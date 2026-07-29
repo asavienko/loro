@@ -71,6 +71,11 @@ prototype-only and **must not** be carried into the app — see the divergence t
 - **Blueprint citations** look like `Loro.dc.html:1404–1538`.
 - **Commits**: Conventional Commits with the scope list in `commitlint.config.cjs`. See
   [`docs/process/git-workflow.md`](docs/process/git-workflow.md).
+- **Plans live in the project root.** Write an implementation or refactor plan as a markdown file at
+  the repo root — `loro/PLAN-P2-04-association-suggestions.md`, carrying the same requirement ID as
+  the branch. Not in `docs/` (that holds the durable spec, and a finished plan isn't one) and not in
+  a temp directory (a plan you can't find again is a plan you rewrite). Root plans are tracked by
+  git, so delete one when the work ships rather than leaving it to rot.
 - **`pnpm check`** is the single command that must pass — lint, typecheck, test, content validation.
 - **Layer boundaries in the app are lint-enforced**, not conventional
   ([mobile-app.md](docs/architecture/mobile-app.md#layers)). If an import fails lint, you're
@@ -104,9 +109,10 @@ npx expo start --web                # from apps/mobile — fastest way to see th
 - **A green build proves less than usual.** The five hand-checks in
   [`onboarding.md`](docs/process/onboarding.md) — audio, mic, the warming card, offline, sync — have
   no implementation behind them to check.
-- **`packages/core-rs` tests are all inline `#[cfg(test)]`; there is no `tests/` directory yet.** The
-  integration files named in [`testing-strategy.md`](docs/process/testing-strategy.md) (`sim.rs`,
-  `merge.rs`, `golden/`) don't exist, so don't assume a scheduling or DSP change is covered.
+- **`packages/core-rs` tests are all inline `#[cfg(test)]`; there is no `tests/` directory yet.**
+  The integration files named in [`testing-strategy.md`](docs/process/testing-strategy.md)
+  (`sim.rs`, `merge.rs`, `golden/`) don't exist, so don't assume a scheduling or DSP change is
+  covered.
 - **Two docs run ahead of the code.** `onboarding.md` §3 says to run `db:migrate` / `db:seed`, which
   aren't defined — [`apps/api/README.md`](apps/api/README.md) is the accurate one.
   `apps/mobile/README.md` lists `src/features/`, `src/engines/`, `src/domain/`, `src/data/`,
@@ -117,7 +123,7 @@ npx expo start --web                # from apps/mobile — fastest way to see th
 | Path                      | What                                                                      |
 | ------------------------- | ------------------------------------------------------------------------- |
 | `docs/`                   | All documentation — start at `docs/README.md`                             |
-| `apps/mobile/`            | Expo / React Native app; routes in `app/`, design system in `src/ui/`      |
+| `apps/mobile/`            | Expo / React Native app; routes in `app/`, design system in `src/ui/`     |
 | `apps/api/`               | NestJS backend                                                            |
 | `packages/core/`          | Shared TS domain, engine contracts, API schemas — **used by app AND api** |
 | `packages/core-rs/`       | Rust: FSRS, sync merge, ranking, DSP. All reproducible maths              |
