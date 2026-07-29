@@ -9,7 +9,7 @@ import { useEffect } from 'react'
 import { ScrollView, View } from 'react-native'
 import { Redirect, router } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { DEFAULT_REP_TARGET } from '@loro/core'
+import { DEFAULT_REP_TARGET, streak as streakOf } from '@loro/core'
 import {
   Button,
   Card,
@@ -25,13 +25,16 @@ import {
 } from '../src/ui/primitives'
 import { accent, ink, line, radius, scale, space, surface } from '../src/ui/theme'
 import { toView, useApp } from '../src/store'
+import { deviceClock, localWeekdayLabel } from '../src/lib/clock'
 
 export default function Today() {
   const onboarded = useApp((s) => s.onboarded)
   const phrases = useApp((s) => s.phrases)
   const refrainSet = useApp((s) => s.refrainSet)
   const ensure = useApp((s) => s.ensureRefrainSet)
-  const streak = useApp((s) => s.streakDays)
+  const practiceDays = useApp((s) => s.practiceDays)
+  // Derived, never stored — the same function the widget will call (ADR-0002).
+  const streak = streakOf(practiceDays, deviceClock.streakDay())
   const insets = useSafeAreaInsets()
 
   useEffect(() => {
@@ -62,7 +65,7 @@ export default function Today() {
         <Row justify="space-between" align="flex-end">
           <View>
             <Text variant="labelSm" color={ink.muted}>
-              {new Date().toLocaleDateString(undefined, { weekday: 'long' })} · the daily refrain
+              {localWeekdayLabel()} · the daily refrain
             </Text>
             <Text variant="title3" color={ink.ink}>
               Today
@@ -81,7 +84,8 @@ export default function Today() {
           >
             <Text variant="caption">🔥</Text>
             <Text variant="bodySm" color={accent.accentInk}>
-              {streak}
+              {/* A learner on day zero sees an invitation, not a zero. */}
+              {streak === 0 ? '—' : streak}
             </Text>
           </View>
         </Row>

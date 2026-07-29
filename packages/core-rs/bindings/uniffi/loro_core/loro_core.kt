@@ -777,6 +777,8 @@ internal interface UniffiForeignFutureCompleteVoid : com.sun.jna.Callback {
 
 
 
+
+
 // A JNA Library to expose the extern-C FFI definitions.
 // This is an implementation detail which will be called internally by the public API.
 
@@ -848,6 +850,8 @@ internal interface UniffiLib : Library {
     ): Int
     fun uniffi_loro_core_fn_func_retrievability(`daysSinceReview`: Float,`stability`: Float,uniffi_out_err: UniffiRustCallStatus, 
     ): Float
+    fun uniffi_loro_core_fn_func_streak(`practiceDays`: RustBuffer.ByValue,`today`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Int
     fun uniffi_loro_core_fn_func_streak_day_for(`atMs`: Long,`localMidnightMs`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_loro_core_fn_func_streak_survives(`lastDay`: RustBuffer.ByValue,`today`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
@@ -1026,6 +1030,8 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_loro_core_checksum_func_retrievability(
     ): Short
+    fun uniffi_loro_core_checksum_func_streak(
+    ): Short
     fun uniffi_loro_core_checksum_func_streak_day_for(
     ): Short
     fun uniffi_loro_core_checksum_func_streak_survives(
@@ -1137,7 +1143,10 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_loro_core_checksum_func_retrievability() != 2410.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_streak_day_for() != 1338.toShort()) {
+    if (lib.uniffi_loro_core_checksum_func_streak() != 21767.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_loro_core_checksum_func_streak_day_for() != 43641.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_loro_core_checksum_func_streak_survives() != 29477.toShort()) {
@@ -3476,11 +3485,32 @@ public object FfiConverterSequenceTypeTag: FfiConverterRustBuffer<List<Tag>> {
     
 
         /**
+         * The current streak length, from the set of days the learner practised.
+         *
+         * `practice_days` need not be sorted or deduped. A gap of more than one calendar day
+         * ends the run. A streak whose last day is yesterday is still alive and still counted:
+         * today is not over, and nothing here shames a missed day (non-negotiable #3).
+         *
+         * Unparseable days are **dropped, not treated as a gap**. They sort after every real
+         * date (`'n' > '2'`), so counting them would let one corrupt row zero a streak the
+         * learner earned.
+         */ fun `streak`(`practiceDays`: List<kotlin.String>, `today`: kotlin.String): kotlin.UInt {
+            return FfiConverterUInt.lift(
+    uniffiRustCall() { _status ->
+    UniffiLib.INSTANCE.uniffi_loro_core_fn_func_streak(
+        FfiConverterSequenceString.lower(`practiceDays`),FfiConverterString.lower(`today`),_status)
+}
+    )
+    }
+    
+
+        /**
          * The `local_day` a timestamp belongs to for streak purposes, applying the grace window.
          *
-         * `local_midnight_ms` is midnight of the device's current local day, and
-         * `offset_minutes` is the device's UTC offset — both passed in, because this crate
-         * has no clock.
+         * Both arguments are **local wall-clock ms** — epoch ms shifted by the device's UTC
+         * offset, so that dividing by a day lands on the learner's calendar date rather than
+         * UTC's. The shift happens at the edge (`apps/mobile/src/lib/clock.ts`) because this
+         * crate has no clock and no timezone database.
          */ fun `streakDayFor`(`atMs`: kotlin.Long, `localMidnightMs`: kotlin.Long): kotlin.String {
             return FfiConverterString.lift(
     uniffiRustCall() { _status ->

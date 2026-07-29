@@ -122,6 +122,43 @@ describe('the API over HTTP', () => {
     expect(row?.fields['difficulty']?.v, 'lww class takes the later write').toBe('easy')
   })
 
+  needsWasm('keeps two devices adding the same catalog phrase as two rows', async () => {
+    // Row ids are per-learner UUIDv7s, not catalog ids (plans/04). If both devices sent
+    // `entity_id: 'cafe1'` they would key the same row and per-field LWW would
+    // interleave two independent add events into one — a data-loss bug invisible until
+    // a second device exists. Here they send distinct row ids for the same `phraseId`.
+    const stamp = Date.now()
+    const rowA = `0197f2a0-${stamp % 10_000}-7000-8000-aaaaaaaaaaaa`
+    const rowB = `0197f2a0-${stamp % 10_000}-7000-8000-bbbbbbbbbbbb`
+
+    await post('/sync/push', {
+      ops: [rowA, rowB].map((id, i) => ({
+        seq: 20 + i,
+        entity: 'user_phrase',
+        entity_id: id,
+        op: 'upsert',
+        fields: {
+          phraseId: { v: 'cafe1', hlc: hlc(1000 + i, i === 0 ? 'a' : 'b') },
+          difficulty: { v: i === 0 ? 'hard' : 'easy', hlc: hlc(1000 + i, i === 0 ? 'a' : 'b') },
+        },
+      })),
+    })
+
+    const pulled = (await post('/sync/pull', {})) as {
+      changes: { id: string; fields: Record<string, { v: unknown }> }[]
+    }
+    const a = pulled.changes.find((r) => r.id === rowA)
+    const b = pulled.changes.find((r) => r.id === rowB)
+
+    expect(a, 'device A kept its own row').toBeDefined()
+    expect(b, 'device B kept its own row').toBeDefined()
+    expect(a?.fields['phraseId']?.v).toBe('cafe1')
+    expect(b?.fields['phraseId']?.v).toBe('cafe1')
+    // The ratings did not interleave: each device's row still holds what it wrote.
+    expect(a?.fields['difficulty']?.v).toBe('hard')
+    expect(b?.fields['difficulty']?.v).toBe('easy')
+  })
+
   it('rejects a field with no declared merge class rather than guessing', async () => {
     // This is the guard that stops an undeclared field becoming silent data loss.
     const res = (await post('/sync/push', {

@@ -1,0 +1,151 @@
+{
+  "$comment": [
+    "Canonical cases for day boundaries and streaks.",
+    "",
+    "Asserted by BOTH packages/core/src/domain/calendar.test.ts and",
+    "packages/core-rs/tests/parity.rs. This file is the reason the TypeScript mirror in",
+    "calendar.ts may exist at all: if the two implementations disagree on any case here,",
+    "one of the two builds fails. Add a case to BOTH languages by adding it here once.",
+    "",
+    "It lives under packages/core/src/ rather than beside the crate because the TS",
+    "package compiles with rootDir: ./src and cannot import a file above it, while Rust's",
+    "include_str! reaches anywhere. Direction chosen by the tighter constraint.",
+    "",
+    "wallMs values are LOCAL wall-clock ms — epoch ms plus the device's UTC offset.",
+    "1785196800000 is midnight at the start of 2026-07-28 in that frame."
+  ],
+
+  "localMidnightWallMs": 1785196800000,
+
+  "streakDayFor": [
+    {
+      "why": "midnight exactly is still inside the grace window",
+      "atWallMs": 1785196800000,
+      "localMidnightWallMs": 1785196800000,
+      "expect": "2026-07-27"
+    },
+    {
+      "why": "01:30 counts for yesterday — we do not punish night owls",
+      "atWallMs": 1785202200000,
+      "localMidnightWallMs": 1785196800000,
+      "expect": "2026-07-27"
+    },
+    {
+      "why": "the last millisecond of the grace window",
+      "atWallMs": 1785211199999,
+      "localMidnightWallMs": 1785196800000,
+      "expect": "2026-07-27"
+    },
+    {
+      "why": "04:00:00.000 exactly — the window has closed",
+      "atWallMs": 1785211200000,
+      "localMidnightWallMs": 1785196800000,
+      "expect": "2026-07-28"
+    },
+    {
+      "why": "09:41, an ordinary morning session",
+      "atWallMs": 1785231660000,
+      "localMidnightWallMs": 1785196800000,
+      "expect": "2026-07-28"
+    },
+    {
+      "why": "23:59 belongs to the day it is still on",
+      "atWallMs": 1785283140000,
+      "localMidnightWallMs": 1785196800000,
+      "expect": "2026-07-28"
+    },
+    {
+      "why": "a month boundary crossed backwards through the grace window",
+      "atWallMs": 1782864000000,
+      "localMidnightWallMs": 1782864000000,
+      "expect": "2026-06-30"
+    }
+  ],
+
+  "daysBetween": [
+    { "a": "2026-06-30", "b": "2026-07-01", "expect": 1 },
+    { "a": "2026-12-31", "b": "2027-01-01", "expect": 1 },
+    { "a": "2026-02-28", "b": "2026-03-01", "expect": 1 },
+    { "a": "2028-02-28", "b": "2028-03-01", "expect": 2 },
+    { "a": "2026-07-01", "b": "2026-06-30", "expect": -1 },
+    { "a": "2026-07-28", "b": "2026-07-28", "expect": 0 },
+    { "a": "nonsense", "b": "2026-07-01", "expect": null },
+    { "a": "2026-13-01", "b": "2026-07-01", "expect": null },
+    { "a": "2026-07-01-02", "b": "2026-07-01", "expect": null },
+    { "a": "2026-07-00", "b": "2026-07-01", "expect": null },
+    { "a": "2026-7x-01", "b": "2026-07-01", "expect": null }
+  ],
+
+  "streakSurvives": [
+    { "lastDay": "2026-07-27", "today": "2026-07-28", "expect": true },
+    { "lastDay": "2026-07-28", "today": "2026-07-28", "expect": true },
+    { "lastDay": "2026-07-26", "today": "2026-07-28", "expect": false },
+    { "lastDay": "2026-07-28", "today": "2026-07-27", "expect": true },
+    { "lastDay": "nonsense", "today": "2026-07-28", "expect": false }
+  ],
+
+  "streak": [
+    { "why": "a fresh install", "days": [], "today": "2026-07-28", "expect": 0 },
+    { "why": "one rep today", "days": ["2026-07-28"], "today": "2026-07-28", "expect": 1 },
+    {
+      "why": "yesterday and today",
+      "days": ["2026-07-27", "2026-07-28"],
+      "today": "2026-07-28",
+      "expect": 2
+    },
+    {
+      "why": "a two-day gap counts the run that reaches today, not the total",
+      "days": ["2026-07-25", "2026-07-26", "2026-07-28"],
+      "today": "2026-07-28",
+      "expect": 1
+    },
+    {
+      "why": "alive but not yet practised today — today is not over",
+      "days": ["2026-07-26", "2026-07-27"],
+      "today": "2026-07-28",
+      "expect": 2
+    },
+    {
+      "why": "long since broken",
+      "days": ["2026-07-20"],
+      "today": "2026-07-28",
+      "expect": 0
+    },
+    {
+      "why": "flying west moved the local date backwards; the streak holds",
+      "days": ["2026-07-29"],
+      "today": "2026-07-28",
+      "expect": 1
+    },
+    {
+      "why": "unsorted with duplicates",
+      "days": ["2026-07-28", "2026-07-26", "2026-07-27", "2026-07-28"],
+      "today": "2026-07-28",
+      "expect": 3
+    },
+    {
+      "why": "across a month boundary",
+      "days": ["2026-06-29", "2026-06-30", "2026-07-01"],
+      "today": "2026-07-01",
+      "expect": 3
+    },
+    {
+      "why": "across a leap day",
+      "days": ["2028-02-28", "2028-02-29", "2028-03-01"],
+      "today": "2028-03-01",
+      "expect": 3
+    },
+    {
+      "why": "a malformed row must not silently extend a streak",
+      "days": ["2026-07-26", "nonsense", "2026-07-28"],
+      "today": "2026-07-28",
+      "expect": 1
+    },
+    {
+      "why": "a year boundary",
+      "days": ["2026-12-30", "2026-12-31", "2027-01-01"],
+      "today": "2027-01-01",
+      "expect": 3
+    }
+  ]
+}

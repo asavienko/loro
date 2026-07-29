@@ -666,8 +666,31 @@ Ladder palette: Accumulated `#5f6b78` · Bent `#7f6a44` · Transferred `#8a6810`
 - **Milestones** — earned ones in white with a green ✓; unearned ones greyed
   (`grayscale(1) opacity(.55)`).
 
+**The streak is derived, never stored.** The store keeps `practiceDays` — the distinct
+[streak days](../architecture/scheduling.md#two-day-keys-not-one) on which at least one **rep**
+landed — and the count comes from `loro-core`'s `streak()`, the same function the widget calls, so
+the two can never disagree. A listen in the stream is not a rep and does not extend a streak.
+
+**Streak states**, all three of which the screen must render without apology:
+
+| State                               | The number | The label      | The 7-day strip                                      |
+| ----------------------------------- | ---------- | -------------- | ---------------------------------------------------- |
+| No practice ever                    | `—`        | `start today`  | seven neutral cells                                  |
+| A live run (today or yesterday)     | the count  | `day` / `days` | accent-filled with 🔥 on the days actually practised |
+| Broken (last practice ≥ 2 days ago) | `—`        | `start today`  | filled cells stay where they were                    |
+
+The strip shows the **last seven real local days**, filled from `practiceDays` membership. It must
+not be drawn from the streak count: `i < streak` renders a seven-day streak for a learner who
+practised once, which is both a fabricated number (non-negotiable #2) and a calendar that never
+happened.
+
+An unpractised cell is **neutral** — no red, no ✗, no count-down copy, and a broken streak gets the
+same invitation as a fresh install. A streak of zero is an absence, not a zero: `—`, never
+`0 days 😞` (non-negotiable #3, [copy-and-tone.md](../design/copy-and-tone.md)).
+
 **Edge cases** — an empty stream must render zeroes, not division-by-zero (`totalPhrases || 1`). No
-copy on this screen may frame a missed day as failure.
+copy on this screen may frame a missed day as failure. Timezone travel westward moves the local date
+backwards; it must not break a streak or re-count a day.
 
 ---
 

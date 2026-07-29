@@ -7,28 +7,44 @@
  *
  * v1 keeps this in memory. SQLite + the outbox land with sync (ADR-0003/0012); the
  * repository shape below is the seam they slot into.
+ *
+ * Two rules this file holds:
+ *   • The day comes from the injected `Clock`, never from a `Date` — one wrong line
+ *     there reached every engine at once (see src/lib/clock.ts).
+ *   • Practice outcomes are written ONLY through `applyDelta`, from a delta an engine
+ *     produced. No action here computes a progress field.
  */
 
-import { create } from 'zustand'
+import { create, type StoreApi, type UseBoundStore } from 'zustand'
 import {
+  DEFAULT_REP_TARGET,
   LadderRung,
   masteryBucket,
   RefrainEngine,
   StreamEngine,
-  selectRefrainSet,
-  automaticity,
-  DEFAULT_REP_TARGET,
   refrainSetSize,
-  type Difficulty,
-  type PhraseState,
-  type Tag,
-  type EngineContext,
-  type PhraseRepository,
-  type LoroCoreFacade,
+  repsToday,
+  selectRefrainSet,
+  type CatalogPhraseId,
   type Clock,
+  type Difficulty,
+  type EngineContext,
+  type LoroCoreFacade,
+  type PhraseRepository,
+  type PhraseState,
+  type ProgressDelta,
+  type Tag,
+  type Theme,
+  type UserPhraseId,
 } from '@loro/core'
+import { catalogPhraseId } from '@loro/core'
 import { loadCatalog, type CatalogPhrase } from '@loro/content'
-import { userPhraseId, catalogPhraseId } from '@loro/core'
+import { deviceClock } from '../lib/clock'
+import { newId } from '../lib/ids'
+import { addPracticeDay, applyDeltaToPhrase, INITIAL_STATE, type AppData } from './state'
+
+export { INITIAL_STATE, dataOf, applyDeltaToPhrase, addPracticeDay } from './state'
+export type { AppData, Toast } from './state'
 
 const catalog = loadCatalog()
 export const catalogById = new Map(catalog.phrases.map((p) => [p.id, p]))
@@ -46,14 +62,23 @@ export interface PhraseView extends PhraseState {
   catalog: CatalogPhrase | null
 }
 
-function newPhraseState(
-  cat: CatalogPhrase,
+/**
+ * A blank row.
+ *
+ * `id` is a generated UUIDv7 and `phraseId` is the catalog join key — two different
+ * things, which is the whole point. They used to be the same string, so a learner's row
+ * carried the content team's id: no learner-authored phrase could have an id at all, and
+ * two devices adding `cafe1` produced one row with interleaved fields.
+ */
+function blankPhraseState(
+  id: UserPhraseId,
+  phraseId: CatalogPhraseId | null,
   source: PhraseState['source'],
   now: number,
 ): PhraseState {
   return {
-    id: userPhraseId(cat.id),
-    phraseId: catalogPhraseId(cat.id),
+    id,
+    phraseId,
     source,
     difficulty: 'med',
     tags: [],
@@ -79,6 +104,30 @@ function newPhraseState(
   }
 }
 
+/** What the learner types (or imports, or photographs) when the phrase is their own. */
+export interface OwnPhraseDraft {
+  es: string
+  en: string
+  theme?: Theme
+  emoji?: string
+}
+
+/**
+ * A row for a phrase with no catalog entry: `phraseId` is null and the text lives on
+ * the row itself. This is the seam Import (`P2-09`, `P2-10`) and Capture plug into.
+ */
+function newOwnPhrase(id: UserPhraseId, draft: OwnPhraseDraft, now: number): PhraseState {
+  return {
+    ...blankPhraseState(id, null, 'custom', now),
+    ownEs: draft.es,
+    ownEn: draft.en,
+    // The same fallbacks `toView` uses, resolved once at write time so the stored row
+    // is complete rather than depending on a render-time default.
+    ownTheme: draft.theme ?? 'Mine',
+    ownEmoji: draft.emoji ?? '✍️',
+  }
+}
+
 export function toView(p: PhraseState): PhraseView {
   const cat = p.phraseId === null ? null : (catalogById.get(p.phraseId) ?? null)
   return {
@@ -93,29 +142,14 @@ export function toView(p: PhraseState): PhraseView {
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-export interface Toast {
-  message: string
-  undo?: () => void
-}
-
-interface AppState {
-  onboarded: boolean
-  goal: string | null
-  dailyMinutes: 5 | 10 | 20
-  phrases: PhraseState[]
-  toast: Toast | null
-  selectedId: string | null
-  streakDays: number
-
-  // Refrain day state — chosen once, FROZEN. "You always see today."
-  refrainSet: string[]
-  refrainDay: string | null
-
+interface AppActions {
   completeOnboarding: (o: { goal: string; dailyMinutes: 5 | 10 | 20; packIds: string[] }) => void
   addPhrase: (
     catalogId: string,
     o?: { difficulty?: Difficulty; tags?: Tag[]; source?: PhraseState['source'] },
   ) => void
+  /** Returns the new row id, because the caller has no other way to name the row. */
+  addOwnPhrase: (draft: OwnPhraseDraft, o?: { difficulty?: Difficulty; tags?: Tag[] }) => string
   removePhrase: (id: string) => void
   setDifficulty: (id: string, d: Difficulty) => void
   toggleTag: (id: string, t: Tag) => void
@@ -123,166 +157,237 @@ interface AppState {
   markLearned: (id: string, learned: boolean) => void
   setNote: (id: string, note: string) => void
   recordPlay: (id: string) => void
-  recordRep: (id: string, o: { success: boolean; latencyMs: number | null }) => void
+  /**
+   * The ONLY write path for a practice outcome. A screen calls `engine.record(...)` and
+   * hands the result here; nothing else writes a progress field.
+   */
+  applyDelta: (delta: ProgressDelta) => void
   select: (id: string | null) => void
   showToast: (message: string, undo?: () => void) => void
   clearToast: () => void
+  /**
+   * Make sure `refrainSet` is today's. Safe to call on every foreground and every entry
+   * to a practice screen: it re-rolls only when the day changed, and otherwise backfills
+   * a set that lost a member.
+   */
   ensureRefrainSet: () => void
   reset: () => void
 }
 
-const LOCAL_DAY = (): string => new Date().toISOString().slice(0, 10)
+export type AppState = AppData & AppActions
 
-export const useApp = create<AppState>((set, get) => ({
-  onboarded: false,
-  goal: null,
-  dailyMinutes: 10,
-  phrases: [],
-  toast: null,
-  selectedId: null,
-  streakDays: 1,
-  refrainSet: [],
-  refrainDay: null,
+/**
+ * What the store needs from the platform.
+ *
+ * Injected so a test can drive a day rollover, and so the store's day logic is provable
+ * rather than dependent on when the suite happens to run.
+ */
+export interface StoreDeps {
+  clock: Clock
+  newId: () => UserPhraseId
+}
 
-  completeOnboarding: ({ goal, dailyMinutes, packIds }) => {
-    const now = Date.now()
-    const chosen = new Set<string>()
-    for (const packId of packIds) {
-      const pack = packs.find((p) => p.id === packId)
-      for (const pid of pack?.phrases ?? []) chosen.add(pid)
-    }
-    const seeded = [...chosen]
-      .map((id) => catalogById.get(id))
-      .filter((c): c is CatalogPhrase => c !== undefined)
-      .map((c) => newPhraseState(c, 'starter', now))
+export function createAppStore(deps: StoreDeps): UseBoundStore<StoreApi<AppState>> {
+  const { clock } = deps
 
-    set({ onboarded: true, goal, dailyMinutes, phrases: seeded, refrainSet: [], refrainDay: null })
-    get().ensureRefrainSet()
-  },
+  return create<AppState>((set, get) => ({
+    ...INITIAL_STATE,
 
-  addPhrase: (catalogId, o = {}) => {
-    const cat = catalogById.get(catalogId)
-    if (cat === undefined) return
-    // The blueprint guards on id — adding twice is a no-op (Loro.dc.html:3602).
-    if (get().phrases.some((p) => p.id === catalogId)) return
+    completeOnboarding: ({ goal, dailyMinutes, packIds }) => {
+      const now = clock.now()
+      const chosen = new Set<string>()
+      for (const packId of packIds) {
+        const pack = packs.find((p) => p.id === packId)
+        for (const pid of pack?.phrases ?? []) chosen.add(pid)
+      }
+      const seeded = [...chosen]
+        .map((id) => catalogById.get(id))
+        .filter((c): c is CatalogPhrase => c !== undefined)
+        .map((c) => blankPhraseState(deps.newId(), catalogPhraseId(c.id), 'starter', now))
 
-    const next = {
-      ...newPhraseState(cat, o.source ?? 'discover', Date.now()),
-      difficulty: o.difficulty ?? 'med',
-      tags: o.tags ?? [],
-    }
-    set((st) => ({ phrases: [...st.phrases, next] }))
-    get().showToast('Added — here are more like it', () => {
-      get().removePhrase(catalogId)
-    })
-  },
+      set({
+        onboarded: true,
+        goal,
+        dailyMinutes,
+        phrases: seeded,
+        refrainSet: [],
+        refrainDay: null,
+        refrainSubstituted: [],
+      })
+      get().ensureRefrainSet()
+    },
 
-  removePhrase: (id) => {
-    set((st) => ({
-      phrases: st.phrases.filter((p) => p.id !== id),
-      selectedId: st.selectedId === id ? null : st.selectedId,
-      refrainSet: st.refrainSet.filter((x) => x !== id),
-    }))
-  },
+    addPhrase: (catalogId, o = {}) => {
+      const cat = catalogById.get(catalogId)
+      if (cat === undefined) return
+      // Adding the same phrase twice is a no-op (Loro.dc.html:3602). The guard compares
+      // CATALOG ids: comparing row ids would never match, since every row id is fresh.
+      if (get().phrases.some((p) => p.phraseId === catalogPhraseId(catalogId))) return
 
-  setDifficulty: (id, d) => {
-    set((st) => ({ phrases: st.phrases.map((p) => (p.id === id ? { ...p, difficulty: d } : p)) }))
-    // The toast explains the CONSEQUENCE — that's what teaches the model.
-    get().showToast(
-      {
-        hard: 'Difficult — repeats more, comes back sooner',
-        easy: 'Easy — drifting to the back',
-        med: 'Back to normal',
-      }[d],
-    )
-  },
+      const next = {
+        ...blankPhraseState(
+          deps.newId(),
+          catalogPhraseId(cat.id),
+          o.source ?? 'discover',
+          clock.now(),
+        ),
+        difficulty: o.difficulty ?? 'med',
+        tags: o.tags ?? [],
+      }
+      set((st) => ({ phrases: [...st.phrases, next] }))
+      // Undo removes the row that was just created, by its row id. Passing the catalog
+      // id here would have removed nothing.
+      get().showToast('Added — here are more like it', () => {
+        get().removePhrase(next.id)
+      })
+    },
 
-  toggleTag: (id, t) => {
-    set((st) => ({
-      phrases: st.phrases.map((p) =>
-        p.id === id
-          ? { ...p, tags: p.tags.includes(t) ? p.tags.filter((x) => x !== t) : [...p.tags, t] }
-          : p,
-      ),
-    }))
-  },
+    addOwnPhrase: (draft, o = {}) => {
+      const next = {
+        ...newOwnPhrase(deps.newId(), draft, clock.now()),
+        difficulty: o.difficulty ?? 'med',
+        tags: o.tags ?? [],
+      }
+      set((st) => ({ phrases: [...st.phrases, next] }))
+      get().showToast('Added to your stream', () => {
+        get().removePhrase(next.id)
+      })
+      return next.id
+    },
 
-  toggleLoved: (id) => {
-    const now = get().phrases.find((p) => p.id === id)?.loved ?? false
-    set((st) => ({ phrases: st.phrases.map((p) => (p.id === id ? { ...p, loved: !p.loved } : p)) }))
-    get().showToast(now ? 'Removed from Loved' : '♥ Loved — surfacing more often')
-  },
+    removePhrase: (id) => {
+      set((st) => ({
+        phrases: st.phrases.filter((p) => p.id !== id),
+        selectedId: st.selectedId === id ? null : st.selectedId,
+        refrainSet: st.refrainSet.filter((x) => x !== id),
+        refrainSubstituted: st.refrainSubstituted.filter((x) => x !== id),
+      }))
+      // A day's set that loses a member must be refilled, not left short: "you always
+      // see today" turns into "you see nothing today" once the last member is deleted.
+      get().ensureRefrainSet()
+    },
 
-  markLearned: (id, learned) => {
-    set((st) => ({ phrases: st.phrases.map((p) => (p.id === id ? { ...p, learned } : p)) }))
-    get().showToast(learned ? '✓ Learned — removed from the stream' : 'Back into your stream')
-  },
+    setDifficulty: (id, d) => {
+      set((st) => ({ phrases: st.phrases.map((p) => (p.id === id ? { ...p, difficulty: d } : p)) }))
+      // The toast explains the CONSEQUENCE — that's what teaches the model.
+      get().showToast(
+        {
+          hard: 'Difficult — repeats more, comes back sooner',
+          easy: 'Easy — drifting to the back',
+          med: 'Back to normal',
+        }[d],
+      )
+    },
 
-  setNote: (id, note) => {
-    set((st) => ({ phrases: st.phrases.map((p) => (p.id === id ? { ...p, note } : p)) }))
-  },
+    toggleTag: (id, t) => {
+      set((st) => ({
+        phrases: st.phrases.map((p) =>
+          p.id === id
+            ? { ...p, tags: p.tags.includes(t) ? p.tags.filter((x) => x !== t) : [...p.tags, t] }
+            : p,
+        ),
+      }))
+    },
 
-  recordPlay: (id) => {
-    set((st) => ({
-      phrases: st.phrases.map((p) =>
-        p.id === id ? { ...p, plays: p.plays + 1, lastPracticedAt: Date.now() } : p,
-      ),
-    }))
-  },
+    toggleLoved: (id) => {
+      const wasLoved = get().phrases.find((p) => p.id === id)?.loved ?? false
+      set((st) => ({
+        phrases: st.phrases.map((p) => (p.id === id ? { ...p, loved: !p.loved } : p)),
+      }))
+      get().showToast(wasLoved ? 'Removed from Loved' : '♥ Loved — surfacing more often')
+    },
 
-  recordRep: (id, { success, latencyMs }) => {
-    const day = LOCAL_DAY()
-    set((st) => ({
-      phrases: st.phrases.map((p) => {
-        if (p.id !== id) return p
-        // A stale counter must not inflate automaticity.
-        const todayReps = (p.repsTodayDay === day ? p.repsToday : 0) + (success ? 1 : 0)
-        return {
-          ...p,
-          reps: p.reps + (success ? 1 : 0),
-          repsToday: todayReps,
-          repsTodayDay: day,
-          automaticity: automaticity(todayReps, DEFAULT_REP_TARGET),
-          lastPracticedAt: Date.now(),
-          stumbles: success ? p.stumbles : p.stumbles + 1,
-          // latencyMs is MEASURED or null. Never estimated.
-          axProduction: Math.min(99, p.axProduction + (success ? 2 : 0)),
-        }
-      }),
-    }))
-    void latencyMs
-  },
+    markLearned: (id, learned) => {
+      set((st) => ({ phrases: st.phrases.map((p) => (p.id === id ? { ...p, learned } : p)) }))
+      get().showToast(learned ? '✓ Learned — removed from the stream' : 'Back into your stream')
+    },
 
-  select: (id) => {
-    set({ selectedId: id })
-  },
-  showToast: (message, undo) => {
-    set({ toast: undo ? { message, undo } : { message } })
-  },
-  clearToast: () => {
-    set({ toast: null })
-  },
+    setNote: (id, note) => {
+      set((st) => ({ phrases: st.phrases.map((p) => (p.id === id ? { ...p, note } : p)) }))
+    },
 
-  ensureRefrainSet: () => {
-    const day = LOCAL_DAY()
-    const st = get()
-    if (st.refrainDay === day && st.refrainSet.length > 0) return
-    const size = refrainSetSize(st.dailyMinutes)
-    set({ refrainSet: [...selectRefrainSet(st.phrases, size)], refrainDay: day })
-  },
+    recordPlay: (id) => {
+      // A play is an observation, not a computed score, so it goes through the same
+      // single write path as everything else.
+      get().applyDelta({
+        phraseId: id as UserPhraseId,
+        plays: 1,
+        lastPracticedAt: clock.now(),
+      })
+    },
 
-  reset: () => {
-    set({
-      onboarded: false,
-      goal: null,
-      phrases: [],
-      refrainSet: [],
-      refrainDay: null,
-      selectedId: null,
-      toast: null,
-    })
-  },
-}))
+    applyDelta: (delta) => {
+      const day = clock.localDay()
+      // A rep is what makes a day count towards the streak — a play in the stream is
+      // listening, not production. Keyed on the STREAK day, so a 01:30 session extends
+      // the evening it continues rather than starting a new day.
+      const practised = (delta.reps ?? 0) > 0 ? clock.streakDay() : null
+
+      set((st) => ({
+        phrases: st.phrases.map((p) =>
+          p.id === delta.phraseId ? applyDeltaToPhrase(p, delta, day) : p,
+        ),
+        practiceDays:
+          practised === null ? st.practiceDays : addPracticeDay(st.practiceDays, practised),
+      }))
+    },
+
+    select: (id) => {
+      set({ selectedId: id })
+    },
+    showToast: (message, undo) => {
+      set({ toast: undo ? { message, undo } : { message } })
+    },
+    clearToast: () => {
+      set({ toast: null })
+    },
+
+    ensureRefrainSet: () => {
+      const day = clock.localDay()
+      const st = get()
+      const size = refrainSetSize(st.dailyMinutes)
+
+      // A new day (or the first ever): choose today's set once, then freeze it.
+      if (st.refrainDay !== day) {
+        set({
+          refrainSet: [...selectRefrainSet(st.phrases, size)],
+          refrainDay: day,
+          refrainSubstituted: [],
+        })
+        return
+      }
+
+      // Same day, so the set is FROZEN — it may only be topped up. The old guard was
+      // `refrainDay === day && refrainSet.length > 0`, which fell through on an emptied
+      // set and re-rolled the whole day, including phrases already practised. Backfill
+      // instead: existing members keep their place.
+      if (st.refrainSet.length >= size) return
+
+      const inSet = new Set(st.refrainSet)
+      const candidates = st.phrases.filter(
+        // Not already in today's set, and not something the learner already finished
+        // today — substituting in a phrase that is already at 6/6 offers no work.
+        (p) => !inSet.has(p.id) && repsToday(p, day) < DEFAULT_REP_TARGET,
+      )
+      const fill = selectRefrainSet(candidates, size - st.refrainSet.length)
+      if (fill.length === 0) return
+
+      set({
+        refrainSet: [...st.refrainSet, ...fill],
+        refrainSubstituted: [...st.refrainSubstituted, ...fill],
+      })
+    },
+
+    // Spreads the one declaration of a fresh app, so a field added to AppData is
+    // cleared here for free. The enumerated version left `dailyMinutes` and
+    // `streakDays` behind — the previous learner's settings, on a shared device.
+    reset: () => {
+      set({ ...INITIAL_STATE })
+    },
+  }))
+}
+
+export const useApp = createAppStore({ clock: deviceClock, newId })
 
 // ─── selectors ───────────────────────────────────────────────────────────────
 
@@ -296,8 +401,6 @@ export function useMastery(): { key: string; count: number }[] {
 }
 
 // ─── engines ─────────────────────────────────────────────────────────────────
-
-const clock: Clock = { now: () => Date.now(), localDay: LOCAL_DAY }
 
 const core: LoroCoreFacade = {
   repeatTarget: (d) => (d === 'hard' ? 4 : d === 'easy' ? 2 : 3),
@@ -349,7 +452,7 @@ export function engineContext(): EngineContext {
   }
   return {
     phrases: repo,
-    clock,
+    clock: deviceClock,
     core,
     settings: {
       dailyMinutes: useApp.getState().dailyMinutes,

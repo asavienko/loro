@@ -30,7 +30,7 @@ import type {
 } from '../types.js'
 import type { PhraseState } from '../../domain/phrase.js'
 import type { UserPhraseId } from '../../domain/ids.js'
-import { LadderRung } from '../../domain/phrase.js'
+import { LadderRung, repsToday } from '../../domain/phrase.js'
 
 export const REFRAIN_MODES = ['echo', 'chorus', 'speed', 'cloze', 'call', 'cold'] as const
 export type RefrainMode = (typeof REFRAIN_MODES)[number]
@@ -223,13 +223,18 @@ export class RefrainEngine implements PracticeEngine {
     const setIds = selectRefrainSet(active, size, ctx.trip?.phraseIds ?? [])
     const byId = new Map(active.map((p) => [p.id, p]))
     const target = ctx.settings.repTarget || DEFAULT_REP_TARGET
+    const today = ctx.clock.localDay()
 
     const items: PracticeItem[] = []
     for (const id of setIds) {
       const phrase = byId.get(id)
       if (phrase === undefined) continue
       const mask = ctx.core.clozeMask(id)
-      for (let rep = 0; rep < target; rep++) {
+      // RESUME, don't restart. A phrase already at 4 of 6 reps today gets its remaining
+      // two, at the modes that follow — so `repIndex` is the day's rep number and
+      // `record()`'s absolute `repsToday` cannot walk the stored count backwards.
+      // Read through the day guard, so yesterday's counter reads as zero.
+      for (let rep = repsToday(phrase, today); rep < target; rep++) {
         const mode = modeForRep(rep)
         const rate = modelRateForMode(mode)
         items.push({
