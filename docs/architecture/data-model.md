@@ -385,6 +385,15 @@ CREATE TABLE streak_day (
 Streak is **derived** from `streak_day`, never stored as a counter. A stored counter is how streaks
 get corrupted by timezone travel and offline replay.
 
+`local_day` here is the **streak** day key — local midnight plus a four-hour grace window, so a
+01:30 session belongs to the evening it continues
+([scheduling.md](scheduling.md#two-day-keys-not-one)). A row is written when at least one **rep**
+lands; a stream play is listening and writes nothing.
+
+**Retention: 400 days** (`PRACTICE_DAY_RETENTION`). The Progress screen never shows more than a year
+and a streak breaks after one missed day, so a longer tail is storage the product cannot use. The
+cap drops the oldest days, which can only shorten a run that was already broken.
+
 ---
 
 ## Client-only tables — never synced

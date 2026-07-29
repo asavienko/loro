@@ -134,9 +134,14 @@ export default tseslint.config(
     },
   },
 
-  // ── 2 · No colour literals (ADR-0013) ──
+  // ── 2 · No colour literals (ADR-0013), and one clock (plans/01) ──
   // `app/**` too, not just `src/**`: the expo-router screens are where a literal is
   // most tempting and least visible in review.
+  //
+  // NOTE: `no-restricted-syntax` is replaced wholesale by the last config that matches
+  // a file, not merged. The Math.random selector from the base block is repeated here
+  // for that reason — dropping it would silently unrestrict `Math.random` across the
+  // whole app.
   {
     files: ['apps/mobile/{app,src}/**/*.{ts,tsx}'],
     ignores: ['apps/mobile/src/ui/tokens/**'],
@@ -147,6 +152,44 @@ export default tseslint.config(
           selector: 'Literal[value=/^#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/]',
           message:
             'Use a design token, not a colour literal. Tokens encode the accessibility rules (accentInk for text, never accent).',
+        },
+        {
+          selector: 'MemberExpression[object.name="Math"][property.name="random"]',
+          message: 'Use an injected, seeded RNG. Engines and core logic must be deterministic.',
+        },
+        {
+          // The exact bug: `toISOString()` is UTC, so slicing it yields a UTC date for
+          // a value the Clock contract says is LOCAL. Off by up to 14 hours, and
+          // invisible in a CI container running UTC.
+          selector:
+            'CallExpression[callee.property.name="slice"][callee.object.callee.property.name="toISOString"]',
+          message:
+            'toISOString() is UTC. For a learner-facing day use clock.localDay() (or clock.streakDay()) — see apps/mobile/src/lib/clock.ts.',
+        },
+        {
+          // One place constructs a Date, so there is one place to get timezones wrong.
+          // src/lib/clock.ts is exempted by the block below.
+          selector: 'NewExpression[callee.name="Date"]',
+          message:
+            'Construct dates only in src/lib/clock.ts. Read the day from clock.localDay() / clock.streakDay(), and the time from clock.now().',
+        },
+      ],
+    },
+  },
+  {
+    // The exemption, and the reason this file is worth keeping small.
+    files: ['apps/mobile/src/lib/clock.ts', 'apps/mobile/src/lib/clock.test.ts'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'Literal[value=/^#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/]',
+          message:
+            'Use a design token, not a colour literal. Tokens encode the accessibility rules (accentInk for text, never accent).',
+        },
+        {
+          selector: 'MemberExpression[object.name="Math"][property.name="random"]',
+          message: 'Use an injected, seeded RNG. Engines and core logic must be deterministic.',
         },
       ],
     },

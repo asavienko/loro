@@ -48,6 +48,9 @@ export const FIELD_POLICY: Readonly<Record<SyncEntity, FieldMap>> = {
   user_phrase: {
     // identity — set once, never merged
     phraseId: 'lww',
+    // The learner's own text, for rows with no catalog entry (`phraseId: null`).
+    // LWW because these are learner-set scalars and an edit on either device should
+    // win by clock; there is no counter or schedule to merge as a group.
     ownEs: 'lww',
     ownEn: 'lww',
     ownTheme: 'lww',

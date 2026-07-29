@@ -3652,11 +3652,31 @@ public func retrievability(daysSinceReview: Float, stability: Float) -> Float {
 })
 }
 /**
+ * The current streak length, from the set of days the learner practised.
+ *
+ * `practice_days` need not be sorted or deduped. A gap of more than one calendar day
+ * ends the run. A streak whose last day is yesterday is still alive and still counted:
+ * today is not over, and nothing here shames a missed day (non-negotiable #3).
+ *
+ * Unparseable days are **dropped, not treated as a gap**. They sort after every real
+ * date (`'n' > '2'`), so counting them would let one corrupt row zero a streak the
+ * learner earned.
+ */
+public func streak(practiceDays: [String], today: String) -> UInt32 {
+    return try!  FfiConverterUInt32.lift(try! rustCall() {
+    uniffi_loro_core_fn_func_streak(
+        FfiConverterSequenceString.lower(practiceDays),
+        FfiConverterString.lower(today),$0
+    )
+})
+}
+/**
  * The `local_day` a timestamp belongs to for streak purposes, applying the grace window.
  *
- * `local_midnight_ms` is midnight of the device's current local day, and
- * `offset_minutes` is the device's UTC offset — both passed in, because this crate
- * has no clock.
+ * Both arguments are **local wall-clock ms** — epoch ms shifted by the device's UTC
+ * offset, so that dividing by a day lands on the learner's calendar date rather than
+ * UTC's. The shift happens at the edge (`apps/mobile/src/lib/clock.ts`) because this
+ * crate has no clock and no timezone database.
  */
 public func streakDayFor(atMs: Int64, localMidnightMs: Int64) -> String {
     return try!  FfiConverterString.lift(try! rustCall() {
@@ -3826,7 +3846,10 @@ private var initializationResult: InitializationResult = {
     if (uniffi_loro_core_checksum_func_retrievability() != 2410) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_loro_core_checksum_func_streak_day_for() != 1338) {
+    if (uniffi_loro_core_checksum_func_streak() != 21767) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_loro_core_checksum_func_streak_day_for() != 43641) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_loro_core_checksum_func_streak_survives() != 29477) {

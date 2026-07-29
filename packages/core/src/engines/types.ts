@@ -105,31 +105,74 @@ export interface Attempt {
  * A learner practising only in the Refrain still accrues FSRS state and ladder rungs.
  * That's what makes engine switching lossless and the loop experiment interpretable.
  * Enforced by the conformance suite, not by convention.
+ *
+ * ── Increment, absolute, or monotonic ──
+ * Not every field means the same kind of thing, and a writer that gets this wrong
+ * corrupts progress silently. Each field below says which it is. The three shapes:
+ *
+ *   • INCREMENT — add to the stored value (`reps: 1` means "one more rep"). Absent
+ *     means zero. The conformance suite accumulates these across a phrase's work.
+ *   • ABSOLUTE  — replace the stored value. Absent means "unchanged".
+ *   • MONOTONIC — take the max of stored and new; the value may never fall.
+ *
+ * The store's `applyDelta` is the only place these rules are implemented, so this
+ * comment and that function are the pair to read together.
  */
 export interface ProgressDelta {
   readonly phraseId: UserPhraseId
 
   // Universal — every engine updates these.
+  /** INCREMENT. */
   readonly reps?: number
+  /** INCREMENT. */
   readonly plays?: number
+  /** ABSOLUTE. */
   readonly lastPracticedAt?: number
+  /**
+   * ABSOLUTE, and MEASURED or null — never estimated. `null` is a real value meaning
+   * "onset was not detected", and the UI hides the read-out rather than substituting.
+   */
   readonly latencySampleMs?: number | null
 
   // FSRS — maintained even by engines that never show an interval.
+  /** ABSOLUTE, and merged as a GROUP: taking `due` from one device and `stability` from
+   * another would produce a scheduling state no algorithm ever computed. */
   readonly srs?: { readonly stability: number; readonly difficulty: number; readonly due: number }
 
   // Loop B.
+  /**
+   * ABSOLUTE, and day-scoped: it is the count for the engine's current local day, so a
+   * writer must stamp `repsTodayDay` alongside it. An engine plans from the reps already
+   * done today, which is what makes a resumed session continue rather than restart.
+   */
   readonly repsToday?: number
+  /** ABSOLUTE. `min(100, round(repsToday / target × 100))`. */
   readonly automaticity?: number
+  /**
+   * A FLAG, not a counter: "this phrase reached 100% today". The store turns it into
+   * `lockInDays`, which counts DISTINCT days, so it must be idempotent within a day.
+   */
   readonly lockedInToday?: boolean
 
   // Loop C — maintained from v1 so the Phrasebook isn't empty on day one.
+  /** MONOTONIC — "you only climb or hold". */
   readonly rung?: LadderRung
+  /** INCREMENT. */
   readonly stumbles?: number
+  /** A FLAG: Loop C staleness was reset by this attempt. */
   readonly staleReset?: boolean
 
   // Prosody.
+  /** MONOTONIC — a cue level never decreases. */
   readonly cueLevel?: number
+  /**
+   * INCREMENTS, clamped to 0…100.
+   *
+   * NOTE: until the DSP lands (plans/19, plans/27) the engines supply a fixed
+   * progression here rather than a score derived from real signal processing. Nothing
+   * displays these yet, and nothing may display them until they are real — see
+   * non-negotiable #2.
+   */
   readonly axes?: {
     readonly perception?: number
     readonly recall?: number
@@ -137,7 +180,9 @@ export interface ProgressDelta {
   }
 
   // Learner-facing flags an engine may set.
+  /** ABSOLUTE. */
   readonly difficulty?: Difficulty
+  /** ABSOLUTE. */
   readonly learned?: boolean
 }
 
@@ -149,6 +194,16 @@ export interface Clock {
   now(): number
   /** The device's LOCAL calendar date, 'YYYY-MM-DD'. Drives day boundaries offline. */
   localDay(): string
+  /**
+   * The day this instant counts for in a STREAK — `localDay()` plus a four-hour grace
+   * window, so practising at 01:30 extends yesterday rather than starting a new day.
+   *
+   * Deliberately not the same key as `localDay()`: the Refrain's frozen set must roll
+   * at midnight (a learner mid-ritual cannot have today's set change under them) while
+   * a streak must not. Two keys, two reasons.
+   * See docs/architecture/scheduling.md#day-boundaries
+   */
+  streakDay(): string
 }
 
 export interface PhraseRepository {

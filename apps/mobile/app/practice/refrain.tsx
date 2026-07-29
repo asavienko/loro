@@ -10,7 +10,7 @@
  * Latency is MEASURED (rep start → tap). Never computed from the rep index.
  */
 
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ScrollView, View } from 'react-native'
 import { router } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -19,10 +19,11 @@ import {
   DEFAULT_REP_TARGET,
   effortLabel,
   micLabelForMode,
-  modeForRep,
   modelRateForMode,
+  repsToday as repsTodayOf,
   warmBand,
   type RefrainMode,
+  type SessionHandle,
 } from '@loro/core'
 import {
   Button,
@@ -45,8 +46,9 @@ import {
   surface,
   warming,
 } from '../../src/ui/theme'
-import { toView, useApp } from '../../src/store'
+import { engineContext, refrainEngine, toView, useApp } from '../../src/store'
 import { formatLatency } from '../../src/lib/format'
+import { deviceClock } from '../../src/lib/clock'
 
 const MODE_CUE: Record<RefrainMode, string> = {
   echo: 'Hear it, then say it back',
@@ -72,15 +74,109 @@ export default function Refrain() {
   const insets = useSafeAreaInsets()
   const phrases = useApp((s) => s.phrases)
   const refrainSet = useApp((s) => s.refrainSet)
-  const recordRep = useApp((s) => s.recordRep)
+  const applyDelta = useApp((s) => s.applyDelta)
+  const ensureRefrainSet = useApp((s) => s.ensureRefrainSet)
 
-  const [index, setIndex] = useState(0)
-  const [reps, setReps] = useState(0)
+  /**
+   * The engine plans the session; this screen renders it and hands the deltas back.
+   * The mode sequence, the rep target, and which reps remain today are all the
+   * RefrainEngine's decisions — the screen used to re-derive them, which is how the
+   * card's warmth and the stored value came to disagree.
+   */
+  const [session, setSession] = useState<SessionHandle | null>(null)
+  const [cursor, setCursor] = useState(0)
   const [lastLatency, setLastLatency] = useState<number | null>(null)
   const [history, setHistory] = useState<(number | null)[]>([])
   const [done, setDone] = useState(false)
   // Monotonic, so a wall-clock jump can't corrupt a measurement.
-  const repStart = useRef<number>(Date.now())
+  const repStart = useRef<number>(deviceClock.now())
+
+  // Entering the Refrain is one of the moments the day must be re-checked: a learner who
+  // opened the app before midnight and starts practising after it needs today's set.
+  useEffect(() => {
+    ensureRefrainSet()
+  }, [ensureRefrainSet])
+
+  useEffect(() => {
+    let cancelled = false
+    void refrainEngine.plan(engineContext()).then((plan) => {
+      if (cancelled) return
+      setSession({ sessionId: `refrain:${String(plan.items.length)}`, plan, cursor: 0 })
+      setCursor(0)
+    })
+    return () => {
+      cancelled = true
+    }
+    // Re-planned when the day's set changes, not on every rep: the plan is the day's
+    // work, and re-planning mid-phrase would restart the mode sequence.
+  }, [refrainSet])
+
+  const item = session?.plan.items[cursor]
+
+  const storePhrase = useMemo(
+    () => (item === undefined ? undefined : phrases.find((p) => p.id === item.phraseId)),
+    [item, phrases],
+  )
+  const phrase = storePhrase === undefined ? undefined : toView(storePhrase)
+
+  const mode = (item?.mode ?? 'echo') as RefrainMode
+
+  /**
+   * Automaticity comes from the STORE's rep count for TODAY, not from a counter local to
+   * this visit. The two disagree the moment a learner returns to a phrase later the same
+   * day: local state starts at 0 while the store says 4 of 6, and the number on screen
+   * was the wrong one. `repsToday` is read through the day guard, so a stale counter from
+   * yesterday reads as 0 rather than inflating the card.
+   */
+  const dayReps = storePhrase === undefined ? 0 : repsTodayOf(storePhrase, deviceClock.localDay())
+  const auto = automaticity(dayReps, DEFAULT_REP_TARGET)
+  const band = warmBand(auto)
+  const bandStyle = warming[band]
+  const locked = auto >= 100
+
+  const doRep = useCallback(() => {
+    if (session === null || item === undefined || locked) return
+    // MEASURED: from when the prompt settled to when the learner confirmed.
+    const measured = deviceClock.now() - repStart.current
+    setLastLatency(measured)
+    setHistory((h) => [...h.slice(-3), measured])
+
+    // The engine owns every progress signal, including the ones this screen never shows
+    // (rule 5). The store applies the delta; nothing here computes a field.
+    void refrainEngine
+      .record(
+        { ...session, cursor },
+        {
+          itemId: item.itemId,
+          outcome: 'success',
+          latencyMs: measured,
+          hintsUsed: 0,
+          at: deviceClock.now(),
+        },
+      )
+      .then(applyDelta)
+
+    // Advance only WITHIN the phrase. On its last rep the cursor stays put, so the card
+    // reaches 100% and the learner sees the lock-in — the reward moment of the screen —
+    // instead of being moved on before it renders. Leaving the phrase is their tap.
+    if (session.plan.items[cursor + 1]?.phraseId === item.phraseId) setCursor(cursor + 1)
+    repStart.current = deviceClock.now()
+  }, [session, item, cursor, locked, applyDelta])
+
+  /** Jump to the first item of the next phrase in the plan. */
+  const nextPhrase = useCallback(() => {
+    const items = session?.plan.items ?? []
+    const current = items[cursor]?.phraseId
+    const nextIndex = items.findIndex((i, n) => n > cursor && i.phraseId !== current)
+    if (nextIndex < 0) {
+      setDone(true)
+      return
+    }
+    setCursor(nextIndex)
+    setLastLatency(null)
+    setHistory([])
+    repStart.current = deviceClock.now()
+  }, [session, cursor])
 
   const set = useMemo(
     () =>
@@ -91,35 +187,10 @@ export default function Refrain() {
     [refrainSet, phrases],
   )
 
-  const phrase = set[index]
-  const mode = modeForRep(reps)
-  const auto = automaticity(reps, DEFAULT_REP_TARGET)
-  const band = warmBand(auto)
-  const bandStyle = warming[band]
-  const locked = auto >= 100
-
-  const doRep = useCallback(() => {
-    if (phrase === undefined || locked) return
-    // MEASURED: from when the prompt settled to when the learner confirmed.
-    const measured = Date.now() - repStart.current
-    setLastLatency(measured)
-    setHistory((h) => [...h.slice(-3), measured])
-    recordRep(phrase.id, { success: true, latencyMs: measured })
-    setReps((r) => r + 1)
-    repStart.current = Date.now()
-  }, [phrase, locked, recordRep])
-
-  const nextPhrase = useCallback(() => {
-    if (index + 1 >= set.length) {
-      setDone(true)
-      return
-    }
-    setIndex((i) => i + 1)
-    setReps(0)
-    setLastLatency(null)
-    setHistory([])
-    repStart.current = Date.now()
-  }, [index, set.length])
+  // Which phrase of the day's set is on screen. Read from the frozen set rather than
+  // counted locally, so it stays right when a session resumes part-way through.
+  const phraseNumber =
+    item === undefined ? 1 : Math.max(1, set.findIndex((p) => p.id === item.phraseId) + 1)
 
   if (set.length === 0) {
     return (
@@ -150,8 +221,14 @@ export default function Refrain() {
     )
   }
 
-  if (done) {
-    const totalReps = set.reduce((n, p) => n + p.repsToday, 0)
+  // The plan is the day's remaining work. Empty means the set is already warmed up —
+  // a distinct state from "nothing in rotation", and the learner should see the finish,
+  // not an empty screen.
+  const exhausted = session !== null && cursor >= session.plan.items.length
+
+  if (done || exhausted) {
+    const day = deviceClock.localDay()
+    const totalReps = set.reduce((n, p) => n + repsTodayOf(p, day), 0)
     return (
       <Screen>
         <View
@@ -225,9 +302,9 @@ export default function Refrain() {
       >
         <Row justify="space-between">
           <Text variant="caption" color={ink.ink}>
-            Phrase {index + 1} / {set.length}
+            Phrase {phraseNumber} / {set.length}
           </Text>
-          <Dots count={set.length} filled={index} />
+          <Dots count={set.length} filled={phraseNumber - 1} />
         </Row>
 
         {/* ── Mode strip: done · current · upcoming ── */}
@@ -338,7 +415,7 @@ export default function Refrain() {
           </Row>
           <ProgressBar value={auto / 100} height={9} track={surface.sunken} />
 
-          {reps > 0 && (
+          {history.length > 0 && (
             <Row gap={space['2.5']} style={{ marginTop: space['3'] }}>
               {/* Effort bars: gaps for unmeasured reps, never interpolation. */}
               <Row gap={3} align="flex-end" style={{ height: 28 }}>
@@ -367,7 +444,7 @@ export default function Refrain() {
                   </Text>
                 </Row>
                 <Text variant="captionSm" color={ink.muted}>
-                  {effortLabel(reps, auto)}
+                  {effortLabel(dayReps, auto)}
                 </Text>
               </View>
             </Row>
@@ -376,9 +453,9 @@ export default function Refrain() {
 
         <Row justify="space-between">
           <Text variant="labelSm" color={ink.muted}>
-            Rep {Math.min(reps, DEFAULT_REP_TARGET)} / {DEFAULT_REP_TARGET}
+            Rep {Math.min(dayReps, DEFAULT_REP_TARGET)} / {DEFAULT_REP_TARGET}
           </Text>
-          <Dots count={DEFAULT_REP_TARGET} filled={reps} size={7} />
+          <Dots count={DEFAULT_REP_TARGET} filled={dayReps} size={7} />
         </Row>
 
         {modelRateForMode(mode) !== null && (
@@ -419,7 +496,7 @@ export default function Refrain() {
               </View>
             </Row>
             <Button
-              label={index + 1 >= set.length ? 'Finish the set →' : 'Next phrase →'}
+              label={phraseNumber >= set.length ? 'Finish the set →' : 'Next phrase →'}
               onPress={nextPhrase}
             />
           </>

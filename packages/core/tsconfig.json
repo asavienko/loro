@@ -4,5 +4,8 @@
     "outDir": "./dist",
     "rootDir": "./src"
   },
-  "include": ["src/**/*"]
+  // `.json` needs its own pattern: an extensionless `include` glob picks up only
+  // TS/JS files, so the calendar parity fixture would be invisible to the compiler
+  // even with resolveJsonModule on.
+  "include": ["src/**/*", "src/**/*.json"]
 }

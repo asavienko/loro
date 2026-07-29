@@ -333,6 +333,30 @@ Everything above needs to agree on "today".
   polling timer.
 - **Streaks** use `local_day` and a 4-hour grace window after midnight (practising at 01:30 counts
   for the previous day) — because the alternative punishes night owls, and we don't punish.
+
+### Two day keys, not one
+
+The grace window means there are **two** day keys in the app, and they disagree between midnight and
+04:00 local. Which one a feature reads is a correctness question, not a preference:
+
+| Key                 | Rolls at            | Read by                                                       | Why                                                                                                                                   |
+| ------------------- | ------------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `clock.localDay()`  | local midnight      | the Refrain's frozen set, `reps_today` / `reps_today_day`     | A learner mid-ritual must not watch today's set change under them. "You always see today" means the set is frozen per calendar day.   |
+| `clock.streakDay()` | local midnight + 4h | streak history (`streak_day` rows), the widget's streak count | Practising at 01:30 is one session, not the end of one day and the start of another. Counting it twice would also inflate the streak. |
+
+Both come from `Clock` (`packages/core/src/engines/types.ts`), which is injected — no engine and no
+screen constructs a date. In the app, `apps/mobile/src/lib/clock.ts` is the **only** file that calls
+`new Date()`, enforced by ESLint. It exists because the bug it replaced was one line —
+`new Date().toISOString().slice(0, 10)`, a UTC date behind a contract promising a local one — that
+reached every engine at once through `engineContext()`, and was invisible in a CI container running
+UTC.
+
+The arithmetic itself is `core-rs/src/calendar.rs` (`streak_day_for`, `streak_survives`, `streak`).
+Until the UniFFI bridge lands, `packages/core/src/domain/calendar.ts` mirrors it, and
+`calendar.fixtures.json` is asserted by both languages so a divergence fails the build. Wall-clock
+ms — epoch ms shifted by the device's UTC offset — is the boundary convention: the crate has no
+timezone database, so the shift happens in `clock.ts` and never in Rust.
+
 - **Timezone travel** never breaks a streak. If the local date moves backward (flying west), the day
   is not re-counted; if it jumps forward, no day is marked missed.
 - **HLC timestamps** order sync operations; `local_day` drives learner-facing day logic. They are
@@ -344,17 +368,17 @@ Everything above needs to agree on "today".
 
 Scheduling is pure and deterministic, so it's the best-tested part of the system.
 
-| Test                                                                             | Location                       |
-| -------------------------------------------------------------------------------- | ------------------------------ |
-| FSRS parity against the reference implementation                                 | `core-rs/tests/fsrs_parity.rs` |
-| Stream rank ordering, including the due extension                                | `core-rs/tests/rank.rs`        |
-| Refrain set selection — stability across a day, correct priority order           | `core-rs/tests/refrain_set.rs` |
-| Ladder monotonicity under every engine's writes                                  | `core-rs/tests/ladder.rs`      |
-| Draw determinism from a seed; eligibility invariants                             | `core-rs/tests/draw.rs`        |
-| Drop schedules for lengths 1…90                                                  | `core-rs/tests/drops.rs`       |
-| Day boundaries — DST, timezone travel, the grace window                          | `core-rs/tests/calendar.rs`    |
-| Interval formatting                                                              | `core-rs/tests/format.rs`      |
-| Long-horizon simulation — 365 days, 500 phrases, review load stays under the cap | `core-rs/tests/sim.rs`         |
+| Test                                                                             | Location                                                                                           |
+| -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| FSRS parity against the reference implementation                                 | `core-rs/tests/fsrs_parity.rs`                                                                     |
+| Stream rank ordering, including the due extension                                | `core-rs/tests/rank.rs`                                                                            |
+| Refrain set selection — stability across a day, correct priority order           | `core-rs/tests/refrain_set.rs`                                                                     |
+| Ladder monotonicity under every engine's writes                                  | `core-rs/tests/ladder.rs`                                                                          |
+| Draw determinism from a seed; eligibility invariants                             | `core-rs/tests/draw.rs`                                                                            |
+| Drop schedules for lengths 1…90                                                  | `core-rs/tests/drops.rs`                                                                           |
+| Day boundaries — DST, timezone travel, the grace window                          | `core-rs/src/calendar.rs` (inline), `core-rs/tests/parity.rs`, `apps/mobile/src/lib/clock.test.ts` |
+| Interval formatting                                                              | `core-rs/tests/format.rs`                                                                          |
+| Long-horizon simulation — 365 days, 500 phrases, review load stays under the cap | `core-rs/tests/sim.rs`                                                                             |
 
 The simulation test is the one that catches design errors rather than code errors: it's how we find
 out that a scheduling change quietly creates a review wall in month four.

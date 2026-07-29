@@ -11,7 +11,7 @@ import { useMemo } from 'react'
 import { ScrollView, View } from 'react-native'
 import { router } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { masteryBucket, type Tag } from '@loro/core'
+import { masteryBucket, streak as streakOf, type Tag } from '@loro/core'
 import {
   Card,
   ChartSummary,
@@ -37,12 +37,30 @@ import {
   tagMeta,
 } from '../src/ui/theme'
 import { useApp } from '../src/store'
+import { deviceClock, recentLocalDays } from '../src/lib/clock'
 
 export default function Progress() {
   const insets = useSafeAreaInsets()
   const phrases = useApp((s) => s.phrases)
-  const streak = useApp((s) => s.streakDays)
+  const practiceDays = useApp((s) => s.practiceDays)
   const showToast = useApp((s) => s.showToast)
+
+  /**
+   * Derived from the practice history, never stored. The same function `core-rs` exposes
+   * to the widget, so the two show the same number (ADR-0002).
+   */
+  const streak = useMemo(() => streakOf(practiceDays, deviceClock.streakDay()), [practiceDays])
+
+  const week = useMemo(() => {
+    const practised = new Set(practiceDays)
+    return recentLocalDays(7).map((d) => ({ ...d, practised: practised.has(d.day) }))
+  }, [practiceDays])
+
+  const weekSummary = useMemo(() => {
+    const count = week.filter((d) => d.practised).length
+    // Stated as what happened, with no comparison to what could have happened.
+    return `Last seven days: practised on ${count} of them.`
+  }, [week])
 
   const mastery = useMemo(() => {
     const counts: Record<string, number> = { new: 0, learning: 0, strong: 0, mastered: 0 }
@@ -84,35 +102,45 @@ export default function Progress() {
               </Text>
               <Row gap={8} align="baseline" style={{ marginTop: 4 }}>
                 <Text variant="hero" color={onDark.primary}>
-                  {streak}
+                  {/* No streak yet reads as an absence, not a zero. Nothing here
+                      apologises for a day that has not happened. */}
+                  {streak === 0 ? '—' : streak}
                 </Text>
                 <Text variant="body" color={onDark.tertiary}>
-                  days 🔥
+                  {streak === 0 ? 'start today' : `${streak === 1 ? 'day' : 'days'} 🔥`}
                 </Text>
               </Row>
             </View>
           </Row>
-          <Row gap={6} style={{ marginTop: space['4'] }}>
-            {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, i) => (
-              <View key={i} style={{ flex: 1, alignItems: 'center', gap: 5 }}>
-                <View
-                  style={{
-                    width: '100%',
-                    height: 30,
-                    borderRadius: radius.sm,
-                    backgroundColor: i < streak ? accent.accent : onDark.surface,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <Text variant="captionSm">{i < streak ? '🔥' : ''}</Text>
+          {/* The last seven REAL days, filled from the practice history. This used to be
+              `i < streak`: a bar chart pretending to be a calendar, which drew a
+              seven-day streak for a learner who had practised once. */}
+          {/* One accessible group: seven separate cells would be read as seven
+              meaningless letters. */}
+          <View accessible accessibilityLabel={weekSummary} style={{ marginTop: space['4'] }}>
+            <Row gap={6}>
+              {week.map((d) => (
+                <View key={d.day} style={{ flex: 1, alignItems: 'center', gap: 5 }}>
+                  <View
+                    style={{
+                      width: '100%',
+                      height: 30,
+                      borderRadius: radius.sm,
+                      // An unpractised day is neutral: no red, no dash, no penalty.
+                      backgroundColor: d.practised ? accent.accent : onDark.surface,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Text variant="captionSm">{d.practised ? '🔥' : ''}</Text>
+                  </View>
+                  <Text variant="labelSm" color={onDark.muted}>
+                    {d.initial}
+                  </Text>
                 </View>
-                <Text variant="labelSm" color={onDark.muted}>
-                  {d}
-                </Text>
-              </View>
-            ))}
-          </Row>
+              ))}
+            </Row>
+          </View>
         </DarkCard>
 
         <Row gap={9}>

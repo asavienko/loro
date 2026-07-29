@@ -20,11 +20,18 @@ import { userPhraseId, catalogPhraseId } from '../domain/ids.js'
 /** A fixed instant, so every fixture is reproducible. 2026-07-28T09:41:00Z. */
 export const T0 = 1_785_231_660_000
 
-export function fakeClock(now: number = T0, localDay = '2026-07-28'): Clock {
+/**
+ * `streakDay` defaults to `localDay` — the two only differ between midnight and 04:00,
+ * and a test that cares about the grace window should say so by passing it explicitly.
+ * Defaulting it to something *else* would make every unrelated fixture depend on the
+ * window's exact width.
+ */
+export function fakeClock(now: number = T0, localDay = '2026-07-28', streakDay = localDay): Clock {
   let current = now
   return {
     now: () => current,
     localDay: () => localDay,
+    streakDay: () => streakDay,
     // Test-only escape hatch for advancing time deliberately.
     ...({ advance: (ms: number) => (current += ms) } as object),
   }

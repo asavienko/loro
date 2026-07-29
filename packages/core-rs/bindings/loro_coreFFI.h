@@ -391,6 +391,11 @@ uint32_t uniffi_loro_core_fn_func_repeat_target(RustBuffer difficulty, RustCallS
 float uniffi_loro_core_fn_func_retrievability(float days_since_review, float stability, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_STREAK
+#define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_STREAK
+uint32_t uniffi_loro_core_fn_func_streak(RustBuffer practice_days, RustBuffer today, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_STREAK_DAY_FOR
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_STREAK_DAY_FOR
 RustBuffer uniffi_loro_core_fn_func_streak_day_for(int64_t at_ms, int64_t local_midnight_ms, RustCallStatus *_Nonnull out_status
@@ -861,6 +866,12 @@ uint16_t uniffi_loro_core_checksum_func_repeat_target(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_RETRIEVABILITY
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_RETRIEVABILITY
 uint16_t uniffi_loro_core_checksum_func_retrievability(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_STREAK
+#define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_STREAK
+uint16_t uniffi_loro_core_checksum_func_streak(void
     
 );
 #endif

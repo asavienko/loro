@@ -3,8 +3,13 @@ import { StatusBar } from 'expo-status-bar'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { surface, ink } from '../src/ui/theme'
 import { ToastHost } from '../src/ui/ToastHost'
+import { useDayRollover } from '../src/store/dayRollover'
 
 export default function RootLayout() {
+  // Mounted once, app-wide: every screen gets the new day, not just the one that
+  // happened to remember to ask.
+  useDayRollover()
+
   return (
     <SafeAreaProvider>
       <StatusBar style="dark" />
