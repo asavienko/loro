@@ -39,6 +39,52 @@ fileprivate extension ForeignBytes {
     init(bufferPointer: UnsafeBufferPointer<UInt8>) {
         self.init(len: Int32(bufferPointer.count), data: bufferPointer.baseAddress)
     }
+
+    init(rawBufferPointer: UnsafeRawBufferPointer) {
+        self.init(
+            len: Int32(rawBufferPointer.count),
+            data: rawBufferPointer.baseAddress?.assumingMemoryBound(to: UInt8.self)
+        )
+    }
+}
+
+// Converter for `&[u8]` / `[ByRef] bytes` arguments.
+//
+// Conforms to `FfiConverter` so the compiler enforces the full converter
+// method set. Only the scope-bound `lower(_:_body:)` overload is sound —
+// zero-copy byte buffers only flow foreign -> Rust, and only in argument
+// position. The four protocol-witness methods (`lift`, `lower`, `read`,
+// `write`) `fatalError` at runtime if anyone reaches them.
+//
+// The scope-bound `lower` takes a closure because the `ForeignBytes`
+// pointer is only guaranteed valid for the duration of
+// `Data.withUnsafeBytes`. Callers must run the full FFI call inside
+// the closure body.
+fileprivate enum FfiConverterByRefBytes: FfiConverter {
+    typealias SwiftType = Data
+    typealias FfiType = ForeignBytes
+
+    static func lower<R>(_ value: Data, _ body: (ForeignBytes) throws -> R) rethrows -> R {
+        return try value.withUnsafeBytes { rawBuf in
+            try body(ForeignBytes(rawBufferPointer: rawBuf))
+        }
+    }
+
+    static func lower(_ value: Data) -> ForeignBytes {
+        fatalError("ByRef bytes cannot use the plain lower: returning ForeignBytes escapes the Data.withUnsafeBytes scope. Use the scope-bound lower(_:_body:) overload instead.")
+    }
+
+    static func lift(_ value: ForeignBytes) throws -> Data {
+        fatalError("ByRef bytes cannot be lifted: zero-copy &[u8] only flows foreign->Rust")
+    }
+
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> Data {
+        fatalError("ByRef bytes cannot be read from a buffer: zero-copy &[u8] is only supported in argument position, not nested in records/options/etc.")
+    }
+
+    static func write(_ value: Data, into buf: inout [UInt8]) {
+        fatalError("ByRef bytes cannot be written to a buffer: zero-copy &[u8] is only supported in argument position, not nested in records/options/etc.")
+    }
 }
 
 // For every type used in the interface, we provide helper methods for conveniently
@@ -281,7 +327,7 @@ private func makeRustCall<T, E: Swift.Error>(
     _ callback: (UnsafeMutablePointer<RustCallStatus>) -> T,
     errorHandler: ((RustBuffer) throws -> E)?
 ) throws -> T {
-    uniffiEnsureInitialized()
+    uniffiEnsureLoroCoreInitialized()
     var callStatus = RustCallStatus.init()
     let returnedVal = callback(&callStatus)
     try uniffiCheckCallStatus(callStatus: callStatus, errorHandler: errorHandler)
@@ -352,18 +398,29 @@ private func uniffiTraitInterfaceCallWithError<T, E>(
         callStatus.pointee.errorBuf = FfiConverterString.lower(String(describing: error))
     }
 }
-fileprivate class UniffiHandleMap<T> {
-    private var map: [UInt64: T] = [:]
+// Initial value and increment amount for handles. 
+// These ensure that SWIFT handles always have the lowest bit set
+fileprivate let UNIFFI_HANDLEMAP_INITIAL: UInt64 = 1
+fileprivate let UNIFFI_HANDLEMAP_DELTA: UInt64 = 2
+
+fileprivate final class UniffiHandleMap<T>: @unchecked Sendable {
+    // All mutation happens with this lock held, which is why we implement @unchecked Sendable.
     private let lock = NSLock()
-    private var currentHandle: UInt64 = 1
+    private var map: [UInt64: T] = [:]
+    private var currentHandle: UInt64 = UNIFFI_HANDLEMAP_INITIAL
 
     func insert(obj: T) -> UInt64 {
         lock.withLock {
-            let handle = currentHandle
-            currentHandle += 1
-            map[handle] = obj
-            return handle
+            return doInsert(obj)
         }
+    }
+
+    // Low-level insert function, this assumes `lock` is held.
+    private func doInsert(_ obj: T) -> UInt64 {
+        let handle = currentHandle
+        currentHandle += UNIFFI_HANDLEMAP_DELTA
+        map[handle] = obj
+        return handle
     }
 
      func get(handle: UInt64) throws -> T {
@@ -372,6 +429,15 @@ fileprivate class UniffiHandleMap<T> {
                 throw UniffiInternalError.unexpectedStaleHandle
             }
             return obj
+        }
+    }
+
+     func clone(handle: UInt64) throws -> UInt64 {
+        try lock.withLock {
+            guard let obj = map[handle] else {
+                throw UniffiInternalError.unexpectedStaleHandle
+            }
+            return doInsert(obj)
         }
     }
 
@@ -531,7 +597,11 @@ fileprivate struct FfiConverterString: FfiConverter {
             return String()
         }
         let bytes = UnsafeBufferPointer<UInt8>(start: value.data!, count: Int(value.len))
-        return String(bytes: bytes, encoding: String.Encoding.utf8)!
+        // Use Swift's native UTF-8 decoder; `String(bytes:encoding:.utf8)` goes
+        // through Foundation's NSString and silently strips a leading U+FEFF BOM.
+        // Invalid UTF-8 substitutes U+FFFD instead of trapping (unreachable
+        // given Rust's `String` invariant).
+        return String(decoding: bytes, as: UTF8.self)
     }
 
     public static func lower(_ value: String) -> RustBuffer {
@@ -547,7 +617,8 @@ fileprivate struct FfiConverterString: FfiConverter {
 
     public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> String {
         let len: Int32 = try readInt(&buf)
-        return String(bytes: try readBytes(&buf, count: Int(len)), encoding: String.Encoding.utf8)!
+        // See `lift` above for why we avoid Foundation's NSString-backed decoder here.
+        return String(decoding: try readBytes(&buf, count: Int(len)), as: UTF8.self)
     }
 
     public static func write(_ value: String, into buf: inout [UInt8]) {
@@ -579,7 +650,7 @@ fileprivate struct FfiConverterData: FfiConverterRustBuffer {
 /**
  * The outcome of a draw.
  */
-public struct Draw {
+public struct Draw: Equatable, Hashable {
     /**
      * The dealt card.
      */
@@ -601,27 +672,15 @@ public struct Draw {
         self.card = card
         self.targetId = targetId
     }
+
+    
+
+    
 }
 
-
-
-extension Draw: Equatable, Hashable {
-    public static func ==(lhs: Draw, rhs: Draw) -> Bool {
-        if lhs.card != rhs.card {
-            return false
-        }
-        if lhs.targetId != rhs.targetId {
-            return false
-        }
-        return true
-    }
-
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(card)
-        hasher.combine(targetId)
-    }
-}
-
+#if compiler(>=6)
+extension Draw: Sendable {}
+#endif
 
 #if swift(>=5.8)
 @_documentation(visibility: private)
@@ -660,7 +719,7 @@ public func FfiConverterTypeDraw_lower(_ value: Draw) -> RustBuffer {
 /**
  * A selected fix.
  */
-public struct Fix {
+public struct Fix: Equatable, Hashable {
     /**
      * What kind.
      */
@@ -690,31 +749,15 @@ public struct Fix {
         self.code = code
         self.syllableIndex = syllableIndex
     }
+
+    
+
+    
 }
 
-
-
-extension Fix: Equatable, Hashable {
-    public static func ==(lhs: Fix, rhs: Fix) -> Bool {
-        if lhs.kind != rhs.kind {
-            return false
-        }
-        if lhs.code != rhs.code {
-            return false
-        }
-        if lhs.syllableIndex != rhs.syllableIndex {
-            return false
-        }
-        return true
-    }
-
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(kind)
-        hasher.combine(code)
-        hasher.combine(syllableIndex)
-    }
-}
-
+#if compiler(>=6)
+extension Fix: Sendable {}
+#endif
 
 #if swift(>=5.8)
 @_documentation(visibility: private)
@@ -755,7 +798,7 @@ public func FfiConverterTypeFix_lower(_ value: Fix) -> RustBuffer {
 /**
  * A phrase's memory state.
  */
-public struct FsrsState {
+public struct FsrsState: Equatable, Hashable {
     /**
      * Days until retrievability decays to the review threshold.
      */
@@ -801,39 +844,15 @@ public struct FsrsState {
         self.lastReview = lastReview
         self.lapses = lapses
     }
+
+    
+
+    
 }
 
-
-
-extension FsrsState: Equatable, Hashable {
-    public static func ==(lhs: FsrsState, rhs: FsrsState) -> Bool {
-        if lhs.stability != rhs.stability {
-            return false
-        }
-        if lhs.difficulty != rhs.difficulty {
-            return false
-        }
-        if lhs.due != rhs.due {
-            return false
-        }
-        if lhs.lastReview != rhs.lastReview {
-            return false
-        }
-        if lhs.lapses != rhs.lapses {
-            return false
-        }
-        return true
-    }
-
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(stability)
-        hasher.combine(difficulty)
-        hasher.combine(due)
-        hasher.combine(lastReview)
-        hasher.combine(lapses)
-    }
-}
-
+#if compiler(>=6)
+extension FsrsState: Sendable {}
+#endif
 
 #if swift(>=5.8)
 @_documentation(visibility: private)
@@ -878,7 +897,7 @@ public func FfiConverterTypeFsrsState_lower(_ value: FsrsState) -> RustBuffer {
 /**
  * A hybrid logical clock reading: `<physical_ms>:<logical>:<node_id>`.
  */
-public struct Hlc {
+public struct Hlc: Equatable, Hashable {
     /**
      * Wall-clock milliseconds, monotonically non-decreasing.
      */
@@ -908,31 +927,15 @@ public struct Hlc {
         self.logical = logical
         self.nodeId = nodeId
     }
+
+    
+
+    
 }
 
-
-
-extension Hlc: Equatable, Hashable {
-    public static func ==(lhs: Hlc, rhs: Hlc) -> Bool {
-        if lhs.physical != rhs.physical {
-            return false
-        }
-        if lhs.logical != rhs.logical {
-            return false
-        }
-        if lhs.nodeId != rhs.nodeId {
-            return false
-        }
-        return true
-    }
-
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(physical)
-        hasher.combine(logical)
-        hasher.combine(nodeId)
-    }
-}
-
+#if compiler(>=6)
+extension Hlc: Sendable {}
+#endif
 
 #if swift(>=5.8)
 @_documentation(visibility: private)
@@ -977,7 +980,7 @@ public func FfiConverterTypeHlc_lower(_ value: Hlc) -> RustBuffer {
  * The UI hides the read-out on `None` rather than substituting an estimate —
  * see docs/architecture/audio-speech.md#recording-and-latency
  */
-public struct LatencySample {
+public struct LatencySample: Equatable, Hashable {
     /**
      * Rep index within the phrase.
      */
@@ -999,27 +1002,15 @@ public struct LatencySample {
         self.repIndex = repIndex
         self.ms = ms
     }
+
+    
+
+    
 }
 
-
-
-extension LatencySample: Equatable, Hashable {
-    public static func ==(lhs: LatencySample, rhs: LatencySample) -> Bool {
-        if lhs.repIndex != rhs.repIndex {
-            return false
-        }
-        if lhs.ms != rhs.ms {
-            return false
-        }
-        return true
-    }
-
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(repIndex)
-        hasher.combine(ms)
-    }
-}
-
+#if compiler(>=6)
+extension LatencySample: Sendable {}
+#endif
 
 #if swift(>=5.8)
 @_documentation(visibility: private)
@@ -1058,7 +1049,7 @@ public func FfiConverterTypeLatencySample_lower(_ value: LatencySample) -> RustB
 /**
  * The result of matching one utterance against the target phrase.
  */
-public struct MatchResult {
+public struct MatchResult: Equatable, Hashable {
     /**
      * How many leading target tokens are now revealed. Only ever increases.
      */
@@ -1088,31 +1079,15 @@ public struct MatchResult {
         self.justIndex = justIndex
         self.complete = complete
     }
+
+    
+
+    
 }
 
-
-
-extension MatchResult: Equatable, Hashable {
-    public static func ==(lhs: MatchResult, rhs: MatchResult) -> Bool {
-        if lhs.revealed != rhs.revealed {
-            return false
-        }
-        if lhs.justIndex != rhs.justIndex {
-            return false
-        }
-        if lhs.complete != rhs.complete {
-            return false
-        }
-        return true
-    }
-
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(revealed)
-        hasher.combine(justIndex)
-        hasher.combine(complete)
-    }
-}
-
+#if compiler(>=6)
+extension MatchResult: Sendable {}
+#endif
 
 #if swift(>=5.8)
 @_documentation(visibility: private)
@@ -1153,7 +1128,7 @@ public func FfiConverterTypeMatchResult_lower(_ value: MatchResult) -> RustBuffe
 /**
  * What the scheduler needs to know. All of it is available offline.
  */
-public struct NotifyContext {
+public struct NotifyContext: Equatable, Hashable {
     /**
      * Local hour now, 0..23.
      */
@@ -1215,47 +1190,15 @@ public struct NotifyContext {
         self.tripActive = tripActive
         self.revealModeCount = revealModeCount
     }
+
+    
+
+    
 }
 
-
-
-extension NotifyContext: Equatable, Hashable {
-    public static func ==(lhs: NotifyContext, rhs: NotifyContext) -> Bool {
-        if lhs.hour != rhs.hour {
-            return false
-        }
-        if lhs.practisedToday != rhs.practisedToday {
-            return false
-        }
-        if lhs.previousWaveCompleted != rhs.previousWaveCompleted {
-            return false
-        }
-        if lhs.enabled != rhs.enabled {
-            return false
-        }
-        if lhs.alreadyScheduled != rhs.alreadyScheduled {
-            return false
-        }
-        if lhs.tripActive != rhs.tripActive {
-            return false
-        }
-        if lhs.revealModeCount != rhs.revealModeCount {
-            return false
-        }
-        return true
-    }
-
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(hour)
-        hasher.combine(practisedToday)
-        hasher.combine(previousWaveCompleted)
-        hasher.combine(enabled)
-        hasher.combine(alreadyScheduled)
-        hasher.combine(tripActive)
-        hasher.combine(revealModeCount)
-    }
-}
-
+#if compiler(>=6)
+extension NotifyContext: Sendable {}
+#endif
 
 #if swift(>=5.8)
 @_documentation(visibility: private)
@@ -1304,7 +1247,7 @@ public func FfiConverterTypeNotifyContext_lower(_ value: NotifyContext) -> RustB
 /**
  * A phrase's learner state, as far as this crate needs it.
  */
-public struct PhraseState {
+public struct PhraseState: Equatable, Hashable {
     /**
      * The learner's row id.
      */
@@ -1446,87 +1389,15 @@ public struct PhraseState {
         self.stumbles = stumbles
         self.cueLevel = cueLevel
     }
+
+    
+
+    
 }
 
-
-
-extension PhraseState: Equatable, Hashable {
-    public static func ==(lhs: PhraseState, rhs: PhraseState) -> Bool {
-        if lhs.id != rhs.id {
-            return false
-        }
-        if lhs.difficulty != rhs.difficulty {
-            return false
-        }
-        if lhs.tags != rhs.tags {
-            return false
-        }
-        if lhs.loved != rhs.loved {
-            return false
-        }
-        if lhs.learned != rhs.learned {
-            return false
-        }
-        if lhs.plays != rhs.plays {
-            return false
-        }
-        if lhs.reps != rhs.reps {
-            return false
-        }
-        if lhs.lastPracticedAt != rhs.lastPracticedAt {
-            return false
-        }
-        if lhs.srsDue != rhs.srsDue {
-            return false
-        }
-        if lhs.srsStability != rhs.srsStability {
-            return false
-        }
-        if lhs.srsDifficulty != rhs.srsDifficulty {
-            return false
-        }
-        if lhs.repsToday != rhs.repsToday {
-            return false
-        }
-        if lhs.repsTodayDay != rhs.repsTodayDay {
-            return false
-        }
-        if lhs.lockInDays != rhs.lockInDays {
-            return false
-        }
-        if lhs.rung != rhs.rung {
-            return false
-        }
-        if lhs.stumbles != rhs.stumbles {
-            return false
-        }
-        if lhs.cueLevel != rhs.cueLevel {
-            return false
-        }
-        return true
-    }
-
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(id)
-        hasher.combine(difficulty)
-        hasher.combine(tags)
-        hasher.combine(loved)
-        hasher.combine(learned)
-        hasher.combine(plays)
-        hasher.combine(reps)
-        hasher.combine(lastPracticedAt)
-        hasher.combine(srsDue)
-        hasher.combine(srsStability)
-        hasher.combine(srsDifficulty)
-        hasher.combine(repsToday)
-        hasher.combine(repsTodayDay)
-        hasher.combine(lockInDays)
-        hasher.combine(rung)
-        hasher.combine(stumbles)
-        hasher.combine(cueLevel)
-    }
-}
-
+#if compiler(>=6)
+extension PhraseState: Sendable {}
+#endif
 
 #if swift(>=5.8)
 @_documentation(visibility: private)
@@ -1595,7 +1466,7 @@ public func FfiConverterTypePhraseState_lower(_ value: PhraseState) -> RustBuffe
 /**
  * One planned notification.
  */
-public struct PlannedNotification {
+public struct PlannedNotification: Equatable, Hashable {
     /**
      * Its category.
      */
@@ -1633,35 +1504,15 @@ public struct PlannedNotification {
         self.minute = minute
         self.deepLink = deepLink
     }
+
+    
+
+    
 }
 
-
-
-extension PlannedNotification: Equatable, Hashable {
-    public static func ==(lhs: PlannedNotification, rhs: PlannedNotification) -> Bool {
-        if lhs.category != rhs.category {
-            return false
-        }
-        if lhs.hour != rhs.hour {
-            return false
-        }
-        if lhs.minute != rhs.minute {
-            return false
-        }
-        if lhs.deepLink != rhs.deepLink {
-            return false
-        }
-        return true
-    }
-
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(category)
-        hasher.combine(hour)
-        hasher.combine(minute)
-        hasher.combine(deepLink)
-    }
-}
-
+#if compiler(>=6)
+extension PlannedNotification: Sendable {}
+#endif
 
 #if swift(>=5.8)
 @_documentation(visibility: private)
@@ -1704,7 +1555,7 @@ public func FfiConverterTypePlannedNotification_lower(_ value: PlannedNotificati
 /**
  * The three skill axes for a phrase.
  */
-public struct SkillAxes {
+public struct SkillAxes: Equatable, Hashable {
     /**
      * Recognising it.
      */
@@ -1734,31 +1585,15 @@ public struct SkillAxes {
         self.recall = recall
         self.production = production
     }
+
+    
+
+    
 }
 
-
-
-extension SkillAxes: Equatable, Hashable {
-    public static func ==(lhs: SkillAxes, rhs: SkillAxes) -> Bool {
-        if lhs.perception != rhs.perception {
-            return false
-        }
-        if lhs.recall != rhs.recall {
-            return false
-        }
-        if lhs.production != rhs.production {
-            return false
-        }
-        return true
-    }
-
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(perception)
-        hasher.combine(recall)
-        hasher.combine(production)
-    }
-}
-
+#if compiler(>=6)
+extension SkillAxes: Sendable {}
+#endif
 
 #if swift(>=5.8)
 @_documentation(visibility: private)
@@ -1795,13 +1630,12 @@ public func FfiConverterTypeSkillAxes_lower(_ value: SkillAxes) -> RustBuffer {
     return FfiConverterTypeSkillAxes.lower(value)
 }
 
-// Note that we don't yet support `indirect` for enums.
-// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+
 /**
  * Notification categories. Each is individually opt-out.
  */
 
-public enum Category {
+public enum Category: Equatable, Hashable {
     
     /**
      * One a day, at a learner-chosen time. On by default.
@@ -1831,8 +1665,16 @@ public enum Category {
      * On-device speech unavailable and reveal mode has been hit repeatedly.
      */
     case languagePack
+
+
+
+
+
 }
 
+#if compiler(>=6)
+extension Category: Sendable {}
+#endif
 
 #if swift(>=5.8)
 @_documentation(visibility: private)
@@ -1914,12 +1756,6 @@ public func FfiConverterTypeCategory_lower(_ value: Category) -> RustBuffer {
 
 
 
-extension Category: Equatable, Hashable {}
-
-
-
-// Note that we don't yet support `indirect` for enums.
-// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
 /**
  * The learner's five-level confidence rating (the Memory-model screen), mapped to a grade.
  *
@@ -1927,7 +1763,7 @@ extension Category: Equatable, Hashable {}
  * than Good but not instant.
  */
 
-public enum Confidence {
+public enum Confidence: Equatable, Hashable {
     
     /**
      * Blank.
@@ -1949,8 +1785,16 @@ public enum Confidence {
      * Automatic.
      */
     case instant
+
+
+
+
+
 }
 
+#if compiler(>=6)
+extension Confidence: Sendable {}
+#endif
 
 #if swift(>=5.8)
 @_documentation(visibility: private)
@@ -2020,17 +1864,11 @@ public func FfiConverterTypeConfidence_lower(_ value: Confidence) -> RustBuffer 
 
 
 
-extension Confidence: Equatable, Hashable {}
-
-
-
-// Note that we don't yet support `indirect` for enums.
-// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
 /**
  * The learner's declaration of how hard a phrase is for them.
  */
 
-public enum Difficulty {
+public enum Difficulty: Equatable, Hashable {
     
     /**
      * Shown as "Easy".
@@ -2044,8 +1882,16 @@ public enum Difficulty {
      * Shown as "Difficult" — describing the phrase, not the learner.
      */
     case hard
+
+
+
+
+
 }
 
+#if compiler(>=6)
+extension Difficulty: Sendable {}
+#endif
 
 #if swift(>=5.8)
 @_documentation(visibility: private)
@@ -2103,17 +1949,11 @@ public func FfiConverterTypeDifficulty_lower(_ value: Difficulty) -> RustBuffer 
 
 
 
-extension Difficulty: Equatable, Hashable {}
-
-
-
-// Note that we don't yet support `indirect` for enums.
-// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
 /**
  * The four finisher cards. Each advances one specific rung.
  */
 
-public enum FinisherCard {
+public enum FinisherCard: Equatable, Hashable {
     
     /**
      * "the Rally" — make it pliable. Accumulated → Bent.
@@ -2131,8 +1971,16 @@ public enum FinisherCard {
      * "the Sportscaster" — make it yours. Pressure-tested → Deployed.
      */
     case deploy
+
+
+
+
+
 }
 
+#if compiler(>=6)
+extension FinisherCard: Sendable {}
+#endif
 
 #if swift(>=5.8)
 @_documentation(visibility: private)
@@ -2196,17 +2044,11 @@ public func FfiConverterTypeFinisherCard_lower(_ value: FinisherCard) -> RustBuf
 
 
 
-extension FinisherCard: Equatable, Hashable {}
-
-
-
-// Note that we don't yet support `indirect` for enums.
-// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
 /**
  * What kind of error we detected. Selection is ordered, not scored.
  */
 
-public enum FixKind {
+public enum FixKind: Equatable, Hashable {
     
     /**
      * The contour's overall shape is wrong (a question that doesn't rise, etc.).
@@ -2226,8 +2068,16 @@ public enum FixKind {
      * Nothing actionable — the take was good.
      */
     case none
+
+
+
+
+
 }
 
+#if compiler(>=6)
+extension FixKind: Sendable {}
+#endif
 
 #if swift(>=5.8)
 @_documentation(visibility: private)
@@ -2291,17 +2141,11 @@ public func FfiConverterTypeFixKind_lower(_ value: FixKind) -> RustBuffer {
 
 
 
-extension FixKind: Equatable, Hashable {}
-
-
-
-// Note that we don't yet support `indirect` for enums.
-// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
 /**
  * The four grades FSRS understands.
  */
 
-public enum Grade {
+public enum Grade: Equatable, Hashable {
     
     /**
      * Couldn't recall it.
@@ -2319,8 +2163,16 @@ public enum Grade {
      * Recalled instantly.
      */
     case easy
+
+
+
+
+
 }
 
+#if compiler(>=6)
+extension Grade: Sendable {}
+#endif
 
 #if swift(>=5.8)
 @_documentation(visibility: private)
@@ -2384,17 +2236,11 @@ public func FfiConverterTypeGrade_lower(_ value: Grade) -> RustBuffer {
 
 
 
-extension Grade: Equatable, Hashable {}
-
-
-
-// Note that we don't yet support `indirect` for enums.
-// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
 /**
  * The five-rung ladder. Monotonic: "you only climb or hold."
  */
 
-public enum LadderRung {
+public enum LadderRung: Equatable, Hashable {
     
     /**
      * Recognise and repeat it.
@@ -2416,8 +2262,16 @@ public enum LadderRung {
      * Spontaneous, unprompted, for real.
      */
     case deployed
+
+
+
+
+
 }
 
+#if compiler(>=6)
+extension LadderRung: Sendable {}
+#endif
 
 #if swift(>=5.8)
 @_documentation(visibility: private)
@@ -2487,17 +2341,11 @@ public func FfiConverterTypeLadderRung_lower(_ value: LadderRung) -> RustBuffer 
 
 
 
-extension LadderRung: Equatable, Hashable {}
-
-
-
-// Note that we don't yet support `indirect` for enums.
-// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
 /**
  * How a field resolves when two devices disagree.
  */
 
-public enum MergeClass {
+public enum MergeClass: Equatable, Hashable {
     
     /**
      * Highest HLC wins. Learner-set scalars.
@@ -2520,8 +2368,16 @@ public enum MergeClass {
      * A delete wins over a concurrent edit at any HLC.
      */
     case tombstone
+
+
+
+
+
 }
 
+#if compiler(>=6)
+extension MergeClass: Sendable {}
+#endif
 
 #if swift(>=5.8)
 @_documentation(visibility: private)
@@ -2591,12 +2447,6 @@ public func FfiConverterTypeMergeClass_lower(_ value: MergeClass) -> RustBuffer 
 
 
 
-extension MergeClass: Equatable, Hashable {}
-
-
-
-// Note that we don't yet support `indirect` for enums.
-// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
 /**
  * The manner of one rep. From the blueprint (`Loro.dc.html:3353–3360`).
  *
@@ -2604,7 +2454,7 @@ extension MergeClass: Equatable, Hashable {}
  * compression, generation, translation, free recall — not one event six times.
  */
 
-public enum RefrainMode {
+public enum RefrainMode: Equatable, Hashable {
     
     /**
      * Hear it, then say it back.
@@ -2630,8 +2480,16 @@ public enum RefrainMode {
      * From memory — no model.
      */
     case cold
+
+
+
+
+
 }
 
+#if compiler(>=6)
+extension RefrainMode: Sendable {}
+#endif
 
 #if swift(>=5.8)
 @_documentation(visibility: private)
@@ -2707,17 +2565,11 @@ public func FfiConverterTypeRefrainMode_lower(_ value: RefrainMode) -> RustBuffe
 
 
 
-extension RefrainMode: Equatable, Hashable {}
-
-
-
-// Note that we don't yet support `indirect` for enums.
-// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
 /**
  * Why a take could not be scored. Each maps to honest copy, never a low score.
  */
 
-public enum RejectReason {
+public enum RejectReason: Equatable, Hashable {
     
     /**
      * Too much background noise.
@@ -2735,8 +2587,16 @@ public enum RejectReason {
      * The alignment cost was too high — they probably said something else.
      */
     case unalignable
+
+
+
+
+
 }
 
+#if compiler(>=6)
+extension RejectReason: Sendable {}
+#endif
 
 #if swift(>=5.8)
 @_documentation(visibility: private)
@@ -2800,17 +2660,11 @@ public func FfiConverterTypeRejectReason_lower(_ value: RejectReason) -> RustBuf
 
 
 
-extension RejectReason: Equatable, Hashable {}
-
-
-
-// Note that we don't yet support `indirect` for enums.
-// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
 /**
  * "What's tricky about it" — the *nature* of the difficulty, never its magnitude.
  */
 
-public enum Tag {
+public enum Tag: Equatable, Hashable {
     
     /**
      * The sounds are the problem.
@@ -2828,8 +2682,16 @@ public enum Tag {
      * Specific lexical items trip me up.
      */
     case words
+
+
+
+
+
 }
 
+#if compiler(>=6)
+extension Tag: Sendable {}
+#endif
 
 #if swift(>=5.8)
 @_documentation(visibility: private)
@@ -2893,17 +2755,11 @@ public func FfiConverterTypeTag_lower(_ value: Tag) -> RustBuffer {
 
 
 
-extension Tag: Equatable, Hashable {}
-
-
-
-// Note that we don't yet support `indirect` for enums.
-// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
 /**
  * The outcome of scoring a take.
  */
 
-public enum TakeResult {
+public enum TakeResult: Equatable, Hashable {
     
     /**
      * A real score.
@@ -2933,8 +2789,16 @@ public enum TakeResult {
          * Why.
          */reason: RejectReason
     )
+
+
+
+
+
 }
 
+#if compiler(>=6)
+extension TakeResult: Sendable {}
+#endif
 
 #if swift(>=5.8)
 @_documentation(visibility: private)
@@ -2991,11 +2855,6 @@ public func FfiConverterTypeTakeResult_lift(_ buf: RustBuffer) throws -> TakeRes
 public func FfiConverterTypeTakeResult_lower(_ value: TakeResult) -> RustBuffer {
     return FfiConverterTypeTakeResult.lower(value)
 }
-
-
-
-extension TakeResult: Equatable, Hashable {}
-
 
 
 #if swift(>=5.8)
@@ -3291,211 +3150,6 @@ fileprivate struct FfiConverterSequenceTypeTag: FfiConverterRustBuffer {
     }
 }
 /**
- * Advance the axes after a take. A blueprint contract (`Loro.dc.html:3180–3182`).
- *
- * The asymmetry is the pedagogy: **Recall advances faster at high cue levels**, because
- * recalling *without* cues is what trains recall. Production tracks the actual score.
- * Perception creeps up from mere exposure.
- */
-public func advanceAxes(current: SkillAxes, score: UInt8, cueLevel: UInt8) -> SkillAxes {
-    return try!  FfiConverterTypeSkillAxes.lift(try! rustCall() {
-    uniffi_loro_core_fn_func_advance_axes(
-        FfiConverterTypeSkillAxes.lower(current),
-        FfiConverterUInt8.lower(score),
-        FfiConverterUInt8.lower(cueLevel),$0
-    )
-})
-}
-/**
- * Today's automaticity, from the blueprint (`Loro.dc.html:3378`).
- */
-public func automaticity(repsToday: UInt32, target: UInt32) -> UInt8 {
-    return try!  FfiConverterUInt8.lift(try! rustCall() {
-    uniffi_loro_core_fn_func_automaticity(
-        FfiConverterUInt32.lower(repsToday),
-        FfiConverterUInt32.lower(target),$0
-    )
-})
-}
-/**
- * Which band a score falls in.
- */
-public func band(score: UInt8) -> UInt8 {
-    return try!  FfiConverterUInt8.lift(try! rustCall() {
-    uniffi_loro_core_fn_func_band(
-        FfiConverterUInt8.lower(score),$0
-    )
-})
-}
-/**
- * Beat tempo in milliseconds. Speed mode's faster beat is the only cue that it differs.
- */
-public func beatMsForMode(mode: RefrainMode) -> UInt32 {
-    return try!  FfiConverterUInt32.lift(try! rustCall() {
-    uniffi_loro_core_fn_func_beat_ms_for_mode(
-        FfiConverterTypeRefrainMode.lower(mode),$0
-    )
-})
-}
-/**
- * Advance a phrase's rung, never downwards.
- *
- * This is the monotonicity guarantee the conformance suite checks.
- */
-public func climb(current: LadderRung, target: LadderRung) -> LadderRung {
-    return try!  FfiConverterTypeLadderRung.lift(try! rustCall() {
-    uniffi_loro_core_fn_func_climb(
-        FfiConverterTypeLadderRung.lower(current),
-        FfiConverterTypeLadderRung.lower(target),$0
-    )
-})
-}
-/**
- * Daily review cap, so a queue never becomes a wall.
- *
- * Uncapped review queues are how SRS apps lose learners in month two.
- */
-public func dailyReviewCap(dailyMinutes: UInt32, multiplier: UInt32) -> UInt32 {
-    return try!  FfiConverterUInt32.lift(try! rustCall() {
-    uniffi_loro_core_fn_func_daily_review_cap(
-        FfiConverterUInt32.lower(dailyMinutes),
-        FfiConverterUInt32.lower(multiplier),$0
-    )
-})
-}
-/**
- * Days between two local dates, positive if `b` is later. Calendar days, not elapsed hours.
- *
- * # Errors
- * Returns `None` if either string is not `YYYY-MM-DD`.
- */
-public func daysBetween(a: String, b: String) -> Int32? {
-    return try!  FfiConverterOptionInt32.lift(try! rustCall() {
-    uniffi_loro_core_fn_func_days_between(
-        FfiConverterString.lower(a),
-        FfiConverterString.lower(b),$0
-    )
-})
-}
-/**
- * The deep link for a category. A notification that opens the home screen has wasted
- * the learner's attention.
- */
-public func deepLinkFor(category: Category) -> String {
-    return try!  FfiConverterString.lift(try! rustCall() {
-    uniffi_loro_core_fn_func_deep_link_for(
-        FfiConverterTypeCategory.lower(category),$0
-    )
-})
-}
-/**
- * The Draw — a real shuffle, constrained to what phrases are ready for and biased
- * toward weak spots.
- *
- * From the blueprint (`Loro.dc.html:3479–3488`). Deterministic given `seed`, which is
- * persisted on the run row so any run can be replayed exactly in a test or a bug report.
- *
- * Returns `None` when the deck has nothing eligible — a brand-new deck with no phrase
- * at any unlocked card's source rung.
- */
-public func draw(deck: [PhraseState], seed: UInt64, exclude: FinisherCard?, nowMs: Int64) -> Draw? {
-    return try!  FfiConverterOptionTypeDraw.lift(try! rustCall() {
-    uniffi_loro_core_fn_func_draw(
-        FfiConverterSequenceTypePhraseState.lower(deck),
-        FfiConverterUInt64.lower(seed),
-        FfiConverterOptionTypeFinisherCard.lower(exclude),
-        FfiConverterInt64.lower(nowMs),$0
-    )
-})
-}
-/**
- * Whether a take earns a cue level-up. The reward is the **removal of help**.
- */
-public func earnsLevelUp(score: UInt8, cueLevel: UInt8, threshold: UInt8) -> Bool {
-    return try!  FfiConverterBool.lift(try! rustCall() {
-    uniffi_loro_core_fn_func_earns_level_up(
-        FfiConverterUInt8.lower(score),
-        FfiConverterUInt8.lower(cueLevel),
-        FfiConverterUInt8.lower(threshold),$0
-    )
-})
-}
-/**
- * Plain-language effort label, from the blueprint (`Loro.dc.html:3411`).
- *
- * This is the progression a learner actually reads. It ships as a group for
- * translation, because the escalation matters more than the individual strings.
- */
-public func effortLabel(reps: UInt32, automaticityPct: UInt8) -> String {
-    return try!  FfiConverterString.lift(try! rustCall() {
-    uniffi_loro_core_fn_func_effort_label(
-        FfiConverterUInt32.lower(reps),
-        FfiConverterUInt8.lower(automaticityPct),$0
-    )
-})
-}
-/**
- * Format an interval for display, from the blueprint (`Loro.dc.html:3009`).
- *
- * The blueprint's *fixed* interval labels are a display model; these are formatted
- * from FSRS's real output.
- */
-public func formatInterval(days: Float) -> String {
-    return try!  FfiConverterString.lift(try! rustCall() {
-    uniffi_loro_core_fn_func_format_interval(
-        FfiConverterFloat.lower(days),$0
-    )
-})
-}
-/**
- * Map a five-level confidence onto a grade.
- */
-public func gradeForConfidence(c: Confidence) -> Grade {
-    return try!  FfiConverterTypeGrade.lift(try! rustCall() {
-    uniffi_loro_core_fn_func_grade_for_confidence(
-        FfiConverterTypeConfidence.lower(c),$0
-    )
-})
-}
-/**
- * Seed FSRS difficulty from the learner's own declaration.
- *
- * This is Loro's structural advantage over every other app using FSRS: the learner
- * tells us a phrase's difficulty when they add it, so there is no cold start.
- *
- * `pron` deliberately does **not** raise difficulty — it changes the *drill*, not the
- * memory load.
- */
-public func initialDifficulty(declared: Difficulty, tags: [Tag]) -> Float {
-    return try!  FfiConverterFloat.lift(try! rustCall() {
-    uniffi_loro_core_fn_func_initial_difficulty(
-        FfiConverterTypeDifficulty.lower(declared),
-        FfiConverterSequenceTypeTag.lower(tags),$0
-    )
-})
-}
-/**
- * Whether an hour falls in quiet hours.
- */
-public func isQuietHour(hour: UInt32) -> Bool {
-    return try!  FfiConverterBool.lift(try! rustCall() {
-    uniffi_loro_core_fn_func_is_quiet_hour(
-        FfiConverterUInt32.lower(hour),$0
-    )
-})
-}
-/**
- * Whether a client reading is implausibly far ahead of server time.
- */
-public func isSkewed(client: Hlc, serverMs: Int64) -> Bool {
-    return try!  FfiConverterBool.lift(try! rustCall() {
-    uniffi_loro_core_fn_func_is_skewed(
-        FfiConverterTypeHlc.lower(client),
-        FfiConverterInt64.lower(serverMs),$0
-    )
-})
-}
-/**
  * Match heard tokens against the target, walking forward from `revealed`.
  *
  * Properties, all inherited from the blueprint:
@@ -3507,57 +3161,14 @@ public func isSkewed(client: Hlc, serverMs: Int64) -> Bool {
  * turning it on makes the production gate more forgiving, which is a
  * *pedagogical* decision, not an implementation detail.
  */
-public func matchTokens(heard: [String], target: [String], revealed: UInt32, fuzzy: Bool) -> MatchResult {
-    return try!  FfiConverterTypeMatchResult.lift(try! rustCall() {
+public func matchTokens(heard: [String], target: [String], revealed: UInt32, fuzzy: Bool) -> MatchResult  {
+    return try!  FfiConverterTypeMatchResult_lift(try! rustCall() {
+        uniffiCallStatus in
     uniffi_loro_core_fn_func_match_tokens(
         FfiConverterSequenceString.lower(heard),
         FfiConverterSequenceString.lower(target),
         FfiConverterUInt32.lower(revealed),
-        FfiConverterBool.lower(fuzzy),$0
-    )
-})
-}
-/**
- * Whether a category may fire, given the context.
- */
-public func mayFire(category: Category, ctx: NotifyContext) -> Bool {
-    return try!  FfiConverterBool.lift(try! rustCall() {
-    uniffi_loro_core_fn_func_may_fire(
-        FfiConverterTypeCategory.lower(category),
-        FfiConverterTypeNotifyContext.lower(ctx),$0
-    )
-})
-}
-/**
- * The mode for a given rep index, clamped at the last.
- */
-public func modeForRep(repIndex: UInt32) -> RefrainMode {
-    return try!  FfiConverterTypeRefrainMode.lift(try! rustCall() {
-    uniffi_loro_core_fn_func_mode_for_rep(
-        FfiConverterUInt32.lower(repIndex),$0
-    )
-})
-}
-/**
- * Model-audio playback rate for a mode, or `None` when no model is offered.
- */
-public func modelRateForMode(mode: RefrainMode) -> Float? {
-    return try!  FfiConverterOptionFloat.lift(try! rustCall() {
-    uniffi_loro_core_fn_func_model_rate_for_mode(
-        FfiConverterTypeRefrainMode.lower(mode),$0
-    )
-})
-}
-/**
- * How much a phrase needs attention. Biases the draw and drives the `refresh` flags.
- *
- * From the blueprint (`Loro.dc.html:3467`): `need = stale×2 + stumbles`.
- */
-public func need(p: PhraseState, nowMs: Int64) -> UInt32 {
-    return try!  FfiConverterUInt32.lift(try! rustCall() {
-    uniffi_loro_core_fn_func_need(
-        FfiConverterTypePhraseState.lower(p),
-        FfiConverterInt64.lower(nowMs),$0
+        FfiConverterBool.lower(fuzzy),uniffiCallStatus
     )
 })
 }
@@ -3567,87 +3178,37 @@ public func need(p: PhraseState, nowMs: Int64) -> UInt32 {
  *
  * So `¿Cuánto cuesta?` matches `cuanto cuesta`, and `dónde` matches `donde`.
  */
-public func normalize(s: String) -> String {
+public func normalize(s: String) -> String  {
     return try!  FfiConverterString.lift(try! rustCall() {
+        uniffiCallStatus in
     uniffi_loro_core_fn_func_normalize(
-        FfiConverterString.lower(s),$0
+        FfiConverterString.lower(s),uniffiCallStatus
     )
 })
 }
 /**
- * Normalise an F0 track to semitones relative to the speaker's own median, then to 0..1.
+ * Split a phrase into comparable tokens.
+ */
+public func tokenize(phrase: String) -> [String]  {
+    return try!  FfiConverterSequenceString.lift(try! rustCall() {
+        uniffiCallStatus in
+    uniffi_loro_core_fn_func_tokenize(
+        FfiConverterString.lower(phrase),uniffiCallStatus
+    )
+})
+}
+/**
+ * Days between two local dates, positive if `b` is later. Calendar days, not elapsed hours.
  *
- * **This is what makes the comparison fair.** A learner's absolute pitch is irrelevant;
- * the *shape* is the skill. Normalised the same way for both the native reference and
- * the learner, a bass and a soprano producing identical question intonation score
- * identically.
+ * # Errors
+ * Returns `None` if either string is not `YYYY-MM-DD`.
  */
-public func normalizeF0(hz: [Float]) -> [Float] {
-    return try!  FfiConverterSequenceFloat.lift(try! rustCall() {
-    uniffi_loro_core_fn_func_normalize_f0(
-        FfiConverterSequenceFloat.lower(hz),$0
-    )
-})
-}
-/**
- * Nudge an established difficulty toward a new declaration, bounded.
- */
-public func nudgeDifficulty(current: Float, declared: Difficulty, tags: [Tag]) -> Float {
-    return try!  FfiConverterFloat.lift(try! rustCall() {
-    uniffi_loro_core_fn_func_nudge_difficulty(
-        FfiConverterFloat.lower(current),
-        FfiConverterTypeDifficulty.lower(declared),
-        FfiConverterSequenceTypeTag.lower(tags),$0
-    )
-})
-}
-/**
- * Advance the local clock on receiving a remote reading.
- */
-public func receive(last: Hlc, remote: Hlc, wallMs: Int64, nodeId: String) -> Hlc {
-    return try!  FfiConverterTypeHlc.lift(try! rustCall() {
-    uniffi_loro_core_fn_func_receive(
-        FfiConverterTypeHlc.lower(last),
-        FfiConverterTypeHlc.lower(remote),
-        FfiConverterInt64.lower(wallMs),
-        FfiConverterString.lower(nodeId),$0
-    )
-})
-}
-/**
- * Set size from the learner's daily-minutes answer.
- */
-public func refrainSetSize(dailyMinutes: UInt32) -> UInt32 {
-    return try!  FfiConverterUInt32.lift(try! rustCall() {
-    uniffi_loro_core_fn_func_refrain_set_size(
-        FfiConverterUInt32.lower(dailyMinutes),$0
-    )
-})
-}
-/**
- * How many times a phrase repeats before the stream advances.
- *
- * From `Loro.dc.html:2526`. Visible to the learner: rating something Difficult
- * makes it repeat more, and the toast says so.
- */
-public func repeatTarget(difficulty: Difficulty) -> UInt32 {
-    return try!  FfiConverterUInt32.lift(try! rustCall() {
-    uniffi_loro_core_fn_func_repeat_target(
-        FfiConverterTypeDifficulty.lower(difficulty),$0
-    )
-})
-}
-/**
- * Retrievability at `t` days after the last review, in the blueprint's display form.
- *
- * The Memory-model screen plots exactly this curve, so it must stay the shape the
- * screen draws.
- */
-public func retrievability(daysSinceReview: Float, stability: Float) -> Float {
-    return try!  FfiConverterFloat.lift(try! rustCall() {
-    uniffi_loro_core_fn_func_retrievability(
-        FfiConverterFloat.lower(daysSinceReview),
-        FfiConverterFloat.lower(stability),$0
+public func daysBetween(a: String, b: String) -> Int32?  {
+    return try!  FfiConverterOptionInt32.lift(try! rustCall() {
+        uniffiCallStatus in
+    uniffi_loro_core_fn_func_days_between(
+        FfiConverterString.lower(a),
+        FfiConverterString.lower(b),uniffiCallStatus
     )
 })
 }
@@ -3662,11 +3223,12 @@ public func retrievability(daysSinceReview: Float, stability: Float) -> Float {
  * date (`'n' > '2'`), so counting them would let one corrupt row zero a streak the
  * learner earned.
  */
-public func streak(practiceDays: [String], today: String) -> UInt32 {
+public func streak(practiceDays: [String], today: String) -> UInt32  {
     return try!  FfiConverterUInt32.lift(try! rustCall() {
+        uniffiCallStatus in
     uniffi_loro_core_fn_func_streak(
         FfiConverterSequenceString.lower(practiceDays),
-        FfiConverterString.lower(today),$0
+        FfiConverterString.lower(today),uniffiCallStatus
     )
 })
 }
@@ -3678,11 +3240,12 @@ public func streak(practiceDays: [String], today: String) -> UInt32 {
  * UTC's. The shift happens at the edge (`apps/mobile/src/lib/clock.ts`) because this
  * crate has no clock and no timezone database.
  */
-public func streakDayFor(atMs: Int64, localMidnightMs: Int64) -> String {
+public func streakDayFor(atMs: Int64, localMidnightMs: Int64) -> String  {
     return try!  FfiConverterString.lift(try! rustCall() {
+        uniffiCallStatus in
     uniffi_loro_core_fn_func_streak_day_for(
         FfiConverterInt64.lower(atMs),
-        FfiConverterInt64.lower(localMidnightMs),$0
+        FfiConverterInt64.lower(localMidnightMs),uniffiCallStatus
     )
 })
 }
@@ -3694,11 +3257,252 @@ public func streakDayFor(atMs: Int64, localMidnightMs: Int64) -> String {
  * **Timezone travel never breaks a streak**: a negative gap (flying west, so the local
  * date moved backwards) is treated as the same day.
  */
-public func streakSurvives(lastDay: String, today: String) -> Bool {
+public func streakSurvives(lastDay: String, today: String) -> Bool  {
     return try!  FfiConverterBool.lift(try! rustCall() {
+        uniffiCallStatus in
     uniffi_loro_core_fn_func_streak_survives(
         FfiConverterString.lower(lastDay),
-        FfiConverterString.lower(today),$0
+        FfiConverterString.lower(today),uniffiCallStatus
+    )
+})
+}
+/**
+ * Which band a score falls in.
+ */
+public func band(score: UInt8) -> UInt8  {
+    return try!  FfiConverterUInt8.lift(try! rustCall() {
+        uniffiCallStatus in
+    uniffi_loro_core_fn_func_band(
+        FfiConverterUInt8.lower(score),uniffiCallStatus
+    )
+})
+}
+/**
+ * Normalise an F0 track to semitones relative to the speaker's own median, then to 0..1.
+ *
+ * **This is what makes the comparison fair.** A learner's absolute pitch is irrelevant;
+ * the *shape* is the skill. Normalised the same way for both the native reference and
+ * the learner, a bass and a soprano producing identical question intonation score
+ * identically.
+ */
+public func normalizeF0(hz: [Float]) -> [Float]  {
+    return try!  FfiConverterSequenceFloat.lift(try! rustCall() {
+        uniffiCallStatus in
+    uniffi_loro_core_fn_func_normalize_f0(
+        FfiConverterSequenceFloat.lower(hz),uniffiCallStatus
+    )
+})
+}
+/**
+ * Advance the axes after a take. A blueprint contract (`Loro.dc.html:3180–3182`).
+ *
+ * The asymmetry is the pedagogy: **Recall advances faster at high cue levels**, because
+ * recalling *without* cues is what trains recall. Production tracks the actual score.
+ * Perception creeps up from mere exposure.
+ */
+public func advanceAxes(current: SkillAxes, score: UInt8, cueLevel: UInt8) -> SkillAxes  {
+    return try!  FfiConverterTypeSkillAxes_lift(try! rustCall() {
+        uniffiCallStatus in
+    uniffi_loro_core_fn_func_advance_axes(
+        FfiConverterTypeSkillAxes_lower(current),
+        FfiConverterUInt8.lower(score),
+        FfiConverterUInt8.lower(cueLevel),uniffiCallStatus
+    )
+})
+}
+/**
+ * Whether a take earns a cue level-up. The reward is the **removal of help**.
+ */
+public func earnsLevelUp(score: UInt8, cueLevel: UInt8, threshold: UInt8) -> Bool  {
+    return try!  FfiConverterBool.lift(try! rustCall() {
+        uniffiCallStatus in
+    uniffi_loro_core_fn_func_earns_level_up(
+        FfiConverterUInt8.lower(score),
+        FfiConverterUInt8.lower(cueLevel),
+        FfiConverterUInt8.lower(threshold),uniffiCallStatus
+    )
+})
+}
+/**
+ * Daily review cap, so a queue never becomes a wall.
+ *
+ * Uncapped review queues are how SRS apps lose learners in month two.
+ */
+public func dailyReviewCap(dailyMinutes: UInt32, multiplier: UInt32) -> UInt32  {
+    return try!  FfiConverterUInt32.lift(try! rustCall() {
+        uniffiCallStatus in
+    uniffi_loro_core_fn_func_daily_review_cap(
+        FfiConverterUInt32.lower(dailyMinutes),
+        FfiConverterUInt32.lower(multiplier),uniffiCallStatus
+    )
+})
+}
+/**
+ * Format an interval for display, from the blueprint (`Loro.dc.html:3009`).
+ *
+ * The blueprint's *fixed* interval labels are a display model; these are formatted
+ * from FSRS's real output.
+ */
+public func formatInterval(days: Float) -> String  {
+    return try!  FfiConverterString.lift(try! rustCall() {
+        uniffiCallStatus in
+    uniffi_loro_core_fn_func_format_interval(
+        FfiConverterFloat.lower(days),uniffiCallStatus
+    )
+})
+}
+/**
+ * Map a five-level confidence onto a grade.
+ */
+public func gradeForConfidence(c: Confidence) -> Grade  {
+    return try!  FfiConverterTypeGrade_lift(try! rustCall() {
+        uniffiCallStatus in
+    uniffi_loro_core_fn_func_grade_for_confidence(
+        FfiConverterTypeConfidence_lower(c),uniffiCallStatus
+    )
+})
+}
+/**
+ * Seed FSRS difficulty from the learner's own declaration.
+ *
+ * This is Loro's structural advantage over every other app using FSRS: the learner
+ * tells us a phrase's difficulty when they add it, so there is no cold start.
+ *
+ * `pron` deliberately does **not** raise difficulty — it changes the *drill*, not the
+ * memory load.
+ */
+public func initialDifficulty(declared: Difficulty, tags: [Tag]) -> Float  {
+    return try!  FfiConverterFloat.lift(try! rustCall() {
+        uniffiCallStatus in
+    uniffi_loro_core_fn_func_initial_difficulty(
+        FfiConverterTypeDifficulty_lower(declared),
+        FfiConverterSequenceTypeTag.lower(tags),uniffiCallStatus
+    )
+})
+}
+/**
+ * Nudge an established difficulty toward a new declaration, bounded.
+ */
+public func nudgeDifficulty(current: Float, declared: Difficulty, tags: [Tag]) -> Float  {
+    return try!  FfiConverterFloat.lift(try! rustCall() {
+        uniffiCallStatus in
+    uniffi_loro_core_fn_func_nudge_difficulty(
+        FfiConverterFloat.lower(current),
+        FfiConverterTypeDifficulty_lower(declared),
+        FfiConverterSequenceTypeTag.lower(tags),uniffiCallStatus
+    )
+})
+}
+/**
+ * Retrievability at `t` days after the last review, in the blueprint's display form.
+ *
+ * The Memory-model screen plots exactly this curve, so it must stay the shape the
+ * screen draws.
+ */
+public func retrievability(daysSinceReview: Float, stability: Float) -> Float  {
+    return try!  FfiConverterFloat.lift(try! rustCall() {
+        uniffiCallStatus in
+    uniffi_loro_core_fn_func_retrievability(
+        FfiConverterFloat.lower(daysSinceReview),
+        FfiConverterFloat.lower(stability),uniffiCallStatus
+    )
+})
+}
+/**
+ * Advance a phrase's rung, never downwards.
+ *
+ * This is the monotonicity guarantee the conformance suite checks.
+ */
+public func climb(current: LadderRung, target: LadderRung) -> LadderRung  {
+    return try!  FfiConverterTypeLadderRung_lift(try! rustCall() {
+        uniffiCallStatus in
+    uniffi_loro_core_fn_func_climb(
+        FfiConverterTypeLadderRung_lower(current),
+        FfiConverterTypeLadderRung_lower(target),uniffiCallStatus
+    )
+})
+}
+/**
+ * The Draw — a real shuffle, constrained to what phrases are ready for and biased
+ * toward weak spots.
+ *
+ * From the blueprint (`Loro.dc.html:3479–3488`). Deterministic given `seed`, which is
+ * persisted on the run row so any run can be replayed exactly in a test or a bug report.
+ *
+ * Returns `None` when the deck has nothing eligible — a brand-new deck with no phrase
+ * at any unlocked card's source rung.
+ */
+public func draw(deck: [PhraseState], seed: UInt64, exclude: FinisherCard?, nowMs: Int64) -> Draw?  {
+    return try!  FfiConverterOptionTypeDraw.lift(try! rustCall() {
+        uniffiCallStatus in
+    uniffi_loro_core_fn_func_draw(
+        FfiConverterSequenceTypePhraseState.lower(deck),
+        FfiConverterUInt64.lower(seed),
+        FfiConverterOptionTypeFinisherCard.lower(exclude),
+        FfiConverterInt64.lower(nowMs),uniffiCallStatus
+    )
+})
+}
+/**
+ * How much a phrase needs attention. Biases the draw and drives the `refresh` flags.
+ *
+ * From the blueprint (`Loro.dc.html:3467`): `need = stale×2 + stumbles`.
+ */
+public func need(p: PhraseState, nowMs: Int64) -> UInt32  {
+    return try!  FfiConverterUInt32.lift(try! rustCall() {
+        uniffiCallStatus in
+    uniffi_loro_core_fn_func_need(
+        FfiConverterTypePhraseState_lower(p),
+        FfiConverterInt64.lower(nowMs),uniffiCallStatus
+    )
+})
+}
+/**
+ * The deep link for a category. A notification that opens the home screen has wasted
+ * the learner's attention.
+ */
+public func deepLinkFor(category: Category) -> String  {
+    return try!  FfiConverterString.lift(try! rustCall() {
+        uniffiCallStatus in
+    uniffi_loro_core_fn_func_deep_link_for(
+        FfiConverterTypeCategory_lower(category),uniffiCallStatus
+    )
+})
+}
+/**
+ * Whether an hour falls in quiet hours.
+ */
+public func isQuietHour(hour: UInt32) -> Bool  {
+    return try!  FfiConverterBool.lift(try! rustCall() {
+        uniffiCallStatus in
+    uniffi_loro_core_fn_func_is_quiet_hour(
+        FfiConverterUInt32.lower(hour),uniffiCallStatus
+    )
+})
+}
+/**
+ * Whether a category may fire, given the context.
+ */
+public func mayFire(category: Category, ctx: NotifyContext) -> Bool  {
+    return try!  FfiConverterBool.lift(try! rustCall() {
+        uniffiCallStatus in
+    uniffi_loro_core_fn_func_may_fire(
+        FfiConverterTypeCategory_lower(category),
+        FfiConverterTypeNotifyContext_lower(ctx),uniffiCallStatus
+    )
+})
+}
+/**
+ * How many times a phrase repeats before the stream advances.
+ *
+ * From `Loro.dc.html:2526`. Visible to the learner: rating something Difficult
+ * makes it repeat more, and the toast says so.
+ */
+public func repeatTarget(difficulty: Difficulty) -> UInt32  {
+    return try!  FfiConverterUInt32.lift(try! rustCall() {
+        uniffiCallStatus in
+    uniffi_loro_core_fn_func_repeat_target(
+        FfiConverterTypeDifficulty_lower(difficulty),uniffiCallStatus
     )
 })
 }
@@ -3714,11 +3518,109 @@ public func streakSurvives(lastDay: String, today: String) -> Bool {
  * The due term is deliberately only `-4`: the stream should stay a listening
  * experience, not become a covert review queue.
  */
-public func streamRank(p: PhraseState, nowMs: Int64) -> Int32 {
+public func streamRank(p: PhraseState, nowMs: Int64) -> Int32  {
     return try!  FfiConverterInt32.lift(try! rustCall() {
+        uniffiCallStatus in
     uniffi_loro_core_fn_func_stream_rank(
-        FfiConverterTypePhraseState.lower(p),
-        FfiConverterInt64.lower(nowMs),$0
+        FfiConverterTypePhraseState_lower(p),
+        FfiConverterInt64.lower(nowMs),uniffiCallStatus
+    )
+})
+}
+/**
+ * Today's automaticity, from the blueprint (`Loro.dc.html:3378`).
+ */
+public func automaticity(repsToday: UInt32, target: UInt32) -> UInt8  {
+    return try!  FfiConverterUInt8.lift(try! rustCall() {
+        uniffiCallStatus in
+    uniffi_loro_core_fn_func_automaticity(
+        FfiConverterUInt32.lower(repsToday),
+        FfiConverterUInt32.lower(target),uniffiCallStatus
+    )
+})
+}
+/**
+ * Beat tempo in milliseconds. Speed mode's faster beat is the only cue that it differs.
+ */
+public func beatMsForMode(mode: RefrainMode) -> UInt32  {
+    return try!  FfiConverterUInt32.lift(try! rustCall() {
+        uniffiCallStatus in
+    uniffi_loro_core_fn_func_beat_ms_for_mode(
+        FfiConverterTypeRefrainMode_lower(mode),uniffiCallStatus
+    )
+})
+}
+/**
+ * Plain-language effort label, from the blueprint (`Loro.dc.html:3411`).
+ *
+ * This is the progression a learner actually reads. It ships as a group for
+ * translation, because the escalation matters more than the individual strings.
+ */
+public func effortLabel(reps: UInt32, automaticityPct: UInt8) -> String  {
+    return try!  FfiConverterString.lift(try! rustCall() {
+        uniffiCallStatus in
+    uniffi_loro_core_fn_func_effort_label(
+        FfiConverterUInt32.lower(reps),
+        FfiConverterUInt8.lower(automaticityPct),uniffiCallStatus
+    )
+})
+}
+/**
+ * The mode for a given rep index, clamped at the last.
+ */
+public func modeForRep(repIndex: UInt32) -> RefrainMode  {
+    return try!  FfiConverterTypeRefrainMode_lift(try! rustCall() {
+        uniffiCallStatus in
+    uniffi_loro_core_fn_func_mode_for_rep(
+        FfiConverterUInt32.lower(repIndex),uniffiCallStatus
+    )
+})
+}
+/**
+ * Model-audio playback rate for a mode, or `None` when no model is offered.
+ */
+public func modelRateForMode(mode: RefrainMode) -> Float?  {
+    return try!  FfiConverterOptionFloat.lift(try! rustCall() {
+        uniffiCallStatus in
+    uniffi_loro_core_fn_func_model_rate_for_mode(
+        FfiConverterTypeRefrainMode_lower(mode),uniffiCallStatus
+    )
+})
+}
+/**
+ * Set size from the learner's daily-minutes answer.
+ */
+public func refrainSetSize(dailyMinutes: UInt32) -> UInt32  {
+    return try!  FfiConverterUInt32.lift(try! rustCall() {
+        uniffiCallStatus in
+    uniffi_loro_core_fn_func_refrain_set_size(
+        FfiConverterUInt32.lower(dailyMinutes),uniffiCallStatus
+    )
+})
+}
+/**
+ * Whether a client reading is implausibly far ahead of server time.
+ */
+public func isSkewed(client: Hlc, serverMs: Int64) -> Bool  {
+    return try!  FfiConverterBool.lift(try! rustCall() {
+        uniffiCallStatus in
+    uniffi_loro_core_fn_func_is_skewed(
+        FfiConverterTypeHlc_lower(client),
+        FfiConverterInt64.lower(serverMs),uniffiCallStatus
+    )
+})
+}
+/**
+ * Advance the local clock on receiving a remote reading.
+ */
+public func receive(last: Hlc, remote: Hlc, wallMs: Int64, nodeId: String) -> Hlc  {
+    return try!  FfiConverterTypeHlc_lift(try! rustCall() {
+        uniffiCallStatus in
+    uniffi_loro_core_fn_func_receive(
+        FfiConverterTypeHlc_lower(last),
+        FfiConverterTypeHlc_lower(remote),
+        FfiConverterInt64.lower(wallMs),
+        FfiConverterString.lower(nodeId),uniffiCallStatus
     )
 })
 }
@@ -3727,22 +3629,13 @@ public func streamRank(p: PhraseState, nowMs: Int64) -> Int32 {
  *
  * `wall_ms` is passed in — this crate has no clock.
  */
-public func tick(last: Hlc, wallMs: Int64, nodeId: String) -> Hlc {
-    return try!  FfiConverterTypeHlc.lift(try! rustCall() {
+public func tick(last: Hlc, wallMs: Int64, nodeId: String) -> Hlc  {
+    return try!  FfiConverterTypeHlc_lift(try! rustCall() {
+        uniffiCallStatus in
     uniffi_loro_core_fn_func_tick(
-        FfiConverterTypeHlc.lower(last),
+        FfiConverterTypeHlc_lower(last),
         FfiConverterInt64.lower(wallMs),
-        FfiConverterString.lower(nodeId),$0
-    )
-})
-}
-/**
- * Split a phrase into comparable tokens.
- */
-public func tokenize(phrase: String) -> [String] {
-    return try!  FfiConverterSequenceString.lift(try! rustCall() {
-    uniffi_loro_core_fn_func_tokenize(
-        FfiConverterString.lower(phrase),$0
+        FfiConverterString.lower(nodeId),uniffiCallStatus
     )
 })
 }
@@ -3754,121 +3647,123 @@ private enum InitializationResult {
 }
 // Use a global variable to perform the versioning checks. Swift ensures that
 // the code inside is only computed once.
-private var initializationResult: InitializationResult = {
+private let initializationResult: InitializationResult = {
     // Get the bindings contract version from our ComponentInterface
-    let bindings_contract_version = 26
+    let bindings_contract_version = 30
     // Get the scaffolding contract version by calling the into the dylib
     let scaffolding_contract_version = ffi_loro_core_uniffi_contract_version()
     if bindings_contract_version != scaffolding_contract_version {
         return InitializationResult.contractVersionMismatch
     }
-    if (uniffi_loro_core_checksum_func_advance_axes() != 10792) {
+    if (uniffi_loro_core_checksum_func_match_tokens() != 45107) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_loro_core_checksum_func_automaticity() != 19901) {
+    if (uniffi_loro_core_checksum_func_normalize() != 36037) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_loro_core_checksum_func_band() != 13607) {
+    if (uniffi_loro_core_checksum_func_tokenize() != 50042) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_loro_core_checksum_func_beat_ms_for_mode() != 15077) {
+    if (uniffi_loro_core_checksum_func_days_between() != 61716) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_loro_core_checksum_func_climb() != 34211) {
+    if (uniffi_loro_core_checksum_func_streak() != 18523) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_loro_core_checksum_func_daily_review_cap() != 57348) {
+    if (uniffi_loro_core_checksum_func_streak_day_for() != 29614) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_loro_core_checksum_func_days_between() != 54773) {
+    if (uniffi_loro_core_checksum_func_streak_survives() != 57834) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_loro_core_checksum_func_deep_link_for() != 7544) {
+    if (uniffi_loro_core_checksum_func_band() != 43754) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_loro_core_checksum_func_draw() != 65089) {
+    if (uniffi_loro_core_checksum_func_normalize_f0() != 20818) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_loro_core_checksum_func_earns_level_up() != 44757) {
+    if (uniffi_loro_core_checksum_func_advance_axes() != 1156) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_loro_core_checksum_func_effort_label() != 9773) {
+    if (uniffi_loro_core_checksum_func_earns_level_up() != 49403) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_loro_core_checksum_func_format_interval() != 7764) {
+    if (uniffi_loro_core_checksum_func_daily_review_cap() != 8914) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_loro_core_checksum_func_grade_for_confidence() != 35223) {
+    if (uniffi_loro_core_checksum_func_format_interval() != 50827) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_loro_core_checksum_func_initial_difficulty() != 8612) {
+    if (uniffi_loro_core_checksum_func_grade_for_confidence() != 31441) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_loro_core_checksum_func_is_quiet_hour() != 50060) {
+    if (uniffi_loro_core_checksum_func_initial_difficulty() != 41499) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_loro_core_checksum_func_is_skewed() != 19846) {
+    if (uniffi_loro_core_checksum_func_nudge_difficulty() != 10246) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_loro_core_checksum_func_match_tokens() != 56382) {
+    if (uniffi_loro_core_checksum_func_retrievability() != 7937) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_loro_core_checksum_func_may_fire() != 19166) {
+    if (uniffi_loro_core_checksum_func_climb() != 50333) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_loro_core_checksum_func_mode_for_rep() != 8670) {
+    if (uniffi_loro_core_checksum_func_draw() != 17799) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_loro_core_checksum_func_model_rate_for_mode() != 29690) {
+    if (uniffi_loro_core_checksum_func_need() != 14278) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_loro_core_checksum_func_need() != 16) {
+    if (uniffi_loro_core_checksum_func_deep_link_for() != 25113) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_loro_core_checksum_func_normalize() != 10544) {
+    if (uniffi_loro_core_checksum_func_is_quiet_hour() != 14173) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_loro_core_checksum_func_normalize_f0() != 47781) {
+    if (uniffi_loro_core_checksum_func_may_fire() != 35123) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_loro_core_checksum_func_nudge_difficulty() != 19498) {
+    if (uniffi_loro_core_checksum_func_repeat_target() != 48455) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_loro_core_checksum_func_receive() != 42692) {
+    if (uniffi_loro_core_checksum_func_stream_rank() != 33635) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_loro_core_checksum_func_refrain_set_size() != 42706) {
+    if (uniffi_loro_core_checksum_func_automaticity() != 54682) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_loro_core_checksum_func_repeat_target() != 29482) {
+    if (uniffi_loro_core_checksum_func_beat_ms_for_mode() != 18787) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_loro_core_checksum_func_retrievability() != 2410) {
+    if (uniffi_loro_core_checksum_func_effort_label() != 55096) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_loro_core_checksum_func_streak() != 21767) {
+    if (uniffi_loro_core_checksum_func_mode_for_rep() != 35315) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_loro_core_checksum_func_streak_day_for() != 43641) {
+    if (uniffi_loro_core_checksum_func_model_rate_for_mode() != 59286) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_loro_core_checksum_func_streak_survives() != 29477) {
+    if (uniffi_loro_core_checksum_func_refrain_set_size() != 44059) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_loro_core_checksum_func_stream_rank() != 58341) {
+    if (uniffi_loro_core_checksum_func_is_skewed() != 16657) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_loro_core_checksum_func_tick() != 4271) {
+    if (uniffi_loro_core_checksum_func_receive() != 34320) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_loro_core_checksum_func_tokenize() != 26754) {
+    if (uniffi_loro_core_checksum_func_tick() != 63061) {
         return InitializationResult.apiChecksumMismatch
     }
 
     return InitializationResult.ok
 }()
 
-private func uniffiEnsureInitialized() {
+// Make the ensure init function public so that other modules which have external type references to
+// our types can call it.
+public func uniffiEnsureLoroCoreInitialized() {
     switch initializationResult {
     case .ok:
         break
