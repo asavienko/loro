@@ -36,14 +36,16 @@ native wiring waits on [09](09-native-toolchain-and-dev-client.md) — [20](20-s
 — the Today route/layout and basic store integration landed, while wave/completion/resume behaviour
 follows persistence and audio — [23](23-add-import-and-capture.md) — the own-phrase domain/store
 seam landed, while Import and Capture surfaces remain — and [37](37-testing-gaps.md) — calendar
-parity and mobile domain/data tests are done; built-screen coverage is unblocked, while full
-simulations and device E2E follow their named feature plans.
+parity, mobile domain/data tests, and whole-current-app Playwright coverage are done; component,
+blueprint-fidelity, simulation, property, and native device suites remain.
 
 ## Active execution order
 
 1. Finish the remaining correctness defects: **03, 05, 06**.
 2. Run **08** before porting more screens; its findings update the relevant screen plan rather than
-   creating an unowned backlog.
+   creating an unowned backlog. Land **46**'s route table and laws alongside it — thirteen unbuilt
+   screens each need a route, a class, and an exit, and deciding that per screen is how the eleven
+   defects 46 records were introduced.
 3. Establish **09**, then finish **10** and start the native/audio path (**11**, **12**).
 4. Build server foundations in dependency order: **13 → 14 → 15**, with **06** supplying the safe
    temporary identity boundary before auth lands.
@@ -122,24 +124,25 @@ Seven `todo!`s, each standing under a screen.
 
 ## Cross-cutting
 
-| Plan                                                                | Why now                                                                                                                                                                                          | Size |
-| ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---- |
-| [30-widgets-and-notifications](30-widgets-and-notifications.md)     | The policy is written and tested in Rust; nothing calls it                                                                                                                                       | L    |
-| [31-offline-survival-mode](31-offline-survival-mode.md)             | The first M2 exit criterion: airplane mode, fresh launch, usable in <2 s                                                                                                                         | L    |
-| [32-observability-and-analytics](32-observability-and-analytics.md) | Crash reporting is unwired (unmet M0 item), and three open questions are unanswerable without instrumentation                                                                                    | M–L  |
-| [33-experimentation-and-flags](33-experimentation-and-flags.md)     | Four flags exist in code and cannot be set. **Q-05 blocks M3 start** and its measure cannot be retro-fitted                                                                                      | M    |
-| [34-design-system-completion](34-design-system-completion.md)       | ~15 of ~40 components exist; 11 animations are specified and almost none implemented                                                                                                             | M–L  |
-| [35-accessibility-wcag-pass](35-accessibility-wcag-pass.md)         | Four gates already run in CI. **Q-14 is holding the hero screen's peak state**                                                                                                                   | M–L  |
-| [36-content-scale-to-600](36-content-scale-to-600.md)               | 31 phrases, no audio. Gates the labs and the audio module, not just the catalog                                                                                                                  | L    |
-| [37-testing-gaps](37-testing-gaps.md) 🟡                            | Calendar parity and mobile domain/data tests exist; simulation, properties, screen tests, blueprint fixtures and device E2E remain                                                               | M    |
-| [38-performance-budget-harness](38-performance-budget-harness.md)   | One budget of many is enforced. The <2 s bar is unmeasured                                                                                                                                       | M    |
-| [39-security-hardening-api](39-security-hardening-api.md)           | No validation pipeline, no rate limits, no guards                                                                                                                                                | M    |
-| [40-monetization-paywall](40-monetization-paywall.md)               | **Q-08 blocks v1 launch** and needs research before code                                                                                                                                         | L    |
-| [41-docker-and-compose](41-docker-and-compose.md)                   | **The API image build cannot succeed** — it `COPY`s a gitignored directory the deploy workflow never builds. Plus no `.dockerignore`, floating tags, and compose binding Postgres to `0.0.0.0`   | M    |
-| [42-incident-response-and-slos](42-incident-response-and-slos.md)   | The doc exists; nothing is wired. Offline-first changes what the SLOs should measure                                                                                                             | M    |
-| [43-ui-localization](43-ui-localization.md)                         | Scaffolding is cheap now and expensive across 21 screens later                                                                                                                                   | M    |
-| [44-docs-drift-cleanup](44-docs-drift-cleanup.md)                   | Onboarding, README and testing docs advertise commands, paths or suites that do not exist; volatile counts have already diverged                                                                 | S    |
-| [45-api-integrations](45-api-integrations.md)                       | Provider-side contracts, credentials, and verification for the LLM, TTS, STT, auth, billing, storage, and observability vendors (pre-existing plan; complements the app-side module plans above) | L    |
+| Plan                                                                | Why now                                                                                                                                                                                                           | Size |
+| ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- |
+| [30-widgets-and-notifications](30-widgets-and-notifications.md)     | The policy is written and tested in Rust; nothing calls it                                                                                                                                                        | L    |
+| [31-offline-survival-mode](31-offline-survival-mode.md)             | The first M2 exit criterion: airplane mode, fresh launch, usable in <2 s                                                                                                                                          | L    |
+| [32-observability-and-analytics](32-observability-and-analytics.md) | Crash reporting is unwired (unmet M0 item), and three open questions are unanswerable without instrumentation                                                                                                     | M–L  |
+| [33-experimentation-and-flags](33-experimentation-and-flags.md)     | Four flags exist in code and cannot be set. **Q-05 blocks M3 start** and its measure cannot be retro-fitted                                                                                                       | M    |
+| [34-design-system-completion](34-design-system-completion.md)       | ~15 of ~40 components exist; 11 animations are specified and almost none implemented                                                                                                                              | M–L  |
+| [35-accessibility-wcag-pass](35-accessibility-wcag-pass.md)         | Four gates already run in CI. **Q-14 is holding the hero screen's peak state**                                                                                                                                    | M–L  |
+| [36-content-scale-to-600](36-content-scale-to-600.md)               | 31 phrases, no audio. Gates the labs and the audio module, not just the catalog                                                                                                                                   | L    |
+| [37-testing-gaps](37-testing-gaps.md) 🟡                            | Calendar parity, mobile domain/data tests, and every current web route have coverage; simulation, properties, component/blueprint fixtures, and native E2E remain                                                 | M    |
+| [38-performance-budget-harness](38-performance-budget-harness.md)   | One budget of many is enforced. The <2 s bar is unmeasured                                                                                                                                                        | M    |
+| [39-security-hardening-api](39-security-hardening-api.md)           | No validation pipeline, no rate limits, no guards                                                                                                                                                                 | M    |
+| [40-monetization-paywall](40-monetization-paywall.md)               | **Q-08 blocks v1 launch** and needs research before code                                                                                                                                                          | L    |
+| [41-docker-and-compose](41-docker-and-compose.md)                   | **The API image build cannot succeed** — it `COPY`s a gitignored directory the deploy workflow never builds. Plus no `.dockerignore`, floating tags, and compose binding Postgres to `0.0.0.0`                    | M    |
+| [42-incident-response-and-slos](42-incident-response-and-slos.md)   | The doc exists; nothing is wired. Offline-first changes what the SLOs should measure                                                                                                                              | M    |
+| [43-ui-localization](43-ui-localization.md)                         | Scaffolding is cheap now and expensive across 21 screens later                                                                                                                                                    | M    |
+| [44-docs-drift-cleanup](44-docs-drift-cleanup.md)                   | Onboarding, README and testing docs advertise commands, paths or suites that do not exist; volatile counts have already diverged                                                                                  | S    |
+| [45-api-integrations](45-api-integrations.md)                       | Provider-side contracts, credentials, and verification for the LLM, TTS, STT, auth, billing, storage, and observability vendors (pre-existing plan; complements the app-side module plans above)                  | L    |
+| [46-navigation-system](46-navigation-system.md)                     | Eight routes, each wired by the screen that needed it. Nothing owns the route map for 21 screens — so eleven verified defects, and thirteen screen plans with no header, exit, or entry contract to build against | M–L  |
 
 ---
 
