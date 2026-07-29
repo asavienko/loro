@@ -39,6 +39,10 @@ export type {
 export { FIELD_POLICY, mergeClassFor } from './sync/fieldPolicy.js'
 export type { MergeClass, SyncEntity } from './sync/fieldPolicy.js'
 
+// Local persistence: schema, migrations, repositories, outbox. Driver-agnostic — the
+// concrete SQLite driver is supplied by the platform.
+export * from './persistence/index.js'
+
 // Engine implementations. v1 ships stream + refrain; the rest land per the roadmap.
 export {
   StreamEngine,
