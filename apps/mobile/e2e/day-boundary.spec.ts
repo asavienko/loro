@@ -1,0 +1,175 @@
+/**
+ * The day boundary, end to end.
+ *
+ * These are the tests the suite could not express before `e2e/clock.ts`: the app reads the
+ * real clock, so every other spec runs on one arbitrary day and never crosses midnight.
+ * Both bugs this repo has already fixed at the hero screen were day-key bugs
+ * (plans/01-fix-local-day-boundary.md, plans/02-fix-fabricated-streak.md), and
+ * `src/store/dayRollover.ts` names the three places it now defends — none of which had a
+ * browser-level test.
+ *
+ * The two keys are NOT interchangeable, which is what most of this file is about:
+ *   • `localDay()`  — midnight to midnight. Today's frozen Refrain set rolls here.
+ *   • `streakDay()` — plus four hours, so 01:30 still belongs to the evening before.
+ *
+ * All times below are the LEARNER'S wall clock in the project's pinned zone. 2026-03-10 is
+ * a Tuesday; 2026-03-29 is the Sunday Madrid springs forward, a 23-hour day.
+ */
+
+import type { Locator, Page } from '@playwright/test'
+import { atInstant, jumpTo, returnToForeground } from './clock'
+import { expect, onboard, test } from './fixtures'
+
+const REPS = ['Say it', 'Chorus it', 'Faster!', 'Fill & say', 'Respond', 'Say it cold'] as const
+
+test('the weekday label names the learner’s day, not the runner’s', async ({ page }) => {
+  await atInstant(page, '2026-03-10T22:00')
+  await onboard(page)
+
+  await expect(page.getByText('Tuesday · the daily refrain')).toBeVisible()
+})
+
+test('entering the Refrain on a new day rolls the set without a foreground event', async ({
+  page,
+}) => {
+  await atInstant(page, '2026-03-10T22:00')
+  await onboard(page)
+  await lockInOnePhrase(page)
+  await page.goBack()
+
+  // Deliberately no `returnToForeground` — this covers the second of the three call sites
+  // in `src/store/dayRollover.ts`, the one on entry to the Refrain.
+  await jumpTo(page, '2026-03-11T09:00')
+  await page.getByRole('button', { name: 'Start the wave →' }).click()
+
+  await expect(page.getByText('Phrase 1 / 5')).toBeVisible()
+  await expect(page.getByText('Locked in for today')).toBeHidden()
+  await expect(page.locator('div[aria-label$="0 percent automatic."]').first()).toBeVisible()
+})
+
+test('a session inside the grace window counts for the evening it continues', async ({ page }) => {
+  await atInstant(page, '2026-03-10T23:50')
+  await onboard(page)
+  await doOneRep(page)
+
+  await openProgress(page)
+  await expect(page.getByLabel('Last seven days: practised on 1 of them.')).toBeVisible()
+  await expect(streakValue(page)).toHaveText('1')
+  await backToToday(page)
+
+  // 01:30 is inside the four-hour grace, so this rep belongs to the 10th — the same streak
+  // day as the one before it. A second distinct day here would mean the grace window was
+  // not applied, and the learner would be shown a two-day streak they did not earn.
+  await jumpTo(page, '2026-03-11T01:30')
+  await returnToForeground(page)
+  await doOneRep(page)
+
+  await openProgress(page)
+  await expect(page.getByLabel('Last seven days: practised on 1 of them.')).toBeVisible()
+  await expect(streakValue(page)).toHaveText('1')
+})
+
+test('a session past the grace window starts a second streak day', async ({ page }) => {
+  await atInstant(page, '2026-03-10T23:50')
+  await onboard(page)
+  await doOneRep(page)
+
+  // The grace window closes at 04:00, so 09:00 is unambiguously the 11th. This is the
+  // other side of the boundary asserted above; together they pin it rather than assuming
+  // whichever direction happens to pass.
+  await jumpTo(page, '2026-03-11T09:00')
+  await returnToForeground(page)
+  await doOneRep(page)
+
+  await openProgress(page)
+  await expect(page.getByLabel('Last seven days: practised on 2 of them.')).toBeVisible()
+  await expect(streakValue(page)).toHaveText('2')
+})
+
+test('the streak survives the spring-forward day', async ({ page }) => {
+  // Madrid moves 02:00 → 03:00 on the 29th, so the 28th→29th gap is 23 hours of elapsed
+  // time and one calendar day. A streak measured in elapsed hours breaks here; one measured
+  // in calendar days does not (`packages/core/src/domain/calendar.ts`).
+  await atInstant(page, '2026-03-28T22:00')
+  await onboard(page)
+  await doOneRep(page)
+
+  await jumpTo(page, '2026-03-29T12:00')
+  await returnToForeground(page)
+  await doOneRep(page)
+
+  await openProgress(page)
+  await expect(page.getByLabel('Last seven days: practised on 2 of them.')).toBeVisible()
+  await expect(streakValue(page)).toHaveText('2')
+
+  // Seven cells, one per local date. A week built by subtracting 24 hours would land twice
+  // on the same date across the transition and draw six.
+  const initials = await weekdayInitials(page)
+  expect(initials, `the week row drew ${initials.length} days: ${initials.join('')}`).toEqual([
+    'M',
+    'T',
+    'W',
+    'T',
+    'F',
+    'S',
+    'S',
+  ])
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// NOT COVERED HERE, and why
+//
+// A cold launch on a new day — the third `dayRollover.ts` call site, `ensure()` on mount —
+// needs the app to survive a reload. The store is in memory today, so `page.reload()`
+// returns a first-run app and redirects to onboarding rather than a launched-on-a-new-day
+// app. It becomes testable with plans/10-sqlite-persistence-and-outbox.md, and faking it
+// here would assert a state shape production does not have.
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function lockInOnePhrase(page: Page): Promise<void> {
+  await page.getByRole('button', { name: 'Start the wave →' }).click()
+  for (const rep of REPS) await page.getByRole('button', { name: rep }).click()
+  await expect(page.getByText('Locked in for today')).toBeVisible()
+}
+
+/** One rep, from Today and back to Today. */
+async function doOneRep(page: Page): Promise<void> {
+  await page.getByRole('button', { name: 'Start the wave →' }).click()
+  await page.getByRole('button', { name: 'Say it' }).click()
+  await page.goBack()
+  await expect(page.getByText('Today', { exact: true })).toBeVisible()
+}
+
+async function openProgress(page: Page): Promise<void> {
+  await page.getByRole('button', { name: 'Progress' }).click()
+  await expect(page).toHaveURL(/\/progress$/)
+}
+
+/**
+ * In-app navigation, never `page.goto`.
+ *
+ * The store is in memory, so a real navigation would reset the learner to first-run and
+ * every assertion after it would be about a different app.
+ */
+async function backToToday(page: Page): Promise<void> {
+  await page.getByRole('link', { name: /back/i }).click()
+  await expect(page.getByText('Today', { exact: true })).toBeVisible()
+}
+
+function streakValue(page: Page): Locator {
+  return page
+    .getByText('Current streak')
+    .locator('..')
+    .getByText(/^\d+$|^—$/)
+    .first()
+}
+
+/** The seven weekday initials in the Progress week row, oldest first. */
+async function weekdayInitials(page: Page): Promise<string[]> {
+  const cells = await page.getByLabel(/^Last seven days/).allInnerTexts()
+  return cells
+    .join('\n')
+    .split('\n')
+    .map((s) => s.trim())
+    .filter((s) => s.length === 1 && s !== '🔥')
+}

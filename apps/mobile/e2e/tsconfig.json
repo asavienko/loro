@@ -2,7 +2,13 @@
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "noEmit": true,
-    "types": ["node", "@playwright/test"]
+    "types": ["node", "@playwright/test"],
+    // `page.evaluate` bodies run IN THE BROWSER, so a spec legitimately references
+    // `document` and `Intl`. Without DOM here the type-aware lint rules see an unresolved
+    // type and report every such line as unsafe, while `apps/mobile/tsconfig.json` — which
+    // also covers `e2e/**` and does include DOM — reports nothing. One of the two had to be
+    // wrong about this directory, and browser globals are real in it.
+    "lib": ["ES2022", "DOM"]
   },
   "include": ["./**/*.ts"]
 }
