@@ -41,7 +41,7 @@ jobs:
         env: { LORO_SKIP_WASM: '1' }
       - run: pnpm tokens:build
 
-      - uses: expo/expo-github-action@v8
+      - uses: expo/expo-github-action@v9
         with:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
