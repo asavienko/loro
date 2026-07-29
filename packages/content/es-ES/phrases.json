@@ -1,0 +1,334 @@
+{
+  "$comment": [
+    "The seed catalog, extracted verbatim from Loro.dc.html:2179-2211 (the library) and",
+    "2885-2899 (LORO_RICH — respellings, glosses, examples, hooks).",
+    "",
+    "31 phrases across 8 themes. Launch target is ~600 (docs/product/roadmap.md).",
+    "",
+    "Every phrase must meet the ten-point quality bar:",
+    "docs/product/content-model.md#quality-bar-for-a-catalog-phrase",
+    "",
+    "Fields still to be authored for most rows: resp, resp_ipa, words, example, hint,",
+    "note, syl, f0_native, audio. Those are produced by the enrich + render pipeline",
+    "(docs/process/content-authoring.md) and human-reviewed before merge."
+  ],
+  "lang": "es-ES",
+  "catalogVersion": 1,
+
+  "phrases": [
+    {
+      "id": "cafe1",
+      "es": "Me pone un cortado, por favor",
+      "en": "A cortado, please",
+      "theme": "Café",
+      "emoji": "☕",
+      "register": "neutral",
+      "cefr": "A1",
+      "resp": "meh PO-neh oon kor-TAH-doh por fah-VOR",
+      "note": "Watch the soft 'd' in cortado — closer to 'th' in 'the' than an English d."
+    },
+    {
+      "id": "cafe2",
+      "es": "¿Tienen leche de avena?",
+      "en": "Do you have oat milk?",
+      "theme": "Café",
+      "emoji": "🥛",
+      "register": "neutral",
+      "cefr": "A2"
+    },
+    {
+      "id": "cafe3",
+      "es": "Para llevar, por favor",
+      "en": "To go, please",
+      "theme": "Café",
+      "emoji": "🥤",
+      "register": "neutral",
+      "cefr": "A1"
+    },
+    {
+      "id": "cafe4",
+      "es": "La cuenta, por favor",
+      "en": "The bill, please",
+      "theme": "Café",
+      "emoji": "🧾",
+      "register": "neutral",
+      "cefr": "A1",
+      "resp": "lah KWEN-tah por fah-VOR"
+    },
+
+    {
+      "id": "din1",
+      "es": "¿Tienen una mesa para dos?",
+      "en": "A table for two?",
+      "theme": "Dining",
+      "emoji": "🍽",
+      "register": "neutral",
+      "cefr": "A1",
+      "resp": "TYEH-nen OO-nah MEH-sah PAH-rah dos"
+    },
+    {
+      "id": "din2",
+      "es": "¿Qué me recomienda?",
+      "en": "What do you recommend?",
+      "theme": "Dining",
+      "emoji": "👨‍🍳",
+      "register": "neutral",
+      "cefr": "A2"
+    },
+    {
+      "id": "din3",
+      "es": "Soy alérgico a los frutos secos",
+      "en": "I'm allergic to nuts",
+      "theme": "Dining",
+      "emoji": "🥜",
+      "register": "neutral",
+      "cefr": "A2"
+    },
+    {
+      "id": "din4",
+      "es": "Estaba delicioso",
+      "en": "It was delicious",
+      "theme": "Dining",
+      "emoji": "😋",
+      "register": "neutral",
+      "cefr": "A1"
+    },
+
+    {
+      "id": "trv1",
+      "es": "¿Dónde está la parada de taxis?",
+      "en": "Where's the taxi stand?",
+      "theme": "Travel",
+      "emoji": "🚕",
+      "register": "neutral",
+      "cefr": "A1",
+      "resp": "DON-deh es-TAH lah pah-RAH-dah deh TAHK-sees",
+      "words": [
+        { "es": "¿Dónde", "gloss": "Where", "say": "dónde" },
+        { "es": "está", "gloss": "is", "say": "está" },
+        { "es": "la parada", "gloss": "the stop", "say": "la parada" },
+        { "es": "de taxis?", "gloss": "of taxis", "say": "de taxis" }
+      ],
+      "example": {
+        "es": "Perdone, ¿dónde está la parada de taxis más cercana?",
+        "en": "Excuse me, where is the nearest taxi stand?"
+      }
+    },
+    {
+      "id": "trv2",
+      "es": "¿A qué hora sale el tren?",
+      "en": "What time does the train leave?",
+      "theme": "Travel",
+      "emoji": "🚆",
+      "register": "neutral",
+      "cefr": "A2"
+    },
+    {
+      "id": "trv3",
+      "es": "¿Este autobús va al centro?",
+      "en": "Does this bus go downtown?",
+      "theme": "Travel",
+      "emoji": "🚌",
+      "register": "neutral",
+      "cefr": "A2"
+    },
+    {
+      "id": "trv4",
+      "es": "He perdido mi maleta",
+      "en": "I've lost my suitcase",
+      "theme": "Travel",
+      "emoji": "🧳",
+      "register": "neutral",
+      "cefr": "A2"
+    },
+
+    {
+      "id": "dir1",
+      "es": "¿Cómo llego al museo?",
+      "en": "How do I get to the museum?",
+      "theme": "Directions",
+      "emoji": "🧭",
+      "register": "neutral",
+      "cefr": "A1"
+    },
+    {
+      "id": "dir2",
+      "es": "Gire a la derecha",
+      "en": "Turn right",
+      "theme": "Directions",
+      "emoji": "➡️",
+      "register": "formal",
+      "cefr": "A1"
+    },
+    {
+      "id": "dir3",
+      "es": "¿Está lejos de aquí?",
+      "en": "Is it far from here?",
+      "theme": "Directions",
+      "emoji": "📍",
+      "register": "neutral",
+      "cefr": "A1"
+    },
+    {
+      "id": "dir4",
+      "es": "Estoy perdido",
+      "en": "I'm lost",
+      "theme": "Directions",
+      "emoji": "🗺",
+      "register": "neutral",
+      "cefr": "A1",
+      "resp": "es-TOY per-DEE-doh",
+      "hint": "\"Perdido\" shares a root with \"lost / perish.\""
+    },
+
+    {
+      "id": "shp1",
+      "es": "¿Cuánto cuesta?",
+      "en": "How much is it?",
+      "theme": "Shopping",
+      "emoji": "💶",
+      "register": "neutral",
+      "cefr": "A1",
+      "resp": "KWAN-toh KWES-tah"
+    },
+    {
+      "id": "shp2",
+      "es": "¿Lo tienen en otra talla?",
+      "en": "Do you have it in another size?",
+      "theme": "Shopping",
+      "emoji": "👕",
+      "register": "neutral",
+      "cefr": "A2"
+    },
+    {
+      "id": "shp3",
+      "es": "Solo estoy mirando, gracias",
+      "en": "Just looking, thanks",
+      "theme": "Shopping",
+      "emoji": "🛍",
+      "register": "neutral",
+      "cefr": "A1"
+    },
+    {
+      "id": "shp4",
+      "es": "¿Aceptan tarjeta?",
+      "en": "Do you take card?",
+      "theme": "Shopping",
+      "emoji": "💳",
+      "register": "neutral",
+      "cefr": "A1"
+    },
+
+    {
+      "id": "tlk1",
+      "es": "Encantado de conocerte",
+      "en": "Nice to meet you",
+      "theme": "Small talk",
+      "emoji": "🤝",
+      "register": "neutral",
+      "cefr": "A1",
+      "resp": "en-kahn-TAH-doh deh ko-no-SER-teh",
+      "hint": "\"Encantado\" = enchanted — you are \"enchanted to meet you.\""
+    },
+    {
+      "id": "tlk2",
+      "es": "¿De dónde eres?",
+      "en": "Where are you from?",
+      "theme": "Small talk",
+      "emoji": "🌍",
+      "register": "casual",
+      "cefr": "A1"
+    },
+    {
+      "id": "tlk3",
+      "es": "¿A qué te dedicas?",
+      "en": "What do you do?",
+      "theme": "Small talk",
+      "emoji": "💼",
+      "register": "casual",
+      "cefr": "A2"
+    },
+    {
+      "id": "tlk4",
+      "es": "Que tengas un buen día",
+      "en": "Have a nice day",
+      "theme": "Small talk",
+      "emoji": "🌞",
+      "register": "casual",
+      "cefr": "A1"
+    },
+
+    {
+      "id": "srv1",
+      "es": "¿Me lo puede repetir?",
+      "en": "Can you repeat that?",
+      "theme": "Survival",
+      "emoji": "🔁",
+      "register": "neutral",
+      "cefr": "A1",
+      "resp": "meh loh PWEH-deh reh-peh-TEER",
+      "example": {
+        "es": "Perdone, ¿me lo puede repetir más despacio?",
+        "en": "Sorry, can you repeat that more slowly?"
+      }
+    },
+    {
+      "id": "srv2",
+      "es": "Lo siento, no entiendo",
+      "en": "Sorry, I don't understand",
+      "theme": "Survival",
+      "emoji": "🙏",
+      "register": "neutral",
+      "cefr": "A1",
+      "resp": "loh SYEN-toh no en-TYEN-doh"
+    },
+    {
+      "id": "srv3",
+      "es": "¿Habla inglés?",
+      "en": "Do you speak English?",
+      "theme": "Survival",
+      "emoji": "💬",
+      "register": "neutral",
+      "cefr": "A1"
+    },
+    {
+      "id": "srv4",
+      "es": "¿Puede hablar más despacio?",
+      "en": "Can you speak slower?",
+      "theme": "Survival",
+      "emoji": "🐢",
+      "register": "neutral",
+      "cefr": "A1"
+    },
+
+    {
+      "id": "htl1",
+      "es": "Tengo una reserva",
+      "en": "I have a reservation",
+      "theme": "Hotel",
+      "emoji": "🏨",
+      "register": "neutral",
+      "cefr": "A1"
+    },
+    {
+      "id": "htl2",
+      "es": "¿A qué hora es el desayuno?",
+      "en": "What time is breakfast?",
+      "theme": "Hotel",
+      "emoji": "🍳",
+      "register": "neutral",
+      "cefr": "A1",
+      "resp": "ah keh OH-rah es el deh-sah-YOO-no",
+      "hint": "\"Des-ayuno\" = un-fasting — break-fast, same idea as English."
+    },
+    {
+      "id": "htl3",
+      "es": "¿Hay wifi en la habitación?",
+      "en": "Is there wifi in the room?",
+      "theme": "Hotel",
+      "emoji": "📶",
+      "register": "neutral",
+      "cefr": "A1"
+    }
+  ]
+}

@@ -1,0 +1,126 @@
+{
+  "$comment": [
+    "All 11 animations from Loro.dc.html:19-62, plus the easing set and the touch layer.",
+    "",
+    "Reduced-motion behaviour is declared here rather than per component, so a new",
+    "animation inherits the correct behaviour instead of needing to remember it.",
+    "",
+    "THE RULE: if an animation carries information, the information survives; only the",
+    "motion goes. See docs/design/motion.md"
+  ],
+
+  "easing": {
+    "out": { "value": "cubic-bezier(.2,.8,.2,1)", "use": "growth, sheets, layout, presses" },
+    "pop": { "value": "cubic-bezier(.2,.85,.25,1)", "use": "arrivals — a REWARD appearing. 8% overshoot" },
+    "press": { "value": "cubic-bezier(.3,.7,.3,1)", "use": "icon-button presses" },
+    "inOut": { "value": "ease-in-out", "use": "looping indicators" },
+    "linear": { "value": "linear", "use": "progress bars tracking real playback" }
+  },
+
+  "animation": {
+    "popIn": {
+      "duration": 400,
+      "range": [300, 500],
+      "easing": "pop",
+      "reducedMotion": "crossfade",
+      "use": "toasts, lock-in diamond, level-up, completion check — REWARDS specifically"
+    },
+    "stepIn": { "duration": 300, "easing": "out", "reducedMotion": "crossfade", "use": "onboarding step content" },
+    "flip": {
+      "duration": 300,
+      "easing": "out",
+      "reducedMotion": "crossfade",
+      "use": "card reveal, score card, curve panel"
+    },
+    "fadeIn": {
+      "duration": 250,
+      "range": [200, 300],
+      "easing": "out",
+      "reducedMotion": "keep",
+      "use": "scrims, coach notes, deck cards"
+    },
+    "sheetUp": { "duration": 340, "easing": "pop", "reducedMotion": "crossfade", "use": "the tagging sheet" },
+    "grow": {
+      "duration": 500,
+      "easing": "out",
+      "reducedMotion": "instant",
+      "use": "mastery bar, tag bars, ladder bars"
+    },
+    "eqA": { "duration": 1000, "loop": true, "easing": "inOut", "reducedMotion": "static", "use": "small equalisers" },
+    "eqB": {
+      "duration": 1000,
+      "loop": true,
+      "stagger": 150,
+      "easing": "inOut",
+      "reducedMotion": "static",
+      "use": "now-playing equaliser, mic listening, ambient loop"
+    },
+    "barJump": {
+      "duration": 720,
+      "range": [700, 900],
+      "loop": true,
+      "stagger": 120,
+      "easing": "inOut",
+      "reducedMotion": "static",
+      "use": "listening bars, typing dots, recording waveform, THE REFRAIN BEAT"
+    },
+    "pulseRing": { "duration": 1600, "loop": true, "reducedMotion": "static", "use": "the mic button while listening" },
+    "tapRing": { "duration": 400, "easing": "out", "reducedMotion": "none", "use": "tap ripple" }
+  },
+
+  "transition": {
+    "warmingCard": {
+      "duration": 500,
+      "properties": ["background", "box-shadow"],
+      "easing": "ease",
+      "reducedMotion": "keepColour",
+      "note": "THE most important animation in the app. The colour change is DATA, so it survives Reduce Motion; only the glow animation drops. Must hold 60fps on the device floor — a stutter reads as the app not noticing the learner's rep."
+    },
+    "automaticityBar": { "duration": 450, "easing": "out", "reducedMotion": "instant" },
+    "wordUnblur": {
+      "duration": 350,
+      "range": [300, 400],
+      "properties": ["filter", "color", "background", "transform"],
+      "easing": "out",
+      "reducedMotion": "instant"
+    },
+    "cardGrow": { "duration": 280, "easing": "out" },
+    "queueReorder": {
+      "duration": 320,
+      "easing": "out",
+      "note": "transforms only — never height changes, or lists drop frames"
+    },
+    "progressBar": { "duration": 400, "easing": "out" },
+    "skillAxis": { "duration": 500, "easing": "out" },
+    "selection": { "duration": 190, "range": [180, 200], "easing": "out" },
+    "contourTrace": { "stepMs": 45, "totalMs": 2300, "easing": "linear", "reducedMotion": "scrubber" }
+  },
+
+  "press": {
+    "$comment": "Every interactive element scales on press. Nothing here is tappable without physical feedback.",
+    "row": { "scale": 0.988, "duration": 160, "backgroundShift": true },
+    "button": { "scale": 0.98, "duration": 150 },
+    "smallButton": { "scale": 0.9, "duration": 130, "brightness": 0.93 },
+    "icon": { "scale": 0.82, "duration": 130, "opacity": 0.6 },
+    "grow": { "scale": 0.985, "duration": 280, "shadow": true },
+    "reducedMotion": "keep"
+  },
+
+  "audioTiming": {
+    "$comment": "Two of these are deliberately MINIMUM durations. When a result arrives in 80ms, showing it instantly makes the learner doubt it was computed. The work is real; the pacing lets it read that way.",
+    "repeatGapMs": { "value": 350, "note": "silence between stream repeats, for the learner to shadow" },
+    "autoPlayDelayMs": { "value": 200, "note": "after a card reveal" },
+    "completionEchoMs": { "value": 250, "note": "before replaying the full phrase on completion" },
+    "processingMinMs": { "value": 400, "note": "MINIMUM — a too-fast score reads as fake" },
+    "deckShuffleMs": { "value": 1200, "note": "the suspense IS the mechanic (Loro.dc.html:3487)" },
+    "voiceCloneGenMs": { "value": 1200, "note": "the wait signals real work" }
+  },
+
+  "touch": {
+    "minTapTarget": 44,
+    "iconHitArea": 44,
+    "tapHighlight": "none",
+    "touchAction": "manipulation",
+    "userSelect": "none"
+  }
+}

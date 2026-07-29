@@ -1,0 +1,4 @@
+module loro_coreFFI {
+    header "loro_coreFFI.h"
+    export *
+}

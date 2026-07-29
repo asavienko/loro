@@ -1,0 +1,197 @@
+{
+  "$comment": "Extracted from Language Learning by Phrases/Loro.dc.html. See docs/design/design-system.md",
+
+  "surface": {
+    "canvas": { "value": "#eae6de", "comment": "The blueprint's page backdrop (Loro.dc.html:16)" },
+    "app": { "value": "#f6f2ea", "comment": "THE app screen background (131)" },
+    "card": { "value": "#ffffff" },
+    "sunken": { "value": "#ece7db", "comment": "Inset areas, inactive chips, icon tiles" },
+    "sunken2": { "value": "#e9e3d6", "comment": "Segmented-control track (643)" },
+    "device": { "value": "#1a1815", "comment": "Blueprint device bezel; not a product surface" },
+    "dark": {
+      "value": "#23201b",
+      "comment": "The flat dark fill: dark cards, the toast, the active segmented-control track. Pair only with onDark.* text — being the lightest dark background, it is the worst case for contrast, so that is what the checker uses."
+    }
+  },
+
+  "ink": {
+    "$comment": "Contrast ratios are against surface.app (#f6f2ea).",
+    "ink": { "value": "#23201b", "contrast": 13.9, "use": "headings, phrase text, primary values" },
+    "ink2": { "value": "#514e44", "contrast": 7.4, "use": "body copy" },
+    "ink3": { "value": "#5c584c", "contrast": 6.3, "use": "secondary body, labels" },
+    "ink4": { "value": "#57534a", "contrast": 6.8, "use": "nav links" },
+    "muted": { "value": "#6c6759", "contrast": 4.8, "use": "captions, translations, hints" },
+    "muted2": { "value": "#7a7466", "contrast": 3.9, "use": "WARNING: >=14px semibold or non-text only" },
+    "muted3": {
+      "value": "#8a8476",
+      "contrast": 3.2,
+      "use": "WARNING: decorative marks only",
+      "deviation": "blueprint #8c8677 was 2.94:1 on surface.sunken — nudged to clear 3:1"
+    }
+  },
+
+  "line": {
+    "subtle": { "value": "#ece7db", "use": "dividers inside cards" },
+    "default": { "value": "#e5dfd2", "use": "card borders" },
+    "strong": { "value": "#ddd6c7", "use": "interactive borders (inputs, outlined buttons)" },
+    "stronger": { "value": "#d9d3c5", "use": "section rules, sheet handle" },
+    "strongest": { "value": "#cbc4b5", "use": "header underlines" }
+  },
+
+  "semantic": {
+    "$comment": "Each family is a triple — text, background, border. That triple is what makes the pills and banners work.",
+    "success": {
+      "text": "#356b4f",
+      "bg": "#e8f1ea",
+      "border": "#bcd6c6",
+      "contrast": 5.4,
+      "use": "Easy, learned, locked in, score >=85"
+    },
+    "successMeta": {
+      "text": "#50745f",
+      "use": "Secondary line under a success headline ('It comes out without thinking now.'), on success.bg",
+      "comment": "Blueprint had #5f8a71 — 3.4:1 on success.bg, below AA. Darkened along the same hue to 4.55:1."
+    },
+    "successAlt": {
+      "text": "#3c785a",
+      "comment": "Blueprint had #3d7a5b, which passes on surface.app (4.7:1) but only reaches 4.4:1 on success.bg, where it is actually used. Nudged to 4.52:1.",
+      "use": "Mastered dot, check marks",
+      "deviation": "blueprint #3f7d5d was 4.37:1 — a check mark beside text reads as text"
+    },
+    "warn": {
+      "text": "#8a6414",
+      "bg": "#f7efdd",
+      "border": "#e3d1a8",
+      "contrast": 4.7,
+      "use": "Learning, useful, score 70-84"
+    },
+    "danger": {
+      "text": "#8c3f18",
+      "bg": "#f8e9e3",
+      "border": "#e2b8a5",
+      "contrast": 6.4,
+      "use": "Difficult, destructive, score <70"
+    },
+    "dangerAlt": { "text": "#a94a2b", "use": "retry copy, tricky-words tag" },
+    "info": {
+      "text": "#3d6a94",
+      "bg": "#eaeff5",
+      "border": "#c5d5e4",
+      "contrast": 4.6,
+      "use": "Pronunciation focus, Easy grade, Instant confidence"
+    },
+    "violet": {
+      "text": "#77558f",
+      "bg": "#f1edf6",
+      "border": "#ded3e8",
+      "contrast": 5.1,
+      "use": "Hard-to-remember focus, remediation"
+    },
+    "hook": {
+      "text": "#7a6247",
+      "bg": "#faf1e7",
+      "border": "#efe0cd",
+      "contrast": 5.0,
+      "use": "memory hooks, coach notes"
+    },
+    "hookMeta": {
+      "text": "#866a44",
+      "use": "'tap to change'",
+      "deviation": "blueprint #bd9660 was 2.44:1 — genuinely unreadable at 10px. The largest correction in the palette."
+    }
+  },
+
+  "scale": {
+    "$comment": "Four ordered scales. Their ORDER carries meaning, so it is part of the contract.",
+
+    "mastery": {
+      "$comment": "Loro.dc.html:2839-2842",
+      "$deviation": "new and learning were 2.29:1 and 2.46:1 on surface.app — too faint for the legend dots to be distinguishable. Darkened to clear 3:1.",
+      "new": "#918b82",
+      "learning": "#b58331",
+      "strong": "#5b89ab",
+      "mastered": "#3d7a5b"
+    },
+
+    "ladder": {
+      "$comment": "Loro.dc.html:3429-3435. A real competence hierarchy.",
+      "accumulated": "#5f6b78",
+      "bent": "#7f6a44",
+      "transferred": "#8a6810",
+      "pressureTested": "#bf5722",
+      "deployed": "#8c3f18"
+    },
+
+    "confidence": {
+      "$comment": "Loro.dc.html:2993-2998",
+      "forgot": "#8c3f18",
+      "shaky": "#a94a2b",
+      "ok": "#8a6414",
+      "strong": "#356b4f",
+      "instant": "#3d6a94"
+    },
+
+    "warming": {
+      "$comment": "THE most important colour transition in the app. The Refrain card heats as automaticity climbs. Loro.dc.html:3392-3396",
+      "cold": { "bg": "#edf0f4", "text": "#516275", "glow": "0 2px 8px rgba(0,0,0,.04)", "range": "0-32%" },
+      "warm": {
+        "bg": "#faf1e7",
+        "text": "#936439",
+        "glow": "0 6px 16px rgba(191,87,34,.12)",
+        "range": "33-65%",
+        "deviation": "text was #9b6a3c at 4.16:1"
+      },
+      "hot": {
+        "bg": "linear-gradient(160deg,#f8ddc8,#f0cfa9)",
+        "text": "#8f4a1f",
+        "glow": "0 10px 28px rgba(191,87,34,.26)",
+        "range": "66-99%"
+      },
+      "peak": {
+        "bg": "linear-gradient(160deg,#d28145,#bf5722)",
+        "text": "#ffffff",
+        "glow": "0 14px 40px rgba(191,87,34,.45)",
+        "range": "100%",
+        "textSizeFloor": "large",
+        "deviation": "the gradient's light stop was #e08a4a — white on it was 2.66:1, below even the 3:1 large-text floor. Darkened to #d28145.",
+        "constraint": [
+          "WHITE TEXT ON THIS BAND MUST BE >=17px SEMIBOLD. It clears 3:1, not 4.5:1.",
+          "",
+          "The blueprint renders a 13px English subtitle in white at 0.7 opacity here",
+          "(Loro.dc.html:1442). That does not pass, and darkening the gradient far enough",
+          "to fix it (#a86737 -> #8f4119) turns the app's single most important reward",
+          "moment into a muddy brown.",
+          "",
+          "So the constraint is recorded rather than waived: the peak card's secondary",
+          "text needs a different treatment. Tracked as Q-14 in docs/decisions/open-questions.md",
+          "and enforced by checkContrast.ts, which fails if this floor is removed."
+        ]
+      }
+    }
+  },
+
+  "onDark": {
+    "$comment": "Ink inverts to a warm grey ramp on dark cards. Loro.dc.html:49-52",
+    "primary": "#ffffff",
+    "secondary": "#e5dfd2",
+    "tertiary": "#c2bbac",
+    "muted": "#a8a196",
+    "faint": "rgba(255,255,255,.6)",
+    "surface": "rgba(255,255,255,.08)",
+    "surface2": "rgba(255,255,255,.12)",
+    "line": "rgba(255,255,255,.16)"
+  },
+
+  "gradient": {
+    "darkCard": "linear-gradient(170deg,#332e27,#141310)",
+    "darkCardAlt": "linear-gradient(160deg,#33302a,#141310)",
+    "warm": "linear-gradient(165deg,#f8ece1,#f2ddc5)",
+    "warmStrong": "linear-gradient(150deg,#a2461a,#bd7d1f)",
+    "night": "linear-gradient(165deg,#6b4e33 0%,#3a2e22 55%,#171310 100%)",
+    "fire": "linear-gradient(160deg,#e08a4a,#bf5722)"
+  },
+
+  "scrim": {
+    "sheet": "rgba(26,24,21,.42)"
+  }
+}

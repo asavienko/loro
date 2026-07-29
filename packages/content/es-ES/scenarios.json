@@ -1,0 +1,52 @@
+{
+  "$comment": [
+    "Cross-theme bundles, from Loro.dc.html:2230-2238.",
+    "",
+    "A scenario is a SITUATION, so it deliberately crosses themes — a dinner reservation",
+    "needs Dining phrases AND a greeting.",
+    "",
+    "THE ORDER IS THE ARC OF THE REAL INTERACTION, and a scenario add preserves it.",
+    "",
+    "Authoring rule: 4-6 phrases, and someone who learns only that scenario can get",
+    "through the real situation. Production target ~30."
+  ],
+  "lang": "es-ES",
+
+  "scenarios": [
+    {
+      "id": "dinner",
+      "label": "Dinner reservation",
+      "emoji": "🍽",
+      "phrases": ["din1", "din2", "tlk1", "din4"],
+      "arc": "ask for a table → ask what's good → meet whoever you're with → compliment the food"
+    },
+    {
+      "id": "train",
+      "label": "Catching a train",
+      "emoji": "🚆",
+      "phrases": ["trv2", "trv1", "dir3", "srv1"],
+      "arc": "departure time → find a taxi → how far → ask them to repeat"
+    },
+    {
+      "id": "checkin",
+      "label": "Hotel check-in",
+      "emoji": "🏨",
+      "phrases": ["htl1", "htl2", "htl3", "srv3"],
+      "arc": "I have a reservation → breakfast time → wifi → do you speak English"
+    },
+    {
+      "id": "market",
+      "label": "Market & shops",
+      "emoji": "🛍",
+      "phrases": ["shp1", "shp2", "shp4", "shp3"],
+      "arc": "how much → another size → card → just looking"
+    },
+    {
+      "id": "lost",
+      "label": "Getting un-lost",
+      "emoji": "🧭",
+      "phrases": ["dir1", "dir3", "dir4", "srv4"],
+      "arc": "how do I get to → is it far → I'm lost → speak slower"
+    }
+  ]
+}

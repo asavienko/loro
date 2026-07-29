@@ -1,0 +1,67 @@
+name: Content
+
+on:
+  pull_request:
+    paths: ['packages/content/**']
+  workflow_dispatch:
+    inputs:
+      action:
+        type: choice
+        options: [validate, render, publish]
+        default: validate
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+
+      # Every mechanical check, so human review can spend itself on naturalness.
+      # See docs/process/content-authoring.md#6--validate
+      - name: Schema
+        run: pnpm --filter @loro/content validate:schema
+      - name: Pack counts match their promised label
+        run: pnpm --filter @loro/content validate:packs
+      - name: References (packs, scenarios, drops → existing phrases)
+        run: pnpm --filter @loro/content validate:refs
+      - name: Audio present and checksums resolve
+        run: pnpm --filter @loro/content validate:audio
+      - name: Syllable spans cover the phrase; f0 has 14 points
+        run: pnpm --filter @loro/content validate:prosody
+      - name: No duplicate Spanish within a language
+        run: pnpm --filter @loro/content validate:duplicates
+      - name: Respelling stress agrees with IPA
+        run: pnpm --filter @loro/content validate:stress
+      - name: Length caps for A1/A2
+        run: pnpm --filter @loro/content validate:length
+
+      - name: Remind about native review
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "::notice::Content changes need a native es-ES reviewer approval (CODEOWNERS)"
+          echo "::notice::and every new/changed audio clip must be listened to by a human."
+
+  render:
+    if: inputs.action == 'render' || inputs.action == 'publish'
+    runs-on: ubuntu-latest
+    environment: content
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: Render TTS + extract f0/syllables/mfcc reference
+        run: echo "TODO(M1) — pnpm content:render --all"
+        env:
+          TTS_API_KEY: ${{ secrets.TTS_API_KEY }}
+
+  publish:
+    if: inputs.action == 'publish'
+    needs: render
+    runs-on: ubuntu-latest
+    environment: content
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      # Content ships independently of the app — ADR-0009.
+      - name: Bump catalog_version and publish the manifest
+        run: echo "TODO(M1) — pnpm content:publish"

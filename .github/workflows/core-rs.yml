@@ -1,0 +1,104 @@
+name: core-rs
+
+on:
+  pull_request:
+    paths:
+      - 'packages/core-rs/**'
+      - '.github/workflows/core-rs.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'packages/core-rs/**'
+
+concurrency:
+  group: core-rs-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: packages/core-rs
+
+jobs:
+  test:
+    name: test + golden
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with: { components: clippy, rustfmt }
+      - uses: Swatinem/rust-cache@v2
+        with: { workspaces: packages/core-rs }
+
+      - run: cargo fmt --check
+      - run: cargo clippy --all-targets -- -D warnings
+
+      - name: Unit + integration tests
+        run: cargo test --all-features
+
+      # ~50 recorded utterances with committed expected output.
+      # A moved score is either a real improvement or a regression — the author must say which.
+      # See docs/architecture/prosody-dsp.md#golden-tests-forever
+      - name: Golden DSP tests
+        run: cargo test --test golden -- --nocapture
+
+      - name: Explain the golden failure
+        if: failure()
+        run: |
+          echo "::error::A golden DSP score moved beyond its stability threshold."
+          echo "This is either a real improvement or a regression. Do NOT re-baseline silently —"
+          echo "explain the change in the PR description. See docs/process/code-review.md#special-review-paths"
+
+  bench:
+    name: benchmarks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with: { workspaces: packages/core-rs }
+      - name: Criterion (fails on >10% regression)
+        run: cargo bench -- --save-baseline pr
+      - uses: actions/upload-artifact@v4
+        with:
+          name: criterion
+          path: packages/core-rs/target/criterion/
+
+  build-matrix:
+    name: build ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { target: aarch64-apple-ios, os: macos-latest }
+          - { target: aarch64-apple-ios-sim, os: macos-latest }
+          - { target: aarch64-linux-android, os: ubuntu-latest }
+          - { target: armv7-linux-androideabi, os: ubuntu-latest }
+          - { target: x86_64-linux-android, os: ubuntu-latest }
+          - { target: wasm32-unknown-unknown, os: ubuntu-latest }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with: { targets: '${{ matrix.target }}' }
+      - uses: Swatinem/rust-cache@v2
+        with: { workspaces: packages/core-rs, key: '${{ matrix.target }}' }
+
+      - name: Install cargo-ndk
+        if: contains(matrix.target, 'android')
+        run: cargo install cargo-ndk --locked
+
+      - run: cargo build --release --target ${{ matrix.target }}
+
+  parity:
+    name: cross-language parity
+    runs-on: macos-latest
+    needs: build-matrix
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with: { workspaces: packages/core-rs }
+      # Swift, Kotlin, and WASM must agree on every number.
+      # A divergence here means the sync merge could lose learner data. ADR-0002.
+      - name: Same inputs, same outputs across all bindings
+        run: cargo test --test parity

@@ -1,0 +1,105 @@
+# Loro documentation
+
+Everything written down, indexed. Four sections plus decisions.
+
+| Section                       | For                                        |
+| ----------------------------- | ------------------------------------------ |
+| [Product](#product)           | What we're building and why                |
+| [Architecture](#architecture) | How it's built                             |
+| [Design](#design)             | How it looks, moves, and reads             |
+| [Process](#process)           | How we work                                |
+| [Decisions](#decisions)       | What's still open, and what could go wrong |
+
+**The design blueprint (`Language Learning by Phrases/Loro.dc.html`) outranks every document here.**
+These docs interpret and extend it; they do not replace it.
+
+---
+
+## Product
+
+| Doc                                              | Contents                                                                                   |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------ |
+| [vision.md](product/vision.md)                   | The thesis, positioning, what Loro is not, success conditions                              |
+| [personas.md](product/personas.md)               | Four learners, their jobs-to-be-done, and which loop serves each                           |
+| [prd.md](product/prd.md)                         | **Every feature**, phase by phase, with IDs, acceptance criteria, and release targets      |
+| [functional-spec.md](product/functional-spec.md) | Screen-by-screen behaviour for all 21 screens — states, interactions, edge cases           |
+| [learning-model.md](product/learning-model.md)   | The pedagogy: difficulty, tags, the connective thread, mastery states                      |
+| [practice-loops.md](product/practice-loops.md)   | Loops A/B/C compared; what ships when; how the engine abstraction keeps all three alive    |
+| [content-model.md](product/content-model.md)     | Phrases, themes, scenarios, packs, drops, and the rich fields (respelling, glosses, hooks) |
+| [trip-arc.md](product/trip-arc.md)               | The countdown product: 6 steps from setting a date to the souvenir                         |
+| [metrics.md](product/metrics.md)                 | North star, funnel, event taxonomy, guardrail metrics                                      |
+| [monetization.md](product/monetization.md)       | Free tier, subscription, what stays free forever, and why                                  |
+| [roadmap.md](product/roadmap.md)                 | M0–M6 with scope, exit criteria, and rough sizing                                          |
+
+## Architecture
+
+| Doc                                                               | Contents                                                                            |
+| ----------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| [overview.md](architecture/overview.md)                           | C4 context and containers, cross-cutting concerns, the ten rules                    |
+| [mobile-app.md](architecture/mobile-app.md)                       | Layers, folder structure, navigation, state, rendering strategy                     |
+| [practice-engines.md](architecture/practice-engines.md)           | The `PracticeEngine` contract and all five implementations                          |
+| [audio-speech.md](architecture/audio-speech.md)                   | Playback graph, TTS, ASR, background audio, the hands-free stream                   |
+| [prosody-dsp.md](architecture/prosody-dsp.md)                     | Pitch extraction, alignment, per-syllable scoring, rhythm/stress, the cue ladder    |
+| [scheduling.md](architecture/scheduling.md)                       | FSRS, queue ranking, automaticity, the roguelike ladder, drop scheduling            |
+| [data-model.md](architecture/data-model.md)                       | Entities, ERD, SQLite DDL, Postgres DDL, migrations                                 |
+| [sync-protocol.md](architecture/sync-protocol.md)                 | Delta sync, hybrid logical clocks, per-field LWW, conflict rules, wire format       |
+| [backend.md](architecture/backend.md)                             | NestJS module map, infrastructure, deployment topology                              |
+| [api.md](architecture/api.md)                                     | The HTTP contract — every endpoint, request, response, and error                    |
+| [ai-services.md](architecture/ai-services.md)                     | Claude roleplay, coach notes, phrase generation; prompts, caching, guardrails, cost |
+| [offline.md](architecture/offline.md)                             | What works with no network, prefetch policy, survival mode                          |
+| [widgets-notifications.md](architecture/widgets-notifications.md) | Lock screen widget, Live Activity, Glance widget, notification policy               |
+| [security-privacy.md](architecture/security-privacy.md)           | Auth, tokens, at-rest/in-transit, data classes, retention, GDPR duties              |
+| [threat-model.md](architecture/threat-model.md)                   | Assets, actors, attack surface, mitigations, abuse of the AI endpoints              |
+| [performance.md](architecture/performance.md)                     | Budgets per screen and per subsystem, with how each is measured                     |
+| [accessibility.md](architecture/accessibility.md)                 | WCAG target, screen readers, motion, contrast, the audio-first advantage            |
+| [observability.md](architecture/observability.md)                 | Logs, traces, metrics, crash reporting, learning-quality telemetry                  |
+| [adr/](architecture/adr/)                                         | 14 architecture decision records                                                    |
+
+## Design
+
+| Doc                                                     | Contents                                                                          |
+| ------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| [design-system.md](design/design-system.md)             | Every token extracted from the blueprint — colour, type, space, radius, elevation |
+| [component-inventory.md](design/component-inventory.md) | The ~40 components the 21 screens are actually made of                            |
+| [motion.md](design/motion.md)                           | All 11 keyframe animations, the easing set, and the touch-feedback layer          |
+| [screen-catalog.md](design/screen-catalog.md)           | All 21 screens ↔ blueprint line ranges ↔ screenshots ↔ specs                      |
+| [copy-and-tone.md](design/copy-and-tone.md)             | Voice, the Spanish/English rules, microcopy patterns, what we never say           |
+
+## Process
+
+| Doc                                                    | Contents                                                                |
+| ------------------------------------------------------ | ----------------------------------------------------------------------- |
+| [ways-of-working.md](process/ways-of-working.md)       | Cadence, roles, planning, how decisions get made and recorded           |
+| [onboarding.md](process/onboarding.md)                 | Day one: tools, clone, bootstrap, run on a device, first PR             |
+| [git-workflow.md](process/git-workflow.md)             | Trunk-based, branch naming, Conventional Commits, stacking, hotfixes    |
+| [code-review.md](process/code-review.md)               | What reviewers look for, SLAs, the review checklist                     |
+| [definition-of-done.md](process/definition-of-done.md) | Ready / done gates, including the design-fidelity gate                  |
+| [testing-strategy.md](process/testing-strategy.md)     | The pyramid, what we test where, golden tests for the scheduler and DSP |
+| [ci-cd.md](process/ci-cd.md)                           | Pipelines, EAS builds, OTA update policy, store submission              |
+| [release-versioning.md](process/release-versioning.md) | SemVer, build numbers, release trains, staged rollout, rollback         |
+| [environments.md](process/environments.md)             | local / dev / staging / prod, secrets, seed data                        |
+| [qa-device-matrix.md](process/qa-device-matrix.md)     | Devices, OS floor, the manual pass, audio-specific QA                   |
+| [content-authoring.md](process/content-authoring.md)   | How a phrase gets written, recorded, reviewed, and shipped              |
+| [localization.md](process/localization.md)             | UI localization, and the separate problem of new target languages       |
+| [experimentation.md](process/experimentation.md)       | Flags, A/B on pedagogy, ethics of experimenting on learning             |
+| [incident-response.md](process/incident-response.md)   | Severities, on-call, comms, postmortems                                 |
+| [glossary.md](process/glossary.md)                     | Every term the blueprint invents, defined once                          |
+
+## Decisions
+
+| Doc                                              | Contents                                                |
+| ------------------------------------------------ | ------------------------------------------------------- |
+| [open-questions.md](decisions/open-questions.md) | Unresolved, with owner and the date it blocks           |
+| [risks.md](decisions/risks.md)                   | Risk register — likelihood, impact, mitigation, trigger |
+
+---
+
+## Conventions in these docs
+
+- **Requirement IDs** (`P2-04`, `AI-03`) are stable. Reference them in issues, commits, and tests.
+- **Blueprint anchors** look like `Loro.dc.html:1404–1538` and point at exact line ranges.
+- **`⚠️ Decision needed`** marks a real fork with no owner yet — mirrored in `open-questions.md`.
+- **`🔒 Promise`** marks something the UI states to the user in writing, which the implementation
+  must therefore honour (e.g. "your audio stays on your device").
+- Version pins in these docs were chosen at authoring time. Re-verify at kickoff; see
+  [`process/onboarding.md`](process/onboarding.md).

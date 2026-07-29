@@ -1,0 +1,153 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://loro.app/schema/phrase.json",
+  "title": "Loro catalog phrase",
+  "description": "See docs/product/content-model.md. Ids are IMMUTABLE — fixing a typo mutates the row; changing the meaning creates a new id and deprecates the old one.",
+
+  "type": "object",
+  "required": ["id", "es", "en", "theme", "emoji"],
+  "additionalProperties": false,
+
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]{2,12}$",
+      "description": "Immutable forever. '<theme-prefix><n>', e.g. cafe1."
+    },
+    "es": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 120,
+      "description": "The phrase, with full punctuation including ¿ and ¡."
+    },
+    "en": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 140,
+      "description": "What an English speaker would ACTUALLY say — not a gloss."
+    },
+    "theme": {
+      "enum": ["Café", "Dining", "Travel", "Directions", "Shopping", "Small talk", "Survival", "Hotel"],
+      "description": "Exactly one. If a phrase fits two equally, it's too vague."
+    },
+    "emoji": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 8,
+      "description": "Row identity at a glance. Exactly one."
+    },
+
+    "register": {
+      "enum": ["neutral", "casual", "formal"],
+      "default": "neutral",
+      "description": "Default to neutral. Over-formality is the most common content failure."
+    },
+    "cefr": { "enum": ["A1", "A2", "B1", "B2"] },
+
+    "resp": {
+      "type": "string",
+      "maxLength": 200,
+      "description": "English-speaker respelling, hyphenated, CAPS on the stressed syllable. Must be readable by someone who has never seen IPA."
+    },
+    "resp_ipa": {
+      "type": "string",
+      "maxLength": 200,
+      "description": "For alignment and fix selection, not display."
+    },
+
+    "words": {
+      "type": "array",
+      "maxItems": 12,
+      "items": {
+        "type": "object",
+        "required": ["es", "gloss"],
+        "additionalProperties": false,
+        "properties": {
+          "es": { "type": "string", "maxLength": 40 },
+          "gloss": { "type": "string", "maxLength": 60, "description": "May be literal — that's its job." },
+          "say": {
+            "type": "string",
+            "maxLength": 40,
+            "description": "REQUIRED when `es` is a fragment: '¿Dón' → 'dónde'. The chips are tappable and must speak a real word."
+          }
+        }
+      }
+    },
+
+    "example": {
+      "type": "object",
+      "required": ["es", "en"],
+      "additionalProperties": false,
+      "description": "The phrase VERBATIM inside a longer, natural sentence. Shows where it sits in real speech.",
+      "properties": {
+        "es": { "type": "string", "maxLength": 200 },
+        "en": { "type": "string", "maxLength": 220 }
+      }
+    },
+
+    "hint": {
+      "type": "string",
+      "maxLength": 200,
+      "description": "A real mnemonic — etymology or imagery. NEVER a restatement of the translation."
+    },
+    "note": {
+      "type": "string",
+      "maxLength": 240,
+      "description": "The default coaching line for the labs: ONE concrete physical fix."
+    },
+
+    "syl": {
+      "type": "array",
+      "maxItems": 24,
+      "description": "Produced by the render pipeline from the rendered audio and resp_ipa.",
+      "items": {
+        "type": "object",
+        "required": ["t", "stress", "dur"],
+        "additionalProperties": false,
+        "properties": {
+          "t": { "type": "string", "maxLength": 12 },
+          "stress": { "type": "number", "minimum": 0, "maximum": 1 },
+          "dur": { "type": "number", "exclusiveMinimum": 0 }
+        }
+      }
+    },
+
+    "f0_native": {
+      "type": "array",
+      "minItems": 14,
+      "maxItems": 14,
+      "items": { "type": "number", "minimum": 0, "maximum": 1 },
+      "description": "14-point normalised contour — what the prosody chart draws. Scoring uses the full-resolution track."
+    },
+
+    "audio": {
+      "type": "object",
+      "required": ["uri", "sha256", "ms"],
+      "additionalProperties": false,
+      "properties": {
+        "uri": { "type": "string" },
+        "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "ms": { "type": "integer", "exclusiveMinimum": 0 }
+      }
+    },
+
+    "variants": {
+      "type": "array",
+      "description": "Regional variants. Keeps es-419 cheap later — see docs/process/localization.md",
+      "items": {
+        "type": "object",
+        "required": ["lang", "es"],
+        "additionalProperties": false,
+        "properties": {
+          "lang": { "type": "string" },
+          "es": { "type": "string", "maxLength": 120 }
+        }
+      }
+    },
+
+    "deprecated_by": {
+      "type": "string",
+      "description": "Set when the MEANING changed. The old phrase stays resolvable FOREVER — a learner who owns it must never see a broken row."
+    }
+  }
+}

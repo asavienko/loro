@@ -1,0 +1,74 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "ui": "tui",
+  "globalDependencies": ["tsconfig.base.json", ".nvmrc"],
+  "globalEnv": ["NODE_ENV", "CI"],
+  "tasks": {
+    "core-rs:build": {
+      "inputs": ["packages/core-rs/src/**", "packages/core-rs/Cargo.toml", "packages/core-rs/*.udl"],
+      "outputs": ["packages/core-rs/target/**", "packages/core-rs/bindings/**", "packages/core-rs/pkg/**"],
+      "cache": true
+    },
+    "core-rs:test": {
+      "inputs": ["packages/core-rs/**"],
+      "cache": true
+    },
+    "tokens:build": {
+      "inputs": ["packages/design-tokens/tokens/**", "packages/design-tokens/src/**"],
+      "outputs": ["packages/design-tokens/out/**"],
+      "cache": true
+    },
+    "content:validate": {
+      "inputs": ["packages/content/**/*.json", "packages/content/src/**"],
+      "cache": true
+    },
+    "build": {
+      "dependsOn": ["^build", "core-rs:build", "tokens:build"],
+      "outputs": ["dist/**", ".expo/**", "build/**", "out/**"]
+    },
+    // `@loro/api` depends on `@loro/core-rs`, so `^build` reaches its build script —
+    // which is cargo + wasm-pack, not tsc. Without this override it inherits the
+    // generic `build` outputs, finds none of them, and warns while caching nothing.
+    "@loro/core-rs#build": {
+      "inputs": ["src/**", "Cargo.toml", "Cargo.lock", "build.sh", "*.udl"],
+      "outputs": ["pkg/**", "bindings/**", "target/release/libloro_core.*"]
+    },
+    // The proof the app actually compiles. Not part of `check` — it takes minutes and
+    // needs the full RN toolchain — but CI runs it on every PR.
+    "bundle": {
+      "dependsOn": ["tokens:build"],
+      "outputs": [".expo-export/**"]
+    },
+    "typecheck": {
+      "dependsOn": ["^build", "tokens:build"],
+      "outputs": []
+    },
+    "test": {
+      "dependsOn": ["^build", "tokens:build", "core-rs:build"],
+      "outputs": []
+    },
+    "test:watch": {
+      "cache": false,
+      "persistent": true
+    },
+    "lint": {
+      "outputs": []
+    },
+    // Part of `pnpm check`, not CI-only. These caught a real regression that sat
+    // unnoticed precisely because they lived in a separate job.
+    "check:a11y": {
+      "outputs": []
+    },
+    "check:contrast": {
+      "dependsOn": ["tokens:build"],
+      "outputs": []
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "clean": {
+      "cache": false
+    }
+  }
+}

@@ -1,0 +1,41 @@
+[package]
+name = "loro-core"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.82"
+description = "Every number in Loro that must be identical on iOS, Android, and the server."
+license = "UNLICENSED"
+publish = false
+
+[lib]
+name = "loro_core"
+# staticlib → iOS · cdylib → Android + WASM · rlib → tests and benches
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[dependencies]
+uniffi = { version = "0.28", features = ["cli"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "0.2"
+serde-wasm-bindgen = "0.6"
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+proptest = "1"
+insta = { version = "1", features = ["json"] }
+
+[[bench]]
+name = "core_benches"
+harness = false
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+
+# Golden DSP tests and the 365-day simulation are slow in debug.
+[profile.test]
+opt-level = 2

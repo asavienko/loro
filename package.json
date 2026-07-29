@@ -1,0 +1,63 @@
+{
+  "name": "loro",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Loro — learn Spanish by the phrase. iOS + Android.",
+  "packageManager": "pnpm@9.12.0",
+  "engines": {
+    "node": ">=22.0.0 <23",
+    "pnpm": ">=9.0.0"
+  },
+  "scripts": {
+    "bootstrap": "./scripts/bootstrap.sh",
+    "check": "turbo run lint typecheck test content:validate check:a11y check:contrast",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "lint:fix": "turbo run lint -- --fix",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:watch": "turbo run test:watch",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "tokens:build": "pnpm --filter @loro/design-tokens build",
+    "core-rs:build": "pnpm --filter @loro/core-rs build",
+    "core-rs:test": "pnpm --filter @loro/core-rs test",
+    "content:validate": "pnpm --filter @loro/content validate",
+    "content:enrich": "pnpm --filter @loro/content enrich",
+    "content:render": "pnpm --filter @loro/content render",
+    "content:publish": "pnpm --filter @loro/content publish",
+    "mobile": "pnpm --filter @loro/mobile",
+    "api": "pnpm --filter @loro/api",
+    "clean": "turbo run clean && rm -rf node_modules",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.6.1",
+    "@commitlint/config-conventional": "^19.6.0",
+    "@eslint/js": "^9.39.5",
+    "@types/node": "^22.18.13",
+    "eslint": "^9.39.5",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.2",
+    "prettier": "^3.9.6",
+    "turbo": "^2.10.7",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.65.0",
+    "vitest": "^4.1.10"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ],
+    "packages/core-rs/**/*.rs": [
+      "rustfmt --edition 2021"
+    ],
+    "packages/design-tokens/tokens/**/*.json": [
+      "pnpm tokens:build && git add packages/design-tokens/out"
+    ]
+  }
+}

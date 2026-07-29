@@ -1,0 +1,66 @@
+# Local development stack. The API itself runs on the host for fast reload.
+#
+# Design goal: local development works OFFLINE and needs no API keys. AI and TTS are
+# stubbed (AI_PROVIDER=stub), returning the bundled fallback fixtures — which also means
+# the fallback path is exercised constantly and can't silently rot.
+#
+# See docs/process/environments.md#local
+
+name: loro-dev
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: loro
+      POSTGRES_PASSWORD: loro
+      POSTGRES_DB: loro
+    ports: ['5432:5432']
+    volumes: ['pgdata:/var/lib/postgresql/data']
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U loro']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    ports: ['6379:6379']
+    volumes: ['redisdata:/data']
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # S3 stand-in for content and audio.
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: loro
+      MINIO_ROOT_PASSWORD: loro-dev-secret
+    ports: ['9000:9000', '9001:9001']
+    volumes: ['miniodata:/data']
+    healthcheck:
+      test: ['CMD', 'mc', 'ready', 'local']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      minio: { condition: service_healthy }
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 loro loro-dev-secret &&
+      mc mb --ignore-existing local/loro-content &&
+      mc anonymous set download local/loro-content
+      "
+
+volumes:
+  pgdata:
+  redisdata:
+  miniodata:
