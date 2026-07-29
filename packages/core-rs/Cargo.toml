@@ -2,7 +2,10 @@
 name = "loro-core"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.82"
+# uniffi 0.32 pulls askama 0.16 (1.88), cargo_metadata 0.23 (1.86) and toml 1.1 (1.85)
+# through uniffi_bindgen. CI builds on stable, so nothing here catches a stale floor —
+# it only breaks for whoever is pinned to the old one.
+rust-version = "1.88"
 description = "Every number in Loro that must be identical on iOS, Android, and the server."
 license = "UNLICENSED"
 publish = false
