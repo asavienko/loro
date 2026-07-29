@@ -8,10 +8,10 @@
   `packages/core-rs/tests/parity.rs`; shared IDs and mobile clock, store, formatting, and
   persistence (including real SQLite) now have unit/integration coverage. Playwright now covers
   every implemented Expo route and the complete current learner loop on web, with a manifest guard
-  for future routes. Still missing are the scheduler/sync simulation suites, the golden DSP corpus,
-  the property suite, screen component tests, blueprint fixtures, and native device E2E.
-  Implemented-function properties are unblocked; the full simulation waits on plans 17–19, and
-  native/offline E2E waits on 09–12 and 31.
+  for future routes and a required CI job. Still missing are the scheduler/sync simulation suites,
+  the golden DSP corpus, the property suite, screen component tests, blueprint fixtures, and native
+  device E2E. Implemented-function properties are unblocked; the full simulation waits on plans
+  17–19, and native/offline E2E waits on 09–12 and 31.
 
 ## Current state
 
@@ -92,7 +92,8 @@ becomes a documented exception in the fixture rather than a silent drift.
 The web behavior gate is implemented in `apps/mobile/e2e/`: it covers every current route, the
 one-sentence M1 connective-thread test, a full five-phrase Refrain, all Stream mutations, empty
 states, and completion propagation to Today and Progress. `route-coverage.spec.ts` fails when a new
-Expo route is not added to the E2E contract.
+Expo route is not added to the E2E contract. `.github/workflows/ci.yml` installs Chromium and makes
+this suite part of the required aggregate check, retaining failure artifacts for diagnosis.
 
 Maestro is already implied (`.gitignore` has `maestro-debug-output/`). Add the M2 airplane-mode test
 and native equivalents of the critical flows after the native toolchain, persistence, audio, and

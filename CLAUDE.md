@@ -140,7 +140,9 @@ npx expo start --web                # from apps/mobile — fastest way to see th
   installed yet.
 - **The browser E2E suite protects the current web behavior, not missing native behavior.** The five
   hand-checks in [`onboarding.md`](docs/process/onboarding.md) — audio, mic, the warming card,
-  offline, sync — have no implementation behind them to check.
+  offline, sync — have no implementation behind them to check. CI runs `pnpm test:e2e` as a separate
+  required job; it is intentionally not hidden inside the fast `pnpm check` command because Chromium
+  is a one-time local install.
 - **`packages/core-rs` tests are almost all inline `#[cfg(test)]`.** The one integration file is
   `tests/parity.rs` (the calendar cross-language check). The others named in
   [`testing-strategy.md`](docs/process/testing-strategy.md) (`sim.rs`, `merge.rs`, `golden/`) don't

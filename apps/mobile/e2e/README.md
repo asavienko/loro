@@ -26,7 +26,8 @@ pnpm test:e2e
 
 `fixtures.ts` also fails every test that emits a browser console error or uncaught page error.
 Selectors use learner-visible roles, labels, and copy so refactors may freely change component
-structure while preserving behavior.
+structure while preserving behavior. The `mobile web E2E` job is part of CI's required aggregate;
+failure artifacts contain the Playwright report, trace, screenshot, and video.
 
 ## Deliberate boundary
 
