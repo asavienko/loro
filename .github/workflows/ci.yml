@@ -35,7 +35,7 @@ jobs:
       - run: pnpm core-rs:build
       - name: The wasm must be in the artifact, not just in the log
         run: test -f packages/core-rs/pkg/loro_core_bg.wasm
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: core-rs-artifacts
           path: |
@@ -80,7 +80,7 @@ jobs:
         with: { name: core-rs-artifacts, path: packages/core-rs }
       - run: pnpm tokens:build
       - run: pnpm test
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: coverage
