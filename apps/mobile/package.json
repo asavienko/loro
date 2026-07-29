@@ -10,7 +10,10 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "lint": "eslint app src scripts",
+    "test:e2e": "playwright test --config e2e/playwright.config.mjs",
+    "test:e2e:ui": "playwright test --config e2e/playwright.config.mjs --ui",
+    "test:e2e:install": "playwright install chromium",
+    "lint": "eslint app src scripts e2e",
     "check:lang": "tsx scripts/a11yChecks.ts lang",
     "check:chart-summaries": "tsx scripts/a11yChecks.ts chart-summaries",
     "check:tap-targets": "tsx scripts/a11yChecks.ts tap-targets",
@@ -50,6 +53,7 @@
     "zustand": "^5.0.14"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.0",
     "@types/react": "~19.1.0",
     "tsx": "^4.23.1",
     "typescript": "^5.9.3",

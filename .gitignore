@@ -62,6 +62,7 @@ diagnostics-*.json
 coverage/
 .nyc_output/
 test-results/
+playwright-report/
 maestro-debug-output/
 *.hprof
 
@@ -82,3 +83,4 @@ Thumbs.db
 npm-debug.log*
 pnpm-debug.log*
 yarn-error.log*
+.gstack/
