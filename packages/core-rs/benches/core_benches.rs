@@ -10,12 +10,13 @@
 //!   draw (500 phrases) <= 500 us
 //!   plan_notifications <= 1 ms
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{criterion_group, criterion_main, Criterion};
 use loro_core::asr::{match_tokens, tokenize};
 use loro_core::ladder::{draw, need};
 use loro_core::notify::{may_fire, Category, NotifyContext};
 use loro_core::rank::{order_stream, stream_rank};
 use loro_core::{Difficulty, LadderRung, PhraseState};
+use std::hint::black_box;
 
 fn phrase(i: usize) -> PhraseState {
     PhraseState {
