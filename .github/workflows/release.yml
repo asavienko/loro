@@ -55,7 +55,7 @@ jobs:
       # Native targets for EAS; the WASM is a server artifact and no consumer here loads it.
       - run: pnpm core-rs:build && pnpm tokens:build
         env: { LORO_SKIP_WASM: '1' }
-      - uses: expo/expo-github-action@v8
+      - uses: expo/expo-github-action@v9
         with: { eas-version: latest, token: '${{ secrets.EXPO_TOKEN }}' }
       - run: eas build --non-interactive --platform all --profile production
 
@@ -67,7 +67,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
-      - uses: expo/expo-github-action@v8
+      - uses: expo/expo-github-action@v9
         with: { eas-version: latest, token: '${{ secrets.EXPO_TOKEN }}' }
 
       # iOS phased release ON; Play staged rollout starts at 10%.
