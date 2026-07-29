@@ -19,6 +19,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
       - uses: dtolnay/rust-toolchain@stable
+      # `pnpm check` runs the API's merge tests, which skip themselves when pkg/ is absent.
+      # Without wasm-pack this gate would pass by not testing the merge at all.
+      - run: cargo install wasm-pack --locked
       - run: pnpm core-rs:build && pnpm tokens:build
       - run: pnpm check
       - name: Performance budgets
@@ -49,7 +52,9 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with: { targets: aarch64-apple-ios, aarch64-linux-android, x86_64-linux-android }
       - run: cargo install cargo-ndk --locked
+      # Native targets for EAS; the WASM is a server artifact and no consumer here loads it.
       - run: pnpm core-rs:build && pnpm tokens:build
+        env: { LORO_SKIP_WASM: '1' }
       - uses: expo/expo-github-action@v8
         with: { eas-version: latest, token: '${{ secrets.EXPO_TOKEN }}' }
       - run: eas build --non-interactive --platform all --profile production

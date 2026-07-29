@@ -35,7 +35,10 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with: { workspaces: packages/core-rs }
       - run: cargo install cargo-ndk --locked
+      # This job feeds EAS the native targets; nothing here loads the WASM, so skip it
+      # rather than spend a wasm-pack install on it. Declared, not silently absent.
       - run: pnpm core-rs:build
+        env: { LORO_SKIP_WASM: '1' }
       - run: pnpm tokens:build
 
       - uses: expo/expo-github-action@v8

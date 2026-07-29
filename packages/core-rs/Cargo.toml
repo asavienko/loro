@@ -11,6 +11,16 @@ publish = false
 name = "loro_core"
 # staticlib → iOS · cdylib → Android + WASM · rlib → tests and benches
 crate-type = ["staticlib", "cdylib", "rlib"]
+# Only core_benches is a benchmark. Without this, `cargo bench` also builds the lib and the
+# bindgen bin as bench targets, and their libtest harnesses reject Criterion's own flags:
+# `cargo bench -- --warm-up-time 1` dies on "Unrecognized option: 'warm-up-time'" before a
+# single benchmark runs. Both CI bench invocations pass such flags.
+bench = false
+
+[[bin]]
+name = "uniffi-bindgen"
+path = "src/bin/uniffi-bindgen.rs"
+bench = false
 
 [dependencies]
 uniffi = { version = "0.28", features = ["cli"] }
@@ -34,7 +44,21 @@ harness = false
 opt-level = 3
 lto = true
 codegen-units = 1
-panic = "abort"
+# No `panic = "abort"` here, deliberately, for two reasons.
+#
+# It breaks `cargo bench`. The `bench` profile inherits `release`, and Cargo then builds the
+# lib twice under one filename — once as a deliverable (abort) and once as a dependency of a
+# bench harness, which must unwind. That is "output filename collision at
+# target/release/deps/libloro_core.rlib" (rust-lang/cargo#6313); whichever build loses the
+# clobber leaves the other linking against the wrong strategy and the compile fails with
+# "the crate `loro_core` requires panic strategy `abort` which is incompatible with this
+# crate's strategy of `unwind`". It failed on CI's Linux runner and passed on macOS, because
+# the clobber order decides, not the platform.
+#
+# It also defeats UniFFI. The generated scaffolding wraps every call in
+# `panic::catch_unwind` (uniffi_core/src/ffi/rustcalls.rs) to turn a Rust panic into an
+# error the Swift and Kotlin sides can handle. Under `abort` that catch is dead code and any
+# panic in loro-core takes the learner's whole app down instead.
 
 # Golden DSP tests and the 365-day simulation are slow in debug.
 [profile.test]
