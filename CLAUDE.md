@@ -99,6 +99,11 @@ prototype-only and **must not** be carried into the app — see the divergence t
   does, and deleting that means the next session re-derives it. **Implemented so far: 01, 02,
   04, 07. Partly: 10, 20, 23, 37.** Read each plan's status for what remains and what blocks it.
 - **`pnpm check`** is the single command that must pass — lint, typecheck, test, content validation.
+- **Keep E2E coverage in step with functionality while developing it.** Add or adjust the
+  learner-visible behavior in `apps/mobile/e2e/` in the same coherent change as the functionality,
+  and run `pnpm test:e2e` before committing. New routes must be added to the route coverage
+  contract. A behavior-preserving refactor should keep the existing E2E expectations unchanged and
+  green; change expectations only when the intended product behavior changes.
 - **Layer boundaries in the app are lint-enforced**, not conventional
   ([mobile-app.md](docs/architecture/mobile-app.md#layers)). If an import fails lint, you're
   crossing a boundary.
