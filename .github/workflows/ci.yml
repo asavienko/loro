@@ -50,7 +50,7 @@ jobs:
       - uses: actions/checkout@v7
         with: { fetch-depth: 0 }
       - uses: ./.github/actions/setup
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with: { name: core-rs-artifacts, path: packages/core-rs }
       - run: pnpm tokens:build
       - run: pnpm lint
@@ -65,7 +65,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with: { name: core-rs-artifacts, path: packages/core-rs }
       - run: pnpm tokens:build
       - run: pnpm typecheck
@@ -76,7 +76,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with: { name: core-rs-artifacts, path: packages/core-rs }
       - run: pnpm tokens:build
       - run: pnpm test
@@ -107,7 +107,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with: { name: core-rs-artifacts, path: packages/core-rs }
       - run: pnpm tokens:build
 
@@ -147,7 +147,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with: { name: core-rs-artifacts, path: packages/core-rs }
       - run: pnpm tokens:build
       - name: Fail if generated output differs from the commit
@@ -194,7 +194,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: packages/core-rs
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with: { name: core-rs-artifacts, path: packages/core-rs }
       - run: pnpm tokens:build
       - name: loro-core Criterion benches (CI fails on >10% regression)
