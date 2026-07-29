@@ -16,7 +16,7 @@ jobs:
     name: automated release gates
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - uses: dtolnay/rust-toolchain@stable
       # `pnpm check` runs the API's merge tests, which skip themselves when pkg/ is absent.
@@ -47,7 +47,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - uses: dtolnay/rust-toolchain@stable
         with: { targets: aarch64-apple-ios, aarch64-linux-android, x86_64-linux-android }
@@ -65,7 +65,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - uses: expo/expo-github-action@v8
         with: { eas-version: latest, token: '${{ secrets.EXPO_TOKEN }}' }

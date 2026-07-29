@@ -13,7 +13,7 @@ jobs:
     name: E2E on the device matrix
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Maestro flows across ~10 configurations
         run: echo "TODO(M2) — device farm E2E"
 
@@ -21,7 +21,7 @@ jobs:
     name: 30-day offline replay
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       # Simulated clock advance, then sync. Asserts convergence and no data loss.
       - run: echo "TODO(M2) — pnpm --filter api test:sync-replay"
@@ -30,7 +30,7 @@ jobs:
     name: 365-day scheduler simulation
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
         with: { workspaces: packages/core-rs }
@@ -42,14 +42,14 @@ jobs:
     name: load test at 10x projected peak
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: echo "TODO(M4) — k6 against staging"
 
   audit:
     name: dependency audit
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - run: pnpm audit --audit-level=high
       - uses: dtolnay/rust-toolchain@stable
@@ -59,7 +59,7 @@ jobs:
     name: content quality report
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       # Feeds the content lead's weekly review: removal rate per phrase,
       # never-practised, disproportionately hard-tagged.
       # See docs/process/content-authoring.md#the-feedback-loop
