@@ -1,0 +1,162 @@
+/**
+ * What the app needs from storage, as interfaces.
+ *
+ * Two implementations satisfy every one of these: SQL (`sqlite.ts`) and in-memory
+ * (`memory.ts`). The in-memory set is not a test double — it is the web target's real
+ * storage, because `expo start --web` has no SQLite and is currently the fastest way to
+ * see the screens.
+ *
+ * Reads here are SYNCHRONOUS. The engine contract's `PhraseRepository` is async, and
+ * `asPhraseRepository` adapts one to the other: engines keep their promise-shaped
+ * contract, and the store does not await a local read to paint a frame.
+ */
+
+import type { UserPhraseId } from '../domain/ids.js'
+import type { PhraseState } from '../domain/phrase.js'
+import type { PhraseRepository } from '../engines/types.js'
+
+/**
+ * Until accounts exist (plans/14-auth-anonymous-first.md) every row belongs to one local
+ * learner. Named rather than empty so the column is never ambiguous, and so the day auth
+ * lands it is a migration rather than an archaeology exercise.
+ */
+export const LOCAL_USER_ID = 'local'
+
+export interface PhraseTable {
+  all(): PhraseState[]
+  byId(id: UserPhraseId): PhraseState | null
+  /** Not learned, not graduated, not deleted — what an engine may plan with. */
+  active(): PhraseState[]
+  due(at: number): PhraseState[]
+  /** Insert or replace the whole row. The caller owns the merge, not the database. */
+  upsert(phrase: PhraseState): void
+  /**
+   * Soft delete. A hard delete cannot be synced: the other device would see the row
+   * missing and treat it as never having existed, so the removal would come straight
+   * back (docs/architecture/sync-protocol.md).
+   */
+  softDelete(id: UserPhraseId, at: number): void
+  count(): number
+}
+
+/** The learner's settings. One row. */
+export interface SettingsRow {
+  onboarded: boolean
+  goal: string | null
+  level: string | null
+  dailyMinutes: 5 | 10 | 20 | null
+  waveTimes: string[]
+}
+
+export interface SettingsTable {
+  load(): SettingsRow | null
+  save(settings: SettingsRow): void
+}
+
+/** Today's frozen Refrain set. */
+export interface RefrainDayRow {
+  localDay: string
+  setIds: string[]
+  substituted: string[]
+}
+
+export interface RefrainDayTable {
+  load(localDay: string): RefrainDayRow | null
+  /** The most recent day on record, whatever it is — what hydration reads. */
+  latest(): RefrainDayRow | null
+  save(row: RefrainDayRow): void
+}
+
+/**
+ * The streak history: the distinct streak days at least one rep landed on.
+ *
+ * A history, not a counter. The count is derived by `streak()` in `core-rs`, so the app
+ * and the widget cannot disagree (ADR-0002).
+ */
+export interface PracticeDayTable {
+  all(): string[]
+  /** Idempotent: practising twice on one day is one day. */
+  add(localDay: string, minutes?: number): void
+  /** Drop everything before `localDay`, for the retention cap. */
+  pruneBefore(localDay: string): void
+}
+
+/** Everything the app stores, in one bag, so callers take one dependency. */
+export interface Persistence {
+  readonly phrases: PhraseTable
+  readonly settings: SettingsTable
+  readonly refrainDay: RefrainDayTable
+  readonly practiceDays: PracticeDayTable
+  readonly outbox: OutboxTable
+  /** Drop every learner row. GDPR erasure, not a cache clear. */
+  wipe(): void
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// The outbox
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type SyncOpKind = 'upsert' | 'delete'
+
+/** A field value with the HLC that produced it — the wire shape `/sync/push` accepts. */
+export interface FieldWrite {
+  readonly v: string | number | boolean | null
+  readonly hlc: string
+}
+
+export interface OutboxOp {
+  readonly seq: number
+  readonly entity: string
+  readonly entityId: string
+  readonly op: SyncOpKind
+  readonly fields: Readonly<Record<string, FieldWrite>>
+  readonly hlc: string
+  readonly createdAt: number
+  readonly attempts: number
+}
+
+/** What a caller appends. `seq` is the store's to assign. */
+export interface OutboxAppend {
+  readonly entity: string
+  readonly entityId: string
+  readonly op: SyncOpKind
+  readonly fields: Readonly<Record<string, FieldWrite>>
+  /**
+   * From `core-rs`'s HLC (`packages/core-rs/src/sync/hlc.rs`) — never generated here.
+   * A second implementation of a clock that orders sync operations is exactly the
+   * divergence ADR-0002 exists to prevent.
+   */
+  readonly hlc: string
+  readonly createdAt: number
+}
+
+export interface OutboxTable {
+  append(op: OutboxAppend): void
+  /** The oldest `limit` ops, in seq order. What the sync client drains. */
+  pending(limit: number): OutboxOp[]
+  /** Remove ops the server accepted. */
+  ack(seqs: readonly number[]): void
+  /** Record a failed flush without losing the op. */
+  recordFailure(seqs: readonly number[], error: string): void
+  size(): number
+  /**
+   * Merge queued ops per entity when the queue grows past `maxOps`.
+   *
+   * Compaction NEVER drops a learner's write: it merges ops that can be merged without
+   * losing information (see `compactable` in outbox.ts) and leaves the rest alone. An
+   * outbox that drops writes to stay small is a data-loss bug with a performance excuse.
+   */
+  compact(maxOps: number): number
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Adapt a synchronous table to the engine contract's async repository. */
+export function asPhraseRepository(table: PhraseTable): PhraseRepository {
+  return {
+    all: () => Promise.resolve(table.all()),
+    byId: (id) => Promise.resolve(table.byId(id)),
+    active: () => Promise.resolve(table.active()),
+    due: (at) => Promise.resolve(table.due(at)),
+  }
+}
