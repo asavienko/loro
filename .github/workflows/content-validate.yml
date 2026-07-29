@@ -14,7 +14,7 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
 
       # Every mechanical check, so human review can spend itself on naturalness.
@@ -47,7 +47,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: content
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - name: Render TTS + extract f0/syllables/mfcc reference
         run: echo "TODO(M1) — pnpm content:render --all"
@@ -60,7 +60,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: content
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       # Content ships independently of the app — ADR-0009.
       - name: Bump catalog_version and publish the manifest

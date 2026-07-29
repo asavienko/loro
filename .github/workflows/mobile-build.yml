@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ (inputs.profile == 'production') && 'production' || 'preview' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
 
       - uses: dtolnay/rust-toolchain@stable
@@ -66,7 +66,7 @@ jobs:
     if: github.ref == 'refs/heads/main'
     needs: build
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Maestro E2E on the device matrix
         run: echo "TODO(M0) — wire up the device farm — see docs/process/ci-cd.md"
       - name: Startup trace vs budget (iPhone SE 3, Pixel 6a)
