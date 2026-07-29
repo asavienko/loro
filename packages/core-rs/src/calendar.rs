@@ -1,0 +1,163 @@
+//! Day boundaries, streaks, and the grace window.
+//!
+//! Everything here uses the device's **local** calendar date, never UTC, so trip
+//! transitions and day rollover work offline. Distinct from HLC, which orders sync
+//! operations and is never shown to a learner.
+//!
+//! See docs/architecture/scheduling.md#day-boundaries
+
+/// A local calendar date, `YYYY-MM-DD`.
+pub type LocalDay = String;
+
+/// Hours after midnight during which practice still counts for the previous day.
+///
+/// Practising at 01:30 counts for yesterday. The alternative punishes night owls,
+/// and we don't punish.
+pub const STREAK_GRACE_HOURS: u32 = 4;
+
+/// The `local_day` a timestamp belongs to for streak purposes, applying the grace window.
+///
+/// `local_midnight_ms` is midnight of the device's current local day, and
+/// `offset_minutes` is the device's UTC offset — both passed in, because this crate
+/// has no clock.
+#[must_use]
+#[uniffi::export]
+pub fn streak_day_for(at_ms: i64, local_midnight_ms: i64) -> LocalDay {
+    let grace_ms = i64::from(STREAK_GRACE_HOURS) * 3_600_000;
+    let effective = if at_ms < local_midnight_ms + grace_ms {
+        // Within the grace window: count it for the previous day.
+        at_ms - grace_ms
+    } else {
+        at_ms
+    };
+    format_ymd(effective)
+}
+
+/// Days between two local dates, positive if `b` is later. Calendar days, not elapsed hours.
+///
+/// # Errors
+/// Returns `None` if either string is not `YYYY-MM-DD`.
+#[must_use]
+#[uniffi::export]
+pub fn days_between(a: &str, b: &str) -> Option<i32> {
+    Some(julian(b)? - julian(a)?)
+}
+
+/// Whether a streak survives, given the last practised day and today.
+///
+/// A gap of 0 (same day) or 1 (yesterday) keeps the streak. Anything larger breaks it.
+///
+/// **Timezone travel never breaks a streak**: a negative gap (flying west, so the local
+/// date moved backwards) is treated as the same day.
+#[must_use]
+#[uniffi::export]
+pub fn streak_survives(last_day: &str, today: &str) -> bool {
+    match days_between(last_day, today) {
+        Some(gap) => gap <= 1,
+        None => false,
+    }
+}
+
+/// Parse `YYYY-MM-DD` into a day number, for differencing.
+// Fliegel–Van Flandern uses single-letter names by convention; renaming them would
+// make the algorithm harder to check against the published form.
+#[allow(clippy::many_single_char_names)]
+fn julian(s: &str) -> Option<i32> {
+    let mut parts = s.split('-');
+    let y: i32 = parts.next()?.parse().ok()?;
+    let m: i32 = parts.next()?.parse().ok()?;
+    let d: i32 = parts.next()?.parse().ok()?;
+    if parts.next().is_some() || !(1..=12).contains(&m) || !(1..=31).contains(&d) {
+        return None;
+    }
+    // Fliegel–Van Flandern, valid for all dates we care about.
+    let a = (14 - m) / 12;
+    let y2 = y + 4800 - a;
+    let m2 = m + 12 * a - 3;
+    Some(d + (153 * m2 + 2) / 5 + 365 * y2 + y2 / 4 - y2 / 100 + y2 / 400 - 32_045)
+}
+
+/// Format epoch ms as `YYYY-MM-DD`, treating the input as already-local ms.
+fn format_ymd(ms: i64) -> String {
+    let days = ms.div_euclid(86_400_000);
+    let (y, m, d) = from_days(days);
+    format!("{y:04}-{m:02}-{d:02}")
+}
+
+/// Inverse of `julian`, for the Unix epoch day count.
+fn from_days(days_since_epoch: i64) -> (i32, u32, u32) {
+    // 1970-01-01 is Julian day 2440588.
+    let jd = days_since_epoch + 2_440_588;
+    let a = jd + 32_044;
+    let b = (4 * a + 3) / 146_097;
+    let c = a - 146_097 * b / 4;
+    let dd = (4 * c + 3) / 1461;
+    let e = c - 1461 * dd / 4;
+    let mm = (5 * e + 2) / 153;
+    let day = e - (153 * mm + 2) / 5 + 1;
+    let month = mm + 3 - 12 * (mm / 10);
+    let year = 100 * b + dd - 4800 + mm / 10;
+    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+    (year as i32, month as u32, day as u32)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn days_between_handles_month_and_year_boundaries() {
+        assert_eq!(days_between("2026-06-30", "2026-07-01"), Some(1));
+        assert_eq!(days_between("2026-12-31", "2027-01-01"), Some(1));
+        assert_eq!(days_between("2026-02-28", "2026-03-01"), Some(1)); // not a leap year
+        assert_eq!(days_between("2028-02-28", "2028-03-01"), Some(2)); // leap year
+        assert_eq!(days_between("2026-07-01", "2026-06-30"), Some(-1));
+    }
+
+    #[test]
+    fn malformed_dates_are_rejected_not_guessed() {
+        assert_eq!(days_between("nonsense", "2026-07-01"), None);
+        assert_eq!(days_between("2026-13-01", "2026-07-01"), None);
+        assert_eq!(days_between("2026-07-01-02", "2026-07-01"), None);
+    }
+
+    #[test]
+    fn a_streak_survives_yesterday_but_not_the_day_before() {
+        assert!(streak_survives("2026-07-27", "2026-07-28"));
+        assert!(streak_survives("2026-07-28", "2026-07-28"));
+        assert!(!streak_survives("2026-07-26", "2026-07-28"));
+    }
+
+    #[test]
+    fn timezone_travel_westwards_never_breaks_a_streak() {
+        // The local date moved backwards after a long westbound flight.
+        assert!(streak_survives("2026-07-28", "2026-07-27"));
+    }
+
+    #[test]
+    fn practice_inside_the_grace_window_counts_for_the_previous_day() {
+        let midnight = 1_753_660_800_000; // some local midnight
+        let at_0130 = midnight + 90 * 60 * 1000;
+        let at_0600 = midnight + 6 * 3_600_000;
+        assert_ne!(
+            streak_day_for(at_0130, midnight),
+            streak_day_for(at_0600, midnight),
+            "01:30 should count for the previous day; 06:00 for today"
+        );
+    }
+
+    #[test]
+    fn round_trip_through_the_day_number() {
+        for date in [
+            "1970-01-01",
+            "2026-07-28",
+            "2027-02-28",
+            "2028-02-29",
+            "2099-12-31",
+        ] {
+            let n = julian(date).expect("valid");
+            let back = days_between("1970-01-01", date).expect("valid");
+            assert_eq!(n - julian("1970-01-01").unwrap(), back);
+        }
+    }
+}

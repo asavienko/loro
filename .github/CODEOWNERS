@@ -1,0 +1,61 @@
+# Code owners. See docs/process/ways-of-working.md#code-ownership
+#
+# Replace the placeholder handles at kickoff. The IMPORTANT part is the
+# structure — particularly the two-reviewer rules, which exist because those
+# areas fail silently.
+
+# ── default ──
+*                                       @loro/eng
+
+# ── docs ──
+/docs/                                  @loro/tech-lead
+/docs/product/                          @loro/product
+/docs/design/                           @loro/design
+/docs/process/                           @loro/tech-lead
+/docs/architecture/adr/                 @loro/tech-lead
+
+# ── mobile ──
+/apps/mobile/                           @loro/mobile
+/apps/mobile/src/ui/                    @loro/mobile @loro/design
+/apps/mobile/src/features/              @loro/mobile @loro/design
+
+# Native audio and speech: the highest-skill native work in the project.
+/apps/mobile/modules/                   @loro/mobile-lead
+/apps/mobile/targets/                   @loro/mobile-lead @loro/design
+
+# Engines encode the pedagogy.
+/apps/mobile/src/engines/               @loro/tech-lead
+/packages/core/src/engines/             @loro/tech-lead
+
+# ── TWO REVIEWERS, one from each side ──
+# A merge-class mistake here is silent data loss, and it needs both the client
+# and the server perspective in the room.
+# See docs/architecture/sync-protocol.md
+/packages/core/src/sync/                @loro/tech-lead @loro/backend
+/apps/api/src/sync/                     @loro/tech-lead @loro/backend
+
+# ── the Rust core ──
+# Single owner: a shared-ownership DSP module drifts.
+/packages/core-rs/                      @loro/core-owner
+/packages/core-rs/tests/golden/         @loro/core-owner @loro/tech-lead
+
+# ── backend ──
+/apps/api/                              @loro/backend
+/apps/api/src/ai/                       @loro/backend @loro/tech-lead
+
+# ── design tokens ──
+# Generated output must not be hand-edited; CI drift-checks it.
+/packages/design-tokens/                @loro/design
+/packages/design-tokens/out/            @loro/design @loro/tech-lead
+
+# ── content ──
+# Needs the content lead AND a native es-ES reviewer.
+/packages/content/                      @loro/content-lead @loro/native-reviewer
+
+# ── infra and CI ──
+/.github/                               @loro/tech-lead
+/scripts/                               @loro/tech-lead
+
+# ── the blueprint: read-only ──
+# The authored design artefact. Changes to intended design go in docs/.
+/Language\ Learning\ by\ Phrases/       @loro/design @loro/product

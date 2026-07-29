@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    // No `rootDir`/`outDir`: tsc never emits here. Workspace packages are consumed as
+    // TypeScript source (their package `exports` point at `src/*.ts`), so the program
+    // legitimately spans `packages/**` and any `rootDir` under `apps/api` would reject
+    // it. Emit is esbuild's job — see the `build` script.
+    "noEmit": true,
+    "module": "NodeNext",
+    "moduleResolution": "nodenext",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "composite": false,
+    "types": ["node"]
+  },
+  "include": ["src/**/*"]
+}

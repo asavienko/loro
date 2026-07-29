@@ -1,0 +1,28 @@
+{
+  "name": "@loro/core-rs",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Rust core — every number that must be identical on iOS, Android, and the server.",
+  "exports": {
+    "./wasm": "./pkg/loro_core.js"
+  },
+  "//files": "Listed file-by-file, not as \"pkg\": npm's packer will not descend into a directory that has its own package.json, and wasm-pack writes one there. `files: [\"pkg\"]` therefore ships an empty folder, and the API image boots with no merge engine. Verified with `pnpm --filter @loro/api deploy --prod`.",
+  "files": [
+    "pkg/loro_core.js",
+    "pkg/loro_core.d.ts",
+    "pkg/loro_core_bg.wasm"
+  ],
+  "scripts": {
+    "build": "./build.sh",
+    "build:host": "cargo build --release",
+    "build:wasm": "wasm-pack build --target nodejs --out-dir pkg",
+    "build:bindings": "cargo run --bin uniffi-bindgen -- generate --library target/release/libloro_core.dylib --language swift --language kotlin --out-dir bindings",
+    "test": "cargo test --all-features",
+    "test:golden": "cargo test --test golden",
+    "test:parity": "cargo test --test parity",
+    "bench": "cargo bench",
+    "lint": "cargo clippy --all-targets -- -D warnings && cargo fmt --check",
+    "typecheck": "cargo check --all-targets --quiet",
+    "clean": "cargo clean && rm -rf bindings pkg"
+  }
+}

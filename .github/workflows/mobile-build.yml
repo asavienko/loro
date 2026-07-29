@@ -1,0 +1,70 @@
+name: Mobile build
+
+on:
+  pull_request:
+    paths: ['apps/mobile/**', 'packages/**']
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: EAS build profile
+        type: choice
+        options: [preview, staging, production]
+        default: preview
+
+concurrency:
+  group: mobile-${{ github.ref }}
+  cancel-in-progress: true
+
+# NOTE: `preview` builds are posted to the PR as a QR code. For anything visual,
+# audio, or animated, a reviewer is expected to install it — a screenshot cannot
+# show whether the warming card stutters. See docs/process/code-review.md
+jobs:
+  build:
+    name: EAS ${{ inputs.profile || 'preview' }}
+    runs-on: ubuntu-latest
+    environment: ${{ (inputs.profile == 'production') && 'production' || 'preview' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-ios,aarch64-linux-android,x86_64-linux-android
+      - uses: Swatinem/rust-cache@v2
+        with: { workspaces: packages/core-rs }
+      - run: cargo install cargo-ndk --locked
+      - run: pnpm core-rs:build
+      - run: pnpm tokens:build
+
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Build
+        run: eas build --non-interactive --no-wait --platform all --profile ${{ inputs.profile || 'preview' }}
+
+      - name: Comment the install link on the PR
+        if: github.event_name == 'pull_request'
+        run: eas build:list --limit 1 --json --non-interactive > build.json
+        # A follow-up step posts the QR code; omitted here to keep the scaffold honest
+        # about what has and hasn't been wired up.
+
+  # ─────────────────────────────────────────────────────────────
+  # Device farm — only on main, because it's slow and costs money.
+  # All p95 budgets are measured on the DEVICE FLOOR, not flagships.
+  # See docs/process/qa-device-matrix.md
+  # ─────────────────────────────────────────────────────────────
+  device-farm:
+    name: device farm (E2E + startup)
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+      - name: Maestro E2E on the device matrix
+        run: echo "TODO(M0) — wire up the device farm — see docs/process/ci-cd.md"
+      - name: Startup trace vs budget (iPhone SE 3, Pixel 6a)
+        run: echo "TODO(M0) — cold start p95 <= 1.8s, survival mode <= 2.0s"

@@ -1,0 +1,162 @@
+{
+  "$comment": [
+    "Onboarding packs from Loro.dc.html:2089-2096, plus the trip-only packs.",
+    "",
+    "TWO COUNTS, and the distinction matters:",
+    "",
+    "  promisedCount — what the UI SHOWS THE LEARNER ('8 phrases'). It must equal",
+    "                  membership exactly. CI errors otherwise, because a pack that",
+    "                  says 8 and adds 4 lies in the onboarding summary and the drop.",
+    "",
+    "  targetCount   — the authoring goal. CI warns while membership is short of it.",
+    "                  This is the backlog signal, and it is NOT shown to anyone.",
+    "",
+    "So a pack always tells the truth today, and we still know what's left to author.",
+    "",
+    "`draft: true` marks a pack with no phrases yet. Draft packs are excluded from",
+    "onboarding and from drop schedules until they have content."
+  ],
+  "lang": "es-ES",
+
+  "packs": [
+    {
+      "id": "cafe",
+      "label": "Café & ordering",
+      "emoji": "☕",
+      "sub": "4 phrases",
+      "promisedCount": 4,
+      "targetCount": 8,
+      "onboarding": true,
+      "trip": true,
+      "phrases": ["cafe1", "cafe3", "cafe2", "cafe4"]
+    },
+    {
+      "id": "travel",
+      "label": "Getting around",
+      "emoji": "🚕",
+      "sub": "6 phrases",
+      "promisedCount": 6,
+      "targetCount": 10,
+      "onboarding": true,
+      "trip": true,
+      "phrases": ["trv1", "trv3", "trv2", "dir1", "dir3", "trv4"]
+    },
+    {
+      "id": "dining",
+      "label": "Eating out",
+      "emoji": "🍽",
+      "sub": "4 phrases",
+      "promisedCount": 4,
+      "targetCount": 8,
+      "onboarding": true,
+      "trip": true,
+      "phrases": ["din1", "din2", "din3", "din4"]
+    },
+    {
+      "id": "talk",
+      "label": "Small talk",
+      "emoji": "🤝",
+      "sub": "4 phrases",
+      "promisedCount": 4,
+      "targetCount": 8,
+      "onboarding": true,
+      "trip": true,
+      "phrases": ["tlk1", "tlk2", "tlk3", "tlk4"]
+    },
+    {
+      "id": "shop",
+      "label": "Shopping",
+      "emoji": "🛍",
+      "sub": "4 phrases",
+      "promisedCount": 4,
+      "targetCount": 6,
+      "onboarding": true,
+      "trip": true,
+      "phrases": ["shp1", "shp2", "shp4", "shp3"]
+    },
+    {
+      "id": "survival",
+      "label": "Survival basics",
+      "emoji": "🆘",
+      "sub": "4 phrases",
+      "promisedCount": 4,
+      "targetCount": 8,
+      "onboarding": true,
+      "trip": true,
+      "phrases": ["srv1", "srv2", "srv3", "srv4"],
+      "note": "The safety net. First trip drop after Airport & taxi."
+    },
+    {
+      "id": "directions",
+      "label": "Directions",
+      "emoji": "🧭",
+      "sub": "4 phrases",
+      "promisedCount": 4,
+      "targetCount": 6,
+      "onboarding": false,
+      "trip": true,
+      "phrases": ["dir1", "dir2", "dir3", "dir4"]
+    },
+    {
+      "id": "airport",
+      "label": "Airport & taxi",
+      "emoji": "🛫",
+      "sub": "2 phrases",
+      "promisedCount": 2,
+      "targetCount": 8,
+      "onboarding": false,
+      "trip": true,
+      "phrases": ["trv1", "trv4"],
+      "note": "The FIRST thing that happens on the trip, so it's the first drop."
+    },
+    {
+      "id": "hotel",
+      "label": "Hotel check-in",
+      "emoji": "🏨",
+      "sub": "3 phrases",
+      "promisedCount": 3,
+      "targetCount": 6,
+      "onboarding": false,
+      "trip": true,
+      "phrases": ["htl1", "htl2", "htl3"]
+    },
+    {
+      "id": "local",
+      "label": "Sound local",
+      "emoji": "🗣",
+      "sub": "0 phrases",
+      "promisedCount": 0,
+      "targetCount": 8,
+      "onboarding": false,
+      "trip": true,
+      "draft": true,
+      "phrases": [],
+      "note": "Polish, once the essentials are owned. Casual register. Lands in the final days."
+    },
+    {
+      "id": "pharmacy",
+      "label": "Pharmacy & problems",
+      "emoji": "💊",
+      "sub": "0 phrases",
+      "promisedCount": 0,
+      "targetCount": 6,
+      "onboarding": false,
+      "trip": true,
+      "draft": true,
+      "phrases": [],
+      "note": "The 'what if' set."
+    },
+    {
+      "id": "nightlife",
+      "label": "Nightlife",
+      "emoji": "🍷",
+      "sub": "0 phrases",
+      "promisedCount": 0,
+      "targetCount": 6,
+      "onboarding": false,
+      "trip": true,
+      "draft": true,
+      "phrases": []
+    }
+  ]
+}

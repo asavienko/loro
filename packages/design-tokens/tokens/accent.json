@@ -1,0 +1,53 @@
+{
+  "$comment": [
+    "Four accent themes, three variants each. The three-variant split is the most",
+    "important structural idea in the palette (Loro.dc.html:49, 3617-3625).",
+    "",
+    "THE RULE THE NAMES ENCODE:",
+    "  accent       → fills, borders, and >=17px semibold text ON the accent",
+    "  accentInk    → accent-coloured TEXT on light surfaces",
+    "  accentOnDark → text and marks on dark cards",
+    "",
+    "accent Coral is 4.0:1 on surface.app — fine for large text and UI, FAILS AA for",
+    "body text. accentInk is 5.6:1 and passes. The blueprint is consistent about this;",
+    "the token names make the correct choice the obvious one, and the contrast gate",
+    "makes the wrong one unmergeable. See ADR-0013."
+  ],
+
+  "default": "coral",
+
+  "themes": {
+    "coral": {
+      "label": "Coral",
+      "accent": { "value": "#bf5722", "contrast": 4.0, "use": "fills, borders, >=17px semibold on accent" },
+      "accentInk": { "value": "#a2461a", "contrast": 5.6, "use": "TEXT on light surfaces" },
+      "accentOnDark": { "value": "#e8a06a", "use": "text and marks on dark cards" }
+    },
+    "sunset": {
+      "label": "Sunset",
+      "accent": { "value": "#95560f" },
+      "accentInk": { "value": "#7d470b" },
+      "accentOnDark": { "value": "#ddab5e" }
+    },
+    "teal": {
+      "label": "Teal",
+      "accent": { "value": "#1f7d6c" },
+      "accentInk": { "value": "#186356" },
+      "accentOnDark": { "value": "#68c0ae" }
+    },
+    "berry": {
+      "label": "Berry",
+      "accent": { "value": "#9c4470" },
+      "accentInk": { "value": "#7f345a" },
+      "accentOnDark": { "value": "#d98fb4" }
+    }
+  },
+
+  "tints": {
+    "$comment": "Derived from the active accent at 7%, 10%, and as a solid wash.",
+    "tint": { "alpha": 0.07, "use": "selected option background" },
+    "tint2": { "alpha": 0.1, "use": "pressed / emphasised" },
+    "border": { "alpha": 0.38, "use": "soft accent borders" },
+    "wash": { "coral": "#f8ece1", "sunset": "#f6ecdc", "teal": "#e4f2ef", "berry": "#f6e9ef" }
+  }
+}

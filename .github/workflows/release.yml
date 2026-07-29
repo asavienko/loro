@@ -1,0 +1,80 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  # The MANUAL gates (airplane-mode test, interruption matrix, warming-card frame
+  # check, battery, screen readers, widgets, copy audit) happen BEFORE the tag is
+  # pushed. See docs/process/definition-of-done.md#manual-gates--the-release-checklist
+  gates:
+    name: automated release gates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - uses: dtolnay/rust-toolchain@stable
+      - run: pnpm core-rs:build && pnpm tokens:build
+      - run: pnpm check
+      - name: Performance budgets
+        run: pnpm --filter @loro/mobile check:bundle-size
+      - name: Accessibility gates
+        run: |
+          pnpm --filter @loro/design-tokens check:contrast
+          pnpm --filter @loro/mobile check:lang
+          pnpm --filter @loro/mobile check:chart-summaries
+      - name: Confirm the manual checklist was signed off
+        run: |
+          echo "::notice::Tag annotation must reference the completed manual release checklist."
+          git tag -l --format='%(contents)' "${GITHUB_REF_NAME}" | tee /tmp/tag-body
+          grep -qi 'checklist' /tmp/tag-body || {
+            echo "::error::Tag annotation does not reference the manual release checklist."
+            echo "The airplane-mode test and the warming-card frame check are release gates."
+            exit 1
+          }
+
+  build:
+    name: production build
+    needs: gates
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - uses: dtolnay/rust-toolchain@stable
+        with: { targets: aarch64-apple-ios, aarch64-linux-android, x86_64-linux-android }
+      - run: cargo install cargo-ndk --locked
+      - run: pnpm core-rs:build && pnpm tokens:build
+      - uses: expo/expo-github-action@v8
+        with: { eas-version: latest, token: '${{ secrets.EXPO_TOKEN }}' }
+      - run: eas build --non-interactive --platform all --profile production
+
+  submit:
+    name: store submission
+    needs: build
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - uses: expo/expo-github-action@v8
+        with: { eas-version: latest, token: '${{ secrets.EXPO_TOKEN }}' }
+
+      # iOS phased release ON; Play staged rollout starts at 10%.
+      # Halt criteria: crash-free < 99.3%, any P0, sync success < 95%,
+      # any privacy incident, or a guardrail spike.
+      # See docs/process/release-versioning.md#store-rollout
+      - run: eas submit --non-interactive --platform all --profile production
+
+      - name: Generate the changelog
+        run: echo "TODO(M0) — conventional-changelog from the previous tag"
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          draft: false

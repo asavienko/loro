@@ -1,0 +1,39 @@
+version: 2
+
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule: { interval: weekly, day: monday }
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: 'chore(deps)'
+    groups:
+      # Expo and React Native must move together, or nothing builds.
+      expo:
+        patterns: ['expo', 'expo-*', 'react-native', 'react-native-*', '@expo/*']
+      nest:
+        patterns: ['@nestjs/*']
+      tooling:
+        patterns: ['eslint*', '@typescript-eslint/*', 'prettier', 'turbo', 'vitest', 'typescript']
+        update-types: [minor, patch]
+    ignore:
+      # Framework majors are a deliberate, planned migration, never a bot PR.
+      - dependency-name: 'expo'
+        update-types: [version-update:semver-major]
+      - dependency-name: 'react-native'
+        update-types: [version-update:semver-major]
+      - dependency-name: 'react'
+        update-types: [version-update:semver-major]
+
+  - package-ecosystem: cargo
+    directory: /packages/core-rs
+    schedule: { interval: weekly, day: monday }
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: 'chore(deps)'
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: monthly }
+    commit-message:
+      prefix: 'chore(ci)'

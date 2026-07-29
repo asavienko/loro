@@ -1,0 +1,20 @@
+# Generated — fix the generator, not the output. See ADR-0013 / ADR-0014.
+packages/design-tokens/out/
+packages/core-rs/bindings/
+packages/core-rs/pkg/
+packages/core-rs/target/
+
+# The authored design artefact. Not ours to reformat.
+Language Learning by Phrases/
+
+# Lockfiles and build output
+pnpm-lock.yaml
+**/dist/
+**/build/
+**/.expo/
+**/.expo-export/
+**/coverage/
+**/.turbo/
+
+# Rust is formatted by rustfmt
+**/*.rs

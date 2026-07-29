@@ -1,0 +1,88 @@
+{
+  "$comment": "Extracted from Loro.dc.html. See docs/design/design-system.md#typography",
+
+  "family": {
+    "sans": {
+      "value": "Plus Jakarta Sans",
+      "weights": [400, 500, 600, 700, 800],
+      "use": "everything"
+    },
+    "serif": {
+      "value": "Instrument Serif",
+      "weights": [400],
+      "style": "italic",
+      "use": [
+        "EMOTIONAL PUNCTUATION ONLY.",
+        "'¡Hola! I'm Loro' · 'You're all set' · '¡Hecho!' · '¡Escena completada!' ·",
+        "'today's run' · 'shuffling the deck…' · 'it climbed' · the phase numerals.",
+        "Never for UI labels. Never for body copy.",
+        "If you're reaching for the serif and it isn't a moment of feeling, use the sans."
+      ]
+    }
+  },
+
+  "scale": {
+    "display": {
+      "size": 62,
+      "sizeMax": 74,
+      "weight": 700,
+      "tracking": "-0.035em",
+      "lineHeight": 0.9,
+      "use": "countdown days, lock screen clock"
+    },
+    "hero": {
+      "size": 46,
+      "sizeMax": 56,
+      "weight": 700,
+      "tracking": "-0.03em",
+      "lineHeight": 1.0,
+      "use": "streak count, recap number"
+    },
+    "title1": {
+      "size": 26,
+      "sizeMax": 28,
+      "weight": 700,
+      "tracking": "-0.01em",
+      "lineHeight": 1.18,
+      "use": "phrase hero, welcome headline"
+    },
+    "title2": {
+      "size": 22,
+      "sizeMax": 24,
+      "weight": 700,
+      "tracking": "-0.01em",
+      "lineHeight": 1.22,
+      "use": "screen headings, card phrases"
+    },
+    "title3": { "size": 20, "weight": 700, "tracking": "-0.01em", "lineHeight": 1.2, "use": "screen titles" },
+    "headline": { "size": 18, "weight": 700, "tracking": "-0.01em", "lineHeight": 1.25, "use": "lab titles" },
+    "body": { "size": 15, "weight": 700, "lineHeight": 1.4, "use": "row primary, CTA labels" },
+    "bodySm": { "size": 14, "weight": 700, "lineHeight": 1.4, "use": "row primary (dense), buttons" },
+    "caption": { "size": 13, "weight": 600, "lineHeight": 1.45, "use": "row secondary, helper text" },
+    "captionSm": { "size": 12, "weight": 600, "lineHeight": 1.45, "use": "translations, tips" },
+    "label": {
+      "size": 11,
+      "weight": 700,
+      "tracking": "0.04em",
+      "transform": "uppercase",
+      "use": "section labels, pills"
+    },
+    "labelSm": {
+      "size": 10,
+      "weight": 700,
+      "tracking": "0.05em",
+      "transform": "uppercase",
+      "use": "tile labels, micro-labels"
+    },
+    "prose": { "size": 14, "weight": 400, "lineHeight": 1.58, "use": "long paragraphs" },
+    "serifDisplay": { "size": 26, "weight": 400, "family": "serif", "style": "italic", "use": "the emotional moments" },
+    "serifNum": { "size": 32, "weight": 400, "family": "serif", "variant": "tabular-nums", "use": "phase numerals" }
+  },
+
+  "rules": [
+    "tabular-nums on EVERY changing number (streaks, counters, scores) so digits don't jitter.",
+    "Uppercase labels ALWAYS carry letter-spacing: 0.04em at 11px, 0.05em+ at 10px.",
+    "  Uppercase without tracking is the most common way this palette looks cheap.",
+    "Spanish text nodes must carry lang='es-ES' — checked in CI."
+  ]
+}

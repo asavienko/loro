@@ -1,0 +1,85 @@
+name: Bug report
+description: Something is broken
+labels: [bug, needs-triage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Automatically S0 or S1**, regardless of how minor it looks
+        ([triage](../../docs/process/qa-device-matrix.md#bug-triage)):
+        recorded audio leaving the device · a displayed number that isn't real ·
+        copy that shames a missed day · offline function broken ·
+        any sync path that can lose a rating, note, or rep count.
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: Expected vs actual.
+    validations: { required: true }
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1.
+        2.
+        3.
+    validations: { required: true }
+
+  - type: input
+    id: device
+    attributes:
+      label: Device and OS
+      placeholder: iPhone SE (3rd gen), iOS 16.4
+    validations: { required: true }
+
+  - type: input
+    id: version
+    attributes:
+      label: App version and build
+      placeholder: 1.2.0 (247)
+    validations: { required: true }
+
+  - type: dropdown
+    id: connectivity
+    attributes:
+      label: Connectivity
+      description: Matters for almost every bug in this app.
+      options: [wifi, cellular, offline / airplane mode, captive portal, unsure]
+    validations: { required: true }
+
+  - type: dropdown
+    id: engine
+    attributes:
+      label: Active practice engine
+      options: [stream, refrain, srs, prosody, pronunciation, roleplay, run, not applicable, unsure]
+
+  - type: dropdown
+    id: trip
+    attributes:
+      label: Trip state
+      options: [no trip, countdown, abroad, completed, unsure]
+
+  - type: textarea
+    id: audio
+    attributes:
+      label: If this is an audio bug
+      description: >
+        Headphones or speaker? Bluetooth? Was anything else playing? Did a call, alarm, or
+        Siri interrupt? Did you change route mid-session?
+
+  - type: textarea
+    id: recording
+    attributes:
+      label: Screenshot or recording
+      description: A recording, not a still, for anything animated.
+
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics bundle
+      description: >
+        Settings → Diagnostics → Share. It contains scalar events only — no phrase text,
+        no notes, no audio — and you can read it before sharing.

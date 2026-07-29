@@ -1,0 +1,202 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TURBO_TELEMETRY_DISABLED: 1
+
+jobs:
+  # ─────────────────────────────────────────────────────────────
+  # Prebuild the Rust core once and share it. See ADR-0014.
+  # ─────────────────────────────────────────────────────────────
+  core:
+    name: core-rs (host + wasm)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+          components: clippy, rustfmt
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: packages/core-rs
+      - run: pnpm core-rs:build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: core-rs-artifacts
+          path: |
+            packages/core-rs/bindings/
+            packages/core-rs/pkg/
+          retention-days: 1
+
+  lint:
+    runs-on: ubuntu-latest
+    needs: core
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: ./.github/actions/setup
+      - uses: actions/download-artifact@v4
+        with: { name: core-rs-artifacts, path: packages/core-rs }
+      - run: pnpm tokens:build
+      - run: pnpm lint
+      - run: pnpm format:check
+      - name: commitlint
+        if: github.event_name == 'pull_request'
+        run: pnpm commitlint --from ${{ github.event.pull_request.base.sha }} --to HEAD
+
+  typecheck:
+    runs-on: ubuntu-latest
+    needs: core
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - uses: actions/download-artifact@v4
+        with: { name: core-rs-artifacts, path: packages/core-rs }
+      - run: pnpm tokens:build
+      - run: pnpm typecheck
+
+  test:
+    runs-on: ubuntu-latest
+    needs: core
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - uses: actions/download-artifact@v4
+        with: { name: core-rs-artifacts, path: packages/core-rs }
+      - run: pnpm tokens:build
+      - run: pnpm test
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage
+          path: '**/coverage/'
+
+  content:
+    name: content validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: pnpm content:validate
+
+  # ─────────────────────────────────────────────────────────────
+  # Does it actually build? Typecheck passing is not the same as
+  # Metro resolving every import and Hermes accepting the output —
+  # the workspace is consumed as TypeScript source, so resolution
+  # is a real failure mode. No secrets needed, unlike the EAS job.
+  # ─────────────────────────────────────────────────────────────
+  bundle:
+    name: app bundles / api builds
+    runs-on: ubuntu-latest
+    needs: core
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - uses: actions/download-artifact@v4
+        with: { name: core-rs-artifacts, path: packages/core-rs }
+      - run: pnpm tokens:build
+
+      - name: Mobile — Metro + Hermes bytecode
+        run: pnpm --filter @loro/mobile bundle
+
+      - name: Report the bundle size
+        run: |
+          bundle=$(find apps/mobile/.expo-export -name '*.hbc' | head -1)
+          size=$(wc -c < "$bundle")
+          echo "Hermes bytecode: $((size / 1024)) KB" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: API — esbuild bundle, then boot it
+        run: pnpm --filter @loro/api build
+
+      - name: The built API must serve, not just compile
+        run: |
+          PORT=3999 node apps/api/dist/main.js &
+          pid=$!
+          for _ in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:3999/v1/health >/dev/null 2>&1; then break; fi
+            sleep 1
+          done
+          # Readiness, not liveness: it fails if the WASM did not make it into the
+          # build, which is the failure that otherwise reaches production quietly.
+          curl -fsS http://127.0.0.1:3999/v1/health/ready
+          kill $pid
+
+  # ─────────────────────────────────────────────────────────────
+  # Generated output is committed (native targets need it without
+  # the JS toolchain). This is what keeps it honest — ADR-0014.
+  # ─────────────────────────────────────────────────────────────
+  drift:
+    name: generated output drift
+    runs-on: ubuntu-latest
+    needs: core
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - uses: actions/download-artifact@v4
+        with: { name: core-rs-artifacts, path: packages/core-rs }
+      - run: pnpm tokens:build
+      - name: Fail if generated output differs from the commit
+        run: |
+          if ! git diff --quiet -- packages/design-tokens/out packages/core-rs/bindings; then
+            echo "::error::Generated output is stale or was hand-edited."
+            echo "Run 'pnpm tokens:build && pnpm core-rs:build' and commit the result."
+            git diff --stat -- packages/design-tokens/out packages/core-rs/bindings
+            exit 1
+          fi
+
+  # ─────────────────────────────────────────────────────────────
+  # Accessibility gates. See docs/architecture/accessibility.md
+  # ─────────────────────────────────────────────────────────────
+  a11y:
+    name: accessibility gates
+    runs-on: ubuntu-latest
+    needs: core
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: Contrast — all four accent themes
+        run: pnpm --filter @loro/design-tokens check:contrast
+      - name: Spanish text carries lang="es-ES"
+        run: pnpm --filter @loro/mobile check:lang
+      - name: Every chart has a visible text summary
+        run: pnpm --filter @loro/mobile check:chart-summaries
+      - name: Tap targets >= 44x44
+        run: pnpm --filter @loro/mobile check:tap-targets
+
+  # ─────────────────────────────────────────────────────────────
+  # Performance budgets. See docs/architecture/performance.md
+  # ─────────────────────────────────────────────────────────────
+  budgets:
+    name: performance budgets
+    runs-on: ubuntu-latest
+    needs: core
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - uses: actions/download-artifact@v4
+        with: { name: core-rs-artifacts, path: packages/core-rs }
+      - run: pnpm tokens:build
+      - name: loro-core Criterion benches (CI fails on >10% regression)
+        run: pnpm --filter @loro/core-rs bench -- --warm-up-time 1 --measurement-time 2
+
+  # A single required check, so branch protection needs one entry.
+  ci:
+    name: ci
+    runs-on: ubuntu-latest
+    needs: [lint, typecheck, test, content, bundle, drift, a11y, budgets]
+    if: always()
+    steps:
+      - name: Fail if any job failed
+        run: |
+          if echo '${{ toJSON(needs) }}' | grep -q '"result": *"failure"'; then exit 1; fi
+          if echo '${{ toJSON(needs) }}' | grep -q '"result": *"cancelled"'; then exit 1; fi

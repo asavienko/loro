@@ -1,0 +1,89 @@
+{
+  "$comment": [
+    "Trip drop schedules, keyed by trip length in days.",
+    "",
+    "THE ESCALATION PRINCIPLE (Loro.dc.html:1981): survival basics first, 'sound local'",
+    "extras as the date nears. Concretely — what happens FIRST on the trip is taught",
+    "first, then highest-frequency daily interactions, then contingencies, then polish.",
+    "",
+    "TWO INVARIANTS:",
+    "  1. No new phrases on the final day. Review only. Cramming the night before a",
+    "     flight produces anxiety, not retention.",
+    "  2. A missed drop stays available and merges into the next day. Never debt.",
+    "",
+    "A schedule is picked by nearest length and padded with review days.",
+    "See docs/product/trip-arc.md#the-daily-drop"
+  ],
+  "lang": "es-ES",
+
+  "schedules": {
+    "3": [
+      { "day": 3, "pack": "survival", "note": "no time for escalation — the safety net first" },
+      { "day": 2, "pack": "airport" },
+      { "day": 1, "pack": null, "reviewOnly": true }
+    ],
+
+    "7": [
+      { "day": 7, "pack": "airport" },
+      { "day": 6, "pack": "survival" },
+      { "day": 5, "pack": "hotel" },
+      { "day": 4, "pack": "cafe" },
+      { "day": 3, "pack": "travel" },
+      { "day": 2, "pack": "dining" },
+      { "day": 1, "pack": null, "reviewOnly": true }
+    ],
+
+    "12": [
+      { "day": 12, "pack": "airport", "note": "the first thing that happens" },
+      { "day": 11, "pack": "survival", "note": "the safety net, early" },
+      { "day": 10, "pack": "hotel", "note": "the second thing that happens" },
+      { "day": 9, "pack": "cafe", "note": "highest-frequency daily interaction" },
+      { "day": 8, "pack": "travel" },
+      { "day": 7, "pack": "dining" },
+      { "day": 6, "pack": "directions" },
+      { "day": 5, "pack": "shop" },
+      { "day": 4, "pack": "talk", "note": "now that survival is covered" },
+      { "day": 3, "pack": "pharmacy", "note": "the 'what if' set" },
+      { "day": 2, "pack": "local", "note": "polish, once essentials are owned" },
+      { "day": 1, "pack": null, "reviewOnly": true }
+    ],
+
+    "20": [
+      { "day": 20, "pack": "airport" },
+      { "day": 19, "pack": "survival" },
+      { "day": 18, "pack": null, "reviewOnly": true },
+      { "day": 17, "pack": "hotel" },
+      { "day": 16, "pack": "cafe" },
+      { "day": 15, "pack": null, "reviewOnly": true },
+      { "day": 14, "pack": "travel" },
+      { "day": 13, "pack": "dining" },
+      { "day": 12, "pack": null, "reviewOnly": true },
+      { "day": 11, "pack": "directions" },
+      { "day": 10, "pack": "shop" },
+      { "day": 9, "pack": null, "reviewOnly": true },
+      { "day": 8, "pack": "talk" },
+      { "day": 7, "pack": "pharmacy" },
+      { "day": 6, "pack": null, "reviewOnly": true },
+      { "day": 5, "pack": "nightlife" },
+      { "day": 4, "pack": "local" },
+      { "day": 3, "pack": null, "reviewOnly": true },
+      { "day": 2, "pack": null, "reviewOnly": true },
+      { "day": 1, "pack": null, "reviewOnly": true }
+    ]
+  },
+
+  "tripTypeBias": {
+    "$comment": "Trip type REORDERS packs but never changes the survival-first principle.",
+    "vacation": ["cafe", "dining", "shop", "nightlife"],
+    "work": ["talk", "travel", "hotel", "cafe"],
+    "family": ["talk", "dining", "cafe", "pharmacy"]
+  },
+
+  "rules": {
+    "unlockHourLocal": 6,
+    "noNewPhrasesOnFinalDay": true,
+    "missedDropsMergeForward": true,
+    "futureDropsCanBePulledForward": true,
+    "dormantAboveDays": 60
+  }
+}

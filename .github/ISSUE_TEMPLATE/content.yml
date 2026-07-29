@@ -1,0 +1,70 @@
+name: Content change
+description: Add, fix, or retire a Spanish phrase, pack, or scenario
+labels: [content, needs-triage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Process: [content-authoring.md](../../docs/process/content-authoring.md).
+        Content ships independently of the app, so a fix reaches learners within a day.
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind
+      options:
+        - Add a phrase
+        - Fix a phrase (typo, wording, register)
+        - Retire / deprecate a phrase
+        - Fix audio
+        - Add or change a pack
+        - Add or change a scenario
+        - Change a drop schedule
+        - Add or change a roleplay fallback scene
+    validations: { required: true }
+
+  - type: input
+    id: ids
+    attributes:
+      label: Phrase / pack / scenario IDs
+      placeholder: cafe1, cafe4
+
+  - type: textarea
+    id: change
+    attributes:
+      label: The change
+      description: Current value → proposed value, and why.
+    validations: { required: true }
+
+  - type: checkboxes
+    id: quality
+    attributes:
+      label: The quality bar
+      description: >
+        All ten must hold —
+        [content-model.md](../../docs/product/content-model.md#quality-bar-for-a-catalog-phrase)
+      options:
+        - label: A real person would say this, in this situation, in this century
+        - label: It's a complete utterance, usable alone
+        - label: The English is what an English speaker would actually say, not a gloss
+        - label: The respelling marks stress with CAPS and matches the IPA
+        - label: ≤ 8 words for A1/A2 — learnable in 6 reps
+        - label: The theme is unambiguous
+        - label: The example uses the phrase verbatim in a longer sentence
+        - label: Any memory hook is a real mnemonic, not a restatement
+        - label: The audio has been listened to by a human
+        - label: It doesn't duplicate an existing phrase's function
+
+  - type: dropdown
+    id: register
+    attributes:
+      label: Register
+      description: Default to neutral. Over-formality is the most common content failure.
+      options: [neutral, casual, formal]
+
+  - type: markdown
+    attributes:
+      value: |
+        **Reminder:** phrase IDs are immutable. Fixing a typo mutates the row; changing the
+        *meaning* creates a new ID and deprecates the old one. A learner who owns a deprecated
+        phrase keeps it forever.
