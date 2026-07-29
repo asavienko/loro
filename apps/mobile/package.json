@@ -12,6 +12,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test --config e2e/playwright.config.mjs",
     "test:e2e:ui": "playwright test --config e2e/playwright.config.mjs --ui",
+    "test:e2e:bundle": "playwright test --config e2e/playwright.config.production.mjs",
     "test:e2e:install": "playwright install chromium",
     "lint": "eslint app src scripts e2e",
     "check:lang": "tsx scripts/a11yChecks.ts lang",

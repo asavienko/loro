@@ -21,6 +21,7 @@ Cargo.lock                       # workspace-level; the crate's own lockfile IS 
 .expo-shared/
 # `expo export` output — the bundle CI builds to prove the app compiles.
 .expo-export/
+.expo-export-web/
 *.jsbundle
 apps/mobile/ios/Pods/
 apps/mobile/ios/build/
