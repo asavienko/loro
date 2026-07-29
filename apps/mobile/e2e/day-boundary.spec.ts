@@ -29,6 +29,27 @@ test('the weekday label names the learner’s day, not the runner’s', async ({
   await expect(page.getByText('Tuesday · the daily refrain')).toBeVisible()
 })
 
+test('a new day clears yesterday’s reps and lock-ins from Today', async ({ page }) => {
+  await atInstant(page, '2026-03-10T22:00')
+  await onboard(page)
+
+  await lockInOnePhrase(page)
+  await page.goBack()
+  await expect(page.getByText('1 of 5 locked in')).toBeVisible()
+  await expect(statValue(page, 'reps today')).toHaveText('6')
+
+  // A phone asleep across midnight: no timer fired, the learner just picked it up again.
+  await jumpTo(page, '2026-03-11T09:00')
+  await returnToForeground(page)
+
+  // Nothing has been practised today, so every number on the screen must say so —
+  // non-negotiable 2. Yesterday's `automaticity` and `repsToday` are still on the row.
+  await expect(page.getByText('Wednesday · the daily refrain')).toBeVisible()
+  await expect(page.getByText('0 of 5 locked in')).toBeVisible()
+  await expect(statValue(page, 'reps today')).toHaveText('0')
+  await expect(page.getByText('Locked', { exact: true })).toHaveCount(0)
+})
+
 test('entering the Refrain on a new day rolls the set without a foreground event', async ({
   page,
 }) => {
@@ -84,6 +105,27 @@ test('a session past the grace window starts a second streak day', async ({ page
   await openProgress(page)
   await expect(page.getByLabel('Last seven days: practised on 2 of them.')).toBeVisible()
   await expect(streakValue(page)).toHaveText('2')
+})
+
+test('an earned milestone survives the next morning’s first rep', async ({ page }) => {
+  await atInstant(page, '2026-03-10T22:00')
+  await onboard(page)
+  await lockInOnePhrase(page)
+  await page.goBack()
+
+  await openProgress(page)
+  await expect(milestone(page, 'First locked in')).toContainText('✓')
+  await backToToday(page)
+
+  // Tomorrow's first rep rewrites the stored `automaticity` DOWNWARD, from 100 to 17. A
+  // milestone keyed on that signal un-earns itself here; one keyed on `lockInDays`, which
+  // only ever climbs, does not. Nothing the learner has earned may disappear.
+  await jumpTo(page, '2026-03-11T09:00')
+  await returnToForeground(page)
+  await doOneRep(page)
+
+  await openProgress(page)
+  await expect(milestone(page, 'First locked in')).toContainText('✓')
 })
 
 test('the streak survives the spring-forward day', async ({ page }) => {
@@ -154,6 +196,28 @@ async function openProgress(page: Page): Promise<void> {
 async function backToToday(page: Page): Promise<void> {
   await page.getByRole('link', { name: /back/i }).click()
   await expect(page.getByText('Today', { exact: true })).toBeVisible()
+}
+
+/**
+ * A `StatTile`'s number, addressed through its label.
+ *
+ * The value and the label are sibling text nodes in one card
+ * (`src/ui/primitives.tsx:313-324`), so the label is the stable handle; asserting the
+ * card's whole text would read `'0reps today'`.
+ */
+function statValue(page: Page, label: string): Locator {
+  return page.getByText(label, { exact: true }).locator('..').locator('div').first()
+}
+
+/**
+ * A milestone row on Progress, addressed by its title.
+ *
+ * The `✓` renders only for an earned milestone (`app/progress.tsx:327-331`); the rest of
+ * the earned/unearned distinction is colour and opacity, which is not assertable and not
+ * available to a learner who cannot see it either.
+ */
+function milestone(page: Page, title: string): Locator {
+  return page.getByText(title, { exact: true }).locator('../..')
 }
 
 function streakValue(page: Page): Locator {

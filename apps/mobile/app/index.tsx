@@ -9,7 +9,12 @@ import { useEffect } from 'react'
 import { ScrollView, View } from 'react-native'
 import { Redirect, router } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { DEFAULT_REP_TARGET, streak as streakOf } from '@loro/core'
+import {
+  DEFAULT_REP_TARGET,
+  automaticity,
+  repsToday as repsTodayOf,
+  streak as streakOf,
+} from '@loro/core'
 import {
   Button,
   Card,
@@ -43,10 +48,31 @@ export default function Today() {
 
   if (!onboarded) return <Redirect href="/onboarding" />
 
+  /**
+   * Today's set, with the two day-scoped signals DERIVED rather than read.
+   *
+   * `repsToday` and `automaticity` are stored undated next to `repsTodayDay`, so the row
+   * still carries yesterday's values until the next write. Reading them raw made this
+   * screen claim "1 of 5 locked in", "6 reps today" and a `Locked` badge at 100% on a
+   * morning the learner had not practised — a number that is not real (non-negotiable 2).
+   *
+   * `repsToday(p, day)` is the day-scoped reader that exists for exactly this
+   * (`packages/core/src/domain/phrase.ts:230-239`) and `automaticity()` is a pure function
+   * of it. The Refrain already derives both this way (`app/practice/refrain.tsx:131-132`);
+   * this screen was the one place that did not.
+   */
+  const day = deviceClock.localDay()
   const set = refrainSet
     .map((id) => phrases.find((p) => p.id === id))
     .filter((p): p is NonNullable<typeof p> => p !== undefined)
-    .map(toView)
+    .map((p) => {
+      const reps = repsTodayOf(p, day)
+      return {
+        ...toView(p),
+        repsToday: reps,
+        automaticity: automaticity(reps, DEFAULT_REP_TARGET),
+      }
+    })
 
   const lockedIn = set.filter((p) => p.automaticity >= 100).length
   const totalReps = set.reduce((n, p) => n + p.repsToday, 0)

@@ -279,7 +279,11 @@ export default function Progress() {
               emoji: '🔥',
               title: 'First locked in',
               sub: 'Six reps in one day',
-              done: phrases.some((p) => p.automaticity >= 100),
+              // `lockInDays` counts DISTINCT lock-in days and never decreases, which is
+              // what a milestone needs. `automaticity` is today's signal: it is rewritten
+              // downward by tomorrow's first rep, so this milestone used to un-earn itself
+              // overnight — a learner watching an achievement they had disappear.
+              done: phrases.some((p) => p.lockInDays > 0),
             },
             {
               emoji: '🏆',
