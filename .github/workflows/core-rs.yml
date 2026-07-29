@@ -58,7 +58,7 @@ jobs:
         with: { workspaces: packages/core-rs }
       - name: Criterion (fails on >10% regression)
         run: cargo bench -- --save-baseline pr
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: criterion
           path: packages/core-rs/target/criterion/
