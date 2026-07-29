@@ -172,7 +172,8 @@ The implemented app surface has a Playwright behavior gate in `apps/mobile/e2e/`
 itself, uses a phone-sized viewport, creates all state through learner-visible interactions, and
 covers every route currently present in `apps/mobile/app/`. A route-manifest test fails when a new
 route lands without being declared in the E2E coverage contract. Run it with `pnpm test:e2e` after
-the one-time `pnpm test:e2e:install`.
+the one-time `pnpm test:e2e:install`. CI runs it as the required `mobile web E2E` job and retains
+Playwright traces, screenshots, and video when it fails.
 
 Playwright answers the refactoring question now: do the current screens, gates, mutations,
 navigation, and cross-screen rollups still behave the same? It does not answer native questions.
