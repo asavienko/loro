@@ -29,7 +29,12 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: packages/core-rs
+      # pkg/ is the API's merge engine, so this is a build dependency, not a nicety.
+      # rust-cache keeps ~/.cargo/bin, so this compiles once and is restored after.
+      - run: cargo install wasm-pack --locked
       - run: pnpm core-rs:build
+      - name: The wasm must be in the artifact, not just in the log
+        run: test -f packages/core-rs/pkg/loro_core_bg.wasm
       - uses: actions/upload-artifact@v4
         with:
           name: core-rs-artifacts
@@ -183,6 +188,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
+      # Every other Rust job pins the toolchain and caches; this one used whatever the
+      # runner image happened to ship and recompiled criterion from scratch each run.
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: packages/core-rs
       - uses: actions/download-artifact@v4
         with: { name: core-rs-artifacts, path: packages/core-rs }
       - run: pnpm tokens:build

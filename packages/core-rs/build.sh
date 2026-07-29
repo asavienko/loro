@@ -16,11 +16,20 @@ echo "── host ──"
 cargo build --release
 
 echo "── wasm (for apps/api — the server runs the SAME merge as the client) ──"
+# Not optional, and not silently skippable. apps/api resolves `@loro/core-rs/wasm` at boot
+# and /v1/health/ready answers 503 without it. Skipping quietly is exactly how CI went green
+# here with no pkg/, then failed two jobs later on a 503 that pointed at the API rather than
+# at the build that never produced the file. Opt out explicitly or not at all.
 if command -v wasm-pack >/dev/null 2>&1; then
   wasm-pack build --target nodejs --out-dir pkg
+elif [[ "${LORO_SKIP_WASM:-}" == "1" ]]; then
+  echo "  wasm-pack not found; LORO_SKIP_WASM=1 set — skipping."
+  echo "  apps/api built from this tree will report merge: unavailable."
 else
-  echo "  wasm-pack not found. Install it with: cargo install wasm-pack"
-  echo "  Skipping — the API's merge path will not be available."
+  echo "  wasm-pack not found, and apps/api's merge path is built from it." >&2
+  echo "    install:            cargo install wasm-pack --locked" >&2
+  echo "    or skip on purpose: LORO_SKIP_WASM=1 pnpm core-rs:build" >&2
+  exit 1
 fi
 
 echo "── UniFFI bindings (Swift + Kotlin) ──"
