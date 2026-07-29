@@ -29,6 +29,7 @@ specified in [screen-catalog.md](../../docs/design/screen-catalog.md) and not bu
 pnpm --filter @loro/mobile ios          # or android
 pnpm --filter @loro/mobile ios --device # do this on day one
 pnpm --filter @loro/mobile bundle       # no simulator: just prove it compiles
+pnpm test:e2e                           # all implemented routes through Expo Web
 ```
 
 **The simulator lies about audio sessions, microphone behaviour, and interruptions**, and those are
@@ -38,6 +39,10 @@ half of what this app does. Test on hardware.
 catches the resolution failures that `typecheck` cannot see, and it needs no simulator.
 
 Setup: [onboarding.md](../../docs/process/onboarding.md).
+
+The browser suite lives in [`e2e/`](e2e/README.md). Run `pnpm test:e2e:install` once per machine;
+the tests then start Expo themselves and exercise the learner-visible flow at a phone viewport. They
+complement, rather than replace, native device checks.
 
 ## Layers — enforced, not conventional
 

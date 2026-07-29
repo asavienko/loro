@@ -9,10 +9,10 @@ Guidance for Claude Code working in this repository.
 Early implementation. **What exists:** the docs, 8 of the blueprint's 21 screens in
 `apps/mobile/app/`, an API with 10 endpoints over an in-memory store, the Rust core, the design
 tokens, a 31-phrase catalog, and the local persistence layer (schema, migrations, repositories,
-outbox — driver-agnostic and tested against real SQLite). 317 JS/TS tests and 99 Rust tests pass.
-**What doesn't:** the native modules (audio, speech, ASR, widgets), the on-device SQLite driver, and
-the other 13 screens — so nothing runnable today exercises audio or the microphone, which is half of
-what this app is, and the app store is still in memory.
+outbox — driver-agnostic and tested against real SQLite). 317 JS/TS tests, 99 Rust tests, and 12
+browser E2E tests pass. **What doesn't:** the native modules (audio, speech, ASR, widgets), the
+on-device SQLite driver, and the other 13 screens — so nothing runnable today exercises audio or the
+microphone, which is half of what this app is, and the app store is still in memory.
 
 ## Keep this file current
 
@@ -85,7 +85,7 @@ prototype-only and **must not** be carried into the app — see the divergence t
   that isn't about regenerating it.
 - **Plans live in `plans/`, numbered.** One markdown file per plan: a two-digit number, then
   kebab-case named for the topic — `plans/46-association-suggestions.md`. The numbers run
-  consecutively in [`plans/README.md`](plans/README.md)'s recommended order, 01–45 today; a new plan
+  consecutively in [`plans/README.md`](plans/README.md)'s recommended order, 01–46 today; a new plan
   takes the next free number and gets a row in that README. **Numbers are never reused** — a deleted
   plan leaves a gap, so a link written against a number can't come to mean a different plan. Not in
   `docs/`: that holds the durable spec. Not in a temp directory either — a plan you can't find again
@@ -97,8 +97,7 @@ prototype-only and **must not** be carried into the app — see the divergence t
   `🟡` must say what is left **and what blocks it**. Plans stay on disk after shipping — their
   verified "current state" notes and code citations are the record of why the code looks the way it
   does, and deleting that means the next session re-derives it. **Implemented so far: 01, 02,
-  04, 07. Partly: 10** (schema, migrations, repositories, and the outbox are done and tested; the
-  on-device driver is blocked on 09).
+  04, 07. Partly: 10, 20, 23, 37.** Read each plan's status for what remains and what blocks it.
 - **`pnpm check`** is the single command that must pass — lint, typecheck, test, content validation.
 - **Layer boundaries in the app are lint-enforced**, not conventional
   ([mobile-app.md](docs/architecture/mobile-app.md#layers)). If an import fails lint, you're
@@ -126,6 +125,7 @@ be off PATH.
 
 ```bash
 pnpm check                          # the gate: 23 turbo tasks, all green today
+pnpm test:e2e                       # every implemented web route and the full learner loop
 pnpm --filter @loro/api dev         # :3000 — no Docker, no keys, no database
 pnpm --filter @loro/mobile bundle   # proves the app compiles; needs no simulator
 npx expo start --web                # from apps/mobile — fastest way to see the screens
@@ -138,9 +138,9 @@ npx expo start --web                # from apps/mobile — fastest way to see th
   Android SDK, plus a first `expo prebuild` (there is no `apps/mobile/ios` or `android/`). Until
   then: web, or Expo Go on a device, which still works only because no custom native module is
   installed yet.
-- **A green build proves less than usual.** The five hand-checks in
-  [`onboarding.md`](docs/process/onboarding.md) — audio, mic, the warming card, offline, sync — have
-  no implementation behind them to check.
+- **The browser E2E suite protects the current web behavior, not missing native behavior.** The five
+  hand-checks in [`onboarding.md`](docs/process/onboarding.md) — audio, mic, the warming card,
+  offline, sync — have no implementation behind them to check.
 - **`packages/core-rs` tests are almost all inline `#[cfg(test)]`.** The one integration file is
   `tests/parity.rs` (the calendar cross-language check). The others named in
   [`testing-strategy.md`](docs/process/testing-strategy.md) (`sim.rs`, `merge.rs`, `golden/`) don't
@@ -159,6 +159,7 @@ npx expo start --web                # from apps/mobile — fastest way to see th
 | ------------------------- | ------------------------------------------------------------------------- |
 | `docs/`                   | All documentation — start at `docs/README.md`                             |
 | `apps/mobile/`            | Expo / React Native app; routes in `app/`, design system in `src/ui/`     |
+| `apps/mobile/e2e/`        | Playwright web E2E for every implemented route and cross-screen flow      |
 | `apps/api/`               | NestJS backend                                                            |
 | `packages/core/`          | Shared TS domain, engine contracts, API schemas — **used by app AND api** |
 | `…/core/src/persistence/` | SQLite schema, migrations, repositories, outbox. Driver-agnostic          |
