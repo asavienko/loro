@@ -71,11 +71,11 @@ prototype-only and **must not** be carried into the app — see the divergence t
 - **Blueprint citations** look like `Loro.dc.html:1404–1538`.
 - **Commits**: Conventional Commits with the scope list in `commitlint.config.cjs`. See
   [`docs/process/git-workflow.md`](docs/process/git-workflow.md).
-- **Plans live in the project root.** Write an implementation or refactor plan as a markdown file at
-  the repo root — `loro/PLAN-P2-04-association-suggestions.md`, carrying the same requirement ID as
-  the branch. Not in `docs/` (that holds the durable spec, and a finished plan isn't one) and not in
-  a temp directory (a plan you can't find again is a plan you rewrite). Root plans are tracked by
-  git, so delete one when the work ships rather than leaving it to rot.
+- **Plans live in `plans/`.** One markdown file per plan, at the repo root, kebab-case and named for
+  the topic — `plans/association-suggestions.md`. Not in `docs/`: that holds the durable spec, and a
+  plan is scaffolding you delete once the work ships. Not in a temp directory either — a plan you
+  can't find again is a plan you rewrite. Name the requirement ID inside the plan so it ties back to
+  the branch and the PR.
 - **`pnpm check`** is the single command that must pass — lint, typecheck, test, content validation.
 - **Layer boundaries in the app are lint-enforced**, not conventional
   ([mobile-app.md](docs/architecture/mobile-app.md#layers)). If an import fails lint, you're
