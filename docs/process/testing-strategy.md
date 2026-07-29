@@ -166,7 +166,33 @@ Priorities:
 
 ---
 
-## E2E — Maestro
+## E2E — Playwright web + Maestro devices
+
+The implemented app surface has a Playwright behavior gate in `apps/mobile/e2e/`. It starts Expo Web
+itself, uses a phone-sized viewport, creates all state through learner-visible interactions, and
+covers every route currently present in `apps/mobile/app/`. A route-manifest test fails when a new
+route lands without being declared in the E2E coverage contract. Run it with `pnpm test:e2e` after
+the one-time `pnpm test:e2e:install`.
+
+Playwright answers the refactoring question now: do the current screens, gates, mutations,
+navigation, and cross-screen rollups still behave the same? It does not answer native questions.
+Maestro remains the device-level layer for audio, speech, persistence/resume, widgets, and real
+offline operation once those modules exist.
+
+### Current Playwright web gate
+
+| Flow                                                     | Covers                                      |
+| -------------------------------------------------------- | ------------------------------------------- |
+| Six-step onboarding → seeded Today                       | First-run state machine and store seed      |
+| Discover/search/scenario → tag → add → undo              | Add and the connective thread               |
+| Browse all themes → drill into a theme                   | Catalog navigation                          |
+| Phrase detail edits → Progress tag rollup                | Cross-screen shared-state propagation       |
+| Adaptive Stream → rerate/love/learn → empty              | Queue mutations and empty state             |
+| Full Refrain, 5 phrases × 6 modes                        | Hero loop, 30 real engine writes            |
+| Refrain completion → Today → Progress                    | Lock-in, reps, and streak propagation       |
+| Every current route is declared in the coverage manifest | New screens cannot silently escape the gate |
+
+### Future Maestro device flows
 
 ~15 flows, on both platforms, in CI on a device farm.
 

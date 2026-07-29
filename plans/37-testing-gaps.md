@@ -6,11 +6,12 @@
 - **Size:** M
 - **Status:** 🟡 Partly implemented 2026-07-29. Calendar parity now runs from
   `packages/core-rs/tests/parity.rs`; shared IDs and mobile clock, store, formatting, and
-  persistence (including real SQLite) now have unit/integration coverage. Still missing are the
-  scheduler/sync simulation suites, the golden DSP corpus, the property suite, screen component
-  tests, blueprint fixtures, and device E2E. Built-screen tests and implemented-function properties
-  are unblocked; the full simulation waits on plans 17–19, and native/offline E2E waits on 09–12
-  and 31.
+  persistence (including real SQLite) now have unit/integration coverage. Playwright now covers
+  every implemented Expo route and the complete current learner loop on web, with a manifest guard
+  for future routes. Still missing are the scheduler/sync simulation suites, the golden DSP corpus,
+  the property suite, screen component tests, blueprint fixtures, and native device E2E.
+  Implemented-function properties are unblocked; the full simulation waits on plans 17–19, and
+  native/offline E2E waits on 09–12 and 31.
 
 ## Current state
 
@@ -30,8 +31,10 @@ The Rust modules have good unit coverage of implemented functions; `dsp/align.rs
 test while its central function remains `todo!`. Calendar now has integration-level parity coverage.
 Everything else above unit level remains the subject of this plan.
 
-On the app side, the new tests are valuable domain/data tests, not screen tests. Seven ported
-screens still have no component or interaction tests, and there is no device E2E flow.
+On the app side, Playwright now protects every implemented route through the web renderer: all six
+onboarding steps, Today, Add/Discover/Browse and tagging, phrase detail, Adaptive Stream, all 30
+Refrain reps, Progress, and the cross-screen mutations between them. These are real browser E2E
+tests, not component tests. Native device E2E and per-state component tests remain absent.
 
 ## The work
 
@@ -86,9 +89,14 @@ becomes a documented exception in the fixture rather than a silent drift.
 
 ### 5. E2E
 
-Maestro is already implied (`.gitignore` has `maestro-debug-output/`). Cover the one-sentence test
-that M1 is judged on — onboarding → add → tag → stream repeat count changes → Progress reflects it —
-plus the M2 airplane-mode test. Two flows, run per release, worth more than a hundred shallow ones.
+The web behavior gate is implemented in `apps/mobile/e2e/`: it covers every current route, the
+one-sentence M1 connective-thread test, a full five-phrase Refrain, all Stream mutations, empty
+states, and completion propagation to Today and Progress. `route-coverage.spec.ts` fails when a new
+Expo route is not added to the E2E contract.
+
+Maestro is already implied (`.gitignore` has `maestro-debug-output/`). Add the M2 airplane-mode test
+and native equivalents of the critical flows after the native toolchain, persistence, audio, and
+speech plans land. Web E2E cannot prove native module or lifecycle behavior.
 
 ### 6. Make the five hand-checks checkable
 
