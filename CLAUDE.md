@@ -8,9 +8,11 @@ Guidance for Claude Code working in this repository.
 
 Early implementation. **What exists:** the docs, 8 of the blueprint's 21 screens in
 `apps/mobile/app/`, an API with 10 endpoints over an in-memory store, the Rust core, the design
-tokens, and a 31-phrase catalog. 249 tests pass. **What doesn't:** the native modules (audio,
-speech, ASR, widgets), persistence, and the other 13 screens — so nothing runnable today exercises
-audio or the microphone, which is half of what this app is.
+tokens, a 31-phrase catalog, and the local persistence layer (schema, migrations, repositories,
+outbox — driver-agnostic and tested against real SQLite). 317 JS/TS tests and 99 Rust tests pass.
+**What doesn't:** the native modules (audio, speech, ASR, widgets), the on-device SQLite driver, and
+the other 13 screens — so nothing runnable today exercises audio or the microphone, which is half of
+what this app is, and the app store is still in memory.
 
 ## Keep this file current
 
@@ -71,11 +73,32 @@ prototype-only and **must not** be carried into the app — see the divergence t
 - **Blueprint citations** look like `Loro.dc.html:1404–1538`.
 - **Commits**: Conventional Commits with the scope list in `commitlint.config.cjs`. See
   [`docs/process/git-workflow.md`](docs/process/git-workflow.md).
-- **Plans live in `plans/`.** One markdown file per plan, at the repo root, kebab-case and named for
-  the topic — `plans/association-suggestions.md`. Not in `docs/`: that holds the durable spec, and a
-  plan is scaffolding you delete once the work ships. Not in a temp directory either — a plan you
-  can't find again is a plan you rewrite. Name the requirement ID inside the plan so it ties back to
-  the branch and the PR.
+- **Commit in meaningful chunks as the work progresses, not one big drop at the end.** Make each
+  commit one coherent change — a bug fixed with its test, a schema with its migration, a doc
+  corrected — each with its own requirement ID and each leaving `pnpm check` green on its own. A
+  plan is usually several commits, not one: land the shared contract, then the implementation, then
+  the docs. This matters more than usual here because PRs are squash-merged
+  ([git-workflow.md](docs/process/git-workflow.md)), so the branch's commits are the only place the
+  reasoning survives at that granularity — and because a change spanning `core-rs`, `core`, and
+  `mobile` at once is one that cannot be reverted in pieces when it turns out to be wrong. Don't mix
+  a refactor into a fix, and don't let generated output (bindings, tokens) ride along in a commit
+  that isn't about regenerating it.
+- **Plans live in `plans/`, numbered.** One markdown file per plan: a two-digit number, then
+  kebab-case named for the topic — `plans/46-association-suggestions.md`. The numbers run
+  consecutively in [`plans/README.md`](plans/README.md)'s recommended order, 01–45 today; a new plan
+  takes the next free number and gets a row in that README. **Numbers are never reused** — a deleted
+  plan leaves a gap, so a link written against a number can't come to mean a different plan. Not in
+  `docs/`: that holds the durable spec. Not in a temp directory either — a plan you can't find again
+  is a plan you rewrite. Name the requirement ID inside the plan so it ties back to the branch and
+  the PR.
+- **A plan records its own status, and is kept rather than deleted.** Put a `**Status:**` line in
+  the plan's header block when work starts, and mark its row in
+  [`plans/README.md`](plans/README.md): `✅` implemented, `🟡` partly, nothing for not started. A
+  `🟡` must say what is left **and what blocks it**. Plans stay on disk after shipping — their
+  verified "current state" notes and code citations are the record of why the code looks the way it
+  does, and deleting that means the next session re-derives it. **Implemented so far: 01, 02,
+  04, 07. Partly: 10** (schema, migrations, repositories, and the outbox are done and tested; the
+  on-device driver is blocked on 09).
 - **`pnpm check`** is the single command that must pass — lint, typecheck, test, content validation.
 - **Layer boundaries in the app are lint-enforced**, not conventional
   ([mobile-app.md](docs/architecture/mobile-app.md#layers)). If an import fails lint, you're
@@ -84,6 +107,15 @@ prototype-only and **must not** be carried into the app — see the divergence t
   text, never `accent`).
 - **Generated files are committed and drift-checked** — `packages/design-tokens/out/` and the UniFFI
   bindings. Never hand-edit them; fix the generator.
+- **One clock, one `new Date()`.** `apps/mobile/src/lib/clock.ts` is the only file allowed to
+  construct a date, and ESLint enforces it. Read the day from `clock.localDay()` or
+  `clock.streakDay()` — they are
+  [two different keys](docs/architecture/scheduling.md#two-day-keys-not-one) and picking the wrong
+  one is a correctness bug, not a style choice.
+- **Practice outcomes are written only through `applyDelta`.** A screen calls `engine.record(...)`
+  and hands the `ProgressDelta` to the store; nothing else writes a progress field. Which fields are
+  increments, which absolute, and which monotonic is declared on `ProgressDelta`
+  (`packages/core/src/engines/types.ts`) and implemented once in `apps/mobile/src/store/state.ts`.
 
 ## Running and testing
 
@@ -109,10 +141,13 @@ npx expo start --web                # from apps/mobile — fastest way to see th
 - **A green build proves less than usual.** The five hand-checks in
   [`onboarding.md`](docs/process/onboarding.md) — audio, mic, the warming card, offline, sync — have
   no implementation behind them to check.
-- **`packages/core-rs` tests are all inline `#[cfg(test)]`; there is no `tests/` directory yet.**
-  The integration files named in [`testing-strategy.md`](docs/process/testing-strategy.md)
-  (`sim.rs`, `merge.rs`, `golden/`) don't exist, so don't assume a scheduling or DSP change is
-  covered.
+- **`packages/core-rs` tests are almost all inline `#[cfg(test)]`.** The one integration file is
+  `tests/parity.rs` (the calendar cross-language check). The others named in
+  [`testing-strategy.md`](docs/process/testing-strategy.md) (`sim.rs`, `merge.rs`, `golden/`) don't
+  exist, so don't assume a scheduling or DSP change is covered.
+- **`cargo` is off the PATH that `pnpm`/`turbo` see.** `pnpm check` looks green while the four
+  `@loro/core-rs` tasks are cache hits, then fails with `cargo: command not found` the moment a Rust
+  file changes. Run `export PATH="$HOME/.cargo/bin:$PATH"` first.
 - **Two docs run ahead of the code.** `onboarding.md` §3 says to run `db:migrate` / `db:seed`, which
   aren't defined — [`apps/api/README.md`](apps/api/README.md) is the accurate one.
   `apps/mobile/README.md` lists `src/features/`, `src/engines/`, `src/domain/`, `src/data/`,
@@ -126,6 +161,8 @@ npx expo start --web                # from apps/mobile — fastest way to see th
 | `apps/mobile/`            | Expo / React Native app; routes in `app/`, design system in `src/ui/`     |
 | `apps/api/`               | NestJS backend                                                            |
 | `packages/core/`          | Shared TS domain, engine contracts, API schemas — **used by app AND api** |
+| `…/core/src/persistence/` | SQLite schema, migrations, repositories, outbox. Driver-agnostic          |
+| `apps/mobile/src/data/`   | The SQL drivers. `driver.node.ts` (tests) today; op-sqlite needs plan 09  |
 | `packages/core-rs/`       | Rust: FSRS, sync merge, ranking, DSP. All reproducible maths              |
 | `packages/design-tokens/` | Tokens extracted from the blueprint + generators                          |
 | `packages/content/`       | The Spanish catalog, schema-validated                                     |
