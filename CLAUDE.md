@@ -85,7 +85,7 @@ prototype-only and **must not** be carried into the app — see the divergence t
   that isn't about regenerating it.
 - **Plans live in `plans/`, numbered.** One markdown file per plan: a two-digit number, then
   kebab-case named for the topic — `plans/60-association-suggestions.md`. The numbers run
-  consecutively in [`plans/README.md`](plans/README.md)'s recommended order, 01–51 today (49 is
+  consecutively in [`plans/README.md`](plans/README.md)'s recommended order, 01–53 today (49 is
   vacant); a new plan takes the next free number and gets a row in that README. **Numbers are never
   reused** — a gap is left rather than backfilled, so a link written against a number can't come to
   mean a different plan. Not in `docs/`: that holds the durable spec. Not in a temp directory either
