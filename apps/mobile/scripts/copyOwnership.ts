@@ -46,11 +46,53 @@ const COPY_PROPS = new Set([
   'title',
 ])
 
-function literalValue(node: ts.Node | undefined): string | null {
-  if (node === undefined) return null
-  if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) return node.text
-  if (ts.isJsxExpression(node)) return literalValue(node.expression)
-  return null
+interface LiteralPart {
+  readonly node: ts.Node
+  readonly value: string
+}
+
+/**
+ * Return literal copy embedded in the expression forms normally used to compose UI text.
+ * This stays deliberately narrower than a descendant walk: property keys, semantic arguments,
+ * and implementation strings inside unrelated calls are not presentation surfaces.
+ */
+function literalParts(node: ts.Node | undefined): LiteralPart[] {
+  if (node === undefined) return []
+  if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) {
+    return [{ node, value: node.text }]
+  }
+  if (ts.isTemplateExpression(node)) {
+    return [
+      { node: node.head, value: node.head.text },
+      ...node.templateSpans.map((span) => ({ node: span.literal, value: span.literal.text })),
+    ]
+  }
+  if (ts.isJsxExpression(node)) return literalParts(node.expression)
+  if (
+    ts.isParenthesizedExpression(node) ||
+    ts.isAsExpression(node) ||
+    ts.isSatisfiesExpression(node) ||
+    ts.isNonNullExpression(node)
+  ) {
+    return literalParts(node.expression)
+  }
+  if (ts.isConditionalExpression(node)) {
+    return [...literalParts(node.whenTrue), ...literalParts(node.whenFalse)]
+  }
+  if (ts.isBinaryExpression(node)) {
+    const operator = node.operatorToken.kind
+    if (
+      operator === ts.SyntaxKind.PlusToken ||
+      operator === ts.SyntaxKind.AmpersandAmpersandToken ||
+      operator === ts.SyntaxKind.BarBarToken ||
+      operator === ts.SyntaxKind.QuestionQuestionToken
+    ) {
+      return [...literalParts(node.left), ...literalParts(node.right)]
+    }
+    return []
+  }
+  if (ts.isArrayLiteralExpression(node)) return node.elements.flatMap(literalParts)
+  return []
 }
 
 function lineOf(source: ts.SourceFile, node: ts.Node): number {
@@ -74,7 +116,8 @@ export function findCopyViolations(sourceText: string, file = 'source.tsx'): Cop
   const findings: CopyFinding[] = []
 
   const report = (node: ts.Node, surface: string, value: string): void => {
-    if (value.length === 0) return
+    // Delimiters used to combine already-owned dynamic values are formatting, not copy.
+    if (!/[\p{L}\p{N}\p{S}]/u.test(value)) return
     findings.push({
       file,
       line: lineOf(source, node),
@@ -82,19 +125,20 @@ export function findCopyViolations(sourceText: string, file = 'source.tsx'): Cop
     })
   }
 
+  const reportLiterals = (node: ts.Node | undefined, surface: string): void => {
+    for (const part of literalParts(node)) report(part.node, surface, part.value)
+  }
+
   const visit = (node: ts.Node): void => {
     if (ts.isJsxText(node)) {
       const text = node.getText(source).trim()
       if (text.length > 0) report(node, 'JSX text', text)
     } else if (ts.isJsxExpression(node) && !ts.isJsxAttribute(node.parent)) {
-      const value = literalValue(node)
-      if (value !== null) report(node, 'JSX text expression', value)
+      reportLiterals(node, 'JSX text expression')
     } else if (ts.isJsxAttribute(node) && COPY_PROPS.has(node.name.getText(source))) {
-      const value = literalValue(node.initializer)
-      if (value !== null) report(node, `JSX ${node.name.getText(source)} prop`, value)
+      reportLiterals(node.initializer, `JSX ${node.name.getText(source)} prop`)
     } else if (ts.isCallExpression(node) && callName(node.expression) === 'showToast') {
-      const value = literalValue(node.arguments[0])
-      if (value !== null) report(node.arguments[0] ?? node, 'showToast message', value)
+      reportLiterals(node.arguments[0], 'showToast message')
     }
     ts.forEachChild(node, visit)
   }
