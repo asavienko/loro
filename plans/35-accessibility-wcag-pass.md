@@ -22,6 +22,54 @@ What is missing is everything the gates cannot check by static analysis: screen-
 focus order, dynamic type, reduced motion, and whether the app is actually usable without hearing or
 without speech.
 
+### One of the four gates does not gate
+
+Verified 2026-07-29: **`check:tap-targets` passes while the app's icon controls are all under 44
+px.** The check (`apps/mobile/scripts/a11yChecks.ts:127`) only fires when a `width`/`height` literal
+**and** a `Pressable`/`onPress` token appear on the _same physical line_. Styles live on their own
+lines, so it almost never matches.
+
+Underneath it, `Pressable` (`src/ui/primitives.tsx:102`) applies a flat `hitSlop={8}` rather than
+guaranteeing a target, while `component-inventory.md` claims it "Enforces a 44×44 hit area". Four
+controls land at roughly 33–40 px:
+
+| Control                 | Where                                 |
+| ----------------------- | ------------------------------------- |
+| Transport `◄◄` / `►►`   | `app/practice/stream.tsx:152`, `:180` |
+| Love toggle `♥`         | `app/phrase/[id].tsx:85`              |
+| Onboarding back chevron | `app/onboarding.tsx:132`              |
+| `Undo` in the toast     | `src/ui/ToastHost.tsx:38`             |
+
+The last one is the worst: it is the only path to reversing a destructive action
+([50](50-interface-integrity-defects.md) §5), it is the smallest target in the app, and it
+disappears after 2.6 s.
+
+**Fix both halves in this plan, early:** make `Pressable` compute the hit area needed to reach 44
+(measured or `minWidth`/`minHeight` plus slop) so the primitive keeps the promise the inventory
+makes for it, and rewrite the check to parse the JSX element rather than the line. A gate that
+passes a codebase that violates the rule is worse than no gate, because it is cited as evidence.
+
+### Three more verified findings to fix, with citations
+
+Found in the same pass; each belongs to a numbered section below rather than to a new plan.
+
+1. **No announcements exist.** `announceForAccessibility` is never called and `AccessibilityInfo` is
+   never imported. `accessibility.md#practice-screens` requires the Refrain's mode change announced,
+   **lock-in announced assertively**, and now-playing announced politely. The only live region in
+   the app is the toast (`ToastHost.tsx:33`). A blind learner currently gets no signal for the app's
+   reward moment. → §1.
+2. **Fixed heights on text containers**, which `accessibility.md#text-and-layout` forbids: the
+   search field `height: 46` (`app/add.tsx:185`), week cells `height: 30` (`app/progress.tsx:127`),
+   the effort chart `height: 28` (`app/practice/refrain.tsx:421`), the 26 px wave dots
+   (`app/index.tsx:188`), and the warming card's `minHeight: 200` (`refrain.tsx:346`). These clip
+   before 200% type, so §2 is layout work on existing screens, not a flag. → §2.
+3. **The tagging sheet has no modal semantics.** `app/add.tsx:350` is a bare RN `Modal`: no
+   `accessibilityViewIsModal`, so focus is not trapped and the screen behind stays reachable; and
+   the scrim is a full-screen `Pressable accessibilityLabel="Dismiss"` (`:361`), which VoiceOver
+   reads as one giant button covering the screen. It also uses `animationType="slide"` instead of
+   the specified `sheetUp`, ignoring Reduce Motion. → §1 and §3, and the `Sheet` component in
+   [34](34-design-system-completion.md).
+
 ## Resolve Q-14 first — it blocks the hero screen
 
 At 100% automaticity the Refrain's warming card is a hot-coral gradient with white text. The
@@ -107,6 +155,11 @@ VoiceOver and TalkBack, full flows, by someone who uses them regularly if possib
 ## Acceptance criteria
 
 - Q-14 resolved, implemented, and closed in `docs/decisions/open-questions.md`.
+- `Pressable` guarantees a 44×44 target, `check:tap-targets` parses JSX rather than lines, and the
+  rewritten check **fails** on today's four sub-44 controls before they are fixed — proving the gate
+  works, not just that it is green.
+- Mode changes, lock-in, and now-playing are announced with the documented politeness; the tagging
+  sheet traps focus and its scrim is not a focusable element.
 - All 21 shipped screens navigable and completable with VoiceOver and with TalkBack.
 - Largest dynamic type: no clipping, no unreachable controls, on both platforms.
 - Every animation has a reduced-motion behaviour that preserves its information.

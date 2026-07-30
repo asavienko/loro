@@ -50,7 +50,12 @@ interface PhraseOverrides {
   lockInDays?: number
   rung?: LadderRung
   stumbles?: number
+  // The prosody block. All four move together; overriding `cueLevel` but not the axes
+  // made the out-of-range values a clamping test needs unreachable from here.
   cueLevel?: number
+  axPerception?: number
+  axRecall?: number
+  axProduction?: number
   addedAt?: number
   lastPracticedAt?: number | null
   graduatedAt?: number | null
@@ -79,9 +84,9 @@ export function makePhrase(id: string, o: PhraseOverrides = {}): PhraseState {
     rung: o.rung ?? LadderRung.Accumulated,
     stumbles: o.stumbles ?? 0,
     cueLevel: o.cueLevel ?? 0,
-    axPerception: 0,
-    axRecall: 0,
-    axProduction: 0,
+    axPerception: o.axPerception ?? 0,
+    axRecall: o.axRecall ?? 0,
+    axProduction: o.axProduction ?? 0,
   }
 }
 

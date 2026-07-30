@@ -1,9 +1,22 @@
 import { Body, Controller, Get, Inject, Post } from '@nestjs/common'
-import { AiService, type Scene } from './ai.service.js'
+import { AiService } from './ai.service.js'
+import type { Scene } from './scene.js'
 
 interface SceneRequest {
   theme?: string
   level?: string
+}
+
+interface SceneResponse {
+  scene_id: string
+  cached: boolean
+  fallback: boolean
+  scene: Scene
+}
+
+interface ThemesResponse {
+  themes: string[]
+  provider: string
 }
 
 @Controller('ai')
@@ -12,28 +25,18 @@ export class AiController {
   // `design:paramtypes`, so type-only constructor injection resolves to undefined.
   constructor(@Inject(AiService) private readonly ai: AiService) {}
 
+  /**
+   * The service guarantees the scene is valid and picks the default theme, so all that
+   * is left here is the wire naming — `scene_id` rather than `id`.
+   */
   @Post('scene')
-  scene(@Body() body: SceneRequest): {
-    scene_id: string
-    cached: boolean
-    fallback: boolean
-    scene: Scene
-  } {
-    const theme = body.theme ?? 'Café'
-    const { scene, cached, fallback } = this.ai.scene(theme)
-
-    // Nothing invalid ever reaches a learner.
-    const check = this.ai.validate(scene)
-    if (!check.ok) {
-      const safe = this.ai.scene('Café')
-      return { scene_id: 'fallback', cached: false, fallback: true, scene: safe.scene }
-    }
-
-    return { scene_id: `scn_${theme.toLowerCase()}`, cached, fallback, scene }
+  async scene(@Body() body: SceneRequest): Promise<SceneResponse> {
+    const { id, cached, fallback, scene } = await this.ai.scene(body.theme)
+    return { scene_id: id, cached, fallback, scene }
   }
 
   @Get('themes')
-  themes(): { themes: string[]; provider: string } {
-    return { themes: this.ai.themes(), provider: process.env['AI_PROVIDER'] ?? 'stub' }
+  themes(): ThemesResponse {
+    return { themes: this.ai.themes(), provider: this.ai.providerName }
   }
 }

@@ -14,7 +14,10 @@
   the Refrain. Remaining: time-driven wave state, truthful completion/all-graduated states,
   persisted mid-session resume, blueprint fidelity/component coverage, and audio-backed ambient
   behaviour. Resume/persistence waits on plan 10; audio waits on 11. The UI/state work is otherwise
-  unblocked.
+  unblocked. Two of the blueprint's four content blocks — the **ambient loop** card (`LB-05`) and
+  the **fading tail + graduated & banked** pair (`LB-06`) — are absent entirely, and the wave rows'
+  hardcoded, mislabelled times are a defect owned by
+  [50-interface-integrity-defects](50-interface-integrity-defects.md) §4.
 
 ## Why it matters
 
@@ -39,10 +42,25 @@ The mechanics, from `docs/product/prd.md` (`LB-01`…`LB-10`) and
 - **Three waves** at `waveTimes` (already in `PracticeSettings`, defaulted to
   `['08:00','13:00','19:00']` in `store/index.ts:356`). A wave is a portion of today's reps, not a
   separate set.
-- **The rolling window** — how phrases enter and leave rotation across days (`LB-05`…`LB-07`).
-- **The ambient loop** — passive listening for the day's set (`LB-08`); on the M2 cut list, so build
-  it behind a flag and cut cleanly if needed.
+- **The rolling window** (`LB-06`) — how phrases enter and leave rotation across days, shown as a
+  **fading tail** of yesterday's phrases with days-left beside a count of **graduated & banked**
+  phrases (`Loro.dc.html:1369–1381`).
+- **The ambient loop** (`LB-05`) — passive listening for the day's set, a dark card with a live
+  equaliser (`1356–1367`); on the M2 cut list, so build it behind a flag and cut cleanly if needed.
 - **Progress within the day** shown as effort dropping, consistent with the Refrain's warming card.
+
+**Both of those blocks are absent from the current implementation**, and their absence is not
+neutral: `app/index.tsx:217–221` renders three invented `StatTile`s (reps today · in your stream ·
+graduated) where the blueprint has the ambient card and the tail/bank pair, and `:225–253` adds a
+three-button navigation row that the blueprint does not have anywhere on this screen. So Today
+currently shows two of the blueprint's four content blocks plus chrome of its own. The navigation
+question is owned by [46-navigation-system](46-navigation-system.md) (its Q-17, the hub rail) —
+**sequence the two**, because changing that row without restoring the content leaves the screen with
+a hole in it.
+
+One more fidelity gap in the set list: the blueprint's rows carry a per-phrase `daysLabel`
+(`p.daysLabel`, the lock-in day counter of `LB-02`'s `day n/4`) beside the LOCKED badge. The app
+renders the badge and not the counter, so the four-day graduation path is invisible.
 
 ## The work
 

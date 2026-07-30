@@ -14,6 +14,32 @@ pub const DEFAULT_REP_TARGET: u32 = 6;
 /// Distinct lock-in days before a phrase graduates out of rotation.
 pub const LOCK_IN_DAYS_TO_GRADUATE: u32 = 4;
 
+/// The ceiling on automaticity. A *cap*, not a scale: reps past the target still count as
+/// reps, they just don't read as more than "done".
+const AUTOMATICITY_MAX_PCT: f64 = 100.0;
+
+/// Playback rate when a model is offered — a touch under natural speed, which is what
+/// makes a phrase imitable without sounding slowed down.
+const MODEL_RATE_MODELLED: f32 = 0.95;
+
+/// Playback rate for Speed mode. Above natural speed: the point of the mode.
+const MODEL_RATE_SPEED: f32 = 1.15;
+
+/// Beat period for every mode but Speed. ~83 bpm, a comfortable speaking pulse.
+const BEAT_MS_DEFAULT: u32 = 720;
+
+/// Beat period for Speed mode. Just over double time, and the only cue that the mode
+/// differs — hence the size of the gap.
+const BEAT_MS_SPEED: u32 = 340;
+
+// ── Effort-label thresholds, in percent (`Loro.dc.html:3411`) ────────────────────────
+/// At or above the target: "instant & smooth".
+const EFFORT_INSTANT_PCT: u8 = 100;
+/// Two thirds of the way: "quick & smooth".
+const EFFORT_QUICK_PCT: u8 = 66;
+/// One third of the way: "getting smoother". Below this it's still "warming up".
+const EFFORT_SMOOTHER_PCT: u8 = 33;
+
 /// Today's automaticity, from the blueprint (`Loro.dc.html:3378`).
 #[must_use]
 #[uniffi::export]
@@ -24,7 +50,7 @@ pub fn automaticity(reps_today: u32, target: u32) -> u8 {
     #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
     let pct = ((f64::from(reps_today) / f64::from(target)) * 100.0)
         .round()
-        .min(100.0) as u8;
+        .min(AUTOMATICITY_MAX_PCT) as u8;
     pct
 }
 
@@ -78,8 +104,8 @@ pub fn mode_for_rep(rep_index: u32) -> RefrainMode {
 #[uniffi::export]
 pub fn model_rate_for_mode(mode: RefrainMode) -> Option<f32> {
     match mode {
-        RefrainMode::Echo | RefrainMode::Chorus => Some(0.95),
-        RefrainMode::Speed => Some(1.15),
+        RefrainMode::Echo | RefrainMode::Chorus => Some(MODEL_RATE_MODELLED),
+        RefrainMode::Speed => Some(MODEL_RATE_SPEED),
         // Cloze, Call, and Cold withhold the model — that's the point.
         RefrainMode::Cloze | RefrainMode::Call | RefrainMode::Cold => None,
     }
@@ -90,8 +116,8 @@ pub fn model_rate_for_mode(mode: RefrainMode) -> Option<f32> {
 #[uniffi::export]
 pub fn beat_ms_for_mode(mode: RefrainMode) -> u32 {
     match mode {
-        RefrainMode::Speed => 340,
-        _ => 720,
+        RefrainMode::Speed => BEAT_MS_SPEED,
+        _ => BEAT_MS_DEFAULT,
     }
 }
 
@@ -104,11 +130,11 @@ pub fn beat_ms_for_mode(mode: RefrainMode) -> u32 {
 pub fn effort_label(reps: u32, automaticity_pct: u8) -> String {
     if reps == 0 {
         "tap to begin".to_string()
-    } else if automaticity_pct >= 100 {
+    } else if automaticity_pct >= EFFORT_INSTANT_PCT {
         "instant & smooth".to_string()
-    } else if automaticity_pct >= 66 {
+    } else if automaticity_pct >= EFFORT_QUICK_PCT {
         "quick & smooth".to_string()
-    } else if automaticity_pct >= 33 {
+    } else if automaticity_pct >= EFFORT_SMOOTHER_PCT {
         "getting smoother".to_string()
     } else {
         "warming up".to_string()
@@ -165,38 +191,100 @@ mod tests {
 
     #[test]
     fn set_size_follows_the_daily_minutes_answer() {
-        assert_eq!(refrain_set_size(5), 3);
-        assert_eq!(refrain_set_size(10), 5);
-        assert_eq!(refrain_set_size(20), 8);
+        for (minutes, expect) in [
+            (0, 3),
+            (5, 3),
+            (6, 5),
+            (10, 5),
+            (11, 8),
+            (20, 8),
+            (u32::MAX, 8),
+        ] {
+            assert_eq!(refrain_set_size(minutes), expect, "{minutes} minutes");
+        }
     }
+
+    /// The rotation in order, one per rep. `mode_for_rep` is written as a match on the
+    /// index, so the table is the specification rather than a restatement of the code.
+    const ROTATION: [RefrainMode; 6] = [
+        RefrainMode::Echo,
+        RefrainMode::Chorus,
+        RefrainMode::Speed,
+        RefrainMode::Cloze,
+        RefrainMode::Call,
+        RefrainMode::Cold,
+    ];
 
     #[test]
     fn modes_rotate_then_hold_at_cold() {
-        assert_eq!(mode_for_rep(0), RefrainMode::Echo);
-        assert_eq!(mode_for_rep(3), RefrainMode::Cloze);
-        assert_eq!(mode_for_rep(5), RefrainMode::Cold);
-        assert_eq!(mode_for_rep(99), RefrainMode::Cold);
+        for (rep, expect) in ROTATION.iter().enumerate() {
+            let rep = u32::try_from(rep).expect("six reps");
+            assert_eq!(mode_for_rep(rep), *expect, "rep {rep}");
+        }
+        for rep in [6, 7, 99, u32::MAX] {
+            assert_eq!(mode_for_rep(rep), RefrainMode::Cold, "rep {rep} holds");
+        }
+    }
+
+    #[test]
+    fn the_default_rep_target_spends_every_mode_exactly_once() {
+        // Six reps of one phrase are six different cognitive events, not one six times.
+        let used: Vec<RefrainMode> = (0..DEFAULT_REP_TARGET).map(mode_for_rep).collect();
+        assert_eq!(
+            used, ROTATION,
+            "the target and the rotation must stay in step"
+        );
     }
 
     #[test]
     fn the_later_modes_withhold_the_model() {
-        assert_eq!(model_rate_for_mode(RefrainMode::Echo), Some(0.95));
-        assert_eq!(model_rate_for_mode(RefrainMode::Speed), Some(1.15));
-        assert_eq!(model_rate_for_mode(RefrainMode::Cloze), None);
-        assert_eq!(model_rate_for_mode(RefrainMode::Cold), None);
+        for (mode, expect) in [
+            (RefrainMode::Echo, Some(MODEL_RATE_MODELLED)),
+            (RefrainMode::Chorus, Some(MODEL_RATE_MODELLED)),
+            (RefrainMode::Speed, Some(MODEL_RATE_SPEED)),
+            // Withholding the model is the point of these three.
+            (RefrainMode::Cloze, None),
+            (RefrainMode::Call, None),
+            (RefrainMode::Cold, None),
+        ] {
+            assert_eq!(model_rate_for_mode(mode), expect, "{mode:?}");
+        }
+        // Under, then over, natural speed — checked at compile time.
+        const {
+            assert!(MODEL_RATE_MODELLED < 1.0);
+            assert!(MODEL_RATE_SPEED > 1.0);
+        }
     }
 
     #[test]
     fn speed_mode_has_a_faster_beat() {
         assert!(beat_ms_for_mode(RefrainMode::Speed) < beat_ms_for_mode(RefrainMode::Echo));
+        for mode in ROTATION {
+            let expect = if mode == RefrainMode::Speed {
+                BEAT_MS_SPEED
+            } else {
+                BEAT_MS_DEFAULT
+            };
+            assert_eq!(beat_ms_for_mode(mode), expect, "{mode:?}");
+        }
     }
 
     #[test]
     fn the_effort_label_escalates() {
-        assert_eq!(effort_label(0, 0), "tap to begin");
-        assert_eq!(effort_label(1, 16), "warming up");
-        assert_eq!(effort_label(3, 50), "getting smoother");
-        assert_eq!(effort_label(4, 66), "quick & smooth");
-        assert_eq!(effort_label(6, 100), "instant & smooth");
+        for (reps, pct, expect) in [
+            (0, 0, "tap to begin"),
+            (0, 100, "tap to begin"), // no reps outranks any percentage
+            (1, 0, "warming up"),
+            (1, 16, "warming up"),
+            (1, EFFORT_SMOOTHER_PCT - 1, "warming up"),
+            (3, EFFORT_SMOOTHER_PCT, "getting smoother"),
+            (3, 50, "getting smoother"),
+            (4, EFFORT_QUICK_PCT, "quick & smooth"),
+            (4, EFFORT_INSTANT_PCT - 1, "quick & smooth"),
+            (6, EFFORT_INSTANT_PCT, "instant & smooth"),
+            (9, u8::MAX, "instant & smooth"),
+        ] {
+            assert_eq!(effort_label(reps, pct), expect, "{reps} reps at {pct}%");
+        }
     }
 }

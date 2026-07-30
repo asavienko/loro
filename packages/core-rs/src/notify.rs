@@ -16,6 +16,12 @@ pub const QUIET_START_HOUR: u32 = 22;
 /// Quiet hours end (local hour).
 pub const QUIET_END_HOUR: u32 = 7;
 
+/// Reveal-mode fallbacks before the language-pack prompt is offered.
+///
+/// Three, not one: a single fallback is a fluke, and prompting on it would be exactly the
+/// re-engagement bait rule `N-04` forbids. Three is a pattern worth a suggestion.
+const REVEAL_MODE_THRESHOLD: u32 = 3;
+
 /// Notification categories. Each is individually opt-out.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]
 pub enum Category {
@@ -97,7 +103,7 @@ pub fn may_fire(category: Category, ctx: &NotifyContext) -> bool {
         Category::TripDrop | Category::TripMilestone | Category::Arrival | Category::Return => {
             ctx.trip_active
         }
-        Category::LanguagePack => ctx.reveal_mode_count >= 3,
+        Category::LanguagePack => ctx.reveal_mode_count >= REVEAL_MODE_THRESHOLD,
     }
 }
 
@@ -122,42 +128,60 @@ pub fn deep_link_for(category: Category) -> String {
 mod tests {
     use super::*;
 
+    /// Every category. Written once, so a new one can't be added without every policy
+    /// test below covering it.
+    const ALL: [Category; 7] = [
+        Category::DailyReminder,
+        Category::WaveNudge,
+        Category::TripDrop,
+        Category::TripMilestone,
+        Category::Arrival,
+        Category::Return,
+        Category::LanguagePack,
+    ];
+
+    /// A context in which every category is *permitted*, so each test can switch off the
+    /// one thing it is about and watch the answer change.
     fn ctx() -> NotifyContext {
         NotifyContext {
             hour: 9,
             practised_today: false,
             previous_wave_completed: true,
-            enabled: vec![
-                Category::DailyReminder,
-                Category::WaveNudge,
-                Category::TripDrop,
-                Category::LanguagePack,
-            ],
+            enabled: ALL.to_vec(),
             already_scheduled: 0,
             trip_active: true,
-            reveal_mode_count: 0,
+            reveal_mode_count: REVEAL_MODE_THRESHOLD,
         }
     }
 
     #[test]
     fn quiet_hours_span_midnight() {
-        assert!(is_quiet_hour(23));
-        assert!(is_quiet_hour(3));
-        assert!(is_quiet_hour(6));
-        assert!(!is_quiet_hour(7));
-        assert!(!is_quiet_hour(21));
+        for hour in 0..24 {
+            let quiet = !(QUIET_END_HOUR..QUIET_START_HOUR).contains(&hour);
+            assert_eq!(is_quiet_hour(hour), quiet, "hour {hour}");
+        }
+        // Pinned, not just self-consistent: 22:00 through 06:59 is quiet.
+        assert!(is_quiet_hour(22) && is_quiet_hour(23) && is_quiet_hour(0));
+        assert!(is_quiet_hour(6) && !is_quiet_hour(7) && !is_quiet_hour(21));
+    }
+
+    #[test]
+    fn every_category_is_permitted_in_the_baseline_context() {
+        // Otherwise a test that expects `false` could be passing for the wrong reason.
+        let c = ctx();
+        for cat in ALL {
+            assert!(may_fire(cat, &c), "{cat:?} should be allowed at 09:00");
+        }
     }
 
     #[test]
     fn nothing_fires_during_quiet_hours() {
         let mut c = ctx();
-        c.hour = 23;
-        for cat in [
-            Category::DailyReminder,
-            Category::TripDrop,
-            Category::Arrival,
-        ] {
-            assert!(!may_fire(cat, &c));
+        for hour in (QUIET_START_HOUR..24).chain(0..QUIET_END_HOUR) {
+            c.hour = hour;
+            for cat in ALL {
+                assert!(!may_fire(cat, &c), "{cat:?} at {hour}:00");
+            }
         }
     }
 
@@ -165,8 +189,12 @@ mod tests {
     fn the_daily_cap_is_absolute() {
         let mut c = ctx();
         c.already_scheduled = MAX_PER_DAY;
-        assert!(!may_fire(Category::DailyReminder, &c));
-        assert!(!may_fire(Category::TripDrop, &c));
+        for cat in ALL {
+            assert!(!may_fire(cat, &c), "{cat:?} past the cap");
+        }
+        // One below the cap still fires; the cap is a ceiling, not an off switch.
+        c.already_scheduled = MAX_PER_DAY - 1;
+        assert!(may_fire(Category::DailyReminder, &c));
     }
 
     #[test]
@@ -192,41 +220,55 @@ mod tests {
     fn a_disabled_category_never_fires() {
         let mut c = ctx();
         c.enabled = vec![];
-        assert!(!may_fire(Category::DailyReminder, &c));
+        for cat in ALL {
+            assert!(!may_fire(cat, &c), "{cat:?} while opted out");
+        }
+        // Opting one in doesn't opt the others in — each is individually opt-out.
+        c.enabled = vec![Category::DailyReminder];
+        assert!(may_fire(Category::DailyReminder, &c));
+        assert!(!may_fire(Category::WaveNudge, &c));
     }
 
     #[test]
     fn trip_notifications_need_an_active_trip() {
         let mut c = ctx();
         c.trip_active = false;
-        assert!(!may_fire(Category::TripDrop, &c));
+        for cat in [
+            Category::TripDrop,
+            Category::TripMilestone,
+            Category::Arrival,
+            Category::Return,
+        ] {
+            assert!(!may_fire(cat, &c), "{cat:?} without a trip");
+        }
+        // The non-trip categories are unaffected.
+        assert!(may_fire(Category::DailyReminder, &c));
     }
 
     #[test]
     fn the_language_pack_prompt_waits_for_repeated_fallbacks() {
         let mut c = ctx();
-        assert!(!may_fire(Category::LanguagePack, &c));
-        c.reveal_mode_count = 3;
+        for count in 0..REVEAL_MODE_THRESHOLD {
+            c.reveal_mode_count = count;
+            assert!(!may_fire(Category::LanguagePack, &c), "after {count}");
+        }
+        c.reveal_mode_count = REVEAL_MODE_THRESHOLD;
         assert!(may_fire(Category::LanguagePack, &c));
     }
 
     #[test]
     fn every_category_lands_on_a_specific_surface() {
-        for cat in [
-            Category::DailyReminder,
-            Category::WaveNudge,
-            Category::TripDrop,
-            Category::TripMilestone,
-            Category::Arrival,
-            Category::Return,
-            Category::LanguagePack,
-        ] {
+        let mut seen: Vec<String> = Vec::new();
+        for cat in ALL {
             let link = deep_link_for(cat);
-            assert!(link.starts_with("loro://"));
+            assert!(link.starts_with("loro://"), "{cat:?} → {link}");
             assert_ne!(
                 link, "loro://",
                 "a notification must not open the home screen"
             );
+            // Two categories sharing a link would waste one of them.
+            assert!(!seen.contains(&link), "{cat:?} reuses {link}");
+            seen.push(link);
         }
     }
 }

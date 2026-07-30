@@ -13,9 +13,37 @@
  */
 
 import { expect, it, describe } from 'vitest'
-import type { EngineContext, PracticeEngine, Attempt, ProgressDelta } from './types.js'
+import type {
+  EngineContext,
+  PracticeEngine,
+  Attempt,
+  ProgressDelta,
+  ProgressSignal,
+} from './types.js'
+import { PROGRESS_SIGNALS } from './types.js'
 import type { PhraseState } from '../domain/phrase.js'
 import { LadderRung } from '../domain/phrase.js'
+
+/**
+ * What an engine claims about rule 5, declared rather than inferred.
+ *
+ * Every signal on `ProgressDelta` must appear in exactly one of these. That is the whole
+ * mechanism: an engine may decline a signal, but it may not IGNORE one, and a signal
+ * added to the contract fails every engine's suite until each has decided about it.
+ *
+ * A single `skipFsrs`-style flag per exemption cannot do this — it answers one question
+ * and stays silent about the other fourteen.
+ */
+export interface SignalManifest {
+  /** Signals this engine writes. Its own tests say when and with what value. */
+  readonly maintains: readonly ProgressSignal[]
+  /**
+   * Signals it legitimately cannot, mapped to WHY. The reason is the point: "passive
+   * listening is not a review" is a design decision, and an exemption without one is
+   * usually an oversight wearing a declaration.
+   */
+  readonly exempt: Partial<Record<ProgressSignal, string>>
+}
 
 export interface ConformanceOptions {
   /** A context with a populated store. */
@@ -27,8 +55,8 @@ export interface ConformanceOptions {
    * Engines gate differently, so the suite can't guess.
    */
   readonly makeSuccessAttempt: (itemId: string) => Attempt
-  /** Engines that legitimately never write FSRS (e.g. passive listening). */
-  readonly skipFsrs?: boolean
+  /** Required — see `SignalManifest`. There is no default, because a default is a guess. */
+  readonly signals: SignalManifest
 }
 
 /**
@@ -88,8 +116,41 @@ export function runConformanceSuite(engine: PracticeEngine, opts: ConformanceOpt
       expect(delta.lastPracticedAt, 'lastPracticedAt must be set').toBeTypeOf('number')
     })
 
+    // ── the signal manifest: rule 5, declared and checked ──
+
+    it('classifies every progress signal as maintained or exempt', () => {
+      const maintained = new Set<string>(opts.signals.maintains)
+      const exempt = new Set(Object.keys(opts.signals.exempt))
+
+      const undeclared = PROGRESS_SIGNALS.filter((s) => !maintained.has(s) && !exempt.has(s))
+      expect(
+        undeclared,
+        'a signal on ProgressDelta that no engine decided about is rule 5 quietly failing',
+      ).toEqual([])
+
+      const both = PROGRESS_SIGNALS.filter((s) => maintained.has(s) && exempt.has(s))
+      expect(both, 'a signal cannot be both maintained and exempt').toEqual([])
+    })
+
+    it('gives a reason for every exemption', () => {
+      for (const [signal, why] of Object.entries(opts.signals.exempt)) {
+        expect(why, `${signal} is exempt with no reason`).toBeTruthy()
+      }
+    })
+
+    it('never writes a signal it declared exempt', async () => {
+      // Checked across EVERY delta, not the accumulation: a conditional write (a stumble,
+      // a rung) shows up in one delta and would be invisible in a merged one.
+      const written = new Set<string>()
+      for (const delta of await recordPhraseWork(engine, opts)) {
+        for (const key of Object.keys(delta)) written.add(key)
+      }
+      const lied = Object.keys(opts.signals.exempt).filter((s) => written.has(s))
+      expect(lied, 'declared exempt but written anyway').toEqual([])
+    })
+
     it('maintains FSRS state even if it never shows an interval (rule 5)', async () => {
-      if (opts.skipFsrs) return
+      if (opts.signals.exempt.srs !== undefined) return
       const delta = await recordFirstPhrase(engine, opts)
       if (delta === null) return
       expect(delta.srs, 'every engine feeds FSRS — see rule 5').toBeDefined()
@@ -158,38 +219,49 @@ export function runConformanceSuite(engine: PracticeEngine, opts: ConformanceOpt
  * Engines differ in what one item means — a repetition, a rep with a rotating mode,
  * a beat in a finisher — so the unit the rules are stated over is "one phrase's work".
  */
+async function recordPhraseWork(
+  engine: PracticeEngine,
+  opts: ConformanceOptions,
+): Promise<readonly ProgressDelta[]> {
+  const ctx = opts.makeContext()
+  const plan = await engine.plan(ctx)
+  const first = plan.items[0]
+  if (first === undefined) return []
+
+  const items = plan.items.filter((i) => i.phraseId === first.phraseId)
+  const session = { sessionId: 'conformance', plan, cursor: 0 }
+
+  const deltas: ProgressDelta[] = []
+  for (const item of items) {
+    deltas.push(await engine.record(session, opts.makeSuccessAttempt(item.itemId)))
+  }
+  return deltas
+}
+
 async function recordFirstPhrase(
   engine: PracticeEngine,
   opts: ConformanceOptions,
 ): Promise<ProgressDelta | null> {
-  const ctx = opts.makeContext()
-  const plan = await engine.plan(ctx)
-  const first = plan.items[0]
-  if (first === undefined) return null
-
-  const phraseId = first.phraseId
-  const items = plan.items.filter((i) => i.phraseId === phraseId)
-  const session = { sessionId: 'conformance', plan, cursor: 0 }
+  const deltas = await recordPhraseWork(engine, opts)
+  const last = deltas[deltas.length - 1]
+  if (last === undefined) return null
 
   // Accumulated as a mutable draft, then frozen — `exactOptionalPropertyTypes` makes
   // spreading optional fields across a union unpleasant, and this is clearer anyway.
   let reps = 0
   let plays = 0
   let rung: ProgressDelta['rung']
-  let last: ProgressDelta = { phraseId }
 
-  for (const item of items) {
-    const d = await engine.record(session, opts.makeSuccessAttempt(item.itemId))
+  for (const d of deltas) {
     reps += d.reps ?? 0
     plays += d.plays ?? 0
     // Monotonic signals accumulate as a maximum, mirroring the `max` merge class.
     if (d.rung !== undefined) rung = rung === undefined ? d.rung : Math.max(rung, d.rung)
-    last = d
   }
 
   return {
     ...last,
-    phraseId,
+    phraseId: last.phraseId,
     reps,
     plays,
     ...(rung === undefined ? {} : { rung }),

@@ -7,10 +7,19 @@
 //!
 //! See docs/architecture/scheduling.md#4--the-ladder--loop-c
 
+use crate::rng::Lcg;
+use crate::units::MS_PER_DAY;
 use crate::{LadderRung, PhraseState};
 
 /// Days without practice after which a phrase is considered stale.
 pub const STALE_DAYS: i64 = 14;
+
+/// What staleness contributes to `need`.
+///
+/// The `×2` of the blueprint's `need = stale×2 + stumbles` (`Loro.dc.html:3467`): being
+/// stale is worth two stumbles. Also the value for "never practised", which is stale by
+/// definition — one constant, so the two can't drift apart.
+const STALE_WEIGHT: u32 = 2;
 
 impl LadderRung {
     /// The rung as a 0..4 index.
@@ -65,11 +74,11 @@ pub fn climb(current: LadderRung, target: LadderRung) -> LadderRung {
 pub fn need(p: &PhraseState, now_ms: i64) -> u32 {
     let stale = match p.last_practiced_at {
         Some(t) => {
-            let days = (now_ms - t) / 86_400_000;
-            u32::from(days > STALE_DAYS) * 2
+            let days = (now_ms - t) / MS_PER_DAY;
+            u32::from(days > STALE_DAYS) * STALE_WEIGHT
         }
         // Never practised is stale by definition.
-        None => 2,
+        None => STALE_WEIGHT,
     };
     stale + p.stumbles
 }
@@ -111,6 +120,17 @@ impl FinisherCard {
         [Self::Bend, Self::Transfer, Self::Pressure, Self::Deploy]
     }
 }
+
+/// How much a card's total need outweighs the jitter when dealing.
+///
+/// Scaling need by 100 while the jitter spans 0..200 means need decides the card whenever
+/// two candidates differ by 2 or more, and the shuffle only breaks near-ties. The draw
+/// feels like a draw without ever dealing a card the deck doesn't need.
+const NEED_WEIGHT: u32 = 100;
+
+/// Width of the random term in the card weighting. Two `NEED_WEIGHT` units wide, so it
+/// can only reorder cards whose need is within 1.
+const DRAW_JITTER: u32 = 200;
 
 /// The outcome of a draw.
 #[derive(Debug, Clone, uniffi::Record)]
@@ -156,7 +176,7 @@ pub fn draw(
             .map(|p| need(p, now_ms) + 1)
             .sum();
         // Weight by total need, with a small random term so the draw feels like a draw.
-        total * 100 + rng.next_range(200)
+        total * NEED_WEIGHT + rng.next_range(DRAW_JITTER)
     })?;
 
     let target = deck
@@ -170,70 +190,41 @@ pub fn draw(
     })
 }
 
-/// A small deterministic PRNG. The crate takes no ambient randomness.
-struct Lcg(u64);
-
-impl Lcg {
-    const fn new(seed: u64) -> Self {
-        Self(seed ^ 0x9E37_79B9_7F4A_7C15)
-    }
-    fn next_u32(&mut self) -> u32 {
-        self.0 = self
-            .0
-            .wrapping_mul(6_364_136_223_846_793_005)
-            .wrapping_add(1_442_695_040_888_963_407);
-        #[allow(clippy::cast_possible_truncation)]
-        ((self.0 >> 33) as u32)
-    }
-    fn next_range(&mut self, n: u32) -> u32 {
-        if n == 0 {
-            0
-        } else {
-            self.next_u32() % n
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::Difficulty;
+    use crate::test_support;
 
     fn phrase(id: &str, rung: LadderRung, stumbles: u32, last: Option<i64>) -> PhraseState {
         PhraseState {
-            id: id.into(),
-            difficulty: Difficulty::Med,
-            tags: vec![],
-            loved: false,
-            learned: false,
-            plays: 0,
-            reps: 0,
-            last_practiced_at: last,
-            srs_due: None,
-            srs_stability: None,
-            srs_difficulty: None,
-            reps_today: 0,
-            reps_today_day: None,
-            lock_in_days: 0,
             rung,
             stumbles,
-            cue_level: 0,
+            last_practiced_at: last,
+            ..test_support::phrase(id)
         }
     }
 
     const NOW: i64 = 1_753_660_800_000;
-    const RECENT: i64 = NOW - 86_400_000;
+    const RECENT: i64 = NOW - MS_PER_DAY;
+
+    /// Every rung, low to high — so a test over the whole ladder can't miss one.
+    const ASCENDING: [LadderRung; 5] = [
+        LadderRung::Accumulated,
+        LadderRung::Bent,
+        LadderRung::Transferred,
+        LadderRung::PressureTested,
+        LadderRung::Deployed,
+    ];
 
     #[test]
     fn a_rung_never_goes_down() {
-        assert_eq!(
-            climb(LadderRung::Transferred, LadderRung::Bent),
-            LadderRung::Transferred
-        );
-        assert_eq!(
-            climb(LadderRung::Bent, LadderRung::Transferred),
-            LadderRung::Transferred
-        );
+        for (i, &lower) in ASCENDING.iter().enumerate() {
+            for &higher in &ASCENDING[i + 1..] {
+                assert_eq!(climb(lower, higher), higher, "{lower:?} may climb");
+                assert_eq!(climb(higher, lower), higher, "{higher:?} may not fall");
+            }
+            assert_eq!(climb(lower, lower), lower, "{lower:?} holds");
+        }
     }
 
     #[test]
@@ -242,18 +233,63 @@ mod tests {
     }
 
     #[test]
+    fn the_rung_index_round_trips_and_saturates() {
+        for (i, &rung) in ASCENDING.iter().enumerate() {
+            let index = u8::try_from(i).expect("five rungs");
+            assert_eq!(rung.index(), index);
+            assert_eq!(LadderRung::from_index(index), rung);
+        }
+        // Past the top, saturating rather than wrapping to Accumulated.
+        assert_eq!(LadderRung::from_index(5), LadderRung::Deployed);
+        assert_eq!(LadderRung::from_index(u8::MAX), LadderRung::Deployed);
+    }
+
+    #[test]
     fn need_combines_staleness_and_stumbles() {
         let fresh = phrase("f", LadderRung::Accumulated, 0, Some(RECENT));
-        let stale = phrase("s", LadderRung::Accumulated, 0, Some(NOW - 30 * 86_400_000));
+        let stale = phrase("s", LadderRung::Accumulated, 0, Some(NOW - 30 * MS_PER_DAY));
         let stumbling = phrase("t", LadderRung::Accumulated, 3, Some(RECENT));
         assert_eq!(need(&fresh, NOW), 0);
-        assert_eq!(need(&stale, NOW), 2);
+        assert_eq!(need(&stale, NOW), STALE_WEIGHT);
         assert_eq!(need(&stumbling, NOW), 3);
+        // Both terms at once, so the formula is `stale×2 + stumbles`, not `max`.
+        let both = phrase("b", LadderRung::Accumulated, 3, Some(NOW - 30 * MS_PER_DAY));
+        assert_eq!(need(&both, NOW), STALE_WEIGHT + 3);
+    }
+
+    #[test]
+    fn staleness_turns_over_exactly_at_the_threshold() {
+        let at = |days: i64| {
+            let p = phrase(
+                "p",
+                LadderRung::Accumulated,
+                0,
+                Some(NOW - days * MS_PER_DAY),
+            );
+            need(&p, NOW)
+        };
+        assert_eq!(at(STALE_DAYS), 0, "day 14 is not yet stale");
+        assert_eq!(at(STALE_DAYS + 1), STALE_WEIGHT, "day 15 is");
     }
 
     #[test]
     fn never_practised_counts_as_stale() {
-        assert_eq!(need(&phrase("n", LadderRung::Accumulated, 0, None), NOW), 2);
+        assert_eq!(
+            need(&phrase("n", LadderRung::Accumulated, 0, None), NOW),
+            STALE_WEIGHT
+        );
+    }
+
+    #[test]
+    fn every_card_advances_exactly_one_rung() {
+        for card in FinisherCard::all() {
+            let from = LadderRung::from_index(card.source_rung());
+            assert_eq!(
+                card.advances_to(),
+                from.climbed(),
+                "{card:?} must advance one rung from {from:?}"
+            );
+        }
     }
 
     #[test]

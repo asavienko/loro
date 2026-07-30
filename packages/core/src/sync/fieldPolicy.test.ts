@@ -8,7 +8,13 @@
  */
 
 import { describe, expect, it } from 'vitest'
-import { FIELD_POLICY, mergeClassFor, type SyncEntity } from './fieldPolicy.js'
+import {
+  FIELD_POLICY,
+  isSyncEntity,
+  mergeClassFor,
+  mergeClassOf,
+  type SyncEntity,
+} from './fieldPolicy.js'
 import { makePhrase } from '../testing/index.js'
 
 /** Fields that exist on PhraseState but are deliberately client-only. */
@@ -90,5 +96,35 @@ describe('field policy', () => {
     for (const e of entities) {
       expect(Object.keys(FIELD_POLICY[e]).length, e).toBeGreaterThan(0)
     }
+  })
+
+  // ── recognising an entity name that arrived as a plain string ──
+  // The outbox stores entity names as TEXT, so every folding decision starts by asking
+  // whether the policy governs this name at all. That question used to be answered by a
+  // hand-written twelve-branch chain in the persistence layer, which could drift from
+  // this file without anything failing.
+
+  it('recognises every entity the policy declares', () => {
+    for (const entity of Object.keys(FIELD_POLICY)) {
+      expect(isSyncEntity(entity), entity).toBe(true)
+    }
+  })
+
+  it('rejects a name the policy does not govern', () => {
+    for (const notAnEntity of ['kv', 'schema_version', 'outbox', '', 'toString', 'constructor']) {
+      expect(isSyncEntity(notAnEntity), notAnEntity).toBe(false)
+    }
+  })
+
+  it('resolves a merge class from an un-narrowed entity name', () => {
+    expect(mergeClassOf('user_phrase', 'reps')).toBe('max')
+    expect(mergeClassOf('review_log', 'anything')).toBe('append-only')
+  })
+
+  it('returns undefined for an entity outside the policy, never a default', () => {
+    // "Unknown" must not resolve to a permissive class: a caller that folds on `lww`
+    // would silently fold writes for a table nobody classified.
+    expect(mergeClassOf('kv', 'v')).toBeUndefined()
+    expect(mergeClassOf('constructor', 'anything')).toBeUndefined()
   })
 })
