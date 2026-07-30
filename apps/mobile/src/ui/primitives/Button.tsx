@@ -4,7 +4,8 @@
  */
 
 import { StyleSheet } from 'react-native'
-import { MIN_TAP, accent, ink, line, onDark, radius, semantic, space, surface } from '../theme'
+import { MIN_TAP, ink, line, onDark, radius, semantic, space, surface } from '../theme'
+import { useTheme } from '../ThemeProvider'
 import { Pressable } from './Pressable'
 import { Text } from './Text'
 
@@ -27,6 +28,7 @@ export function Button({
   disabled?: boolean | undefined
   accessibilityHint?: string | undefined
 }) {
+  const { accent } = useTheme()
   const bg = disabled === true ? line.default : variant === 'primary' ? accent.accent : surface.card
   const fg =
     disabled === true

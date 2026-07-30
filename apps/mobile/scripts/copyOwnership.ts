@@ -30,6 +30,7 @@ export interface CopyFinding {
 
 const SOURCE_GLOBS = ['app/**/*.{ts,tsx}', 'src/**/*.{ts,tsx}']
 const OWNERSHIP_EXCLUDES = ['src/lib/copy.ts', '.test.', '.spec.', 'node_modules']
+const DEV_TOOLS_PREFIX = 'src/dev-tools/'
 
 /** Props whose static value is presented or spoken to the learner. */
 const COPY_PROPS = new Set([
@@ -147,10 +148,15 @@ export function findCopyViolations(sourceText: string, file = 'source.tsx'): Cop
   return findings
 }
 
-function sourceFiles(): string[] {
-  return SOURCE_GLOBS.flatMap((glob) => globSync(glob)).filter(
-    (file) => !OWNERSHIP_EXCLUDES.some((part) => file.includes(part)),
+/** Developer-only workbench labels are not learner copy; route files remain checked. */
+export function isCopyOwnershipSource(file: string): boolean {
+  return (
+    !file.startsWith(DEV_TOOLS_PREFIX) && !OWNERSHIP_EXCLUDES.some((part) => file.includes(part))
   )
+}
+
+function sourceFiles(): string[] {
+  return SOURCE_GLOBS.flatMap((glob) => globSync(glob)).filter(isCopyOwnershipSource)
 }
 
 export function checkCopyOwnership(): CopyFinding[] {

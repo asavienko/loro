@@ -11,9 +11,11 @@ import { View, StyleSheet } from 'react-native'
 import { copy } from '../lib/copy'
 import { useApp } from '../store'
 import { Pressable, Text } from './primitives'
-import { accent, onDark, radius, space, surface } from './theme'
+import { onDark, radius, space, surface } from './theme'
+import { useTheme } from './ThemeProvider'
 
 export function ToastHost() {
+  const { accent } = useTheme()
   const toast = useApp((s) => s.toast)
   const clear = useApp((s) => s.clearToast)
 

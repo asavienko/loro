@@ -3,8 +3,10 @@
  */
 
 import type { ReactNode } from 'react'
-import { Text as RNText, type StyleProp, type TextStyle } from 'react-native'
+import { StyleSheet, Text as RNText, type StyleProp, type TextStyle } from 'react-native'
+import { scaleTextStyle } from '../runtimeStyles'
 import { ink, space, type, type TypeVariant } from '../theme'
+import { useTheme } from '../ThemeProvider'
 
 export type { TypeVariant }
 
@@ -34,11 +36,18 @@ export function Text({
   style?: StyleProp<TextStyle>
   children: ReactNode
 }) {
+  const { textScale } = useTheme()
+  const resolvedStyle = StyleSheet.flatten([
+    type[variant],
+    { color },
+    align ? { textAlign: align } : null,
+    style,
+  ])
   return (
     <RNText
       accessibilityLanguage={lang === 'es' ? 'es-ES' : undefined}
       numberOfLines={numberOfLines}
-      style={[type[variant], { color }, align ? { textAlign: align } : null, style]}
+      style={scaleTextStyle(resolvedStyle, textScale)}
     >
       {children}
     </RNText>

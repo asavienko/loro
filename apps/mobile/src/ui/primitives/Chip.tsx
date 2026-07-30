@@ -18,6 +18,7 @@
  */
 
 import { chipLook, type ChipTone, type ChipVariant } from './controlStyle'
+import { useTheme } from '../ThemeProvider'
 import { Pressable } from './Pressable'
 import { Text } from './Text'
 
@@ -45,7 +46,8 @@ export function Chip({
   accessibilityLabel?: string | undefined
   accessibilityRole?: 'button' | 'radio' | 'checkbox' | undefined
 }) {
-  const look = chipLook(variant, tone, selected)
+  const { accent } = useTheme()
+  const look = chipLook(variant, tone, selected, accent)
 
   return (
     <Pressable
@@ -63,4 +65,3 @@ export function Chip({
     </Pressable>
   )
 }
-

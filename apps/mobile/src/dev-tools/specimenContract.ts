@@ -1,0 +1,90 @@
+export const PRODUCTION_COMPONENT_NAMES = [
+  'Text',
+  'SectionLabel',
+  'ChartSummary',
+  'SectionHeader',
+  'CardHeader',
+  'Pressable',
+  'Screen',
+  'Card',
+  'DarkCard',
+  'Divider',
+  'Row',
+  'Stack',
+  'Grid',
+  'Button',
+  'IconButton',
+  'Pill',
+  'Chip',
+  'Segmented',
+  'Sheet',
+  'ProgressBar',
+  'Dots',
+  'EmojiTile',
+  'Dot',
+  'StatTile',
+  'ActionBar',
+  'DifficultySelector',
+  'EmptyState',
+  'PhraseRow',
+  'StatRow',
+  'TagChips',
+] as const
+
+export type RegisteredProductionComponentName = (typeof PRODUCTION_COMPONENT_NAMES)[number]
+
+export type SpecimenState =
+  | 'default'
+  | 'pressed-focused'
+  | 'disabled'
+  | 'loading'
+  | 'empty'
+  | 'error'
+  | 'selected'
+  | 'long-copy'
+  | 'spanish'
+  | 'text-200'
+  | 'text-310'
+  | 'reduced-motion'
+  | 'accent'
+
+export const SPECIMEN_STATE_MATRIX = [
+  { id: 'default', status: 'available' },
+  { id: 'pressed-focused', status: 'pending-plan-57' },
+  { id: 'disabled', status: 'available' },
+  { id: 'loading', status: 'pending-plan-57' },
+  { id: 'empty', status: 'available' },
+  { id: 'error', status: 'available' },
+  { id: 'selected', status: 'available' },
+  { id: 'long-copy', status: 'available' },
+  { id: 'spanish', status: 'available' },
+  { id: 'text-200', status: 'inspection-context' },
+  { id: 'text-310', status: 'inspection-context' },
+  { id: 'reduced-motion', status: 'inspection-context' },
+  { id: 'accent', status: 'inspection-context' },
+] as const satisfies readonly {
+  readonly id: SpecimenState
+  readonly status: 'available' | 'interactive' | 'inspection-context' | 'pending-plan-57'
+}[]
+
+export const PLAN_80_PENDING_NAVIGATION = [
+  'Spine',
+  'ScreenHeader',
+  'SwitcherSheet',
+  'ExitSheet',
+  'ResumeStrip',
+  'TransportStrip',
+] as const
+
+export interface PendingNavigationSpecimen {
+  readonly name: (typeof PLAN_80_PENDING_NAVIGATION)[number]
+  readonly status: 'pending-plan-81'
+  readonly reason: string
+}
+
+export const PENDING_NAVIGATION_SPECIMENS: readonly PendingNavigationSpecimen[] =
+  PLAN_80_PENDING_NAVIGATION.map((name) => ({
+    name,
+    status: 'pending-plan-81',
+    reason: 'Intentionally pending plan 81; the workbench does not draw a lookalike.',
+  }))

@@ -27,7 +27,7 @@ import { expect, test } from './fixtures'
 import { STATES } from './states'
 
 test('every implemented Expo route has at least one state in the manifest', () => {
-  const onDisk = discoverRoutes(join(process.cwd(), 'app'))
+  const onDisk = discoverLearnerRoutes(join(process.cwd(), 'app'))
   const declared = [...new Set(STATES.map((s) => s.route))].sort()
 
   expect(
@@ -38,6 +38,16 @@ test('every implemented Expo route has at least one state in the manifest', () =
     declared.filter((route) => !onDisk.includes(route)),
     'states for absent routes',
   ).toEqual([])
+})
+
+test('developer routes are outside the learner-state coverage contract', () => {
+  const appDirectory = join(process.cwd(), 'app')
+
+  expect(discoverRoutes(appDirectory)).toContain('/dev/tokens')
+  expect(discoverLearnerRoutes(appDirectory)).not.toContain('/dev/tokens')
+  expect(isLearnerRoute('/dev')).toBe(false)
+  expect(isLearnerRoute('/dev/tokens')).toBe(false)
+  expect(isLearnerRoute('/device')).toBe(true)
 })
 
 test('every state names the spec section it comes from, and is named once', () => {
@@ -55,6 +65,10 @@ test('every state names the spec section it comes from, and is named once', () =
   expect(duplicates, 'state names must be unique — they become test titles').toEqual([])
 })
 
+function discoverLearnerRoutes(appDirectory: string): string[] {
+  return discoverRoutes(appDirectory).filter(isLearnerRoute)
+}
+
 function discoverRoutes(appDirectory: string): string[] {
   const files: string[] = []
   visit(appDirectory, files)
@@ -70,6 +84,10 @@ function discoverRoutes(appDirectory: string): string[] {
       return route.length === 0 ? '/' : `/${route}`
     })
     .sort()
+}
+
+function isLearnerRoute(route: string): boolean {
+  return route !== '/dev' && !route.startsWith('/dev/')
 }
 
 function visit(directory: string, files: string[]): void {

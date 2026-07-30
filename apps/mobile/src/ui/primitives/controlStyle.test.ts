@@ -12,6 +12,7 @@
  * palette is drift-checked by its own package.
  */
 
+import { accents } from '@loro/design-tokens'
 import { describe, expect, it } from 'vitest'
 import {
   MIN_TAP,
@@ -35,6 +36,15 @@ describe('chipLook · the tag toggle (app/add.tsx:473-483, app/phrase/[id].tsx:2
   // the container hugs the label either way.
   const shape = { flexDirection: 'row', alignItems: 'center', gap: 6 } as const
   const metrics = { paddingHorizontal: 12, paddingVertical: 10, borderRadius: radius.lg } as const
+
+  it('uses the runtime accent supplied by the theme provider seam', () => {
+    const themed = chipLook('tag', 'tint', true, accents.berry)
+    expect(themed.container).toMatchObject({
+      backgroundColor: accents.berry.tint,
+      borderColor: accents.berry.accent,
+    })
+    expect(themed.textColor).toBe(accents.berry.accentInk)
+  })
 
   it('idle', () => {
     expect(chipLook('tag', 'tint', false)).toEqual({

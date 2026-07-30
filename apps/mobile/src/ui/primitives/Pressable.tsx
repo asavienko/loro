@@ -12,7 +12,9 @@
 
 import type { ReactNode } from 'react'
 import { Pressable as RNPressable, type StyleProp, type ViewStyle } from 'react-native'
+import { resolvePressScale } from '../runtimeStyles'
 import { MIN_TAP, press } from '../theme'
+import { useTheme } from '../ThemeProvider'
 
 export function Pressable({
   onPress,
@@ -51,6 +53,7 @@ export function Pressable({
   style?: StyleProp<ViewStyle> | undefined
   children: ReactNode
 }) {
+  const { reducedMotion } = useTheme()
   const checkable = accessibilityRole === 'radio' || accessibilityRole === 'checkbox'
   return (
     <RNPressable
@@ -71,17 +74,25 @@ export function Pressable({
       }}
       {...(checkable ? { 'aria-checked': Boolean(selected) } : {})}
       hitSlop={8}
-      style={({ pressed }) => [
-        // An icon button is sized by its glyph, so it gets the 44×44 floor here rather
-        // than at each call site. The love toggle on phrase detail rendered 17×23 — 33×39
-        // even with `hitSlop` — and `scripts/a11yChecks.ts` could not see it, because that
-        // check looks for a DECLARED width or height under 44 and this element declared
-        // none. Caller styles come after, so a call site can still be more generous.
-        feedback === 'icon' ? iconTapTarget : null,
-        style,
-        pressed && !disabled ? { transform: [{ scale: press[feedback] }] } : null,
-        disabled ? { opacity: 0.55 } : null,
-      ]}
+      style={({ pressed }) => {
+        const scale = resolvePressScale({
+          pressed,
+          disabled: Boolean(disabled),
+          reducedMotion,
+          scale: press[feedback],
+        })
+        return [
+          // An icon button is sized by its glyph, so it gets the 44×44 floor here rather
+          // than at each call site. The love toggle on phrase detail rendered 17×23 — 33×39
+          // even with `hitSlop` — and `scripts/a11yChecks.ts` could not see it, because that
+          // check looks for a DECLARED width or height under 44 and this element declared
+          // none. Caller styles come after, so a call site can still be more generous.
+          feedback === 'icon' ? iconTapTarget : null,
+          style,
+          scale === null ? null : { transform: [{ scale }] },
+          disabled ? { opacity: 0.55 } : null,
+        ]
+      }}
     >
       {children}
     </RNPressable>

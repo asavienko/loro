@@ -8,7 +8,8 @@
  */
 
 import { View } from 'react-native'
-import { accent, barRadius, line, size } from '../theme'
+import { barRadius, line, size } from '../theme'
+import { useTheme } from '../ThemeProvider'
 import { Row } from './layout'
 
 /**
@@ -26,7 +27,7 @@ import { Row } from './layout'
  */
 export function ProgressBar({
   value,
-  color = accent.accent,
+  color,
   height = size.progressBar.default,
   track = line.default,
   radius = barRadius,
@@ -50,6 +51,8 @@ export function ProgressBar({
   radius?: number | undefined
   label?: string | undefined
 }) {
+  const { accent } = useTheme()
+  const fill = color ?? accent.accent
   const pct = Math.max(0, Math.min(1, value)) * 100
   const rounded = Math.round(pct)
   const semantics =
@@ -75,7 +78,7 @@ export function ProgressBar({
       style={{ height, borderRadius: radius, backgroundColor: track, overflow: 'hidden' }}
     >
       <View
-        style={{ width: `${pct}%`, height: '100%', borderRadius: radius, backgroundColor: color }}
+        style={{ width: `${pct}%`, height: '100%', borderRadius: radius, backgroundColor: fill }}
       />
     </View>
   )
@@ -90,6 +93,7 @@ export function Dots({
   filled: number
   size?: number | undefined
 }) {
+  const { accent } = useTheme()
   return (
     <Row gap={DOT_GAP}>
       {Array.from({ length: count }, (_, i) => (
