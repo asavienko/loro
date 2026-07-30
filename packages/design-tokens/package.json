@@ -6,6 +6,10 @@
   "type": "module",
   "main": "./out/tokens.ts",
   "types": "./out/tokens.ts",
+  "exports": {
+    ".": "./out/tokens.ts",
+    "./contrast": "./src/contrast.ts"
+  },
   "scripts": {
     "build": "tsx src/generate.ts",
     "check:contrast": "tsx src/checkContrast.ts",
