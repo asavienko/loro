@@ -11,7 +11,7 @@
  * the component. See `src/ui/tokens/sizing.ts` for why this directory exists.
  */
 
-import { radius, space } from '@loro/design-tokens'
+import { radius, size, space } from '@loro/design-tokens'
 import { barRadius, border } from './sizing'
 
 /**
@@ -150,7 +150,7 @@ export const sheet = {
   padding: space['5'],
   gap: space['3.5'],
   /** Drawn, and inert: the drag gesture is plans/48's, not this component's. */
-  handle: { width: 42, height: 5, borderRadius: barRadius },
+  handle: { ...size.sheetHandle, borderRadius: barRadius },
 } as const
 
 /**

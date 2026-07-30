@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
+import { readFileSync } from 'node:fs'
 import { loadTokens } from './tokens.js'
+import { generateOutputs } from './generate.js'
 import { contrastRatio, parseHex, passes, ratio, AA_BODY, AA_LARGE } from './contrast.js'
 
 describe('contrast maths', () => {
@@ -98,5 +100,80 @@ describe('token source', () => {
 
   it('keeps radius.lg at 12 — the workhorse', () => {
     expect(t.radius.lg).toBe(12)
+  })
+
+  it('loads the complete authored typography, motion, and layout token families', () => {
+    expect(Object.keys(t.typography.family)).toEqual(['sans', 'serif'])
+    expect(Object.keys(t.typography.scale)).toHaveLength(15)
+    expect(t.typography.scale.display).toMatchObject({
+      size: 62,
+      sizeMax: 74,
+      weight: 700,
+      tracking: '-0.035em',
+      lineHeight: 0.9,
+    })
+    expect(Object.keys(t.motion.animation)).toHaveLength(11)
+    expect(Object.keys(t.motion.transition)).toHaveLength(9)
+    expect(t.motion.press.icon).toEqual({
+      scale: 0.82,
+      duration: 130,
+      opacity: 0.6,
+    })
+    expect(t.motion.touch).toMatchObject({ minTapTarget: 44, iconHitArea: 44 })
+    expect(t.gutter).toEqual({ dense: 14, default: 18, roomy: 22 })
+    expect(t.size.progressBar).toEqual({ thin: 4, default: 6, thick: 9, mastery: 12 })
+    expect(t.size.sheetHandle).toEqual({ width: 42, height: 5 })
+  })
+})
+
+describe('generated targets', () => {
+  const tokens = loadTokens()
+
+  it('is stable when the source tokens do not change', () => {
+    expect(generateOutputs(tokens)).toEqual(generateOutputs(tokens))
+  })
+
+  it('keeps committed generated files in sync with their source', () => {
+    for (const [target, output] of Object.entries(generateOutputs(tokens))) {
+      expect(readFileSync(new URL(`../out/${target}`, import.meta.url), 'utf8'), target).toBe(
+        output,
+      )
+    }
+  })
+
+  it('drifts in every target when a shared source token changes', () => {
+    const baseline = generateOutputs(tokens)
+    const changed = structuredClone(tokens)
+    changed.typography.scale.body!.size += 1
+    const regenerated = generateOutputs(changed)
+
+    for (const target of Object.keys(baseline)) {
+      expect(regenerated[target], target).not.toBe(baseline[target])
+    }
+  })
+
+  it('emits typography, motion, controls, and sheet geometry with cross-target parity', () => {
+    const outputs = generateOutputs(tokens)
+    const ts = outputs['tokens.ts']!
+    const swift = outputs['Tokens.swift']!
+    const kotlin = outputs['Tokens.kt']!
+
+    expect(ts).toContain('export const typography = {')
+    expect(ts).toContain('export const motion = {')
+    expect(ts).toContain('minTapTarget: 44')
+    expect(ts).toContain('mastery: 12')
+
+    expect(swift).toContain('public static let size: CGFloat = 62')
+    expect(kotlin).toContain('val size: TextUnit = 62.sp')
+    expect(swift).toContain('public static let durationMs = 400')
+    expect(kotlin).toContain('const val durationMs = 400')
+    expect(swift).toContain('public static let scale: CGFloat = 0.82')
+    expect(kotlin).toContain('const val scale = 0.82')
+    expect(swift).toContain('public static let minTapTarget: CGFloat = 44')
+    expect(kotlin).toContain('val minTapTarget: Dp = 44.dp')
+    expect(swift).toContain('public static let bottomLeftRadius: CGFloat = 40')
+    expect(kotlin).toContain('val bottomLeftRadius: Dp = 40.dp')
+    expect(swift).toContain('public static let mastery: CGFloat = 12')
+    expect(kotlin).toContain('val mastery: Dp = 12.dp')
   })
 })
