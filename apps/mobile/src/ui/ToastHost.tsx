@@ -8,6 +8,7 @@
 
 import { useEffect } from 'react'
 import { View, StyleSheet } from 'react-native'
+import { copy } from '../lib/copy'
 import { useApp } from '../store'
 import { Pressable, Text } from './primitives'
 import { accent, onDark, radius, space, surface } from './theme'
@@ -37,14 +38,14 @@ export function ToastHost() {
         {toast.undo !== undefined && (
           <Pressable
             feedback="smallButton"
-            accessibilityLabel="Undo"
+            accessibilityLabel={copy.a11y.common.undo}
             onPress={() => {
               toast.undo?.()
               clear()
             }}
           >
             <Text variant="captionSm" color={accent.accentOnDark}>
-              Undo
+              {copy.toast.undo}
             </Text>
           </Pressable>
         )}

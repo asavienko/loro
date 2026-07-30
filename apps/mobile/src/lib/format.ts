@@ -47,21 +47,3 @@ export function ownershipPct(owned: number, target: number): number {
   if (target <= 0) return 0
   return Math.min(100, Math.round((owned / target) * 100))
 }
-
-/**
- * Difficulty labels. Note the middle one: "Learning" is a STATUS, not a rating, and
- * "Difficult" describes the phrase rather than the learner.
- */
-export function difficultyLabel(d: 'easy' | 'med' | 'hard'): string {
-  return { easy: 'Easy', med: 'Learning', hard: 'Difficult' }[d]
-}
-
-/** Tag labels, exactly as the blueprint writes them. */
-export function tagLabel(t: 'pron' | 'remember' | 'useful' | 'words'): string {
-  return {
-    pron: 'Pronunciation',
-    remember: 'Hard to remember',
-    useful: 'Very useful',
-    words: 'Tricky words',
-  }[t]
-}
