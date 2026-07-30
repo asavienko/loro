@@ -1,24 +1,30 @@
 # Screen catalog
 
-All 21 screens, mapped to their blueprint line ranges, their logic classes, their screenshots, and
-the specs that describe them.
+All 23 learner screens, mapped to their authored artifact ranges, logic classes, screenshots, and
+the specs that describe them. Shared navigation chrome and the developer workbench are cataloged
+separately because neither is a twenty-fourth learner destination.
 
-**Open the blueprint before implementing any screen.**
-`design/Language Learning by Phrases - V1.1/Loro.dc.html` is executable spec: every phone is
-interactive, and the card beside each one explains what it does and how it connects. This table is
-an index into it, not a substitute.
+**Open the applicable artifact before implementing any screen.** The four `.dc.html` files under
+`design/Language Learning by Phrases - V1.1/` are executable specs: every phone is interactive, and
+the card beside each one explains what it does and how it connects. This catalog is an index into
+them, not a substitute.
 
-The v1.1 package also authors two learner screens in `Loro Chat.dc.html`, navigation laws in
-`Navigation.dc.html`, and a component/token reference in `Design System.dc.html`. They are real new
-scope but are not yet folded into the numbered catalog below; plan 79 owns that durable contract
-before plans 80–83 implement it.
+Precedence is scoped: `Loro.dc.html` owns screens 1–21, `Loro Chat.dc.html` owns screens 22–23,
+`Navigation.dc.html` owns the shell and navigation laws across all 23, and `Design System.dc.html`
+owns the authored visual reference. Navigation's spine-on-every-screen rule
+(`Navigation.dc.html:35–40`, `94–102`, `456–474`) supersedes Chat's earlier “no chrome” description
+(`Loro Chat.dc.html:95–98`): Chat has no card/drill chrome inside the conversation, but it still
+participates in the shared app shell.
 
 ---
 
-## How to read the blueprint
+## How to read the artifacts
 
 ```bash
 open "design/Language Learning by Phrases - V1.1/Loro.dc.html"
+open "design/Language Learning by Phrases - V1.1/Loro Chat.dc.html"
+open "design/Language Learning by Phrases - V1.1/Navigation.dc.html"
+open "design/Language Learning by Phrases - V1.1/Design System.dc.html"
 ```
 
 Structure:
@@ -36,15 +42,20 @@ Structure:
 - **The catalog** — lines 2179–2211: 31 phrases across 8 themes. Extracted to
   [`packages/content/`](../../packages/content/).
 
+`Loro Chat.dc.html` has two phone blocks at `101–329` and `331–446`; both share `ChatLogic` at
+`456–714`. `Navigation.dc.html` specifies five surface classes at `38–78` and the shared spine and
+navigation laws; it wraps screens rather than adding a destination. `Design System.dc.html` is the
+authored visual specimen, while reviewed runtime tokens live in `packages/design-tokens/tokens/`.
+
 Screenshots are in `design/Language Learning by Phrases - V1.1/screenshots/`. Naming is loose (the
-blueprint's own working names), so this table is the reliable mapping.
+artifacts' own working names), so this table is the reliable mapping.
 
 ---
 
 ## Current implementation and browser coverage
 
 This is the repository inventory, not a claim that a built route already satisfies every behaviour
-below. As of 2026-07-30, **7 of the 21 learner screens have Expo routes**. The other 14 remain
+below. As of 2026-07-30, **7 of the 23 learner screens have Expo routes**. The other 16 remain
 target behaviour in the blueprint and functional spec; they must not be treated as runnable app
 surfaces. `apps/mobile/app/_layout.tsx` is the shell and is not counted as a learner screen.
 
@@ -53,20 +64,21 @@ The browser suites exercise **20 declared learner-visible states across all 7 ro
 first coverage gate: sheets, empty states, completion states, and other materially different views
 need their own manifest entries.
 
-| #     | Screen             | Current Expo route         | Declared E2E states                                                                                        |
-| ----- | ------------------ | -------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| 1     | Onboarding         | `/onboarding`              | `onboarding · welcome`; `onboarding · packs step`                                                          |
-| 2     | Add phrases        | `/add`                     | `add · discover`; `add · browse grid`; `add · theme drilled`; `add · difficulty sheet`; `add · no matches` |
-| 3     | Phrase detail      | `/phrase/[id]`             | `phrase detail`; `phrase detail · edited`; `phrase detail · unknown id`                                    |
-| 4     | Adaptive stream    | `/practice/stream`         | `stream · first phrase`; `stream · all learned`                                                            |
-| 5–10  | Loop A practice    | — not implemented          | —                                                                                                          |
-| 11    | Today              | `/`                        | `today · seeded`; `today · nothing in rotation`                                                            |
-| 12    | The Refrain        | `/practice/refrain`        | `refrain · first rep`; `refrain · locked in`; `refrain · set complete`; `refrain · tag drill`              |
-| 13–14 | Run and Phrasebook | — not implemented          | —                                                                                                          |
-| 15    | Progress           | `/progress`                | `progress · zero state`; `progress · with a tagged phrase`                                                 |
-| 16–18 | Trip app screens   | — not implemented          | —                                                                                                          |
-| 19    | Lock screen widget | — native surface not built | —                                                                                                          |
-| 20–21 | Survival, Souvenir | — not implemented          | —                                                                                                          |
+| #     | Screen               | Current Expo route         | Declared E2E states                                                                                        |
+| ----- | -------------------- | -------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| 1     | Onboarding           | `/onboarding`              | `onboarding · welcome`; `onboarding · packs step`                                                          |
+| 2     | Add phrases          | `/add`                     | `add · discover`; `add · browse grid`; `add · theme drilled`; `add · difficulty sheet`; `add · no matches` |
+| 3     | Phrase detail        | `/phrase/[id]`             | `phrase detail`; `phrase detail · edited`; `phrase detail · unknown id`                                    |
+| 4     | Adaptive stream      | `/practice/stream`         | `stream · first phrase`; `stream · all learned`                                                            |
+| 5–10  | Loop A practice      | — not implemented          | —                                                                                                          |
+| 11    | Today                | `/`                        | `today · seeded`; `today · nothing in rotation`                                                            |
+| 12    | The Refrain          | `/practice/refrain`        | `refrain · first rep`; `refrain · locked in`; `refrain · set complete`; `refrain · tag drill`              |
+| 13–14 | Run and Phrasebook   | — not implemented          | —                                                                                                          |
+| 15    | Progress             | `/progress`                | `progress · zero state`; `progress · with a tagged phrase`                                                 |
+| 16–18 | Trip app screens     | — not implemented          | —                                                                                                          |
+| 19    | Lock screen widget   | — native surface not built | —                                                                                                          |
+| 20–21 | Survival, Souvenir   | — not implemented          | —                                                                                                          |
+| 22–23 | Open chat, Inspector | — not implemented          | —                                                                                                          |
 
 The state names above are the executable inventory; the numbered sections in this catalog and the
 functional spec remain the product taxonomy. The `spec` labels in `states.ts` use those canonical
@@ -139,6 +151,55 @@ Static screens — the trip rail is a storyboard rather than interactive prototy
 
 Additional screenshots not tied to one screen: `mobile.png` and `phone-review.png` (responsive
 checks), `final-a.png` (a full-canvas capture).
+
+## Loop D · The Open Chat (v1.1)
+
+Both phones share one `ChatLogic` state machine (`Loro Chat.dc.html:456–714`); selecting a message
+in the conversation determines what the inspector shows, and keeping/removing a line updates both
+surfaces (`518–566`, `604–712`). The six `01-chat*.png`–`03-chat*.png` captures show states of the
+paired live phones rather than six additional screens.
+
+| #   | Screen                | Authored markup             | Logic                        | Screenshots                                    | Spec                                                         | Rel  |
+| --- | --------------------- | --------------------------- | ---------------------------- | ---------------------------------------------- | ------------------------------------------------------------ | ---- |
+| 22  | **Open chat**         | `Loro Chat.dc.html:101–329` | `ChatLogic` `456–714`        | `01-chat.png`, `02-chat.png`, `03-chat.png`    | [FS §22](../product/functional-spec.md#22-open-chat)         | v1.1 |
+| 23  | **Message inspector** | `Loro Chat.dc.html:331–446` | shared `ChatLogic` `456–714` | `01-chat2.png`, `02-chat2.png`, `03-chat2.png` | [FS §23](../product/functional-spec.md#23-message-inspector) | v1.1 |
+
+### Open chat state catalog
+
+| Visible state                    | Exact authored citation                | Contract                                                                                  |
+| -------------------------------- | -------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Thread, selected AI/learner line | `Loro Chat.dc.html:108–170`            | Spanish-first thread; one selected line exposes Hear/EN/Save/Open or Say again actions.   |
+| Translation revealed             | `Loro Chat.dc.html:123–135`, `143–158` | English appears for one line only after `EN`; `renderVals()` controls it at `613–617`.    |
+| Reply pending                    | `Loro Chat.dc.html:163–169`            | Typing dots are a pending state, not evidence of a real provider response.                |
+| Ways to answer                   | `Loro Chat.dc.html:173–196`            | Three editable/sendable/hearable suggestions, with alternate set and explicit hide.       |
+| Draft correction                 | `Loro Chat.dc.html:198–206`            | A proposed correction can be applied before send; production corrections must be genuine. |
+| Voice, hold-to-talk              | `Loro Chat.dc.html:208–229`            | Holding, locked listening, cancel, and Done are distinct capture states.                  |
+| Recognition confirmation         | `Loro Chat.dc.html:231–240`            | Recognized text is shown before Again or Send; production may not fabricate recognition.  |
+| Idle text/mic composer           | `Loro Chat.dc.html:242–262`            | Draft text enables send; an empty draft exposes the microphone path.                      |
+| Topic and pace sheet             | `Loro Chat.dc.html:265–291`            | Four topics, Natural/Slow + English pace, Start over, and Done.                           |
+| Kept sheet, empty/populated      | `Loro Chat.dc.html:293–318`            | Empty guidance or removable kept lines, plus explicit queue-for-review handoff.           |
+| Confirmation toast               | `Loro Chat.dc.html:320–322`            | Short, outcome-specific feedback overlays the conversation.                               |
+
+### Message inspector state catalog
+
+| Visible state                    | Exact authored citation     | Contract                                                                                 |
+| -------------------------------- | --------------------------- | ---------------------------------------------------------------------------------------- |
+| AI or learner line               | `Loro Chat.dc.html:337–365` | Thread position, full line, optional translation/respelling, two playback speeds, Keep.  |
+| Learner line with corrections    | `Loro Chat.dc.html:367–391` | Plain diff, reason, corrected sentence, playback, and explicit use-and-keep action.      |
+| Learner line with no corrections | `Loro Chat.dc.html:393–398` | Truthful “Nothing to fix” state; absence of provider output is not proof of correctness. |
+| Alternatives                     | `Loro Chat.dc.html:400–412` | Register-labelled alternatives can be heard and individually added.                      |
+| Word-by-word glosses             | `Loro Chat.dc.html:414–427` | Optional tappable word rows pair Spanish with short glosses.                             |
+| Usage explanation                | `Loro Chat.dc.html:429–434` | Optional plain-language explanation of why the line is said that way.                    |
+| Confirmation toast               | `Loro Chat.dc.html:437–439` | Keep/fix outcomes appear over the inspector.                                             |
+
+### Shell and developer-only surfaces
+
+- The navigation shell is not learner screen 24. Its five surface classes are authored at
+  `Navigation.dc.html:38–78`; the spine and route/switcher/exit/resume/transport laws wrap the
+  numbered screens and are implemented under plan 81.
+- The design-system workbench is not a learner screen or an entry in `apps/mobile/e2e/states.ts`.
+  `Design System.dc.html` is its authored reference and plan 80 owns a development-only
+  `/dev/tokens` inspection route that must be absent from production builds.
 
 ---
 
@@ -219,14 +280,18 @@ A change is incomplete until the spec, route, and state inventory agree:
 
 Six places the implementation must diverge. All six are also flagged where they occur.
 
-| Blueprint                                                    | Reality                                                                               |
-| ------------------------------------------------------------ | ------------------------------------------------------------------------------------- |
-| An 80 ms `setInterval` drives stream progress (`2521`)       | Real playback position from the audio module                                          |
-| Latency computed as `2.0 − reps × 0.26` (`3377`)             | **Measured** from prompt-end to speech onset, `null` if unmeasurable                  |
-| Pronunciation scores from a seeded PRNG (`3068`, `3079`)     | **Real** forced alignment and scoring ([prosody-dsp](../architecture/prosody-dsp.md)) |
-| Prosody contour blended linearly toward native (`3158–3161`) | **Real** F0 extraction from the recording                                             |
-| Review intervals as fixed labels (`2790–2795`)               | FSRS-computed, displayed with the blueprint's formatter                               |
-| Onboarding loops back to step 0 on completion (`2120`)       | Commits the stream and exits                                                          |
+| Blueprint                                                                                 | Reality                                                                               |
+| ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| An 80 ms `setInterval` drives stream progress (`2521`)                                    | Real playback position from the audio module                                          |
+| Latency computed as `2.0 − reps × 0.26` (`3377`)                                          | **Measured** from prompt-end to speech onset, `null` if unmeasurable                  |
+| Pronunciation scores from a seeded PRNG (`3068`, `3079`)                                  | **Real** forced alignment and scoring ([prosody-dsp](../architecture/prosody-dsp.md)) |
+| Prosody contour blended linearly toward native (`3158–3161`)                              | **Real** F0 extraction from the recording                                             |
+| Review intervals as fixed labels (`2790–2795`)                                            | FSRS-computed, displayed with the blueprint's formatter                               |
+| Onboarding loops back to step 0 on completion (`2120`)                                    | Commits the stream and exits                                                          |
+| Browser speech synthesis supplies Chat audio (`Loro Chat.dc.html:514`)                    | Catalog/reference audio or on-device TTS behind the production audio contract         |
+| Timers and fixture arrays produce Chat replies (`Loro Chat.dc.html:582–588`)              | Guarded live text provider with a bundled authored reply graph as the offline floor   |
+| Regex substitutions claim Chat corrections (`Loro Chat.dc.html:568–574`)                  | Genuine validated correction output; uncertainty degrades honestly                    |
+| Timers copy a suggested answer into Chat recognition (`Loro Chat.dc.html:529–531`, `596`) | Real on-device recognition or an explicit unavailable/permission fallback             |
 
 The three "real" rows are the honesty line for the product
 ([overview.md](../architecture/overview.md#the-ten-rules), rule 4).
