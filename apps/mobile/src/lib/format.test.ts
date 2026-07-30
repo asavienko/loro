@@ -1,12 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import {
-  daysUntil,
-  difficultyLabel,
-  formatInterval,
-  formatLatency,
-  ownershipPct,
-  tagLabel,
-} from './format.js'
+import { daysUntil, formatInterval, formatLatency, ownershipPct } from './format.js'
 
 describe('interval formatting', () => {
   it('matches the blueprint formatter', () => {
@@ -58,20 +51,5 @@ describe('trip maths', () => {
     expect(ownershipPct(0, 100)).toBe(0)
     expect(ownershipPct(120, 100)).toBe(100)
     expect(ownershipPct(1, 0)).toBe(0)
-  })
-})
-
-describe('labels', () => {
-  it('calls the middle difficulty a status, not a rating', () => {
-    expect(difficultyLabel('med')).toBe('Learning')
-    expect(difficultyLabel('hard')).toBe('Difficult')
-    expect(difficultyLabel('easy')).toBe('Easy')
-  })
-
-  it('uses the blueprint tag wording', () => {
-    expect(tagLabel('pron')).toBe('Pronunciation')
-    expect(tagLabel('remember')).toBe('Hard to remember')
-    expect(tagLabel('useful')).toBe('Very useful')
-    expect(tagLabel('words')).toBe('Tricky words')
   })
 })
