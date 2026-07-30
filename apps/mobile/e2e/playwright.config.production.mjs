@@ -29,6 +29,7 @@ const exportDir = '.expo-export-web'
 
 export default defineConfig({
   testDir: '.',
+  testIgnore: 'workbench/**',
   outputDir: '../../../test-results/mobile-e2e-production',
   ...sharedTiming,
   grep: /@smoke/,

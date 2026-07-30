@@ -12,6 +12,8 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test --config e2e/playwright.config.mjs",
     "test:e2e:ui": "playwright test --config e2e/playwright.config.mjs --ui",
+    "test:e2e:workbench": "playwright test --config e2e/playwright.config.workbench.mjs",
+    "test:e2e:workbench:update": "playwright test --config e2e/playwright.config.workbench.mjs --update-snapshots",
     "test:e2e:bundle": "playwright test --config e2e/playwright.config.production.mjs",
     "test:e2e:install": "playwright install chromium",
     "lint": "eslint app src scripts e2e",

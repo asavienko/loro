@@ -5,6 +5,7 @@ const port = 8082
 
 export default defineConfig({
   testDir: '.',
+  testIgnore: ['production-unavailable.spec.ts', 'workbench/**'],
   outputDir: '../../../test-results/mobile-e2e',
   ...sharedTiming,
   reporter: [

@@ -112,6 +112,8 @@ jobs:
           start=$SECONDS
           pnpm test:e2e
           echo "mobile web E2E: $((SECONDS - start))s elapsed (budget 480s)" >> "$GITHUB_STEP_SUMMARY"
+      - name: Developer design-system workbench
+        run: pnpm test:e2e:workbench
       # The suite above runs against `expo start --web`: a dev bundle, unminified, with
       # React's development build. This step is the only thing that loads what would
       # actually ship — it catches a module Metro resolves and the export does not, an
@@ -128,8 +130,10 @@ jobs:
           name: mobile-e2e-${{ github.run_attempt }}
           path: |
             test-results/mobile-e2e/
+            test-results/mobile-workbench-e2e/
             test-results/mobile-e2e-production/
             playwright-report/mobile/
+            playwright-report/mobile-workbench/
             playwright-report/mobile-production/
           if-no-files-found: ignore
 
