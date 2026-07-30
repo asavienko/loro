@@ -33,7 +33,7 @@ src/
 ├── dsp/
 │   ├── mod.rs       # frame/rate constants, TakeResult, the score_take entry point
 │   ├── pitch.rs     # F0: YIN / pYIN extraction, median filter, normalize_f0
-│   │                #   (mfcc.rs lands alongside it in M3)
+│   │                #   (there is no MFCC module yet)
 │   ├── align.rs     # DTW forced alignment against the native reference
 │   ├── score.rs     # melody, per-syllable, stress, rhythm; the bands and band()
 │   └── feedback.rs  # worst syllable → phoneme class → one concrete fix
@@ -46,13 +46,13 @@ src/
 └── test_support.rs  # #[cfg(test)] PhraseState + Hlc fixtures for the module suites
 ```
 
-Both F0 functions live in `pitch.rs` and both score-band items in `score.rs`, so `feedback.rs`
-no longer reaches up into `dsp/mod.rs` for a threshold. UniFFI names are flat per crate, so
-`bindings/` is byte-identical across that move — verified, not assumed.
+Both F0 functions live in `pitch.rs` and both score-band items in `score.rs`, so `feedback.rs` no
+longer reaches up into `dsp/mod.rs` for a threshold. UniFFI names are flat per crate, so `bindings/`
+is byte-identical across that move — verified, not assumed.
 
 ## Status
 
-**130 tests passing** (125 inline + 5 in `tests/parity.rs`). **Clippy clean under `-D warnings`,
+**131 tests passing** (125 inline + 6 in `tests/parity.rs`). **Clippy clean under `-D warnings`,
 `cargo fmt` clean.**
 
 | Module        | State                                                                                        |
@@ -68,15 +68,23 @@ no longer reaches up into `dsp/mod.rs` for a threshold. UniFFI names are flat pe
 | `fsrs`        | Partial — grade mapping, difficulty prior, curve, formatting done; `review()` is M0          |
 | `dsp`         | Skeleton — normalisation, bands, correlation, axes, fix selection done; the pipeline is M3   |
 
-The three `todo!()`s (`fsrs::review`, `select::select_refrain_set`, `dsp::score_take`) are the real
-work, and each is scheduled in [roadmap.md](../../docs/product/roadmap.md). The surrounding pure
-functions are implemented and tested first because they're where the blueprint's contracts live.
+Seven `todo!()`s remain: FSRS review; cloze and Refrain-set selection; and DSP pitch, alignment,
+score, and pipeline stages. Plans 60 and 77 own them. None of these functions is safe to call in a
+production path: a `todo!()` is a panic, not a degraded result. The mobile app therefore still uses
+TypeScript fallbacks for several Rust-owned calculations; that is current state, not an approved
+second source of truth.
+
+The bindings are also partial. UniFFI derives records/enums and exports annotated functions, while
+the WASM module currently exposes only `merge_row`. There is no mobile native module consuming the
+generated bindings yet. A Rust implementation is not integrated until its generated UniFFI and/or
+WASM surface, adapter, and boundary tests land together.
 
 ## Rules
 
 1. **No I/O, no networking, no persistence.** Pure functions over passed-in state.
 2. **No ambient nondeterminism.** No system clock, no unseeded RNG. Both are parameters.
-3. **Every public function is golden- or property-tested.**
+3. **Every completed public function is unit-, golden-, parity-, or property-tested.** Public
+   placeholders are explicitly documented and must not be bound into production paths.
 4. **A moved golden score is explained in the PR**, never re-baselined silently
    ([code-review.md](../../docs/process/code-review.md#special-review-paths)).
 
@@ -88,13 +96,19 @@ and a state.
 ```bash
 pnpm core-rs:build            # host + wasm + UniFFI bindings
 cargo test                    # unit + integration
-cargo test --test golden      # ~50 recorded utterances vs expected DSP output
-cargo test --test parity      # Swift, Kotlin, and WASM agree
+cargo test --test parity      # calendar cross-language fixtures
 cargo bench                   # Criterion; CI fails on >10% regression
 ```
 
 Targets: `aarch64-apple-ios`, `aarch64-apple-ios-sim`, `aarch64-linux-android`,
 `armv7-linux-androideabi`, `x86_64-linux-android`, `wasm32-unknown-unknown`.
+
+Before extending a module, define the canonical input/output and units, add reference or parity
+vectors, implement the pure Rust function, export it through the required generated bindings, and
+wire the adapter without a fabricated fallback. Remove any duplicate TypeScript implementation only
+after boundary parity passes. [Plan 60](../../plans/60-authoritative-core-maths.md) owns this
+sequence for rank, FSRS, cloze/set selection, and token matching; plan 77 owns the evidence-gated
+DSP work.
 
 ## Performance budgets
 
@@ -112,11 +126,8 @@ Called synchronously from JS, so these are tight
 | `align_dtw` (2 s audio)                 | ≤ 80 ms _(async, native thread)_  |
 | `score_take` (full pipeline)            | ≤ 200 ms _(async, native thread)_ |
 
-## Golden tests
+## Missing golden corpus
 
-`tests/golden/` holds ~50 recorded utterances with committed expected output. Any DSP change that
-moves a score beyond the stability threshold fails CI.
-
-**Recordings require documented speaker consent** and are the only audio files in the repo. Learner
-audio never enters this directory or any other
-([ADR-0011](../../docs/architecture/adr/0011-analytics-and-privacy.md)).
+No committed DSP golden corpus exists yet; the only integration file is `tests/parity.rs`. Plan 77
+owns the consented corpus and score-stability gate. Learner audio must never enter that corpus or
+any other repository path ([ADR-0011](../../docs/architecture/adr/0011-analytics-and-privacy.md)).

@@ -74,6 +74,8 @@ enjoy saying, and honouring that is cheap motivation.
 
 Two independent axes, and it matters that they're independent.
 
+<a id="axis-1--retention-maturity-loop-a--progress-screen"></a>
+
 ### Axis 1 — Retention maturity (Loop A / progress screen)
 
 Bucketed from reps and the learned flag (`Loro.dc.html:2828`):
@@ -194,6 +196,8 @@ the principle for the whole product: _you only climb or hold._ Guardrail metrics
 [metrics.md](metrics.md) watch for us drifting from this.
 
 ---
+
+<a id="where-the-blueprints-numbers-came-from--and-what-is-real"></a>
 
 ## Where the blueprint's numbers came from — and what's real
 

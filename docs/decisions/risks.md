@@ -25,6 +25,8 @@ materialising — because a risk without a trigger is just an anxiety.
 
 ---
 
+<a id="r-01"></a>
+
 ### R-01 · The DSP can't score well enough to be honest · 20
 
 The pronunciation and prosody labs claim per-syllable accuracy and a melody score. On-device DTW
@@ -49,6 +51,8 @@ theatre.
 
 ---
 
+<a id="r-02"></a>
+
 ### R-02 · On-device ASR is too weak for `es-ES` learner accents · 15
 
 Platform recognisers may not handle strong English-accented Spanish, making the production gates
@@ -69,6 +73,8 @@ rate correlates with learner accent
 
 ---
 
+<a id="r-03"></a>
+
 ### R-03 · Sync loses learner data · 10
 
 Low likelihood, catastrophic impact. A learner losing their phrase library — especially on sign-in —
@@ -88,6 +94,8 @@ check, or a single claim/merge failure.
 - Two required reviewers on `packages/core/src/sync`.
 
 ---
+
+<a id="r-04"></a>
 
 ### R-04 · The Refrain feels tedious, not alive · 15
 
@@ -111,6 +119,8 @@ substitutes for the team practising daily.
 
 ---
 
+<a id="r-05"></a>
+
 ### R-05 · Content quality doesn't scale to 600 phrases · 12
 
 150 excellent phrases is achievable. 600 with the same ten-point quality bar, all natively reviewed
@@ -131,6 +141,8 @@ and human-listened, is a different problem.
 
 ---
 
+<a id="r-06"></a>
+
 ### R-06 · Team size can't deliver 21 screens plus native work · 12
 
 4.5 FTE, 21 dense screens, three native modules, two widget targets, a Rust core, and a backend.
@@ -147,6 +159,8 @@ and human-listened, is a different problem.
 - Design system as its own M1 workstream, so screens compose rather than each being bespoke.
 
 ---
+
+<a id="r-07"></a>
 
 ### R-07 · Native audio work overruns · 12
 
@@ -165,6 +179,8 @@ capture, onset detection, rate with pitch preservation, and a long interruption 
 - Playback and capture can be built and validated independently.
 
 ---
+
+<a id="r-08"></a>
 
 ### R-08 · The trip arc doesn't retain learners post-trip · 12
 
@@ -185,6 +201,8 @@ reason to open the app again.
 
 ---
 
+<a id="r-09"></a>
+
 ### R-09 · AI costs run away · 6
 
 Roleplay is the only variable cost that scales with usage.
@@ -196,6 +214,8 @@ silently to bundled scenes**, and pre-generation of the top combinations as the 
 ([`../architecture/ai-services.md`](../architecture/ai-services.md#cost-model)).
 
 ---
+
+<a id="r-10"></a>
 
 ### R-10 · Monetization is unvalidated · 16
 
@@ -213,6 +233,8 @@ placement as a legitimate experiment. Keep the Trip Pass as a serious option rat
 
 ---
 
+<a id="r-11"></a>
+
 ### R-11 · The loop question never gets answered · 9
 
 The engine abstraction preserves optionality. Optionality without a decision date becomes permanent
@@ -225,6 +247,8 @@ indecision, and we end up maintaining three loops forever.
 be instrumented before the arms go live.
 
 ---
+
+<a id="r-12"></a>
 
 ### R-12 · We drift into engagement-optimisation · 10
 
@@ -244,6 +268,8 @@ dependence ([`../product/metrics.md`](../product/metrics.md#guardrails)).
 - The forbidden-copy list is audited every release.
 
 ---
+
+<a id="r-13"></a>
 
 ### R-13 · The privacy promise gets broken by accident · 10
 
@@ -265,6 +291,8 @@ audio module.
 
 ---
 
+<a id="r-14"></a>
+
 ### R-14 · Store rejection on the microphone or subscription · 6
 
 Continuous microphone use, background audio, and subscription mechanics all attract reviewer
@@ -278,6 +306,8 @@ any data-flow change; a reviewer note explaining the mic usage; the free tier is
 which matters for subscription guidelines.
 
 ---
+
+<a id="r-15"></a>
 
 ### R-15 · Platform API changes break widgets or ASR · 6
 
@@ -302,5 +332,5 @@ with a snapshot contract; the OS floor moves deliberately, once a year, announce
 | 24 bundled roleplay scenes is limited variety offline | Roleplay is supplementary, not the daily loop                                                                                                                                          |
 | Sync availability depends on us                       | The app works offline, so an outage delays sync rather than learning                                                                                                                   |
 | A determined learner can extract the catalog          | It ships to every device. The moat is the pedagogy, not the phrase list                                                                                                                |
-| Emoji render differently across platforms             | It's part of the register ([`../design/design-system.md`](../design/design-system.md#iconography))                                                                                     |
+| Unicode glyphs render differently across platforms    | The authored iconography uses a small glyph set; verify it on both platforms ([`../design/design-system.md`](../design/design-system.md#iconography))                                  |
 | We are not a 24/7 service                             | Offline-first makes best-effort out-of-hours on-call defensible — except for privacy and data-loss P0s                                                                                 |

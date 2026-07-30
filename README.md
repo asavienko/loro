@@ -11,27 +11,25 @@ and every buildable artifact — a running app and a running API.
 
 ## Status
 
-**A running app and a running API.** 8 of the blueprint's 21 screens are built — the whole core
-loop: onboard → add a phrase and tag it → practise → see progress. The remaining 13 are labs,
-settings, and the two alternative practice philosophies.
+**A running web app and a running API.** Seven of the v1.1 design package's 23 learner screens, plus
+the app shell, are built — the demonstrable core loop: onboard → add and tag a phrase → practise →
+see progress. The remaining 16 learner screens include trips, labs, settings, chat, and alternative
+loops.
 
 ```
-pnpm bootstrap && pnpm check     →  23/23 tasks, 317 JS/TS + 99 Rust tests
-pnpm test:e2e                    →  12 browser tests across every implemented route
-pnpm --filter @loro/mobile bundle →  999 modules, 2.6 MB Hermes bytecode
+pnpm bootstrap && pnpm check     →  23/23 tasks at the last green baseline
+pnpm test:e2e                    →  61 browser tests across every implemented route and state
+pnpm --filter @loro/mobile bundle →  production Expo/Metro export proof
 pnpm --filter @loro/api start     →  10 endpoints on :3000/v1
 ```
 
-| Area                      |        Tests | State                                                                                                                                                                                                     |
-| ------------------------- | -----------: | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Documentation             |            — | 44 documents — product, architecture, design, process, decisions, and 14 ADRs                                                                                                                             |
-| Toolchain                 |            — | Installs, builds, lints, typechecks, and tests from a clean clone                                                                                                                                         |
-| **`loro-core`** (Rust)    |           99 | Ranking, ASR matching, calendar, ladder + the draw, HLC, and sync merge implemented. FSRS `review()`, Refrain selection, and the DSP pipeline are skeletons ([status](packages/core-rs/README.md#status)) |
-| **`@loro/core`**          |          130 | `StreamEngine` and `RefrainEngine`, both passing the conformance suite that enforces rule 5                                                                                                               |
-| **`@loro/content`**       |           26 | 31-phrase seed catalog, 14 validation checks. 0 errors, 48 warnings that _are_ the authoring backlog                                                                                                      |
-| **`@loro/api`**           |           27 | 10 endpoints, driven end-to-end over HTTP against a real Nest app — including sync running the same Rust merge the client runs                                                                            |
-| **`@loro/design-tokens`** |           16 | Generates TS + Swift + Kotlin. 107 contrast pairings green across all four accent themes                                                                                                                  |
-| **`@loro/mobile`**        | 118 + 12 E2E | 8 screens, all current routes browser-tested, bundling to Hermes bytecode. Formatters and the three a11y gates                                                                                            |
+| Area                   | Tests | State                                                                                                                                                                                           |
+| ---------------------- | ----: | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Documentation          |     — | 65 substantive documents — 51 product, architecture, design, process, and decision docs, plus 14 ADRs                                                                                           |
+| Toolchain              |     — | Installs, builds, lints, typechecks, and tests from a clean clone                                                                                                                               |
+| **`loro-core`** (Rust) |   131 | Ranking, ASR matching, calendar, ladder, notification policy, HLC, and sync merge implemented. FSRS, Refrain selection, and DSP remain incomplete ([status](packages/core-rs/README.md#status)) |
+| **JS/TS workspaces**   |   432 | Core engines/persistence, content validation, API seams, mobile state/UI, and design tokens                                                                                                     |
+| **Browser E2E**        |    61 | Every current route and declared state, clock behavior, accessibility, text scale, and production-bundle smoke                                                                                  |
 
 **What the build already caught:** eight colours in the blueprint's palette that fail WCAG AA (the
 worst at 2.44:1, genuinely unreadable) plus one that only passes at a declared size floor; a drop
@@ -41,9 +39,9 @@ branded id types; and a container build that would have shipped the API with no 
 reporting itself healthy. Details in
 [`docs/decisions/open-questions.md`](docs/decisions/open-questions.md).
 
-**Not built yet:** persistence (the API's store is in-memory), auth, the live AI provider, on-device
-ASR and the prosody DSP, and the 13 remaining screens. See
-[`docs/product/roadmap.md`](docs/product/roadmap.md).
+**Not built yet:** the on-device SQLite driver/integration (the reusable persistence layer exists),
+durable API storage, auth, the live AI provider, native audio/ASR/widgets, and 16 learner screens.
+See the refreshed [`plans/README.md`](plans/README.md).
 
 Start at [`docs/process/onboarding.md`](docs/process/onboarding.md).
 
@@ -54,18 +52,22 @@ Start at [`docs/process/onboarding.md`](docs/process/onboarding.md).
 The product design lives in an interactive blueprint authored outside this repo's code tree:
 
 ```
-Language Learning by Phrases/
-├── Loro.dc.html      # 21 live, interactive screens across 5 phases + 3 practice philosophies
-├── support.js        # the blueprint's runtime shim
-└── screenshots/      # rendered stills of every screen
+design/Language Learning by Phrases - V1.1/
+├── Loro.dc.html          # 21 live, interactive screens
+├── Loro Chat.dc.html     # 2 v1.1 conversation screens
+├── Design System.dc.html # authored visual system
+├── Navigation.dc.html    # authored navigation system
+├── support.js            # blueprint runtime shim
+└── screenshots/          # rendered stills
 ```
 
 Open `Loro.dc.html` in a browser. Every phone in it is interactive and every card beside a phone
 explains what that screen does and how it connects. **When a spec in `docs/` and the blueprint
 disagree, the blueprint wins** — file an issue and fix the doc.
 
-[`docs/design/screen-catalog.md`](docs/design/screen-catalog.md) maps all 21 screens to their line
-ranges in the blueprint, their screenshots, and the docs that specify them.
+[`docs/design/screen-catalog.md`](docs/design/screen-catalog.md) maps the original 21 screens to
+their blueprint ranges. Plan 79 owns the durable registration of the two v1.1 chat screens and the
+new navigation/design-system artifacts.
 
 ---
 
@@ -85,12 +87,18 @@ Everything else is indexed in [`docs/README.md`](docs/README.md).
 
 ---
 
-## The shape of the system
+## Target system shape
+
+The diagram below is the intended architecture, not the current inventory. Today the web app uses an
+in-memory Zustand store, the API uses in-memory sync storage and a stub AI provider, and none of the
+native modules or cloud data services shown here is wired. The [status](#status) above and
+[`docs/architecture/overview.md`](docs/architecture/overview.md) distinguish the implemented seams
+from their targets.
 
 ```mermaid
 graph TB
   subgraph device["📱 Device (iOS · Android)"]
-    UI["React Native + Expo<br/>21 screens · Reanimated · Skia"]
+    UI["React Native + Expo<br/>23 authored screens · Reanimated · Skia"]
     ENG["Practice engines<br/>Stream · Refrain · SRS · Prosody · Run"]
     CORE["loro-core (Rust)<br/>scheduler · pitch/DSP · alignment"]
     DB[("SQLite<br/>offline-first")]
@@ -121,17 +129,17 @@ Full detail: [`docs/architecture/overview.md`](docs/architecture/overview.md).
 
 ## Repository layout
 
-| Path                            | What it is                                                            |
-| ------------------------------- | --------------------------------------------------------------------- |
-| `docs/`                         | All documentation — product, architecture, design, process, decisions |
-| `apps/mobile/`                  | The Expo / React Native app (iOS + Android)                           |
-| `apps/api/`                     | NestJS backend — sync, content, AI proxy, TTS proxy                   |
-| `packages/core/`                | Shared TypeScript domain model and engine contracts                   |
-| `packages/core-rs/`             | Rust core — scheduler, pitch/DSP, phonetic alignment (via UniFFI)     |
-| `packages/design-tokens/`       | Design tokens extracted from the blueprint, and their build           |
-| `packages/content/`             | Phrase catalog, packs, scenarios — schema + validated data            |
-| `scripts/`                      | Repo automation                                                       |
-| `Language Learning by Phrases/` | **The design blueprint** (source of truth)                            |
+| Path                                          | What it is                                                            |
+| --------------------------------------------- | --------------------------------------------------------------------- |
+| `docs/`                                       | All documentation — product, architecture, design, process, decisions |
+| `apps/mobile/`                                | The Expo / React Native app (iOS + Android)                           |
+| `apps/api/`                                   | NestJS backend — sync/content, stub AI; TTS remains a target          |
+| `packages/core/`                              | Shared TypeScript domain model and engine contracts                   |
+| `packages/core-rs/`                           | Rust core — scheduler, pitch/DSP, phonetic alignment (via UniFFI)     |
+| `packages/design-tokens/`                     | Design tokens extracted from the blueprint, and their build           |
+| `packages/content/`                           | Phrase catalog, packs, scenarios — schema + validated data            |
+| `scripts/`                                    | Repo automation                                                       |
+| `design/Language Learning by Phrases - V1.1/` | **The design blueprint** (source of truth)                            |
 
 ---
 
@@ -139,16 +147,16 @@ Full detail: [`docs/architecture/overview.md`](docs/architecture/overview.md).
 
 Each links to its ADR — the reasoning, alternatives, and consequences.
 
-| Decision                                                                                        | Why                                                                          |
-| ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| [React Native + Expo](docs/architecture/adr/0001-cross-platform-react-native-expo.md)           | One TS codebase for 21 screens; Expo Modules where we need real native audio |
-| [A Rust core](docs/architecture/adr/0002-shared-rust-core.md)                                   | Scheduler and DSP must be bit-identical on iOS, Android, and the server      |
-| [Offline-first SQLite + delta sync](docs/architecture/adr/0003-offline-first-sqlite-sync.md)    | Survival mode on a foreign SIM is a product requirement, not a nicety        |
-| [FSRS for scheduling](docs/architecture/adr/0004-fsrs-scheduler.md)                             | The blueprint's forgetting-curve screen _is_ FSRS made visible               |
-| [On-device ASR, cloud fallback](docs/architecture/adr/0005-on-device-asr-cloud-fallback.md)     | Speaking is the core loop; it cannot require a network                       |
-| [Pluggable practice engines](docs/architecture/adr/0006-pluggable-practice-engines.md)          | The blueprint deliberately left three philosophies open; so do we            |
-| [NestJS + Postgres](docs/architecture/adr/0008-backend-nestjs-postgres.md)                      | We own the sync protocol and the content pipeline                            |
-| [Audio never leaves the device by default](docs/architecture/adr/0011-analytics-and-privacy.md) | The prosody screen promises it in writing                                    |
+| Decision                                                                                      | Why                                                                          |
+| --------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| [React Native + Expo](docs/architecture/adr/0001-cross-platform-react-native-expo.md)         | One TS codebase for 21 screens; Expo Modules where we need real native audio |
+| [A Rust core](docs/architecture/adr/0002-shared-rust-core.md)                                 | Scheduler and DSP must be bit-identical on iOS, Android, and the server      |
+| [Offline-first SQLite + delta sync](docs/architecture/adr/0003-offline-first-sqlite-sync.md)  | Survival mode on a foreign SIM is a product requirement, not a nicety        |
+| [FSRS for scheduling](docs/architecture/adr/0004-fsrs-scheduler.md)                           | The blueprint's forgetting-curve screen _is_ FSRS made visible               |
+| [On-device ASR, cloud fallback](docs/architecture/adr/0005-on-device-asr-cloud-fallback.md)   | Speaking is the core loop; it cannot require a network                       |
+| [Pluggable practice engines](docs/architecture/adr/0006-pluggable-practice-engines.md)        | The blueprint deliberately left three philosophies open; so do we            |
+| [NestJS + Postgres](docs/architecture/adr/0008-backend-nestjs-postgres.md)                    | We own the sync protocol and the content pipeline                            |
+| [Recorded audio never leaves the device](docs/architecture/adr/0011-analytics-and-privacy.md) | The prosody screen promises it in writing                                    |
 
 ---
 

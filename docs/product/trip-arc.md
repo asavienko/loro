@@ -90,6 +90,8 @@ Platform mapping in
 
 ---
 
+<a id="regime-2--survival-mode"></a>
+
 ## Regime 2 — Survival mode
 
 **The flip is the feature.** On the arrival date the app's whole purpose changes, and it says so:
@@ -137,6 +139,8 @@ under 2 seconds.** Audio for the whole trip set is prefetched before the arrival
 prefetch is verified — the app must not discover a missing file in a taxi rank.
 
 ---
+
+<a id="regime-3--souvenir"></a>
 
 ## Regime 3 — Souvenir
 

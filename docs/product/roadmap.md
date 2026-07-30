@@ -9,44 +9,85 @@ ideal engineering weeks.
 on-device ASR quality for `es-ES` — are both in M3 and both could move it by weeks. They're
 deliberately not on the v1 critical path.
 
-```
-M0 ──▶ M1 ──▶ M2 ──▶ M3 ──▶ M4 ──▶ M5 ──▶ M6
-Setup  Spine  v1     v1.1   Scale  v2     Beyond
-2w     5w     7w     8w     4w     8w     —
- ▲      ▲
- │      └── in progress
- └── done
-       └──────────┬──────────┘
-              v1 ships (~14w)
-```
+| Milestone   | Meaning on 2026-07-30                                                                                                         |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| M0 · Setup  | **Partial:** portable foundations exist; native workspace, device persistence, dev deployment, and crash reporting do not     |
+| M1 · Spine  | **Partial and current:** seven learner routes demonstrate the thread on web; it is not yet durable, audible, or native-tested |
+| M2 · v1     | **Planned:** extend the spine into a production Today/Refrain loop, trip arc, offline/sync, release, and monetization         |
+| M3 · v1.1   | **Planned/evidence-gated:** Review/Memory and Roleplay follow the v1 foundations; speech labs wait for their quality gate     |
+| M4 · Scale  | **Planned:** hardening follows a functioning production service                                                               |
+| M5 · v2     | **Conditional:** Run/Phrasebook ship only if the loop experiment supports them                                                |
+| M6 · Beyond | **Unscheduled candidates**, not commitments                                                                                   |
 
-## Where we actually are — 2026-07-28
+The original `2w / 5w / 7w / 8w / 4w / 8w` estimates describe effort with the assumed team. They do
+not describe elapsed time from the current repository state, and milestones may overlap where their
+plan dependencies allow it.
 
-**M0 is complete** except the two items that need infrastructure that doesn't exist yet: the API is
-not deployed to a `dev` environment, and crash reporting is not wired to a dashboard. Everything
-else exits: `pnpm check` is green from a clean clone (21 tasks, 249 tests), CI runs on PRs, tokens
-generate for three targets, the Rust crate builds for host and WASM with bindings round-tripping,
-and ADRs 0001–0014 are merged.
+## Where we actually are — 2026-07-30
+
+**M0's portable code foundations are built, but M0 is not operationally complete.** The API is not
+deployed to `dev`, crash reporting is not wired, no native project/dev client exists, and the
+on-device SQLite driver is absent. At the last green baseline `pnpm check` ran 23 tasks; 432 JS/TS,
+131 Rust, and 61 browser E2E tests passed. Tokens generate for three targets and the Rust crate
+builds for host/WASM with committed bindings.
 
 **M1 is partly built.** The spine's one-sentence test passes in the app: onboarding → add from
 Discover → tag as Difficult/Pronunciation → the stream's repeat count changes → Progress reflects
 it. What is built:
 
-| M1 scope                                    | State                                                            |
-| ------------------------------------------- | ---------------------------------------------------------------- |
-| Onboarding, six steps                       | Built; seeds a real stream                                       |
-| Design system in code                       | Tokens + ~15 primitives; the inventory is not complete           |
-| Add: Discover + Browse, tagging sheet       | Built                                                            |
-| Phrase detail                               | Built                                                            |
-| Adaptive stream                             | Built                                                            |
-| Progress screen                             | Built                                                            |
-| Daily Refrain                               | Built — pulled forward from M2, it's the v1 hero loop            |
-| Audio: TTS cache, rates, exclusive playback | **Not built.** No audio anywhere in the app yet                  |
-| SQLite persistence                          | **Not built.** State is in memory and does not survive a restart |
-| Content: 150 phrases with audio             | 31 phrases, no audio                                             |
+| M1 scope                                    | State                                                                                                        |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Onboarding, six steps                       | Built; seeds a real stream                                                                                   |
+| Design system in code                       | Generated tokens + split primitives/components; runtime fonts/motion/themes remain                           |
+| Add: Discover + Browse, tagging sheet       | Built                                                                                                        |
+| Phrase detail                               | Built                                                                                                        |
+| Adaptive stream                             | Built                                                                                                        |
+| Progress screen                             | Built                                                                                                        |
+| Daily Refrain                               | Route and headless flow built; production loop remains partial (no durable set, audio, ASR, or real latency) |
+| Audio: TTS cache, rates, exclusive playback | **Not built.** No audio anywhere in the app yet                                                              |
+| SQLite persistence                          | Schema/migrations/repositories/outbox built and SQLite-tested; device driver/app wiring absent               |
+| Content: 150 phrases with audio             | 31 phrases, no audio                                                                                         |
 
-So the loop is demonstrable but not yet durable or audible — and both of those are M1 scope, not
-someone else's problem. Sizing below is unchanged; it was never a commitment.
+So the loop is demonstrable and well covered on web, but not yet durable, audible, or native-tested.
+The dependency-ordered execution source is now [`../../plans/README.md`](../../plans/README.md);
+sizing below remains milestone intent rather than a commitment.
+
+### How the app extends from here
+
+The milestone sections define product scope. Plans 54–83 define executable order and must not be
+replaced by treating a milestone table as a backlog:
+
+1. **Make the existing seven routes truthful and safe to extend:** consume completed protected plan
+   [53](../../plans/53-post-refactor-solid-kiss-dry-audit.md), then land persistence correctness and
+   current-surface fidelity in
+   [54](../../plans/54-local-persistence-correctness.md)–[55](../../plans/55-current-surface-truth-and-fidelity.md).
+2. **Establish extension foundations:** shared navigation/runtime UI/native workspace/core maths,
+   content, and backend contracts in
+   [56](../../plans/56-navigation-failure-and-input-shell.md)–[61](../../plans/61-content-and-audio-assets.md)
+   and [66](../../plans/66-backend-contract-data-and-security.md).
+3. **Make the demonstrated spine real on devices:** wire device SQLite, audio, speech, identity, and
+   sync in [59](../../plans/59-device-persistence-and-resume.md),
+   [62](../../plans/62-native-audio-playback.md)–[63](../../plans/63-native-speech-speak-and-latency.md),
+   and
+   [67](../../plans/67-anonymous-auth-and-account-lifecycle.md)–[68](../../plans/68-sync-and-offline-convergence.md).
+4. **Complete and ship v1 behavior:** finish Today/Refrain, Import, trips/Survival, settings,
+   quality, delivery, and entitlements in
+   [64](../../plans/64-today-and-refrain-production-loop.md)–[65](../../plans/65-import-and-capture.md)
+
+5. **Register and extend the v1.1 design package:** plan
+   [79](../../plans/79-v1-1-design-contract.md) defines stable navigation/chat requirements before
+   [80](../../plans/80-dev-design-system-workbench.md)–[83](../../plans/83-open-chat-and-message-inspector.md)
+   implement the workbench, navigation spine, and two chat surfaces. and
+   [69](../../plans/69-trip-domain-and-arc.md)–[74](../../plans/74-monetization-and-entitlements.md).
+6. **Add later surfaces without rebuilding foundations:** Review/Memory, Roleplay, and the gated
+   labs use the same repositories, engines, native capture, and release harness in
+   [75](../../plans/75-review-and-memory.md)–[77](../../plans/77-dsp-and-speech-labs.md).
+   Conditional Run/Phrasebook remains [78](../../plans/78-conditional-run-and-phrasebook.md).
+
+Current decision/evidence gates are Q-15 for production audio assets, Q-07 for trip semantics, Q-05
+for the loop experiment and conditional Run, Q-14 for the Refrain peak accessibility sign-off,
+Q-08/Q-12 for monetization, and the recorded DSP spike gate for the labs. Other work should proceed
+when its technical dependencies pass; a blocked plan does not freeze file-disjoint work.
 
 ---
 
@@ -60,7 +101,7 @@ someone else's problem. Sizing below is unchanged; it was never a commitment.
 | Expo app boots on an iPhone and a Pixel            | Both, from the documented onboarding steps                         |
 | Design tokens package generating from source       | Token change → app change with one command                         |
 | `loro-core` Rust crate building for both platforms | UniFFI bindings importable from TS; a trivial function round-trips |
-| SQLite + Drizzle, migration runner                 | Schema v1 applies on a fresh install                               |
+| SQLite + reviewed SQL migrations                   | Schema v1 applies on a fresh install                               |
 | NestJS API skeleton with health check              | Deployed to `dev`, reachable from a device                         |
 | Crash reporting + analytics wired                  | A deliberate crash appears in the dashboard                        |
 | ADRs 0001–0014 accepted                            | Reviewed and merged                                                |
@@ -96,6 +137,8 @@ the Progress rollup. Internal dogfooding starts here and never stops.
 
 ---
 
+<a id="m2--v1--7-weeks"></a>
+
 ## M2 · v1 · ~7 weeks
 
 **Goal: ship. The Refrain as hero, plus the trip arc.**
@@ -130,6 +173,8 @@ the Progress rollup. Internal dogfooding starts here and never stops.
 **Never cut:** offline survival mode, the production gate, or the real latency measurement.
 
 ---
+
+<a id="m3--v11--loop-a-and-the-labs--8-weeks"></a>
 
 ## M3 · v1.1 — Loop A and the labs · ~8 weeks
 
@@ -184,7 +229,6 @@ pursuing, or if Refrain retention is plateauing.
 
 - The Run: all five phases, the draw, four finishers with real evaluation (`LC-01`…`LC-11`)
 - Phrasebook / ladder collection (`LC-12`…`LC-15`)
-- "Hear myself, perfectly" — voice conversion, opt-in (`P3D-12`, `AI-04`)
 - The Deploy finisher's open-ended speech evaluation — the hardest thing in the product
 
 **Exit criteria:** the ladder distribution is a metric people check weekly, and rung ≥2 correlates
@@ -220,9 +264,9 @@ entire reason for installing. Shipping without it means shipping without a reaso
 v1 critical path would put the whole release at the mercy of a DSP result we haven't validated yet.
 
 **Why the Run is v2 and conditional.** Highest build cost, most speculative payoff, and its best
-idea (the ladder) is already being captured from v1 as data
-([practice-loops.md](practice-loops.md#loop-c--the-roguelike-run)) — so delaying costs us nothing we
-can't recover.
+idea (the ladder) already has a shared data contract, though current engines do not yet maintain it
+durably and consistently ([practice-loops.md](practice-loops.md#loop-c--the-roguelike-run)) — so
+delaying costs us nothing we can't recover.
 
 **Why hardening gets its own milestone.** Sync and offline correctness at a 2 000-phrase library is
 real work, and squeezing it into feature milestones is how you end up with a product that's great at

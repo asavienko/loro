@@ -11,7 +11,7 @@ actually considered, what we chose, and the consequences we accepted.
 | [0002](0002-shared-rust-core.md)                 | A shared Rust core via UniFFI          | Accepted | 2026-07-28 |
 | [0003](0003-offline-first-sqlite-sync.md)        | Offline-first SQLite with delta sync   | Accepted | 2026-07-28 |
 | [0004](0004-fsrs-scheduler.md)                   | FSRS as the scheduling algorithm       | Accepted | 2026-07-28 |
-| [0005](0005-on-device-asr-cloud-fallback.md)     | On-device ASR, opt-in cloud fallback   | Accepted | 2026-07-28 |
+| [0005](0005-on-device-asr-cloud-fallback.md)     | On-device ASR, reveal-mode fallback    | Accepted | 2026-07-28 |
 | [0006](0006-pluggable-practice-engines.md)       | Pluggable practice engines             | Accepted | 2026-07-28 |
 | [0007](0007-audio-pipeline.md)                   | A native audio module, not a JS player | Accepted | 2026-07-28 |
 | [0008](0008-backend-nestjs-postgres.md)          | NestJS + Postgres over a BaaS          | Accepted | 2026-07-28 |

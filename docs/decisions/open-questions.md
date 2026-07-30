@@ -6,24 +6,26 @@ review.
 **Status** — `open` (needs an answer) · `leaning` (we have a working assumption, stated) ·
 `deferred` (deliberately not now) · `closed` (answered; kept for the record with the answer).
 
-| #             | Question                                                        | Status   | Owner            | Blocks                         | By            |
-| ------------- | --------------------------------------------------------------- | -------- | ---------------- | ------------------------------ | ------------- |
-| [Q-01](#q-01) | Is 6 reps the right Refrain target?                             | leaning  | Product          | Tuning, not shipping           | M3            |
-| [Q-02](#q-02) | Should graduation require a _cold_ lock-in?                     | open     | Product          | Loop B correctness             | M3            |
-| [Q-03](#q-03) | Does learner-declared difficulty stay accurate?                 | open     | Product          | The whole thread's validity    | M3            |
-| [Q-04](#q-04) | Should the ladder be the universal depth model?                 | leaning  | Tech lead        | Nothing — already mitigated    | M5            |
-| [Q-05](#q-05) | Who owns the loop decision, and when?                           | **open** | **Product**      | **The loop experiment**        | **M3 start**  |
-| [Q-06](#q-06) | Is the practice loop a setting or an assignment?                | leaning  | Product          | Settings UI, experiment design | M2            |
-| [Q-07](#q-07) | How does trip mode serve "moving abroad"?                       | open     | Product          | Trip arc completeness          | M2            |
-| [Q-08](#q-08) | Pricing, tiers, and the paywall                                 | **open** | **Product**      | **v1 launch**                  | **M2 mid**    |
-| [Q-09](#q-09) | SQLCipher for the local database?                               | deferred | Tech lead        | Nothing today                  | Revisit at M4 |
-| [Q-10](#q-10) | A text-production mode for deaf learners?                       | open     | Product + design | Accessibility completeness     | M3            |
-| [Q-11](#q-11) | Rename the blueprint folder?                                    | open     | Tech lead        | Tooling ergonomics             | M1            |
-| [Q-12](#q-12) | Store mechanics: RevenueCat or direct?                          | open     | Backend          | Billing implementation         | M2 start      |
-| [Q-13](#q-13) | Is `es-419` the next language, before UI localization?          | deferred | Product          | Nothing pre-v1                 | Post-v1       |
-| [Q-14](#q-14) | How should the Refrain's peak card render its English subtitle? | open     | Design           | Loop B accessibility           | M2            |
+| #             | Question                                                        | Status   | Owner                   | Blocks                         | By                       |
+| ------------- | --------------------------------------------------------------- | -------- | ----------------------- | ------------------------------ | ------------------------ |
+| [Q-01](#q-01) | Is 6 reps the right Refrain target?                             | leaning  | Product                 | Tuning, not shipping           | M3                       |
+| [Q-02](#q-02) | Should graduation require a _cold_ lock-in?                     | open     | Product                 | Loop B correctness             | M3                       |
+| [Q-03](#q-03) | Does learner-declared difficulty stay accurate?                 | open     | Product                 | The whole thread's validity    | M3                       |
+| [Q-04](#q-04) | Should the ladder be the universal depth model?                 | leaning  | Tech lead               | Nothing — already mitigated    | M5                       |
+| [Q-05](#q-05) | Who owns the loop decision, and when?                           | **open** | **Product**             | **Experiment activation; Run** | **Before M3 experiment** |
+| [Q-06](#q-06) | Is the practice loop a setting or an assignment?                | leaning  | Product                 | Settings UI, experiment design | M2                       |
+| [Q-07](#q-07) | How does trip mode serve "moving abroad"?                       | **open** | **Product**             | **Plan 69 trip state machine** | **Before plan 69**       |
+| [Q-08](#q-08) | Pricing, tiers, and the paywall                                 | **open** | **Product**             | **v1 launch**                  | **M2 mid**               |
+| [Q-09](#q-09) | SQLCipher for the local database?                               | deferred | Tech lead               | Nothing today                  | Revisit at M4            |
+| [Q-10](#q-10) | A text-production mode for deaf learners?                       | open     | Product + design        | Accessibility completeness     | M3                       |
+| [Q-12](#q-12) | Store mechanics: RevenueCat or direct?                          | **open** | **Backend**             | **Plan 74 implementation**     | **Before plan 74**       |
+| [Q-13](#q-13) | Is `es-419` the next language, before UI localization?          | deferred | Product                 | Nothing pre-v1                 | Post-v1                  |
+| [Q-14](#q-14) | How should the Refrain's peak card render its English subtitle? | **open** | **Design**              | **Plan 72 peak sign-off**      | **Before M2 release**    |
+| [Q-15](#q-15) | Which licensed voice and source produce production audio?       | **open** | **Content + tech lead** | **Plans 61 and 62 seed batch** | **Now**                  |
 
 ---
+
+<a id="q-01"></a>
 
 ### Q-01 · Is 6 reps the right Refrain target?
 
@@ -37,6 +39,8 @@ always see today" depends on the learner knowing how much work today is.
 
 ---
 
+<a id="q-02"></a>
+
 ### Q-02 · Should graduation require a _cold_ lock-in?
 
 Currently four days of lock-in graduates a phrase, and a day's reps might end on Cloze rather than
@@ -47,6 +51,8 @@ before graduation. (c) is also the cleanest source for the loop experiment's com
 deciding alongside Q-05.
 
 ---
+
+<a id="q-03"></a>
 
 ### Q-03 · Does learner-declared difficulty stay accurate over weeks?
 
@@ -63,6 +69,8 @@ re-rate when the two disagree strongly. That's a real feature, so we need the me
 
 ---
 
+<a id="q-04"></a>
+
 ### Q-04 · Should the ladder be the universal depth model?
 
 The five-rung ladder is the most pedagogically defensible progress model in the blueprint, and it
@@ -75,6 +83,8 @@ v1, replacing or joining the four mastery buckets on the Progress screen.
 
 ---
 
+<a id="q-05"></a>
+
 ### Q-05 · Who owns the loop decision, and when? 🔴
 
 The engine abstraction preserves optionality, but optionality without a decision date becomes
@@ -85,10 +95,14 @@ size. The metric and design are drafted
 ([`../product/practice-loops.md`](../product/practice-loops.md#how-well-actually-decide)); the owner
 and the power calculation are not.
 
-**Blocks M3 start**, because the common cold probe has to be instrumented before the arms are live —
-you cannot retro-fit the measure onto an experiment already running.
+**Blocks activation of the M3 loop experiment and plan 78's Run decision**, because the common cold
+probe has to be instrumented before the arms are live — you cannot retro-fit the measure onto an
+experiment already running. It does not block unrelated M3 implementation such as Review/Memory or
+Roleplay once their technical dependencies pass.
 
 ---
+
+<a id="q-06"></a>
 
 ### Q-06 · Is the practice loop a setting or an assignment?
 
@@ -102,6 +116,8 @@ which Q-05's design has to account for.
 
 ---
 
+<a id="q-07"></a>
+
 ### Q-07 · How does trip mode serve "moving abroad"?
 
 Ana's persona picks "moving abroad", which is a _date_ but not a _trip_. Survival mode never ends,
@@ -111,7 +127,12 @@ Currently the trip machinery assumes a return. Options: (a) an "indefinite" trip
 date and continuing weekly drops; (b) a distinct "relocation" mode; (c) treat it as a normal trip
 with a far-future return date. (a) is cheapest and probably right.
 
+**Blocks plan 69 before the trip state machine is committed.** Navigation, persistence, content, and
+scheduling foundations may proceed; implementing return/end semantics may not.
+
 ---
+
+<a id="q-08"></a>
 
 ### Q-08 · Pricing, tiers, and the paywall 🔴
 
@@ -127,6 +148,8 @@ everyday learners, the whole pricing model should be built around trips.
 
 ---
 
+<a id="q-09"></a>
+
 ### Q-09 · SQLCipher for the local database?
 
 Currently we rely on OS full-disk encryption
@@ -137,6 +160,8 @@ costs 5–15% on every read, and the hot path (reading phrase state mid-rep) is 
 if we ever store something more sensitive, or if a platform requirement changes.
 
 ---
+
+<a id="q-10"></a>
 
 ### Q-10 · A text-production mode for deaf learners?
 
@@ -151,15 +176,7 @@ sleeping baby) — which is a much larger group than the accessibility framing s
 
 ---
 
-### Q-11 · Rename the blueprint folder?
-
-`Language Learning by Phrases/` has spaces, which is awkward for scripts, globs, and CI paths.
-`design/blueprint/` would be cleaner.
-
-Against: it's the author's artefact and every doc in this repo cites paths into it. If we rename,
-all citations update in the same PR.
-
----
+<a id="q-12"></a>
 
 ### Q-12 · Store mechanics: RevenueCat or direct StoreKit 2 / Play Billing?
 
@@ -173,6 +190,8 @@ support that cleanly.
 
 ---
 
+<a id="q-13"></a>
+
 ### Q-13 · Is `es-419` the next language, before UI localization?
 
 Latin American Spanish is a variant (4–6 weeks) and probably a larger market than `es-ES`
@@ -183,6 +202,8 @@ kind of work with a different payoff.
 schema, which is what keeps this cheap later.
 
 ---
+
+<a id="q-14"></a>
 
 ### Q-14 · How should the Refrain's peak card render its English subtitle?
 
@@ -212,7 +233,32 @@ Lean: (a) or (b). Needs the designer.
 
 ---
 
+<a id="q-15"></a>
+
+### Q-15 · Which licensed voice and source produce production audio?
+
+The bundled catalog contains text only. Plan 61 cannot render even its seed batch, and plan 62
+cannot validate the real cache/playback contract, until the source audio has clear provenance and
+production rights.
+
+**Needs now:** choose recorded voice, licensed TTS, or a reviewed hybrid; name the `es-ES` voice and
+fallback; document commercial and redistribution rights, consent/provenance, regional storage and
+deletion obligations; define pronunciation review and replacement policy; and set the budget for 150
+v1-spine phrases followed by 600 v1 phrases.
+
+This decision authorizes assets, not playback architecture. Learner recordings remain subject to the
+separate non-negotiable that PCM never leaves native memory/the device.
+
+---
+
 ## Closed
 
-None yet. When a question closes, move it here with its answer and the date — the reasoning is worth
-more than the conclusion.
+<a id="q-11"></a>
+
+### Q-11 · Rename the blueprint folder? — closed 2026-07-30
+
+**Decision: retain `design/Language Learning by Phrases - V1.1/` as the canonical path.** The
+artefact has already moved under `design/`, its versioned authored name distinguishes it from future
+blueprints, and repository citations/tooling now use that location. The inconvenience of quoting a
+path with spaces is smaller than another repo-wide rename and citation migration. This is no longer
+an M1 blocker.

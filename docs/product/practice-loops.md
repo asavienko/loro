@@ -83,6 +83,8 @@ maximises engagement while teaching less loses.
 
 ---
 
+<a id="loop-a--the-engine"></a>
+
 ## Loop A — The engine
 
 **Screens:** [Review session](functional-spec.md#6-review-session) ·
@@ -108,6 +110,8 @@ else on the market does this well, and it directly serves the app's central prom
 melody).
 
 ---
+
+<a id="loop-b--the-daily-refrain--v1-hero"></a>
 
 ## Loop B — The Daily Refrain · **v1 hero**
 
@@ -136,6 +140,8 @@ carrying passive breadth.
 3. "You always see today" is the antidote to the review-debt failure mode that kills SRS apps.
 
 ---
+
+<a id="loop-c--the-roguelike-run"></a>
 
 ## Loop C — The Roguelike Run
 

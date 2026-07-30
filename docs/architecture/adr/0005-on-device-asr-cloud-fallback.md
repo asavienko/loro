@@ -1,4 +1,4 @@
-# 0005 · On-device ASR, with an opt-in cloud fallback and a reveal-mode floor
+# 0005 · On-device ASR with a reveal-mode floor
 
 - **Status:** Accepted
 - **Date:** 2026-07-28
@@ -60,14 +60,13 @@ utterance plus upload. Also a recurring per-minute cost on the app's most-used i
 
 ## Decision
 
-**Platform on-device recognisers**, with `onDeviceOnly: true` as a hard flag, and a four-rung
+**Platform on-device recognisers**, with `onDeviceOnly: true` as a hard flag, and a three-rung
 degradation ladder ([audio-speech.md](../audio-speech.md#degradation-ladder)):
 
 ```
 1. On-device recogniser available                → full experience
 2. Language pack missing                         → in-context download prompt, reveal mode meanwhile
-3. Unavailable, learner opted into cloud ASR     → cloud (per-utterance, explicitly consented)
-4. Unavailable, no consent                       → REVEAL MODE
+3. Unavailable                                  → REVEAL MODE
 ```
 
 **Reveal mode is the floor, and it is a first-class experience, not an error state.** It comes
@@ -104,8 +103,8 @@ differences.
   data).
 - Two platform APIs to wrap and two failure vocabularies to normalise. Contained in one module with
   one TS surface.
-- Cloud fallback adds a consented path where audio does leave the device. It is off by default,
-  asked for only when on-device is genuinely unavailable, revocable immediately, and never silent
+- There is no cloud escape hatch. When on-device recognition is unavailable, reveal mode preserves
+  completion without violating the recorded-audio boundary
   ([security-privacy.md](../security-privacy.md#consent-surfaces)).
 
 ### Revisit if…

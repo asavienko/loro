@@ -102,6 +102,8 @@ like a loading spinner; three bars 0.12 s apart looks like sound.
 
 These three carry actual information. They are not interchangeable with a fade.
 
+<a id="1--the-warming-card--the-refrain"></a>
+
 ### 1 · The warming card — the Refrain
 
 `Loro.dc.html:1438`, `3392–3396`

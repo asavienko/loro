@@ -5,6 +5,49 @@ Rationale: [ADR-0011](adr/0011-analytics-and-privacy.md) · Attacker's view:
 
 ---
 
+## Implementation boundary (current repository)
+
+The privacy promise is binding now; most defence-in-depth controls described in this document are
+still target architecture.
+
+- Recorded audio cannot currently leave the device because the app has no recorder, speech module,
+  audio upload endpoint, or native audio bridge. That absence is not the structural guarantee
+  promised below; the future bridge still has to make PCM inaccessible to JS and accept only opaque,
+  lifetime-checked handles for Rust scoring.
+- The API has no authentication module, account routes, entitlement guard, persistent user store,
+  Postgres, Redis, TLS termination, certificate pinning, audit log, deletion/export jobs, analytics
+  ingest, TTS endpoint, or voice-clone endpoint. Its sync repository is an in-memory development
+  implementation and controllers are not protected by learner identity.
+- Rate-limit values and RFC 9457 error shaping exist in source, but no rate-limit middleware applies
+  those values. Nest's logger is not the structured, allowlist-redacted logging pipeline described
+  below.
+- The mobile app has no Keychain/Keystore wrapper, secure-store dependency, analytics consent
+  implementation, local analytics queue, or on-device SQLite driver. Current Zustand state is
+  in-memory; the driver-agnostic SQLite repositories are tested from Node but not wired to the app.
+- `app.config.ts` declares purpose strings, selected manifest permissions, blocked Android
+  permissions, the URL scheme, and an App Group entitlement. Runtime, in-context permission prompts
+  and native targets are not implemented, and no store privacy manifest/data-safety artifact exists.
+
+Tables below therefore state required production controls unless explicitly identified above as
+present. A route name, retention period, provider, or encryption choice in this document does not
+mean its implementation exists.
+
+### Security prerequisites for extending the app
+
+Any feature that creates a new data flow must update the data classification, threat model,
+consent/retention behavior, and store disclosures in the same change. Before networked sync or
+accounts ship, add authenticated tenant scoping at the repository boundary, secure token storage,
+refresh-family rotation/reuse tests, enforced rate limiting, persistent deletion/export semantics,
+and production transport controls. Before telemetry ships, implement the pre-queue allowlist and
+opt-out guarantees in [observability.md](observability.md).
+
+Before microphone functionality ships, enforce and test the PCM handle boundary on both platforms,
+including error/crash paths and backgrounding. Cloud ASR, voice cloning, quality sampling, and every
+other recorded-audio upload are out of scope: consent does not override the promise that recorded
+audio never leaves the device. A future product proposal that needs upload must first change the
+learner-facing promise, the non-negotiable, ADR-0011, and this architecture through an explicit
+decision; implementation cannot create an exception by itself.
+
 ## The promise that constrains everything
 
 The prosody lab prints this on screen, to the learner, in writing:
@@ -12,26 +55,26 @@ The prosody lab prints this on screen, to the learner, in writing:
 > 🔒 **Private — your audio stays on your device** — `Loro.dc.html:1281`
 
 That single line is the strongest constraint in the entire architecture. It rules out server-side
-pronunciation scoring, cloud ASR by default, "anonymous audio sampling for model improvement", and
-any telemetry that includes a waveform. It's the reason `loro-core` does DSP on-device
+pronunciation scoring, cloud ASR, "anonymous audio sampling for model improvement", and any
+telemetry that includes a waveform. It's the reason `loro-core` does DSP on-device
 ([prosody-dsp.md](prosody-dsp.md)) and the reason recorded PCM is passed between native modules by
 handle and never surfaced to JavaScript ([audio-speech.md](audio-speech.md#loro-audio-api)).
 
-**A promise displayed to a user is a technical requirement.** If we ever need to break it, the
-screen changes first, with consent, in the same release.
+**A promise displayed to a user is a technical requirement.** There is no consent-based exception in
+the current product or architecture.
 
 ---
 
 ## Data classification
 
-| Class                 | Data                                                                                        | Where it lives                        | Leaves the device?                                      |
-| --------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------- | ------------------------------------------------------- |
-| **P0 · Never leaves** | Recorded audio (PCM buffers)                                                                | Native memory, released after scoring | **No** — except a per-use, consented voice-clone sample |
-| **P1 · Sensitive**    | Email, auth identities, purchase receipts                                                   | Server, encrypted at rest             | Yes, to us and to the store providers                   |
-| **P2 · Personal**     | Phrase library, notes/memory hooks, difficulty and tags, trip city and dates, captured text | Device + server (synced)              | Yes, to us only                                         |
-| **P3 · Derived**      | Scores, latencies, reps, FSRS state, ladder rungs                                           | Device + server                       | Yes, to us only                                         |
-| **P4 · Telemetry**    | Events with ids, no free text                                                               | Device queue → analytics              | Yes, pseudonymous                                       |
-| **P5 · Public**       | Catalog content                                                                             | CDN                                   | It's public content                                     |
+| Class                 | Data                                                                                        | Where it lives                        | Leaves the device?                    |
+| --------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------- | ------------------------------------- |
+| **P0 · Never leaves** | Recorded audio (PCM buffers)                                                                | Native memory, released after scoring | **No**                                |
+| **P1 · Sensitive**    | Email, auth identities, purchase receipts                                                   | Server, encrypted at rest             | Yes, to us and to the store providers |
+| **P2 · Personal**     | Phrase library, notes/memory hooks, difficulty and tags, trip city and dates, captured text | Device + server (synced)              | Yes, to us only                       |
+| **P3 · Derived**      | Scores, latencies, reps, FSRS state, ladder rungs                                           | Device + server                       | Yes, to us only                       |
+| **P4 · Telemetry**    | Events with ids, no free text                                                               | Device queue → analytics              | Yes, pseudonymous                     |
+| **P5 · Public**       | Catalog content                                                                             | CDN                                   | It's public content                   |
 
 ### What P2 actually contains, and why it matters
 
@@ -141,18 +184,17 @@ the library), calendar, health.
 
 ## Retention
 
-| Data                                     | Client                                    | Server                                                        |
-| ---------------------------------------- | ----------------------------------------- | ------------------------------------------------------------- |
-| Recorded audio                           | Released after scoring, same call stack   | Never stored                                                  |
-| Voice-clone sample                       | Not stored                                | Deleted within the request; `retained: false` in the response |
-| `user_phrase`, `trip`, `settings`        | Until deleted by the learner              | Until account deletion                                        |
-| `review_log`                             | Forever (needed for FSRS re-optimisation) | 3 years                                                       |
-| `latency_sample`, `attempt`              | Pruned after 90 days; aggregates kept     | 1 year, then aggregated                                       |
-| `take` (scores, contour)                 | Last 20 per phrase                        | 1 year                                                        |
-| Analytics events                         | Queue: 7 days / 5 000 events              | 25 months, pseudonymous                                       |
-| Server logs                              | —                                         | 30 days                                                       |
-| Audit log (auth, deletion, staff access) | —                                         | 2 years                                                       |
-| Backups                                  | —                                         | 35 days PITR                                                  |
+| Data                                     | Client                                    | Server                  |
+| ---------------------------------------- | ----------------------------------------- | ----------------------- |
+| Recorded audio                           | Released after scoring, same call stack   | Never stored            |
+| `user_phrase`, `trip`, `settings`        | Until deleted by the learner              | Until account deletion  |
+| `review_log`                             | Forever (needed for FSRS re-optimisation) | 3 years                 |
+| `latency_sample`, `attempt`              | Pruned after 90 days; aggregates kept     | 1 year, then aggregated |
+| `take` (scores, contour)                 | Last 20 per phrase                        | 1 year                  |
+| Analytics events                         | Queue: 7 days / 5 000 events              | 25 months, pseudonymous |
+| Server logs                              | —                                         | 30 days                 |
+| Audit log (auth, deletion, staff access) | —                                         | 2 years                 |
+| Backups                                  | —                                         | 35 days PITR            |
 
 **Deleted accounts** are hard-deleted with cascades within 30 days, including from backups as they
 age out, and a verification job confirms zero remaining rows.
@@ -163,7 +205,7 @@ age out, and a verification job confirms zero remaining rows.
 
 | Duty                          | Implementation                                                                                                                 |
 | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| Lawful basis                  | Contract (delivering the service) for P1–P3; **consent** for P4 analytics and for cloud ASR and voice cloning                  |
+| Lawful basis                  | Contract (delivering the service) for P1–P3; **consent** for P4 analytics                                                      |
 | Right of access / portability | `GET /account/export` — complete JSON, documented, re-importable ([api.md](api.md#account))                                    |
 | Right to erasure              | `DELETE /account` — 24 h cancellation window, then hard cascade delete, verified                                               |
 | Right to object               | Analytics opt-out in Settings; **client-side**, so nothing is even queued                                                      |
@@ -182,15 +224,14 @@ personalisation from a corpus ([ai-services.md](ai-services.md)).
 
 ## Consent surfaces
 
-Three explicit, revocable consents. Each is off by default and stored in `settings`.
+The target architecture has one explicit, revocable consent. It is off by default and stored in
+`settings`.
 
-| Consent                | Asked when                                  | Effect if declined                               |
-| ---------------------- | ------------------------------------------- | ------------------------------------------------ |
-| **Analytics**          | Once, after the first week, honestly framed | Nothing is queued. No functional change          |
-| **Cloud ASR**          | Only if on-device ASR is unavailable        | Reveal mode ([offline.md](offline.md#asr))       |
-| **Voice cloning** (v2) | At first use of "Hear myself, perfectly"    | The feature is unavailable; nothing else changes |
+| Consent       | Asked when                                  | Effect if declined                      |
+| ------------- | ------------------------------------------- | --------------------------------------- |
+| **Analytics** | Once, after the first week, honestly framed | Nothing is queued. No functional change |
 
-Each is revocable in Settings, and revoking cloud ASR or voice cloning takes effect immediately.
+It is revocable in Settings, and revocation takes effect before another event is queued.
 
 ---
 
@@ -234,10 +275,10 @@ page.
 
 Full runbook: [`process/incident-response.md`](../process/incident-response.md). Privacy-specific:
 
-| Severity       | Definition                                                                        | Response                                                                  |
-| -------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| **P0 privacy** | Any recorded audio left the device without consent, or cross-tenant data exposure | Immediate: disable the path, notify within 72 h per GDPR, full postmortem |
-| **P1 privacy** | P1/P2 data exposed to an unauthorised party                                       | Same-day containment, assess notification duty                            |
-| **P2 privacy** | Analytics captured data outside the allowlist                                     | Purge the affected events, fix the allowlist, document                    |
+| Severity       | Definition                                                        | Response                                                                  |
+| -------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| **P0 privacy** | Any recorded audio left the device, or cross-tenant data exposure | Immediate: disable the path, notify within 72 h per GDPR, full postmortem |
+| **P1 privacy** | P1/P2 data exposed to an unauthorised party                       | Same-day containment, assess notification duty                            |
+| **P2 privacy** | Analytics captured data outside the allowlist                     | Purge the affected events, fix the allowlist, document                    |
 
 A P0 privacy incident is the only class of incident that halts all feature work until closed.

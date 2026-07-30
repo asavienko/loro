@@ -7,10 +7,38 @@ five phases plus cross-cutting concerns.
 
 - **ID** — stable. Cite it in issues, branch names, commits, and tests (`P2-04`).
 - **Rel** — target release: `v1` · `v1.1` · `v2` · `later`. See [roadmap.md](roadmap.md).
-- **Source** — line range in `Language Learning by Phrases/Loro.dc.html`.
+- **Rel is scope, not delivery status.** A `v1` row is not necessarily implemented. Use the
+  implementation ledger below and the linked active plan before treating a requirement as shipped.
+- **Source** — line range in `design/Language Learning by Phrases - V1.1/Loro.dc.html`.
 - Screen-level behaviour (states, transitions, edge cases) lives in
   [functional-spec.md](functional-spec.md). This document says _what_; that one says _how it
   behaves_.
+
+### Implementation ledger — 2026-07-30
+
+`Built surface` means a learner can reach the route on web today. `Partial` means some UI/domain
+seams exist but the requirement range is not complete; in particular, browser interaction is not
+evidence for native audio, speech, persistence, offline, widgets, or notifications. The
+dependency-ordered source for remaining work is [`../../plans/README.md`](../../plans/README.md).
+
+| Requirement area                                    | Current implementation                                                                                                                                                                                   | Completion path                                                                                                                                                                                                                                                                                                                                      |
+| --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `P1-01`…`P1-12`                                     | **Partial:** six-step onboarding route and stream seeding exist; answers are in memory, trip handoff and in-context permissions do not                                                                   | [55](../../plans/55-current-surface-truth-and-fidelity.md), [59](../../plans/59-device-persistence-and-resume.md), [63](../../plans/63-native-speech-speak-and-latency.md), [69](../../plans/69-trip-domain-and-arc.md), [70](../../plans/70-survival-widgets-and-notifications.md)                                                                  |
+| `P2-01`…`P2-14`, `P2-20`…`P2-40`                    | **Partial:** Discover, Browse, tagging, and phrase-detail routes exist over the 31-phrase bundled catalog; Import, real audio, durable edits, and several fidelity/error states do not                   | [55](../../plans/55-current-surface-truth-and-fidelity.md), [56](../../plans/56-navigation-failure-and-input-shell.md), [59](../../plans/59-device-persistence-and-resume.md), [61](../../plans/61-content-and-audio-assets.md), [62](../../plans/62-native-audio-playback.md), [65](../../plans/65-import-and-capture.md)                           |
+| `P2-15`                                             | **Not built:** Capture is v1.1 scope                                                                                                                                                                     | [65](../../plans/65-import-and-capture.md), then the guarded provider seam in [76](../../plans/76-roleplay-and-live-ai.md) if needed                                                                                                                                                                                                                 |
+| `P3-01`…`P3-12`                                     | **Partial:** Stream UI, queue controls, re-rating, and empty state exist; playback, background transport, durable progress, and truthful playback progress do not                                        | [55](../../plans/55-current-surface-truth-and-fidelity.md), [59](../../plans/59-device-persistence-and-resume.md), [60](../../plans/60-authoritative-core-maths.md), [62](../../plans/62-native-audio-playback.md), [64](../../plans/64-today-and-refrain-production-loop.md)                                                                        |
+| `P3-20`…`P3-28`                                     | **Not built:** no microphone or ASR route/module exists                                                                                                                                                  | [63](../../plans/63-native-speech-speak-and-latency.md)                                                                                                                                                                                                                                                                                              |
+| `LB-01`…`LB-10`, `LB-20`…`LB-32`                    | **Partial:** Today and six-mode Refrain routes, frozen set, warming UI, `applyDelta`, and completion state exist; waves are not durable/timed/audible and latency is not a real speech-onset measurement | [55](../../plans/55-current-surface-truth-and-fidelity.md), [59](../../plans/59-device-persistence-and-resume.md), [60](../../plans/60-authoritative-core-maths.md), [62](../../plans/62-native-audio-playback.md), [63](../../plans/63-native-speech-speak-and-latency.md), [64](../../plans/64-today-and-refrain-production-loop.md)               |
+| `P4-01`…`P4-08`                                     | **Partial:** Progress route, range control, stats, tag rollup/drill entry, and milestone UI exist; values remain in-memory and fidelity/truth fixes remain                                               | [55](../../plans/55-current-surface-truth-and-fidelity.md), [59](../../plans/59-device-persistence-and-resume.md), [60](../../plans/60-authoritative-core-maths.md)                                                                                                                                                                                  |
+| `F-01`…`F-04`, `F-07`                               | **Foundation only:** persistence schema/repositories/outbox and API/WASM seams exist; device SQLite, durable backend, identity, and client sync are not wired                                            | [54](../../plans/54-local-persistence-correctness.md), [58](../../plans/58-native-workspace-and-device-ci.md), [59](../../plans/59-device-persistence-and-resume.md), [66](../../plans/66-backend-contract-data-and-security.md), [67](../../plans/67-anonymous-auth-and-account-lifecycle.md), [68](../../plans/68-sync-and-offline-convergence.md) |
+| `F-05`, `F-06`, `F-08`, `F-09`                      | **Partial foundation:** design tokens and an English/`es-ES` content convention exist; runtime themes, localization harness, and native minimum-OS proof do not                                          | [57](../../plans/57-runtime-design-system.md), [58](../../plans/58-native-workspace-and-device-ci.md), [71](../../plans/71-settings-telemetry-and-experiments.md), [72](../../plans/72-release-quality-gates.md)                                                                                                                                     |
+| `P5-01`…`P5-13`, `N-01`…`N-04`                      | **Not built:** trip, Survival, widgets, Live Activity, and notification surfaces have no app routes or native targets                                                                                    | [69](../../plans/69-trip-domain-and-arc.md), [70](../../plans/70-survival-widgets-and-notifications.md); trip semantics are blocked on [Q-07](../decisions/open-questions.md#q-07)                                                                                                                                                                   |
+| `P3-30`…`P3-40`, `P3A-*`, `P3B-*`, `P3C-*`, `P3D-*` | **Not built as learner surfaces:** core/provider seams are inputs, not completed screens                                                                                                                 | [75](../../plans/75-review-and-memory.md), [76](../../plans/76-roleplay-and-live-ai.md), and evidence-gated [77](../../plans/77-dsp-and-speech-labs.md)                                                                                                                                                                                              |
+| `LC-01`…`LC-15`                                     | **Not built and conditional:** compatible ladder data may be retained, but Run/Phrasebook UI waits for comparative evidence                                                                              | [78](../../plans/78-conditional-run-and-phrasebook.md), blocked on [Q-05](../decisions/open-questions.md#q-05) and M3 data                                                                                                                                                                                                                           |
+| v1.1 navigation + chat artifacts                    | **Authored but not yet registered here:** `Navigation.dc.html`, `Design System.dc.html`, and the two `Loro Chat.dc.html` screens are not implemented routes or stable requirements yet                   | [79](../../plans/79-v1-1-design-contract.md) defines the `NAV-*`/`P3E-*` contract before [80](../../plans/80-dev-design-system-workbench.md)–[83](../../plans/83-open-chat-and-message-inspector.md) implement it                                                                                                                                    |
+
+When code lands, update this ledger in the same change. Do not mark a range complete unless every
+row in that range has acceptance evidence; narrow partial ranges instead.
 
 ---
 
@@ -29,6 +57,8 @@ five phases plus cross-cutting concerns.
 | F-09 | Minimum OS: iOS 16, Android 10 (API 29)                                         | v1   | [qa-device-matrix.md](../process/qa-device-matrix.md)                           |
 
 ---
+
+<a id="phase-1--onboard"></a>
 
 ## Phase 1 — Onboard
 
@@ -148,19 +178,19 @@ All practice surfaces implement one `PracticeEngine` contract:
 
 ### Review session — spaced repetition (`P3-30…P3-40`)
 
-| ID    | Requirement                                                                                                                                     | Rel  | Source            |
-| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ---- | ----------------- |
-| P3-30 | Recall → reveal → grade, one card at a time                                                                                                     | v1.1 | `759–801`         |
-| P3-31 | Four grades: **Again** (<5 min) · **Difficult** (~10 min) · **Good** (1 d / 3 d / 1 wk by reps) · **Easy** (5 d)                                | v1.1 | `2790–2795`       |
-| P3-32 | Grades write back to difficulty and reps; 4× Easy at reps ≥3 marks the phrase learned                                                           | v1.1 | `2759`            |
-| P3-33 | **Tag-driven focus banner**: Pronunciation → say it out loud; Hard to remember → use the hook; Very useful → worth nailing; else → plain recall | v1.1 | `2769–2774`       |
-| P3-34 | Pronunciation-tagged cards prompt "Say this in Spanish" and auto-play audio on reveal                                                           | v1.1 | `2802–2806`       |
-| P3-35 | Hard-to-remember cards surface the memory hook on reveal                                                                                        | v1.1 | `776–778`, `2786` |
-| P3-36 | Card chrome shows theme and current difficulty                                                                                                  | v1.1 | `766–767`         |
-| P3-37 | Deck ordering by `reps + (hard: −5 · easy: +3)` ascending                                                                                       | v1.1 | `2749–2750`       |
-| P3-38 | Session complete: count reviewed, % recalled well, streak, next due                                                                             | v1.1 | `804–816`         |
-| P3-39 | Progress bar and `n / total` counter                                                                                                            | v1.1 | `753–757`         |
-| P3-40 | "Review again" restarts with a freshly built deck                                                                                               | v1.1 | `2767`            |
+| ID    | Requirement                                                                                                                                              | Rel  | Source            |
+| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- | ----------------- |
+| P3-30 | Recall → reveal → grade, one card at a time                                                                                                              | v1.1 | `759–801`         |
+| P3-31 | Four grades: **Again** · **Difficult** · **Good** · **Easy**; the displayed intervals come from the real FSRS result, never the prototype's fixed labels | v1.1 | `2790–2795`       |
+| P3-32 | Grades write back to difficulty and reps; 4× Easy at reps ≥3 marks the phrase learned                                                                    | v1.1 | `2759`            |
+| P3-33 | **Tag-driven focus banner**: Pronunciation → say it out loud; Hard to remember → use the hook; Very useful → worth nailing; else → plain recall          | v1.1 | `2769–2774`       |
+| P3-34 | Pronunciation-tagged cards prompt "Say this in Spanish" and auto-play audio on reveal                                                                    | v1.1 | `2802–2806`       |
+| P3-35 | Hard-to-remember cards surface the memory hook on reveal                                                                                                 | v1.1 | `776–778`, `2786` |
+| P3-36 | Card chrome shows theme and current difficulty                                                                                                           | v1.1 | `766–767`         |
+| P3-37 | Deck ordering by `reps + (hard: −5 · easy: +3)` ascending                                                                                                | v1.1 | `2749–2750`       |
+| P3-38 | Session complete: count reviewed, % recalled well, streak, next due                                                                                      | v1.1 | `804–816`         |
+| P3-39 | Progress bar and `n / total` counter                                                                                                                     | v1.1 | `753–757`         |
+| P3-40 | "Review again" restarts with a freshly built deck                                                                                                        | v1.1 | `2767`            |
 
 ---
 
@@ -215,22 +245,22 @@ All practice surfaces implement one `PracticeEngine` contract:
 > _The prompt strips its cues as you improve — text → meaning → cold — and that "level up" is the
 > reward._ `Loro.dc.html:1294`
 
-| ID     | Requirement                                                                                                       | Rel  | Source                   |
-| ------ | ----------------------------------------------------------------------------------------------------------------- | ---- | ------------------------ |
-| P3D-01 | **Cue ladder** with four levels: Listen & repeat → From text → From meaning (5 s timer) → Cold recall (3 s timer) | v1.1 | `3142–3147`              |
-| P3D-02 | Cue level rises when a take scores ≥88; the level-up is celebrated _as a removal of help_                         | v1.1 | `3184`, `1254–1258`      |
-| P3D-03 | Prompt content is cue-dependent: full text · meaning only · nothing                                               | v1.1 | `1146–1168`, `3266`      |
-| P3D-04 | Model audio is offered **only** at cue level 0                                                                    | v1.1 | `3267`                   |
-| P3D-05 | Maturity bar showing progress through the cue ladder                                                              | v1.1 | `1133–1141`, `3264`      |
-| P3D-06 | **Pitch contour** — your F0 traced against a native's, with off-target points marked                              | v1.1 | `1191–1211`, `3218–3220` |
-| P3D-07 | **Trace** playback: a synchronised cursor across both contours                                                    | v1.1 | `1202–1206`, `3221–3229` |
-| P3D-08 | **Rhythm & stress** — per-syllable stress and duration bars, yours vs native                                      | v1.1 | `1212–1226`, `3242–3245` |
-| P3D-09 | **Three skill axes** per phrase: Perception · Recall · Production, each advancing differently                     | v1.1 | `1171–1183`, `3180–3182` |
-| P3D-10 | Melody score with a delta against your previous take ("+7 clearer than last time")                                | v1.1 | `1230–1245`, `3278–3279` |
-| P3D-11 | Sparkline of the last 6 takes                                                                                     | v1.1 | `1246–1251`, `3253`      |
-| P3D-12 | **"Hear myself, perfectly"** — your own voice saying it correctly (voice conversion)                              | v2   | `1264`, `3201–3206`      |
-| P3D-13 | Targeted remediation offer when a take is weak                                                                    | v1.1 | `1267–1273`              |
-| P3D-14 | 🔒 **Promise:** "Private — your audio stays on your device" — displayed, therefore binding                        | v1.1 | `1281`                   |
+| ID     | Requirement                                                                                                                                         | Rel  | Source                   |
+| ------ | --------------------------------------------------------------------------------------------------------------------------------------------------- | ---- | ------------------------ |
+| P3D-01 | **Cue ladder** with four levels: Listen & repeat → From text → From meaning (5 s timer) → Cold recall (3 s timer)                                   | v1.1 | `3142–3147`              |
+| P3D-02 | Cue level rises when a take scores ≥88; the level-up is celebrated _as a removal of help_                                                           | v1.1 | `3184`, `1254–1258`      |
+| P3D-03 | Prompt content is cue-dependent: full text · meaning only · nothing                                                                                 | v1.1 | `1146–1168`, `3266`      |
+| P3D-04 | Model audio is offered **only** at cue level 0                                                                                                      | v1.1 | `3267`                   |
+| P3D-05 | Maturity bar showing progress through the cue ladder                                                                                                | v1.1 | `1133–1141`, `3264`      |
+| P3D-06 | **Pitch contour** — your F0 traced against a native's, with off-target points marked                                                                | v1.1 | `1191–1211`, `3218–3220` |
+| P3D-07 | **Trace** playback: a synchronised cursor across both contours                                                                                      | v1.1 | `1202–1206`, `3221–3229` |
+| P3D-08 | **Rhythm & stress** — per-syllable stress and duration bars, yours vs native                                                                        | v1.1 | `1212–1226`, `3242–3245` |
+| P3D-09 | **Three skill axes** per phrase: Perception · Recall · Production, each advancing differently                                                       | v1.1 | `1171–1183`, `3180–3182` |
+| P3D-10 | Melody score with a delta against your previous take ("+7 clearer than last time")                                                                  | v1.1 | `1230–1245`, `3278–3279` |
+| P3D-11 | Sparkline of the last 6 takes                                                                                                                       | v1.1 | `1246–1251`, `3253`      |
+| P3D-12 | **Excluded as authored:** "Hear myself, perfectly" cannot upload a learner recording; reconsider only if a truthful on-device implementation exists | —    | `1264`, `3201–3206`      |
+| P3D-13 | Targeted remediation offer when a take is weak                                                                                                      | v1.1 | `1267–1273`              |
+| P3D-14 | 🔒 **Promise:** "Private — your audio stays on your device" — displayed, therefore binding                                                          | v1.1 | `1281`                   |
 
 ---
 
@@ -345,14 +375,14 @@ All practice surfaces implement one `PracticeEngine` contract:
 | ----- | ------------------------------------------------------------------------------------------- | ---- | -------------------------------------------------------------------- |
 | AS-01 | Native-quality Spanish TTS for every phrase, cached on device                               | v1   | Pre-rendered per phrase; on-device TTS fallback                      |
 | AS-02 | Variable playback rate (0.6× – 1.5×) preserving pitch                                       | v1   |                                                                      |
-| AS-03 | On-device ASR for Spanish, with a cloud fallback the user can decline                       | v1   | [ADR-0005](../architecture/adr/0005-on-device-asr-cloud-fallback.md) |
+| AS-03 | On-device ASR for Spanish, with reveal mode when recognition is unavailable                 | v1   | [ADR-0005](../architecture/adr/0005-on-device-asr-cloud-fallback.md) |
 | AS-04 | Background audio, lock screen transport, ducking, and interruption recovery                 | v1   | [audio-speech.md](../architecture/audio-speech.md)                   |
 | AS-05 | Pitch (F0) extraction and contour comparison on-device                                      | v1.1 | [prosody-dsp.md](../architecture/prosody-dsp.md)                     |
 | AS-06 | Forced alignment of the learner's audio to the expected syllables                           | v1.1 |                                                                      |
 | AI-01 | LLM roleplay scene generation and coach notes                                               | v1.1 | [ai-services.md](../architecture/ai-services.md)                     |
 | AI-02 | LLM-assisted phrase enrichment (respelling, gloss, example, hook) at content-authoring time | v1   | Offline pipeline, human-reviewed                                     |
 | AI-03 | Translation and normalisation for imported and captured lines                               | v1.1 |                                                                      |
-| AI-04 | Voice conversion for "hear myself, perfectly"                                               | v2   | Requires explicit opt-in                                             |
+| AI-04 | Reserved; no implementation may upload recorded learner audio                               | —    | P3D-12 remains excluded unless a real on-device design exists        |
 | AI-05 | All AI output on learner-visible paths is cached, rate-limited, and has a bundled fallback  | v1.1 |                                                                      |
 
 ## Cross-cutting: notifications

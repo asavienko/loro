@@ -1,171 +1,134 @@
 # Definition of ready / done
 
-Gates at three levels: an issue, a PR, a release.
+These gates distinguish evidence available today from gates that activate as native, persistent and
+deployed surfaces are added.
 
 ---
 
-## Definition of ready — before work starts
+## Definition of ready
 
-- [ ] **Requirement IDs** from [`../product/prd.md`](../product/prd.md)
-- [ ] **Blueprint reference** (line range from `Loro.dc.html`), or an explicit note that this is new
-      design
-- [ ] **Acceptance criteria**, testable, written as observable behaviour
-- [ ] **Edge cases listed** — usually already in
-      [`../product/functional-spec.md`](../product/functional-spec.md)
-- [ ] **Design tokens and components identified**, or flagged as new (which means designer
-      involvement)
-- [ ] **Open questions resolved**, or explicitly deferred with a stated assumption
-- [ ] **Sized** — if it's more than two days, it's split
+- [ ] Requirement ID from [`../product/prd.md`](../product/prd.md)
+- [ ] Blueprint line range, or an explicit new-design decision
+- [ ] Observable acceptance criteria and edge/error/empty states
+- [ ] Affected layer and test level identified
+- [ ] Learner-visible states mapped to `apps/mobile/e2e/states.ts`
+- [ ] Native, persistence, sync and offline implications stated
+- [ ] Open questions resolved or a bounded assumption recorded
+- [ ] Work split into coherent, independently green commits
 
-An issue that isn't ready doesn't get picked up. Making it ready is fifteen minutes; discovering it
-wasn't is half a day.
+## Definition of done — every PR
 
----
+- [ ] Acceptance criteria are demonstrably met
+- [ ] `pnpm check` passes with Node 22 and Cargo on `PATH`
+- [ ] Tests changed at the owning layer; learner-visible changes also pass `pnpm test:e2e`
+- [ ] New learner-visible states have a `states.ts` row and a functional-spec citation
+- [ ] Import/asset/routing/build changes pass `pnpm test:e2e:bundle`
+- [ ] The relevant package builds; mobile changes pass `pnpm --filter @loro/mobile bundle`
+- [ ] Generated tokens/bindings are regenerated and committed when their sources change
+- [ ] The three non-negotiables hold: no recorded-audio egress, no fake learner numbers, no
+      missed-day shame
+- [ ] Expected failures are usable UI states; empty and offline behaviour are handled or explicitly
+      marked not applicable
+- [ ] Docs and current-state limitations are updated in the same change
+- [ ] Requirement ID is present in branch, commits and PR; review is approved
 
-## Definition of done — a PR
+`pnpm check` is necessary but not sufficient: CI separately checks formatting/commit messages,
+browser E2E, a production-export smoke run, build/readiness, generated drift and benchmarks.
 
-### Always
+### Screen or component
 
-- [ ] `pnpm check` passes locally and in CI
-- [ ] Acceptance criteria met, demonstrably
-- [ ] **The three non-negotiables asserted** (no audio egress · no fake numbers · no shame copy)
-- [ ] Tests at the right level ([testing-strategy.md](testing-strategy.md))
-- [ ] Errors handled per [`../architecture/mobile-app.md`](../architecture/mobile-app.md#errors) —
-      expected states are UI states, not errors
-- [ ] Empty state handled
-- [ ] Offline behaviour correct, or explicitly N/A
-- [ ] No new performance-budget regression
-- [ ] Docs updated if behaviour changed
-- [ ] Reviewed and approved
+- [ ] Compared with every relevant blueprint state
+- [ ] Copy comes from `src/lib/copy.ts`; tokens only, including the correct accessible colour token
+- [ ] Press, keyboard and reduced-motion behaviour are covered where applicable
+- [ ] Spanish nodes carry the source accessibility language property; charts have visible summaries
+- [ ] Accessibility and text scale pass through the shared E2E state manifest
+- [ ] Browser limitations are not presented as native accessibility evidence
+- [ ] Visual/animated changes include review evidence (recording where motion matters)
 
-### If it's a screen or a component — the design-fidelity gate
+### Practice engine or progress write
 
-- [ ] **Compared against the blueprint side by side**, on a device
-- [ ] Every `sc-if` state implemented, including empty and error
-- [ ] Toast and label copy verbatim where the blueprint has copy
-- [ ] Tokens only, no colour literals; correct variant (`accentInk` for text)
-- [ ] Press feedback on every interactive element
-- [ ] Animations match [`../design/motion.md`](../design/motion.md), reduced-motion variant works
-- [ ] `lang="es-ES"` on every Spanish text node
-- [ ] Charts have a visible text summary
-- [ ] Dynamic Type at 200% doesn't break layout
-- [ ] Screen-reader pass: labels, values, actions, one focusable element per row
-- [ ] Screen recording in the PR for anything animated
+- [ ] Shared engine conformance passes, including determinism and termination
+- [ ] Selection/sequencing and empty-session behaviour are tested
+- [ ] Outcomes are expressed as `ProgressDelta` and written only through `applyDelta`
+- [ ] Every computable progress signal is maintained; latency is measured or `null`
+- [ ] Persistence/resume is required once durable session storage is introduced
 
-### If it's an engine
+### Persistence or sync
 
-- [ ] **Passes the conformance suite**
-      ([`../architecture/practice-engines.md`](../architecture/practice-engines.md#conformance))
-- [ ] Selection and sequencing rules unit-tested
-- [ ] `plan()` is read-only; determinism with an injected clock and seed
-- [ ] Maintains **every** progress signal it can compute, including undisplayed ones
-- [ ] Session state persisted, so an interruption resumes rather than restarts
+- [ ] Repository contract runs against every affected driver
+- [ ] Every syncable field has a declared class in `fieldPolicy.ts`
+- [ ] Merge idempotency/precedence are tested in Rust and through API WASM as applicable
+- [ ] Transaction rollback and outbox behaviour are tested
+- [ ] A new device driver adds migration, cold-hydration and force-quit/resume tests
+- [ ] Auth/server persistence adds two-device, overlapping sign-in merge, tenant-isolation and
+      long-offline replay tests before it can be called complete
 
-### If it touches sync
+### Rust core or learner-facing maths
 
-- [ ] Every new field has a **declared merge class** in `fieldPolicy.ts`
-- [ ] Merge commutativity and idempotency tested
-- [ ] Two-device scenario tested
-- [ ] Reviewed by **both** tech lead and backend
+- [ ] Rust unit tests and `tests/parity.rs` pass
+- [ ] Criterion is run for a performance-sensitive change and the result is reviewed
+- [ ] No ambient clock, unseeded randomness or I/O enters deterministic maths
+- [ ] If DSP scores ship, real-recording golden tests and a documented stability threshold exist
+- [ ] If review intervals ship, real FSRS `review()` passes reference fixtures, boundary/property
+      tests, and native/WASM/TS parity; prototype fixed labels never appear as computed results
+- [ ] “Cross-language parity” is claimed only after generated Swift, Kotlin and WASM outputs are
+      actually executed against the same fixtures
 
-### If it touches `loro-core`
+### Native, audio, speech or widget work
 
-- [ ] Golden tests pass, or a diff is **explained in the PR** — never re-baselined silently
-- [ ] Criterion benchmarks show no >10% regression
-- [ ] Cross-language parity test passes (Swift, Kotlin, WASM agree)
-- [ ] No `Date.now()`, no unseeded RNG, no I/O
+- [ ] Contract and lifecycle tests exist, plus device flows on iOS and Android
+- [ ] Permission denied, interruption, route change, background and cleanup are covered
+- [ ] PCM remains in native memory and is passed to Rust by handle; buffers are released
+- [ ] Device-farm/real-device evidence is wired before removing the corresponding documented gap
 
-### If it touches audio or the native modules
+### Content or analytics
 
-- [ ] Tested on a **real device**, both platforms
-- [ ] Interruption cases checked (call, route change, background)
-- [ ] No PCM crosses into JS
-- [ ] Buffer released after use
+- [ ] Content passes `pnpm content:validate`, native Spanish review, and human listening for changed
+      audio
+- [ ] New analytics events are documented in [`../product/metrics.md`](../product/metrics.md), use
+      allowlisted properties, and contain no PII, free text or audio derivative
 
-### If it's content
+## Definition of done — current pre-native milestone
 
-- [ ] `content:validate` passes (schema, pack counts, references, audio)
-- [ ] **Reviewed by a native Spanish speaker**
-- [ ] Audio rendered and **listened to by a human**
-- [ ] Meets the ten-point quality bar
-      ([`../product/content-model.md`](../product/content-model.md#quality-bar-for-a-catalog-phrase))
+The repository is not yet releasable to an app store. A milestone may be called complete only when:
 
-### If it adds an analytics event
+- [ ] all required CI jobs that contain real commands are green;
+- [ ] no required workflow step for that milestone is a `TODO`/echo scaffold;
+- [ ] all implemented routes and states pass the full web E2E and production smoke suites;
+- [ ] limitations in onboarding, testing and CI docs match the code;
+- [ ] state-manifest `spec` references match the canonical functional-spec sections;
+- [ ] deferred native/persistence acceptance gates are named, owned and planned rather than marked
+      passed.
 
-- [ ] Documented in [`../product/metrics.md`](../product/metrics.md) **in the same PR**
-- [ ] Properties allowlisted
-- [ ] No free text, no audio derivative, no PII
+<a id="manual-gates--the-release-checklist"></a>
 
----
+## Definition of done — first native release and later
 
-## Definition of done — a release
+These gates activate when the relevant implementation exists. They cannot be waived by a green web
+suite:
 
-### Automated gates (CI blocks the build)
+- [ ] real device E2E on both platforms, including offline cold launch and force-quit resume
+- [ ] audio interruption, microphone denial/fallback and background-session matrix
+- [ ] VoiceOver and TalkBack pass on changed screens
+- [ ] startup, bundle, data, frame-rate, battery and thermal budgets are measured on the device
+      floor
+- [ ] previous-schema migration and overlapping-library sign-in merge lose no data
+- [ ] widget/Live Activity lifecycle is checked if shipped
+- [ ] built artifacts are secret-scanned and deployment/store workflows contain no placeholder steps
+- [ ] store privacy disclosures, release notes, rollback plan and guardrail monitoring are ready
 
-- [ ] All checks green on the release branch
-- [ ] Performance budgets: startup, `core-rs`, data layer, bundle size
-- [ ] Accessibility: contrast (all four accents), `lang` attribution, tap targets, Dynamic Type
-      snapshots, chart summaries
-- [ ] E2E suite green on both platforms
-- [ ] No secrets in the built artifact (scanned)
-- [ ] Content validation green
-
-### Manual gates — the release checklist
-
-Run on the device floor ([qa-device-matrix.md](qa-device-matrix.md)).
-
-- [ ] **The airplane-mode test:** airplane mode, force-quit, relaunch, survival mode fully usable in
-      under 2 s ([`../architecture/offline.md`](../architecture/offline.md#the-acceptance-test))
-- [ ] **The warming card holds 60 fps** through a full 500 ms transition, on the device floor
-- [ ] **Audio interruption matrix** — call, Siri, route change, headphones out, background, lock
-- [ ] 40-minute background stream soak: no leak, no drop, lock screen stays in sync
-- [ ] Mic denied → reveal mode works on every speaking screen
-- [ ] Screen-reader pass on every changed screen (VoiceOver + TalkBack)
-- [ ] Battery: stream ≤ 4%/h screen-off; refrain ≤ 12%/h screen-on
-- [ ] No thermal throttling in a 30-minute session
-- [ ] Widget and Live Activity states, including offline playback from the lock screen
-- [ ] **Copy audit:** every new string checked against the forbidden list
-      ([`../design/copy-and-tone.md`](../design/copy-and-tone.md#what-we-never-write))
-- [ ] Migration from the previous released schema, with a 2 000-phrase fixture
-- [ ] Sign-in merge with overlapping libraries — nothing lost
-
-### Product gates
-
-- [ ] Requirement IDs for the milestone closed, or explicitly deferred with a note
-- [ ] Store metadata, screenshots, and privacy disclosures updated
-      ([`../architecture/security-privacy.md`](../architecture/security-privacy.md#gdpr--regulatory-duties))
-- [ ] Release notes written for humans
-- [ ] Rollback plan confirmed (OTA revert, or the previous binary)
-- [ ] Guardrail metrics instrumented and reading
-- [ ] On-call knows the release is going out
-
-### Milestone-specific gates
-
-| Milestone       | Extra gate                                                                                                                                                               |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **M2 (v1)**     | The trip test — ≥5 real people set a 12-day trip, travel, and report readiness                                                                                           |
-| **M3 (labs)**   | **Native-speaker agreement ≥80% on 20 recorded takes.** If it fails, the labs don't ship ([`../architecture/prosody-dsp.md`](../architecture/prosody-dsp.md#validation)) |
-| **M4**          | Load test passes at 10× projected peak                                                                                                                                   |
-| **M5 (Loop C)** | Rung ≥2 correlates with 30-day retention                                                                                                                                 |
-
----
+For pronunciation/prosody, native-speaker agreement and the real-recording golden suite block the
+feature, not merely the release.
 
 ## Not done
 
-Things that look done and aren't:
-
-| Looks done             | Actually needs                                                              |
-| ---------------------- | --------------------------------------------------------------------------- |
-| "The screen renders"   | Every state, including empty, error, and long content                       |
-| "It works on my phone" | The device floor, both platforms                                            |
-| "The animation plays"  | 60 fps on the device floor, plus a reduced-motion variant                   |
-| "Audio plays"          | Interruptions, route changes, backgrounding                                 |
-| "The score appears"    | Validated against a native speaker, and stable across takes                 |
-| "Sync works"           | Two devices, a partition, and reconvergence                                 |
-| "It's behind a flag"   | The flag resolving offline, and the off path tested                         |
-| "Tests pass"           | Tests that would fail if the behaviour broke                                |
-| "The copy is in"       | Checked against the forbidden list, and screen-reader-read                  |
-| "The latency shows"    | **Measured**, with `null` handled and the read-out hidden when unmeasurable |
-
-That last row is the one that matters most. A plausible-looking number that isn't real is worse than
-no number, because nobody will ever question it.
+| Claim                          | Missing evidence                                                                   |
+| ------------------------------ | ---------------------------------------------------------------------------------- |
+| “The screen renders”           | Every learner-visible state, empty/error/long content and the state-manifest gates |
+| “The app compiles”             | The Metro/Hermes bundle and representative production-export flows                 |
+| “Offline first works”          | On-device persistence, airplane-mode cold launch and force-quit resume             |
+| “Sync works”                   | Two devices, a partition and reconvergence; overlapping sign-in data               |
+| “Audio works”                  | Real-device permissions, interruptions, backgrounding and cleanup                  |
+| “The score is real”            | Real signal processing, recording goldens and native-speaker validation            |
+| “Cross-platform parity passes” | Executing Swift, Kotlin and WASM outputs, not only one Rust fixture test           |
+| “CI deploys/releases it”       | All workflow placeholders replaced and credentials/environments exercised          |

@@ -61,8 +61,8 @@ grammatical scaffolding and written exams. Both are well served elsewhere.
   surfaces are phrase mastery, the automaticity meter, and the ladder distribution — all of which
   reflect ability, not attendance. Nothing in Loro punishes a missed day; the roguelike loop states
   it outright: _"Nothing lost — you only climb or hold."_ (`Loro.dc.html:1690`)
-- **Not surveillance.** Recorded audio is scored on-device and discarded by default. The prosody
-  screen prints this promise to the user (`Loro.dc.html:1281`), so it constrains the architecture.
+- **Not surveillance.** Recorded audio is scored on-device and always discarded. The prosody screen
+  prints this promise to the user (`Loro.dc.html:1281`), so it constrains the architecture.
 
 ## The three product bets
 

@@ -84,6 +84,8 @@ Full budgets: [`architecture/performance.md`](../architecture/performance.md).
 
 ---
 
+<a id="guardrails"></a>
+
 ## Guardrails — metrics that must NOT improve at the expense of others
 
 These exist because the product has explicit anti-goals ([vision.md](vision.md#what-loro-is-not)).

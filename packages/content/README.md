@@ -1,81 +1,101 @@
 # @loro/content
 
-The Spanish catalog. Authored here, validated in CI, and **shipped independently of the app** — a
-phrase fix reaches every learner within a day, no release
-([ADR-0009](../../docs/architecture/adr/0009-content-pipeline-and-packs.md)).
+The bundled Spanish catalog: phrases, scenarios, packs, and countdown drop schedules. The package is
+usable by Metro, Node, and the browser and is validated in CI.
+
+The long-term delivery model is independent content releases
+([ADR-0009](../../docs/architecture/adr/0009-content-pipeline-and-packs.md)). **That publisher does
+not exist yet.** Today the app and API consume the JSON snapshot bundled with this workspace, so a
+catalog change still ships with code.
 
 Process: [content-authoring.md](../../docs/process/content-authoring.md) · Model:
 [content-model.md](../../docs/product/content-model.md)
 
-## Layout
+## Current inventory
 
-```
+Catalog version 1 currently contains:
+
+- 31 `es-ES` phrases, 5 ordered scenarios, 12 packs, and 4 drop schedules (3, 7, 12, and 20 days);
+- 10 phrases with respellings, 1 with word glosses, and 2 with examples;
+- no rendered audio, syllable timing, or native F0 references yet;
+- 3 empty draft packs (`local`, `pharmacy`, and `nightlife`).
+
+The regular validator passes with 48 authoring warnings: 31 missing-audio warnings, 12 pack backlog
+warnings, and 5 schedules that currently reference draft packs. `--strict` intentionally turns those
+warnings into a failure.
+
+## Layout and runtime entry points
+
+```text
 es-ES/
-├── phrases.json     # the catalog — 31 seed phrases, launch target ~600
-├── scenarios.json   # 5 cross-theme bundles; the ORDER is the arc of the interaction
-├── packs.json       # onboarding + trip packs, each with a promised count
-└── drops.json       # trip drop schedules by trip length
+├── phrases.json       # catalogVersion + the 31 phrase records
+├── scenarios.json     # ordered phrase arcs; order is meaningful
+├── packs.json         # visible promisedCount vs non-visible targetCount
+└── drops.json         # schedules and the shared drop rules
 schema/
-└── phrase.schema.json
+└── phrase.schema.json # JSON Schema for an individual phrase
 src/
-├── validate.ts      # every mechanical check
-├── enrich.ts        # LLM drafts resp/words/example/hint — a human edits every field
-├── render.ts        # TTS + f0/syllable/mfcc extraction
-└── publish.ts       # bump catalogVersion, publish the manifest
+├── catalog.ts         # JSON imports; the cross-platform bundled snapshot
+├── fs.ts              # Node-only disk loader for authoring tools
+├── types.ts           # Catalog, phrase, pack, scenario, and drop types
+├── checks.ts          # pure validation checks
+├── validate.ts        # validation CLI
+└── index.ts           # public loadCatalog() and bundledCatalog exports
 ```
 
-## Status
+Import `loadCatalog` or `bundledCatalog` from `@loro/content` in cross-platform code. The package
+only bundles `es-ES`; `loadCatalog()` rejects any other language rather than silently returning
+Spanish. Import `@loro/content/fs` only from Node authoring code—Metro has no filesystem.
 
-The seed catalog is extracted verbatim from the blueprint (`Loro.dc.html:2179-2211` and
-`2885-2899`). **Most rows still need `resp`, `words`, `example`, `syl`, `f0_native`, and `audio`** —
-those come from the enrich and render pipeline, and every field is human-reviewed before merge.
+## Commands that work today
 
-The under-populated packs in `packs.json` are deliberate and visible: their `promisedCount` is the
-target, and `validate:packs` **fails** until membership matches. A pack that promises 8 phrases and
-delivers 4 would be lying to the learner, and CI is what stops that shipping.
-
-## Commands
+Use Node 22.
 
 ```bash
-pnpm content:validate                        # everything
-pnpm --filter @loro/content validate:packs   # one check
-pnpm content:enrich --ids cafe1,cafe2        # LLM drafts; you edit
-pnpm content:render --ids cafe1              # TTS + reference extraction
-pnpm content:publish                         # bump catalogVersion
+pnpm content:validate
+pnpm --filter @loro/content validate --strict
+pnpm --filter @loro/content validate --only packs,refs,drops
+pnpm --filter @loro/content test
 ```
 
-## What validation catches
+The package manifest reserves `enrich`, `render`, and `publish`, but their source files are not
+implemented. Consequently `pnpm content:enrich`, `pnpm content:render`, and `pnpm content:publish`
+currently fail and must not be documented or automated as working steps. The content workflow has
+explicit TODO jobs for rendering and publication.
 
-| Check           | Fails when                                                          |
-| --------------- | ------------------------------------------------------------------- |
-| Schema          | A field is missing or the wrong type                                |
-| **Pack counts** | Membership ≠ `promisedCount`. _The count in the label is a promise_ |
-| References      | A pack, scenario, or drop names a phrase that doesn't exist         |
-| Audio           | A phrase has no audio, or a checksum doesn't resolve                |
-| Prosody         | Syllable spans don't cover the phrase; `f0_native` isn't 14 points  |
-| Duplicates      | Two phrases share the same `es` in one language                     |
-| Stress          | `resp` CAPS placement disagrees with `resp_ipa`                     |
-| Length          | An A1/A2 phrase exceeds 8 words — it must be learnable in 6 reps    |
+## What validation actually enforces
 
-## The two immutability rules
+| Check                     | Current behaviour                                                                                              |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `schema`                  | Validates every phrase against `schema/phrase.schema.json`                                                     |
+| `packs`                   | Errors when `promisedCount` or visible `sub` differs from membership; warns below `targetCount` and for drafts |
+| `refs`                    | Resolves phrase references from packs/scenarios, pack references from drops, and `deprecated_by`               |
+| `audio`                   | Warns when audio is absent; errors on malformed SHA-256 values                                                 |
+| `prosody`                 | Requires 14 F0 points when present and valid stress/duration values for syllables                              |
+| `duplicates`              | Rejects duplicate ids and duplicate case-insensitive Spanish text                                              |
+| `stress`                  | Requires a respelling, when present, to mark at least one stressed syllable in capitals                        |
+| `length`                  | Caps A1/A2 phrases at eight whitespace-delimited words                                                         |
+| `theme`, `emoji`, `words` | Enforces the shared theme set, one grapheme emoji, and spoken forms for punctuated word fragments              |
+| `scenarios`               | Warns outside the 4–6 phrase guideline                                                                         |
+| `drops`, `draftDrops`     | Requires a review-only final day and unique days; warns when a schedule deals a draft pack                     |
 
-1. **Phrase ids are immutable.** Fixing a typo mutates the row. Changing the _meaning_ creates a new
-   id and marks the old one `deprecated_by`.
-2. **Deprecated phrases stay resolvable forever.** A learner who has practised a phrase 40 times
-   must never see a broken row.
+Audio absence and incomplete authoring targets are warnings during early catalog construction, not
+errors. Run with `--strict` when assessing release readiness.
 
-## The quality bar
+## Extending the catalog safely
 
-Ten points, all of which must hold
-([full list](../../docs/product/content-model.md#quality-bar-for-a-catalog-phrase)). The two that
-are hardest to hold to:
+1. Add or edit source JSON in `es-ES/`; never generate a second in-app catalog.
+2. Keep phrase ids immutable. A changed meaning gets a new id; the old row remains resolvable and
+   points to its replacement with `deprecated_by`.
+3. Update every pack/scenario/drop reference in the same change. Scenario order is the interaction
+   arc, not a set.
+4. Make `promisedCount` and `sub` describe membership that exists now. Use `targetCount` for the
+   authoring goal; use `draft: true` only for an empty, non-onboarding pack.
+5. Add or update validation tests for a new field or invariant, then run validation and package
+   tests. A type alone is not runtime validation: the JSON Schema currently covers phrase rows,
+   while the other files are protected by the checks and TypeScript snapshot assembly.
+6. Obtain native `es-ES` review. Audio, once rendering exists, also needs a human listening pass.
 
-- **"A real person would say this, in this situation, in this century."** No textbook Spanish.
-  `Me pone un café` ✅ · `Quisiera un café` ❌
-- **"It doesn't duplicate an existing phrase's function."** Two ways to say "the bill, please" is
-  one phrase too many for someone with five slots a day. A growing catalog accumulates
-  near-duplicates naturally, and each one dilutes a learner's daily set.
-
-Every phrase needs a **native `es-ES` reviewer** (CODEOWNERS enforces it) and every audio clip needs
-a human to listen to it. A phrase whose audio is wrong is worse than no phrase — the audio _is_ the
-pronunciation model, and a learner will faithfully reproduce whatever they hear.
+Every new cross-platform consumer should read the bundled snapshot through this package. When the
+independent publisher is implemented, preserve that snapshot as the offline install fallback and add
+versioned/diff delivery around it rather than replacing it.

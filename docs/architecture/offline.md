@@ -1,237 +1,141 @@
 # Offline behaviour
 
-The most important non-functional requirement in the product. A learner in a taxi rank in Madrid
-with no data plan is the person Loro was built for.
+Offline-first is the product contract, not the current implementation state.
 
----
+## Current state
+
+The implemented learner screens can run in the Expo web target without the API because their catalog
+and store state are in the JavaScript bundle/process. That is useful development behaviour, but it
+is not durable offline support:
+
+- the live Zustand store is in memory and is not hydrated from SQLite;
+- no on-device SQLite driver or native composition root exists;
+- no mobile sync client drains the outbox or applies pulls;
+- audio playback, recording, ASR, DSP integration, widgets, prefetch and cache management are not
+  implemented;
+- the API's sync repository is in memory and loses rows on restart.
+
+Consequently the cold-launch airplane-mode acceptance test below does **not** pass today. Browser
+E2E coverage protects the implemented web states; it must not be cited as evidence for native
+offline audio, microphone, durability or sync.
+
+The persistence foundation does exist: `packages/core/src/persistence/` contains a driver-agnostic
+SQLite schema, repositories and outbox tested against real SQLite. It becomes product behaviour only
+after the app store writes through it, hydrates from it on launch, and a device driver exists.
 
 ## The acceptance test
 
-> **Airplane mode. Force-quit the app. Relaunch. Survival mode must be fully usable in under two
-> seconds — every phrase playable, every screen navigable, no error, no spinner.**
+> In airplane mode, force-quit and relaunch the native app. Implemented daily practice and survival
+> content must be usable from durable local state without a network error or sync spinner; every
+> promised audio asset must play from disk.
 
-This is a release gate for v1 ([`product/roadmap.md`](../product/roadmap.md#m2--v1--7-weeks)), run
-on the device floor, on a fresh launch with a cold cache warm-up path.
+Measure the launch budget on the device floor once the native runtime exists. Do not mark the gate
+green with web storage, a warm JavaScript process or mocked network responses.
 
----
+<a id="2--there-is-no-offline-mode"></a>
 
-## What works offline
+## Offline contract for new work
 
-| Feature                         | Offline     | Notes                                                              |
-| ------------------------------- | ----------- | ------------------------------------------------------------------ |
-| Onboarding, all six steps       | ✅          | Starter packs are bundled in the binary                            |
-| Add phrases — Discover, Browse  | ✅          | Full local catalog                                                 |
-| Add phrases — Import (paste)    | ✅          | Parsing is local; translation deferred                             |
-| Add your own                    | ✅          | Device TTS for audio                                               |
-| Capture (photograph a sign)     | ✅          | On-device OCR; translation deferred                                |
-| Rate, tag, love, mark learned   | ✅          | Writes locally, syncs later                                        |
-| Phrase detail — everything      | ✅          | Word-by-word uses device TTS                                       |
-| Adaptive stream                 | ✅          | Cached audio; the queue is local                                   |
-| The Refrain, all 6 modes        | ✅          | On-device ASR                                                      |
-| Speak to progress               | ✅          | On-device ASR, or reveal mode                                      |
-| Review session                  | ✅          | FSRS runs locally                                                  |
-| Memory model / curve            | ✅          | Curve maths is local                                               |
-| Pronunciation lab               | ✅          | On-device DSP; needs the pack's `mfcc_ref` prefetched              |
-| Prosody lab                     | ✅          | Same                                                               |
-| The Run                         | ✅          |                                                                    |
-| Progress, Phrasebook            | ✅          |                                                                    |
-| Trip countdown, drops, widget   | ✅          | Drops prefetched at trip creation                                  |
-| **Survival mode**               | ✅          | **The whole point**                                                |
-| Souvenir                        | ✅          |                                                                    |
-| Roleplay                        | ⚠️ Degraded | Bundled scenes ([ai-services.md](ai-services.md#bundled-fallback)) |
-| Translation of imports/captures | ⚠️ Deferred | Queued; the phrase is usable untranslated                          |
-| "Hear myself, perfectly" (v2)   | ❌          | Requires the server                                                |
-| Sign-in, sync, purchase         | ❌          | Queued or blocked, with honest copy                                |
+### Local writes finish locally
 
-**Two things are genuinely unavailable offline**, and neither is in the daily loop.
+A learner action may wait for its SQLite transaction, because durable local storage is the action.
+It must not wait for HTTP, authentication refresh, analytics or asset upload. For a syncable change,
+the row update and outbox append commit in the same transaction.
 
----
+The current repositories and outbox can participate in one transaction, but they do not couple the
+two calls and are not wired to the app. The mobile integration must provide a single mutation seam
+so a screen cannot accidentally update one without the other.
 
-## What "offline-first" means concretely
+### Local state renders the UI
 
-### 1 · No write ever waits on the network
+Screens render from the local store/database. Network responses may update local state and trigger a
+normal re-render; they are never a required read-through cache for practice. There is no separate
+“offline mode” for local features and no practice-screen banner implying that practice is degraded.
 
-```ts
-async function rateDifficulty(id: PhraseId, d: Difficulty): Promise<void> {
-  await db.transaction(async (tx) => {
-    await tx.update(userPhrase).set({ difficulty: d /* hlc… */ }).where(eq(userPhrase.id, id))
-    await tx.insert(outbox).values({ entity: 'user_phrase', entityId: id, op: 'upsert' /* … */ })
-  })
-  // Returns here. Sync happens whenever it happens.
-  syncService.scheduleFlush() // fire and forget
-}
-```
+The blueprint's `✈ OFFLINE` survival indicator is reassurance about a fully available local deck,
+not evidence that the current app implements that deck.
 
-There is no code path in the app where a learner action awaits an HTTP response. Sync is a
-background process draining a queue ([sync-protocol.md](sync-protocol.md)).
+### Server-only work degrades honestly
 
-### 2 · There is no "offline mode"
+Sign-in, purchase verification, sync and genuinely server-only generation may be unavailable. The UI
+must distinguish “queued”, “not downloaded” and “requires connection”; it must not display a fake
+success or a fabricated score. Imported/captured content can become usable locally only when its
+local parsing/capture implementation actually exists.
 
-The app doesn't switch modes. It behaves identically; only _sync_ and the two server-dependent
-features notice. Concretely:
+Recorded audio never enters a deferred upload queue. Cloud ASR and every other recorded-audio upload
+are prohibited by the learner-facing promise and ADR-0011; consent is not an exception.
 
-- No offline banner on practice screens. A banner implies degradation, and there isn't any.
-- No greyed-out buttons on features that work.
-- No retry prompts for things that will retry themselves.
-- The `✈ OFFLINE` indicator in survival mode (`Loro.dc.html:2017`) is **informational reassurance**,
-  not a warning: it tells the learner the deck they're holding works.
+## Target capability matrix
 
-### 3 · Local state is authoritative
+This is a delivery checklist, not a claim about current behaviour.
 
-The device's SQLite is the source of truth ([data-model.md](data-model.md)). The server holds a copy
-for other devices. No screen renders from a network response.
+| Capability                         | Required offline result                               | Current implementation                                       |
+| ---------------------------------- | ----------------------------------------------------- | ------------------------------------------------------------ |
+| Implemented text screens/catalog   | Navigate and read bundled content                     | Web process only; not restart-durable                        |
+| Learner state and progress         | Persist across force-quit and device restart          | SQLite library exists; app wiring missing                    |
+| Review scheduling                  | Plan and record locally from authoritative core maths | Engines exist; durable write path missing                    |
+| Audio for owned/daily/trip phrases | Play verified local assets                            | Missing native audio/cache/prefetch                          |
+| Speech/ASR/pronunciation/prosody   | Use on-device modules and real measurements           | Missing native modules                                       |
+| Sync                               | Queue locally and converge later                      | Outbox and server endpoints exist separately; client missing |
+| Trips/widgets/notifications        | Derive from durable local calendar state              | Not implemented                                              |
+| Live AI/translation/purchase       | Degrade or defer with honest copy                     | Server-side pieces are partial or absent                     |
 
----
+A feature may be documented as offline only after its asset/data dependencies, cold-launch path and
+failure behaviour are implemented and tested.
 
-## Prefetch policy
+## Target asset policy
 
-Everything needed is on disk before it's needed. That requires deciding what "needed" means.
+When media support lands, assets required for the next practice surface must be on disk before the
+surface promises availability. The intended priority order is:
 
-| Content                                                                         | When fetched                                  | Priority   |
-| ------------------------------------------------------------------------------- | --------------------------------------------- | ---------- |
-| **Bundled snapshot** — 6 starter packs, ~50 phrases + audio, 24 roleplay scenes | In the app binary                             | —          |
-| Catalog metadata (all phrases, no audio)                                        | First launch, then on version change          | High       |
-| Audio for owned phrases                                                         | On add                                        | High       |
-| Audio for today's Refrain set                                                   | On day rollover                               | **Pinned** |
-| Audio for the stream queue (next 20)                                            | Rolling, as the queue advances                | **Pinned** |
-| **The entire trip set + audio**                                                 | At trip creation, before the countdown starts | **Pinned** |
-| `mfcc_ref` for lab-enabled packs                                                | On first lab open, per pack                   | Medium     |
-| Roleplay scenes for the learner's top 3 themes                                  | Opportunistically on wifi                     | Low        |
-| Audio for suggested-but-not-added phrases                                       | Never                                         | —          |
+1. bundled starter/survival content;
+2. owned phrases and today's frozen Refrain set;
+3. the active practice queue and complete trip set;
+4. optional lab references and suggestions.
 
-**Pinned content is never LRU-evicted.** Today's set, the stream queue, and the trip set are exempt
-from the 150 MB cache cap and are reported separately in Settings, so a learner can see why the app
-is using space.
-
-### Prefetch conditions
-
-| Condition                | Behaviour                                                                                            |
-| ------------------------ | ---------------------------------------------------------------------------------------------------- |
-| Wifi + charging          | Full prefetch, including low-priority                                                                |
-| Wifi                     | High + medium priority                                                                               |
-| Cellular                 | High priority only, and only if the file is < 200 KB                                                 |
-| Cellular + Low Data Mode | Nothing; deferred                                                                                    |
-| Battery < 15%            | Nothing; deferred                                                                                    |
-| Trip within 3 days       | **Trip set prefetch is forced**, on any connection, and reported to the learner if it can't complete |
-
-That last row exists because discovering a missing audio file in a taxi rank is the failure this
-document exists to prevent. Trip prefetch completeness is **verified** (every `sha256` present on
-disk, right size), and if it can't complete the learner is told before departure — not after.
-
----
-
-## The deferred-work queue
-
-Work that needs a network but must not block anything:
-
-| Deferred work                          | Trigger                               | Retry                               |
-| -------------------------------------- | ------------------------------------- | ----------------------------------- |
-| Sync push/pull                         | Connectivity, foreground, session end | Backoff to 5 min                    |
-| Translation of imported/captured lines | Connectivity                          | 3 attempts, then leave untranslated |
-| Server TTS render for a learner phrase | Connectivity + wifi                   | 3 attempts, then keep device TTS    |
-| Analytics flush                        | Connectivity                          | Retained 7 days / 5 000 events      |
-| Roleplay scene prefetch                | Wifi + idle                           | Best effort                         |
-| Receipt re-verification                | Connectivity                          | Daily, with a grace period          |
-
-Deferred work is **invisible**. An untranslated imported phrase shows the Spanish and an empty
-English field the learner can fill in — not an error, not a badge, not a queue screen.
-
----
-
-## Degradation ladder
-
-Every server-dependent feature has a defined ladder, and each rung is a real experience.
-
-### Roleplay
-
-```
-1. Live generated scene, tailored to theme + level + tags
-2. Cached scene from a previous session (Redis-backed on the server, SQLite locally)
-3. Bundled scene for the theme          ← offline lands here, and it's a good scene
-4. Suggest a different practice surface  ← only if the theme has no bundled scene
-```
+Pinned daily/trip/active-queue assets must not be evicted by ordinary LRU cleanup. Every cached
+asset is content-addressed or otherwise integrity-checked; a metadata row without a usable file does
+not count as prefetched. Exact caps and cellular thresholds should be set from measured native
+behaviour when the cache exists, rather than preserved as unevidenced constants in architecture
+documentation.
 
 ### ASR
 
-```
-1. On-device recogniser
-2. Prompt to download the language pack (deep link to settings)
-3. Cloud ASR — only with explicit prior consent
-4. REVEAL MODE — a first-class experience, per the blueprint
-```
-
-### Audio for a phrase
-
-```
-1. Cached rendered clip (content-addressed, verified by hash)
-2. Fetch from CDN
-3. On-device TTS
-4. Text-only, with the phonetic respelling shown more prominently
-```
-
-Rung 4 exists for a genuinely broken device with no TTS voice installed. The respelling
-(`meh PO-neh oon kor-TAH-doh por fah-VOR`) is why the field is worth authoring for every phrase.
-
-### Translation
-
-```
-1. Cached / catalog translation
-2. Server translation
-3. Untranslated, with an inline "add the meaning" affordance
-```
-
----
+The target degradation order is on-device recognition, an honest language-pack/download affordance,
+then reveal mode. There is no cloud ASR fallback because recorded audio never leaves the device.
 
 ## Detecting connectivity
 
-**Reachability is not connectivity.** A hotel captive portal reports a connection and returns HTML
-for every request; a foreign SIM reports cellular data and drops packets.
+Connectivity affects scheduling, never correctness. A future connectivity service must combine OS
+reachability with an API probe, treat captive portals as offline, and react to transitions rather
+than poll continuously. Unknown connectivity may attempt a request; failure leaves durable work
+queued.
 
-```ts
-type Connectivity =
-  | { state: 'unknown' }
-  | { state: 'offline' }
-  | { state: 'metered'; lowDataMode: boolean }
-  | { state: 'unmetered' }
-  | { state: 'captive' } // reachable, but a probe failed
-```
+The sync queue retries with bounded, jittered backoff and is never truncated to recover from an
+error. Other deferred queues (translation, TTS, analytics, receipts) must have independent retention
+and consent rules; they must not share the sync outbox by convenience.
 
-- The OS network state gives the _type_; a lightweight probe against `/health` confirms the
-  _reality_.
-- The probe runs on transition only, never on a timer.
-- `captive` is treated exactly like `offline` for all purposes.
-- **Optimistic by default:** on `unknown` we attempt the request. Being wrong costs one failed
-  request; being pessimistic costs a learner their sync.
+## Extension invariants
 
----
+1. **No network on a learner mutation path.** Persist locally, then schedule background work.
+2. **No false offline claim.** A route is offline-capable only after cold restart with its required
+   data/assets on disk.
+3. **No fake fallback.** Latency and scores are measured or absent; missing media degrades to honest
+   text/phonetics, never simulated success.
+4. **No recorded-audio upload.** PCM stays in native memory and is released after local processing.
+5. **No cache dependency for learner state.** Evicting reproducible media may be safe; learner
+   progress, outbox rows and authored phrases are not cache entries.
+6. **No partial durable mutation.** State and outbox commit together; disk-full failure leaves both
+   unchanged and is reported honestly.
+7. **No new native feature without offline tests.** Add cold-launch, airplane-mode, interrupted
+   write and missing-asset coverage with the feature.
+8. **No shaming through scheduling.** Offline notification/widget logic still follows the missed-day
+   tone invariant.
 
-## Storage management
+## Verification required before v1
 
-| Concern                   | Handling                                                                                                     |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| Cache cap                 | 150 MB, LRU, pinned content exempt                                                                           |
-| Device nearly full        | Stop prefetch; keep pinned; warn once if the trip set cannot be completed                                    |
-| Settings visibility       | "Storage" shows cache size, pinned size, and a clear-cache action (pinned content is re-fetched, never lost) |
-| Write failure (disk full) | The transaction fails, the UI reports honestly, and no partial state is committed                            |
-
-A learner whose disk is full is a real case — phones abroad fill up with photos — and the failure
-must be legible rather than a mysterious crash.
-
----
-
-## Testing
-
-| Test                          | Method                                                                            |
-| ----------------------------- | --------------------------------------------------------------------------------- |
-| **The acceptance test**       | Manual, scripted, on the device floor, every release                              |
-| Airplane-mode E2E             | Maestro flow with the network disabled: onboard → add → practise → review         |
-| Captive portal                | A proxy that returns HTML for every request                                       |
-| Flaky network                 | 30% packet loss, 2 s latency — sync must converge, UI must never block            |
-| 30-day offline                | Simulated clock advance, then sync; assert convergence and no data loss           |
-| Trip prefetch completeness    | Create a trip, go offline, assert every trip audio file is present and hash-valid |
-| Cache eviction under pressure | Force a 20 MB cap; assert pinned content survives                                 |
-| Disk full                     | Fill the volume; assert honest failure and no corruption                          |
-| Cold start offline            | Time to interactive with no network, cold cache, on the device floor              |
-
-The flaky-network test is the one that catches the subtle bugs. Total offline is easy to handle
-correctly; 30% packet loss is where retry storms, duplicated pushes, and stuck queues appear.
+Native tests must cover cold launch in airplane mode, process death after local commit, process
+death between attempted state/outbox operations, long offline replay, flaky/captive networks, disk
+full, cache eviction under pressure, corrupt/missing media, trip completeness and sync
+reconvergence. Until those tests exist, this document describes the contract and the remaining
+integration work, not a shipped capability.

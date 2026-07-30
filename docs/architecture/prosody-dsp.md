@@ -12,6 +12,40 @@ Loro.
 
 ---
 
+## Implementation boundary (current repository)
+
+The pipeline below is a gated target, not a working scorer. `packages/core-rs/src/dsp/` is
+explicitly a skeleton:
+
+- implemented and unit-tested today: F0 normalisation, median filtering, score bands, Pearson
+  correlation, off-target point selection, skill-axis advancement, cue-level rules, and feedback
+  priority/template selection;
+- declared but still `todo!()`: pitch extraction, DTW alignment, melody scoring, and the end-to-end
+  `score_take` pipeline;
+- absent today: preprocessing and MFCC extraction, the native capture-to-core buffer bridge, a
+  content render pipeline producing `mfcc_ref`, the validation harness/corpus, and
+  `packages/core-rs/tests/golden/`;
+- absent from the app: the Prosody and Pronunciation learner screens and any code that records or
+  displays a real take.
+
+Consequently, the constants and formulas already present are contracts under test, not validated
+claims of acoustic accuracy. None of them may be used to synthesize a score from the current web UI
+or from fixture state.
+
+### Prerequisites for enabling either lab
+
+First land the opaque native PCM-handle path described in [audio-speech.md](audio-speech.md), then
+implement preprocessing, feature extraction, rejection, alignment, and scoring behind a Rust API
+that cannot return a score for an invalid take. The content toolchain must produce reviewed native
+audio and full-resolution reference features with checksums; the current optional 14-point
+`f0_native` field is only a display artifact and cannot substitute for scoring data.
+
+The M1 study must run before product integration chooses this scoring design. The full pipeline then
+has to pass the M3 gates and device-floor budgets below before a route can show any acoustic number.
+Validation audio needs a separately governed, consented study workflow and must never be committed
+as learner product data or admitted to telemetry. If the gates fail, ship the documented reduced
+experience or no lab—not plausible-looking fixture output.
+
 ## What the labs claim
 
 | Screen                | Claims to the learner                                                                                                                                                   |
@@ -70,6 +104,8 @@ that never leaves native memory.
 
 ---
 
+<a id="1--pre-processing"></a>
+
 ## 1 · Pre-processing
 
 | Step         | Setting                                  | Why                                                                                                                                                                    |
@@ -122,6 +158,8 @@ distance, never displayed.
 RMS per frame, dB-scaled, used for stress and for onset detection.
 
 ---
+
+<a id="3--forced-alignment"></a>
 
 ## 3 · Forced alignment
 
@@ -218,6 +256,8 @@ without cues is what trains recall. Production tracks the actual score. Percepti
 mere exposure.
 
 ---
+
+<a id="5--feedback-selection"></a>
 
 ## 5 · Feedback selection
 

@@ -75,7 +75,7 @@ export const STATES: AppState[] = [
   {
     name: 'onboarding · welcome',
     route: '/onboarding',
-    spec: '§2 First run',
+    spec: '§1 Onboarding',
     firstRun: true,
     reach: async (page) => {
       await page.goto('/onboarding')
@@ -85,7 +85,7 @@ export const STATES: AppState[] = [
   {
     name: 'onboarding · packs step',
     route: '/onboarding',
-    spec: '§2 First run',
+    spec: '§1 Onboarding',
     firstRun: true,
     reach: async (page) => {
       await page.goto('/onboarding')
@@ -115,11 +115,11 @@ export const STATES: AppState[] = [
       await expect(page.getByRole('button', { name: /Hard to remember, 1 phrases/ })).toBeVisible()
     },
   },
-  { name: 'add · discover', route: '/add', spec: '§3 Add', reach: (page) => open(page, 'Add') },
+  { name: 'add · discover', route: '/add', spec: '§2 Add', reach: (page) => open(page, 'Add') },
   {
     name: 'add · browse grid',
     route: '/add',
-    spec: '§3 Add, browse',
+    spec: '§2 Add, browse',
     reach: async (page) => {
       await open(page, 'Add')
       await click(page, 'browse')
@@ -128,7 +128,7 @@ export const STATES: AppState[] = [
   {
     name: 'add · theme drilled',
     route: '/add',
-    spec: '§3 Add, browse',
+    spec: '§2 Add, browse',
     reach: async (page) => {
       await open(page, 'Add')
       await click(page, 'browse')
@@ -139,7 +139,7 @@ export const STATES: AppState[] = [
   {
     name: 'add · difficulty sheet',
     route: '/add',
-    spec: '§3 Add, tagging sheet',
+    spec: '§2 Add, tagging sheet',
     reach: async (page) => {
       await open(page, 'Add')
       await page.getByRole('button', { name: /¿Tienen una mesa para dos/ }).click()
@@ -153,7 +153,7 @@ export const STATES: AppState[] = [
   {
     name: 'add · no matches',
     route: '/add',
-    spec: '§3 Add, empty search',
+    spec: '§2 Add, empty search',
     reach: async (page) => {
       await open(page, 'Add')
       await page.getByRole('textbox', { name: 'Search phrases' }).fill('not in this catalog')
@@ -163,13 +163,13 @@ export const STATES: AppState[] = [
   {
     name: 'phrase detail',
     route: '/phrase/[id]',
-    spec: '§4 Phrase detail',
+    spec: '§3 Phrase detail',
     reach: (page) => openFirstPhrase(page),
   },
   {
     name: 'phrase detail · edited',
     route: '/phrase/[id]',
-    spec: '§4 Phrase detail, edits',
+    spec: '§3 Phrase detail, edits',
     reach: async (page) => {
       await openFirstPhrase(page)
       await page.getByRole('radio', { name: 'Difficult' }).click()
@@ -179,7 +179,7 @@ export const STATES: AppState[] = [
   {
     name: 'phrase detail · unknown id',
     route: '/phrase/[id]',
-    spec: '§4 Phrase detail, not found',
+    spec: '§3 Phrase detail, not found',
     // `firstRun` because this is the one state a fresh navigation is the honest way to
     // reach: a deep link to a row that does not exist. Onboarding first would be undone by
     // the navigation anyway.
@@ -192,13 +192,13 @@ export const STATES: AppState[] = [
   {
     name: 'stream · first phrase',
     route: '/practice/stream',
-    spec: '§12 Adaptive stream',
+    spec: '§4 Adaptive stream',
     reach: (page) => open(page, 'Stream'),
   },
   {
     name: 'stream · all learned',
     route: '/practice/stream',
-    spec: '§12 Adaptive stream, empty',
+    spec: '§4 Adaptive stream, empty',
     reach: async (page) => {
       await open(page, 'Stream')
       for (let i = 0; i < 10; i += 1) await click(page, 'Mark learned')
@@ -208,13 +208,13 @@ export const STATES: AppState[] = [
   {
     name: 'refrain · first rep',
     route: '/practice/refrain',
-    spec: '§13 The refrain',
+    spec: '§12 The refrain',
     reach: (page) => open(page, 'Start the wave →'),
   },
   {
     name: 'refrain · locked in',
     route: '/practice/refrain',
-    spec: '§13 The refrain, lock-in',
+    spec: '§12 The refrain, lock-in',
     reach: async (page) => {
       await open(page, 'Start the wave →')
       await lockIn(page)
@@ -223,7 +223,7 @@ export const STATES: AppState[] = [
   {
     name: 'refrain · set complete',
     route: '/practice/refrain',
-    spec: '§13 The refrain, completion',
+    spec: '§12 The refrain, completion',
     reach: async (page) => {
       await open(page, 'Start the wave →')
       for (let phrase = 0; phrase < 5; phrase += 1) {
@@ -236,7 +236,7 @@ export const STATES: AppState[] = [
   {
     name: 'refrain · tag drill',
     route: '/practice/refrain',
-    spec: '§13 The refrain, tag drill',
+    spec: '§12 The refrain, tag drill',
     reach: async (page) => {
       await openFirstPhrase(page)
       await page.getByRole('checkbox', { name: 'Hard to remember' }).click()

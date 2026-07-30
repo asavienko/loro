@@ -125,7 +125,7 @@ day for a month. A team that doesn't will ship something that looks right and fe
 
 ## Working with the blueprint
 
-`Language Learning by Phrases/Loro.dc.html` is the design source of truth
+`design/Language Learning by Phrases - V1.1/Loro.dc.html` is the design source of truth
 ([`../design/screen-catalog.md`](../design/screen-catalog.md)).
 
 - **Open it before implementing a screen.** It's interactive; the `renderVals()` of each logic class

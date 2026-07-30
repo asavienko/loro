@@ -41,6 +41,8 @@ notification scheduler and the widget, not just strings
 The roguelike loop states the principle outright (`Loro.dc.html:1690`), and it applies to every
 surface.
 
+<a id="2--name-the-specific-thing-to-change"></a>
+
 ### 2 · Name the specific thing to change
 
 The pronunciation lab's feedback is the model for all instructional copy: one concrete, physical
@@ -74,6 +76,8 @@ The prosody lab's cue ladder inverts the usual reward structure, and the copy ha
 > _"Leveled up — a cue just dropped"_ _"Next time you get less help. That's the point."_ — `1257`
 
 That second line is doing real work: without it, losing the model audio would read as a punishment.
+
+<a id="5--spanish-first-for-feeling-english-for-meaning"></a>
 
 ### 5 · Spanish first for feeling, English for meaning
 

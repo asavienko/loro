@@ -1,9 +1,43 @@
 # API contract
 
-`https://api.loro.app/v1` — REST over HTTPS, JSON. Request and response types are generated from Zod
-schemas in `packages/core/src/api/`, so the client and server cannot drift.
+Target production base: `https://api.loro.app/v1` — REST over HTTPS, JSON. Shared request and
+response Zod schemas in `packages/core/src/api/` are the intended authority; that package surface
+does not exist yet.
 
-**Conventions**
+> **Status (2026-07-30): target contract with a small implemented subset.** The deployed-shape
+> contract on this page is the destination, not a claim that every route or guard exists. The
+> current Nest service has the ten `/v1` routes in the table below. Its wire types are local
+> TypeScript interfaces plus partial explicit runtime checks; shared Zod API schemas, auth, request
+> headers, rate-limit middleware, Postgres, Redis, streaming, and external providers are not
+> implemented. Plan [66](../../plans/66-backend-contract-data-and-security.md) closes the
+> contract/data/security foundation before plans
+> [67](../../plans/67-anonymous-auth-and-account-lifecycle.md),
+> [68](../../plans/68-sync-and-offline-convergence.md), and
+> [76](../../plans/76-roleplay-and-live-ai.md) extend it.
+
+## Implemented surface
+
+| Method | `/v1` route             | Current behavior and important limitation                                         |
+| ------ | ----------------------- | --------------------------------------------------------------------------------- |
+| `GET`  | `/health`               | Liveness: `{status, version}`                                                     |
+| `GET`  | `/health/ready`         | Reports content ok and observes WASM merge; returns 503 when merge is unavailable |
+| `GET`  | `/content/manifest`     | Manifest built directly from the bundled `@loro/content` catalog                  |
+| `GET`  | `/content/diff`         | Empty when current; otherwise returns the whole current catalog, not history      |
+| `GET`  | `/content/pack?id=<id>` | Pack selected by query parameter; there is no `/pack/:id` route                   |
+| `POST` | `/sync/push`            | Validates entity/field policy and merges through Rust/WASM into process memory    |
+| `POST` | `/sync/pull`            | Returns every row; `since` and `limit` are currently ignored                      |
+| `POST` | `/sync/status`          | Diagnostic merge availability and in-memory row count                             |
+| `POST` | `/ai/scene`             | Bundled/provider scene, validated; JSON only                                      |
+| `GET`  | `/ai/themes`            | Bundled theme names plus configured provider name                                 |
+
+No implemented endpoint authenticates a caller, scopes a row to a learner, accepts audio, charges an
+entitlement, ingests analytics, or invokes a live AI/TTS provider. Until plans 66–68 land, the sync
+routes are a development harness and must not be exposed as a multi-user service.
+
+## Target transport conventions
+
+These conventions become mandatory as the owning route groups land. They are not enforced by the
+current app.
 
 |             |                                                                                       |
 | ----------- | ------------------------------------------------------------------------------------- |
@@ -43,10 +77,11 @@ schemas in `packages/core/src/api/`, so the client and server cannot drift.
 | `VALIDATION_FAILED`    | 422    | Dead-letter the op locally and report — never retry blindly |
 | `PROVIDER_UNAVAILABLE` | 503    | Bundled fallback                                            |
 | `INTERNAL`             | 500    | Backoff                                                     |
+| `NOT_FOUND`            | 404    | Log; a missing known route is a client/server contract bug  |
 
 ---
 
-## Auth
+## Auth — target, not implemented
 
 ### `POST /auth/apple` · `POST /auth/google`
 
@@ -94,6 +129,38 @@ For upgrading an anonymous device _after_ sign-in (rare — normally folded into
 ## Sync
 
 Protocol semantics: [sync-protocol.md](sync-protocol.md).
+
+### Current sync contract and safety boundary
+
+The current request field HLC is an object, not the target string shown below:
+
+```jsonc
+{
+  "ops": [
+    {
+      "seq": 1042,
+      "entity": "user_phrase",
+      "entity_id": "0197…",
+      "op": "upsert",
+      "fields": {
+        "difficulty": {
+          "v": "hard",
+          "hlc": { "physical": 1721558400123, "logical": 7, "node_id": "d3f9a1" },
+        },
+      },
+    },
+  ],
+}
+```
+
+`push` caps batches at 500 operations, rejects unknown entities and fields without a declared merge
+class per operation, returns `accepted`, `rejected`, `conflicts`, `server_hlc`, and `server_time`,
+and requires the built WASM merge for accepted operations. The documented 512 KB limit is not yet
+enforced. `pull` accepts `since` and `limit` syntactically but ignores both, returns every row in
+the process-wide repository, and always reports `has_more: false`. Those are known development-only
+limitations, not permitted production semantics.
+
+The examples below describe the target user-scoped, cursor-paged protocol owned by plans 66–68.
 
 ### `POST /sync/push`
 
@@ -155,6 +222,18 @@ Limits: 500 ops or 512 KB per batch. Entities accepted: `user_phrase`, `trip`, `
 ---
 
 ## Content
+
+### Current content behavior
+
+Content is loaded once from `@loro/content`. `lang` defaults to `es-ES` and any other value returns
+`VALIDATION_FAILED`. The manifest reports real current counts and pack membership, but does not yet
+set `ETag` or `Cache-Control`. `diff` has no version history: `from >= catalog_version` returns no
+upserts; any older positive version returns every phrase; `from=0` additionally sets
+`full_resync_required: true`. Pack lookup is `GET /content/pack?id=<id>`, and its response is
+`{id, label, promised_count, phrases}`.
+
+The cache headers, checksums, historical diffs, object storage, and path-parameter pack route below
+are target behavior for the versioned content pipeline.
 
 ### `GET /content/manifest?lang=es-ES`
 
@@ -221,6 +300,17 @@ labs) live under `/ref/sha256/<hash>.bin` and are fetched only when the labs are
 ## AI
 
 Guardrails, prompts, and caching: [ai-services.md](ai-services.md).
+
+### Current scene behavior
+
+`POST /ai/scene` currently reads only optional `theme` (and accepts but does not use `level`). It
+returns JSON with `{scene_id, cached, fallback, scene}`. The registered `stub` provider serves the
+bundled Café/Hotel scenes. An unregistered `AI_PROVIDER` logs a warning and serves bundled content;
+provider output is validated before serving. There is no streaming, cache, rate limit, budget,
+repair pass, persistence, live provider, tag profile, phrase selection, trip adaptation, coach,
+translate, or enrich route yet. `GET /ai/themes` returns `{themes, provider}`.
+
+The richer request/streaming response and remaining AI endpoints below are target behavior.
 
 ### `POST /ai/scene` — roleplay
 
@@ -302,7 +392,9 @@ human-reviewed before merge ([`process/content-authoring.md`](../process/content
 
 ---
 
-## TTS
+<a id="tts"></a>
+
+## TTS — target, not implemented
 
 ### `POST /tts/render`
 
@@ -314,21 +406,15 @@ human-reviewed before merge ([`process/content-authoring.md`](../process/content
 
 Content-addressed by `(text, lang, voice)`, so a phrase a thousand learners typed is rendered once.
 
-### `POST /tts/voice-clone` — v2, consent-gated
-
-```jsonc
-// multipart: sample (audio/m4a) + text + lang
-// 402 if plan doesn't include it; 403 if voice_clone_consent is not recorded
-{ "uri": "signed-url", "expires_in": 300, "retained": false }
-```
-
-**The only endpoint in the entire API that accepts learner audio.** Requires `voice_clone_consent`,
-is per-use, and `retained: false` is a contract — the sample is processed and deleted within the
-request ([ADR-0011](adr/0011-analytics-and-privacy.md)).
+There is deliberately no voice-clone endpoint. Recorded learner audio never leaves the device, so a
+server route accepting a sample would violate [ADR-0011](adr/0011-analytics-and-privacy.md),
+regardless of consent or retention settings.
 
 ---
 
-## Billing
+<a id="billing"></a>
+
+## Billing — target, not implemented
 
 ### `POST /billing/verify`
 
@@ -345,7 +431,9 @@ important when they're abroad.
 
 ---
 
-## Account
+<a id="account"></a>
+
+## Account — target, not implemented
 
 ### `GET /account/export`
 
@@ -368,7 +456,7 @@ Hard delete, cascading, verified by a follow-up job.
 
 ---
 
-## Analytics
+## Analytics — target, not implemented
 
 ### `POST /analytics/batch`
 
@@ -400,12 +488,21 @@ stored — that's what keeps the taxonomy real.
 
 ## Health
 
-`GET /health` → `200 {"status":"ok"}` (liveness) · `GET /health/ready` → dependency checks
-(readiness, gates the blue-green cutover).
+Current liveness is `GET /health` → `200 {"status":"ok","version":"…"}`. Current readiness is
+`GET /health/ready`: `checks.content` is `ok`, `checks.merge` reflects actual WASM availability, and
+the response is 503 with `status: "degraded"` when merge is unavailable. Postgres, Redis, object
+storage, and providers are absent and therefore are not readiness checks yet.
 
 ---
 
-## Rate limits
+<a id="rate-limits"></a>
+
+## Target rate limits — declared, not enforced
+
+The values below exist as constants in `src/common/errors.ts`; no guard or middleware currently
+applies them and no rate-limit response headers are emitted. The source still contains an unused
+legacy `ttsVoiceClone` constant; it does not authorize a route that would violate the on-device
+audio rule and should disappear when rate limiting is implemented.
 
 | Endpoint group               | Per user            | Per IP      |
 | ---------------------------- | ------------------- | ----------- |
@@ -415,7 +512,6 @@ stored — that's what keeps the taxonomy real.
 | `/ai/scene`                  | 20 / hour, 60 / day | 200 / hour  |
 | `/ai/coach`, `/ai/translate` | 60 / hour           | 400 / hour  |
 | `/tts/render`                | 100 / day           | 500 / day   |
-| `/tts/voice-clone`           | 20 / day            | 60 / day    |
 | `/analytics/batch`           | 60 / min            | 600 / min   |
 
 Responses carry `X-RateLimit-Limit`, `-Remaining`, `-Reset`, and `Retry-After` on 429.

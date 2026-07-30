@@ -22,6 +22,11 @@ design system, and the trip arc. That agreement is the interface boundary.
 
 ## The contract
 
+The authoritative declaration is `packages/core/src/engines/types.ts`; the excerpt below describes
+the intended shape but should not be copied as a second definition. In the current contract,
+timestamps are epoch-millisecond `number`s, every item has an `itemId`, `EngineContext` also carries
+an injected deterministic `seed`, and `LoroCoreFacade` is the seam for Rust-owned maths.
+
 ```ts
 // packages/core/src/engines/types.ts
 
@@ -30,7 +35,8 @@ export type EngineId =
 
 /** A single unit of work an engine hands to the UI. */
 export interface PracticeItem {
-  readonly phraseId: PhraseId
+  readonly itemId: string
+  readonly phraseId: UserPhraseId
   /** Engine-specific presentation mode: 'echo' | 'cloze' | 'recall' | 'pressure-2' … */
   readonly mode: string
   /** What the learner sees as the prompt. */
@@ -67,7 +73,7 @@ export interface Attempt {
   readonly selfGrade?: 'again' | 'hard' | 'good' | 'easy'
   readonly confidence?: 'forgot' | 'shaky' | 'ok' | 'strong' | 'instant'
   readonly hintsUsed: number
-  readonly at: Timestamp
+  readonly at: number // epoch ms
 }
 
 export interface SessionPlan {
@@ -105,16 +111,16 @@ export interface PracticeEngine {
 
 ```ts
 export interface ProgressDelta {
-  readonly phraseId: PhraseId
+  readonly phraseId: UserPhraseId
 
   // Universal — every engine updates these.
   readonly reps?: number // increment
   readonly plays?: number
-  readonly lastPracticedAt?: Timestamp
-  readonly latencySampleMs?: number
+  readonly lastPracticedAt?: number
+  readonly latencySampleMs?: number | null
 
   // FSRS — maintained even by engines that never show an interval.
-  readonly srs?: { stability: number; difficulty: number; due: Timestamp }
+  readonly srs?: { stability: number; difficulty: number; due: number }
 
   // Loop B.
   readonly repsToday?: number
@@ -149,10 +155,11 @@ export interface ProgressDelta {
 export interface EngineContext {
   readonly phrases: PhraseRepository // read-only view
   readonly clock: Clock // injectable — no Date.now() in engines
-  readonly core: LoroCore // Rust: FSRS, rank, mode, scoring
+  readonly core: LoroCoreFacade // typed seam for Rust-owned maths
   readonly settings: PracticeSettings // daily minutes, set size, wave times
   readonly trip: TripContext | null // biases selection when a trip is active
   readonly flags: FlagReader
+  readonly seed: number // injected; no Math.random() in engines
 }
 ```
 
@@ -162,6 +169,22 @@ export interface EngineContext {
 ---
 
 ## The engines
+
+### Current implementation status
+
+| Engine ID       | Contract | Headless engine | Mobile route | Current limitation                                                                          |
+| --------------- | -------- | --------------- | ------------ | ------------------------------------------------------------------------------------------- |
+| `stream`        | Yes      | Implemented     | Implemented  | Audio is not native/background-capable; ranking reaches it through a TS facade fallback     |
+| `refrain`       | Yes      | Implemented     | Implemented  | No real audio/ASR; set selection, cloze, and FSRS still use interim TS/fabricated fallbacks |
+| `srs`           | Reserved | Not implemented | No           | Requires authoritative FSRS and durable due state                                           |
+| `prosody`       | Reserved | Not implemented | No           | Requires the evidence-gated DSP/native capture pipeline                                     |
+| `pronunciation` | Reserved | Not implemented | No           | Requires the evidence-gated DSP/native capture pipeline                                     |
+| `roleplay`      | Reserved | Not implemented | No           | Requires speech plus guarded live/offline AI behavior                                       |
+| `run`           | Reserved | Not implemented | No           | Conditional on loop evidence and durable ladder history                                     |
+
+The sections that follow specify target behavior for extension. Only Stream and Refrain describe
+classes that exist today. `EngineId` membership does not mean an engine, registry entry, screen, or
+native capability has shipped.
 
 ### StreamEngine · v1 · used by every loop
 
@@ -276,6 +299,9 @@ target(card)     = argmax need among phrases at card.sourceRung
 
 ## Engine resolution
 
+The following is target policy, not current code: `packages/core/src/engines/registry.ts` does not
+exist. Mobile currently constructs Stream and Refrain in `apps/mobile/src/store/engines.ts`.
+
 ```ts
 // src/engines/registry.ts
 function resolveEngine(ctx: ResolveContext): EngineId {
@@ -293,30 +319,34 @@ const defaultForGoal = (goal: Goal): EngineId =>
   })[goal]
 ```
 
-Every engine is flag-gated, so the mapping can change remotely without a release. ⚠️ Whether the
-loop is a setting or an assignment is **Q-06**
-([open-questions.md](../decisions/open-questions.md)); the code above implements the current lean —
-assign, allow override, log switches.
+The eventual resolver must respect the decision recorded for loop ownership and experiment policy;
+it must not be inferred by adding a registry. Plan 71 owns settings, flags, and the loop experiment,
+and Q-05 currently blocks the experiment.
 
 ---
 
 ## Conformance
 
-Every engine must pass a shared suite in `packages/core/src/engines/conformance.ts`, run against a
-seeded in-memory store. This is the mechanism that keeps rule 5 true.
+Every implemented engine passes a shared suite in `packages/core/src/engines/conformance.ts` against
+injected repositories and clocks. This is the mechanism that makes every progress signal an explicit
+`maintains` or `exempt` decision.
 
 | Test                      | Asserts                                                                       |
 | ------------------------- | ----------------------------------------------------------------------------- |
 | `plan()` is read-only     | No store mutation during planning                                             |
 | Determinism               | Same store + same clock + same seed → identical plan                          |
 | No ambient nondeterminism | `Date.now`/`Math.random` are stubbed to throw; the engine still works         |
-| **Universal signals**     | Any successful attempt yields `reps`, `lastPracticedAt`, and an FSRS update   |
+| **Signal manifest**       | Every `ProgressDelta` signal is classified; declarations agree with writes    |
+| **Universal signals**     | Successful production engines maintain their declared universal/FSRS writes   |
 | **Ladder maintenance**    | A successful attempt never _lowers_ `rung`                                    |
 | **Latency honesty**       | `latencyMs` is either a measured number or `null` — never a computed estimate |
 | Idempotent replay         | Recording the same attempt id twice yields the same final state               |
-| Interruption safety       | Killing the session after any `record()` leaves consistent state              |
 | Empty store               | `plan()` returns an empty plan and a usable empty state, not an error         |
 | Closed sessions terminate | `next()` eventually returns `null` for `closed: true` engines                 |
+
+The suite tests returned deltas, not durable application. It does not currently kill/relaunch a
+session, write through `applyDelta`, exercise SQLite, or validate Rust FSRS correctness. Those need
+store/persistence and boundary tests in the plan that adds the behavior.
 
 A new engine is not "done" until this suite passes
 ([`process/definition-of-done.md`](../process/definition-of-done.md)).
@@ -325,14 +355,18 @@ A new engine is not "done" until this suite passes
 
 ## Adding an engine
 
-1. `packages/core/src/engines/<id>/` — the implementation, pure TS, no platform imports.
-2. Register in `src/engines/registry.ts` behind a flag, default off.
-3. `src/features/<id>/` — the screen and its components.
-4. `app/practice/<id>.tsx` — the route.
-5. Extend `ProgressDelta` only if a genuinely new signal exists (and add it to the conformance
-   suite).
-6. Pass conformance. Add engine-specific tests for its selection and sequencing rules.
-7. Document it in this file and in [`product/practice-loops.md`](../product/practice-loops.md).
+1. Confirm the engine is in the active roadmap and its evidence/decision gates are satisfied.
+2. Add `packages/core/src/engines/<id>/` as pure headless TypeScript and export it from
+   `engines/index.ts`; there is no registry to edit today.
+3. Put reproducible maths in Rust, expose generated bindings, and implement the `LoroCoreFacade`
+   adapter. Never make a second TypeScript algorithm or fabricated fallback.
+4. Extend `ProgressDelta` only for a genuinely new stored signal; add it to `PROGRESS_SIGNALS`,
+   merge/apply semantics, sync field policy where applicable, and every engine's conformance
+   manifest.
+5. Pass conformance and engine-specific tests, then add the mobile route/composition, store wiring,
+   persistence/resume coverage, E2E state manifest row, and learner-visible E2E tests together.
+6. Document the implemented behavior here and in
+   [`product/practice-loops.md`](../product/practice-loops.md).
 
 If an engine needs a new _gate kind_, that's a signal it needs new evaluation machinery — a bigger
 change than adding an engine, and it should come with its own ADR.

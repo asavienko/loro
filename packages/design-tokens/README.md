@@ -1,89 +1,101 @@
 # @loro/design-tokens
 
-Design tokens extracted from `Language Learning by Phrases/Loro.dc.html`, and the generators that
-turn them into typed code for four targets.
+The machine-readable design token package. It turns reviewed JSON into generated TypeScript, Swift,
+and Kotlin and runs the palette's WCAG contrast gate.
 
 Rationale: [ADR-0013](../../docs/architecture/adr/0013-design-tokens-pipeline.md) · Reference:
 [design-system.md](../../docs/design/design-system.md)
 
-## Why this is a package and not a constants file
+## Sources and boundaries
 
-The blueprint's design system is real and consistent — it just expresses itself as **inline styles
-on 3,629 lines of HTML**. Two problems follow:
+The authored design artifacts live under `design/Language Learning by Phrases - V1.1/`: the
+21-screen `Loro.dc.html` blueprint, `Design System.dc.html`, `Navigation.dc.html`,
+`Loro Chat.dc.html`, CSS token files, 39 prototype components, screenshots, and a small web UI kit.
+They are references and executable prototypes, not runtime dependencies; do not edit them when
+implementing the app.
 
-1. **Drift.** Four accent themes × three variants × 21 screens is exactly where copy-paste diverges.
-   And the widgets are native (Swift/Kotlin), so a hand-maintained second copy would guarantee the
-   lock screen stops matching the app.
-2. **Contrast.** The palette is warm and low-contrast by design, and several tokens sit near the AA
-   boundary. `accent` Coral is 4.0:1 — fine for large text and UI, **not** for body text. The
-   blueprint respects this by using `accentInk` for text; nothing enforced it.
+The reviewed runtime source is `tokens/*.json`. If it disagrees with the blueprint, correct the JSON
+(and document an intentional accessibility deviation); do not patch generated output or the authored
+blueprint.
 
-## Layout
-
-```
+```text
 tokens/
-├── color.json      # surfaces, ink, lines, semantic families, the four ordered scales
-├── accent.json     # Coral · Sunset · Teal · Berry × {accent, accentInk, accentOnDark}
-├── type.json       # families, the scale, and the two typography rules
-├── layout.json     # space, gutters, radius, shadow, sizes
-└── motion.json     # 11 animations, 3 easings, press feedback, audio timing
+├── color.json      # surfaces, ink, lines, semantics, scales, dark ink, gradients
+├── accent.json     # four accent themes and their derived tint inputs
+├── type.json       # families, type scale, and typography rules
+├── layout.json     # spacing, gutters, radii, shadows, and common sizes
+└── motion.json     # easing, animation/transition, press, audio, and touch tokens
 src/
-├── generate.ts     # → out/
+├── tokens.ts       # loads and validates the JSON shape
+├── generate.ts     # emits all three generated files
+├── contrast.ts     # contrast maths
 └── checkContrast.ts
-out/                # GENERATED — committed and drift-checked. Never hand-edit
-├── tokens.ts       # for the app
-├── Tokens.swift    # for the iOS widget target
-└── Tokens.kt       # for the Glance widget
+out/                # GENERATED, committed, and drift-checked
+├── tokens.ts       # React Native / TypeScript
+├── Tokens.swift    # future iOS widget/native consumers
+└── Tokens.kt       # future Android widget/native consumers
 ```
+
+Swift and Kotlin output exists so future native targets can share the palette, but there are no
+native projects or widgets in the repository today.
 
 ## Commands
 
+Use Node 22.
+
 ```bash
-pnpm tokens:build                             # regenerate out/
-pnpm --filter @loro/design-tokens check:contrast   # the CI gate
+pnpm tokens:build
+pnpm --filter @loro/design-tokens test
+pnpm --filter @loro/design-tokens check:contrast
 ```
 
-CI regenerates and **fails if `out/` differs from the commit**, so a hand-edited generated file
-cannot merge.
+CI regenerates `out/` and fails if it differs from the commit. Never hand-edit generated files. The
+current contrast gate checks 122 real pairings across all four accent themes; all pass WCAG 2.2 AA.
+It also reports the one live size constraint: text on `warming.peak` must be at least 17 px
+semibold.
 
-## The naming rule
+## What the generated API contains
 
-```jsonc
-"accent":       "#bf5722"   // fills, borders, >=17px semibold text ON the accent — 4.0:1
-"accentInk":    "#a2461a"   // TEXT on light surfaces — 5.6:1
-"accentOnDark": "#e8a06a"   // text and marks on dark cards
+`out/tokens.ts` exports `surface`, `ink`, `line`, `semantic`, `scale`, `onDark`, `gradient`,
+`accents`, `defaultAccent`, `space`, `gutter`, `radius`, `shadow`, `size`, `typography`, and
+`motion`, plus accent and token-name types and `accentTheme()`.
+
+The most important colour naming rule is:
+
+```text
+accent       fills, borders, and large semibold text on the fill
+accentInk    accent-coloured body text on a light surface
+accentOnDark text and marks on dark surfaces
+wash/tint    soft selected backgrounds paired with accentInk
 ```
 
-A developer reaching for a text colour finds `accentInk`. **The name is the rule**, which works
-better than a comment nobody reads — and the contrast gate catches it if they get it wrong anyway.
+The app currently resolves Coral once in `apps/mobile/src/ui/theme.ts`. The other themes are
+generated and contrast-tested but are not learner-selectable yet.
 
-## The contrast gate
+## Package tokens versus component tokens
 
-`checkContrast.ts` computes contrast for every foreground/background pair used in the codebase,
-**for all four accent themes**, and fails the build on:
+This package owns cross-platform values extracted from the design: palette, type, space, radius,
+motion, and reusable sizes. Exact component geometry that has no shared design-scale name lives in
+`apps/mobile/src/ui/tokens/` (for example a 1.5 px selected border or an 11 px row padding). This
+keeps exact blueprint measurements without pretending every number is a global token.
 
-| Rule                                     | Threshold              |
-| ---------------------------------------- | ---------------------- |
-| Body text (< 17 px, or < 14 px semibold) | 4.5:1                  |
-| Large text and UI components             | 3:1                    |
-| `accent` used as body text               | **forbidden outright** |
-| `muted2` below 14 px semibold            | **forbidden outright** |
+Shadows and gradients are emitted as CSS strings. React Native has no mapping for them yet, so the
+current mobile `DarkCard` is a flat `surface.dark` card and `Card` has no elevation prop. Add a
+reviewed token-to-native mapping before claiming those effects are implemented.
 
-A new accent theme that fails is adjusted before it ships, not after an audit. For a deliberately
-warm, low-contrast palette, this is the difference between "accessible at launch" and "accessible in
-eighteen months".
+## Extending safely
 
-## Motion tokens carry their own reduced-motion behaviour
+1. Find the authored value and usage in the blueprint/design-system artifacts.
+2. Add the smallest semantic token to the relevant JSON file, with its usage and source note. Do not
+   add a token for a value used at one call site; keep that value local. Repeated component-only
+   geometry belongs in `apps/mobile/src/ui/tokens/`.
+3. Update `src/tokens.ts` validation and every emitter when the JSON shape changes. A field present
+   in JSON but absent from an emitter is not cross-platform.
+4. Add generator/contrast tests for the new contract, run the three commands above, and inspect the
+   Swift and Kotlin diff as well as TypeScript.
+5. Commit source JSON and regenerated `out/` together. Use `accentInk` for text and add every new
+   foreground/background pairing to the contrast gate.
 
-Each animation declares `reducedMotion` (`crossfade` · `instant` · `static` · `keep` · `keepColour`
-· `scrubber`), so a new component inherits the correct behaviour rather than needing to remember it.
-
-Note `warmingCard.reducedMotion: "keepColour"` — the Refrain card's colour change is _information_,
-so it survives Reduce Motion. Only the glow animation drops.
-
-## Adding a token
-
-1. Edit the relevant `tokens/*.json`, with a `use` note and a blueprint line reference.
-2. `pnpm tokens:build`
-3. `pnpm --filter @loro/design-tokens check:contrast`
-4. Commit both the source and `out/`.
+Reduced-motion metadata is already present on animation tokens, but most animations are not wired
+into React Native yet. A new animated component must implement the declared reduced-motion outcome;
+having a token alone does not provide behaviour.

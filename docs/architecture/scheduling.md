@@ -1,8 +1,24 @@
 # Scheduling
 
-Every "when does this come back?" and "what's next?" decision in the product. All of it lives in
-`loro-core` (Rust) so iOS, Android, and the server compute identical answers
-([ADR-0002](adr/0002-shared-rust-core.md)).
+Every "when does this come back?" and "what's next?" decision in the product. The architectural
+owner is `loro-core` (Rust), so iOS, Android, and the server must compute identical answers
+([ADR-0002](adr/0002-shared-rust-core.md)). That ownership is not fully integrated yet.
+
+## Current implementation status
+
+| Mechanism      | Implemented now                                                     | Missing before it is authoritative in the app                                                      |
+| -------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| Stream rank    | Rust rank/repeat functions with inline tests; mobile calls a facade | Generated binding/adapters replace the current TS fallback and gain boundary parity                |
+| FSRS           | Grade mapping, priors, retrievability, cap, and formatting in Rust  | `fsrs::review` is `todo!()`; no reference parity, durable due workflow, or real app intervals      |
+| Automaticity   | Rust and TS helpers; TS Refrain engine plans modes and sets         | Rust cloze/set functions are `todo!()`; the app has interim TS selection and a fixed/fallback mask |
+| Ladder         | Rust climb/need/draw functions with inline tests                    | Only limited Refrain writes exist; Run/Roleplay and durable device history do not                  |
+| Trip drops     | Content data exists                                                 | No `build_drop_schedule`, trip service, persistence, or learner flow exists                        |
+| Day boundaries | Rust/TS fixture parity and mobile clock tests exist                 | Native lifecycle scheduling and durable device integration do not                                  |
+
+[Plan 60](../../plans/60-authoritative-core-maths.md) makes rank, FSRS, cloze/set selection, and
+token matching authoritative through generated bindings. Until it lands, formulas below are target
+contracts unless this status table says they are wired; they must not be displayed as real results
+from placeholder calculations.
 
 Five independent mechanisms, one per progress signal:
 
@@ -15,6 +31,8 @@ Five independent mechanisms, one per progress signal:
 | [Drops](#5-trip-drops)                  | What unlocks today?                      | TripService                   |
 
 ---
+
+<a id="1-stream-rank"></a>
 
 ## 1 · Stream rank
 
@@ -51,6 +69,8 @@ dominant: the stream should stay a listening experience, not become a covert rev
 
 ---
 
+<a id="2-fsrs--spaced-repetition"></a>
+
 ## 2 · FSRS — spaced repetition
 
 [ADR-0004](adr/0004-fsrs-scheduler.md). FSRS (Free Spaced Repetition Scheduler) rather than SM-2 or
@@ -63,6 +83,10 @@ the screen lies about the algorithm behind it. FSRS is also open, well-validated
 and has a reference implementation we can port.
 
 ### State per phrase
+
+This is the target complete scheduling state. Rust's current `FsrsState` contains `stability`,
+`difficulty`, `due`, `last_review`, and `lapses`; card phase and review-count behavior arrive with
+the authoritative review implementation.
 
 ```rust
 pub struct FsrsState {
@@ -127,6 +151,10 @@ The blueprint shows fixed labels (`<5 min`, `~10 min`, `1 day`, `5 days`). Those
 model. **The shipped UI shows FSRS's computed intervals, formatted with the blueprint's own
 formatter** (`Loro.dc.html:3009`):
 
+This is the required shipped behavior, not current behavior: Rust interval formatting exists, but
+the update algorithm does not, and the app facade currently fabricates scheduling values. No
+learner-facing interval may be treated as authoritative until plan 60 removes that fallback.
+
 ```rust
 pub fn format_interval(days: f32) -> String {
     if days < 0.9  { "~10 min".into() }
@@ -164,6 +192,8 @@ inherit FSRS state derived from their actual trip performance rather than being 
 
 ---
 
+<a id="3-automaticity--loop-b"></a>
+
 ## 3 · Automaticity — Loop B
 
 The blueprint's formula, kept exactly (`Loro.dc.html:3378`):
@@ -183,6 +213,11 @@ pub fn automaticity(reps_today: u32, target: u32) -> u8 {
 | **Overlearning** | The target does **not** shorten if rep 1 was perfect. Deliberate ([learning-model.md](../product/learning-model.md#overlearning-is-the-point-not-waste)) |
 
 ### Choosing today's set
+
+The priority order below is the target Rust implementation. Today, the TypeScript Refrain engine
+implements an interim version, while Rust's `select_refrain_set` and `cloze_mask` are `todo!()`. The
+store can freeze a set by local day in memory, and persistence defines a `refrain_day` table, but
+on-device SQLite/resume is not wired.
 
 Run once per day, persisted to `refrain_day`. **Never recomputed mid-day** — the learner must be
 able to finish the set they were shown.
@@ -212,6 +247,9 @@ Three waves (`Loro.dc.html:3306–3310`), spaced for real spacing effects. Defau
 wave stays available until midnight local. Missing a wave is not a failure — the reps simply move to
 the next one.
 
+The defaults/settings shape exist today; timed wave enforcement, completion persistence, local
+notification scheduling, and relaunch-safe behavior do not. Plan 64 owns the production loop.
+
 ### Latency
 
 ```rust
@@ -224,6 +262,8 @@ the read-out on `None` rather than substituting an estimate
 measured samples; unmeasured reps leave gaps rather than interpolated bars.
 
 ---
+
+<a id="4-the-ladder--loop-c"></a>
 
 ## 4 · The ladder — Loop C
 
@@ -292,10 +332,15 @@ the document.
 
 ---
 
+<a id="5-trip-drops"></a>
+
 ## 5 · Trip drops
 
 Schedules are **data**, in `packages/content/es-ES/drops.json`, keyed by trip length
 ([content-model.md](../product/content-model.md#trip-drops)):
+
+Only the data exists today. The `build_drop_schedule` function and `TripService` shown below are
+target interfaces; there is no implemented drop scheduler or trip flow yet.
 
 ```jsonc
 {
@@ -318,8 +363,8 @@ pub fn build_drop_schedule(days: u32, trip_type: TripType, schedules: &Schedules
 | The schedule is picked by nearest length and padded with review days    | Lengths 1–3, 4–7, 8–20, 21–60 |
 | Trip type reorders packs but never changes the survival-first principle |                               |
 
-All computed from the device's local date, so the entire countdown works offline
-([offline.md](offline.md)).
+The completed implementation must compute this from the device's local date so the countdown works
+offline ([offline.md](offline.md)).
 
 ---
 
@@ -329,8 +374,8 @@ Everything above needs to agree on "today".
 
 - **`local_day` = the device's local calendar date.** Not UTC. A learner practising at 23:50 and
   00:10 has practised on two days, which is what they'd expect.
-- **Day rollover** is detected on foreground and by a scheduled local notification hook, never by a
-  polling timer.
+- **Day rollover** is detected on foreground today. The completed native implementation also uses a
+  scheduled local notification hook, never a polling timer.
 - **Streaks** use `local_day` and a 4-hour grace window after midnight (practising at 01:30 counts
   for the previous day) — because the alternative punishes night owls, and we don't punish.
 
@@ -366,19 +411,20 @@ timezone database, so the shift happens in `clock.ts` and never in Rust.
 
 ## Testing
 
-Scheduling is pure and deterministic, so it's the best-tested part of the system.
+The implemented scheduling helpers are pure and deterministic. Test coverage currently consists of
+inline Rust module tests, TypeScript engine/domain tests, one Rust calendar parity integration file,
+and mobile clock tests. The planned suites below do not exist and must not be cited as evidence.
 
-| Test                                                                             | Location                                                                                           |
-| -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| FSRS parity against the reference implementation                                 | `core-rs/tests/fsrs_parity.rs`                                                                     |
-| Stream rank ordering, including the due extension                                | `core-rs/tests/rank.rs`                                                                            |
-| Refrain set selection — stability across a day, correct priority order           | `core-rs/tests/refrain_set.rs`                                                                     |
-| Ladder monotonicity under every engine's writes                                  | `core-rs/tests/ladder.rs`                                                                          |
-| Draw determinism from a seed; eligibility invariants                             | `core-rs/tests/draw.rs`                                                                            |
-| Drop schedules for lengths 1…90                                                  | `core-rs/tests/drops.rs`                                                                           |
-| Day boundaries — DST, timezone travel, the grace window                          | `core-rs/src/calendar.rs` (inline), `core-rs/tests/parity.rs`, `apps/mobile/src/lib/clock.test.ts` |
-| Interval formatting                                                              | `core-rs/tests/format.rs`                                                                          |
-| Long-horizon simulation — 365 days, 500 phrases, review load stays under the cap | `core-rs/tests/sim.rs`                                                                             |
+| Test                                                    | Location                                                                                           |
+| ------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| FSRS helpers (not the review algorithm)                 | `core-rs/src/fsrs/mod.rs` inline                                                                   |
+| Stream rank ordering, including the due extension       | `core-rs/src/rank.rs` inline and TypeScript engine tests                                           |
+| Interim Refrain set selection and mode rules            | `packages/core/src/engines/engines.test.ts`                                                        |
+| Ladder monotonicity and draw determinism/eligibility    | `core-rs/src/ladder.rs` inline                                                                     |
+| Notification policy helpers                             | `core-rs/src/notify.rs` inline                                                                     |
+| Day boundaries — DST, timezone travel, the grace window | `core-rs/src/calendar.rs` (inline), `core-rs/tests/parity.rs`, `apps/mobile/src/lib/clock.test.ts` |
+| Interval formatting                                     | `core-rs/src/fsrs/mod.rs` inline                                                                   |
 
-The simulation test is the one that catches design errors rather than code errors: it's how we find
-out that a scheduling change quietly creates a review wall in month four.
+Reference FSRS parity, Rust refrain selection/cloze tests, drop-schedule properties, and the
+long-horizon simulation are missing. Add them with the implementation they validate; a passing
+helper test must not be used as evidence that a scheduler or production workflow exists.

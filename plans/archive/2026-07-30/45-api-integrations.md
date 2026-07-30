@@ -163,7 +163,7 @@ Non-negotiables from `offline.md` and `api.md`:
 - `UNAUTHENTICATED` → refresh once, then re-auth. **Never drop the outbox.**
 - `BUDGET_EXCEEDED` / `PROVIDER_UNAVAILABLE` → bundled fallback, **silently**. No toast, no banner.
 - Connectivity is probed on transition only, and `captive` is treated as `offline`
-  ([`offline.md`](../docs/architecture/offline.md#detecting-connectivity)).
+  ([`offline.md`](../../../docs/architecture/offline.md#detecting-connectivity)).
 - Certificate pinning on `api.loro.app` with a backup pin, per `security-privacy.md`.
 
 ### 3.3 Auth — `apps/api/src/auth/` (`F-01`, `F-02`)

@@ -1,206 +1,128 @@
 # Component inventory
 
-The components the 21 screens are actually made of. Built in `apps/mobile/src/ui/`, ordered by build
-priority — the first two sections cover most of the app.
+The current React Native inventory, followed by the rules for extending it toward the full
+blueprint. Only the items in the current tables exist. The authored 39 JSX prototype components in
+`design/Language Learning by Phrases - V1.1/components/` are design references, not modules the app
+imports.
 
-`P1` = needed for M1 · `P2` = M2 · `P3` = M3+
+All reusable app UI lives under `apps/mobile/src/ui/`. Seven learner screens plus the shell use 24
+exported primitives and 6 exported composites. There is no `src/ui/charts/` directory yet.
 
----
+## Current primitives · `src/ui/primitives/`
 
-## Primitives · `src/ui/primitives/`
+Primitives are domain-free. Their public exports come from `primitives/index.ts`.
 
-Nothing above these knows about phrases.
+| Component       | Main props/current contract                                                                                          |
+| --------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `Text`          | `variant`, `color`, `align`, `lang`, `numberOfLines`, `style`; `lang="es"` sets native `es-ES`                       |
+| `SectionLabel`  | `size: md\|sm`, `color`; tracked uppercase text                                                                      |
+| `ChartSummary`  | Visible `captionSm` summary to accompany a future chart                                                              |
+| `SectionHeader` | `label`, optional `hint`, `variant: label\|caption`; baseline aligned                                                |
+| `CardHeader`    | `title`, `meta`, `metaVariant`; owns the body gap                                                                    |
+| `Pressable`     | `feedback`, `disabled`, `selected`, accessibility props; checked state in native and flat web forms                  |
+| `Screen`        | Full-screen `surface.app` container                                                                                  |
+| `Card`          | `padding`, numeric `radius`, `background`, border colour/width, optional grouped accessibility; no elevation yet     |
+| `DarkCard`      | Flat `surface.dark`, 24 px radius; gradients/shadows are not mapped yet                                              |
+| `Divider`       | One-pixel subtle line                                                                                                |
+| `Row`           | `gap`, `align`, `justify`, `wrap`, `style`; wraps vertically for large text when requested                           |
+| `Stack`         | Vertical `gap` and `style`                                                                                           |
+| `Grid`          | Wrapping row with stretch alignment, for same-shaped controls/tiles                                                  |
+| `Button`        | `label`, `variant: primary\|secondary\|destructive`, `size: md\|lg`, `disabled`, hint                                |
+| `IconButton`    | Required glyph and accessible label; uses the icon target floor                                                      |
+| `Pill`          | Static `label`, optional emoji, `tone: neutral\|accent\|onDark`, five sizes, colour overrides                        |
+| `Chip`          | Selectable label; `variant: tag\|scenario\|toggle`, `tone: tint\|solid`, explicit role/state                         |
+| `Segmented`     | Generic options/value/change; `variant: pill\|track`, button or radio role                                           |
+| `Sheet`         | `visible`, `onDismiss`, required learner-facing `dismissLabel`; slide modal with tappable backdrop; grabber is inert |
+| `ProgressBar`   | Clamped 0–1 value, colour/track/height/radius, optional label; labelled or hidden, never unnamed                     |
+| `Dots`          | Count, filled count, optional size; simple accent pips                                                               |
+| `EmojiTile`     | Decorative emoji square with size/radius/background/font-size overrides                                              |
+| `Dot`           | Decorative sized colour dot                                                                                          |
+| `StatTile`      | String value/label grouped into one accessible node                                                                  |
 
-| Component      | Props                                                                 | Notes                                                                                                | Pri |
-| -------------- | --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | --- |
-| `Text`         | `variant`, `color`, `align`, `numberOfLines`, `lang`                  | Wraps the type scale. **`lang="es"` sets the accessibility language** — required on all Spanish text | P1  |
-| `Pressable`    | `feedback: 'row' \| 'button' \| 'icon' \| 'small' \| 'grow'`          | The four press behaviours from [motion.md](motion.md#press-feedback). Enforces a 44×44 hit area      | P1  |
-| `Card`         | `padding`, `radius`, `border`, `elevation`                            | White surface, `radius.xl`, `line.default`                                                           | P1  |
-| `DarkCard`     | `gradient`, `padding`                                                 | The gradient card with the inverted ink ramp                                                         | P1  |
-| `Row`          | `gap`, `align`, `justify`                                             | Flex helper                                                                                          | P1  |
-| `Stack`        | `gap`, `direction`                                                    | Flex helper                                                                                          | P1  |
-| `Pill`         | `tone: semantic \| neutral \| accent`, `size`                         | 10–11 px uppercase, tracked, semantic background                                                     | P1  |
-| `Chip`         | `selected`, `emoji`, `label`, `onPress`                               | Selectable chip with the 180 ms selection transition                                                 | P1  |
-| `Button`       | `variant: primary \| secondary \| destructive`, `disabled`, `loading` | Primary uses the accent-tinted shadow. Disabled = grey bg, grey text, no shadow                      | P1  |
-| `Segmented`    | `options`, `value`, `onChange`                                        | Sunken track, white thumb with `shadow.card`                                                         | P1  |
-| `Sheet`        | `visible`, `onDismiss`, `children`                                    | Bottom sheet: asymmetric radius, handle, 42% scrim, `sheetUp`                                        | P1  |
-| `Toast`        | `message`, `action?`, `duration`                                      | Dark pill, bottom-centre, `popIn`. One at a time                                                     | P1  |
-| `ProgressBar`  | `value`, `color`, `height`, `animated`                                |                                                                                                      | P1  |
-| `Dots`         | `count`, `filled`, `variant: pip \| dot \| bar`                       | Repeat pips, set dots, onboarding segments                                                           | P1  |
-| `IconButton`   | `glyph`, `label`, `onPress`                                           | Glyph or emoji, with a real accessibility label                                                      | P1  |
-| `TextField`    | `value`, `onChange`, `placeholder`, `focused`                         | Accent border on focus, clear button                                                                 | P1  |
-| `TextArea`     | uncontrolled via ref                                                  | Import paste — uncontrolled to avoid IME/caret issues                                                | P2  |
-| `EmojiTile`    | `emoji`, `size`, `background`                                         | The rounded emoji tile used everywhere                                                               | P1  |
-| `StatTile`     | `value`, `label`                                                      | Big number over an uppercase label. Always in threes                                                 | P1  |
-| `SectionLabel` | `children`                                                            | 11 px, 700, uppercase, tracked, `muted`                                                              | P1  |
-| `Divider`      | `tone`                                                                |                                                                                                      | P1  |
-| `Equalizer`    | `bars`, `active`, `tempo`                                             | `eqB` staggered. Also the beat, with a tempo prop                                                    | P1  |
-| `Scrim`        | `opacity`, `onPress`                                                  |                                                                                                      | P1  |
+`controlStyle.ts` is private style algebra for `Chip` and `Segmented`; its unit test pins variant
+geometry. Files such as `bars.tsx`, `tiles.tsx`, and `surfaces.tsx` are source grouping, not extra
+public components.
 
----
+## Current composites · `src/ui/components/`
 
-## Domain components · `src/ui/components/`
+Composites may accept domain types, but do not import the store or learner-facing copy.
 
-These know what a phrase is.
+| Component            | Current contract and use                                                                                                         |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `ActionBar`          | Safe-area-aware fixed action container; row/column direction. Screen-specific scroll clearance remains named in component tokens |
+| `DifficultySelector` | `Difficulty`, labels, `cards\|segmented` layout, default/tight density; add, detail, and stream                                  |
+| `EmptyState`         | Passed title/body/action plus padding/gap/alignment; four empty states share the shape                                           |
+| `PhraseRow`          | Passed `es`, `en`, `emoji`, `queue\|suggestion`, labels/hint, and non-focusable trailing content                                 |
+| `StatRow`            | A row of passed `Stat` values; current call sites supply three                                                                   |
+| `TagChips`           | Passed tag order/labels/selected suffix and toggle callback; checkbox semantics and a visible selected mark                      |
 
-| Component            | Props                                                                            | Used by                                                                                  | Pri |
-| -------------------- | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | --- |
-| `PhraseRow`          | `phrase`, `showAudio`, `showAdd`, `showLove`, `showDifficulty`, `onPress`, `on*` | Every list in the app. **One focusable element; sub-controls are accessibility actions** | P1  |
-| `PhraseHero`         | `phrase`, `showRespelling`                                                       | Detail, review card back                                                                 | P1  |
-| `DifficultySelector` | `value`, `onChange`, `layout: segmented \| cards`                                | Sheet, detail, stream                                                                    | P1  |
-| `TagChips`           | `value`, `onChange`                                                              | Sheet, detail                                                                            | P1  |
-| `LoveToggle`         | `value`, `onChange`, `size`                                                      | Detail, stream, rows                                                                     | P1  |
-| `DifficultyPill`     | `value`, `onPress?`                                                              | Rows, cards. Tapping cycles                                                              | P1  |
-| `ThemePill`          | `theme`                                                                          | Detail, review card                                                                      | P1  |
-| `WordChips`          | `words`, `onWordPress`                                                           | Detail word-by-word                                                                      | P1  |
-| `MemoryHookCard`     | `note`, `suggestions`, `onPick`, `onEdit`                                        | Detail, review reveal                                                                    | P1  |
-| `StreamStrip`        | `phrases`, `selectedId`, `onSelect`                                              | Add phrases — the horizontal recent strip                                                | P1  |
-| `TransportBar`       | `playing`, `speed`, `onPlay/Next/Prev/Speed`                                     | Stream                                                                                   | P1  |
-| `NowPlayingCard`     | `phrase`, `repeatIndex`, `repeatTarget`, `progress`                              | Stream                                                                                   | P1  |
-| `UpNextList`         | `phrases`, `on*`                                                                 | Stream                                                                                   | P1  |
-| `MicButton`          | `state: idle \| listening \| processing \| done`, `onPress`                      | Every speaking screen. `pulseRing` when listening                                        | P2  |
-| `BlurredWordChips`   | `tokens`, `revealed`, `justRevealed`                                             | Speak to progress. **Hidden words expose no text**                                       | P2  |
-| `FocusBanner`        | `tag`                                                                            | Review — the tag-driven instruction banner                                               | P3  |
-| `GradeButtons`       | `grades`, `onGrade`                                                              | Review                                                                                   | P3  |
-| `ConfidenceLevels`   | `levels`, `value`, `onChange`                                                    | Memory model                                                                             | P3  |
-| `WarmingCard`        | `automaticity`, `mode`, `content`                                                | **The Refrain hero.** See below                                                          | P2  |
-| `AutomaticityMeter`  | `value`                                                                          | The Refrain                                                                              | P2  |
-| `EffortChart`        | `samples`                                                                        | The Refrain — falling latency bars. **Gaps for unmeasured reps, never interpolation**    | P2  |
-| `ModeStrip`          | `modes`, `currentIndex`                                                          | The Refrain                                                                              | P2  |
-| `WaveList`           | `waves`, `onStart`                                                               | Today                                                                                    | P2  |
-| `TodaySetList`       | `phrases`, `onPress`                                                             | Today                                                                                    | P2  |
-| `AmbientToggle`      | `active`, `onToggle`                                                             | Today                                                                                    | P2  |
-| `CueBar`             | `level`, `maturity`, `timer?`                                                    | Prosody                                                                                  | P3  |
-| `SkillAxes`          | `perception`, `recall`, `production`                                             | Prosody                                                                                  | P3  |
-| `SyllableChips`      | `syllables`, `scores?`, `onPress`                                                | Pronunciation, prosody                                                                   | P3  |
-| `ScoreRing`          | `score`, `verdict`                                                               | Pronunciation                                                                            | P3  |
-| `RungPips`           | `rung`                                                                           | Phrasebook                                                                               | P3  |
-| `LadderBadge`        | `rung`                                                                           | Phrasebook, run wrap                                                                     | P3  |
-| `MasteryBar`         | `buckets`                                                                        | Progress                                                                                 | P1  |
-| `TrickyRollup`       | `tags`, `onDrill`                                                                | Progress. **Rows are actionable** — this closes the tag loop                             | P1  |
-| `MilestoneRow`       | `milestone`                                                                      | Progress                                                                                 | P1  |
-| `StreakCard`         | `current`, `best`, `week`                                                        | Progress, Today                                                                          | P1  |
-| `CountdownCard`      | `trip`, `owned`, `target`                                                        | Countdown home                                                                           | P2  |
-| `DropCard`           | `drop`, `onAdd`                                                                  | Countdown home, drop screen                                                              | P2  |
-| `SurvivalRow`        | `phrase`, `onPlay`                                                               | Survival mode                                                                            | P2  |
-| `SceneBubble`        | `speaker`, `es`, `en`, `onHear`                                                  | Roleplay                                                                                 | P3  |
-| `ReplyOptions`       | `options`, `onPick`, `onHear`                                                    | Roleplay                                                                                 | P3  |
-| `CoachNote`          | `text`, `isBest`                                                                 | Roleplay                                                                                 | P3  |
+`ToastHost.tsx` is a deliberate app host, not a reusable composite: it subscribes to the store and
+reads toast copy. Keep store-aware hosts at the UI root rather than weakening the component-layer
+rule.
 
----
+## What is not implemented
 
-## Charts · `src/ui/charts/` · React Native Skia
+The blueprint still calls for reusable audio transport, microphone/listening states, phrase-detail
+rich content, practice/reveal/grade surfaces, warming/automaticity feedback, trip/drop surfaces,
+roleplay, navigation sheets, and progress/lab visualizations. None should be claimed as an app
+component until a real route uses it.
 
-Every chart is accompanied by a **visible text summary** carrying the same information
-([accessibility.md](../architecture/accessibility.md#graphs-and-the-labs)). The summary is not
-screen-reader-only — it improves the screen for everyone, and it's checked in CI.
+There are also no Skia chart components. `PitchContour`, `RhythmBars`, `WaveformPair`,
+`ForgettingCurve`, `Sparkline`, `LadderHistogram`, and `WeekDots` remain target names only. When a
+chart lands, pair it with a visible `ChartSummary` and real measurements; missing samples stay
+missing rather than being interpolated or simulated.
 
-| Component         | Draws                                                                                    | Screen        | Pri |
-| ----------------- | ---------------------------------------------------------------------------------------- | ------------- | --- |
-| `PitchContour`    | Native (dashed) vs learner (solid) polylines, off-target dots, the animated trace cursor | Prosody       | P3  |
-| `RhythmBars`      | Paired native/learner stress bars, flexed by syllable duration                           | Prosody       | P3  |
-| `WaveformPair`    | Two 34-bar lanes; the learner's animates while recording                                 | Pronunciation | P3  |
-| `ForgettingCurve` | `0.5^(t/S)` with a filled area, the 50% threshold, now and next-review dots              | Memory model  | P3  |
-| `Sparkline`       | Last 6 take scores                                                                       | Prosody       | P3  |
-| `LadderHistogram` | Five-bar distribution in rung colours                                                    | Phrasebook    | P3  |
-| `WeekDots`        | 7-day streak strip                                                                       | Progress      | P1  |
-
----
-
-## The three components worth extra care
-
-### `WarmingCard`
-
-The Refrain's hero, and the app's most important animation.
-
-```tsx
-interface WarmingCardProps {
-  automaticity: number // 0–100 drives everything
-  mode: RefrainMode // echo | chorus | speed | cloze | call | cold
-  es: string
-  en: string
-  cloze?: string
-  hook?: string
-}
-```
-
-- Background, text colour, and glow interpolate across four bands
-  ([design-system.md](design-system.md#scales)) over 500 ms.
-- Driven by a Reanimated shared value and `interpolateColor` — **never** a re-render per band.
-- Content is mode-dependent: full text · cloze with a gap · English-only · ❄️ plus the hook.
-- Under Reduce Motion the **colour stays** and only the glow animation drops.
-- Checked at 60 fps on the device floor every release
-  ([performance.md](../architecture/performance.md#frame-rate)).
+## Load-bearing component rules
 
 ### `PhraseRow`
 
-Used more than any other component, and the one most likely to be got wrong for accessibility.
+The current row deliberately takes three display strings rather than a `Phrase` object so catalog
+and store views can share it without confusing id spaces. It is one focusable button; `trailing` is
+display-only. Both bilingual lines ellipsise at one line and Spanish always carries `lang="es"`. If
+future row variants need audio/love/difficulty actions, design and test native accessibility actions
+before adding nested focusable controls.
 
-```tsx
-interface PhraseRowProps {
-  phrase: PhraseView
-  variant: 'suggestion' | 'queue' | 'related' | 'survival' | 'collection'
-  showAudio?: boolean
-  showAdd?: boolean
-  showLove?: boolean
-  showDifficulty?: boolean
-  onPress?: () => void
-  onPlay?: () => void
-  onLove?: () => void
-  onDifficulty?: () => void
-  onAdd?: () => void
-}
-```
+### `Pressable`, `Chip`, and `Segmented`
 
-- **One focusable element.** Sub-controls become accessibility actions, not separate tab stops.
-- Spanish gets `lang="es-ES"`.
-- Sub-control taps must `stopPropagation` — the blueprint does this explicitly (`Loro.dc.html:2353`)
-  and forgetting it means every ♪ tap also opens the detail screen.
-- Both text lines ellipsise at one line.
-- **Tapping the row always opens phrase detail.** No exceptions across the whole app — that
-  consistency is what makes it feel like one object graph.
+All taps go through `Pressable` for press feedback and target sizing. A radio or checkbox must pass
+`selected`; the primitive emits both `accessibilityState.checked` for native and `aria-checked` for
+the browser. Selected controls use border/mark changes as well as colour. `Chip` separates visible
+and announced labels because a visible selected suffix must not pollute the accessible name.
 
-### `EffortChart`
+### `ProgressBar`
 
-Small, but it's where the honesty rule bites.
+A supplied label produces a named progressbar with native `accessibilityValue` and flat web
+`aria-value*` props. Without a label, the visual bar is hidden from assistive technology because the
+surrounding row already announces the value. Never create an unnamed progressbar.
 
-```tsx
-interface EffortChartProps {
-  samples: (number | null)[] // ms; null = NOT MEASURED
-}
-```
+### `Sheet` and `ActionBar`
 
-`null` renders a **gap**, never an interpolated bar. If no sample in the window was measured, the
-whole chart is hidden rather than shown empty-but-plausible
-([`product/learning-model.md`](../product/learning-model.md#where-the-blueprints-numbers-came-from--and-what-is-real)).
+The sheet backdrop is a labelled button; its grabber is not a drag handle yet. `ActionBar` reads the
+safe-area inset but does not measure its own height, so each route uses a named clearance token.
+Replacing those values with measurement is a behaviour/layout change and needs text-scale E2E
+verification.
 
----
+## Where a new shape belongs
 
-## Conventions
+Use this decision order:
 
-1. **Primitives know nothing about the domain.** A primitive that takes a `phrase` prop belongs in
-   `components/`.
-2. **Colours come from tokens, never literals.** Enforced by a lint rule.
-3. **Every interactive component has press feedback** via `Pressable`'s `feedback` prop.
-4. **Every Spanish text node carries `lang`.** Checked in CI.
-5. **Every chart has a visible text summary.** Checked in CI.
-6. **Empty states are the component's job**, not the screen's. A `UpNextList` with no items renders
-   its own empty copy.
-7. **Reduced-motion behaviour lives in the motion tokens**, so a new component inherits it.
-8. **Stories for every state**, including empty, loading, error, and long-content. The long-content
-   case is where the blueprint's tight rows break.
+1. One call site: keep a named local component in the route. A component used once is not reuse.
+2. Two or more call sites, no domain knowledge: add a primitive.
+3. Two or more call sites and domain types are useful: add a composite in `components/`.
+4. Store subscription or navigation coordination: keep it in a route/app host and pass plain props
+   down. Do not make the reusable component subscribe.
 
----
+For every reusable addition:
 
-## Rough counts
+- import palette/global scale through `src/ui/theme.ts`; put repeated exact geometry in
+  `src/ui/tokens/`, and keep single-use values local without rounding them;
+- pass every learner-facing string from `src/lib/copy.ts` through props;
+- preserve the 44 px target, visible press feedback, native and web state/value semantics, Spanish
+  language, vertical growth at large text, and reduced-motion behaviour;
+- export it from the appropriate index, test non-trivial variants, and remove the replaced local
+  copies in the same change;
+- add or update the learner-visible state in `apps/mobile/e2e/states.ts`, then run `pnpm check` and
+  `pnpm test:e2e`.
 
-| Group             | Count   | Milestone       |
-| ----------------- | ------- | --------------- |
-| Primitives        | 23      | M1              |
-| Domain components | 39      | M1–M3           |
-| Charts            | 7       | M1 (1) · M3 (6) |
-| **Total**         | **~69** |                 |
-
-M1 needs roughly 35 of them, which is why the design system is scheduled as its own workstream in
-[`product/roadmap.md`](../product/roadmap.md#m1--the-spine--5-weeks) rather than emerging screen by
-screen.
+Build components when a screen proves the abstraction. This keeps the system extendable without
+turning the blueprint's prototype catalog into a speculative second UI framework.

@@ -1,217 +1,101 @@
-# Plans
+# Active plans
 
-One markdown file per plan, numbered then named for the topic — `01-fix-local-day-boundary.md`. The
-numbers run consecutively in the recommended order below, and a new plan takes the next free number.
-**Numbers are never reused**, so a gap in the sequence is expected and a link written against a
-number stays unambiguous.
+This roadmap was rebuilt on **2026-07-30** from the current code, architecture documents, product
+specification, blueprint, open decisions, and every plan in the previous 01–52 set. The previous set
+is preserved under [`archive/2026-07-30/`](archive/2026-07-30/README.md); its review and scope
+mapping are in [`REVIEW.md`](archive/2026-07-30/REVIEW.md).
 
-The current-state claims below were re-verified against the worktree on **2026-07-29**, including
-uncommitted implementation. Code citations can move, so each plan names the symbol or invariant as
-well as the line where practical.
-
-Each focused plan has a bounded outcome, acceptance criteria, tests, and an explicit out-of-scope
-section. A plan with dependencies is runnable only after those dependencies' relevant acceptance
-criteria pass. Plan 45 is the deliberate exception: it is a provider-integration programme and
-reference map; the focused plans own implementation.
+Plan numbers are never reused. Plans 01–52 remain historical IDs. **Plan 53 completed concurrently
+during this reset and remains in place as a protected record; this reset did not edit or move it.**
+Replacement plans begin at 54.
 
 ## Status
 
-A shipped plan is **marked, not deleted**: its verified "current state" notes and code citations are
-the record of why the code looks the way it does. The plan's own header carries the authoritative
-`**Status:**` line — what landed, what was skipped, and anything the plan turned out to have got
-wrong. The tables below mirror it:
+| Mark | Meaning                                                                             |
+| ---- | ----------------------------------------------------------------------------------- |
+| 🟡   | In progress or partly implemented; the plan states what remains and what blocks it. |
+| ⛔   | Blocked by a named external decision or evidence gate.                              |
+| —    | Ready when its dependencies pass.                                                   |
+| ✅   | Implemented; move it to the next dated archive during the next roadmap reset.       |
 
-| Mark | Meaning                                                                          |
-| ---- | -------------------------------------------------------------------------------- |
-| ✅   | Implemented. Read the plan's `Status` line for anything deliberately left out.   |
-| 🟡   | Partly implemented. Its `Status` line names what is left **and what blocks it**. |
-| —    | Not started.                                                                     |
+The active set deliberately contains no replacement for completed plans 01, 02, 04, 07, 51, 52,
+or 53. It does not repeat their behavior-preserving or correctness work.
 
-**Completed plans are skipped by the active queue:** [01](01-fix-local-day-boundary.md),
-[02](02-fix-fabricated-streak.md), [04](04-fix-user-phrase-identity.md), and
-[07](07-fix-store-invariants.md). They remain on disk as implementation records.
+## Execution order
 
-**Partly implemented:** [10](10-sqlite-persistence-and-outbox.md) — storage primitives are done;
-native wiring waits on [09](09-native-toolchain-and-dev-client.md) — [20](20-screen-today-ritual.md)
-— the Today route/layout and basic store integration landed, while wave/completion/resume behaviour
-follows persistence and audio — [23](23-add-import-and-capture.md) — the own-phrase domain/store
-seam landed, while Import and Capture surfaces remain — and [37](37-testing-gaps.md) — calendar
-parity, mobile domain/data tests, and whole-current-app Playwright coverage are done; component,
-blueprint-fidelity, simulation, property, and native device suites remain.
+The plans are ordered by dependency, not by department:
 
-## Active execution order
+1. Begin with the correctness work in [54](54-local-persistence-correctness.md) and
+   [55](55-current-surface-truth-and-fidelity.md), consuming the completed plan-53 seams.
+2. Establish contracts and foundations: [56](56-navigation-failure-and-input-shell.md),
+   [57](57-runtime-design-system.md), [58](58-native-workspace-and-device-ci.md),
+   [60](60-authoritative-core-maths.md), [61](61-content-and-audio-assets.md), and
+   [66](66-backend-contract-data-and-security.md).
+3. Wire the device and service spine: [59](59-device-persistence-and-resume.md),
+   [62](62-native-audio-playback.md), [63](63-native-speech-speak-and-latency.md),
+   [67](67-anonymous-auth-and-account-lifecycle.md), and [68](68-sync-and-offline-convergence.md).
+4. Complete v1 product behavior: [64](64-today-and-refrain-production-loop.md),
+   [65](65-import-and-capture.md), [69](69-trip-domain-and-arc.md),
+   [70](70-survival-widgets-and-notifications.md), [71](71-settings-telemetry-and-experiments.md),
+   [72](72-release-quality-gates.md), [73](73-delivery-observability-and-slos.md), and
+   [74](74-monetization-and-entitlements.md).
+5. Build later surfaces only after their evidence gates: [75](75-review-and-memory.md),
+   [76](76-roleplay-and-live-ai.md), [77](77-dsp-and-speech-labs.md), and
+   [78](78-conditional-run-and-phrasebook.md).
+6. Reconcile and implement the v1.1 additions: [79](79-v1-1-design-contract.md) records the new
+   source/requirement contract first; [80](80-dev-design-system-workbench.md) adds the dev-only
+   token surface; [81](81-navigation-spine-switcher-and-more.md) implements the new menu on plan
+   56's route model; and [82](82-guided-chat-domain-and-service.md) then
+   [83](83-open-chat-and-message-inspector.md) deliver the guarded conversation loop.
 
-1. Finish the remaining correctness defects: **03, 05, 06, 50**. **50** is the cheapest and the most
-   embarrassing to ship: four places the interface states something the code does not do.
-2. Run **08** before porting more screens; its findings update the relevant screen plan rather than
-   creating an unowned backlog. Land **46**'s route table and laws alongside it — thirteen unbuilt
-   screens each need a route, a class, and an exit, and deciding that per screen is how the eleven
-   defects 46 records were introduced. **47** belongs here too: it is a prerequisite for **34**, and
-   every screen built before it is built against a hand-copied type scale and no motion tokens.
-   **48**'s lint and failure-state fixes are mechanical and land cleanest before **34**'s refactor.
-3. Establish **09**, then finish **10** and start the native/audio path (**11**, **12**).
-4. Build server foundations in dependency order: **13 → 14 → 15**, with **06** supplying the safe
-   temporary identity boundary before auth lands.
-5. Treat the later screen and cross-cutting tables as milestone scope, not as permission to bypass
-   their named foundation, decision, or research gates.
+## Protected retained record
 
----
+[Plan 53](53-post-refactor-solid-kiss-dry-audit.md) is ✅ implemented and intentionally left at its
+original path at the user's request. It is not part of the replacement queue.
 
-## Start here: the four remaining bug plans
+## Active roadmap
 
-These are defects in code that already exists, and they get more expensive once persistence lands.
-The four completed bug plans are retained as implementation records but omitted from this table.
+| Plan                                             | Outcome                                                                      | Milestone | Status                 | Depends on                     |
+| ------------------------------------------------ | ---------------------------------------------------------------------------- | --------- | ---------------------- | ------------------------------ |
+| [54](54-local-persistence-correctness.md)        | Tombstone/HLC-safe local writes and complete wave persistence                | M1        | —                      | 53 ✅                          |
+| [55](55-current-surface-truth-and-fidelity.md)   | Existing screens stop making false claims and match the blueprint contract   | M1        | —                      | 53 ✅                          |
+| [56](56-navigation-failure-and-input-shell.md)   | One route model, honest failure states, keyboard-safe input, scalable lists  | M1        | —                      | 53                             |
+| [57](57-runtime-design-system.md)                | Fonts, runtime motion, haptics, themes, remaining reusable inventory         | M1/M2     | —                      | 53, 55                         |
+| [58](58-native-workspace-and-device-ci.md)       | Reproducible iOS/Android projects, dev clients, native CI and device harness | M1        | —                      | 53                             |
+| [59](59-device-persistence-and-resume.md)        | SQLite becomes the device source of truth; sessions survive relaunch         | M1        | —                      | 54, 58                         |
+| [60](60-authoritative-core-maths.md)             | Rust owns ranking, FSRS, cloze/set selection and parity-backed bindings      | M1/M2     | —                      | 53, 58 for native integration  |
+| [61](61-content-and-audio-assets.md)             | Versioned content delivery, licensed audio, references, 150→600 phrases      | M1/M2     | ⛔ Q-15                | 53                             |
+| [62](62-native-audio-playback.md)                | Offline/background playback, rates, cache and hands-free stream              | M1/M2     | —                      | 58, 61 seed batch              |
+| [63](63-native-speech-speak-and-latency.md)      | Handle-only capture, on-device ASR, Speak screen, real onset latency         | M2        | —                      | 58, 60, 62                     |
+| [64](64-today-and-refrain-production-loop.md)    | Persisted timed waves and truthful, audible Refrain completion               | M2        | —                      | 55, 59, 60, 62, 63             |
+| [65](65-import-and-capture.md)                   | Local Import in v1; reviewed OCR Capture in v1.1                             | M2/M3     | —                      | 56, 59; Capture also 63/76     |
+| [66](66-backend-contract-data-and-security.md)   | Shared wire schemas, Postgres, safe sync repository, deployable image        | M2        | —                      | 54 for policy parity           |
+| [67](67-anonymous-auth-and-account-lifecycle.md) | Anonymous-first identity, sign-in merge, export and erasure                  | M2        | —                      | 59, 66                         |
+| [68](68-sync-and-offline-convergence.md)         | User-scoped cursor sync, outbox replay and two-device convergence            | M2        | —                      | 59, 60 merge binding, 66, 67   |
+| [69](69-trip-domain-and-arc.md)                  | Trip state machine and arrival/countdown/drop/survival/souvenir routes       | M2        | ⛔ Q-07                | 56, 59, 60, 61                 |
+| [70](70-survival-widgets-and-notifications.md)   | Airplane-mode survival, widgets, Live Activity and no-shame scheduling       | M2        | —                      | 58, 62, 69                     |
+| [71](71-settings-telemetry-and-experiments.md)   | Durable settings, privacy-safe measures, flags and loop experiment           | M2/M3     | ⛔ Q-05 for experiment | 59, 68                         |
+| [72](72-release-quality-gates.md)                | Native accessibility, localization, performance and complete test gates      | M2        | ⛔ Q-14 for peak state | 57–71 as applicable            |
+| [73](73-delivery-observability-and-slos.md)      | Dev→store delivery, crash/API observability, rollback and runbooks           | M2/M4     | —                      | 58, 66, 72                     |
+| [74](74-monetization-and-entitlements.md)        | Offline-safe entitlements and an evidence-backed paywall                     | M2        | ⛔ Q-08, Q-12          | 59, 67, 73                     |
+| [75](75-review-and-memory.md)                    | Real FSRS Review and Memory surfaces                                         | M3        | —                      | 60, 59, 72                     |
+| [76](76-roleplay-and-live-ai.md)                 | Guarded live provider and offline-degradable Roleplay                        | M3        | —                      | 63, 66, 67, 71                 |
+| [77](77-dsp-and-speech-labs.md)                  | Evidence-gated DSP followed by truthful Pronunciation/Prosody labs           | M3        | ⛔ spike quality gate  | 60–63, 72                      |
+| [78](78-conditional-run-and-phrasebook.md)       | Run and Phrasebook only if loop evidence supports them                       | M5        | ⛔ Q-05 + M3 data      | 59, 60, 71, 72                 |
+| [79](79-v1-1-design-contract.md)                 | Stable requirements and architecture for all v1.1 design artifacts           | M1/M3     | —                      | —                              |
+| [80](80-dev-design-system-workbench.md)          | Dev-only generated token and production component inspection page            | M1        | —                      | 53; coordinates with 57        |
+| [81](81-navigation-spine-switcher-and-more.md)   | Spine, switcher, state-driven More menu, resume and travelling transport     | M1/M2     | —                      | 56, 57; then 59, 62, 64        |
+| [82](82-guided-chat-domain-and-service.md)       | Typed private chat domain, bundled offline floor and guarded text provider   | M3        | ⛔ plan-79 decisions   | 59, 61, 66–68, 79              |
+| [83](83-open-chat-and-message-inspector.md)      | Voice/text chat and inspector with explicit phrase/Review handoff            | M3        | —                      | 57, 59, 62, 63, 75, 79, 81, 82 |
 
-| Plan                                                                          | What is wrong                                                                                                                                                                                                                              | Size |
-| ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---- |
-| [03-fix-latency-measurement](03-fix-latency-measurement.md)                   | Wall-clock used where the comment claims monotonic; `applyDeltaToPhrase` drops the measured sample; the display floor turns 120 ms into `0.3s`. **Violates rule 2**                                                                        | M    |
-| [05-fix-shared-maths-duplication](05-fix-shared-maths-duplication.md)         | Numbers ADR-0002 says must exist once have two or three implementations; two are outright fabrications (`fsrsReview`, `clozeMask: () => [1]`)                                                                                              | M–L  |
-| [06-fix-sync-pull-cursor-and-scoping](06-fix-sync-pull-cursor-and-scoping.md) | `/sync/pull` ignores its cursor, hardcodes `has_more: false`, and shares one global `Map` across all learners — a cross-tenant read                                                                                                        | M    |
-| [50-interface-integrity-defects](50-interface-integrity-defects.md)           | Four places the UI states something the code does not do — a 35% progress bar over silence (**violates rule 2**), a drill that does not drill, two discarded onboarding answers, mislabelled wave times — plus `removePhrase` with no undo | S–M  |
+## Rules for this set
 
-Then [08-built-screens-fidelity-audit](08-built-screens-fidelity-audit.md) — read the seven ported
-screens and app shell against the blueprint. Every bug above came from that kind of reading.
-
----
-
-## The unblocker
-
-[09-native-toolchain-and-dev-client](09-native-toolchain-and-dev-client.md) — there is no
-`apps/mobile/ios` or `android/`, and Expo Go works today only because no custom native module is
-installed. **Audio, speech, SQLite, the UniFFI bridge, and widgets all end Expo Go compatibility**,
-so this decides whether half the product can be built at all. Run it before any of them.
-
----
-
-## Foundations — the things half of v1 depends on
-
-| Plan                                                                       | Why                                                                                                                              | Size |
-| -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ---- |
-| [10-sqlite-persistence-and-outbox](10-sqlite-persistence-and-outbox.md) 🟡 | Schema, repositories and outbox are tested; the app still needs the native driver, HLC bridge and hydration/write-through wiring | L    |
-| [11-audio-playback-module](11-audio-playback-module.md)                    | No audio anywhere. The Refrain currently tells the learner the rate at which nothing plays                                       | L    |
-| [12-asr-speech-module](12-asr-speech-module.md)                            | Nothing records. The matcher is already built and tested in Rust; everything upstream is missing                                 | L    |
-| [13-api-postgres-persistence](13-api-postgres-persistence.md)              | The API stores nothing; readiness honestly omits absent dependencies but needs real Postgres/Redis checks when they land         | L    |
-| [14-auth-anonymous-first](14-auth-anonymous-first.md)                      | No auth at all, no user scoping, nothing to rate-limit the AI endpoints against                                                  | L    |
-| [15-sync-client-loop](15-sync-client-loop.md)                              | The merge is real and shared; there is no client                                                                                 | L    |
-| [16-ci-cd-and-release](16-ci-cd-and-release.md)                            | The API is deployed nowhere — an unmet M0 exit criterion. CI never compiles native                                               | M–L  |
-
----
-
-## Reproducible maths (`packages/core-rs`)
-
-Seven `todo!`s, each standing under a screen.
-
-| Plan                                                                            | The gap                                                                                         | Size      |
-| ------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | --------- |
-| [17-fsrs-implementation-and-parity](17-fsrs-implementation-and-parity.md)       | The FSRS update is `todo!`; the app ships a four-interval lookup table in its place             | M         |
-| [18-select-rs-cloze-and-set-selection](18-select-rs-cloze-and-set-selection.md) | Cloze mask and set selection are `todo!`; the stand-in always blanks token 1                    | M         |
-| [19-prosody-dsp-spike-and-pipeline](19-prosody-dsp-spike-and-pipeline.md)       | Four `todo!`s in `dsp/`. **Run the M1 spike first** — it decides whether the labs are buildable | M then XL |
-
----
-
-## Screen work
-
-| Plan                                                                      | Screens                                                  | Rel       | Size  |
-| ------------------------------------------------------------------------- | -------------------------------------------------------- | --------- | ----- |
-| [20-screen-today-ritual](20-screen-today-ritual.md) 🟡                    | 11 — Today (route/layout landed; behaviour incomplete)   | v1        | M     |
-| [21-screen-speak-to-progress](21-screen-speak-to-progress.md)             | 5 — the production gate                                  | v1        | M     |
-| [22-trip-arc-screens](22-trip-arc-screens.md)                             | 16–21 — the whole arc                                    | **v1**    | XL    |
-| [23-add-import-and-capture](23-add-import-and-capture.md) 🟡              | 2 — own-phrase seam landed; Import and Capture UI remain | v1 / v1.1 | M / L |
-| [24-screen-review-session](24-screen-review-session.md)                   | 6 — tag-aware SRS                                        | v1.1      | M     |
-| [25-screen-memory-model](25-screen-memory-model.md)                       | 8 — the forgetting curve                                 | v1.1      | M     |
-| [26-screen-roleplay-and-ai](26-screen-roleplay-and-ai.md)                 | 7 — roleplay, and the live provider                      | v1.1      | L     |
-| [27-labs-pronunciation-and-prosody](27-labs-pronunciation-and-prosody.md) | 9 & 10 — highest technical risk in the project           | v1.1      | XL    |
-| [28-screens-run-and-phrasebook](28-screens-run-and-phrasebook.md)         | 13 & 14 — **conditional on M3 data and Q-05**            | v2        | XL    |
-| [29-settings-and-engine-switching](29-settings-and-engine-switching.md)   | Settings, which does not exist at all                    | v1        | M     |
-
----
-
-## Cross-cutting
-
-| Plan                                                                                 | Why now                                                                                                                                                                                                                                                                                                                    | Size |
-| ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- |
-| [30-widgets-and-notifications](30-widgets-and-notifications.md)                      | The policy is written and tested in Rust; nothing calls it                                                                                                                                                                                                                                                                 | L    |
-| [31-offline-survival-mode](31-offline-survival-mode.md)                              | The first M2 exit criterion: airplane mode, fresh launch, usable in <2 s                                                                                                                                                                                                                                                   | L    |
-| [32-observability-and-analytics](32-observability-and-analytics.md)                  | Crash reporting is unwired (unmet M0 item), and three open questions are unanswerable without instrumentation                                                                                                                                                                                                              | M–L  |
-| [33-experimentation-and-flags](33-experimentation-and-flags.md)                      | Four flags exist in code and cannot be set. **Q-05 blocks M3 start** and its measure cannot be retro-fitted                                                                                                                                                                                                                | M    |
-| [34-design-system-completion](34-design-system-completion.md)                        | ~15 of ~40 components exist; 11 animations are specified and almost none implemented                                                                                                                                                                                                                                       | M–L  |
-| [35-accessibility-wcag-pass](35-accessibility-wcag-pass.md)                          | Four gates already run in CI. **Q-14 is holding the hero screen's peak state**                                                                                                                                                                                                                                             | M–L  |
-| [36-content-scale-to-600](36-content-scale-to-600.md)                                | 31 phrases, no audio. Gates the labs and the audio module, not just the catalog                                                                                                                                                                                                                                            | L    |
-| [37-testing-gaps](37-testing-gaps.md) 🟡                                             | Calendar parity, mobile domain/data tests, and every current web route have coverage; simulation, properties, component/blueprint fixtures, and native E2E remain                                                                                                                                                          | M    |
-| [38-performance-budget-harness](38-performance-budget-harness.md)                    | One budget of many is enforced. The <2 s bar is unmeasured                                                                                                                                                                                                                                                                 | M    |
-| [39-security-hardening-api](39-security-hardening-api.md)                            | No validation pipeline, no rate limits, no guards                                                                                                                                                                                                                                                                          | M    |
-| [40-monetization-paywall](40-monetization-paywall.md)                                | **Q-08 blocks v1 launch** and needs research before code                                                                                                                                                                                                                                                                   | L    |
-| [41-docker-and-compose](41-docker-and-compose.md)                                    | **The API image build cannot succeed** — it `COPY`s a gitignored directory the deploy workflow never builds. Plus no `.dockerignore`, floating tags, and compose binding Postgres to `0.0.0.0`                                                                                                                             | M    |
-| [42-incident-response-and-slos](42-incident-response-and-slos.md)                    | The doc exists; nothing is wired. Offline-first changes what the SLOs should measure                                                                                                                                                                                                                                       | M    |
-| [43-ui-localization](43-ui-localization.md)                                          | Scaffolding is cheap now and expensive across 21 screens later                                                                                                                                                                                                                                                             | M    |
-| [44-docs-drift-cleanup](44-docs-drift-cleanup.md)                                    | Onboarding, README and testing docs advertise commands, paths or suites that do not exist; volatile counts have already diverged                                                                                                                                                                                           | S    |
-| [45-api-integrations](45-api-integrations.md)                                        | Provider-side contracts, credentials, and verification for the LLM, TTS, STT, auth, billing, storage, and observability vendors (pre-existing plan; complements the app-side module plans above)                                                                                                                           | L    |
-| [46-navigation-system](46-navigation-system.md)                                      | Eight routes, each wired by the screen that needed it. Nothing owns the route map for 21 screens — so eleven verified defects, and thirteen screen plans with no header, exit, or entry contract to build against                                                                                                          | M–L  |
-| [47-typography-motion-and-haptics](47-typography-motion-and-haptics.md)              | The generator emits colour and layout and **silently skips `type.json` and `motion.json`**. So neither typeface loads, the italic serif that carries the product's voice has no rendering path, no number is tabular, reduced motion has no tokens to inherit from — and haptics are absent from the app and from the spec | M    |
-| [48-app-shell-failure-states-and-input](48-app-shell-failure-states-and-input.md)    | The Refrain renders **blank** while its plan resolves and forever if it rejects; there is no `ErrorBoundary` anywhere. Plus unfinished text input with no keyboard handling, unvirtualised lists, and a colour-literal lint rule that misses `rgba()` in six places                                                        | S–M  |
-| [51-extended-e2e-strategy](51-extended-e2e-strategy.md) ✅                           | Added the clock, multi-day, rendered-a11y, text-scale and production-bundle axes to the web gate — 61 tests. Found and fixed nine defects none of the previous suite could reach, including a CI drift gate that had been passing vacuously                                                                                | M–L  |
-| [52-solid-kiss-dry-refactor](52-solid-kiss-dry-refactor.md) ✅                       | Whole-project SOLID/KISS/DRY pass behind a frozen E2E suite: route copy centralized, style literals tokenized, duplicated screen furniture moved to `src/ui/components/`, and the four biggest internals decomposed. Lands [48](48-app-shell-failure-states-and-input.md) §3/§3a                                           | L    |
-| [53-post-refactor-solid-kiss-dry-audit](53-post-refactor-solid-kiss-dry-audit.md) 🟡 | Evidence-led follow-up to 52: implementation is in progress with no external blocker; copy ownership, token generation, canonical-data deduplication, engine injection, and final frozen-E2E proof remain                                                                                                                  | M    |
-
----
-
-## Blocked on a decision, not on engineering
-
-Seven open decisions block work in the plans below — five filed in
-`docs/decisions/open-questions.md`, and two (Q-15, Q-16) proposed by these plans and **not yet
-filed**, which is itself an action. Each plan says so in its own text rather than building around
-the gap:
-
-| Question                                                                                               | Blocks                                                       | Plan                                                                                                                               |
-| ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
-| **Q-05** — who owns the loop decision (🔴, blocks M3 start)                                            | The loop experiment; the cold probe cannot be retro-fitted   | [33-experimentation-and-flags](33-experimentation-and-flags.md), [28-screens-run-and-phrasebook](28-screens-run-and-phrasebook.md) |
-| **Q-08** — pricing (🔴, blocks v1 launch)                                                              | The paywall's contents                                       | [40-monetization-paywall](40-monetization-paywall.md)                                                                              |
-| **Q-07** — how trip mode serves "moving abroad"                                                        | The arrival screen's data model                              | [22-trip-arc-screens](22-trip-arc-screens.md)                                                                                      |
-| **Q-14** — the Refrain peak subtitle's contrast                                                        | The v1 hero screen's reward moment                           | [35-accessibility-wcag-pass](35-accessibility-wcag-pass.md)                                                                        |
-| **Q-11** — rename the blueprint folder                                                                 | Nothing, but it gets costlier every week                     | [44-docs-drift-cleanup](44-docs-drift-cleanup.md)                                                                                  |
-| **Q-15** (proposed) — is there a cloud ASR path at all? ADR-0005 says yes, the printed promise says no | The speech module's network code                             | [12-asr-speech-module](12-asr-speech-module.md), [45-api-integrations](45-api-integrations.md) §6.4                                |
-| **Q-16** (proposed) — TTS provider and the pinned voice                                                | Catalog audio, and every `f0_native` contour derived from it | [45-api-integrations](45-api-integrations.md) §5.1, [36-content-scale-to-600](36-content-scale-to-600.md)                          |
-
----
-
-## The three non-negotiables, and which plans touch them
-
-A change that violates one of these is reverted, not discussed (`CLAUDE.md`).
-
-**1 · Recorded audio never leaves the device** — [12-asr-speech-module](12-asr-speech-module.md)
-(owns the by-handle API contract),
-[27-labs-pronunciation-and-prosody](27-labs-pronunciation-and-prosody.md),
-[23-add-import-and-capture](23-add-import-and-capture.md) (OCR images raise the same question for
-photos).
-
-**2 · Every number shown to a learner is real** — **three** violations left:
-[03-fix-latency-measurement](03-fix-latency-measurement.md) (a display floor that rewrites the
-measurement), [05-fix-shared-maths-duplication](05-fix-shared-maths-duplication.md) (invented FSRS
-intervals, a fixed cloze mask), and
-[50-interface-integrity-defects](50-interface-integrity-defects.md) (a playback progress bar
-hardcoded at 35% over an app with no audio, and repeat pips that never advance). A fourth,
-[02-fix-fabricated-streak](02-fix-fabricated-streak.md) ✅, is fixed. Also guarded by
-[25-screen-memory-model](25-screen-memory-model.md),
-[19-prosody-dsp-spike-and-pipeline](19-prosody-dsp-spike-and-pipeline.md), and
-[22-trip-arc-screens](22-trip-arc-screens.md) (the souvenir screen is the most likely place to
-acquire fake stats).
-
-**3 · No screen shames a missed day** — constrains
-[02-fix-fabricated-streak](02-fix-fabricated-streak.md) ✅,
-[30-widgets-and-notifications](30-widgets-and-notifications.md) (a notification is a screen, and it
-arrives uninvited), [20-screen-today-ritual](20-screen-today-ritual.md) and
-[24-screen-review-session](24-screen-review-session.md) (both must present a return after an absence
-with no backlog framing), and [28-screens-run-and-phrasebook](28-screens-run-and-phrasebook.md)
-(staleness is information, not a penalty).
-
----
-
-## Conventions in these plans
-
-- **Requirement IDs** (`P2-04`, `LB-25`) come from [`docs/product/prd.md`](../docs/product/prd.md)
-  and go in the branch, the commits, and the PR.
-- **Blueprint citations** look like `Loro.dc.html:1404–1538`.
-- **Code citations** look like `apps/mobile/src/store/index.ts:134` and were verified at the time of
-  writing — re-check the line if the file has moved on.
-- Each plan carries **acceptance criteria** written so they can be checked, and an explicit **out of
-  scope** so a plan does not grow into its neighbours.
+- Every plan begins from what is implemented now; no plan may rebuild a completed seam.
+- Learner-visible behavior and each new state land with its E2E manifest entry and tests.
+- Native plans add real-device coverage; browser E2E is not accepted as proof of audio, speech,
+  persistence, widgets, permissions, or offline operation.
+- Cross-cutting testing, accessibility, performance, security, observability, and documentation are
+  acceptance work inside the plan that creates the behavior. Plans 72 and 73 own only release-level
+  matrices and shared infrastructure.
+- When a blocked decision is resolved, record it in `docs/decisions/`, update the owning plan, and
+  remove the blocker here. Do not invent a product answer inside implementation.

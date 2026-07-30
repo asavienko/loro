@@ -5,6 +5,36 @@ guilt** (`Loro.dc.html:2009`).
 
 ---
 
+## Implementation boundary (current repository)
+
+The native surfaces in this document do not exist yet. There is no WidgetKit, ActivityKit, Glance,
+Android widget, notification scheduler, snapshot publisher, or `expo-notifications` dependency in
+`apps/mobile`. The app configuration reserves the iOS App Group, Android notification/foreground
+service permissions, URL scheme, and background-audio capability; those declarations do not render,
+schedule, or deliver anything.
+
+The reusable part that does exist is smaller: `packages/core-rs/src/notify.rs` defines the seven
+categories and unit-tests quiet hours, the daily cap, opt-outs, conditional waves, trip gating, the
+language-pack threshold, and category deep-link strings. It does **not** yet implement the
+`planNotifications` function shown below, choose delivery times, schedule OS notifications, publish
+a widget snapshot, or select a phrase of the moment. `apps/mobile/src/lib/clock.ts` and Rust
+calendar rules provide day semantics, but neither is connected to a native rollover callback.
+
+### Prerequisites for adding the surfaces
+
+Before scheduling, complete a pure planner whose output includes stable notification identifiers,
+delivery timestamps, category, copy key, and destination; test replacement/cancellation, foreground
+suppression, timezone travel, DST, permission denial, and the absolute daily cap. Then add the
+platform adapter and reschedule hooks for foreground, settings, practice completion, trip changes,
+and local-day rollover. A scheduled notification must never depend on JavaScript waking at delivery
+time.
+
+Before widgets, define and version the snapshot at the shared boundary, add atomic platform storage,
+publish after the local transaction commits, and make stale/missing/audio-missing states explicit.
+Only after those contracts exist should the native targets and Live Activity lifecycle be added.
+Every destination in the policy must resolve to an implemented route (or remain unscheduled); most
+trip/settings destinations in the target table do not exist today.
+
 ## The lock screen widget
 
 `Loro.dc.html:1988–2007` · [functional-spec.md](../product/functional-spec.md#19-lock-screen-widget)
@@ -146,9 +176,10 @@ async function rescheduleAll(state: NotificationState): Promise<void> {
 }
 ```
 
-`planNotifications` is pure and lives in `loro-core`, which means the entire notification policy —
-caps, quiet hours, conditionality, skip-if-practised — is unit-tested rather than emergent from
-scattered scheduling calls. This is the mechanism that makes rule `N-04` enforceable.
+`planNotifications` will be pure and live in `loro-core`, so the entire notification policy can be
+unit-tested rather than emerging from scattered scheduling calls. Today the core exposes and tests
+the individual `may_fire` policy and `deep_link_for` rules; constructing a complete, ordered plan is
+still required. This boundary is the mechanism that makes rule `N-04` enforceable.
 
 ### Deep links
 
@@ -191,13 +222,13 @@ Arrival date reached
 
 ## Testing
 
-| Test                        | Method                                                                                 |
-| --------------------------- | -------------------------------------------------------------------------------------- |
-| `planNotifications` policy  | Unit tests in `loro-core`: caps, quiet hours, skip-if-practised, conditional waves     |
-| Widget snapshot correctness | Unit test the selection ladder; golden-file the snapshot for known states              |
-| Widget rendering            | Xcode previews / Glance previews for every state, including empty and no-trip          |
-| Offline widget play         | Manual: airplane mode, tap ▶ on the lock screen, audio plays without launching the app |
-| Live Activity lifecycle     | Manual on a device — the simulator's Activity behaviour is not trustworthy             |
-| Deep links                  | Maestro flows asserting each notification lands on the right screen                    |
-| Day rollover                | Advance the device clock past midnight; assert widget and notifications both update    |
-| Copy audit                  | Every string in both surfaces reviewed against the forbidden list, every release       |
+| Test                        | Method                                                                                               |
+| --------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Notification policy         | Present: Rust unit tests for caps, quiet hours, opt-outs and gates. Required: complete planner tests |
+| Widget snapshot correctness | Unit test the selection ladder; golden-file the snapshot for known states                            |
+| Widget rendering            | Xcode previews / Glance previews for every state, including empty and no-trip                        |
+| Offline widget play         | Manual: airplane mode, tap ▶ on the lock screen, audio plays without launching the app               |
+| Live Activity lifecycle     | Manual on a device — the simulator's Activity behaviour is not trustworthy                           |
+| Deep links                  | Maestro flows asserting each notification lands on the right screen                                  |
+| Day rollover                | Advance the device clock past midnight; assert widget and notifications both update                  |
+| Copy audit                  | Every string in both surfaces reviewed against the forbidden list, every release                     |
