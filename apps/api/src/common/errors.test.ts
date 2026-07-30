@@ -100,6 +100,15 @@ describe('a framework HTTP exception', () => {
   it('serves problem bodies as problem+json', () => {
     expect(PROBLEM_MEDIA_TYPE).toBe('application/problem+json')
   })
+
+  it('keeps the `type` at /http rather than deriving it from the code', () => {
+    // `NOT_FOUND` is a code in the catalog now, so deriving the slug the way every other
+    // problem does would emit `…/errors/not-found` — a changed response for a client that
+    // may already switch on this one. The divergence is deliberate; this pins it.
+    expect(toHttpProblemDetails(404, 'x').type).not.toContain('not-found')
+    expect(ERROR_CODES.NOT_FOUND).toBe(404)
+    expect(CLIENT_BEHAVIOUR.NOT_FOUND).toBeTruthy()
+  })
 })
 
 describe('rate limits', () => {

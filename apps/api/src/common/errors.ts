@@ -7,60 +7,106 @@
  * See docs/architecture/api.md#error-shape
  */
 
-export const ERROR_CODES = {
-  UNAUTHENTICATED: 401,
-  FORBIDDEN: 403,
-  PLAN_REQUIRED: 402,
-  SCHEMA_TOO_OLD: 409,
-  RATE_LIMITED: 429,
-  BUDGET_EXCEEDED: 429,
-  VALIDATION_FAILED: 422,
-  PROVIDER_UNAVAILABLE: 503,
-  INTERNAL: 500,
-} as const
-
-export type ErrorCode = keyof typeof ERROR_CODES
-
-/** What the client is expected to do. Documented so the two sides can't drift. */
-export const CLIENT_BEHAVIOUR: Record<ErrorCode, string> = {
-  UNAUTHENTICATED: 'refresh once, then re-auth. NEVER drop the outbox',
-  FORBIDDEN: 'log — this is a bug if it happens',
-  PLAN_REQUIRED: 'show the paywall for the relevant feature',
-  SCHEMA_TOO_OLD: 'prompt to update; pause sync; local use continues',
-  RATE_LIMITED: 'back off per Retry-After',
-  BUDGET_EXCEEDED: 'use the bundled fallback SILENTLY — the learner must not notice',
-  VALIDATION_FAILED: 'dead-letter the op locally and report. Never retry blindly',
-  PROVIDER_UNAVAILABLE: 'bundled fallback',
-  INTERNAL: 'backoff',
+interface ErrorSpec {
+  /** The HTTP status. */
+  status: number
+  /** For logs and diagnostics. Never shown verbatim to a learner. */
+  title: string
+  /** What the client is expected to do. Documented so the two sides can't drift. */
+  client: string
 }
 
 /**
- * `NOT_FOUND` is not a `LoroError` code — it is what the filter emits for a routing
- * 404 raised by the framework itself. Naming it here rather than leaving it as a loose
- * string in the filter is the only way the client's switch and this table can be
- * checked against each other.
+ * ONE row per code.
+ *
+ * This was three parallel tables — status, title, client behaviour — each keyed by the
+ * same union and each living in a different part of the file. Adding a code meant three
+ * edits, and reading what `PLAN_REQUIRED` means meant three lookups. The three exports
+ * below are now views over this, so a code cannot exist with two of the three defined.
  */
-export type ProblemCode = ErrorCode | 'NOT_FOUND'
+const CATALOG = {
+  UNAUTHENTICATED: {
+    status: 401,
+    title: 'Authentication required',
+    client: 'refresh once, then re-auth. NEVER drop the outbox',
+  },
+  FORBIDDEN: {
+    status: 403,
+    title: 'Not permitted',
+    client: 'log — this is a bug if it happens',
+  },
+  PLAN_REQUIRED: {
+    status: 402,
+    title: 'This feature requires Loro Plus',
+    client: 'show the paywall for the relevant feature',
+  },
+  SCHEMA_TOO_OLD: {
+    status: 409,
+    title: 'Client schema version is no longer supported',
+    client: 'prompt to update; pause sync; local use continues',
+  },
+  RATE_LIMITED: {
+    status: 429,
+    title: 'Too many requests',
+    client: 'back off per Retry-After',
+  },
+  BUDGET_EXCEEDED: {
+    status: 429,
+    title: 'AI budget exceeded',
+    client: 'use the bundled fallback SILENTLY — the learner must not notice',
+  },
+  VALIDATION_FAILED: {
+    status: 422,
+    title: 'Request failed validation',
+    client: 'dead-letter the op locally and report. Never retry blindly',
+  },
+  PROVIDER_UNAVAILABLE: {
+    status: 503,
+    title: 'Upstream provider unavailable',
+    client: 'bundled fallback',
+  },
+  INTERNAL: {
+    status: 500,
+    title: 'Internal error',
+    client: 'backoff',
+  },
+  /**
+   * Emitted by the exception filter for a routing 404, never thrown as a `LoroError`.
+   * It was previously a loose string in the filter — the one field this file's header
+   * calls "the CONTRACT — the client switches on it" was shipping a value the contract
+   * did not define, and `CLIENT_BEHAVIOUR` had no row to tell a client what to do with
+   * it. The emitted body is unchanged; only the table now admits it exists.
+   */
+  NOT_FOUND: {
+    status: 404,
+    title: 'Not found',
+    client: 'log — a 404 on a route the client knows is a bug. Never retry blindly',
+  },
+} as const satisfies Record<string, ErrorSpec>
+
+export type ErrorCode = keyof typeof CATALOG
+
+/** One view per column, so the three stay in step by construction. */
+function view<T>(pick: (spec: ErrorSpec) => T): Record<ErrorCode, T> {
+  return Object.fromEntries(
+    Object.entries(CATALOG).map(([code, spec]) => [code, pick(spec)]),
+  ) as Record<ErrorCode, T>
+}
+
+export const ERROR_CODES: Record<ErrorCode, number> = view((s) => s.status)
+
+/** What the client is expected to do. Documented so the two sides can't drift. */
+export const CLIENT_BEHAVIOUR: Record<ErrorCode, string> = view((s) => s.client)
+
+const TITLES: Record<ErrorCode, string> = view((s) => s.title)
 
 export interface ProblemDetails {
   type: string
   title: string
   status: number
   detail?: string
-  code: ProblemCode
+  code: ErrorCode
   [key: string]: unknown
-}
-
-const TITLES: Record<ErrorCode, string> = {
-  UNAUTHENTICATED: 'Authentication required',
-  FORBIDDEN: 'Not permitted',
-  PLAN_REQUIRED: 'This feature requires Loro Plus',
-  SCHEMA_TOO_OLD: 'Client schema version is no longer supported',
-  RATE_LIMITED: 'Too many requests',
-  BUDGET_EXCEEDED: 'AI budget exceeded',
-  VALIDATION_FAILED: 'Request failed validation',
-  PROVIDER_UNAVAILABLE: 'Upstream provider unavailable',
-  INTERNAL: 'Internal error',
 }
 
 export class LoroError extends Error {
@@ -88,7 +134,7 @@ interface ProblemInit {
   slug: string
   title: string
   status: number
-  code: ProblemCode
+  code: ErrorCode
   /** Fields the client needs beyond the RFC members, e.g. `min_app_version`. */
   extra?: Record<string, unknown>
 }
@@ -132,16 +178,21 @@ export function toProblemDetails(e: unknown): ProblemDetails {
 
 /**
  * A problem body for an exception the FRAMEWORK raised — a routing 404, a malformed
- * body — where there is no `LoroError` and so no `code` of ours to report. The status
- * carries the meaning, and `title` is the framework's own message, which is safe: it
- * describes the request, not our internals.
+ * body — where there is no `LoroError` to take a code from. The status carries the
+ * meaning, and `title` is the framework's own message, which is safe: it describes the
+ * request, not our internals.
+ *
+ * The slug stays `http` DELIBERATELY, even though `NOT_FOUND` is now a code in the
+ * catalog: deriving it would emit `…/errors/not-found` and silently change a response a
+ * client may already switch on. The `status` likewise comes from the exception, not from
+ * the catalog — the framework is the authority on what it just raised.
  */
 export function toHttpProblemDetails(status: number, title: string): ProblemDetails {
   return problem({
     slug: 'http',
     title,
     status,
-    code: status === 404 ? 'NOT_FOUND' : 'INTERNAL',
+    code: status === ERROR_CODES.NOT_FOUND ? 'NOT_FOUND' : 'INTERNAL',
   })
 }
 

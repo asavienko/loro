@@ -8,6 +8,7 @@
  */
 
 import { describe, expect, it } from 'vitest'
+import { systemClock, type ServerClock } from '../common/clock.js'
 import { LoroError } from '../common/errors.js'
 import { mergeAvailable, type StoredRow } from './merge.js'
 import { InMemorySyncRepository } from './sync.repository.memory.js'
@@ -22,7 +23,11 @@ const hlc = (
   node_id,
 })
 
-const service = (): SyncService => new SyncService(new InMemorySyncRepository())
+const service = (clock: ServerClock = systemClock): SyncService =>
+  new SyncService(new InMemorySyncRepository(), clock)
+
+/** A clock that does not move, so a response string can be asserted exactly. */
+const frozen = (at: number): ServerClock => ({ now: () => at })
 
 const upsert = (overrides: Partial<PushOp> = {}): PushOp => ({
   seq: 1,
@@ -88,10 +93,30 @@ describe('push validation', () => {
 
 describe('push response', () => {
   it('reports a server clock the client can measure its own skew against', async () => {
-    const res = await service().push({ ops: [] })
-    expect(res).toMatchObject({ accepted: [], rejected: [], conflicts: [] })
-    expect(res.server_hlc).toMatch(/^\d+:0000:srv$/)
-    expect(res.server_time).toBeGreaterThan(0)
+    // The HLC format is a wire contract: the client parses the physical part out of it
+    // to detect skew, so the exact string matters, not just that it is a string.
+    const res = await service(frozen(1_700_000_000_000)).push({ ops: [] })
+    expect(res).toEqual({
+      accepted: [],
+      rejected: [],
+      conflicts: [],
+      server_hlc: '1700000000000:0000:srv',
+      server_time: 1_700_000_000_000,
+    })
+  })
+
+  needsWasm('stamps a delete with the server clock when the client sent no time', async () => {
+    const repo = new InMemorySyncRepository()
+    const sync = new SyncService(repo, frozen(4_242))
+    await sync.push({ ops: [upsert({ op: 'delete', fields: {} })] })
+    expect((await repo.get('user_phrase', 'up_1'))?.deleted_at).toBe(4_242)
+  })
+
+  needsWasm('keeps a delete time the client DID send — the device owns that instant', async () => {
+    const repo = new InMemorySyncRepository()
+    const sync = new SyncService(repo, frozen(4_242))
+    await sync.push({ ops: [upsert({ op: 'delete', fields: {}, deleted_at: 999 })] })
+    expect((await repo.get('user_phrase', 'up_1'))?.deleted_at).toBe(999)
   })
 })
 
@@ -102,7 +127,7 @@ describe('the injected store', () => {
 
   needsWasm('writes the merged row through the repository, not to module state', async () => {
     const repo = new InMemorySyncRepository()
-    const sync = new SyncService(repo)
+    const sync = new SyncService(repo, systemClock)
 
     await sync.push({ ops: [upsert({ fields: { reps: { v: 20, hlc: hlc(1000, 'a') } } })] })
     // A LOWER count with a LATER clock: `max` must hold 20. Asserted here to prove the

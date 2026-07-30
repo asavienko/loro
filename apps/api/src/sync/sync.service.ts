@@ -13,6 +13,7 @@
 
 import { Inject, Injectable } from '@nestjs/common'
 import { isSyncEntity, mergeClassFor, type MergeClass, type SyncEntity } from '@loro/core'
+import { SERVER_CLOCK, type ServerClock } from '../common/clock.js'
 import { LoroError } from '../common/errors.js'
 import { mergeAvailable, mergeRow, type FieldValue, type StoredRow } from './merge.js'
 import { SYNC_REPOSITORY, type SyncRepository } from './sync.repository.js'
@@ -72,7 +73,10 @@ const MAX_OPS = 500
 
 @Injectable()
 export class SyncService {
-  constructor(@Inject(SYNC_REPOSITORY) private readonly rows: SyncRepository) {}
+  constructor(
+    @Inject(SYNC_REPOSITORY) private readonly rows: SyncRepository,
+    @Inject(SERVER_CLOCK) private readonly clock: ServerClock,
+  ) {}
 
   async push(body: PushBody): Promise<PushResponse> {
     const ops = body.ops
@@ -104,7 +108,8 @@ export class SyncService {
         entity: op.entity,
         id: op.entity_id,
         fields: op.fields ?? {},
-        deleted_at: op.op === 'delete' ? (op.deleted_at ?? Date.now()) : (op.deleted_at ?? null),
+        deleted_at:
+          op.op === 'delete' ? (op.deleted_at ?? this.clock.now()) : (op.deleted_at ?? null),
         classes: declared.classes,
       })
 
@@ -117,9 +122,9 @@ export class SyncService {
       accepted,
       rejected,
       conflicts,
-      server_hlc: serverHlc(),
+      server_hlc: this.serverHlc(),
       // Lets the client detect its own clock skew.
-      server_time: Date.now(),
+      server_time: this.clock.now(),
     }
   }
 
@@ -132,9 +137,12 @@ export class SyncService {
   async pull(_body: PullBody): Promise<PullResponse> {
     return {
       changes: await this.rows.all(),
-      next: serverHlc(),
+      // Two reads, not one: `next` and `server_hlc` were two separate `Date.now()`
+      // calls and may differ by a millisecond. Collapsing them would be a response
+      // change, small but real.
+      next: this.serverHlc(),
       has_more: false,
-      server_hlc: serverHlc(),
+      server_hlc: this.serverHlc(),
     }
   }
 
@@ -144,6 +152,15 @@ export class SyncService {
       merge: mergeAvailable() ? 'loro-core (wasm)' : 'unavailable — run pnpm core-rs:build',
       entities: await this.rows.count(),
     }
+  }
+
+  /**
+   * The server's HLC. `0000:srv` is a placeholder for a real logical counter and node id,
+   * which arrive with persistence (plans/13) — the client only uses this to order and to
+   * detect skew today.
+   */
+  private serverHlc(): string {
+    return `${this.clock.now()}:0000:srv`
   }
 }
 
@@ -168,13 +185,4 @@ function declaredClasses(entity: SyncEntity, fields: Record<string, FieldValue>)
 /** A row this server has never seen. The merge treats it as an empty local side. */
 function blankRow(op: PushOp): StoredRow {
   return { entity: op.entity, id: op.entity_id, fields: {}, deleted_at: null }
-}
-
-/**
- * The server's HLC. `0000:srv` is a placeholder for a real logical counter and node id,
- * which arrive with persistence (plans/13) — the client only uses this to order and to
- * detect skew today.
- */
-function serverHlc(): string {
-  return `${Date.now()}:0000:srv`
 }

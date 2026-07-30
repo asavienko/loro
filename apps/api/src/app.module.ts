@@ -8,6 +8,7 @@
  */
 
 import { Module } from '@nestjs/common'
+import { SERVER_CLOCK, systemClock } from './common/clock.js'
 import { HealthController } from './health/health.controller.js'
 import { ContentController } from './content/content.controller.js'
 import { SyncController } from './sync/sync.controller.js'
@@ -35,6 +36,8 @@ import { StubSceneProvider } from './ai/scene-provider.stub.js'
     SyncService,
     // Postgres lands with plans/13; it replaces this line and nothing else.
     { provide: SYNC_REPOSITORY, useClass: InMemorySyncRepository },
+    // The wall clock, so a test can pin `server_hlc` instead of matching a regex.
+    { provide: SERVER_CLOCK, useValue: systemClock },
   ],
 })
 // A Nest module is a decorated marker class; an empty body is the framework's shape,

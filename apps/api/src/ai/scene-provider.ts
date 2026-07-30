@@ -41,5 +41,13 @@ export interface SceneProvider {
   scene(theme: string): Promise<SceneResult>
 }
 
-/** Nest DI token for every registered provider. Injected as `SceneProvider[]`. */
-export const SCENE_PROVIDERS = 'SCENE_PROVIDERS'
+/**
+ * Nest DI token for every registered provider, injected as `SceneProvider[]`.
+ *
+ * The ARRAY rather than the one provider `AI_PROVIDER` selects, because the selection
+ * has to stay observable: an `AI_PROVIDER` naming a provider that isn't registered
+ * warns on every request and serves the bundled scene, and `/ai/themes` reports the
+ * configured name — not the name of whatever was substituted for it. Resolving the
+ * choice once in the module factory would quietly change both.
+ */
+export const SCENE_PROVIDERS = Symbol('SceneProviders')

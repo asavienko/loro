@@ -40,5 +40,8 @@ export interface SyncRepository {
   count(): Promise<number>
 }
 
-/** Nest DI token. An interface has no runtime value to inject by. */
-export const SYNC_REPOSITORY = 'SYNC_REPOSITORY'
+/**
+ * Nest DI token. An interface has no runtime value to inject by, and a symbol cannot
+ * collide with another module's token the way a bare string can.
+ */
+export const SYNC_REPOSITORY = Symbol('SyncRepository')
