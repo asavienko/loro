@@ -67,7 +67,12 @@ Five findings that set the shape of the work:
 
 ## Where things go
 
-Grounded in what `eslint.config.mjs` already declares, so no lint config has to be loosened:
+Grounded in what `eslint.config.mjs` already declares, so no lint config has to be loosened — and in
+[`component-inventory.md`](../docs/design/component-inventory.md), which **already specifies 23
+primitives in `src/ui/primitives/` (a directory) and 39 domain components in `src/ui/components/`**,
+naming `Chip`, `Segmented`, `Sheet`, `Scrim`, `IconButton`, `TextField`, `PhraseRow`,
+`DifficultySelector`, `TagChips` and `MasteryBar` — every one of which the screens hand-roll today.
+Nothing below is invented: the structure was specified before it was built, and this plan builds it:
 
 | New home                    | Holds                                                                | Why there                                                                        |
 | --------------------------- | -------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
@@ -115,6 +120,54 @@ paths; the wave boundary is where a consumer needs its dependency's real API.
 - No learner-facing string literal left in `apps/mobile/app/**`.
 - No numeric style literal in `apps/mobile/app/**` that isn't a token reference.
 - Every route file's default export composes named components; none is a monolith.
+
+## Defects found while reading, all OUT of scope
+
+Reading eight screens and four packages closely enough to refactor them turned up nine defects. None
+is fixed here — every one of them changes a number, a merge outcome, or a planning decision, which
+is exactly what this plan promises not to do. They are recorded so the reading is not thrown away.
+
+1. **The stream's rank formula has already drifted from the one it duplicates.**
+   `app/practice/stream.tsx:48-51` computes `plays + difficultyOffset + lovedBonus` and **omits the
+   `srs.due` term** that both `store/index.ts:411` (`r -= 4`) and `core-rs/src/rank.rs:47-51` apply.
+   So the queue the learner scrolls is ordered differently from the one `StreamEngine.plan()` would
+   produce, and `rank.rs:22-32` calls that formula "a **contract**, not a display model". Three
+   implementations, one already wrong — precisely the failure
+   [ADR-0002](../docs/architecture/adr/0002-shared-rust-core.md) exists to prevent. Fixing it
+   reorders the queue, so it belongs to
+   [05-fix-shared-maths-duplication](05-fix-shared-maths-duplication.md).
+2. **The Refrain's cloze blank and the stored cloze mask can disagree.** `practice/refrain.tsx`'s
+   local `cloze()` blanks the longest content word, while `RefrainEngine` records `clozeMask: [1]`
+   from the stubbed facade. The screen renders one thing and the engine stores another. Also
+   plan 05.
+3. **`SqlPhraseTable.upsert` resurrects soft-deleted rows and wipes per-field HLCs** —
+   `persistence/sqlite.ts:230-235` writes `field_hlc = '{}'` and `deleted_at = null` through
+   `INSERT OR REPLACE`, which is what `persistence/tables.ts:33-38` says soft-delete exists to
+   prevent. Changes a merge outcome directly.
+4. **`matchTokens` has two implementations that disagree on empty input.** `store/index.ts:440`
+   returns `complete: true` for an empty target; `packages/core/src/testing/index.ts:178` guards
+   with `&& t.length > 0`. The app's ASR gate completes on an empty phrase, and the test that would
+   catch it uses the other copy.
+5. **The app's inline `PhraseRepository.active()` ignores `graduatedAt`** (`store/index.ts:450`),
+   while both real table implementations require `graduatedAt === null`. A graduated phrase stays in
+   the Refrain rotation forever.
+6. **`isSyncEntity` hand-restates the `SyncEntity` union inside the persistence layer**
+   (`sqlite.ts:403-418`). Adding an entity compiles cleanly and this silently returns `false`, so
+   outbox coalescing stops for it with no failing test. Derivable from `FIELD_POLICY`; safe to fix,
+   and folded into this refactor.
+7. **`dropAll` hardcodes a table list** (`migrations.ts:235-249`) that a v2 migration will not
+   update, leaving learner rows on disk after a wipe that `tables.ts:91` calls "GDPR erasure, not a
+   cache clear". Safe to derive from `sqlite_master`; folded in.
+8. **`problem-filter.ts:33-43` emits `code: 'NOT_FOUND'`, which `ERROR_CODES` does not define** —
+   the one field its own header calls "the CONTRACT — the client switches on it". Adding the code to
+   the table is additive and changes no response; folded in.
+9. **`main.ts:30-32` describes an implementation that does not exist** — it claims request
+   validation uses "Zod schemas shared with the client (`packages/core`)". `zod` is a dependency of
+   both packages and the repo contains zero schemas. Either the schemas or the comment must go.
+
+Rule 5 is also weaker than it reads: `ProgressDelta` declares 17 signals, `engines/conformance.ts`
+enforces 4, and `cueLevel` has never been written by any engine. A new engine can maintain the same
+4 and pass. Tightening that is in scope as a **declaration plus a test**, which changes no delta.
 
 ## Deliberately not done
 
