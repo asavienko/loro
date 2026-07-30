@@ -9,7 +9,7 @@ Guidance for Claude Code working in this repository.
 Early implementation. **What exists:** the docs, 8 of the blueprint's 21 screens in
 `apps/mobile/app/`, an API with 10 endpoints over an in-memory store, the Rust core, the design
 tokens, a 31-phrase catalog, and the local persistence layer (schema, migrations, repositories,
-outbox — driver-agnostic and tested against real SQLite). 419 JS/TS tests, 130 Rust tests, and 61
+outbox — driver-agnostic and tested against real SQLite). 418 JS/TS tests, 130 Rust tests, and 61
 browser E2E tests pass. **What doesn't:** the native modules (audio, speech, ASR, widgets), the
 on-device SQLite driver, and the other 13 screens — so nothing runnable today exercises audio or the
 microphone, which is half of what this app is, and the app store is still in memory.
