@@ -4,11 +4,12 @@
   [`mobile-app.md`](../docs/architecture/mobile-app.md#layers)
 - **Milestone:** M1
 - **Size:** M, split into behavior-preserving, independently reversible commits
-- **Status:** 🟡 Implementation started 2026-07-30. Workstreams 1–5 and final verification remain;
-  there is no external blocker. Current-state audit completed with three parallel reviewers. Audit
-  baseline: `main` and `origin/main` at `c9b4e4d`; `pnpm check` **23/23** and `pnpm test:e2e`
-  **61/61**. Plan 52 already completed the whole-tree refactor, so this plan is the bounded residual
-  pass, not permission for another blanket rewrite.
+- **Status:** ✅ Implemented 2026-07-30 with one coordinator and three parallel agents. The frozen
+  implementation baseline was `5258228`; `apps/mobile/e2e/**` remained byte-identical. Final proof:
+  `pnpm check` **23/23**, browser E2E **61/61**, production-export smoke **3/3**, mobile iOS export,
+  API production build, generated-output drift checks, and scoped formatting all pass. The global
+  formatter is presently obscured by a concurrent, unrelated roadmap/design import in the shared
+  worktree; no Plan 53 implementation file is among its findings.
 - **Depends on:** [52-solid-kiss-dry-refactor](52-solid-kiss-dry-refactor.md) ✅
 - **Coordinates with:** [05](05-fix-shared-maths-duplication.md),
   [18](18-select-rs-cloze-and-set-selection.md), [34](34-design-system-completion.md),
@@ -296,6 +297,23 @@ test counts rather than copying old counts forward.
 The browser suite cannot prove native audio, microphone, device SQLite, or real offline behavior;
 none exists today and none is changed by this plan.
 
+## Implementation record
+
+- `60c75d5` centralizes presentation semantics, canonical mastery/themes/text folding, injected
+  engine construction, mobile copy, the exception-free copy gate, and TS/Rust effort parity.
+- `20ee201` emits complete authored typography, motion, touch, gutter, progress, and sheet token
+  families for TypeScript, Swift, and Kotlin, then migrates byte-equivalent mobile consumers.
+- `369305b` precomputes catalog lookup, locks controller bytes with tests, and removes dependencies
+  proven unused by source, builds, and the full gate.
+- `c51ce21` closes conditional, logical, concatenated, array, and template-expression gaps found by
+  the independent review of the copy gate.
+- `f555b42` names the two established React Native oversized line boxes. Their authored web ratios
+  deliberately remain unmigrated because doing so would change rendered pixels.
+
+The generated asymmetric sheet corner geometry also remains unused because the current screen uses
+24/24 while the authored token is 24/28. That visual correction belongs to the runtime design-system
+plan; this behavior-preserving pass does not silently move it.
+
 ## Acceptance criteria
 
 - `pnpm check` and every applicable verification command above pass.
@@ -312,8 +330,9 @@ none exists today and none is changed by this plan.
   table is silently fixed.
 - Each newly introduced pattern is justified in the register; no inheritance tree, singleton,
   service locator, or speculative component extraction lands.
-- Plans 34, 47, 52, and the new persistence-defect owner are updated with verified current state and
-  accurate ownership after implementation.
+- The rebuilt active roadmap records Plan 53 as the generated-token dependency for plan 57 and the
+  adapter/context dependency for persistence plan 54. Superseded plans 34, 47, and 52 remain
+  byte-preserved in the dated archive rather than being rewritten as current plans.
 
 ## Failure and rollback strategy
 
