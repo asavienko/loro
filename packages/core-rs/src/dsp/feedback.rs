@@ -80,7 +80,7 @@ pub fn select_fix(
     };
 
     // A syllable in the good band isn't worth a correction.
-    if syllable_scores[worst as usize] >= super::BAND_GOOD {
+    if syllable_scores[worst as usize] >= super::score::BAND_GOOD {
         return Fix {
             kind: FixKind::None,
             code: "none".into(),
@@ -97,13 +97,20 @@ pub fn select_fix(
     }
 }
 
+/// How close to the worst score still counts as a tie, in points.
+///
+/// Within this band the *earliest* syllable wins rather than the lowest-scoring one,
+/// because fixing an early error often fixes what follows — and because a 2-point gap is
+/// inside the DSP's own accuracy, so "lowest" would be picking noise.
+const NEAR_TIE_POINTS: u8 = 5;
+
 /// The weakest syllable, preferring the earliest among near-ties.
 #[must_use]
 pub fn worst_syllable(scores: &[u8]) -> Option<u32> {
     let min = *scores.iter().min()?;
     scores
         .iter()
-        .position(|s| *s <= min.saturating_add(5))
+        .position(|s| *s <= min.saturating_add(NEAR_TIE_POINTS))
         .and_then(|i| u32::try_from(i).ok())
 }
 

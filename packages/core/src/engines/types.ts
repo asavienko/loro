@@ -186,6 +186,45 @@ export interface ProgressDelta {
   readonly learned?: boolean
 }
 
+/** One writable progress signal. `phraseId` is the address, not a signal. */
+export type ProgressSignal = Exclude<keyof ProgressDelta, 'phraseId'>
+
+/**
+ * Every signal, enumerable at runtime — the list `conformance.ts` walks so that each
+ * engine must classify each one as maintained or exempt.
+ *
+ * This is `FIELD_POLICY`'s trick applied to rule 5. Declaring a signal on `ProgressDelta`
+ * is a promise that some engine keeps it; without a list to walk, adding a sixteenth is
+ * silent, and it stays unwritten by anything until someone happens to count. That is how
+ * `cueLevel` came to be declared and maintained by nobody.
+ */
+export const PROGRESS_SIGNALS = [
+  'reps',
+  'plays',
+  'lastPracticedAt',
+  'latencySampleMs',
+  'srs',
+  'repsToday',
+  'automaticity',
+  'lockedInToday',
+  'rung',
+  'stumbles',
+  'staleReset',
+  'cueLevel',
+  'axes',
+  'difficulty',
+  'learned',
+] as const satisfies readonly ProgressSignal[]
+
+type MustBeNever<T extends never> = T
+/**
+ * Compile error the moment a signal is added to `ProgressDelta` without being listed
+ * above — `satisfies` alone proves the list is sound, not that it is complete.
+ */
+export type AllProgressSignalsListed = MustBeNever<
+  Exclude<ProgressSignal, (typeof PROGRESS_SIGNALS)[number]>
+>
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Context and the engine itself
 // ─────────────────────────────────────────────────────────────────────────────

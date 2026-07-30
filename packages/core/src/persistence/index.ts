@@ -40,5 +40,5 @@ export {
   SqlRefrainDayTable,
   SqlSettingsTable,
   openSqlPersistence,
-} from './sqlite.js'
+} from './sqlite/index.js'
 export { openMemoryPersistence } from './memory.js'

@@ -3,6 +3,10 @@
  *
  * Never leaks a stack trace, an internal identifier, or SQL text — an unknown error
  * becomes a bare INTERNAL. See docs/architecture/security-privacy.md#server-hardening
+ *
+ * The filter decides WHICH problem describes the exception; `errors.ts` owns what the
+ * body looks like. Keeping those apart is what stops a fourth error case from inventing
+ * a fourth spelling of the same JSON.
  */
 
 import {
@@ -13,7 +17,13 @@ import {
   type ExceptionFilter,
 } from '@nestjs/common'
 import type { Request, Response } from 'express'
-import { LoroError, toProblemDetails } from './errors.js'
+import {
+  LoroError,
+  PROBLEM_MEDIA_TYPE,
+  toHttpProblemDetails,
+  toProblemDetails,
+  type ProblemDetails,
+} from './errors.js'
 
 @Catch()
 export class ProblemDetailsFilter implements ExceptionFilter {
@@ -21,32 +31,18 @@ export class ProblemDetailsFilter implements ExceptionFilter {
 
   catch(exception: unknown, host: ArgumentsHost): void {
     const ctx = host.switchToHttp()
-    const res = ctx.getResponse<Response>()
-    const req = ctx.getRequest<Request>()
+    const problem = this.problemFor(exception, ctx.getRequest<Request>())
+    ctx.getResponse<Response>().status(problem.status).type(PROBLEM_MEDIA_TYPE).json(problem)
+  }
 
-    if (exception instanceof LoroError) {
-      const problem = toProblemDetails(exception)
-      res.status(problem.status).type('application/problem+json').json(problem)
-      return
-    }
-
+  private problemFor(exception: unknown, req: Request): ProblemDetails {
+    if (exception instanceof LoroError) return toProblemDetails(exception)
     if (exception instanceof HttpException) {
-      const status = exception.getStatus()
-      res
-        .status(status)
-        .type('application/problem+json')
-        .json({
-          type: 'https://loro.app/errors/http',
-          title: exception.message,
-          status,
-          code: status === 404 ? 'NOT_FOUND' : 'INTERNAL',
-        })
-      return
+      return toHttpProblemDetails(exception.getStatus(), exception.message)
     }
-
-    // Log the detail; return none of it. `user_id` only — never a payload.
+    // An error we did not model: log the detail, return none of it. `user_id` only —
+    // never a payload.
     this.logger.error(`${req.method} ${req.url} — ${String(exception)}`)
-    const problem = toProblemDetails(exception)
-    res.status(problem.status).type('application/problem+json').json(problem)
+    return toProblemDetails(exception)
   }
 }

@@ -20,20 +20,22 @@ import type {
   SessionPlan,
   SessionSummary,
 } from '../types.js'
+import {
+  availableWhenActive,
+  distinctPhrases,
+  itemAtCursor,
+  itemFor,
+  metaNumber,
+  universalDelta,
+  workedItems,
+} from '../common.js'
 import type { PhraseState } from '../../domain/phrase.js'
-import { LadderRung } from '../../domain/phrase.js'
 
 export class StreamEngine implements PracticeEngine {
   readonly id = 'stream' as const
 
   availability(ctx: EngineContext): Promise<Availability> {
-    return ctx.phrases
-      .active()
-      .then((active) =>
-        active.length === 0
-          ? ({ state: 'unavailable', reason: 'stream-empty' } as const)
-          : ({ state: 'available' } as const),
-      )
+    return availableWhenActive(ctx, 'stream-empty')
   }
 
   async plan(ctx: EngineContext): Promise<SessionPlan> {
@@ -73,28 +75,24 @@ export class StreamEngine implements PracticeEngine {
   }
 
   next(session: SessionHandle): Promise<PracticeItem | null> {
-    return Promise.resolve(session.plan.items[session.cursor] ?? null)
+    return itemAtCursor(session)
   }
 
   record(session: SessionHandle, attempt: Attempt): Promise<ProgressDelta> {
-    const item = session.plan.items.find((i) => i.itemId === attempt.itemId)
-    if (item === undefined) {
-      throw new Error(`unknown item ${attempt.itemId}`)
-    }
-
-    const repIndex = Number(item.meta.repIndex ?? 0)
-    const repeatTarget = Number(item.meta.repeatTarget ?? 1)
+    const item = itemFor(session, attempt)
+    const repIndex = metaNumber(item, 'repIndex', 0)
+    const repeatTarget = metaNumber(item, 'repeatTarget', 1)
     const finishedCycle = repIndex === repeatTarget - 1
 
     return Promise.resolve({
-      phraseId: item.phraseId,
-      plays: finishedCycle ? 1 : 0,
-      // A full listen cycle is a rep; individual repetitions are not.
-      reps: finishedCycle ? 1 : 0,
-      lastPracticedAt: attempt.at,
-      // Passive listening does not measure production latency, and we do not
-      // invent one. Rule 4.
-      latencySampleMs: null,
+      ...universalDelta(item, attempt, {
+        // A full listen cycle is a rep; individual repetitions are not.
+        reps: finishedCycle ? 1 : 0,
+        plays: finishedCycle ? 1 : 0,
+        // Passive listening does not measure production latency, and we do not
+        // invent one. Rule 4.
+        latencyMs: null,
+      }),
       // Rule 5: listening is exposure, so it advances perception only. No FSRS
       // write — recognition without production is not a review.
       axes: { perception: 1 },
@@ -102,10 +100,9 @@ export class StreamEngine implements PracticeEngine {
   }
 
   async summarize(session: SessionHandle): Promise<SessionSummary> {
-    const unique = new Set(session.plan.items.slice(0, session.cursor).map((i) => i.phraseId))
     return Promise.resolve({
       engineId: this.id,
-      phrasesTouched: unique.size,
+      phrasesTouched: distinctPhrases(workedItems(session)),
       phrasesProduced: 0,
       durationMs: session.cursor * 4_350,
       extra: {},
@@ -134,5 +131,3 @@ export function rerateToast(to: 'easy' | 'med' | 'hard'): string {
     med: 'Back to normal',
   }[to]
 }
-
-export const STREAM_DEFAULT_RUNG = LadderRung.Accumulated

@@ -40,6 +40,11 @@ function main(): void {
     ['surface.app', appBg],
     ['surface.card', need('card')],
     ['surface.sunken', need('sunken')],
+    // `sunken2` was missing, and it is the DARKEST light surface — so it is the tightest
+    // pairing, not one that could be inferred from `sunken`. Its absence let
+    // `ink.muted` on `surface.sunken2` ship at 4.41:1 in the stream's difficulty row,
+    // where axe found it in the browser. A surface the app renders text on has to be here.
+    ['surface.sunken2', need('sunken2')],
   ]
 
   const check = (

@@ -24,6 +24,32 @@ import {
 
 export { surface, ink, line, semantic, scale, onDark, gradient, space, radius, shadow }
 
+/**
+ * The component-level tokens — sizing, borders, and each control's metrics.
+ *
+ * Re-exported here so this file stays the single front door to the design system: a screen
+ * or a component imports `space` and `chip` from the same place. They live in
+ * `src/ui/tokens/` because that directory is lint-exempt from the colour-literal rule and
+ * because the generated set has no name for a 1.5-px border or an 11-px chip.
+ */
+export {
+  MIN_TAP,
+  actionBar,
+  barRadius,
+  border,
+  cardHeader,
+  chip,
+  difficultyCard,
+  emptyState,
+  grid,
+  phraseRow,
+  pillSize,
+  sectionHeader,
+  segmented,
+  sheet,
+  statRow,
+} from './tokens'
+
 export type { AccentName }
 
 /** The active accent. Learner-selectable in v1.1; Coral until then. */
@@ -55,6 +81,9 @@ export const type = {
     textTransform: 'uppercase',
   },
 } as const
+
+/** A step on the type scale. `Text`'s `variant`. */
+export type TypeVariant = keyof typeof type
 
 /**
  * Difficulty palette, from the blueprint (`Loro.dc.html:2327-2331`).
@@ -118,6 +147,3 @@ export const press = {
   smallButton: 0.9,
   icon: 0.82,
 } as const
-
-/** Minimum tap target. WCAG 2.2 AA. */
-export const MIN_TAP = 44

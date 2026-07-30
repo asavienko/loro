@@ -154,6 +154,24 @@ export default tseslint.config(
             'Use a design token, not a colour literal. Tokens encode the accessibility rules (accentInk for text, never accent).',
         },
         {
+          // Hex was the only form this rule caught, so `rgba(191,87,34,0.07)` — which is
+          // exactly `accent.tint` — sat hardcoded in five screens and the sheet scrim in a
+          // sixth, invisible to the gate. Every one was a SELECTED state, so under F-05 all
+          // four accent themes would have changed and those six would have stayed coral.
+          // See plans/48 §3 and plans/52.
+          selector: 'Literal[value=/^(?:rgb|rgba|hsl|hsla)\\(/]',
+          message:
+            'Use a design token, not a colour literal. The accent alpha overlays are accent.tint / tint2 / tintBorder, and the sheet backdrop is surface.scrim.',
+        },
+        {
+          // `transparent` is deliberately absent: it is the absence of a colour, not a
+          // value that could drift from the palette.
+          selector:
+            'Literal[value=/^(?:white|black|red|green|blue|gray|grey|yellow|orange|purple|pink|brown|cyan|magenta|silver|gold|teal|navy|olive|maroon|lime|aqua|fuchsia)$/i]',
+          message:
+            'Use a design token, not a named CSS colour. `transparent` is the one permitted keyword.',
+        },
+        {
           selector: 'MemberExpression[object.name="Math"][property.name="random"]',
           message: 'Use an injected, seeded RNG. Engines and core logic must be deterministic.',
         },
@@ -186,6 +204,17 @@ export default tseslint.config(
           selector: 'Literal[value=/^#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/]',
           message:
             'Use a design token, not a colour literal. Tokens encode the accessibility rules (accentInk for text, never accent).',
+        },
+        {
+          selector: 'Literal[value=/^(?:rgb|rgba|hsl|hsla)\\(/]',
+          message:
+            'Use a design token, not a colour literal. The accent alpha overlays are accent.tint / tint2 / tintBorder, and the sheet backdrop is surface.scrim.',
+        },
+        {
+          selector:
+            'Literal[value=/^(?:white|black|red|green|blue|gray|grey|yellow|orange|purple|pink|brown|cyan|magenta|silver|gold|teal|navy|olive|maroon|lime|aqua|fuchsia)$/i]',
+          message:
+            'Use a design token, not a named CSS colour. `transparent` is the one permitted keyword.',
         },
         {
           selector: 'MemberExpression[object.name="Math"][property.name="random"]',

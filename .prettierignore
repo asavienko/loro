@@ -15,6 +15,7 @@ pnpm-lock.yaml
 **/.expo-export/
 **/coverage/
 **/.turbo/
+**/expo-env.d.ts
 
 # Rust is formatted by rustfmt
 **/*.rs
