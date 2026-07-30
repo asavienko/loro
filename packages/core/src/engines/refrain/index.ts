@@ -28,12 +28,92 @@ import type {
   SessionPlan,
   SessionSummary,
 } from '../types.js'
-import type { PhraseState } from '../../domain/phrase.js'
+import {
+  availableWhenActive,
+  distinctPhrases,
+  itemAtCursor,
+  itemFor,
+  metaNumber,
+  universalDelta,
+  workedItems,
+} from '../common.js'
+import type { Difficulty, PhraseState } from '../../domain/phrase.js'
 import type { UserPhraseId } from '../../domain/ids.js'
 import { LadderRung, repsToday } from '../../domain/phrase.js'
 
 export const REFRAIN_MODES = ['echo', 'chorus', 'speed', 'cloze', 'call', 'cold'] as const
 export type RefrainMode = (typeof REFRAIN_MODES)[number]
+
+/**
+ * Everything one mode is, on one row.
+ *
+ * A mode is not five independent settings — it is one cognitive event defined by all five
+ * at once: the rate it hears the model at (or doesn't), the beat it is paced by, what the
+ * mic asks for, how much of the phrase is on screen, and what counts as having said it.
+ * Read as a table, "what is Chorus?" is one row. Spread across a function per property, it
+ * is five lookups in five places, and a seventh mode is five edits to remember.
+ */
+interface RefrainModeSpec {
+  /** Model-audio rate, or null when the mode deliberately withholds the model. */
+  readonly modelRate: number | null
+  readonly beatMs: number
+  readonly micLabel: string
+  /** Takes the mask because only Cloze uses it; the rest ignore it. */
+  readonly prompt: (clozeMask: readonly number[]) => PromptSpec
+  readonly gate: GateSpec
+}
+
+/**
+ * The progression. Cloze, Call, and Cold withhold the model and demand the WHOLE phrase —
+ * that widening gap between what is given and what is asked for IS the Refrain.
+ */
+const MODE_SPEC: Record<RefrainMode, RefrainModeSpec> = {
+  // Echo/Chorus/Speed shadow a model, so a partial match is enough.
+  echo: {
+    modelRate: 0.95,
+    beatMs: 720,
+    micLabel: 'Say it',
+    prompt: () => ({ show: 'full' }),
+    gate: { kind: 'asr-partial', minTokens: 1 },
+  },
+  chorus: {
+    modelRate: 0.95,
+    beatMs: 720,
+    micLabel: 'Chorus it',
+    prompt: () => ({ show: 'full' }),
+    gate: { kind: 'asr-partial', minTokens: 1 },
+  },
+  speed: {
+    modelRate: 1.15,
+    // The faster beat is the only cue that Speed differs.
+    beatMs: 340,
+    micLabel: 'Faster!',
+    prompt: () => ({ show: 'full' }),
+    gate: { kind: 'asr-partial', minTokens: 1 },
+  },
+  // The production gate proper: generate it without the model.
+  cloze: {
+    modelRate: null,
+    beatMs: 720,
+    micLabel: 'Fill & say',
+    prompt: (clozeMask) => ({ show: 'cloze', clozeMask }),
+    gate: { kind: 'asr-full' },
+  },
+  call: {
+    modelRate: null,
+    beatMs: 720,
+    micLabel: 'Respond',
+    prompt: () => ({ show: 'meaning' }),
+    gate: { kind: 'asr-full' },
+  },
+  cold: {
+    modelRate: null,
+    beatMs: 720,
+    micLabel: 'Say it cold',
+    prompt: () => ({ show: 'nothing', hookOnly: true }),
+    gate: { kind: 'asr-full' },
+  },
+}
 
 /** Reps per phrase per day. Overlearning is deliberate — the target does NOT shorten. */
 export const DEFAULT_REP_TARGET = 6
@@ -56,35 +136,17 @@ export function modeForRep(repIndex: number): RefrainMode {
 
 /** Model-audio rate, or null when the mode deliberately withholds the model. */
 export function modelRateForMode(mode: RefrainMode): number | null {
-  switch (mode) {
-    case 'echo':
-    case 'chorus':
-      return 0.95
-    case 'speed':
-      return 1.15
-    // Cloze, Call, and Cold withhold the model. That IS the progression.
-    case 'cloze':
-    case 'call':
-    case 'cold':
-      return null
-  }
+  return MODE_SPEC[mode].modelRate
 }
 
 /** Beat tempo. Speed mode's faster beat is the only cue that it differs. */
 export function beatMsForMode(mode: RefrainMode): number {
-  return mode === 'speed' ? 340 : 720
+  return MODE_SPEC[mode].beatMs
 }
 
 /** The mic label per mode. */
 export function micLabelForMode(mode: RefrainMode): string {
-  return {
-    echo: 'Say it',
-    chorus: 'Chorus it',
-    speed: 'Faster!',
-    cloze: 'Fill & say',
-    call: 'Respond',
-    cold: 'Say it cold',
-  }[mode]
+  return MODE_SPEC[mode].micLabel
 }
 
 /** `min(100, round(reps / target * 100))`. Blueprint contract. */
@@ -93,55 +155,41 @@ export function automaticity(repsToday: number, target: number): number {
   return Math.min(100, Math.round((repsToday / target) * 100))
 }
 
+/** The four warming bands. The card's colour IS the feedback signal. */
+export type WarmBand = 'cold' | 'warm' | 'hot' | 'peak'
+
+/**
+ * One ladder, read two ways.
+ *
+ * The band paints the card and the label says the same thing in words, so they are the
+ * same rung of the same progression — 33 and 66 stated twice, five lines apart, is two
+ * places for the boundaries to drift and a card that says "warming up" while glowing hot.
+ * `cold` is the floor and so has no minimum.
+ */
+const WARM_BANDS = [
+  { min: 100, band: 'peak', effort: 'instant & smooth' },
+  { min: 66, band: 'hot', effort: 'quick & smooth' },
+  { min: 33, band: 'warm', effort: 'getting smoother' },
+] as const satisfies readonly { readonly min: number; readonly band: WarmBand; readonly effort: string }[]
+
+const COLDEST = { band: 'cold', effort: 'warming up' } as const
+
+function rungFor(automaticityPct: number): { readonly band: WarmBand; readonly effort: string } {
+  return WARM_BANDS.find((b) => automaticityPct >= b.min) ?? COLDEST
+}
+
 /**
  * The plain-language effort label. The progression matters more than the individual
  * strings — it ships as a group for translation.
  */
 export function effortLabel(reps: number, automaticityPct: number): string {
+  // Before the first rep there is no warmth to describe, only an invitation.
   if (reps === 0) return 'tap to begin'
-  if (automaticityPct >= 100) return 'instant & smooth'
-  if (automaticityPct >= 66) return 'quick & smooth'
-  if (automaticityPct >= 33) return 'getting smoother'
-  return 'warming up'
+  return rungFor(automaticityPct).effort
 }
 
-/** The four warming bands. The card's colour IS the feedback signal. */
-export type WarmBand = 'cold' | 'warm' | 'hot' | 'peak'
 export function warmBand(automaticityPct: number): WarmBand {
-  if (automaticityPct >= 100) return 'peak'
-  if (automaticityPct >= 66) return 'hot'
-  if (automaticityPct >= 33) return 'warm'
-  return 'cold'
-}
-
-function promptForMode(mode: RefrainMode, clozeMask: readonly number[]): PromptSpec {
-  switch (mode) {
-    case 'echo':
-    case 'chorus':
-    case 'speed':
-      return { show: 'full' }
-    case 'cloze':
-      return { show: 'cloze', clozeMask }
-    case 'call':
-      return { show: 'meaning' }
-    case 'cold':
-      return { show: 'nothing', hookOnly: true }
-  }
-}
-
-function gateForMode(mode: RefrainMode): GateSpec {
-  switch (mode) {
-    // Echo/Chorus/Speed shadow a model, so a partial match is enough.
-    case 'echo':
-    case 'chorus':
-    case 'speed':
-      return { kind: 'asr-partial', minTokens: 1 }
-    // The production gate proper: generate it without the model.
-    case 'cloze':
-    case 'call':
-    case 'cold':
-      return { kind: 'asr-full' }
-  }
+  return rungFor(automaticityPct).band
 }
 
 /**
@@ -203,18 +251,18 @@ export function selectRefrainSet(
   return picked
 }
 
+/** How strongly a difficulty rating pulls a phrase forward when automaticity ties. */
+const DIFFICULTY_WEIGHT: Record<Difficulty, number> = { hard: 2, med: 1, easy: 0 }
+
 function difficultyWeight(p: PhraseState): number {
-  return p.difficulty === 'hard' ? 2 : p.difficulty === 'med' ? 1 : 0
+  return DIFFICULTY_WEIGHT[p.difficulty]
 }
 
 export class RefrainEngine implements PracticeEngine {
   readonly id = 'refrain' as const
 
-  async availability(ctx: EngineContext): Promise<Availability> {
-    const active = await ctx.phrases.active()
-    return active.length === 0
-      ? { state: 'unavailable', reason: 'no-phrases' }
-      : { state: 'available' }
+  availability(ctx: EngineContext): Promise<Availability> {
+    return availableWhenActive(ctx, 'no-phrases')
   }
 
   async plan(ctx: EngineContext): Promise<SessionPlan> {
@@ -236,19 +284,19 @@ export class RefrainEngine implements PracticeEngine {
       // Read through the day guard, so yesterday's counter reads as zero.
       for (let rep = repsToday(phrase, today); rep < target; rep++) {
         const mode = modeForRep(rep)
-        const rate = modelRateForMode(mode)
+        const spec = MODE_SPEC[mode]
         items.push({
           itemId: `${id}#${rep}`,
           phraseId: id,
           mode,
-          prompt: promptForMode(mode, mask),
-          gate: gateForMode(mode),
-          audio: rate === null ? null : { rate, source: 'catalog' },
+          prompt: spec.prompt(mask),
+          gate: spec.gate,
+          audio: spec.modelRate === null ? null : { rate: spec.modelRate, source: 'catalog' },
           meta: {
             repIndex: rep,
             repTarget: target,
-            beatMs: beatMsForMode(mode),
-            micLabel: micLabelForMode(mode),
+            beatMs: spec.beatMs,
+            micLabel: spec.micLabel,
             automaticity: automaticity(rep, target),
             warmBand: warmBand(automaticity(rep, target)),
           },
@@ -266,25 +314,24 @@ export class RefrainEngine implements PracticeEngine {
   }
 
   next(session: SessionHandle): Promise<PracticeItem | null> {
-    return Promise.resolve(session.plan.items[session.cursor] ?? null)
+    return itemAtCursor(session)
   }
 
   record(session: SessionHandle, attempt: Attempt): Promise<ProgressDelta> {
-    const item = session.plan.items.find((i) => i.itemId === attempt.itemId)
-    if (item === undefined) throw new Error(`unknown item ${attempt.itemId}`)
-
-    const repIndex = Number(item.meta.repIndex ?? 0)
-    const repTarget = Number(item.meta.repTarget ?? DEFAULT_REP_TARGET)
+    const item = itemFor(session, attempt)
+    const repIndex = metaNumber(item, 'repIndex', 0)
+    const repTarget = metaNumber(item, 'repTarget', DEFAULT_REP_TARGET)
     const success = attempt.outcome === 'success'
-    const repsToday = repIndex + (success ? 1 : 0)
-    const auto = automaticity(repsToday, repTarget)
+    // Named for what it is, not shadowing the `repsToday` derivation imported above.
+    const repsTodayAfter = repIndex + (success ? 1 : 0)
+    const auto = automaticity(repsTodayAfter, repTarget)
     const mode = item.mode as RefrainMode
 
     // Rule 5: a Refrain rep is an implicit FSRS review even though this screen
     // never shows an interval. Produced hint-free at a later mode is a 'Good';
     // anything needing hints or a model is a 'Hard'.
     const grade: 1 | 2 | 3 | 4 = !success ? 1 : attempt.hintsUsed > 0 ? 2 : 3
-    const srs = ctx_srs(session, attempt, grade)
+    const srs = fsrsWriteFor(attempt, grade)
 
     // Rule 5 again: producing from a cue-free mode is evidence of Bent-level depth.
     const earnsBent = success && (mode === 'cloze' || mode === 'call') && attempt.hintsUsed === 0
@@ -293,14 +340,14 @@ export class RefrainEngine implements PracticeEngine {
       success && mode === 'speed' && attempt.latencyMs !== null && attempt.latencyMs < 800
 
     return Promise.resolve({
-      phraseId: item.phraseId,
-      reps: success ? 1 : 0,
-      lastPracticedAt: attempt.at,
-      repsToday,
+      ...universalDelta(item, attempt, {
+        reps: success ? 1 : 0,
+        // MEASURED or null. Never derived from the rep index.
+        latencyMs: attempt.latencyMs,
+      }),
+      repsToday: repsTodayAfter,
       automaticity: auto,
       lockedInToday: auto >= 100,
-      // MEASURED or null. Never derived from the rep index.
-      latencySampleMs: attempt.latencyMs,
       ...(srs === undefined ? {} : { srs }),
       ...(earnsPressure
         ? { rung: LadderRung.PressureTested }
@@ -313,15 +360,15 @@ export class RefrainEngine implements PracticeEngine {
   }
 
   async summarize(session: SessionHandle): Promise<SessionSummary> {
-    const done = session.plan.items.slice(0, session.cursor)
-    const unique = new Set(done.map((i) => i.phraseId))
+    const done = workedItems(session)
+    const unique = distinctPhrases(done)
     const produced = done.filter((i) => i.gate.kind === 'asr-full').length
     return Promise.resolve({
       engineId: this.id,
-      phrasesTouched: unique.size,
+      phrasesTouched: unique,
       phrasesProduced: produced,
       durationMs: done.length * 9_000,
-      extra: { repsToday: done.length, setSize: unique.size },
+      extra: { repsToday: done.length, setSize: unique },
     })
   }
 }
@@ -332,12 +379,14 @@ export class RefrainEngine implements PracticeEngine {
  * Kept as a seam so the mapping lives in ONE place and can be reviewed against
  * calibration data — the implicit-grade mappings are a judgement call, not a proof.
  * See docs/architecture/scheduling.md#grade-mapping
+ *
+ * ⚠️ This duplicates `LoroCoreFacade.fsrsReview`, which `record()` cannot reach: the
+ * `PracticeEngine` contract passes a session and an attempt, not the `EngineContext` that
+ * carries the injected core. Every engine therefore has to hand-roll FSRS, which is the
+ * cross-platform divergence ADR-0002 exists to prevent. Tracked in
+ * plans/05-fix-shared-maths-duplication.md; fixing it needs a contract change.
  */
-function ctx_srs(
-  _session: SessionHandle,
-  attempt: Attempt,
-  grade: 1 | 2 | 3 | 4,
-): ProgressDelta['srs'] {
+function fsrsWriteFor(attempt: Attempt, grade: 1 | 2 | 3 | 4): ProgressDelta['srs'] {
   // A skipped rep is not a review.
   if (attempt.outcome === 'skipped') return undefined
   // Placeholder scheduling until loro-core's FSRS lands (M0). The SHAPE is correct —

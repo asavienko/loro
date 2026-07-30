@@ -1,8 +1,8 @@
 /**
  * What the app needs from storage, as interfaces.
  *
- * Two implementations satisfy every one of these: SQL (`sqlite.ts`) and in-memory
- * (`memory.ts`). The in-memory set is not a test double — it is the web target's real
+ * Two implementations satisfy every one of these: SQL (`sqlite/`, one module per table)
+ * and in-memory (`memory.ts`). The in-memory set is not a test double — it is the web target's real
  * storage, because `expo start --web` has no SQLite and is currently the fastest way to
  * see the screens.
  *
@@ -143,7 +143,8 @@ export interface OutboxTable {
    * Merge queued ops per entity when the queue grows past `maxOps`.
    *
    * Compaction NEVER drops a learner's write: it merges ops that can be merged without
-   * losing information (see `compactable` in outbox.ts) and leaves the rest alone. An
+   * losing information (see `coalescable` / `maxFolding` in `sqlite/outbox.ts`, both
+   * decided by the field's merge class) and leaves the rest alone. An
    * outbox that drops writes to stay small is a data-loss bug with a performance excuse.
    */
   compact(maxOps: number): number
