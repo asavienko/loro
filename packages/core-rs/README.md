@@ -31,18 +31,23 @@ src/
 │   └── merge.rs     # merge_row — THE function both client and server run
 ├── asr.rs           # normalisation + forward-walk token matching
 ├── dsp/
-│   ├── pitch.rs     # YIN / pYIN F0 extraction
-│   ├── mfcc.rs
+│   ├── pitch.rs     # YIN / pYIN F0 extraction (mfcc.rs lands with it in M3)
 │   ├── align.rs     # DTW forced alignment against the native reference
 │   ├── score.rs     # melody, per-syllable, stress, rhythm
 │   └── feedback.rs  # worst syllable → phoneme class → one concrete fix
 ├── calendar.rs      # local_day, streak grace window, DST, timezone travel
-└── notify.rs        # the notification plan (caps, quiet hours, conditionality)
+├── notify.rs        # the notification plan (caps, quiet hours, conditionality)
+│
+│                    # internal, never `pub`, absent from bindings/:
+├── rng.rs           # the seeded LCG — the crate's only randomness
+├── units.rs         # MS_PER_HOUR / MS_PER_DAY, so no module re-derives them
+└── test_support.rs  # #[cfg(test)] PhraseState fixture shared by module tests
 ```
 
 ## Status
 
-**94 tests passing. Clippy clean under `-D warnings`, `cargo fmt` clean.**
+**130 tests passing** (125 inline + 5 in `tests/parity.rs`). **Clippy clean under `-D warnings`,
+`cargo fmt` clean.**
 
 | Module        | State                                                                                        |
 | ------------- | -------------------------------------------------------------------------------------------- |

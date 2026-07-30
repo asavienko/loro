@@ -10,6 +10,7 @@
 //!
 //! See docs/architecture/sync-protocol.md#time
 
+use crate::units::MS_PER_HOUR;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 
@@ -115,20 +116,13 @@ pub const MAX_SKEW_HOURS: i64 = 24;
 #[must_use]
 #[uniffi::export]
 pub fn is_skewed(client: &Hlc, server_ms: i64) -> bool {
-    client.physical - server_ms > MAX_SKEW_HOURS * 3_600_000
+    client.physical - server_ms > MAX_SKEW_HOURS * MS_PER_HOUR
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    fn hlc(p: i64, l: u32, n: &str) -> Hlc {
-        Hlc {
-            physical: p,
-            logical: l,
-            node_id: n.into(),
-        }
-    }
+    use crate::test_support::hlc;
 
     #[test]
     fn round_trips_through_the_wire_form() {
@@ -138,9 +132,17 @@ mod tests {
 
     #[test]
     fn rejects_malformed_readings() {
-        assert!(Hlc::parse("nonsense").is_none());
-        assert!(Hlc::parse("123:4").is_none());
-        assert!(Hlc::parse("123:4:").is_none());
+        for (bad, why) in [
+            ("nonsense", "not a reading at all"),
+            ("123:4", "no node id"),
+            ("123:4:", "empty node id"),
+            ("123:4:a:b", "a trailing field"),
+            ("", "empty"),
+            (":4:a", "no physical time"),
+            ("123:x:a", "a non-numeric logical counter"),
+        ] {
+            assert!(Hlc::parse(bad).is_none(), "{bad:?} — {why}");
+        }
     }
 
     #[test]
@@ -180,7 +182,16 @@ mod tests {
     #[test]
     fn detects_absurd_client_skew() {
         let server = 1_721_558_400_000;
-        assert!(!is_skewed(&hlc(server + 3_600_000, 0, "a"), server));
-        assert!(is_skewed(&hlc(server + 48 * 3_600_000, 0, "a"), server));
+        let ahead_by = |hours: i64| is_skewed(&hlc(server + hours * MS_PER_HOUR, 0, "a"), server);
+        assert!(!ahead_by(1), "an hour of drift is normal");
+        assert!(ahead_by(48), "two days is not");
+        // The threshold itself is inclusive-safe: exactly MAX_SKEW_HOURS is tolerated.
+        assert!(!ahead_by(MAX_SKEW_HOURS));
+        assert!(is_skewed(
+            &hlc(server + MAX_SKEW_HOURS * MS_PER_HOUR + 1, 0, "a"),
+            server
+        ));
+        // A client *behind* the server is never skewed — it loses conflicts anyway.
+        assert!(!ahead_by(-100));
     }
 }

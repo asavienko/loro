@@ -41,9 +41,57 @@ pub const SCORE_MIN: u8 = 40;
 /// Score ceiling.
 pub const SCORE_MAX: u8 = 99;
 
+/// Score band thresholds. From the blueprint (`Loro.dc.html:3083`) — the visual meaning
+/// must not drift.
+pub const BAND_GOOD: u8 = 85;
+/// Amber band floor.
+pub const BAND_OK: u8 = 70;
+
+/// Which band a score falls in.
+#[must_use]
+#[uniffi::export]
+#[allow(clippy::bool_to_int_with_if)] // three bands, not a boolean
+pub fn band(score: u8) -> u8 {
+    if score >= BAND_GOOD {
+        2
+    } else if score >= BAND_OK {
+        1
+    } else {
+        0
+    }
+}
+
 /// The prosody lab's cue-level-up threshold. Tunable via the `prosody.levelUpThreshold`
 /// flag, because we genuinely don't know the right value yet.
 pub const LEVEL_UP_THRESHOLD: u8 = 88;
+
+/// Top cue level. Level 3 is no help at all, so there is nothing left to remove — and the
+/// reward for a strong take *is* the removal of help.
+const MAX_CUE_LEVEL: u8 = 3;
+
+// ── Skill-axis advance (`Loro.dc.html:3180–3182`) ────────────────────────────────────
+
+/// Share of the gap between the current production axis and the take's score that one
+/// take closes. Under a half, so a single lucky take can't declare the skill learned.
+const PRODUCTION_GAIN_RATE: f32 = 0.3;
+
+/// Floor on the production gain, applied even when the take scored *below* the current
+/// axis. Showing up is progress; non-negotiable #3 says no screen shames a bad day.
+const MIN_PRODUCTION_GAIN: f32 = 3.0;
+
+/// Cue level at or above which recall is being genuinely trained, because the learner is
+/// retrieving rather than reading.
+const UNCUED_FROM_LEVEL: u8 = 2;
+
+/// Recall gain when retrieving without much help. Three times the cued gain: recalling
+/// *without* cues is what trains recall, and the asymmetry is the pedagogy.
+const RECALL_GAIN_UNCUED: u8 = 6;
+
+/// Recall gain when the cues are still doing the work.
+const RECALL_GAIN_CUED: u8 = 2;
+
+/// Perception gain per take. Creeps: mere exposure is worth something, but only just.
+const PERCEPTION_GAIN: u8 = 1;
 
 /// Pearson correlation between two equal-length series. Implemented ahead of the
 /// pipeline because it's independently testable.
@@ -104,16 +152,23 @@ pub struct SkillAxes {
 #[uniffi::export]
 pub fn advance_axes(current: SkillAxes, score: u8, cue_level: u8) -> SkillAxes {
     let prod = f32::from(current.production);
-    let gain = ((f32::from(score) - prod) * 0.3).max(3.0);
+    let gain = ((f32::from(score) - prod) * PRODUCTION_GAIN_RATE).max(MIN_PRODUCTION_GAIN);
 
     SkillAxes {
         #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
-        production: ((prod + gain).round() as u8).min(99),
+        production: ((prod + gain).round() as u8).min(SCORE_MAX),
         recall: current
             .recall
-            .saturating_add(if cue_level >= 2 { 6 } else { 2 })
-            .min(99),
-        perception: current.perception.saturating_add(1).min(99),
+            .saturating_add(if cue_level >= UNCUED_FROM_LEVEL {
+                RECALL_GAIN_UNCUED
+            } else {
+                RECALL_GAIN_CUED
+            })
+            .min(SCORE_MAX),
+        perception: current
+            .perception
+            .saturating_add(PERCEPTION_GAIN)
+            .min(SCORE_MAX),
     }
 }
 
@@ -121,7 +176,7 @@ pub fn advance_axes(current: SkillAxes, score: u8, cue_level: u8) -> SkillAxes {
 #[must_use]
 #[uniffi::export]
 pub fn earns_level_up(score: u8, cue_level: u8, threshold: u8) -> bool {
-    score >= threshold && cue_level < 3
+    score >= threshold && cue_level < MAX_CUE_LEVEL
 }
 
 /// Compute the melody score.
@@ -138,6 +193,31 @@ mod tests {
     #![allow(clippy::float_cmp)] // exact-zero sentinels are deliberate here
 
     use super::*;
+
+    #[test]
+    fn bands_match_the_blueprint_thresholds() {
+        for (score, expect, why) in [
+            (u8::MAX, 2, "above anything scorable"),
+            (92, 2, "comfortably good"),
+            (BAND_GOOD, 2, "exactly the good floor"),
+            (BAND_GOOD - 1, 1, "one under it"),
+            (BAND_OK, 1, "exactly the amber floor"),
+            (BAND_OK - 1, 0, "one under it"),
+            (0, 0, "the bottom"),
+        ] {
+            assert_eq!(band(score), expect, "band({score}) — {why}");
+        }
+    }
+
+    #[test]
+    fn the_score_bands_sit_inside_the_score_range() {
+        // A band floor outside 40..99 would be a band no real score can reach.
+        const {
+            assert!(SCORE_MIN < BAND_OK);
+            assert!(BAND_OK < BAND_GOOD);
+            assert!(BAND_GOOD < SCORE_MAX);
+        }
+    }
 
     #[test]
     fn identical_series_correlate_perfectly() {
@@ -173,54 +253,104 @@ mod tests {
         assert_eq!(off_target_indices(&learner, &native), vec![2]);
     }
 
+    /// The axes a take starts from, for the advance tests below.
+    const START: SkillAxes = SkillAxes {
+        perception: 70,
+        recall: 55,
+        production: 40,
+    };
+
     #[test]
     fn production_tracks_the_score_with_a_minimum_gain() {
-        let axes = SkillAxes {
-            perception: 70,
-            recall: 55,
-            production: 40,
-        };
-        let next = advance_axes(axes, 90, 0);
-        assert!(next.production > 40);
-        // Even a score below current production yields the +3 floor.
-        let stalled = advance_axes(axes, 30, 0);
-        assert_eq!(stalled.production, 43);
+        // 0.3 of the 50-point gap is 15, well over the floor.
+        assert_eq!(advance_axes(START, 90, 0).production, 55);
+        // Even a score below current production yields the floor, not a fall.
+        assert_eq!(advance_axes(START, 30, 0).production, 43);
+        assert_eq!(
+            advance_axes(START, 0, 0).production,
+            43,
+            "and never below it"
+        );
+    }
+
+    #[test]
+    fn an_axis_never_falls() {
+        for score in [0, 30, 40, 88, 99] {
+            for cue_level in 0..=MAX_CUE_LEVEL {
+                let next = advance_axes(START, score, cue_level);
+                assert!(next.production >= START.production, "score {score}");
+                assert!(next.recall >= START.recall, "score {score}");
+                assert!(next.perception >= START.perception, "score {score}");
+            }
+        }
     }
 
     #[test]
     fn recall_advances_faster_without_cues() {
-        let axes = SkillAxes {
-            perception: 70,
-            recall: 55,
-            production: 40,
-        };
-        let cued = advance_axes(axes, 90, 0);
-        let cold = advance_axes(axes, 90, 3);
-        assert_eq!(cued.recall, 57);
-        assert_eq!(cold.recall, 61);
+        for cue_level in 0..UNCUED_FROM_LEVEL {
+            let next = advance_axes(START, 90, cue_level);
+            assert_eq!(
+                next.recall,
+                START.recall + RECALL_GAIN_CUED,
+                "cue {cue_level}"
+            );
+        }
+        for cue_level in UNCUED_FROM_LEVEL..=MAX_CUE_LEVEL {
+            let next = advance_axes(START, 90, cue_level);
+            assert_eq!(
+                next.recall,
+                START.recall + RECALL_GAIN_UNCUED,
+                "cue {cue_level}"
+            );
+        }
+        // The exact numbers, so the asymmetry can't be tuned away silently.
+        assert_eq!(advance_axes(START, 90, 0).recall, 57);
+        assert_eq!(advance_axes(START, 90, 3).recall, 61);
     }
 
     #[test]
     fn axes_are_capped_at_ninety_nine() {
         let maxed = SkillAxes {
-            perception: 99,
-            recall: 99,
-            production: 99,
+            perception: SCORE_MAX,
+            recall: SCORE_MAX,
+            production: SCORE_MAX,
         };
         let next = advance_axes(maxed, 99, 3);
         assert_eq!(
             (next.perception, next.recall, next.production),
-            (99, 99, 99)
+            (SCORE_MAX, SCORE_MAX, SCORE_MAX)
+        );
+        // Saturating, not wrapping: one point below the cap lands on it, never past.
+        let near = SkillAxes {
+            perception: SCORE_MAX - 1,
+            recall: SCORE_MAX - 1,
+            production: SCORE_MAX - 1,
+        };
+        let next = advance_axes(near, 99, 3);
+        assert_eq!(
+            (next.perception, next.recall, next.production),
+            (SCORE_MAX, SCORE_MAX, SCORE_MAX)
         );
     }
 
     #[test]
     fn a_strong_take_levels_up_until_the_ladder_is_topped() {
         assert!(earns_level_up(90, 0, LEVEL_UP_THRESHOLD));
-        assert!(!earns_level_up(80, 0, LEVEL_UP_THRESHOLD));
+        assert!(earns_level_up(LEVEL_UP_THRESHOLD, 0, LEVEL_UP_THRESHOLD));
+        assert!(!earns_level_up(
+            LEVEL_UP_THRESHOLD - 1,
+            0,
+            LEVEL_UP_THRESHOLD
+        ));
+        for cue_level in 0..MAX_CUE_LEVEL {
+            assert!(
+                earns_level_up(99, cue_level, LEVEL_UP_THRESHOLD),
+                "{cue_level}"
+            );
+        }
         assert!(
-            !earns_level_up(99, 3, LEVEL_UP_THRESHOLD),
-            "cue 3 is the last level"
+            !earns_level_up(99, MAX_CUE_LEVEL, LEVEL_UP_THRESHOLD),
+            "cue 3 is the last level — there is no more help to remove"
         );
     }
 }

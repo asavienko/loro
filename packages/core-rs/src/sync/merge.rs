@@ -159,53 +159,47 @@ mod tests {
     use super::*;
     use serde_json::json;
 
+    /// Every merge case here turns on physical time, never on the logical counter, so this
+    /// pins it to 0 and delegates the literal to the shared fixture.
     fn hlc(p: i64, n: &str) -> Hlc {
-        Hlc {
-            physical: p,
-            logical: 0,
-            node_id: n.into(),
-        }
+        crate::test_support::hlc(p, 0, n)
     }
 
-    fn row(fields: &[(&str, serde_json::Value, i64, &str)]) -> Row {
+    /// One field spec: name, value, physical time, node id.
+    type Spec<'a> = (&'a str, serde_json::Value, i64, &'a str);
+
+    /// Built once and shared by `row` and `op` — the two used to hold identical copies of
+    /// this closure, which is one edit away from a test that no longer compares like
+    /// with like.
+    fn fields(specs: &[Spec]) -> BTreeMap<String, FieldValue> {
+        specs
+            .iter()
+            .map(|(k, v, p, n)| {
+                (
+                    (*k).to_string(),
+                    FieldValue {
+                        v: v.clone(),
+                        hlc: hlc(*p, n),
+                    },
+                )
+            })
+            .collect()
+    }
+
+    fn row(specs: &[Spec]) -> Row {
         Row {
             entity: "user_phrase".into(),
             id: "up_1".into(),
-            fields: fields
-                .iter()
-                .map(|(k, v, p, n)| {
-                    (
-                        (*k).to_string(),
-                        FieldValue {
-                            v: v.clone(),
-                            hlc: hlc(*p, n),
-                        },
-                    )
-                })
-                .collect(),
+            fields: fields(specs),
             deleted_at: None,
         }
     }
 
-    fn op(
-        fields: &[(&str, serde_json::Value, i64, &str)],
-        classes: &[(&str, MergeClass)],
-    ) -> RowOp {
+    fn op(specs: &[Spec], classes: &[(&str, MergeClass)]) -> RowOp {
         RowOp {
             entity: "user_phrase".into(),
             id: "up_1".into(),
-            fields: fields
-                .iter()
-                .map(|(k, v, p, n)| {
-                    (
-                        (*k).to_string(),
-                        FieldValue {
-                            v: v.clone(),
-                            hlc: hlc(*p, n),
-                        },
-                    )
-                })
-                .collect(),
+            fields: fields(specs),
             deleted_at: None,
             classes: classes
                 .iter()
@@ -234,10 +228,104 @@ mod tests {
             &[("difficulty", json!("easy"), 1_000, "b")],
             &[("difficulty", MergeClass::Lww)],
         );
-        assert_eq!(
-            merge_row(&local, &remote).row.fields["difficulty"].v,
-            json!("hard")
+        let out = merge_row(&local, &remote);
+        assert_eq!(out.row.fields["difficulty"].v, json!("hard"));
+        // A rejected write is still a discarded value, so it is still a conflict. The
+        // metric would under-report if only the accepted direction counted.
+        assert_eq!(out.conflicts, vec!["difficulty".to_string()]);
+        assert!(!out.changed);
+    }
+
+    /// A discarded value is reported whichever side loses, for every class that can
+    /// discard one. This is the property that made the two copies of the bookkeeping in
+    /// `merge_row` worth collapsing into one.
+    #[test]
+    fn a_discarded_value_is_reported_in_both_directions() {
+        for (class, local_v, remote_v, expect_take) in [
+            (MergeClass::Lww, json!("med"), json!("hard"), true),
+            (MergeClass::Max, json!(20), json!(18), false),
+            (MergeClass::Max, json!(5), json!(9), true),
+            (MergeClass::AppendOnly, json!("x"), json!("y"), false),
+            (MergeClass::Tombstone, json!("x"), json!("y"), true),
+        ] {
+            let local = row(&[("f", local_v.clone(), 1_000, "a")]);
+            let remote = op(&[("f", remote_v.clone(), 2_000, "b")], &[("f", class)]);
+            let out = merge_row(&local, &remote);
+            assert_eq!(
+                out.conflicts,
+                vec!["f".to_string()],
+                "{class:?}: {local_v} vs {remote_v}"
+            );
+            let expect = if expect_take { &remote_v } else { &local_v };
+            assert_eq!(out.row.fields["f"].v, *expect, "{class:?}");
+        }
+    }
+
+    #[test]
+    fn identical_values_are_never_a_conflict() {
+        // Same value from both sides is convergence, not disagreement — reporting it
+        // would swamp `conflict_rate` with noise.
+        for class in [
+            MergeClass::Lww,
+            MergeClass::Max,
+            MergeClass::AppendOnly,
+            MergeClass::Tombstone,
+            MergeClass::LatestReview,
+        ] {
+            let local = row(&[("f", json!(7), 1_000, "a")]);
+            let remote = op(&[("f", json!(7), 2_000, "b")], &[("f", class)]);
+            assert!(merge_row(&local, &remote).conflicts.is_empty(), "{class:?}");
+        }
+    }
+
+    #[test]
+    fn append_only_never_overwrites_an_existing_value() {
+        let local = row(&[("note", json!("mine"), 1_000, "a")]);
+        // A far later HLC must still not win: the union happens by primary key upstream.
+        let remote = op(
+            &[("note", json!("theirs"), 9_999_999, "b")],
+            &[("note", MergeClass::AppendOnly)],
         );
+        let out = merge_row(&local, &remote);
+        assert_eq!(out.row.fields["note"].v, json!("mine"));
+        assert!(!out.changed);
+    }
+
+    #[test]
+    fn a_field_absent_locally_is_taken_under_every_class() {
+        for class in [
+            MergeClass::Lww,
+            MergeClass::Max,
+            MergeClass::AppendOnly,
+            MergeClass::Tombstone,
+        ] {
+            let out = merge_row(&row(&[]), &op(&[("f", json!(1), 1, "b")], &[("f", class)]));
+            assert_eq!(out.row.fields["f"].v, json!(1), "{class:?}");
+            assert!(out.changed, "{class:?}");
+            assert!(
+                out.conflicts.is_empty(),
+                "{class:?} — nothing was discarded"
+            );
+        }
+    }
+
+    #[test]
+    fn a_field_with_no_declared_class_falls_back_to_lww() {
+        // A field policy that forgot a class must not silently drop the write.
+        let local = row(&[("f", json!("old"), 1_000, "a")]);
+        let remote = op(&[("f", json!("new"), 2_000, "b")], &[]);
+        assert_eq!(merge_row(&local, &remote).row.fields["f"].v, json!("new"));
+    }
+
+    #[test]
+    fn max_ignores_a_non_numeric_value_rather_than_taking_it() {
+        // Non-numbers sort lowest, so a corrupt remote can't lower a counter.
+        let local = row(&[("reps", json!(20), 1_000, "a")]);
+        let remote = op(
+            &[("reps", json!("twenty-one"), 9_999, "b")],
+            &[("reps", MergeClass::Max)],
+        );
+        assert_eq!(merge_row(&local, &remote).row.fields["reps"].v, json!(20));
     }
 
     #[test]
@@ -296,6 +384,32 @@ mod tests {
         assert_eq!(out.row.fields["srsStability"].v, json!(7.5));
         assert_eq!(out.row.fields["srsDue"].v, json!(9_000_000));
         assert_eq!(out.row.fields["srsLastReview"].v, json!(1_500));
+    }
+
+    #[test]
+    fn fsrs_fields_stay_local_when_the_local_review_is_later() {
+        // The dangerous direction: a remote with a much *later HLC* but an *earlier
+        // review*. The group is decided by the review time, so it must lose whole —
+        // taking its stability while keeping the local due date is a state no algorithm
+        // ever computed.
+        let local = row(&[
+            ("srsStability", json!(9.0), 1_000, "a"),
+            ("srsLastReview", json!(5_000), 1_000, "a"),
+        ]);
+        let remote = op(
+            &[
+                ("srsStability", json!(2.0), 9_999, "b"),
+                ("srsLastReview", json!(500), 9_999, "b"),
+            ],
+            &[
+                ("srsStability", MergeClass::LatestReview),
+                ("srsLastReview", MergeClass::LatestReview),
+            ],
+        );
+        let out = merge_row(&local, &remote);
+        assert_eq!(out.row.fields["srsStability"].v, json!(9.0));
+        assert_eq!(out.row.fields["srsLastReview"].v, json!(5_000));
+        assert!(!out.changed);
     }
 
     #[test]
