@@ -29,6 +29,7 @@
 import AxeBuilder from '@axe-core/playwright'
 import type { Page } from '@playwright/test'
 import { expect, onboard, test } from './fixtures'
+import { enter, openFirstPhrase, STATES } from './states'
 
 const WCAG = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']
 
@@ -73,101 +74,11 @@ const KNOWN: Record<string, string[]> = {
   'refrain · locked in': ['color-contrast'],
 }
 
-/**
- * Reachable states, not just routes.
- *
- * A closed modal has no violations to find: `add` scanned clean while its difficulty sheet
- * — which holds three radios — was never rendered. Scanning routes alone would have called
- * that screen accessible.
- */
-const STATES: { name: string; reach: (page: Page) => Promise<void> }[] = [
-  // `onboard()` already left the learner on Today, so there is nowhere to navigate.
-  {
-    name: 'today',
-    reach: (page) => expect(page.getByText('Today', { exact: true })).toBeVisible(),
-  },
-  { name: 'onboarding · first step', reach: async (page) => void (await page.goto('/onboarding')) },
-  { name: 'progress · zero state', reach: (page) => open(page, 'Progress') },
-  { name: 'add · discover', reach: (page) => open(page, 'Add') },
-  {
-    name: 'add · browse grid',
-    reach: async (page) => {
-      await open(page, 'Add')
-      await page.getByRole('button', { name: 'browse' }).click()
-    },
-  },
-  {
-    name: 'add · difficulty sheet open',
-    reach: async (page) => {
-      await open(page, 'Add')
-      await page.getByRole('button', { name: /¿Tienen una mesa para dos/ }).click()
-      await expect(page.getByText('How hard is it for you?')).toBeVisible()
-      // Wait for the SETTLED sheet, not a frame of the slide-in. react-native-web's
-      // `Modal` renders `aria-modal="true"` immediately but only adds `role="dialog"`
-      // when the show animation completes (`Modal/ModalContent.js:57-59`), and
-      // `aria-modal` without a dialog role is an axe `aria-allowed-attr` failure. That
-      // window is the library's, lasts as long as the animation, and is not addressable
-      // from app code — so the scan waits for the state a learner actually sits in.
-      await expect(page.getByRole('dialog')).toBeVisible()
-    },
-  },
-  {
-    name: 'add · no matches',
-    reach: async (page) => {
-      await open(page, 'Add')
-      await page.getByRole('textbox', { name: 'Search phrases' }).fill('not in this catalog')
-      await expect(page.getByText('No matches in the library')).toBeVisible()
-    },
-  },
-  { name: 'stream', reach: (page) => open(page, 'Stream') },
-  {
-    name: 'stream · all learned',
-    reach: async (page) => {
-      await open(page, 'Stream')
-      for (let i = 0; i < 10; i += 1)
-        await page.getByRole('button', { name: 'Mark learned' }).click()
-      await expect(page.getByText('Your stream is empty')).toBeVisible()
-    },
-  },
-  { name: 'phrase detail', reach: (page) => openFirstPhrase(page) },
-  {
-    name: 'phrase detail · edited',
-    reach: async (page) => {
-      await openFirstPhrase(page)
-      await page.getByRole('radio', { name: 'Difficult' }).click()
-      await page.getByRole('checkbox', { name: 'Pronunciation' }).click()
-    },
-  },
-  { name: 'refrain · first rep', reach: (page) => open(page, 'Start the wave →') },
-  {
-    name: 'refrain · locked in',
-    reach: async (page) => {
-      await open(page, 'Start the wave →')
-      for (const r of ['Say it', 'Chorus it', 'Faster!', 'Fill & say', 'Respond', 'Say it cold'])
-        await page.getByRole('button', { name: r }).click()
-      await expect(page.getByText('Locked in for today')).toBeVisible()
-    },
-  },
-  {
-    name: 'refrain · set complete',
-    reach: async (page) => {
-      await open(page, 'Start the wave →')
-      for (let phrase = 0; phrase < 5; phrase += 1) {
-        for (const r of ['Say it', 'Chorus it', 'Faster!', 'Fill & say', 'Respond', 'Say it cold'])
-          await page.getByRole('button', { name: r }).click()
-        await page.getByRole('button', { name: /Next phrase →|Finish the set →/ }).click()
-      }
-      await expect(page.getByText('¡Hecho! Today is done')).toBeVisible()
-    },
-  },
-]
-
 for (const state of STATES) {
   const known = KNOWN[state.name] ?? []
 
   test(`axe: ${state.name}`, async ({ page }) => {
-    await onboard(page)
-    await state.reach(page)
+    await enter(page, state, onboard)
 
     const { violations } = await new AxeBuilder({ page })
       .withTags(WCAG)
@@ -196,13 +107,10 @@ for (const state of STATES) {
 }
 
 test('every interactive element meets the 44 px touch target', async ({ page }) => {
-  await onboard(page)
   const offenders: string[] = []
 
   for (const state of STATES) {
-    if (state.name.startsWith('onboarding')) continue
-    await onboard(page)
-    await state.reach(page)
+    await enter(page, state, onboard)
     offenders.push(...(await tooSmall(page, state.name)))
   }
 
@@ -299,18 +207,6 @@ test('onboarding is completable with the keyboard alone', async ({ page }) => {
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
-
-async function open(page: Page, button: string): Promise<void> {
-  await page.getByRole('button', { name: button }).click()
-}
-
-async function openFirstPhrase(page: Page): Promise<void> {
-  await page
-    .getByRole('button', { name: /percent automatic/ })
-    .first()
-    .click()
-  await expect(page.getByRole('button', { name: 'Practice now →' })).toBeVisible()
-}
 
 /**
  * Tab until the named control has focus, then leave it focused for the caller to activate.
