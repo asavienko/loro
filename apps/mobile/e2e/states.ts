@@ -20,7 +20,7 @@
  * See plans/51-extended-e2e-strategy.md §2, §4, §6.
  */
 
-import { expect, type Page } from '@playwright/test'
+import { expect, type Locator, type Page } from '@playwright/test'
 
 const REFRAIN_REPS = [
   'Say it',
@@ -290,6 +290,53 @@ export async function openFirstPhrase(page: Page): Promise<void> {
 export async function lockIn(page: Page): Promise<void> {
   for (const rep of REFRAIN_REPS) await click(page, rep)
   await expect(page.getByText('Locked in for today')).toBeVisible()
+}
+
+/** One rep, from Today and back to Today. */
+export async function doOneRep(page: Page): Promise<void> {
+  await click(page, 'Start the wave →')
+  await click(page, 'Say it')
+  await page.goBack()
+  await expect(page.getByText('Today', { exact: true })).toBeVisible()
+}
+
+export async function openProgress(page: Page): Promise<void> {
+  await click(page, 'Progress')
+  await expect(page).toHaveURL(/\/progress$/)
+}
+
+export async function backToToday(page: Page): Promise<void> {
+  await back(page)
+  await expect(page.getByText('Today', { exact: true })).toBeVisible()
+}
+
+/**
+ * A `StatTile`'s value, by its accessible name.
+ *
+ * `StatTile` groups its number and label into one labelled node
+ * (`src/ui/primitives.tsx`), which is why this is `getByLabel` and not a walk up the DOM
+ * looking for whichever child holds the number.
+ */
+export function statTile(page: Page, label: string, value: number | string): Locator {
+  return page.getByLabel(`${label}: ${String(value)}`)
+}
+
+/** The big streak number on Progress — `—` before the first rep, the count after it. */
+export function streakValue(page: Page): Locator {
+  return page
+    .getByText('Current streak')
+    .locator('..')
+    .getByText(/^\d+$|^—$/)
+    .first()
+}
+
+/** Today's streak chip. */
+export function streakChip(page: Page): Locator {
+  return page
+    .getByText('🔥')
+    .locator('..')
+    .getByText(/^\d+$|^—$/)
+    .first()
 }
 
 export { REFRAIN_REPS }

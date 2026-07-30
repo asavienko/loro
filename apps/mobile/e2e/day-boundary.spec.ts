@@ -19,8 +19,7 @@
 import type { Locator, Page } from '@playwright/test'
 import { atInstant, jumpTo, returnToForeground } from './clock'
 import { expect, onboard, test } from './fixtures'
-
-const REPS = ['Say it', 'Chorus it', 'Faster!', 'Fill & say', 'Respond', 'Say it cold'] as const
+import { backToToday, click, doOneRep, lockIn, openProgress, statTile, streakValue } from './states'
 
 test('the weekday label names the learner’s day, not the runner’s', async ({ page }) => {
   await atInstant(page, '2026-03-10T22:00')
@@ -33,10 +32,11 @@ test('a new day clears yesterday’s reps and lock-ins from Today', async ({ pag
   await atInstant(page, '2026-03-10T22:00')
   await onboard(page)
 
-  await lockInOnePhrase(page)
+  await click(page, 'Start the wave →')
+  await lockIn(page)
   await page.goBack()
   await expect(page.getByText('1 of 5 locked in')).toBeVisible()
-  await expect(statValue(page, 'reps today')).toHaveText('6')
+  await expect(statTile(page, 'reps today', 6)).toBeVisible()
 
   // A phone asleep across midnight: no timer fired, the learner just picked it up again.
   await jumpTo(page, '2026-03-11T09:00')
@@ -46,7 +46,7 @@ test('a new day clears yesterday’s reps and lock-ins from Today', async ({ pag
   // non-negotiable 2. Yesterday's `automaticity` and `repsToday` are still on the row.
   await expect(page.getByText('Wednesday · the daily refrain')).toBeVisible()
   await expect(page.getByText('0 of 5 locked in')).toBeVisible()
-  await expect(statValue(page, 'reps today')).toHaveText('0')
+  await expect(statTile(page, 'reps today', 0)).toBeVisible()
   await expect(page.getByText('Locked', { exact: true })).toHaveCount(0)
 })
 
@@ -55,17 +55,21 @@ test('entering the Refrain on a new day rolls the set without a foreground event
 }) => {
   await atInstant(page, '2026-03-10T22:00')
   await onboard(page)
-  await lockInOnePhrase(page)
+  await click(page, 'Start the wave →')
+  await lockIn(page)
   await page.goBack()
 
   // Deliberately no `returnToForeground` — this covers the second of the three call sites
   // in `src/store/dayRollover.ts`, the one on entry to the Refrain.
   await jumpTo(page, '2026-03-11T09:00')
-  await page.getByRole('button', { name: 'Start the wave →' }).click()
+  await click(page, 'Start the wave →')
 
   await expect(page.getByText('Phrase 1 / 5')).toBeVisible()
   await expect(page.getByText('Locked in for today')).toBeHidden()
-  await expect(page.locator('div[aria-label$="0 percent automatic."]').first()).toBeVisible()
+  await expect(page.getByRole('progressbar', { name: 'Automaticity' })).toHaveAttribute(
+    'aria-valuenow',
+    '0',
+  )
 })
 
 test('a session inside the grace window counts for the evening it continues', async ({ page }) => {
@@ -95,9 +99,9 @@ test('a session past the grace window starts a second streak day', async ({ page
   await onboard(page)
   await doOneRep(page)
 
-  // The grace window closes at 04:00, so 09:00 is unambiguously the 11th. This is the
-  // other side of the boundary asserted above; together they pin it rather than assuming
-  // whichever direction happens to pass.
+  // The grace window closes at 04:00, so 09:00 is unambiguously the 11th. This is the other
+  // side of the boundary asserted above; together they pin it rather than assuming whichever
+  // direction happens to pass.
   await jumpTo(page, '2026-03-11T09:00')
   await returnToForeground(page)
   await doOneRep(page)
@@ -110,7 +114,8 @@ test('a session past the grace window starts a second streak day', async ({ page
 test('an earned milestone survives the next morning’s first rep', async ({ page }) => {
   await atInstant(page, '2026-03-10T22:00')
   await onboard(page)
-  await lockInOnePhrase(page)
+  await click(page, 'Start the wave →')
+  await lockIn(page)
   await page.goBack()
 
   await openProgress(page)
@@ -168,64 +173,15 @@ test('the streak survives the spring-forward day', async ({ page }) => {
 // here would assert a state shape production does not have.
 // ─────────────────────────────────────────────────────────────────────────────
 
-async function lockInOnePhrase(page: Page): Promise<void> {
-  await page.getByRole('button', { name: 'Start the wave →' }).click()
-  for (const rep of REPS) await page.getByRole('button', { name: rep }).click()
-  await expect(page.getByText('Locked in for today')).toBeVisible()
-}
-
-/** One rep, from Today and back to Today. */
-async function doOneRep(page: Page): Promise<void> {
-  await page.getByRole('button', { name: 'Start the wave →' }).click()
-  await page.getByRole('button', { name: 'Say it' }).click()
-  await page.goBack()
-  await expect(page.getByText('Today', { exact: true })).toBeVisible()
-}
-
-async function openProgress(page: Page): Promise<void> {
-  await page.getByRole('button', { name: 'Progress' }).click()
-  await expect(page).toHaveURL(/\/progress$/)
-}
-
-/**
- * In-app navigation, never `page.goto`.
- *
- * The store is in memory, so a real navigation would reset the learner to first-run and
- * every assertion after it would be about a different app.
- */
-async function backToToday(page: Page): Promise<void> {
-  await page.getByRole('link', { name: /back/i }).click()
-  await expect(page.getByText('Today', { exact: true })).toBeVisible()
-}
-
-/**
- * A `StatTile`'s number, addressed through its label.
- *
- * The value and the label are sibling text nodes in one card
- * (`src/ui/primitives.tsx:313-324`), so the label is the stable handle; asserting the
- * card's whole text would read `'0reps today'`.
- */
-function statValue(page: Page, label: string): Locator {
-  return page.getByText(label, { exact: true }).locator('..').locator('div').first()
-}
-
 /**
  * A milestone row on Progress, addressed by its title.
  *
- * The `✓` renders only for an earned milestone (`app/progress.tsx:327-331`); the rest of
- * the earned/unearned distinction is colour and opacity, which is not assertable and not
+ * The `✓` renders only for an earned milestone (`app/progress.tsx`); the rest of the
+ * earned/unearned distinction is colour and opacity, which is not assertable and not
  * available to a learner who cannot see it either.
  */
 function milestone(page: Page, title: string): Locator {
   return page.getByText(title, { exact: true }).locator('../..')
-}
-
-function streakValue(page: Page): Locator {
-  return page
-    .getByText('Current streak')
-    .locator('..')
-    .getByText(/^\d+$|^—$/)
-    .first()
 }
 
 /** The seven weekday initials in the Progress week row, oldest first. */

@@ -26,11 +26,10 @@
  *     unbuilt (plans/17, plans/24). Asserting a due date here would assert the stand-in.
  */
 
-import type { Locator, Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
 import { atInstant, jumpTo, returnToForeground } from './clock'
 import { expect, onboard, test } from './fixtures'
-
-const REPS = ['Say it', 'Chorus it', 'Faster!', 'Fill & say', 'Respond', 'Say it cold'] as const
+import { click, doOneRep, lockIn, openProgress, statTile, streakChip, streakValue } from './states'
 
 /** `LOCK_IN_DAYS_TO_GRADUATE` — four distinct lock-in days retires a phrase. */
 const LOCK_IN_DAYS_TO_GRADUATE = 4
@@ -40,10 +39,7 @@ test('a streak climbs across five consecutive days', async ({ page }) => {
   await onboard(page)
 
   for (let day = 6; day <= 10; day += 1) {
-    if (day > 6) {
-      await jumpTo(page, `2026-04-${String(day).padStart(2, '0')}T09:00`)
-      await returnToForeground(page)
-    }
+    if (day > 6) await nextMorning(page, `2026-04-${String(day).padStart(2, '0')}T09:00`)
     await doOneRep(page)
     await expect(streakChip(page)).toHaveText(String(day - 5))
   }
@@ -60,11 +56,13 @@ test('a missed day resets the streak without saying so', async ({ page }) => {
   await atInstant(page, '2026-04-06T09:00')
   await onboard(page)
   await doOneRep(page)
-  await doOneRepOn(page, '2026-04-07T09:00')
+  await nextMorning(page, '2026-04-07T09:00')
+  await doOneRep(page)
   await expect(streakChip(page)).toHaveText('2')
 
   // Skip the 8th entirely and return on the 9th.
-  await doOneRepOn(page, '2026-04-09T09:00')
+  await nextMorning(page, '2026-04-09T09:00')
+  await doOneRep(page)
 
   await openProgress(page)
   await expect(streakValue(page)).toHaveText('1')
@@ -75,7 +73,7 @@ test('a missed day resets the streak without saying so', async ({ page }) => {
   // Non-negotiable 3: no screen shames a missed day. The gap is drawn as an absence and
   // never named — no broken-streak notice, no apology, no comparison to what could have
   // been.
-  const body = await page.locator('body').innerText()
+  const body = (await page.locator('body').innerText()).toLowerCase()
   for (const shame of [
     'broke',
     'broken',
@@ -88,7 +86,7 @@ test('a missed day resets the streak without saying so', async ({ page }) => {
     "don't",
     'failed',
   ]) {
-    expect(body.toLowerCase(), `Progress said "${shame}" after a missed day`).not.toContain(shame)
+    expect(body, `Progress said "${shame}" after a missed day`).not.toContain(shame)
   }
 })
 
@@ -97,21 +95,19 @@ test('four lock-in days graduate a phrase out of rotation', async ({ page }) => 
   await onboard(page)
 
   const retiring = await firstPhraseInSet(page)
-  await expect(statValue(page, 'graduated')).toHaveText('0')
+  await expect(statTile(page, 'graduated', 0)).toBeVisible()
 
   for (let day = 0; day < LOCK_IN_DAYS_TO_GRADUATE; day += 1) {
-    if (day > 0) {
-      await jumpTo(page, `2026-04-${String(6 + day).padStart(2, '0')}T09:00`)
-      await returnToForeground(page)
-    }
+    if (day > 0) await nextMorning(page, `2026-04-${String(6 + day).padStart(2, '0')}T09:00`)
     // A phrase mid-graduation is priority 1 in the next day's set, so the same phrase is
     // always Phrase 1 — deterministic without the spec knowing the selection rules.
     await expect(page.getByText(retiring, { exact: true })).toBeVisible()
-    await lockInFirstPhrase(page)
+    await click(page, 'Start the wave →')
+    await lockIn(page)
     await page.goBack()
   }
 
-  await expect(statValue(page, 'graduated')).toHaveText('1')
+  await expect(statTile(page, 'graduated', 1)).toBeVisible()
 
   // Still in TODAY's set, and that is the contract: the set is frozen once per day so a
   // learner can always finish what they were shown. A phrase vanishing from the screen the
@@ -119,13 +115,12 @@ test('four lock-in days graduate a phrase out of rotation', async ({ page }) => 
   await expect(page.getByText(retiring, { exact: true })).toBeVisible()
 
   // It leaves on the next roll, not before.
-  await jumpTo(page, '2026-04-10T09:00')
-  await returnToForeground(page)
+  await nextMorning(page, '2026-04-10T09:00')
   await expect(page.getByText(retiring, { exact: true })).toBeHidden()
-  await expect(statValue(page, 'graduated')).toHaveText('1')
+  await expect(statTile(page, 'graduated', 1)).toBeVisible()
 
   // Retired means out of rotation, not deleted — the stream still holds all ten.
-  await expect(statValue(page, 'in your stream')).toHaveText('10')
+  await expect(statTile(page, 'in your stream', 10)).toBeVisible()
   await expect(page.getByRole('button', { name: /percent automatic/ })).toHaveCount(5)
 })
 
@@ -137,38 +132,22 @@ test('a phrase practised for four non-consecutive days still graduates', async (
   const retiring = await firstPhraseInSet(page)
 
   for (const day of ['06', '08', '11', '12']) {
-    if (day !== '06') {
-      await jumpTo(page, `2026-04-${day}T09:00`)
-      await returnToForeground(page)
-    }
+    if (day !== '06') await nextMorning(page, `2026-04-${day}T09:00`)
     await expect(page.getByText(retiring, { exact: true })).toBeVisible()
-    await lockInFirstPhrase(page)
+    await click(page, 'Start the wave →')
+    await lockIn(page)
     await page.goBack()
   }
 
-  await expect(statValue(page, 'graduated')).toHaveText('1')
+  await expect(statTile(page, 'graduated', 1)).toBeVisible()
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-async function lockInFirstPhrase(page: Page): Promise<void> {
-  await page.getByRole('button', { name: 'Start the wave →' }).click()
-  for (const rep of REPS) await page.getByRole('button', { name: rep }).click()
-  await expect(page.getByText('Locked in for today')).toBeVisible()
-}
-
-/** One rep, from Today and back to Today. */
-async function doOneRep(page: Page): Promise<void> {
-  await page.getByRole('button', { name: 'Start the wave →' }).click()
-  await page.getByRole('button', { name: 'Say it' }).click()
-  await page.goBack()
-  await expect(page.getByText('Today', { exact: true })).toBeVisible()
-}
-
-async function doOneRepOn(page: Page, instant: string): Promise<void> {
+/** Cross to a later day the way a phone does: the clock moved, then the app came back. */
+async function nextMorning(page: Page, instant: string): Promise<void> {
   await jumpTo(page, instant)
   await returnToForeground(page)
-  await doOneRep(page)
 }
 
 /**
@@ -187,30 +166,4 @@ async function firstPhraseInSet(page: Page): Promise<string> {
   const es = /^(.*)\.\s\d+ percent automatic\.$/.exec(label)?.[1]
   expect(es, `could not read the first phrase from '${label}'`).toBeTruthy()
   return es ?? ''
-}
-
-async function openProgress(page: Page): Promise<void> {
-  await page.getByRole('button', { name: 'Progress' }).click()
-  await expect(page).toHaveURL(/\/progress$/)
-}
-
-/** Today's streak chip — `—` before the first rep, the count after it. */
-function streakChip(page: Page): Locator {
-  return page
-    .getByText('🔥')
-    .locator('..')
-    .getByText(/^\d+$|^—$/)
-    .first()
-}
-
-function streakValue(page: Page): Locator {
-  return page
-    .getByText('Current streak')
-    .locator('..')
-    .getByText(/^\d+$|^—$/)
-    .first()
-}
-
-function statValue(page: Page, label: string): Locator {
-  return page.getByText(label, { exact: true }).locator('..').locator('div').first()
 }

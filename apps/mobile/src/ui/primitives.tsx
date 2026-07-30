@@ -171,12 +171,26 @@ export function Card({
   padding = space['3.5'],
   children,
   style,
+  accessible,
+  accessibilityLabel,
 }: {
   padding?: number
   children: ReactNode
   style?: StyleProp<ViewStyle>
+  /** Set both together when the card's contents only make sense read as one phrase. */
+  accessible?: boolean | undefined
+  accessibilityLabel?: string | undefined
 }) {
-  return <View style={[s.card, { padding }, style]}>{children}</View>
+  return (
+    <View
+      style={[s.card, { padding }, style]}
+      accessible={accessible}
+      accessibilityLabel={accessibilityLabel}
+      aria-label={accessibilityLabel}
+    >
+      {children}
+    </View>
+  )
 }
 
 export function DarkCard({
@@ -396,9 +410,23 @@ export function EmojiTile({ emoji, size = 42 }: { emoji: string; size?: number }
   )
 }
 
+/**
+ * A number with its label.
+ *
+ * `accessible` with a combined label, the same way the Progress week row groups its seven
+ * cells (`app/progress.tsx:120`): read as two separate nodes, a tile announces a bare "2"
+ * and then "reps today", and the number arrives before anything says what it counts.
+ * Grouping also gives the value a semantic handle, so a test can ask for
+ * `getByLabel('reps today: 2')` instead of walking the DOM to find which child holds it.
+ */
 export function StatTile({ value, label }: { value: string; label: string }) {
   return (
-    <Card padding={space['3.5']} style={{ flex: 1, alignItems: 'center' }}>
+    <Card
+      padding={space['3.5']}
+      style={{ flex: 1, alignItems: 'center' }}
+      accessible
+      accessibilityLabel={`${label}: ${value}`}
+    >
       <Text variant="title2" color={ink.ink}>
         {value}
       </Text>
