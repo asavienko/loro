@@ -3,10 +3,10 @@
  *
  * A component that does — one that takes a phrase, a difficulty, a tag — belongs in
  * `src/ui/components/`, and the layer rule at `eslint.config.mjs:83-97` enforces the
- * boundary. See docs/design/component-inventory.md.
+ * boundary. The names and prop shapes come from docs/design/component-inventory.md.
  *
  * This is the directory's front door: everything is re-exported here, so
- * `from '../src/ui/primitives'` resolves whether the primitives live in one file or twelve.
+ * `from '../src/ui/primitives'` resolves whether the primitives live in one file or thirteen.
  *
  * ── Accessibility props are set in BOTH forms, on purpose ──
  * react-native-web 0.21 forwards the FLAT `aria-*` props and a handful of deprecated
@@ -29,13 +29,15 @@
  */
 
 export { Text, SectionLabel, ChartSummary, type TypeVariant } from './Text'
+export { SectionHeader, CardHeader } from './headers'
 export { Pressable } from './Pressable'
 export { Screen, Card, DarkCard, Divider } from './surfaces'
-export { Row, Stack } from './layout'
+export { Row, Stack, Grid } from './layout'
 export { Button } from './Button'
-export { Pill } from './Pill'
-export { Chip, ChipGrid } from './Chip'
+export { IconButton } from './IconButton'
+export { Pill, type PillSize, type PillTone } from './Pill'
+export { Chip } from './Chip'
 export { Segmented, type SegmentedOption } from './Segmented'
 export { Sheet } from './Sheet'
-export { ProgressBar, ValueBar, Dots, type ValueBarSegment } from './bars'
-export { EmojiTile, StatTile } from './tiles'
+export { ProgressBar, Dots } from './bars'
+export { EmojiTile, Dot, StatTile } from './tiles'

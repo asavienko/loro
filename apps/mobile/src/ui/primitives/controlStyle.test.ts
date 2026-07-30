@@ -22,7 +22,7 @@ import {
   line,
   onDark,
   phraseRow,
-  pill,
+  pillSize,
   radius,
   statRow,
   surface,
@@ -211,8 +211,8 @@ describe('control tokens keep the value the screen had', () => {
   it('the difficulty cards: 12 in the add sheet, 11 on phrase detail', () => {
     // app/add.tsx:433 and app/phrase/[id].tsx:168. One pixel apart, and preserved: unifying
     // them would move every row below the selector on one of the two screens.
-    expect(difficultyCard.cards).toEqual({ gap: 8, paddingVertical: 12 })
-    expect(difficultyCard.cardsTight).toEqual({ gap: 8, paddingVertical: 11 })
+    expect(difficultyCard.default).toEqual({ gap: 8, paddingVertical: 12 })
+    expect(difficultyCard.tight).toEqual({ gap: 8, paddingVertical: 11 })
   })
 
   it('the phrase row: the queue is a pixel tighter and a type step smaller', () => {
@@ -221,14 +221,26 @@ describe('control tokens keep the value the screen had', () => {
     expect(phraseRow.suggestion).toEqual({ padding: 12, gap: 10, emojiSize: 17 })
   })
 
-  it('the three pills, and the alignSelf that made stream keep its own copy', () => {
-    expect(pill.standalone).toEqual({
+  it('the pill sizes, and the alignSelf that made stream keep its own copy', () => {
+    // `md` is the standalone pill (phrase detail's theme label); `sm` is the one that sits in a
+    // row of other content, which is what stream.tsx hand-rolled a second Pill to get; `xs` is
+    // Today's `Locked` badge. The paddings are the three the screens shipped with, and the
+    // alignSelf difference is the whole reason the duplicate existed.
+    expect(pillSize.md).toMatchObject({
       paddingHorizontal: 9,
       paddingVertical: 4,
       alignSelf: 'flex-start',
     })
-    expect(pill.inline).toEqual({ paddingHorizontal: 8, paddingVertical: 4, alignSelf: 'auto' })
-    expect(pill.compact).toEqual({ paddingHorizontal: 7, paddingVertical: 3, alignSelf: 'auto' })
+    expect(pillSize.sm).toMatchObject({
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      alignSelf: 'auto',
+    })
+    expect(pillSize.xs).toMatchObject({
+      paddingHorizontal: 7,
+      paddingVertical: 3,
+      alignSelf: 'auto',
+    })
   })
 
   it('the stat row gap is 9, not a space step', () => {

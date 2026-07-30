@@ -17,9 +17,6 @@
  * them against the values the screens used to hold.
  */
 
-import type { ReactNode } from 'react'
-import { StyleSheet, View } from 'react-native'
-import { chipGrid } from '../theme'
 import { chipLook, type ChipTone, type ChipVariant } from './controlStyle'
 import { Pressable } from './Pressable'
 import { Text } from './Text'
@@ -67,17 +64,3 @@ export function Chip({
   )
 }
 
-/**
- * The wrapping grid chip-sized things are laid out in: the tag grids on Add and phrase detail,
- * and phrase detail's word-by-word cards.
- *
- * It wraps rather than scrolls on purpose — at 310% text one chip is wider than the screen, and
- * `e2e/text-scale.spec.ts` asserts nothing overflows.
- */
-export function ChipGrid({ children }: { children: ReactNode }) {
-  return <View style={s.grid}>{children}</View>
-}
-
-const s = StyleSheet.create({
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: chipGrid.gap },
-})

@@ -1,10 +1,10 @@
 /**
  * `DifficultySelector` — "How hard is it for you?", in the three shapes the app renders it.
  *
- * ── Why three layouts and not one ──
+ * ── Why a layout AND a density ──
  * The add sheet and phrase detail draw CARDS; the stream draws a segmented track. And the two
  * card sites differ by one pixel of vertical padding (12 in the sheet, 11 on detail). That
- * pixel is preserved as `cardsTight` rather than averaged away: unifying it would move every
+ * pixel is preserved as `density="tight"` rather than averaged away: unifying it would move every
  * row below the selector on one of the two screens, and `e2e/text-scale.spec.ts` checks that
  * nothing clips at 200% and 310% text.
  *
@@ -24,14 +24,18 @@ export function DifficultySelector({
   value,
   onChange,
   layout = 'cards',
+  density = 'default',
 }: {
   value: Difficulty
   onChange: (value: Difficulty) => void
+  /** The inventory's two layouts: `cards` (the add sheet, phrase detail) or `segmented` (stream). */
+  layout?: 'cards' | 'segmented' | undefined
   /**
-   * `cards` is the add sheet, `cardsTight` phrase detail (one pixel shorter), `segmented` the
-   * stream's inset track.
+   * `tight` is phrase detail's cards — one pixel shorter than the add sheet's. Ignored by
+   * `segmented`. It is a second prop rather than a third `layout` value because the layout and how
+   * dense it is are two different questions, and the inventory fixes `layout`'s two names.
    */
-  layout?: 'cards' | 'cardsTight' | 'segmented' | undefined
+  density?: keyof typeof difficultyCard | undefined
 }) {
   if (layout === 'segmented') {
     return (
@@ -49,7 +53,7 @@ export function DifficultySelector({
     )
   }
 
-  const m = difficultyCard[layout]
+  const m = difficultyCard[density]
 
   return (
     <Row gap={m.gap}>

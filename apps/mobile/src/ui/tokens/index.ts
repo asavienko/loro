@@ -8,13 +8,15 @@
 
 export { MIN_TAP, barRadius, border } from './sizing'
 export {
-  bottomBar,
+  actionBar,
+  cardHeader,
   chip,
-  chipGrid,
   difficultyCard,
   emptyState,
+  grid,
   phraseRow,
-  pill,
+  pillSize,
+  sectionHeader,
   segmented,
   sheet,
   statRow,

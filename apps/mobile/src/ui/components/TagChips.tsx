@@ -1,5 +1,5 @@
 /**
- * `TagSelector` — "What's tricky about it?", the four tags as a wrapping grid of checkboxes.
+ * `TagChips` — "What's tricky about it?", the four tags as a wrapping grid of checkboxes.
  *
  * Multi-select, so the role is `checkbox` and every chip carries `selected`; the mark appended to
  * a chosen chip's text is the visible half of the same signal, since a selection must not be
@@ -11,17 +11,22 @@
  */
 
 import type { Tag } from '@loro/core'
-import { Chip, ChipGrid } from '../primitives'
+import { Chip, Grid } from '../primitives'
 import { tagMeta } from '../theme'
 
 const ORDER = Object.keys(tagMeta) as Tag[]
 
-export function TagSelector({
+export function TagChips({
   value,
   onToggle,
   selectedSuffix,
 }: {
   value: readonly Tag[]
+  /**
+   * The inventory calls this `onChange`. It is a toggle here because that is what both call sites
+   * need: phrase detail's store action is `toggleTag(id, tag)`, and handing back the whole array
+   * would force it to diff two arrays to find which tag moved.
+   */
   onToggle: (tag: Tag) => void
   /**
    * Appended to a CHOSEN chip's visible text — `copy.common.selectedSuffix`, which is `' ✓'`
@@ -32,7 +37,7 @@ export function TagSelector({
   selectedSuffix: string
 }) {
   return (
-    <ChipGrid>
+    <Grid>
       {ORDER.map((t) => {
         const selected = value.includes(t)
         return (
@@ -49,6 +54,6 @@ export function TagSelector({
           />
         )
       })}
-    </ChipGrid>
+    </Grid>
   )
 }

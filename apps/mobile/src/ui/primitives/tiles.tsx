@@ -7,7 +7,29 @@ import { ink, radius, space, surface } from '../theme'
 import { Card } from './surfaces'
 import { Text } from './Text'
 
-export function EmojiTile({ emoji, size = 42 }: { emoji: string; size?: number | undefined }) {
+/**
+ * The rounded emoji tile.
+ *
+ * The glyph is `0.48 × size`, which is the ratio the blueprint draws at every size it uses — except
+ * where it does not, and `fontSize` is the escape hatch for those. The Refrain's finish tile is
+ * 88 px with a 42 px glyph (0.477) and Progress's milestone tiles are 38 with 18 (0.474); rounding
+ * either to the ratio would move the glyph by a quarter of a pixel, which is a change nobody asked
+ * for.
+ */
+export function EmojiTile({
+  emoji,
+  size = 42,
+  radius: corner = radius.lg,
+  background = surface.sunken,
+  fontSize,
+}: {
+  emoji: string
+  size?: number | undefined
+  radius?: number | undefined
+  background?: string | undefined
+  /** Overrides `0.48 × size`. */
+  fontSize?: number | undefined
+}) {
   return (
     <View
       // Decorative: the row's label already carries the meaning.
@@ -16,14 +38,29 @@ export function EmojiTile({ emoji, size = 42 }: { emoji: string; size?: number |
       style={{
         width: size,
         height: size,
-        borderRadius: radius.lg,
-        backgroundColor: surface.sunken,
+        borderRadius: corner,
+        backgroundColor: background,
         alignItems: 'center',
         justifyContent: 'center',
       }}
     >
-      <RNText style={{ fontSize: size * 0.48 }}>{emoji}</RNText>
+      <RNText style={{ fontSize: fontSize ?? size * 0.48 }}>{emoji}</RNText>
     </View>
+  )
+}
+
+/**
+ * A single dot.
+ *
+ * `borderRadius` is `ceil(size / 2)`, which is what both call sites wrote by hand: 5 for a 9 px dot
+ * and 4 for a 7 px one. `Dots` does NOT use this — its pips round at `size / 2`, so a 7 px pip
+ * there is 3.5 — and unifying the two would move a corner on the Refrain's rep strip.
+ */
+export function Dot({ size, color }: { size: number; color: string }) {
+  return (
+    <View
+      style={{ width: size, height: size, borderRadius: Math.ceil(size / 2), backgroundColor: color }}
+    />
   )
 }
 
@@ -35,6 +72,11 @@ export function EmojiTile({ emoji, size = 42 }: { emoji: string; size?: number |
  * and then "reps today", and the number arrives before anything says what it counts.
  * Grouping also gives the value a semantic handle, so a test can ask for
  * `getByLabel('reps today: 2')` instead of walking the DOM to find which child holds it.
+ *
+ * NOT for the Refrain's two finish cards (`app/practice/refrain.tsx:262-277`). They look identical
+ * and are not: they use `title3` where this uses `title2`, and they are deliberately NOT one
+ * accessible node. Routing them through here would change both the type size and the accessibility
+ * tree.
  */
 export function StatTile({ value, label }: { value: string; label: string }) {
   return (

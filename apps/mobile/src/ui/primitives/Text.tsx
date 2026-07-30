@@ -1,5 +1,5 @@
 /**
- * Text, and the two text-only components built on it. Nothing here knows what a phrase is.
+ * Text, and the components that are only text: the section label, its header, a chart's summary.
  */
 
 import type { ReactNode } from 'react'
@@ -17,11 +17,11 @@ export function Text({
   style,
   children,
 }: {
-  // `| undefined` on every optional prop, deliberately — the same reason it is spelled out
-  // on `Pressable`. Under `exactOptionalPropertyTypes` a bare `?:` means "absent", not "may
-  // be undefined", so a composite forwarding its own optional prop (`PhraseRow` → `Text`)
-  // would not typecheck. Widening at the point props are RECEIVED keeps the strict setting
-  // everywhere else, where it catches real bugs.
+  // `| undefined` on every optional prop, deliberately — the same reason it is spelled out on
+  // `Pressable`. Under `exactOptionalPropertyTypes` a bare `?:` means "absent", not "may be
+  // undefined", so a composite forwarding its own optional prop (`PhraseRow` → `Text`) would not
+  // typecheck. Widening at the point props are RECEIVED keeps the strict setting everywhere else,
+  // where it catches real bugs.
   variant?: TypeVariant | undefined
   color?: string | undefined
   align?: 'left' | 'center' | 'right' | undefined
@@ -45,9 +45,24 @@ export function Text({
   )
 }
 
-export function SectionLabel({ children }: { children: ReactNode }) {
+/**
+ * The uppercase label above a section, and the same treatment one step down.
+ *
+ * `size="sm"` is `labelSm` — the 10 px form. It is a size and not a second component because
+ * fourteen places in the app wrote `<Text variant="labelSm" color={ink.muted}>` by hand, which is
+ * this component with a different step of the scale.
+ */
+export function SectionLabel({
+  size = 'md',
+  color = ink.muted,
+  children,
+}: {
+  size?: 'md' | 'sm' | undefined
+  color?: string | undefined
+  children: ReactNode
+}) {
   return (
-    <Text variant="label" color={ink.muted}>
+    <Text variant={size === 'sm' ? 'labelSm' : 'label'} color={color}>
       {children}
     </Text>
   )

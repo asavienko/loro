@@ -1,9 +1,14 @@
 /**
- * The bars and pips: `ProgressBar` (announced), `ValueBar` (drawn only), `Dots`.
+ * The bar and the pips.
+ *
+ * Progress's two bars are NOT here. The tricky-tag bar and the mastery stacked bar have one call
+ * site each and belong to `TrickyRollup` and `MasteryBar` in the inventory
+ * (`docs/design/component-inventory.md:79-80`); a shared "thin bar" primitive could not be adopted
+ * by either without moving a pixel — see the report on plans/52.
  */
 
 import { View } from 'react-native'
-import { accent, barRadius, line, radius, surface } from '../theme'
+import { accent, barRadius, line } from '../theme'
 import { Row } from './layout'
 
 /**
@@ -24,6 +29,7 @@ export function ProgressBar({
   color = accent.accent,
   height = 6,
   track = line.default,
+  radius = barRadius,
   label,
 }: {
   /** 0..1 */
@@ -31,6 +37,17 @@ export function ProgressBar({
   color?: string | undefined
   height?: number | undefined
   track?: string | undefined
+  /**
+   * The corner, on both track and fill. Defaults to `barRadius` (2), which is what every
+   * announced bar in the app uses.
+   *
+   * It is a prop because Progress's "what's tricky" rows shipped with a fully-round `8` on a
+   * 7px bar, and without this the only ways to reuse this primitive were to square those
+   * corners or to leave the row hand-drawing a bar this component already draws. Neither is
+   * acceptable: the first changes what a learner sees, the second is the duplication being
+   * removed. See plans/52.
+   */
+  radius?: number | undefined
   label?: string | undefined
 }) {
   const pct = Math.max(0, Math.min(1, value)) * 100
@@ -55,78 +72,11 @@ export function ProgressBar({
   return (
     <View
       {...semantics}
-      style={{ height, borderRadius: barRadius, backgroundColor: track, overflow: 'hidden' }}
+      style={{ height, borderRadius: radius, backgroundColor: track, overflow: 'hidden' }}
     >
       <View
-        style={{ width: `${pct}%`, height: '100%', borderRadius: barRadius, backgroundColor: color }}
+        style={{ width: `${pct}%`, height: '100%', borderRadius: radius, backgroundColor: color }}
       />
-    </View>
-  )
-}
-
-export interface ValueBarSegment {
-  key: string
-  /** A share of the whole. The segments of one bar are expected to SUM TO 1. */
-  portion: number
-  color: string
-}
-
-/**
- * A thin bar that is DRAWN, not announced — a rounder, chunkier shape than `ProgressBar`,
- * and with no accessibility semantics of its own.
- *
- * That is the point of it being separate: both of its call sites already carry their number
- * in words. Progress's tricky rows put the count in the row's label ("Pronunciation, 12
- * phrases"), and the mastery bar has a `ChartSummary` beside it, which accessibility.md
- * requires and CI checks. A second, unnamed `progressbar` node in either place would
- * announce a bare number twice.
- *
- * ── Why two sizing modes and not one ──
- * `value` renders ONE fill as a percentage width; `segments` renders several as flex ratios.
- * They are not interchangeable: Yoga normalises `flex` by the SUM of its siblings' grow
- * factors, so a single child with `flex: 0.4` fills the whole track rather than 40% of it.
- * A percentage cannot express a stack that must add up, and a flex ratio cannot express a
- * single fill. Pass one or the other.
- */
-export function ValueBar({
-  value,
-  color,
-  segments,
-  height,
-  radius: corner = radius.sm,
-  track = surface.sunken,
-}: {
-  /** 0..1 — a single fill. Mutually exclusive with `segments`. */
-  value?: number | undefined
-  color?: string | undefined
-  /** A stack that sums to 1. Mutually exclusive with `value`. */
-  segments?: readonly ValueBarSegment[] | undefined
-  height: number
-  radius?: number | undefined
-  track?: string | undefined
-}) {
-  return (
-    <View
-      style={{
-        flexDirection: 'row',
-        height,
-        borderRadius: corner,
-        backgroundColor: track,
-        overflow: 'hidden',
-      }}
-    >
-      {segments?.map((seg) => (
-        <View key={seg.key} style={{ flex: seg.portion, backgroundColor: seg.color }} />
-      ))}
-      {value !== undefined && color !== undefined && (
-        <View
-          style={{
-            width: `${Math.max(0, Math.min(1, value)) * 100}%`,
-            height: '100%',
-            backgroundColor: color,
-          }}
-        />
-      )}
     </View>
   )
 }
