@@ -289,9 +289,16 @@ export default function PhraseDetail() {
         <Divider />
 
         {/* ── Status ── */}
+        {/* `flexWrap` for the same reason as the stream's re-rating row: at a large font
+            scale the button must drop to the next line, not off the screen. */}
         <Row
           justify="space-between"
-          style={{ backgroundColor: surface.sunken, borderRadius: radius.xl, padding: 13 }}
+          style={{
+            backgroundColor: surface.sunken,
+            borderRadius: radius.xl,
+            padding: 13,
+            flexWrap: 'wrap',
+          }}
         >
           <View>
             <Text variant="caption" color={ink.ink}>

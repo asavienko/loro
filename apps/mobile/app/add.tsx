@@ -279,6 +279,10 @@ export default function Add() {
                   onPress={() => {
                     setBrowseTheme(null)
                   }}
+                  // A bare text button is 17px tall — 33 even with hitSlop, under the 44
+                  // floor. Padding rather than `minHeight` so the label stays vertically
+                  // centred in the row it shares with the section label.
+                  style={{ paddingVertical: 8, paddingRight: space['2'] }}
                 >
                   <Text variant="captionSm" color={ink.ink2}>
                     ‹ Themes

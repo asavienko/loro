@@ -192,7 +192,10 @@ export default function Stream() {
 
         {/* ── Live re-rating ── */}
         <Stack gap={space['2']}>
-          <Row gap={7}>
+          {/* Wraps so the row grows DOWNWARD at large text sizes rather than pushing
+              "✓ Learned" off the right edge, where it is neither readable nor tappable.
+              accessibility.md#text-and-layout: rows grow vertically. */}
+          <Row gap={7} style={{ flexWrap: 'wrap' }}>
             <Text variant="labelSm" color={ink.muted}>
               How&apos;s this one?
             </Text>
