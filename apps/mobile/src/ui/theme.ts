@@ -80,19 +80,28 @@ export const accent = accents[defaultAccent as AccentName]
 const weight = (value: number): TextStyle['fontWeight'] => String(value) as TextStyle['fontWeight']
 const emToPixels = (value: string, fontSize: number, precision = 1): number =>
   Number((Number.parseFloat(value) * fontSize).toFixed(precision))
+/**
+ * Established React Native line boxes for the two oversized styles. Applying the authored web
+ * ratios here would change display from 62 to 56 and hero from 48 to 46 pixels, so they remain
+ * explicit platform tokens until a visual-change plan can migrate them with screenshot evidence.
+ */
+const rnOversizedLineHeight = {
+  display: typography.scale.display.size,
+  hero: 48,
+} as const
 
 export const type = {
   display: {
     fontSize: typography.scale.display.size,
     fontWeight: weight(typography.scale.display.weight),
     letterSpacing: emToPixels(typography.scale.display.tracking, typography.scale.display.size, 0),
-    lineHeight: typography.scale.display.size,
+    lineHeight: rnOversizedLineHeight.display,
   },
   hero: {
     fontSize: typography.scale.hero.size,
     fontWeight: weight(typography.scale.hero.weight),
     letterSpacing: emToPixels(typography.scale.hero.tracking, typography.scale.hero.size),
-    lineHeight: 48,
+    lineHeight: rnOversizedLineHeight.hero,
   },
   title1: {
     fontSize: typography.scale.title1.size,
