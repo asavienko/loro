@@ -42,4 +42,5 @@ export type { AppState, StoreDeps } from './types'
 
 export { useMastery, useViews } from './selectors'
 
-export { engineContext, refrainEngine, streamEngine } from './engines'
+export { createEngineContext, engineContext, refrainEngine, streamEngine } from './engines'
+export type { EngineContextDeps } from './engines'

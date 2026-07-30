@@ -47,17 +47,15 @@ export type RefrainMode = (typeof REFRAIN_MODES)[number]
 /**
  * Everything one mode is, on one row.
  *
- * A mode is not five independent settings — it is one cognitive event defined by all five
- * at once: the rate it hears the model at (or doesn't), the beat it is paced by, what the
- * mic asks for, how much of the phrase is on screen, and what counts as having said it.
- * Read as a table, "what is Chorus?" is one row. Spread across a function per property, it
- * is five lookups in five places, and a seventh mode is five edits to remember.
+ * A mode is not four independent settings — it is one cognitive event defined by all four
+ * at once: the rate it hears the model at (or doesn't), the beat it is paced by, how much
+ * of the phrase is on screen, and what counts as having said it. Presentation copy is keyed
+ * by the mode in the app. Read as a table, "what is Chorus?" is one row.
  */
 interface RefrainModeSpec {
   /** Model-audio rate, or null when the mode deliberately withholds the model. */
   readonly modelRate: number | null
   readonly beatMs: number
-  readonly micLabel: string
   /** Takes the mask because only Cloze uses it; the rest ignore it. */
   readonly prompt: (clozeMask: readonly number[]) => PromptSpec
   readonly gate: GateSpec
@@ -72,14 +70,12 @@ const MODE_SPEC: Record<RefrainMode, RefrainModeSpec> = {
   echo: {
     modelRate: 0.95,
     beatMs: 720,
-    micLabel: 'Say it',
     prompt: () => ({ show: 'full' }),
     gate: { kind: 'asr-partial', minTokens: 1 },
   },
   chorus: {
     modelRate: 0.95,
     beatMs: 720,
-    micLabel: 'Chorus it',
     prompt: () => ({ show: 'full' }),
     gate: { kind: 'asr-partial', minTokens: 1 },
   },
@@ -87,7 +83,6 @@ const MODE_SPEC: Record<RefrainMode, RefrainModeSpec> = {
     modelRate: 1.15,
     // The faster beat is the only cue that Speed differs.
     beatMs: 340,
-    micLabel: 'Faster!',
     prompt: () => ({ show: 'full' }),
     gate: { kind: 'asr-partial', minTokens: 1 },
   },
@@ -95,21 +90,18 @@ const MODE_SPEC: Record<RefrainMode, RefrainModeSpec> = {
   cloze: {
     modelRate: null,
     beatMs: 720,
-    micLabel: 'Fill & say',
     prompt: (clozeMask) => ({ show: 'cloze', clozeMask }),
     gate: { kind: 'asr-full' },
   },
   call: {
     modelRate: null,
     beatMs: 720,
-    micLabel: 'Respond',
     prompt: () => ({ show: 'meaning' }),
     gate: { kind: 'asr-full' },
   },
   cold: {
     modelRate: null,
     beatMs: 720,
-    micLabel: 'Say it cold',
     prompt: () => ({ show: 'nothing', hookOnly: true }),
     gate: { kind: 'asr-full' },
   },
@@ -144,11 +136,6 @@ export function beatMsForMode(mode: RefrainMode): number {
   return MODE_SPEC[mode].beatMs
 }
 
-/** The mic label per mode. */
-export function micLabelForMode(mode: RefrainMode): string {
-  return MODE_SPEC[mode].micLabel
-}
-
 /** `min(100, round(reps / target * 100))`. Blueprint contract. */
 export function automaticity(repsToday: number, target: number): number {
   if (target <= 0) return 0
@@ -157,6 +144,9 @@ export function automaticity(repsToday: number, target: number): number {
 
 /** The four warming bands. The card's colour IS the feedback signal. */
 export type WarmBand = 'cold' | 'warm' | 'hot' | 'peak'
+
+/** Presentation-neutral effort state. Mobile maps this key to localized copy. */
+export type EffortState = 'ready' | WarmBand
 
 /**
  * One ladder, read two ways.
@@ -167,33 +157,27 @@ export type WarmBand = 'cold' | 'warm' | 'hot' | 'peak'
  * `cold` is the floor and so has no minimum.
  */
 const WARM_BANDS = [
-  { min: 100, band: 'peak', effort: 'instant & smooth' },
-  { min: 66, band: 'hot', effort: 'quick & smooth' },
-  { min: 33, band: 'warm', effort: 'getting smoother' },
+  { min: 100, band: 'peak' },
+  { min: 66, band: 'hot' },
+  { min: 33, band: 'warm' },
 ] as const satisfies readonly {
   readonly min: number
   readonly band: WarmBand
-  readonly effort: string
 }[]
 
-const COLDEST = { band: 'cold', effort: 'warming up' } as const
-
-function rungFor(automaticityPct: number): { readonly band: WarmBand; readonly effort: string } {
-  return WARM_BANDS.find((b) => automaticityPct >= b.min) ?? COLDEST
+function bandFor(automaticityPct: number): WarmBand {
+  return WARM_BANDS.find((candidate) => automaticityPct >= candidate.min)?.band ?? 'cold'
 }
 
 /**
- * The plain-language effort label. The progression matters more than the individual
- * strings — it ships as a group for translation.
+ * The semantic effort state. Presentation maps the state to localized copy.
  */
-export function effortLabel(reps: number, automaticityPct: number): string {
-  // Before the first rep there is no warmth to describe, only an invitation.
-  if (reps === 0) return 'tap to begin'
-  return rungFor(automaticityPct).effort
+export function effortState(reps: number, automaticityPct: number): EffortState {
+  return reps === 0 ? 'ready' : bandFor(automaticityPct)
 }
 
 export function warmBand(automaticityPct: number): WarmBand {
-  return rungFor(automaticityPct).band
+  return bandFor(automaticityPct)
 }
 
 /**
@@ -300,7 +284,6 @@ export class RefrainEngine implements PracticeEngine {
             repIndex: rep,
             repTarget: target,
             beatMs: spec.beatMs,
-            micLabel: spec.micLabel,
             automaticity: automaticity(rep, target),
             warmBand: warmBand(automaticity(rep, target)),
           },

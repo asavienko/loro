@@ -7,13 +7,12 @@
 
 import { describe, expect, it } from 'vitest'
 import { runConformanceSuite } from './conformance.js'
-import { StreamEngine, streamStats, rerateToast } from './stream/index.js'
+import { StreamEngine, streamStats } from './stream/index.js'
 import {
   RefrainEngine,
   automaticity,
   beatMsForMode,
-  effortLabel,
-  micLabelForMode,
+  effortState,
   modeForRep,
   modelRateForMode,
   refrainSetSize,
@@ -25,6 +24,7 @@ import { makeContext, makePhrase, seedFixture, T0 } from '../testing/index.js'
 import type { Attempt } from './types.js'
 import { LadderRung } from '../domain/phrase.js'
 import { userPhraseId } from '../domain/ids.js'
+import effortFixtures from '../domain/effort.fixtures.json'
 
 const success = (itemId: string, extra: Partial<Attempt> = {}): Attempt => ({
   itemId,
@@ -132,12 +132,6 @@ describe('StreamEngine', () => {
 describe('stream helpers', () => {
   it('counts the header stats, excluding learned from loved and hard', () => {
     expect(streamStats(seedFixture())).toEqual({ loved: 1, hard: 2, learned: 1 })
-  })
-
-  it('explains the consequence in every re-rate toast', () => {
-    expect(rerateToast('hard')).toBe('Difficult — repeats more, comes back sooner')
-    expect(rerateToast('easy')).toBe('Easy — drifting to the back')
-    expect(rerateToast('med')).toBe('Back to normal')
   })
 })
 
@@ -369,12 +363,10 @@ describe('refrain mechanics', () => {
     expect(warmBand(100)).toBe('peak')
   })
 
-  it('escalates the effort label', () => {
-    expect(effortLabel(0, 0)).toBe('tap to begin')
-    expect(effortLabel(1, 16)).toBe('warming up')
-    expect(effortLabel(3, 50)).toBe('getting smoother')
-    expect(effortLabel(4, 70)).toBe('quick & smooth')
-    expect(effortLabel(6, 100)).toBe('instant & smooth')
+  it('escalates the presentation-neutral effort state', () => {
+    for (const fixture of effortFixtures) {
+      expect(effortState(fixture.reps, fixture.automaticityPct)).toBe(fixture.expect)
+    }
   })
 
   it('holds at Cold past the last mode', () => {
@@ -385,11 +377,6 @@ describe('refrain mechanics', () => {
   it('speeds up the beat only in Speed mode', () => {
     expect(beatMsForMode('speed')).toBe(340)
     expect(beatMsForMode('echo')).toBe(720)
-  })
-
-  it('labels the mic per mode', () => {
-    expect(micLabelForMode('speed')).toBe('Faster!')
-    expect(micLabelForMode('cold')).toBe('Say it cold')
   })
 
   it('plays Speed faster than Echo', () => {

@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest'
+import { BROWSABLE_THEMES } from '@loro/core'
+import phraseSchema from '../schema/phrase.schema.json' with { type: 'json' }
 import { loadCatalog, stressedSyllables, THEMES, wordCount } from './index.js'
 import { ALL_CHECKS, runChecks, runChecksForCatalog, type Issue } from './checks.js'
 
@@ -23,6 +25,11 @@ describe('catalog integrity', () => {
   it('covers all eight themes', () => {
     const used = new Set(catalog.phrases.map((p) => p.theme))
     for (const theme of THEMES) expect(used, theme).toContain(theme)
+  })
+
+  it('keeps the authoring schema and Browse on the same canonical themes', () => {
+    expect(THEMES).toBe(BROWSABLE_THEMES)
+    expect(phraseSchema.properties.theme.enum).toEqual(BROWSABLE_THEMES)
   })
 
   it('gives every phrase a stable id, Spanish, English, theme, and emoji', () => {
@@ -179,7 +186,7 @@ describe('enrichment fields', () => {
 describe('check helpers', () => {
   it('runs selected checks against a supplied catalog', () => {
     const bad = structuredClone(catalog)
-    bad.phrases[0]!.theme = 'Nonsense'
+    ;(bad.phrases[0] as { theme: string }).theme = 'Nonsense'
 
     expect(runChecksForCatalog(bad, ['theme'])).toEqual(ALL_CHECKS.theme!(bad))
   })
@@ -198,7 +205,7 @@ describe('check helpers', () => {
 
   it('flags an unknown theme', () => {
     const bad = structuredClone(catalog)
-    bad.phrases[0]!.theme = 'Nonsense'
+    ;(bad.phrases[0] as { theme: string }).theme = 'Nonsense'
     expect(errors(ALL_CHECKS.theme!(bad)).length).toBeGreaterThan(0)
   })
 

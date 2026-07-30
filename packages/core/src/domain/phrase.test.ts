@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
+  BROWSABLE_THEMES,
+  MASTERY_BUCKETS,
+  countMasteryBuckets,
   masteryBucket,
   repsToday,
   REPEAT_TARGET,
@@ -20,6 +23,16 @@ describe('mastery buckets', () => {
 
   it('lets `learned` override the rep count', () => {
     expect(masteryBucket({ learned: true, reps: 0 })).toBe('mastered')
+  })
+
+  it('counts every bucket in canonical order, including zeroes', () => {
+    const counts = countMasteryBuckets([
+      { learned: false, reps: 0 },
+      { learned: false, reps: 1 },
+      { learned: true, reps: 0 },
+    ])
+    expect(Object.keys(counts)).toEqual(MASTERY_BUCKETS)
+    expect(counts).toEqual({ new: 1, learning: 1, strong: 0, mastered: 1 })
   })
 })
 
@@ -56,5 +69,18 @@ describe('contracts carried over from the blueprint', () => {
   it('has exactly three difficulties and four tags', () => {
     expect(DIFFICULTIES).toEqual(['easy', 'med', 'hard'])
     expect(TAGS).toEqual(['pron', 'remember', 'useful', 'words'])
+  })
+
+  it('keeps synthetic learner themes out of Browse', () => {
+    expect(BROWSABLE_THEMES).toEqual([
+      'Café',
+      'Dining',
+      'Travel',
+      'Directions',
+      'Shopping',
+      'Small talk',
+      'Survival',
+      'Hotel',
+    ])
   })
 })

@@ -24,8 +24,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import {
   automaticity,
   DEFAULT_REP_TARGET,
-  effortLabel,
-  micLabelForMode,
+  effortState,
   modelRateForMode,
   REFRAIN_MODES,
   repsToday as repsTodayOf,
@@ -133,7 +132,7 @@ export default function Refrain() {
             <EffortChart
               history={session.history}
               lastLatency={session.lastLatency}
-              summary={effortLabel(dayReps, auto)}
+              summary={copy.refrain.effort[effortState(dayReps, auto)]}
             />
           )}
         </Card>
@@ -496,7 +495,7 @@ function AutomaticityMeter({ auto }: { auto: number }) {
  * The falling effort: one bar per recent rep, and the read-out beside them.
  *
  * `summary` is the visible text summary every chart in the app carries
- * (`scripts/a11yChecks.ts` checks for it) — here the engine's own `effortLabel`.
+ * (`scripts/a11yChecks.ts` checks for it) — here the label for the engine's semantic state.
  */
 function EffortChart({
   history,
@@ -560,9 +559,9 @@ function RepCounter({ reps }: { reps: number }) {
   )
 }
 
-/** The one tap of the whole screen: a rep is done. Its label is the mode's, from the engine. */
+/** The one tap of the whole screen: a rep is done. Its mode is core-owned; its label is copy. */
 function MicButton({ mode, onPress }: { mode: RefrainMode; onPress: () => void }) {
-  const label = micLabelForMode(mode)
+  const label = copy.refrain.mic[mode]
   return (
     <Pressable
       feedback="button"

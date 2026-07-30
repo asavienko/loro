@@ -1,0 +1,11 @@
+[
+  { "reps": 0, "automaticityPct": 0, "expect": "ready" },
+  { "reps": 0, "automaticityPct": 100, "expect": "ready" },
+  { "reps": 1, "automaticityPct": 32, "expect": "cold" },
+  { "reps": 1, "automaticityPct": 33, "expect": "warm" },
+  { "reps": 3, "automaticityPct": 65, "expect": "warm" },
+  { "reps": 4, "automaticityPct": 66, "expect": "hot" },
+  { "reps": 4, "automaticityPct": 99, "expect": "hot" },
+  { "reps": 6, "automaticityPct": 100, "expect": "peak" },
+  { "reps": 9, "automaticityPct": 255, "expect": "peak" }
+]

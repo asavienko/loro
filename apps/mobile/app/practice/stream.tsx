@@ -317,7 +317,12 @@ function RerateRow({
       {/* `segmented` is the stream's inset track. Its inactive label is `ink.ink3` rather than
           `ink.muted` — on `surface.sunken2` muted is 4.41:1, under AA for 12 px text — and that
           decision now lives in `primitives/controlStyle.ts` beside the reasoning. */}
-      <DifficultySelector layout="segmented" value={phrase.difficulty} onChange={onRate} />
+      <DifficultySelector
+        layout="segmented"
+        value={phrase.difficulty}
+        labels={copy.difficulty}
+        onChange={onRate}
+      />
     </Stack>
   )
 }
@@ -368,7 +373,7 @@ function UpNextList({
             accessibilityLabel={copy.a11y.stream.queueRow(
               p.es,
               p.en,
-              difficultyMeta[p.difficulty].label,
+              copy.difficulty[p.difficulty],
             )}
             accessibilityHint={copy.a11y.common.opensPhraseDetails}
             onPress={() => {
@@ -377,7 +382,7 @@ function UpNextList({
             trailing={
               <Pill
                 size="sm"
-                label={difficultyMeta[p.difficulty].label}
+                label={copy.difficulty[p.difficulty]}
                 color={difficultyMeta[p.difficulty].color}
                 background={difficultyMeta[p.difficulty].bg}
               />

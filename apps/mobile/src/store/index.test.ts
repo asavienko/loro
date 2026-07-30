@@ -48,6 +48,7 @@ describe('the public surface', () => {
         'catalogById',
         'catalogPhrases',
         'createAppStore',
+        'createEngineContext',
         'dataOf',
         'engineContext',
         'packs',

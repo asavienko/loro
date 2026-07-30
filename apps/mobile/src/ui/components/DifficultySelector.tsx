@@ -8,26 +8,23 @@
  * row below the selector on one of the two screens, and `e2e/text-scale.spec.ts` checks that
  * nothing clips at 200% and 310% text.
  *
- * The labels come from `difficultyMeta` (`src/ui/theme.ts`), which is also where their colours
- * live — "Learning" is a status and "Difficult" describes the phrase, and the E2E suite finds
- * these controls by exactly those names.
+ * Labels are presentation copy supplied by the route; this leaf owns only layout and colours.
  */
 
-import type { Difficulty } from '@loro/core'
+import { DIFFICULTIES, type Difficulty } from '@loro/core'
 import { Pressable, Row, Segmented, Text } from '../primitives'
 import { border, difficultyCard, difficultyMeta, ink, line, radius, surface } from '../theme'
-
-/** The blueprint's order, easiest first (`Loro.dc.html:2327-2331`). */
-const ORDER: readonly Difficulty[] = ['easy', 'med', 'hard']
 
 export function DifficultySelector({
   value,
   onChange,
+  labels,
   layout = 'cards',
   density = 'default',
 }: {
   value: Difficulty
   onChange: (value: Difficulty) => void
+  labels: Readonly<Record<Difficulty, string>>
   /** The inventory's two layouts: `cards` (the add sheet, phrase detail) or `segmented` (stream). */
   layout?: 'cards' | 'segmented' | undefined
   /**
@@ -44,9 +41,9 @@ export function DifficultySelector({
         accessibilityRole="radio"
         value={value}
         onChange={onChange}
-        options={ORDER.map((d) => ({
+        options={DIFFICULTIES.map((d) => ({
           value: d,
-          label: difficultyMeta[d].label,
+          label: labels[d],
           selectedColor: difficultyMeta[d].color,
         }))}
       />
@@ -57,7 +54,7 @@ export function DifficultySelector({
 
   return (
     <Row gap={m.gap}>
-      {ORDER.map((d) => {
+      {DIFFICULTIES.map((d) => {
         const meta = difficultyMeta[d]
         const active = value === d
         return (
@@ -65,7 +62,7 @@ export function DifficultySelector({
             key={d}
             feedback="row"
             accessibilityRole="radio"
-            accessibilityLabel={meta.label}
+            accessibilityLabel={labels[d]}
             selected={active}
             onPress={() => {
               onChange(d)
@@ -81,7 +78,7 @@ export function DifficultySelector({
             }}
           >
             <Text variant="labelSm" color={active ? meta.color : ink.ink3}>
-              {meta.label}
+              {labels[d]}
             </Text>
           </Pressable>
         )

@@ -41,7 +41,7 @@
  * merge. Until then the divergence is DELIBERATE and recorded here.
  */
 
-import { REPEAT_TARGET, type LoroCoreFacade } from '@loro/core'
+import { foldDiacritics, REPEAT_TARGET, type LoroCoreFacade } from '@loro/core'
 
 export const jsCoreFacade: LoroCoreFacade = {
   // The one line here that is NOT a duplicate: `REPEAT_TARGET` is the canonical declaration
@@ -63,12 +63,7 @@ export const jsCoreFacade: LoroCoreFacade = {
     return { stability: days, difficulty: 5, due: at + days * 86_400_000 }
   },
   matchTokens: (heard, target, revealed) => {
-    const norm = (x: string): string =>
-      x
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[̀-ͯ]/g, '')
-        .replace(/[^a-z0-9ñ]/g, '')
+    const norm = (x: string): string => foldDiacritics(x.toLowerCase()).replace(/[^a-z0-9ñ]/g, '')
     const h = heard.map(norm).filter(Boolean)
     const t = target.map(norm)
     let cursor = 0

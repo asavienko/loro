@@ -7,6 +7,7 @@
  */
 
 import { catalogPhraseId, type PhraseState } from '@loro/core'
+import { copy } from '../../lib/copy'
 import { catalogById } from '../catalog'
 import { blankPhraseState, newOwnPhrase } from '../phraseFactory'
 import type { Slice, SliceContext } from '../types'
@@ -61,7 +62,7 @@ export const createPhrasesSlice: Slice<
       set((st) => ({ phrases: [...st.phrases, next] }))
       // Undo removes the row that was just created, by its row id. Passing the catalog
       // id here would have removed nothing.
-      get().showToast('Added — here are more like it', () => {
+      get().showToast(copy.toast.added, () => {
         get().removePhrase(next.id)
       })
     },
@@ -73,7 +74,7 @@ export const createPhrasesSlice: Slice<
         tags: o.tags ?? [],
       }
       set((st) => ({ phrases: [...st.phrases, next] }))
-      get().showToast('Added to your stream', () => {
+      get().showToast(copy.toast.addedOwn, () => {
         get().removePhrase(next.id)
       })
       return next.id
@@ -95,17 +96,7 @@ export const createPhrasesSlice: Slice<
       updatePhrase(ctx, id, () => ({ difficulty: d }))
       // The toast explains the CONSEQUENCE — that's what teaches the model.
       //
-      // This map is byte-identical to the exported `rerateToast`
-      // (`packages/core/src/engines/stream/index.ts:127-135`). Left inline on purpose: the
-      // store's copy strings are moving to `src/lib/copy.ts` as one change, and collapsing
-      // one of them into core first would have to be undone to get there.
-      get().showToast(
-        {
-          hard: 'Difficult — repeats more, comes back sooner',
-          easy: 'Easy — drifting to the back',
-          med: 'Back to normal',
-        }[d],
-      )
+      get().showToast(copy.toast.difficulty[d])
     },
 
     toggleTag: (id, t) => {
@@ -117,12 +108,12 @@ export const createPhrasesSlice: Slice<
     toggleLoved: (id) => {
       const wasLoved = get().phrases.find((p) => p.id === id)?.loved ?? false
       updatePhrase(ctx, id, (p) => ({ loved: !p.loved }))
-      get().showToast(wasLoved ? 'Removed from Loved' : '♥ Loved — surfacing more often')
+      get().showToast(wasLoved ? copy.toast.loved.removed : copy.toast.loved.added)
     },
 
     markLearned: (id, learned) => {
       updatePhrase(ctx, id, () => ({ learned }))
-      get().showToast(learned ? '✓ Learned — removed from the stream' : 'Back into your stream')
+      get().showToast(learned ? copy.toast.learned.marked : copy.toast.learned.unmarked)
     },
 
     setNote: (id, note) => {

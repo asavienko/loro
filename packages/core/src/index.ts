@@ -13,6 +13,7 @@
 export * from './domain/ids.js'
 export * from './domain/phrase.js'
 export * from './domain/calendar.js'
+export * from './domain/text.js'
 
 export type {
   EngineId,
@@ -47,7 +48,6 @@ export * from './persistence/index.js'
 export {
   StreamEngine,
   streamStats,
-  rerateToast,
   RefrainEngine,
   REFRAIN_MODES,
   DEFAULT_REP_TARGET,
@@ -56,10 +56,9 @@ export {
   modeForRep,
   modelRateForMode,
   beatMsForMode,
-  micLabelForMode,
   automaticity,
-  effortLabel,
+  effortState,
   warmBand,
   selectRefrainSet,
 } from './engines/index.js'
-export type { RefrainMode, WarmBand } from './engines/index.js'
+export type { EffortState, RefrainMode, WarmBand } from './engines/index.js'

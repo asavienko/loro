@@ -1,4 +1,6 @@
-/** Catalog types. No runtime, so every consumer can import them freely. */
+/** Catalog types. No platform runtime, so every consumer can import them freely. */
+
+import { BROWSABLE_THEMES, type BrowsableTheme } from '@loro/core'
 
 export interface WordGloss {
   es: string
@@ -11,7 +13,7 @@ export interface CatalogPhrase {
   id: string
   es: string
   en: string
-  theme: string
+  theme: BrowsableTheme
   emoji: string
   register?: 'neutral' | 'casual' | 'formal'
   cefr?: 'A1' | 'A2' | 'B1' | 'B2'
@@ -77,17 +79,8 @@ export interface Catalog {
   }
 }
 
-/** The eight taxonomic themes. Exactly one per catalog phrase. */
-export const THEMES = [
-  'Café',
-  'Dining',
-  'Travel',
-  'Directions',
-  'Shopping',
-  'Small talk',
-  'Survival',
-  'Hotel',
-] as const
+/** The eight taxonomic themes. Core owns the closed set consumed by Browse. */
+export const THEMES = BROWSABLE_THEMES
 
 /** Word count, used by the A1/A2 length rule. */
 export function wordCount(es: string): number {
