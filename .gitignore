@@ -6,7 +6,11 @@ node_modules/
 dist/
 build/
 out/
-!packages/design-tokens/out/     # generated, but COMMITTED — see ADR-0014
+# Generated, but COMMITTED — see ADR-0014. The comment is on its own line because
+# .gitignore has no trailing comments: with `# …` after the pattern, the whole line
+# was the pattern, it matched nothing, and design-tokens/out/ stayed ignored. The
+# `drift` job in CI diffs that directory, so it could never fail.
+!packages/design-tokens/out/
 .turbo/
 *.tsbuildinfo
 
@@ -21,6 +25,7 @@ Cargo.lock                       # workspace-level; the crate's own lockfile IS 
 .expo-shared/
 # `expo export` output — the bundle CI builds to prove the app compiles.
 .expo-export/
+.expo-export-web/
 *.jsbundle
 apps/mobile/ios/Pods/
 apps/mobile/ios/build/
@@ -62,6 +67,7 @@ diagnostics-*.json
 coverage/
 .nyc_output/
 test-results/
+playwright-report/
 maestro-debug-output/
 *.hprof
 
@@ -82,3 +88,4 @@ Thumbs.db
 npm-debug.log*
 pnpm-debug.log*
 yarn-error.log*
+.gstack/

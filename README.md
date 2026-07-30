@@ -16,21 +16,22 @@ loop: onboard → add a phrase and tag it → practise → see progress. The rem
 settings, and the two alternative practice philosophies.
 
 ```
-pnpm bootstrap && pnpm check     →  23/23 tasks, 249 tests, a11y + contrast gates
+pnpm bootstrap && pnpm check     →  23/23 tasks, 317 JS/TS + 99 Rust tests
+pnpm test:e2e                    →  12 browser tests across every implemented route
 pnpm --filter @loro/mobile bundle →  999 modules, 2.6 MB Hermes bytecode
 pnpm --filter @loro/api start     →  10 endpoints on :3000/v1
 ```
 
-| Area                      | Tests | State                                                                                                                                                                                                     |
-| ------------------------- | ----: | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Documentation             |     — | 44 documents — product, architecture, design, process, decisions, and 14 ADRs                                                                                                                             |
-| Toolchain                 |     — | Installs, builds, lints, typechecks, and tests from a clean clone. Cold `pnpm check` ≈ 6 s                                                                                                                |
-| **`loro-core`** (Rust)    |    94 | Ranking, ASR matching, calendar, ladder + the draw, HLC, and sync merge implemented. FSRS `review()`, Refrain selection, and the DSP pipeline are skeletons ([status](packages/core-rs/README.md#status)) |
-| **`@loro/core`**          |    77 | `StreamEngine` and `RefrainEngine`, both passing the conformance suite that enforces rule 5                                                                                                               |
-| **`@loro/content`**       |    26 | 31-phrase seed catalog, 14 validation checks. 0 errors, 48 warnings that _are_ the authoring backlog                                                                                                      |
-| **`@loro/api`**           |    26 | 10 endpoints, driven end-to-end over HTTP against a real Nest app — including sync running the same Rust merge the client runs                                                                            |
-| **`@loro/design-tokens`** |    16 | Generates TS + Swift + Kotlin. 107 contrast pairings green across all four accent themes                                                                                                                  |
-| **`@loro/mobile`**        |    10 | 8 screens, bundling to Hermes bytecode. Formatters and the three a11y gates                                                                                                                               |
+| Area                      |        Tests | State                                                                                                                                                                                                     |
+| ------------------------- | -----------: | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Documentation             |            — | 44 documents — product, architecture, design, process, decisions, and 14 ADRs                                                                                                                             |
+| Toolchain                 |            — | Installs, builds, lints, typechecks, and tests from a clean clone                                                                                                                                         |
+| **`loro-core`** (Rust)    |           99 | Ranking, ASR matching, calendar, ladder + the draw, HLC, and sync merge implemented. FSRS `review()`, Refrain selection, and the DSP pipeline are skeletons ([status](packages/core-rs/README.md#status)) |
+| **`@loro/core`**          |          130 | `StreamEngine` and `RefrainEngine`, both passing the conformance suite that enforces rule 5                                                                                                               |
+| **`@loro/content`**       |           26 | 31-phrase seed catalog, 14 validation checks. 0 errors, 48 warnings that _are_ the authoring backlog                                                                                                      |
+| **`@loro/api`**           |           27 | 10 endpoints, driven end-to-end over HTTP against a real Nest app — including sync running the same Rust merge the client runs                                                                            |
+| **`@loro/design-tokens`** |           16 | Generates TS + Swift + Kotlin. 107 contrast pairings green across all four accent themes                                                                                                                  |
+| **`@loro/mobile`**        | 118 + 12 E2E | 8 screens, all current routes browser-tested, bundling to Hermes bytecode. Formatters and the three a11y gates                                                                                            |
 
 **What the build already caught:** eight colours in the blueprint's palette that fail WCAG AA (the
 worst at 2.44:1, genuinely unreadable) plus one that only passes at a declared size floor; a drop

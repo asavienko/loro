@@ -3,13 +3,21 @@
  *
  * The catalog ships INDEPENDENTLY of the app: a phrase fix reaches every learner
  * within a day, no release (ADR-0009).
+ *
+ * No service layer, deliberately: the catalog is immutable data loaded from
+ * `@loro/content` at import, and a pass-through service would be a layer around a
+ * constant. When packs move to object storage there will be something to inject.
  */
 
 import { Controller, Get, Query } from '@nestjs/common'
 import { loadCatalog, type CatalogPhrase } from '@loro/content'
+import { config } from '../common/config.js'
 import { LoroError } from '../common/errors.js'
 
 const catalog = loadCatalog()
+
+/** The oldest app build this catalog is safe to serve. */
+const MIN_APP_VERSION = '1.0.0'
 
 interface ManifestPack {
   id: string
@@ -20,19 +28,43 @@ interface ManifestPack {
   trip: boolean
 }
 
+interface ManifestScenario {
+  id: string
+  label: string
+  emoji: string
+  count: number
+}
+
+interface ManifestResponse {
+  catalog_version: number
+  lang: string
+  phrase_count: number
+  packs: ManifestPack[]
+  scenarios: ManifestScenario[]
+  audio_base: string
+  min_app_version: string
+}
+
+interface DiffResponse {
+  from: number
+  to: number
+  upserts: CatalogPhrase[]
+  deprecations: { id: string; deprecated_by: string }[]
+  full_resync_required: boolean
+}
+
+interface PackResponse {
+  id: string
+  label: string
+  promised_count: number
+  phrases: CatalogPhrase[]
+}
+
 @Controller('content')
 export class ContentController {
   /** ~2 KB, cacheable, ETag'd. The client diffs against `catalog_version`. */
   @Get('manifest')
-  manifest(@Query('lang') lang = 'es-ES'): {
-    catalog_version: number
-    lang: string
-    phrase_count: number
-    packs: ManifestPack[]
-    scenarios: { id: string; label: string; emoji: string; count: number }[]
-    audio_base: string
-    min_app_version: string
-  } {
+  manifest(@Query('lang') lang = 'es-ES'): ManifestResponse {
     this.assertLang(lang)
     return {
       catalog_version: catalog.catalogVersion,
@@ -53,23 +85,14 @@ export class ContentController {
         emoji: s.emoji,
         count: s.phrases.length,
       })),
-      audio_base: process.env['CDN_BASE_URL'] ?? 'http://localhost:9000/loro-content',
-      min_app_version: '1.0.0',
+      audio_base: config.cdnBaseUrl(),
+      min_app_version: MIN_APP_VERSION,
     }
   }
 
   /** Only the phrases changed since version N. */
   @Get('diff')
-  diff(
-    @Query('from') from = '0',
-    @Query('lang') lang = 'es-ES',
-  ): {
-    from: number
-    to: number
-    upserts: CatalogPhrase[]
-    deprecations: { id: string; deprecated_by: string }[]
-    full_resync_required: boolean
-  } {
+  diff(@Query('from') from = '0', @Query('lang') lang = 'es-ES'): DiffResponse {
     this.assertLang(lang)
     const fromVersion = Number.parseInt(from, 10)
     if (Number.isNaN(fromVersion) || fromVersion < 0) {
@@ -92,15 +115,7 @@ export class ContentController {
 
   /** A full pack, for trip prefetch. */
   @Get('pack')
-  pack(
-    @Query('id') id: string,
-    @Query('lang') lang = 'es-ES',
-  ): {
-    id: string
-    label: string
-    promised_count: number
-    phrases: CatalogPhrase[]
-  } {
+  pack(@Query('id') id: string, @Query('lang') lang = 'es-ES'): PackResponse {
     this.assertLang(lang)
     const pack = catalog.packs.find((p) => p.id === id)
     if (pack === undefined) throw new LoroError('VALIDATION_FAILED', `unknown pack '${id}'`)

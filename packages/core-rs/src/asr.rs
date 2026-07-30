@@ -111,17 +111,29 @@ fn find_from(heard: &[String], needle: &str, from: usize, fuzzy: bool) -> Option
     })
 }
 
-/// Edit distance ≤ 1 for words of 5+ characters. Deliberately conservative.
+/// Shortest word the fuzzy path will consider, in bytes as normalised.
+///
+/// Below this, one edit is too large a share of the word: `casa`/`cosa` and `mas`/`mis`
+/// are different words, and forgiving them would let the production gate pass on a phrase
+/// the learner didn't say.
+const FUZZY_MIN_LEN: usize = 5;
+
+/// Edits tolerated on the fuzzy path. Deliberately one — a single slip of the recogniser,
+/// not a different word.
+const MAX_EDITS: usize = 1;
+
+/// Whether two words are within the fuzzy tolerance. Deliberately conservative.
 fn close_enough(a: &str, b: &str) -> bool {
-    if a.len() < 5 || b.len() < 5 {
+    if a.len() < FUZZY_MIN_LEN || b.len() < FUZZY_MIN_LEN {
         return false;
     }
-    levenshtein_at_most_one(a, b)
+    within_edit_distance(a, b)
 }
 
-fn levenshtein_at_most_one(a: &str, b: &str) -> bool {
+/// Levenshtein distance ≤ `MAX_EDITS`, without building the full matrix.
+fn within_edit_distance(a: &str, b: &str) -> bool {
     let (a, b): (Vec<char>, Vec<char>) = (a.chars().collect(), b.chars().collect());
-    if a.len().abs_diff(b.len()) > 1 {
+    if a.len().abs_diff(b.len()) > MAX_EDITS {
         return false;
     }
     let mut i = 0;
@@ -134,7 +146,7 @@ fn levenshtein_at_most_one(a: &str, b: &str) -> bool {
             continue;
         }
         edits += 1;
-        if edits > 1 {
+        if edits > MAX_EDITS {
             return false;
         }
         match a.len().cmp(&b.len()) {
@@ -146,7 +158,7 @@ fn levenshtein_at_most_one(a: &str, b: &str) -> bool {
             }
         }
     }
-    edits + (a.len() - i) + (b.len() - j) <= 1
+    edits + (a.len() - i) + (b.len() - j) <= MAX_EDITS
 }
 
 /// Split a phrase into comparable tokens.
@@ -160,8 +172,17 @@ pub fn tokenize(phrase: &str) -> Vec<String> {
 mod tests {
     use super::*;
 
-    fn v(s: &str) -> Vec<String> {
-        s.split_whitespace().map(str::to_string).collect()
+    // The tests tokenise with the crate's own `tokenize` rather than a local copy of it:
+    // a private duplicate would silently stop matching the tokenizer under test.
+
+    #[test]
+    fn tokenizing_splits_on_any_run_of_whitespace() {
+        assert_eq!(tokenize("dónde está"), ["dónde", "está"]);
+        assert_eq!(tokenize("  dónde \t está \n "), ["dónde", "está"]);
+        assert!(tokenize("   ").is_empty());
+        assert!(tokenize("").is_empty());
+        // Punctuation rides along; `normalize` is what strips it.
+        assert_eq!(tokenize("¿Dónde?"), ["¿Dónde?"]);
     }
 
     #[test]
@@ -178,32 +199,32 @@ mod tests {
 
     #[test]
     fn partial_production_reveals_a_prefix() {
-        let target = v("¿Dónde está el baño?");
-        let r = match_tokens(&v("dónde está"), &target, 0, false);
+        let target = tokenize("¿Dónde está el baño?");
+        let r = match_tokens(&tokenize("dónde está"), &target, 0, false);
         assert_eq!(r.revealed, 2);
         assert!(!r.complete);
     }
 
     #[test]
     fn full_production_completes_the_gate() {
-        let target = v("¿Dónde está el baño?");
-        let r = match_tokens(&v("dónde está el baño"), &target, 0, false);
+        let target = tokenize("¿Dónde está el baño?");
+        let r = match_tokens(&tokenize("dónde está el baño"), &target, 0, false);
         assert_eq!(r.revealed, 4);
         assert!(r.complete);
     }
 
     #[test]
     fn asr_insertions_are_tolerated() {
-        let target = v("¿Dónde está el baño?");
+        let target = tokenize("¿Dónde está el baño?");
         // The recogniser hallucinated "eh" and "um" between real words.
-        let r = match_tokens(&v("dónde eh está um el baño"), &target, 0, false);
+        let r = match_tokens(&tokenize("dónde eh está um el baño"), &target, 0, false);
         assert!(r.complete);
     }
 
     #[test]
     fn out_of_order_production_does_not_count() {
-        let target = v("¿Dónde está el baño?");
-        let r = match_tokens(&v("baño el está dónde"), &target, 0, false);
+        let target = tokenize("¿Dónde está el baño?");
+        let r = match_tokens(&tokenize("baño el está dónde"), &target, 0, false);
         // 'dónde' matches first, then nothing follows it in order.
         assert_eq!(r.revealed, 1);
         assert!(!r.complete);
@@ -211,23 +232,57 @@ mod tests {
 
     #[test]
     fn progress_is_monotonic() {
-        let target = v("¿Dónde está el baño?");
+        let target = tokenize("¿Dónde está el baño?");
         // Already at 3; a worse utterance must not reduce it.
-        let r = match_tokens(&v("dónde"), &target, 3, false);
+        let r = match_tokens(&tokenize("dónde"), &target, 3, false);
         assert_eq!(r.revealed, 3);
         assert_eq!(r.just_index, -1);
     }
 
     #[test]
     fn fuzzy_is_off_by_default() {
-        let target = v("cortado");
-        assert_eq!(match_tokens(&v("cortando"), &target, 0, false).revealed, 0);
-        assert_eq!(match_tokens(&v("cortando"), &target, 0, true).revealed, 1);
+        let target = tokenize("cortado");
+        let revealed = |fuzzy| match_tokens(&tokenize("cortando"), &target, 0, fuzzy).revealed;
+        assert_eq!(revealed(false), 0);
+        assert_eq!(revealed(true), 1);
+    }
+
+    #[test]
+    fn fuzzy_never_forgives_a_short_word() {
+        // Short words differing by one letter are different words, not a slip.
+        for (heard, target) in [("cosa", "casa"), ("mis", "mas"), ("de", "da")] {
+            assert_eq!(
+                match_tokens(&tokenize(heard), &tokenize(target), 0, true).revealed,
+                0,
+                "{heard} must not pass as {target} even with fuzzy on"
+            );
+        }
+    }
+
+    #[test]
+    fn fuzzy_tolerates_one_edit_of_each_kind_but_not_two() {
+        // At FUZZY_MIN_LEN or above: a substitution, a deletion, an insertion.
+        for (heard, why) in [
+            ("cortido", "one substitution"),
+            ("cortdo", "one deletion"),
+            ("cortadoo", "one insertion"),
+        ] {
+            assert_eq!(
+                match_tokens(&tokenize(heard), &tokenize("cortado"), 0, true).revealed,
+                1,
+                "{heard}: {why}"
+            );
+        }
+        for (heard, why) in [("cortido", "one edit"), ("cirtido", "two edits")] {
+            let revealed = match_tokens(&tokenize(heard), &tokenize("cortado"), 0, true).revealed;
+            let expect = u32::from(why == "one edit");
+            assert_eq!(revealed, expect, "{heard}: {why}");
+        }
     }
 
     #[test]
     fn empty_input_is_safe() {
-        assert_eq!(match_tokens(&[], &v("hola"), 0, false).revealed, 0);
-        assert!(!match_tokens(&v("hola"), &[], 0, false).complete);
+        assert_eq!(match_tokens(&[], &tokenize("hola"), 0, false).revealed, 0);
+        assert!(!match_tokens(&tokenize("hola"), &[], 0, false).complete);
     }
 }

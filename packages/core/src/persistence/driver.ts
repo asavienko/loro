@@ -47,6 +47,33 @@ export interface SqlDriver {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Query helpers
+//
+// `all()` is the driver's only read, so "the one row I asked for" and "an IN-list of
+// n values" are spelled out at every call site otherwise. Both were, seven and three
+// times respectively, and the hand-written IN-list carried a magic count.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * The first row of a query, or `null` when it returned none.
+ *
+ * `null` rather than `undefined` because every caller is answering "is there a row?",
+ * and `noUncheckedIndexedAccess` makes `rows[0]` a three-line dance each time.
+ */
+export function firstRow(
+  driver: SqlDriver,
+  sql: string,
+  params?: readonly SqlValue[],
+): SqlRow | null {
+  return driver.all(sql, params)[0] ?? null
+}
+
+/** `?, ?, ?` — n bind placeholders, for an IN-list or a VALUES clause. */
+export function placeholders(n: number): string {
+  return Array.from({ length: n }, () => '?').join(', ')
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Row helpers
 //
 // SQLite is dynamically typed and a driver may hand back a number where the column

@@ -1,13 +1,27 @@
 import { Controller, Get, HttpStatus, Res } from '@nestjs/common'
 import type { Response } from 'express'
+import { config } from '../common/config.js'
 import { mergeAvailable } from '../sync/merge.js'
+
+interface HealthResponse {
+  status: string
+  version: string
+}
+
+interface ReadinessResponse {
+  status: string
+  checks: Record<string, string>
+}
+
+/** What a passing check reports. Anything else makes the whole probe degraded. */
+const OK = 'ok'
 
 @Controller('health')
 export class HealthController {
   /** Liveness. */
   @Get()
-  health(): { status: string; version: string } {
-    return { status: 'ok', version: process.env['npm_package_version'] ?? '0.0.0' }
+  health(): HealthResponse {
+    return { status: OK, version: config.appVersion() }
   }
 
   /**
@@ -18,18 +32,15 @@ export class HealthController {
    * starts fine and only sync breaks. A 503 here keeps that build from taking traffic.
    */
   @Get('ready')
-  ready(@Res({ passthrough: true }) res: Response): {
-    status: string
-    checks: Record<string, string>
-  } {
+  ready(@Res({ passthrough: true }) res: Response): ReadinessResponse {
     const checks: Record<string, string> = {
       // Postgres and Redis land with persistence; this reports what it actually
       // knows rather than claiming green for absent dependencies.
-      content: 'ok',
-      merge: mergeAvailable() ? 'ok' : 'unavailable',
+      content: OK,
+      merge: mergeAvailable() ? OK : 'unavailable',
     }
-    const ok = Object.values(checks).every((v) => v === 'ok')
+    const ok = Object.values(checks).every((v) => v === OK)
     if (!ok) res.status(HttpStatus.SERVICE_UNAVAILABLE)
-    return { status: ok ? 'ok' : 'degraded', checks }
+    return { status: ok ? OK : 'degraded', checks }
   }
 }

@@ -7,13 +7,78 @@
  */
 
 import { describe, expect, it } from 'vitest'
-import { LadderRung, LOCK_IN_DAYS_TO_GRADUATE, RefrainEngine, type ProgressDelta } from '@loro/core'
+import {
+  LadderRung,
+  LOCK_IN_DAYS_TO_GRADUATE,
+  RefrainEngine,
+  userPhraseId,
+  type ProgressDelta,
+} from '@loro/core'
 import { makeContext, makePhrase } from '@loro/core/testing'
-import { applyDeltaToPhrase } from './state'
+import { applyDeltaToPhrase, DELTA_RULES } from './delta'
 
 /** `fakeClock`'s default local day, so the fixtures and the store agree. */
 const DAY = '2026-07-28'
 const AT = 1_785_231_660_000
+
+/**
+ * Every field a `ProgressDelta` can carry, present.
+ *
+ * `Required<ProgressDelta>` is the point: a signal added to the contract will not compile
+ * here until it is listed, and the test below then fails until `DELTA_RULES` classifies it.
+ * Two locks, and neither can be opened by deleting the other. Same trick as
+ * `packages/core/src/sync/fieldPolicy.test.ts` — a field nobody classified is a signal the
+ * learner earned and the store threw away.
+ */
+const EVERY_SIGNAL: Required<ProgressDelta> = {
+  phraseId: userPhraseId('0197f2a0-0000-7000-8000-000000000001'),
+  reps: 1,
+  plays: 1,
+  lastPracticedAt: AT,
+  latencySampleMs: 640,
+  srs: { stability: 2, difficulty: 4, due: AT + 86_400_000 },
+  repsToday: 6,
+  automaticity: 100,
+  lockedInToday: true,
+  rung: LadderRung.Transferred,
+  stumbles: 1,
+  staleReset: true,
+  cueLevel: 2,
+  axes: { perception: 3, recall: 4, production: 5 },
+  difficulty: 'easy',
+  learned: true,
+}
+
+describe('the delta classification', () => {
+  it('classifies every signal a ProgressDelta can carry', () => {
+    const declared = new Set(Object.keys(DELTA_RULES))
+    const missing = Object.keys(EVERY_SIGNAL)
+      // `phraseId` names the row; it is not a signal.
+      .filter((k) => k !== 'phraseId')
+      .filter((k) => !declared.has(k))
+
+    expect(
+      missing,
+      'these ProgressDelta fields reach applyDeltaToPhrase with no classification — see DELTA_RULES and packages/core/src/engines/types.ts',
+    ).toEqual([])
+  })
+
+  it('classifies nothing that is not a signal any more', () => {
+    // The other direction: a field REMOVED from the contract must not leave a rule behind
+    // writing a column from a value that can no longer arrive.
+    const carried = new Set(Object.keys(EVERY_SIGNAL))
+    expect(Object.keys(DELTA_RULES).filter((k) => !carried.has(k))).toEqual([])
+  })
+
+  it('makes every unstored signal say why', () => {
+    // "Dropped on purpose" and "forgotten" must not look alike. This is what stops the
+    // unstored kind becoming a place to park a field nobody wanted to think about.
+    for (const [field, rule] of Object.entries(DELTA_RULES)) {
+      if (rule.kind !== 'unstored') continue
+      expect(rule.why.length, `${field} is unstored but gives no reason`).toBeGreaterThan(20)
+    }
+  })
+})
 
 describe('applyDeltaToPhrase', () => {
   it('adds the increments and replaces the absolutes', () => {
@@ -55,6 +120,21 @@ describe('applyDeltaToPhrase', () => {
     const after = applyDeltaToPhrase(before, { phraseId: before.id, plays: 1 }, DAY)
     expect(after.repsToday).toBe(4)
     expect(after.repsTodayDay).toBe('2026-07-27')
+  })
+
+  it('clamps a stored axis even when the delta carries no axes', () => {
+    // The axes fold is UNCONDITIONAL, deliberately: `bumpAxis` runs with `undefined` on
+    // every delta, so a row holding an out-of-range percentage is repaired by the next rep
+    // instead of carrying it forever. The "leaves every field alone for an empty delta"
+    // test above cannot see this — its fixture axes are already 0 — so a reducer that
+    // skipped absent keys would look correct and silently drop the clamp.
+    // Built by spreading, not by an override: `makePhrase` pins the three axes to 0
+    // (`packages/core/src/testing/index.ts:82-84`) and `PhraseOverrides` cannot reach them,
+    // which is the very reason no existing test could have caught this.
+    const before = { ...makePhrase('p'), axPerception: 150, axRecall: -20 }
+    const after = applyDeltaToPhrase(before, { phraseId: before.id, reps: 1 }, DAY)
+    expect(after.axPerception).toBe(100)
+    expect(after.axRecall).toBe(0)
   })
 
   it('never lowers a ladder rung', () => {
@@ -177,6 +257,61 @@ describe('applyDeltaToPhrase', () => {
     )
     expect(relapsed.srs?.lapses).toBe(2)
     expect(relapsed.srs?.state).toBe('relearning')
+  })
+
+  it('lands every signal a delta can carry, in one delta', () => {
+    // The coverage test for `DELTA_RULES`. One delta with every field of `ProgressDelta`
+    // set, so a classification dropped from the table fails here rather than costing a
+    // learner the signal — which is exactly what happened while the classification was a
+    // hand-written literal: most of the engine's signals never arrived.
+    const before = makePhrase('p', { reps: 1, plays: 1, stumbles: 1, cueLevel: 1 })
+    const after = applyDeltaToPhrase(
+      before,
+      {
+        phraseId: before.id,
+        reps: 1,
+        plays: 1,
+        stumbles: 1,
+        axes: { perception: 3, recall: 4, production: 5 },
+        lastPracticedAt: AT,
+        difficulty: 'easy',
+        learned: true,
+        repsToday: 6,
+        automaticity: 100,
+        lockedInToday: true,
+        rung: LadderRung.Transferred,
+        cueLevel: 2,
+        srs: { stability: 2, difficulty: 4, due: AT + 86_400_000 },
+        // The two the store deliberately does not keep: there is no column for either
+        // yet, and inventing one would be a fabricated number on a learner's screen.
+        latencySampleMs: 640,
+        staleReset: true,
+      },
+      DAY,
+    )
+
+    expect(after.reps).toBe(2)
+    expect(after.plays).toBe(2)
+    expect(after.stumbles).toBe(2)
+    expect(after.axPerception).toBe(3)
+    expect(after.axRecall).toBe(4)
+    expect(after.axProduction).toBe(5)
+    expect(after.lastPracticedAt).toBe(AT)
+    expect(after.difficulty).toBe('easy')
+    expect(after.learned).toBe(true)
+    expect(after.repsToday).toBe(6)
+    expect(after.repsTodayDay).toBe(DAY)
+    expect(after.automaticity).toBe(100)
+    expect(after.rung).toBe(LadderRung.Transferred)
+    expect(after.cueLevel).toBe(2)
+    expect(after.srs?.due).toBe(AT + 86_400_000)
+    expect(after.lockInDays).toBe(1)
+
+    // …and nothing else moved: `addedAt`, `id`, `note`, `tags`, `loved` are the learner's.
+    expect(after.addedAt).toBe(before.addedAt)
+    expect(after.tags).toBe(before.tags)
+    expect(after.note).toBe(before.note)
+    expect(after.loved).toBe(before.loved)
   })
 
   it('touches only the phrase the delta names', () => {

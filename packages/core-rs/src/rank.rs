@@ -5,6 +5,29 @@
 
 use crate::{Difficulty, PhraseState};
 
+// ── Stream-rank offsets (`Loro.dc.html:2527`) ────────────────────────────────────────
+//
+// All in "plays" units, and all smaller in magnitude than the play counts they adjust —
+// that is what makes `plays` dominate and stops any bias from starving a phrase. Sort is
+// ascending, so a *negative* offset means "sooner".
+
+/// Difficult phrases come sooner: worth six plays of a head start.
+const HARD_OFFSET: i32 = -6;
+
+/// Easy phrases wait: they cost four plays.
+const EASY_OFFSET: i32 = 4;
+
+/// "Learning" is the neutral case, named so the match arms read as one scale.
+const MED_OFFSET: i32 = 0;
+
+/// A loved phrase surfaces more often. Smaller than `HARD_OFFSET`: what the learner
+/// declared about the phrase outweighs what they favourited.
+const LOVED_OFFSET: i32 = -3;
+
+/// A due phrase deserves to be heard — but only modestly. Deliberately the smallest
+/// offset: the stream stays a listening experience rather than a covert review queue.
+const DUE_OFFSET: i32 = -4;
+
 /// How many times a phrase repeats before the stream advances.
 ///
 /// From `Loro.dc.html:2526`. Visible to the learner: rating something Difficult
@@ -35,18 +58,18 @@ pub fn stream_rank(p: &PhraseState, now_ms: i64) -> i32 {
     let mut r = i32::try_from(p.plays).unwrap_or(i32::MAX);
 
     r += match p.difficulty {
-        Difficulty::Hard => -6,
-        Difficulty::Easy => 4,
-        Difficulty::Med => 0,
+        Difficulty::Hard => HARD_OFFSET,
+        Difficulty::Easy => EASY_OFFSET,
+        Difficulty::Med => MED_OFFSET,
     };
 
     if p.loved {
-        r -= 3;
+        r += LOVED_OFFSET;
     }
 
     if let Some(due) = p.srs_due {
         if due <= now_ms {
-            r -= 4;
+            r += DUE_OFFSET;
         }
     }
 
@@ -70,27 +93,14 @@ pub fn order_stream(phrases: &[PhraseState], now_ms: i64) -> Vec<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::LadderRung;
+    use crate::test_support;
 
     fn phrase(id: &str, difficulty: Difficulty, plays: u32, loved: bool) -> PhraseState {
         PhraseState {
-            id: id.into(),
             difficulty,
-            tags: vec![],
             loved,
-            learned: false,
             plays,
-            reps: 0,
-            last_practiced_at: None,
-            srs_due: None,
-            srs_stability: None,
-            srs_difficulty: None,
-            reps_today: 0,
-            reps_today_day: None,
-            lock_in_days: 0,
-            rung: LadderRung::Accumulated,
-            stumbles: 0,
-            cue_level: 0,
+            ..test_support::phrase(id)
         }
     }
 
@@ -99,6 +109,43 @@ mod tests {
         assert_eq!(repeat_target(Difficulty::Hard), 4);
         assert_eq!(repeat_target(Difficulty::Med), 3);
         assert_eq!(repeat_target(Difficulty::Easy), 2);
+    }
+
+    /// The exact ranks, not just their order. Two platforms computing this differently is
+    /// what ADR-0002 exists to prevent, and only an absolute assertion catches that.
+    #[test]
+    fn the_rank_offsets_are_exactly_the_blueprints() {
+        const PLAYS: u32 = 5;
+        let at = |d, loved| stream_rank(&phrase("p", d, PLAYS, loved), 0);
+        let plays = i32::try_from(PLAYS).expect("small");
+
+        assert_eq!(at(Difficulty::Med, false), plays, "Med is the neutral case");
+        assert_eq!(at(Difficulty::Hard, false), plays - 6);
+        assert_eq!(at(Difficulty::Easy, false), plays + 4);
+        assert_eq!(at(Difficulty::Med, true), plays - 3, "loved");
+
+        let mut due = phrase("d", Difficulty::Med, PLAYS, false);
+        due.srs_due = Some(0);
+        assert_eq!(stream_rank(&due, 1_000), plays - 4, "due");
+
+        // Offsets accumulate rather than override.
+        let mut all = phrase("a", Difficulty::Hard, PLAYS, true);
+        all.srs_due = Some(0);
+        assert_eq!(stream_rank(&all, 1_000), plays - 6 - 3 - 4);
+    }
+
+    #[test]
+    fn a_phrase_not_yet_due_gets_no_boost() {
+        let mut later = phrase("l", Difficulty::Med, 5, false);
+        later.srs_due = Some(2_000);
+        assert_eq!(
+            stream_rank(&later, 1_000),
+            5,
+            "due in the future is not due"
+        );
+        // Due exactly now counts as due.
+        later.srs_due = Some(1_000);
+        assert_eq!(stream_rank(&later, 1_000), 1);
     }
 
     #[test]

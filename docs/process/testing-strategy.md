@@ -166,7 +166,46 @@ Priorities:
 
 ---
 
-## E2E — Maestro
+## E2E — Playwright web + Maestro devices
+
+The implemented app surface has a Playwright behavior gate in `apps/mobile/e2e/` — **61 tests, about
+80 seconds**. It starts Expo Web itself, uses a phone-sized viewport, and creates all state through
+learner-visible interactions. Run it with `pnpm test:e2e` after the one-time
+`pnpm test:e2e:install`. CI runs it as the required `mobile web E2E` job.
+
+Playwright answers the refactoring question — do the screens, gates, mutations, navigation and
+cross-screen rollups still behave the same? — and, since
+[plan 51](../../plans/51-extended-e2e-strategy.md), four questions a route-by-route suite could not
+ask at all. It still does not answer native questions. Maestro remains the device-level layer for
+audio, speech, persistence/resume, widgets, and real offline operation once those modules exist.
+
+### The axes the gate varies
+
+| Axis                       | Covers                                                                                                |
+| -------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Behavior, per screen       | Every implemented route, its states, and the mutations between them                                   |
+| **The clock**              | Both day keys, the streak grace window either side, DST, rollover at every reachable call site        |
+| **Multi-day time**         | Streaks past two days, a missed day, graduation over four lock-in days — consecutive and not          |
+| **The rendered a11y tree** | axe over every state, `aria-checked`, named progress bars, live regions, 44 px targets, keyboard-only |
+| **Text size**              | 200% and 310%, text only: no clipping, no horizontal scroll, nothing pushed out of reach              |
+| **The production bundle**  | The `@smoke` subset against `expo export --platform web`, not the dev server                          |
+| The contract itself        | Every route has a state, every state cites a spec section                                             |
+
+**States, not routes.** `apps/mobile/e2e/states.ts` lists each learner-visible state and how to
+reach it; the accessibility, text-scale and manifest suites all read it. A route is a file, not a
+unit of behaviour — `/add` counted as covered while its tagging sheet had never been rendered, and a
+critical `aria-checked` defect sat inside a screen the old contract called green.
+
+**Recorded exceptions, never silent ones.** Exactly one axe rule is waived, with its reason, because
+it asks for a `tabindex` that a native `ScrollView` does not need. One contrast violation is
+recorded per state and per rule — **Q-14** — so a different violation there still fails, and so does
+that one disappearing.
+
+**What web cannot verify.** react-native-web forwards neither `accessibilityLanguage` nor
+`accessibilityHint`, so `lang="es-ES"` is absent from the DOM however correct the source is. That is
+why `check:lang` scans source, and why no green E2E run is evidence about it.
+
+### Future Maestro device flows
 
 ~15 flows, on both platforms, in CI on a device farm.
 

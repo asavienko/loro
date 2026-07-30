@@ -4,67 +4,153 @@
  * Discover (search + association + scenarios) and Browse (by theme). The tagging
  * sheet is where the connective thread starts: difficulty + "what's tricky", set at
  * add time, reshape everything downstream.
+ *
+ * The screen is a composition of four named pieces — `AddHeader` over either `ThemeGrid`
+ * or `SuggestionList`, with `TaggingSheet` above both — driven by two hooks:
+ * `useSuggestions` holds what the learner is LOOKING AT, `useAddDraft` holds what they are
+ * ABOUT TO ADD. Splitting the state that way is what let the render collapse: the sheet no
+ * longer reads the search box's state, and the list no longer reads the draft's.
  */
 
 import { useMemo, useState } from 'react'
-import { Modal, ScrollView, TextInput, View } from 'react-native'
+import { ScrollView, StyleSheet, TextInput, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { router } from 'expo-router'
-import type { Difficulty, Tag } from '@loro/core'
+import type { Difficulty, PhraseState, Tag } from '@loro/core'
 import type { CatalogPhrase } from '@loro/content'
 import {
   Button,
   Card,
+  Chip,
   EmojiTile,
+  Grid,
   Pressable,
   Row,
   Screen,
+  SectionHeader,
   SectionLabel,
+  Segmented,
+  Sheet,
   Stack,
   Text,
+  type SegmentedOption,
 } from '../src/ui/primitives'
-import {
-  accent,
-  difficultyMeta,
-  ink,
-  line,
-  onDark,
-  radius,
-  space,
-  surface,
-  tagMeta,
-} from '../src/ui/theme'
+import { DifficultySelector, PhraseRow, TagChips } from '../src/ui/components'
+import { accent, border, ink, line, radius, space, surface } from '../src/ui/theme'
+import { copy } from '../src/lib/copy'
 import { catalogPhrases, scenarios, useApp } from '../src/store'
 
+/**
+ * The themes Browse offers.
+ *
+ * The NAMES are domain data, not copy: each is the value the catalog is filtered on
+ * (`p.theme === theme` in `useSuggestions`), and `as const` keeps the key union exact so
+ * `copy.add.themes[t]` indexes. Do NOT widen it to `Theme[]` — that union also carries the
+ * synthetic `'Imported' | 'Mine' | 'Captured'`, which have no tile and no label here.
+ *
+ * The string comparison against the catalog is brittle against a content-side rename: a
+ * renamed theme silently empties its tile rather than failing a build. Real, and not this
+ * refactor's to fix — see plans/52.
+ */
 const THEMES = [
-  // a11y-lang: English UI category labels. "Café" is the English loanword, and a
-  // screen reader should read this list in the interface language, not Spanish.
-  { name: 'Café', emoji: '☕' },
-  { name: 'Dining', emoji: '🍽' },
-  { name: 'Travel', emoji: '🚆' },
-  { name: 'Directions', emoji: '🧭' },
-  { name: 'Shopping', emoji: '🛍' },
-  { name: 'Small talk', emoji: '🤝' },
-  { name: 'Survival', emoji: '🆘' },
-  { name: 'Hotel', emoji: '🏨' },
+  // a11y-lang: English UI category labels. "Café" is the English loanword, and a screen
+  // reader should read this list in the interface language, not Spanish. The same note sits
+  // above `copy.add.themes`, which holds these names' labels and emoji.
+  'Café',
+  'Dining',
+  'Travel',
+  'Directions',
+  'Shopping',
+  'Small talk',
+  'Survival',
+  'Hotel',
+] as const
+
+type BrowsableTheme = (typeof THEMES)[number]
+
+type Mode = 'discover' | 'browse'
+
+/** The discover / browse switch. The ids are state; only their labels are copy. */
+const MODES: readonly SegmentedOption<Mode>[] = [
+  { value: 'discover', label: copy.add.modes.discover },
+  { value: 'browse', label: copy.add.modes.browse },
 ]
 
-const norm = (s: string): string => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+/**
+ * Diacritic-insensitive fold, so "alergico" finds "alérgico" (`e2e/add.spec.ts:9`).
+ *
+ * It duplicates the normalisation inside `matchTokens` (`src/store`), which is worth
+ * unifying and is deliberately NOT unified here: that lives in another layer, and this
+ * change is a behaviour-preserving refactor of one screen.
+ *
+ * The combining-mark range is spelled as escapes. It used to be two raw U+0300/U+036F bytes
+ * in the source — invisible in an editor, and one careless paste away from breaking search.
+ */
+const norm = (s: string): string =>
+  s
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
 
-export default function Add() {
-  const insets = useSafeAreaInsets()
-  const owned = useApp((s) => s.phrases)
-  const addPhrase = useApp((s) => s.addPhrase)
+/**
+ * The three numbers this screen passes as PROPS, where a `StyleSheet` cannot hold them.
+ *
+ * Same rule as the styles below: each is transcribed from the markup it replaced, and none
+ * is a design token, because none has a second call site anywhere in the app —
+ * `src/ui/tokens/sizing.ts`: a token used once is not a token.
+ */
+const metrics = {
+  /** The browse grid: two tiles to a row, at a gap one wider than `grid.gap`. */
+  themeGrid: 9,
+  /** The browse tile's emoji square. */
+  themeEmoji: 40,
+  /** The sheet's question → its control. */
+  sheetGroup: 9,
+  /** The sheet's phrase card: emoji tile → the two lines. */
+  sheetPhrase: 11,
+} as const
 
-  const [mode, setMode] = useState<'discover' | 'browse'>('discover')
+// ─── State ───────────────────────────────────────────────────────────────────
+
+/** What the learner is looking at: the mode, the filters, and the list they produce. */
+interface Suggestions {
+  mode: Mode
+  query: string
+  scenario: string | null
+  browseTheme: string | null
+  /** The rows to offer, in order. */
+  phrases: readonly CatalogPhrase[]
+  /** What the list is showing, in the learner's terms. */
+  contextLabel: string
+  /** Switching mode drops the theme drill-down and the query, as it always did. */
+  setMode: (mode: Mode) => void
+  setQuery: (query: string) => void
+  /** Tapping the active scenario clears it. */
+  toggleScenario: (id: string) => void
+  browse: (theme: BrowsableTheme) => void
+  backToThemes: () => void
+  /** How many of a theme's phrases the learner does not own yet — the tile's count. */
+  countFor: (theme: string) => number
+  /** After a confirmed add: anchor on that theme, so the next list is "more like it". */
+  anchorOn: (theme: string) => void
+}
+
+/**
+ * The suggestion algorithm, unchanged.
+ *
+ * Every branch, every order and both limits are the ones the screen shipped with: a drilled
+ * theme wins, then a search over es/en/theme capped at 8, then a scenario's own arc, then
+ * the association anchor's theme first and everything else after, capped at 6. It arguably
+ * belongs in `@loro/core` (plans/60 wants to rank these) — moving it now would risk changing
+ * the ORDER or the COUNT of what a learner sees, which is the one thing this refactor
+ * promises not to do.
+ */
+function useSuggestions(owned: readonly PhraseState[]): Suggestions {
+  const [mode, setModeState] = useState<Mode>('discover')
   const [query, setQuery] = useState('')
   const [scenario, setScenario] = useState<string | null>(null)
   const [browseTheme, setBrowseTheme] = useState<string | null>(null)
   // The association anchor: after adding, suggestions become "more like that".
   const [anchorTheme, setAnchorTheme] = useState<string | null>(null)
-  const [sheet, setSheet] = useState<CatalogPhrase | null>(null)
-  const [draftDiff, setDraftDiff] = useState<Difficulty>('med')
-  const [draftTags, setDraftTags] = useState<Tag[]>([])
 
   // Joined on the CATALOG id, not the row id. They happen to be equal today, but
   // they are different id spaces — a learner-authored phrase has a row id and no
@@ -79,7 +165,7 @@ export default function Add() {
     [ownedCatalogIds],
   )
 
-  const suggestions = useMemo(() => {
+  const phrases = useMemo(() => {
     if (mode === 'browse' && browseTheme !== null) {
       return pool.filter((p) => p.theme === browseTheme)
     }
@@ -108,393 +194,454 @@ export default function Add() {
 
   const contextLabel =
     query.trim().length > 0
-      ? suggestions.length > 0
-        ? `Matches for "${query.trim()}"`
-        : 'No matches in the library'
+      ? phrases.length > 0
+        ? copy.add.context.matches(query.trim())
+        : copy.add.context.noMatches
       : scenario !== null
-        ? `For: ${scenarios.find((s) => s.id === scenario)?.label ?? ''}`
+        ? copy.add.context.forScenario(scenarios.find((s) => s.id === scenario)?.label ?? '')
         : anchorTheme !== null
-          ? `More like ${anchorTheme}`
-          : 'Popular starters'
+          ? copy.add.context.moreLike(anchorTheme)
+          : copy.add.context.popular
+
+  return {
+    mode,
+    query,
+    scenario,
+    browseTheme,
+    phrases,
+    contextLabel,
+    setMode: (next) => {
+      setModeState(next)
+      setBrowseTheme(null)
+      setQuery('')
+    },
+    setQuery,
+    toggleScenario: (id) => {
+      setScenario((cur) => (cur === id ? null : id))
+      setQuery('')
+      setAnchorTheme(null)
+    },
+    browse: setBrowseTheme,
+    backToThemes: () => {
+      setBrowseTheme(null)
+    },
+    countFor: (theme) => pool.filter((p) => p.theme === theme).length,
+    anchorOn: (theme) => {
+      setAnchorTheme(theme)
+      setQuery('')
+      setScenario(null)
+    },
+  }
+}
+
+/** What the learner is about to add: the phrase the sheet is open on, and its draft rating. */
+interface AddDraft {
+  phrase: CatalogPhrase | null
+  difficulty: Difficulty
+  tags: Tag[]
+  open: (phrase: CatalogPhrase) => void
+  /**
+   * Dismiss WITHOUT clearing the draft — reopening the sheet keeps what was picked, which is
+   * what the hand-rolled version did. Only a confirmed add resets it.
+   */
+  close: () => void
+  setDifficulty: (difficulty: Difficulty) => void
+  toggleTag: (tag: Tag) => void
+  /** After a confirmed add: the sheet closes and the draft returns to its defaults. */
+  reset: () => void
+}
+
+function useAddDraft(): AddDraft {
+  const [phrase, setPhrase] = useState<CatalogPhrase | null>(null)
+  const [difficulty, setDifficulty] = useState<Difficulty>('med')
+  const [tags, setTags] = useState<Tag[]>([])
+
+  return {
+    phrase,
+    difficulty,
+    tags,
+    open: setPhrase,
+    close: () => {
+      setPhrase(null)
+    },
+    setDifficulty,
+    toggleTag: (tag) => {
+      setTags((cur) => (cur.includes(tag) ? cur.filter((x) => x !== tag) : [...cur, tag]))
+    },
+    reset: () => {
+      setPhrase(null)
+      setDifficulty('med')
+      setTags([])
+    },
+  }
+}
+
+// ─── The screen ──────────────────────────────────────────────────────────────
+
+export default function Add() {
+  const insets = useSafeAreaInsets()
+  const owned = useApp((s) => s.phrases)
+  const addPhrase = useApp((s) => s.addPhrase)
+
+  const list = useSuggestions(owned)
+  const draft = useAddDraft()
 
   const confirmAdd = (): void => {
-    if (sheet === null) return
-    addPhrase(sheet.id, { difficulty: draftDiff, tags: draftTags, source: 'discover' })
-    setAnchorTheme(sheet.theme)
-    setSheet(null)
-    setDraftDiff('med')
-    setDraftTags([])
-    setQuery('')
-    setScenario(null)
+    const phrase = draft.phrase
+    if (phrase === null) return
+    addPhrase(phrase.id, {
+      difficulty: draft.difficulty,
+      tags: draft.tags,
+      source: 'discover',
+    })
+    list.anchorOn(phrase.theme)
+    draft.reset()
   }
 
   return (
     <Screen>
-      <View style={{ paddingHorizontal: space['4'], paddingTop: space['2'], gap: space['2.5'] }}>
-        <Row justify="space-between">
-          <Text variant="labelSm" color={ink.muted}>
-            {owned.length} in stream
-          </Text>
-        </Row>
+      <AddHeader
+        ownedCount={owned.length}
+        mode={list.mode}
+        onModeChange={list.setMode}
+        query={list.query}
+        onQueryChange={list.setQuery}
+        scenario={list.scenario}
+        onScenarioToggle={list.toggleScenario}
+      />
 
-        <Row gap={6}>
-          {(['discover', 'browse'] as const).map((m) => (
-            <Pressable
-              key={m}
-              feedback="button"
-              accessibilityLabel={m}
-              onPress={() => {
-                setMode(m)
-                setBrowseTheme(null)
-                setQuery('')
-              }}
-              style={{
-                flex: 1,
-                alignItems: 'center',
-                paddingVertical: 9,
-                borderRadius: radius.lg,
-                backgroundColor: mode === m ? surface.dark : surface.card,
-                borderWidth: mode === m ? 0 : 1,
-                borderColor: line.default,
-              }}
-            >
-              <Text variant="labelSm" color={mode === m ? onDark.primary : ink.ink3}>
-                {m}
-              </Text>
-            </Pressable>
-          ))}
-        </Row>
-
-        {mode === 'discover' && (
-          <>
-            <View
-              style={{
-                backgroundColor: surface.card,
-                borderWidth: 1.5,
-                borderColor: query.length > 0 ? accent.accent : line.default,
-                borderRadius: radius.xl,
-                paddingHorizontal: 13,
-              }}
-            >
-              <TextInput
-                value={query}
-                onChangeText={setQuery}
-                placeholder="Type a phrase, or a topic…"
-                placeholderTextColor={ink.muted2}
-                accessibilityLabel="Search phrases"
-                style={{ height: 46, fontSize: 14, fontWeight: '600', color: ink.ink }}
-              />
-            </View>
-
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ gap: 7 }}
-            >
-              <Text variant="labelSm" color={ink.muted} style={{ alignSelf: 'center' }}>
-                Scenario
-              </Text>
-              {scenarios.map((sc) => {
-                const active = scenario === sc.id
-                return (
-                  <Pressable
-                    key={sc.id}
-                    feedback="smallButton"
-                    accessibilityLabel={sc.label}
-                    onPress={() => {
-                      setScenario(active ? null : sc.id)
-                      setQuery('')
-                      setAnchorTheme(null)
-                    }}
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      gap: 5,
-                      backgroundColor: active ? accent.accent : surface.card,
-                      borderWidth: active ? 0 : 1,
-                      borderColor: line.default,
-                      borderRadius: radius.lg,
-                      paddingHorizontal: 12,
-                      paddingVertical: 8,
-                    }}
-                  >
-                    <Text variant="captionSm">{sc.emoji}</Text>
-                    <Text variant="captionSm" color={active ? onDark.primary : ink.ink2}>
-                      {sc.label}
-                    </Text>
-                  </Pressable>
-                )
-              })}
-            </ScrollView>
-          </>
-        )}
-      </View>
-
-      <ScrollView
-        contentContainerStyle={{
-          padding: space['4'],
-          paddingBottom: insets.bottom + space['5'],
-          gap: space['2'],
-        }}
-      >
-        {mode === 'browse' && browseTheme === null ? (
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 9 }}>
-            {THEMES.map((t) => {
-              const count = pool.filter((p) => p.theme === t.name).length
-              return (
-                <Pressable
-                  key={t.name}
-                  feedback="row"
-                  accessibilityLabel={`${t.name}, ${count} to add`}
-                  onPress={() => {
-                    setBrowseTheme(t.name)
-                  }}
-                  style={{
-                    width: '48%',
-                    backgroundColor: surface.card,
-                    borderWidth: 1,
-                    borderColor: line.default,
-                    borderRadius: radius.lg,
-                    padding: 14,
-                  }}
-                >
-                  <EmojiTile emoji={t.emoji} size={40} />
-                  <Text variant="bodySm" color={ink.ink} style={{ marginTop: 10 }}>
-                    {t.name}
-                  </Text>
-                  <Text variant="labelSm" color={ink.muted}>
-                    {count > 0 ? `${count} to add` : 'all added ✓'}
-                  </Text>
-                </Pressable>
-              )
-            })}
-          </View>
+      <ScrollView contentContainerStyle={[s.body, { paddingBottom: insets.bottom + space['5'] }]}>
+        {list.mode === 'browse' && list.browseTheme === null ? (
+          <ThemeGrid countFor={list.countFor} onSelect={list.browse} />
         ) : (
           <>
             <Row justify="space-between" align="center">
-              {mode === 'browse' ? (
-                <Pressable
-                  feedback="smallButton"
-                  accessibilityLabel="Back to themes"
-                  onPress={() => {
-                    setBrowseTheme(null)
-                  }}
-                >
-                  <Text variant="captionSm" color={ink.ink2}>
-                    ‹ Themes
-                  </Text>
-                </Pressable>
+              {list.mode === 'browse' ? (
+                <ThemesBackLink onPress={list.backToThemes} />
               ) : (
-                <SectionLabel>{contextLabel}</SectionLabel>
+                <SectionLabel>{list.contextLabel}</SectionLabel>
               )}
             </Row>
 
-            {suggestions.length === 0 ? (
-              <Card>
-                <Text variant="caption" color={ink.muted} align="center">
-                  Nothing more to suggest here.{'\n'}Try another theme, scenario, or search above.
-                </Text>
-              </Card>
-            ) : (
-              suggestions.map((p) => (
-                <Pressable
-                  key={p.id}
-                  feedback="row"
-                  accessibilityLabel={`${p.es}. ${p.en}`}
-                  accessibilityHint="Opens the tagging sheet"
-                  onPress={() => {
-                    setSheet(p)
-                  }}
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: 10,
-                    backgroundColor: surface.card,
-                    borderWidth: 1,
-                    borderColor: line.default,
-                    borderRadius: radius.lg,
-                    padding: 12,
-                  }}
-                >
-                  <Text style={{ fontSize: 17 }}>{p.emoji}</Text>
-                  <View style={{ flex: 1 }}>
-                    <Text variant="bodySm" color={ink.ink} numberOfLines={1} lang="es">
-                      {p.es}
-                    </Text>
-                    <Text variant="captionSm" color={ink.muted} numberOfLines={1}>
-                      {p.en}
-                    </Text>
-                  </View>
-                  <View
-                    style={{
-                      width: 30,
-                      height: 30,
-                      borderRadius: 15,
-                      backgroundColor: accent.wash,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <Text variant="headline" color={accent.accentInk}>
-                      +
-                    </Text>
-                  </View>
-                </Pressable>
-              ))
-            )}
+            <SuggestionList phrases={list.phrases} onSelect={draft.open} />
           </>
         )}
       </ScrollView>
 
-      {/* ── The tagging sheet: where the connective thread starts ── */}
-      <Modal
-        visible={sheet !== null}
-        transparent
-        animationType="slide"
-        onRequestClose={() => {
-          setSheet(null)
-        }}
-      >
-        <View
-          style={{ flex: 1, backgroundColor: 'rgba(26,24,21,0.42)', justifyContent: 'flex-end' }}
-        >
-          <Pressable
-            feedback="row"
-            accessibilityLabel="Dismiss"
-            onPress={() => {
-              setSheet(null)
-            }}
-            style={{ flex: 1 }}
-          >
-            <View />
-          </Pressable>
-
-          <View
-            style={{
-              backgroundColor: surface.app,
-              borderTopLeftRadius: radius['3xl'],
-              borderTopRightRadius: radius['3xl'],
-              padding: space['5'],
-              paddingBottom: insets.bottom + space['5'],
-              gap: space['3.5'],
-            }}
-          >
-            <View
-              style={{
-                width: 42,
-                height: 5,
-                borderRadius: 2,
-                backgroundColor: line.stronger,
-                alignSelf: 'center',
-              }}
-            />
-
-            {sheet !== null && (
-              <>
-                <Card>
-                  <Row gap={11}>
-                    <EmojiTile emoji={sheet.emoji} />
-                    <View style={{ flex: 1 }}>
-                      <Text variant="headline" color={ink.ink} lang="es">
-                        {sheet.es}
-                      </Text>
-                      <Text variant="captionSm" color={ink.muted}>
-                        {sheet.en}
-                      </Text>
-                    </View>
-                  </Row>
-                </Card>
-
-                <Stack gap={9}>
-                  <Text variant="caption" color={ink.ink}>
-                    How hard is it for you?
-                  </Text>
-                  <Row gap={8}>
-                    {(['easy', 'med', 'hard'] as const).map((d) => {
-                      const meta = difficultyMeta[d]
-                      const active = draftDiff === d
-                      return (
-                        <Pressable
-                          key={d}
-                          feedback="row"
-                          accessibilityRole="radio"
-                          accessibilityLabel={meta.label}
-                          onPress={() => {
-                            setDraftDiff(d)
-                          }}
-                          style={{
-                            flex: 1,
-                            alignItems: 'center',
-                            paddingVertical: 12,
-                            borderRadius: radius.lg,
-                            backgroundColor: active ? meta.bg : surface.card,
-                            borderWidth: active ? 1.5 : 1,
-                            borderColor: active ? meta.border : line.strong,
-                          }}
-                        >
-                          <Text variant="labelSm" color={active ? meta.color : ink.ink3}>
-                            {meta.label}
-                          </Text>
-                        </Pressable>
-                      )
-                    })}
-                  </Row>
-                </Stack>
-
-                <Stack gap={9}>
-                  <Row gap={7} align="baseline">
-                    <Text variant="caption" color={ink.ink}>
-                      What&apos;s tricky about it?
-                    </Text>
-                    <Text variant="captionSm" color={ink.muted}>
-                      pick any
-                    </Text>
-                  </Row>
-                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-                    {(Object.keys(tagMeta) as Tag[]).map((t) => {
-                      const active = draftTags.includes(t)
-                      return (
-                        <Pressable
-                          key={t}
-                          feedback="smallButton"
-                          accessibilityRole="checkbox"
-                          accessibilityLabel={tagMeta[t].label}
-                          onPress={() => {
-                            setDraftTags((cur) =>
-                              cur.includes(t) ? cur.filter((x) => x !== t) : [...cur, t],
-                            )
-                          }}
-                          style={{
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            gap: 6,
-                            paddingHorizontal: 12,
-                            paddingVertical: 10,
-                            borderRadius: radius.lg,
-                            backgroundColor: active ? 'rgba(191,87,34,0.07)' : surface.card,
-                            borderWidth: active ? 1.5 : 1,
-                            borderColor: active ? accent.accent : line.strong,
-                          }}
-                        >
-                          <Text variant="captionSm" color={active ? accent.accentInk : ink.ink2}>
-                            {tagMeta[t].label}
-                            {active ? ' ✓' : ''}
-                          </Text>
-                        </Pressable>
-                      )
-                    })}
-                  </View>
-                </Stack>
-
-                <Button label="Add to my stream" onPress={confirmAdd} />
-              </>
-            )}
-          </View>
-        </View>
-      </Modal>
+      <TaggingSheet
+        phrase={draft.phrase}
+        difficulty={draft.difficulty}
+        tags={draft.tags}
+        onDifficultyChange={draft.setDifficulty}
+        onToggleTag={draft.toggleTag}
+        onDismiss={draft.close}
+        onConfirm={confirmAdd}
+      />
     </Screen>
   )
 }
 
-export const unstable_settings = { initialRouteName: 'index' }
-void router
+/** The stream count, the mode switch, and — in discover — the search field and scenarios. */
+function AddHeader({
+  ownedCount,
+  mode,
+  onModeChange,
+  query,
+  onQueryChange,
+  scenario,
+  onScenarioToggle,
+}: {
+  ownedCount: number
+  mode: Mode
+  onModeChange: (mode: Mode) => void
+  query: string
+  onQueryChange: (query: string) => void
+  scenario: string | null
+  onScenarioToggle: (id: string) => void
+}) {
+  return (
+    <View style={s.header}>
+      {/*
+        A one-child `Row`, kept: inside a row the count sits at its intrinsic width, and
+        dropping the row would let it stretch and rewrap at 310% text — which
+        `e2e/text-scale.spec.ts` is watching.
+      */}
+      <Row justify="space-between">
+        <Text variant="labelSm" color={ink.muted}>
+          {copy.add.inStream(ownedCount)}
+        </Text>
+      </Row>
+
+      <Segmented value={mode} options={MODES} onChange={onModeChange} />
+
+      {mode === 'discover' && (
+        <>
+          {/* A typed query is a selected state, hence the accent border at `border.selected`. */}
+          <Card
+            padding={0}
+            border={query.length > 0 ? accent.accent : line.default}
+            borderWidth={border.selected}
+            style={s.searchField}
+          >
+            <TextInput
+              value={query}
+              onChangeText={onQueryChange}
+              placeholder={copy.add.searchPlaceholder}
+              placeholderTextColor={ink.muted2}
+              accessibilityLabel={copy.a11y.add.searchInput}
+              style={s.searchInput}
+            />
+          </Card>
+
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={s.scenarioStrip}
+          >
+            <Text variant="labelSm" color={ink.muted} style={s.scenarioLabel}>
+              {copy.add.scenarioLabel}
+            </Text>
+            {scenarios.map((sc) => (
+              <Chip
+                key={sc.id}
+                variant="scenario"
+                tone="solid"
+                emoji={sc.emoji}
+                label={sc.label}
+                selected={scenario === sc.id}
+                onPress={() => {
+                  onScenarioToggle(sc.id)
+                }}
+              />
+            ))}
+          </ScrollView>
+        </>
+      )}
+    </View>
+  )
+}
+
+/** Browse's landing: one tile per theme, with how much of it is left to add. */
+function ThemeGrid({
+  countFor,
+  onSelect,
+}: {
+  countFor: (theme: string) => number
+  onSelect: (theme: BrowsableTheme) => void
+}) {
+  return (
+    <Grid gap={metrics.themeGrid}>
+      {THEMES.map((t) => {
+        const theme = copy.add.themes[t]
+        const count = countFor(t)
+        return (
+          <Pressable
+            key={t}
+            feedback="row"
+            accessibilityLabel={copy.a11y.add.themeTile(theme.label, count)}
+            onPress={() => {
+              onSelect(t)
+            }}
+            style={s.themeTile}
+          >
+            <EmojiTile emoji={theme.emoji} size={metrics.themeEmoji} />
+            <Text variant="bodySm" color={ink.ink} style={s.themeName}>
+              {theme.label}
+            </Text>
+            <Text variant="labelSm" color={ink.muted}>
+              {count > 0 ? copy.add.toAdd(count) : copy.add.allAdded}
+            </Text>
+          </Pressable>
+        )
+      })}
+    </Grid>
+  )
+}
+
+/** Back out of a drilled theme, to the grid. */
+function ThemesBackLink({ onPress }: { onPress: () => void }) {
+  return (
+    <Pressable
+      feedback="smallButton"
+      accessibilityLabel={copy.a11y.add.backToThemes}
+      onPress={onPress}
+      style={s.backToThemes}
+    >
+      <Text variant="captionSm" color={ink.ink2}>
+        {copy.add.backToThemes}
+      </Text>
+    </Pressable>
+  )
+}
+
+/** The offer: one tappable row per phrase, or the note that there is nothing left here. */
+function SuggestionList({
+  phrases,
+  onSelect,
+}: {
+  phrases: readonly CatalogPhrase[]
+  onSelect: (phrase: CatalogPhrase) => void
+}) {
+  // Not an `EmptyState`: this is one centred line with a break in it, and no title. Passing
+  // an empty title would render a `title3` node and its gap that are not there today.
+  if (phrases.length === 0) {
+    return (
+      <Card>
+        <Text variant="caption" color={ink.muted} align="center">
+          {copy.add.empty.body}
+        </Text>
+      </Card>
+    )
+  }
+
+  return (
+    <>
+      {phrases.map((p) => (
+        <PhraseRow
+          key={p.id}
+          variant="suggestion"
+          es={p.es}
+          en={p.en}
+          emoji={p.emoji}
+          accessibilityLabel={copy.a11y.add.suggestionRow(p.es, p.en)}
+          accessibilityHint={copy.a11y.add.opensSheet}
+          onPress={() => {
+            onSelect(p)
+          }}
+          trailing={<AddGlyph />}
+        />
+      ))}
+    </>
+  )
+}
+
+/** The `+` circle on a suggestion row. Decorative — the row's own name is the affordance. */
+function AddGlyph() {
+  return (
+    <View style={s.addGlyph}>
+      <Text variant="headline" color={accent.accentInk}>
+        {copy.add.addGlyph}
+      </Text>
+    </View>
+  )
+}
+
+/** ── The tagging sheet: where the connective thread starts ── */
+function TaggingSheet({
+  phrase,
+  difficulty,
+  tags,
+  onDifficultyChange,
+  onToggleTag,
+  onDismiss,
+  onConfirm,
+}: {
+  phrase: CatalogPhrase | null
+  difficulty: Difficulty
+  tags: readonly Tag[]
+  onDifficultyChange: (difficulty: Difficulty) => void
+  onToggleTag: (tag: Tag) => void
+  onDismiss: () => void
+  onConfirm: () => void
+}) {
+  return (
+    <Sheet visible={phrase !== null} onDismiss={onDismiss} dismissLabel={copy.a11y.common.dismiss}>
+      {/* The guard stays INSIDE the sheet: `Modal` mounts its children either way. */}
+      {phrase !== null && (
+        <>
+          <Card>
+            <Row gap={metrics.sheetPhrase}>
+              <EmojiTile emoji={phrase.emoji} />
+              <View style={s.sheetPhraseLines}>
+                <Text variant="headline" color={ink.ink} lang="es">
+                  {phrase.es}
+                </Text>
+                <Text variant="captionSm" color={ink.muted}>
+                  {phrase.en}
+                </Text>
+              </View>
+            </Row>
+          </Card>
+
+          <Stack gap={metrics.sheetGroup}>
+            <Text variant="caption" color={ink.ink}>
+              {copy.common.difficultyQuestion}
+            </Text>
+            {/* The add sheet is the DEFAULT density — `paddingVertical: 12`. Phrase detail's
+                `tight` is a pixel shorter, so `density` is deliberately not passed. */}
+            <DifficultySelector layout="cards" value={difficulty} onChange={onDifficultyChange} />
+          </Stack>
+
+          <Stack gap={metrics.sheetGroup}>
+            {/* `caption`, not the uppercase `label`: inside the sheet an uppercase header
+                would compete with the sheet's own title. */}
+            <SectionHeader
+              variant="caption"
+              label={copy.add.tagsQuestion}
+              hint={copy.add.tagsHelper}
+            />
+            <TagChips
+              value={tags}
+              onToggle={onToggleTag}
+              selectedSuffix={copy.common.selectedSuffix}
+            />
+          </Stack>
+
+          <Button label={copy.add.confirm} onPress={onConfirm} />
+        </>
+      )}
+    </Sheet>
+  )
+}
+
+/**
+ * The numbers this screen owns.
+ *
+ * Every value is transcribed from the markup it replaced — none was rounded on the way in —
+ * and every one stays local rather than becoming a design token, because none of them has a
+ * second call site: `src/ui/tokens/sizing.ts`, a token used once is not a token.
+ */
+const s = StyleSheet.create({
+  // ── AddHeader ──
+  header: { paddingHorizontal: space['4'], paddingTop: space['2'], gap: space['2.5'] },
+  /** 13 is the field's own inset, so a 46-px input is not edge-to-edge. Not a `space` step. */
+  searchField: { paddingHorizontal: 13 },
+  /** 14 at weight 600 sits between `caption` and `bodySm`, so it is not a type variant. */
+  searchInput: { height: 46, fontSize: 14, fontWeight: '600', color: ink.ink },
+  scenarioStrip: { gap: 7 },
+  scenarioLabel: { alignSelf: 'center' },
+
+  // ── The scroll body ──
+  body: { padding: space['4'], gap: space['2'] },
+
+  // ── ThemeGrid ──
+  themeTile: {
+    width: '48%',
+    backgroundColor: surface.card,
+    borderWidth: border.hairline,
+    borderColor: line.default,
+    borderRadius: radius.lg,
+    padding: 14,
+  },
+  themeName: { marginTop: 10 },
+
+  // ── ThemesBackLink ──
+  // `paddingVertical` is a TAP-TARGET measurement, not a spacing step that happens to equal
+  // one: the bare label is 17 px tall — 33 even with `hitSlop` — under the 44 floor. Padding
+  // rather than `minHeight` so the label stays vertically centred in the row it shares with
+  // the section label.
+  backToThemes: { paddingVertical: 8, paddingRight: space['2'] },
+
+  // ── SuggestionList ──
+  addGlyph: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: accent.wash,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  // ── TaggingSheet ──
+  sheetPhraseLines: { flex: 1 },
+})
