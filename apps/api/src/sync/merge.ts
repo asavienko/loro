@@ -6,6 +6,7 @@
  */
 
 import { createRequire } from 'node:module'
+import type { MergeClass } from '@loro/core'
 
 export interface Hlc {
   physical: number
@@ -30,7 +31,12 @@ export interface RowOp {
   id: string
   fields: Record<string, FieldValue>
   deleted_at: number | null
-  classes: Record<string, string>
+  /**
+   * Field name → the merge class DECLARED IN THE SHARED POLICY (`@loro/core`), in its TS
+   * spelling. The Rust enum spelling is this module's business, not a caller's — see
+   * `WASM_MERGE_CLASS`.
+   */
+  classes: Record<string, MergeClass>
 }
 
 export interface MergeOutcome {
@@ -72,11 +78,29 @@ export function mergeAvailable(): boolean {
   return core !== null
 }
 
+/**
+ * TS merge-class names → the Rust enum variants.
+ *
+ * Typed as a total map over `MergeClass`, so adding a class to the shared policy is a
+ * COMPILE error here rather than a field that quietly merges as `Lww` — which is the
+ * silent data-loss bug the field policy exists to prevent (ADR-0002).
+ */
+const WASM_MERGE_CLASS: Record<MergeClass, string> = {
+  lww: 'Lww',
+  max: 'Max',
+  'latest-review': 'LatestReview',
+  'append-only': 'AppendOnly',
+  tombstone: 'Tombstone',
+}
+
 export function mergeRow(local: StoredRow, remote: RowOp): MergeOutcome {
   if (core === null) {
     throw new Error('loro-core wasm is not built — run `pnpm core-rs:build`')
   }
-  const out = core.merge_row(local, remote)
+  const classes = Object.fromEntries(
+    Object.entries(remote.classes).map(([field, cls]) => [field, WASM_MERGE_CLASS[cls]]),
+  )
+  const out = core.merge_row(local, { ...remote, classes })
   return {
     row: {
       entity: out.row.entity,

@@ -34,12 +34,20 @@ export const CLIENT_BEHAVIOUR: Record<ErrorCode, string> = {
   INTERNAL: 'backoff',
 }
 
+/**
+ * `NOT_FOUND` is not a `LoroError` code — it is what the filter emits for a routing
+ * 404 raised by the framework itself. Naming it here rather than leaving it as a loose
+ * string in the filter is the only way the client's switch and this table can be
+ * checked against each other.
+ */
+export type ProblemCode = ErrorCode | 'NOT_FOUND'
+
 export interface ProblemDetails {
   type: string
   title: string
   status: number
   detail?: string
-  code: ErrorCode
+  code: ProblemCode
   [key: string]: unknown
 }
 
@@ -69,6 +77,34 @@ export class LoroError extends Error {
   }
 }
 
+/** The `type` URI namespace. Documented in docs/architecture/api.md#error-shape. */
+const PROBLEM_TYPE_BASE = 'https://loro.app/errors'
+
+/** The media type every problem body is served as, per RFC 9457. */
+export const PROBLEM_MEDIA_TYPE = 'application/problem+json'
+
+interface ProblemInit {
+  /** The last segment of the `type` URI. */
+  slug: string
+  title: string
+  status: number
+  code: ProblemCode
+  /** Fields the client needs beyond the RFC members, e.g. `min_app_version`. */
+  extra?: Record<string, unknown>
+}
+
+/**
+ * The ONE place a problem+json body is constructed.
+ *
+ * Three call sites used to spell the shape out by hand, so the member order and the
+ * `type` prefix were three separate opportunities to drift from the documented
+ * contract. Key order is part of that contract for anyone diffing responses, so it is
+ * fixed here: `type`, `title`, `status`, `code`, then extras.
+ */
+function problem({ slug, title, status, code, extra = {} }: ProblemInit): ProblemDetails {
+  return { type: `${PROBLEM_TYPE_BASE}/${slug}`, title, status, code, ...extra }
+}
+
 /**
  * Map an error to a problem-details body.
  *
@@ -77,21 +113,36 @@ export class LoroError extends Error {
  */
 export function toProblemDetails(e: unknown): ProblemDetails {
   if (e instanceof LoroError) {
-    return {
-      type: `https://loro.app/errors/${kebab(e.code)}`,
+    return problem({
+      slug: kebab(e.code),
       title: TITLES[e.code],
       status: e.status,
       code: e.code,
-      ...(e.message !== TITLES[e.code] ? { detail: e.message } : {}),
-      ...e.extra,
-    }
+      // `detail` is omitted when it would only repeat the title.
+      extra: { ...(e.message !== TITLES[e.code] ? { detail: e.message } : {}), ...e.extra },
+    })
   }
-  return {
-    type: 'https://loro.app/errors/internal',
+  return problem({
+    slug: 'internal',
     title: TITLES.INTERNAL,
-    status: 500,
+    status: ERROR_CODES.INTERNAL,
     code: 'INTERNAL',
-  }
+  })
+}
+
+/**
+ * A problem body for an exception the FRAMEWORK raised — a routing 404, a malformed
+ * body — where there is no `LoroError` and so no `code` of ours to report. The status
+ * carries the meaning, and `title` is the framework's own message, which is safe: it
+ * describes the request, not our internals.
+ */
+export function toHttpProblemDetails(status: number, title: string): ProblemDetails {
+  return problem({
+    slug: 'http',
+    title,
+    status,
+    code: status === 404 ? 'NOT_FOUND' : 'INTERNAL',
+  })
 }
 
 function kebab(code: string): string {

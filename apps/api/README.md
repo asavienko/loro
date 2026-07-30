@@ -66,7 +66,7 @@ healthy. In development it starts with a warning and reports readiness as degrad
 ## The one thing to understand first
 
 ```ts
-// src/sync/sync.controller.ts
+// src/sync/sync.service.ts
 const merged = mergeRow(current, op) // ← loro-core, compiled to WASM
 ```
 
@@ -95,6 +95,19 @@ src/
 Workers run from this same image with a different entrypoint. They share the domain types and DB
 layer, but a slow content build must never contend with a learner's sync request.
 
+**Two things are chosen in `src/app.module.ts` and nowhere else**, so swapping either is a new file
+plus one line there rather than an edit to the logic that uses it:
+
+| Seam                                       | Today                                       | Next                              |
+| ------------------------------------------ | ------------------------------------------- | --------------------------------- |
+| `SYNC_REPOSITORY` (`sync.repository.ts`)   | `InMemorySyncRepository` — a `Map`, per app | Postgres, via plans/13            |
+| `SCENE_PROVIDERS` (`ai/scene-provider.ts`) | `StubSceneProvider` — the bundled catalog   | Claude, via plans/26 and plans/45 |
+
+A provider registers under the `AI_PROVIDER` value that selects it, and `AiService` keys them by
+name — so a second provider is never a second branch. An `AI_PROVIDER` naming a provider that isn't
+registered logs a warning and serves the bundled scene, which is the documented posture for every AI
+path: degrade loudly in the log, silently to the learner.
+
 ## Rules
 
 - **Every query is scoped by `user_id`**, and the repository layer requires it as a parameter. There
@@ -113,11 +126,14 @@ layer, but a slow content build must never contend with a learner's sync request
 
 ### Written
 
-| Test                          | What it holds down                                                                        |
-| ----------------------------- | ----------------------------------------------------------------------------------------- |
-| `src/sync/sync.e2e.test.ts`   | Every endpoint over HTTP against a real Nest app, including the `max`-vs-later-clock case |
-| `src/sync/merge.wasm.test.ts` | The five merge classes, run through the actual WASM build the client uses                 |
-| `src/common/errors.test.ts`   | Problem details: every code's status, and that nothing internal leaks                     |
+| Test                            | What it holds down                                                                        |
+| ------------------------------- | ----------------------------------------------------------------------------------------- |
+| `src/sync/sync.e2e.test.ts`     | Every endpoint over HTTP against a real Nest app, including the `max`-vs-later-clock case |
+| `src/sync/merge.wasm.test.ts`   | The five merge classes, run through the actual WASM build the client uses                 |
+| `src/sync/sync.service.test.ts` | The push guards without HTTP: the op cap, an unknown entity, an undeclared field          |
+| `src/common/errors.test.ts`     | Problem details: every code's status, member order, and that nothing internal leaks       |
+| `src/ai/scene.test.ts`          | The pedagogical invariants — above all, exactly one `best` option per turn                |
+| `src/ai/ai.service.test.ts`     | An invalid scene never reaches a learner; an unregistered provider degrades, not 500s     |
 
 ### Planned — these do not exist yet
 

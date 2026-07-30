@@ -3,7 +3,9 @@ import {
   CLIENT_BEHAVIOUR,
   ERROR_CODES,
   LoroError,
+  PROBLEM_MEDIA_TYPE,
   RATE_LIMITS,
+  toHttpProblemDetails,
   toProblemDetails,
   type ErrorCode,
 } from './errors.js'
@@ -62,6 +64,41 @@ describe('problem details', () => {
 
   it('never drops the outbox on an auth failure', () => {
     expect(CLIENT_BEHAVIOUR.UNAUTHENTICATED).toContain('NEVER drop the outbox')
+  })
+
+  it('emits the same member order for every code, extras last', () => {
+    // The order is part of what a client diffing two responses sees, and it used to
+    // depend on which of three hand-written object literals produced the body.
+    const p = toProblemDetails(new LoroError('RATE_LIMITED', 'Slow down.', { retry_after: 30 }))
+    expect(Object.keys(p)).toEqual(['type', 'title', 'status', 'code', 'detail', 'retry_after'])
+  })
+
+  it('omits `detail` when it would only repeat the title', () => {
+    expect(toProblemDetails(new LoroError('RATE_LIMITED'))).not.toHaveProperty('detail')
+  })
+})
+
+describe('a framework HTTP exception', () => {
+  it('reports a routing 404 as NOT_FOUND', () => {
+    // What a client gets for a mistyped path. `NOT_FOUND` is not a LoroError code, so
+    // the shape is easy to get wrong in a fourth hand-written literal.
+    expect(toHttpProblemDetails(404, 'Cannot GET /v1/nope')).toEqual({
+      type: 'https://loro.app/errors/http',
+      title: 'Cannot GET /v1/nope',
+      status: 404,
+      code: 'NOT_FOUND',
+    })
+  })
+
+  it('reports anything else as INTERNAL, carrying the framework status', () => {
+    expect(toHttpProblemDetails(413, 'Payload Too Large')).toMatchObject({
+      status: 413,
+      code: 'INTERNAL',
+    })
+  })
+
+  it('serves problem bodies as problem+json', () => {
+    expect(PROBLEM_MEDIA_TYPE).toBe('application/problem+json')
   })
 })
 
