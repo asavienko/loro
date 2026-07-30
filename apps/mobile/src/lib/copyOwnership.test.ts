@@ -29,4 +29,24 @@ describe('copy ownership AST check', () => {
       `),
     ).toEqual([])
   })
+
+  it('finds literals nested in conditional and composed presentation expressions', () => {
+    const findings = findCopyViolations(`
+      const screen = <>
+        <Button label={ready ? 'Continue' : 'Try again'} />
+        <Text>{ready && 'Done'}</Text>
+        <Text>{\`Hello \${learnerName}!\`}</Text>
+      </>
+      showToast(saved ? 'Saved' : 'Failed')
+    `)
+
+    expect(findings.map((finding) => finding.message)).toEqual([
+      expect.stringContaining('"Continue"'),
+      expect.stringContaining('"Try again"'),
+      expect.stringContaining('"Done"'),
+      expect.stringContaining('"Hello "'),
+      expect.stringContaining('"Saved"'),
+      expect.stringContaining('"Failed"'),
+    ])
+  })
 })
