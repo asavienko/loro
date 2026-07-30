@@ -305,11 +305,19 @@ export const ALL_CHECKS: Record<string, Check> = {
   draftDrops: draftDropCheck,
 }
 
-export function runChecks(names: string[] = Object.keys(ALL_CHECKS), lang = 'es-ES'): Issue[] {
-  const catalog = loadCatalogFromDisk(lang)
+/** Run selected validation strategies against an already-loaded catalog. */
+export function runChecksForCatalog(
+  catalog: Catalog,
+  names: string[] = Object.keys(ALL_CHECKS),
+): Issue[] {
   return names.flatMap((n) => {
     const check = ALL_CHECKS[n]
     if (check === undefined) throw new Error(`unknown check '${n}'`)
     return check(catalog)
   })
+}
+
+/** Load an authoring catalog from disk, then run the selected validation strategies. */
+export function runChecks(names: string[] = Object.keys(ALL_CHECKS), lang = 'es-ES'): Issue[] {
+  return runChecksForCatalog(loadCatalogFromDisk(lang), names)
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { loadCatalog, stressedSyllables, THEMES, wordCount } from './index.js'
-import { ALL_CHECKS, runChecks, type Issue } from './checks.js'
+import { ALL_CHECKS, runChecks, runChecksForCatalog, type Issue } from './checks.js'
 
 const catalog = loadCatalog()
 const errors = (issues: Issue[]): Issue[] => issues.filter((i) => i.level === 'error')
@@ -177,6 +177,13 @@ describe('enrichment fields', () => {
 })
 
 describe('check helpers', () => {
+  it('runs selected checks against a supplied catalog', () => {
+    const bad = structuredClone(catalog)
+    bad.phrases[0]!.theme = 'Nonsense'
+
+    expect(runChecksForCatalog(bad, ['theme'])).toEqual(ALL_CHECKS.theme!(bad))
+  })
+
   it('flags a duplicate Spanish phrase', () => {
     const dup = structuredClone(catalog)
     dup.phrases.push({ ...dup.phrases[0]!, id: 'clone1' })
