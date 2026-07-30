@@ -895,6 +895,9 @@ Open chat is a supplementary, private conversation loop with a bundled offline f
 primary. The screen is a bottom-anchored thread plus one composer; it does not turn provider
 availability, tokens, or safety machinery into learner-facing scores.
 
+It is a Push surface whose resolved home is supplied by the route table. Warm entry names and pops
+the actual prior destination; cold entry uses the resolved-home exit instead of inventing history.
+
 **Header and thread**
 
 - Header shows Loro, current topic, pace, and a real `Nothing kept` / `n kept` control
@@ -934,7 +937,7 @@ availability, tokens, or safety machinery into learner-facing scores.
 Recorded PCM stays in native memory and never reaches JS or a request. Only the learner-confirmed
 on-device transcript may become a text turn. Browser tests use an explicitly labelled speech fake;
 production never falls back to `SpeechSynthesisUtterance`, a canned transcript, or the prototype's
-timer (`Loro Chat.dc.html:504`, `529–531`, `576–588`).
+timer (`Loro Chat.dc.html:514`, `529–531`, `576–588`).
 
 **Topic/pace Sheet** (`Loro Chat.dc.html:265–291`)
 

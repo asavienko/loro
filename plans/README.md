@@ -60,7 +60,7 @@ original path at the user's request. It is not part of the replacement queue.
 | [54](54-local-persistence-correctness.md)        | Tombstone/HLC-safe local writes and complete wave persistence                | M1        | —                      | 53 ✅                          |
 | [55](55-current-surface-truth-and-fidelity.md)   | Existing screens stop making false claims and match the blueprint contract   | M1        | —                      | 53 ✅                          |
 | [56](56-navigation-failure-and-input-shell.md)   | One route model, honest failure states, keyboard-safe input, scalable lists  | M1        | —                      | 53                             |
-| [57](57-runtime-design-system.md)                | Fonts, runtime motion, haptics, themes, remaining reusable inventory         | M1/M2     | —                      | 53, 55                         |
+| [57](57-runtime-design-system.md)                | Fonts, runtime motion, haptics, themes, remaining reusable inventory         | M1/M2     | 🟡                     | 53, 55                         |
 | [58](58-native-workspace-and-device-ci.md)       | Reproducible iOS/Android projects, dev clients, native CI and device harness | M1        | —                      | 53                             |
 | [59](59-device-persistence-and-resume.md)        | SQLite becomes the device source of truth; sessions survive relaunch         | M1        | —                      | 54, 58                         |
 | [60](60-authoritative-core-maths.md)             | Rust owns ranking, FSRS, cloze/set selection and parity-backed bindings      | M1/M2     | —                      | 53, 58 for native integration  |
@@ -82,10 +82,10 @@ original path at the user's request. It is not part of the replacement queue.
 | [76](76-roleplay-and-live-ai.md)                 | Guarded live provider and offline-degradable Roleplay                        | M3        | —                      | 63, 66, 67, 71                 |
 | [77](77-dsp-and-speech-labs.md)                  | Evidence-gated DSP followed by truthful Pronunciation/Prosody labs           | M3        | ⛔ spike quality gate  | 60–63, 72                      |
 | [78](78-conditional-run-and-phrasebook.md)       | Run and Phrasebook only if loop evidence supports them                       | M5        | ⛔ Q-05 + M3 data      | 59, 60, 71, 72                 |
-| [79](79-v1-1-design-contract.md)                 | Stable requirements and architecture for all v1.1 design artifacts           | M1/M3     | —                      | —                              |
-| [80](80-dev-design-system-workbench.md)          | Dev-only generated token and production component inspection page            | M1        | —                      | 53; coordinates with 57        |
+| [79](79-v1-1-design-contract.md)                 | Stable requirements and architecture for all v1.1 design artifacts           | M1/M3     | ✅                     | —                              |
+| [80](80-dev-design-system-workbench.md)          | Dev-only generated token and production component inspection page            | M1        | 🟡                     | 53; blocked on 57 state APIs   |
 | [81](81-navigation-spine-switcher-and-more.md)   | Spine, switcher, state-driven More menu, resume and travelling transport     | M1/M2     | —                      | 56, 57; then 59, 62, 64        |
-| [82](82-guided-chat-domain-and-service.md)       | Typed private chat domain, bundled offline floor and guarded text provider   | M3        | ⛔ plan-79 decisions   | 59, 61, 66–68, 79              |
+| [82](82-guided-chat-domain-and-service.md)       | Typed private chat domain, bundled offline floor and guarded text provider   | M3        | ⛔ Q-16, Q-18–Q-20     | 59, 61, 66–68, 79 ✅           |
 | [83](83-open-chat-and-message-inspector.md)      | Voice/text chat and inspector with explicit phrase/Review handoff            | M3        | —                      | 57, 59, 62, 63, 75, 79, 81, 82 |
 
 ## Rules for this set

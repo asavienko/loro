@@ -45,10 +45,13 @@ the stale authored headline itself.
   audio-timing, and touch tokens are generated and committed.
 - The app consumes generated colours, spacing, radii, sizes, typography metrics, and press scales
   through one front door: `src/ui/theme.ts`.
-- Coral is the fixed active accent. Sunset, Teal, and Berry are generated and contrast-tested but
-  there is no theme selector yet.
+- A typed runtime provider resolves Coral by default, supports all four generated accents for the
+  dev workbench, scales production text for inspection, and suppresses press scaling under Reduce
+  Motion. Learner routes still have no theme selector and retain Coral as their active accent.
 - React Native primitives and six reusable composites cover the seven implemented learner screens.
 - The contrast gate currently passes 122 pairings across four accent themes.
+- `/dev/tokens` enumerates all 404 generated primitive leaves, computes that same contrast report,
+  and renders current production specimens without entering the learner route/state manifest.
 
 The following are specified but not yet implemented: custom font loading/family assignment,
 learner-selectable accents, CSS-shadow/gradient-to-native rendering, most declared animations, Skia

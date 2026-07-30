@@ -30,8 +30,24 @@ are authored. The original 21 are in [screen-catalog.md](../../docs/design/scree
 ```bash
 pnpm --filter @loro/mobile bundle       # no simulator: prove the app compiles
 pnpm test:e2e                           # all implemented routes/states through Expo Web
+pnpm test:e2e:workbench                 # dev-only tokens and component inspection contract
 cd apps/mobile && npx expo start --web  # fastest way to inspect current screens
 ```
+
+With the development server running, open `/dev/tokens` for the design-system workbench. It needs no
+account, service, secret, or native module. The route is deliberately unavailable in a production
+export and is never linked from learner navigation; `pnpm test:e2e:bundle` proves both properties.
+That assertion is behavioral: because the route is statically imported, it does not claim that the
+workbench's bytes are tree-shaken out of the export.
+
+The workbench reads generated values from `@loro/design-tokens` and renders the production
+components used by learner routes. When a value is wrong, edit its source under
+`packages/design-tokens/tokens/` and regenerate the committed output with `pnpm tokens:build`—never
+edit `packages/design-tokens/out/` by hand. When adding or changing a reusable component, add its
+named states to the production specimen registry rather than creating a workbench-only lookalike.
+Include default and relevant selected, disabled, loading, empty, error, long-copy, Spanish,
+large-text, reduced-motion, and accent states. Then run the workbench suite; update its narrow
+screenshot baseline with `pnpm test:e2e:workbench:update` only after visually reviewing the change.
 
 Native `ios`/`android` projects and dev clients do not exist yet; plan 58 owns that substrate.
 
@@ -44,9 +60,9 @@ Hermes on a device, or prove that an Expo Module links.
 
 Setup: [onboarding.md](../../docs/process/onboarding.md).
 
-The browser suite lives in [`e2e/`](e2e/README.md). Run `pnpm test:e2e:install` once per machine;
-the tests then start Expo themselves and exercise the learner-visible flow at a phone viewport. They
-complement, rather than replace, native device checks.
+The browser suites live in [`e2e/`](e2e/README.md). Run `pnpm test:e2e:install` once per machine;
+the tests then start Expo themselves and exercise the learner-visible flow or the isolated
+development workbench. They complement, rather than replace, native device checks.
 
 ## Current shape
 

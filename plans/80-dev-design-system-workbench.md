@@ -2,7 +2,9 @@
 
 - **Requirement IDs:** `F-05`, `F-06`, `LB-25`…`LB-28`; developer-only acceptance contract
 - **Milestone:** M1
-- **Status:** Not started
+- **Status:** 🟡 Gated route, exhaustive token catalog, live contrast report, current production
+  specimens, inspection controls, CI/browser suite, and docs implemented; loading and forced
+  pressed/focused specimens remain blocked on plan 57's production state APIs
 - **Depends on:** 53 ✅ generated-token completion; coordinates with 57 runtime design system
 
 ## Outcome
@@ -47,8 +49,8 @@ components) are design-package inventory, not values to hardcode into the app.
 7. Add developer documentation and a start command/link explaining how to reach the page, how to add
    a specimen, and which generated source to edit when a value is wrong.
 8. Add a separate dev-workbench browser suite. Do not place this route in learner `STATES`; prove
-   production route exclusion, token enumeration, theme/reduced-motion controls, keyboard access,
-   overflow at large text, and screenshot baselines for a small stable subset.
+   production route unavailability, token enumeration, theme/reduced-motion controls, keyboard
+   access, overflow at large text, and screenshot baselines for a small stable subset.
 
 ## Acceptance criteria
 
@@ -66,7 +68,7 @@ components) are design-package inventory, not values to hardcode into the app.
 
 1. `feat(mobile): gate the dev design-system route (F-05)`
 2. `feat(mobile): render generated tokens and production specimens (F-05)`
-3. `test(mobile): prove workbench coverage and production exclusion (F-06)`
+3. `test(mobile): prove workbench coverage and production unavailability (F-06)`
 4. `docs(mobile): document the tokens workbench (F-05)`
 
 ## Out of scope

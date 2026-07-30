@@ -418,7 +418,7 @@ API neither writes raw thread text to the sync store nor emits it to logs/teleme
 retention must satisfy the separately recorded privacy decision before live chat is release-enabled.
 On timeout, invalid output, safety rejection, budget exhaustion or offline use, the client continues
 from the versioned authored topic/reply graph; it does not wait out the prototype's fixed 1.2-second
-reply timer (`Loro Chat.dc.html:586–596`). Personalized turns are not shared-cache material, though
+reply timer (`Loro Chat.dc.html:582–588`). Personalized turns are not shared-cache material, though
 stable prompts and authored/provider-independent resources may be cached.
 
 ### `POST /ai/coach`

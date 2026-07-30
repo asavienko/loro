@@ -75,7 +75,7 @@ continues the local graph without a decorative delay or a fabricated “AI is ty
 Voice chat follows the normal native degradation order: on-device ASR, an honest unavailable state,
 then text input. Recorded audio remains in native memory. Reference playback uses downloaded assets
 when present and approved on-device Spanish speech for arbitrary lines; the browser speech API and
-canned transcript in `ChatLogic` are prototype-only (`Loro Chat.dc.html:514`, `529–535`).
+canned transcript in `ChatLogic` are prototype-only (`Loro Chat.dc.html:514`, `529–531`).
 
 ## Target capability matrix
 

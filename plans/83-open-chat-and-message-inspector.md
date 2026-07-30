@@ -28,8 +28,8 @@ fixture language/provider behavior; plans 62/63 replace browser speech and fake 
 
 ## Work
 
-1. Add typed `/chat` and `/chat/message/[turnId]` routes to plan 81's route table. Chat is a Root or
-   Push destination according to the resolved-home decision; the inspector is Push and renders the
+1. Add typed `/chat` and `/chat/message/[turnId]` routes to plan 81's route table. Chat is a Push
+   destination whose resolved home comes from the route table; the inspector is Push and renders the
    correct named-back/cold-entry behavior. Declare menu frequency/build state and all E2E states in
    the same commit.
 2. Implement the route-local chat composition and only the repeated production components proven by
