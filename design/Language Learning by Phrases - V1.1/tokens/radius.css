@@ -1,0 +1,18 @@
+:root {
+  --r-pip: 2px;        /* ladder pips, waveform bars */
+  --r-chip: 8px;       /* register tags */
+  --r-chip-lg: 10px;
+  --r-card: 12px;      /* the default: cards, fields, quiet buttons */
+  --r-card-lg: 16px;
+  --r-pill: 20px;      /* pace buttons, primary chat CTA */
+  --r-pill-lg: 22px;
+  --r-sheet: 26px;     /* bottom sheet top corners */
+  --r-screen: 38px;    /* inner screen */
+  --r-device: 46px;    /* bezel */
+  --r-full: 50%;
+
+  /* speech bubbles — one corner clipped toward the speaker */
+  --r-bubble-them: 18px 18px 18px 6px;
+  --r-bubble-me: 18px 18px 6px 18px;
+  --r-sheet-in-device: 26px 26px 38px 38px;
+}

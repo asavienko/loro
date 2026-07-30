@@ -1,0 +1,81 @@
+:root {
+  /* ══ navigation · five surface classes: root · push · session · flow · sheet ══ */
+
+  /* chrome geometry — every class shares one header band */
+  --nav-gutter: 20px;            /* navigation screens sit on a 20px gutter */
+  --nav-header-h: 34px;          /* visual header height */
+  --nav-header-tap: 44px;        /* its tap area, never smaller */
+  --nav-row-h: 34px;             /* rail item / header control */
+  --nav-row-pad-y: 13px;         /* hairline list row padding */
+  --nav-title-size: 22px;        /* root title (Today) */
+  --nav-back-size: 15px;         /* the ‹ and ✕ glyphs */
+  --nav-action-size: 11.5px;     /* Edit · Filter · named back */
+  --nav-label-size: 9px;         /* caps group label */
+  --nav-label-track: .13em;
+
+  /* the rail — text only, out of the thumb arc, carries counts */
+  --rail-h: 34px;
+  --rail-gap-x: 16px;
+  --rail-label: var(--ink-2);
+  --rail-count: var(--accent-ink);
+
+  /* progress in the header: one bar for a session, pips for a flow */
+  --nav-progress-h: 3px;
+  --nav-progress-track: var(--line-hair);
+  --nav-progress-fill: var(--accent);
+  --nav-step-h: 3px;
+  --nav-step-gap: 4px;
+  --nav-step-done: var(--accent);
+  --nav-step-todo: var(--line-card);
+
+  /* the spine (law N16) — the one persistent band, on every class */
+  --spine-h: 28px;
+  --spine-gap: 10px;
+  --spine-place: var(--ink-1);
+  --spine-place-size: 11.5px;
+  --spine-caret: var(--ink-6);
+  --spine-chip-ink: var(--accent-ink);
+  --spine-dot: 5px;
+
+  /* the switcher it opens — same sheet from every class */
+  --switcher-handle-w: 40px;
+  --switcher-handle-h: 4px;
+  --switcher-handle-ink: var(--line-field);
+  --switcher-top: var(--status-bar-h);      /* it hangs off the status bar */
+  --switcher-radius: 0 0 26px 26px;
+  --switcher-hint: var(--ink-9);
+
+  /* sheets and what they cover */
+  --nav-scrim: rgba(26, 24, 21, .42);
+  --nav-beneath-opacity: .38;               /* the surface under a sheet */
+  --sheet-radius: 26px;
+  --sheet-radius-inset: 26px 26px 38px 38px; /* bottom sheet inside the bezel */
+  --sheet-grip-w: 34px;
+  --sheet-grip-h: 4px;
+
+  /* home is the day, in order */
+  --day-time-w: 34px;
+  --day-done-ink: var(--ink-6);   /* what happened recedes */
+  --day-next-ink: var(--ink-1);   /* only the next thing is full weight */
+
+  /* travelling transport (law N15) */
+  --transport-radius: 14px;
+  --transport-surface: var(--ink-1);   /* dark variant, on Push */
+  --transport-bar-w: 2.5px;
+  --transport-eq-h: 16px;
+
+  /* exactly one filled control per screen */
+  --cta-h: 56px;
+  --cta-radius: 22px;
+  --exit-primary-h: 52px;
+  --exit-option-h: 48px;
+
+  /* one job per glyph */
+  --glyph-back: "‹";     /* pop a stack */
+  --glyph-leave: "✕";    /* leave a place */
+  --glyph-reveal: "⌄";   /* reveal in place */
+  --glyph-more: "⋯";     /* more of the same kind */
+  --glyph-search: "⌕";   /* search */
+  --glyph-pause: "❙❙";   /* pause, keep the transport */
+  --glyph-audio: "♪";    /* something is sounding */
+}

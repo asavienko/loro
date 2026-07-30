@@ -1,0 +1,19 @@
+<!-- @dsCard group="Colors" viewport="700x190" subtitle="One accent at a time; the whole product re-themes" name="Accent themes" -->
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
+<style>
+  html,body{margin:0;}
+  body{background:var(--paper-canvas);font-family:var(--font-sans);color:var(--text-primary);padding:18px 20px;box-sizing:border-box;height:190px;overflow:hidden;}
+  .row{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap;}
+  .sw{display:flex;flex-direction:column;gap:5px;width:96px;}
+  .chip{height:44px;border-radius:var(--r-card);border:1px solid rgba(35,32,27,.08);}
+  .nm{font-size:10px;font-weight:700;color:var(--ink-4);letter-spacing:.02em;}
+  .hex{font-size:9.5px;font-weight:700;color:var(--ink-7);font-variant-numeric:tabular-nums;text-transform:uppercase;}
+  .cap{font-size:9px;font-weight:700;color:var(--ink-7);text-transform:uppercase;letter-spacing:var(--track-caps);}
+  
+</style></head>
+<body><div style="display:flex;flex-direction:column;gap:14px;">
+  <div class="row"><div class="sw"><div class="chip" style="background:var(--coral);"></div><div class="nm">coral</div><div class="hex">#BF5722</div></div><div class="sw"><div class="chip" style="background:var(--coral-ink);"></div><div class="nm">coral ink</div><div class="hex">#A2461A</div></div><div class="sw"><div class="chip" style="background:var(--coral-deep);"></div><div class="nm">deep</div><div class="hex">#8C3F18</div></div><div class="sw"><div class="chip" style="background:var(--coral-on-dark);"></div><div class="nm">on dark</div><div class="hex">#E8A06A</div></div><div class="sw"><div class="chip" style="background:var(--coral-tint);"></div><div class="nm">tint</div><div class="hex">#F8ECE1</div></div></div>
+  <div class="row"><div class="sw"><div class="chip" style="background:var(--sunset);"></div><div class="nm">sunset</div><div class="hex">#95560F</div></div><div class="sw"><div class="chip" style="background:var(--teal);"></div><div class="nm">teal</div><div class="hex">#1F7D6C</div></div><div class="sw"><div class="chip" style="background:var(--berry);"></div><div class="nm">berry</div><div class="hex">#9C4470</div></div>
+  <div style="flex:1;min-width:200px;font-size:11px;color:var(--ink-4);line-height:1.5;">Set <b>data-accent="teal"</b> on any ancestor. <b>--accent</b> fills primary buttons and the user's own speech; <b>--accent-ink</b> is the text-on-paper version; <b>--accent-on-dark</b> is used only on dark cards.</div></div>
+</div></body></html>
