@@ -31,9 +31,11 @@ src/
 │   └── merge.rs     # merge_row — THE function both client and server run
 ├── asr.rs           # normalisation + forward-walk token matching
 ├── dsp/
-│   ├── pitch.rs     # YIN / pYIN F0 extraction (mfcc.rs lands with it in M3)
+│   ├── mod.rs       # frame/rate constants, TakeResult, the score_take entry point
+│   ├── pitch.rs     # F0: YIN / pYIN extraction, median filter, normalize_f0
+│   │                #   (mfcc.rs lands alongside it in M3)
 │   ├── align.rs     # DTW forced alignment against the native reference
-│   ├── score.rs     # melody, per-syllable, stress, rhythm
+│   ├── score.rs     # melody, per-syllable, stress, rhythm; the bands and band()
 │   └── feedback.rs  # worst syllable → phoneme class → one concrete fix
 ├── calendar.rs      # local_day, streak grace window, DST, timezone travel
 ├── notify.rs        # the notification plan (caps, quiet hours, conditionality)
@@ -41,8 +43,12 @@ src/
 │                    # internal, never `pub`, absent from bindings/:
 ├── rng.rs           # the seeded LCG — the crate's only randomness
 ├── units.rs         # MS_PER_HOUR / MS_PER_DAY, so no module re-derives them
-└── test_support.rs  # #[cfg(test)] PhraseState fixture shared by module tests
+└── test_support.rs  # #[cfg(test)] PhraseState + Hlc fixtures for the module suites
 ```
+
+Both F0 functions live in `pitch.rs` and both score-band items in `score.rs`, so `feedback.rs`
+no longer reaches up into `dsp/mod.rs` for a threshold. UniFFI names are flat per crate, so
+`bindings/` is byte-identical across that move — verified, not assumed.
 
 ## Status
 
