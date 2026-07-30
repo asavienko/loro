@@ -36,7 +36,20 @@ export const sharedTiming = {
   fullyParallel: false,
   forbidOnly: isCI,
   retries: isCI ? 2 : 0,
+  // Serial, deliberately: the suite is well under its budget and a shared Expo dev server
+  // is one fewer thing to reason about. Worth revisiting around 40 specs — and the budget
+  // below is what will say when.
   workers: 1,
   timeout: 30_000,
   expect: { timeout: 5_000 },
+  /**
+   * THE RUNTIME BUDGET, enforced rather than hoped for.
+   *
+   * `testing-strategy.md:218` puts E2E last in value per minute and plan 37's risks section
+   * names suite runtime as the thing that erodes the fast feedback loop. A budget nobody
+   * measures is a budget that is already gone, so this fails the run instead: eight minutes
+   * against the ~2 the whole suite takes today, which leaves room to grow and still catches
+   * a spec that hangs or quietly waits on a timeout.
+   */
+  globalTimeout: 8 * 60_000,
 }

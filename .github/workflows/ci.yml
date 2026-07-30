@@ -104,8 +104,14 @@ jobs:
           key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
       - name: Install Chromium
         run: pnpm --filter @loro/mobile exec playwright install --with-deps chromium
-      - name: Every implemented route and learner flow
-        run: pnpm test:e2e
+      # The elapsed time is reported, not just spent. The config carries a hard
+      # `globalTimeout` budget; this makes the trend visible before it reaches it, the same
+      # way the bundle job reports bytecode size.
+      - name: Every implemented route, state and learner flow
+        run: |
+          start=$SECONDS
+          pnpm test:e2e
+          echo "mobile web E2E: $((SECONDS - start))s elapsed (budget 480s)" >> "$GITHUB_STEP_SUMMARY"
       # The suite above runs against `expo start --web`: a dev bundle, unminified, with
       # React's development build. This step is the only thing that loads what would
       # actually ship — it catches a module Metro resolves and the export does not, an
