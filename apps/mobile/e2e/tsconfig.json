@@ -8,7 +8,7 @@
     // type and report every such line as unsafe, while `apps/mobile/tsconfig.json` — which
     // also covers `e2e/**` and does include DOM — reports nothing. One of the two had to be
     // wrong about this directory, and browser globals are real in it.
-    "lib": ["ES2022", "DOM"]
+    "lib": ["ES2022", "DOM", "DOM.Iterable"]
   },
   "include": ["./**/*.ts"]
 }
