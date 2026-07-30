@@ -4,8 +4,9 @@
   [`mobile-app.md`](../docs/architecture/mobile-app.md#layers)
 - **Milestone:** M1
 - **Size:** M, split into behavior-preserving, independently reversible commits
-- **Status:** Not started. Current-state audit completed 2026-07-30 with three parallel reviewers.
-  Audit baseline: `main` and `origin/main` at `c9b4e4d`; `pnpm check` **23/23** and `pnpm test:e2e`
+- **Status:** 🟡 Implementation started 2026-07-30. Workstreams 1–5 and final verification remain;
+  there is no external blocker. Current-state audit completed with three parallel reviewers. Audit
+  baseline: `main` and `origin/main` at `c9b4e4d`; `pnpm check` **23/23** and `pnpm test:e2e`
   **61/61**. Plan 52 already completed the whole-tree refactor, so this plan is the bounded residual
   pass, not permission for another blanket rewrite.
 - **Depends on:** [52-solid-kiss-dry-refactor](52-solid-kiss-dry-refactor.md) ✅
