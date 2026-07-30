@@ -22,6 +22,11 @@ review.
 | [Q-13](#q-13) | Is `es-419` the next language, before UI localization?          | deferred | Product                 | Nothing pre-v1                 | Post-v1                  |
 | [Q-14](#q-14) | How should the Refrain's peak card render its English subtitle? | **open** | **Design**              | **Plan 72 peak sign-off**      | **Before M2 release**    |
 | [Q-15](#q-15) | Which licensed voice and source produce production audio?       | **open** | **Content + tech lead** | **Plans 61 and 62 seed batch** | **Now**                  |
+| [Q-16](#q-16) | Is guided open chat committed v1.1 scope or an experiment?      | **open** | **Product**             | **Chat release enablement**    | **2026-08-06**           |
+| [Q-17](#q-17) | Which daily destinations earn a home-rail slot?                 | **open** | **Product + design**    | **Plan 81 rail ordering**      | **2026-08-06**           |
+| [Q-18](#q-18) | Who can use live chat, and what is its provider budget?         | **open** | **Product + finance**   | **Plan 82 live provider**      | **2026-08-06**           |
+| [Q-19](#q-19) | How long are local chat threads retained?                       | **open** | **Product + privacy**   | **Plan 82 persistence**        | **2026-08-06**           |
+| [Q-20](#q-20) | May a provider retain chat text, and for how long?              | **open** | **Privacy + backend**   | **Plan 82 provider contract**  | **2026-08-06**           |
 
 ---
 
@@ -248,6 +253,95 @@ v1-spine phrases followed by 600 v1 phrases.
 
 This decision authorizes assets, not playback architecture. Learner recordings remain subject to the
 separate non-negotiable that PCM never leaves native memory/the device.
+
+---
+
+<a id="q-16"></a>
+
+### Q-16 · Is guided open chat committed v1.1 scope or an experiment?
+
+`Loro Chat.dc.html` authors Open chat and Message inspector as “Loop D”, but it does not decide
+whether the production surface is a generally available v1.1 commitment, a bounded experiment, or a
+later release. That choice changes release flags, evaluation sample, entitlement messaging, and how
+much content/provider capacity must exist at launch.
+
+**Invariant while open:** plans 79/82 may define the private domain, bundled topic floor, safety
+contract, and evaluation harness. Plan 83 must not claim general availability or enable the route
+for release until Product chooses the launch posture. The answer cannot weaken offline fallback,
+explicit save, real-output, or recorded-audio privacy requirements.
+
+**Decision owner/date:** Product, 2026-08-06.
+
+---
+
+<a id="q-17"></a>
+
+### Q-17 · Which daily destinations earn a home-rail slot?
+
+This number is intentionally reserved for the authored navigation question at
+`Navigation.dc.html:865–873`: route frequency belongs beside depth. The contract requires every
+route to declare `expectedUse: daily | weekly | rare`; the remaining judgment is which daily routes
+win the scarce rail positions on each resolved home. The artifact's example says daily Review
+outranks weekly Add, but does not fully classify every current/future destination.
+
+**Invariant while open:** plan 81 can land the route metadata, spine, switcher, and state-driven
+More menu. It must not hardcode Today as the only home or let any built daily destination become
+unreachable. Rail ordering remains data on each possible resolved home.
+
+**Decision owner/date:** Product + design, 2026-08-06.
+
+---
+
+<a id="q-18"></a>
+
+### Q-18 · Who can use live chat, and what is its provider budget?
+
+The bundled conversation floor works for every eligible chat learner without a provider. A live text
+request adds variable cost and abuse surface, so the release needs a decision on free/paid or
+experimental entitlement, per-user turn/rate/cost limits, global daily spend, and what happens at
+the cap. This decision is narrower than Q-08's whole-product pricing and does not wait for a final
+subscription SKU.
+
+**Invariant while open:** budget exhaustion selects the bundled continuation without fabricated
+typing or a fake live reply. It never disables the conversation, uploads audio, or exposes an
+internal allowance as a learner score.
+
+**Decision owner/date:** Product + finance, 2026-08-06.
+
+---
+
+<a id="q-19"></a>
+
+### Q-19 · How long are local chat threads retained?
+
+Open chat needs crash/relaunch resume, Start over, export, erasure, and bounded storage, but the
+authored design does not choose whether completed local threads expire after days, weeks, or only on
+explicit deletion. The answer must cover active drafts, turns, inspector evidence, and what happens
+to explicitly kept phrases when their source thread expires.
+
+**Invariant while open:** thread text is local/private by default, excluded from telemetry and
+ordinary phrase sync. Explicitly kept phrases remain ordinary learner-owned records with source
+metadata; thread expiry cannot silently delete them. Start over is explicit and confirmable when
+retained learner turns exist.
+
+**Decision owner/date:** Product + privacy, 2026-08-06.
+
+---
+
+<a id="q-20"></a>
+
+### Q-20 · May a provider retain chat text, and for how long?
+
+A guarded live request necessarily sends bounded transcript text unless an approved zero-retention
+provider mode makes a stronger guarantee. Before `/v1/chat/turn` can ship, choose whether any
+provider retention is permitted, its maximum window and region, training/secondary-use prohibition,
+deletion/export duties, and the consent/copy required before the first live request.
+
+**Invariant while open:** no production live request. Bundled topics remain usable offline. Audio is
+structurally absent; prompts/logs/telemetry contain no thread text or ASR transcript; and local
+development defaults to the bundled path.
+
+**Decision owner/date:** Privacy + backend, 2026-08-06.
 
 ---
 

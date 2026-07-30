@@ -1,4 +1,4 @@
-# The three practice loops
+# The three practice loops and supplementary conversation
 
 The blueprint's most important structural feature is that it **does not resolve** what daily
 practice should be. It presents three complete philosophies and explicitly labels the transitions
@@ -8,6 +8,10 @@ between them:
 > `Loro.dc.html:1541`
 
 This document records how we treat that, what ships when, and what it costs.
+
+`Loro Chat.dc.html` later labels its conversation surface “Loop D”. That name does not change the
+three-way daily-practice decision: guided open chat is a supplementary conversation loop, not a
+fourth `PracticeEngine`.
 
 ---
 
@@ -55,11 +59,11 @@ roughly one interface and one router.
 
 ## Release plan
 
-| Release  | Ships                                                                           | Rationale                                                                                                                                                             |
-| -------- | ------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **v1**   | **StreamEngine** + **RefrainEngine** (Loop B, hero)                             | Depth-first is the differentiated bet, it's the cheapest of the three to build _well_, and the blueprint marks the Refrain ★ hero. The stream is universal and cheap. |
-| **v1.1** | **SrsEngine** (review session, memory model), **PronEngine**, **ProsodyEngine** | Loop A completes the retention story and the prosody lab is the standout screen. Both need real DSP, which is the long-lead item.                                     |
-| **v2**   | **RunEngine** + Phrasebook/ladder                                               | Highest build cost, most speculative payoff. Gated on v1 retention data.                                                                                              |
+| Release  | Ships                                                                                                           | Rationale                                                                                                                                                                                   |
+| -------- | --------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **v1**   | **StreamEngine** + **RefrainEngine** (Loop B, hero)                                                             | Depth-first is the differentiated bet, it's the cheapest of the three to build _well_, and the blueprint marks the Refrain ★ hero. The stream is universal and cheap.                       |
+| **v1.1** | **SrsEngine** (review session, memory model), **PronEngine**, **ProsodyEngine**; supplementary guided open chat | Loop A completes retention and the labs need the long-lead DSP. Chat uses the shared phrase/audio/speech foundations but has a separate private conversation coordinator and bundled floor. |
+| **v2**   | **RunEngine** + Phrasebook/ladder                                                                               | Highest build cost, most speculative payoff. Gated on v1 retention data.                                                                                                                    |
 
 Each engine is behind a flag from day one
 ([process/experimentation.md](../process/experimentation.md)), so the release order can change
@@ -170,6 +174,41 @@ the day it ships and the Phrasebook is not empty.
 
 ---
 
+<a id="loop-d--guided-open-chat"></a>
+
+## Loop D — Guided open chat · **v1.1 supplementary**
+
+**Screens:** [Open chat](functional-spec.md#22-open-chat) ·
+[Message inspector](functional-spec.md#23-message-inspector)
+
+**Shape.** Choose a topic and Loro's pace, speak or type Spanish, reveal help only when wanted, then
+open any line to inspect audio, alternatives, glosses, and real correction evidence. Saving is
+always explicit; kept lines join the normal phrase stream and can be queued through Review's own
+contract (`Loro Chat.dc.html:91–99`, `293–318`, `331–449`).
+
+**Why it is not a practice engine.** It does not own selection, scheduling, a progress delta, or a
+graduation rule. It is an input/feedback surface over a private conversation domain. Its only
+learning-state handoffs are explicit phrase save/remove and queue-for-review commands; it never
+writes reps, automaticity, FSRS, or rungs.
+
+**The production guard.** Every topic has a versioned bundled reply graph and answer suggestions, so
+offline use is coherent rather than a disabled composer. A live text provider may improve variety
+only after the entitlement/budget, retention, privacy, safety, and quality gates are met. Requests
+contain bounded text context, never recorded audio. Thread text/transcripts remain local and outside
+telemetry/normal phrase sync under the product privacy floor. Invalid, unsafe, late, or over-budget
+responses fall back without masquerading as live output.
+
+**What the authored prototype does not authorize.** Its deterministic correction regexes, timed
+canned replies, browser speech synthesis, and canned microphone recognition are executable
+presentation fixtures (`Loro Chat.dc.html:504`, `529–531`, `568–588`), not product mechanisms. Every
+correction, reply, transcript, playback state, and count shown in production must be real.
+
+**Release gate.** Q-16 decides whether this is a committed v1.1 loop or an experiment. Q-18 decides
+entitlement and provider budget; Q-19/Q-20 decide local and provider retention. Those questions may
+gate live/release behavior, but they do not weaken the bundled offline and privacy requirements.
+
+---
+
 ## What all three share
 
 Everything below the loop line is common and built once:
@@ -206,6 +245,9 @@ Yes, from Settings → _How you practise_, with an honest one-screen explanation
 | **The Run**                     | "A short daily run with a surprise challenge, and a ladder every phrase climbs." |
 
 Switching is free and reversible. The learner keeps everything.
+
+Loop D is entered as a conversation destination, not listed in this engine switcher. Entering or
+leaving it does not change the active practice engine.
 
 ⚠️ **Decision needed (Q-06):** is the loop a _setting_ (learner-chosen, as above) or an _assignment_
 (chosen by the app from the onboarding goal)? Setting is more respectful; assignment produces
