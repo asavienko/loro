@@ -114,4 +114,4 @@ cat <<'NEXT'
 
 NEXT
 printf '  %sAnd spend twenty minutes here first:%s\n' "$DIM" "$OFF"
-printf '  %sopen "Language Learning by Phrases/Loro.dc.html"%s\n\n' "$DIM" "$OFF"
+printf '  %sopen "design/Language Learning by Phrases - V1.1/Loro.dc.html"%s\n\n' "$DIM" "$OFF"
