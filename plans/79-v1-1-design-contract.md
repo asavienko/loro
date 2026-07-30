@@ -3,7 +3,7 @@
 - **Requirement IDs:** introduces `NAV-01`…`NAV-16` and `P3E-01`…`P3E-18`; reconciles `F-03`,
   `F-05`, `F-06`, `AI-05`, and `AS-01`…`AS-04`
 - **Milestone:** M1 documentation contract; v1.1 delivery mapping
-- **Status:** Not started
+- **Status:** ✅ Implemented 2026-07-30
 - **Depends on:** none
 
 ## Outcome
@@ -17,12 +17,12 @@ developer workbench, or conversation loop is implemented.
 
 The v1.1 package adds functionality in separate artifacts:
 
-| Artifact                | New contract                                                                                                       | Implementation owner |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------ | -------------------- |
-| `Loro.dc.html`          | Existing 21-screen product blueprint; only two lines differ from the prior file                                    | Plans 54–78          |
-| `Navigation.dc.html`    | Five surface classes, the spine, switcher, More menu, resume/exit/transport laws                                   | Plan 81              |
-| `Loro Chat.dc.html`     | Open chat and message inspector, including text/voice input, corrections, suggestions, keeping, and review handoff | Plans 82–83          |
-| `Design System.dc.html` | 245-token map, 37-component inventory, navigation tokens, and three reference screens                              | Plans 57 and 80      |
+| Artifact                | New contract                                                                                                                                                   | Implementation owner |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------- |
+| `Loro.dc.html`          | Existing 21-screen product blueprint; only two lines differ from the prior file                                                                                | Plans 54–78          |
+| `Navigation.dc.html`    | Five surface classes, the spine, switcher, More menu, resume/exit/transport laws                                                                               | Plan 81              |
+| `Loro Chat.dc.html`     | Open chat and message inspector, including text/voice input, corrections, suggestions, keeping, and review handoff                                             | Plans 82–83          |
+| `Design System.dc.html` | Authored token/component map (stale 245/37 headline; verified package has 246 CSS variables/39 JSX components), navigation tokens, and three reference screens | Plans 57 and 80      |
 
 The new chat is a product-level change. Current durable docs say Loro is “not a chatbot” and
 ADR-0010 explicitly excludes open-ended chat. The design shows a free conversation but its

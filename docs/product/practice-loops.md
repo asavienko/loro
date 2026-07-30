@@ -200,7 +200,7 @@ responses fall back without masquerading as live output.
 
 **What the authored prototype does not authorize.** Its deterministic correction regexes, timed
 canned replies, browser speech synthesis, and canned microphone recognition are executable
-presentation fixtures (`Loro Chat.dc.html:504`, `529–531`, `568–588`), not product mechanisms. Every
+presentation fixtures (`Loro Chat.dc.html:514`, `529–531`, `568–588`), not product mechanisms. Every
 correction, reply, transcript, playback state, and count shown in production must be real.
 
 **Release gate.** Q-16 decides whether this is a committed v1.1 loop or an experiment. Q-18 decides

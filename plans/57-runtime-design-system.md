@@ -2,7 +2,10 @@
 
 - **Requirement IDs:** `F-05`, `F-06`, `LB-25`…`LB-28`
 - **Milestone:** M1/M2
-- **Status:** Not started
+- **Status:** 🟡 Runtime accent/text-scale/reduced-motion provider and current accent-aware
+  primitives implemented; fonts, dark theme, haptics, motion primitives, route migration, and the
+  full loading/forced-state matrix remain, blocked on plan 55 fidelity findings and production font
+  assets
 - **Depends on:** plan 53 ✅ generated-token completion; plan 55 fidelity findings
 
 ## Outcome
@@ -14,7 +17,10 @@ behavior, not one-use markup, and accent/dark/reduced-motion behavior comes from
 
 Color/layout tokens, UI primitives/components/tokens directories, composition-oriented routes, and
 color-literal enforcement are implemented. Plan 53 owns generation/parity of authored type, motion,
-layout, and control tokens. This plan consumes that output and does not regenerate it independently.
+layout, and control tokens. A typed runtime provider now supplies generated accent selection,
+text-scale inspection, and system/explicit reduced-motion state; current accent-aware primitives
+consume it, and reduced motion suppresses press scaling. Learner routes still default to Coral and
+have not been migrated for learner-selectable themes.
 
 ## Work
 

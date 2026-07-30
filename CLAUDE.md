@@ -9,11 +9,11 @@ Guidance for Claude Code working in this repository.
 Early implementation. **What exists:** the docs, 7 of the v1.1 design package's 23 learner screens
 plus the app shell in `apps/mobile/app/`, an API with 10 endpoints over an in-memory store, the Rust
 core, the design tokens, a 31-phrase catalog, and the local persistence layer (schema, migrations,
-repositories, outbox — driver-agnostic and tested against real SQLite). 432 JS/TS tests, 131 Rust
-tests, and 61 browser E2E tests pass. **What doesn't:** the native modules (audio, speech, ASR,
-widgets), the on-device SQLite driver, and the other 16 learner screens — so nothing runnable today
-exercises audio or the microphone, which is half of what this app is, and the app store is still in
-memory.
+repositories, outbox — driver-agnostic and tested against real SQLite), plus a dev-only generated
+token/component workbench. 451 JS/TS tests, 131 Rust tests, and 66 distinct browser E2E tests pass.
+**What doesn't:** the native modules (audio, speech, ASR, widgets), the on-device SQLite driver, and
+the other 16 learner screens — so nothing runnable today exercises audio or the microphone, which is
+half of what this app is, and the app store is still in memory.
 
 ## Keep this file current
 
@@ -157,7 +157,8 @@ be off PATH.
 
 ```bash
 pnpm check                          # the gate: 23 turbo tasks, all green today
-pnpm test:e2e                       # 61 tests: every route and state, the clock, a11y, text scale
+pnpm test:e2e                       # 62 learner tests: routes/states, clock, a11y, text scale
+pnpm test:e2e:workbench             # 3 tests: dev-only tokens/component inspection surface
 pnpm test:e2e:bundle                # the @smoke subset against the production web export
 pnpm --filter @loro/api dev         # :3000 — no Docker, no keys, no database
 pnpm --filter @loro/mobile bundle   # proves the app compiles; needs no simulator

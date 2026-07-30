@@ -76,10 +76,10 @@ replaced by treating a milestone table as a backlog:
    and
    [69](../../plans/69-trip-domain-and-arc.md)–[74](../../plans/74-monetization-and-entitlements.md).
 
-5. **Register and extend the v1.1 design package:** plan
-   [79](../../plans/79-v1-1-design-contract.md) defines stable navigation/chat requirements before
+5. **Extend the registered v1.1 design package:** completed plan
+   [79](../../plans/79-v1-1-design-contract.md) defines the stable navigation/chat requirements that
    [80](../../plans/80-dev-design-system-workbench.md)–[83](../../plans/83-open-chat-and-message-inspector.md)
-   implement the workbench, navigation spine, private conversation service, and two chat surfaces.
+   consume for the workbench, navigation spine, private conversation service, and two chat surfaces.
 6. **Add later surfaces without rebuilding foundations:** Review/Memory, Roleplay, and the gated
    labs use the same repositories, engines, native capture, and release harness in
    [75](../../plans/75-review-and-memory.md)–[77](../../plans/77-dsp-and-speech-labs.md).

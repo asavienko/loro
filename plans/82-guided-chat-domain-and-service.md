@@ -3,7 +3,7 @@
 - **Requirement IDs:** `P3E-01`…`P3E-10`, `P3E-16`…`P3E-18`, `AI-05`, `F-03`, `F-04`, `AS-01`,
   `AS-02`
 - **Milestone:** M3 / v1.1
-- **Status:** Not started; blocked until plan 79 records the product/privacy contract
+- **Status:** ⛔ Blocked by Q-16 and Q-18…Q-20 release, budget, and retention decisions
 - **Depends on:** 59 device persistence, 61 content/audio assets, 66 backend contracts/security, 67
   identity/budgets, 68 sync boundaries, and 79 design contract
 
@@ -26,7 +26,8 @@ Production keeps these invariants:
 
 - recorded audio stays in native memory and only the on-device ASR transcript reaches JS;
 - thread text is local/private by default, excluded from analytics and ordinary phrase sync;
-- a live request sends only bounded text context after the plan-79 consent/retention decision;
+- a live request sends only bounded text context after Q-18 and Q-20 authorize the provider budget
+  and retention contract;
 - every provider path has an authored topic graph and answer suggestions as an offline floor;
 - saving a line is always an explicit learner tap and writes through the phrase repository/outbox.
 
@@ -39,7 +40,8 @@ Production keeps these invariants:
 2. Define lifecycle and persistence: local thread metadata/turns, active draft, topic/pace, provider
    provenance, clear/start-over semantics, crash resume, retention expiry, export/erasure, and
    migrations. Keep ephemeral selection/sheets/toasts out of durable storage. Do not sync raw thread
-   text unless plan 79 explicitly authorizes and specifies merge semantics.
+   text; plan 79 excludes it from ordinary sync, so any future sync change requires a new explicit
+   consent decision and merge contract.
 3. Author versioned bundled topic packs with finite reply graphs, safe continuations, suggestions,
    English, respellings, explanations, alternatives, register labels, and word glosses. Validate
    packs in `@loro/content`; local development and offline mode use them by default.
@@ -64,8 +66,8 @@ Production keeps these invariants:
    schedules outside their owning repository/engine contract.
 9. Build an evaluation corpus covering CEFR fit, Spain/LatAm policy, gender/profile agreement,
    correctness, explanation quality, register, suggestion usefulness, safety, prompt injection,
-   long/empty/mixed-language input, latency, cost, fallback continuity, and schema failures. Gate
-   provider/prompt changes on named thresholds recorded by plan 79.
+   long/empty/mixed-language input, latency, cost, fallback continuity, and schema failures. Define
+   named thresholds with the provider evaluation gate before enabling live traffic.
 10. Add observability using IDs, booleans, counts, timings, safety codes, fallback provenance, and
     budget state only. Static/runtime tests reject phrase text, thread text, translations,
     corrections, ASR transcripts, and audio fields in telemetry.

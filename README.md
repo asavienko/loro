@@ -18,7 +18,8 @@ loops.
 
 ```
 pnpm bootstrap && pnpm check     →  23/23 tasks at the last green baseline
-pnpm test:e2e                    →  61 browser tests across every implemented route and state
+pnpm test:e2e                    →  62 learner browser tests across every implemented state
+pnpm test:e2e:workbench          →  3 dev-workbench browser tests
 pnpm --filter @loro/mobile bundle →  production Expo/Metro export proof
 pnpm --filter @loro/api start     →  10 endpoints on :3000/v1
 ```
@@ -28,8 +29,8 @@ pnpm --filter @loro/api start     →  10 endpoints on :3000/v1
 | Documentation          |     — | 65 substantive documents — 51 product, architecture, design, process, and decision docs, plus 14 ADRs                                                                                           |
 | Toolchain              |     — | Installs, builds, lints, typechecks, and tests from a clean clone                                                                                                                               |
 | **`loro-core`** (Rust) |   131 | Ranking, ASR matching, calendar, ladder, notification policy, HLC, and sync merge implemented. FSRS, Refrain selection, and DSP remain incomplete ([status](packages/core-rs/README.md#status)) |
-| **JS/TS workspaces**   |   432 | Core engines/persistence, content validation, API seams, mobile state/UI, and design tokens                                                                                                     |
-| **Browser E2E**        |    61 | Every current route and declared state, clock behavior, accessibility, text scale, and production-bundle smoke                                                                                  |
+| **JS/TS workspaces**   |   451 | Core engines/persistence, content validation, API seams, mobile state/UI, and design tokens                                                                                                     |
+| **Browser E2E**        |    66 | 62 learner tests, 3 dev-workbench tests, and 1 production-only route-unavailability contract; bundle smoke re-runs a four-test subset                                                           |
 
 **What the build already caught:** eight colours in the blueprint's palette that fail WCAG AA (the
 worst at 2.44:1, genuinely unreadable) plus one that only passes at a declared size floor; a drop
