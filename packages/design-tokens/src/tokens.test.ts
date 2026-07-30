@@ -2,7 +2,15 @@ import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { loadTokens } from './tokens.js'
 import { generateOutputs } from './generate.js'
-import { contrastRatio, parseHex, passes, ratio, AA_BODY, AA_LARGE } from './contrast.js'
+import {
+  contrastRatio,
+  createContrastReport,
+  parseHex,
+  passes,
+  ratio,
+  AA_BODY,
+  AA_LARGE,
+} from '@loro/design-tokens/contrast'
 
 describe('contrast maths', () => {
   it('matches known WCAG values', () => {
@@ -37,6 +45,36 @@ describe('contrast maths', () => {
 
 describe('token source', () => {
   const t = loadTokens()
+
+  it('produces one structured contrast report for the CLI and browser consumers', () => {
+    const report = createContrastReport(t)
+
+    expect(report).toMatchObject({ checked: 122, passed: true, violations: [] })
+    expect(report.accentThemes).toEqual([
+      { name: 'coral', checked: 12, failed: 0, passes: true },
+      { name: 'sunset', checked: 12, failed: 0, passes: true },
+      { name: 'teal', checked: 12, failed: 0, passes: true },
+      { name: 'berry', checked: 12, failed: 0, passes: true },
+    ])
+    expect(report.constraints).toEqual(['warming.peak: text must be >=17px semibold'])
+  })
+
+  it('reports an accent violation with the shared WCAG threshold', () => {
+    const changed = structuredClone(t)
+    changed.accents.coral!.accentInk = '#ffffff'
+
+    const report = createContrastReport(changed)
+    const coral = report.accentThemes.find(({ name }) => name === 'coral')
+
+    expect(report.passed).toBe(false)
+    expect(coral).toMatchObject({ failed: 5, passes: false })
+    expect(report.violations[0]).toMatchObject({
+      pair: 'accent.coral.accentInk on surface.app',
+      need: AA_BODY,
+      passes: false,
+      accentTheme: 'coral',
+    })
+  })
 
   it('loads all four accent themes', () => {
     expect(Object.keys(t.accents).sort()).toEqual(['berry', 'coral', 'sunset', 'teal'])
