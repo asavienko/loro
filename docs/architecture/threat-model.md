@@ -78,7 +78,7 @@ why the export/deletion paths must actually work.
 | **Automated scanner**      | Internet-wide scanning                    | Known CVEs, exposed endpoints                                                            |
 | **Malicious insider**      | Staff production access                   | A2, A3, A5 at scale                                                                      |
 | **Compromised dependency** | Code execution in our build or app        | Everything                                                                               |
-| **Compromised provider**   | Access to what we send them               | Prompt content (B7), clone samples (B8)                                                  |
+| **Compromised provider**   | Access to what we send them               | Prompt content (B7); recorded learner audio is never sent                                |
 
 The **network attacker on hostile wifi** deserves emphasis. The primary persona is, by definition,
 using this app on unfamiliar networks in a foreign country. Hotel wifi with a captive portal that
@@ -88,12 +88,14 @@ MITMs TLS is not hypothetical.
 
 ## STRIDE by boundary
 
+<a id="b2--audio-leaving-the-device--the-one-that-matters-most"></a>
+
 ### B2 · Audio leaving the device — the one that matters most
 
 | Threat                                                        | Mitigation                                                                                                                                                                                                                                                                                                     |
 | ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | A feature added later uploads audio for "quality improvement" | **Architectural**: PCM lives in native memory and is passed to `loro-core` by handle. There is no JS API that returns audio bytes, so the code to upload it does not exist and would have to be deliberately added to a native module. Plus a CI test asserting no network call originates in the audio module |
-| Voice-clone endpoint misused as a general upload path         | It's the only endpoint accepting audio; requires `voice_clone_consent`; per-use; `retained: false` is a contract verified by a test that the temp file is gone after the request                                                                                                                               |
+| A future endpoint accepts recorded learner audio              | Prohibited by ADR-0011; API contract tests and architecture review reject any recorded-audio request body                                                                                                                                                                                                      |
 | Crash reporter attaches an audio buffer                       | Crash reporter configured with no attachments; PCM is not in a JS-visible structure so it can't be serialised into a report                                                                                                                                                                                    |
 | Analytics accidentally includes a derivative                  | Redaction allowlist; a CI test asserts every documented event's props are allowlisted ([metrics.md](../product/metrics.md#instrumentation-rules))                                                                                                                                                              |
 | Debug builds log audio paths                                  | Audio never has a path — it's never written to disk                                                                                                                                                                                                                                                            |
@@ -113,6 +115,8 @@ remembering not to write it. That's why this is an architecture concern and not 
 | Forged HLC to win all conflicts                       | A learner can only corrupt _their own_ data; server clamps absurd future clocks and logs it                                                      |
 | Enumerating accounts via magic link                   | `/auth/magic-link` returns 202 regardless of existence                                                                                           |
 | Sync flood                                            | Rate limits per user and per IP; batch caps                                                                                                      |
+
+<a id="b7--prompt-injection--the-ai-boundary"></a>
 
 ### B7 · Prompt injection — the AI boundary
 
@@ -148,6 +152,8 @@ café scene".
 | Widget snapshot leaks data to a less-protected store | The snapshot is minimal (city, days, counts, one phrase). No notes, no captured text, no tokens       |
 | Malicious app reads our App Group                    | App Groups are entitlement-scoped to our team id                                                      |
 | Deep link mutates state                              | Deep links may navigate only; every parameter validated; no mutating handler is reachable from a link |
+
+<a id="b9--cdn"></a>
 
 ### B9 · CDN
 

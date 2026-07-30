@@ -4,10 +4,10 @@
 - **Milestone:** M1 (the contract and the enforcement) / M2 (the surfaces it enables)
 - **Size:** M–L
 - **Status:** not started
-- **Spec:** [`mobile-app.md#navigation`](../docs/architecture/mobile-app.md#navigation),
-  [`functional-spec.md#global-behaviours`](../docs/product/functional-spec.md),
-  [`widgets-notifications.md#deep-links`](../docs/architecture/widgets-notifications.md),
-  [`screen-catalog.md`](../docs/design/screen-catalog.md)
+- **Spec:** [`mobile-app.md#navigation`](../../../docs/architecture/mobile-app.md#navigation),
+  [`functional-spec.md#global-behaviours`](../../../docs/product/functional-spec.md),
+  [`widgets-notifications.md#deep-links`](../../../docs/architecture/widgets-notifications.md),
+  [`screen-catalog.md`](../../../docs/design/screen-catalog.md)
 - **Open questions:** Q-06 (loop a setting or an assignment — decides the resolved home), Q-17
   (proposed, below)
 
@@ -244,7 +244,7 @@ with the 44×44 hit area the blueprint already sets for `‹` (`Loro.dc.html:45�
 Per-class `screenOptions` (`animation`, `gestureEnabled`, `presentation`) are read from the route
 table, not written per screen, so a class change cannot be applied inconsistently. Session gets
 `gestureEnabled: false` (a swipe must not abandon a wave), Sheet gets `presentation: 'modal'`, and
-transitions come from [`motion.md`](../docs/design/motion.md).
+transitions come from [`motion.md`](../../../docs/design/motion.md).
 
 ## Guards, deep links, and the outside world
 
@@ -283,11 +283,11 @@ routes are lazily imported so a v1 learner who never opens them does not pay for
 announced; `‹` and `✕` carry distinct labels ("Back" vs "Close practice") because they mean
 different things; the hub rail is one focusable row of buttons, not a nested tree; Reduce Motion
 turns transitions into cross-fades
-([`accessibility.md#motion`](../docs/architecture/accessibility.md)).
+([`accessibility.md#motion`](../../../docs/architecture/accessibility.md)).
 
 ## Instrumentation, and the collision it exposes
 
-[`observability.md`](../docs/architecture/observability.md) already requires navigation breadcrumbs
+[`observability.md`](../../../docs/architecture/observability.md) already requires navigation breadcrumbs
 ("Navigation, engine transitions, audio-session events…"), per-screen frame drops, and per-screen
 memory. Instrumenting that **once in the shell** — a route listener that reads the route table for a
 stable screen id — is strictly better than thirteen screens each remembering to emit an event, and
@@ -358,7 +358,7 @@ then prove directly:
 
 **Not the browser's job.** Android hardware back, the iOS swipe, and `presentation: 'modal'` are
 device behaviours (defects 4, 7). They belong to the Maestro flows in
-[`testing-strategy.md`](../docs/process/testing-strategy.md) — which do not exist yet — so this plan
+[`testing-strategy.md`](../../../docs/process/testing-strategy.md) — which do not exist yet — so this plan
 adds them to that plan's list rather than pretending web coverage settles them, and law 5 stays a
 review item until plan 09 makes a device build possible.
 

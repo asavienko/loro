@@ -7,6 +7,43 @@ Rationale: [ADR-0007](adr/0007-audio-pipeline.md) ·
 
 ---
 
+## Implementation boundary (current repository)
+
+This document is the target architecture. The native subsystem it describes is **not implemented
+yet**:
+
+- `apps/mobile/modules/loro-audio/`, `apps/mobile/modules/loro-speech/`, and the native `loro-core`
+  bridge do not exist. There are no generated `ios/` or `android/` projects either.
+- The mobile package has no playback, capture, speech-recognition, notification, or secure-storage
+  dependency. `app.config.ts` declares the future microphone/speech purpose strings and background
+  capabilities, but configuration is not an audio implementation.
+- The Stream and Refrain routes exercise queue and practice state on the web. They deliberately show
+  that audio is unavailable; no current route plays a clip, records a learner, detects onset, or
+  invokes ASR.
+- `packages/core-rs/src/asr.rs` does implement and test deterministic transcript-to-target matching,
+  and the shared engine contracts require measured latency or `null`. Those are reusable domain
+  pieces, not evidence that either platform can obtain a transcript or measurement.
+- Generated Swift and Kotlin UniFFI bindings are committed, but nothing in the mobile application
+  links or calls them. In particular, a generated binding that can marshal byte arrays must never
+  become the recorded-audio API; capture-to-DSP integration still has to enforce the native-memory
+  handle boundary below.
+
+The interfaces and graphs in the rest of this document are therefore normative designs. Code
+examples are proposed contracts unless a source path above says otherwise.
+
+### Prerequisites for implementing it
+
+Implementation must land in independently verifiable layers: create the native projects and local
+Expo modules; prove pitch-preserving playback, interruption handling, and real-device background
+operation; add capture with an opaque, lifetime-checked buffer registry; link `loro-core` so PCM is
+consumed by handle without entering JS; then integrate on-device speech availability and the reveal
+fallback. Catalog playback also needs reviewed audio artifacts and a real local cache—most catalog
+rows do not carry audio today.
+
+No learner-visible score, latency, waveform, playback progress, or microphone-success state may be
+enabled until its producing native path and failure state are both wired. The device matrix and the
+privacy-boundary tests in [Testing](#testing) are release prerequisites, not follow-up hardening.
+
 ## Requirements this has to satisfy
 
 From the blueprint, in the order they constrain the design:
@@ -261,7 +298,7 @@ words is not worth the storage.
 
 ## ASR
 
-**On-device only by default.** `onDeviceOnly: true` is a hard flag, not a preference.
+**On-device only.** `onDeviceOnly: true` is a hard flag, not a preference.
 
 | Platform    | Recogniser                                                     | Notes                                                                                        |
 | ----------- | -------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
@@ -274,8 +311,7 @@ words is not worth the storage.
 1. On-device ASR available                → full experience
 2. Requires a language-pack download      → in-context prompt with a deep link to settings;
                                              reveal mode meanwhile
-3. Unavailable, learner opted into cloud  → cloud ASR (a per-utterance upload, explicitly consented)
-4. Unavailable, no consent                → REVEAL MODE
+3. Unavailable                            → REVEAL MODE
 ```
 
 **Reveal mode** is a first-class experience, not an error state. From the blueprint: mic tap reveals

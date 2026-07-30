@@ -40,6 +40,23 @@ src/
 Persistence is exercised against real SQLite from `apps/mobile/src/data/persistence.test.ts`, which
 is where `node:sqlite` lives; the tests in here are the parts that need no database.
 
+## Current implementation boundary
+
+This package currently contains two engines: `StreamEngine` and `RefrainEngine`. The other five
+values in `EngineId` are contract reservations, not implementations, and there is no engine registry
+in this package yet. Mobile constructs the two implemented engines in its store layer.
+
+The Refrain implementation is intentionally an interim seam. Its TypeScript currently owns mode
+rotation, automaticity, daily-set selection, and a placeholder FSRS write because the corresponding
+Rust `cloze_mask`, `select_refrain_set`, and `fsrs::review` functions are not implemented or wired.
+The mobile facade also supplies fallbacks for Rust-owned maths. Do not copy those fallbacks into a
+new engine: [plan 60](../../plans/60-authoritative-core-maths.md) replaces them with generated
+UniFFI/WASM-backed adapters and parity tests.
+
+Persistence contracts and repositories exist here, but the running app still uses its in-memory
+store. `openMemoryPersistence()` is a real web-capable implementation of these contracts; it is not
+evidence that mobile SQLite is wired.
+
 ## The two things that matter most here
 
 ### 1 · `sync/fieldPolicy.ts`
@@ -59,13 +76,31 @@ Its partner is `engines/common.ts`. The suite catches an engine that forgot a si
 required arguments. A new engine should build its `ProgressDelta` on top of it rather than from
 scratch.
 
+The suite requires every signal to be classified as `maintains` or `exempt`, checks that
+declarations match actual writes, and covers deterministic/read-only planning, idempotent
+`record()`, honest latency, monotonic rungs, empty plans, and termination of closed sessions. It
+does not apply deltas to persistence, simulate interruption/relaunch, or prove the correctness of an
+FSRS algorithm.
+
 See [practice-engines.md](../../docs/architecture/practice-engines.md#conformance).
 
 ## Rules
 
 - **No platform imports.** No `react`, no `react-native`, no `@nestjs/*`, no `node:*`. This package
   runs in both an app and a server.
-- **No I/O.** Types, schemas, and pure functions only.
+- **No ambient or platform-specific I/O.** Domain/engine code is pure; persistence code operates
+  only through an injected `SqlDriver` or the in-memory implementation.
 - **Reproducible maths belongs in `@loro/core-rs`**, not here
   ([ADR-0002](../../docs/architecture/adr/0002-shared-rust-core.md)). If two platforms could
   disagree about a number, it's computed in Rust.
+
+## Extending safely
+
+1. Add a headless engine under `src/engines/<id>/` and export it from `engines/index.ts`; do not add
+   platform, store, or presentation dependencies.
+2. Build every delta with `universalDelta`, classify every `PROGRESS_SIGNALS` entry in the shared
+   conformance suite, then add engine-specific selection, sequencing, and evaluation tests.
+3. Keep learner-visible maths behind `LoroCoreFacade`. If the Rust function or binding is missing,
+   implement that boundary under plan 60 rather than adding another TypeScript algorithm.
+4. Wire persistence and the route in their owning layers. An engine returning a delta is not proof
+   that `applyDelta`, local storage, resume, or E2E behavior is correct.

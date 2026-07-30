@@ -15,8 +15,8 @@ pnpm test:e2e:bundle    # the same @smoke flows from the production web export
 ## What the suite varies
 
 The first row is what a route-by-route suite gives you. The rest are the reason
-[plan 51](../../../plans/51-extended-e2e-strategy.md) exists: each was structurally inexpressible
-before, and each found real defects on its first run.
+[plan 51](../../../plans/archive/2026-07-30/51-extended-e2e-strategy.md) exists: each was
+structurally inexpressible before, and each found real defects on its first run.
 
 | Axis                       | Owner                                                                    | What it establishes                                                                                    |
 | -------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------ |

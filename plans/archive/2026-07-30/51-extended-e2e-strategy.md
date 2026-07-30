@@ -29,10 +29,10 @@
   ([09](09-native-toolchain-and-dev-client.md)–[12](12-asr-speech-module.md),
   [31](31-offline-survival-mode.md)).
 
-- **Spec:** [`testing-strategy.md`](../docs/process/testing-strategy.md),
-  [`definition-of-done.md`](../docs/process/definition-of-done.md),
-  [`accessibility.md`](../docs/architecture/accessibility.md),
-  [`scheduling.md#day-boundaries`](../docs/architecture/scheduling.md)
+- **Spec:** [`testing-strategy.md`](../../../docs/process/testing-strategy.md),
+  [`definition-of-done.md`](../../../docs/process/definition-of-done.md),
+  [`accessibility.md`](../../../docs/architecture/accessibility.md),
+  [`scheduling.md#day-boundaries`](../../../docs/architecture/scheduling.md)
 - **Parent plan:** [37-testing-gaps](37-testing-gaps.md) 🟡 — this plan takes over and expands its
   §5 (E2E) only. Everything else in 37 (`sim.rs`, `merge.rs`, `golden/`, property suites, RNTL
   component tests, blueprint fixtures) stays there.

@@ -1,332 +1,232 @@
 # Sync protocol
 
-How a learner's data gets between devices without ever blocking a practice session.
+Sync has implemented primitives and an implemented development API, but no end-to-end device sync
+path. Rationale: [ADR-0003](adr/0003-offline-first-sqlite-sync.md).
 
-Rationale: [ADR-0003](adr/0003-offline-first-sqlite-sync.md)
+## Implementation status
 
----
+| Layer                       | Current state                                                                                                                 |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| HLC and row merge           | Implemented and tested in `packages/core-rs/src/sync/`.                                                                       |
+| Field policy                | Implemented in `packages/core/src/sync/fieldPolicy.ts`; unknown fields are rejected by the API.                               |
+| Local outbox                | Implemented for SQLite and memory persistence; SQLite supports ack, failure counts and merge-class-aware compaction.          |
+| API push/pull               | Implemented at `POST /v1/sync/push` and `POST /v1/sync/pull`; a status diagnostic exists at `POST /v1/sync/status`.           |
+| API merge runtime           | Uses the Rust merge compiled to WASM. Production refuses to start without it; development sync calls fail if it is absent.    |
+| Server storage              | An unscoped in-memory `Map`; rows disappear on restart. No auth or Postgres.                                                  |
+| Pull cursor                 | Not implemented. `since` and `limit` are accepted but ignored; pull returns every stored row and `has_more: false`.           |
+| Mobile client               | Not implemented. Nothing drains the outbox, calls the endpoints, advances a device HLC from responses or applies pulled rows. |
+| Store/outbox write coupling | Not wired. Current mobile mutations remain in Zustand memory.                                                                 |
+
+These endpoints are useful for exercising arbitration, not safe multi-user sync. Do not deploy them
+as a learner-data service until authentication, tenant scoping, durable storage and real cursors
+land.
 
 ## Position
 
-**The device is the source of truth. The server is a sync peer and an arbiter, not an owner.**
-
-Every write succeeds locally, immediately, in a transaction, and appends an outbox row. Sync drains
-the outbox opportunistically. There is no write path that waits on the network, and no screen shows
-a spinner because of sync.
-
-Consequences we accept deliberately:
-
-- Two devices editing the same field concurrently will resolve to one value, and the other is lost.
-- The server cannot enforce cross-row invariants at write time.
-
-Consequences we get:
-
-- The app works identically on a plane, in a taxi rank in Madrid, and on wifi.
-- No offline queue UI, no "syncing…" state, no conflict prompts.
-
----
-
-## Why not CRDTs
-
-Considered and rejected. Our conflict domain is:
-
-- **Single-writer-per-row in practice.** One learner, usually one device at a time.
-- **Scalar fields.** `difficulty`, `loved`, `reps`, `srs_due`. There is no collaborative text, no
-  ordered list requiring intent preservation, no simultaneous multi-user editing.
-- **Counters that are derivable.** `reps` and `plays` are reconstructable from `review_log` and
-  `attempt`, which are append-only and therefore conflict-free by construction.
-
-Per-field last-write-wins over a hybrid logical clock gives the same practical outcome as a CRDT for
-this shape of data, with an order of magnitude less machinery and no library dependency in
-`loro-core`. If we later add shared phrasebooks (multi-writer), that's the moment to revisit — and
-it would be a new ADR.
-
----
+The intended system treats the device's durable SQLite as the learner-facing source of truth. The
+server is a convergence peer. A write completes locally and queues an operation; background sync
+pushes and pulls later. The current app has not yet reached this position because its live store is
+not persistent and it has no sync client.
 
 ## Time
 
-Two independent clocks, and conflating them is a bug class.
+Hybrid logical clocks order sync; local/streak day keys drive learner-facing calendar behaviour.
+They are independent.
 
-| Clock                                        | Used for                                                | Never used for              |
-| -------------------------------------------- | ------------------------------------------------------- | --------------------------- |
-| **HLC** — hybrid logical clock               | Ordering sync operations, per-field conflict resolution | Anything shown to a learner |
-| **`local_day`** — device local calendar date | Day boundaries, streaks, trip transitions, `reps_today` | Sync ordering               |
+The Rust core implements HLC parsing/encoding, `tick`, `receive`, total ordering by physical time,
+logical counter and node id, plus detection of a client more than 24 hours ahead of server time. No
+mobile bridge currently supplies a stable installation node id or persists the last HLC. The SQLite
+factory accepts an HLC callback, and its tests use a deterministic stand-in.
 
-### HLC
+The wire encoding is:
 
-```
-hlc = "<physical_ms>:<logical_counter>:<node_id>"
-      1721558400123:0007:d3f9a1
-```
-
-```ts
-function tick(last: Hlc, wallMs: number, nodeId: string): Hlc {
-  const physical = Math.max(last.physical, wallMs)
-  const logical = physical === last.physical ? last.logical + 1 : 0
-  return { physical, logical, nodeId }
-}
-
-function receive(last: Hlc, remote: Hlc, wallMs: number, nodeId: string): Hlc {
-  const physical = Math.max(last.physical, remote.physical, wallMs)
-  let logical = 0
-  if (physical === last.physical && physical === remote.physical) {
-    logical = Math.max(last.logical, remote.logical) + 1
-  } else if (physical === last.physical) {
-    logical = last.logical + 1
-  } else if (physical === remote.physical) {
-    logical = remote.logical + 1
-  }
-  return { physical, logical, nodeId }
-}
+```text
+<physical_ms>:<zero-padded logical counter>:<node_id>
+1721558400123:0007:d3f9a1
 ```
 
-**Properties**
-
-- Monotonic per device, even if the wall clock jumps backwards (NTP correction, manual change,
-  timezone travel).
-- Totally ordered across devices — `node_id` breaks ties deterministically, so both peers reach the
-  same answer without coordination.
-- Roughly tracks real time, which makes debugging tractable.
-
-**Clock skew.** A device whose clock is wildly wrong will produce HLCs far in the future and win
-every conflict. Mitigation: on each sync response the server returns its own time; if the client's
-physical component exceeds it by more than 24 hours, the client clamps future ticks toward server
-time and logs it. We never _reject_ a client's writes for skew — that would lose real learner data.
-
-### `local_day`
-
-```
-local_day = format(deviceLocalDate, 'YYYY-MM-DD')
-```
-
-Used because every day-boundary decision must work offline
-([scheduling.md](scheduling.md#day-boundaries)). Two devices in different timezones may briefly
-disagree about `reps_today`; that resolves on the next sync and is invisible to the learner because
-automaticity is recomputed from `lock_in_days` and today's counter, not from a synced total.
-
----
+The API currently returns `${serverTime}:0000:srv`; it does not maintain a logical server clock.
+That placeholder is adequate for development responses, not the final cursor/order source.
 
 ## Per-field LWW
 
-Each syncable row carries a `field_hlc` map:
+Every syncable field is classified in `FIELD_POLICY`. Current classes are:
 
-```jsonc
-// user_phrase.field_hlc
-{
-  "difficulty": "1721558400123:0007:d3f9a1",
-  "tags": "1721558100000:0002:d3f9a1",
-  "loved": "1721559000000:0001:a71c04", // set on another device
-  "srs_due": "1721559000000:0003:a71c04",
-}
-```
+| Class           | Rule                                                            |
+| --------------- | --------------------------------------------------------------- |
+| `lww`           | Higher HLC wins for learner-set scalar state.                   |
+| `max`           | Numerically greater value wins for monotonic values.            |
+| `latest-review` | The FSRS group follows the side with the later `srsLastReview`. |
+| `append-only`   | Rows union by primary key; an existing row is not field-merged. |
+| `tombstone`     | Deletion prevents resurrection by a concurrent edit.            |
 
-Merge rule, applied per field:
+The policy currently declares `user_phrase`, trip entities, settings, Refrain/streak days and the
+planned append-only log entities. Some declared entities have no SQLite table or client writer yet;
+policy declaration is preparation, not evidence that they sync.
 
-```
-if remote.field_hlc[f] > local.field_hlc[f]:  take remote value and its HLC
-else:                                          keep local
-```
+Two implementation details matter when extending this code:
 
-**Merge classes.** Not every field is LWW; the class is declared per field in
-`packages/core/src/sync/fieldPolicy.ts` and enforced in `loro-core::sync::merge_row`.
+- The API resolves every incoming field through the TypeScript policy and passes the resulting
+  classes to Rust. It rejects an unknown entity as `schema_unknown` and an undeclared field as
+  `VALIDATION_FAILED`; it does not guess LWW.
+- The Rust merge function has an internal LWW fallback if a class is absent. Callers must therefore
+  preserve the policy-validation boundary; invoking it directly with incomplete classes is unsafe.
 
-| Class             | Fields                                                                                | Rule                                                                         |
-| ----------------- | ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| **LWW**           | `difficulty`, `tags`, `loved`, `learned`, `note`, `cue_level`, `settings.*`, `trip.*` | Highest HLC wins                                                             |
-| **Max**           | `reps`, `plays`, `rung`, `lock_in_days`, `ax_*`, `stumbles`                           | `max(local, remote)` — monotonic, so never regresses                         |
-| **Latest-review** | `srs_stability`, `srs_difficulty`, `srs_due`, `srs_last_review`, `srs_state`          | Merged **as a group**, taking whichever side has the later `srs_last_review` |
-| **Append-only**   | `review_log`, `latency_sample`, `take`, `attempt`, `session`                          | No merge; union by primary key                                               |
-| **Tombstone**     | `deleted_at`                                                                          | A delete wins over a concurrent edit at any HLC                              |
+For `max`, equal numeric values do not replace the existing value. For latest-review, an incoming
+group without a later `srsLastReview` does not win. Keep an FSRS update complete as a group.
 
-Two of these deserve emphasis:
+## Current wire contract
 
-**Max, not LWW, for monotonic counters.** If device A is at `reps: 20` offline and device B does 3
-reviews reaching `reps: 18`, LWW on B's later HLC would _lower_ A's count. `max` cannot. And because
-`reps` is also derivable from `review_log`, the server periodically reconciles it as a background
-job — `max` is the fast path, the log is the truth.
-
-**FSRS fields merge as a unit.** Taking `stability` from one device and `due` from another would
-produce a scheduling state that no algorithm ever computed. The group rule keeps FSRS state
-internally consistent.
-
-**Delete wins.** A learner who removes a phrase on their phone must not have it resurrected by a
-stale edit from their tablet. The undo window ([functional-spec.md](../product/functional-spec.md))
-is local and pre-sync, so this doesn't fight undo.
-
----
-
-## The protocol
-
-Two endpoints. Full request/response shapes in [api.md](api.md#sync).
-
-```
-POST /v1/sync/push     outbox batch  → accepted seqs, server HLC
-POST /v1/sync/pull     since HLC     → changed rows, next cursor, server HLC
-```
-
-### Push
+Types currently live in `apps/api/src/sync/sync.service.ts`; there is no shared validated client/API
+schema yet. Field HLCs on the actual API wire are structured objects, not the encoded strings used
+by the local outbox interface:
 
 ```jsonc
 POST /v1/sync/push
 {
-  "device_id": "d3f9a1…",
   "client_hlc": "1721559000000:0003:d3f9a1",
-  "ops": [
-    {
-      "seq": 1042,
-      "entity": "user_phrase",
-      "entity_id": "up_8f2c…",
-      "op": "upsert",
-      "fields": {
-        "difficulty": { "v": "hard", "hlc": "1721558400123:0007:d3f9a1" },
-        "tags":       { "v": ["pron"], "hlc": "1721558400123:0008:d3f9a1" }
+  "ops": [{
+    "seq": 1042,
+    "entity": "user_phrase",
+    "entity_id": "up_8f2c",
+    "op": "upsert",
+    "fields": {
+      "difficulty": {
+        "v": "hard",
+        "hlc": { "physical": 1721558400123, "logical": 7, "node_id": "d3f9a1" }
       }
-    },
-    { "seq": 1043, "entity": "review_log", "entity_id": "rl_…", "op": "upsert", "fields": { … } }
-  ]
+    }
+  }]
 }
 ```
 
-```jsonc
-200
-{ "accepted": [1042, 1043], "rejected": [], "server_hlc": "1721559100000:0000:srv" }
-```
+Push accepts at most 500 operations. Each operation is processed independently; accepted sequence
+numbers, rejected operations, conflict field names, `server_hlc` and `server_time` are returned. A
+delete may omit fields and gets `deleted_at` from the request or current server time.
 
-- **Only changed fields are sent**, with their individual HLCs. A row with one changed field sends
-  one field.
-- Batches are capped at 500 ops / 512 KB. The outbox drains in `seq` order.
-- **Idempotent.** Re-pushing an already-applied op is a no-op — the HLC comparison makes it so.
-- `rejected` carries a reason per seq (`schema_unknown`, `entity_forbidden`). Rejected ops are moved
-  to a dead-letter table locally and reported, never silently dropped.
-
-### Pull
+Current gaps in input enforcement are deliberate facts to fix, not protocol promises: there is no
+shared Zod schema, no byte-size cap, no authenticated device id, limited primitive validation and no
+durable idempotency record beyond re-merging the current in-memory row.
 
 ```jsonc
 POST /v1/sync/pull
-{ "device_id": "d3f9a1…", "since": "1721550000000:0000:srv", "limit": 500 }
+{ "since": "1721550000000:0000:srv", "limit": 500 }
 ```
 
+The current implementation ignores both fields and returns all rows from the global repository:
+
 ```jsonc
-200
 {
-  "changes": [ { "entity": "user_phrase", "entity_id": "up_1a…", "fields": { … }, "deleted_at": null } ],
-  "next": "1721559100000:0002:srv",
+  "changes": [],
+  "next": "<placeholder server HLC>",
   "has_more": false,
-  "server_hlc": "1721559100000:0003:srv"
+  "server_hlc": "<another placeholder server HLC>",
 }
 ```
 
-The client applies changes through `loro-core::sync::merge_row` — the same function the server uses,
-so both sides always agree on the outcome.
+There is no `device_id` in the implemented request types. Add it only as part of authenticated
+device registration and a shared versioned wire schema.
 
-### Cadence
+## Local outbox reality
 
-| Trigger                                       | Behaviour                                          |
-| --------------------------------------------- | -------------------------------------------------- |
-| App foreground                                | Push then pull                                     |
-| Session end                                   | Push                                               |
-| Outbox exceeds 50 rows                        | Push                                               |
-| Every 15 min while foregrounded and connected | Push then pull                                     |
-| Connectivity regained                         | Push then pull                                     |
-| App background                                | Push once, best-effort, within the OS grace window |
-| Manual (Settings → Sync now)                  | Push then pull, with a visible result              |
+The SQLite outbox is ordered by autoincrement `seq`. It can return a bounded pending prefix,
+acknowledge accepted sequences, increment attempts/store the last error and compact queued upserts.
 
-**Never on the practice hot path.** Sync is a background concern; a rep never waits for it.
+Compaction is policy-aware:
 
-### Failure handling
+- LWW fields may replace an earlier queued value for the same row.
+- Max fields may fold by preserving the numeric maximum.
+- append-only, latest-review, tombstone, delete and unknown-policy operations are not lossily
+  folded.
+- compaction stops at the first unmergeable operation for a row so sequence semantics remain
+  understandable.
 
-| Failure                   | Behaviour                                                                                                        |
-| ------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| Network error / timeout   | Exponential backoff, 2s → 5m, jittered. Outbox retained                                                          |
-| 401                       | Refresh the token once, retry once, then require re-auth without losing the outbox                               |
-| 409 (schema too old)      | Prompt for an app update; sync pauses, local use continues                                                       |
-| 5xx                       | Backoff. After 5 failures, log once and stop retrying until the next foreground                                  |
-| Outbox older than 30 days | Log a warning event — this means sync has been broken silently                                                   |
-| Outbox above 10 000 rows  | Compact: collapse repeated upserts of the same `(entity, entity_id)` into one, keeping the highest HLC per field |
+The memory outbox does not compact and no current client flushes either implementation. Rejections
+are not moved to a dead-letter table because no such table or sync client exists.
 
-The outbox is never truncated to make sync succeed. Dropping a learner's data to fix a sync error is
-never the right trade.
+Most importantly, repository writes do not append automatically. The device integration must wrap
+the row mutation and outbox append in one driver transaction. Tests prove that this composition can
+commit and roll back atomically; live app code does not yet use it.
 
----
+## Required end-to-end flow
+
+When the missing client/server persistence work lands, the flow is:
+
+1. A single mobile mutation service ticks the persisted HLC and commits row fields plus outbox op in
+   one SQLite transaction.
+2. A background client reads the oldest bounded batch and pushes it with authenticated installation
+   identity.
+3. Only accepted sequences are acknowledged. Retryable failures remain queued; permanent schema
+   failures are quarantined without discarding unrelated operations.
+4. The client pulls a tenant-scoped durable cursor, applies every page through the same Rust merge,
+   persists the new cursor/HLC transactionally, and repeats while `has_more`.
+5. UI state is refreshed from local persistence. No screen waits for this cycle.
+
+Before step 4 can ship, catalog-phrase identity must be reconciled across devices. The API currently
+allows two row ids for the same learner/catalog phrase, while SQLite permits one live row for that
+pair. The shared contract must define a deterministic canonical id or a transactional merge of
+duplicate rows before insertion, and prove that independent fields, tombstones, and history survive.
+
+Foreground, connectivity regain and session end are sensible triggers; cadence/backoff values must
+be owned by the eventual background scheduler and tested against native OS limits rather than
+claimed here before implementation.
 
 ## First sign-in on a device with local data
 
-The anonymous-first flow ([prd.md](../product/prd.md) `F-02`) makes this the most delicate path in
-the protocol.
+Anonymous-to-account claim/merge is not implemented. The present repository has no user scope, so it
+cannot safely distinguish two learners or perform the documented “keep all local data” promise.
 
-```
-Anonymous learner has 120 local phrases, then signs in with Apple.
-```
+The eventual flow must authenticate every request, derive `user_id` server-side, register a stable
+device id, merge existing anonymous local rows without replacing them wholesale, and keep sign-out
+distinct from confirmed erase. Until then, do not expose current sync routes to untrusted clients.
 
-```
-1. Client sends anon_id with the auth request.
-2. Server looks up the account:
-   a) No existing account for that identity
-      → claim: bind anon_id to the new user. Push everything. Nothing merged, nothing lost.
-   b) Existing account with data
-      → MERGE. Push the whole local outbox (a full-state push for every local row),
-        then pull. Per-field LWW resolves overlaps; disjoint rows union.
-        Duplicate catalog phrases collapse on the (user_id, phrase_id) unique index,
-        keeping the row with the higher `reps`.
-3. Both directions complete before the UI reports "signed in".
-```
+## What must never sync
 
-**We never discard local data on sign-in.** Case (b) merges, even when it produces a slightly odd
-union (two rows' ratings resolved by timestamp). A learner who loses 120 phrases by signing in has
-been failed in a way no other bug matches.
+- recorded PCM, recorded files or uploadable recording paths;
+- local outbox bookkeeping;
+- reproducible audio/AI caches;
+- transient UI/session navigation state;
+- catalog delivery rows, which use the content-version mechanism.
 
-Sign-_out_ keeps local data and stops syncing. Sign-out-and-erase is a separate, confirmed action.
+Derived pronunciation/prosody numbers may sync only after their schema and privacy/retention rules
+exist. Merely listing an append-only entity in `FIELD_POLICY` does not authorise collection.
 
----
+## Extension invariants
 
-## What is not synced
+1. **One merge implementation.** Client and server call the Rust core; no TypeScript conflict-rule
+   fork.
+2. **Reject unknown policy.** Every field is classified before enqueue/accept; never default an
+   unknown field to LWW.
+3. **Preserve atomicity.** Local row, field HLC and outbox op commit together. Pulled rows,
+   receive-HLC and cursor also commit together.
+4. **Scope before persistence.** Server keys and queries include authenticated learner ownership;
+   never add Postgres behind today's global `(entity,id)` interface and call it complete.
+5. **Cursor from durable order.** A pull cursor must be stable, tenant-scoped and page without skips
+   or duplicates under concurrent pushes. Wall-clock strings alone are not sufficient evidence.
+6. **Keep retry lossless.** Ack only explicit accepts. Queue compaction follows merge classes; size
+   pressure never truncates learner writes.
+7. **Version one shared wire schema.** Client and API import the same validation/serialization
+   contract, including HLC representation and rejection codes.
+8. **Tombstones have lifecycle.** Define retention and device acknowledgement before garbage
+   collection; otherwise stale devices resurrect deletes.
+9. **Append-only means immutable identity.** Use collision-resistant client ids and union rows; do
+   not compact separate events.
+10. **Observe without private payloads.** Record counts, duration, age and conflicts, not learner
+    text or audio.
+11. **Reconcile duplicate phrase identities explicitly.** Two devices adding the same catalog phrase
+    must converge to the one-row SQLite invariant without `INSERT OR REPLACE`, lost fields,
+    resurrected tombstones, or duplicated history.
 
-| Not synced              | Why                                                                        |
-| ----------------------- | -------------------------------------------------------------------------- |
-| `outbox`                | Per-device by definition                                                   |
-| `audio_cache`           | Re-fetchable from the CDN                                                  |
-| `ai_cache`              | Re-fetchable; device-local                                                 |
-| `analytics_queue`       | Goes to the analytics pipeline, not sync                                   |
-| **Recorded audio**      | Never leaves the device ([ADR-0011](adr/0011-analytics-and-privacy.md))    |
-| Ephemeral session state | Meaningless on another device mid-session                                  |
-| Catalog tables          | Delivered by content sync, a separate mechanism ([api.md](api.md#content)) |
+<a id="testing"></a>
 
-`session`, `attempt`, and `latency_sample` **are** synced (append-only) — they're needed for
-cross-device progress and for the learning-quality telemetry that decides the loop question.
+## Current verification and missing tests
 
----
+Implemented tests cover HLC ordering/skew, Rust merge behaviour, field-policy coverage, API
+push/rejection/conflict behaviour and SQLite outbox semantics. The API E2E suite runs against the
+in-memory repository.
 
-## Observability
-
-Every sync emits `sync_completed` or `sync_failed` ([metrics.md](../product/metrics.md)) with
-`pushed`, `pulled`, `conflicts`, `duration_ms`.
-
-| Metric              | Alert                                                                      |
-| ------------------- | -------------------------------------------------------------------------- |
-| Conflict rate       | > 0.5% of merged rows — suggests a merge-class error, not real concurrency |
-| Sync failure rate   | > 2% of attempts                                                           |
-| Outbox age p95      | > 24 h                                                                     |
-| Push batch size p95 | > 400 ops — suggests sync is falling behind                                |
-| Rows rejected       | any sustained non-zero                                                     |
-
-A conflict-rate spike is the canary for a field being in the wrong merge class. Because merges run
-through one shared function, a fix is one change in `loro-core` and it corrects both sides.
-
----
-
-## Testing
-
-| Test                                                                                 | Location                                                             |
-| ------------------------------------------------------------------------------------ | -------------------------------------------------------------------- |
-| HLC monotonicity under clock jumps (backwards, forwards, equal)                      | `core-rs/tests/hlc.rs`                                               |
-| Merge commutativity and idempotency — `merge(a,b) == merge(b,a)` for LWW/Max classes | `core-rs/tests/merge.rs`                                             |
-| Every field has a declared merge class                                               | `core/src/sync/fieldPolicy.test.ts` (fails on an unclassified field) |
-| Two-device simulation: concurrent edits, partitions, reconvergence                   | `api/test/sync.e2e.ts`                                               |
-| Sign-in merge, both cases, with overlapping libraries                                | `api/test/claim-merge.e2e.ts`                                        |
-| Offline-for-30-days replay                                                           | `api/test/sync-replay.e2e.ts`                                        |
-| Outbox compaction correctness                                                        | `mobile/src/data/sync/compact.test.ts`                               |
-| Tombstone precedence over concurrent edits                                           | `core-rs/tests/merge.rs`                                             |
-
-The "every field has a declared merge class" test is the important one: it makes adding a field to
-`user_phrase` without thinking about sync a **build failure** rather than a subtle data-loss bug
-discovered by a learner.
+Still required are a mobile sync-client suite, shared wire-schema compatibility tests, tenant
+isolation, durable cursor pagination under concurrency, server restart/idempotency, anonymous claim,
+multi-device partition/reconvergence, tombstone collection and 30-day offline replay. Paths such as
+`core-rs/tests/merge.rs`, `api/test/claim-merge.e2e.ts` and `mobile/src/data/sync/compact.test.ts`
+do not exist and must not be cited as current coverage.

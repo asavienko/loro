@@ -7,7 +7,8 @@ Architecture: [mobile-app.md](../../docs/architecture/mobile-app.md) · Stack ra
 
 ## What's here
 
-8 of the blueprint's 21 screens — the complete core loop, and nothing beyond it:
+Seven of the v1.1 design package's 23 learner screens, plus the app shell — the demonstrable core
+loop:
 
 | Route              | Screen                                                                      |
 | ------------------ | --------------------------------------------------------------------------- |
@@ -20,23 +21,26 @@ Architecture: [mobile-app.md](../../docs/architecture/mobile-app.md) · Stack ra
 | `progress`         | Mastery, ladder, and the rollup from those tags                             |
 | `_layout`          | Router shell + toast host                                                   |
 
-The other 13 — the prosody and pronunciation labs, the Roguelike Run, trips, settings — are
-specified in [screen-catalog.md](../../docs/design/screen-catalog.md) and not built.
+The other 16 learner screens — chat, the prosody and pronunciation labs, the Run, trips, settings —
+are authored. The original 21 are in [screen-catalog.md](../../docs/design/screen-catalog.md); plan
+79 owns registration of the two v1.1 chat screens.
 
 ## Run it
 
 ```bash
-pnpm --filter @loro/mobile ios          # or android
-pnpm --filter @loro/mobile ios --device # do this on day one
-pnpm --filter @loro/mobile bundle       # no simulator: just prove it compiles
-pnpm test:e2e                           # all implemented routes through Expo Web
+pnpm --filter @loro/mobile bundle       # no simulator: prove the app compiles
+pnpm test:e2e                           # all implemented routes/states through Expo Web
+cd apps/mobile && npx expo start --web  # fastest way to inspect current screens
 ```
 
-**The simulator lies about audio sessions, microphone behaviour, and interruptions**, and those are
-half of what this app does. Test on hardware.
+Native `ios`/`android` projects and dev clients do not exist yet; plan 58 owns that substrate.
 
-`bundle` runs `expo export` — Metro resolution plus Hermes bytecode, which is what CI gates on. It
-catches the resolution failures that `typecheck` cannot see, and it needs no simulator.
+When native audio and speech arrive, test them on hardware: simulators do not faithfully reproduce
+audio sessions, microphone behaviour, routing, lock-screen playback, or interruptions.
+
+`bundle` runs an iOS `expo export`. It proves that Metro can resolve and emit the production bundle,
+which catches failures that `typecheck` cannot see. It does not compile a native project, exercise
+Hermes on a device, or prove that an Expo Module links.
 
 Setup: [onboarding.md](../../docs/process/onboarding.md).
 
@@ -44,28 +48,33 @@ The browser suite lives in [`e2e/`](e2e/README.md). Run `pnpm test:e2e:install` 
 the tests then start Expo themselves and exercise the learner-visible flow at a phone viewport. They
 complement, rather than replace, native device checks.
 
-## Layers — enforced, not conventional
+## Current shape
 
 ```
-app/            routes (Expo Router). Screens compose features; no logic
-src/features/   screen-level components + view models
-src/engines/    practice engines — HEADLESS, unit-testable without a renderer
-src/domain/     phrases · trips · progress · content · settings
-src/data/       Drizzle schema · repositories · outbox · sync
-src/platform/   native bridges: audio · speech · core · widgets · ocr
-src/ui/         design system: tokens · primitives · components · charts
-src/lib/        pure helpers
+app/                  seven learner routes plus the root layout
+src/store/            in-memory app state, actions, selectors, and engine adapters
+src/data/             Node SQLite driver used only by persistence tests
+src/ui/primitives/    domain-free controls and layout
+src/ui/components/    reusable domain-aware composites
+src/lib/              copy, clock, IDs, and formatting helpers
+packages/core/        domain types, Stream/Refrain engines, persistence, sync policy
 ```
 
-A layer may only import from layers below it, and an ESLint `no-restricted-imports` rule fails the
-build otherwise. Two extra rules:
+Routes currently own their screen-specific hooks and named components. Reuse moves downward:
+domain-free pieces go in `src/ui/primitives/`, while a component used by multiple screens and typed
+with `@loro/core` domain values goes in `src/ui/components/`. The latter never reads the store or
+the copy catalog. `ToastHost` is the deliberate shell adapter that does both.
 
-- **`src/ui/` imports nothing from above it.** A design-system component that knows what a phrase is
-  belongs in `src/ui/components` (domain types only) or in `src/features`.
-- **`src/engines/` never imports `react`, `react-native`, or `src/platform/`.** Engines receive
-  capabilities through `EngineContext`. That's what makes the pedagogy testable without a simulator.
+ESLint enforces the boundaries that have corresponding folders today, as well as the colour, clock,
+secure-storage, and learner-copy rules. The fuller `features/domain/data/platform` layering in
+[mobile-app.md](../../docs/architecture/mobile-app.md) is the migration target, not a description of
+directories already present.
 
-## Native code
+Practice engines already live in `@loro/core` and are headless. Mobile assembles their
+`EngineContext` in `src/store/engines.ts`; the current repository adapter reads the Zustand phrase
+array, and `src/store/coreFacade.ts` is a temporary JavaScript stand-in for the unwired Rust bridge.
+
+## Native code (target; not present yet)
 
 ```
 modules/loro-audio/     playback · capture · rate · routing · interruptions · lock screen
@@ -86,7 +95,7 @@ understanding before touching it:
 That's how the on-screen privacy promise is kept structurally rather than by remembering not to
 break it ([ADR-0011](../../docs/architecture/adr/0011-analytics-and-privacy.md)).
 
-## State — three tiers, no overlap
+## State target — three tiers, no overlap
 
 | Tier          | Holds                                       | Mechanism                             |
 | ------------- | ------------------------------------------- | ------------------------------------- |
@@ -94,35 +103,50 @@ break it ([ADR-0011](../../docs/architecture/adr/0011-analytics-and-privacy.md))
 | **Session**   | current rep, revealed words, engine phase   | Zustand, persisted per transition     |
 | **Ephemeral** | sheet open, toast, scroll, animation values | React state / Reanimated              |
 
-Durable state is **read, never mirrored**. There is no phrase array in a store, and no "refresh"
-function. A write goes through a repository (row + outbox in one transaction) and live queries push
-it to every subscriber — which is why re-rating a phrase in the stream instantly updates the
-Progress histogram with no code connecting them
-([ADR-0012](../../docs/architecture/adr/0012-state-management.md)).
+The schema, migrations, repositories, and outbox exist in `@loro/core` and are tested through the
+Node driver against real SQLite. The running app does not open them: all app data, including
+onboarding, phrases, progress days, and today's frozen Refrain set, lives only in Zustand and is
+lost on reload. Plan 59 adds the device driver, hydration, repository-backed writes, and session
+resume; only then does the three-tier table become true.
 
 ## The checks that block merge
 
 ```bash
-pnpm --filter @loro/mobile check:lang              # Spanish text carries lang="es-ES"
-pnpm --filter @loro/mobile check:chart-summaries   # every chart has a visible text summary
-pnpm --filter @loro/mobile check:tap-targets       # >= 44x44
-pnpm --filter @loro/mobile bundle                  # Metro resolves; Hermes accepts
+pnpm check                              # lint, types, unit tests, content and static a11y
+pnpm test:e2e                           # routes, states, flows, a11y and text scale
+pnpm --filter @loro/mobile bundle       # Metro resolves a production iOS export
 ```
 
-The first two matter most, because both are easy to forget on a new screen and both are invisible to
-a sighted developer testing by hand.
+The mobile part of `pnpm check` includes `check:lang`, `check:chart-summaries`, `check:tap-targets`,
+and `check:copy`. The browser suite is intentionally separate because it needs Chromium, but
+learner-visible work is not complete until it is green.
 
 Two more gates are specified but **not implemented**: bundle size against a committed baseline, and
 Dynamic Type snapshots at five scale steps. Both need a baseline to compare against, so they land
 with the first release build rather than now.
 
-## Three things to know before writing a screen
+## Extend the app without creating a second architecture
 
-1. **Open the blueprint.** `Language Learning by Phrases/Loro.dc.html` is executable spec. Each
-   screen's `DCLogic.renderVals()` is a complete view model, and the `sc-if` flags enumerate every
-   visual state that exists. [screen-catalog.md](../../docs/design/screen-catalog.md) maps them.
-2. **Every list row that shows a phrase opens phrase detail.** No exceptions across the whole app —
-   that consistency is what makes it feel like one object graph rather than 21 screens.
-3. **The warming card is the canary.** The Refrain's colour transition _is_ the product's core
-   feedback signal. It runs on the UI thread via Reanimated `interpolateColor`, never a re-render
-   per band, and it's checked at 60 fps on the device floor every release.
+1. **Open the blueprint.** `design/Language Learning by Phrases - V1.1/Loro.dc.html` is executable
+   spec. Each screen's `DCLogic.renderVals()` is a complete view model, and the `sc-if` flags
+   enumerate every visual state that exists.
+   [screen-catalog.md](../../docs/design/screen-catalog.md) maps them.
+2. **Add copy first.** Learner-facing text belongs in `src/lib/copy.ts`, including interpolated and
+   accessibility strings. Route literals fail `check:copy`.
+3. **Compose the route locally.** Keep one-use blocks as named components in the route. Promote a
+   component only at its second call site, to `ui/primitives` if domain-free or `ui/components` if
+   it accepts domain types.
+4. **Keep practice logic headless.** Extend the contracts and engines in `@loro/core`; inject clock,
+   repository, flags, and core maths through `EngineContext`. A route records an attempt and sends
+   the resulting `ProgressDelta` through `applyDelta`—it never edits progress fields itself.
+5. **Describe every state once.** Add each learner-visible state to `e2e/states.ts` in the same
+   change. The manifest gives it route coverage, axe coverage, and 200%/310% text-scale coverage;
+   add focused behavior assertions in the route's spec as well.
+6. **Do not build against a future dependency.** Native audio, ASR, Rust bindings, device SQLite,
+   Skia, widgets, and notifications need their planned substrate and platform wrappers first. Keep
+   an honest unavailable state until the real capability exists; never fabricate a score or delay.
+
+Every phrase row still opens phrase detail. The warming card is also still the performance canary,
+but today its band colour is selected during a React render and gradient bands fall back to a solid
+colour. The target is a measured UI-thread transition after Reanimated/Skia work lands; do not cite
+the current screen as evidence that animation or 60 fps has been implemented.

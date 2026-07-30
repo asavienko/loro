@@ -10,6 +10,39 @@ Most apps only instrument #1. Loro's differentiators live in #2 and #3.
 
 ---
 
+## Implementation boundary (current repository)
+
+This is the production observability design, not a description of a deployed stack.
+
+- The mobile app has no Sentry (or equivalent) SDK, analytics client, allowlist, event queue,
+  diagnostics ring buffer, performance collector, or Rust-panic reporting bridge. The empty
+  `EXPO_PUBLIC_SENTRY_DSN` example only reserves configuration.
+- The API uses Nest's console logger and a global RFC 9457 exception filter. It has health and sync
+  status endpoints, but no request correlation, structured allowlist logger, OpenTelemetry, metrics
+  exporter, analytics ingest, dashboards, or alert routing.
+- Sync currently uses an in-memory repository. There is no client sync worker or mobile outbox
+  integration producing the outbox-age, conflict, claim, or merge signals described below.
+- The learning metrics can be derived from domain records once persistence and consented analytics
+  exist; there is currently no collection or warehouse path.
+
+Examples, sampling rates, dashboards, SLOs, and alerts below are target contracts. They must not be
+used as operational evidence until the producing path, privacy filter, backend sink, and alert test
+all exist.
+
+### Prerequisites for instrumentation
+
+Start with a shared event catalog and a fail-closed property allowlist, covered by tests that feed
+it phrase text, notes, transcripts, tokens, and audio-like values and prove they are rejected
+**before queueing**. Add consent/opt-out and bounded local retention before adding any transport.
+Crash reporting must disable attachments and default SDK data collection explicitly; native and Rust
+events need the same scrubber as JavaScript events.
+
+On the server, introduce correlation ids and structured allowlisted logging before traces or domain
+metrics, then instrument actual persistence/sync boundaries rather than the current in-memory
+stand-in. Each alert needs a synthetic or runbook test that demonstrates both that the signal fires
+and that forbidden payload data is absent. The audio-egress control also needs enforcement at the
+native module's network boundary; a dashboard query alone is not prevention.
+
 ## Client
 
 ### Crash and error reporting
@@ -62,6 +95,8 @@ Sampled at 10% of sessions, aggregated client-side, sent as events:
 Budgets and gates: [performance.md](performance.md).
 
 ---
+
+<a id="sync-observability--the-highest-consequence-signal"></a>
 
 ## Sync observability — the highest-consequence signal
 

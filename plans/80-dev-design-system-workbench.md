@@ -3,7 +3,7 @@
 - **Requirement IDs:** `F-05`, `F-06`, `LB-25`…`LB-28`; developer-only acceptance contract
 - **Milestone:** M1
 - **Status:** Not started
-- **Depends on:** 53 generated-token completion; coordinates with 57 runtime design system
+- **Depends on:** 53 ✅ generated-token completion; coordinates with 57 runtime design system
 
 ## Outcome
 
@@ -14,8 +14,8 @@ unreachable and unadvertised in production builds.
 
 ## Current state and boundary
 
-`@loro/design-tokens` already generates TypeScript, Swift, and Kotlin output, and plan 53 is
-completing typography, motion, layout, and control generation. Plan 57 owns runtime fonts, themes,
+`@loro/design-tokens` already generates TypeScript, Swift, and Kotlin output, and completed plan 53
+landed typography, motion, layout, and control generation. Plan 57 owns runtime fonts, themes,
 motion, haptics, and reusable component implementation. This plan does not create a second token
 source or duplicate the broad component-gallery work in plan 57: it builds the dev surface that
 renders plan 57's production components and plan 53's generated values.

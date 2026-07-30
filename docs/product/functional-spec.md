@@ -7,33 +7,62 @@ prototype actually resolves.
 Each screen section carries its blueprint anchor. **Open the blueprint and interact with the screen
 before implementing it.** The prototype is executable spec; the prose below is a summary of it.
 
-**Contents**
+**Contents and implementation status (2026-07-30)**
 
-| #                                        | Screen             | Loop | Rel  |
-| ---------------------------------------- | ------------------ | ---- | ---- |
-| [1](#1-onboarding)                       | Onboarding         | —    | v1   |
-| [2](#2-add-phrases)                      | Add phrases        | —    | v1   |
-| [3](#3-phrase-detail)                    | Phrase detail      | —    | v1   |
-| [4](#4-adaptive-stream)                  | Adaptive stream    | all  | v1   |
-| [5](#5-speak-to-progress)                | Speak to progress  | A    | v1   |
-| [6](#6-review-session)                   | Review session     | A    | v1.1 |
-| [7](#7-roleplay)                         | Roleplay           | A+   | v1.1 |
-| [8](#8-memory-model)                     | Memory model       | A+   | v1.1 |
-| [9](#9-pronunciation-lab)                | Pronunciation lab  | A+   | v1.1 |
-| [10](#10-prosody-lab)                    | Prosody lab        | A+   | v1.1 |
-| [11](#11-today--the-ritual)              | Today — the ritual | B    | v1   |
-| [12](#12-the-refrain)                    | The Refrain        | B    | v1   |
-| [13](#13-the-run)                        | The Run            | C    | v2   |
-| [14](#14-phrasebook--collection--ladder) | Phrasebook         | C    | v2   |
-| [15](#15-progress)                       | Progress           | —    | v1   |
-| [16](#16-set-the-arrival)                | Set the arrival    | Trip | v1   |
-| [17](#17-countdown-home)                 | Countdown home     | Trip | v1   |
-| [18](#18-daily-drop)                     | Daily drop         | Trip | v1   |
-| [19](#19-lock-screen-widget)             | Lock screen widget | Trip | v1   |
-| [20](#20-survival-mode)                  | Survival mode      | Trip | v1   |
-| [21](#21-souvenir)                       | Souvenir           | Trip | v1   |
+`Built` means an Expo route exists; it does not mean every target behaviour in that section is
+complete. `Planned` means the section specifies future behaviour and has no current learner route.
+
+| #                                        | Screen             | Loop | Rel  | Repository status           |
+| ---------------------------------------- | ------------------ | ---- | ---- | --------------------------- |
+| [1](#1-onboarding)                       | Onboarding         | —    | v1   | Built · `/onboarding`       |
+| [2](#2-add-phrases)                      | Add phrases        | —    | v1   | Built · `/add`              |
+| [3](#3-phrase-detail)                    | Phrase detail      | —    | v1   | Built · `/phrase/[id]`      |
+| [4](#4-adaptive-stream)                  | Adaptive stream    | all  | v1   | Built · `/practice/stream`  |
+| [5](#5-speak-to-progress)                | Speak to progress  | A    | v1   | Planned                     |
+| [6](#6-review-session)                   | Review session     | A    | v1.1 | Planned                     |
+| [7](#7-roleplay)                         | Roleplay           | A+   | v1.1 | Planned                     |
+| [8](#8-memory-model)                     | Memory model       | A+   | v1.1 | Planned                     |
+| [9](#9-pronunciation-lab)                | Pronunciation lab  | A+   | v1.1 | Planned                     |
+| [10](#10-prosody-lab)                    | Prosody lab        | A+   | v1.1 | Planned                     |
+| [11](#11-today--the-ritual)              | Today — the ritual | B    | v1   | Built · `/`                 |
+| [12](#12-the-refrain)                    | The Refrain        | B    | v1   | Built · `/practice/refrain` |
+| [13](#13-the-run)                        | The Run            | C    | v2   | Planned                     |
+| [14](#14-phrasebook--collection--ladder) | Phrasebook         | C    | v2   | Planned                     |
+| [15](#15-progress)                       | Progress           | —    | v1   | Built · `/progress`         |
+| [16](#16-set-the-arrival)                | Set the arrival    | Trip | v1   | Planned                     |
+| [17](#17-countdown-home)                 | Countdown home     | Trip | v1   | Planned                     |
+| [18](#18-daily-drop)                     | Daily drop         | Trip | v1   | Planned                     |
+| [19](#19-lock-screen-widget)             | Lock screen widget | Trip | v1   | Planned · native surface    |
+| [20](#20-survival-mode)                  | Survival mode      | Trip | v1   | Planned                     |
+| [21](#21-souvenir)                       | Souvenir           | Trip | v1   | Planned                     |
 
 Plus: [Permissions](#permissions) · [Global behaviours](#global-behaviours)
+
+---
+
+## Keeping specification, routes, and states aligned
+
+The current app has 7 learner routes and 20 declared learner-visible browser states. The exact
+route-to-state inventory is maintained in
+[`screen-catalog.md`](../design/screen-catalog.md#current-implementation-and-browser-coverage), and
+the executable manifest is [`apps/mobile/e2e/states.ts`](../../apps/mobile/e2e/states.ts).
+
+When functionality grows, extend these three layers together:
+
+- Describe the state and its transitions in the appropriate numbered section here. Preserve the
+  section number: it maps to the authored 21-screen blueprint, not to implementation order.
+- Add the Expo route if the screen is new. A route file alone is not functional coverage.
+- Add a manifest entry for each materially different learner-visible state in the same change. This
+  includes sheets/dialogs, empty and not-found views, permission fallbacks, completion states, and
+  drilled sub-views. Give each entry a unique stable name, its actual route, a reference to the
+  correct section here, and a learner-reachable interaction path.
+- Update the catalog's current-inventory table whenever a route or manifest state changes, and run
+  `pnpm test:e2e`. Its route guard, accessibility suite, and text-scale suite all consume the state
+  manifest.
+
+The manifest's `spec` field is traceability metadata and uses the canonical headings in this file:
+Onboarding §1, Add §2, Phrase detail §3, Adaptive stream §4, Today §11, Refrain §12, and Progress
+§15. Update those references in the same change if a heading is deliberately renumbered.
 
 ---
 
@@ -473,8 +502,9 @@ _"Leveled up — a cue just dropped / Next time you get less help. That's the po
 5. **Result card** — melody score (band-coloured), a `↑ +N clearer than last time` delta chip, a
    verdict (`Native-like melody` ≥85 / `Getting closer` ≥75 / `Keep shaping it`), the phrase's
    coaching note, and a sparkline of the last 6 takes.
-6. **Playback row** — `Native` · `My take` · **`Hear myself, perfectly`** (v2 — generates a
-   voice-converted rendition; states: idle → `Generating your voice…` → `Playing — in your voice`).
+6. **Playback row** — `Native` · `My take`. The authored **`Hear myself, perfectly`**
+   voice-conversion control is excluded: it cannot be implemented by uploading a learner recording.
+   It may be reconsidered only if a real on-device implementation can keep the privacy promise.
 7. **Remediation** — when the take is weak: _"Let's nail this — a quick drill on the part that
    slipped."_
 
@@ -485,10 +515,12 @@ _"Leveled up — a cue just dropped / Next time you get less help. That's the po
 
 - Cue level is **per phrase**, persisted, and never decreases within a session.
 - The timer at cue 2–3 is a soft nudge; expiry does not fail the attempt.
-- Voice cloning requires explicit opt-in and is the only path on which recorded audio may leave the
-  device ([security-privacy.md](../architecture/security-privacy.md)).
+- Recorded audio never leaves the device. Consent is not an exception
+  ([security-privacy.md](../architecture/security-privacy.md)).
 
 ---
+
+<a id="11-today--the-ritual"></a>
 
 ## 11. Today — the ritual
 
@@ -629,6 +661,8 @@ On success the target phrase's rung increments (capped at Deployed), `stale` res
 `stumbles` decrements by 1 (floor 0).
 
 ---
+
+<a id="14-phrasebook--collection--ladder"></a>
 
 ## 14. Phrasebook — Collection & ladder
 
@@ -811,11 +845,12 @@ Requested **in context only**, never at launch:
 - **Toasts** — dark pill, bottom-centred, `popIn` 300 ms, 1.7 s (informational) or 2.6 s (with
   Undo). One at a time; a new toast replaces the current one.
 - **Tap feedback** — every interactive element scales on press (0.98 for rows/cards, 0.90 for icon
-  buttons) and icon buttons have a 44×44 hit area regardless of visual size. Minimum tap target
-  40×40. See [motion.md](../design/motion.md).
+  buttons) and every interactive target has a minimum 44×44 hit area regardless of visual size. See
+  [motion.md](../design/motion.md).
 - **Audio playback is exclusive** — starting any utterance cancels the current one.
-- **Every list row that shows a phrase opens [Phrase detail](#3-phrase-detail)** on tap. No
-  exceptions; this is what makes the app feel like one object graph rather than several screens.
+- **Every owned/library row that represents an existing learner phrase opens
+  [Phrase detail](#3-phrase-detail)** on tap. Discovery suggestions may instead open the Add tagging
+  sheet because the phrase does not exist in the learner library yet.
 - **Every rating control anywhere writes to the same phrase record** and is reflected everywhere
   immediately.
 - **No modal blocks audio.** The stream keeps playing behind sheets and navigation.

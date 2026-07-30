@@ -1,6 +1,8 @@
 # @loro/api
 
-The Loro backend. NestJS, Postgres, Redis.
+The implemented Loro backend skeleton: NestJS over an in-memory sync repository, the bundled
+catalog, the shared Rust/WASM merge, and bundled AI scenes. Postgres, Redis, auth, TTS, billing,
+accounts, analytics, queues, and live providers are target architecture, not running modules.
 
 Architecture: [backend.md](../../docs/architecture/backend.md) · Contract:
 [api.md](../../docs/architecture/api.md) · Rationale:
@@ -10,10 +12,12 @@ Architecture: [backend.md](../../docs/architecture/backend.md) · Contract:
 
 Four jobs, and **none of them is running a practice session**:
 
-1. **Arbitrate sync** — apply per-field merge rules using the _same_ implementation as the client.
-2. **Distribute content** — versioned catalog, diffs, packs, signed CDN URLs.
-3. **Proxy AI and TTS** — with caching, budgets, rate limits, and output validation.
-4. **Verify purchases** and resolve entitlements.
+1. **Arbitrate sync** — implemented for one process, using the same Rust/WASM merge as the client.
+2. **Distribute content** — implemented from the bundled catalog; version history and object storage
+   are not implemented.
+3. **Proxy AI and TTS** — only the AI scene provider seam, bundled scenes, and scene validation are
+   implemented. There is no live AI call or TTS module.
+4. **Verify purchases and resolve entitlements** — planned, not implemented.
 
 A learner can practise for weeks with this service unreachable
 ([overview.md](../../docs/architecture/overview.md#the-ten-rules), rule 2). That's why the
@@ -22,18 +26,20 @@ availability SLO is a modest 99.9% and why best-effort out-of-hours on-call is d
 ## Run it
 
 ```bash
-pnpm core-rs:build              # once — the WASM merge; the service needs it
+pnpm core-rs:build              # once — sync and production startup need the WASM merge
 pnpm --filter @loro/api dev     # tsx watch
 curl localhost:3000/v1/health/ready
 ```
 
-No database required yet: **persistence is not wired**. The sync store is an in-memory `Map`, so it
-empties on restart. The merge semantics it enforces are already the real ones — the same Rust code
-the client runs — which is the part worth getting right first. Postgres, Redis, and MinIO are in
-`docker compose` (`pnpm --filter @loro/api dev:up`) ready for when the repository layer lands.
+No database is read by the service yet. The sync store is an in-memory `Map`, so it empties on
+restart and is neither authenticated nor user-scoped. `docker compose` can start Postgres, Redis,
+and MinIO (`pnpm --filter @loro/api dev:up`), but today the API does not connect to them. Plan
+[66](../../plans/66-backend-contract-data-and-security.md) owns shared wire schemas, Postgres, and a
+deployable image; plans [67](../../plans/67-anonymous-auth-and-account-lifecycle.md) and
+[68](../../plans/68-sync-and-offline-convergence.md) add identity and safe convergence.
 
-**AI and TTS are stubbed locally** (`AI_PROVIDER=stub`). No credentials needed, no cost, works
-offline — and the bundled fallback path stays exercised.
+**AI scenes are stubbed locally** (`AI_PROVIDER=stub`). No credentials are needed, there is no cost,
+and the bundled fallback path stays exercised. There is no TTS implementation yet.
 
 ### The endpoints that exist
 
@@ -41,16 +47,18 @@ offline — and the bundled fallback path stays exercised.
 | ------ | ---------------------- | --------------------------------------------------------------- |
 | `GET`  | `/v1/health`           | Liveness                                                        |
 | `GET`  | `/v1/health/ready`     | Readiness — **503 if the WASM merge is missing**                |
-| `GET`  | `/v1/content/manifest` | 31 phrases, 12 packs, 5 scenarios                               |
+| `GET`  | `/v1/content/manifest` | Bundled catalog; counts come from `@loro/content`               |
 | `GET`  | `/v1/content/diff`     | `?from=<version>`                                               |
 | `GET`  | `/v1/content/pack`     | `?id=<pack>`                                                    |
 | `POST` | `/v1/sync/push`        | Per-field merge; rejects any field with no declared merge class |
-| `POST` | `/v1/sync/pull`        |                                                                 |
+| `POST` | `/v1/sync/pull`        | Currently returns every in-memory row; ignores cursor and limit |
 | `POST` | `/v1/sync/status`      | Diagnostic: is the shared Rust merge loaded?                    |
 | `POST` | `/v1/ai/scene`         | Roleplay scene, validated before it can reach a learner         |
 | `GET`  | `/v1/ai/themes`        |                                                                 |
 
-`src/sync/sync.e2e.test.ts` drives all of these over HTTP against a real Nest app.
+`src/sync/sync.e2e.test.ts` drives representative health, content, sync, error, and AI behavior over
+HTTP against a real Nest app. Controller/service unit suites cover additional cases. There is no
+auth, tenant isolation, persistence, rate limiting, streaming, or external-service E2E coverage yet.
 
 ### Build
 
@@ -76,64 +84,63 @@ rating, a note, or a rep count ([ADR-0002](../../docs/architecture/adr/0002-shar
 
 That's also why `packages/core/src/sync/` requires **two reviewers**, one from each side.
 
-## Modules
+## Implemented modules
 
 ```
 src/
-├── auth/       apple · google · magic link · refresh rotation · anonymous claim
-├── sync/       push/pull — thin, because the logic is in loro-core
-├── content/    manifest · diff · packs · signed CDN URLs
-├── ai/         Claude proxy: rate limit → budget → cache → validate → fallback
-├── tts/        render on demand · voice-clone (the ONLY endpoint accepting audio)
-├── billing/    receipt verification, entitlements with an offline grace period
-├── account/    export (GDPR) · deletion (hard cascade, verified)
-├── analytics/  ingest → warehouse
-├── health/
-└── workers/    content-build · tts-render · enrich · reconcile · analytics-etl · notify
+├── ai/         bundled scene provider · validation · provider registry
+├── common/     clock · environment access · RFC 9457 problem mapping/filter
+├── content/    manifest · whole-catalog diff · pack-by-query from @loro/content
+├── health/     liveness · WASM-aware readiness
+└── sync/       push/pull/status · WASM adapter · in-memory repository
 ```
 
-Workers run from this same image with a different entrypoint. They share the domain types and DB
-layer, but a slow content build must never contend with a learner's sync request.
+The intended auth, TTS, billing, account, analytics, persistence, cache, queue, and worker modules
+are specified in [backend.md](../../docs/architecture/backend.md). Add them as separate modules at
+their boundary; do not make existing controllers pretend those dependencies already exist.
 
 **Two things are chosen in `src/app.module.ts` and nowhere else**, so swapping either is a new file
 plus one line there rather than an edit to the logic that uses it:
 
-| Seam                                       | Today                                       | Next                              |
-| ------------------------------------------ | ------------------------------------------- | --------------------------------- |
-| `SYNC_REPOSITORY` (`sync.repository.ts`)   | `InMemorySyncRepository` — a `Map`, per app | Postgres, via plans/13            |
-| `SCENE_PROVIDERS` (`ai/scene-provider.ts`) | `StubSceneProvider` — the bundled catalog   | Claude, via plans/26 and plans/45 |
+| Seam                                       | Today                                       | Next                                 |
+| ------------------------------------------ | ------------------------------------------- | ------------------------------------ |
+| `SYNC_REPOSITORY` (`sync.repository.ts`)   | `InMemorySyncRepository` — a `Map`, per app | User-scoped Postgres via plans 66–68 |
+| `SCENE_PROVIDERS` (`ai/scene-provider.ts`) | `StubSceneProvider` — bundled scenes        | Guarded live provider via plan 76    |
 
 A provider registers under the `AI_PROVIDER` value that selects it, and `AiService` keys them by
 name — so a second provider is never a second branch. An `AI_PROVIDER` naming a provider that isn't
 registered logs a warning and serves the bundled scene, which is the documented posture for every AI
 path: degrade loudly in the log, silently to the learner.
 
-## Rules
+## Rules: enforced now versus required next
 
-- **Every query is scoped by `user_id`**, and the repository layer requires it as a parameter. There
-  is no `db.query` reachable from a controller, so a cross-tenant read is a compile-time
-  impossibility rather than a review concern.
-- **Validation uses the Zod schemas from `@loro/core`**, shared with the client, so the contract
-  cannot drift.
-- **No PII in logs.** Structured logging with an allowlist. `user_id` only, never email.
-- **`POST /tts/voice-clone` is the only endpoint that accepts learner audio.** Consent-gated,
-  per-use, and `retained: false` is a contract verified by a test that the temp file is gone after
-  the request ([ADR-0011](../../docs/architecture/adr/0011-analytics-and-privacy.md)).
-- **AI budgets fail silently to bundled fallbacks.** A learner should not be able to tell.
-- **Migrations are expand → migrate → contract**, so a deploy is never coupled to a client release.
+- **Not yet user-scoped:** `SyncRepository` keys rows by `(entity, id)`, and `pull()` returns all
+  rows. Do not expose this service to multiple learners. Plan 68 must change the repository contract
+  to require server-derived user scope and cursor paging.
+- **Not yet single-sourced:** controllers use local TypeScript interfaces and explicit checks, not
+  shared Zod wire schemas. Plan 66 must move request/response validation to `@loro/core` and apply
+  it at every transport boundary.
+- **Logging hardening is still required:** current code does not intentionally log request bodies,
+  but there is no structured redaction allowlist yet. Add it before auth, accounts, or live
+  providers introduce more sensitive values.
+- **No endpoint accepts learner audio, now or in the current target.** Recorded audio never leaves
+  the device; a server voice-clone route would violate ADR-0011 and must not be added.
+- **AI fallback is implemented; budgets, cache, rate limits, repair, and live providers are not.**
+- **Migrations do not exist yet.** When persistence lands, use expand → migrate → contract.
 
 ## Tests
 
 ### Written
 
-| Test                            | What it holds down                                                                        |
-| ------------------------------- | ----------------------------------------------------------------------------------------- |
-| `src/sync/sync.e2e.test.ts`     | Every endpoint over HTTP against a real Nest app, including the `max`-vs-later-clock case |
-| `src/sync/merge.wasm.test.ts`   | The five merge classes, run through the actual WASM build the client uses                 |
-| `src/sync/sync.service.test.ts` | The push guards without HTTP: the op cap, an unknown entity, an undeclared field          |
-| `src/common/errors.test.ts`     | Problem details: every code's status, member order, and that nothing internal leaks       |
-| `src/ai/scene.test.ts`          | The pedagogical invariants — above all, exactly one `best` option per turn                |
-| `src/ai/ai.service.test.ts`     | An invalid scene never reaches a learner; an unregistered provider degrades, not 500s     |
+| Test                                     | What it holds down                                                                        |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `src/sync/sync.e2e.test.ts`              | Representative endpoints over HTTP, including readiness and the `max`-vs-later-clock case |
+| `src/content/content.controller.test.ts` | Pack response order/bytes and unknown-pack error contract                                 |
+| `src/sync/merge.wasm.test.ts`            | The five merge classes, run through the actual WASM build the client uses                 |
+| `src/sync/sync.service.test.ts`          | The push guards without HTTP: the op cap, an unknown entity, an undeclared field          |
+| `src/common/errors.test.ts`              | Problem details: every code's status, member order, and that nothing internal leaks       |
+| `src/ai/scene.test.ts`                   | The pedagogical invariants — above all, exactly one `best` option per turn                |
+| `src/ai/ai.service.test.ts`              | An invalid scene never reaches a learner; an unregistered provider degrades, not 500s     |
 
 ### Planned — these do not exist yet
 

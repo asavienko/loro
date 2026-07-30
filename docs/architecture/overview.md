@@ -2,6 +2,12 @@
 
 The system end to end. Read this before any other architecture document.
 
+> **Target architecture, not current inventory.** As of 2026-07-30 the repository implements the
+> Expo routes/UI/store, shared TypeScript engines and local persistence library, Rust host/WASM
+> core, content bundle, and an in-memory Nest API. Native modules/projects, on-device SQLite wiring,
+> Postgres/auth/sync client, independent content delivery, and most screens shown below are planned.
+> See [`../../plans/README.md`](../../plans/README.md) for the implementation order.
+
 ---
 
 ## Forces
@@ -9,17 +15,17 @@ The system end to end. Read this before any other architecture document.
 What actually shapes this architecture, in priority order. Every significant decision traces back to
 one of these.
 
-| #   | Force                                                                                                                       | Consequence                                                                                                                                                         |
-| --- | --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | **A learner abroad has no network.** Survival mode is the product's most important moment.                                  | Offline-first is not a feature. The device is the source of truth; the server is a sync peer. [ADR-0003](adr/0003-offline-first-sqlite-sync.md)                     |
-| 2   | **Speaking is the core loop.** Every practice surface has a mic.                                                            | ASR must work on-device with no network. [ADR-0005](adr/0005-on-device-asr-cloud-fallback.md)                                                                       |
-| 3   | **🔒 "Your audio stays on your device"** — printed on screen (`Loro.dc.html:1281`).                                         | Pitch extraction, alignment, and scoring run on-device. Recorded audio never uploads without explicit per-use opt-in. [ADR-0011](adr/0011-analytics-and-privacy.md) |
-| 4   | **Scoring must be identical everywhere** — the same take, scored on iOS, Android, or the server, must give the same number. | One implementation in Rust, shared. [ADR-0002](adr/0002-shared-rust-core.md)                                                                                        |
-| 5   | **Three competing practice philosophies, unresolved.**                                                                      | The loop is a plug-in, and every engine maintains every progress signal. [ADR-0006](adr/0006-pluggable-practice-engines.md)                                         |
-| 6   | **21 dense, animated screens for a small team.**                                                                            | One UI codebase. [ADR-0001](adr/0001-cross-platform-react-native-expo.md)                                                                                           |
-| 7   | **Audio must survive backgrounding, calls, and headphone changes.**                                                         | A real native audio layer, not a JS player. [audio-speech.md](audio-speech.md)                                                                                      |
-| 8   | **The catalog changes far more often than the app.**                                                                        | Content ships independently of releases. [ADR-0009](adr/0009-content-pipeline-and-packs.md)                                                                         |
-| 9   | **AI is a garnish, never a dependency.**                                                                                    | Every AI path is cached, rate-limited, and has a bundled fallback. [ADR-0010](adr/0010-llm-roleplay-and-guardrails.md)                                              |
+| #   | Force                                                                                                                          | Consequence                                                                                                                                     |
+| --- | ------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | **A learner abroad has no network.** Survival mode is the product's most important moment.                                     | Offline-first is not a feature. The device is the source of truth; the server is a sync peer. [ADR-0003](adr/0003-offline-first-sqlite-sync.md) |
+| 2   | **Speaking is the core loop.** Every practice surface has a mic.                                                               | ASR must work on-device with no network. [ADR-0005](adr/0005-on-device-asr-cloud-fallback.md)                                                   |
+| 3   | **🔒 "Your audio stays on your device"** — printed on screen (`Loro.dc.html:1281`).                                            | Pitch extraction, alignment, and scoring run on-device. Recorded audio never uploads. [ADR-0011](adr/0011-analytics-and-privacy.md)             |
+| 4   | **Scoring must be identical on supported devices** — equivalent derived fixtures must agree across iOS, Android, and bindings. | One implementation in Rust, shared; the server never receives a learner take. [ADR-0002](adr/0002-shared-rust-core.md)                          |
+| 5   | **Three competing practice philosophies, unresolved.**                                                                         | The loop is a plug-in, and every engine maintains every progress signal. [ADR-0006](adr/0006-pluggable-practice-engines.md)                     |
+| 6   | **23 dense, animated screens for a small team.**                                                                               | One UI codebase. [ADR-0001](adr/0001-cross-platform-react-native-expo.md)                                                                       |
+| 7   | **Audio must survive backgrounding, calls, and headphone changes.**                                                            | A real native audio layer, not a JS player. [audio-speech.md](audio-speech.md)                                                                  |
+| 8   | **The catalog changes far more often than the app.**                                                                           | Content ships independently of releases. [ADR-0009](adr/0009-content-pipeline-and-packs.md)                                                     |
+| 9   | **AI is a garnish, never a dependency.**                                                                                       | Every AI path is cached, rate-limited, and has a bundled fallback. [ADR-0010](adr/0010-llm-roleplay-and-guardrails.md)                          |
 
 ---
 
@@ -34,7 +40,7 @@ graph TB
 
   ASR["Platform speech recognition<br/>SFSpeechRecognizer · Android SR"]
   TTSP["Platform TTS<br/>fallback only"]
-  NTTS["Neural TTS provider<br/>catalog audio + voice conversion"]
+  NTTS["Neural TTS provider<br/>catalog/reference audio"]
   LLM["Claude<br/>roleplay · coach notes · enrichment"]
   OCR["OCR<br/>on-device text recognition"]
   STORE["App Store · Play Store<br/>billing"]
@@ -124,12 +130,13 @@ Non-negotiable invariants. A PR that breaks one needs an ADR, not a review comme
    own state. Every write succeeds locally first.
 2. **Every practice surface works with no network.** If a feature can't degrade gracefully offline,
    it isn't in the daily loop.
-3. **Recorded audio never leaves the device** except on an explicit, per-use opt-in (voice
-   conversion). No exceptions, no "anonymous quality sampling".
+3. **Recorded audio never leaves the device.** No consent exception, no cloud fallback, no
+   "anonymous quality sampling".
 4. **Every number shown to a learner is real.** Latency is measured. Scores come from real signal
    processing. No simulated values, ever — not even as a placeholder behind a flag.
 5. **Every engine maintains every progress signal**, including the ones it doesn't display. FSRS
-   state, `rung`, and `automaticity` are always current, whichever loop is active.
+   state, `rung`, and `automaticity` must be current whichever loop is active. Current explicit
+   conformance exemptions are implementation debt, not evidence that an engine is complete.
 6. **Nothing enters a learner's stream without an explicit tap.** Not a suggestion, not an import,
    not an AI generation.
 7. **All reproducible maths lives in `loro-core`.** If two platforms could disagree about a number,
@@ -148,14 +155,14 @@ Non-negotiable invariants. A PR that breaks one needs an ADR, not a review comme
 
 ```
 tap Start wave
-  → RefrainEngine.start(setId)
-      → SQLite: today's set + per-phrase state
+  → repository: load today's frozen set + phrase state
+  → RefrainEngine.plan/next(context)
       → loro-core: mode for rep index, automaticity
   → AudioModule.play(clip, rate)          [local cache]
   → SpeechModule.listen()                  [on-device ASR]
   → loro-core: match(transcript, target) → revealed words, latency
-  → SQLite: reps++, automaticity, latency sample   [single tx]
-  → outbox row appended
+  → RefrainEngine.record(attempt, context) → ProgressDelta
+  → mutation boundary: applyDelta + outbox append   [single SQLite tx]
   → UI updates from the DB (single source)
 Later, on connectivity:
   → SyncService flushes the outbox
@@ -212,13 +219,13 @@ Versions are the pins chosen at authoring time — **re-verify at kickoff**
 
 | Concern         | Choice                                                     | Why                                                                          |
 | --------------- | ---------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| Framework       | React Native 0.81 + Expo SDK 54, New Architecture          | One codebase for 21 screens; Expo Modules for native work                    |
+| Framework       | React Native 0.81 + Expo SDK 54, New Architecture          | One codebase for 23 screens; Expo Modules for native work                    |
 | Language        | TypeScript 5.6, `strict`                                   |                                                                              |
 | Navigation      | Expo Router                                                | Typed, file-based, deep-link native                                          |
 | Animation       | Reanimated 4 + Gesture Handler                             | The warming card, sheets, and press feedback run at 60 fps off the JS thread |
 | Custom graphics | React Native Skia                                          | Pitch contours, waveforms, forgetting curve, ladder histogram                |
 | State           | Zustand + live SQLite queries                              | Small, no boilerplate, no cache-invalidation layer                           |
-| Local DB        | SQLite (`op-sqlite`) + Drizzle ORM                         | Synchronous JSI access; typed schema and migrations                          |
+| Local DB        | SQLite (`op-sqlite`) + reviewed SQL migrations             | Synchronous JSI access behind the existing `SqlDriver` contract              |
 | Native audio    | Custom Expo Module — AVAudioEngine (iOS) / Oboe (Android)  | Rate control, capture, interruption handling, lock screen                    |
 | Speech          | Custom Expo Module — SFSpeechRecognizer / SpeechRecognizer | On-device Spanish ASR                                                        |
 | Shared maths    | `loro-core` (Rust) via UniFFI                              | Identical numbers on both platforms                                          |
@@ -231,11 +238,11 @@ Versions are the pins chosen at authoring time — **re-verify at kickoff**
 | -------------- | --------------------------------------------------- | ------------------------------------------------------- |
 | Runtime        | Node 22 LTS                                         |                                                         |
 | Framework      | NestJS 11                                           | Module boundaries that survive growth; team familiarity |
-| DB             | Postgres 16 + Drizzle                               | Same ORM as the client → shared schema types            |
+| DB             | Postgres 16 + Drizzle                               | Durable tenant-scoped server storage                    |
 | Cache / queues | Redis 7 + BullMQ                                    | AI cache, rate limits, worker jobs                      |
 | Storage / CDN  | S3-compatible + CDN                                 | Content-addressed audio                                 |
 | AI             | Anthropic Claude                                    | Roleplay, coach notes, content enrichment               |
-| TTS            | Managed neural TTS                                  | Catalog audio at build time; voice conversion in v2     |
+| TTS            | Managed neural TTS                                  | Catalog/reference audio at build time                   |
 | Auth           | Apple / Google / email magic link; own JWT issuance | Anonymous-first upgrade path                            |
 | Deploy         | Containers, IaC, blue-green                         | [backend.md](backend.md#deployment)                     |
 
@@ -261,25 +268,25 @@ Versions are the pins chosen at authoring time — **re-verify at kickoff**
 | **CRDTs for sync**                | Correct and elegant, but our conflict domain is small scalar fields on one owner's rows. Per-field LWW with HLC is far less machinery for the same result. [ADR-0003](adr/0003-offline-first-sqlite-sync.md)              |
 | **A single "best" practice loop** | The blueprint left it open on purpose, and we don't have the data. [ADR-0006](adr/0006-pluggable-practice-engines.md)                                                                                                     |
 | **GraphQL**                       | The client mostly syncs and fetches content diffs. REST plus a delta endpoint is a better fit and cheaper to cache.                                                                                                       |
-| **Cloud ASR as primary**          | Latency, cost, and it would make the core loop network-dependent.                                                                                                                                                         |
+| **Cloud ASR**                     | Recorded audio never leaves the device; reveal mode is the unavailable fallback.                                                                                                                                          |
 
 ---
 
 ## Architecture decision records
 
-| #                                                    | Decision                                    | Status   |
-| ---------------------------------------------------- | ------------------------------------------- | -------- |
-| [0001](adr/0001-cross-platform-react-native-expo.md) | React Native + Expo                         | Accepted |
-| [0002](adr/0002-shared-rust-core.md)                 | A shared Rust core via UniFFI               | Accepted |
-| [0003](adr/0003-offline-first-sqlite-sync.md)        | Offline-first SQLite with delta sync        | Accepted |
-| [0004](adr/0004-fsrs-scheduler.md)                   | FSRS as the scheduling algorithm            | Accepted |
-| [0005](adr/0005-on-device-asr-cloud-fallback.md)     | On-device ASR with an opt-in cloud fallback | Accepted |
-| [0006](adr/0006-pluggable-practice-engines.md)       | Pluggable practice engines                  | Accepted |
-| [0007](adr/0007-audio-pipeline.md)                   | A native audio module, not a JS player      | Accepted |
-| [0008](adr/0008-backend-nestjs-postgres.md)          | NestJS + Postgres over a BaaS               | Accepted |
-| [0009](adr/0009-content-pipeline-and-packs.md)       | Content ships independently of the app      | Accepted |
-| [0010](adr/0010-llm-roleplay-and-guardrails.md)      | LLM roleplay with hard guardrails           | Accepted |
-| [0011](adr/0011-analytics-and-privacy.md)            | Privacy posture and the audio promise       | Accepted |
-| [0012](adr/0012-state-management.md)                 | Zustand + live SQLite queries               | Accepted |
-| [0013](adr/0013-design-tokens-pipeline.md)           | Design tokens as generated code             | Accepted |
-| [0014](adr/0014-monorepo-tooling.md)                 | pnpm workspaces + Turborepo                 | Accepted |
+| #                                                    | Decision                               | Status   |
+| ---------------------------------------------------- | -------------------------------------- | -------- |
+| [0001](adr/0001-cross-platform-react-native-expo.md) | React Native + Expo                    | Accepted |
+| [0002](adr/0002-shared-rust-core.md)                 | A shared Rust core via UniFFI          | Accepted |
+| [0003](adr/0003-offline-first-sqlite-sync.md)        | Offline-first SQLite with delta sync   | Accepted |
+| [0004](adr/0004-fsrs-scheduler.md)                   | FSRS as the scheduling algorithm       | Accepted |
+| [0005](adr/0005-on-device-asr-cloud-fallback.md)     | On-device ASR with a reveal fallback   | Accepted |
+| [0006](adr/0006-pluggable-practice-engines.md)       | Pluggable practice engines             | Accepted |
+| [0007](adr/0007-audio-pipeline.md)                   | A native audio module, not a JS player | Accepted |
+| [0008](adr/0008-backend-nestjs-postgres.md)          | NestJS + Postgres over a BaaS          | Accepted |
+| [0009](adr/0009-content-pipeline-and-packs.md)       | Content ships independently of the app | Accepted |
+| [0010](adr/0010-llm-roleplay-and-guardrails.md)      | LLM roleplay with hard guardrails      | Accepted |
+| [0011](adr/0011-analytics-and-privacy.md)            | Privacy posture and the audio promise  | Accepted |
+| [0012](adr/0012-state-management.md)                 | Zustand + live SQLite queries          | Accepted |
+| [0013](adr/0013-design-tokens-pipeline.md)           | Design tokens as generated code        | Accepted |
+| [0014](adr/0014-monorepo-tooling.md)                 | pnpm workspaces + Turborepo            | Accepted |

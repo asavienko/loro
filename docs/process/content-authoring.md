@@ -164,6 +164,8 @@ Recorded as a PR approval from the reviewer, required by CODEOWNERS on `packages
 
 ---
 
+<a id="4--render-and-extract"></a>
+
 ## 4 · Render and extract
 
 ```bash

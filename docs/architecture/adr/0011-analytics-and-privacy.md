@@ -48,8 +48,7 @@ bounded by what runs in 200 ms on a mid-range phone.
 **Option C, elevated to an architectural invariant** ([overview.md](../overview.md#the-ten-rules),
 rule 3):
 
-> **Recorded audio never leaves the device**, except on an explicit, per-use, revocable opt-in
-> (voice conversion, v2).
+> **Recorded audio never leaves the device.** Consent is not an exception.
 
 And the corollary that makes it durable:
 
@@ -57,16 +56,16 @@ And the corollary that makes it durable:
 
 ### How it is structurally enforced
 
-| Mechanism                                                                                                                             | Effect                                                                                                                                                              |
-| ------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| PCM lives in **native memory only**; `stopRecording()` returns a `bufferId`, not bytes                                                | There is no JS API that yields audio, so upload code does not exist and would have to be deliberately added to a native module ([ADR-0007](0007-audio-pipeline.md)) |
-| DSP runs in `loro-core` on a native thread, taking the buffer by handle                                                               | Scoring never surfaces audio                                                                                                                                        |
-| Buffer released within 50 ms of scoring                                                                                               | Also a memory budget ([performance.md](../performance.md#memory))                                                                                                   |
-| Audio is **never written to disk**                                                                                                    | Nothing to attach to a crash report, nothing to find in a backup                                                                                                    |
-| `take` stores numbers and a normalised contour — no audio, no path                                                                    | [data-model.md](../data-model.md)                                                                                                                                   |
-| Crash reporter configured with **no attachments**                                                                                     |                                                                                                                                                                     |
-| **A P0 alert on any network request originating in the audio module**                                                                 | There should never be one ([observability.md](../observability.md#alerting))                                                                                        |
-| One endpoint accepts audio (`POST /tts/voice-clone`), consent-gated, `retained: false`, verified by a test that the temp file is gone | [api.md](../api.md#tts)                                                                                                                                             |
+| Mechanism                                                                              | Effect                                                                                                                                                              |
+| -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| PCM lives in **native memory only**; `stopRecording()` returns a `bufferId`, not bytes | There is no JS API that yields audio, so upload code does not exist and would have to be deliberately added to a native module ([ADR-0007](0007-audio-pipeline.md)) |
+| DSP runs in `loro-core` on a native thread, taking the buffer by handle                | Scoring never surfaces audio                                                                                                                                        |
+| Buffer released within 50 ms of scoring                                                | Also a memory budget ([performance.md](../performance.md#memory))                                                                                                   |
+| Audio is **never written to disk**                                                     | Nothing to attach to a crash report, nothing to find in a backup                                                                                                    |
+| `take` stores numbers and a normalised contour — no audio, no path                     | [data-model.md](../data-model.md)                                                                                                                                   |
+| Crash reporter configured with **no attachments**                                      |                                                                                                                                                                     |
+| **A P0 alert on any network request originating in the audio module**                  | There should never be one ([observability.md](../observability.md#alerting))                                                                                        |
+| No API endpoint accepts recorded learner audio                                         | [api.md](../api.md#tts)                                                                                                                                             |
 
 ### The analytics posture that follows
 
@@ -88,7 +87,7 @@ memory-hook text (a boolean instead); captured OCR text (a line count instead); 
 because our AI use is text generation from a prompt, not personalisation from a corpus
 ([ADR-0010](0010-llm-roleplay-and-guardrails.md)).
 
-**Three explicit consents**, all off by default and revocable: analytics, cloud ASR, voice cloning
+**Analytics consent** is off by default and revocable
 ([security-privacy.md](../security-privacy.md#consent-surfaces)).
 
 ## Consequences
@@ -119,14 +118,12 @@ because our AI use is text generation from a prompt, not personalisation from a 
   (retention, latency trends, tag predictiveness) are all answerable with ids and numbers.
 - The salted-hash approach means we can never inspect a problematic learner-authored phrase, even to
   debug. Accepted.
-- Voice cloning (v2) requires a carefully built consent flow for one feature.
 
 ### Revisit if…
 
-- The DSP validation gate fails and cannot be fixed on-device. Then the honest options are: ship a
-  contour-only lab (no per-syllable numbers, much easier to get right), or offer server scoring as
-  an **opt-in** with the screen copy changed in the same release. **We change the promise before we
-  break it — never the other way round.**
+- The DSP validation gate fails and cannot be fixed on-device. Then the honest options are a
+  contour-only lab (no per-syllable numbers, much easier to get right) or no scoring lab. Server
+  scoring is not a fallback.
 - A regulator or platform requirement forces a change in what we can say on screen.
 - On-device acoustic models become small enough to bundle, which would raise accuracy with no change
   to the promise. This is the likeliest and happiest trigger.

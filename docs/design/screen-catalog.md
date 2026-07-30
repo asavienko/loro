@@ -3,16 +3,22 @@
 All 21 screens, mapped to their blueprint line ranges, their logic classes, their screenshots, and
 the specs that describe them.
 
-**Open the blueprint before implementing any screen.** `Language Learning by Phrases/Loro.dc.html`
-is executable spec: every phone is interactive, and the card beside each one explains what it does
-and how it connects. This table is an index into it, not a substitute.
+**Open the blueprint before implementing any screen.**
+`design/Language Learning by Phrases - V1.1/Loro.dc.html` is executable spec: every phone is
+interactive, and the card beside each one explains what it does and how it connects. This table is
+an index into it, not a substitute.
+
+The v1.1 package also authors two learner screens in `Loro Chat.dc.html`, navigation laws in
+`Navigation.dc.html`, and a component/token reference in `Design System.dc.html`. They are real new
+scope but are not yet folded into the numbered catalog below; plan 79 owns that durable contract
+before plans 80–83 implement it.
 
 ---
 
 ## How to read the blueprint
 
 ```bash
-open "Language Learning by Phrases/Loro.dc.html"
+open "design/Language Learning by Phrases - V1.1/Loro.dc.html"
 ```
 
 Structure:
@@ -30,8 +36,41 @@ Structure:
 - **The catalog** — lines 2179–2211: 31 phrases across 8 themes. Extracted to
   [`packages/content/`](../../packages/content/).
 
-Screenshots are in `Language Learning by Phrases/screenshots/`. Naming is loose (the blueprint's own
-working names), so this table is the reliable mapping.
+Screenshots are in `design/Language Learning by Phrases - V1.1/screenshots/`. Naming is loose (the
+blueprint's own working names), so this table is the reliable mapping.
+
+---
+
+## Current implementation and browser coverage
+
+This is the repository inventory, not a claim that a built route already satisfies every behaviour
+below. As of 2026-07-30, **7 of the 21 learner screens have Expo routes**. The other 14 remain
+target behaviour in the blueprint and functional spec; they must not be treated as runnable app
+surfaces. `apps/mobile/app/_layout.tsx` is the shell and is not counted as a learner screen.
+
+The browser suites exercise **20 declared learner-visible states across all 7 routes** through
+[`apps/mobile/e2e/states.ts`](../../apps/mobile/e2e/states.ts). A route being present is only the
+first coverage gate: sheets, empty states, completion states, and other materially different views
+need their own manifest entries.
+
+| #     | Screen             | Current Expo route         | Declared E2E states                                                                                        |
+| ----- | ------------------ | -------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| 1     | Onboarding         | `/onboarding`              | `onboarding · welcome`; `onboarding · packs step`                                                          |
+| 2     | Add phrases        | `/add`                     | `add · discover`; `add · browse grid`; `add · theme drilled`; `add · difficulty sheet`; `add · no matches` |
+| 3     | Phrase detail      | `/phrase/[id]`             | `phrase detail`; `phrase detail · edited`; `phrase detail · unknown id`                                    |
+| 4     | Adaptive stream    | `/practice/stream`         | `stream · first phrase`; `stream · all learned`                                                            |
+| 5–10  | Loop A practice    | — not implemented          | —                                                                                                          |
+| 11    | Today              | `/`                        | `today · seeded`; `today · nothing in rotation`                                                            |
+| 12    | The Refrain        | `/practice/refrain`        | `refrain · first rep`; `refrain · locked in`; `refrain · set complete`; `refrain · tag drill`              |
+| 13–14 | Run and Phrasebook | — not implemented          | —                                                                                                          |
+| 15    | Progress           | `/progress`                | `progress · zero state`; `progress · with a tagged phrase`                                                 |
+| 16–18 | Trip app screens   | — not implemented          | —                                                                                                          |
+| 19    | Lock screen widget | — native surface not built | —                                                                                                          |
+| 20–21 | Survival, Souvenir | — not implemented          | —                                                                                                          |
+
+The state names above are the executable inventory; the numbered sections in this catalog and the
+functional spec remain the product taxonomy. The `spec` labels in `states.ts` use those canonical
+section numbers; new coverage must link to the actual heading rather than copy a neighbouring label.
 
 ---
 
@@ -156,11 +195,29 @@ Before a screen is done, compare against the blueprint side by side
       ([learning model](../product/learning-model.md#where-the-blueprints-numbers-came-from--and-what-is-real))
 - [ ] The screen still works with an empty store
 
+### Extending a learner-visible screen or state
+
+A change is incomplete until the spec, route, and state inventory agree:
+
+1. Add or amend the behaviour in the matching numbered section of
+   [`functional-spec.md`](../product/functional-spec.md), keeping the blueprint anchor intact.
+2. Implement the route or state. A learner-visible state includes a materially different view such
+   as a sheet/dialog, empty or not-found state, permission fallback, completion state, or drilled
+   sub-view; a transient animation frame is not a separate state.
+3. Add one row to [`apps/mobile/e2e/states.ts`](../../apps/mobile/e2e/states.ts) for every new
+   state, in the same change. Give it a unique stable name, the real Expo route, the correct
+   functional-spec section, and a `reach` path that uses learner interactions. Use `firstRun` only
+   when onboarding first would make the state dishonest.
+4. Update the inventory above when a route or declared state is added, removed, or renamed. Do not
+   mark a blueprint screen implemented merely because a shared component or domain contract exists.
+5. Run `pnpm test:e2e`. The route guard rejects a route with no manifest state; the manifest-driven
+   accessibility and text-scale suites then exercise every declared state.
+
 ---
 
 ## Where the blueprint is a prototype, not a spec
 
-Five places the implementation must diverge. All five are also flagged where they occur.
+Six places the implementation must diverge. All six are also flagged where they occur.
 
 | Blueprint                                                    | Reality                                                                               |
 | ------------------------------------------------------------ | ------------------------------------------------------------------------------------- |
@@ -173,3 +230,17 @@ Five places the implementation must diverge. All five are also flagged where the
 
 The three "real" rows are the honesty line for the product
 ([overview.md](../architecture/overview.md#the-ten-rules), rule 4).
+
+### Current honesty gaps
+
+Two implemented web routes still violate that line and remain incomplete until plan 55/64 removes
+the placeholders:
+
+- Stream renders a hard-coded 35% playback bar while no audio is playing. It must read real native
+  playback position or stay absent.
+- Refrain measures prompt-to-button-confirm elapsed time and presents it as latency. Real latency is
+  prompt-end to detected speech onset; without microphone/onset measurement it must be `null` and
+  hidden.
+
+E2E expectations must prove these indicators remain absent until the real measurement sources land;
+tests may not preserve the placeholders as intended behavior.

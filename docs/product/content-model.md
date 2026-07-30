@@ -21,6 +21,8 @@ The atom of the entire product. Everything in Loro is a lens over a set of phras
 | `theme` | enum   | `Café`                          | One of 8 (below) + `Imported`, `Mine`, `Captured`                                                                               |
 | `emoji` | string | `☕`                            | Row identity at a glance; one per phrase                                                                                        |
 
+<a id="enrichment-fields--optional-but-they-carry-most-of-the-value"></a>
+
 ### Enrichment fields — optional, but they carry most of the value
 
 | Field       | Type                 | Example                                                      | Used by                                                                                          |
@@ -108,6 +110,8 @@ Production target: ~30 scenarios. Authoring rule: 4–6 phrases, and someone who
 scenario can get through the real situation.
 
 ---
+
+<a id="packs--onboarding-and-drops"></a>
 
 ## Packs — onboarding and drops
 

@@ -10,8 +10,22 @@ Everything written down, indexed. Four sections plus decisions.
 | [Process](#process)           | How we work                                |
 | [Decisions](#decisions)       | What's still open, and what could go wrong |
 
-**The design blueprint (`Language Learning by Phrases/Loro.dc.html`) outranks every document here.**
-These docs interpret and extend it; they do not replace it.
+**The design blueprint (`design/Language Learning by Phrases - V1.1/Loro.dc.html`) outranks every
+document here.** These docs interpret and extend it; they do not replace it.
+
+---
+
+## How to use these docs to extend the app
+
+These documents describe both the implemented product and its intended architecture. Start with the
+current inventory in the root [`README.md`](../README.md), then read the status callout in the
+relevant architecture or product document before treating a diagram, route, or service as live.
+
+For implementation work, follow the dependency-ordered [`plans/README.md`](../plans/README.md), use
+the blueprint and screen catalog for learner-visible behavior (plan 79 owns the v1.1 artifacts not
+yet registered there), and use the architecture docs for the contracts that let later screens reuse
+the same persistence, engine, native, and service foundations. When a change makes a current-state
+statement true or false, update that statement and the owning plan in the same change.
 
 ---
 
@@ -37,7 +51,7 @@ These docs interpret and extend it; they do not replace it.
 | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
 | [overview.md](architecture/overview.md)                           | C4 context and containers, cross-cutting concerns, the ten rules                    |
 | [mobile-app.md](architecture/mobile-app.md)                       | Layers, folder structure, navigation, state, rendering strategy                     |
-| [practice-engines.md](architecture/practice-engines.md)           | The `PracticeEngine` contract and all five implementations                          |
+| [practice-engines.md](architecture/practice-engines.md)           | The contract, current Stream/Refrain engines, and planned engine behavior           |
 | [audio-speech.md](architecture/audio-speech.md)                   | Playback graph, TTS, ASR, background audio, the hands-free stream                   |
 | [prosody-dsp.md](architecture/prosody-dsp.md)                     | Pitch extraction, alignment, per-syllable scoring, rhythm/stress, the cue ladder    |
 | [scheduling.md](architecture/scheduling.md)                       | FSRS, queue ranking, automaticity, the roguelike ladder, drop scheduling            |

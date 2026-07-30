@@ -6,13 +6,14 @@ Guidance for Claude Code working in this repository.
 
 **Loro** — a mobile app (iOS + Android) that teaches Spanish by the phrase.
 
-Early implementation. **What exists:** the docs, 8 of the blueprint's 21 screens in
-`apps/mobile/app/`, an API with 10 endpoints over an in-memory store, the Rust core, the design
-tokens, a 31-phrase catalog, and the local persistence layer (schema, migrations, repositories,
-outbox — driver-agnostic and tested against real SQLite). 418 JS/TS tests, 130 Rust tests, and 61
-browser E2E tests pass. **What doesn't:** the native modules (audio, speech, ASR, widgets), the
-on-device SQLite driver, and the other 13 screens — so nothing runnable today exercises audio or the
-microphone, which is half of what this app is, and the app store is still in memory.
+Early implementation. **What exists:** the docs, 7 of the v1.1 design package's 23 learner screens
+plus the app shell in `apps/mobile/app/`, an API with 10 endpoints over an in-memory store, the Rust
+core, the design tokens, a 31-phrase catalog, and the local persistence layer (schema, migrations,
+repositories, outbox — driver-agnostic and tested against real SQLite). 432 JS/TS tests, 131 Rust
+tests, and 61 browser E2E tests pass. **What doesn't:** the native modules (audio, speech, ASR,
+widgets), the on-device SQLite driver, and the other 16 learner screens — so nothing runnable today
+exercises audio or the microphone, which is half of what this app is, and the app store is still in
+memory.
 
 ## Keep this file current
 
@@ -35,8 +36,10 @@ Keep it short. Long-form belongs in `docs/`; this file points at it.
 ## The design blueprint is the source of truth
 
 ```
-Language Learning by Phrases/Loro.dc.html    # 3,629 lines: 21 interactive screens + all logic
-Language Learning by Phrases/screenshots/    # rendered stills
+design/Language Learning by Phrases - V1.1/Loro.dc.html          # original 21 interactive screens
+design/Language Learning by Phrases - V1.1/Loro Chat.dc.html     # 2 chat screens
+design/Language Learning by Phrases - V1.1/Navigation.dc.html    # shell/navigation laws
+design/Language Learning by Phrases - V1.1/Design System.dc.html # tokens/components
 ```
 
 It is an executable spec, not a mockup. Every phone in it is interactive; each screen has a
@@ -44,8 +47,9 @@ It is an executable spec, not a mockup. Every phone in it is interactive; each s
 
 - **When a doc and the blueprint disagree, the blueprint wins.** Fix the doc.
 - **Don't edit the blueprint.** It's the authored artefact. Intended-design changes go in `docs/`.
-- [`docs/design/screen-catalog.md`](docs/design/screen-catalog.md) maps all 21 screens to their line
-  ranges, logic classes, screenshots, and specs. Start there when working on a screen.
+- [`docs/design/screen-catalog.md`](docs/design/screen-catalog.md) maps the original 21 screens;
+  plan 79 owns registration of the 2 v1.1 chat screens and the other authored artifacts. Start there
+  when working on a screen.
 
 ## The three non-negotiables
 
@@ -84,23 +88,22 @@ prototype-only and **must not** be carried into the app — see the divergence t
   a refactor into a fix, and don't let generated output (bindings, tokens) ride along in a commit
   that isn't about regenerating it.
 - **Plans live in `plans/`, numbered.** One markdown file per plan: a two-digit number, then
-  kebab-case named for the topic — `plans/60-association-suggestions.md`. The numbers run
-  consecutively in [`plans/README.md`](plans/README.md)'s recommended order, 01–53 today (49 is
-  vacant); a new plan takes the next free number and gets a row in that README. **Numbers are never
-  reused** — a gap is left rather than backfilled, so a link written against a number can't come to
-  mean a different plan. Not in `docs/`: that holds the durable spec. Not in a temp directory either
-  — a plan you can't find again is a plan you rewrite. Name the requirement ID inside the plan so it
-  ties back to the branch and the PR.
-- **A plan records its own status, and is kept rather than deleted.** Put a `**Status:**` line in
-  the plan's header block when work starts, and mark its row in
-  [`plans/README.md`](plans/README.md): `✅` implemented, `🟡` partly, nothing for not started. A
-  `🟡` must say what is left **and what blocks it**. Plans stay on disk after shipping — their
-  verified "current state" notes and code citations are the record of why the code looks the way it
-  does, and deleting that means the next session re-derives it. **Implemented so far: 01, 02, 04,
-  07, 51, 52. Partly: 10, 20, 23, 37.** Read each plan's status for what remains and what blocks it.
-  [52](plans/52-solid-kiss-dry-refactor.md) also carries a register of **ten defects it found and
-  deliberately did not fix** — read it before "cleaning up" anything it names, because each one
-  changes a number, a merge outcome, or a planning decision.
+  kebab-case named for the topic — `plans/60-authoritative-core-maths.md`. The active roadmap is
+  54–83 today; 01–52 are under `plans/archive/2026-07-30/`, and completed plan 53 remains at its
+  protected original path. A new plan takes the next free number and gets a row in
+  [`plans/README.md`](plans/README.md). **Numbers are never reused** — a gap is left rather than
+  backfilled, so a link written against a number can't come to mean a different plan. Not in
+  `docs/`: that holds the durable spec. Not in a temp directory either — a plan you can't find again
+  is a plan you rewrite. Name the requirement ID inside the plan so it ties back to the branch and
+  the PR.
+- **A plan records its own status, and is archived rather than deleted.** Put a `**Status:**` line
+  in the plan's header block when work starts, and mark its row in
+  [`plans/README.md`](plans/README.md): `🟡` in progress or partly implemented, `⛔` blocked by a
+  named decision/evidence gate, `—` ready when dependencies pass, or `✅` implemented. A `🟡` must
+  say what is left **and what blocks it**. Archived plans stay on disk as the verified record of why
+  the code looks the way it does. The 2026-07-30 reset and legacy-to-active mapping are in
+  [`plans/archive/2026-07-30/REVIEW.md`](plans/archive/2026-07-30/REVIEW.md). Plan 53 is a protected
+  completed exception; do not edit or move it without explicit user direction.
 - **`pnpm check`** is the single command that must pass — lint, typecheck, test, content validation.
 - **Keep E2E coverage in step with functionality while developing it.** Add or adjust the
   learner-visible behavior in `apps/mobile/e2e/` in the same coherent change as the functionality,
@@ -139,7 +142,7 @@ prototype-only and **must not** be carried into the app — see the divergence t
 - **Practice outcomes are written only through `applyDelta`.** A screen calls `engine.record(...)`
   and hands the `ProgressDelta` to the store; nothing else writes a progress field. Which fields are
   increments, which absolute, and which monotonic is declared on `ProgressDelta`
-  (`packages/core/src/engines/types.ts`) and implemented once in `apps/mobile/src/store/state.ts`.
+  (`packages/core/src/engines/types.ts`) and implemented once in `apps/mobile/src/store/delta.ts`.
 
 ## Running and testing
 
@@ -173,9 +176,9 @@ npx expo start --web                # from apps/mobile — fastest way to see th
   react-native-web's allowlist forwards neither `accessibilityLanguage` (hence no `lang="es-ES"` in
   the DOM) nor `accessibilityHint`. `check:lang` is the gate for the first, which is why it scans
   source. Conversely, react-native-web ignores NESTED `accessibilityState` / `accessibilityValue`
-  entirely — `src/ui/primitives.tsx` therefore sets the flat `aria-*` form as well, and the header
-  there explains why. Check any new accessibility prop against `createDOMProps`; silence is the
-  failure mode.
+  entirely — `src/ui/primitives/Pressable.tsx` and `src/ui/primitives/bars.tsx` therefore set the
+  flat `aria-*` forms as well; `src/ui/primitives/index.ts` explains why. Check any new
+  accessibility prop against `createDOMProps`; silence is the failure mode.
 - **`packages/core-rs` tests are almost all inline `#[cfg(test)]`.** The one integration file is
   `tests/parity.rs` (the calendar cross-language check). The others named in
   [`testing-strategy.md`](docs/process/testing-strategy.md) (`sim.rs`, `merge.rs`, `golden/`) don't
@@ -183,10 +186,10 @@ npx expo start --web                # from apps/mobile — fastest way to see th
 - **`cargo` is off the PATH that `pnpm`/`turbo` see.** `pnpm check` looks green while the four
   `@loro/core-rs` tasks are cache hits, then fails with `cargo: command not found` the moment a Rust
   file changes. Run `export PATH="$HOME/.cargo/bin:$PATH"` first.
-- **Two docs run ahead of the code.** `onboarding.md` §3 says to run `db:migrate` / `db:seed`, which
-  aren't defined — [`apps/api/README.md`](apps/api/README.md) is the accurate one.
-  `apps/mobile/README.md` lists `src/features/`, `src/engines/`, `src/domain/`, `src/data/`,
-  `src/platform/`, `modules/`, and `targets/`; only `src/lib/`, `src/store/`, and `src/ui/` exist.
+- **Onboarding still runs ahead of the code.** `onboarding.md` §3 names undefined `db:migrate` /
+  `db:seed` commands and its tree includes target-only feature, domain, platform, module, and target
+  directories. [`apps/api/README.md`](apps/api/README.md) and
+  [`apps/mobile/README.md`](apps/mobile/README.md) are the accurate current inventories.
 
 ## Where things live
 
@@ -202,7 +205,7 @@ npx expo start --web                # from apps/mobile — fastest way to see th
 | `apps/api/`               | NestJS backend                                                            |
 | `packages/core/`          | Shared TS domain, engine contracts, API schemas — **used by app AND api** |
 | `…/core/src/persistence/` | SQLite schema, migrations, repositories, outbox. Driver-agnostic          |
-| `apps/mobile/src/data/`   | The SQL drivers. `driver.node.ts` (tests) today; op-sqlite needs plan 09  |
+| `apps/mobile/src/data/`   | Node SQLite test driver today; plan 59 adds the on-device driver          |
 | `packages/core-rs/`       | Rust: FSRS, sync merge, ranking, DSP. All reproducible maths              |
 | `packages/design-tokens/` | Tokens extracted from the blueprint + generators                          |
 | `packages/content/`       | The Spanish catalog, schema-validated                                     |
@@ -215,20 +218,24 @@ npx expo start --web                # from apps/mobile — fastest way to see th
 - **Every syncable field needs a declared merge class** in `packages/core/src/sync/fieldPolicy.ts`.
   CI fails without one, because a missing class is a silent data-loss bug
   ([sync-protocol.md](docs/architecture/sync-protocol.md)).
-- **The practice loop is a plug-in.** Five to seven engines implement one interface, and **every
-  engine maintains every progress signal, including ones it doesn't display** (rule 5). Enforced by
-  a conformance suite ([practice-engines.md](docs/architecture/practice-engines.md)).
-- **Offline-first is not a feature.** The device is the source of truth; every write succeeds
-  locally and appends to an outbox. No code path awaits the network
-  ([offline.md](docs/architecture/offline.md)).
-- **Content ships independently of the app.** A phrase fix needs no release
+- **The practice loop is a plug-in.** Stream and Refrain implement one interface today; every future
+  engine must maintain every progress signal, including ones it doesn't display (rule 5). The
+  conformance suite enforces this for implemented engines
+  ([practice-engines.md](docs/architecture/practice-engines.md)).
+- **Offline-first is the target invariant, not a feature toggle.** The persistence primitives and
+  outbox exist, but the running app remains in memory until plan 59 makes the device database the
+  source of truth ([offline.md](docs/architecture/offline.md)).
+- **Independent content delivery is a target, not current behavior.** Plan 61 adds the updater and
+  artifact path that will let a phrase fix ship without an app release
   ([ADR-0009](docs/architecture/adr/0009-content-pipeline-and-packs.md)).
 
 ## Open questions
 
 Unresolved decisions with owners and dates:
-[`docs/decisions/open-questions.md`](docs/decisions/open-questions.md). Two are currently blocking:
-**Q-05** (who owns the practice-loop decision) and **Q-08** (pricing).
+[`docs/decisions/open-questions.md`](docs/decisions/open-questions.md). Active roadmap gates are
+**Q-15** (production audio), **Q-07** (trip semantics), **Q-05** (loop experiment and conditional
+Run), **Q-14** (Refrain peak accessibility), and **Q-08/Q-12** (pricing and billing), plus the DSP
+quality gate. Work whose dependencies do not cross those gates should continue.
 
 ## Python
 

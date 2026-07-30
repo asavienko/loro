@@ -6,6 +6,8 @@ segmentation the product needs, so the personas map 1:1 onto them.
 
 ---
 
+<a id="1-mara--a-trip-coming-up--the-primary-persona"></a>
+
 ## 1. Mara — "A trip coming up" 🧳 · **the primary persona**
 
 **35, product designer, London. Twelve days from landing in Madrid.**

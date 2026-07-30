@@ -46,7 +46,6 @@ Everything else is negotiable.
 | The trip arc — countdown, daily drops, widget        |                  |
 | Capture (photograph a sign or menu)                  | Fair-use limited |
 | Cross-device sync                                    |                  |
-| "Hear myself, perfectly" (voice conversion)          | v2, opt-in       |
 
 **Placeholder pricing:** $8.99/mo · $47.99/yr (56% off) · 7-day trial, no card up front. A one-off
 **Trip Pass** ($12.99, 30 days of Plus) exists for the one-trip learner who will never subscribe —
@@ -91,13 +90,12 @@ a price.
 | ------------------------------- | --------------- | --------------------------------------------------------- |
 | TTS (catalog)                   | ~$0             | Rendered once at content build, served from CDN           |
 | TTS (learner phrases)           | ~$0.01          | On-device TTS by default; server render only if requested |
-| ASR                             | ~$0             | On-device; cloud fallback is opt-in and rare              |
+| ASR                             | ~$0             | On-device; reveal mode is the unavailable fallback        |
 | LLM roleplay + coach notes      | ~$0.10–0.30     | Cached scenes; the dominant AI cost                       |
 | Prosody / pronunciation scoring | $0              | 🔒 On-device by design                                    |
-| Voice conversion (v2)           | ~$0.05          | Per opt-in use, rate-limited                              |
 | CDN + storage                   | ~$0.01          | ~10 MB/learner                                            |
 | Backend (sync, content, API)    | ~$0.03          |                                                           |
-| **Total**                       | **~$0.20–0.40** | Comfortable margin at $8.99                               |
+| **Total**                       | **~$0.15–0.35** | Placeholder until pricing/provider decisions close        |
 
 The architecture keeps costs low **because** it pushes work to the device — on-device ASR and
 on-device DSP were chosen for privacy and offline function first

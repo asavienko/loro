@@ -7,9 +7,41 @@ The `api` service and its supporting infrastructure. Rationale:
 verifying purchases. **What it is not for:** running a practice session. A learner can practise for
 weeks with the API unreachable ([overview.md](overview.md#the-ten-rules), rule 2).
 
+> **Status (2026-07-30): architecture target, partially implemented.** The Nest service currently
+> provides health, bundled content, in-memory sync through the shared Rust/WASM merge, and validated
+> bundled AI scenes. It does not connect to Postgres, Redis, MinIO, queues, a warehouse, or external
+> AI/TTS services, and it has no auth, billing, account, analytics, TTS, or worker module. The
+> target map and infrastructure below guide extension; they are not an inventory of running code.
+
 ---
 
-## Module map
+## Current module map
+
+```
+apps/api/src/
+├── main.ts                    # /v1 prefix, problem filter, production WASM startup gate
+├── app.module.ts              # repository/provider/clock choices
+├── ai/                        # bundled scenes, provider seam, validation, 2 routes
+├── common/                    # clock, config, problem-details catalog/filter
+├── content/                   # bundled manifest/diff/pack, 3 routes
+├── health/                    # liveness and WASM-aware readiness, 2 routes
+└── sync/                      # push/pull/status, WASM adapter, memory repository, 3 routes
+```
+
+| Implemented seam  | Current adapter                                      | Extension path                                                              |
+| ----------------- | ---------------------------------------------------- | --------------------------------------------------------------------------- |
+| `SYNC_REPOSITORY` | `InMemorySyncRepository`, process-local and unscoped | Add a user-scoped Postgres repository and select it only in `app.module.ts` |
+| `SCENE_PROVIDERS` | `StubSceneProvider`                                  | Register provider adapters; keep validation and fallback in `AiService`     |
+| `SERVER_CLOCK`    | system wall clock                                    | Override in tests; persistence later supplies durable HLC state             |
+| `config`          | one reader/default per environment variable          | Add accessors in `common/config.ts`, not scattered `process.env` reads      |
+
+Plan [66](../../plans/66-backend-contract-data-and-security.md) owns shared wire schemas, durable
+repositories, safe defaults, and the image contract. Plans
+[67](../../plans/67-anonymous-auth-and-account-lifecycle.md) and
+[68](../../plans/68-sync-and-offline-convergence.md) add identity and safe convergence. Plan
+[76](../../plans/76-roleplay-and-live-ai.md) adds a guarded live provider.
+
+## Target module map
 
 ```
 apps/api/src/
@@ -39,8 +71,8 @@ apps/api/src/
 │   ├── budget.service.ts     # per-user and global spend caps
 │   └── guard.service.ts      # prompt-injection + output validation
 │
-├── tts/                     # neural TTS proxy
-│   ├── tts.controller.ts     # POST /tts/render, POST /tts/voice-clone
+├── tts/                     # neural TTS proxy for learner-authored text
+│   ├── tts.controller.ts     # POST /tts/render; never accepts recorded audio
 │   └── tts.service.ts
 │
 ├── billing/                 # receipt verification, entitlements
@@ -74,15 +106,18 @@ apps/api/src/workers/         # separate process, same codebase
 └── notify/                   # server-driven pushes (rare — most are local)
 ```
 
-**Why workers are a separate process, same codebase:** they share the domain types and DB layer, but
-a slow content build must never contend with a learner's sync request. Deployed from the same image
-with a different entrypoint.
+**Why future workers are a separate process, same codebase:** they will share domain types and the
+DB layer, but a slow content build must never contend with a learner's sync request. The worker tree
+and alternate entrypoint do not exist yet.
 
 ---
 
 ## Module responsibilities
 
-### `auth`
+Unless a subsection says **current**, it specifies the target responsibility for a module that has
+not landed.
+
+### `auth` — target
 
 | Endpoint                                            | Purpose                                                                  |
 | --------------------------------------------------- | ------------------------------------------------------------------------ |
@@ -98,9 +133,18 @@ hashed. Detail: [security-privacy.md](security-privacy.md#authentication).
 [sync-protocol.md](sync-protocol.md#first-sign-in-on-a-device-with-local-data) and it must be
 transactional: either the anon identity is bound and the merge is queued, or nothing changed.
 
-### `sync`
+<a id="sync"></a>
+
+### `sync` — current skeleton, target protocol
 
 Thin. All the logic is in the shared merge function.
+
+Today `SyncService` calls the real WASM merge and rejects undeclared fields, but storage is one
+process-wide `Map`. There is no authenticated principal or transaction, the repository key is only
+`(entity, id)`, `pull` ignores `since`/`limit` and returns every row, and the server HLC has a fixed
+logical counter/node id. The sketch below is target code: its transaction and `user.id` scoping are
+not implemented. Until plans 66–68 land, this is a single-process development harness, not a safe
+multi-user sync service.
 
 ```ts
 @Post('push')
@@ -124,10 +168,11 @@ async push(@User() user: AuthUser, @Body() body: PushRequest): Promise<PushRespo
 > non-negotiable: two implementations of a conflict-resolution rule will diverge, and the divergence
 > will be discovered as data loss. See [ADR-0002](adr/0002-shared-rust-core.md).
 
-Reconciliation of derived counters (`reps`, `plays`) from the append-only logs runs as a nightly
-worker job, so the `max` merge class is a fast path and the logs are the truth.
+Target reconciliation of derived counters (`reps`, `plays`) from append-only logs runs as a nightly
+worker job, so the `max` merge class is a fast path and the logs are the truth. No reconciliation
+worker exists today.
 
-### `content`
+### `content` — current bundled source, target distribution
 
 | Endpoint                   | Notes                                                                  |
 | -------------------------- | ---------------------------------------------------------------------- |
@@ -136,34 +181,40 @@ worker job, so the `max` merge class is a fast path and the logs are the truth.
 | `GET /content/pack/:id`    | Full pack, for prefetch                                                |
 | Audio                      | Not served by the API — signed CDN URLs, content-addressed by `sha256` |
 
-Catalog data is served from Redis (warm) with Postgres as the source. It's the same for every
-learner, so it's aggressively cacheable at the CDN edge with a version-keyed path.
+Today catalog data is loaded directly from `@loro/content`: manifest counts are real, diff returns
+either nothing or the entire current catalog, and pack lookup uses `/content/pack?id=…`. It does not
+emit cache headers or checksums and has no version history. Redis/Postgres/object storage,
+historical diffs, CDN caching, and `/pack/:id` are target behavior.
 
-### `ai`
+### `ai` — current bundled scene seam, target pipeline
 
 The only module with an external runtime dependency on the learner's path, and therefore the one
 with the most guardrails. Detail: [ai-services.md](ai-services.md).
 
-Every request goes: **rate limit → budget check → cache lookup → provider → output validation →
-persist → respond.** A failure at any step returns a bundled fallback rather than an error.
+Today the registered stub provider returns bundled scenes and `AiService` validates provider output;
+an unknown configured provider warns and falls back. There is no live provider, rate limiter,
+budget, cache, persistence, repair pass, or streaming. The target request path is **rate limit →
+budget check → cache lookup → provider → output validation → persist → respond**, with bundled
+fallback at every failure boundary.
 
-### `tts`
+### `tts` — target
 
-| Endpoint                | Purpose                                                                                                      |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `POST /tts/render`      | Render a learner-authored phrase; cached and content-addressed, so a common phrase is rendered once globally |
-| `POST /tts/voice-clone` | v2. Requires `voice_clone_consent`; the only endpoint that accepts learner audio, per-use                    |
+| Endpoint           | Purpose                                                                                                      |
+| ------------------ | ------------------------------------------------------------------------------------------------------------ |
+| `POST /tts/render` | Render a learner-authored phrase; cached and content-addressed, so a common phrase is rendered once globally |
 
 Catalog audio is **not** rendered here — it's built by the `tts-render` worker at content build
-time.
+time. Recorded learner audio never leaves the device; no backend endpoint may accept it.
 
-### `billing`
+<a id="billing"></a>
+
+### `billing` — target
 
 Receipt verification (StoreKit 2 / Play Billing) and entitlement resolution. Webhooks for renewals
 and cancellations. **Entitlements are cached on the device with a grace period**, so a learner whose
 network is down does not lose Plus features mid-trip.
 
-### `account`
+### `account` — target
 
 `GET /account/export` produces a JSON archive of everything (phrases, ratings, notes, logs, trips) —
 a GDPR duty and a trust signal. `DELETE /account` cascades hard, and the deletion is verified by a
@@ -171,7 +222,7 @@ job that confirms zero rows remain.
 
 ---
 
-## Infrastructure
+## Target infrastructure — not provisioned or connected
 
 ```mermaid
 graph TB
@@ -219,7 +270,9 @@ and it's cached.
 
 ---
 
-## Deployment
+<a id="deployment"></a>
+
+## Target deployment
 
 - **IaC** for everything. No console changes; a console change that isn't in code is an incident
   waiting to recur.
@@ -229,7 +282,9 @@ and it's cached.
 - **Config via environment**, secrets from a managed secret store, never in the image.
 - Environments and promotion: [`process/environments.md`](../process/environments.md).
 
-## SLOs
+<a id="slos"></a>
+
+## Target SLOs
 
 | SLO                                  | Target                                          | Rationale                                                                        |
 | ------------------------------------ | ----------------------------------------------- | -------------------------------------------------------------------------------- |
@@ -248,36 +303,47 @@ an inconvenience, not an outage of the product.
 ## Security posture
 
 Detail in [security-privacy.md](security-privacy.md) and [threat-model.md](threat-model.md). The
-backend-specific measures:
+backend-specific target measures:
 
-| Measure                            |                                                                                                                   |
-| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| Every query is scoped by `user_id` | Enforced by a repository layer that requires it as a parameter; no raw `db.query` in controllers                  |
-| Rate limits                        | Per-user and per-IP; strictest on `/ai/*` and `/auth/*`                                                           |
-| Input validation                   | Zod schemas from `packages/core`, shared with the client, so the contract can't drift                             |
-| No PII in logs                     | Structured logging with a redaction allowlist; `user_id` only, never email                                        |
-| Learner audio                      | Accepted on exactly one endpoint (`/tts/voice-clone`), requires consent, processed and deleted within the request |
-| Errors                             | RFC 9457 problem details; no stack traces, no internal identifiers                                                |
-| Dependencies                       | Lockfile committed, automated updates, CI blocks on known-critical advisories                                     |
+| Measure                            |                                                                                                  |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------ |
+| Every query is scoped by `user_id` | Enforced by a repository layer that requires it as a parameter; no raw `db.query` in controllers |
+| Rate limits                        | Per-user and per-IP; strictest on `/ai/*` and `/auth/*`                                          |
+| Input validation                   | Zod schemas from `packages/core`, shared with the client, so the contract can't drift            |
+| No PII in logs                     | Structured logging with a redaction allowlist; `user_id` only, never email                       |
+| Learner audio                      | Never accepted by the backend; recorded audio remains on device                                  |
+| Errors                             | RFC 9457 problem details; no stack traces, no internal identifiers                               |
+| Dependencies                       | Lockfile committed, automated updates, CI blocks on known-critical advisories                    |
+
+What is enforced now is narrower: production bootstrap refuses to run without the WASM merge;
+readiness observes merge availability; accepted sync fields must have a declared merge class;
+provider scenes are validated; and the global exception filter emits problem details without stack
+traces or internal error text. Auth, tenant scoping, request Zod schemas, rate limits,
+structured-log redaction, database isolation, and learner-audio handling are not implemented and
+must not be credited as controls.
 
 ---
 
 ## Local development
 
-`docker-compose.yml` brings up Postgres, Redis, and a MinIO S3 stand-in. The API runs on the host
-for fast reload.
+The API runs on the host for fast reload and needs none of the compose services today. Use compose
+only while building repository/cache/object-storage layers; starting it does not make the API
+persistent because there is no database client or migration layer yet.
 
 ```bash
-pnpm --filter api dev:up      # compose up: postgres, redis, minio
-pnpm --filter api db:migrate
-pnpm --filter api db:seed     # a demo user with the blueprint's 10 seeded phrases
-pnpm --filter api dev
+pnpm core-rs:build              # build the real WASM merge once
+pnpm --filter @loro/api dev     # starts the API on :3000
+curl localhost:3000/v1/health/ready
+
+# Optional infrastructure for persistence work; unused by the current service
+pnpm --filter @loro/api dev:up
+pnpm --filter @loro/api dev:down
 ```
 
-The seed reproduces `LORO_SEED` from the blueprint (`Loro.dc.html:2873–2884`) — 10 phrases with real
-difficulties, tags, and rep counts — so every screen has plausible data on first run without anyone
-tapping through onboarding.
+There are no `db:migrate` or `db:seed` package scripts. The current sync repository starts empty and
+loses all rows at process restart.
 
-AI and TTS providers are stubbed locally by default (`AI_PROVIDER=stub`), returning the bundled
-fallback fixtures. Hitting real providers requires an explicit env change, which keeps local
-development free and offline-capable.
+AI scenes are stubbed locally by default (`AI_PROVIDER=stub`) and return bundled fallbacks. No live
+provider is registered: setting `AI_PROVIDER=anthropic` only logs a warning and still returns a
+bundled scene. There is no TTS controller or provider despite future TTS variables in
+`.env.example`.
