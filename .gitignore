@@ -6,7 +6,11 @@ node_modules/
 dist/
 build/
 out/
-!packages/design-tokens/out/     # generated, but COMMITTED — see ADR-0014
+# Generated, but COMMITTED — see ADR-0014. The comment is on its own line because
+# .gitignore has no trailing comments: with `# …` after the pattern, the whole line
+# was the pattern, it matched nothing, and design-tokens/out/ stayed ignored. The
+# `drift` job in CI diffs that directory, so it could never fail.
+!packages/design-tokens/out/
 .turbo/
 *.tsbuildinfo
 
