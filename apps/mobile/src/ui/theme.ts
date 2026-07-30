@@ -10,19 +10,40 @@ import {
   accents,
   defaultAccent,
   gradient,
+  gutter,
   ink,
   line,
+  motion,
   onDark,
   radius,
   scale,
   semantic,
   shadow,
+  size,
   space,
   surface,
+  typography,
   type AccentName,
 } from '@loro/design-tokens'
+import type { MasteryBucket } from '@loro/core'
+import type { TextStyle } from 'react-native'
 
-export { surface, ink, line, semantic, scale, onDark, gradient, space, radius, shadow }
+export {
+  surface,
+  ink,
+  line,
+  semantic,
+  scale,
+  onDark,
+  gradient,
+  space,
+  gutter,
+  radius,
+  shadow,
+  size,
+  typography,
+  motion,
+}
 
 /**
  * The component-level tokens — sizing, borders, and each control's metrics.
@@ -56,29 +77,83 @@ export type { AccentName }
 export const accent = accents[defaultAccent as AccentName]
 
 /** Type scale, as RN style objects. */
+const weight = (value: number): TextStyle['fontWeight'] => String(value) as TextStyle['fontWeight']
+const emToPixels = (value: string, fontSize: number, precision = 1): number =>
+  Number((Number.parseFloat(value) * fontSize).toFixed(precision))
+
 export const type = {
-  display: { fontSize: 62, fontWeight: '700', letterSpacing: -2, lineHeight: 62 },
-  hero: { fontSize: 46, fontWeight: '700', letterSpacing: -1.4, lineHeight: 48 },
-  title1: { fontSize: 26, fontWeight: '700', letterSpacing: -0.3, lineHeight: 31 },
-  title2: { fontSize: 22, fontWeight: '700', letterSpacing: -0.2, lineHeight: 27 },
-  title3: { fontSize: 20, fontWeight: '700', letterSpacing: -0.2, lineHeight: 24 },
-  headline: { fontSize: 18, fontWeight: '700', letterSpacing: -0.2, lineHeight: 23 },
-  body: { fontSize: 15, fontWeight: '700', lineHeight: 21 },
-  bodySm: { fontSize: 14, fontWeight: '700', lineHeight: 20 },
-  caption: { fontSize: 13, fontWeight: '600', lineHeight: 19 },
-  captionSm: { fontSize: 12, fontWeight: '600', lineHeight: 17 },
-  prose: { fontSize: 14, fontWeight: '400', lineHeight: 22 },
+  display: {
+    fontSize: typography.scale.display.size,
+    fontWeight: weight(typography.scale.display.weight),
+    letterSpacing: emToPixels(typography.scale.display.tracking, typography.scale.display.size, 0),
+    lineHeight: typography.scale.display.size,
+  },
+  hero: {
+    fontSize: typography.scale.hero.size,
+    fontWeight: weight(typography.scale.hero.weight),
+    letterSpacing: emToPixels(typography.scale.hero.tracking, typography.scale.hero.size),
+    lineHeight: 48,
+  },
+  title1: {
+    fontSize: typography.scale.title1.size,
+    fontWeight: weight(typography.scale.title1.weight),
+    letterSpacing: emToPixels(typography.scale.title1.tracking, typography.scale.title1.size),
+    lineHeight: Math.round(typography.scale.title1.size * typography.scale.title1.lineHeight),
+  },
+  title2: {
+    fontSize: typography.scale.title2.size,
+    fontWeight: weight(typography.scale.title2.weight),
+    letterSpacing: emToPixels(typography.scale.title2.tracking, typography.scale.title2.size),
+    lineHeight: Math.round(typography.scale.title2.size * typography.scale.title2.lineHeight),
+  },
+  title3: {
+    fontSize: typography.scale.title3.size,
+    fontWeight: weight(typography.scale.title3.weight),
+    letterSpacing: emToPixels(typography.scale.title3.tracking, typography.scale.title3.size),
+    lineHeight: Math.round(typography.scale.title3.size * typography.scale.title3.lineHeight),
+  },
+  headline: {
+    fontSize: typography.scale.headline.size,
+    fontWeight: weight(typography.scale.headline.weight),
+    letterSpacing: emToPixels(typography.scale.headline.tracking, typography.scale.headline.size),
+    lineHeight: Math.round(typography.scale.headline.size * typography.scale.headline.lineHeight),
+  },
+  body: {
+    fontSize: typography.scale.body.size,
+    fontWeight: weight(typography.scale.body.weight),
+    lineHeight: Math.round(typography.scale.body.size * typography.scale.body.lineHeight),
+  },
+  bodySm: {
+    fontSize: typography.scale.bodySm.size,
+    fontWeight: weight(typography.scale.bodySm.weight),
+    lineHeight: Math.round(typography.scale.bodySm.size * typography.scale.bodySm.lineHeight),
+  },
+  caption: {
+    fontSize: typography.scale.caption.size,
+    fontWeight: weight(typography.scale.caption.weight),
+    lineHeight: Math.round(typography.scale.caption.size * typography.scale.caption.lineHeight),
+  },
+  captionSm: {
+    fontSize: typography.scale.captionSm.size,
+    fontWeight: weight(typography.scale.captionSm.weight),
+    lineHeight: Math.round(typography.scale.captionSm.size * typography.scale.captionSm.lineHeight),
+  },
+  prose: {
+    fontSize: typography.scale.prose.size,
+    fontWeight: weight(typography.scale.prose.weight),
+    lineHeight: Math.round(typography.scale.prose.size * typography.scale.prose.lineHeight),
+  },
   label: {
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 0.44,
-    textTransform: 'uppercase',
+    fontSize: typography.scale.label.size,
+    fontWeight: weight(typography.scale.label.weight),
+    letterSpacing: emToPixels(typography.scale.label.tracking, typography.scale.label.size, 2),
+    textTransform: typography.scale.label.transform,
   },
   labelSm: {
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
+    fontSize: typography.scale.labelSm.size,
+    fontWeight: weight(typography.scale.labelSm.weight),
+    letterSpacing: emToPixels(typography.scale.labelSm.tracking, typography.scale.labelSm.size, 2),
+    textTransform: typography.scale.labelSm.transform,
   },
 } as const
 
@@ -91,21 +166,18 @@ export type TypeVariant = keyof typeof type
  */
 export const difficultyMeta = {
   easy: {
-    label: 'Easy',
     dot: semantic.success.text,
     bg: semantic.success.bg,
     border: semantic.success.border,
     color: semantic.success.text,
   },
   med: {
-    label: 'Learning',
     dot: semantic.warn.text,
     bg: semantic.warn.bg,
     border: semantic.warn.border,
     color: semantic.warn.text,
   },
   hard: {
-    label: 'Difficult',
     dot: semantic.danger.text,
     bg: semantic.danger.bg,
     border: semantic.danger.border,
@@ -115,11 +187,10 @@ export const difficultyMeta = {
 
 /** "What's tricky about it?" — the four tags. */
 export const tagMeta = {
-  pron: { label: 'Pronunciation', color: semantic.info.text, bg: semantic.info.bg },
-  remember: { label: 'Hard to remember', color: semantic.violet.text, bg: semantic.violet.bg },
-  useful: { label: 'Very useful', color: semantic.warn.text, bg: semantic.warn.bg, emoji: '⭐' },
+  pron: { color: semantic.info.text, bg: semantic.info.bg },
+  remember: { color: semantic.violet.text, bg: semantic.violet.bg },
+  useful: { color: semantic.warn.text, bg: semantic.warn.bg, emoji: '⭐' },
   words: {
-    label: 'Tricky words',
     color: semantic.dangerAlt.text,
     bg: semantic.danger.bg,
     emoji: '🔤',
@@ -130,20 +201,20 @@ export const tagMeta = {
 export const warming = scale.warming
 
 /** Mastery buckets, for the Progress screen. */
-export const masteryMeta = [
-  { key: 'new', label: 'New', color: scale.mastery.new },
-  { key: 'learning', label: 'Learning', color: scale.mastery.learning },
-  { key: 'strong', label: 'Strong', color: scale.mastery.strong },
-  { key: 'mastered', label: 'Mastered', color: scale.mastery.mastered },
-] as const
+export const masteryMeta = {
+  new: { color: scale.mastery.new },
+  learning: { color: scale.mastery.learning },
+  strong: { color: scale.mastery.strong },
+  mastered: { color: scale.mastery.mastered },
+} as const satisfies Record<MasteryBucket, { readonly color: string }>
 
 /**
  * Press feedback. Every interactive element scales — nothing in this app is
  * tappable without physical feedback. See docs/design/motion.md
  */
 export const press = {
-  row: 0.988,
-  button: 0.98,
-  smallButton: 0.9,
-  icon: 0.82,
+  row: motion.press.row.scale,
+  button: motion.press.button.scale,
+  smallButton: motion.press.smallButton.scale,
+  icon: motion.press.icon.scale,
 } as const

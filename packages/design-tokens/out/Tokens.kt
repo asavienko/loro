@@ -7,6 +7,8 @@ package app.loro.tokens
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.sp
 
 object LoroTokens {
     object Surface {
@@ -65,10 +67,316 @@ object LoroTokens {
         val md: Dp = 10.dp
         val lg: Dp = 12.dp
         val xl: Dp = 16.dp
-        val 2xl: Dp = 20.dp
-        val 3xl: Dp = 24.dp
+        val r2xl: Dp = 20.dp
+        val r3xl: Dp = 24.dp
         val pill: Dp = 999.dp
         val screen: Dp = 38.dp
         val device: Dp = 46.dp
+    }
+
+    object Gutter {
+        val dense: Dp = 14.dp
+        val default: Dp = 18.dp
+        val roomy: Dp = 22.dp
+    }
+
+    object Size {
+        object EmojiTile {
+            val sm: Dp = 22.dp
+            val md: Dp = 36.dp
+            val lg: Dp = 42.dp
+            val xl: Dp = 46.dp
+        }
+        object MicButton {
+            val sm: Dp = 60.dp
+            val md: Dp = 74.dp
+            val lg: Dp = 80.dp
+        }
+        object ProgressBar {
+            val thin: Dp = 4.dp
+            val default: Dp = 6.dp
+            val thick: Dp = 9.dp
+            val mastery: Dp = 12.dp
+        }
+        val scoreRing: Dp = 58.dp
+        val chartHeight: Dp = 104.dp
+        const val waveformBars = 34
+        const val contourPoints = 14
+    }
+
+    object Sheet {
+        val topLeftRadius: Dp = 24.dp
+        val topRightRadius: Dp = 28.dp
+        val bottomRightRadius: Dp = 40.dp
+        val bottomLeftRadius: Dp = 40.dp
+        val handleWidth: Dp = 42.dp
+        val handleHeight: Dp = 5.dp
+    }
+
+    object Typography {
+        object Family {
+            object Sans {
+                const val name = "Plus Jakarta Sans"
+                val weights = listOf(400, 500, 600, 700, 800)
+            }
+            object Serif {
+                const val name = "Instrument Serif"
+                val weights = listOf(400)
+                const val style = "italic"
+            }
+        }
+        object Scale {
+        object Display {
+            val size: TextUnit = 62.sp
+            val sizeMax: TextUnit = 74.sp
+            const val weight = 700
+            const val tracking = "-0.035em"
+            const val lineHeight = 0.9
+        }
+        object Hero {
+            val size: TextUnit = 46.sp
+            val sizeMax: TextUnit = 56.sp
+            const val weight = 700
+            const val tracking = "-0.03em"
+            const val lineHeight = 1
+        }
+        object Title1 {
+            val size: TextUnit = 26.sp
+            val sizeMax: TextUnit = 28.sp
+            const val weight = 700
+            const val tracking = "-0.01em"
+            const val lineHeight = 1.18
+        }
+        object Title2 {
+            val size: TextUnit = 22.sp
+            val sizeMax: TextUnit = 24.sp
+            const val weight = 700
+            const val tracking = "-0.01em"
+            const val lineHeight = 1.22
+        }
+        object Title3 {
+            val size: TextUnit = 20.sp
+            const val weight = 700
+            const val tracking = "-0.01em"
+            const val lineHeight = 1.2
+        }
+        object Headline {
+            val size: TextUnit = 18.sp
+            const val weight = 700
+            const val tracking = "-0.01em"
+            const val lineHeight = 1.25
+        }
+        object Body {
+            val size: TextUnit = 15.sp
+            const val weight = 700
+            const val lineHeight = 1.4
+        }
+        object BodySm {
+            val size: TextUnit = 14.sp
+            const val weight = 700
+            const val lineHeight = 1.4
+        }
+        object Caption {
+            val size: TextUnit = 13.sp
+            const val weight = 600
+            const val lineHeight = 1.45
+        }
+        object CaptionSm {
+            val size: TextUnit = 12.sp
+            const val weight = 600
+            const val lineHeight = 1.45
+        }
+        object Label {
+            val size: TextUnit = 11.sp
+            const val weight = 700
+            const val tracking = "0.04em"
+            const val transform = "uppercase"
+        }
+        object LabelSm {
+            val size: TextUnit = 10.sp
+            const val weight = 700
+            const val tracking = "0.05em"
+            const val transform = "uppercase"
+        }
+        object Prose {
+            val size: TextUnit = 14.sp
+            const val weight = 400
+            const val lineHeight = 1.58
+        }
+        object SerifDisplay {
+            val size: TextUnit = 26.sp
+            const val weight = 400
+            const val family = "serif"
+            const val style = "italic"
+        }
+        object SerifNum {
+            val size: TextUnit = 32.sp
+            const val weight = 400
+            const val family = "serif"
+            const val variant = "tabular-nums"
+        }
+        }
+    }
+
+    object Motion {
+        object Easing {
+            const val out = "cubic-bezier(.2,.8,.2,1)"
+            const val pop = "cubic-bezier(.2,.85,.25,1)"
+            const val press = "cubic-bezier(.3,.7,.3,1)"
+            const val inOut = "ease-in-out"
+            const val linear = "linear"
+        }
+        object Animation {
+        object PopIn {
+            const val durationMs = 400
+            val rangeMs = listOf(300, 500)
+            const val easing = "pop"
+            const val reducedMotion = "crossfade"
+        }
+        object StepIn {
+            const val durationMs = 300
+            const val easing = "out"
+            const val reducedMotion = "crossfade"
+        }
+        object Flip {
+            const val durationMs = 300
+            const val easing = "out"
+            const val reducedMotion = "crossfade"
+        }
+        object FadeIn {
+            const val durationMs = 250
+            val rangeMs = listOf(200, 300)
+            const val easing = "out"
+            const val reducedMotion = "keep"
+        }
+        object SheetUp {
+            const val durationMs = 340
+            const val easing = "pop"
+            const val reducedMotion = "crossfade"
+        }
+        object Grow {
+            const val durationMs = 500
+            const val easing = "out"
+            const val reducedMotion = "instant"
+        }
+        object EqA {
+            const val durationMs = 1000
+            const val easing = "inOut"
+            const val reducedMotion = "static"
+            const val loop = true
+        }
+        object EqB {
+            const val durationMs = 1000
+            const val easing = "inOut"
+            const val reducedMotion = "static"
+            const val loop = true
+            const val staggerMs = 150
+        }
+        object BarJump {
+            const val durationMs = 720
+            val rangeMs = listOf(700, 900)
+            const val easing = "inOut"
+            const val reducedMotion = "static"
+            const val loop = true
+            const val staggerMs = 120
+        }
+        object PulseRing {
+            const val durationMs = 1600
+            const val reducedMotion = "static"
+            const val loop = true
+        }
+        object TapRing {
+            const val durationMs = 400
+            const val easing = "out"
+            const val reducedMotion = "none"
+        }
+        }
+        object Transition {
+        object WarmingCard {
+            const val durationMs = 500
+            const val easing = "ease"
+            const val reducedMotion = "keepColour"
+            val properties = listOf("background", "box-shadow")
+        }
+        object AutomaticityBar {
+            const val durationMs = 450
+            const val easing = "out"
+            const val reducedMotion = "instant"
+        }
+        object WordUnblur {
+            const val durationMs = 350
+            val rangeMs = listOf(300, 400)
+            const val easing = "out"
+            const val reducedMotion = "instant"
+            val properties = listOf("filter", "color", "background", "transform")
+        }
+        object CardGrow {
+            const val durationMs = 280
+            const val easing = "out"
+        }
+        object QueueReorder {
+            const val durationMs = 320
+            const val easing = "out"
+        }
+        object ProgressBar {
+            const val durationMs = 400
+            const val easing = "out"
+        }
+        object SkillAxis {
+            const val durationMs = 500
+            const val easing = "out"
+        }
+        object Selection {
+            const val durationMs = 190
+            val rangeMs = listOf(180, 200)
+            const val easing = "out"
+        }
+        object ContourTrace {
+            const val stepMs = 45
+            const val totalMs = 2300
+            const val easing = "linear"
+            const val reducedMotion = "scrubber"
+        }
+        }
+        object Press {
+        object Row {
+            const val scale = 0.988
+            const val durationMs = 160
+            const val backgroundShift = true
+        }
+        object Button {
+            const val scale = 0.98
+            const val durationMs = 150
+        }
+        object SmallButton {
+            const val scale = 0.9
+            const val durationMs = 130
+            const val brightness = 0.93
+        }
+        object Icon {
+            const val scale = 0.82
+            const val durationMs = 130
+            const val opacity = 0.6
+        }
+        object Grow {
+            const val scale = 0.985
+            const val durationMs = 280
+            const val shadow = true
+        }
+            const val reducedMotion = "keep"
+        }
+        object AudioTiming {
+            const val repeatGapMs = 350
+            const val autoPlayDelayMs = 200
+            const val completionEchoMs = 250
+            const val processingMinMs = 400
+            const val deckShuffleMs = 1200
+            const val voiceCloneGenMs = 1200
+        }
+    }
+
+    object Touch {
+        val minTapTarget: Dp = 44.dp
+        val iconHitArea: Dp = 44.dp
     }
 }

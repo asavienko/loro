@@ -124,18 +124,7 @@ export const scale = {
       range: "100%",
       textSizeFloor: "large",
       deviation: "the gradient's light stop was #e08a4a — white on it was 2.66:1, below even the 3:1 large-text floor. Darkened to #d28145.",
-      constraint: {
-        "0": "WHITE TEXT ON THIS BAND MUST BE >=17px SEMIBOLD. It clears 3:1, not 4.5:1.",
-        "1": "",
-        "2": "The blueprint renders a 13px English subtitle in white at 0.7 opacity here",
-        "3": "(Loro.dc.html:1442). That does not pass, and darkening the gradient far enough",
-        "4": "to fix it (#a86737 -> #8f4119) turns the app's single most important reward",
-        "5": "moment into a muddy brown.",
-        "6": "",
-        "7": "So the constraint is recorded rather than waived: the peak card's secondary",
-        "8": "text needs a different treatment. Tracked as Q-14 in docs/decisions/open-questions.md",
-        "9": "and enforced by checkContrast.ts, which fails if this floor is removed.",
-      },
+      constraint: ["WHITE TEXT ON THIS BAND MUST BE >=17px SEMIBOLD. It clears 3:1, not 4.5:1.","","The blueprint renders a 13px English subtitle in white at 0.7 opacity here","(Loro.dc.html:1442). That does not pass, and darkening the gradient far enough","to fix it (#a86737 -> #8f4119) turns the app's single most important reward","moment into a muddy brown.","","So the constraint is recorded rather than waived: the peak card's secondary","text needs a different treatment. Tracked as Q-14 in docs/decisions/open-questions.md","and enforced by checkContrast.ts, which fails if this floor is removed."],
     },
   },
 } as const
@@ -228,6 +217,12 @@ export const space = {
   "5.5": 22,
 } as const
 
+export const gutter = {
+  dense: 14,
+  default: 18,
+  roomy: 22,
+} as const
+
 export const radius = {
   sm: 8,
   md: 10,
@@ -249,6 +244,367 @@ export const shadow = {
   float: "0 16px 40px rgba(0,0,0,.16)",
 } as const
 
+export const size = {
+  emojiTile: {
+    sm: 22,
+    md: 36,
+    lg: 42,
+    xl: 46,
+  },
+  micButton: {
+    sm: 60,
+    md: 74,
+    lg: 80,
+  },
+  scoreRing: 58,
+  sheetHandle: {
+    width: 42,
+    height: 5,
+  },
+  progressBar: {
+    thin: 4,
+    default: 6,
+    thick: 9,
+    mastery: 12,
+  },
+  chartHeight: 104,
+  waveformBars: 34,
+  contourPoints: 14,
+} as const
+
+export const typography = {
+  family: {
+    sans: {
+      value: "Plus Jakarta Sans",
+      weights: [400,500,600,700,800],
+      use: "everything",
+    },
+    serif: {
+      value: "Instrument Serif",
+      weights: [400],
+      style: "italic",
+      use: ["EMOTIONAL PUNCTUATION ONLY.","'¡Hola! I'm Loro' · 'You're all set' · '¡Hecho!' · '¡Escena completada!' ·","'today's run' · 'shuffling the deck…' · 'it climbed' · the phase numerals.","Never for UI labels. Never for body copy.","If you're reaching for the serif and it isn't a moment of feeling, use the sans."],
+    },
+  },
+  scale: {
+    display: {
+      size: 62,
+      sizeMax: 74,
+      weight: 700,
+      tracking: "-0.035em",
+      lineHeight: 0.9,
+      use: "countdown days, lock screen clock",
+    },
+    hero: {
+      size: 46,
+      sizeMax: 56,
+      weight: 700,
+      tracking: "-0.03em",
+      lineHeight: 1,
+      use: "streak count, recap number",
+    },
+    title1: {
+      size: 26,
+      sizeMax: 28,
+      weight: 700,
+      tracking: "-0.01em",
+      lineHeight: 1.18,
+      use: "phrase hero, welcome headline",
+    },
+    title2: {
+      size: 22,
+      sizeMax: 24,
+      weight: 700,
+      tracking: "-0.01em",
+      lineHeight: 1.22,
+      use: "screen headings, card phrases",
+    },
+    title3: {
+      size: 20,
+      weight: 700,
+      tracking: "-0.01em",
+      lineHeight: 1.2,
+      use: "screen titles",
+    },
+    headline: {
+      size: 18,
+      weight: 700,
+      tracking: "-0.01em",
+      lineHeight: 1.25,
+      use: "lab titles",
+    },
+    body: {
+      size: 15,
+      weight: 700,
+      lineHeight: 1.4,
+      use: "row primary, CTA labels",
+    },
+    bodySm: {
+      size: 14,
+      weight: 700,
+      lineHeight: 1.4,
+      use: "row primary (dense), buttons",
+    },
+    caption: {
+      size: 13,
+      weight: 600,
+      lineHeight: 1.45,
+      use: "row secondary, helper text",
+    },
+    captionSm: {
+      size: 12,
+      weight: 600,
+      lineHeight: 1.45,
+      use: "translations, tips",
+    },
+    label: {
+      size: 11,
+      weight: 700,
+      tracking: "0.04em",
+      transform: "uppercase",
+      use: "section labels, pills",
+    },
+    labelSm: {
+      size: 10,
+      weight: 700,
+      tracking: "0.05em",
+      transform: "uppercase",
+      use: "tile labels, micro-labels",
+    },
+    prose: {
+      size: 14,
+      weight: 400,
+      lineHeight: 1.58,
+      use: "long paragraphs",
+    },
+    serifDisplay: {
+      size: 26,
+      weight: 400,
+      family: "serif",
+      style: "italic",
+      use: "the emotional moments",
+    },
+    serifNum: {
+      size: 32,
+      weight: 400,
+      family: "serif",
+      variant: "tabular-nums",
+      use: "phase numerals",
+    },
+  },
+  rules: ["tabular-nums on EVERY changing number (streaks, counters, scores) so digits don't jitter.","Uppercase labels ALWAYS carry letter-spacing: 0.04em at 11px, 0.05em+ at 10px.","  Uppercase without tracking is the most common way this palette looks cheap.","Spanish text nodes must carry lang='es-ES' — checked in CI."],
+} as const
+
+export const motion = {
+  easing: {
+    out: {
+      value: "cubic-bezier(.2,.8,.2,1)",
+      use: "growth, sheets, layout, presses",
+    },
+    pop: {
+      value: "cubic-bezier(.2,.85,.25,1)",
+      use: "arrivals — a REWARD appearing. 8% overshoot",
+    },
+    press: {
+      value: "cubic-bezier(.3,.7,.3,1)",
+      use: "icon-button presses",
+    },
+    inOut: {
+      value: "ease-in-out",
+      use: "looping indicators",
+    },
+    linear: {
+      value: "linear",
+      use: "progress bars tracking real playback",
+    },
+  },
+  animation: {
+    popIn: {
+      duration: 400,
+      range: [300,500],
+      easing: "pop",
+      reducedMotion: "crossfade",
+      use: "toasts, lock-in diamond, level-up, completion check — REWARDS specifically",
+    },
+    stepIn: {
+      duration: 300,
+      easing: "out",
+      reducedMotion: "crossfade",
+      use: "onboarding step content",
+    },
+    flip: {
+      duration: 300,
+      easing: "out",
+      reducedMotion: "crossfade",
+      use: "card reveal, score card, curve panel",
+    },
+    fadeIn: {
+      duration: 250,
+      range: [200,300],
+      easing: "out",
+      reducedMotion: "keep",
+      use: "scrims, coach notes, deck cards",
+    },
+    sheetUp: {
+      duration: 340,
+      easing: "pop",
+      reducedMotion: "crossfade",
+      use: "the tagging sheet",
+    },
+    grow: {
+      duration: 500,
+      easing: "out",
+      reducedMotion: "instant",
+      use: "mastery bar, tag bars, ladder bars",
+    },
+    eqA: {
+      duration: 1000,
+      loop: true,
+      easing: "inOut",
+      reducedMotion: "static",
+      use: "small equalisers",
+    },
+    eqB: {
+      duration: 1000,
+      loop: true,
+      stagger: 150,
+      easing: "inOut",
+      reducedMotion: "static",
+      use: "now-playing equaliser, mic listening, ambient loop",
+    },
+    barJump: {
+      duration: 720,
+      range: [700,900],
+      loop: true,
+      stagger: 120,
+      easing: "inOut",
+      reducedMotion: "static",
+      use: "listening bars, typing dots, recording waveform, THE REFRAIN BEAT",
+    },
+    pulseRing: {
+      duration: 1600,
+      loop: true,
+      reducedMotion: "static",
+      use: "the mic button while listening",
+    },
+    tapRing: {
+      duration: 400,
+      easing: "out",
+      reducedMotion: "none",
+      use: "tap ripple",
+    },
+  },
+  transition: {
+    warmingCard: {
+      duration: 500,
+      properties: ["background","box-shadow"],
+      easing: "ease",
+      reducedMotion: "keepColour",
+      note: "THE most important animation in the app. The colour change is DATA, so it survives Reduce Motion; only the glow animation drops. Must hold 60fps on the device floor — a stutter reads as the app not noticing the learner's rep.",
+    },
+    automaticityBar: {
+      duration: 450,
+      easing: "out",
+      reducedMotion: "instant",
+    },
+    wordUnblur: {
+      duration: 350,
+      range: [300,400],
+      properties: ["filter","color","background","transform"],
+      easing: "out",
+      reducedMotion: "instant",
+    },
+    cardGrow: {
+      duration: 280,
+      easing: "out",
+    },
+    queueReorder: {
+      duration: 320,
+      easing: "out",
+      note: "transforms only — never height changes, or lists drop frames",
+    },
+    progressBar: {
+      duration: 400,
+      easing: "out",
+    },
+    skillAxis: {
+      duration: 500,
+      easing: "out",
+    },
+    selection: {
+      duration: 190,
+      range: [180,200],
+      easing: "out",
+    },
+    contourTrace: {
+      stepMs: 45,
+      totalMs: 2300,
+      easing: "linear",
+      reducedMotion: "scrubber",
+    },
+  },
+  press: {
+    row: {
+      scale: 0.988,
+      duration: 160,
+      backgroundShift: true,
+    },
+    button: {
+      scale: 0.98,
+      duration: 150,
+    },
+    smallButton: {
+      scale: 0.9,
+      duration: 130,
+      brightness: 0.93,
+    },
+    icon: {
+      scale: 0.82,
+      duration: 130,
+      opacity: 0.6,
+    },
+    grow: {
+      scale: 0.985,
+      duration: 280,
+      shadow: true,
+    },
+    reducedMotion: "keep",
+  },
+  audioTiming: {
+    repeatGapMs: {
+      value: 350,
+      note: "silence between stream repeats, for the learner to shadow",
+    },
+    autoPlayDelayMs: {
+      value: 200,
+      note: "after a card reveal",
+    },
+    completionEchoMs: {
+      value: 250,
+      note: "before replaying the full phrase on completion",
+    },
+    processingMinMs: {
+      value: 400,
+      note: "MINIMUM — a too-fast score reads as fake",
+    },
+    deckShuffleMs: {
+      value: 1200,
+      note: "the suspense IS the mechanic (Loro.dc.html:3487)",
+    },
+    voiceCloneGenMs: {
+      value: 1200,
+      note: "the wait signals real work",
+    },
+  },
+  touch: {
+    minTapTarget: 44,
+    iconHitArea: 44,
+    tapHighlight: "none",
+    touchAction: "manipulation",
+    userSelect: "none",
+  },
+} as const
+
 export type AccentName = keyof typeof accents
 export type SurfaceName = keyof typeof surface
 export type InkName = keyof typeof ink
@@ -262,5 +618,5 @@ export function accentTheme(name: string = defaultAccent): (typeof accents)[Acce
 
 export const tokens = {
   surface, ink, line, semantic, scale, onDark, gradient,
-  accents, defaultAccent, space, radius, shadow,
+  accents, defaultAccent, space, gutter, radius, shadow, size, typography, motion,
 } as const

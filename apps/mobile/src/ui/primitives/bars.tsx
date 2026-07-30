@@ -8,7 +8,7 @@
  */
 
 import { View } from 'react-native'
-import { accent, barRadius, line } from '../theme'
+import { accent, barRadius, line, size } from '../theme'
 import { Row } from './layout'
 
 /**
@@ -27,7 +27,7 @@ import { Row } from './layout'
 export function ProgressBar({
   value,
   color = accent.accent,
-  height = 6,
+  height = size.progressBar.default,
   track = line.default,
   radius = barRadius,
   label,

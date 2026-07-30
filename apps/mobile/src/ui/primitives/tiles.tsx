@@ -3,7 +3,7 @@
  */
 
 import { Text as RNText, View } from 'react-native'
-import { ink, radius, space, surface } from '../theme'
+import { ink, radius, size as designSize, space, surface } from '../theme'
 import { Card } from './surfaces'
 import { Text } from './Text'
 
@@ -18,7 +18,7 @@ import { Text } from './Text'
  */
 export function EmojiTile({
   emoji,
-  size = 42,
+  size = designSize.emojiTile.lg,
   radius: corner = radius.lg,
   background = surface.sunken,
   fontSize,
@@ -59,7 +59,12 @@ export function EmojiTile({
 export function Dot({ size, color }: { size: number; color: string }) {
   return (
     <View
-      style={{ width: size, height: size, borderRadius: Math.ceil(size / 2), backgroundColor: color }}
+      style={{
+        width: size,
+        height: size,
+        borderRadius: Math.ceil(size / 2),
+        backgroundColor: color,
+      }}
     />
   )
 }

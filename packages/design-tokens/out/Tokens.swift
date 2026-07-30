@@ -27,7 +27,7 @@ public enum LoroTokens {
 
     public enum Line {
         public static let subtle = Color(red: 0.9255, green: 0.9059, blue: 0.8588)
-        public static let default = Color(red: 0.8980, green: 0.8745, blue: 0.8235)
+        public static let `default` = Color(red: 0.8980, green: 0.8745, blue: 0.8235)
         public static let strong = Color(red: 0.8667, green: 0.8392, blue: 0.7804)
         public static let stronger = Color(red: 0.8510, green: 0.8275, blue: 0.7725)
         public static let strongest = Color(red: 0.7961, green: 0.7686, blue: 0.7098)
@@ -61,8 +61,8 @@ public enum LoroTokens {
         public static let md: CGFloat = 10
         public static let lg: CGFloat = 12
         public static let xl: CGFloat = 16
-        public static let 2xl: CGFloat = 20
-        public static let 3xl: CGFloat = 24
+        public static let r2xl: CGFloat = 20
+        public static let r3xl: CGFloat = 24
         public static let pill: CGFloat = 999
         public static let screen: CGFloat = 38
         public static let device: CGFloat = 46
@@ -81,5 +81,311 @@ public enum LoroTokens {
         public static let s3_5: CGFloat = 14
         public static let s4_5: CGFloat = 18
         public static let s5_5: CGFloat = 22
+    }
+
+    public enum Gutter {
+        public static let dense: CGFloat = 14
+        public static let `default`: CGFloat = 18
+        public static let roomy: CGFloat = 22
+    }
+
+    public enum Size {
+        public enum EmojiTile {
+            public static let sm: CGFloat = 22
+            public static let md: CGFloat = 36
+            public static let lg: CGFloat = 42
+            public static let xl: CGFloat = 46
+        }
+        public enum MicButton {
+            public static let sm: CGFloat = 60
+            public static let md: CGFloat = 74
+            public static let lg: CGFloat = 80
+        }
+        public enum ProgressBar {
+            public static let thin: CGFloat = 4
+            public static let `default`: CGFloat = 6
+            public static let thick: CGFloat = 9
+            public static let mastery: CGFloat = 12
+        }
+        public static let scoreRing: CGFloat = 58
+        public static let chartHeight: CGFloat = 104
+        public static let waveformBars = 34
+        public static let contourPoints = 14
+    }
+
+    public enum Sheet {
+        public static let topLeftRadius: CGFloat = 24
+        public static let topRightRadius: CGFloat = 28
+        public static let bottomRightRadius: CGFloat = 40
+        public static let bottomLeftRadius: CGFloat = 40
+        public static let handleWidth: CGFloat = 42
+        public static let handleHeight: CGFloat = 5
+    }
+
+    public enum Typography {
+        public enum Family {
+            public enum Sans {
+                public static let name = "Plus Jakarta Sans"
+                public static let weights = [400,500,600,700,800]
+            }
+            public enum Serif {
+                public static let name = "Instrument Serif"
+                public static let weights = [400]
+                public static let style = "italic"
+            }
+        }
+        public enum Scale {
+        public enum Display {
+            public static let size: CGFloat = 62
+            public static let sizeMax: CGFloat = 74
+            public static let weight = 700
+            public static let tracking = "-0.035em"
+            public static let lineHeight: CGFloat = 0.9
+        }
+        public enum Hero {
+            public static let size: CGFloat = 46
+            public static let sizeMax: CGFloat = 56
+            public static let weight = 700
+            public static let tracking = "-0.03em"
+            public static let lineHeight: CGFloat = 1
+        }
+        public enum Title1 {
+            public static let size: CGFloat = 26
+            public static let sizeMax: CGFloat = 28
+            public static let weight = 700
+            public static let tracking = "-0.01em"
+            public static let lineHeight: CGFloat = 1.18
+        }
+        public enum Title2 {
+            public static let size: CGFloat = 22
+            public static let sizeMax: CGFloat = 24
+            public static let weight = 700
+            public static let tracking = "-0.01em"
+            public static let lineHeight: CGFloat = 1.22
+        }
+        public enum Title3 {
+            public static let size: CGFloat = 20
+            public static let weight = 700
+            public static let tracking = "-0.01em"
+            public static let lineHeight: CGFloat = 1.2
+        }
+        public enum Headline {
+            public static let size: CGFloat = 18
+            public static let weight = 700
+            public static let tracking = "-0.01em"
+            public static let lineHeight: CGFloat = 1.25
+        }
+        public enum Body {
+            public static let size: CGFloat = 15
+            public static let weight = 700
+            public static let lineHeight: CGFloat = 1.4
+        }
+        public enum BodySm {
+            public static let size: CGFloat = 14
+            public static let weight = 700
+            public static let lineHeight: CGFloat = 1.4
+        }
+        public enum Caption {
+            public static let size: CGFloat = 13
+            public static let weight = 600
+            public static let lineHeight: CGFloat = 1.45
+        }
+        public enum CaptionSm {
+            public static let size: CGFloat = 12
+            public static let weight = 600
+            public static let lineHeight: CGFloat = 1.45
+        }
+        public enum Label {
+            public static let size: CGFloat = 11
+            public static let weight = 700
+            public static let tracking = "0.04em"
+            public static let transform = "uppercase"
+        }
+        public enum LabelSm {
+            public static let size: CGFloat = 10
+            public static let weight = 700
+            public static let tracking = "0.05em"
+            public static let transform = "uppercase"
+        }
+        public enum Prose {
+            public static let size: CGFloat = 14
+            public static let weight = 400
+            public static let lineHeight: CGFloat = 1.58
+        }
+        public enum SerifDisplay {
+            public static let size: CGFloat = 26
+            public static let weight = 400
+            public static let family = "serif"
+            public static let style = "italic"
+        }
+        public enum SerifNum {
+            public static let size: CGFloat = 32
+            public static let weight = 400
+            public static let family = "serif"
+            public static let variant = "tabular-nums"
+        }
+        }
+    }
+
+    public enum Motion {
+        public enum Easing {
+            public static let out = "cubic-bezier(.2,.8,.2,1)"
+            public static let pop = "cubic-bezier(.2,.85,.25,1)"
+            public static let press = "cubic-bezier(.3,.7,.3,1)"
+            public static let inOut = "ease-in-out"
+            public static let linear = "linear"
+        }
+        public enum Animation {
+        public enum PopIn {
+            public static let durationMs = 400
+            public static let rangeMs = [300,500]
+            public static let easing = "pop"
+            public static let reducedMotion = "crossfade"
+        }
+        public enum StepIn {
+            public static let durationMs = 300
+            public static let easing = "out"
+            public static let reducedMotion = "crossfade"
+        }
+        public enum Flip {
+            public static let durationMs = 300
+            public static let easing = "out"
+            public static let reducedMotion = "crossfade"
+        }
+        public enum FadeIn {
+            public static let durationMs = 250
+            public static let rangeMs = [200,300]
+            public static let easing = "out"
+            public static let reducedMotion = "keep"
+        }
+        public enum SheetUp {
+            public static let durationMs = 340
+            public static let easing = "pop"
+            public static let reducedMotion = "crossfade"
+        }
+        public enum Grow {
+            public static let durationMs = 500
+            public static let easing = "out"
+            public static let reducedMotion = "instant"
+        }
+        public enum EqA {
+            public static let durationMs = 1000
+            public static let easing = "inOut"
+            public static let reducedMotion = "static"
+            public static let loop = true
+        }
+        public enum EqB {
+            public static let durationMs = 1000
+            public static let easing = "inOut"
+            public static let reducedMotion = "static"
+            public static let loop = true
+            public static let staggerMs = 150
+        }
+        public enum BarJump {
+            public static let durationMs = 720
+            public static let rangeMs = [700,900]
+            public static let easing = "inOut"
+            public static let reducedMotion = "static"
+            public static let loop = true
+            public static let staggerMs = 120
+        }
+        public enum PulseRing {
+            public static let durationMs = 1600
+            public static let reducedMotion = "static"
+            public static let loop = true
+        }
+        public enum TapRing {
+            public static let durationMs = 400
+            public static let easing = "out"
+            public static let reducedMotion = "none"
+        }
+        }
+        public enum Transition {
+        public enum WarmingCard {
+            public static let durationMs = 500
+            public static let easing = "ease"
+            public static let reducedMotion = "keepColour"
+            public static let properties = ["background","box-shadow"]
+        }
+        public enum AutomaticityBar {
+            public static let durationMs = 450
+            public static let easing = "out"
+            public static let reducedMotion = "instant"
+        }
+        public enum WordUnblur {
+            public static let durationMs = 350
+            public static let rangeMs = [300,400]
+            public static let easing = "out"
+            public static let reducedMotion = "instant"
+            public static let properties = ["filter","color","background","transform"]
+        }
+        public enum CardGrow {
+            public static let durationMs = 280
+            public static let easing = "out"
+        }
+        public enum QueueReorder {
+            public static let durationMs = 320
+            public static let easing = "out"
+        }
+        public enum ProgressBar {
+            public static let durationMs = 400
+            public static let easing = "out"
+        }
+        public enum SkillAxis {
+            public static let durationMs = 500
+            public static let easing = "out"
+        }
+        public enum Selection {
+            public static let durationMs = 190
+            public static let rangeMs = [180,200]
+            public static let easing = "out"
+        }
+        public enum ContourTrace {
+            public static let stepMs = 45
+            public static let totalMs = 2300
+            public static let easing = "linear"
+            public static let reducedMotion = "scrubber"
+        }
+        }
+        public enum Press {
+        public enum Row {
+            public static let scale: CGFloat = 0.988
+            public static let durationMs = 160
+            public static let backgroundShift = true
+        }
+        public enum Button {
+            public static let scale: CGFloat = 0.98
+            public static let durationMs = 150
+        }
+        public enum SmallButton {
+            public static let scale: CGFloat = 0.9
+            public static let durationMs = 130
+            public static let brightness: CGFloat = 0.93
+        }
+        public enum Icon {
+            public static let scale: CGFloat = 0.82
+            public static let durationMs = 130
+            public static let opacity: CGFloat = 0.6
+        }
+        public enum Grow {
+            public static let scale: CGFloat = 0.985
+            public static let durationMs = 280
+            public static let shadow = true
+        }
+            public static let reducedMotion = "keep"
+        }
+        public enum AudioTiming {
+            public static let repeatGapMs = 350
+            public static let autoPlayDelayMs = 200
+            public static let completionEchoMs = 250
+            public static let processingMinMs = 400
+            public static let deckShuffleMs = 1200
+            public static let voiceCloneGenMs = 1200
+        }
+    }
+
+    public enum Touch {
+        public static let minTapTarget: CGFloat = 44
+        public static let iconHitArea: CGFloat = 44
     }
 }

@@ -19,8 +19,10 @@
  * colour still comes from `@loro/design-tokens`.
  */
 
-/** Minimum tap target. WCAG 2.2 AA. The one place the number lives. */
-export const MIN_TAP = 44
+import { motion } from '@loro/design-tokens'
+
+/** Minimum tap target. WCAG 2.2 AA. Authored in the generated touch tokens. */
+export const MIN_TAP = motion.touch.minTapTarget
 
 /**
  * The two border weights in the app.
