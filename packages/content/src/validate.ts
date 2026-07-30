@@ -10,7 +10,7 @@
  * expected while the catalog is being authored.
  */
 
-import { ALL_CHECKS, runChecks, type Issue } from './checks.js'
+import { ALL_CHECKS, runChecksForCatalog, type Issue } from './checks.js'
 import { loadCatalogFromDisk } from './fs.js'
 
 function parseArgs(argv: string[]): { only: string[]; strict: boolean } {
@@ -26,7 +26,7 @@ function main(): void {
 
   let issues: Issue[]
   try {
-    issues = runChecks(only)
+    issues = runChecksForCatalog(catalog, only)
   } catch (e) {
     console.error(`content: ${(e as Error).message}`)
     console.error(`available checks: ${Object.keys(ALL_CHECKS).join(', ')}`)
