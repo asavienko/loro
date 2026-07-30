@@ -145,6 +145,11 @@ export default function Stream() {
           </Row>
 
           <View style={{ marginTop: space['3'] }}>
+            {/* Deliberately UNNAMED, so assistive tech does not announce it.
+                `value={0.35}` is a hardcoded number over silence — there is no audio to be
+                35% through — which is a rule-2 violation owned by
+                plans/50-interface-integrity-defects.md. Naming it would announce the
+                fabricated number to a learner who cannot see that it never moves. */}
             <ProgressBar value={0.35} color={accent.accent} track={onDark.line} height={4} />
           </View>
 
@@ -244,6 +249,7 @@ export default function Stream() {
                   feedback="row"
                   accessibilityRole="radio"
                   accessibilityLabel={difficultyMeta[d].label}
+                  selected={active}
                   onPress={() => {
                     setDifficulty(current.id, d)
                   }}
@@ -255,7 +261,10 @@ export default function Stream() {
                     backgroundColor: active ? surface.card : 'transparent',
                   }}
                 >
-                  <Text variant="captionSm" color={active ? difficultyMeta[d].color : ink.muted}>
+                  {/* `ink.ink3`, not `ink.muted`: this row sits on `surface.sunken2`, where
+                      muted is 4.41:1 — under AA for 12 px text. Phrase detail already uses
+                      ink3 for the same inactive label; the stream was the outlier. */}
+                  <Text variant="captionSm" color={active ? difficultyMeta[d].color : ink.ink3}>
                     {difficultyMeta[d].label}
                   </Text>
                 </Pressable>

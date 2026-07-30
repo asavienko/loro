@@ -20,13 +20,18 @@
     "ink2": { "value": "#514e44", "contrast": 7.4, "use": "body copy" },
     "ink3": { "value": "#5c584c", "contrast": 6.3, "use": "secondary body, labels" },
     "ink4": { "value": "#57534a", "contrast": 6.8, "use": "nav links" },
-    "muted": { "value": "#6c6759", "contrast": 4.8, "use": "captions, translations, hints" },
+    "muted": {
+      "value": "#6a6558",
+      "contrast": 5.2,
+      "use": "captions, translations, hints",
+      "deviation": "#6c6759 was 4.41:1 on surface.sunken2 — the darkest light surface, which the contrast gate did not check until axe found the pairing rendered in the stream. Nudged along the same hue to clear 4.5:1 there"
+    },
     "muted2": { "value": "#7a7466", "contrast": 3.9, "use": "WARNING: >=14px semibold or non-text only" },
     "muted3": {
-      "value": "#8a8476",
-      "contrast": 3.2,
+      "value": "#878174",
+      "contrast": 3.5,
       "use": "WARNING: decorative marks only",
-      "deviation": "blueprint #8c8677 was 2.94:1 on surface.sunken — nudged to clear 3:1"
+      "deviation": "blueprint #8c8677 was 2.94:1 on surface.sunken — nudged to clear 3:1, then again from #8a8476 which was 2.91:1 on surface.sunken2"
     }
   },
 
