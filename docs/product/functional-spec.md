@@ -1,8 +1,9 @@
 # Functional specification
 
-Screen-by-screen behaviour for all 21 screens. The PRD says _what_ exists ([prd.md](prd.md)); this
-says _how it behaves_ — states, transitions, and the edge cases the blueprint's interactive
-prototype actually resolves.
+Screen-by-screen behaviour for all 23 learner screens: the original 21 in `Loro.dc.html` and the two
+v1.1 conversation screens in `Loro Chat.dc.html`. The navigation shell in `Navigation.dc.html` wraps
+them and is specified separately; it is not a twenty-fourth learner destination. The PRD says _what_
+exists ([prd.md](prd.md)); this says _how it behaves_ — states, transitions, and edge cases.
 
 Each screen section carries its blueprint anchor. **Open the blueprint and interact with the screen
 before implementing it.** The prototype is executable spec; the prose below is a summary of it.
@@ -35,8 +36,11 @@ complete. `Planned` means the section specifies future behaviour and has no curr
 | [19](#19-lock-screen-widget)             | Lock screen widget | Trip | v1   | Planned · native surface    |
 | [20](#20-survival-mode)                  | Survival mode      | Trip | v1   | Planned                     |
 | [21](#21-souvenir)                       | Souvenir           | Trip | v1   | Planned                     |
+| [22](#22-open-chat)                      | Open chat          | D    | v1.1 | Planned                     |
+| [23](#23-message-inspector)              | Message inspector  | D    | v1.1 | Planned                     |
 
-Plus: [Permissions](#permissions) · [Global behaviours](#global-behaviours)
+Plus: [Navigation shell](#navigation-shell) · [Permissions](#permissions) ·
+[Global behaviours](#global-behaviours)
 
 ---
 
@@ -63,6 +67,60 @@ When functionality grows, extend these three layers together:
 The manifest's `spec` field is traceability metadata and uses the canonical headings in this file:
 Onboarding §1, Add §2, Phrase detail §3, Adaptive stream §4, Today §11, Refrain §12, and Progress
 §15. Update those references in the same change if a heading is deliberately renumbered.
+
+---
+
+## Navigation shell
+
+`Navigation.dc.html:35–499` · state laws `512–873` · requirements `NAV-01…NAV-16`
+
+This is one route-owned system around every learner screen, not an alternative navigation mode. Each
+route declares one of five surface classes plus its place, parent/resolved home, built state,
+expected frequency, resumability, practice-source behavior, and menu grouping.
+
+**Surface states**
+
+| Class     | Header/exit behavior                                                                                                                                             |
+| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Root`    | No Back. The resolved home has its stateful text rail and exactly one primary filled action.                                                                     |
+| `Push`    | Names the route actually below it (`‹ Today`, `‹ Phrasebook`). Cold entry has no invented history and renders `✕ <resolved home>`.                               |
+| `Session` | Back gesture disabled. `✕` opens **Pause · End it here · Keep going**, with Pause first. Pausing writes a resumable checkpoint.                                  |
+| `Flow`    | Back steps within the flow and preserves answers. The switcher offers answered/current valid steps and Finish, never a guarded dead link.                        |
+| `Sheet`   | Owns focus and the only active escape. Scrim, swipe-down, and its `✕` dismiss it while the mounted surface beneath is inert; the spine is not duplicated inside. |
+
+**Spine, switcher, rail, and More**
+
+- Every non-Sheet surface has one 28 px spine directly below the status bar
+  (`Navigation.dc.html:311–330`, `454–475`). The left word names the current place and opens the
+  switcher. The right side is absent for no ongoing work, opens one item directly, or reads
+  `n ongoing` and opens the Ongoing group. Glyph/color alone never carries that state.
+- Ongoing is one canonical list: paused Sessions, playing loops, and half-answered Flows appear
+  consistently in the spine, switcher, and resolved home (`383–397`, `460–462`).
+- The switcher begins with Ongoing, then built roots and contextual Flow steps. `/more` renders
+  Lately, Phrases, Practice, and You from route metadata with real counts. Unbuilt/empty groups are
+  omitted, not disabled (`272–305`, `383–450`, `494–499`).
+- A home rail is declared on every possible resolved home. It contains only real destinations and
+  real state (for example `Review 12`); the bottom thumb arc belongs to the one filled CTA
+  (`111–163`, `479–499`).
+
+**Entry, interruption, and failure states**
+
+| State                         | Required behavior                                                                                                                                                                                                        |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Warm stack Push               | Back names and pops the actual prior screen.                                                                                                                                                                             |
+| Cold Push                     | `✕ <resolved home>` replaces the false Back label; a one-line arrival note may name the widget/notification/deep link source (`Navigation.dc.html:696–746`).                                                             |
+| Session dismissed             | Resolved home's primary CTA becomes **Resume rep n**; no second CTA is added. The checkpoint is addressable and survives process restart (`518–578`).                                                                    |
+| Deep link, no work at stake   | Land immediately.                                                                                                                                                                                                        |
+| Deep link, work at stake      | Keep the current rep/answers mounted, show the queued destination in-surface, and let the learner switch or keep going (`582–638`).                                                                                      |
+| Sheet over Session            | Underlying Session exit dims, is removed from accessibility, and does not respond. Sheet dismiss keeps audio/rep state alive (`643–691`).                                                                                |
+| Valid route, empty source     | Stay on the Session route; name the empty source and offer exactly two useful paths: fill that set or do today's instead (`751–799`).                                                                                    |
+| Gone/deleted source           | Resolve to Phrasebook with a reason.                                                                                                                                                                                     |
+| Malformed/unresolvable source | Resolve to the guarded home with a reason. Never spinner-then-error or silently bounce.                                                                                                                                  |
+| Travelling audio              | One transport appears directly under Root/Push header with real title/position, Pause and End. It hides on its own Session; another practice Session pauses it; Flow/Sheet hide it while playback continues (`802–860`). |
+
+`expectedUse: daily | weekly | rare` is route metadata, not taste at render time. Q-17 owns the
+remaining product decision about which daily destinations win scarce rail positions; it does not
+permit a daily built route to become unreachable.
 
 ---
 
@@ -826,6 +884,124 @@ itinerary themes. Everything on this screen must work with zero connectivity.
 
 "Phrases used in real life" is counted from survival-deck plays and captures while abroad — it must
 be a real number, not an estimate.
+
+---
+
+## 22. Open chat
+
+`Loro Chat.dc.html:91–328` · logic `456–684` · requirements `P3E-01…P3E-10`, `P3E-15…P3E-18`
+
+Open chat is a supplementary, private conversation loop with a bundled offline floor. Spanish is
+primary. The screen is a bottom-anchored thread plus one composer; it does not turn provider
+availability, tokens, or safety machinery into learner-facing scores.
+
+**Header and thread**
+
+- Header shows Loro, current topic, pace, and a real `Nothing kept` / `n kept` control
+  (`Loro Chat.dc.html:108–116`, `646–657`). Topic/pace opens its Sheet; kept opens its own Sheet.
+- Loro turns are unboxed on the left; learner turns are tinted bubbles on the right. One selected
+  line exposes its action row without a decorative selection outline (`118–162`, `607–635`).
+- Selected Loro: **Hear · EN/Hide · Save/Saved · Open**. Selected learner: **Say again · EN/Hide ·
+  Save/Saved · Open/Fix n**. A correction count is the real correction-array length.
+- English is hidden initially and revealed for one line only. Spanish remains visible and is marked
+  `es-ES` for native accessibility. New turns anchor at the bottom without stealing focus from a
+  learner editing the composer.
+
+**Text composer and suggestions**
+
+| State                 | Behavior                                                                                                                                                                                                 |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Empty                 | Spanish placeholder and mic are available; Send is absent/disabled.                                                                                                                                      |
+| Draft                 | Non-whitespace text enables Send and temporarily removes the mic so the two actions cannot conflict (`242–262`, `674–677`).                                                                              |
+| Draft correction      | A validated, high-confidence `was → now · kind · Fix` row may appear (`198–206`). Applying it changes the draft only. Editing invalidates stale feedback; send-as-is remains possible.                   |
+| Suggestions collapsed | **Ways to answer** chip is available when not listening or confirming speech.                                                                                                                            |
+| Suggestions open      | Three context suggestions show Spanish, English, register, Hear, and Send. Tapping text copies it into the editable field; Send sends as-is. **Others** changes the set; **Hide** closes it (`172–196`). |
+| Submitted             | The learner turn appears immediately and the composer clears. One real pending indicator follows; a cancelled, failed, stale, or budget-blocked request cannot later overwrite the thread (`163–169`).   |
+| Degraded/offline      | The bundled topic graph continues coherently and identifies its fallback provenance where useful. There is no fake typing delay, canned "AI" claim, or network-required dead end.                        |
+| Safety/provider error | Preserve the submitted turn and offer a useful bundled continuation/retry. Never show raw provider text, internal policy detail, or a reply that failed schema/safety validation.                        |
+
+**Voice composer**
+
+| State                  | Behavior                                                                                                                                                  |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Permission not decided | First mic action requests permission in context.                                                                                                          |
+| Denied/unavailable     | Explain how to re-enable it and keep text/suggestions fully usable; never insert a transcript.                                                            |
+| Holding                | Real input meter/listening state, **Keep talking**, cancel, and `Release to send · slide up to lock` where the platform supports the gesture (`208–228`). |
+| Locked                 | **Listening…**, cancel, and **Done**. Background, route change, interruption, or lost permission ends capture honestly.                                   |
+| Silence/no match/error | No fabricated recognition. Keep the draft/thread and offer Again or text entry.                                                                           |
+| Final transcript       | **Heard you say** shows the on-device final transcript with **Again** and **Send it**; it is never sent automatically (`231–240`).                        |
+
+Recorded PCM stays in native memory and never reaches JS or a request. Only the learner-confirmed
+on-device transcript may become a text turn. Browser tests use an explicitly labelled speech fake;
+production never falls back to `SpeechSynthesisUtterance`, a canned transcript, or the prototype's
+timer (`Loro Chat.dc.html:504`, `529–531`, `576–588`).
+
+**Topic/pace Sheet** (`Loro Chat.dc.html:265–291`)
+
+- Four authored topic entries show the selected mark. **Natural** and **Slow + English** change
+  actual playback/help policy, not just the label.
+- Topic change follows the durable thread policy: preserve the thread or explicitly start a new one;
+  never silently replace turns. **Start over** requires confirmation when retained learner turns
+  exist, then clears the durable thread/draft according to the retention contract.
+- Scrim, swipe, and Done dismiss the Sheet and restore focus. The thread remains mounted.
+
+**Kept Sheet** (`Loro Chat.dc.html:293–318`)
+
+- Empty explains how to save. Populated rows show Spanish and English/note with real Hear and Remove
+  actions. Header count updates immediately and survives relaunch.
+- **Queue for today's review** is disabled/honest when empty and otherwise reports the actual
+  singular/plural count. It invokes Review's queue contract; it does not write progress or invent a
+  due interval.
+
+**Persistence, privacy, and production divergence**
+
+The current topic/pace, durable turns, confirmed draft, kept references, and pending-request
+identity survive ordinary backgrounding and relaunch under Q-19's retention decision. Ephemeral
+selection, open Sheets, pending animation, and toasts do not. Thread text and ASR transcripts are
+excluded from telemetry and normal phrase sync. A live request may contain only the bounded text
+context authorized by Q-20; audio is structurally impossible.
+
+The authored `ChatLogic` is a state fixture, not a language/service implementation. Production
+explicitly rejects its regex corrections (`568–575`), text-derived IDs (`542–545`), canned reply
+timer (`576–588`), browser speech (`514`), and canned microphone result (`529–531`). Corrections,
+replies, suggestions, counts, playback, and recognition must come from their real owners.
+
+---
+
+## 23. Message inspector
+
+`Loro Chat.dc.html:331–449` · logic `686–710` · requirements `P3E-11…P3E-16`
+
+The inspector opens the selected durable turn. It is a Push surface: warm Back names Chat; cold
+entry uses the navigation contract's truthful resolved-home exit. If the turn was removed or
+expired, explain that and offer Chat plus the nearest retained conversation/phrase destination.
+
+**Common states**
+
+- Header identifies **Loro** or **You**, shows real `position / total`, returns to Chat, and steps
+  previous/next without wrapping or selecting an absent turn (`Loro Chat.dc.html:337–345`).
+- Body shows the full Spanish line, then available English and respelling. **Hear** and **Slow** use
+  real reference audio/rates; learner turns also offer **Say again** through on-device capture
+  (`347–365`). **Keep it/Kept** is idempotent.
+- Alternatives show Spanish, English, register, independent Hear, and `+`/`✓`. Saving an alternative
+  uses canonical phrase identity and the same explicit phrase transaction as every other add
+  (`400–412`).
+- Word-by-word rows speak the word and show its gloss (`414–427`). **Why it's said this way**
+  appears only when validated explanation content exists (`429–434`). Missing optional content
+  removes its section; it does not render placeholder expertise.
+
+**Learner correction states**
+
+| State                | Behavior                                                                                                                                                                        |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| No correction        | A validated positive state may say **Nothing to fix — this reads naturally**; provider failure/low confidence must omit the claim rather than manufacture approval (`393–398`). |
+| Correction available | Show real count; for each item show struck original, replacement, category, and specific explanation. Then show the complete fixed line and Hear (`367–388`).                   |
+| Apply                | **Use it & keep the fix** performs one explicit repository transaction, previews real audio, retains the original turn as evidence, and cannot double-add (`389`).              |
+| Already applied/kept | Render `Kept`/`✓` from repository identity. Re-entry, repeated taps, and process restart do not create another phrase.                                                          |
+
+Saving an original, corrected, or alternative line preserves chat provenance/register/note metadata
+and enters the same phrase/outbox path as other learner-authored content. Queueing it for Review
+uses Review's explicit queue handoff; neither inspector nor chat writes practice outcomes directly.
 
 ---
 

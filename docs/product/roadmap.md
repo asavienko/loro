@@ -14,7 +14,7 @@ deliberately not on the v1 critical path.
 | M0 · Setup  | **Partial:** portable foundations exist; native workspace, device persistence, dev deployment, and crash reporting do not     |
 | M1 · Spine  | **Partial and current:** seven learner routes demonstrate the thread on web; it is not yet durable, audible, or native-tested |
 | M2 · v1     | **Planned:** extend the spine into a production Today/Refrain loop, trip arc, offline/sync, release, and monetization         |
-| M3 · v1.1   | **Planned/evidence-gated:** Review/Memory and Roleplay follow the v1 foundations; speech labs wait for their quality gate     |
+| M3 · v1.1   | **Planned/evidence-gated:** Review/Memory, Roleplay, and guided open chat follow v1 foundations; speech labs wait for quality |
 | M4 · Scale  | **Planned:** hardening follows a functioning production service                                                               |
 | M5 · v2     | **Conditional:** Run/Phrasebook ship only if the loop experiment supports them                                                |
 | M6 · Beyond | **Unscheduled candidates**, not commitments                                                                                   |
@@ -73,12 +73,13 @@ replaced by treating a milestone table as a backlog:
 4. **Complete and ship v1 behavior:** finish Today/Refrain, Import, trips/Survival, settings,
    quality, delivery, and entitlements in
    [64](../../plans/64-today-and-refrain-production-loop.md)–[65](../../plans/65-import-and-capture.md)
+   and
+   [69](../../plans/69-trip-domain-and-arc.md)–[74](../../plans/74-monetization-and-entitlements.md).
 
 5. **Register and extend the v1.1 design package:** plan
    [79](../../plans/79-v1-1-design-contract.md) defines stable navigation/chat requirements before
    [80](../../plans/80-dev-design-system-workbench.md)–[83](../../plans/83-open-chat-and-message-inspector.md)
-   implement the workbench, navigation spine, and two chat surfaces. and
-   [69](../../plans/69-trip-domain-and-arc.md)–[74](../../plans/74-monetization-and-entitlements.md).
+   implement the workbench, navigation spine, private conversation service, and two chat surfaces.
 6. **Add later surfaces without rebuilding foundations:** Review/Memory, Roleplay, and the gated
    labs use the same repositories, engines, native capture, and release harness in
    [75](../../plans/75-review-and-memory.md)–[77](../../plans/77-dsp-and-speech-labs.md).
@@ -86,8 +87,9 @@ replaced by treating a milestone table as a backlog:
 
 Current decision/evidence gates are Q-15 for production audio assets, Q-07 for trip semantics, Q-05
 for the loop experiment and conditional Run, Q-14 for the Refrain peak accessibility sign-off,
-Q-08/Q-12 for monetization, and the recorded DSP spike gate for the labs. Other work should proceed
-when its technical dependencies pass; a blocked plan does not freeze file-disjoint work.
+Q-08/Q-12 for monetization, Q-16/Q-18…Q-20 for chat release/provider/retention, Q-17 for authored
+navigation frequency, and the recorded DSP spike gate for the labs. Other work should proceed when
+its technical dependencies pass; a blocked plan does not freeze file-disjoint work.
 
 ---
 
@@ -176,9 +178,10 @@ the Progress rollup. Internal dogfooding starts here and never stops.
 
 <a id="m3--v11--loop-a-and-the-labs--8-weeks"></a>
 
-## M3 · v1.1 — Loop A and the labs · ~8 weeks
+## M3 · v1.1 — Loop A, guided chat, and the labs · ~8 weeks
 
-**Goal: the retention story and the standout screen. Highest technical risk in the project.**
+**Goal: the retention story, guarded conversation, and the standout screen. Highest technical risk
+in the project.**
 
 | Scope                                                                | Requirements                                                      | Risk     |
 | -------------------------------------------------------------------- | ----------------------------------------------------------------- | -------- |
@@ -187,6 +190,7 @@ the Progress rollup. Internal dogfooding starts here and never stops.
 | **Pronunciation lab — real forced alignment + GOP scoring**          | `P3C-01`…`P3C-08`, `AS-06`                                        | **High** |
 | **Prosody lab — real F0 extraction, contour comparison, cue ladder** | `P3D-01`…`P3D-11`, `P3D-13`, `P3D-14`, `AS-05`                    | **High** |
 | Roleplay — LLM scenes, coach notes, spoken replies                   | `P3A-01`…`P3A-10`, `AI-01`                                        | Medium   |
+| Guided open chat + message inspector, bundled offline floor          | `P3E-01`…`P3E-18`, `AI-05`                                        | High     |
 | Capture — OCR → review → add                                         | `P2-15`, `AI-03`                                                  | Medium   |
 | Engine switching in Settings                                         | [practice-loops.md](practice-loops.md#can-a-learner-switch-loops) | Low      |
 | Accent theming, dark theme                                           | `F-05`, `F-06`                                                    | Low      |
@@ -200,6 +204,9 @@ during. See [`architecture/prosody-dsp.md`](../architecture/prosody-dsp.md#valid
 
 **Exit criteria:** a native Spanish speaker agrees with the pronunciation and prosody scores on 20
 recorded takes ≥80% of the time. If not, the labs don't ship — a wrong score is worse than no score.
+Guided chat separately requires its named release/retention decisions, coherent multi-turn bundled
+coverage for every topic with the network disabled, provider safety/quality thresholds, and proof
+that audio/thread text cannot enter telemetry or ordinary sync.
 
 ---
 

@@ -1,7 +1,7 @@
 # Product requirements
 
-Every piece of functionality in Loro, derived from the blueprint. Organised by the blueprint's own
-five phases plus cross-cutting concerns.
+Every piece of functionality in Loro, derived from the authored design package. Organised by the
+original blueprint's five phases, the v1.1 conversation addition, and cross-cutting concerns.
 
 **How to read this**
 
@@ -9,7 +9,9 @@ five phases plus cross-cutting concerns.
 - **Rel** — target release: `v1` · `v1.1` · `v2` · `later`. See [roadmap.md](roadmap.md).
 - **Rel is scope, not delivery status.** A `v1` row is not necessarily implemented. Use the
   implementation ledger below and the linked active plan before treating a requirement as shipped.
-- **Source** — line range in `design/Language Learning by Phrases - V1.1/Loro.dc.html`.
+- **Source** — line range in the named file under `design/Language Learning by Phrases - V1.1/`. An
+  unqualified range means `Loro.dc.html`; navigation and chat rows name their adjacent authored
+  artifact.
 - Screen-level behaviour (states, transitions, edge cases) lives in
   [functional-spec.md](functional-spec.md). This document says _what_; that one says _how it
   behaves_.
@@ -35,7 +37,8 @@ dependency-ordered source for remaining work is [`../../plans/README.md`](../../
 | `P5-01`…`P5-13`, `N-01`…`N-04`                      | **Not built:** trip, Survival, widgets, Live Activity, and notification surfaces have no app routes or native targets                                                                                    | [69](../../plans/69-trip-domain-and-arc.md), [70](../../plans/70-survival-widgets-and-notifications.md); trip semantics are blocked on [Q-07](../decisions/open-questions.md#q-07)                                                                                                                                                                   |
 | `P3-30`…`P3-40`, `P3A-*`, `P3B-*`, `P3C-*`, `P3D-*` | **Not built as learner surfaces:** core/provider seams are inputs, not completed screens                                                                                                                 | [75](../../plans/75-review-and-memory.md), [76](../../plans/76-roleplay-and-live-ai.md), and evidence-gated [77](../../plans/77-dsp-and-speech-labs.md)                                                                                                                                                                                              |
 | `LC-01`…`LC-15`                                     | **Not built and conditional:** compatible ladder data may be retained, but Run/Phrasebook UI waits for comparative evidence                                                                              | [78](../../plans/78-conditional-run-and-phrasebook.md), blocked on [Q-05](../decisions/open-questions.md#q-05) and M3 data                                                                                                                                                                                                                           |
-| v1.1 navigation + chat artifacts                    | **Authored but not yet registered here:** `Navigation.dc.html`, `Design System.dc.html`, and the two `Loro Chat.dc.html` screens are not implemented routes or stable requirements yet                   | [79](../../plans/79-v1-1-design-contract.md) defines the `NAV-*`/`P3E-*` contract before [80](../../plans/80-dev-design-system-workbench.md)–[83](../../plans/83-open-chat-and-message-inspector.md) implement it                                                                                                                                    |
+| `NAV-01`…`NAV-16`                                   | **Specified, not built:** the route-owned surface model, spine, switcher, honest exits/resume, and travelling transport have no production implementation                                                | [81](../../plans/81-navigation-spine-switcher-and-more.md), on the route foundation in [56](../../plans/56-navigation-failure-and-input-shell.md) and the persistence/audio owners named there                                                                                                                                                       |
+| `P3E-01`…`P3E-18`                                   | **Specified, not built:** Open chat and Message inspector have no routes, durable domain, bundled conversation pack, or guarded provider                                                                 | [82](../../plans/82-guided-chat-domain-and-service.md) defines the private domain/service after the named decisions below; [83](../../plans/83-open-chat-and-message-inspector.md) implements the two surfaces                                                                                                                                       |
 
 When code lands, update this ledger in the same change. Do not mark a range complete unless every
 row in that range has acceptance evidence; narrow partial ranges instead.
@@ -55,6 +58,30 @@ row in that range has acceptance evidence; narrow partial ranges instead.
 | F-07 | Data export (phrases + progress, JSON) and account deletion                     | v1   | GDPR duty: [security-privacy.md](../architecture/security-privacy.md)           |
 | F-08 | Spanish (`es-ES`) as the only target language; UI in English                    | v1   | `es-419` and UI localization: [localization.md](../process/localization.md)     |
 | F-09 | Minimum OS: iOS 16, Android 10 (API 29)                                         | v1   | [qa-device-matrix.md](../process/qa-device-matrix.md)                           |
+
+### Navigation contract (`NAV-01…NAV-16`)
+
+The authored navigation shorthand uses `N9` and `N13`…`N16`. Durable requirements use `NAV-*` so
+they cannot collide with notification requirements `N-01`…`N-04`.
+
+| ID     | Requirement                                                                                                                                                                               | Rel  | Source                                             |
+| ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- | -------------------------------------------------- |
+| NAV-01 | Every learner route declares exactly one surface class: **Root · Push · Session · Flow · Sheet**                                                                                          | v1.1 | `Navigation.dc.html:40–76`                         |
+| NAV-02 | A Root is a resolved home, has no Back control, and owns a stateful text rail plus one primary filled action                                                                              | v1.1 | `Navigation.dc.html:88–165`                        |
+| NAV-03 | A Push names the destination Back will reach; cold entry uses `✕ <resolved home>` rather than inventing browser history                                                                   | v1.1 | `Navigation.dc.html:167–240`, `696–746`            |
+| NAV-04 | A Session disables back gestures and exits through **Pause · End it here · Keep going**; Pause is offered first and never threatens lost progress                                         | v1.1 | `Navigation.dc.html:242–269`, `488–491`            |
+| NAV-05 | A Flow steps backward without losing answers, exposes only valid flow steps, and remains resumable across interruption                                                                    | v1.1 | `Navigation.dc.html:413–450`, `869`                |
+| NAV-06 | A Sheet owns focus, scrim and swipe dismissal while open; its underlying surface remains mounted and cannot also escape                                                                   | v1.1 | `Navigation.dc.html:643–691`                       |
+| NAV-07 | Route-owned metadata names place, parent/resolved home, hub/group, built state, expected use, resumability, practice-source parser, and empty-state copy                                  | v1.1 | `Navigation.dc.html:456–470`, `865–873`            |
+| NAV-08 | The switcher lists **Ongoing** first, then built roots/contextual flow steps; `/more` lists **Lately · Phrases · Practice · You**, with real counts and no dead rows                      | v1.1 | `Navigation.dc.html:332–450`, `272–305`, `494–496` |
+| NAV-09 | A deep link lands immediately unless work is at stake; then it queues in-surface. Valid-empty, gone/deleted, and malformed/unresolvable targets remain distinct and explain what happened | v1.1 | `Navigation.dc.html:582–638`, `751–799`            |
+| NAV-10 | Home rails are declared per possible resolved home, carry useful state such as a real due count, and leave the thumb arc for the one filled action                                        | v1.1 | `Navigation.dc.html:111–163`, `479–499`            |
+| NAV-11 | A paused session, playing loop, or half-answered flow is one canonical **ongoing** item shown consistently in the spine, switcher, and resolved home                                      | v1.1 | `Navigation.dc.html:315–330`, `383–397`, `460–462` |
+| NAV-12 | Every route declares expected use as `daily`, `weekly`, or `rare`; daily destinations cannot silently sit at depth three, and unbuilt groups remain hidden                                | v1.1 | `Navigation.dc.html:865–873`                       |
+| NAV-13 | Dismissing a resumable Session writes a checkpoint and changes the resolved home's primary CTA into **Resume**; it does not add a competing CTA                                           | v1.1 | `Navigation.dc.html:518–578`                       |
+| NAV-14 | Exactly one escape is active: while a Sheet is open, the underlying Session exit is inert and inaccessible                                                                                | v1.1 | `Navigation.dc.html:643–691`                       |
+| NAV-15 | Audio that outlives its route has one travelling transport on Root/Push; it hides on its own Session, pauses before another practice Session, and continues behind Flow/Sheet             | v1.1 | `Navigation.dc.html:802–860`                       |
+| NAV-16 | Every non-Sheet surface renders one 28 px spine: readable place on the left, zero/one/many ongoing state on the right, both actionable                                                    | v1.1 | `Navigation.dc.html:311–330`, `454–475`            |
 
 ---
 
@@ -329,6 +356,37 @@ All practice surfaces implement one `PracticeEngine` contract:
 
 ---
 
+## Loop D — Guided open chat (v1.1 supplementary)
+
+> _Talk first, take it apart after._ `Loro Chat.dc.html:91–99`
+
+Loop D is an optional conversation surface, not a fourth daily-practice engine and never a
+provider-dependent core loop. Its usable floor is a bundled, finite topic graph. A guarded live text
+provider may make replies less repetitive when policy, budget, and safety gates pass.
+
+| ID     | Requirement                                                                                                                                                                                                                                | Rel  | Source                                                                      |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---- | --------------------------------------------------------------------------- |
+| P3E-01 | Open chat offers an explicit topic and Loro pace; authored topics include Morning talk, At the café, Weekend plans, and Asking directions, with **Natural** or **Slow + English** pace                                                     | v1.1 | `Loro Chat.dc.html:108–114`, `269–289`, `456–459`                           |
+| P3E-02 | The thread distinguishes Loro and learner turns, keeps Spanish primary, anchors new turns at the bottom, and selects only one line for contextual actions                                                                                  | v1.1 | `Loro Chat.dc.html:116–162`, `604–635`                                      |
+| P3E-03 | English is hidden by default and revealed or hidden for one line at a time through **EN**; changing pace to Slow + English changes actual help/playback policy                                                                             | v1.1 | `Loro Chat.dc.html:123–155`, `327`, `646–666`                               |
+| P3E-04 | A learner can compose, edit, and send a non-empty Spanish text turn; empty input has no send action                                                                                                                                        | v1.1 | `Loro Chat.dc.html:242–262`, `674–677`                                      |
+| P3E-05 | **Ways to answer** exposes three editable suggestions with English/register, preview audio, direct send, **Others**, and **Hide**                                                                                                          | v1.1 | `Loro Chat.dc.html:172–196`, `668–673`                                      |
+| P3E-06 | Voice input supports hold-to-talk, tap/slide-to-lock where available, cancel/Done, a final **Heard you say** confirmation, Again, and explicit Send                                                                                        | v1.1 | `Loro Chat.dc.html:208–240`, `251–260`, `678–684`                           |
+| P3E-07 | A submitted turn enters a real pending state and resolves from the current thread/topic; cancellation, late-result protection, honest failure, and bundled degradation replace fake delay                                                  | v1.1 | `Loro Chat.dc.html:163–169`, `576–588` (prototype timing is non-production) |
+| P3E-08 | Selecting a Loro line exposes independent **Hear · EN · Save · Open** actions; selecting a learner line exposes **Say again · EN · Save · Open/Fix**                                                                                       | v1.1 | `Loro Chat.dc.html:118–162`                                                 |
+| P3E-09 | A high-confidence draft correction may be offered before send and applied explicitly; changed/stale or low-confidence text is never silently rewritten                                                                                     | v1.1 | `Loro Chat.dc.html:198–206`, `641–643`, `674–677`                           |
+| P3E-10 | Topic/pace and kept-line Sheets dismiss without losing the thread; **Start over** deliberately clears retained turns, while interruption/relaunch resumes the durable draft/thread                                                         | v1.1 | `Loro Chat.dc.html:265–318`, `523–538`                                      |
+| P3E-11 | Message inspector identifies Loro/You and position, returns to chat, and steps previous/next through the same durable thread                                                                                                               | v1.1 | `Loro Chat.dc.html:331–345`, `686–710`                                      |
+| P3E-12 | Inspector shows the full Spanish line plus available English and respelling, with real normal/slow playback and Say again for learner turns                                                                                                | v1.1 | `Loro Chat.dc.html:347–365`, `689–695`                                      |
+| P3E-13 | A learner-line correction shows count, plain diff, category, explanation, fixed line and preview; **Use it & keep the fix** is one explicit, idempotent handoff that preserves the original evidence                                       | v1.1 | `Loro Chat.dc.html:367–398`, `696–700`                                      |
+| P3E-14 | Inspector exposes alternative phrasings with English/register, per-item playback/save, word glosses, and a contextual explanation when supplied                                                                                            | v1.1 | `Loro Chat.dc.html:400–434`, `701–709`                                      |
+| P3E-15 | Saving/removing an original, fixed, or alternative line is explicit and deduplicated; kept lines enter the same phrase repository/stream as every learner-owned phrase                                                                     | v1.1 | `Loro Chat.dc.html:293–318`, `542–565`                                      |
+| P3E-16 | Kept lines can be queued explicitly for today's Review with a real singular/plural count; the handoff cannot fabricate progress or a due interval                                                                                          | v1.1 | `Loro Chat.dc.html:293–316`, `538`                                          |
+| P3E-17 | Threads are private/local by default, survive ordinary interruption under the chosen retention policy, never enter analytics or normal phrase sync, and recorded audio never leaves the device                                             | v1.1 | `Loro Chat.dc.html:95–99`; privacy extension required by `P3D-14`           |
+| P3E-18 | Every topic has a useful bundled offline path; live text is bounded, budgeted, schema/safety validated, and honestly degraded. Prototype regex corrections, timed canned replies, browser speech, and fabricated recognition are forbidden | v1.1 | `Loro Chat.dc.html:456–588` (prototype mechanisms explicitly rejected)      |
+
+---
+
 ## Phase 4 — Stay on track
 
 > _See it add up — and steer what comes next._ `Loro.dc.html:1778–1883`
@@ -371,19 +429,19 @@ All practice surfaces implement one `PracticeEngine` contract:
 
 ## Cross-cutting: audio, speech, and AI
 
-| ID    | Requirement                                                                                 | Rel  | Notes                                                                |
-| ----- | ------------------------------------------------------------------------------------------- | ---- | -------------------------------------------------------------------- |
-| AS-01 | Native-quality Spanish TTS for every phrase, cached on device                               | v1   | Pre-rendered per phrase; on-device TTS fallback                      |
-| AS-02 | Variable playback rate (0.6× – 1.5×) preserving pitch                                       | v1   |                                                                      |
-| AS-03 | On-device ASR for Spanish, with reveal mode when recognition is unavailable                 | v1   | [ADR-0005](../architecture/adr/0005-on-device-asr-cloud-fallback.md) |
-| AS-04 | Background audio, lock screen transport, ducking, and interruption recovery                 | v1   | [audio-speech.md](../architecture/audio-speech.md)                   |
-| AS-05 | Pitch (F0) extraction and contour comparison on-device                                      | v1.1 | [prosody-dsp.md](../architecture/prosody-dsp.md)                     |
-| AS-06 | Forced alignment of the learner's audio to the expected syllables                           | v1.1 |                                                                      |
-| AI-01 | LLM roleplay scene generation and coach notes                                               | v1.1 | [ai-services.md](../architecture/ai-services.md)                     |
-| AI-02 | LLM-assisted phrase enrichment (respelling, gloss, example, hook) at content-authoring time | v1   | Offline pipeline, human-reviewed                                     |
-| AI-03 | Translation and normalisation for imported and captured lines                               | v1.1 |                                                                      |
-| AI-04 | Reserved; no implementation may upload recorded learner audio                               | —    | P3D-12 remains excluded unless a real on-device design exists        |
-| AI-05 | All AI output on learner-visible paths is cached, rate-limited, and has a bundled fallback  | v1.1 |                                                                      |
+| ID    | Requirement                                                                                                                                                       | Rel  | Notes                                                                |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- | -------------------------------------------------------------------- |
+| AS-01 | Native-quality Spanish TTS for every phrase, cached on device                                                                                                     | v1   | Pre-rendered per phrase; on-device TTS fallback                      |
+| AS-02 | Variable playback rate (0.6× – 1.5×) preserving pitch                                                                                                             | v1   |                                                                      |
+| AS-03 | On-device ASR for Spanish, with reveal mode when recognition is unavailable                                                                                       | v1   | [ADR-0005](../architecture/adr/0005-on-device-asr-cloud-fallback.md) |
+| AS-04 | Background audio, lock screen transport, ducking, and interruption recovery                                                                                       | v1   | [audio-speech.md](../architecture/audio-speech.md)                   |
+| AS-05 | Pitch (F0) extraction and contour comparison on-device                                                                                                            | v1.1 | [prosody-dsp.md](../architecture/prosody-dsp.md)                     |
+| AS-06 | Forced alignment of the learner's audio to the expected syllables                                                                                                 | v1.1 |                                                                      |
+| AI-01 | LLM roleplay scene generation and coach notes                                                                                                                     | v1.1 | [ai-services.md](../architecture/ai-services.md)                     |
+| AI-02 | LLM-assisted phrase enrichment (respelling, gloss, example, hook) at content-authoring time                                                                       | v1   | Offline pipeline, human-reviewed                                     |
+| AI-03 | Translation and normalisation for imported and captured lines                                                                                                     | v1.1 |                                                                      |
+| AI-04 | Reserved; no implementation may upload recorded learner audio                                                                                                     | —    | P3D-12 remains excluded unless a real on-device design exists        |
+| AI-05 | Every learner-visible AI path is bounded, rate-limited, schema/safety validated, and has a useful bundled fallback; cache only where privacy and semantics permit | v1.1 | Open chat remains subject to `P3E-17`…`P3E-18`                       |
 
 ## Cross-cutting: notifications
 

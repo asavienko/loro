@@ -55,8 +55,11 @@ grammatical scaffolding and written exams. Both are well served elsewhere.
 
 - **Not a grammar course.** No conjugation tables, no exercises about rules. Grammar shows up only
   as a word-by-word gloss on a phrase you already care about.
-- **Not a chatbot.** The roleplay is a bounded scene with a coach, not open-ended conversation with
-  an AI. Three turns in a café, then a recap.
+- **Not an unbounded AI companion.** v1.1 includes an optional open-chat surface authored in
+  `Loro Chat.dc.html`, but the product still does not outsource its curriculum, relationship, or
+  daily loop to a model. Conversation has learner-chosen topics, a finite bundled offline floor,
+  explicit save/review handoffs, bounded provider context, and a message inspector that turns talk
+  back into phrases. Provider availability enhances it; it never gates learning.
 - **Not a streak machine.** The streak exists (it's motivating and cheap), but the honest progress
   surfaces are phrase mastery, the automaticity meter, and the ladder distribution — all of which
   reflect ability, not attendance. Nothing in Loro punishes a missed day; the roguelike loop states
@@ -82,6 +85,12 @@ We do not resolve this by guessing. We resolve it by making the loop a plug-in
 [ADR-0006](../architecture/adr/0006-pluggable-practice-engines.md)) and letting real retention data
 pick the winner. **v1 ships Loop B as the hero** with the hands-free stream alongside it, because
 depth-first is the differentiated bet and the cheapest to build well.
+
+The v1.1 package also authors **Loop D — guided open chat** (`Loro Chat.dc.html:91–99`). It is
+supplementary conversation, not a fourth answer to the daily-practice question and therefore not a
+`PracticeEngine`. It reads from bundled topic/phrase content and hands explicitly kept lines back to
+the shared phrase and Review paths. Its live text provider is guarded garnish over a usable offline
+conversation, never the method itself.
 
 ## Success conditions
 
