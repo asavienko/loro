@@ -170,7 +170,11 @@ const WARM_BANDS = [
   { min: 100, band: 'peak', effort: 'instant & smooth' },
   { min: 66, band: 'hot', effort: 'quick & smooth' },
   { min: 33, band: 'warm', effort: 'getting smoother' },
-] as const satisfies readonly { readonly min: number; readonly band: WarmBand; readonly effort: string }[]
+] as const satisfies readonly {
+  readonly min: number
+  readonly band: WarmBand
+  readonly effort: string
+}[]
 
 const COLDEST = { band: 'cold', effort: 'warming up' } as const
 

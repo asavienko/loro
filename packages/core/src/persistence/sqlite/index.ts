@@ -27,6 +27,7 @@ export { SqlSettingsTable } from './settings.js'
 export { SqlRefrainDayTable } from './refrainDay.js'
 export { SqlPracticeDayTable } from './practiceDay.js'
 export { SqlOutboxTable } from './outbox.js'
+export type { SyncedTableDeps, TableDeps } from './deps.js'
 
 /**
  * Open a persistence set over a driver, applying migrations first.
@@ -41,11 +42,15 @@ export function openSqlPersistence(
   userId: string = LOCAL_USER_ID,
 ): Persistence {
   migrate(driver, at)
+  // `refrain_day` and `streak_day` have no `updated_hlc` column, so they are handed no
+  // clock to stamp with — see `deps.ts`.
+  const deps = { driver, userId }
+  const synced = { ...deps, hlc }
   return {
-    phrases: new SqlPhraseTable(driver, hlc, userId),
-    settings: new SqlSettingsTable(driver, hlc, userId),
-    refrainDay: new SqlRefrainDayTable(driver, userId),
-    practiceDays: new SqlPracticeDayTable(driver, userId),
+    phrases: new SqlPhraseTable(synced),
+    settings: new SqlSettingsTable(synced),
+    refrainDay: new SqlRefrainDayTable(deps),
+    practiceDays: new SqlPracticeDayTable(deps),
     outbox: new SqlOutboxTable(driver),
     wipe: () => {
       // Drop and recreate rather than DELETE: a dropped table leaves no rows to recover

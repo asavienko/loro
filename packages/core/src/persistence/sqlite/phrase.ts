@@ -27,30 +27,74 @@ import {
   readRealOrNull,
   readText,
   readTextOrNull,
-  type SqlDriver,
   type SqlRow,
   type SqlValue,
 } from '../driver.js'
-import { LOCAL_USER_ID, type PhraseTable } from '../tables.js'
-
-const PHRASE_COLUMNS = `
-  id, user_id, phrase_id, own_es, own_en, own_theme, own_emoji, source,
-  difficulty, tags, loved, learned, note,
-  plays, reps, added_at, last_practiced_at, graduated_at,
-  srs_stability, srs_difficulty, srs_due, srs_last_review, srs_lapses, srs_state,
-  reps_today, reps_today_day, automaticity, lock_in_days,
-  rung, stumbles,
-  cue_level, ax_perception, ax_recall, ax_production,
-  updated_hlc, field_hlc, deleted_at
-`
+import type { PhraseTable } from '../tables.js'
+import type { SyncedTableDeps } from './deps.js'
 
 /**
- * Derived, never written down: the INSERT's placeholder count and `phraseToParams`'
- * length must both equal the column count, and a hand-maintained number is one edit away
- * from binding a column to the wrong value. `phrase.test.ts` asserts the pairing — and
- * the names let it assert the ORDER too, which nothing used to.
+ * The column list, grouped as docs/architecture/data-model.md groups it so the two can be
+ * read side by side.
+ *
+ * An ARRAY rather than SQL text, because three artefacts have to agree — this list, the
+ * `INSERT`'s placeholder count, and `phraseToParams`' return — and only one of the three
+ * can be authored. The other two are derived below, so a column added here without its
+ * parameter is a COMPILE error rather than a row whose every later column holds its
+ * neighbour's value.
  */
-export const PHRASE_COLUMN_NAMES: readonly string[] = PHRASE_COLUMNS.split(',').map((c) => c.trim())
+export const PHRASE_COLUMN_NAMES = [
+  'id',
+  'user_id',
+  'phrase_id',
+  'own_es',
+  'own_en',
+  'own_theme',
+  'own_emoji',
+  'source',
+  'difficulty',
+  'tags',
+  'loved',
+  'learned',
+  'note',
+  'plays',
+  'reps',
+  'added_at',
+  'last_practiced_at',
+  'graduated_at',
+  'srs_stability',
+  'srs_difficulty',
+  'srs_due',
+  'srs_last_review',
+  'srs_lapses',
+  'srs_state',
+  'reps_today',
+  'reps_today_day',
+  'automaticity',
+  'lock_in_days',
+  'rung',
+  'stumbles',
+  'cue_level',
+  'ax_perception',
+  'ax_recall',
+  'ax_production',
+  'updated_hlc',
+  'field_hlc',
+  'deleted_at',
+] as const
+
+/**
+ * One `SqlValue` per element of a column tuple — same length, positionally.
+ *
+ * Written over a type PARAMETER so the mapping is homomorphic: TypeScript then preserves
+ * the tuple's length instead of mapping its array methods too. That length is the whole
+ * point — it is what makes a missing parameter a type error.
+ */
+type ValuesFor<T extends readonly unknown[]> = { -readonly [K in keyof T]: SqlValue }
+
+type PhraseParams = ValuesFor<typeof PHRASE_COLUMN_NAMES>
+
+const PHRASE_COLUMNS = PHRASE_COLUMN_NAMES.join(', ')
 
 const PHRASE_PLACEHOLDERS = placeholders(PHRASE_COLUMN_NAMES.length)
 
@@ -121,7 +165,7 @@ export function rowToPhrase(row: SqlRow): PhraseState {
   }
 }
 
-export function phraseToParams(p: PhraseState, userId: string, hlc: string): SqlValue[] {
+export function phraseToParams(p: PhraseState, userId: string, hlc: string): PhraseParams {
   return [
     p.id,
     userId,
@@ -171,15 +215,13 @@ export function phraseToParams(p: PhraseState, userId: string, hlc: string): Sql
 }
 
 export class SqlPhraseTable implements PhraseTable {
-  constructor(
-    private readonly driver: SqlDriver,
-    private readonly hlc: () => string,
-    private readonly userId: string = LOCAL_USER_ID,
-  ) {}
+  constructor(private readonly deps: SyncedTableDeps) {}
 
   /** `PHRASE_SELECT` plus this query's own predicate and ordering. */
   private select(tail: string, params: readonly SqlValue[] = []): PhraseState[] {
-    return this.driver.all(`${PHRASE_SELECT} ${tail}`, [this.userId, ...params]).map(rowToPhrase)
+    return this.deps.driver
+      .all(`${PHRASE_SELECT} ${tail}`, [this.deps.userId, ...params])
+      .map(rowToPhrase)
   }
 
   all(): PhraseState[] {
@@ -202,24 +244,24 @@ export class SqlPhraseTable implements PhraseTable {
   }
 
   upsert(phrase: PhraseState): void {
-    this.driver.run(
+    this.deps.driver.run(
       `INSERT OR REPLACE INTO user_phrase (${PHRASE_COLUMNS}) VALUES (${PHRASE_PLACEHOLDERS})`,
-      phraseToParams(phrase, this.userId, this.hlc()),
+      phraseToParams(phrase, this.deps.userId, this.deps.hlc()),
     )
   }
 
   softDelete(id: UserPhraseId, at: number): void {
-    this.driver.run(
+    this.deps.driver.run(
       `UPDATE user_phrase SET deleted_at = ?, updated_hlc = ? WHERE user_id = ? AND id = ?`,
-      [at, this.hlc(), this.userId, id],
+      [at, this.deps.hlc(), this.deps.userId, id],
     )
   }
 
   count(): number {
     const row = firstRow(
-      this.driver,
+      this.deps.driver,
       'SELECT COUNT(*) AS n FROM user_phrase WHERE user_id = ? AND deleted_at IS NULL',
-      [this.userId],
+      [this.deps.userId],
     )
     return row === null ? 0 : readInt(row, 'n')
   }

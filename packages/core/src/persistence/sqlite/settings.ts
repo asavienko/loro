@@ -7,22 +7,18 @@ import {
   readIntOrNull,
   readJson,
   readTextOrNull,
-  type SqlDriver,
 } from '../driver.js'
-import { LOCAL_USER_ID, type SettingsRow, type SettingsTable } from '../tables.js'
+import type { SettingsRow, SettingsTable } from '../tables.js'
+import type { SyncedTableDeps } from './deps.js'
 
 export class SqlSettingsTable implements SettingsTable {
-  constructor(
-    private readonly driver: SqlDriver,
-    private readonly hlc: () => string,
-    private readonly userId: string = LOCAL_USER_ID,
-  ) {}
+  constructor(private readonly deps: SyncedTableDeps) {}
 
   load(): SettingsRow | null {
     const row = firstRow(
-      this.driver,
+      this.deps.driver,
       `SELECT onboarded, goal, level, daily_minutes, wave_times FROM settings WHERE user_id = ?`,
-      [this.userId],
+      [this.deps.userId],
     )
     if (row === null) return null
     const minutes = readIntOrNull(row, 'daily_minutes')
@@ -37,18 +33,18 @@ export class SqlSettingsTable implements SettingsTable {
   }
 
   save(settings: SettingsRow): void {
-    this.driver.run(
+    this.deps.driver.run(
       `INSERT OR REPLACE INTO settings
          (user_id, onboarded, goal, level, daily_minutes, wave_times, updated_hlc)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [
-        this.userId,
+        this.deps.userId,
         boolToSql(settings.onboarded),
         settings.goal,
         settings.level,
         settings.dailyMinutes,
         JSON.stringify(settings.waveTimes),
-        this.hlc(),
+        this.deps.hlc(),
       ],
     )
   }
