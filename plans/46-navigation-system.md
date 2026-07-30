@@ -418,8 +418,14 @@ plan 37 rather than smuggled in here.
 
 - **Q-17 (proposed, not yet filed)** — _what are the four hub-rail destinations?_ Owner: design.
   Blocks nothing (the rail renders from the table), but the choice changes as screens land, and it
-  is the one navigational judgement the blueprint does not make: it shows `Stream · Progress · Add`
-  on Today and `Trip plan · Stream · Review` on the countdown home, which are different rails for
-  different home surfaces. Recommendation to review: keep them per-home, declared in the table.
+  is the one navigational judgement the blueprint does not make. Verified 2026-07-29: the blueprint
+  draws a three-tile rail on exactly **one** surface — `Trip plan · Stream · Review` on the
+  countdown home (`Loro.dc.html:1950`) — and **none on Today**, whose only bottom control is the
+  wave CTA (`1384–1386`). The `Stream · Progress · Add` row now on Today (`app/index.tsx:225–253`)
+  is the app's own invention, and the space it occupies is where the blueprint puts the ambient loop
+  and the fading tail ([20-screen-today-ritual](20-screen-today-ritual.md)). So the rail is per-home
+  by precedent, not per-app. Recommendation to review: keep them per-home, declared in the table —
+  and sequence Today's rail change with 20, or the screen ends up with a hole where the buttons
+  were.
 - **Q-06** already blocks the last row of `resolveHome` — whether the engine home comes from an
   assignment or a setting. The mechanism is neutral to the answer; only the adapter changes.
