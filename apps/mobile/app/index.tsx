@@ -3,10 +3,14 @@
  *
  * A CLOSED, finite set you can see in full and finish. No queue, no hidden
  * algorithm: you always see today.
+ *
+ * The screen is a composition of five blocks, each named for what the learner sees and each
+ * defined below: the header, today's set, the three waves, the stats, and the nav row. The
+ * default export derives the numbers and lays those five out; nothing in it draws.
  */
 
 import { useEffect } from 'react'
-import { ScrollView, View } from 'react-native'
+import { ScrollView, StyleSheet, View } from 'react-native'
 import { Redirect, router } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import {
@@ -18,19 +22,35 @@ import {
 import {
   Button,
   Card,
+  CardHeader,
   Divider,
+  Pill,
   Pressable,
   ProgressBar,
   Row,
   Screen,
   SectionLabel,
   Stack,
-  StatTile,
   Text,
 } from '../src/ui/primitives'
-import { accent, ink, line, radius, scale, space, surface } from '../src/ui/theme'
-import { toView, useApp } from '../src/store'
+import { ActionBar, StatRow } from '../src/ui/components'
+import {
+  accent,
+  actionBar,
+  border,
+  ink,
+  line,
+  radius,
+  scale,
+  space,
+  surface,
+} from '../src/ui/theme'
+import { toView, useApp, type PhraseView } from '../src/store'
+import { copy } from '../src/lib/copy'
 import { deviceClock, localWeekdayLabel } from '../src/lib/clock'
+
+/** Full automaticity: six reps in one day. The badge, the bar's colour and the count agree. */
+const isLockedIn = (p: Pick<PhraseView, 'automaticity'>): boolean => p.automaticity >= 100
 
 export default function Today() {
   const onboarded = useApp((s) => s.onboarded)
@@ -74,237 +94,250 @@ export default function Today() {
       }
     })
 
-  const lockedIn = set.filter((p) => p.automaticity >= 100).length
+  const lockedIn = set.filter(isLockedIn).length
   const totalReps = set.reduce((n, p) => n + p.repsToday, 0)
   const graduated = phrases.filter((p) => p.graduatedAt !== null).length
 
   return (
     <Screen>
       <ScrollView
-        contentContainerStyle={{
-          padding: space['4'],
-          paddingTop: insets.top + space['3'],
-          paddingBottom: insets.bottom + 96,
-          gap: space['4'],
-        }}
+        contentContainerStyle={[
+          s.scroll,
+          {
+            paddingTop: insets.top + space['3'],
+            // `ActionBar` is absolutely positioned and reserves nothing, so the clearance
+            // for it is this screen's to leave. See `actionBar.clearance`.
+            paddingBottom: insets.bottom + actionBar.clearance.today,
+          },
+        ]}
       >
-        <Row justify="space-between" align="flex-end">
-          <View>
-            <Text variant="labelSm" color={ink.muted}>
-              {localWeekdayLabel()} · the daily refrain
-            </Text>
-            <Text variant="title3" color={ink.ink}>
-              Today
-            </Text>
-          </View>
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 5,
-              backgroundColor: accent.wash,
-              paddingHorizontal: 11,
-              paddingVertical: 6,
-              borderRadius: 20,
-            }}
-          >
-            <Text variant="caption">🔥</Text>
-            <Text variant="bodySm" color={accent.accentInk}>
-              {/* A learner on day zero sees an invitation, not a zero. */}
-              {streak === 0 ? '—' : streak}
-            </Text>
-          </View>
-        </Row>
+        <TodayHeader streak={streak} />
+        <TodaySetList set={set} lockedIn={lockedIn} />
+        <WaveList lockedIn={lockedIn} />
 
-        {/* ── Today's set: closed, finite, finishable ── */}
-        <Card>
-          <Row justify="space-between" align="baseline" style={{ marginBottom: space['3'] }}>
-            <Text variant="caption" color={ink.ink}>
-              Today&apos;s {set.length === 0 ? 'set' : set.length}
-            </Text>
-            <Text variant="labelSm" color={ink.muted}>
-              {lockedIn} of {set.length} locked in
-            </Text>
-          </Row>
-
-          {set.length === 0 ? (
-            <Stack gap={space['2']}>
-              <Text variant="caption" color={ink.muted}>
-                Nothing in rotation yet. Add a few phrases and today&apos;s set builds itself.
-              </Text>
-              <Button
-                label="Add phrases"
-                variant="secondary"
-                onPress={() => {
-                  router.push('/add')
-                }}
-              />
-            </Stack>
-          ) : (
-            <Stack gap={space['2.5']}>
-              {set.map((p) => (
-                <Pressable
-                  key={p.id}
-                  feedback="row"
-                  accessibilityLabel={`${p.es}. ${p.automaticity} percent automatic.`}
-                  accessibilityHint="Opens phrase details"
-                  onPress={() => {
-                    router.push(`/phrase/${p.id}`)
-                  }}
-                >
-                  <Row justify="space-between" style={{ marginBottom: 5 }}>
-                    <Text
-                      variant="caption"
-                      color={ink.ink}
-                      numberOfLines={1}
-                      lang="es"
-                      style={{ flex: 1 }}
-                    >
-                      {p.es}
-                    </Text>
-                    {p.automaticity >= 100 && (
-                      <View
-                        style={{
-                          backgroundColor: accent.wash,
-                          paddingHorizontal: 7,
-                          paddingVertical: 3,
-                          borderRadius: radius.sm,
-                        }}
-                      >
-                        <Text variant="labelSm" color={accent.accentInk}>
-                          Locked
-                        </Text>
-                      </View>
-                    )}
-                  </Row>
-                  {/* Unnamed on purpose: the row's own label already reads
-                      "…, 0 percent automatic.", so a named bar inside it would announce
-                      the same number twice. One focusable element per row
-                      (accessibility.md#every-phrase-row). */}
-                  <ProgressBar
-                    value={p.automaticity / 100}
-                    color={p.automaticity >= 100 ? accent.accent : scale.ladder.bent}
-                    track={surface.sunken}
-                  />
-                </Pressable>
-              ))}
-            </Stack>
-          )}
-        </Card>
-
-        {/* ── The three waves ── */}
-        <Stack gap={space['2']}>
-          <SectionLabel>Today&apos;s three waves</SectionLabel>
-          {[
-            { label: 'Morning', sub: 'Meet & first reps', time: '8:00' },
-            { label: 'Midday', sub: 'Re-rep, from memory', time: '1:00' },
-            { label: 'Evening', sub: 'Cold + perform', time: '7:00' },
-          ].map((w, i) => {
-            const ready = i === 0 || lockedIn > 0
-            return (
-              <Row
-                key={w.label}
-                gap={11}
-                style={{
-                  backgroundColor: ready ? accent.tint : surface.card,
-                  borderWidth: ready ? 1.5 : 1,
-                  borderColor: ready ? accent.accent : line.default,
-                  borderRadius: radius.xl,
-                  padding: 11,
-                }}
-              >
-                <View
-                  style={{
-                    width: 26,
-                    height: 26,
-                    borderRadius: 13,
-                    borderWidth: 1.5,
-                    borderColor: ready ? accent.accent : ink.muted2,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <Text variant="labelSm" color={ready ? accent.accentInk : ink.muted2}>
-                    {ready ? '●' : '○'}
-                  </Text>
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text variant="caption" color={ink.ink}>
-                    {w.label}
-                  </Text>
-                  <Text variant="captionSm" color={ink.muted}>
-                    {w.sub}
-                  </Text>
-                </View>
-                <Text variant="labelSm" color={ink.muted}>
-                  {w.time}
-                </Text>
-              </Row>
-            )
-          })}
-        </Stack>
-
-        <Row gap={9}>
-          <StatTile value={String(totalReps)} label="reps today" />
-          <StatTile value={String(phrases.length)} label="in your stream" />
-          <StatTile value={String(graduated)} label="graduated" />
-        </Row>
+        <StatRow
+          stats={[
+            { value: String(totalReps), label: copy.today.stats.repsToday },
+            { value: String(phrases.length), label: copy.today.stats.inYourStream },
+            { value: String(graduated), label: copy.today.stats.graduated },
+          ]}
+        />
 
         <Divider />
 
-        <Row gap={space['2.5']}>
-          <View style={{ flex: 1 }}>
-            <Button
-              label="Stream"
-              variant="secondary"
-              onPress={() => {
-                router.push('/practice/stream')
-              }}
-            />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Button
-              label="Progress"
-              variant="secondary"
-              onPress={() => {
-                router.push('/progress')
-              }}
-            />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Button
-              label="Add"
-              variant="secondary"
-              onPress={() => {
-                router.push('/add')
-              }}
-            />
-          </View>
-        </Row>
+        <NavRow />
       </ScrollView>
 
-      <View
-        style={{
-          position: 'absolute',
-          left: 0,
-          right: 0,
-          bottom: 0,
-          padding: space['4'],
-          paddingBottom: insets.bottom + space['3'],
-          backgroundColor: surface.app,
-          borderTopWidth: 1,
-          borderTopColor: line.default,
-        }}
-      >
+      <ActionBar>
         <Button
-          label={set.length === 0 ? 'Add phrases to begin' : `Start the wave →`}
+          label={set.length === 0 ? copy.today.cta.empty : copy.today.cta.start}
           disabled={set.length === 0}
-          accessibilityHint={`${set.length} phrases, ${DEFAULT_REP_TARGET} reps each`}
+          accessibilityHint={copy.a11y.today.startHint(set.length, DEFAULT_REP_TARGET)}
           onPress={() => {
             router.push('/practice/refrain')
           }}
         />
-      </View>
+      </ActionBar>
     </Screen>
   )
 }
+
+/** The weekday line, the title, and the streak capsule. */
+function TodayHeader({ streak }: { streak: number }) {
+  return (
+    <Row justify="space-between" align="flex-end">
+      <View>
+        <Text variant="labelSm" color={ink.muted}>
+          {copy.today.subtitle(localWeekdayLabel())}
+        </Text>
+        <Text variant="title3" color={ink.ink}>
+          {copy.today.title}
+        </Text>
+      </View>
+      <Pill
+        size="capsule"
+        tone="accent"
+        emoji={copy.common.flame}
+        // A learner on day zero sees an invitation, not a zero.
+        label={streak === 0 ? copy.common.noValue : String(streak)}
+      />
+    </Row>
+  )
+}
+
+/** Today's set: closed, finite, finishable. Owns its own empty state. */
+function TodaySetList({ set, lockedIn }: { set: readonly PhraseView[]; lockedIn: number }) {
+  return (
+    <Card>
+      <CardHeader
+        title={copy.today.setHeading(set.length)}
+        meta={copy.today.lockedIn(lockedIn, set.length)}
+      />
+
+      {set.length === 0 ? (
+        <Stack gap={space['2']}>
+          <Text variant="caption" color={ink.muted}>
+            {copy.today.empty.body}
+          </Text>
+          <Button
+            label={copy.common.addPhrases}
+            variant="secondary"
+            onPress={() => {
+              router.push('/add')
+            }}
+          />
+        </Stack>
+      ) : (
+        <Stack gap={space['2.5']}>
+          {set.map((p) => (
+            <SetRow key={p.id} phrase={p} />
+          ))}
+        </Stack>
+      )}
+    </Card>
+  )
+}
+
+/**
+ * One phrase in today's set.
+ *
+ * Not a `PhraseRow`: no English line, no emoji, no container of its own, and a progress bar
+ * where that component has a trailing slot (ui-api.md §4).
+ */
+function SetRow({ phrase }: { phrase: PhraseView }) {
+  const locked = isLockedIn(phrase)
+  return (
+    <Pressable
+      feedback="row"
+      accessibilityLabel={copy.a11y.today.phraseRow(phrase.es, phrase.automaticity)}
+      accessibilityHint={copy.a11y.common.opensPhraseDetails}
+      onPress={() => {
+        router.push(`/phrase/${phrase.id}`)
+      }}
+    >
+      <Row justify="space-between" style={s.setRow}>
+        <Text variant="caption" color={ink.ink} numberOfLines={1} lang="es" style={s.grow}>
+          {phrase.es}
+        </Text>
+        {locked && <Pill size="xs" tone="accent" label={copy.today.lockedBadge} />}
+      </Row>
+      {/* Unnamed on purpose: the row's own label already reads
+          "…, 0 percent automatic.", so a named bar inside it would announce
+          the same number twice. One focusable element per row
+          (accessibility.md#every-phrase-row). */}
+      <ProgressBar
+        value={phrase.automaticity / 100}
+        color={locked ? accent.accent : scale.ladder.bent}
+        track={surface.sunken}
+      />
+    </Pressable>
+  )
+}
+
+/**
+ * The three waves.
+ *
+ * The ORDER is structure and lives here; each wave's label, subtitle and displayed time are
+ * copy (`copy.today.waves`). Readiness keys off the index — the morning wave is always ready,
+ * the other two open once something is locked in. Whether those times are honest, and whether
+ * readiness should come from the scheduler rather than a position in this array, is plans/50's
+ * question: unchanged here on purpose.
+ */
+const WAVES = ['morning', 'midday', 'evening'] as const
+
+function WaveList({ lockedIn }: { lockedIn: number }) {
+  return (
+    <Stack gap={space['2']}>
+      <SectionLabel>{copy.today.wavesHeading}</SectionLabel>
+      {WAVES.map((wave, i) => (
+        <WaveRow key={wave} wave={copy.today.waves[wave]} ready={i === 0 || lockedIn > 0} />
+      ))}
+    </Stack>
+  )
+}
+
+function WaveRow({
+  wave,
+  ready,
+}: {
+  wave: (typeof copy.today.waves)[(typeof WAVES)[number]]
+  ready: boolean
+}) {
+  return (
+    <Row gap={WAVE.gap} style={[s.wave, ready ? s.waveReady : s.wavePending]}>
+      <View style={[s.waveMark, { borderColor: ready ? accent.accent : ink.muted2 }]}>
+        <Text variant="labelSm" color={ready ? accent.accentInk : ink.muted2}>
+          {ready ? copy.common.marks.dot : copy.common.marks.ring}
+        </Text>
+      </View>
+      <View style={s.grow}>
+        <Text variant="caption" color={ink.ink}>
+          {wave.label}
+        </Text>
+        <Text variant="captionSm" color={ink.muted}>
+          {wave.sub}
+        </Text>
+      </View>
+      <Text variant="labelSm" color={ink.muted}>
+        {wave.time}
+      </Text>
+    </Row>
+  )
+}
+
+/**
+ * The wave row's own metrics — an 11-px inset with an 11-px gap, and a 26-px rail mark whose
+ * radius is half of it. One call site, so they stay here rather than becoming tokens.
+ */
+const WAVE = { gap: 11, padding: 11, mark: 26 } as const
+
+/** The three secondary destinations, side by side and equally wide. */
+const NAV = [
+  { label: copy.common.stream, href: '/practice/stream' },
+  { label: copy.common.progress, href: '/progress' },
+  { label: copy.today.actions.add, href: '/add' },
+] as const
+
+function NavRow() {
+  return (
+    <Row gap={space['2.5']}>
+      {NAV.map((dest) => (
+        <View key={dest.href} style={s.grow}>
+          <Button
+            label={dest.label}
+            variant="secondary"
+            onPress={() => {
+              router.push(dest.href)
+            }}
+          />
+        </View>
+      ))}
+    </Row>
+  )
+}
+
+const s = StyleSheet.create({
+  scroll: { padding: space['4'], gap: space['4'] },
+  /** Take the row's remaining width — the Spanish line, the wave's two lines, a nav button. */
+  grow: { flex: 1 },
+  setRow: { marginBottom: 5 },
+  wave: { borderRadius: radius.xl, padding: WAVE.padding },
+  waveReady: {
+    backgroundColor: accent.tint,
+    borderWidth: border.selected,
+    borderColor: accent.accent,
+  },
+  wavePending: {
+    backgroundColor: surface.card,
+    borderWidth: border.hairline,
+    borderColor: line.default,
+  },
+  waveMark: {
+    width: WAVE.mark,
+    height: WAVE.mark,
+    borderRadius: WAVE.mark / 2,
+    borderWidth: border.selected,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+})
