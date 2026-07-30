@@ -67,6 +67,12 @@ And the corollary that makes it durable:
 | **A P0 alert on any network request originating in the audio module**                  | There should never be one ([observability.md](../observability.md#alerting))                                                                                        |
 | No API endpoint accepts recorded learner audio                                         | [api.md](../api.md#tts)                                                                                                                                             |
 
+Open chat does not weaken this boundary. The native speech module may return an on-device transcript
+to the conversation coordinator; it never returns PCM, a file path or a network-capable handle.
+`/chat/turn` accepts bounded text only. Playback of arbitrary chat lines uses the production
+audio/on-device speech capability, not the blueprint's browser `speechSynthesis`
+(`Loro Chat.dc.html:514`).
+
 ### The analytics posture that follows
 
 Because we take the audio promise literally, we take the rest literally too.
@@ -79,7 +85,14 @@ new property is invisible until someone justifies it.
 **Never in telemetry:** recorded audio or any derivative beyond a numeric score; phrase text for
 learner-authored phrases (a salted hash instead, so we can count without reading); note and
 memory-hook text (a boolean instead); captured OCR text (a line count instead); ASR transcripts
-(match outcome instead); email or provider identity; precise location.
+(match outcome instead); chat turns, drafts, translations, corrections and inspector explanations
+(counts, ids, timings, provenance and safety codes instead); email or provider identity; precise
+location.
+
+Raw open-chat text is also excluded from ordinary sync. A guarded live turn may transmit bounded
+recent text directly to its provider under the approved retention/no-training terms, but that path
+is not analytics or sync and recorded audio is structurally absent. Explicitly keeping a line
+creates a normal learner-authored phrase; it does not make the source thread syncable.
 
 **Opt-out is client-side.** With analytics disabled, nothing is queued — not merely not sent.
 
@@ -118,6 +131,8 @@ because our AI use is text generation from a prompt, not personalisation from a 
   (retention, latency trends, tag predictiveness) are all answerable with ids and numbers.
 - The salted-hash approach means we can never inspect a problematic learner-authored phrase, even to
   debug. Accepted.
+- The same fail-safe posture prevents inspecting a learner's raw chat to debug a provider result.
+  Quality work uses consented evaluation fixtures and aggregate validation/safety codes instead.
 
 ### Revisit if…
 

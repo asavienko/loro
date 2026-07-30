@@ -56,11 +56,28 @@ The following durable product entities are still target design, not current SQLi
 - catalog phrases, words, syllables, packs, scenarios and search indexes;
 - review, latency, take, session and attempt logs;
 - trips, drops and trip membership;
+- local open-chat threads, turns, drafts and provider provenance;
 - analytics, audio and AI caches.
 
 Add these with new numbered migrations and repositories when their feature lands. Do not add empty
 tables merely to make the schema resemble a future ERD; storage should arrive with a writer, a
 reader, migration tests and retention/erasure behaviour.
+
+### Open-chat storage boundary
+
+The two authored chat surfaces require restart-safe topic, pace, draft and thread state
+(`Loro Chat.dc.html:95–449`), but that does not make their raw text ordinary learner-state sync.
+When chat persistence lands, store thread metadata, turns, bounded provider provenance and the
+active draft locally with an explicit retention/clear policy. Keep selected rows, open sheets,
+toasts and scroll position ephemeral.
+
+Raw turns, drafts, translations, correction explanations and ASR transcripts are private local text.
+They do not enter the shared outbox, `fieldPolicy.ts`, or Postgres sync tables unless a later
+explicit consent decision defines identity, merge, retention, export and erasure semantics. A
+guarded live turn may transmit bounded recent text directly to the chat service; that provider
+request is not a sync operation and never includes recorded audio. A line the learner explicitly
+keeps becomes a normal learner-authored phrase through the existing phrase mutation/outbox boundary,
+without making its source thread syncable.
 
 ## Current repositories
 
@@ -124,11 +141,13 @@ Every persistence extension must preserve these rules:
    erasure after the server-side lifecycle is defined.
 7. **Keep recorded audio out.** No database, outbox or sync payload may contain PCM, recorded files
    or paths that enable upload. A `take` may eventually store derived scores only.
-8. **Centralise clocks.** Repositories receive timestamps/HLCs; they do not call `new Date()` or
+8. **Keep conversation text out of ordinary sync.** Persist it locally under its own retention
+   policy; only an explicitly kept phrase crosses into the syncable phrase domain.
+9. **Centralise clocks.** Repositories receive timestamps/HLCs; they do not call `new Date()` or
    invent a second HLC implementation.
-9. **Scope every learner query.** Device SQL uses `user_id`; server storage must derive tenant scope
-   from authenticated identity, never a client-supplied owner id.
-10. **Ship a complete vertical slice.** Schema, repository, live composition, hydration, mutation
+10. **Scope every learner query.** Device SQL uses `user_id`; server storage must derive tenant
+    scope from authenticated identity, never a client-supplied owner id.
+11. **Ship a complete vertical slice.** Schema, repository, live composition, hydration, mutation
     path, erasure, tests and documentation land together for a feature to count as persisted.
 
 ### Client rules

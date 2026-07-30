@@ -308,7 +308,7 @@ returns JSON with `{scene_id, cached, fallback, scene}`. The registered `stub` p
 bundled Café/Hotel scenes. An unregistered `AI_PROVIDER` logs a warning and serves bundled content;
 provider output is validated before serving. There is no streaming, cache, rate limit, budget,
 repair pass, persistence, live provider, tag profile, phrase selection, trip adaptation, coach,
-translate, or enrich route yet. `GET /ai/themes` returns `{themes, provider}`.
+translate, enrich, or chat-turn route yet. `GET /ai/themes` returns `{themes, provider}`.
 
 The richer request/streaming response and remaining AI endpoints below are target behavior.
 
@@ -368,6 +368,58 @@ Response invariants, validated server-side before the response leaves
 ([ai-services.md](ai-services.md#output-validation)): 3–4 turns; exactly 3 options per turn;
 **exactly one `best: true` per turn**; every option has a `tip`; all Spanish is `es-ES`; no option
 exceeds 12 words.
+
+### `POST /chat/turn` — guarded open chat, target
+
+The open-chat surface is specified at `Loro Chat.dc.html:95–328`; its inspector reads the same turn
+records at `Loro Chat.dc.html:331–449`. The endpoint accepts bounded text context only:
+
+```jsonc
+{
+  "thread_id": "cht_a1b2",
+  "topic_id": "cafe",
+  "pace": "natural",
+  "locale": "es-ES",
+  "turns": [
+    { "id": "trn_1", "speaker": "loro", "text": "¿Qué te apetece tomar?" },
+    { "id": "trn_2", "speaker": "learner", "text": "Un cortado, por favor." },
+  ],
+  "request_id": "req_7f3a",
+}
+```
+
+The server caps turn count and text length, treats every learner field as untrusted data, applies
+identity/entitlement, rate, concurrency and budget guards, and returns validated structured text:
+
+```jsonc
+{
+  "request_id": "req_7f3a",
+  "provenance": "live",
+  "reply": {
+    "id": "trn_3",
+    "es": "Marchando. ¿Solo o con leche?",
+    "en": "Coming up. Black or with milk?",
+  },
+  "suggestions": [
+    {
+      "id": "sg_1",
+      "es": "Con leche, por favor.",
+      "en": "With milk, please.",
+      "register": "neutral",
+    },
+  ],
+  "corrections": [],
+}
+```
+
+Audio bytes, file paths, native buffer handles and voice embeddings are structurally absent. Voice
+input is transcribed on-device before this request, and the raw recording is released locally. The
+API neither writes raw thread text to the sync store nor emits it to logs/telemetry. Provider
+retention must satisfy the separately recorded privacy decision before live chat is release-enabled.
+On timeout, invalid output, safety rejection, budget exhaustion or offline use, the client continues
+from the versioned authored topic/reply graph; it does not wait out the prototype's fixed 1.2-second
+reply timer (`Loro Chat.dc.html:586–596`). Personalized turns are not shared-cache material, though
+stable prompts and authored/provider-independent resources may be cached.
 
 ### `POST /ai/coach`
 
@@ -504,17 +556,20 @@ applies them and no rate-limit response headers are emitted. The source still co
 legacy `ttsVoiceClone` constant; it does not authorize a route that would violate the on-device
 audio rule and should disappear when rate limiting is implemented.
 
-| Endpoint group               | Per user            | Per IP      |
-| ---------------------------- | ------------------- | ----------- |
-| `/auth/*`                    | 10 / 15 min         | 30 / 15 min |
-| `/sync/*`                    | 120 / min           | 600 / min   |
-| `/content/*`                 | 60 / min            | 600 / min   |
-| `/ai/scene`                  | 20 / hour, 60 / day | 200 / hour  |
-| `/ai/coach`, `/ai/translate` | 60 / hour           | 400 / hour  |
-| `/tts/render`                | 100 / day           | 500 / day   |
-| `/analytics/batch`           | 60 / min            | 600 / min   |
+| Endpoint group               | Per user            | Per IP            |
+| ---------------------------- | ------------------- | ----------------- |
+| `/auth/*`                    | 10 / 15 min         | 30 / 15 min       |
+| `/sync/*`                    | 120 / min           | 600 / min         |
+| `/content/*`                 | 60 / min            | 600 / min         |
+| `/ai/scene`                  | 20 / hour, 60 / day | 200 / hour        |
+| `/chat/turn`                 | Decision required   | Decision required |
+| `/ai/coach`, `/ai/translate` | 60 / hour           | 400 / hour        |
+| `/tts/render`                | 100 / day           | 500 / day         |
+| `/analytics/batch`           | 60 / min            | 600 / min         |
 
-Responses carry `X-RateLimit-Limit`, `-Remaining`, `-Reset`, and `Retry-After` on 429.
+Responses carry `X-RateLimit-Limit`, `-Remaining`, `-Reset`, and `Retry-After` on 429. The chat row
+is deliberately not a guessed number: measured cost/latency and the release entitlement/budget
+decision must set both caps before the endpoint is enabled.
 
 ---
 

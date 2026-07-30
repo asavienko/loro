@@ -126,6 +126,14 @@ Only the onboarding redirect and the links made by these screens are implemented
 home routing, universal-link mapping, notification links, and persistent audio across navigation are
 targets for the capabilities that require them.
 
+The target navigation shell is the route-rendered system in `Navigation.dc.html:40–499` and its six
+required states at `Navigation.dc.html:512–873`. Its Root, Push, Session, Flow, and Sheet classes,
+spine, switcher, named cold-entry exit, resumability, single active escape, honest empty sets, and
+travelling transport are one route model rather than screen-local conventions. The Open chat and
+Message inspector routes shown in `Loro Chat.dc.html:95–449` consume that shell when implemented;
+the chat prototype's phrase “no chrome” describes its quiet conversation body, not an exemption from
+the global navigation contract.
+
 ### Adding a route
 
 1. Find its states and logic in the blueprint through
@@ -140,6 +148,14 @@ targets for the capabilities that require them.
 6. Add every learner-visible state to `e2e/states.ts`; add focused behavior tests to the matching
    Playwright spec. The route coverage test rejects a route with no state.
 7. Run `pnpm check`, `pnpm test:e2e`, and the mobile `bundle` command.
+
+Conversation routes add one further boundary: durable thread text, draft text, translations,
+corrections, and ASR transcripts remain local/private by default. They do not enter the ordinary
+sync outbox or analytics queue. A live chat coordinator may send a bounded text context to the
+guarded provider endpoint, but no route or coordinator may accept recorded audio bytes, paths, or
+handles. Playback uses the production audio capability and arbitrary chat lines use approved
+on-device speech; browser `speechSynthesis` is blueprint fixture behavior only
+(`Loro Chat.dc.html:514`).
 
 <a id="state"></a>
 

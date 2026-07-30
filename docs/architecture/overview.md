@@ -143,7 +143,7 @@ Non-negotiable invariants. A PR that breaks one needs an ADR, not a review comme
    the number is computed in Rust.
 8. **Content ships independently of the app.** A phrase fix needs no release.
 9. **AI has a bundled fallback on every learner-visible path.** Losing the LLM degrades roleplay to
-   a curated scene set; it never breaks a screen.
+   curated scenes and open chat to authored topic/reply graphs; it never breaks a screen.
 10. **No screen shames a missed day.** This is an architectural rule because it constrains the
     notification scheduler, the widget content, and the streak model — not just copy.
 
@@ -170,7 +170,7 @@ Later, on connectivity:
 
 Zero network calls on the hot path. The outbox is drained opportunistically.
 
-### A roleplay scene (the only AI path in a session)
+### An optional conversation surface
 
 ```
 tap Roleplay
@@ -179,7 +179,23 @@ tap Roleplay
       miss → api POST /ai/scene  (streamed)
                → Redis check → Claude → validate → persist → stream
       offline or error or over budget → bundled fallback scene
+
+tap Open chat
+  → load the local thread + bundled topic/reply graph
+  → learner speaks through on-device ASR or types Spanish
+      recorded PCM remains in native memory; JS receives text only
+  → when allowed and online: api POST /chat/turn
+      → bounded recent text context → validate guarded reply/feedback
+      offline or error or over budget → continue through the authored graph
+  → persist the local thread outside the ordinary sync outbox
 ```
+
+Roleplay and open chat are supplementary. Neither provider path chooses the practice queue, writes
+progress, or gates the deterministic daily loop. Open chat follows the two authored surfaces and
+state machine in `Loro Chat.dc.html:95–449` and `Loro Chat.dc.html:456–714`; its prototype regex
+corrections, canned recognition, timer-driven replies, browser speech synthesis, text-derived ids,
+and fabricated due interval (`Loro Chat.dc.html:514`, `529–596`) are demonstrations, not production
+mechanisms.
 
 ### Content update
 
