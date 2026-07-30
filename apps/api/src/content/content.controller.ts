@@ -15,6 +15,9 @@ import { config } from '../common/config.js'
 import { LoroError } from '../common/errors.js'
 
 const catalog = loadCatalog()
+const phrasesById: ReadonlyMap<string, CatalogPhrase> = new Map(
+  catalog.phrases.map((phrase) => [phrase.id, phrase]),
+)
 
 /** The oldest app build this catalog is safe to serve. */
 const MIN_APP_VERSION = '1.0.0'
@@ -120,13 +123,12 @@ export class ContentController {
     const pack = catalog.packs.find((p) => p.id === id)
     if (pack === undefined) throw new LoroError('VALIDATION_FAILED', `unknown pack '${id}'`)
 
-    const byId = new Map(catalog.phrases.map((p) => [p.id, p]))
     return {
       id: pack.id,
       label: pack.label,
       promised_count: pack.promisedCount,
       phrases: pack.phrases
-        .map((pid) => byId.get(pid))
+        .map((pid) => phrasesById.get(pid))
         .filter((p): p is CatalogPhrase => p !== undefined),
     }
   }
