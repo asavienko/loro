@@ -9,7 +9,7 @@ Guidance for Claude Code working in this repository.
 Early implementation. **What exists:** the docs, 8 of the blueprint's 21 screens in
 `apps/mobile/app/`, an API with 10 endpoints over an in-memory store, the Rust core, the design
 tokens, a 31-phrase catalog, and the local persistence layer (schema, migrations, repositories,
-outbox — driver-agnostic and tested against real SQLite). 317 JS/TS tests, 99 Rust tests, and 12
+outbox — driver-agnostic and tested against real SQLite). 317 JS/TS tests, 99 Rust tests, and 61
 browser E2E tests pass. **What doesn't:** the native modules (audio, speech, ASR, widgets), the
 on-device SQLite driver, and the other 13 screens — so nothing runnable today exercises audio or the
 microphone, which is half of what this app is, and the app store is still in memory.
@@ -84,26 +84,29 @@ prototype-only and **must not** be carried into the app — see the divergence t
   a refactor into a fix, and don't let generated output (bindings, tokens) ride along in a commit
   that isn't about regenerating it.
 - **Plans live in `plans/`, numbered.** One markdown file per plan: a two-digit number, then
-  kebab-case named for the topic — `plans/46-association-suggestions.md`. The numbers run
-  consecutively in [`plans/README.md`](plans/README.md)'s recommended order, 01–46 today; a new plan
-  takes the next free number and gets a row in that README. **Numbers are never reused** — a deleted
-  plan leaves a gap, so a link written against a number can't come to mean a different plan. Not in
-  `docs/`: that holds the durable spec. Not in a temp directory either — a plan you can't find again
-  is a plan you rewrite. Name the requirement ID inside the plan so it ties back to the branch and
-  the PR.
+  kebab-case named for the topic — `plans/60-association-suggestions.md`. The numbers run
+  consecutively in [`plans/README.md`](plans/README.md)'s recommended order, 01–51 today (49 is
+  vacant); a new plan takes the next free number and gets a row in that README. **Numbers are never
+  reused** — a gap is left rather than backfilled, so a link written against a number can't come to
+  mean a different plan. Not in `docs/`: that holds the durable spec. Not in a temp directory either
+  — a plan you can't find again is a plan you rewrite. Name the requirement ID inside the plan so it
+  ties back to the branch and the PR.
 - **A plan records its own status, and is kept rather than deleted.** Put a `**Status:**` line in
   the plan's header block when work starts, and mark its row in
   [`plans/README.md`](plans/README.md): `✅` implemented, `🟡` partly, nothing for not started. A
   `🟡` must say what is left **and what blocks it**. Plans stay on disk after shipping — their
   verified "current state" notes and code citations are the record of why the code looks the way it
-  does, and deleting that means the next session re-derives it. **Implemented so far: 01, 02,
-  04, 07. Partly: 10, 20, 23, 37.** Read each plan's status for what remains and what blocks it.
+  does, and deleting that means the next session re-derives it. **Implemented so far: 01, 02, 04,
+  07, 51. Partly: 10, 20, 23, 37.** Read each plan's status for what remains and what blocks it.
 - **`pnpm check`** is the single command that must pass — lint, typecheck, test, content validation.
 - **Keep E2E coverage in step with functionality while developing it.** Add or adjust the
   learner-visible behavior in `apps/mobile/e2e/` in the same coherent change as the functionality,
-  and run `pnpm test:e2e` before committing. New routes must be added to the route coverage
-  contract. A behavior-preserving refactor should keep the existing E2E expectations unchanged and
-  green; change expectations only when the intended product behavior changes.
+  and run `pnpm test:e2e` before committing. **A new learner-visible STATE gets a row in
+  `apps/mobile/e2e/states.ts` in the same change** — that manifest is what the accessibility,
+  text-scale and coverage-guard suites all read, so one row buys all three, and
+  `route-coverage.spec.ts` fails if a route has no state. A behavior-preserving refactor should keep
+  the existing E2E expectations unchanged and green; change expectations only when the intended
+  product behavior changes.
 - **Layer boundaries in the app are lint-enforced**, not conventional
   ([mobile-app.md](docs/architecture/mobile-app.md#layers)). If an import fails lint, you're
   crossing a boundary.
@@ -130,7 +133,8 @@ be off PATH.
 
 ```bash
 pnpm check                          # the gate: 23 turbo tasks, all green today
-pnpm test:e2e                       # every implemented web route and the full learner loop
+pnpm test:e2e                       # 61 tests: every route and state, the clock, a11y, text scale
+pnpm test:e2e:bundle                # the @smoke subset against the production web export
 pnpm --filter @loro/api dev         # :3000 — no Docker, no keys, no database
 pnpm --filter @loro/mobile bundle   # proves the app compiles; needs no simulator
 npx expo start --web                # from apps/mobile — fastest way to see the screens
@@ -148,6 +152,13 @@ npx expo start --web                # from apps/mobile — fastest way to see th
   offline, sync — have no implementation behind them to check. CI runs `pnpm test:e2e` as a separate
   required job; it is intentionally not hidden inside the fast `pnpm check` command because Chromium
   is a one-time local install.
+- **Two accessibility props never reach a browser**, so a green E2E run says nothing about them:
+  react-native-web's allowlist forwards neither `accessibilityLanguage` (hence no `lang="es-ES"` in
+  the DOM) nor `accessibilityHint`. `check:lang` is the gate for the first, which is why it scans
+  source. Conversely, react-native-web ignores NESTED `accessibilityState` / `accessibilityValue`
+  entirely — `src/ui/primitives.tsx` therefore sets the flat `aria-*` form as well, and the header
+  there explains why. Check any new accessibility prop against `createDOMProps`; silence is the
+  failure mode.
 - **`packages/core-rs` tests are almost all inline `#[cfg(test)]`.** The one integration file is
   `tests/parity.rs` (the calendar cross-language check). The others named in
   [`testing-strategy.md`](docs/process/testing-strategy.md) (`sim.rs`, `merge.rs`, `golden/`) don't

@@ -41,11 +41,14 @@ blueprint-fidelity, simulation, property, and native device suites remain.
 
 ## Active execution order
 
-1. Finish the remaining correctness defects: **03, 05, 06**.
+1. Finish the remaining correctness defects: **03, 05, 06, 50**. **50** is the cheapest and the most
+   embarrassing to ship: four places the interface states something the code does not do.
 2. Run **08** before porting more screens; its findings update the relevant screen plan rather than
    creating an unowned backlog. Land **46**'s route table and laws alongside it — thirteen unbuilt
    screens each need a route, a class, and an exit, and deciding that per screen is how the eleven
-   defects 46 records were introduced.
+   defects 46 records were introduced. **47** belongs here too: it is a prerequisite for **34**, and
+   every screen built before it is built against a hand-copied type scale and no motion tokens.
+   **48**'s lint and failure-state fixes are mechanical and land cleanest before **34**'s refactor.
 3. Establish **09**, then finish **10** and start the native/audio path (**11**, **12**).
 4. Build server foundations in dependency order: **13 → 14 → 15**, with **06** supplying the safe
    temporary identity boundary before auth lands.
@@ -54,16 +57,17 @@ blueprint-fidelity, simulation, property, and native device suites remain.
 
 ---
 
-## Start here: the three remaining bugs
+## Start here: the four remaining bug plans
 
 These are defects in code that already exists, and they get more expensive once persistence lands.
 The four completed bug plans are retained as implementation records but omitted from this table.
 
-| Plan                                                                          | What is wrong                                                                                                                                                       | Size |
-| ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- |
-| [03-fix-latency-measurement](03-fix-latency-measurement.md)                   | Wall-clock used where the comment claims monotonic; `applyDeltaToPhrase` drops the measured sample; the display floor turns 120 ms into `0.3s`. **Violates rule 2** | M    |
-| [05-fix-shared-maths-duplication](05-fix-shared-maths-duplication.md)         | Numbers ADR-0002 says must exist once have two or three implementations; two are outright fabrications (`fsrsReview`, `clozeMask: () => [1]`)                       | M–L  |
-| [06-fix-sync-pull-cursor-and-scoping](06-fix-sync-pull-cursor-and-scoping.md) | `/sync/pull` ignores its cursor, hardcodes `has_more: false`, and shares one global `Map` across all learners — a cross-tenant read                                 | M    |
+| Plan                                                                          | What is wrong                                                                                                                                                                                                                              | Size |
+| ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---- |
+| [03-fix-latency-measurement](03-fix-latency-measurement.md)                   | Wall-clock used where the comment claims monotonic; `applyDeltaToPhrase` drops the measured sample; the display floor turns 120 ms into `0.3s`. **Violates rule 2**                                                                        | M    |
+| [05-fix-shared-maths-duplication](05-fix-shared-maths-duplication.md)         | Numbers ADR-0002 says must exist once have two or three implementations; two are outright fabrications (`fsrsReview`, `clozeMask: () => [1]`)                                                                                              | M–L  |
+| [06-fix-sync-pull-cursor-and-scoping](06-fix-sync-pull-cursor-and-scoping.md) | `/sync/pull` ignores its cursor, hardcodes `has_more: false`, and shares one global `Map` across all learners — a cross-tenant read                                                                                                        | M    |
+| [50-interface-integrity-defects](50-interface-integrity-defects.md)           | Four places the UI states something the code does not do — a 35% progress bar over silence (**violates rule 2**), a drill that does not drill, two discarded onboarding answers, mislabelled wave times — plus `removePhrase` with no undo | S–M  |
 
 Then [08-built-screens-fidelity-audit](08-built-screens-fidelity-audit.md) — read the seven ported
 screens and app shell against the blueprint. Every bug above came from that kind of reading.
@@ -124,25 +128,28 @@ Seven `todo!`s, each standing under a screen.
 
 ## Cross-cutting
 
-| Plan                                                                | Why now                                                                                                                                                                                                           | Size |
-| ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- |
-| [30-widgets-and-notifications](30-widgets-and-notifications.md)     | The policy is written and tested in Rust; nothing calls it                                                                                                                                                        | L    |
-| [31-offline-survival-mode](31-offline-survival-mode.md)             | The first M2 exit criterion: airplane mode, fresh launch, usable in <2 s                                                                                                                                          | L    |
-| [32-observability-and-analytics](32-observability-and-analytics.md) | Crash reporting is unwired (unmet M0 item), and three open questions are unanswerable without instrumentation                                                                                                     | M–L  |
-| [33-experimentation-and-flags](33-experimentation-and-flags.md)     | Four flags exist in code and cannot be set. **Q-05 blocks M3 start** and its measure cannot be retro-fitted                                                                                                       | M    |
-| [34-design-system-completion](34-design-system-completion.md)       | ~15 of ~40 components exist; 11 animations are specified and almost none implemented                                                                                                                              | M–L  |
-| [35-accessibility-wcag-pass](35-accessibility-wcag-pass.md)         | Four gates already run in CI. **Q-14 is holding the hero screen's peak state**                                                                                                                                    | M–L  |
-| [36-content-scale-to-600](36-content-scale-to-600.md)               | 31 phrases, no audio. Gates the labs and the audio module, not just the catalog                                                                                                                                   | L    |
-| [37-testing-gaps](37-testing-gaps.md) 🟡                            | Calendar parity, mobile domain/data tests, and every current web route have coverage; simulation, properties, component/blueprint fixtures, and native E2E remain                                                 | M    |
-| [38-performance-budget-harness](38-performance-budget-harness.md)   | One budget of many is enforced. The <2 s bar is unmeasured                                                                                                                                                        | M    |
-| [39-security-hardening-api](39-security-hardening-api.md)           | No validation pipeline, no rate limits, no guards                                                                                                                                                                 | M    |
-| [40-monetization-paywall](40-monetization-paywall.md)               | **Q-08 blocks v1 launch** and needs research before code                                                                                                                                                          | L    |
-| [41-docker-and-compose](41-docker-and-compose.md)                   | **The API image build cannot succeed** — it `COPY`s a gitignored directory the deploy workflow never builds. Plus no `.dockerignore`, floating tags, and compose binding Postgres to `0.0.0.0`                    | M    |
-| [42-incident-response-and-slos](42-incident-response-and-slos.md)   | The doc exists; nothing is wired. Offline-first changes what the SLOs should measure                                                                                                                              | M    |
-| [43-ui-localization](43-ui-localization.md)                         | Scaffolding is cheap now and expensive across 21 screens later                                                                                                                                                    | M    |
-| [44-docs-drift-cleanup](44-docs-drift-cleanup.md)                   | Onboarding, README and testing docs advertise commands, paths or suites that do not exist; volatile counts have already diverged                                                                                  | S    |
-| [45-api-integrations](45-api-integrations.md)                       | Provider-side contracts, credentials, and verification for the LLM, TTS, STT, auth, billing, storage, and observability vendors (pre-existing plan; complements the app-side module plans above)                  | L    |
-| [46-navigation-system](46-navigation-system.md)                     | Eight routes, each wired by the screen that needed it. Nothing owns the route map for 21 screens — so eleven verified defects, and thirteen screen plans with no header, exit, or entry contract to build against | M–L  |
+| Plan                                                                              | Why now                                                                                                                                                                                                                                                                                                                    | Size |
+| --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- |
+| [30-widgets-and-notifications](30-widgets-and-notifications.md)                   | The policy is written and tested in Rust; nothing calls it                                                                                                                                                                                                                                                                 | L    |
+| [31-offline-survival-mode](31-offline-survival-mode.md)                           | The first M2 exit criterion: airplane mode, fresh launch, usable in <2 s                                                                                                                                                                                                                                                   | L    |
+| [32-observability-and-analytics](32-observability-and-analytics.md)               | Crash reporting is unwired (unmet M0 item), and three open questions are unanswerable without instrumentation                                                                                                                                                                                                              | M–L  |
+| [33-experimentation-and-flags](33-experimentation-and-flags.md)                   | Four flags exist in code and cannot be set. **Q-05 blocks M3 start** and its measure cannot be retro-fitted                                                                                                                                                                                                                | M    |
+| [34-design-system-completion](34-design-system-completion.md)                     | ~15 of ~40 components exist; 11 animations are specified and almost none implemented                                                                                                                                                                                                                                       | M–L  |
+| [35-accessibility-wcag-pass](35-accessibility-wcag-pass.md)                       | Four gates already run in CI. **Q-14 is holding the hero screen's peak state**                                                                                                                                                                                                                                             | M–L  |
+| [36-content-scale-to-600](36-content-scale-to-600.md)                             | 31 phrases, no audio. Gates the labs and the audio module, not just the catalog                                                                                                                                                                                                                                            | L    |
+| [37-testing-gaps](37-testing-gaps.md) 🟡                                          | Calendar parity, mobile domain/data tests, and every current web route have coverage; simulation, properties, component/blueprint fixtures, and native E2E remain                                                                                                                                                          | M    |
+| [38-performance-budget-harness](38-performance-budget-harness.md)                 | One budget of many is enforced. The <2 s bar is unmeasured                                                                                                                                                                                                                                                                 | M    |
+| [39-security-hardening-api](39-security-hardening-api.md)                         | No validation pipeline, no rate limits, no guards                                                                                                                                                                                                                                                                          | M    |
+| [40-monetization-paywall](40-monetization-paywall.md)                             | **Q-08 blocks v1 launch** and needs research before code                                                                                                                                                                                                                                                                   | L    |
+| [41-docker-and-compose](41-docker-and-compose.md)                                 | **The API image build cannot succeed** — it `COPY`s a gitignored directory the deploy workflow never builds. Plus no `.dockerignore`, floating tags, and compose binding Postgres to `0.0.0.0`                                                                                                                             | M    |
+| [42-incident-response-and-slos](42-incident-response-and-slos.md)                 | The doc exists; nothing is wired. Offline-first changes what the SLOs should measure                                                                                                                                                                                                                                       | M    |
+| [43-ui-localization](43-ui-localization.md)                                       | Scaffolding is cheap now and expensive across 21 screens later                                                                                                                                                                                                                                                             | M    |
+| [44-docs-drift-cleanup](44-docs-drift-cleanup.md)                                 | Onboarding, README and testing docs advertise commands, paths or suites that do not exist; volatile counts have already diverged                                                                                                                                                                                           | S    |
+| [45-api-integrations](45-api-integrations.md)                                     | Provider-side contracts, credentials, and verification for the LLM, TTS, STT, auth, billing, storage, and observability vendors (pre-existing plan; complements the app-side module plans above)                                                                                                                           | L    |
+| [46-navigation-system](46-navigation-system.md)                                   | Eight routes, each wired by the screen that needed it. Nothing owns the route map for 21 screens — so eleven verified defects, and thirteen screen plans with no header, exit, or entry contract to build against                                                                                                          | M–L  |
+| [47-typography-motion-and-haptics](47-typography-motion-and-haptics.md)           | The generator emits colour and layout and **silently skips `type.json` and `motion.json`**. So neither typeface loads, the italic serif that carries the product's voice has no rendering path, no number is tabular, reduced motion has no tokens to inherit from — and haptics are absent from the app and from the spec | M    |
+| [48-app-shell-failure-states-and-input](48-app-shell-failure-states-and-input.md) | The Refrain renders **blank** while its plan resolves and forever if it rejects; there is no `ErrorBoundary` anywhere. Plus unfinished text input with no keyboard handling, unvirtualised lists, and a colour-literal lint rule that misses `rgba()` in six places                                                        | S–M  |
+| [51-extended-e2e-strategy](51-extended-e2e-strategy.md) ✅                        | Added the clock, multi-day, rendered-a11y, text-scale and production-bundle axes to the web gate — 61 tests. Found and fixed nine defects none of the previous suite could reach, including a CI drift gate that had been passing vacuously                                                                                | M–L  |
 
 ---
 
@@ -175,10 +182,12 @@ A change that violates one of these is reverted, not discussed (`CLAUDE.md`).
 [23-add-import-and-capture](23-add-import-and-capture.md) (OCR images raise the same question for
 photos).
 
-**2 · Every number shown to a learner is real** — **two** violations left:
+**2 · Every number shown to a learner is real** — **three** violations left:
 [03-fix-latency-measurement](03-fix-latency-measurement.md) (a display floor that rewrites the
-measurement) and [05-fix-shared-maths-duplication](05-fix-shared-maths-duplication.md) (invented
-FSRS intervals, a fixed cloze mask). The third,
+measurement), [05-fix-shared-maths-duplication](05-fix-shared-maths-duplication.md) (invented FSRS
+intervals, a fixed cloze mask), and
+[50-interface-integrity-defects](50-interface-integrity-defects.md) (a playback progress bar
+hardcoded at 35% over an app with no audio, and repeat pips that never advance). A fourth,
 [02-fix-fabricated-streak](02-fix-fabricated-streak.md) ✅, is fixed. Also guarded by
 [25-screen-memory-model](25-screen-memory-model.md),
 [19-prosody-dsp-spike-and-pipeline](19-prosody-dsp-spike-and-pipeline.md), and

@@ -4,7 +4,31 @@
   `P1-01`…`P1-10`, `P4-02`…`P4-08` along axes the existing specs cannot reach
 - **Milestone:** M1 (stages 1–3, 6, 7) → M2 (stages 4, 5)
 - **Size:** M–L, split into seven independently landable stages
-- **Status:** not started
+- **Status:** ✅ Implemented 2026-07-30. All seven stages landed; the suite is **61 tests in 13
+  files, ~80 s**, plus a production-bundle smoke job. §2 was **revised while implementing** — no
+  fixture loader; see the note in that section for the two findings that killed it.
+
+  **Nine defects found, all fixed, none reachable by the previous suite:** Today reporting
+  yesterday's reps and lock-ins; the "First locked in" milestone un-earning itself overnight; every
+  radio and checkbox in the app unable to report a checked state; eight unnamed progress bars; the
+  love toggle at 17×23; `Back to themes` at 17 px tall; `ink.muted` at 4.41:1 on `surface.sunken2`
+  plus the contrast gate that never checked that surface; two rows pushing their button off-screen
+  at large text; and `.gitignore` voiding the design-token drift gate with a trailing comment, so
+  that CI job had been passing vacuously.
+
+  **Left as recorded exceptions, deliberately:** the `scrollable-region-focusable` axe rule (asks
+  for a `tabindex` a native `ScrollView` does not need); the peak warming band's contrast
+  (**Q-14**); and the missing in-app back control after a browser Forward
+  ([46-navigation-system](46-navigation-system.md)'s first defect from another direction). Each is
+  asserted, so the fix will flip a line rather than pass silently.
+
+  **Still blocked, unchanged:** a 2 000-phrase library ([36](36-content-scale-to-600.md)), a trip
+  mid-flight ([22](22-trip-arc-screens.md)), a due FSRS queue
+  ([17](17-fsrs-implementation-and-parity.md), [24](24-screen-review-session.md)), cold-launch
+  rollover ([10](10-sqlite-persistence-and-outbox.md)), and everything native
+  ([09](09-native-toolchain-and-dev-client.md)–[12](12-asr-speech-module.md),
+  [31](31-offline-survival-mode.md)).
+
 - **Spec:** [`testing-strategy.md`](../docs/process/testing-strategy.md),
   [`definition-of-done.md`](../docs/process/definition-of-done.md),
   [`accessibility.md`](../docs/architecture/accessibility.md),
