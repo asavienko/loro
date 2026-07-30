@@ -5,7 +5,34 @@
   [`mobile-app.md`](../docs/architecture/mobile-app.md#layers)
 - **Milestone:** M1
 - **Size:** L, split into three waves of file-disjoint work
-- **Status:** 🟡 In progress, started 2026-07-30.
+- **Status:** ✅ Implemented 2026-07-30, in 16 commits (this one included). `pnpm check` **23/23**,
+  `pnpm test:e2e` **61/61** with `apps/mobile/e2e/` byte-identical to the baseline — no spec was
+  adjusted to fit the refactor, which is the whole proof that behaviour did not move.
+
+  **What landed:** every learner-facing string in `src/lib/copy.ts`; `src/ui/` split into
+  `primitives/`, `components/` and `tokens/`; the eight screens rebuilt as composition (the
+  Refrain's default export 455 → ~134 lines over twelve named components); `store/index.ts` 469 → 45
+  as a barrel with the shipped maths stub isolated in `coreFacade.ts`; `packages/core`'s `sqlite.ts`
+  (603) split six ways and the Refrain's five per-mode dispatches collapsed to one table; rule 5
+  made enforceable — adding a `ProgressDelta` field is now a compile error until it is classified;
+  `apps/api`'s provider and store seams; `packages/core-rs` constants named with an **empty bindings
+  diff**. Test counts rose everywhere: core 77 → 157 static cases, api 24 → 62, core-rs 99 → 130,
+  mobile store/data 82 → 137.
+
+  **Two things this plan got wrong while running.** (1) Line counts went UP, 2,813 → 3,656 across
+  the routes — code lines 2,526 → 2,831, the rest comments. The `+305` is prop types on extracted
+  components. The duplication left the screens; it did not leave the diff, and the acceptance
+  criteria should have said so. (2) `src/ui` was committed once and then renamed under seven
+  in-flight consumers, costing a broadcast and one agent a rewrite. **A shared layer needs its
+  consumers' call sites before its names are final** — the rename list (`BottomActionBar` →
+  `ActionBar`, `TagSelector` → `TagChips`, `layout="cardsTight"` → `density="tight"`) was only
+  obvious once seven screens had used it.
+
+  **Ten defects found, none fixed** — see "Defects found while reading" below. Three safe ones were
+  folded in (`isSyncEntity`, `dropAll`, the undeclared `NOT_FOUND`); the other seven belong to
+  [05](05-fix-shared-maths-duplication.md), [06](06-fix-sync-pull-cursor-and-scoping.md) and
+  [50](50-interface-integrity-defects.md).
+
 - **Depends on:** nothing. **Overlaps, and lands part of:**
   - [48-app-shell-failure-states-and-input](48-app-shell-failure-states-and-input.md) **§3 and §3a**
     — the `rgba()` lint gap, the six hardcoded literals, and the duplicate `Pill` at
@@ -123,7 +150,7 @@ paths; the wave boundary is where a consumer needs its dependency's real API.
 
 ## Defects found while reading, all OUT of scope
 
-Reading eight screens and four packages closely enough to refactor them turned up nine defects. None
+Reading eight screens and four packages closely enough to refactor them turned up ten defects. None
 is fixed here — every one of them changes a number, a merge outcome, or a planning decision, which
 is exactly what this plan promises not to do. They are recorded so the reading is not thrown away.
 
@@ -164,6 +191,17 @@ is exactly what this plan promises not to do. They are recorded so the reading i
 9. **`main.ts:30-32` describes an implementation that does not exist** — it claims request
    validation uses "Zod schemas shared with the client (`packages/core`)". `zod` is a dependency of
    both packages and the repo contains zero schemas. Either the schemas or the comment must go.
+
+10. **Progress's mastery histogram renders nothing.** `progress.tsx`'s stacked bar is a
+    `<Row gap={0}>` whose children carry `flex` but no height, and `Row` defaults to
+    `alignItems: 'center'` (`src/ui/primitives/layout.tsx`) — so every coloured segment lays out at
+    **0 px** and the bar is an empty groove under a legend that reports real counts. The
+    `ChartSummary` beside it is correct, which is likely why nobody noticed, and no E2E assertion
+    looks at a fill's height. Found while extracting `MasteryBar`; preserved exactly, because making
+    the segments visible is a rendered change. Fixing it is a one-line `alignItems: 'stretch'`, and
+    it belongs with [50-interface-integrity-defects](50-interface-integrity-defects.md) — a chart
+    that draws nothing while its numbers are right is the same class of problem as a progress bar
+    hardcoded at 35%.
 
 Rule 5 is also weaker than it reads: `ProgressDelta` declares 17 signals, `engines/conformance.ts`
 enforces 4, and `cueLevel` has never been written by any engine. A new engine can maintain the same
