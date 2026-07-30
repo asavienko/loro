@@ -211,6 +211,7 @@ export default function Onboarding() {
                     feedback="row"
                     accessibilityRole={current.multi === true ? 'checkbox' : 'radio'}
                     accessibilityLabel={`${o.label}. ${o.sub}`}
+                    selected={active}
                     onPress={() => {
                       choose(current.key ?? '', o.val, current.multi === true)
                     }}

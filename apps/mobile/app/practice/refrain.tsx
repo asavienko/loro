@@ -413,7 +413,10 @@ export default function Refrain() {
               {auto}%
             </Text>
           </Row>
-          <ProgressBar value={auto / 100} height={9} track={surface.sunken} />
+          {/* Named: this bar IS the product's core feedback signal, and accessibility.md
+              requires the Refrain expose automaticity "as a progress bar with a
+              percentage". Unnamed it announced as an anonymous progressbar. */}
+          <ProgressBar value={auto / 100} height={9} track={surface.sunken} label="Automaticity" />
 
           {history.length > 0 && (
             <Row gap={space['2.5']} style={{ marginTop: space['3'] }}>

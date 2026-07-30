@@ -158,6 +158,7 @@ export default function PhraseDetail() {
                   feedback="row"
                   accessibilityRole="radio"
                   accessibilityLabel={meta.label}
+                  selected={active}
                   onPress={() => {
                     setDifficulty(p.id, d)
                   }}
@@ -197,6 +198,7 @@ export default function PhraseDetail() {
                   feedback="smallButton"
                   accessibilityRole="checkbox"
                   accessibilityLabel={tagMeta[t].label}
+                  selected={active}
                   onPress={() => {
                     toggleTag(p.id, t)
                   }}

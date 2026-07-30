@@ -419,6 +419,7 @@ export default function Add() {
                           feedback="row"
                           accessibilityRole="radio"
                           accessibilityLabel={meta.label}
+                          selected={active}
                           onPress={() => {
                             setDraftDiff(d)
                           }}
@@ -459,6 +460,7 @@ export default function Add() {
                           feedback="smallButton"
                           accessibilityRole="checkbox"
                           accessibilityLabel={tagMeta[t].label}
+                          selected={active}
                           onPress={() => {
                             setDraftTags((cur) =>
                               cur.includes(t) ? cur.filter((x) => x !== t) : [...cur, t],

@@ -2,6 +2,23 @@
  * Design-system primitives. Nothing here knows what a phrase is.
  *
  * See docs/design/component-inventory.md
+ *
+ * ── Accessibility props are set in BOTH forms, on purpose ──
+ * react-native-web 0.21 forwards the FLAT `aria-*` props and a handful of deprecated
+ * `accessibility*` aliases. It does not read the NESTED objects at all:
+ * `accessibilityState` appears nowhere in its `createDOMProps`, and `accessibilityValue`
+ * is not mapped either. So on web, `accessibilityState={{ checked }}` and
+ * `accessibilityValue={{ now }}` are silently dropped — every radio in the app announced
+ * no checked state and every progress bar announced no value, while the source looked
+ * correct and the source-scanning gates in `scripts/a11yChecks.ts` had nothing to catch.
+ *
+ * The nested form is still the canonical one on iOS and Android, so both are set: the
+ * object for the platforms the app ships on, the flat `aria-*` for the one the E2E suite
+ * can actually inspect. React Native has accepted `aria-*` as aliases since 0.71, so
+ * neither form is web-only.
+ *
+ * When adding an accessibility prop here, check it against
+ * `react-native-web/src/modules/createDOMProps/index.js` — silence is the failure mode.
  */
 
 import type { ReactNode } from 'react'
@@ -70,6 +87,7 @@ export function Pressable({
   onPress,
   feedback = 'button',
   disabled,
+  selected,
   accessibilityLabel,
   accessibilityHint,
   accessibilityRole = 'button',
@@ -84,12 +102,25 @@ export function Pressable({
   onPress?: (() => void) | undefined
   feedback?: keyof typeof press | undefined
   disabled?: boolean | undefined
+  /**
+   * REQUIRED whenever the role is `radio` or `checkbox`.
+   *
+   * Those roles promise a checked state and this primitive used to have no way to carry
+   * one, so every difficulty selector, every onboarding answer, and every tag toggle in
+   * the app announced its role and its label and then said nothing about whether it was
+   * the chosen one — the selection existed only as a background colour. That is both a
+   * WCAG failure (`aria-checked` is required on `role="radio"`) and the thing
+   * accessibility.md forbids twice over: "state is in `accessibilityValue`, not appended
+   * to the label", and "no information by colour alone".
+   */
+  selected?: boolean | undefined
   accessibilityLabel?: string | undefined
   accessibilityHint?: string | undefined
   accessibilityRole?: 'button' | 'link' | 'radio' | 'checkbox' | undefined
   style?: StyleProp<ViewStyle> | undefined
   children: ReactNode
 }) {
+  const checkable = accessibilityRole === 'radio' || accessibilityRole === 'checkbox'
   return (
     <RNPressable
       onPress={onPress}
@@ -98,9 +129,24 @@ export function Pressable({
       accessibilityRole={accessibilityRole}
       accessibilityLabel={accessibilityLabel}
       accessibilityHint={accessibilityHint}
-      accessibilityState={{ disabled: Boolean(disabled) }}
+      // BOTH FORMS, and both are load-bearing. See the note at the top of this file:
+      // react-native-web reads the flat `aria-*` props and ignores nested
+      // `accessibilityState` entirely, while `accessibilityState` is the canonical form a
+      // native reader expects. `checked` is emitted only for the roles that define it — a
+      // button carrying `aria-checked` is its own violation.
+      accessibilityState={{
+        disabled: Boolean(disabled),
+        ...(checkable ? { checked: Boolean(selected) } : {}),
+      }}
+      {...(checkable ? { 'aria-checked': Boolean(selected) } : {})}
       hitSlop={8}
       style={({ pressed }) => [
+        // An icon button is sized by its glyph, so it gets the 44×44 floor here rather
+        // than at each call site. The love toggle on phrase detail rendered 17×23 — 33×39
+        // even with `hitSlop` — and `scripts/a11yChecks.ts` could not see it, because that
+        // check looks for a DECLARED width or height under 44 and this element declared
+        // none. Caller styles come after, so a call site can still be more generous.
+        feedback === 'icon' ? iconTapTarget : null,
         style,
         pressed && !disabled ? { transform: [{ scale: press[feedback] }] } : null,
         disabled ? { opacity: 0.55 } : null,
@@ -110,6 +156,14 @@ export function Pressable({
     </RNPressable>
   )
 }
+
+/** The 44×44 floor for glyph-sized buttons. `MIN_TAP` is the one place the number lives. */
+const iconTapTarget = {
+  minWidth: MIN_TAP,
+  minHeight: MIN_TAP,
+  alignItems: 'center',
+  justifyContent: 'center',
+} as const
 
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -240,23 +294,55 @@ export function Button({
   )
 }
 
+/**
+ * A progress bar — either NAMED or invisible to assistive tech, never in between.
+ *
+ * `role="progressbar"` requires an accessible name, and every bar in the app was
+ * announced as an unnamed one with a number. Which of the two is right depends on the
+ * caller, and both cases are real here:
+ *
+ *   • `label` given — the bar carries the signal itself, like the Refrain's automaticity,
+ *     which accessibility.md requires be "a progress bar with a percentage".
+ *   • `label` omitted — the bar restates something the surrounding row already says. A
+ *     Today row's own label is already "…, 0 percent automatic.", so a second unnamed
+ *     announcement is noise, and the bar is hidden from the tree rather than left unnamed.
+ */
 export function ProgressBar({
   value,
   color = accent.accent,
   height = 6,
   track = line.default,
+  label,
 }: {
   /** 0..1 */
   value: number
   color?: string
   height?: number
   track?: string
+  label?: string | undefined
 }) {
   const pct = Math.max(0, Math.min(1, value)) * 100
+  const rounded = Math.round(pct)
+  const semantics =
+    label === undefined
+      ? ({ 'aria-hidden': true, importantForAccessibility: 'no-hide-descendants' } as const)
+      : ({
+          accessible: true,
+          accessibilityRole: 'progressbar',
+          accessibilityLabel: label,
+          // Both forms — see the note at the top of this file. The nested
+          // `accessibilityValue` is what a native reader reads and what
+          // react-native-web silently drops, which is why every bar in the app
+          // announced no value at all on web.
+          accessibilityValue: { now: rounded, min: 0, max: 100, text: `${rounded}%` },
+          'aria-valuenow': rounded,
+          'aria-valuemin': 0,
+          'aria-valuemax': 100,
+          'aria-valuetext': `${rounded}%`,
+        } as const)
   return (
     <View
-      accessibilityRole="progressbar"
-      accessibilityValue={{ now: Math.round(pct), min: 0, max: 100 }}
+      {...semantics}
       style={{ height, borderRadius: 2, backgroundColor: track, overflow: 'hidden' }}
     >
       <View style={{ width: `${pct}%`, height: '100%', borderRadius: 2, backgroundColor: color }} />

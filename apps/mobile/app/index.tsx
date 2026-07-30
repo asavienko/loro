@@ -177,6 +177,10 @@ export default function Today() {
                       </View>
                     )}
                   </Row>
+                  {/* Unnamed on purpose: the row's own label already reads
+                      "…, 0 percent automatic.", so a named bar inside it would announce
+                      the same number twice. One focusable element per row
+                      (accessibility.md#every-phrase-row). */}
                   <ProgressBar
                     value={p.automaticity / 100}
                     color={p.automaticity >= 100 ? accent.accent : scale.ladder.bent}
