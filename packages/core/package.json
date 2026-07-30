@@ -21,9 +21,6 @@
     "lint": "eslint src",
     "clean": "rm -rf dist *.tsbuildinfo"
   },
-  "dependencies": {
-    "zod": "^4.4.3"
-  },
   "devDependencies": {
     "typescript": "^5.9.3",
     "vitest": "^4.1.10"
