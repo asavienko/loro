@@ -9,8 +9,29 @@ does not have.
 nvm use 22
 pnpm test:e2e:install   # once per machine
 pnpm test:e2e           # the gate
+pnpm test:e2e:workbench # the dev-only design-system surface
 pnpm test:e2e:bundle    # the same @smoke flows from the production web export
 ```
+
+The workbench suite is separate on purpose. `/dev/tokens` is developer tooling rather than a
+learner-visible state, so it does not belong in `states.ts` and does not inflate learner route,
+accessibility, or text-scale coverage. Its suite proves generated-token search, inspection controls,
+keyboard use, large-text overflow, and a narrow screenshot baseline. Refresh that baseline only
+after reviewing an intended design-system change:
+
+```bash
+pnpm test:e2e:workbench:update
+```
+
+That screenshot uses one platform-neutral baseline so the same reviewed image is enforced locally
+and on CI's Linux runner. Pixel-level font rasterization can still vary across hosts; keep the
+subset small and production-font-backed, and review a cross-platform diff instead of widening the
+tolerance or snapshotting the full workbench.
+
+The production-bundle suite also deep-links to `/dev/tokens` and requires Expo's unmatched-route
+result, then proves the learner surface has no link to it. This is a behavioral availability
+contract: the static route import means workbench code can remain among the export's bytes, and the
+test deliberately makes no tree-shaking or bundle-content claim.
 
 ## What the suite varies
 
@@ -44,13 +65,14 @@ as exactly that.
 
 ## Shared machinery
 
-| File                | Why it exists                                                                                                                               |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `fixtures.ts`       | `onboard()`, plus the gate that fails any test emitting a browser console error or uncaught page error                                      |
-| `clock.ts`          | Instants written in the learner's wall clock; the zone is read back from the browser, and the helper asserts the page agrees                |
-| `states.ts`         | The manifest, `enter()`, and the navigation and assertion helpers                                                                           |
-| `config.shared.mjs` | Everything the dev and production configs must not differ in — including the pinned `timezoneId` and the runtime budget                     |
-| `serveExport.ts`    | Serves the production export. Extensionless paths fall back to `index.html`; anything with an extension 404s, so a missing asset is visible |
+| File                              | Why it exists                                                                                                                               |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `fixtures.ts`                     | `onboard()`, plus the gate that fails any test emitting a browser console error or uncaught page error                                      |
+| `clock.ts`                        | Instants written in the learner's wall clock; the zone is read back from the browser, and the helper asserts the page agrees                |
+| `states.ts`                       | The manifest, `enter()`, and the navigation and assertion helpers                                                                           |
+| `config.shared.mjs`               | Browser, timezone, artifact, and runtime-budget defaults shared by learner, production, and workbench suites                                |
+| `playwright.config.workbench.mjs` | Starts the development server for the isolated `/dev/tokens` contract; its specs live under `workbench/`                                    |
+| `serveExport.ts`                  | Serves the production export. Extensionless paths fall back to `index.html`; anything with an extension 404s, so a missing asset is visible |
 
 Selectors use learner-visible roles, labels and copy, so a refactor may change component structure
 freely while preserving behavior. The `mobile web E2E` job is part of CI's required aggregate and
