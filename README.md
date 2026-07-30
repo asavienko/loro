@@ -49,25 +49,30 @@ Start at [`docs/process/onboarding.md`](docs/process/onboarding.md).
 
 ## The source of truth
 
-The product design lives in an interactive blueprint authored outside this repo's code tree:
+The product design lives in four interactive artifacts authored outside this repo's code tree:
 
 ```
 design/Language Learning by Phrases - V1.1/
-├── Loro.dc.html          # 21 live, interactive screens
-├── Loro Chat.dc.html     # 2 v1.1 conversation screens
-├── Design System.dc.html # authored visual system
-├── Navigation.dc.html    # authored navigation system
+├── Loro.dc.html          # original 21 learner screens
+├── Loro Chat.dc.html     # Open chat + Message inspector (screens 22–23)
+├── Navigation.dc.html    # shell, surface classes, spine, switcher, exit/resume/transport
+├── Design System.dc.html # visual reference and specimen inventory
 ├── support.js            # blueprint runtime shim
 └── screenshots/          # rendered stills
 ```
 
-Open `Loro.dc.html` in a browser. Every phone in it is interactive and every card beside a phone
-explains what that screen does and how it connects. **When a spec in `docs/` and the blueprint
-disagree, the blueprint wins** — file an issue and fix the doc.
+Open the artifact for the surface you are changing; every phone is interactive and its adjacent card
+explains the intended behaviour. Precedence is scoped rather than a global file order:
+`Loro.dc.html` owns screens 1–21, `Loro Chat.dc.html` owns screens 22–23, and `Navigation.dc.html`
+owns shared app chrome and navigation laws across all screens. In particular, Navigation's spine
+rule wins over Chat's earlier “no chrome” description; that phrase means no card/drill chrome inside
+the conversation, not an exemption from the app shell. `Design System.dc.html` demonstrates the
+visual language; reviewed runtime tokens may intentionally differ for accessibility, with the
+deviation recorded and tested. When durable docs disagree with the applicable authored artifact, fix
+the docs; do not edit the authored files.
 
-[`docs/design/screen-catalog.md`](docs/design/screen-catalog.md) maps the original 21 screens to
-their blueprint ranges. Plan 79 owns the durable registration of the two v1.1 chat screens and the
-new navigation/design-system artifacts.
+[`docs/design/screen-catalog.md`](docs/design/screen-catalog.md) maps all 23 learner screens and
+catalogs the navigation shell and developer workbench separately.
 
 ---
 

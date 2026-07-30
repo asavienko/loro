@@ -10,8 +10,12 @@ Everything written down, indexed. Four sections plus decisions.
 | [Process](#process)           | How we work                                |
 | [Decisions](#decisions)       | What's still open, and what could go wrong |
 
-**The design blueprint (`design/Language Learning by Phrases - V1.1/Loro.dc.html`) outranks every
-document here.** These docs interpret and extend it; they do not replace it.
+**The four-artifact v1.1 design package under `design/Language Learning by Phrases - V1.1/` outranks
+these docs within each artifact's scope.** `Loro.dc.html` owns learner screens 1–21,
+`Loro Chat.dc.html` owns screens 22–23, `Navigation.dc.html` owns shared shell/navigation behaviour,
+and `Design System.dc.html` is the authored visual reference. The navigation shell applies to Chat
+despite Chat's earlier “no chrome” description. These docs interpret and extend the package; they do
+not replace or modify it.
 
 ---
 
@@ -22,10 +26,10 @@ current inventory in the root [`README.md`](../README.md), then read the status 
 relevant architecture or product document before treating a diagram, route, or service as live.
 
 For implementation work, follow the dependency-ordered [`plans/README.md`](../plans/README.md), use
-the blueprint and screen catalog for learner-visible behavior (plan 79 owns the v1.1 artifacts not
-yet registered there), and use the architecture docs for the contracts that let later screens reuse
-the same persistence, engine, native, and service foundations. When a change makes a current-state
-statement true or false, update that statement and the owning plan in the same change.
+the applicable authored artifact and screen catalog for learner-visible behaviour, and use the
+architecture docs for the contracts that let later screens reuse the same persistence, engine,
+native, and service foundations. When a change makes a current-state statement true or false, update
+that statement and the owning plan in the same change.
 
 ---
 
@@ -36,7 +40,7 @@ statement true or false, update that statement and the owning plan in the same c
 | [vision.md](product/vision.md)                   | The thesis, positioning, what Loro is not, success conditions                              |
 | [personas.md](product/personas.md)               | Four learners, their jobs-to-be-done, and which loop serves each                           |
 | [prd.md](product/prd.md)                         | **Every feature**, phase by phase, with IDs, acceptance criteria, and release targets      |
-| [functional-spec.md](product/functional-spec.md) | Screen-by-screen behaviour for all 21 screens — states, interactions, edge cases           |
+| [functional-spec.md](product/functional-spec.md) | Screen-by-screen behaviour for all 23 learner screens — states, interactions, edge cases   |
 | [learning-model.md](product/learning-model.md)   | The pedagogy: difficulty, tags, the connective thread, mastery states                      |
 | [practice-loops.md](product/practice-loops.md)   | Loops A/B/C compared; what ships when; how the engine abstraction keeps all three alive    |
 | [content-model.md](product/content-model.md)     | Phrases, themes, scenarios, packs, drops, and the rich fields (respelling, glosses, hooks) |
@@ -71,13 +75,13 @@ statement true or false, update that statement and the owning plan in the same c
 
 ## Design
 
-| Doc                                                     | Contents                                                                          |
-| ------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| [design-system.md](design/design-system.md)             | Every token extracted from the blueprint — colour, type, space, radius, elevation |
-| [component-inventory.md](design/component-inventory.md) | The ~40 components the 21 screens are actually made of                            |
-| [motion.md](design/motion.md)                           | All 11 keyframe animations, the easing set, and the touch-feedback layer          |
-| [screen-catalog.md](design/screen-catalog.md)           | All 21 screens ↔ blueprint line ranges ↔ screenshots ↔ specs                      |
-| [copy-and-tone.md](design/copy-and-tone.md)             | Voice, the Spanish/English rules, microcopy patterns, what we never say           |
+| Doc                                                     | Contents                                                                         |
+| ------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| [design-system.md](design/design-system.md)             | Authored visual reference, generated runtime tokens, and implementation status   |
+| [component-inventory.md](design/component-inventory.md) | Authored 39-component reference and current React Native component inventory     |
+| [motion.md](design/motion.md)                           | All 11 keyframe animations, the easing set, and the touch-feedback layer         |
+| [screen-catalog.md](design/screen-catalog.md)           | All 23 learner screens ↔ artifact ranges ↔ screenshots ↔ specs; shell separately |
+| [copy-and-tone.md](design/copy-and-tone.md)             | Voice, the Spanish/English rules, microcopy patterns, what we never say          |
 
 ## Process
 

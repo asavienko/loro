@@ -10,19 +10,34 @@ Implemented components: [component-inventory.md](component-inventory.md) · Moti
 
 ## Source hierarchy
 
-1. `design/Language Learning by Phrases - V1.1/Loro.dc.html` is the executable product blueprint and
-   wins when product documentation disagrees.
-2. The adjacent authored artifacts—`Design System.dc.html`, `Navigation.dc.html`,
-   `Loro Chat.dc.html`, `tokens/*.css`, 39 prototype components, and screenshots—explain and
-   demonstrate the visual language. They are references, not code imported by the app. Do not edit
-   them during implementation.
-3. [`packages/design-tokens/tokens/`](../../packages/design-tokens/tokens/) is the reviewed,
+Precedence is scoped, not one global file order:
+
+1. `design/Language Learning by Phrases - V1.1/Loro.dc.html` owns the visual and interaction intent
+   of learner screens 1–21; `Loro Chat.dc.html` owns screens 22–23.
+2. `Navigation.dc.html` owns the shared shell, five surface classes, spine, switcher, and
+   exit/resume/transport laws across all 23 learner screens. Its spine rule supersedes Chat's
+   earlier “no chrome” phrase: that phrase excludes drill/card chrome inside the conversation, not
+   the app shell.
+3. `Design System.dc.html`, `tokens/*.css`, `components/`, screenshots, and the small `ui_kits/` app
+   explain and demonstrate the authored visual language. They are references, not code imported by
+   the app. Do not edit them during implementation.
+4. [`packages/design-tokens/tokens/`](../../packages/design-tokens/tokens/) is the reviewed,
    machine-readable runtime source. Its generator emits TypeScript, Swift, and Kotlin.
-4. `apps/mobile/src/ui/theme.ts` maps generated tokens to React Native, while
+5. `apps/mobile/src/ui/theme.ts` maps generated tokens to React Native, while
    `apps/mobile/src/ui/tokens/` names exact component geometry not covered by the global scale.
 
 An accessibility correction may intentionally differ from the authored colour. Record that deviation
 in the token JSON, keep the design intent, and let the contrast gate prove the result.
+
+### Authored inventory counts
+
+The headline inside `Design System.dc.html:36–37` says **245 tokens / 37 components**, but that
+caption predates the final files beside it. The checked-in package contains **246 unique CSS custom
+property names** across `tokens/*.css` and **39 JSX reference components** under `components/` (8
+chat, 7 core, 5 forms, 2 frames, 10 navigation, 4 practice, 3 progress). The four JSX files in
+`ui_kits/loro-app/` are screen/demo composition and are not included in the 39-component count. Use
+the filesystem inventory for workbench coverage and drift checks; retain 245/37 only when quoting
+the stale authored headline itself.
 
 ## What is implemented now
 
@@ -37,7 +52,7 @@ in the token JSON, keep the design intent, and let the contrast gate prove the r
 
 The following are specified but not yet implemented: custom font loading/family assignment,
 learner-selectable accents, CSS-shadow/gradient-to-native rendering, most declared animations, Skia
-charts, and the component families required by the other 14 learner screens. The current `DarkCard`
+charts, and the component families required by the other 16 learner screens. The current `DarkCard`
 therefore uses flat `surface.dark`, and `Card` intentionally has no elevation prop.
 
 ## Visual character

@@ -1,9 +1,15 @@
 # Component inventory
 
-The current React Native inventory, followed by the rules for extending it toward the full
-blueprint. Only the items in the current tables exist. The authored 39 JSX prototype components in
-`design/Language Learning by Phrases - V1.1/components/` are design references, not modules the app
-imports.
+The current React Native inventory, followed by the rules for extending it toward the full v1.1
+design package. Only the items in the current tables exist. The authored 39 JSX reference components
+in `design/Language Learning by Phrases - V1.1/components/` are design references, not modules the
+app imports.
+
+`Design System.dc.html:36–37` still displays an earlier **37-component** headline. The checked-in
+filesystem is authoritative for inventory and contains **39** components: 8 chat, 7 core, 5 forms, 2
+frames, 10 navigation, 4 practice, and 3 progress. Four additional JSX files under
+`ui_kits/loro-app/` compose reference screens and do not belong to the component count. Likewise,
+the adjacent CSS token files contain 246 unique custom-property names, not the headline's 245.
 
 All reusable app UI lives under `apps/mobile/src/ui/`. Seven learner screens plus the shell use 24
 exported primitives and 6 exported composites. There is no `src/ui/charts/` directory yet.
@@ -62,10 +68,11 @@ rule.
 
 ## What is not implemented
 
-The blueprint still calls for reusable audio transport, microphone/listening states, phrase-detail
-rich content, practice/reveal/grade surfaces, warming/automaticity feedback, trip/drop surfaces,
-roleplay, navigation sheets, and progress/lab visualizations. None should be claimed as an app
-component until a real route uses it.
+The authored package still calls for reusable audio transport, microphone/listening states,
+phrase-detail rich content, practice/reveal/grade surfaces, warming/automaticity feedback, trip/drop
+surfaces, roleplay/chat, navigation sheets, and progress/lab visualizations. None should be claimed
+as an app component until production code uses it. The plan 80 workbench may report an authored
+reference as pending, but a specimen does not make that reference a shipped app component.
 
 There are also no Skia chart components. `PitchContour`, `RhythmBars`, `WaveformPair`,
 `ForgettingCurve`, `Sparkline`, `LadderHistogram`, and `WeekDots` remain target names only. When a

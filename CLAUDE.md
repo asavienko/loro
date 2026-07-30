@@ -33,23 +33,27 @@ Keep it short. Long-form belongs in `docs/`; this file points at it.
 - [`docs/README.md`](docs/README.md) — the full documentation index
 - [`docs/architecture/overview.md`](docs/architecture/overview.md) — **the ten rules**
 
-## The design blueprint is the source of truth
+## The v1.1 design package is the source of truth
 
 ```
-design/Language Learning by Phrases - V1.1/Loro.dc.html          # original 21 interactive screens
-design/Language Learning by Phrases - V1.1/Loro Chat.dc.html     # 2 chat screens
-design/Language Learning by Phrases - V1.1/Navigation.dc.html    # shell/navigation laws
-design/Language Learning by Phrases - V1.1/Design System.dc.html # tokens/components
+design/Language Learning by Phrases - V1.1/Loro.dc.html          # original learner screens 1–21
+design/Language Learning by Phrases - V1.1/Loro Chat.dc.html     # Open chat + Message inspector, 22–23
+design/Language Learning by Phrases - V1.1/Navigation.dc.html    # shell/navigation laws for every screen
+design/Language Learning by Phrases - V1.1/Design System.dc.html # authored visual reference
 ```
 
-It is an executable spec, not a mockup. Every phone in it is interactive; each screen has a
-`DCLogic` class whose `renderVals()` is a complete view model.
+They are executable specs, not mockups. Every phone is interactive; learner screens have a `DCLogic`
+class whose `renderVals()` is a complete view model.
 
-- **When a doc and the blueprint disagree, the blueprint wins.** Fix the doc.
-- **Don't edit the blueprint.** It's the authored artefact. Intended-design changes go in `docs/`.
-- [`docs/design/screen-catalog.md`](docs/design/screen-catalog.md) maps the original 21 screens;
-  plan 79 owns registration of the 2 v1.1 chat screens and the other authored artifacts. Start there
-  when working on a screen.
+- **Precedence is scoped.** `Loro.dc.html` owns screens 1–21; `Loro Chat.dc.html` owns screens
+  22–23; `Navigation.dc.html` owns shared chrome and navigation laws across all 23. Its “spine on
+  every screen” law supersedes Chat's earlier “no chrome” description: Chat excludes card/drill
+  chrome inside the conversation, not the app shell. `Design System.dc.html` is the authored visual
+  reference; reviewed runtime tokens may diverge only for recorded, tested accessibility reasons.
+- **When a doc and the applicable authored artifact disagree, the artifact wins.** Fix the doc.
+- **Don't edit the authored artifacts.** Intended-design changes go in `docs/`.
+- [`docs/design/screen-catalog.md`](docs/design/screen-catalog.md) maps all 23 learner screens and
+  indexes the shell and developer workbench separately. Start there when working on a screen.
 
 ## The three non-negotiables
 
