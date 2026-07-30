@@ -8,6 +8,7 @@
 
 import { beforeEach, describe, expect, it } from 'vitest'
 import { createUserPhraseIds, streak } from '@loro/core'
+import * as store from './index'
 import {
   addPracticeDay,
   catalogPhrases,
@@ -29,6 +30,37 @@ const someCatalogId = (): string => {
 
 beforeEach(() => {
   useApp.getState().reset()
+})
+
+describe('the public surface', () => {
+  it('is exactly the names a screen may import', () => {
+    // Eight route files and `ToastHost` import from `../src/store`, and the modules behind
+    // that barrel were reorganised once already. Asserted rather than assumed, so a name
+    // cannot be dropped or quietly renamed by the next reorganisation — and so ADDING one
+    // is a deliberate edit here, not a side effect. Types are absent by construction:
+    // `AppData`, `Toast`, `PhraseView`, `OwnPhraseDraft`, `AppState` and `StoreDeps` are
+    // checked by `tsc`, which is why the route files compiling is the other half of this.
+    expect(Object.keys(store).sort()).toEqual(
+      [
+        'INITIAL_STATE',
+        'addPracticeDay',
+        'applyDeltaToPhrase',
+        'catalogById',
+        'catalogPhrases',
+        'createAppStore',
+        'dataOf',
+        'engineContext',
+        'packs',
+        'refrainEngine',
+        'scenarios',
+        'streamEngine',
+        'toView',
+        'useApp',
+        'useMastery',
+        'useViews',
+      ].sort(),
+    )
+  })
 })
 
 describe('row identity', () => {
