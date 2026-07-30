@@ -1,0 +1,54 @@
+:root {
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-serif: 'Instrument Serif', Georgia, 'Times New Roman', serif;
+
+  /* size scale — measured from the screens, not rounded to a grid */
+  --fs-micro: 9px;      /* uppercase eyebrow inside cards */
+  --fs-label: 10px;     /* tiny caps labels, hints */
+  --fs-label-lg: 10.5px;
+  --fs-meta: 11px;      /* metadata, inline actions, rail labels */
+  --fs-meta-lg: 11.5px;
+  --fs-body-s: 12px;
+  --fs-body-s-lg: 12.5px;
+  --fs-body: 13px;      /* the workhorse caption/body size */
+  --fs-ui: 14px;
+  --fs-ui-lg: 15px;
+  --fs-phrase: 16px;    /* Spanish in the chat */
+  --fs-phrase-lg: 18px;
+  --fs-title: 21px;
+  --fs-title-lg: 22px;  /* phase titles on the canvas */
+  --fs-display-s: 26px; /* serif phrase in the inspector (27px in use) */
+  --fs-display: 32px;   /* serif phase numerals */
+  --fs-display-lg: 40px;
+  --fs-hero: 48px;
+  --fs-numeral: 74px;   /* big count on progress screens */
+
+  --fw-light: 300;      /* rail arrows only */
+  --fw-regular: 400;    /* serif + note copy */
+  --fw-medium: 600;     /* headings, phrase text, most sans */
+  --fw-bold: 700;       /* labels, actions, everything small */
+
+  --lh-flat: 1;
+  --lh-tight: 1.2;
+  --lh-snug: 1.35;
+  --lh-body: 1.45;
+  --lh-relaxed: 1.55;
+  --lh-loose: 1.62;
+
+  --track-hero: -0.034em;
+  --track-display: -0.024em;
+  --track-title: -0.014em;
+  --track-ui: -0.01em;
+  --track-tight: -0.008em;
+  --track-caps-tight: 0.04em;
+  --track-caps: 0.13em;
+  --track-caps-wide: 0.16em;
+
+  /* composed roles */
+  --type-hero: var(--fw-medium) var(--fs-hero)/1.04 var(--font-sans);
+  --type-phase-title: var(--fw-medium) var(--fs-title-lg)/1.2 var(--font-sans);
+  --type-body: var(--fw-regular) var(--fs-body)/var(--lh-relaxed) var(--font-sans);
+  --type-phrase: var(--fw-medium) var(--fs-phrase)/1.4 var(--font-sans);
+  --type-serif-phrase: var(--fw-regular) 27px/1.2 var(--font-serif);
+  --type-caps: var(--fw-bold) var(--fs-label)/1.4 var(--font-sans);
+}

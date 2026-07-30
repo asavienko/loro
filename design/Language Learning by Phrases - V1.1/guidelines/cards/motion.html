@@ -1,0 +1,24 @@
+<!-- @dsCard group="Brand" viewport="700x150" subtitle="Voice waveform, typing dots, press ring — nothing decorative" name="Motion" -->
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
+<style>
+  html,body{margin:0;}
+  body{background:var(--paper-canvas);font-family:var(--font-sans);color:var(--text-primary);padding:18px 20px;box-sizing:border-box;height:150px;overflow:hidden;}
+  .row{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap;}
+  .sw{display:flex;flex-direction:column;gap:5px;width:96px;}
+  .chip{height:44px;border-radius:var(--r-card);border:1px solid rgba(35,32,27,.08);}
+  .nm{font-size:10px;font-weight:700;color:var(--ink-4);letter-spacing:.02em;}
+  .hex{font-size:9.5px;font-weight:700;color:var(--ink-7);font-variant-numeric:tabular-nums;text-transform:uppercase;}
+  .cap{font-size:9px;font-weight:700;color:var(--ink-7);text-transform:uppercase;letter-spacing:var(--track-caps);}
+  
+</style></head>
+<body><div style="display:flex;gap:26px;align-items:center;">
+  <div style="display:flex;align-items:flex-end;gap:3px;height:24px;">
+    <div style="width:3px;height:8px;border-radius:2px;background:var(--accent);animation:eqB .9s ease-in-out infinite 0s;"></div><div style="width:3px;height:18px;border-radius:2px;background:var(--accent);animation:eqB .9s ease-in-out infinite 0.1s;"></div><div style="width:3px;height:12px;border-radius:2px;background:var(--accent);animation:eqB .9s ease-in-out infinite 0.2s;"></div><div style="width:3px;height:22px;border-radius:2px;background:var(--accent);animation:eqB .9s ease-in-out infinite 0.30000000000000004s;"></div><div style="width:3px;height:14px;border-radius:2px;background:var(--accent);animation:eqB .9s ease-in-out infinite 0.4s;"></div>
+  </div>
+  <div style="display:flex;gap:4px;align-items:center;">
+    <div style="width:5px;height:5px;border-radius:50%;background:var(--ink-10);animation:barJump .9s ease-in-out infinite 0s;"></div><div style="width:5px;height:5px;border-radius:50%;background:var(--ink-10);animation:barJump .9s ease-in-out infinite 0.15s;"></div><div style="width:5px;height:5px;border-radius:50%;background:var(--ink-10);animation:barJump .9s ease-in-out infinite 0.3s;"></div>
+  </div>
+  <div style="width:44px;height:44px;border-radius:50%;background:var(--accent);animation:pulseRing 1.6s ease-out infinite;"></div>
+  <div style="font-size:10.5px;color:var(--ink-7);line-height:1.5;">eqB · barJump · pulseRing<br>sheetUp .28s --ease-pop · popIn for toasts<br>press = scale(.98–.9), no bounce</div>
+</div></body></html>

@@ -1,0 +1,53 @@
+<!-- @dsCard group="Components" viewport="700x380" subtitle="MessageBubble · PhraseRow · DiffRow · MicButton · Toast · BottomSheet" name="Chat" -->
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
+<style>
+  html,body{margin:0;}
+  body{background:var(--paper-canvas);font-family:var(--font-sans);color:var(--ink-1);padding:18px 20px;box-sizing:border-box;height:380px;overflow:hidden;}
+  .cap{font-size:9px;font-weight:700;color:var(--ink-7);text-transform:uppercase;letter-spacing:var(--track-caps);}
+  .pill{display:flex;align-items:center;justify-content:center;gap:7px;min-height:44px;padding:0 16px;border-radius:var(--r-pill-lg);font-size:13px;font-weight:700;border:none;font-family:inherit;}
+  .act{font-size:11px;font-weight:700;}
+  .tag{font-size:9px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:4px 7px;border-radius:var(--r-chip);}
+  .card{background:#fff;border:1px solid var(--line-card);border-radius:var(--r-card);padding:11px 13px;font-size:12px;}
+</style></head>
+<body><div style="display:flex;gap:28px;">
+  <div style="width:280px;display:flex;flex-direction:column;gap:14px;">
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div style="max-width:88%;"><div style="font-size:16px;font-weight:600;color:#33302a;line-height:1.4;letter-spacing:-0.008em;">Te entiendo. ¿Te apetece un café antes de empezar?</div></div>
+      <div style="align-self:flex-end;max-width:88%;display:flex;flex-direction:column;gap:7px;align-items:flex-end;">
+        <div style="background:color-mix(in srgb, var(--accent) 18%, var(--paper-screen-quiet));border-radius:18px 18px 6px 18px;padding:11px 14px;">
+          <div style="font-size:16px;font-weight:600;color:var(--accent-ink);line-height:1.4;">Yo estoy un poco cansado.</div>
+          <div style="font-size:11.5px;color:var(--ink-7);margin-top:4px;">I am a bit tired.</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;"><span style="width:5px;height:5px;border-radius:50%;background:var(--accent);"></span><span style="font-size:10px;font-weight:700;color:var(--accent-ink);">2 things to fix</span></div>
+        <div style="display:flex;gap:13px;"><span class="act" style="color:var(--ink-4);">↻ Say again</span><span class="act" style="color:var(--ink-4);">EN</span><span class="act" style="color:var(--accent-ink);">Fix 2 ›</span></div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;background:color-mix(in srgb, var(--accent) 9%, var(--paper-screen-quiet));border-radius:24px;padding:0 8px 0 16px;min-height:52px;">
+      <div style="display:flex;align-items:flex-end;gap:3px;height:22px;">
+        <div style="width:3px;height:8px;border-radius:2px;background:var(--accent);animation:eqB .9s ease-in-out infinite 0s;"></div><div style="width:3px;height:18px;border-radius:2px;background:var(--accent);animation:eqB .9s ease-in-out infinite 0.1s;"></div><div style="width:3px;height:12px;border-radius:2px;background:var(--accent);animation:eqB .9s ease-in-out infinite 0.2s;"></div><div style="width:3px;height:22px;border-radius:2px;background:var(--accent);animation:eqB .9s ease-in-out infinite 0.30000000000000004s;"></div><div style="width:3px;height:14px;border-radius:2px;background:var(--accent);animation:eqB .9s ease-in-out infinite 0.4s;"></div>
+      </div>
+      <span style="flex:1;font-size:13px;font-weight:700;color:var(--accent-ink);">Listening…</span>
+      <span style="font-size:15px;color:var(--ink-6);">×</span>
+      <div style="background:var(--accent);border-radius:20px;padding:0 15px;min-height:40px;display:flex;align-items:center;"><span style="font-size:12px;font-weight:700;color:#fff;">Done</span></div>
+    </div>
+    <div style="display:flex;align-items:flex-end;gap:12px;">
+      <div style="flex:1;display:flex;flex-direction:column;gap:5px;"><div style="border-bottom:1px solid var(--line-field);min-height:44px;display:flex;align-items:center;font-size:14px;font-weight:600;color:var(--ink-9);">Escribe en español…</div><span style="font-size:10px;color:var(--ink-8);">Hold the mic to talk · tap it to keep listening</span></div>
+      <div style="flex:none;width:56px;height:56px;border-radius:50%;background:var(--accent);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2.5px;box-shadow:var(--shadow-lift);"><span style="width:10px;height:15px;border-radius:5px;background:#fff;"></span><span style="width:15px;height:2px;border-radius:1px;background:rgba(255,255,255,.85);"></span></div>
+    </div>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;gap:16px;">
+    <div>
+      <div class="cap">Ways to answer · for this answer</div>
+      <div style="display:flex;align-items:center;gap:6px;padding:9px 0;border-top:none;"><div style="flex:1;min-width:0;"><div style="font-size:14px;font-weight:600;">Sí, me apetece mucho.</div><div style="display:flex;gap:6px;align-items:center;margin-top:2px;"><span style="font-size:10.5px;color:var(--ink-7);">Yes, I'd love one.</span><span class="tag" style="color:var(--ink-8);padding:0;">warm</span></div></div><span style="width:34px;text-align:center;font-size:13px;color:var(--ink-6);">♪</span><div style="border:1px solid var(--line-field);border-radius:16px;padding:0 11px;min-height:34px;display:flex;align-items:center;"><span style="font-size:11px;font-weight:700;">Send</span></div></div><div style="display:flex;align-items:center;gap:6px;padding:9px 0;border-top:1px solid var(--line-hair);"><div style="flex:1;min-width:0;"><div style="font-size:14px;font-weight:600;">Un cortado, si puede ser.</div><div style="display:flex;gap:6px;align-items:center;margin-top:2px;"><span style="font-size:10.5px;color:var(--ink-7);">A cortado, if possible.</span><span class="tag" style="color:var(--ink-8);padding:0;">ordering</span></div></div><span style="width:34px;text-align:center;font-size:13px;color:var(--ink-6);">♪</span><div style="border:1px solid var(--line-field);border-radius:16px;padding:0 11px;min-height:34px;display:flex;align-items:center;"><span style="font-size:11px;font-weight:700;">Send</span></div></div>
+    </div>
+    <div>
+      <div class="cap">2 things to fix</div>
+      <div style="padding:11px 0;border-top:none;"><div style="display:flex;align-items:baseline;gap:8px;"><span style="font-size:14px;font-weight:600;color:var(--ink-9);text-decoration:line-through;">Yo estoy</span><span style="font-size:12px;color:var(--ink-10);">→</span><span style="font-size:14px;font-weight:700;">Estoy</span><div style="flex:1;"></div><span class="tag" style="color:var(--ink-8);padding:0;letter-spacing:.09em;">Extra word</span></div><div style="font-size:11.5px;color:var(--ink-5);line-height:1.5;margin-top:5px;">Spanish carries the subject in the verb, so “yo” reads as emphasis.</div></div><div style="padding:11px 0;border-top:1px solid var(--line-hair);"><div style="display:flex;align-items:baseline;gap:8px;"><span style="font-size:14px;font-weight:600;color:var(--ink-9);text-decoration:line-through;">cansado</span><span style="font-size:12px;color:var(--ink-10);">→</span><span style="font-size:14px;font-weight:700;">cansada</span><div style="flex:1;"></div><span class="tag" style="color:var(--ink-8);padding:0;letter-spacing:.09em;">Agreement</span></div><div style="font-size:11.5px;color:var(--ink-5);line-height:1.5;margin-top:5px;">Your profile is set to feminine, so the adjective ends in -a.</div></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div style="background:var(--ink-1);color:var(--ink-on-dark);font-size:12px;font-weight:700;padding:10px 15px;border-radius:14px;box-shadow:var(--shadow-toast);">Fixed — and saved to practice</div>
+      <span style="font-size:9.5px;color:var(--ink-7);">Toast · popIn, ~2s</span>
+    </div>
+  </div>
+</div></body></html>
