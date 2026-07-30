@@ -64,11 +64,11 @@ export const DELTA_RULES: Readonly<Record<DeltaField, DeltaRule>> = {
   stumbles: { kind: 'increment', write: (p, d) => ({ stumbles: p.stumbles + (d.stumbles ?? 0) }) },
   axes: {
     kind: 'increment',
-    write: (p, d) => (d.axes === undefined ? {} : {
+    write: (p, d) => ({
       axPerception: bumpAxis(p.axPerception, d.axes?.perception),
       axRecall: bumpAxis(p.axRecall, d.axes?.recall),
       axProduction: bumpAxis(p.axProduction, d.axes?.production),
-    }) as Partial<PhraseState>,
+    }),
   },
 
   // ── ABSOLUTES ──
