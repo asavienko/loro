@@ -65,6 +65,18 @@ local parsing/capture implementation actually exists.
 Recorded audio never enters a deferred upload queue. Cloud ASR and every other recorded-audio upload
 are prohibited by the learner-facing promise and ADR-0011; consent is not an exception.
 
+Open chat is usable offline from versioned authored topic/reply graphs, including answer
+suggestions, translations and inspector material. The graphs are the production floor for the two
+surfaces in `Loro Chat.dc.html:95–449`, not timer-driven canned replies. A live guarded text
+provider may improve a turn when reachable, but entry, multiple coherent turns, inspection and
+explicitly keeping a line cannot depend on it. Provider failure cancels the stale request and
+continues the local graph without a decorative delay or a fabricated “AI is typing” result.
+
+Voice chat follows the normal native degradation order: on-device ASR, an honest unavailable state,
+then text input. Recorded audio remains in native memory. Reference playback uses downloaded assets
+when present and approved on-device Spanish speech for arbitrary lines; the browser speech API and
+canned transcript in `ChatLogic` are prototype-only (`Loro Chat.dc.html:514`, `529–535`).
+
 ## Target capability matrix
 
 This is a delivery checklist, not a claim about current behaviour.
@@ -78,6 +90,7 @@ This is a delivery checklist, not a claim about current behaviour.
 | Speech/ASR/pronunciation/prosody   | Use on-device modules and real measurements           | Missing native modules                                       |
 | Sync                               | Queue locally and converge later                      | Outbox and server endpoints exist separately; client missing |
 | Trips/widgets/notifications        | Derive from durable local calendar state              | Not implemented                                              |
+| Open chat                          | Continue through bundled topic/reply graphs           | Authored prototype only; no route/domain/persistence         |
 | Live AI/translation/purchase       | Degrade or defer with honest copy                     | Server-side pieces are partial or absent                     |
 
 A feature may be documented as offline only after its asset/data dependencies, cold-launch path and
@@ -131,6 +144,8 @@ and consent rules; they must not share the sync outbox by convenience.
    write and missing-asset coverage with the feature.
 8. **No shaming through scheduling.** Offline notification/widget logic still follows the missed-day
    tone invariant.
+9. **No provider-shaped chat floor.** Bundled graphs must complete useful turns and inspection on a
+   cold offline launch; regex corrections, canned recognition and timer replies do not qualify.
 
 ## Verification required before v1
 

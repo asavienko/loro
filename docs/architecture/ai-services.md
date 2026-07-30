@@ -12,8 +12,8 @@ Rationale: [ADR-0010](adr/0010-llm-roleplay-and-guardrails.md)
 
 The daily loop — add, listen, repeat, rate, review, score — involves no LLM at all. That's a
 deliberate architectural choice, not an oversight: it keeps the product offline-capable, keeps unit
-costs at cents per learner, and means a provider outage degrades one optional surface instead of
-breaking the app.
+costs bounded, and means a provider outage degrades supplementary surfaces instead of breaking the
+app.
 
 Every learner-facing AI path has a **bundled fallback** that is good, not merely non-broken.
 
@@ -25,11 +25,12 @@ Every learner-facing AI path has a **bundled fallback** that is good, not merely
 | ----------------------------------------------------------------- | ------------------ | --------------- | ------------------------------------------- |
 | **Roleplay scenes**                                               | Yes                | Yes             | 24 bundled scenes, 3 per theme              |
 | **Coach notes** for free-speech replies                           | Yes                | Yes             | The scene's pre-authored tip                |
+| **Open-chat turns, suggestions and feedback**                     | Yes                | Yes             | Authored topic/reply graphs                 |
 | **Translation** for Import and Capture                            | Yes                | Yes             | Leave untranslated; the learner can type it |
 | **Content enrichment** — `resp`, `words`, `example`, `hint`       | No, authoring-time | No              | Human authoring                             |
 | **Phrase-quality review** — flag stiff or unnatural catalog lines | No, CI             | No              | Human review                                |
 
-Rows 4 and 5 are where the LLM earns most of its value: enriching 600 phrases with respellings,
+Rows 5 and 6 are where the LLM earns most of its value: enriching 600 phrases with respellings,
 glosses, examples, and memory hooks is weeks of work, and a draft-then-review pipeline turns it into
 days. That work happens offline, in CI, with a human gate
 ([`process/content-authoring.md`](../process/content-authoring.md)) — so no learner ever waits on it
@@ -39,7 +40,7 @@ and no unreviewed model output reaches a learner.
 
 ## Roleplay scenes
 
-The only substantial runtime use.
+The reusable, cacheable runtime generation path.
 
 ### Request flow
 
@@ -156,22 +157,66 @@ exercised constantly and can't silently rot.
 
 ---
 
+## Guarded open chat
+
+`Loro Chat.dc.html:95–328` specifies the conversation and `331–449` its Message inspector; the state
+logic is at `456–714`. Production preserves topic/pace, text and voice turns, on-demand translation,
+answer suggestions, explained corrections, alternatives, glosses, explicit keep/remove and Review
+handoff. It does not preserve the prototype's language machinery.
+
+### Local floor and live enhancement
+
+Versioned authored topic packs contain finite reply graphs, safe continuations, suggestions,
+English, respellings, explanations, alternatives, register labels and word glosses. They are usable
+offline and are the local development default. A guarded provider may produce a more responsive turn
+from bounded recent text context, but it never becomes the source of thread persistence, practice
+selection, progress or the phrase library.
+
+Each live request is authenticated and entitled as decided for release, rate- and budget-limited,
+bounded by turn count and characters, structurally separates learner text from instructions, and
+requires validated structured output. Timeout, safety rejection, invalid output, stale response,
+provider failure or budget exhaustion continues the authored graph. There is no artificial minimum
+latency and no pending indicator after a request has failed.
+
+Raw threads, drafts, corrections, translations and ASR transcripts are excluded from application
+logs, analytics and ordinary sync. A request sends only its bounded text context to the configured
+provider under the approved retention/no-training terms. Recorded audio is structurally absent:
+on-device ASR yields text while PCM remains in native memory. Reference playback uses production
+assets or approved on-device speech, never browser `speechSynthesis`.
+
+### Prototype mechanisms explicitly rejected
+
+`ChatLogic` demonstrates view states, not a production language service. Do not port:
+
+- browser speech synthesis (`Loro Chat.dc.html:514`);
+- canned recognition selected from suggestions (`529–535`);
+- text-length/character-code phrase ids or a fabricated due interval (`542–544`);
+- the four regex corrections in `fixFor()` (`568–575`);
+- canned replies dispatched after a fixed 1.2-second timer (`586–596`).
+
+Corrections and explanations must be validated and attributable; low-confidence feedback is omitted.
+IDs are opaque and stable. Saving a line is an explicit learner action through the normal phrase
+mutation boundary, and queuing it for Review cannot write progress or invent an interval.
+
+---
+
 ## Prompt injection
 
-The threat is real and specific: **learner-authored phrase text reaches a prompt.**
+The threat is real and specific: **learner-authored phrase and chat text reaches a prompt.**
 
-A learner can type any phrase, import any pasted text, and photograph any sign. That text flows into
-`/ai/translate` and — via `phrase_ids` for owned phrases — into scene generation.
+A learner can type any phrase, import any pasted text, photograph any sign, or enter a chat turn.
+That text flows into `/ai/translate`, via `phrase_ids` into scene generation, or as bounded recent
+context into `/chat/turn`.
 
 | Defence                           |                                                                                                                                      |
 | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
 | **Structural separation**         | Learner text is passed as data in a user-turn field, never concatenated into the system prompt                                       |
 | **Delimiting and escaping**       | Learner content is wrapped in explicit delimiters, with delimiter sequences stripped from the content                                |
-| **Length caps**                   | 200 chars per phrase, 12 phrases per request. A prompt-injection payload usually needs room                                          |
+| **Length caps**                   | 200 chars per phrase plus endpoint-specific chat turn/context caps. A prompt-injection payload usually needs room                    |
 | **Output validation**             | The gate above is a second line: even a successful injection has to produce a valid scene, in Spanish, with correct structure        |
 | **Instruction detection**         | `containsInstruction()` flags imperative English patterns in tips (`ignore previous`, `system:`, `you are now`) and fails validation |
 | **No tool access**                | The LLM has no tools, no retrieval, no ability to make requests. Output is text                                                      |
-| **No privileged data in context** | Prompts contain the learner's phrases, level, and tags. No email, no ids, no other learners' data                                    |
+| **No privileged data in context** | Prompts contain only required phrase/chat text and learning context. No email, ids, or other learners' data                          |
 | **Rate limits**                   | Bound the blast radius of iterative probing                                                                                          |
 
 Worst realistic case: a learner injects a prompt and receives a weird scene _for themselves_. There
@@ -195,7 +240,9 @@ Assumptions to re-derive before pricing ([`product/monetization.md`](../product/
 | Translation               | ~1 import/month, ~300 tokens                                              |
 
 At those volumes the AI cost per engaged learner lands around **$0.10–0.30/month**, dominated by
-scenes. Levers, in the order we'd pull them:
+scenes. This estimate predates open chat and cannot authorize its entitlement or budget. Chat must
+ship behind a separately approved per-user/global cap derived from measured turns, context size and
+fallback usage. Levers for the reusable scene workload, in the order we'd pull them:
 
 1. **Cache key coarseness.** Bucketing `tag_profile` into 4 buckets instead of 16 roughly doubles
    the hit rate.
@@ -210,26 +257,27 @@ scenes. Levers, in the order we'd pull them:
 
 Enforced in `ai/budget.service.ts`, two layers:
 
-| Cap                       | Behaviour on breach                                                                                    |
-| ------------------------- | ------------------------------------------------------------------------------------------------------ |
-| Per-user monthly AI spend | Silently serve the bundled fallback. **No error, no paywall** — the learner should not be able to tell |
-| Global daily spend        | Same, plus an alert                                                                                    |
-| Per-user rate limits      | 429 with `Retry-After`; client falls back                                                              |
+| Cap                       | Behaviour on breach                                                   |
+| ------------------------- | --------------------------------------------------------------------- |
+| Per-user monthly AI spend | Silently serve the bundled scene/chat graph. **No error, no paywall** |
+| Global daily spend        | Same, plus an alert                                                   |
+| Per-user rate limits      | 429 with `Retry-After`; client falls back locally                     |
 
 **Silent fallback is a product requirement.** A message saying "you've used your AI allowance" turns
-a graceful degradation into a visible failure, and the fallback scenes are good enough that the
-learner has lost nothing.
+a graceful degradation into a visible failure, and the authored fallback content is good enough that
+the learner has lost the provider enhancement rather than the surface.
 
 ---
 
 ## Model choice
 
-| Use                            | Model            | Why                                                                                    |
-| ------------------------------ | ---------------- | -------------------------------------------------------------------------------------- |
-| Scene generation               | Claude Sonnet 5  | Quality matters — register, naturalness, and the best-option judgement are the product |
-| Coach notes                    | Claude Haiku 4.5 | One sentence about a known line                                                        |
-| Translation                    | Claude Haiku 4.5 | Short, well-constrained                                                                |
-| Content enrichment (authoring) | Claude Opus 5    | Highest quality, offline, human-reviewed, low volume — no reason to economise          |
+| Use                            | Model                 | Why                                                                                    |
+| ------------------------------ | --------------------- | -------------------------------------------------------------------------------------- |
+| Scene generation               | Claude Sonnet 5       | Quality matters — register, naturalness, and the best-option judgement are the product |
+| Guarded chat turns             | Configured text model | Validated conversational Spanish within the approved latency/cost/retention envelope   |
+| Coach notes                    | Claude Haiku 4.5      | One sentence about a known line                                                        |
+| Translation                    | Claude Haiku 4.5      | Short, well-constrained                                                                |
+| Content enrichment (authoring) | Claude Opus 5         | Highest quality, offline, human-reviewed, low volume — no reason to economise          |
 
 Model ids are configuration, not code, and every prompt is versioned alongside its model so a model
 change is a reviewable, revertable event.
@@ -238,12 +286,21 @@ change is a reviewable, revertable event.
 validation invariants plus a native-speaker rating of naturalness on a 20-scene sample. A model that
 validates but produces stiff Spanish is a regression, and only a human notices.
 
+Chat provider/prompt changes additionally run a consented fixture corpus covering CEFR fit,
+Spain/Latin-America policy, agreement, correction and explanation quality, register, suggestion
+usefulness, mixed/empty/long input, safety, injection, fallback continuity, latency and cost. The
+release thresholds belong with the provider decision; the prototype's handful of seeded lines is not
+an evaluation set.
+
 ---
 
 ## Observability
 
 `ai_request_completed` ([metrics.md](../product/metrics.md)) carries `endpoint`, `cache_hit`,
-`latency_ms`, `tokens_in/out`, `fallback_used`, `validation_failures`, `repair_attempted`.
+`latency_ms`, `tokens_in/out`, `fallback_used`, `validation_failures`, `repair_attempted`,
+`safety_code`, and `budget_state`. For chat, `cache_hit` describes stable prompt/resource caches,
+not reuse of a personalized turn. No request, response, translation, correction or transcript text
+is logged or emitted.
 
 | Metric                    | Alert                                                                             |
 | ------------------------- | --------------------------------------------------------------------------------- |
@@ -261,15 +318,15 @@ cached, a bad batch can persist — so a spike triggers a cache purge for the af
 
 ## What we deliberately don't do with AI
 
-| Not doing                               | Why                                                                                                                                           |
-| --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Generate catalog phrases at runtime** | Unreviewed content would reach learners. Generation is an authoring step with a human gate                                                    |
-| **Score pronunciation with an LLM**     | It's a signal-processing problem, it must run offline, and audio must not leave the device ([prosody-dsp.md](prosody-dsp.md))                 |
-| **Open-ended chat**                     | The blueprint's roleplay is a bounded scene with a coach. Free chat is a different product, and much harder to keep pedagogically honest      |
-| **Auto-tag phrases for the learner**    | Difficulty and tags are the _learner's_ declaration — that's the entire connective thread ([learning-model.md](../product/learning-model.md)) |
-| **Auto-add suggested phrases**          | Rule 6: nothing enters the stream without an explicit tap                                                                                     |
-| **Personalise with an LLM at runtime**  | Selection and scheduling are deterministic, testable, and explainable. An LLM in that loop would make the product unauditable                 |
-| **Send learner audio to a model**       | The 🔒 on-screen promise ([ADR-0011](adr/0011-analytics-and-privacy.md))                                                                      |
+| Not doing                                      | Why                                                                                                                                           |
+| ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Generate catalog phrases at runtime**        | Unreviewed content would reach learners. Generation is an authoring step with a human gate                                                    |
+| **Score pronunciation with an LLM**            | It's a signal-processing problem, it must run offline, and audio must not leave the device ([prosody-dsp.md](prosody-dsp.md))                 |
+| **Unbounded/autonomous chat**                  | Authored open chat is topic-bounded, has a finite offline floor, bounded context, no tools, and validated output                              |
+| **Auto-tag phrases for the learner**           | Difficulty and tags are the _learner's_ declaration — that's the entire connective thread ([learning-model.md](../product/learning-model.md)) |
+| **Auto-add suggested phrases**                 | Rule 6: nothing enters the stream without an explicit tap                                                                                     |
+| **Personalise practice selection with an LLM** | Selection and scheduling are deterministic, testable, and explainable. An LLM in that loop would make the product unauditable                 |
+| **Send learner audio to a model**              | The 🔒 on-screen promise ([ADR-0011](adr/0011-analytics-and-privacy.md))                                                                      |
 
 The last two are the important ones. A tempting version of this product asks an LLM "what should
 this learner practise next?" We don't, because the answer has to be correct, reproducible on two

@@ -1,8 +1,9 @@
-# 0010 · Use an LLM for roleplay and authoring, with a bundled fallback on every learner-facing path
+# 0010 · Use guarded text generation with a bundled fallback on every learner-facing path
 
 - **Status:** Accepted
 - **Date:** 2026-07-28
 - **Deciders:** Product, tech lead, content lead
+- **Amended:** 2026-07-30 to register the authored open-chat surfaces
 
 ## Context
 
@@ -22,6 +23,16 @@ involves no LLM. It must stay that way, because the app has to work in a taxi ra
 destroy the unit economics
 ([`product/monetization.md`](../../product/monetization.md#cost-structure-per-learner)).
 
+The v1.1 package subsequently added Open chat and Message inspector as two authored learner surfaces
+(`Loro Chat.dc.html:95–449`, state logic `456–714`). They allow voice or text turns, suggestions,
+corrections and line inspection. This amendment admits that product-level addition without admitting
+an unbounded provider dependency: authored topic/reply graphs are the offline floor, a guarded live
+provider is optional enhancement, and the deterministic daily loop remains LLM-free.
+
+The prototype is evidence for visible states, not production language behavior. Its browser speech
+synthesis, canned recognition, four regex corrections, fixed timer replies, text-derived ids and
+fabricated due interval (`Loro Chat.dc.html:514`, `529–596`) are explicitly rejected.
+
 ## Options considered
 
 ### A · No LLM at all — hand-author every scene
@@ -36,13 +47,11 @@ profiles. And it forfeits the authoring leverage, which is where most of the val
 with usage. Provider latency and outages become learner-visible. And unreviewed model output would
 reach learners directly.
 
-### C · LLM for runtime roleplay and authoring-time enrichment, **with a bundled fallback on every
-
-learner-facing path**
+### C · Guarded generation for supplementary surfaces and authoring-time enrichment, with a bundled fallback on every learner-facing path
 
 **Pros**
 
-- Personalised scenes when online; real scenes when not.
+- Personalised scenes and chat turns when online; real authored scenes/reply graphs when not.
 - Caching makes the cost model work: bucketed keys mean the hundredth learner with a similar profile
   gets a cached scene.
 - Authoring leverage without unreviewed content reaching learners, because enrichment is an offline
@@ -58,14 +67,20 @@ content changes. Output quality must be enforced, not assumed.
 
 ### 1 · AI is a garnish, never a dependency
 
-No LLM on any daily-loop path. Roleplay, coach notes on free-speech replies, and import/capture
-translation are the only runtime uses, and each degrades cleanly.
+No LLM on any daily-loop path. Roleplay, guarded open-chat turns and feedback, coach notes on
+free-speech replies, and import/capture translation are the only runtime uses, and each degrades
+cleanly.
 
 ### 2 · Every learner-facing AI path has a bundled fallback that is _good_
 
 24 hand-authored scenes ship in the binary — three per theme, at two levels — written by the content
 lead. Not placeholders. They are also the local-development default (`AI_PROVIDER=stub`), so they
 are exercised constantly and cannot silently rot.
+
+Open chat likewise ships versioned authored topic/reply graphs with coherent continuations,
+suggestions, translations and inspector material. Offline, over budget, unsafe, timed out or invalid
+live turns continue through those graphs without a fake typing delay. Stable scenes and prompts may
+be cached; personalized thread turns are not shared-response cache material.
 
 ### 3 · Output is validated against pedagogical invariants, not just a schema
 
@@ -82,33 +97,39 @@ best options teaches the wrong lesson.
 ### 4 · Budgets fail silently to the fallback
 
 Per-user monthly spend, global daily spend, and per-user rate limits. On breach: serve the bundled
-scene with **no message**. A "you've used your AI allowance" notice turns a graceful degradation
-into a visible failure, and the fallback is good enough that nothing has been lost.
+scene or authored chat continuation with **no message**. A "you've used your AI allowance" notice
+turns a graceful degradation into a visible failure, and the fallback is good enough that nothing
+has been lost.
 
 ### 5 · Learner text is data, never instructions
 
-Learner-authored phrase text reaches prompts (via translation and via owned-phrase ids). It is
-passed as a delimited field in a user turn, never concatenated into the system prompt; delimiters
-are stripped from the content; lengths are capped; and the model has **no tools, no retrieval, and
-no cross-tenant context**
-([threat-model.md](../threat-model.md#b7--prompt-injection--the-ai-boundary)).
+Learner-authored phrase and bounded chat text reaches prompts. It is passed as a delimited field in
+a user turn, never concatenated into the system prompt; delimiters are stripped from the content;
+lengths and turn counts are capped; and the model has **no tools, no retrieval, and no cross-tenant
+context** ([threat-model.md](../threat-model.md#b7--prompt-injection--the-ai-boundary)).
+
+Recorded chat audio never reaches the prompt or JavaScript. Native on-device ASR produces text; PCM
+remains handle-only native memory and is released locally. Raw thread text is excluded from
+analytics and ordinary phrase/progress sync. Live provider retention and local thread retention are
+release decisions, not defaults an implementation may invent.
 
 ### Where AI is explicitly not used
 
-| Not used for                          | Why                                                                                                                       |
-| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| Generating catalog phrases at runtime | Unreviewed content would reach learners                                                                                   |
-| Scoring pronunciation                 | It's signal processing, must run offline, and audio must not leave the device                                             |
-| Auto-tagging phrases                  | Difficulty and tags are the _learner's_ declaration — the entire connective thread                                        |
-| Auto-adding suggested phrases         | Rule 6: nothing enters the stream without an explicit tap                                                                 |
-| Deciding what to practise next        | Selection must be deterministic, reproducible on two platforms, offline, and auditable — that's what `loro-core` is for   |
-| Open-ended chat                       | A bounded scene with a coach is the design; free chat is a different product and much harder to keep pedagogically honest |
+| Not used for                          | Why                                                                                                                             |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Generating catalog phrases at runtime | Unreviewed content would reach learners                                                                                         |
+| Scoring pronunciation                 | It's signal processing, must run offline, and audio must not leave the device                                                   |
+| Auto-tagging phrases                  | Difficulty and tags are the _learner's_ declaration — the entire connective thread                                              |
+| Auto-adding suggested phrases         | Rule 6: nothing enters the stream without an explicit tap                                                                       |
+| Deciding what to practise next        | Selection must be deterministic, reproducible on two platforms, offline, and auditable — that's what `loro-core` is for         |
+| Unbounded autonomous chat             | Open chat is topic-bounded, has authored offline continuations, no tools, bounded context and explicit safety/output validation |
 
 ## Consequences
 
 ### Good
 
 - Roleplay is personalised online and real offline.
+- Open chat remains usable through authored topic/reply graphs when the provider is unavailable.
 - AI cost lands around **$0.10–0.30 per engaged learner per month**, dominated by scenes, with clear
   levers (coarser cache keys, pre-generation, smaller models for tips)
   ([ai-services.md](../ai-services.md#cost-model)).
@@ -121,15 +142,16 @@ no cross-tenant context**
 
 ### Bad — accepted deliberately
 
-- Two code paths for roleplay, and the fallback path must stay genuinely good. Mitigated by making
-  it the local dev default.
+- Live and authored paths for each conversation surface, and every fallback must stay genuinely
+  good. Mitigated by making authored content the local development default.
 - Cache invalidation on `content_version` changes flushes scenes, causing a temporary cost spike
   after every content release. Accepted; alternatively pre-generation smooths it.
 - Prompt and model are coupled and versioned together, so a model change is a reviewable event with
   an evaluation suite — including a native-speaker naturalness rating, because a model can pass
   every structural check and still produce stiff Spanish.
-- 24 bundled scenes is not much variety for an offline learner who uses roleplay heavily. Acceptable
-  because roleplay is a supplementary surface, not the daily loop.
+- Bundled scenes and finite chat graphs have less variety for an offline learner. Acceptable because
+  both are supplementary surfaces, not the daily loop; content quality and coverage are release
+  gates rather than excuses to require the provider.
 
 ### Revisit if…
 
@@ -138,6 +160,9 @@ no cross-tenant context**
   much larger.
 - An on-device model becomes good enough to generate a scene locally, which would remove the last
   runtime provider dependency.
+- Open chat needs tools, unbounded history, cross-device raw-thread sync, or provider retention
+  beyond the approved window. Any of those is a new privacy/product decision rather than an
+  implementation detail.
 - Validation failure rates stay high enough that the "one repair then fallback" policy means most
   learners see bundled scenes anyway — at which point hand-authoring (option A) is the honest
   choice.

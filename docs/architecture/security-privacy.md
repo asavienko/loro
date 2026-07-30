@@ -16,8 +16,8 @@ still target architecture.
   lifetime-checked handles for Rust scoring.
 - The API has no authentication module, account routes, entitlement guard, persistent user store,
   Postgres, Redis, TLS termination, certificate pinning, audit log, deletion/export jobs, analytics
-  ingest, TTS endpoint, or voice-clone endpoint. Its sync repository is an in-memory development
-  implementation and controllers are not protected by learner identity.
+  ingest, TTS endpoint, chat-turn endpoint, or voice-clone endpoint. Its sync repository is an
+  in-memory development implementation and controllers are not protected by learner identity.
 - Rate-limit values and RFC 9457 error shaping exist in source, but no rate-limit middleware applies
   those values. Nest's logger is not the structured, allowlist-redacted logging pipeline described
   below.
@@ -48,6 +48,12 @@ audio never leaves the device. A future product proposal that needs upload must 
 learner-facing promise, the non-negotiable, ADR-0011, and this architecture through an explicit
 decision; implementation cannot create an exception by itself.
 
+Before live open chat ships, resolve local-thread and provider retention, release entitlement and
+budget, and whether the surface is committed or experimental. The request must carry only bounded
+text context, never audio, and provider contracts must prohibit training and unapproved retention.
+Raw thread text remains outside analytics and ordinary sync. The authored offline topic/reply graphs
+must remain usable if the learner declines or cannot reach the live service.
+
 ## The promise that constrains everything
 
 The prosody lab prints this on screen, to the learner, in writing:
@@ -67,14 +73,15 @@ the current product or architecture.
 
 ## Data classification
 
-| Class                 | Data                                                                                        | Where it lives                        | Leaves the device?                    |
-| --------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------- | ------------------------------------- |
-| **P0 · Never leaves** | Recorded audio (PCM buffers)                                                                | Native memory, released after scoring | **No**                                |
-| **P1 · Sensitive**    | Email, auth identities, purchase receipts                                                   | Server, encrypted at rest             | Yes, to us and to the store providers |
-| **P2 · Personal**     | Phrase library, notes/memory hooks, difficulty and tags, trip city and dates, captured text | Device + server (synced)              | Yes, to us only                       |
-| **P3 · Derived**      | Scores, latencies, reps, FSRS state, ladder rungs                                           | Device + server                       | Yes, to us only                       |
-| **P4 · Telemetry**    | Events with ids, no free text                                                               | Device queue → analytics              | Yes, pseudonymous                     |
-| **P5 · Public**       | Catalog content                                                                             | CDN                                   | It's public content                   |
+| Class                 | Data                                                                                        | Where it lives                           | Leaves the device?                    |
+| --------------------- | ------------------------------------------------------------------------------------------- | ---------------------------------------- | ------------------------------------- |
+| **P0 · Never leaves** | Recorded audio (PCM buffers)                                                                | Native memory, released after scoring    | **No**                                |
+| **P1 · Sensitive**    | Email, auth identities, purchase receipts                                                   | Server, encrypted at rest                | Yes, to us and to the store providers |
+| **P2 · Personal**     | Phrase library, notes/memory hooks, difficulty and tags, trip city and dates, captured text | Device + server (synced)                 | Yes, to us only                       |
+| **P2 · Personal**     | Chat turns, drafts, translations, corrections and ASR transcript text                       | Device; bounded live context to provider | Only for a guarded live turn          |
+| **P3 · Derived**      | Scores, latencies, reps, FSRS state, ladder rungs                                           | Device + server                          | Yes, to us only                       |
+| **P4 · Telemetry**    | Events with ids, no free text                                                               | Device queue → analytics                 | Yes, pseudonymous                     |
+| **P5 · Public**       | Catalog content                                                                             | CDN                                      | It's public content                   |
 
 ### What P2 actually contains, and why it matters
 
@@ -84,6 +91,7 @@ A learner's phrase library is more personal than it looks. It can contain:
 - Captured text — photographs of prescriptions, letters, forms, addresses.
 - Their trip city and dates, i.e. **when their home is empty**.
 - Imported text they pasted from anywhere.
+- Their open-chat thread, including what they typed or said and the feedback they received.
 
 So P2 is treated as personal data in the GDPR sense throughout, not as "app content".
 
@@ -96,6 +104,7 @@ So P2 is treated as personal data in the GDPR sense throughout, not as "app cont
 | Note / memory-hook text                                | A boolean: has a note                          |
 | Captured OCR text                                      | A count of lines                               |
 | ASR transcripts                                        | Match outcome only                             |
+| Chat turns, drafts, translations or corrections        | Counts, ids, timings and safety codes only     |
 | Email, name, or any provider identity                  | `user_id`                                      |
 | Precise location                                       | Trip city, only when the learner set it        |
 | The learner's own phrase list as a payload             | Per-phrase events, catalog ids only            |
@@ -184,17 +193,19 @@ the library), calendar, health.
 
 ## Retention
 
-| Data                                     | Client                                    | Server                  |
-| ---------------------------------------- | ----------------------------------------- | ----------------------- |
-| Recorded audio                           | Released after scoring, same call stack   | Never stored            |
-| `user_phrase`, `trip`, `settings`        | Until deleted by the learner              | Until account deletion  |
-| `review_log`                             | Forever (needed for FSRS re-optimisation) | 3 years                 |
-| `latency_sample`, `attempt`              | Pruned after 90 days; aggregates kept     | 1 year, then aggregated |
-| `take` (scores, contour)                 | Last 20 per phrase                        | 1 year                  |
-| Analytics events                         | Queue: 7 days / 5 000 events              | 25 months, pseudonymous |
-| Server logs                              | —                                         | 30 days                 |
-| Audit log (auth, deletion, staff access) | —                                         | 2 years                 |
-| Backups                                  | —                                         | 35 days PITR            |
+| Data                                     | Client                                      | Server                              |
+| ---------------------------------------- | ------------------------------------------- | ----------------------------------- |
+| Recorded audio                           | Released after scoring, same call stack     | Never stored                        |
+| `user_phrase`, `trip`, `settings`        | Until deleted by the learner                | Until account deletion              |
+| `review_log`                             | Forever (needed for FSRS re-optimisation)   | 3 years                             |
+| `latency_sample`, `attempt`              | Pruned after 90 days; aggregates kept       | 1 year, then aggregated             |
+| `take` (scores, contour)                 | Last 20 per phrase                          | 1 year                              |
+| Open-chat thread text                    | Pending local-retention decision; clearable | Not in app sync storage             |
+| Live chat provider context               | Sent per bounded request only               | Pending provider-retention decision |
+| Analytics events                         | Queue: 7 days / 5 000 events                | 25 months, pseudonymous             |
+| Server logs                              | —                                           | 30 days                             |
+| Audit log (auth, deletion, staff access) | —                                           | 2 years                             |
+| Backups                                  | —                                           | 35 days PITR                        |
 
 **Deleted accounts** are hard-deleted with cascades within 30 days, including from backups as they
 age out, and a verification job confirms zero remaining rows.
@@ -203,21 +214,21 @@ age out, and a verification job confirms zero remaining rows.
 
 ## GDPR / regulatory duties
 
-| Duty                          | Implementation                                                                                                                 |
-| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| Lawful basis                  | Contract (delivering the service) for P1–P3; **consent** for P4 analytics                                                      |
-| Right of access / portability | `GET /account/export` — complete JSON, documented, re-importable ([api.md](api.md#account))                                    |
-| Right to erasure              | `DELETE /account` — 24 h cancellation window, then hard cascade delete, verified                                               |
-| Right to object               | Analytics opt-out in Settings; **client-side**, so nothing is even queued                                                      |
-| Data minimisation             | No location, no contacts, no photo library, no free text in analytics                                                          |
-| Purpose limitation            | Learner data is never used to train a model. Stated in the policy and true in the pipeline                                     |
-| Sub-processors                | Documented and listed in the privacy policy: TTS provider, Anthropic (roleplay text only), crash reporting, analytics, hosting |
-| DPIA                          | Required — the app processes voice. The mitigation is that voice never leaves the device                                       |
-| Age                           | 16+; no child-directed features, no age-gated content flows                                                                    |
-| Store disclosures             | Apple Privacy Manifest and Play Data Safety kept in sync with this document, in the same PR as any data-flow change            |
+| Duty                          | Implementation                                                                                                                      |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Lawful basis                  | Contract (delivering the service) for P1–P3; **consent** for P4 analytics                                                           |
+| Right of access / portability | `GET /account/export` — complete JSON, documented, re-importable ([api.md](api.md#account))                                         |
+| Right to erasure              | `DELETE /account` — 24 h cancellation window, then hard cascade delete, verified                                                    |
+| Right to object               | Analytics opt-out in Settings; **client-side**, so nothing is even queued                                                           |
+| Data minimisation             | No location, no contacts, no photo library, no free text in analytics                                                               |
+| Purpose limitation            | Learner data is never used to train a model. Stated in the policy and true in the pipeline                                          |
+| Sub-processors                | Documented and listed in the privacy policy: TTS provider, guarded roleplay/chat text provider, crash reporting, analytics, hosting |
+| DPIA                          | Required — the app processes voice. The mitigation is that voice never leaves the device                                            |
+| Age                           | 16+; no child-directed features, no age-gated content flows                                                                         |
+| Store disclosures             | Apple Privacy Manifest and Play Data Safety kept in sync with this document, in the same PR as any data-flow change                 |
 
-**Learner data is never used for model training.** Not the phrases, not the notes, not the audio.
-This is a promise we can make cheaply because the AI use is text generation from a prompt, not
+**Learner data is never used for model training.** Not the phrases, notes, chat text, or audio. This
+is a promise we can make cheaply because the AI use is text generation from a prompt, not
 personalisation from a corpus ([ai-services.md](ai-services.md)).
 
 ---

@@ -110,8 +110,9 @@ Reviewed weekly. Any tripped guardrail is an agenda item, not a dashboard colour
 Naming: `object_verb_past_tense`, `snake_case`. Every event carries the
 [common properties](#common-properties). Privacy rules in
 [`architecture/security-privacy.md`](../architecture/security-privacy.md) — **notably: no phrase
-text and no audio ever appears in an event.** Phrases are referenced by `phrase_id` only, and
-learner-authored phrases are referenced by a salted hash so we can count them without reading them.
+text, chat text, transcript, correction text, or audio ever appears in an event.** Phrases are
+referenced by `phrase_id` only, and learner-authored phrases are referenced by a salted hash so we
+can count them without reading them.
 
 ### Lifecycle
 
@@ -125,16 +126,16 @@ learner-authored phrases are referenced by a salted hash so we can count them wi
 
 ### Content
 
-| Event               | Key properties                                                                                                                                       |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `phrase_added`      | `phrase_id`, `source` (starter \| discover \| scenario \| browse \| custom \| import \| capture \| related \| drop), `difficulty`, `tags[]`, `theme` |
-| `phrase_removed`    | `phrase_id`, `owned_days`, `reps_at_removal`                                                                                                         |
-| `phrase_rated`      | `phrase_id`, `field` (difficulty \| tags \| loved \| learned), `from`, `to`, `surface`                                                               |
-| `phrase_note_set`   | `phrase_id`, `source` (typed \| suggestion)                                                                                                          |
-| `import_parsed`     | `line_count`, `parsed_count`, `separator_hits{}`                                                                                                     |
-| `import_committed`  | `added_count`, `deselected_count`                                                                                                                    |
-| `capture_completed` | `line_count`, `added_count`, `ocr_confidence_bucket`                                                                                                 |
-| `undo_used`         | `action`                                                                                                                                             |
+| Event               | Key properties                                                                                                                                               |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `phrase_added`      | `phrase_id`, `source` (starter \| discover \| scenario \| browse \| custom \| import \| capture \| related \| drop \| chat), `difficulty`, `tags[]`, `theme` |
+| `phrase_removed`    | `phrase_id`, `owned_days`, `reps_at_removal`                                                                                                                 |
+| `phrase_rated`      | `phrase_id`, `field` (difficulty \| tags \| loved \| learned), `from`, `to`, `surface`                                                                       |
+| `phrase_note_set`   | `phrase_id`, `source` (typed \| suggestion)                                                                                                                  |
+| `import_parsed`     | `line_count`, `parsed_count`, `separator_hits{}`                                                                                                             |
+| `import_committed`  | `added_count`, `deselected_count`                                                                                                                            |
+| `capture_completed` | `line_count`, `added_count`, `ocr_confidence_bucket`                                                                                                         |
+| `undo_used`         | `action`                                                                                                                                                     |
 
 ### Practice — shared
 
@@ -148,25 +149,30 @@ learner-authored phrases are referenced by a salted hash so we can count them wi
 
 ### Practice — per engine
 
-| Event                                             | Key properties                                                                 |
-| ------------------------------------------------- | ------------------------------------------------------------------------------ |
-| `stream_advanced`                                 | `phrase_id`, `repeats_completed`, `manual`                                     |
-| `stream_rerated_live`                             | `phrase_id`, `to`, `queue_position_before/after`                               |
-| `refrain_wave_started` / `refrain_wave_completed` | `wave`, `set_size`, `reps_total`                                               |
-| `refrain_rep_completed`                           | `phrase_id`, `mode`, `rep_index`, `latency_ms`, `automaticity`                 |
-| `refrain_phrase_locked`                           | `phrase_id`, `reps`, `total_ms`, `day_index`                                   |
-| `refrain_phrase_graduated`                        | `phrase_id`, `days_in_rotation`                                                |
-| `srs_card_graded`                                 | `phrase_id`, `grade`, `interval_days`, `stability`, `focus_tag`, `ms_to_grade` |
-| `curve_confidence_rated`                          | `phrase_id`, `level`, `stability_before/after`                                 |
-| `speak_word_revealed`                             | `phrase_id`, `word_index`, `via` (asr \| hint)                                 |
-| `speak_phrase_completed`                          | `phrase_id`, `hints_used`, `stars`, `asr_attempts`                             |
-| `pron_take_scored`                                | `phrase_id`, `overall`, `worst_syllable_index`, `attempt`                      |
-| `prosody_take_scored`                             | `phrase_id`, `melody_score`, `delta`, `cue_level`, `attempt`, `axes{}`         |
-| `prosody_cue_leveled_up`                          | `phrase_id`, `from_level`, `to_level`                                          |
-| `roleplay_turn_taken`                             | `scene_id`, `turn`, `was_best`, `via` (tap \| speech)                          |
-| `roleplay_scene_completed`                        | `scene_id`, `turns`, `natural_lines`, `fluency`                                |
-| `run_started` / `run_completed`                   | `deck_size`, `card_drawn`, `redrawn`, `target_phrase_id`                       |
-| `run_rung_climbed`                                | `phrase_id`, `from_rung`, `to_rung`                                            |
+| Event                                             | Key properties                                                                                            |
+| ------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `stream_advanced`                                 | `phrase_id`, `repeats_completed`, `manual`                                                                |
+| `stream_rerated_live`                             | `phrase_id`, `to`, `queue_position_before/after`                                                          |
+| `refrain_wave_started` / `refrain_wave_completed` | `wave`, `set_size`, `reps_total`                                                                          |
+| `refrain_rep_completed`                           | `phrase_id`, `mode`, `rep_index`, `latency_ms`, `automaticity`                                            |
+| `refrain_phrase_locked`                           | `phrase_id`, `reps`, `total_ms`, `day_index`                                                              |
+| `refrain_phrase_graduated`                        | `phrase_id`, `days_in_rotation`                                                                           |
+| `srs_card_graded`                                 | `phrase_id`, `grade`, `interval_days`, `stability`, `focus_tag`, `ms_to_grade`                            |
+| `curve_confidence_rated`                          | `phrase_id`, `level`, `stability_before/after`                                                            |
+| `speak_word_revealed`                             | `phrase_id`, `word_index`, `via` (asr \| hint)                                                            |
+| `speak_phrase_completed`                          | `phrase_id`, `hints_used`, `stars`, `asr_attempts`                                                        |
+| `pron_take_scored`                                | `phrase_id`, `overall`, `worst_syllable_index`, `attempt`                                                 |
+| `prosody_take_scored`                             | `phrase_id`, `melody_score`, `delta`, `cue_level`, `attempt`, `axes{}`                                    |
+| `prosody_cue_leveled_up`                          | `phrase_id`, `from_level`, `to_level`                                                                     |
+| `roleplay_turn_taken`                             | `scene_id`, `turn`, `was_best`, `via` (tap \| speech)                                                     |
+| `roleplay_scene_completed`                        | `scene_id`, `turns`, `natural_lines`, `fluency`                                                           |
+| `chat_started`                                    | `thread_id`, `topic_id`, `pace`, `offline`, `fallback_provenance`                                         |
+| `chat_turn_submitted`                             | `thread_id`, `turn_id`, `turn_index`, `via` (text \| speech), `char_count`                                |
+| `chat_turn_resolved`                              | `thread_id`, `turn_id`, `latency_ms`, `provenance`, `suggestion_count`, `correction_count`, `safety_code` |
+| `chat_line_kept`                                  | `thread_id`, `turn_id`, `kind` (original \| corrected \| alternative)                                     |
+| `chat_thread_cleared`                             | `thread_id`, `turn_count`, `age_days`                                                                     |
+| `run_started` / `run_completed`                   | `deck_size`, `card_drawn`, `redrawn`, `target_phrase_id`                                                  |
+| `run_rung_climbed`                                | `phrase_id`, `from_rung`, `to_rung`                                                                       |
 
 ### Trip
 
@@ -181,14 +187,14 @@ learner-authored phrases are referenced by a salted hash so we can count them wi
 
 ### Commerce & system
 
-| Event                                 | Key properties                                                          |
-| ------------------------------------- | ----------------------------------------------------------------------- |
-| `paywall_shown` / `paywall_dismissed` | `trigger`, `variant`                                                    |
-| `subscription_started` / `cancelled`  | `plan`, `trial`, `days_since_install`                                   |
-| `sync_completed`                      | `pushed`, `pulled`, `conflicts`, `duration_ms`                          |
-| `sync_failed`                         | `reason`, `retry_count`                                                 |
-| `ai_request_completed`                | `endpoint`, `cache_hit`, `latency_ms`, `tokens_in/out`, `fallback_used` |
-| `error_surfaced`                      | `code`, `surface`, `recoverable`                                        |
+| Event                                 | Key properties                                                                                                                                    |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `paywall_shown` / `paywall_dismissed` | `trigger`, `variant`                                                                                                                              |
+| `subscription_started` / `cancelled`  | `plan`, `trial`, `days_since_install`                                                                                                             |
+| `sync_completed`                      | `pushed`, `pulled`, `conflicts`, `duration_ms`                                                                                                    |
+| `sync_failed`                         | `reason`, `retry_count`                                                                                                                           |
+| `ai_request_completed`                | `endpoint`, `cache_hit`, `latency_ms`, `tokens_in/out`, `fallback_used`, `validation_failures`, `repair_attempted`, `safety_code`, `budget_state` |
+| `error_surfaced`                      | `code`, `surface`, `recoverable`                                                                                                                  |
 
 ### Common properties
 
@@ -204,8 +210,9 @@ On every event: `event_id` (uuid, for dedup), `client_ts`, `server_ts`, `user_id
    locally and flush on connectivity, so offline behaviour is measured. Queue cap 5 000 events / 7
    days.
 2. **`event_id` for idempotency.** Offline replay must not double-count.
-3. **No free text, ever.** No phrase text, no notes, no transcripts, no audio. Learner-authored
-   phrases get a salted hash id.
+3. **No free text, ever.** No phrase text, notes, chat turns, drafts, translations, corrections,
+   inspector explanations, ASR transcripts, or audio. Learner-authored phrases get a salted hash id;
+   conversation events use opaque thread/turn ids plus counts, timings, provenance and safety codes.
 4. **Latency and score numbers must be real.** An event carrying a simulated value is worse than no
    event.
 5. **One event per user action.** No shadow events for renders or scroll positions.
