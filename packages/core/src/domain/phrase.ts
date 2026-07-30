@@ -49,6 +49,14 @@ export const REPEAT_TARGET: Record<Difficulty, number> = { hard: 4, med: 3, easy
 /** Retention maturity, shown on the Progress screen. Derived, never stored. */
 export type MasteryBucket = 'new' | 'learning' | 'strong' | 'mastered'
 
+/** Histogram/display order. Exhaustive so a new bucket cannot disappear from a consumer. */
+export const MASTERY_BUCKETS = [
+  'new',
+  'learning',
+  'strong',
+  'mastered',
+] as const satisfies readonly MasteryBucket[]
+
 /**
  * The five-rung ladder: a permanent measure of DEPTH per phrase.
  * Loop C's model, but maintained from v1 by every engine so the Phrasebook
@@ -80,6 +88,20 @@ export type Theme =
   | 'Imported'
   | 'Mine'
   | 'Captured'
+
+/** Catalog themes exposed by Browse. Learner-originated synthetic themes are excluded. */
+export const BROWSABLE_THEMES = [
+  'Café',
+  'Dining',
+  'Travel',
+  'Directions',
+  'Shopping',
+  'Small talk',
+  'Survival',
+  'Hotel',
+] as const satisfies readonly Theme[]
+
+export type BrowsableTheme = (typeof BROWSABLE_THEMES)[number]
 
 export type Register = 'neutral' | 'casual' | 'formal'
 export type Cefr = 'A1' | 'A2' | 'B1' | 'B2'
@@ -225,6 +247,20 @@ export function masteryBucket(p: Pick<PhraseState, 'learned' | 'reps'>): Mastery
   if (p.reps >= 3) return 'strong'
   if (p.reps >= 1) return 'learning'
   return 'new'
+}
+
+/** Count phrases once in the canonical mastery order. */
+export function countMasteryBuckets(
+  phrases: readonly Pick<PhraseState, 'learned' | 'reps'>[],
+): Record<MasteryBucket, number> {
+  const counts: Record<MasteryBucket, number> = {
+    new: 0,
+    learning: 0,
+    strong: 0,
+    mastered: 0,
+  }
+  for (const phrase of phrases) counts[masteryBucket(phrase)]++
+  return counts
 }
 
 /**

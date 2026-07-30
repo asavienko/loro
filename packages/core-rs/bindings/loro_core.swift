@@ -2110,6 +2110,109 @@ extension Difficulty: Equatable, Hashable {}
 // Note that we don't yet support `indirect` for enums.
 // See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
 /**
+ * Presentation-neutral effort state, from the blueprint thresholds (`Loro.dc.html:3411`).
+ */
+
+public enum EffortState {
+    
+    /**
+     * No repetitions yet; presentation invites the learner to begin.
+     */
+    case ready
+    /**
+     * Below the first automaticity threshold.
+     */
+    case cold
+    /**
+     * At least one third automatic.
+     */
+    case warm
+    /**
+     * At least two thirds automatic.
+     */
+    case hot
+    /**
+     * Fully automatic at the daily target.
+     */
+    case peak
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeEffortState: FfiConverterRustBuffer {
+    typealias SwiftType = EffortState
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> EffortState {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .ready
+        
+        case 2: return .cold
+        
+        case 3: return .warm
+        
+        case 4: return .hot
+        
+        case 5: return .peak
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: EffortState, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case .ready:
+            writeInt(&buf, Int32(1))
+        
+        
+        case .cold:
+            writeInt(&buf, Int32(2))
+        
+        
+        case .warm:
+            writeInt(&buf, Int32(3))
+        
+        
+        case .hot:
+            writeInt(&buf, Int32(4))
+        
+        
+        case .peak:
+            writeInt(&buf, Int32(5))
+        
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeEffortState_lift(_ buf: RustBuffer) throws -> EffortState {
+    return try FfiConverterTypeEffortState.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeEffortState_lower(_ value: EffortState) -> RustBuffer {
+    return FfiConverterTypeEffortState.lower(value)
+}
+
+
+
+extension EffortState: Equatable, Hashable {}
+
+
+
+// Note that we don't yet support `indirect` for enums.
+// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+/**
  * The four finisher cards. Each advances one specific rung.
  */
 
@@ -3421,14 +3524,11 @@ public func earnsLevelUp(score: UInt8, cueLevel: UInt8, threshold: UInt8) -> Boo
 })
 }
 /**
- * Plain-language effort label, from the blueprint (`Loro.dc.html:3411`).
- *
- * This is the progression a learner actually reads. It ships as a group for
- * translation, because the escalation matters more than the individual strings.
+ * Map repetitions and automaticity to a semantic state; presentation owns the wording.
  */
-public func effortLabel(reps: UInt32, automaticityPct: UInt8) -> String {
-    return try!  FfiConverterString.lift(try! rustCall() {
-    uniffi_loro_core_fn_func_effort_label(
+public func effortState(reps: UInt32, automaticityPct: UInt8) -> EffortState {
+    return try!  FfiConverterTypeEffortState.lift(try! rustCall() {
+    uniffi_loro_core_fn_func_effort_state(
         FfiConverterUInt32.lower(reps),
         FfiConverterUInt8.lower(automaticityPct),$0
     )
@@ -3792,7 +3892,7 @@ private var initializationResult: InitializationResult = {
     if (uniffi_loro_core_checksum_func_earns_level_up() != 44757) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_loro_core_checksum_func_effort_label() != 9773) {
+    if (uniffi_loro_core_checksum_func_effort_state() != 58290) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_loro_core_checksum_func_format_interval() != 7764) {

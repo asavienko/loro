@@ -13,15 +13,35 @@ import {
   DEFAULT_REP_TARGET,
   RefrainEngine,
   StreamEngine,
+  type Clock,
   type EngineContext,
+  type LoroCoreFacade,
   type PhraseRepository,
+  type TripContext,
 } from '@loro/core'
+import type { StoreApi } from 'zustand'
 import { deviceClock } from '../lib/clock'
 import { jsCoreFacade } from './coreFacade'
 import { useApp } from './store'
+import type { AppState } from './types'
 
-export function engineContext(): EngineContext {
-  const phrases = useApp.getState().phrases
+export interface EngineContextDeps {
+  readonly clock: Clock
+  readonly waveTimes: readonly string[]
+  readonly repTarget: number
+  readonly trip: TripContext | null
+  readonly flags: EngineContext['flags']
+  readonly seed: number
+}
+
+/** Build an engine context from explicit collaborators, with no module-global reads. */
+export function createEngineContext(
+  store: Pick<StoreApi<AppState>, 'getState'>,
+  deps: EngineContextDeps,
+  core: LoroCoreFacade,
+): EngineContext {
+  const state = store.getState()
+  const phrases = state.phrases
   /**
    * KNOWN DIVERGENCE, left exactly as it is.
    *
@@ -44,17 +64,31 @@ export function engineContext(): EngineContext {
   }
   return {
     phrases: repo,
-    clock: deviceClock,
-    core: jsCoreFacade,
+    clock: deps.clock,
+    core,
     settings: {
-      dailyMinutes: useApp.getState().dailyMinutes,
-      waveTimes: ['08:00', '13:00', '19:00'],
-      repTarget: DEFAULT_REP_TARGET,
+      dailyMinutes: state.dailyMinutes,
+      waveTimes: deps.waveTimes,
+      repTarget: deps.repTarget,
     },
-    trip: null,
-    flags: { bool: (_k, d) => d, number: (_k, d) => d },
-    seed: 42,
+    trip: deps.trip,
+    flags: deps.flags,
+    seed: deps.seed,
   }
+}
+
+const productionEngineDeps: EngineContextDeps = {
+  clock: deviceClock,
+  waveTimes: ['08:00', '13:00', '19:00'],
+  repTarget: DEFAULT_REP_TARGET,
+  trip: null,
+  flags: { bool: (_k, d) => d, number: (_k, d) => d },
+  seed: 42,
+}
+
+/** Zero-argument production wrapper retained for existing route call sites. */
+export function engineContext(): EngineContext {
+  return createEngineContext(useApp, productionEngineDeps, jsCoreFacade)
 }
 
 export const streamEngine = new StreamEngine()

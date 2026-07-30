@@ -14,7 +14,7 @@
 import { ScrollView, StyleSheet, View } from 'react-native'
 import { router, useLocalSearchParams } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { masteryBucket } from '@loro/core'
+import { masteryBucket, TAGS } from '@loro/core'
 import {
   Button,
   Card,
@@ -128,6 +128,7 @@ export default function PhraseDetail() {
             layout="cards"
             density="tight"
             value={state.difficulty}
+            labels={copy.difficulty}
             onChange={(d) => {
               setDifficulty(p.id, d)
             }}
@@ -138,6 +139,8 @@ export default function PhraseDetail() {
           <SectionHeader label={copy.phrase.sections.tricky} hint={copy.phrase.tagsHelper} />
           <TagChips
             value={state.tags}
+            order={TAGS}
+            labels={copy.tags}
             selectedSuffix={copy.common.selectedSuffix}
             onToggle={(t) => {
               toggleTag(p.id, t)
@@ -301,7 +304,7 @@ function MemoryHookCard({
           style={s.hookAdopted}
         >
           <Row gap={space['2.5']} align="flex-start">
-            <Text style={s.hookGlyph}>💡</Text>
+            <Text style={s.hookGlyph}>{copy.phrase.hookGlyph}</Text>
             <View style={s.grow}>
               <Text variant="caption" color={semantic.hook.text}>
                 {note}

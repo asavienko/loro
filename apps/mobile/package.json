@@ -18,8 +18,9 @@
     "check:lang": "tsx scripts/a11yChecks.ts lang",
     "check:chart-summaries": "tsx scripts/a11yChecks.ts chart-summaries",
     "check:tap-targets": "tsx scripts/a11yChecks.ts tap-targets",
+    "check:copy": "tsx scripts/copyOwnership.ts",
     "clean": "rm -rf .expo dist node_modules/.cache",
-    "check:a11y": "tsx scripts/a11yChecks.ts all",
+    "check:a11y": "tsx scripts/a11yChecks.ts all && pnpm check:copy",
     "bundle": "expo export --platform ios --output-dir .expo-export --clear"
   },
   "$comment": [

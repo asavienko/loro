@@ -15,7 +15,15 @@
 import { useMemo, useState } from 'react'
 import { ScrollView, StyleSheet, TextInput, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import type { Difficulty, PhraseState, Tag } from '@loro/core'
+import {
+  BROWSABLE_THEMES,
+  foldDiacritics,
+  TAGS,
+  type BrowsableTheme,
+  type Difficulty,
+  type PhraseState,
+  type Tag,
+} from '@loro/core'
 import type { CatalogPhrase } from '@loro/content'
 import {
   Button,
@@ -42,30 +50,12 @@ import { catalogPhrases, scenarios, useApp } from '../src/store'
 /**
  * The themes Browse offers.
  *
- * The NAMES are domain data, not copy: each is the value the catalog is filtered on
- * (`p.theme === theme` in `useSuggestions`), and `as const` keeps the key union exact so
- * `copy.add.themes[t]` indexes. Do NOT widen it to `Theme[]` — that union also carries the
- * synthetic `'Imported' | 'Mine' | 'Captured'`, which have no tile and no label here.
- *
- * The string comparison against the catalog is brittle against a content-side rename: a
- * renamed theme silently empties its tile rather than failing a build. Real, and not this
- * refactor's to fix — see plans/52.
+ * Core owns the browsable key set (excluding learner-originated synthetic themes), while
+ * `copy.add.themes` exhaustively maps those keys to their presentation.
  */
-const THEMES = [
-  // a11y-lang: English UI category labels. "Café" is the English loanword, and a screen
-  // reader should read this list in the interface language, not Spanish. The same note sits
-  // above `copy.add.themes`, which holds these names' labels and emoji.
-  'Café',
-  'Dining',
-  'Travel',
-  'Directions',
-  'Shopping',
-  'Small talk',
-  'Survival',
-  'Hotel',
-] as const
-
-type BrowsableTheme = (typeof THEMES)[number]
+// a11y-lang: English UI category labels. "Café" is the English loanword, and a screen
+// reader should read this list in the interface language, not Spanish.
+const THEMES = BROWSABLE_THEMES
 
 type Mode = 'discover' | 'browse'
 
@@ -78,18 +68,9 @@ const MODES: readonly SegmentedOption<Mode>[] = [
 /**
  * Diacritic-insensitive fold, so "alergico" finds "alérgico" (`e2e/add.spec.ts:9`).
  *
- * It duplicates the normalisation inside `matchTokens` (`src/store`), which is worth
- * unifying and is deliberately NOT unified here: that lives in another layer, and this
- * change is a behaviour-preserving refactor of one screen.
- *
- * The combining-mark range is spelled as escapes. It used to be two raw U+0300/U+036F bytes
- * in the source — invisible in an editor, and one careless paste away from breaking search.
+ * Case-folding remains search behavior; the shared helper owns only diacritic folding.
  */
-const norm = (s: string): string =>
-  s
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
+const norm = (s: string): string => foldDiacritics(s.toLowerCase())
 
 /**
  * The three numbers this screen passes as PROPS, where a `StyleSheet` cannot hold them.
@@ -569,7 +550,12 @@ function TaggingSheet({
             </Text>
             {/* The add sheet is the DEFAULT density — `paddingVertical: 12`. Phrase detail's
                 `tight` is a pixel shorter, so `density` is deliberately not passed. */}
-            <DifficultySelector layout="cards" value={difficulty} onChange={onDifficultyChange} />
+            <DifficultySelector
+              layout="cards"
+              value={difficulty}
+              labels={copy.difficulty}
+              onChange={onDifficultyChange}
+            />
           </Stack>
 
           <Stack gap={metrics.sheetGroup}>
@@ -582,6 +568,8 @@ function TaggingSheet({
             />
             <TagChips
               value={tags}
+              order={TAGS}
+              labels={copy.tags}
               onToggle={onToggleTag}
               selectedSuffix={copy.common.selectedSuffix}
             />

@@ -32,12 +32,12 @@ const BEAT_MS_DEFAULT: u32 = 720;
 /// differs — hence the size of the gap.
 const BEAT_MS_SPEED: u32 = 340;
 
-// ── Effort-label thresholds, in percent (`Loro.dc.html:3411`) ────────────────────────
-/// At or above the target: "instant & smooth".
+// ── Effort-state thresholds, in percent (`Loro.dc.html:3411`) ────────────────────────
+/// At or above the target: peak effort state.
 const EFFORT_INSTANT_PCT: u8 = 100;
-/// Two thirds of the way: "quick & smooth".
+/// Two thirds of the way: hot effort state.
 const EFFORT_QUICK_PCT: u8 = 66;
-/// One third of the way: "getting smoother". Below this it's still "warming up".
+/// One third of the way: warm effort state. Below this it is cold.
 const EFFORT_SMOOTHER_PCT: u8 = 33;
 
 /// Today's automaticity, from the blueprint (`Loro.dc.html:3378`).
@@ -121,23 +121,35 @@ pub fn beat_ms_for_mode(mode: RefrainMode) -> u32 {
     }
 }
 
-/// Plain-language effort label, from the blueprint (`Loro.dc.html:3411`).
-///
-/// This is the progression a learner actually reads. It ships as a group for
-/// translation, because the escalation matters more than the individual strings.
+/// Presentation-neutral effort state, from the blueprint thresholds (`Loro.dc.html:3411`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]
+pub enum EffortState {
+    /// No repetitions yet; presentation invites the learner to begin.
+    Ready,
+    /// Below the first automaticity threshold.
+    Cold,
+    /// At least one third automatic.
+    Warm,
+    /// At least two thirds automatic.
+    Hot,
+    /// Fully automatic at the daily target.
+    Peak,
+}
+
+/// Map repetitions and automaticity to a semantic state; presentation owns the wording.
 #[must_use]
 #[uniffi::export]
-pub fn effort_label(reps: u32, automaticity_pct: u8) -> String {
+pub fn effort_state(reps: u32, automaticity_pct: u8) -> EffortState {
     if reps == 0 {
-        "tap to begin".to_string()
+        EffortState::Ready
     } else if automaticity_pct >= EFFORT_INSTANT_PCT {
-        "instant & smooth".to_string()
+        EffortState::Peak
     } else if automaticity_pct >= EFFORT_QUICK_PCT {
-        "quick & smooth".to_string()
+        EffortState::Hot
     } else if automaticity_pct >= EFFORT_SMOOTHER_PCT {
-        "getting smoother".to_string()
+        EffortState::Warm
     } else {
-        "warming up".to_string()
+        EffortState::Cold
     }
 }
 
@@ -270,21 +282,21 @@ mod tests {
     }
 
     #[test]
-    fn the_effort_label_escalates() {
+    fn the_effort_state_escalates() {
         for (reps, pct, expect) in [
-            (0, 0, "tap to begin"),
-            (0, 100, "tap to begin"), // no reps outranks any percentage
-            (1, 0, "warming up"),
-            (1, 16, "warming up"),
-            (1, EFFORT_SMOOTHER_PCT - 1, "warming up"),
-            (3, EFFORT_SMOOTHER_PCT, "getting smoother"),
-            (3, 50, "getting smoother"),
-            (4, EFFORT_QUICK_PCT, "quick & smooth"),
-            (4, EFFORT_INSTANT_PCT - 1, "quick & smooth"),
-            (6, EFFORT_INSTANT_PCT, "instant & smooth"),
-            (9, u8::MAX, "instant & smooth"),
+            (0, 0, EffortState::Ready),
+            (0, 100, EffortState::Ready), // no reps outranks any percentage
+            (1, 0, EffortState::Cold),
+            (1, 16, EffortState::Cold),
+            (1, EFFORT_SMOOTHER_PCT - 1, EffortState::Cold),
+            (3, EFFORT_SMOOTHER_PCT, EffortState::Warm),
+            (3, 50, EffortState::Warm),
+            (4, EFFORT_QUICK_PCT, EffortState::Hot),
+            (4, EFFORT_INSTANT_PCT - 1, EffortState::Hot),
+            (6, EFFORT_INSTANT_PCT, EffortState::Peak),
+            (9, u8::MAX, EffortState::Peak),
         ] {
-            assert_eq!(effort_label(reps, pct), expect, "{reps} reps at {pct}%");
+            assert_eq!(effort_state(reps, pct), expect, "{reps} reps at {pct}%");
         }
     }
 }

@@ -301,9 +301,9 @@ RustBuffer uniffi_loro_core_fn_func_draw(RustBuffer deck, uint64_t seed, RustBuf
 int8_t uniffi_loro_core_fn_func_earns_level_up(uint8_t score, uint8_t cue_level, uint8_t threshold, RustCallStatus *_Nonnull out_status
 );
 #endif
-#ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_EFFORT_LABEL
-#define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_EFFORT_LABEL
-RustBuffer uniffi_loro_core_fn_func_effort_label(uint32_t reps, uint8_t automaticity_pct, RustCallStatus *_Nonnull out_status
+#ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_EFFORT_STATE
+#define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_EFFORT_STATE
+RustBuffer uniffi_loro_core_fn_func_effort_state(uint32_t reps, uint8_t automaticity_pct, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_FORMAT_INTERVAL
@@ -761,9 +761,9 @@ uint16_t uniffi_loro_core_checksum_func_earns_level_up(void
     
 );
 #endif
-#ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_EFFORT_LABEL
-#define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_EFFORT_LABEL
-uint16_t uniffi_loro_core_checksum_func_effort_label(void
+#ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_EFFORT_STATE
+#define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_EFFORT_STATE
+uint16_t uniffi_loro_core_checksum_func_effort_state(void
     
 );
 #endif

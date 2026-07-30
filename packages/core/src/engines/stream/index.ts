@@ -122,12 +122,3 @@ export function streamStats(phrases: readonly PhraseState[]): {
     learned: phrases.filter((p) => p.learned).length,
   }
 }
-
-/** The blueprint's toast copy. It explains the CONSEQUENCE, which is what teaches the model. */
-export function rerateToast(to: 'easy' | 'med' | 'hard'): string {
-  return {
-    hard: 'Difficult — repeats more, comes back sooner',
-    easy: 'Easy — drifting to the back',
-    med: 'Back to normal',
-  }[to]
-}

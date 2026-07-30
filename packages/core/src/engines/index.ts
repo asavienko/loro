@@ -8,7 +8,7 @@
  */
 
 export * from './types.js'
-export { StreamEngine, streamStats, rerateToast } from './stream/index.js'
+export { StreamEngine, streamStats } from './stream/index.js'
 
 export {
   RefrainEngine,
@@ -19,10 +19,9 @@ export {
   modeForRep,
   modelRateForMode,
   beatMsForMode,
-  micLabelForMode,
   automaticity,
-  effortLabel,
+  effortState,
   warmBand,
   selectRefrainSet,
 } from './refrain/index.js'
-export type { RefrainMode, WarmBand } from './refrain/index.js'
+export type { EffortState, RefrainMode, WarmBand } from './refrain/index.js'

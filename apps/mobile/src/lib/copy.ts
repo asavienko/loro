@@ -29,15 +29,23 @@
  *   logic, not wording.
  * - Domain data stays out. The Refrain's mode LIST, the browse THEME list, and the
  *   onboarding step order are structure; only their text is here, keyed so the
- *   structural table can look it up. Labels that already have a single home in
- *   `@loro/core` (`micLabelForMode`, `effortLabel`) or `src/ui/theme.ts`
- *   (`difficultyMeta`, `tagMeta`, `masteryMeta`) are NOT duplicated here.
+ *   structural table can look it up. Core owns those semantic keys; this file owns
+ *   every English label attached to them.
  * - Catalog text (phrase `es`/`en`, pack and scenario labels, word glosses, hints) is
  *   content shipped by `@loro/content`. It is not copy and is not here.
  *
  * LAYER: this is a leaf. `src/store/`, `src/ui/` and `app/` may all import it; it
- * imports nothing, so it cannot pull a screen's dependencies into the store.
+ * imports only domain types, so it cannot pull a screen's dependencies into the store.
  */
+
+import type {
+  BrowsableTheme,
+  Difficulty,
+  EffortState,
+  MasteryBucket,
+  RefrainMode,
+  Tag,
+} from '@loro/core'
 
 // ─── Shared atoms ────────────────────────────────────────────────────────────
 // Declared once above the table because more than one entry composes them. A
@@ -46,6 +54,59 @@
 /** Today and the Refrain say this in one sentence and two, respectively. */
 const NOTHING_IN_ROTATION = 'Nothing in rotation yet'
 const SET_BUILDS_ITSELF = "Add a few phrases and today's set builds itself."
+const ADD_PHRASES = 'Add phrases'
+const STREAM = 'Stream'
+const PROGRESS = 'Progress'
+const REPS_TODAY = 'reps today'
+const UNDO = 'Undo'
+
+const difficultyLabels = {
+  easy: 'Easy',
+  med: 'Learning',
+  hard: 'Difficult',
+} as const satisfies Record<Difficulty, string>
+
+const tagLabels = {
+  pron: 'Pronunciation',
+  remember: 'Hard to remember',
+  useful: 'Very useful',
+  words: 'Tricky words',
+} as const satisfies Record<Tag, string>
+
+const masteryLabels = {
+  new: 'New',
+  learning: 'Learning',
+  strong: 'Strong',
+  mastered: 'Mastered',
+} as const satisfies Record<MasteryBucket, string>
+
+const refrainMicLabels = {
+  echo: 'Say it',
+  chorus: 'Chorus it',
+  speed: 'Faster!',
+  cloze: 'Fill & say',
+  call: 'Respond',
+  cold: 'Say it cold',
+} as const satisfies Record<RefrainMode, string>
+
+const effortLabels = {
+  ready: 'tap to begin',
+  cold: 'warming up',
+  warm: 'getting smoother',
+  hot: 'quick & smooth',
+  peak: 'instant & smooth',
+} as const satisfies Record<EffortState, string>
+
+const browseThemeCopy = {
+  Café: { label: 'Café', emoji: '☕' },
+  Dining: { label: 'Dining', emoji: '🍽' },
+  Travel: { label: 'Travel', emoji: '🚆' },
+  Directions: { label: 'Directions', emoji: '🧭' },
+  Shopping: { label: 'Shopping', emoji: '🛍' },
+  'Small talk': { label: 'Small talk', emoji: '🤝' },
+  Survival: { label: 'Survival', emoji: '🆘' },
+  Hotel: { label: 'Hotel', emoji: '🏨' },
+} as const satisfies Record<BrowsableTheme, { readonly label: string; readonly emoji: string }>
 
 /** Today's phrase rows and the Refrain's warming card both end on this. */
 const percentAutomatic = (pct: number): string => `${pct} percent automatic.`
@@ -57,17 +118,17 @@ export const copy = {
   /** Strings genuinely shared by more than one screen. */
   common: {
     /** `_layout` header title, Today's empty-set button, the Refrain's empty state. */
-    addPhrases: 'Add phrases',
+    addPhrases: ADD_PHRASES,
     /** `_layout` header title and Today's footer button. */
-    stream: 'Stream',
+    stream: STREAM,
     /** `_layout` header title and Today's footer button. */
-    progress: 'Progress',
+    progress: PROGRESS,
     /** Phrase detail and the stream. */
     markLearned: 'Mark learned',
     /** Phrase detail's status badge and the stream's re-rating row. */
     learnedBadge: '✓ Learned',
     /** Today's stat tile and the Refrain's finish card. */
-    repsToday: 'reps today',
+    repsToday: REPS_TODAY,
     /** The add sheet and phrase detail share one difficulty editor. */
     difficultyQuestion: 'How hard is it for you?',
     /** Appended to a tag chip's label when the tag is on. Leading space is deliberate. */
@@ -100,17 +161,22 @@ export const copy = {
     },
   },
 
+  /** Presentation labels for closed domain sets. Their keys remain core-owned. */
+  difficulty: difficultyLabels,
+  tags: tagLabels,
+  mastery: masteryLabels,
+
   /** Stack header titles (`app/_layout.tsx`). */
   nav: {
-    add: 'Add phrases',
+    add: ADD_PHRASES,
     /**
      * Deliberately empty: phrase detail's hero IS the title, and a header repeating
      * the Spanish would read it twice, in the wrong language.
      */
     phrase: '',
     refrain: 'The Refrain',
-    stream: 'Stream',
-    progress: 'Progress',
+    stream: STREAM,
+    progress: PROGRESS,
   },
 
   /** Today — the ritual home. */
@@ -136,7 +202,7 @@ export const copy = {
       evening: { label: 'Evening', sub: 'Cold + perform', time: '7:00' },
     },
     stats: {
-      repsToday: 'reps today',
+      repsToday: REPS_TODAY,
       inYourStream: 'in your stream',
       graduated: 'graduated',
     },
@@ -183,16 +249,7 @@ export const copy = {
      * loanword, so a screen reader must read this list in the interface language and
      * these must NOT be given `lang="es"`.
      */
-    themes: {
-      Café: { label: 'Café', emoji: '☕' },
-      Dining: { label: 'Dining', emoji: '🍽' },
-      Travel: { label: 'Travel', emoji: '🚆' },
-      Directions: { label: 'Directions', emoji: '🧭' },
-      Shopping: { label: 'Shopping', emoji: '🛍' },
-      'Small talk': { label: 'Small talk', emoji: '🤝' },
-      Survival: { label: 'Survival', emoji: '🆘' },
-      Hotel: { label: 'Hotel', emoji: '🏨' },
-    },
+    themes: browseThemeCopy,
     toAdd,
     allAdded: 'all added ✓',
     /** Back out of a theme, to the grid of themes. */
@@ -301,6 +358,7 @@ export const copy = {
     },
     tagsHelper: 'tap to toggle',
     hookHelper: 'helps it stick',
+    hookGlyph: '💡',
     /** Under a hook the learner has adopted: tapping clears it. */
     tapToChange: 'tap to change',
     /**
@@ -346,6 +404,7 @@ export const copy = {
       call: { label: 'call', icon: '💬', cue: 'Say the Spanish for the cue' },
       cold: { label: 'cold', icon: '❄️', cue: 'From memory — no model' },
     },
+    mic: refrainMicLabels,
     phraseCounter: (n: number, total: number): string => `Phrase ${n} / ${total}`,
     /** What the warming card shows instead of the phrase, per mode. */
     prompt: {
@@ -361,6 +420,7 @@ export const copy = {
     },
     /** What is falling is EFFORT, not a score. */
     effortLabel: 'effort ↓',
+    effort: effortLabels,
     repCounter: (rep: number, target: number): string => `Rep ${rep} / ${target}`,
     /** Shown only for modes that play a model; the null check stays at the call site. */
     modelRate: (rate: number): string =>
@@ -473,7 +533,7 @@ export const copy = {
    */
   toast: {
     /** The affordance in the toast pill: visible label and accessible name. */
-    undo: 'Undo',
+    undo: UNDO,
     added: 'Added — here are more like it',
     addedOwn: 'Added to your stream',
     difficulty: {
@@ -506,7 +566,7 @@ export const copy = {
     common: {
       back: 'Back',
       dismiss: 'Dismiss',
-      undo: 'Undo',
+      undo: UNDO,
       /** Phrase detail's heart, and the stream's love button, when the phrase is loved. */
       removeFromLoved: 'Remove from loved',
       /** Today's set rows and the stream's up-next rows both open phrase detail. */

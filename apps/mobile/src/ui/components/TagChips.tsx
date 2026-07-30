@@ -3,23 +3,20 @@
  *
  * Multi-select, so the role is `checkbox` and every chip carries `selected`; the mark appended to
  * a chosen chip's text is the visible half of the same signal, since a selection must not be
- * carried by colour alone. The labels come from `tagMeta` (`src/ui/theme.ts`), which the E2E
- * suite matches on; the mark itself is copy, so it arrives as a prop.
+ * carried by colour alone. Labels and the mark are presentation copy supplied by the route.
  *
- * The set of tags is closed and its order is `tagMeta`'s — pronunciation, memory, usefulness,
- * words. Both call sites (the add sheet, phrase detail) render all four.
+ * The set of tags and its order are domain structure supplied by the route.
  */
 
 import type { Tag } from '@loro/core'
 import { Chip, Grid } from '../primitives'
-import { tagMeta } from '../theme'
-
-const ORDER = Object.keys(tagMeta) as Tag[]
 
 export function TagChips({
   value,
   onToggle,
   selectedSuffix,
+  order,
+  labels,
 }: {
   value: readonly Tag[]
   /**
@@ -28,6 +25,8 @@ export function TagChips({
    * would force it to diff two arrays to find which tag moved.
    */
   onToggle: (tag: Tag) => void
+  order: readonly Tag[]
+  labels: Readonly<Record<Tag, string>>
   /**
    * Appended to a CHOSEN chip's visible text — `copy.common.selectedSuffix`, which is `' ✓'`
    * with its leading space. Required rather than defaulted, because a component that quietly
@@ -38,15 +37,15 @@ export function TagChips({
 }) {
   return (
     <Grid>
-      {ORDER.map((t) => {
+      {order.map((t) => {
         const selected = value.includes(t)
         return (
           <Chip
             key={t}
             variant="tag"
             accessibilityRole="checkbox"
-            accessibilityLabel={tagMeta[t].label}
-            label={selected ? `${tagMeta[t].label}${selectedSuffix}` : tagMeta[t].label}
+            accessibilityLabel={labels[t]}
+            label={selected ? `${labels[t]}${selectedSuffix}` : labels[t]}
             selected={selected}
             onPress={() => {
               onToggle(t)

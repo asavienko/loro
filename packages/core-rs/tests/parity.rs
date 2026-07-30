@@ -13,9 +13,11 @@
 //! Run: `cargo test --test parity` (or `pnpm --filter @loro/core-rs test:parity`).
 
 use loro_core::calendar::{days_between, streak, streak_day_for, streak_survives};
+use loro_core::select::{effort_state, EffortState};
 use serde_json::Value;
 
 const FIXTURES: &str = include_str!("../../core/src/domain/calendar.fixtures.json");
+const EFFORT_FIXTURES: &str = include_str!("../../core/src/domain/effort.fixtures.json");
 
 fn fixtures() -> Value {
     serde_json::from_str(FIXTURES).expect("calendar.fixtures.json is valid JSON")
@@ -49,6 +51,27 @@ fn str_at(case: &Value, key: &str) -> String {
         .and_then(Value::as_str)
         .unwrap_or_else(|| panic!("case is missing string `{key}`: {case}"))
         .to_string()
+}
+
+#[test]
+fn effort_state_matches_the_fixture() {
+    let cases: Vec<Value> =
+        serde_json::from_str(EFFORT_FIXTURES).expect("effort.fixtures.json is valid JSON");
+    assert!(!cases.is_empty(), "effort fixtures are not empty");
+
+    for case in cases {
+        let reps = u32::try_from(i64_at(&case, "reps")).expect("reps fit in u32");
+        let pct = u8::try_from(i64_at(&case, "automaticityPct")).expect("pct fits in u8");
+        let expect = match str_at(&case, "expect").as_str() {
+            "ready" => EffortState::Ready,
+            "cold" => EffortState::Cold,
+            "warm" => EffortState::Warm,
+            "hot" => EffortState::Hot,
+            "peak" => EffortState::Peak,
+            other => panic!("unknown effort state `{other}`"),
+        };
+        assert_eq!(effort_state(reps, pct), expect, "{case}");
+    }
 }
 
 #[test]

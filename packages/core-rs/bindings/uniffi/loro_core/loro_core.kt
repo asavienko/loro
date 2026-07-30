@@ -814,7 +814,7 @@ internal interface UniffiLib : Library {
     ): RustBuffer.ByValue
     fun uniffi_loro_core_fn_func_earns_level_up(`score`: Byte,`cueLevel`: Byte,`threshold`: Byte,uniffi_out_err: UniffiRustCallStatus, 
     ): Byte
-    fun uniffi_loro_core_fn_func_effort_label(`reps`: Int,`automaticityPct`: Byte,uniffi_out_err: UniffiRustCallStatus, 
+    fun uniffi_loro_core_fn_func_effort_state(`reps`: Int,`automaticityPct`: Byte,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_loro_core_fn_func_format_interval(`days`: Float,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
@@ -994,7 +994,7 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_loro_core_checksum_func_earns_level_up(
     ): Short
-    fun uniffi_loro_core_checksum_func_effort_label(
+    fun uniffi_loro_core_checksum_func_effort_state(
     ): Short
     fun uniffi_loro_core_checksum_func_format_interval(
     ): Short
@@ -1089,7 +1089,7 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_loro_core_checksum_func_earns_level_up() != 44757.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_effort_label() != 9773.toShort()) {
+    if (lib.uniffi_loro_core_checksum_func_effort_state() != 58290.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_loro_core_checksum_func_format_interval() != 7764.toShort()) {
@@ -2221,6 +2221,57 @@ public object FfiConverterTypeDifficulty: FfiConverterRustBuffer<Difficulty> {
 
 
 /**
+ * Presentation-neutral effort state, from the blueprint thresholds (`Loro.dc.html:3411`).
+ */
+
+enum class EffortState {
+    
+    /**
+     * No repetitions yet; presentation invites the learner to begin.
+     */
+    READY,
+    /**
+     * Below the first automaticity threshold.
+     */
+    COLD,
+    /**
+     * At least one third automatic.
+     */
+    WARM,
+    /**
+     * At least two thirds automatic.
+     */
+    HOT,
+    /**
+     * Fully automatic at the daily target.
+     */
+    PEAK;
+    companion object
+}
+
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeEffortState: FfiConverterRustBuffer<EffortState> {
+    override fun read(buf: ByteBuffer) = try {
+        EffortState.values()[buf.getInt() - 1]
+    } catch (e: IndexOutOfBoundsException) {
+        throw RuntimeException("invalid enum value, something is very wrong!!", e)
+    }
+
+    override fun allocationSize(value: EffortState) = 4UL
+
+    override fun write(value: EffortState, buf: ByteBuffer) {
+        buf.putInt(value.ordinal + 1)
+    }
+}
+
+
+
+
+
+/**
  * The four finisher cards. Each advances one specific rung.
  */
 
@@ -3232,14 +3283,11 @@ public object FfiConverterSequenceTypeTag: FfiConverterRustBuffer<List<Tag>> {
     
 
         /**
-         * Plain-language effort label, from the blueprint (`Loro.dc.html:3411`).
-         *
-         * This is the progression a learner actually reads. It ships as a group for
-         * translation, because the escalation matters more than the individual strings.
-         */ fun `effortLabel`(`reps`: kotlin.UInt, `automaticityPct`: kotlin.UByte): kotlin.String {
-            return FfiConverterString.lift(
+         * Map repetitions and automaticity to a semantic state; presentation owns the wording.
+         */ fun `effortState`(`reps`: kotlin.UInt, `automaticityPct`: kotlin.UByte): EffortState {
+            return FfiConverterTypeEffortState.lift(
     uniffiRustCall() { _status ->
-    UniffiLib.INSTANCE.uniffi_loro_core_fn_func_effort_label(
+    UniffiLib.INSTANCE.uniffi_loro_core_fn_func_effort_state(
         FfiConverterUInt.lower(`reps`),FfiConverterUByte.lower(`automaticityPct`),_status)
 }
     )

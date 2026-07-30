@@ -15,7 +15,13 @@ import { useMemo } from 'react'
 import { ScrollView, StyleSheet, View } from 'react-native'
 import { router } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { masteryBucket, streak as streakOf, type PhraseState, type Tag } from '@loro/core'
+import {
+  countMasteryBuckets,
+  MASTERY_BUCKETS,
+  streak as streakOf,
+  TAGS,
+  type PhraseState,
+} from '@loro/core'
 import {
   Card,
   CardHeader,
@@ -117,31 +123,26 @@ function useProgressSummary(phrases: readonly PhraseState[], practiceDays: reado
     return copy.a11y.progress.weekSummary(count)
   }, [week])
 
-  /**
-   * The mastery histogram.
-   *
-   * `useMastery()` in the store computes the same four counts, and this deliberately does
-   * NOT call it: the two build their shape differently (this one carries `masteryMeta`'s
-   * label and colour through, so the legend, the bar and the chart summary all read one
-   * array). Real duplication, flagged rather than half-fixed — unifying them is a store
-   * change, not a screen one.
-   */
+  /** The canonical counts enriched with the presentation each chart row needs. */
   const mastery = useMemo(() => {
-    const counts: Record<string, number> = { new: 0, learning: 0, strong: 0, mastered: 0 }
-    for (const p of phrases) counts[masteryBucket(p)] = (counts[masteryBucket(p)] ?? 0) + 1
-    return masteryMeta.map((m) => ({ ...m, count: counts[m.key] ?? 0 }))
+    const counts = countMasteryBuckets(phrases)
+    return MASTERY_BUCKETS.map((key) => ({
+      key,
+      color: masteryMeta[key].color,
+      label: copy.mastery[key],
+      count: counts[key],
+    }))
   }, [phrases])
 
   const total = Math.max(1, phrases.length)
 
   const tricky = useMemo(() => {
-    const rows = (Object.keys(tagMeta) as Tag[])
-      .map((t) => ({
-        tag: t,
-        ...tagMeta[t],
-        count: phrases.filter((p) => p.tags.includes(t)).length,
-      }))
-      .filter((r) => r.count > 0)
+    const rows = TAGS.map((t) => ({
+      tag: t,
+      ...tagMeta[t],
+      label: copy.tags[t],
+      count: phrases.filter((p) => p.tags.includes(t)).length,
+    })).filter((r) => r.count > 0)
     const max = Math.max(1, ...rows.map((r) => r.count))
     return rows.map((r) => ({ ...r, pct: r.count / max }))
   }, [phrases])
