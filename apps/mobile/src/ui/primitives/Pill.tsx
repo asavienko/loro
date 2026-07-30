@@ -17,15 +17,15 @@
  */
 
 import { View } from 'react-native'
-import { accent, ink, onDark, pillSize, surface } from '../theme'
+import { ink, onDark, pillSize, surface } from '../theme'
+import { useTheme } from '../ThemeProvider'
 import { Text } from './Text'
 
 export type PillSize = keyof typeof pillSize
-export type PillTone = keyof typeof TONE
+export type PillTone = 'neutral' | 'accent' | 'onDark'
 
-const TONE = {
+const STATIC_TONE = {
   neutral: { color: ink.muted, background: surface.sunken },
-  accent: { color: accent.accentInk, background: accent.wash },
   /** On a `DarkCard`, where the ink ramp inverts. */
   onDark: { color: onDark.secondary, background: onDark.surface },
 } as const
@@ -51,8 +51,10 @@ export function Pill({
   tone?: PillTone | undefined
   size?: PillSize | undefined
 }) {
+  const { accent } = useTheme()
   const m = pillSize[size]
-  const t = TONE[tone]
+  const t =
+    tone === 'accent' ? { color: accent.accentInk, background: accent.wash } : STATIC_TONE[tone]
 
   return (
     <View

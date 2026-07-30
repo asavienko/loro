@@ -73,7 +73,10 @@ export {
 
 export type { AccentName }
 
-/** The active accent. Learner-selectable in v1.1; Coral until then. */
+/**
+ * Generated default accent for pure style resolvers and routes not yet migrated to runtime themes.
+ * Runtime-aware production components read `useTheme().accent` instead.
+ */
 export const accent = accents[defaultAccent as AccentName]
 
 /** Type scale, as RN style objects. */

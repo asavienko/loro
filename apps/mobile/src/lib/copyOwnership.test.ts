@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { findCopyViolations } from '../../scripts/copyOwnership'
+import { findCopyViolations, isCopyOwnershipSource } from '../../scripts/copyOwnership'
 
 describe('copy ownership AST check', () => {
   it('finds rendered, accessible, placeholder, and toast literals', () => {
@@ -48,5 +48,11 @@ describe('copy ownership AST check', () => {
       expect.stringContaining('"Saved"'),
       expect.stringContaining('"Failed"'),
     ])
+  })
+
+  it('excludes only the dev-tools implementation, not its composing route', () => {
+    expect(isCopyOwnershipSource('src/dev-tools/TokensWorkbench.tsx')).toBe(false)
+    expect(isCopyOwnershipSource('app/dev/tokens.tsx')).toBe(true)
+    expect(isCopyOwnershipSource('src/ui/components/Button.tsx')).toBe(true)
   })
 })

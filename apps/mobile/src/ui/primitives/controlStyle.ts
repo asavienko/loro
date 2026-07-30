@@ -15,7 +15,6 @@
 
 import type { ViewStyle } from 'react-native'
 import {
-  accent,
   border,
   chip,
   ink,
@@ -26,6 +25,8 @@ import {
   surface,
   type TypeVariant,
 } from '../theme'
+import type { AccentTheme } from '../themeContext'
+import { accent as defaultAccent } from '../theme'
 
 export type ChipVariant = keyof typeof chip
 /**
@@ -53,7 +54,12 @@ const CHIP_INK: Record<ChipVariant, { text: TypeVariant; idleInk: string; idleBo
   toggle: { text: 'labelSm', idleInk: ink.ink3, idleBorder: line.strong },
 }
 
-export function chipLook(variant: ChipVariant, tone: ChipTone, selected: boolean): ControlLook {
+export function chipLook(
+  variant: ChipVariant,
+  tone: ChipTone,
+  selected: boolean,
+  accent: AccentTheme = defaultAccent,
+): ControlLook {
   const m = chip[variant]
   const look = CHIP_INK[variant]
   const solid = tone === 'solid'
@@ -81,7 +87,11 @@ export type SegmentedVariant = keyof typeof segmented
 
 /** The sunken groove the `track` variant's segments sit in. `undefined` for `pill`. */
 export function segmentedTrackStyle(variant: SegmentedVariant): ViewStyle {
-  const base: ViewStyle = { flexDirection: 'row', alignItems: 'center', gap: segmented[variant].gap }
+  const base: ViewStyle = {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: segmented[variant].gap,
+  }
   if (variant !== 'track') return base
   return {
     ...base,
