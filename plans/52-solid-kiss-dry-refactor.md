@@ -5,9 +5,12 @@
   [`mobile-app.md`](../docs/architecture/mobile-app.md#layers)
 - **Milestone:** M1
 - **Size:** L, split into three waves of file-disjoint work
-- **Status:** ✅ Implemented 2026-07-30, in 16 commits (this one included). `pnpm check` **23/23**,
-  `pnpm test:e2e` **61/61** with `apps/mobile/e2e/` byte-identical to the baseline — no spec was
-  adjusted to fit the refactor, which is the whole proof that behaviour did not move.
+- **Status:** ✅ Implemented 2026-07-30, initially in 16 commits. A follow-up parallel whole-tree
+  audit the same day removed two unused mobile label maps, moved ToastHost's final literal `Undo`
+  into the existing copy catalog, and stopped content validation from loading its catalog twice.
+  `pnpm check` **23/23**, `pnpm test:e2e` **61/61** with `apps/mobile/e2e/` byte-identical to the
+  baseline — no spec was adjusted to fit the refactor, which is the whole proof that behaviour did
+  not move.
 
   **What landed:** every learner-facing string in `src/lib/copy.ts`; `src/ui/` split into
   `primitives/`, `components/` and `tokens/`; the eight screens rebuilt as composition (the
