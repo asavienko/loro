@@ -206,7 +206,7 @@ export default function PhraseDetail() {
                     paddingHorizontal: 12,
                     paddingVertical: 10,
                     borderRadius: radius.lg,
-                    backgroundColor: active ? 'rgba(191,87,34,0.07)' : surface.card,
+                    backgroundColor: active ? accent.tint : surface.card,
                     borderWidth: active ? 1.5 : 1,
                     borderColor: active ? accent.accent : line.strong,
                   }}

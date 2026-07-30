@@ -8,6 +8,10 @@
     "sunken": { "value": "#ece7db", "comment": "Inset areas, inactive chips, icon tiles" },
     "sunken2": { "value": "#e9e3d6", "comment": "Segmented-control track (643)" },
     "device": { "value": "#1a1815", "comment": "Blueprint device bezel; not a product surface" },
+    "scrim": {
+      "value": "rgba(26,24,21,0.42)",
+      "comment": "The modal/sheet backdrop — surface.device at 42%. Deliberately absent from checkContrast's surface list: it is a translucent overlay, so no text is laid on it directly and a ratio against it would be meaningless. Was hardcoded in add.tsx; see plans/52 and plans/48 §3"
+    },
     "dark": {
       "value": "#23201b",
       "comment": "The flat dark fill: dark cards, the toast, the active segmented-control track. Pair only with onDark.* text — being the lightest dark background, it is the worst case for contrast, so that is what the checker uses."

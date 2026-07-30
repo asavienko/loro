@@ -9,6 +9,7 @@ export const surface = {
   sunken: "#ece7db",
   sunken2: "#e9e3d6",
   device: "#1a1815",
+  scrim: "rgba(26,24,21,0.42)",
   dark: "#23201b",
 } as const
 

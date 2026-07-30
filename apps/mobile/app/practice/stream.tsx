@@ -212,7 +212,7 @@ export default function Stream() {
                 borderRadius: radius.lg,
                 borderWidth: 1.5,
                 borderColor: current.loved ? accent.accent : line.strong,
-                backgroundColor: current.loved ? 'rgba(191,87,34,0.07)' : surface.card,
+                backgroundColor: current.loved ? accent.tint : surface.card,
               }}
             >
               <Text variant="labelSm" color={current.loved ? accent.accentInk : ink.ink3}>

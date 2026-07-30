@@ -206,7 +206,7 @@ export default function Today() {
                 key={w.label}
                 gap={11}
                 style={{
-                  backgroundColor: ready ? 'rgba(191,87,34,0.07)' : surface.card,
+                  backgroundColor: ready ? accent.tint : surface.card,
                   borderWidth: ready ? 1.5 : 1,
                   borderColor: ready ? accent.accent : line.default,
                   borderRadius: radius.xl,

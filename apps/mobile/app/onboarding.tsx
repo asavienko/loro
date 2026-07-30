@@ -219,7 +219,7 @@ export default function Onboarding() {
                       flexDirection: 'row',
                       alignItems: 'center',
                       gap: 13,
-                      backgroundColor: active ? 'rgba(191,87,34,0.07)' : surface.card,
+                      backgroundColor: active ? accent.tint : surface.card,
                       borderWidth: active ? 1.5 : 1,
                       borderColor: active ? accent.accent : line.strong,
                       borderRadius: radius.lg,
