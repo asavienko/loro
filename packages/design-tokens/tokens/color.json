@@ -1,5 +1,5 @@
 {
-  "$comment": "Extracted from Language Learning by Phrases/Loro.dc.html. See docs/design/design-system.md",
+  "$comment": "Extracted from design/Language Learning by Phrases - V1.1/Loro.dc.html. See docs/design/design-system.md",
 
   "surface": {
     "canvas": { "value": "#eae6de", "comment": "The blueprint's page backdrop (Loro.dc.html:16)" },
