@@ -42,8 +42,21 @@ describe('StreamEngine', () => {
     makeContext: () => makeContext(),
     makeEmptyContext: () => makeContext([]),
     makeSuccessAttempt: success,
-    // Passive listening is exposure, not a review. Documented exemption.
-    skipFsrs: true,
+    signals: {
+      maintains: ['reps', 'plays', 'lastPracticedAt', 'latencySampleMs', 'axes'],
+      exempt: {
+        srs: 'passive listening is exposure, not a review — recognition without production',
+        repsToday: 'the stream is open-ended; it has no daily rep target to count against',
+        automaticity: 'derived from repsToday, which the stream does not keep',
+        lockedInToday: 'lock-in is the Refrain’s closed-set idea; the stream has no set',
+        rung: 'the ladder measures depth of production; listening produces nothing',
+        stumbles: 'there is no gate to fail — the stream cannot tell a stumble from silence',
+        staleReset: 'Loop C staleness is reset by producing, not by hearing',
+        cueLevel: 'prosody cueing needs the DSP (plans/19, plans/27); no engine writes it yet',
+        difficulty: 'the learner re-rates from the stream UI; the engine never infers it',
+        learned: 'marking a phrase learned is a deliberate learner action, never inferred',
+      },
+    },
   })
 
   it('excludes learned phrases from the queue', async () => {
@@ -135,6 +148,27 @@ describe('RefrainEngine', () => {
     makeContext: () => makeContext(),
     makeEmptyContext: () => makeContext([]),
     makeSuccessAttempt: success,
+    signals: {
+      maintains: [
+        'reps',
+        'lastPracticedAt',
+        'latencySampleMs',
+        'srs',
+        'repsToday',
+        'automaticity',
+        'lockedInToday',
+        'rung',
+        'stumbles',
+        'axes',
+      ],
+      exempt: {
+        plays: 'a play is a stream listen-through; the Refrain counts reps, not plays',
+        staleReset: 'Loop C staleness lands with the Phrasebook (plans/23), not here',
+        cueLevel: 'prosody cueing needs the DSP (plans/19, plans/27); no engine writes it yet',
+        difficulty: 'the learner rates a phrase; six reps of it are not evidence to overrule them',
+        learned: 'graduation is lockInDays reaching 4, applied by the store — not a delta',
+      },
+    },
   })
 
   it('is a CLOSED session — you can finish today', async () => {

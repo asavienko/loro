@@ -499,6 +499,77 @@ describe('the outbox', () => {
 
 // ─────────────────────────────────────────────────────────────────────────────
 
+describe('nested transactions', () => {
+  /**
+   * The savepoint branch of `driver.node.ts` — the half of `transaction()` no test reached.
+   *
+   * It exists because `migrate()` and `dropAll()` each wrap their own work and a caller may
+   * reasonably wrap either, so a plain nested `BEGIN` would throw and a plain nested
+   * `COMMIT` would commit the OUTER transaction early: the outbox's "a row write and its op
+   * land together or not at all" would silently stop holding.
+   */
+  const table = 'CREATE TABLE t (id TEXT PRIMARY KEY)'
+
+  it('does not commit the outer transaction when the inner one rolls back', () => {
+    const driver = openNodeSqlite()
+    driver.exec(table)
+
+    driver.transaction(() => {
+      driver.run('INSERT INTO t (id) VALUES (?)', ['outer'])
+      expect(() =>
+        driver.transaction(() => {
+          driver.run('INSERT INTO t (id) VALUES (?)', ['inner'])
+          throw new Error('inner failed')
+        }),
+      ).toThrow(/inner failed/)
+      // The inner work is gone; the outer work is still pending, not committed.
+      expect(driver.all('SELECT id FROM t').map((r) => r['id'])).toEqual(['outer'])
+    })
+
+    expect(driver.all('SELECT id FROM t').map((r) => r['id'])).toEqual(['outer'])
+  })
+
+  it('rolls the outer transaction back even after the inner one succeeded', () => {
+    const driver = openNodeSqlite()
+    driver.exec(table)
+
+    expect(() =>
+      driver.transaction(() => {
+        driver.transaction(() => {
+          driver.run('INSERT INTO t (id) VALUES (?)', ['inner'])
+        })
+        throw new Error('outer failed')
+      }),
+    ).toThrow(/outer failed/)
+
+    // A released savepoint is not a commit. If the inner call had issued COMMIT, this row
+    // would have survived a failure that must undo everything.
+    expect(driver.all('SELECT id FROM t')).toEqual([])
+  })
+
+  it('commits once, at the outermost boundary', () => {
+    const driver = openNodeSqlite()
+    driver.exec(table)
+
+    driver.transaction(() => {
+      driver.transaction(() => {
+        driver.transaction(() => {
+          driver.run('INSERT INTO t (id) VALUES (?)', ['deep'])
+        })
+      })
+    })
+
+    expect(driver.all('SELECT id FROM t').map((r) => r['id'])).toEqual(['deep'])
+  })
+
+  it('returns the callback’s value through every level', () => {
+    const driver = openNodeSqlite()
+    expect(driver.transaction(() => driver.transaction(() => 41 + 1))).toBe(42)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 describe('at scale', () => {
   it('reads 2 000 phrases well inside the frame budget', () => {
     const driver = openNodeSqlite()

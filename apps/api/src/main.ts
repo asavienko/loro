@@ -9,6 +9,7 @@
 import { NestFactory } from '@nestjs/core'
 import { Logger } from '@nestjs/common'
 import { AppModule } from './app.module.js'
+import { config } from './common/config.js'
 import { ProblemDetailsFilter } from './common/problem-filter.js'
 import { mergeAvailable } from './sync/merge.js'
 
@@ -20,26 +21,34 @@ async function bootstrap(): Promise<void> {
   // tax on everyone.
   if (!mergeAvailable()) {
     const msg = 'loro-core WASM is missing — build it with `pnpm core-rs:build`'
-    if (process.env['NODE_ENV'] === 'production') throw new Error(msg)
+    if (config.isProduction()) throw new Error(msg)
     new Logger('bootstrap').warn(`${msg}. /v1/sync will return 500 and readiness is degraded.`)
   }
 
   const app = await NestFactory.create(AppModule, { bufferLogs: false })
 
   app.setGlobalPrefix('v1')
-  // Request validation is explicit in the controllers, using the Zod schemas shared
-  // with the client (packages/core). That keeps ONE definition of the contract and
-  // avoids a second, decorator-based one that could drift from it.
+  // Request validation is explicit in the controllers rather than decorator-based, so the
+  // contract is readable in one place per route.
+  //
+  // This comment used to claim the guards were "Zod schemas shared with the client
+  // (packages/core)". They are not, and never were: `zod` is a dependency of both
+  // packages and the repo contains no schema. Sharing them with the client is still the
+  // right destination — the mobile outbox has to PRODUCE these shapes — but writing it
+  // here as though it were done meant every reader believed the contract was
+  // single-sourced when each side hand-rolls its own. See plans/52.
   //
   // RFC 9457 for every error. Never a stack trace, never SQL text.
   app.useGlobalFilters(new ProblemDetailsFilter())
 
-  const port = Number(process.env['PORT'] ?? 3000)
+  const port = config.port()
   await app.listen(port, '0.0.0.0')
 
   const logger = new Logger('bootstrap')
   logger.log(`loro api listening on :${port}/v1`)
-  logger.log(`AI provider: ${process.env['AI_PROVIDER'] ?? 'stub'}`)
+  // Read through the same accessor the service uses, so the banner cannot name a
+  // provider the service isn't actually running.
+  logger.log(`AI provider: ${config.aiProvider()}`)
 }
 
 void bootstrap()

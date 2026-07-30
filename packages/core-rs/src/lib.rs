@@ -21,6 +21,15 @@ pub mod rank;
 pub mod select;
 pub mod sync;
 
+// Internal, and deliberately not `pub`: shared arithmetic that no platform calls.
+// Nothing here crosses the FFI boundary, so nothing here appears in `bindings/`.
+mod rng;
+mod units;
+
+/// Shared fixtures, so the 17 fields of `PhraseState` are written out in one place.
+#[cfg(test)]
+pub(crate) mod test_support;
+
 uniffi::setup_scaffolding!();
 
 // ─────────────────────────────────────────────────────────────────────────────

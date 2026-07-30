@@ -164,3 +164,26 @@ export function mergeClassFor(entity: SyncEntity, field: string): MergeClass | u
   const map = FIELD_POLICY[entity]
   return map[field] ?? map['*']
 }
+
+/**
+ * Whether an arbitrary entity name is one this policy governs.
+ *
+ * Derived from `FIELD_POLICY` rather than re-listed, so a new syncable entity is
+ * registered by adding its row above and nothing else. A hand-written list would let an
+ * entity exist in the union, exist in the policy, and still be treated as unknown by
+ * whoever forgot to extend the list — and "unknown entity" silently means "no merge
+ * class", which is the data-loss bug this file exists to prevent.
+ */
+export function isSyncEntity(entity: string): entity is SyncEntity {
+  return Object.hasOwn(FIELD_POLICY, entity)
+}
+
+/**
+ * The merge class for an entity name that has not been narrowed yet — `undefined` when
+ * the entity is not syncable at all. The pairing of `isSyncEntity` with `mergeClassFor`
+ * is needed at every boundary where entity names arrive as plain strings (the outbox
+ * stores them as text), so it lives here once.
+ */
+export function mergeClassOf(entity: string, field: string): MergeClass | undefined {
+  return isSyncEntity(entity) ? mergeClassFor(entity, field) : undefined
+}

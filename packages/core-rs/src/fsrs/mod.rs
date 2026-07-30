@@ -71,6 +71,39 @@ pub enum Confidence {
     Instant,
 }
 
+// ── The difficulty scale ─────────────────────────────────────────────────────────────
+//
+// FSRS's own 1..10, as declared on `FsrsState::difficulty`. Every function that produces
+// a difficulty clamps to this range, and it is one range so the two cannot drift apart.
+
+/// Easiest a phrase can be for a learner.
+const DIFFICULTY_MIN: f32 = 1.0;
+/// Hardest a phrase can be for a learner.
+const DIFFICULTY_MAX: f32 = 10.0;
+
+// ── Priors, seeded from the learner's own declaration ────────────────────────────────
+//
+// Loro's structural advantage over other FSRS apps: no cold start. Spaced either side of
+// `PRIOR_MED` so that a declaration moves the prior by more than either tag can.
+
+/// Prior for a phrase the learner called Easy.
+const PRIOR_EASY: f32 = 3.5;
+/// Prior for "Learning" — mid-scale, the neutral declaration.
+const PRIOR_MED: f32 = 5.0;
+/// Prior for a phrase the learner called Difficult.
+const PRIOR_HARD: f32 = 7.5;
+
+/// What "the meaning won't stick" adds. The largest tag adjustment: `Remember` is a
+/// statement about memory load, which is exactly what difficulty models.
+const TAG_REMEMBER_ADJUSTMENT: f32 = 0.8;
+
+/// What "specific words trip me up" adds. Half of `Remember`: a lexical snag is a smaller
+/// memory cost than a whole meaning that won't stick.
+///
+/// `Pron` and `Useful` are deliberately absent — `Pron` changes the *drill*, not the
+/// memory load, and `Useful` is motivation.
+const TAG_WORDS_ADJUSTMENT: f32 = 0.4;
+
 /// Map a five-level confidence onto a grade.
 #[must_use]
 #[uniffi::export]
@@ -94,17 +127,17 @@ pub fn grade_for_confidence(c: Confidence) -> Grade {
 #[uniffi::export]
 pub fn initial_difficulty(declared: Difficulty, tags: &[Tag]) -> f32 {
     let mut d: f32 = match declared {
-        Difficulty::Easy => 3.5,
-        Difficulty::Med => 5.0,
-        Difficulty::Hard => 7.5,
+        Difficulty::Easy => PRIOR_EASY,
+        Difficulty::Med => PRIOR_MED,
+        Difficulty::Hard => PRIOR_HARD,
     };
     if tags.contains(&Tag::Remember) {
-        d += 0.8;
+        d += TAG_REMEMBER_ADJUSTMENT;
     }
     if tags.contains(&Tag::Words) {
-        d += 0.4;
+        d += TAG_WORDS_ADJUSTMENT;
     }
-    d.clamp(1.0, 10.0)
+    d.clamp(DIFFICULTY_MIN, DIFFICULTY_MAX)
 }
 
 /// How far a re-rating may nudge an established difficulty.
@@ -119,7 +152,7 @@ pub const RERATE_MAX_NUDGE: f32 = 1.0;
 pub fn nudge_difficulty(current: f32, declared: Difficulty, tags: &[Tag]) -> f32 {
     let target = initial_difficulty(declared, tags);
     let delta = (target - current).clamp(-RERATE_MAX_NUDGE, RERATE_MAX_NUDGE);
-    (current + delta).clamp(1.0, 10.0)
+    (current + delta).clamp(DIFFICULTY_MIN, DIFFICULTY_MAX)
 }
 
 /// Retrievability at `t` days after the last review, in the blueprint's display form.
@@ -135,6 +168,23 @@ pub fn retrievability(days_since_review: f32, stability: f32) -> f32 {
     0.5_f32.powf(days_since_review / stability)
 }
 
+// ── Display thresholds for `format_interval` (`Loro.dc.html:3009`) ───────────────────
+
+/// Below this many days, the review is same-session: shown as the relearn step, not a
+/// date. Just under 1 so that an interval of exactly one day reads as "tomorrow".
+const INTERVAL_SUB_DAY_MAX: f32 = 0.9;
+
+/// Below this, "tomorrow". Above 1.5 so a 1.5-day interval rounds *to* tomorrow rather
+/// than displaying as "2 days".
+const INTERVAL_TOMORROW_MAX: f32 = 1.6;
+
+/// Below this, count in days; at or above it, count in weeks. A month of days is a number
+/// a learner stops being able to feel.
+const INTERVAL_DAYS_MAX: f32 = 30.0;
+
+/// Days per week, for the weeks read-out.
+const DAYS_PER_WEEK: f32 = 7.0;
+
 /// Format an interval for display, from the blueprint (`Loro.dc.html:3009`).
 ///
 /// The blueprint's *fixed* interval labels are a display model; these are formatted
@@ -143,14 +193,14 @@ pub fn retrievability(days_since_review: f32, stability: f32) -> f32 {
 #[uniffi::export]
 #[allow(clippy::cast_possible_truncation)] // rounded, and bounded by the branches above
 pub fn format_interval(days: f32) -> String {
-    if days < 0.9 {
+    if days < INTERVAL_SUB_DAY_MAX {
         "~10 min".to_string()
-    } else if days < 1.6 {
+    } else if days < INTERVAL_TOMORROW_MAX {
         "tomorrow".to_string()
-    } else if days < 30.0 {
+    } else if days < INTERVAL_DAYS_MAX {
         format!("{} days", days.round() as i32)
     } else {
-        format!("{} wks", (days / 7.0).round() as i32)
+        format!("{} wks", (days / DAYS_PER_WEEK).round() as i32)
     }
 }
 
@@ -181,11 +231,16 @@ mod tests {
 
     #[test]
     fn confidence_maps_onto_four_grades() {
-        assert_eq!(grade_for_confidence(Confidence::Forgot), Grade::Again);
-        assert_eq!(grade_for_confidence(Confidence::Shaky), Grade::Hard);
-        assert_eq!(grade_for_confidence(Confidence::Ok), Grade::Good);
-        assert_eq!(grade_for_confidence(Confidence::Strong), Grade::Good);
-        assert_eq!(grade_for_confidence(Confidence::Instant), Grade::Easy);
+        for (confidence, grade) in [
+            (Confidence::Forgot, Grade::Again),
+            (Confidence::Shaky, Grade::Hard),
+            (Confidence::Ok, Grade::Good),
+            // Strong is better than Good but not instant; the bonus is the caller's.
+            (Confidence::Strong, Grade::Good),
+            (Confidence::Instant, Grade::Easy),
+        ] {
+            assert_eq!(grade_for_confidence(confidence), grade, "{confidence:?}");
+        }
     }
 
     #[test]
@@ -214,6 +269,27 @@ mod tests {
     }
 
     #[test]
+    fn every_prior_lands_inside_the_fsrs_scale() {
+        // All sixteen tag subsets, so no combination can push the prior out of 1..10.
+        const TAGS: [Tag; 4] = [Tag::Pron, Tag::Remember, Tag::Useful, Tag::Words];
+        for declared in [Difficulty::Easy, Difficulty::Med, Difficulty::Hard] {
+            for mask in 0..(1u8 << TAGS.len()) {
+                let tags: Vec<Tag> = TAGS
+                    .iter()
+                    .enumerate()
+                    .filter(|(i, _)| mask & (1 << i) != 0)
+                    .map(|(_, t)| *t)
+                    .collect();
+                let d = initial_difficulty(declared, &tags);
+                assert!(
+                    (DIFFICULTY_MIN..=DIFFICULTY_MAX).contains(&d),
+                    "{declared:?} with {tags:?} gave {d}"
+                );
+            }
+        }
+    }
+
+    #[test]
     fn a_rerating_nudges_rather_than_resets() {
         // 20 reviews in, established at 4.0, learner now says Difficult (target 7.5).
         let nudged = nudge_difficulty(4.0, Difficulty::Hard, &[]);
@@ -221,6 +297,23 @@ mod tests {
             (nudged - 5.0).abs() < f32::EPSILON,
             "bounded to +1.0, got {nudged}"
         );
+    }
+
+    #[test]
+    fn a_rerating_downwards_is_bounded_the_same_way() {
+        // Established at 8.0, learner now says Easy (target 3.5). One rung, not five.
+        let nudged = nudge_difficulty(8.0, Difficulty::Easy, &[]);
+        assert!(
+            (nudged - 7.0).abs() < f32::EPSILON,
+            "bounded to -1.0, got {nudged}"
+        );
+    }
+
+    #[test]
+    fn a_nudge_pulls_an_out_of_range_difficulty_back_into_the_scale() {
+        // A corrupt or migrated row must not stay outside 1..10.
+        assert!(nudge_difficulty(20.0, Difficulty::Hard, &[]) <= DIFFICULTY_MAX);
+        assert!(nudge_difficulty(-5.0, Difficulty::Easy, &[]) >= DIFFICULTY_MIN);
     }
 
     #[test]
@@ -232,10 +325,22 @@ mod tests {
 
     #[test]
     fn intervals_format_the_way_the_blueprint_does() {
-        assert_eq!(format_interval(0.2), "~10 min");
-        assert_eq!(format_interval(1.0), "tomorrow");
-        assert_eq!(format_interval(5.0), "5 days");
-        assert_eq!(format_interval(42.0), "6 wks");
+        for (days, expect) in [
+            (0.0, "~10 min"),
+            (0.2, "~10 min"),
+            // Each boundary from both sides, so a threshold can't move unnoticed.
+            (INTERVAL_SUB_DAY_MAX, "tomorrow"),
+            (1.0, "tomorrow"),
+            (1.5, "tomorrow"),
+            (INTERVAL_TOMORROW_MAX, "2 days"),
+            (5.0, "5 days"),
+            (29.4, "29 days"),
+            (INTERVAL_DAYS_MAX, "4 wks"),
+            (42.0, "6 wks"),
+            (365.0, "52 wks"),
+        ] {
+            assert_eq!(format_interval(days), expect, "{days} days");
+        }
     }
 
     #[test]

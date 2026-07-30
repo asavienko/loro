@@ -36,7 +36,7 @@ export type {
   Clock,
 } from './engines/types.js'
 
-export { FIELD_POLICY, mergeClassFor } from './sync/fieldPolicy.js'
+export { FIELD_POLICY, mergeClassFor, mergeClassOf, isSyncEntity } from './sync/fieldPolicy.js'
 export type { MergeClass, SyncEntity } from './sync/fieldPolicy.js'
 
 // Local persistence: schema, migrations, repositories, outbox. Driver-agnostic — the

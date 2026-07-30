@@ -17,7 +17,9 @@
 
 import { useEffect } from 'react'
 import { AppState } from 'react-native'
-import { useApp } from './index'
+// The store instance directly, not the barrel: this hook is one of the store's own
+// modules, and importing its own public surface would be a cycle.
+import { useApp } from './store'
 
 export function useDayRollover(): void {
   const ensure = useApp((s) => s.ensureRefrainSet)

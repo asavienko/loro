@@ -23,7 +23,7 @@
  */
 
 import type { SqlDriver } from './driver.js'
-import { readInt } from './driver.js'
+import { firstRow, readInt, readText } from './driver.js'
 
 export interface Migration {
   readonly version: number
@@ -178,10 +178,10 @@ const VERSION_TABLE = `
 /** The highest applied migration, or 0 on a fresh database. */
 export function currentVersion(driver: SqlDriver): number {
   driver.exec(VERSION_TABLE)
-  const rows = driver.all('SELECT MAX(version) AS v FROM schema_version')
-  const first = rows[0]
-  if (first === undefined || first['v'] === null) return 0
-  return readInt(first, 'v')
+  const row = firstRow(driver, 'SELECT MAX(version) AS v FROM schema_version')
+  // MAX() over an empty table is one row holding NULL, not zero rows — both mean "fresh".
+  if (row === null || row['v'] === null) return 0
+  return readInt(row, 'v')
 }
 
 export interface MigrationResult {
@@ -231,19 +231,24 @@ export function migrate(driver: SqlDriver, at: number): MigrationResult {
  * `reset()` must leave no learner rows on disk — GDPR erasure is a duty, and a
  * half-cleared local database is the usual way it gets missed
  * (docs/architecture/security-privacy.md).
+ *
+ * The list is READ FROM THE DATABASE rather than written here, because a hand-maintained
+ * copy of the schema is one migration away from being wrong in the direction that leaves
+ * a learner's rows behind. `MIGRATIONS` is append-only and nobody adding a table to v2
+ * would think to also edit an erasure routine three hundred lines away.
+ *
+ * `sqlite_%` names are SQLite's own bookkeeping (`sqlite_sequence`, the internal
+ * indexes); they are not droppable and hold nothing of the learner's. Dropping a table
+ * takes its indexes and its `sqlite_sequence` row with it.
  */
 export function dropAll(driver: SqlDriver): void {
   driver.transaction(() => {
-    for (const table of [
-      'user_phrase',
-      'settings',
-      'refrain_day',
-      'streak_day',
-      'outbox',
-      'kv',
-      'schema_version',
-    ]) {
-      driver.exec(`DROP TABLE IF EXISTS ${table};`)
+    const tables = driver
+      .all(`SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'`)
+      .map((row) => readText(row, 'name'))
+    for (const table of tables) {
+      // The name comes from sqlite_master, so it is already a real identifier.
+      driver.exec(`DROP TABLE IF EXISTS "${table}";`)
     }
   })
 }
