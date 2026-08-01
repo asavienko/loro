@@ -79,7 +79,7 @@ jobs:
       - name: Generate the changelog
         run: echo "TODO(M0) — conventional-changelog from the previous tag"
 
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@v3
         with:
           generate_release_notes: true
           draft: false
