@@ -62,16 +62,28 @@ test('narrow Progress tiles align and Add phrases remain fully readable', async 
   await page.getByRole('dialog').getByRole('button', { name: 'Add', exact: true }).click()
   const phrase = page.getByText('¿Tienen una mesa para dos?', { exact: true })
   await expect(phrase).toBeVisible()
-  const textMetrics = await phrase.evaluate((node) => ({
-    overflow: getComputedStyle(node).textOverflow,
-    width: node.clientWidth,
-    scrollWidth: node.scrollWidth,
-    height: node.clientHeight,
-    lineHeight: Number.parseFloat(getComputedStyle(node).lineHeight),
-  }))
+  const textMetrics = await phrase.evaluate((node) => {
+    const box = node.getBoundingClientRect()
+    const range = document.createRange()
+    range.selectNodeContents(node)
+    return {
+      overflow: getComputedStyle(node).textOverflow,
+      width: node.clientWidth,
+      scrollWidth: node.scrollWidth,
+      // A phrase can fit on one line with Linux font metrics. Assert that every text
+      // fragment is inside its box, including vertically, instead of requiring a wrap.
+      fits: Array.from(range.getClientRects()).every(
+        (text) =>
+          text.left >= box.left - 1 &&
+          text.right <= box.right + 1 &&
+          text.top >= box.top - 1 &&
+          text.bottom <= box.bottom + 1,
+      ),
+    }
+  })
   expect(textMetrics.overflow).toBe('clip')
   expect(textMetrics.scrollWidth).toBeLessThanOrEqual(textMetrics.width + 1)
-  expect(textMetrics.height).toBeGreaterThan(textMetrics.lineHeight)
+  expect(textMetrics.fits).toBe(true)
   // Enlarged labels move their controls to separate rows instead of splitting a word.
   for (const name of ['discover', 'browse']) {
     const label = page.getByRole('button', { name, exact: true }).getByText(name, { exact: true })

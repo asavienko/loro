@@ -8,7 +8,11 @@ const Ajv2020 = (Ajv2020Module as unknown as { default?: unknown }).default ?? A
 interface Compiler {
   compile(schema: object): ValidateFunction
 }
-type Constructor = new (opts: { strict: boolean; validateFormats: boolean }) => Compiler
+type Constructor = new (opts: {
+  strict: boolean
+  validateFormats: boolean
+  inlineRefs: boolean
+}) => Compiler
 
 for (const kind of ['current', 'target'] as const) {
   it(`compiles every generated ${kind} OpenAPI component with an independent validator`, () => {
@@ -31,7 +35,12 @@ for (const kind of ['current', 'target'] as const) {
       throw new Error('Invalid OpenAPI components')
     const names = Object.keys(doc.components.schemas)
     expect(names.length).toBeGreaterThan(10)
-    const compiler = new (Ajv2020 as Constructor)({ strict: false, validateFormats: false })
+    // Compile shared references once; inlining expands them repeatedly across the full registry.
+    const compiler = new (Ajv2020 as Constructor)({
+      strict: false,
+      validateFormats: false,
+      inlineRefs: false,
+    })
     // Reference the real component paths; malformed or dangling references fail compilation.
     expect(() =>
       compiler.compile({
