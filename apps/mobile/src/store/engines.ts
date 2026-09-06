@@ -13,6 +13,8 @@ import {
   DEFAULT_REP_TARGET,
   RefrainEngine,
   StreamEngine,
+  isActive,
+  isDue,
   type Clock,
   type EngineContext,
   type LoroCoreFacade,
@@ -43,24 +45,24 @@ export function createEngineContext(
   const state = store.getState()
   const phrases = state.phrases
   /**
-   * KNOWN DIVERGENCE, left exactly as it is.
+   * The store's array, read through the SAME eligibility rule as the repositories.
    *
-   * `active()` here filters only `!learned`, while the persistence layer's
-   * `PhraseTable.active()` (`packages/core/src/persistence/memory.ts:44` and its SQL twin)
-   * ALSO requires `graduatedAt === null`. So a graduated phrase stays in what the engines
-   * plan from, and the Refrain keeps offering work on a phrase that left rotation four
-   * lock-in days ago — while every persistence reader already excludes it.
+   * This used to carry a recorded divergence: `active()` filtered only `!learned`, while
+   * `PhraseTable.active()` and the Refrain's own candidate filter ALSO required
+   * `graduatedAt === null`. So a graduated phrase stayed in what the engines planned from,
+   * and the Stream kept offering work on a phrase that left rotation four lock-in days ago
+   * — while every persistence reader already excluded it. `due()` disagreed the other way,
+   * omitting the `!learned` the repositories require.
    *
-   * Swapping in the repository would fix that AND change which phrases the learner is asked
-   * to practise, which is a behaviour change, not a refactor. Recorded for the plan that
-   * wires persistence into the store (plans/09/10); the two must agree then, and the
-   * repository's definition is the right one to keep.
+   * `isActive` / `isDue` are the domain's (`@loro/core`), so there is now one rule and three
+   * call sites rather than four rules. Deletion needs no check here: `removePhrase` splices
+   * the row out of the array, so a deleted phrase is not a candidate to filter.
    */
   const repo: PhraseRepository = {
     all: () => Promise.resolve(phrases),
     byId: (id) => Promise.resolve(phrases.find((p) => p.id === id) ?? null),
-    active: () => Promise.resolve(phrases.filter((p) => !p.learned)),
-    due: (at) => Promise.resolve(phrases.filter((p) => p.srs !== null && p.srs.due <= at)),
+    active: () => Promise.resolve(phrases.filter(isActive)),
+    due: (at) => Promise.resolve(phrases.filter((p) => isDue(p, at))),
   }
   return {
     phrases: repo,
@@ -77,9 +79,19 @@ export function createEngineContext(
   }
 }
 
+/**
+ * The wave schedule the production engines run on — and the one Today's day list renders.
+ *
+ * Exported so the screen cannot drift from the scheduler. The times are SETTINGS, not copy:
+ * Today used to print its own 12-hour display strings out of `copy.today.waves` ("1:00",
+ * "7:00") beside these 24-hour ones, so the screen and the engine could disagree about when
+ * the midday wave is and nothing would fail.
+ */
+export const PRODUCTION_WAVE_TIMES = ['08:00', '13:00', '19:00'] as const
+
 const productionEngineDeps: EngineContextDeps = {
   clock: deviceClock,
-  waveTimes: ['08:00', '13:00', '19:00'],
+  waveTimes: PRODUCTION_WAVE_TIMES,
   repTarget: DEFAULT_REP_TARGET,
   trip: null,
   flags: { bool: (_k, d) => d, number: (_k, d) => d },

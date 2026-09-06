@@ -33,7 +33,7 @@ Primitives are domain-free. Their public exports come from `primitives/index.ts`
 | `Row`           | `gap`, `align`, `justify`, `wrap`, `style`; wraps vertically for large text when requested                           |
 | `Stack`         | Vertical `gap` and `style`                                                                                           |
 | `Grid`          | Wrapping row with stretch alignment, for same-shaped controls/tiles                                                  |
-| `Button`        | `label`, `variant: primary\|secondary\|destructive`, `size: md\|lg`, `disabled`, hint                                |
+| `Button`        | `label`, `variant: primary\|secondary\|destructive`, `size: md\|lg\|cta`, `disabled`, hint                           |
 | `IconButton`    | Required glyph and accessible label; uses the icon target floor                                                      |
 | `Pill`          | Static `label`, optional emoji, `tone: neutral\|accent\|onDark`, five sizes, colour overrides                        |
 | `Chip`          | Selectable label; `variant: tag\|scenario\|toggle`, `tone: tint\|solid`, explicit role/state                         |
@@ -65,6 +65,21 @@ Composites may accept domain types, but do not import the store or learner-facin
 `ToastHost.tsx` is a deliberate app host, not a reusable composite: it subscribes to the store and
 reads toast copy. Keep store-aware hosts at the UI root rather than weakening the component-layer
 rule.
+
+`Button`'s `cta` size is the v1.1 screen CTA at the authored `--cta-h` 56 / `--cta-radius` 22 — the
+single filled control a surface is allowed. Today is its only call site; every screen adopting the
+v1.1 shell uses the same size rather than its own metrics.
+
+## The v1.1 navigation components
+
+The authored package has ten (`components/navigation/`): `Spine`, `ScreenHeader`, `NavRail`,
+`DayRow`, `SwitcherHandle`, `SwitcherSheet`, `ArrivalNote`, `ExitSheet`, `ResumeStrip`,
+`TransportStrip`. **None is an app component yet.** Today draws the first four plus a minimal
+switcher as route-local blocks with the authored geometry transcribed beside them, because it is the
+only surface carrying the shell and a component used once is not reuse. Plan 81 mounts the spine on
+every non-sheet surface from the route table; promoting these into `src/ui/components/` belongs to
+that change, together with the props the single call site does not exercise — the ongoing chip,
+`DayRow`'s `status` slot, and the other six components.
 
 ## What is not implemented
 

@@ -89,7 +89,8 @@ export type SegmentedVariant = keyof typeof segmented
 export function segmentedTrackStyle(variant: SegmentedVariant): ViewStyle {
   const base: ViewStyle = {
     flexDirection: 'row',
-    alignItems: 'center',
+    flexWrap: 'wrap',
+    alignItems: 'stretch',
     gap: segmented[variant].gap,
   }
   if (variant !== 'track') return base

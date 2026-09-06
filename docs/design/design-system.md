@@ -41,6 +41,17 @@ the stale authored headline itself.
 
 ## What is implemented now
 
+The web learner shell uses a centered column with a 640px maximum width, including its stack headers
+and action bars. Bottom sheets use the same maximum width over a full-window scrim. Phones and
+native layouts remain fluid; the developer workbench retains the full browser width. This web
+adaptation is named by `webLayout.learnerMaxWidth` and tested in `e2e/responsive.spec.ts`.
+
+The web accessibility adaptation also allows bilingual phrase rows to wrap fully, with status
+badges moving below the text when necessary. Choice controls wrap onto additional rows rather than
+overlapping enlarged labels. Progress tiles share a row height. Fixed action bars publish their
+measured height so final scroll content and toasts remain above them as text grows. These deliberate
+layout adaptations preserve the authored colors and metrics; the authored artifacts are unchanged.
+
 - All colour, accent, spacing, gutter, radius, size, typography metadata, shadow, gradient, motion,
   audio-timing, and touch tokens are generated and committed.
 - The app consumes generated colours, spacing, radii, sizes, typography metrics, and press scales
@@ -49,6 +60,10 @@ the stale authored headline itself.
   dev workbench, scales production text for inspection, and suppresses press scaling under Reduce
   Motion. Learner routes still have no theme selector and retain Coral as their active accent.
 - React Native primitives and six reusable composites cover the seven implemented learner screens.
+- The v1.1 navigation tokens (`tokens/navigation.css`) are **not** in the generated package. Today,
+  the one screen on the v1.1 shell, transcribes the handful it needs — spine, rail, day-row and CTA
+  geometry — next to its own blocks, with the authored custom-property name beside each value. They
+  become generated tokens when plan 81 gives them a second call site.
 - The contrast gate currently passes 122 pairings across four accent themes.
 - `/dev/tokens` enumerates all 404 generated primitive leaves, computes that same contrast report,
   and renders current production specimens without entering the learner route/state manifest.

@@ -17,6 +17,10 @@ Repository contracts, schema/migrations, outbox, memory parity, and a Node SQLit
 exist. The current production app does not instantiate them and still stores phrases/settings/days
 in memory.
 
+Plan 85 adds schema-2 language settings, course-session repositories and target-scoped daily sets.
+Hydrate every course, restore the active target, and write course transitions transactionally with
+existing repositories/outbox. Native/target settings use the atomic `languagePair` field.
+
 ## Work
 
 1. Implement the op-sqlite `SqlDriver` adapter and migration/bootstrap/erasure lifecycle behind the

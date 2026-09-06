@@ -12,6 +12,9 @@ Learners control privacy, audio/speech, theme/accessibility, notifications, down
 practice settings. Typed allowlisted events answer named product questions; deterministic flags can
 run the approved loop experiment without changing data meaning or shaming learners.
 
+Language selection is implemented separately in plan 85. Reuse its language-pair contract and
+course-session repositories when wiring durable settings; do not recreate an independent setting.
+
 ## Work
 
 1. Define the settings schema, defaults, migrations, device-vs-account scope, sync policy, reset,

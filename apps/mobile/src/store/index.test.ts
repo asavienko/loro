@@ -20,6 +20,7 @@ import {
   useApp,
 } from './index'
 import { PRACTICE_DAY_RETENTION } from './state'
+import { copy } from '../lib/copy'
 
 /** A catalog id that definitely exists, whatever the catalog currently holds. */
 const someCatalogId = (): string => {
@@ -43,6 +44,7 @@ describe('the public surface', () => {
     expect(Object.keys(store).sort()).toEqual(
       [
         'INITIAL_STATE',
+        'PRODUCTION_WAVE_TIMES',
         'addPracticeDay',
         'applyDeltaToPhrase',
         'catalogById',
@@ -89,13 +91,42 @@ describe('row identity', () => {
     expect(pack).toBeDefined()
     if (pack === undefined) return
 
-    useApp.getState().completeOnboarding({ goal: 'travel', dailyMinutes: 10, packIds: [pack.id] })
+    useApp
+      .getState()
+      .completeOnboarding({ goal: 'travel', level: 'beg', dailyMinutes: 10, packIds: [pack.id] })
 
     const ids = useApp.getState().phrases.map((p) => p.id)
     expect(ids.length).toBeGreaterThan(1)
     expect(new Set(ids).size).toBe(ids.length)
     // Ids are time-ordered, so the stream sorts by when it was added for free.
     expect([...ids].sort()).toEqual(ids)
+  })
+
+  /**
+   * P1-03, P1-04, P1-08: every answer the four questions collect lands in `AppData`.
+   *
+   * Written against the STORED SHAPE rather than against named fields on purpose. `level` was
+   * collected across a whole step and dropped at the moment of commit, and any test that checked
+   * only `dailyMinutes` and `packIds` passed over it — as the suite did. This one fails the same
+   * way for a fifth answer that is collected and never stored.
+   */
+  it('persists every onboarding answer, not the subset the screen happens to pass', () => {
+    const pack = packs[0]
+    expect(pack).toBeDefined()
+    if (pack === undefined) return
+
+    const answers = { goal: 'trip', level: 'conf', dailyMinutes: 20, packIds: [pack.id] } as const
+    useApp.getState().completeOnboarding({ ...answers, packIds: [...answers.packIds] })
+
+    const stored = dataOf(useApp.getState()) as unknown as Record<string, unknown>
+    // Every scalar answer is readable back out under its own name. `packIds` seeds `phrases`
+    // rather than being stored as ids, which is why it is asserted through the seed below.
+    for (const [key, value] of Object.entries(answers)) {
+      if (key === 'packIds') continue
+      expect(stored[key], `onboarding answer '${key}' never reached the store`).toBe(value)
+    }
+    expect(useApp.getState().phrases).toHaveLength(pack.phrases.length)
+    expect(useApp.getState().onboarded).toBe(true)
   })
 
   it('removes by row id, and undo removes the row it just added', () => {
@@ -111,6 +142,61 @@ describe('row identity', () => {
     // The toast's undo closes over the row id, so it removes the right row.
     useApp.getState().toast?.undo?.()
     expect(useApp.getState().phrases).toHaveLength(0)
+  })
+
+  /**
+   * P2-13, P2-26: the undo restores the ROW, not a fresh phrase with the same Spanish.
+   *
+   * `deepEqual` on the whole row is the point. A re-`addPhrase` typechecks and passes any test
+   * that only counts rows or matches `es`, while silently minting a new `id` and zeroing `reps`,
+   * `srs`, `lockInDays`, the tags and the note.
+   */
+  it('restores the whole row, at its own position, when a removal is undone', () => {
+    const ids = catalogPhrases.slice(0, 3).map((c) => c.id)
+    for (const id of ids) useApp.getState().addPhrase(id)
+
+    // Give the middle row a history worth losing.
+    const target = useApp.getState().phrases[1]
+    expect(target).toBeDefined()
+    if (target === undefined) return
+    useApp.getState().setDifficulty(target.id, 'hard')
+    useApp.getState().toggleTag(target.id, 'pron')
+    useApp.getState().setNote(target.id, 'ties to the moment')
+    useApp.setState((st) => ({
+      phrases: st.phrases.map((p) => (p.id === target.id ? { ...p, reps: 7, lockInDays: 2 } : p)),
+    }))
+
+    const before = useApp.getState().phrases
+    const row = before[1]
+    expect(row).toBeDefined()
+    if (row === undefined) return
+
+    useApp.getState().removePhrase(row.id)
+    expect(useApp.getState().phrases.map((p) => p.id)).not.toContain(row.id)
+    // Silence is the defect this closes: there is a toast, and it carries an undo.
+    expect(useApp.getState().toast?.message).toBe(copy.toast.removed)
+    expect(useApp.getState().toast?.undo).toBeDefined()
+
+    useApp.getState().toast?.undo?.()
+    expect(useApp.getState().phrases).toEqual(before)
+    // Identity and history, field by field — including the position in the array.
+    expect(useApp.getState().phrases[1]).toEqual(row)
+  })
+
+  it('rejoins today’s set when a removal is undone', () => {
+    const catalogId = someCatalogId()
+    useApp.getState().addPhrase(catalogId)
+    const id = useApp.getState().phrases[0]?.id
+    expect(id).toBeDefined()
+    if (id === undefined) return
+
+    useApp.setState({ refrainSet: [id], refrainDay: '2026-07-28', selectedId: id })
+    useApp.getState().removePhrase(id)
+    expect(useApp.getState().refrainSet).not.toContain(id)
+
+    useApp.getState().toast?.undo?.()
+    expect(useApp.getState().refrainSet).toContain(id)
+    expect(useApp.getState().selectedId).toBe(id)
   })
 
   it('keeps a row out of refrainSet and selectedId once removed', () => {
@@ -133,7 +219,10 @@ describe('learner-authored phrases', () => {
   it('round-trips through the store with no catalog row', () => {
     const id = useApp
       .getState()
-      .addOwnPhrase({ es: 'Me lo apunto', en: "I'll note that down" }, { tags: ['useful'] })
+      .addOwnPhrase(
+        { targetText: 'Me lo apunto', translation: "I'll note that down" },
+        { tags: ['useful'] },
+      )
 
     const row = useApp.getState().phrases.find((p) => p.id === id)
     expect(row).toBeDefined()
@@ -147,16 +236,16 @@ describe('learner-authored phrases', () => {
 
     // What a screen actually renders comes from the row itself.
     const view = toView(row)
-    expect(view.es).toBe('Me lo apunto')
-    expect(view.en).toBe("I'll note that down")
+    expect(view.targetText).toBe('Me lo apunto')
+    expect(view.translation).toBe("I'll note that down")
     expect(view.theme).toBe('Mine')
     expect(view.emoji).toBe('✍️')
     expect(view.catalog).toBeNull()
   })
 
   it('does not collide with a catalog phrase of the same text, or with itself', () => {
-    const a = useApp.getState().addOwnPhrase({ es: 'Vale', en: 'OK' })
-    const b = useApp.getState().addOwnPhrase({ es: 'Vale', en: 'OK' })
+    const a = useApp.getState().addOwnPhrase({ targetText: 'Vale', translation: 'OK' })
+    const b = useApp.getState().addOwnPhrase({ targetText: 'Vale', translation: 'OK' })
     // Two rows: an own phrase has no catalog id to dedupe on, and the learner may
     // legitimately record the same words twice.
     expect(a).not.toBe(b)
@@ -164,9 +253,12 @@ describe('learner-authored phrases', () => {
   })
 
   it('takes a theme and emoji when given them', () => {
-    const id = useApp
-      .getState()
-      .addOwnPhrase({ es: 'La cuenta', en: 'The bill', theme: 'Dining', emoji: '🧾' })
+    const id = useApp.getState().addOwnPhrase({
+      targetText: 'La cuenta',
+      translation: 'The bill',
+      theme: 'Dining',
+      emoji: '🧾',
+    })
     const row = useApp.getState().phrases.find((p) => p.id === id)
     expect(toView(row!).theme).toBe('Dining')
     expect(toView(row!).emoji).toBe('🧾')
@@ -189,7 +281,7 @@ describe('reset', () => {
       refrainDay: '2026-07-28',
       refrainSubstituted: ['a'],
     })
-    useApp.getState().addOwnPhrase({ es: 'Hola', en: 'Hi' })
+    useApp.getState().addOwnPhrase({ targetText: 'Hola', translation: 'Hi' })
 
     useApp.getState().reset()
 

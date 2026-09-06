@@ -15,7 +15,7 @@ export interface Stat {
 
 export function StatRow({ stats }: { stats: readonly Stat[] }) {
   return (
-    <Row gap={statRow.gap}>
+    <Row gap={statRow.gap} align="stretch" wrap>
       {stats.map((stat) => (
         <StatTile key={stat.label} value={stat.value} label={stat.label} />
       ))}

@@ -90,7 +90,7 @@ export default (): ExpoConfig => ({
   // Only plugins for INSTALLED packages. The native modules (loro-audio,
   // loro-speech, loro-core) and notifications / secure-store / localization arrive
   // with their packages — see README.md.
-  plugins: ['expo-router'],
+  plugins: ['expo-router', ['expo-localization', { supportedLocales: ['en', 'bg', 'ru'] }]],
 
   experiments: {
     typedRoutes: true,

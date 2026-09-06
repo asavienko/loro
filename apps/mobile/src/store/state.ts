@@ -11,7 +11,7 @@
  * progress field is `delta.ts`.
  */
 
-import type { PhraseState } from '@loro/core'
+import type { NativeLanguage, TargetLocale, PhraseState, SessionHandle } from '@loro/core'
 
 export interface Toast {
   message: string
@@ -19,9 +19,55 @@ export interface Toast {
 }
 
 /** Everything the store holds. Actions live in `slices/`; this is only the data. */
+export interface RefrainResume {
+  session: SessionHandle | null
+  cursor: number
+  lastLatency: number | null
+  history: (number | null)[]
+  done: boolean
+}
+export const EMPTY_REFRAIN_RESUME: RefrainResume = {
+  session: null,
+  cursor: 0,
+  lastLatency: null,
+  history: [],
+  done: false,
+}
+export interface CourseState {
+  streamCursor: number
+  refrainResume: RefrainResume
+  onboarded: boolean
+  phrases: PhraseState[]
+  selectedId: string | null
+  refrainSet: string[]
+  refrainDay: string | null
+  refrainSubstituted: string[]
+}
 export interface AppData {
+  streamCursor: number
+  refrainResume: RefrainResume
+  nativeLanguage: NativeLanguage
+  targetLocale: TargetLocale
+  languageChosen: boolean
+  courses: Partial<Record<TargetLocale, CourseState>>
   onboarded: boolean
   goal: string | null
+  /**
+   * The learner's self-reported Spanish (`beg` | `some` | `conf`), or `null` before onboarding.
+   *
+   * Collected since the screen shipped and DROPPED at the moment of commit — `completeOnboarding`
+   * took three of the four answers, so the level question's own helper ("Sets how long and tricky
+   * your first phrases are") described a setting that did not exist and the ready screen could
+   * only summarise three answers (`P1-04`, `P1-08`).
+   *
+   * Persisting it is not the same as acting on it: biasing initial phrase length and difficulty is
+   * plan 60's set selection, and until then this is a stored answer and nothing reads it. That is
+   * the order plan 50 §3 called for — never ship a question whose answer is discarded.
+   *
+   * `settings.level` already carries a declared `lww` merge class
+   * (`packages/core/src/sync/fieldPolicy.ts`), so this is the field the sync contract expected.
+   */
+  level: string | null
   dailyMinutes: 5 | 10 | 20
   phrases: PhraseState[]
   toast: Toast | null
@@ -56,8 +102,15 @@ export interface AppData {
  * `reset()` spreads this, so a field added here is cleared by reset for free.
  */
 export const INITIAL_STATE: AppData = {
+  streamCursor: 0,
+  refrainResume: EMPTY_REFRAIN_RESUME,
+  nativeLanguage: 'en',
+  targetLocale: 'es-ES',
+  languageChosen: false,
+  courses: {},
   onboarded: false,
   goal: null,
+  level: null,
   dailyMinutes: 10,
   phrases: [],
   toast: null,
@@ -71,8 +124,15 @@ export const INITIAL_STATE: AppData = {
 /** The data half of the store, for assertions and (later) persistence. */
 export function dataOf(state: AppData): AppData {
   return {
+    nativeLanguage: state.nativeLanguage,
+    targetLocale: state.targetLocale,
+    languageChosen: state.languageChosen,
+    courses: state.courses,
+    streamCursor: state.streamCursor,
+    refrainResume: state.refrainResume,
     onboarded: state.onboarded,
     goal: state.goal,
+    level: state.level,
     dailyMinutes: state.dailyMinutes,
     phrases: state.phrases,
     toast: state.toast,

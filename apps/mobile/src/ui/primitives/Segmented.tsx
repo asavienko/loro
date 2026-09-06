@@ -14,7 +14,7 @@
  * forms of it from `selected`.
  */
 
-import { View } from 'react-native'
+import { Platform, View } from 'react-native'
 import { segmentLook, segmentedTrackStyle, type SegmentedVariant } from './controlStyle'
 import { Pressable } from './Pressable'
 import { Text } from './Text'
@@ -59,9 +59,14 @@ export function Segmented<T extends string>({
             onPress={() => {
               onChange(o.value)
             }}
-            style={look.container}
+            style={[look.container, Platform.OS === 'web' && { minWidth: 'auto' }]}
           >
-            <Text variant={look.textVariant} color={look.textColor}>
+            <Text
+              variant={look.textVariant}
+              color={look.textColor}
+              align="center"
+              style={{ maxWidth: '100%', flexShrink: 1 }}
+            >
               {o.label}
             </Text>
           </Pressable>

@@ -13,7 +13,7 @@
 import type { ReactNode } from 'react'
 import { Pressable as RNPressable, type StyleProp, type ViewStyle } from 'react-native'
 import { resolvePressScale } from '../runtimeStyles'
-import { MIN_TAP, press } from '../theme'
+import { HIT_SLOP, MIN_TAP, press } from '../theme'
 import { useTheme } from '../ThemeProvider'
 
 export function Pressable({
@@ -73,7 +73,7 @@ export function Pressable({
         ...(checkable ? { checked: Boolean(selected) } : {}),
       }}
       {...(checkable ? { 'aria-checked': Boolean(selected) } : {})}
-      hitSlop={8}
+      hitSlop={HIT_SLOP}
       style={({ pressed }) => {
         const scale = resolvePressScale({
           pressed,

@@ -54,6 +54,7 @@ export {
  * because the generated set has no name for a 1.5-px border or an 11-px chip.
  */
 export {
+  HIT_SLOP,
   MIN_TAP,
   actionBar,
   barRadius,
@@ -69,6 +70,7 @@ export {
   segmented,
   sheet,
   statRow,
+  webLayout,
 } from './tokens'
 
 export type { AccentName }

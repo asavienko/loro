@@ -4,16 +4,28 @@ Guidance for Claude Code working in this repository.
 
 ## What this is
 
-**Loro** — a mobile app (iOS + Android) that teaches Spanish by the phrase.
+**Loro** — a mobile app (iOS + Android) that teaches Spanish, Bulgarian, and Russian by the phrase.
 
 Early implementation. **What exists:** the docs, 7 of the v1.1 design package's 23 learner screens
-plus the app shell in `apps/mobile/app/`, an API with 10 endpoints over an in-memory store, the Rust
-core, the design tokens, a 31-phrase catalog, and the local persistence layer (schema, migrations,
-repositories, outbox — driver-agnostic and tested against real SQLite), plus a dev-only generated
-token/component workbench. 451 JS/TS tests, 131 Rust tests, and 66 distinct browser E2E tests pass.
-**What doesn't:** the native modules (audio, speech, ASR, widgets), the on-device SQLite driver, and
-the other 16 learner screens — so nothing runnable today exercises audio or the microphone, which is
-half of what this app is, and the app store is still in memory.
+plus the Languages utility and app shell in `apps/mobile/app/`, an API with 13 endpoints over an
+in-memory store, the Rust core, the design tokens, 31-phrase Spanish/Bulgarian/Russian starter
+catalogs (new translations await bilingual review), and the local persistence layer (schema,
+migrations, repositories, outbox — driver-agnostic and tested against real SQLite), plus a dev-only
+generated token/component workbench. 570 JS/TS tests, 131 Rust tests, and 122 distinct browser E2E
+tests cover the implemented behavior. **What doesn't:** the native modules (audio, speech, ASR,
+widgets), the on-device SQLite driver, and the other 16 learner screens — so nothing runnable today
+exercises audio or the microphone, which is half of what this app is, and the app store is still in
+memory.
+
+**The shared spine/switcher now wraps Today, Add, Progress, Stream, Refrain, and phrase detail.**
+`src/lib/navigation.ts` declares the built hubs used by the switcher and Today's rail. Today owns
+its root header and day-as-hairline-rows treatment; other routes retain their stack header with a
+Today escape for cold entries. Onboarding keeps step-back navigation. More, ongoing work, durable
+resume, session exits and travelling audio still belong to plans 56/59/62/64/81.
+
+API contracts now live in `packages/core/src/api/` with current/target/draft entry points and
+generated OpenAPI. `pnpm check` includes contract drift checks. They are not wired into Nest or the
+mobile runtime; [the contract guide](docs/architecture/api-contracts.md) records that boundary.
 
 ## Keep this file current
 
@@ -93,7 +105,7 @@ prototype-only and **must not** be carried into the app — see the divergence t
   that isn't about regenerating it.
 - **Plans live in `plans/`, numbered.** One markdown file per plan: a two-digit number, then
   kebab-case named for the topic — `plans/60-authoritative-core-maths.md`. The active roadmap is
-  54–83 today; 01–52 are under `plans/archive/2026-07-30/`, and completed plan 53 remains at its
+  54–87 today; 01–52 are under `plans/archive/2026-07-30/`, and completed plan 53 remains at its
   protected original path. A new plan takes the next free number and gets a row in
   [`plans/README.md`](plans/README.md). **Numbers are never reused** — a gap is left rather than
   backfilled, so a link written against a number can't come to mean a different plan. Not in
@@ -116,7 +128,11 @@ prototype-only and **must not** be carried into the app — see the divergence t
   text-scale and coverage-guard suites all read, so one row buys all three, and
   `route-coverage.spec.ts` fails if a route has no state. A behavior-preserving refactor should keep
   the existing E2E expectations unchanged and green; change expectations only when the intended
-  product behavior changes.
+  product behavior changes. **A semantic locator cannot see geometry** — a chart whose segments were
+  0 px tall kept its legend, its counts and its summary and passed every suite — so a bar, a chart
+  or a fill that states a number belongs in [`e2e/render.spec.ts`](apps/mobile/e2e/render.spec.ts),
+  which measures the rendering against what the same page says in words. It is not a screenshot
+  suite and must not become one.
 - **Layer boundaries in the app are lint-enforced**, not conventional
   ([mobile-app.md](docs/architecture/mobile-app.md#layers)). If an import fails lint, you're
   crossing a boundary.
@@ -124,11 +140,12 @@ prototype-only and **must not** be carried into the app — see the divergence t
   text, never `accent`). The lint rule catches hex, `rgb()`/`rgba()`/`hsl()` **and** named CSS
   colours — `transparent` is the one permitted keyword. `accent.tint` is the selected-state overlay
   and `surface.scrim` the sheet backdrop; both were hardcoded six times before the rule saw them.
-- **No learner-facing string literal in `apps/mobile/app/**`.** Every one lives in
-  [`src/lib/copy.ts`](apps/mobile/src/lib/copy.ts), interpolated ones as functions with named
-  parameters. It sits in `src/lib/` because that is the leaf layer, so `store/` (which raises
-  toasts) and `ui/` and `app/` can all import it. **The E2E suite matches ~110 of these strings by
-  accessible name or visible text**, so a reworded string is a failing suite, not a cosmetic change.
+- **No learner-facing string literal in `apps/mobile/app/**`.** Every one is accessed through
+  [`src/lib/copy.ts`](apps/mobile/src/lib/copy.ts), backed by bundled resources in `src/lib/i18n/`,
+  with named interpolation parameters. It sits in `src/lib/` because that is the leaf layer, so
+  `store/` (which raises toasts) and `ui/` and `app/` can all import it. **The E2E suite matches
+  ~110 of these strings by accessible name or visible text**, so a reworded string is a failing
+  suite, not a cosmetic change.
 - **A screen composes; it does not draw.** Route files hold named sub-components and hooks; anything
   with two or more call sites belongs in `src/ui/primitives/` (domain-free) or `src/ui/components/`
   (may take domain types, never the store, never `copy`). A block with ONE call site stays local to
@@ -143,6 +160,16 @@ prototype-only and **must not** be carried into the app — see the divergence t
   `clock.streakDay()` — they are
   [two different keys](docs/architecture/scheduling.md#two-day-keys-not-one) and picking the wrong
   one is a correctness bug, not a style choice.
+- **A local write owns some columns and not others.** `upsert` never touches `field_hlc` (the
+  merge's) or `deleted_at` (`softDelete`'s), so a stale write cannot resurrect a tombstone or erase
+  another device's clocks. `INSERT OR REPLACE` is banned in `persistence/` for exactly this reason —
+  it is a delete-then-insert, so every column the incoming row does not carry silently reverts to
+  its default. Use `ON CONFLICT … DO UPDATE` over the columns the write owns, and there is
+  [no ORM on the client](docs/architecture/adr/0003-offline-first-sqlite-sync.md#amendment--2026-07-30--handwritten-sql-on-the-client-no-orm).
+- **Eligibility is one rule, not four.** `isActive` / `isDue` in
+  `packages/core/src/domain/phrase.ts` decide what an engine may plan with. The SQL tables express
+  the same rule as a `WHERE` clause, and `apps/mobile/src/data/persistence.test.ts` asserts every
+  implementation returns the same ids.
 - **Practice outcomes are written only through `applyDelta`.** A screen calls `engine.record(...)`
   and hands the `ProgressDelta` to the store; nothing else writes a progress field. Which fields are
   increments, which absolute, and which monotonic is declared on `ProgressDelta`
@@ -157,7 +184,7 @@ be off PATH.
 
 ```bash
 pnpm check                          # the gate: 23 turbo tasks, all green today
-pnpm test:e2e                       # 62 learner tests: routes/states, clock, a11y, text scale
+pnpm test:e2e                       # 118 learner tests: routes/states, clock, a11y, text scale
 pnpm test:e2e:workbench             # 3 tests: dev-only tokens/component inspection surface
 pnpm test:e2e:bundle                # the @smoke subset against the production web export
 pnpm --filter @loro/api dev         # :3000 — no Docker, no keys, no database
@@ -209,7 +236,7 @@ npx expo start --web                # from apps/mobile — fastest way to see th
 | `apps/mobile/e2e/`        | Playwright web E2E for every implemented route and cross-screen flow      |
 | `apps/api/`               | NestJS backend                                                            |
 | `packages/core/`          | Shared TS domain, engine contracts, API schemas — **used by app AND api** |
-| `…/core/src/persistence/` | SQLite schema, migrations, repositories, outbox. Driver-agnostic          |
+| `…/core/src/persistence/` | Schema, migrations, repositories, outbox. Handwritten SQL, no ORM         |
 | `apps/mobile/src/data/`   | Node SQLite test driver today; plan 59 adds the on-device driver          |
 | `packages/core-rs/`       | Rust: FSRS, sync merge, ranking, DSP. All reproducible maths              |
 | `packages/design-tokens/` | Tokens extracted from the blueprint + generators                          |
@@ -246,3 +273,13 @@ quality gate. Work whose dependencies do not cross those gates should continue.
 
 Per the global instruction: use `uv run python3 ...` and `uv add <pkg>`. Bare `python`/`pip` are
 intentionally blocked. There is no Python in this project today; content tooling is TypeScript.
+
+## Multilingual work (plan 87)
+
+The UI follows the native language (`en`, `bg`, `ru`); targets are `es-ES`, `bg-BG`, `ru-RU`,
+excluding matching pairs. Use `loadLearningCatalog`, neutral targetText/translation views and the
+reactive `copy.ts` adapter over bundled i18next/ICU resources in `src/lib/i18n/`. Shared UI receives
+translated props. The Languages route is reachable from Today's switcher. Course progress and resume
+state are separate; the streak is global. Schema 2 repositories exist, but plan 59 still owns device
+persistence. New linguistic content is pending bilingual review; audio/ASR/DSP capabilities remain
+disabled.

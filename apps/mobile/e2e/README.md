@@ -44,7 +44,7 @@ structurally inexpressible before, and each found real defects on its first run.
 | Behavior, per screen       | `onboarding` `today` `add` `phrase-detail` `stream` `refrain` `progress` | Every implemented route, its states, and the mutations between them                                    |
 | **The clock**              | `day-boundary.spec.ts`                                                   | Both day keys, the four-hour streak grace either side, DST, rollover at all reachable call sites       |
 | **Multi-day time**         | `progression.spec.ts`                                                    | Streaks past two days, a missed day, graduation over four lock-in days — consecutive and not           |
-| **The rendered a11y tree** | `accessibility.spec.ts`                                                  | axe over 20 states, `aria-checked`, named progress bars, live regions, 44 px targets, keyboard-only    |
+| **The rendered a11y tree** | `accessibility.spec.ts`                                                  | axe over 21 states, `aria-checked`, named progress bars, live regions, 44 px targets, keyboard-only    |
 | **Text size**              | `text-scale.spec.ts`                                                     | 200% and 310%, text-only: no clipping, no horizontal scroll, nothing pushed out of reach               |
 | **Odd interactions**       | `interactions.spec.ts`                                                   | Toast expiry on its real timings, browser Forward, a double-pressed rep, empty states, cold deep links |
 | The contract itself        | `route-coverage.spec.ts`                                                 | Every route has a state, every state cites a spec section, names are unique                            |

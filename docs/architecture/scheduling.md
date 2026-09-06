@@ -247,8 +247,16 @@ Three waves (`Loro.dc.html:3306–3310`), spaced for real spacing effects. Defau
 wave stays available until midnight local. Missing a wave is not a failure — the reps simply move to
 the next one.
 
-The defaults/settings shape exist today; timed wave enforcement, completion persistence, local
-notification scheduling, and relaunch-safe behavior do not. Plan 64 owns the production loop.
+The defaults/settings shape exist today, and `refrain_day.waves` is a readable, writable,
+reopen-safe column on both persistence implementations (`RefrainDayRow.waves` — the wave keys the
+learner finished). Timed wave enforcement, a WRITER for that column, local notification scheduling,
+and relaunch-safe behavior do not exist. Plan 64 owns the production loop.
+
+What Today does with that today is **presentation only**: `apps/mobile/src/lib/waves.ts` marks the
+last wave whose time has arrived as the next one — before the first arrives, the first — so the day
+list and the CTA name the wave the clock is on. Earlier waves recede and say nothing about whether
+they were practised, because no per-wave completion is recorded; and nothing is enforced, so the
+Refrain stays reachable at any hour, exactly as it was when readiness was a position in an array.
 
 ### Latency
 

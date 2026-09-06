@@ -1,33 +1,9 @@
 /** Catalog types. No platform runtime, so every consumer can import them freely. */
 
-import { BROWSABLE_THEMES, type BrowsableTheme } from '@loro/core'
+import { BROWSABLE_THEMES } from '@loro/core'
 
-export interface WordGloss {
-  es: string
-  gloss: string
-  /** Required when `es` is a fragment: '¿Dón' → 'dónde'. The chips are tappable. */
-  say?: string
-}
-
-export interface CatalogPhrase {
-  id: string
-  es: string
-  en: string
-  theme: BrowsableTheme
-  emoji: string
-  register?: 'neutral' | 'casual' | 'formal'
-  cefr?: 'A1' | 'A2' | 'B1' | 'B2'
-  resp?: string
-  resp_ipa?: string
-  words?: WordGloss[]
-  example?: { es: string; en: string }
-  hint?: string
-  note?: string
-  syl?: { t: string; stress: number; dur: number }[]
-  f0_native?: number[]
-  audio?: { uri: string; sha256: string; ms: number }
-  deprecated_by?: string
-}
+export type { CatalogPhrase, WordGloss } from '@loro/core/api/catalog'
+import type { CatalogPhrase } from '@loro/core/api/catalog'
 
 export interface Scenario {
   id: string

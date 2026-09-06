@@ -57,8 +57,8 @@ export function blankPhraseState(
 
 /** What the learner types (or imports, or photographs) when the phrase is their own. */
 export interface OwnPhraseDraft {
-  es: string
-  en: string
+  targetText: string
+  translation: string
   theme?: Theme
   emoji?: string
 }
@@ -83,8 +83,8 @@ export const OWN_PHRASE_FALLBACK: { readonly theme: Theme; readonly emoji: strin
 export function newOwnPhrase(id: UserPhraseId, draft: OwnPhraseDraft, now: number): PhraseState {
   return {
     ...blankPhraseState(id, null, 'custom', now),
-    ownEs: draft.es,
-    ownEn: draft.en,
+    ownEs: draft.targetText,
+    ownEn: draft.translation,
     // Resolved once at write time so the stored row is complete rather than depending on
     // a render-time default. Same constant `toView` falls back to.
     ownTheme: draft.theme ?? OWN_PHRASE_FALLBACK.theme,

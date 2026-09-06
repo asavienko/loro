@@ -27,12 +27,12 @@ fn phrase(i: usize) -> PhraseState {
             _ => Difficulty::Hard,
         },
         tags: vec![],
-        loved: i % 13 == 0,
-        learned: i % 17 == 0,
+        loved: i.is_multiple_of(13),
+        learned: i.is_multiple_of(17),
         plays: (i % 11) as u32,
         reps: (i % 7) as u32,
         last_practiced_at: Some(1_785_231_660_000 - (i as i64 % 30) * 86_400_000),
-        srs_due: if i % 5 == 0 {
+        srs_due: if i.is_multiple_of(5) {
             Some(1_785_231_660_000)
         } else {
             None

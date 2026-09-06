@@ -6,7 +6,8 @@
  * single front door to the design system.
  */
 
-export { MIN_TAP, barRadius, border } from './sizing'
+export { HIT_SLOP, MIN_TAP, barRadius, border } from './sizing'
+export { webLayout } from './webLayout'
 export {
   actionBar,
   cardHeader,

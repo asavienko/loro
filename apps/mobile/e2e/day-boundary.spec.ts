@@ -19,24 +19,34 @@
 import type { Locator, Page } from '@playwright/test'
 import { atInstant, jumpTo, returnToForeground } from './clock'
 import { expect, onboard, test } from './fixtures'
-import { backToToday, click, doOneRep, lockIn, openProgress, statTile, streakValue } from './states'
+import {
+  backToToday,
+  doOneRep,
+  lockIn,
+  openProgress,
+  repsTodayRow,
+  startWave,
+  streakValue,
+} from './states'
 
-test('the weekday label names the learner’s day, not the runner’s', async ({ page }) => {
+test('the date line names the learner’s day, not the runner’s', async ({ page }) => {
   await atInstant(page, '2026-03-10T22:00')
   await onboard(page)
 
-  await expect(page.getByText('Tuesday · the daily refrain')).toBeVisible()
+  // The v1.1 root header prints the real date, in the device's own locale — pinned to en-US
+  // and Europe/Madrid for the suite (`config.shared.mjs`).
+  await expect(page.getByText('Tuesday, March 10')).toBeVisible()
 })
 
 test('a new day clears yesterday’s reps and lock-ins from Today', async ({ page }) => {
   await atInstant(page, '2026-03-10T22:00')
   await onboard(page)
 
-  await click(page, 'Start the wave →')
+  await startWave(page)
   await lockIn(page)
   await page.goBack()
   await expect(page.getByText('1 of 5 locked in')).toBeVisible()
-  await expect(statTile(page, 'reps today', 6)).toBeVisible()
+  await expect(repsTodayRow(page, 6)).toBeVisible()
 
   // A phone asleep across midnight: no timer fired, the learner just picked it up again.
   await jumpTo(page, '2026-03-11T09:00')
@@ -44,9 +54,9 @@ test('a new day clears yesterday’s reps and lock-ins from Today', async ({ pag
 
   // Nothing has been practised today, so every number on the screen must say so —
   // non-negotiable 2. Yesterday's `automaticity` and `repsToday` are still on the row.
-  await expect(page.getByText('Wednesday · the daily refrain')).toBeVisible()
+  await expect(page.getByText('Wednesday, March 11')).toBeVisible()
   await expect(page.getByText('0 of 5 locked in')).toBeVisible()
-  await expect(statTile(page, 'reps today', 0)).toBeVisible()
+  await expect(repsTodayRow(page, 0)).toBeVisible()
   await expect(page.getByText('Locked', { exact: true })).toHaveCount(0)
 })
 
@@ -55,14 +65,14 @@ test('entering the Refrain on a new day rolls the set without a foreground event
 }) => {
   await atInstant(page, '2026-03-10T22:00')
   await onboard(page)
-  await click(page, 'Start the wave →')
+  await startWave(page)
   await lockIn(page)
   await page.goBack()
 
   // Deliberately no `returnToForeground` — this covers the second of the three call sites
   // in `src/store/dayRollover.ts`, the one on entry to the Refrain.
   await jumpTo(page, '2026-03-11T09:00')
-  await click(page, 'Start the wave →')
+  await startWave(page)
 
   await expect(page.getByText('Phrase 1 / 5')).toBeVisible()
   await expect(page.getByText('Locked in for today')).toBeHidden()
@@ -114,7 +124,7 @@ test('a session past the grace window starts a second streak day', async ({ page
 test('an earned milestone survives the next morning’s first rep', async ({ page }) => {
   await atInstant(page, '2026-03-10T22:00')
   await onboard(page)
-  await click(page, 'Start the wave →')
+  await startWave(page)
   await lockIn(page)
   await page.goBack()
 

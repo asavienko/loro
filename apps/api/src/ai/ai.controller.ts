@@ -1,8 +1,10 @@
+import type { LanguagePair } from '@loro/core'
+import { LoroError } from '../common/errors.js'
 import { Body, Controller, Get, Inject, Post } from '@nestjs/common'
 import { AiService } from './ai.service.js'
 import type { Scene } from './scene.js'
 
-interface SceneRequest {
+interface SceneRequest extends Partial<LanguagePair> {
   theme?: string
   level?: string
 }
@@ -31,6 +33,12 @@ export class AiController {
    */
   @Post('scene')
   async scene(@Body() body: SceneRequest): Promise<SceneResponse> {
+    if ((body.nativeLanguage ?? 'en') !== 'en' || (body.targetLocale ?? 'es-ES') !== 'es-ES') {
+      throw new LoroError(
+        'VALIDATION_FAILED',
+        'AI scenes currently support English to Spanish only',
+      )
+    }
     const { id, cached, fallback, scene } = await this.ai.scene(body.theme)
     return { scene_id: id, cached, fallback, scene }
   }

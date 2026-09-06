@@ -23,22 +23,24 @@ describe('toView', () => {
     if (cat === undefined) return
 
     const view = toView(blankPhraseState(rowId, cat.id as CatalogPhraseId, 'starter', AT))
-    expect(view.es).toBe(cat.es)
-    expect(view.en).toBe(cat.en)
+    expect(view.targetText).toBe(cat.es)
+    expect(view.translation).toBe(cat.en)
     expect(view.theme).toBe(cat.theme)
     expect(view.emoji).toBe(cat.emoji)
-    expect(view.catalog).toBe(cat)
+    expect(view.catalog?.id).toBe(cat.id)
   })
 
   it('renders a learner-authored row from the row itself', () => {
-    const view = toView(newOwnPhrase(rowId, { es: 'Me lo apunto', en: "I'll note that down" }, AT))
-    expect(view.es).toBe('Me lo apunto')
+    const view = toView(
+      newOwnPhrase(rowId, { targetText: 'Me lo apunto', translation: "I'll note that down" }, AT),
+    )
+    expect(view.targetText).toBe('Me lo apunto')
     expect(view.catalog).toBeNull()
   })
 
   it('agrees with the write-time fallback for a row that named no theme or emoji', () => {
     // Written by the factory…
-    const written = toView(newOwnPhrase(rowId, { es: 'Vale', en: 'OK' }, AT))
+    const written = toView(newOwnPhrase(rowId, { targetText: 'Vale', translation: 'OK' }, AT))
     // …and a row that reached the store without those fields at all.
     const bare = toView({
       ...blankPhraseState(rowId, null, 'custom', AT),
@@ -55,8 +57,8 @@ describe('toView', () => {
   it('falls back to empty text rather than showing a missing catalog id', () => {
     // Content ships independently of the app: a row can outlive the phrase it joined to.
     const view = toView(blankPhraseState(rowId, 'gone-in-v2' as CatalogPhraseId, 'discover', AT))
-    expect(view.es).toBe('')
-    expect(view.en).toBe('')
+    expect(view.targetText).toBe('')
+    expect(view.translation).toBe('')
     expect(view.catalog).toBeNull()
   })
 })

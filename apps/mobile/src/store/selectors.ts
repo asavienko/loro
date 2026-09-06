@@ -10,7 +10,10 @@ import { countMasteryBuckets, MASTERY_BUCKETS } from '@loro/core'
 import { useApp } from './store'
 import { toView, type PhraseView } from './view'
 
-export const useViews = (): PhraseView[] => useApp((s) => s.phrases).map(toView)
+export const useViews = (): PhraseView[] => {
+  useApp((s) => s.nativeLanguage)
+  return useApp((s) => s.phrases).map(toView)
+}
 
 /**
  * Phrase counts per mastery bucket, in histogram order.

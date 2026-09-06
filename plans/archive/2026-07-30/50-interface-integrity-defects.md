@@ -66,8 +66,8 @@ was tapped. No tag-filtered session exists anywhere in the app. So the toast nam
 category, and then the learner gets whatever today's set already was.
 
 This is worse than a missing feature: `P4-06` and
-[functional-spec.md §15](../../../docs/product/functional-spec.md#15-progress) call this row "the tag
-thread closing its loop", and `copy-and-tone.md` rule 3 exists specifically so a toast can be
+[functional-spec.md §15](../../../docs/product/functional-spec.md#15-progress) call this row "the
+tag thread closing its loop", and `copy-and-tone.md` rule 3 exists specifically so a toast can be
 trusted to state a real consequence. A toast that lies about a consequence undoes the reason the
 consequence toasts exist.
 

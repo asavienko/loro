@@ -35,7 +35,7 @@ function lines(file: string): string[] {
 }
 
 /** Spanish text is any JSX text node holding ¿ ¡ ñ or an accented vowel. */
-const SPANISH = /[¿¡ñáéíóúÁÉÍÓÚÑ]/
+const SPANISH = /[¿¡ñáéíóúÁÉÍÓÚÑ\u0400-\u04ff]/
 
 /**
  * An explicit, reasoned waiver: `// a11y-lang: <why>` on the line or the one above.
@@ -85,7 +85,7 @@ export function checkSpanishLang(): Finding[] {
         findings.push({
           file,
           line: i + 1,
-          message: `Spanish text without lang="es-ES" — a screen reader will read it in English`,
+          message: `Learning-language text without an explicit lang attribute`,
         })
       }
     })

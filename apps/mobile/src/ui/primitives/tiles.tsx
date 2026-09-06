@@ -2,7 +2,7 @@
  * The two tiles: a decorative emoji square, and a number with its label.
  */
 
-import { Text as RNText, View } from 'react-native'
+import { Platform, Text as RNText, View } from 'react-native'
 import { ink, radius, size as designSize, space, surface } from '../theme'
 import { Card } from './surfaces'
 import { Text } from './Text'
@@ -87,7 +87,11 @@ export function StatTile({ value, label }: { value: string; label: string }) {
   return (
     <Card
       padding={space['3.5']}
-      style={{ flex: 1, alignItems: 'center' }}
+      style={{
+        flex: 1,
+        alignItems: 'center',
+        ...(Platform.OS === 'web' ? { minWidth: 'auto' as const } : {}),
+      }}
       accessible
       accessibilityLabel={`${label}: ${value}`}
     >

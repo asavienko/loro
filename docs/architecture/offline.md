@@ -20,8 +20,13 @@ E2E coverage protects the implemented web states; it must not be cited as eviden
 offline audio, microphone, durability or sync.
 
 The persistence foundation does exist: `packages/core/src/persistence/` contains a driver-agnostic
-SQLite schema, repositories and outbox tested against real SQLite. It becomes product behaviour only
-after the app store writes through it, hydrates from it on launch, and a device driver exists.
+SQLite schema, repositories and outbox tested against real SQLite — handwritten SQL over a
+six-method driver interface, deliberately and with no ORM
+([ADR-0003's amendment](adr/0003-offline-first-sqlite-sync.md#amendment--2026-07-30--handwritten-sql-on-the-client-no-orm)).
+A local write preserves the tombstone and the per-field merge history it does not own, the outbox
+never folds an edit across a delete, and a file-backed database is proved to survive a close and
+reopen. It becomes product behaviour only after the app store writes through it, hydrates from it on
+launch, and a device driver exists.
 
 ## The acceptance test
 

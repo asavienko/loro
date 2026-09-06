@@ -162,6 +162,40 @@ export const MIGRATIONS: readonly Migration[] = [
       CREATE TABLE kv (k TEXT PRIMARY KEY, v TEXT NOT NULL);
     `,
   },
+  {
+    version: 2,
+    name: 'language_courses',
+    up: `
+      ALTER TABLE settings ADD COLUMN language_pair TEXT;
+      ALTER TABLE user_phrase ADD COLUMN target_locale TEXT;
+      ALTER TABLE user_phrase ADD COLUMN own_meaning_language TEXT;
+      CREATE INDEX user_phrase_course ON user_phrase(user_id, target_locale);
+      ALTER TABLE refrain_day RENAME TO refrain_day_legacy;
+      CREATE TABLE refrain_day (
+        user_id TEXT NOT NULL,
+        target_locale TEXT NOT NULL DEFAULT 'es-ES',
+        local_day TEXT NOT NULL,
+        set_ids TEXT NOT NULL DEFAULT '[]',
+        waves TEXT NOT NULL DEFAULT '[]',
+        substituted TEXT NOT NULL DEFAULT '[]',
+        PRIMARY KEY (user_id, target_locale, local_day)
+      );
+      INSERT INTO refrain_day(user_id, local_day, set_ids, waves, substituted)
+        SELECT user_id, local_day, set_ids, waves, substituted FROM refrain_day_legacy;
+      DROP TABLE refrain_day_legacy;
+      CREATE TABLE course_session (
+        user_id TEXT NOT NULL,
+        target_locale TEXT NOT NULL,
+        onboarded INTEGER NOT NULL DEFAULT 0,
+        selected_id TEXT,
+        stream_cursor INTEGER NOT NULL DEFAULT 0,
+        refrain_session TEXT,
+        PRIMARY KEY (user_id, target_locale)
+      );
+      INSERT INTO course_session(user_id, target_locale, onboarded)
+        SELECT user_id, 'es-ES', onboarded FROM settings;
+    `,
+  },
 ]
 
 /** The newest schema this build understands. */

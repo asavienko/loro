@@ -13,7 +13,8 @@
  * scale that drives Dynamic Type does not exist in a browser. Browser zoom is not a
  * substitute: it scales layout too, so everything grows together and nothing ever overflows,
  * which is the one outcome that would make this suite useless. So the scale is applied the
- * way Dynamic Type applies it — TEXT ONLY — by multiplying every inline `font-size` and
+ * way the runtime typography provider applies it — TEXT ONLY — by multiplying font size,
+ * line height and letter spacing and
  * leaving every box, gap and padding alone, then letting flexbox reflow.
  *
  * Two steps rather than five: 200% is the promise in the spec, and 310% is iOS's largest
@@ -30,7 +31,7 @@
 
 import type { Page } from '@playwright/test'
 import { expect, onboard, test } from './fixtures'
-import { enter, STATES } from './states'
+import { enter, START_WAVE, STATES, todayMarker } from './states'
 
 /** 200% is the documented promise; 310% is iOS's largest accessibility size. */
 const SCALES = [2, 3.1] as const
@@ -55,7 +56,7 @@ test('the primary action stays reachable at 310% text', async ({ page }) => {
 
   // Today's bottom bar is absolutely positioned, so it is the one most likely to be pushed
   // out of the viewport or covered when everything above it grows.
-  const start = page.getByRole('button', { name: 'Start the wave →' })
+  const start = page.getByRole('button', { name: START_WAVE })
   await expect(start).toBeVisible()
   await expect(start).toBeInViewport()
 
@@ -82,13 +83,13 @@ test('onboarding can still be completed at 310% text', async ({ page }) => {
 
   await expect(page.getByText("You're all set")).toBeVisible()
   await page.getByRole('button', { name: 'Start learning 🎧' }).click()
-  await expect(page.getByText('Today', { exact: true })).toBeVisible()
+  await expect(todayMarker(page)).toBeVisible()
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Multiply every inline `font-size` by `factor`, leaving boxes untouched.
+ * Multiply inline typography metrics by `factor`, leaving boxes untouched.
  *
  * Idempotent per element: the original size is stashed in a data attribute, so calling this
  * twice on the same page does not compound.
@@ -96,10 +97,12 @@ test('onboarding can still be completed at 310% text', async ({ page }) => {
 async function scaleText(page: Page, factor: number): Promise<void> {
   await page.evaluate((f) => {
     for (const node of Array.from(document.querySelectorAll<HTMLElement>('[style*="font-size"]'))) {
-      const original = node.dataset.baseFontSize ?? node.style.fontSize
-      node.dataset.baseFontSize = original
-      const px = Number.parseFloat(original)
-      if (!Number.isNaN(px)) node.style.fontSize = `${px * f}px`
+      for (const property of ['fontSize', 'lineHeight', 'letterSpacing'] as const) {
+        const key = `base${property}`
+        const original = node.dataset[key] ?? node.style[property]
+        node.dataset[key] = original
+        if (original.endsWith('px')) node.style[property] = `${Number.parseFloat(original) * f}px`
+      }
     }
   }, factor)
 }

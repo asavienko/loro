@@ -11,11 +11,9 @@ const port = 8084
 export default defineConfig({
   testDir: './workbench',
   outputDir: '../../../test-results/mobile-workbench-e2e',
-  // The deliberately small subset uses bundled production typography and must compare on
-  // CI's Linux runner as well as local macOS. Font rasterization can still differ across
-  // engines/hosts, so keep this baseline narrow and review cross-platform diffs rather than
-  // expanding it into a screenshot of the whole workbench.
-  snapshotPathTemplate: '{testDir}/{testFilePath}-snapshots/{arg}{ext}',
+  // Font metrics differ by host even with bundled typography. Keep reviewed macOS/Linux
+  // baselines separate so a two-pixel height difference does not mask real component drift.
+  snapshotPathTemplate: '{testDir}/{testFilePath}-snapshots/{platform}/{arg}{ext}',
   ...sharedTiming,
   reporter: [
     ['list'],
