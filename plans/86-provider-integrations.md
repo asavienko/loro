@@ -128,13 +128,16 @@ this plan. Practice writes still use the engine/applyDelta boundary.
   text-only structured HTTP requests, mandatory parsing, provider-reported token usage, bounded
   bytes/deadline, sanitized failure codes and no automatic retries/redirects. It is not registered
   with Nest.
-- **Adapter verification:** 21 deterministic tests, including a real loopback HTTP body-stall
-  timeout. No live credentials, paid requests or learner data were used.
+- **Adapter verification:** 22 deterministic tests, including malformed UTF-8 rejection and a real
+  loopback HTTP body-stall timeout. No live credentials, paid requests or learner data were used.
 - **Repository verification:** `pnpm check` passes all 23 tasks. The rebased main baseline passes
   all 62 browser E2E tests via a temporary configuration using dedicated port 8186 and
   `reuseExistingServer: false`; the temporary file was removed. The original UI-containing baseline
   also passed 68 tests before the rebase. These establish compatibility, not completed production
   integrations.
+- **Formatting gate:** all five files in this PR pass Prettier. Repository-wide `format:check`
+  reports 158 pre-existing failures, verified by checking each flagged file's `origin/main` content
+  with the same formatter configuration. Do not rewrite authored artifacts or unrelated files here.
 - **Foundation and mobile client:** not implemented; wait for handoff, then plan 66 and
   device-persistence dependencies.
 - **Identity/account/sync:** not implemented; needs stable contracts, durable data and device

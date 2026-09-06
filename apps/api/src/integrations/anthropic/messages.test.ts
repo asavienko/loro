@@ -97,6 +97,15 @@ describe('Anthropic provider-only messages adapter', () => {
     await expect(client.generate(request)).rejects.toMatchObject({ code: 'invalid_output' })
   })
 
+  it('rejects malformed UTF-8 instead of silently substituting text before validation', async () => {
+    const bytes = Buffer.from(JSON.stringify(envelope('{"ok":true,"note":"marker"}')))
+    bytes[bytes.indexOf('marker')] = 0xff
+    const send = vi.fn<typeof fetch>().mockResolvedValue(new Response(bytes))
+    await expect(new AnthropicMessages(options, send).generate(request)).rejects.toMatchObject({
+      code: 'invalid_output',
+    })
+  })
+
   it('rejects oversized UTF-8 requests before sending', async () => {
     const { client, send } = setup(envelope(), { maxRequestBytes: 10 })
     await expect(client.generate(request)).rejects.toMatchObject({ code: 'input' })

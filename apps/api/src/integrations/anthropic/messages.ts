@@ -81,7 +81,9 @@ async function boundedJson(response: Response, limit: number): Promise<unknown> 
     reader.releaseLock()
   }
   try {
-    return JSON.parse(Buffer.concat(chunks).toString('utf8')) as unknown
+    return JSON.parse(
+      new TextDecoder('utf-8', { fatal: true }).decode(Buffer.concat(chunks)),
+    ) as unknown
   } catch {
     throw new AnthropicFailure('invalid_output')
   }

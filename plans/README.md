@@ -102,9 +102,9 @@ original path at the user's request. It is not part of the replacement queue.
 
 ## Provider integration follow-up
 
-| Plan | Outcome | Milestone | Status | Depends on |
-| --- | --- | --- | --- | --- |
-| [86](86-provider-integrations.md) | Isolated implementation of backend/provider integrations consuming plan 85 contracts | M2/M3 | 🟡 Anthropic transport implemented; remaining runtime wiring blocked by merged/verified plan 85 and feature gates | 85 contract handoff; feature plans 59, 61–63, 65–68, 71, 73–74, 76, 82–83 |
+| Plan                              | Outcome                                                                              | Milestone | Status                                                                                                            | Depends on                                                                |
+| --------------------------------- | ------------------------------------------------------------------------------------ | --------- | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| [86](86-provider-integrations.md) | Isolated implementation of backend/provider integrations consuming plan 85 contracts | M2/M3     | 🟡 Anthropic transport implemented; remaining runtime wiring blocked by merged/verified plan 85 and feature gates | 85 contract handoff; feature plans 59, 61–63, 65–68, 71, 73–74, 76, 82–83 |
 
 Plan 86 is maintained in a separate worktree and branch. Its index entry must be reconciled after
 the contract task merges, preserving plan 85's own entry and status.
