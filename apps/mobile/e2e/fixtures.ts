@@ -1,4 +1,5 @@
 import { test as base, expect, type Page } from '@playwright/test'
+import { todayMarker } from './states'
 
 export const test = base.extend<{ consoleHealth: undefined }>({
   consoleHealth: [
@@ -66,7 +67,7 @@ export async function onboard(page: Page, choices: OnboardingChoices = {}): Prom
   await expect(page.getByText("You're all set")).toBeVisible()
   await page.getByRole('button', { name: 'Start learning 🎧' }).click()
   await expect(page).toHaveURL(/\/$/)
-  await expect(page.getByText('Today', { exact: true })).toBeVisible()
+  await expect(todayMarker(page)).toBeVisible()
 }
 
 export async function openFirstPhrase(page: Page): Promise<void> {

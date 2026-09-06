@@ -1,0 +1,1877 @@
+{
+  "openapi": "3.1.0",
+  "jsonSchemaDialect": "https://json-schema.org/draft/2020-12/schema",
+  "info": {
+    "title": "Loro current API",
+    "version": "1.0.0",
+    "description": "Observed development API. No authentication, tenant isolation or durable storage. Not for multi-user deployment."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000/v1"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "operationId": "health",
+        "summary": "Liveness",
+        "description": "No auth. Liveness is independent of dependencies.",
+        "tags": [
+          "health"
+        ],
+        "security": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Liveness",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/health_200"
+                },
+                "examples": {
+                  "illustrative": {
+                    "value": {
+                      "status": "ok",
+                      "version": "0.0.0"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-loro-auth-boundary": "none",
+        "x-loro-status": "implemented",
+        "x-loro-owner-plan": 66,
+        "x-loro-requirements": [
+          "F-04"
+        ]
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "operationId": "readiness",
+        "summary": "WASM readiness",
+        "description": "503 is JSON checks, not RFC 9457. Content and WASM only.",
+        "tags": [
+          "health"
+        ],
+        "security": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "WASM readiness",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/readiness_200"
+                },
+                "examples": {
+                  "illustrative": {
+                    "value": {
+                      "status": "ok",
+                      "checks": {
+                        "content": "ok",
+                        "merge": "ok"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/readiness_200"
+                },
+                "examples": {
+                  "illustrative": {
+                    "value": {
+                      "status": "degraded",
+                      "checks": {
+                        "content": "ok",
+                        "merge": "unavailable"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-loro-auth-boundary": "none",
+        "x-loro-status": "implemented",
+        "x-loro-owner-plan": 66,
+        "x-loro-requirements": [
+          "F-04"
+        ]
+      }
+    },
+    "/content/manifest": {
+      "get": {
+        "operationId": "contentManifest",
+        "summary": "Bundled manifest",
+        "description": "Real membership counts; no ETag or Cache-Control.",
+        "tags": [
+          "content"
+        ],
+        "security": [],
+        "parameters": [
+          {
+            "name": "lang",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/contentManifest_query_lang"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bundled manifest",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentManifest_200"
+                },
+                "examples": {
+                  "illustrative": {
+                    "value": {
+                      "catalog_version": 0,
+                      "lang": "es-ES",
+                      "phrase_count": 0,
+                      "packs": [],
+                      "scenarios": [],
+                      "audio_base": "https://cdn.loro.app/audio/",
+                      "min_app_version": "1.0.0"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentManifest_400"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentManifest_400"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentManifest_400"
+                }
+              }
+            }
+          }
+        },
+        "x-loro-auth-boundary": "none",
+        "x-loro-status": "implemented",
+        "x-loro-owner-plan": 66,
+        "x-loro-requirements": [
+          "F-04"
+        ]
+      }
+    },
+    "/content/diff": {
+      "get": {
+        "operationId": "contentDiff",
+        "summary": "Bundled catalog diff",
+        "description": "from is parsed with parseInt; older versions receive whole catalog; from=0 requests resync; no history.",
+        "tags": [
+          "content"
+        ],
+        "security": [],
+        "parameters": [
+          {
+            "name": "lang",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/contentManifest_query_lang"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/contentDiff_query_from"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bundled catalog diff",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentDiff_200"
+                },
+                "examples": {
+                  "illustrative": {
+                    "value": {
+                      "from": 0,
+                      "to": 0,
+                      "upserts": [],
+                      "deprecations": [],
+                      "full_resync_required": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentManifest_400"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentManifest_400"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentManifest_400"
+                }
+              }
+            }
+          }
+        },
+        "x-loro-auth-boundary": "none",
+        "x-loro-status": "implemented",
+        "x-loro-owner-plan": 66,
+        "x-loro-requirements": [
+          "F-04"
+        ]
+      }
+    },
+    "/content/pack": {
+      "get": {
+        "operationId": "contentPack",
+        "summary": "Pack by query",
+        "description": "Unknown pack returns 422; preserves authored membership order.",
+        "tags": [
+          "content"
+        ],
+        "security": [],
+        "parameters": [
+          {
+            "name": "lang",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/contentManifest_query_lang"
+            }
+          },
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/contentPack_query_id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pack by query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentPack_200"
+                },
+                "examples": {
+                  "illustrative": {
+                    "value": {
+                      "id": "example",
+                      "label": "Illustrative empty pack",
+                      "promised_count": 0,
+                      "phrases": []
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentManifest_400"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentManifest_400"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentManifest_400"
+                }
+              }
+            }
+          }
+        },
+        "x-loro-auth-boundary": "none",
+        "x-loro-status": "implemented",
+        "x-loro-owner-plan": 66,
+        "x-loro-requirements": [
+          "F-04"
+        ]
+      }
+    },
+    "/sync/push": {
+      "post": {
+        "operationId": "syncPush",
+        "summary": "Development merge harness",
+        "description": "Nest default 201. Unscoped memory. Partial rejection: schema_unknown or VALIDATION_FAILED. Field HLC objects. Input checks are incomplete; schema describes intended well-formed calls, not all accidentally accepted inputs.",
+        "tags": [
+          "sync"
+        ],
+        "security": [],
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Development merge harness",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/syncPush_201"
+                },
+                "examples": {
+                  "illustrative": {
+                    "value": {
+                      "accepted": [],
+                      "rejected": [],
+                      "conflicts": [],
+                      "server_hlc": "1721558400123:0007:device_1",
+                      "server_time": 1721558400123
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentManifest_400"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentManifest_400"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentManifest_400"
+                }
+              }
+            }
+          }
+        },
+        "x-loro-auth-boundary": "none",
+        "x-loro-status": "implemented",
+        "x-loro-owner-plan": 66,
+        "x-loro-requirements": [
+          "F-04"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/syncPush_request"
+              },
+              "examples": {
+                "illustrative": {
+                  "value": {
+                    "ops": []
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sync/pull": {
+      "post": {
+        "operationId": "syncPull",
+        "summary": "All development rows",
+        "description": "Ignores since and limit; every process row; no tenant scope; next is a placeholder HLC.",
+        "tags": [
+          "sync"
+        ],
+        "security": [],
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "All development rows",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/syncPull_201"
+                },
+                "examples": {
+                  "illustrative": {
+                    "value": {
+                      "changes": [],
+                      "next": "1721558400123:0007:device_1",
+                      "has_more": false,
+                      "server_hlc": "1721558400123:0007:device_1"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentManifest_400"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentManifest_400"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentManifest_400"
+                }
+              }
+            }
+          }
+        },
+        "x-loro-auth-boundary": "none",
+        "x-loro-status": "implemented",
+        "x-loro-owner-plan": 66,
+        "x-loro-requirements": [
+          "F-04"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/syncPull_request"
+              },
+              "examples": {
+                "illustrative": {
+                  "value": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sync/status": {
+      "post": {
+        "operationId": "syncStatus",
+        "summary": "Development diagnostic",
+        "description": "WASM availability and global row count; not production sync health.",
+        "tags": [
+          "sync"
+        ],
+        "security": [],
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Development diagnostic",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/syncStatus_201"
+                },
+                "examples": {
+                  "illustrative": {
+                    "value": {
+                      "merge": "loro-core (wasm)",
+                      "entities": 0
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-loro-auth-boundary": "none",
+        "x-loro-status": "implemented",
+        "x-loro-owner-plan": 66,
+        "x-loro-requirements": [
+          "F-04"
+        ]
+      }
+    },
+    "/ai/scene": {
+      "post": {
+        "operationId": "aiScene",
+        "summary": "Bundled scene",
+        "description": "JSON only; optional level ignored. Stub or bundled fallback, no live provider or budgets.",
+        "tags": [
+          "ai"
+        ],
+        "security": [],
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Bundled scene",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/aiScene_201"
+                },
+                "examples": {
+                  "illustrative": {
+                    "value": {
+                      "scene_id": "scene_example",
+                      "cached": false,
+                      "fallback": true,
+                      "scene": {
+                        "place": "Café",
+                        "city": "Madrid",
+                        "emoji": "☕",
+                        "role": "Camarero",
+                        "turns": [
+                          {
+                            "npc": {
+                              "es": "Un café, por favor.",
+                              "en": "A coffee, please."
+                            },
+                            "options": [
+                              {
+                                "es": "Un café, por favor.",
+                                "en": "A coffee, please.",
+                                "best": true,
+                                "tip": "A natural way to order."
+                              },
+                              {
+                                "es": "¿Qué me recomienda?",
+                                "en": "What do you recommend?",
+                                "tip": "A useful question to ask."
+                              },
+                              {
+                                "es": "¿Tienen leche?",
+                                "en": "Do you have milk?",
+                                "tip": "Ask about available milk."
+                              }
+                            ]
+                          },
+                          {
+                            "npc": {
+                              "es": "Un café, por favor.",
+                              "en": "A coffee, please."
+                            },
+                            "options": [
+                              {
+                                "es": "Un café, por favor.",
+                                "en": "A coffee, please.",
+                                "best": true,
+                                "tip": "A natural way to order."
+                              },
+                              {
+                                "es": "¿Qué me recomienda?",
+                                "en": "What do you recommend?",
+                                "tip": "A useful question to ask."
+                              },
+                              {
+                                "es": "¿Tienen leche?",
+                                "en": "Do you have milk?",
+                                "tip": "Ask about available milk."
+                              }
+                            ]
+                          },
+                          {
+                            "npc": {
+                              "es": "Un café, por favor.",
+                              "en": "A coffee, please."
+                            },
+                            "options": [
+                              {
+                                "es": "Un café, por favor.",
+                                "en": "A coffee, please.",
+                                "best": true,
+                                "tip": "A natural way to order."
+                              },
+                              {
+                                "es": "¿Qué me recomienda?",
+                                "en": "What do you recommend?",
+                                "tip": "A useful question to ask."
+                              },
+                              {
+                                "es": "¿Tienen leche?",
+                                "en": "Do you have milk?",
+                                "tip": "Ask about available milk."
+                              }
+                            ]
+                          }
+                        ],
+                        "closer": {
+                          "es": "Un café, por favor.",
+                          "en": "A coffee, please."
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentManifest_400"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentManifest_400"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentManifest_400"
+                }
+              }
+            }
+          }
+        },
+        "x-loro-auth-boundary": "none",
+        "x-loro-status": "implemented",
+        "x-loro-owner-plan": 66,
+        "x-loro-requirements": [
+          "F-04"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/aiScene_request"
+              },
+              "examples": {
+                "illustrative": {
+                  "value": {
+                    "theme": "Café"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ai/themes": {
+      "get": {
+        "operationId": "aiThemes",
+        "summary": "Bundled themes",
+        "description": "Exposes configured provider name; not provider health.",
+        "tags": [
+          "ai"
+        ],
+        "security": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Bundled themes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/aiThemes_200"
+                },
+                "examples": {
+                  "illustrative": {
+                    "value": {
+                      "themes": [
+                        "Café",
+                        "Hotel"
+                      ],
+                      "provider": "stub"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-loro-auth-boundary": "none",
+        "x-loro-status": "implemented",
+        "x-loro-owner-plan": 66,
+        "x-loro-requirements": [
+          "F-04"
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "health_200": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "ok"
+          },
+          "version": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "version"
+        ],
+        "additionalProperties": {}
+      },
+      "readiness_200": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "degraded"
+            ]
+          },
+          "checks": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "status",
+          "checks"
+        ],
+        "additionalProperties": {}
+      },
+      "contentManifest_query_lang": {
+        "type": "string",
+        "const": "es-ES"
+      },
+      "contentManifest_200": {
+        "type": "object",
+        "properties": {
+          "catalog_version": {
+            "type": "number"
+          },
+          "lang": {
+            "type": "string"
+          },
+          "phrase_count": {
+            "type": "number"
+          },
+          "packs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                },
+                "emoji": {
+                  "type": "string"
+                },
+                "count": {
+                  "type": "number"
+                },
+                "onboarding": {
+                  "type": "boolean"
+                },
+                "trip": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "id",
+                "label",
+                "emoji",
+                "count",
+                "onboarding",
+                "trip"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "scenarios": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                },
+                "emoji": {
+                  "type": "string"
+                },
+                "count": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "id",
+                "label",
+                "emoji",
+                "count"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "audio_base": {
+            "type": "string"
+          },
+          "min_app_version": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "catalog_version",
+          "lang",
+          "phrase_count",
+          "packs",
+          "scenarios",
+          "audio_base",
+          "min_app_version"
+        ],
+        "additionalProperties": {}
+      },
+      "contentManifest_400": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "detail": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "UNAUTHENTICATED",
+              "FORBIDDEN",
+              "PLAN_REQUIRED",
+              "SCHEMA_TOO_OLD",
+              "RATE_LIMITED",
+              "BUDGET_EXCEEDED",
+              "VALIDATION_FAILED",
+              "PROVIDER_UNAVAILABLE",
+              "INTERNAL",
+              "NOT_FOUND"
+            ]
+          }
+        },
+        "required": [
+          "type",
+          "title",
+          "status",
+          "code"
+        ],
+        "additionalProperties": {}
+      },
+      "contentDiff_query_from": {
+        "type": "string"
+      },
+      "contentDiff_200": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "number"
+          },
+          "to": {
+            "type": "number"
+          },
+          "upserts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "pattern": "^[a-z0-9]{2,12}$"
+                },
+                "es": {
+                  "type": "string",
+                  "minLength": 2,
+                  "maxLength": 120
+                },
+                "en": {
+                  "type": "string",
+                  "minLength": 2,
+                  "maxLength": 140
+                },
+                "theme": {
+                  "type": "string",
+                  "enum": [
+                    "Café",
+                    "Dining",
+                    "Travel",
+                    "Directions",
+                    "Shopping",
+                    "Small talk",
+                    "Survival",
+                    "Hotel"
+                  ]
+                },
+                "emoji": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 8
+                },
+                "register": {
+                  "type": "string",
+                  "enum": [
+                    "neutral",
+                    "casual",
+                    "formal"
+                  ]
+                },
+                "cefr": {
+                  "type": "string",
+                  "enum": [
+                    "A1",
+                    "A2",
+                    "B1",
+                    "B2"
+                  ]
+                },
+                "resp": {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                "resp_ipa": {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                "words": {
+                  "maxItems": 12,
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "es": {
+                        "type": "string",
+                        "maxLength": 40
+                      },
+                      "gloss": {
+                        "type": "string",
+                        "maxLength": 60
+                      },
+                      "say": {
+                        "type": "string",
+                        "maxLength": 40
+                      }
+                    },
+                    "required": [
+                      "es",
+                      "gloss"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "example": {
+                  "type": "object",
+                  "properties": {
+                    "es": {
+                      "type": "string",
+                      "maxLength": 200
+                    },
+                    "en": {
+                      "type": "string",
+                      "maxLength": 220
+                    }
+                  },
+                  "required": [
+                    "es",
+                    "en"
+                  ],
+                  "additionalProperties": false
+                },
+                "hint": {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                "note": {
+                  "type": "string",
+                  "maxLength": 240
+                },
+                "syl": {
+                  "maxItems": 24,
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "t": {
+                        "type": "string",
+                        "maxLength": 12
+                      },
+                      "stress": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "dur": {
+                        "type": "number",
+                        "exclusiveMinimum": 0
+                      }
+                    },
+                    "required": [
+                      "t",
+                      "stress",
+                      "dur"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "f0_native": {
+                  "minItems": 14,
+                  "maxItems": 14,
+                  "type": "array",
+                  "items": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  }
+                },
+                "audio": {
+                  "type": "object",
+                  "properties": {
+                    "uri": {
+                      "type": "string"
+                    },
+                    "sha256": {
+                      "type": "string",
+                      "pattern": "^[a-f0-9]{64}$"
+                    },
+                    "ms": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "uri",
+                    "sha256",
+                    "ms"
+                  ],
+                  "additionalProperties": false
+                },
+                "variants": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "lang": {
+                        "type": "string"
+                      },
+                      "es": {
+                        "type": "string",
+                        "maxLength": 120
+                      }
+                    },
+                    "required": [
+                      "lang",
+                      "es"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "deprecated_by": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "es",
+                "en",
+                "theme",
+                "emoji"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "deprecations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "deprecated_by": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "deprecated_by"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "full_resync_required": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "from",
+          "to",
+          "upserts",
+          "deprecations",
+          "full_resync_required"
+        ],
+        "additionalProperties": {}
+      },
+      "contentPack_query_id": {
+        "type": "string"
+      },
+      "contentPack_200": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "promised_count": {
+            "type": "number"
+          },
+          "phrases": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "pattern": "^[a-z0-9]{2,12}$"
+                },
+                "es": {
+                  "type": "string",
+                  "minLength": 2,
+                  "maxLength": 120
+                },
+                "en": {
+                  "type": "string",
+                  "minLength": 2,
+                  "maxLength": 140
+                },
+                "theme": {
+                  "type": "string",
+                  "enum": [
+                    "Café",
+                    "Dining",
+                    "Travel",
+                    "Directions",
+                    "Shopping",
+                    "Small talk",
+                    "Survival",
+                    "Hotel"
+                  ]
+                },
+                "emoji": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 8
+                },
+                "register": {
+                  "type": "string",
+                  "enum": [
+                    "neutral",
+                    "casual",
+                    "formal"
+                  ]
+                },
+                "cefr": {
+                  "type": "string",
+                  "enum": [
+                    "A1",
+                    "A2",
+                    "B1",
+                    "B2"
+                  ]
+                },
+                "resp": {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                "resp_ipa": {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                "words": {
+                  "maxItems": 12,
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "es": {
+                        "type": "string",
+                        "maxLength": 40
+                      },
+                      "gloss": {
+                        "type": "string",
+                        "maxLength": 60
+                      },
+                      "say": {
+                        "type": "string",
+                        "maxLength": 40
+                      }
+                    },
+                    "required": [
+                      "es",
+                      "gloss"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "example": {
+                  "type": "object",
+                  "properties": {
+                    "es": {
+                      "type": "string",
+                      "maxLength": 200
+                    },
+                    "en": {
+                      "type": "string",
+                      "maxLength": 220
+                    }
+                  },
+                  "required": [
+                    "es",
+                    "en"
+                  ],
+                  "additionalProperties": false
+                },
+                "hint": {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                "note": {
+                  "type": "string",
+                  "maxLength": 240
+                },
+                "syl": {
+                  "maxItems": 24,
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "t": {
+                        "type": "string",
+                        "maxLength": 12
+                      },
+                      "stress": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "dur": {
+                        "type": "number",
+                        "exclusiveMinimum": 0
+                      }
+                    },
+                    "required": [
+                      "t",
+                      "stress",
+                      "dur"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "f0_native": {
+                  "minItems": 14,
+                  "maxItems": 14,
+                  "type": "array",
+                  "items": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  }
+                },
+                "audio": {
+                  "type": "object",
+                  "properties": {
+                    "uri": {
+                      "type": "string"
+                    },
+                    "sha256": {
+                      "type": "string",
+                      "pattern": "^[a-f0-9]{64}$"
+                    },
+                    "ms": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "uri",
+                    "sha256",
+                    "ms"
+                  ],
+                  "additionalProperties": false
+                },
+                "variants": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "lang": {
+                        "type": "string"
+                      },
+                      "es": {
+                        "type": "string",
+                        "maxLength": 120
+                      }
+                    },
+                    "required": [
+                      "lang",
+                      "es"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "deprecated_by": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "es",
+                "en",
+                "theme",
+                "emoji"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "promised_count",
+          "phrases"
+        ],
+        "additionalProperties": {}
+      },
+      "syncPush_201": {
+        "type": "object",
+        "properties": {
+          "accepted": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "rejected": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "seq": {
+                  "type": "number"
+                },
+                "code": {
+                  "type": "string"
+                },
+                "field": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "seq",
+                "code"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "conflicts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "server_hlc": {
+            "type": "string"
+          },
+          "server_time": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "accepted",
+          "rejected",
+          "conflicts",
+          "server_hlc",
+          "server_time"
+        ],
+        "additionalProperties": {}
+      },
+      "syncPush_request": {
+        "type": "object",
+        "properties": {
+          "client_hlc": {
+            "type": "string"
+          },
+          "ops": {
+            "maxItems": 500,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "seq": {
+                  "type": "number"
+                },
+                "entity": {
+                  "type": "string"
+                },
+                "entity_id": {
+                  "type": "string"
+                },
+                "op": {
+                  "type": "string",
+                  "enum": [
+                    "upsert",
+                    "delete"
+                  ]
+                },
+                "fields": {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {
+                    "type": "object",
+                    "properties": {
+                      "v": {},
+                      "hlc": {
+                        "type": "object",
+                        "properties": {
+                          "physical": {
+                            "type": "number"
+                          },
+                          "logical": {
+                            "type": "number"
+                          },
+                          "node_id": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "physical",
+                          "logical",
+                          "node_id"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "v",
+                      "hlc"
+                    ]
+                  }
+                },
+                "deleted_at": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "seq",
+                "entity",
+                "entity_id",
+                "op"
+              ]
+            }
+          }
+        },
+        "required": [
+          "ops"
+        ]
+      },
+      "syncPull_201": {
+        "type": "object",
+        "properties": {
+          "changes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "entity": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "fields": {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {
+                    "type": "object",
+                    "properties": {
+                      "v": {},
+                      "hlc": {
+                        "type": "object",
+                        "properties": {
+                          "physical": {
+                            "type": "number"
+                          },
+                          "logical": {
+                            "type": "number"
+                          },
+                          "node_id": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "physical",
+                          "logical",
+                          "node_id"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "v",
+                      "hlc"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "deleted_at": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "entity",
+                "id",
+                "fields"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "next": {
+            "type": "string"
+          },
+          "has_more": {
+            "type": "boolean",
+            "const": false
+          },
+          "server_hlc": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "changes",
+          "next",
+          "has_more",
+          "server_hlc"
+        ],
+        "additionalProperties": {}
+      },
+      "syncPull_request": {
+        "type": "object",
+        "properties": {
+          "since": {
+            "type": "string"
+          },
+          "limit": {
+            "type": "number"
+          }
+        }
+      },
+      "syncStatus_201": {
+        "type": "object",
+        "properties": {
+          "merge": {
+            "type": "string"
+          },
+          "entities": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "merge",
+          "entities"
+        ],
+        "additionalProperties": {}
+      },
+      "aiScene_201": {
+        "type": "object",
+        "properties": {
+          "scene_id": {
+            "type": "string"
+          },
+          "cached": {
+            "type": "boolean"
+          },
+          "fallback": {
+            "type": "boolean"
+          },
+          "scene": {
+            "type": "object",
+            "properties": {
+              "place": {
+                "type": "string"
+              },
+              "city": {
+                "type": "string"
+              },
+              "emoji": {
+                "type": "string"
+              },
+              "role": {
+                "type": "string"
+              },
+              "turns": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "npc": {
+                      "type": "object",
+                      "properties": {
+                        "es": {
+                          "type": "string"
+                        },
+                        "en": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "es",
+                        "en"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "options": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "es": {
+                            "type": "string"
+                          },
+                          "en": {
+                            "type": "string"
+                          },
+                          "best": {
+                            "type": "boolean"
+                          },
+                          "tip": {
+                            "type": "string"
+                          },
+                          "phrase_id": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "es",
+                          "en",
+                          "tip"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "npc",
+                    "options"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "closer": {
+                "type": "object",
+                "properties": {
+                  "es": {
+                    "type": "string"
+                  },
+                  "en": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "es",
+                  "en"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "place",
+              "city",
+              "emoji",
+              "role",
+              "turns",
+              "closer"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "scene_id",
+          "cached",
+          "fallback",
+          "scene"
+        ],
+        "additionalProperties": {}
+      },
+      "aiScene_request": {
+        "type": "object",
+        "properties": {
+          "theme": {
+            "type": "string"
+          },
+          "level": {
+            "type": "string"
+          }
+        }
+      },
+      "aiThemes_200": {
+        "type": "object",
+        "properties": {
+          "themes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "provider": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "themes",
+          "provider"
+        ],
+        "additionalProperties": {}
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      },
+      "staffBearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Verified staff authorization required, not merely any bearer token."
+      }
+    }
+  }
+}

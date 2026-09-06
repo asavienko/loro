@@ -29,7 +29,7 @@
 import AxeBuilder from '@axe-core/playwright'
 import type { Page } from '@playwright/test'
 import { expect, onboard, test } from './fixtures'
-import { enter, openFirstPhrase, STATES } from './states'
+import { enter, openFirstPhrase, startWave, STATES, todayMarker } from './states'
 
 const WCAG = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']
 
@@ -159,7 +159,7 @@ test('onboarding reports its chosen answer at every step', async ({ page }) => {
 
 test('the automaticity bar is a named progress bar with a value', async ({ page }) => {
   await onboard(page)
-  await page.getByRole('button', { name: 'Start the wave →' }).click()
+  await startWave(page)
 
   const bar = page.getByRole('progressbar', { name: 'Automaticity' })
   await expect(bar).toHaveAttribute('aria-valuenow', '0')
@@ -203,7 +203,7 @@ test('onboarding is completable with the keyboard alone', async ({ page }) => {
   await expect(page.getByText("You're all set")).toBeVisible()
   await pressUntil(page, 'Start learning 🎧')
   await page.keyboard.press('Enter')
-  await expect(page.getByText('Today', { exact: true })).toBeVisible()
+  await expect(todayMarker(page)).toBeVisible()
 })
 
 // ─────────────────────────────────────────────────────────────────────────────

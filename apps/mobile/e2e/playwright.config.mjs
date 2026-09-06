@@ -1,7 +1,8 @@
+import process from 'node:process'
 import { defineConfig } from '@playwright/test'
 import { isCI, sharedTiming, sharedUse } from './config.shared.mjs'
 
-const port = 8082
+const port = Number(process.env.LORO_E2E_PORT ?? 8082)
 
 export default defineConfig({
   testDir: '.',

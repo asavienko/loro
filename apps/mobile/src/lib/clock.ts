@@ -1,3 +1,4 @@
+import { currentNativeLanguage } from './i18n'
 /**
  * The device clock — the ONE place in the app that constructs a `Date`.
  *
@@ -74,7 +75,7 @@ export function recentLocalDays(count: number, at: Date = new Date()): RecentDay
     const d = new Date(at.getFullYear(), at.getMonth(), at.getDate() - back)
     days.push({
       day: localDayOf(d),
-      initial: d.toLocaleDateString(undefined, { weekday: 'narrow' }),
+      initial: d.toLocaleDateString(currentNativeLanguage(), { weekday: 'narrow' }),
     })
   }
   return days
@@ -88,13 +89,31 @@ export interface RecentDay {
 }
 
 /**
- * The weekday name for the device's current local day, in the device's locale.
+ * The full local date — "Tuesday, 29 July" — in the device's locale.
  *
- * A display string rather than a day key, but it lives here because it needs a `Date`
- * and this is the one file allowed to have one.
+ * The v1.1 root header names the actual day (`Navigation.dc.html:113`), where the earlier Today
+ * header printed a weekday and a tagline ("Tuesday · the daily refrain"). A display string rather
+ * than a day key, but it lives here because it needs a `Date` and this is the one file allowed one.
  */
-export function localWeekdayLabel(): string {
-  return new Date().toLocaleDateString(undefined, { weekday: 'long' })
+export function localDateLabel(): string {
+  return new Date().toLocaleDateString(currentNativeLanguage(), {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  })
+}
+
+/**
+ * The device's local wall-clock time as zero-padded `HH:MM`.
+ *
+ * Deliberately the same shape the engine settings keep wave times in
+ * (`waveTimes: ['08:00', '13:00', '19:00']`), so the day list compares them as strings and
+ * neither side is ever parsed into minutes. Zero-padded 24-hour strings sort the way the
+ * clock does, which is the whole trick.
+ */
+export function localTimeLabel(): string {
+  const at = new Date()
+  return `${pad(at.getHours())}:${pad(at.getMinutes())}`
 }
 
 /**

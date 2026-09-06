@@ -52,9 +52,7 @@ export function Card({
           backgroundColor: background,
           borderRadius: corner,
           padding,
-          ...(border === false
-            ? null
-            : { borderWidth, borderColor: border }),
+          ...(border === false ? null : { borderWidth, borderColor: border }),
         },
         style,
       ]}

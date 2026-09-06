@@ -1,619 +1,991 @@
-/**
- * Every learner-facing string in the mobile app, in one place.
- *
- * WHY THIS FILE EXISTS
- *
- * 1. **A string the E2E suite asserts on must not be able to drift.** The Playwright
- *    suite in `apps/mobile/e2e/` matches many of these by accessible name and by
- *    visible text, so a screen that holds its own literal can be "improved" in a
- *    refactor and break a test that names the same words three files away. One
- *    declaration means one place to change, and the diff shows every screen the
- *    change reaches.
- *
- * 2. **Spanish and UI chrome are different content, and the difference must be
- *    visible.** Spanish renders under `lang="es"` so a screen reader switches voice
- *    (`src/ui/primitives.tsx`); English chrome must not. Nearly all Spanish the
- *    learner sees is catalog content and never appears here — the handful of
- *    authored Spanish strings below carry an `a11y-lang: SPANISH` comment, and every
- *    one of them must be rendered with `lang="es"`.
- *
- * 3. **The DRY win.** "Add phrases", "Mark learned", "✓ Learned", "Remove from
- *    loved", "reps today", "Nothing in rotation yet" and the ✓/●/♥/‹/› glyphs each
- *    appeared in two or three screens with no shared source. They now have one.
- *
- * WHAT BELONGS HERE, AND WHAT DOES NOT
- *
- * - Interpolated copy is a **function** with named parameters, so the template — not
- *   a fragment of it — is what lives here. Defaults (`?? 10`) and derivations
- *   (`Math.min`, `.split(' ').slice(0, 2)`) stay at the call site: they are state
- *   logic, not wording.
- * - Domain data stays out. The Refrain's mode LIST, the browse THEME list, and the
- *   onboarding step order are structure; only their text is here, keyed so the
- *   structural table can look it up. Core owns those semantic keys; this file owns
- *   every English label attached to them.
- * - Catalog text (phrase `es`/`en`, pack and scenario labels, word glosses, hints) is
- *   content shipped by `@loro/content`. It is not copy and is not here.
- *
- * LAYER: this is a leaf. `src/store/`, `src/ui/` and `app/` may all import it; it
- * imports only domain types, so it cannot pull a screen's dependencies into the store.
- */
-
-import type {
-  BrowsableTheme,
-  Difficulty,
-  EffortState,
-  MasteryBucket,
-  RefrainMode,
-  Tag,
-} from '@loro/core'
-
-// ─── Shared atoms ────────────────────────────────────────────────────────────
-// Declared once above the table because more than one entry composes them. A
-// nested object literal cannot reference its own siblings.
-
-/** Today and the Refrain say this in one sentence and two, respectively. */
-const NOTHING_IN_ROTATION = 'Nothing in rotation yet'
-const SET_BUILDS_ITSELF = "Add a few phrases and today's set builds itself."
-const ADD_PHRASES = 'Add phrases'
-const STREAM = 'Stream'
-const PROGRESS = 'Progress'
-const REPS_TODAY = 'reps today'
-const UNDO = 'Undo'
-
-const difficultyLabels = {
-  easy: 'Easy',
-  med: 'Learning',
-  hard: 'Difficult',
-} as const satisfies Record<Difficulty, string>
-
-const tagLabels = {
-  pron: 'Pronunciation',
-  remember: 'Hard to remember',
-  useful: 'Very useful',
-  words: 'Tricky words',
-} as const satisfies Record<Tag, string>
-
-const masteryLabels = {
-  new: 'New',
-  learning: 'Learning',
-  strong: 'Strong',
-  mastered: 'Mastered',
-} as const satisfies Record<MasteryBucket, string>
-
-const refrainMicLabels = {
-  echo: 'Say it',
-  chorus: 'Chorus it',
-  speed: 'Faster!',
-  cloze: 'Fill & say',
-  call: 'Respond',
-  cold: 'Say it cold',
-} as const satisfies Record<RefrainMode, string>
-
-const effortLabels = {
-  ready: 'tap to begin',
-  cold: 'warming up',
-  warm: 'getting smoother',
-  hot: 'quick & smooth',
-  peak: 'instant & smooth',
-} as const satisfies Record<EffortState, string>
-
-const browseThemeCopy = {
-  Café: { label: 'Café', emoji: '☕' },
-  Dining: { label: 'Dining', emoji: '🍽' },
-  Travel: { label: 'Travel', emoji: '🚆' },
-  Directions: { label: 'Directions', emoji: '🧭' },
-  Shopping: { label: 'Shopping', emoji: '🛍' },
-  'Small talk': { label: 'Small talk', emoji: '🤝' },
-  Survival: { label: 'Survival', emoji: '🆘' },
-  Hotel: { label: 'Hotel', emoji: '🏨' },
-} as const satisfies Record<BrowsableTheme, { readonly label: string; readonly emoji: string }>
-
-/** Today's phrase rows and the Refrain's warming card both end on this. */
-const percentAutomatic = (pct: number): string => `${pct} percent automatic.`
-
-/** Browse tiles say it visibly; the tile's accessible name repeats it. */
-const toAdd = (count: number): string => `${count} to add`
-
+/** F-08. Reactive readers translate at access time; domain and UI layers share this adapter. */
+import { message, formatBuckets, currentNativeLanguage } from './i18n'
 export const copy = {
-  /** Strings genuinely shared by more than one screen. */
+  languages: {
+    get title() {
+      return message('languages.title')
+    },
+    get native() {
+      return message('languages.native')
+    },
+    get target() {
+      return message('languages.target')
+    },
+    get save() {
+      return message('languages.save')
+    },
+    get invalid() {
+      return message('languages.invalid')
+    },
+    get review() {
+      return message('languages.review')
+    },
+    personalMeaning: (language: string): string =>
+      message('languages.personalMeaning', { language }),
+  },
   common: {
-    /** `_layout` header title, Today's empty-set button, the Refrain's empty state. */
-    addPhrases: ADD_PHRASES,
-    /** `_layout` header title and Today's footer button. */
-    stream: STREAM,
-    /** `_layout` header title and Today's footer button. */
-    progress: PROGRESS,
-    /** Phrase detail and the stream. */
-    markLearned: 'Mark learned',
-    /** Phrase detail's status badge and the stream's re-rating row. */
-    learnedBadge: '✓ Learned',
-    /** Today's stat tile and the Refrain's finish card. */
-    repsToday: REPS_TODAY,
-    /** The add sheet and phrase detail share one difficulty editor. */
-    difficultyQuestion: 'How hard is it for you?',
-    /** Appended to a tag chip's label when the tag is on. Leading space is deliberate. */
+    get addPhrases() {
+      return message('common.addPhrases')
+    },
+    get stream() {
+      return message('common.stream')
+    },
+    get progress() {
+      return message('common.progress')
+    },
+    get markLearned() {
+      return message('common.markLearned')
+    },
+    get learnedBadge() {
+      return message('common.learnedBadge')
+    },
+    get repsToday() {
+      return message('common.repsToday')
+    },
+    get difficultyQuestion() {
+      return message('common.difficultyQuestion')
+    },
     selectedSuffix: ' ✓',
-    /**
-     * An absence, not a zero. Today's and Progress's streak badges, and an
-     * unanswered onboarding summary row. Non-negotiable 3: nothing here apologises
-     * for a day that has not happened.
-     */
     noValue: '—',
-    /** A practised day, a finished set, the 10-minute option, a milestone. */
     flame: '🔥',
     marks: {
-      /** Multi-select tick: onboarding packs, tag chips, milestones. */
       check: '✓',
-      /** Single-select / ready marker: onboarding radios, Today's wave rail. */
       dot: '●',
-      /** The unreached half of the same pair. */
       ring: '○',
+      reveal: '⌄',
     },
     hearts: {
       filled: '♥',
       outline: '♡',
     },
     chevron: {
-      /** Onboarding's back affordance and the add screen's "‹ Themes". */
       left: '‹',
-      /** Progress's tricky rows. */
       right: '›',
     },
   },
-
-  /** Presentation labels for closed domain sets. Their keys remain core-owned. */
-  difficulty: difficultyLabels,
-  tags: tagLabels,
-  mastery: masteryLabels,
-
-  /** Stack header titles (`app/_layout.tsx`). */
-  nav: {
-    add: ADD_PHRASES,
-    /**
-     * Deliberately empty: phrase detail's hero IS the title, and a header repeating
-     * the Spanish would read it twice, in the wrong language.
-     */
-    phrase: '',
-    refrain: 'The Refrain',
-    stream: STREAM,
-    progress: PROGRESS,
+  difficulty: {
+    get easy() {
+      return message('difficulty.easy')
+    },
+    get med() {
+      return message('difficulty.med')
+    },
+    get hard() {
+      return message('difficulty.hard')
+    },
   },
-
-  /** Today — the ritual home. */
+  tags: {
+    get pron() {
+      return message('tags.pron')
+    },
+    get remember() {
+      return message('tags.remember')
+    },
+    get useful() {
+      return message('tags.useful')
+    },
+    get words() {
+      return message('tags.words')
+    },
+  },
+  mastery: {
+    get new() {
+      return message('mastery.new')
+    },
+    get learning() {
+      return message('mastery.learning')
+    },
+    get strong() {
+      return message('mastery.strong')
+    },
+    get mastered() {
+      return message('mastery.mastered')
+    },
+  },
+  nav: {
+    get home() {
+      return message('nav.home')
+    },
+    get phrasePlace() {
+      return message('nav.phrasePlace')
+    },
+    get add() {
+      return message('nav.add')
+    },
+    phrase: '',
+    get refrain() {
+      return message('nav.refrain')
+    },
+    get stream() {
+      return message('nav.stream')
+    },
+    get progress() {
+      return message('nav.progress')
+    },
+  },
   today: {
-    title: 'Today',
-    subtitle: (weekday: string): string => `${weekday} · the daily refrain`,
-    /** "Today's set" before there is a set; "Today's 5" once there is. */
-    setHeading: (count: number): string => (count === 0 ? "Today's set" : `Today's ${count}`),
-    lockedIn: (locked: number, total: number): string => `${locked} of ${total} locked in`,
-    /** The badge on a phrase that reached 100% automaticity today. */
-    lockedBadge: 'Locked',
+    get title() {
+      return message('today.title')
+    },
+    setHeading: (count: number): string => message('today.setHeading', { count }),
+    lockedIn: (locked: number, total: number): string =>
+      message('today.lockedIn', { locked, total }),
+    get lockedBadge() {
+      return message('today.lockedBadge')
+    },
+    lockInDay: (day: number, days: number): string => message('today.lockInDay', { day, days }),
+    streakDays: (days: number): string => message('today.streakDays', { days }),
     empty: {
-      body: `${NOTHING_IN_ROTATION}. ${SET_BUILDS_ITSELF}`,
+      get body() {
+        return message('today.empty.body')
+      },
     },
-    wavesHeading: "Today's three waves",
-    /**
-     * The three waves. `time` is the DISPLAY form; the scheduler's own times live in
-     * the store's `EngineContext` settings (`waveTimes`) and are 24-hour.
-     */
+    day: {
+      get heading() {
+        return message('today.day.heading')
+      },
+      get now() {
+        return message('today.day.now')
+      },
+      reps: (count: number): string => message('today.day.reps', { count }),
+      get banked() {
+        return message('today.day.banked')
+      },
+      nextWave: (manner: string, phrases: number): string =>
+        message('today.day.nextWave', { manner, phrases }),
+    },
     waves: {
-      morning: { label: 'Morning', sub: 'Meet & first reps', time: '8:00' },
-      midday: { label: 'Midday', sub: 'Re-rep, from memory', time: '1:00' },
-      evening: { label: 'Evening', sub: 'Cold + perform', time: '7:00' },
+      morning: {
+        get title() {
+          return message('today.waves.morning.title')
+        },
+        get manner() {
+          return message('today.waves.morning.manner')
+        },
+      },
+      midday: {
+        get title() {
+          return message('today.waves.midday.title')
+        },
+        get manner() {
+          return message('today.waves.midday.manner')
+        },
+      },
+      evening: {
+        get title() {
+          return message('today.waves.evening.title')
+        },
+        get manner() {
+          return message('today.waves.evening.manner')
+        },
+      },
     },
-    stats: {
-      repsToday: REPS_TODAY,
-      inYourStream: 'in your stream',
-      graduated: 'graduated',
+    rail: {
+      get stream() {
+        return message('today.rail.stream')
+      },
+      get add() {
+        return message('today.rail.add')
+      },
+      get progress() {
+        return message('today.rail.progress')
+      },
     },
-    actions: {
-      add: 'Add',
+    switcher: {
+      get title() {
+        return message('today.switcher.title')
+      },
+      get go() {
+        return message('today.switcher.go')
+      },
+      get here() {
+        return message('today.switcher.here')
+      },
     },
     cta: {
-      /** Nothing to practise: the button invites, it does not scold. */
-      empty: 'Add phrases to begin',
-      start: 'Start the wave →',
+      get empty() {
+        return message('today.cta.empty')
+      },
+      startWave: {
+        get morning() {
+          return message('today.cta.startWave.morning')
+        },
+        get midday() {
+          return message('today.cta.startWave.midday')
+        },
+        get evening() {
+          return message('today.cta.startWave.evening')
+        },
+      },
     },
   },
-
-  /** Add phrases — discover, browse, and the tagging sheet. */
   add: {
-    inStream: (count: number): string => `${count} in stream`,
-    /**
-     * The discover/browse switch. Rendered lowercase, exactly as the blueprint has
-     * it. The MODE ids are state (`'discover' | 'browse'`); these are their labels.
-     */
+    browseTitle: (theme: string, left: number): string =>
+      message('add.browseTitle', { theme, left }),
+    inStream: (count: number): string => message('add.inStream', { count }),
     modes: {
-      discover: 'discover',
-      browse: 'browse',
+      get discover() {
+        return message('add.modes.discover')
+      },
+      get browse() {
+        return message('add.modes.browse')
+      },
     },
-    searchPlaceholder: 'Type a phrase, or a topic…',
-    scenarioLabel: 'Scenario',
-    /** What the suggestion list is showing, in the learner's terms. */
+    get searchPlaceholder() {
+      return message('add.searchPlaceholder')
+    },
+    get scenarioLabel() {
+      return message('add.scenarioLabel')
+    },
     context: {
-      matches: (query: string): string => `Matches for "${query}"`,
-      noMatches: 'No matches in the library',
-      forScenario: (scenario: string): string => `For: ${scenario}`,
-      moreLike: (theme: string): string => `More like ${theme}`,
-      popular: 'Popular starters',
+      matches: (query: string): string => message('add.context.matches', { query }),
+      get noMatches() {
+        return message('add.context.noMatches')
+      },
+      forScenario: (scenario: string): string => message('add.context.forScenario', { scenario }),
+      moreLike: (theme: string): string => message('add.context.moreLike', { theme }),
+      get popular() {
+        return message('add.context.popular')
+      },
     },
-    /**
-     * Browse themes.
-     *
-     * SPLIT: the theme NAMES are domain data — `Theme` in `@loro/core`, and the key
-     * the catalog is filtered on — so the list itself stays in the screen (or moves
-     * to core) as `Theme[]`. What is copy is the tile's emoji and the fact that the
-     * tile shows the theme name verbatim; both are looked up by theme.
-     *
-     * a11y-lang: these are ENGLISH UI category labels. "Café" is the English
-     * loanword, so a screen reader must read this list in the interface language and
-     * these must NOT be given `lang="es"`.
-     */
-    themes: browseThemeCopy,
-    toAdd,
-    allAdded: 'all added ✓',
-    /** Back out of a theme, to the grid of themes. */
-    backToThemes: '‹ Themes',
+    themes: {
+      Café: {
+        get label() {
+          return message('add.themes.Café.label')
+        },
+        emoji: '☕',
+      },
+      Dining: {
+        get label() {
+          return message('add.themes.Dining.label')
+        },
+        emoji: '🍽',
+      },
+      Travel: {
+        get label() {
+          return message('add.themes.Travel.label')
+        },
+        emoji: '🚆',
+      },
+      Directions: {
+        get label() {
+          return message('add.themes.Directions.label')
+        },
+        emoji: '🧭',
+      },
+      Shopping: {
+        get label() {
+          return message('add.themes.Shopping.label')
+        },
+        emoji: '🛍',
+      },
+      'Small talk': {
+        get label() {
+          return message('add.themes.Small talk.label')
+        },
+        emoji: '🤝',
+      },
+      Survival: {
+        get label() {
+          return message('add.themes.Survival.label')
+        },
+        emoji: '🆘',
+      },
+      Hotel: {
+        get label() {
+          return message('add.themes.Hotel.label')
+        },
+        emoji: '🏨',
+      },
+    },
+    toAdd: (count: number): string => message('add.toAdd', { count }),
+    get allAdded() {
+      return message('add.allAdded')
+    },
+    get backToThemes() {
+      return message('add.backToThemes')
+    },
     empty: {
-      body: 'Nothing more to suggest here.\nTry another theme, scenario, or search above.',
+      get body() {
+        return message('add.empty.body')
+      },
+      get themeComplete() {
+        return message('add.empty.themeComplete')
+      },
     },
-    /** The + on a suggestion row. */
     addGlyph: '+',
-    tagsQuestion: "What's tricky about it?",
-    tagsHelper: 'pick any',
-    confirm: 'Add to my stream',
+    get tagsQuestion() {
+      return message('add.tagsQuestion')
+    },
+    get tagsHelper() {
+      return message('add.tagsHelper')
+    },
+    get confirm() {
+      return message('add.confirm')
+    },
   },
-
-  /** Onboarding — welcome → goal → level → time → packs → ready. */
   onboarding: {
+    goalValue: (goal: string): string => message('onboarding.goalValue', { goal }),
     welcome: {
       emoji: '🦜',
-      /** a11y-lang: SPANISH. Render with `lang="es"`. */
-      greeting: "¡Hola! I'm Loro",
-      /** The line break is the design: two lines, centred. */
-      title: 'Learn Spanish\nby the phrase',
-      body:
-        "Forget grammar drills. You'll collect phrases that matter to you and learn them by " +
-        "listening and repeating — like a parrot, until they're yours.",
+      get greeting() {
+        return message('onboarding.welcome.greeting')
+      },
+      get title() {
+        return message('onboarding.welcome.title')
+      },
+      get body() {
+        return message('onboarding.welcome.body')
+      },
     },
-    /**
-     * SPLIT: the step ORDER, each step's `kind`/`key`/`multi`, and each option's
-     * `val` are structure — they drive `completeOnboarding` and stay in the screen's
-     * `STEPS` table. The question, the helper, and each option's label/sub/emoji are
-     * copy and live here, keyed by step key and option value.
-     */
     steps: {
       goal: {
-        question: 'What brings you to Spanish?',
-        helper: "We'll lead with the phrases that fit.",
+        get question() {
+          return message('onboarding.steps.goal.question')
+        },
+        get helper() {
+          return message('onboarding.steps.goal.helper')
+        },
         options: {
-          trip: { emoji: '🧳', label: 'A trip coming up', sub: 'Survival & travel first' },
-          convo: { emoji: '💬', label: 'Real conversations', sub: 'Small talk & everyday' },
-          move: { emoji: '🌍', label: 'Moving abroad', sub: 'The full picture, fast' },
-          curious: { emoji: '🪶', label: 'Just curious', sub: 'A relaxed mix' },
+          trip: {
+            emoji: '🧳',
+            get label() {
+              return message('onboarding.steps.goal.options.trip.label')
+            },
+            get sub() {
+              return message('onboarding.steps.goal.options.trip.sub')
+            },
+          },
+          convo: {
+            emoji: '💬',
+            get label() {
+              return message('onboarding.steps.goal.options.convo.label')
+            },
+            get sub() {
+              return message('onboarding.steps.goal.options.convo.sub')
+            },
+          },
+          move: {
+            emoji: '🌍',
+            get label() {
+              return message('onboarding.steps.goal.options.move.label')
+            },
+            get sub() {
+              return message('onboarding.steps.goal.options.move.sub')
+            },
+          },
+          curious: {
+            emoji: '🪶',
+            get label() {
+              return message('onboarding.steps.goal.options.curious.label')
+            },
+            get sub() {
+              return message('onboarding.steps.goal.options.curious.sub')
+            },
+          },
         },
       },
       level: {
-        question: 'How much Spanish do you have?',
-        helper: 'Sets how long and tricky your first phrases are.',
+        get question() {
+          return message('onboarding.steps.level.question')
+        },
+        get helper() {
+          return message('onboarding.steps.level.helper')
+        },
         options: {
-          beg: { emoji: '🌱', label: 'Starting out', sub: 'Little to none' },
-          some: { emoji: '🌿', label: 'Some basics', sub: 'I know a few things' },
-          conf: { emoji: '🌳', label: 'Fairly confident', sub: 'I can hold a chat' },
+          beg: {
+            emoji: '🌱',
+            get label() {
+              return message('onboarding.steps.level.options.beg.label')
+            },
+            get sub() {
+              return message('onboarding.steps.level.options.beg.sub')
+            },
+          },
+          some: {
+            emoji: '🌿',
+            get label() {
+              return message('onboarding.steps.level.options.some.label')
+            },
+            get sub() {
+              return message('onboarding.steps.level.options.some.sub')
+            },
+          },
+          conf: {
+            emoji: '🌳',
+            get label() {
+              return message('onboarding.steps.level.options.conf.label')
+            },
+            get sub() {
+              return message('onboarding.steps.level.options.conf.sub')
+            },
+          },
         },
       },
       mins: {
-        question: 'How much time per day?',
-        helper: 'Your daily stream is built to fit.',
+        get question() {
+          return message('onboarding.steps.mins.question')
+        },
+        get helper() {
+          return message('onboarding.steps.mins.helper')
+        },
         options: {
-          '5': { emoji: '⚡', label: '5 minutes', sub: 'Light & steady' },
-          '10': { emoji: '🔥', label: '10 minutes', sub: 'A good rhythm' },
-          '20': { emoji: '🚀', label: '20 minutes', sub: 'Serious progress' },
+          '5': {
+            emoji: '⚡',
+            get label() {
+              return message('onboarding.steps.mins.options.5.label')
+            },
+            get sub() {
+              return message('onboarding.steps.mins.options.5.sub')
+            },
+          },
+          '10': {
+            emoji: '🔥',
+            get label() {
+              return message('onboarding.steps.mins.options.10.label')
+            },
+            get sub() {
+              return message('onboarding.steps.mins.options.10.sub')
+            },
+          },
+          '20': {
+            emoji: '🚀',
+            get label() {
+              return message('onboarding.steps.mins.options.20.label')
+            },
+            get sub() {
+              return message('onboarding.steps.mins.options.20.sub')
+            },
+          },
         },
       },
       packs: {
-        question: 'Pick a few starter packs',
-        helper: 'Choose at least one — these seed your stream now.',
+        get question() {
+          return message('onboarding.steps.packs.question')
+        },
+        get helper() {
+          return message('onboarding.steps.packs.helper')
+        },
       },
     },
-    /**
-     * A starter pack's subtitle. The pack's own label and emoji are catalog content
-     * (`@loro/content`), so only the count line is copy.
-     */
-    packSub: (phrases: number): string => `${phrases} phrases`,
+    packSub: (phrases: number): string => message('onboarding.packSub', { phrases }),
     ready: {
       emoji: '✅',
-      title: "You're all set",
-      /** The line break is the design: the count leads, the phrase follows. */
-      seeded: (count: number): string => `${count} phrases are\nin your stream`,
-      /** `mins` is already stringified at the call site, where its `?? 10` default lives. */
-      sessionReady: (mins: string): string =>
-        `Your first ${mins}-minute session is ready whenever you are.`,
+      get title() {
+        return message('onboarding.ready.title')
+      },
+      seeded: (count: number): string => message('onboarding.ready.seeded', { count }),
+      sessionReady: (mins: string): string => message('onboarding.ready.sessionReady', { mins }),
       summary: {
-        goal: 'Goal',
-        daily: 'Daily',
-        packs: 'Packs',
-        minutes: (mins: string): string => `${mins} min`,
-        packsSelected: (count: number): string => `${count} selected`,
+        get level() {
+          return message('onboarding.ready.summary.level')
+        },
+        get goal() {
+          return message('onboarding.ready.summary.goal')
+        },
+        get daily() {
+          return message('onboarding.ready.summary.daily')
+        },
+        get packs() {
+          return message('onboarding.ready.summary.packs')
+        },
+        minutes: (mins: string): string => message('onboarding.ready.summary.minutes', { mins }),
+        packsSelected: (count: number): string =>
+          message('onboarding.ready.summary.packsSelected', { count }),
       },
     },
     cta: {
-      welcome: "Let's go →",
-      next: 'Continue',
-      ready: 'Start learning 🎧',
+      get welcome() {
+        return message('onboarding.cta.welcome')
+      },
+      get next() {
+        return message('onboarding.cta.next')
+      },
+      get ready() {
+        return message('onboarding.cta.ready')
+      },
     },
   },
-
-  /** Phrase detail — one source of truth per phrase. */
   phrase: {
     missing: {
-      title: 'No phrase selected',
-      body: 'Add or tap a phrase to view it',
+      get action() {
+        return message('phrase.missing.action')
+      },
+      get title() {
+        return message('phrase.missing.title')
+      },
+      get body() {
+        return message('phrase.missing.body')
+      },
     },
     sections: {
-      wordByWord: 'Word by word',
-      tricky: "What's tricky",
-      inContext: 'In context',
-      memoryHook: 'Memory hook',
+      get wordByWord() {
+        return message('phrase.sections.wordByWord')
+      },
+      get tricky() {
+        return message('phrase.sections.tricky')
+      },
+      get inContext() {
+        return message('phrase.sections.inContext')
+      },
+      get memoryHook() {
+        return message('phrase.sections.memoryHook')
+      },
     },
-    tagsHelper: 'tap to toggle',
-    hookHelper: 'helps it stick',
+    get tagsHelper() {
+      return message('phrase.tagsHelper')
+    },
+    get hookHelper() {
+      return message('phrase.hookHelper')
+    },
     hookGlyph: '💡',
-    /** Under a hook the learner has adopted: tapping clears it. */
-    tapToChange: 'tap to change',
-    /**
-     * The three generated memory hooks, offered when the catalog has no hint of its
-     * own. `tie` takes the phrase's opening words — the slicing is derivation and
-     * stays at the call site.
-     */
+    get tapToChange() {
+      return message('phrase.tapToChange')
+    },
     hooks: {
-      sayAloud: 'Say it out loud 3× now — your mouth remembers what your eyes forget.',
-      tie: (opening: string): string => `Tie “${opening}…” to the exact moment you would use it.`,
-      picture: 'Picture the scene: who you are talking to, and what happens next.',
+      get sayAloud() {
+        return message('phrase.hooks.sayAloud')
+      },
+      tie: (opening: string): string => message('phrase.hooks.tie', { opening }),
+      get picture() {
+        return message('phrase.hooks.picture')
+      },
     },
     status: {
-      /** "Learned" / "Learning" are STATUSES here, not difficulty ratings. */
-      learned: 'Learned',
-      learning: 'Learning',
-      reps: (reps: number, bucket: string): string => `${reps} reps · ${bucket}`,
+      get learned() {
+        return message('phrase.status.learned')
+      },
+      get learning() {
+        return message('phrase.status.learning')
+      },
+      reps: (reps: number, bucket: string): string =>
+        message('phrase.status.reps', { reps, bucket }),
     },
     actions: {
-      remove: 'Remove',
-      practiceNow: 'Practice now →',
+      get remove() {
+        return message('phrase.actions.remove')
+      },
+      get practiceNow() {
+        return message('phrase.actions.practiceNow')
+      },
     },
   },
-
-  /** The Refrain — one phrase, six reps, a different manner each rep. */
   refrain: {
     empty: {
-      title: NOTHING_IN_ROTATION,
-      body: SET_BUILDS_ITSELF,
+      get title() {
+        return message('refrain.empty.title')
+      },
+      get body() {
+        return message('refrain.empty.body')
+      },
     },
-    /**
-     * SPLIT: the mode LIST and its order (`echo → chorus → speed → cloze → call →
-     * cold`) are the RefrainEngine's decision and belong in `@loro/core` — the
-     * screen's local `MODES` array is domain data, not copy. What is copy is each
-     * mode's CUE (shown on the warming card, and read as the mic button's hint), its
-     * ICON, and the label on the mode strip. All three are keyed by mode name.
-     */
     modes: {
-      echo: { label: 'echo', icon: '🔁', cue: 'Hear it, then say it back' },
-      chorus: { label: 'chorus', icon: '🎵', cue: 'Say it in unison — ride the beat' },
-      speed: { label: 'speed', icon: '⚡', cue: 'Again, faster — keep the groove' },
-      cloze: { label: 'cloze', icon: '◻️', cue: 'Fill the gap out loud' },
-      call: { label: 'call', icon: '💬', cue: 'Say the Spanish for the cue' },
-      cold: { label: 'cold', icon: '❄️', cue: 'From memory — no model' },
+      echo: {
+        get label() {
+          return message('refrain.modes.echo.label')
+        },
+        icon: '🔁',
+        get cue() {
+          return message('refrain.modes.echo.cue')
+        },
+      },
+      chorus: {
+        get label() {
+          return message('refrain.modes.chorus.label')
+        },
+        icon: '🎵',
+        get cue() {
+          return message('refrain.modes.chorus.cue')
+        },
+      },
+      speed: {
+        get label() {
+          return message('refrain.modes.speed.label')
+        },
+        icon: '⚡',
+        get cue() {
+          return message('refrain.modes.speed.cue')
+        },
+      },
+      cloze: {
+        get label() {
+          return message('refrain.modes.cloze.label')
+        },
+        icon: '◻️',
+        get cue() {
+          return message('refrain.modes.cloze.cue')
+        },
+      },
+      call: {
+        get label() {
+          return message('refrain.modes.call.label')
+        },
+        icon: '💬',
+        get cue() {
+          return message('refrain.modes.call.cue')
+        },
+      },
+      cold: {
+        get label() {
+          return message('refrain.modes.cold.label')
+        },
+        icon: '❄️',
+        get cue() {
+          return message('refrain.modes.cold.cue')
+        },
+      },
     },
-    mic: refrainMicLabels,
-    phraseCounter: (n: number, total: number): string => `Phrase ${n} / ${total}`,
-    /** What the warming card shows instead of the phrase, per mode. */
+    mic: {
+      get echo() {
+        return message('refrain.mic.echo')
+      },
+      get chorus() {
+        return message('refrain.mic.chorus')
+      },
+      get speed() {
+        return message('refrain.mic.speed')
+      },
+      get cloze() {
+        return message('refrain.mic.cloze')
+      },
+      get call() {
+        return message('refrain.mic.call')
+      },
+      get cold() {
+        return message('refrain.mic.cold')
+      },
+    },
+    phraseCounter: (n: number, total: number): string =>
+      message('refrain.phraseCounter', { n, total }),
     prompt: {
-      callLabel: 'say the Spanish for',
-      coldLabel: 'from memory',
-      /** The blanked word in cloze mode. The word CHOICE is domain logic. */
+      get callLabel() {
+        return message('refrain.prompt.callLabel')
+      },
+      get coldLabel() {
+        return message('refrain.prompt.coldLabel')
+      },
       clozeBlank: '___',
     },
     automaticity: {
-      /** Serves as both the visible label and the progress bar's accessible name. */
-      label: 'Automaticity',
-      percent: (pct: number): string => `${pct}%`,
+      get label() {
+        return message('refrain.automaticity.label')
+      },
+      percent: (pct: number): string => message('refrain.automaticity.percent', { pct }),
     },
-    /** What is falling is EFFORT, not a score. */
-    effortLabel: 'effort ↓',
-    effort: effortLabels,
-    repCounter: (rep: number, target: number): string => `Rep ${rep} / ${target}`,
-    /** Shown only for modes that play a model; the null check stays at the call site. */
-    modelRate: (rate: number): string =>
-      `Model plays at ${rate}× · audio lands with the native module`,
+    get effortLabel() {
+      return message('refrain.effortLabel')
+    },
+    effort: {
+      get ready() {
+        return message('refrain.effort.ready')
+      },
+      get cold() {
+        return message('refrain.effort.cold')
+      },
+      get warm() {
+        return message('refrain.effort.warm')
+      },
+      get hot() {
+        return message('refrain.effort.hot')
+      },
+      get peak() {
+        return message('refrain.effort.peak')
+      },
+    },
+    repCounter: (rep: number, target: number): string =>
+      message('refrain.repCounter', { rep, target }),
+    get audioNote() {
+      return message('refrain.audioNote')
+    },
     locked: {
       gem: '💎',
-      title: 'Locked in for today',
-      body: 'It comes out without thinking now.',
-      next: 'Next phrase →',
-      finish: 'Finish the set →',
+      get title() {
+        return message('refrain.locked.title')
+      },
+      get body() {
+        return message('refrain.locked.body')
+      },
+      get next() {
+        return message('refrain.locked.next')
+      },
+      get finish() {
+        return message('refrain.locked.finish')
+      },
     },
     done: {
-      /** a11y-lang: SPANISH. Render with `lang="es"`. */
-      headline: '¡Hecho! Today is done',
-      title: "Today's set is warmed up",
-      workedLabel: 'worked',
-      cta: 'Back to today',
+      get headline() {
+        return message('refrain.done.headline')
+      },
+      get title() {
+        return message('refrain.done.title')
+      },
+      get workedLabel() {
+        return message('refrain.done.workedLabel')
+      },
+      get cta() {
+        return message('refrain.done.cta')
+      },
     },
   },
-
-  /** The adaptive stream — the one screen every persona uses. */
   stream: {
     empty: {
-      title: 'Your stream is empty',
-      body: 'Add phrases to start listening',
+      get title() {
+        return message('stream.empty.title')
+      },
+      get body() {
+        return message('stream.empty.body')
+      },
+      get action() {
+        return message('common.addPhrases')
+      },
     },
-    counter: (n: number, total: number): string => `${n} / ${total}`,
-    repeatLabel: 'repeat',
-    /** The transport row. Glyphs, not icons: they are the rendered text. */
+    counter: (n: number, total: number): string => message('stream.counter', { n, total }),
+    get repeatLabel() {
+      return message('stream.repeatLabel')
+    },
     controls: {
       prev: '◄◄',
       play: '►',
+      get next() {
+        return message('stream.controls.next')
+      },
       skip: '►►',
     },
-    rateQuestion: "How's this one?",
-    lovedBadge: '♥ Loved',
-    loveLabel: '♡ Love',
-    upNext: 'Up next',
-    /** Roll-up pills. "Difficult" describes the phrase, never the learner. */
-    pills: {
-      loved: (count: number): string => `♥ ${count}`,
-      hard: (count: number): string => `Difficult ${count}`,
-      learned: (count: number): string => `Learned ${count}`,
+    get rateQuestion() {
+      return message('stream.rateQuestion')
     },
-    /**
-     * Non-negotiable 2: the screen says plainly which of its numbers are real, rather
-     * than letting silence imply the audio works.
-     */
-    audioNote:
-      'Audio playback arrives with the native audio module — see ADR-0007. The queue, the ' +
-      'repeat counts, and the live re-ranking are real.',
+    get lovedBadge() {
+      return message('stream.lovedBadge')
+    },
+    get loveLabel() {
+      return message('stream.loveLabel')
+    },
+    get upNext() {
+      return message('stream.upNext')
+    },
+    pills: {
+      loved: (count: number): string => message('stream.pills.loved', { count }),
+      hard: (count: number): string => message('stream.pills.hard', { count }),
+      learned: (count: number): string => message('stream.pills.learned', { count }),
+    },
+    get audioNote() {
+      return message('stream.audioNote')
+    },
   },
-
-  /** Progress — the connective thread closing its loop. Nothing here shames a missed day. */
   progress: {
     streak: {
-      label: 'Current streak',
-      /** No streak yet is an invitation, not a zero. */
-      empty: 'start today',
-      days: (streak: number): string => `${streak === 1 ? 'day' : 'days'} 🔥`,
+      get label() {
+        return message('progress.streak.label')
+      },
+      get empty() {
+        return message('progress.streak.empty')
+      },
+      days: (streak: number): string => message('progress.streak.days', { streak }),
     },
     stats: {
-      phrasesInStream: 'phrases in stream',
-      repsDone: 'reps done',
-      mastered: 'mastered',
+      get phrasesInStream() {
+        return message('progress.stats.phrasesInStream')
+      },
+      get repsDone() {
+        return message('progress.stats.repsDone')
+      },
+      get mastered() {
+        return message('progress.stats.mastered')
+      },
     },
     mastery: {
-      title: 'Phrase mastery',
-      total: (count: number): string => `${count} total`,
-      /**
-       * Every chart carries a visible summary — checked in CI. The bucket labels come
-       * from `masteryMeta` in `src/ui/theme.ts`; this lowercases them into a sentence.
-       */
+      get title() {
+        return message('progress.mastery.title')
+      },
+      total: (count: number): string => message('progress.mastery.total', { count }),
       chartSummary: (buckets: readonly { count: number; label: string }[]): string =>
-        `${buckets.map((b) => `${b.count} ${b.label.toLowerCase()}`).join(', ')}.`,
+        formatBuckets(buckets),
     },
     tricky: {
-      title: "What's tricky in your stream",
-      empty:
-        "Nothing tagged yet. Tag a phrase with what's hard about it and it shows up here — and " +
-        'steers what you practise.',
+      get title() {
+        return message('progress.tricky.title')
+      },
+      get empty() {
+        return message('progress.tricky.empty')
+      },
     },
     milestones: {
-      title: 'Milestones',
-      /**
-       * SPLIT: whether a milestone is `done` is state (and each predicate stays in the
-       * screen); the emoji, title, and progress line are copy.
-       */
+      get title() {
+        return message('progress.milestones.title')
+      },
       first10: {
         emoji: '🌱',
-        title: 'First 10 phrases',
-        sub: (collected: number): string => `${collected} collected`,
+        get title() {
+          return message('progress.milestones.first10.title')
+        },
+        sub: (collected: number): string =>
+          message('progress.milestones.first10.sub', { collected }),
       },
-      firstTag: { emoji: '💬', title: 'First tagged phrase', sub: 'The thread begins' },
-      firstLockIn: { emoji: '🔥', title: 'First locked in', sub: 'Six reps in one day' },
+      firstTag: {
+        emoji: '💬',
+        get title() {
+          return message('progress.milestones.firstTag.title')
+        },
+        get sub() {
+          return message('progress.milestones.firstTag.sub')
+        },
+      },
+      firstLockIn: {
+        emoji: '🔥',
+        get title() {
+          return message('progress.milestones.firstLockIn.title')
+        },
+        get sub() {
+          return message('progress.milestones.firstLockIn.sub')
+        },
+      },
       mastered25: {
         emoji: '🏆',
-        title: '25 mastered',
-        sub: (mastered: number): string => `${mastered} of 25`,
+        get title() {
+          return message('progress.milestones.mastered25.title')
+        },
+        sub: (mastered: number): string =>
+          message('progress.milestones.mastered25.sub', { mastered }),
       },
     },
   },
-
-  /**
-   * Toasts.
-   *
-   * These explain the CONSEQUENCE of an action ("Difficult — repeats more, comes back
-   * sooner") rather than confirming it ("Saved"). That is what teaches the learner the
-   * model, so the wording is a product contract, not decoration.
-   */
   toast: {
-    /** The affordance in the toast pill: visible label and accessible name. */
-    undo: UNDO,
-    added: 'Added — here are more like it',
-    addedOwn: 'Added to your stream',
+    get removed() {
+      return message('toast.removed')
+    },
+    get undo() {
+      return message('toast.undo')
+    },
+    get added() {
+      return message('toast.added')
+    },
+    get addedOwn() {
+      return message('toast.addedOwn')
+    },
     difficulty: {
-      hard: 'Difficult — repeats more, comes back sooner',
-      easy: 'Easy — drifting to the back',
-      med: 'Back to normal',
+      get hard() {
+        return message('toast.difficulty.hard')
+      },
+      get easy() {
+        return message('toast.difficulty.easy')
+      },
+      get med() {
+        return message('toast.difficulty.med')
+      },
     },
     loved: {
-      added: '♥ Loved — surfacing more often',
-      removed: 'Removed from Loved',
+      get added() {
+        return message('toast.loved.added')
+      },
+      get removed() {
+        return message('toast.loved.removed')
+      },
     },
     learned: {
-      marked: '✓ Learned — removed from the stream',
-      unmarked: 'Back into your stream',
+      get marked() {
+        return message('toast.learned.marked')
+      },
+      get unmarked() {
+        return message('toast.learned.unmarked')
+      },
     },
-    /** Curly quotes are the blueprint's. `label` is lowercased here, once. */
     drilling: (count: number, label: string): string =>
-      `Drilling ${count} “${label.toLowerCase()}” phrases`,
+      message('toast.drilling', { count, label: label.toLocaleLowerCase(currentNativeLanguage()) }),
   },
-
-  /**
-   * Accessible names and hints.
-   *
-   * Kept apart from visible copy because they answer a different question — what the
-   * control IS, spoken, with no layout to lean on — and because two of these props
-   * never reach a browser (react-native-web forwards neither `accessibilityHint` nor
-   * `accessibilityLanguage`), so the E2E suite cannot catch a regression in a hint.
-   */
   a11y: {
     common: {
-      back: 'Back',
-      dismiss: 'Dismiss',
-      undo: UNDO,
-      /** Phrase detail's heart, and the stream's love button, when the phrase is loved. */
-      removeFromLoved: 'Remove from loved',
-      /** Today's set rows and the stream's up-next rows both open phrase detail. */
-      opensPhraseDetails: 'Opens phrase details',
+      get back() {
+        return message('a11y.common.back')
+      },
+      get dismiss() {
+        return message('a11y.common.dismiss')
+      },
+      get undo() {
+        return message('a11y.common.undo')
+      },
+      get removeFromLoved() {
+        return message('a11y.common.removeFromLoved')
+      },
+      get opensPhraseDetails() {
+        return message('a11y.common.opensPhraseDetails')
+      },
     },
     today: {
-      /** One focusable element per row, so the row's name carries the number. */
-      phraseRow: (es: string, pct: number): string => `${es}. ${percentAutomatic(pct)}`,
+      phraseRow: (es: string, pct: number, day: number, days: number): string =>
+        message('a11y.today.phraseRow', { es, pct, day, days }),
       startHint: (phrases: number, repsEach: number): string =>
-        `${phrases} phrases, ${repsEach} reps each`,
+        message('a11y.today.startHint', { phrases, repsEach }),
+      place: (place: string): string => message('a11y.today.place', { place }),
+      railCount: (label: string, phrases: number): string =>
+        message('a11y.today.railCount', { label, phrases }),
+      nextWaveRow: (title: string, detail: string): string =>
+        message('a11y.today.nextWaveRow', { title, detail }),
+      banked: (count: number): string => message('a11y.today.banked', { count }),
+      hereNow: (place: string): string => message('a11y.today.hereNow', { place }),
     },
     add: {
-      searchInput: 'Search phrases',
-      themeTile: (theme: string, count: number): string => `${theme}, ${toAdd(count)}`,
-      backToThemes: 'Back to themes',
-      /** A suggestion row: Spanish, then the English. */
-      suggestionRow: (es: string, en: string): string => `${es}. ${en}`,
-      opensSheet: 'Opens the tagging sheet',
+      get searchInput() {
+        return message('a11y.add.searchInput')
+      },
+      themeTile: (theme: string, remaining: string): string =>
+        message('a11y.add.themeTile', { theme, remaining }),
+      get backToThemes() {
+        return message('a11y.add.backToThemes')
+      },
+      suggestionRow: (es: string, en: string): string =>
+        message('a11y.add.suggestionRow', { es, en }),
+      get opensSheet() {
+        return message('a11y.add.opensSheet')
+      },
     },
     onboarding: {
-      option: (label: string, sub: string): string => `${label}. ${sub}`,
+      goalValue: (goal: string): string => message('onboarding.goalValue', { goal }),
+      option: (label: string, sub: string): string =>
+        message('a11y.onboarding.option', { label, sub }),
     },
     phrase: {
-      markLoved: 'Mark as loved',
-      markStillLearning: 'Mark as still learning',
-      currentHook: (note: string): string => `Memory hook: ${note}. Tap to change.`,
-      useHook: (hook: string): string => `Use hook: ${hook}`,
+      get markLoved() {
+        return message('a11y.phrase.markLoved')
+      },
+      get markStillLearning() {
+        return message('a11y.phrase.markStillLearning')
+      },
+      currentHook: (note: string): string => message('a11y.phrase.currentHook', { note }),
+      useHook: (hook: string): string => message('a11y.phrase.useHook', { hook }),
     },
     refrain: {
-      /** The warming card, read as one thing: what to do, the phrase, how automatic. */
       card: (cue: string, es: string, pct: number): string =>
-        `${cue}. ${es}. ${percentAutomatic(pct)}`,
+        message('a11y.refrain.card', { cue, es, pct }),
     },
     stream: {
-      previous: 'Previous',
-      next: 'Next phrase',
-      skip: 'Skip',
-      loveThisPhrase: 'Love this phrase',
+      get previous() {
+        return message('a11y.stream.previous')
+      },
+      get next() {
+        return message('a11y.stream.next')
+      },
+      get skip() {
+        return message('a11y.stream.skip')
+      },
+      get loveThisPhrase() {
+        return message('a11y.stream.loveThisPhrase')
+      },
       queueRow: (es: string, en: string, difficulty: string): string =>
-        `${es}. ${en}. ${difficulty}.`,
+        message('a11y.stream.queueRow', { es, en, difficulty }),
     },
     progress: {
-      /** Seven bars as ONE group: seven cells would read as seven meaningless letters. */
       weekSummary: (practisedDays: number): string =>
-        `Last seven days: practised on ${practisedDays} of them.`,
-      trickyRow: (label: string, count: number): string => `${label}, ${count} phrases`,
-      trickyHint: 'Drills exactly these phrases',
+        message('a11y.progress.weekSummary', { practisedDays }),
+      trickyRow: (label: string, count: number): string =>
+        message('a11y.progress.trickyRow', { label, count }),
+      get trickyHint() {
+        return message('a11y.progress.trickyHint')
+      },
     },
   },
-} as const
+}
+
+export function themeLabel(theme: string): string {
+  const themes: Record<string, { label: string }> = copy.add.themes
+  return themes[theme]?.label ?? message('theme.own', { theme })
+}

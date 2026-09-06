@@ -3,9 +3,12 @@ packages/design-tokens/out/
 packages/core-rs/bindings/
 packages/core-rs/pkg/
 packages/core-rs/target/
+docs/architecture/openapi.*.json
 
 # The authored design artefact. Not ours to reformat.
 Language Learning by Phrases/
+design/
+.claude/
 
 # Lockfiles and build output
 pnpm-lock.yaml

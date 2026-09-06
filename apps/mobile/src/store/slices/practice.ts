@@ -29,12 +29,24 @@ export const createPracticeSlice: Slice<'recordPlay' | 'applyDelta'> = ({ set, g
     // the evening it continues rather than starting a new day.
     const practised = (delta.reps ?? 0) > 0 ? deps.clock.streakDay() : null
 
-    set((st) => ({
-      phrases: st.phrases.map((p) =>
-        p.id === delta.phraseId ? applyDeltaToPhrase(p, delta, day) : p,
-      ),
-      practiceDays:
-        practised === null ? st.practiceDays : addPracticeDay(st.practiceDays, practised),
-    }))
+    set((st) => {
+      const active = st.phrases.some((p) => p.id === delta.phraseId)
+      const saved = Object.entries(st.courses).find(
+        ([locale, course]) =>
+          locale !== st.targetLocale && course.phrases.some((p) => p.id === delta.phraseId),
+      )
+      if (!active && !saved) return st
+      const update = (phrases: typeof st.phrases): typeof st.phrases =>
+        phrases.map((p) => (p.id === delta.phraseId ? applyDeltaToPhrase(p, delta, day) : p))
+      return {
+        phrases: active ? update(st.phrases) : st.phrases,
+        courses:
+          !active && saved
+            ? { ...st.courses, [saved[0]]: { ...saved[1], phrases: update(saved[1].phrases) } }
+            : st.courses,
+        practiceDays:
+          practised === null ? st.practiceDays : addPracticeDay(st.practiceDays, practised),
+      }
+    })
   },
 })

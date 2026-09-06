@@ -26,3 +26,5 @@ export function loadCatalog(lang = 'es-ES'): Catalog {
   }
   return bundledCatalog
 }
+
+export * from './multilingual.js'

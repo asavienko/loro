@@ -171,12 +171,9 @@ export const phraseRow = {
  *
  * `padding` / `paddingBottom` are the bar's own; `paddingBottom` is added to the safe-area inset.
  *
- * `clearance` is the room the SCREEN must leave at the foot of its scroll view so the bar does not
- * cover the last row. The bar is absolutely positioned, so it reserves nothing itself. **These
- * three numbers are guesses, not measurements** — each screen picked its own, and they disagree by
- * 24 px for bars of similar height. Do NOT replace them with `onLayout`: measuring would change
- * layout, which `e2e/text-scale.spec.ts` can catch, and this refactor changes no behaviour. A
- * follow-up plan owns making them real.
+ * `clearance` preserves each screen's authored minimum scroll padding before the first layout.
+ * Plan 84 adds measured ActionBar height plus breathing room as the other side of Math.max, so
+ * enlarged buttons cannot hide the final row. These fallback numbers are not measurements.
  */
 export const actionBar = {
   padding: space['4'],

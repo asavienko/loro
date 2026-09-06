@@ -12,6 +12,7 @@
  */
 
 import { DIFFICULTIES, type Difficulty } from '@loro/core'
+import { Platform } from 'react-native'
 import { Pressable, Row, Segmented, Text } from '../primitives'
 import { border, difficultyCard, difficultyMeta, ink, line, radius, surface } from '../theme'
 
@@ -53,7 +54,7 @@ export function DifficultySelector({
   const m = difficultyCard[density]
 
   return (
-    <Row gap={m.gap}>
+    <Row gap={m.gap} wrap align="stretch">
       {DIFFICULTIES.map((d) => {
         const meta = difficultyMeta[d]
         const active = value === d
@@ -69,6 +70,7 @@ export function DifficultySelector({
             }}
             style={{
               flex: 1,
+              ...(Platform.OS === 'web' ? { minWidth: 'auto' as const } : {}),
               alignItems: 'center',
               paddingVertical: m.paddingVertical,
               borderRadius: radius.lg,
@@ -77,7 +79,7 @@ export function DifficultySelector({
               borderColor: active ? meta.border : line.strong,
             }}
           >
-            <Text variant="labelSm" color={active ? meta.color : ink.ink3}>
+            <Text variant="labelSm" color={active ? meta.color : ink.ink3} align="center">
               {labels[d]}
             </Text>
           </Pressable>

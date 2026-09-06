@@ -9,7 +9,8 @@ test('adaptive stream rerates, reorders, transports, loves, and learns phrases',
   await expect(page.getByText("How's this one?")).toBeVisible()
   await expect(page.getByRole('button', { name: 'Previous' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Next phrase' })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Skip' })).toBeVisible()
+  await expect(page.getByText(/Audio is not available yet/)).toBeVisible()
+  await expect(page.getByRole('progressbar')).toHaveCount(0)
 
   await page.getByRole('radio', { name: 'Difficult' }).click()
   await expect(page.getByRole('alert')).toContainText('repeats more, comes back sooner')
@@ -21,11 +22,28 @@ test('adaptive stream rerates, reorders, transports, loves, and learns phrases',
   await expect(page.getByText('2 / 10')).toBeVisible()
   await page.getByRole('button', { name: 'Previous' }).click()
   await expect(page.getByText('1 / 10')).toBeVisible()
-  await page.getByRole('button', { name: 'Skip' }).click()
+  await page.getByRole('button', { name: 'Next phrase' }).click()
   await expect(page.getByText('2 / 10')).toBeVisible()
 
   await page.getByRole('button', { name: 'Mark learned' }).click()
   await expect(page.getByText('Learned 1')).toBeVisible()
+})
+
+test('P3-03: the stream claims no playback it cannot do', async ({ page }) => {
+  await onboard(page)
+  await page.getByRole('button', { name: 'Stream' }).click()
+
+  // The 35% bar over silence and the pips stuck at zero are both gone, and this is the
+  // assertion that fails if either comes back before plan 62 owns real playback position.
+  // The unnamed form of the bar is `aria-hidden`, so it is invisible to a role locator —
+  // `render.spec.ts` catches that one by its geometry.
+  await expect(page.getByRole('progressbar')).toHaveCount(0)
+
+  // Nothing wears a play glyph. The centre control is the queue's forward move and says so.
+  await expect(page.getByText('►', { exact: true })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Next phrase' })).toBeVisible()
+
+  await expect(page.getByText(/Audio is not available yet/)).toBeVisible()
 })
 
 test('adaptive stream reaches its all-learned empty state', async ({ page }) => {
@@ -37,5 +55,18 @@ test('adaptive stream reaches its all-learned empty state', async ({ page }) => 
   }
 
   await expect(page.getByText('Your stream is empty')).toBeVisible()
-  await expect(page.getByText('Add phrases to start listening')).toBeVisible()
+  await expect(page.getByText('Add phrases to build your stream')).toBeVisible()
+  await page.getByRole('button', { name: 'Add phrases', exact: true }).click()
+  await expect(page.getByRole('textbox', { name: 'Search phrases' })).toBeVisible()
+})
+
+test('manual phrase browsing wraps the queue without recording practice', async ({ page }) => {
+  await onboard(page)
+  await page.getByRole('button', { name: 'Stream' }).click()
+  for (let phrase = 0; phrase < 10; phrase += 1) {
+    await page.getByRole('button', { name: 'Next phrase' }).click()
+  }
+  await expect(page.getByText('1 / 10')).toBeVisible()
+  await page.getByRole('link', { name: /back/i }).click()
+  await expect(page.getByText('0 reps today', { exact: true })).toBeVisible()
 })

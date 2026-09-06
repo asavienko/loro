@@ -6,22 +6,73 @@
  * one place decides what today is.
  */
 
-import { catalogPhraseId } from '@loro/core'
-import { packPhrases } from '../catalog'
+import { assertLanguagePair, catalogPhraseId } from '@loro/core'
+import { loadLearningCatalog } from '../catalog'
+import type { CourseState } from '../state'
 import { blankPhraseState } from '../phraseFactory'
-import { INITIAL_STATE } from '../state'
+import { EMPTY_REFRAIN_RESUME, INITIAL_STATE } from '../state'
 import type { Slice } from '../types'
 
-export const createSessionSlice: Slice<'completeOnboarding' | 'reset'> = ({ set, get, deps }) => ({
-  completeOnboarding: ({ goal, dailyMinutes, packIds }) => {
+export const createSessionSlice: Slice<'completeOnboarding' | 'reset' | 'setLanguages'> = ({
+  set,
+  get,
+  deps,
+}) => ({
+  setLanguages: (nativeLanguage, targetLocale) => {
+    assertLanguagePair(nativeLanguage, targetLocale)
+    const current = get()
+    if (targetLocale === current.targetLocale) {
+      set({ nativeLanguage, languageChosen: true, toast: null })
+      return
+    }
+    const snapshot: CourseState = {
+      streamCursor: current.streamCursor,
+      refrainResume: current.refrainResume,
+      onboarded: current.onboarded,
+      phrases: current.phrases,
+      selectedId: current.selectedId,
+      refrainSet: current.refrainSet,
+      refrainDay: current.refrainDay,
+      refrainSubstituted: current.refrainSubstituted,
+    }
+    const destination = current.courses[targetLocale] ?? {
+      streamCursor: 0,
+      refrainResume: EMPTY_REFRAIN_RESUME,
+      onboarded: false,
+      phrases: [],
+      selectedId: null,
+      refrainSet: [],
+      refrainDay: null,
+      refrainSubstituted: [],
+    }
+    set({
+      ...destination,
+      nativeLanguage,
+      targetLocale,
+      languageChosen: true,
+      courses: { ...current.courses, [current.targetLocale]: snapshot },
+      toast: null,
+    })
+    get().ensureRefrainSet()
+  },
+  completeOnboarding: ({ goal, level, dailyMinutes, packIds }) => {
     const now = deps.clock.now()
-    const seeded = packPhrases(packIds).map((c) =>
-      blankPhraseState(deps.newId(), catalogPhraseId(c.id), 'starter', now),
+    if (get().onboarded) return
+    const catalog = loadLearningCatalog(get().targetLocale, get().nativeLanguage)
+    const ids = new Set(
+      packIds.flatMap((id) => catalog.packs.find((pack) => pack.id === id)?.phrases ?? []),
+    )
+    const seeded = [...ids].map((id) =>
+      blankPhraseState(deps.newId(), catalogPhraseId(id), 'starter', now),
     )
 
     set({
       onboarded: true,
+      languageChosen: true,
       goal,
+      // Stored, not yet acted on — see `level` on `AppData`. Dropping it here is the defect
+      // this field exists to close.
+      level,
       dailyMinutes,
       phrases: seeded,
       refrainSet: [],

@@ -3,7 +3,7 @@
  * pairing.
  */
 
-import { StyleSheet } from 'react-native'
+import { Platform, StyleSheet } from 'react-native'
 import { MIN_TAP, ink, line, onDark, radius, semantic, space, surface } from '../theme'
 import { useTheme } from '../ThemeProvider'
 import { Pressable } from './Pressable'
@@ -22,9 +22,10 @@ export function Button({
   variant?: 'primary' | 'secondary' | 'destructive' | undefined
   /**
    * `lg` is the Refrain's rep button — the one control the whole screen exists for, at 56 px with
-   * `title3` on it. Everything else is `md`, whose floor is `MIN_TAP`.
+   * `title3` on it. `cta` is the v1.1 screen CTA: the single filled control a surface is allowed,
+   * at the authored `--cta-h` / `--cta-radius`. Everything else is `md`, whose floor is `MIN_TAP`.
    */
-  size?: 'md' | 'lg' | undefined
+  size?: 'md' | 'lg' | 'cta' | undefined
   disabled?: boolean | undefined
   accessibilityHint?: string | undefined
 }) {
@@ -48,6 +49,7 @@ export function Button({
       style={[
         s.button,
         size === 'lg' ? s.lg : null,
+        size === 'cta' ? s.cta : null,
         { backgroundColor: bg },
         variant !== 'primary' ? { borderWidth: 1, borderColor: line.strong } : null,
       ]}
@@ -56,6 +58,8 @@ export function Button({
       <Text
         variant={size === 'lg' ? 'title3' : 'body'}
         color={fg}
+        // F-08: web text-only zoom must grow multiline CTA line boxes with the glyphs.
+        style={size === 'cta' && Platform.OS === 'web' ? { lineHeight: undefined } : undefined}
         align={size === 'lg' ? undefined : 'center'}
       >
         {label}
@@ -79,4 +83,12 @@ const s = StyleSheet.create({
    * one text-scale step earlier and the button would grow to two lines.
    */
   lg: { minHeight: 56, paddingVertical: 0, paddingHorizontal: 0, alignItems: 'center' },
+  /**
+   * The v1.1 screen CTA, at the authored navigation tokens: `--cta-h: 56px` and
+   * `--cta-radius: 22px` (`design/…/tokens/navigation.css`). Rounder and taller than `md`
+   * because the design system allows exactly one filled control per screen and this is it.
+   * `body` text, not `lg`'s `title3`: the authored CTA label is 15 px
+   * (`Navigation.dc.html:160`).
+   */
+  cta: { minHeight: 56, borderRadius: 22, paddingVertical: 0, alignItems: 'center' },
 })

@@ -21,8 +21,37 @@ concurrency:
 # audio, or animated, a reviewer is expected to install it — a screenshot cannot
 # show whether the warming card stutters. See docs/process/code-review.md
 jobs:
+  configuration:
+    name: EAS configuration
+    runs-on: ubuntu-latest
+    outputs:
+      enabled: ${{ steps.config.outputs.enabled }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - name: Check project and credentials without starting a build
+        id: config
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          MANUAL_BUILD: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          pnpm --filter @loro/mobile exec expo config --type public --json > /tmp/loro-expo-config.json
+          node <<'NODE'
+          const fs = require('node:fs');
+          const config = JSON.parse(fs.readFileSync('/tmp/loro-expo-config.json', 'utf8'));
+          const id = config.extra?.eas?.projectId;
+          const enabled = Boolean(process.env.EXPO_TOKEN && id && id !== 'PLACEHOLDER');
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `enabled=${enabled}\n`);
+          if (!enabled) {
+            console.log('EAS is not configured: set a real project ID and EXPO_TOKEN (plan 58). Browser and bundle gates run in CI.');
+            if (process.env.MANUAL_BUILD === 'true') process.exit(1);
+          }
+          NODE
+
   build:
     name: EAS ${{ inputs.profile || 'preview' }}
+    needs: configuration
+    if: needs.configuration.outputs.enabled == 'true'
     runs-on: ubuntu-latest
     environment: ${{ (inputs.profile == 'production') && 'production' || 'preview' }}
     steps:

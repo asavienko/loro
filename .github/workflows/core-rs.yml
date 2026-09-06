@@ -20,7 +20,7 @@ defaults:
 
 jobs:
   test:
-    name: test + golden
+    name: unit and integration tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -35,14 +35,15 @@ jobs:
       - name: Unit + integration tests
         run: cargo test --all-features
 
-      # ~50 recorded utterances with committed expected output.
-      # A moved score is either a real improvement or a regression — the author must say which.
-      # See docs/architecture/prosody-dsp.md#golden-tests-forever
+      # Plan 77 has not landed the golden harness yet. All existing tests run above;
+      # enable the dedicated suite automatically when its Cargo test target exists.
       - name: Golden DSP tests
+        id: golden
+        if: hashFiles('packages/core-rs/tests/golden.rs', 'packages/core-rs/tests/golden/main.rs') != ''
         run: cargo test --test golden -- --nocapture
 
       - name: Explain the golden failure
-        if: failure()
+        if: failure() && steps.golden.outcome == 'failure'
         run: |
           echo "::error::A golden DSP score moved beyond its stability threshold."
           echo "This is either a real improvement or a regression. Do NOT re-baseline silently —"
@@ -56,7 +57,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
         with: { workspaces: packages/core-rs }
-      - name: Criterion (fails on >10% regression)
+      - name: Criterion benchmarks
         run: cargo bench -- --save-baseline pr
       - uses: actions/upload-artifact@v7
         with:
@@ -72,9 +73,9 @@ jobs:
         include:
           - { target: aarch64-apple-ios, os: macos-latest }
           - { target: aarch64-apple-ios-sim, os: macos-latest }
-          - { target: aarch64-linux-android, os: ubuntu-latest }
-          - { target: armv7-linux-androideabi, os: ubuntu-latest }
-          - { target: x86_64-linux-android, os: ubuntu-latest }
+          - { target: aarch64-linux-android, abi: arm64-v8a, os: ubuntu-latest }
+          - { target: armv7-linux-androideabi, abi: armeabi-v7a, os: ubuntu-latest }
+          - { target: x86_64-linux-android, abi: x86_64, os: ubuntu-latest }
           - { target: wasm32-unknown-unknown, os: ubuntu-latest }
     steps:
       - uses: actions/checkout@v7
@@ -87,10 +88,16 @@ jobs:
         if: contains(matrix.target, 'android')
         run: cargo install cargo-ndk --locked
 
-      - run: cargo build --release --target ${{ matrix.target }}
+      - name: Android library with the NDK linker
+        if: contains(matrix.target, 'android')
+        run: cargo ndk --target ${{ matrix.abi }} build --release --lib
+
+      - name: iOS or WASM library
+        if: ${{ !contains(matrix.target, 'android') }}
+        run: cargo build --release --lib --target ${{ matrix.target }}
 
   parity:
-    name: cross-language parity
+    name: calendar parity
     runs-on: macos-latest
     needs: build-matrix
     steps:
@@ -98,7 +105,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
         with: { workspaces: packages/core-rs }
-      # Swift, Kotlin, and WASM must agree on every number.
-      # A divergence here means the sync merge could lose learner data. ADR-0002.
-      - name: Same inputs, same outputs across all bindings
+      # The current parity target exercises calendar fixtures; native binding parity is
+      # still owned by plan 60. Do not claim it from this Rust-only harness.
+      - name: Calendar parity fixtures
         run: cargo test --test parity

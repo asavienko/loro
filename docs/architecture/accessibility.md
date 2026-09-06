@@ -274,3 +274,15 @@ protecting deliberately.
 The two automated checks that matter most are **Spanish `lang` attribution** and **graph summaries
 present**, because both are easy to forget on a new screen and both are invisible to a sighted
 developer testing by hand.
+
+## F-08 language metadata
+
+The text primitive accepts the active target marker, native codes and explicit target locales. It
+supplies both native `accessibilityLanguage` and web `lang`; untranslated personal meanings retain
+their original-language label. Language choices are named radio groups with explicit checked state.
+Cyrillic/expanded-copy states join the accessibility and 200%/310% manifests. Browser checks do not
+prove native voice availability or native screen-reader pronunciation.
+
+F-08 runtime accessibility divergence: tag chips cap their width to their container and allow their
+labels to wrap. Web CTA labels use natural line height so 310% text-only zoom cannot paint Cyrillic
+glyphs outside the button. Native line-height tokens and the CTA minimum height remain unchanged.

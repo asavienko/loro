@@ -33,10 +33,10 @@
 
   **Ten defects found, none fixed as behavior changes** — see "Defects found while reading" below.
   Three safe ones were folded in (`isSyncEntity`, `dropAll`, the undeclared `NOT_FOUND`). A
-  follow-up ownership audit in [53](../../53-post-refactor-solid-kiss-dry-audit.md) found the original
-  05/06/50 routing was too coarse: 05 owns maths/token matching, 18 owns set eligibility, 39 owns
-  API validation, 50 owns rendered integrity, and the local SQLite merge defects still need a
-  focused correctness plan.
+  follow-up ownership audit in [53](../../53-post-refactor-solid-kiss-dry-audit.md) found the
+  original 05/06/50 routing was too coarse: 05 owns maths/token matching, 18 owns set eligibility,
+  39 owns API validation, 50 owns rendered integrity, and the local SQLite merge defects still need
+  a focused correctness plan.
 
 - **Depends on:** nothing. **Overlaps, and lands part of:**
   - [48-app-shell-failure-states-and-input](48-app-shell-failure-states-and-input.md) **§3 and §3a**
@@ -100,11 +100,12 @@ Five findings that set the shape of the work:
 ## Where things go
 
 Grounded in what `eslint.config.mjs` already declares, so no lint config has to be loosened — and in
-[`component-inventory.md`](../../../docs/design/component-inventory.md), which **already specifies 23
-primitives in `src/ui/primitives/` (a directory) and 39 domain components in `src/ui/components/`**,
-naming `Chip`, `Segmented`, `Sheet`, `Scrim`, `IconButton`, `TextField`, `PhraseRow`,
-`DifficultySelector`, `TagChips` and `MasteryBar` — every one of which the screens hand-roll today.
-Nothing below is invented: the structure was specified before it was built, and this plan builds it:
+[`component-inventory.md`](../../../docs/design/component-inventory.md), which **already specifies
+23 primitives in `src/ui/primitives/` (a directory) and 39 domain components in
+`src/ui/components/`**, naming `Chip`, `Segmented`, `Sheet`, `Scrim`, `IconButton`, `TextField`,
+`PhraseRow`, `DifficultySelector`, `TagChips` and `MasteryBar` — every one of which the screens
+hand-roll today. Nothing below is invented: the structure was specified before it was built, and
+this plan builds it:
 
 | New home                    | Holds                                                                | Why there                                                                        |
 | --------------------------- | -------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
@@ -217,8 +218,8 @@ enforces 4, and `cueLevel` has never been written by any engine. A new engine ca
 - **The fake maths in `store/index.ts:405-443` stays as-is.** `fsrsReview` invents intervals
   (`grade === 1 ? 0.007 : …`), `clozeMask` returns a fixed `[1]`, and `streamRank` reimplements
   ranking in TS — all of which `packages/core-rs` is supposed to own
-  ([ADR-0002](../../../docs/architecture/adr/0002-shared-rust-core.md)). Fixing it changes numbers the
-  learner sees, so it is out of bounds here; that is
+  ([ADR-0002](../../../docs/architecture/adr/0002-shared-rust-core.md)). Fixing it changes numbers
+  the learner sees, so it is out of bounds here; that is
   [05-fix-shared-maths-duplication](05-fix-shared-maths-duplication.md)'s job. This refactor only
   **moves** the facade to its own module, where the next plan can replace it in one file.
 - The motion layer and the remaining component inventory —

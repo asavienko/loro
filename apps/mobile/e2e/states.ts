@@ -1,3 +1,4 @@
+import { localeText, onboardPair } from './languageFlow'
 /**
  * Every learner-visible STATE the app can be in, and how to reach it by clicking.
  *
@@ -49,11 +50,109 @@ export interface AppState {
 }
 
 export const STATES: AppState[] = [
+  ...(['bg', 'ru'] as const).flatMap((native) =>
+    (['today', 'stream', 'add', 'progress', 'refrain'] as const).map((surface): AppState => ({
+      name: `${surface} · ${native} course`,
+      route:
+        surface === 'today'
+          ? '/'
+          : surface === 'stream' || surface === 'refrain'
+            ? `/practice/${surface}`
+            : `/${surface}`,
+      firstRun: true,
+      spec: '§ F-08 Languages',
+      reach: async (page) => {
+        const text = localeText[native]
+        await onboardPair(page, native, native === 'bg' ? 'ru-RU' : 'bg-BG')
+        if (surface === 'stream') {
+          await page.getByRole('button', { name: new RegExp(`^${text['common.stream']},`) }).click()
+          await expect(page.getByText(text['stream.audioNote'])).toBeVisible()
+        } else if (surface === 'add') {
+          await page.getByRole('button', { name: text['today.rail.add'], exact: true }).click()
+          await page
+            .getByRole('button')
+            .filter({ has: page.locator('[lang="bg-BG"], [lang="ru-RU"]') })
+            .first()
+            .click()
+          await expect(
+            page.getByRole('button', { name: text['add.confirm'], exact: true }),
+          ).toBeVisible()
+          await expect(page.getByRole('dialog')).toBeVisible()
+        } else if (surface === 'progress') {
+          await page.getByRole('button', { name: text['common.progress'], exact: true }).click()
+          await expect(page.getByText(text['progress.mastery.title'])).toBeVisible()
+        } else if (surface === 'refrain') {
+          const names = [
+            text['today.cta.startWave.morning'],
+            text['today.cta.startWave.midday'],
+            text['today.cta.startWave.evening'],
+          ]
+          await page.getByRole('button', { name: new RegExp(names.join('|')) }).click()
+          await expect(page.getByText(text['refrain.audioNote'])).toBeVisible()
+        }
+      },
+    })),
+  ),
+  {
+    name: 'languages · selection',
+    route: '/languages',
+    spec: '§ F-08 Languages',
+    reach: async (page) => {
+      await page.getByRole('button', { name: /Today, open the menu/ }).click()
+      await page.getByRole('button', { name: 'Languages', exact: true }).click()
+      await expect(page.getByRole('button', { name: 'Save languages' })).toBeVisible()
+    },
+  },
+  {
+    name: 'languages · invalid matching pair',
+    route: '/languages',
+    spec: '§ F-08 Languages',
+    reach: async (page) => {
+      await page.getByRole('button', { name: /Today, open the menu/ }).click()
+      await page.getByRole('button', { name: 'Languages', exact: true }).click()
+      await page
+        .getByRole('radiogroup', { name: 'I want to learn' })
+        .getByRole('radio', { name: 'Български' })
+        .click()
+      await page
+        .getByRole('radiogroup', { name: 'My native language' })
+        .getByRole('radio', { name: 'Български' })
+        .click()
+      await expect(page.getByText('Choose a different learning language.')).toBeVisible()
+    },
+  },
+  ...(['bg', 'ru'] as const).map((locale): AppState => ({
+    name: `onboarding · ${locale} languages`,
+    route: '/onboarding',
+    firstRun: true,
+    spec: '§ F-08 Languages',
+    reach: async (page) => {
+      await page.goto('/onboarding')
+      await page
+        .getByRole('radiogroup', { name: 'My native language' })
+        .getByRole('radio', { name: locale === 'bg' ? 'Български' : 'Русский' })
+        .click()
+      await expect(
+        page.getByText(locale === 'bg' ? 'Моят роден език' : 'Мой родной язык'),
+      ).toBeVisible()
+    },
+  })),
   {
     name: 'today · seeded',
     route: '/',
     spec: '§11 Today',
-    reach: (page) => expect(page.getByText('Today', { exact: true })).toBeVisible(),
+    reach: (page) => expect(todayMarker(page)).toBeVisible(),
+  },
+  {
+    name: 'today · switcher',
+    route: '/',
+    spec: '§11 Today, the navigation spine',
+    reach: async (page) => {
+      await page.getByRole('button', { name: /Today, open the menu/ }).click()
+      await expect(page.getByText('Where to?')).toBeVisible()
+      // The SETTLED sheet, not a frame of the slide-in — see `add · difficulty sheet`.
+      await expect(page.getByRole('dialog')).toBeVisible()
+    },
   },
   {
     name: 'today · nothing in rotation',
@@ -70,6 +169,19 @@ export const STATES: AppState[] = [
         await expect(page).toHaveURL(/\/$/)
       }
       await expect(page.getByText(/Nothing in rotation yet/)).toBeVisible()
+    },
+  },
+  {
+    // The undo window is a learner-visible state of its own: a toast with an affordance in it,
+    // living on Today because `Remove` navigates back before the toast expires (`P2-13`).
+    name: 'today · remove undo offered',
+    route: '/',
+    spec: '§3 Phrase detail, remove',
+    reach: async (page) => {
+      await openFirstPhrase(page)
+      await click(page, 'Remove')
+      await expect(page).toHaveURL(/\/$/)
+      await expect(page.getByRole('button', { name: 'Undo' })).toBeVisible()
     },
   },
   {
@@ -112,7 +224,9 @@ export const STATES: AppState[] = [
       await page.getByRole('checkbox', { name: 'Hard to remember' }).click()
       await back(page)
       await open(page, 'Progress')
-      await expect(page.getByRole('button', { name: /Hard to remember, 1 phrases/ })).toBeVisible()
+      // `getByLabel`, not `getByRole('button')`: the row is a rollup, not a control. The tag
+      // drill it used to claim does not exist (plan 64 §4).
+      await expect(trickyRow(page, 'Hard to remember', 1)).toBeVisible()
     },
   },
   { name: 'add · discover', route: '/add', spec: '§2 Add', reach: (page) => open(page, 'Add') },
@@ -134,6 +248,20 @@ export const STATES: AppState[] = [
       await click(page, 'browse')
       await page.getByRole('button', { name: /^Dining,/ }).click()
       await expect(page.getByRole('button', { name: 'Back to themes' })).toBeVisible()
+      await expect(page.getByText('Dining · 4 left')).toBeVisible()
+    },
+  },
+  {
+    // The other end of a drill: a theme the learner already owns in full. Onboarding seeds
+    // every Café phrase in the catalog, so this is one tap from the grid.
+    name: 'add · theme fully added',
+    route: '/add',
+    spec: '§2 Add, browse',
+    reach: async (page) => {
+      await open(page, 'Add')
+      await click(page, 'browse')
+      await page.getByRole('button', { name: /^Café,/ }).click()
+      await expect(page.getByText(/You have every phrase in this theme/)).toBeVisible()
     },
   },
   {
@@ -187,12 +315,13 @@ export const STATES: AppState[] = [
     reach: async (page) => {
       await page.goto('/phrase/not-a-row-id')
       await expect(page.getByText('No phrase selected')).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Go to Today' })).toBeVisible()
     },
   },
   {
     name: 'stream · first phrase',
     route: '/practice/stream',
-    spec: '§4 Adaptive stream',
+    spec: '§4 Adaptive stream; plan 84 manual browsing while audio is unavailable',
     reach: (page) => open(page, 'Stream'),
   },
   {
@@ -203,21 +332,24 @@ export const STATES: AppState[] = [
       await open(page, 'Stream')
       for (let i = 0; i < 10; i += 1) await click(page, 'Mark learned')
       await expect(page.getByText('Your stream is empty')).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Add phrases', exact: true })).toBeVisible()
     },
   },
   {
     name: 'refrain · first rep',
     route: '/practice/refrain',
     spec: '§12 The refrain',
-    reach: (page) => open(page, 'Start the wave →'),
+    reach: (page) => startWave(page),
   },
   {
     name: 'refrain · locked in',
     route: '/practice/refrain',
     spec: '§12 The refrain, lock-in',
     reach: async (page) => {
-      await open(page, 'Start the wave →')
+      await startWave(page)
       await lockIn(page)
+      await expect(page.getByText("Today's practice rounds are complete.")).toBeVisible()
+      await expect(page.getByText('effort ↓', { exact: true })).toHaveCount(0)
     },
   },
   {
@@ -225,7 +357,7 @@ export const STATES: AppState[] = [
     route: '/practice/refrain',
     spec: '§12 The refrain, completion',
     reach: async (page) => {
-      await open(page, 'Start the wave →')
+      await startWave(page)
       for (let phrase = 0; phrase < 5; phrase += 1) {
         for (const rep of REFRAIN_REPS) await click(page, rep)
         await page.getByRole('button', { name: /Next phrase →|Finish the set →/ }).click()
@@ -233,17 +365,97 @@ export const STATES: AppState[] = [
       await expect(page.getByText('¡Hecho! Today is done')).toBeVisible()
     },
   },
-  {
-    name: 'refrain · tag drill',
-    route: '/practice/refrain',
-    spec: '§12 The refrain, tag drill',
+  ...[
+    {
+      name: 'languages · cold entry',
+      route: '/languages',
+      url: '/languages',
+      spec: '§ F-08 Languages',
+    },
+    { name: 'add · cold entry', route: '/add', url: '/add', spec: '§2 Add' },
+    { name: 'progress · cold entry', route: '/progress', url: '/progress', spec: '§15 Progress' },
+    {
+      name: 'stream · cold entry',
+      route: '/practice/stream',
+      url: '/practice/stream',
+      spec: '§4 Adaptive stream',
+    },
+    {
+      name: 'refrain · cold entry',
+      route: '/practice/refrain',
+      url: '/practice/refrain',
+      spec: '§12 The refrain',
+    },
+    {
+      name: 'phrase detail · cold entry',
+      route: '/phrase/[id]',
+      url: '/phrase/missing',
+      spec: '§3 Phrase detail',
+    },
+  ].map(({ name, route, url, spec }): AppState => ({
+    name,
+    route,
+    spec,
+    firstRun: true,
     reach: async (page) => {
-      await openFirstPhrase(page)
-      await page.getByRole('checkbox', { name: 'Hard to remember' }).click()
-      await back(page)
-      await open(page, 'Progress')
-      await page.getByRole('button', { name: /Hard to remember, 1 phrases/ }).click()
-      await expect(page.getByRole('alert')).toContainText('Drilling')
+      await page.goto(url)
+      await expect(page.getByRole('button', { name: 'Today', exact: true })).toBeVisible()
+    },
+  })),
+  ...[
+    {
+      name: 'languages · switcher',
+      route: '/languages',
+      url: '/languages',
+      spec: '§ F-08 Languages',
+    },
+    { name: 'add · switcher', route: '/add', url: '/add', spec: '§2 Add' },
+    { name: 'progress · switcher', route: '/progress', url: '/progress', spec: '§15 Progress' },
+    {
+      name: 'stream · switcher',
+      route: '/practice/stream',
+      url: '/practice/stream',
+      spec: '§4 Adaptive stream',
+    },
+    {
+      name: 'refrain · switcher',
+      route: '/practice/refrain',
+      url: '/practice/refrain',
+      spec: '§12 The refrain',
+    },
+    {
+      name: 'phrase detail · switcher',
+      route: '/phrase/[id]',
+      url: '/phrase/missing',
+      spec: '§3 Phrase detail',
+    },
+  ].map(({ name, route, url, spec }): AppState => ({
+    name,
+    route,
+    spec,
+    firstRun: true,
+    reach: async (page) => {
+      await page.goto(url)
+      await page.getByRole('button', { name: /, open the menu$/ }).click()
+      await expect(page.getByRole('dialog')).toBeVisible()
+    },
+  })),
+  {
+    name: 'onboarding · ready summary',
+    route: '/onboarding',
+    spec: '§1 Onboarding, ready',
+    firstRun: true,
+    reach: async (page) => {
+      await page.goto('/onboarding')
+      await click(page, "Let's go →")
+      for (const answer of [/A trip coming up/, /Starting out/, /10 minutes/]) {
+        await page.getByRole('radio', { name: answer }).click()
+        await click(page, 'Continue')
+      }
+      await page.getByRole('checkbox', { name: /Café & ordering/ }).click()
+      await click(page, 'Continue')
+      await expect(page.getByText('A trip coming up', { exact: true })).toBeVisible()
+      await expect(page.getByText("You're all set")).toBeVisible()
     },
   },
 ]
@@ -292,12 +504,33 @@ export async function lockIn(page: Page): Promise<void> {
   await expect(page.getByText('Locked in for today')).toBeVisible()
 }
 
+/**
+ * Today's single filled control. It NAMES the wave the clock is on
+ * (`Navigation.dc.html:159–161`), so specs match the shape rather than the hour CI runs at.
+ */
+export const START_WAVE = /^Start the (morning|midday|evening) wave$/
+
+export async function startWave(page: Page): Promise<void> {
+  await page.getByRole('button', { name: START_WAVE }).click()
+}
+
+/**
+ * Proof that Today is on screen.
+ *
+ * Not `getByText('Today')`: the v1.1 shell says the word twice, once in the spine and once as
+ * the header title, so that locator is a strict-mode violation. The day list's heading is the
+ * one thing only this screen has.
+ */
+export function todayMarker(page: Page): Locator {
+  return page.getByText('Your day', { exact: true })
+}
+
 /** One rep, from Today and back to Today. */
 export async function doOneRep(page: Page): Promise<void> {
-  await click(page, 'Start the wave →')
+  await startWave(page)
   await click(page, 'Say it')
   await page.goBack()
-  await expect(page.getByText('Today', { exact: true })).toBeVisible()
+  await expect(todayMarker(page)).toBeVisible()
 }
 
 export async function openProgress(page: Page): Promise<void> {
@@ -307,7 +540,7 @@ export async function openProgress(page: Page): Promise<void> {
 
 export async function backToToday(page: Page): Promise<void> {
   await back(page)
-  await expect(page.getByText('Today', { exact: true })).toBeVisible()
+  await expect(todayMarker(page)).toBeVisible()
 }
 
 /**
@@ -330,13 +563,55 @@ export function streakValue(page: Page): Locator {
     .first()
 }
 
-/** Today's streak chip. */
+/**
+ * Today's streak capsule — `—` before the first rep, "N days" after it.
+ *
+ * The v1.1 root header words the streak rather than pairing a bare number with a flame
+ * (`Navigation.dc.html:118`), so this matches the wording. Nothing else on Today reads as a day
+ * count: the day list's own numbers are times, "N reps today", and "day N/4".
+ */
 export function streakChip(page: Page): Locator {
-  return page
-    .getByText('🔥')
-    .locator('..')
-    .getByText(/^\d+$|^—$/)
-    .first()
+  return page.getByText(/^(\d+ days?|—)$/)
+}
+
+/** The streak capsule's copy, for a given number of practised days. */
+export function streakText(days: number): string {
+  return `${days} day${days === 1 ? '' : 's'}`
+}
+
+/**
+ * A fact row in Today's day list whose number sits in the time column, so the row carries a
+ * grouped accessible name: the banked tail is `getByLabel('1 graduated and banked')`.
+ */
+export function bankedRow(page: Page, graduated: number): Locator {
+  return page.getByLabel(`${graduated} graduated and banked`)
+}
+
+/**
+ * The day list's reps-so-far row, which replaced Today's "reps today" stat tile.
+ *
+ * Filtered to the visible node: returning to Today from the Refrain leaves the popped screen's
+ * copy of it in the DOM, and `refrain.spec.ts` already filters the same way for that reason.
+ */
+export function repsTodayRow(page: Page, reps: number): Locator {
+  return page.getByText(`${reps} reps today`, { exact: true }).filter({ visible: true })
+}
+
+/** A rail destination that carries a count — "Stream, 10 phrases". */
+export function railCount(page: Page, label: string, phrases: number): Locator {
+  return page.getByRole('button', { name: `${label}, ${phrases} phrases` })
+}
+
+/**
+ * A "what's tricky" row on Progress, by its grouped accessible name.
+ *
+ * `getByLabel`, not `getByRole('button')`: the row is a ROLLUP. It used to be a control that
+ * toasted "Drilling N …" and navigated to today's unfiltered set, which named a consequence that
+ * did not happen; the tag-filtered session is plan 64 §4. So a change that makes this a button
+ * again should be the change that makes the drill real.
+ */
+export function trickyRow(page: Page, label: string, phrases: number): Locator {
+  return page.getByLabel(`${label}, ${phrases} phrases`)
 }
 
 export { REFRAIN_REPS }

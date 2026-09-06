@@ -56,8 +56,12 @@ Same custom-anyway problem for content and AI.
 - The sync endpoint is **thin** because the logic is in `loro-core` (WASM) — the same bytes the
   client runs. This is the single most important property and it's only available if we control the
   request handler.
-- Drizzle schemas are shared with the client, so client and server DDL come from one definition
-  ([data-model.md](../data-model.md)).
+- ~~Drizzle schemas are shared with the client, so client and server DDL come from one definition.~~
+  **Withdrawn.** The client's DDL is handwritten SQL and there is no Drizzle on the device
+  ([ADR-0003's amendment](0003-offline-first-sqlite-sync.md#amendment--2026-07-30--handwritten-sql-on-the-client-no-orm)).
+  The two definitions are separate; what keeps them honest is the sync contract in
+  `packages/core/src/sync/fieldPolicy.ts`, which CI enforces, not a shared schema. This was a
+  supporting pro, not the reason option C won — the thin WASM sync endpoint below is.
 - Zod schemas from `packages/core` validate both sides of every endpoint; the contract cannot drift.
 - NestJS module boundaries suit a service that will grow a worker tier and several proxies.
 - Team familiarity — this is the stack already run elsewhere in the org.

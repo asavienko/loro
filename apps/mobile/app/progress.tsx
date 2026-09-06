@@ -1,19 +1,26 @@
+import { useLocale } from '../src/lib/i18n'
 /**
  * Progress — Loro.dc.html:1787–1876, logic 2815–2871.
  *
- * The connective thread closing its loop: "What's tricky in your stream" rolls up
- * the learner's OWN tags, and tapping a row drills exactly those phrases.
+ * The connective thread: "What's tricky in your stream" rolls up the learner's OWN tags.
  *
  * Nothing on this screen shames a missed day.
  *
  * One rollup hook and five blocks, in the blueprint's order: `StreakCard` → `StatRow` →
  * `MasteryBar` → `TrickyRollup` → `MilestoneList`. Every number they show comes from
  * `useProgressSummary`, so there is one place to read what this screen counts.
+ *
+ * ── The loop this screen does NOT close yet ──
+ * `P4-06` and FS §15 say tapping a tricky row starts a drill of exactly those phrases. It does
+ * not exist: `RefrainEngine.plan()` practises today's frozen `refrainSet`, which has no
+ * relationship to the tag that was tapped, and no tag-filtered session exists anywhere. The row
+ * used to navigate there anyway and toast "Drilling 4 “pronunciation” phrases", which named a
+ * consequence that did not happen — the exact thing `copy-and-tone.md` rule 3 exists to prevent.
+ * So the rows are a rollup and nothing more until plan 64 §4 lands a genuinely filtered set (with
+ * plan 60's tag-scoped selection). Their numbers are real; their tap is not invented.
  */
-
 import { useMemo } from 'react'
 import { ScrollView, StyleSheet, View } from 'react-native'
-import { router } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import {
   countMasteryBuckets,
@@ -29,7 +36,6 @@ import {
   DarkCard,
   Dot,
   Grid,
-  Pressable,
   ProgressBar,
   Row,
   Screen,
@@ -54,15 +60,13 @@ import {
 import { useApp } from '../src/store'
 import { copy } from '../src/lib/copy'
 import { deviceClock, recentLocalDays } from '../src/lib/clock'
-
 export default function Progress() {
+  useLocale()
   const insets = useSafeAreaInsets()
   const phrases = useApp((s) => s.phrases)
   const practiceDays = useApp((s) => s.practiceDays)
-  const showToast = useApp((s) => s.showToast)
 
   const summary = useProgressSummary(phrases, practiceDays)
-
   return (
     <Screen>
       <ScrollView
@@ -80,24 +84,16 @@ export default function Progress() {
 
         <MasteryBar mastery={summary.mastery} total={summary.total} collected={phrases.length} />
 
-        <TrickyRollup
-          rows={summary.tricky}
-          onDrill={(row) => {
-            showToast(copy.toast.drilling(row.count, row.label))
-            router.push('/practice/refrain')
-          }}
-        />
+        <TrickyRollup rows={summary.tricky} />
 
         <MilestoneList phrases={phrases} mastered={summary.mastered} />
       </ScrollView>
     </Screen>
   )
 }
-
 // ─────────────────────────────────────────────────────────────────────────────
 // The rollups
 // ─────────────────────────────────────────────────────────────────────────────
-
 /**
  * Everything this screen shows, derived from the practice history and the phrase list.
  * Nothing here is stored: the streak, the week, the histogram and the tag counts are all
@@ -110,19 +106,17 @@ function useProgressSummary(phrases: readonly PhraseState[], practiceDays: reado
    * Derived from the practice history, never stored. The same function `core-rs` exposes
    * to the widget, so the two show the same number (ADR-0002).
    */
+  const nativeLanguage = useApp((state) => state.nativeLanguage)
   const streak = useMemo(() => streakOf(practiceDays, deviceClock.streakDay()), [practiceDays])
-
   const week = useMemo(() => {
     const practised = new Set(practiceDays)
     return recentLocalDays(7).map((d) => ({ ...d, practised: practised.has(d.day) }))
-  }, [practiceDays])
-
+  }, [practiceDays, nativeLanguage])
   const weekSummary = useMemo(() => {
     const count = week.filter((d) => d.practised).length
     // Stated as what happened, with no comparison to what could have happened.
     return copy.a11y.progress.weekSummary(count)
-  }, [week])
-
+  }, [week, nativeLanguage])
   /** The canonical counts enriched with the presentation each chart row needs. */
   const mastery = useMemo(() => {
     const counts = countMasteryBuckets(phrases)
@@ -132,10 +126,8 @@ function useProgressSummary(phrases: readonly PhraseState[], practiceDays: reado
       label: copy.mastery[key],
       count: counts[key],
     }))
-  }, [phrases])
-
+  }, [phrases, nativeLanguage])
   const total = Math.max(1, phrases.length)
-
   const tricky = useMemo(() => {
     const rows = TAGS.map((t) => ({
       tag: t,
@@ -145,10 +137,8 @@ function useProgressSummary(phrases: readonly PhraseState[], practiceDays: reado
     })).filter((r) => r.count > 0)
     const max = Math.max(1, ...rows.map((r) => r.count))
     return rows.map((r) => ({ ...r, pct: r.count / max }))
-  }, [phrases])
-
+  }, [phrases, nativeLanguage])
   const totalReps = phrases.reduce((n, p) => n + p.reps, 0)
-
   return {
     streak,
     week,
@@ -161,13 +151,10 @@ function useProgressSummary(phrases: readonly PhraseState[], practiceDays: reado
     totalReps,
   }
 }
-
 type Summary = ReturnType<typeof useProgressSummary>
-
 // ─────────────────────────────────────────────────────────────────────────────
 // The cards
 // ─────────────────────────────────────────────────────────────────────────────
-
 /** The streak: warm and central, never punitive — and the last seven real days under it. */
 function StreakCard({
   streak,
@@ -178,17 +165,18 @@ function StreakCard({
   week: Summary['week']
   weekSummary: string
 }) {
+  useLocale()
   return (
     <DarkCard>
       <Row justify="space-between" align="flex-end">
-        <View>
+        <View style={{ flex: 1 }}>
           <Text variant="labelSm" color={onDark.muted}>
             {copy.progress.streak.label}
           </Text>
-          <Row gap={space['2']} align="baseline" style={streakStyles.value}>
+          <Row gap={space['2']} align="baseline" wrap style={streakStyles.value}>
             <Text variant="hero" color={onDark.primary}>
               {/* No streak yet reads as an absence, not a zero. Nothing here
-                  apologises for a day that has not happened. */}
+            apologises for a day that has not happened. */}
               {streak === 0 ? copy.common.noValue : streak}
             </Text>
             <Text variant="body" color={onDark.tertiary}>
@@ -198,10 +186,10 @@ function StreakCard({
         </View>
       </Row>
       {/* The last seven REAL days, filled from the practice history. This used to be
-          `i < streak`: a bar chart pretending to be a calendar, which drew a
-          seven-day streak for a learner who had practised once. */}
+            `i < streak`: a bar chart pretending to be a calendar, which drew a
+            seven-day streak for a learner who had practised once. */}
       {/* One accessible group: seven separate cells would be read as seven
-          meaningless letters. */}
+            meaningless letters. */}
       <View accessible accessibilityLabel={weekSummary} style={streakStyles.week}>
         <Row gap={space['1.5']}>
           {week.map((d) => (
@@ -225,7 +213,6 @@ function StreakCard({
     </DarkCard>
   )
 }
-
 /** Phrase mastery: one stacked bar, its legend, and the summary that must sit beside it. */
 function MasteryBar({
   mastery,
@@ -236,6 +223,7 @@ function MasteryBar({
   total: number
   collected: number
 }) {
+  useLocale()
   return (
     <Card>
       <CardHeader
@@ -272,14 +260,15 @@ function MasteryBar({
   )
 }
 
-/** The thread closing its loop: the learner's own tags, and a row that drills exactly them. */
-function TrickyRollup({
-  rows,
-  onDrill,
-}: {
-  rows: Summary['tricky']
-  onDrill: (row: Summary['tricky'][number]) => void
-}) {
+/**
+ * The learner's own tags, rolled up.
+ *
+ * A row is NOT a control. It carries no chevron and no hint, because both are affordances for a
+ * tag drill that does not exist — see the note at the top of this file. The row is still one
+ * accessible node named "<tag>, N phrases", so the number and what it counts are read together;
+ * that is what a rollup owes a screen reader whether or not it is tappable.
+ */
+function TrickyRollup({ rows }: { rows: Summary['tricky'] }) {
   return (
     <Stack gap={space['2.5']}>
       <SectionLabel>{copy.progress.tricky.title}</SectionLabel>
@@ -292,14 +281,11 @@ function TrickyRollup({
         </Card>
       ) : (
         rows.map((r) => (
-          <Pressable
+          <View
             key={r.tag}
-            feedback="row"
+            accessible
             accessibilityLabel={copy.a11y.progress.trickyRow(r.label, r.count)}
-            accessibilityHint={copy.a11y.progress.trickyHint}
-            onPress={() => {
-              onDrill(r)
-            }}
+            aria-label={copy.a11y.progress.trickyRow(r.label, r.count)}
             style={trickyStyles.row}
           >
             <Row gap={metrics.trickyRow} style={trickyStyles.head}>
@@ -309,9 +295,6 @@ function TrickyRollup({
               </Text>
               <Text variant="caption" color={r.color}>
                 {r.count}
-              </Text>
-              <Text variant="body" color={ink.muted2}>
-                {copy.common.chevron.right}
               </Text>
             </Row>
             {/*
@@ -333,13 +316,12 @@ function TrickyRollup({
               radius={radius.sm}
               track={surface.sunken}
             />
-          </Pressable>
+          </View>
         ))
       )}
     </Stack>
   )
 }
-
 /** Milestones. Every one is earned by a signal that cannot go backwards. */
 function MilestoneList({
   phrases,
@@ -348,6 +330,7 @@ function MilestoneList({
   phrases: readonly PhraseState[]
   mastered: number
 }) {
+  useLocale()
   const milestone = copy.progress.milestones
   return (
     <Stack gap={space['2.5']}>
@@ -384,7 +367,6 @@ function MilestoneList({
     </Stack>
   )
 }
-
 function MilestoneRow({
   emoji,
   title,
@@ -396,16 +378,17 @@ function MilestoneRow({
   sub: string
   done: boolean
 }) {
+  useLocale()
   return (
     <Row
       gap={space['3']}
       style={[milestoneStyles.row, { backgroundColor: done ? surface.card : surface.sunken }]}
     >
       {/*
-        Not `EmojiTile`, though it is the same 38-px square: the tile dims to 0.55 when the
-        milestone is unearned, which that primitive has no prop for, and it would also hide
-        the emoji from the accessibility tree. Either is a change to what ships.
-      */}
+          Not `EmojiTile`, though it is the same 38-px square: the tile dims to 0.55 when the
+          milestone is unearned, which that primitive has no prop for, and it would also hide
+          the emoji from the accessibility tree. Either is a change to what ships.
+        */}
       <View
         style={[
           milestoneStyles.tile,
@@ -431,11 +414,9 @@ function MilestoneRow({
     </Row>
   )
 }
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Metrics
 // ─────────────────────────────────────────────────────────────────────────────
-
 /**
  * The numbers this screen passes as a PROP — a gap, a dot's diameter — where a `StyleSheet`
  * entry cannot hold them. Each has exactly one call site, which is why none of them is a
@@ -453,11 +434,9 @@ const metrics = {
   /** The tricky row's bar: one pixel taller than `ProgressBar`'s default. */
   trickyBar: 7,
 } as const
-
 const screenStyles = StyleSheet.create({
   scroll: { padding: space['4'], gap: space['4'] },
 })
-
 const streakStyles = StyleSheet.create({
   value: { marginTop: space['1'] },
   week: { marginTop: space['4'] },
@@ -471,20 +450,24 @@ const streakStyles = StyleSheet.create({
     justifyContent: 'center',
   },
 })
-
 const masteryStyles = StyleSheet.create({
   /**
-   * The stacked bar.
+   * The stacked bar (`Loro.dc.html:1830–1831`).
    *
-   * `alignItems: 'center'` is load-bearing and wrong: this was a `<Row gap={0}>`, whose
-   * default it is, and the segments declare no height of their own — so they centre at
-   * ZERO height and the bar renders as an empty groove, on web and on native alike.
-   * Preserved on purpose. Letting the fills stretch changes what is drawn, which this
-   * refactor promises not to do (plans/52); the fix is the lead's call, not this file's.
+   * `alignItems: 'stretch'` is the whole chart. It inherited `'center'` from the
+   * `<Row gap={0}>` this used to be, and the segments declare no height of their own — so
+   * every one of them centred at ZERO height and the bar drew as an empty groove while the
+   * legend beside it counted four buckets. A chart that renders nothing is not a smaller
+   * chart, it is a fabricated state: the screen claimed to show a distribution and showed
+   * none. The authored segments carry no height either, precisely because they stretch to
+   * fill the 12-px track.
+   *
+   * `render.spec.ts` measures the segments, because no semantic locator can see a zero
+   * height — that is how this survived two rounds of E2E.
    */
   bar: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'stretch',
     height: 12,
     borderRadius: radius.sm,
     overflow: 'hidden',
@@ -492,7 +475,6 @@ const masteryStyles = StyleSheet.create({
   },
   legend: { marginTop: space['3.5'] },
 })
-
 const trickyStyles = StyleSheet.create({
   row: {
     backgroundColor: surface.card,
@@ -505,7 +487,6 @@ const trickyStyles = StyleSheet.create({
   /** The label takes the slack, so the count and chevron stay on the right edge. */
   label: { flex: 1 },
 })
-
 const milestoneStyles = StyleSheet.create({
   row: {
     borderWidth: border.hairline,

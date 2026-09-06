@@ -287,11 +287,12 @@ turns transitions into cross-fades
 
 ## Instrumentation, and the collision it exposes
 
-[`observability.md`](../../../docs/architecture/observability.md) already requires navigation breadcrumbs
-("Navigation, engine transitions, audio-session events…"), per-screen frame drops, and per-screen
-memory. Instrumenting that **once in the shell** — a route listener that reads the route table for a
-stable screen id — is strictly better than thirteen screens each remembering to emit an event, and
-it is the only way the per-screen performance budgets get a name that survives a route rename.
+[`observability.md`](../../../docs/architecture/observability.md) already requires navigation
+breadcrumbs ("Navigation, engine transitions, audio-session events…"), per-screen frame drops, and
+per-screen memory. Instrumenting that **once in the shell** — a route listener that reads the route
+table for a stable screen id — is strictly better than thirteen screens each remembering to emit an
+event, and it is the only way the per-screen performance budgets get a name that survives a route
+rename.
 
 **But law 6 and the privacy rules collide, and it is worth naming before either is implemented.**
 Observability's rule 2 is "no free text. Not in logs, not in events, not in breadcrumbs, not in
@@ -358,9 +359,9 @@ then prove directly:
 
 **Not the browser's job.** Android hardware back, the iOS swipe, and `presentation: 'modal'` are
 device behaviours (defects 4, 7). They belong to the Maestro flows in
-[`testing-strategy.md`](../../../docs/process/testing-strategy.md) — which do not exist yet — so this plan
-adds them to that plan's list rather than pretending web coverage settles them, and law 5 stays a
-review item until plan 09 makes a device build possible.
+[`testing-strategy.md`](../../../docs/process/testing-strategy.md) — which do not exist yet — so
+this plan adds them to that plan's list rather than pretending web coverage settles them, and law 5
+stays a review item until plan 09 makes a device build possible.
 
 ## Commit sequence
 

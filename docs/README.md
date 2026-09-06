@@ -73,6 +73,12 @@ that statement and the owning plan in the same change.
 | [observability.md](architecture/observability.md)                 | Logs, traces, metrics, crash reporting, learning-quality telemetry                  |
 | [adr/](architecture/adr/)                                         | 14 architecture decision records                                                    |
 
+The backend contract package also has an
+[all-screen integration inventory](architecture/backend-integration-inventory.md),
+[implementation/migration guide](architecture/api-contracts.md), and generated
+[current](architecture/openapi.current.json) / [target](architecture/openapi.target.json) OpenAPI
+specifications.
+
 ## Design
 
 | Doc                                                     | Contents                                                                         |

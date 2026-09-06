@@ -1,3 +1,4 @@
+import { isNativeLanguage, isTargetLocale } from '../../domain/languages.js'
 /**
  * `user_phrase` — the learner's rows.
  *
@@ -81,6 +82,8 @@ export const PHRASE_COLUMN_NAMES = [
   'updated_hlc',
   'field_hlc',
   'deleted_at',
+  'target_locale',
+  'own_meaning_language',
 ] as const
 
 /**
@@ -97,6 +100,41 @@ type PhraseParams = ValuesFor<typeof PHRASE_COLUMN_NAMES>
 const PHRASE_COLUMNS = PHRASE_COLUMN_NAMES.join(', ')
 
 const PHRASE_PLACEHOLDERS = placeholders(PHRASE_COLUMN_NAMES.length)
+
+/**
+ * The columns an `upsert` does NOT own, and therefore must never write on conflict.
+ *
+ * `INSERT OR REPLACE` used to stand where the conflict clause below does, and it is a
+ * DELETE followed by an INSERT: the existing row is dropped, so every column the incoming
+ * row does not carry reverts to its DEFAULT. Two of them are not the caller's to reset.
+ *
+ *   • `field_hlc`  — the per-field merge history. `phraseToParams` binds `'{}'`, so a
+ *                    replace erased whatever `POST /sync/pull` had recorded, and the next
+ *                    merge would treat every field as never having been written. A local
+ *                    write owns `updated_hlc`; it does not own the other device's clocks.
+ *   • `deleted_at` — the tombstone. `phraseToParams` binds `NULL`, so a replace RESURRECTED
+ *                    a deleted row: `tombstone` is the one class that beats a concurrent
+ *                    edit at any HLC (docs/architecture/sync-protocol.md#per-field-lww),
+ *                    and a plain re-add of a row the learner deleted silently undid the
+ *                    deletion — on this device and, once the outbox drains, on every other.
+ *
+ * `id` is the conflict target. `user_id` is ownership: a content write is not a transfer,
+ * and leaving it out means one learner's row cannot be reassigned by writing over it.
+ *
+ * Derived from `PHRASE_COLUMN_NAMES` rather than listed again, so a column added there
+ * joins the update automatically — the failure mode of a hand-copied SET list is a new
+ * field that persists on insert and is silently dropped on every write after the first.
+ */
+const PHRASE_UPSERT_PRESERVES: ReadonlySet<string> = new Set([
+  'id',
+  'user_id',
+  'field_hlc',
+  'deleted_at',
+])
+
+const PHRASE_UPSERT_SET = PHRASE_COLUMN_NAMES.filter((c) => !PHRASE_UPSERT_PRESERVES.has(c))
+  .map((c) => `${c} = excluded.${c}`)
+  .join(', ')
 
 /** Every read filters to the live rows of one learner; only the tail differs. */
 const PHRASE_SELECT = `SELECT ${PHRASE_COLUMNS} FROM user_phrase
@@ -125,7 +163,11 @@ export function rowToPhrase(row: SqlRow): PhraseState {
   const ownEmoji = readTextOrNull(row, 'own_emoji')
   const phraseIdRaw = readTextOrNull(row, 'phrase_id')
 
+  const targetLocale = readTextOrNull(row, 'target_locale')
+  const ownMeaningLanguage = readTextOrNull(row, 'own_meaning_language')
   return {
+    ...(targetLocale && isTargetLocale(targetLocale) ? { targetLocale } : {}),
+    ...(ownMeaningLanguage && isNativeLanguage(ownMeaningLanguage) ? { ownMeaningLanguage } : {}),
     id: userPhraseId(readText(row, 'id')),
     phraseId: phraseIdRaw === null ? null : catalogPhraseId(phraseIdRaw),
     // `exactOptionalPropertyTypes` means an absent own_* field must be absent, not
@@ -209,8 +251,12 @@ export function phraseToParams(p: PhraseState, userId: string, hlc: string): Phr
     p.axProduction,
 
     hlc,
+    // INSERT-only defaults. A fresh row has no merge history and is not deleted; on
+    // conflict both columns are left alone — see `PHRASE_UPSERT_PRESERVES`.
     '{}',
     null,
+    p.targetLocale ?? null,
+    p.ownMeaningLanguage ?? null,
   ]
 }
 
@@ -243,16 +289,35 @@ export class SqlPhraseTable implements PhraseTable {
     )
   }
 
+  /**
+   * Insert the row, or update the columns this write owns.
+   *
+   * The conflict target is `id` alone, so a SECOND row id claiming a catalog phrase the
+   * learner already holds live raises the unique-index error rather than replacing the
+   * existing row — `INSERT OR REPLACE` used to discard that row and its history without a
+   * word (docs/architecture/data-model.md). Reconciling two ids for one phrase is plans
+   * 67–68's decision, and an exception is the honest interim answer.
+   */
   upsert(phrase: PhraseState): void {
     this.deps.driver.run(
-      `INSERT OR REPLACE INTO user_phrase (${PHRASE_COLUMNS}) VALUES (${PHRASE_PLACEHOLDERS})`,
+      `INSERT INTO user_phrase (${PHRASE_COLUMNS}) VALUES (${PHRASE_PLACEHOLDERS})
+       ON CONFLICT(id) DO UPDATE SET ${PHRASE_UPSERT_SET}`,
       phraseToParams(phrase, this.deps.userId, this.deps.hlc()),
     )
   }
 
+  /**
+   * Stamp the tombstone, once.
+   *
+   * `deleted_at IS NULL` makes a repeat delete a no-op rather than moving the recorded
+   * instant forward. A tombstone that keeps getting newer would eventually outrank a
+   * legitimate later write, and the in-memory table (a `Set`) was already idempotent — so
+   * the two implementations disagreed about what deleting twice means.
+   */
   softDelete(id: UserPhraseId, at: number): void {
     this.deps.driver.run(
-      `UPDATE user_phrase SET deleted_at = ?, updated_hlc = ? WHERE user_id = ? AND id = ?`,
+      `UPDATE user_phrase SET deleted_at = ?, updated_hlc = ?
+       WHERE user_id = ? AND id = ? AND deleted_at IS NULL`,
       [at, this.deps.hlc(), this.deps.userId, id],
     )
   }

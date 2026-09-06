@@ -39,7 +39,7 @@ import {
 } from '../common.js'
 import type { Difficulty, PhraseState } from '../../domain/phrase.js'
 import type { UserPhraseId } from '../../domain/ids.js'
-import { LadderRung, repsToday } from '../../domain/phrase.js'
+import { LadderRung, isActive, repsToday } from '../../domain/phrase.js'
 
 export const REFRAIN_MODES = ['echo', 'chorus', 'speed', 'cloze', 'call', 'cold'] as const
 export type RefrainMode = (typeof REFRAIN_MODES)[number]
@@ -204,7 +204,9 @@ export function selectRefrainSet(
     }
   }
 
-  const eligible = candidates.filter((p) => !p.learned && p.graduatedAt === null)
+  // The selector is handed raw candidates by some callers, so it filters again rather than
+  // trusting them — but through the one domain predicate, not a second copy of the rule.
+  const eligible = candidates.filter(isActive)
 
   // 1 · unfinished business
   eligible

@@ -1,3 +1,4 @@
+import type { LanguagePair, TargetLocale } from '../domain/languages.js'
 /**
  * What the app needs from storage, as interfaces.
  *
@@ -28,12 +29,20 @@ export interface PhraseTable {
   /** Not learned, not graduated, not deleted — what an engine may plan with. */
   active(): PhraseState[]
   due(at: number): PhraseState[]
-  /** Insert or replace the whole row. The caller owns the merge, not the database. */
+  /**
+   * Insert the row, or overwrite every field a `PhraseState` carries. The caller owns the
+   * merge, not the database.
+   *
+   * It does NOT clear the tombstone or the per-field merge history: `PhraseState` has no
+   * `deletedAt` and no HLC map, so an upsert holds no claim about either, and a write that
+   * reset them let a stale value resurrect a deleted row. Both implementations preserve
+   * them; see `sqlite/phrase.ts` for what that used to cost.
+   */
   upsert(phrase: PhraseState): void
   /**
-   * Soft delete. A hard delete cannot be synced: the other device would see the row
-   * missing and treat it as never having existed, so the removal would come straight
-   * back (docs/architecture/sync-protocol.md).
+   * Soft delete, idempotently. A hard delete cannot be synced: the other device would see
+   * the row missing and treat it as never having existed, so the removal would come
+   * straight back (docs/architecture/sync-protocol.md).
    */
   softDelete(id: UserPhraseId, at: number): void
   count(): number
@@ -41,6 +50,7 @@ export interface PhraseTable {
 
 /** The learner's settings. One row. */
 export interface SettingsRow {
+  languagePair?: LanguagePair
   onboarded: boolean
   goal: string | null
   level: string | null
@@ -55,15 +65,30 @@ export interface SettingsTable {
 
 /** Today's frozen Refrain set. */
 export interface RefrainDayRow {
+  targetLocale?: TargetLocale
   localDay: string
   setIds: string[]
+  /**
+   * The wave keys the learner has FINISHED today, in the order they finished.
+   *
+   * `refrain_day.waves` has existed since migration 1, but the repository bound a literal
+   * `'[]'` into every write, so the column could not be read or written and a completed
+   * wave died with the process. That is the durability half of `LB-03` ("three waves …
+   * with done/ready/locked states"): `done` is a fact about the LEARNER and must survive a
+   * relaunch, while `ready`/`locked` come from the clock and are derived
+   * (`apps/mobile/src/lib/waves.ts`).
+   *
+   * Empty until plan 64 writes it — no screen may render a wave as done on the strength of
+   * an empty array (non-negotiable 2).
+   */
+  waves: string[]
   substituted: string[]
 }
 
 export interface RefrainDayTable {
-  load(localDay: string): RefrainDayRow | null
+  load(localDay: string, targetLocale?: TargetLocale): RefrainDayRow | null
   /** The most recent day on record, whatever it is — what hydration reads. */
-  latest(): RefrainDayRow | null
+  latest(targetLocale?: TargetLocale): RefrainDayRow | null
   save(row: RefrainDayRow): void
 }
 
@@ -83,6 +108,7 @@ export interface PracticeDayTable {
 
 /** Everything the app stores, in one bag, so callers take one dependency. */
 export interface Persistence {
+  readonly courses: CourseTable
   readonly phrases: PhraseTable
   readonly settings: SettingsTable
   readonly refrainDay: RefrainDayTable
@@ -160,4 +186,17 @@ export function asPhraseRepository(table: PhraseTable): PhraseRepository {
     active: () => Promise.resolve(table.active()),
     due: (at) => Promise.resolve(table.due(at)),
   }
+}
+
+/** Device-local session resume metadata; phrase progress remains in user_phrase. */
+export interface CourseRow {
+  targetLocale: TargetLocale
+  onboarded: boolean
+  selectedId: string | null
+  streamCursor: number
+  refrainSession: string | null
+}
+export interface CourseTable {
+  load(target: TargetLocale): CourseRow | null
+  save(row: CourseRow): void
 }

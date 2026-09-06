@@ -25,6 +25,16 @@ import { motion } from '@loro/design-tokens'
 export const MIN_TAP = motion.touch.minTapTarget
 
 /**
+ * The slop `Pressable` adds outside every tappable box, on all four edges.
+ *
+ * Named because two places do arithmetic with it: `Pressable` applies it, and a control whose
+ * drawn box is deliberately smaller than `MIN_TAP` — Today's 28-px spine band, its text rail —
+ * has to know how much of the floor the slop already covers. `e2e/accessibility.spec.ts` adds
+ * the same number back when it measures, which is the check those call sites answer to.
+ */
+export const HIT_SLOP = 8
+
+/**
  * The two border weights in the app.
  *
  * `selected` is 1.5 wherever a control shows it is the chosen one — the difficulty cards,

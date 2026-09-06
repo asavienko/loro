@@ -16,6 +16,7 @@
 
 import { create, type StoreApi, type UseBoundStore } from 'zustand'
 import { deviceClock } from '../lib/clock'
+import { setCopyLanguages } from '../lib/i18n'
 import { newId } from '../lib/ids'
 import { INITIAL_STATE } from './state'
 import { createPhrasesSlice } from './slices/phrases'
@@ -41,3 +42,13 @@ export function createAppStore(deps: StoreDeps): UseBoundStore<StoreApi<AppState
 
 /** The app's store. A test builds its own with `createAppStore` and a fake clock. */
 export const useApp = createAppStore({ clock: deviceClock, newId })
+
+// Only the production instance drives the UI locale. Test stores stay independent.
+useApp.subscribe((state, previous) => {
+  if (
+    state.nativeLanguage !== previous.nativeLanguage ||
+    state.targetLocale !== previous.targetLocale
+  ) {
+    setCopyLanguages(state.nativeLanguage, state.targetLocale)
+  }
+})

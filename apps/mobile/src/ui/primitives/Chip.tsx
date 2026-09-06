@@ -56,10 +56,14 @@ export function Chip({
       accessibilityLabel={accessibilityLabel ?? label}
       selected={selected}
       onPress={onPress}
-      style={look.container}
+      style={[look.container, variant === 'tag' ? { maxWidth: '100%' } : null]}
     >
       {emoji !== undefined && <Text variant={look.textVariant}>{emoji}</Text>}
-      <Text variant={look.textVariant} color={look.textColor}>
+      <Text
+        variant={look.textVariant}
+        color={look.textColor}
+        style={variant === 'tag' ? { flexShrink: 1 } : undefined}
+      >
         {label}
       </Text>
     </Pressable>

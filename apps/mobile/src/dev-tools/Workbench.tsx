@@ -388,8 +388,8 @@ function RenderedStateGallery({ textScale }: { textScale: TextScale }) {
           <WorkbenchHeading size="group">PhraseRow</WorkbenchHeading>
           <StateLabel>Spanish</StateLabel>
           <PhraseRow
-            es={GALLERY_SPANISH}
-            en="Do you have a table for two?"
+            targetText={GALLERY_SPANISH}
+            translation="Do you have a table for two?"
             emoji="☕"
             onPress={() => undefined}
             accessibilityLabel="Spanish production phrase row"

@@ -1,165 +1,83 @@
-# Localization
+# Localization and learning languages
 
-Two completely different problems that get confused with each other:
+**Implemented foundation (F-08, plan 85):** bundled English, Bulgarian and Russian UI; Spanish,
+Bulgarian and Russian starter catalogs; language selection and separate course state. New linguistic
+content awaits bilingual review. Device persistence still depends on plan 59. Audio, ASR and DSP
+capabilities remain unavailable until their native implementations and language validation land.
 
-|                                                                | Effort | v1                        |
-| -------------------------------------------------------------- | ------ | ------------------------- |
-| **UI localization** — translating Loro's interface             | Weeks  | Prepared for, not shipped |
-| **A new target language** — teaching French instead of Spanish | Months | No                        |
+## Language choices
 
-The first is a translation project. The second is a product.
+| Native language / UI | Learning languages                                        |
+| -------------------- | --------------------------------------------------------- |
+| English (`en`)       | Spanish (`es-ES`), Bulgarian (`bg-BG`), Russian (`ru-RU`) |
+| Bulgarian (`bg`)     | Spanish, Russian                                          |
+| Russian (`ru`)       | Spanish, Bulgarian                                        |
 
----
+The UI follows the native language. The welcome screen offers both choices before starter packs.
+Languages is also reachable from Today's switcher. Settings edits are staged until Save; an invalid
+matching pair cannot be saved. A first visit to another course asks for starter packs; returning to
+a course preserves its collection, daily set, session and progress. Changing native language changes
+catalog meanings and UI, never rewrites personal translations or resets progress. Personal meanings
+retain their original language label. The activity streak remains shared across courses.
 
-## UI localization
+New installs detect a supported device locale, otherwise English. Explicit choices win. Existing
+learners migrate as English → Spanish. An unavailable learning language is an error, never a silent
+Spanish fallback.
 
-English-only in v1, but every string goes through ICU message format from day one. Retrofitting i18n
-into 21 screens is far more expensive than doing it now.
+## Interface translations
 
-### Setup
+`apps/mobile/src/lib/i18n/` contains bundled `en.json`, `bg.json`, `ru.json` resources and the
+synchronous i18next + react-i18next + i18next-icu runtime. expo-localization supplies the initial
+language. `copy.ts` is the typed adapter: getters and functions resolve messages at access time;
+React consumers subscribe with `useLocale()`. Shared components receive translated props.
 
-```
-apps/mobile/src/i18n/
-├── index.ts              # i18next + expo-localization
-├── en.json               # the source
-└── <locale>.json         # translations
-```
+- Semantic keys, named parameters, ICU plurals, no concatenated message fragments.
+- `Intl` formatting follows the native/UI language; logical day keys remain language-independent.
+- CI requires identical keys and interpolation arguments. English is the emergency UI fallback.
+- Translations are bundled, so reading them requires no network.
+- Preserve the no-shame tone, structural emoji and the effort progression as a group.
+- Dense rows must accommodate expansion and Cyrillic at 200% and 310% text scale.
+- Target text uses `lang="target"`; the text primitive resolves the active target locale. Native
+  `accessibilityLanguage` and the explicit web `lang` attribute are both set.
 
-```ts
-t('refrain.lockedIn.title') // "Locked in for today"
-t('stream.toast.difficult') // "Difficult — repeats more, comes back sooner"
-t('progress.mastery.count', { count: 12 }) // plural-aware
-t('trip.countdown.daysToGo', { days: 12 })
-```
+## Content and service contracts
 
-### Rules
+`@loro/core` owns language identities, supported pairs and the neutral catalog/teaching types.
+`@loro/content` exposes `loadLearningCatalog(targetLocale, nativeLanguage)`. Each target phrase has
+stable identity, `targetText`, and `translations` keyed by native language. Respelling, coaching,
+glosses and contextual explanations belong to the native/target pair. Existing English → Spanish
+teaching is retained; unsupported pair-specific teaching is absent.
 
-1. **No string literals in components.** Lint-enforced.
-2. **Keys are semantic paths**, not English text — `refrain.lockedIn.title`, not
-   `Locked_in_for_today`.
-3. **ICU plurals from the start.** `{count, plural, one {# phrase} other {# phrases}}`. Spanish,
-   Polish, and Arabic all disagree with English here.
-4. **No string concatenation.** One message with placeholders, always — word order differs by
-   language.
-5. **Numbers and dates through `Intl`**, never hand-formatted.
-6. **Allow for 40% expansion.** German and Finnish are long, and the blueprint's rows are tight.
-7. **RTL-ready layout** — logical properties (`start`/`end`), never `left`/`right`.
+The original Spanish JSON and `loadCatalog()` remain legacy adapters for v1 APIs and authoring
+tools. New catalog access rejects unsupported pairs. Existing Spanish IDs are unchanged; Bulgarian
+and Russian IDs are prefixed by target locale. Each target has 31 starter phrases, sharing pack
+membership and stable theme keys. Display labels are localized; counts derive from membership.
 
-### Three things that are not UI strings
+`/v1/content/v2/{manifest,diff,pack}` accepts `target` and `native`, returning neutral field names
+and explicit locale metadata. `/v1/content/{manifest,diff,pack}` retains the original
+Spanish/English wire shape. AI scene requests accept `nativeLanguage` and `targetLocale`; the
+current Spanish-only stub rejects other pairs rather than returning the wrong language.
 
-This is the distinction that makes Loro's i18n unusual, and getting it wrong would break the
-product.
+## Persistence and release gates
 
-**Spanish content is content, not UI.** `es`, `en`, `resp`, glosses, examples, hooks all live in
-`packages/content`, keyed by language pair. They are never touched by UI translation.
+Migration 2 preserves existing IDs, progress and outbox data. Legacy physical `own_es`/`own_en`
+columns are storage compatibility names; new input/view APIs use neutral names. Own phrases record
+their target and meaning language. `languagePair` has one LWW policy so concurrent settings cannot
+produce an unsupported hybrid pair. Frozen daily sets key on user, target and local day.
+`course_session` stores device-local resume metadata, independently of syncable phrase progress.
 
-**The Spanish celebrations stay Spanish.** _"¡Hola! I'm Loro"_, _"¡Hecho!"_, _"¡Escena
-completada!"_, _"¡BIENVENIDO A MADRID!"_ are target-language content used as emotional punctuation
-([`../design/copy-and-tone.md`](../design/copy-and-tone.md#5--spanish-first-for-feeling-english-for-meaning)).
-A German UI still says _"¡Hecho!"_, then explains in German.
+The running app still uses the existing in-memory store. Plan 59 must wire these repositories into
+transactional hydration/write-through and prove device relaunch/offline behavior. This feature is
+not a claim that device persistence has shipped.
 
-**The pronunciation coaching is language-pair-specific.** _"Say 'ba-nyo'"_ only helps an English
-speaker; _"the double rr needs a real roll"_ assumes the learner's L1 lacks a trill. Every fix
-template is keyed by `(target_language, ui_language)` and needs re-authoring per pair, not
-translating
-([`../architecture/prosody-dsp.md`](../architecture/prosody-dsp.md#5--feedback-selection)).
+New translations carry `pending-bilingual-review`. Review must cover meanings, naturalness,
+register, gendered forms, cultural substitutions and UI tone before production release. No machine
+or structural test constitutes bilingual approval. Optional unreviewed pronunciation teaching stays
+absent. Production audio/ASR/DSP support remains separately gated per language.
 
-### Translator notes
+Future languages require reviewed content and capability validation, not just another UI JSON file.
+Spanish UI, English as a target, full courses and RTL-language release validation are deferred.
 
-Three cases need explicit notes, or a translator will get them wrong:
-
-1. **The effort ladder** — _"warming up" → "getting smoother" → "quick & smooth" → "instant &
-   smooth"_ is a **progression**, not four independent strings. It ships as a group with a note to
-   preserve the escalation.
-2. **The tone rules** — no shaming, no unspecific praise, no exclamation marks in chrome
-   ([`../design/copy-and-tone.md`](../design/copy-and-tone.md#what-we-never-write)). A translator
-   producing _"Toll gemacht!"_ has broken a product rule.
-3. **Emoji are structural**, not decorative. They carry row identity and must not be dropped or
-   substituted.
-
-### Candidate UI locales, in order
-
-`es` (learners often prefer a Spanish UI) · `de` · `fr` · `pt-BR` · `it` · `ja` · `ko`.
-
-**`es` first is counter-intuitive but right:** intermediate learners frequently switch the UI to
-their target language, and it's also the cheapest quality check — a Spanish UI with bad Spanish is
-immediately obvious.
-
----
-
-## Adding a target language
-
-Teaching French instead of Spanish is a **project**, not a configuration change. The architecture is
-ready; the linguistic and content work is not.
-
-### What's already language-agnostic
-
-| Ready                             | Why                                                                                                                 |
-| --------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| Data model                        | `lang` on every phrase; catalog files per locale ([`../architecture/data-model.md`](../architecture/data-model.md)) |
-| All five practice engines         | Selection and sequencing have no Spanish in them                                                                    |
-| FSRS, ladder, automaticity        | Language-independent                                                                                                |
-| Sync, offline, trips              | Unaffected                                                                                                          |
-| Design system, motion, components | Unaffected                                                                                                          |
-| DSP pipeline **structure**        | F0, MFCC, DTW are language-agnostic                                                                                 |
-| Content pipeline **structure**    | Render, extract, validate, publish                                                                                  |
-
-### What is not
-
-| Needed per language                      | Effort     | Notes                                                                                                                    |
-| ---------------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------ |
-| **~600 phrases, authored and reviewed**  | 6–10 weeks | The bulk of it. Needs a native content lead                                                                              |
-| Themes, scenarios, packs, drop schedules | 2 weeks    | Culturally specific — a French café interaction differs from a Spanish one                                               |
-| A TTS voice, evaluated and chosen        | 1 week     | One voice, forever ([content-authoring.md](content-authoring.md#4--render-and-extract))                                  |
-| **Syllabification + stress rules**       | 2–4 weeks  | Spanish is regular; French elision and liaison are not. This is the hard one                                             |
-| IPA mapping and respelling conventions   | 2 weeks    | `resp` is for an English-speaker's eye and differs entirely per language                                                 |
-| **Pronunciation coaching templates**     | 2 weeks    | Per `(target, ui)` pair. Requires phonetic expertise                                                                     |
-| ASR availability check                   | 1 week     | On-device support varies by language and platform ([ADR-0005](../architecture/adr/0005-on-device-asr-cloud-fallback.md)) |
-| Roleplay prompt + 24 fallback scenes     | 2 weeks    |                                                                                                                          |
-| DSP re-validation with native speakers   | 2 weeks    | The ≥80% agreement gate, again ([`../architecture/prosody-dsp.md`](../architecture/prosody-dsp.md#validation))           |
-| Store listings, screenshots, ASO         | 1 week     |                                                                                                                          |
-
-**Realistic total: 4–6 months per language**, dominated by content authoring and the phonetic work.
-
-### The cheap one: `es-419`
-
-Latin American Spanish is a _variant_, not a new language:
-
-- Same syllabification, stress, and IPA machinery.
-- Same coaching templates.
-- Same ASR support.
-- **Needs:** a variant voice, ~200 phrase substitutions (`el cortado` → `el café con leche`,
-  `vosotros` → `ustedes`, `coger` → `tomar`), and variant-specific scenarios.
-
-**Realistic total: 4–6 weeks**, and it's probably a larger market than `es-ES`. This is the first
-localization to do, and it's why `variants[]` is already in the phrase schema
-([`../product/content-model.md`](../product/content-model.md#enrichment-fields--optional-but-they-carry-most-of-the-value)).
-
-### Sequencing
-
-If we do this, the order should be:
-
-1. **`es-419`** — cheapest, largest incremental market, proves the variant machinery.
-2. **UI localization** to `es` and one other — proves the i18n pipeline at low risk.
-3. **One new target language** (probably French or Italian — regular-ish phonology, large learner
-   base).
-
-Attempting step 3 before steps 1 and 2 would mean discovering the pipeline's language assumptions
-the expensive way.
-
----
-
-## Right-to-left
-
-Not needed for any candidate language, but layout is written RTL-ready anyway because retrofitting
-it is expensive:
-
-- Logical properties (`marginStart`, `paddingEnd`), never `left`/`right`
-- No direction-dependent icons except where genuinely directional (the `‹` back chevron flips; `♪`
-  doesn't)
-- Charts and contours **do not flip** — a pitch contour reads left-to-right as _time_, in every
-  language
-- Text alignment via `start`/`end`
-
-The chart rule is worth noting: time flows left-to-right universally in data visualisation, and
-mirroring a pitch contour would make it wrong rather than localised.
+Before shipping multilingual courses, run `pnpm --filter @loro/content check:release`. It
+intentionally rejects the pending review status; structural CI remains usable while linguistic
+review is pending.

@@ -254,8 +254,8 @@ const COMPONENT_METADATA = {
     states: ['default', 'pressed-focused', 'long-copy', 'spanish', 'text-200', 'text-310'],
     render: () => (
       <componentExports.PhraseRow
-        es={SAMPLE_SPANISH}
-        en="Do you have a table for two?"
+        targetText={SAMPLE_SPANISH}
+        translation="Do you have a table for two?"
         emoji="☕"
         onPress={noop}
         accessibilityLabel="Production phrase row"

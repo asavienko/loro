@@ -4,9 +4,9 @@
  * ── The rules it exists to hold ──
  * • ONE focusable element. The row is the button; whatever `trailing` renders must not be a
  *   second tab stop (accessibility.md#every-phrase-row).
- * • The Spanish line carries `lang="es"`, always. A screen reader that reads it in English
+ * • The Spanish line carries `lang="target"`, always. A screen reader that reads it in English
  *   mangles it, and that is the highest-impact accessibility detail in the app.
- * • Both lines ellipsise at one line, so a long phrase cannot reflow the row.
+ * • Both languages wrap, so narrow screens and enlarged text do not hide the phrase to learn.
  * • The label is the CALLER's, because it differs by list: the stream announces the
  *   difficulty too, Add announces only the phrase.
  *
@@ -15,15 +15,17 @@
  * over the store's view — and their only common ground is these three strings. Taking the
  * strings keeps the component out of the business of knowing which id space it was handed.
  */
-
 import type { ReactNode } from 'react'
 import { View } from 'react-native'
 import { Pressable, Text } from '../primitives'
 import { border, ink, line, phraseRow, radius, surface } from '../theme'
 
+// Reserve most of the row for language; an enlarged badge must wrap before squeezing it.
+const PHRASE_TEXT_BASIS = '60%'
+
 export function PhraseRow({
-  es,
-  en,
+  targetText,
+  translation,
   emoji,
   variant = 'queue',
   onPress,
@@ -31,8 +33,8 @@ export function PhraseRow({
   accessibilityHint,
   trailing,
 }: {
-  es: string
-  en: string
+  targetText: string
+  translation: string
   emoji: string
   /** `queue` is the stream's "up next"; `suggestion` is Add's list — a step larger. */
   variant?: keyof typeof phraseRow | undefined
@@ -43,7 +45,6 @@ export function PhraseRow({
   trailing?: ReactNode
 }) {
   const m = phraseRow[variant]
-
   return (
     <Pressable
       feedback="row"
@@ -52,6 +53,7 @@ export function PhraseRow({
       onPress={onPress}
       style={{
         flexDirection: 'row',
+        flexWrap: 'wrap',
         alignItems: 'center',
         gap: m.gap,
         backgroundColor: surface.card,
@@ -62,17 +64,16 @@ export function PhraseRow({
       }}
     >
       <Text style={{ fontSize: m.emojiSize }}>{emoji}</Text>
-      <View style={{ flex: 1 }}>
+      <View style={{ flexGrow: 1, flexShrink: 0, flexBasis: PHRASE_TEXT_BASIS }}>
         <Text
           variant={variant === 'suggestion' ? 'bodySm' : 'caption'}
           color={ink.ink}
-          numberOfLines={1}
-          lang="es"
+          lang="target"
         >
-          {es}
+          {targetText}
         </Text>
-        <Text variant="captionSm" color={ink.muted} numberOfLines={1}>
-          {en}
+        <Text variant="captionSm" color={ink.muted}>
+          {translation}
         </Text>
       </View>
       {trailing}

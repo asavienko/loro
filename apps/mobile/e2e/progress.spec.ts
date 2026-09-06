@@ -1,6 +1,7 @@
 import { expect, onboard, openFirstPhrase, test } from './fixtures'
+import { trickyRow } from './states'
 
-test('P4-02..P4-08: reports real zero-state data and drills a learner tag', async ({ page }) => {
+test('P4-02..P4-08: reports real zero-state data and rolls up a learner tag', async ({ page }) => {
   await onboard(page)
   await page.getByRole('button', { name: 'Progress' }).click()
 
@@ -17,7 +18,13 @@ test('P4-02..P4-08: reports real zero-state data and drills a learner tag', asyn
   await page.getByRole('link', { name: /back/i }).click()
   await page.getByRole('button', { name: 'Progress' }).click()
 
-  await page.getByRole('button', { name: 'Hard to remember, 1 phrases' }).click()
-  await expect(page).toHaveURL(/\/practice\/refrain$/)
-  await expect(page.getByRole('alert')).toContainText('Drilling 1 “hard to remember” phrases')
+  // P4-05: the rollup row states the tag and its real count.
+  await expect(trickyRow(page, 'Hard to remember', 1)).toBeVisible()
+
+  // P4-06 is NOT built, and the screen must not pretend it is: no chevron, no button, no
+  // "Drilling 1 “hard to remember” phrases" toast over a session that practises today's
+  // unfiltered set. Plan 64 §4 lands the filtered set; this assertion flips when it does.
+  await expect(page.getByRole('button', { name: 'Hard to remember, 1 phrases' })).toHaveCount(0)
+  await expect(page.getByText(/Drilling/)).toHaveCount(0)
+  await expect(page).toHaveURL(/\/progress$/)
 })

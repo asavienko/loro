@@ -3,7 +3,15 @@
 - **Requirement IDs:** `NAV-01`…`NAV-16`, plus existing `F-03`, `P1-02`, `P2-14`, `P4-06`, `P5-08`,
   and `AS-04`
 - **Milestone:** M1/M2
-- **Status:** Not started
+- **Status:** 🟡 Partly implemented. Plan 84 moved the spine and switcher into the shared layout for
+  Today, Add, Progress, Stream, Refrain and phrase detail; the built-hub declaration in
+  `src/lib/navigation.ts` also supplies Today's rail. Cold stack entries have a Today escape and
+  menu navigation reuses existing stack destinations. Today retains its root header/day treatment.
+  **Remaining:** complete surface metadata/guards, flow navigation, More, contextual/ongoing groups,
+  session exits, durable resume, travelling transport and native verification. **Dependencies:**
+  plan 56 must extend the built route declaration with its full route/failure policy, and ongoing
+  work/transport still need 59/62/64. The current menu is not evidence those systems are
+  implemented.
 - **Depends on:** 56 typed navigation/failure shell; 57 runtime design system; transport/resume
   integration also depends on 59, 62, and 64
 

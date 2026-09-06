@@ -72,9 +72,13 @@ src/store/            in-memory app state, actions, selectors, and engine adapte
 src/data/             Node SQLite driver used only by persistence tests
 src/ui/primitives/    domain-free controls and layout
 src/ui/components/    reusable domain-aware composites
-src/lib/              copy, clock, IDs, and formatting helpers
+src/lib/              copy, clock, wave positions, IDs, and formatting helpers
 packages/core/        domain types, Stream/Refrain engines, persistence, sync policy
 ```
+
+Today additionally owns the v1.1 navigation chrome — spine, root header, rail, day rows, switcher —
+as route-local blocks, because it is the only surface carrying them today. Plan 81 mounts the spine
+on every non-sheet surface from the route table, and that is when they become shared components.
 
 Routes currently own their screen-specific hooks and named components. Reuse moves downward:
 domain-free pieces go in `src/ui/primitives/`, while a component used by multiple screens and typed
@@ -166,3 +170,16 @@ Every phrase row still opens phrase detail. The warming card is also still the p
 but today its band colour is selected during a React render and gradient bands fall back to a solid
 colour. The target is a measured UI-thread transition after Reanimated/Skia work lands; do not cite
 the current screen as evidence that animation or 60 fps has been implemented.
+
+## Language selection (F-08)
+
+Choose native and learning languages on the welcome page or through Today → switcher → Languages.
+English/Bulgarian/Russian UI follows the native choice; Spanish/Bulgarian/Russian starter courses
+keep separate in-memory collections, daily sets and resume state. Each target has 31 phrases. New
+translations are pending bilingual review. Schema 2 supports language settings and sessions, but
+production hydration/write-through still belongs to plan 59.
+
+Use `src/lib/copy.ts` for reactive localized copy and `useLearningCatalog()` for the selected pair.
+`src/lib/i18n/` bundles all translations; screens subscribe with `useLocale()`. A target text uses
+`lang="target"`. New translated states belong in the E2E manifest, including expanded/Cyrillic copy.
+To avoid another checkout's dev server, set `LORO_E2E_PORT=8095 pnpm test:e2e` from the root.
