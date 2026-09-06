@@ -199,6 +199,11 @@ npx expo start --web                # from apps/mobile — fastest way to see th
   Android SDK, plus a first `expo prebuild` (there is no `apps/mobile/ios` or `android/`). Until
   then: web, or Expo Go on a device, which still works only because no custom native module is
   installed yet.
+- **Native CI distinguishes implemented checks from setup gates.** Rust library builds use cargo-ndk
+  for Android and compile only libraries for mobile targets. Existing Rust tests always run; the
+  plan-77 golden harness runs once its test target exists. EAS builds require a real project ID and
+  `EXPO_TOKEN`; unconfigured automatic builds skip, while explicit manual requests fail with the
+  setup requirement. Browser and bundle gates remain required.
 - **The browser E2E suite protects the current web behavior, not missing native behavior.** The five
   hand-checks in [`onboarding.md`](docs/process/onboarding.md) — audio, mic, the warming card,
   offline, sync — have no implementation behind them to check. CI runs `pnpm test:e2e` as a separate
