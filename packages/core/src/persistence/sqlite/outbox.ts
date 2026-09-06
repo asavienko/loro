@@ -63,8 +63,14 @@ export class SqlOutboxTable implements OutboxTable {
       op.op === 'upsert' && fields.length > 0 && fields.every((f) => coalescable(op.entity, f))
 
     if (foldable) {
-      const pending = this.newestPendingUpsert(op.entity, op.entityId)
-      if (pending !== null) {
+      // The NEWEST queued op for this row, whatever kind it is — not the newest upsert.
+      // Folding into an older upsert when a DELETE sits between them moves this write
+      // BACKWARD past the delete, and `tombstone` beats an edit at any HLC: the server
+      // would apply the edit, then the delete, and the learner's write would be gone.
+      // The reverse case ("never coalesces a delete into an edit") was already guarded;
+      // this direction was not.
+      const pending = this.newestPendingOp(op.entity, op.entityId)
+      if (pending !== null && pending.op === 'upsert') {
         // Replace the earlier values in place rather than queueing a second op: two `lww`
         // writes to the same field are one write as far as the server is concerned, and a
         // learner who taps a rating four times should not cost four round trips.
@@ -84,11 +90,11 @@ export class SqlOutboxTable implements OutboxTable {
     )
   }
 
-  private newestPendingUpsert(entity: string, entityId: string): OutboxOp | null {
+  private newestPendingOp(entity: string, entityId: string): OutboxOp | null {
     const row = firstRow(
       this.driver,
       `${OUTBOX_SELECT}
-       WHERE entity = ? AND entity_id = ? AND op = 'upsert'
+       WHERE entity = ? AND entity_id = ?
        ORDER BY seq DESC LIMIT 1`,
       [entity, entityId],
     )
@@ -129,18 +135,27 @@ export class SqlOutboxTable implements OutboxTable {
 
     let removed = 0
     this.driver.transaction(() => {
-      for (const ops of this.pendingUpsertsByRow().values()) {
-        removed += this.foldForward(ops)
+      for (const ops of this.pendingOpsByRow().values()) {
+        for (const run of upsertRuns(ops)) {
+          removed += this.foldForward(run)
+        }
       }
     })
     return removed
   }
 
-  /** Every queued upsert, grouped by the row it targets and kept in seq order. */
-  private pendingUpsertsByRow(): Map<string, OutboxOp[]> {
+  /**
+   * Every queued op, grouped by the row it targets and kept in seq order.
+   *
+   * This used to drop deletes before grouping, which made a delete sitting between two
+   * upserts INVISIBLE to folding: the two upserts merged across it and the later write
+   * ended up in front of the tombstone that was meant to precede it. `isFoldable` did not
+   * catch it either — a delete carries no fields, and "every field is foldable" is
+   * vacuously true of none.
+   */
+  private pendingOpsByRow(): Map<string, OutboxOp[]> {
     const groups = new Map<string, OutboxOp[]>()
     for (const op of this.pending(Number.MAX_SAFE_INTEGER)) {
-      if (op.op !== 'upsert') continue
       const key = `${op.entity} ${op.entityId}`
       const list = groups.get(key) ?? []
       list.push(op)
@@ -193,11 +208,41 @@ export class SqlOutboxTable implements OutboxTable {
   }
 }
 
-/** An op folds only if EVERY field it carries can be folded without losing information. */
+/**
+ * An op folds only if it is an upsert AND every field it carries folds losslessly.
+ *
+ * The `op === 'upsert'` half is not redundant: a delete carries no fields, and `every` over
+ * no fields is `true`, so without it a delete reported itself as foldable.
+ */
 function isFoldable(op: OutboxOp): boolean {
+  if (op.op !== 'upsert') return false
   return Object.entries(op.fields).every(
     ([field, write]) =>
       coalescable(op.entity, field) ||
       (maxFolding(op.entity, field) && typeof write.v === 'number'),
   )
+}
+
+/**
+ * Split one row's queue into maximal runs of CONSECUTIVE upserts.
+ *
+ * Folding happens inside a run and never across the boundary between them, so whatever
+ * separates two runs — a delete today — keeps its place in the sequence. Splitting rather
+ * than stopping at the first boundary matters for the case compaction exists for: a learner
+ * weeks offline whose queue is edits, a delete, then more edits still gets both halves
+ * compacted.
+ */
+function upsertRuns(ops: readonly OutboxOp[]): OutboxOp[][] {
+  const runs: OutboxOp[][] = []
+  let current: OutboxOp[] = []
+  for (const op of ops) {
+    if (op.op === 'upsert') {
+      current.push(op)
+    } else if (current.length > 0) {
+      runs.push(current)
+      current = []
+    }
+  }
+  if (current.length > 0) runs.push(current)
+  return runs
 }

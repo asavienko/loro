@@ -117,20 +117,28 @@ path: degrade loudly in the log, silently to the learner.
 - **Not yet user-scoped:** `SyncRepository` keys rows by `(entity, id)`, and `pull()` returns all
   rows. Do not expose this service to multiple learners. Plan 68 must change the repository contract
   to require server-derived user scope and cursor paging.
-- **Not yet single-sourced:** controllers use local TypeScript interfaces and explicit checks, not
-  shared Zod wire schemas. Plan 66 must move request/response validation to `@loro/core` and apply
-  it at every transport boundary.
+- **Shared contracts exist; boundary wiring remains:** plan 85 supplies current/target/draft Zod
+  schemas and generated OpenAPI in `@loro/core/api/*`. HTTP conformance tests protect current
+  behavior. Controllers still use local interfaces/checks; plan 66 must install validated boundaries
+  without turning per-item sync/analytics rejection into whole-batch rejection. See
+  [api-contracts.md](../../docs/architecture/api-contracts.md).
 - **Logging hardening is still required:** current code does not intentionally log request bodies,
   but there is no structured redaction allowlist yet. Add it before auth, accounts, or live
   providers introduce more sensitive values.
-- **No endpoint accepts learner audio, now or in the current target.** Recorded audio never leaves
-  the device; a server voice-clone route would violate ADR-0011 and must not be added.
+- **No endpoint is authorized to accept learner audio.** Recorded audio never leaves the device; a
+  voice-clone route would violate ADR-0011. Current generic sync validation is not a privacy
+  allowlist: wildcard append-only fields remain an input-hardening gap. Target schemas reject
+  audio/paths/transcripts; plan 66 must enforce them before multi-user service exposure.
 - **AI fallback is implemented; budgets, cache, rate limits, repair, and live providers are not.**
 - **Migrations do not exist yet.** When persistence lands, use expand → migrate → contract.
 
 ## Tests
 
 ### Written
+
+`src/contracts.e2e.test.ts` validates all ten current routes over HTTP with real WASM, including
+partial sync rejection, framework problems and the unavailable-readiness 503 body. Target schema and
+OpenAPI compatibility tests live in core/content; they do not prove missing services work.
 
 | Test                                     | What it holds down                                                                        |
 | ---------------------------------------- | ----------------------------------------------------------------------------------------- |
@@ -154,3 +162,12 @@ on persistence or auth:
 | 30-day replay        | A month offline, then sync                                                                  |
 | Tenant isolation     | Cross-user reads 404                                                                        |
 | AI budget breach     | Invalid scene → repair → fallback; budget breach → silent fallback                          |
+
+## Multilingual content (F-08)
+
+Three additional endpoints under `/v1/content/v2`: `manifest`, `diff`, `pack`. They accept `target`
+(`es-ES`, `bg-BG`, `ru-RU`) and `native` (`en`, `bg`, `ru`), rejecting equal-language pairs.
+Payloads use `targetText` and `translations`; manifests expose review status and capability flags.
+The original `/v1/content` endpoints retain their Spanish/English shape. AI scene requests accept
+`targetLocale` and `nativeLanguage`, but the current stub rejects pairs other than English →
+Spanish.

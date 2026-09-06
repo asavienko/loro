@@ -58,7 +58,7 @@ open class RustBuffer : Structure() {
     companion object {
         internal fun alloc(size: ULong = 0UL) = uniffiRustCall() { status ->
             // Note: need to convert the size to a `Long` value to make this work with JVM.
-            UniffiLib.INSTANCE.ffi_loro_core_rustbuffer_alloc(size.toLong(), status)
+            UniffiLib.ffi_loro_core_rustbuffer_alloc(size.toLong(), status)
         }.also {
             if(it.data == null) {
                throw RuntimeException("RustBuffer.alloc() returned null data pointer (size=${size})")
@@ -74,49 +74,15 @@ open class RustBuffer : Structure() {
         }
 
         internal fun free(buf: RustBuffer.ByValue) = uniffiRustCall() { status ->
-            UniffiLib.INSTANCE.ffi_loro_core_rustbuffer_free(buf, status)
+            UniffiLib.ffi_loro_core_rustbuffer_free(buf, status)
         }
     }
 
     @Suppress("TooGenericExceptionThrown")
     fun asByteBuffer() =
-        this.data?.getByteBuffer(0, this.len.toLong())?.also {
+        this.data?.getByteBuffer(0, this.len)?.also {
             it.order(ByteOrder.BIG_ENDIAN)
         }
-}
-
-/**
- * The equivalent of the `*mut RustBuffer` type.
- * Required for callbacks taking in an out pointer.
- *
- * Size is the sum of all values in the struct.
- *
- * @suppress
- */
-class RustBufferByReference : ByReference(16) {
-    /**
-     * Set the pointed-to `RustBuffer` to the given value.
-     */
-    fun setValue(value: RustBuffer.ByValue) {
-        // NOTE: The offsets are as they are in the C-like struct.
-        val pointer = getPointer()
-        pointer.setLong(0, value.capacity)
-        pointer.setLong(8, value.len)
-        pointer.setPointer(16, value.data)
-    }
-
-    /**
-     * Get a `RustBuffer.ByValue` from this reference.
-     */
-    fun getValue(): RustBuffer.ByValue {
-        val pointer = getPointer()
-        val value = RustBuffer.ByValue()
-        value.writeField("capacity", pointer.getLong(0))
-        value.writeField("len", pointer.getLong(8))
-        value.writeField("data", pointer.getLong(16))
-
-        return value
-    }
 }
 
 // This is a helper for safely passing byte references into the rust code.
@@ -131,6 +97,43 @@ internal open class ForeignBytes : Structure() {
     @JvmField var data: Pointer? = null
 
     class ByValue : ForeignBytes(), Structure.ByValue
+}
+
+// Converter for `&[u8]` / `[ByRef] bytes` arguments.
+//
+// Only `lower` is valid — zero-copy byte buffers only flow foreign -> Rust,
+// and only in argument position. `lift`, `read`, `write`, and
+// `allocationSize` have no sound implementation here and all panic at
+// runtime. The `FfiConverter` interface is implemented so that the
+// compiler enforces the full method set (rather than relying on eyeball).
+//
+// The provided `ByteBuffer` MUST be direct — only direct buffers have a
+// stable native address that JNA can expose via `getDirectBufferPointer`.
+// The returned `ForeignBytes.ByValue` is only valid for the duration of
+// the FFI call; the Rust side treats it as a borrow.
+internal object FfiConverterByRefBytes : FfiConverter<java.nio.ByteBuffer, ForeignBytes.ByValue> {
+    override fun lower(value: java.nio.ByteBuffer): ForeignBytes.ByValue {
+        require(value.isDirect) { "UniFFI zero-copy &[u8] requires a direct ByteBuffer. Use ByteBuffer.allocateDirect()." }
+        val remaining = value.remaining()
+        val fb = ForeignBytes.ByValue()
+        fb.len = remaining
+        // Zero-length direct buffers: skip getDirectBufferPointer (platform-variable behavior)
+        // and pass null. The Rust side treats (null, 0) as &[].
+        fb.data = if (remaining == 0) null else com.sun.jna.Native.getDirectBufferPointer(value)
+        return fb
+    }
+
+    override fun lift(value: ForeignBytes.ByValue): java.nio.ByteBuffer =
+        error("ByRef bytes cannot be lifted: zero-copy &[u8] only flows foreign->Rust")
+
+    override fun read(buf: java.nio.ByteBuffer): java.nio.ByteBuffer =
+        error("ByRef bytes cannot be read from a buffer: zero-copy &[u8] is only supported in argument position, not nested in records/options/etc.")
+
+    override fun write(value: java.nio.ByteBuffer, buf: java.nio.ByteBuffer): Unit =
+        error("ByRef bytes cannot be written to a buffer: zero-copy &[u8] is only supported in argument position, not nested in records/options/etc.")
+
+    override fun allocationSize(value: java.nio.ByteBuffer): ULong =
+        error("ByRef bytes have no RustBuffer allocation size: zero-copy &[u8] is only supported in argument position, not nested in records/options/etc.")
 }
 /**
  * The FfiConverter interface handles converter types to and from the FFI
@@ -315,8 +318,9 @@ internal inline fun<T> uniffiTraitInterfaceCall(
     try {
         writeReturn(makeCall())
     } catch(e: kotlin.Exception) {
+        val err = try { e.stackTraceToString() } catch(_: Throwable) { "" }
         callStatus.code = UNIFFI_CALL_UNEXPECTED_ERROR
-        callStatus.error_buf = FfiConverterString.lower(e.toString())
+        callStatus.error_buf = FfiConverterString.lower(err)
     }
 }
 
@@ -333,26 +337,39 @@ internal inline fun<T, reified E: Throwable> uniffiTraitInterfaceCallWithError(
             callStatus.code = UNIFFI_CALL_ERROR
             callStatus.error_buf = lowerError(e)
         } else {
+            val err = try { e.stackTraceToString() } catch(_: Throwable) { "" }
             callStatus.code = UNIFFI_CALL_UNEXPECTED_ERROR
-            callStatus.error_buf = FfiConverterString.lower(e.toString())
+            callStatus.error_buf = FfiConverterString.lower(err)
         }
     }
 }
+// Initial value and increment amount for handles. 
+// These ensure that Kotlin-generated handles always have the lowest bit set
+private const val UNIFFI_HANDLEMAP_INITIAL = 1.toLong()
+private const val UNIFFI_HANDLEMAP_DELTA = 2.toLong()
+
 // Map handles to objects
 //
 // This is used pass an opaque 64-bit handle representing a foreign object to the Rust code.
 internal class UniffiHandleMap<T: Any> {
     private val map = ConcurrentHashMap<Long, T>()
-    private val counter = java.util.concurrent.atomic.AtomicLong(0)
+    // Start 
+    private val counter = java.util.concurrent.atomic.AtomicLong(UNIFFI_HANDLEMAP_INITIAL)
 
     val size: Int
         get() = map.size
 
     // Insert a new object into the handle map and get a handle for it
     fun insert(obj: T): Long {
-        val handle = counter.getAndAdd(1)
+        val handle = counter.getAndAdd(UNIFFI_HANDLEMAP_DELTA)
         map.put(handle, obj)
         return handle
+    }
+
+    // Clone a handle, creating a new one
+    fun clone(handle: Long): Long {
+        val obj = map.get(handle) ?: throw InternalException("UniffiHandleMap.clone: Invalid handle")
+        return insert(obj)
     }
 
     // Get an object from the handle map
@@ -377,790 +394,664 @@ private fun findLibraryName(componentName: String): String {
     return "loro_core"
 }
 
-private inline fun <reified Lib : Library> loadIndirect(
-    componentName: String
-): Lib {
-    return Native.load<Lib>(findLibraryName(componentName), Lib::class.java)
-}
-
 // Define FFI callback types
 internal interface UniffiRustFutureContinuationCallback : com.sun.jna.Callback {
     fun callback(`data`: Long,`pollResult`: Byte,)
 }
-internal interface UniffiForeignFutureFree : com.sun.jna.Callback {
+internal interface UniffiForeignFutureDroppedCallback : com.sun.jna.Callback {
     fun callback(`handle`: Long,)
 }
 internal interface UniffiCallbackInterfaceFree : com.sun.jna.Callback {
     fun callback(`handle`: Long,)
 }
+internal interface UniffiCallbackInterfaceClone : com.sun.jna.Callback {
+    fun callback(`handle`: Long,)
+    : Long
+}
 @Structure.FieldOrder("handle", "free")
-internal open class UniffiForeignFuture(
+internal open class UniffiForeignFutureDroppedCallbackStruct(
     @JvmField internal var `handle`: Long = 0.toLong(),
-    @JvmField internal var `free`: UniffiForeignFutureFree? = null,
+    @JvmField internal var `free`: UniffiForeignFutureDroppedCallback? = null,
 ) : Structure() {
     class UniffiByValue(
         `handle`: Long = 0.toLong(),
-        `free`: UniffiForeignFutureFree? = null,
-    ): UniffiForeignFuture(`handle`,`free`,), Structure.ByValue
+        `free`: UniffiForeignFutureDroppedCallback? = null,
+    ): UniffiForeignFutureDroppedCallbackStruct(`handle`,`free`,), Structure.ByValue
 
-   internal fun uniffiSetValue(other: UniffiForeignFuture) {
+   internal fun uniffiSetValue(other: UniffiForeignFutureDroppedCallbackStruct) {
         `handle` = other.`handle`
         `free` = other.`free`
     }
 
 }
 @Structure.FieldOrder("returnValue", "callStatus")
-internal open class UniffiForeignFutureStructU8(
+internal open class UniffiForeignFutureResultU8(
     @JvmField internal var `returnValue`: Byte = 0.toByte(),
     @JvmField internal var `callStatus`: UniffiRustCallStatus.ByValue = UniffiRustCallStatus.ByValue(),
 ) : Structure() {
     class UniffiByValue(
         `returnValue`: Byte = 0.toByte(),
         `callStatus`: UniffiRustCallStatus.ByValue = UniffiRustCallStatus.ByValue(),
-    ): UniffiForeignFutureStructU8(`returnValue`,`callStatus`,), Structure.ByValue
+    ): UniffiForeignFutureResultU8(`returnValue`,`callStatus`,), Structure.ByValue
 
-   internal fun uniffiSetValue(other: UniffiForeignFutureStructU8) {
+   internal fun uniffiSetValue(other: UniffiForeignFutureResultU8) {
         `returnValue` = other.`returnValue`
         `callStatus` = other.`callStatus`
     }
 
 }
 internal interface UniffiForeignFutureCompleteU8 : com.sun.jna.Callback {
-    fun callback(`callbackData`: Long,`result`: UniffiForeignFutureStructU8.UniffiByValue,)
+    fun callback(`callbackData`: Long,`result`: UniffiForeignFutureResultU8.UniffiByValue,)
 }
 @Structure.FieldOrder("returnValue", "callStatus")
-internal open class UniffiForeignFutureStructI8(
+internal open class UniffiForeignFutureResultI8(
     @JvmField internal var `returnValue`: Byte = 0.toByte(),
     @JvmField internal var `callStatus`: UniffiRustCallStatus.ByValue = UniffiRustCallStatus.ByValue(),
 ) : Structure() {
     class UniffiByValue(
         `returnValue`: Byte = 0.toByte(),
         `callStatus`: UniffiRustCallStatus.ByValue = UniffiRustCallStatus.ByValue(),
-    ): UniffiForeignFutureStructI8(`returnValue`,`callStatus`,), Structure.ByValue
+    ): UniffiForeignFutureResultI8(`returnValue`,`callStatus`,), Structure.ByValue
 
-   internal fun uniffiSetValue(other: UniffiForeignFutureStructI8) {
+   internal fun uniffiSetValue(other: UniffiForeignFutureResultI8) {
         `returnValue` = other.`returnValue`
         `callStatus` = other.`callStatus`
     }
 
 }
 internal interface UniffiForeignFutureCompleteI8 : com.sun.jna.Callback {
-    fun callback(`callbackData`: Long,`result`: UniffiForeignFutureStructI8.UniffiByValue,)
+    fun callback(`callbackData`: Long,`result`: UniffiForeignFutureResultI8.UniffiByValue,)
 }
 @Structure.FieldOrder("returnValue", "callStatus")
-internal open class UniffiForeignFutureStructU16(
+internal open class UniffiForeignFutureResultU16(
     @JvmField internal var `returnValue`: Short = 0.toShort(),
     @JvmField internal var `callStatus`: UniffiRustCallStatus.ByValue = UniffiRustCallStatus.ByValue(),
 ) : Structure() {
     class UniffiByValue(
         `returnValue`: Short = 0.toShort(),
         `callStatus`: UniffiRustCallStatus.ByValue = UniffiRustCallStatus.ByValue(),
-    ): UniffiForeignFutureStructU16(`returnValue`,`callStatus`,), Structure.ByValue
+    ): UniffiForeignFutureResultU16(`returnValue`,`callStatus`,), Structure.ByValue
 
-   internal fun uniffiSetValue(other: UniffiForeignFutureStructU16) {
+   internal fun uniffiSetValue(other: UniffiForeignFutureResultU16) {
         `returnValue` = other.`returnValue`
         `callStatus` = other.`callStatus`
     }
 
 }
 internal interface UniffiForeignFutureCompleteU16 : com.sun.jna.Callback {
-    fun callback(`callbackData`: Long,`result`: UniffiForeignFutureStructU16.UniffiByValue,)
+    fun callback(`callbackData`: Long,`result`: UniffiForeignFutureResultU16.UniffiByValue,)
 }
 @Structure.FieldOrder("returnValue", "callStatus")
-internal open class UniffiForeignFutureStructI16(
+internal open class UniffiForeignFutureResultI16(
     @JvmField internal var `returnValue`: Short = 0.toShort(),
     @JvmField internal var `callStatus`: UniffiRustCallStatus.ByValue = UniffiRustCallStatus.ByValue(),
 ) : Structure() {
     class UniffiByValue(
         `returnValue`: Short = 0.toShort(),
         `callStatus`: UniffiRustCallStatus.ByValue = UniffiRustCallStatus.ByValue(),
-    ): UniffiForeignFutureStructI16(`returnValue`,`callStatus`,), Structure.ByValue
+    ): UniffiForeignFutureResultI16(`returnValue`,`callStatus`,), Structure.ByValue
 
-   internal fun uniffiSetValue(other: UniffiForeignFutureStructI16) {
+   internal fun uniffiSetValue(other: UniffiForeignFutureResultI16) {
         `returnValue` = other.`returnValue`
         `callStatus` = other.`callStatus`
     }
 
 }
 internal interface UniffiForeignFutureCompleteI16 : com.sun.jna.Callback {
-    fun callback(`callbackData`: Long,`result`: UniffiForeignFutureStructI16.UniffiByValue,)
+    fun callback(`callbackData`: Long,`result`: UniffiForeignFutureResultI16.UniffiByValue,)
 }
 @Structure.FieldOrder("returnValue", "callStatus")
-internal open class UniffiForeignFutureStructU32(
+internal open class UniffiForeignFutureResultU32(
     @JvmField internal var `returnValue`: Int = 0,
     @JvmField internal var `callStatus`: UniffiRustCallStatus.ByValue = UniffiRustCallStatus.ByValue(),
 ) : Structure() {
     class UniffiByValue(
         `returnValue`: Int = 0,
         `callStatus`: UniffiRustCallStatus.ByValue = UniffiRustCallStatus.ByValue(),
-    ): UniffiForeignFutureStructU32(`returnValue`,`callStatus`,), Structure.ByValue
+    ): UniffiForeignFutureResultU32(`returnValue`,`callStatus`,), Structure.ByValue
 
-   internal fun uniffiSetValue(other: UniffiForeignFutureStructU32) {
+   internal fun uniffiSetValue(other: UniffiForeignFutureResultU32) {
         `returnValue` = other.`returnValue`
         `callStatus` = other.`callStatus`
     }
 
 }
 internal interface UniffiForeignFutureCompleteU32 : com.sun.jna.Callback {
-    fun callback(`callbackData`: Long,`result`: UniffiForeignFutureStructU32.UniffiByValue,)
+    fun callback(`callbackData`: Long,`result`: UniffiForeignFutureResultU32.UniffiByValue,)
 }
 @Structure.FieldOrder("returnValue", "callStatus")
-internal open class UniffiForeignFutureStructI32(
+internal open class UniffiForeignFutureResultI32(
     @JvmField internal var `returnValue`: Int = 0,
     @JvmField internal var `callStatus`: UniffiRustCallStatus.ByValue = UniffiRustCallStatus.ByValue(),
 ) : Structure() {
     class UniffiByValue(
         `returnValue`: Int = 0,
         `callStatus`: UniffiRustCallStatus.ByValue = UniffiRustCallStatus.ByValue(),
-    ): UniffiForeignFutureStructI32(`returnValue`,`callStatus`,), Structure.ByValue
+    ): UniffiForeignFutureResultI32(`returnValue`,`callStatus`,), Structure.ByValue
 
-   internal fun uniffiSetValue(other: UniffiForeignFutureStructI32) {
+   internal fun uniffiSetValue(other: UniffiForeignFutureResultI32) {
         `returnValue` = other.`returnValue`
         `callStatus` = other.`callStatus`
     }
 
 }
 internal interface UniffiForeignFutureCompleteI32 : com.sun.jna.Callback {
-    fun callback(`callbackData`: Long,`result`: UniffiForeignFutureStructI32.UniffiByValue,)
+    fun callback(`callbackData`: Long,`result`: UniffiForeignFutureResultI32.UniffiByValue,)
 }
 @Structure.FieldOrder("returnValue", "callStatus")
-internal open class UniffiForeignFutureStructU64(
+internal open class UniffiForeignFutureResultU64(
     @JvmField internal var `returnValue`: Long = 0.toLong(),
     @JvmField internal var `callStatus`: UniffiRustCallStatus.ByValue = UniffiRustCallStatus.ByValue(),
 ) : Structure() {
     class UniffiByValue(
         `returnValue`: Long = 0.toLong(),
         `callStatus`: UniffiRustCallStatus.ByValue = UniffiRustCallStatus.ByValue(),
-    ): UniffiForeignFutureStructU64(`returnValue`,`callStatus`,), Structure.ByValue
+    ): UniffiForeignFutureResultU64(`returnValue`,`callStatus`,), Structure.ByValue
 
-   internal fun uniffiSetValue(other: UniffiForeignFutureStructU64) {
+   internal fun uniffiSetValue(other: UniffiForeignFutureResultU64) {
         `returnValue` = other.`returnValue`
         `callStatus` = other.`callStatus`
     }
 
 }
 internal interface UniffiForeignFutureCompleteU64 : com.sun.jna.Callback {
-    fun callback(`callbackData`: Long,`result`: UniffiForeignFutureStructU64.UniffiByValue,)
+    fun callback(`callbackData`: Long,`result`: UniffiForeignFutureResultU64.UniffiByValue,)
 }
 @Structure.FieldOrder("returnValue", "callStatus")
-internal open class UniffiForeignFutureStructI64(
+internal open class UniffiForeignFutureResultI64(
     @JvmField internal var `returnValue`: Long = 0.toLong(),
     @JvmField internal var `callStatus`: UniffiRustCallStatus.ByValue = UniffiRustCallStatus.ByValue(),
 ) : Structure() {
     class UniffiByValue(
         `returnValue`: Long = 0.toLong(),
         `callStatus`: UniffiRustCallStatus.ByValue = UniffiRustCallStatus.ByValue(),
-    ): UniffiForeignFutureStructI64(`returnValue`,`callStatus`,), Structure.ByValue
+    ): UniffiForeignFutureResultI64(`returnValue`,`callStatus`,), Structure.ByValue
 
-   internal fun uniffiSetValue(other: UniffiForeignFutureStructI64) {
+   internal fun uniffiSetValue(other: UniffiForeignFutureResultI64) {
         `returnValue` = other.`returnValue`
         `callStatus` = other.`callStatus`
     }
 
 }
 internal interface UniffiForeignFutureCompleteI64 : com.sun.jna.Callback {
-    fun callback(`callbackData`: Long,`result`: UniffiForeignFutureStructI64.UniffiByValue,)
+    fun callback(`callbackData`: Long,`result`: UniffiForeignFutureResultI64.UniffiByValue,)
 }
 @Structure.FieldOrder("returnValue", "callStatus")
-internal open class UniffiForeignFutureStructF32(
+internal open class UniffiForeignFutureResultF32(
     @JvmField internal var `returnValue`: Float = 0.0f,
     @JvmField internal var `callStatus`: UniffiRustCallStatus.ByValue = UniffiRustCallStatus.ByValue(),
 ) : Structure() {
     class UniffiByValue(
         `returnValue`: Float = 0.0f,
         `callStatus`: UniffiRustCallStatus.ByValue = UniffiRustCallStatus.ByValue(),
-    ): UniffiForeignFutureStructF32(`returnValue`,`callStatus`,), Structure.ByValue
+    ): UniffiForeignFutureResultF32(`returnValue`,`callStatus`,), Structure.ByValue
 
-   internal fun uniffiSetValue(other: UniffiForeignFutureStructF32) {
+   internal fun uniffiSetValue(other: UniffiForeignFutureResultF32) {
         `returnValue` = other.`returnValue`
         `callStatus` = other.`callStatus`
     }
 
 }
 internal interface UniffiForeignFutureCompleteF32 : com.sun.jna.Callback {
-    fun callback(`callbackData`: Long,`result`: UniffiForeignFutureStructF32.UniffiByValue,)
+    fun callback(`callbackData`: Long,`result`: UniffiForeignFutureResultF32.UniffiByValue,)
 }
 @Structure.FieldOrder("returnValue", "callStatus")
-internal open class UniffiForeignFutureStructF64(
+internal open class UniffiForeignFutureResultF64(
     @JvmField internal var `returnValue`: Double = 0.0,
     @JvmField internal var `callStatus`: UniffiRustCallStatus.ByValue = UniffiRustCallStatus.ByValue(),
 ) : Structure() {
     class UniffiByValue(
         `returnValue`: Double = 0.0,
         `callStatus`: UniffiRustCallStatus.ByValue = UniffiRustCallStatus.ByValue(),
-    ): UniffiForeignFutureStructF64(`returnValue`,`callStatus`,), Structure.ByValue
+    ): UniffiForeignFutureResultF64(`returnValue`,`callStatus`,), Structure.ByValue
 
-   internal fun uniffiSetValue(other: UniffiForeignFutureStructF64) {
+   internal fun uniffiSetValue(other: UniffiForeignFutureResultF64) {
         `returnValue` = other.`returnValue`
         `callStatus` = other.`callStatus`
     }
 
 }
 internal interface UniffiForeignFutureCompleteF64 : com.sun.jna.Callback {
-    fun callback(`callbackData`: Long,`result`: UniffiForeignFutureStructF64.UniffiByValue,)
+    fun callback(`callbackData`: Long,`result`: UniffiForeignFutureResultF64.UniffiByValue,)
 }
 @Structure.FieldOrder("returnValue", "callStatus")
-internal open class UniffiForeignFutureStructPointer(
-    @JvmField internal var `returnValue`: Pointer = Pointer.NULL,
-    @JvmField internal var `callStatus`: UniffiRustCallStatus.ByValue = UniffiRustCallStatus.ByValue(),
-) : Structure() {
-    class UniffiByValue(
-        `returnValue`: Pointer = Pointer.NULL,
-        `callStatus`: UniffiRustCallStatus.ByValue = UniffiRustCallStatus.ByValue(),
-    ): UniffiForeignFutureStructPointer(`returnValue`,`callStatus`,), Structure.ByValue
-
-   internal fun uniffiSetValue(other: UniffiForeignFutureStructPointer) {
-        `returnValue` = other.`returnValue`
-        `callStatus` = other.`callStatus`
-    }
-
-}
-internal interface UniffiForeignFutureCompletePointer : com.sun.jna.Callback {
-    fun callback(`callbackData`: Long,`result`: UniffiForeignFutureStructPointer.UniffiByValue,)
-}
-@Structure.FieldOrder("returnValue", "callStatus")
-internal open class UniffiForeignFutureStructRustBuffer(
+internal open class UniffiForeignFutureResultRustBuffer(
     @JvmField internal var `returnValue`: RustBuffer.ByValue = RustBuffer.ByValue(),
     @JvmField internal var `callStatus`: UniffiRustCallStatus.ByValue = UniffiRustCallStatus.ByValue(),
 ) : Structure() {
     class UniffiByValue(
         `returnValue`: RustBuffer.ByValue = RustBuffer.ByValue(),
         `callStatus`: UniffiRustCallStatus.ByValue = UniffiRustCallStatus.ByValue(),
-    ): UniffiForeignFutureStructRustBuffer(`returnValue`,`callStatus`,), Structure.ByValue
+    ): UniffiForeignFutureResultRustBuffer(`returnValue`,`callStatus`,), Structure.ByValue
 
-   internal fun uniffiSetValue(other: UniffiForeignFutureStructRustBuffer) {
+   internal fun uniffiSetValue(other: UniffiForeignFutureResultRustBuffer) {
         `returnValue` = other.`returnValue`
         `callStatus` = other.`callStatus`
     }
 
 }
 internal interface UniffiForeignFutureCompleteRustBuffer : com.sun.jna.Callback {
-    fun callback(`callbackData`: Long,`result`: UniffiForeignFutureStructRustBuffer.UniffiByValue,)
+    fun callback(`callbackData`: Long,`result`: UniffiForeignFutureResultRustBuffer.UniffiByValue,)
 }
 @Structure.FieldOrder("callStatus")
-internal open class UniffiForeignFutureStructVoid(
+internal open class UniffiForeignFutureResultVoid(
     @JvmField internal var `callStatus`: UniffiRustCallStatus.ByValue = UniffiRustCallStatus.ByValue(),
 ) : Structure() {
     class UniffiByValue(
         `callStatus`: UniffiRustCallStatus.ByValue = UniffiRustCallStatus.ByValue(),
-    ): UniffiForeignFutureStructVoid(`callStatus`,), Structure.ByValue
+    ): UniffiForeignFutureResultVoid(`callStatus`,), Structure.ByValue
 
-   internal fun uniffiSetValue(other: UniffiForeignFutureStructVoid) {
+   internal fun uniffiSetValue(other: UniffiForeignFutureResultVoid) {
         `callStatus` = other.`callStatus`
     }
 
 }
 internal interface UniffiForeignFutureCompleteVoid : com.sun.jna.Callback {
-    fun callback(`callbackData`: Long,`result`: UniffiForeignFutureStructVoid.UniffiByValue,)
+    fun callback(`callbackData`: Long,`result`: UniffiForeignFutureResultVoid.UniffiByValue,)
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // A JNA Library to expose the extern-C FFI definitions.
 // This is an implementation detail which will be called internally by the public API.
 
-internal interface UniffiLib : Library {
-    companion object {
-        internal val INSTANCE: UniffiLib by lazy {
-            loadIndirect<UniffiLib>(componentName = "loro_core")
-            .also { lib: UniffiLib ->
-                uniffiCheckContractApiVersion(lib)
-                uniffiCheckApiChecksums(lib)
-                }
-        }
-        
+// For large crates we prevent `MethodTooLargeException` (see #2340)
+// N.B. the name of the extension is very misleading, since it is
+// rather `InterfaceTooLargeException`, caused by too many methods
+// in the interface for large crates.
+//
+// By splitting the otherwise huge interface into two parts
+// * UniffiLib (this)
+// * IntegrityCheckingUniffiLib
+// And all checksum methods are put into `IntegrityCheckingUniffiLib`
+// we allow for ~2x as many methods in the UniffiLib interface.
+//
+// Note: above all written when we used JNA's `loadIndirect` etc.
+// We now use JNA's "direct mapping" - unclear if same considerations apply exactly.
+internal object IntegrityCheckingUniffiLib {
+    init {
+        Native.register(IntegrityCheckingUniffiLib::class.java, findLibraryName(componentName = "loro_core"))
+        uniffiCheckContractApiVersion(this)
+        uniffiCheckApiChecksums(this)
     }
+    external fun uniffi_loro_core_checksum_func_match_tokens(
+    ): Int
+    external fun uniffi_loro_core_checksum_func_normalize(
+    ): Int
+    external fun uniffi_loro_core_checksum_func_tokenize(
+    ): Int
+    external fun uniffi_loro_core_checksum_func_days_between(
+    ): Int
+    external fun uniffi_loro_core_checksum_func_streak(
+    ): Int
+    external fun uniffi_loro_core_checksum_func_streak_day_for(
+    ): Int
+    external fun uniffi_loro_core_checksum_func_streak_survives(
+    ): Int
+    external fun uniffi_loro_core_checksum_func_normalize_f0(
+    ): Int
+    external fun uniffi_loro_core_checksum_func_advance_axes(
+    ): Int
+    external fun uniffi_loro_core_checksum_func_band(
+    ): Int
+    external fun uniffi_loro_core_checksum_func_earns_level_up(
+    ): Int
+    external fun uniffi_loro_core_checksum_func_daily_review_cap(
+    ): Int
+    external fun uniffi_loro_core_checksum_func_format_interval(
+    ): Int
+    external fun uniffi_loro_core_checksum_func_grade_for_confidence(
+    ): Int
+    external fun uniffi_loro_core_checksum_func_initial_difficulty(
+    ): Int
+    external fun uniffi_loro_core_checksum_func_nudge_difficulty(
+    ): Int
+    external fun uniffi_loro_core_checksum_func_retrievability(
+    ): Int
+    external fun uniffi_loro_core_checksum_func_climb(
+    ): Int
+    external fun uniffi_loro_core_checksum_func_draw(
+    ): Int
+    external fun uniffi_loro_core_checksum_func_need(
+    ): Int
+    external fun uniffi_loro_core_checksum_func_deep_link_for(
+    ): Int
+    external fun uniffi_loro_core_checksum_func_is_quiet_hour(
+    ): Int
+    external fun uniffi_loro_core_checksum_func_may_fire(
+    ): Int
+    external fun uniffi_loro_core_checksum_func_repeat_target(
+    ): Int
+    external fun uniffi_loro_core_checksum_func_stream_rank(
+    ): Int
+    external fun uniffi_loro_core_checksum_func_automaticity(
+    ): Int
+    external fun uniffi_loro_core_checksum_func_beat_ms_for_mode(
+    ): Int
+    external fun uniffi_loro_core_checksum_func_effort_state(
+    ): Int
+    external fun uniffi_loro_core_checksum_func_mode_for_rep(
+    ): Int
+    external fun uniffi_loro_core_checksum_func_model_rate_for_mode(
+    ): Int
+    external fun uniffi_loro_core_checksum_func_refrain_set_size(
+    ): Int
+    external fun uniffi_loro_core_checksum_func_is_skewed(
+    ): Int
+    external fun uniffi_loro_core_checksum_func_receive(
+    ): Int
+    external fun uniffi_loro_core_checksum_func_tick(
+    ): Int
+    external fun ffi_loro_core_uniffi_contract_version(
+    ): Int
 
-    fun uniffi_loro_core_fn_func_advance_axes(`current`: RustBuffer.ByValue,`score`: Byte,`cueLevel`: Byte,uniffi_out_err: UniffiRustCallStatus, 
-    ): RustBuffer.ByValue
-    fun uniffi_loro_core_fn_func_automaticity(`repsToday`: Int,`target`: Int,uniffi_out_err: UniffiRustCallStatus, 
-    ): Byte
-    fun uniffi_loro_core_fn_func_band(`score`: Byte,uniffi_out_err: UniffiRustCallStatus, 
-    ): Byte
-    fun uniffi_loro_core_fn_func_beat_ms_for_mode(`mode`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
-    ): Int
-    fun uniffi_loro_core_fn_func_climb(`current`: RustBuffer.ByValue,`target`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
-    ): RustBuffer.ByValue
-    fun uniffi_loro_core_fn_func_daily_review_cap(`dailyMinutes`: Int,`multiplier`: Int,uniffi_out_err: UniffiRustCallStatus, 
-    ): Int
-    fun uniffi_loro_core_fn_func_days_between(`a`: RustBuffer.ByValue,`b`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
-    ): RustBuffer.ByValue
-    fun uniffi_loro_core_fn_func_deep_link_for(`category`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
-    ): RustBuffer.ByValue
-    fun uniffi_loro_core_fn_func_draw(`deck`: RustBuffer.ByValue,`seed`: Long,`exclude`: RustBuffer.ByValue,`nowMs`: Long,uniffi_out_err: UniffiRustCallStatus, 
-    ): RustBuffer.ByValue
-    fun uniffi_loro_core_fn_func_earns_level_up(`score`: Byte,`cueLevel`: Byte,`threshold`: Byte,uniffi_out_err: UniffiRustCallStatus, 
-    ): Byte
-    fun uniffi_loro_core_fn_func_effort_state(`reps`: Int,`automaticityPct`: Byte,uniffi_out_err: UniffiRustCallStatus, 
-    ): RustBuffer.ByValue
-    fun uniffi_loro_core_fn_func_format_interval(`days`: Float,uniffi_out_err: UniffiRustCallStatus, 
-    ): RustBuffer.ByValue
-    fun uniffi_loro_core_fn_func_grade_for_confidence(`c`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
-    ): RustBuffer.ByValue
-    fun uniffi_loro_core_fn_func_initial_difficulty(`declared`: RustBuffer.ByValue,`tags`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
-    ): Float
-    fun uniffi_loro_core_fn_func_is_quiet_hour(`hour`: Int,uniffi_out_err: UniffiRustCallStatus, 
-    ): Byte
-    fun uniffi_loro_core_fn_func_is_skewed(`client`: RustBuffer.ByValue,`serverMs`: Long,uniffi_out_err: UniffiRustCallStatus, 
-    ): Byte
-    fun uniffi_loro_core_fn_func_match_tokens(`heard`: RustBuffer.ByValue,`target`: RustBuffer.ByValue,`revealed`: Int,`fuzzy`: Byte,uniffi_out_err: UniffiRustCallStatus, 
-    ): RustBuffer.ByValue
-    fun uniffi_loro_core_fn_func_may_fire(`category`: RustBuffer.ByValue,`ctx`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
-    ): Byte
-    fun uniffi_loro_core_fn_func_mode_for_rep(`repIndex`: Int,uniffi_out_err: UniffiRustCallStatus, 
-    ): RustBuffer.ByValue
-    fun uniffi_loro_core_fn_func_model_rate_for_mode(`mode`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
-    ): RustBuffer.ByValue
-    fun uniffi_loro_core_fn_func_need(`p`: RustBuffer.ByValue,`nowMs`: Long,uniffi_out_err: UniffiRustCallStatus, 
-    ): Int
-    fun uniffi_loro_core_fn_func_normalize(`s`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
-    ): RustBuffer.ByValue
-    fun uniffi_loro_core_fn_func_normalize_f0(`hz`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
-    ): RustBuffer.ByValue
-    fun uniffi_loro_core_fn_func_nudge_difficulty(`current`: Float,`declared`: RustBuffer.ByValue,`tags`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
-    ): Float
-    fun uniffi_loro_core_fn_func_receive(`last`: RustBuffer.ByValue,`remote`: RustBuffer.ByValue,`wallMs`: Long,`nodeId`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
-    ): RustBuffer.ByValue
-    fun uniffi_loro_core_fn_func_refrain_set_size(`dailyMinutes`: Int,uniffi_out_err: UniffiRustCallStatus, 
-    ): Int
-    fun uniffi_loro_core_fn_func_repeat_target(`difficulty`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
-    ): Int
-    fun uniffi_loro_core_fn_func_retrievability(`daysSinceReview`: Float,`stability`: Float,uniffi_out_err: UniffiRustCallStatus, 
-    ): Float
-    fun uniffi_loro_core_fn_func_streak(`practiceDays`: RustBuffer.ByValue,`today`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
-    ): Int
-    fun uniffi_loro_core_fn_func_streak_day_for(`atMs`: Long,`localMidnightMs`: Long,uniffi_out_err: UniffiRustCallStatus, 
-    ): RustBuffer.ByValue
-    fun uniffi_loro_core_fn_func_streak_survives(`lastDay`: RustBuffer.ByValue,`today`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
-    ): Byte
-    fun uniffi_loro_core_fn_func_stream_rank(`p`: RustBuffer.ByValue,`nowMs`: Long,uniffi_out_err: UniffiRustCallStatus, 
-    ): Int
-    fun uniffi_loro_core_fn_func_tick(`last`: RustBuffer.ByValue,`wallMs`: Long,`nodeId`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
-    ): RustBuffer.ByValue
-    fun uniffi_loro_core_fn_func_tokenize(`phrase`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
-    ): RustBuffer.ByValue
-    fun ffi_loro_core_rustbuffer_alloc(`size`: Long,uniffi_out_err: UniffiRustCallStatus, 
-    ): RustBuffer.ByValue
-    fun ffi_loro_core_rustbuffer_from_bytes(`bytes`: ForeignBytes.ByValue,uniffi_out_err: UniffiRustCallStatus, 
-    ): RustBuffer.ByValue
-    fun ffi_loro_core_rustbuffer_free(`buf`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
-    ): Unit
-    fun ffi_loro_core_rustbuffer_reserve(`buf`: RustBuffer.ByValue,`additional`: Long,uniffi_out_err: UniffiRustCallStatus, 
-    ): RustBuffer.ByValue
-    fun ffi_loro_core_rust_future_poll_u8(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
-    ): Unit
-    fun ffi_loro_core_rust_future_cancel_u8(`handle`: Long,
-    ): Unit
-    fun ffi_loro_core_rust_future_free_u8(`handle`: Long,
-    ): Unit
-    fun ffi_loro_core_rust_future_complete_u8(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
-    ): Byte
-    fun ffi_loro_core_rust_future_poll_i8(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
-    ): Unit
-    fun ffi_loro_core_rust_future_cancel_i8(`handle`: Long,
-    ): Unit
-    fun ffi_loro_core_rust_future_free_i8(`handle`: Long,
-    ): Unit
-    fun ffi_loro_core_rust_future_complete_i8(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
-    ): Byte
-    fun ffi_loro_core_rust_future_poll_u16(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
-    ): Unit
-    fun ffi_loro_core_rust_future_cancel_u16(`handle`: Long,
-    ): Unit
-    fun ffi_loro_core_rust_future_free_u16(`handle`: Long,
-    ): Unit
-    fun ffi_loro_core_rust_future_complete_u16(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
-    ): Short
-    fun ffi_loro_core_rust_future_poll_i16(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
-    ): Unit
-    fun ffi_loro_core_rust_future_cancel_i16(`handle`: Long,
-    ): Unit
-    fun ffi_loro_core_rust_future_free_i16(`handle`: Long,
-    ): Unit
-    fun ffi_loro_core_rust_future_complete_i16(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
-    ): Short
-    fun ffi_loro_core_rust_future_poll_u32(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
-    ): Unit
-    fun ffi_loro_core_rust_future_cancel_u32(`handle`: Long,
-    ): Unit
-    fun ffi_loro_core_rust_future_free_u32(`handle`: Long,
-    ): Unit
-    fun ffi_loro_core_rust_future_complete_u32(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
-    ): Int
-    fun ffi_loro_core_rust_future_poll_i32(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
-    ): Unit
-    fun ffi_loro_core_rust_future_cancel_i32(`handle`: Long,
-    ): Unit
-    fun ffi_loro_core_rust_future_free_i32(`handle`: Long,
-    ): Unit
-    fun ffi_loro_core_rust_future_complete_i32(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
-    ): Int
-    fun ffi_loro_core_rust_future_poll_u64(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
-    ): Unit
-    fun ffi_loro_core_rust_future_cancel_u64(`handle`: Long,
-    ): Unit
-    fun ffi_loro_core_rust_future_free_u64(`handle`: Long,
-    ): Unit
-    fun ffi_loro_core_rust_future_complete_u64(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
-    ): Long
-    fun ffi_loro_core_rust_future_poll_i64(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
-    ): Unit
-    fun ffi_loro_core_rust_future_cancel_i64(`handle`: Long,
-    ): Unit
-    fun ffi_loro_core_rust_future_free_i64(`handle`: Long,
-    ): Unit
-    fun ffi_loro_core_rust_future_complete_i64(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
-    ): Long
-    fun ffi_loro_core_rust_future_poll_f32(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
-    ): Unit
-    fun ffi_loro_core_rust_future_cancel_f32(`handle`: Long,
-    ): Unit
-    fun ffi_loro_core_rust_future_free_f32(`handle`: Long,
-    ): Unit
-    fun ffi_loro_core_rust_future_complete_f32(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
-    ): Float
-    fun ffi_loro_core_rust_future_poll_f64(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
-    ): Unit
-    fun ffi_loro_core_rust_future_cancel_f64(`handle`: Long,
-    ): Unit
-    fun ffi_loro_core_rust_future_free_f64(`handle`: Long,
-    ): Unit
-    fun ffi_loro_core_rust_future_complete_f64(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
-    ): Double
-    fun ffi_loro_core_rust_future_poll_pointer(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
-    ): Unit
-    fun ffi_loro_core_rust_future_cancel_pointer(`handle`: Long,
-    ): Unit
-    fun ffi_loro_core_rust_future_free_pointer(`handle`: Long,
-    ): Unit
-    fun ffi_loro_core_rust_future_complete_pointer(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
-    ): Pointer
-    fun ffi_loro_core_rust_future_poll_rust_buffer(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
-    ): Unit
-    fun ffi_loro_core_rust_future_cancel_rust_buffer(`handle`: Long,
-    ): Unit
-    fun ffi_loro_core_rust_future_free_rust_buffer(`handle`: Long,
-    ): Unit
-    fun ffi_loro_core_rust_future_complete_rust_buffer(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
-    ): RustBuffer.ByValue
-    fun ffi_loro_core_rust_future_poll_void(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
-    ): Unit
-    fun ffi_loro_core_rust_future_cancel_void(`handle`: Long,
-    ): Unit
-    fun ffi_loro_core_rust_future_free_void(`handle`: Long,
-    ): Unit
-    fun ffi_loro_core_rust_future_complete_void(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
-    ): Unit
-    fun uniffi_loro_core_checksum_func_advance_axes(
-    ): Short
-    fun uniffi_loro_core_checksum_func_automaticity(
-    ): Short
-    fun uniffi_loro_core_checksum_func_band(
-    ): Short
-    fun uniffi_loro_core_checksum_func_beat_ms_for_mode(
-    ): Short
-    fun uniffi_loro_core_checksum_func_climb(
-    ): Short
-    fun uniffi_loro_core_checksum_func_daily_review_cap(
-    ): Short
-    fun uniffi_loro_core_checksum_func_days_between(
-    ): Short
-    fun uniffi_loro_core_checksum_func_deep_link_for(
-    ): Short
-    fun uniffi_loro_core_checksum_func_draw(
-    ): Short
-    fun uniffi_loro_core_checksum_func_earns_level_up(
-    ): Short
-    fun uniffi_loro_core_checksum_func_effort_state(
-    ): Short
-    fun uniffi_loro_core_checksum_func_format_interval(
-    ): Short
-    fun uniffi_loro_core_checksum_func_grade_for_confidence(
-    ): Short
-    fun uniffi_loro_core_checksum_func_initial_difficulty(
-    ): Short
-    fun uniffi_loro_core_checksum_func_is_quiet_hour(
-    ): Short
-    fun uniffi_loro_core_checksum_func_is_skewed(
-    ): Short
-    fun uniffi_loro_core_checksum_func_match_tokens(
-    ): Short
-    fun uniffi_loro_core_checksum_func_may_fire(
-    ): Short
-    fun uniffi_loro_core_checksum_func_mode_for_rep(
-    ): Short
-    fun uniffi_loro_core_checksum_func_model_rate_for_mode(
-    ): Short
-    fun uniffi_loro_core_checksum_func_need(
-    ): Short
-    fun uniffi_loro_core_checksum_func_normalize(
-    ): Short
-    fun uniffi_loro_core_checksum_func_normalize_f0(
-    ): Short
-    fun uniffi_loro_core_checksum_func_nudge_difficulty(
-    ): Short
-    fun uniffi_loro_core_checksum_func_receive(
-    ): Short
-    fun uniffi_loro_core_checksum_func_refrain_set_size(
-    ): Short
-    fun uniffi_loro_core_checksum_func_repeat_target(
-    ): Short
-    fun uniffi_loro_core_checksum_func_retrievability(
-    ): Short
-    fun uniffi_loro_core_checksum_func_streak(
-    ): Short
-    fun uniffi_loro_core_checksum_func_streak_day_for(
-    ): Short
-    fun uniffi_loro_core_checksum_func_streak_survives(
-    ): Short
-    fun uniffi_loro_core_checksum_func_stream_rank(
-    ): Short
-    fun uniffi_loro_core_checksum_func_tick(
-    ): Short
-    fun uniffi_loro_core_checksum_func_tokenize(
-    ): Short
-    fun ffi_loro_core_uniffi_contract_version(
-    ): Int
-    
+        
 }
 
-private fun uniffiCheckContractApiVersion(lib: UniffiLib) {
+internal object UniffiLib {
+    
+
+    init {
+        Native.register(UniffiLib::class.java, findLibraryName(componentName = "loro_core"))
+        
+    }
+    external fun uniffi_loro_core_fn_func_match_tokens(`heard`: RustBuffer.ByValue,`target`: RustBuffer.ByValue,`revealed`: Int,`fuzzy`: Byte,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_loro_core_fn_func_normalize(`s`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_loro_core_fn_func_tokenize(`phrase`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_loro_core_fn_func_days_between(`a`: RustBuffer.ByValue,`b`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_loro_core_fn_func_streak(`practiceDays`: RustBuffer.ByValue,`today`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Int
+    external fun uniffi_loro_core_fn_func_streak_day_for(`atMs`: Long,`localMidnightMs`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_loro_core_fn_func_streak_survives(`lastDay`: RustBuffer.ByValue,`today`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Byte
+    external fun uniffi_loro_core_fn_func_normalize_f0(`hz`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_loro_core_fn_func_advance_axes(`current`: RustBuffer.ByValue,`score`: Byte,`cueLevel`: Byte,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_loro_core_fn_func_band(`score`: Byte,uniffi_out_err: UniffiRustCallStatus, 
+    ): Int
+    external fun uniffi_loro_core_fn_func_earns_level_up(`score`: Byte,`cueLevel`: Byte,`threshold`: Byte,uniffi_out_err: UniffiRustCallStatus, 
+    ): Byte
+    external fun uniffi_loro_core_fn_func_daily_review_cap(`dailyMinutes`: Int,`multiplier`: Int,uniffi_out_err: UniffiRustCallStatus, 
+    ): Int
+    external fun uniffi_loro_core_fn_func_format_interval(`days`: Float,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_loro_core_fn_func_grade_for_confidence(`c`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_loro_core_fn_func_initial_difficulty(`declared`: RustBuffer.ByValue,`tags`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Float
+    external fun uniffi_loro_core_fn_func_nudge_difficulty(`current`: Float,`declared`: RustBuffer.ByValue,`tags`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Float
+    external fun uniffi_loro_core_fn_func_retrievability(`daysSinceReview`: Float,`stability`: Float,uniffi_out_err: UniffiRustCallStatus, 
+    ): Float
+    external fun uniffi_loro_core_fn_func_climb(`current`: RustBuffer.ByValue,`target`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_loro_core_fn_func_draw(`deck`: RustBuffer.ByValue,`seed`: Long,`exclude`: RustBuffer.ByValue,`nowMs`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_loro_core_fn_func_need(`p`: RustBuffer.ByValue,`nowMs`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): Int
+    external fun uniffi_loro_core_fn_func_deep_link_for(`category`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_loro_core_fn_func_is_quiet_hour(`hour`: Int,uniffi_out_err: UniffiRustCallStatus, 
+    ): Byte
+    external fun uniffi_loro_core_fn_func_may_fire(`category`: RustBuffer.ByValue,`ctx`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Byte
+    external fun uniffi_loro_core_fn_func_repeat_target(`difficulty`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Int
+    external fun uniffi_loro_core_fn_func_stream_rank(`p`: RustBuffer.ByValue,`nowMs`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): Int
+    external fun uniffi_loro_core_fn_func_automaticity(`repsToday`: Int,`target`: Int,uniffi_out_err: UniffiRustCallStatus, 
+    ): Int
+    external fun uniffi_loro_core_fn_func_beat_ms_for_mode(`mode`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Int
+    external fun uniffi_loro_core_fn_func_effort_state(`reps`: Int,`automaticityPct`: Byte,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_loro_core_fn_func_mode_for_rep(`repIndex`: Int,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_loro_core_fn_func_model_rate_for_mode(`mode`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_loro_core_fn_func_refrain_set_size(`dailyMinutes`: Int,uniffi_out_err: UniffiRustCallStatus, 
+    ): Int
+    external fun uniffi_loro_core_fn_func_is_skewed(`client`: RustBuffer.ByValue,`serverMs`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): Byte
+    external fun uniffi_loro_core_fn_func_receive(`last`: RustBuffer.ByValue,`remote`: RustBuffer.ByValue,`wallMs`: Long,`nodeId`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_loro_core_fn_func_tick(`last`: RustBuffer.ByValue,`wallMs`: Long,`nodeId`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun ffi_loro_core_rustbuffer_alloc(`size`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun ffi_loro_core_rustbuffer_from_bytes(`bytes`: ForeignBytes.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun ffi_loro_core_rustbuffer_free(`buf`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    external fun ffi_loro_core_rustbuffer_reserve(`buf`: RustBuffer.ByValue,`additional`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun ffi_loro_core_rust_future_poll_u8(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
+    ): Unit
+    external fun ffi_loro_core_rust_future_cancel_u8(`handle`: Long,
+    ): Unit
+    external fun ffi_loro_core_rust_future_free_u8(`handle`: Long,
+    ): Unit
+    external fun ffi_loro_core_rust_future_complete_u8(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): Int
+    external fun ffi_loro_core_rust_future_poll_i8(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
+    ): Unit
+    external fun ffi_loro_core_rust_future_cancel_i8(`handle`: Long,
+    ): Unit
+    external fun ffi_loro_core_rust_future_free_i8(`handle`: Long,
+    ): Unit
+    external fun ffi_loro_core_rust_future_complete_i8(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): Byte
+    external fun ffi_loro_core_rust_future_poll_u16(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
+    ): Unit
+    external fun ffi_loro_core_rust_future_cancel_u16(`handle`: Long,
+    ): Unit
+    external fun ffi_loro_core_rust_future_free_u16(`handle`: Long,
+    ): Unit
+    external fun ffi_loro_core_rust_future_complete_u16(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): Int
+    external fun ffi_loro_core_rust_future_poll_i16(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
+    ): Unit
+    external fun ffi_loro_core_rust_future_cancel_i16(`handle`: Long,
+    ): Unit
+    external fun ffi_loro_core_rust_future_free_i16(`handle`: Long,
+    ): Unit
+    external fun ffi_loro_core_rust_future_complete_i16(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): Short
+    external fun ffi_loro_core_rust_future_poll_u32(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
+    ): Unit
+    external fun ffi_loro_core_rust_future_cancel_u32(`handle`: Long,
+    ): Unit
+    external fun ffi_loro_core_rust_future_free_u32(`handle`: Long,
+    ): Unit
+    external fun ffi_loro_core_rust_future_complete_u32(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): Int
+    external fun ffi_loro_core_rust_future_poll_i32(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
+    ): Unit
+    external fun ffi_loro_core_rust_future_cancel_i32(`handle`: Long,
+    ): Unit
+    external fun ffi_loro_core_rust_future_free_i32(`handle`: Long,
+    ): Unit
+    external fun ffi_loro_core_rust_future_complete_i32(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): Int
+    external fun ffi_loro_core_rust_future_poll_u64(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
+    ): Unit
+    external fun ffi_loro_core_rust_future_cancel_u64(`handle`: Long,
+    ): Unit
+    external fun ffi_loro_core_rust_future_free_u64(`handle`: Long,
+    ): Unit
+    external fun ffi_loro_core_rust_future_complete_u64(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): Long
+    external fun ffi_loro_core_rust_future_poll_i64(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
+    ): Unit
+    external fun ffi_loro_core_rust_future_cancel_i64(`handle`: Long,
+    ): Unit
+    external fun ffi_loro_core_rust_future_free_i64(`handle`: Long,
+    ): Unit
+    external fun ffi_loro_core_rust_future_complete_i64(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): Long
+    external fun ffi_loro_core_rust_future_poll_f32(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
+    ): Unit
+    external fun ffi_loro_core_rust_future_cancel_f32(`handle`: Long,
+    ): Unit
+    external fun ffi_loro_core_rust_future_free_f32(`handle`: Long,
+    ): Unit
+    external fun ffi_loro_core_rust_future_complete_f32(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): Float
+    external fun ffi_loro_core_rust_future_poll_f64(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
+    ): Unit
+    external fun ffi_loro_core_rust_future_cancel_f64(`handle`: Long,
+    ): Unit
+    external fun ffi_loro_core_rust_future_free_f64(`handle`: Long,
+    ): Unit
+    external fun ffi_loro_core_rust_future_complete_f64(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): Double
+    external fun ffi_loro_core_rust_future_poll_rust_buffer(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
+    ): Unit
+    external fun ffi_loro_core_rust_future_cancel_rust_buffer(`handle`: Long,
+    ): Unit
+    external fun ffi_loro_core_rust_future_free_rust_buffer(`handle`: Long,
+    ): Unit
+    external fun ffi_loro_core_rust_future_complete_rust_buffer(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun ffi_loro_core_rust_future_poll_void(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
+    ): Unit
+    external fun ffi_loro_core_rust_future_cancel_void(`handle`: Long,
+    ): Unit
+    external fun ffi_loro_core_rust_future_free_void(`handle`: Long,
+    ): Unit
+    external fun ffi_loro_core_rust_future_complete_void(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+
+        
+}
+
+private fun uniffiCheckContractApiVersion(lib: IntegrityCheckingUniffiLib) {
     // Get the bindings contract version from our ComponentInterface
-    val bindings_contract_version = 26
+    val bindings_contract_version = 30
     // Get the scaffolding contract version by calling the into the dylib
     val scaffolding_contract_version = lib.ffi_loro_core_uniffi_contract_version()
     if (bindings_contract_version != scaffolding_contract_version) {
         throw RuntimeException("UniFFI contract version mismatch: try cleaning and rebuilding your project")
     }
 }
-
 @Suppress("UNUSED_PARAMETER")
-private fun uniffiCheckApiChecksums(lib: UniffiLib) {
-    if (lib.uniffi_loro_core_checksum_func_advance_axes() != 10792.toShort()) {
+private fun uniffiCheckApiChecksums(lib: IntegrityCheckingUniffiLib) {
+    if (lib.uniffi_loro_core_checksum_func_match_tokens() != 45107) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_automaticity() != 19901.toShort()) {
+    if (lib.uniffi_loro_core_checksum_func_normalize() != 36037) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_band() != 13607.toShort()) {
+    if (lib.uniffi_loro_core_checksum_func_tokenize() != 50042) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_beat_ms_for_mode() != 15077.toShort()) {
+    if (lib.uniffi_loro_core_checksum_func_days_between() != 61716) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_climb() != 34211.toShort()) {
+    if (lib.uniffi_loro_core_checksum_func_streak() != 18523) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_daily_review_cap() != 57348.toShort()) {
+    if (lib.uniffi_loro_core_checksum_func_streak_day_for() != 29614) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_days_between() != 54773.toShort()) {
+    if (lib.uniffi_loro_core_checksum_func_streak_survives() != 57834) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_deep_link_for() != 7544.toShort()) {
+    if (lib.uniffi_loro_core_checksum_func_normalize_f0() != 21709) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_draw() != 65089.toShort()) {
+    if (lib.uniffi_loro_core_checksum_func_advance_axes() != 1156) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_earns_level_up() != 44757.toShort()) {
+    if (lib.uniffi_loro_core_checksum_func_band() != 39941) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_effort_state() != 58290.toShort()) {
+    if (lib.uniffi_loro_core_checksum_func_earns_level_up() != 49403) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_format_interval() != 7764.toShort()) {
+    if (lib.uniffi_loro_core_checksum_func_daily_review_cap() != 8914) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_grade_for_confidence() != 35223.toShort()) {
+    if (lib.uniffi_loro_core_checksum_func_format_interval() != 50827) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_initial_difficulty() != 8612.toShort()) {
+    if (lib.uniffi_loro_core_checksum_func_grade_for_confidence() != 31441) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_is_quiet_hour() != 50060.toShort()) {
+    if (lib.uniffi_loro_core_checksum_func_initial_difficulty() != 41499) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_is_skewed() != 19846.toShort()) {
+    if (lib.uniffi_loro_core_checksum_func_nudge_difficulty() != 10246) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_match_tokens() != 56382.toShort()) {
+    if (lib.uniffi_loro_core_checksum_func_retrievability() != 7937) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_may_fire() != 19166.toShort()) {
+    if (lib.uniffi_loro_core_checksum_func_climb() != 50333) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_mode_for_rep() != 8670.toShort()) {
+    if (lib.uniffi_loro_core_checksum_func_draw() != 17799) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_model_rate_for_mode() != 29690.toShort()) {
+    if (lib.uniffi_loro_core_checksum_func_need() != 14278) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_need() != 16.toShort()) {
+    if (lib.uniffi_loro_core_checksum_func_deep_link_for() != 25113) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_normalize() != 10544.toShort()) {
+    if (lib.uniffi_loro_core_checksum_func_is_quiet_hour() != 14173) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_normalize_f0() != 47781.toShort()) {
+    if (lib.uniffi_loro_core_checksum_func_may_fire() != 35123) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_nudge_difficulty() != 19498.toShort()) {
+    if (lib.uniffi_loro_core_checksum_func_repeat_target() != 48455) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_receive() != 42692.toShort()) {
+    if (lib.uniffi_loro_core_checksum_func_stream_rank() != 33635) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_refrain_set_size() != 42706.toShort()) {
+    if (lib.uniffi_loro_core_checksum_func_automaticity() != 54682) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_repeat_target() != 29482.toShort()) {
+    if (lib.uniffi_loro_core_checksum_func_beat_ms_for_mode() != 18787) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_retrievability() != 2410.toShort()) {
+    if (lib.uniffi_loro_core_checksum_func_effort_state() != 42974) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_streak() != 21767.toShort()) {
+    if (lib.uniffi_loro_core_checksum_func_mode_for_rep() != 35315) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_streak_day_for() != 43641.toShort()) {
+    if (lib.uniffi_loro_core_checksum_func_model_rate_for_mode() != 59286) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_streak_survives() != 29477.toShort()) {
+    if (lib.uniffi_loro_core_checksum_func_refrain_set_size() != 44059) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_stream_rank() != 58341.toShort()) {
+    if (lib.uniffi_loro_core_checksum_func_is_skewed() != 16657) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_tick() != 4271.toShort()) {
+    if (lib.uniffi_loro_core_checksum_func_receive() != 34320) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_tokenize() != 26754.toShort()) {
+    if (lib.uniffi_loro_core_checksum_func_tick() != 63061) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
+}
+
+/**
+ * @suppress
+ */
+public fun uniffiEnsureInitialized() {
+    IntegrityCheckingUniffiLib
+    // UniffiLib() initialized as objects are used, but we still need to explicitly
+    // reference it so initialization across crates works as expected.
+    UniffiLib
 }
 
 // Async support
@@ -1180,8 +1071,33 @@ interface Disposable {
     fun destroy()
     companion object {
         fun destroy(vararg args: Any?) {
-            args.filterIsInstance<Disposable>()
-                .forEach(Disposable::destroy)
+            for (arg in args) {
+                when (arg) {
+                    is Disposable -> arg.destroy()
+                    is ArrayList<*> -> {
+                        for (idx in arg.indices) {
+                            val element = arg[idx]
+                            if (element is Disposable) {
+                                element.destroy()
+                            }
+                        }
+                    }
+                    is Map<*, *> -> {
+                        for (element in arg.values) {
+                            if (element is Disposable) {
+                                element.destroy()
+                            }
+                        }
+                    }
+                    is Iterable<*> -> {
+                        for (element in arg) {
+                            if (element is Disposable) {
+                                element.destroy()
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -1202,17 +1118,32 @@ inline fun <T : Disposable?, R> T.use(block: (T) -> R) =
     }
 
 /** 
+ * Placeholder object used to signal that we're constructing an interface with a FFI handle.
+ *
+ * This is the first argument for interface constructors that input a raw handle. It exists is that
+ * so we can avoid signature conflicts when an interface has a regular constructor than inputs a
+ * Long.
+ *
+ * @suppress
+ * */
+object UniffiWithHandle
+
+/** 
  * Used to instantiate an interface without an actual pointer, for fakes in tests, mostly.
  *
  * @suppress
  * */
-object NoPointer
+object NoHandle
 
 /**
  * @suppress
  */
 public object FfiConverterUByte: FfiConverter<UByte, Byte> {
     override fun lift(value: Byte): UByte {
+        return value.toUByte()
+    }
+
+    fun lift(value: Int): UByte {
         return value.toUByte()
     }
 
@@ -1454,12 +1385,18 @@ data class Draw (
     /**
      * The dealt card.
      */
-    var `card`: FinisherCard, 
+    var `card`: FinisherCard
+    , 
     /**
      * The phrase it targets.
      */
     var `targetId`: kotlin.String
-) {
+    
+){
+    
+
+    
+
     
     companion object
 }
@@ -1495,16 +1432,23 @@ data class Fix (
     /**
      * What kind.
      */
-    var `kind`: FixKind, 
+    var `kind`: FixKind
+    , 
     /**
      * Which template fired, e.g. `es.trill.rr`. Logged as `fix_code`.
      */
-    var `code`: kotlin.String, 
+    var `code`: kotlin.String
+    , 
     /**
      * The syllable it refers to, if any.
      */
     var `syllableIndex`: kotlin.UInt?
-) {
+    
+){
+    
+
+    
+
     
     companion object
 }
@@ -1543,24 +1487,33 @@ data class FsrsState (
     /**
      * Days until retrievability decays to the review threshold.
      */
-    var `stability`: kotlin.Float, 
+    var `stability`: kotlin.Float
+    , 
     /**
      * Intrinsic difficulty for this learner, 1..10.
      */
-    var `difficulty`: kotlin.Float, 
+    var `difficulty`: kotlin.Float
+    , 
     /**
      * Next review, epoch ms.
      */
-    var `due`: kotlin.Long, 
+    var `due`: kotlin.Long
+    , 
     /**
      * Last review, epoch ms.
      */
-    var `lastReview`: kotlin.Long?, 
+    var `lastReview`: kotlin.Long?
+    , 
     /**
      * Failed reviews.
      */
     var `lapses`: kotlin.UInt
-) {
+    
+){
+    
+
+    
+
     
     companion object
 }
@@ -1605,16 +1558,23 @@ data class Hlc (
     /**
      * Wall-clock milliseconds, monotonically non-decreasing.
      */
-    var `physical`: kotlin.Long, 
+    var `physical`: kotlin.Long
+    , 
     /**
      * Tiebreaker within the same millisecond.
      */
-    var `logical`: kotlin.UInt, 
+    var `logical`: kotlin.UInt
+    , 
     /**
      * Stable per installation.
      */
     var `nodeId`: kotlin.String
-) {
+    
+){
+    
+
+    
+
     
     companion object
 }
@@ -1657,12 +1617,18 @@ data class LatencySample (
     /**
      * Rep index within the phrase.
      */
-    var `repIndex`: kotlin.UInt, 
+    var `repIndex`: kotlin.UInt
+    , 
     /**
      * Measured milliseconds, or `None` if onset was never detected.
      */
     var `ms`: kotlin.UInt?
-) {
+    
+){
+    
+
+    
+
     
     companion object
 }
@@ -1698,16 +1664,23 @@ data class MatchResult (
     /**
      * How many leading target tokens are now revealed. Only ever increases.
      */
-    var `revealed`: kotlin.UInt, 
+    var `revealed`: kotlin.UInt
+    , 
     /**
      * The index just revealed, for the "just said" highlight. `-1` if none.
      */
-    var `justIndex`: kotlin.Int, 
+    var `justIndex`: kotlin.Int
+    , 
     /**
      * Whether the whole phrase has been produced — the production gate.
      */
     var `complete`: kotlin.Boolean
-) {
+    
+){
+    
+
+    
+
     
     companion object
 }
@@ -1746,32 +1719,43 @@ data class NotifyContext (
     /**
      * Local hour now, 0..23.
      */
-    var `hour`: kotlin.UInt, 
+    var `hour`: kotlin.UInt
+    , 
     /**
      * Has the learner already practised today?
      */
-    var `practisedToday`: kotlin.Boolean, 
+    var `practisedToday`: kotlin.Boolean
+    , 
     /**
      * Was the previous wave completed? Gates the next wave nudge.
      */
-    var `previousWaveCompleted`: kotlin.Boolean, 
+    var `previousWaveCompleted`: kotlin.Boolean
+    , 
     /**
      * Which categories the learner has enabled.
      */
-    var `enabled`: List<Category>, 
+    var `enabled`: List<Category>
+    , 
     /**
      * Already scheduled today.
      */
-    var `alreadyScheduled`: kotlin.UInt, 
+    var `alreadyScheduled`: kotlin.UInt
+    , 
     /**
      * Is a trip active?
      */
-    var `tripActive`: kotlin.Boolean, 
+    var `tripActive`: kotlin.Boolean
+    , 
     /**
      * Reveal-mode fallbacks recently, for the language-pack prompt.
      */
     var `revealModeCount`: kotlin.UInt
-) {
+    
+){
+    
+
+    
+
     
     companion object
 }
@@ -1822,72 +1806,93 @@ data class PhraseState (
     /**
      * The learner's row id.
      */
-    var `id`: kotlin.String, 
+    var `id`: kotlin.String
+    , 
     /**
      * Learner-declared difficulty.
      */
-    var `difficulty`: Difficulty, 
+    var `difficulty`: Difficulty
+    , 
     /**
      * Active tags.
      */
-    var `tags`: List<Tag>, 
+    var `tags`: List<Tag>
+    , 
     /**
      * Surfaces more often.
      */
-    var `loved`: kotlin.Boolean, 
+    var `loved`: kotlin.Boolean
+    , 
     /**
      * Left the active stream, still in review.
      */
-    var `learned`: kotlin.Boolean, 
+    var `learned`: kotlin.Boolean
+    , 
     /**
      * Stream play count.
      */
-    var `plays`: kotlin.UInt, 
+    var `plays`: kotlin.UInt
+    , 
     /**
      * Total reps across all engines.
      */
-    var `reps`: kotlin.UInt, 
+    var `reps`: kotlin.UInt
+    , 
     /**
      * Epoch ms.
      */
-    var `lastPracticedAt`: kotlin.Long?, 
+    var `lastPracticedAt`: kotlin.Long?
+    , 
     /**
      * FSRS due date, epoch ms.
      */
-    var `srsDue`: kotlin.Long?, 
+    var `srsDue`: kotlin.Long?
+    , 
     /**
      * FSRS stability, in days.
      */
-    var `srsStability`: kotlin.Float?, 
+    var `srsStability`: kotlin.Float?
+    , 
     /**
      * FSRS difficulty, 1..10.
      */
-    var `srsDifficulty`: kotlin.Float?, 
+    var `srsDifficulty`: kotlin.Float?
+    , 
     /**
      * Reps today, valid only for `reps_today_day`.
      */
-    var `repsToday`: kotlin.UInt, 
+    var `repsToday`: kotlin.UInt
+    , 
     /**
      * The `local_day` `reps_today` belongs to.
      */
-    var `repsTodayDay`: kotlin.String?, 
+    var `repsTodayDay`: kotlin.String?
+    , 
     /**
      * Distinct days locked in; 4 → graduated.
      */
-    var `lockInDays`: kotlin.UInt, 
+    var `lockInDays`: kotlin.UInt
+    , 
     /**
      * Ladder rung.
      */
-    var `rung`: LadderRung, 
+    var `rung`: LadderRung
+    , 
     /**
      * Failed productions, floor 0.
      */
-    var `stumbles`: kotlin.UInt, 
+    var `stumbles`: kotlin.UInt
+    , 
     /**
      * Prosody cue level, 0..3.
      */
     var `cueLevel`: kotlin.UByte
-) {
+    
+){
+    
+
+    
+
     
     companion object
 }
@@ -1968,20 +1973,28 @@ data class PlannedNotification (
     /**
      * Its category.
      */
-    var `category`: Category, 
+    var `category`: Category
+    , 
     /**
      * Local hour to fire at.
      */
-    var `hour`: kotlin.UInt, 
+    var `hour`: kotlin.UInt
+    , 
     /**
      * Local minute.
      */
-    var `minute`: kotlin.UInt, 
+    var `minute`: kotlin.UInt
+    , 
     /**
      * Deep link, so it lands on the right surface rather than the home screen.
      */
     var `deepLink`: kotlin.String
-) {
+    
+){
+    
+
+    
+
     
     companion object
 }
@@ -2023,16 +2036,23 @@ data class SkillAxes (
     /**
      * Recognising it.
      */
-    var `perception`: kotlin.UByte, 
+    var `perception`: kotlin.UByte
+    , 
     /**
      * Retrieving it.
      */
-    var `recall`: kotlin.UByte, 
+    var `recall`: kotlin.UByte
+    , 
     /**
      * Saying it.
      */
     var `production`: kotlin.UByte
-) {
+    
+){
+    
+
+    
+
     
     companion object
 }
@@ -2098,6 +2118,10 @@ enum class Category {
      * On-device speech unavailable and reveal mode has been hit repeatedly.
      */
     LANGUAGE_PACK;
+
+    
+
+
     companion object
 }
 
@@ -2152,6 +2176,10 @@ enum class Confidence {
      * Automatic.
      */
     INSTANT;
+
+    
+
+
     companion object
 }
 
@@ -2195,6 +2223,10 @@ enum class Difficulty {
      * Shown as "Difficult" — describing the phrase, not the learner.
      */
     HARD;
+
+    
+
+
     companion object
 }
 
@@ -2246,6 +2278,10 @@ enum class EffortState {
      * Fully automatic at the daily target.
      */
     PEAK;
+
+    
+
+
     companion object
 }
 
@@ -2293,6 +2329,10 @@ enum class FinisherCard {
      * "the Sportscaster" — make it yours. Pressure-tested → Deployed.
      */
     DEPLOY;
+
+    
+
+
     companion object
 }
 
@@ -2342,6 +2382,10 @@ enum class FixKind {
      * Nothing actionable — the take was good.
      */
     NONE;
+
+    
+
+
     companion object
 }
 
@@ -2389,6 +2433,10 @@ enum class Grade {
      * Recalled instantly.
      */
     EASY;
+
+    
+
+
     companion object
 }
 
@@ -2440,6 +2488,10 @@ enum class LadderRung {
      * Spontaneous, unprompted, for real.
      */
     DEPLOYED;
+
+    
+
+
     companion object
 }
 
@@ -2492,6 +2544,10 @@ enum class MergeClass {
      * A delete wins over a concurrent edit at any HLC.
      */
     TOMBSTONE;
+
+    
+
+
     companion object
 }
 
@@ -2550,6 +2606,10 @@ enum class RefrainMode {
      * From memory — no model.
      */
     COLD;
+
+    
+
+
     companion object
 }
 
@@ -2597,6 +2657,10 @@ enum class RejectReason {
      * The alignment cost was too high — they probably said something else.
      */
     UNALIGNABLE;
+
+    
+
+
     companion object
 }
 
@@ -2644,6 +2708,10 @@ enum class Tag {
      * Specific lexical items trip me up.
      */
     WORDS;
+
+    
+
+
     companion object
 }
 
@@ -2697,7 +2765,11 @@ sealed class TakeResult {
         /**
          * Which feedback template to show.
          */
-        val `fixCode`: kotlin.String) : TakeResult() {
+        val `fixCode`: kotlin.String) : TakeResult()
+        
+    {
+        
+
         companion object
     }
     
@@ -2708,12 +2780,21 @@ sealed class TakeResult {
         /**
          * Why.
          */
-        val `reason`: RejectReason) : TakeResult() {
+        val `reason`: uniffi.loro_core.RejectReason) : TakeResult()
+        
+    {
+        
+
         companion object
     }
     
 
     
+
+    
+    
+
+
     companion object
 }
 
@@ -2737,7 +2818,7 @@ public object FfiConverterTypeTakeResult : FfiConverterRustBuffer<TakeResult>{
         }
     }
 
-    override fun allocationSize(value: TakeResult) = when(value) {
+    override fun allocationSize(value: TakeResult): ULong = when(value) {
         is TakeResult.Scored -> {
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
@@ -3144,226 +3225,6 @@ public object FfiConverterSequenceTypeTag: FfiConverterRustBuffer<List<Tag>> {
     }
 }
         /**
-         * Advance the axes after a take. A blueprint contract (`Loro.dc.html:3180–3182`).
-         *
-         * The asymmetry is the pedagogy: **Recall advances faster at high cue levels**, because
-         * recalling *without* cues is what trains recall. Production tracks the actual score.
-         * Perception creeps up from mere exposure.
-         */ fun `advanceAxes`(`current`: SkillAxes, `score`: kotlin.UByte, `cueLevel`: kotlin.UByte): SkillAxes {
-            return FfiConverterTypeSkillAxes.lift(
-    uniffiRustCall() { _status ->
-    UniffiLib.INSTANCE.uniffi_loro_core_fn_func_advance_axes(
-        FfiConverterTypeSkillAxes.lower(`current`),FfiConverterUByte.lower(`score`),FfiConverterUByte.lower(`cueLevel`),_status)
-}
-    )
-    }
-    
-
-        /**
-         * Today's automaticity, from the blueprint (`Loro.dc.html:3378`).
-         */ fun `automaticity`(`repsToday`: kotlin.UInt, `target`: kotlin.UInt): kotlin.UByte {
-            return FfiConverterUByte.lift(
-    uniffiRustCall() { _status ->
-    UniffiLib.INSTANCE.uniffi_loro_core_fn_func_automaticity(
-        FfiConverterUInt.lower(`repsToday`),FfiConverterUInt.lower(`target`),_status)
-}
-    )
-    }
-    
-
-        /**
-         * Which band a score falls in.
-         */ fun `band`(`score`: kotlin.UByte): kotlin.UByte {
-            return FfiConverterUByte.lift(
-    uniffiRustCall() { _status ->
-    UniffiLib.INSTANCE.uniffi_loro_core_fn_func_band(
-        FfiConverterUByte.lower(`score`),_status)
-}
-    )
-    }
-    
-
-        /**
-         * Beat tempo in milliseconds. Speed mode's faster beat is the only cue that it differs.
-         */ fun `beatMsForMode`(`mode`: RefrainMode): kotlin.UInt {
-            return FfiConverterUInt.lift(
-    uniffiRustCall() { _status ->
-    UniffiLib.INSTANCE.uniffi_loro_core_fn_func_beat_ms_for_mode(
-        FfiConverterTypeRefrainMode.lower(`mode`),_status)
-}
-    )
-    }
-    
-
-        /**
-         * Advance a phrase's rung, never downwards.
-         *
-         * This is the monotonicity guarantee the conformance suite checks.
-         */ fun `climb`(`current`: LadderRung, `target`: LadderRung): LadderRung {
-            return FfiConverterTypeLadderRung.lift(
-    uniffiRustCall() { _status ->
-    UniffiLib.INSTANCE.uniffi_loro_core_fn_func_climb(
-        FfiConverterTypeLadderRung.lower(`current`),FfiConverterTypeLadderRung.lower(`target`),_status)
-}
-    )
-    }
-    
-
-        /**
-         * Daily review cap, so a queue never becomes a wall.
-         *
-         * Uncapped review queues are how SRS apps lose learners in month two.
-         */ fun `dailyReviewCap`(`dailyMinutes`: kotlin.UInt, `multiplier`: kotlin.UInt): kotlin.UInt {
-            return FfiConverterUInt.lift(
-    uniffiRustCall() { _status ->
-    UniffiLib.INSTANCE.uniffi_loro_core_fn_func_daily_review_cap(
-        FfiConverterUInt.lower(`dailyMinutes`),FfiConverterUInt.lower(`multiplier`),_status)
-}
-    )
-    }
-    
-
-        /**
-         * Days between two local dates, positive if `b` is later. Calendar days, not elapsed hours.
-         *
-         * # Errors
-         * Returns `None` if either string is not `YYYY-MM-DD`.
-         */ fun `daysBetween`(`a`: kotlin.String, `b`: kotlin.String): kotlin.Int? {
-            return FfiConverterOptionalInt.lift(
-    uniffiRustCall() { _status ->
-    UniffiLib.INSTANCE.uniffi_loro_core_fn_func_days_between(
-        FfiConverterString.lower(`a`),FfiConverterString.lower(`b`),_status)
-}
-    )
-    }
-    
-
-        /**
-         * The deep link for a category. A notification that opens the home screen has wasted
-         * the learner's attention.
-         */ fun `deepLinkFor`(`category`: Category): kotlin.String {
-            return FfiConverterString.lift(
-    uniffiRustCall() { _status ->
-    UniffiLib.INSTANCE.uniffi_loro_core_fn_func_deep_link_for(
-        FfiConverterTypeCategory.lower(`category`),_status)
-}
-    )
-    }
-    
-
-        /**
-         * The Draw — a real shuffle, constrained to what phrases are ready for and biased
-         * toward weak spots.
-         *
-         * From the blueprint (`Loro.dc.html:3479–3488`). Deterministic given `seed`, which is
-         * persisted on the run row so any run can be replayed exactly in a test or a bug report.
-         *
-         * Returns `None` when the deck has nothing eligible — a brand-new deck with no phrase
-         * at any unlocked card's source rung.
-         */ fun `draw`(`deck`: List<PhraseState>, `seed`: kotlin.ULong, `exclude`: FinisherCard?, `nowMs`: kotlin.Long): Draw? {
-            return FfiConverterOptionalTypeDraw.lift(
-    uniffiRustCall() { _status ->
-    UniffiLib.INSTANCE.uniffi_loro_core_fn_func_draw(
-        FfiConverterSequenceTypePhraseState.lower(`deck`),FfiConverterULong.lower(`seed`),FfiConverterOptionalTypeFinisherCard.lower(`exclude`),FfiConverterLong.lower(`nowMs`),_status)
-}
-    )
-    }
-    
-
-        /**
-         * Whether a take earns a cue level-up. The reward is the **removal of help**.
-         */ fun `earnsLevelUp`(`score`: kotlin.UByte, `cueLevel`: kotlin.UByte, `threshold`: kotlin.UByte): kotlin.Boolean {
-            return FfiConverterBoolean.lift(
-    uniffiRustCall() { _status ->
-    UniffiLib.INSTANCE.uniffi_loro_core_fn_func_earns_level_up(
-        FfiConverterUByte.lower(`score`),FfiConverterUByte.lower(`cueLevel`),FfiConverterUByte.lower(`threshold`),_status)
-}
-    )
-    }
-    
-
-        /**
-         * Map repetitions and automaticity to a semantic state; presentation owns the wording.
-         */ fun `effortState`(`reps`: kotlin.UInt, `automaticityPct`: kotlin.UByte): EffortState {
-            return FfiConverterTypeEffortState.lift(
-    uniffiRustCall() { _status ->
-    UniffiLib.INSTANCE.uniffi_loro_core_fn_func_effort_state(
-        FfiConverterUInt.lower(`reps`),FfiConverterUByte.lower(`automaticityPct`),_status)
-}
-    )
-    }
-    
-
-        /**
-         * Format an interval for display, from the blueprint (`Loro.dc.html:3009`).
-         *
-         * The blueprint's *fixed* interval labels are a display model; these are formatted
-         * from FSRS's real output.
-         */ fun `formatInterval`(`days`: kotlin.Float): kotlin.String {
-            return FfiConverterString.lift(
-    uniffiRustCall() { _status ->
-    UniffiLib.INSTANCE.uniffi_loro_core_fn_func_format_interval(
-        FfiConverterFloat.lower(`days`),_status)
-}
-    )
-    }
-    
-
-        /**
-         * Map a five-level confidence onto a grade.
-         */ fun `gradeForConfidence`(`c`: Confidence): Grade {
-            return FfiConverterTypeGrade.lift(
-    uniffiRustCall() { _status ->
-    UniffiLib.INSTANCE.uniffi_loro_core_fn_func_grade_for_confidence(
-        FfiConverterTypeConfidence.lower(`c`),_status)
-}
-    )
-    }
-    
-
-        /**
-         * Seed FSRS difficulty from the learner's own declaration.
-         *
-         * This is Loro's structural advantage over every other app using FSRS: the learner
-         * tells us a phrase's difficulty when they add it, so there is no cold start.
-         *
-         * `pron` deliberately does **not** raise difficulty — it changes the *drill*, not the
-         * memory load.
-         */ fun `initialDifficulty`(`declared`: Difficulty, `tags`: List<Tag>): kotlin.Float {
-            return FfiConverterFloat.lift(
-    uniffiRustCall() { _status ->
-    UniffiLib.INSTANCE.uniffi_loro_core_fn_func_initial_difficulty(
-        FfiConverterTypeDifficulty.lower(`declared`),FfiConverterSequenceTypeTag.lower(`tags`),_status)
-}
-    )
-    }
-    
-
-        /**
-         * Whether an hour falls in quiet hours.
-         */ fun `isQuietHour`(`hour`: kotlin.UInt): kotlin.Boolean {
-            return FfiConverterBoolean.lift(
-    uniffiRustCall() { _status ->
-    UniffiLib.INSTANCE.uniffi_loro_core_fn_func_is_quiet_hour(
-        FfiConverterUInt.lower(`hour`),_status)
-}
-    )
-    }
-    
-
-        /**
-         * Whether a client reading is implausibly far ahead of server time.
-         */ fun `isSkewed`(`client`: Hlc, `serverMs`: kotlin.Long): kotlin.Boolean {
-            return FfiConverterBoolean.lift(
-    uniffiRustCall() { _status ->
-    UniffiLib.INSTANCE.uniffi_loro_core_fn_func_is_skewed(
-        FfiConverterTypeHlc.lower(`client`),FfiConverterLong.lower(`serverMs`),_status)
-}
-    )
-    }
-    
-
-        /**
          * Match heard tokens against the target, walking forward from `revealed`.
          *
          * Properties, all inherited from the blueprint:
@@ -3377,58 +3238,13 @@ public object FfiConverterSequenceTypeTag: FfiConverterRustBuffer<List<Tag>> {
          */ fun `matchTokens`(`heard`: List<kotlin.String>, `target`: List<kotlin.String>, `revealed`: kotlin.UInt, `fuzzy`: kotlin.Boolean): MatchResult {
             return FfiConverterTypeMatchResult.lift(
     uniffiRustCall() { _status ->
-    UniffiLib.INSTANCE.uniffi_loro_core_fn_func_match_tokens(
-        FfiConverterSequenceString.lower(`heard`),FfiConverterSequenceString.lower(`target`),FfiConverterUInt.lower(`revealed`),FfiConverterBoolean.lower(`fuzzy`),_status)
-}
-    )
-    }
+    UniffiLib.uniffi_loro_core_fn_func_match_tokens(
     
-
-        /**
-         * Whether a category may fire, given the context.
-         */ fun `mayFire`(`category`: Category, `ctx`: NotifyContext): kotlin.Boolean {
-            return FfiConverterBoolean.lift(
-    uniffiRustCall() { _status ->
-    UniffiLib.INSTANCE.uniffi_loro_core_fn_func_may_fire(
-        FfiConverterTypeCategory.lower(`category`),FfiConverterTypeNotifyContext.lower(`ctx`),_status)
-}
-    )
-    }
-    
-
-        /**
-         * The mode for a given rep index, clamped at the last.
-         */ fun `modeForRep`(`repIndex`: kotlin.UInt): RefrainMode {
-            return FfiConverterTypeRefrainMode.lift(
-    uniffiRustCall() { _status ->
-    UniffiLib.INSTANCE.uniffi_loro_core_fn_func_mode_for_rep(
-        FfiConverterUInt.lower(`repIndex`),_status)
-}
-    )
-    }
-    
-
-        /**
-         * Model-audio playback rate for a mode, or `None` when no model is offered.
-         */ fun `modelRateForMode`(`mode`: RefrainMode): kotlin.Float? {
-            return FfiConverterOptionalFloat.lift(
-    uniffiRustCall() { _status ->
-    UniffiLib.INSTANCE.uniffi_loro_core_fn_func_model_rate_for_mode(
-        FfiConverterTypeRefrainMode.lower(`mode`),_status)
-}
-    )
-    }
-    
-
-        /**
-         * How much a phrase needs attention. Biases the draw and drives the `refresh` flags.
-         *
-         * From the blueprint (`Loro.dc.html:3467`): `need = stale×2 + stumbles`.
-         */ fun `need`(`p`: PhraseState, `nowMs`: kotlin.Long): kotlin.UInt {
-            return FfiConverterUInt.lift(
-    uniffiRustCall() { _status ->
-    UniffiLib.INSTANCE.uniffi_loro_core_fn_func_need(
-        FfiConverterTypePhraseState.lower(`p`),FfiConverterLong.lower(`nowMs`),_status)
+        
+        FfiConverterSequenceString.lower(`heard`),
+        FfiConverterSequenceString.lower(`target`),
+        FfiConverterUInt.lower(`revealed`),
+        FfiConverterBoolean.lower(`fuzzy`),_status)
 }
     )
     }
@@ -3442,7 +3258,9 @@ public object FfiConverterSequenceTypeTag: FfiConverterRustBuffer<List<Tag>> {
          */ fun `normalize`(`s`: kotlin.String): kotlin.String {
             return FfiConverterString.lift(
     uniffiRustCall() { _status ->
-    UniffiLib.INSTANCE.uniffi_loro_core_fn_func_normalize(
+    UniffiLib.uniffi_loro_core_fn_func_normalize(
+    
+        
         FfiConverterString.lower(`s`),_status)
 }
     )
@@ -3450,83 +3268,32 @@ public object FfiConverterSequenceTypeTag: FfiConverterRustBuffer<List<Tag>> {
     
 
         /**
-         * Normalise an F0 track to semitones relative to the speaker's own median, then to 0..1.
+         * Split a phrase into comparable tokens.
+         */ fun `tokenize`(`phrase`: kotlin.String): List<kotlin.String> {
+            return FfiConverterSequenceString.lift(
+    uniffiRustCall() { _status ->
+    UniffiLib.uniffi_loro_core_fn_func_tokenize(
+    
+        
+        FfiConverterString.lower(`phrase`),_status)
+}
+    )
+    }
+    
+
+        /**
+         * Days between two local dates, positive if `b` is later. Calendar days, not elapsed hours.
          *
-         * **This is what makes the comparison fair.** A learner's absolute pitch is irrelevant;
-         * the *shape* is the skill. Normalised the same way for both the native reference and
-         * the learner, a bass and a soprano producing identical question intonation score
-         * identically.
-         */ fun `normalizeF0`(`hz`: List<kotlin.Float>): List<kotlin.Float> {
-            return FfiConverterSequenceFloat.lift(
+         * # Errors
+         * Returns `None` if either string is not `YYYY-MM-DD`.
+         */ fun `daysBetween`(`a`: kotlin.String, `b`: kotlin.String): kotlin.Int? {
+            return FfiConverterOptionalInt.lift(
     uniffiRustCall() { _status ->
-    UniffiLib.INSTANCE.uniffi_loro_core_fn_func_normalize_f0(
-        FfiConverterSequenceFloat.lower(`hz`),_status)
-}
-    )
-    }
+    UniffiLib.uniffi_loro_core_fn_func_days_between(
     
-
-        /**
-         * Nudge an established difficulty toward a new declaration, bounded.
-         */ fun `nudgeDifficulty`(`current`: kotlin.Float, `declared`: Difficulty, `tags`: List<Tag>): kotlin.Float {
-            return FfiConverterFloat.lift(
-    uniffiRustCall() { _status ->
-    UniffiLib.INSTANCE.uniffi_loro_core_fn_func_nudge_difficulty(
-        FfiConverterFloat.lower(`current`),FfiConverterTypeDifficulty.lower(`declared`),FfiConverterSequenceTypeTag.lower(`tags`),_status)
-}
-    )
-    }
-    
-
-        /**
-         * Advance the local clock on receiving a remote reading.
-         */ fun `receive`(`last`: Hlc, `remote`: Hlc, `wallMs`: kotlin.Long, `nodeId`: kotlin.String): Hlc {
-            return FfiConverterTypeHlc.lift(
-    uniffiRustCall() { _status ->
-    UniffiLib.INSTANCE.uniffi_loro_core_fn_func_receive(
-        FfiConverterTypeHlc.lower(`last`),FfiConverterTypeHlc.lower(`remote`),FfiConverterLong.lower(`wallMs`),FfiConverterString.lower(`nodeId`),_status)
-}
-    )
-    }
-    
-
-        /**
-         * Set size from the learner's daily-minutes answer.
-         */ fun `refrainSetSize`(`dailyMinutes`: kotlin.UInt): kotlin.UInt {
-            return FfiConverterUInt.lift(
-    uniffiRustCall() { _status ->
-    UniffiLib.INSTANCE.uniffi_loro_core_fn_func_refrain_set_size(
-        FfiConverterUInt.lower(`dailyMinutes`),_status)
-}
-    )
-    }
-    
-
-        /**
-         * How many times a phrase repeats before the stream advances.
-         *
-         * From `Loro.dc.html:2526`. Visible to the learner: rating something Difficult
-         * makes it repeat more, and the toast says so.
-         */ fun `repeatTarget`(`difficulty`: Difficulty): kotlin.UInt {
-            return FfiConverterUInt.lift(
-    uniffiRustCall() { _status ->
-    UniffiLib.INSTANCE.uniffi_loro_core_fn_func_repeat_target(
-        FfiConverterTypeDifficulty.lower(`difficulty`),_status)
-}
-    )
-    }
-    
-
-        /**
-         * Retrievability at `t` days after the last review, in the blueprint's display form.
-         *
-         * The Memory-model screen plots exactly this curve, so it must stay the shape the
-         * screen draws.
-         */ fun `retrievability`(`daysSinceReview`: kotlin.Float, `stability`: kotlin.Float): kotlin.Float {
-            return FfiConverterFloat.lift(
-    uniffiRustCall() { _status ->
-    UniffiLib.INSTANCE.uniffi_loro_core_fn_func_retrievability(
-        FfiConverterFloat.lower(`daysSinceReview`),FfiConverterFloat.lower(`stability`),_status)
+        
+        FfiConverterString.lower(`a`),
+        FfiConverterString.lower(`b`),_status)
 }
     )
     }
@@ -3545,8 +3312,11 @@ public object FfiConverterSequenceTypeTag: FfiConverterRustBuffer<List<Tag>> {
          */ fun `streak`(`practiceDays`: List<kotlin.String>, `today`: kotlin.String): kotlin.UInt {
             return FfiConverterUInt.lift(
     uniffiRustCall() { _status ->
-    UniffiLib.INSTANCE.uniffi_loro_core_fn_func_streak(
-        FfiConverterSequenceString.lower(`practiceDays`),FfiConverterString.lower(`today`),_status)
+    UniffiLib.uniffi_loro_core_fn_func_streak(
+    
+        
+        FfiConverterSequenceString.lower(`practiceDays`),
+        FfiConverterString.lower(`today`),_status)
 }
     )
     }
@@ -3562,8 +3332,11 @@ public object FfiConverterSequenceTypeTag: FfiConverterRustBuffer<List<Tag>> {
          */ fun `streakDayFor`(`atMs`: kotlin.Long, `localMidnightMs`: kotlin.Long): kotlin.String {
             return FfiConverterString.lift(
     uniffiRustCall() { _status ->
-    UniffiLib.INSTANCE.uniffi_loro_core_fn_func_streak_day_for(
-        FfiConverterLong.lower(`atMs`),FfiConverterLong.lower(`localMidnightMs`),_status)
+    UniffiLib.uniffi_loro_core_fn_func_streak_day_for(
+    
+        
+        FfiConverterLong.lower(`atMs`),
+        FfiConverterLong.lower(`localMidnightMs`),_status)
 }
     )
     }
@@ -3579,8 +3352,302 @@ public object FfiConverterSequenceTypeTag: FfiConverterRustBuffer<List<Tag>> {
          */ fun `streakSurvives`(`lastDay`: kotlin.String, `today`: kotlin.String): kotlin.Boolean {
             return FfiConverterBoolean.lift(
     uniffiRustCall() { _status ->
-    UniffiLib.INSTANCE.uniffi_loro_core_fn_func_streak_survives(
-        FfiConverterString.lower(`lastDay`),FfiConverterString.lower(`today`),_status)
+    UniffiLib.uniffi_loro_core_fn_func_streak_survives(
+    
+        
+        FfiConverterString.lower(`lastDay`),
+        FfiConverterString.lower(`today`),_status)
+}
+    )
+    }
+    
+
+        /**
+         * Normalise an F0 track to semitones relative to the speaker's own median, then to 0..1.
+         *
+         * **This is what makes the comparison fair.** A learner's absolute pitch is irrelevant;
+         * the *shape* is the skill. Normalised the same way for both the native reference and
+         * the learner, a bass and a soprano producing identical question intonation score
+         * identically.
+         */ fun `normalizeF0`(`hz`: List<kotlin.Float>): List<kotlin.Float> {
+            return FfiConverterSequenceFloat.lift(
+    uniffiRustCall() { _status ->
+    UniffiLib.uniffi_loro_core_fn_func_normalize_f0(
+    
+        
+        FfiConverterSequenceFloat.lower(`hz`),_status)
+}
+    )
+    }
+    
+
+        /**
+         * Advance the axes after a take. A blueprint contract (`Loro.dc.html:3180–3182`).
+         *
+         * The asymmetry is the pedagogy: **Recall advances faster at high cue levels**, because
+         * recalling *without* cues is what trains recall. Production tracks the actual score.
+         * Perception creeps up from mere exposure.
+         */ fun `advanceAxes`(`current`: SkillAxes, `score`: kotlin.UByte, `cueLevel`: kotlin.UByte): SkillAxes {
+            return FfiConverterTypeSkillAxes.lift(
+    uniffiRustCall() { _status ->
+    UniffiLib.uniffi_loro_core_fn_func_advance_axes(
+    
+        
+        FfiConverterTypeSkillAxes.lower(`current`),
+        FfiConverterUByte.lower(`score`),
+        FfiConverterUByte.lower(`cueLevel`),_status)
+}
+    )
+    }
+    
+
+        /**
+         * Which band a score falls in.
+         */ fun `band`(`score`: kotlin.UByte): kotlin.UByte {
+            return FfiConverterUByte.lift(
+    uniffiRustCall() { _status ->
+    UniffiLib.uniffi_loro_core_fn_func_band(
+    
+        
+        FfiConverterUByte.lower(`score`),_status)
+}
+    )
+    }
+    
+
+        /**
+         * Whether a take earns a cue level-up. The reward is the **removal of help**.
+         */ fun `earnsLevelUp`(`score`: kotlin.UByte, `cueLevel`: kotlin.UByte, `threshold`: kotlin.UByte): kotlin.Boolean {
+            return FfiConverterBoolean.lift(
+    uniffiRustCall() { _status ->
+    UniffiLib.uniffi_loro_core_fn_func_earns_level_up(
+    
+        
+        FfiConverterUByte.lower(`score`),
+        FfiConverterUByte.lower(`cueLevel`),
+        FfiConverterUByte.lower(`threshold`),_status)
+}
+    )
+    }
+    
+
+        /**
+         * Daily review cap, so a queue never becomes a wall.
+         *
+         * Uncapped review queues are how SRS apps lose learners in month two.
+         */ fun `dailyReviewCap`(`dailyMinutes`: kotlin.UInt, `multiplier`: kotlin.UInt): kotlin.UInt {
+            return FfiConverterUInt.lift(
+    uniffiRustCall() { _status ->
+    UniffiLib.uniffi_loro_core_fn_func_daily_review_cap(
+    
+        
+        FfiConverterUInt.lower(`dailyMinutes`),
+        FfiConverterUInt.lower(`multiplier`),_status)
+}
+    )
+    }
+    
+
+        /**
+         * Format an interval for display, from the blueprint (`Loro.dc.html:3009`).
+         *
+         * The blueprint's *fixed* interval labels are a display model; these are formatted
+         * from FSRS's real output.
+         */ fun `formatInterval`(`days`: kotlin.Float): kotlin.String {
+            return FfiConverterString.lift(
+    uniffiRustCall() { _status ->
+    UniffiLib.uniffi_loro_core_fn_func_format_interval(
+    
+        
+        FfiConverterFloat.lower(`days`),_status)
+}
+    )
+    }
+    
+
+        /**
+         * Map a five-level confidence onto a grade.
+         */ fun `gradeForConfidence`(`c`: Confidence): Grade {
+            return FfiConverterTypeGrade.lift(
+    uniffiRustCall() { _status ->
+    UniffiLib.uniffi_loro_core_fn_func_grade_for_confidence(
+    
+        
+        FfiConverterTypeConfidence.lower(`c`),_status)
+}
+    )
+    }
+    
+
+        /**
+         * Seed FSRS difficulty from the learner's own declaration.
+         *
+         * This is Loro's structural advantage over every other app using FSRS: the learner
+         * tells us a phrase's difficulty when they add it, so there is no cold start.
+         *
+         * `pron` deliberately does **not** raise difficulty — it changes the *drill*, not the
+         * memory load.
+         */ fun `initialDifficulty`(`declared`: Difficulty, `tags`: List<Tag>): kotlin.Float {
+            return FfiConverterFloat.lift(
+    uniffiRustCall() { _status ->
+    UniffiLib.uniffi_loro_core_fn_func_initial_difficulty(
+    
+        
+        FfiConverterTypeDifficulty.lower(`declared`),
+        FfiConverterSequenceTypeTag.lower(`tags`),_status)
+}
+    )
+    }
+    
+
+        /**
+         * Nudge an established difficulty toward a new declaration, bounded.
+         */ fun `nudgeDifficulty`(`current`: kotlin.Float, `declared`: Difficulty, `tags`: List<Tag>): kotlin.Float {
+            return FfiConverterFloat.lift(
+    uniffiRustCall() { _status ->
+    UniffiLib.uniffi_loro_core_fn_func_nudge_difficulty(
+    
+        
+        FfiConverterFloat.lower(`current`),
+        FfiConverterTypeDifficulty.lower(`declared`),
+        FfiConverterSequenceTypeTag.lower(`tags`),_status)
+}
+    )
+    }
+    
+
+        /**
+         * Retrievability at `t` days after the last review, in the blueprint's display form.
+         *
+         * The Memory-model screen plots exactly this curve, so it must stay the shape the
+         * screen draws.
+         */ fun `retrievability`(`daysSinceReview`: kotlin.Float, `stability`: kotlin.Float): kotlin.Float {
+            return FfiConverterFloat.lift(
+    uniffiRustCall() { _status ->
+    UniffiLib.uniffi_loro_core_fn_func_retrievability(
+    
+        
+        FfiConverterFloat.lower(`daysSinceReview`),
+        FfiConverterFloat.lower(`stability`),_status)
+}
+    )
+    }
+    
+
+        /**
+         * Advance a phrase's rung, never downwards.
+         *
+         * This is the monotonicity guarantee the conformance suite checks.
+         */ fun `climb`(`current`: LadderRung, `target`: LadderRung): LadderRung {
+            return FfiConverterTypeLadderRung.lift(
+    uniffiRustCall() { _status ->
+    UniffiLib.uniffi_loro_core_fn_func_climb(
+    
+        
+        FfiConverterTypeLadderRung.lower(`current`),
+        FfiConverterTypeLadderRung.lower(`target`),_status)
+}
+    )
+    }
+    
+
+        /**
+         * The Draw — a real shuffle, constrained to what phrases are ready for and biased
+         * toward weak spots.
+         *
+         * From the blueprint (`Loro.dc.html:3479–3488`). Deterministic given `seed`, which is
+         * persisted on the run row so any run can be replayed exactly in a test or a bug report.
+         *
+         * Returns `None` when the deck has nothing eligible — a brand-new deck with no phrase
+         * at any unlocked card's source rung.
+         */ fun `draw`(`deck`: List<PhraseState>, `seed`: kotlin.ULong, `exclude`: FinisherCard?, `nowMs`: kotlin.Long): Draw? {
+            return FfiConverterOptionalTypeDraw.lift(
+    uniffiRustCall() { _status ->
+    UniffiLib.uniffi_loro_core_fn_func_draw(
+    
+        
+        FfiConverterSequenceTypePhraseState.lower(`deck`),
+        FfiConverterULong.lower(`seed`),
+        FfiConverterOptionalTypeFinisherCard.lower(`exclude`),
+        FfiConverterLong.lower(`nowMs`),_status)
+}
+    )
+    }
+    
+
+        /**
+         * How much a phrase needs attention. Biases the draw and drives the `refresh` flags.
+         *
+         * From the blueprint (`Loro.dc.html:3467`): `need = stale×2 + stumbles`.
+         */ fun `need`(`p`: PhraseState, `nowMs`: kotlin.Long): kotlin.UInt {
+            return FfiConverterUInt.lift(
+    uniffiRustCall() { _status ->
+    UniffiLib.uniffi_loro_core_fn_func_need(
+    
+        
+        FfiConverterTypePhraseState.lower(`p`),
+        FfiConverterLong.lower(`nowMs`),_status)
+}
+    )
+    }
+    
+
+        /**
+         * The deep link for a category. A notification that opens the home screen has wasted
+         * the learner's attention.
+         */ fun `deepLinkFor`(`category`: Category): kotlin.String {
+            return FfiConverterString.lift(
+    uniffiRustCall() { _status ->
+    UniffiLib.uniffi_loro_core_fn_func_deep_link_for(
+    
+        
+        FfiConverterTypeCategory.lower(`category`),_status)
+}
+    )
+    }
+    
+
+        /**
+         * Whether an hour falls in quiet hours.
+         */ fun `isQuietHour`(`hour`: kotlin.UInt): kotlin.Boolean {
+            return FfiConverterBoolean.lift(
+    uniffiRustCall() { _status ->
+    UniffiLib.uniffi_loro_core_fn_func_is_quiet_hour(
+    
+        
+        FfiConverterUInt.lower(`hour`),_status)
+}
+    )
+    }
+    
+
+        /**
+         * Whether a category may fire, given the context.
+         */ fun `mayFire`(`category`: Category, `ctx`: NotifyContext): kotlin.Boolean {
+            return FfiConverterBoolean.lift(
+    uniffiRustCall() { _status ->
+    UniffiLib.uniffi_loro_core_fn_func_may_fire(
+    
+        
+        FfiConverterTypeCategory.lower(`category`),
+        FfiConverterTypeNotifyContext.lower(`ctx`),_status)
+}
+    )
+    }
+    
+
+        /**
+         * How many times a phrase repeats before the stream advances.
+         *
+         * From `Loro.dc.html:2526`. Visible to the learner: rating something Difficult
+         * makes it repeat more, and the toast says so.
+         */ fun `repeatTarget`(`difficulty`: Difficulty): kotlin.UInt {
+            return FfiConverterUInt.lift(
+    uniffiRustCall() { _status ->
+    UniffiLib.uniffi_loro_core_fn_func_repeat_target(
+    
+        
+        FfiConverterTypeDifficulty.lower(`difficulty`),_status)
 }
     )
     }
@@ -3600,8 +3667,129 @@ public object FfiConverterSequenceTypeTag: FfiConverterRustBuffer<List<Tag>> {
          */ fun `streamRank`(`p`: PhraseState, `nowMs`: kotlin.Long): kotlin.Int {
             return FfiConverterInt.lift(
     uniffiRustCall() { _status ->
-    UniffiLib.INSTANCE.uniffi_loro_core_fn_func_stream_rank(
-        FfiConverterTypePhraseState.lower(`p`),FfiConverterLong.lower(`nowMs`),_status)
+    UniffiLib.uniffi_loro_core_fn_func_stream_rank(
+    
+        
+        FfiConverterTypePhraseState.lower(`p`),
+        FfiConverterLong.lower(`nowMs`),_status)
+}
+    )
+    }
+    
+
+        /**
+         * Today's automaticity, from the blueprint (`Loro.dc.html:3378`).
+         */ fun `automaticity`(`repsToday`: kotlin.UInt, `target`: kotlin.UInt): kotlin.UByte {
+            return FfiConverterUByte.lift(
+    uniffiRustCall() { _status ->
+    UniffiLib.uniffi_loro_core_fn_func_automaticity(
+    
+        
+        FfiConverterUInt.lower(`repsToday`),
+        FfiConverterUInt.lower(`target`),_status)
+}
+    )
+    }
+    
+
+        /**
+         * Beat tempo in milliseconds. Speed mode's faster beat is the only cue that it differs.
+         */ fun `beatMsForMode`(`mode`: RefrainMode): kotlin.UInt {
+            return FfiConverterUInt.lift(
+    uniffiRustCall() { _status ->
+    UniffiLib.uniffi_loro_core_fn_func_beat_ms_for_mode(
+    
+        
+        FfiConverterTypeRefrainMode.lower(`mode`),_status)
+}
+    )
+    }
+    
+
+        /**
+         * Map repetitions and automaticity to a semantic state; presentation owns the wording.
+         */ fun `effortState`(`reps`: kotlin.UInt, `automaticityPct`: kotlin.UByte): EffortState {
+            return FfiConverterTypeEffortState.lift(
+    uniffiRustCall() { _status ->
+    UniffiLib.uniffi_loro_core_fn_func_effort_state(
+    
+        
+        FfiConverterUInt.lower(`reps`),
+        FfiConverterUByte.lower(`automaticityPct`),_status)
+}
+    )
+    }
+    
+
+        /**
+         * The mode for a given rep index, clamped at the last.
+         */ fun `modeForRep`(`repIndex`: kotlin.UInt): RefrainMode {
+            return FfiConverterTypeRefrainMode.lift(
+    uniffiRustCall() { _status ->
+    UniffiLib.uniffi_loro_core_fn_func_mode_for_rep(
+    
+        
+        FfiConverterUInt.lower(`repIndex`),_status)
+}
+    )
+    }
+    
+
+        /**
+         * Model-audio playback rate for a mode, or `None` when no model is offered.
+         */ fun `modelRateForMode`(`mode`: RefrainMode): kotlin.Float? {
+            return FfiConverterOptionalFloat.lift(
+    uniffiRustCall() { _status ->
+    UniffiLib.uniffi_loro_core_fn_func_model_rate_for_mode(
+    
+        
+        FfiConverterTypeRefrainMode.lower(`mode`),_status)
+}
+    )
+    }
+    
+
+        /**
+         * Set size from the learner's daily-minutes answer.
+         */ fun `refrainSetSize`(`dailyMinutes`: kotlin.UInt): kotlin.UInt {
+            return FfiConverterUInt.lift(
+    uniffiRustCall() { _status ->
+    UniffiLib.uniffi_loro_core_fn_func_refrain_set_size(
+    
+        
+        FfiConverterUInt.lower(`dailyMinutes`),_status)
+}
+    )
+    }
+    
+
+        /**
+         * Whether a client reading is implausibly far ahead of server time.
+         */ fun `isSkewed`(`client`: Hlc, `serverMs`: kotlin.Long): kotlin.Boolean {
+            return FfiConverterBoolean.lift(
+    uniffiRustCall() { _status ->
+    UniffiLib.uniffi_loro_core_fn_func_is_skewed(
+    
+        
+        FfiConverterTypeHlc.lower(`client`),
+        FfiConverterLong.lower(`serverMs`),_status)
+}
+    )
+    }
+    
+
+        /**
+         * Advance the local clock on receiving a remote reading.
+         */ fun `receive`(`last`: Hlc, `remote`: Hlc, `wallMs`: kotlin.Long, `nodeId`: kotlin.String): Hlc {
+            return FfiConverterTypeHlc.lift(
+    uniffiRustCall() { _status ->
+    UniffiLib.uniffi_loro_core_fn_func_receive(
+    
+        
+        FfiConverterTypeHlc.lower(`last`),
+        FfiConverterTypeHlc.lower(`remote`),
+        FfiConverterLong.lower(`wallMs`),
+        FfiConverterString.lower(`nodeId`),_status)
 }
     )
     }
@@ -3614,20 +3802,12 @@ public object FfiConverterSequenceTypeTag: FfiConverterRustBuffer<List<Tag>> {
          */ fun `tick`(`last`: Hlc, `wallMs`: kotlin.Long, `nodeId`: kotlin.String): Hlc {
             return FfiConverterTypeHlc.lift(
     uniffiRustCall() { _status ->
-    UniffiLib.INSTANCE.uniffi_loro_core_fn_func_tick(
-        FfiConverterTypeHlc.lower(`last`),FfiConverterLong.lower(`wallMs`),FfiConverterString.lower(`nodeId`),_status)
-}
-    )
-    }
+    UniffiLib.uniffi_loro_core_fn_func_tick(
     
-
-        /**
-         * Split a phrase into comparable tokens.
-         */ fun `tokenize`(`phrase`: kotlin.String): List<kotlin.String> {
-            return FfiConverterSequenceString.lift(
-    uniffiRustCall() { _status ->
-    UniffiLib.INSTANCE.uniffi_loro_core_fn_func_tokenize(
-        FfiConverterString.lower(`phrase`),_status)
+        
+        FfiConverterTypeHlc.lower(`last`),
+        FfiConverterLong.lower(`wallMs`),
+        FfiConverterString.lower(`nodeId`),_status)
 }
     )
     }

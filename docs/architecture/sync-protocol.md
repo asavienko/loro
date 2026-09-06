@@ -77,9 +77,11 @@ group without a later `srsLastReview` does not win. Keep an FSRS update complete
 
 ## Current wire contract
 
-Types currently live in `apps/api/src/sync/sync.service.ts`; there is no shared validated client/API
-schema yet. Field HLCs on the actual API wire are structured objects, not the encoded strings used
-by the local outbox interface:
+The service still uses local types in `apps/api/src/sync/sync.service.ts`. Shared current/target Zod
+schemas now exist in `@loro/core/api/*`, with HTTP conformance tests and an explicit
+[migration map](api-contracts.md#migration-map); they are not installed as middleware. Field HLCs on
+the actual API wire are structured objects, not the encoded strings used by the local outbox
+interface:
 
 ```jsonc
 POST /v1/sync/push
@@ -105,8 +107,9 @@ numbers, rejected operations, conflict field names, `server_hlc` and `server_tim
 delete may omit fields and gets `deleted_at` from the request or current server time.
 
 Current gaps in input enforcement are deliberate facts to fix, not protocol promises: there is no
-shared Zod schema, no byte-size cap, no authenticated device id, limited primitive validation and no
-durable idempotency record beyond re-merging the current in-memory row.
+shared Zod validation at the transport boundary, no byte-size cap, no authenticated device id,
+limited primitive validation and no durable idempotency record beyond re-merging the current
+in-memory row.
 
 ```jsonc
 POST /v1/sync/pull
@@ -204,7 +207,9 @@ exist. Merely listing an append-only entity in `FIELD_POLICY` does not authorise
 5. **Cursor from durable order.** A pull cursor must be stable, tenant-scoped and page without skips
    or duplicates under concurrent pushes. Wall-clock strings alone are not sufficient evidence.
 6. **Keep retry lossless.** Ack only explicit accepts. Queue compaction follows merge classes; size
-   pressure never truncates learner writes.
+   pressure never truncates learner writes. Compaction also preserves ORDER across a tombstone: an
+   edit must never be folded in front of a delete for the same row, because `tombstone` beats an
+   edit at any HLC and the folded write would be applied and then discarded.
 7. **Version one shared wire schema.** Client and API import the same validation/serialization
    contract, including HLC representation and rejection codes.
 8. **Tombstones have lifecycle.** Define retention and device acknowledgement before garbage
@@ -215,17 +220,23 @@ exist. Merely listing an append-only entity in `FIELD_POLICY` does not authorise
     text or audio.
 11. **Reconcile duplicate phrase identities explicitly.** Two devices adding the same catalog phrase
     must converge to the one-row SQLite invariant without `INSERT OR REPLACE`, lost fields,
-    resurrected tombstones, or duplicated history.
+    resurrected tombstones, or duplicated history. The client repository no longer has an
+    `INSERT OR REPLACE` to reach for: `SqlPhraseTable.upsert` conflicts on `id` alone, so a second
+    row id for a live catalog phrase raises the unique-index error instead of silently replacing the
+    row. Choosing the canonical identity is still plans 67–68's; until then the failure is loud.
 
 <a id="testing"></a>
 
 ## Current verification and missing tests
 
 Implemented tests cover HLC ordering/skew, Rust merge behaviour, field-policy coverage, API
-push/rejection/conflict behaviour and SQLite outbox semantics. The API E2E suite runs against the
-in-memory repository.
+push/rejection/conflict behaviour and SQLite outbox semantics — including, on the client side, that
+a local upsert preserves `field_hlc` and `deleted_at`, that retry accumulates attempts without
+reordering or dropping ops, and that neither `append` nor `compact` folds an edit across a delete
+for the same row. The API E2E suite runs against the in-memory repository.
 
-Still required are a mobile sync-client suite, shared wire-schema compatibility tests, tenant
+Plan 85 adds shared wire-schema compatibility tests, field-policy coverage and per-item validation
+tests. Still required are a mobile sync-client suite, installed transport validation, tenant
 isolation, durable cursor pagination under concurrency, server restart/idempotency, anonymous claim,
 multi-device partition/reconvergence, tombstone collection and 30-day offline replay. Paths such as
 `core-rs/tests/merge.rs`, `api/test/claim-merge.e2e.ts` and `mobile/src/data/sync/compact.test.ts`

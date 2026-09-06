@@ -38,3 +38,6 @@ export function packPhrases(packIds: readonly string[]): CatalogPhrase[] {
     .map((id) => catalogById.get(id))
     .filter((c): c is CatalogPhrase => c !== undefined)
 }
+
+/** New consumers select a pair explicitly; legacy exports above serve migration tests only. */
+export { loadLearningCatalog, phraseMeaning } from '@loro/content'

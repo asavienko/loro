@@ -6,6 +6,7 @@
  * See docs/product/content-model.md#separation-rule
  */
 
+import type { TargetLocale, NativeLanguage } from './languages.js'
 import type { CatalogPhraseId, UserPhraseId } from './ids.js'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -122,9 +123,9 @@ export type PhraseSource =
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface WordGloss {
-  readonly es: string
+  readonly targetText: string
   readonly gloss: string
-  /** What TTS should speak when `es` is a fragment: '¿Dón' → 'dónde'. Loro.dc.html:2483 */
+  /** What TTS should speak when `targetText` is a fragment: '¿Dón' → 'dónde'. Loro.dc.html:2483 */
   readonly say?: string
 }
 
@@ -136,24 +137,26 @@ export interface Syllable {
   readonly dur: number
 }
 
+export interface PhraseTeaching {
+  readonly resp?: string
+  readonly words?: readonly WordGloss[]
+  readonly example?: { readonly targetText: string; readonly translation: string }
+  readonly hint?: string
+  readonly note?: string
+}
+
 export interface CatalogPhrase {
   readonly id: CatalogPhraseId
-  readonly lang: string
-  readonly es: string
-  /** What an English speaker would ACTUALLY say — not a gloss. */
-  readonly en: string
+  readonly targetLocale: TargetLocale
+  readonly targetText: string
+  /** Idiomatic meanings keyed by the learner's native language. */
+  readonly translations: Partial<Record<NativeLanguage, string>>
   readonly theme: Theme
   readonly emoji: string
 
-  /** English-speaker respelling, CAPS on the stressed syllable. */
-  readonly resp?: string
+  /** IPA is target-specific; respelling and coaching are native/target-pair-specific. */
   readonly respIpa?: string
-  readonly words?: readonly WordGloss[]
-  readonly example?: { readonly es: string; readonly en: string }
-  /** A mnemonic — etymology or imagery, never a restatement of the translation. */
-  readonly hint?: string
-  /** The default coaching line for the labs: one concrete physical fix. */
-  readonly note?: string
+  readonly teaching?: Partial<Record<NativeLanguage, PhraseTeaching>>
   readonly register?: Register
   readonly cefr?: Cefr
 
@@ -180,6 +183,9 @@ export interface FsrsState {
 }
 
 export interface PhraseState {
+  /** Legacy rows belong to the original English → Spanish course. */
+  targetLocale?: TargetLocale
+  ownMeaningLanguage?: NativeLanguage
   readonly id: UserPhraseId
   /** Null for learner-authored phrases. */
   readonly phraseId: CatalogPhraseId | null
@@ -230,8 +236,8 @@ export interface PhraseState {
 
 /** Catalog + learner state, joined. What a screen actually renders. */
 export interface PhraseView extends PhraseState {
-  readonly es: string
-  readonly en: string
+  readonly targetText: string
+  readonly translation: string
   readonly theme: Theme
   readonly emoji: string
   readonly catalog: CatalogPhrase | null
@@ -240,6 +246,45 @@ export interface PhraseView extends PhraseState {
 // ─────────────────────────────────────────────────────────────────────────────
 // Derivations
 // ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * ELIGIBILITY — whether a row may be planned with, and whether it is owed a review.
+ *
+ * These two predicates exist because the same rule was written four times, in three
+ * languages, and one copy disagreed: the persistence tables required `!learned` AND
+ * `graduatedAt === null`, the Refrain's own candidate filter required both, and the store's
+ * repository adapter required only `!learned` — so a graduated phrase stayed in what the
+ * engines planned from and the Refrain kept offering work on a phrase that left rotation
+ * four lock-in days ago.
+ *
+ * `graduatedAt` is not a nicer `learned`. `learned` is the learner saying "I know this";
+ * graduation is the app concluding it after four distinct lock-in days
+ * (`store/delta.ts`). Either one takes the row out of rotation, and a row can have one
+ * without the other, so both have to be asked.
+ *
+ * Deletion is the third condition and is deliberately NOT here: a `PhraseState` has no
+ * `deletedAt` field, so a tombstoned row is one a repository never hands out at all
+ * (`PHRASE_SELECT` filters it; the memory table filters it; the store's array has no row
+ * for it). Adding a `deletedAt` field later must add the check here too.
+ *
+ * The SQL implementations cannot call these — they are WHERE clauses — so
+ * `apps/mobile/src/data/persistence.test.ts` runs one adversarial row history through every
+ * implementation and asserts they return the same ids.
+ */
+export function isActive(p: Pick<PhraseState, 'learned' | 'graduatedAt'>): boolean {
+  return !p.learned && p.graduatedAt === null
+}
+
+/**
+ * Due for review at `at`.
+ *
+ * A graduated phrase IS still due: graduation ends the daily ritual, not the long-interval
+ * schedule FSRS is keeping for it. Only `learned` — the learner's own claim — stops a row
+ * being owed a review, which is why this is not `isActive` plus a date.
+ */
+export function isDue(p: Pick<PhraseState, 'learned' | 'srs'>, at: number): boolean {
+  return !p.learned && p.srs !== null && p.srs.due <= at
+}
 
 /** From the blueprint (Loro.dc.html:2828). Derived — never stored. */
 export function masteryBucket(p: Pick<PhraseState, 'learned' | 'reps'>): MasteryBucket {

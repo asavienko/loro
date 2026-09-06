@@ -59,26 +59,26 @@ below. As of 2026-07-30, **7 of the 23 learner screens have Expo routes**. The o
 target behaviour in the blueprint and functional spec; they must not be treated as runnable app
 surfaces. `apps/mobile/app/_layout.tsx` is the shell and is not counted as a learner screen.
 
-The browser suites exercise **20 declared learner-visible states across all 7 routes** through
+The browser suites exercise **22 declared learner-visible states across all 7 routes** through
 [`apps/mobile/e2e/states.ts`](../../apps/mobile/e2e/states.ts). A route being present is only the
 first coverage gate: sheets, empty states, completion states, and other materially different views
 need their own manifest entries.
 
-| #     | Screen               | Current Expo route         | Declared E2E states                                                                                        |
-| ----- | -------------------- | -------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| 1     | Onboarding           | `/onboarding`              | `onboarding · welcome`; `onboarding · packs step`                                                          |
-| 2     | Add phrases          | `/add`                     | `add · discover`; `add · browse grid`; `add · theme drilled`; `add · difficulty sheet`; `add · no matches` |
-| 3     | Phrase detail        | `/phrase/[id]`             | `phrase detail`; `phrase detail · edited`; `phrase detail · unknown id`                                    |
-| 4     | Adaptive stream      | `/practice/stream`         | `stream · first phrase`; `stream · all learned`                                                            |
-| 5–10  | Loop A practice      | — not implemented          | —                                                                                                          |
-| 11    | Today                | `/`                        | `today · seeded`; `today · nothing in rotation`                                                            |
-| 12    | The Refrain          | `/practice/refrain`        | `refrain · first rep`; `refrain · locked in`; `refrain · set complete`; `refrain · tag drill`              |
-| 13–14 | Run and Phrasebook   | — not implemented          | —                                                                                                          |
-| 15    | Progress             | `/progress`                | `progress · zero state`; `progress · with a tagged phrase`                                                 |
-| 16–18 | Trip app screens     | — not implemented          | —                                                                                                          |
-| 19    | Lock screen widget   | — native surface not built | —                                                                                                          |
-| 20–21 | Survival, Souvenir   | — not implemented          | —                                                                                                          |
-| 22–23 | Open chat, Inspector | — not implemented          | —                                                                                                          |
+| #     | Screen               | Current Expo route         | Declared E2E states                                                                                                                   |
+| ----- | -------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| 1     | Onboarding           | `/onboarding`              | `onboarding · welcome`; `onboarding · packs step`                                                                                     |
+| 2     | Add phrases          | `/add`                     | `add · discover`; `add · browse grid`; `add · theme drilled`; `add · theme fully added`; `add · difficulty sheet`; `add · no matches` |
+| 3     | Phrase detail        | `/phrase/[id]`             | `phrase detail`; `phrase detail · edited`; `phrase detail · unknown id` (the remove confirmation lands on Today)                      |
+| 4     | Adaptive stream      | `/practice/stream`         | `stream · first phrase`; `stream · all learned`                                                                                       |
+| 5–10  | Loop A practice      | — not implemented          | —                                                                                                                                     |
+| 11    | Today                | `/`                        | `today · seeded`; `today · switcher`; `today · nothing in rotation`; `today · remove undo offered`                                    |
+| 12    | The Refrain          | `/practice/refrain`        | `refrain · first rep`; `refrain · locked in`; `refrain · set complete`                                                                |
+| 13–14 | Run and Phrasebook   | — not implemented          | —                                                                                                                                     |
+| 15    | Progress             | `/progress`                | `progress · zero state`; `progress · with a tagged phrase`                                                                            |
+| 16–18 | Trip app screens     | — not implemented          | —                                                                                                                                     |
+| 19    | Lock screen widget   | — native surface not built | —                                                                                                                                     |
+| 20–21 | Survival, Souvenir   | — not implemented          | —                                                                                                                                     |
+| 22–23 | Open chat, Inspector | — not implemented          | —                                                                                                                                     |
 
 The state names above are the executable inventory; the numbered sections in this catalog and the
 functional spec remain the product taxonomy. The `spec` labels in `states.ts` use those canonical
@@ -196,7 +196,17 @@ paired live phones rather than six additional screens.
 
 - The navigation shell is not learner screen 24. Its five surface classes are authored at
   `Navigation.dc.html:38–78`; the spine and route/switcher/exit/resume/transport laws wrap the
-  numbered screens and are implemented under plan 81.
+  numbered screens and are implemented under plan 81. The shared layout now mounts the spine and
+  built-hub switcher on Today, Add, Progress, Stream, Refrain, and phrase detail. Today additionally
+  owns the root header band, text rail, and day-as-hairline-rows treatment. Every shared-menu
+  surface has a switcher state in the browser manifest; onboarding retains its step-based
+  navigation. The spine's ongoing chip, the travelling transport, the exit sheet, resume, named
+  back, and `/more` remain plan 81's, on plan 56's route table — none of them has state behind it
+  yet.
+- The existing stack headers now provide a labelled Today escape when a cold entry has no stack
+  history (plan 84). Warm entries retain native Back. Today redirects to onboarding if setup is
+  incomplete. This fixes direct Add/Progress/practice/detail dead ends; it is not the full plan-81
+  session-exit/resume system.
 - The design-system workbench is not a learner screen or an entry in `apps/mobile/e2e/states.ts`.
   `Design System.dc.html` is its authored reference and plan 80 owns a development-only
   `/dev/tokens` inspection route that must be absent from production builds.
@@ -296,16 +306,98 @@ Six places the implementation must diverge. All six are also flagged where they 
 The three "real" rows are the honesty line for the product
 ([overview.md](../architecture/overview.md#the-ten-rules), rule 4).
 
-### Current honesty gaps
+### Current unavailable-capability treatment
 
-Two implemented web routes still violate that line and remain incomplete until plan 55/64 removes
-the placeholders:
+Stream's fabricated playback bar and repeat dots were removed in plan 84. Its manual navigation does
+not record plays, and the phrase card explains that audio is unavailable.
 
-- Stream renders a hard-coded 35% playback bar while no audio is playing. It must read real native
-  playback position or stay absent.
-- Refrain measures prompt-to-button-confirm elapsed time and presents it as latency. Real latency is
-  prompt-end to detected speech onset; without microphone/onset measurement it must be `null` and
-  hidden.
+- Refrain's manual confirmation now records `latencyMs: null`. The button-timing chart and inferred
+  fluency summaries are removed until prompt-end to detected speech-onset measurement exists.
+  Practice counts remain real, cues offer read-aloud alternatives to unavailable model playback, and
+  lock-in confirms completion of practice rounds rather than unmeasured speaking ability.
 
-E2E expectations must prove these indicators remain absent until the real measurement sources land;
-tests may not preserve the placeholders as intended behavior.
+---
+
+## Current-surface divergences — the seven built routes
+
+Every place a built route departs from the applicable authored `renderVals()`, with the reason and
+the plan that closes it. Audited screen by screen against `Loro.dc.html`'s logic classes and `sc-if`
+states (plan 55 §1); the prototype table above covers the numbers that must never be ported at all,
+and this covers what is simply not there yet or is deliberately different.
+
+**A row here is a promise that the screen does not IMPLY the missing thing.** An omission is honest;
+an inert control shaped like a working one is not.
+
+### 1 · Onboarding
+
+| Authored                                                               | Built                                       | ID               | Why                                                                                                          |
+| ---------------------------------------------------------------------- | ------------------------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------ |
+| Ready summary values are a second label set — `Upcoming trip` (`2153`) | The option's own label — `A trip coming up` | `P1-08`          | A summary of the answers reads back the words they were offered in. Two label sets can disagree.             |
+| Summary rows carry emoji (`2155–2159`)                                 | Label and value only                        | `P1-08`          | Presentational; the four rows and their values are the requirement.                                          |
+| `goal`/`level` steer content (`2079–2083` helpers)                     | Both stored, neither read                   | `P1-03`, `P1-04` | Set selection is [plan 60](../../plans/60-authoritative-core-maths.md); storing first is plan 50 §3's order. |
+| `goal = trip` opens the trip flow                                      | Always exits to Today                       | `P1-10`          | [Plan 69](../../plans/69-trip-domain-and-arc.md) owns the trip arc. Nothing offers a trip.                   |
+
+### 2 · Add phrases
+
+| Authored                                                                          | Built                              | ID      | Why                                                                                                                |
+| --------------------------------------------------------------------------------- | ---------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------ |
+| Three modes — Discover · Browse · **Import** (`2351`)                             | Two; no Import segment             | `P2-14` | [Plan 65](../../plans/65-import-and-capture.md). A third segment leading nowhere is a row to nowhere.              |
+| `custom` free-text add row (`2372`)                                               | Absent                             | `P2-09` | Plan 65. `addOwnPhrase` exists in the store; no surface offers it.                                                 |
+| `+ Add all N` (`canAddAll`, `2374`, `308`, `315`)                                 | Absent                             | `P2-08` | Plan 65 with Import; bulk add needs the tagging sheet's answer for N phrases at once.                              |
+| In-your-stream strip (`hasRecent`, `recent`, `2384–2397`)                         | Absent                             | `P2-03` | [Plan 56](../../plans/56-navigation-failure-and-input-shell.md)'s list work; Today's rail carries the count today. |
+| Search field's `✕` clear (`showClear`, `2419`)                                    | Absent                             | `P2-07` | Plan 56 owns input behaviour.                                                                                      |
+| `♪` per suggestion row, and in the sheet (`playSheet`, `2426`)                    | Absent                             | `AS-01` | No audio module ([plan 62](../../plans/62-native-audio-playback.md)). A ♪ that plays nothing claims playback.      |
+| The sheet edits an owned phrase (`sheetEditing`, `Save changes`, `removeEditing`) | Add-only; editing is phrase detail | `P2-26` | One editor per control, reached from the row it belongs to. Two would drift.                                       |
+
+### 3 · Phrase detail
+
+| Authored                                                   | Built                      | ID      | Why                                                                                       |
+| ---------------------------------------------------------- | -------------------------- | ------- | ----------------------------------------------------------------------------------------- |
+| `Hear it` 0.92× and `Slow` 0.6× (`hearNormal`, `hearSlow`) | Absent                     | `AS-01` | Plan 62. Two disabled speed buttons would imply audio exists.                             |
+| Word chips speak at 0.85× (`words[].onTap`)                | Chips render, do not speak | `AS-01` | Plan 62. The chips carry the gloss, which is real; the tap is not offered.                |
+| `Add related to your stream`, up to 3 (`related`, `2494`)  | Absent                     | `P2-24` | Plan 60's ranking owns "related"; the blueprint's own `added` flag is dead (`added:''`).  |
+| Status row shows `Next review <due>` (`phrase.nextDue`)    | `N reps · <bucket>`        | `P3-02` | FSRS intervals are not displayed anywhere yet — plan 60. `'soon'` is not a real interval. |
+| Sync hint line (`viewHint`, `2498`)                        | Absent                     | `P2-30` | Presentational; the behaviour it describes (one row, every list) is what is implemented.  |
+
+### 4 · Adaptive stream
+
+| Authored                                                        | Built                                        | ID      | Why                                                                                       |
+| --------------------------------------------------------------- | -------------------------------------------- | ------- | ----------------------------------------------------------------------------------------- |
+| Per-repetition progress bar (`progressPct`, `624`)              | Absent                                       | `P3-03` | Plan 62 §5. Shipped as a literal `0.35` over silence; removed by plan 55.                 |
+| Repeat pips (`dots`, `617–622`)                                 | Absent; audio-unavailable note               | `P3-03` | Plan 62 §5. The target is real; the INDEX needs a playback position.                      |
+| Play/pause (`playIcon`, `629`)                                  | Absent; labelled `Next phrase →` button      | `P3-03` | Plan 62. A ► on a screen that cannot play claims playback; it also duplicated `Skip`.     |
+| Speed chip 1× · 1.25× · 1.5× · 0.75× (`cycleSpeed`, `2559`)     | Absent                                       | `P3-06` | Plan 62. Nothing to set a rate on.                                                        |
+| Animated equaliser (`606–611`)                                  | Absent                                       | `P3-03` | Plan 62. It animates unconditionally in the blueprint, which reads as "audio is playing". |
+| Up-next rows carry `♥` and a difficulty pill that cycles on tap | The pill is decorative; the row opens detail | `P3-09` | One action per row (`accessibility.md`); the row states the action it has.                |
+
+### 11 · Today
+
+| Authored                                                     | Built                                 | ID      | Why                                                                                                                                                 |
+| ------------------------------------------------------------ | ------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Waves are `done` / `ready` / `locked` (`3309–3311`)          | `passed` / `next` / `later`           | `LB-03` | Nothing records that a wave was FINISHED — [plan 64](../../plans/64-today-and-refrain-production-loop.md) §1–2. `passed` is a fact about the clock. |
+| Wave times `8:00` · `1:00` · `7:00`, hardcoded               | `PRODUCTION_WAVE_TIMES`, 24-hour      | `LB-03` | `1:00` is wrong for 13:00, and two sources for one fact drift. Fixed by NAV-16.                                                                     |
+| Ambient loop row and its transport (`toggleAmbient`, `1357`) | Absent                                | `LB-05` | Plan 62. A loop control with no audio behind it is the clearest possible false claim.                                                               |
+| Fading tail (`tail`, `1370–1375`)                            | Absent                                | `LB-06` | Nothing tracks a phrase leaving rotation. Plan 64.                                                                                                  |
+| Tapping a set row speaks the phrase (`setList[].onTap`)      | Opens phrase detail                   | `AS-01` | Plan 62. The row's hint says what it does.                                                                                                          |
+| `dateLabel` `Tuesday · the daily refrain`, `streak` `12`     | The real local date; a derived streak | `LB-02` | Both are fabricated in the prototype. `streak()` is the same function the widget calls.                                                             |
+
+### 12 · The Refrain
+
+| Authored                                                                                           | Built                                       | ID      | Why                                                                                                        |
+| -------------------------------------------------------------------------------------------------- | ------------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------- |
+| `waveLabel` `Midday wave` above the phrase counter (`3407`)                                        | Absent                                      | `LB-20` | Hardcoded in the prototype and unlinked to `DayLogic`'s waves; plan 64 carries the wave through the route. |
+| `♪ hear` beside the mic (`hear`, `1500`)                                                           | Absent                                      | `AS-01` | Plan 62. Read-aloud cues explain that model audio is unavailable.                                          |
+| "On the beat" equaliser at `beatDur` (`1477–1481`)                                                 | Absent                                      | `LB-23` | Plan 62. A beat with no audio is a claim about sound.                                                      |
+| Completion card: `5 locked in` literal, `🔥 13 day refrain`, `"¿Qué tal?" graduated` (`1522–1527`) | Phrases worked and reps today, both counted | `LB-31` | Three fabricated numbers. Graduation is real in the store but not a completion-card fact yet — plan 64.    |
+| `Run the wave again ↺` (`restart`)                                                                 | `Back to today`                             | `LB-32` | Re-running a finished wave would record reps a second time; plan 64 owns wave state.                       |
+| Set dots are `done` / `current` / `todo` (`setDots`)                                               | Filled-to-cursor `Dots`                     | `LB-21` | Presentational; the count and the position are the information.                                            |
+
+### 15 · Progress
+
+| Authored                                                                                                          | Built                                          | ID      | Why                                                                                                                                                                        |
+| ----------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Week / All time range toggle (`1794–1796`)                                                                        | Absent — one range                             | `P4-01` | The two stats it switches are the fabricated ones; with a real history it returns. [Plan 59](../../plans/59-device-persistence-and-resume.md), then 60.                    |
+| Stats are `minutes listened` · `phrases in stream` · `reviews done`, at `84`/`38` and `20.6h`/`410` (`2839–2840`) | `phrases in stream` · `reps done` · `mastered` | `P4-03` | Nothing measures listening time (no audio) or reviews (no SRS session). Two of three stats had no source, so they were replaced by two that do.                            |
+| `Best` streak `14` (`2865`)                                                                                       | Absent                                         | `P4-02` | A best streak needs a history longer than the session. Plan 59.                                                                                                            |
+| Milestones: `7-day streak` at `6 of 7 — one more day!`, `First Café pack` (`2857–2860`)                           | `First tagged phrase`, `First locked in`       | `P4-07` | Both authored subs are literals, and "one more day" is a nudge about a missed day (non-negotiable 3). The two replacements are earned by signals that cannot go backwards. |
+| Tapping a tricky row drills exactly those phrases (`2855`)                                                        | A non-interactive rollup                       | `P4-06` | No tag-filtered session exists. Plan 64 §4 over plan 60's tag-scoped selection.                                                                                            |

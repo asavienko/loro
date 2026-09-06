@@ -1,0 +1,82 @@
+{
+  "Café & ordering": {
+    "en": "Café & ordering",
+    "bg": "Кафене и поръчки",
+    "ru": "Кафе и заказы"
+  },
+  "Getting around": {
+    "en": "Getting around",
+    "bg": "Придвижване",
+    "ru": "Передвижение"
+  },
+  "Eating out": {
+    "en": "Eating out",
+    "bg": "Хранене навън",
+    "ru": "В ресторане"
+  },
+  "Small talk": {
+    "en": "Small talk",
+    "bg": "Непринуден разговор",
+    "ru": "Непринуждённая беседа"
+  },
+  "Shopping": {
+    "en": "Shopping",
+    "bg": "Пазаруване",
+    "ru": "Покупки"
+  },
+  "Survival basics": {
+    "en": "Survival basics",
+    "bg": "Най-необходимото",
+    "ru": "Самое необходимое"
+  },
+  "Directions": {
+    "en": "Directions",
+    "bg": "Упътвания",
+    "ru": "Как пройти"
+  },
+  "Airport & taxi": {
+    "en": "Airport & taxi",
+    "bg": "Летище и такси",
+    "ru": "Аэропорт и такси"
+  },
+  "Hotel check-in": {
+    "en": "Hotel check-in",
+    "bg": "Настаняване в хотел",
+    "ru": "Заселение в отель"
+  },
+  "Sound local": {
+    "en": "Sound local",
+    "bg": "Като местен",
+    "ru": "Как местный"
+  },
+  "Pharmacy & problems": {
+    "en": "Pharmacy & problems",
+    "bg": "Аптека и проблеми",
+    "ru": "Аптека и проблемы"
+  },
+  "Nightlife": {
+    "en": "Nightlife",
+    "bg": "Нощен живот",
+    "ru": "Ночная жизнь"
+  },
+  "Dinner reservation": {
+    "en": "Dinner reservation",
+    "bg": "Резервация за вечеря",
+    "ru": "Бронирование столика"
+  },
+  "Catching a train": {
+    "en": "Catching a train",
+    "bg": "Пътуване с влак",
+    "ru": "Поездка на поезде"
+  },
+  "Market & shops": {
+    "en": "Market & shops",
+    "bg": "Пазар и магазини",
+    "ru": "Рынок и магазины"
+  },
+  "Getting un-lost": {
+    "en": "Getting un-lost",
+    "bg": "Намиране на пътя",
+    "ru": "Как найти дорогу"
+  }
+}

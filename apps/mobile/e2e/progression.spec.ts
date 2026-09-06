@@ -29,7 +29,17 @@
 import type { Page } from '@playwright/test'
 import { atInstant, jumpTo, returnToForeground } from './clock'
 import { expect, onboard, test } from './fixtures'
-import { click, doOneRep, lockIn, openProgress, statTile, streakChip, streakValue } from './states'
+import {
+  bankedRow,
+  doOneRep,
+  lockIn,
+  openProgress,
+  railCount,
+  startWave,
+  streakChip,
+  streakText,
+  streakValue,
+} from './states'
 
 /** `LOCK_IN_DAYS_TO_GRADUATE` — four distinct lock-in days retires a phrase. */
 const LOCK_IN_DAYS_TO_GRADUATE = 4
@@ -41,7 +51,7 @@ test('a streak climbs across five consecutive days', async ({ page }) => {
   for (let day = 6; day <= 10; day += 1) {
     if (day > 6) await nextMorning(page, `2026-04-${String(day).padStart(2, '0')}T09:00`)
     await doOneRep(page)
-    await expect(streakChip(page)).toHaveText(String(day - 5))
+    await expect(streakChip(page)).toHaveText(streakText(day - 5))
   }
 
   // The whole week row is lit, and the count is the real number of distinct days rather
@@ -58,7 +68,7 @@ test('a missed day resets the streak without saying so', async ({ page }) => {
   await doOneRep(page)
   await nextMorning(page, '2026-04-07T09:00')
   await doOneRep(page)
-  await expect(streakChip(page)).toHaveText('2')
+  await expect(streakChip(page)).toHaveText(streakText(2))
 
   // Skip the 8th entirely and return on the 9th.
   await nextMorning(page, '2026-04-09T09:00')
@@ -95,19 +105,19 @@ test('four lock-in days graduate a phrase out of rotation', async ({ page }) => 
   await onboard(page)
 
   const retiring = await firstPhraseInSet(page)
-  await expect(statTile(page, 'graduated', 0)).toBeVisible()
+  await expect(bankedRow(page, 0)).toBeVisible()
 
   for (let day = 0; day < LOCK_IN_DAYS_TO_GRADUATE; day += 1) {
     if (day > 0) await nextMorning(page, `2026-04-${String(6 + day).padStart(2, '0')}T09:00`)
     // A phrase mid-graduation is priority 1 in the next day's set, so the same phrase is
     // always Phrase 1 — deterministic without the spec knowing the selection rules.
     await expect(page.getByText(retiring, { exact: true })).toBeVisible()
-    await click(page, 'Start the wave →')
+    await startWave(page)
     await lockIn(page)
     await page.goBack()
   }
 
-  await expect(statTile(page, 'graduated', 1)).toBeVisible()
+  await expect(bankedRow(page, 1)).toBeVisible()
 
   // Still in TODAY's set, and that is the contract: the set is frozen once per day so a
   // learner can always finish what they were shown. A phrase vanishing from the screen the
@@ -117,10 +127,10 @@ test('four lock-in days graduate a phrase out of rotation', async ({ page }) => 
   // It leaves on the next roll, not before.
   await nextMorning(page, '2026-04-10T09:00')
   await expect(page.getByText(retiring, { exact: true })).toBeHidden()
-  await expect(statTile(page, 'graduated', 1)).toBeVisible()
+  await expect(bankedRow(page, 1)).toBeVisible()
 
   // Retired means out of rotation, not deleted — the stream still holds all ten.
-  await expect(statTile(page, 'in your stream', 10)).toBeVisible()
+  await expect(railCount(page, 'Stream', 10)).toBeVisible()
   await expect(page.getByRole('button', { name: /percent automatic/ })).toHaveCount(5)
 })
 
@@ -134,12 +144,12 @@ test('a phrase practised for four non-consecutive days still graduates', async (
   for (const day of ['06', '08', '11', '12']) {
     if (day !== '06') await nextMorning(page, `2026-04-${day}T09:00`)
     await expect(page.getByText(retiring, { exact: true })).toBeVisible()
-    await click(page, 'Start the wave →')
+    await startWave(page)
     await lockIn(page)
     await page.goBack()
   }
 
-  await expect(statTile(page, 'graduated', 1)).toBeVisible()
+  await expect(bankedRow(page, 1)).toBeVisible()
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -163,7 +173,7 @@ async function firstPhraseInSet(page: Page): Promise<string> {
       .getByRole('button', { name: /percent automatic/ })
       .first()
       .getAttribute('aria-label')) ?? ''
-  const es = /^(.*)\.\s\d+ percent automatic\.$/.exec(label)?.[1]
+  const es = /^(.*)\.\s\d+ percent automatic\./.exec(label)?.[1]
   expect(es, `could not read the first phrase from '${label}'`).toBeTruthy()
   return es ?? ''
 }

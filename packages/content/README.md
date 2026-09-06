@@ -1,3 +1,8 @@
+> **F-08:** `loadLearningCatalog(targetLocale, nativeLanguage)` now provides seven pairs with 31
+> phrases per Spanish/Bulgarian/Russian target. New translations await bilingual review.
+> `loadCatalog()` and the Spanish authoring pipeline below remain the v1 compatibility boundary. See
+> [localization](../../docs/process/localization.md).
+
 # @loro/content
 
 The bundled Spanish catalog: phrases, scenarios, packs, and countdown drop schedules. The package is

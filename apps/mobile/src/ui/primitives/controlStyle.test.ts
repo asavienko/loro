@@ -140,7 +140,8 @@ describe('segmented · the pill pair (app/add.tsx:151-159)', () => {
   it('lays out on a bare row with a 6 px gap — no track', () => {
     expect(segmentedTrackStyle('pill')).toEqual({
       flexDirection: 'row',
-      alignItems: 'center',
+      flexWrap: 'wrap',
+      alignItems: 'stretch',
       gap: 6,
     })
   })
@@ -176,7 +177,8 @@ describe('segmented · the sunken track (app/practice/stream.tsx:243-265)', () =
   it('is a groove with a 3 px inset', () => {
     expect(segmentedTrackStyle('track')).toEqual({
       flexDirection: 'row',
-      alignItems: 'center',
+      flexWrap: 'wrap',
+      alignItems: 'stretch',
       gap: 3,
       backgroundColor: surface.sunken2,
       borderRadius: radius.lg,

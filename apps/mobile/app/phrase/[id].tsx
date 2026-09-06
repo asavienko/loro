@@ -1,3 +1,4 @@
+import { useLocale } from '../../src/lib/i18n'
 /**
  * Phrase detail — Loro.dc.html:436–581, logic 2435–2514.
  *
@@ -11,9 +12,10 @@
  * two places a learner meets it.
  */
 
-import { ScrollView, StyleSheet, View } from 'react-native'
+import { Platform, ScrollView, StyleSheet, View } from 'react-native'
 import { router, useLocalSearchParams } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useBottomBar } from '../../src/ui/BottomBarContext'
 import { masteryBucket, TAGS } from '@loro/core'
 import {
   Button,
@@ -42,22 +44,23 @@ import {
   space,
   surface,
 } from '../../src/ui/theme'
-import { copy } from '../../src/lib/copy'
+import { copy, themeLabel } from '../../src/lib/copy'
 import { toView, useApp } from '../../src/store'
-
 /**
  * The gap between a section's label and its body, on all five labelled sections. Not a `space`
  * step — it sits between 8 and 12, and moving it to either would shift every section on the
  * screen, which `e2e/text-scale.spec.ts` reads at 200% and 310%.
  */
 const SECTION_GAP = 9
-
 /** Between the three memory-hook offers — tighter than a section, they are one list. */
 const HOOK_OFFER_GAP = 7
-
 export default function PhraseDetail() {
-  const { id } = useLocalSearchParams<{ id: string }>()
+  useLocale()
+  const { id } = useLocalSearchParams<{
+    id: string
+  }>()
   const insets = useSafeAreaInsets()
+  const { height: bottomBarHeight } = useBottomBar()
   const phrases = useApp((s) => s.phrases)
   const setDifficulty = useApp((s) => s.setDifficulty)
   const toggleTag = useApp((s) => s.toggleTag)
@@ -65,44 +68,43 @@ export default function PhraseDetail() {
   const markLearned = useApp((s) => s.markLearned)
   const removePhrase = useApp((s) => s.removePhrase)
   const setNote = useApp((s) => s.setNote)
-
   const state = phrases.find((p) => p.id === id)
   if (state === undefined) {
     return <PhraseNotFound />
   }
-
   const p = toView(state)
   const cat = p.catalog
   const bucket = masteryBucket(state)
-
   // The three offers made when the learner has no note yet. `tie` reads the phrase's opening
   // words, so the SLICING stays here — it is derivation from the phrase, not authored text —
   // and only the sentence comes from `copy`. The catalog's own hint, when there is one, goes
   // in front of them.
   const hooks = [
     copy.phrase.hooks.sayAloud,
-    copy.phrase.hooks.tie(p.es.split(' ').slice(0, 2).join(' ')),
+    copy.phrase.hooks.tie(p.targetText.split(' ').slice(0, 2).join(' ')),
     copy.phrase.hooks.picture,
   ]
-
   return (
     <Screen>
       <ScrollView
         contentContainerStyle={{
           padding: space['4'],
           // The bar below is absolute and reserves nothing, so the last row needs the
-          // clearance by hand. `actionBar.clearance` records what each screen chose.
-          paddingBottom: insets.bottom + actionBar.clearance.phraseDetail,
+          // clearance using its measured height, with the authored minimum before layout.
+          paddingBottom: Math.max(
+            insets.bottom + actionBar.clearance.phraseDetail,
+            bottomBarHeight + space['4'],
+          ),
           gap: space['4'],
         }}
       >
         <Row justify="space-between">
-          <Pill label={p.theme} />
+          <Pill label={themeLabel(p.theme)} />
           {/*
-            `IconButton` for the 44×44 floor, not just the label: a bare heart glyph measured
-            17×23, and it is `Pressable`'s `feedback="icon"` underneath that puts the minimum
-            back. Do not restyle it into something smaller.
-          */}
+          `IconButton` for the 44×44 floor, not just the label: a bare heart glyph measured
+          17×23, and it is `Pressable`'s `feedback="icon"` underneath that puts the minimum
+          back. Do not restyle it into something smaller.
+        */}
           <IconButton
             glyph={state.loved ? copy.common.hearts.filled : copy.common.hearts.outline}
             label={state.loved ? copy.a11y.common.removeFromLoved : copy.a11y.phrase.markLoved}
@@ -113,7 +115,8 @@ export default function PhraseDetail() {
           />
         </Row>
 
-        <PhraseHero es={p.es} en={p.en} resp={cat?.resp} />
+        <PhraseHero targetText={p.targetText} translation={p.translation} resp={cat?.resp} />
+        {cat === null && <Text>{copy.languages.personalMeaning(p.meaningLanguage)}</Text>}
 
         {cat?.words !== undefined && cat.words.length > 0 && <WordChips words={cat.words} />}
 
@@ -148,7 +151,9 @@ export default function PhraseDetail() {
           />
         </Stack>
 
-        {cat?.example !== undefined && <ExampleCard es={cat.example.es} en={cat.example.en} />}
+        {cat?.example !== undefined && (
+          <ExampleCard targetText={cat.example.targetText} translation={cat.example.translation} />
+        )}
 
         <MemoryHookCard
           note={state.note}
@@ -182,7 +187,7 @@ export default function PhraseDetail() {
             router.back()
           }}
         />
-        <View style={s.grow}>
+        <View style={[s.grow, Platform.OS === 'web' && { minWidth: 'auto' }]}>
           <Button
             label={copy.phrase.actions.practiceNow}
             onPress={() => {
@@ -194,35 +199,48 @@ export default function PhraseDetail() {
     </Screen>
   )
 }
-
 /** No row behind the id — a stale link, or a phrase removed while this screen was open. */
 function PhraseNotFound() {
+  useLocale()
   return (
     <Screen>
       <EmptyState
         title={copy.phrase.missing.title}
         body={copy.phrase.missing.body}
+        action={{
+          label: copy.phrase.missing.action,
+          onPress: () => {
+            router.replace('/')
+          },
+        }}
         gap={space['2']}
-        padding={0}
-        align="left"
+        padding={space['5']}
       />
     </Screen>
   )
 }
-
 /**
  * The hero: the phrase, its English, and the reply the catalog expects back.
  *
  * `resp` is italic because it is someone else speaking — the product's voice, not decoration.
  */
-function PhraseHero({ es, en, resp }: { es: string; en: string; resp: string | undefined }) {
+function PhraseHero({
+  targetText,
+  translation,
+  resp,
+}: {
+  targetText: string
+  translation: string
+  resp: string | undefined
+}) {
+  useLocale()
   return (
     <Stack gap={space['2']} style={s.hero}>
-      <Text variant="title1" color={ink.ink} align="center" lang="es">
-        {es}
+      <Text variant="title1" color={ink.ink} align="center" lang="target">
+        {targetText}
       </Text>
       <Text variant="body" color={ink.ink3} align="center">
-        {en}
+        {translation}
       </Text>
       {resp !== undefined && (
         <Text variant="caption" color={ink.muted} align="center" style={s.resp}>
@@ -232,22 +250,29 @@ function PhraseHero({ es, en, resp }: { es: string; en: string; resp: string | u
     </Stack>
   )
 }
-
 /**
  * Word by word — one card per word, its gloss under it.
  *
  * Not a `Chip`: these are not selectable and they stack two lines. They share the grid, which
  * wraps rather than scrolls so nothing runs off the edge at a large text scale.
  */
-function WordChips({ words }: { words: readonly { es: string; gloss: string }[] }) {
+function WordChips({
+  words,
+}: {
+  words: readonly {
+    targetText: string
+    gloss: string
+  }[]
+}) {
+  useLocale()
   return (
     <Stack gap={SECTION_GAP}>
       <SectionLabel>{copy.phrase.sections.wordByWord}</SectionLabel>
       <Grid>
         {words.map((w, i) => (
           <View key={i} style={s.wordCard}>
-            <Text variant="body" color={ink.ink} lang="es">
-              {w.es}
+            <Text variant="body" color={ink.ink} lang="target">
+              {w.targetText}
             </Text>
             <Text variant="labelSm" color={ink.muted}>
               {w.gloss}
@@ -258,24 +283,23 @@ function WordChips({ words }: { words: readonly { es: string; gloss: string }[] 
     </Stack>
   )
 }
-
 /** In context — the catalog's example sentence, and its English underneath. */
-function ExampleCard({ es, en }: { es: string; en: string }) {
+function ExampleCard({ targetText, translation }: { targetText: string; translation: string }) {
+  useLocale()
   return (
     <Stack gap={SECTION_GAP}>
       <SectionLabel>{copy.phrase.sections.inContext}</SectionLabel>
       <Card>
-        <Text variant="bodySm" color={ink.ink} lang="es">
-          {es}
+        <Text variant="bodySm" color={ink.ink} lang="target">
+          {targetText}
         </Text>
         <Text variant="captionSm" color={ink.muted} style={s.exampleEn}>
-          {en}
+          {translation}
         </Text>
       </Card>
     </Stack>
   )
 }
-
 /**
  * Memory hook — either the note the learner adopted, or the offers to adopt one.
  *
@@ -293,6 +317,7 @@ function MemoryHookCard({
   onAdopt: (hook: string) => void
   onClear: () => void
 }) {
+  useLocale()
   return (
     <Stack gap={SECTION_GAP}>
       <SectionHeader label={copy.phrase.sections.memoryHook} hint={copy.phrase.hookHelper} />
@@ -337,7 +362,6 @@ function MemoryHookCard({
     </Stack>
   )
 }
-
 /**
  * Learned / Learning, with the toggle opposite and the rep count under it.
  *
@@ -356,6 +380,7 @@ function StatusRow({
   bucket: string
   onToggle: () => void
 }) {
+  useLocale()
   return (
     <Row justify="space-between" style={s.status}>
       <View>
@@ -379,18 +404,15 @@ function StatusRow({
     </Row>
   )
 }
-
 const s = StyleSheet.create({
   /**
    * Takes the room the other child in the row does not need: the hook's text beside its 💡, and
    * "Practice now" beside a "Remove" that is only as wide as its label.
    */
   grow: { flex: 1 },
-
   hero: { alignItems: 'center' },
   /** Someone else speaking. See `PhraseHero`. */
   resp: { fontStyle: 'italic' },
-
   wordCard: {
     backgroundColor: surface.card,
     borderWidth: border.hairline,
@@ -400,15 +422,12 @@ const s = StyleSheet.create({
     paddingVertical: 8,
     alignItems: 'center',
   },
-
   exampleEn: { marginTop: 5 },
-
   hookAdopted: { backgroundColor: semantic.hook.bg, borderRadius: radius.lg, padding: 13 },
   /** Bigger than the `caption` it inherits from, and only here. */
   hookGlyph: { fontSize: 16 },
   hookMeta: { marginTop: 6 },
   hookOffer: { backgroundColor: surface.card, borderRadius: radius.lg, padding: 12 },
-
   status: {
     backgroundColor: surface.sunken,
     borderRadius: radius.xl,

@@ -137,21 +137,22 @@ café scene".
 
 ### B6 · API ↔ data stores
 
-| Threat                                    | Mitigation                                                                                      |
-| ----------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| SQL injection                             | Parameterised queries via Drizzle; raw SQL requires review and a justifying comment             |
-| Cross-tenant read via a missing predicate | Repository layer requires `user_id`; no `db.query` in controllers; e2e test                     |
-| Redis cache poisoning                     | Keys are namespaced and derived server-side from validated input; never from raw client strings |
-| Backup exfiltration                       | Encrypted at rest, access audit-logged, restore requires break-glass approval                   |
+| Threat                                    | Mitigation                                                                                                                   |
+| ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| SQL injection                             | Target: parameterised queries via Drizzle. No server repository exists yet ([ADR-0008](adr/0008-backend-nestjs-postgres.md)) |
+| Cross-tenant read via a missing predicate | Repository layer requires `user_id`; no `db.query` in controllers; e2e test                                                  |
+| Redis cache poisoning                     | Keys are namespaced and derived server-side from validated input; never from raw client strings                              |
+| Backup exfiltration                       | Encrypted at rest, access audit-logged, restore requires break-glass approval                                                |
 
 ### B3 / B4 · On-device
 
-| Threat                                               | Mitigation                                                                                            |
-| ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| Token theft from insecure storage                    | Keychain / Keystore-backed only. **Never AsyncStorage** — CI lint rule forbidding token keys there    |
-| Widget snapshot leaks data to a less-protected store | The snapshot is minimal (city, days, counts, one phrase). No notes, no captured text, no tokens       |
-| Malicious app reads our App Group                    | App Groups are entitlement-scoped to our team id                                                      |
-| Deep link mutates state                              | Deep links may navigate only; every parameter validated; no mutating handler is reachable from a link |
+| Threat                                               | Mitigation                                                                                                                                                                                                                                                                                                                                                                      |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Token theft from insecure storage                    | Keychain / Keystore-backed only. **Never AsyncStorage** — CI lint rule forbidding token keys there                                                                                                                                                                                                                                                                              |
+| Widget snapshot leaks data to a less-protected store | The snapshot is minimal (city, days, counts, one phrase). No notes, no captured text, no tokens                                                                                                                                                                                                                                                                                 |
+| Malicious app reads our App Group                    | App Groups are entitlement-scoped to our team id                                                                                                                                                                                                                                                                                                                                |
+| Deep link mutates state                              | Deep links may navigate only; every parameter validated; no mutating handler is reachable from a link                                                                                                                                                                                                                                                                           |
+| SQL injection into the device database               | Every learner value is a bound parameter. The device layer is handwritten SQL over `SqlDriver` and no ORM ([ADR-0003 amendment](adr/0003-offline-first-sqlite-sync.md#amendment--2026-07-30--handwritten-sql-on-the-client-no-orm)); the only interpolations are generated identifiers — the column list, the placeholder count, and table names read back from `sqlite_master` |
 
 <a id="b9--cdn"></a>
 

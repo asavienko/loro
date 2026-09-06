@@ -1,31 +1,31 @@
+import { useLocale } from '../../src/lib/i18n'
 /**
  * The Refrain — THE v1 hero. Loro.dc.html:1405–1532, logic 3343–3424.
  *
  * One phrase, six reps, a different MANNER each rep:
  *   Echo → Chorus → Speed → Cloze → Call → Cold
  *
- * What moves on screen is EFFORT DROPPING, not a score. The card visibly warms
+ * The card shows completed practice, not a measured speech score. It visibly warms
  * cold-blue → hot-coral as automaticity climbs, then locks in.
  *
- * Latency is MEASURED (rep start → tap). Never computed from the rep index.
+ * Manual confirmation counts practice only. Speech latency stays null until onset is measured.
  *
  * ── How the file is laid out ──
- * `useRefrainSession()` is the state machine: it owns the plan, the cursor, the measured
- * latencies and the two transitions, and returns the view model. Everything under it renders
+ * `useRefrainSession()` owns the plan, the cursor and the two transitions, and returns the
+ * view model. Everything under it renders
  * one band of the screen and nothing else, so a change to the warming card cannot reach the
- * effort bars. Every learner-facing string comes from `src/lib/copy.ts`; every number is a
+ * progress counters. Every learner-facing string comes from `src/lib/copy.ts`; every number is a
  * token or lives in this file's `StyleSheet`.
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { ScrollView, StyleSheet, View } from 'react-native'
+import { useCallback, useEffect, useMemo } from 'react'
+import { Platform, ScrollView, StyleSheet, View } from 'react-native'
 import { router } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useBottomBar } from '../../src/ui/BottomBarContext'
 import {
   automaticity,
   DEFAULT_REP_TARGET,
-  effortState,
-  modelRateForMode,
   REFRAIN_MODES,
   repsToday as repsTodayOf,
   warmBand,
@@ -46,9 +46,7 @@ import { ActionBar, EmptyState } from '../../src/ui/components'
 import {
   accent,
   actionBar,
-  barRadius,
   ink,
-  line,
   onDark,
   radius,
   semantic,
@@ -58,17 +56,15 @@ import {
 } from '../../src/ui/theme'
 import { engineContext, refrainEngine, toView, useApp, type PhraseView } from '../../src/store'
 import { copy } from '../../src/lib/copy'
-import { formatLatency } from '../../src/lib/format'
 import { deviceClock } from '../../src/lib/clock'
-
 /** One warming band's resolved style. The bands are a design token, not a screen decision. */
 type WarmingStyle = (typeof warming)[ReturnType<typeof warmBand>]
-
 export default function Refrain() {
+  useLocale()
   const insets = useSafeAreaInsets()
+  const { height: bottomBarHeight } = useBottomBar()
   const session = useRefrainSession()
   const { set, phrase, mode, auto, dayReps, locked, phraseNumber } = session
-
   if (set.length === 0) {
     return (
       <Screen>
@@ -85,7 +81,6 @@ export default function Refrain() {
       </Screen>
     )
   }
-
   if (session.finished) {
     const day = deviceClock.localDay()
     return (
@@ -97,12 +92,7 @@ export default function Refrain() {
       </Screen>
     )
   }
-
   if (phrase === undefined) return null
-
-  // Hoisted: the guard and the sentence read the same value, and `modelRate` takes a number.
-  const rate = modelRateForMode(mode)
-
   return (
     <Screen>
       <ScrollView
@@ -110,9 +100,11 @@ export default function Refrain() {
           padding: space['4'],
           gap: space['3.5'],
           // The action bar is absolutely positioned and reserves nothing, so the scroll view
-          // leaves its own clearance. The number is a guess, not a measurement — see
-          // `actionBar` in src/ui/tokens/control.ts; a follow-up plan owns making it real.
-          paddingBottom: insets.bottom + actionBar.clearance.refrain,
+          // clears its measured height, retaining the authored minimum before layout.
+          paddingBottom: Math.max(
+            insets.bottom + actionBar.clearance.refrain,
+            bottomBarHeight + space['4'],
+          ),
         }}
       >
         <Row justify="space-between">
@@ -128,22 +120,13 @@ export default function Refrain() {
 
         <Card>
           <AutomaticityMeter auto={auto} />
-          {session.history.length > 0 && (
-            <EffortChart
-              history={session.history}
-              lastLatency={session.lastLatency}
-              summary={copy.refrain.effort[effortState(dayReps, auto)]}
-            />
-          )}
         </Card>
 
         <RepCounter reps={dayReps} />
 
-        {rate !== null && (
-          <Text variant="captionSm" color={ink.muted} align="center">
-            {copy.refrain.modelRate(rate)}
-          </Text>
-        )}
+        <Text variant="captionSm" color={ink.muted} align="center">
+          {copy.refrain.audioNote}
+        </Text>
       </ScrollView>
 
       <ActionBar gap={space['2.5']}>
@@ -164,11 +147,9 @@ export default function Refrain() {
     </Screen>
   )
 }
-
 // ─────────────────────────────────────────────────────────────────────────────
 // The session
 // ─────────────────────────────────────────────────────────────────────────────
-
 interface RefrainSession {
   /** Today's frozen set, in the order the learner will see it. */
   set: PhraseView[]
@@ -182,16 +163,11 @@ interface RefrainSession {
   auto: number
   bandStyle: WarmingStyle
   locked: boolean
-  /** The last MEASURED rep, or `null` when nothing has been measured yet. */
-  lastLatency: number | null
-  /** The last four reps. `null` is an unmeasured rep and draws as a gap. */
-  history: (number | null)[]
   /** The learner tapped through the set, or the plan had nothing left to do. */
   finished: boolean
   doRep: () => void
   nextPhrase: () => void
 }
-
 /**
  * The engine plans the session; this hook holds the plan and hands the deltas back.
  * The mode sequence, the rep target, and which reps remain today are all the
@@ -203,22 +179,23 @@ function useRefrainSession(): RefrainSession {
   const refrainSet = useApp((s) => s.refrainSet)
   const applyDelta = useApp((s) => s.applyDelta)
   const ensureRefrainSet = useApp((s) => s.ensureRefrainSet)
-
-  const [session, setSession] = useState<SessionHandle | null>(null)
-  const [cursor, setCursor] = useState(0)
-  const [lastLatency, setLastLatency] = useState<number | null>(null)
-  const [history, setHistory] = useState<(number | null)[]>([])
-  const [done, setDone] = useState(false)
-  // Monotonic, so a wall-clock jump can't corrupt a measurement.
-  const repStart = useRef<number>(deviceClock.now())
-
+  const { session, cursor, done } = useApp((state) => state.refrainResume)
+  const setSession = useCallback((session: SessionHandle): void => {
+    useApp.setState((state) => ({ refrainResume: { ...state.refrainResume, session } }))
+  }, [])
+  const setCursor = useCallback((cursor: number): void => {
+    useApp.setState((state) => ({ refrainResume: { ...state.refrainResume, cursor } }))
+  }, [])
+  const setDone = useCallback((done: boolean): void => {
+    useApp.setState((state) => ({ refrainResume: { ...state.refrainResume, done } }))
+  }, [])
   // Entering the Refrain is one of the moments the day must be re-checked: a learner who
   // opened the app before midnight and starts practising after it needs today's set.
   useEffect(() => {
     ensureRefrainSet()
   }, [ensureRefrainSet])
-
   useEffect(() => {
+    if (useApp.getState().refrainResume.session !== null) return
     let cancelled = false
     void refrainEngine.plan(engineContext()).then((plan) => {
       if (cancelled) return
@@ -231,17 +208,13 @@ function useRefrainSession(): RefrainSession {
     // Re-planned when the day's set changes, not on every rep: the plan is the day's
     // work, and re-planning mid-phrase would restart the mode sequence.
   }, [refrainSet])
-
   const item = session?.plan.items[cursor]
-
   const storePhrase = useMemo(
     () => (item === undefined ? undefined : phrases.find((p) => p.id === item.phraseId)),
     [item, phrases],
   )
   const phrase = storePhrase === undefined ? undefined : toView(storePhrase)
-
   const mode = (item?.mode ?? 'echo') as RefrainMode
-
   /**
    * Automaticity comes from the STORE's rep count for TODAY, not from a counter local to
    * this visit. The two disagree the moment a learner returns to a phrase later the same
@@ -254,13 +227,9 @@ function useRefrainSession(): RefrainSession {
   const band = warmBand(auto)
   const bandStyle = warming[band]
   const locked = auto >= 100
-
   const doRep = useCallback(() => {
     if (session === null || item === undefined || locked) return
-    // MEASURED: from when the prompt settled to when the learner confirmed.
-    const measured = deviceClock.now() - repStart.current
-    setLastLatency(measured)
-    setHistory((h) => [...h.slice(-3), measured])
+    // This button confirms practice, not speech onset. No microphone measurement exists yet.
 
     // The engine owns every progress signal, including the ones this screen never shows
     // (rule 5). The store applies the delta; nothing here computes a field.
@@ -270,20 +239,17 @@ function useRefrainSession(): RefrainSession {
         {
           itemId: item.itemId,
           outcome: 'success',
-          latencyMs: measured,
+          latencyMs: null,
           hintsUsed: 0,
           at: deviceClock.now(),
         },
       )
       .then(applyDelta)
-
     // Advance only WITHIN the phrase. On its last rep the cursor stays put, so the card
     // reaches 100% and the learner sees the lock-in — the reward moment of the screen —
     // instead of being moved on before it renders. Leaving the phrase is their tap.
     if (session.plan.items[cursor + 1]?.phraseId === item.phraseId) setCursor(cursor + 1)
-    repStart.current = deviceClock.now()
   }, [session, item, cursor, locked, applyDelta])
-
   /** Jump to the first item of the next phrase in the plan. */
   const nextPhrase = useCallback(() => {
     const items = session?.plan.items ?? []
@@ -294,11 +260,7 @@ function useRefrainSession(): RefrainSession {
       return
     }
     setCursor(nextIndex)
-    setLastLatency(null)
-    setHistory([])
-    repStart.current = deviceClock.now()
   }, [session, cursor])
-
   const set = useMemo(
     () =>
       refrainSet
@@ -307,17 +269,14 @@ function useRefrainSession(): RefrainSession {
         .map(toView),
     [refrainSet, phrases],
   )
-
   // Which phrase of the day's set is on screen. Read from the frozen set rather than
   // counted locally, so it stays right when a session resumes part-way through.
   const phraseNumber =
     item === undefined ? 1 : Math.max(1, set.findIndex((p) => p.id === item.phraseId) + 1)
-
   // The plan is the day's remaining work. Empty means the set is already warmed up —
   // a distinct state from "nothing in rotation", and the learner should see the finish,
   // not an empty screen.
   const exhausted = session !== null && cursor >= session.plan.items.length
-
   return {
     set,
     phrase,
@@ -327,23 +286,20 @@ function useRefrainSession(): RefrainSession {
     auto,
     bandStyle,
     locked,
-    lastLatency,
-    history,
     finished: done || exhausted,
     doRep,
     nextPhrase,
   }
 }
-
 // ─────────────────────────────────────────────────────────────────────────────
 // The screen, band by band
 // ─────────────────────────────────────────────────────────────────────────────
-
 /** Mode strip: done · current · upcoming, in the engine's own order. */
 function ModeStrip({ mode }: { mode: RefrainMode }) {
+  useLocale()
   const currentIndex = REFRAIN_MODES.indexOf(mode)
   return (
-    <Row gap={space['1']}>
+    <Row gap={space['1']} wrap align="stretch">
       {REFRAIN_MODES.map((m, i) => {
         const isCurrent = m === mode
         const isDone = i < currentIndex
@@ -352,6 +308,7 @@ function ModeStrip({ mode }: { mode: RefrainMode }) {
             key={m}
             style={[
               s.modeCell,
+              Platform.OS === 'web' && { minWidth: 'auto' },
               {
                 backgroundColor: isCurrent ? accent.accent : isDone ? accent.wash : surface.sunken,
               },
@@ -369,7 +326,6 @@ function ModeStrip({ mode }: { mode: RefrainMode }) {
     </Row>
   )
 }
-
 /** THE WARMING CARD — the product's core feedback signal. */
 function WarmingCard({
   mode,
@@ -382,9 +338,14 @@ function WarmingCard({
   auto: number
   bandStyle: WarmingStyle
 }) {
+  useLocale()
   return (
     <View
-      accessibilityLabel={copy.a11y.refrain.card(copy.refrain.modes[mode].cue, phrase.es, auto)}
+      accessibilityLabel={copy.a11y.refrain.card(
+        copy.refrain.modes[mode].cue,
+        phrase.targetText,
+        auto,
+      )}
       style={[
         s.warmingCard,
         {
@@ -407,7 +368,6 @@ function WarmingCard({
     </View>
   )
 }
-
 /** Prompt content is mode-dependent: full → cloze → meaning → nothing. */
 function WarmingPrompt({
   mode,
@@ -418,28 +378,29 @@ function WarmingPrompt({
   phrase: PhraseView
   color: string
 }) {
+  useLocale()
   switch (mode) {
     case 'echo':
     case 'chorus':
     case 'speed':
       return (
         <>
-          <Text variant="title1" color={color} align="center" lang="es">
-            {phrase.es}
+          <Text variant="title1" color={color} align="center" lang="target">
+            {phrase.targetText}
           </Text>
           <Text variant="caption" color={color} align="center">
-            {phrase.en}
+            {phrase.translation}
           </Text>
         </>
       )
     case 'cloze':
       return (
         <>
-          <Text variant="title1" color={color} align="center" lang="es">
-            {cloze(phrase.es)}
+          <Text variant="title1" color={color} align="center" lang="target">
+            {cloze(phrase.targetText)}
           </Text>
           <Text variant="caption" color={color} align="center">
-            {phrase.en}
+            {phrase.translation}
           </Text>
         </>
       )
@@ -450,7 +411,7 @@ function WarmingPrompt({
             {copy.refrain.prompt.callLabel}
           </Text>
           <Text variant="title2" color={color} align="center">
-            {phrase.en}
+            {phrase.translation}
           </Text>
         </>
       )
@@ -465,12 +426,12 @@ function WarmingPrompt({
       )
   }
 }
-
 /** Automaticity, as a percentage and as a bar. */
 function AutomaticityMeter({ auto }: { auto: number }) {
+  useLocale()
   return (
     <>
-      <Row justify="space-between" style={s.meterHeader}>
+      <Row justify="space-between" wrap style={s.meterHeader}>
         <Text variant="labelSm" color={ink.ink}>
           {copy.refrain.automaticity.label}
         </Text>
@@ -479,8 +440,8 @@ function AutomaticityMeter({ auto }: { auto: number }) {
         </Text>
       </Row>
       {/* Named: this bar IS the product's core feedback signal, and accessibility.md
-          requires the Refrain expose automaticity "as a progress bar with a
-          percentage". Unnamed it announced as an anonymous progressbar. */}
+            requires the Refrain expose automaticity "as a progress bar with a
+            percentage". Unnamed it announced as an anonymous progressbar. */}
       <ProgressBar
         value={auto / 100}
         height={9}
@@ -491,64 +452,9 @@ function AutomaticityMeter({ auto }: { auto: number }) {
   )
 }
 
-/**
- * The falling effort: one bar per recent rep, and the read-out beside them.
- *
- * `summary` is the visible text summary every chart in the app carries
- * (`scripts/a11yChecks.ts` checks for it) — here the label for the engine's semantic state.
- */
-function EffortChart({
-  history,
-  lastLatency,
-  summary,
-}: {
-  history: readonly (number | null)[]
-  lastLatency: number | null
-  summary: string
-}) {
-  // null hides the read-out — never an estimate.
-  const latency = formatLatency(lastLatency)
-  return (
-    <Row gap={space['2.5']} style={s.effortRow}>
-      {/* Effort bars: gaps for unmeasured reps, never interpolation. */}
-      <Row gap={EFFORT.gap} align="flex-end" style={s.effortBars}>
-        {history.map((ms, i) => (
-          <View
-            key={i}
-            style={[
-              s.effortBar,
-              {
-                height:
-                  ms === null
-                    ? EFFORT.gapHeight
-                    : Math.max(EFFORT.minFill, Math.min(EFFORT.height, ms / EFFORT.msPerPixel)),
-                backgroundColor: ms === null ? line.default : line.stronger,
-              },
-            ]}
-          />
-        ))}
-      </Row>
-      <View style={s.effortMeta}>
-        <Row gap={space['1.5']}>
-          {latency !== null && (
-            <Text variant="caption" color={ink.ink}>
-              {latency}
-            </Text>
-          )}
-          <Text variant="labelSm" color={semantic.success.text}>
-            {copy.refrain.effortLabel}
-          </Text>
-        </Row>
-        <Text variant="captionSm" color={ink.muted}>
-          {summary}
-        </Text>
-      </View>
-    </Row>
-  )
-}
-
 /** Reps done today, against the target. Capped for display; the store keeps the real count. */
 function RepCounter({ reps }: { reps: number }) {
+  useLocale()
   return (
     <Row justify="space-between">
       <Text variant="labelSm" color={ink.muted}>
@@ -558,9 +464,9 @@ function RepCounter({ reps }: { reps: number }) {
     </Row>
   )
 }
-
 /** The one tap of the whole screen: a rep is done. Its mode is core-owned; its label is copy. */
 function MicButton({ mode, onPress }: { mode: RefrainMode; onPress: () => void }) {
+  useLocale()
   const label = copy.refrain.mic[mode]
   return (
     <Pressable
@@ -576,9 +482,9 @@ function MicButton({ mode, onPress }: { mode: RefrainMode; onPress: () => void }
     </Pressable>
   )
 }
-
 /** The reward moment: this phrase is automatic today. */
 function LockedInBanner() {
+  useLocale()
   return (
     <Row gap={space['2.5']} style={s.lockedBanner}>
       <Text style={s.lockedGem}>{copy.refrain.locked.gem}</Text>
@@ -593,7 +499,6 @@ function LockedInBanner() {
     </Row>
   )
 }
-
 /**
  * The finish.
  *
@@ -602,18 +507,19 @@ function LockedInBanner() {
  * a full-width button. Routing it through `EmptyState` would silently restyle all four.
  */
 function DoneState({ worked, totalReps }: { worked: number; totalReps: number }) {
+  useLocale()
   return (
-    <View style={s.centred}>
+    <ScrollView contentContainerStyle={s.centred}>
       <View style={s.doneTile}>
         <Text style={s.doneEmoji}>{copy.common.flame}</Text>
       </View>
-      <Text variant="title2" color={accent.accentInk} lang="es">
+      <Text variant="title2" color={accent.accentInk} lang="target">
         {copy.refrain.done.headline}
       </Text>
       <Text variant="title2" color={ink.ink} align="center">
         {copy.refrain.done.title}
       </Text>
-      <Row gap={space['2.5']} style={s.doneStats}>
+      <Row gap={space['2.5']} wrap align="stretch" style={s.doneStats}>
         <DoneStat value={worked} label={copy.refrain.done.workedLabel} />
         <DoneStat value={totalReps} label={copy.common.repsToday} />
       </Row>
@@ -625,10 +531,9 @@ function DoneState({ worked, totalReps }: { worked: number; totalReps: number })
           }}
         />
       </View>
-    </View>
+    </ScrollView>
   )
 }
-
 /**
  * One of the finish screen's two counters. Deliberately NOT `StatTile`.
  *
@@ -638,6 +543,7 @@ function DoneState({ worked, totalReps }: { worked: number; totalReps: number })
  * are. Unifying them is a design decision, not a refactor (plans/34).
  */
 function DoneStat({ value, label }: { value: number; label: string }) {
+  useLocale()
   return (
     <Card style={s.doneStat}>
       <Text variant="title3" color={ink.ink}>
@@ -650,18 +556,9 @@ function DoneStat({ value, label }: { value: number; label: string }) {
   )
 }
 
-/**
- * The effort chart's geometry, in one place.
- *
- * `msPerPixel` is the only judgement in it: 90 ms to a pixel puts a slow first rep at the top
- * of the 28-px chart and a fast one near the floor. An unmeasured rep draws `gapHeight` — a
- * visible gap, never an interpolated bar.
- */
-const EFFORT = { width: 7, gap: 3, height: 28, minFill: 6, gapHeight: 3, msPerPixel: 90 } as const
-
 const s = StyleSheet.create({
   centred: {
-    flex: 1,
+    flexGrow: 1,
     alignItems: 'center',
     justifyContent: 'center',
     padding: space['5'],
@@ -683,10 +580,6 @@ const s = StyleSheet.create({
   },
   coldGlyph: { fontSize: 32 },
   meterHeader: { marginBottom: space['2'] },
-  effortRow: { marginTop: space['3'] },
-  effortBars: { height: EFFORT.height },
-  effortBar: { width: EFFORT.width, borderRadius: barRadius },
-  effortMeta: { flex: 1 },
   mic: {
     minHeight: 56,
     borderRadius: radius.lg,
@@ -711,10 +604,13 @@ const s = StyleSheet.create({
   },
   doneEmoji: { fontSize: 42 },
   doneStats: { width: '100%', marginTop: space['3'] },
-  doneStat: { flex: 1, alignItems: 'center' },
+  doneStat: {
+    flex: 1,
+    alignItems: 'center',
+    ...(Platform.OS === 'web' ? { minWidth: 'auto' as const } : {}),
+  },
   doneCta: { width: '100%', marginTop: space['3'] },
 })
-
 /**
  * Blank the most informative content word — never an article or preposition.
  *
@@ -723,7 +619,7 @@ const s = StyleSheet.create({
  * the learner sees blanked, so "fixing" it here would change the screen rather than reconcile
  * the two. See plans/52 §"Defects found".
  */
-function cloze(es: string): string {
+function cloze(targetText: string): string {
   const stop = new Set([
     'el',
     'la',
@@ -746,7 +642,7 @@ function cloze(es: string): string {
     'se',
     'lo',
   ])
-  const words = es.split(' ')
+  const words = targetText.split(' ')
   let best = -1
   let bestLen = 0
   words.forEach((w, i) => {
@@ -756,6 +652,6 @@ function cloze(es: string): string {
       best = i
     }
   })
-  if (best < 0) return es
+  if (best < 0) return targetText
   return words.map((w, i) => (i === best ? copy.refrain.prompt.clozeBlank : w)).join(' ')
 }

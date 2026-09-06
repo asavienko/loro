@@ -15,7 +15,30 @@
 
 import { atInstant, runFor } from './clock'
 import { expect, onboard, test } from './fixtures'
-import { back, click, open, openFirstPhrase, statTile } from './states'
+import {
+  back,
+  click,
+  open,
+  openFirstPhrase,
+  repsTodayRow,
+  startWave,
+  todayMarker,
+  trickyRow,
+} from './states'
+
+test('phrase feedback stays above the primary action and follows navigation', async ({ page }) => {
+  await atInstant(page, '2026-07-30T10:00')
+  await onboard(page)
+  await openFirstPhrase(page)
+  await page.getByRole('radio', { name: 'Difficult' }).click()
+  const toast = page.getByRole('alert')
+  await expect(toast).toBeVisible()
+  const toastBounds = await toast.boundingBox()
+  const actionBounds = await page.getByRole('button', { name: 'Practice now →' }).boundingBox()
+  expect((toastBounds?.y ?? 0) + (toastBounds?.height ?? 0)).toBeLessThan(actionBounds?.y ?? 0)
+  await page.getByRole('button', { name: 'Practice now →' }).click()
+  await expect(page).toHaveURL(/\/practice\/refrain/)
+})
 
 test('a memory hook can be chosen and changed back', async ({ page }) => {
   await onboard(page)
@@ -94,7 +117,11 @@ test('Today’s empty state offers a way out and disables the wave', async ({ pa
   await expect(page.getByText(/Nothing in rotation yet/)).toBeVisible()
   await expect(page.getByText('0 of 0 locked in')).toBeVisible()
 
-  // And the card's own button is the working route out. `exact` because the disabled
+  // The day's next wave is not a second way in while the primary says there is nothing to do:
+  // one screen cannot both offer and refuse the same wave.
+  await expect(page.getByRole('button', { name: /wave\./ })).toHaveCount(0)
+
+  // And the set's own button is the working route out. `exact` because the disabled
   // primary above is labelled "Add phrases to begin" and would match a substring.
   await page.getByRole('button', { name: 'Add phrases', exact: true }).click()
   await expect(page).toHaveURL(/\/add$/)
@@ -108,7 +135,7 @@ test('browser Back and Forward keep the learner’s state', async ({ page }) => 
   await expect(page.getByRole('checkbox', { name: 'Very useful' })).toBeChecked()
 
   await page.goBack()
-  await expect(page.getByText('Today', { exact: true })).toBeVisible()
+  await expect(todayMarker(page)).toBeVisible()
 
   // Forward is the half nothing tested. History navigation must not remount a fresh screen
   // that has forgotten the tag — the store outlives the route.
@@ -127,12 +154,12 @@ test('browser Back and Forward keep the learner’s state', async ({ page }) => 
   // getting to Progress needs the browser, which is the gap.
   await page.goBack()
   await open(page, 'Progress')
-  await expect(page.getByRole('button', { name: /Very useful, 1 phrases/ })).toBeVisible()
+  await expect(trickyRow(page, 'Very useful', 1)).toBeVisible()
 })
 
 test('pressing a rep twice counts twice, and never lands between modes', async ({ page }) => {
   await onboard(page)
-  await click(page, 'Start the wave →')
+  await startWave(page)
 
   // Double-pressing a rep button is the most likely accidental input in the hero loop: the
   // cue changes under the finger. Two presses must be two reps and land on mode 3, not on a
@@ -145,8 +172,8 @@ test('pressing a rep twice counts twice, and never lands between modes', async (
   )
 
   await back(page)
-  await expect(page.getByText('Today', { exact: true })).toBeVisible()
-  await expect(statTile(page, 'reps today', 2)).toBeVisible()
+  await expect(todayMarker(page)).toBeVisible()
+  await expect(repsTodayRow(page, 2)).toBeVisible()
 })
 
 test('a cold deep link to a practice route does not strand the learner', async ({ page }) => {

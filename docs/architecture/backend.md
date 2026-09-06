@@ -35,7 +35,9 @@ apps/api/src/
 | `SERVER_CLOCK`    | system wall clock                                    | Override in tests; persistence later supplies durable HLC state             |
 | `config`          | one reader/default per environment variable          | Add accessors in `common/config.ts`, not scattered `process.env` reads      |
 
-Plan [66](../../plans/66-backend-contract-data-and-security.md) owns shared wire schemas, durable
+Plan [85](../../plans/85-backend-integration-contracts.md) supplies shared current/target/draft wire
+schemas, OpenAPI and HTTP conformance tests. Plan
+[66](../../plans/66-backend-contract-data-and-security.md) retains boundary integration, durable
 repositories, safe defaults, and the image contract. Plans
 [67](../../plans/67-anonymous-auth-and-account-lifecycle.md) and
 [68](../../plans/68-sync-and-offline-convergence.md) add identity and safe convergence. Plan
@@ -318,7 +320,7 @@ backend-specific target measures:
 What is enforced now is narrower: production bootstrap refuses to run without the WASM merge;
 readiness observes merge availability; accepted sync fields must have a declared merge class;
 provider scenes are validated; and the global exception filter emits problem details without stack
-traces or internal error text. Auth, tenant scoping, request Zod schemas, rate limits,
+traces or internal error text. Auth, tenant scoping, request-schema boundary wiring, rate limits,
 structured-log redaction, database isolation, and learner-audio handling are not implemented and
 must not be credited as controls.
 

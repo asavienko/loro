@@ -56,7 +56,31 @@ test('P2-08: browses all themes, drills into one, and returns to the grid', asyn
 
   await page.getByRole('button', { name: /^Dining,/ }).click()
   await expect(page.getByRole('button', { name: 'Back to themes' })).toBeVisible()
+  // The drilled list names itself and says how much is left, as the authored header does
+  // (`Loro.dc.html:306`). Without it the list was anonymous while the tile it opened had just
+  // stated a count.
+  await expect(page.getByText('Dining · 4 left')).toBeVisible()
   await expect(page.getByRole('button', { name: /¿Qué me recomienda/ })).toBeVisible()
   await page.getByRole('button', { name: 'Back to themes' }).click()
   await expect(page.getByRole('button', { name: /^Hotel,/ })).toBeVisible()
+})
+
+test('P2-08: a finished theme says it is finished, not that the library is empty', async ({
+  page,
+}) => {
+  // Onboarding seeds Café & ordering, which is every Café phrase in the catalog — so the tile
+  // reads "all added ✓" and drilling in is the empty case.
+  await onboard(page)
+  await page.getByRole('button', { name: 'Add' }).click()
+  await page.getByRole('button', { name: 'browse' }).click()
+  await expect(page.getByRole('button', { name: 'Café, all added ✓' })).toBeVisible()
+
+  await page.getByRole('button', { name: /^Café,/ }).click()
+  await expect(page.getByText('Café · 0 left')).toBeVisible()
+  await expect(page.getByText(/You have every phrase in this theme/)).toBeVisible()
+
+  // NOT the discover copy: it sends the learner to a search field and a scenario strip, and
+  // browse mode renders neither — a screen describing controls it is not showing.
+  await expect(page.getByText(/Nothing more to suggest here/)).toHaveCount(0)
+  await expect(page.getByRole('textbox', { name: 'Search phrases' })).toHaveCount(0)
 })

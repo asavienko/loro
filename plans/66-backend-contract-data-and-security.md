@@ -2,7 +2,9 @@
 
 - **Requirement IDs:** `F-01`, `F-02`, `F-04`, `F-07`, API security requirements
 - **Milestone:** M2
-- **Status:** Not started; Nest seams and WASM merge already exist
+- **Status:** 🟡 Shared contracts/OpenAPI/HTTP compatibility delivered by plan 85. Nest boundary
+  wiring, Postgres, production pagination/security and image work remain; production merge semantics
+  require plan 54 policy parity, with identity supplied by plan 67.
 - **Depends on:** 54 local merge-policy correctness for shared semantics; may proceed alongside
   native work
 
@@ -14,9 +16,10 @@ practice dependency.
 
 ## Work
 
-1. Put request/response/problem schemas in `@loro/core`, generate/infer types from them, and
-   validate at the Nest boundary. Remove hand-cast wire contracts only after compatibility tests
-   pass.
+1. **Contracts delivered in [85](85-backend-integration-contracts.md):** current/target/draft
+   schemas, inferred types, OpenAPI and compatibility tests. Remaining: install shared validation at
+   Nest boundaries and replace local wire interfaces after preserving current behavior. Batch routes
+   validate envelopes then individual items; never reject unrelated ops wholesale.
 2. Implement Postgres migrations/repositories for sync rows, accounts/devices, content versions,
    idempotency, and audit metadata; keep repositories injectable and test against real Postgres.
 3. Implement deterministic `(hlc,id)` cursor pagination, limits, `has_more`, tombstones, idempotent

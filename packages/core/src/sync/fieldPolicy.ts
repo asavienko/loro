@@ -46,6 +46,8 @@ type FieldMap = Readonly<Record<string, MergeClass>>
 
 export const FIELD_POLICY: Readonly<Record<SyncEntity, FieldMap>> = {
   user_phrase: {
+    targetLocale: 'lww',
+    ownMeaningLanguage: 'lww',
     // identity — set once, never merged
     phraseId: 'lww',
     // The learner's own text, for rows with no catalog entry (`phraseId: null`).
@@ -127,6 +129,8 @@ export const FIELD_POLICY: Readonly<Record<SyncEntity, FieldMap>> = {
   },
 
   settings: {
+    // Native/target selection merges atomically to avoid unsupported hybrid pairs.
+    languagePair: 'lww',
     goal: 'lww',
     level: 'lww',
     dailyMinutes: 'lww',
@@ -143,6 +147,7 @@ export const FIELD_POLICY: Readonly<Record<SyncEntity, FieldMap>> = {
   },
 
   refrain_day: {
+    targetLocale: 'lww',
     setIds: 'lww',
     waves: 'lww',
   },

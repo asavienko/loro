@@ -12,9 +12,9 @@
  */
 
 import type { ReactNode } from 'react'
-import { Modal, StyleSheet, View } from 'react-native'
+import { Modal, Platform, StyleSheet, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { line, radius, sheet, surface } from '../theme'
+import { line, radius, sheet, surface, webLayout } from '../theme'
 import { Pressable } from './Pressable'
 
 export function Sheet({
@@ -56,6 +56,9 @@ const s = StyleSheet.create({
   scrim: { flex: 1, backgroundColor: surface.scrim, justifyContent: 'flex-end' },
   backdrop: { flex: 1 },
   panel: {
+    width: '100%',
+    alignSelf: 'center',
+    ...(Platform.OS === 'web' ? { maxWidth: webLayout.learnerMaxWidth } : {}),
     backgroundColor: surface.app,
     borderTopLeftRadius: radius['3xl'],
     borderTopRightRadius: radius['3xl'],

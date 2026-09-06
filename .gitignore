@@ -89,3 +89,6 @@ npm-debug.log*
 pnpm-debug.log*
 yarn-error.log*
 .gstack/
+
+# Local agent checkouts are independent Git worktrees, not project source.
+.claude/worktrees/

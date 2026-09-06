@@ -2,6 +2,9 @@
  * Text, and the components that are only text: the section label, its header, a chart's summary.
  */
 
+import { currentNativeLanguage, currentTargetLocale, useLocale } from '../../lib/i18n'
+import type { NativeLanguage, TargetLocale } from '@loro/core'
+import { Platform } from 'react-native'
 import type { ReactNode } from 'react'
 import { StyleSheet, Text as RNText, type StyleProp, type TextStyle } from 'react-native'
 import { scaleTextStyle } from '../runtimeStyles'
@@ -31,11 +34,14 @@ export function Text({
    * Set `lang="es"` on ALL Spanish text. Without it a screen reader pronounces it
    * in English and mangles it — the highest-impact a11y detail in the app.
    */
-  lang?: 'es' | 'en' | undefined
+  lang?: 'target' | 'es' | NativeLanguage | TargetLocale | undefined
   numberOfLines?: number | undefined
   style?: StyleProp<TextStyle>
   children: ReactNode
 }) {
+  useLocale()
+  const language =
+    lang === 'target' || lang === 'es' ? currentTargetLocale() : (lang ?? currentNativeLanguage())
   const { textScale } = useTheme()
   const resolvedStyle = StyleSheet.flatten([
     type[variant],
@@ -45,7 +51,8 @@ export function Text({
   ])
   return (
     <RNText
-      accessibilityLanguage={lang === 'es' ? 'es-ES' : undefined}
+      accessibilityLanguage={language}
+      {...(Platform.OS === 'web' ? { lang: language } : {})}
       numberOfLines={numberOfLines}
       style={scaleTextStyle(resolvedStyle, textScale)}
     >

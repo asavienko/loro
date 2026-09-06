@@ -248,16 +248,18 @@ It is revocable in Settings, and revocation takes effect before another event is
 
 ## Client hardening
 
-| Measure                  |                                                                                                |
-| ------------------------ | ---------------------------------------------------------------------------------------------- |
-| No secrets in the bundle | Verified by a CI secret scan of the built artifact, not just the source                        |
-| Certificate pinning      | On the API host, with a backup pin and a documented rotation runbook                           |
-| Jailbreak/root detection | **No.** It's defeatable, it breaks legitimate power users, and there's nothing to protect      |
-| Screenshot prevention    | **No.** Nothing here is a secret from the learner                                              |
-| Deep-link validation     | Every parameter validated; a deep link can navigate but never mutate                           |
-| WebViews                 | None in the app                                                                                |
-| Third-party SDKs         | Minimised, each one reviewed for what it collects; no ad SDKs, no attribution SDKs             |
-| OTA updates              | Signed by EAS; the update channel is release-gated ([`process/ci-cd.md`](../process/ci-cd.md)) |
+| Measure                  |                                                                                                                                                                                                                                                                              |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| No secrets in the bundle | Verified by a CI secret scan of the built artifact, not just the source                                                                                                                                                                                                      |
+| Certificate pinning      | On the API host, with a backup pin and a documented rotation runbook                                                                                                                                                                                                         |
+| Jailbreak/root detection | **No.** It's defeatable, it breaks legitimate power users, and there's nothing to protect                                                                                                                                                                                    |
+| Screenshot prevention    | **No.** Nothing here is a secret from the learner                                                                                                                                                                                                                            |
+| Deep-link validation     | Every parameter validated; a deep link can navigate but never mutate                                                                                                                                                                                                         |
+| Device SQL               | **Present.** Handwritten SQL over `SqlDriver`, no ORM ([ADR-0003 amendment](adr/0003-offline-first-sqlite-sync.md#amendment--2026-07-30--handwritten-sql-on-the-client-no-orm)). Every learner value is a bound parameter; the only interpolations are generated identifiers |
+| Local erasure            | **Present.** `wipe()` drops and recreates every owned table, so no learner row — tombstones included — survives on the freelist                                                                                                                                              |
+| WebViews                 | None in the app                                                                                                                                                                                                                                                              |
+| Third-party SDKs         | Minimised, each one reviewed for what it collects; no ad SDKs, no attribution SDKs                                                                                                                                                                                           |
+| OTA updates              | Signed by EAS; the update channel is release-gated ([`process/ci-cd.md`](../process/ci-cd.md))                                                                                                                                                                               |
 
 **Deep links can navigate but never mutate** is worth stating as a rule: a link that could add a
 phrase, start a purchase, or change a setting would be an attack surface reachable from any web
@@ -267,18 +269,18 @@ page.
 
 ## Server hardening
 
-| Measure          |                                                                                           |
-| ---------------- | ----------------------------------------------------------------------------------------- |
-| Input validation | Zod schemas shared with the client — the contract cannot drift                            |
-| Rate limits      | Per-user and per-IP, strictest on `/auth/*` and `/ai/*` ([api.md](api.md#rate-limits))    |
-| SQL              | Parameterised via Drizzle throughout; raw SQL requires review and a comment justifying it |
-| Errors           | RFC 9457 problem details; no stack traces, no internal ids, no SQL text                   |
-| Logging          | Structured, with a redaction allowlist. `user_id` only, never email                       |
-| Headers          | HSTS, `X-Content-Type-Options`, restrictive CSP on any HTML surface                       |
-| Dependencies     | Lockfile committed; CI fails on known-critical advisories; automated update PRs           |
-| Container        | Distroless base, non-root, read-only filesystem                                           |
-| Network          | API is the only public surface; DB and Redis are private-subnet only                      |
-| Staff access     | SSO, MFA, audit-logged; production DB access requires an approved break-glass             |
+| Measure          |                                                                                        |
+| ---------------- | -------------------------------------------------------------------------------------- |
+| Input validation | Zod schemas shared with the client — the contract cannot drift                         |
+| Rate limits      | Per-user and per-IP, strictest on `/auth/*` and `/ai/*` ([api.md](api.md#rate-limits)) |
+| SQL              | Target: parameterised via Drizzle throughout. No server repository exists yet          |
+| Errors           | RFC 9457 problem details; no stack traces, no internal ids, no SQL text                |
+| Logging          | Structured, with a redaction allowlist. `user_id` only, never email                    |
+| Headers          | HSTS, `X-Content-Type-Options`, restrictive CSP on any HTML surface                    |
+| Dependencies     | Lockfile committed; CI fails on known-critical advisories; automated update PRs        |
+| Container        | Distroless base, non-root, read-only filesystem                                        |
+| Network          | API is the only public surface; DB and Redis are private-subnet only                   |
+| Staff access     | SSO, MFA, audit-logged; production DB access requires an approved break-glass          |
 
 ---
 

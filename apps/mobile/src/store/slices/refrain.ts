@@ -1,3 +1,4 @@
+import { EMPTY_REFRAIN_RESUME } from '../state'
 /**
  * Today's Refrain set: chosen once, then FROZEN. "You always see today."
  *
@@ -17,6 +18,7 @@ export const createRefrainSlice: Slice<'ensureRefrainSet'> = ({ set, get, deps }
     // A new day (or the first ever): choose today's set once, then freeze it.
     if (st.refrainDay !== day) {
       set({
+        refrainResume: EMPTY_REFRAIN_RESUME,
         refrainSet: [...selectRefrainSet(st.phrases, size)],
         refrainDay: day,
         refrainSubstituted: [],
@@ -40,6 +42,7 @@ export const createRefrainSlice: Slice<'ensureRefrainSet'> = ({ set, get, deps }
     if (fill.length === 0) return
 
     set({
+      refrainResume: EMPTY_REFRAIN_RESUME,
       refrainSet: [...st.refrainSet, ...fill],
       refrainSubstituted: [...st.refrainSubstituted, ...fill],
     })

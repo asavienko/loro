@@ -29,7 +29,7 @@ migration and creates:
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | `user_phrase`    | Full current `PhraseState`, learner ownership, per-field sync metadata and soft deletion.                                      |
 | `settings`       | The full planned settings row; the current repository reads/writes only onboarding, goal, level, daily minutes and wave times. |
-| `refrain_day`    | Frozen set ids, wave JSON and substitutions; the repository currently exposes set ids and substitutions.                       |
+| `refrain_day`    | Frozen set ids, the wave keys the learner finished, and substitutions. All three round-trip through both repositories.         |
 | `streak_day`     | One row per streak-day key, with accumulated minutes.                                                                          |
 | `outbox`         | Ordered sync operations with payload, HLC, attempts and last error.                                                            |
 | `kv`             | Reserved key/value storage; no repository uses it yet.                                                                         |
@@ -121,8 +121,12 @@ or repository code exists today. In particular, the current sync repository has 
 device table, no cursor index and no durable rows. See [sync-protocol.md](sync-protocol.md) for the
 implemented API limits.
 
-Do not describe the client and server as “one Drizzle schema”: there is no Drizzle schema in this
-repository and the current SQLite is authored as reviewed SQL migrations.
+Do not describe the client and server as “one Drizzle schema”. There is no Drizzle schema in this
+repository, the client's is authored as reviewed SQL migrations and will stay that way, and the
+ADR-0008 pro that claimed one shared definition is withdrawn. Why, and what it costs, is recorded in
+[ADR-0003's amendment](adr/0003-offline-first-sqlite-sync.md#amendment--2026-07-30--handwritten-sql-on-the-client-no-orm).
+What keeps the two sides honest is the sync contract in `packages/core/src/sync/fieldPolicy.ts`,
+which CI enforces.
 
 ## Extension invariants
 
@@ -173,6 +177,23 @@ not establish database, log-retention or cache-size forecasts.
 
 The SQLite tests in `apps/mobile/src/data/persistence.test.ts` exercise migration safety,
 constraints, phrase/settings/day repositories, tombstones, outbox ordering and acknowledgement,
-failure tracking, class-aware compaction, transaction rollback and wipe against real SQLite. They do
-not exercise a device driver, app hydration, a sync client, process restart, Postgres or account
-scoping; those require new integration and device tests when their implementations land.
+failure tracking, class-aware compaction, transaction rollback and wipe against real SQLite.
+
+They also cover the correctness properties plan 54 added, which are the ones a filtered read hides:
+
+- a stale upsert preserves the tombstone and the per-field HLC, and does not reset the settings
+  columns the repository never writes;
+- `active()`/`due()` agree across the SQL table, the memory table and the store's repository
+  adapter, driven by one adversarial row history covering learned, graduated, both, and deleted;
+- retry accumulates attempts without reordering or dropping ops, an edit is never folded backward
+  past a delete, and compaction folds on both sides of one without crossing it;
+- a nested mutation boundary rolls back through savepoints, including `compact()` and `wipe()` run
+  under a caller's transaction;
+- erasure is asserted against every table read from `sqlite_master`, not against the repositories
+  that filter tombstones out;
+- a file-backed database is closed and reopened, so `refrain_day.waves` and a tombstone are proved
+  to reach the disk rather than only the row mapping.
+
+They still do not exercise a device driver, app hydration, a sync client, an app process restart
+with rehydration, Postgres or account scoping; those require new integration and device tests when
+their implementations land.

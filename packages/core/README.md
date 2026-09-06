@@ -9,13 +9,19 @@ losing their phrase library.
 
 ## Layout
 
-What is actually here. The `api/` Zod schemas and the `db/` Drizzle schema this file used to promise
-do not exist — the API defines its own shapes today, and persistence is raw SQL against the
-`SqlDriver` interface, deliberately (see `persistence/driver.ts`).
+The `api/` Zod schemas now describe current, planned and gated-draft wire surfaces, with inferred
+types and generated OpenAPI. Import them explicitly through `@loro/core/api/current`, `/target`, or
+`/draft`; they are not exported from the domain root. Existing Nest controllers are not yet wired to
+target validation. See [the contract guide](../../docs/architecture/api-contracts.md). Persistence
+remains raw SQL against `SqlDriver`; no Drizzle schema exists.
+[ADR-0003’s amendment](../../docs/architecture/adr/0003-offline-first-sqlite-sync.md#amendment--2026-07-30--handwritten-sql-on-the-client-no-orm)
+records the client choice and its costs; Drizzle remains the server’s choice.
 
 ```
 src/
 ├── index.ts              # the public surface — imported by BOTH apps
+├── api/                  # current/target/draft Zod contracts + operation registries
+├── api-tooling/          # build-time OpenAPI generation; no runtime exports
 ├── domain/               # the vocabulary of the product
 │   ├── phrase.ts         # PhraseState, CatalogPhrase, Difficulty, Tag, LadderRung
 │   ├── calendar.ts       # day keys and streaks — mirrors core-rs until UniFFI lands

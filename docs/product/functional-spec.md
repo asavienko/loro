@@ -46,7 +46,7 @@ Plus: [Navigation shell](#navigation-shell) · [Permissions](#permissions) ·
 
 ## Keeping specification, routes, and states aligned
 
-The current app has 7 learner routes and 20 declared learner-visible browser states. The exact
+The current app has 7 learner routes and 21 declared learner-visible browser states. The exact
 route-to-state inventory is maintained in
 [`screen-catalog.md`](../design/screen-catalog.md#current-implementation-and-browser-coverage), and
 the executable manifest is [`apps/mobile/e2e/states.ts`](../../apps/mobile/e2e/states.ts).
@@ -755,6 +755,17 @@ Ladder palette: Accumulated `#5f6b78` · Bent `#7f6a44` · Transferred `#8a6810`
 - **What's tricky in your stream** — one row per tag the learner actually uses (zero-count tags are
   hidden), bar-scaled to the largest count. **Tapping a row starts a drill of exactly those
   phrases** — this is the tag thread closing its loop.
+
+  **Not built yet, and the screen must not imply it is.** No tag-filtered session exists:
+  `RefrainEngine.plan()` practises today's frozen set, which has no relationship to the tag that was
+  tapped. Until [plan 64](../../plans/64-today-and-refrain-production-loop.md) §4 lands a genuinely
+  filtered set — over [plan 60](../../plans/60-authoritative-core-maths.md)'s tag-scoped selection —
+  a tricky row is a **non-interactive rollup**: no chevron, no hint, no toast, and no navigation. It
+  used to navigate to the unfiltered Refrain and toast _"Drilling 4 “pronunciation” phrases"_, which
+  names a consequence that did not happen and is exactly what
+  [copy-and-tone.md](../design/copy-and-tone.md) rule 3 forbids. The row's own numbers are real and
+  stay on screen.
+
 - **Milestones** — earned ones in white with a green ✓; unearned ones greyed
   (`grayscale(1) opacity(.55)`).
 
@@ -1033,3 +1044,13 @@ Requested **in context only**, never at launch:
 - **Every rating control anywhere writes to the same phrase record** and is reflected everywhere
   immediately.
 - **No modal blocks audio.** The stream keeps playing behind sheets and navigation.
+
+## F-08 Languages
+
+Plan 85 extends the authored English/Spanish screens with native/UI and learning-language selection.
+The welcome page offers English/Bulgarian/Russian native choices and compatible Spanish/Bulgarian/
+Russian targets. The Languages destination in Today's switcher stages changes until Save. Matching
+native/target pairs show an explanation and disable Save. Each target owns its phrase collection,
+daily set and session; new targets open starter-pack selection, existing ones restore their state.
+Native-language changes preserve learning progress and personal translations. See
+[localization](../process/localization.md) for the pair matrix and release gates.

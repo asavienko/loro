@@ -1,3 +1,6 @@
+import { parseLanguagePair } from '../domain/languages.js'
+import type { CourseRow } from './tables.js'
+import type { TargetLocale } from '../domain/languages.js'
 /**
  * The in-memory persistence set.
  *
@@ -11,7 +14,7 @@
  */
 
 import type { UserPhraseId } from '../domain/ids.js'
-import type { PhraseState } from '../domain/phrase.js'
+import { isActive, isDue, type PhraseState } from '../domain/phrase.js'
 import {
   type OutboxAppend,
   type OutboxOp,
@@ -40,21 +43,32 @@ class MemoryPhraseTable implements PhraseTable {
     return this.rows.get(id) ?? null
   }
 
+  // `isActive` / `isDue` rather than the predicates spelled out: the rule is the domain's
+  // (`domain/phrase.ts`), and writing it here again is how the store's copy came to disagree.
   active(): PhraseState[] {
-    return this.all().filter((p) => !p.learned && p.graduatedAt === null)
+    return this.all().filter(isActive)
   }
 
   due(at: number): PhraseState[] {
     return this.all()
-      .filter((p) => !p.learned && p.srs !== null && p.srs.due <= at)
+      .filter((p) => isDue(p, at))
       .sort((a, b) => (a.srs?.due ?? 0) - (b.srs?.due ?? 0))
   }
 
+  /**
+   * Write the row. The tombstone is NOT cleared — see `sqlite/phrase.ts`.
+   *
+   * This used to `deleted.delete(id)`, which is the in-memory spelling of the same
+   * resurrection bug `INSERT OR REPLACE` caused in SQL: a stale write, or a plain re-add,
+   * undid a deletion. Nothing about a `PhraseState` says "undelete" — the type has no
+   * `deletedAt` field to carry the claim — so an upsert cannot be the operation that
+   * decides one.
+   */
   upsert(phrase: PhraseState): void {
     this.rows.set(phrase.id, phrase)
-    this.deleted.delete(phrase.id)
   }
 
+  /** Idempotent, matching the SQL `deleted_at IS NULL` guard. */
   softDelete(id: UserPhraseId, _at: number): void {
     if (this.rows.has(id)) this.deleted.add(id)
   }
@@ -75,6 +89,7 @@ class MemorySettingsTable implements SettingsTable {
     return this.row
   }
   save(settings: SettingsRow): void {
+    if (settings.languagePair) parseLanguagePair(settings.languagePair)
     this.row = { ...settings, waveTimes: [...settings.waveTimes] }
   }
   clear(): void {
@@ -85,20 +100,24 @@ class MemorySettingsTable implements SettingsTable {
 class MemoryRefrainDayTable implements RefrainDayTable {
   private days = new Map<string, RefrainDayRow>()
 
-  load(localDay: string): RefrainDayRow | null {
-    return this.days.get(localDay) ?? null
+  load(localDay: string, target: TargetLocale = 'es-ES'): RefrainDayRow | null {
+    return this.days.get(`${target}/${localDay}`) ?? null
   }
 
-  latest(): RefrainDayRow | null {
-    const keys = [...this.days.keys()].sort()
+  latest(target: TargetLocale = 'es-ES'): RefrainDayRow | null {
+    const keys = [...this.days.keys()].filter((key) => key.startsWith(`${target}/`)).sort()
     const newest = keys[keys.length - 1]
     return newest === undefined ? null : (this.days.get(newest) ?? null)
   }
 
   save(row: RefrainDayRow): void {
-    this.days.set(row.localDay, {
+    this.days.set(`${row.targetLocale ?? 'es-ES'}/${row.localDay}`, {
+      ...(row.targetLocale && row.targetLocale !== 'es-ES'
+        ? { targetLocale: row.targetLocale }
+        : {}),
       localDay: row.localDay,
       setIds: [...row.setIds],
+      waves: [...row.waves],
       substituted: [...row.substituted],
     })
   }
@@ -173,6 +192,7 @@ class MemoryOutboxTable implements OutboxTable {
 
 /** A fresh in-memory persistence set. */
 export function openMemoryPersistence(): Persistence {
+  const courses = new Map<TargetLocale, CourseRow>()
   const phrases = new MemoryPhraseTable()
   const settings = new MemorySettingsTable()
   const refrainDay = new MemoryRefrainDayTable()
@@ -180,12 +200,19 @@ export function openMemoryPersistence(): Persistence {
   const outbox = new MemoryOutboxTable()
 
   return {
+    courses: {
+      load: (target) => courses.get(target) ?? null,
+      save: (row) => {
+        courses.set(row.targetLocale, { ...row })
+      },
+    },
     phrases,
     settings,
     refrainDay,
     practiceDays,
     outbox,
     wipe: () => {
+      courses.clear()
       phrases.clear()
       settings.clear()
       refrainDay.clear()

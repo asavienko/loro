@@ -1,3 +1,4 @@
+import { SqlCourseTable } from './course.js'
 /**
  * The SQL implementations, one module per table.
  *
@@ -47,6 +48,7 @@ export function openSqlPersistence(
   const deps = { driver, userId }
   const synced = { ...deps, hlc }
   return {
+    courses: new SqlCourseTable(deps),
     phrases: new SqlPhraseTable(synced),
     settings: new SqlSettingsTable(synced),
     refrainDay: new SqlRefrainDayTable(deps),

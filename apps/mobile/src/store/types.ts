@@ -7,12 +7,35 @@
  */
 
 import type { StoreApi } from 'zustand'
-import type { Clock, Difficulty, PhraseState, ProgressDelta, Tag, UserPhraseId } from '@loro/core'
+import type {
+  NativeLanguage,
+  TargetLocale,
+  Clock,
+  Difficulty,
+  PhraseState,
+  ProgressDelta,
+  Tag,
+  UserPhraseId,
+} from '@loro/core'
 import type { AppData } from './state'
 import type { OwnPhraseDraft } from './phraseFactory'
 
 export interface AppActions {
-  completeOnboarding: (o: { goal: string; dailyMinutes: 5 | 10 | 20; packIds: string[] }) => void
+  setLanguages: (nativeLanguage: NativeLanguage, targetLocale: TargetLocale) => void
+  /**
+   * Commit the first-run answers and seed the stream.
+   *
+   * Every field the four questions collect is REQUIRED, including `level`, which nothing reads
+   * yet (plan 60 biases selection with it). That is deliberate: the previous signature took three
+   * of the four and the fourth was dropped silently at the call site, so adding a fifth question
+   * without wiring it now fails to compile rather than fails to persist.
+   */
+  completeOnboarding: (o: {
+    goal: string
+    level: string
+    dailyMinutes: 5 | 10 | 20
+    packIds: string[]
+  }) => void
   addPhrase: (
     catalogId: string,
     o?: { difficulty?: Difficulty; tags?: Tag[]; source?: PhraseState['source'] },

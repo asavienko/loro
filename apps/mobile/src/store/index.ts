@@ -42,5 +42,11 @@ export type { AppState, StoreDeps } from './types'
 
 export { useMastery, useViews } from './selectors'
 
-export { createEngineContext, engineContext, refrainEngine, streamEngine } from './engines'
+export {
+  PRODUCTION_WAVE_TIMES,
+  createEngineContext,
+  engineContext,
+  refrainEngine,
+  streamEngine,
+} from './engines'
 export type { EngineContextDeps } from './engines'
