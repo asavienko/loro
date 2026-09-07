@@ -98,3 +98,6 @@ yarn-error.log*
 # age identities and interrupted SOPS staging files stay local.
 *.agekey
 secrets/.encrypt.*
+
+# Local APK artifacts; generated native projects are built in temporary snapshots.
+.local-builds/

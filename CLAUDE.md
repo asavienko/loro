@@ -194,6 +194,15 @@ inactive references in `.github/workflows-disabled/`. `pnpm ci:local` is the ful
 `pnpm check` remains the fast development gate. See `docs/process/ci-cd.md` for prerequisites,
 native builds, audits, commit validation, and retained reports.
 
+## Local Android APK distribution
+
+`pnpm apk:local` builds a standalone, development-key-signed testing APK from a clean committed
+snapshot using local Expo prebuild and Gradle. `pnpm apk:github` also uploads it to a draft GitHub
+prerelease; add `--publish` to publish the prerelease after upload verification. No GitHub Actions
+or EAS build is invoked. JDK 17 and Android SDK 36 are required. Native projects stay temporary;
+`apps/mobile/android` is not a source checkout. See `docs/process/local-apk.md` for signing,
+configuration and release boundaries. This does not implement the native audio/SQLite bridges.
+
 ## Running and testing
 
 `pnpm local:up` decrypts the SOPS API environment and builds/starts the API and Expo web containers,

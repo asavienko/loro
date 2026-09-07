@@ -45,7 +45,9 @@
     "local:logs": "docker compose logs -f",
     "ci:local": "bash scripts/ci-local.sh",
     "ci:local:native": "bash scripts/ci-local.sh native",
-    "ci:local:audit": "bash scripts/ci-local.sh audit"
+    "ci:local:audit": "bash scripts/ci-local.sh audit",
+    "apk:local": "node scripts/apk-local.mjs",
+    "apk:github": "node scripts/apk-local.mjs --upload"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.6.1",
