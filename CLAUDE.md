@@ -194,6 +194,15 @@ inactive references in `.github/workflows-disabled/`. `pnpm ci:local` is the ful
 `pnpm check` remains the fast development gate. See `docs/process/ci-cd.md` for prerequisites,
 native builds, audits, commit validation, and retained reports.
 
+## Local Android APK distribution
+
+`pnpm apk:local` builds a standalone, development-key-signed testing APK from a clean committed
+snapshot using local Expo prebuild and Gradle. `pnpm apk:github` also uploads it to a draft GitHub
+prerelease; add `--publish` to publish the prerelease after upload verification. No GitHub Actions
+or EAS build is invoked. JDK 17 and Android SDK 36 are required. Native projects stay temporary;
+`apps/mobile/android` is not a source checkout. See `docs/process/local-apk.md` for signing,
+configuration and release boundaries. This does not implement the native audio/SQLite bridges.
+
 ## Running and testing
 
 `pnpm local:up` decrypts the SOPS API environment and builds/starts the API and Expo web containers,
@@ -219,10 +228,9 @@ npx expo start --web                # from apps/mobile — fastest way to see th
 - **The API needs no Docker.** Persistence isn't wired — the sync store is an in-memory `Map` and AI
   is stubbed (`AI_PROVIDER=stub`), so skip `dev:up` unless you're building the repository layer.
   `/v1/health/ready` returns 503 if the WASM merge is missing, which is the check worth watching.
-- **`expo run:ios` / `run:android` need a toolchain that isn't set up here** — full Xcode or the
-  Android SDK, plus a first `expo prebuild` (there is no `apps/mobile/ios` or `android/`). Until
-  then: web, or Expo Go on a device, which still works only because no custom native module is
-  installed yet.
+- **Local Android preview builds are verified:** `pnpm apk:local` uses Java/Android SDK and a
+  temporary Expo prebuild. There is no committed `apps/mobile/android` or `ios` project. iOS still
+  needs full Xcode. The APK build is not evidence of native audio/SQLite bridges or device tests.
 - **Native builds are a separate local gate:** `pnpm ci:local:native` requires macOS/Xcode,
   installed Rust targets, cargo-ndk and an Android NDK. It builds libraries only. EAS and
   device-farm scaffolds are inactive; no command in local CI queues a cloud build.
