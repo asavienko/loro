@@ -6,8 +6,8 @@ completed plans moved to [the dated archive](archive/2026-09-07/README.md), and 
 [review](archive/2026-09-07/REVIEW.md) records evidence, scope transfers and verification.
 
 Plans 01–52 remain historical in [the previous archive](archive/2026-07-30/REVIEW.md); 49 is an
-existing gap, not a free number. No plan was renumbered. The highest assigned ID is **89** and the
-next new plan is **90**. Original paths of newly archived plans remain compatibility symlinks.
+existing gap, not a free number. No plan was renumbered. The highest assigned ID is **90** and the
+next new plan is **91**. Original paths of newly archived plans remain compatibility symlinks.
 
 ## Current scope
 
@@ -93,6 +93,10 @@ feature↔release-completion cycle. See each plan's checkboxes for executable ta
 | [86](86-provider-integrations.md)                   | Shared provider controls and approved vendor adapters                       | M2/M3       | 🟡 Anthropic transport merged; controls/adapters/runtime remain | 85 ✅; 66; owning feature/decision slices; 88 testing resources            |
 | [87](87-multilingual-app-and-language-selection.md) | Bilingual sign-off and multilingual device/release proof                    | M1/M2       | 🟡 Seven-pair foundation done; review/durability gates          | Human review; 59 device proof; 61/72 release integration                   |
 | [88](88-low-cost-backend-infrastructure.md)         | Frankfurt EC2/Postgres/S3 testing environment and recovery                  | M2 testing  | — Planned; infrastructure preparation can start now             | 66 image/data/security; 67 shared access; 59/68 mobile sync; 61/86 content |
+
+| [90](90-default-english-content-language.md) | English default learning content and course
+selection | M1/M2 | — Planned; English target confirmed; review/device gates remain | 87/85; 59
+persistence; 61/62 audio |
 
 Plan 88 owns the selected AWS testing profile and
 [operations runbook](../docs/runbooks/backend-testing.md); plan 73 retains production operations.
