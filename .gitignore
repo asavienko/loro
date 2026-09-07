@@ -92,3 +92,7 @@ yarn-error.log*
 
 # Local agent checkouts are independent Git worktrees, not project source.
 .claude/worktrees/
+
+# age identities and interrupted SOPS staging files stay local.
+*.agekey
+secrets/.encrypt.*
