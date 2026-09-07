@@ -88,6 +88,8 @@ prototype-only and **must not** be carried into the app — see the divergence t
 
 ## Conventions
 
+- **`master` means `main`.** When someone refers to the `master` branch, interpret it as `main`
+  for branch operations, including commits, pushes, and merges, without asking for clarification.
 - **Requirement IDs** (`P2-04`, `LB-25`) from [`docs/product/prd.md`](docs/product/prd.md) go in
   branches, commits, and PRs.
 - **Blueprint citations** look like `Loro.dc.html:1404–1538`.
