@@ -88,14 +88,14 @@ prototype-only and **must not** be carried into the app — see the divergence t
 
 ## Conventions
 
-- **`master` means `main`.** When someone refers to the `master` branch, interpret it as `main`
-  for branch operations, including commits, pushes, and merges, without asking for clarification.
-- **Never commit or push unencrypted environment files.** Real `.env`, `.env.*`, and `*.env`
-  values stay local and gitignored. The only plaintext exception is `.env.example`, containing
-  placeholders or non-secret local defaults. Run `pnpm env:encrypt` before committing API
-  configuration; commit only SOPS-encrypted `secrets/*.enc.env`. Verify decryption matches the local
-  values without printing them, and inspect staged paths before every commit. Never stage private
-  age identities, use `git add -f` to bypass this rule, or include credentials in logs or commit text.
+- **`master` means `main`.** When someone refers to the `master` branch, interpret it as `main` for
+  branch operations, including commits, pushes, and merges, without asking for clarification.
+- **Never commit or push unencrypted environment files.** Real `.env`, `.env.*`, and `*.env` values
+  stay local and gitignored. The only plaintext exception is `.env.example`, containing placeholders
+  or non-secret local defaults. Run `pnpm env:encrypt` before committing API configuration; commit
+  only SOPS-encrypted `secrets/*.enc.env`. Verify decryption matches the local values without
+  printing them, and inspect staged paths before every commit. Never stage private age identities,
+  use `git add -f` to bypass this rule, or include credentials in logs or commit text.
 
 - **Requirement IDs** (`P2-04`, `LB-25`) from [`docs/product/prd.md`](docs/product/prd.md) go in
   branches, commits, and PRs.
