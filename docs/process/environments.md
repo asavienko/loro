@@ -1,6 +1,14 @@
 # Environments
 
-Four environments, one promotion path.
+Four target environments, one production promotion path.
+
+**Selected testing exception, not yet provisioned:**
+[Plan 88](../../plans/88-low-cost-backend-infrastructure.md) defines one shared `testing` environment
+in Frankfurt: one EC2 instance with local PostgreSQL, private S3 and a $25–35/month target. Deploys
+are manual after required CI; short maintenance downtime and synthetic test data are accepted. It
+does not provision separate dev/staging stacks or their managed services. Shared API access waits
+for authentication, tenant isolation and durable storage; mobile sync has its own additional gates.
+The tables and promotion path below describe the later target environments.
 
 ---
 

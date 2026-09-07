@@ -7,7 +7,7 @@ mapping are in [`REVIEW.md`](archive/2026-07-30/REVIEW.md).
 
 Plan numbers are never reused. Plans 01–52 remain historical IDs. **Plan 53 completed concurrently
 during this reset and remains in place as a protected record; this reset did not edit or move it.**
-Replacement plans begin at 54.
+Replacement plans begin at 54. The highest assigned ID is **88**; the next new plan is **89**.
 
 ## Status
 
@@ -95,6 +95,15 @@ and product gates | 85 ✅; feature plans 59, 61–63, 65–68, 71, 73–74, 76,
 [87](87-multilingual-app-and-language-selection.md) | Multilingual UI and Spanish/Bulgarian/Russian
 starter courses | M1/M2 | 🟡 Implemented; bilingual review and plan 59 device persistence remain
 gates | 59 for device persistence |
+
+## Testing infrastructure
+
+| Plan | Outcome | Milestone | Status | Depends on |
+| --- | --- | --- | --- | --- |
+| [88](88-low-cost-backend-infrastructure.md) | One Frankfurt EC2 instance, local Postgres, private S3, deployment and recovery; $25–35/month target | M2 | — Planned; infrastructure preparation can start now | 66 image/data/security and 67 isolation for shared access; 59/68 for mobile sync; 61/86 for content adapters |
+
+Plan 88 owns the low-cost testing profile; plan 73 retains production operations. Dependency gates
+apply to the named testing stage, not automatically to the whole environment.
 
 ## Rules for this set
 
