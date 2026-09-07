@@ -1,5 +1,11 @@
 # Incident response
 
+**Testing response:** use the [backend testing runbook](../runbooks/backend-testing.md). The
+selected single-instance environment has maintenance downtime, SNS email and verified restore
+targets; monitoring and operator procedures are still to be implemented. The production pager,
+status-page, store-release and regulatory response arrangements below are future policy, not
+deployed services.
+
 ---
 
 ## Severities
@@ -39,8 +45,9 @@ Small team, so on-call is honest about its limits:
 
 **Why best-effort is defensible here:** the app is offline-first, so an API outage delays sync
 rather than blocking learning ([ADR-0003](../architecture/adr/0003-offline-first-sqlite-sync.md)).
-The 99.9% SLO reflects that deliberately
-([`../architecture/backend.md`](../architecture/backend.md#slos)).
+Production response objectives will be selected from testing evidence in plan 73
+([backend objectives](../architecture/backend.md#slos)); the testing host has no production
+availability guarantee.
 
 The exception is a P0 privacy or data-loss incident, which is paged out of hours without
 qualification.
@@ -61,14 +68,14 @@ qualification.
 
 ### Mitigation levers, in order of speed
 
-| Lever                         | Speed      | For                                              |
-| ----------------------------- | ---------- | ------------------------------------------------ |
-| **Feature flag off**          | Seconds    | A misbehaving feature. **Always try this first** |
-| Halt the store rollout        | Minutes    | A bad binary not yet widely installed            |
-| OTA republish (previous JS)   | Minutes    | A bad JS release                                 |
-| Rollback the API (blue-green) | Minutes    | A bad backend deploy                             |
-| Disable an endpoint           | Minutes    | An abused or leaking endpoint                    |
-| Ship a hotfix binary          | Hours–days | A native bug already installed                   |
+| Lever                                  | Speed      | For                                              |
+| -------------------------------------- | ---------- | ------------------------------------------------ |
+| **Feature flag off**                   | Seconds    | A misbehaving feature. **Always try this first** |
+| Halt the store rollout                 | Minutes    | A bad binary not yet widely installed            |
+| OTA republish (previous JS)            | Minutes    | A bad JS release                                 |
+| Rollback a schema-compatible API image | Minutes    | A bad backend deploy                             |
+| Disable an endpoint                    | Minutes    | An abused or leaking endpoint                    |
+| Ship a hotfix binary                   | Hours–days | A native bug already installed                   |
 
 **Mitigate before diagnosing.** Turn it off, then find out why. A flag flip costs nothing and buys
 the time to be careful.
@@ -180,19 +187,21 @@ Honestly.
 
 ## Runbooks
 
-In `docs/runbooks/` — written when first needed, not speculatively.
+[Backend testing operations](../runbooks/backend-testing.md) covers the selected EC2 environment. It
+is a planned runbook until its commands and drills are verified. The following feature-specific
+runbooks remain to be written when their implementations exist:
 
-| Runbook               | Covers                                                       |
-| --------------------- | ------------------------------------------------------------ |
-| `sync-degraded`       | Conflict-rate spike, outbox backlog, rejected ops            |
-| `db-failover`         | Managed Postgres failover, connection exhaustion             |
-| `ai-budget-exceeded`  | Global cap hit; verify silent fallback is working            |
-| `content-bad-publish` | Roll back `catalog_version`, purge the CDN                   |
-| `ota-rollback`        | Republish previous, verify the schema floor                  |
-| `store-rollout-halt`  | Halting on both platforms                                    |
-| `audio-egress-alert`  | **The P0 canary** — how to confirm, contain, and assess duty |
-| `token-compromise`    | Revoke families, rotate signing keys                         |
-| `cert-pin-rotation`   | Rotate pins without bricking clients                         |
+| Runbook               | Covers                                                         |
+| --------------------- | -------------------------------------------------------------- |
+| `sync-degraded`       | Conflict-rate spike, outbox backlog, rejected ops              |
+| `db-recovery`         | Retained-volume recovery, S3 restore and connection exhaustion |
+| `ai-budget-exceeded`  | Global cap hit; verify silent fallback is working              |
+| `content-bad-publish` | Roll back `catalog_version`, purge the CDN                     |
+| `ota-rollback`        | Republish previous, verify the schema floor                    |
+| `store-rollout-halt`  | Halting on both platforms                                      |
+| `audio-egress-alert`  | **The P0 canary** — how to confirm, contain, and assess duty   |
+| `token-compromise`    | Revoke families, rotate signing keys                           |
+| `cert-pin-rotation`   | Rotate pins without bricking clients                           |
 
 The last one is worth writing early: a botched certificate-pin rotation bricks every installed app
 and cannot be fixed by OTA, because OTA needs the network the pin just broke.
@@ -201,16 +210,17 @@ and cannot be fixed by OTA, because OTA needs the network the pin just broke.
 
 ## Practice
 
-Twice a year, a scheduled game day. Pick a scenario, run it against staging, time the response,
-update the runbook.
+Testing restore drills run before tester access and monthly under plan 88. Broader production game
+days below follow implementation of the relevant features and plan-73 release policy; they do not
+require a second staging stack now.
 
-| Scenario                      | Tests                                                   |
-| ----------------------------- | ------------------------------------------------------- |
-| Postgres primary fails        | Failover, alerting, comms                               |
-| A bad content publish         | Rollback and CDN purge                                  |
-| Sync returns 500 for 30 min   | Client behaviour: does the outbox survive and converge? |
-| The audio-egress canary fires | The P0 path end to end, including the comms draft       |
-| Certificate pin rotation      | The one that could brick clients                        |
+| Scenario                      | Tests                                                                     |
+| ----------------------------- | ------------------------------------------------------------------------- |
+| PostgreSQL host/volume fails  | Retained-data recovery or verified S3 restore, alerting and communication |
+| A bad content publish         | Rollback and CDN purge                                                    |
+| Sync returns 500 for 30 min   | Client behaviour: does the outbox survive and converge?                   |
+| The audio-egress canary fires | The P0 path end to end, including the comms draft                         |
+| Certificate pin rotation      | The one that could brick clients                                          |
 
 The sync scenario is the most valuable, because it tests a client property we otherwise only assert:
 that an outage delays sync and never loses data.

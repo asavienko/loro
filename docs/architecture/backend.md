@@ -7,11 +7,12 @@ The `api` service and its supporting infrastructure. Rationale:
 verifying purchases. **What it is not for:** running a practice session. A learner can practise for
 weeks with the API unreachable ([overview.md](overview.md#the-ten-rules), rule 2).
 
-> **Status (2026-07-30): architecture target, partially implemented.** The Nest service currently
-> provides health, bundled content, in-memory sync through the shared Rust/WASM merge, and validated
-> bundled AI scenes. It does not connect to Postgres, Redis, MinIO, queues, a warehouse, or external
-> AI/TTS services, and it has no auth, billing, account, analytics, TTS, or worker module. The
-> target map and infrastructure below guide extension; they are not an inventory of running code.
+> **Status (2026-09-07): partially implemented; testing infrastructure selected, not provisioned.**
+> The Nest service currently provides health, bundled content, in-memory sync through the shared
+> Rust/WASM merge, and validated bundled AI scenes. It does not connect to Postgres, Redis, MinIO,
+> queues, a warehouse, or external AI/TTS services, and it has no auth, billing, account, analytics,
+> TTS, or worker module. The target map and infrastructure below guide extension; they are not an
+> inventory of running code.
 
 ---
 
@@ -23,8 +24,9 @@ apps/api/src/
 ├── app.module.ts              # repository/provider/clock choices
 ├── ai/                        # bundled scenes, provider seam, validation, 2 routes
 ├── common/                    # clock, config, problem-details catalog/filter
-├── content/                   # bundled manifest/diff/pack, 3 routes
+├── content/                   # legacy and multilingual manifest/diff/pack, 6 routes
 ├── health/                    # liveness and WASM-aware readiness, 2 routes
+├── integrations/              # tested Anthropic transport, not registered with Nest
 └── sync/                      # push/pull/status, WASM adapter, memory repository, 3 routes
 ```
 
@@ -224,90 +226,77 @@ job that confirms zero rows remain.
 
 ---
 
-## Selected testing infrastructure — not provisioned
+## Testing infrastructure
 
-[Plan 88](../../plans/88-low-cost-backend-infrastructure.md) selects one EC2 instance in Frankfurt
-with PostgreSQL on the instance, private S3, Caddy HTTPS and a $25–35/month infrastructure target.
-It accepts maintenance downtime and one failure domain. Shared tester access requires durable,
-authenticated, tenant-isolated backend slices; provisioning a database does not wire the current
-in-memory API into it. The managed/replicated topology below remains a production target, not a
-prerequisite for this testing profile.
-
-## Target infrastructure — not provisioned or connected
+[Plan 88](../../plans/88-low-cost-backend-infrastructure.md) selects this topology for a small
+tester group. It is not provisioned, and starting PostgreSQL does not connect the current in-memory
+API.
 
 ```mermaid
-graph TB
-  CDN["CDN<br/>audio · packs"]
-  LB["Load balancer / TLS"]
-
-  subgraph svc["api (2–8 replicas)"]
-    A1["api"]; A2["api"]
+flowchart LR
+  Client["Tester devices"] -->|"HTTPS"| Proxy
+  subgraph EC2["One EC2 instance · Frankfurt"]
+    Proxy["Caddy"] --> API["NestJS API"]
+    API --> DB[("PostgreSQL 16")]
   end
-  subgraph wrk["workers (1–3 replicas)"]
-    W1["workers"]
-  end
-
-  PG[("Postgres 16<br/>primary + replica")]
-  RD[("Redis 7<br/>cache · rate limits · queues")]
-  S3[("Object storage<br/>audio · packs · exports")]
-
-  LLM["Claude API"]
-  TTS["Neural TTS"]
-  WH["Warehouse<br/>analytics"]
-
-  LB --> A1 & A2
-  A1 & A2 --> PG
-  A1 & A2 --> RD
-  A1 & A2 --> S3
-  A1 & A2 --> LLM
-  A1 & A2 --> TTS
-  W1 --> PG & RD & S3 & TTS & LLM
-  W1 --> WH
-  S3 --> CDN
+  API -->|"authorized downloads"| Assets[("Private S3 content")]
+  DB -->|"nightly / pre-migration dumps"| Backups[("Private S3 backups")]
+  CI["GitHub Actions · OIDC"] -->|"SSM deployment"| EC2
 ```
 
-| Component | Choice                                         | Sizing at 100k MAU     |
-| --------- | ---------------------------------------------- | ---------------------- |
-| Compute   | Containers, 2 vCPU / 4 GB, HPA on p95 latency  | 2–8 replicas           |
-| Postgres  | Managed 16, primary + read replica, PITR       | 4 vCPU / 16 GB, 200 GB |
-| Redis     | Managed 7, AOF                                 | 2 GB                   |
-| Storage   | S3-compatible                                  | ~50 GB                 |
-| CDN       | Edge-cached, immutable content-addressed paths | ~2 TB/mo egress        |
-| Queues    | BullMQ on Redis                                |                        |
+| Component                | Testing decision                                                                        |
+| ------------------------ | --------------------------------------------------------------------------------------- |
+| Compute                  | One On-Demand x86-64 `t3.small`, standard CPU credits                                   |
+| Runtime                  | Docker Compose and systemd on Ubuntu 24.04 LTS; no builds on EC2                        |
+| Persistent storage       | Encrypted gp3, 16 GiB root and separate retained 20 GiB data volume                     |
+| Network                  | One public subnet and Elastic IP; only Caddy on 80/443 is public                        |
+| Database                 | Local PostgreSQL 16; private container network and distinct application/migration roles |
+| Assets / backups         | Private S3 buckets in Frankfurt; content adapters remain in plans 61/86                 |
+| Secrets / administration | SSM SecureString and Systems Manager; temporary role credentials, no inbound SSH        |
+| Operations               | CloudWatch/SNS, bounded logs, nightly backups and verified restores                     |
+| Budget                   | $25–35/month planning target; verify regional prices and usage before provisioning      |
 
-Traffic profile is unusual and favourable: **sync is bursty and small, content is cacheable and
-identical for everyone, and there is no per-session server work.** The expensive path is `ai/scene`,
-and it's cached.
+There is no Redis, worker tier, managed database, load balancer, NAT Gateway, CDN or extra permanent
+environment in this phase. Future cache/jobs may be introduced only with a feature that consumes
+them and an updated resource budget. AI remains stubbed; TTS is disabled.
 
----
+Provision and test recovery first, then enable shared access after the plan-66/67 persistence,
+validation, auth and tenant-isolation slices pass. Mobile sync needs its own device/convergence
+work. Resource limits and acceptance checks live in plan 88; actual operations and evidence belong
+in the [testing runbook](../runbooks/backend-testing.md).
 
 <a id="deployment"></a>
 
-## Target deployment
+## Deployment
 
-- **IaC** for everything. No console changes; a console change that isn't in code is an incident
-  waiting to recur.
-- **Blue-green** with health-gated cutover, automatic rollback on error-rate or latency regression.
-- **Migrations run as a separate step before cutover** — expand/migrate/contract, so a deploy never
-  requires a client release ([data-model.md](data-model.md#server-rules)).
-- **Config via environment**, secrets from a managed secret store, never in the image.
-- Environments and promotion: [`process/environments.md`](../process/environments.md).
+Use one GitHub `testing` environment, manual deployment after required CI and an immutable ECR image
+digest. Terraform owns infrastructure; release scripts update containers without replacing EC2. The
+deployed image must contain the real WASM merge and pass exact-image tests.
+
+Accept a short maintenance window: pull → stop API traffic/writes → verify backup → run compatible
+migrations separately → start API → readiness and authenticated smoke checks → reopen HTTPS.
+Rollback the image only when it supports the resulting schema. Never automatically restore a
+database or reverse migrations over newer writes.
+
+The existing deploy workflows contain placeholders; their green result is not deployment evidence.
+See [CI/CD](../process/ci-cd.md#backend-deploys), [environments](../process/environments.md) and the
+[deployment runbook](../runbooks/backend-testing.md#deploy-an-api-release).
 
 <a id="slos"></a>
 
-## Target SLOs
+## Testing objectives and production decisions
 
-| SLO                                  | Target                                          | Rationale                                                                        |
-| ------------------------------------ | ----------------------------------------------- | -------------------------------------------------------------------------------- |
-| `POST /sync/push` availability       | 99.9%                                           | A failure is invisible to the learner (retry), so this is about data freshness   |
-| `POST /sync/push` p95                | ≤ 400 ms (≤ 800 ms with a 2 000-phrase library) |                                                                                  |
-| `GET /content/manifest` p95          | ≤ 100 ms                                        | Cached                                                                           |
-| `POST /ai/scene` p95                 | ≤ 3 s (cache hit ≤ 200 ms)                      | Streamed, so perceived latency is lower                                          |
-| Availability, learner-facing overall | 99.9%                                           | **Not 99.99%** — the app works offline, so an outage degrades sync, not learning |
-| Error budget policy                  | Burn > 50% in a week → feature work stops       |                                                                                  |
+The test host has one failure domain, planned downtime and no production availability guarantee.
+Nightly backups target approximately a 24-hour recovery point and a two-hour recovery time, verified
+by restore drills; there is no point-in-time recovery.
 
-The deliberately modest availability target is a design dividend: offline-first means an outage is
-an inconvenience, not an outage of the product.
+Keep the existing sync performance acceptance budget: p95 ≤800 ms for a 2,000-phrase library under
+the plan-88 test load. Measure it; do not claim production latency or availability from a healthy
+process, a placeholder workflow or cached unit tests.
+
+Plan 73 uses testing evidence to choose production capacity, availability/recovery objectives,
+retention and rollout. Managed services, replicas and uninterrupted cutover are future choices, not
+assumed prerequisites or a pre-sized 100k-MAU deployment.
 
 ---
 

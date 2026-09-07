@@ -155,10 +155,10 @@ breach liability. Provider sign-in plus magic links covers every learner and rem
 | Layer                 | Approach                                                                                     |
 | --------------------- | -------------------------------------------------------------------------------------------- |
 | In transit            | TLS 1.3, HSTS, pinned for the API host                                                       |
-| Server at rest        | Managed disk encryption; Postgres column encryption for `email`                              |
+| Server at rest        | Encrypted EBS and S3 in testing; account-field encryption remains plan 67                    |
 | **Device at rest**    | The SQLite file relies on OS-level full-disk encryption. **Not** SQLCipher in v1 — see below |
 | Secrets in the app    | None. There are no API keys in the binary; all provider calls go through our API             |
-| Secrets on the server | Managed secret store, injected as env, rotated quarterly                                     |
+| Secrets on the server | SSM SecureString in testing; restricted runtime files and documented rotation                |
 
 **Why not SQLCipher.** It costs 5–15% on every read, and the hot path (reading phrase state mid-rep)
 is latency-sensitive. OS full-disk encryption already protects against device theft for any device
@@ -193,19 +193,25 @@ the library), calendar, health.
 
 ## Retention
 
-| Data                                     | Client                                      | Server                              |
-| ---------------------------------------- | ------------------------------------------- | ----------------------------------- |
-| Recorded audio                           | Released after scoring, same call stack     | Never stored                        |
-| `user_phrase`, `trip`, `settings`        | Until deleted by the learner                | Until account deletion              |
-| `review_log`                             | Forever (needed for FSRS re-optimisation)   | 3 years                             |
-| `latency_sample`, `attempt`              | Pruned after 90 days; aggregates kept       | 1 year, then aggregated             |
-| `take` (scores, contour)                 | Last 20 per phrase                          | 1 year                              |
-| Open-chat thread text                    | Pending local-retention decision; clearable | Not in app sync storage             |
-| Live chat provider context               | Sent per bounded request only               | Pending provider-retention decision |
-| Analytics events                         | Queue: 7 days / 5 000 events                | 25 months, pseudonymous             |
-| Server logs                              | —                                           | 30 days                             |
-| Audit log (auth, deletion, staff access) | —                                           | 2 years                             |
-| Backups                                  | —                                           | 35 days PITR                        |
+The testing log/backup policy below follows
+[plan 88](../../plans/88-low-cost-backend-infrastructure.md). The remaining learner-data rows
+describe feature policies, not implemented storage. Plan 73 must record production backup/recovery
+retention before real learner data is admitted; no 35-day PITR service is provisioned or required
+for the testing host.
+
+| Data                                     | Client                                      | Server                                                  |
+| ---------------------------------------- | ------------------------------------------- | ------------------------------------------------------- |
+| Recorded audio                           | Released after scoring, same call stack     | Never stored                                            |
+| `user_phrase`, `trip`, `settings`        | Until deleted by the learner                | Until account deletion                                  |
+| `review_log`                             | Forever (needed for FSRS re-optimisation)   | 3 years                                                 |
+| `latency_sample`, `attempt`              | Pruned after 90 days; aggregates kept       | 1 year, then aggregated                                 |
+| `take` (scores, contour)                 | Last 20 per phrase                          | 1 year                                                  |
+| Open-chat thread text                    | Pending local-retention decision; clearable | Not in app sync storage                                 |
+| Live chat provider context               | Sent per bounded request only               | Pending provider-retention decision                     |
+| Analytics events                         | Queue: 7 days / 5 000 events                | 25 months, pseudonymous                                 |
+| Server logs                              | —                                           | Testing: 7 days; production policy set before release   |
+| Audit log (auth, deletion, staff access) | —                                           | 2 years                                                 |
+| Backups                                  | —                                           | Testing: nightly 14 days, pre-migration 7 days; no PITR |
 
 **Deleted accounts** are hard-deleted with cascades within 30 days, including from backups as they
 age out, and a verification job confirms zero remaining rows.
@@ -269,18 +275,18 @@ page.
 
 ## Server hardening
 
-| Measure          |                                                                                        |
-| ---------------- | -------------------------------------------------------------------------------------- |
-| Input validation | Zod schemas shared with the client — the contract cannot drift                         |
-| Rate limits      | Per-user and per-IP, strictest on `/auth/*` and `/ai/*` ([api.md](api.md#rate-limits)) |
-| SQL              | Target: parameterised via Drizzle throughout. No server repository exists yet          |
-| Errors           | RFC 9457 problem details; no stack traces, no internal ids, no SQL text                |
-| Logging          | Structured, with a redaction allowlist. `user_id` only, never email                    |
-| Headers          | HSTS, `X-Content-Type-Options`, restrictive CSP on any HTML surface                    |
-| Dependencies     | Lockfile committed; CI fails on known-critical advisories; automated update PRs        |
-| Container        | Distroless base, non-root, read-only filesystem                                        |
-| Network          | API is the only public surface; DB and Redis are private-subnet only                   |
-| Staff access     | SSO, MFA, audit-logged; production DB access requires an approved break-glass          |
+| Measure          |                                                                                                 |
+| ---------------- | ----------------------------------------------------------------------------------------------- |
+| Input validation | Zod schemas shared with the client — the contract cannot drift                                  |
+| Rate limits      | Per-user and per-IP, strictest on `/auth/*` and `/ai/*` ([api.md](api.md#rate-limits))          |
+| SQL              | Target: parameterised via Drizzle throughout. No server repository exists yet                   |
+| Errors           | RFC 9457 problem details; no stack traces, no internal ids, no SQL text                         |
+| Logging          | Structured, with a redaction allowlist. `user_id` only, never email                             |
+| Headers          | HSTS, `X-Content-Type-Options`, restrictive CSP on any HTML surface                             |
+| Dependencies     | Lockfile committed; CI fails on known-critical advisories; automated update PRs                 |
+| Container        | Distroless base, non-root, read-only filesystem                                                 |
+| Network          | Only Caddy is public in testing; PostgreSQL uses the private container network; Redis is absent |
+| Staff access     | SSO, MFA, audit-logged; production DB access requires an approved break-glass                   |
 
 ---
 

@@ -7,6 +7,11 @@ The system end to end. Read this before any other architecture document.
 > core, content bundle, and an in-memory Nest API. Native modules/projects, on-device SQLite wiring,
 > Postgres/auth/sync client, independent content delivery, and most screens shown below are planned.
 > See [`../../plans/README.md`](../../plans/README.md) for the implementation order.
+>
+> **Testing hosting:** plan 88 selects one Frankfurt EC2 instance with local PostgreSQL and private
+> S3 at a $25–35/month target. It is not provisioned. The feature-level diagrams below do not
+> require separate workers, Redis or a CDN for this phase; see
+> [backend hosting](backend.md#testing-infrastructure).
 
 ---
 
@@ -255,12 +260,12 @@ Versions are the pins chosen at authoring time — **re-verify at kickoff**
 | Runtime        | Node 22 LTS                                         |                                                         |
 | Framework      | NestJS 11                                           | Module boundaries that survive growth; team familiarity |
 | DB             | Postgres 16 + Drizzle                               | Durable tenant-scoped server storage                    |
-| Cache / queues | Redis 7 + BullMQ                                    | AI cache, rate limits, worker jobs                      |
-| Storage / CDN  | S3-compatible + CDN                                 | Content-addressed audio                                 |
+| Cache / queues | Redis 7 + BullMQ, deferred                          | Add only with an implemented consumer and budget        |
+| Storage / CDN  | Private S3; CDN deferred                            | Authorized content downloads through plans 61/86        |
 | AI             | Anthropic Claude                                    | Roleplay, coach notes, content enrichment               |
 | TTS            | Managed neural TTS                                  | Catalog/reference audio at build time                   |
 | Auth           | Apple / Google / email magic link; own JWT issuance | Anonymous-first upgrade path                            |
-| Deploy         | Containers, IaC, blue-green                         | [backend.md](backend.md#deployment)                     |
+| Deploy         | One EC2, Compose, Terraform; maintenance deploys    | [backend.md](backend.md#deployment)                     |
 
 ### Shared
 

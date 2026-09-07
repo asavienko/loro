@@ -27,7 +27,7 @@ pnpm --filter @loro/api start     →  13 endpoints on :3000/v1
 
 | Area                   | Tests | State                                                                                                                                                                                           |
 | ---------------------- | ----: | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Documentation          |     — | 67 substantive documents — 53 product, architecture, design, process, and decision docs, plus 14 ADRs                                                                                           |
+| Documentation          |     — | Product, architecture, design, process and decision guides, testing runbooks, and 14 ADRs                                                                                                       |
 | Toolchain              |     — | Installs, builds, lints, typechecks, and tests from a clean clone                                                                                                                               |
 | **`loro-core`** (Rust) |   131 | Ranking, ASR matching, calendar, ladder, notification policy, HLC, and sync merge implemented. FSRS, Refrain selection, and DSP remain incomplete ([status](packages/core-rs/README.md#status)) |
 | **JS/TS workspaces**   |   570 | Core engines/persistence, content validation, API seams, mobile state/UI, and design tokens                                                                                                     |
@@ -49,6 +49,12 @@ planned interfaces and gated drafts; no mobile networking or server validation w
 **Not built yet:** the on-device SQLite driver/integration (the reusable persistence layer exists),
 durable API storage, auth, the live AI provider, native audio/ASR/widgets, and 16 learner screens.
 See the refreshed [`plans/README.md`](plans/README.md).
+
+**Selected backend testing setup, not provisioned:** one Frankfurt EC2 instance with local
+PostgreSQL and private S3, targeting $25–35/month. Shared tester access waits for durable data,
+authentication and tenant isolation. Start with [environments](docs/process/environments.md),
+[plan 88](plans/88-low-cost-backend-infrastructure.md) and the
+[testing operations runbook](docs/runbooks/backend-testing.md).
 
 Start at [`docs/process/onboarding.md`](docs/process/onboarding.md).
 

@@ -12,7 +12,8 @@ Most apps only instrument #1. Loro's differentiators live in #2 and #3.
 
 ## Implementation boundary (current repository)
 
-This is the production observability design, not a description of a deployed stack.
+The testing baseline below is selected but not deployed. Later client/domain instrumentation is
+feature design, not an inventory of running collectors or dashboards.
 
 - The mobile app has no Sentry (or equivalent) SDK, analytics client, allowlist, event queue,
   diagnostics ring buffer, performance collector, or Rust-panic reporting bridge. The empty
@@ -28,6 +29,21 @@ This is the production observability design, not a description of a deployed sta
 Examples, sampling rates, dashboards, SLOs, and alerts below are target contracts. They must not be
 used as operational evidence until the producing path, privacy filter, backend sink, and alert test
 all exist.
+
+## Testing operations baseline
+
+Plan 88 uses CloudWatch and SNS email for the single EC2 host. Implement bounded, allowlisted server
+logs with seven-day retention; host memory/disk collection; instance/API health; CPU-credit
+monitoring; backup-success age; and $25/$35 cost notifications. Missing heartbeat data is a failure.
+Thresholds and responses live in the
+[testing runbook](../runbooks/backend-testing.md#monitor-and-respond).
+
+Do not add a tracing collector, warehouse, per-user metric dimensions, session replay or mobile
+analytics just to host this environment. A host health check needs no learner text. Verify the
+metric producer, retention and actual alert delivery before calling monitoring implemented.
+
+The remaining client, sync and learning sections apply when those feature paths exist. Their example
+sampling rates and product dashboards are not testing infrastructure requirements.
 
 ### Prerequisites for instrumentation
 
@@ -180,45 +196,23 @@ Structured JSON to stdout, collected by the platform.
 Redaction is **allowlist-based**: a field not on the allowlist for its log event is dropped. Never
 logged: email, phrase text, notes, captured text, tokens, receipts.
 
-### Tracing
+### Tracing and domain metrics — deferred
 
-OpenTelemetry, with spans across the boundaries that actually cost time:
-
-```
-POST /v1/sync/push
-├── auth.verify
-├── db.transaction
-│   ├── db.findRow            × N
-│   ├── core.mergeRow (wasm)  × N
-│   └── db.upsert             × N
-└── hlc.tick
-```
-
-```
-POST /v1/ai/scene
-├── ratelimit.check
-├── budget.check
-├── cache.lookup              ← the span we care about most
-├── anthropic.messages.create
-├── scene.validate
-└── db.persist
-```
-
-100% sampling on errors and on `/ai/*` (low volume, high cost); 10% elsewhere.
-
-### Metrics
-
-RED per endpoint (rate, errors, duration) plus the domain metrics above. Alerting is on **SLO burn
-rate**, not raw thresholds, so a brief blip doesn't page anyone and a slow bleed does
-([backend.md](backend.md#slos)).
+Testing uses bounded logs and the small operational metric set above. Add request tracing or domain
+metrics through plans 71/73/86 only when the real auth, database, sync or provider path exists and
+its producer, privacy allowlist, sampling cost and consumer are verified. There is no required
+OpenTelemetry collector or SLO burn-rate pipeline on the test host.
 
 ### Health
 
-`GET /health` (liveness) · `GET /health/ready` (dependency checks, gates blue-green cutover).
+`GET /v1/health` is liveness. `GET /v1/health/ready` currently checks the real WASM merge; plan 66
+adds database/schema checks before shared deployment. Use readiness and authenticated smoke checks
+to reopen traffic after testing maintenance. Optional S3/provider failures must not disable
+otherwise usable sync.
 
 ---
 
-## Dashboards
+## Future product dashboards
 
 | Dashboard                   | Audience              | Contents                                                                              |
 | --------------------------- | --------------------- | ------------------------------------------------------------------------------------- |
@@ -236,7 +230,7 @@ learners who add it is a bad phrase, and that's directly actionable
 
 ---
 
-## Alerting
+## Future product alerting
 
 | Alert                                                           | Severity | Route                    |
 | --------------------------------------------------------------- | -------- | ------------------------ |

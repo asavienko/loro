@@ -249,6 +249,16 @@ npx expo start --web                # from apps/mobile — fastest way to see th
 | `packages/design-tokens/` | Tokens extracted from the blueprint + generators                          |
 | `packages/content/`       | The Spanish catalog, schema-validated                                     |
 
+## Backend testing infrastructure
+
+[Plan 88](plans/88-low-cost-backend-infrastructure.md) selects one Frankfurt EC2 instance with local
+PostgreSQL and private S3 at a $25–35/month target. It is not provisioned. Shared access requires
+66/67's persistence, auth and isolation; mobile sync has additional 59/68 gates. Do not add managed
+dev/staging stacks, Redis, CDN or live providers to this phase. Start with
+[environments](docs/process/environments.md) and the
+[testing runbook](docs/runbooks/backend-testing.md). Plan 73 owns production decisions; plan 86 owns
+provider adapters.
+
 ## Things worth knowing before making changes
 
 - **`packages/core-rs` owns every number that must be identical across platforms** — FSRS intervals,

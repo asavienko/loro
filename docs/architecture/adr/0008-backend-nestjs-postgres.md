@@ -116,3 +116,15 @@ S3-compatible storage behind a CDN.** Workers run from the same image with a dif
   sync platform might genuinely fit ([ADR-0003](0003-offline-first-sqlite-sync.md#revisit-if)).
 - The operational burden of owning auth and hosting starts to cost more engineering time than the
   correctness benefit is worth — the honest trigger would be on-call load, measured.
+
+## Amendment — 2026-09-07 — single-instance testing infrastructure
+
+The user selected [plan 88](../../../plans/88-low-cost-backend-infrastructure.md): one On-Demand EC2
+instance in Frankfurt with the API and PostgreSQL, private S3, Caddy HTTPS and a $25–35/month
+target. This supersedes the original assumption that managed PostgreSQL/Redis, workers and a CDN are
+required for testing. None is provisioned by this documentation decision.
+
+The NestJS/PostgreSQL/shared-WASM decision stands. Testing accepts maintenance downtime and one
+failure domain, with nightly and pre-migration backups and verified restores. A 99.9% availability
+statement above is a historical production objective, not a promise for this host. Plan 73 owns
+production objectives and topology after testing evidence; plan 88 owns this testing deployment.
