@@ -13,9 +13,11 @@
 GitHub Actions is disabled. `pnpm ci:local:native` retains local Rust target compilation and
 `pnpm apk:local` / `pnpm apk:github` provide local Gradle APK builds and verified GitHub release
 uploads. See [the APK guide](../docs/process/local-apk.md). Generated Android projects live only in
-temporary committed snapshots; they are not maintained or committed in `apps/mobile/android`.
-Preview signing uses the Expo development key and is not production signing. Custom native modules
-and device-level bridge tests remain absent. Building an APK does not establish those capabilities.
+temporary committed snapshots; they are not maintained or committed in `apps/mobile/android`. The
+first arm64-v8a/x86_64 APK build and GitHub asset checksum were verified on 2026-09-07
+(`6891fe5316a4`). Preview signing uses the Expo development key and is not production signing.
+Custom native modules and device-level bridge tests remain absent. Building an APK does not
+establish those capabilities.
 
 ## Outcome
 

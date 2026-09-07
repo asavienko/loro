@@ -75,3 +75,16 @@ result: audio/ASR, native persistence and Rust module bridges remain unimplement
 The implementation follows
 [Expo's local build flow](https://docs.expo.dev/guides/local-app-production/) and
 [GitHub CLI release commands](https://cli.github.com/manual/gh_release_create).
+
+## Verified build
+
+On 2026-09-07, commit `6891fe5316a4` produced a 45,511,837-byte APK for both configured ABIs.
+Signature, non-debuggable preview manifest, bundled JavaScript and downloaded GitHub asset checksum
+passed. The artifact is in
+[the draft GitHub release](https://github.com/asavienko/loro/releases/tag/untagged-61fbf2e2b1e7dc39497a).
+The native build required explicitly pinning Expo's Worklets 0.5.1 and generating the preview splash
+drawable. No emulator/device launch or sign-in backend was tested.
+
+Workspace checks and 128 learner browser tests passed after the dependency fix. Dependency audit
+reported 16 high and 8 moderate advisories before and after that fix, with no new advisory IDs;
+those existing advisories are not resolved by this workflow.

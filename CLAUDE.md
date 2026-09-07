@@ -228,10 +228,9 @@ npx expo start --web                # from apps/mobile — fastest way to see th
 - **The API needs no Docker.** Persistence isn't wired — the sync store is an in-memory `Map` and AI
   is stubbed (`AI_PROVIDER=stub`), so skip `dev:up` unless you're building the repository layer.
   `/v1/health/ready` returns 503 if the WASM merge is missing, which is the check worth watching.
-- **`expo run:ios` / `run:android` need a toolchain that isn't set up here** — full Xcode or the
-  Android SDK, plus a first `expo prebuild` (there is no `apps/mobile/ios` or `android/`). Until
-  then: web, or Expo Go on a device, which still works only because no custom native module is
-  installed yet.
+- **Local Android preview builds are verified:** `pnpm apk:local` uses Java/Android SDK and a
+  temporary Expo prebuild. There is no committed `apps/mobile/android` or `ios` project. iOS still
+  needs full Xcode. The APK build is not evidence of native audio/SQLite bridges or device tests.
 - **Native builds are a separate local gate:** `pnpm ci:local:native` requires macOS/Xcode,
   installed Rust targets, cargo-ndk and an Android NDK. It builds libraries only. EAS and
   device-farm scaffolds are inactive; no command in local CI queues a cloud build.
