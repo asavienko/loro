@@ -54,7 +54,7 @@ export function buildOpenApi(kind: 'current' | 'target') {
         description:
           response.description ??
           (Number(status) < 400 ? op.summary : 'RFC 9457 problem; code selects recovery.'),
-        ...(Number(status) === 204 || Number(status) === 304
+        ...(Number(status) === 204 || Number(status) === 304 || Number(status) === 303
           ? {}
           : {
               content: {

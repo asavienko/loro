@@ -6,8 +6,8 @@ completed plans moved to [the dated archive](archive/2026-09-07/README.md), and 
 [review](archive/2026-09-07/REVIEW.md) records evidence, scope transfers and verification.
 
 Plans 01–52 remain historical in [the previous archive](archive/2026-07-30/REVIEW.md); 49 is an
-existing gap, not a free number. No plan was renumbered. The highest assigned ID is **88** and the
-next new plan is **89**. Original paths of newly archived plans remain compatibility symlinks.
+existing gap, not a free number. No plan was renumbered. The highest assigned ID is **89** and the
+next new plan is **90**. Original paths of newly archived plans remain compatibility symlinks.
 
 ## Current scope
 
@@ -109,6 +109,9 @@ Render testing recommendation in 86 is superseded by 88.
 | [79](archive/2026-09-07/79-v1-1-design-contract.md)               | v1.1 design and requirement contract                           |
 | [84](archive/2026-09-07/84-visual-ui-ux-audit.md)                 | Web visual/navigation/enlarged-layout audit                    |
 | [85](archive/2026-09-07/85-backend-integration-contracts.md)      | Backend integration inventory and shared API/OpenAPI contracts |
+
+| [89](89-google-apple-sign-in.md) | Google/Apple identity and optional Account utility; provider
+setup and native verification remain deployment prerequisites |
 
 ## Working rules
 

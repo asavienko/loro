@@ -1,8 +1,11 @@
 # @loro/api
 
 The implemented Loro backend skeleton: NestJS over an in-memory sync repository, the bundled
-catalog, the shared Rust/WASM merge, and bundled AI scenes. Postgres, Redis, auth, TTS, billing,
-accounts, analytics, queues, and live providers are target architecture, not running modules.
+catalog, shared Rust/WASM merge and bundled AI scenes. Optional Google/Apple OAuth now uses
+PostgreSQL for accounts and rotating sessions;
+[setup and boundaries](../../docs/architecture/google-apple-auth.md). Auth-enabled deployments
+disable legacy sync/AI until account isolation lands. Redis, TTS, billing, analytics, queues and
+live AI providers remain target architecture.
 
 Architecture: [backend.md](../../docs/architecture/backend.md) · Contract:
 [api.md](../../docs/architecture/api.md) · Rationale:
@@ -44,7 +47,7 @@ and the bundled fallback path stays exercised. There is no TTS implementation ye
 
 ### Testing hosting
 
-[Plan 88](../../plans/88-low-cost-backend-infrastructure.md) selects one Frankfurt EC2 instance,
+[Plan 89](../../plans/88-low-cost-backend-infrastructure.md) selects one Frankfurt EC2 instance,
 local PostgreSQL, private S3 and a $25–35/month target. Nothing is provisioned yet. The database,
 auth and isolation slices must pass before shared access; a running container does not establish
 them. See [environments](../../docs/process/environments.md) and the
@@ -68,7 +71,8 @@ disabled or deferred.
 
 `src/sync/sync.e2e.test.ts` drives representative health, content, sync, error, and AI behavior over
 HTTP against a real Nest app. Controller/service unit suites cover additional cases. There is no
-auth, tenant isolation, persistence, rate limiting, streaming, or external-service E2E coverage yet.
+tenant-scoped learning persistence, streaming or live external-service E2E coverage yet. The
+optional auth module has its own provider verification, HTTP and PostgreSQL transaction tests.
 
 ### Build
 
@@ -105,9 +109,10 @@ src/
 └── sync/       push/pull/status · WASM adapter · in-memory repository
 ```
 
-The intended auth, TTS, billing, account, analytics, persistence, cache, queue, and worker modules
-are specified in [backend.md](../../docs/architecture/backend.md). Add them as separate modules at
-their boundary; do not make existing controllers pretend those dependencies already exist.
+The remaining TTS, billing, account lifecycle, analytics, learning persistence, cache, queue, and
+worker modules are specified in [backend.md](../../docs/architecture/backend.md). Add them as
+separate modules at their boundary; do not make existing controllers pretend those dependencies
+already exist.
 
 **Two things are chosen in `src/app.module.ts` and nowhere else**, so swapping either is a new file
 plus one line there rather than an edit to the logic that uses it:

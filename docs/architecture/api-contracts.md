@@ -1,18 +1,21 @@
 # Executable API contracts
 
-**F-04 / plan 85.** Runtime schemas and generated specifications now exist. They do **not** install
-Nest validation, implement missing services, or connect the mobile app. The
-[integration inventory](backend-integration-inventory.md) accounts for all 23 authored screens and
-supporting functionality.
+**F-04 / plan 85.** Runtime schemas and generated specifications now exist. Most remain planned. The
+[plan 89 OAuth slice](google-apple-auth.md) now validates requests in Nest and responses in the
+mobile account client. The [integration inventory](backend-integration-inventory.md) accounts for
+all 23 authored screens and supporting functionality.
 
 ## Sources and entry points
 
-| Surface      | Import                   | Specification                                  | Meaning                                                             |
-| ------------ | ------------------------ | ---------------------------------------------- | ------------------------------------------------------------------- |
-| Current      | `@loro/core/api/current` | [openapi.current.json](openapi.current.json)   | Ten observed development routes; unauthenticated/unscoped/in-memory |
-| Target       | `@loro/core/api/target`  | [openapi.target.json](openapi.target.json)     | Planned contracts for settled capabilities; not deployed            |
-| Draft        | `@loro/core/api/draft`   | Target document, marked `x-loro-status: draft` | Product/transport review still required; no release authorization   |
-| Catalog wire | `@loro/core/api/catalog` | Referenced content schemas                     | Unbranded snake-case catalog transport, separate from domain views  |
+| Surface      | Import                   | Specification                                  | Meaning                                                                    |
+| ------------ | ------------------------ | ---------------------------------------------- | -------------------------------------------------------------------------- |
+| Current      | `@loro/core/api/current` | [openapi.current.json](openapi.current.json)   | Ten original development operations plus eight configured OAuth operations |
+| Target       | `@loro/core/api/target`  | [openapi.target.json](openapi.target.json)     | Planned contracts for settled capabilities; not deployed                   |
+| Draft        | `@loro/core/api/draft`   | Target document, marked `x-loro-status: draft` | Product/transport review still required; no release authorization          |
+| Catalog wire | `@loro/core/api/catalog` | Referenced content schemas                     | Unbranded snake-case catalog transport, separate from domain views         |
+
+`@loro/core/api/oauth` exports the implemented identity-only transport; planned anonymous-claim
+contracts remain separate.
 
 Every named request/response schema has a corresponding inferred TypeScript type. Types are inferred
 from Zod, not maintained as independent DTO interfaces. `Operation` metadata owns methods, paths,

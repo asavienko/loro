@@ -47,8 +47,8 @@ See [the API guide](../../apps/api/README.md) for current routes and tests, and
 
 There are no `db:migrate` or `db:seed` package scripts yet; starting containers does not make sync
 durable. The bundled catalogs contain 31 phrases per target language. They are loaded from the
-package, not seeded by a server database job. Bilingual review and audio capabilities have their
-own gates. Setting a public API URL does not create the missing mobile HTTP/sync client. AI returns
+package, not seeded by a server database job. Bilingual review and audio capabilities have their own
+gates. Setting a public API URL does not create the missing mobile HTTP/sync client. AI returns
 bundled fixtures; live provider and TTS runtime integrations remain unfinished.
 
 ## Testing

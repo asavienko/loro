@@ -424,9 +424,9 @@ describe('AI and privacy contracts', () => {
 
 describe('registry and generated OpenAPI', () => {
   it('publishes only implemented routes in current and excludes drafts from stable exports', () => {
-    expect(currentOperations).toHaveLength(10)
+    expect(currentOperations).toHaveLength(18)
     expect(Object.keys(buildOpenApi('current').paths).sort()).toEqual(
-      currentOperations.map((o) => o.path).sort(),
+      [...new Set(currentOperations.map((o) => o.path))].sort(),
     )
     expect('ChatTurnRequestSchema' in target).toBe(false)
     expect('TripSyncOpSchema' in target).toBe(false)

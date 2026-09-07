@@ -1,3 +1,4 @@
+import { oauthOperations } from './oauth-operations.js'
 import { withExamples, currentExamples } from './examples.js'
 /** Observed development surface. Not a production safety or input-validation guarantee. */
 import { z } from 'zod'
@@ -149,7 +150,7 @@ const errors = {
 } as const
 const base = { status: 'implemented', auth: 'none', requirements: ['F-04'], owner: 66 } as const
 const lang = z.literal('es-ES').optional()
-export const currentOperations = withExamples(
+const legacyOperations = withExamples(
   [
     {
       ...base,
@@ -259,6 +260,11 @@ export const currentOperations = withExamples(
   ] as const satisfies readonly Operation[],
   currentExamples,
 )
+
+export const currentOperations: readonly Operation[] = [
+  ...legacyOperations,
+  ...oauthOperations(ProblemSchema),
+]
 
 export type { Operation, ResponseContract } from './operation.js'
 

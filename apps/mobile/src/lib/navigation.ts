@@ -3,6 +3,14 @@ import { copy } from './copy'
 /** The currently built hubs. Rails and the shared switcher consume this same declaration. */
 export const DESTINATIONS = [
   {
+    href: '/account',
+    get label() {
+      return copy.account.title
+    },
+    rail: false,
+    counted: false,
+  },
+  {
     href: '/',
     get label() {
       return copy.today.title

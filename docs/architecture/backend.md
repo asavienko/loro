@@ -9,10 +9,11 @@ weeks with the API unreachable ([overview.md](overview.md#the-ten-rules), rule 2
 
 > **Status (2026-09-07): partially implemented; testing infrastructure selected, not provisioned.**
 > The Nest service currently provides health, bundled content, in-memory sync through the shared
-> Rust/WASM merge, and validated bundled AI scenes. It does not connect to Postgres, Redis, MinIO,
-> queues, a warehouse, or external AI/TTS services, and it has no auth, billing, account, analytics,
-> TTS, or worker module. The target map and infrastructure below guide extension; they are not an
-> inventory of running code.
+> Rust/WASM merge, and validated bundled AI scenes. Learning data does not connect to Postgres,
+> Redis, MinIO, queues, a warehouse, or external AI/TTS services, and billing, analytics, TTS and
+> workers remain unimplemented. Optional Google/Apple auth and PostgreSQL accounts now exist
+> ([plan 89](google-apple-auth.md)). The target map and infrastructure below guide extension; they
+> are not an inventory of running code.
 
 ---
 
@@ -121,7 +122,7 @@ and alternate entrypoint do not exist yet.
 Unless a subsection says **current**, it specifies the target responsibility for a module that has
 not landed.
 
-### `auth` — target
+### `auth` — identity slice implemented; remaining lifecycle is target
 
 | Endpoint                                            | Purpose                                                                  |
 | --------------------------------------------------- | ------------------------------------------------------------------------ |

@@ -131,3 +131,6 @@ specifications.
   must therefore honour (e.g. "your audio stays on your device").
 - Version pins in these docs were chosen at authoring time. Re-verify at kickoff; see
   [`process/onboarding.md`](process/onboarding.md).
+
+Account implementation and provider setup:
+[Google and Apple accounts](architecture/google-apple-auth.md).

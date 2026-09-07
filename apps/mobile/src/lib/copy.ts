@@ -1,6 +1,47 @@
 /** F-08. Reactive readers translate at access time; domain and UI layers share this adapter. */
 import { message, formatBuckets, currentNativeLanguage } from './i18n'
 export const copy = {
+  account: {
+    get retry() {
+      return message('account.retry')
+    },
+    get title() {
+      return message('account.title')
+    },
+    get intro() {
+      return message('account.intro')
+    },
+    get localData() {
+      return message('account.localData')
+    },
+    get google() {
+      return message('account.google')
+    },
+    get apple() {
+      return message('account.apple')
+    },
+    get signedIn() {
+      return message('account.signedIn')
+    },
+    get signOut() {
+      return message('account.signOut')
+    },
+    get unavailable() {
+      return message('account.unavailable')
+    },
+    get busy() {
+      return message('account.busy')
+    },
+    get error() {
+      return message('account.error')
+    },
+    get cancelled() {
+      return message('account.cancelled')
+    },
+    get localSignOut() {
+      return message('account.localSignOut')
+    },
+  },
   languages: {
     get title() {
       return message('languages.title')

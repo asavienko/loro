@@ -7,15 +7,15 @@ Guidance for Claude Code working in this repository.
 **Loro** — a mobile app (iOS + Android) that teaches Spanish, Bulgarian, and Russian by the phrase.
 
 Early implementation. **What exists:** the docs, 7 of the v1.1 design package's 23 learner screens
-plus the Languages utility and app shell in `apps/mobile/app/`, an API with 13 endpoints over an
-in-memory store, the Rust core, the design tokens, 31-phrase Spanish/Bulgarian/Russian starter
-catalogs (new translations await bilingual review), and the local persistence layer (schema,
-migrations, repositories, outbox — driver-agnostic and tested against real SQLite), plus a dev-only
-generated token/component workbench. 570 JS/TS tests, 131 Rust tests, and 122 distinct browser E2E
-tests cover the implemented behavior. **What doesn't:** the native modules (audio, speech, ASR,
-widgets), the on-device SQLite driver, and the other 16 learner screens — so nothing runnable today
-exercises audio or the microphone, which is half of what this app is, and the app store is still in
-memory.
+plus the Languages and Account utilities and app shell in `apps/mobile/app/`, an API with 21
+endpoints (in-memory learning sync and PostgreSQL accounts), the Rust core, the design tokens,
+31-phrase Spanish/Bulgarian/Russian starter catalogs (new translations await bilingual review), and
+the local persistence layer (schema, migrations, repositories, outbox — driver-agnostic and tested
+against real SQLite), plus a dev-only generated token/component workbench. 602 JS/TS tests, 131 Rust
+tests, and 132 distinct browser E2E tests cover the implemented behavior. **What doesn't:** the
+native modules (audio, speech, ASR, widgets), the on-device SQLite driver, and the other 16 learner
+screens — so nothing runnable today exercises audio or the microphone, which is half of what this
+app is, and the app store is still in memory.
 
 **The shared spine/switcher now wraps Today, Add, Progress, Stream, Refrain, and phrase detail.**
 `src/lib/navigation.ts` declares the built hubs used by the switcher and Today's rail. Today owns
@@ -108,7 +108,7 @@ prototype-only and **must not** be carried into the app — see the divergence t
   leaves 30 active plans within 56–88; completed 54/55/79/84/85 are under
   `plans/archive/2026-09-07/` with compatibility symlinks. Plans 01–52 remain under
   `plans/archive/2026-07-30/`; completed 53 remains at its protected original path. The next new
-  plan number is 89. A new plan takes the next free number and gets a row in
+  plan number is 90. A new plan takes the next free number and gets a row in
   [`plans/README.md`](plans/README.md). **Numbers are never reused** — a gap is left rather than
   backfilled, so a link written against a number can't come to mean a different plan. Not in
   `docs/`: that holds the durable spec. Not in a temp directory either — a plan you can't find again
@@ -191,7 +191,7 @@ be off PATH.
 
 ```bash
 pnpm check                          # the gate: 23 turbo tasks, all green today
-pnpm test:e2e                       # 118 learner tests: routes/states, clock, a11y, text scale
+pnpm test:e2e                       # 128 learner tests: routes/states, clock, a11y, text scale
 pnpm test:e2e:workbench             # 3 tests: dev-only tokens/component inspection surface
 pnpm test:e2e:bundle                # the @smoke subset against the production web export
 pnpm --filter @loro/api dev         # :3000 — no Docker, no keys, no database
@@ -309,3 +309,11 @@ persistence. New linguistic content is pending bilingual review; audio/ASR/DSP c
 disabled. Plan 87 now tracks review and multilingual acceptance only; plan 59 owns device wiring and
 correction of the remaining `INSERT OR REPLACE` in `sqlite/course.ts`. Plan 60 owns the
 ASCII-oriented matcher/fabricated FSRS-cloze fallback and missing nightly `tests/sim` target.
+
+## Google/Apple accounts (plan 89)
+
+Optional `/account` identity is implemented with server-side provider verification, PostgreSQL
+accounts/refresh families and native SecureStore. Browser credentials remain in memory. Auth-enabled
+deployments fail closed on legacy sync/AI until tenant isolation lands. Learning data is untouched;
+anonymous claim/merge, deletion/export and live provider/device verification remain separate work.
+See [provider setup](docs/architecture/google-apple-auth.md).

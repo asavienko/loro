@@ -220,3 +220,17 @@ Applied to any PR touching auth, sync, the AI endpoints, or the audio module:
 - [ ] Does a new deep-link handler mutate state?
 - [ ] Is the new data flow reflected in the Apple Privacy Manifest and Play Data Safety form?
 - [ ] Does a new sub-processor need adding to the privacy policy?
+
+## Implemented Google/Apple identity boundary (plan 89)
+
+[Account implementation](google-apple-auth.md) now rejects substituted issuers/audiences/nonces,
+replayed state/tickets/refresh credentials and arbitrary callback redirects. Provider identity is
+never inferred from email. PostgreSQL session locks serialize refresh rotation across processes;
+replay revocation also invalidates access credentials. Native refresh uses SecureStore and web
+credentials remain in memory. Auth-enabled deployments disable legacy shared sync/AI repositories.
+No learning text, audio or progress enters this identity flow. Persisted P1 data is the provider
+subject, account ID and session relationships; email/name are not persisted. Raw IP is hashed for
+the 15-minute auth rate bucket, not logged as account metadata. Provider callback codes/state and
+all credentials require proxy/APM redaction; application-level unexpected auth errors are redacted.
+Account deletion/export, release store disclosures, production transport and native device evidence
+remain release gates, not properties proved by the browser suite.

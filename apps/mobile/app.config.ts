@@ -88,9 +88,14 @@ export default (): ExpoConfig => ({
   },
 
   // Only plugins for INSTALLED packages. The native modules (loro-audio,
-  // loro-speech, loro-core) and notifications / secure-store / localization arrive
-  // with their packages — see README.md.
-  plugins: ['expo-router', ['expo-localization', { supportedLocales: ['en', 'bg', 'ru'] }]],
+  // loro-speech, loro-core) and notifications remain future work. Account browser and
+  // secure storage plugins are installed below — see README.md.
+  plugins: [
+    'expo-router',
+    'expo-web-browser',
+    'expo-secure-store',
+    ['expo-localization', { supportedLocales: ['en', 'bg', 'ru'] }],
+  ],
 
   experiments: {
     typedRoutes: true,
