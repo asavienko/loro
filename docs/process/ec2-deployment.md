@@ -1,9 +1,9 @@
 # EC2 development backend
 
-The existing Nest API can run on one Amazon Linux 2023 x86 EC2 instance using
-`infra/ec2/template.yaml`. This is a restricted development deployment: sync has no auth or tenant
-isolation and all data disappears when its process restarts. Durable production service remains with
-plans 66–68 and 73. Deployment and rollback both lose in-memory writes. Do not use learner data.
+The Nest API can run on one Amazon Linux 2023 x86 EC2 instance using `infra/ec2/template.yaml`. This
+is a restricted development deployment: legacy sync has no auth or tenant isolation and all data
+disappears when its process restarts. Durable production service remains with plans 66–68 and 73.
+Deployment and rollback both lose in-memory writes. Do not use learner data.
 
 The template creates a t3.small with an encrypted 30 GiB gp3 disk, IMDSv2 required, Docker enabled
 at boot, and SSH ingress from one IPv4 address. It opens no HTTP port. The API binds only to host
@@ -67,6 +67,10 @@ region. This destroys the instance and its disk. No database or backup is provis
 
 The template follows AWS's
 [instance metadata options](https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-properties-ec2-instance-metadataoptions.html).
+
+The verified deployed image below predates main's optional Google/Apple account support. The
+deployment script leaves that integration disabled; provider credentials and PostgreSQL are not
+provisioned here. Merging repository changes does not replace the running EC2 image.
 
 ## Verified development instance — 2026-09-07
 

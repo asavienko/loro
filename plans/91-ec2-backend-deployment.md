@@ -15,7 +15,7 @@ build, strict SSH transport, loopback binding, readiness gates, serialized cutov
 
 Shell syntax, ShellCheck, cfn-lint and `pnpm check` passed. `pnpm test:deploy` covers successful
 replacement, candidate rejection without stopping the service, and rollback after cutover failure;
-it runs in the repository gate and CI. Image build and live deployment/rollback evidence are
+it runs in the repository gate and local CI. Image build and live deployment/rollback evidence are
 separate. AWS template validation was attempted but rejected with `InvalidClientTokenId`; no
 resources were created.
 

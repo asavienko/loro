@@ -339,9 +339,10 @@ deployments fail closed on legacy sync/AI until tenant isolation lands. Learning
 anonymous claim/merge, deletion/export and live provider/device verification remain separate work.
 See [provider setup](docs/architecture/google-apple-auth.md).
 
-## EC2 development deployment (plan 88)
+## EC2 development deployment (plan 91)
 
 `infra/ec2/template.yaml` and `scripts/provision-ec2.sh` provision a restricted development host;
 `scripts/deploy-ec2.sh` builds/transfers the API image and health-gates replacement with rollback.
-API access uses an SSH tunnel, pending auth and persistence. Deployed in eu-central-1; readiness, SSH tunnel access and manual rollback verified on 2026-09-07.
-See [`ec2-deployment.md`](docs/process/ec2-deployment.md).
+API access uses an SSH tunnel, pending auth and persistence. Deployed in eu-central-1; readiness,
+SSH tunnel access and manual rollback verified on 2026-09-07. See
+[`ec2-deployment.md`](docs/process/ec2-deployment.md).
