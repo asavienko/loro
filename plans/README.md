@@ -133,3 +133,5 @@ setup and native verification remain deployment prerequisites |
   Q-19 local retention and Q-20 provider retention. No decision is silently resolved by this reset.
 - Keep each plan/status row current and commit coherent requirement-tagged chunks with `pnpm check`
   green. Archive completed scope; never delete historical records or reuse numbers.
+
+| [88](88-ec2-backend-deployment.md) | Restricted EC2 API and deployment scripts | M0 | 🟡 Implemented; live rehearsal awaits AWS region/network/key inputs | Existing image; 66–68 for public service |

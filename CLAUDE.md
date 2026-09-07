@@ -338,3 +338,10 @@ accounts/refresh families and native SecureStore. Browser credentials remain in 
 deployments fail closed on legacy sync/AI until tenant isolation lands. Learning data is untouched;
 anonymous claim/merge, deletion/export and live provider/device verification remain separate work.
 See [provider setup](docs/architecture/google-apple-auth.md).
+
+## EC2 development deployment (plan 88)
+
+`infra/ec2/template.yaml` and `scripts/provision-ec2.sh` provision a restricted development host;
+`scripts/deploy-ec2.sh` builds/transfers the API image and health-gates replacement with rollback.
+API access uses an SSH tunnel, pending auth and persistence. Live cloud validation remains pending.
+See [`ec2-deployment.md`](docs/process/ec2-deployment.md).

@@ -116,6 +116,7 @@ jobs:
         with: { name: core-rs-artifacts, path: packages/core-rs }
       - run: pnpm tokens:build
       - run: pnpm test
+      - run: pnpm test:deploy
       - uses: actions/upload-artifact@v7
         if: always()
         with:
