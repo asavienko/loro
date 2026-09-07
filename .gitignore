@@ -42,7 +42,9 @@ apps/mobile/android/.cxx/
 # ── secrets and local config ──
 .env
 .env.*
+*.env
 !.env.example
+!secrets/*.enc.env
 *.pem
 *.p8
 *.p12
