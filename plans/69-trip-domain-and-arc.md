@@ -2,8 +2,18 @@
 
 - **Requirement IDs:** `P1-10`, `P5-01`…`P5-13`
 - **Milestone:** M2
-- **Status:** Blocked on Q-07 trip-end semantics
-- **Depends on:** 56 navigation, 59 persistence, 60 scheduling/selection, 61 trip content/assets
+- **Status:** ⛔ Trip lifecycle implementation is blocked by Q-07 return/relocation semantics.
+  Content inventory and design review can proceed; do not commit the state machine/schema before
+  that decision.
+- **Depends on:** 56 route laws; 59 persistence; 60 selection/scheduling; 61 trip content/assets;
+  Q-07.
+- **Reviewed:** 2026-09-07 against merged baseline `2d9e8c3`.
+
+## Verified starting point
+
+Trip documentation and gated draft API shapes exist, but no durable trip lifecycle or trip routes.
+The current app supports seven course pairs; a trip must bind an explicit target course and preserve
+it across UI-language changes. Drafts are not approved trip semantics.
 
 ## Outcome
 
@@ -11,19 +21,21 @@ A durable trip state machine drives Set Arrival, Countdown, Daily Drop, Survival
 surfaces without duplicating state in routes. The arc works across timezone changes, missed days,
 offline launches, and trip edits.
 
-## Work
+## Remaining work
 
-1. Resolve Q-07 before schema work: return date, one-way/moving-abroad, extension, cancellation, and
-   completed-trip history.
-2. Define trip entities, state transitions, local/absolute day keys, destination/timezone, need
-   ordering, drop schedule, content snapshot, prefetch status, and souvenir handoff.
-3. Add migrations/repositories/outbox/merge policies and pure lifecycle/scheduling tests.
-4. Build Set Arrival and Countdown, then Daily Drop, Survival, and Souvenir routes against the
-   shared navigation and UI systems. Plan 70 owns native widget/notification surfaces.
-5. Select/compress practice content with plan-60 rules and real learner state; no fake readiness,
-   urgency, ladder, or souvenir number.
-6. Define edit/cancel/offline/no-content/insufficient-audio/midnight/DST/expired-drop/relaunch
-   states and make every one reachable in E2E fixtures.
+1. [ ] Resolve Q-07 before schema work: return date, one-way/moving-abroad, extension, cancellation,
+       and completed-trip history.
+2. [ ] Bind each trip to its target course, preserve it when the UI/native language changes, and
+       require reviewed destination content for that target. Define trip entities, state
+       transitions, local/absolute day keys, destination/timezone, need ordering, drop schedule,
+       content snapshot, prefetch status, and souvenir handoff.
+3. [ ] Add migrations/repositories/outbox/merge policies and pure lifecycle/scheduling tests.
+4. [ ] Build Set Arrival and Countdown, then Daily Drop, Survival, and Souvenir routes against the
+       shared navigation and UI systems. Plan 70 owns native widget/notification surfaces.
+5. [ ] Select/compress practice content with plan-60 rules and real learner state; no fake
+       readiness, urgency, ladder, or souvenir number.
+6. [ ] Define edit/cancel/offline/no-content/insufficient-audio/midnight/DST/expired-drop/relaunch
+       states and make every one reachable in E2E fixtures.
 
 ## Acceptance criteria
 
