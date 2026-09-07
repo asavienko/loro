@@ -9,7 +9,8 @@ outside GitHub's workflow discovery directory. No push, PR, schedule or tag runs
 
 ## Setup and full gate
 
-Use Node 22, pnpm 9.12.0, Rust stable with rustfmt/clippy, and wasm-pack:
+Use Node 22, pnpm 9.12.0, Rust stable with rustfmt/clippy, wasm-pack, and a running local Docker
+engine (for the disposable PostgreSQL 16 auth transaction gate):
 
 ```bash
 nvm use 22
@@ -28,9 +29,14 @@ tasks to limit local CPU/memory contention; override with `LORO_CI_CONCURRENCY` 
 
 The full gate runs, in order:
 
-1. Frozen-lockfile dependency installation; host/WASM/UniFFI and design-token generation.
+1. Frozen-lockfile dependency installation; host/WASM/UniFFI, design-token and Expo route-type
+   generation. Route types are refreshed with the installed Expo SDK before typechecking to avoid
+   stale declarations after switching branches.
 2. `pnpm check`: contracts, lint, typecheck, JS/TS/Rust tests, content and accessibility checks. The
-   golden DSP target also runs if implemented; no missing harness is reported as passing.
+   auth transaction tests also run against a disposable PostgreSQL 16 container on a free localhost
+   port, removed after success or failure. Existing database URLs are ignored because these tests
+   drop tables. The golden DSP target also runs if implemented; no missing harness is reported as
+   passing.
 3. Formatting; optional commit-range lint; generated-output drift (including untracked output).
 4. Chromium installation; learner, workbench and production-export browser suites.
 5. Mobile Metro/Hermes export; API build, boot and readiness with the actual WASM merge engine. The
