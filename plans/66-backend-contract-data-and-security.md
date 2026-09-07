@@ -15,8 +15,9 @@
 Current/target/draft schemas and 13 current routes exist; these are not installed as Nest boundary
 validation. Docker has a non-root skeleton and expects prebuilt WASM, but no exact-image deployment
 proof. The later `5f4fb76` environment commit supplies SOPS/age tooling and `.dockerignore`; these
-do not establish a deployed API or durable store. Own server pagination here; 68 consumes it rather
-than implementing it twice.
+do not establish a deployed API or durable store. Plan 88 owns the selected AWS testing environment
+and consumes this plan's image/data/security slices. Own server pagination here; 68 consumes it
+rather than implementing it twice.
 
 ## Outcome
 

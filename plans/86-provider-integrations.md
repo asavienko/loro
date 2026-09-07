@@ -69,6 +69,11 @@ requests; unsupported pairs get the owning feature's honest fallback.
 
 ## Vendor decision inputs
 
+For the shared testing environment, [plan 88](88-low-cost-backend-infrastructure.md) is the approved
+owner and selects AWS EC2/PostgreSQL/private S3 in Frankfurt. It supersedes the earlier Render/R2
+testing recommendation. Consume its infrastructure outputs; 61/86 still own content adapters and
+authenticated URL issuance. Production vendor choices remain separate.
+
 The earlier plan proposed Render (API/Postgres/jobs), Cloudflare R2/CDN, Apple/Google verification,
 Amazon SES, Polly, Anthropic, RevenueCat and Sentry EU/OTel. These remain research candidates, not
 provisioned infrastructure or approved pricing/retention/voice choices. Re-verify official support,
