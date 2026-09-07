@@ -1,4 +1,4 @@
-import { isNativeLanguage, isTargetLocale } from '../../domain/languages.js'
+import { isNativeLanguage, isTargetLocale, type TargetLocale } from '../../domain/languages.js'
 /**
  * `user_phrase` — the learner's rows.
  *
@@ -84,6 +84,7 @@ export const PHRASE_COLUMN_NAMES = [
   'deleted_at',
   'target_locale',
   'own_meaning_language',
+  'srs_algorithm',
 ] as const
 
 /**
@@ -149,6 +150,9 @@ export function rowToPhrase(row: SqlRow): PhraseState {
     stability === null || due === null
       ? null
       : {
+          ...(readTextOrNull(row, 'srs_algorithm')
+            ? { algorithm: readText(row, 'srs_algorithm') }
+            : {}),
           stability,
           difficulty: readRealOrNull(row, 'srs_difficulty') ?? 5,
           due,
@@ -257,6 +261,7 @@ export function phraseToParams(p: PhraseState, userId: string, hlc: string): Phr
     null,
     p.targetLocale ?? null,
     p.ownMeaningLanguage ?? null,
+    p.srs?.algorithm ?? null,
   ]
 }
 
@@ -268,6 +273,16 @@ export class SqlPhraseTable implements PhraseTable {
     return this.deps.driver
       .all(`${PHRASE_SELECT} ${tail}`, [this.deps.userId, ...params])
       .map(rowToPhrase)
+  }
+
+  hasCatalog(id: string, target: TargetLocale): boolean {
+    return (
+      firstRow(
+        this.deps.driver,
+        `SELECT id FROM user_phrase WHERE user_id = ? AND phrase_id = ? AND COALESCE(target_locale, 'es-ES') = ? LIMIT 1`,
+        [this.deps.userId, id, target],
+      ) !== null
+    )
   }
 
   all(): PhraseState[] {
@@ -299,9 +314,14 @@ export class SqlPhraseTable implements PhraseTable {
    * 67–68's decision, and an exception is the honest interim answer.
    */
   upsert(phrase: PhraseState): void {
+    const existing = firstRow(this.deps.driver, 'SELECT user_id FROM user_phrase WHERE id = ?', [
+      phrase.id,
+    ])
+    if (existing && readText(existing, 'user_id') !== this.deps.userId)
+      throw new Error('Phrase belongs to another local owner')
     this.deps.driver.run(
       `INSERT INTO user_phrase (${PHRASE_COLUMNS}) VALUES (${PHRASE_PLACEHOLDERS})
-       ON CONFLICT(id) DO UPDATE SET ${PHRASE_UPSERT_SET}`,
+       ON CONFLICT(id) DO UPDATE SET ${PHRASE_UPSERT_SET} WHERE user_phrase.user_id = excluded.user_id`,
       phraseToParams(phrase, this.deps.userId, this.deps.hlc()),
     )
   }
@@ -319,6 +339,13 @@ export class SqlPhraseTable implements PhraseTable {
       `UPDATE user_phrase SET deleted_at = ?, updated_hlc = ?
        WHERE user_id = ? AND id = ? AND deleted_at IS NULL`,
       [at, this.deps.hlc(), this.deps.userId, id],
+    )
+  }
+
+  restore(id: UserPhraseId): void {
+    this.deps.driver.run(
+      'UPDATE user_phrase SET deleted_at = NULL, updated_hlc = ? WHERE user_id = ? AND id = ?',
+      [this.deps.hlc(), this.deps.userId, id],
     )
   }
 

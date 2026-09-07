@@ -1,3 +1,7 @@
+import { decodeCheckpoint, encodeCheckpoint } from './checkpoint.js'
+import { synchronousResult } from './transaction.js'
+import { validateReview } from './sqlite/local.js'
+import type { ReviewEvent } from './tables.js'
 import { parseLanguagePair } from '../domain/languages.js'
 import type { CourseRow } from './tables.js'
 import type { TargetLocale } from '../domain/languages.js'
@@ -31,6 +35,12 @@ import {
 class MemoryPhraseTable implements PhraseTable {
   private rows = new Map<string, PhraseState>()
   private deleted = new Set<string>()
+
+  hasCatalog(id: string, target: TargetLocale): boolean {
+    return [...this.rows.values()].some(
+      (p) => p.phraseId === id && (p.targetLocale ?? 'es-ES') === target,
+    )
+  }
 
   all(): PhraseState[] {
     return [...this.rows.values()]
@@ -71,6 +81,10 @@ class MemoryPhraseTable implements PhraseTable {
   /** Idempotent, matching the SQL `deleted_at IS NULL` guard. */
   softDelete(id: UserPhraseId, _at: number): void {
     if (this.rows.has(id)) this.deleted.add(id)
+  }
+
+  restore(id: UserPhraseId): void {
+    this.deleted.delete(id)
   }
 
   count(): number {
@@ -191,7 +205,7 @@ class MemoryOutboxTable implements OutboxTable {
 }
 
 /** A fresh in-memory persistence set. */
-export function openMemoryPersistence(): Persistence {
+export function openMemoryPersistence(hlc?: (previous: string | null) => string): Persistence {
   const courses = new Map<TargetLocale, CourseRow>()
   const phrases = new MemoryPhraseTable()
   const settings = new MemorySettingsTable()
@@ -199,8 +213,85 @@ export function openMemoryPersistence(): Persistence {
   const practiceDays = new MemoryPracticeDayTable()
   const outbox = new MemoryOutboxTable()
 
+  const metadata = new Map<string, string>()
+  const checkpoints = new Map<TargetLocale, string>()
+  const attempts = new Set<string>()
+  const reviews: ReviewEvent[] = []
+  const tables = [phrases, settings, refrainDay, practiceDays, outbox]
   return {
+    transaction: (fn) => {
+      const snapshots = tables.map((table) =>
+        structuredClone(Object.fromEntries(Object.entries(table))),
+      )
+      const local = structuredClone({ courses, metadata, checkpoints, attempts, reviews })
+      try {
+        return synchronousResult(fn())
+      } catch (error) {
+        tables.forEach((table, i) => Object.assign(table, snapshots[i]))
+        courses.clear()
+        local.courses.forEach((v, k) => courses.set(k, v))
+        metadata.clear()
+        local.metadata.forEach((v, k) => metadata.set(k, v))
+        checkpoints.clear()
+        local.checkpoints.forEach((v, k) => checkpoints.set(k, v))
+        attempts.clear()
+        local.attempts.forEach((v) => attempts.add(v))
+        reviews.splice(0, reviews.length, ...local.reviews)
+        throw error
+      }
+    },
+    nextHlc: () => {
+      if (!hlc)
+        throw new Error(
+          'Memory persistence has no canonical HLC; inject a canonical clock for writes',
+        )
+      const value = hlc(metadata.get('hlc') ?? null)
+      metadata.set('hlc', value)
+      return value
+    },
+    metadata: {
+      get: (key) => metadata.get(key) ?? null,
+      set: (key, value) => {
+        metadata.set(key, value)
+      },
+      delete: (key) => {
+        metadata.delete(key)
+      },
+    },
+    checkpoints: {
+      load: (target) => decodeCheckpoint(checkpoints.get(target) ?? ''),
+      save: (value) => {
+        checkpoints.set(value.targetLocale, encodeCheckpoint(value))
+      },
+      clear: (target) => {
+        checkpoints.delete(target)
+      },
+    },
+    attempts: {
+      has: (target, id) => attempts.has(`${target}/${id}`),
+      record: (target, id) => {
+        if (!id || id.length > 512) throw new Error('Invalid attempt identity')
+        const key = `${target}/${id}`
+        if (attempts.has(key)) return false
+        attempts.add(key)
+        return true
+      },
+    },
+    reviews: {
+      append: (event) => {
+        validateReview(event)
+        if (
+          reviews.some(
+            (r) => r.targetLocale === event.targetLocale && r.attemptId === event.attemptId,
+          )
+        )
+          throw new Error('Duplicate review event')
+        reviews.push(structuredClone(event))
+      },
+      all: (target) => structuredClone(reviews.filter((r) => r.targetLocale === target)),
+    },
     courses: {
+      all: () => [...courses.values()].map((row) => ({ ...row })),
       load: (target) => courses.get(target) ?? null,
       save: (row) => {
         courses.set(row.targetLocale, { ...row })
@@ -212,6 +303,10 @@ export function openMemoryPersistence(): Persistence {
     practiceDays,
     outbox,
     wipe: () => {
+      metadata.clear()
+      checkpoints.clear()
+      attempts.clear()
+      reviews.length = 0
       courses.clear()
       phrases.clear()
       settings.clear()

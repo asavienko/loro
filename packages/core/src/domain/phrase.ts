@@ -174,6 +174,8 @@ export interface CatalogPhrase {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface FsrsState {
+  /** Absent only for legacy state, which the canonical scheduler must reinitialize. */
+  readonly algorithm?: string
   readonly stability: number
   readonly difficulty: number
   readonly due: number

@@ -1,4 +1,4 @@
-import { supportsPair } from '../domain/languages.js'
+import { supportsPair, TARGET_LOCALES } from '../domain/languages.js'
 /** Target sync values, independent of storage/merge implementations. F-01/F-02/F-04. */
 import { z } from 'zod'
 import {
@@ -71,6 +71,7 @@ export const userPhraseValues = {
   srsLastReview: T.nullable(),
   srsLapses: N,
   srsState: z.enum(['new', 'learning', 'review', 'relearning']),
+  srsAlgorithm: z.string().min(1).max(200).nullable(),
   repsToday: N,
   repsTodayDay: LocalDateSchema.nullable(),
   automaticity: z.number().min(0).max(100),
@@ -120,6 +121,7 @@ export const streakDayValues = { practised: z.boolean(), minutes: z.number().non
 const LogBase = { phraseId: Id, at: T }
 export const reviewLogValues = {
   ...LogBase,
+  algorithm: z.string().min(1).max(200),
   grade: GradeSchema,
   stability: z.number().nonnegative(),
   difficulty: z.number().min(0).max(10),
@@ -200,7 +202,7 @@ export const fieldsByEntity = {
   settings: SettingsFields,
   refrain_day: z.strictObject(fieldShape(refrainDayValues)).partial(),
   streak_day: z.strictObject(fieldShape(streakDayValues)).partial(),
-  review_log: z.strictObject(fieldShape(reviewLogValues)),
+  review_log: z.strictObject(fieldShape(reviewLogValues)).partial({ algorithm: true }),
   latency_sample: z.strictObject(fieldShape(latencySampleValues)),
   take: z.strictObject(fieldShape(takeValues)),
   session: z.strictObject(fieldShape(sessionValues)),
@@ -208,7 +210,19 @@ export const fieldsByEntity = {
 }
 export type SyncEntity = keyof typeof fieldsByEntity
 export function rowIdFor(entity: SyncEntity) {
-  if (entity === 'refrain_day' || entity === 'streak_day') return LocalDateSchema
+  if (entity === 'refrain_day')
+    return z.union([
+      LocalDateSchema,
+      z.string().refine((id) => {
+        const [locale, day, extra] = id.split(':')
+        return (
+          extra === undefined &&
+          TARGET_LOCALES.some((target) => target === locale) &&
+          LocalDateSchema.safeParse(day).success
+        )
+      }, 'Expected a target locale and local date'),
+    ])
+  if (entity === 'streak_day') return LocalDateSchema
   if (entity === 'settings') return z.literal('settings')
   return Id
 }

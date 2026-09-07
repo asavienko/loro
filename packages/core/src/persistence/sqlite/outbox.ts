@@ -55,7 +55,10 @@ function rowToOp(row: SqlRow): OutboxOp {
 }
 
 export class SqlOutboxTable implements OutboxTable {
-  constructor(private readonly driver: SqlDriver) {}
+  constructor(
+    private readonly driver: SqlDriver,
+    private readonly userId = 'local',
+  ) {}
 
   append(op: OutboxAppend): void {
     const fields = Object.keys(op.fields)
@@ -84,9 +87,9 @@ export class SqlOutboxTable implements OutboxTable {
     }
 
     this.driver.run(
-      `INSERT INTO outbox (entity, entity_id, op, payload, hlc, created_at)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [op.entity, op.entityId, op.op, JSON.stringify(op.fields), op.hlc, op.createdAt],
+      `INSERT INTO outbox (entity, entity_id, op, payload, hlc, created_at, user_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [op.entity, op.entityId, op.op, JSON.stringify(op.fields), op.hlc, op.createdAt, this.userId],
     )
   }
 
@@ -94,9 +97,9 @@ export class SqlOutboxTable implements OutboxTable {
     const row = firstRow(
       this.driver,
       `${OUTBOX_SELECT}
-       WHERE entity = ? AND entity_id = ?
+       WHERE user_id = ? AND entity = ? AND entity_id = ?
        ORDER BY seq DESC LIMIT 1`,
-      [entity, entityId],
+      [this.userId, entity, entityId],
     )
     return row === null ? null : rowToOp(row)
   }
@@ -105,28 +108,33 @@ export class SqlOutboxTable implements OutboxTable {
     return this.driver
       .all(
         `${OUTBOX_SELECT}
-         ORDER BY seq LIMIT ?`,
-        [limit],
+         WHERE user_id = ? ORDER BY seq LIMIT ?`,
+        [this.userId, limit],
       )
       .map(rowToOp)
   }
 
   ack(seqs: readonly number[]): void {
     if (seqs.length === 0) return
-    this.driver.run(`DELETE FROM outbox WHERE seq IN (${placeholders(seqs.length)})`, seqs)
+    this.driver.run(
+      `DELETE FROM outbox WHERE user_id = ? AND seq IN (${placeholders(seqs.length)})`,
+      [this.userId, ...seqs],
+    )
   }
 
   recordFailure(seqs: readonly number[], error: string): void {
     if (seqs.length === 0) return
     this.driver.run(
       `UPDATE outbox SET attempts = attempts + 1, last_error = ?
-       WHERE seq IN (${placeholders(seqs.length)})`,
-      [error, ...seqs] as SqlValue[],
+       WHERE user_id = ? AND seq IN (${placeholders(seqs.length)})`,
+      [error, this.userId, ...seqs] as SqlValue[],
     )
   }
 
   size(): number {
-    const row = firstRow(this.driver, 'SELECT COUNT(*) AS n FROM outbox')
+    const row = firstRow(this.driver, 'SELECT COUNT(*) AS n FROM outbox WHERE user_id = ?', [
+      this.userId,
+    ])
     return row === null ? 0 : readInt(row, 'n')
   }
 

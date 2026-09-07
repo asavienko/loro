@@ -125,6 +125,7 @@ describe('target wire boundaries (F-04)', () => {
       srsLastReview: field(1000),
       srsLapses: field(0),
       srsState: field('review'),
+      srsAlgorithm: field('fsrs-test'),
     }
     expect(target.UserPhraseFieldsSchema.safeParse(fields).success).toBe(true)
     for (const key of target.fsrsFields) {

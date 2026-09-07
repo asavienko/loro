@@ -15,13 +15,15 @@ import { SqlCourseTable } from './course.js'
  */
 
 import type { SqlDriver } from '../driver.js'
-import { dropAll, migrate } from '../migrations.js'
+import { migrate } from '../migrations.js'
 import { LOCAL_USER_ID, type Persistence } from '../tables.js'
 import { SqlPhraseTable } from './phrase.js'
 import { SqlSettingsTable } from './settings.js'
 import { SqlRefrainDayTable } from './refrainDay.js'
 import { SqlPracticeDayTable } from './practiceDay.js'
 import { SqlOutboxTable } from './outbox.js'
+import { SqlMetadataTable, SqlCheckpointTable, SqlAttemptTable, SqlReviewTable } from './local.js'
+import { synchronousResult } from '../transaction.js'
 
 export { SqlPhraseTable } from './phrase.js'
 export { SqlSettingsTable } from './settings.js'
@@ -38,7 +40,7 @@ export type { SyncedTableDeps, TableDeps } from './deps.js'
  */
 export function openSqlPersistence(
   driver: SqlDriver,
-  hlc: () => string,
+  hlc: (previous: string | null) => string,
   at: number,
   userId: string = LOCAL_USER_ID,
 ): Persistence {
@@ -46,19 +48,45 @@ export function openSqlPersistence(
   // `refrain_day` and `streak_day` have no `updated_hlc` column, so they are handed no
   // clock to stamp with — see `deps.ts`.
   const deps = { driver, userId }
-  const synced = { ...deps, hlc }
+  const metadata = new SqlMetadataTable(deps)
+  const nextHlc = () => {
+    const value = hlc(metadata.get('hlc'))
+    metadata.set('hlc', value)
+    return value
+  }
+  const synced = { ...deps, hlc: nextHlc }
   return {
+    transaction: (fn) => driver.transaction(() => synchronousResult(fn())),
+    nextHlc,
+    metadata,
+    checkpoints: new SqlCheckpointTable(deps),
+    attempts: new SqlAttemptTable(deps),
+    reviews: new SqlReviewTable(deps),
     courses: new SqlCourseTable(deps),
     phrases: new SqlPhraseTable(synced),
     settings: new SqlSettingsTable(synced),
     refrainDay: new SqlRefrainDayTable(deps),
     practiceDays: new SqlPracticeDayTable(deps),
-    outbox: new SqlOutboxTable(driver),
+    outbox: new SqlOutboxTable(driver, userId),
     wipe: () => {
-      // Drop and recreate rather than DELETE: a dropped table leaves no rows to recover
-      // from the freelist, which is what erasure has to mean.
-      dropAll(driver)
-      migrate(driver, at)
+      driver.transaction(() => {
+        // Legacy kv predates owner scoping and belongs to the anonymous local owner.
+        if (userId === LOCAL_USER_ID) driver.run('DELETE FROM kv')
+        for (const table of [
+          'user_phrase',
+          'settings',
+          'refrain_day',
+          'streak_day',
+          'outbox',
+          'course_session',
+          'local_metadata',
+          'session_checkpoint',
+          'committed_attempt',
+          'review_event',
+        ]) {
+          driver.run(`DELETE FROM ${table} WHERE user_id = ?`, [userId])
+        }
+      })
     },
   }
 }

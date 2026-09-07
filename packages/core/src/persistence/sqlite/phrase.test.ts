@@ -31,8 +31,12 @@ describe('user_phrase column mapping', () => {
     // inserted in the middle without its parameter.
     expect(PHRASE_COLUMN_NAMES[0]).toBe('id')
     expect(PHRASE_COLUMN_NAMES[7]).toBe('source')
-    expect(PHRASE_COLUMN_NAMES.at(-3)).toBe('deleted_at')
-    expect(PHRASE_COLUMN_NAMES.slice(-2)).toEqual(['target_locale', 'own_meaning_language'])
+    expect(PHRASE_COLUMN_NAMES.at(-4)).toBe('deleted_at')
+    expect(PHRASE_COLUMN_NAMES.slice(-3)).toEqual([
+      'target_locale',
+      'own_meaning_language',
+      'srs_algorithm',
+    ])
     expect(new Set(PHRASE_COLUMN_NAMES).size, 'no column listed twice').toBe(
       PHRASE_COLUMN_NAMES.length,
     )

@@ -80,6 +80,7 @@ export const FIELD_POLICY: Readonly<Record<SyncEntity, FieldMap>> = {
     srsLastReview: 'latest-review',
     srsLapses: 'latest-review',
     srsState: 'latest-review',
+    srsAlgorithm: 'latest-review',
 
     // Loop B — repsToday is day-scoped, so LWW on the pair is correct
     repsToday: 'lww',

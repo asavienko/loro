@@ -5,13 +5,10 @@
  * every write succeeds locally and appends to an outbox, and **no code path awaits the
  * network**.
  *
- * ── What is here, and what is not ──
- * The schema, the forward-only migration runner, the repositories, and the outbox are
- * complete and tested against real SQLite. The **`op-sqlite` driver is not**: it is a
- * custom native module, and this checkout has no `ios/` or `android/` directory and no
- * Xcode, so it cannot be built or run until the dev client exists
- * (plans/09-native-toolchain-and-dev-client.md). Everything above is written against the
- * `SqlDriver` interface precisely so that driver is the only piece still missing.
+ * Repositories, forward migrations and local commit records are driver-independent.
+ * Mobile installs the platform driver during bootstrap; Node SQLite exercises the same
+ * transaction and migration paths in tests. Native process-death acceptance is a separate
+ * device gate and must not be inferred from those tests.
  */
 
 export type { SqlDriver, SqlRow, SqlValue } from './driver.js'
@@ -42,3 +39,14 @@ export {
   openSqlPersistence,
 } from './sqlite/index.js'
 export { openMemoryPersistence } from './memory.js'
+
+export * from './checkpoint.js'
+export type {
+  CourseRow,
+  CourseTable,
+  MetadataTable,
+  CheckpointTable,
+  AttemptTable,
+  ReviewEvent,
+  ReviewTable,
+} from './tables.js'

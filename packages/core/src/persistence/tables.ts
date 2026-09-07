@@ -13,7 +13,8 @@ import type { LanguagePair, TargetLocale } from '../domain/languages.js'
  */
 
 import type { UserPhraseId } from '../domain/ids.js'
-import type { PhraseState } from '../domain/phrase.js'
+import type { CourseCheckpoint } from './checkpoint.js'
+import type { FsrsState, PhraseState } from '../domain/phrase.js'
 import type { PhraseRepository } from '../engines/types.js'
 
 /**
@@ -24,6 +25,8 @@ import type { PhraseRepository } from '../engines/types.js'
 export const LOCAL_USER_ID = 'local'
 
 export interface PhraseTable {
+  /** Includes tombstones so initial seeding never recreates a learner-deleted catalog entry. */
+  hasCatalog(id: string, target: TargetLocale): boolean
   all(): PhraseState[]
   byId(id: UserPhraseId): PhraseState | null
   /** Not learned, not graduated, not deleted — what an engine may plan with. */
@@ -45,6 +48,8 @@ export interface PhraseTable {
    * straight back (docs/architecture/sync-protocol.md).
    */
   softDelete(id: UserPhraseId, at: number): void
+  /** Explicit local undo; ordinary writes never clear a tombstone. */
+  restore(id: UserPhraseId): void
   count(): number
 }
 
@@ -108,13 +113,19 @@ export interface PracticeDayTable {
 
 /** Everything the app stores, in one bag, so callers take one dependency. */
 export interface Persistence {
+  transaction<T>(fn: () => T): T
+  nextHlc(): string
+  readonly metadata: MetadataTable
+  readonly checkpoints: CheckpointTable
+  readonly attempts: AttemptTable
+  readonly reviews: ReviewTable
   readonly courses: CourseTable
   readonly phrases: PhraseTable
   readonly settings: SettingsTable
   readonly refrainDay: RefrainDayTable
   readonly practiceDays: PracticeDayTable
   readonly outbox: OutboxTable
-  /** Drop every learner row. GDPR erasure, not a cache clear. */
+  /** Erase this local owner, including tombstones and queued operations. Other owners remain. */
   wipe(): void
 }
 
@@ -124,9 +135,18 @@ export interface Persistence {
 
 export type SyncOpKind = 'upsert' | 'delete'
 
+/** JSON field payloads remain structured on the wire and inside the outbox JSON envelope. */
+export type JsonFieldValue =
+  | string
+  | number
+  | boolean
+  | null
+  | readonly JsonFieldValue[]
+  | { readonly [key: string]: JsonFieldValue }
+
 /** A field value with the HLC that produced it — the wire shape `/sync/push` accepts. */
 export interface FieldWrite {
-  readonly v: string | number | boolean | null
+  readonly v: JsonFieldValue
   readonly hlc: string
 }
 
@@ -197,6 +217,37 @@ export interface CourseRow {
   refrainSession: string | null
 }
 export interface CourseTable {
+  all(): CourseRow[]
   load(target: TargetLocale): CourseRow | null
   save(row: CourseRow): void
+}
+
+export interface MetadataTable {
+  get(key: string): string | null
+  set(key: string, value: string): void
+  delete(key: string): void
+}
+export interface CheckpointTable {
+  load(target: TargetLocale): CourseCheckpoint | null
+  save(checkpoint: CourseCheckpoint): void
+  clear(target: TargetLocale): void
+}
+export interface AttemptTable {
+  has(target: TargetLocale, attemptId: string): boolean
+  /** Returns false for an already committed attempt. Call inside the same transaction as progress. */
+  record(target: TargetLocale, attemptId: string): boolean
+}
+/** Scalar local review history: never audio or recognition transcripts. */
+export interface ReviewEvent {
+  attemptId: string
+  targetLocale: TargetLocale
+  phraseId: string
+  reviewedAt: number
+  rating: 1 | 2 | 3 | 4
+  algorithm: string
+  state: FsrsState
+}
+export interface ReviewTable {
+  append(event: ReviewEvent): void
+  all(target: TargetLocale): ReviewEvent[]
 }
