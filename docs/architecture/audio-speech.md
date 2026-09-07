@@ -273,6 +273,14 @@ Onset detection is validated against 200 hand-labelled recordings; target ≤ ±
 
 ## TTS strategy
 
+**Selected cloud provider: ElevenLabs** (product-owner decision, 2026-09-07; `AS-01`, `AS-02`). It
+is the planned source for pre-rendered catalog and server-rendered on-demand audio. Local
+development remains stubbed; provider integration is not implemented. Voice/model selection,
+production rights, pronunciation review and budget remain under
+[Q-15](../decisions/open-questions.md#q-15). Preserve approved audio as immutable,
+checksum-addressed assets with voice/model/settings provenance; a provider update must not silently
+replace a learner reference or its derived contours.
+
 Three tiers, in preference order:
 
 | Tier                               | Used for                                   | Quality                                                        |
