@@ -63,7 +63,9 @@ describe('current HTTP contracts', () => {
     expect(mergeAvailable()).toBe(true)
   })
   // Configured auth routes have their own HTTP suite with a verified identity-provider seam.
-  for (const operation of currentOperations.filter((operation) => !operation.id.startsWith('oauth'))) {
+  for (const operation of currentOperations.filter(
+    (operation) => !operation.id.startsWith('oauth'),
+  )) {
     it(`${operation.method} ${operation.path}`, async () => {
       const req = requests[operation.id]
       const res = await fetch(`${base}/v1${operation.path}${req?.suffix ?? ''}`, {
