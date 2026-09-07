@@ -1,100 +1,112 @@
 # CI / CD
 
-Workflows live in [`.github/workflows/`](../../.github/workflows/). Some are executable gates and
-some are roadmap scaffolds. This page makes that boundary explicit so a green check cannot be read
-as deployment, device or release evidence that does not exist.
+## Local-only policy
 
----
+Run checks locally. Do not enable, dispatch or rerun GitHub Actions unless the user explicitly
+changes this policy. Actions is disabled in the GitHub repository settings. All eight former
+workflows are preserved in [`.github/workflows-disabled/`](../../.github/workflows-disabled/),
+outside GitHub's workflow discovery directory. No push, PR, schedule or tag runs them.
 
-## Current workflow status
+## Setup and full gate
 
-| Workflow                         | Trigger                            | Status today                                                                                                                                        |
-| -------------------------------- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ci.yml`                         | every PR; push to `main`           | Real required validation/build/browser gate                                                                                                         |
-| `content-validate.yml`           | content PR; manual                 | Validation is real; render and publish steps are `TODO` scaffolds                                                                                   |
-| `core-rs.yml`                    | Rust PR/push                       | Unit/clippy/build/parity are real; the golden step is conditional on its test target existing; benchmark comparison is not an enforced 10% baseline |
-| `mobile-build.yml`               | mobile/packages PR; `main`; manual | EAS needs a real project ID and credentials; unconfigured automatic runs skip and explicit requests fail; device-farm steps remain TODO             |
-| `api-deploy.yml` / `_deploy.yml` | relevant `main` push; manual       | Image build is defined; authentication, migrations, deploy, health gate, traffic shift, rollback and smoke test are placeholder echoes              |
-| `nightly.yml`                    | nightly; manual                    | Dependency audit is real; device/offline/load/content jobs are placeholders and scheduler job references missing `tests/sim.rs`                     |
-| `release.yml`                    | `v*` tag                           | Scaffold, not a usable release gate: it references a missing mobile `check:bundle-size` script and has no real native/device gate                   |
-
-Do not push a release tag or rely on deploy/release workflows until their placeholders and missing
-commands are implemented and exercised in a non-production environment.
-
-## `ci.yml`: the current PR gate
-
-The aggregate `ci` job requires:
-
-1. `core-rs (host + wasm)` — builds host/WASM/bindings once and uploads them.
-2. `lint` — workspace lint, Prettier and PR commitlint.
-3. `typecheck` — all workspace packages.
-4. `test` — `pnpm test`, including Rust through Turbo.
-5. `mobile web E2E` — the learner and workbench suites plus production-export `@smoke` flows.
-6. `content validation` — catalog checks.
-7. `app bundles / api builds` — mobile Metro/Hermes export; API esbuild, boot and readiness.
-8. `generated output drift` — regenerated design tokens and UniFFI bindings must match Git.
-9. `accessibility gates` — contrast, source language, chart summaries and tap targets.
-10. `performance budgets` — Criterion runs for `core-rs`.
-
-`pnpm check` reproduces the fast lint/typecheck/test/content/a11y/contrast portion locally. It does
-not run formatting/commitlint, browser E2E, production-export smoke, bundles/API readiness, drift or
-Criterion. Use this local pre-PR sequence when relevant:
+Use Node 22, pnpm 9.12.0, Rust stable with rustfmt/clippy, wasm-pack, and a running local Docker
+engine (for the disposable PostgreSQL 16 auth transaction gate):
 
 ```bash
 nvm use 22
 export PATH="$HOME/.cargo/bin:$PATH"
-pnpm check
-pnpm test:e2e
-pnpm test:e2e:bundle
-pnpm --filter @loro/mobile bundle
-pnpm --filter @loro/api build
+rustup component add clippy rustfmt
+rustup target add wasm32-unknown-unknown
+cargo install wasm-pack --locked
+pnpm ci:local
 ```
 
-The E2E config enforces an eight-minute global timeout. CI reports elapsed time and always uploads
-Playwright reports/traces so retries remain visible.
+Alternatively `bash scripts/ci-local.sh` selects Node 22 through nvm when available, including when
+pnpm is initially off PATH. The runner exits on failure and refuses to run in GitHub Actions. It
+sets `CI=1` so Playwright starts fresh servers and uses its strict CI behavior, and forces Turbo
+checks to execute instead of accepting cached task results. Workspace concurrency defaults to two
+tasks to limit local CPU/memory contention; override with `LORO_CI_CONCURRENCY` if needed.
 
-## What current CI does not prove
+The full gate runs, in order:
 
-- The app runs on iOS or Android; EAS queueing is not a device test.
-- Audio, microphone, native lifecycle, on-device SQLite, offline resume, notifications or widgets.
-- Full Swift/Kotlin/WASM numerical parity; current `parity.rs` is a Rust fixture test.
-- DSP stability against recorded utterances; no golden corpus/test exists.
-- A benchmark stayed within 10%; Criterion runs, but no durable comparison baseline is enforced.
-- API persistence, migrations, cloud deployment, health-gated traffic shifting or rollback.
-- Store submission readiness, OTA rollback or built-artifact secret scanning.
-- Coverage percentage; Vitest does not generate coverage by default.
+1. Frozen-lockfile dependency installation; host/WASM/UniFFI, design-token and Expo route-type
+   generation. Route types are refreshed with the installed Expo SDK before typechecking to avoid
+   stale declarations after switching branches.
+2. `pnpm check`: contracts, lint, typecheck, JS/TS/Rust tests, content and accessibility checks. The
+   auth transaction tests also run against a disposable PostgreSQL 16 container on a free localhost
+   port, removed after success or failure. Existing database URLs are ignored because these tests
+   drop tables. The golden DSP target also runs if implemented; no missing harness is reported as
+   passing.
+3. Formatting; optional commit-range lint; generated-output drift (including untracked output).
+4. Chromium installation; learner, workbench and production-export browser suites.
+5. Mobile Metro/Hermes export; API build, boot and readiness with the actual WASM merge engine. The
+   API smoke check selects a free port and cleans up its child process on success or failure.
+6. Criterion benchmarks with short warm-up and measurement windows.
 
-## Generated-output drift
+To validate branch commits, provide a locally available base ref:
 
-Design-token output and UniFFI bindings are committed. CI rebuilds and diffs
-`packages/design-tokens/out` and `packages/core-rs/bindings`. Change the generator/source,
-regenerate, and commit the result; never hand-edit generated files.
+```bash
+CI_BASE_REF=origin/main pnpm ci:local
+```
 
-## Activation gates for future pipelines
+Without `CI_BASE_REF`, commit lint is explicitly omitted; no network fetch or push is performed.
+`pnpm check` remains the fast development command. Full CI installs dependencies/browsers when
+needed but never publishes, deploys, queues EAS, or calls GitHub. Do not run concurrent full gates
+in the same checkout: generated files and build output are shared. Each browser suite selects a free
+local port through `LORO_E2E_PORT`, leaving existing development servers alone.
 
-### Native modules and device farm
+Record the checked commit, commands and results in the PR. No GitHub status check is required by
+this policy. If a repository rule later requires an old Actions check, remove that obsolete check
+requirement while retaining review/branch protections; do not re-enable CI to satisfy it.
 
-The change that introduces the first custom native module must also:
+## Additional local gates
 
-- generate/build both native projects reproducibly;
-- add contract tests and a real both-platform device flow;
-- replace the device-farm `TODO` with an executable job;
-- cover permissions, interruption/background cleanup and force-quit resume as applicable;
-- publish useful artifacts/results and make the job required before the feature is called done.
+- `pnpm ci:local:native`: the former six-target Rust matrix (two iOS, three Android, WASM), then
+  calendar parity. Requires macOS with full Xcode, the Android SDK/NDK configured for cargo-ndk,
+  `cargo install cargo-ndk --locked`, and all six Rust targets installed with `rustup target add`.
+  Missing toolchains fail this explicit gate; they are not silently skipped.
+- `pnpm ci:local:audit`: `pnpm audit --audit-level=high` and `cargo audit`. Install the latter with
+  `cargo install cargo-audit --locked`. Advisory lookups require network access.
+- Content checks also remain available through `pnpm content:validate`.
 
-<a id="backend-deploys"></a>
+Run the native gate for native/Rust target changes and audits for dependency changes. These are
+separate from the default host/browser gate so routine checks need neither mobile SDKs nor advisory
+services. The historical nightly scheduler simulation has no test target, and device/offline/load
+and content-quality jobs were placeholders; they are not pretend local successes.
 
-### API persistence and deployment
+## Reports and limits
+
+Playwright keeps reports in `playwright-report/` and diagnostics in `test-results/`. Criterion keeps
+results in `packages/core-rs/target/criterion/`. Results remain local; nothing uploads them.
+Generated tokens and bindings must match Git: regenerate from source and review/commit changes.
+Browser baselines are platform-specific; do not overwrite another platform's baseline to pass.
+
+A green local gate does not prove native audio, microphone, lifecycle, device persistence, offline
+resume, notifications or widgets. Calendar parity is a Rust fixture test, not Swift/Kotlin parity.
+Criterion measures performance but does not enforce a durable 10% regression baseline. No golden DSP
+corpus exists yet. Tests do not generate coverage percentages by default.
+
+## Deployment and release
+
+<a id="backend-deploys"></a> <a id="ota-updates"></a>
+
+Deployment, EAS, content publishing and release workflows remain inactive historical scaffolds.
+Authentication, migrations, deployment/rollback, device-farm validation and store submission need
+real implementations and separate authorization. The archived release workflow references missing
+commands; it must not be treated as a working release procedure. Tags do not start store builds.
+
+### Future EC2 testing deployment
 
 [Plan 88](../../plans/88-low-cost-backend-infrastructure.md) owns one EC2 testing deployment. The
-`dev`/`staging`/`production` chain and traffic-shift echoes in the current workflows are scaffolding
-to replace, not a required test topology.
+`dev`/`staging`/`production` chain and traffic-shift echoes in the archived workflows are
+scaffolding to replace, not a required test topology.
 
 The implemented path must:
 
-1. Select the exact commit whose required CI passed and serialize deployments to GitHub `testing`.
+1. Select the exact commit whose local CI passed and serialize testing deployments locally.
 2. Build real WASM before the `linux/amd64` API image. Scan/test the image, publish to private ECR
-   and deploy by digest with AWS OIDC and SSM, without permanent AWS keys.
+   and deploy by digest with approved short-lived AWS credentials and SSM, without permanent AWS
+   keys.
 3. Pull the release before downtime, close traffic, stop API writes and verify a pre-migration S3
    backup before running a separate compatible migration.
 4. Start the image and verify real readiness and authenticated synthetic sync/content checks before
@@ -110,36 +122,3 @@ evidence is recorded in [the testing runbook](../runbooks/backend-testing.md).
 Cloud infrastructure itself is applied from the separate Terraform roots and must not be replaced by
 an ordinary application deployment. Production rollout policy remains with plan 73; the testing host
 does not require blue-green replicas or staged traffic percentages.
-
-### Content publishing
-
-Before content ships independently, replace render/publish placeholders, protect the content
-environment, verify catalog versioning and artifact integrity, and retain native-review and human
-audio-listening approvals.
-
-<a id="ota-updates"></a>
-
-### Release and store submission
-
-Before the first `v*` tag:
-
-- remove every missing command and placeholder from `release.yml`;
-- make native builds and both-platform device tests real;
-- add measured startup/bundle/data/accessibility gates appropriate to shipped features;
-- scan built artifacts for secrets;
-- require a signed manual release checklist;
-- exercise submission and rollback in staging/internal tracks.
-
-Only then document EAS profiles, OTA channels and staged rollout as operating procedures rather than
-intended architecture.
-
-## Caching and failure policy
-
-The setup action installs Node/pnpm dependencies and restores a local `.turbo` cache; Rust jobs use
-`Swatinem/rust-cache`, and Playwright caches Chromium. Cache keys must follow all meaningful inputs.
-A flaky E2E retry remains visible in the always-uploaded report and should be fixed or explicitly
-quarantined with an owner; retries are diagnostic, not proof of stability.
-
-Nightly placeholder failures are development signals. Once deployment or release jobs become real,
-their required status, environment approvals, owners and alert route must be documented here in the
-same change.

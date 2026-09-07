@@ -17,7 +17,7 @@ Be specific. For anything audio, animated, or native, say WHICH DEVICE —
 the simulator lies about audio sessions and can't show a dropped frame.
 -->
 
-- [ ] `pnpm check` passes
+- [ ] `pnpm ci:local` passes locally (include commit, command and result)
 - [ ] Tested on a real device: <!-- iPhone SE 3 / Pixel 6a / ... -->
 
 ## The five checks
