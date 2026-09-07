@@ -131,7 +131,7 @@ prototype-only and **must not** be carried into the app — see the divergence t
   the code looks the way it does. The 2026-07-30 reset and legacy-to-active mapping are in
   [`plans/archive/2026-07-30/REVIEW.md`](plans/archive/2026-07-30/REVIEW.md). Plan 53 is a protected
   completed exception; do not edit or move it without explicit user direction.
-- **`pnpm check`** is the single command that must pass — lint, typecheck, test, content validation.
+- **`pnpm ci:local`** is the full local CI gate; `pnpm check` is the fast development gate.
 - **Keep E2E coverage in step with functionality while developing it.** Add or adjust the
   learner-visible behavior in `apps/mobile/e2e/` in the same coherent change as the functionality,
   and run `pnpm test:e2e` before committing. **A new learner-visible STATE gets a row in
@@ -186,6 +186,14 @@ prototype-only and **must not** be carried into the app — see the divergence t
   increments, which absolute, and which monotonic is declared on `ProgressDelta`
   (`packages/core/src/engines/types.ts`) and implemented once in `apps/mobile/src/store/delta.ts`.
 
+## CI policy
+
+Run CI checks locally. Do not enable, dispatch, or rerun GitHub Actions unless the user explicitly
+changes this policy. GitHub Actions is disabled in the repository settings; former workflows are
+inactive references in `.github/workflows-disabled/`. `pnpm ci:local` is the full local gate;
+`pnpm check` remains the fast development gate. See `docs/process/ci-cd.md` for prerequisites,
+native builds, audits, commit validation, and retained reports.
+
 ## Running and testing
 
 `pnpm local:up` decrypts the SOPS API environment and builds/starts the API and Expo web containers,
@@ -215,16 +223,12 @@ npx expo start --web                # from apps/mobile — fastest way to see th
   Android SDK, plus a first `expo prebuild` (there is no `apps/mobile/ios` or `android/`). Until
   then: web, or Expo Go on a device, which still works only because no custom native module is
   installed yet.
-- **Native CI distinguishes implemented checks from setup gates.** Rust library builds use cargo-ndk
-  for Android and compile only libraries for mobile targets. Existing Rust tests always run; the
-  plan-77 golden harness runs once its test target exists. EAS builds require a real project ID and
-  `EXPO_TOKEN`; unconfigured automatic builds skip, while explicit manual requests fail with the
-  setup requirement. Browser and bundle gates remain required.
-- **The browser E2E suite protects the current web behavior, not missing native behavior.** The five
-  hand-checks in [`onboarding.md`](docs/process/onboarding.md) — audio, mic, the warming card,
-  offline, sync — have no implementation behind them to check. CI runs `pnpm test:e2e` as a separate
-  required job; it is intentionally not hidden inside the fast `pnpm check` command because Chromium
-  is a one-time local install.
+- **Native builds are a separate local gate:** `pnpm ci:local:native` requires macOS/Xcode,
+  installed Rust targets, cargo-ndk and an Android NDK. It builds libraries only. EAS and
+  device-farm scaffolds are inactive; no command in local CI queues a cloud build.
+- **Browser E2E protects current web behavior, not missing native behavior.** The five hand-checks
+  in `onboarding.md` have no implementation behind them yet. `pnpm ci:local` runs learner, workbench
+  and production browser suites; `pnpm check` stays the fast gate.
 - **Two accessibility props never reach a browser**, so a green E2E run says nothing about them:
   react-native-web's allowlist forwards neither `accessibilityLanguage` (hence no `lang="es-ES"` in
   the DOM) nor `accessibilityHint`. `check:lang` is the gate for the first, which is why it scans

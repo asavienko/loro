@@ -3,10 +3,11 @@
  * Its browser contract therefore has its own small suite, report, and dev server.
  */
 
+import process from 'node:process'
 import { defineConfig } from '@playwright/test'
 import { isCI, sharedTiming, sharedUse } from './config.shared.mjs'
 
-const port = 8084
+const port = Number(process.env.LORO_E2E_PORT ?? 8084)
 
 export default defineConfig({
   testDir: './workbench',

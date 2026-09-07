@@ -167,8 +167,8 @@ human assertion is still cheaper than finding out from a learner.
 
 - **Squash merge.** The commit message becomes the PR title, so PR titles follow the commit
   convention.
-- **CI must be green.** No merging through a red build; a flaky test is fixed or quarantined with an
-  issue.
+- **Local CI (`pnpm ci:local`) must be green.** No merging through a red build; a flaky test is
+  fixed or quarantined with an issue.
 - **One approval**, two where CODEOWNERS says so — notably `packages/core/src/sync` needs both a
   tech-lead and a backend review, because a merge-class mistake there is silent data loss.
 - **The author merges.** Whoever wrote it decides when it lands.
@@ -178,15 +178,15 @@ human assertion is still cheaper than finding out from a learner.
 
 ## Protection on `main`
 
-| Rule                   |                                                                                          |
-| ---------------------- | ---------------------------------------------------------------------------------------- |
-| Direct pushes          | Blocked                                                                                  |
-| Required approvals     | 1 (2 where CODEOWNERS requires)                                                          |
-| Required status checks | `lint` · `typecheck` · `test` · `content:validate` · `core-rs:test` · `budgets` · `a11y` |
-| Stale approvals        | Dismissed on new commits                                                                 |
-| Force push / delete    | Blocked                                                                                  |
-| Linear history         | Required                                                                                 |
-| Admin bypass           | Only for a P0 incident, and it's logged                                                  |
+| Rule                   |                                                              |
+| ---------------------- | ------------------------------------------------------------ |
+| Direct pushes          | Blocked                                                      |
+| Required approvals     | 1 (2 where CODEOWNERS requires)                              |
+| Required status checks | None from GitHub Actions; record local CI evidence in the PR |
+| Stale approvals        | Dismissed on new commits                                     |
+| Force push / delete    | Blocked                                                      |
+| Linear history         | Required                                                     |
+| Admin bypass           | Only for a P0 incident, and it's logged                      |
 
 ---
 
@@ -205,7 +205,8 @@ main ──●──●──●──●──●──●──●──▶
 - Cut `release/x.y` from `main` at the start of a train.
 - Fixes are made on `main` and **cherry-picked** to the release branch — never the reverse, or
   `main` loses the fix.
-- Tag on the release branch; the tag triggers the store build.
+- Tag on the release branch only as part of an explicitly authorized release; tags do not trigger
+  builds.
 - Hotfixes branch from the tag, then merge back to both the release branch and `main`.
 
 ---
