@@ -57,19 +57,19 @@ pub fn repeat_target(difficulty: Difficulty) -> u32 {
 pub fn stream_rank(p: &PhraseState, now_ms: i64) -> i32 {
     let mut r = i32::try_from(p.plays).unwrap_or(i32::MAX);
 
-    r += match p.difficulty {
+    r = r.saturating_add(match p.difficulty {
         Difficulty::Hard => HARD_OFFSET,
         Difficulty::Easy => EASY_OFFSET,
         Difficulty::Med => MED_OFFSET,
-    };
+    });
 
     if p.loved {
-        r += LOVED_OFFSET;
+        r = r.saturating_add(LOVED_OFFSET);
     }
 
     if let Some(due) = p.srs_due {
         if due <= now_ms {
-            r += DUE_OFFSET;
+            r = r.saturating_add(DUE_OFFSET);
         }
     }
 
@@ -102,6 +102,14 @@ mod tests {
             plays,
             ..test_support::phrase(id)
         }
+    }
+
+    #[test]
+    fn oversized_play_counts_saturate_without_overflow() {
+        assert_eq!(
+            stream_rank(&phrase("max", Difficulty::Easy, u32::MAX, false), 0),
+            i32::MAX
+        );
     }
 
     #[test]

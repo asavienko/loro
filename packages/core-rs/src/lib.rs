@@ -12,6 +12,7 @@
 #![allow(clippy::module_name_repetitions)]
 
 pub mod asr;
+pub mod boundary;
 pub mod calendar;
 pub mod dsp;
 pub mod fsrs;
@@ -37,7 +38,7 @@ uniffi::setup_scaffolding!();
 // ─────────────────────────────────────────────────────────────────────────────
 
 /// The learner's declaration of how hard a phrase is for them.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize, uniffi::Enum)]
 pub enum Difficulty {
     /// Shown as "Easy".
     Easy,
@@ -48,7 +49,7 @@ pub enum Difficulty {
 }
 
 /// "What's tricky about it" — the *nature* of the difficulty, never its magnitude.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize, uniffi::Enum)]
 pub enum Tag {
     /// The sounds are the problem.
     Pron,
@@ -61,7 +62,18 @@ pub enum Tag {
 }
 
 /// The five-rung ladder. Monotonic: "you only climb or hold."
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, uniffi::Enum)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize,
+    uniffi::Enum,
+)]
 pub enum LadderRung {
     /// Recognise and repeat it.
     Accumulated,
@@ -76,7 +88,7 @@ pub enum LadderRung {
 }
 
 /// A phrase's learner state, as far as this crate needs it.
-#[derive(Debug, Clone, uniffi::Record)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, uniffi::Record)]
 pub struct PhraseState {
     /// The learner's row id.
     pub id: String,
@@ -135,6 +147,12 @@ pub struct LatencySample {
 #[cfg(target_arch = "wasm32")]
 mod wasm {
     use wasm_bindgen::prelude::*;
+
+    /// Execute the same JSON transport as native UniFFI.
+    #[wasm_bindgen]
+    pub fn core_call(request: &str) -> String {
+        crate::boundary::core_call(request)
+    }
 
     /// Merge one row, from the server side. Byte-identical to the client path.
     ///

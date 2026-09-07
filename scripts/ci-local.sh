@@ -43,6 +43,8 @@ unset AUTH_TEST_DATABASE_URL
 run pnpm install --frozen-lockfile
 run pnpm core-rs:build
 test -f packages/core-rs/pkg/loro_core_bg.wasm
+run pnpm --filter @loro/core-rs test:browser
+(cd packages/core-rs && run cargo test --release --test sim -- --nocapture)
 run pnpm tokens:build
 run node scripts/ci-expo-routes.mjs
 run pnpm check --concurrency="${LORO_CI_CONCURRENCY:-2}"

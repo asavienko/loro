@@ -1,11 +1,10 @@
 //! Set selection and cloze masking — Loop B's daily choices.
 //!
-//! **Status: partial.** Automaticity and the mode rotation are implemented; the full
-//! priority-ordered set selection lands in M2 with the Refrain.
+//! Pure deterministic helpers; callers own content metadata and frozen-day persistence.
 //!
 //! See docs/architecture/scheduling.md#3--automaticity--loop-b
 
-use crate::PhraseState;
+use crate::Difficulty;
 
 /// Reps per phrase per day. Overlearning is deliberate: the target does **not**
 /// shorten when rep 1 was perfect (`Loro.dc.html:1536`, `3361`).
@@ -69,7 +68,7 @@ pub fn refrain_set_size(daily_minutes: u32) -> u32 {
 ///
 /// Six reps of one phrase are six different cognitive events — imitation, synchrony,
 /// compression, generation, translation, free recall — not one event six times.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize, uniffi::Enum)]
 pub enum RefrainMode {
     /// Hear it, then say it back.
     Echo,
@@ -122,7 +121,7 @@ pub fn beat_ms_for_mode(mode: RefrainMode) -> u32 {
 }
 
 /// Presentation-neutral effort state, from the blueprint thresholds (`Loro.dc.html:3411`).
-#[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize, uniffi::Enum)]
 pub enum EffortState {
     /// No repetitions yet; presentation invites the learner to begin.
     Ready,
@@ -153,36 +152,161 @@ pub fn effort_state(reps: u32, automaticity_pct: u8) -> EffortState {
     }
 }
 
-/// Which tokens to blank for Cloze mode.
-///
-/// # Panics
-/// Not yet implemented — lands in M2. Must select the most informative **content**
-/// word, never an article or preposition.
+/// Select one content token from reviewed metadata, in the supplied priority order.
+/// Unknown locales, empty metadata and punctuation-only tokens yield no mask. Indices
+/// always refer to the unmodified display token sequence. No function-word guessing
+/// or positional fallback is performed for user-authored/unknown text.
 #[must_use]
-pub fn cloze_mask(_es: &str) -> Vec<u32> {
-    todo!("M2: select the most informative content word, never a function word")
+#[uniffi::export]
+pub fn cloze_mask(tokens: &[String], target_locale: &str, eligible_indices: &[u32]) -> Vec<u32> {
+    if !matches!(target_locale, "es-ES" | "bg-BG" | "ru-RU") {
+        return Vec::new();
+    }
+    eligible_indices
+        .iter()
+        .copied()
+        .find(|index| {
+            tokens
+                .get(*index as usize)
+                .is_some_and(|token| !crate::asr::normalize(token).is_empty())
+        })
+        .into_iter()
+        .collect()
 }
 
-/// Choose today's closed set.
-///
-/// Priority order: phrases mid-graduation → today's trip drop → weakest by
-/// automaticity → new material. Persisted once per day and **never recomputed
-/// mid-day**, so a learner can always finish the set they were shown.
-///
-/// # Panics
-/// Not yet implemented — lands in M2.
+/// Data-only selection input. Eligibility is supplied by the domain's single
+/// active predicate after course/tag filtering. Due state does not boost this daily
+/// ritual; due review uses its separate domain predicate and queue.
+#[derive(Debug, Clone, uniffi::Record, serde::Serialize, serde::Deserialize)]
+pub struct RefrainCandidate {
+    /// Stable learner phrase identifier; also the deterministic byte-order tie break.
+    pub id: String,
+    /// Active, in the selected course, and matching the requested filters.
+    pub eligible: bool,
+    /// Distinct completed ritual days.
+    pub lock_in_days: u32,
+    /// Included in the caller's already resolved trip drop.
+    pub trip: bool,
+    /// Observed lifetime production count.
+    pub reps: u32,
+    /// Observed automaticity percentage.
+    pub automaticity: u8,
+    /// Learner-declared hardness.
+    pub difficulty: Difficulty,
+    /// Epoch milliseconds of addition.
+    pub added_at: i64,
+}
+
+/// Choose a closed daily set: unfinished graduation, trip, weakest, then new.
+/// Caller persists the returned IDs and must not reselect a resumed day's set.
+/// Goal/level weights are intentionally absent until an approved policy exists.
 #[must_use]
-pub fn select_refrain_set(
-    _candidates: &[PhraseState],
-    _size: u32,
-    _local_day: &str,
-) -> Vec<String> {
-    todo!("M2: priority-ordered selection; see docs/architecture/scheduling.md")
+#[uniffi::export]
+pub fn select_refrain_set(candidates: &[RefrainCandidate], size: u32) -> Vec<String> {
+    fn weight(d: Difficulty) -> u8 {
+        match d {
+            Difficulty::Hard => 2,
+            Difficulty::Med => 1,
+            Difficulty::Easy => 0,
+        }
+    }
+    let eligible: Vec<_> = candidates.iter().filter(|p| p.eligible).collect();
+    let mut ordered = Vec::new();
+    let mut mid: Vec<_> = eligible
+        .iter()
+        .copied()
+        .filter(|p| p.lock_in_days > 0 && p.lock_in_days < LOCK_IN_DAYS_TO_GRADUATE)
+        .collect();
+    mid.sort_by(|a, b| {
+        b.lock_in_days
+            .cmp(&a.lock_in_days)
+            .then_with(|| a.id.cmp(&b.id))
+    });
+    ordered.extend(mid);
+    let mut trip: Vec<_> = eligible.iter().copied().filter(|p| p.trip).collect();
+    trip.sort_by(|a, b| a.id.cmp(&b.id));
+    ordered.extend(trip);
+    let mut weak: Vec<_> = eligible.iter().copied().filter(|p| p.reps > 0).collect();
+    weak.sort_by(|a, b| {
+        a.automaticity
+            .cmp(&b.automaticity)
+            .then_with(|| weight(b.difficulty).cmp(&weight(a.difficulty)))
+            .then_with(|| a.id.cmp(&b.id))
+    });
+    ordered.extend(weak);
+    let mut new: Vec<_> = eligible.iter().copied().filter(|p| p.reps == 0).collect();
+    new.sort_by(|a, b| a.added_at.cmp(&b.added_at).then_with(|| a.id.cmp(&b.id)));
+    ordered.extend(new);
+    let mut seen = std::collections::BTreeSet::new();
+    ordered
+        .into_iter()
+        .filter(|p| seen.insert(p.id.clone()))
+        .take(size as usize)
+        .map(|p| p.id.clone())
+        .collect()
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn cloze_uses_only_supplied_valid_content_metadata() {
+        let tokens = crate::asr::tokenize("¿ el baño ?");
+        assert_eq!(cloze_mask(&tokens, "es-ES", &[99, 0, 2]), [2]);
+        assert!(cloze_mask(&tokens, "es-ES", &[]).is_empty());
+        assert!(cloze_mask(&tokens, "unknown", &[2]).is_empty());
+        assert_eq!(
+            cloze_mask(&crate::asr::tokenize("Где кафе?"), "ru-RU", &[1]),
+            [1]
+        );
+    }
+
+    fn candidate(id: &str) -> RefrainCandidate {
+        RefrainCandidate {
+            id: id.into(),
+            eligible: true,
+            lock_in_days: 0,
+            trip: false,
+            reps: 0,
+            automaticity: 0,
+            difficulty: Difficulty::Med,
+            added_at: 0,
+        }
+    }
+
+    #[test]
+    fn selection_preserves_priority_filters_and_deduplicates() {
+        let mut mid = candidate("mid");
+        mid.lock_in_days = 3;
+        mid.trip = true;
+        let mut trip = candidate("trip");
+        trip.trip = true;
+        let mut weak = candidate("weak");
+        weak.reps = 1;
+        weak.automaticity = 2;
+        let mut hard = candidate("hard");
+        hard.reps = 1;
+        hard.automaticity = 2;
+        hard.difficulty = Difficulty::Hard;
+        let mut excluded = candidate("excluded");
+        excluded.eligible = false;
+        excluded.lock_in_days = 3;
+        let candidates = vec![candidate("new"), weak, excluded, trip, mid, hard];
+        assert_eq!(
+            select_refrain_set(&candidates, 8),
+            ["mid", "trip", "hard", "weak", "new"]
+        );
+        assert_eq!(select_refrain_set(&candidates, 2), ["mid", "trip"]);
+        assert!(select_refrain_set(&candidates, 0).is_empty());
+        let mut reversed = candidates.clone();
+        reversed.reverse();
+        assert_eq!(
+            select_refrain_set(&candidates, 8),
+            select_refrain_set(&reversed, 8)
+        );
+        assert!(select_refrain_set(&[], 8).is_empty());
+    }
 
     #[test]
     fn automaticity_reaches_a_hundred_at_the_target() {

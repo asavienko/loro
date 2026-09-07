@@ -22,6 +22,8 @@ echo "── wasm (for apps/api — the server runs the SAME merge as the client
 # at the build that never produced the file. Opt out explicitly or not at all.
 if command -v wasm-pack >/dev/null 2>&1; then
   wasm-pack build --target nodejs --out-dir pkg
+  wasm-pack build --target web --out-dir pkg-web
+  node scripts/browser-bytes.mjs
 elif [[ "${LORO_SKIP_WASM:-}" == "1" ]]; then
   echo "  wasm-pack not found; LORO_SKIP_WASM=1 set — skipping."
   echo "  apps/api built from this tree will report merge: unavailable."
@@ -47,13 +49,13 @@ fi
 if [[ "$MOBILE" == true ]]; then
   echo "── iOS ──"
   for target in aarch64-apple-ios aarch64-apple-ios-sim; do
-    cargo build --release --target "$target"
+    cargo build --release --lib --target "$target"
   done
 
   echo "── Android ──"
   if command -v cargo-ndk >/dev/null 2>&1; then
     cargo ndk -t arm64-v8a -t armeabi-v7a -t x86_64 \
-      -o ../../apps/mobile/android/app/src/main/jniLibs build --release
+      -o ../../apps/mobile/android/app/src/main/jniLibs build --release --lib --lib
   else
     echo "  cargo-ndk not found. Install it with: cargo install cargo-ndk"
   fi

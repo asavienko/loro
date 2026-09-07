@@ -6,7 +6,12 @@
   "tasks": {
     "core-rs:build": {
       "inputs": ["packages/core-rs/src/**", "packages/core-rs/Cargo.toml", "packages/core-rs/*.udl"],
-      "outputs": ["packages/core-rs/target/**", "packages/core-rs/bindings/**", "packages/core-rs/pkg/**"],
+      "outputs": [
+        "packages/core-rs/target/**",
+        "packages/core-rs/bindings/**",
+        "packages/core-rs/pkg/**",
+        "packages/core-rs/pkg-web/**"
+      ],
       "cache": true
     },
     "core-rs:test": {
@@ -30,8 +35,8 @@
     // which is cargo + wasm-pack, not tsc. Without this override it inherits the
     // generic `build` outputs, finds none of them, and warns while caching nothing.
     "@loro/core-rs#build": {
-      "inputs": ["src/**", "Cargo.toml", "Cargo.lock", "build.sh", "*.udl"],
-      "outputs": ["pkg/**", "bindings/**", "target/release/libloro_core.*"]
+      "inputs": ["src/**", "Cargo.toml", "Cargo.lock", "build.sh", "scripts/**", "*.udl"],
+      "outputs": ["pkg/**", "pkg-web/**", "bindings/**", "target/release/libloro_core.*"]
     },
     // The proof the app actually compiles. Not part of `check` — it takes minutes and
     // needs the full RN toolchain — but CI runs it on every PR.

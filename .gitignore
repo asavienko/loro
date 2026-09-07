@@ -101,3 +101,6 @@ secrets/.encrypt.*
 
 # Local APK artifacts; generated native projects are built in temporary snapshots.
 .local-builds/
+# Generated browser WASM and local native library build products.
+packages/core-rs/pkg-web/
+apps/mobile/modules/loro-core/artifacts/

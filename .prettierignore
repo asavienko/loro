@@ -2,6 +2,7 @@
 packages/design-tokens/out/
 packages/core-rs/bindings/
 packages/core-rs/pkg/
+packages/core-rs/pkg-web/
 packages/core-rs/target/
 docs/architecture/openapi.*.json
 
