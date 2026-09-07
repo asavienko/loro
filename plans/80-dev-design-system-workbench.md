@@ -1,78 +1,59 @@
-# Dev-only design-system and tokens workbench
+# Complete the existing dev design-system workbench
 
-- **Requirement IDs:** `F-05`, `F-06`, `LB-25`…`LB-28`; developer-only acceptance contract
-- **Milestone:** M1
-- **Status:** 🟡 Gated route, exhaustive token catalog, live contrast report, current production
-  specimens, inspection controls, CI/browser suite, and docs implemented; loading and forced
-  pressed/focused specimens remain blocked on plan 57's production state APIs
-- **Depends on:** 53 ✅ generated-token completion; coordinates with 57 runtime design system
+- **Requirement IDs:** `F-05`, `F-06`, `LB-25`…`LB-28`
+- **Milestone:** M1/M2, alongside the owning UI features
+- **Status:** 🟡 Workbench, token enumeration, contrast reports, inspection controls and production
+  exclusion are implemented. Production-state and navigation/language specimen coverage remains; new
+  state APIs need 57 and future navigation components need 81. Existing component registration can
+  start now.
+- **Depends on:** 53 completed; 57 production state APIs; 81 future navigation components; 87
+  implemented language UI.
+- **Reviewed:** 2026-09-07 against merged baseline `2d9e8c3`.
 
-## Outcome
+## Verified starting point
 
-The development environment has a discoverable `/dev/tokens` page that renders the generated Loro
-tokens and reusable component states from production code. It becomes the visual inspection surface
-for theme, type, motion, text scale, reduced motion, and component drift, while remaining
-unreachable and unadvertised in production builds.
+`apps/mobile/app/dev/tokens.tsx` and `apps/mobile/src/dev-tools/` already provide the gated route,
+searchable generated tokens, live contrast reports, inspection-only accent/text-scale/reduced-motion
+controls, device viewport and production specimens. Three workbench browser tests and a production
+route unavailability check exist. The original implementation commits are `be024be`, `5632ce1`,
+`7eefcf2` and `5ee247f`; plan 84 subsequently reviewed the rendered workbench.
 
-## Current state and boundary
+`specimenContract.ts` still marks forced pressed/focused and loading states pending. Its registry
+lists 30 components and six pending navigation names, while production now also exports
+`NavigationMenu` and `LanguageChoices`. Registration must follow actual production exports, not
+obsolete prototype names. The authored reference remains `Design System.dc.html`.
 
-`@loro/design-tokens` already generates TypeScript, Swift, and Kotlin output, and completed plan 53
-landed typography, motion, layout, and control generation. Plan 57 owns runtime fonts, themes,
-motion, haptics, and reusable component implementation. This plan does not create a second token
-source or duplicate the broad component-gallery work in plan 57: it builds the dev surface that
-renders plan 57's production components and plan 53's generated values.
+## Remaining work
 
-The authored reference is `Design System.dc.html`: Colour, Type, Space/radius/depth, Motion/touch,
-Components, Navigation, Screens, Voice/icons, and Files. Its headline counts (245 tokens and 37
-components) are design-package inventory, not values to hardcode into the app.
-
-## Work
-
-1. Add a typed dev-tools gate and `/dev/tokens` route. Local Expo/web development enables it by
-   default; production export, release clients, deep links, and the learner menu resolve it as not
-   found. Keep the route free of credentials, learner data, and privileged mutations even in dev.
-2. Build the workbench outside `app/` so the route only composes it. Derive sections from generated
-   exports and production component registries; never copy values out of the `.dc.html` or generated
-   files into route-local literals.
-3. Render searchable token rows for semantic name, resolved value, source group, and intended use:
-   paper/ink/accent/status/hairlines, type, spacing/layout, radii, shadows, motion, touch, and
-   navigation geometry. Show all accent themes side by side and flag failed contrast checks.
-4. Render production components in explicit states: default, pressed/focused, disabled, loading,
-   empty, error, selected, long copy, Spanish, 200%/310% text scale, reduced motion, and each
-   accent. Reuse the state matrix plan 57 establishes rather than creating demo-only component
-   variants.
-5. Add device-size and safe-area controls for the authored 344×732 reference plus supported phone,
-   tablet, and web widths. Controls change inspection context only; they never alter app settings.
-6. Add a small navigation section for `Spine`, `ScreenHeader`, `SwitcherSheet`, `ExitSheet`,
-   `ResumeStrip`, and `TransportStrip` once plan 81 provides them. Until then, the registry reports
-   those entries as intentionally pending rather than drawing lookalikes.
-7. Add developer documentation and a start command/link explaining how to reach the page, how to add
-   a specimen, and which generated source to edit when a value is wrong.
-8. Add a separate dev-workbench browser suite. Do not place this route in learner `STATES`; prove
-   production route unavailability, token enumeration, theme/reduced-motion controls, keyboard
-   access, overflow at large text, and screenshot baselines for a small stable subset.
+1. [ ] Reconcile the registry with current exported components, including NavigationMenu and
+       LanguageChoices. State explicitly whether each export is rendered, interaction-owned or
+       internal; add a drift assertion that catches a new component being omitted.
+2. [ ] Consume plan 57's actual loading and forced pressed/focused APIs when they exist. Verify the
+       same component under default, disabled, error, selected, long-copy and motion variants; no
+       demonstration-only clone or loading prop invented inside the workbench.
+3. [ ] Add Bulgarian/Russian and translated long-copy specimens alongside Spanish, testing 200% and
+       310% with font size, line height and letter spacing. Inspection must not mutate learner
+       settings.
+4. [ ] Replace pending navigation entries with real plan-81 components as they land: named headers,
+       More/switcher, exits, resume and transport. Keep unfinished components honestly pending.
+5. [ ] Extend the existing keyboard/focus/overflow, token and small stable screenshot suites only
+       for those changes. Retain the authored-size horizontal viewport; do not shrink it to hide
+       overflow.
+6. [ ] Update `apps/mobile/README.md` and component inventory with the final supported/pending
+       matrix.
 
 ## Acceptance criteria
 
-- `nvm use 22 && pnpm --filter @loro/mobile start --web` exposes `/dev/tokens` with no service,
-  account, native module, or secret.
-- Every exported token is either rendered or explicitly classified as non-visual/internal; a drift
-  test fails when an export silently disappears from the page.
-- Specimens import the same components and tokens learner routes use. No workbench-only clone can
-  satisfy coverage.
-- The page is keyboard/screen-reader usable and remains legible at 200% and 310% text scale.
-- Production bundle E2E proves `/dev/tokens` is unavailable and no learner menu links to it.
-- `pnpm check`, the dev-workbench suite, and `pnpm test:e2e:bundle` pass.
+- Every production export and specimen state has an accurate coverage disposition.
+- Specimens consume the same generated tokens and production APIs as learner routes.
+- Keyboard, screen reader, large text and Cyrillic specimens remain usable.
+- Production export and deep links still make `/dev/tokens` unavailable; learner menus never list
+  it.
+- `pnpm check`, `pnpm test:e2e:workbench` and `pnpm test:e2e:bundle` pass. Run learner E2E when
+  shared component behavior changes; keep developer states outside the learner manifest.
 
-## Commit sequence
+## Delivery boundary
 
-1. `feat(mobile): gate the dev design-system route (F-05)`
-2. `feat(mobile): render generated tokens and production specimens (F-05)`
-3. `test(mobile): prove workbench coverage and production unavailability (F-06)`
-4. `docs(mobile): document the tokens workbench (F-05)`
-
-## Out of scope
-
-Editing generated files by hand, replacing plan 57's runtime work, learner theme settings, visual
-regression coverage for every permutation, and shipping a public Storybook or design documentation
-site.
+Commit registry/language coverage first (F-05), then each dependency-backed state addition (F-06).
+Plan 57 owns component behavior and theme implementation; 81 owns navigation. This plan owns only
+their inspection coverage. Do not rebuild the route, token pipeline, contrast report or gallery.

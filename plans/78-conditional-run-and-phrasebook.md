@@ -2,9 +2,17 @@
 
 - **Requirement IDs:** `LC-01`…`LC-15`
 - **Milestone:** M5
-- **Status:** Blocked on Q-05 and M3 comparative evidence
-- **Depends on:** 59 durable ladder history, 60 deterministic selection/maths, 71 experiment
-  decision/data, 72 quality gates
+- **Status:** ⛔ Run and ladder Phrasebook remain blocked by Q-05 and comparative M3 evidence.
+  Existing ladder helpers are reusable inputs, not approval to build Loop C.
+- **Depends on:** 59 course history; 60 canonical selection; 71 approved experiment and data; 72
+  applicable release evidence.
+- **Reviewed:** 2026-09-07 against merged baseline `2d9e8c3`.
+
+## Verified starting point
+
+`packages/core-rs/src/ladder.rs` exists, but Run/Phrasebook routes and a Run engine do not. Keep
+ladder-compatible data in ordinary engines. Plan 81 may expose search over existing owned phrases
+independently; it must not release the gated ladder Phrasebook under another name.
 
 ## Decision gate
 
@@ -19,18 +27,19 @@ Phrasebook exposes real ladder distribution/history and filters; Run provides a 
 resumable sequence using the existing `PracticeEngine` contract. Neither invents rung movement,
 staleness, mastery, or readiness.
 
-## Work
+## Remaining work
 
-1. Write the go/no-go decision and exact product scope; update Q-05 and roadmap before code.
-2. Audit accumulated ladder data/model validity and migrate only if the approved metric requires it.
-3. Build Phrasebook first: scalable search/filter/tag/rung/history states with accessible histogram
-   and honest no-data behavior.
-4. Implement `RunEngine` and Run session/deal/ladder/finisher/resume/undo behavior through canonical
-   selection and `applyDelta`.
-5. Define engine switching, flags, trip interaction, offline behavior, sync conflicts, and rollback
-   if the arm is disabled.
-6. Add deterministic simulations, long-library performance, interrupted/resumed sessions, no-data/
-   mixed-rung states, accessibility, native E2E, and experiment-analysis parity.
+1. [ ] Write the go/no-go decision and exact product scope; update Q-05 and roadmap before code.
+2. [ ] Audit accumulated target-course ladder data/model validity and migrate only if the approved
+       metric requires it.
+3. [ ] Build Phrasebook first: scalable search/filter/tag/rung/history states with accessible
+       histogram and honest no-data behavior.
+4. [ ] Implement `RunEngine` and Run session/deal/ladder/finisher/resume/undo behavior through
+       canonical selection and `applyDelta`.
+5. [ ] Define engine switching, flags, trip interaction, offline behavior, sync conflicts, and
+       rollback if the arm is disabled.
+6. [ ] Add deterministic simulations, long-library performance, interrupted/resumed sessions,
+       no-data/ mixed-rung states, accessibility, native E2E, and experiment-analysis parity.
 
 ## Acceptance criteria
 

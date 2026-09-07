@@ -1,112 +1,81 @@
-# Navigation spine, switcher, and More menu
+# Complete navigation laws, More, exits, resume and travelling audio
 
-- **Requirement IDs:** `NAV-01`…`NAV-16`, plus existing `F-03`, `P1-02`, `P2-14`, `P4-06`, `P5-08`,
-  and `AS-04`
+- **Requirement IDs:** `NAV-01`…`NAV-16`, `F-03`, `P1-02`, `P2-14`, `P4-06`, `P5-08`, `AS-04`
 - **Milestone:** M1/M2
-- **Status:** 🟡 Partly implemented. Plan 84 moved the spine and switcher into the shared layout for
-  Today, Add, Progress, Stream, Refrain and phrase detail; the built-hub declaration in
-  `src/lib/navigation.ts` also supplies Today's rail. Cold stack entries have a Today escape and
-  menu navigation reuses existing stack destinations. Today retains its root header/day treatment.
-  **Remaining:** complete surface metadata/guards, flow navigation, More, contextual/ongoing groups,
-  session exits, durable resume, travelling transport and native verification. **Dependencies:**
-  plan 56 must extend the built route declaration with its full route/failure policy, and ongoing
-  work/transport still need 59/62/64. The current menu is not evidence those systems are
-  implemented.
-- **Depends on:** 56 typed navigation/failure shell; 57 runtime design system; transport/resume
-  integration also depends on 59, 62, and 64
+- **Status:** 🟡 Shared built-page spine/switcher, translated hubs and cold-entry escapes are
+  implemented. More, ongoing/contextual groups, full flow/session laws, durable resume and transport
+  remain. Consume 56's metadata; 59/64 supply checkpoints and 62 supplies audio. Q-17 gates final
+  home-rail priority, not reachability work.
+- **Depends on:** 55/79/84 completed; 56 route contract, 57 shared state APIs; 59/64 checkpoints and
+  62 playback for later slices.
+- **Reviewed:** 2026-09-07 against merged baseline `2d9e8c3`.
 
-## Outcome
+## Verified starting point
 
-Every learner route participates in the v1.1 navigation system: a 28px spine names the current place
-and ongoing work, opens the new switcher, and reaches the state-driven More menu. Back names its
-destination, sessions pause or end honestly, flows resume, empty deep links stay explainable, and
-active audio has one travelling transport.
+`apps/mobile/app/_layout.tsx` mounts shared chrome over Today, Add, Progress, Stream, Refrain,
+phrase detail and Languages. `apps/mobile/src/lib/navigation.ts` supplies translated built hubs and
+Today's rail. `NavigationMenu.tsx` and `apps/mobile/e2e/navigation.spec.ts` cover menu navigation,
+cold Today escapes, warm Back and Escape/focus restoration. Onboarding retains step-back behavior.
 
-## Relationship to existing plans
+There is no `/more`, exhaustive surface registry, ongoing-work selector, exit sheet, durable resume
+or travelling audio. Today is the only implemented home; the future conditional-home resolver is
+still work, not a seam to claim already exists.
 
-Plan 56 owns the typed route model, route guards, deep-link parsing, failure boundaries, input
-shell, and scalable-list contract. This plan consumes and extends that model with the authored v1.1
-navigation metadata and presentation. It must not build a competing navigation store or route table.
-Plans 59/64 own durable session checkpoints, plan 62 owns playback truth, and plan 70 owns OS
-lock-screen/Live Activity mirrors.
+## Source and ownership
 
-The source is `Navigation.dc.html`, especially the five surface classes at lines 40–76, four
-reference screens at 82–305, spine/switcher behavior at 311–499, and six state laws at 512–873.
+`Navigation.dc.html:40–76`, `82–305`, `311–499`, `512–873` own surface classes, chrome and laws.
+Plan 56 owns the single route declaration, parsing/guards, conditional-home resolution, failure
+policy and `check:routes`. This plan owns presentation and interaction against those values; it must
+not create a second route table or navigation store. Plan 59 owns checkpoint persistence, 64 owns
+wave transitions, 62 owns playback truth and 70 owns native lock-screen mirrors.
 
-## Work
+## Remaining work
 
-1. Extend the single route declaration with exhaustive metadata: `surfaceClass` (`root`, `push`,
-   `session`, `flow`, `sheet`), place/copy keys, parent/resolved-home behavior, `hub`, `built`,
-   `expectedUse`, `resumable`, practice-source parsing, empty-state copy, and rail/More grouping.
-   Add a static `check:routes` gate for missing or contradictory fields.
-2. Implement shared navigation components from the v1.1 package: `Spine`, `ScreenHeader`, `NavRail`,
-   `SwitcherHandle`, `SwitcherSheet`, `ArrivalNote`, `ExitSheet`, `ResumeStrip`, and
-   `TransportStrip`. Components consume route/session/audio values and presentation copy; they do
-   not import the store or invent route policy.
-3. Mount the spine above Root, Push, Session, and Flow surfaces and omit it while a Sheet owns
-   focus. The left word names the place and opens the switcher. The right word names the one ongoing
-   item, or “n ongoing” and opens the Ongoing group. Never add a second chrome row.
-4. Implement the switcher and `/more` from route data:
-   - switcher: Ongoing first, then built/root destinations and contextual flow steps;
-   - More: Lately, Phrases, Practice, and You, with real counts and conditional trip content;
-   - hide unbuilt or empty groups rather than rendering disabled destinations;
-   - add `/phrasebook?q=` for owned-phrase search without logging query text.
-5. Implement surface-class behavior: Root has no back; Push names the actual stack destination or
-   uses the cold-entry `✕ <resolved home>` variant; Session disables back gestures and exits through
-   pause/end/keep-going; Flow steps back and persists answers; Sheet traps focus and is the sole
-   escape while open.
-6. Implement authored laws using one source of truth:
-   - `NAV-13`: dismissal writes a resumable checkpoint and makes the resolved home's primary CTA
-     Resume, without adding a second CTA;
-   - `NAV-14`: one escape at a time, with underlying session exits inert and inaccessible;
-   - `NAV-15`: playback state from the audio module renders one travelling strip on Root/Push, stays
-     hidden in its own Session, pauses before another practice Session, and keeps playing behind
-     Flow/Sheet;
-   - `NAV-16`: every non-Sheet surface has the route-rendered spine.
-7. Handle deep-link/session collisions with the existing pure “work at stake” predicate: queue a
-   target when reps or flow answers would be lost; replace only an idle Session, Root, or Push.
-   Distinguish resolvable-empty, gone/deleted, and malformed/unresolvable destinations with honest
-   copy and two useful next actions.
-8. Update the eight existing routes first, then require every later route plan to declare metadata
-   and states in its own commit. Preserve the current conditional-home resolver and add authored
-   rails as data on each possible home rather than hardcoding Today.
-9. Add accessibility and interaction behavior: focus trap/restore, scrim and swipe dismissal,
-   meaningful control names, minimum touch targets, safe-area/keyboard handling, reduced motion, and
-   200%/310% layouts. A screen reader must hear place, ongoing state, counts, and destinations
-   without relying on glyphs or color.
+1. [ ] Consume plan 56's exhaustive metadata: surface class, translated place/parent, built/hub,
+       expectedUse, practice source with target course, resumability and rail/More grouping.
+       Preserve all currently reachable hubs, including Languages. Resolve Q-17 before final daily
+       rail priorities; store rails on each approved resolved home, not as a Today-only assumption.
+2. [ ] Evolve existing chrome into the repeated production components needed by actual call sites.
+       Root has no Back; Push names its real destination or cold resolved home; Flow steps back with
+       answers preserved; Session disables implicit exits; Sheet owns focus and the only active
+       escape.
+3. [ ] Add More and switcher groups from selectors: Ongoing first, contextual flow steps, built
+       destinations, then Lately/Phrases/Practice/You with real counts and conditional trip entries.
+       Hide unbuilt/empty groups. Expose search over owned phrases using the existing phrase
+       data/list surface; reserve the ladder Phrasebook/Run product for gated plan 78. Do not create
+       a dead `/phrasebook` link or log search text.
+4. [ ] Show one/multiple ongoing items and implement NAV-13/14: Pause, End and Keep going; persisted
+       checkpoint acknowledgement; a single primary Resume action on the resolved home; focus
+       restoration and no underlying exit while a sheet is active. A language/course switch must not
+       discard work.
+5. [ ] Implement the pure work-at-stake predicate and deep-link collision flow together with 56:
+       queue a target when reps/answers would be lost; replace only idle work. Distinguish
+       valid-empty, deleted/gone and malformed sources, with useful recovery and no silent course
+       substitution.
+6. [ ] Connect NAV-15 to plan 62: one travelling transport on Root/Push, hidden in its own Session,
+       pause before another practice Session, continue behind Flow/Sheet when policy permits.
+       Commands must affect the same native session and use real position/state.
+7. [ ] Complete sheet gesture/focus ownership, safe-area/keyboard behavior, meaningful translated
+       names, minimum touch targets, reduced motion and 200%/310% reflow; feed real components
+       to 80.
 
-## Test matrix
+## Verification and acceptance
 
-- Pure tables cover every route × surface class × cold/warm entry × built state × practice source.
-- Property tests enforce: one resolved home, no unreachable built route, no daily route hidden at
-  depth three, one active escape, and one rendered transport.
-- Browser E2E adds states for closed/open switcher, one/multiple ongoing items, More with hidden and
-  populated groups, named back, cold deep link, exit sheet, resume strip, empty/gone/bad source, and
-  route-persistent audio fake.
-- Native integration covers back gestures, sheet focus/gesture ownership, process-resumed sessions,
-  real audio continuity, interruptions, and lock-screen parity once dependencies land.
+- Pure route tables cover cold/warm entry, surface classes, built state, target course and practice
+  sources. Properties enforce one home, one escape, one transport and reachability of every built
+  hub.
+- Add manifest states and E2E journeys for More, ongoing work, exit/resume, empty/gone/bad links,
+  language changes and provider-independent navigation. Keep current menu/Back expectations green.
+- Native tests prove back gestures, process resume, real audio continuity and lock-screen parity. A
+  browser fake can test UI state, not prove native playback or persistence.
+- Counts come from selectors; pause/resume survives relaunch; missing routes and fake audio remain
+  unavailable. `check:routes`, `pnpm check`, learner/bundle E2E and applicable device suites pass.
 
-## Acceptance criteria
+## Delivery sequence
 
-- Every built learner route is reachable from the spine/switcher or More without relying on Back.
-- No visible menu row points to an unbuilt screen; real counts come from selectors, never fixtures.
-- Leaving an active session offers Pause first and distinguishes Pause, End, and Keep going without
-  loss or shame copy.
-- Cold deep links never render a false back destination; empty valid sets never silently redirect.
-- Audio state is read from plan 62's module and survives allowed route changes with pause/end
-  controls that affect the same underlying session.
-- `check:routes`, `pnpm check`, `pnpm test:e2e`, and the applicable native matrix pass.
+1. [ ] More/contextual navigation on the completed route-contract slice (NAV-01/NAV-08).
+2. [ ] Session/flow exits and persisted resume integration (NAV-13/NAV-14).
+3. [ ] Travelling transport and device verification (NAV-15/NAV-16).
 
-## Commit sequence
-
-1. `feat(mobile): declare v1.1 route metadata and laws (NAV-01)`
-2. `feat(mobile): add the spine and switcher menu (NAV-16)`
-3. `feat(mobile): add state-driven More navigation (NAV-08)`
-4. `feat(mobile): implement honest exits and resumability (NAV-13)`
-5. `feat(mobile): connect travelling audio transport (NAV-15)`
-6. `test(mobile): cover navigation states and invariants (NAV-01)`
-
-## Out of scope
-
-Business logic for unbuilt destinations, native universal-link provisioning, session persistence
-internals, audio playback internals, widgets/Live Activities, and the dev-only tokens route.
+Native universal-link provisioning, route business logic, persistence/audio internals and OS widgets
+remain with their owners. No authored artifact changes are required.

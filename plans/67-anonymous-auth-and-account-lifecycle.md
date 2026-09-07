@@ -2,8 +2,17 @@
 
 - **Requirement IDs:** `F-01`, `F-02`, `F-07`
 - **Milestone:** M2
-- **Status:** Not started
-- **Depends on:** 59 durable device identity/state, 66 backend data and guard seams
+- **Status:** — Auth and account lifecycle remain to do. Contract/security design can start from
+  completed 85; runtime needs 66 and device identity/storage from 59.
+- **Depends on:** 85 completed; 66 durable principal-aware backend; 59 device identity/state; 86
+  provider verification/email adapters.
+- **Reviewed:** 2026-09-07 against merged baseline `2d9e8c3`.
+
+## Verified starting point
+
+Shared account schemas exist in `packages/core/src/api/account.ts`; no authentication service,
+principal guard or account route is registered in Nest. Local use already starts without an account.
+The existing generic sync development seam is not a production identity boundary.
 
 ## Outcome
 
@@ -11,20 +20,21 @@ A learner starts offline without an account, later signs in without losing or du
 and can export/delete data. Every server row and rate budget is scoped to an authenticated
 principal.
 
-## Work
+## Remaining work
 
-1. Model local installation/device identity separately from account identity and define rotation,
-   loss, reinstall, restore, and multi-device semantics.
-2. Implement short-lived access/rotating refresh tokens with secure native storage, replay
-   detection, revocation, clock-skew policy, and redacted logs.
-3. Add the approved Apple/Google/magic-link providers behind one account-link contract; do not make
-   sign-in a first-run requirement.
-4. Specify and implement anonymous→signed-in reconciliation using the shared merge policy,
-   idempotency, duplicate-device handling, conflict visibility, and retry after interruption.
-5. Scope every endpoint/repository/cache/rate bucket by principal and test horizontal/vertical
-   access controls.
-6. Implement account/device management, export, deletion/tombstone propagation, consent/version
-   records, and recovery/support procedures.
+1. [ ] Model local installation/device identity separately from account identity and define
+       rotation, loss, reinstall, restore, and multi-device semantics.
+2. [ ] Implement short-lived access/rotating refresh tokens with secure native storage, replay
+       detection, revocation, clock-skew policy, and redacted logs.
+3. [ ] Add the approved Apple/Google/magic-link providers behind one account-link contract; do not
+       make sign-in a first-run requirement.
+4. [ ] Specify and implement course-aware anonymous→signed-in reconciliation using the shared merge
+       policy, idempotency, duplicate-device handling, conflict visibility, and retry after
+       interruption.
+5. [ ] Scope every endpoint/repository/cache/rate bucket by principal and test horizontal/vertical
+       access controls.
+6. [ ] Implement account/device management, export, deletion/tombstone propagation, consent/version
+       records, and recovery/support procedures.
 
 ## Acceptance criteria
 
