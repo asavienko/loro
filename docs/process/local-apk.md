@@ -67,9 +67,10 @@ needed. The runner verifies the APK signature, application ID and bundled JavaSc
 
 The local-build config uses `app.loro.android.preview` and the name “Loro Preview”, separate from
 the planned production app. OTA/EAS placeholders and missing production icon/splash image references
-are excluded only for this preview; Android uses the generated template assets. Store signing,
-branded native assets and version-code policy remain release work. A verified build is not a
-device-test result: audio/ASR, native persistence and Rust module bridges remain unimplemented.
+are excluded only for this preview. Android uses the generated template icon and an explicit
+transparent splash drawable, preserving a background-only launch screen. Store signing, branded
+native assets and version-code policy remain release work. A verified build is not a device-test
+result: audio/ASR, native persistence and Rust module bridges remain unimplemented.
 
 The implementation follows
 [Expo's local build flow](https://docs.expo.dev/guides/local-app-production/) and
