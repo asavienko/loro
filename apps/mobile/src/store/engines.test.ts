@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { userPhraseId, type Clock } from '@loro/core'
 import { createEngineContext } from './engines'
-import { jsCoreFacade } from './coreFacade'
+import { fakeCore } from '@loro/core/testing'
 import { createAppStore } from './store'
 
 const fixedClock: Clock = {
@@ -12,9 +12,14 @@ const fixedClock: Clock = {
 
 describe('createEngineContext', () => {
   it('assembles only the supplied store and engine dependencies', async () => {
-    const store = createAppStore({ clock: fixedClock, newId: () => userPhraseId('test-row') })
+    const store = createAppStore({
+      core: fakeCore(),
+      clock: fixedClock,
+      newId: () => userPhraseId('test-row'),
+    })
     store.setState({ dailyMinutes: 20 })
 
+    const core = fakeCore()
     const flags = { bool: (_key: string, fallback: boolean) => fallback, number: () => 17 }
     const context = createEngineContext(
       store,
@@ -26,11 +31,11 @@ describe('createEngineContext', () => {
         flags,
         seed: 123,
       },
-      jsCoreFacade,
+      core,
     )
 
     expect(context.clock).toBe(fixedClock)
-    expect(context.core).toBe(jsCoreFacade)
+    expect(context.core).toBe(core)
     expect(context.flags).toBe(flags)
     expect(context.settings).toEqual({ dailyMinutes: 20, waveTimes: ['07:00'], repTarget: 9 })
     expect(context.seed).toBe(123)

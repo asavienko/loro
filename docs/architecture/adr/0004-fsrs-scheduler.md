@@ -48,9 +48,9 @@ tell we'd got it wrong.
 
 **Pros**
 
-- Its state **is** stability + difficulty + retrievability. `R(t) = 0.9^(t/S)` in the canonical form
-  — the same shape the blueprint plots, and the threshold is a parameter (the blueprint's 50% is a
-  desired-retention setting).
+- Its state **is** stability + difficulty + retrievability. FSRS-6 uses a power forgetting curve,
+  with stability measured at 90% recall. Desired retention is a separate parameter; the prototype's
+  exponential curve is corrected by the implementation amendment below.
 - Open, published, validated on very large review datasets, with a reference implementation to port
   and test against.
 - **Parameters can be re-optimised from our own `review_log`**, so the scheduler gets better for
@@ -125,3 +125,21 @@ cap disclosed to the learner — the review-debt failure mode is the main way SR
   visualisation contract.
 - The implicit-grade mappings turn out to be doing more harm than good, in which case non-SRS
   engines would only feed FSRS on explicit gates.
+
+## Implementation amendment — 2026-09-07 (`F-04`, plan 60)
+
+[FSRS model and policy](../fsrs-model.md) pins FSRS-6, upstream revision, MIT license, parameters,
+precision, learning steps and algorithm provenance. The authored desired retention remains 50%; the
+production model uses the canonical power curve, not `0.5^(t/S)`. The future Memory screen must use
+Rust retrievability and distinguish stability at 90% recall from the 50% due interval. This intended
+implementation correction leaves the authored artifacts intact.
+
+The scheduler returns all six state fields plus an algorithm identifier. Existing unversioned
+placeholder state is reinitialized only when a real review occurs, retaining phrases, declared
+difficulty and observed practice. Old fabricated intervals never become canonical by relabeling. No
+historical reviews are reconstructed. Plan 59 commits the result and scalar review evidence with the
+attempt identity, progress, checkpoint and outbox.
+
+Reference parity and browser transport are separate from native bridge/device acceptance. The manual
+loop supplies only explicit practice evidence; it cannot assert recognized speech, measured latency
+or DSP scores. Passive listening and skipped items do not schedule reviews.

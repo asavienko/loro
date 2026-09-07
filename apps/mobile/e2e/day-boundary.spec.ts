@@ -203,3 +203,49 @@ async function weekdayInitials(page: Page): Promise<string[]> {
     .map((s) => s.trim())
     .filter((s) => s.length === 1 && s !== '🔥')
 }
+
+test('an open Refrain replans before a post-midnight rep can complete yesterday’s set', async ({
+  page,
+}) => {
+  await atInstant(page, '2026-03-10T23:59')
+  await onboard(page)
+  await startWave(page)
+  for (const name of ['Say it', 'Chorus it', 'Faster!', 'I read it aloud', 'Respond']) {
+    await page.getByRole('button', { name, exact: true }).click()
+  }
+  await expect(page.getByRole('progressbar', { name: 'Automaticity' })).toHaveAttribute(
+    'aria-valuenow',
+    '83',
+  )
+  await jumpTo(page, '2026-03-11T00:01')
+  // No foreground event: the phone stayed awake on this exact screen.
+  await page.getByRole('button', { name: 'Say it cold', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Say it', exact: true })).toBeVisible()
+  await expect(page.getByRole('progressbar', { name: 'Automaticity' })).toHaveAttribute(
+    'aria-valuenow',
+    '0',
+  )
+  await page.getByRole('button', { name: 'Say it', exact: true }).click()
+  await expect(page.getByRole('progressbar', { name: 'Automaticity' })).toHaveAttribute(
+    'aria-valuenow',
+    '17',
+  )
+  await expect(page.getByText('Locked in for today')).toBeHidden()
+})
+
+test('an old locked card replans before advancing to the next phrase after midnight', async ({
+  page,
+}) => {
+  await atInstant(page, '2026-03-10T23:59')
+  await onboard(page)
+  await startWave(page)
+  await lockIn(page)
+  await jumpTo(page, '2026-03-11T00:01')
+  await page.getByRole('button', { name: 'Next phrase →', exact: true }).click()
+  await expect(page.getByText('Phrase 1 / 5')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Say it', exact: true })).toBeVisible()
+  await expect(page.getByRole('progressbar', { name: 'Automaticity' })).toHaveAttribute(
+    'aria-valuenow',
+    '0',
+  )
+})

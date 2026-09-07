@@ -288,5 +288,13 @@
   "account.backend.unavailable": "Сервер недоступен. Можно продолжать заниматься локально.",
   "account.backend.unconfigured": "Для этой сборки сервер не настроен.",
   "account.backend.scope": "Соединение с сервером не включает вход в аккаунт или синхронизацию прогресса.",
-  "account.backend.retry": "Проверить соединение"
+  "account.backend.retry": "Проверить соединение",
+  "bootstrap.loading": "Открываем ваше учебное пространство…",
+  "bootstrap.error": "Не удалось открыть ваше учебное пространство. Попробуйте ещё раз.",
+  "bootstrap.retry": "Попробовать снова",
+  "persistence.error": "Не удалось сохранить ваш прогресс. Попробуйте ещё раз.",
+  "persistence.retry": "Попробовать снова",
+  "refrain.clozeUnavailable.cue": "Прочитайте всю фразу вслух",
+  "refrain.clozeUnavailable.note": "Упражнение с пропущенными словами пока недоступно для этой фразы.",
+  "refrain.clozeUnavailable.confirm": "Я прочитал(а) вслух"
 }

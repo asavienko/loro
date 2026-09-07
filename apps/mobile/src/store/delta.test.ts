@@ -13,6 +13,7 @@ import {
   RefrainEngine,
   userPhraseId,
   type ProgressDelta,
+  type FsrsState,
 } from '@loro/core'
 import { makeContext, makePhrase } from '@loro/core/testing'
 import { applyDeltaToPhrase, DELTA_RULES } from './delta'
@@ -20,6 +21,15 @@ import { applyDeltaToPhrase, DELTA_RULES } from './delta'
 /** `fakeClock`'s default local day, so the fixtures and the store agree. */
 const DAY = '2026-07-28'
 const AT = 1_785_231_660_000
+const CANONICAL_SRS: FsrsState = {
+  stability: 2,
+  difficulty: 4,
+  due: AT + 86_400_000,
+  lastReview: AT,
+  lapses: 3,
+  state: 'review',
+  algorithm: 'fsrs-6-default-c8ca282-loro-v1',
+}
 
 /**
  * Every field a `ProgressDelta` can carry, present.
@@ -36,7 +46,7 @@ const EVERY_SIGNAL: Required<ProgressDelta> = {
   plays: 1,
   lastPracticedAt: AT,
   latencySampleMs: 640,
-  srs: { stability: 2, difficulty: 4, due: AT + 86_400_000 },
+  srs: CANONICAL_SRS,
   repsToday: 6,
   automaticity: 100,
   lockedInToday: true,
@@ -47,14 +57,15 @@ const EVERY_SIGNAL: Required<ProgressDelta> = {
   axes: { perception: 3, recall: 4, production: 5 },
   difficulty: 'easy',
   learned: true,
+  review: { grade: 3, at: AT, algorithm: CANONICAL_SRS.algorithm! },
 }
 
 describe('the delta classification', () => {
   it('classifies every signal a ProgressDelta can carry', () => {
     const declared = new Set(Object.keys(DELTA_RULES))
     const missing = Object.keys(EVERY_SIGNAL)
-      // `phraseId` names the row; it is not a signal.
-      .filter((k) => k !== 'phraseId')
+      // Identity and review history metadata are not phrase progress signals.
+      .filter((k) => k !== 'phraseId' && k !== 'review')
       .filter((k) => !declared.has(k))
 
     expect(
@@ -229,34 +240,44 @@ describe('applyDeltaToPhrase', () => {
     expect(maxed.axProduction).toBe(100)
   })
 
-  it('merges FSRS as a group and keeps the fields no engine reports', () => {
-    const before = makePhrase('p')
+  it('replaces the complete scheduler group without deriving fields from stale state', () => {
+    const before = {
+      ...makePhrase('p'),
+      srs: {
+        ...CANONICAL_SRS,
+        lapses: 8,
+        state: 'relearning' as const,
+        lastReview: AT - 1000,
+        algorithm: 'legacy',
+      },
+    }
     const after = applyDeltaToPhrase(
       before,
-      {
-        phraseId: before.id,
-        srs: { stability: 3, difficulty: 5, due: AT + 3 * 86_400_000 },
-        lastPracticedAt: AT,
-      },
+      { phraseId: before.id, srs: CANONICAL_SRS, lastPracticedAt: AT + 500 },
       DAY,
     )
-    expect(after.srs).toEqual({
-      stability: 3,
-      difficulty: 5,
-      due: AT + 3 * 86_400_000,
-      lastReview: AT,
-      lapses: 0,
-      state: 'learning',
-    })
+    expect(after.srs).toEqual(CANONICAL_SRS)
+    // Scheduler review time is authoritative even if another practice timestamp differs.
+    expect(after.srs?.lastReview).toBe(AT)
+    expect(after.srs?.lapses).toBe(3)
+    expect(after.srs?.state).toBe('review')
+    expect(after.srs?.algorithm).toBe(CANONICAL_SRS.algorithm)
+    expect(after.srs).not.toBe(CANONICAL_SRS)
 
-    // A second review keeps the accumulated lapses rather than resetting them.
-    const relapsed = applyDeltaToPhrase(
-      { ...after, srs: { ...after.srs!, lapses: 2, state: 'relearning' } },
-      { phraseId: before.id, srs: { stability: 1, difficulty: 6, due: AT }, lastPracticedAt: AT },
-      DAY,
+    const relapsedSrs: FsrsState = {
+      ...CANONICAL_SRS,
+      stability: 1,
+      difficulty: 6,
+      due: AT + 600_000,
+      lastReview: AT + 1000,
+      lapses: 4,
+      state: 'relearning',
+    }
+    const relapsed = applyDeltaToPhrase(after, { phraseId: before.id, srs: relapsedSrs }, DAY)
+    expect(relapsed.srs).toEqual(relapsedSrs)
+    expect(applyDeltaToPhrase(relapsed, { phraseId: before.id, plays: 1 }, DAY).srs).toEqual(
+      relapsedSrs,
     )
-    expect(relapsed.srs?.lapses).toBe(2)
-    expect(relapsed.srs?.state).toBe('relearning')
   })
 
   it('lands every signal a delta can carry, in one delta', () => {
@@ -281,7 +302,7 @@ describe('applyDeltaToPhrase', () => {
         lockedInToday: true,
         rung: LadderRung.Transferred,
         cueLevel: 2,
-        srs: { stability: 2, difficulty: 4, due: AT + 86_400_000 },
+        srs: CANONICAL_SRS,
         // The two the store deliberately does not keep: there is no column for either
         // yet, and inventing one would be a fabricated number on a learner's screen.
         latencySampleMs: 640,
@@ -341,6 +362,7 @@ describe('a real engine delta, round-tripped', () => {
         hintsUsed: 0,
         at: AT,
       },
+      ctx,
     )
 
     const after = applyDeltaToPhrase(phrase, delta, DAY)
@@ -351,10 +373,11 @@ describe('a real engine delta, round-tripped', () => {
     expect(after.automaticity).toBe(17)
     expect(after.repsTodayDay).toBe(DAY)
     expect(after.lastPracticedAt).toBe(AT)
-    expect(after.srs).not.toBeNull()
+    expect(after.srs).toEqual(delta.srs)
+    expect(after.srs?.algorithm).toBe('test-fixture')
     expect(after.srs?.due).toBeGreaterThan(AT)
-    expect(after.axProduction).toBeGreaterThan(0)
-    expect(after.axRecall).toBeGreaterThan(0)
+    expect(after.axProduction).toBe(phrase.axProduction)
+    expect(after.axRecall).toBe(phrase.axRecall)
   })
 
   it('resumes a phrase already part-way through today rather than restarting it', async () => {
@@ -362,7 +385,8 @@ describe('a real engine delta, round-tripped', () => {
     // Refrain reported repsToday: 1 and walked a stored 4 backwards.
     const engine = new RefrainEngine()
     const phrase = makePhrase('one', { reps: 4, repsToday: 4, repsTodayDay: DAY })
-    const plan = await engine.plan(makeContext([phrase]))
+    const ctx = makeContext([phrase])
+    const plan = await engine.plan(ctx)
 
     expect(plan.items).toHaveLength(2) // two reps left of six
     expect(plan.items.map((i) => i.mode)).toEqual(['call', 'cold'])
@@ -372,6 +396,7 @@ describe('a real engine delta, round-tripped', () => {
     const delta = await engine.record(
       { sessionId: 's', plan, cursor: 0 },
       { itemId: first.itemId, outcome: 'success', latencyMs: 500, hintsUsed: 0, at: AT },
+      ctx,
     )
     const after = applyDeltaToPhrase(phrase, delta, DAY)
 

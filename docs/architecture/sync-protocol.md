@@ -15,7 +15,7 @@ path. Rationale: [ADR-0003](adr/0003-offline-first-sqlite-sync.md).
 | Server storage              | An unscoped in-memory `Map`; rows disappear on restart. No auth or Postgres.                                                  |
 | Pull cursor                 | Not implemented. `since` and `limit` are accepted but ignored; pull returns every stored row and `has_more: false`.           |
 | Mobile client               | Not implemented. Nothing drains the outbox, calls the endpoints, advances a device HLC from responses or applies pulled rows. |
-| Store/outbox write coupling | Not wired. Current mobile mutations remain in Zustand memory.                                                                 |
+| Store/outbox write coupling | Implemented by the mobile transaction adapter; read snapshots publish after local commit.                                     |
 
 These endpoints are useful for exercising arbitration, not safe multi-user sync. Do not deploy them
 as a learner-data service until authentication, tenant scoping, durable storage and real cursors
@@ -147,9 +147,17 @@ Compaction is policy-aware:
 The memory outbox does not compact and no current client flushes either implementation. Rejections
 are not moved to a dead-letter table because no such table or sync client exists.
 
-Most importantly, repository writes do not append automatically. The device integration must wrap
-the row mutation and outbox append in one driver transaction. Tests prove that this composition can
-commit and roll back atomically; live app code does not yet use it.
+Repository writes do not append automatically. The mobile runtime adapter wraps row mutations,
+review events, checkpoints and required outbox fields in one transaction before publishing the read
+projection. SQLite tests exercise rollback, replay and the queued target-schema payloads; native
+force-quit evidence remains separate.
+
+Outbox field values retain JSON arrays and objects: `tags`, `languagePair`, `setIds` and `waves` are
+not double-encoded strings. Only the enclosing SQLite payload is serialized. Unscheduled phrases
+omit the entire FSRS group; scheduled writes carry every group field together. Review operations use
+a UUID persisted in the same transaction as the originating attempt. These payloads conform to the
+shared target contract; the transport conversion to the legacy API HLC representation and remote
+synchronization remain plan 68 work.
 
 ## Required end-to-end flow
 

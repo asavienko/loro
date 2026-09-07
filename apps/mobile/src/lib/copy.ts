@@ -1,6 +1,25 @@
 /** F-08. Reactive readers translate at access time; domain and UI layers share this adapter. */
 import { message, formatBuckets, currentNativeLanguage } from './i18n'
 export const copy = {
+  persistence: {
+    get error() {
+      return message('persistence.error')
+    },
+    get retry() {
+      return message('persistence.retry')
+    },
+  },
+  bootstrap: {
+    get loading() {
+      return message('bootstrap.loading')
+    },
+    get error() {
+      return message('bootstrap.error')
+    },
+    get retry() {
+      return message('bootstrap.retry')
+    },
+  },
   account: {
     backend: {
       get checking() {
@@ -694,6 +713,17 @@ export const copy = {
         get cue() {
           return message('refrain.modes.cold.cue')
         },
+      },
+    },
+    clozeUnavailable: {
+      get cue() {
+        return message('refrain.clozeUnavailable.cue')
+      },
+      get note() {
+        return message('refrain.clozeUnavailable.note')
+      },
+      get confirm() {
+        return message('refrain.clozeUnavailable.confirm')
       },
     },
     mic: {

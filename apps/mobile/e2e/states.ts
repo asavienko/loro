@@ -1,3 +1,4 @@
+import { reachBootstrap, reachWriteFailure } from './bootstrapFlow'
 import { reachAccount } from './accountFlow'
 import { localeText, onboardPair } from './languageFlow'
 /**
@@ -28,7 +29,7 @@ const REFRAIN_REPS = [
   'Say it',
   'Chorus it',
   'Faster!',
-  'Fill & say',
+  'I read it aloud',
   'Respond',
   'Say it cold',
 ] as const
@@ -51,6 +52,19 @@ export interface AppState {
 }
 
 export const STATES: AppState[] = [
+  {
+    name: 'languages · save failure',
+    route: '/languages',
+    spec: '§ F-08 Languages',
+    reach: reachWriteFailure,
+  },
+  ...(['loading', 'error'] as const).map((scenario): AppState => ({
+    name: `startup · ${scenario}`,
+    route: '/',
+    spec: '§ F-01 Startup (plan 59)',
+    firstRun: true,
+    reach: (page) => reachBootstrap(page, scenario),
+  })),
   ...(
     [
       'discoveryError',

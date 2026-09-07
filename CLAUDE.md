@@ -10,12 +10,13 @@ Early implementation. **What exists:** the docs, 7 of the v1.1 design package's 
 plus the Languages and Account utilities and app shell in `apps/mobile/app/`, an API with 21
 endpoints (in-memory learning sync and PostgreSQL accounts), the Rust core, the design tokens,
 31-phrase Spanish/Bulgarian/Russian starter catalogs (new translations await bilingual review), and
-the local persistence layer (schema, migrations, repositories, outbox — driver-agnostic and tested
-against real SQLite), plus a dev-only generated token/component workbench. 619 JS/TS tests, 131 Rust
-tests, and 138 distinct browser E2E tests cover the implemented behavior. **What doesn't:** the
-native modules (audio, speech, ASR, widgets), the on-device SQLite driver, and the other 16 learner
-screens — so nothing runnable today exercises audio or the microphone, which is half of what this
-app is, and the app store is still in memory.
+the local persistence layer (schema 3, migrations, repositories, transactional outbox and validated
+checkpoints), plus a dev-only generated token/component workbench. Native op-sqlite bootstrap and a
+local Rust Expo bridge are implemented; browser development explicitly uses volatile memory. FSRS-6,
+ranking, matching and selection run through Rust, with reference, SQLite and browser tests. **What
+doesn't:** native audio/speech/ASR/widgets and the other 16 learner screens. Android one-rep
+force-stop/resume and course restart are verified; iOS and the full native matrix remain acceptance
+gates. See plans 58–60.
 
 The spine supports pull-down to open its menu; sheets dismiss by pulling their dedicated handle.
 Practice routes disable native back-swipe. Native touch validation remains a release gate.
@@ -23,8 +24,9 @@ Practice routes disable native back-swipe. Native touch validation remains a rel
 **The shared spine/switcher now wraps Today, Add, Progress, Stream, Refrain, and phrase detail.**
 `src/lib/navigation.ts` declares the built hubs used by the switcher and Today's rail. Today owns
 its root header and day-as-hairline-rows treatment; other routes retain their stack header with a
-Today escape for cold entries. Onboarding keeps step-back navigation. More, ongoing work, durable
-resume, session exits and travelling audio still belong to plans 56/59/62/64/81.
+Today escape for cold entries. Onboarding keeps step-back navigation. More, ongoing work, session
+exits and travelling audio still belong to plans 56/62/64/81. Plan 59 supplies committed local
+checkpoints; native lifecycle acceptance remains open.
 
 API contracts now live in `packages/core/src/api/` with current/target/draft entry points and
 generated OpenAPI. `pnpm check` includes contract drift checks. OAuth contracts and mobile readiness
@@ -216,7 +218,7 @@ configuration and release boundaries. This does not implement the native audio/S
 
 `pnpm local:up` decrypts the SOPS API environment and builds/starts the API and Expo web containers,
 including WASM. `pnpm local:down` stops them. Optional data services use the `infra` Compose
-profile; runtime storage is still in memory. See
+profile; browser learning storage is still in memory. See
 [`local-development.md`](docs/process/local-development.md) for age identity setup.
 
 **Use Node 22.** The repo pins it (`.nvmrc`, `engines`), and `pnpm` is installed only under that
@@ -226,7 +228,7 @@ be off PATH.
 
 ```bash
 pnpm check                          # the gate: 23 turbo tasks, all green today
-pnpm test:e2e                       # 134 learner tests: routes/states, clock, a11y, text scale
+pnpm test:e2e                       # learner routes/states, clock, a11y, text scale
 pnpm test:e2e:workbench             # 3 tests: dev-only tokens/component inspection surface
 pnpm test:e2e:bundle                # the @smoke subset against the production web export
 pnpm --filter @loro/api dev         # :3000 — no Docker, no keys, no database
@@ -237,9 +239,11 @@ npx expo start --web                # from apps/mobile — fastest way to see th
 - **The API needs no Docker.** Persistence isn't wired — the sync store is an in-memory `Map` and AI
   is stubbed (`AI_PROVIDER=stub`), so skip `dev:up` unless you're building the repository layer.
   `/v1/health/ready` returns 503 if the WASM merge is missing, which is the check worth watching.
-- **Local Android preview builds are verified:** `pnpm apk:local` uses Java/Android SDK and a
-  temporary Expo prebuild. There is no committed `apps/mobile/android` or `ios` project. iOS still
-  needs full Xcode. The APK build is not evidence of native audio/SQLite bridges or device tests.
+- **Native builds need custom development clients.** Expo Go cannot load op-sqlite or Loro's Rust
+  bridge. Android ABI libraries and module compilation are verified; full Xcode is absent.
+  [Native runtime setup](docs/native-core-runtime.md) records reproducible builds and remaining
+  device acceptance. Generated prebuild projects are disposable; authored native code lives in
+  `apps/mobile/modules/`.
 - **Native builds are a separate local gate:** `pnpm ci:local:native` requires macOS/Xcode,
   installed Rust targets, cargo-ndk and an Android NDK. It builds libraries only. EAS and
   device-farm scaffolds are inactive; no command in local CI queues a cloud build.
@@ -253,10 +257,9 @@ npx expo start --web                # from apps/mobile — fastest way to see th
   entirely — `src/ui/primitives/Pressable.tsx` and `src/ui/primitives/bars.tsx` therefore set the
   flat `aria-*` forms as well; `src/ui/primitives/index.ts` explains why. Check any new
   accessibility prop against `createDOMProps`; silence is the failure mode.
-- **`packages/core-rs` tests are almost all inline `#[cfg(test)]`.** The one integration file is
-  `tests/parity.rs` (the calendar cross-language check). The others named in
-  [`testing-strategy.md`](docs/process/testing-strategy.md) (`sim.rs`, `merge.rs`, `golden/`) don't
-  exist, so don't assume a scheduling or DSP change is covered.
+- **`packages/core-rs` tests are mostly inline `#[cfg(test)]`.** `tests/parity.rs` covers calendar
+  parity and `tests/sim.rs` runs the deterministic FSRS year simulation. DSP golden coverage remains
+  a separate plan-77 gate; scheduler tests do not prove speech quality.
 - **`cargo` is off the PATH that `pnpm`/`turbo` see.** `pnpm check` looks green while the four
   `@loro/core-rs` tasks are cache hits, then fails with `cargo: command not found` the moment a Rust
   file changes. Run `export PATH="$HOME/.cargo/bin:$PATH"` first.
@@ -279,7 +282,7 @@ npx expo start --web                # from apps/mobile — fastest way to see th
 | `apps/api/`               | NestJS backend                                                            |
 | `packages/core/`          | Shared TS domain, engine contracts, API schemas — **used by app AND api** |
 | `…/core/src/persistence/` | Schema, migrations, repositories, outbox. Handwritten SQL, no ORM         |
-| `apps/mobile/src/data/`   | Node SQLite test driver today; plan 59 adds the on-device driver          |
+| `apps/mobile/src/data/`   | Node SQLite test driver, native op-sqlite adapter and hydration           |
 | `packages/core-rs/`       | Rust: FSRS, sync merge, ranking, DSP. All reproducible maths              |
 | `packages/design-tokens/` | Tokens extracted from the blueprint + generators                          |
 | `packages/content/`       | The Spanish catalog, schema-validated                                     |
@@ -307,8 +310,9 @@ provider adapters.
   conformance suite enforces this for implemented engines
   ([practice-engines.md](docs/architecture/practice-engines.md)).
 - **Offline-first is the target invariant, not a feature toggle.** The persistence primitives and
-  outbox exist, but the running app remains in memory until plan 59 makes the device database the
-  source of truth ([offline.md](docs/architecture/offline.md)).
+  outbox exist, but native bootstrap makes SQLite authoritative; browser development intentionally
+  remains volatile. Android one-rep and course restart are verified; iOS and native upgrade
+  acceptance remain pending ([offline.md](docs/architecture/offline.md)).
 - **Independent content delivery is a target, not current behavior.** Plan 61 adds the updater and
   artifact path that will let a phrase fix ship without an app release
   ([ADR-0009](docs/architecture/adr/0009-content-pipeline-and-packs.md)).
@@ -334,11 +338,12 @@ The UI follows the native language (`en`, `bg`, `ru`); targets are `es-ES`, `bg-
 excluding matching pairs. Use `loadLearningCatalog`, neutral targetText/translation views and the
 reactive `copy.ts` adapter over bundled i18next/ICU resources in `src/lib/i18n/`. Shared UI receives
 translated props. The Languages route is reachable from Today's switcher. Course progress and resume
-state are separate; the streak is global. Schema 2 repositories exist, but plan 59 still owns device
-persistence. New linguistic content is pending bilingual review; audio/ASR/DSP capabilities remain
-disabled. Plan 87 now tracks review and multilingual acceptance only; plan 59 owns device wiring and
-correction of the remaining `INSERT OR REPLACE` in `sqlite/course.ts`. Plan 60 owns the
-ASCII-oriented matcher/fabricated FSRS-cloze fallback and missing nightly `tests/sim` target.
+state are separate; the streak is global. Schema 3 repositories and device persistence source exist;
+plan 59 retains native acceptance gates. New linguistic content is pending bilingual review;
+audio/ASR/DSP capabilities remain disabled. Plan 87 now tracks review and multilingual acceptance
+only; plan 59 owns device wiring and correction of the remaining `INSERT OR REPLACE` in
+`sqlite/course.ts`. Plan 60 owns the ASCII-oriented matcher/fabricated FSRS-cloze fallback and
+missing nightly `tests/sim` target.
 
 ## Google/Apple accounts (plan 89)
 

@@ -3,12 +3,14 @@
 - **Requirement IDs:** `F-04`, `LB-03`, `LB-21`, `LB-24`, `P3-02`, `P3-04`, `P3-30`…`P3-40`,
   `P3B-01`…`P3B-08`
 - **Milestone:** M1/M2
-- **Status:** 🟡 Rust helpers exist; canonical scheduler/selection and production adapters remain.
-  Contracts, Unicode matching and host/browser work can start now. FSRS activation requires the
-  model-policy decision below; native adapter proof needs 58, durable review/history writes need 59.
+- **Status:** 🟡 Canonical FSRS-6, Unicode matching, selection, HLC, full-state engine recording,
+  generated native bindings and browser adapters implemented. Android bridge and scheduler
+  persistence are verified; iOS and broader parity/latency proof remain with plan 58; reviewed
+  lexical cloze metadata and goal/level ranking policy remain explicit content/product gates. No
+  fabricated algorithm fallback remains.
 - **Depends on:** 53 completed; existing 87 language identities; 58 native bridge only; 59 only for
   durable integration, not pure functions or reference tests.
-- **Reviewed:** 2026-09-07 against `d544fa4`; documentation review only, no implementation claimed.
+- **Implementation review:** 2026-09-07, based on `3a24e99`; evidence and remaining gates below.
 
 ## Outcome and ownership
 
@@ -18,7 +20,7 @@ Plan 59 persists complete results and checkpoints, 64 owns production wave trans
 recognition/latency measurement, and 75 owns Review/Memory screens. This plan does not enable speech
 or claim its accuracy from token-matching fixtures.
 
-## Verified starting point
+## Starting point before this implementation
 
 | Evidence                                                                                                                                             | Required correction                                                                                     |
 | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
@@ -63,55 +65,55 @@ proven. Inventory these call sites before claiming the whole app uses one implem
 
 ### 1. Explicit core and engine contracts — ready now
 
-- [ ] Inventory Rust/TS functions and production consumers, including `fsrsWriteFor`, rank, repeat
+- [x] Inventory Rust/TS functions and production consumers, including `fsrsWriteFor`, rank, repeat
       targets, automaticity, set size/modes and store-level set selection. Record each migration
       slice and any existing parity-backed boundary. Test fakes stay in test-only modules.
-- [ ] Make recording receive the injected core and the correct current course/phrase state through
+- [x] Make recording receive the injected core and the correct current course/phrase state through
       an explicit port/context. Keep `engine.record(...) → ProgressDelta → applyDelta`; never import
       the store into an engine or serialize service objects into a resumable session. Coordinate
       revision/attempt identity with plan 59 so stale asynchronous results cannot overwrite newer
       state.
-- [ ] Define data-only function inputs: content/tokens and target locale for cloze, eligible
+- [x] Define data-only function inputs: content/tokens and target locale for cloze, eligible
       candidates and stable IDs for selection, complete prior state and measured/explicit evidence
       for grading. Rust does no catalog lookup or I/O. Pass time/day and deterministic seed
       explicitly.
-- [ ] Specify safe integer/time conversions, numeric precision, finite-value validation, null
+- [x] Specify safe integer/time conversions, numeric precision, finite-value validation, null
       semantics, error mapping and tie-breaking across TS/WASM/UniFFI. Reference float tolerances
       must be stated; IDs, masks, grades, card states and emitted due timestamps must agree exactly.
 
 ### 2. Canonical matching and existing helpers — ready independently of FSRS
 
-- [ ] Define Unicode normalization for es-ES/bg-BG/ru-RU, preserving distinct letters and original
+- [x] Define Unicode normalization for es-ES/bg-BG/ru-RU, preserving distinct letters and original
       token indices. Test composed/decomposed `ñ`, Cyrillic `й`/`ё`, stress marks, punctuation-only
       tokens, repeated words, insertions and order. Record locale-specific equivalences; do not
       apply Spanish accent stripping indiscriminately to other languages or enable fuzzy matching by
       default.
-- [ ] Define empty/invalid-target and out-of-range `revealed` behavior. Empty or fully stripped
+- [x] Define empty/invalid-target and out-of-range `revealed` behavior. Empty or fully stripped
       targets must not complete; valid progress is monotonic and bounded by target length. If
       retaining fuzzy mode, measure its threshold in the declared character unit, not UTF-8 byte
       length.
-- [ ] Export matching/rank through the required generated interfaces and wire their actual web
+- [x] Export matching/rank through the required generated interfaces and wire their actual web
       consumers with parity tests. Preserve `isActive`/`isDue` eligibility and existing due-rank
       behavior; native proof lands after 58. Plan 90 adds English when its locale/content contract
       exists.
-- [ ] Expose the existing Rust HLC through a typed port with a restart-state contract for plan 59.
+- [x] Expose the existing Rust HLC through a typed port with a restart-state contract for plan 59.
       Verify monotonic generation after reload/backward wall-clock movement and safe timestamp
       serialization. Reuse the implemented HLC algorithm; 59 persists its state and 68 owns remote
       clock observation during sync. This slice can ship independently of FSRS and set selection.
 
 ### 3. Reference-backed scheduler — after the model policy is recorded
 
-- [ ] Implement initialization/review/retrievability and real interval output against the pinned
+- [x] Implement initialization/review/retrievability and real interval output against the pinned
       reference. Add cited reference vectors for all grades, first/same-day reviews, relearning,
       lapses, long gaps, re-rating and invalid/backward time. Test Loro adaptations separately.
-- [ ] Return complete state through `ProgressDelta.srs`; remove `nextSrs`'s carried-forward lapse/
+- [x] Return complete state through `ProgressDelta.srs`; remove `nextSrs`'s carried-forward lapse/
       card-state approximation. Put grade mapping in the canonical core. Skips and passive listening
       are not reviews; manual confirmation cannot supply measured latency, ASR success or DSP
       evidence.
-- [ ] Replace both fabricated scheduling sites only once the real recording path passes integration
+- [x] Replace both fabricated scheduling sites only once the real recording path passes integration
       tests. An unavailable/failed core exposes a truthful unavailable/degraded state for dependent
       behavior, without fabricated writes or claiming every progress signal was updated.
-- [ ] Exercise the agreed old-state policy and hand results/events to 59 for atomic persistence.
+- [x] Exercise the agreed old-state policy and hand results/events to 59 for atomic persistence.
       Pure scheduler completion and durable/native integration must have separate status evidence.
 
 ### 4. Cloze and priority selection — after input contracts
@@ -119,15 +121,15 @@ proven. Inventory these call sites before claiming the whole app uses one implem
 - [ ] Pass target text/tokens and reviewed function-word/content metadata to cloze; define short,
       unknown/user-authored and no-eligible-token behavior. Every index must refer to the displayed
       token sequence. A phrase ID alone cannot support a pure Rust implementation.
-- [ ] Port priority selection with active/due/graduated eligibility, existing trip-priority inputs,
+- [x] Port priority selection with active/due/graduated eligibility, existing trip-priority inputs,
       deterministic ties, tag filters, goal/level inputs and course isolation. Document any
       unresolved goal/level policy instead of inventing weights. Do not implement trip semantics or
       Run here.
-- [ ] Route both Refrain engine planning and the store's frozen-set/backfill calls through the same
+- [x] Route both Refrain engine planning and the store's frozen-set/backfill calls through the same
       selection contract. Plan 59 saves selected IDs; plan 64 owns when a set/wave changes. Resume
       must not reselect a frozen day. Cover empty pools, exhausted/graduated pools and deleted
       members.
-- [ ] Replace duplicate deterministic automaticity/set-size/mode calculations in coherent slices;
+- [x] Replace duplicate deterministic automaticity/set-size/mode calculations in coherent slices;
       keep presentation/copy in TypeScript. Tighten conformance exemptions only when real evidence
       supports the signal; do not turn manual taps into simulated speech or DSP progression.
 
@@ -139,11 +141,11 @@ proven. Inventory these call sites before claiming the whole app uses one implem
       budgets.
 - [ ] Regenerate committed bindings through the generator; check drift and serialized round trips.
       Delete remaining replaced production TS algorithms only after each consumer passes parity.
-- [ ] Add `packages/core-rs/tests/sim.rs` and its reproducible seed/history fixtures; run
+- [x] Add `packages/core-rs/tests/sim.rs` and its reproducible seed/history fixtures; run
       `cargo test --release --test sim -- --nocapture`. The current nightly workflow names this
       missing target. Coordinate its invocation with ongoing local-CI work; scheduler coverage must
       remain runnable without a GitHub schedule. Offline sync simulation stays with 68.
-- [ ] Simulate 365 days with bounded finite results, deterministic replay, due ordering, day
+- [x] Simulate 365 days with bounded finite results, deterministic replay, due ordering, day
       boundaries, review-cap/overflow policy and lapses. Assert monotonicity only for signals that
       promise it; a failed review can legitimately shorten an interval. Simulation is not evidence
       of pedagogical effectiveness or real speech accuracy.
@@ -166,3 +168,27 @@ proven. Inventory these call sites before claiming the whole app uses one implem
 
 DSP scoring/axes, speech capture, UI curves/screens, live sync transport or merge-algorithm changes,
 trip policy, experiment analysis, parameter optimization and activation of gated practice loops.
+
+## Delivered evidence and remaining gates — 2026-09-07
+
+- [FSRS policy](../docs/architecture/fsrs-model.md) and ADR-0004 pin FSRS-6 defaults,
+  source/license, 50% desired retention, power curve, lifecycle and explicit legacy conversion.
+  Foreign versioned state fails safely. Full state and review provenance survive SQLite; rerating
+  preserves history.
+- Rust reference fixtures, a deterministic 365-day simulation, Node/browser transport parity, and
+  real WASM facade tests exercise canonical results. Production selection/order/mode/automaticity
+  duplicates moved into test fixtures. Manual confirmation never supplies DSP scores or speech
+  evidence; no fixed-mask fallback exists.
+- Cloze accepts reviewed eligible-token indexes. Current catalogs do not supply that metadata, so
+  the displayed text stays intact. Supplying reviewed metadata remains with content review; no
+  guessed function-word list is substituted. Goal/level weights likewise need a product policy.
+- Generated Swift/Kotlin and a local Expo bridge exist. Android bridge/bootstrap and scheduler
+  persistence are verified. Broader fixture parity, cold-start/hot-path timing and iOS runtime
+  acceptance remain unverified; browser and host tests are not substitutes. The unchecked platform
+  items above retain those acceptance obligations.
+
+Final integration verification: all 148 Rust tests passed, including the 365-day simulation, which
+also passed independently in release mode (seed 104837470900225, 191 reviews, four overflow days).
+Node/browser transport parity, `pnpm check` (23 tasks), 138 browser E2E tests and four production
+bundle smoke tests passed. The Android restart proof compared the complete persisted scheduler state
+with Node WASM for the same prior state, grade and timestamp.

@@ -1,0 +1,15 @@
+apply plugin: 'com.android.library'
+apply plugin: 'expo-module-gradle-plugin'
+
+group = 'expo.modules.lorocore'
+version = '0.1.0'
+
+android {
+  namespace 'expo.modules.lorocore'
+  defaultConfig { versionCode 1; versionName '0.1.0' }
+  sourceSets.main {
+    java.srcDirs += '../../../../../packages/core-rs/bindings'
+    jniLibs.srcDirs = ['../artifacts/jniLibs']
+  }
+}
+dependencies { implementation 'net.java.dev.jna:jna:5.13.0@aar' }

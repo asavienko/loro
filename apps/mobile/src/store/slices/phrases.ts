@@ -59,6 +59,7 @@ export const createPhrasesSlice: Slice<
           o.source ?? 'discover',
           deps.clock.now(),
         ),
+        targetLocale: get().targetLocale,
         difficulty: o.difficulty ?? 'med',
         tags: o.tags ?? [],
       }
@@ -140,7 +141,12 @@ export const createPhrasesSlice: Slice<
     },
 
     setDifficulty: (id, d) => {
+      const phrase = get().phrases.find((p) => p.id === id)
+      if (!phrase || phrase.difficulty === d) return
+      if (!deps.core) throw new Error('Canonical core is not ready')
+      const srs = deps.core.rerate(phrase, d)
       updatePhrase(ctx, id, () => ({ difficulty: d }))
+      if (srs && srs !== phrase.srs) get().applyDelta({ phraseId: phrase.id, srs })
       // The toast explains the CONSEQUENCE — that's what teaches the model.
       //
       get().showToast(copy.toast.difficulty[d])

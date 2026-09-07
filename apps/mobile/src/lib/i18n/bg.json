@@ -288,5 +288,13 @@
   "account.backend.unavailable": "Сървърът е недостъпен. Можете да продължите да се упражнявате локално.",
   "account.backend.unconfigured": "За тази версия не е настроен сървър.",
   "account.backend.scope": "Връзката със сървъра не активира входа в профил или синхронизирането на напредъка.",
-  "account.backend.retry": "Провери връзката"
+  "account.backend.retry": "Провери връзката",
+  "bootstrap.loading": "Отваряме вашето учебно пространство…",
+  "bootstrap.error": "Не успяхме да отворим вашето учебно пространство. Опитайте отново.",
+  "bootstrap.retry": "Опитайте отново",
+  "persistence.error": "Напредъкът ви не беше запазен. Опитайте отново.",
+  "persistence.retry": "Опитайте отново",
+  "refrain.clozeUnavailable.cue": "Прочетете цялата фраза на глас",
+  "refrain.clozeUnavailable.note": "Упражнението с пропуснати думи все още не е налично за тази фраза.",
+  "refrain.clozeUnavailable.confirm": "Прочетох я на глас"
 }

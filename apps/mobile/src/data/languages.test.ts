@@ -85,7 +85,7 @@ describe('F-08 language persistence', () => {
     )
     const beforeOutbox = driver.all('SELECT * FROM outbox')
     const beforeTables = driver.all('SELECT * FROM settings')
-    expect(migrate(driver, AT).applied).toEqual([2])
+    expect(migrate(driver, AT).applied).toEqual([2, 3])
     const db = openSqlPersistence(driver, () => 'new', AT)
     expect(db.settings.load()?.onboarded).toBe(true)
     expect(db.refrainDay.latest()?.setIds).toEqual(['old-id'])
@@ -93,7 +93,9 @@ describe('F-08 language persistence', () => {
     expect(driver.all('SELECT user_id, updated_hlc FROM settings')).toEqual(
       beforeTables.map((r) => ({ user_id: r['user_id'], updated_hlc: r['updated_hlc'] })),
     )
-    expect(driver.all('SELECT * FROM outbox')).toEqual(beforeOutbox)
+    expect(driver.all('SELECT * FROM outbox')).toEqual(
+      beforeOutbox.map((row) => ({ ...row, user_id: 'local' })),
+    )
     expect(migrate(driver, AT).applied).toEqual([])
   })
 })

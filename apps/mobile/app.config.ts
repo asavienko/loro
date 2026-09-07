@@ -1,4 +1,5 @@
 import type { ExpoConfig } from 'expo/config'
+import { withAndroidStyles } from 'expo/config-plugins'
 
 /**
  * Expo config.
@@ -38,11 +39,7 @@ export default (): ExpoConfig => ({
   userInterfaceStyle: 'light', // dark theme is v1.1
   newArchEnabled: true,
 
-  splash: {
-    backgroundColor: '#f6f2ea', // surface.app
-    resizeMode: 'contain',
-    image: localApk ? undefined : './assets/images/splash.png',
-  },
+  // Splash artwork is not supplied; keep Expo's native defaults.
 
   updates: {
     // OTA is for FIXES, not features. Staged 5% → 25% → 100%.
@@ -81,12 +78,7 @@ export default (): ExpoConfig => ({
   android: {
     package: localApk ? 'app.loro.android.preview' : 'app.loro.android',
     versionCode: 1,
-    adaptiveIcon: localApk
-      ? undefined
-      : {
-          foregroundImage: './assets/images/adaptive-icon.png',
-          backgroundColor: '#f6f2ea',
-        },
+    // Use Expo's default icon until reviewed adaptive-icon artwork is supplied.
     permissions: [
       'android.permission.RECORD_AUDIO',
       'android.permission.CAMERA',
@@ -104,11 +96,23 @@ export default (): ExpoConfig => ({
     ],
   },
 
-  // Only plugins for INSTALLED packages. The native modules (loro-audio,
-  // loro-speech, loro-core) and notifications remain future work. Account browser and
-  // secure storage plugins are installed below — see README.md.
+  // Only plugins for installed packages. The local loro-core module is autolinked;
+  // audio, speech and notifications remain future work. See README.md.
   plugins: [
     ...previewPlugins,
+    // Expo's template references a logo even when no splash image exists. Removing
+    // that item lets Android use its default icon without inventing artwork.
+    (config) =>
+      withAndroidStyles(config, (mod) => {
+        for (const style of mod.modResults.resources.style ?? []) {
+          if (style.$.name === 'Theme.App.SplashScreen') {
+            style.item = style.item?.filter(
+              (item) => item.$.name !== 'windowSplashScreenAnimatedIcon',
+            )
+          }
+        }
+        return mod
+      }),
     'expo-router',
     'expo-web-browser',
     'expo-secure-store',

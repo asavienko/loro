@@ -1,0 +1,5 @@
+{
+  "platforms": ["apple", "android"],
+  "apple": { "modules": ["LoroCoreModule"] },
+  "android": { "modules": ["expo.modules.lorocore.LoroCoreModule"] }
+}

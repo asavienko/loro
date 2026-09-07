@@ -6,19 +6,18 @@ owner is `loro-core` (Rust), so iOS, Android, and the server must compute identi
 
 ## Current implementation status
 
-| Mechanism      | Implemented now                                                     | Missing before it is authoritative in the app                                                      |
-| -------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| Stream rank    | Rust rank/repeat functions with inline tests; mobile calls a facade | Generated binding/adapters replace the current TS fallback and gain boundary parity                |
-| FSRS           | Grade mapping, priors, retrievability, cap, and formatting in Rust  | `fsrs::review` is `todo!()`; no reference parity, durable due workflow, or real app intervals      |
-| Automaticity   | Rust and TS helpers; TS Refrain engine plans modes and sets         | Rust cloze/set functions are `todo!()`; the app has interim TS selection and a fixed/fallback mask |
-| Ladder         | Rust climb/need/draw functions with inline tests                    | Only limited Refrain writes exist; Run/Roleplay and durable device history do not                  |
-| Trip drops     | Content data exists                                                 | No `build_drop_schedule`, trip service, persistence, or learner flow exists                        |
-| Day boundaries | Rust/TS fixture parity and mobile clock tests exist                 | Native lifecycle scheduling and durable device integration do not                                  |
+| Mechanism      | Implemented now                                                         | Remaining boundary                                              |
+| -------------- | ----------------------------------------------------------------------- | --------------------------------------------------------------- |
+| Stream rank    | Rust rank/repeat through canonical runtime facade                       | Native device bridge acceptance                                 |
+| FSRS           | FSRS-6 full state, reference vectors, review persistence and simulation | Review/Memory screens and native acceptance                     |
+| Automaticity   | Rust helpers, deterministic set selection and explicit cloze inputs     | Reviewed cloze metadata; goal/level policies remain unspecified |
+| Ladder         | Rust climb/need/draw helpers                                            | Evidence-backed speech/Run/Roleplay writes                      |
+| Trip drops     | Content data                                                            | No trip scheduler or learner flow                               |
+| Day boundaries | Rust/TS fixture parity and mobile clock tests                           | Native lifecycle acceptance                                     |
 
-[Plan 60](../../plans/60-authoritative-core-maths.md) makes rank, FSRS, cloze/set selection, and
-token matching authoritative through generated bindings. Until it lands, formulas below are target
-contracts unless this status table says they are wired; they must not be displayed as real results
-from placeholder calculations.
+[Plan 60](../../plans/60-authoritative-core-maths.md) and the [FSRS model policy](fsrs-model.md)
+record the implemented canonical boundary and outstanding native proof. Browser success does not
+establish device durability or speech accuracy.
 
 Five independent mechanisms, one per progress signal:
 
@@ -76,29 +75,18 @@ dominant: the stream should stay a listening experience, not become a covert rev
 [ADR-0004](adr/0004-fsrs-scheduler.md). FSRS (Free Spaced Repetition Scheduler) rather than SM-2 or
 a hand-rolled scheme.
 
-**Why FSRS.** The blueprint's Memory-model screen is _already_ FSRS made visible — it plots
-`R(t) = 0.5^(t/S)`, marks the 50% review threshold, and shows stability in days
-(`Loro.dc.html:3010–3019`). That is FSRS's model of memory, drawn. Using anything else would mean
-the screen lies about the algorithm behind it. FSRS is also open, well-validated on large datasets,
-and has a reference implementation we can port.
+The prototype plots an exponential `0.5^(t/S)` curve and a 50% threshold. FSRS-6 instead uses a
+power curve, with stability at 90% recall and the desired retention as a separate parameter. The
+[ADR amendment](adr/0004-fsrs-scheduler.md#implementation-amendment--2026-09-07-f-04-plan-60)
+records this correction: preserve the 50% threshold, display the real power curve in the future
+Memory screen, and leave authored artifacts unchanged.
 
 ### State per phrase
 
-This is the target complete scheduling state. Rust's current `FsrsState` contains `stability`,
-`difficulty`, `due`, `last_review`, and `lapses`; card phase and review-count behavior arrive with
-the authoritative review implementation.
-
-```rust
-pub struct FsrsState {
-    pub stability: f32,        // days until retrievability falls to 0.9
-    pub difficulty: f32,       // 1..10, intrinsic to the phrase for this learner
-    pub due: Timestamp,
-    pub last_review: Option<Timestamp>,
-    pub reps: u32,
-    pub lapses: u32,
-    pub state: CardState,      // New | Learning | Review | Relearning
-}
-```
+Rust returns f64 stability/difficulty, due milliseconds, nullable last review, lapse count,
+New/Learning/Review/Relearning state and algorithm provenance. TypeScript and SQLite preserve this
+complete group. Reference parameters, rounding, ten-minute learning step, legacy-state conversion
+and explicit errors are specified in [fsrs-model.md](fsrs-model.md).
 
 ### Grade mapping
 
@@ -151,9 +139,9 @@ The blueprint shows fixed labels (`<5 min`, `~10 min`, `1 day`, `5 days`). Those
 model. **The shipped UI shows FSRS's computed intervals, formatted with the blueprint's own
 formatter** (`Loro.dc.html:3009`):
 
-This is the required shipped behavior, not current behavior: Rust interval formatting exists, but
-the update algorithm does not, and the app facade currently fabricates scheduling values. No
-learner-facing interval may be treated as authoritative until plan 60 removes that fallback.
+The canonical update algorithm now exists. Review/Memory screens remain future work. The legacy
+formatter below is an authored display reference: its sub-day bucket must not label every actual
+interval as ten minutes. A future screen must format the actual due timestamp truthfully.
 
 ```rust
 pub fn format_interval(days: f32) -> String {
@@ -419,20 +407,24 @@ timezone database, so the shift happens in `clock.ts` and never in Rust.
 
 ## Testing
 
-The implemented scheduling helpers are pure and deterministic. Test coverage currently consists of
-inline Rust module tests, TypeScript engine/domain tests, one Rust calendar parity integration file,
-and mobile clock tests. The planned suites below do not exist and must not be cited as evidence.
+The canonical scheduler and selection functions are pure and deterministic. Reference parity checks
+model arithmetic separately from Loro's declared-prior, confidence and learning-step policy.
 
-| Test                                                    | Location                                                                                           |
-| ------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| FSRS helpers (not the review algorithm)                 | `core-rs/src/fsrs/mod.rs` inline                                                                   |
-| Stream rank ordering, including the due extension       | `core-rs/src/rank.rs` inline and TypeScript engine tests                                           |
-| Interim Refrain set selection and mode rules            | `packages/core/src/engines/engines.test.ts`                                                        |
-| Ladder monotonicity and draw determinism/eligibility    | `core-rs/src/ladder.rs` inline                                                                     |
-| Notification policy helpers                             | `core-rs/src/notify.rs` inline                                                                     |
-| Day boundaries — DST, timezone travel, the grace window | `core-rs/src/calendar.rs` (inline), `core-rs/tests/parity.rs`, `apps/mobile/src/lib/clock.test.ts` |
-| Interval formatting                                     | `core-rs/src/fsrs/mod.rs` inline                                                                   |
+| Test                                                                         | Location                                                                                                    |
+| ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| FSRS-6 reference vectors: all grades, initialization, same-day and long gaps | `packages/core-rs/src/fsrs/scheduler.rs`, `packages/core-rs/tests/fixtures/fsrs-6-reference.json`           |
+| Loro priors, confidence bonus, lifecycle/lapses, rerating and invalid inputs | `packages/core-rs/src/fsrs/mod.rs`, `packages/core-rs/src/fsrs/scheduler.rs`                                |
+| Deterministic 365-day simulation, bounded backlog and replay                 | `packages/core-rs/tests/sim.rs`                                                                             |
+| JSON transport validation and host adapter parity                            | `packages/core-rs/src/boundary.rs`, `apps/mobile/src/store/coreFacade.test.ts`                              |
+| Stream rank ordering, including the due extension                            | `packages/core-rs/src/rank.rs` and TypeScript engine tests                                                  |
+| Refrain selection, cloze and mode rules                                      | `packages/core-rs/src/select.rs`, `packages/core/src/engines/engines.test.ts`                               |
+| Complete scheduler delta propagation                                         | `apps/mobile/src/store/delta.test.ts`                                                                       |
+| Ladder monotonicity and draw determinism/eligibility                         | `packages/core-rs/src/ladder.rs`                                                                            |
+| Notification policy helpers                                                  | `packages/core-rs/src/notify.rs`                                                                            |
+| Day boundaries: DST, timezone travel and grace window                        | `packages/core-rs/src/calendar.rs`, `packages/core-rs/tests/parity.rs`, `apps/mobile/src/lib/clock.test.ts` |
+| Interval formatting                                                          | `packages/core-rs/src/fsrs/mod.rs`                                                                          |
 
-Reference FSRS parity, Rust refrain selection/cloze tests, drop-schedule properties, and the
-long-horizon simulation are missing. Add them with the implementation they validate; a passing
-helper test must not be used as evidence that a scheduler or production workflow exists.
+Run `cargo test --release --test sim -- --nocapture` from `packages/core-rs` for the seeded
+simulation. Reference fixtures and simulations establish reproducibility and numeric behavior; they
+do not establish pedagogical effectiveness or native bridge/device correctness. Native acceptance
+remains a separate plan-58 gate. Drop-schedule property tests remain outstanding.

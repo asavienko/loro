@@ -62,9 +62,17 @@ export const createSessionSlice: Slice<'completeOnboarding' | 'reset' | 'setLang
     const ids = new Set(
       packIds.flatMap((id) => catalog.packs.find((pack) => pack.id === id)?.phrases ?? []),
     )
-    const seeded = [...ids].map((id) =>
-      blankPhraseState(deps.newId(), catalogPhraseId(id), 'starter', now),
-    )
+    const existing = get().phrases
+    const seeded = [...ids]
+      .filter(
+        (id) =>
+          !existing.some((p) => p.phraseId === id) &&
+          !deps.persistence?.hasCatalog?.(id, get().targetLocale),
+      )
+      .map((id) => ({
+        ...blankPhraseState(deps.newId(), catalogPhraseId(id), 'starter', now),
+        targetLocale: get().targetLocale,
+      }))
 
     set({
       onboarded: true,
@@ -74,7 +82,7 @@ export const createSessionSlice: Slice<'completeOnboarding' | 'reset' | 'setLang
       // this field exists to close.
       level,
       dailyMinutes,
-      phrases: seeded,
+      phrases: [...existing, ...seeded],
       refrainSet: [],
       refrainDay: null,
       refrainSubstituted: [],

@@ -20,10 +20,12 @@ import {
   type LoroCoreFacade,
   type PhraseRepository,
   type TripContext,
+  userPhraseId,
 } from '@loro/core'
 import type { StoreApi } from 'zustand'
 import { deviceClock } from '../lib/clock'
-import { jsCoreFacade } from './coreFacade'
+import { canonicalCoreFacade } from './coreFacade'
+import { displayPhrase } from './learningCatalog'
 import { useApp } from './store'
 import type { AppState } from './types'
 
@@ -66,6 +68,22 @@ export function createEngineContext(
   }
   return {
     phrases: repo,
+    frozenRefrainIds: state.refrainSet.map(userPhraseId),
+    content: (id) => {
+      const phrase = phrases.find((p) => p.id === id)
+      if (phrase === undefined) return undefined
+      const catalog =
+        phrase.phraseId === null
+          ? undefined
+          : displayPhrase(state.targetLocale, state.nativeLanguage, phrase.phraseId)
+      const text = catalog?.targetText ?? phrase.ownEs
+      if (text === undefined) return undefined
+      return {
+        tokens: text.split(/\s+/),
+        targetLocale: state.targetLocale,
+        clozeEligibleIndices: [],
+      }
+    },
     clock: deps.clock,
     core,
     settings: {
@@ -100,7 +118,7 @@ const productionEngineDeps: EngineContextDeps = {
 
 /** Zero-argument production wrapper retained for existing route call sites. */
 export function engineContext(): EngineContext {
-  return createEngineContext(useApp, productionEngineDeps, jsCoreFacade)
+  return createEngineContext(useApp, productionEngineDeps, canonicalCoreFacade)
 }
 
 export const streamEngine = new StreamEngine()

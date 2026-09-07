@@ -1,3 +1,4 @@
+import { attemptWrite } from '../src/store/attemptWrite'
 import { useLocale } from '../src/lib/i18n'
 /**
  * Add phrases — Loro.dc.html:222–427, logic 2176–2433.
@@ -266,11 +267,16 @@ export default function Add() {
   const confirmAdd = (): void => {
     const phrase = draft.phrase
     if (phrase === null) return
-    addPhrase(phrase.id, {
-      difficulty: draft.difficulty,
-      tags: draft.tags,
-      source: 'discover',
-    })
+    if (
+      !attemptWrite(() => {
+        addPhrase(phrase.id, {
+          difficulty: draft.difficulty,
+          tags: draft.tags,
+          source: 'discover',
+        })
+      })
+    )
+      return
     list.anchorOn(phrase.theme)
     draft.reset()
   }

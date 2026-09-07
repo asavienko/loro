@@ -1,84 +1,197 @@
-/**
- * A TEMPORARY JavaScript stand-in for `packages/core-rs`. Nothing here is canonical.
- *
- * `LoroCoreFacade` (packages/core/src/engines/types.ts) is the subset of loro-core an
- * engine may use, injected rather than imported so engines stay pure. On device it must be
- * backed by the Rust core: ADR-0002 says every number that has to be identical across
- * platforms — FSRS intervals, ranking, the cloze mask, ASR token matching — is implemented
- * ONCE, in Rust, because two implementations diverge and a learner's schedule is what
- * diverges. The UniFFI binding is not wired up yet, so the app injects this object.
- *
- * Two of these are not merely duplicates, they are fabrications standing in for the real
- * thing, and they are the reason this file is quarantined rather than tidied:
- *
- *   • `fsrsReview` returns a made-up interval table with `difficulty` pinned to 5, feeding
- *     the field the memory-model screen is specified to plot as a real forgetting curve
- *     (ADR-0004). `core-rs/src/fsrs/mod.rs` still has the `todo!`.
- *   • `clozeMask` always blanks the SECOND token. `core-rs/src/select.rs:121-122` says it
- *     must be the most informative content word, never an article or a preposition.
- *
- * They are non-negotiable #2 violations that predate this file, and changing a number here
- * changes what a learner sees. So the values below are reproduced EXACTLY as they were
- * inline in the store, and fixing them is plans/05-fix-shared-maths-duplication.md — whose
- * job this file exists to make small: replace this one module with the binding, delete it,
- * and no call site moves.
- *
- * Do not add a number here. Do not adjust one. Anything new belongs in `core-rs`.
- *
- * ── AND IT IS A THIRD COPY: the production facade is the test fake ──
- *
- * `fakeCore()` at `packages/core/src/testing/index.ts:136-181` is this object, near
- * verbatim — so the app ships the fixture the engine tests assert against. Obvious as that
- * looks, DO NOT unify them here. They diverge at ONE line, in `matchTokens`:
- *
- *     this file             complete: next >= t.length
- *     testing/index.ts:178  complete: next >= t.length && t.length > 0
- *
- * For an EMPTY target the app answers `true` and the fixture answers `false`. That is the
- * ASR production gate: unifying on core's version would stop an empty phrase completing,
- * and unifying on this one would change what the engine suite proves. Which is correct is a
- * question for plans/05 and `core-rs/src/asr.rs:64`, and it needs the parity check, not a
- * merge. Until then the divergence is DELIBERATE and recorded here.
- */
+/** Typed transport adapter. Every result is computed by the loaded canonical Rust core. */
+import {
+  isActive,
+  isDue,
+  userPhraseId,
+  type Difficulty,
+  type FsrsState,
+  type LoroCoreFacade,
+  type PhraseState,
+  type Tag,
+} from '@loro/core'
+import { getCore } from '../core/loader'
 
-import { foldDiacritics, REPEAT_TARGET, type LoroCoreFacade } from '@loro/core'
+const DIFFICULTY: Record<Difficulty, string> = { hard: 'Hard', med: 'Med', easy: 'Easy' }
+const TAG: Record<Tag, string> = {
+  pron: 'Pron',
+  remember: 'Remember',
+  useful: 'Useful',
+  words: 'Words',
+}
+const MODES = {
+  echo: 'Echo',
+  chorus: 'Chorus',
+  speed: 'Speed',
+  cloze: 'Cloze',
+  call: 'Call',
+  cold: 'Cold',
+} as const
+const SELF_GRADES = { again: 'Again', hard: 'Hard', good: 'Good', easy: 'Easy' } as const
+const CONFIDENCE = {
+  forgot: 'Forgot',
+  shaky: 'Shaky',
+  ok: 'Ok',
+  strong: 'Strong',
+  instant: 'Instant',
+} as const
+const GRADES = { 1: 'Again', 2: 'Hard', 3: 'Good', 4: 'Easy' } as const
+const RUNGS = ['Accumulated', 'Bent', 'Transferred', 'PressureTested', 'Deployed'] as const
 
-export const jsCoreFacade: LoroCoreFacade = {
-  // The one line here that is NOT a duplicate: `REPEAT_TARGET` is the canonical declaration
-  // (`domain/phrase.ts:42`, `{ hard: 4, med: 3, easy: 2 }`, blueprint `Loro.dc.html:2526`),
-  // exported and — until now — used by nothing. Identical values to the `? :` chain this
-  // replaces, and a `Record<Difficulty, number>` cannot silently miss a new difficulty the
-  // way the chain's trailing `: 3` did.
-  repeatTarget: (d) => REPEAT_TARGET[d],
-  streamRank: (p, now) => {
-    let r = p.plays
-    r += p.difficulty === 'hard' ? -6 : p.difficulty === 'easy' ? 4 : 0
-    if (p.loved) r -= 3
-    if (p.srs !== null && p.srs.due <= now) r -= 4
-    return r
+type WireSrs = Omit<FsrsState, 'lastReview' | 'algorithm'> & {
+  last_review: number | null
+  algorithm: string
+}
+
+// The compiled core validates requests; operation-specific result types live at this boundary.
+// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters
+function call<T>(request: object): T {
+  validateNumbers(request)
+  return getCore().coreCall(request) as T
+}
+
+/** JSON must not turn non-finite optional values into meaningful nulls. */
+function validateNumbers(value: unknown): void {
+  if (typeof value === 'number') {
+    if (!Number.isFinite(value) || (Number.isInteger(value) && !Number.isSafeInteger(value))) {
+      throw new Error('Unsafe canonical numeric input')
+    }
+  } else if (Array.isArray(value)) {
+    value.forEach(validateNumbers)
+  } else if (value !== null && typeof value === 'object') {
+    Object.values(value).forEach(validateNumbers)
+  }
+}
+
+function wireMode(mode: string): string {
+  if (!Object.hasOwn(MODES, mode)) throw new Error('Unknown canonical practice mode')
+  return MODES[mode as keyof typeof MODES]
+}
+
+function wirePhrase(p: PhraseState, now: number): object {
+  return {
+    id: p.id,
+    difficulty: DIFFICULTY[p.difficulty],
+    tags: p.tags.map((tag) => TAG[tag]),
+    loved: p.loved,
+    learned: p.learned,
+    plays: p.plays,
+    reps: p.reps,
+    last_practiced_at: p.lastPracticedAt,
+    srs_due: isDue(p, now) ? p.srs?.due : null,
+    srs_stability: p.srs?.stability ?? null,
+    srs_difficulty: p.srs?.difficulty ?? null,
+    reps_today: p.repsToday,
+    reps_today_day: p.repsTodayDay,
+    lock_in_days: p.lockInDays,
+    rung: RUNGS[p.rung],
+    stumbles: p.stumbles,
+    cue_level: p.cueLevel,
+  }
+}
+
+export const canonicalCoreFacade: LoroCoreFacade = {
+  orderStream: (phrases, now) =>
+    call<string[]>({
+      op: 'order_stream',
+      phrases: phrases.filter(isActive).map((p) => wirePhrase(p, now)),
+      now_ms: now,
+    }).map(userPhraseId),
+  repeatTarget: (difficulty) => call({ op: 'repeat_target', difficulty: DIFFICULTY[difficulty] }),
+  streamRank: (p, now) => call({ op: 'stream_rank', phrase: wirePhrase(p, now), now_ms: now }),
+  clozeMask: (tokens, targetLocale, eligibleIndices) =>
+    call({
+      op: 'cloze_mask',
+      tokens,
+      target_locale: targetLocale,
+      eligible_indices: eligibleIndices,
+    }),
+  automaticity: (reps, target) => call({ op: 'automaticity', reps_today: reps, target }),
+  refrainSetSize: (dailyMinutes) => call({ op: 'refrain_set_size', daily_minutes: dailyMinutes }),
+  selectRefrainSet: (candidates, size, tripIds = []) => {
+    const trip = new Set(tripIds)
+    return call<string[]>({
+      op: 'select_refrain_set',
+      size,
+      candidates: candidates.map((p) => ({
+        id: p.id,
+        eligible: isActive(p),
+        lock_in_days: p.lockInDays,
+        trip: trip.has(p.id),
+        reps: p.reps,
+        automaticity: p.automaticity,
+        difficulty: DIFFICULTY[p.difficulty],
+        added_at: p.addedAt,
+      })),
+    }).map(userPhraseId)
   },
-  clozeMask: () => [1],
-  fsrsReview: (_s, grade, at) => {
-    const days = grade === 1 ? 0.007 : grade === 2 ? 1 : grade === 3 ? 3 : 5
-    return { stability: days, difficulty: 5, due: at + days * 86_400_000 }
+  modeForRep: (index) =>
+    call<string>({ op: 'mode_for_rep', rep_index: index }).toLowerCase() as ReturnType<
+      LoroCoreFacade['modeForRep']
+    >,
+  modelRateForMode: (mode) => call({ op: 'model_rate_for_mode', mode: wireMode(mode) }),
+  beatMsForMode: (mode) => call({ op: 'beat_ms_for_mode', mode: wireMode(mode) }),
+  rerate: (phrase, difficulty) => {
+    const prior = phrase.srs
+    if (prior?.algorithm === undefined) return prior
+    const { lastReview, ...rest } = prior
+    const { last_review: nextLastReview, ...result } = call<WireSrs>({
+      op: 'fsrs_rerate',
+      state: { ...rest, last_review: lastReview },
+      declared: DIFFICULTY[difficulty],
+      tags: phrase.tags.map((tag) => TAG[tag]),
+    })
+    return { ...result, lastReview: nextLastReview }
+  },
+  reviewGrade: (attempt) =>
+    call({
+      op: 'review_grade',
+      success: attempt.outcome === 'success',
+      hints_used: attempt.hintsUsed,
+      self_grade: attempt.selfGrade ? SELF_GRADES[attempt.selfGrade] : null,
+      confidence: attempt.confidence ? CONFIDENCE[attempt.confidence] : null,
+    }),
+  fsrsReview: (phrase, grade, at, confidence) => {
+    // The core owns the provenance identifier. Legacy schedules are invalidated, without
+    // inventing a review history or discarding observed phrase progress.
+    const initialized = call<WireSrs>({
+      op: 'fsrs_initialize',
+      declared: DIFFICULTY[phrase.difficulty],
+      tags: phrase.tags.map((tag) => TAG[tag]),
+      at_ms: at,
+    })
+    const prior = phrase.srs
+    if (prior?.algorithm !== undefined && prior.algorithm !== initialized.algorithm) {
+      throw new Error('Unsupported scheduler algorithm')
+    }
+    const state: WireSrs =
+      prior?.algorithm === initialized.algorithm
+        ? {
+            stability: prior.stability,
+            difficulty: prior.difficulty,
+            due: prior.due,
+            last_review: prior.lastReview,
+            lapses: prior.lapses,
+            state: prior.state,
+            algorithm: prior.algorithm,
+          }
+        : initialized
+    const { last_review: lastReview, ...result } = call<WireSrs>({
+      ...(confidence
+        ? { op: 'fsrs_review_confidence', confidence: CONFIDENCE[confidence] }
+        : { op: 'fsrs_review', grade: GRADES[grade] }),
+      state,
+      at_ms: at,
+    })
+    return { ...result, lastReview }
   },
   matchTokens: (heard, target, revealed) => {
-    const norm = (x: string): string => foldDiacritics(x.toLowerCase()).replace(/[^a-z0-9ñ]/g, '')
-    const h = heard.map(norm).filter(Boolean)
-    const t = target.map(norm)
-    let cursor = 0
-    let matched = revealed
-    for (let k = revealed; k < t.length; k++) {
-      const idx = h.indexOf(t[k] ?? '', cursor)
-      if (idx < 0) break
-      cursor = idx + 1
-      matched = k + 1
-    }
-    const next = Math.max(matched, revealed)
-    return {
-      revealed: next,
-      justIndex: next > revealed ? next - 1 : -1,
-      complete: next >= t.length,
-    }
+    const result = call<{ revealed: number; just_index: number; complete: boolean }>({
+      op: 'match_tokens',
+      heard,
+      target,
+      revealed,
+      fuzzy: false,
+    })
+    return { revealed: result.revealed, justIndex: result.just_index, complete: result.complete }
   },
 }

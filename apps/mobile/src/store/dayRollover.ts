@@ -20,6 +20,7 @@ import { AppState } from 'react-native'
 // The store instance directly, not the barrel: this hook is one of the store's own
 // modules, and importing its own public surface would be a cycle.
 import { useApp } from './store'
+import { attemptWrite } from './attemptWrite'
 
 export function useDayRollover(): void {
   const ensure = useApp((s) => s.ensureRefrainSet)
@@ -30,10 +31,10 @@ export function useDayRollover(): void {
     // learn the same thing later. (A scheduled notification hook is the other half of
     // this, and lands with plans/30-widgets-and-notifications.md.)
     const sub = AppState.addEventListener('change', (status) => {
-      if (status === 'active') ensure()
+      if (status === 'active') attemptWrite(ensure)
     })
     // Also on mount: the app may have been launched cold on a new day.
-    ensure()
+    attemptWrite(ensure)
     return () => {
       sub.remove()
     }

@@ -111,6 +111,12 @@ importers:
       '@expo/metro-runtime':
         specifier: ~6.1.2
         version: 6.1.2(expo@54.0.36)(react-dom@19.1.0(react@19.1.0))(react-native@0.81.5(@babel/core@7.29.7)(@react-native/metro-config@0.86.2(@babel/core@7.29.7))(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
+      '@formatjs/intl-getcanonicallocales':
+        specifier: ^3.2.11
+        version: 3.2.11
+      '@formatjs/intl-locale':
+        specifier: ^5.3.10
+        version: 5.3.10
       '@formatjs/intl-pluralrules':
         specifier: ^6.3.13
         version: 6.3.13
@@ -120,9 +126,15 @@ importers:
       '@loro/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@loro/core-rs':
+        specifier: workspace:^
+        version: link:../../packages/core-rs
       '@loro/design-tokens':
         specifier: workspace:*
         version: link:../../packages/design-tokens
+      '@op-engineering/op-sqlite':
+        specifier: ^18.2.0
+        version: 18.2.1(react-native@0.81.5(@babel/core@7.29.7)(@react-native/metro-config@0.86.2(@babel/core@7.29.7))(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
       expo:
         specifier: 54.0.36
         version: 54.0.36(@babel/core@7.29.7)(@expo/dom-webview@57.0.1)(@expo/metro-runtime@6.1.2)(expo-router@6.0.24)(react-native@0.81.5(@babel/core@7.29.7)(@react-native/metro-config@0.86.2(@babel/core@7.29.7))(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)(typescript@5.9.3)
@@ -141,6 +153,9 @@ importers:
       expo-localization:
         specifier: ~17.0.9
         version: 17.0.9(expo@54.0.36)(react@19.1.0)
+      expo-modules-core:
+        specifier: ~3.0.30
+        version: 3.0.30(react-native@0.81.5(@babel/core@7.29.7)(@react-native/metro-config@0.86.2(@babel/core@7.29.7))(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
       expo-router:
         specifier: ^6.0.24
         version: 6.0.24(h7bawttmh6n4w5qwy3c6o6ib7a)
@@ -1213,11 +1228,20 @@ packages:
   '@formatjs/icu-skeleton-parser@2.1.11':
     resolution: {integrity: sha512-j8cUmOJzVgkHuS0QiQ6ga76UIoLOFSAMWhs7aZJztH3aAdCOAE6vpC8KVvFB4cU10ON0y2/5oOVmPJ43s2lTwA==}
 
+  '@formatjs/intl-getcanonicallocales@3.2.11':
+    resolution: {integrity: sha512-3FX+dgs+n7IZ6LGewqKV+JhAN7PeknS17j2QH0Qq4yQ64QJCmd8ST5FIRRvVgM93T6L2sARpcSH1gNiVMgVy6w==}
+
+  '@formatjs/intl-locale@5.3.10':
+    resolution: {integrity: sha512-JAlo479jZagR6Ze7EI4HGcV8Fi0PYVvEYmsis7c5i7I9Wa5d1Cbo+ThvDikhkQi6Gt86fpGriDOiOQP8CT2WZA==}
+
   '@formatjs/intl-localematcher@0.8.13':
     resolution: {integrity: sha512-kHEAFOkeJSPNi7c5PaKaRjxcBrJwzzt81ifUu+8uve1EDW/VJl83KsxmqgqNZLzcFEhSliZGvx3+pk/RH0IOmg==}
 
   '@formatjs/intl-pluralrules@6.3.13':
     resolution: {integrity: sha512-78dxY4nu4BbB9J7WqqIFzr1EbhrbB6VE4KOGw4qlmX+IpS6YPM7tVYLLhDq7qOQCzq9+741iDMrgB1JlhHUM/Q==}
+
+  '@formatjs/intl-supportedvaluesof@2.3.9':
+    resolution: {integrity: sha512-RquyMkDVrJ5c0fYJSehVfzp7fWELH7vWY4nIvCoEchkDA32Mdm06ms6QvWdW+slECykCmoG4p8SLhwOKj2nCcg==}
 
   '@humanfs/core@0.19.2':
     resolution: {integrity: sha512-UhXNm+CFMWcbChXywFwkmhqjs3PRCmcSa/hfBgLIb7oQ5HNb1wS0icWsGtSAUNgefHeI+eBrA8I1fxmbHsGdvA==}
@@ -1357,6 +1381,16 @@ packages:
       '@nestjs/microservices':
         optional: true
       '@nestjs/platform-express':
+        optional: true
+
+  '@op-engineering/op-sqlite@18.2.1':
+    resolution: {integrity: sha512-atVOtXyFzO0e454eVS27AMwRs515URCKrkvLLG+mGKcyiF5UPfC53oukpNp2UmVzlLebyTEXNkTYs6n0dVGd0g==}
+    peerDependencies:
+      '@sqlite.org/sqlite-wasm': '*'
+      react: '*'
+      react-native: '*'
+    peerDependenciesMeta:
+      '@sqlite.org/sqlite-wasm':
         optional: true
 
   '@oxc-project/types@0.139.0':
@@ -6596,6 +6630,13 @@ snapshots:
 
   '@formatjs/icu-skeleton-parser@2.1.11': {}
 
+  '@formatjs/intl-getcanonicallocales@3.2.11': {}
+
+  '@formatjs/intl-locale@5.3.10':
+    dependencies:
+      '@formatjs/intl-getcanonicallocales': 3.2.11
+      '@formatjs/intl-supportedvaluesof': 2.3.9
+
   '@formatjs/intl-localematcher@0.8.13':
     dependencies:
       '@formatjs/fast-memoize': 3.1.7
@@ -6604,6 +6645,10 @@ snapshots:
     dependencies:
       '@formatjs/bigdecimal': 0.2.7
       '@formatjs/intl-localematcher': 0.8.13
+
+  '@formatjs/intl-supportedvaluesof@2.3.9':
+    dependencies:
+      '@formatjs/fast-memoize': 3.1.7
 
   '@humanfs/core@0.19.2':
     dependencies:
@@ -6770,6 +6815,11 @@ snapshots:
       tslib: 2.8.1
     optionalDependencies:
       '@nestjs/platform-express': 11.1.28(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.28)
+
+  '@op-engineering/op-sqlite@18.2.1(react-native@0.81.5(@babel/core@7.29.7)(@react-native/metro-config@0.86.2(@babel/core@7.29.7))(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)':
+    dependencies:
+      react: 19.1.0
+      react-native: 0.81.5(@babel/core@7.29.7)(@react-native/metro-config@0.86.2(@babel/core@7.29.7))(@types/react@19.1.17)(react@19.1.0)
 
   '@oxc-project/types@0.139.0': {}
 

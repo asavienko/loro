@@ -57,27 +57,29 @@ that statement and the owning plan in the same change.
 
 ## Architecture
 
-| Doc                                                               | Contents                                                                            |
-| ----------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| [overview.md](architecture/overview.md)                           | C4 context and containers, cross-cutting concerns, the ten rules                    |
-| [mobile-app.md](architecture/mobile-app.md)                       | Layers, folder structure, navigation, state, rendering strategy                     |
-| [practice-engines.md](architecture/practice-engines.md)           | The contract, current Stream/Refrain engines, and planned engine behavior           |
-| [audio-speech.md](architecture/audio-speech.md)                   | Playback graph, TTS, ASR, background audio, the hands-free stream                   |
-| [prosody-dsp.md](architecture/prosody-dsp.md)                     | Pitch extraction, alignment, per-syllable scoring, rhythm/stress, the cue ladder    |
-| [scheduling.md](architecture/scheduling.md)                       | FSRS, queue ranking, automaticity, the roguelike ladder, drop scheduling            |
-| [data-model.md](architecture/data-model.md)                       | Entities, ERD, SQLite DDL, Postgres DDL, migrations                                 |
-| [sync-protocol.md](architecture/sync-protocol.md)                 | Delta sync, hybrid logical clocks, per-field LWW, conflict rules, wire format       |
-| [backend.md](architecture/backend.md)                             | Implemented NestJS seams, EC2/Postgres/S3 testing topology and feature boundaries   |
-| [api.md](architecture/api.md)                                     | The HTTP contract — every endpoint, request, response, and error                    |
-| [ai-services.md](architecture/ai-services.md)                     | Claude roleplay, coach notes, phrase generation; prompts, caching, guardrails, cost |
-| [offline.md](architecture/offline.md)                             | What works with no network, prefetch policy, survival mode                          |
-| [widgets-notifications.md](architecture/widgets-notifications.md) | Lock screen widget, Live Activity, Glance widget, notification policy               |
-| [security-privacy.md](architecture/security-privacy.md)           | Auth, tokens, at-rest/in-transit, data classes, retention, GDPR duties              |
-| [threat-model.md](architecture/threat-model.md)                   | Assets, actors, attack surface, mitigations, abuse of the AI endpoints              |
-| [performance.md](architecture/performance.md)                     | Budgets per screen and per subsystem, with how each is measured                     |
-| [accessibility.md](architecture/accessibility.md)                 | WCAG target, screen readers, motion, contrast, the audio-first advantage            |
-| [observability.md](architecture/observability.md)                 | Testing health/log baseline; future client, sync and learning telemetry             |
-| [adr/](architecture/adr/)                                         | 14 architecture decision records                                                    |
+| Doc                                                               | Contents                                                                                        |
+| ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| [overview.md](architecture/overview.md)                           | C4 context and containers, cross-cutting concerns, the ten rules                                |
+| [mobile-app.md](architecture/mobile-app.md)                       | Layers, folder structure, navigation, state, rendering strategy                                 |
+| [practice-engines.md](architecture/practice-engines.md)           | The contract, current Stream/Refrain engines, and planned engine behavior                       |
+| [audio-speech.md](architecture/audio-speech.md)                   | Playback graph, TTS, ASR, background audio, the hands-free stream                               |
+| [prosody-dsp.md](architecture/prosody-dsp.md)                     | Pitch extraction, alignment, per-syllable scoring, rhythm/stress, the cue ladder                |
+| [scheduling.md](architecture/scheduling.md)                       | FSRS, queue ranking, automaticity, the roguelike ladder, drop scheduling                        |
+| [data-model.md](architecture/data-model.md)                       | Entities, ERD, SQLite DDL, Postgres DDL, migrations                                             |
+| [sync-protocol.md](architecture/sync-protocol.md)                 | Delta sync, hybrid logical clocks, per-field LWW, conflict rules, wire format                   |
+| [backend.md](architecture/backend.md)                             | Implemented NestJS seams, EC2/Postgres/S3 testing topology and feature boundaries               |
+| [api.md](architecture/api.md)                                     | The HTTP contract — every endpoint, request, response, and error                                |
+| [ai-services.md](architecture/ai-services.md)                     | Claude roleplay, coach notes, phrase generation; prompts, caching, guardrails, cost             |
+| [offline.md](architecture/offline.md)                             | What works with no network, prefetch policy, survival mode                                      |
+| [device-persistence.md](architecture/device-persistence.md)       | Local mutation ownership, schema upgrades, atomic commits, resume and device verification gates |
+| [fsrs-model.md](architecture/fsrs-model.md)                       | Pinned FSRS-6 reference, retention, lifecycle, precision and provenance                         |
+| [widgets-notifications.md](architecture/widgets-notifications.md) | Lock screen widget, Live Activity, Glance widget, notification policy                           |
+| [security-privacy.md](architecture/security-privacy.md)           | Auth, tokens, at-rest/in-transit, data classes, retention, GDPR duties                          |
+| [threat-model.md](architecture/threat-model.md)                   | Assets, actors, attack surface, mitigations, abuse of the AI endpoints                          |
+| [performance.md](architecture/performance.md)                     | Budgets per screen and per subsystem, with how each is measured                                 |
+| [accessibility.md](architecture/accessibility.md)                 | WCAG target, screen readers, motion, contrast, the audio-first advantage                        |
+| [observability.md](architecture/observability.md)                 | Testing health/log baseline; future client, sync and learning telemetry                         |
+| [adr/](architecture/adr/)                                         | 14 architecture decision records                                                                |
 
 The backend contract package also has an
 [all-screen integration inventory](architecture/backend-integration-inventory.md),

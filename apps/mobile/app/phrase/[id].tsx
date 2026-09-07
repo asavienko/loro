@@ -1,3 +1,4 @@
+import { attemptWrite } from '../../src/store/attemptWrite'
 import { useLocale } from '../../src/lib/i18n'
 /**
  * Phrase detail — Loro.dc.html:436–581, logic 2435–2514.
@@ -110,7 +111,9 @@ export default function PhraseDetail() {
             label={state.loved ? copy.a11y.common.removeFromLoved : copy.a11y.phrase.markLoved}
             color={state.loved ? accent.accentInk : ink.muted2}
             onPress={() => {
-              toggleLoved(p.id)
+              attemptWrite(() => {
+                toggleLoved(p.id)
+              })
             }}
           />
         </Row>
@@ -133,7 +136,9 @@ export default function PhraseDetail() {
             value={state.difficulty}
             labels={copy.difficulty}
             onChange={(d) => {
-              setDifficulty(p.id, d)
+              attemptWrite(() => {
+                setDifficulty(p.id, d)
+              })
             }}
           />
         </Stack>
@@ -146,7 +151,9 @@ export default function PhraseDetail() {
             labels={copy.tags}
             selectedSuffix={copy.common.selectedSuffix}
             onToggle={(t) => {
-              toggleTag(p.id, t)
+              attemptWrite(() => {
+                toggleTag(p.id, t)
+              })
             }}
           />
         </Stack>
@@ -159,10 +166,14 @@ export default function PhraseDetail() {
           note={state.note}
           offers={cat?.hint !== undefined ? [cat.hint, ...hooks] : hooks}
           onAdopt={(h) => {
-            setNote(p.id, h)
+            attemptWrite(() => {
+              setNote(p.id, h)
+            })
           }}
           onClear={() => {
-            setNote(p.id, '')
+            attemptWrite(() => {
+              setNote(p.id, '')
+            })
           }}
         />
 
@@ -173,7 +184,9 @@ export default function PhraseDetail() {
           reps={state.reps}
           bucket={bucket}
           onToggle={() => {
-            markLearned(p.id, !state.learned)
+            attemptWrite(() => {
+              markLearned(p.id, !state.learned)
+            })
           }}
         />
       </ScrollView>
@@ -183,7 +196,12 @@ export default function PhraseDetail() {
           label={copy.phrase.actions.remove}
           variant="destructive"
           onPress={() => {
-            removePhrase(p.id)
+            if (
+              !attemptWrite(() => {
+                removePhrase(p.id)
+              })
+            )
+              return
             router.back()
           }}
         />

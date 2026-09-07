@@ -1,3 +1,8 @@
+import { vi } from 'vitest'
+vi.mock('./coreFacade', async () => {
+  const { fakeCore } = await import('@loro/core/testing')
+  return { canonicalCoreFacade: fakeCore() }
+})
 import { beforeEach, describe, expect, it } from 'vitest'
 import { useApp } from './store'
 import { toView } from './view'

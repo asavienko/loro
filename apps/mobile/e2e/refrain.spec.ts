@@ -6,7 +6,7 @@ const reps = [
   { label: 'Say it', cue: 'Read it, then say it back', automaticity: 0 },
   { label: 'Chorus it', cue: 'Read aloud with a steady rhythm', automaticity: 17 },
   { label: 'Faster!', cue: 'Again, faster — keep the groove', automaticity: 33 },
-  { label: 'Fill & say', cue: 'Fill the gap out loud', automaticity: 50 },
+  { label: 'I read it aloud', cue: 'Read the full phrase aloud', automaticity: 50 },
   { label: 'Respond', cue: 'Say the Spanish for the cue', automaticity: 67 },
   { label: 'Say it cold', cue: 'From memory — no model', automaticity: 83 },
 ] as const
@@ -35,6 +35,12 @@ test(
             has: page.getByText(rep.cue, { exact: true }),
           }),
         ).toHaveAttribute('aria-label', new RegExp(`${rep.automaticity} percent automatic`))
+        if (rep.automaticity === 50) {
+          await expect(
+            page.getByText('Gap practice is not available for this phrase yet.'),
+          ).toBeVisible()
+          await expect(page.getByText('Fill the gap out loud', { exact: true })).toHaveCount(0)
+        }
         await page.getByRole('button', { name: rep.label }).click()
         await expect(page.getByText('effort ↓', { exact: true })).toHaveCount(0)
         await expect(page.getByText('instant & smooth', { exact: true })).toHaveCount(0)
@@ -77,4 +83,24 @@ test('LB-27: manual confirmation never reports speech latency', async ({ page })
     await expect(page.getByText(/^(\d+ ms|\d+\.\ds)$/)).toHaveCount(0)
     await expect(page.getByText('effort ↓', { exact: true })).toHaveCount(0)
   }
+})
+
+test('F-04: repeated confirmation commits one rep and resumes at the committed cursor', async ({
+  page,
+}) => {
+  await onboard(page)
+  await startWave(page)
+  const confirm = page.getByRole('button', { name: 'Say it', exact: true })
+  await confirm.evaluate((button) => {
+    button.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    button.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+  })
+  await expect(page.getByRole('button', { name: 'Chorus it', exact: true })).toBeVisible()
+  await expect(page.locator('div[aria-label$="17 percent automatic."]')).toBeVisible()
+  await page.getByRole('button', { name: 'The Refrain, open the menu' }).click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Today', exact: true }).click()
+  await expect(repsTodayRow(page, 1)).toBeVisible()
+  await startWave(page)
+  await expect(page.getByRole('button', { name: 'Chorus it', exact: true })).toBeVisible()
+  await expect(page.locator('div[aria-label$="17 percent automatic."]')).toBeVisible()
 })

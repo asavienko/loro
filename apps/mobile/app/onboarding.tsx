@@ -1,3 +1,4 @@
+import { attemptWrite } from '../src/store/attemptWrite'
 import { useLocale } from '../src/lib/i18n'
 /**
  * Onboarding — Loro.dc.html:128–212, logic 2068–2174.
@@ -206,18 +207,23 @@ function useOnboardingFlow() {
   const next = (): void => {
     if (current?.kind === 'ready') {
       const mins = Number(answers['mins'] ?? 10)
-      complete({
-        goal: String(answers['goal'] ?? 'curious'),
-        // `level` used to be collected across a whole step and then dropped here, so the
-        // question's helper described a setting that did not exist (`P1-04`). Nothing reads it
-        // yet — plan 60's set selection is what biases on it — but it is stored, and
-        // `completeOnboarding` now requires it, so a future question cannot go the same way.
-        level: String(answers['level'] ?? 'beg'),
-        // The three allowed daily budgets, and anything unrecognised is the middle one.
-        // This ternary IS the domain rule; the mapping is exact on purpose.
-        dailyMinutes: mins === 5 ? 5 : mins === 20 ? 20 : 10,
-        packIds: answers['packs'] as string[],
-      })
+      if (
+        !attemptWrite(() => {
+          complete({
+            goal: String(answers['goal'] ?? 'curious'),
+            // `level` used to be collected across a whole step and then dropped here, so the
+            // question's helper described a setting that did not exist (`P1-04`). Nothing reads it
+            // yet — plan 60's set selection is what biases on it — but it is stored, and
+            // `completeOnboarding` now requires it, so a future question cannot go the same way.
+            level: String(answers['level'] ?? 'beg'),
+            // The three allowed daily budgets, and anything unrecognised is the middle one.
+            // This ternary IS the domain rule; the mapping is exact on purpose.
+            dailyMinutes: mins === 5 ? 5 : mins === 20 ? 20 : 10,
+            packIds: answers['packs'] as string[],
+          })
+        })
+      )
+        return
       router.replace('/')
       return
     }
@@ -551,7 +557,9 @@ function OnboardingLanguages() {
   const target = useApp((state) => state.targetLocale)
   const setLanguages = useApp((state) => state.setLanguages)
   const chooseNative = (next: NativeLanguage): void => {
-    setLanguages(next, supportsPair(next, target) ? target : 'es-ES')
+    attemptWrite(() => {
+      setLanguages(next, supportsPair(next, target) ? target : 'es-ES')
+    })
   }
   return (
     <Stack gap={space['3']}>
@@ -566,7 +574,9 @@ function OnboardingLanguages() {
         values={TARGET_LOCALES.filter((value) => supportsPair(native, value))}
         selected={target}
         onSelect={(next: TargetLocale) => {
-          setLanguages(native, next)
+          attemptWrite(() => {
+            setLanguages(native, next)
+          })
         }}
       />
     </Stack>

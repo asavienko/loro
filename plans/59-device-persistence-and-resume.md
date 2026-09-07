@@ -2,12 +2,13 @@
 
 - **Requirement IDs:** `F-02`, `F-03`, `F-04`, `LB-01`…`LB-10`
 - **Milestone:** M1
-- **Status:** 🟡 Schema-2 repositories and SQLite tests exist. Course-write correction and
-  persistence contracts can start now; native wiring needs plan 58, and canonical scheduling/HLC
-  writes consume the relevant plan-60 contracts and bindings. Hydration and crash resume remain.
+- **Status:** 🟡 Implemented schema-3 transactions, native driver/bootstrap, hydration and atomic
+  progress/checkpoint/review/outbox persistence. Host/SQLite/browser tests and Android one-rep
+  force-stop/resume and course switching pass. iOS and the full native upgrade/offline matrix remain
+  plan-58 acceptance gates.
 - **Depends on:** 54 completed; existing 87 language/course contracts; 58 native driver/bridge; 60
   HLC and scheduler-state slices, not completion of its selection algorithms.
-- **Reviewed:** 2026-09-07 against `d544fa4`; documentation review only, no implementation claimed.
+- **Implementation review:** 2026-09-07, based on `3a24e99`; evidence and remaining gates below.
 
 ## Outcome and scope
 
@@ -20,7 +21,7 @@ This plan delivers persistence for the implemented manual learning loop. It does
 or all of plan 64. Plan 64 owns production wave transitions and timing rules; 59 supplies their
 checkpoint transaction, and 56/81 own navigation and exit/resume presentation.
 
-## Verified starting point
+## Starting point before this implementation
 
 | Existing seam                                                                                                                                       | Gap this plan must close                                                                                  |
 | --------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
@@ -43,68 +44,68 @@ device acceptance criteria pass.
 
 ### 1. Safe course saves — ready now
 
-- [ ] Replace `SqlCourseTable.save` with `ON CONFLICT(user_id, target_locale) DO UPDATE` over only
+- [x] Replace `SqlCourseTable.save` with `ON CONFLICT(user_id, target_locale) DO UPDATE` over only
       its owned columns. Preserve the row identity and unrelated columns; do not alter schema 2 for
       this fix or touch completed plan-54 phrase/settings behavior.
-- [ ] Add real-SQLite regression coverage for repeated saves, nullable-field clearing, another
+- [x] Add real-SQLite regression coverage for repeated saves, nullable-field clearing, another
       user/course remaining untouched, and an extra column/related row surviving an update. Extend
       the existing legacy-upgrade test to save and reopen the migrated course without changing
       queued ops.
 
 ### 2. Durable contracts and transaction boundary — ready before native integration
 
-- [ ] Inventory `AppData`, `CourseState`, `RefrainResume` and settings as global, course-local,
+- [x] Inventory `AppData`, `CourseState`, `RefrainResume` and settings as global, course-local,
       checkpointed or ephemeral. Include `languageChosen`, per-course onboarding, selected phrase,
       Stream cursor, frozen sets, substitutions, wave completion and global streak days. Define
       legacy defaults explicitly; restore every course without seeding it again.
-- [ ] Define a versioned checkpoint containing stable session/item/phrase identity, course, day,
+- [x] Define a versioned checkpoint containing stable session/item/phrase identity, course, day,
       cursor and the data required to resume a committed transition. Define decoding,
       unknown-version, deleted-phrase and changed-catalog recovery. Keep functions, native handles,
       PCM and speculative scores out. Plan 64 supplies future wave-specific transitions rather than
       a second checkpoint store.
-- [ ] Add an injectable transaction coordinator around the existing repositories. Keep SQL in the
+- [x] Add an injectable transaction coordinator around the existing repositories. Keep SQL in the
       data layer and never await inside `SqlDriver.transaction`. Compute/await engine results
       outside it, then validate their expected course/session/revision before committing against
       current rows.
-- [ ] Preserve `engine.record(...) → applyDelta` as the only progress-write path. A committed
+- [x] Preserve `engine.record(...) → applyDelta` as the only progress-write path. A committed
       attempt must atomically update its phrase, relevant day/streak state, checkpoint, and syncable
       field writes. Define stable attempt identity/replay handling so retries or process death
       cannot double-count a rep or advance a cursor without its progress. Reuse plan 60's
       review-event contract when FSRS writes are integrated; only add forward migrations for proven
       missing fields/tables.
-- [ ] Keep course resume local. Queue only entities/fields declared syncable, with their existing
+- [x] Keep course resume local. Queue only entities/fields declared syncable, with their existing
       merge classes; new syncable fields require policy and wire-contract coverage. Native/target
       settings remain one atomic `languagePair`. Use plan 60's canonical HLC port and persist its
       restart state; no timestamp-string stand-in and no dependency on server availability.
 
 ### 3. Device driver and bootstrap — requires plan 58's native substrate
 
-- [ ] Adapt the selected op-sqlite version to the existing `SqlDriver`: bindings, foreign keys,
+- [x] Adapt the selected op-sqlite version to the existing `SqlDriver`: bindings, foreign keys,
       nested transaction semantics, rollback, close/reopen and schema-version checks. Plan 58 owns
       module installation/config plugins; 59 owns database lifecycle and adapter behavior.
-- [ ] Open and migrate once, restore settings/course state, then permit learner routes and writes.
+- [x] Open and migrate once, restore settings/course state, then permit learner routes and writes.
       Provide explicit initializing, ready and recoverable/fatal failure states using plan 56's
       shell. A failed open/migration must preserve the database and offer retry; never fall back
       silently to a fresh in-memory session. Keep explicit local erasure separate from
       sign-out/account deletion.
-- [ ] Define the web adapter policy explicitly. The existing memory fallback may remain for web
+- [x] Define the web adapter policy explicitly. The existing memory fallback may remain for web
       development with its reload limitation documented; it is not device durability evidence.
       Browser persistence is a separate decision, not an accidental localStorage implementation.
 
 ### 4. Hydration, write-through and resume — integrate by mutation family
 
-- [ ] Replace direct durable writes in onboarding, language switching, phrase edits/deletes/undo,
+- [x] Replace direct durable writes in onboarding, language switching, phrase edits/deletes/undo,
       settings and practice with repository transactions. Publish updated read snapshots after
       commit; on disk-full/transaction failure, retain the prior checkpoint and show a retryable
       failure.
-- [ ] Scope phrase reads and writes by owner and course; current phrase repositories filter by user,
+- [x] Scope phrase reads and writes by owner and course; current phrase repositories filter by user,
       not target. Keep late results associated with their originating course, reject stale or
       deleted-session results, and prevent a switch from changing their destination or day stamp.
-- [ ] Make first-course seeding idempotent and transactional with its onboarding/settings record.
+- [x] Make first-course seeding idempotent and transactional with its onboarding/settings record.
       Preserve phrase IDs, personal meanings and tombstones; catalog activation belongs to plan 61.
       Plan 90's future English default must never replace an existing learner's saved course or
       legacy Spanish identity. Do not reconstruct history lost by earlier in-memory-only sessions.
-- [ ] Resume the last committed transition without reapplying an attempt. Preserve the frozen set
+- [x] Resume the last committed transition without reapplying an attempt. Preserve the frozen set
       and completed reps; derive midnight/day rollover through the existing clock policy.
       Distinguish `localDay()` from the global `streakDay()` grace window. Reset transient
       highlights and native handles. Apply plan-64 abandon/rollover rules and plan-81 exit choices
@@ -132,3 +133,29 @@ device acceptance criteria pass.
 Remote sync transport, account reconciliation/export/deletion, scheduling algorithm implementation,
 production wave semantics, audio cache/playback, browser durable storage, and unapproved trip
 tables.
+
+## Delivered evidence and remaining gates — 2026-09-07
+
+- [Device persistence architecture](../docs/architecture/device-persistence.md) records ownership,
+  schema-3 migration, validated checkpoints, hydration, explicit web memory policy and recovery.
+- Real SQLite tests cover course upserts, schema-1/2 upgrades, rollback at each practice table and
+  COMMIT, reopen/hydration, replay, cross-course completion, stale phrase/session rejection and
+  unchanged projections after failure. Outbox tests validate actual queued values against the target
+  sync schema, including course-scoped day IDs and full scheduler groups.
+- The op-sqlite adapter is tested against real SQLite behind its synchronous transport. Native
+  bootstrap has retryable failure and no volatile fallback. Browser states cover startup and save
+  failure; form drafts and practice cursors survive failed commits.
+- Android fresh install, one-rep force-stop/relaunch and course restart are verified. iOS, native
+  database upgrades and the full midnight/timezone/offline matrix still require plan 58. Source
+  implementation completion above does not claim those device checks passed. Local tombstone undo is
+  implemented; remote restoration and equal-review-time rerating reconciliation remain plan-68
+  protocol work.
+
+Android smoke evidence: the same session resumed at cursor 1 after force-stop, with exactly one rep,
+one attempt and one review; the outbox stayed at nine operations before and after restart. Switching
+to Bulgarian persisted that selection while Spanish retained its rep and cursor. See
+[native runtime evidence](../docs/native-core-runtime.md).
+
+Final integration verification: `pnpm check` passed all 23 tasks; all 138 browser E2E tests and four
+production-bundle smoke tests passed. Formatting and the iOS JavaScript/Hermes export passed; the
+latter is not an iOS native build or device test.

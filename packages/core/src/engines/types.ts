@@ -9,7 +9,7 @@
  * See docs/architecture/practice-engines.md and ADR-0006.
  */
 
-import type { Difficulty, LadderRung, PhraseState } from '../domain/phrase.js'
+import type { Difficulty, FsrsState, LadderRung, PhraseState } from '../domain/phrase.js'
 import type { UserPhraseId } from '../domain/ids.js'
 
 export type EngineId =
@@ -137,7 +137,13 @@ export interface ProgressDelta {
   // FSRS — maintained even by engines that never show an interval.
   /** ABSOLUTE, and merged as a GROUP: taking `due` from one device and `stability` from
    * another would produce a scheduling state no algorithm ever computed. */
-  readonly srs?: { readonly stability: number; readonly difficulty: number; readonly due: number }
+  readonly srs?: FsrsState
+  /** Durable review evidence; metadata, not an independently merged progress signal. */
+  readonly review?: {
+    readonly grade: 1 | 2 | 3 | 4
+    readonly at: number
+    readonly algorithm: string
+  }
 
   // Loop B.
   /**
@@ -168,10 +174,8 @@ export interface ProgressDelta {
   /**
    * INCREMENTS, clamped to 0…100.
    *
-   * NOTE: until the DSP lands (plans/19, plans/27) the engines supply a fixed
-   * progression here rather than a score derived from real signal processing. Nothing
-   * displays these yet, and nothing may display them until they are real — see
-   * non-negotiable #2.
+   * Only populated from measured DSP evidence. Manual practice and passive listening
+   * never synthesize score increments.
    */
   readonly axes?: {
     readonly perception?: number
@@ -187,7 +191,7 @@ export interface ProgressDelta {
 }
 
 /** One writable progress signal. `phraseId` is the address, not a signal. */
-export type ProgressSignal = Exclude<keyof ProgressDelta, 'phraseId'>
+export type ProgressSignal = Exclude<keyof ProgressDelta, 'phraseId' | 'review'>
 
 /**
  * Every signal, enumerable at runtime — the list `conformance.ts` walks so that each
@@ -275,6 +279,15 @@ export interface EngineContext {
   readonly flags: { bool(k: string, d: boolean): boolean; number(k: string, d: number): number }
   /** Injected — no engine calls Math.random(). */
   readonly seed: number
+  /** Already frozen by the daily persistence transaction; preserve order, including an empty set. */
+  readonly frozenRefrainIds?: readonly UserPhraseId[]
+  readonly content?: (id: UserPhraseId) =>
+    | {
+        readonly tokens: readonly string[]
+        readonly targetLocale: string
+        readonly clozeEligibleIndices: readonly number[]
+      }
+    | undefined
 }
 
 /**
@@ -284,11 +297,33 @@ export interface EngineContext {
  * native binding. See docs/architecture/adr/0002-shared-rust-core.md
  */
 export interface LoroCoreFacade {
+  rerate(phrase: PhraseState, difficulty: Difficulty): FsrsState | null
+  orderStream(phrases: readonly PhraseState[], now: number): readonly UserPhraseId[]
+  reviewGrade(attempt: Attempt): 1 | 2 | 3 | 4
   streamRank(p: PhraseState, now: number): number
   repeatTarget(d: Difficulty): number
   /** Token indices to blank. Content words only, never articles or prepositions. */
-  clozeMask(phraseId: string): readonly number[]
-  fsrsReview(state: PhraseState, grade: 1 | 2 | 3 | 4, at: number): ProgressDelta['srs']
+  clozeMask(
+    tokens: readonly string[],
+    targetLocale: string,
+    eligibleIndices: readonly number[],
+  ): readonly number[]
+  automaticity(reps: number, target: number): number
+  refrainSetSize(dailyMinutes: number): number
+  selectRefrainSet(
+    candidates: readonly PhraseState[],
+    size: number,
+    tripIds?: readonly UserPhraseId[],
+  ): readonly UserPhraseId[]
+  modeForRep(index: number): 'echo' | 'chorus' | 'speed' | 'cloze' | 'call' | 'cold'
+  modelRateForMode(mode: string): number | null
+  beatMsForMode(mode: string): number
+  fsrsReview(
+    state: PhraseState,
+    grade: 1 | 2 | 3 | 4,
+    at: number,
+    confidence?: Attempt['confidence'],
+  ): FsrsState
   matchTokens(
     heard: readonly string[],
     target: readonly string[],
@@ -328,7 +363,7 @@ export interface PracticeEngine {
   next(session: SessionHandle): Promise<PracticeItem | null>
 
   /** Record an attempt; return the deltas to persist. See ProgressDelta / rule 5. */
-  record(session: SessionHandle, attempt: Attempt): Promise<ProgressDelta>
+  record(session: SessionHandle, attempt: Attempt, ctx: EngineContext): Promise<ProgressDelta>
 
   summarize(session: SessionHandle): Promise<SessionSummary>
 }

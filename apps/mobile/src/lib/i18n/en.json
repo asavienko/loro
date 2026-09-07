@@ -288,5 +288,13 @@
   "account.backend.unavailable": "Server unavailable. You can continue practising locally.",
   "account.backend.unconfigured": "No server is configured for this build.",
   "account.backend.scope": "Server connection does not enable account sign-in or progress sync.",
-  "account.backend.retry": "Check connection"
+  "account.backend.retry": "Check connection",
+  "bootstrap.loading": "Opening your learning space…",
+  "bootstrap.error": "We couldn’t open your learning space. Please try again.",
+  "bootstrap.retry": "Try again",
+  "persistence.error": "Your progress couldn’t be saved. Please try again.",
+  "persistence.retry": "Try again",
+  "refrain.clozeUnavailable.cue": "Read the full phrase aloud",
+  "refrain.clozeUnavailable.note": "Gap practice is not available for this phrase yet.",
+  "refrain.clozeUnavailable.confirm": "I read it aloud"
 }

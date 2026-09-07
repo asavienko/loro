@@ -18,15 +18,10 @@
  *     "not handled" and "handled by ignoring it, on purpose" stop looking alike.
  */
 
-import {
-  LOCK_IN_DAYS_TO_GRADUATE,
-  type FsrsState,
-  type PhraseState,
-  type ProgressDelta,
-} from '@loro/core'
+import { LOCK_IN_DAYS_TO_GRADUATE, type PhraseState, type ProgressDelta } from '@loro/core'
 
 /** Every signal a delta can carry. `phraseId` names the row, so it is not a signal. */
-type DeltaField = Exclude<keyof ProgressDelta, 'phraseId'>
+type DeltaField = Exclude<keyof ProgressDelta, 'phraseId' | 'review'>
 
 /** How one signal reaches the row. Returns only the fields it owns. */
 type DeltaWrite = (p: PhraseState, d: ProgressDelta) => Partial<PhraseState>
@@ -136,7 +131,7 @@ export function applyDeltaToPhrase(
     if (rule.kind === 'derived' || rule.kind === 'unstored') continue
     next = { ...next, ...rule.write(p, d) }
   }
-  return { ...next, ...dayScopedReps(d, localDay), ...mergedSrs(p, d), ...lockIn(p, d) }
+  return { ...next, ...dayScopedReps(d, localDay), ...mergedSrs(d), ...lockIn(p, d) }
 }
 
 /**
@@ -152,9 +147,9 @@ function dayScopedReps(d: ProgressDelta, localDay: string): Partial<PhraseState>
 }
 
 /** FSRS is ABSOLUTE and merged as a GROUP — see `nextSrs`. */
-function mergedSrs(p: PhraseState, d: ProgressDelta): Partial<PhraseState> {
+function mergedSrs(d: ProgressDelta): Partial<PhraseState> {
   if (d.srs === undefined) return {}
-  return { srs: nextSrs(p.srs, d.srs, d.lastPracticedAt ?? null) }
+  return { srs: { ...d.srs } }
 }
 
 /**
@@ -181,26 +176,4 @@ function lockIn(p: PhraseState, d: ProgressDelta): Partial<PhraseState> {
 /** Axes are percentages. Clamped to 0…100 — the old store clamped at 99, arbitrarily. */
 function bumpAxis(current: number, delta: number | undefined): number {
   return Math.max(0, Math.min(100, current + (delta ?? 0)))
-}
-
-/**
- * FSRS state, merged as a group.
- *
- * `lapses` and `state` are carried rather than computed: no engine reports them, and
- * the real transitions are FSRS's own (plans/17-fsrs-implementation-and-parity.md).
- * Guessing them here would put a made-up card state behind the memory-model screen.
- */
-function nextSrs(
-  prev: FsrsState | null,
-  next: NonNullable<ProgressDelta['srs']>,
-  at: number | null,
-): FsrsState {
-  return {
-    stability: next.stability,
-    difficulty: next.difficulty,
-    due: next.due,
-    lastReview: at ?? prev?.lastReview ?? null,
-    lapses: prev?.lapses ?? 0,
-    state: prev?.state ?? 'learning',
-  }
 }

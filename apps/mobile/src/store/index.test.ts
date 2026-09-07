@@ -1,3 +1,9 @@
+import { vi } from 'vitest'
+vi.mock('./coreFacade', async () => {
+  const { fakeCore } = await import('@loro/core/testing')
+  return { canonicalCoreFacade: fakeCore() }
+})
+import { fakeCore } from '@loro/core/testing'
 /**
  * Store tests.
  *
@@ -296,6 +302,7 @@ describe("the day's Refrain set", () => {
   const withDay = (day: string) => {
     let current = day
     const store = createAppStore({
+      core: fakeCore(),
       clock: {
         now: () => 1_785_231_660_000,
         localDay: () => current,
@@ -406,6 +413,7 @@ describe('the streak', () => {
   const atStreakDay = (streakDay: string) => {
     let current = streakDay
     const store = createAppStore({
+      core: fakeCore(),
       clock: {
         now: () => 1_785_231_660_000,
         localDay: () => '2026-07-28',

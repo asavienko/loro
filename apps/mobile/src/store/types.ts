@@ -8,6 +8,7 @@
 
 import type { StoreApi } from 'zustand'
 import type {
+  LoroCoreFacade,
   NativeLanguage,
   TargetLocale,
   Clock,
@@ -17,7 +18,7 @@ import type {
   Tag,
   UserPhraseId,
 } from '@loro/core'
-import type { AppData } from './state'
+import type { AppData, RefrainResume } from './state'
 import type { OwnPhraseDraft } from './phraseFactory'
 
 export interface AppActions {
@@ -53,7 +54,7 @@ export interface AppActions {
    * The ONLY write path for a practice outcome. A screen calls `engine.record(...)` and
    * hands the result here; nothing else writes a progress field.
    */
-  applyDelta: (delta: ProgressDelta) => void
+  applyDelta: (delta: ProgressDelta, context?: PracticeCommitContext) => void
   select: (id: string | null) => void
   showToast: (message: string, undo?: () => void) => void
   clearToast: () => void
@@ -74,7 +75,31 @@ export type AppState = AppData & AppActions
  * Injected so a test can drive a day rollover, and so the store's day logic is provable
  * rather than dependent on when the suite happens to run.
  */
+export interface PracticeCommitContext {
+  expectedPhrase?: PhraseState
+  phraseId?: UserPhraseId
+  review?: { grade: 1 | 2 | 3 | 4; at: number; algorithm: string }
+  attemptId: string
+  targetLocale: TargetLocale
+  localDay: string
+  streakDay: string
+  sessionId?: string
+  expectedCursor?: number
+  checkpoint?: RefrainResume
+}
+
+/** Synchronous local transaction; returned data is a fresh repository projection. */
+export interface StorePersistence {
+  hasCatalog?(id: string, target: TargetLocale): boolean
+  hasAttempt?(context: PracticeCommitContext): boolean
+  load(): AppData | null
+  commit(before: AppData, after: AppData, attempt?: PracticeCommitContext): AppData
+  reset(): AppData
+}
+
 export interface StoreDeps {
+  core?: Pick<LoroCoreFacade, 'refrainSetSize' | 'selectRefrainSet' | 'rerate'>
+  persistence?: StorePersistence
   clock: Clock
   newId: () => UserPhraseId
 }
@@ -85,7 +110,7 @@ export interface StoreDeps {
  * `get` rather than a direct import of a sibling slice: an action that calls another action
  * (`removePhrase` → `ensureRefrainSet`, `addPhrase` → `showToast`) must go through the store
  * so it sees the CURRENT function, and so the slices stay independent of each other's
- * grouping. Zustand's own `set`/`get`, unwrapped — no middleware.
+ * grouping. The store stages these writes until the enclosing action commits locally.
  */
 export interface SliceContext {
   readonly set: StoreApi<AppState>['setState']

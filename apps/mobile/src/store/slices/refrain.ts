@@ -6,20 +6,22 @@ import { EMPTY_REFRAIN_RESUME } from '../state'
  * day key reaches first, and from here it reaches every engine at once.
  */
 
-import { DEFAULT_REP_TARGET, refrainSetSize, repsToday, selectRefrainSet } from '@loro/core'
+import { DEFAULT_REP_TARGET, repsToday } from '@loro/core'
 import type { Slice } from '../types'
 
 export const createRefrainSlice: Slice<'ensureRefrainSet'> = ({ set, get, deps }) => ({
   ensureRefrainSet: () => {
     const day = deps.clock.localDay()
     const st = get()
-    const size = refrainSetSize(st.dailyMinutes)
+    if (!deps.core) throw new Error('Canonical core is not ready')
+    const size = deps.core.refrainSetSize(st.dailyMinutes)
+    const select = deps.core.selectRefrainSet
 
     // A new day (or the first ever): choose today's set once, then freeze it.
     if (st.refrainDay !== day) {
       set({
         refrainResume: EMPTY_REFRAIN_RESUME,
-        refrainSet: [...selectRefrainSet(st.phrases, size)],
+        refrainSet: [...select(st.phrases, size)],
         refrainDay: day,
         refrainSubstituted: [],
       })
@@ -38,7 +40,7 @@ export const createRefrainSlice: Slice<'ensureRefrainSet'> = ({ set, get, deps }
       // today — substituting in a phrase that is already at 6/6 offers no work.
       (p) => !inSet.has(p.id) && repsToday(p, day) < DEFAULT_REP_TARGET,
     )
-    const fill = selectRefrainSet(candidates, size - st.refrainSet.length)
+    const fill = select(candidates, size - st.refrainSet.length)
     if (fill.length === 0) return
 
     set({

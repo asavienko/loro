@@ -27,8 +27,7 @@ import {
   type SqlDriver,
   type SqlRow,
 } from '@loro/core'
-import { makePhrase } from '@loro/core/testing'
-import { jsCoreFacade } from '../store/coreFacade'
+import { makePhrase, fakeCore } from '@loro/core/testing'
 import { createEngineContext } from '../store/engines'
 import { createAppStore } from '../store/store'
 import { openNodeSqlite } from './driver.node'
@@ -432,7 +431,11 @@ describe('eligibility agrees across every implementation', () => {
       built[name] = { active: ids(repo.active()), due: ids(repo.due(AT)) }
     }
 
-    const store = createAppStore({ clock: storeClock, newId: () => userPhraseId('unused') })
+    const store = createAppStore({
+      core: fakeCore(),
+      clock: storeClock,
+      newId: () => userPhraseId('unused'),
+    })
     store.setState({ phrases: rows.filter((r) => r.id !== deleted) })
     const storeRepo = createEngineContext(
       store,
@@ -444,7 +447,7 @@ describe('eligibility agrees across every implementation', () => {
         flags: { bool: (_k, d) => d, number: (_k, d) => d },
         seed: 1,
       },
-      jsCoreFacade,
+      fakeCore(),
     ).phrases
     built['store'] = { active: ids(storeRepo.active()), due: ids(storeRepo.due(AT)) }
     return built
@@ -1019,6 +1022,24 @@ describe('erasure leaves nothing behind', () => {
       refrainSession: null,
     })
     driver.run(`INSERT INTO kv (k, v) VALUES ('last-sync-cursor', 'c-42')`)
+    db.attempts.record('es-ES', 'attempt-one')
+    db.checkpoints.save({
+      version: 1,
+      targetLocale: 'es-ES',
+      localDay: DAY,
+      revision: 1,
+      streamCursor: 1,
+      refrainResume: { session: null, cursor: 0, lastLatency: null, history: [], done: false },
+    })
+    db.reviews.append({
+      attemptId: 'attempt-one',
+      targetLocale: 'es-ES',
+      phraseId: kept,
+      reviewedAt: AT,
+      rating: 3,
+      algorithm: 'test',
+      state: { stability: 1, difficulty: 5, due: AT, lastReview: AT, lapses: 0, state: 'review' },
+    })
     for (const id of [kept, gone]) {
       db.outbox.append({
         entity: 'user_phrase',
@@ -1055,8 +1076,8 @@ describe('erasure leaves nothing behind', () => {
     expect(currentVersion(driver)).toBe(SCHEMA_VERSION)
     expect(migrate(driver, AT).applied, 'no migration is owed').toEqual([])
 
-    // The seq counter restarts too: `DROP TABLE` takes the `sqlite_sequence` row with it, so
-    // a re-registered learner's first op is seq 1 and cannot be confused with an old ack.
+    // Sequence ids never repeat after owner erasure, so stale acknowledgements cannot
+    // delete writes queued by a fresh session; other owners also retain their queue.
     db.phrases.upsert({ ...makePhrase('a'), id: userPhraseId('id-new') })
     db.outbox.append({
       entity: 'user_phrase',
@@ -1067,7 +1088,7 @@ describe('erasure leaves nothing behind', () => {
       createdAt: AT,
     })
     expect(db.phrases.count()).toBe(1)
-    expect(db.outbox.pending(10).map((o) => o.seq)).toEqual([1])
+    expect(db.outbox.pending(10).map((o) => o.seq)).toEqual([3])
   })
 
   it('erases nothing when the wrapping transaction rolls back', () => {

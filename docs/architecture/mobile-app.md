@@ -9,18 +9,19 @@ new work is extending toward.
 
 The mobile package is an Expo Router app that currently runs seven learner screens plus its root
 layout. It is useful on the web for the onboarding-to-practice loop, but it is not yet a native
-product: there are no generated `ios/` or `android/` projects, local Expo Modules, device SQLite
-driver, audio or speech implementation, Rust UniFFI bridge, notifications, or widgets.
+product: there are no generated `ios/` or `android/` projects, audio or speech implementation,
+verified native Rust bridge, notifications, or widgets. The op-sqlite driver and
+bootstrap/write-through wiring exist; native device durability is not yet verified.
 
-| Area                  | Implemented now                                                                                                | Target                                                                          |
-| --------------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| Routes                | Today, onboarding, Add, phrase detail, Stream, Refrain, Progress                                               | The remaining blueprint routes, trips, settings, labs, and Run                  |
-| Domain and engines    | Domain contracts plus Stream/Refrain engines in `@loro/core`                                                   | All engines behind the same `PracticeEngine` contract                           |
-| App state             | One in-memory Zustand store, split into action slices                                                          | SQLite as durable truth; Zustand only for resumable sessions                    |
-| Persistence           | Schema, migrations, repositories, and outbox in `@loro/core`, tested against real SQLite through `node:sqlite` | An `op-sqlite` device driver wired into app startup and writes                  |
-| Rust core             | Rust implementation and generated artifacts in the monorepo; temporary JS facade in the app                    | UniFFI-backed mobile facade; no duplicated authoritative maths                  |
-| Native capabilities   | Expo config declares intended permissions and background modes                                                 | Audio, speech, ASR, DSP, notifications, purchases, and widgets through wrappers |
-| Automated UI coverage | Playwright on Expo Web, driven through learner-visible interactions                                            | Keep web coverage and add native/device suites for native behavior              |
+| Area                  | Implemented now                                                                               | Target                                                                          |
+| --------------------- | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Routes                | Today, onboarding, Add, phrase detail, Stream, Refrain, Progress                              | The remaining blueprint routes, trips, settings, labs, and Run                  |
+| Domain and engines    | Domain contracts plus Stream/Refrain engines in `@loro/core`                                  | All engines behind the same `PracticeEngine` contract                           |
+| App state             | Staged Zustand actions with repository-backed committed projections                           | SQLite as durable truth; Zustand only for resumable sessions                    |
+| Persistence           | Schema 3, native op-sqlite adapter, bootstrap, hydration and atomic writes; real SQLite tests | Native force-quit/upgrade/offline acceptance                                    |
+| Rust core             | Rust implementation and generated artifacts in the monorepo; temporary JS facade in the app   | UniFFI-backed mobile facade; no duplicated authoritative maths                  |
+| Native capabilities   | Expo config declares intended permissions and background modes                                | Audio, speech, ASR, DSP, notifications, purchases, and widgets through wrappers |
+| Automated UI coverage | Playwright on Expo Web, driven through learner-visible interactions                           | Keep web coverage and add native/device suites for native behavior              |
 
 “Target” in this document is a constraint for extension work, not evidence that a folder, package,
 or capability already exists.
@@ -34,7 +35,7 @@ apps/mobile/
 ├── app/                  Expo Router routes and root layout
 ├── src/
 │   ├── store/            Zustand state, actions, selectors, engine adapters
-│   ├── data/             test-only Node SQLite driver
+│   ├── data/             native driver, runtime persistence adapter and Node SQLite tests
 │   ├── ui/
 │   │   ├── primitives/   domain-free reusable controls and layout
 │   │   ├── components/   reusable composites that may accept domain types
@@ -97,8 +98,8 @@ ui/ and lib/ are leaves: reusable rendering and pure helpers
 
 Practice engines do **not** move into mobile feature code. They stay headless in `@loro/core`, with
 platform and data capabilities supplied through `EngineContext`. The current adapter is
-`src/store/engines.ts`; replacing its in-memory repository with device persistence must not change
-an engine's public contract.
+`src/store/engines.ts`; repository-backed projection reads must not change an engine's public
+contract.
 
 When the feature layer becomes useful, routes should compose it rather than contain view-model
 logic. That migration is incremental: move a coherent screen concern only when it is shared or the
@@ -110,15 +111,15 @@ route can no longer remain a readable composition. Do not perform a folder-only 
 
 Expo Router typed routes are enabled in `app.config.ts`. The route files on disk are:
 
-| Route               | Current behavior                                                               |
-| ------------------- | ------------------------------------------------------------------------------ |
-| `/`                 | Today; redirects to `/onboarding` until the in-memory `onboarded` flag is true |
-| `/onboarding`       | Six in-route steps; seeds selected catalog packs into the store                |
-| `/add`              | Discover and Browse states plus an in-route tagging sheet                      |
-| `/phrase/[id]`      | Phrase signals and edits; includes an honest unknown-ID state                  |
-| `/practice/stream`  | Stream practice over active in-memory phrases                                  |
-| `/practice/refrain` | Frozen daily set and six-rep Refrain flow                                      |
-| `/progress`         | Mastery, ladder, streak, and tag rollups derived from store rows               |
+| Route               | Current behavior                                                              |
+| ------------------- | ----------------------------------------------------------------------------- |
+| `/`                 | Today; redirects to `/onboarding` until the hydrated `onboarded` flag is true |
+| `/onboarding`       | Six in-route steps; seeds selected catalog packs into the store               |
+| `/add`              | Discover and Browse states plus an in-route tagging sheet                     |
+| `/phrase/[id]`      | Phrase signals and edits; includes an honest unknown-ID state                 |
+| `/practice/stream`  | Stream practice over active course phrases                                    |
+| `/practice/refrain` | Frozen daily set and six-rep Refrain flow                                     |
+| `/progress`         | Mastery, ladder, streak, and tag rollups derived from store rows              |
 
 `_layout.tsx` owns the native stack, headers, safe-area provider, app-wide day rollover, and toast
 host. The Add tagging sheet is currently component state inside `/add`, not a route-level modal.
@@ -163,46 +164,25 @@ on-device speech; browser `speechSynthesis` is blueprint fixture behavior only
 
 ### Current
 
-`src/store/state.ts` declares one `AppData` object containing onboarding answers, settings, phrase
-rows, toast and selection state, practice-day history, and the frozen Refrain set. `store.ts`
-creates a plain Zustand store with no persistence middleware. Reloading or killing the process loses
-all of it.
+`src/store/state.ts` declares the observable `AppData` projection. Native bootstrap installs the
+repository adapter before mounting learner routes. Actions stage their changes; a synchronous
+transaction writes the corresponding tables, checkpoint and syncable field operations, then
+publishes a fresh projection. A failure retains the prior snapshot and reports a retryable write
+error. The web development adapter remains memory-only and loses state on reload.
 
-Actions are split by concern under `src/store/slices/`. Derived reads live in selectors and view
-helpers. Two boundaries are already important:
+Actions remain split under `src/store/slices/`. Practice outcomes enter only through `applyDelta`;
+calendar reads use the injected `Clock`, with distinct local-day and streak-day keys. Engine results
+are computed before the transaction, then committed with their originating course and stable attempt
+identity. Duplicate attempts do not count again; Refrain checks persisted session/cursor identity.
 
-- Practice outcomes enter through `applyDelta` only. The engine produces a `ProgressDelta`; the
-  store applies increment, absolute, and monotonic semantics in one implementation.
-- Calendar reads use the injected `Clock`. `new Date()` is restricted to `src/lib/clock.ts`, and
-  `localDay()` and `streakDay()` are deliberately different keys.
+[Device persistence](device-persistence.md) inventories global, course, checkpoint and ephemeral
+fields, schema-3 upgrades, recovery and HLC ownership. Toast functions, focus, animations and native
+handles remain transient. Durable phrase rows are not serialized into a whole-store blob.
 
-The mobile engine context currently wraps the Zustand phrase array in an asynchronous
-`PhraseRepository`. This is the persistence seam, not durable persistence itself. The current
-adapter also has a recorded behavior difference from the finished repository's `active()` filter;
-wire the repository with explicit behavior tests rather than treating it as a mechanical swap.
-
-### Target
-
-| Tier      | Holds                                                                    | Mechanism                                               |
-| --------- | ------------------------------------------------------------------------ | ------------------------------------------------------- |
-| Durable   | phrases, settings, schedules, practice days, Refrain days, trips, outbox | SQLite repositories and observable/read-through queries |
-| Session   | active plan, current item, revealed words, engine phase                  | Zustand, checkpointed at transitions                    |
-| Ephemeral | focus, open sheet, toast, scroll, animation values                       | React state or Reanimated shared values                 |
-
-Every durable mutation must update SQLite and append its outbox operation in one transaction. The UI
-then observes repository-backed data; it must not maintain a second phrase array, require a manual
-refresh, or await the network before accepting a write. Hydration needs an explicit loading state so
-first paint never mistakes “not loaded” for an empty learner library.
-
-Migration order matters:
-
-1. Add and test the device `SqlDriver` behind the existing `@loro/core` interfaces.
-2. Open and migrate the database during app bootstrap, with honest fatal/recovery states.
-3. Hydrate durable rows and settings before routing past startup.
-4. Move writes slice by slice to repository transactions and remove each mirrored Zustand field as
-   its readers migrate.
-5. Checkpoint only session state in Zustand/SQLite; do not reintroduce durable phrase truth there.
-6. Add force-quit resume, migration, offline, and outbox tests on a real native build.
+The engine repository reads the committed store projection. Native force-quit/relaunch, schema
+upgrade and airplane-mode proof are still required. Browser tests and Node SQLite close/reopen tests
+do not establish those device properties. Future trips and production wave transitions must use the
+same commit boundary rather than introducing a second persistence mechanism.
 
 ## Engines and authoritative numbers
 

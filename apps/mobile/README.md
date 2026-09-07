@@ -68,7 +68,7 @@ development workbench. They complement, rather than replace, native device check
 
 ```
 app/                  seven learner routes plus the root layout
-src/store/            in-memory app state, actions, selectors, and engine adapters
+src/store/            transactional repository projections, actions, selectors, engine adapters
 src/data/             Node SQLite driver used only by persistence tests
 src/ui/primitives/    domain-free controls and layout
 src/ui/components/    reusable domain-aware composites
@@ -175,9 +175,10 @@ the current screen as evidence that animation or 60 fps has been implemented.
 
 Choose native and learning languages on the welcome page or through Today → switcher → Languages.
 English/Bulgarian/Russian UI follows the native choice; Spanish/Bulgarian/Russian starter courses
-keep separate in-memory collections, daily sets and resume state. Each target has 31 phrases. New
-translations are pending bilingual review. Schema 2 supports language settings and sessions, but
-production hydration/write-through still belongs to plan 59.
+keep separate collections, daily sets and committed resume state in native SQLite. Browser
+development deliberately uses volatile memory. Each target has 31 phrases. New translations are
+pending bilingual review. Schema 2 supports language settings and sessions, but production
+hydration/write-through still belongs to plan 59.
 
 Use `src/lib/copy.ts` for reactive localized copy and `useLearningCatalog()` for the selected pair.
 `src/lib/i18n/` bundles all translations; screens subscribe with `useLocale()`. A target text uses
@@ -189,3 +190,12 @@ To avoid another checkout's dev server, set `LORO_E2E_PORT=8095 pnpm test:e2e` f
 `/account` adds Google/Apple sign-in and sign-up through the switcher, with SecureStore for native
 refresh credentials and memory-only browser sessions. Local learning state is retained on sign-out.
 [Configuration, provider setup and release boundaries](../../docs/architecture/google-apple-auth.md).
+
+### Canonical runtime and persistence (plans 59–60)
+
+Bootstrap loads the Rust core and migrates/hydrates the local repository before learner routes
+mount. Native builds use op-sqlite and the local Expo bridge; Expo Go is no longer supported.
+Browser development keeps an explicit in-memory repository but uses the same Rust WASM algorithms.
+See [device persistence](../../docs/architecture/device-persistence.md),
+[FSRS policy](../../docs/architecture/fsrs-model.md) and
+[native runtime setup](../../docs/native-core-runtime.md) for verification and remaining gates.

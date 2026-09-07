@@ -52,14 +52,8 @@ export {
   REFRAIN_MODES,
   DEFAULT_REP_TARGET,
   LOCK_IN_DAYS_TO_GRADUATE,
-  refrainSetSize,
-  modeForRep,
-  modelRateForMode,
-  beatMsForMode,
-  automaticity,
   effortState,
   warmBand,
-  selectRefrainSet,
 } from './engines/index.js'
 export type { EffortState, RefrainMode, WarmBand } from './engines/index.js'
 

@@ -4,29 +4,21 @@ Offline-first is the product contract, not the current implementation state.
 
 ## Current state
 
-The implemented learner screens can run in the Expo web target without the API because their catalog
-and store state are in the JavaScript bundle/process. That is useful development behaviour, but it
-is not durable offline support:
+The implemented learner screens use bundled catalogs. Native bootstrap now opens op-sqlite, applies
+migrations and hydrates repository-backed state before learner routes mount. Store actions commit
+local rows, checkpoints and required outbox writes together. See
+[device persistence](device-persistence.md) for the mutation inventory and recovery rules.
 
-- the live Zustand store is in memory and is not hydrated from SQLite;
-- no on-device SQLite driver or native composition root exists;
-- no mobile sync client drains the outbox or applies pulls;
-- audio playback, recording, ASR, DSP integration, widgets, prefetch and cache management are not
-  implemented;
-- the API's sync repository is in memory and loses rows on restart.
+The web development target remains volatile memory and loses learning data on reload. Native
+force-quit/relaunch and airplane-mode acceptance remain unverified on a device. Audio playback,
+recording, ASR, DSP integration, widgets, prefetch and cache management are not implemented. No
+mobile sync client drains the outbox or applies pulls, and the API learning-sync repository remains
+in memory.
 
-Consequently the cold-launch airplane-mode acceptance test below does **not** pass today. Browser
-E2E coverage protects the implemented web states; it must not be cited as evidence for native
-offline audio, microphone, durability or sync.
-
-The persistence foundation does exist: `packages/core/src/persistence/` contains a driver-agnostic
-SQLite schema, repositories and outbox tested against real SQLite — handwritten SQL over a
-six-method driver interface, deliberately and with no ORM
-([ADR-0003's amendment](adr/0003-offline-first-sqlite-sync.md#amendment--2026-07-30--handwritten-sql-on-the-client-no-orm)).
-A local write preserves the tombstone and the per-field merge history it does not own, the outbox
-never folds an edit across a delete, and a file-backed database is proved to survive a close and
-reopen. It becomes product behaviour only after the app store writes through it, hydrates from it on
-launch, and a device driver exists.
+Real SQLite tests prove migrations, atomic rollback, replay protection and file close/reopen.
+Browser E2E protects implemented web states; neither is evidence for native offline audio,
+microphone, device durability or sync. Local upserts preserve tombstones and merge history; explicit
+local undo is separate from the remote reconciliation gate.
 
 ## The acceptance test
 
@@ -47,9 +39,9 @@ A learner action may wait for its SQLite transaction, because durable local stor
 It must not wait for HTTP, authentication refresh, analytics or asset upload. For a syncable change,
 the row update and outbox append commit in the same transaction.
 
-The current repositories and outbox can participate in one transaction, but they do not couple the
-two calls and are not wired to the app. The mobile integration must provide a single mutation seam
-so a screen cannot accidentally update one without the other.
+The store stages each action and the runtime persistence adapter couples repository writes and
+outbox changes in one synchronous transaction. The UI receives the committed projection only after
+that boundary succeeds.
 
 ### Local state renders the UI
 
@@ -88,9 +80,9 @@ This is a delivery checklist, not a claim about current behaviour.
 
 | Capability                         | Required offline result                               | Current implementation                                       |
 | ---------------------------------- | ----------------------------------------------------- | ------------------------------------------------------------ |
-| Implemented text screens/catalog   | Navigate and read bundled content                     | Web process only; not restart-durable                        |
-| Learner state and progress         | Persist across force-quit and device restart          | SQLite library exists; app wiring missing                    |
-| Review scheduling                  | Plan and record locally from authoritative core maths | Engines exist; durable write path missing                    |
+| Implemented text screens/catalog   | Navigate and read bundled content                     | Bundled content; device cold-launch acceptance pending       |
+| Learner state and progress         | Persist across force-quit and device restart          | Native SQLite wiring implemented; device proof pending       |
+| Review scheduling                  | Plan and record locally from authoritative core maths | Atomic result/history/checkpoint write path implemented      |
 | Audio for owned/daily/trip phrases | Play verified local assets                            | Missing native audio/cache/prefetch                          |
 | Speech/ASR/pronunciation/prosody   | Use on-device modules and real measurements           | Missing native modules                                       |
 | Sync                               | Queue locally and converge later                      | Outbox and server endpoints exist separately; client missing |

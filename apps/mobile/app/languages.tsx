@@ -1,3 +1,4 @@
+import { attemptWrite } from '../src/store/attemptWrite'
 import { useLocale } from '../src/lib/i18n'
 import { useState } from 'react'
 import { ScrollView } from 'react-native'
@@ -18,7 +19,12 @@ export default function Languages() {
   const valid = supportsPair(native, target)
   const save = (): void => {
     if (!valid) return
-    setLanguages(native, target)
+    if (
+      !attemptWrite(() => {
+        setLanguages(native, target)
+      })
+    )
+      return
     router.replace(useApp.getState().onboarded ? '/' : '/onboarding')
   }
   return (
