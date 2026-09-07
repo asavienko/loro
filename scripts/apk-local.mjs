@@ -119,6 +119,7 @@ try {
     [
       ':app:assembleRelease',
       '--no-daemon',
+      '--build-cache',
       '--max-workers=2',
       '-PreactNativeArchitectures=arm64-v8a,x86_64',
     ],

@@ -15,6 +15,19 @@ import type { ExpoConfig } from 'expo/config'
 
 const VERSION = '0.1.0'
 const localApk = process.env['LORO_LOCAL_APK'] === '1'
+const previewPlugins: NonNullable<ExpoConfig['plugins']> = localApk
+  ? [
+      [
+        'expo-splash-screen',
+        {
+          android: {
+            drawable: { icon: './assets/preview/splash.xml' },
+            backgroundColor: '#f6f2ea',
+          },
+        },
+      ],
+    ]
+  : []
 
 export default (): ExpoConfig => ({
   name: localApk ? 'Loro Preview' : 'Loro',
@@ -95,6 +108,7 @@ export default (): ExpoConfig => ({
   // loro-speech, loro-core) and notifications remain future work. Account browser and
   // secure storage plugins are installed below — see README.md.
   plugins: [
+    ...previewPlugins,
     'expo-router',
     'expo-web-browser',
     'expo-secure-store',
