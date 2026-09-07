@@ -32,7 +32,10 @@ export class ProblemDetailsFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost): void {
     const ctx = host.switchToHttp()
     const problem = this.problemFor(exception, ctx.getRequest<Request>())
-    ctx.getResponse<Response>().status(problem.status).type(PROBLEM_MEDIA_TYPE).json(problem)
+    const response = ctx.getResponse<Response>()
+    if (/^\/v1\/auth\//i.test(ctx.getRequest<Request>().path))
+      response.setHeader('Cache-Control', 'no-store')
+    response.status(problem.status).type(PROBLEM_MEDIA_TYPE).json(problem)
   }
 
   private problemFor(exception: unknown, req: Request): ProblemDetails {
@@ -42,7 +45,11 @@ export class ProblemDetailsFilter implements ExceptionFilter {
     }
     // An error we did not model: log the detail, return none of it. `user_id` only —
     // never a payload.
-    this.logger.error(`${req.method} ${req.url} — ${String(exception)}`)
+    this.logger.error(
+      /^\/v1\/auth\//i.test(req.path)
+        ? `${req.method} /v1/auth/[redacted] — internal error`
+        : `${req.method} ${req.url} — ${String(exception)}`,
+    )
     return toProblemDetails(exception)
   }
 }

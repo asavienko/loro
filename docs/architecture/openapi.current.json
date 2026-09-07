@@ -790,6 +790,674 @@
           "F-04"
         ]
       }
+    },
+    "/auth/providers": {
+      "get": {
+        "operationId": "oauthProviders",
+        "summary": "Available sign-in providers",
+        "description": "Optional identity-only flow. Requires configured PostgreSQL and providers; no claim or sync. All responses are no-store.",
+        "tags": [
+          "auth"
+        ],
+        "security": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Available sign-in providers",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/oauthProviders_200"
+                }
+              }
+            }
+          }
+        },
+        "x-loro-auth-boundary": "none",
+        "x-loro-status": "implemented",
+        "x-loro-owner-plan": 88,
+        "x-loro-requirements": [
+          "F-01",
+          "F-02",
+          "F-07"
+        ]
+      }
+    },
+    "/auth/{provider}/start": {
+      "post": {
+        "operationId": "oauthStart",
+        "summary": "Start provider sign-in",
+        "description": "Optional identity-only flow. Requires configured PostgreSQL and providers; no claim or sync. All responses are no-store.",
+        "tags": [
+          "auth"
+        ],
+        "security": [],
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/oauthStart_path_provider"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Start provider sign-in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/oauthStart_200"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentManifest_400"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentManifest_400"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentManifest_400"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentManifest_400"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentManifest_400"
+                }
+              }
+            }
+          }
+        },
+        "x-loro-auth-boundary": "none",
+        "x-loro-status": "implemented",
+        "x-loro-owner-plan": 88,
+        "x-loro-requirements": [
+          "F-01",
+          "F-02",
+          "F-07"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/oauthStart_request"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/{provider}/callback": {
+      "get": {
+        "operationId": "oauthCallbackGet",
+        "summary": "Provider callback",
+        "description": "Google GET query or Apple application/x-www-form-urlencoded POST: state plus code or error. Consumes state once. Redirects only to the stored exact allowlisted URI. Never returns provider tokens.",
+        "tags": [
+          "auth"
+        ],
+        "security": [],
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/oauthStart_path_provider"
+            }
+          }
+        ],
+        "responses": {
+          "303": {
+            "description": "Redirect with one-use PKCE-bound ticket and state, or generic error.",
+            "headers": {
+              "Location": {
+                "schema": {
+                  "$ref": "#/components/schemas/oauthCallbackGet_303_Location"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentManifest_400"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentManifest_400"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentManifest_400"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentManifest_400"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentManifest_400"
+                }
+              }
+            }
+          }
+        },
+        "x-loro-auth-boundary": "none",
+        "x-loro-status": "implemented",
+        "x-loro-owner-plan": 88,
+        "x-loro-requirements": [
+          "F-01",
+          "F-02",
+          "F-07"
+        ]
+      },
+      "post": {
+        "operationId": "oauthCallbackPost",
+        "summary": "Provider callback",
+        "description": "Google GET query or Apple application/x-www-form-urlencoded POST: state plus code or error. Consumes state once. Redirects only to the stored exact allowlisted URI. Never returns provider tokens.",
+        "tags": [
+          "auth"
+        ],
+        "security": [],
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/oauthStart_path_provider"
+            }
+          }
+        ],
+        "responses": {
+          "303": {
+            "description": "Redirect with one-use PKCE-bound ticket and state, or generic error.",
+            "headers": {
+              "Location": {
+                "schema": {
+                  "$ref": "#/components/schemas/oauthCallbackPost_303_Location"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentManifest_400"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentManifest_400"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentManifest_400"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentManifest_400"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentManifest_400"
+                }
+              }
+            }
+          }
+        },
+        "x-loro-auth-boundary": "none",
+        "x-loro-status": "implemented",
+        "x-loro-owner-plan": 88,
+        "x-loro-requirements": [
+          "F-01",
+          "F-02",
+          "F-07"
+        ]
+      }
+    },
+    "/auth/exchange": {
+      "post": {
+        "operationId": "oauthExchange",
+        "summary": "Redeem app handoff",
+        "description": "Optional identity-only flow. Requires configured PostgreSQL and providers; no claim or sync. All responses are no-store.",
+        "tags": [
+          "auth"
+        ],
+        "security": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Redeem app handoff",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/oauthExchange_200"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentManifest_400"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentManifest_400"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentManifest_400"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentManifest_400"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentManifest_400"
+                }
+              }
+            }
+          }
+        },
+        "x-loro-auth-boundary": "none",
+        "x-loro-status": "implemented",
+        "x-loro-owner-plan": 88,
+        "x-loro-requirements": [
+          "F-01",
+          "F-02",
+          "F-07"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/oauthExchange_request"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "operationId": "oauthRefresh",
+        "summary": "Rotate refresh family",
+        "description": "Optional identity-only flow. Requires configured PostgreSQL and providers; no claim or sync. All responses are no-store.",
+        "tags": [
+          "auth"
+        ],
+        "security": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Rotate refresh family",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/oauthExchange_200"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentManifest_400"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentManifest_400"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentManifest_400"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentManifest_400"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentManifest_400"
+                }
+              }
+            }
+          }
+        },
+        "x-loro-auth-boundary": "none",
+        "x-loro-status": "implemented",
+        "x-loro-owner-plan": 88,
+        "x-loro-requirements": [
+          "F-01",
+          "F-02",
+          "F-07"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/oauthRefresh_request"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "operationId": "oauthLogout",
+        "summary": "Revoke refresh family",
+        "description": "Optional identity-only flow. Requires configured PostgreSQL and providers; no claim or sync. All responses are no-store.",
+        "tags": [
+          "auth"
+        ],
+        "security": [],
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "Revoke refresh family"
+          },
+          "401": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentManifest_400"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentManifest_400"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentManifest_400"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentManifest_400"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentManifest_400"
+                }
+              }
+            }
+          }
+        },
+        "x-loro-auth-boundary": "none",
+        "x-loro-status": "implemented",
+        "x-loro-owner-plan": 88,
+        "x-loro-requirements": [
+          "F-01",
+          "F-02",
+          "F-07"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/oauthRefresh_request"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "operationId": "oauthMe",
+        "summary": "Read authenticated identity",
+        "description": "Optional identity-only flow. Requires configured PostgreSQL and providers; no claim or sync. All responses are no-store.",
+        "tags": [
+          "auth"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Read authenticated identity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/oauthMe_200"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentManifest_400"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentManifest_400"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentManifest_400"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentManifest_400"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentManifest_400"
+                }
+              }
+            }
+          }
+        },
+        "x-loro-auth-boundary": "bearer",
+        "x-loro-status": "implemented",
+        "x-loro-owner-plan": 88,
+        "x-loro-requirements": [
+          "F-01",
+          "F-02",
+          "F-07"
+        ]
+      }
     }
   },
   "components": {
@@ -1858,6 +2526,177 @@
           "provider"
         ],
         "additionalProperties": {}
+      },
+      "oauthProviders_200": {
+        "type": "object",
+        "properties": {
+          "providers": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "google",
+                "apple"
+              ]
+            }
+          }
+        },
+        "required": [
+          "providers"
+        ],
+        "additionalProperties": false
+      },
+      "oauthStart_path_provider": {
+        "type": "string",
+        "enum": [
+          "google",
+          "apple"
+        ]
+      },
+      "oauthStart_200": {
+        "type": "object",
+        "properties": {
+          "authorization_url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "state": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{43}$"
+          }
+        },
+        "required": [
+          "authorization_url",
+          "state"
+        ],
+        "additionalProperties": false
+      },
+      "oauthStart_request": {
+        "type": "object",
+        "properties": {
+          "redirect_uri": {
+            "type": "string",
+            "maxLength": 2048,
+            "format": "uri"
+          },
+          "code_challenge": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{43}$"
+          }
+        },
+        "required": [
+          "redirect_uri",
+          "code_challenge"
+        ],
+        "additionalProperties": false
+      },
+      "oauthCallbackGet_303_Location": {
+        "type": "string",
+        "format": "uri"
+      },
+      "oauthCallbackPost_303_Location": {
+        "type": "string",
+        "format": "uri"
+      },
+      "oauthExchange_200": {
+        "type": "object",
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "refresh_token": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{43}$"
+          },
+          "expires_in": {
+            "type": "number",
+            "const": 900
+          },
+          "user": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              "provider": {
+                "type": "string",
+                "enum": [
+                  "google",
+                  "apple"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "provider"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "access_token",
+          "refresh_token",
+          "expires_in",
+          "user"
+        ],
+        "additionalProperties": false
+      },
+      "oauthExchange_request": {
+        "type": "object",
+        "properties": {
+          "ticket": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{43}$"
+          },
+          "code_verifier": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{43}$"
+          }
+        },
+        "required": [
+          "ticket",
+          "code_verifier"
+        ],
+        "additionalProperties": false
+      },
+      "oauthRefresh_request": {
+        "type": "object",
+        "properties": {
+          "refresh_token": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{43}$"
+          }
+        },
+        "required": [
+          "refresh_token"
+        ],
+        "additionalProperties": false
+      },
+      "oauthMe_200": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "provider": {
+            "type": "string",
+            "enum": [
+              "google",
+              "apple"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "provider"
+        ],
+        "additionalProperties": false
       }
     },
     "securitySchemes": {
