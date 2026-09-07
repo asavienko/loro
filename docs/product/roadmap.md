@@ -43,7 +43,7 @@ DSP lab scoring is the separate evidence-gated v1.1 risk.
 
 Completed [54, 55, 79, 84 and 85](../../plans/archive/2026-09-07/README.md) are archived. Protected
 plan 53 stays unchanged. [The review](../../plans/archive/2026-09-07/REVIEW.md) records every
-remaining plan's disposition and source evidence; 29 plans remain active, with no renumbering.
+remaining plan's disposition and source evidence; 30 plans remain active, with no renumbering.
 
 1. Correct the remaining Rust/Unicode maths and course-upsert debt (60/59), extend the existing
    route declaration (56), establish the native workspace/bridge (58), and wire backend foundations
@@ -60,6 +60,11 @@ remaining plan's disposition and source evidence; 29 plans remain active, with n
    prerequisite.
 5. Add Review/Memory (75), guarded Roleplay (76), private chat and inspector (82/83), then
    evidence-approved labs (77) and conditional Run/ladder Phrasebook (78).
+
+Plan [88](../../plans/88-low-cost-backend-infrastructure.md), added on main during this review, owns
+the approved AWS testing environment. Infrastructure preparation can start now; shared access
+requires the relevant 66/67 slices, and mobile sync testing adds 59/68. Production operations remain
+with 73. The highest assigned plan is 88 and the next number is 89.
 
 ## Scoped decision gates
 

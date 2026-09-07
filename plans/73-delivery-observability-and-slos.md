@@ -16,6 +16,10 @@ steps. Repository evidence does not establish a deployed dev service, device far
 restore or crash dashboard. Distinguish skipped/unconfigured jobs from completed delivery; connect
 the existing health/readiness seams.
 
+Plan [88](88-low-cost-backend-infrastructure.md) owns the approved single-EC2 AWS testing profile,
+manual deployment and testing recovery. This plan retains later production delivery and operations;
+it does not require separate managed dev/staging infrastructure before testing can begin.
+
 ## Outcome
 
 The exact tested artifacts move through dev/staging/production and app stores with privacy-safe
