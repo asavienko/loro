@@ -105,7 +105,7 @@ prototype-only and **must not** be carried into the app — see the divergence t
   that isn't about regenerating it.
 - **Plans live in `plans/`, numbered.** One markdown file per plan: a two-digit number, then
   kebab-case named for the topic — `plans/60-authoritative-core-maths.md`. The active roadmap is
-  54–87 today; 01–52 are under `plans/archive/2026-07-30/`, and completed plan 53 remains at its
+  54–88 today; 01–52 are under `plans/archive/2026-07-30/`, and completed plan 53 remains at its
   protected original path. A new plan takes the next free number and gets a row in
   [`plans/README.md`](plans/README.md). **Numbers are never reused** — a gap is left rather than
   backfilled, so a link written against a number can't come to mean a different plan. Not in

@@ -224,6 +224,15 @@ job that confirms zero rows remain.
 
 ---
 
+## Selected testing infrastructure — not provisioned
+
+[Plan 88](../../plans/88-low-cost-backend-infrastructure.md) selects one EC2 instance in Frankfurt
+with PostgreSQL on the instance, private S3, Caddy HTTPS and a $25–35/month infrastructure target.
+It accepts maintenance downtime and one failure domain. Shared tester access requires durable,
+authenticated, tenant-isolated backend slices; provisioning a database does not wire the current
+in-memory API into it. The managed/replicated topology below remains a production target, not a
+prerequisite for this testing profile.
+
 ## Target infrastructure — not provisioned or connected
 
 ```mermaid
