@@ -1,3 +1,4 @@
+import { authSettings } from './auth/settings.js'
 /**
  * Loro API.
  *
@@ -28,6 +29,20 @@ async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, { bufferLogs: false })
 
   app.setGlobalPrefix('v1')
+  const auth = authSettings()
+  if (auth)
+    app.enableCors({
+      origin: [
+        ...new Set(
+          auth.redirects
+            .filter((url) => url.startsWith('https:'))
+            .map((url) => new URL(url).origin),
+        ),
+      ],
+      methods: ['GET', 'POST'],
+      allowedHeaders: ['Content-Type', 'Authorization'],
+    })
+  app.enableShutdownHooks()
   // Request validation is explicit in the controllers rather than decorator-based, so the
   // contract is readable in one place per route.
   //

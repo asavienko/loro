@@ -15,7 +15,8 @@
     "./api/current": "./src/api/current.ts",
     "./api/catalog": "./src/api/catalog.ts",
     "./api/target": "./src/api/target.ts",
-    "./api/draft": "./src/api/draft.ts"
+    "./api/draft": "./src/api/draft.ts",
+    "./api/oauth": "./src/api/oauth.ts"
   },
   "scripts": {
     "build": "tsc -b",

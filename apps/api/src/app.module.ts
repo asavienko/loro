@@ -1,3 +1,4 @@
+import { AuthModule } from './auth/module.js'
 import { LearningContentController } from './content/learning-content.controller.js'
 /**
  * The composition root.
@@ -22,6 +23,7 @@ import { SCENE_PROVIDERS, type SceneProvider } from './ai/scene-provider.js'
 import { StubSceneProvider } from './ai/scene-provider.stub.js'
 
 @Module({
+  imports: [AuthModule],
   controllers: [
     HealthController,
     ContentController,

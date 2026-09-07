@@ -401,3 +401,9 @@ an inert control shaped like a working one is not.
 | `Best` streak `14` (`2865`)                                                                                       | Absent                                         | `P4-02` | A best streak needs a history longer than the session. Plan 59.                                                                                                            |
 | Milestones: `7-day streak` at `6 of 7 — one more day!`, `First Café pack` (`2857–2860`)                           | `First tagged phrase`, `First locked in`       | `P4-07` | Both authored subs are literals, and "one more day" is a nudge about a missed day (non-negotiable 3). The two replacements are earned by signals that cannot go backwards. |
 | Tapping a tricky row drills exactly those phrases (`2855`)                                                        | A non-interactive rollup                       | `P4-06` | No tag-filtered session exists. Plan 64 §4 over plan 60's tag-scoped selection.                                                                                            |
+
+## Account utility (F-01)
+
+`/account` is the optional Google/Apple identity utility implemented by plan 89. It uses the shared
+spine and push header, outside the 23 authored learner screens. Its intended-design extension and
+states are recorded in [functional-spec.md](../product/functional-spec.md#f-01-account).

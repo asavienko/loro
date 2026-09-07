@@ -1,3 +1,4 @@
+import { reachAccount } from './accountFlow'
 import { localeText, onboardPair } from './languageFlow'
 /**
  * Every learner-visible STATE the app can be in, and how to reach it by clicking.
@@ -50,6 +51,23 @@ export interface AppState {
 }
 
 export const STATES: AppState[] = [
+  ...(
+    [
+      'discoveryError',
+      'unavailable',
+      'ready',
+      'busy',
+      'error',
+      'cancelled',
+      'signedIn',
+      'localSignOut',
+    ] as const
+  ).map((scenario): AppState => ({
+    name: `account · ${scenario}`,
+    route: '/account',
+    spec: '§ F-01 Account',
+    reach: (page) => reachAccount(page, scenario),
+  })),
   ...(['bg', 'ru'] as const).flatMap((native) =>
     (['today', 'stream', 'add', 'progress', 'refrain'] as const).map((surface): AppState => ({
       name: `${surface} · ${native} course`,

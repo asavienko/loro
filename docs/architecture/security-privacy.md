@@ -14,16 +14,16 @@ still target architecture.
   audio upload endpoint, or native audio bridge. That absence is not the structural guarantee
   promised below; the future bridge still has to make PCM inaccessible to JS and accept only opaque,
   lifetime-checked handles for Rust scoring.
-- The API has no authentication module, account routes, entitlement guard, persistent user store,
-  Postgres, Redis, TLS termination, certificate pinning, audit log, deletion/export jobs, analytics
-  ingest, TTS endpoint, chat-turn endpoint, or voice-clone endpoint. Its sync repository is an
-  in-memory development implementation and controllers are not protected by learner identity.
-- Rate-limit values and RFC 9457 error shaping exist in source, but no rate-limit middleware applies
-  those values. Nest's logger is not the structured, allowlist-redacted logging pipeline described
-  below.
-- The mobile app has no Keychain/Keystore wrapper, secure-store dependency, analytics consent
-  implementation, local analytics queue, or on-device SQLite driver. Current Zustand state is
-  in-memory; the driver-agnostic SQLite repositories are tested from Node but not wired to the app.
+- Optional Google/Apple OAuth and durable PostgreSQL accounts/refresh families are implemented in
+  [plan 89's account slice](google-apple-auth.md), including provider JWT verification, nonce/state,
+  PKCE handoff, refresh replay detection, per-IP auth rate limits and revocation. Auth-enabled
+  deployments disable legacy shared `/sync/*` and `/ai/*` routes until tenant isolation.
+- Entitlements, Redis, TLS termination/pinning, audit logs, account deletion/export, analytics,
+  TTS/chat and voice-clone endpoints remain unimplemented. General rate-limit middleware and the
+  structured logging pipeline remain targets; unexpected auth errors are explicitly redacted.
+- Native account refresh uses Expo SecureStore; web session credentials remain in memory. Analytics
+  consent, local analytics queue and on-device SQLite integration remain unimplemented. Current
+  learning state remains in memory.
 - `app.config.ts` declares purpose strings, selected manifest permissions, blocked Android
   permissions, the URL scheme, and an App Group entitlement. Runtime, in-context permission prompts
   and native targets are not implemented, and no store privacy manifest/data-safety artifact exists.
