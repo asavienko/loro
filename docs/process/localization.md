@@ -1,6 +1,6 @@
 # Localization and learning languages
 
-**Implemented foundation (F-08, plan 85):** bundled English, Bulgarian and Russian UI; Spanish,
+**Implemented foundation (F-08, plan 87):** bundled English, Bulgarian and Russian UI; Spanish,
 Bulgarian and Russian starter catalogs; language selection and separate course state. New linguistic
 content awaits bilingual review. Device persistence still depends on plan 59. Audio, ASR and DSP
 capabilities remain unavailable until their native implementations and language validation land.
