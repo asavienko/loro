@@ -108,7 +108,7 @@ prototype-only and **must not** be carried into the app — see the divergence t
   leaves 30 active plans within 56–88; completed 54/55/79/84/85 are under
   `plans/archive/2026-09-07/` with compatibility symlinks. Plans 01–52 remain under
   `plans/archive/2026-07-30/`; completed 53 remains at its protected original path. The next new
-  plan number is 89. A new plan takes the next free number and gets a row in
+  plan number is 90. A new plan takes the next free number and gets a row in
   [`plans/README.md`](plans/README.md). **Numbers are never reused** — a gap is left rather than
   backfilled, so a link written against a number can't come to mean a different plan. Not in
   `docs/`: that holds the durable spec. Not in a temp directory either — a plan you can't find again
@@ -256,7 +256,7 @@ npx expo start --web                # from apps/mobile — fastest way to see th
 
 ## Backend testing infrastructure
 
-[Plan 89](plans/88-low-cost-backend-infrastructure.md) selects one Frankfurt EC2 instance with local
+[Plan 88](plans/88-low-cost-backend-infrastructure.md) selects one Frankfurt EC2 instance with local
 PostgreSQL and private S3 at a $25–35/month target. It is not provisioned. Shared access requires
 66/67's persistence, auth and isolation; mobile sync has additional 59/68 gates. Do not add managed
 dev/staging stacks, Redis, CDN or live providers to this phase. Start with

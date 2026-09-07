@@ -815,7 +815,7 @@
         },
         "x-loro-auth-boundary": "none",
         "x-loro-status": "implemented",
-        "x-loro-owner-plan": 88,
+        "x-loro-owner-plan": 89,
         "x-loro-requirements": [
           "F-01",
           "F-02",
@@ -906,7 +906,7 @@
         },
         "x-loro-auth-boundary": "none",
         "x-loro-status": "implemented",
-        "x-loro-owner-plan": 88,
+        "x-loro-owner-plan": 89,
         "x-loro-requirements": [
           "F-01",
           "F-02",
@@ -1007,7 +1007,7 @@
         },
         "x-loro-auth-boundary": "none",
         "x-loro-status": "implemented",
-        "x-loro-owner-plan": 88,
+        "x-loro-owner-plan": 89,
         "x-loro-requirements": [
           "F-01",
           "F-02",
@@ -1096,7 +1096,7 @@
         },
         "x-loro-auth-boundary": "none",
         "x-loro-status": "implemented",
-        "x-loro-owner-plan": 88,
+        "x-loro-owner-plan": 89,
         "x-loro-requirements": [
           "F-01",
           "F-02",
@@ -1178,7 +1178,7 @@
         },
         "x-loro-auth-boundary": "none",
         "x-loro-status": "implemented",
-        "x-loro-owner-plan": 88,
+        "x-loro-owner-plan": 89,
         "x-loro-requirements": [
           "F-01",
           "F-02",
@@ -1270,7 +1270,7 @@
         },
         "x-loro-auth-boundary": "none",
         "x-loro-status": "implemented",
-        "x-loro-owner-plan": 88,
+        "x-loro-owner-plan": 89,
         "x-loro-requirements": [
           "F-01",
           "F-02",
@@ -1355,7 +1355,7 @@
         },
         "x-loro-auth-boundary": "none",
         "x-loro-status": "implemented",
-        "x-loro-owner-plan": 88,
+        "x-loro-owner-plan": 89,
         "x-loro-requirements": [
           "F-01",
           "F-02",
@@ -1451,7 +1451,7 @@
         },
         "x-loro-auth-boundary": "bearer",
         "x-loro-status": "implemented",
-        "x-loro-owner-plan": 88,
+        "x-loro-owner-plan": 89,
         "x-loro-requirements": [
           "F-01",
           "F-02",

@@ -7,13 +7,13 @@ The `api` service and its supporting infrastructure. Rationale:
 verifying purchases. **What it is not for:** running a practice session. A learner can practise for
 weeks with the API unreachable ([overview.md](overview.md#the-ten-rules), rule 2).
 
-> **Status (2026-09-07): partially implemented; testing infrastructure selected, not provisioned.** The Nest service currently
-> provides health, bundled content, in-memory sync through the shared Rust/WASM merge, and validated
-> bundled AI scenes. Learning data does not connect to Postgres, Redis, MinIO, queues, a warehouse,
-> or external AI/TTS services, and billing, analytics, TTS and workers remain unimplemented.
-> Optional Google/Apple auth and PostgreSQL accounts now exist ([plan 89](google-apple-auth.md)).
-> The target map and infrastructure below guide extension; they are not an inventory of running
-> code.
+> **Status (2026-09-07): partially implemented; testing infrastructure selected, not provisioned.**
+> The Nest service currently provides health, bundled content, in-memory sync through the shared
+> Rust/WASM merge, and validated bundled AI scenes. Learning data does not connect to Postgres,
+> Redis, MinIO, queues, a warehouse, or external AI/TTS services, and billing, analytics, TTS and
+> workers remain unimplemented. Optional Google/Apple auth and PostgreSQL accounts now exist
+> ([plan 89](google-apple-auth.md)). The target map and infrastructure below guide extension; they
+> are not an inventory of running code.
 
 ---
 
@@ -229,7 +229,7 @@ job that confirms zero rows remain.
 
 ## Testing infrastructure
 
-[Plan 89](../../plans/88-low-cost-backend-infrastructure.md) selects this topology for a small
+[Plan 88](../../plans/88-low-cost-backend-infrastructure.md) selects this topology for a small
 tester group. It is not provisioned, and starting PostgreSQL does not connect the current in-memory
 API.
 
@@ -263,7 +263,7 @@ them and an updated resource budget. AI remains stubbed; TTS is disabled.
 
 Provision and test recovery first, then enable shared access after the plan-66/67 persistence,
 validation, auth and tenant-isolation slices pass. Mobile sync needs its own device/convergence
-work. Resource limits and acceptance checks live in plan 89; actual operations and evidence belong
+work. Resource limits and acceptance checks live in plan 88; actual operations and evidence belong
 in the [testing runbook](../runbooks/backend-testing.md).
 
 <a id="deployment"></a>

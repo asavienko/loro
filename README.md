@@ -54,7 +54,7 @@ screens. See the refreshed [`plans/README.md`](plans/README.md).
 **Selected backend testing setup, not provisioned:** one Frankfurt EC2 instance with local
 PostgreSQL and private S3, targeting $25–35/month. Shared tester access waits for durable data,
 authentication and tenant isolation. Start with [environments](docs/process/environments.md),
-[plan 89](plans/88-low-cost-backend-infrastructure.md) and the
+[plan 88](plans/88-low-cost-backend-infrastructure.md) and the
 [testing operations runbook](docs/runbooks/backend-testing.md).
 
 Start at [`docs/process/onboarding.md`](docs/process/onboarding.md).

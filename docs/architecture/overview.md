@@ -9,7 +9,7 @@ The system end to end. Read this before any other architecture document.
 > Google/Apple identity and PostgreSQL session persistence exist ([plan 89](google-apple-auth.md)).
 > See [`../../plans/README.md`](../../plans/README.md) for the implementation order.
 >
-> **Testing hosting:** plan 89 selects one Frankfurt EC2 instance with local PostgreSQL and private
+> **Testing hosting:** plan 88 selects one Frankfurt EC2 instance with local PostgreSQL and private
 > S3 at a $25–35/month target. It is not provisioned. The feature-level diagrams below do not
 > require separate workers, Redis or a CDN for this phase; see
 > [backend hosting](backend.md#testing-infrastructure).
