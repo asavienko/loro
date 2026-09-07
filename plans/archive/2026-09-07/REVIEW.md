@@ -111,7 +111,7 @@ concurrent environment changes are claimed as roadmap implementation or committe
   language, navigation, accessibility, text-scale and geometry suites.
 - Fresh visual captures, native tests, provider traffic and production deployment were not run. Plan
   84's original visual evidence is retained as historical evidence, not claimed as a new audit.
-- Scoped Prettier and whitespace checks pass; 237 local file links, all 29 active status/index rows
+- Scoped Prettier and whitespace checks pass; 236 local file links, all 29 active status/index rows
   and five archive symlinks were verified. Protected plan 53, the prior archive and authored design
   files are unchanged. Runtime defects remain explicit todos.
 

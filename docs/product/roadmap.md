@@ -1,95 +1,75 @@
 # Roadmap
 
-Seven milestones from empty repo to a product that survives a trip. Sizing assumes the team in
-[`process/ways-of-working.md`](../process/ways-of-working.md#the-team): 2 mobile, 1 backend, 1
-designer (shared), 1 content lead (part-time), and it counts calendar weeks with that team, not
-ideal engineering weeks.
+The milestone sections retain product intent and historical effort estimates for the assumed team in
+[ways-of-working.md](../process/ways-of-working.md). They are not delivery dates or the execution
+queue. The [active plans](../../plans/README.md) record the dependency order and exact remaining
+work.
 
-**Sizing is a planning estimate, not a commitment.** The two long-lead risks — real prosody DSP and
-on-device ASR quality for `es-ES` — are both in M3 and both could move it by weeks. They're
-deliberately not on the v1 critical path.
+## Current baseline — 2026-09-07
 
-| Milestone   | Meaning on 2026-07-30                                                                                                         |
-| ----------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| M0 · Setup  | **Partial:** portable foundations exist; native workspace, device persistence, dev deployment, and crash reporting do not     |
-| M1 · Spine  | **Partial and current:** seven learner routes demonstrate the thread on web; it is not yet durable, audible, or native-tested |
-| M2 · v1     | **Planned:** extend the spine into a production Today/Refrain loop, trip arc, offline/sync, release, and monetization         |
-| M3 · v1.1   | **Planned/evidence-gated:** Review/Memory, Roleplay, and guided open chat follow v1 foundations; speech labs wait for quality |
-| M4 · Scale  | **Planned:** hardening follows a functioning production service                                                               |
-| M5 · v2     | **Conditional:** Run/Phrasebook ship only if the loop experiment supports them                                                |
-| M6 · Beyond | **Unscheduled candidates**, not commitments                                                                                   |
+Reviewed against merged `2d9e8c3`. Seven of 23 authored learner screens plus Languages, the shared
+shell and the dev workbench are implemented. The web app demonstrates onboarding, collecting and
+tagging phrases, manual practice and progress. It does not yet demonstrate a durable, audible native
+learning loop. Stream browsing records no playback; manual Refrain confirmation records null speech
+latency. Rust FSRS/cloze fallbacks are still implementation debt in plan 60.
 
-The original `2w / 5w / 7w / 8w / 4w / 8w` estimates describe effort with the assumed team. They do
-not describe elapsed time from the current repository state, and milestones may overlap where their
-plan dependencies allow it.
+The current UI/native languages are English, Bulgarian and Russian. Targets are Spanish, Bulgarian
+and Russian, excluding matching pairs: seven supported pairs and 31-phrase starters per target.
+Course progress/resume is separate; the streak is global. New linguistic content awaits bilingual
+review. Text support does not enable audio, ASR or scoring for any target.
 
-## Where we actually are — 2026-07-30
+| Milestone   | Current state                                                                                                                                                        |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| M0 · Setup  | Partial: portable foundations and native CI scaffolds exist; device app/bridge, device database, deployment and crash proof remain.                                  |
+| M1 · Spine  | Partial: built routes, responsive UI, shared menu, localization, persistence primitives and contract package exist; native audio and durable app integration remain. |
+| M2 · v1     | Remaining: production Today/Refrain, Speak, Import, trip/Survival, settings, auth/sync, release and approved monetization.                                           |
+| M3 · v1.1   | Review/Memory, Roleplay and chat follow their foundation slices; chat launch/live service and speech labs have explicit gates.                                       |
+| M4 · Scale  | Operational hardening and measured SLOs follow a functioning service; tests/budgets also belong to each feature.                                                     |
+| M5 · v2     | Run and ladder Phrasebook depend on Q-05 and comparative evidence.                                                                                                   |
+| M6 · Beyond | Candidates only; starter Bulgarian/Russian and UI localization are already implemented foundations.                                                                  |
 
-**M0's portable code foundations are built, but M0 is not operationally complete.** The API is not
-deployed to `dev`, crash reporting is not wired, no native project/dev client exists, and the
-on-device SQLite driver is absent. At the last green baseline `pnpm check` ran 23 tasks; 432 JS/TS,
-131 Rust, and 61 browser E2E tests passed. Tokens generate for three targets and the Rust crate
-builds for host/WASM with committed bindings.
+The app remains in memory despite SQLite-tested schema-2 repositories, outbox and course settings.
+The 13-route API remains in memory with stub AI. Shared current/target/draft schemas and OpenAPI are
+implemented; Nest validation, auth, Postgres and mobile networking are not. Anthropic transport is
+tested and merged but unregistered. Rust target compilation/EAS setup gates are not native app
+proof.
 
-**M1 is partly built.** The spine's one-sentence test passes in the app: onboarding → add from
-Discover → tag as Difficult/Pronunciation → the stream's repeat count changes → Progress reflects
-it. What is built:
+`pnpm check` passed its contract drift check and 23 Turbo tasks using the cached implementation
+baseline; 118 learner E2E tests passed freshly during the review. Historical milestone estimates
+below remain sizing assumptions. On-device ASR/reveal behavior is on the v1 path through plan 63;
+DSP lab scoring is the separate evidence-gated v1.1 risk.
 
-| M1 scope                                    | State                                                                                                        |
-| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| Onboarding, six steps                       | Built; seeds a real stream                                                                                   |
-| Design system in code                       | Generated tokens + split primitives/components; runtime fonts/motion/themes remain                           |
-| Add: Discover + Browse, tagging sheet       | Built                                                                                                        |
-| Phrase detail                               | Built                                                                                                        |
-| Adaptive stream                             | Built                                                                                                        |
-| Progress screen                             | Built                                                                                                        |
-| Daily Refrain                               | Route and headless flow built; production loop remains partial (no durable set, audio, ASR, or real latency) |
-| Audio: TTS cache, rates, exclusive playback | **Not built.** No audio anywhere in the app yet                                                              |
-| SQLite persistence                          | Schema/migrations/repositories/outbox built and SQLite-tested; device driver/app wiring absent               |
-| Content: 150 phrases with audio             | 31 phrases, no audio                                                                                         |
+## Execution after the review
 
-So the loop is demonstrable and well covered on web, but not yet durable, audible, or native-tested.
-The dependency-ordered execution source is now [`../../plans/README.md`](../../plans/README.md);
-sizing below remains milestone intent rather than a commitment.
+Completed [54, 55, 79, 84 and 85](../../plans/archive/2026-09-07/README.md) are archived. Protected
+plan 53 stays unchanged. [The review](../../plans/archive/2026-09-07/REVIEW.md) records every
+remaining plan's disposition and source evidence; 29 plans remain active, with no renumbering.
 
-### How the app extends from here
+1. Correct the remaining Rust/Unicode maths and course-upsert debt (60/59), extend the existing
+   route declaration (56), establish the native workspace/bridge (58), and wire backend foundations
+   (66).
+2. Complete production UI state APIs and workbench coverage (57/80); add More and full navigation
+   laws (81). Begin bilingual sign-off (87), content/asset contracts (61), the DSP evidence spike
+   (77) and offline chat schemas/topics/evals (82) without activating gated production features.
+3. Wire durable device state (59), approved assets/playback (61/62), real on-device speech (63),
+   identity (67) and client sync (68). Provider plan 86 supplies adapters to feature owners; its old
+   contract-task/worktree handoff block is closed.
+4. Finish production Today/Refrain (64), Import then OCR (65), approved trips and Survival (69/70),
+   general Settings/consent/flags (71), shared release gates (72), delivery (73) and approved
+   billing (74). Shared harnesses develop with features; whole-release completion is not a circular
+   prerequisite.
+5. Add Review/Memory (75), guarded Roleplay (76), private chat and inspector (82/83), then
+   evidence-approved labs (77) and conditional Run/ladder Phrasebook (78).
 
-The milestone sections define product scope. Plans 54–83 define executable order and must not be
-replaced by treating a milestone table as a backlog:
+## Scoped decision gates
 
-1. **Make the existing seven routes truthful and safe to extend:** consume completed protected plan
-   [53](../../plans/53-post-refactor-solid-kiss-dry-audit.md), then land persistence correctness and
-   current-surface fidelity in
-   [54](../../plans/54-local-persistence-correctness.md)–[55](../../plans/55-current-surface-truth-and-fidelity.md).
-2. **Establish extension foundations:** shared navigation/runtime UI/native workspace/core maths,
-   content, and backend contracts in
-   [56](../../plans/56-navigation-failure-and-input-shell.md)–[61](../../plans/61-content-and-audio-assets.md)
-   and [66](../../plans/66-backend-contract-data-and-security.md).
-3. **Make the demonstrated spine real on devices:** wire device SQLite, audio, speech, identity, and
-   sync in [59](../../plans/59-device-persistence-and-resume.md),
-   [62](../../plans/62-native-audio-playback.md)–[63](../../plans/63-native-speech-speak-and-latency.md),
-   and
-   [67](../../plans/67-anonymous-auth-and-account-lifecycle.md)–[68](../../plans/68-sync-and-offline-convergence.md).
-4. **Complete and ship v1 behavior:** finish Today/Refrain, Import, trips/Survival, settings,
-   quality, delivery, and entitlements in
-   [64](../../plans/64-today-and-refrain-production-loop.md)–[65](../../plans/65-import-and-capture.md)
-   and
-   [69](../../plans/69-trip-domain-and-arc.md)–[74](../../plans/74-monetization-and-entitlements.md).
-
-5. **Extend the registered v1.1 design package:** completed plan
-   [79](../../plans/79-v1-1-design-contract.md) defines the stable navigation/chat requirements that
-   [80](../../plans/80-dev-design-system-workbench.md)–[83](../../plans/83-open-chat-and-message-inspector.md)
-   consume for the workbench, navigation spine, private conversation service, and two chat surfaces.
-6. **Add later surfaces without rebuilding foundations:** Review/Memory, Roleplay, and the gated
-   labs use the same repositories, engines, native capture, and release harness in
-   [75](../../plans/75-review-and-memory.md)–[77](../../plans/77-dsp-and-speech-labs.md).
-   Conditional Run/Phrasebook remains [78](../../plans/78-conditional-run-and-phrasebook.md).
-
-Current decision/evidence gates are Q-15 for production audio assets, Q-07 for trip semantics, Q-05
-for the loop experiment and conditional Run, Q-14 for the Refrain peak accessibility sign-off,
-Q-08/Q-12 for monetization, Q-16/Q-18…Q-20 for chat release/provider/retention, Q-17 for authored
-navigation frequency, and the recorded DSP spike gate for the labs. Other work should proceed when
-its technical dependencies pass; a blocked plan does not freeze file-disjoint work.
+Q-15 blocks production voice/assets, Q-07 trip semantics, Q-05 experiment activation/Run, Q-14 peak
+accessibility sign-off, Q-08/Q-12 monetization and Q-17 final rail priority. Q-16 gates chat
+release, Q-18 budget, Q-19 local retention and Q-20 provider retention. The DSP production pipeline
+waits for its recorded quality decision. Bilingual sign-off remains separate from schema/key
+validation. Unrelated foundation, offline content and harness work can proceed. The
+[decision register](../decisions/open-questions.md) retains its owners; this roadmap review resolves
+none of those decisions.
 
 ---
 
@@ -97,16 +77,16 @@ its technical dependencies pass; a blocked plan does not freeze file-disjoint wo
 
 **Goal: a hello-world app on a real device, from a clean clone, with CI green.**
 
-| Deliverable                                        | Done when                                                          |
-| -------------------------------------------------- | ------------------------------------------------------------------ |
-| Monorepo, tooling, CI                              | `pnpm i && pnpm check` passes from clean clone; CI runs on PRs     |
-| Expo app boots on an iPhone and a Pixel            | Both, from the documented onboarding steps                         |
-| Design tokens package generating from source       | Token change → app change with one command                         |
-| `loro-core` Rust crate building for both platforms | UniFFI bindings importable from TS; a trivial function round-trips |
-| SQLite + reviewed SQL migrations                   | Schema v1 applies on a fresh install                               |
-| NestJS API skeleton with health check              | Deployed to `dev`, reachable from a device                         |
-| Crash reporting + analytics wired                  | A deliberate crash appears in the dashboard                        |
-| ADRs 0001–0014 accepted                            | Reviewed and merged                                                |
+| Deliverable                                        | Done when                                                             |
+| -------------------------------------------------- | --------------------------------------------------------------------- |
+| Monorepo, tooling, CI                              | `pnpm i && pnpm check` passes from clean clone; CI runs on PRs        |
+| Expo app boots on an iPhone and a Pixel            | Both, from the documented onboarding steps                            |
+| Design tokens package generating from source       | Token change → app change with one command                            |
+| `loro-core` Rust crate building for both platforms | UniFFI bindings importable from TS; a trivial function round-trips    |
+| SQLite + reviewed SQL migrations                   | Current schema applies on a fresh install and upgrades prior versions |
+| NestJS API skeleton with health check              | Deployed to `dev`, reachable from a device                            |
+| Crash reporting + analytics wired                  | A deliberate crash appears in the dashboard                           |
+| ADRs 0001–0014 accepted                            | Reviewed and merged                                                   |
 
 **Exit criteria:** a new engineer follows [`process/onboarding.md`](../process/onboarding.md) and
 ships a trivial PR to `dev` in under a day.
@@ -247,15 +227,15 @@ with 30-day retention.
 
 Not planned, in rough order of expected value:
 
-| Candidate                             | Why it might matter                                                          | Cost                                                      |
-| ------------------------------------- | ---------------------------------------------------------------------------- | --------------------------------------------------------- |
-| **A second target language**          | The whole model is language-agnostic; the content and linguistic work is not | Large — see [localization.md](../process/localization.md) |
-| **`es-419` (Latin American Spanish)** | Probably a larger market than `es-ES`. Mostly content + one voice            | Medium                                                    |
-| Apple Watch — stream + refrain reps   | The Refrain is genuinely wrist-sized                                         | Medium                                                    |
-| CarPlay / Android Auto — the stream   | Commute is prime hands-free time                                             | Medium                                                    |
-| Shared phrasebooks                    | Couples and families learning together                                       | Medium                                                    |
-| Conversation partner matching         | Real speaking practice; entirely new product surface                         | Very large                                                |
-| Teacher tooling                       | Explicit non-persona today; revisit only with pull                           | Large                                                     |
+| Candidate                             | Why it might matter                                                                      | Cost                                                      |
+| ------------------------------------- | ---------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| **Full Bulgarian/Russian courses**    | Starter courses exist; reviewed expansion, voices and per-language speech quality remain | Large — see [localization.md](../process/localization.md) |
+| **`es-419` (Latin American Spanish)** | Probably a larger market than `es-ES`. Mostly content + one voice                        | Medium                                                    |
+| Apple Watch — stream + refrain reps   | The Refrain is genuinely wrist-sized                                                     | Medium                                                    |
+| CarPlay / Android Auto — the stream   | Commute is prime hands-free time                                                         | Medium                                                    |
+| Shared phrasebooks                    | Couples and families learning together                                                   | Medium                                                    |
+| Conversation partner matching         | Real speaking practice; entirely new product surface                                     | Very large                                                |
+| Teacher tooling                       | Explicit non-persona today; revisit only with pull                                       | Large                                                     |
 
 ---
 

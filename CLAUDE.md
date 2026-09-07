@@ -104,9 +104,11 @@ prototype-only and **must not** be carried into the app — see the divergence t
   a refactor into a fix, and don't let generated output (bindings, tokens) ride along in a commit
   that isn't about regenerating it.
 - **Plans live in `plans/`, numbered.** One markdown file per plan: a two-digit number, then
-  kebab-case named for the topic — `plans/60-authoritative-core-maths.md`. The active roadmap is
-  54–88 today; 01–52 are under `plans/archive/2026-07-30/`, and completed plan 53 remains at its
-  protected original path. A new plan takes the next free number and gets a row in
+  kebab-case named for the topic — `plans/60-authoritative-core-maths.md`. The 2026-09-07 review
+  leaves 30 active plans within 56–88; completed 54/55/79/84/85 are under
+  `plans/archive/2026-09-07/` with compatibility symlinks. Plans 01–52 remain under
+  `plans/archive/2026-07-30/`; completed 53 remains at its protected original path. The next new
+  plan number is 89. A new plan takes the next free number and gets a row in
   [`plans/README.md`](plans/README.md). **Numbers are never reused** — a gap is left rather than
   backfilled, so a link written against a number can't come to mean a different plan. Not in
   `docs/`: that holds the durable spec. Not in a temp directory either — a plan you can't find again
@@ -271,8 +273,10 @@ npx expo start --web                # from apps/mobile — fastest way to see th
 Unresolved decisions with owners and dates:
 [`docs/decisions/open-questions.md`](docs/decisions/open-questions.md). Active roadmap gates are
 **Q-15** (production audio), **Q-07** (trip semantics), **Q-05** (loop experiment and conditional
-Run), **Q-14** (Refrain peak accessibility), and **Q-08/Q-12** (pricing and billing), plus the DSP
-quality gate. Work whose dependencies do not cross those gates should continue.
+Run), **Q-14** (Refrain peak accessibility), **Q-08/Q-12** (pricing and billing), **Q-17** (rail
+priority), **Q-16/Q-18–Q-20** (chat launch, budget and retention), plus bilingual review and the DSP
+quality gate. Gates apply to their named slices; offline chat and spike preparation may proceed.
+Work whose dependencies do not cross those gates should continue.
 
 ## Python
 
@@ -287,4 +291,6 @@ reactive `copy.ts` adapter over bundled i18next/ICU resources in `src/lib/i18n/`
 translated props. The Languages route is reachable from Today's switcher. Course progress and resume
 state are separate; the streak is global. Schema 2 repositories exist, but plan 59 still owns device
 persistence. New linguistic content is pending bilingual review; audio/ASR/DSP capabilities remain
-disabled.
+disabled. Plan 87 now tracks review and multilingual acceptance only; plan 59 owns device wiring and
+correction of the remaining `INSERT OR REPLACE` in `sqlite/course.ts`. Plan 60 owns the
+ASCII-oriented matcher/fabricated FSRS-cloze fallback and missing nightly `tests/sim` target.

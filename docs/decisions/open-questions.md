@@ -6,27 +6,27 @@ review.
 **Status** — `open` (needs an answer) · `leaning` (we have a working assumption, stated) ·
 `deferred` (deliberately not now) · `closed` (answered; kept for the record with the answer).
 
-| #             | Question                                                        | Status   | Owner                   | Blocks                         | By                       |
-| ------------- | --------------------------------------------------------------- | -------- | ----------------------- | ------------------------------ | ------------------------ |
-| [Q-01](#q-01) | Is 6 reps the right Refrain target?                             | leaning  | Product                 | Tuning, not shipping           | M3                       |
-| [Q-02](#q-02) | Should graduation require a _cold_ lock-in?                     | open     | Product                 | Loop B correctness             | M3                       |
-| [Q-03](#q-03) | Does learner-declared difficulty stay accurate?                 | open     | Product                 | The whole thread's validity    | M3                       |
-| [Q-04](#q-04) | Should the ladder be the universal depth model?                 | leaning  | Tech lead               | Nothing — already mitigated    | M5                       |
-| [Q-05](#q-05) | Who owns the loop decision, and when?                           | **open** | **Product**             | **Experiment activation; Run** | **Before M3 experiment** |
-| [Q-06](#q-06) | Is the practice loop a setting or an assignment?                | leaning  | Product                 | Settings UI, experiment design | M2                       |
-| [Q-07](#q-07) | How does trip mode serve "moving abroad"?                       | **open** | **Product**             | **Plan 69 trip state machine** | **Before plan 69**       |
-| [Q-08](#q-08) | Pricing, tiers, and the paywall                                 | **open** | **Product**             | **v1 launch**                  | **M2 mid**               |
-| [Q-09](#q-09) | SQLCipher for the local database?                               | deferred | Tech lead               | Nothing today                  | Revisit at M4            |
-| [Q-10](#q-10) | A text-production mode for deaf learners?                       | open     | Product + design        | Accessibility completeness     | M3                       |
-| [Q-12](#q-12) | Store mechanics: RevenueCat or direct?                          | **open** | **Backend**             | **Plan 74 implementation**     | **Before plan 74**       |
-| [Q-13](#q-13) | Is `es-419` the next language, before UI localization?          | deferred | Product                 | Nothing pre-v1                 | Post-v1                  |
-| [Q-14](#q-14) | How should the Refrain's peak card render its English subtitle? | **open** | **Design**              | **Plan 72 peak sign-off**      | **Before M2 release**    |
-| [Q-15](#q-15) | Which licensed voice and source produce production audio?       | **open** | **Content + tech lead** | **Plans 61 and 62 seed batch** | **Now**                  |
-| [Q-16](#q-16) | Is guided open chat committed v1.1 scope or an experiment?      | **open** | **Product**             | **Chat release enablement**    | **2026-08-06**           |
-| [Q-17](#q-17) | Which daily destinations earn a home-rail slot?                 | **open** | **Product + design**    | **Plan 81 rail ordering**      | **2026-08-06**           |
-| [Q-18](#q-18) | Who can use live chat, and what is its provider budget?         | **open** | **Product + finance**   | **Plan 82 live provider**      | **2026-08-06**           |
-| [Q-19](#q-19) | How long are local chat threads retained?                       | **open** | **Product + privacy**   | **Plan 82 persistence**        | **2026-08-06**           |
-| [Q-20](#q-20) | May a provider retain chat text, and for how long?              | **open** | **Privacy + backend**   | **Plan 82 provider contract**  | **2026-08-06**           |
+| #             | Question                                                               | Status   | Owner                   | Blocks                         | By                       |
+| ------------- | ---------------------------------------------------------------------- | -------- | ----------------------- | ------------------------------ | ------------------------ |
+| [Q-01](#q-01) | Is 6 reps the right Refrain target?                                    | leaning  | Product                 | Tuning, not shipping           | M3                       |
+| [Q-02](#q-02) | Should graduation require a _cold_ lock-in?                            | open     | Product                 | Loop B correctness             | M3                       |
+| [Q-03](#q-03) | Does learner-declared difficulty stay accurate?                        | open     | Product                 | The whole thread's validity    | M3                       |
+| [Q-04](#q-04) | Should the ladder be the universal depth model?                        | leaning  | Tech lead               | Nothing — already mitigated    | M5                       |
+| [Q-05](#q-05) | Who owns the loop decision, and when?                                  | **open** | **Product**             | **Experiment activation; Run** | **Before M3 experiment** |
+| [Q-06](#q-06) | Is the practice loop a setting or an assignment?                       | leaning  | Product                 | Settings UI, experiment design | M2                       |
+| [Q-07](#q-07) | How does trip mode serve "moving abroad"?                              | **open** | **Product**             | **Plan 69 trip state machine** | **Before plan 69**       |
+| [Q-08](#q-08) | Pricing, tiers, and the paywall                                        | **open** | **Product**             | **v1 launch**                  | **M2 mid**               |
+| [Q-09](#q-09) | SQLCipher for the local database?                                      | deferred | Tech lead               | Nothing today                  | Revisit at M4            |
+| [Q-10](#q-10) | A text-production mode for deaf learners?                              | open     | Product + design        | Accessibility completeness     | M3                       |
+| [Q-12](#q-12) | Store mechanics: RevenueCat or direct?                                 | **open** | **Backend**             | **Plan 74 implementation**     | **Before plan 74**       |
+| [Q-13](#q-13) | Is `es-419` a later target variant beyond the current starter courses? | deferred | Product                 | Nothing pre-v1                 | Post-v1                  |
+| [Q-14](#q-14) | How should the Refrain's peak card render its English subtitle?        | **open** | **Design**              | **Plan 72 peak sign-off**      | **Before M2 release**    |
+| [Q-15](#q-15) | Which licensed voice and source produce production audio?              | **open** | **Content + tech lead** | **Plans 61 and 62 seed batch** | **Now**                  |
+| [Q-16](#q-16) | Is guided open chat committed v1.1 scope or an experiment?             | **open** | **Product**             | **Chat release enablement**    | **2026-08-06**           |
+| [Q-17](#q-17) | Which daily destinations earn a home-rail slot?                        | **open** | **Product + design**    | **Plan 81 rail ordering**      | **2026-08-06**           |
+| [Q-18](#q-18) | Who can use live chat, and what is its provider budget?                | **open** | **Product + finance**   | **Plan 82 live provider**      | **2026-08-06**           |
+| [Q-19](#q-19) | How long are local chat threads retained?                              | **open** | **Product + privacy**   | **Plan 82 persistence**        | **2026-08-06**           |
+| [Q-20](#q-20) | May a provider retain chat text, and for how long?                     | **open** | **Privacy + backend**   | **Plan 82 provider contract**  | **2026-08-06**           |
 
 ---
 
@@ -197,11 +197,12 @@ support that cleanly.
 
 <a id="q-13"></a>
 
-### Q-13 · Is `es-419` the next language, before UI localization?
+### Q-13 · Is `es-419` a later target variant beyond the current starter courses?
 
 Latin American Spanish is a variant (4–6 weeks) and probably a larger market than `es-ES`
-([localization.md](../process/localization.md#the-cheap-one-es-419)). UI localization is a different
-kind of work with a different payoff.
+([localization.md](../process/localization.md#the-cheap-one-es-419)). English/Bulgarian/Russian UI
+and Bulgarian/Russian starter targets already landed in plan 87; this question now concerns adding
+es-419 beyond that scope, with its own content/voice review.
 
 **Deferred** until post-v1 — but worth noting now, because `variants[]` is already in the phrase
 schema, which is what keeps this cheap later.
@@ -247,12 +248,14 @@ cannot validate the real cache/playback contract, until the source audio has cle
 production rights.
 
 **Needs now:** choose recorded voice, licensed TTS, or a reviewed hybrid; name the `es-ES` voice and
-fallback; document commercial and redistribution rights, consent/provenance, regional storage and
-deletion obligations; define pronunciation review and replacement policy; and set the budget for 150
-v1-spine phrases followed by 600 v1 phrases.
+fallback, with separate coverage/review before enabling `bg-BG` or `ru-RU`; document commercial and
+redistribution rights, consent/provenance, regional storage and deletion obligations; define
+pronunciation review and replacement policy; and set the budget for 150 v1-spine phrases followed by
+600 v1 phrases.
 
-This decision authorizes assets, not playback architecture. Learner recordings remain subject to the
-separate non-negotiable that PCM never leaves native memory/the device.
+The 150→600 target remains the Spanish milestone goal; Bulgarian/Russian course expansion needs its
+own approved scope. This decision authorizes assets, not playback architecture. Learner recordings
+remain subject to the separate non-negotiable that PCM never leaves native memory/the device.
 
 ---
 

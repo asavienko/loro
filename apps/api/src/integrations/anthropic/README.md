@@ -17,14 +17,15 @@ Provider JSON-schema guidance alone is not validation. Schema and system prompt 
 server-authored configuration; learner text belongs only in bounded message content. Only text
 message fields are serialized, never arbitrary attachments or tools.
 
-## Runtime handoff still required
+## Runtime integration still required
 
-Before registration, consume the merged plan-85 target contracts and implement identity/entitlement
-guards, rate/concurrency controls, atomic budget reservations and reconciliation, approved
-retention, request-context policy, semantic/safety evaluation, and bundled fallback. These controls
-are not implemented by this low-level transport. The service must account for possible provider
-charges on timeouts; a timed-out request is not evidence of zero spend. Retry only under the owning
-idempotency and spend policy, never automatically inside the adapter.
+Plan 85's contracts and this transport were merged in `2d9e8c3`; the isolated contract-task handoff
+is complete. Before registration, consume the relevant stable contracts and implement
+identity/entitlement guards, rate/concurrency controls, atomic budget reservations and
+reconciliation, approved retention, request-context policy, semantic/safety evaluation, and bundled
+fallback. These controls are not implemented by this low-level transport. The service must account
+for possible provider charges on timeouts; a timed-out request is not evidence of zero spend. Retry
+only under the owning idempotency and spend policy, never automatically inside the adapter.
 
 Credentials and production text are not needed for tests. An injected fetch exercises deterministic
 failure modes; a loopback server on an ephemeral port proves a stalled HTTP body is aborted. No live
