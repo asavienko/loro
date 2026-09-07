@@ -21,10 +21,11 @@
  * pass, and `testing-strategy.md:218` stays honoured.
  */
 
+import process from 'node:process'
 import { defineConfig } from '@playwright/test'
 import { isCI, sharedTiming, sharedUse } from './config.shared.mjs'
 
-const port = 8083
+const port = Number(process.env.LORO_E2E_PORT ?? 8083)
 const exportDir = '.expo-export-web'
 
 export default defineConfig({

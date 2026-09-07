@@ -42,7 +42,10 @@
     "env:edit": "./scripts/secrets.sh edit",
     "local:up": "pnpm env:decrypt && docker compose up --build -d --wait",
     "local:down": "docker compose down",
-    "local:logs": "docker compose logs -f"
+    "local:logs": "docker compose logs -f",
+    "ci:local": "bash scripts/ci-local.sh",
+    "ci:local:native": "bash scripts/ci-local.sh native",
+    "ci:local:audit": "bash scripts/ci-local.sh audit"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.6.1",

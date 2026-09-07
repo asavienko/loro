@@ -182,6 +182,12 @@ Each links to its ADR — the reasoning, alternatives, and consequences.
 
 ---
 
+## Local CI
+
+Run `pnpm ci:local` before merging. GitHub Actions is disabled; checks run on your machine. See
+[local CI setup and gates](docs/process/ci-cd.md) for prerequisites and optional native/audit
+checks. Do not dispatch or re-enable GitHub workflows without an explicit change of policy.
+
 ## Contributing
 
 - Process: [`docs/process/ways-of-working.md`](docs/process/ways-of-working.md)
