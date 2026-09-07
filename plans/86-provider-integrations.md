@@ -46,8 +46,9 @@ language/course identity in asset selection, requests and cache keys.
   URL can substitute for it.
 - Identity verification/email transports support plan 67's approved providers. Sender setup,
   verification, delivery failures and external credentials remain implementation requirements.
-- TTS remains disabled in testing. Q-15 voice/licensing/quality evidence gates production rendering;
-  no voice or vendor is selected merely by mentioning an adapter candidate.
+- ElevenLabs is the selected cloud TTS provider (product-owner decision, 2026-09-07); voice/model
+  IDs remain pending. TTS remains disabled in testing. Q-15 voice/licensing/quality evidence gates
+  production rendering; no voice or vendor is selected merely by mentioning an adapter candidate.
 - AI remains stubbed until the owning feature's identity, budget, safety, retention and fallback
   gates pass. The merged Anthropic transport is an input to that work.
 - Billing awaits Q-08/Q-12; diagnostics vendor selection must satisfy privacy/region constraints.

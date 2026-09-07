@@ -247,7 +247,12 @@ The bundled catalog contains text only. Plan 61 cannot render even its seed batc
 cannot validate the real cache/playback contract, until the source audio has clear provenance and
 production rights.
 
-**Needs now:** choose recorded voice, licensed TTS, or a reviewed hybrid; name the `es-ES` voice and
+**Provider decision — 2026-09-07 (product owner): ElevenLabs is the selected cloud TTS provider**,
+including for Bulgarian and Polish audio evaluation. This supersedes the earlier Amazon Polly
+recommendation and the historical ElevenLabs rejection in archived plan 45. It does not add Polish
+to the shipped course catalog or mean the integration is implemented.
+
+**Still needed before production rendering:** select and review the model and `es-ES` voice ID and
 fallback, with separate coverage/review before enabling `bg-BG` or `ru-RU`; document commercial and
 redistribution rights, consent/provenance, regional storage and deletion obligations; define
 pronunciation review and replacement policy; and set the budget for 150 v1-spine phrases followed by

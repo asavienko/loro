@@ -10,6 +10,9 @@
   adapters; 87 for bilingual review.
 - **Reviewed:** 2026-09-07 against merged baseline `2d9e8c3`.
 
+**Provider decision (2026-09-07):** ElevenLabs selected. Q-15 still gates production audio on
+voice/model selection, production rights, pronunciation review and budget.
+
 ## Verified starting point
 
 `packages/content/` supplies 31-phrase es-ES/bg-BG/ru-RU starters and neutral learning catalogs;
