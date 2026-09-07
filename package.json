@@ -36,7 +36,13 @@
     "clean": "turbo run clean && rm -rf node_modules",
     "prepare": "husky",
     "contracts:generate": "pnpm --filter @loro/core contracts:generate",
-    "contracts:check": "pnpm --filter @loro/core contracts:check"
+    "contracts:check": "pnpm --filter @loro/core contracts:check",
+    "env:encrypt": "./scripts/secrets.sh encrypt",
+    "env:decrypt": "./scripts/secrets.sh decrypt",
+    "env:edit": "./scripts/secrets.sh edit",
+    "local:up": "pnpm env:decrypt && docker compose up --build -d --wait",
+    "local:down": "docker compose down",
+    "local:logs": "docker compose logs -f"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.6.1",

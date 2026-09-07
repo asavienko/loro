@@ -179,6 +179,11 @@ prototype-only and **must not** be carried into the app — see the divergence t
 
 ## Running and testing
 
+`pnpm local:up` decrypts the SOPS API environment and builds/starts the API and Expo web containers,
+including WASM. `pnpm local:down` stops them. Optional data services use the `infra` Compose
+profile; runtime storage is still in memory. See
+[`local-development.md`](docs/process/local-development.md) for age identity setup.
+
 **Use Node 22.** The repo pins it (`.nvmrc`, `engines`), and `pnpm` is installed only under that
 version — a shell on any other Node has no `pnpm` at all, which reads as "the repo is broken" rather
 than "wrong Node". Run `nvm use 22` first, every time. `cargo` lives in `~/.cargo/bin` and may also

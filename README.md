@@ -58,6 +58,9 @@ authentication and tenant isolation. Start with [environments](docs/process/envi
 
 Start at [`docs/process/onboarding.md`](docs/process/onboarding.md).
 
+For Docker: `pnpm local:up` starts the API and web app with a SOPS-encrypted environment. See
+[local containers and secrets](docs/process/local-development.md) for age key setup and commands.
+
 ---
 
 ## The source of truth

@@ -2,6 +2,9 @@
 
 Everything written down, indexed. Four sections plus decisions.
 
+[Local containers and encrypted environment](process/local-development.md) — Docker Compose, SOPS
+and age.
+
 | Section                       | For                                        |
 | ----------------------------- | ------------------------------------------ |
 | [Product](#product)           | What we're building and why                |

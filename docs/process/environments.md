@@ -11,7 +11,7 @@ selected, but no cloud deployment, database integration or shared-user access is
 | Object storage | Optional MinIO for adapter development               | Private S3 content, backup and Terraform-state buckets     |
 | AI / TTS       | Bundled AI scenes; no TTS runtime                    | AI remains stubbed; TTS disabled                           |
 | Access         | Developer-only; current sync has no tenant boundary  | Small tester group after authentication and isolation pass |
-| Deploy         | Host development commands                            | Manual, immutable image, required CI, maintenance downtime |
+| Deploy         | Host commands or root Docker Compose                 | Manual, immutable image, required CI, maintenance downtime |
 | Data           | Local fixtures; memory state disappears on restart   | Synthetic data; nightly and pre-migration backups          |
 | Cost           | No cloud services required                           | $25–35/month planning budget, excluding tax and providers  |
 
@@ -20,7 +20,20 @@ in this phase. Historical environment names in workflow scaffolds are not deploy
 
 ## Local
 
-Use Node 22 with Cargo on PATH. These commands exist in the repository:
+For the implemented container workflow, see
+[local containers and encrypted environment](local-development.md).
+
+```bash
+nvm use 22
+pnpm local:up    # SOPS decrypt, image build, API + Expo web with health checks
+```
+
+Open <http://localhost:8081>. API readiness at <http://localhost:3000/v1/health/ready> must report
+the WASM merge available. Optional PostgreSQL, Redis and MinIO services use the `infra` Compose
+profile; the current API does not use them. Redis is an optional local tool, not a testing
+infrastructure dependency.
+
+For host development, use Node 22 with Cargo on PATH:
 
 ```bash
 nvm use 22
@@ -29,18 +42,14 @@ pnpm core-rs:build
 pnpm --filter @loro/api dev
 ```
 
-From another terminal, check `http://localhost:3000/v1/health/ready`. Readiness must report the WASM
-merge available. See [the API guide](../../apps/api/README.md) for current routes and tests, and
+See [the API guide](../../apps/api/README.md) for current routes and tests, and
 [the mobile guide](../../apps/mobile/README.md) for running Expo.
 
-`pnpm --filter @loro/api dev:up` starts optional PostgreSQL, Redis and MinIO for integration work.
-The current API does not use them. There are no `db:migrate` or `db:seed` package scripts yet;
-starting containers does not make sync durable. Redis is an optional local tool, not a testing
-infrastructure dependency.
-
-The bundled catalogs contain 31 phrases per target language. They are loaded from the package, not
-seeded by a server database job. Bilingual review and audio capabilities have their own gates.
-Setting a public API URL does not create the missing mobile HTTP/sync client.
+There are no `db:migrate` or `db:seed` package scripts yet; starting containers does not make sync
+durable. The bundled catalogs contain 31 phrases per target language. They are loaded from the
+package, not seeded by a server database job. Bilingual review and audio capabilities have their
+own gates. Setting a public API URL does not create the missing mobile HTTP/sync client. AI returns
+bundled fixtures; live provider and TTS runtime integrations remain unfinished.
 
 ## Testing
 
