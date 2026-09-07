@@ -269,5 +269,18 @@
   "add.empty.themeComplete": "You have every phrase in this theme.\nPick another, or head back to your stream.",
   "onboarding.ready.summary.level": "Level",
   "phrase.missing.action": "Go to Today",
-  "toast.removed": "Removed — its reps and tags go with it"
+  "toast.removed": "Removed — its reps and tags go with it",
+  "account.title": "Account",
+  "account.intro": "Continue with Google or Apple to sign in. Your first sign-in creates an account.",
+  "account.localData": "Learning stays on this device. Cloud sync is not available yet. Signing out keeps your phrases and progress.",
+  "account.google": "Continue with Google",
+  "account.apple": "Continue with Apple",
+  "account.signedIn": "You are signed in.",
+  "account.signOut": "Sign out",
+  "account.unavailable": "Sign-in is not available in this build yet. You can keep learning without an account.",
+  "account.busy": "Connecting…",
+  "account.error": "We could not complete the account request. Please try signing in again.",
+  "account.cancelled": "Sign-in cancelled. You can keep learning.",
+  "account.localSignOut": "You are signed out on this device. We could not confirm that the server session ended.",
+  "account.retry": "Try again"
 }

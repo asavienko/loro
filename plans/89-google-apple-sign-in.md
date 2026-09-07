@@ -1,7 +1,8 @@
 # Google and Apple sign-in/sign-up
 
 - **Requirement IDs:** `F-01`, `F-02`, `F-07`
-- **Status:** 🟡 In progress — provider flows, durable sessions, Account utility and verification.
+- **Status:** ✅ Implemented and verified. Live provider configuration and native device
+  verification remain deployment/release prerequisites.
 - **Parent:** 67; intentionally implements identity separately from unfinished plans 59/66/68.
 
 ## Scope
@@ -26,3 +27,14 @@ Provider consoles, deployment secrets and real-device verification are external 
 The authored artifacts do not specify sign-in. Account is an optional utility in the existing
 spine/switcher, composing existing primitives. English/Bulgarian/Russian copy explains account
 creation and the current lack of cloud sync. Sign-out retains local learning data.
+
+## Verification record (2026-09-07)
+
+- `pnpm check`: 23/23 tasks pass; 601 JS/TS tests pass by default, with the PostgreSQL-only
+  concurrency test also passing in its dedicated run (602 total).
+- `AUTH_TEST_DATABASE_URL=... pnpm --filter @loro/api exec vitest run src/auth/auth.test.ts`: 9/9
+  pass on PostgreSQL 16, including concurrent refresh-family revocation.
+- `LORO_E2E_PORT=8198 pnpm test:e2e`: 128/128 pass, including touch targets and 200%/310% text.
+- `pnpm --filter @loro/mobile bundle`: iOS Hermes export succeeds.
+- Provider JWT fixtures and browser transport are test-only. No real Google/Apple credentials,
+  production deployment, account merge, or physical-device sign-in is claimed.

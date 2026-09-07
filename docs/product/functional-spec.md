@@ -1054,3 +1054,15 @@ native/target pairs show an explanation and disable Save. Each target owns its p
 daily set and session; new targets open starter-pack selection, existing ones restore their state.
 Native-language changes preserve learning progress and personal translations. See
 [localization](../process/localization.md) for the pair matrix and release gates.
+
+## F-01 Account
+
+Optional `/account` utility in the shared spine/switcher (plan 89); it does not gate onboarding or
+practice. Continue with Google/Apple creates an account on first sign-in and signs in on later
+visits. Provider buttons are unavailable when not configured; the learner can still practise.
+Pending requests disable actions. Cancellation and errors retain all local data and allow retry.
+Signed-in state offers Sign out. Sign-out retains learning data and explicitly reports when remote
+revocation cannot be confirmed. All copy follows the native language. Cloud sync is not promised.
+The utility follows `Navigation.dc.html:35–40` and is an intended-design extension, not a new
+numbered authored learner screen. See
+[account implementation](../architecture/google-apple-auth.md).

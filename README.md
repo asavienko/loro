@@ -13,16 +13,16 @@ and every buildable artifact — a running app and a running API.
 ## Status
 
 **A running web app and a running API.** Seven of the v1.1 design package's 23 learner screens, plus
-the app shell and Languages utility, are built — the demonstrable core loop: onboard → add and tag a
-phrase → practise → see progress. The remaining 16 learner screens include trips, labs, settings,
-chat, and alternative loops.
+the app shell and Languages and Account utilities, are built — the demonstrable core loop: onboard →
+add and tag a phrase → practise → see progress. The remaining 16 learner screens include trips,
+labs, settings, chat, and alternative loops.
 
 ```
 pnpm bootstrap && pnpm check     →  23/23 tasks at the last green baseline
-pnpm test:e2e                    →  118 learner browser tests across every implemented state
+pnpm test:e2e                    →  128 learner browser tests across every implemented state
 pnpm test:e2e:workbench          →  3 dev-workbench browser tests
 pnpm --filter @loro/mobile bundle →  production Expo/Metro export proof
-pnpm --filter @loro/api start     →  13 endpoints on :3000/v1
+pnpm --filter @loro/api start     →  21 endpoints on :3000/v1
 ```
 
 | Area                   | Tests | State                                                                                                                                                                                           |
@@ -30,8 +30,8 @@ pnpm --filter @loro/api start     →  13 endpoints on :3000/v1
 | Documentation          |     — | Product, architecture, design, process and decision guides, testing runbooks, and 14 ADRs                                                                                                       |
 | Toolchain              |     — | Installs, builds, lints, typechecks, and tests from a clean clone                                                                                                                               |
 | **`loro-core`** (Rust) |   131 | Ranking, ASR matching, calendar, ladder, notification policy, HLC, and sync merge implemented. FSRS, Refrain selection, and DSP remain incomplete ([status](packages/core-rs/README.md#status)) |
-| **JS/TS workspaces**   |   570 | Core engines/persistence, content validation, API seams, mobile state/UI, and design tokens                                                                                                     |
-| **Browser E2E**        |   122 | 118 learner tests, 3 dev-workbench tests, and 1 production-only route-unavailability contract; bundle smoke re-runs a four-test subset                                                          |
+| **JS/TS workspaces**   |   602 | Core engines/persistence, content validation, API seams, mobile state/UI, and design tokens                                                                                                     |
+| **Browser E2E**        |   132 | 128 learner tests, 3 dev-workbench tests, and 1 production-only route-unavailability contract; bundle smoke re-runs a four-test subset                                                          |
 
 **What the build already caught:** eight colours in the blueprint's palette that fail WCAG AA (the
 worst at 2.44:1, genuinely unreadable) plus one that only passes at a declared size floor; a drop
@@ -44,16 +44,17 @@ reporting itself healthy. Details in
 Shared API schemas, current/target OpenAPI specifications and the
 [backend integration inventory](docs/architecture/backend-integration-inventory.md) now exist.
 [Contract usage and migration](docs/architecture/api-contracts.md) distinguish current behavior,
-planned interfaces and gated drafts; no mobile networking or server validation was wired.
+planned interfaces and gated drafts; the Google/Apple OAuth slice now validates requests and
+connects the Account utility. Learning sync remains unwired.
 
 **Not built yet:** the on-device SQLite driver/integration (the reusable persistence layer exists),
-durable API storage, auth, the live AI provider, native audio/ASR/widgets, and 16 learner screens.
-See the refreshed [`plans/README.md`](plans/README.md).
+durable learning-data API storage, the live AI provider, native audio/ASR/widgets, and 16 learner
+screens. See the refreshed [`plans/README.md`](plans/README.md).
 
 **Selected backend testing setup, not provisioned:** one Frankfurt EC2 instance with local
 PostgreSQL and private S3, targeting $25–35/month. Shared tester access waits for durable data,
 authentication and tenant isolation. Start with [environments](docs/process/environments.md),
-[plan 88](plans/88-low-cost-backend-infrastructure.md) and the
+[plan 89](plans/88-low-cost-backend-infrastructure.md) and the
 [testing operations runbook](docs/runbooks/backend-testing.md).
 
 Start at [`docs/process/onboarding.md`](docs/process/onboarding.md).
@@ -191,3 +192,11 @@ Each links to its ADR — the reasoning, alternatives, and consequences.
 
 Open questions that still need an owner:
 [`docs/decisions/open-questions.md`](docs/decisions/open-questions.md).
+
+## Google/Apple accounts (plan 89)
+
+Optional `/account` identity is implemented with server-side provider verification, PostgreSQL
+accounts/refresh families and native SecureStore. Browser credentials remain in memory. Auth-enabled
+deployments fail closed on legacy sync/AI until tenant isolation lands. Learning data is untouched;
+anonymous claim/merge, deletion/export and live provider/device verification remain separate work.
+See [provider setup](docs/architecture/google-apple-auth.md).

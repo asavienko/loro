@@ -1,7 +1,7 @@
 # Executable API contracts
 
 **F-04 / plan 85.** Runtime schemas and generated specifications now exist. Most remain planned. The
-[plan 88 OAuth slice](google-apple-auth.md) now validates requests in Nest and responses in the
+[plan 89 OAuth slice](google-apple-auth.md) now validates requests in Nest and responses in the
 mobile account client. The [integration inventory](backend-integration-inventory.md) accounts for
 all 23 authored screens and supporting functionality.
 

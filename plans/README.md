@@ -94,7 +94,7 @@ feature↔release-completion cycle. See each plan's checkboxes for executable ta
 | [87](87-multilingual-app-and-language-selection.md) | Bilingual sign-off and multilingual device/release proof                    | M1/M2       | 🟡 Seven-pair foundation done; review/durability gates          | Human review; 59 device proof; 61/72 release integration                   |
 | [88](88-low-cost-backend-infrastructure.md)         | Frankfurt EC2/Postgres/S3 testing environment and recovery                  | M2 testing  | — Planned; infrastructure preparation can start now             | 66 image/data/security; 67 shared access; 59/68 mobile sync; 61/86 content |
 
-Plan 88 owns the selected AWS testing profile and
+Plan 89 owns the selected AWS testing profile and
 [operations runbook](../docs/runbooks/backend-testing.md); plan 73 retains production operations.
 The testing stages depend on the relevant feature slices, not whole plan completion. The previous
 Render testing recommendation in 86 is superseded by 88.
@@ -109,6 +109,8 @@ Render testing recommendation in 86 is superseded by 88.
 | [79](archive/2026-09-07/79-v1-1-design-contract.md)               | v1.1 design and requirement contract                           |
 | [84](archive/2026-09-07/84-visual-ui-ux-audit.md)                 | Web visual/navigation/enlarged-layout audit                    |
 | [85](archive/2026-09-07/85-backend-integration-contracts.md)      | Backend integration inventory and shared API/OpenAPI contracts |
+
+| [89](89-google-apple-sign-in.md) | Google/Apple identity and optional Account utility; provider setup and native verification remain deployment prerequisites |
 
 ## Working rules
 

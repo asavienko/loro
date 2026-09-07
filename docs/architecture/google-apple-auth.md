@@ -1,6 +1,6 @@
 # Google and Apple accounts
 
-**F-01 / F-02 / F-07 — plan 88.** Implemented optional identity flow, not a production release of
+**F-01 / F-02 / F-07 — plan 89.** Implemented optional identity flow, not a production release of
 plan 67. Account is accessible from the shared switcher. First sign-in creates an account; returning
 sign-in reuses `(provider, subject)`. Email is not an account key and is not persisted. Different
 Google/Apple identities remain separate accounts. There is no automatic account linking.

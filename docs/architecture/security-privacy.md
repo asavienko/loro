@@ -15,7 +15,7 @@ still target architecture.
   promised below; the future bridge still has to make PCM inaccessible to JS and accept only opaque,
   lifetime-checked handles for Rust scoring.
 - Optional Google/Apple OAuth and durable PostgreSQL accounts/refresh families are implemented in
-  [plan 88's account slice](google-apple-auth.md), including provider JWT verification, nonce/state,
+  [plan 89's account slice](google-apple-auth.md), including provider JWT verification, nonce/state,
   PKCE handoff, refresh replay detection, per-IP auth rate limits and revocation. Auth-enabled
   deployments disable legacy shared `/sync/*` and `/ai/*` routes until tenant isolation.
 - Entitlements, Redis, TLS termination/pinning, audit logs, account deletion/export, analytics,
@@ -194,7 +194,7 @@ the library), calendar, health.
 ## Retention
 
 The testing log/backup policy below follows
-[plan 88](../../plans/88-low-cost-backend-infrastructure.md). The remaining learner-data rows
+[plan 89](../../plans/88-low-cost-backend-infrastructure.md). The remaining learner-data rows
 describe feature policies, not implemented storage. Plan 73 must record production backup/recovery
 retention before real learner data is admitted; no 35-day PITR service is provisioned or required
 for the testing host.

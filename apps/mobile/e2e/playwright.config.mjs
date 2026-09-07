@@ -25,6 +25,6 @@ export default defineConfig({
     reuseExistingServer: !isCI,
     stdout: 'ignore',
     stderr: 'pipe',
-    env: { EXPO_NO_TELEMETRY: '1' },
+    env: { EXPO_NO_TELEMETRY: '1', EXPO_PUBLIC_API_URL: 'https://auth.loro.test/v1' },
   },
 })

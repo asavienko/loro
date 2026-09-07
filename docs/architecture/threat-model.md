@@ -221,7 +221,7 @@ Applied to any PR touching auth, sync, the AI endpoints, or the audio module:
 - [ ] Is the new data flow reflected in the Apple Privacy Manifest and Play Data Safety form?
 - [ ] Does a new sub-processor need adding to the privacy policy?
 
-## Implemented Google/Apple identity boundary (plan 88)
+## Implemented Google/Apple identity boundary (plan 89)
 
 [Account implementation](google-apple-auth.md) now rejects substituted issuers/audiences/nonces,
 replayed state/tickets/refresh credentials and arbitrary callback redirects. Provider identity is

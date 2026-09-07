@@ -14,7 +14,7 @@ export function oauthOperations(problem: z.ZodType): readonly Operation[] {
   const base = {
     status: 'implemented',
     auth: 'none',
-    owner: 88,
+    owner: 89,
     requirements: ['F-01', 'F-02', 'F-07'],
     behavior:
       'Optional identity-only flow. Requires configured PostgreSQL and providers; no claim or sync. All responses are no-store.',

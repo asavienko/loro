@@ -183,3 +183,9 @@ Use `src/lib/copy.ts` for reactive localized copy and `useLearningCatalog()` for
 `src/lib/i18n/` bundles all translations; screens subscribe with `useLocale()`. A target text uses
 `lang="target"`. New translated states belong in the E2E manifest, including expanded/Cyrillic copy.
 To avoid another checkout's dev server, set `LORO_E2E_PORT=8095 pnpm test:e2e` from the root.
+
+## Optional Account utility
+
+`/account` adds Google/Apple sign-in and sign-up through the switcher, with SecureStore for native
+refresh credentials and memory-only browser sessions. Local learning state is retained on sign-out.
+[Configuration, provider setup and release boundaries](../../docs/architecture/google-apple-auth.md).

@@ -5,10 +5,11 @@ The system end to end. Read this before any other architecture document.
 > **Target architecture, not current inventory.** As of 2026-07-30 the repository implements the
 > Expo routes/UI/store, shared TypeScript engines and local persistence library, Rust host/WASM
 > core, content bundle, and an in-memory Nest API. Native modules/projects, on-device SQLite wiring,
-> Postgres/auth/sync client, independent content delivery, and most screens shown below are planned.
+> The sync client, independent content delivery and most screens shown below are planned. Optional
+> Google/Apple identity and PostgreSQL session persistence exist ([plan 89](google-apple-auth.md)).
 > See [`../../plans/README.md`](../../plans/README.md) for the implementation order.
 >
-> **Testing hosting:** plan 88 selects one Frankfurt EC2 instance with local PostgreSQL and private
+> **Testing hosting:** plan 89 selects one Frankfurt EC2 instance with local PostgreSQL and private
 > S3 at a $25–35/month target. It is not provisioned. The feature-level diagrams below do not
 > require separate workers, Redis or a CDN for this phase; see
 > [backend hosting](backend.md#testing-infrastructure).

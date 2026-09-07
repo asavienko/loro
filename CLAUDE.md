@@ -7,15 +7,15 @@ Guidance for Claude Code working in this repository.
 **Loro** — a mobile app (iOS + Android) that teaches Spanish, Bulgarian, and Russian by the phrase.
 
 Early implementation. **What exists:** the docs, 7 of the v1.1 design package's 23 learner screens
-plus the Languages utility and app shell in `apps/mobile/app/`, an API with 13 endpoints over an
-in-memory store, the Rust core, the design tokens, 31-phrase Spanish/Bulgarian/Russian starter
-catalogs (new translations await bilingual review), and the local persistence layer (schema,
-migrations, repositories, outbox — driver-agnostic and tested against real SQLite), plus a dev-only
-generated token/component workbench. 570 JS/TS tests, 131 Rust tests, and 122 distinct browser E2E
-tests cover the implemented behavior. **What doesn't:** the native modules (audio, speech, ASR,
-widgets), the on-device SQLite driver, and the other 16 learner screens — so nothing runnable today
-exercises audio or the microphone, which is half of what this app is, and the app store is still in
-memory.
+plus the Languages and Account utilities and app shell in `apps/mobile/app/`, an API with 21
+endpoints (in-memory learning sync and PostgreSQL accounts), the Rust core, the design tokens,
+31-phrase Spanish/Bulgarian/Russian starter catalogs (new translations await bilingual review), and
+the local persistence layer (schema, migrations, repositories, outbox — driver-agnostic and tested
+against real SQLite), plus a dev-only generated token/component workbench. 602 JS/TS tests, 131 Rust
+tests, and 132 distinct browser E2E tests cover the implemented behavior. **What doesn't:** the
+native modules (audio, speech, ASR, widgets), the on-device SQLite driver, and the other 16 learner
+screens — so nothing runnable today exercises audio or the microphone, which is half of what this
+app is, and the app store is still in memory.
 
 **The shared spine/switcher now wraps Today, Add, Progress, Stream, Refrain, and phrase detail.**
 `src/lib/navigation.ts` declares the built hubs used by the switcher and Today's rail. Today owns
@@ -191,7 +191,7 @@ be off PATH.
 
 ```bash
 pnpm check                          # the gate: 23 turbo tasks, all green today
-pnpm test:e2e                       # 118 learner tests: routes/states, clock, a11y, text scale
+pnpm test:e2e                       # 128 learner tests: routes/states, clock, a11y, text scale
 pnpm test:e2e:workbench             # 3 tests: dev-only tokens/component inspection surface
 pnpm test:e2e:bundle                # the @smoke subset against the production web export
 pnpm --filter @loro/api dev         # :3000 — no Docker, no keys, no database
@@ -256,7 +256,7 @@ npx expo start --web                # from apps/mobile — fastest way to see th
 
 ## Backend testing infrastructure
 
-[Plan 88](plans/88-low-cost-backend-infrastructure.md) selects one Frankfurt EC2 instance with local
+[Plan 89](plans/88-low-cost-backend-infrastructure.md) selects one Frankfurt EC2 instance with local
 PostgreSQL and private S3 at a $25–35/month target. It is not provisioned. Shared access requires
 66/67's persistence, auth and isolation; mobile sync has additional 59/68 gates. Do not add managed
 dev/staging stacks, Redis, CDN or live providers to this phase. Start with
@@ -309,3 +309,11 @@ persistence. New linguistic content is pending bilingual review; audio/ASR/DSP c
 disabled. Plan 87 now tracks review and multilingual acceptance only; plan 59 owns device wiring and
 correction of the remaining `INSERT OR REPLACE` in `sqlite/course.ts`. Plan 60 owns the
 ASCII-oriented matcher/fabricated FSRS-cloze fallback and missing nightly `tests/sim` target.
+
+## Google/Apple accounts (plan 89)
+
+Optional `/account` identity is implemented with server-side provider verification, PostgreSQL
+accounts/refresh families and native SecureStore. Browser credentials remain in memory. Auth-enabled
+deployments fail closed on legacy sync/AI until tenant isolation lands. Learning data is untouched;
+anonymous claim/merge, deletion/export and live provider/device verification remain separate work.
+See [provider setup](docs/architecture/google-apple-auth.md).

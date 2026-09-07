@@ -47,7 +47,7 @@ and the bundled fallback path stays exercised. There is no TTS implementation ye
 
 ### Testing hosting
 
-[Plan 88](../../plans/88-low-cost-backend-infrastructure.md) selects one Frankfurt EC2 instance,
+[Plan 89](../../plans/88-low-cost-backend-infrastructure.md) selects one Frankfurt EC2 instance,
 local PostgreSQL, private S3 and a $25–35/month target. Nothing is provisioned yet. The database,
 auth and isolation slices must pass before shared access; a running container does not establish
 them. See [environments](../../docs/process/environments.md) and the
