@@ -4,7 +4,9 @@
 - **Milestone:** M2 testing; production operations remain in plan 73.
 - **Status:** — Planned; infrastructure preparation can start now. Shared access requires the
   persistence/security slice of 66 and authentication/tenant isolation from 67; mobile sync testing
-  additionally requires the relevant device and convergence slices of 59/68. Nothing is provisioned.
+  additionally requires the relevant device and convergence slices of 59/68. The restricted EC2
+  deployment in [plan 91](91-ec2-backend-deployment.md) is live; this plan still owns PostgreSQL,
+  S3, TLS, Terraform and shared testing readiness.
 - **Depends on:** 66 exact API image and backend foundations; 67 shared access; 61/86 content
   adapters only when activated. Whole-plan completion is not an infrastructure prerequisite.
 - **Reviewed:** 2026-09-07; user selected Frankfurt, a small tester group and a $25–35 monthly
@@ -15,7 +17,8 @@
 [Backend architecture](../docs/architecture/backend.md#testing-infrastructure),
 [environments](../docs/process/environments.md), [CI/CD](../docs/process/ci-cd.md#backend-deploys)
 and the [testing runbook](../docs/runbooks/backend-testing.md) describe this selected profile.
-Documentation is complete; provisioning, runtime wiring and operational evidence remain outstanding.
+Documentation is complete. Plan 91 provides a CloudFormation-provisioned SSH-only development API;
+the broader testing stack, runtime wiring and operational evidence remain outstanding.
 
 ## Outcome and scope
 

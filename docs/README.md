@@ -134,3 +134,5 @@ specifications.
 
 Account implementation and provider setup:
 [Google and Apple accounts](architecture/google-apple-auth.md).
+[EC2 development deployment](process/ec2-deployment.md) — provisioning, SSH access, readiness and
+rollback.

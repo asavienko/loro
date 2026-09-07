@@ -186,3 +186,10 @@ Payloads use `targetText` and `translations`; manifests expose review status and
 The original `/v1/content` endpoints retain their Spanish/English shape. AI scene requests accept
 `targetLocale` and `nativeLanguage`, but the current stub rejects pairs other than English →
 Spanish.
+
+## EC2 development deployment
+
+The [EC2 runbook](../../docs/process/ec2-deployment.md) provisions a restricted host and deploys
+this image with readiness checks and rollback. The API remains in memory and is accessed over an SSH
+tunnel. Live EC2 deployment, readiness and manual rollback were verified on 2026-09-07 in
+eu-central-1.
