@@ -122,3 +122,9 @@ evidence is recorded in [the testing runbook](../runbooks/backend-testing.md).
 Cloud infrastructure itself is applied from the separate Terraform roots and must not be replaced by
 an ordinary application deployment. Production rollout policy remains with plan 73; the testing host
 does not require blue-green replicas or staged traffic percentages.
+
+## Local APK distribution
+
+[The local APK workflow](local-apk.md) builds an installable Android preview with Gradle and uploads
+it to a draft GitHub prerelease. Run `pnpm apk:local` or `pnpm apk:github`; GitHub Actions and EAS
+remain disabled. This testing distribution uses development signing, not store credentials.

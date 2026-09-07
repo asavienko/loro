@@ -2,18 +2,22 @@
 
 - **Requirement IDs:** `AS-01`…`AS-06`, `P5-06`, `F-03`, `F-09`
 - **Milestone:** M1
-- **Status:** 🟡 Rust target CI and EAS configuration gates exist. Native projects, module bridge,
-  dev clients and device harness remain; real EAS project/signing configuration is required for
-  distribution, not for local design work.
+- **Status:** 🟡 Local CI and an APK build/upload runner exist. Standalone preview uses temporary
+  Expo prebuild output and development signing; native bridges, device harness and production
+  signing remain. Those slices require the native substrate and real device/signing evidence.
 - **Depends on:** 53 completed; no unfinished plan blocks native workspace setup.
 - **Reviewed:** 2026-09-07 against merged baseline `2d9e8c3`.
 
 ## Verified starting point
 
-`.github/workflows/core-rs.yml` uses cargo-ndk for Android and library-only native builds.
-`mobile-build.yml` distinguishes missing EAS configuration from a successful build; device-farm
-steps are still TODOs. `apps/mobile/ios`, `android` and custom native modules are absent. Rust
-target compilation is not an Expo app or bridge smoke test.
+GitHub Actions is disabled. `pnpm ci:local:native` retains local Rust target compilation and
+`pnpm apk:local` / `pnpm apk:github` provide local Gradle APK builds and verified GitHub release
+uploads. See [the APK guide](../docs/process/local-apk.md). Generated Android projects live only in
+temporary committed snapshots; they are not maintained or committed in `apps/mobile/android`. The
+first arm64-v8a/x86_64 APK build and GitHub asset checksum were verified on 2026-09-07
+(`6891fe5316a4`). Preview signing uses the Expo development key and is not production signing.
+Custom native modules and device-level bridge tests remain absent. Building an APK does not
+establish those capabilities.
 
 ## Outcome
 

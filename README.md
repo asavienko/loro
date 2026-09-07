@@ -188,6 +188,9 @@ Run `pnpm ci:local` before merging. GitHub Actions is disabled; checks run on yo
 [local CI setup and gates](docs/process/ci-cd.md) for prerequisites and optional native/audit
 checks. Do not dispatch or re-enable GitHub workflows without an explicit change of policy.
 
+Build an Android testing APK with `pnpm apk:local`, or upload a verified draft GitHub prerelease
+with `pnpm apk:github`. See [APK prerequisites and signing boundaries](docs/process/local-apk.md).
+
 ## Contributing
 
 - Process: [`docs/process/ways-of-working.md`](docs/process/ways-of-working.md)

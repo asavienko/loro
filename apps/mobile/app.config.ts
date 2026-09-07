@@ -14,9 +14,23 @@ import type { ExpoConfig } from 'expo/config'
  */
 
 const VERSION = '0.1.0'
+const localApk = process.env['LORO_LOCAL_APK'] === '1'
+const previewPlugins: NonNullable<ExpoConfig['plugins']> = localApk
+  ? [
+      [
+        'expo-splash-screen',
+        {
+          android: {
+            drawable: { icon: './assets/preview/splash.xml' },
+            backgroundColor: '#f6f2ea',
+          },
+        },
+      ],
+    ]
+  : []
 
 export default (): ExpoConfig => ({
-  name: 'Loro',
+  name: localApk ? 'Loro Preview' : 'Loro',
   slug: 'loro',
   version: VERSION,
   orientation: 'default',
@@ -27,13 +41,14 @@ export default (): ExpoConfig => ({
   splash: {
     backgroundColor: '#f6f2ea', // surface.app
     resizeMode: 'contain',
-    image: './assets/images/splash.png',
+    image: localApk ? undefined : './assets/images/splash.png',
   },
 
   updates: {
     // OTA is for FIXES, not features. Staged 5% → 25% → 100%.
     // See docs/process/ci-cd.md#ota-updates
-    url: 'https://u.expo.dev/PLACEHOLDER',
+    enabled: !localApk,
+    url: localApk ? undefined : 'https://u.expo.dev/PLACEHOLDER',
     fallbackToCacheTimeout: 0,
   },
   // An OTA cannot target a binary whose native surface differs.
@@ -64,12 +79,14 @@ export default (): ExpoConfig => ({
   },
 
   android: {
-    package: 'app.loro.android',
+    package: localApk ? 'app.loro.android.preview' : 'app.loro.android',
     versionCode: 1,
-    adaptiveIcon: {
-      foregroundImage: './assets/images/adaptive-icon.png',
-      backgroundColor: '#f6f2ea',
-    },
+    adaptiveIcon: localApk
+      ? undefined
+      : {
+          foregroundImage: './assets/images/adaptive-icon.png',
+          backgroundColor: '#f6f2ea',
+        },
     permissions: [
       'android.permission.RECORD_AUDIO',
       'android.permission.CAMERA',
@@ -91,6 +108,7 @@ export default (): ExpoConfig => ({
   // loro-speech, loro-core) and notifications remain future work. Account browser and
   // secure storage plugins are installed below — see README.md.
   plugins: [
+    ...previewPlugins,
     'expo-router',
     'expo-web-browser',
     'expo-secure-store',
@@ -102,6 +120,6 @@ export default (): ExpoConfig => ({
   },
 
   extra: {
-    eas: { projectId: 'PLACEHOLDER' },
+    eas: localApk ? undefined : { projectId: 'PLACEHOLDER' },
   },
 })
