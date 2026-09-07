@@ -43,12 +43,51 @@ without overwriting learner state.
 6. [ ] Generate pronunciation/prosody reference data only from approved source audio and keep raw
        learner recordings out of the pipeline.
 
+## ElevenLabs integration (`AS-01`, `AS-02`, `AS-05`, `AS-06`)
+
+Provider selected by the user on 2026-09-07. Integrate the plan-86 ElevenLabs adapter into the
+server-side content rendering pipeline behind `pnpm content:render`; credential provisioning alone
+does not implement TTS. Keep native playback and device-TTS fallback in plan 62.
+
+1. Consume the plan-86 provider adapter and configuration validation for `TTS_PROVIDER=elevenlabs`,
+   `TTS_API_KEY`, and `TTS_VOICE_ES_ES`. Explicitly load the protected environment for the content
+   command; do not assume it inherits the API container's environment. Keep `stub` as the local
+   default, reject unknown providers, and fail clearly when live configuration is incomplete.
+2. Pin the ElevenLabs model, voice ID, language, output format, and synthesis settings in versioned
+   render metadata. Select and review an `es-ES` voice before the seed batch; add independently
+   reviewed voice mappings for `bg-BG` and `ru-RU` before rendering those catalogs. Never silently
+   substitute a voice or re-render an approved reference under the same asset ID.
+3. Send approved catalog text only. Keep the key in SOPS/runtime secrets, redact credentials from
+   logs/errors, and never expose it through `EXPO_PUBLIC_*`. No learner recordings enter this
+   pipeline. Use Text-to-Speech access and voice-read permission without unrelated account access.
+4. Reuse plan-86 controls for bounded concurrency, timeouts, cancellation, and bounded retries for
+   transient failures/rate limits. Treat authorization and quota failures distinctly. Add a dry-run
+   estimate, an explicit batch spending/credit ceiling, and resumable rendering that skips verified
+   assets; retries must not imply guaranteed provider-side deduplication or zero duplicate charges.
+5. Validate generated audio, write atomically, calculate checksums, normalize and generate real
+   reference features through the existing pipeline boundary. Failed/stub renders must never be
+   published as production audio. Record actual usage when available and distinguish estimates.
+6. Require plan-86 deterministic adapter tests for success, invalid credentials, missing voice,
+   timeout, 429, quota exhaustion, corrupt output, resume, and secret redaction. After Q-15 passes,
+   run a bounded live seed render, inspect/listen to the output with bilingual review, and verify
+   manifest/cache compatibility with plan 62. Normal CI must not call ElevenLabs or spend provider
+   credits.
+7. Update environment examples and local-development/content-authoring instructions with the
+   implemented command, provider selection, secret-loading mechanism, and verified smoke-test steps.
+
+The API key has been provisioned in the local encrypted environment; it is not a test result or
+approval of any voice's production rights. Q-15 remains open for the asset evidence above.
+
 ## Acceptance criteria
 
 - A bad, partial, unsigned, incompatible, or rolled-back pack cannot replace the last good pack.
 - Every production phrase has verified text, metadata, audio ownership, checksums, and fallback.
 - Content update changes catalog/assets without requiring an app release or mutating learner rows.
 - The pipeline is reproducible, budgeted, and reports per-check quality failures.
+- Explicit ElevenLabs mode renders a reviewed seed batch with pinned provenance and real audio;
+  missing credentials, exhausted budget, and failed renders cannot produce a publishable pack.
+- Adapter tests and `pnpm check` pass; approved live verification records usage and review evidence
+  without credentials. Native playback claims require plan-62 device verification.
 
 ## Out of scope
 

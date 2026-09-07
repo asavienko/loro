@@ -252,6 +252,10 @@ including for Bulgarian and Polish audio evaluation. This supersedes the earlier
 recommendation and the historical ElevenLabs rejection in archived plan 45. It does not add Polish
 to the shipped course catalog or mean the integration is implemented.
 
+Plan 61 records the rendering/configuration/seed-verification checklist; plan 86 owns the vendor
+adapter and common controls. Adapter work may proceed with fixtures before Q-15 passes. A
+provisioned API key is not evidence of voice quality or production rights.
+
 **Still needed before production rendering:** select and review the model and `es-ES` voice ID and
 fallback, with separate coverage/review before enabling `bg-BG` or `ru-RU`; document commercial and
 redistribution rights, consent/provenance, regional storage and deletion obligations; define
