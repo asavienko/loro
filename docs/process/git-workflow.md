@@ -50,6 +50,14 @@ properly.
 
 ## Commits
 
+### Secret scanning
+
+Install [Gitleaks](https://github.com/gitleaks/gitleaks) (`brew install gitleaks` on macOS).
+`pnpm install` activates the Husky pre-commit hook through the existing `prepare` script.
+The hook scans staged changes and blocks commits when secrets are detected or Gitleaks is
+missing. Findings are redacted. Run the same check manually with
+`gitleaks git --pre-commit --staged --redact --no-banner`.
+
 [Conventional Commits](https://www.conventionalcommits.org/), enforced by commitlint.
 
 ```
