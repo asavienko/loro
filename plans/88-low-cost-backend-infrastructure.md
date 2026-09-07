@@ -10,6 +10,13 @@
 - **Reviewed:** 2026-09-07; user selected Frankfurt, a small tester group and a $25–35 monthly
   budget.
 
+## Documentation
+
+[Backend architecture](../docs/architecture/backend.md#testing-infrastructure),
+[environments](../docs/process/environments.md), [CI/CD](../docs/process/ci-cd.md#backend-deploys)
+and the [testing runbook](../docs/runbooks/backend-testing.md) describe this selected profile.
+Documentation is complete; provisioning, runtime wiring and operational evidence remain outstanding.
+
 ## Outcome and scope
 
 Provide one always-on testing environment in **Frankfurt (`eu-central-1`)**, targeting
@@ -103,7 +110,7 @@ Cost controls:
       authenticated URL issuance. This plan introduces no new learner-facing API routes.
 - [ ] Preserve published immutable content. Apply bounded backup/version retention and remove
       abandoned multipart uploads. Recorded learner audio never enters S3.
-- [ ] Document the testing exception to managed dependencies and blue-green deployment in the
+- [x] Document the testing exception to managed dependencies and blue-green deployment in the
       backend/environment guides, and align plans 73/86 with this ownership when implementation
       starts.
 

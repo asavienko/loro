@@ -12,8 +12,8 @@ as deployment, device or release evidence that does not exist.
 | -------------------------------- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `ci.yml`                         | every PR; push to `main`           | Real required validation/build/browser gate                                                                                                         |
 | `content-validate.yml`           | content PR; manual                 | Validation is real; render and publish steps are `TODO` scaffolds                                                                                   |
-| `core-rs.yml`                    | Rust PR/push                       | Unit/clippy/build/parity are real; the named golden step references missing `tests/golden.rs`; benchmark comparison is not an enforced 10% baseline |
-| `mobile-build.yml`               | mobile/packages PR; `main`; manual | Queues EAS builds when credentials exist; device-farm steps are `TODO`; QR posting is not wired                                                     |
+| `core-rs.yml`                    | Rust PR/push                       | Unit/clippy/build/parity are real; the golden step is conditional on its test target existing; benchmark comparison is not an enforced 10% baseline |
+| `mobile-build.yml`               | mobile/packages PR; `main`; manual | EAS needs a real project ID and credentials; unconfigured automatic runs skip and explicit requests fail; device-farm steps remain TODO             |
 | `api-deploy.yml` / `_deploy.yml` | relevant `main` push; manual       | Image build is defined; authentication, migrations, deploy, health gate, traffic shift, rollback and smoke test are placeholder echoes              |
 | `nightly.yml`                    | nightly; manual                    | Dependency audit is real; device/offline/load/content jobs are placeholders and scheduler job references missing `tests/sim.rs`                     |
 | `release.yml`                    | `v*` tag                           | Scaffold, not a usable release gate: it references a missing mobile `check:bundle-size` script and has no real native/device gate                   |
@@ -29,7 +29,7 @@ The aggregate `ci` job requires:
 2. `lint` — workspace lint, Prettier and PR commitlint.
 3. `typecheck` — all workspace packages.
 4. `test` — `pnpm test`, including Rust through Turbo.
-5. `mobile web E2E` — all 61 Playwright tests plus production-export `@smoke` flows.
+5. `mobile web E2E` — the learner and workbench suites plus production-export `@smoke` flows.
 6. `content validation` — catalog checks.
 7. `app bundles / api builds` — mobile Metro/Hermes export; API esbuild, boot and readiness.
 8. `generated output drift` — regenerated design tokens and UniFFI bindings must match Git.
@@ -86,10 +86,30 @@ The change that introduces the first custom native module must also:
 
 ### API persistence and deployment
 
-Before API deployment is real, add actual OIDC authentication, image secret scanning, deploy-time
-migrations, readiness plus a synthetic sync round-trip, staged traffic shift and automatic rollback.
-Validate expand/migrate/contract against old and new clients. An `echo TODO` step is not a
-deployment gate.
+[Plan 88](../../plans/88-low-cost-backend-infrastructure.md) owns one EC2 testing deployment. The
+`dev`/`staging`/`production` chain and traffic-shift echoes in the current workflows are scaffolding
+to replace, not a required test topology.
+
+The implemented path must:
+
+1. Select the exact commit whose required CI passed and serialize deployments to GitHub `testing`.
+2. Build real WASM before the `linux/amd64` API image. Scan/test the image, publish to private ECR
+   and deploy by digest with AWS OIDC and SSM, without permanent AWS keys.
+3. Pull the release before downtime, close traffic, stop API writes and verify a pre-migration S3
+   backup before running a separate compatible migration.
+4. Start the image and verify real readiness and authenticated synthetic sync/content checks before
+   reopening traffic. Repeat an external HTTPS smoke check.
+5. Restore the previous image only if schema compatibility is established; otherwise stay in
+   maintenance. Never automatically downgrade schema or restore over newer data.
+
+An `echo TODO`, missing credential or skipped job cannot satisfy these gates. Infrastructure
+verification can precede auth, but unfinished API routes stay closed until plans 66/67 provide
+durable tenant-scoped access. Device sync is a separate feature gate. Deployment and recovery
+evidence is recorded in [the testing runbook](../runbooks/backend-testing.md).
+
+Cloud infrastructure itself is applied from the separate Terraform roots and must not be replaced by
+an ordinary application deployment. Production rollout policy remains with plan 73; the testing host
+does not require blue-green replicas or staged traffic percentages.
 
 ### Content publishing
 

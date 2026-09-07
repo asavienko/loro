@@ -1,218 +1,127 @@
 # Environments
 
-Four target environments, one production promotion path.
+Use local development today and one shared AWS testing environment when
+[plan 88](../../plans/88-low-cost-backend-infrastructure.md) is implemented. The testing design is
+selected, but no cloud deployment, database integration or shared-user access is established yet.
 
-**Selected testing exception, not yet provisioned:**
-[Plan 88](../../plans/88-low-cost-backend-infrastructure.md) defines one shared `testing` environment
-in Frankfurt: one EC2 instance with local PostgreSQL, private S3 and a $25–35/month target. Deploys
-are manual after required CI; short maintenance downtime and synthetic test data are accepted. It
-does not provision separate dev/staging stacks or their managed services. Shared API access waits
-for authentication, tenant isolation and durable storage; mobile sync has its own additional gates.
-The tables and promotion path below describe the later target environments.
+| Concern        | Local: implemented                                   | Testing: selected, not provisioned                         |
+| -------------- | ---------------------------------------------------- | ---------------------------------------------------------- |
+| API            | NestJS on port 3000; memory sync repository          | Same production image on one Frankfurt EC2 instance        |
+| Database       | Optional Docker PostgreSQL; API does not connect yet | PostgreSQL 16 on retained encrypted EC2 storage            |
+| Object storage | Optional MinIO for adapter development               | Private S3 content, backup and Terraform-state buckets     |
+| AI / TTS       | Bundled AI scenes; no TTS runtime                    | AI remains stubbed; TTS disabled                           |
+| Access         | Developer-only; current sync has no tenant boundary  | Small tester group after authentication and isolation pass |
+| Deploy         | Host development commands                            | Manual, immutable image, required CI, maintenance downtime |
+| Data           | Local fixtures; memory state disappears on restart   | Synthetic data; nightly and pre-migration backups          |
+| Cost           | No cloud services required                           | $25–35/month planning budget, excluding tax and providers  |
 
----
+There is no separate cloud dev/staging stack, managed database, Redis, CDN or live-provider budget
+in this phase. Historical environment names in workflow scaffolds are not deployed services.
 
-## The environments
+## Local
 
-|                  | `local`         | `dev`                 | `staging`              | `production`       |
-| ---------------- | --------------- | --------------------- | ---------------------- | ------------------ |
-| **API**          | localhost:3000  | `api-dev.loro.app`    | `api-staging.loro.app` | `api.loro.app`     |
-| **Database**     | Docker Postgres | Managed, small        | Managed, prod-shaped   | Managed, HA + PITR |
-| **Redis**        | Docker          | Managed, small        | Managed                | Managed, AOF       |
-| **Storage**      | MinIO           | Bucket + CDN          | Bucket + CDN           | Bucket + CDN       |
-| **AI provider**  | **Stub**        | Real, low budget      | Real, prod budget      | Real               |
-| **TTS provider** | **Stub**        | Real, low budget      | Real                   | Real               |
-| **Content**      | Seeded fixture  | Latest, unreviewed OK | **Production catalog** | Production catalog |
-| **App build**    | Dev client      | `preview`             | `staging`              | `production`       |
-| **Analytics**    | Console only    | Dev project           | Staging project        | Production project |
-| **Learner data** | Fixtures        | Synthetic             | **Synthetic only**     | Real               |
-| **Deploys**      | —               | On push to `main`     | On push to `main`      | Manual approval    |
-| **Who**          | Everyone        | Everyone              | Team + testers         | Learners           |
-
----
-
-## `local`
-
-**Design goal: works offline, needs no API keys, costs nothing.**
+Use Node 22 with Cargo on PATH. These commands exist in the repository:
 
 ```bash
-pnpm --filter api dev:up      # postgres, redis, minio
-pnpm --filter api db:migrate
-pnpm --filter api db:seed
-pnpm --filter api dev
-pnpm --filter mobile ios      # or android
+nvm use 22
+export PATH="$HOME/.cargo/bin:$PATH"
+pnpm core-rs:build
+pnpm --filter @loro/api dev
 ```
 
-**AI and TTS are stubbed** (`AI_PROVIDER=stub`, `TTS_PROVIDER=stub`), returning the bundled fallback
-fixtures. That means a new developer needs no credentials on day one, and it also means the fallback
-path is exercised constantly and can't silently rot
-([`../architecture/ai-services.md`](../architecture/ai-services.md#bundled-fallback)).
+From another terminal, check `http://localhost:3000/v1/health/ready`. Readiness must report the WASM
+merge available. See [the API guide](../../apps/api/README.md) for current routes and tests, and
+[the mobile guide](../../apps/mobile/README.md) for running Expo.
 
-Hitting real providers requires an explicit env change and your own key. Nobody does this by
-accident.
+`pnpm --filter @loro/api dev:up` starts optional PostgreSQL, Redis and MinIO for integration work.
+The current API does not use them. There are no `db:migrate` or `db:seed` package scripts yet;
+starting containers does not make sync durable. Redis is an optional local tool, not a testing
+infrastructure dependency.
 
-**Seed data** reproduces the blueprint's `LORO_SEED` (`Loro.dc.html:2873–2884`) — 10 phrases with
-real difficulties, tags, and rep counts — so every screen has plausible data without tapping through
-onboarding.
+The bundled catalogs contain 31 phrases per target language. They are loaded from the package, not
+seeded by a server database job. Bilingual review and audio capabilities have their own gates.
+Setting a public API URL does not create the missing mobile HTTP/sync client.
 
-### Device on a LAN
+## Testing
 
-A physical device can't reach `localhost`:
+One `testing` environment in `eu-central-1`, with resource limits and staged access gates in
+[plan 88](../../plans/88-low-cost-backend-infrastructure.md). Its hostname is an input using an
+existing domain, not an assumed `loro.app` deployment.
 
-```bash
-# apps/mobile/.env
-EXPO_PUBLIC_API_URL=http://192.168.1.42:3000
-```
+1. Prepare infrastructure and test recovery with synthetic fixtures. Keep unfinished API routes
+   inaccessible externally.
+2. Enable shared API access only after plans 66/67 supply durable data, request validation,
+   authentication and tenant isolation. Infrastructure credentials never substitute for user auth.
+3. Enable mobile sync testing when the relevant device-persistence and convergence slices pass.
+4. Enable S3 content delivery only through the approved adapters in plans 61/86. Until then, bundled
+   content is the current implementation.
 
----
-
-## `dev`
-
-The integration environment. Deploys automatically from `main`, and **is allowed to be broken** —
-that's what it's for.
-
-- Unreviewed content can be published here to see how it looks in the app.
-- Low AI/TTS budgets, because experiments happen here.
-- Data is wiped weekly; nobody should have anything they care about in it.
-
----
-
-## `staging`
-
-**Production-shaped, and the release-candidate gate.** The manual release checklist runs here
-([definition-of-done.md](definition-of-done.md#manual-gates--the-release-checklist)).
-
-- Same infrastructure topology as production, smaller.
-- **The production content catalog**, so what a tester sees is what learners will see.
-- Real AI and TTS at production budgets, so cost and latency are representative.
-- **Synthetic learner data only.** Never a copy of production
-  ([`../architecture/security-privacy.md`](../architecture/security-privacy.md)).
-- Distributed via TestFlight and the Play internal track.
-
-The synthetic-data rule is worth stating plainly: copying production data into staging would put
-real learners' phrase libraries — which include private memory hooks and photographed documents —
-into a lower-trust environment. Instead there's a generator that produces realistic libraries at
-realistic scale (including a 2 000-phrase account for performance testing).
-
----
-
-## `production`
-
-- Manual approval gate on deploy.
-- Blue-green with health-gated cutover and automatic rollback
-  ([ci-cd.md](ci-cd.md#backend-deploys)).
-- HA Postgres with PITR (35 days).
-- Full observability, SLO-based alerting, on-call
-  ([`../architecture/observability.md`](../architecture/observability.md)).
-- **No standing human access to the database.** Break-glass only, approved and audit-logged.
-
----
+The [testing operations runbook](../runbooks/backend-testing.md) owns deployment, recovery,
+monitoring and teardown. There is no automatic weekly wipe or set of pre-created QA accounts. Create
+isolated empty, seeded and 2,000-phrase test accounts through the real auth/data path once it
+exists. Do not reset tester data as part of deployment.
 
 ## Promotion
 
-```
-local  ──(PR)──▶  main  ──(auto)──▶  dev  ──(auto)──▶  staging  ──(approval)──▶  production
-                    │                                      │
-                    │                              manual release gates
-                    └──(cut)──▶ release/x.y ──(tag)──▶ store
+```text
+local changes -> main + required CI -> manual testing deployment -> verified test evidence
 ```
 
-Nothing skips staging. A hotfix goes through it too — faster, but through it
-([release-versioning.md](release-versioning.md#hotfixes)).
+Deploy the exact tested image digest; build once in CI. A code push alone does not deploy the API.
+Current deployment workflows contain TODO steps and must be replaced before this path operates. See
+[CI/CD](ci-cd.md#backend-deploys).
 
----
+<a id="dev"></a> <a id="staging"></a>
+
+## Production
+
+Production infrastructure and promotion are deferred to plan 73. Before real learner data or a
+production release, choose availability/recovery objectives, data retention, provider budgets,
+release gates and capacity using testing evidence. Additional environments, managed databases,
+replicas, CDN and uninterrupted deployment are not prerequisites for this testing phase.
 
 ## Configuration
 
-Everything is environment variables. No environment-specific code branches, ever — a
-`if (env === 'production')` in application code is a bug, because it means staging isn't testing
-what production runs.
+### Current API readers
 
-### API
+[`apps/api/src/common/config.ts`](../../apps/api/src/common/config.ts) is the runtime source of
+truth. Entries in `.env.example` without a reader are reserved for future adapters.
 
-```bash
-NODE_ENV=production
-PORT=3000
-DATABASE_URL=postgres://…
-REDIS_URL=redis://…
-S3_ENDPOINT=…
-S3_BUCKET=…
-CDN_BASE_URL=https://cdn.loro.app
+| Variable              | Current behavior                                                                  |
+| --------------------- | --------------------------------------------------------------------------------- |
+| `NODE_ENV`            | `production` makes missing WASM fatal at startup; use it for the deployed image   |
+| `PORT`                | HTTP listener; defaults to 3000                                                   |
+| `AI_PROVIDER`         | Defaults to `stub`; only the stub is registered in the runtime                    |
+| `CDN_BASE_URL`        | Legacy content manifest `audio_base`; no CDN or working audio download is implied |
+| `npm_package_version` | Version reported by health; defaults to `0.0.0` outside the package runner        |
 
-JWT_PRIVATE_KEY=…            # ES256, from the secret store
-JWT_PUBLIC_KEY=…
-REFRESH_TOKEN_PEPPER=…
+### Testing configuration to implement
 
-AI_PROVIDER=anthropic         # anthropic | stub
-ANTHROPIC_API_KEY=…
-AI_MONTHLY_BUDGET_USD_PER_USER=0.50
-AI_DAILY_BUDGET_USD_GLOBAL=200
+Plan 66 owns PostgreSQL, migration and logger configuration. Plan 67 owns signing keys and session
+secrets. Plans 61/86 own AWS region, bucket and download configuration. Add validated readers and
+update `.env.example` with each adapter; do not publish executable configuration for missing
+services.
 
-TTS_PROVIDER=neural           # neural | stub
-TTS_API_KEY=…
+Use the AWS credential provider chain and temporary instance-role credentials. Local MinIO keys must
+never become AWS credentials. Private S3 content needs an authorized download path; setting
+`CDN_BASE_URL` to a private bucket URL does not provide one.
 
-APPLE_TEAM_ID=…               # receipt verification
-GOOGLE_PLAY_SA_JSON=…
-
-OTEL_EXPORTER_OTLP_ENDPOINT=…
-SENTRY_DSN=…
-LOG_LEVEL=info
-```
-
-### Mobile
-
-Only `EXPO_PUBLIC_*` values reach the bundle, and **none of them is a secret**
-([`../architecture/security-privacy.md`](../architecture/security-privacy.md#encryption)):
-
-```bash
-EXPO_PUBLIC_API_URL=https://api.loro.app
-EXPO_PUBLIC_CDN_URL=https://cdn.loro.app
-EXPO_PUBLIC_ENV=production
-EXPO_PUBLIC_SENTRY_DSN=…       # public by design
-```
-
-**There is no provider API key in the app.** Every third-party call is proxied through our API,
-which is what makes rate limiting, budget enforcement, and key rotation possible at all.
+All `EXPO_PUBLIC_*` configuration is public. It can contain a testing hostname when the mobile
+client lands, but never database, signing, AWS or provider secrets.
 
 ### Secrets
 
-| Where    | How                                                                  |
-| -------- | -------------------------------------------------------------------- |
-| Local    | `.env`, gitignored, from `.env.example`                              |
-| CI       | GitHub environment secrets; production requires reviewer approval    |
-| Cloud    | Managed secret store, injected at runtime, never baked into an image |
-| Rotation | Quarterly, and immediately on any suspicion                          |
-
-`.env.example` files are committed with placeholder values and a comment per variable. A new
-variable added without updating `.env.example` fails CI.
-
----
-
-## Test accounts
-
-| Account              | Purpose                                         |
-| -------------------- | ----------------------------------------------- |
-| `qa+empty@loro.app`  | Fresh, no onboarding — tests the first-run path |
-| `qa+seed@loro.app`   | The blueprint's 10 seeded phrases               |
-| `qa+large@loro.app`  | 2 000 phrases — performance and scale           |
-| `qa+trip@loro.app`   | A 12-day countdown, mid-flight                  |
-| `qa+abroad@loro.app` | Trip state `abroad` — survival mode             |
-| `qa+plus@loro.app`   | Entitled to Plus                                |
-
-Available on `dev` and `staging`, recreated nightly from generators so they can't drift into a weird
-state that hides a bug.
-
----
+- Local: gitignored `.env` values based on the checked-in example; never commit plaintext secrets.
+- CI: AWS OIDC with a role scoped to this repository and testing environment; no long-lived AWS key.
+- EC2: standard SSM SecureString parameters, fetched into restricted runtime files. Terraform
+  provisions permissions and references, not secret values. Never put values in state, user data,
+  image layers, workflow output or logs.
+- Bootstrap missing secrets idempotently. A redeploy must not rotate database passwords or signing
+  keys accidentally. Document deliberate rotation and recovery when the consuming adapter lands.
 
 ## Data handling
 
-| Rule                                          |                                                                                                                                                                     |
-| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Production data never leaves production**   | No copies to staging, no local restores, no dumps in tickets                                                                                                        |
-| Synthetic data is generated, not derived      | A generator producing realistic libraries at realistic scale                                                                                                        |
-| Backups are encrypted, access is audit-logged | Restore requires break-glass approval                                                                                                                               |
-| Debugging a learner's issue                   | Their own diagnostics bundle, which they see and share deliberately ([`../architecture/observability.md`](../architecture/observability.md#structured-client-logs)) |
-
-That last row is how a support case gets debugged without anyone reading a learner's phrase library:
-the diagnostics bundle is a ring buffer of scalar events, learner-initiated, with the content shown
-before sharing.
+Use synthetic data throughout this phase. Never import production learner databases into testing.
+Restrict backups to deployment/operator roles and restore only into an isolated destination. Do not
+log phrase text, tokens, transcripts or signed download URLs. Recorded learner audio remains on
+device and is never accepted by the backend or uploaded to S3.

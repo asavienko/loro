@@ -20,8 +20,9 @@ Four jobs, and **none of them is running a practice session**:
 4. **Verify purchases and resolve entitlements** — planned, not implemented.
 
 A learner can practise for weeks with this service unreachable
-([overview.md](../../docs/architecture/overview.md#the-ten-rules), rule 2). That's why the
-availability SLO is a modest 99.9% and why best-effort out-of-hours on-call is defensible.
+([overview.md](../../docs/architecture/overview.md#the-ten-rules), rule 2). The selected
+[testing host](../../docs/architecture/backend.md#testing-infrastructure) accepts maintenance
+downtime and has no production availability guarantee; plan 73 owns production objectives.
 
 ## Run it
 
@@ -40,6 +41,15 @@ deployable image; plans [67](../../plans/67-anonymous-auth-and-account-lifecycle
 
 **AI scenes are stubbed locally** (`AI_PROVIDER=stub`). No credentials are needed, there is no cost,
 and the bundled fallback path stays exercised. There is no TTS implementation yet.
+
+### Testing hosting
+
+[Plan 88](../../plans/88-low-cost-backend-infrastructure.md) selects one Frankfurt EC2 instance,
+local PostgreSQL, private S3 and a $25–35/month target. Nothing is provisioned yet. The database,
+auth and isolation slices must pass before shared access; a running container does not establish
+them. See [environments](../../docs/process/environments.md) and the
+[operations runbook](../../docs/runbooks/backend-testing.md). Live AI, TTS, Redis and CDN remain
+disabled or deferred.
 
 ### The endpoints that exist
 

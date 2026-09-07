@@ -1,93 +1,85 @@
 # Shared provider adapters and integration verification
 
-- **Requirement IDs:** `F-01`…`F-04`, `F-07`, `AS-01`…`AS-06`, `AI-01`…`AI-05`, `P3E-*`
-- **Milestone:** M2/M3, phased beta
-- **Status:** 🟡 Anthropic transport is implemented and the plan-85 contract handoff is merged.
-  Shared provider controls and remaining vendor adapters are to do; each runtime integration needs
-  its owning feature. Q-15, Q-08/Q-12 and Q-18/Q-20 gate their respective production uses, not all
-  adapter work.
-- **Depends on:** 85 completed; 66 backend seams; 61/67/71/73/74/76/82 for the relevant provider
-  slice.
-- **Reviewed:** 2026-09-07 against merged baseline `2d9e8c3`.
+- **Requirement IDs:** `F-01`–`F-04`, `F-07`, `AS-01`–`AS-06`, `AI-01`–`AI-05`, `P3E-*`
+- **Milestone:** M2/M3, phased testing
+- **Status:** 🟡 Tested Anthropic transport and plan-85 contracts are merged. Common provider
+  controls, remaining adapters and runtime wiring remain; each needs its owning feature slice and
+  applicable product decision.
+- **Depends on:** 85 completed; 66 backend seams; owning feature slices in 61/65/67/71/74/76/82; 88
+  supplies testing infrastructure and 73 owns production operations.
+- **Reviewed:** 2026-09-07 against merged contracts/transport in `2d9e8c3` and the agreed plan 88.
 
-## Verified starting point and superseded restrictions
+## Current evidence
 
-Merged commit `2d9e8c3` contains plan 85's schemas, OpenAPI, migration guide and integration
-inventory together with `apps/api/src/integrations/anthropic/messages.ts`. The transport provides
-text-only structured requests, mandatory result parsing, bounded bytes/deadlines, reported usage,
-sanitized failures and no automatic retries/redirects. Its deterministic/loopback tests are present;
-`app.module.ts` still registers only StubSceneProvider.
+`apps/api/src/integrations/anthropic/messages.ts` implements text-only structured requests,
+mandatory result parsing, bounded bytes/deadlines, reported usage and sanitized failures without
+automatic retries or redirects. Its deterministic/loopback tests exist. Nest still registers only
+`StubSceneProvider`; the transport is not a live AI feature.
 
-The earlier isolated-worktree restriction and “wait until plan 85 merges” instructions were specific
-to the pre-merge parallel tasks. They are superseded by this review. Use normal repository branches
-and coherent requirement-tagged commits; no hardcoded external worktree or defunct task is a gate.
-Keep test databases, ports and vendor resources isolated from other work.
+The former fixed-worktree restriction and wait-for-plan-85 instructions applied to work before the
+merge and are removed. Use normal repository branches, isolated test resources and shared contracts;
+no copied schemas, permanent external worktree or alternate API type system is required.
 
 ## Ownership
 
-This plan owns vendor transports, common provider execution controls and adapter-level verification.
-It does not reimplement feature plans:
+| Owner   | Responsibility                                                                          |
+| ------- | --------------------------------------------------------------------------------------- |
+| 66      | Runtime validation, Postgres repositories, principal-ready cursors/HLC, exact API image |
+| 67 / 68 | Authentication and account lifecycle / mobile sync and convergence                      |
+| 61      | Content publication, asset identity and client update behavior                          |
+| 86      | Vendor transports, common execution controls and adapter verification                   |
+| 76 / 82 | AI feature prompts, semantics, evaluations and bundled fallback coordinators            |
+| 71 / 73 | Consent/telemetry behavior / production delivery and diagnostics                        |
+| 74      | Approved purchases, entitlements and offline policy                                     |
+| 88      | Testing EC2, local Postgres, private S3, IAM, deployment, monitoring and recovery       |
 
-| Owner        | Product/runtime integration                                                             |
-| ------------ | --------------------------------------------------------------------------------------- |
-| 66           | Nest validation, Postgres, tenant cursors, server HLC, HTTP foundation, exact API image |
-| 67 / 68      | Identity/account lifecycle / device sync and convergence                                |
-| 61 / 62 / 63 | Catalog publication / native playback / on-device recognition                           |
-| 71 / 73      | Consent/events/flags / deployment, diagnostics, recovery and SLOs                       |
-| 74           | Approved purchases and offline entitlement policy                                       |
-| 76 / 82      | Roleplay / chat schemas, prompts, safety, evals and bundled coordinators                |
+Consume plan 85's current/target contracts according to the migration guide. Drafts remain gated. A
+missing interface requires a shared-contract change before dependent runtime work. Preserve
+language/course identity in asset selection, requests and cache keys.
 
-Consume current/target schemas from completed 85. Drafts stay gated. Missing contract changes land
-as explicit reviewed contract changes before runtime consumers, never duplicate provider-local API
-types. Target/native language identity must flow through cache keys, asset selection and provider
-requests; unsupported pairs get the owning feature's honest fallback.
+## Infrastructure and provider choices
+
+- Testing hosting and storage are selected: AWS Frankfurt, one EC2 instance, local PostgreSQL and
+  private S3 under plan 88. Remove Render, R2, managed cache and CDN from testing prerequisites.
+- Provide an AWS S3 adapter through the standard temporary-credential chain. Plan 61 owns immutable
+  asset keys and authorized download behavior; neither public buckets nor a static private-bucket
+  URL can substitute for it.
+- Identity verification/email transports support plan 67's approved providers. Sender setup,
+  verification, delivery failures and external credentials remain implementation requirements.
+- TTS remains disabled in testing. Q-15 voice/licensing/quality evidence gates production rendering;
+  no voice or vendor is selected merely by mentioning an adapter candidate.
+- AI remains stubbed until the owning feature's identity, budget, safety, retention and fallback
+  gates pass. The merged Anthropic transport is an input to that work.
+- Billing awaits Q-08/Q-12; diagnostics vendor selection must satisfy privacy/region constraints.
+  CloudWatch/SNS host operations from plan 88 do not require a mobile analytics SDK.
+- Redis, queues and workers are deferred until an implemented consumer and revised budget justify
+  them. Do not provision idle services for transport tests.
 
 ## Remaining work
 
-1. [ ] Review the delivered inventory/migration guide per integration slice and select its stable
-       request/result parser. Preserve current HTTP compatibility until the owning migration lands.
-2. [ ] Supply shared server-side execution controls: credential/config validation, deadlines,
-       concurrency, atomic spend reservation/reconciliation, rate limits, circuit breaking and
-       redacted metadata. Account for ambiguous charges on timeouts; do not retry merely because a
-       result is absent. Plan 67 supplies principals; 76/82 supply semantic safety and fallback
-       decisions.
-3. [ ] Add approved identity verification and email transports for 67, including token/signature
-       validation, sender/bounce lifecycle and deterministic failure tests. Account state stays
-       in 67.
-4. [ ] Add catalog storage/CDN and licensed TTS adapters for 61 after the relevant decisions.
-       Require immutable hashes, target/voice/version identity and scoped asset access. Q-15
-       approves production rendering; local architecture and test fixtures can proceed without
-       vendor credentials.
-5. [ ] Integrate Anthropic through 76/82 only after their parser, identity, budget, retention,
-       evaluation and bundled fallback contracts pass. Add guarded text-only enrichment/translation
-       transport as requested by 61/65; keep live chat disabled while Q-18/Q-20 are open.
-6. [ ] Add telemetry/crash transports for 71/73 with pre-egress allowlists and approved regional
-       storage; disable free text, transcripts, recordings, replay and screenshots by default.
-7. [ ] Add the selected billing/webhook verification adapter only after Q-08/Q-12; 74 owns products,
-       reconciliation and offline grace. Supply infrastructure/provider health checks and bounded
-       staging smoke evidence to 73, which owns provisioning and promotion.
-
-## Vendor decision inputs
-
-For the shared testing environment, [plan 88](88-low-cost-backend-infrastructure.md) is the approved
-owner and selects AWS EC2/PostgreSQL/private S3 in Frankfurt. It supersedes the earlier Render/R2
-testing recommendation. Consume its infrastructure outputs; 61/86 still own content adapters and
-authenticated URL issuance. Production vendor choices remain separate.
-
-The earlier plan proposed Render (API/Postgres/jobs), Cloudflare R2/CDN, Apple/Google verification,
-Amazon SES, Polly, Anthropic, RevenueCat and Sentry EU/OTel. These remain research candidates, not
-provisioned infrastructure or approved pricing/retention/voice choices. Re-verify official support,
-regions, cost, language/voice coverage and data terms when choosing a slice. There is no new vendor
-selection or spending authorization in this documentation refresh. Local development stays stubbed.
+1. [ ] Add common credential/configuration validation, deadlines, concurrency limits, atomic spend
+       reservation/reconciliation, rate limits, circuit breaking and redacted metadata. Account for
+       ambiguous provider charges on timeout; do not retry solely because a result is absent.
+2. [ ] Supply plan-67 identity verification and email adapters with deterministic signature,
+       delivery and failure tests. Keep account state and token issuance in 67.
+3. [ ] Supply plan-61 S3 upload/download and asset-integrity adapters with scoped permissions and
+       expiry handling. Use local fixtures first; verify against private testing S3 when available.
+4. [ ] Wire Anthropic only through plans 76/82 after their semantics, evaluations, identity, budget
+       and fallback checks pass. Keep live chat disabled while Q-18/Q-20 remain open. Supply guarded
+       text-only enrichment and translation transports when requested by plans 61/65.
+5. [ ] Add licensed TTS, billing and privacy-safe diagnostics adapters only as their feature and
+       decision gates pass; no recorded learner audio or voice-clone transport.
+6. [ ] Cover malformed output, oversized/stalled bodies, cancellation, credential failures,
+       ambiguous spend, replay and log redaction. Add bounded paid smoke tests only when explicitly
+       enabled, separate from ordinary CI and the $25–35 infrastructure allowance.
 
 ## Acceptance and delivery
 
-- Adapter tests cover malformed output, stalled/oversized bodies, cancellation, budget races,
-  ambiguous spend, replay/order and redaction, using isolated local resources.
-- Each registered integration passes the owning feature's real database/device/fallback tests;
-  transport tests alone cannot establish language quality, native correctness or deployment.
-- No audio/image-upload, cloud ASR, voice cloning, private-thread sync or learner-text telemetry
-  path is introduced. PCM remains native; secrets remain server-side.
-- Paid provider checks are bounded staging smoke tests, separate from ordinary CI.
-- Deliver one coherent adapter/control slice per commit/PR with `pnpm check` and applicable browser,
-  contract, integration and device checks. Record actual runtime registration in the inventory.
+Every registered integration passes its owning feature's tests. Transport tests cannot establish
+native speech quality, tenant isolation, durable device sync or production readiness. No
+audio/image-upload, cloud ASR, voice cloning, private-thread sync or learner-text telemetry path is
+introduced. Native recordings, captured text and private chat threads retain their existing privacy
+boundaries.
+
+Deliver coherent requirement-tagged commits with `pnpm check` and applicable browser, integration or
+device tests. Update runtime registration and inventory only after the implemented path passes.

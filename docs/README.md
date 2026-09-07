@@ -61,7 +61,7 @@ that statement and the owning plan in the same change.
 | [scheduling.md](architecture/scheduling.md)                       | FSRS, queue ranking, automaticity, the roguelike ladder, drop scheduling            |
 | [data-model.md](architecture/data-model.md)                       | Entities, ERD, SQLite DDL, Postgres DDL, migrations                                 |
 | [sync-protocol.md](architecture/sync-protocol.md)                 | Delta sync, hybrid logical clocks, per-field LWW, conflict rules, wire format       |
-| [backend.md](architecture/backend.md)                             | NestJS module map, infrastructure, deployment topology                              |
+| [backend.md](architecture/backend.md)                             | Implemented NestJS seams, EC2/Postgres/S3 testing topology and feature boundaries   |
 | [api.md](architecture/api.md)                                     | The HTTP contract — every endpoint, request, response, and error                    |
 | [ai-services.md](architecture/ai-services.md)                     | Claude roleplay, coach notes, phrase generation; prompts, caching, guardrails, cost |
 | [offline.md](architecture/offline.md)                             | What works with no network, prefetch policy, survival mode                          |
@@ -70,7 +70,7 @@ that statement and the owning plan in the same change.
 | [threat-model.md](architecture/threat-model.md)                   | Assets, actors, attack surface, mitigations, abuse of the AI endpoints              |
 | [performance.md](architecture/performance.md)                     | Budgets per screen and per subsystem, with how each is measured                     |
 | [accessibility.md](architecture/accessibility.md)                 | WCAG target, screen readers, motion, contrast, the audio-first advantage            |
-| [observability.md](architecture/observability.md)                 | Logs, traces, metrics, crash reporting, learning-quality telemetry                  |
+| [observability.md](architecture/observability.md)                 | Testing health/log baseline; future client, sync and learning telemetry             |
 | [adr/](architecture/adr/)                                         | 14 architecture decision records                                                    |
 
 The backend contract package also has an
@@ -91,23 +91,24 @@ specifications.
 
 ## Process
 
-| Doc                                                    | Contents                                                                |
-| ------------------------------------------------------ | ----------------------------------------------------------------------- |
-| [ways-of-working.md](process/ways-of-working.md)       | Cadence, roles, planning, how decisions get made and recorded           |
-| [onboarding.md](process/onboarding.md)                 | Day one: tools, clone, bootstrap, run on a device, first PR             |
-| [git-workflow.md](process/git-workflow.md)             | Trunk-based, branch naming, Conventional Commits, stacking, hotfixes    |
-| [code-review.md](process/code-review.md)               | What reviewers look for, SLAs, the review checklist                     |
-| [definition-of-done.md](process/definition-of-done.md) | Ready / done gates, including the design-fidelity gate                  |
-| [testing-strategy.md](process/testing-strategy.md)     | The pyramid, what we test where, golden tests for the scheduler and DSP |
-| [ci-cd.md](process/ci-cd.md)                           | Pipelines, EAS builds, OTA update policy, store submission              |
-| [release-versioning.md](process/release-versioning.md) | SemVer, build numbers, release trains, staged rollout, rollback         |
-| [environments.md](process/environments.md)             | local / dev / staging / prod, secrets, seed data                        |
-| [qa-device-matrix.md](process/qa-device-matrix.md)     | Devices, OS floor, the manual pass, audio-specific QA                   |
-| [content-authoring.md](process/content-authoring.md)   | How a phrase gets written, recorded, reviewed, and shipped              |
-| [localization.md](process/localization.md)             | UI localization, and the separate problem of new target languages       |
-| [experimentation.md](process/experimentation.md)       | Flags, A/B on pedagogy, ethics of experimenting on learning             |
-| [incident-response.md](process/incident-response.md)   | Severities, on-call, comms, postmortems                                 |
-| [glossary.md](process/glossary.md)                     | Every term the blueprint invents, defined once                          |
+| Doc                                                    | Contents                                                                           |
+| ------------------------------------------------------ | ---------------------------------------------------------------------------------- |
+| [ways-of-working.md](process/ways-of-working.md)       | Cadence, roles, planning, how decisions get made and recorded                      |
+| [onboarding.md](process/onboarding.md)                 | Day one: tools, clone, bootstrap, run on a device, first PR                        |
+| [git-workflow.md](process/git-workflow.md)             | Trunk-based, branch naming, Conventional Commits, stacking, hotfixes               |
+| [code-review.md](process/code-review.md)               | What reviewers look for, SLAs, the review checklist                                |
+| [definition-of-done.md](process/definition-of-done.md) | Ready / done gates, including the design-fidelity gate                             |
+| [testing-strategy.md](process/testing-strategy.md)     | The pyramid, what we test where, golden tests for the scheduler and DSP            |
+| [ci-cd.md](process/ci-cd.md)                           | Pipelines, EAS builds, OTA update policy, store submission                         |
+| [release-versioning.md](process/release-versioning.md) | SemVer, build numbers, release trains, staged rollout, rollback                    |
+| [environments.md](process/environments.md)             | Local and selected AWS testing environment, runtime configuration and access gates |
+| [backend-testing.md](runbooks/backend-testing.md)      | Planned EC2 deployment, backups, restore, alerts, maintenance and teardown         |
+| [qa-device-matrix.md](process/qa-device-matrix.md)     | Devices, OS floor, the manual pass, audio-specific QA                              |
+| [content-authoring.md](process/content-authoring.md)   | How a phrase gets written, recorded, reviewed, and shipped                         |
+| [localization.md](process/localization.md)             | UI localization, and the separate problem of new target languages                  |
+| [experimentation.md](process/experimentation.md)       | Flags, A/B on pedagogy, ethics of experimenting on learning                        |
+| [incident-response.md](process/incident-response.md)   | Severities, on-call, comms, postmortems                                            |
+| [glossary.md](process/glossary.md)                     | Every term the blueprint invents, defined once                                     |
 
 ## Decisions
 
