@@ -25,8 +25,8 @@ export ADMIN_CIDR=YOUR_PUBLIC_IPV4/32
 The script prints the instance ID and public DNS host. Configure `IdentityFile` for that host in
 `~/.ssh/config`. Verify the instance SSH host key through a trusted AWS console channel, then add it
 to known_hosts with an interactive SSH connection. Deployment requires strict host-key checking. The
-script waits for cloud-init; CloudFormation completion alone does not prove Docker is ready. No live
-deployment has been verified by this change.
+script waits for cloud-init; CloudFormation completion alone does not prove Docker is ready. Live
+deployment and manual rollback were verified on 2026-09-07; see the instance details below.
 
 ## Deploy and access
 
@@ -67,3 +67,24 @@ region. This destroys the instance and its disk. No database or backup is provis
 
 The template follows AWS's
 [instance metadata options](https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-properties-ec2-instance-metadataoptions.html).
+
+## Verified development instance — 2026-09-07
+
+- AWS profile: `loro` (SSO); region: `eu-central-1`.
+- CloudFormation stack: `loro-api-dev`; instance: `i-0ce58e049c8fe0f7b`.
+- Host: `ec2-3-70-202-73.eu-central-1.compute.amazonaws.com`.
+- EC2 key pair: `loro-ec2-dev`; private key stays locally at `~/.ssh/loro-ec2-dev`.
+- Host-specific SSH configuration and a verified known_hosts entry are installed locally.
+- Image: `loro-api:67741e690fce-20260907131530`.
+
+```bash
+ssh -N -L 127.0.0.1:13000:127.0.0.1:3000 ec2-user@ec2-3-70-202-73.eu-central-1.compute.amazonaws.com
+# Another terminal:
+curl --fail http://127.0.0.1:13000/v1/health/ready
+```
+
+The public IP/DNS can change after stop/start; retrieve current stack outputs before connecting. SSH
+ingress is restricted to the provisioning machine's public IPv4 /32. If it changes, update the
+stack's AdminCidr using the provisioning script with the same region/network/key parameters. The key
+pair was imported separately and is not deleted with the stack. The verification tunnel was closed
+after testing; use the command above to open one when needed.

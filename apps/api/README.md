@@ -191,4 +191,4 @@ Spanish.
 
 The [EC2 runbook](../../docs/process/ec2-deployment.md) provisions a restricted host and deploys this
 image with readiness checks and rollback. The API remains in memory and is accessed over an SSH
-tunnel. Infrastructure code is implemented; a live deployment has not yet been verified.
+tunnel. Live EC2 deployment, readiness and manual rollback were verified on 2026-09-07 in eu-central-1.
