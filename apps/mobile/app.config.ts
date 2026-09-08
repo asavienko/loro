@@ -104,6 +104,7 @@ export default (): ExpoConfig => ({
     // that item lets Android use its default icon without inventing artwork.
     (config) =>
       withAndroidStyles(config, (mod) => {
+        if (localApk) return mod
         for (const style of mod.modResults.resources.style ?? []) {
           if (style.$.name === 'Theme.App.SplashScreen') {
             style.item = style.item?.filter(
