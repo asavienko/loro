@@ -4,9 +4,8 @@
  * One narrow interface so the same schema, migrations, repositories, and outbox run
  * against every SQLite the project needs:
  *
- *   • `op-sqlite`   — on device. Lands with the dev client
- *                     (plans/09-native-toolchain-and-dev-client.md); it is a custom
- *                     native module and cannot be built before then.
+ *   • `op-sqlite`   — the native app's custom SQLite module.
+ *   • `sql.js`      — browser SQLite with atomic durable snapshots.
  *   • `node:sqlite` — in tests. Real SQLite, real SQL, no native build
  *                     (apps/mobile/src/data/driver.node.ts).
  *

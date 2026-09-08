@@ -4,7 +4,6 @@ it('formats bundled plural messages when the device starts without Intl.PluralRu
   const original = Object.getOwnPropertyDescriptor(Intl, 'PluralRules')!
   Reflect.deleteProperty(Intl, 'PluralRules')
   try {
-    await import('./polyfills.native')
     const { message, setCopyLanguages } = await import('./index')
     expect(typeof Intl.PluralRules).toBe('function')
     setCopyLanguages('en', 'es-ES')

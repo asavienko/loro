@@ -1,4 +1,4 @@
-import { mockAccountService, openAccount, requestCode, finishSignIn } from './accountFlow'
+import { reachAccount } from './accountFlow'
 import { localeText, onboardPair } from './languageFlow'
 import { openStorageFailure, openStorageLoading } from './persistenceFlow'
 /**
@@ -66,34 +66,33 @@ export const STATES: AppState[] = [
     spec: 'F-02 non-destructive migration recovery',
     reach: openStorageFailure,
   },
-  ...(['email', 'code', 'connected', 'invalid-code', 'sync-unavailable'] as const).map(
-    (step): AppState => ({
-      name: `account · ${step}`,
-      route: '/account',
-      spec: 'F-01/F-04 optional sign-in and sync',
-      reach: async (page) => {
-        await mockAccountService(
-          page,
-          step === 'invalid-code' || step === 'sync-unavailable' ? step : 'success',
-        )
-        await openAccount(page)
-        if (step !== 'email') await requestCode(page)
-        if (step === 'connected' || step === 'sync-unavailable') await finishSignIn(page)
-        if (step === 'invalid-code') {
-          await page.getByRole('textbox', { name: 'Six-digit code' }).fill('000000')
-          await page.getByRole('button', { name: 'Sign in', exact: true }).click()
-          await expect(
-            page.getByText('That code could not be verified. Check it or request another code.'),
-          ).toBeVisible()
-        }
-        if (step === 'sync-unavailable') {
-          await expect(
-            page.getByText('Your progress is saved here. Sync will retry when you are connected.'),
-          ).toBeVisible()
-        }
-      },
-    }),
-  ),
+  ...(
+    [
+      'discoveryError',
+      'unavailable',
+      'ready',
+      'busy',
+      'error',
+      'cancelled',
+      'signedIn',
+      'localSignOut',
+      'backendUnavailable',
+      'backendChecking',
+      'email',
+      'code',
+      'connected',
+      'invalid-code',
+      'sync-unavailable',
+      'signed-out',
+    ] as const
+  ).map((scenario): AppState => ({
+    name: `account · ${scenario}`,
+    route: '/account',
+    spec: 'F-01/F-04 optional sign-in and sync',
+    reach: async (page) => {
+      await reachAccount(page, scenario)
+    },
+  })),
   ...(['initial', 'partial', 'revealed'] as const).map((step): AppState => ({
     name: `speak · ${step} reveal`,
     route: '/practice/speak',

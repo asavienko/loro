@@ -5,6 +5,7 @@
  */
 import initSqlJs, { type Database, type SqlJsStatic } from 'sql.js/dist/sql-asm.js'
 import type { SqlDriver, SqlRow, SqlValue } from '@loro/core'
+import { synchronousResult } from '@loro/core'
 
 export const WEB_DATABASE_KEY = 'loro.sqlite.v1'
 export interface BrowserStorage {
@@ -88,7 +89,7 @@ export function createBrowserSqlite(SQL: SqlJsStatic, storage: BrowserStorage): 
       depth++
       let committed = false
       try {
-        const result = fn()
+        const result = synchronousResult(fn())
         db.exec(outer ? 'COMMIT' : `RELEASE SAVEPOINT ${savepoint}`)
         committed = true
         if (outer) {

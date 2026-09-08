@@ -50,7 +50,8 @@ pub enum Difficulty {
 }
 
 /// "What's tricky about it" — the *nature* of the difficulty, never its magnitude.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize, uniffi::Enum)]
+#[serde(rename_all = "lowercase")]
 pub enum Tag {
     /// The sounds are the problem.
     Pron,

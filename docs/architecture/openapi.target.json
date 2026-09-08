@@ -6092,9 +6092,16 @@
                 "pattern": "^[a-zA-Z0-9_-]+$"
               },
               "created_at": {
-                "type": "integer",
-                "minimum": 0,
-                "maximum": 9007199254740991
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
               }
             },
             "required": [
@@ -6372,6 +6379,37 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 16384
+          },
+          "device": {
+            "type": "object",
+            "properties": {
+              "installation_id": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+              },
+              "platform": {
+                "type": "string",
+                "enum": [
+                  "ios",
+                  "android",
+                  "web"
+                ]
+              },
+              "app_version": {
+                "type": "string",
+                "maxLength": 100
+              }
+            },
+            "required": [
+              "installation_id",
+              "platform",
+              "app_version"
+            ],
+            "additionalProperties": false
+          },
+          "anon_id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
           }
         },
         "required": [
@@ -7131,6 +7169,27 @@
                                     "learning",
                                     "review",
                                     "relearning"
+                                  ]
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "srsAlgorithm": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "type": "string",
+                                  "enum": [
+                                    "fsrs-6-default-c8ca282-loro-v1",
+                                    "fsrs-6/py-fsrs-6.3.2/default-90-no-steps"
                                   ]
                                 },
                                 "hlc": {
@@ -8227,6 +8286,117 @@
                                   "type": "integer",
                                   "minimum": 0,
                                   "maximum": 9007199254740991
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "algorithm": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "type": "string",
+                                  "enum": [
+                                    "fsrs-6-default-c8ca282-loro-v1",
+                                    "fsrs-6/py-fsrs-6.3.2/default-90-no-steps"
+                                  ]
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "targetLocale": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "type": "string",
+                                  "enum": [
+                                    "es-ES",
+                                    "bg-BG",
+                                    "ru-RU"
+                                  ]
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "lastReview": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "anyOf": [
+                                    {
+                                      "type": "integer",
+                                      "minimum": 0,
+                                      "maximum": 9007199254740991
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "lapses": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "state": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "type": "string",
+                                  "enum": [
+                                    "new",
+                                    "learning",
+                                    "review",
+                                    "relearning"
+                                  ]
                                 },
                                 "hlc": {
                                   "type": "string",
@@ -9706,6 +9876,27 @@
                               ],
                               "additionalProperties": false
                             },
+                            "srsAlgorithm": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "type": "string",
+                                  "enum": [
+                                    "fsrs-6-default-c8ca282-loro-v1",
+                                    "fsrs-6/py-fsrs-6.3.2/default-90-no-steps"
+                                  ]
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
                             "repsToday": {
                               "type": "object",
                               "properties": {
@@ -10744,6 +10935,117 @@
                                   "type": "integer",
                                   "minimum": 0,
                                   "maximum": 9007199254740991
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "algorithm": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "type": "string",
+                                  "enum": [
+                                    "fsrs-6-default-c8ca282-loro-v1",
+                                    "fsrs-6/py-fsrs-6.3.2/default-90-no-steps"
+                                  ]
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "targetLocale": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "type": "string",
+                                  "enum": [
+                                    "es-ES",
+                                    "bg-BG",
+                                    "ru-RU"
+                                  ]
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "lastReview": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "anyOf": [
+                                    {
+                                      "type": "integer",
+                                      "minimum": 0,
+                                      "maximum": 9007199254740991
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "lapses": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "state": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "type": "string",
+                                  "enum": [
+                                    "new",
+                                    "learning",
+                                    "review",
+                                    "relearning"
+                                  ]
                                 },
                                 "hlc": {
                                   "type": "string",
@@ -22308,9 +22610,16 @@
             "pattern": "^[a-zA-Z0-9_-]+$"
           },
           "created_at": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 9007199254740991
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "deletion_scheduled_for": {
             "anyOf": [
@@ -23041,6 +23350,27 @@
                                     "learning",
                                     "review",
                                     "relearning"
+                                  ]
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "srsAlgorithm": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "type": "string",
+                                  "enum": [
+                                    "fsrs-6-default-c8ca282-loro-v1",
+                                    "fsrs-6/py-fsrs-6.3.2/default-90-no-steps"
                                   ]
                                 },
                                 "hlc": {
@@ -24137,6 +24467,117 @@
                                   "type": "integer",
                                   "minimum": 0,
                                   "maximum": 9007199254740991
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "algorithm": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "type": "string",
+                                  "enum": [
+                                    "fsrs-6-default-c8ca282-loro-v1",
+                                    "fsrs-6/py-fsrs-6.3.2/default-90-no-steps"
+                                  ]
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "targetLocale": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "type": "string",
+                                  "enum": [
+                                    "es-ES",
+                                    "bg-BG",
+                                    "ru-RU"
+                                  ]
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "lastReview": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "anyOf": [
+                                    {
+                                      "type": "integer",
+                                      "minimum": 0,
+                                      "maximum": 9007199254740991
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "lapses": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "state": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "type": "string",
+                                  "enum": [
+                                    "new",
+                                    "learning",
+                                    "review",
+                                    "relearning"
+                                  ]
                                 },
                                 "hlc": {
                                   "type": "string",
@@ -34178,6 +34619,27 @@
                               ],
                               "additionalProperties": false
                             },
+                            "srsAlgorithm": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "type": "string",
+                                  "enum": [
+                                    "fsrs-6-default-c8ca282-loro-v1",
+                                    "fsrs-6/py-fsrs-6.3.2/default-90-no-steps"
+                                  ]
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
                             "repsToday": {
                               "type": "object",
                               "properties": {
@@ -35216,6 +35678,117 @@
                                   "type": "integer",
                                   "minimum": 0,
                                   "maximum": 9007199254740991
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "algorithm": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "type": "string",
+                                  "enum": [
+                                    "fsrs-6-default-c8ca282-loro-v1",
+                                    "fsrs-6/py-fsrs-6.3.2/default-90-no-steps"
+                                  ]
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "targetLocale": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "type": "string",
+                                  "enum": [
+                                    "es-ES",
+                                    "bg-BG",
+                                    "ru-RU"
+                                  ]
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "lastReview": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "anyOf": [
+                                    {
+                                      "type": "integer",
+                                      "minimum": 0,
+                                      "maximum": 9007199254740991
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "lapses": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "state": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "type": "string",
+                                  "enum": [
+                                    "new",
+                                    "learning",
+                                    "review",
+                                    "relearning"
+                                  ]
                                 },
                                 "hlc": {
                                   "type": "string",

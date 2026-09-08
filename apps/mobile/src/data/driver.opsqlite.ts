@@ -1,6 +1,7 @@
 /** Native SQLite adapter. A native development build is required; no memory fallback on device. */
 import { open } from '@op-engineering/op-sqlite'
 import type { SqlDriver, SqlRow } from '@loro/core'
+import { synchronousResult } from '@loro/core'
 
 export function openDeviceSqlite(): SqlDriver {
   const db = open({ name: 'loro.sqlite' })
@@ -26,7 +27,7 @@ export function openDeviceSqlite(): SqlDriver {
       db.executeSync(outer ? 'BEGIN IMMEDIATE' : `SAVEPOINT ${savepoint}`)
       depth++
       try {
-        const result = fn()
+        const result = synchronousResult(fn())
         db.executeSync(outer ? 'COMMIT' : `RELEASE SAVEPOINT ${savepoint}`)
         return result
       } catch (error) {

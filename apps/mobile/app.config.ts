@@ -14,9 +14,23 @@ import type { ExpoConfig } from 'expo/config'
  */
 
 const VERSION = '0.1.0'
+const localApk = process.env['LORO_LOCAL_APK'] === '1'
+const splashPlugins: NonNullable<ExpoConfig['plugins']> = localApk
+  ? [
+      [
+        'expo-splash-screen',
+        {
+          android: {
+            drawable: { icon: './assets/preview/splash.xml' },
+            backgroundColor: '#f6f2ea',
+          },
+        },
+      ],
+    ]
+  : ['./plugins/with-default-splash-icon.cjs']
 
 export default (): ExpoConfig => ({
-  name: 'Loro',
+  name: localApk ? 'Loro Preview' : 'Loro',
   slug: 'loro',
   version: VERSION,
   orientation: 'default',
@@ -32,7 +46,8 @@ export default (): ExpoConfig => ({
   updates: {
     // OTA is for FIXES, not features. Staged 5% → 25% → 100%.
     // See docs/process/ci-cd.md#ota-updates
-    url: 'https://u.expo.dev/PLACEHOLDER',
+    enabled: !localApk,
+    url: localApk ? undefined : 'https://u.expo.dev/PLACEHOLDER',
     fallbackToCacheTimeout: 0,
   },
   // An OTA cannot target a binary whose native surface differs.
@@ -63,11 +78,13 @@ export default (): ExpoConfig => ({
   },
 
   android: {
-    package: 'app.loro.android',
+    package: localApk ? 'app.loro.android.preview' : 'app.loro.android',
     versionCode: 1,
-    adaptiveIcon: {
-      backgroundColor: '#f6f2ea',
-    },
+    adaptiveIcon: localApk
+      ? undefined
+      : {
+          backgroundColor: '#f6f2ea',
+        },
     permissions: [
       'android.permission.RECORD_AUDIO',
       'android.permission.CAMERA',
@@ -87,10 +104,11 @@ export default (): ExpoConfig => ({
 
   // Local Expo modules in ./modules are discovered by Expo autolinking during prebuild.
   plugins: [
+    ...splashPlugins,
     'expo-router',
+    'expo-web-browser',
     'expo-secure-store',
     ['expo-localization', { supportedLocales: ['en', 'bg', 'ru'] }],
-    './plugins/with-default-splash-icon.cjs',
   ],
 
   experiments: {
@@ -98,6 +116,6 @@ export default (): ExpoConfig => ({
   },
 
   extra: {
-    eas: { projectId: 'PLACEHOLDER' },
+    eas: localApk ? undefined : { projectId: 'PLACEHOLDER' },
   },
 })

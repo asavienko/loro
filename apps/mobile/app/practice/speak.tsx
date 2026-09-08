@@ -8,6 +8,7 @@ import { useLocale } from '../../src/lib/i18n'
 import { coreAvailable } from '../../src/lib/core'
 import { audioSpeech, useAudioSpeech } from '../../src/lib/audioSpeech'
 import { deviceClock } from '../../src/lib/clock'
+import { newId } from '../../src/lib/ids'
 import { engineContext, toView, useApp, type PhraseView } from '../../src/store'
 import { EmptyState } from '../../src/ui/components'
 import { AudioControls } from '../../src/ui/components/AudioControls'
@@ -72,6 +73,7 @@ function SpeakingPhrase({
   const [done, setDone] = useState(false)
   const [saveError, setSaveError] = useState(false)
   const [recognitionFailed, setRecognitionFailed] = useState(false)
+  const [attemptId] = useState(newId)
   const completeRef = useRef(false)
   const hintsRef = useRef(0)
   const revealedRef = useRef(0)
@@ -98,6 +100,11 @@ function SpeakingPhrase({
     if (event.transcript.length === 0) return
     setHeard(event.transcript)
     try {
+      const origin = useApp.getState()
+      const expectedPhrase = (
+        origin.targetLocale === locale ? origin.phrases : origin.courses[locale]?.phrases
+      )?.find((item) => item.id === phrase.id)
+      if (!expectedPhrase) return
       const context = engineContext()
       const matched = context.core.matchTokens(
         event.transcript.split(/\s+/),
@@ -108,6 +115,8 @@ function SpeakingPhrase({
       setRevealed(revealedRef.current)
       if (!matched.complete) return
       completeRef.current = true
+      const localDay = deviceClock.localDay()
+      const streakDay = deviceClock.streakDay()
       void audioSpeech.stopListening()
       const session: SessionHandle = {
         sessionId: event.id,
@@ -143,7 +152,13 @@ function SpeakingPhrase({
           context,
         )
         .then((delta) => {
-          applyDelta(delta)
+          applyDelta(delta, {
+            attemptId,
+            targetLocale: locale,
+            localDay,
+            streakDay,
+            expectedPhrase,
+          })
           setDone(true)
         })
         .catch(() => {
@@ -153,7 +168,7 @@ function SpeakingPhrase({
     } catch {
       setRecognitionFailed(true)
     }
-  }, [audio.speech, applyDelta, phrase.id, tokens])
+  }, [audio.speech, applyDelta, phrase.id, tokens, locale, attemptId])
 
   const revealWord = (): void => {
     if (completeRef.current) return

@@ -12,6 +12,565 @@
     }
   ],
   "paths": {
+    "/auth/providers": {
+      "get": {
+        "operationId": "oauthProviders",
+        "summary": "Available sign-in providers",
+        "description": "Configured Google/Apple OAuth verifies nonce and both app/provider PKCE where supported, then creates the same registered-device session used by email sign-in and account-scoped sync. All responses are no-store.",
+        "tags": [
+          "auth"
+        ],
+        "security": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Available sign-in providers",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/oauthProviders_200"
+                },
+                "examples": {
+                  "illustrative": {
+                    "value": {
+                      "providers": [
+                        "google",
+                        "apple"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-loro-auth-boundary": "none",
+        "x-loro-status": "implemented",
+        "x-loro-owner-plan": 89,
+        "x-loro-requirements": [
+          "F-01",
+          "F-02",
+          "F-07"
+        ]
+      }
+    },
+    "/auth/{provider}/start": {
+      "post": {
+        "operationId": "oauthStart",
+        "summary": "Start provider sign-in",
+        "description": "Configured Google/Apple OAuth verifies nonce and both app/provider PKCE where supported, then creates the same registered-device session used by email sign-in and account-scoped sync. All responses are no-store.",
+        "tags": [
+          "auth"
+        ],
+        "security": [],
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/oauthStart_path_provider"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Start provider sign-in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/oauthStart_200"
+                },
+                "examples": {
+                  "illustrative": {
+                    "value": {
+                      "authorization_url": "https://accounts.google.com/o/oauth2/v2/auth",
+                      "state": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/oauthStart_401"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/oauthStart_401"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/oauthStart_401"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/oauthStart_401"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/oauthStart_401"
+                }
+              }
+            }
+          }
+        },
+        "x-loro-auth-boundary": "none",
+        "x-loro-status": "implemented",
+        "x-loro-owner-plan": 89,
+        "x-loro-requirements": [
+          "F-01",
+          "F-02",
+          "F-07"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/oauthStart_request"
+              },
+              "examples": {
+                "illustrative": {
+                  "value": {
+                    "redirect_uri": "loro://account",
+                    "code_challenge": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/{provider}/callback": {
+      "get": {
+        "operationId": "oauthCallbackGet",
+        "summary": "Provider callback",
+        "description": "Google GET query or Apple application/x-www-form-urlencoded POST: state plus code or error. Consumes state once. Redirects only to the stored exact allowlisted URI. Never returns provider tokens.",
+        "tags": [
+          "auth"
+        ],
+        "security": [],
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/oauthStart_path_provider"
+            }
+          }
+        ],
+        "responses": {
+          "303": {
+            "description": "Redirect with one-use PKCE-bound ticket and state, or generic error.",
+            "headers": {
+              "Location": {
+                "schema": {
+                  "$ref": "#/components/schemas/oauthCallbackGet_303_Location"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/oauthStart_401"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/oauthStart_401"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/oauthStart_401"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/oauthStart_401"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/oauthStart_401"
+                }
+              }
+            }
+          }
+        },
+        "x-loro-auth-boundary": "none",
+        "x-loro-status": "implemented",
+        "x-loro-owner-plan": 89,
+        "x-loro-requirements": [
+          "F-01",
+          "F-02",
+          "F-07"
+        ]
+      },
+      "post": {
+        "operationId": "oauthCallbackPost",
+        "summary": "Provider callback",
+        "description": "Google GET query or Apple application/x-www-form-urlencoded POST: state plus code or error. Consumes state once. Redirects only to the stored exact allowlisted URI. Never returns provider tokens.",
+        "tags": [
+          "auth"
+        ],
+        "security": [],
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/oauthStart_path_provider"
+            }
+          }
+        ],
+        "responses": {
+          "303": {
+            "description": "Redirect with one-use PKCE-bound ticket and state, or generic error.",
+            "headers": {
+              "Location": {
+                "schema": {
+                  "$ref": "#/components/schemas/oauthCallbackPost_303_Location"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/oauthStart_401"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/oauthStart_401"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/oauthStart_401"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/oauthStart_401"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/oauthStart_401"
+                }
+              }
+            }
+          }
+        },
+        "x-loro-auth-boundary": "none",
+        "x-loro-status": "implemented",
+        "x-loro-owner-plan": 89,
+        "x-loro-requirements": [
+          "F-01",
+          "F-02",
+          "F-07"
+        ]
+      }
+    },
+    "/auth/exchange": {
+      "post": {
+        "operationId": "oauthExchange",
+        "summary": "Redeem app handoff",
+        "description": "Configured Google/Apple OAuth verifies nonce and both app/provider PKCE where supported, then creates the same registered-device session used by email sign-in and account-scoped sync. All responses are no-store.",
+        "tags": [
+          "auth"
+        ],
+        "security": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Redeem app handoff",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/oauthExchange_200"
+                },
+                "examples": {
+                  "illustrative": {
+                    "value": {
+                      "access_token": "illustrative-access-token",
+                      "refresh_token": "illustrative-refresh-token",
+                      "expires_in": 900,
+                      "user": {
+                        "id": "user_example",
+                        "created_at": 1721558400123
+                      },
+                      "device_id": "device_example",
+                      "claim": {
+                        "performed": false,
+                        "mode": null,
+                        "claim_id": "claim_example",
+                        "upload_required": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/oauthStart_401"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/oauthStart_401"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/oauthStart_401"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/oauthStart_401"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/oauthStart_401"
+                }
+              }
+            }
+          }
+        },
+        "x-loro-auth-boundary": "none",
+        "x-loro-status": "implemented",
+        "x-loro-owner-plan": 89,
+        "x-loro-requirements": [
+          "F-01",
+          "F-02",
+          "F-07"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/oauthExchange_request"
+              },
+              "examples": {
+                "illustrative": {
+                  "value": {
+                    "ticket": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    "code_verifier": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                    "device": {
+                      "installation_id": "0197a001-0000-7000-8000-000000000001",
+                      "platform": "ios",
+                      "app_version": "1.0.0+1"
+                    },
+                    "anon_id": "0197a001-0000-7000-8000-000000000001"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "operationId": "oauthMe",
+        "summary": "Read authenticated identity",
+        "description": "Configured Google/Apple OAuth verifies nonce and both app/provider PKCE where supported, then creates the same registered-device session used by email sign-in and account-scoped sync. All responses are no-store.",
+        "tags": [
+          "auth"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Read authenticated identity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/oauthMe_200"
+                },
+                "examples": {
+                  "illustrative": {
+                    "value": {
+                      "id": "user_example",
+                      "created_at": 1721558400123
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/oauthStart_401"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/oauthStart_401"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/oauthStart_401"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/oauthStart_401"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/oauthStart_401"
+                }
+              }
+            }
+          }
+        },
+        "x-loro-auth-boundary": "bearer",
+        "x-loro-status": "implemented",
+        "x-loro-owner-plan": 89,
+        "x-loro-requirements": [
+          "F-01",
+          "F-02",
+          "F-07"
+        ]
+      }
+    },
     "/health": {
       "get": {
         "operationId": "health",
@@ -162,7 +721,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -172,7 +731,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -182,7 +741,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -250,7 +809,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -260,7 +819,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -270,7 +829,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -337,7 +896,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -347,7 +906,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -357,7 +916,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -435,7 +994,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/authApple_200"
+                  "$ref": "#/components/schemas/oauthExchange_200"
                 },
                 "examples": {
                   "illustrative": {
@@ -472,7 +1031,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -482,7 +1041,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -492,7 +1051,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -502,7 +1061,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -512,7 +1071,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -522,7 +1081,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -532,7 +1091,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -542,7 +1101,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -597,7 +1156,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/authApple_200"
+                  "$ref": "#/components/schemas/oauthExchange_200"
                 },
                 "examples": {
                   "illustrative": {
@@ -634,7 +1193,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -644,7 +1203,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -654,7 +1213,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -664,7 +1223,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -674,7 +1233,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -684,7 +1243,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -694,7 +1253,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -704,7 +1263,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -783,7 +1342,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -793,7 +1352,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -803,7 +1362,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -813,7 +1372,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -823,7 +1382,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -833,7 +1392,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -843,7 +1402,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -853,7 +1412,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -902,7 +1461,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/authApple_200"
+                  "$ref": "#/components/schemas/oauthExchange_200"
                 },
                 "examples": {
                   "illustrative": {
@@ -939,7 +1498,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -949,7 +1508,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -959,7 +1518,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -969,7 +1528,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -979,7 +1538,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -989,7 +1548,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -999,7 +1558,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -1009,7 +1568,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -1053,7 +1612,7 @@
       "post": {
         "operationId": "authRefresh",
         "summary": "Rotate refresh token",
-        "description": "Rotate the refresh token transactionally. Reuse revokes the session family; clients refresh once, single-flight, then re-authenticate while retaining their outbox.",
+        "description": "Rotate the refresh token transactionally. Reuse revokes the session family. Legacy OAuth refresh credentials require paired device and anon_id registration for one-time migration, returning a SignInResponse and retaining the original account ID and remaining session lifetime; modern refresh returns tokens only.",
         "tags": [
           "auth"
         ],
@@ -1091,7 +1650,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -1101,7 +1660,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -1111,7 +1670,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -1121,7 +1680,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -1131,7 +1690,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -1141,7 +1700,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -1151,7 +1710,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -1161,7 +1720,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -1198,15 +1757,11 @@
       "post": {
         "operationId": "authLogout",
         "summary": "Revoke the current session",
-        "description": "Revoke the authenticated session without deleting local learner data. An optional device header must agree with the authenticated device.",
+        "description": "Revoke a session using its refresh credential in the body, or a bearer access token when the body is absent. Both modern and legacy refresh families are supported. This revocation-only endpoint never reads learner data; local progress is retained. An optional device header must agree with a bearer-authenticated device.",
         "tags": [
           "auth"
         ],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
+        "security": [],
         "parameters": [],
         "responses": {
           "204": {
@@ -1224,7 +1779,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -1234,7 +1789,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -1244,7 +1799,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -1254,7 +1809,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -1264,7 +1819,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -1274,7 +1829,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -1284,7 +1839,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -1294,20 +1849,37 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
           }
         },
-        "x-loro-auth-boundary": "bearer",
+        "x-loro-auth-boundary": "none",
         "x-loro-status": "implemented",
         "x-loro-owner-plan": 67,
         "x-loro-requirements": [
           "F-01",
           "F-02",
           "F-07"
-        ]
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/authRefresh_request"
+              },
+              "examples": {
+                "illustrative": {
+                  "value": {
+                    "refresh_token": "illustrative-refresh-token"
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/auth/claim": {
@@ -1374,7 +1946,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -1384,7 +1956,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -1394,7 +1966,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -1404,7 +1976,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -1414,7 +1986,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -1424,7 +1996,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -1434,7 +2006,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -1444,7 +2016,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -1527,7 +2099,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -1537,7 +2109,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -1547,7 +2119,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -1557,7 +2129,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -1567,7 +2139,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -1577,7 +2149,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -1587,7 +2159,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -1597,7 +2169,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -1671,7 +2243,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -1681,7 +2253,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -1691,7 +2263,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -1701,7 +2273,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -1711,7 +2283,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -1721,7 +2293,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -1731,7 +2303,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -1741,7 +2313,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -1832,7 +2404,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -1842,7 +2414,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -1852,7 +2424,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -1862,7 +2434,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -1872,7 +2444,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -1882,7 +2454,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -1892,7 +2464,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -1902,7 +2474,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -1988,7 +2560,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -1998,7 +2570,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -2008,7 +2580,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -2018,7 +2590,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -2028,7 +2600,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -2038,7 +2610,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -2048,7 +2620,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -2058,7 +2630,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -2191,7 +2763,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -2201,7 +2773,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -2211,7 +2783,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
+                  "$ref": "#/components/schemas/oauthStart_401"
                 }
               }
             }
@@ -2282,678 +2854,300 @@
           "F-04"
         ]
       }
-    },
-    "/auth/providers": {
-      "get": {
-        "operationId": "oauthProviders",
-        "summary": "Available sign-in providers",
-        "description": "Optional identity-only flow. Requires configured PostgreSQL and providers; no claim or sync. All responses are no-store.",
-        "tags": [
-          "auth"
-        ],
-        "security": [],
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Available sign-in providers",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/oauthProviders_200"
-                }
-              }
-            }
-          }
-        },
-        "x-loro-auth-boundary": "none",
-        "x-loro-status": "implemented",
-        "x-loro-owner-plan": 89,
-        "x-loro-requirements": [
-          "F-01",
-          "F-02",
-          "F-07"
-        ]
-      }
-    },
-    "/auth/{provider}/start": {
-      "post": {
-        "operationId": "oauthStart",
-        "summary": "Start provider sign-in",
-        "description": "Optional identity-only flow. Requires configured PostgreSQL and providers; no claim or sync. All responses are no-store.",
-        "tags": [
-          "auth"
-        ],
-        "security": [],
-        "parameters": [
-          {
-            "name": "provider",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "$ref": "#/components/schemas/oauthStart_path_provider"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Start provider sign-in",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/oauthStart_200"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "RFC 9457 problem; code selects recovery.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "RFC 9457 problem; code selects recovery.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "RFC 9457 problem; code selects recovery.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "RFC 9457 problem; code selects recovery.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "RFC 9457 problem; code selects recovery.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
-                }
-              }
-            }
-          }
-        },
-        "x-loro-auth-boundary": "none",
-        "x-loro-status": "implemented",
-        "x-loro-owner-plan": 89,
-        "x-loro-requirements": [
-          "F-01",
-          "F-02",
-          "F-07"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/oauthStart_request"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/auth/{provider}/callback": {
-      "get": {
-        "operationId": "oauthCallbackGet",
-        "summary": "Provider callback",
-        "description": "Google GET query or Apple application/x-www-form-urlencoded POST: state plus code or error. Consumes state once. Redirects only to the stored exact allowlisted URI. Never returns provider tokens.",
-        "tags": [
-          "auth"
-        ],
-        "security": [],
-        "parameters": [
-          {
-            "name": "provider",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "$ref": "#/components/schemas/oauthStart_path_provider"
-            }
-          }
-        ],
-        "responses": {
-          "303": {
-            "description": "Redirect with one-use PKCE-bound ticket and state, or generic error.",
-            "headers": {
-              "Location": {
-                "schema": {
-                  "$ref": "#/components/schemas/oauthCallbackGet_303_Location"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "RFC 9457 problem; code selects recovery.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "RFC 9457 problem; code selects recovery.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "RFC 9457 problem; code selects recovery.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "RFC 9457 problem; code selects recovery.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "RFC 9457 problem; code selects recovery.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
-                }
-              }
-            }
-          }
-        },
-        "x-loro-auth-boundary": "none",
-        "x-loro-status": "implemented",
-        "x-loro-owner-plan": 89,
-        "x-loro-requirements": [
-          "F-01",
-          "F-02",
-          "F-07"
-        ]
-      },
-      "post": {
-        "operationId": "oauthCallbackPost",
-        "summary": "Provider callback",
-        "description": "Google GET query or Apple application/x-www-form-urlencoded POST: state plus code or error. Consumes state once. Redirects only to the stored exact allowlisted URI. Never returns provider tokens.",
-        "tags": [
-          "auth"
-        ],
-        "security": [],
-        "parameters": [
-          {
-            "name": "provider",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "$ref": "#/components/schemas/oauthStart_path_provider"
-            }
-          }
-        ],
-        "responses": {
-          "303": {
-            "description": "Redirect with one-use PKCE-bound ticket and state, or generic error.",
-            "headers": {
-              "Location": {
-                "schema": {
-                  "$ref": "#/components/schemas/oauthCallbackPost_303_Location"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "RFC 9457 problem; code selects recovery.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "RFC 9457 problem; code selects recovery.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "RFC 9457 problem; code selects recovery.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "RFC 9457 problem; code selects recovery.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "RFC 9457 problem; code selects recovery.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
-                }
-              }
-            }
-          }
-        },
-        "x-loro-auth-boundary": "none",
-        "x-loro-status": "implemented",
-        "x-loro-owner-plan": 89,
-        "x-loro-requirements": [
-          "F-01",
-          "F-02",
-          "F-07"
-        ]
-      }
-    },
-    "/auth/exchange": {
-      "post": {
-        "operationId": "oauthExchange",
-        "summary": "Redeem app handoff",
-        "description": "Optional identity-only flow. Requires configured PostgreSQL and providers; no claim or sync. All responses are no-store.",
-        "tags": [
-          "auth"
-        ],
-        "security": [],
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Redeem app handoff",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/oauthExchange_200"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "RFC 9457 problem; code selects recovery.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "RFC 9457 problem; code selects recovery.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "RFC 9457 problem; code selects recovery.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "RFC 9457 problem; code selects recovery.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "RFC 9457 problem; code selects recovery.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
-                }
-              }
-            }
-          }
-        },
-        "x-loro-auth-boundary": "none",
-        "x-loro-status": "implemented",
-        "x-loro-owner-plan": 89,
-        "x-loro-requirements": [
-          "F-01",
-          "F-02",
-          "F-07"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/oauthExchange_request"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/auth/refresh": {
-      "post": {
-        "operationId": "oauthRefresh",
-        "summary": "Rotate refresh family",
-        "description": "Optional identity-only flow. Requires configured PostgreSQL and providers; no claim or sync. All responses are no-store.",
-        "tags": [
-          "auth"
-        ],
-        "security": [],
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Rotate refresh family",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/oauthExchange_200"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "RFC 9457 problem; code selects recovery.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "RFC 9457 problem; code selects recovery.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "RFC 9457 problem; code selects recovery.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "RFC 9457 problem; code selects recovery.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "RFC 9457 problem; code selects recovery.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
-                }
-              }
-            }
-          }
-        },
-        "x-loro-auth-boundary": "none",
-        "x-loro-status": "implemented",
-        "x-loro-owner-plan": 89,
-        "x-loro-requirements": [
-          "F-01",
-          "F-02",
-          "F-07"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/oauthRefresh_request"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/auth/logout": {
-      "post": {
-        "operationId": "oauthLogout",
-        "summary": "Revoke refresh family",
-        "description": "Optional identity-only flow. Requires configured PostgreSQL and providers; no claim or sync. All responses are no-store.",
-        "tags": [
-          "auth"
-        ],
-        "security": [],
-        "parameters": [],
-        "responses": {
-          "204": {
-            "description": "Revoke refresh family"
-          },
-          "401": {
-            "description": "RFC 9457 problem; code selects recovery.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "RFC 9457 problem; code selects recovery.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "RFC 9457 problem; code selects recovery.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "RFC 9457 problem; code selects recovery.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "RFC 9457 problem; code selects recovery.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
-                }
-              }
-            }
-          }
-        },
-        "x-loro-auth-boundary": "none",
-        "x-loro-status": "implemented",
-        "x-loro-owner-plan": 89,
-        "x-loro-requirements": [
-          "F-01",
-          "F-02",
-          "F-07"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/oauthRefresh_request"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/auth/me": {
-      "get": {
-        "operationId": "oauthMe",
-        "summary": "Read authenticated identity",
-        "description": "Optional identity-only flow. Requires configured PostgreSQL and providers; no claim or sync. All responses are no-store.",
-        "tags": [
-          "auth"
-        ],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Read authenticated identity",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/oauthMe_200"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "RFC 9457 problem; code selects recovery.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "RFC 9457 problem; code selects recovery.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "RFC 9457 problem; code selects recovery.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "RFC 9457 problem; code selects recovery.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "RFC 9457 problem; code selects recovery.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/contentManifest_400"
-                }
-              }
-            }
-          }
-        },
-        "x-loro-auth-boundary": "bearer",
-        "x-loro-status": "implemented",
-        "x-loro-owner-plan": 89,
-        "x-loro-requirements": [
-          "F-01",
-          "F-02",
-          "F-07"
-        ]
-      }
     }
   },
   "components": {
     "schemas": {
+      "oauthProviders_200": {
+        "type": "object",
+        "properties": {
+          "providers": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "google",
+                "apple"
+              ]
+            }
+          }
+        },
+        "required": [
+          "providers"
+        ],
+        "additionalProperties": false
+      },
+      "oauthStart_path_provider": {
+        "type": "string",
+        "enum": [
+          "google",
+          "apple"
+        ]
+      },
+      "oauthStart_200": {
+        "type": "object",
+        "properties": {
+          "authorization_url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "state": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{43}$"
+          }
+        },
+        "required": [
+          "authorization_url",
+          "state"
+        ],
+        "additionalProperties": false
+      },
+      "oauthStart_401": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "detail": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "UNAUTHENTICATED",
+              "FORBIDDEN",
+              "PLAN_REQUIRED",
+              "SCHEMA_TOO_OLD",
+              "RATE_LIMITED",
+              "BUDGET_EXCEEDED",
+              "VALIDATION_FAILED",
+              "PROVIDER_UNAVAILABLE",
+              "INTERNAL",
+              "NOT_FOUND",
+              "CURSOR_EXPIRED"
+            ]
+          }
+        },
+        "required": [
+          "type",
+          "title",
+          "status",
+          "code"
+        ],
+        "additionalProperties": {}
+      },
+      "oauthStart_request": {
+        "type": "object",
+        "properties": {
+          "redirect_uri": {
+            "type": "string",
+            "maxLength": 2048,
+            "format": "uri"
+          },
+          "code_challenge": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{43}$"
+          }
+        },
+        "required": [
+          "redirect_uri",
+          "code_challenge"
+        ],
+        "additionalProperties": false
+      },
+      "oauthCallbackGet_303_Location": {
+        "type": "string",
+        "format": "uri"
+      },
+      "oauthCallbackPost_303_Location": {
+        "type": "string",
+        "format": "uri"
+      },
+      "oauthExchange_200": {
+        "type": "object",
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "minLength": 1
+          },
+          "expires_in": {
+            "type": "number",
+            "const": 900
+          },
+          "refresh_token": {
+            "type": "string",
+            "minLength": 1
+          },
+          "user": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128,
+                "pattern": "^[a-zA-Z0-9_-]+$"
+              },
+              "created_at": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "created_at"
+            ],
+            "additionalProperties": {}
+          },
+          "device_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[a-zA-Z0-9_-]+$"
+          },
+          "claim": {
+            "type": "object",
+            "properties": {
+              "performed": {
+                "type": "boolean"
+              },
+              "mode": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "enum": [
+                      "bind",
+                      "merge"
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "claim_id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128,
+                "pattern": "^[a-zA-Z0-9_-]+$"
+              },
+              "upload_required": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "performed",
+              "mode",
+              "claim_id",
+              "upload_required"
+            ],
+            "additionalProperties": {}
+          }
+        },
+        "required": [
+          "access_token",
+          "expires_in",
+          "refresh_token",
+          "user",
+          "device_id",
+          "claim"
+        ],
+        "additionalProperties": {}
+      },
+      "oauthExchange_request": {
+        "type": "object",
+        "properties": {
+          "ticket": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{43}$"
+          },
+          "code_verifier": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{43}$"
+          },
+          "device": {
+            "type": "object",
+            "properties": {
+              "installation_id": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+              },
+              "platform": {
+                "type": "string",
+                "enum": [
+                  "ios",
+                  "android",
+                  "web"
+                ]
+              },
+              "app_version": {
+                "type": "string",
+                "maxLength": 100
+              }
+            },
+            "required": [
+              "installation_id",
+              "platform",
+              "app_version"
+            ],
+            "additionalProperties": false
+          },
+          "anon_id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+          }
+        },
+        "required": [
+          "ticket",
+          "code_verifier",
+          "device",
+          "anon_id"
+        ],
+        "additionalProperties": false
+      },
+      "oauthMe_200": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[a-zA-Z0-9_-]+$"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "created_at"
+        ],
+        "additionalProperties": {}
+      },
       "health_200": {
         "type": "object",
         "properties": {
@@ -3090,48 +3284,6 @@
           "scenarios",
           "audio_base",
           "min_app_version"
-        ],
-        "additionalProperties": {}
-      },
-      "contentManifest_400": {
-        "type": "object",
-        "properties": {
-          "type": {
-            "type": "string"
-          },
-          "title": {
-            "type": "string"
-          },
-          "status": {
-            "type": "integer",
-            "minimum": -9007199254740991,
-            "maximum": 9007199254740991
-          },
-          "detail": {
-            "type": "string"
-          },
-          "code": {
-            "type": "string",
-            "enum": [
-              "UNAUTHENTICATED",
-              "FORBIDDEN",
-              "PLAN_REQUIRED",
-              "SCHEMA_TOO_OLD",
-              "RATE_LIMITED",
-              "BUDGET_EXCEEDED",
-              "VALIDATION_FAILED",
-              "PROVIDER_UNAVAILABLE",
-              "INTERNAL",
-              "NOT_FOUND",
-              "CURSOR_EXPIRED"
-            ]
-          }
-        },
-        "required": [
-          "type",
-          "title",
-          "status",
-          "code"
         ],
         "additionalProperties": {}
       },
@@ -3645,97 +3797,6 @@
         "type": "string",
         "const": "no-store"
       },
-      "authApple_200": {
-        "type": "object",
-        "properties": {
-          "access_token": {
-            "type": "string",
-            "minLength": 1
-          },
-          "expires_in": {
-            "type": "number",
-            "const": 900
-          },
-          "refresh_token": {
-            "type": "string",
-            "minLength": 1
-          },
-          "user": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 128,
-                "pattern": "^[a-zA-Z0-9_-]+$"
-              },
-              "created_at": {
-                "type": "integer",
-                "minimum": 0,
-                "maximum": 9007199254740991
-              }
-            },
-            "required": [
-              "id",
-              "created_at"
-            ],
-            "additionalProperties": {}
-          },
-          "device_id": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 128,
-            "pattern": "^[a-zA-Z0-9_-]+$"
-          },
-          "claim": {
-            "type": "object",
-            "properties": {
-              "performed": {
-                "type": "boolean"
-              },
-              "mode": {
-                "anyOf": [
-                  {
-                    "type": "string",
-                    "enum": [
-                      "bind",
-                      "merge"
-                    ]
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
-              },
-              "claim_id": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 128,
-                "pattern": "^[a-zA-Z0-9_-]+$"
-              },
-              "upload_required": {
-                "type": "boolean"
-              }
-            },
-            "required": [
-              "performed",
-              "mode",
-              "claim_id",
-              "upload_required"
-            ],
-            "additionalProperties": {}
-          }
-        },
-        "required": [
-          "access_token",
-          "expires_in",
-          "refresh_token",
-          "user",
-          "device_id",
-          "claim"
-        ],
-        "additionalProperties": {}
-      },
       "authApple_request": {
         "type": "object",
         "properties": {
@@ -3865,27 +3926,129 @@
         "additionalProperties": false
       },
       "authRefresh_200": {
-        "type": "object",
-        "properties": {
-          "access_token": {
-            "type": "string",
-            "minLength": 1
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "access_token": {
+                "type": "string",
+                "minLength": 1
+              },
+              "expires_in": {
+                "type": "number",
+                "const": 900
+              },
+              "refresh_token": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "access_token",
+              "expires_in",
+              "refresh_token"
+            ],
+            "additionalProperties": {}
           },
-          "expires_in": {
-            "type": "number",
-            "const": 900
-          },
-          "refresh_token": {
-            "type": "string",
-            "minLength": 1
+          {
+            "type": "object",
+            "properties": {
+              "access_token": {
+                "type": "string",
+                "minLength": 1
+              },
+              "expires_in": {
+                "type": "number",
+                "const": 900
+              },
+              "refresh_token": {
+                "type": "string",
+                "minLength": 1
+              },
+              "user": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128,
+                    "pattern": "^[a-zA-Z0-9_-]+$"
+                  },
+                  "created_at": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "id",
+                  "created_at"
+                ],
+                "additionalProperties": {}
+              },
+              "device_id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128,
+                "pattern": "^[a-zA-Z0-9_-]+$"
+              },
+              "claim": {
+                "type": "object",
+                "properties": {
+                  "performed": {
+                    "type": "boolean"
+                  },
+                  "mode": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "bind",
+                          "merge"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "claim_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128,
+                    "pattern": "^[a-zA-Z0-9_-]+$"
+                  },
+                  "upload_required": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "performed",
+                  "mode",
+                  "claim_id",
+                  "upload_required"
+                ],
+                "additionalProperties": {}
+              }
+            },
+            "required": [
+              "access_token",
+              "expires_in",
+              "refresh_token",
+              "user",
+              "device_id",
+              "claim"
+            ],
+            "additionalProperties": {}
           }
-        },
-        "required": [
-          "access_token",
-          "expires_in",
-          "refresh_token"
-        ],
-        "additionalProperties": {}
+        ]
       },
       "authRefresh_request": {
         "type": "object",
@@ -3894,6 +4057,37 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 16384
+          },
+          "device": {
+            "type": "object",
+            "properties": {
+              "installation_id": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+              },
+              "platform": {
+                "type": "string",
+                "enum": [
+                  "ios",
+                  "android",
+                  "web"
+                ]
+              },
+              "app_version": {
+                "type": "string",
+                "maxLength": 100
+              }
+            },
+            "required": [
+              "installation_id",
+              "platform",
+              "app_version"
+            ],
+            "additionalProperties": false
+          },
+          "anon_id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
           }
         },
         "required": [
@@ -3987,9 +4181,16 @@
                 "pattern": "^[a-zA-Z0-9_-]+$"
               },
               "created_at": {
-                "type": "integer",
-                "minimum": 0,
-                "maximum": 9007199254740991
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
               }
             },
             "required": [
@@ -4690,6 +4891,27 @@
                                     "learning",
                                     "review",
                                     "relearning"
+                                  ]
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "srsAlgorithm": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "type": "string",
+                                  "enum": [
+                                    "fsrs-6-default-c8ca282-loro-v1",
+                                    "fsrs-6/py-fsrs-6.3.2/default-90-no-steps"
                                   ]
                                 },
                                 "hlc": {
@@ -5786,6 +6008,117 @@
                                   "type": "integer",
                                   "minimum": 0,
                                   "maximum": 9007199254740991
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "algorithm": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "type": "string",
+                                  "enum": [
+                                    "fsrs-6-default-c8ca282-loro-v1",
+                                    "fsrs-6/py-fsrs-6.3.2/default-90-no-steps"
+                                  ]
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "targetLocale": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "type": "string",
+                                  "enum": [
+                                    "es-ES",
+                                    "bg-BG",
+                                    "ru-RU"
+                                  ]
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "lastReview": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "anyOf": [
+                                    {
+                                      "type": "integer",
+                                      "minimum": 0,
+                                      "maximum": 9007199254740991
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "lapses": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "state": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "type": "string",
+                                  "enum": [
+                                    "new",
+                                    "learning",
+                                    "review",
+                                    "relearning"
+                                  ]
                                 },
                                 "hlc": {
                                   "type": "string",
@@ -7265,6 +7598,27 @@
                               ],
                               "additionalProperties": false
                             },
+                            "srsAlgorithm": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "type": "string",
+                                  "enum": [
+                                    "fsrs-6-default-c8ca282-loro-v1",
+                                    "fsrs-6/py-fsrs-6.3.2/default-90-no-steps"
+                                  ]
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
                             "repsToday": {
                               "type": "object",
                               "properties": {
@@ -8303,6 +8657,117 @@
                                   "type": "integer",
                                   "minimum": 0,
                                   "maximum": 9007199254740991
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "algorithm": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "type": "string",
+                                  "enum": [
+                                    "fsrs-6-default-c8ca282-loro-v1",
+                                    "fsrs-6/py-fsrs-6.3.2/default-90-no-steps"
+                                  ]
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "targetLocale": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "type": "string",
+                                  "enum": [
+                                    "es-ES",
+                                    "bg-BG",
+                                    "ru-RU"
+                                  ]
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "lastReview": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "anyOf": [
+                                    {
+                                      "type": "integer",
+                                      "minimum": 0,
+                                      "maximum": 9007199254740991
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "lapses": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "state": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "type": "string",
+                                  "enum": [
+                                    "new",
+                                    "learning",
+                                    "review",
+                                    "relearning"
+                                  ]
                                 },
                                 "hlc": {
                                   "type": "string",
@@ -9372,177 +9837,6 @@
           "provider"
         ],
         "additionalProperties": {}
-      },
-      "oauthProviders_200": {
-        "type": "object",
-        "properties": {
-          "providers": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "enum": [
-                "google",
-                "apple"
-              ]
-            }
-          }
-        },
-        "required": [
-          "providers"
-        ],
-        "additionalProperties": false
-      },
-      "oauthStart_path_provider": {
-        "type": "string",
-        "enum": [
-          "google",
-          "apple"
-        ]
-      },
-      "oauthStart_200": {
-        "type": "object",
-        "properties": {
-          "authorization_url": {
-            "type": "string",
-            "format": "uri"
-          },
-          "state": {
-            "type": "string",
-            "pattern": "^[A-Za-z0-9_-]{43}$"
-          }
-        },
-        "required": [
-          "authorization_url",
-          "state"
-        ],
-        "additionalProperties": false
-      },
-      "oauthStart_request": {
-        "type": "object",
-        "properties": {
-          "redirect_uri": {
-            "type": "string",
-            "maxLength": 2048,
-            "format": "uri"
-          },
-          "code_challenge": {
-            "type": "string",
-            "pattern": "^[A-Za-z0-9_-]{43}$"
-          }
-        },
-        "required": [
-          "redirect_uri",
-          "code_challenge"
-        ],
-        "additionalProperties": false
-      },
-      "oauthCallbackGet_303_Location": {
-        "type": "string",
-        "format": "uri"
-      },
-      "oauthCallbackPost_303_Location": {
-        "type": "string",
-        "format": "uri"
-      },
-      "oauthExchange_200": {
-        "type": "object",
-        "properties": {
-          "access_token": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 4096
-          },
-          "refresh_token": {
-            "type": "string",
-            "pattern": "^[A-Za-z0-9_-]{43}$"
-          },
-          "expires_in": {
-            "type": "number",
-            "const": 900
-          },
-          "user": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string",
-                "format": "uuid",
-                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-              },
-              "provider": {
-                "type": "string",
-                "enum": [
-                  "google",
-                  "apple"
-                ]
-              }
-            },
-            "required": [
-              "id",
-              "provider"
-            ],
-            "additionalProperties": false
-          }
-        },
-        "required": [
-          "access_token",
-          "refresh_token",
-          "expires_in",
-          "user"
-        ],
-        "additionalProperties": false
-      },
-      "oauthExchange_request": {
-        "type": "object",
-        "properties": {
-          "ticket": {
-            "type": "string",
-            "pattern": "^[A-Za-z0-9_-]{43}$"
-          },
-          "code_verifier": {
-            "type": "string",
-            "pattern": "^[A-Za-z0-9_-]{43}$"
-          }
-        },
-        "required": [
-          "ticket",
-          "code_verifier"
-        ],
-        "additionalProperties": false
-      },
-      "oauthRefresh_request": {
-        "type": "object",
-        "properties": {
-          "refresh_token": {
-            "type": "string",
-            "pattern": "^[A-Za-z0-9_-]{43}$"
-          }
-        },
-        "required": [
-          "refresh_token"
-        ],
-        "additionalProperties": false
-      },
-      "oauthMe_200": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "provider": {
-            "type": "string",
-            "enum": [
-              "google",
-              "apple"
-            ]
-          }
-        },
-        "required": [
-          "id",
-          "provider"
-        ],
-        "additionalProperties": false
       }
     },
     "securitySchemes": {

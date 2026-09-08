@@ -12,7 +12,7 @@ import { describe, expect, it } from 'vitest'
 import { PHRASE_COLUMN_NAMES, phraseToParams, rowToPhrase } from './phrase.js'
 import type { SqlRow, SqlValue } from '../driver.js'
 import { makePhrase } from '../../testing/index.js'
-import { LadderRung } from '../../domain/phrase.js'
+import { FSRS_ALGORITHM, LadderRung } from '../../domain/phrase.js'
 import { userPhraseId } from '../../domain/ids.js'
 
 /** What the driver would hand back after the INSERT this file writes. */
@@ -58,6 +58,7 @@ describe('user_phrase column mapping', () => {
       id: userPhraseId('row-1'),
       note: 'sounds like "coffee"',
       srs: {
+        algorithm: FSRS_ALGORITHM,
         stability: 3.5,
         difficulty: 6.25,
         due: 1_785_318_060_000,

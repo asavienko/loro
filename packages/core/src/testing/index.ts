@@ -16,6 +16,14 @@ import type {
 import type { Difficulty, PhraseState, Tag } from '../domain/phrase.js'
 import { LadderRung } from '../domain/phrase.js'
 import { fakeSelectRefrainSet } from './selection.js'
+import {
+  automaticity,
+  refrainSetSize,
+  modeForRep,
+  modelRateForMode,
+  beatMsForMode,
+  type RefrainMode,
+} from '../engines/refrain/index.js'
 import { userPhraseId, catalogPhraseId } from '../domain/ids.js'
 
 /** A fixed instant, so every fixture is reproducible. 2026-07-28T09:41:00Z. */
@@ -142,6 +150,25 @@ export function fakeRepository(phrases: readonly PhraseState[]): PhraseRepositor
  */
 export function fakeCore(): LoroCoreFacade {
   return {
+    rerate: (phrase) => phrase.srs,
+    orderStream: (phrases, now) =>
+      [...phrases]
+        .sort(
+          (a, b) =>
+            fakeCore().streamRank(a, now) - fakeCore().streamRank(b, now) ||
+            (a.id < b.id ? -1 : a.id > b.id ? 1 : 0),
+        )
+        .map((phrase) => phrase.id),
+    reviewGrade: (attempt) =>
+      attempt.selfGrade !== undefined
+        ? ({ again: 1, hard: 2, good: 3, easy: 4 } as const)[attempt.selfGrade]
+        : attempt.confidence !== undefined
+          ? ({ forgot: 1, shaky: 2, ok: 3, strong: 4, instant: 4 } as const)[attempt.confidence]
+          : attempt.outcome !== 'success'
+            ? 1
+            : attempt.hintsUsed > 0
+              ? 2
+              : 3,
     repeatTarget: (d) => (d === 'hard' ? 4 : d === 'easy' ? 2 : 3),
 
     streamRank: (p, now) => {
@@ -153,13 +180,26 @@ export function fakeCore(): LoroCoreFacade {
     },
 
     selectRefrainSet: fakeSelectRefrainSet,
+    automaticity,
+    refrainSetSize,
+    modeForRep,
+    modelRateForMode: (mode) => modelRateForMode(mode as RefrainMode),
+    beatMsForMode: (mode) => beatMsForMode(mode as RefrainMode),
 
     // Deterministic stand-in: blank the second token.
     clozeMask: () => [1],
 
     fsrsReview: (_state, grade, at) => {
       const days = grade === 1 ? 0.007 : grade === 2 ? 1 : grade === 3 ? 3 : 5
-      return { stability: days, difficulty: 5, due: at + days * 86_400_000 }
+      return {
+        stability: days,
+        difficulty: 5,
+        due: at + days * 86_400_000,
+        lastReview: at,
+        lapses: grade === 1 ? 1 : 0,
+        state: 'review',
+        algorithm: 'test-fsrs',
+      }
     },
 
     matchTokens: (heard, target, revealed) => {

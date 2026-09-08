@@ -11,7 +11,7 @@ runConformanceSuite(
     availability: (ctx) => conformingEngine.availability(ctx),
     plan: (ctx) => conformingEngine.plan(ctx),
     next: (session) => conformingEngine.next(session),
-    record: (session, attempt) => conformingEngine.record(session, attempt, makeContext()),
+    record: (session, attempt, ctx) => conformingEngine.record(session, attempt, ctx),
     summarize: (session) => conformingEngine.summarize(session),
   },
   {
@@ -65,7 +65,7 @@ describe('Speak production evidence', () => {
   it('uses current canonical scheduling only for an unassisted recognized phrase', async () => {
     const engine = new SpeakEngine()
     const ctx = makeContext([makePhrase('p')])
-    const expected = { stability: 1.4, difficulty: 3.2, due: T0 + 90_000 }
+    const expected = { stability: 1.4, difficulty: 3.2, due: T0 + 90_000, algorithm: 'test-fsrs' }
     const review = vi.spyOn(ctx.core, 'fsrsReview').mockReturnValue(expected)
     const plan = await engine.plan(ctx)
     const attempt: Attempt = {
@@ -82,10 +82,91 @@ describe('Speak production evidence', () => {
       srs: expected,
       latencySampleMs: null,
       lastPracticedAt: T0,
+      review: { grade: 3, at: T0, algorithm: 'test-fsrs' },
     })
-    expect(review).toHaveBeenCalledWith(await ctx.phrases.byId(plan.items[0]!.phraseId), 3, T0)
+    expect(review).toHaveBeenCalledWith(
+      await ctx.phrases.byId(plan.items[0]!.phraseId),
+      3,
+      T0,
+      undefined,
+    )
     await expect(engine.record({ sessionId: 's', plan, cursor: 0 }, attempt)).rejects.toThrow(
       'canonical engine context',
     )
+  })
+
+  it('uses the canonical attempt grade and attaches its review provenance', async () => {
+    const engine = new SpeakEngine()
+    const ctx = makeContext([makePhrase('p')])
+    const grade = vi.spyOn(ctx.core, 'reviewGrade').mockReturnValue(4)
+    const review = vi.spyOn(ctx.core, 'fsrsReview')
+    const plan = await engine.plan(ctx)
+    const attempt: Attempt = {
+      itemId: 'p#speak',
+      outcome: 'success',
+      hintsUsed: 0,
+      transcript: 'Hola',
+      confidence: 'instant',
+      latencyMs: null,
+      at: T0,
+    }
+    const delta = await engine.record({ sessionId: 's', plan, cursor: 0 }, attempt, ctx)
+    expect(grade).toHaveBeenCalledWith(attempt)
+    expect(review).toHaveBeenCalledWith(
+      await ctx.phrases.byId(plan.items[0]!.phraseId),
+      4,
+      T0,
+      'instant',
+    )
+    expect(delta.review).toEqual({ grade: 4, at: T0, algorithm: 'test-fsrs' })
+  })
+
+  it('does not pass confidence when the learner explicitly self-grades', async () => {
+    const engine = new SpeakEngine()
+    const ctx = makeContext([makePhrase('p')])
+    const review = vi.spyOn(ctx.core, 'fsrsReview')
+    const plan = await engine.plan(ctx)
+    const delta = await engine.record(
+      { sessionId: 's', plan, cursor: 0 },
+      {
+        itemId: 'p#speak',
+        outcome: 'success',
+        hintsUsed: 0,
+        transcript: 'Hola',
+        selfGrade: 'hard',
+        confidence: 'instant',
+        latencyMs: null,
+        at: T0,
+      },
+      ctx,
+    )
+    expect(review).toHaveBeenCalledWith(
+      await ctx.phrases.byId(plan.items[0]!.phraseId),
+      2,
+      T0,
+      undefined,
+    )
+    expect(delta.review?.grade).toBe(2)
+  })
+
+  it('never creates review evidence without an identified canonical schedule', async () => {
+    const engine = new SpeakEngine()
+    const ctx = makeContext([makePhrase('p')])
+    const review = vi.spyOn(ctx.core, 'fsrsReview').mockReturnValue(undefined)
+    const plan = await engine.plan(ctx)
+    const session = { sessionId: 's', plan, cursor: 0 }
+    const attempt: Attempt = {
+      itemId: 'p#speak',
+      outcome: 'success',
+      hintsUsed: 0,
+      transcript: 'Hola',
+      latencyMs: null,
+      at: T0,
+    }
+    const delta = await engine.record(session, attempt, ctx)
+    expect(delta.srs).toBeUndefined()
+    expect(delta.review).toBeUndefined()
+    review.mockReturnValue({ stability: 3, difficulty: 5, due: T0 + 1 })
+    await expect(engine.record(session, attempt, ctx)).rejects.toThrow('identify its algorithm')
   })
 })

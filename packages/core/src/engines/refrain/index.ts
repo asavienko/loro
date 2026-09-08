@@ -47,15 +47,10 @@ export type RefrainMode = (typeof REFRAIN_MODES)[number]
 /**
  * Everything one mode is, on one row.
  *
- * A mode is not four independent settings — it is one cognitive event defined by all four
- * at once: the rate it hears the model at (or doesn't), the beat it is paced by, how much
- * of the phrase is on screen, and what counts as having said it. Presentation copy is keyed
- * by the mode in the app. Read as a table, "what is Chorus?" is one row.
+ * Rust chooses the mode, model rate and beat. The engine maps that mode to the
+ * prompt and gate; presentation copy is keyed by the same mode in the app.
  */
 interface RefrainModeSpec {
-  /** Model-audio rate, or null when the mode deliberately withholds the model. */
-  readonly modelRate: number | null
-  readonly beatMs: number
   /** Takes the mask because only Cloze uses it; the rest ignore it. */
   readonly prompt: (clozeMask: readonly number[]) => PromptSpec
   readonly gate: GateSpec
@@ -68,40 +63,27 @@ interface RefrainModeSpec {
 const MODE_SPEC: Record<RefrainMode, RefrainModeSpec> = {
   // Echo/Chorus/Speed shadow a model, so a partial match is enough.
   echo: {
-    modelRate: 0.95,
-    beatMs: 720,
     prompt: () => ({ show: 'full' }),
     gate: { kind: 'asr-partial', minTokens: 1 },
   },
   chorus: {
-    modelRate: 0.95,
-    beatMs: 720,
     prompt: () => ({ show: 'full' }),
     gate: { kind: 'asr-partial', minTokens: 1 },
   },
   speed: {
-    modelRate: 1.15,
-    // The faster beat is the only cue that Speed differs.
-    beatMs: 340,
     prompt: () => ({ show: 'full' }),
     gate: { kind: 'asr-partial', minTokens: 1 },
   },
   // The production gate proper: generate it without the model.
   cloze: {
-    modelRate: null,
-    beatMs: 720,
     prompt: (clozeMask) => ({ show: 'cloze', clozeMask }),
     gate: { kind: 'asr-full' },
   },
   call: {
-    modelRate: null,
-    beatMs: 720,
     prompt: () => ({ show: 'meaning' }),
     gate: { kind: 'asr-full' },
   },
   cold: {
-    modelRate: null,
-    beatMs: 720,
     prompt: () => ({ show: 'nothing', hookOnly: true }),
     gate: { kind: 'asr-full' },
   },
@@ -114,6 +96,8 @@ export const DEFAULT_REP_TARGET = 6
 export const LOCK_IN_DAYS_TO_GRADUATE = 4
 
 /** Set size from the learner's daily-minutes answer. */
+// These pure helper exports remain for API compatibility and deterministic fixtures.
+// Production engines obtain the corresponding values from the canonical core facade.
 export function refrainSetSize(dailyMinutes: number): number {
   if (dailyMinutes <= 5) return 3
   if (dailyMinutes <= 10) return 5
@@ -128,12 +112,12 @@ export function modeForRep(repIndex: number): RefrainMode {
 
 /** Model-audio rate, or null when the mode deliberately withholds the model. */
 export function modelRateForMode(mode: RefrainMode): number | null {
-  return MODE_SPEC[mode].modelRate
+  return mode === 'speed' ? 1.15 : mode === 'echo' || mode === 'chorus' ? 0.95 : null
 }
 
 /** Beat tempo. Speed mode's faster beat is the only cue that it differs. */
 export function beatMsForMode(mode: RefrainMode): number {
-  return MODE_SPEC[mode].beatMs
+  return mode === 'speed' ? 340 : 720
 }
 
 /** `min(100, round(reps / target * 100))`. Blueprint contract. */
@@ -211,7 +195,7 @@ export class RefrainEngine implements PracticeEngine {
 
   async plan(ctx: EngineContext): Promise<SessionPlan> {
     const active = await ctx.phrases.active()
-    const size = ctx.settings.repTarget > 0 ? refrainSetSize(ctx.settings.dailyMinutes) : 0
+    const size = ctx.settings.repTarget > 0 ? ctx.core.refrainSetSize(ctx.settings.dailyMinutes) : 0
     const setIds =
       ctx.refrainSet ?? selectRefrainSet(ctx.core, active, size, ctx.trip?.phraseIds ?? [])
     const byId = new Map(active.map((p) => [p.id, p]))
@@ -228,21 +212,23 @@ export class RefrainEngine implements PracticeEngine {
       // `record()`'s absolute `repsToday` cannot walk the stored count backwards.
       // Read through the day guard, so yesterday's counter reads as zero.
       for (let rep = repsToday(phrase, today); rep < target; rep++) {
-        const mode = modeForRep(rep)
+        const mode = ctx.core.modeForRep(rep)
         const spec = MODE_SPEC[mode]
+        const modelRate = ctx.core.modelRateForMode(mode)
+        const automaticityPct = ctx.core.automaticity(rep, target)
         items.push({
           itemId: `${id}#${rep}`,
           phraseId: id,
           mode,
           prompt: spec.prompt(mask),
           gate: spec.gate,
-          audio: spec.modelRate === null ? null : { rate: spec.modelRate, source: 'catalog' },
+          audio: modelRate === null ? null : { rate: modelRate, source: 'catalog' },
           meta: {
             repIndex: rep,
             repTarget: target,
-            beatMs: spec.beatMs,
-            automaticity: automaticity(rep, target),
-            warmBand: warmBand(automaticity(rep, target)),
+            beatMs: ctx.core.beatMsForMode(mode),
+            automaticity: automaticityPct,
+            warmBand: warmBand(automaticityPct),
           },
         })
       }
@@ -269,30 +255,51 @@ export class RefrainEngine implements PracticeEngine {
     context?: EngineContext,
   ): Promise<ProgressDelta> {
     const item = itemFor(session, attempt)
+    const ctx = context ?? this.currentContext?.() ?? this.contexts.get(session.plan)
+    if (ctx === undefined) throw new Error('Refrain recording requires its current engine context')
     const repIndex = metaNumber(item, 'repIndex', 0)
     const repTarget = metaNumber(item, 'repTarget', DEFAULT_REP_TARGET)
     const success = attempt.outcome === 'success'
     // Named for what it is, not shadowing the `repsToday` derivation imported above.
     const repsTodayAfter = repIndex + (success ? 1 : 0)
-    const auto = automaticity(repsTodayAfter, repTarget)
+    const auto = ctx.core.automaticity(repsTodayAfter, repTarget)
     const mode = item.mode as RefrainMode
 
     // Rule 5: a Refrain rep is an implicit FSRS review even though this screen
-    // never shows an interval. Produced hint-free at a later mode is a 'Good';
-    // anything needing hints or a model is a 'Hard'.
-    const grade: 1 | 2 | 3 | 4 = !success ? 1 : attempt.hintsUsed > 0 ? 2 : 3
-    const ctx = context ?? this.currentContext?.() ?? this.contexts.get(session.plan)
-    if (ctx === undefined) throw new Error('Refrain recording requires its current engine context')
+    // never shows an interval. Rust maps explicit ratings or the attempt's outcome
+    // and hints; manual taps remain self-reported practice.
+    const grade = ctx.core.reviewGrade(attempt)
     const phrase = await ctx.phrases.byId(item.phraseId)
     if (phrase === null) throw new Error('The practised phrase no longer exists')
     const srs =
-      attempt.outcome === 'skipped' ? undefined : ctx.core.fsrsReview(phrase, grade, attempt.at)
+      attempt.outcome === 'skipped'
+        ? undefined
+        : ctx.core.fsrsReview(
+            phrase,
+            grade,
+            attempt.at,
+            attempt.selfGrade === undefined ? attempt.confidence : undefined,
+          )
+
+    if (srs !== undefined && !srs.algorithm)
+      throw new Error('Canonical review must identify its algorithm')
+
+    const productionEvidence =
+      Boolean(attempt.transcript?.trim()) || attempt.selfGrade !== undefined
 
     // Rule 5 again: producing from a cue-free mode is evidence of Bent-level depth.
-    const earnsBent = success && (mode === 'cloze' || mode === 'call') && attempt.hintsUsed === 0
+    const earnsBent =
+      productionEvidence &&
+      success &&
+      (mode === 'cloze' || mode === 'call') &&
+      attempt.hintsUsed === 0
     // Speed mode under 0.8s is genuine pressure-testing.
     const earnsPressure =
-      success && mode === 'speed' && attempt.latencyMs !== null && attempt.latencyMs < 800
+      productionEvidence &&
+      success &&
+      mode === 'speed' &&
+      attempt.latencyMs !== null &&
+      attempt.latencyMs < 800
 
     return Promise.resolve({
       ...universalDelta(item, attempt, {
@@ -303,14 +310,15 @@ export class RefrainEngine implements PracticeEngine {
       repsToday: repsTodayAfter,
       automaticity: auto,
       lockedInToday: auto >= 100,
-      ...(srs === undefined ? {} : { srs }),
+      ...(srs === undefined
+        ? {}
+        : { srs, review: { grade, at: attempt.at, algorithm: srs.algorithm ?? '' } }),
       ...(earnsPressure
         ? { rung: LadderRung.PressureTested }
         : earnsBent
           ? { rung: LadderRung.Bent }
           : {}),
       ...(success ? {} : { stumbles: 1 }),
-      axes: { production: success ? 2 : 0, recall: mode === 'cold' ? 6 : 2 },
     })
   }
 

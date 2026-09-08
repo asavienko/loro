@@ -2,7 +2,7 @@ import { expect, onboard, openFirstPhrase, test } from './fixtures'
 import { startWave } from './states'
 import { openStorageFailure } from './persistenceFlow'
 
-test('F-02/LB-01: a full reload restores phrase identity and the next Refrain rep', async ({
+test('F-02/LB-01: duplicate completion and reload preserve one rep and its next checkpoint', async ({
   page,
 }) => {
   await onboard(page)
@@ -13,7 +13,12 @@ test('F-02/LB-01: a full reload restores phrase identity and the next Refrain re
   await expect(page.getByRole('button', { name: 'Practice now →' })).toBeVisible()
   await page.goto('/')
   await startWave(page)
-  await page.getByRole('button', { name: 'Say it', exact: true }).click()
+  // Two handlers enter before the asynchronous engine result returns. Only this
+  // displayed attempt may commit, including after its database is reopened.
+  await page.getByRole('button', { name: 'Say it', exact: true }).evaluate((button) => {
+    ;(button as HTMLElement).click()
+    ;(button as HTMLElement).click()
+  })
   await expect(page.getByRole('button', { name: 'Chorus it', exact: true })).toBeVisible()
   await page.reload()
   await expect(page.getByRole('button', { name: 'Chorus it', exact: true })).toBeVisible()

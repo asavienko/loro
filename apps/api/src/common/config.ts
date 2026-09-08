@@ -44,22 +44,42 @@ export const config = {
    */
   isProduction: (): boolean => process.env['NODE_ENV'] === 'production',
 
-  /** Auth is unavailable until an ES256 signing key and provider are configured. */
-  authSettings: () => ({
-    privateKeyPem: process.env['AUTH_PRIVATE_KEY_PEM'],
-    issuer: process.env['AUTH_ISSUER'] ?? 'https://api.loro.app',
-    audience: process.env['AUTH_AUDIENCE'] ?? 'loro-mobile',
-    keyId: process.env['AUTH_KEY_ID'] ?? 'primary',
-    emailHashKey: process.env['AUTH_EMAIL_HASH_KEY'],
-    magicDeliveryUrl: process.env['AUTH_MAGIC_DELIVERY_URL'],
-    magicDeliveryToken: process.env['AUTH_MAGIC_DELIVERY_TOKEN'],
-    googleClientIds: (process.env['GOOGLE_CLIENT_IDS'] ?? '')
-      .split(',')
-      .map((id) => id.trim())
-      .filter(Boolean),
-    appleClientIds: (process.env['APPLE_CLIENT_IDS'] ?? '')
-      .split(',')
-      .map((id) => id.trim())
-      .filter(Boolean),
+  /** Raw browser OAuth configuration; auth/settings.ts validates deployment requirements. */
+  oauthSettings: () => ({
+    enabled: process.env['AUTH_ENABLED'],
+    publicUrl: process.env['AUTH_PUBLIC_URL'],
+    redirectsRaw: process.env['AUTH_REDIRECT_URIS'],
+    signingKey: process.env['AUTH_SIGNING_KEY'],
+    googleClientId: process.env['GOOGLE_CLIENT_ID'],
+    googleClientSecret: process.env['GOOGLE_CLIENT_SECRET'],
+    appleClientId: process.env['APPLE_CLIENT_ID'],
+    appleTeamId: process.env['APPLE_TEAM_ID'],
+    appleKeyId: process.env['APPLE_KEY_ID'],
+    applePrivateKey: process.env['APPLE_PRIVATE_KEY'],
   }),
+
+  /** Shared session engine for native identity proof, email and browser OAuth. */
+  authSettings: () => {
+    const oauth = config.oauthSettings()
+    return {
+      enabled: oauth.enabled === 'false' ? false : undefined,
+      privateKeyPem: process.env['AUTH_PRIVATE_KEY_PEM'],
+      signingKey: oauth.signingKey,
+      issuer:
+        process.env['AUTH_ISSUER'] ?? oauth.publicUrl?.replace(/\/$/, '') ?? 'https://api.loro.app',
+      audience: 'loro-mobile',
+      keyId: process.env['AUTH_KEY_ID'] ?? 'primary',
+      emailHashKey: process.env['AUTH_EMAIL_HASH_KEY'],
+      magicDeliveryUrl: process.env['AUTH_MAGIC_DELIVERY_URL'],
+      magicDeliveryToken: process.env['AUTH_MAGIC_DELIVERY_TOKEN'],
+      googleClientIds: (process.env['GOOGLE_CLIENT_IDS'] ?? oauth.googleClientId ?? '')
+        .split(',')
+        .map((id) => id.trim())
+        .filter(Boolean),
+      appleClientIds: (process.env['APPLE_CLIENT_IDS'] ?? oauth.appleClientId ?? '')
+        .split(',')
+        .map((id) => id.trim())
+        .filter(Boolean),
+    }
+  },
 } as const

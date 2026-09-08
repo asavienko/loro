@@ -11,6 +11,10 @@
 import process from 'node:process'
 
 export const isCI = process.env.CI !== undefined
+export const accountEnvironment = {
+  EXPO_NO_TELEMETRY: '1',
+  EXPO_PUBLIC_API_URL: 'https://auth.loro.test/v1',
+}
 
 /**
  * The learner's device, pinned.

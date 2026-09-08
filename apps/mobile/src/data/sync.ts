@@ -69,6 +69,7 @@ const PHRASE_COLUMNS: Readonly<Record<string, string>> = {
   srsLastReview: 'srs_last_review',
   srsLapses: 'srs_lapses',
   srsState: 'srs_state',
+  srsAlgorithm: 'srs_algorithm',
   repsToday: 'reps_today',
   repsTodayDay: 'reps_today_day',
   automaticity: 'automaticity',
@@ -103,6 +104,7 @@ const BOOL_FIELDS = new Set([
   'practised',
   'notifications',
 ])
+const REVIEW_RATINGS: Readonly<Record<string, number>> = { again: 1, hard: 2, good: 3, easy: 4 }
 function parseHlc(value: string): Hlc {
   const parts = value.split(':')
   if (parts.length !== 3 || !parts[2]) throw new SyncError('INVALID_HLC')
@@ -178,7 +180,9 @@ export function createSqlSyncStore(options: {
       if (value === undefined) continue
       if (
         value === null &&
-        (field.startsWith('own') || field === 'targetLocale' || field.startsWith('srs'))
+        (field.startsWith('own') ||
+          field === 'targetLocale' ||
+          (field.startsWith('srs') && field !== 'srsLastReview'))
       )
         continue
       // A never-scheduled row has no complete latest-review group to send or merge.
@@ -190,7 +194,9 @@ export function createSqlSyncStore(options: {
         v,
         hlc: parseHlc(
           clocks[field] ??
-            (previous.fields[field] ? encodeHlc(previous.fields[field].hlc) : fallback),
+            (previous.fields[field]
+              ? encodeHlc(previous.fields[field].hlc)
+              : ((field === 'srsAlgorithm' ? clocks['srsLastReview'] : undefined) ?? fallback)),
         ),
       }
     }
@@ -219,8 +225,8 @@ export function createSqlSyncStore(options: {
     // Pending day writes have no field_hlc columns; layer their exact durable clocks
     // over the last synchronized version before resolving a remote page.
     const ops = driver.all(
-      'SELECT payload,op,created_at FROM outbox WHERE entity=? AND entity_id=? ORDER BY seq',
-      [entity, id],
+      'SELECT payload,op,created_at FROM outbox WHERE user_id=? AND entity=? AND entity_id=? ORDER BY seq',
+      [userId, entity, id],
     )
     for (const op of ops) {
       const writes = JSON.parse(readText(op, 'payload')) as Record<
@@ -255,6 +261,11 @@ export function createSqlSyncStore(options: {
     ])
   }
   function correctStoredClock(op: OutboxOp, field: string, from: string, to: string): void {
+    // Legacy six-field requests stay byte-identical after their first attempt. Rust
+    // adds their known preview provenance at the review anchor's stamp; its derived
+    // clock must follow the same receipt correction even though it was not on the wire.
+    if (field === 'srsLastReview' && !op.fields['srsAlgorithm'])
+      correctStoredClock(op, 'srsAlgorithm', from, to)
     const prior = shadow(op.entity, op.entityId)
     const stored = prior.fields[field]
     if (stored && encodeHlc(stored.hlc) === from) {
@@ -293,6 +304,61 @@ export function createSqlSyncStore(options: {
         .map((name) => `${name}=excluded.${name}`)
         .join(',')}`,
       entries.map(([, value]) => value),
+    )
+  }
+  function applyReview(row: Row, values: Readonly<Record<string, unknown>>): void {
+    const target = values['targetLocale']
+    const grade = values['grade']
+    const rating = typeof grade === 'string' ? REVIEW_RATINGS[grade] : undefined
+    // Older journal rows do not include the full scheduler snapshot. Keep them in
+    // sync_rows until a complete record exists; never manufacture state or lapses.
+    if (
+      (target !== 'es-ES' && target !== 'bg-BG' && target !== 'ru-RU') ||
+      typeof rating !== 'number' ||
+      typeof values['algorithm'] !== 'string' ||
+      typeof values['state'] !== 'string' ||
+      typeof values['phraseId'] !== 'string' ||
+      typeof values['at'] !== 'number' ||
+      typeof values['stability'] !== 'number' ||
+      typeof values['difficulty'] !== 'number' ||
+      typeof values['due'] !== 'number' ||
+      typeof values['lapses'] !== 'number' ||
+      (values['lastReview'] !== null && typeof values['lastReview'] !== 'number')
+    )
+      return
+    const prefix = `review-id:${target}:`
+    const mapping = driver
+      .all("SELECT k FROM kv WHERE v=? AND k LIKE 'review-id:%'", [row.id])
+      .find((entry) => readText(entry, 'k').startsWith(prefix))
+    // A local review's wire UUID is deliberately distinct from the practice attempt
+    // id. Reuse its durable mapping so a server echo cannot count the review twice.
+    const attemptId = mapping ? readText(mapping, 'k').slice(prefix.length) : `remote:${row.id}`
+    if (row.deleted_at !== null) {
+      driver.run('DELETE FROM review_event WHERE user_id=? AND target_locale=? AND attempt_id=?', [
+        userId,
+        target,
+        attemptId,
+      ])
+      return
+    }
+    driver.run(
+      `INSERT INTO review_event(user_id,target_locale,attempt_id,phrase_id,reviewed_at,rating,algorithm,stability,difficulty,due,last_review,lapses,state)
+       VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(user_id,target_locale,attempt_id) DO NOTHING`,
+      [
+        userId,
+        target,
+        attemptId,
+        sqlValue(values['phraseId']),
+        sqlValue(values['at']),
+        rating,
+        sqlValue(values['algorithm']),
+        sqlValue(values['stability']),
+        sqlValue(values['difficulty']),
+        sqlValue(values['due']),
+        sqlValue(values['lastReview']),
+        sqlValue(values['lapses']),
+        sqlValue(values['state']),
+      ],
     )
   }
   function apply(row: Row, serverHlc: string): void {
@@ -338,6 +404,8 @@ export function createSqlSyncStore(options: {
       writeColumns('user_phrase', { id: row.id }, columns)
       const target = typeof values['targetLocale'] === 'string' ? values['targetLocale'] : 'es-ES'
       writeColumns('course_session', { user_id: userId, target_locale: target }, { onboarded: 1 })
+    } else if (row.entity === 'review_log') {
+      applyReview(row, values)
     } else if (row.entity === 'settings') {
       if (row.deleted_at !== null) return
       const columns: Record<string, SqlValue> = { field_hlc: fieldHlc, updated_hlc: serverHlc }
@@ -434,6 +502,18 @@ export function createSqlSyncStore(options: {
       userId,
       from,
     ])
+    driver.run('UPDATE review_event SET phrase_id=? WHERE user_id=? AND phrase_id=?', [
+      to,
+      userId,
+      from,
+    ])
+    for (const entry of driver.all("SELECT k,v FROM kv WHERE k LIKE 'phrase-order:%'")) {
+      const ids: unknown = JSON.parse(readText(entry, 'v'))
+      if (Array.isArray(ids) && ids.includes(from))
+        writeKv(readText(entry, 'k'), [
+          ...new Set(ids.map((id: unknown) => (id === from ? to : id))),
+        ])
+    }
     function rewriteRefs(value: unknown): unknown {
       if (Array.isArray(value)) return value.map((entry: unknown) => rewriteRefs(entry))
       if (value && typeof value === 'object')
@@ -473,7 +553,8 @@ export function createSqlSyncStore(options: {
       )
     }
     for (const row of driver.all(
-      'SELECT seq,entity,entity_id,payload FROM outbox WHERE attempts=0',
+      'SELECT seq,entity,entity_id,payload FROM outbox WHERE user_id=? AND attempts=0',
+      [userId],
     )) {
       const fields = JSON.parse(readText(row, 'payload')) as Record<
         string,
@@ -486,11 +567,12 @@ export function createSqlSyncStore(options: {
         setIds.v = JSON.stringify(
           (JSON.parse(setIds.v) as string[]).map((id) => (id === from ? to : id)),
         )
-      driver.run('UPDATE outbox SET entity_id=?,payload=? WHERE seq=?', [
+      driver.run('UPDATE outbox SET entity_id=?,payload=? WHERE user_id=? AND seq=?', [
         row['entity'] === 'user_phrase' && row['entity_id'] === from
           ? to
           : readText(row, 'entity_id'),
         JSON.stringify(fields),
+        userId,
         Number(row['seq']),
       ])
     }
@@ -521,8 +603,8 @@ export function createSqlSyncStore(options: {
     beginPush(seqs) {
       if (seqs.length > 0)
         driver.run(
-          `UPDATE outbox SET attempts=attempts+1,last_error=NULL WHERE seq IN (${seqs.map(() => '?').join(',')})`,
-          seqs,
+          `UPDATE outbox SET attempts=attempts+1,last_error=NULL WHERE user_id=? AND seq IN (${seqs.map(() => '?').join(',')})`,
+          [userId, ...seqs],
         )
     },
     commitPush(ops, response) {
@@ -638,8 +720,8 @@ export function createSqlSyncStore(options: {
       driver.transaction(() => {
         if (seqs.length > 0)
           driver.run(
-            `UPDATE outbox SET last_error=? WHERE seq IN (${seqs.map(() => '?').join(',')})`,
-            [code, ...seqs],
+            `UPDATE outbox SET last_error=? WHERE user_id=? AND seq IN (${seqs.map(() => '?').join(',')})`,
+            [code, userId, ...seqs],
           )
         driver.run('UPDATE sync_state SET failures=failures+1,next_attempt_at=? WHERE id=1', [
           nextAttemptAt,

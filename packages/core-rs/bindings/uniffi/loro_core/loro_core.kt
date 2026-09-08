@@ -706,9 +706,17 @@ internal object IntegrityCheckingUniffiLib {
     ): Int
     external fun uniffi_loro_core_checksum_func_nudge_difficulty(
     ): Int
+    external fun uniffi_loro_core_checksum_func_review_grade(
+    ): Int
+    external fun uniffi_loro_core_checksum_func_initialize(
+    ): Int
+    external fun uniffi_loro_core_checksum_func_rerate(
+    ): Int
     external fun uniffi_loro_core_checksum_func_retrievability(
     ): Int
     external fun uniffi_loro_core_checksum_func_review(
+    ): Int
+    external fun uniffi_loro_core_checksum_func_review_confidence(
     ): Int
     external fun uniffi_loro_core_checksum_func_climb(
     ): Int
@@ -797,9 +805,17 @@ internal object UniffiLib {
     ): Float
     external fun uniffi_loro_core_fn_func_nudge_difficulty(`current`: Float,`declared`: RustBuffer.ByValue,`tags`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Float
-    external fun uniffi_loro_core_fn_func_retrievability(`daysSinceReview`: Float,`stability`: Float,uniffi_out_err: UniffiRustCallStatus, 
-    ): Float
+    external fun uniffi_loro_core_fn_func_review_grade(`success`: Byte,`hintsUsed`: Int,`selfGrade`: RustBuffer.ByValue,`confidence`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_loro_core_fn_func_initialize(`declared`: RustBuffer.ByValue,`tags`: RustBuffer.ByValue,`atMs`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_loro_core_fn_func_rerate(`state`: RustBuffer.ByValue,`declared`: RustBuffer.ByValue,`tags`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_loro_core_fn_func_retrievability(`daysSinceReview`: Double,`stability`: Double,uniffi_out_err: UniffiRustCallStatus, 
+    ): Double
     external fun uniffi_loro_core_fn_func_review(`state`: RustBuffer.ByValue,`grade`: RustBuffer.ByValue,`atMs`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_loro_core_fn_func_review_confidence(`state`: RustBuffer.ByValue,`confidence`: RustBuffer.ByValue,`atMs`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     external fun uniffi_loro_core_fn_func_climb(`current`: RustBuffer.ByValue,`target`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
@@ -1005,16 +1021,28 @@ private fun uniffiCheckApiChecksums(lib: IntegrityCheckingUniffiLib) {
     if (lib.uniffi_loro_core_checksum_func_grade_for_confidence() != 31441) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_initial_difficulty() != 32425) {
+    if (lib.uniffi_loro_core_checksum_func_initial_difficulty() != 41499) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_loro_core_checksum_func_nudge_difficulty() != 10246) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_retrievability() != 27447) {
+    if (lib.uniffi_loro_core_checksum_func_review_grade() != 5503) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_review() != 35956) {
+    if (lib.uniffi_loro_core_checksum_func_initialize() != 10030) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_loro_core_checksum_func_rerate() != 38115) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_loro_core_checksum_func_retrievability() != 3854) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_loro_core_checksum_func_review() != 25686) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_loro_core_checksum_func_review_confidence() != 30479) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_loro_core_checksum_func_climb() != 50333) {
@@ -1315,6 +1343,29 @@ public object FfiConverterFloat: FfiConverter<Float, Float> {
 /**
  * @suppress
  */
+public object FfiConverterDouble: FfiConverter<Double, Double> {
+    override fun lift(value: Double): Double {
+        return value
+    }
+
+    override fun read(buf: ByteBuffer): Double {
+        return buf.getDouble()
+    }
+
+    override fun lower(value: Double): Double {
+        return value
+    }
+
+    override fun allocationSize(value: Double) = 8UL
+
+    override fun write(value: Double, buf: ByteBuffer) {
+        buf.putDouble(value)
+    }
+}
+
+/**
+ * @suppress
+ */
 public object FfiConverterBoolean: FfiConverter<Boolean, Byte> {
     override fun lift(value: Byte): Boolean {
         return value.toInt() != 0
@@ -1516,33 +1567,43 @@ public object FfiConverterTypeFix: FfiConverterRustBuffer<Fix> {
 
 
 /**
- * A phrase's memory state.
+ * Complete atomic scheduler group, including algorithm provenance.
  */
 data class FsrsState (
     /**
-     * Days until retrievability decays to 90%.
+     * Days until recall reaches 90%, NOT the selected scheduling threshold.
      */
-    var `stability`: kotlin.Float
+    var `stability`: kotlin.Double
     , 
     /**
-     * Intrinsic difficulty for this learner, 1..10.
+     * Intrinsic difficulty in 1..10.
      */
-    var `difficulty`: kotlin.Float
+    var `difficulty`: kotlin.Double
     , 
     /**
-     * Next review, epoch ms.
+     * Next review, epoch milliseconds.
      */
     var `due`: kotlin.Long
     , 
     /**
-     * Last review, epoch ms.
+     * Last observed review, epoch milliseconds; absent for new cards.
      */
     var `lastReview`: kotlin.Long?
     , 
     /**
-     * Failed reviews.
+     * Failed established reviews (not repeated learning failures).
      */
     var `lapses`: kotlin.UInt
+    , 
+    /**
+     * Learning lifecycle.
+     */
+    var `state`: CardState
+    , 
+    /**
+     * Versioned algorithm, parameters and Loro policy identifier.
+     */
+    var `algorithm`: kotlin.String
     
 ){
     
@@ -1559,28 +1620,34 @@ data class FsrsState (
 public object FfiConverterTypeFsrsState: FfiConverterRustBuffer<FsrsState> {
     override fun read(buf: ByteBuffer): FsrsState {
         return FsrsState(
-            FfiConverterFloat.read(buf),
-            FfiConverterFloat.read(buf),
+            FfiConverterDouble.read(buf),
+            FfiConverterDouble.read(buf),
             FfiConverterLong.read(buf),
             FfiConverterOptionalLong.read(buf),
             FfiConverterUInt.read(buf),
+            FfiConverterTypeCardState.read(buf),
+            FfiConverterString.read(buf),
         )
     }
 
     override fun allocationSize(value: FsrsState) = (
-            FfiConverterFloat.allocationSize(value.`stability`) +
-            FfiConverterFloat.allocationSize(value.`difficulty`) +
+            FfiConverterDouble.allocationSize(value.`stability`) +
+            FfiConverterDouble.allocationSize(value.`difficulty`) +
             FfiConverterLong.allocationSize(value.`due`) +
             FfiConverterOptionalLong.allocationSize(value.`lastReview`) +
-            FfiConverterUInt.allocationSize(value.`lapses`)
+            FfiConverterUInt.allocationSize(value.`lapses`) +
+            FfiConverterTypeCardState.allocationSize(value.`state`) +
+            FfiConverterString.allocationSize(value.`algorithm`)
     )
 
     override fun write(value: FsrsState, buf: ByteBuffer) {
-            FfiConverterFloat.write(value.`stability`, buf)
-            FfiConverterFloat.write(value.`difficulty`, buf)
+            FfiConverterDouble.write(value.`stability`, buf)
+            FfiConverterDouble.write(value.`difficulty`, buf)
             FfiConverterLong.write(value.`due`, buf)
             FfiConverterOptionalLong.write(value.`lastReview`, buf)
             FfiConverterUInt.write(value.`lapses`, buf)
+            FfiConverterTypeCardState.write(value.`state`, buf)
+            FfiConverterString.write(value.`algorithm`, buf)
     }
 }
 
@@ -2215,6 +2282,57 @@ public object FfiConverterTypeSkillAxes: FfiConverterRustBuffer<SkillAxes> {
 
 
 /**
+ * Scheduler lifecycle; Loro uses one explicit ten-minute learning/relearning step.
+ */
+
+enum class CardState {
+    
+    /**
+     * No review evidence yet.
+     */
+    NEW,
+    /**
+     * Initial recall has not succeeded.
+     */
+    LEARNING,
+    /**
+     * Established scheduled review.
+     */
+    REVIEW,
+    /**
+     * A scheduled review failed.
+     */
+    RELEARNING;
+
+    
+
+
+    companion object
+}
+
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeCardState: FfiConverterRustBuffer<CardState> {
+    override fun read(buf: ByteBuffer) = try {
+        CardState.values()[buf.getInt() - 1]
+    } catch (e: IndexOutOfBoundsException) {
+        throw RuntimeException("invalid enum value, something is very wrong!!", e)
+    }
+
+    override fun allocationSize(value: CardState) = 4UL
+
+    override fun write(value: CardState, buf: ByteBuffer) {
+        buf.putInt(value.ordinal + 1)
+    }
+}
+
+
+
+
+
+/**
  * Notification categories. Each is individually opt-out.
  */
 
@@ -2280,8 +2398,8 @@ public object FfiConverterTypeCategory: FfiConverterRustBuffer<Category> {
 /**
  * The learner's five-level confidence rating (the Memory-model screen), mapped to a grade.
  *
- * `Strong` maps to `Good`. The reference algorithm has four grades; adding a
- * caller-side stability bonus would create a second, non-reference scheduler.
+ * `Strong` maps to `Good`; `review_confidence` applies the documented 10% stability
+ * bonus in the canonical core.
  */
 
 enum class Confidence {
@@ -2615,12 +2733,12 @@ public object FfiConverterTypeFixKind: FfiConverterRustBuffer<FixKind> {
 
 
 /**
- * A review that cannot safely produce a portable, finite schedule.
+ * Explicit invalid-input failures cross both WASM and native bindings.
  */
 sealed class FsrsException: kotlin.Exception() {
     
     /**
-     * Memory values are non-finite or outside their domain.
+     * Non-finite values, invalid memory state, or inconsistent lifecycle.
      */
     class InvalidState(
         ) : FsrsException() {
@@ -2629,45 +2747,27 @@ sealed class FsrsException: kotlin.Exception() {
     }
     
     /**
-     * Timestamp is outside the supported nonnegative JavaScript Date range.
+     * Negative, backward or unsafe epoch milliseconds.
      */
-    class InvalidTimestamp(
+    class InvalidTime(
         ) : FsrsException() {
         override val message
             get() = ""
     }
     
     /**
-     * Applying an older review would rewind the complete memory state.
+     * An unknown algorithm needs an explicit migration; recognized preview is supported.
      */
-    class ReviewBeforeLastReview(
+    class UnsupportedAlgorithm(
         ) : FsrsException() {
         override val message
             get() = ""
     }
     
     /**
-     * The next due timestamp would exceed the shared timestamp range.
+     * A due timestamp or lapse counter cannot be represented.
      */
-    class TimestampOverflow(
-        ) : FsrsException() {
-        override val message
-            get() = ""
-    }
-    
-    /**
-     * The lapse counter cannot represent another failed review.
-     */
-    class LapseOverflow(
-        ) : FsrsException() {
-        override val message
-            get() = ""
-    }
-    
-    /**
-     * Computed memory state cannot be represented as finite 32-bit values.
-     */
-    class NumericOverflow(
+    class Overflow(
         ) : FsrsException() {
         override val message
             get() = ""
@@ -2693,11 +2793,9 @@ public object FfiConverterTypeFsrsError : FfiConverterRustBuffer<FsrsException> 
 
         return when(buf.getInt()) {
             1 -> FsrsException.InvalidState()
-            2 -> FsrsException.InvalidTimestamp()
-            3 -> FsrsException.ReviewBeforeLastReview()
-            4 -> FsrsException.TimestampOverflow()
-            5 -> FsrsException.LapseOverflow()
-            6 -> FsrsException.NumericOverflow()
+            2 -> FsrsException.InvalidTime()
+            3 -> FsrsException.UnsupportedAlgorithm()
+            4 -> FsrsException.Overflow()
             else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
         }
     }
@@ -2708,23 +2806,15 @@ public object FfiConverterTypeFsrsError : FfiConverterRustBuffer<FsrsException> 
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4UL
             )
-            is FsrsException.InvalidTimestamp -> (
+            is FsrsException.InvalidTime -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4UL
             )
-            is FsrsException.ReviewBeforeLastReview -> (
+            is FsrsException.UnsupportedAlgorithm -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4UL
             )
-            is FsrsException.TimestampOverflow -> (
-                // Add the size for the Int that specifies the variant plus the size needed for all fields
-                4UL
-            )
-            is FsrsException.LapseOverflow -> (
-                // Add the size for the Int that specifies the variant plus the size needed for all fields
-                4UL
-            )
-            is FsrsException.NumericOverflow -> (
+            is FsrsException.Overflow -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4UL
             )
@@ -2737,24 +2827,16 @@ public object FfiConverterTypeFsrsError : FfiConverterRustBuffer<FsrsException> 
                 buf.putInt(1)
                 Unit
             }
-            is FsrsException.InvalidTimestamp -> {
+            is FsrsException.InvalidTime -> {
                 buf.putInt(2)
                 Unit
             }
-            is FsrsException.ReviewBeforeLastReview -> {
+            is FsrsException.UnsupportedAlgorithm -> {
                 buf.putInt(3)
                 Unit
             }
-            is FsrsException.TimestampOverflow -> {
+            is FsrsException.Overflow -> {
                 buf.putInt(4)
-                Unit
-            }
-            is FsrsException.LapseOverflow -> {
-                buf.putInt(5)
-                Unit
-            }
-            is FsrsException.NumericOverflow -> {
-                buf.putInt(6)
                 Unit
             }
         }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
@@ -2885,8 +2967,9 @@ enum class MergeClass {
      */
     MAX,
     /**
-     * Merged as a group, by the later `srs_last_review`. Mixing FSRS fields across
-     * devices would produce a state no algorithm ever computed.
+     * Merged as a group, by the later `srs_last_review`, then its group HLC when
+     * actual review times tie. Mixing FSRS fields across devices would produce a
+     * state no algorithm ever computed.
      */
     LATEST_REVIEW,
     /**
@@ -3412,6 +3495,38 @@ public object FfiConverterOptionalTypeDraw: FfiConverterRustBuffer<Draw?> {
 /**
  * @suppress
  */
+public object FfiConverterOptionalTypeConfidence: FfiConverterRustBuffer<Confidence?> {
+    override fun read(buf: ByteBuffer): Confidence? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeConfidence.read(buf)
+    }
+
+    override fun allocationSize(value: Confidence?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeConfidence.allocationSize(value)
+        }
+    }
+
+    override fun write(value: Confidence?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeConfidence.write(value, buf)
+        }
+    }
+}
+
+
+
+
+/**
+ * @suppress
+ */
 public object FfiConverterOptionalTypeFinisherCard: FfiConverterRustBuffer<FinisherCard?> {
     override fun read(buf: ByteBuffer): FinisherCard? {
         if (buf.get().toInt() == 0) {
@@ -3434,6 +3549,38 @@ public object FfiConverterOptionalTypeFinisherCard: FfiConverterRustBuffer<Finis
         } else {
             buf.put(1)
             FfiConverterTypeFinisherCard.write(value, buf)
+        }
+    }
+}
+
+
+
+
+/**
+ * @suppress
+ */
+public object FfiConverterOptionalTypeGrade: FfiConverterRustBuffer<Grade?> {
+    override fun read(buf: ByteBuffer): Grade? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeGrade.read(buf)
+    }
+
+    override fun allocationSize(value: Grade?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeGrade.allocationSize(value)
+        }
+    }
+
+    override fun write(value: Grade?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeGrade.write(value, buf)
         }
     }
 }
@@ -3910,9 +4057,8 @@ public object FfiConverterSequenceTypeTag: FfiConverterRustBuffer<List<Tag>> {
         /**
          * Seed FSRS difficulty from the learner's own declaration.
          *
-         * This prior records the learner's declaration before they have reviewed a phrase.
-         * `review` initializes canonical memory difficulty from its first observed grade;
-         * the declaration itself remains available for ranking and bounded re-rating.
+         * This is Loro's structural advantage over every other app using FSRS: the learner
+         * tells us a phrase's difficulty when they add it, so there is no cold start.
          *
          * `pron` deliberately does **not** raise difficulty — it changes the *drill*, not the
          * memory load.
@@ -3946,36 +4092,92 @@ public object FfiConverterSequenceTypeTag: FfiConverterRustBuffer<List<Tag>> {
     
 
         /**
-         * FSRS-6 retrievability at `t` elapsed days after the last review.
+         * Map observed recall evidence to the grade used by every practice engine.
          *
-         * Stability is the interval at 90% recall. Negative elapsed time is clamped to zero;
-         * invalid/non-finite inputs return zero rather than propagating NaN through ranking.
-         */ fun `retrievability`(`daysSinceReview`: kotlin.Float, `stability`: kotlin.Float): kotlin.Float {
-            return FfiConverterFloat.lift(
+         * An explicit four-grade self-rating takes precedence over confidence;
+         * otherwise a failed recall is Again, a hinted success Hard, and an unhinted
+         * success Good. Passive listening and skipped attempts must not call this function.
+         */ fun `reviewGrade`(`success`: kotlin.Boolean, `hintsUsed`: kotlin.UInt, `selfGrade`: Grade?, `confidence`: Confidence?): Grade {
+            return FfiConverterTypeGrade.lift(
     uniffiRustCall() { _status ->
-    UniffiLib.uniffi_loro_core_fn_func_retrievability(
+    UniffiLib.uniffi_loro_core_fn_func_review_grade(
     
         
-        FfiConverterFloat.lower(`daysSinceReview`),
-        FfiConverterFloat.lower(`stability`),_status)
+        FfiConverterBoolean.lower(`success`),
+        FfiConverterUInt.lower(`hintsUsed`),
+        FfiConverterOptionalTypeGrade.lower(`selfGrade`),
+        FfiConverterOptionalTypeConfidence.lower(`confidence`),_status)
 }
     )
     }
     
 
         /**
-         * Apply one review using FSRS-6 and the pinned default parameter set.
-         *
-         * `last_review: None` means an unseen phrase: its first grade initializes memory
-         * using the reference parameters. Declared difficulty remains a separate input to
-         * ranking and re-rating; it does not alter the canonical first-review equation.
-         * For established phrases, elapsed whole 24-hour days select the reference
-         * short-/long-term update. Due dates are relative to `at_ms`, never to an old due.
-         * An Again on an established phrase increments lapses; first exposure does not.
+         * Create a new card without pretending that adding a phrase is a recall observation.
          *
          * # Errors
-         * Rejects non-finite or invalid memory values, out-of-order reviews, timestamp
-         * overflow and lapse overflow. It never silently resets an established state.
+         * Rejects unsafe timestamps.
+         */
+    @Throws(FsrsException::class) fun `initialize`(`declared`: Difficulty, `tags`: List<Tag>, `atMs`: kotlin.Long): FsrsState {
+            return FfiConverterTypeFsrsState.lift(
+    uniffiRustCallWithError(FsrsException) { _status ->
+    UniffiLib.uniffi_loro_core_fn_func_initialize(
+    
+        
+        FfiConverterTypeDifficulty.lower(`declared`),
+        FfiConverterSequenceTypeTag.lower(`tags`),
+        FfiConverterLong.lower(`atMs`),_status)
+}
+    )
+    }
+    
+
+        /**
+         * Apply a changed declaration without manufacturing a review or rescheduling it.
+         *
+         * # Errors
+         * Rejects corrupt or foreign state using the same validation as review.
+         */
+    @Throws(FsrsException::class) fun `rerate`(`state`: FsrsState, `declared`: Difficulty, `tags`: List<Tag>): FsrsState {
+            return FfiConverterTypeFsrsState.lift(
+    uniffiRustCallWithError(FsrsException) { _status ->
+    UniffiLib.uniffi_loro_core_fn_func_rerate(
+    
+        
+        FfiConverterTypeFsrsState.lower(`state`),
+        FfiConverterTypeDifficulty.lower(`declared`),
+        FfiConverterSequenceTypeTag.lower(`tags`),_status)
+}
+    )
+    }
+    
+
+        /**
+         * FSRS-6 power curve. Stability is the interval at 90% recall.
+         *
+         * # Errors
+         * Rejects non-finite, negative elapsed time or nonpositive stability.
+         */
+    @Throws(FsrsException::class) fun `retrievability`(`daysSinceReview`: kotlin.Double, `stability`: kotlin.Double): kotlin.Double {
+            return FfiConverterDouble.lift(
+    uniffiRustCallWithError(FsrsException) { _status ->
+    UniffiLib.uniffi_loro_core_fn_func_retrievability(
+    
+        
+        FfiConverterDouble.lower(`daysSinceReview`),
+        FfiConverterDouble.lower(`stability`),_status)
+}
+    )
+    }
+    
+
+        /**
+         * Apply an observed grade with full card state, no randomized interval fuzz.
+         *
+         * # Errors
+         * Rejects corrupt/unknown state, backward time and timestamp/counter overflow.
+         * Recognized preview evidence is updated directly and adopts the current policy
+         * only here, after an actual review; deserialization never changes memory or due.
          */
     @Throws(FsrsException::class) fun `review`(`state`: FsrsState, `grade`: Grade, `atMs`: kotlin.Long): FsrsState {
             return FfiConverterTypeFsrsState.lift(
@@ -3985,6 +4187,26 @@ public object FfiConverterSequenceTypeTag: FfiConverterRustBuffer<List<Tag>> {
         
         FfiConverterTypeFsrsState.lower(`state`),
         FfiConverterTypeGrade.lower(`grade`),
+        FfiConverterLong.lower(`atMs`),_status)
+}
+    )
+    }
+    
+
+        /**
+         * Apply Loro confidence policy; Strong adds 10% stability to Good and recomputes due.
+         *
+         * # Errors
+         * Same validation and overflow failures as `review`.
+         */
+    @Throws(FsrsException::class) fun `reviewConfidence`(`state`: FsrsState, `confidence`: Confidence, `atMs`: kotlin.Long): FsrsState {
+            return FfiConverterTypeFsrsState.lift(
+    uniffiRustCallWithError(FsrsException) { _status ->
+    UniffiLib.uniffi_loro_core_fn_func_review_confidence(
+    
+        
+        FfiConverterTypeFsrsState.lower(`state`),
+        FfiConverterTypeConfidence.lower(`confidence`),
         FfiConverterLong.lower(`atMs`),_status)
 }
     )

@@ -3,7 +3,13 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { spawnSync } from 'node:child_process'
 import { afterEach, describe, expect, it } from 'vitest'
-import { openSqlPersistence, userPhraseId, type Clock, type SqlDriver } from '@loro/core'
+import {
+  openSqlPersistence,
+  userPhraseId,
+  type Clock,
+  type SqlDriver,
+  type SessionHandle,
+} from '@loro/core'
 import { makePhrase } from '@loro/core/testing'
 import { createAppStore, reloadStorePersistence } from '../store/store'
 import { INITIAL_STATE } from '../store/state'
@@ -12,6 +18,8 @@ import { openNodeSqlite } from './driver.node'
 import { flushPendingDeletes } from './pendingDeletes'
 import { UNDO_TOAST_MS } from '../lib/toastTiming'
 import { writeLocalValue } from './database'
+import { loadLearningCatalog } from '@loro/content'
+import type { PracticeCommitContext } from '../store/types'
 
 const AT = 1_785_231_660_000
 const DAY = '2026-07-28'
@@ -47,6 +55,26 @@ function open(path = ':memory:') {
   })
   return { ...database, storage, store }
 }
+function sessionFor(id: string): SessionHandle {
+  return {
+    sessionId: 'session-1',
+    cursor: 0,
+    plan: {
+      engineId: 'refrain',
+      estimatedMs: 0,
+      closed: true,
+      items: Array.from({ length: 10 }, (_, index) => ({
+        itemId: `${id}:${String(index)}`,
+        phraseId: userPhraseId(id),
+        mode: 'echo',
+        prompt: { show: 'full' },
+        gate: { kind: 'self-report' },
+        audio: null,
+        meta: { repIndex: index, repTarget: 10 },
+      })),
+    },
+  }
+}
 function diskPath(): string {
   const dir = mkdtempSync(join(tmpdir(), 'loro-progress-'))
   dirs.push(dir)
@@ -54,6 +82,141 @@ function diskPath(): string {
 }
 
 describe('repository-backed learner state', () => {
+  function preparedPractice(path = ':memory:') {
+    const db = open(path)
+    db.store.setState({ phrases: [makePhrase('practised')], onboarded: true })
+    db.store.getState().ensureRefrainSet()
+    const resume = { ...db.store.getState().refrainResume, session: sessionFor('practised') }
+    db.store.setState({ refrainResume: resume })
+    const algorithm = 'fsrs-6-default-c8ca282-loro-v1'
+    const delta = {
+      phraseId: userPhraseId('practised'),
+      reps: 1,
+      repsToday: 1,
+      lastPracticedAt: at,
+      srs: {
+        stability: 4,
+        difficulty: 5,
+        due: at + 86_400_000,
+        lastReview: at,
+        lapses: 0,
+        state: 'review' as const,
+        algorithm,
+      },
+      review: { at, grade: 3 as const, algorithm },
+    }
+    const context: PracticeCommitContext = {
+      attemptId: 'attempt-1',
+      targetLocale: 'es-ES',
+      localDay: DAY,
+      streakDay: DAY,
+      expectedPhrase: db.store.getState().phrases[0]!,
+      sessionId: resume.session.sessionId,
+      expectedCursor: 0,
+      checkpoint: { ...resume, cursor: 1, session: { ...resume.session, cursor: 1 } },
+    }
+    return { ...db, delta, context }
+  }
+
+  it('deduplicates a completed attempt across a database close and reopen with one review receipt', () => {
+    const path = diskPath()
+    const first = preparedPractice(path)
+    first.store.getState().applyDelta(first.delta, first.context)
+    first.store.getState().applyDelta(first.delta, first.context)
+    const queued = first.persistence.outbox.pending(100)
+    first.driver.close()
+    const next = open(path)
+    next.store.getState().applyDelta(first.delta, first.context)
+    expect(next.store.getState().phrases[0]?.reps).toBe(1)
+    expect(next.store.getState().refrainResume.cursor).toBe(1)
+    expect(next.driver.all('SELECT * FROM review_event')).toHaveLength(1)
+    expect(next.driver.all('SELECT * FROM committed_attempt')).toHaveLength(1)
+    expect(next.persistence.outbox.pending(100)).toEqual(queued)
+    expect(queued.filter((op) => op.entity === 'review_log')).toHaveLength(1)
+  })
+
+  it('rolls back the delta, checkpoint, attempt, review and outbox together when journal insertion fails', () => {
+    const db = preparedPractice()
+    const previous = db.store.getState()
+    const queued = db.persistence.outbox.pending(100)
+    db.driver.exec(
+      "CREATE TRIGGER fail_review BEFORE INSERT ON review_event BEGIN SELECT RAISE(ABORT,'disk full'); END",
+    )
+    expect(() => {
+      db.store.getState().applyDelta(db.delta, db.context)
+    }).toThrow('disk full')
+    expect(db.store.getState()).toBe(previous)
+    expect(db.persistence.phrases.byId(db.delta.phraseId)?.reps).toBe(0)
+    expect(db.driver.all('SELECT * FROM committed_attempt')).toEqual([])
+    expect(db.persistence.outbox.pending(100)).toEqual(queued)
+    db.driver.exec('DROP TRIGGER fail_review')
+    db.store.getState().applyDelta(db.delta, db.context)
+    expect(db.store.getState().refrainResume.cursor).toBe(1)
+    expect(db.persistence.phrases.byId(db.delta.phraseId)?.reps).toBe(1)
+  })
+
+  it('rejects an asynchronous outcome after the repository phrase changed under the displayed snapshot', () => {
+    const db = preparedPractice()
+    db.driver.run('UPDATE user_phrase SET note=? WHERE id=?', [
+      'Other device note',
+      db.delta.phraseId,
+    ])
+    expect(() => {
+      db.store.getState().applyDelta(db.delta, db.context)
+    }).toThrow('Practice phrase has changed')
+    expect(db.persistence.phrases.byId(db.delta.phraseId)?.note).toBe('Other device note')
+    expect(db.driver.all('SELECT * FROM committed_attempt')).toEqual([])
+  })
+
+  it('preserves cold-entry additions and catalog tombstones when onboarding seeds a pack', () => {
+    const db = open()
+    const pack = loadLearningCatalog('es-ES', 'en').packs[0]!
+    const keep = pack.phrases[0]!,
+      removed = pack.phrases[1]!
+    db.store.getState().addPhrase(keep)
+    const kept = db.store.getState().phrases[0]!
+    db.store.getState().setNote(kept.id, 'Keep my note')
+    db.store.getState().addPhrase(removed)
+    const deleted = db.store.getState().phrases.find((phrase) => phrase.phraseId === removed)!
+    db.store.getState().removePhrase(deleted.id)
+    const own = db.store
+      .getState()
+      .addOwnPhrase({ targetText: 'Mi frase', translation: 'My phrase' })
+    db.store
+      .getState()
+      .completeOnboarding({ goal: 'travel', level: 'beg', dailyMinutes: 10, packIds: [pack.id] })
+    expect(db.store.getState().phrases.find((phrase) => phrase.id === kept.id)?.note).toBe(
+      'Keep my note',
+    )
+    expect(db.store.getState().phrases.some((phrase) => phrase.id === own)).toBe(true)
+    expect(db.store.getState().phrases.some((phrase) => phrase.phraseId === removed)).toBe(false)
+  })
+
+  it('stages nested onboarding actions and keeps transient error toasts usable when writes fail', () => {
+    const db = open()
+    const previous = db.store.getState()
+    db.driver.exec(
+      "CREATE TRIGGER fail_set BEFORE INSERT ON refrain_day BEGIN SELECT RAISE(ABORT,'disk full'); END",
+    )
+    expect(() => {
+      db.store
+        .getState()
+        .completeOnboarding({ goal: 'travel', level: 'beg', dailyMinutes: 10, packIds: ['cafe'] })
+    }).toThrow('disk full')
+    expect(db.store.getState()).toBe(previous)
+    expect(db.persistence.phrases.all()).toEqual([])
+    expect(db.persistence.outbox.pending(100)).toEqual([])
+    db.store.getState().showToast('Could not save')
+    expect(db.store.getState().toast?.message).toBe('Could not save')
+    expect(db.persistence.outbox.pending(100)).toEqual([])
+  })
+
+  it('discards malformed resume data while preserving valid phrase progress', () => {
+    const db = preparedPractice()
+    db.driver.run('UPDATE course_session SET refrain_session=?', ['{"session":'])
+    expect(db.storage.load().phrases[0]?.id).toBe(db.delta.phraseId)
+    expect(db.storage.load().refrainResume.session).toBeNull()
+  })
   it('reopens every course, phrase identity, streak day, settings and resume cursor', () => {
     const path = diskPath()
     const first = open(path)
@@ -66,6 +229,9 @@ describe('repository-backed learner state', () => {
       level: 'beg',
     })
     first.store.getState().ensureRefrainSet()
+    first.store.setState({
+      refrainResume: { ...first.store.getState().refrainResume, session: sessionFor(phrase.id) },
+    })
     first.store
       .getState()
       .applyDelta(
@@ -220,7 +386,13 @@ describe('repository-backed learner state', () => {
     day = '2026-07-29'
     db.store.getState().ensureRefrainSet()
     expect(db.store.getState().refrainSet).not.toEqual(original)
-    db.store.setState({ refrainResume: { ...db.store.getState().refrainResume, cursor: 9 } })
+    db.store.setState({
+      refrainResume: {
+        ...db.store.getState().refrainResume,
+        session: sessionFor(db.store.getState().refrainSet[0]!),
+        cursor: 9,
+      },
+    })
     day = DAY
     db.driver.close()
     const reopened = open(path)

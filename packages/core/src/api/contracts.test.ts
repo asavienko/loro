@@ -127,7 +127,7 @@ describe('target wire boundaries (F-04)', () => {
       srsState: field('review'),
     }
     expect(target.UserPhraseFieldsSchema.safeParse(fields).success).toBe(true)
-    for (const key of target.fsrsFields) {
+    for (const key of target.fsrsFields.filter((field) => field !== 'srsAlgorithm')) {
       const partial = Object.fromEntries(Object.entries(fields).filter(([name]) => name !== key))
       expect(target.UserPhraseFieldsSchema.safeParse(partial).success).toBe(false)
     }
@@ -432,10 +432,10 @@ describe('AI and privacy contracts', () => {
 
 describe('registry and generated OpenAPI', () => {
   it('publishes only implemented routes in current and excludes drafts from stable exports', () => {
-    expect(currentOperations).toHaveLength(19)
+    expect(currentOperations).toHaveLength(25)
     expect(new Set(currentOperations.map((op) => op.status))).toEqual(new Set(['implemented']))
     expect(Object.keys(buildOpenApi('current').paths).sort()).toEqual(
-      currentOperations.map((o) => o.path).sort(),
+      [...new Set(currentOperations.map((o) => o.path))].sort(),
     )
     expect('ChatTurnRequestSchema' in target).toBe(false)
     expect('TripSyncOpSchema' in target).toBe(false)

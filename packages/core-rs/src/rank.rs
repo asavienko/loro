@@ -81,6 +81,47 @@ pub fn stream_rank_values(
     r.saturating_add(offset)
 }
 
+/// Minimal scheduling input for an ordered stream; eligibility uses the app/domain rule.
+#[derive(serde::Deserialize)]
+pub struct StreamCandidate {
+    /// Stable learner phrase identity.
+    pub id: String,
+    /// True only for live, unlearned, ungraduated phrases.
+    pub active: bool,
+    /// Number of completed listens.
+    pub plays: u32,
+    /// Learner-declared difficulty.
+    pub difficulty: Difficulty,
+    /// Whether the learner loves the phrase.
+    pub loved: bool,
+    /// Actual scheduled review time, if any.
+    pub due: Option<i64>,
+}
+
+/// Order eligible stream candidates with platform-independent ID ties.
+#[must_use]
+pub fn order_stream_candidates(candidates: &[StreamCandidate], now_ms: i64) -> Vec<String> {
+    let mut active: Vec<_> = candidates
+        .iter()
+        .filter(|candidate| candidate.active)
+        .collect();
+    active.sort_by(|a, b| {
+        stream_rank_values(a.plays, a.difficulty, a.loved, a.due, now_ms)
+            .cmp(&stream_rank_values(
+                b.plays,
+                b.difficulty,
+                b.loved,
+                b.due,
+                now_ms,
+            ))
+            .then_with(|| a.id.cmp(&b.id))
+    });
+    active
+        .into_iter()
+        .map(|candidate| candidate.id.clone())
+        .collect()
+}
+
 /// Order the active queue. Excludes learned phrases.
 #[must_use]
 pub fn order_stream(phrases: &[PhraseState], now_ms: i64) -> Vec<String> {

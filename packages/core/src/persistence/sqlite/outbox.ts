@@ -17,6 +17,7 @@ import {
   type SqlValue,
 } from '../driver.js'
 import type { FieldWrite, OutboxAppend, OutboxOp, OutboxTable } from '../tables.js'
+import { LOCAL_USER_ID } from '../tables.js'
 import { mergeClassOf } from '../../sync/fieldPolicy.js'
 
 const OUTBOX_SELECT = `SELECT seq, entity, entity_id, op, payload, hlc, created_at, attempts, replaces FROM outbox`
@@ -57,7 +58,10 @@ function rowToOp(row: SqlRow): OutboxOp {
 }
 
 export class SqlOutboxTable implements OutboxTable {
-  constructor(private readonly driver: SqlDriver) {}
+  constructor(
+    private readonly driver: SqlDriver,
+    private readonly userId: string = LOCAL_USER_ID,
+  ) {}
 
   append(op: OutboxAppend): void {
     const fields = Object.keys(op.fields)
@@ -84,9 +88,10 @@ export class SqlOutboxTable implements OutboxTable {
         // Replace the earlier values in place rather than queueing a second op: two `lww`
         // writes to the same field are one write as far as the server is concerned, and a
         // learner who taps a rating four times should not cost four round trips.
-        this.driver.run('UPDATE outbox SET payload = ?, hlc = ? WHERE seq = ?', [
+        this.driver.run('UPDATE outbox SET payload = ?, hlc = ? WHERE user_id = ? AND seq = ?', [
           JSON.stringify({ ...pending.fields, ...op.fields }),
           op.hlc,
+          this.userId,
           pending.seq,
         ])
         return
@@ -94,9 +99,10 @@ export class SqlOutboxTable implements OutboxTable {
     }
 
     this.driver.run(
-      `INSERT INTO outbox (entity, entity_id, op, payload, hlc, created_at, replaces)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO outbox (user_id, entity, entity_id, op, payload, hlc, created_at, replaces)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       [
+        this.userId,
         op.entity,
         op.entityId,
         op.op,
@@ -112,9 +118,9 @@ export class SqlOutboxTable implements OutboxTable {
     const row = firstRow(
       this.driver,
       `${OUTBOX_SELECT}
-       WHERE entity = ? AND entity_id = ?
+       WHERE user_id = ? AND entity = ? AND entity_id = ?
        ORDER BY seq DESC LIMIT 1`,
-      [entity, entityId],
+      [this.userId, entity, entityId],
     )
     return row === null ? null : rowToOp(row)
   }
@@ -123,28 +129,34 @@ export class SqlOutboxTable implements OutboxTable {
     return this.driver
       .all(
         `${OUTBOX_SELECT}
+         WHERE user_id = ?
          ORDER BY seq LIMIT ?`,
-        [limit],
+        [this.userId, limit],
       )
       .map(rowToOp)
   }
 
   ack(seqs: readonly number[]): void {
     if (seqs.length === 0) return
-    this.driver.run(`DELETE FROM outbox WHERE seq IN (${placeholders(seqs.length)})`, seqs)
+    this.driver.run(
+      `DELETE FROM outbox WHERE user_id = ? AND seq IN (${placeholders(seqs.length)})`,
+      [this.userId, ...seqs],
+    )
   }
 
   recordFailure(seqs: readonly number[], error: string): void {
     if (seqs.length === 0) return
     this.driver.run(
       `UPDATE outbox SET attempts = attempts + 1, last_error = ?
-       WHERE seq IN (${placeholders(seqs.length)})`,
-      [error, ...seqs] as SqlValue[],
+       WHERE user_id = ? AND seq IN (${placeholders(seqs.length)})`,
+      [error, this.userId, ...seqs] as SqlValue[],
     )
   }
 
   size(): number {
-    const row = firstRow(this.driver, 'SELECT COUNT(*) AS n FROM outbox')
+    const row = firstRow(this.driver, 'SELECT COUNT(*) AS n FROM outbox WHERE user_id = ?', [
+      this.userId,
+    ])
     return row === null ? 0 : readInt(row, 'n')
   }
 
@@ -217,8 +229,9 @@ export class SqlOutboxTable implements OutboxTable {
     }
 
     if (dropped.length === 0) return 0
-    this.driver.run('UPDATE outbox SET payload = ? WHERE seq = ?', [
+    this.driver.run('UPDATE outbox SET payload = ? WHERE user_id = ? AND seq = ?', [
       JSON.stringify(merged),
+      this.userId,
       target.seq,
     ])
     this.ack(dropped)

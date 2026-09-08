@@ -33,6 +33,8 @@ export class ProblemDetailsFilter implements ExceptionFilter {
     const ctx = host.switchToHttp()
     const problem = this.problemFor(exception, ctx.getRequest<Request>())
     const response = ctx.getResponse<Response>()
+    if (ctx.getRequest<Request>().path.startsWith('/v1/auth'))
+      response.setHeader('Cache-Control', 'no-store')
     if (exception instanceof LoroError && exception.status === 429) {
       const retry = exception.extra['retry_after']
       if (typeof retry === 'number' && Number.isFinite(retry) && retry > 0)
@@ -51,7 +53,7 @@ export class ProblemDetailsFilter implements ExceptionFilter {
     // Drivers/providers may put SQL parameters or credentials in exception text.
     // Logs retain only the route and exception class, never the original message.
     this.logger.error(
-      `${req.method} ${req.path} — ${exception instanceof Error ? exception.name : 'UnknownError'}`,
+      `${req.method} ${req.path.startsWith('/v1/auth') ? '[auth]' : req.path} — ${exception instanceof Error ? exception.name : 'UnknownError'}`,
     )
     return toProblemDetails(exception)
   }

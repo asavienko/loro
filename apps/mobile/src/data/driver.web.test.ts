@@ -21,6 +21,21 @@ function storage(): BrowserStorage & { fail: boolean } {
 }
 
 describe('durable browser SQLite', () => {
+  it('rejects asynchronous callbacks without publishing a partial SQLite file', () => {
+    const disk = storage()
+    const driver = createBrowserSqlite(SQL, disk)
+    driver.exec('CREATE TABLE progress(reps INTEGER)')
+    const before = disk.getItem(WEB_DATABASE_KEY)
+    expect(() =>
+      driver.transaction(() => {
+        driver.run('INSERT INTO progress VALUES(1)')
+        return Promise.resolve()
+      }),
+    ).toThrow('must be synchronous')
+    expect(driver.all('SELECT * FROM progress')).toEqual([])
+    expect(disk.getItem(WEB_DATABASE_KEY)).toBe(before)
+    driver.close()
+  })
   it('reopens committed SQL rows in a new SQLite instance', () => {
     const disk = storage()
     const first = createBrowserSqlite(SQL, disk)

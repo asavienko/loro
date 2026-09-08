@@ -1,6 +1,6 @@
 import process from 'node:process'
 import { defineConfig } from '@playwright/test'
-import { isCI, sharedTiming, sharedUse } from './config.shared.mjs'
+import { accountEnvironment, isCI, sharedTiming, sharedUse } from './config.shared.mjs'
 
 const port = Number(process.env.LORO_E2E_PORT ?? 8082)
 
@@ -25,6 +25,6 @@ export default defineConfig({
     reuseExistingServer: !isCI,
     stdout: 'ignore',
     stderr: 'pipe',
-    env: { EXPO_NO_TELEMETRY: '1', EXPO_PUBLIC_API_URL: 'http://127.0.0.1:3000/v1' },
+    env: accountEnvironment,
   },
 })

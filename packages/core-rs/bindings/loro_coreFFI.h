@@ -328,14 +328,34 @@ float uniffi_loro_core_fn_func_initial_difficulty(RustBuffer declared, RustBuffe
 float uniffi_loro_core_fn_func_nudge_difficulty(float current, RustBuffer declared, RustBuffer tags, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_REVIEW_GRADE
+#define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_REVIEW_GRADE
+RustBuffer uniffi_loro_core_fn_func_review_grade(int8_t success, uint32_t hints_used, RustBuffer self_grade, RustBuffer confidence, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_INITIALIZE
+#define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_INITIALIZE
+RustBuffer uniffi_loro_core_fn_func_initialize(RustBuffer declared, RustBuffer tags, int64_t at_ms, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_RERATE
+#define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_RERATE
+RustBuffer uniffi_loro_core_fn_func_rerate(RustBuffer state, RustBuffer declared, RustBuffer tags, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_RETRIEVABILITY
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_RETRIEVABILITY
-float uniffi_loro_core_fn_func_retrievability(float days_since_review, float stability, RustCallStatus *_Nonnull out_status
+double uniffi_loro_core_fn_func_retrievability(double days_since_review, double stability, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_REVIEW
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_REVIEW
 RustBuffer uniffi_loro_core_fn_func_review(RustBuffer state, RustBuffer grade, int64_t at_ms, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_REVIEW_CONFIDENCE
+#define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_REVIEW_CONFIDENCE
+RustBuffer uniffi_loro_core_fn_func_review_confidence(RustBuffer state, RustBuffer confidence, int64_t at_ms, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_CLIMB
@@ -800,6 +820,24 @@ uint16_t uniffi_loro_core_checksum_func_nudge_difficulty(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_REVIEW_GRADE
+#define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_REVIEW_GRADE
+uint16_t uniffi_loro_core_checksum_func_review_grade(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_INITIALIZE
+#define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_INITIALIZE
+uint16_t uniffi_loro_core_checksum_func_initialize(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_RERATE
+#define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_RERATE
+uint16_t uniffi_loro_core_checksum_func_rerate(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_RETRIEVABILITY
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_RETRIEVABILITY
 uint16_t uniffi_loro_core_checksum_func_retrievability(void
@@ -809,6 +847,12 @@ uint16_t uniffi_loro_core_checksum_func_retrievability(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_REVIEW
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_REVIEW
 uint16_t uniffi_loro_core_checksum_func_review(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_REVIEW_CONFIDENCE
+#define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_REVIEW_CONFIDENCE
+uint16_t uniffi_loro_core_checksum_func_review_confidence(void
     
 );
 #endif

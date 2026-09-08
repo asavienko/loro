@@ -4,6 +4,62 @@ import { persistenceCopy } from './i18n/persistence'
 export const copy = {
   persistence: persistenceCopy,
   account: {
+    backend: {
+      get checking() {
+        return message('account.backend.checking')
+      },
+      get connected() {
+        return message('account.backend.connected')
+      },
+      get unavailable() {
+        return message('account.backend.unavailable')
+      },
+      get unconfigured() {
+        return message('account.backend.unconfigured')
+      },
+      get scope() {
+        return message('account.backend.scope')
+      },
+      get retry() {
+        return message('account.backend.retry')
+      },
+    },
+    get google() {
+      return message('account.google')
+    },
+    get apple() {
+      return message('account.apple')
+    },
+    get localData() {
+      return message('account.localData')
+    },
+    get busy() {
+      return message('account.busy')
+    },
+    get error() {
+      return message('account.error')
+    },
+    get 'provider-error'() {
+      return message('account.error')
+    },
+    get cancelled() {
+      return message('account.cancelled')
+    },
+    get localSignOut() {
+      return message('account.localSignOut')
+    },
+    get retry() {
+      return message('account.retry')
+    },
+    get providersUnavailable() {
+      return message('account.providersUnavailable')
+    },
+    get 'upgrade-sign-in'() {
+      return message('account.upgrade-sign-in')
+    },
+    get 'upgrade-offline'() {
+      return message('account.upgrade-offline')
+    },
     get title() {
       return message('account.title')
     },

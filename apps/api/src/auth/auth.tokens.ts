@@ -14,7 +14,9 @@ export interface AuthPrincipal {
 }
 
 export interface TokenSettings {
+  enabled?: boolean | undefined
   privateKeyPem: string | undefined
+  signingKey?: string | undefined
   issuer: string
   audience: string
   keyId: string
@@ -29,6 +31,11 @@ export function tokenHash(token: string): string {
   return createHash('sha256').update(token).digest('hex')
 }
 
+/** Old browser sessions used the same SHA-256 digest encoded as base64url. */
+export function legacyTokenHash(token: string): string {
+  return createHash('sha256').update(token).digest('base64url')
+}
+
 export function keyedHash(secret: string, value: string): string {
   return createHmac('sha256', secret).update(value).digest('hex')
 }
@@ -40,11 +47,22 @@ export function equalHash(actual: string, expected: string): boolean {
 }
 
 export class AccessTokens {
-  private readonly signingKey: ReturnType<typeof importPKCS8>
-  private readonly verificationKey: ReturnType<typeof importSPKI>
+  private readonly signingKey: ReturnType<typeof importPKCS8> | Uint8Array
+  private readonly verificationKey: ReturnType<typeof importSPKI> | Uint8Array
+  private readonly algorithm: 'ES256' | 'HS256'
 
   constructor(private readonly settings: TokenSettings) {
-    if (!settings.privateKeyPem?.startsWith('-----BEGIN PRIVATE KEY-----'))
+    if (settings.enabled === false) throw new LoroError('PROVIDER_UNAVAILABLE')
+    if (!settings.privateKeyPem) {
+      if (!settings.signingKey || Buffer.byteLength(settings.signingKey) < 32) {
+        throw new LoroError('PROVIDER_UNAVAILABLE')
+      }
+      this.algorithm = 'HS256'
+      this.signingKey = new TextEncoder().encode(settings.signingKey)
+      this.verificationKey = this.signingKey
+      return
+    }
+    if (!settings.privateKeyPem.startsWith('-----BEGIN PRIVATE KEY-----'))
       throw new LoroError('PROVIDER_UNAVAILABLE')
     try {
       const key = createPublicKey(settings.privateKeyPem)
@@ -52,6 +70,7 @@ export class AccessTokens {
         throw new Error('ES256 key required')
       }
       this.signingKey = importPKCS8(settings.privateKeyPem, 'ES256')
+      this.algorithm = 'ES256'
       this.verificationKey = importSPKI(
         key.export({ type: 'spki', format: 'pem' }).toString(),
         'ES256',
@@ -69,7 +88,7 @@ export class AccessTokens {
       plan: 'free',
       ver: 1,
     })
-      .setProtectedHeader({ alg: 'ES256', kid: this.settings.keyId, typ: 'JWT' })
+      .setProtectedHeader({ alg: this.algorithm, kid: this.settings.keyId, typ: 'JWT' })
       .setSubject(principal.userId)
       .setIssuer(this.settings.issuer)
       .setAudience(this.settings.audience)
@@ -83,7 +102,7 @@ export class AccessTokens {
       const { payload } = await jwtVerify(token, await this.verificationKey, {
         issuer: this.settings.issuer,
         audience: this.settings.audience,
-        algorithms: ['ES256'],
+        algorithms: [this.algorithm],
         typ: 'JWT',
         currentDate: new Date(now),
         clockTolerance: 30,

@@ -1,7 +1,13 @@
 /** Typed engine adapters over the same Rust code used by the API and native bindings. */
-import { userPhraseId, type LoroCoreFacade } from '@loro/core'
-import { coreCall } from '../lib/core'
+import {
+  isActive,
+  LEGACY_PREVIEW_ALGORITHM,
+  userPhraseId,
+  type FsrsState,
+  type LoroCoreFacade,
+} from '@loro/core'
 import { loadLearningCatalog, targetForPhraseId } from '@loro/content'
+import { coreCall } from '../lib/core'
 
 interface ReviewedState {
   readonly stability: number
@@ -9,9 +15,29 @@ interface ReviewedState {
   readonly due: number
   readonly last_review: number | null
   readonly lapses: number
+  readonly state: FsrsState['state']
+  readonly algorithm: string
+}
+function readSchedule({ last_review, ...rest }: ReviewedState): FsrsState {
+  return { ...rest, lastReview: last_review }
+}
+function wireSchedule({ lastReview, ...rest }: FsrsState): ReviewedState {
+  return { ...rest, last_review: lastReview, algorithm: rest.algorithm ?? LEGACY_PREVIEW_ALGORITHM }
 }
 
 export const rustCoreFacade: LoroCoreFacade = {
+  orderStream: (candidates, now) =>
+    coreCall<string[]>('order_stream', {
+      candidates: candidates.map((phrase) => ({
+        id: phrase.id,
+        active: isActive(phrase),
+        plays: phrase.plays,
+        difficulty: phrase.difficulty,
+        loved: phrase.loved,
+        due: phrase.srs?.due ?? null,
+      })),
+      now,
+    }).map(userPhraseId),
   repeatTarget: (difficulty) => coreCall('repeat_target', difficulty),
   streamRank: (phrase, now) =>
     coreCall('stream_rank', {
@@ -21,6 +47,11 @@ export const rustCoreFacade: LoroCoreFacade = {
       due: phrase.srs?.due ?? null,
       now,
     }),
+  automaticity: (reps, target) => coreCall('automaticity', { reps, target }),
+  refrainSetSize: (dailyMinutes) => coreCall('refrain_set_size', dailyMinutes),
+  modeForRep: (index) => coreCall('mode_for_rep', index),
+  modelRateForMode: (mode) => coreCall('model_rate_for_mode', mode),
+  beatMsForMode: (mode) => coreCall('beat_ms_for_mode', mode),
   clozeMask: (phrase) => {
     const language = phrase.targetLocale ?? targetForPhraseId(phrase.phraseId ?? '')
     // Target text is independent of the learner's native language. Read the bundled
@@ -47,27 +78,37 @@ export const rustCoreFacade: LoroCoreFacade = {
       size,
       tripPhraseIds,
     }).map(userPhraseId),
-  fsrsReview: (phrase, grade, at) => {
-    const result = coreCall<ReviewedState>('fsrs_review', {
-      state: {
-        stability: phrase.srs?.stability ?? 0,
-        difficulty: phrase.srs?.difficulty ?? 5,
-        due: phrase.srs?.due ?? at,
-        last_review: phrase.srs?.lastReview ?? null,
-        lapses: phrase.srs?.lapses ?? 0,
-      },
-      grade,
-      at,
-    })
-    return {
-      stability: result.stability,
-      difficulty: result.difficulty,
-      due: result.due,
-      lastReview: result.last_review,
-      lapses: result.lapses,
-      // Reference no-steps policy keeps cards in the review phase, including lapses.
-      state: 'review',
-    }
+  reviewGrade: (attempt) =>
+    coreCall('review_grade', {
+      success: attempt.outcome === 'success',
+      hintsUsed: attempt.hintsUsed,
+      selfGrade: attempt.selfGrade ?? null,
+      confidence: attempt.confidence ?? null,
+    }),
+  rerate: (phrase, declared) =>
+    phrase.srs === null
+      ? null
+      : readSchedule(
+          coreCall<ReviewedState>('fsrs_rerate', {
+            state: wireSchedule(phrase.srs),
+            declared,
+            tags: phrase.tags,
+          }),
+        ),
+  fsrsReview: (phrase, grade, at, confidence) => {
+    // Unversioned preview memory is retained exactly; only an observed review adopts
+    // the authored policy. Adding a phrase never creates synthetic review history.
+    const state =
+      phrase.srs === null
+        ? coreCall<ReviewedState>('fsrs_initialize', {
+            declared: phrase.difficulty,
+            tags: phrase.tags,
+            at,
+          })
+        : wireSchedule(phrase.srs)
+    return readSchedule(
+      coreCall<ReviewedState>('fsrs_review', { state, grade, at, confidence: confidence ?? null }),
+    )
   },
   matchTokens: (heard, target, revealed) => coreCall('match_tokens', { heard, target, revealed }),
 }

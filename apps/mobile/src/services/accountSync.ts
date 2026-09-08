@@ -9,6 +9,7 @@ import { deviceClock } from '../lib/clock'
 import { receiveHlc } from '../lib/core'
 import { randomBytes } from '../lib/entropy'
 import { AccountClient } from '../lib/account/client'
+import { authorizationPorts } from '../auth/runtime'
 import { accountApiUrl } from '../lib/account/config'
 import { credentialVault } from '../lib/account/vault'
 import { configureAccount, configureAccountSync, publishSyncStatus } from '../lib/account/runtime'
@@ -44,6 +45,7 @@ async function start(): Promise<void> {
   const account = new AccountClient({
     baseUrl,
     vault: credentialVault,
+    authorization: authorizationPorts,
     now: () => deviceClock.now(),
     anonId: db.deviceId,
     isOnline: isNetworkAvailable,

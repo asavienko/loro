@@ -7,6 +7,7 @@
  */
 
 import { applyDeltaToPhrase } from '../delta'
+import { structuralEqual } from '../../lib/structuralEqual'
 import { addPracticeDay } from '../state'
 import type { Slice } from '../types'
 import type { UserPhraseId } from '@loro/core'
@@ -22,26 +23,46 @@ export const createPracticeSlice: Slice<'recordPlay' | 'applyDelta'> = ({ set, g
     })
   },
 
-  applyDelta: (delta, resume) => {
-    const day = deps.clock.localDay()
+  applyDelta: (delta, context) => {
+    const day = context?.localDay ?? deps.clock.localDay()
     // A rep is what makes a day count towards the streak — a play in the stream is
     // listening, not production. Keyed on the STREAK day, so a 01:30 session extends
     // the evening it continues rather than starting a new day.
-    const practised = (delta.reps ?? 0) > 0 ? deps.clock.streakDay() : null
+    const practised = (delta.reps ?? 0) > 0 ? (context?.streakDay ?? deps.clock.streakDay()) : null
 
     set((st) => {
-      const active = st.phrases.some((p) => p.id === delta.phraseId)
+      const destination = context?.targetLocale ?? st.targetLocale
+      const active =
+        destination === st.targetLocale && st.phrases.some((p) => p.id === delta.phraseId)
       const saved = Object.entries(st.courses).find(
         ([locale, course]) =>
-          locale !== st.targetLocale && course.phrases.some((p) => p.id === delta.phraseId),
+          locale !== st.targetLocale &&
+          (!context?.targetLocale || locale === destination) &&
+          course.phrases.some((p) => p.id === delta.phraseId),
       )
-      if (!active && !saved) return st
+      if (!active && !saved) {
+        if (context?.attemptId) throw new Error('Practice phrase is no longer available')
+        return st
+      }
+      const currentPhrase = (active ? st.phrases : saved?.[1].phrases)?.find(
+        (p) => p.id === delta.phraseId,
+      )
+      if (context?.expectedPhrase && !structuralEqual(context.expectedPhrase, currentPhrase))
+        throw new Error('Practice phrase has changed')
+      const resume = active ? st.refrainResume : saved?.[1].refrainResume
+      if (context?.sessionId && resume?.session?.sessionId !== context.sessionId)
+        throw new Error('Practice session has changed')
+      if (context?.expectedCursor !== undefined && resume?.cursor !== context.expectedCursor)
+        throw new Error('Practice cursor has changed')
+      const checkpoint =
+        context?.checkpoint ??
+        (context?.refrainCursor === undefined
+          ? undefined
+          : { ...(resume ?? st.refrainResume), cursor: context.refrainCursor })
       const update = (phrases: typeof st.phrases): typeof st.phrases =>
         phrases.map((p) => (p.id === delta.phraseId ? applyDeltaToPhrase(p, delta, day) : p))
       return {
-        ...(resume && active
-          ? { refrainResume: { ...st.refrainResume, cursor: resume.refrainCursor } }
-          : {}),
+        ...(checkpoint && active ? { refrainResume: checkpoint } : {}),
         phrases: active ? update(st.phrases) : st.phrases,
         courses:
           !active && saved
@@ -50,9 +71,7 @@ export const createPracticeSlice: Slice<'recordPlay' | 'applyDelta'> = ({ set, g
                 [saved[0]]: {
                   ...saved[1],
                   phrases: update(saved[1].phrases),
-                  ...(resume
-                    ? { refrainResume: { ...saved[1].refrainResume, cursor: resume.refrainCursor } }
-                    : {}),
+                  ...(checkpoint ? { refrainResume: checkpoint } : {}),
                 },
               }
             : st.courses,

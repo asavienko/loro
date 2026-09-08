@@ -70,7 +70,8 @@ pub fn refrain_set_size(daily_minutes: u32) -> u32 {
 ///
 /// Six reps of one phrase are six different cognitive events — imitation, synchrony,
 /// compression, generation, translation, free recall — not one event six times.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize, uniffi::Enum)]
+#[serde(rename_all = "lowercase")]
 pub enum RefrainMode {
     /// Hear it, then say it back.
     Echo,

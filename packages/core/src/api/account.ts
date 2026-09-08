@@ -10,7 +10,11 @@ export const SignInRequestSchema = z.strictObject({
   anon_id: RowIdSchema,
   device: DeviceRegistrationSchema,
 })
-export const UserSchema = z.looseObject({ id: ResourceIdSchema, created_at: TimestampSchema })
+/** Older imported accounts have no recorded creation instant; never fabricate one. */
+export const UserSchema = z.looseObject({
+  id: ResourceIdSchema,
+  created_at: TimestampSchema.nullable(),
+})
 export const ClaimResultSchema = z.looseObject({
   performed: z.boolean(),
   mode: z.enum(['bind', 'merge']).nullable(),
@@ -35,7 +39,15 @@ export const MagicVerifyRequestSchema = z.strictObject({
   device: DeviceRegistrationSchema,
 })
 export const MagicLinkResponseSchema = z.looseObject({ status: z.literal('accepted') })
-export const RefreshRequestSchema = z.strictObject({ refresh_token: z.string().min(1).max(16384) })
+export const RefreshRequestSchema = z
+  .strictObject({
+    refresh_token: z.string().min(1).max(16384),
+    device: DeviceRegistrationSchema.optional(),
+    anon_id: RowIdSchema.optional(),
+  })
+  .refine((request) => (request.device === undefined) === (request.anon_id === undefined), {
+    message: 'Device registration and anonymous correlation must be supplied together',
+  })
 /** Bearer + registered device required. anon_id is a local correlation ID, not a credential. */
 export const ClaimRequestSchema = z.strictObject({
   anon_id: RowIdSchema,

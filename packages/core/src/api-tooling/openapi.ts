@@ -114,7 +114,7 @@ export function buildOpenApi(kind: 'current' | 'target') {
       ...(op.request
         ? {
             requestBody: {
-              required: true,
+              required: op.request.required ?? true,
               ...(op.request.description ? { description: op.request.description } : {}),
               content: { 'application/json': media(op.request, `${op.id}_request`, 'input') },
             },

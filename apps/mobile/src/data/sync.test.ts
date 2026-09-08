@@ -1,5 +1,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { openSqlPersistence, userPhraseId, type FieldWrite, type OutboxOp } from '@loro/core'
+import {
+  FSRS_ALGORITHM,
+  LEGACY_PREVIEW_ALGORITHM,
+  openSqlPersistence,
+  userPhraseId,
+  type FieldWrite,
+  type OutboxOp,
+} from '@loro/core'
 import { makePhrase } from '@loro/core/testing'
 import { PullResponseSchema, type PullResponse, type PushResponse } from '@loro/core/api/target'
 import { openNodeSqlite } from './driver.node'
@@ -11,6 +18,7 @@ import { SyncError, type SyncSession, type SyncTransport } from '../lib/sync/typ
 
 const ID = '00000000-0000-7000-8000-000000000001'
 const CANONICAL = '00000000-0000-7000-8000-000000000002'
+const REVIEW = '00000000-0000-7000-8000-000000000003'
 const HLC = '1000:0001:device'
 const SERVER_HLC = '2000:0001:server'
 const session: SyncSession = { accountId: 'account1', deviceId: 'device' }
@@ -90,8 +98,156 @@ function seed(db: ReturnType<typeof database>) {
     targetLocale: field('es-ES'),
   })
 }
+function reviewFields(at: number, hlc: string, algorithm?: string) {
+  return {
+    srsStability: field(at / 1000, hlc),
+    srsDifficulty: field(3, hlc),
+    srsDue: field(at + 10000, hlc),
+    srsLastReview: field(at, hlc),
+    srsLapses: field(1, hlc),
+    srsState: field('review', hlc),
+    ...(algorithm === undefined ? {} : { srsAlgorithm: field(algorithm, hlc) }),
+  }
+}
+function reviewLogFields() {
+  return {
+    phraseId: field(ID),
+    at: field(2000),
+    grade: field('good'),
+    stability: field(4),
+    difficulty: field(3),
+    due: field(10000),
+    algorithm: field(FSRS_ALGORITHM),
+    targetLocale: field('es-ES'),
+    lastReview: field(2000),
+    lapses: field(1),
+    state: field('review'),
+  }
+}
+function reviewLogChange(fields: Record<string, FieldWrite> = reviewLogFields()) {
+  return { entity: 'review_log', entity_id: REVIEW, deleted_at: null, fields }
+}
 
 describe('durable sync and canonical Rust merge', () => {
+  it('hydrates a complete remote review journal exactly once and retains deletion on replay', () => {
+    const db = database()
+    const change = reviewLogChange()
+    db.local.applyPage(page([change, change]))
+    expect(db.driver.all('SELECT * FROM review_event')).toEqual([
+      {
+        user_id: 'local',
+        target_locale: 'es-ES',
+        attempt_id: `remote:${REVIEW}`,
+        phrase_id: ID,
+        reviewed_at: 2000,
+        rating: 3,
+        algorithm: FSRS_ALGORITHM,
+        stability: 4,
+        difficulty: 3,
+        due: 10000,
+        last_review: 2000,
+        lapses: 1,
+        state: 'review',
+      },
+    ])
+    db.local.applyPage(
+      page([{ entity: 'review_log', entity_id: REVIEW, deleted_at: 3000, fields: {} }, change]),
+    )
+    expect(db.driver.all('SELECT * FROM review_event')).toEqual([])
+    expect(db.driver.all("SELECT payload FROM sync_rows WHERE entity='review_log'")).toHaveLength(1)
+  })
+  it('keeps legacy review logs durable without inventing missing journal state', () => {
+    const { phraseId, at, grade, stability, difficulty, due, algorithm } = reviewLogFields()
+    const base = { phraseId, at, grade, stability, difficulty, due }
+    for (const fields of [base, { ...base, algorithm }]) {
+      const db = database()
+      db.local.applyPage(page([reviewLogChange(fields)]))
+      expect(db.driver.all('SELECT * FROM review_event')).toEqual([])
+      expect(db.driver.all("SELECT payload FROM sync_rows WHERE entity='review_log'")).toHaveLength(
+        1,
+      )
+      expect(db.local.state().cursor).toBe('cursor1')
+      append(db, fields, 'review_log', REVIEW)
+      const pending = db.local.pending(100)
+      db.local.beginPush(pending.map((op) => op.seq))
+      expect(outboxToWire(pending[0]!)).toEqual({
+        seq: pending[0]!.seq,
+        entity: 'review_log',
+        entity_id: REVIEW,
+        op: 'upsert',
+        fields,
+      })
+    }
+  })
+  it('uses the durable local attempt mapping when its review is echoed by sync', () => {
+    const db = database()
+    db.driver.run('INSERT INTO kv(k,v) VALUES(?,?)', ['review-id:es-ES:session:item', REVIEW])
+    db.driver.run(
+      `INSERT INTO review_event(user_id,target_locale,attempt_id,phrase_id,reviewed_at,rating,algorithm,stability,difficulty,due,last_review,lapses,state)
+       VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+      [
+        'local',
+        'es-ES',
+        'session:item',
+        ID,
+        2000,
+        3,
+        FSRS_ALGORITHM,
+        4,
+        3,
+        10000,
+        2000,
+        1,
+        'review',
+      ],
+    )
+    db.local.applyPage(page([reviewLogChange()]))
+    expect(db.driver.all('SELECT attempt_id FROM review_event')).toEqual([
+      { attempt_id: 'session:item' },
+    ])
+  })
+  it('keeps scheduling provenance with the latest real review through reordered delivery', () => {
+    const left = database(),
+      right = database()
+    const preview = phraseChange(reviewFields(2000, '9000:0000:preview'))
+    const canonical = phraseChange(reviewFields(3000, '3000:0000:canonical', FSRS_ALGORITHM))
+    left.local.applyPage(page([canonical, preview]))
+    right.local.applyPage(page([preview, canonical, preview]))
+    expect(left.persistence.phrases.all()).toEqual(right.persistence.phrases.all())
+    expect(left.persistence.phrases.byId(userPhraseId(ID))?.srs).toMatchObject({
+      algorithm: FSRS_ALGORITHM,
+      stability: 3,
+      lastReview: 3000,
+      due: 13000,
+    })
+    // A legacy device can still submit an actual later review. Its schedule must
+    // never inherit the newer implementation's provenance from the previous row.
+    left.local.applyPage(page([phraseChange(reviewFields(4000, '4000:0000:preview'))]))
+    expect(left.persistence.phrases.byId(userPhraseId(ID))?.srs).toMatchObject({
+      algorithm: LEGACY_PREVIEW_ALGORITHM,
+      stability: 4,
+      lastReview: 4000,
+      due: 14000,
+    })
+  })
+  it('resolves equal-time reviews by their causal stamp as a complete scheduling group', () => {
+    const left = database(),
+      right = database()
+    const preview = phraseChange(reviewFields(2000, '2100:0000:preview'))
+    const canonical = phraseChange({
+      ...reviewFields(2000, '2200:0000:canonical', FSRS_ALGORITHM),
+      srsStability: field(5, '2200:0000:canonical'),
+      srsDue: field(17000, '2200:0000:canonical'),
+    })
+    left.local.applyPage(page([canonical, preview]))
+    right.local.applyPage(page([preview, canonical]))
+    expect(left.persistence.phrases.all()).toEqual(right.persistence.phrases.all())
+    expect(left.persistence.phrases.byId(userPhraseId(ID))?.srs).toMatchObject({
+      algorithm: FSRS_ALGORITHM,
+      stability: 5,
+      due: 17000,
+    })
+  })
   it('converges two offline SQLite devices after duplicated and reordered delivery', () => {
     const left = database(),
       right = database()
@@ -211,6 +367,29 @@ describe('durable sync and canonical Rust merge', () => {
       reopened.bindAccount('account1')
     }).not.toThrow()
   })
+  it("never overlays, marks attempted, or remaps another local owner's pending operations", () => {
+    const db = database()
+    seed(db)
+    const other = openSqlPersistence(db.driver, () => HLC, 1000, 'other-owner')
+    other.outbox.append({
+      entity: 'user_phrase',
+      entityId: ID,
+      op: 'upsert',
+      fields: { note: field('Other owner', '9000:0000:other') },
+      hlc: HLC,
+      createdAt: 1000,
+    })
+    const foreign = other.outbox.pending(100)[0]!
+    db.local.beginPush([foreign.seq])
+    db.local.fail([foreign.seq], 'NETWORK', 2000)
+    db.local.applyPage(page([phraseChange({ note: field('Mine', SERVER_HLC) })]))
+    expect(db.persistence.phrases.byId(userPhraseId(ID))?.note).toBe('Mine')
+    db.local.applyPage({ ...page(), aliases: [{ from: ID, to: CANONICAL }] })
+    expect(other.outbox.pending(100)).toEqual([foreign])
+    expect(db.driver.all('SELECT last_error FROM outbox WHERE seq=?', [foreign.seq])).toEqual([
+      { last_error: null },
+    ])
+  })
   it('keeps a sent seq immutable during new writes and compaction', () => {
     const db = database()
     append(db, { loved: field(true) })
@@ -319,6 +498,48 @@ describe('durable sync and canonical Rust merge', () => {
     expect(db.persistence.refrainDay.load('2026-09-08')?.setIds).toEqual([CANONICAL])
     expect(db.local.pending(100)).toHaveLength(0)
   })
+  it('corrects inferred legacy provenance with its original review receipt without rewriting retries', () => {
+    const db = database()
+    seed(db)
+    const future = '200000000:0000:device'
+    const fields = reviewFields(2000, future)
+    append(db, fields)
+    const sent = db.local.pending(100)
+    db.local.beginPush(sent.map((op) => op.seq))
+    const immutable = JSON.stringify(db.local.pending(100).map(outboxToWire))
+    // A pull first overlays the pending legacy request and leaves its inferred
+    // algorithm at the same future anchor in both SQLite and the merge shadow.
+    db.local.applyPage(page([phraseChange(reviewFields(1000, HLC))]))
+    expect(db.persistence.phrases.byId(userPhraseId(ID))?.srs?.algorithm).toBe(
+      LEGACY_PREVIEW_ALGORITHM,
+    )
+    expect(JSON.stringify(db.local.pending(100).map(outboxToWire))).toBe(immutable)
+    const scheduled = sent.find((op) => op.fields['srsLastReview'])!
+    db.local.commitPush(sent, {
+      ...response(sent.map((op) => op.seq)),
+      clock_corrections: Object.keys(fields).map((name) => ({
+        seq: scheduled.seq,
+        field: name,
+        from: future,
+        to: '2000:0000:device',
+      })),
+    })
+    db.local.applyPage(
+      page([
+        phraseChange({
+          ...reviewFields(2000, '2500:0000:other', FSRS_ALGORITHM),
+          srsStability: field(7, '2500:0000:other'),
+          srsDue: field(19000, '2500:0000:other'),
+        }),
+      ]),
+    )
+    expect(db.persistence.phrases.byId(userPhraseId(ID))?.srs).toMatchObject({
+      algorithm: FSRS_ALGORITHM,
+      stability: 7,
+      due: 19000,
+    })
+    expect(db.local.pending(100)).toHaveLength(0)
+  })
   it('retains catalog tombstone identity on a fresh device without creating a live phrase', () => {
     const db = database()
     db.local.applyPage(
@@ -358,6 +579,27 @@ describe('durable sync and canonical Rust merge', () => {
     expect(db.persistence.phrases.byId(userPhraseId(CANONICAL))?.loved).toBe(true)
     expect(db.local.pending(100)[0]?.entityId).toBe(CANONICAL)
     expect(db.persistence.refrainDay.load('2026-09-08')?.setIds).toEqual([CANONICAL])
+  })
+  it('remaps journal references and phrase order while preserving attempted review payloads', () => {
+    const db = database()
+    seed(db)
+    db.local.applyPage(page([reviewLogChange()]))
+    db.driver.run('INSERT INTO kv(k,v) VALUES(?,?)', [
+      'phrase-order:es-ES',
+      JSON.stringify([ID, CANONICAL]),
+    ])
+    append(db, reviewLogFields(), 'review_log', REVIEW)
+    const sent = db.local.pending(100)
+    db.local.beginPush(sent.map((op) => op.seq))
+    const attempted = sent.find((op) => op.entity === 'review_log')!
+    db.local.applyPage({ ...page(), aliases: [{ from: ID, to: CANONICAL }] })
+    expect(db.driver.all('SELECT phrase_id FROM review_event')).toEqual([{ phrase_id: CANONICAL }])
+    expect(db.driver.all("SELECT v FROM kv WHERE k='phrase-order:es-ES'")).toEqual([
+      { v: JSON.stringify([CANONICAL]) },
+    ])
+    expect(db.local.pending(100).find((op) => op.seq === attempted.seq)?.fields).toEqual(
+      attempted.fields,
+    )
   })
   it('rejects unrelated and duplicated acknowledgements transactionally', () => {
     const db = database()

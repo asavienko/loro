@@ -26,7 +26,7 @@ import {
 } from '@loro/core'
 
 /** Every signal a delta can carry. `phraseId` names the row, so it is not a signal. */
-type DeltaField = Exclude<keyof ProgressDelta, 'phraseId'>
+type DeltaField = Exclude<keyof ProgressDelta, 'phraseId' | 'review'>
 
 /** How one signal reaches the row. Returns only the fields it owns. */
 type DeltaWrite = (p: PhraseState, d: ProgressDelta) => Partial<PhraseState>
@@ -194,6 +194,7 @@ function nextSrs(
   next: NonNullable<ProgressDelta['srs']>,
   at: number | null,
 ): FsrsState {
+  const algorithm = next.algorithm ?? prev?.algorithm
   return {
     stability: next.stability,
     difficulty: next.difficulty,
@@ -201,5 +202,6 @@ function nextSrs(
     lastReview: next.lastReview ?? at ?? prev?.lastReview ?? null,
     lapses: next.lapses ?? prev?.lapses ?? 0,
     state: next.state ?? prev?.state ?? 'learning',
+    ...(algorithm === undefined ? {} : { algorithm }),
   }
 }

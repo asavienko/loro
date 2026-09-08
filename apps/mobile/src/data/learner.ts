@@ -1,6 +1,8 @@
 /** F-02/F-03/LB-01: repository snapshots drive rendering; all writes commit before publication. */
 import {
   LOCAL_USER_ID,
+  decodeCheckpoint,
+  encodeCheckpoint,
   TARGET_LOCALES,
   type Clock,
   type FieldWrite,
@@ -16,13 +18,22 @@ import {
   type RefrainResume,
 } from '../store/state'
 import type { RuntimeDatabase } from './database'
+import type { PracticeCommitContext } from '../store/types'
+import {
+  contentSignature,
+  phraseOrder,
+  validatePractice,
+  writePracticeReview,
+} from './practiceRecords'
 import { readLocalValue, writeLocalValue } from './database'
 import { deferPhraseDelete, flushPendingDeletes, undoPendingPhraseDelete } from './pendingDeletes'
 import { resolveLearnerAliases } from './aliases'
 
 export interface LearnerStorage {
   load(): AppData
-  commit(previous: AppData, next: AppData): AppData
+  commit(previous: AppData, next: AppData, attempt?: PracticeCommitContext): AppData
+  hasAttempt(context: PracticeCommitContext): boolean
+  hasCatalog(id: string, target: TargetLocale): boolean
   erase(): AppData
   refrainDay(day: string, target: TargetLocale): RefrainDayRow | null
 }
@@ -47,6 +58,7 @@ export function phraseFields(phrase: PhraseState): Values {
       srsLastReview: srs.lastReview,
       srsLapses: srs.lapses,
       srsState: srs.state,
+      ...(srs.algorithm ? { srsAlgorithm: srs.algorithm } : {}),
     })
   }
   return result
@@ -73,62 +85,57 @@ function allCourses(state: AppData): Partial<Record<TargetLocale, CourseState>> 
   return { ...state.courses, [state.targetLocale]: snapshotCourse(state) }
 }
 
-function parseResume(serialized: string | null, localDay: string | null): RefrainResume {
+function parseResume(
+  serialized: string | null,
+  day: string,
+  targetLocale: TargetLocale,
+  streamCursor: number,
+  course: CourseState,
+  native: AppData['nativeLanguage'],
+): RefrainResume {
   if (serialized === null) return EMPTY_REFRAIN_RESUME
-  const value: unknown = JSON.parse(serialized)
-  if (
-    typeof value === 'object' &&
-    value !== null &&
-    'localDay' in value &&
-    value.localDay !== localDay
-  )
+  try {
+    const raw: unknown = JSON.parse(serialized)
+    if (typeof raw !== 'object' || raw === null) return EMPTY_REFRAIN_RESUME
+    const value = raw as Record<string, unknown>
+    const checkpoint = decodeCheckpoint(
+      JSON.stringify({
+        version: value['version'] ?? 1,
+        targetLocale,
+        localDay: value['localDay'] ?? day,
+        revision: 0,
+        streamCursor,
+        ...(typeof value['contentSignature'] === 'string'
+          ? { contentSignature: value['contentSignature'] }
+          : {}),
+        refrainResume: {
+          session: value['session'],
+          cursor: value['cursor'],
+          done: value['done'],
+          lastLatency: value['lastLatency'],
+          history: value['history'],
+        },
+      }),
+    )
+    if (checkpoint?.localDay !== day) return EMPTY_REFRAIN_RESUME
+    const ids = new Set(course.phrases.map((phrase) => phrase.id))
+    if (checkpoint.refrainResume.session?.plan.items.some((item) => !ids.has(item.phraseId)))
+      return EMPTY_REFRAIN_RESUME
+    if (
+      checkpoint.contentSignature !== undefined &&
+      checkpoint.contentSignature !==
+        contentSignature(
+          { ...course, refrainResume: checkpoint.refrainResume },
+          targetLocale,
+          native,
+        )
+    )
+      return EMPTY_REFRAIN_RESUME
+    return checkpoint.refrainResume
+  } catch {
+    // A broken local resume cannot make the learner's valid phrase rows inaccessible.
     return EMPTY_REFRAIN_RESUME
-  if (
-    typeof value !== 'object' ||
-    value === null ||
-    !('cursor' in value) ||
-    typeof value.cursor !== 'number' ||
-    !Number.isInteger(value.cursor) ||
-    value.cursor < 0 ||
-    !('done' in value) ||
-    typeof value.done !== 'boolean' ||
-    !('lastLatency' in value) ||
-    (value.lastLatency !== null && typeof value.lastLatency !== 'number') ||
-    !('history' in value) ||
-    !Array.isArray(value.history) ||
-    !value.history.every((sample: unknown) => sample === null || typeof sample === 'number') ||
-    !('session' in value)
-  )
-    throw new Error('Invalid stored Refrain resume state')
-  const session = value.session
-  if (
-    session !== null &&
-    (typeof session !== 'object' ||
-      !('sessionId' in session) ||
-      typeof session.sessionId !== 'string' ||
-      !('cursor' in session) ||
-      typeof session.cursor !== 'number' ||
-      !('plan' in session) ||
-      typeof session.plan !== 'object' ||
-      session.plan === null ||
-      !('engineId' in session.plan) ||
-      session.plan.engineId !== 'refrain' ||
-      !('items' in session.plan) ||
-      !Array.isArray(session.plan.items) ||
-      !session.plan.items.every(
-        (item: unknown) =>
-          typeof item === 'object' &&
-          item !== null &&
-          'phraseId' in item &&
-          typeof item.phraseId === 'string' &&
-          'itemId' in item &&
-          typeof item.itemId === 'string' &&
-          'mode' in item &&
-          typeof item.mode === 'string',
-      ))
-  )
-    throw new Error('Invalid stored Refrain session')
-  return value as RefrainResume
+  }
 }
 
 function settingsFields(state: AppData): Values {
@@ -198,19 +205,35 @@ export function createLearnerStorage(database: RuntimeDatabase, clock: Clock): L
     for (const targetLocale of TARGET_LOCALES) {
       const saved = persistence.courses.load(targetLocale)
       const owned = phrases.filter((phrase) => (phrase.targetLocale ?? 'es-ES') === targetLocale)
+      const order = phraseOrder(readLocalValue(driver, `phrase-order:${targetLocale}`))
+      const position = (id: string) => {
+        const index = order.indexOf(id)
+        return index < 0 ? order.length : index
+      }
+      owned.sort((left, right) => position(left.id) - position(right.id))
+      const ids = new Set(owned.map((phrase) => phrase.id as string))
       const day =
         persistence.refrainDay.load(clock.localDay(), targetLocale) ??
         persistence.refrainDay.latest(targetLocale)
       courses[targetLocale] = {
         onboarded: saved?.onboarded ?? (targetLocale === 'es-ES' && (settings?.onboarded ?? false)),
         phrases: owned,
-        selectedId: saved?.selectedId ?? null,
+        selectedId: saved?.selectedId && ids.has(saved.selectedId) ? saved.selectedId : null,
         streamCursor: saved?.streamCursor ?? 0,
-        refrainResume: parseResume(saved?.refrainSession ?? null, day?.localDay ?? null),
-        refrainSet: day?.setIds ?? [],
+        refrainResume: EMPTY_REFRAIN_RESUME,
+        refrainSet: day?.setIds.filter((id) => ids.has(id)) ?? [],
         refrainDay: day?.localDay ?? null,
-        refrainSubstituted: day?.substituted ?? [],
+        refrainSubstituted: day?.substituted.filter((id) => ids.has(id)) ?? [],
       }
+      const course = courses[targetLocale]
+      course.refrainResume = parseResume(
+        saved?.refrainSession ?? null,
+        clock.localDay(),
+        targetLocale,
+        course.streamCursor,
+        course,
+        pair.nativeLanguage,
+      )
     }
     const active = courses[pair.targetLocale]
     if (!active) throw new Error('Missing active course')
@@ -235,9 +258,21 @@ export function createLearnerStorage(database: RuntimeDatabase, clock: Clock): L
   return {
     load,
     refrainDay: (day, target) => persistence.refrainDay.load(day, target),
-    commit(previous, next) {
+    hasCatalog: (id, target) =>
+      driver.all(
+        `SELECT id FROM user_phrase WHERE user_id = ? AND phrase_id = ? AND COALESCE(target_locale,'es-ES') = ?
+       UNION ALL SELECT id FROM sync_catalog_tombstones WHERE phrase_id = ? AND target_locale = ? LIMIT 1`,
+        [LOCAL_USER_ID, id, target, id, target],
+      ).length > 0,
+    hasAttempt: (context) =>
+      driver.all(
+        'SELECT attempt_id FROM committed_attempt WHERE user_id = ? AND target_locale = ? AND attempt_id = ?',
+        [LOCAL_USER_ID, context.targetLocale ?? load().targetLocale, context.attemptId ?? ''],
+      ).length > 0,
+    commit(previous, next, attempt) {
       next = resolveLearnerAliases(database, next)
       driver.transaction(() => {
+        if (!validatePractice(database, attempt, previous)) return
         flushPendingDeletes(database, clock.now())
         const before = allCourses(previous)
         for (const [locale, course] of Object.entries(allCourses(next))) {
@@ -270,6 +305,7 @@ export function createLearnerStorage(database: RuntimeDatabase, clock: Clock): L
                   ) ORDER BY deleted_at DESC LIMIT 1`,
                   [
                     LOCAL_USER_ID,
+
                     row.phraseId,
                     'es-ES',
                     targetLocale,
@@ -315,11 +351,43 @@ export function createLearnerStorage(database: RuntimeDatabase, clock: Clock): L
             onboarded: course.onboarded,
             selectedId: course.selectedId,
             streamCursor: course.streamCursor,
-            refrainSession: JSON.stringify({
-              ...course.refrainResume,
-              localDay: course.refrainDay,
-            }),
+            refrainSession: (() => {
+              const priorResume = persistence.courses.load(targetLocale)?.refrainSession
+              let signature: string | undefined
+              if (
+                priorResume &&
+                old?.refrainResume.session?.sessionId === course.refrainResume.session?.sessionId
+              ) {
+                try {
+                  signature = (JSON.parse(priorResume) as { contentSignature?: string })
+                    .contentSignature
+                } catch {
+                  /* replaced below */
+                }
+              }
+              signature ??= contentSignature(course, targetLocale, next.nativeLanguage)
+              encodeCheckpoint({
+                version: 1,
+                targetLocale,
+                revision: 0,
+                localDay: course.refrainDay ?? clock.localDay(),
+                streamCursor: course.streamCursor,
+                contentSignature: signature,
+                refrainResume: course.refrainResume,
+              })
+              return JSON.stringify({
+                ...course.refrainResume,
+                version: 1,
+                localDay: course.refrainDay ?? clock.localDay(),
+                contentSignature: signature,
+              })
+            })(),
           })
+          writeLocalValue(
+            driver,
+            `phrase-order:${targetLocale}`,
+            JSON.stringify(course.phrases.map((phrase) => phrase.id)),
+          )
           if (course.refrainDay !== null) {
             const existing = persistence.refrainDay.load(course.refrainDay, targetLocale)
             persistence.refrainDay.save({
@@ -348,6 +416,7 @@ export function createLearnerStorage(database: RuntimeDatabase, clock: Clock): L
             )
           }
         }
+        writePracticeReview(database, attempt, next, clock)
         const settings = persistence.settings.load()
         persistence.settings.save({
           onboarded: next.onboarded,
@@ -370,6 +439,7 @@ export function createLearnerStorage(database: RuntimeDatabase, clock: Clock): L
           persistence.practiceDays.add(day)
           append('streak_day', day, { practised: true, minutes: 0 })
         }
+        if (next.practiceDays[0]) persistence.practiceDays.pruneBefore(next.practiceDays[0])
       })
       return { ...load(), toast: next.toast }
     },

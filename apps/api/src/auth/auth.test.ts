@@ -1,15 +1,30 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { newDb } from 'pg-mem'
+/** F-01/F-02/F-04: browser OAuth handoff uses the durable shared account/session engine. */
+import { generateKeyPairSync, randomUUID } from 'node:crypto'
 import { Pool } from 'pg'
-import { AuthRepository } from './repository.js'
-import { AuthService, hash, secret } from './service.js'
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { SignInResponseSchema, type DeviceRegistration } from '@loro/core/api/target'
+import type { OAuthProvider } from '@loro/core/api/oauth'
+import { PostgresDatabase } from '../database/database.js'
+import { AuthService } from './auth.service.js'
+import { tokenHash } from './auth.tokens.js'
+import { OAuthFlowService, hash, secret } from './service.js'
 import type { AuthSettings } from './settings.js'
 import type { IdentityProvider } from './provider.js'
-import type { OAuthProvider } from '@loro/core/api/oauth'
 
+const testUrl = process.env['LORO_TEST_DATABASE_URL']
+const key = generateKeyPairSync('ec', { namedCurve: 'prime256v1' })
+  .privateKey.export({ type: 'pkcs8', format: 'pem' })
+  .toString()
+const installationId = '0197f2a0-0000-7000-8000-000000000001'
+const anonId = '0197f2a0-0000-7000-8000-000000000002'
+const device: DeviceRegistration = {
+  installation_id: installationId,
+  platform: 'web',
+  app_version: '1.0.0+1',
+}
 const settings: AuthSettings = {
   databaseUrl: '',
-  publicUrl: 'https://api.example.com',
+  publicUrl: 'https://api.example.test',
   redirects: ['loro://account'],
   signingKey: 'test-signing-key-with-at-least-32-bytes',
   googleClientId: 'google-client',
@@ -19,128 +34,233 @@ const settings: AuthSettings = {
   appleKeyId: 'key',
   applePrivateKey: 'test-only',
 }
-let repository: AuthRepository
-let service: AuthService
-let now: number
-const provider: IdentityProvider = {
-  authorizationUrl: (p, state, nonce) =>
-    `https://provider.example/${p}?state=${state}&nonce=${nonce}`,
-  exchange: (p, code) =>
+
+describe.skipIf(!testUrl)('browser OAuth with durable shared accounts', () => {
+  let admin: Pool
+  let database: PostgresDatabase
+  let service: OAuthFlowService
+  let auth: AuthService
+  let now: number
+  let schema: string
+  const providerExchange = vi.fn<IdentityProvider['exchange']>((provider, code) =>
     code === 'invalid'
-      ? Promise.reject(new Error('secret must not escape'))
-      : Promise.resolve({ provider: p, subject: code }),
-}
-beforeEach(async () => {
-  now = 1_788_000_000_000
-  const url = process.env['AUTH_TEST_DATABASE_URL']
-  if (url) {
-    repository = new AuthRepository(new Pool({ connectionString: url }))
-    await repository.pool.query(
-      'DROP TABLE IF EXISTS auth_refresh,auth_sessions,auth_grants,auth_attempts,auth_accounts,auth_rates CASCADE',
-    )
-  } else {
-    const adapter = newDb().adapters.createPg()
-    repository = new AuthRepository(new (adapter.Pool as typeof Pool)())
+      ? Promise.reject(new Error('provider-private-detail'))
+      : Promise.resolve({ provider, subject: code }),
+  )
+  const provider: IdentityProvider = {
+    authorizationUrl: (p, state, nonce, challenge) =>
+      `https://provider.example/${p}?${new URLSearchParams({ state, nonce, code_challenge: challenge }).toString()}`,
+    exchange: providerExchange,
   }
-  await repository.initialize()
-  service = new AuthService(settings, repository, provider, { now: () => now })
-})
-afterEach(async () => {
-  await repository.close()
-})
-async function grant(p: OAuthProvider = 'google', subject = 'person') {
-  const verifier = secret()
-  const start = await service.start(p, 'loro://account', hash(verifier))
-  const callback = new URL(await service.callback(p, start.state, subject))
-  const ticket = callback.searchParams.get('ticket') ?? ''
-  return { verifier, start, callback, ticket }
-}
-async function signIn(p: OAuthProvider = 'google', subject = 'person') {
-  const g = await grant(p, subject)
-  return service.exchange(g.ticket, g.verifier)
-}
-describe('durable provider identity and sessions', () => {
-  it('creates once, signs in again, and never links different provider subjects', async () => {
-    const a = await signIn(),
-      b = await signIn(),
-      c = await signIn('apple')
-    expect(a.user.id).toBe(b.user.id)
-    expect(c.user.id).not.toBe(a.user.id)
-    expect(await service.principal(a.access_token)).toEqual(a.user)
-    const restarted = new AuthService(settings, repository, provider, { now: () => now })
-    expect((await restarted.refresh(a.refresh_token)).user).toEqual(a.user)
+  const rebuild = () => {
+    database = new PostgresDatabase()
+    auth = new AuthService(database, { now: () => now })
+    service = new OAuthFlowService(settings, database, provider, auth, { now: () => now })
+  }
+
+  beforeAll(() => {
+    admin = new Pool({ connectionString: testUrl })
   })
-  it('rejects unregistered redirects, provider-swapped state, expired and replayed state', async () => {
-    await expect(service.start('google', 'https://evil.example', secret())).rejects.toThrow()
-    const start = await service.start('google', 'loro://account', secret())
-    await expect(service.callback('apple', start.state, 'person')).rejects.toThrow()
-    await service.callback('google', start.state, 'person')
-    await expect(service.callback('google', start.state, 'person')).rejects.toThrow()
+  beforeEach(async () => {
+    now = 1_800_000_000_000
+    schema = `oauth_service_${randomUUID().replaceAll('-', '')}`
+    await admin.query(`CREATE SCHEMA ${schema}`)
+    const url = new URL(testUrl!)
+    url.searchParams.set('options', `-csearch_path=${schema}`)
+    vi.stubEnv('DATABASE_URL', url.toString())
+    vi.stubEnv('AUTH_ENABLED', 'true')
+    vi.stubEnv('AUTH_PRIVATE_KEY_PEM', key)
+    vi.stubEnv('AUTH_ISSUER', settings.publicUrl)
+    providerExchange.mockClear()
+    rebuild()
+  })
+  afterEach(async () => {
+    await database.onModuleDestroy()
+    await admin.query(`DROP SCHEMA ${schema} CASCADE`)
+    vi.restoreAllMocks()
+    vi.unstubAllEnvs()
+  })
+  afterAll(async () => {
+    await admin.end()
+  })
+
+  async function grant(p: OAuthProvider = 'google', subject = 'person') {
+    const verifier = secret()
+    const start = await service.start(p, 'loro://account', hash(verifier))
+    const callback = new URL(await service.callback(p, start.state, subject))
+    return { verifier, start, callback, ticket: callback.searchParams.get('ticket') ?? '' }
+  }
+  async function signIn(p: OAuthProvider = 'google', subject = 'person') {
+    const g = await grant(p, subject)
+    return SignInResponseSchema.parse(await service.exchange(g.ticket, g.verifier, device, anonId))
+  }
+
+  it('reuses verified provider identities and device registrations across reconnects', async () => {
+    const first = await signIn()
+    const repeated = await signIn()
+    const apple = await signIn('apple')
+    expect(repeated.user.id).toBe(first.user.id)
+    expect(repeated.device_id).toBe(first.device_id)
+    expect(apple.user.id).not.toBe(first.user.id)
+    expect(first.claim).toMatchObject({ performed: false, upload_required: true })
+    await database.onModuleDestroy()
+    rebuild()
+    expect(await auth.authenticate(first.access_token)).toMatchObject({
+      userId: first.user.id,
+      deviceId: first.device_id,
+    })
+    const rotated = await auth.refresh(first.refresh_token, 'reconnect')
+    expect(await auth.authenticate(rotated.access_token)).toMatchObject({ userId: first.user.id })
+  })
+
+  it('preserves nonce and backend PKCE independently from the app verifier', async () => {
+    const verifier = secret()
+    const started = await service.start('google', 'loro://account', hash(verifier))
+    const authorization = new URL(started.authorization_url)
+    const saved = (
+      await database.query<{ hash: string; nonce: string; verifier: string; challenge: string }>(
+        'SELECT hash,nonce,verifier,challenge FROM oauth_attempts',
+      )
+    ).rows[0]!
+    expect(saved.hash).toBe(hash(started.state))
+    expect(JSON.stringify(saved)).not.toContain(started.state)
+    expect(saved.challenge).toBe(hash(verifier))
+    expect(saved.verifier).not.toBe(verifier)
+    expect(authorization.searchParams.get('nonce')).toBe(saved.nonce)
+    expect(authorization.searchParams.get('code_challenge')).toBe(hash(saved.verifier))
+    await service.callback('google', started.state, 'person')
+    expect(providerExchange).toHaveBeenCalledExactlyOnceWith(
+      'google',
+      'person',
+      saved.nonce,
+      saved.verifier,
+      now,
+    )
+  })
+
+  it('rejects unregistered redirects, swapped providers, expired state and state replay', async () => {
+    await expect(
+      service.start('google', 'https://evil.example/account', secret()),
+    ).rejects.toMatchObject({ code: 'VALIDATION_FAILED' })
+    const started = await service.start('google', 'loro://account', secret())
+    await expect(service.callback('apple', started.state, 'person')).rejects.toMatchObject({
+      code: 'UNAUTHENTICATED',
+    })
+    await service.callback('google', started.state, 'person')
+    await expect(service.callback('google', started.state, 'person')).rejects.toMatchObject({
+      code: 'UNAUTHENTICATED',
+    })
     const late = await service.start('apple', 'loro://account', secret())
-    now += 300_001
-    await expect(service.callback('apple', late.state, 'person')).rejects.toThrow()
+    now += 300_000
+    await expect(service.callback('apple', late.state, 'person')).rejects.toMatchObject({
+      code: 'UNAUTHENTICATED',
+    })
   })
-  it('requires the app verifier and consumes a handoff once', async () => {
+
+  it('requires the app verifier before creating an account and consumes each grant once', async () => {
     const g = await grant()
-    await expect(service.exchange(g.ticket, secret())).rejects.toThrow()
-    await service.exchange(g.ticket, g.verifier)
-    await expect(service.exchange(g.ticket, g.verifier)).rejects.toThrow()
+    expect((await database.query('SELECT id FROM auth_users')).rowCount).toBe(0)
+    await expect(service.exchange(g.ticket, secret(), device, anonId)).rejects.toMatchObject({
+      code: 'UNAUTHENTICATED',
+    })
+    expect((await database.query('SELECT id FROM auth_users')).rowCount).toBe(0)
+    const saved = (await database.query<{ hash: string }>('SELECT hash FROM oauth_grants')).rows[0]!
+    expect(saved.hash).toBe(hash(g.ticket))
+    expect(JSON.stringify(saved)).not.toContain(g.ticket)
+    await service.exchange(g.ticket, g.verifier, device, anonId)
+    await expect(service.exchange(g.ticket, g.verifier, device, anonId)).rejects.toMatchObject({
+      code: 'UNAUTHENTICATED',
+    })
   })
-  it('expires handoffs and returns only a generic provider error', async () => {
+
+  it('expires handoffs and redirects provider failure or denial without sensitive detail', async () => {
     const g = await grant()
-    now += 60_001
-    await expect(service.exchange(g.ticket, g.verifier)).rejects.toThrow()
+    now += 60_000
+    await expect(service.exchange(g.ticket, g.verifier, device, anonId)).rejects.toMatchObject({
+      code: 'UNAUTHENTICATED',
+    })
     const failed = await grant('apple', 'invalid')
     expect(failed.callback.searchParams.get('error')).toBe('sign_in_failed')
     expect(failed.callback.searchParams.has('ticket')).toBe(false)
+    expect(failed.callback.toString()).not.toContain('provider-private-detail')
+    const denied = await service.start('google', 'loro://account', secret())
+    const redirect = new URL(await service.callback('google', denied.state))
+    expect(redirect.searchParams.get('error')).toBe('sign_in_failed')
+    await expect(service.callback('google', denied.state, 'person')).rejects.toMatchObject({
+      code: 'UNAUTHENTICATED',
+    })
   })
-  it('rotates refresh and commits family revocation on replay', async () => {
-    const session = await signIn(),
-      next = await service.refresh(session.refresh_token)
-    expect(next.refresh_token).not.toBe(session.refresh_token)
-    await expect(service.refresh(session.refresh_token)).rejects.toThrow()
-    await expect(service.refresh(next.refresh_token)).rejects.toThrow()
-    await expect(service.principal(next.access_token)).rejects.toThrow()
+
+  it('rolls grant consumption back when shared session creation fails', async () => {
+    const g = await grant()
+    const interrupted = vi
+      .spyOn(auth, 'signInVerified')
+      .mockRejectedValueOnce(new Error('interrupted session write'))
+    await expect(service.exchange(g.ticket, g.verifier, device, anonId)).rejects.toThrow(
+      'interrupted session write',
+    )
+    expect(
+      (await database.query('SELECT hash FROM oauth_grants WHERE hash=$1', [hash(g.ticket)]))
+        .rowCount,
+    ).toBe(1)
+    interrupted.mockRestore()
+    expect((await service.exchange(g.ticket, g.verifier, device, anonId)).user.id).toBeTruthy()
   })
-  it('sign-out revokes only this session and also invalidates its access JWT', async () => {
-    const a = await signIn(),
-      b = await signIn()
-    await service.logout(a.refresh_token)
-    await expect(service.principal(a.access_token)).rejects.toThrow()
-    await expect(service.refresh(a.refresh_token)).rejects.toThrow()
-    expect(await service.principal(b.access_token)).toEqual(b.user)
-    await service.logout(a.refresh_token)
+
+  it('serializes a concurrent grant exchange to exactly one shared session', async () => {
+    const g = await grant()
+    const outcomes = await Promise.allSettled([
+      service.exchange(g.ticket, g.verifier, device, anonId),
+      service.exchange(g.ticket, g.verifier, device, anonId),
+    ])
+    expect(outcomes.filter((outcome) => outcome.status === 'fulfilled')).toHaveLength(1)
+    expect(outcomes.filter((outcome) => outcome.status === 'rejected')).toHaveLength(1)
+    expect((await database.query('SELECT id FROM auth_users')).rowCount).toBe(1)
+    expect((await database.query('SELECT id FROM auth_sessions')).rowCount).toBe(1)
   })
-  it('rejects modified and expired access, expires refresh families', async () => {
-    const s = await signIn()
-    await expect(service.principal(s.access_token.slice(0, -8) + 'invalid!')).rejects.toThrow()
-    now += 901_000
-    await expect(service.principal(s.access_token)).rejects.toThrow()
-    now += 30 * 24 * 60 * 60 * 1000
-    await expect(service.refresh(s.refresh_token)).rejects.toThrow()
+
+  it('uses shared refresh family replay revocation and stores only token digests', async () => {
+    const session = await signIn()
+    const principal = await auth.authenticate(session.access_token)
+    const saved = await database.query<{ token_hash: string }>(
+      'SELECT token_hash FROM auth_refresh_tokens WHERE session_id=$1',
+      [principal.sessionId],
+    )
+    expect(saved.rows[0]?.token_hash).toBe(tokenHash(session.refresh_token))
+    expect(JSON.stringify(saved)).not.toContain(session.refresh_token)
+    const next = await auth.refresh(session.refresh_token, 'rotation')
+    await expect(auth.refresh(session.refresh_token, 'rotation')).rejects.toMatchObject({
+      code: 'UNAUTHENTICATED',
+    })
+    await expect(auth.refresh(next.refresh_token, 'rotation')).rejects.toMatchObject({
+      code: 'UNAUTHENTICATED',
+    })
+    await expect(auth.authenticate(next.access_token)).rejects.toMatchObject({
+      code: 'UNAUTHENTICATED',
+    })
   })
-  it('stores hashes instead of refresh/ticket/state secrets and limits starts', async () => {
-    const s = await signIn()
-    const rows = await repository.pool.query<{ hash: string }>('SELECT hash FROM auth_refresh')
-    expect(rows.rows[0]?.hash).toBe(hash(s.refresh_token))
-    for (let i = 0; i < 30; i++) await service.rate('one-ip')
-    await expect(service.rate('one-ip')).rejects.toThrow()
-    await service.rate('another-ip')
-    now += 900_001
-    await service.rate('one-ip')
+
+  it('sign-out revokes the shared session while another OAuth session keeps working', async () => {
+    const first = await signIn()
+    const second = await signIn()
+    await auth.logout(await auth.authenticate(first.access_token))
+    await expect(auth.authenticate(first.access_token)).rejects.toMatchObject({
+      code: 'UNAUTHENTICATED',
+    })
+    await expect(auth.refresh(first.refresh_token, 'logout')).rejects.toMatchObject({
+      code: 'UNAUTHENTICATED',
+    })
+    expect(await auth.authenticate(second.access_token)).toMatchObject({ userId: second.user.id })
   })
-  it.skipIf(!process.env['AUTH_TEST_DATABASE_URL'])(
-    'serializes concurrent rotation on real PostgreSQL',
-    async () => {
-      const s = await signIn()
-      const outcomes = await Promise.allSettled([
-        service.refresh(s.refresh_token),
-        service.refresh(s.refresh_token),
-      ])
-      expect(outcomes.filter((r) => r.status === 'fulfilled')).toHaveLength(1)
-      const success = outcomes.find((r) => r.status === 'fulfilled')
-      if (success?.status === 'fulfilled')
-        await expect(service.refresh(success.value.refresh_token)).rejects.toThrow()
-    },
-  )
+
+  it('stores a durable start limit independently of expired attempts and resets its window', async () => {
+    for (let count = 0; count < 30; count++) await service.rate('one-address')
+    await expect(service.rate('one-address')).rejects.toMatchObject({ code: 'RATE_LIMITED' })
+    await database.onModuleDestroy()
+    rebuild()
+    await expect(service.rate('one-address')).rejects.toMatchObject({ code: 'RATE_LIMITED' })
+    await service.rate('another-address')
+    now += 900_000
+    await service.rate('one-address')
+  })
 })

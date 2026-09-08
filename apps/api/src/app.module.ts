@@ -1,4 +1,10 @@
-import { AuthModule } from './auth/module.js'
+import { AuthLifecycle, buildAuth } from './auth/module.js'
+import { OAuthController } from './auth/controller.js'
+import { AUTH_RUNTIME } from './auth/runtime.js'
+import { authSettings } from './auth/settings.js'
+import { AuthBoundaryGuard } from './auth/guard.js'
+import { APP_GUARD } from '@nestjs/core'
+import type { SqlDatabase } from './database/database.js'
 import { LearningContentController } from './content/learning-content.controller.js'
 /**
  * The composition root.
@@ -27,7 +33,6 @@ import { SCENE_PROVIDERS, type SceneProvider } from './ai/scene-provider.js'
 import { StubSceneProvider } from './ai/scene-provider.stub.js'
 
 @Module({
-  imports: [AuthModule],
   controllers: [
     HealthController,
     ContentController,
@@ -36,6 +41,7 @@ import { StubSceneProvider } from './ai/scene-provider.stub.js'
     AiController,
     AuthController,
     MeController,
+    OAuthController,
   ],
   providers: [
     AiService,
@@ -51,6 +57,14 @@ import { StubSceneProvider } from './ai/scene-provider.stub.js'
     SyncService,
     AuthService,
     AuthGuard,
+    AuthLifecycle,
+    {
+      provide: AUTH_RUNTIME,
+      useFactory: (database: SqlDatabase, sessions: AuthService) =>
+        buildAuth(authSettings(), database, sessions),
+      inject: [DATABASE, AuthService],
+    },
+    { provide: APP_GUARD, useClass: AuthBoundaryGuard },
     { provide: DATABASE, useClass: PostgresDatabase },
     { provide: SYNC_REPOSITORY, useClass: PostgresSyncRepository },
     // The wall clock, so a test can pin `server_hlc` instead of matching a regex.

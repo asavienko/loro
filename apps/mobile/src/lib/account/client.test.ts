@@ -49,6 +49,128 @@ function setup() {
 }
 const ok = (body: unknown) => new Response(JSON.stringify(body), { status: 200 })
 describe('anonymous-first account lifecycle', () => {
+  it.each(['google', 'apple'] as const)(
+    'connects %s through the same device-bound session and vault as email',
+    async (provider) => {
+      const { deps, fetch, saved, bindAccount } = setup()
+      const state = 's'.repeat(43),
+        ticket = 't'.repeat(43),
+        verifier = 'v'.repeat(43)
+      fetch
+        .mockResolvedValueOnce(
+          ok({ authorization_url: 'https://accounts.example/authorize', state }),
+        )
+        .mockResolvedValueOnce(ok(signedIn))
+      const client = new AccountClient({
+        ...deps,
+        authorization: {
+          random: () => verifier,
+          challenge: () => Promise.resolve('c'.repeat(43)),
+          redirect: 'loro://account',
+          authorize: () => Promise.resolve(`loro://account?state=${state}&ticket=${ticket}`),
+        },
+      })
+      await client.signIn(provider)
+      expect(fetch.mock.calls[1]?.[1]?.body).toBe(
+        JSON.stringify({
+          ticket,
+          code_verifier: verifier,
+          device: deps.device,
+          anon_id: installation,
+        }),
+      )
+      expect(bindAccount).toHaveBeenCalledWith('user-1')
+      expect(client.getSnapshot().session).toEqual({ accountId: 'user-1', deviceId: 'device-1' })
+      expect(await client.getAccessToken()).toBe('access')
+      expect(saved()).toContain('refresh')
+    },
+  )
+  it('does not exchange a cancelled provider callback or replace local account ownership', async () => {
+    const { deps, fetch, bindAccount, saved } = setup()
+    fetch.mockResolvedValueOnce(
+      ok({ authorization_url: 'https://accounts.example/authorize', state: 's'.repeat(43) }),
+    )
+    const client = new AccountClient({
+      ...deps,
+      authorization: {
+        random: () => 'v'.repeat(43),
+        challenge: () => Promise.resolve('c'.repeat(43)),
+        redirect: 'loro://account',
+        authorize: () => Promise.resolve(null),
+      },
+    })
+    await client.signIn('apple')
+    expect(client.getSnapshot().status).toBe('cancelled')
+    expect(fetch).toHaveBeenCalledTimes(1)
+    expect(bindAccount).not.toHaveBeenCalled()
+    expect(saved()).toBeNull()
+  })
+  it('upgrades a legacy raw refresh through server verification and current database ownership', async () => {
+    const { deps, fetch, bindAccount, saved } = setup()
+    const clearLegacy = vi.fn(() => Promise.resolve())
+    fetch.mockImplementation(() => {
+      expect(clearLegacy).toHaveBeenCalledTimes(1)
+      return Promise.resolve(ok(signedIn))
+    })
+    const client = new AccountClient({
+      ...deps,
+      vault: { ...deps.vault, readLegacy: () => Promise.resolve('r'.repeat(43)), clearLegacy },
+    })
+    await Promise.all([client.restore(), client.restore()])
+    expect(fetch).toHaveBeenCalledTimes(1)
+    expect(fetch.mock.calls[0]?.[1]?.body).toBe(
+      JSON.stringify({ refresh_token: 'r'.repeat(43), device: deps.device, anon_id: installation }),
+    )
+    expect(bindAccount).toHaveBeenCalledWith('user-1')
+    expect(saved()).toContain('device-1')
+  })
+  it('retains legacy credentials offline with an explicit upgrade state', async () => {
+    const { deps, fetch } = setup()
+    const clearLegacy = vi.fn(() => Promise.resolve())
+    const client = new AccountClient({
+      ...deps,
+      isOnline: () => Promise.resolve(false),
+      vault: { ...deps.vault, readLegacy: () => Promise.resolve('r'.repeat(43)), clearLegacy },
+    })
+    await client.restore()
+    expect(client.getSnapshot()).toMatchObject({ session: null, error: 'upgrade-offline' })
+    expect(clearLegacy).not.toHaveBeenCalled()
+    expect(fetch).not.toHaveBeenCalled()
+  })
+  it('clears a rejected legacy credential and asks for verified sign-in without publishing identity', async () => {
+    const { deps, fetch, bindAccount } = setup()
+    const clearLegacy = vi.fn(() => Promise.resolve())
+    fetch.mockResolvedValue(new Response(null, { status: 401 }))
+    const client = new AccountClient({
+      ...deps,
+      vault: { ...deps.vault, readLegacy: () => Promise.resolve('r'.repeat(43)), clearLegacy },
+    })
+    await client.restore()
+    expect(client.getSnapshot()).toMatchObject({ session: null, error: 'upgrade-sign-in' })
+    expect(clearLegacy).toHaveBeenCalledTimes(1)
+    expect(bindAccount).not.toHaveBeenCalled()
+  })
+  it('reports incomplete server revocation after local sign-out', async () => {
+    const { client, fetch, saved } = setup()
+    fetch.mockResolvedValueOnce(ok(signedIn)).mockRejectedValueOnce(new Error('offline'))
+    await client.verifyCode('learner@example.com', '123456')
+    await client.signOut()
+    expect(client.getSnapshot()).toMatchObject({ session: null, error: 'localSignOut' })
+    expect(saved()).toBeNull()
+  })
+  it('revokes a newly verified session if secure storage rejects admission', async () => {
+    const { deps, fetch } = setup()
+    fetch
+      .mockResolvedValueOnce(ok(signedIn))
+      .mockResolvedValueOnce(new Response(null, { status: 204 }))
+    const client = new AccountClient({
+      ...deps,
+      vault: { ...deps.vault, write: () => Promise.reject(new Error('locked')) },
+    })
+    await client.verifyCode('learner@example.com', '123456')
+    expect(client.getSnapshot()).toMatchObject({ session: null, error: 'storage' })
+    expect(fetch.mock.calls[1]?.[0]).toContain('/auth/logout')
+  })
   it('starts without any network request and requests a code without exposing existence', async () => {
     const { client, fetch } = setup()
     expect(client.getSnapshot().session).toBeNull()
@@ -168,6 +290,18 @@ describe('anonymous-first account lifecycle', () => {
       Authorization: 'Bearer access',
       'X-Loro-Device': 'device-1',
     })
+  })
+  it('uses refresh-family logout when the access token expired', async () => {
+    const { client, fetch, advance } = setup()
+    fetch
+      .mockResolvedValueOnce(ok(signedIn))
+      .mockResolvedValueOnce(new Response(null, { status: 204 }))
+    await client.verifyCode('learner@example.com', '123456')
+    advance()
+    await client.signOut()
+    expect(fetch.mock.calls[1]?.[1]?.headers).not.toHaveProperty('Authorization')
+    expect(fetch.mock.calls[1]?.[1]?.body).toBe(JSON.stringify({ refresh_token: 'refresh' }))
+    expect(client.getSnapshot().error).toBeNull()
   })
   it('keeps restored credentials while offline and refreshes after reconnection', async () => {
     const { client, deps, fetch, saved } = setup()

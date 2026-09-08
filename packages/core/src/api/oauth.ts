@@ -1,5 +1,12 @@
-/** F-01/F-02: implemented identity-only flow; no anonymous claim or sync promise. */
+/** F-01/F-02: OAuth handoff into the shared device-bound account and sync session. */
 import { z } from 'zod'
+import {
+  DeviceRegistrationSchema,
+  SignInResponseSchema,
+  RefreshRequestSchema,
+  UserSchema,
+} from './account.js'
+import { RowIdSchema } from './common.js'
 export const OAuthProviderSchema = z.enum(['google', 'apple'])
 export type OAuthProvider = z.infer<typeof OAuthProviderSchema>
 const SecretSchema = z.string().regex(/^[A-Za-z0-9_-]{43}$/)
@@ -14,15 +21,12 @@ export const OAuthStartResponseSchema = z.object({
 export const OAuthExchangeSchema = z.strictObject({
   ticket: SecretSchema,
   code_verifier: SecretSchema,
+  device: DeviceRegistrationSchema,
+  anon_id: RowIdSchema,
 })
-export const OAuthRefreshSchema = z.strictObject({ refresh_token: SecretSchema })
-export const OAuthSessionSchema = z.object({
-  access_token: z.string().min(1).max(4096),
-  refresh_token: SecretSchema,
-  expires_in: z.literal(900),
-  user: z.object({ id: z.uuid(), provider: OAuthProviderSchema }),
-})
+export const OAuthRefreshSchema = RefreshRequestSchema
+export const OAuthSessionSchema = SignInResponseSchema
 export type OAuthSession = z.infer<typeof OAuthSessionSchema>
 
 export const OAuthProvidersSchema = z.object({ providers: z.array(OAuthProviderSchema) })
-export const OAuthUserSchema = OAuthSessionSchema.shape.user
+export const OAuthUserSchema = UserSchema

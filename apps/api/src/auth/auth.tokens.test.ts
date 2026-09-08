@@ -1,5 +1,5 @@
 import { generateKeyPairSync } from 'node:crypto'
-import { decodeJwt, SignJWT } from 'jose'
+import { decodeJwt, decodeProtectedHeader, SignJWT } from 'jose'
 import { describe, expect, it } from 'vitest'
 import { AccessTokens, equalHash, keyedHash, newRefreshToken, tokenHash } from './auth.tokens.js'
 
@@ -60,6 +60,52 @@ describe('ES256 access tokens', () => {
     expect(() => new AccessTokens({ ...settings, privateKeyPem: 'not a key' })).toThrow()
     const sec1 = privateKey.export({ type: 'sec1', format: 'pem' }).toString()
     expect(() => new AccessTokens({ ...settings, privateKeyPem: sec1 })).toThrow()
+  })
+})
+
+describe('shared browser and native session signing', () => {
+  const symmetric = {
+    ...settings,
+    privateKeyPem: undefined,
+    signingKey: 'browser-signing-key-at-least-32-bytes',
+  }
+
+  it('uses a configured HS256 key only when no PEM is supplied, with the same device claims', async () => {
+    const tokens = new AccessTokens(symmetric)
+    const token = await tokens.issue(principal, now)
+    expect(decodeProtectedHeader(token).alg).toBe('HS256')
+    expect(await tokens.verify(token, now)).toEqual(principal)
+    expect(decodeJwt(token)).toMatchObject({
+      aud: 'loro-mobile',
+      device_id: 'device-a',
+      sid: 'session-a',
+      ver: 1,
+    })
+    const preferred = new AccessTokens({ ...symmetric, privateKeyPem: settings.privateKeyPem })
+    expect(decodeProtectedHeader(await preferred.issue(principal, now)).alg).toBe('ES256')
+    await expect(preferred.verify(token, now)).rejects.toMatchObject({ code: 'UNAUTHENTICATED' })
+  })
+
+  it('rejects short signing keys, explicitly disabled auth and invalid PEM fallback', () => {
+    expect(() => new AccessTokens({ ...symmetric, signingKey: 'short' })).toThrow()
+    expect(() => new AccessTokens({ ...symmetric, enabled: false })).toThrow()
+    expect(() => new AccessTokens({ ...settings, enabled: false })).toThrow()
+    expect(() => new AccessTokens({ ...symmetric, privateKeyPem: 'invalid' })).toThrow()
+  })
+
+  it('rejects legacy bearer JWTs without device/version claims even with a valid signature', async () => {
+    const tokens = new AccessTokens(symmetric)
+    for (const audience of ['loro-api', 'loro-mobile']) {
+      const legacy = await new SignJWT({ sid: 'session-a' })
+        .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
+        .setIssuer(settings.issuer)
+        .setAudience(audience)
+        .setSubject('account-a')
+        .setIssuedAt(now / 1000)
+        .setExpirationTime(now / 1000 + 900)
+        .sign(new TextEncoder().encode(symmetric.signingKey))
+      await expect(tokens.verify(legacy, now)).rejects.toMatchObject({ code: 'UNAUTHENTICATED' })
+    }
   })
 })
 

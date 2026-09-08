@@ -62,6 +62,33 @@ const claim = { performed: true, mode: 'bind', claim_id: 'claim_example', upload
 const signedIn = { ...tokens, user, device_id: 'device_example', claim }
 const accepted = { status: 'accepted' }
 export const currentExamples: Readonly<Record<string, WireExample>> = {
+  oauthProviders: { responses: { 200: { providers: ['google', 'apple'] } } },
+  oauthStart: {
+    request: { redirect_uri: 'loro://account', code_challenge: 'a'.repeat(43) },
+    responses: {
+      200: {
+        authorization_url: 'https://accounts.google.com/o/oauth2/v2/auth',
+        state: 'b'.repeat(43),
+      },
+    },
+  },
+  oauthCallbackGet: { responses: { 303: 'Redirecting to the registered application.' } },
+  oauthCallbackPost: { responses: { 303: 'Redirecting to the registered application.' } },
+  oauthExchange: {
+    request: {
+      ticket: 'a'.repeat(43),
+      code_verifier: 'b'.repeat(43),
+      device: signIn.device,
+      anon_id: id,
+    },
+    responses: {
+      200: {
+        ...signedIn,
+        claim: { ...claim, performed: false, mode: null, upload_required: true },
+      },
+    },
+  },
+  oauthMe: { responses: { 200: user } },
   health: { responses: { 200: health } },
   readiness: {
     responses: {
@@ -102,7 +129,7 @@ export const currentExamples: Readonly<Record<string, WireExample>> = {
     },
   },
   authRefresh: { request: { refresh_token: tokens.refresh_token }, responses: { 200: tokens } },
-  authLogout: { responses: {} },
+  authLogout: { request: { refresh_token: tokens.refresh_token }, responses: {} },
   authClaim: {
     request: { anon_id: id, device_id: 'device_example', request_id: id },
     responses: {

@@ -1,7 +1,7 @@
 //! One checked JSON boundary shared by WASM and Expo's synchronous native module.
 //! Algorithms remain in their owning Rust modules; this module only decodes inputs.
 
-use crate::{asr, fsrs, rank, select, sync, Difficulty};
+use crate::{asr, fsrs, rank, select, sync, Difficulty, Tag};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 /// A rejected call never substitutes a schedule or a successful production gate.
@@ -54,6 +54,32 @@ struct ReviewInput {
     state: fsrs::FsrsState,
     grade: u8,
     at: i64,
+    confidence: Option<fsrs::Confidence>,
+}
+#[derive(Deserialize)]
+struct InitializeInput {
+    declared: Difficulty,
+    tags: Vec<Tag>,
+    at: i64,
+}
+#[derive(Deserialize)]
+struct RerateInput {
+    state: fsrs::FsrsState,
+    declared: Difficulty,
+    tags: Vec<Tag>,
+}
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct GradeInput {
+    success: bool,
+    hints_used: u32,
+    self_grade: Option<fsrs::Grade>,
+    confidence: Option<fsrs::Confidence>,
+}
+#[derive(Deserialize)]
+struct OrderStreamInput {
+    candidates: Vec<rank::StreamCandidate>,
+    now: i64,
 }
 #[derive(Deserialize)]
 struct MatchInput {
@@ -112,6 +138,10 @@ struct AutomaticityInput {
 pub fn core_call(method: String, input: String) -> Result<String, CoreError> {
     match method.as_str() {
         "repeat_target" => output(&rank::repeat_target(parse(&input)?)),
+        "order_stream" => {
+            let p: OrderStreamInput = parse(&input)?;
+            output(&rank::order_stream_candidates(&p.candidates, p.now))
+        }
         "stream_rank" => {
             let p: RankInput = parse(&input)?;
             output(&rank::stream_rank_values(
@@ -143,8 +173,27 @@ pub fn core_call(method: String, input: String) -> Result<String, CoreError> {
                 4 => fsrs::Grade::Easy,
                 _ => return Err(invalid("FSRS grade must be 1..4")),
             };
-            output(&fsrs::review(p.state, grade, p.at).map_err(invalid)?)
+            let next = match p.confidence {
+                Some(confidence) => fsrs::review_confidence(p.state, confidence, p.at),
+                None => fsrs::review(p.state, grade, p.at),
+            };
+            output(&next.map_err(invalid)?)
         }
+        "fsrs_initialize" => {
+            let p: InitializeInput = parse(&input)?;
+            output(&fsrs::initialize(p.declared, &p.tags, p.at).map_err(invalid)?)
+        }
+        "fsrs_rerate" => {
+            let p: RerateInput = parse(&input)?;
+            output(&fsrs::rerate(p.state, p.declared, &p.tags).map_err(invalid)?)
+        }
+        "review_grade" => {
+            let p: GradeInput = parse(&input)?;
+            output(&fsrs::review_grade(p.success, p.hints_used, p.self_grade, p.confidence).as_u8())
+        }
+        "mode_for_rep" => output(&select::mode_for_rep(parse(&input)?)),
+        "model_rate_for_mode" => output(&select::model_rate_for_mode(parse(&input)?)),
+        "beat_ms_for_mode" => output(&select::beat_ms_for_mode(parse(&input)?)),
         "match_tokens" => {
             let p: MatchInput = parse(&input)?;
             let result = asr::match_tokens(&p.heard, &p.target, p.revealed, false);
@@ -159,37 +208,7 @@ pub fn core_call(method: String, input: String) -> Result<String, CoreError> {
             output(&select::automaticity(p.reps, p.target))
         }
         "refrain_set_size" => output(&select::refrain_set_size(parse(&input)?)),
-        "hlc_tick" | "hlc_receive" => {
-            let p: ClockInput = parse(&input)?;
-            if p.node_id.is_empty() || p.node_id.contains(':') || p.wall_ms < 0 {
-                return Err(invalid("Invalid HLC node or wall time"));
-            }
-            let previous = match p.previous {
-                Some(value) => {
-                    sync::hlc::Hlc::parse(&value).ok_or_else(|| invalid("Invalid previous HLC"))?
-                }
-                None => sync::hlc::Hlc {
-                    physical: p.wall_ms,
-                    logical: 0,
-                    node_id: p.node_id.clone(),
-                },
-            };
-            let next = if method == "hlc_receive" {
-                let remote = p
-                    .remote
-                    .and_then(|value| sync::hlc::Hlc::parse(&value))
-                    .ok_or_else(|| invalid("Invalid remote HLC"))?;
-                let remote = if p.clamp_remote {
-                    sync::hlc::clamp_to_server(&remote, p.wall_ms)
-                } else {
-                    remote
-                };
-                sync::hlc::receive(&previous, &remote, p.wall_ms, &p.node_id)
-            } else {
-                sync::hlc::tick(&previous, p.wall_ms, &p.node_id)
-            };
-            output(&next.encode())
-        }
+        "hlc_tick" | "hlc_receive" => advance_clock(&method, &input),
         "hlc_clamp" => {
             let p: ClampInput = parse(&input)?;
             let value = sync::hlc::Hlc::parse(&p.value).ok_or_else(|| invalid("Invalid HLC"))?;
@@ -204,6 +223,38 @@ pub fn core_call(method: String, input: String) -> Result<String, CoreError> {
         }
         _ => Err(invalid(format!("Unknown core method: {method}"))),
     }
+}
+
+fn advance_clock(method: &str, input: &str) -> Result<String, CoreError> {
+    let p: ClockInput = parse(input)?;
+    if p.node_id.is_empty() || p.node_id.contains(':') || p.wall_ms < 0 {
+        return Err(invalid("Invalid HLC node or wall time"));
+    }
+    let previous = match p.previous {
+        Some(value) => {
+            sync::hlc::Hlc::parse(&value).ok_or_else(|| invalid("Invalid previous HLC"))?
+        }
+        None => sync::hlc::Hlc {
+            physical: p.wall_ms,
+            logical: 0,
+            node_id: p.node_id.clone(),
+        },
+    };
+    let next = if method == "hlc_receive" {
+        let remote = p
+            .remote
+            .and_then(|value| sync::hlc::Hlc::parse(&value))
+            .ok_or_else(|| invalid("Invalid remote HLC"))?;
+        let remote = if p.clamp_remote {
+            sync::hlc::clamp_to_server(&remote, p.wall_ms)
+        } else {
+            remote
+        };
+        sync::hlc::receive(&previous, &remote, p.wall_ms, &p.node_id)
+    } else {
+        sync::hlc::tick(&previous, p.wall_ms, &p.node_id)
+    };
+    output(&next.encode())
 }
 
 #[cfg(test)]

@@ -30,7 +30,7 @@ export interface Operation {
   query?: Readonly<Record<string, z.ZodType>>
   pathParams?: Readonly<Record<string, z.ZodType>>
   headers?: Readonly<Record<string, z.ZodType>>
-  request?: Payload
+  request?: Payload & { required?: boolean }
   responses: Readonly<Record<number, ResponseContract>>
   behavior: string
   maxBodyBytes?: number

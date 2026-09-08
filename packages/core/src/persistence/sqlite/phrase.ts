@@ -16,6 +16,7 @@ import type {
   Tag,
   Theme,
 } from '../../domain/phrase.js'
+import { LEGACY_PREVIEW_ALGORITHM } from '../../domain/phrase.js'
 import { catalogPhraseId, userPhraseId, type UserPhraseId } from '../../domain/ids.js'
 import {
   boolToSql,
@@ -69,6 +70,7 @@ export const PHRASE_COLUMN_NAMES = [
   'srs_last_review',
   'srs_lapses',
   'srs_state',
+  'srs_algorithm',
   'reps_today',
   'reps_today_day',
   'automaticity',
@@ -155,6 +157,7 @@ export function rowToPhrase(row: SqlRow): PhraseState {
           lastReview: readIntOrNull(row, 'srs_last_review'),
           lapses: readInt(row, 'srs_lapses'),
           state: readText(row, 'srs_state') as FsrsState['state'],
+          algorithm: readTextOrNull(row, 'srs_algorithm') ?? LEGACY_PREVIEW_ALGORITHM,
         }
 
   const ownEs = readTextOrNull(row, 'own_es')
@@ -236,6 +239,7 @@ export function phraseToParams(p: PhraseState, userId: string, hlc: string): Phr
     p.srs?.lastReview ?? null,
     p.srs?.lapses ?? 0,
     p.srs?.state ?? 'new',
+    p.srs?.algorithm ?? LEGACY_PREVIEW_ALGORITHM,
 
     p.repsToday,
     p.repsTodayDay,

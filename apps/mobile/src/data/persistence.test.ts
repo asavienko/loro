@@ -172,6 +172,7 @@ describe.each(implementations)('%s repositories', (_name, open) => {
       id: userPhraseId('0197f2a0-0000-7000-8000-aaaaaaaaaaaa'),
       note: 'sounds like "coffee"',
       srs: {
+        algorithm: 'fsrs-6-default-c8ca282-loro-v1',
         stability: 3.5,
         difficulty: 6.25,
         due: AT + 86_400_000,
@@ -1024,6 +1025,19 @@ describe('erasure leaves nothing behind', () => {
       'INSERT INTO sync_catalog_tombstones(id,phrase_id,target_locale,deleted_at) VALUES(?,?,?,?)',
       [gone, 'b', 'es-ES', AT],
     )
+    driver.run("INSERT INTO local_metadata(user_id,key,value) VALUES('local','test','private')")
+    driver.run(
+      "INSERT INTO session_checkpoint(user_id,target_locale,payload) VALUES('local','es-ES','{}')",
+    )
+    driver.run(
+      "INSERT INTO committed_attempt(user_id,target_locale,attempt_id) VALUES('local','es-ES','attempt-1')",
+    )
+    driver.run(
+      `INSERT INTO review_event(user_id,target_locale,attempt_id,phrase_id,reviewed_at,rating,
+         algorithm,stability,difficulty,due,last_review,lapses,state)
+       VALUES('local','es-ES','attempt-1',?, ?,3,'fsrs',1,5,?, ?,0,'review')`,
+      [kept, AT, AT, AT],
+    )
     for (const id of [kept, gone]) {
       db.outbox.append({
         entity: 'user_phrase',
@@ -1060,8 +1074,8 @@ describe('erasure leaves nothing behind', () => {
     expect(currentVersion(driver)).toBe(SCHEMA_VERSION)
     expect(migrate(driver, AT).applied, 'no migration is owed').toEqual([])
 
-    // The seq counter restarts too: `DROP TABLE` takes the `sqlite_sequence` row with it, so
-    // a re-registered learner's first op is seq 1 and cannot be confused with an old ack.
+    // Sequence ids survive erasure: a delayed acknowledgement for an erased op must
+    // never match a fresh write from this same installation.
     db.phrases.upsert({ ...makePhrase('a'), id: userPhraseId('id-new') })
     db.outbox.append({
       entity: 'user_phrase',
@@ -1072,11 +1086,11 @@ describe('erasure leaves nothing behind', () => {
       createdAt: AT,
     })
     expect(db.phrases.count()).toBe(1)
-    expect(db.outbox.pending(10).map((o) => o.seq)).toEqual([1])
+    expect(db.outbox.pending(10).map((o) => o.seq)).toEqual([3])
   })
 
   it('erases nothing when the wrapping transaction rolls back', () => {
-    // `wipe()` drops and recreates tables, so under a caller it runs in a savepoint. An
+    // `wipe()` deletes records atomically, so under a caller it runs in a savepoint. An
     // erasure that half-committed would be worse than one that failed outright.
     expect(() =>
       driver.transaction(() => {

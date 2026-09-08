@@ -7,7 +7,7 @@ import { EMPTY_REFRAIN_RESUME } from '../state'
  * day key reaches first, and from here it reaches every engine at once.
  */
 
-import { DEFAULT_REP_TARGET, refrainSetSize, repsToday, selectRefrainSet } from '@loro/core'
+import { DEFAULT_REP_TARGET, repsToday, selectRefrainSet } from '@loro/core'
 import type { Slice } from '../types'
 
 export const createRefrainSlice: Slice<'ensureRefrainSet'> = ({
@@ -19,7 +19,7 @@ export const createRefrainSlice: Slice<'ensureRefrainSet'> = ({
   ensureRefrainSet: () => {
     const day = deps.clock.localDay()
     const st = get()
-    const size = refrainSetSize(st.dailyMinutes)
+    const size = rustCoreFacade.refrainSetSize(st.dailyMinutes)
 
     // A new day (or the first ever): choose today's set once, then freeze it.
     if (st.refrainDay !== day) {

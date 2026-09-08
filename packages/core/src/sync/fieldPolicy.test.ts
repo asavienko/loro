@@ -40,7 +40,15 @@ describe('field policy', () => {
   })
 
   it('covers the FSRS group and the prosody axes', () => {
-    for (const f of ['srsStability', 'srsDifficulty', 'srsDue', 'srsLastReview']) {
+    for (const f of [
+      'srsStability',
+      'srsDifficulty',
+      'srsDue',
+      'srsLastReview',
+      'srsLapses',
+      'srsState',
+      'srsAlgorithm',
+    ]) {
       expect(mergeClassFor('user_phrase', f), f).toBe('latest-review')
     }
     for (const f of ['axPerception', 'axRecall', 'axProduction']) {

@@ -14,6 +14,7 @@ import { config } from './common/config.js'
 import { ProblemDetailsFilter } from './common/problem-filter.js'
 import { mergeAvailable } from './sync/merge.js'
 import { DATABASE, type SqlDatabase } from './database/database.js'
+import { authSettings } from './auth/settings.js'
 
 async function bootstrap(): Promise<void> {
   // Refuse to start in production without the shared merge. Serving sync with a
@@ -33,8 +34,15 @@ async function bootstrap(): Promise<void> {
   })
   // Bound parser allocation; the sync service enforces its smaller shared 512 KiB cap.
   app.useBodyParser('json', { limit: '1mb' })
+  // Apple sends its authorization code through a browser form POST.
+  app.useBodyParser('urlencoded', { extended: false, limit: '32kb' })
+  app.enableShutdownHooks()
+  const oauth = authSettings()
+  const redirectOrigins = (oauth?.redirects ?? [])
+    .filter((uri) => uri.startsWith('https:'))
+    .map((uri) => new URL(uri).origin)
   app.enableCors({
-    origin: config.allowedOrigins(),
+    origin: [...new Set([...config.allowedOrigins(), ...redirectOrigins])],
     methods: ['GET', 'POST'],
     allowedHeaders: [
       'Content-Type',
@@ -51,9 +59,11 @@ async function bootstrap(): Promise<void> {
   // Auth and sync install the shared target Zod contracts at their boundary.
   // RFC 9457 for every error. Never a stack trace, never SQL text.
   app.useGlobalFilters(new ProblemDetailsFilter())
-  if (config.isProduction() && !(await app.get<SqlDatabase>(DATABASE).ready())) {
-    await app.close()
-    throw new Error('Durable database is unavailable')
+  if ((config.isProduction() && Boolean(config.databaseUrl())) || oauth) {
+    if (!(await app.get<SqlDatabase>(DATABASE).ready())) {
+      await app.close()
+      throw new Error('Durable database is unavailable')
+    }
   }
 
   const port = config.port()

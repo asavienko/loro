@@ -24,11 +24,13 @@
 
 import type { SqlDriver } from './driver.js'
 import { firstRow, readInt, readText } from './driver.js'
+import { reconcilePreviewSchemas } from './reconcilePreviews.js'
 
 export interface Migration {
   readonly version: number
   readonly name: string
   readonly up: string
+  readonly reconcile?: (driver: SqlDriver) => void
 }
 
 /**
@@ -212,6 +214,32 @@ export const MIGRATIONS: readonly Migration[] = [
     );
     CREATE INDEX sync_catalog_tombstones_identity ON sync_catalog_tombstones(phrase_id,target_locale);`,
   },
+  {
+    version: 5,
+    name: 'reconcile_preview_practice_records',
+    up: `
+      CREATE TABLE IF NOT EXISTS local_metadata (
+        user_id TEXT NOT NULL, key TEXT NOT NULL, value TEXT NOT NULL,
+        PRIMARY KEY (user_id, key)
+      );
+      CREATE TABLE IF NOT EXISTS session_checkpoint (
+        user_id TEXT NOT NULL, target_locale TEXT NOT NULL, payload TEXT NOT NULL,
+        PRIMARY KEY (user_id, target_locale)
+      );
+      CREATE TABLE IF NOT EXISTS committed_attempt (
+        user_id TEXT NOT NULL, target_locale TEXT NOT NULL, attempt_id TEXT NOT NULL,
+        PRIMARY KEY (user_id, target_locale, attempt_id)
+      );
+      CREATE TABLE IF NOT EXISTS review_event (
+        user_id TEXT NOT NULL, target_locale TEXT NOT NULL, attempt_id TEXT NOT NULL,
+        phrase_id TEXT NOT NULL, reviewed_at INTEGER NOT NULL, rating INTEGER NOT NULL,
+        algorithm TEXT NOT NULL, stability REAL NOT NULL, difficulty REAL NOT NULL,
+        due INTEGER NOT NULL, last_review INTEGER, lapses INTEGER NOT NULL, state TEXT NOT NULL,
+        PRIMARY KEY (user_id, target_locale, attempt_id)
+      );
+    `,
+    reconcile: reconcilePreviewSchemas,
+  },
 ]
 
 /** The newest schema this build understands. */
@@ -263,6 +291,7 @@ export function migrate(driver: SqlDriver, at: number): MigrationResult {
     // recover from on a learner's device.
     driver.transaction(() => {
       driver.exec(migration.up)
+      migration.reconcile?.(driver)
       driver.run('INSERT INTO schema_version (version, name, applied_at) VALUES (?, ?, ?)', [
         migration.version,
         migration.name,

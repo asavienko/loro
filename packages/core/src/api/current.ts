@@ -1,4 +1,5 @@
 import { withExamples, currentExamples } from './examples.js'
+import { oauthOperations } from './oauth-operations.js'
 /** Implemented HTTP surface. Content and AI retain their documented development behavior. */
 import { z } from 'zod'
 import { CatalogPhraseSchema } from './catalog.js'
@@ -171,6 +172,7 @@ const signInBehavior =
   'Verify configured provider proof, register the installation and create a session. Tokens expire after 900 seconds; local data must be uploaded before the claim is complete. Provider capabilities describe configured methods. No anonymous identifier grants server access.'
 export const currentOperations = withExamples(
   [
+    ...oauthOperations(ProblemSchema),
     {
       ...base,
       id: 'health',
@@ -285,16 +287,19 @@ export const currentOperations = withExamples(
       path: '/auth/refresh',
       summary: 'Rotate refresh token',
       request: { schema: RefreshRequestSchema },
-      responses: { 200: { schema: TokenResponseSchema, headers: noStore }, ...protectedErrors },
+      responses: {
+        200: { schema: z.union([TokenResponseSchema, SignInResponseSchema]), headers: noStore },
+        ...protectedErrors,
+      },
       behavior:
-        'Rotate the refresh token transactionally. Reuse revokes the session family; clients refresh once, single-flight, then re-authenticate while retaining their outbox.',
+        'Rotate the refresh token transactionally. Reuse revokes the session family. Legacy OAuth refresh credentials require paired device and anon_id registration for one-time migration, returning a SignInResponse and retaining the original account ID and remaining session lifetime; modern refresh returns tokens only.',
     },
     {
       ...authBase,
       id: 'authLogout',
       method: 'post',
       path: '/auth/logout',
-      auth: 'bearer',
+      request: { schema: RefreshRequestSchema, required: false },
       summary: 'Revoke the current session',
       responses: {
         204: {
@@ -305,7 +310,7 @@ export const currentOperations = withExamples(
         ...protectedErrors,
       },
       behavior:
-        'Revoke the authenticated session without deleting local learner data. An optional device header must agree with the authenticated device.',
+        'Revoke a session using its refresh credential in the body, or a bearer access token when the body is absent. Both modern and legacy refresh families are supported. This revocation-only endpoint never reads learner data; local progress is retained. An optional device header must agree with a bearer-authenticated device.',
     },
     {
       ...authBase,

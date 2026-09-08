@@ -561,6 +561,22 @@ fileprivate struct FfiConverterFloat: FfiConverterPrimitive {
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterDouble: FfiConverterPrimitive {
+    typealias FfiType = Double
+    typealias SwiftType = Double
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> Double {
+        return try lift(readDouble(&buf))
+    }
+
+    public static func write(_ value: Double, into buf: inout [UInt8]) {
+        writeDouble(&buf, lower(value))
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterBool : FfiConverter {
     typealias FfiType = Int8
     typealias SwiftType = Bool
@@ -796,53 +812,69 @@ public func FfiConverterTypeFix_lower(_ value: Fix) -> RustBuffer {
 
 
 /**
- * A phrase's memory state.
+ * Complete atomic scheduler group, including algorithm provenance.
  */
 public struct FsrsState: Equatable, Hashable {
     /**
-     * Days until retrievability decays to 90%.
+     * Days until recall reaches 90%, NOT the selected scheduling threshold.
      */
-    public var stability: Float
+    public var stability: Double
     /**
-     * Intrinsic difficulty for this learner, 1..10.
+     * Intrinsic difficulty in 1..10.
      */
-    public var difficulty: Float
+    public var difficulty: Double
     /**
-     * Next review, epoch ms.
+     * Next review, epoch milliseconds.
      */
     public var due: Int64
     /**
-     * Last review, epoch ms.
+     * Last observed review, epoch milliseconds; absent for new cards.
      */
     public var lastReview: Int64?
     /**
-     * Failed reviews.
+     * Failed established reviews (not repeated learning failures).
      */
     public var lapses: UInt32
+    /**
+     * Learning lifecycle.
+     */
+    public var state: CardState
+    /**
+     * Versioned algorithm, parameters and Loro policy identifier.
+     */
+    public var algorithm: String
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
     public init(
         /**
-         * Days until retrievability decays to 90%.
-         */stability: Float, 
+         * Days until recall reaches 90%, NOT the selected scheduling threshold.
+         */stability: Double, 
         /**
-         * Intrinsic difficulty for this learner, 1..10.
-         */difficulty: Float, 
+         * Intrinsic difficulty in 1..10.
+         */difficulty: Double, 
         /**
-         * Next review, epoch ms.
+         * Next review, epoch milliseconds.
          */due: Int64, 
         /**
-         * Last review, epoch ms.
+         * Last observed review, epoch milliseconds; absent for new cards.
          */lastReview: Int64?, 
         /**
-         * Failed reviews.
-         */lapses: UInt32) {
+         * Failed established reviews (not repeated learning failures).
+         */lapses: UInt32, 
+        /**
+         * Learning lifecycle.
+         */state: CardState, 
+        /**
+         * Versioned algorithm, parameters and Loro policy identifier.
+         */algorithm: String) {
         self.stability = stability
         self.difficulty = difficulty
         self.due = due
         self.lastReview = lastReview
         self.lapses = lapses
+        self.state = state
+        self.algorithm = algorithm
     }
 
     
@@ -861,20 +893,24 @@ public struct FfiConverterTypeFsrsState: FfiConverterRustBuffer {
     public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> FsrsState {
         return
             try FsrsState(
-                stability: FfiConverterFloat.read(from: &buf), 
-                difficulty: FfiConverterFloat.read(from: &buf), 
+                stability: FfiConverterDouble.read(from: &buf), 
+                difficulty: FfiConverterDouble.read(from: &buf), 
                 due: FfiConverterInt64.read(from: &buf), 
                 lastReview: FfiConverterOptionInt64.read(from: &buf), 
-                lapses: FfiConverterUInt32.read(from: &buf)
+                lapses: FfiConverterUInt32.read(from: &buf), 
+                state: FfiConverterTypeCardState.read(from: &buf), 
+                algorithm: FfiConverterString.read(from: &buf)
         )
     }
 
     public static func write(_ value: FsrsState, into buf: inout [UInt8]) {
-        FfiConverterFloat.write(value.stability, into: &buf)
-        FfiConverterFloat.write(value.difficulty, into: &buf)
+        FfiConverterDouble.write(value.stability, into: &buf)
+        FfiConverterDouble.write(value.difficulty, into: &buf)
         FfiConverterInt64.write(value.due, into: &buf)
         FfiConverterOptionInt64.write(value.lastReview, into: &buf)
         FfiConverterUInt32.write(value.lapses, into: &buf)
+        FfiConverterTypeCardState.write(value.state, into: &buf)
+        FfiConverterString.write(value.algorithm, into: &buf)
     }
 }
 
@@ -1761,6 +1797,101 @@ public func FfiConverterTypeSkillAxes_lower(_ value: SkillAxes) -> RustBuffer {
 
 
 /**
+ * Scheduler lifecycle; Loro uses one explicit ten-minute learning/relearning step.
+ */
+
+public enum CardState: Equatable, Hashable {
+    
+    /**
+     * No review evidence yet.
+     */
+    case new
+    /**
+     * Initial recall has not succeeded.
+     */
+    case learning
+    /**
+     * Established scheduled review.
+     */
+    case review
+    /**
+     * A scheduled review failed.
+     */
+    case relearning
+
+
+
+
+
+}
+
+#if compiler(>=6)
+extension CardState: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeCardState: FfiConverterRustBuffer {
+    typealias SwiftType = CardState
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> CardState {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .new
+        
+        case 2: return .learning
+        
+        case 3: return .review
+        
+        case 4: return .relearning
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: CardState, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case .new:
+            writeInt(&buf, Int32(1))
+        
+        
+        case .learning:
+            writeInt(&buf, Int32(2))
+        
+        
+        case .review:
+            writeInt(&buf, Int32(3))
+        
+        
+        case .relearning:
+            writeInt(&buf, Int32(4))
+        
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeCardState_lift(_ buf: RustBuffer) throws -> CardState {
+    return try FfiConverterTypeCardState.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeCardState_lower(_ value: CardState) -> RustBuffer {
+    return FfiConverterTypeCardState.lower(value)
+}
+
+
+
+/**
  * Notification categories. Each is individually opt-out.
  */
 
@@ -1888,8 +2019,8 @@ public func FfiConverterTypeCategory_lower(_ value: Category) -> RustBuffer {
 /**
  * The learner's five-level confidence rating (the Memory-model screen), mapped to a grade.
  *
- * `Strong` maps to `Good`. The reference algorithm has four grades; adding a
- * caller-side stability bonus would create a second, non-reference scheduler.
+ * `Strong` maps to `Good`; `review_confidence` applies the documented 10% stability
+ * bonus in the canonical core.
  */
 
 public enum Confidence: Equatable, Hashable {
@@ -2460,7 +2591,7 @@ public func FfiConverterTypeFixKind_lower(_ value: FixKind) -> RustBuffer {
 
 
 /**
- * A review that cannot safely produce a portable, finite schedule.
+ * Explicit invalid-input failures cross both WASM and native bindings.
  */
 public 
 enum FsrsError: Swift.Error, Equatable, Hashable, Foundation.LocalizedError {
@@ -2468,29 +2599,21 @@ enum FsrsError: Swift.Error, Equatable, Hashable, Foundation.LocalizedError {
     
     
     /**
-     * Memory values are non-finite or outside their domain.
+     * Non-finite values, invalid memory state, or inconsistent lifecycle.
      */
     case InvalidState
     /**
-     * Timestamp is outside the supported nonnegative JavaScript Date range.
+     * Negative, backward or unsafe epoch milliseconds.
      */
-    case InvalidTimestamp
+    case InvalidTime
     /**
-     * Applying an older review would rewind the complete memory state.
+     * An unknown algorithm needs an explicit migration; recognized preview is supported.
      */
-    case ReviewBeforeLastReview
+    case UnsupportedAlgorithm
     /**
-     * The next due timestamp would exceed the shared timestamp range.
+     * A due timestamp or lapse counter cannot be represented.
      */
-    case TimestampOverflow
-    /**
-     * The lapse counter cannot represent another failed review.
-     */
-    case LapseOverflow
-    /**
-     * Computed memory state cannot be represented as finite 32-bit values.
-     */
-    case NumericOverflow
+    case Overflow
 
     
 
@@ -2521,11 +2644,9 @@ public struct FfiConverterTypeFsrsError: FfiConverterRustBuffer {
 
         
         case 1: return .InvalidState
-        case 2: return .InvalidTimestamp
-        case 3: return .ReviewBeforeLastReview
-        case 4: return .TimestampOverflow
-        case 5: return .LapseOverflow
-        case 6: return .NumericOverflow
+        case 2: return .InvalidTime
+        case 3: return .UnsupportedAlgorithm
+        case 4: return .Overflow
 
          default: throw UniffiInternalError.unexpectedEnumCase
         }
@@ -2542,24 +2663,16 @@ public struct FfiConverterTypeFsrsError: FfiConverterRustBuffer {
             writeInt(&buf, Int32(1))
         
         
-        case .InvalidTimestamp:
+        case .InvalidTime:
             writeInt(&buf, Int32(2))
         
         
-        case .ReviewBeforeLastReview:
+        case .UnsupportedAlgorithm:
             writeInt(&buf, Int32(3))
         
         
-        case .TimestampOverflow:
+        case .Overflow:
             writeInt(&buf, Int32(4))
-        
-        
-        case .LapseOverflow:
-            writeInt(&buf, Int32(5))
-        
-        
-        case .NumericOverflow:
-            writeInt(&buf, Int32(6))
         
         }
     }
@@ -2796,8 +2909,9 @@ public enum MergeClass: Equatable, Hashable {
      */
     case max
     /**
-     * Merged as a group, by the later `srs_last_review`. Mixing FSRS fields across
-     * devices would produce a state no algorithm ever computed.
+     * Merged as a group, by the later `srs_last_review`, then its group HLC when
+     * actual review times tie. Mixing FSRS fields across devices would produce a
+     * state no algorithm ever computed.
      */
     case latestReview
     /**
@@ -3444,6 +3558,30 @@ fileprivate struct FfiConverterOptionTypeDraw: FfiConverterRustBuffer {
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterOptionTypeConfidence: FfiConverterRustBuffer {
+    typealias SwiftType = Confidence?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeConfidence.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeConfidence.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterOptionTypeFinisherCard: FfiConverterRustBuffer {
     typealias SwiftType = FinisherCard?
 
@@ -3460,6 +3598,30 @@ fileprivate struct FfiConverterOptionTypeFinisherCard: FfiConverterRustBuffer {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeFinisherCard.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterOptionTypeGrade: FfiConverterRustBuffer {
+    typealias SwiftType = Grade?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeGrade.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeGrade.read(from: &buf)
         default: throw UniffiInternalError.unexpectedOptionalTag
         }
     }
@@ -3870,9 +4032,8 @@ public func gradeForConfidence(c: Confidence) -> Grade  {
 /**
  * Seed FSRS difficulty from the learner's own declaration.
  *
- * This prior records the learner's declaration before they have reviewed a phrase.
- * `review` initializes canonical memory difficulty from its first observed grade;
- * the declaration itself remains available for ranking and bounded re-rating.
+ * This is Loro's structural advantage over every other app using FSRS: the learner
+ * tells us a phrase's difficulty when they add it, so there is no cold start.
  *
  * `pron` deliberately does **not** raise difficulty — it changes the *drill*, not the
  * memory load.
@@ -3900,33 +4061,77 @@ public func nudgeDifficulty(current: Float, declared: Difficulty, tags: [Tag]) -
 })
 }
 /**
- * FSRS-6 retrievability at `t` elapsed days after the last review.
+ * Map observed recall evidence to the grade used by every practice engine.
  *
- * Stability is the interval at 90% recall. Negative elapsed time is clamped to zero;
- * invalid/non-finite inputs return zero rather than propagating NaN through ranking.
+ * An explicit four-grade self-rating takes precedence over confidence;
+ * otherwise a failed recall is Again, a hinted success Hard, and an unhinted
+ * success Good. Passive listening and skipped attempts must not call this function.
  */
-public func retrievability(daysSinceReview: Float, stability: Float) -> Float  {
-    return try!  FfiConverterFloat.lift(try! rustCall() {
+public func reviewGrade(success: Bool, hintsUsed: UInt32, selfGrade: Grade?, confidence: Confidence?) -> Grade  {
+    return try!  FfiConverterTypeGrade_lift(try! rustCall() {
         uniffiCallStatus in
-    uniffi_loro_core_fn_func_retrievability(
-        FfiConverterFloat.lower(daysSinceReview),
-        FfiConverterFloat.lower(stability),uniffiCallStatus
+    uniffi_loro_core_fn_func_review_grade(
+        FfiConverterBool.lower(success),
+        FfiConverterUInt32.lower(hintsUsed),
+        FfiConverterOptionTypeGrade.lower(selfGrade),
+        FfiConverterOptionTypeConfidence.lower(confidence),uniffiCallStatus
     )
 })
 }
 /**
- * Apply one review using FSRS-6 and the pinned default parameter set.
- *
- * `last_review: None` means an unseen phrase: its first grade initializes memory
- * using the reference parameters. Declared difficulty remains a separate input to
- * ranking and re-rating; it does not alter the canonical first-review equation.
- * For established phrases, elapsed whole 24-hour days select the reference
- * short-/long-term update. Due dates are relative to `at_ms`, never to an old due.
- * An Again on an established phrase increments lapses; first exposure does not.
+ * Create a new card without pretending that adding a phrase is a recall observation.
  *
  * # Errors
- * Rejects non-finite or invalid memory values, out-of-order reviews, timestamp
- * overflow and lapse overflow. It never silently resets an established state.
+ * Rejects unsafe timestamps.
+ */
+public func initialize(declared: Difficulty, tags: [Tag], atMs: Int64)throws  -> FsrsState  {
+    return try  FfiConverterTypeFsrsState_lift(try rustCallWithError(FfiConverterTypeFsrsError_lift) {
+        uniffiCallStatus in
+    uniffi_loro_core_fn_func_initialize(
+        FfiConverterTypeDifficulty_lower(declared),
+        FfiConverterSequenceTypeTag.lower(tags),
+        FfiConverterInt64.lower(atMs),uniffiCallStatus
+    )
+})
+}
+/**
+ * Apply a changed declaration without manufacturing a review or rescheduling it.
+ *
+ * # Errors
+ * Rejects corrupt or foreign state using the same validation as review.
+ */
+public func rerate(state: FsrsState, declared: Difficulty, tags: [Tag])throws  -> FsrsState  {
+    return try  FfiConverterTypeFsrsState_lift(try rustCallWithError(FfiConverterTypeFsrsError_lift) {
+        uniffiCallStatus in
+    uniffi_loro_core_fn_func_rerate(
+        FfiConverterTypeFsrsState_lower(state),
+        FfiConverterTypeDifficulty_lower(declared),
+        FfiConverterSequenceTypeTag.lower(tags),uniffiCallStatus
+    )
+})
+}
+/**
+ * FSRS-6 power curve. Stability is the interval at 90% recall.
+ *
+ * # Errors
+ * Rejects non-finite, negative elapsed time or nonpositive stability.
+ */
+public func retrievability(daysSinceReview: Double, stability: Double)throws  -> Double  {
+    return try  FfiConverterDouble.lift(try rustCallWithError(FfiConverterTypeFsrsError_lift) {
+        uniffiCallStatus in
+    uniffi_loro_core_fn_func_retrievability(
+        FfiConverterDouble.lower(daysSinceReview),
+        FfiConverterDouble.lower(stability),uniffiCallStatus
+    )
+})
+}
+/**
+ * Apply an observed grade with full card state, no randomized interval fuzz.
+ *
+ * # Errors
+ * Rejects corrupt/unknown state, backward time and timestamp/counter overflow.
+ * Recognized preview evidence is updated directly and adopts the current policy
+ * only here, after an actual review; deserialization never changes memory or due.
  */
 public func review(state: FsrsState, grade: Grade, atMs: Int64)throws  -> FsrsState  {
     return try  FfiConverterTypeFsrsState_lift(try rustCallWithError(FfiConverterTypeFsrsError_lift) {
@@ -3934,6 +4139,22 @@ public func review(state: FsrsState, grade: Grade, atMs: Int64)throws  -> FsrsSt
     uniffi_loro_core_fn_func_review(
         FfiConverterTypeFsrsState_lower(state),
         FfiConverterTypeGrade_lower(grade),
+        FfiConverterInt64.lower(atMs),uniffiCallStatus
+    )
+})
+}
+/**
+ * Apply Loro confidence policy; Strong adds 10% stability to Good and recomputes due.
+ *
+ * # Errors
+ * Same validation and overflow failures as `review`.
+ */
+public func reviewConfidence(state: FsrsState, confidence: Confidence, atMs: Int64)throws  -> FsrsState  {
+    return try  FfiConverterTypeFsrsState_lift(try rustCallWithError(FfiConverterTypeFsrsError_lift) {
+        uniffiCallStatus in
+    uniffi_loro_core_fn_func_review_confidence(
+        FfiConverterTypeFsrsState_lower(state),
+        FfiConverterTypeConfidence_lower(confidence),
         FfiConverterInt64.lower(atMs),uniffiCallStatus
     )
 })
@@ -4277,16 +4498,28 @@ private let initializationResult: InitializationResult = {
     if (uniffi_loro_core_checksum_func_grade_for_confidence() != 31441) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_loro_core_checksum_func_initial_difficulty() != 32425) {
+    if (uniffi_loro_core_checksum_func_initial_difficulty() != 41499) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_loro_core_checksum_func_nudge_difficulty() != 10246) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_loro_core_checksum_func_retrievability() != 27447) {
+    if (uniffi_loro_core_checksum_func_review_grade() != 5503) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_loro_core_checksum_func_review() != 35956) {
+    if (uniffi_loro_core_checksum_func_initialize() != 10030) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_loro_core_checksum_func_rerate() != 38115) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_loro_core_checksum_func_retrievability() != 3854) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_loro_core_checksum_func_review() != 25686) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_loro_core_checksum_func_review_confidence() != 30479) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_loro_core_checksum_func_climb() != 50333) {

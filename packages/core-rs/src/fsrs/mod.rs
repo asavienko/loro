@@ -1,31 +1,23 @@
-//! FSRS — the scheduling algorithm.
-//!
-//! FSRS-6 with the default 21 parameters, ported from the official `py-fsrs` v6.3.2
-//! scheduler. `tests/fsrs_parity.rs` checks vectors produced by that pinned package.
-//! Reference: <https://github.com/open-spaced-repetition/py-fsrs/tree/v6.3.2>.
-//! Its MIT notice is retained at `tests/fixtures/fsrs-reference-LICENSE.txt`.
-//!
-//! Policy: 90% desired retention, no fuzz, no separate learning/relearning steps,
-//! and intervals of 1..=36,500 elapsed 24-hour days. A same-day review updates memory
-//! with the official short-term rule. The caller supplies every timestamp.
-//!
-//! FSRS stability is the time to **90%** recall, not the prototype's half-life curve
-//! (`Loro.dc.html:963–1037`). All real retrievability uses this module's FSRS curve.
+//! Canonical FSRS-6 memory updates with explicit Loro scheduling policy.
+//! See `docs/architecture/fsrs-model.md` for the pinned reference and adaptations.
 
 use crate::{Difficulty, Tag};
-use serde::{Deserialize, Serialize};
 
 /// The four grades FSRS understands.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, uniffi::Enum)]
-#[serde(rename_all = "snake_case")]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize, uniffi::Enum)]
+#[serde(rename_all = "lowercase")]
 pub enum Grade {
     /// Couldn't recall it.
+    #[serde(alias = "Again")]
     Again,
     /// Recalled with difficulty.
+    #[serde(alias = "Hard")]
     Hard,
     /// Recalled.
+    #[serde(alias = "Good")]
     Good,
     /// Recalled instantly.
+    #[serde(alias = "Easy")]
     Easy,
 }
 
@@ -42,26 +34,86 @@ impl Grade {
     }
 }
 
-/// A phrase's memory state.
-#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize, uniffi::Record)]
+/// Scheduler lifecycle; Loro uses one explicit ten-minute learning/relearning step.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize, uniffi::Enum)]
+#[serde(rename_all = "lowercase")]
+pub enum CardState {
+    /// No review evidence yet.
+    New,
+    /// Initial recall has not succeeded.
+    Learning,
+    /// Established scheduled review.
+    Review,
+    /// A scheduled review failed.
+    Relearning,
+}
+
+/// Complete atomic scheduler group, including algorithm provenance.
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, uniffi::Record)]
+#[serde(try_from = "StoredFsrsState")]
 pub struct FsrsState {
-    /// Days until retrievability decays to 90%.
-    pub stability: f32,
-    /// Intrinsic difficulty for this learner, 1..10.
-    pub difficulty: f32,
-    /// Next review, epoch ms.
+    /// Days until recall reaches 90%, NOT the selected scheduling threshold.
+    pub stability: f64,
+    /// Intrinsic difficulty in 1..10.
+    pub difficulty: f64,
+    /// Next review, epoch milliseconds.
     pub due: i64,
-    /// Last review, epoch ms.
+    /// Last observed review, epoch milliseconds; absent for new cards.
     pub last_review: Option<i64>,
-    /// Failed reviews.
+    /// Failed established reviews (not repeated learning failures).
     pub lapses: u32,
+    /// Learning lifecycle.
+    pub state: CardState,
+    /// Versioned algorithm, parameters and Loro policy identifier.
+    pub algorithm: String,
+}
+
+// Compatibility is structural and lossless. The unversioned preview stored real
+// FSRS-6 memory with 90% due dates and no learning steps. Reading that evidence must
+// not initialize a new card or silently change the due date. The next real review
+// applies the current policy and writes its explicit provenance atomically.
+#[derive(serde::Deserialize)]
+struct StoredFsrsState {
+    stability: f64,
+    difficulty: f64,
+    due: i64,
+    last_review: Option<i64>,
+    lapses: u32,
+    state: Option<CardState>,
+    algorithm: Option<String>,
+}
+
+impl TryFrom<StoredFsrsState> for FsrsState {
+    type Error = &'static str;
+
+    fn try_from(stored: StoredFsrsState) -> Result<Self, Self::Error> {
+        if stored.algorithm.as_deref() == Some(ALGORITHM) && stored.state.is_none() {
+            return Err("canonical FSRS state is missing its learning lifecycle");
+        }
+        Ok(Self {
+            stability: stored.stability,
+            difficulty: stored.difficulty,
+            due: stored.due,
+            last_review: stored.last_review,
+            lapses: stored.lapses,
+            state: stored.state.unwrap_or(if stored.last_review.is_some() {
+                CardState::Review
+            } else {
+                CardState::New
+            }),
+            algorithm: stored
+                .algorithm
+                .unwrap_or_else(|| LEGACY_PREVIEW_ALGORITHM.into()),
+        })
+    }
 }
 
 /// The learner's five-level confidence rating (the Memory-model screen), mapped to a grade.
 ///
-/// `Strong` maps to `Good`. The reference algorithm has four grades; adding a
-/// caller-side stability bonus would create a second, non-reference scheduler.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]
+/// `Strong` maps to `Good`; `review_confidence` applies the documented 10% stability
+/// bonus in the canonical core.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize, uniffi::Enum)]
+#[serde(rename_all = "lowercase")]
 pub enum Confidence {
     /// Blank.
     Forgot,
@@ -120,11 +172,36 @@ pub fn grade_for_confidence(c: Confidence) -> Grade {
     }
 }
 
+/// Map observed recall evidence to the grade used by every practice engine.
+///
+/// An explicit four-grade self-rating takes precedence over confidence;
+/// otherwise a failed recall is Again, a hinted success Hard, and an unhinted
+/// success Good. Passive listening and skipped attempts must not call this function.
+#[must_use]
+#[uniffi::export]
+pub fn review_grade(
+    success: bool,
+    hints_used: u32,
+    self_grade: Option<Grade>,
+    confidence: Option<Confidence>,
+) -> Grade {
+    if let Some(grade) = self_grade {
+        grade
+    } else if let Some(confidence) = confidence {
+        grade_for_confidence(confidence)
+    } else if !success {
+        Grade::Again
+    } else if hints_used > 0 {
+        Grade::Hard
+    } else {
+        Grade::Good
+    }
+}
+
 /// Seed FSRS difficulty from the learner's own declaration.
 ///
-/// This prior records the learner's declaration before they have reviewed a phrase.
-/// `review` initializes canonical memory difficulty from its first observed grade;
-/// the declaration itself remains available for ranking and bounded re-rating.
+/// This is Loro's structural advantage over every other app using FSRS: the learner
+/// tells us a phrase's difficulty when they add it, so there is no cold start.
 ///
 /// `pron` deliberately does **not** raise difficulty — it changes the *drill*, not the
 /// memory load.
@@ -160,19 +237,14 @@ pub fn nudge_difficulty(current: f32, declared: Difficulty, tags: &[Tag]) -> f32
     (current + delta).clamp(DIFFICULTY_MIN, DIFFICULTY_MAX)
 }
 
-/// FSRS-6 retrievability at `t` elapsed days after the last review.
-///
-/// Stability is the interval at 90% recall. Negative elapsed time is clamped to zero;
-/// invalid/non-finite inputs return zero rather than propagating NaN through ranking.
-#[must_use]
-#[uniffi::export]
-#[allow(clippy::cast_possible_truncation)] // probability is in 0..=1
-pub fn retrievability(days_since_review: f32, stability: f32) -> f32 {
-    if !days_since_review.is_finite() || !stability.is_finite() || stability <= 0.0 {
-        return 0.0;
-    }
-    memory_retrievability(f64::from(days_since_review.max(0.0)), f64::from(stability)) as f32
-}
+mod scheduler;
+pub use scheduler::{
+    initialize, reference_initial_memory, rerate, retrievability, review, review_confidence,
+    FsrsError, ALGORITHM, DESIRED_RETENTION, LEGACY_PREVIEW_ALGORITHM,
+};
+
+/// Complete current parameter and policy identifier, retained for existing callers.
+pub const SCHEDULER_VERSION: &str = ALGORITHM;
 
 // ── Display thresholds for `format_interval` (`Loro.dc.html:3009`) ───────────────────
 
@@ -219,195 +291,6 @@ pub fn daily_review_cap(daily_minutes: u32, multiplier: u32) -> u32 {
     daily_minutes * multiplier
 }
 
-/// Algorithm and reference version used by persisted schedules.
-pub const SCHEDULER_VERSION: &str = "fsrs-6/py-fsrs-6.3.2/default-90-no-steps";
-
-const WEIGHTS: [f64; 21] = [
-    0.212, 1.2931, 2.3065, 8.2956, 6.4133, 0.8334, 3.0194, 0.001, 1.8722, 0.1666, 0.796, 1.4835,
-    0.0614, 0.2629, 1.6483, 0.6014, 1.8729, 0.5425, 0.0912, 0.0658, 0.1542,
-];
-const STABILITY_MIN: f64 = 0.001;
-const DESIRED_RETENTION: f64 = 0.9;
-const MAX_INTERVAL_DAYS: f64 = 36_500.0;
-const DAY_MS: i64 = 86_400_000;
-// The shared boundary includes JavaScript Date, whose range is smaller than i64.
-const MAX_TIMESTAMP_MS: i64 = 8_640_000_000_000_000;
-
-/// A review that cannot safely produce a portable, finite schedule.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Error)]
-pub enum FsrsError {
-    /// Memory values are non-finite or outside their domain.
-    InvalidState,
-    /// Timestamp is outside the supported nonnegative JavaScript Date range.
-    InvalidTimestamp,
-    /// Applying an older review would rewind the complete memory state.
-    ReviewBeforeLastReview,
-    /// The next due timestamp would exceed the shared timestamp range.
-    TimestampOverflow,
-    /// The lapse counter cannot represent another failed review.
-    LapseOverflow,
-    /// Computed memory state cannot be represented as finite 32-bit values.
-    NumericOverflow,
-}
-
-impl std::fmt::Display for FsrsError {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        formatter.write_str(match self {
-            Self::InvalidState => "invalid FSRS memory state",
-            Self::InvalidTimestamp => "invalid FSRS review timestamp",
-            Self::ReviewBeforeLastReview => "review predates last FSRS review",
-            Self::TimestampOverflow => "FSRS due timestamp exceeds supported range",
-            Self::LapseOverflow => "FSRS lapse count exceeds supported range",
-            Self::NumericOverflow => "FSRS memory state exceeds supported range",
-        })
-    }
-}
-
-impl std::error::Error for FsrsError {}
-
-fn memory_retrievability(elapsed_days: f64, stability: f64) -> f64 {
-    let factor = DESIRED_RETENTION.powf(-1.0 / WEIGHTS[20]) - 1.0;
-    (1.0 + factor * elapsed_days / stability).powf(-WEIGHTS[20])
-}
-
-fn difficulty_after_first_review(grade: Grade) -> f64 {
-    WEIGHTS[4] - (WEIGHTS[5] * (f64::from(grade.as_u8()) - 1.0)).exp() + 1.0
-}
-
-fn difficulty_after_review(difficulty: f64, grade: Grade) -> f64 {
-    let delta = -WEIGHTS[6] * (f64::from(grade.as_u8()) - 3.0);
-    let damped = difficulty + (10.0 - difficulty) * delta / 9.0;
-    (WEIGHTS[7] * difficulty_after_first_review(Grade::Easy) + (1.0 - WEIGHTS[7]) * damped)
-        .clamp(1.0, 10.0)
-}
-
-fn stability_after_review(stability: f64, difficulty: f64, days: f64, grade: Grade) -> f64 {
-    if days < 1.0 {
-        let increase = (WEIGHTS[17] * (f64::from(grade.as_u8()) - 3.0 + WEIGHTS[18])).exp()
-            * stability.powf(-WEIGHTS[19]);
-        // v6.3.2 includes Hard in the no-decrease floor for successful same-day reviews.
-        return stability
-            * if grade == Grade::Again {
-                increase
-            } else {
-                increase.max(1.0)
-            };
-    }
-
-    let recall = memory_retrievability(days, stability);
-    if grade == Grade::Again {
-        let forgotten = WEIGHTS[11]
-            * difficulty.powf(-WEIGHTS[12])
-            * ((stability + 1.0).powf(WEIGHTS[13]) - 1.0)
-            * ((1.0 - recall) * WEIGHTS[14]).exp();
-        return forgotten.min(stability / (WEIGHTS[17] * WEIGHTS[18]).exp());
-    }
-
-    let hard = if grade == Grade::Hard {
-        WEIGHTS[15]
-    } else {
-        1.0
-    };
-    let easy = if grade == Grade::Easy {
-        WEIGHTS[16]
-    } else {
-        1.0
-    };
-    stability
-        * (1.0
-            + WEIGHTS[8].exp()
-                * (11.0 - difficulty)
-                * stability.powf(-WEIGHTS[9])
-                * (((1.0 - recall) * WEIGHTS[10]).exp() - 1.0)
-                * hard
-                * easy)
-}
-
-/// Apply one review using FSRS-6 and the pinned default parameter set.
-///
-/// `last_review: None` means an unseen phrase: its first grade initializes memory
-/// using the reference parameters. Declared difficulty remains a separate input to
-/// ranking and re-rating; it does not alter the canonical first-review equation.
-/// For established phrases, elapsed whole 24-hour days select the reference
-/// short-/long-term update. Due dates are relative to `at_ms`, never to an old due.
-/// An Again on an established phrase increments lapses; first exposure does not.
-///
-/// # Errors
-/// Rejects non-finite or invalid memory values, out-of-order reviews, timestamp
-/// overflow and lapse overflow. It never silently resets an established state.
-#[uniffi::export]
-#[allow(clippy::cast_possible_truncation, clippy::cast_precision_loss)]
-// Intervals are bounded before casting; f64 arithmetic is rounded to the existing
-// f32 storage boundary only once. Timestamps themselves never pass through floats.
-pub fn review(state: FsrsState, grade: Grade, at_ms: i64) -> Result<FsrsState, FsrsError> {
-    if !state.stability.is_finite()
-        || state.stability < 0.0
-        || !state.difficulty.is_finite()
-        || !(DIFFICULTY_MIN..=DIFFICULTY_MAX).contains(&state.difficulty)
-        || (state.last_review.is_some() && f64::from(state.stability) < STABILITY_MIN)
-    {
-        return Err(FsrsError::InvalidState);
-    }
-    if !(0..=MAX_TIMESTAMP_MS).contains(&at_ms)
-        || state
-            .last_review
-            .is_some_and(|last| !(0..=MAX_TIMESTAMP_MS).contains(&last))
-    {
-        return Err(FsrsError::InvalidTimestamp);
-    }
-
-    let (stability, difficulty) = if let Some(last) = state.last_review {
-        if at_ms < last {
-            return Err(FsrsError::ReviewBeforeLastReview);
-        }
-        let days = ((at_ms - last) / DAY_MS) as f64;
-        (
-            stability_after_review(
-                f64::from(state.stability),
-                f64::from(state.difficulty),
-                days,
-                grade,
-            )
-            .max(STABILITY_MIN),
-            difficulty_after_review(f64::from(state.difficulty), grade),
-        )
-    } else {
-        (
-            WEIGHTS[usize::from(grade.as_u8() - 1)],
-            difficulty_after_first_review(grade).clamp(1.0, 10.0),
-        )
-    };
-    if !stability.is_finite() || stability > f64::from(f32::MAX) {
-        return Err(FsrsError::NumericOverflow);
-    }
-
-    // Keep the reference's evaluation order even though this simplifies to stability
-    // at 90% retention: floating-point rounding at a half-day boundary must agree.
-    let factor = DESIRED_RETENTION.powf(-1.0 / WEIGHTS[20]) - 1.0;
-    let interval = (stability / factor) * (DESIRED_RETENTION.powf(-1.0 / WEIGHTS[20]) - 1.0);
-    let interval_days = interval.round_ties_even().clamp(1.0, MAX_INTERVAL_DAYS) as i64;
-    let due = at_ms
-        .checked_add(interval_days * DAY_MS)
-        .filter(|due| *due <= MAX_TIMESTAMP_MS)
-        .ok_or(FsrsError::TimestampOverflow)?;
-    let lapses = if state.last_review.is_some() && grade == Grade::Again {
-        state
-            .lapses
-            .checked_add(1)
-            .ok_or(FsrsError::LapseOverflow)?
-    } else {
-        state.lapses
-    };
-
-    Ok(FsrsState {
-        stability: stability as f32,
-        difficulty: difficulty as f32,
-        due,
-        last_review: Some(at_ms),
-        lapses,
-    })
-}
-
 #[cfg(test)]
 mod tests {
     #![allow(clippy::float_cmp)] // exact-zero sentinels are deliberate here
@@ -415,12 +298,31 @@ mod tests {
     use super::*;
 
     #[test]
+    fn observed_review_grade_mapping_has_one_explicit_precedence() {
+        assert_eq!(review_grade(false, 0, None, None), Grade::Again);
+        assert_eq!(review_grade(true, 1, None, None), Grade::Hard);
+        assert_eq!(review_grade(true, 0, None, None), Grade::Good);
+        assert_eq!(
+            review_grade(true, 0, None, Some(Confidence::Instant)),
+            Grade::Easy
+        );
+        assert_eq!(
+            review_grade(true, 0, None, Some(Confidence::Forgot)),
+            Grade::Again
+        );
+        assert_eq!(
+            review_grade(true, 0, Some(Grade::Hard), Some(Confidence::Instant)),
+            Grade::Hard,
+        );
+    }
+
+    #[test]
     fn confidence_maps_onto_four_grades() {
         for (confidence, grade) in [
             (Confidence::Forgot, Grade::Again),
             (Confidence::Shaky, Grade::Hard),
             (Confidence::Ok, Grade::Good),
-            // Both descriptions represent the reference Good grade.
+            // The grade mapping is separate from review_confidence's stability bonus.
             (Confidence::Strong, Grade::Good),
             (Confidence::Instant, Grade::Easy),
         ] {
@@ -502,141 +404,11 @@ mod tests {
     }
 
     #[test]
-    fn canonical_retrievability_is_ninety_percent_at_stability() {
-        assert!((retrievability(3.0, 3.0) - 0.9).abs() < 0.001);
-        assert!((retrievability(0.0, 3.0) - 1.0).abs() < 0.001);
-        assert!(retrievability(9.0, 3.0) < retrievability(3.0, 3.0));
-        assert_eq!(retrievability(-3.0, 3.0), 1.0);
-        for invalid in [f32::NAN, f32::INFINITY, f32::NEG_INFINITY] {
-            assert_eq!(retrievability(invalid, 3.0), 0.0);
-            assert_eq!(retrievability(3.0, invalid), 0.0);
-        }
-        assert_eq!(retrievability(3.0, 0.0), 0.0);
-        assert_eq!(retrievability(3.0, -3.0), 0.0);
-    }
-
-    fn established_state() -> FsrsState {
-        FsrsState {
-            stability: 5.0,
-            difficulty: 5.0,
-            due: 2 * DAY_MS,
-            last_review: Some(DAY_MS),
-            lapses: 2,
-        }
-    }
-
-    #[test]
-    fn malformed_memory_never_silently_resets_progress() {
-        for invalid in [f32::NAN, f32::INFINITY, f32::NEG_INFINITY, -1.0] {
-            for state in [
-                FsrsState {
-                    stability: invalid,
-                    ..established_state()
-                },
-                FsrsState {
-                    difficulty: invalid,
-                    ..established_state()
-                },
-            ] {
-                assert_eq!(
-                    review(state, Grade::Good, 3 * DAY_MS),
-                    Err(FsrsError::InvalidState)
-                );
-            }
-        }
-        for (stability, difficulty) in [(0.0, 5.0), (0.0001, 5.0), (5.0, 0.0), (5.0, 11.0)] {
-            let state = FsrsState {
-                stability,
-                difficulty,
-                ..established_state()
-            };
-            assert_eq!(
-                review(state, Grade::Good, 3 * DAY_MS),
-                Err(FsrsError::InvalidState)
-            );
-        }
-    }
-
-    #[test]
-    fn out_of_order_and_unportable_timestamps_are_rejected() {
-        assert_eq!(
-            review(established_state(), Grade::Good, DAY_MS - 1),
-            Err(FsrsError::ReviewBeforeLastReview)
-        );
-        for at in [-1, i64::MIN, MAX_TIMESTAMP_MS + 1, i64::MAX] {
-            assert_eq!(
-                review(established_state(), Grade::Good, at),
-                Err(FsrsError::InvalidTimestamp)
-            );
-        }
-        assert_eq!(
-            review(
-                FsrsState {
-                    last_review: Some(-1),
-                    ..established_state()
-                },
-                Grade::Good,
-                DAY_MS
-            ),
-            Err(FsrsError::InvalidTimestamp)
-        );
-        assert_eq!(
-            review(established_state(), Grade::Good, MAX_TIMESTAMP_MS),
-            Err(FsrsError::TimestampOverflow)
-        );
-    }
-
-    #[test]
-    fn lapses_do_not_wrap_or_count_initial_exposure() {
-        assert_eq!(
-            review(
-                FsrsState {
-                    lapses: u32::MAX,
-                    ..established_state()
-                },
-                Grade::Again,
-                3 * DAY_MS,
-            ),
-            Err(FsrsError::LapseOverflow)
-        );
-        let first = review(
-            FsrsState {
-                stability: 0.0,
-                last_review: None,
-                lapses: 0,
-                ..established_state()
-            },
-            Grade::Again,
-            DAY_MS,
-        )
-        .unwrap();
-        assert_eq!(first.lapses, 0);
-        assert_eq!(review(first, Grade::Again, DAY_MS).unwrap().lapses, 1);
-    }
-
-    proptest::proptest! {
-        #[test]
-        fn schedules_are_deterministic_finite_bounded_and_after_the_review(
-            stability in 0.001_f32..100_000.0_f32,
-            difficulty in 1.0_f32..=10.0_f32,
-            elapsed_days in 0_i64..=36_500,
-            grade_index in 0_usize..4,
-        ) {
-            let state = FsrsState { stability, difficulty, ..established_state() };
-            let at = DAY_MS + elapsed_days * DAY_MS;
-            let grade = [Grade::Again, Grade::Hard, Grade::Good, Grade::Easy][grade_index];
-            let next = review(state, grade, at).unwrap();
-            proptest::prop_assert_eq!(next, review(state, grade, at).unwrap());
-            proptest::prop_assert!(next.stability.is_finite() && next.stability >= 0.001);
-            proptest::prop_assert!((1.0..=10.0).contains(&next.difficulty));
-            proptest::prop_assert!(next.due >= at + DAY_MS);
-            proptest::prop_assert!(next.due <= at + 36_500 * DAY_MS);
-            proptest::prop_assert_eq!((next.due - at) % DAY_MS, 0);
-            proptest::prop_assert_eq!(next.last_review, Some(at));
-            if grade != Grade::Again {
-                proptest::prop_assert!(next.stability >= stability);
-            }
-        }
+    fn retrievability_uses_fsrs_ninety_percent_stability() {
+        assert!((retrievability(3.0, 3.0).unwrap() - 0.9).abs() < 0.000_001);
+        assert_eq!(retrievability(0.0, 3.0).unwrap(), 1.0);
+        assert!(retrievability(-1.0, 3.0).is_err());
+        assert!(retrievability(1.0, 0.0).is_err());
     }
 
     #[test]

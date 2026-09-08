@@ -1,5 +1,5 @@
 /** F-08. Bundled, synchronous translations; no translation request needs a network. */
-import './polyfills'
+import './pluralRules'
 import { createInstance, type i18n as I18nInstance } from 'i18next'
 import ICU from 'i18next-icu'
 import { initReactI18next, useTranslation } from 'react-i18next'

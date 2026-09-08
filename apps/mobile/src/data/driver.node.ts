@@ -12,6 +12,7 @@
 
 import { DatabaseSync } from 'node:sqlite'
 import type { SqlDriver, SqlRow, SqlValue } from '@loro/core'
+import { synchronousResult } from '@loro/core'
 
 export interface NodeSqliteDriver extends SqlDriver {
   /** Escape hatch for a test that needs to assert on the schema itself. */
@@ -48,18 +49,20 @@ export function openNodeSqlite(path = ':memory:'): NodeSqliteDriver {
     },
 
     transaction(fn) {
+      const outer = depth === 0
       const name = `sp_${String(depth)}`
-      db.exec(depth === 0 ? 'BEGIN' : `SAVEPOINT ${name}`)
+      db.exec(outer ? 'BEGIN' : `SAVEPOINT ${name}`)
       depth++
       try {
-        const result = fn()
-        depth--
-        db.exec(depth === 0 ? 'COMMIT' : `RELEASE ${name}`)
+        const result = synchronousResult(fn())
+        db.exec(outer ? 'COMMIT' : `RELEASE ${name}`)
         return result
       } catch (error) {
-        depth--
-        db.exec(depth === 0 ? 'ROLLBACK' : `ROLLBACK TO ${name}`)
+        db.exec(outer ? 'ROLLBACK' : `ROLLBACK TO ${name}`)
+        if (!outer) db.exec(`RELEASE ${name}`)
         throw error
+      } finally {
+        depth--
       }
     },
 

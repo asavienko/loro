@@ -12,6 +12,7 @@
 
 use super::hlc::Hlc;
 use serde::{Deserialize, Serialize};
+use std::borrow::Cow;
 use std::collections::BTreeMap;
 
 /// How a field resolves when two devices disagree.
@@ -21,8 +22,9 @@ pub enum MergeClass {
     Lww,
     /// `max(local, remote)`. Monotonic counters — LWW could otherwise *lower* a count.
     Max,
-    /// Merged as a group, by the later `srs_last_review`. Mixing FSRS fields across
-    /// devices would produce a state no algorithm ever computed.
+    /// Merged as a group, by the later `srs_last_review`, then its group HLC when
+    /// actual review times tie. Mixing FSRS fields across devices would produce a
+    /// state no algorithm ever computed.
     LatestReview,
     /// Union by primary key; no field merge.
     AppendOnly,
@@ -82,15 +84,24 @@ pub struct MergeOutcome {
 /// Merge a remote change into a local row.
 ///
 /// Properties the test suite asserts:
-///   • **Commutative** for `Lww` and `Max`: `merge(a,b) == merge(b,a)`.
+///   • **Commutative** for `Lww`, `Max`, and complete uniformly stamped
+///     `LatestReview` groups: `merge(a,b) == merge(b,a)`.
 ///   • **Idempotent**: re-applying the same op is a no-op.
 ///   • **A delete always wins**, at any HLC.
 ///   • **`Max` fields never decrease.**
 #[must_use]
 pub fn merge_row(local: &Row, remote: &RowOp) -> MergeOutcome {
+    let remote = with_fsrs_provenance(remote);
     let mut row = local.clone();
     let mut changed = false;
     let mut conflicts = Vec::new();
+
+    // Normalize either side of the transport boundary, so reversing a merge with
+    // an unversioned local preview yields the exact same row and provenance.
+    if let Some(provenance) = legacy_provenance(&row.fields) {
+        row.fields.insert("srsAlgorithm".into(), provenance);
+        changed = true;
+    }
 
     // A delete wins over a concurrent edit. A learner who removed a phrase on their
     // phone must not have it resurrected by a stale edit from their tablet.
@@ -99,8 +110,9 @@ pub fn merge_row(local: &Row, remote: &RowOp) -> MergeOutcome {
         changed = true;
     }
 
-    // Group the FSRS fields: whichever side reviewed later wins the whole group.
-    let remote_review_wins = fsrs_group_wins(local, remote);
+    // A later actual review wins the whole group. A difficulty rerate can change
+    // its schedule without inventing another review, so its group clock breaks ties.
+    let remote_review_wins = fsrs_group_wins(&row, &remote);
 
     for (name, incoming) in &remote.fields {
         let class = remote.classes.get(name).copied().unwrap_or(MergeClass::Lww);
@@ -138,15 +150,89 @@ pub fn merge_row(local: &Row, remote: &RowOp) -> MergeOutcome {
 
 /// Whether the remote side's FSRS group should replace the local one.
 fn fsrs_group_wins(local: &Row, remote: &RowOp) -> bool {
-    let l = local
-        .fields
-        .get("srsLastReview")
-        .map_or(f64::MIN, |f| numeric(&f.v));
-    let r = remote
-        .fields
-        .get("srsLastReview")
-        .map_or(f64::MIN, |f| numeric(&f.v));
-    r > l
+    let Some((incoming, incoming_at)) = review_anchor(&remote.fields) else {
+        return false;
+    };
+    let Some((current, current_at)) = review_anchor(&local.fields) else {
+        return true;
+    };
+    match incoming_at.cmp(&current_at) {
+        std::cmp::Ordering::Greater => true,
+        std::cmp::Ordering::Less => false,
+        std::cmp::Ordering::Equal => {
+            // Missing/partial or independently stamped groups cannot establish a
+            // rerate. Comparing the anchor alone in that case could mix schedules.
+            uniform_fsrs_group(&local.fields, &current.hlc)
+                && uniform_fsrs_group(&remote.fields, &incoming.hlc)
+                && latest_review_classes(remote)
+                && incoming.hlc > current.hlc
+        }
+    }
+}
+
+/// The preview schedule had these six fields before provenance became explicit.
+const FSRS_FIELDS: [&str; 6] = [
+    "srsStability",
+    "srsDifficulty",
+    "srsDue",
+    "srsLastReview",
+    "srsLapses",
+    "srsState",
+];
+
+/// A rerate requires a real review, not two equally absent or malformed timestamps.
+fn review_anchor(fields: &BTreeMap<String, FieldValue>) -> Option<(&FieldValue, i64)> {
+    let anchor = fields.get("srsLastReview")?;
+    let timestamp = anchor.v.as_i64().filter(|timestamp| *timestamp >= 0)?;
+    Some((anchor, timestamp))
+}
+
+fn uniform_fsrs_group(fields: &BTreeMap<String, FieldValue>, clock: &Hlc) -> bool {
+    FSRS_FIELDS
+        .iter()
+        .all(|name| fields.get(*name).is_some_and(|field| field.hlc == *clock))
+        && fields
+            .get("srsAlgorithm")
+            .is_none_or(|field| field.hlc == *clock && field.v.is_string())
+}
+
+fn latest_review_classes(remote: &RowOp) -> bool {
+    FSRS_FIELDS
+        .iter()
+        .all(|name| remote.classes.get(*name) == Some(&MergeClass::LatestReview))
+        && (!remote.fields.contains_key("srsAlgorithm")
+            || remote.classes.get("srsAlgorithm") == Some(&MergeClass::LatestReview))
+}
+
+/// A complete unversioned preview update must replace provenance together with
+/// its schedule; retaining a losing canonical algorithm would mislabel the winner.
+fn with_fsrs_provenance(remote: &RowOp) -> Cow<'_, RowOp> {
+    if !latest_review_classes(remote) {
+        return Cow::Borrowed(remote);
+    }
+    let Some(provenance) = legacy_provenance(&remote.fields) else {
+        return Cow::Borrowed(remote);
+    };
+    let mut normalized = remote.clone();
+    normalized.fields.insert("srsAlgorithm".into(), provenance);
+    normalized
+        .classes
+        .insert("srsAlgorithm".into(), MergeClass::LatestReview);
+    Cow::Owned(normalized)
+}
+
+fn legacy_provenance(fields: &BTreeMap<String, FieldValue>) -> Option<FieldValue> {
+    if fields.contains_key("srsAlgorithm") {
+        return None;
+    }
+    let (anchor, _) = review_anchor(fields)?;
+    if !uniform_fsrs_group(fields, &anchor.hlc) {
+        return None;
+    }
+    Some(FieldValue {
+        v: serde_json::Value::String(crate::fsrs::LEGACY_PREVIEW_ALGORITHM.into()),
+        hlc: anchor.hlc.clone(),
+    })
 }
 
 /// Coerce a JSON value to a number for `Max` comparison. Non-numbers sort lowest.
@@ -204,6 +290,41 @@ mod tests {
             classes: classes
                 .iter()
                 .map(|(k, c)| ((*k).to_string(), *c))
+                .collect(),
+        }
+    }
+
+    fn schedule(review: i64, clock: i64, node: &str, due: i64, algorithm: Option<&str>) -> Row {
+        let mut schedule = row(&[
+            ("srsStability", json!(3.0), clock, node),
+            ("srsDifficulty", json!(5.0), clock, node),
+            ("srsDue", json!(due), clock, node),
+            ("srsLastReview", json!(review), clock, node),
+            ("srsLapses", json!(0), clock, node),
+            ("srsState", json!("review"), clock, node),
+        ]);
+        if let Some(algorithm) = algorithm {
+            schedule.fields.insert(
+                "srsAlgorithm".into(),
+                FieldValue {
+                    v: json!(algorithm),
+                    hlc: hlc(clock, node),
+                },
+            );
+        }
+        schedule
+    }
+
+    fn schedule_op(schedule: &Row) -> RowOp {
+        RowOp {
+            entity: schedule.entity.clone(),
+            id: schedule.id.clone(),
+            fields: schedule.fields.clone(),
+            deleted_at: None,
+            classes: schedule
+                .fields
+                .keys()
+                .map(|name| (name.clone(), MergeClass::LatestReview))
                 .collect(),
         }
     }
@@ -410,6 +531,164 @@ mod tests {
         assert_eq!(out.row.fields["srsStability"].v, json!(9.0));
         assert_eq!(out.row.fields["srsLastReview"].v, json!(5_000));
         assert!(!out.changed);
+    }
+
+    #[test]
+    fn equal_review_rerates_take_the_newer_atomic_group_clock_and_converge() {
+        let local = schedule(1_000, 2_000, "a", 90_000, Some(crate::fsrs::ALGORITHM));
+        let rerated = schedule(1_000, 3_000, "b", 50_000, Some(crate::fsrs::ALGORITHM));
+        let remote = schedule_op(&rerated);
+        let forward = merge_row(&local, &remote);
+        let reverse = merge_row(&rerated, &schedule_op(&local));
+        assert_eq!(forward.row, rerated, "the full rerated group wins together");
+        assert_eq!(reverse.row, forward.row, "both devices must converge");
+        assert!(forward.changed);
+        assert!(!reverse.changed);
+        let replay = merge_row(&forward.row, &remote);
+        assert_eq!(replay.row, forward.row);
+        assert!(!replay.changed, "replaying a rerate is a no-op");
+    }
+
+    #[test]
+    fn equal_review_group_clocks_include_logical_time_and_node_ties() {
+        for (earlier, later) in [
+            (
+                crate::test_support::hlc(2_000, 1, "z"),
+                crate::test_support::hlc(2_000, 2, "a"),
+            ),
+            (hlc(2_000, "a"), hlc(2_000, "b")),
+        ] {
+            let mut local = schedule(1_000, 0, "a", 90_000, Some(crate::fsrs::ALGORITHM));
+            let mut remote = schedule(1_000, 0, "b", 50_000, Some(crate::fsrs::ALGORITHM));
+            for field in local.fields.values_mut() {
+                field.hlc = earlier.clone();
+            }
+            for field in remote.fields.values_mut() {
+                field.hlc = later.clone();
+            }
+            assert_eq!(merge_row(&local, &schedule_op(&remote)).row, remote);
+            assert_eq!(merge_row(&remote, &schedule_op(&local)).row, remote);
+        }
+    }
+
+    #[test]
+    fn later_actual_review_always_beats_a_later_rerate_clock() {
+        let reviewed = schedule(2_000, 3_000, "a", 90_000, Some(crate::fsrs::ALGORITHM));
+        let rerated = schedule(1_000, 9_000, "b", 50_000, Some(crate::fsrs::ALGORITHM));
+        assert_eq!(merge_row(&reviewed, &schedule_op(&rerated)).row, reviewed);
+        assert_eq!(merge_row(&rerated, &schedule_op(&reviewed)).row, reviewed);
+    }
+
+    #[test]
+    fn absent_and_malformed_equal_reviews_cannot_win_by_clock() {
+        for timestamp in [
+            None,
+            Some(json!(null)),
+            Some(json!("1000")),
+            Some(json!(1.5)),
+            Some(json!(-1)),
+        ] {
+            let mut local = schedule(1_000, 2_000, "a", 90_000, Some(crate::fsrs::ALGORITHM));
+            let mut remote = schedule(1_000, 3_000, "b", 50_000, Some(crate::fsrs::ALGORITHM));
+            for schedule in [&mut local, &mut remote] {
+                if let Some(value) = &timestamp {
+                    schedule.fields.get_mut("srsLastReview").unwrap().v = value.clone();
+                } else {
+                    schedule.fields.remove("srsLastReview");
+                }
+            }
+            let out = merge_row(&local, &schedule_op(&remote));
+            assert_eq!(out.row, local, "invalid anchor: {timestamp:?}");
+            assert!(!out.changed);
+        }
+    }
+
+    #[test]
+    fn equal_review_requires_a_complete_uniform_group_including_provenance() {
+        let local = schedule(1_000, 2_000, "a", 90_000, Some(crate::fsrs::ALGORITHM));
+        let rerated = schedule(1_000, 3_000, "b", 50_000, Some(crate::fsrs::ALGORITHM));
+        for missing in FSRS_FIELDS {
+            let mut remote = schedule_op(&rerated);
+            remote.fields.remove(missing);
+            let out = merge_row(&local, &remote);
+            assert_eq!(out.row, local, "missing {missing}");
+            assert!(!out.changed);
+        }
+        for restamped in FSRS_FIELDS.into_iter().chain(["srsAlgorithm"]) {
+            let mut remote = schedule_op(&rerated);
+            remote.fields.get_mut(restamped).unwrap().hlc = hlc(4_000, "b");
+            let out = merge_row(&local, &remote);
+            assert_eq!(out.row, local, "nonuniform {restamped}");
+            assert!(!out.changed);
+        }
+        let mut partial_local = local;
+        partial_local.fields.remove("srsStability");
+        assert_eq!(
+            merge_row(&partial_local, &schedule_op(&rerated)).row,
+            partial_local
+        );
+    }
+
+    #[test]
+    fn winning_unversioned_preview_replaces_canonical_provenance_at_its_group_clock() {
+        let local = schedule(1_000, 2_000, "a", 90_000, Some(crate::fsrs::ALGORITHM));
+        let legacy = schedule(2_000, 3_000, "b", 50_000, None);
+        let out = merge_row(&local, &schedule_op(&legacy));
+        let expected = schedule(
+            2_000,
+            3_000,
+            "b",
+            50_000,
+            Some(crate::fsrs::LEGACY_PREVIEW_ALGORITHM),
+        );
+        assert_eq!(out.row, expected);
+        assert_eq!(merge_row(&legacy, &schedule_op(&local)).row, expected);
+        assert!(!merge_row(&out.row, &schedule_op(&legacy)).changed);
+    }
+
+    #[test]
+    fn local_preview_provenance_is_materialized_once_without_conflicts() {
+        let legacy = schedule(1_000, 2_000, "a", 90_000, None);
+        let out = merge_row(&legacy, &op(&[], &[]));
+        assert!(out.changed);
+        assert!(out.conflicts.is_empty());
+        assert_eq!(
+            out.row,
+            schedule(
+                1_000,
+                2_000,
+                "a",
+                90_000,
+                Some(crate::fsrs::LEGACY_PREVIEW_ALGORITHM)
+            )
+        );
+        assert!(!merge_row(&out.row, &op(&[], &[])).changed);
+    }
+
+    #[test]
+    fn losing_unversioned_preview_cannot_replace_canonical_provenance() {
+        let local = schedule(2_000, 2_000, "a", 90_000, Some(crate::fsrs::ALGORITHM));
+        let legacy = schedule(1_000, 9_000, "b", 50_000, None);
+        let out = merge_row(&local, &schedule_op(&legacy));
+        assert_eq!(out.row, local);
+        assert!(!out.changed);
+    }
+
+    #[test]
+    fn partial_unreviewed_and_non_atomic_operations_do_not_invent_provenance() {
+        let complete = schedule(1_000, 2_000, "a", 90_000, None);
+        let mut partial = schedule_op(&complete);
+        partial.fields.remove("srsDifficulty");
+        let mut unreviewed = schedule_op(&complete);
+        unreviewed.fields.get_mut("srsLastReview").unwrap().v = json!(null);
+        let mut non_atomic = schedule_op(&complete);
+        non_atomic.classes.insert("srsDue".into(), MergeClass::Lww);
+        for remote in [partial, unreviewed, non_atomic] {
+            assert!(!merge_row(&row(&[]), &remote)
+                .row
+                .fields
+                .contains_key("srsAlgorithm"));
+        }
     }
 
     #[test]

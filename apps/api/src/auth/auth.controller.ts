@@ -78,15 +78,25 @@ export class AuthController {
   @HttpCode(200)
   @Header('Cache-Control', 'no-store')
   refresh(@Body() body: unknown, @Req() request: Request) {
-    return this.auth.refresh(parse(RefreshRequestSchema, body).refresh_token, address(request))
+    const input = parse(RefreshRequestSchema, body)
+    const registration =
+      input.device && input.anon_id ? { device: input.device, anon_id: input.anon_id } : undefined
+    return this.auth.refresh(input.refresh_token, address(request), registration)
   }
 
   @Post('logout')
   @HttpCode(204)
   @Header('Cache-Control', 'no-store')
-  @UseGuards(AuthGuard)
-  logout(@Req() request: AuthenticatedRequest) {
-    return this.auth.logout(request.principal)
+  async logout(@Body() body: unknown, @Req() request: Request) {
+    const refresh = RefreshRequestSchema.safeParse(body)
+    if (refresh.success) return this.auth.revokeRefresh(refresh.data.refresh_token)
+    const bearer = request.headers.authorization
+    if (!bearer?.startsWith('Bearer ') || bearer.length > 16_384)
+      throw new LoroError('UNAUTHENTICATED')
+    const principal = await this.auth.authenticate(bearer.slice(7))
+    const device = request.headers['x-loro-device']
+    if (device !== undefined && device !== principal.deviceId) throw new LoroError('FORBIDDEN')
+    return this.auth.logout(principal)
   }
 
   @Post('claim')

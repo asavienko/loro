@@ -20,6 +20,7 @@ import {
   CODE_MILLISECONDS,
   equalHash,
   keyedHash,
+  legacyTokenHash,
   MAX_CODE_ATTEMPTS,
   newRefreshToken,
   REFRESH_MILLISECONDS,
@@ -30,7 +31,8 @@ import { verifyIdentityToken, type IdentityProvider } from './auth.providers.js'
 
 interface UserRow {
   id: string
-  created_at: string | number
+  created_at: string | number | null
+  provider?: string
 }
 interface SessionRow {
   id: string
@@ -47,6 +49,21 @@ interface CodeRow {
   nonce: string
   expires_at: string | number
   attempts: number
+}
+
+interface LegacyRefreshRow {
+  id: string
+  user_id: string
+  expires: string | number
+  revoked: boolean
+  consumed: boolean
+  provider: 'google' | 'apple'
+  subject: string
+}
+
+export interface RefreshRegistration {
+  device: DeviceRegistration
+  anon_id: string
 }
 
 const RATE_WINDOW = 15 * 60 * 1_000
@@ -178,7 +195,11 @@ export class AuthService {
     return result
   }
 
-  async refresh(refreshToken: string, address: string): Promise<TokenResponse> {
+  async refresh(
+    refreshToken: string,
+    address: string,
+    registration?: RefreshRegistration,
+  ): Promise<TokenResponse | SignInResponse> {
     const tokens = new AccessTokens(config.authSettings())
     await this.limit(`ip:${address}`, AUTH_IP_LIMIT)
     if (!/^[A-Za-z0-9_-]{43}$/.test(refreshToken)) throw new LoroError('UNAUTHENTICATED')
@@ -192,7 +213,8 @@ export class AuthService {
           [tokenHash(refreshToken)],
         )
       ).rows[0]
-      if (row?.revoked_at !== null) return null
+      if (!row) return this.upgradeLegacyRefresh(connection, tokens, refreshToken, registration)
+      if (row.revoked_at !== null) return null
       if (row.consumed_at !== null) {
         // Do not throw in this transaction: rollback would undo reuse revocation.
         await connection.query('UPDATE auth_sessions SET revoked_at=$1 WHERE id=$2', [now, row.id])
@@ -237,26 +259,75 @@ export class AuthService {
   }
 
   async logout(principal: AuthPrincipal): Promise<void> {
+    this.requireEnabled()
     await this.database.query(
       'UPDATE auth_sessions SET revoked_at=$1 WHERE id=$2 AND user_id=$3 AND device_id=$4',
       [this.clock.now(), principal.sessionId, principal.userId, principal.deviceId],
     )
   }
 
+  /** Possession of a refresh token can only revoke its family, never read account data. */
+  async revokeRefresh(refreshToken: string): Promise<void> {
+    this.requireEnabled()
+    if (!/^[A-Za-z0-9_-]{43}$/.test(refreshToken)) throw new LoroError('UNAUTHENTICATED')
+    const now = this.clock.now()
+    await this.database.transaction(async (connection) => {
+      await connection.query(
+        `UPDATE auth_sessions SET revoked_at=$1
+         WHERE id IN (SELECT session_id FROM auth_refresh_tokens WHERE token_hash=$2)`,
+        [now, tokenHash(refreshToken)],
+      )
+      if (!(await this.hasLegacySessions(connection))) return
+      const row = (
+        await connection.query<{ id: string }>(
+          `SELECT s.id FROM auth_sessions_legacy s JOIN auth_refresh r ON r.session_id=s.id
+         WHERE r.hash=$1 FOR UPDATE OF s`,
+          [legacyTokenHash(refreshToken)],
+        )
+      ).rows[0]
+      if (row) await this.revokeLegacyFamily(connection, row.id, now)
+    })
+  }
+
+  /** Internal OAuth handoff: call only after provider proof, in the grant-consumption transaction. */
+  signInVerified(
+    connection: SqlConnection,
+    provider: 'google' | 'apple',
+    subject: string,
+    device: DeviceRegistration,
+    anonId: string,
+  ): Promise<SignInResponse> {
+    return this.createSession(
+      connection,
+      new AccessTokens(config.authSettings()),
+      provider,
+      subject,
+      device,
+      anonId,
+    )
+  }
+
   async me(principal: AuthPrincipal): Promise<{ user: User; device_id: string }> {
     const user = (
-      await this.database.query<UserRow>('SELECT id,created_at FROM auth_users WHERE id=$1', [
-        principal.userId,
-      ])
+      await this.database.query<UserRow>(
+        `SELECT u.id,u.created_at,i.provider FROM auth_users u
+        JOIN auth_identities i ON i.user_id=u.id WHERE u.id=$1 ORDER BY i.provider LIMIT 1`,
+        [principal.userId],
+      )
     ).rows[0]
     if (!user) throw new LoroError('UNAUTHENTICATED')
     return {
-      user: { id: user.id, created_at: Number(user.created_at) },
+      user: {
+        id: user.id,
+        created_at: user.created_at === null ? null : Number(user.created_at),
+        provider: user.provider,
+      },
       device_id: principal.deviceId,
     }
   }
 
   async claim(principal: AuthPrincipal, input: ClaimRequest): Promise<ClaimResult> {
+    this.requireEnabled()
     if (input.device_id !== principal.deviceId) throw new LoroError('FORBIDDEN')
     return this.database.transaction((connection) =>
       this.recordClaim(connection, principal, input.anon_id, input.request_id),
@@ -270,6 +341,7 @@ export class AuthService {
     subject: string,
     device: DeviceRegistration,
     anonId: string,
+    legacyExpiresAt?: number,
   ): Promise<SignInResponse> {
     const now = this.clock.now()
     // Serializes first login of the same verified identity across processes. No
@@ -302,26 +374,105 @@ export class AuthService {
     ).rows[0]
     if (!registered) throw new LoroError('INTERNAL')
     const principal = { userId: user.id, deviceId: registered.id, sessionId: randomUUID() }
+    const expiresAt = Math.min(now + REFRESH_MILLISECONDS, legacyExpiresAt ?? Infinity)
     await connection.query(
       'INSERT INTO auth_sessions(id,user_id,device_id,created_at,expires_at) VALUES($1,$2,$3,$4,$5)',
-      [principal.sessionId, user.id, registered.id, now, now + REFRESH_MILLISECONDS],
+      [principal.sessionId, user.id, registered.id, now, expiresAt],
     )
     const refreshToken = newRefreshToken()
-    await this.insertRefresh(
-      connection,
-      refreshToken,
-      principal.sessionId,
-      now + REFRESH_MILLISECONDS,
-    )
+    await this.insertRefresh(connection, refreshToken, principal.sessionId, expiresAt)
     const claim = await this.recordClaim(connection, principal, anonId, anonId)
     return {
       access_token: await tokens.issue(principal, now),
       expires_in: ACCESS_SECONDS,
       refresh_token: refreshToken,
-      user: { id: user.id, created_at: Number(user.created_at) },
+      user: {
+        id: user.id,
+        created_at: user.created_at === null ? null : Number(user.created_at),
+        provider,
+      },
       device_id: registered.id,
       claim,
     }
+  }
+
+  private async upgradeLegacyRefresh(
+    connection: SqlConnection,
+    tokens: AccessTokens,
+    refreshToken: string,
+    registration?: RefreshRegistration,
+  ): Promise<SignInResponse | null> {
+    if (!(await this.hasLegacySessions(connection))) return null
+    const row = (
+      await connection.query<LegacyRefreshRow>(
+        `SELECT s.id,s.user_id,s.expires,s.revoked,r.consumed,a.provider,a.subject
+       FROM auth_refresh r JOIN auth_sessions_legacy s ON s.id=r.session_id
+       JOIN auth_accounts a ON a.id=s.user_id WHERE r.hash=$1 FOR UPDATE OF s,r`,
+        [legacyTokenHash(refreshToken)],
+      )
+    ).rows[0]
+    if (!row) return null
+    const now = this.clock.now()
+    if (row.consumed || row.revoked) {
+      // Revocation commits outside the eventual 401, including an already-upgraded family.
+      await this.revokeLegacyFamily(connection, row.id, now)
+      return null
+    }
+    if (Number(row.expires) <= now || !registration) return null
+    const identity = (
+      await connection.query<{ user_id: string }>(
+        'SELECT user_id FROM auth_identities WHERE provider=$1 AND subject=$2',
+        [row.provider, row.subject],
+      )
+    ).rows[0]
+    if (identity?.user_id !== row.user_id) throw new LoroError('UNAUTHENTICATED')
+    await connection.query('UPDATE auth_refresh SET consumed=true WHERE hash=$1', [
+      legacyTokenHash(refreshToken),
+    ])
+    await connection.query('UPDATE auth_sessions_legacy SET revoked=true WHERE id=$1', [row.id])
+    const result = await this.createSession(
+      connection,
+      tokens,
+      row.provider,
+      row.subject,
+      registration.device,
+      registration.anon_id,
+      Number(row.expires),
+    )
+    const principal = await tokens.verify(result.access_token, now)
+    await connection.query(
+      'INSERT INTO auth_legacy_upgrades(legacy_session_id,session_id) VALUES($1,$2)',
+      [row.id, principal.sessionId],
+    )
+    return result
+  }
+
+  private async hasLegacySessions(connection: SqlConnection): Promise<boolean> {
+    return (
+      (
+        await connection.query<{ present: boolean }>(
+          `SELECT to_regclass(format('%I.auth_refresh',current_schema())) IS NOT NULL
+         AND to_regclass(format('%I.auth_sessions_legacy',current_schema())) IS NOT NULL AS present`,
+        )
+      ).rows[0]?.present === true
+    )
+  }
+
+  private async revokeLegacyFamily(
+    connection: SqlConnection,
+    sessionId: string,
+    now: number,
+  ): Promise<void> {
+    await connection.query('UPDATE auth_sessions_legacy SET revoked=true WHERE id=$1', [sessionId])
+    await connection.query(
+      `UPDATE auth_sessions SET revoked_at=$1 WHERE id IN
+       (SELECT session_id FROM auth_legacy_upgrades WHERE legacy_session_id=$2)`,
+      [now, sessionId],
+    )
+  }
+
+  private requireEnabled(): void {
+    if (config.authSettings().enabled === false) throw new LoroError('PROVIDER_UNAVAILABLE')
   }
 
   private async recordClaim(
@@ -355,6 +506,11 @@ export class AuthService {
       'INSERT INTO auth_refresh_tokens(token_hash,session_id,expires_at) VALUES($1,$2,$3)',
       [tokenHash(token), sessionId, expiresAt],
     )
+  }
+
+  /** Shared transport-peer budget for OAuth start/exchange and session authentication. */
+  async rateAuthentication(address: string): Promise<void> {
+    await this.limit(`ip:${address}`, AUTH_IP_LIMIT)
   }
 
   private async limit(key: string, limit: number): Promise<void> {

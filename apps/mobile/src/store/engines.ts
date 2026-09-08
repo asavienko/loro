@@ -44,6 +44,9 @@ export function createEngineContext(
   core: LoroCoreFacade,
 ): EngineContext {
   const state = store.getState()
+  // A context belongs to the attempt/course that created it. A later language or
+  // account switch must not redirect an asynchronous recording to another row set.
+  const phrases = state.phrases
   /**
    * The store's array, read through the SAME eligibility rule as the repositories.
    *
@@ -59,10 +62,10 @@ export function createEngineContext(
    * the row out of the array, so a deleted phrase is not a candidate to filter.
    */
   const repo: PhraseRepository = {
-    all: () => Promise.resolve(store.getState().phrases),
-    byId: (id) => Promise.resolve(store.getState().phrases.find((p) => p.id === id) ?? null),
-    active: () => Promise.resolve(store.getState().phrases.filter(isActive)),
-    due: (at) => Promise.resolve(store.getState().phrases.filter((p) => isDue(p, at))),
+    all: () => Promise.resolve(phrases),
+    byId: (id) => Promise.resolve(phrases.find((p) => p.id === id) ?? null),
+    active: () => Promise.resolve(phrases.filter(isActive)),
+    due: (at) => Promise.resolve(phrases.filter((p) => isDue(p, at))),
   }
   return {
     phrases: repo,
