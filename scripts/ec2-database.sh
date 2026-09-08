@@ -21,7 +21,7 @@ if ! docker container inspect loro-postgres >/dev/null 2>&1; then
 else
   docker start loro-postgres >/dev/null
 fi
-for attempt in {1..30}; do
+for ((attempt=0; attempt<30; attempt++)); do
   if docker exec loro-postgres pg_isready -h 127.0.0.1 -U postgres >/dev/null; then
     docker exec -i loro-postgres sh -c 'psql -U postgres -v ON_ERROR_STOP=1 -v password="$LORO_DB_PASSWORD"' <<'SQL'
 SELECT format('CREATE ROLE loro LOGIN PASSWORD %L', :'password')
