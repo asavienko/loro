@@ -4,18 +4,16 @@ import * as Crypto from 'expo-crypto'
 import * as SecureStore from 'expo-secure-store'
 import * as WebBrowser from 'expo-web-browser'
 import { AccountClient } from './client'
+import { apiUrl as api, requestWithTimeout } from '../lib/backend'
 
-const configuredUrl: unknown = process.env.EXPO_PUBLIC_API_URL
-const api = typeof configuredUrl === 'string' ? configuredUrl.replace(/\/$/, '') : undefined
 const key = 'loro.auth.refresh.v1'
 export const authConfigured = Boolean(api?.startsWith('https://'))
 export async function authRequest(path: string, body?: unknown): Promise<unknown> {
   if (!api || !authConfigured) throw new Error('Sign-in unavailable')
-  const response = await fetch(`${api}${path}`, {
+  const response = await requestWithTimeout(`${api}${path}`, {
     method: body === undefined ? 'GET' : 'POST',
     headers: { 'Content-Type': 'application/json' },
     ...(body === undefined ? {} : { body: JSON.stringify(body) }),
-    signal: AbortSignal.timeout(15_000),
     credentials: 'omit',
     cache: 'no-store',
   })

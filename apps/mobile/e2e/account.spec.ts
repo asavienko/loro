@@ -17,3 +17,20 @@ test('rejected callback state creates no app session', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Sign out', exact: true })).toHaveCount(0)
   await expect(page.getByRole('button', { name: 'Continue with Apple' })).toBeEnabled()
 })
+
+test('backend connection recovers independently of sign-in and preserves local practice', async ({
+  page,
+}) => {
+  await onboard(page)
+  await reachAccount(page, 'backendUnavailable')
+  await page
+    .context()
+    .route('https://auth.loro.test/v1/health/ready', (route) =>
+      route.fulfill({ json: { status: 'ok', checks: { content: 'ok', merge: 'ok' } } }),
+    )
+  await page.getByRole('button', { name: 'Check connection', exact: true }).click()
+  await expect(page.getByText('Server connected.', { exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Account, open the menu' }).click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Today', exact: true }).click()
+  await expect(todayMarker(page)).toBeVisible()
+})

@@ -61,6 +61,8 @@ export const STATES: AppState[] = [
       'cancelled',
       'signedIn',
       'localSignOut',
+      'backendUnavailable',
+      'backendChecking',
     ] as const
   ).map((scenario): AppState => ({
     name: `account · ${scenario}`,

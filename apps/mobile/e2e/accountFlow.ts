@@ -9,12 +9,22 @@ export type AccountScenario =
   | 'cancelled'
   | 'signedIn'
   | 'localSignOut'
+  | 'backendUnavailable'
+  | 'backendChecking'
 export async function reachAccount(page: Page, scenario: AccountScenario): Promise<void> {
   // Whole-manifest sweeps reuse the page. Close the previous pending-provider popup.
   for (const popup of page.context().pages()) {
     if (popup !== page) await popup.close()
   }
   const state = 's'.repeat(43)
+  await page.context().route('https://auth.loro.test/v1/health/ready', async (route) => {
+    if (scenario === 'backendChecking') return
+    if (scenario === 'backendUnavailable')
+      return route.fulfill({
+        json: { status: 'degraded', checks: { content: 'ok', merge: 'unavailable' } },
+      })
+    return route.fulfill({ json: { status: 'ok', checks: { content: 'ok', merge: 'ok' } } })
+  })
   await page.context().route('https://auth.loro.test/v1/auth/**', async (route) => {
     const path = new URL(route.request().url()).pathname
     if (path.endsWith('/providers') && scenario === 'discoveryError')
@@ -55,6 +65,18 @@ export async function reachAccount(page: Page, scenario: AccountScenario): Promi
   await page.getByRole('button', { name: /, open the menu$/ }).click()
   await page.getByRole('dialog').getByRole('button', { name: 'Account', exact: true }).click()
   const google = page.getByRole('button', { name: 'Continue with Google' })
+  if (scenario === 'backendUnavailable' || scenario === 'backendChecking') {
+    await expect(
+      page.getByText(
+        scenario === 'backendUnavailable'
+          ? 'Server unavailable. You can continue practising locally.'
+          : 'Checking server connection…',
+        { exact: true },
+      ),
+    ).toBeVisible()
+    return
+  }
+  await expect(page.getByText('Server connected.', { exact: true })).toBeVisible()
   if (scenario === 'discoveryError') {
     await expect(page.getByRole('button', { name: 'Try again', exact: true })).toBeVisible()
     return

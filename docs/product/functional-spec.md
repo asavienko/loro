@@ -1066,3 +1066,8 @@ revocation cannot be confirmed. All copy follows the native language. Cloud sync
 The utility follows `Navigation.dc.html:35–40` and is an intended-design extension, not a new
 numbered authored learner screen. See
 [account implementation](../architecture/google-apple-auth.md).
+
+The Account utility also checks the configured server's readiness on entry and on Check connection.
+It displays checking, connected, unavailable, or unconfigured status. A successful check requires
+valid content and merge readiness, not just HTTP 200. This does not enable sign-in or sync. Local
+practice remains available after failure. The status copy follows the selected native language.
