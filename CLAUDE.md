@@ -12,10 +12,13 @@ endpoints (in-memory learning sync and PostgreSQL accounts), the Rust core, the 
 31-phrase Spanish/Bulgarian/Russian starter catalogs (new translations await bilingual review), and
 the local persistence layer (schema, migrations, repositories, outbox — driver-agnostic and tested
 against real SQLite), plus a dev-only generated token/component workbench. 619 JS/TS tests, 131 Rust
-tests, and 137 distinct browser E2E tests cover the implemented behavior. **What doesn't:** the
+tests, and 138 distinct browser E2E tests cover the implemented behavior. **What doesn't:** the
 native modules (audio, speech, ASR, widgets), the on-device SQLite driver, and the other 16 learner
 screens — so nothing runnable today exercises audio or the microphone, which is half of what this
 app is, and the app store is still in memory.
+
+The spine supports pull-down to open its menu; sheets dismiss by pulling their dedicated handle.
+Practice routes disable native back-swipe. Native touch validation remains a release gate.
 
 **The shared spine/switcher now wraps Today, Add, Progress, Stream, Refrain, and phrase detail.**
 `src/lib/navigation.ts` declares the built hubs used by the switcher and Today's rail. Today owns
@@ -123,7 +126,7 @@ prototype-only and **must not** be carried into the app — see the divergence t
   leaves 30 active plans within 56–88; completed 54/55/79/84/85 are under
   `plans/archive/2026-09-07/` with compatibility symlinks. Plans 01–52 remain under
   `plans/archive/2026-07-30/`; completed 53 remains at its protected original path. The next new
-  plan number is 91. A new plan takes the next free number and gets a row in
+  plan number is 94. A new plan takes the next free number and gets a row in
   [`plans/README.md`](plans/README.md). **Numbers are never reused** — a gap is left rather than
   backfilled, so a link written against a number can't come to mean a different plan. Not in
   `docs/`: that holds the durable spec. Not in a temp directory either — a plan you can't find again
@@ -223,7 +226,7 @@ be off PATH.
 
 ```bash
 pnpm check                          # the gate: 23 turbo tasks, all green today
-pnpm test:e2e                       # 133 learner tests: routes/states, clock, a11y, text scale
+pnpm test:e2e                       # 134 learner tests: routes/states, clock, a11y, text scale
 pnpm test:e2e:workbench             # 3 tests: dev-only tokens/component inspection surface
 pnpm test:e2e:bundle                # the @smoke subset against the production web export
 pnpm --filter @loro/api dev         # :3000 — no Docker, no keys, no database

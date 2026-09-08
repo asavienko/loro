@@ -65,3 +65,54 @@ test('the menu dismisses with Escape and restores keyboard focus', async ({ page
   await expect(page.getByRole('dialog')).toBeHidden()
   await expect(handle).toBeFocused()
 })
+
+test('pull gestures open the menu and dismiss only the sheet', async ({ page }) => {
+  await onboard(page)
+  const touch = await page.context().newCDPSession(page)
+  for (const input of ['mouse', 'touch'] as const) {
+    const drag = async (id: string, dx: number, dy: number, cancel = false) => {
+      const bounds = await page.getByTestId(id).boundingBox()
+      if (!bounds) throw new Error(`Missing gesture handle: ${id}`)
+      const x = bounds.x + bounds.width / 2
+      const y = bounds.y + bounds.height / 2
+      if (input === 'mouse') {
+        await page.mouse.move(x, y)
+        await page.mouse.down()
+        await page.mouse.move(x + dx, y + dy, { steps: 12 })
+        await page.mouse.up()
+      } else {
+        await touch.send('Input.dispatchTouchEvent', {
+          type: 'touchStart',
+          touchPoints: [{ x, y }],
+        })
+        for (let step = 1; step <= 12; step++) {
+          await touch.send('Input.dispatchTouchEvent', {
+            type: 'touchMove',
+            touchPoints: [{ x: x + (dx * step) / 12, y: y + (dy * step) / 12 }],
+          })
+        }
+        await touch.send('Input.dispatchTouchEvent', {
+          type: cancel ? 'touchCancel' : 'touchEnd',
+          touchPoints: [],
+        })
+      }
+    }
+    await drag('navigation-pull-handle', 0, 70)
+    const dialog = page.getByRole('dialog')
+    await expect(dialog).toBeVisible()
+    await drag('sheet-pull-handle', 0, 20)
+    await expect(dialog).toBeVisible()
+    await drag('sheet-pull-handle', 70, 0)
+    await expect(dialog).toBeVisible()
+    if (input === 'touch') {
+      await drag('sheet-pull-handle', 0, 70, true)
+      await expect(dialog).toBeVisible()
+    }
+    await drag('sheet-pull-handle', 0, 70)
+    await expect(dialog).toBeHidden()
+    await expect(todayMarker(page)).toBeVisible()
+  }
+  await touch.detach()
+  await page.getByRole('button', { name: /, open the menu$/ }).click()
+  await expect(page.getByRole('dialog')).toBeVisible()
+})

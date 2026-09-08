@@ -149,7 +149,7 @@ export const grid = { gap: 8 } as const
 export const sheet = {
   padding: space['5'],
   gap: space['3.5'],
-  /** Drawn, and inert: the drag gesture is plans/48's, not this component's. */
+  /** Visual grabber inside the sheet's touch-sized pull target. */
   handle: { ...size.sheetHandle, borderRadius: barRadius },
 } as const
 
