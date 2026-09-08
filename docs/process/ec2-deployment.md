@@ -101,3 +101,33 @@ multilingual content API; provider credentials and PostgreSQL remain unconfigure
 APK can use the [read-only HTTPS gateway](public-api.md). See the
 [readiness review](../reviews/2026-09-08-readiness.md) for verified capabilities and missing
 essentials. The public gateway does not expose the legacy sync or AI routes.
+
+## Durable account release (F-01/F-04)
+
+The account profile uses `scripts/ec2-database.sh` on the existing host. It creates a persistent
+`loro-postgres` Docker volume and private `loro-backend` network, exposes no PostgreSQL host port,
+and creates a non-superuser `loro` database owner. It never resets an existing database. The host's
+encrypted EBS disk holds the volume; instance deletion still requires a separately retained backup.
+
+Encrypted configuration sources are `secrets/ec2-api.enc.env` and `secrets/ec2-postgres.enc.env`.
+Decrypt only into ignored local files, transfer over verified SSH, install root-owned mode-600
+runtime copies at `/opt/loro/runtime/api.env` and `/opt/loro/database/postgres.env`, and remove the
+transfer copies. The API uses the Docker database hostname, not localhost. Never print
+configuration.
+
+```bash
+bash scripts/deploy-ec2.sh HOST /opt/loro/runtime/api.env loro-backend
+```
+
+The configured release takes a custom-format PostgreSQL backup before candidate startup/migrations,
+then uses the same environment/network for candidate and active containers. A failed backup or
+candidate leaves the current API running. Container rollback retains the previous container's own
+configuration and never restores an older database over new writes. Migrations must remain backward
+compatible. Local pre-release dumps under `/opt/loro/backups` are not off-host disaster recovery;
+scheduled backups, retained storage, monitoring and the full plan-88 operational profile remain
+open.
+
+Google development setup uses project `loro-508020`, a Web application OAuth client and the exact
+public `/v1/auth/google/callback` URL. The app callback allowlist currently contains
+`loro://account`. Web preview origins require an explicit HTTPS callback entry before use. Google
+remains in testing mode. Apple and email delivery are unconfigured.

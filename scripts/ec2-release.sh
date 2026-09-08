@@ -1,11 +1,26 @@
 #!/usr/bin/env bash
 # Runs as root on EC2; also accepts a previous local image tag for manual rollback.
 set -euo pipefail
-[[ $# == 1 && $1 =~ ^loro-api:[a-zA-Z0-9_.-]+$ ]] || exit 2
+[[ ( $# == 1 || $# == 3 ) && $1 =~ ^loro-api:[a-zA-Z0-9_.-]+$ ]] || exit 2
+runtime=()
+if [[ $# == 3 ]]; then
+  [[ $2 == /opt/loro/*.env && -f $2 && ! -L $2 && $3 =~ ^[a-zA-Z0-9][a-zA-Z0-9_.-]*$ ]] || exit 2
+  [[ $(stat -c '%u:%a' "$2") == 0:600 ]] || { echo 'Runtime environment must be root-owned mode 600' >&2; exit 1; }
+  docker network inspect "$3" >/dev/null
+  runtime=(--env-file "$2" --network "$3")
+fi
 image=$1
 exec 9>/var/lock/loro-api-deploy.lock
 flock -n 9 || { echo 'Another deployment is running' >&2; exit 1; }
 docker image inspect "$image" >/dev/null
+if [[ ${#runtime[@]} -gt 0 ]]; then
+  # Candidate startup runs additive migrations. Keep a pre-migration recovery artifact.
+  umask 077
+  mkdir -p /opt/loro/backups
+  backup="/opt/loro/backups/pre-release-$(date -u +%Y%m%d%H%M%S).dump"
+  docker exec loro-postgres pg_dump -U postgres -d loro -Fc > "$backup"
+  [[ -s $backup ]] || { echo 'Pre-migration backup failed' >&2; exit 1; }
+fi
 ready() {
   local name=$1
   for ((i=0; i<30; i++)); do
@@ -22,7 +37,7 @@ run() {
     --cap-drop ALL --security-opt no-new-privileges --pids-limit 128 \
     --memory 768m --cpus 1 --tmpfs /tmp:rw,noexec,nosuid,size=64m \
     --log-opt max-size=10m --log-opt max-file=3 \
-    -e NODE_ENV=production -e AI_PROVIDER=stub "${@:2}" "$image"
+    "${runtime[@]}" -e NODE_ENV=production -e AI_PROVIDER=stub "${@:2}" "$image"
 }
 # Candidate is never published. A failed candidate cannot stop the current service.
 docker rm -f loro-api-candidate >/dev/null 2>&1 || true
