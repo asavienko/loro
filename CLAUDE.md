@@ -140,12 +140,15 @@ prototype-only and **must not** be carried into the app — see the divergence t
   Not in `docs/`: that holds the durable spec. Not in a temp directory either — a plan you can't
   find again is a plan you rewrite. Name the requirement ID inside the plan so it ties back to the
   branch and the PR.
+- Plans 56–65 were archived at user request on 2026-09-09 with their partial status and remaining
+  scope preserved in `plans/archive/2026-09-09/`; compatibility symlinks and the roadmap index
+  retain their ownership. This archival does not mean their acceptance criteria are complete.
 - **A plan records its own status, and is archived rather than deleted.** Put a `**Status:**` line
-  in the plan's header block when work starts, and mark its row in
-  [`plans/README.md`](plans/README.md): `🟡` in progress or partly implemented, `⛔` blocked by a
-  named decision/evidence gate, `—` ready when dependencies pass, or `✅` implemented. A `🟡` must
-  say what is left **and what blocks it**. Archived plans stay on disk as the verified record of why
-  the code looks the way it does. The 2026-07-30 reset and legacy-to-active mapping are in
+  in the plan's header block when work starts, and mark its row in [`plans/README.md`](plans/README.md):
+  `🟡` in progress or partly implemented, `⛔` blocked by a named decision/evidence gate, `—` ready
+  when dependencies pass, or `✅` implemented. A `🟡` must say what is left **and what blocks it**.
+  Archived plans stay on disk as the verified record of why the code looks the way it does. The
+  2026-07-30 reset and legacy-to-active mapping are in
   [`plans/archive/2026-07-30/REVIEW.md`](plans/archive/2026-07-30/REVIEW.md). Plan 53 is a protected
   completed exception; do not edit or move it without explicit user direction.
 - **`pnpm ci:local`** is the full local CI gate; `pnpm check` is the fast development gate.
