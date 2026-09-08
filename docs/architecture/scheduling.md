@@ -2,23 +2,23 @@
 
 Every "when does this come back?" and "what's next?" decision in the product. The architectural
 owner is `loro-core` (Rust), so iOS, Android, and the server must compute identical answers
-([ADR-0002](adr/0002-shared-rust-core.md)). That ownership is not fully integrated yet.
+([ADR-0002](adr/0002-shared-rust-core.md)). The implemented engines now call its generated
+native/browser boundary.
 
 ## Current implementation status
 
-| Mechanism      | Implemented now                                                     | Missing before it is authoritative in the app                                                      |
-| -------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| Stream rank    | Rust rank/repeat functions with inline tests; mobile calls a facade | Generated binding/adapters replace the current TS fallback and gain boundary parity                |
-| FSRS           | Grade mapping, priors, retrievability, cap, and formatting in Rust  | `fsrs::review` is `todo!()`; no reference parity, durable due workflow, or real app intervals      |
-| Automaticity   | Rust and TS helpers; TS Refrain engine plans modes and sets         | Rust cloze/set functions are `todo!()`; the app has interim TS selection and a fixed/fallback mask |
-| Ladder         | Rust climb/need/draw functions with inline tests                    | Only limited Refrain writes exist; Run/Roleplay and durable device history do not                  |
-| Trip drops     | Content data exists                                                 | No `build_drop_schedule`, trip service, persistence, or learner flow exists                        |
-| Day boundaries | Rust/TS fixture parity and mobile clock tests exist                 | Native lifecycle scheduling and durable device integration do not                                  |
+| Mechanism      | Implemented now                                                             | Remaining scope/evidence                                         |
+| -------------- | --------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| Stream rank    | Canonical Rust rank/repeat functions used by mobile WASM/UniFFI             | Physical-device performance acceptance                           |
+| FSRS           | FSRS-6 review, 42 reference vectors, native/WASM parity, durable due fields | Future Review/Memory screens and full iOS acceptance             |
+| Automaticity   | Declared progress deltas; Rust cloze and frozen-set selection               | Plan 64 timed/audible wave behavior                              |
+| Ladder         | Rust climb/need/draw and durable current-engine progress                    | Run/Roleplay engines and their acceptance                        |
+| Trip drops     | Content data exists                                                         | Trip scheduling/service/persistence/routes                       |
+| Day boundaries | Calendar parity, durable day keys, frozen sets and resume                   | Physical timezone/process-death matrix and OS lifecycle coverage |
 
-[Plan 60](../../plans/60-authoritative-core-maths.md) makes rank, FSRS, cloze/set selection, and
-token matching authoritative through generated bindings. Until it lands, formulas below are target
-contracts unless this status table says they are wired; they must not be displayed as real results
-from placeholder calculations.
+[Plan 88](../../plans/88-persistent-practice-and-account-integration.md) integrates the canonical
+slice of [plan 60](../../plans/60-authoritative-core-maths.md). Future mechanisms below remain
+product contracts until their routes/engines are built; existing runtime results use real inputs.
 
 Five independent mechanisms, one per progress signal:
 
@@ -76,17 +76,21 @@ dominant: the stream should stay a listening experience, not become a covert rev
 [ADR-0004](adr/0004-fsrs-scheduler.md). FSRS (Free Spaced Repetition Scheduler) rather than SM-2 or
 a hand-rolled scheme.
 
-**Why FSRS.** The blueprint's Memory-model screen is _already_ FSRS made visible — it plots
-`R(t) = 0.5^(t/S)`, marks the 50% review threshold, and shows stability in days
-(`Loro.dc.html:3010–3019`). That is FSRS's model of memory, drawn. Using anything else would mean
-the screen lies about the algorithm behind it. FSRS is also open, well-validated on large datasets,
-and has a reference implementation we can port.
+**Implemented model.** Rust uses FSRS-6 with the default parameter set and reference vectors from
+[py-fsrs v6.3.2](https://github.com/open-spaced-repetition/py-fsrs/tree/v6.3.2), 90% requested
+retention, no interval fuzz and no intraday learning steps. Review intervals are bounded to 1–36,500
+days. The committed reference fixtures are in `packages/core-rs/tests/fixtures/fsrs_v6_3_2.json`.
+
+The blueprint's `R(t) = 0.5^(t/S)` and 50% threshold (`Loro.dc.html:3010–3019`) are prototype
+illustrations, not the FSRS forgetting curve. In the reference model `R(S) = 0.9`. The future Memory
+screen must draw the canonical curve and actual interval, following the real-numbers invariant.
 
 ### State per phrase
 
 This is the target complete scheduling state. Rust's current `FsrsState` contains `stability`,
-`difficulty`, `due`, `last_review`, and `lapses`; card phase and review-count behavior arrive with
-the authoritative review implementation.
+`difficulty`, `due`, `last_review`, and `lapses`. The implemented no-learning-steps policy emits
+review phase; the adapter carries it with the canonical result. The extra fields in this target
+shape are not additional current Rust state.
 
 ```rust
 pub struct FsrsState {
@@ -113,7 +117,7 @@ Loro has three different rating UIs. All three map onto FSRS's four grades in on
 | Memory model (5 levels)      | Forgot       | `Again`                                                                                  |
 |                              | Shaky        | `Hard`                                                                                   |
 |                              | OK           | `Good`                                                                                   |
-|                              | Strong       | `Good`, with a +10% stability bonus                                                      |
+|                              | Strong       | `Good`, with no non-reference stability bonus                                            |
 |                              | Instant      | `Easy`                                                                                   |
 | Refrain rep (implicit)       | —            | `Good` if produced within 2× median latency, else `Hard`; `Again` if not produced at all |
 | Speak-to-progress            | —            | `Good` on a hint-free completion; `Hard` with hints                                      |
@@ -124,8 +128,9 @@ every engine feeds FSRS even when it never shows an interval.
 
 ### Learner-declared difficulty as a prior
 
-FSRS normally needs several reviews to estimate a card's difficulty. Loro knows on day zero, because
-the learner said so. That's a real advantage and we use it:
+Rust retains the learner-declared prior helper below. The current app does not call it: first
+reviews use the reference algorithm's observed-grade initial stability and difficulty. Explicit
+practice difficulty changes do not override the canonical schedule:
 
 ```rust
 pub fn initial_difficulty(declared: Difficulty, tags: &Tags) -> f32 {
@@ -141,28 +146,17 @@ pub fn initial_difficulty(declared: Difficulty, tags: &Tags) -> f32 {
 }
 ```
 
-**Re-rating adjusts, never resets.** When a learner changes a phrase from Learning to Difficult
-after 20 reviews, the declared value nudges FSRS difficulty toward the new prior (a bounded ±1.0)
-rather than overwriting hard-won state.
+The retained Rust adjustment helper supports a bounded ±1.0 nudge toward this prior. Wiring that
+optional extension remains future work; current re-rating changes the declared practice difficulty
+without resetting stored FSRS state.
 
 ### Displayed intervals must be real
 
-The blueprint shows fixed labels (`<5 min`, `~10 min`, `1 day`, `5 days`). Those are a display
-model. **The shipped UI shows FSRS's computed intervals, formatted with the blueprint's own
-formatter** (`Loro.dc.html:3009`):
-
-This is the required shipped behavior, not current behavior: Rust interval formatting exists, but
-the update algorithm does not, and the app facade currently fabricates scheduling values. No
-learner-facing interval may be treated as authoritative until plan 60 removes that fallback.
-
-```rust
-pub fn format_interval(days: f32) -> String {
-    if days < 0.9  { "~10 min".into() }
-    else if days < 1.6 { "tomorrow".into() }
-    else if days < 30.0 { format!("{} days", days.round()) }
-    else { format!("{} wks", (days / 7.0).round()) }
-}
-```
+The blueprint's fixed labels (`<5 min`, `~10 min`, `1 day`, `5 days`) are prototype display data
+(`Loro.dc.html:3009`). The runtime now persists canonical due dates through generated WASM and
+native bindings. Review/Memory interval views remain future screens; they must format the actual due
+time. The selected no-learning-steps model schedules at least one day, so fixed subday labels must
+not be copied into those views.
 
 ### Daily load
 
@@ -214,10 +208,10 @@ pub fn automaticity(reps_today: u32, target: u32) -> u8 {
 
 ### Choosing today's set
 
-The priority order below is the target Rust implementation. Today, the TypeScript Refrain engine
-implements an interim version, while Rust's `select_refrain_set` and `cloze_mask` are `todo!()`. The
-store can freeze a set by local day in memory, and persistence defines a `refrain_day` table, but
-on-device SQLite/resume is not wired.
+Rust's `select_refrain_set` and `cloze_mask` now own selection through the generated runtime
+boundary. The skeleton below describes the priority policy; `packages/core-rs/src/select.rs` is the
+exact implementation. SQLite freezes membership by course and local day, restores it after relaunch
+and ignores a resume cursor from a different day.
 
 Run once per day, persisted to `refrain_day`. **Never recomputed mid-day** — the learner must be
 able to finish the set they were shown.

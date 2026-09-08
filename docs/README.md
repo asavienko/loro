@@ -5,6 +5,9 @@ endpoint, APK evidence, validation and remaining essential features.
 
 Everything written down, indexed. Four sections plus decisions.
 
+[Persistent practice and account sync](process/persistent-practice.md) — runtime setup, native
+limits and validation.
+
 [Local containers and encrypted environment](process/local-development.md) — Docker Compose, SOPS
 and age.
 

@@ -52,21 +52,21 @@ is byte-identical across that move — verified, not assumed.
 
 ## Status
 
-**131 tests passing** (125 inline + 6 in `tests/parity.rs`). **Clippy clean under `-D warnings`,
-`cargo fmt` clean.**
+**152 tests passing** (145 inline + 6 calendar integration + 1 FSRS integration over 42 reference
+vectors). **Clippy clean under `-D warnings`, `cargo fmt` clean.**
 
-| Module        | State                                                                                        |
-| ------------- | -------------------------------------------------------------------------------------------- |
-| `rank`        | **Implemented** + tests — stream rank and repeat targets are blueprint contracts             |
-| `asr`         | **Implemented** + tests — normalisation and forward-walk matching                            |
-| `calendar`    | **Implemented** + tests — day boundaries, streak grace, timezone travel                      |
-| `ladder`      | **Implemented** + tests — rungs, need score, the deterministic draw                          |
-| `sync::hlc`   | **Implemented** + tests — HLC arithmetic and skew detection                                  |
-| `sync::merge` | **Implemented** + tests — `merge_row` with all five merge classes                            |
-| `notify`      | **Implemented** + tests — the full notification policy                                       |
-| `select`      | Partial — automaticity, modes, and labels done; `select_refrain_set` and `cloze_mask` are M2 |
-| `fsrs`        | Partial — grade mapping, difficulty prior, curve, formatting done; `review()` is M0          |
-| `dsp`         | Skeleton — normalisation, bands, correlation, axes, fix selection done; the pipeline is M3   |
+| Module        | State                                                                                      |
+| ------------- | ------------------------------------------------------------------------------------------ |
+| `rank`        | **Implemented** + tests — stream rank and repeat targets are blueprint contracts           |
+| `asr`         | **Implemented** + tests — normalisation and forward-walk matching                          |
+| `calendar`    | **Implemented** + tests — day boundaries, streak grace, timezone travel                    |
+| `ladder`      | **Implemented** + tests — rungs, need score, the deterministic draw                        |
+| `sync::hlc`   | **Implemented** + tests — HLC arithmetic and skew detection                                |
+| `sync::merge` | **Implemented** + tests — `merge_row` with all five merge classes                          |
+| `notify`      | **Implemented** + tests — the full notification policy                                     |
+| `select`      | **Implemented** — priority set selection and multilingual cloze, used by app engines       |
+| `fsrs`        | **Implemented** — FSRS-6 reference review, real due dates, native/WASM parity              |
+| `dsp`         | Skeleton — normalisation, bands, correlation, axes, fix selection done; the pipeline is M3 |
 
 Seven `todo!()`s remain: FSRS review; cloze and Refrain-set selection; and DSP pitch, alignment,
 score, and pipeline stages. Plans 60 and 77 own them. None of these functions is safe to call in a

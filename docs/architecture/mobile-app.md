@@ -7,20 +7,21 @@ new work is extending toward.
 
 ## Implementation status
 
-The mobile package is an Expo Router app that currently runs seven learner screens plus its root
-layout. It is useful on the web for the onboarding-to-practice loop, but it is not yet a native
-product: there are no generated `ios/` or `android/` projects, local Expo Modules, device SQLite
-driver, audio or speech implementation, Rust UniFFI bridge, notifications, or widgets.
+The Expo Router app implements eight learner screens plus Languages, Account and the shell. SQLite
+backs progress and course resume; generated Rust handles scheduling and merge. Local Expo modules
+provide foreground device TTS/on-device ASR. Postgres auth/sync is optional for practice. Native
+projects are generated from app configuration; see
+[runtime evidence](../process/persistent-practice.md).
 
-| Area                  | Implemented now                                                                                                | Target                                                                          |
-| --------------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| Routes                | Today, onboarding, Add, phrase detail, Stream, Refrain, Progress                                               | The remaining blueprint routes, trips, settings, labs, and Run                  |
-| Domain and engines    | Domain contracts plus Stream/Refrain engines in `@loro/core`                                                   | All engines behind the same `PracticeEngine` contract                           |
-| App state             | One in-memory Zustand store, split into action slices                                                          | SQLite as durable truth; Zustand only for resumable sessions                    |
-| Persistence           | Schema, migrations, repositories, and outbox in `@loro/core`, tested against real SQLite through `node:sqlite` | An `op-sqlite` device driver wired into app startup and writes                  |
-| Rust core             | Rust implementation and generated artifacts in the monorepo; temporary JS facade in the app                    | UniFFI-backed mobile facade; no duplicated authoritative maths                  |
-| Native capabilities   | Expo config declares intended permissions and background modes                                                 | Audio, speech, ASR, DSP, notifications, purchases, and widgets through wrappers |
-| Automated UI coverage | Playwright on Expo Web, driven through learner-visible interactions                                            | Keep web coverage and add native/device suites for native behavior              |
+| Area                  | Implemented now                                                                             | Target                                                                          |
+| --------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Routes                | Today, onboarding, Add, phrase detail, Stream, Speak, Refrain, Progress, Languages, Account | The remaining blueprint routes, trips, settings, labs, and Run                  |
+| Domain and engines    | Domain contracts plus Stream/Refrain/Speak engines in `@loro/core`                          | All engines behind the same `PracticeEngine` contract                           |
+| App state             | Repository projections in Zustand; durable writes commit to SQLite first                    | SQLite as durable truth; Zustand only for resumable sessions                    |
+| Persistence           | OP-SQLite on device, durable SQL.js on web; transactional repositories and outbox           | Physical-device upgrade/process-death acceptance                                |
+| Rust core             | Generated WASM/UniFFI runtime bridge with reference parity                                  | Full iOS and device-floor acceptance                                            |
+| Native capabilities   | Local Expo modules provide foreground TTS and strictly on-device ASR                        | Audio, speech, ASR, DSP, notifications, purchases, and widgets through wrappers |
+| Automated UI coverage | Playwright on Expo Web, driven through learner-visible interactions                         | Keep web coverage and add native/device suites for native behavior              |
 
 “Target” in this document is a constraint for extension work, not evidence that a folder, package,
 or capability already exists.
@@ -34,7 +35,7 @@ apps/mobile/
 ├── app/                  Expo Router routes and root layout
 ├── src/
 │   ├── store/            Zustand state, actions, selectors, engine adapters
-│   ├── data/             test-only Node SQLite driver
+│   ├── data/             native/browser SQLite drivers, hydration, repositories and sync
 │   ├── ui/
 │   │   ├── primitives/   domain-free reusable controls and layout
 │   │   ├── components/   reusable composites that may accept domain types
@@ -57,7 +58,7 @@ The practical dependency flow is:
 app routes / root shell
         │
         ├── src/store ── @loro/core engines and domain contracts
-        │                    └── temporary JS core facade
+        │                    └── generated Rust WASM/UniFFI bridge
         ├── src/ui/components ── @loro/core domain types only
         ├── src/ui/primitives
         └── src/lib
@@ -97,8 +98,8 @@ ui/ and lib/ are leaves: reusable rendering and pure helpers
 
 Practice engines do **not** move into mobile feature code. They stay headless in `@loro/core`, with
 platform and data capabilities supplied through `EngineContext`. The current adapter is
-`src/store/engines.ts`; replacing its in-memory repository with device persistence must not change
-an engine's public contract.
+`src/store/engines.ts`; it reads the committed repository projection without changing an engine's
+public contract.
 
 When the feature layer becomes useful, routes should compose it rather than contain view-model
 logic. That migration is incremental: move a coherent screen concern only when it is shared or the
@@ -110,15 +111,18 @@ route can no longer remain a readable composition. Do not perform a folder-only 
 
 Expo Router typed routes are enabled in `app.config.ts`. The route files on disk are:
 
-| Route               | Current behavior                                                               |
-| ------------------- | ------------------------------------------------------------------------------ |
-| `/`                 | Today; redirects to `/onboarding` until the in-memory `onboarded` flag is true |
-| `/onboarding`       | Six in-route steps; seeds selected catalog packs into the store                |
-| `/add`              | Discover and Browse states plus an in-route tagging sheet                      |
-| `/phrase/[id]`      | Phrase signals and edits; includes an honest unknown-ID state                  |
-| `/practice/stream`  | Stream practice over active in-memory phrases                                  |
-| `/practice/refrain` | Frozen daily set and six-rep Refrain flow                                      |
-| `/progress`         | Mastery, ladder, streak, and tag rollups derived from store rows               |
+| Route               | Current behavior                                                             |
+| ------------------- | ---------------------------------------------------------------------------- |
+| `/`                 | Today; redirects to `/onboarding` until the durable `onboarded` flag is true |
+| `/onboarding`       | Six in-route steps; seeds selected catalog packs into the store              |
+| `/add`              | Discover and Browse states plus an in-route tagging sheet                    |
+| `/phrase/[id]`      | Phrase signals and edits; includes an honest unknown-ID state                |
+| `/practice/stream`  | Stream practice over active repository-backed phrases                        |
+| `/practice/refrain` | Frozen daily set and six-rep Refrain flow                                    |
+| `/practice/speak`   | On-device recognition or offline reveal; truthful engine progress            |
+| `/account`          | Optional email sign-in, sync status and sign-out                             |
+| `/languages`        | Native/target selection with durable independent course state                |
+| `/progress`         | Mastery, ladder, streak, and tag rollups derived from store rows             |
 
 `_layout.tsx` owns the native stack, headers, safe-area provider, app-wide day rollover, and toast
 host. The Add tagging sheet is currently component state inside `/add`, not a route-level modal.

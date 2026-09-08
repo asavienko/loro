@@ -1,32 +1,21 @@
 # Offline behaviour
 
-Offline-first is the product contract, not the current implementation state.
+Offline-first is the product contract. Runtime progress is durable; native audio acceptance remains
+a gate.
 
 ## Current state
 
-The implemented learner screens can run in the Expo web target without the API because their catalog
-and store state are in the JavaScript bundle/process. That is useful development behaviour, but it
-is not durable offline support:
+The app hydrates learner progress, settings and course/session state from SQLite. Native uses
+OP-SQLite; web uses SQL.js with atomic persistent snapshots and an exclusive tab lock. Repository
+writes and outbox changes commit together before rendering. Database errors preserve prior state and
+offer recovery rather than automatic reset.
 
-- the live Zustand store is in memory and is not hydrated from SQLite;
-- no on-device SQLite driver or native composition root exists;
-- no mobile sync client drains the outbox or applies pulls;
-- audio playback, recording, ASR, DSP integration, widgets, prefetch and cache management are not
-  implemented;
-- the API's sync repository is in memory and loses rows on restart.
-
-Consequently the cold-launch airplane-mode acceptance test below does **not** pass today. Browser
-E2E coverage protects the implemented web states; it must not be cited as evidence for native
-offline audio, microphone, durability or sync.
-
-The persistence foundation does exist: `packages/core/src/persistence/` contains a driver-agnostic
-SQLite schema, repositories and outbox tested against real SQLite — handwritten SQL over a
-six-method driver interface, deliberately and with no ORM
-([ADR-0003's amendment](adr/0003-offline-first-sqlite-sync.md#amendment--2026-07-30--handwritten-sql-on-the-client-no-orm)).
-A local write preserves the tombstone and the per-field merge history it does not own, the outbox
-never folds an edit across a delete, and a file-backed database is proved to survive a close and
-reopen. It becomes product behaviour only after the app store writes through it, hydrates from it on
-launch, and a device driver exists.
+Authenticated client sync replays the durable outbox and applies canonical Rust merges locally. The
+API uses Postgres for account state, sync rows, revision cursors and idempotency receipts. No
+practice action waits for the API. Native foreground TTS and on-device recognition are implemented,
+with reveal-mode degradation; approved audio clips/cache, background playback, DSP, widgets and the
+native device-floor acceptance matrix remain open. See
+[setup and verified limits](../process/persistent-practice.md).
 
 ## The acceptance test
 
@@ -34,8 +23,9 @@ launch, and a device driver exists.
 > content must be usable from durable local state without a network error or sync spinner; every
 > promised audio asset must play from disk.
 
-Measure the launch budget on the device floor once the native runtime exists. Do not mark the gate
-green with web storage, a warm JavaScript process or mocked network responses.
+Measure the launch budget on the physical device floor; the Android emulator cold-launch smoke
+proves persistence but does not replace that performance matrix. Do not mark the gate green with web
+storage, a warm JavaScript process or mocked network responses.
 
 <a id="2--there-is-no-offline-mode"></a>
 
@@ -47,9 +37,8 @@ A learner action may wait for its SQLite transaction, because durable local stor
 It must not wait for HTTP, authentication refresh, analytics or asset upload. For a syncable change,
 the row update and outbox append commit in the same transaction.
 
-The current repositories and outbox can participate in one transaction, but they do not couple the
-two calls and are not wired to the app. The mobile integration must provide a single mutation seam
-so a screen cannot accidentally update one without the other.
+The mobile learner-storage adapter owns this transaction. The Zustand store publishes only the
+committed repository projection; disk failure leaves the prior projection and outbox intact.
 
 ### Local state renders the UI
 
@@ -86,17 +75,17 @@ canned transcript in `ChatLogic` are prototype-only (`Loro Chat.dc.html:514`, `5
 
 This is a delivery checklist, not a claim about current behaviour.
 
-| Capability                         | Required offline result                               | Current implementation                                       |
-| ---------------------------------- | ----------------------------------------------------- | ------------------------------------------------------------ |
-| Implemented text screens/catalog   | Navigate and read bundled content                     | Web process only; not restart-durable                        |
-| Learner state and progress         | Persist across force-quit and device restart          | SQLite library exists; app wiring missing                    |
-| Review scheduling                  | Plan and record locally from authoritative core maths | Engines exist; durable write path missing                    |
-| Audio for owned/daily/trip phrases | Play verified local assets                            | Missing native audio/cache/prefetch                          |
-| Speech/ASR/pronunciation/prosody   | Use on-device modules and real measurements           | Missing native modules                                       |
-| Sync                               | Queue locally and converge later                      | Outbox and server endpoints exist separately; client missing |
-| Trips/widgets/notifications        | Derive from durable local calendar state              | Not implemented                                              |
-| Open chat                          | Continue through bundled topic/reply graphs           | Authored prototype only; no route/domain/persistence         |
-| Live AI/translation/purchase       | Degrade or defer with honest copy                     | Server-side pieces are partial or absent                     |
+| Capability                         | Required offline result                               | Current implementation                                         |
+| ---------------------------------- | ----------------------------------------------------- | -------------------------------------------------------------- |
+| Implemented text screens/catalog   | Navigate and read bundled content                     | Bundled native/web content with cold-launch persistence        |
+| Learner state and progress         | Persist across force-quit and device restart          | SQLite runtime; Android force-stop and browser reload verified |
+| Review scheduling                  | Plan and record locally from authoritative core maths | Canonical Rust scheduling and transactional writes             |
+| Audio for owned/daily/trip phrases | Play verified local assets                            | Foreground device TTS; recorded cache/prefetch remain          |
+| Speech/ASR/pronunciation/prosody   | Use on-device modules and real measurements           | Strict native ASR with reveal fallback; DSP/onset remain       |
+| Sync                               | Queue locally and converge later                      | Authenticated Postgres/client replay and merge implemented     |
+| Trips/widgets/notifications        | Derive from durable local calendar state              | Not implemented                                                |
+| Open chat                          | Continue through bundled topic/reply graphs           | Authored prototype only; no route/domain/persistence           |
+| Live AI/translation/purchase       | Degrade or defer with honest copy                     | Server-side pieces are partial or absent                       |
 
 A feature may be documented as offline only after its asset/data dependencies, cold-launch path and
 failure behaviour are implemented and tested.

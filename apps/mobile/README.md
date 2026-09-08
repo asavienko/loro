@@ -7,7 +7,7 @@ Architecture: [mobile-app.md](../../docs/architecture/mobile-app.md) · Stack ra
 
 ## What's here
 
-Seven of the v1.1 design package's 23 learner screens, plus the app shell — the demonstrable core
+Eight of the v1.1 design package's 23 learner screens, plus the app shell — the demonstrable core
 loop:
 
 | Route              | Screen                                                                      |
@@ -19,9 +19,12 @@ loop:
 | `practice/stream`  | The SRS stream                                                              |
 | `phrase/[id]`      | One phrase: its signals, its history, its hooks                             |
 | `progress`         | Mastery, ladder, and the rollup from those tags                             |
+| `practice/speak`   | On-device speech or offline word reveal                                     |
+| `languages`        | Native and learning language selection                                      |
+| `account`          | Optional email sign-in and sync status                                      |
 | `_layout`          | Router shell + toast host                                                   |
 
-The other 16 learner screens — chat, the prosody and pronunciation labs, the Run, trips, settings —
+The other 15 learner screens — chat, the prosody and pronunciation labs, the Run, trips, settings —
 are authored. The original 21 are in [screen-catalog.md](../../docs/design/screen-catalog.md); plan
 79 owns registration of the two v1.1 chat screens.
 
@@ -49,10 +52,12 @@ Include default and relevant selected, disabled, loading, empty, error, long-cop
 large-text, reduced-motion, and accent states. Then run the workbench suite; update its narrow
 screenshot baseline with `pnpm test:e2e:workbench:update` only after visually reviewing the change.
 
-Native `ios`/`android` projects and dev clients do not exist yet; plan 58 owns that substrate.
+Native `ios`/`android` projects are generated with Expo prebuild and ignored in Git. Local modules
+autolink from `modules/`. The core/audio/SQLite modules require a native development build. See
+[persistent practice setup and validation](../../docs/process/persistent-practice.md).
 
-When native audio and speech arrive, test them on hardware: simulators do not faithfully reproduce
-audio sessions, microphone behaviour, routing, lock-screen playback, or interruptions.
+Test native audio and speech on hardware: simulators do not faithfully reproduce audio sessions,
+microphone behaviour, routing, lock-screen playback, or interruptions.
 
 `bundle` runs an iOS `expo export`. It proves that Metro can resolve and emit the production bundle,
 which catches failures that `typecheck` cannot see. It does not compile a native project, exercise
@@ -67,18 +72,17 @@ development workbench. They complement, rather than replace, native device check
 ## Current shape
 
 ```
-app/                  seven learner routes plus the root layout
-src/store/            in-memory app state, actions, selectors, and engine adapters
-src/data/             Node SQLite driver used only by persistence tests
+app/                  eight learner routes, Languages/Account utilities and root layout
+src/store/            committed repository projections, actions and engine adapters
+src/data/             native/browser SQLite, hydration, repositories and sync
 src/ui/primitives/    domain-free controls and layout
 src/ui/components/    reusable domain-aware composites
 src/lib/              copy, clock, wave positions, IDs, and formatting helpers
-packages/core/        domain types, Stream/Refrain engines, persistence, sync policy
+packages/core/        domain types, Stream/Refrain/Speak engines, persistence, sync policy
 ```
 
-Today additionally owns the v1.1 navigation chrome — spine, root header, rail, day rows, switcher —
-as route-local blocks, because it is the only surface carrying them today. Plan 81 mounts the spine
-on every non-sheet surface from the route table, and that is when they become shared components.
+The shared spine and switcher wrap built routes. Today owns its root header, rail and day rows;
+other screens retain stack headers and a Today escape for cold entries.
 
 Routes currently own their screen-specific hooks and named components. Reuse moves downward:
 domain-free pieces go in `src/ui/primitives/`, while a component used by multiple screens and typed
@@ -175,9 +179,9 @@ the current screen as evidence that animation or 60 fps has been implemented.
 
 Choose native and learning languages on the welcome page or through Today → switcher → Languages.
 English/Bulgarian/Russian UI follows the native choice; Spanish/Bulgarian/Russian starter courses
-keep separate in-memory collections, daily sets and resume state. Each target has 31 phrases. New
-translations are pending bilingual review. Schema 2 supports language settings and sessions, but
-production hydration/write-through still belongs to plan 59.
+keep separate durable collections, daily sets and resume state. Each target has 31 phrases. New
+translations are pending bilingual review. Four migrations support language settings, sessions and
+sync reconciliation; plan 88 wires production hydration and transactional writes.
 
 Use `src/lib/copy.ts` for reactive localized copy and `useLearningCatalog()` for the selected pair.
 `src/lib/i18n/` bundles all translations; screens subscribe with `useLocale()`. A target text uses
