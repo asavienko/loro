@@ -141,3 +141,12 @@ native smoke does not infer it from repeated taps.
 
 The original evidence above remains historical. Full iOS native builds and physical-device speech,
 audio interruptions and two-device convergence still require the release acceptance matrix.
+
+## Server Google sign-in follow-up (F-01/F-04, 2026-09-08)
+
+In progress: new Google Cloud project/client, encrypted EC2 runtime/database configuration, private
+persistent PostgreSQL, configured candidate releases with pre-migration backup, and opt-in HTTPS
+auth/sync forwarding. Focused gateway/release tests cover request bodies, callback redirects, CORS,
+header exclusion, access disabled by default and backup failure retaining the current API. Live
+cutover and sign-in verification must be recorded before this slice is complete. The broader native,
+multilingual and production operational gates above remain separate.
