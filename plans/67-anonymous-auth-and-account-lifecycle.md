@@ -2,17 +2,26 @@
 
 - **Requirement IDs:** `F-01`, `F-02`, `F-07`
 - **Milestone:** M2
-- **Status:** 🟡 Google/Apple identity implemented in plan 89. Remaining reconciliation, sync,
-  export/deletion and magic links depend on 59/66 and live provider configuration.
+- **Status:** 🟡 Optional Google/Apple/email sign-in, durable session/device identity and
+  installation-bound progress sync are implemented. Account linking, restore/loss policy,
+  export/erasure and physical-device/provider acceptance remain; provider setup and lifecycle policy
+  gate those slices.
 - **Depends on:** 85 completed; 66 durable principal-aware backend; 59 device identity/state; 86
   provider verification/email adapters.
-- **Reviewed:** 2026-09-07 against merged baseline `2d9e8c3`.
+- **Reviewed:** 2026-09-08 during plan-94 integration.
 
-## Verified starting point
+## Implemented scope
 
-Shared account schemas and the optional Google/Apple authentication service now exist. Plan 89 adds
-PostgreSQL sessions and SecureStore. Account-enabled deployments disable legacy unscoped sync/AI;
-account linking and durable learning reconciliation remain to do.
+First use and local practice require no account. Optional Google/Apple and email/code sign-in use
+PostgreSQL accounts and rotating refresh families, replay detection and revocation. Native refresh
+credentials use SecureStore; browser credentials have page lifetime and never enter local storage or
+SQLite. Existing OAuth provider verification and authorization-code protections are retained.
+
+Durable installation/device identity is separate from account identity. The installation binds to
+its verified account before uploading local progress, blocking cross-account data mixing. Sign-out
+clears credentials and attempts server revocation while retaining learner data. Offline practice
+continues, and known offline state preserves refresh credentials; ambiguous rotation requires
+sign-in. Tenant-scoped sync and catalog identity reconciliation live in 66/68.
 
 ## Outcome
 
@@ -22,19 +31,16 @@ principal.
 
 ## Remaining work
 
-1. [ ] Model local installation/device identity separately from account identity and define
-       rotation, loss, reinstall, restore, and multi-device semantics.
-2. [ ] Implement short-lived access/rotating refresh tokens with secure native storage, replay
-       detection, revocation, clock-skew policy, and redacted logs.
-3. [ ] Add the approved Apple/Google/magic-link providers behind one account-link contract; do not
-       make sign-in a first-run requirement.
-4. [ ] Specify and implement course-aware anonymous→signed-in reconciliation using the shared merge
-       policy, idempotency, duplicate-device handling, conflict visibility, and retry after
-       interruption.
-5. [ ] Scope every endpoint/repository/cache/rate bucket by principal and test horizontal/vertical
-       access controls.
-6. [ ] Implement account/device management, export, deletion/tombstone propagation, consent/version
-       records, and recovery/support procedures.
+1. [ ] Complete loss/reinstall/backup-restore/device-rotation and recovery policy with
+       learner-facing management. Browser reload requiring sign-in is intentional credential policy.
+2. [ ] Configure real Google/Apple/email providers and verify their native flows on supported
+       devices. Never link providers automatically by matching email.
+3. [ ] Add deliberate account-linking and cross-account migration/recovery flows with reviewed
+       conflict handling; current binding protects existing data by rejecting another account.
+4. [ ] Implement account/device management, export, deletion/tombstone propagation, consent/version
+       records and support procedures across device, server and backups.
+5. [ ] Expand interrupted/repeated sign-in and multi-device acceptance with real provider/device
+       evidence. Preserve tenant isolation and offline-first behavior in each lifecycle state.
 
 ## Acceptance criteria
 

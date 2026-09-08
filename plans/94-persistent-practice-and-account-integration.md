@@ -1,9 +1,10 @@
 # Persistent practice, native speech, canonical core and account sync
 
 - **Requirement IDs:** `F-01`…`F-04`, `F-07`, `F-08`, `AS-01`…`AS-06`, `LB-01`…`LB-27`
-- **Status:** 🟡 Runtime implemented and local acceptance passed. Remaining gates are full iOS
-  native validation, physical-device speech/convergence acceptance, approved audio assets (Q-15),
-  background transport and production identity/email configuration; see the remaining scope below.
+- **Status:** 🟡 Runtime implemented; original local acceptance passed and merged validation is
+  being repeated. Remaining gates are full iOS native validation, physical-device speech/convergence
+  acceptance, approved ElevenLabs assets (Q-15), background transport and production identity/email
+  configuration; see the remaining scope below.
 - **Depends on:** Existing contracts in 85 and persistence correctness in 54; implements coordinated
   slices of 58–60, 62–63 and 66–68.
 
@@ -21,8 +22,9 @@ branch.
    boundaries are used by runtime callers, with no approximate fallback.
 3. Native TTS uses available device voices. Speech recognition requires a proven on-device path;
    unavailable recognition offers reveal mode. Recorded audio never enters JavaScript or sync.
-4. Email verification is optional and authenticated backend data is durable in Postgres. Native
-   refresh credentials live in secure storage; browser credentials have page lifetime.
+4. Google/Apple and email verification are optional; authenticated backend data is durable in
+   Postgres. Native refresh credentials live in secure storage; browser credentials have page
+   lifetime.
 5. Sync binds a local installation to one verified account, replays the transactional outbox,
    resolves catalog identity aliases and advances a cursor only after local apply commits.
 
@@ -35,20 +37,21 @@ Do not enable GitHub Actions or deploy infrastructure as part of this implementa
 
 ## Implemented runtime
 
-- Device/browser SQLite, four migrations, atomic progress/session/outbox writes, course hydration,
-  non-destructive storage recovery and durable deletion Undo.
+- Device/browser SQLite, forward migrations, atomic progress/session/outbox writes, course
+  hydration, non-destructive storage recovery and durable deletion Undo.
 - Reference-backed Rust FSRS-6, selection, cloze, ranking, matching, HLC and merge; generated
   embedded browser WASM and native UniFFI/Expo ports with drift checks.
 - Native foreground TTS, strict on-device ASR, Speak recognition/reveal paths and truthful progress.
   The Android release smoke exposed missing Hermes plural support; bundled EN/BG/RU PluralRules now
   initializes before ICU, with a regression that starts without the platform API.
-- Optional email/code Account screen, native secure refresh storage/rotation, logout and account
-  binding. Google/Apple server verification exists; native provider buttons remain future work.
+- Optional Google/Apple/email Account screen, native secure refresh storage/rotation, logout and
+  account binding. Main's provider authorization-code/PKCE flows and independent API readiness are
+  retained alongside the new durable sync service.
 - Postgres tenant/device isolation, replay receipts, cursor snapshots, catalog identity aliases,
   deletion/re-add proofs and exact receipt clock corrections. Client acknowledgement/apply/cursor
   changes commit together; foreground/connectivity/write events trigger bounded retries.
 
-## Validation record
+## Original implementation validation (before main integration)
 
 - `pnpm check`: 23 tasks passed. The default run explicitly skips database-dependent API tests; the
   separate real-Postgres run passes all 140 API tests, including sign-in, two device identities,
@@ -67,18 +70,31 @@ advanced while leaving the rep count unchanged; ASR and audio correctly reported
 no voice/model was installed. Microphone permission remained unrequested. Local evidence is retained
 in `test-results/native-smoke/README.md` with screenshots, UI dumps and APK hash.
 
-Final browser run: **136 tests passed in 6.3 minutes**, including invalid-code and unavailable-sync
-states, persistence recovery, route/navigation flows, accessibility and full 200%/310% text-scale
-sweeps. Native builds and source edits were settled before this accepted run. The repository gate
-also passes 284 mobile tests, 202 core tests, 34 content tests and 23 token tests; the separate
-Postgres run completes the 140 API tests. Temporary test database, emulator and development servers
-were stopped after validation.
+Original browser run: **136 tests passed in 6.3 minutes**, including invalid-code and
+unavailable-sync states, persistence recovery, route/navigation flows, accessibility and full
+200%/310% text-scale sweeps. Native builds and source edits were settled before this accepted run.
+The repository gate also passes 284 mobile tests, 202 core tests, 34 content tests and 23 token
+tests; the separate Postgres run completes the 140 API tests. Temporary test database, emulator and
+development servers were stopped after validation.
 
 ## Remaining feature and release gates
 
-Recorded audio assets/cache (Q-15), background/lock-screen audio, retained-buffer DSP and measured
-onset latency are outside the implemented foreground slice. Latency remains null. Native ASR
-accuracy, installed-language availability, hardware interruptions and the full physical-device
-persistence/convergence matrix need device/bilingual acceptance. Account export/erasure and rescue
-UI, OS background sync, load/security-image acceptance and production service configuration remain
-with their feature plans. See [runtime setup](../docs/process/persistent-practice.md).
+ElevenLabs is selected; reviewed/licensed audio assets remain gated by Q-15. Recorded-asset cache,
+background/lock-screen audio, retained-buffer DSP and measured onset latency are outside the
+implemented foreground slice. Latency remains null. Native ASR accuracy, installed-language
+availability, hardware interruptions and the full physical-device persistence/convergence matrix
+need device/bilingual acceptance. Account export/erasure and rescue UI, OS background sync,
+load/security-image acceptance and production service configuration remain with their feature plans.
+See [runtime setup](../docs/process/persistent-practice.md).
+
+## Main integration
+
+Plan 94 combines the persistent-practice implementation with main's Google/Apple identity, Android
+HTTPS/readiness and text-scale fixes, local CI/APK/deployment tooling and pull gestures. The other
+completed persistence/core branch supplies compatible canonical policy and attempt/checkpoint
+hardening. Existing roadmap archives and their compatibility paths remain intact. Plan 88 retains
+its AWS testing scope; 94 is the next free number for this integration.
+
+Merged local CI and acceptance evidence must be recorded after resolving these combined changes. The
+original counts above are retained as dated implementation evidence and are not a claim that the
+merged checkout has already passed.

@@ -17,40 +17,47 @@ curl localhost:3000/v1/health/ready
 ```
 
 `DATABASE_URL` is required for auth and sync. On first use, the API installs its additive schema in
-one PostgreSQL transaction protected by an advisory lock. Production startup fails if PostgreSQL or
-the shared Rust build is unavailable. Development can serve bundled content without either;
-readiness correctly returns 503. No runtime falls back to memory storage. The memory repository is
-only a test adapter.
+one PostgreSQL transaction protected by an advisory lock. Existing OAuth account UUIDs and refresh
+families migrate without deleting their tables. Production startup fails when a configured database
+is unavailable or the shared Rust build is absent. A content-only deployment with auth disabled can
+start without a database; readiness correctly returns 503. No runtime falls back to memory storage.
+The memory repository is only a test adapter.
 
-Configure permitted browser origins through `CORS_ALLOWED_ORIGINS` (comma-separated exact origins).
-Bearer authorization does not use cookies. TLS termination and deployment credentials remain
-operator setup. See [authentication configuration](src/auth/README.md) for real provider keys and
-the HTTPS email delivery protocol; sign-in is unavailable until configured. No test sends email or
-contacts Google/Apple.
+Configure permitted browser origins through `CORS_ALLOWED_ORIGINS` (comma-separated exact origins)
+and the HTTPS origins derived from `AUTH_REDIRECT_URIS`. Bearer authorization does not use cookies.
+`AUTH_ENABLED=false` disables all sign-in; `true` enables the configured browser provider flow. See
+[Google/Apple setup](../../docs/architecture/google-apple-auth.md). TLS termination and deployment
+credentials remain operator setup. See [authentication configuration](src/auth/README.md) for real
+provider keys and the HTTPS email delivery protocol; sign-in is unavailable until configured. No
+test sends email or contacts Google/Apple.
 
 ## Runtime endpoints
 
 All paths have the `/v1` prefix. Content and health remain public.
 
-| Method | Path                                                           | Behavior                                                       |
-| ------ | -------------------------------------------------------------- | -------------------------------------------------------------- |
-| GET    | `/health`, `/health/ready`                                     | Liveness and actual WASM/database readiness                    |
-| GET    | `/content/manifest`, `/content/diff`, `/content/pack`          | Bundled Spanish/English content                                |
-| GET    | `/content/v2/manifest`, `/content/v2/diff`, `/content/v2/pack` | Bundled supported language pairs                               |
-| GET    | `/auth/capabilities`                                           | Configured Apple, Google and email choices                     |
-| POST   | `/auth/apple`, `/auth/google`                                  | Verified provider ID token and registered installation         |
-| POST   | `/auth/magic-link`, `/auth/magic-link/verify`                  | Deliver and verify a ten-minute email code                     |
-| POST   | `/auth/refresh`, `/auth/logout`, `/auth/claim`                 | Rotating refresh, session revocation, local-upload correlation |
-| GET    | `/me`                                                          | Authenticated account and registered device                    |
-| POST   | `/sync/push`, `/sync/pull`, `/sync/status`                     | Bearer and matching `X-Loro-Device` required                   |
-| POST   | `/ai/scene`                                                    | Bundled, validated roleplay scene                              |
-| GET    | `/ai/themes`                                                   | Available bundled themes                                       |
+| Method   | Path                                                           | Behavior                                                        |
+| -------- | -------------------------------------------------------------- | --------------------------------------------------------------- |
+| GET      | `/health`, `/health/ready`                                     | Liveness and actual WASM/database readiness                     |
+| GET      | `/content/manifest`, `/content/diff`, `/content/pack`          | Bundled Spanish/English content                                 |
+| GET      | `/content/v2/manifest`, `/content/v2/diff`, `/content/v2/pack` | Bundled supported language pairs                                |
+| GET      | `/auth/providers`                                              | Configured Google/Apple browser OAuth providers                 |
+| POST     | `/auth/{provider}/start`, `/auth/exchange`                     | PKCE-bound handoff into the shared registered-device session    |
+| GET/POST | `/auth/{provider}/callback`                                    | Google query / Apple form callback; one-use app ticket redirect |
+| GET      | `/auth/capabilities`                                           | Configured Apple, Google and email choices                      |
+| POST     | `/auth/apple`, `/auth/google`                                  | Verified provider ID token and registered installation          |
+| POST     | `/auth/magic-link`, `/auth/magic-link/verify`                  | Deliver and verify a ten-minute email code                      |
+| POST     | `/auth/refresh`, `/auth/logout`, `/auth/claim`                 | Rotating refresh, session revocation, local-upload correlation  |
+| GET      | `/me`, `/auth/me`                                              | Authenticated account and registered device                     |
+| POST     | `/sync/push`, `/sync/pull`, `/sync/status`                     | Bearer and matching `X-Loro-Device` required                    |
+| POST     | `/ai/scene`                                                    | Bundled, validated roleplay scene                               |
+| GET      | `/ai/themes`                                                   | Available bundled themes                                        |
 
-Auth and sync use `@loro/core/api/target` schemas at the transport boundary. Push validates the
-shared envelope, its 500-operation/512-KiB caps, then each operation independently; malformed writes
-cannot authorize extra fields such as recording paths or audio. Creating a phrase requires
-`targetLocale`, `phraseId`, `source` and `addedAt`; subsequent updates may be partial. Catalog
-identity is immutable within a row. New own phrases also require their text under the shared schema.
+OAuth uses `@loro/core/api/oauth`; other auth and sync use `@loro/core/api/target` schemas at the
+transport boundary. Push validates the shared envelope, its 500-operation/512-KiB caps, then each
+operation independently; malformed writes cannot authorize extra fields such as recording paths or
+audio. Creating a phrase requires `targetLocale`, `phraseId`, `source` and `addedAt`; subsequent
+updates may be partial. Catalog identity is immutable within a row. New own phrases also require
+their text under the shared schema.
 
 ## Convergence and durability
 
@@ -60,6 +67,12 @@ immutable change revisions, accepted operation receipts and the canonical Rust H
 `(user_id,device_id,seq)` is the durable replay key: an exact retry returns its original acceptance
 and aliases, while changed content at the same sequence is rejected. A failed transaction commits
 none of those records.
+
+Latest-review FSRS state carries its scheduling algorithm as one atomic group. The Rust merge
+normalizes complete legacy groups with missing provenance to the recorded old preview policy after
+wire receipt hashing. Same-review-time updates use the common group HLC; no synthetic review time is
+invented. Historical review logs with incomplete journal metadata remain immutable history rather
+than fabricated complete reviews.
 
 Clock stamps more than 24 hours ahead are corrected by the shared Rust helper. Each accepted receipt
 stores exact `clock_corrections` by operation sequence and field, and retries return those original
@@ -87,8 +100,10 @@ explicit device acknowledgement before it can be enabled.
 
 Recorded audio, filesystem paths, credentials and device permission state never enter the sync
 allowlist. The error filter logs only route and error class, never SQL/provider exception messages,
-payloads or tokens. Anonymous IDs correlate local uploads and never transfer another account's
-server data. The API reports upload required until the device uploads its durable local state.
+payloads or tokens. AI endpoints remain unavailable in account deployments until their separate
+budget/ownership boundary is reviewed. Anonymous IDs correlate local uploads and never transfer
+another account's server data. The API reports upload required until the device uploads its durable
+local state.
 
 ## Verification
 
@@ -96,7 +111,7 @@ server data. The API reports upload required until the device uploads its durabl
 pnpm --filter @loro/api typecheck
 pnpm --filter @loro/api lint
 pnpm --filter @loro/api test
-LORO_TEST_DATABASE_URL=postgresql://... pnpm --filter @loro/api test
+bash scripts/ci-auth-postgres.sh  # creates, tests and removes a disposable local database
 pnpm --filter @loro/api build
 ```
 

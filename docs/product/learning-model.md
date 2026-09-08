@@ -204,22 +204,22 @@ the principle for the whole product: _you only climb or hold._ Guardrail metrics
 The blueprint contains working formulae. Some are **contracts** (must be preserved) and some are
 **display models** (illustrative, replaced by the real engine). Getting this wrong would ship a toy.
 
-| Mechanic               | Blueprint                                                         | Production                              | Status                |
-| ---------------------- | ----------------------------------------------------------------- | --------------------------------------- | --------------------- |
-| Stream repeat count    | `hard 4 · med 3 · easy 2`                                         | same                                    | ✅ contract           |
-| Stream queue rank      | `plays + (hard −6, easy +4) + (loved −3)`                         | same, plus a due-date term              | ✅ contract, extended |
-| Review deck order      | `reps + (hard −5, easy +3)`                                       | replaced by FSRS due dates              | 🔁 display model      |
-| Review intervals       | fixed `<5m / ~10m / 1d–1wk / 5d`                                  | FSRS-computed, **shown as real values** | 🔁 display model      |
-| Retention curve        | `R(t) = 0.5^(t/S)`                                                | FSRS-6 canonical curve, `R(S) = 0.9`    | 🔁 prototype replaced |
-| Confidence multipliers | `0.35 / 0.9 / 1.7 / 2.7 / 4.3`                                    | FSRS grade → stability                  | 🔁 display model      |
-| Automaticity           | `min(100, reps/6 × 100)`                                          | same                                    | ✅ contract           |
-| Latency                | `max(0.5, 2.0 − reps × 0.26)`                                     | **measured for real**                   | ⚠️ must be real       |
-| Cue level-up threshold | melody score ≥ 88                                                 | tunable, starts at 88                   | ✅ contract, tunable  |
-| Skill axes advance     | `prod +max(3,(s−p)×0.3)`, `recall +6 if cue≥2 else +2`, `perc +1` | same shape, tuned                       | ✅ contract           |
-| Pronunciation scores   | seeded PRNG                                                       | forced alignment + GOP                  | ⚠️ must be real       |
-| Ladder need score      | `stale×2 + stumbles`                                              | same                                    | ✅ contract           |
-| Draw eligibility       | unlocked ∧ deck has a phrase at that rung                         | same                                    | ✅ contract           |
-| Fluency % (roleplay)   | `60 + best_ratio × 40`                                            | same                                    | ✅ contract           |
+| Mechanic               | Blueprint                                                         | Production                                                | Status                |
+| ---------------------- | ----------------------------------------------------------------- | --------------------------------------------------------- | --------------------- |
+| Stream repeat count    | `hard 4 · med 3 · easy 2`                                         | same                                                      | ✅ contract           |
+| Stream queue rank      | `plays + (hard −6, easy +4) + (loved −3)`                         | same, plus a due-date term                                | ✅ contract, extended |
+| Review deck order      | `reps + (hard −5, easy +3)`                                       | replaced by FSRS due dates                                | 🔁 display model      |
+| Review intervals       | fixed `<5m / ~10m / 1d–1wk / 5d`                                  | FSRS-computed, **shown as real values**                   | 🔁 display model      |
+| Retention curve        | `R(t) = 0.5^(t/S)`                                                | FSRS-6 power curve; stability at 90%, due at authored 50% | 🔁 prototype replaced |
+| Confidence multipliers | `0.35 / 0.9 / 1.7 / 2.7 / 4.3`                                    | FSRS grade → stability; Strong adds 10%                   | 🔁 display model      |
+| Automaticity           | `min(100, reps/6 × 100)`                                          | same                                                      | ✅ contract           |
+| Latency                | `max(0.5, 2.0 − reps × 0.26)`                                     | **measured for real**                                     | ⚠️ must be real       |
+| Cue level-up threshold | melody score ≥ 88                                                 | tunable, starts at 88                                     | ✅ contract, tunable  |
+| Skill axes advance     | `prod +max(3,(s−p)×0.3)`, `recall +6 if cue≥2 else +2`, `perc +1` | same shape, tuned                                         | ✅ contract           |
+| Pronunciation scores   | seeded PRNG                                                       | forced alignment + GOP                                    | ⚠️ must be real       |
+| Ladder need score      | `stale×2 + stumbles`                                              | same                                                      | ✅ contract           |
+| Draw eligibility       | unlocked ∧ deck has a phrase at that rung                         | same                                                      | ✅ contract           |
+| Fluency % (roleplay)   | `60 + best_ratio × 40`                                            | same                                                      | ✅ contract           |
 
 The three ⚠️ rows are the honesty line. A fake pronunciation score or a fake latency number would
 make the two most differentiated screens in the product into theatre. See

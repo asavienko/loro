@@ -9,12 +9,12 @@ supporting functionality.
 
 ## Sources and entry points
 
-| Surface      | Import                   | Specification                                  | Meaning                                                                    |
-| ------------ | ------------------------ | ---------------------------------------------- | -------------------------------------------------------------------------- |
-| Current      | `@loro/core/api/current` | [openapi.current.json](openapi.current.json)   | Nineteen implemented routes; auth and durable account-scoped sync included |
-| Target       | `@loro/core/api/target`  | [openapi.target.json](openapi.target.json)     | Settled contract roadmap; auth/sync payloads also used by current runtime  |
-| Draft        | `@loro/core/api/draft`   | Target document, marked `x-loro-status: draft` | Product/transport review still required; no release authorization          |
-| Catalog wire | `@loro/core/api/catalog` | Referenced content schemas                     | Unbranded snake-case catalog transport, separate from domain views         |
+| Surface      | Import                   | Specification                                  | Meaning                                                                   |
+| ------------ | ------------------------ | ---------------------------------------------- | ------------------------------------------------------------------------- |
+| Current      | `@loro/core/api/current` | [openapi.current.json](openapi.current.json)   | Twenty-five documented operations; OAuth, auth and durable sync included  |
+| Target       | `@loro/core/api/target`  | [openapi.target.json](openapi.target.json)     | Settled contract roadmap; auth/sync payloads also used by current runtime |
+| Draft        | `@loro/core/api/draft`   | Target document, marked `x-loro-status: draft` | Product/transport review still required; no release authorization         |
+| Catalog wire | `@loro/core/api/catalog` | Referenced content schemas                     | Unbranded snake-case catalog transport, separate from domain views        |
 
 Every named request/response schema has a corresponding inferred TypeScript type. Types are inferred
 from Zod, not maintained as independent DTO interfaces. `Operation` metadata owns methods, paths,
@@ -27,7 +27,8 @@ import { PushResponseSchema, type PushResponse } from '@loro/core/api/target'
 const response: PushResponse = PushResponseSchema.parse(untrustedJson)
 ```
 
-Auth controllers validate requests against the shared account schemas. Sync validates the envelope
+OAuth controllers validate start and device-bound exchange against `@loro/core/api/oauth`. Other
+auth controllers validate requests against the shared account schemas. Sync validates the envelope
 and classifies each operation independently against the shared sync schemas. Content and AI retain
 their current behavior; their target contracts are not installed as middleware.
 
@@ -45,30 +46,30 @@ The existing JSON authoring schema remains in place, with compatibility tests, i
 
 ## Migration map
 
-| Concern                | Current                                                                                                                | Remaining target / owner                                                                                           |
-| ---------------------- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| Successful POST status | Auth/sync explicitly use 200/202; logout is 204. AI scene still returns 201.                                           | AI migration to explicit 200; 66/76                                                                                |
-| Validation             | Auth uses strict shared requests; sync validates envelope plus independent operations. Content/AI retain local checks. | Remaining route validation; 66                                                                                     |
-| Field HLC              | Encoded string, safe integer physical time and Rust-compatible logical bounds                                          | Shared implementation complete; 68                                                                                 |
-| Pull rows              | `entity_id`, explicit `deleted_at: null` for live rows; tombstones carry empty fields                                  | Shared implementation complete; 68                                                                                 |
-| Pull cursor            | Opaque account-bound durable change position; `since: null` bootstrap; limit 1–500                                     | Operational retention policy; 68                                                                                   |
-| Sync rejection         | Input `index`, nullable `seq`, machine code; invalid envelope rejects the whole request                                | Keep permanent rejects available for review; 59/68                                                                 |
-| Sync replay            | Durable principal/device/sequence idempotency; changed payload for a reused sequence is rejected                       | Operational retention policy; 68                                                                                   |
-| Phrase identity        | Transactional per-account/per-target catalog identity; push and pull return optional `{from,to}` aliases               | Clients must apply aliases with rows/cursor and remap local references; 59/68                                      |
-| Local outbox           | Device persistence serializes typed sync values and retains unacknowledged work                                        | Continued device/restart verification; 59/68                                                                       |
-| Field policy           | Explicit sync payload allowlists; Rust remains authoritative for merge                                                 | Draft trip entities remain excluded; 54/68                                                                         |
-| Settings legacy fields | `cloudAsrConsent` and `voiceCloneConsent` are excluded from sync                                                       | No audio-upload permission exists; 54/71                                                                           |
-| Pack route             | `/content/pack?id=...`; unknown returns 422                                                                            | `/content/pack/{id}`; unknown returns 404; 61                                                                      |
-| Content history        | Whole bundled catalog for older versions; future version treated as up-to-date                                         | Checksummed resources, historical diffs, atomic cache replacement and future-version rejection; 61                 |
-| Auth                   | Provider proof or one-time email code; server-derived principal/device; rotating refresh sessions                      | Deployment needs real provider audiences, signing keys and email delivery configuration; 67                        |
-| Claim                  | Authenticated, durable and idempotent; device header/body and request/idempotency IDs must agree                       | Runtime reports upload required; client treats the claim as pending until full local upload is acknowledged; 67/68 |
-| Account read/logout    | `GET /me` returns `{user, device_id}`; `POST /auth/logout` revokes the session and returns 204                         | Rich account/device management remains draft; 67                                                                   |
-| Sign-in result         | Tokens, identity and pending upload claim                                                                              | Entitlements remain draft billing; 67/74                                                                           |
-| v1 notifications       | Device registration omits push token                                                                                   | All v1 notifications remain local; 67/70                                                                           |
-| Scene                  | Stub JSON; level ignored; at least one turn accepted                                                                   | 3–4 turns, strict options, provenance, validated SSE; 76                                                           |
-| Translation confidence | No runtime translation endpoint                                                                                        | Evidence-derived number or null; null/below 0.7 requires review; 65/76                                             |
-| Account export         | No runtime route                                                                                                       | Server export job plus local private-data assembly; 67                                                             |
-| Analytics              | No ingestion                                                                                                           | Typed events and partial rejection with server-derived identity/time; 71                                           |
+| Concern                | Current                                                                                                                              | Remaining target / owner                                                                                           |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| Successful POST status | Auth/sync explicitly use 200/202; logout is 204. AI scene still returns 201.                                                         | AI migration to explicit 200; 66/76                                                                                |
+| Validation             | Auth uses strict shared requests; sync validates envelope plus independent operations. Content/AI retain local checks.               | Remaining route validation; 66                                                                                     |
+| Field HLC              | Encoded string, safe integer physical time and Rust-compatible logical bounds                                                        | Shared implementation complete; 68                                                                                 |
+| Pull rows              | `entity_id`, explicit `deleted_at: null` for live rows; tombstones carry empty fields                                                | Shared implementation complete; 68                                                                                 |
+| Pull cursor            | Opaque account-bound durable change position; `since: null` bootstrap; limit 1–500                                                   | Operational retention policy; 68                                                                                   |
+| Sync rejection         | Input `index`, nullable `seq`, machine code; invalid envelope rejects the whole request                                              | Keep permanent rejects available for review; 59/68                                                                 |
+| Sync replay            | Durable principal/device/sequence idempotency; changed payload for a reused sequence is rejected                                     | Operational retention policy; 68                                                                                   |
+| Phrase identity        | Transactional per-account/per-target catalog identity; push and pull return optional `{from,to}` aliases                             | Clients must apply aliases with rows/cursor and remap local references; 59/68                                      |
+| Local outbox           | Device persistence serializes typed sync values and retains unacknowledged work                                                      | Continued device/restart verification; 59/68                                                                       |
+| Field policy           | Explicit sync payload allowlists; Rust remains authoritative for merge                                                               | Draft trip entities remain excluded; 54/68                                                                         |
+| Settings legacy fields | `cloudAsrConsent` and `voiceCloneConsent` are excluded from sync                                                                     | No audio-upload permission exists; 54/71                                                                           |
+| Pack route             | `/content/pack?id=...`; unknown returns 422                                                                                          | `/content/pack/{id}`; unknown returns 404; 61                                                                      |
+| Content history        | Whole bundled catalog for older versions; future version treated as up-to-date                                                       | Checksummed resources, historical diffs, atomic cache replacement and future-version rejection; 61                 |
+| Auth                   | Google/Apple PKCE callback, direct provider proof or one-time email code; server-derived principal/device; rotating refresh sessions | Deployment needs real provider audiences, signing keys and email delivery configuration; 67                        |
+| Claim                  | Authenticated, durable and idempotent; device header/body and request/idempotency IDs must agree                                     | Runtime reports upload required; client treats the claim as pending until full local upload is acknowledged; 67/68 |
+| Account read/logout    | `GET /me` returns `{user, device_id}`; `POST /auth/logout` revokes the session and returns 204                                       | Rich account/device management remains draft; 67                                                                   |
+| Sign-in result         | Tokens, identity and pending upload claim                                                                                            | Entitlements remain draft billing; 67/74                                                                           |
+| v1 notifications       | Device registration omits push token                                                                                                 | All v1 notifications remain local; 67/70                                                                           |
+| Scene                  | Stub JSON when accounts disabled; account deployments return 503 pending ownership review                                            | 3–4 turns, strict options, provenance, validated SSE; 76                                                           |
+| Translation confidence | No runtime translation endpoint                                                                                                      | Evidence-derived number or null; null/below 0.7 requires review; 65/76                                             |
+| Account export         | No runtime route                                                                                                                     | Server export job plus local private-data assembly; 67                                                             |
+| Analytics              | No ingestion                                                                                                                         | Typed events and partial rejection with server-derived identity/time; 71                                           |
 
 The current document describes implemented request boundaries and responses. Legacy content/AI
 schemas describe well-formed caller intent; they do not promise compatibility with every malformed
@@ -88,6 +89,20 @@ The server verifies ownership, matching catalog/target identity and deletion tim
 new canonical generation; concurrent re-adds based on the same proof converge. Prior row IDs stay
 tombstoned. Catalog tombstone pulls include optional `catalog_identity` with only catalog ID and
 target locale, allowing a fresh device to retain proof without recovering learner text.
+
+OAuth callbacks support Google GET and Apple form POST, exact stored redirect matching, nonce
+verification and app/provider PKCE. Exchange returns the shared registered-device sign-in result.
+Refresh/logout have one implementation: refresh-body logout is a revocation-only alternative to
+bearer logout. Legacy native refresh credentials upgrade with paired installation registration,
+retaining their original account UUID and remaining expiry. Imported accounts expose
+`created_at: null` when the old schema recorded no creation time. See
+[provider setup](google-apple-auth.md).
+
+Latest-review FSRS groups include `srsAlgorithm`; complete historical groups lacking it retain the
+known preview policy. Review-log algorithm-only historical payloads remain accepted; complete new
+journal metadata includes target, last review, lapses and state. Runtime legacy normalization
+happens after original wire receipt hashing. Same-review-time state updates compare the common group
+HLC.
 
 Accepted skewed field clocks have receipt-scoped `clock_corrections: [{seq,field,from,to}]`. Retries
 return the exact original correction even when their response `server_time` advances.

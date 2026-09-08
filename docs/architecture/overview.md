@@ -2,17 +2,24 @@
 
 The system end to end. Read this before any other architecture document.
 
-> **Target architecture, not current inventory.** As of 2026-07-30 the repository implements the
-> Expo routes/UI/store, shared TypeScript engines and local persistence library, Rust host/WASM
-> core, content bundle, and an in-memory Nest API. Native modules/projects, on-device SQLite wiring,
-> The sync client, independent content delivery and most screens shown below are planned. Optional
-> Google/Apple identity and PostgreSQL session persistence exist ([plan 89](google-apple-auth.md)).
-> See [`../../plans/README.md`](../../plans/README.md) for the implementation order.
+> **Current inventory — 2026-09-08 integration.** Eight learner routes plus Languages/Account and
+> the shell use shared TypeScript engines with durable device/browser SQLite. Generated Rust
+> WASM/UniFFI boundaries own canonical scheduling, selection, matching, clocks and merge. Native
+> foreground TTS and strictly on-device ASR are implemented; Speak falls back to offline reveal.
+> PostgreSQL stores accounts, refresh families and tenant-scoped sync, connected by the durable
+> mobile outbox. Google/Apple/email identity is optional. See
+> [persistent practice](../process/persistent-practice.md) and [the plans](../../plans/README.md).
 >
-> **Testing hosting:** plan 88 selects one Frankfurt EC2 instance with local PostgreSQL and private
-> S3 at a $25–35/month target. It is not provisioned. The feature-level diagrams below do not
-> require separate workers, Redis or a CDN for this phase; see
-> [backend hosting](backend.md#testing-infrastructure).
+> The diagrams include future surfaces: recorded-asset cache/background audio, measured onset and
+> DSP, widgets, independent content delivery, live AI and most remaining learner screens are still
+> planned. Android compilation and an airplane-mode emulator smoke do not replace physical-device
+> speech/convergence or full iOS acceptance.
+>
+> **Testing hosting:** plan 88 selects Frankfurt EC2, local PostgreSQL and private S3 at a
+> $25–35/month target; plan 91 records the restricted EC2 deployment and plan 92 its read-only HTTPS
+> preview. The new durable account/sync runtime needs separate deployment and operational evidence
+> before shared access is enabled. Workers, Redis and a CDN are not required for this testing phase;
+> see [backend hosting](backend.md#testing-infrastructure).
 
 ---
 

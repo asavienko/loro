@@ -1,7 +1,8 @@
 # Loro documentation
 
 [Stack and Android readiness — 2026-09-08](reviews/2026-09-08-readiness.md) records the live AWS
-endpoint, APK evidence, validation and remaining essential features.
+endpoint and APK evidence at that date. Later persistent-practice implementation and remaining
+release gates are recorded in [plan 94](../plans/94-persistent-practice-and-account-integration.md).
 
 Everything written down, indexed. Four sections plus decisions.
 

@@ -2,22 +2,26 @@
 
 - **Requirement IDs:** `AS-01`…`AS-06`, `P5-06`, `F-03`, `F-09`
 - **Milestone:** M1
-- **Status:** 🟡 Local CI and an APK build/upload runner exist. Standalone preview uses temporary
-  Expo prebuild output and development signing; native bridges, device harness and production
-  signing remain. Those slices require the native substrate and real device/signing evidence.
+- **Status:** 🟡 CNG/prebuild ownership, local APK tooling, OP-SQLite and generated Rust/native
+  speech modules are implemented. Full iOS compilation, physical-device harness coverage and
+  production signing still require SDK/device/signing evidence.
 - **Depends on:** 53 completed; no unfinished plan blocks native workspace setup.
-- **Reviewed:** 2026-09-07 against merged baseline `2d9e8c3`.
+- **Reviewed:** 2026-09-08 during plan-94 integration; release gates below remain explicit.
 
-## Verified starting point
+## Implemented scope
 
-GitHub Actions is disabled. `pnpm ci:local:native` retains local Rust target compilation and
-`pnpm apk:local` / `pnpm apk:github` provide local Gradle APK builds and verified GitHub release
-uploads. See [the APK guide](../docs/process/local-apk.md). Generated Android projects live only in
-temporary committed snapshots; they are not maintained or committed in `apps/mobile/android`. The
-first arm64-v8a/x86_64 APK build and GitHub asset checksum were verified on 2026-09-07
-(`6891fe5316a4`). Preview signing uses the Expo development key and is not production signing.
-Custom native modules and device-level bridge tests remain absent. Building an APK does not
-establish those capabilities.
+GitHub Actions stays disabled. `pnpm ci:local:native` retains local Rust target compilation;
+`pnpm apk:local` / `pnpm apk:github` build/upload testing APKs from temporary committed snapshots.
+Generated iOS/Android projects remain ignored. Local Expo modules autolink the generated UniFFI core
+and native foreground audio/speech; OP-SQLite supplies the device driver. Expo Go cannot load these
+custom modules. Generated bindings and embedded browser WASM have drift checks.
+
+The implementation passed Android debug/release compilation, module packaging and an airplane-mode
+emulator persistence/reveal smoke. Swift syntax/podspec and host UniFFI smoke passed, but full iOS
+compilation needs the unavailable Xcode SDK. This evidence does not prove physical-device speech or
+production signing. See [plan 94](94-persistent-practice-and-account-integration.md),
+[persistent practice](../docs/process/persistent-practice.md) and
+[APK setup](../docs/process/local-apk.md).
 
 ## Outcome
 
@@ -26,20 +30,14 @@ modules, generated native projects, UniFFI bindings, device SQLite, permissions,
 
 ## Remaining work
 
-1. [ ] Decide and document CNG/prebuild ownership, committed-vs-generated native projects, minimum
-       OS floors, signing boundaries, and local prerequisites.
-2. [ ] Add idempotent config plugins and the Rust/SQLite bridge substrate needed next. Document
-       extension points for audio, speech, widgets, OCR and purchases; add each module with its
-       owning feature rather than preinstalling unused skeletons or gated SDKs.
-3. [ ] Wrap generated UniFFI bindings behind typed platform ports; add checksum/drift verification
-       and a harmless round-trip smoke call.
-4. [ ] Create dev-client/EAS profiles and environment-safe configuration. Expo Go becomes an
-       explicit unsupported path once native modules install.
-5. [ ] Extend existing Rust target CI with real Expo app compilation, native bridge tests, a
-       device/simulator smoke harness and artifact retention. Replace device-farm TODO success with
-       executable checks or explicit setup gates; retain the separate web bundle job.
-6. [ ] Document first build, clean regeneration, common toolchain failures, and secrets/signing
-       setup.
+1. [ ] Extend the local harness to clean iOS app compilation and supported device floors; retain
+       reproducible prebuild, generated-binding and artifact checks.
+2. [ ] Automate physical-device permissions, bridge, persistence, lifecycle and interruption checks
+       with logs/screenshots; document required voice/model installation.
+3. [ ] Validate minimum OS floors and clean regeneration on supported hosts. Add platform modules
+       for widgets/OCR/purchases only with their owning feature.
+4. [ ] Complete production signing/provisioning and environment-safe release profiles when store
+       delivery is authorized. Local APK development signing is not production signing.
 
 ## Acceptance criteria
 

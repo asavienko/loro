@@ -1,9 +1,9 @@
 # Persistent practice and account sync
 
 The runtime implements SQLite-backed learner progress, canonical Rust scheduling, native foreground
-speech, optional email sign-in and tenant-scoped Postgres sync. These capabilities are implemented
-in plan 88 alongside feature plans 59/60/62/63/66/67/68. Native/device acceptance and production
-service setup remain separate from passing source and browser tests.
+speech, optional email/Google/Apple sign-in and tenant-scoped Postgres sync. These capabilities are
+implemented in plan 94 alongside feature plans 59/60/62/63/66/67/68/89. Native/device acceptance and
+production service setup remain separate from passing source and browser tests.
 
 ## Local practice
 
@@ -28,13 +28,15 @@ server. Sync identities and pending deletions are reconciled together.
    following [local development](local-development.md).
 4. For the email screen, configure the HTTPS delivery webhook with `AUTH_MAGIC_DELIVERY_URL` and
    `AUTH_MAGIC_DELIVERY_TOKEN`. The webhook accepts `{email, code, expires_in: 600}`. There is no
-   console-code fallback. Google/Apple token-verification endpoints additionally use their
-   configured client ID allowlists; native provider buttons are not part of this screen.
+   console-code fallback. Google/Apple browser sign-in also requires the provider credentials,
+   callback URL and exact redirect allowlist described in [API setup](../../apps/api/README.md). Its
+   one-use exchange registers the installation in the same account/session system as email.
 5. Set `EXPO_PUBLIC_API_URL` to the API base including `/v1`. HTTPS is required except for loopback
    development. Allow the browser's exact origin in `CORS_ALLOWED_ORIGINS`.
-6. Open **Sign in & sync** from the app menu. Email/code verification connects the account, then the
-   durable outbox uploads and server changes merge locally. Foreground events, connectivity
-   recovery, local writes and bounded retries trigger sync. Practice never waits for it.
+6. Open **Sign in & sync** from the app menu. Email/code verification or a configured provider
+   connects the account, then the durable outbox uploads and server changes merge locally.
+   Foreground events, connectivity recovery, local writes and bounded retries trigger sync. Practice
+   never waits for it.
 
 Native refresh credentials use
 [Expo SecureStore](https://docs.expo.dev/versions/v54.0.0/sdk/securestore/). Web credentials have
@@ -52,9 +54,12 @@ rescue/export UI and full account deletion lifecycle remain future work.
 
 ## Canonical core and speech
 
-FSRS-6 uses the official default parameter set, 90% requested retention, no fuzz and no intraday
-learning steps. Rust also owns ranking, cloze, set selection, token matching, clocks and sync merge.
-The browser's embedded WASM and the native UniFFI bridge call the same implementation. Run
+FSRS-6 uses the pinned default parameter set and the authored 50% requested retention policy. The
+canonical scheduler retains learning/relearning state and records algorithm provenance; existing
+preview evidence is preserved when the next real review adopts the current policy. See
+[scheduling](../architecture/scheduling.md) for the exact learning steps and compatibility rules.
+Rust also owns ranking, cloze, set selection, token matching, clocks and sync merge. The browser's
+embedded WASM and the native UniFFI bridge call the same implementation. Run
 `pnpm --filter @loro/core-rs check:browser` to check committed source/output fingerprints;
 `node packages/core-rs/scripts/embed-wasm.mjs --verify-build` compares an actual regenerated build.
 
@@ -71,6 +76,10 @@ availability for each language still need physical-device and bilingual acceptan
 
 ## Validation evidence
 
+The following native evidence was captured before the aggregate merge. Final integrated source,
+browser and API validation is recorded in plan 94; emulator evidence does not establish physical
+microphone or speaker acceptance.
+
 - Rust: 145 unit tests and 7 integration tests, including 42 FSRS reference vectors.
 - Shipped WASM: reference scheduling vectors plus multilingual matching, cloze, HLC and merge.
 - Android: full debug and release APK compilation, module AAR packaging and lint. The release
@@ -84,7 +93,7 @@ availability for each language still need physical-device and bilingual acceptan
   removes the platform API before loading the native entry point.
 - iOS: Swift parsing/podspec syntax and host Swift-to-UniFFI runtime smoke. Full iOS build/device
   verification requires a full Xcode SDK, unavailable on the implementation machine.
-- Browser and whole-repository gate results are recorded in plan 88 after integration.
+- Browser and whole-repository gate results are recorded in plan 94 after integration.
 - Real Postgres auth/sync suites use isolated test databases; see
   [API testing](../../apps/api/README.md).
 

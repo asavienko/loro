@@ -2,20 +2,25 @@
 
 - **Requirement IDs:** `F-02`, `F-03`, `F-04`, `LB-01`…`LB-10`
 - **Milestone:** M1
-- **Status:** 🟡 Schema-2 course/settings/day repositories and SQLite tests exist. Device driver,
-  hydration, write-through and crash resume remain; native integration needs 58. Course-upsert
-  correction and migration tests can start now.
+- **Status:** 🟡 Native/browser SQLite, safe course writes, hydration, atomic progress/outbox and
+  session resume are implemented. Broader upgrade/crash/timezone/erasure and physical-device
+  acceptance remain; those checks need the device harness and lifecycle UI.
 - **Depends on:** 54 completed; 58 for the device driver; consume the implemented language/course
   contracts from 87.
-- **Reviewed:** 2026-09-07 against merged baseline `2d9e8c3`.
+- **Reviewed:** 2026-09-08 during plan-94 integration; release gates below remain explicit.
 
-## Verified starting point
+## Implemented scope
 
-`packages/core/src/persistence/migrations.ts` already has schema 2, atomic languagePair settings and
-course-scoped daily sets; `apps/mobile/src/data/languages.test.ts` exercises them with SQLite. The
-store is still in memory. `packages/core/src/persistence/sqlite/course.ts` uses `INSERT OR REPLACE`;
-replace it with an owned-column conflict update before device wiring, preserving 54's
-phrase/settings guarantees.
+The app opens OP-SQLite on native and SQL.js on web, migrates existing schemas and hydrates all
+courses before routes render. Repository transactions commit before Zustand publishes projections;
+settings, target-local day/session state and global streak state retain their separate ownership.
+Course saves use owned-column conflict updates, preserving clocks and tombstones.
+
+Durable snapshots include session transitions, deletion Undo and sync metadata. Browser storage uses
+atomic local-storage snapshots and an exclusive tab lock. A failed write or unreadable database
+shows recovery without resetting learner data. Tests exercise real SQLite and browser relaunch.
+Android airplane-mode force-stop/cold-launch smoke preserved onboarding, a completed rep and the
+next Refrain step; all-platform/all-course acceptance is not implied.
 
 ## Outcome
 
@@ -23,32 +28,15 @@ The mobile app reads durable state from on-device SQLite, writes through reposit
 one transaction, and resumes practice after process death without mirroring durable truth in
 Zustand.
 
-## What already exists
-
-Repository contracts, schema/migrations, outbox, memory parity, and a Node SQLite driver test seam
-exist. The current production app does not instantiate them and still stores phrases/settings/days
-in memory.
-
-Plan 87 delivered schema-2 language settings, course-session repositories and target-scoped daily
-sets. Hydrate every course, restore the active target, and write course transitions transactionally
-with existing repositories/outbox. Native/target settings use the atomic `languagePair` field.
-
 ## Remaining work
 
-1. [ ] Implement the op-sqlite `SqlDriver` adapter and migration/bootstrap/erasure lifecycle behind
-       the plan-58 platform port.
-2. [ ] Correct `SqlCourseTable.save` to use owned-column `ON CONFLICT DO UPDATE`; test repeated
-       writes and preserve unrelated columns. Reuse schema 2 and add forward migrations only for
-       genuinely missing durable/session fields. Every syncable field gets a declared merge policy.
-3. [ ] Hydrate all courses, restore the active pair, and keep global streak days separate from
-       target-local day/session state. Replace durable Zustand slices with repository-backed
-       selectors/subscriptions. Keep only engine-session and ephemeral UI state in memory.
-4. [ ] Persist session transitions, selected sets, wave progress, clock/day keys, settings, and
-       pending operations; define crash-safe resume/abandon semantics.
-5. [ ] Seed bundled content idempotently, preserve learner rows across content updates, and expose
-       fatal migration recovery without destructive automatic reset.
-6. [ ] Add device tests for fresh install, upgrade, force-quit/relaunch, midnight/timezone change,
-       transaction crash, erasure, and web-target fallback.
+1. [ ] Expand native acceptance to fresh install/upgrade, all seven language pairs, midnight and
+       timezone changes, transaction interruption and process death at each checkpoint boundary.
+2. [ ] Verify account/lifecycle erasure and restore flows when plan 67 supplies their UI and policy;
+       keep migration recovery non-destructive.
+3. [ ] Validate large libraries and long-running writes against device performance budgets.
+4. [ ] Complete content-version activation and phrase preservation with plan 61; current bundled
+       seeding is idempotent, while independent content delivery remains a separate integration.
 
 ## Acceptance criteria
 

@@ -7,14 +7,14 @@ native/browser boundary.
 
 ## Current implementation status
 
-| Mechanism      | Implemented now                                                             | Remaining scope/evidence                                         |
-| -------------- | --------------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| Stream rank    | Canonical Rust rank/repeat functions used by mobile WASM/UniFFI             | Physical-device performance acceptance                           |
-| FSRS           | FSRS-6 review, 42 reference vectors, native/WASM parity, durable due fields | Future Review/Memory screens and full iOS acceptance             |
-| Automaticity   | Declared progress deltas; Rust cloze and frozen-set selection               | Plan 64 timed/audible wave behavior                              |
-| Ladder         | Rust climb/need/draw and durable current-engine progress                    | Run/Roleplay engines and their acceptance                        |
-| Trip drops     | Content data exists                                                         | Trip scheduling/service/persistence/routes                       |
-| Day boundaries | Calendar parity, durable day keys, frozen sets and resume                   | Physical timezone/process-death matrix and OS lifecycle coverage |
+| Mechanism      | Implemented now                                                               | Remaining scope/evidence                                         |
+| -------------- | ----------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| Stream rank    | Canonical Rust rank/repeat functions used by mobile WASM/UniFFI               | Physical-device performance acceptance                           |
+| FSRS           | FSRS-6, authored 50% policy, reference/preview parity, complete durable state | Future Review/Memory screens and full iOS acceptance             |
+| Automaticity   | Declared progress deltas; Rust cloze and frozen-set selection                 | Plan 64 timed/audible wave behavior                              |
+| Ladder         | Rust climb/need/draw and durable current-engine progress                      | Run/Roleplay engines and their acceptance                        |
+| Trip drops     | Content data exists                                                           | Trip scheduling/service/persistence/routes                       |
+| Day boundaries | Calendar parity, durable day keys, frozen sets and resume                     | Physical timezone/process-death matrix and OS lifecycle coverage |
 
 [Plan 88](../../plans/88-persistent-practice-and-account-integration.md) integrates the canonical
 slice of [plan 60](../../plans/60-authoritative-core-maths.md). Future mechanisms below remain
@@ -76,33 +76,38 @@ dominant: the stream should stay a listening experience, not become a covert rev
 [ADR-0004](adr/0004-fsrs-scheduler.md). FSRS (Free Spaced Repetition Scheduler) rather than SM-2 or
 a hand-rolled scheme.
 
-**Implemented model.** Rust uses FSRS-6 with the default parameter set and reference vectors from
-[py-fsrs v6.3.2](https://github.com/open-spaced-repetition/py-fsrs/tree/v6.3.2), 90% requested
-retention, no interval fuzz and no intraday learning steps. Review intervals are bounded to 1–36,500
-days. The committed reference fixtures are in `packages/core-rs/tests/fixtures/fsrs_v6_3_2.json`.
+**Implemented model.** Rust uses FSRS-6 with the published default parameters and the pinned
+[ts-fsrs reference](https://github.com/open-spaced-repetition/ts-fsrs/tree/c8ca282edc3fe1cdfa1c24912437938b63a25cb3).
+The [model and policy](fsrs-model.md) records numerical precision, reference fixtures, authored
+adaptations and compatibility. Desired retention remains the authored **50%**. Stability retains its
+FSRS definition at **90% recall**; those two quantities are distinct.
 
-The blueprint's `R(t) = 0.5^(t/S)` and 50% threshold (`Loro.dc.html:3010–3019`) are prototype
-illustrations, not the FSRS forgetting curve. In the reference model `R(S) = 0.9`. The future Memory
-screen must draw the canonical curve and actual interval, following the real-numbers invariant.
+The prototype's exponential `R(t) = 0.5^(t/S)` is replaced by FSRS-6's power forgetting curve. The
+future Memory screen must draw that canonical curve and mark the actual 50% review interval.
+Intervals have no random fuzz and are bounded to 1–36,500 days after graduation. Again schedules an
+explicit ten-minute learning/relearning step; Hard in those phases schedules fifteen minutes. These
+step durations are scheduling policy, never fabricated stability values.
 
 ### State per phrase
 
-This is the target complete scheduling state. Rust's current `FsrsState` contains `stability`,
-`difficulty`, `due`, `last_review`, and `lapses`. The implemented no-learning-steps policy emits
-review phase; the adapter carries it with the canonical result. The extra fields in this target
-shape are not additional current Rust state.
+The atomic persisted group contains every value below. The app keeps unreviewed scheduling state
+null until an actual review, then stores the full canonical result and its scalar review evidence.
 
 ```rust
 pub struct FsrsState {
-    pub stability: f32,        // days until retrievability falls to 0.9
-    pub difficulty: f32,       // 1..10, intrinsic to the phrase for this learner
-    pub due: Timestamp,
-    pub last_review: Option<Timestamp>,
-    pub reps: u32,
+    pub stability: f64,        // days until retrievability falls to 0.9
+    pub difficulty: f64,       // 1..10
+    pub due: i64,              // epoch milliseconds
+    pub last_review: Option<i64>,
     pub lapses: u32,
     pub state: CardState,      // New | Learning | Review | Relearning
+    pub algorithm: String,    // parameter and policy provenance
 }
 ```
+
+Known 90% preview records retain their stored memory, due date and review history. Loading or
+rerating does not reset them; their next real review advances the existing state under the authored
+50% policy. Unknown explicit provenance is rejected without modifying learner data.
 
 ### Grade mapping
 
@@ -117,7 +122,7 @@ Loro has three different rating UIs. All three map onto FSRS's four grades in on
 | Memory model (5 levels)      | Forgot       | `Again`                                                                                  |
 |                              | Shaky        | `Hard`                                                                                   |
 |                              | OK           | `Good`                                                                                   |
-|                              | Strong       | `Good`, with no non-reference stability bonus                                            |
+|                              | Strong       | `Good`, with the authored +10% stability bonus and recomputed due                        |
 |                              | Instant      | `Easy`                                                                                   |
 | Refrain rep (implicit)       | —            | `Good` if produced within 2× median latency, else `Hard`; `Again` if not produced at all |
 | Speak-to-progress            | —            | `Good` on a hint-free completion; `Hard` with hints                                      |
@@ -128,9 +133,8 @@ every engine feeds FSRS even when it never shows an interval.
 
 ### Learner-declared difficulty as a prior
 
-Rust retains the learner-declared prior helper below. The current app does not call it: first
-reviews use the reference algorithm's observed-grade initial stability and difficulty. Explicit
-practice difficulty changes do not override the canonical schedule:
+The first observed review initializes reference stability while retaining the learner-declared
+difficulty prior. Adding a phrase creates no synthetic review:
 
 ```rust
 pub fn initial_difficulty(declared: Difficulty, tags: &Tags) -> f32 {
@@ -146,17 +150,17 @@ pub fn initial_difficulty(declared: Difficulty, tags: &Tags) -> f32 {
 }
 ```
 
-The retained Rust adjustment helper supports a bounded ±1.0 nudge toward this prior. Wiring that
-optional extension remains future work; current re-rating changes the declared practice difficulty
-without resetting stored FSRS state.
+Re-rating uses the canonical bounded ±1.0 difficulty nudge toward this prior. It preserves
+stability, due, last review and lapses and creates no review-log event. The complete group is
+synchronized with a causal HLC while retaining its original observed review time.
 
 ### Displayed intervals must be real
 
 The blueprint's fixed labels (`<5 min`, `~10 min`, `1 day`, `5 days`) are prototype display data
 (`Loro.dc.html:3009`). The runtime now persists canonical due dates through generated WASM and
 native bindings. Review/Memory interval views remain future screens; they must format the actual due
-time. The selected no-learning-steps model schedules at least one day, so fixed subday labels must
-not be copied into those views.
+time. Learning/relearning durations come from the explicit step policy; graduated intervals come
+from the canonical memory model.
 
 ### Daily load
 
@@ -414,19 +418,20 @@ timezone database, so the shift happens in `clock.ts` and never in Rust.
 ## Testing
 
 The implemented scheduling helpers are pure and deterministic. Test coverage currently consists of
-inline Rust module tests, TypeScript engine/domain tests, one Rust calendar parity integration file,
-and mobile clock tests. The planned suites below do not exist and must not be cited as evidence.
+inline Rust module tests, TypeScript engine/domain tests, calendar parity, independently reproduced
+FSRS reference vectors, lossless preview compatibility and a deterministic 365-day simulation.
+Mobile WASM tests exercise the same memory updates, learning steps and provenance boundary.
 
 | Test                                                    | Location                                                                                           |
 | ------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| FSRS helpers (not the review algorithm)                 | `core-rs/src/fsrs/mod.rs` inline                                                                   |
+| FSRS model, lifecycle and compatibility                 | `core-rs/src/fsrs/{mod,scheduler}.rs`, `core-rs/tests/fsrs_parity.rs`                              |
 | Stream rank ordering, including the due extension       | `core-rs/src/rank.rs` inline and TypeScript engine tests                                           |
-| Interim Refrain set selection and mode rules            | `packages/core/src/engines/engines.test.ts`                                                        |
+| Canonical Refrain set selection and mode rules          | `packages/core/src/engines/engines.test.ts`                                                        |
 | Ladder monotonicity and draw determinism/eligibility    | `core-rs/src/ladder.rs` inline                                                                     |
 | Notification policy helpers                             | `core-rs/src/notify.rs` inline                                                                     |
 | Day boundaries — DST, timezone travel, the grace window | `core-rs/src/calendar.rs` (inline), `core-rs/tests/parity.rs`, `apps/mobile/src/lib/clock.test.ts` |
 | Interval formatting                                     | `core-rs/src/fsrs/mod.rs` inline                                                                   |
 
-Reference FSRS parity, Rust refrain selection/cloze tests, drop-schedule properties, and the
-long-horizon simulation are missing. Add them with the implementation they validate; a passing
-helper test must not be used as evidence that a scheduler or production workflow exists.
+The deterministic year-long simulation is in `core-rs/tests/sim.rs`; it checks capped backlog,
+lapses, bounded state and replay. Drop-schedule properties remain pending the trip scheduler.
+Algorithm parity and simulations do not establish pedagogical efficacy or physical-device behavior.
