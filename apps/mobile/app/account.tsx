@@ -12,6 +12,7 @@ import { useLocale } from '../src/lib/i18n'
 import { copy } from '../src/lib/copy'
 import { Button, Screen, Stack, Text } from '../src/ui/primitives'
 import { space } from '../src/ui/theme'
+import { checkBackend, type BackendStatus } from '../src/lib/backend'
 
 type Status = 'loading' | 'ready' | 'busy' | 'signedIn' | 'error' | 'cancelled' | 'localSignOut'
 export default function Account() {
@@ -65,6 +66,7 @@ export default function Account() {
     <Screen>
       <ScrollView contentContainerStyle={{ padding: space['4'] }}>
         <Stack gap={space['4']}>
+          <BackendConnection />
           <Text>{copy.account.intro}</Text>
           <Text>{copy.account.localData}</Text>
           {signedIn ? (
@@ -124,5 +126,35 @@ export default function Account() {
         </Stack>
       </ScrollView>
     </Screen>
+  )
+}
+
+function BackendConnection() {
+  const [status, setStatus] = useState<BackendStatus>('checking')
+  const [attempt, setAttempt] = useState(0)
+  useEffect(() => {
+    let active = true
+    void checkBackend().then((result) => {
+      if (active) setStatus(result)
+    })
+    return () => {
+      active = false
+    }
+  }, [attempt])
+  return (
+    <Stack gap={space['2']}>
+      <View accessibilityLiveRegion="polite">
+        <Text>{copy.account.backend[status]}</Text>
+      </View>
+      <Text>{copy.account.backend.scope}</Text>
+      <Button
+        label={copy.account.backend.retry}
+        disabled={status === 'checking'}
+        onPress={() => {
+          setStatus('checking')
+          setAttempt((value) => value + 1)
+        }}
+      />
+    </Stack>
   )
 }

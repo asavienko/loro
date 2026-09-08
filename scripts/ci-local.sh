@@ -73,5 +73,6 @@ browser test:e2e:bundle
 run pnpm --filter @loro/mobile bundle
 run pnpm --filter @loro/api build
 run node scripts/ci-api-smoke.mjs
+run bash scripts/ci-api-image.sh
 (cd packages/core-rs && run cargo bench --bench core_benches -- --warm-up-time 1 --measurement-time 2)
 echo 'Local CI passed. Native builds and dependency audits are separate explicit gates.'

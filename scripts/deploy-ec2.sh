@@ -15,6 +15,7 @@ pnpm --filter @loro/core-rs build:wasm
 pnpm --filter @loro/api build
 image="loro-api:$(git rev-parse --short=12 HEAD)-$(date -u +%Y%m%d%H%M%S)"
 docker build --platform linux/amd64 -f apps/api/Dockerfile -t "$image" .
+bash scripts/ci-api-image.sh "$image"
 docker save "$image" | gzip | ssh "${ssh_opts[@]}" "ec2-user@$host" 'gunzip | sudo docker load'
 # shellcheck disable=SC2029 # Locally generated image tag is intentionally passed to remote bash.
 ssh "${ssh_opts[@]}" "ec2-user@$host" "sudo bash -s -- '$image'" < scripts/ec2-release.sh

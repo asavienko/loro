@@ -1,5 +1,8 @@
 # Loro documentation
 
+[Stack and Android readiness — 2026-09-08](reviews/2026-09-08-readiness.md) records the live AWS
+endpoint, APK evidence, validation and remaining essential features.
+
 Everything written down, indexed. Four sections plus decisions.
 
 [Local containers and encrypted environment](process/local-development.md) — Docker Compose, SOPS

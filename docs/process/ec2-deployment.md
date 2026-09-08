@@ -3,7 +3,8 @@
 The Nest API can run on one Amazon Linux 2023 x86 EC2 instance using `infra/ec2/template.yaml`. This
 is a restricted development deployment: legacy sync has no auth or tenant isolation and all data
 disappears when its process restarts. Durable production service remains with plans 66–68 and 73.
-Deployment and rollback both lose in-memory writes. Do not use learner data.
+The optional [public gateway](public-api.md) exposes only read-only health/content/provider
+discovery. Deployment and rollback both lose in-memory writes. Do not use learner data.
 
 The template creates a t3.small with an encrypted 30 GiB gp3 disk, IMDSv2 required, Docker enabled
 at boot, and SSH ingress from one IPv4 address. It opens no HTTP port. The API binds only to host
@@ -68,7 +69,7 @@ region. This destroys the instance and its disk. No database or backup is provis
 The template follows AWS's
 [instance metadata options](https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-properties-ec2-instance-metadataoptions.html).
 
-The verified deployed image below predates main's optional Google/Apple account support. The
+The historical 2026-09-07 image below predates main's optional Google/Apple account support. The
 deployment script leaves that integration disabled; provider credentials and PostgreSQL are not
 provisioned here. Merging repository changes does not replace the running EC2 image.
 
@@ -92,3 +93,11 @@ ingress is restricted to the provisioning machine's public IPv4 /32. If it chang
 stack's AdminCidr using the provisioning script with the same region/network/key parameters. The key
 pair was imported separately and is not deleted with the stack. The verification tunnel was closed
 after testing; use the command above to open one when needed.
+
+## Current release — 2026-09-08
+
+Image `loro-api:26dc09e2a27a-20260908114912` is healthy. It includes provider discovery and the
+multilingual content API; provider credentials and PostgreSQL remain unconfigured. The standalone
+APK can use the [read-only HTTPS gateway](public-api.md). See the
+[readiness review](../reviews/2026-09-08-readiness.md) for verified capabilities and missing
+essentials. The public gateway does not expose the legacy sync or AI routes.

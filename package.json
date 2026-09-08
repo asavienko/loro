@@ -48,7 +48,7 @@
     "ci:local:audit": "bash scripts/ci-local.sh audit",
     "apk:local": "node scripts/apk-local.mjs",
     "apk:github": "node scripts/apk-local.mjs --upload",
-    "test:deploy": "node --test scripts/ec2-release.test.mjs"
+    "test:deploy": "node --test scripts/ec2-release.test.mjs scripts/ec2-gateway.test.mjs"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.6.1",

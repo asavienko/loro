@@ -282,5 +282,11 @@
   "account.error": "We could not complete the account request. Please try signing in again.",
   "account.cancelled": "Sign-in cancelled. You can keep learning.",
   "account.localSignOut": "You are signed out on this device. We could not confirm that the server session ended.",
-  "account.retry": "Try again"
+  "account.retry": "Try again",
+  "account.backend.checking": "Checking server connection…",
+  "account.backend.connected": "Server connected.",
+  "account.backend.unavailable": "Server unavailable. You can continue practising locally.",
+  "account.backend.unconfigured": "No server is configured for this build.",
+  "account.backend.scope": "Server connection does not enable account sign-in or progress sync.",
+  "account.backend.retry": "Check connection"
 }
