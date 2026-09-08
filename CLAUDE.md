@@ -55,6 +55,11 @@ Keep it short. Long-form belongs in `docs/`; this file points at it.
 - [`docs/README.md`](docs/README.md) — the full documentation index
 - [`docs/architecture/overview.md`](docs/architecture/overview.md) — **the ten rules**
 
+For development, use the repository skill
+[`loro-development`](.agents/skills/loro-development/SKILL.md) (`$loro-development`). It provides a
+read-only context helper and focused references distilled from current and archived project chats.
+Load only the reference relevant to the task; this file remains the shared instruction source.
+
 ## The v1.1 design package is the source of truth
 
 ```
