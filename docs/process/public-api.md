@@ -1,8 +1,9 @@
 # Standalone Android API access
 
-Requirement F-03; implementation tracked in [plan 92](../../plans/92-android-ec2-readiness.md). This
-is a read-only development service. It does not implement account setup, learner persistence, client
-sync, audio or speech. The API's health check proves content and WASM availability only.
+Requirement F-03; implementation tracked in [plan 92](../../plans/92-android-ec2-readiness.md). The
+gateway defaults to read-only development access. The optional account profile forwards
+Google/Apple/email authentication and guarded sync only after a durable API is deployed. Readiness
+checks both PostgreSQL and WASM; it does not prove a live provider sign-in.
 
 ## Deployed topology
 
@@ -17,6 +18,19 @@ The gateway and nginx independently allow only GET requests to `/v1/health`, `/v
 Locale/version/pack query parameters are forwarded. Caller cookies and authorization are not. Sync,
 AI, sign-in mutations and all other paths remain unavailable through this endpoint. The gateway is
 limited to 10 requests/second with a burst of 20; responses are not cached.
+
+## Account profile (F-01/F-04)
+
+`AccountAccess=enabled` opts into exact auth, `/me` and POST sync routes. The Lambda forwards
+bounded request bodies, bearer/device/idempotency headers and API CORS decisions. OAuth callback
+redirects are returned to the browser, never followed by Lambda. Cookies, caller forwarding headers
+and arbitrary upstream URLs are excluded. AI remains unavailable. The API still uses transport-peer
+rate limits; all gateway users share the proxy's auth rate bucket in this development deployment.
+
+Use `scripts/deploy-ec2-proxy.sh HOST accounts` to install the corresponding exact-method nginx
+profile. `readonly` restores the original profile. Leave the CloudFormation parameter disabled until
+private readiness, provider discovery, database recovery and auth tests pass. Set `AccountAccess`
+back to `disabled` to withdraw account access without deleting data.
 
 ## Deploy
 
