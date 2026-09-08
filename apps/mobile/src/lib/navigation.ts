@@ -1,5 +1,103 @@
 import { copy } from './copy'
 
+/**
+ * The product's routes, including authored surfaces that do not have a screen file yet.
+ *
+ * This is deliberately a declaration, rather than a list inferred from `app/`: a planned
+ * surface must be known to navigation before it is safe to expose it, and a screen file is only
+ * permitted once its declared availability becomes `built`.
+ */
+export const SURFACES = [
+  { id: 'onboarding', path: '/onboarding', kind: 'learner', availability: 'built' },
+  { id: 'add', path: '/add', kind: 'learner', availability: 'built' },
+  { id: 'phrase-detail', path: '/phrase/[id]', kind: 'learner', availability: 'built' },
+  { id: 'stream', path: '/practice/stream', kind: 'learner', availability: 'built' },
+  { id: 'speak', path: '/practice/speak', kind: 'learner', availability: 'built' },
+  { id: 'review', path: '/practice/review', kind: 'learner', availability: 'planned' },
+  { id: 'roleplay', path: '/practice/roleplay', kind: 'learner', availability: 'planned' },
+  { id: 'memory', path: '/memory', kind: 'learner', availability: 'planned' },
+  { id: 'pronunciation', path: '/lab/pronunciation', kind: 'learner', availability: 'planned' },
+  { id: 'prosody', path: '/lab/prosody', kind: 'learner', availability: 'planned' },
+  { id: 'today', path: '/', kind: 'learner', availability: 'built' },
+  { id: 'refrain', path: '/practice/refrain', kind: 'learner', availability: 'built' },
+  { id: 'run', path: '/run', kind: 'learner', availability: 'planned' },
+  { id: 'phrasebook', path: '/phrasebook', kind: 'learner', availability: 'planned' },
+  { id: 'progress', path: '/progress', kind: 'learner', availability: 'built' },
+  { id: 'arrival', path: '/trip/arrival', kind: 'learner', availability: 'planned' },
+  { id: 'countdown', path: '/trip/countdown', kind: 'learner', availability: 'planned' },
+  { id: 'daily-drop', path: '/trip/daily-drop', kind: 'learner', availability: 'planned' },
+  { id: 'widget', path: '/widget', kind: 'learner', availability: 'planned' },
+  { id: 'survival', path: '/survival', kind: 'learner', availability: 'planned' },
+  { id: 'souvenir', path: '/souvenir', kind: 'learner', availability: 'planned' },
+  { id: 'chat', path: '/chat', kind: 'learner', availability: 'planned' },
+  { id: 'message-inspector', path: '/chat/message/[id]', kind: 'learner', availability: 'planned' },
+  { id: 'languages', path: '/languages', kind: 'utility', availability: 'built' },
+  { id: 'account', path: '/account', kind: 'utility', availability: 'built' },
+] as const
+
+export type Surface = (typeof SURFACES)[number]
+export type SurfaceId = Surface['id']
+export type BuiltSurface = Extract<Surface, { availability: 'built' }>
+
+/** A route is a safe app-relative URL, never a host URL or a malformed path. */
+function appPath(input: string): string | undefined {
+  if (!input.startsWith('/') || input.startsWith('//')) return undefined
+  const [path] = input.split(/[?#]/, 1)
+  if (!path || path.includes('\\')) return undefined
+  return path
+}
+
+function matches(surface: Surface, path: string): boolean {
+  const expression = `^${surface.path
+    .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    .replace(/\\\[[^/]+\\\]/g, '[^/]+')}$`
+  return new RegExp(expression).test(path)
+}
+
+export function builtSurfaceForPath(input: string): BuiltSurface | undefined {
+  const path = appPath(input)
+  if (path === undefined) return undefined
+  return SURFACES.find(
+    (surface): surface is BuiltSurface =>
+      surface.availability === 'built' && matches(surface, path),
+  )
+}
+
+/** Onboarding remains the only first-run entry; every other deep link returns through it. */
+export function conditionalHome(onboarded: boolean): '/onboarding' | '/' {
+  return onboarded ? '/' : '/onboarding'
+}
+
+export type DeepLinkResolution =
+  | { kind: 'built'; path: string; surface: BuiltSurface }
+  | { kind: 'fallback'; path: '/onboarding' | '/'; reason: 'unknown' | 'planned' | 'malformed' }
+
+/**
+ * Resolve a user-controlled deep link without making planned screens reachable or bypassing first
+ * run. The caller can use the returned `path` directly with Expo Router.
+ */
+export function resolveDeepLink(input: string, onboarded: boolean): DeepLinkResolution {
+  const path = appPath(input)
+  if (path === undefined)
+    return { kind: 'fallback', path: conditionalHome(onboarded), reason: 'malformed' }
+
+  const built = builtSurfaceForPath(path)
+  if (built !== undefined) {
+    if (!onboarded && built.id !== 'onboarding')
+      return { kind: 'fallback', path: '/onboarding', reason: 'unknown' }
+    return { kind: 'built', path, surface: built }
+  }
+
+  const planned = SURFACES.some(
+    (surface) => surface.availability === 'planned' && matches(surface, path),
+  )
+  return {
+    kind: 'fallback',
+    path: conditionalHome(onboarded),
+    reason: planned ? 'planned' : 'unknown',
+  }
+}
+
 /** The currently built hubs. Rails and the shared switcher consume this same declaration. */
 export const DESTINATIONS = [
   {
@@ -69,6 +167,6 @@ export const DESTINATIONS = [
 ] as const
 
 export function placeForPath(path: string): string | undefined {
-  if (path.startsWith('/phrase/')) return copy.nav.phrasePlace
+  if (builtSurfaceForPath(path)?.id === 'phrase-detail') return copy.nav.phrasePlace
   return DESTINATIONS.find((destination) => destination.href === path)?.label
 }

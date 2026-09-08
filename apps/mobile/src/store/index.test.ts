@@ -339,6 +339,20 @@ describe("the day's Refrain set", () => {
     expect(store.getState().refrainSet).toHaveLength(3)
   })
 
+  it('records a completed wave once and clears it with the next frozen day', () => {
+    const { store, setDay } = withDay('2026-07-28')
+    seedThree(store)
+
+    const checkpoint = store.getState().refrainResume
+    store.getState().completeRefrainWave('morning', checkpoint)
+    store.getState().completeRefrainWave('morning', checkpoint)
+    expect(store.getState().refrainWaves).toEqual(['morning'])
+
+    setDay('2026-07-29')
+    store.getState().ensureRefrainSet()
+    expect(store.getState().refrainWaves).toEqual([])
+  })
+
   it('backfills a set that lost a member instead of leaving the day empty', () => {
     const { store } = withDay('2026-07-28')
     seedThree(store)

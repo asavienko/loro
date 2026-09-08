@@ -28,3 +28,21 @@ export function resolvePressScale({
 }): number | null {
   return pressed && !disabled && !reducedMotion ? scale : null
 }
+
+/**
+ * A specimen may hold the same visual feedback a real control has while it is pressed and
+ * focused. It deliberately changes presentation only; it never makes a control actionable.
+ */
+export function resolveForcedInteractionState(forcedState: 'pressed-focused' | undefined): {
+  pressed: boolean
+  focused: boolean
+} {
+  return forcedState === 'pressed-focused'
+    ? { pressed: true, focused: true }
+    : { pressed: false, focused: false }
+}
+
+/** A pending action is unavailable until it settles, even when its caller did not set disabled. */
+export function isPressableUnavailable(disabled: boolean, loading: boolean): boolean {
+  return disabled || loading
+}

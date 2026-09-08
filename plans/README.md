@@ -7,8 +7,15 @@ completed plans moved to [the dated archive](archive/2026-09-07/README.md), and 
 
 Plans 01–52 remain historical in [the previous archive](archive/2026-07-30/REVIEW.md); 49 is an
 existing gap, not a free number. No plan was renumbered. The highest assigned ID is **94** and the
-next new plan is **95**. Statuses below include the 2026-09-08 runtime integration. Original paths
-of newly archived plans remain compatibility symlinks.
+next new plan is **95**. Statuses below include the 2026-09-08 runtime integration. Completed
+89/91/92 are now in [the 2026-09-08 archive](archive/2026-09-08/README.md), with compatibility
+symlinks at their original paths. That archive also retains superseded snapshots of 64/72/75/88/90
+and the earlier roadmap; refreshed active owners keep all unfinished scope. There are **33 plans
+with remaining work**.
+
+Plans 56–65 are stored in [the 2026-09-09 archive](archive/2026-09-09/README.md) at user request.
+Their partial statuses and outstanding scope remain indexed below; archiving does not imply
+completion.
 
 ## Current scope
 
@@ -73,8 +80,8 @@ feature↔release-completion cycle. See each plan's checkboxes for executable ta
 
 | Plan                                                    | Remaining outcome                                                           | Milestone   | Status / blocker                                                             | Prerequisites                                                   |
 | ------------------------------------------------------- | --------------------------------------------------------------------------- | ----------- | ---------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| [56](56-navigation-failure-and-input-shell.md)          | Route laws, recovery, keyboard and scalable lists                           | M1          | 🟡 Built hubs/escapes done; full shell remains                               | 53/55/79/84 ✅; 58 for device proof                             |
-| [57](57-runtime-design-system.md)                       | Fonts, motion, haptics, dark theme and production state APIs                | M1/M2       | 🟡 Provider exists; fonts/state APIs remain                                  | 53/55 ✅; font provenance; 58 device proof                      |
+| [56](56-navigation-failure-and-input-shell.md)          | Route laws, recovery, keyboard and scalable lists                           | M1          | 🟡 Surface registry/escapes done; full shell remains                         | 53/55/79/84 ✅; 58 for device proof                             |
+| [57](57-runtime-design-system.md)                       | Fonts, motion, haptics, dark theme and production state APIs                | M1/M2       | 🟡 Control states done; fonts/motion/themes remain                           | 53/55 ✅; font provenance; 58 device proof                      |
 | [58](58-native-workspace-and-device-ci.md)              | Native workspace and device harness                                         | M1          | 🟡 Bridges/local APK done; iOS, physical devices and signing remain          | 53 ✅; SDK/device/signing evidence                              |
 | [59](59-device-persistence-and-resume.md)               | Durable SQLite and crash/session acceptance                                 | M1          | 🟡 Runtime done; wider device/upgrade/lifecycle evidence remains             | 54 ✅; 58 device harness; 67 erasure UI                         |
 | [60](60-authoritative-core-maths.md)                    | Canonical core policy and binding acceptance                                | M1/M2       | 🟡 Rust/runtime/parity done; device and linguistic acceptance remain         | 53 ✅; 58 devices; 87 bilingual review                          |
@@ -82,7 +89,7 @@ feature↔release-completion cycle. See each plan's checkboxes for executable ta
 | [62](62-native-audio-playback.md)                       | Recorded playback, cache and background transport                           | M1/M2       | 🟡 Foreground TTS done; Q-15 assets and hardware acceptance remain           | 58; 61 approved seed; 86 remote adapters                        |
 | [63](63-native-speech-speak-and-latency.md)             | Per-target ASR acceptance and measured onset                                | M2          | 🟡 ASR/Speak/reveal done; hardware quality and onset remain                  | 58; 60 matching; 62 clock/buffers; target models                |
 | [64](64-today-and-refrain-production-loop.md)           | Durable timed waves, real Refrain audio and tag drills                      | M2          | 🟡 Manual loop exists; production behavior remains                           | 59/60/62/63; Q-14 peak only; 81 presentation                    |
-| [65](65-import-and-capture.md)                          | Offline reviewed Import, then on-device OCR Capture                         | M2/M3       | 🟡 Own-phrase seam exists; input surfaces remain                             | 56/59; OCR 58; optional assistance 76/86                        |
+| [65](65-import-and-capture.md)                          | Offline reviewed Import, then on-device OCR Capture                         | M2/M3       | 🟡 Paste review done; file import and OCR remain                             | 56/59; OCR 58; optional assistance 76/86                        |
 | [66](66-backend-contract-data-and-security.md)          | Durable backend and operational/security acceptance                         | M2          | 🟡 Postgres/auth/sync done; remaining boundaries, image/load proof remain    | 54/85 ✅; 67 lifecycle; 86 providers                            |
 | [67](67-anonymous-auth-and-account-lifecycle.md)        | Account linking, recovery, export and erasure                               | M2          | 🟡 Identity/binding/sync done; provider/device and lifecycle gates remain    | 59/66 runtime; 86 providers; lifecycle policy                   |
 | [68](68-sync-and-offline-convergence.md)                | Background, rescue and device/load convergence proof                        | M2          | 🟡 Durable client/server sync done; hardware and lifecycle acceptance remain | 59/60/66/67 runtime; device/load environment                    |
@@ -122,9 +129,9 @@ Render testing recommendation in 86 is superseded by 88.
 | [79](archive/2026-09-07/79-v1-1-design-contract.md)               | v1.1 design and requirement contract                                                                                |
 | [84](archive/2026-09-07/84-visual-ui-ux-audit.md)                 | Web visual/navigation/enlarged-layout audit                                                                         |
 | [85](archive/2026-09-07/85-backend-integration-contracts.md)      | Backend integration inventory and shared API/OpenAPI contracts                                                      |
-| [89](89-google-apple-sign-in.md)                                  | Google/Apple identity and Account; integrated with 94, provider/device setup remains a release prerequisite         |
-| [91](91-ec2-backend-deployment.md)                                | Restricted EC2 deployment, readiness and manual rollback verified; shared durable runtime needs separate deployment |
-| [92](92-android-ec2-readiness.md)                                 | Standalone HTTPS/APK/readiness checks verified; dated preview evidence does not validate later native/sync features |
+| [89](archive/2026-09-08/89-google-apple-sign-in.md)               | Google/Apple identity and Account; integrated with 94, provider/device setup remains a release prerequisite         |
+| [91](archive/2026-09-08/91-ec2-backend-deployment.md)             | Restricted EC2 deployment, readiness and manual rollback verified; shared durable runtime needs separate deployment |
+| [92](archive/2026-09-08/92-android-ec2-readiness.md)              | Standalone HTTPS/APK/readiness checks verified; dated preview evidence does not validate later native/sync features |
 
 ## Working rules
 

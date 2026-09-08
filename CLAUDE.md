@@ -131,14 +131,15 @@ prototype-only and **must not** be carried into the app — see the divergence t
 - **Plans live in `plans/`, numbered.** One markdown file per plan: a two-digit number, then
   kebab-case named for the topic — `plans/60-authoritative-core-maths.md`. The 2026-09-07 review
   recorded 30 active plans within 56–88; completed 54/55/79/84/85 are under
-  `plans/archive/2026-09-07/` with compatibility symlinks. Plans 01–52 remain under
-  `plans/archive/2026-07-30/`; completed 53 remains at its protected original path. The next new
-  plan number is 95. A new plan takes the next free number and gets a row in
-  [`plans/README.md`](plans/README.md). **Numbers are never reused** — a gap is left rather than
-  backfilled, so a link written against a number can't come to mean a different plan. Not in
-  `docs/`: that holds the durable spec. Not in a temp directory either — a plan you can't find again
-  is a plan you rewrite. Name the requirement ID inside the plan so it ties back to the branch and
-  the PR.
+  `plans/archive/2026-09-07/` with compatibility symlinks. Completed 89/91/92 and superseded
+  planning snapshots are under `plans/archive/2026-09-08/`; snapshots retain current owners for
+  unfinished work. Plans 01–52 remain under `plans/archive/2026-07-30/`; completed 53 remains at its
+  protected original path. The next new plan number is 95. A new plan takes the next free number and
+  gets a row in [`plans/README.md`](plans/README.md). **Numbers are never reused** — a gap is left
+  rather than backfilled, so a link written against a number can't come to mean a different plan.
+  Not in `docs/`: that holds the durable spec. Not in a temp directory either — a plan you can't
+  find again is a plan you rewrite. Name the requirement ID inside the plan so it ties back to the
+  branch and the PR.
 - **A plan records its own status, and is archived rather than deleted.** Put a `**Status:**` line
   in the plan's header block when work starts, and mark its row in
   [`plans/README.md`](plans/README.md): `🟡` in progress or partly implemented, `⛔` blocked by a

@@ -5,66 +5,52 @@ The milestone sections retain product intent and historical effort estimates for
 queue. The [active plans](../../plans/README.md) record the dependency order and exact remaining
 work.
 
-## Current baseline — 2026-09-07
+## Current baseline — 2026-09-08
 
-Reviewed against merged `2d9e8c3`. Seven of 23 authored learner screens plus Languages, the shared
-shell and the dev workbench are implemented. The web app demonstrates onboarding, collecting and
-tagging phrases, manual practice and progress. It does not yet demonstrate a durable, audible native
-learning loop. Stream browsing records no playback; manual Refrain confirmation records null speech
-latency. Rust FSRS/cloze fallbacks are still implementation debt in plan 60.
+Reviewed against integrated runtime `e013141`. Eight of 23 authored learner screens plus Languages,
+Account, the shared shell and the developer workbench exist. Native/browser SQLite, durable course
+progress and resume, canonical Rust scheduling/matching/merge, foreground device TTS, on-device
+ASR/reveal, PostgreSQL accounts and authenticated sync are implemented. The
+[persistent practice guide](../process/persistent-practice.md) and
+[plan 94](../../plans/94-persistent-practice-and-account-integration.md) record validation
+boundaries.
 
-The current UI/native languages are English, Bulgarian and Russian. Targets are Spanish, Bulgarian
-and Russian, excluding matching pairs: seven supported pairs and 31-phrase starters per target.
-Course progress/resume is separate; the streak is global. New linguistic content awaits bilingual
-review. Text support does not enable audio, ASR or scoring for any target.
+The seven supported language pairs and three 31-phrase starters still need bilingual sign-off.
+English as a learning target/default remains in plan 90. Full iOS compilation, physical-device
+speech/lifecycle/convergence, production recorded/background audio, measured onset and DSP, account
+lifecycle and shared-service operational acceptance remain open. Public readiness or provider
+discovery alone does not establish successful sign-in or deployed sync acceptance.
 
-| Milestone   | Current state                                                                                                                                                        |
-| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| M0 · Setup  | Partial: portable foundations and native CI scaffolds exist; device app/bridge, device database, deployment and crash proof remain.                                  |
-| M1 · Spine  | Partial: built routes, responsive UI, shared menu, localization, persistence primitives and contract package exist; native audio and durable app integration remain. |
-| M2 · v1     | Remaining: production Today/Refrain, Speak, Import, trip/Survival, settings, auth/sync, release and approved monetization.                                           |
-| M3 · v1.1   | Review/Memory, Roleplay and chat follow their foundation slices; chat launch/live service and speech labs have explicit gates.                                       |
-| M4 · Scale  | Operational hardening and measured SLOs follow a functioning service; tests/budgets also belong to each feature.                                                     |
-| M5 · v2     | Run and ladder Phrasebook depend on Q-05 and comparative evidence.                                                                                                   |
-| M6 · Beyond | Candidates only; starter Bulgarian/Russian and UI localization are already implemented foundations.                                                                  |
-
-The app remains in memory despite SQLite-tested schema-2 repositories, outbox and course settings.
-The 13-route API remains in memory with stub AI. Shared current/target/draft schemas and OpenAPI are
-implemented; Nest validation, auth, Postgres and mobile networking are not. Anthropic transport is
-tested and merged but unregistered. Rust target compilation/EAS setup gates are not native app
-proof.
-
-`pnpm check` passed its contract drift check and 23 Turbo tasks using the cached implementation
-baseline; 118 learner E2E tests passed freshly during the review. Historical milestone estimates
-below remain sizing assumptions. On-device ASR/reveal behavior is on the v1 path through plan 63;
-DSP lab scoring is the separate evidence-gated v1.1 risk.
+| Milestone   | Current state                                                                                                                                     |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| M0 · Setup  | Local CI, APK and restricted deployment tooling exist; production signing and device/recovery acceptance remain.                                  |
+| M1 · Spine  | Durable core practice and shared shell exist; native acceptance, production assets/audio and UI completion remain.                                |
+| M2 · v1     | Finish production Today/Refrain, Import, trips/Survival, Settings, account lifecycle, shared sync operations, release gates and approved billing. |
+| M3 · v1.1   | Review/Memory, Roleplay, chat and speech labs remain with their scoped decisions and evidence gates.                                              |
+| M4 · Scale  | Measured load, recovery and operating objectives guide hardening.                                                                                 |
+| M5 · v2     | Run and ladder Phrasebook remain gated on Q-05 and comparative evidence.                                                                          |
+| M6 · Beyond | Candidates only; existing multilingual foundations are not future work.                                                                           |
 
 ## Execution after the review
 
-Completed [54, 55, 79, 84 and 85](../../plans/archive/2026-09-07/README.md) are archived. Protected
-plan 53 stays unchanged. [The review](../../plans/archive/2026-09-07/REVIEW.md) records every
-remaining plan's disposition and source evidence; 30 plans remain active, with no renumbering.
+Use the [active plan index](../../plans/README.md): 33 plans retain unfinished work, the highest
+assigned ID is 94 and the next new ID is 95. Completed 89/91/92 and superseded planning snapshots
+are preserved in [the 2026-09-08 archive](../../plans/archive/2026-09-08/README.md). The earlier
+baseline and historical estimates remain in
+[the roadmap snapshot](../../plans/archive/2026-09-08/roadmap-baseline.md).
 
-1. Correct the remaining Rust/Unicode maths and course-upsert debt (60/59), extend the existing
-   route declaration (56), establish the native workspace/bridge (58), and wire backend foundations
-   (66).
-2. Complete production UI state APIs and workbench coverage (57/80); add More and full navigation
-   laws (81). Begin bilingual sign-off (87), content/asset contracts (61), the DSP evidence spike
-   (77) and offline chat schemas/topics/evals (82) without activating gated production features.
-3. Wire durable device state (59), approved assets/playback (61/62), real on-device speech (63),
-   identity (67) and client sync (68). Provider plan 86 supplies adapters to feature owners; its old
-   contract-task/worktree handoff block is closed.
-4. Finish production Today/Refrain (64), Import then OCR (65), approved trips and Survival (69/70),
-   general Settings/consent/flags (71), shared release gates (72), delivery (73) and approved
-   billing (74). Shared harnesses develop with features; whole-release completion is not a circular
-   prerequisite.
-5. Add Review/Memory (75), guarded Roleplay (76), private chat and inspector (82/83), then
-   evidence-approved labs (77) and conditional Run/ladder Phrasebook (78).
-
-Plan [88](../../plans/88-low-cost-backend-infrastructure.md), added on main during this review, owns
-the approved AWS testing environment. Infrastructure preparation can start now; shared access
-requires the relevant 66/67 slices, and mobile sync testing adds 59/68. Production operations remain
-with 73. The highest assigned plan is 88 and the next number is 89.
+1. Complete device, lifecycle, bilingual and convergence acceptance on the existing foundations
+   (58–60/63/68/87/93/94). Extend them rather than rebuilding storage, Rust or account stacks.
+2. Complete route laws, state APIs and navigation (56/57/80/81). Advance content review, English
+   target/default and asset/update contracts (87/90/61); independent DSP/chat preparation remains
+   scoped by 77/82.
+3. Integrate approved recorded/background playback and measured speech (61–63), then production
+   Today/Refrain (64). Complete account lifecycle and shared-service operational evidence
+   (66–68/88), reusing the existing restricted deployment and local CI policy.
+4. Finish the remaining v1 feature slices (65/69–71/74) and release gates/delivery (72/73). Shared
+   harnesses develop with features; whole-release completion is not a prerequisite to start.
+5. Follow the existing v1.1 and later scope: Review/Memory (75), Roleplay (76), chat (82/83),
+   evidence-approved labs (77) and conditional Run/Phrasebook (78).
 
 ## Scoped decision gates
 

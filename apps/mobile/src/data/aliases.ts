@@ -26,6 +26,7 @@ export function resolveLearnerAliases(database: RuntimeDatabase, state: AppData)
       ),
       selectedId: value.selectedId === null ? null : resolve(value.selectedId),
       refrainSet: value.refrainSet.map(resolve),
+      refrainWaves: value.refrainWaves,
       refrainSubstituted: value.refrainSubstituted.map(resolve),
       refrainResume: {
         ...value.refrainResume,
