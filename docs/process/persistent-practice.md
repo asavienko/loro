@@ -77,8 +77,9 @@ availability for each language still need physical-device and bilingual acceptan
 ## Validation evidence
 
 The following native evidence was captured before the aggregate merge. Final integrated source,
-browser and API validation is recorded in plan 94; emulator evidence does not establish physical
-microphone or speaker acceptance.
+browser and API validation is recorded in
+[plan 94](../../plans/94-persistent-practice-and-account-integration.md); emulator evidence does not
+establish physical microphone or speaker acceptance.
 
 - Rust: 145 unit tests and 7 integration tests, including 42 FSRS reference vectors.
 - Shipped WASM: reference scheduling vectors plus multilingual matching, cloze, HLC and merge.
@@ -93,7 +94,10 @@ microphone or speaker acceptance.
   removes the platform API before loading the native entry point.
 - iOS: Swift parsing/podspec syntax and host Swift-to-UniFFI runtime smoke. Full iOS build/device
   verification requires a full Xcode SDK, unavailable on the implementation machine.
-- Browser and whole-repository gate results are recorded in plan 94 after integration.
+- Aggregate local CI passed at `85a0057`: all 23 fast-gate tasks, 171 real-PostgreSQL API tests, 169
+  Rust tests, 155 learner browser tests, three workbench tests and four production smoke tests, plus
+  production exports and built-process/exact-image API checks. See plan 94 for the counts and
+  platform boundaries.
 - Real Postgres auth/sync suites use isolated test databases; see
   [API testing](../../apps/api/README.md).
 

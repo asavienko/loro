@@ -1,10 +1,9 @@
 # Persistent practice, native speech, canonical core and account sync
 
 - **Requirement IDs:** `F-01`…`F-04`, `F-07`, `F-08`, `AS-01`…`AS-06`, `LB-01`…`LB-27`
-- **Status:** 🟡 Runtime implemented; original local acceptance passed and merged validation is
-  being repeated. Remaining gates are full iOS native validation, physical-device speech/convergence
-  acceptance, approved ElevenLabs assets (Q-15), background transport and production identity/email
-  configuration; see the remaining scope below.
+- **Status:** 🟡 Runtime implemented; aggregate local CI passed. Remaining gates are full iOS native
+  validation, physical-device speech/convergence acceptance, approved ElevenLabs assets (Q-15),
+  background transport and production identity/email configuration; see the remaining scope below.
 - **Depends on:** Existing contracts in 85 and persistence correctness in 54; implements coordinated
   slices of 58–60, 62–63 and 66–68.
 
@@ -95,6 +94,50 @@ completed persistence/core branch supplies compatible canonical policy and attem
 hardening. Existing roadmap archives and their compatibility paths remain intact. Plan 88 retains
 its AWS testing scope; 94 is the next free number for this integration.
 
-Merged local CI and acceptance evidence must be recorded after resolving these combined changes. The
-original counts above are retained as dated implementation evidence and are not a claim that the
-merged checkout has already passed.
+### Aggregate local validation — 2026-09-08
+
+`CI_BASE_REF=origin/main pnpm ci:local` passed on runtime commit
+`85a005709accf7b5c89a748e216c738588726616`, based on main `f1dde4c`. This includes the unique work
+from the separate persistence/core PR #22 at `4d8e783`, both preview schema histories, and main's
+OAuth, navigation, preview identity and deployment tooling. Later evidence-only changes do not alter
+the validated runtime.
+
+- All 23 fast-gate tasks passed: 346 mobile, 225 core, 34 content and 23 token tests. The separate
+  disposable-PostgreSQL gate passed all 171 API tests, for 799 JS/TS cases overall.
+- All 169 Rust unit/integration cases passed. Generated tokens, OpenAPI, browser WASM and UniFFI
+  output were regenerated and passed drift checks.
+- All 155 learner browser tests passed in 7.8 minutes, including the full 71-state accessibility and
+  200%/310% text-scale sweeps. The expanded suite now has a documented 12-minute global budget; only
+  the two whole-manifest text-scale tests receive a two-minute individual budget. No assertions or
+  states were removed after the original eight-minute budget expired at 149 passing tests.
+- Three workbench tests and four production web smoke tests passed. Production web and iOS Metro
+  exports, API compilation, built-process PostgreSQL smoke and exact Docker-image acceptance passed.
+  The image checks cover durable readiness, guarded sync, multilingual content and explicit degraded
+  readiness in content-only mode.
+- Rust Criterion benchmarks completed; this run does not establish a comparative performance
+  regression baseline. GitHub Actions remained disabled, and nothing was deployed.
+- [Account and Speak review captures](../docs/reviews/2026-09-08-aggregate/README.md) show the
+  production web export with the existing test transport; they are not live-provider or native
+  speech acceptance.
+
+The standalone Android preview build (`pnpm apk:local`) also passed from a clean archive of the same
+runtime commit: 554 Gradle tasks in 5 minutes 15 seconds. Packaging checks verified
+`app.loro.android.preview`, a non-debuggable manifest, bundled production JavaScript, APK signature,
+and both `libloro_core.so` and `libop-sqlite.so` for `arm64-v8a` and `x86_64`. This is a
+development-signed release for local preview; the API URL is unset and no artifact was uploaded. The
+local artifact is `.local-builds/apk/85a005709acc/loro-preview-85a005709acc.apk`, SHA-256
+`f876b38cd3e06a2c04c44171a00f7c16ccc755cbb1f78413462b9a2173bb302f`.
+
+The same APK passed the isolated Android emulator smoke with airplane mode enabled and no Metro
+connection. Fresh onboarding saved ten phrases. One Refrain rep and its 17% phrase progress survived
+force-stop/cold launch; entering Refrain resumed Chorus at REP 1/6. Speak correctly reported
+unavailable device speech/audio, revealed 6/6 words before enabling Next, and reset the following
+phrase to 0/4 without increasing Today's one-rep total. All 13 captured-UI assertions passed;
+microphone permission was not granted and no app-fatal log was observed. One emulator SystemUI
+unresponsive dialog after compilation was dismissed with Wait; it was not an app crash. Captures and
+the evidence README remain under `.local-builds/apk/85a005709acc/native-smoke/`. The isolated
+emulator was stopped afterward. Duplicate callback rejection is covered by browser/unit tests; this
+native smoke does not infer it from repeated taps.
+
+The original evidence above remains historical. Full iOS native builds and physical-device speech,
+audio interruptions and two-device convergence still require the release acceptance matrix.

@@ -104,7 +104,7 @@ feature↔release-completion cycle. See each plan's checkboxes for executable ta
 | [88](88-low-cost-backend-infrastructure.md)             | Shared EC2/Postgres/S3 testing and recovery                                 | M2 testing  | 🟡 Restricted host deployed in 91; durable shared-service acceptance remains | 66/67 deployed runtime; 59/68 devices; 61/86 content            |
 | [90](90-default-english-content-language.md)            | English default learning content and course selection                       | M1/M2       | — English target confirmed; review/device gates remain                       | 87/85; 59 persistence; 61/62 audio                              |
 | [93](93-mobile-shell-gestures.md)                       | Pull-down switcher and sheet dismissal                                      | M1/M2       | 🟡 Implemented; physical-device touch verification remains                   | Shared shell; device evidence                                   |
-| [94](94-persistent-practice-and-account-integration.md) | Integrated persistence, canonical core, speech and account sync             | M1/M2       | 🟡 Runtime implemented; merged CI, hardware and service acceptance remain    | 54/85 ✅; coordinated 58–60/62–63/66–68 slices                  |
+| [94](94-persistent-practice-and-account-integration.md) | Integrated persistence, canonical core, speech and account sync             | M1/M2       | 🟡 Runtime and aggregate CI passed; hardware and service acceptance remain   | 54/85 ✅; coordinated 58–60/62–63/66–68 slices                  |
 
 Plan 88 owns the selected AWS testing profile and
 [operations runbook](../docs/runbooks/backend-testing.md); plan 73 retains production operations.
