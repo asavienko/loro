@@ -19,7 +19,7 @@ const upload = args.includes('--upload')
 const publish = args.includes('--publish')
 if (args.includes('--help')) {
   console.log(
-    'Usage: pnpm apk:local [--upload] [--publish]\nBuilds the clean committed checkout. --upload creates a draft GitHub prerelease; --publish also publishes it.\nOptional EXPO_PUBLIC_API_URL must be an HTTPS URL ending in /v1. Requires Node 22, JDK 17, Android SDK and gh for uploads.',
+    'Usage: pnpm apk:local [--upload] [--publish]\nBuilds the clean committed checkout. --upload creates a draft GitHub prerelease; --publish also publishes it.\nOptional EXPO_PUBLIC_API_URL must be an HTTPS URL ending in /v1. Requires Node 22, JDK 17, Android SDK/NDK, Rust Android targets, cargo-ndk and gh for uploads.',
   )
   process.exit(0)
 }
@@ -53,6 +53,7 @@ if (api) {
   }
 }
 env.EXPO_PUBLIC_API_URL = api
+env.PATH = `${join(homedir(), '.cargo/bin')}:${env.PATH}`
 for (const key of Object.keys(env)) {
   if (key.startsWith('EXPO_PUBLIC_') && key !== 'EXPO_PUBLIC_API_URL') delete env[key]
 }
@@ -112,6 +113,7 @@ try {
   run('tar', ['-xf', archive, '-C', source])
   run('pnpm', ['install', '--frozen-lockfile'], source)
   run('pnpm', ['tokens:build'], source)
+  run('bash', ['packages/core-rs/build-native-module.sh', 'android'], source)
   const mobile = join(source, 'apps/mobile')
   run('pnpm', ['exec', 'expo', 'prebuild', '--platform', 'android', '--no-install'], mobile)
   run(
@@ -143,6 +145,10 @@ try {
   const entries = run('unzip', ['-Z1', apk], root, true).split('\n')
   if (!entries.includes('assets/index.android.bundle'))
     throw new Error('APK is missing its bundled JavaScript.')
+  for (const abi of ['arm64-v8a', 'x86_64']) {
+    if (!entries.includes(`lib/${abi}/libloro_core.so`))
+      throw new Error(`APK is missing the Rust runtime for ${abi}.`)
+  }
   const checksum = createHash('sha256').update(readFileSync(apk)).digest('hex')
   const checksumFile = `${apk}.sha256`
   writeFileSync(checksumFile, `${checksum}  loro-preview-${short}.apk\n`)

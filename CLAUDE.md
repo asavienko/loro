@@ -341,9 +341,9 @@ translated props. The Languages route is reachable from Today's switcher. Course
 state are separate; the streak is global. Schema 3 repositories and device persistence source exist;
 plan 59 retains native acceptance gates. New linguistic content is pending bilingual review;
 audio/ASR/DSP capabilities remain disabled. Plan 87 now tracks review and multilingual acceptance
-only; plan 59 owns device wiring and correction of the remaining `INSERT OR REPLACE` in
-`sqlite/course.ts`. Plan 60 owns the ASCII-oriented matcher/fabricated FSRS-cloze fallback and
-missing nightly `tests/sim` target.
+only. Plan 59 implemented safe course writes and device wiring; plan 60 replaced the matcher and
+scheduler fallbacks and added the deterministic `tests/sim` target. Their remaining native and
+reviewed-content acceptance gates stay recorded in those plans.
 
 ## Google/Apple accounts (plan 89)
 

@@ -71,8 +71,8 @@ requirement while retaining review/branch protections; do not re-enable CI to sa
 
 Run the native gate for native/Rust target changes and audits for dependency changes. These are
 separate from the default host/browser gate so routine checks need neither mobile SDKs nor advisory
-services. The historical nightly scheduler simulation has no test target, and device/offline/load
-and content-quality jobs were placeholders; they are not pretend local successes.
+services. The scheduler simulation now runs locally through `tests/sim`; device/offline/load and
+content-quality scaffolds are not reported as completed checks.
 
 ## Reports and limits
 
