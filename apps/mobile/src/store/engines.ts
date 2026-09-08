@@ -10,6 +10,7 @@
  */
 
 import {
+  userPhraseId,
   DEFAULT_REP_TARGET,
   RefrainEngine,
   StreamEngine,
@@ -23,7 +24,7 @@ import {
 } from '@loro/core'
 import type { StoreApi } from 'zustand'
 import { deviceClock } from '../lib/clock'
-import { jsCoreFacade } from './coreFacade'
+import { rustCoreFacade } from './coreFacade'
 import { useApp } from './store'
 import type { AppState } from './types'
 
@@ -43,7 +44,6 @@ export function createEngineContext(
   core: LoroCoreFacade,
 ): EngineContext {
   const state = store.getState()
-  const phrases = state.phrases
   /**
    * The store's array, read through the SAME eligibility rule as the repositories.
    *
@@ -59,10 +59,10 @@ export function createEngineContext(
    * the row out of the array, so a deleted phrase is not a candidate to filter.
    */
   const repo: PhraseRepository = {
-    all: () => Promise.resolve(phrases),
-    byId: (id) => Promise.resolve(phrases.find((p) => p.id === id) ?? null),
-    active: () => Promise.resolve(phrases.filter(isActive)),
-    due: (at) => Promise.resolve(phrases.filter((p) => isDue(p, at))),
+    all: () => Promise.resolve(store.getState().phrases),
+    byId: (id) => Promise.resolve(store.getState().phrases.find((p) => p.id === id) ?? null),
+    active: () => Promise.resolve(store.getState().phrases.filter(isActive)),
+    due: (at) => Promise.resolve(store.getState().phrases.filter((p) => isDue(p, at))),
   }
   return {
     phrases: repo,
@@ -76,6 +76,9 @@ export function createEngineContext(
     trip: deps.trip,
     flags: deps.flags,
     seed: deps.seed,
+    ...(state.refrainDay === deps.clock.localDay()
+      ? { refrainSet: state.refrainSet.map(userPhraseId) }
+      : {}),
   }
 }
 
@@ -100,8 +103,8 @@ const productionEngineDeps: EngineContextDeps = {
 
 /** Zero-argument production wrapper retained for existing route call sites. */
 export function engineContext(): EngineContext {
-  return createEngineContext(useApp, productionEngineDeps, jsCoreFacade)
+  return createEngineContext(useApp, productionEngineDeps, rustCoreFacade)
 }
 
 export const streamEngine = new StreamEngine()
-export const refrainEngine = new RefrainEngine()
+export const refrainEngine = new RefrainEngine(engineContext)

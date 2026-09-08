@@ -1,3 +1,4 @@
+import { rustCoreFacade } from '../coreFacade'
 import { EMPTY_REFRAIN_RESUME } from '../state'
 /**
  * Today's Refrain set: chosen once, then FROZEN. "You always see today."
@@ -9,7 +10,12 @@ import { EMPTY_REFRAIN_RESUME } from '../state'
 import { DEFAULT_REP_TARGET, refrainSetSize, repsToday, selectRefrainSet } from '@loro/core'
 import type { Slice } from '../types'
 
-export const createRefrainSlice: Slice<'ensureRefrainSet'> = ({ set, get, deps }) => ({
+export const createRefrainSlice: Slice<'ensureRefrainSet'> = ({
+  set,
+  get,
+  deps,
+  loadRefrainDay,
+}) => ({
   ensureRefrainSet: () => {
     const day = deps.clock.localDay()
     const st = get()
@@ -17,12 +23,27 @@ export const createRefrainSlice: Slice<'ensureRefrainSet'> = ({ set, get, deps }
 
     // A new day (or the first ever): choose today's set once, then freeze it.
     if (st.refrainDay !== day) {
+      const saved = loadRefrainDay(day, st.targetLocale)
       set({
         refrainResume: EMPTY_REFRAIN_RESUME,
-        refrainSet: [...selectRefrainSet(st.phrases, size)],
+        refrainSet: saved?.setIds ?? [...selectRefrainSet(rustCoreFacade, st.phrases, size)],
         refrainDay: day,
-        refrainSubstituted: [],
+        refrainSubstituted: saved?.substituted ?? [],
       })
+      // A timezone change can revisit a frozen day. Restore its membership, then
+      // repair any phrases deleted since that day was last visible.
+      if (saved) get().ensureRefrainSet()
+      return
+    }
+
+    const liveIds = new Set(st.phrases.map((phrase) => phrase.id as string))
+    if (st.refrainSet.some((id) => !liveIds.has(id))) {
+      set({
+        refrainResume: EMPTY_REFRAIN_RESUME,
+        refrainSet: st.refrainSet.filter((id) => liveIds.has(id)),
+        refrainSubstituted: st.refrainSubstituted.filter((id) => liveIds.has(id)),
+      })
+      get().ensureRefrainSet()
       return
     }
 
@@ -38,7 +59,7 @@ export const createRefrainSlice: Slice<'ensureRefrainSet'> = ({ set, get, deps }
       // today — substituting in a phrase that is already at 6/6 offers no work.
       (p) => !inSet.has(p.id) && repsToday(p, day) < DEFAULT_REP_TARGET,
     )
-    const fill = selectRefrainSet(candidates, size - st.refrainSet.length)
+    const fill = selectRefrainSet(rustCoreFacade, candidates, size - st.refrainSet.length)
     if (fill.length === 0) return
 
     set({

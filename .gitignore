@@ -26,6 +26,9 @@ Cargo.lock                       # workspace-level; the crate's own lockfile IS 
 # `expo export` output — the bundle CI builds to prove the app compiles.
 .expo-export/
 .expo-export-web/
+# Native projects are regenerated from app.config.ts and local Expo modules (CNG).
+apps/mobile/android/
+apps/mobile/ios/
 *.jsbundle
 apps/mobile/ios/Pods/
 apps/mobile/ios/build/

@@ -13,7 +13,7 @@ import type { Difficulty, LadderRung, PhraseState } from '../domain/phrase.js'
 import type { UserPhraseId } from '../domain/ids.js'
 
 export type EngineId =
-  'stream' | 'refrain' | 'srs' | 'prosody' | 'pronunciation' | 'roleplay' | 'run'
+  'stream' | 'refrain' | 'speak' | 'srs' | 'prosody' | 'pronunciation' | 'roleplay' | 'run'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // What the engine hands the UI
@@ -137,7 +137,14 @@ export interface ProgressDelta {
   // FSRS — maintained even by engines that never show an interval.
   /** ABSOLUTE, and merged as a GROUP: taking `due` from one device and `stability` from
    * another would produce a scheduling state no algorithm ever computed. */
-  readonly srs?: { readonly stability: number; readonly difficulty: number; readonly due: number }
+  readonly srs?: {
+    readonly stability: number
+    readonly difficulty: number
+    readonly due: number
+    readonly lastReview?: number | null
+    readonly lapses?: number
+    readonly state?: 'new' | 'learning' | 'review' | 'relearning'
+  }
 
   // Loop B.
   /**
@@ -275,6 +282,8 @@ export interface EngineContext {
   readonly flags: { bool(k: string, d: boolean): boolean; number(k: string, d: number): number }
   /** Injected — no engine calls Math.random(). */
   readonly seed: number
+  /** Persisted ordered membership for today; even an empty frozen set is authoritative. */
+  readonly refrainSet?: readonly UserPhraseId[]
 }
 
 /**
@@ -287,7 +296,12 @@ export interface LoroCoreFacade {
   streamRank(p: PhraseState, now: number): number
   repeatTarget(d: Difficulty): number
   /** Token indices to blank. Content words only, never articles or prepositions. */
-  clozeMask(phraseId: string): readonly number[]
+  clozeMask(phrase: PhraseState): readonly number[]
+  selectRefrainSet(
+    candidates: readonly PhraseState[],
+    size: number,
+    tripPhraseIds?: readonly UserPhraseId[],
+  ): readonly UserPhraseId[]
   fsrsReview(state: PhraseState, grade: 1 | 2 | 3 | 4, at: number): ProgressDelta['srs']
   matchTokens(
     heard: readonly string[],
@@ -328,7 +342,7 @@ export interface PracticeEngine {
   next(session: SessionHandle): Promise<PracticeItem | null>
 
   /** Record an attempt; return the deltas to persist. See ProgressDelta / rule 5. */
-  record(session: SessionHandle, attempt: Attempt): Promise<ProgressDelta>
+  record(session: SessionHandle, attempt: Attempt, ctx?: EngineContext): Promise<ProgressDelta>
 
   summarize(session: SessionHandle): Promise<SessionSummary>
 }

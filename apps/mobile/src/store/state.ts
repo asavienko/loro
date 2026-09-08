@@ -121,7 +121,7 @@ export const INITIAL_STATE: AppData = {
   refrainSubstituted: [],
 }
 
-/** The data half of the store, for assertions and (later) persistence. */
+/** The data half of the repository projection, for assertions and local transactions. */
 export function dataOf(state: AppData): AppData {
   return {
     nativeLanguage: state.nativeLanguage,

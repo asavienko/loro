@@ -46,6 +46,8 @@ import {
 } from '../../src/ui/theme'
 import { copy, themeLabel } from '../../src/lib/copy'
 import { toView, useApp } from '../../src/store'
+import { audioSpeech, useAudioSpeech } from '../../src/lib/audioSpeech'
+import { AudioControls } from '../../src/ui/components/AudioControls'
 /**
  * The gap between a section's label and its body, on all five labelled sections. Not a `space`
  * step — it sits between 8 and 12, and moving it to either would shift every section on the
@@ -62,6 +64,8 @@ export default function PhraseDetail() {
   const insets = useSafeAreaInsets()
   const { height: bottomBarHeight } = useBottomBar()
   const phrases = useApp((s) => s.phrases)
+  const targetLocale = useApp((s) => s.targetLocale)
+  const audio = useAudioSpeech(targetLocale)
   const setDifficulty = useApp((s) => s.setDifficulty)
   const toggleTag = useApp((s) => s.toggleTag)
   const toggleLoved = useApp((s) => s.toggleLoved)
@@ -116,6 +120,33 @@ export default function PhraseDetail() {
         </Row>
 
         <PhraseHero targetText={p.targetText} translation={p.translation} resp={cat?.resp} />
+        <AudioControls
+          label={
+            audio.phraseId === p.id && audio.playback === 'playing'
+              ? copy.audioSpeech.stop
+              : copy.audioSpeech.play
+          }
+          note={
+            !audio.canPlay
+              ? copy.audioSpeech.unavailable
+              : audio.phraseId === p.id && audio.playback === 'error'
+                ? copy.audioSpeech.error
+                : copy.audioSpeech.tts
+          }
+          enabled={audio.canPlay}
+          onPress={() => {
+            if (audio.phraseId === p.id && audio.playback === 'playing')
+              void audioSpeech.stopPlayback()
+            else void audioSpeech.play(p.id, p.targetText, targetLocale)
+          }}
+        />
+        <Button
+          label={copy.audioSpeech.practiceSpeak}
+          variant="secondary"
+          onPress={() => {
+            router.push('/practice/speak')
+          }}
+        />
         {cat === null && <Text>{copy.languages.personalMeaning(p.meaningLanguage)}</Text>}
 
         {cat?.words !== undefined && cat.words.length > 0 && <WordChips words={cat.words} />}

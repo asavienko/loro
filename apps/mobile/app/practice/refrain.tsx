@@ -116,7 +116,13 @@ export default function Refrain() {
 
         <ModeStrip mode={mode} />
 
-        <WarmingCard mode={mode} phrase={phrase} auto={auto} bandStyle={session.bandStyle} />
+        <WarmingCard
+          mode={mode}
+          phrase={phrase}
+          auto={auto}
+          bandStyle={session.bandStyle}
+          clozeMask={session.clozeMask}
+        />
 
         <Card>
           <AutomaticityMeter auto={auto} />
@@ -151,6 +157,7 @@ export default function Refrain() {
 // The session
 // ─────────────────────────────────────────────────────────────────────────────
 interface RefrainSession {
+  clozeMask: readonly number[]
   /** Today's frozen set, in the order the learner will see it. */
   set: PhraseView[]
   /** The phrase on screen. `undefined` while the engine's plan is still resolving. */
@@ -244,11 +251,14 @@ function useRefrainSession(): RefrainSession {
           at: deviceClock.now(),
         },
       )
-      .then(applyDelta)
+      .then((delta) => {
+        const nextCursor =
+          session.plan.items[cursor + 1]?.phraseId === item.phraseId ? cursor + 1 : cursor
+        applyDelta(delta, { refrainCursor: nextCursor })
+      })
     // Advance only WITHIN the phrase. On its last rep the cursor stays put, so the card
     // reaches 100% and the learner sees the lock-in — the reward moment of the screen —
     // instead of being moved on before it renders. Leaving the phrase is their tap.
-    if (session.plan.items[cursor + 1]?.phraseId === item.phraseId) setCursor(cursor + 1)
   }, [session, item, cursor, locked, applyDelta])
   /** Jump to the first item of the next phrase in the plan. */
   const nextPhrase = useCallback(() => {
@@ -286,6 +296,7 @@ function useRefrainSession(): RefrainSession {
     auto,
     bandStyle,
     locked,
+    clozeMask: item?.prompt.clozeMask ?? [],
     finished: done || exhausted,
     doRep,
     nextPhrase,
@@ -332,11 +343,13 @@ function WarmingCard({
   phrase,
   auto,
   bandStyle,
+  clozeMask,
 }: {
   mode: RefrainMode
   phrase: PhraseView
   auto: number
   bandStyle: WarmingStyle
+  clozeMask: readonly number[]
 }) {
   useLocale()
   return (
@@ -364,7 +377,7 @@ function WarmingCard({
         </Text>
       </Row>
 
-      <WarmingPrompt mode={mode} phrase={phrase} color={bandStyle.text} />
+      <WarmingPrompt mode={mode} phrase={phrase} color={bandStyle.text} clozeMask={clozeMask} />
     </View>
   )
 }
@@ -373,10 +386,12 @@ function WarmingPrompt({
   mode,
   phrase,
   color,
+  clozeMask,
 }: {
   mode: RefrainMode
   phrase: PhraseView
   color: string
+  clozeMask: readonly number[]
 }) {
   useLocale()
   switch (mode) {
@@ -397,7 +412,12 @@ function WarmingPrompt({
       return (
         <>
           <Text variant="title1" color={color} align="center" lang="target">
-            {cloze(phrase.targetText)}
+            {phrase.targetText
+              .split(/\s+/)
+              .map((word, index) =>
+                clozeMask.includes(index) ? copy.refrain.prompt.clozeBlank : word,
+              )
+              .join(' ')}
           </Text>
           <Text variant="caption" color={color} align="center">
             {phrase.translation}
@@ -611,47 +631,3 @@ const s = StyleSheet.create({
   },
   doneCta: { width: '100%', marginTop: space['3'] },
 })
-/**
- * Blank the most informative content word — never an article or preposition.
- *
- * Kept here, and kept as written. It disagrees with the `clozeMask: [1]` the RefrainEngine
- * records, which is a real defect owned by plans/05 — but the disagreement is about WHICH word
- * the learner sees blanked, so "fixing" it here would change the screen rather than reconcile
- * the two. See plans/52 §"Defects found".
- */
-function cloze(targetText: string): string {
-  const stop = new Set([
-    'el',
-    'la',
-    'los',
-    'las',
-    'un',
-    'una',
-    'de',
-    'del',
-    'a',
-    'al',
-    'en',
-    'por',
-    'para',
-    'y',
-    'o',
-    'que',
-    'me',
-    'te',
-    'se',
-    'lo',
-  ])
-  const words = targetText.split(' ')
-  let best = -1
-  let bestLen = 0
-  words.forEach((w, i) => {
-    const bare = w.replace(/[¿?¡!,.]/g, '').toLowerCase()
-    if (!stop.has(bare) && bare.length > bestLen) {
-      bestLen = bare.length
-      best = i
-    }
-  })
-  if (best < 0) return targetText
-  return words.map((w, i) => (i === best ? copy.refrain.prompt.clozeBlank : w)).join(' ')
-}

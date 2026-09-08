@@ -1,5 +1,6 @@
-import { reachAccount } from './accountFlow'
+import { mockAccountService, openAccount, requestCode, finishSignIn } from './accountFlow'
 import { localeText, onboardPair } from './languageFlow'
+import { openStorageFailure, openStorageLoading } from './persistenceFlow'
 /**
  * Every learner-visible STATE the app can be in, and how to reach it by clicking.
  *
@@ -51,25 +52,74 @@ export interface AppState {
 }
 
 export const STATES: AppState[] = [
-  ...(
-    [
-      'discoveryError',
-      'unavailable',
-      'ready',
-      'busy',
-      'error',
-      'cancelled',
-      'signedIn',
-      'localSignOut',
-      'backendUnavailable',
-      'backendChecking',
-    ] as const
-  ).map((scenario): AppState => ({
-    name: `account · ${scenario}`,
-    route: '/account',
-    spec: '§ F-01 Account',
-    reach: (page) => reachAccount(page, scenario),
+  {
+    name: 'storage · opening progress',
+    route: '/',
+    firstRun: true,
+    spec: 'F-02 durable hydration',
+    reach: openStorageLoading,
+  },
+  {
+    name: 'storage · recovery preserves data',
+    route: '/',
+    firstRun: true,
+    spec: 'F-02 non-destructive migration recovery',
+    reach: openStorageFailure,
+  },
+  ...(['email', 'code', 'connected', 'invalid-code', 'sync-unavailable'] as const).map(
+    (step): AppState => ({
+      name: `account · ${step}`,
+      route: '/account',
+      spec: 'F-01/F-04 optional sign-in and sync',
+      reach: async (page) => {
+        await mockAccountService(
+          page,
+          step === 'invalid-code' || step === 'sync-unavailable' ? step : 'success',
+        )
+        await openAccount(page)
+        if (step !== 'email') await requestCode(page)
+        if (step === 'connected' || step === 'sync-unavailable') await finishSignIn(page)
+        if (step === 'invalid-code') {
+          await page.getByRole('textbox', { name: 'Six-digit code' }).fill('000000')
+          await page.getByRole('button', { name: 'Sign in', exact: true }).click()
+          await expect(
+            page.getByText('That code could not be verified. Check it or request another code.'),
+          ).toBeVisible()
+        }
+        if (step === 'sync-unavailable') {
+          await expect(
+            page.getByText('Your progress is saved here. Sync will retry when you are connected.'),
+          ).toBeVisible()
+        }
+      },
+    }),
+  ),
+  ...(['initial', 'partial', 'revealed'] as const).map((step): AppState => ({
+    name: `speak · ${step} reveal`,
+    route: '/practice/speak',
+    spec: 'P3-25 on-device speech reveal fallback',
+    reach: async (page) => {
+      await page.getByRole('button', { name: /, open the menu$/ }).click()
+      await page.getByRole('button', { name: 'Speak', exact: true }).click()
+      const reveal = page.getByRole('button', { name: 'Reveal a word', exact: true })
+      await expect(reveal).toBeVisible()
+      if (step !== 'initial') await reveal.click()
+      if (step === 'revealed') {
+        while (await reveal.isEnabled()) await reveal.click()
+        await expect(page.getByText('Phrase revealed. Try saying it aloud.')).toBeVisible()
+      }
+    },
   })),
+  {
+    name: 'speak · empty',
+    route: '/practice/speak',
+    firstRun: true,
+    spec: 'P3-25 empty practice',
+    reach: async (page) => {
+      await page.goto('/practice/speak')
+      await expect(page.getByRole('button', { name: 'Add phrases', exact: true })).toBeVisible()
+    },
+  },
   ...(['bg', 'ru'] as const).flatMap((native) =>
     (['today', 'stream', 'add', 'progress', 'refrain'] as const).map((surface): AppState => ({
       name: `${surface} · ${native} course`,
@@ -493,6 +543,15 @@ export async function enter(
   state: AppState,
   onboard: (page: Page) => Promise<void>,
 ): Promise<void> {
+  // The exhaustive geometry suites reuse one browser page. Each manifest entry is
+  // an independent learner, while production reloads now correctly retain progress.
+  if (page.url().startsWith('http')) {
+    await page.evaluate(() => {
+      localStorage.clear()
+      sessionStorage.clear()
+    })
+    await page.goto('about:blank')
+  }
   if (state.firstRun !== true) await onboard(page)
   await state.reach(page)
 }

@@ -1,36 +1,28 @@
 import { expect, onboard, test } from './fixtures'
-import { reachAccount } from './accountFlow'
-import { todayMarker } from './states'
-test('account sign-in and sign-out retain the active learning session', async ({ page }) => {
+import { mockAccountService, openAccount, requestCode, finishSignIn } from './accountFlow'
+test('optional email sign-in syncs and sign-out keeps durable local practice', async ({ page }) => {
+  await mockAccountService(page)
   await onboard(page)
-  await reachAccount(page, 'signedIn')
+  await openAccount(page)
+  await requestCode(page)
+  await finishSignIn(page)
+  await expect(page.getByText('Your progress is up to date.')).toBeVisible()
+  expect(await page.evaluate(() => JSON.stringify(localStorage))).not.toContain('e2e-refresh')
+  expect(await page.evaluate(() => JSON.stringify(localStorage))).not.toContain('e2e-access')
   await page.getByRole('button', { name: 'Sign out', exact: true }).click()
-  await expect(page.getByRole('button', { name: 'Continue with Google' })).toBeEnabled()
-  await page.getByRole('button', { name: 'Account, open the menu' }).click()
-  await page.getByRole('dialog').getByRole('button', { name: 'Today', exact: true }).click()
-  await expect(todayMarker(page)).toBeVisible()
-  await expect(page.getByRole('button', { name: /percent automatic/ }).first()).toBeVisible()
+  await expect(page.getByRole('textbox', { name: 'Email address' })).toBeVisible()
+  await page.goto('/')
+  await expect(page.getByText('Your day', { exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: /Stream, 10 phrases/ })).toBeVisible()
 })
-test('rejected callback state creates no app session', async ({ page }) => {
+test('web reload retains progress while requiring a fresh sign-in', async ({ page }) => {
+  await mockAccountService(page)
   await onboard(page)
-  await reachAccount(page, 'error')
-  await expect(page.getByRole('button', { name: 'Sign out', exact: true })).toHaveCount(0)
-  await expect(page.getByRole('button', { name: 'Continue with Apple' })).toBeEnabled()
-})
-
-test('backend connection recovers independently of sign-in and preserves local practice', async ({
-  page,
-}) => {
-  await onboard(page)
-  await reachAccount(page, 'backendUnavailable')
-  await page
-    .context()
-    .route('https://auth.loro.test/v1/health/ready', (route) =>
-      route.fulfill({ json: { status: 'ok', checks: { content: 'ok', merge: 'ok' } } }),
-    )
-  await page.getByRole('button', { name: 'Check connection', exact: true }).click()
-  await expect(page.getByText('Server connected.', { exact: true })).toBeVisible()
-  await page.getByRole('button', { name: 'Account, open the menu' }).click()
-  await page.getByRole('dialog').getByRole('button', { name: 'Today', exact: true }).click()
-  await expect(todayMarker(page)).toBeVisible()
+  await openAccount(page)
+  await requestCode(page)
+  await finishSignIn(page)
+  await page.reload()
+  await expect(page.getByRole('textbox', { name: 'Email address' })).toBeVisible()
+  await page.goto('/')
+  await expect(page.getByText('Your day', { exact: true })).toBeVisible()
 })

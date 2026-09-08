@@ -37,9 +37,9 @@ import {
   universalDelta,
   workedItems,
 } from '../common.js'
-import type { Difficulty, PhraseState } from '../../domain/phrase.js'
+import type { PhraseState } from '../../domain/phrase.js'
 import type { UserPhraseId } from '../../domain/ids.js'
-import { LadderRung, isActive, repsToday } from '../../domain/phrase.js'
+import { LadderRung, repsToday } from '../../domain/phrase.js'
 
 export const REFRAIN_MODES = ['echo', 'chorus', 'speed', 'cloze', 'call', 'cold'] as const
 export type RefrainMode = (typeof REFRAIN_MODES)[number]
@@ -191,65 +191,19 @@ export function warmBand(automaticityPct: number): WarmBand {
  * can always finish the set they were shown.
  */
 export function selectRefrainSet(
+  core: EngineContext['core'],
   candidates: readonly PhraseState[],
   size: number,
   tripPhraseIds: readonly UserPhraseId[] = [],
 ): readonly UserPhraseId[] {
-  const picked: UserPhraseId[] = []
-  const seen = new Set<string>()
-  const take = (p: PhraseState): void => {
-    if (!seen.has(p.id) && picked.length < size) {
-      seen.add(p.id)
-      picked.push(p.id)
-    }
-  }
-
-  // The selector is handed raw candidates by some callers, so it filters again rather than
-  // trusting them — but through the one domain predicate, not a second copy of the rule.
-  const eligible = candidates.filter(isActive)
-
-  // 1 · unfinished business
-  eligible
-    .filter((p) => p.lockInDays > 0 && p.lockInDays < LOCK_IN_DAYS_TO_GRADUATE)
-    .sort((a, b) => b.lockInDays - a.lockInDays || a.id.localeCompare(b.id))
-    .forEach(take)
-
-  // 2 · today's trip drop
-  const trip = new Set(tripPhraseIds)
-  eligible
-    .filter((p) => trip.has(p.id))
-    .sort((a, b) => a.id.localeCompare(b.id))
-    .forEach(take)
-
-  // 3 · weakest first
-  eligible
-    .filter((p) => p.reps > 0)
-    .sort(
-      (a, b) =>
-        a.automaticity - b.automaticity ||
-        difficultyWeight(b) - difficultyWeight(a) ||
-        a.id.localeCompare(b.id),
-    )
-    .forEach(take)
-
-  // 4 · new material
-  eligible
-    .filter((p) => p.reps === 0)
-    .sort((a, b) => a.addedAt - b.addedAt || a.id.localeCompare(b.id))
-    .forEach(take)
-
-  return picked
-}
-
-/** How strongly a difficulty rating pulls a phrase forward when automaticity ties. */
-const DIFFICULTY_WEIGHT: Record<Difficulty, number> = { hard: 2, med: 1, easy: 0 }
-
-function difficultyWeight(p: PhraseState): number {
-  return DIFFICULTY_WEIGHT[p.difficulty]
+  return core.selectRefrainSet(candidates, size, tripPhraseIds)
 }
 
 export class RefrainEngine implements PracticeEngine {
   readonly id = 'refrain' as const
+  private readonly contexts = new WeakMap<SessionPlan, EngineContext>()
+
+  constructor(private readonly currentContext?: () => EngineContext) {}
 
   availability(ctx: EngineContext): Promise<Availability> {
     return availableWhenActive(ctx, 'no-phrases')
@@ -258,7 +212,8 @@ export class RefrainEngine implements PracticeEngine {
   async plan(ctx: EngineContext): Promise<SessionPlan> {
     const active = await ctx.phrases.active()
     const size = ctx.settings.repTarget > 0 ? refrainSetSize(ctx.settings.dailyMinutes) : 0
-    const setIds = selectRefrainSet(active, size, ctx.trip?.phraseIds ?? [])
+    const setIds =
+      ctx.refrainSet ?? selectRefrainSet(ctx.core, active, size, ctx.trip?.phraseIds ?? [])
     const byId = new Map(active.map((p) => [p.id, p]))
     const target = ctx.settings.repTarget || DEFAULT_REP_TARGET
     const today = ctx.clock.localDay()
@@ -267,7 +222,7 @@ export class RefrainEngine implements PracticeEngine {
     for (const id of setIds) {
       const phrase = byId.get(id)
       if (phrase === undefined) continue
-      const mask = ctx.core.clozeMask(id)
+      const mask = ctx.core.clozeMask(phrase)
       // RESUME, don't restart. A phrase already at 4 of 6 reps today gets its remaining
       // two, at the modes that follow — so `repIndex` is the day's rep number and
       // `record()`'s absolute `repsToday` cannot walk the stored count backwards.
@@ -293,20 +248,26 @@ export class RefrainEngine implements PracticeEngine {
       }
     }
 
-    return {
+    const plan: SessionPlan = {
       engineId: this.id,
       items,
       estimatedMs: items.length * 9_000,
       // THE point of Loop B: a closed set you can see in full and finish.
       closed: true,
     }
+    this.contexts.set(plan, ctx)
+    return plan
   }
 
   next(session: SessionHandle): Promise<PracticeItem | null> {
     return itemAtCursor(session)
   }
 
-  record(session: SessionHandle, attempt: Attempt): Promise<ProgressDelta> {
+  async record(
+    session: SessionHandle,
+    attempt: Attempt,
+    context?: EngineContext,
+  ): Promise<ProgressDelta> {
     const item = itemFor(session, attempt)
     const repIndex = metaNumber(item, 'repIndex', 0)
     const repTarget = metaNumber(item, 'repTarget', DEFAULT_REP_TARGET)
@@ -320,7 +281,12 @@ export class RefrainEngine implements PracticeEngine {
     // never shows an interval. Produced hint-free at a later mode is a 'Good';
     // anything needing hints or a model is a 'Hard'.
     const grade: 1 | 2 | 3 | 4 = !success ? 1 : attempt.hintsUsed > 0 ? 2 : 3
-    const srs = fsrsWriteFor(attempt, grade)
+    const ctx = context ?? this.currentContext?.() ?? this.contexts.get(session.plan)
+    if (ctx === undefined) throw new Error('Refrain recording requires its current engine context')
+    const phrase = await ctx.phrases.byId(item.phraseId)
+    if (phrase === null) throw new Error('The practised phrase no longer exists')
+    const srs =
+      attempt.outcome === 'skipped' ? undefined : ctx.core.fsrsReview(phrase, grade, attempt.at)
 
     // Rule 5 again: producing from a cue-free mode is evidence of Bent-level depth.
     const earnsBent = success && (mode === 'cloze' || mode === 'call') && attempt.hintsUsed === 0
@@ -359,32 +325,5 @@ export class RefrainEngine implements PracticeEngine {
       durationMs: done.length * 9_000,
       extra: { repsToday: done.length, setSize: unique },
     })
-  }
-}
-
-/**
- * Derive the FSRS write for a rep.
- *
- * Kept as a seam so the mapping lives in ONE place and can be reviewed against
- * calibration data — the implicit-grade mappings are a judgement call, not a proof.
- * See docs/architecture/scheduling.md#grade-mapping
- *
- * ⚠️ This duplicates `LoroCoreFacade.fsrsReview`, which `record()` cannot reach: the
- * `PracticeEngine` contract passes a session and an attempt, not the `EngineContext` that
- * carries the injected core. Every engine therefore has to hand-roll FSRS, which is the
- * cross-platform divergence ADR-0002 exists to prevent. Tracked in
- * plans/05-fix-shared-maths-duplication.md; fixing it needs a contract change.
- */
-function fsrsWriteFor(attempt: Attempt, grade: 1 | 2 | 3 | 4): ProgressDelta['srs'] {
-  // A skipped rep is not a review.
-  if (attempt.outcome === 'skipped') return undefined
-  // Placeholder scheduling until loro-core's FSRS lands (M0). The SHAPE is correct —
-  // a real interval derived from the grade — and the conformance suite asserts that
-  // every engine produces one.
-  const days = grade === 1 ? 0.007 : grade === 2 ? 1 : grade === 3 ? 3 : 5
-  return {
-    stability: days,
-    difficulty: 5,
-    due: attempt.at + days * 86_400_000,
   }
 }

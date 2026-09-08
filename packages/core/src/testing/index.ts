@@ -15,6 +15,7 @@ import type {
 } from '../engines/types.js'
 import type { Difficulty, PhraseState, Tag } from '../domain/phrase.js'
 import { LadderRung } from '../domain/phrase.js'
+import { fakeSelectRefrainSet } from './selection.js'
 import { userPhraseId, catalogPhraseId } from '../domain/ids.js'
 
 /** A fixed instant, so every fixture is reproducible. 2026-07-28T09:41:00Z. */
@@ -150,6 +151,8 @@ export function fakeCore(): LoroCoreFacade {
       if (p.srs !== null && p.srs.due <= now) r -= 4
       return r
     },
+
+    selectRefrainSet: fakeSelectRefrainSet,
 
     // Deterministic stand-in: blank the second token.
     clozeMask: () => [1],

@@ -47,7 +47,8 @@ export class StreamEngine implements PracticeEngine {
     // anything repeats, and the offsets bias WHICH comes sooner without starving.
     const ordered = [...active].sort(
       (a, b) =>
-        ctx.core.streamRank(a, now) - ctx.core.streamRank(b, now) || a.id.localeCompare(b.id),
+        ctx.core.streamRank(a, now) - ctx.core.streamRank(b, now) ||
+        (a.id < b.id ? -1 : a.id > b.id ? 1 : 0),
     )
 
     // One item per repetition, so the UI's repeat pips map 1:1 onto items.

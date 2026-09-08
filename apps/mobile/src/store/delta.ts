@@ -186,9 +186,8 @@ function bumpAxis(current: number, delta: number | undefined): number {
 /**
  * FSRS state, merged as a group.
  *
- * `lapses` and `state` are carried rather than computed: no engine reports them, and
- * the real transitions are FSRS's own (plans/17-fsrs-implementation-and-parity.md).
- * Guessing them here would put a made-up card state behind the memory-model screen.
+ * The canonical scheduler supplies review time, lapses and state together. Older
+ * engine deltas preserve existing values until they supply this metadata too.
  */
 function nextSrs(
   prev: FsrsState | null,
@@ -199,8 +198,8 @@ function nextSrs(
     stability: next.stability,
     difficulty: next.difficulty,
     due: next.due,
-    lastReview: at ?? prev?.lastReview ?? null,
-    lapses: prev?.lapses ?? 0,
-    state: prev?.state ?? 'learning',
+    lastReview: next.lastReview ?? at ?? prev?.lastReview ?? null,
+    lapses: next.lapses ?? prev?.lapses ?? 0,
+    state: next.state ?? prev?.state ?? 'learning',
   }
 }

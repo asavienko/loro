@@ -1,3 +1,7 @@
+import { fakeCore } from '../testing/index.js'
+import { selectRefrainSet as selectCanonicalSet } from './refrain/index.js'
+const selectRefrainSet = (...args: Parameters<ReturnType<typeof fakeCore>['selectRefrainSet']>) =>
+  selectCanonicalSet(fakeCore(), ...args)
 /**
  * Engine tests: the shared conformance suite plus each engine's own rules.
  *
@@ -16,7 +20,6 @@ import {
   modeForRep,
   modelRateForMode,
   refrainSetSize,
-  selectRefrainSet,
   warmBand,
   REFRAIN_MODES,
 } from './refrain/index.js'
@@ -234,6 +237,18 @@ describe('RefrainEngine', () => {
     // Onset was never detected. The read-out is hidden, never estimated.
     const unmeasured = await engine.record(session, success('one#1', { latencyMs: null }))
     expect(unmeasured.latencySampleMs).toBeNull()
+  })
+
+  it('keeps persisted daily membership and order even when later priorities change', async () => {
+    const ctx = makeContext(
+      [makePhrase('new-hard', { difficulty: 'hard' }), makePhrase('first'), makePhrase('second')],
+      {
+        refrainSet: [userPhraseId('second'), userPhraseId('first')],
+      },
+    )
+    const plan = await new RefrainEngine().plan(ctx)
+    expect([...new Set(plan.items.map((item) => item.phraseId))]).toEqual(['second', 'first'])
+    expect((await new RefrainEngine().plan({ ...ctx, refrainSet: [] })).items).toEqual([])
   })
 
   it('writes FSRS state even though the screen shows no interval (rule 5)', async () => {

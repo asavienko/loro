@@ -79,13 +79,16 @@ describe('F-08 language persistence', () => {
     driver.run(
       "INSERT INTO refrain_day(user_id, local_day, set_ids, waves, substituted) VALUES ('local', '2026-07-28', '[\"old-id\"]', '[]', '[]')",
     )
+    // Even whitespace in an attempted operation's persisted payload is retained:
+    // migration must never regenerate a request the server may already have seen.
+    const queuedPayload = '{\n  "note": {"v":"Keep my phrase", "hlc":"legacy"}\n}'
     driver.run(
-      "INSERT INTO outbox(entity, entity_id, op, payload, hlc, created_at) VALUES ('user_phrase', 'old-id', 'upsert', '{}', 'legacy', ?)",
-      [AT],
+      "INSERT INTO outbox(entity, entity_id, op, payload, hlc, created_at, attempts, last_error) VALUES ('user_phrase', 'old-id', 'upsert', ?, 'legacy', ?, 2, 'IN_FLIGHT')",
+      [queuedPayload, AT],
     )
     const beforeOutbox = driver.all('SELECT * FROM outbox')
     const beforeTables = driver.all('SELECT * FROM settings')
-    expect(migrate(driver, AT).applied).toEqual([2])
+    expect(migrate(driver, AT).applied).toEqual([2, 3, 4])
     const db = openSqlPersistence(driver, () => 'new', AT)
     expect(db.settings.load()?.onboarded).toBe(true)
     expect(db.refrainDay.latest()?.setIds).toEqual(['old-id'])
@@ -93,7 +96,18 @@ describe('F-08 language persistence', () => {
     expect(driver.all('SELECT user_id, updated_hlc FROM settings')).toEqual(
       beforeTables.map((r) => ({ user_id: r['user_id'], updated_hlc: r['updated_hlc'] })),
     )
-    expect(driver.all('SELECT * FROM outbox')).toEqual(beforeOutbox)
+    expect(driver.all('SELECT * FROM outbox')).toEqual(
+      beforeOutbox.map((row) => ({ ...row, replaces: null })),
+    )
+    expect(driver.all('SELECT payload FROM outbox')[0]?.['payload']).toBe(queuedPayload)
+    expect(db.outbox.pending(1)[0]).toMatchObject({
+      entityId: 'old-id',
+      fields: { note: { v: 'Keep my phrase', hlc: 'legacy' } },
+      attempts: 2,
+    })
+    expect(db.outbox.pending(1)[0]?.replaces).toBeUndefined()
+    expect(driver.all('SELECT * FROM sync_catalog_tombstones')).toEqual([])
     expect(migrate(driver, AT).applied).toEqual([])
+    driver.close()
   })
 })

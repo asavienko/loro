@@ -196,6 +196,22 @@ export const MIGRATIONS: readonly Migration[] = [
         SELECT user_id, 'es-ES', onboarded FROM settings;
     `,
   },
+  {
+    version: 3,
+    name: 'explicit_phrase_replacement',
+    up: `ALTER TABLE outbox ADD COLUMN replaces TEXT;`,
+  },
+  {
+    version: 4,
+    name: 'catalog_tombstone_identity',
+    up: `CREATE TABLE sync_catalog_tombstones (
+      id TEXT PRIMARY KEY,
+      phrase_id TEXT NOT NULL,
+      target_locale TEXT NOT NULL,
+      deleted_at INTEGER NOT NULL
+    );
+    CREATE INDEX sync_catalog_tombstones_identity ON sync_catalog_tombstones(phrase_id,target_locale);`,
+  },
 ]
 
 /** The newest schema this build understands. */

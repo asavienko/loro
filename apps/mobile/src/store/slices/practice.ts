@@ -22,7 +22,7 @@ export const createPracticeSlice: Slice<'recordPlay' | 'applyDelta'> = ({ set, g
     })
   },
 
-  applyDelta: (delta) => {
+  applyDelta: (delta, resume) => {
     const day = deps.clock.localDay()
     // A rep is what makes a day count towards the streak — a play in the stream is
     // listening, not production. Keyed on the STREAK day, so a 01:30 session extends
@@ -39,10 +39,22 @@ export const createPracticeSlice: Slice<'recordPlay' | 'applyDelta'> = ({ set, g
       const update = (phrases: typeof st.phrases): typeof st.phrases =>
         phrases.map((p) => (p.id === delta.phraseId ? applyDeltaToPhrase(p, delta, day) : p))
       return {
+        ...(resume && active
+          ? { refrainResume: { ...st.refrainResume, cursor: resume.refrainCursor } }
+          : {}),
         phrases: active ? update(st.phrases) : st.phrases,
         courses:
           !active && saved
-            ? { ...st.courses, [saved[0]]: { ...saved[1], phrases: update(saved[1].phrases) } }
+            ? {
+                ...st.courses,
+                [saved[0]]: {
+                  ...saved[1],
+                  phrases: update(saved[1].phrases),
+                  ...(resume
+                    ? { refrainResume: { ...saved[1].refrainResume, cursor: resume.refrainCursor } }
+                    : {}),
+                },
+              }
             : st.courses,
         practiceDays:
           practised === null ? st.practiceDays : addPracticeDay(st.practiceDays, practised),

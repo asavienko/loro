@@ -86,6 +86,6 @@ export const createSessionSlice: Slice<'completeOnboarding' | 'reset' | 'setLang
   // cleared here for free. The enumerated version left `dailyMinutes` and
   // `streakDays` behind — the previous learner's settings, on a shared device.
   reset: () => {
-    set({ ...INITIAL_STATE })
+    set(INITIAL_STATE)
   },
 })

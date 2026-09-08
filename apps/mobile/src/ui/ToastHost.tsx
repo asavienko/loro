@@ -10,6 +10,7 @@ import { useEffect } from 'react'
 import { View, StyleSheet } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { copy } from '../lib/copy'
+import { TOAST_MS, UNDO_TOAST_MS } from '../lib/toastTiming'
 import { useApp } from '../store'
 import { Pressable, Text } from './primitives'
 import { HIT_SLOP, MIN_TAP, onDark, radius, space, surface } from './theme'
@@ -26,7 +27,7 @@ export function ToastHost() {
   useEffect(() => {
     if (toast === null) return
     // 2.6s with Undo, 1.7s without — the blueprint's timings.
-    const ms = toast.undo === undefined ? 1700 : 2600
+    const ms = toast.undo === undefined ? TOAST_MS : UNDO_TOAST_MS
     const t = setTimeout(clear, ms)
     return () => {
       clearTimeout(t)

@@ -14,11 +14,13 @@ import type {
   Difficulty,
   PhraseState,
   ProgressDelta,
+  RefrainDayRow,
   Tag,
   UserPhraseId,
 } from '@loro/core'
 import type { AppData } from './state'
 import type { OwnPhraseDraft } from './phraseFactory'
+import type { LearnerStorage } from '../data/learner'
 
 export interface AppActions {
   setLanguages: (nativeLanguage: NativeLanguage, targetLocale: TargetLocale) => void
@@ -53,7 +55,7 @@ export interface AppActions {
    * The ONLY write path for a practice outcome. A screen calls `engine.record(...)` and
    * hands the result here; nothing else writes a progress field.
    */
-  applyDelta: (delta: ProgressDelta) => void
+  applyDelta: (delta: ProgressDelta, resume?: { refrainCursor: number }) => void
   select: (id: string | null) => void
   showToast: (message: string, undo?: () => void) => void
   clearToast: () => void
@@ -77,6 +79,8 @@ export type AppState = AppData & AppActions
 export interface StoreDeps {
   clock: Clock
   newId: () => UserPhraseId
+  storage?: LearnerStorage
+  onPersistenceError?: (error: unknown) => void
 }
 
 /**
@@ -91,6 +95,7 @@ export interface SliceContext {
   readonly set: StoreApi<AppState>['setState']
   readonly get: StoreApi<AppState>['getState']
   readonly deps: StoreDeps
+  readonly loadRefrainDay: (day: string, target: TargetLocale) => RefrainDayRow | null
 }
 
 /**

@@ -766,17 +766,18 @@ describe('the outbox', () => {
     expect(db.outbox.pending(10).map((o) => o.attempts)).toEqual([0])
   })
 
-  it('folds a new lww write into an op that has already failed, keeping its attempts', () => {
-    // Nothing was accepted, so the two writes are still one write — and the retry history
-    // belongs to the QUEUE SLOT, not to the value that happened to be in it.
+  it('keeps attempted payloads immutable and queues later writes separately', () => {
+    // A failed response may follow an accepted server write. Its retry must retain the
+    // exact payload for that sequence while later edits receive their own sequence.
     write({ difficulty: { v: 'hard', hlc: 'h1' } })
     db.outbox.recordFailure([1], 'offline')
     write({ difficulty: { v: 'easy', hlc: 'h2' } })
 
     const ops = db.outbox.pending(10)
-    expect(ops).toHaveLength(1)
-    expect(ops[0]?.fields['difficulty']).toEqual({ v: 'easy', hlc: 'h2' })
+    expect(ops).toHaveLength(2)
+    expect(ops[0]?.fields['difficulty']).toEqual({ v: 'hard', hlc: 'h1' })
     expect(ops[0]?.attempts).toBe(1)
+    expect(ops[1]?.fields['difficulty']).toEqual({ v: 'easy', hlc: 'h2' })
   })
 
   it('compacts by merging, and never by dropping a write', () => {
@@ -1019,6 +1020,10 @@ describe('erasure leaves nothing behind', () => {
       refrainSession: null,
     })
     driver.run(`INSERT INTO kv (k, v) VALUES ('last-sync-cursor', 'c-42')`)
+    driver.run(
+      'INSERT INTO sync_catalog_tombstones(id,phrase_id,target_locale,deleted_at) VALUES(?,?,?,?)',
+      [gone, 'b', 'es-ES', AT],
+    )
     for (const id of [kept, gone]) {
       db.outbox.append({
         entity: 'user_phrase',

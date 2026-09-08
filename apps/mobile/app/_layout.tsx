@@ -21,9 +21,22 @@ import { BottomBarProvider } from '../src/ui/BottomBarContext'
 import { Pressable, Text } from '../src/ui/primitives'
 import { NavigationMenu } from '../src/ui/components/NavigationMenu'
 import { DESTINATIONS, placeForPath } from '../src/lib/navigation'
+import { startAccountSync } from '../src/services/accountSync'
+import { PersistenceGate } from '../src/store/PersistenceGate'
 
 export default function RootLayout() {
+  return (
+    <PersistenceGate>
+      <ReadyLayout />
+    </PersistenceGate>
+  )
+}
+
+function ReadyLayout() {
   useLocale()
+  useEffect(() => {
+    void startAccountSync()
+  }, [])
   useEffect(() => {
     const state = useApp.getState()
     if (!state.languageChosen && !state.onboarded) {
@@ -121,15 +134,13 @@ export default function RootLayout() {
                 <Stack.Screen name="add" options={{ title: copy.nav.add }} />
                 {/* Empty on purpose — the hero IS the title. See copy.nav.phrase. */}
                 <Stack.Screen name="phrase/[id]" options={{ title: copy.nav.phrase }} />
-                <Stack.Screen
-                  name="practice/refrain"
-                  options={{ title: copy.nav.refrain, gestureEnabled: false }}
-                />
-                <Stack.Screen
-                  name="practice/stream"
-                  options={{ title: copy.nav.stream, gestureEnabled: false }}
-                />
+                <Stack.Screen name="practice/refrain" options={{ title: copy.nav.refrain }} />
+                <Stack.Screen name="practice/stream" options={{ title: copy.nav.stream }} />
                 <Stack.Screen name="account" options={{ title: copy.account.title }} />
+                <Stack.Screen
+                  name="practice/speak"
+                  options={{ title: copy.audioSpeech.speakTitle }}
+                />
                 <Stack.Screen name="languages" options={{ title: copy.languages.title }} />
                 <Stack.Screen name="progress" options={{ title: copy.nav.progress }} />
                 {devToolsAreAvailable() ? (

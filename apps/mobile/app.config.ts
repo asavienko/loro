@@ -14,23 +14,9 @@ import type { ExpoConfig } from 'expo/config'
  */
 
 const VERSION = '0.1.0'
-const localApk = process.env['LORO_LOCAL_APK'] === '1'
-const previewPlugins: NonNullable<ExpoConfig['plugins']> = localApk
-  ? [
-      [
-        'expo-splash-screen',
-        {
-          android: {
-            drawable: { icon: './assets/preview/splash.xml' },
-            backgroundColor: '#f6f2ea',
-          },
-        },
-      ],
-    ]
-  : []
 
 export default (): ExpoConfig => ({
-  name: localApk ? 'Loro Preview' : 'Loro',
+  name: 'Loro',
   slug: 'loro',
   version: VERSION,
   orientation: 'default',
@@ -41,14 +27,12 @@ export default (): ExpoConfig => ({
   splash: {
     backgroundColor: '#f6f2ea', // surface.app
     resizeMode: 'contain',
-    image: localApk ? undefined : './assets/images/splash.png',
   },
 
   updates: {
     // OTA is for FIXES, not features. Staged 5% → 25% → 100%.
     // See docs/process/ci-cd.md#ota-updates
-    enabled: !localApk,
-    url: localApk ? undefined : 'https://u.expo.dev/PLACEHOLDER',
+    url: 'https://u.expo.dev/PLACEHOLDER',
     fallbackToCacheTimeout: 0,
   },
   // An OTA cannot target a binary whose native surface differs.
@@ -63,7 +47,7 @@ export default (): ExpoConfig => ({
     infoPlist: {
       // The promise, at the moment of decision.
       NSMicrophoneUsageDescription:
-        'Loro listens while you practise speaking. Your recordings are scored on this device and never uploaded.',
+        'Loro listens while you practise speaking. Speech is recognized on this device and recordings are never uploaded.',
       NSSpeechRecognitionUsageDescription:
         'Speech recognition runs on your device so you can practise offline.',
       NSCameraUsageDescription: 'Photograph a sign or menu to add the phrases you see.',
@@ -79,14 +63,11 @@ export default (): ExpoConfig => ({
   },
 
   android: {
-    package: localApk ? 'app.loro.android.preview' : 'app.loro.android',
+    package: 'app.loro.android',
     versionCode: 1,
-    adaptiveIcon: localApk
-      ? undefined
-      : {
-          foregroundImage: './assets/images/adaptive-icon.png',
-          backgroundColor: '#f6f2ea',
-        },
+    adaptiveIcon: {
+      backgroundColor: '#f6f2ea',
+    },
     permissions: [
       'android.permission.RECORD_AUDIO',
       'android.permission.CAMERA',
@@ -104,15 +85,12 @@ export default (): ExpoConfig => ({
     ],
   },
 
-  // Only plugins for INSTALLED packages. The native modules (loro-audio,
-  // loro-speech, loro-core) and notifications remain future work. Account browser and
-  // secure storage plugins are installed below — see README.md.
+  // Local Expo modules in ./modules are discovered by Expo autolinking during prebuild.
   plugins: [
-    ...previewPlugins,
     'expo-router',
-    'expo-web-browser',
     'expo-secure-store',
     ['expo-localization', { supportedLocales: ['en', 'bg', 'ru'] }],
+    './plugins/with-default-splash-icon.cjs',
   ],
 
   experiments: {
@@ -120,6 +98,6 @@ export default (): ExpoConfig => ({
   },
 
   extra: {
-    eas: localApk ? undefined : { projectId: 'PLACEHOLDER' },
+    eas: { projectId: 'PLACEHOLDER' },
   },
 })
