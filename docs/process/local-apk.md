@@ -38,6 +38,9 @@ unavailable. To configure a real backend, supply its public HTTPS URL including 
 EXPO_PUBLIC_API_URL=https://your-testing-api.example/v1 pnpm apk:local
 ```
 
+Use the deployed `ApiUrl` from the [AWS gateway](public-api.md) for standalone internet access.
+Account shows the actual server connection and keeps sign-in availability separate.
+
 The URL is public configuration embedded in the APK. It must not contain credentials, query strings
 or fragments. The snapshot excludes ignored local environment files; Expo dotenv loading is
 disabled. Other inherited `EXPO_PUBLIC_*` values are cleared. No API keys or backend secrets belong

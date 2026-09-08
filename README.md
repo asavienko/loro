@@ -19,7 +19,7 @@ labs, settings, chat, and alternative loops.
 
 ```
 pnpm bootstrap && pnpm check     →  23/23 tasks at the last green baseline
-pnpm test:e2e                    →  128 learner browser tests across every implemented state
+pnpm test:e2e                    →  131 learner browser tests across every implemented state
 pnpm test:e2e:workbench          →  3 dev-workbench browser tests
 pnpm --filter @loro/mobile bundle →  production Expo/Metro export proof
 pnpm --filter @loro/api start     →  21 endpoints on :3000/v1
@@ -30,8 +30,8 @@ pnpm --filter @loro/api start     →  21 endpoints on :3000/v1
 | Documentation          |     — | Product, architecture, design, process and decision guides, testing runbooks, and 14 ADRs                                                                                                       |
 | Toolchain              |     — | Installs, builds, lints, typechecks, and tests from a clean clone                                                                                                                               |
 | **`loro-core`** (Rust) |   131 | Ranking, ASR matching, calendar, ladder, notification policy, HLC, and sync merge implemented. FSRS, Refrain selection, and DSP remain incomplete ([status](packages/core-rs/README.md#status)) |
-| **JS/TS workspaces**   |   602 | Core engines/persistence, content validation, API seams, mobile state/UI, and design tokens                                                                                                     |
-| **Browser E2E**        |   132 | 128 learner tests, 3 dev-workbench tests, and 1 production-only route-unavailability contract; bundle smoke re-runs a four-test subset                                                          |
+| **JS/TS workspaces**   |   618 | Core engines/persistence, content validation, API seams, mobile state/UI, and design tokens                                                                                                     |
+| **Browser E2E**        |   135 | 131 learner tests, 3 dev-workbench tests, and 1 production-only route-unavailability contract; bundle smoke re-runs a four-test subset                                                          |
 
 **What the build already caught:** eight colours in the blueprint's palette that fail WCAG AA (the
 worst at 2.44:1, genuinely unreadable) plus one that only passes at a declared size floor; a drop
@@ -51,7 +51,11 @@ connects the Account utility. Learning sync remains unwired.
 durable learning-data API storage, the live AI provider, native audio/ASR/widgets, and 16 learner
 screens. See the refreshed [`plans/README.md`](plans/README.md).
 
-**Selected backend testing setup, not provisioned:** one Frankfurt EC2 instance with local
+**Live connectivity:** the [AWS HTTPS gateway](docs/process/public-api.md) reaches the EC2 API.
+Account checks readiness independently of sign-in; public access is limited to read-only routes. See
+the [readiness review](docs/reviews/2026-09-08-readiness.md) for remaining essential features.
+
+**Selected durable backend testing setup, not provisioned:** one Frankfurt EC2 instance with local
 PostgreSQL and private S3, targeting $25–35/month. Shared tester access waits for durable data,
 authentication and tenant isolation. Start with [environments](docs/process/environments.md),
 [plan 88](plans/88-low-cost-backend-infrastructure.md) and the

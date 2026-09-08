@@ -2,6 +2,26 @@
 import { message, formatBuckets, currentNativeLanguage } from './i18n'
 export const copy = {
   account: {
+    backend: {
+      get checking() {
+        return message('account.backend.checking')
+      },
+      get connected() {
+        return message('account.backend.connected')
+      },
+      get unavailable() {
+        return message('account.backend.unavailable')
+      },
+      get unconfigured() {
+        return message('account.backend.unconfigured')
+      },
+      get scope() {
+        return message('account.backend.scope')
+      },
+      get retry() {
+        return message('account.backend.retry')
+      },
+    },
     get retry() {
       return message('account.retry')
     },

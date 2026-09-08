@@ -6,8 +6,8 @@ completed plans moved to [the dated archive](archive/2026-09-07/README.md), and 
 [review](archive/2026-09-07/REVIEW.md) records evidence, scope transfers and verification.
 
 Plans 01–52 remain historical in [the previous archive](archive/2026-07-30/REVIEW.md); 49 is an
-existing gap, not a free number. No plan was renumbered. The highest assigned ID is **90** and the
-next new plan is **91**. Original paths of newly archived plans remain compatibility symlinks.
+existing gap, not a free number. No plan was renumbered. The highest assigned ID is **92** and the
+next new plan is **93**. Original paths of newly archived plans remain compatibility symlinks.
 
 ## Current scope
 
@@ -136,3 +136,7 @@ setup and native verification remain deployment prerequisites |
 
 | [91](91-ec2-backend-deployment.md) | Restricted EC2 API and deployment scripts | M0 | ✅ Deployed
 in eu-central-1; readiness and manual rollback verified | Existing image; 66–68 for public service |
+
+| [92](92-android-ec2-readiness.md) | Standalone Android HTTPS connectivity and readiness evidence |
+M1/M2 | ✅ HTTPS, APK and emulator checks verified; essential learning gaps recorded | 58/91; 59–68
+for learning readiness |
