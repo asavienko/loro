@@ -13,13 +13,20 @@ Lambda has security-group egress only to the proxy. EC2 permits that gateway sec
 retains its restricted SSH rule; neither API port is open to the public internet. No NAT gateway or
 load balancer is provisioned. API Gateway and Lambda are metered services.
 
-The gateway and nginx independently allow only GET requests to `/v1/health`, `/v1/health/ready`,
-`/v1/content/v2/manifest`, `/v1/content/v2/diff`, `/v1/content/v2/pack`, and `/v1/auth/providers`.
-Locale/version/pack query parameters are forwarded. Caller cookies and authorization are not. Sync,
-AI, sign-in mutations and all other paths remain unavailable through this endpoint. The gateway is
-limited to 10 requests/second with a burst of 20; responses are not cached.
+In the default read-only profile, the gateway and nginx independently allow only GET requests to
+`/v1/health`, `/v1/health/ready`, `/v1/content/v2/manifest`, `/v1/content/v2/diff`,
+`/v1/content/v2/pack`, and `/v1/auth/providers`. Locale/version/pack query parameters are forwarded.
+Caller cookies and authorization are not. Sync, AI, sign-in mutations and all other paths remain
+unavailable through this endpoint. The gateway is limited to 10 requests/second with a burst of 20;
+responses are not cached.
 
 ## Account profile (F-01/F-04)
+
+**Enabled on the development gateway on 2026-09-08.** Google is configured in testing mode for the
+owner account. Apple and email are unavailable. Durable readiness, Google authorization start,
+cancellation callback redirect and rejection of anonymous account/sync access passed through HTTPS.
+The in-app browser blocked navigation to the AWS hostname (`ERR_BLOCKED_BY_CLIENT`), so a complete
+live Google consent-to-device session is still unverified.
 
 `AccountAccess=enabled` opts into exact auth, `/me` and POST sync routes. The Lambda forwards
 bounded request bodies, bearer/device/idempotency headers and API CORS decisions. OAuth callback
@@ -54,6 +61,16 @@ from the CloudFormation inline source by `pnpm test:deploy`. Updating an instanc
 requires updating this stack. Do not delete the base EC2 stack while this gateway uses its group.
 
 ## Verify and build
+
+For the enabled account profile, run:
+
+```bash
+node scripts/check-account-api.mjs https://AWS_GATEWAY_HOST/v1
+```
+
+This checks the public account boundary without signing in a person or logging OAuth material. It
+does not replace the final device consent/session test. The older read-only probe below applies only
+when `AccountAccess=disabled`.
 
 Read `ApiUrl` from the completed gateway stack. Check `/health/ready`, multilingual content with
 explicit `native` and `target` queries, and `/auth/providers`. Verify `/sync/pull`, `/ai/scene` and

@@ -26,8 +26,9 @@ of newly archived plans remain compatibility symlinks.
   acceptance remain. ElevenLabs is selected; Q-15 still gates licensed, reviewed production assets.
 - PostgreSQL accounts and tenant-scoped sync connect optional Google/Apple/email sign-in to durable
   progress. Account linking/export/erasure, OS background sync and production provider/service
-  configuration remain. The existing EC2 HTTPS preview is read-only; merging code does not deploy
-  authenticated sync there.
+  configuration remain. EC2 now exposes Google development sign-in and guarded sync backed by
+  private PostgreSQL. Public-boundary and restore checks passed; live consent-to-device verification
+  remains.
 
 ## Status
 

@@ -1,10 +1,10 @@
 # EC2 development backend
 
 The Nest API can run on one Amazon Linux 2023 x86 EC2 instance using `infra/ec2/template.yaml`. This
-is a restricted development deployment: legacy sync has no auth or tenant isolation and all data
-disappears when its process restarts. Durable production service remains with plans 66–68 and 73.
-The optional [public gateway](public-api.md) exposes only read-only health/content/provider
-discovery. Deployment and rollback both lose in-memory writes. Do not use learner data.
+is a restricted development deployment. Its current account profile uses persistent PostgreSQL and
+authenticated tenant-scoped sync. The [public gateway](public-api.md) enables Google testing
+sign-in. Earlier content-only releases are retained below as dated evidence. Production operations
+and full device acceptance remain separate gates.
 
 The template creates a t3.small with an encrypted 30 GiB gp3 disk, IMDSv2 required, Docker enabled
 at boot, and SSH ingress from one IPv4 address. It opens no HTTP port. The API binds only to host
@@ -64,14 +64,16 @@ ssh ec2-user@EC2_PUBLIC_DNS 'sudo bash -s -- loro-api:PREVIOUS_TAG' < scripts/ec
 Check disk space periodically. Old images remain available for rollback; remove only explicitly
 selected unused image tags after the rollback window. Do not prune containers during a deployment.
 To remove this development environment, delete the named CloudFormation stack in the selected
-region. This destroys the instance and its disk. No database or backup is provisioned.
+region. This destroys the instance and its disk, including account-profile database volumes and
+local backups. Retain and verify a separate recovery copy first.
 
 The template follows AWS's
 [instance metadata options](https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-properties-ec2-instance-metadataoptions.html).
 
 The historical 2026-09-07 image below predates main's optional Google/Apple account support. The
-deployment script leaves that integration disabled; provider credentials and PostgreSQL are not
-provisioned here. Merging repository changes does not replace the running EC2 image.
+original deployment did not provision provider credentials or PostgreSQL. The optional durable
+account profile below now supplies them. Merging repository changes does not replace the running EC2
+image.
 
 ## Verified development instance — 2026-09-07
 
@@ -94,7 +96,7 @@ stack's AdminCidr using the provisioning script with the same region/network/key
 pair was imported separately and is not deleted with the stack. The verification tunnel was closed
 after testing; use the command above to open one when needed.
 
-## Current release — 2026-09-08
+## Earlier content-only release — 2026-09-08
 
 Image `loro-api:26dc09e2a27a-20260908114912` is healthy. It includes provider discovery and the
 multilingual content API; provider credentials and PostgreSQL remain unconfigured. The standalone
@@ -131,3 +133,19 @@ Google development setup uses project `loro-508020`, a Web application OAuth cli
 public `/v1/auth/google/callback` URL. The app callback allowlist currently contains
 `loro://account`. Web preview origins require an explicit HTTPS callback entry before use. Google
 remains in testing mode. Apple and email delivery are unconfigured.
+
+## Verified account release — 2026-09-08
+
+- API image: `loro-api:0efdb14f2a20-20260908201218`.
+- Google project: `loro-508020`; owner test account registered. Apple/email remain unavailable.
+- Local `pnpm check` and all 171 API tests against isolated PostgreSQL passed. The exact amd64 image
+  passed durable readiness, guarded sync, multilingual content and degraded content-only checks.
+- Candidate and active API readiness passed with real PostgreSQL and WASM. An isolated restore of a
+  post-migration dump reproduced all 20 tables; the API database role is not a superuser.
+- nginx account profile and CloudFormation `AccountAccess=enabled` deployed. The HTTPS probe passed
+  Google start/cancellation handoff, healthy database/core and anonymous account/sync rejection.
+- Complete live consent/ticket/session verification is pending the device test: the in-app browser
+  blocked the AWS hostname. This is not a confirmed end-to-end Google sign-in result.
+
+Disable gateway account access before manually rolling back to a pre-authentication API image.
+Current rollback containers retain their own configuration; never expose legacy sync publicly.
