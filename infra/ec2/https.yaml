@@ -1,0 +1,124 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Loro read-only HTTPS gateway to private EC2 (F-03)
+Parameters:
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+  SubnetId:
+    Type: AWS::EC2::Subnet::Id
+  PrivateIp:
+    Type: String
+    AllowedPattern: '(\d{1,3}\.){3}\d{1,3}'
+  OriginSecurityGroup:
+    Type: AWS::EC2::SecurityGroup::Id
+Resources:
+  GatewayGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Loro gateway to EC2 read-only proxy
+      VpcId: !Ref VpcId
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8080
+          DestinationSecurityGroupId: !Ref OriginSecurityGroup
+  OriginIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref OriginSecurityGroup
+      SourceSecurityGroupId: !Ref GatewayGroup
+      IpProtocol: tcp
+      FromPort: 8080
+      ToPort: 8080
+      Description: Private Lambda gateway only
+  Role:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole'
+  Proxy:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: nodejs22.x
+      Handler: index.handler
+      Role: !GetAtt Role.Arn
+      Timeout: 20
+      MemorySize: 128
+      Environment:
+        Variables:
+          ORIGIN: !Sub 'http://${PrivateIp}:8080'
+      VpcConfig:
+        SecurityGroupIds: [!Ref GatewayGroup]
+        SubnetIds: [!Ref SubnetId]
+      Code:
+        ZipFile: |
+          const paths = new Set(['/v1/health', '/v1/health/ready',
+            '/v1/content/v2/manifest', '/v1/content/v2/diff', '/v1/content/v2/pack',
+            '/v1/auth/providers']);
+          exports.handler = async (event) => {
+            const headers = {'content-type': 'application/json', 'cache-control': 'no-store'};
+            const reply = (statusCode, body) => ({statusCode, headers, body});
+            if (event.requestContext?.http?.method !== 'GET' || !paths.has(event.rawPath))
+              return reply(404, '{"error":"not_available"}');
+            const url = new URL(event.rawPath, process.env.ORIGIN);
+            for (const key of ['native', 'target', 'from', 'id']) {
+              const value = event.queryStringParameters?.[key];
+              if (typeof value === 'string') url.searchParams.set(key, value);
+            }
+            try {
+              const response = await fetch(url, {redirect: 'error', signal: AbortSignal.timeout(15000)});
+              return reply(response.status, await response.text());
+            } catch {
+              return reply(503, '{"error":"backend_unavailable"}');
+            }
+          };
+  Logs:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${Proxy}'
+      RetentionInDays: 7
+  Api:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: !Sub '${AWS::StackName}-api'
+      ProtocolType: HTTP
+  Integration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref Api
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !GetAtt Proxy.Arn
+      PayloadFormatVersion: '2.0'
+  Route:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref Api
+      RouteKey: 'GET /v1/{proxy+}'
+      Target: !Sub 'integrations/${Integration}'
+  Stage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref Api
+      StageName: '$default'
+      AutoDeploy: true
+      DefaultRouteSettings:
+        ThrottlingBurstLimit: 20
+        ThrottlingRateLimit: 10
+  Permission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref Proxy
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${Api}/*/GET/v1/*'
+Outputs:
+  ApiUrl:
+    Value: !Sub '${Api.ApiEndpoint}/v1'
+  FunctionName:
+    Value: !Ref Proxy

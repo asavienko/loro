@@ -3,7 +3,8 @@
 The Nest API can run on one Amazon Linux 2023 x86 EC2 instance using `infra/ec2/template.yaml`. This
 is a restricted development deployment: legacy sync has no auth or tenant isolation and all data
 disappears when its process restarts. Durable production service remains with plans 66–68 and 73.
-Deployment and rollback both lose in-memory writes. Do not use learner data.
+The optional [public gateway](public-api.md) exposes only read-only health/content/provider
+discovery. Deployment and rollback both lose in-memory writes. Do not use learner data.
 
 The template creates a t3.small with an encrypted 30 GiB gp3 disk, IMDSv2 required, Docker enabled
 at boot, and SSH ingress from one IPv4 address. It opens no HTTP port. The API binds only to host
