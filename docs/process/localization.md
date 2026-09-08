@@ -31,6 +31,11 @@ synchronous i18next + react-i18next + i18next-icu runtime. expo-localization sup
 language. `copy.ts` is the typed adapter: getters and functions resolve messages at access time;
 React consumers subscribe with `useLocale()`. Shared components receive translated props.
 
+`pluralRules.ts` loads FormatJS plural rules and English/Bulgarian/Russian locale data before
+i18next initializes. Hermes can lack `Intl.PluralRules`; without this, ICU returns raw templates on
+every screen with plural messages. The regression test starts without that API and formats every
+bundled message, and the seven language-pair browser flows exercise the same startup case.
+
 - Semantic keys, named parameters, ICU plurals, no concatenated message fragments.
 - `Intl` formatting follows the native/UI language; logical day keys remain language-independent.
 - CI requires identical keys and interpolation arguments. English is the emergency UI fallback.

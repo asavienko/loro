@@ -11,8 +11,8 @@ plus the Languages and Account utilities and app shell in `apps/mobile/app/`, an
 endpoints (in-memory learning sync and PostgreSQL accounts), the Rust core, the design tokens,
 31-phrase Spanish/Bulgarian/Russian starter catalogs (new translations await bilingual review), and
 the local persistence layer (schema, migrations, repositories, outbox — driver-agnostic and tested
-against real SQLite), plus a dev-only generated token/component workbench. 618 JS/TS tests, 131 Rust
-tests, and 135 distinct browser E2E tests cover the implemented behavior. **What doesn't:** the
+against real SQLite), plus a dev-only generated token/component workbench. 619 JS/TS tests, 131 Rust
+tests, and 137 distinct browser E2E tests cover the implemented behavior. **What doesn't:** the
 native modules (audio, speech, ASR, widgets), the on-device SQLite driver, and the other 16 learner
 screens — so nothing runnable today exercises audio or the microphone, which is half of what this
 app is, and the app store is still in memory.
@@ -223,7 +223,7 @@ be off PATH.
 
 ```bash
 pnpm check                          # the gate: 23 turbo tasks, all green today
-pnpm test:e2e                       # 131 learner tests: routes/states, clock, a11y, text scale
+pnpm test:e2e                       # 133 learner tests: routes/states, clock, a11y, text scale
 pnpm test:e2e:workbench             # 3 tests: dev-only tokens/component inspection surface
 pnpm test:e2e:bundle                # the @smoke subset against the production web export
 pnpm --filter @loro/api dev         # :3000 — no Docker, no keys, no database

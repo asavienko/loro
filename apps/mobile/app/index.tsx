@@ -322,12 +322,7 @@ function DayRow({
   const next = position === 'next'
   const row = (
     <Row align={meta === undefined ? 'center' : 'baseline'} gap={NAV.rowGap} style={s.dayRow}>
-      <Text
-        variant="bodySm"
-        color={next ? accent.accentInk : ink.muted}
-        style={s.dayTime}
-        numberOfLines={1}
-      >
+      <Text variant="bodySm" color={next ? accent.accentInk : ink.muted} style={s.dayTime}>
         {time}
       </Text>
       <View style={s.grow}>
@@ -551,10 +546,15 @@ const s = StyleSheet.create({
   hairline: { borderBottomWidth: border.hairline, borderBottomColor: line.subtle },
   dayRow: { paddingVertical: NAV.rowPadY },
   /**
-   * `--day-time-w` is 34, and it only fits because the authored column is tabular: in
-   * proportional figures "08:00" is wider than "19:00" and the morning wave rendered "08:…".
+   * Preserve the authored 34-px minimum, but let the full time grow with native font scaling.
+   * A fixed width and single-line clamp hid the minutes on Android.
    */
-  dayTime: { width: NAV.timeWidth, fontSize: NAV_TEXT.time, fontVariant: ['tabular-nums'] },
+  dayTime: {
+    minWidth: NAV.timeWidth,
+    flexShrink: 0,
+    fontSize: NAV_TEXT.time,
+    fontVariant: ['tabular-nums'],
+  },
   dayTitle: { fontSize: NAV_TEXT.title },
   dayMeta: { fontSize: NAV_TEXT.meta, marginTop: space['0.5'] },
   chevron: { fontSize: NAV_TEXT.chevron },

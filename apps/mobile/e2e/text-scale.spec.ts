@@ -37,6 +37,24 @@ import { enter, START_WAVE, STATES, todayMarker } from './states'
 const SCALES = [2, 3.1] as const
 
 for (const scale of SCALES) {
+  test(`wave times remain complete at ${scale * 100}% text`, async ({ page }) => {
+    await onboard(page)
+    await scaleText(page, scale)
+    for (const time of ['08:00', '13:00', '19:00']) {
+      const label = page.getByText(time, { exact: true })
+      await expect(label).toBeVisible()
+      expect(
+        await label.evaluate((node) => {
+          const range = document.createRange()
+          range.selectNodeContents(node)
+          const text = range.getBoundingClientRect()
+          const box = node.getBoundingClientRect()
+          return text.width <= box.width + 1 && text.height <= box.height + 1
+        }),
+        `${time} must fit without ellipsis`,
+      ).toBe(true)
+    }
+  })
   test(`text at ${scale * 100}% never clips or overflows`, async ({ page }) => {
     const problems: string[] = []
 
@@ -132,6 +150,14 @@ async function layoutProblems(page: Page, state: string): Promise<string[]> {
     const label = (node: Element): string => {
       const name = node.getAttribute('aria-label') ?? node.textContent.trim()
       return name.length === 0 ? '<no text>' : name.slice(0, 48)
+    }
+
+    for (const input of Array.from(document.querySelectorAll<HTMLInputElement>('input'))) {
+      const style = window.getComputedStyle(input)
+      const textHeight = Number.parseFloat(style.lineHeight) || Number.parseFloat(style.fontSize)
+      const needed =
+        textHeight + Number.parseFloat(style.paddingTop) + Number.parseFloat(style.paddingBottom)
+      if (input.clientHeight + 1 < needed) problems.push(`input clips text: "${label(input)}"`)
     }
 
     for (const node of Array.from(document.querySelectorAll<HTMLElement>('*'))) {
