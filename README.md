@@ -30,7 +30,7 @@ pnpm --filter @loro/api start     →  21 endpoints on :3000/v1
 | Documentation          |     — | Product, architecture, design, process and decision guides, testing runbooks, and 14 ADRs                                                                                                       |
 | Toolchain              |     — | Installs, builds, lints, typechecks, and tests from a clean clone                                                                                                                               |
 | **`loro-core`** (Rust) |   131 | Ranking, ASR matching, calendar, ladder, notification policy, HLC, and sync merge implemented. FSRS, Refrain selection, and DSP remain incomplete ([status](packages/core-rs/README.md#status)) |
-| **JS/TS workspaces**   |   618 | Core engines/persistence, content validation, API seams, mobile state/UI, and design tokens                                                                                                     |
+| **JS/TS workspaces**   |   619 | Core engines/persistence, content validation, API seams, mobile state/UI, and design tokens                                                                                                     |
 | **Browser E2E**        |   135 | 131 learner tests, 3 dev-workbench tests, and 1 production-only route-unavailability contract; bundle smoke re-runs a four-test subset                                                          |
 
 **What the build already caught:** eight colours in the blueprint's palette that fail WCAG AA (the
