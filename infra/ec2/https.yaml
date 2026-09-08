@@ -1,6 +1,11 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Loro read-only HTTPS gateway to private EC2 (F-03)
+Description: Loro HTTPS gateway to private EC2 (F-01/F-03)
 Parameters:
+  AccountAccess:
+    Type: String
+    Default: disabled
+    AllowedValues: [disabled, enabled]
+    Description: Enable only after durable account deployment and provider verification.
   VpcId:
     Type: AWS::EC2::VPC::Id
   SubnetId:
@@ -53,26 +58,58 @@ Resources:
       Environment:
         Variables:
           ORIGIN: !Sub 'http://${PrivateIp}:8080'
+          ACCOUNT_ACCESS: !Ref AccountAccess
       VpcConfig:
         SecurityGroupIds: [!Ref GatewayGroup]
         SubnetIds: [!Ref SubnetId]
       Code:
         ZipFile: |
-          const paths = new Set(['/v1/health', '/v1/health/ready',
+          const publicPaths = new Set(['/v1/health', '/v1/health/ready',
             '/v1/content/v2/manifest', '/v1/content/v2/diff', '/v1/content/v2/pack',
             '/v1/auth/providers']);
+          const accountRoutes = new Map([
+            ['/v1/auth/capabilities', ['GET']], ['/v1/me', ['GET']], ['/v1/auth/me', ['GET']],
+            ...['google/start', 'apple/start', 'exchange', 'google', 'apple', 'magic-link',
+              'magic-link/verify', 'refresh', 'logout', 'claim'].map(p => ['/v1/auth/' + p, ['POST']]),
+            ['/v1/auth/google/callback', ['GET']], ['/v1/auth/apple/callback', ['POST']],
+            ...['push', 'pull', 'status'].map(p => ['/v1/sync/' + p, ['POST']])
+          ]);
           exports.handler = async (event) => {
             const headers = {'content-type': 'application/json', 'cache-control': 'no-store'};
             const reply = (statusCode, body) => ({statusCode, headers, body});
-            if (event.requestContext?.http?.method !== 'GET' || !paths.has(event.rawPath))
+            const method = event.requestContext?.http?.method;
+            const path = event.rawPath;
+            const account = process.env.ACCOUNT_ACCESS === 'enabled' && accountRoutes.has(path);
+            const methods = publicPaths.has(path) ? ['GET'] : account ? accountRoutes.get(path) : [];
+            if (!methods.includes(method) && !(method === 'OPTIONS' && methods.length))
               return reply(404, '{"error":"not_available"}');
-            const url = new URL(event.rawPath, process.env.ORIGIN);
-            for (const key of ['native', 'target', 'from', 'id']) {
+            const url = new URL(path, process.env.ORIGIN);
+            const callback = account && path.endsWith('/callback');
+            for (const key of callback ? ['state', 'code', 'error'] : ['native', 'target', 'from', 'id']) {
               const value = event.queryStringParameters?.[key];
               if (typeof value === 'string') url.searchParams.set(key, value);
             }
+            const forwarded = {};
+            const incoming = Object.fromEntries(Object.entries(event.headers || {}).map(([k, v]) => [k.toLowerCase(), v]));
+            for (const key of ['origin', 'access-control-request-method', 'access-control-request-headers',
+              ...(account ? ['content-type', 'authorization', 'x-loro-device', 'x-loro-app', 'idempotency-key'] : [])]) {
+              if (typeof incoming[key] === 'string') forwarded[key] = incoming[key];
+            }
+            const body = method === 'POST'
+              ? Buffer.from(event.body || '', event.isBase64Encoded ? 'base64' : 'utf8') : undefined;
+            if (body && body.length > 1024 * 1024) return reply(413, '{"error":"payload_too_large"}');
             try {
-              const response = await fetch(url, {redirect: 'error', signal: AbortSignal.timeout(15000)});
+              const response = await fetch(url, {method, headers: forwarded, body,
+                redirect: 'manual', signal: AbortSignal.timeout(15000)});
+              if (response.status >= 300 && response.status < 400 && !callback)
+                return reply(502, '{"error":"unexpected_redirect"}');
+              for (const key of ['content-type', 'retry-after', 'referrer-policy', 'vary',
+                'access-control-allow-origin', 'access-control-allow-methods',
+                'access-control-allow-headers', 'access-control-expose-headers',
+                ...(callback ? ['location'] : [])]) {
+                const value = response.headers.get(key);
+                if (value) headers[key] = value;
+              }
               return reply(response.status, await response.text());
             } catch {
               return reply(503, '{"error":"backend_unavailable"}');
@@ -99,7 +136,7 @@ Resources:
     Type: AWS::ApiGatewayV2::Route
     Properties:
       ApiId: !Ref Api
-      RouteKey: 'GET /v1/{proxy+}'
+      RouteKey: 'ANY /v1/{proxy+}'
       Target: !Sub 'integrations/${Integration}'
   Stage:
     Type: AWS::ApiGatewayV2::Stage
@@ -116,7 +153,7 @@ Resources:
       Action: lambda:InvokeFunction
       FunctionName: !Ref Proxy
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub 'arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${Api}/*/GET/v1/*'
+      SourceArn: !Sub 'arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${Api}/*/*/v1/*'
 Outputs:
   ApiUrl:
     Value: !Sub '${Api.ApiEndpoint}/v1'
