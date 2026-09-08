@@ -19,3 +19,8 @@ Verified: `pnpm check` passed all 23 tasks; `pnpm test:e2e` passed all 119 tests
 including mouse/touch gestures, cancelled touch, accessibility and 310% text. The initial cold
 concurrent run exceeded the database timing and browser suite budgets; sequential warm validation
 passed without relaxing either budget.
+
+Merge validation against `734028a`: `CI_BASE_REF=origin/main LORO_CI_CONCURRENCY=1 pnpm ci:local`
+passed, including 134 learner E2E tests, 3 workbench tests, 4 production-bundle tests, native/WASM
+core generation, PostgreSQL auth tests, mobile/API builds, API/container smoke checks and Rust
+benchmarks. Physical-device gesture validation is still outstanding.

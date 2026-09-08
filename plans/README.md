@@ -143,6 +143,6 @@ for learning readiness |
 
 ## Mobile shell gestures
 
-| Plan                              | Scope                                  | Status                                                                                          |
-| --------------------------------- | -------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| [93](93-mobile-shell-gestures.md) | Pull-down switcher and sheet dismissal | 🟡 Implemented; rebased validation running; physical-device verification remains a release gate |
+| Plan                              | Scope                                  | Status                                                                                    |
+| --------------------------------- | -------------------------------------- | ----------------------------------------------------------------------------------------- |
+| [93](93-mobile-shell-gestures.md) | Pull-down switcher and sheet dismissal | 🟡 Implemented; full local CI passes; physical-device verification remains a release gate |
