@@ -87,7 +87,7 @@ function discoverRoutes(appDirectory: string): string[] {
 }
 
 function isLearnerRoute(route: string): boolean {
-  return route !== '/dev' && !route.startsWith('/dev/')
+  return route !== '/dev' && !route.startsWith('/dev/') && !route.startsWith('/+')
 }
 
 function visit(directory: string, files: string[]): void {

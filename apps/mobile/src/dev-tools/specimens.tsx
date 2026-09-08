@@ -152,6 +152,7 @@ const PRIMITIVE_METADATA = {
       'default',
       'pressed-focused',
       'disabled',
+      'loading',
       'long-copy',
       'text-200',
       'text-310',

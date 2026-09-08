@@ -3,7 +3,7 @@
  * pairing.
  */
 
-import { Platform, StyleSheet } from 'react-native'
+import { ActivityIndicator, Platform, StyleSheet } from 'react-native'
 import { MIN_TAP, ink, line, onDark, radius, semantic, space, surface } from '../theme'
 import { useTheme } from '../ThemeProvider'
 import { Pressable } from './Pressable'
@@ -15,6 +15,8 @@ export function Button({
   variant = 'primary',
   size = 'md',
   disabled,
+  loading,
+  forcedState,
   accessibilityHint,
 }: {
   label: string
@@ -27,6 +29,10 @@ export function Button({
    */
   size?: 'md' | 'lg' | 'cta' | undefined
   disabled?: boolean | undefined
+  /** Shows pending feedback while the underlying action is unavailable. */
+  loading?: boolean | undefined
+  /** Holds the real pressed/focused presentation for an inspection specimen. */
+  forcedState?: 'pressed-focused' | undefined
   accessibilityHint?: string | undefined
 }) {
   const { accent } = useTheme()
@@ -44,6 +50,8 @@ export function Button({
     <Pressable
       onPress={onPress}
       disabled={disabled}
+      loading={loading}
+      forcedState={forcedState}
       accessibilityLabel={label}
       accessibilityHint={accessibilityHint}
       style={[
@@ -55,15 +63,19 @@ export function Button({
       ]}
     >
       {/* >=17px semibold on the accent fill — the contrast floor for white on accent. */}
-      <Text
-        variant={size === 'lg' ? 'title3' : 'body'}
-        color={fg}
-        // F-08: web text-only zoom must grow multiline CTA line boxes with the glyphs.
-        style={size === 'cta' && Platform.OS === 'web' ? { lineHeight: undefined } : undefined}
-        align={size === 'lg' ? undefined : 'center'}
-      >
-        {label}
-      </Text>
+      {loading ? (
+        <ActivityIndicator color={fg} accessible={false} />
+      ) : (
+        <Text
+          variant={size === 'lg' ? 'title3' : 'body'}
+          color={fg}
+          // F-08: web text-only zoom must grow multiline CTA line boxes with the glyphs.
+          style={size === 'cta' && Platform.OS === 'web' ? { lineHeight: undefined } : undefined}
+          align={size === 'lg' ? undefined : 'center'}
+        >
+          {label}
+        </Text>
+      )}
     </Pressable>
   )
 }

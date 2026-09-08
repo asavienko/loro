@@ -14,10 +14,13 @@
 
 use loro_core::calendar::{days_between, streak, streak_day_for, streak_survives};
 use loro_core::select::{effort_state, EffortState};
+use loro_core::{asr, select};
 use serde_json::Value;
 
 const FIXTURES: &str = include_str!("../../core/src/domain/calendar.fixtures.json");
 const EFFORT_FIXTURES: &str = include_str!("../../core/src/domain/effort.fixtures.json");
+const CORE_BOUNDARY_FIXTURES: &str =
+    include_str!("../../core/src/domain/core-boundary.fixtures.json");
 
 fn fixtures() -> Value {
     serde_json::from_str(FIXTURES).expect("calendar.fixtures.json is valid JSON")
@@ -51,6 +54,65 @@ fn str_at(case: &Value, key: &str) -> String {
         .and_then(Value::as_str)
         .unwrap_or_else(|| panic!("case is missing string `{key}`: {case}"))
         .to_string()
+}
+
+#[test]
+fn multilingual_core_boundary_matches_the_shared_fixture() {
+    let fixtures: Value = serde_json::from_str(CORE_BOUNDARY_FIXTURES)
+        .expect("core-boundary.fixtures.json is valid JSON");
+
+    for case in cases(&fixtures, "cloze") {
+        let expected = case
+            .get("expect")
+            .and_then(Value::as_array)
+            .expect("cloze case has an expected mask")
+            .iter()
+            .map(|value| {
+                u32::try_from(value.as_u64().expect("mask is unsigned")).expect("mask fits")
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(
+            select::cloze_mask(str_at(&case, "text"), str_at(&case, "language")),
+            expected,
+            "{}",
+            why(&case, "unnamed cloze case")
+        );
+    }
+
+    for case in cases(&fixtures, "matchTokens") {
+        let tokens = |key: &str| {
+            case.get(key)
+                .and_then(Value::as_array)
+                .expect("match case has token array")
+                .iter()
+                .map(|value| value.as_str().expect("token is a string").to_owned())
+                .collect::<Vec<_>>()
+        };
+        let expected = case.get("expect").expect("match case has expected result");
+        let result = asr::match_tokens(
+            &tokens("heard"),
+            &tokens("target"),
+            u32::try_from(i64_at(&case, "revealed")).expect("revealed fits"),
+            false,
+        );
+        assert_eq!(
+            result.revealed,
+            u32::try_from(i64_at(expected, "revealed")).expect("revealed fits")
+        );
+        assert_eq!(
+            result.just_index,
+            i32::try_from(i64_at(expected, "justIndex")).expect("index fits")
+        );
+        assert_eq!(
+            result.complete,
+            expected
+                .get("complete")
+                .and_then(Value::as_bool)
+                .expect("complete is boolean"),
+            "{}",
+            why(&case, "unnamed matching case")
+        );
+    }
 }
 
 #[test]

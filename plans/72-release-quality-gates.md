@@ -8,15 +8,18 @@
   sign-off and 87 owns bilingual sign-off.
 - **Depends on:** 58 device harness; 57 visual APIs; owning feature acceptance slices as they land.
   This shared harness is not a prerequisite to finish every feature before work starts.
-- **Reviewed:** 2026-09-07 against merged baseline `2d9e8c3`.
+- **Reviewed:** 2026-09-08 against integrated runtime `e013141`; unfinished scope retained.
+
+Previous starting point: [archived snapshot](archive/2026-09-08/72-release-quality-gates.md).
 
 ## Verified starting point
 
 `apps/mobile/e2e/` covers current states, rendering geometry and bundle availability;
 `apps/mobile/src/lib/i18n/` has en/bg/ru ICU resources and parity checks. No native
-accessibility/performance matrix is demonstrated. `.github/workflows/nightly.yml` still calls
-missing `tests/sim`; 60 must supply that test target, while this plan owns honest release-gate
-wiring.
+accessibility/performance matrix is demonstrated. Rust simulation and parity targets exist under
+`packages/core-rs/tests/` and run through the local Rust gate. GitHub Actions remains disabled;
+`.github/workflows-disabled/` contains historical references, not active release enforcement. This
+plan owns the remaining native, content-release and measured-budget gate wiring.
 
 ## Outcome
 

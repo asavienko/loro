@@ -10,7 +10,7 @@
  * `scripts/a11yChecks.ts` cannot see because nothing declares a width.
  */
 
-import type { StyleProp, ViewStyle } from 'react-native'
+import { ActivityIndicator, type StyleProp, type ViewStyle } from 'react-native'
 import { Pressable } from './Pressable'
 import { Text, type TypeVariant } from './Text'
 
@@ -18,6 +18,8 @@ export function IconButton({
   glyph,
   label,
   onPress,
+  loading,
+  forcedState,
   color,
   variant = 'headline',
   style,
@@ -26,6 +28,10 @@ export function IconButton({
   /** Required: the accessible name. A glyph carries none. */
   label: string
   onPress: () => void
+  /** Shows pending feedback while the underlying action is unavailable. */
+  loading?: boolean | undefined
+  /** Holds the real pressed/focused presentation for an inspection specimen. */
+  forcedState?: 'pressed-focused' | undefined
   color?: string | undefined
   /** The glyph's step on the type scale. `title3` for the chevrons, `headline` for the rest. */
   variant?: TypeVariant | undefined
@@ -33,10 +39,21 @@ export function IconButton({
   style?: StyleProp<ViewStyle> | undefined
 }) {
   return (
-    <Pressable feedback="icon" accessibilityLabel={label} onPress={onPress} style={style}>
-      <Text variant={variant} color={color}>
-        {glyph}
-      </Text>
+    <Pressable
+      feedback="icon"
+      accessibilityLabel={label}
+      onPress={onPress}
+      loading={loading}
+      forcedState={forcedState}
+      style={style}
+    >
+      {loading ? (
+        <ActivityIndicator color={color} accessible={false} />
+      ) : (
+        <Text variant={variant} color={color}>
+          {glyph}
+        </Text>
+      )}
     </Pressable>
   )
 }

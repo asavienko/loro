@@ -46,9 +46,11 @@
     "ci:local": "bash scripts/ci-local.sh",
     "ci:local:native": "bash scripts/ci-local.sh native",
     "ci:local:audit": "bash scripts/ci-local.sh audit",
+    "native:evidence": "node scripts/native-device-evidence.mjs",
     "apk:local": "node scripts/apk-local.mjs",
     "apk:github": "node scripts/apk-local.mjs --upload",
-    "test:deploy": "node --test scripts/ec2-release.test.mjs scripts/ec2-gateway.test.mjs"
+    "test:deploy": "node --test scripts/ec2-release.test.mjs scripts/ec2-gateway.test.mjs",
+    "test:native:evidence": "node --test scripts/native-device-evidence.test.mjs"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.6.1",

@@ -340,6 +340,14 @@ function RenderedStateGallery({ textScale }: { textScale: TextScale }) {
             <Button label="Production button" onPress={() => undefined} />
             <StateLabel>disabled</StateLabel>
             <Button label="Unavailable action" disabled />
+            <StateLabel>loading</StateLabel>
+            <Button label="Pending production action" loading />
+            <StateLabel>pressed and focused</StateLabel>
+            <Button
+              label="Pressed and focused production action"
+              onPress={() => undefined}
+              forcedState="pressed-focused"
+            />
             <StateLabel>long copy</StateLabel>
             <Button
               label="A deliberately long production action that must remain readable"
@@ -409,14 +417,6 @@ function RenderedStateGallery({ textScale }: { textScale: TextScale }) {
               track={semantic.danger.bg}
             />
           </Stack>
-        </Card>
-
-        <Card>
-          <WorkbenchHeading size="group">Pending production states</WorkbenchHeading>
-          <Text variant="captionSm" color={semantic.warn.text}>
-            Loading and forced pressed/focused specimens remain pending plan 57. Interactive
-            controls can still be focused and pressed normally.
-          </Text>
         </Card>
       </Stack>
     </View>

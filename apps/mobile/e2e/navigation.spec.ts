@@ -20,6 +20,21 @@ test('cold learner links provide a home escape without browser history', async (
   }
 })
 
+test('unknown and planned deep links return through the safe home gate', async ({ page }) => {
+  for (const route of ['/not-a-route', '/practice/review'] as const) {
+    await page.goto(route)
+    await expect(page).toHaveURL(/\/onboarding$/)
+    await expect(page.getByRole('button', { name: "Let's go →" })).toBeVisible()
+  }
+
+  await onboard(page)
+  for (const route of ['/not-a-route', '/practice/review'] as const) {
+    await page.goto(route)
+    await expect(page).toHaveURL(/\/$/)
+    await expect(todayMarker(page)).toBeVisible()
+  }
+})
+
 test('Add retains Back to Today when entered from the app', async ({ page }) => {
   await onboard(page)
   await open(page, 'Add')
