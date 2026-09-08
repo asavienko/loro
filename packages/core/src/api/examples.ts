@@ -47,18 +47,6 @@ const pushed = {
   server_time: 1721558400123,
 }
 const pulled = { changes: [], next: hlc, has_more: false, server_hlc: hlc }
-export const currentExamples: Readonly<Record<string, WireExample>> = {
-  health: { responses: { 200: health } },
-  readiness: { responses: { 200: ready, 503: unready } },
-  contentManifest: { responses: { 200: manifest } },
-  contentDiff: { responses: { 200: diff } },
-  contentPack: { responses: { 200: pack } },
-  syncPush: { request: { ops: [] }, responses: { 201: pushed } },
-  syncPull: { request: {}, responses: { 201: pulled } },
-  syncStatus: { responses: { 201: { merge: 'loro-core (wasm)', entities: 0 } } },
-  aiScene: { request: { theme: 'Café' }, responses: { 201: sceneResponse } },
-  aiThemes: { responses: { 200: { themes: ['Café', 'Hotel'], provider: 'stub' } } },
-}
 const signIn = {
   identity_token: 'illustrative-provider-token',
   anon_id: id,
@@ -73,6 +61,67 @@ const user = { id: 'user_example', created_at: 1721558400123 }
 const claim = { performed: true, mode: 'bind', claim_id: 'claim_example', upload_required: false }
 const signedIn = { ...tokens, user, device_id: 'device_example', claim }
 const accepted = { status: 'accepted' }
+export const currentExamples: Readonly<Record<string, WireExample>> = {
+  health: { responses: { 200: health } },
+  readiness: {
+    responses: {
+      200: { ...ready, checks: { ...ready.checks, database: 'ok' } },
+      503: { ...unready, checks: { ...unready.checks, database: 'unavailable' } },
+    },
+  },
+  contentManifest: { responses: { 200: manifest } },
+  contentDiff: { responses: { 200: diff } },
+  contentPack: { responses: { 200: pack } },
+  authCapabilities: { responses: { 200: { apple: false, google: false, email: false } } },
+  authApple: {
+    request: signIn,
+    responses: {
+      200: {
+        ...signedIn,
+        claim: { ...claim, performed: false, mode: null, upload_required: true },
+      },
+    },
+  },
+  authGoogle: {
+    request: signIn,
+    responses: {
+      200: {
+        ...signedIn,
+        claim: { ...claim, performed: false, mode: null, upload_required: true },
+      },
+    },
+  },
+  authMagicLink: { request: { email: 'learner@example.com' }, responses: { 202: accepted } },
+  authMagicVerify: {
+    request: { email: 'learner@example.com', code: '123456', anon_id: id, device: signIn.device },
+    responses: {
+      200: {
+        ...signedIn,
+        claim: { ...claim, performed: false, mode: null, upload_required: true },
+      },
+    },
+  },
+  authRefresh: { request: { refresh_token: tokens.refresh_token }, responses: { 200: tokens } },
+  authLogout: { responses: {} },
+  authClaim: {
+    request: { anon_id: id, device_id: 'device_example', request_id: id },
+    responses: {
+      200: { performed: false, mode: null, claim_id: 'claim_example', upload_required: true },
+    },
+  },
+  accountRead: { responses: { 200: { user, device_id: 'device_example' } } },
+  syncPush: {
+    request: { client_hlc: hlc, ops: [] },
+    responses: { 200: { ...pushed, aliases: [] } },
+  },
+  syncPull: {
+    request: { since: null, limit: 500 },
+    responses: { 200: { ...pulled, next: 'opaque_cursor_example', aliases: [] } },
+  },
+  syncStatus: { responses: { 200: { merge: 'loro-core (wasm)', entities: 0 } } },
+  aiScene: { request: { theme: 'Café' }, responses: { 201: sceneResponse } },
+  aiThemes: { responses: { 200: { themes: ['Café', 'Hotel'], provider: 'stub' } } },
+}
 export const targetExamples: Readonly<Record<string, WireExample>> = {
   health: { responses: { 200: health } },
   readiness: { responses: { 200: ready, 503: unready } },

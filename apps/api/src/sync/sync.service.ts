@@ -1,75 +1,47 @@
-/**
- * Sync arbitration — docs/architecture/sync-protocol.md
- *
- * Thin by design: all the merge logic is in `loro-core`, compiled to WASM. THE SERVER
- * RUNS THE SAME MERGE AS THE CLIENT. Two implementations of a conflict rule diverge, and
- * the divergence shows up months later as a learner losing a rating (ADR-0002).
- *
- * Held apart from the controller so it can be tested without HTTP, and so the store it
- * reads and writes is an injected `SyncRepository` rather than a `Map` it reached for.
- * The wire shapes live here too, next to the code that produces them — the controller
- * only names the routes.
- */
-
+/** F-04: authenticated, transactionally durable convergence through canonical Rust. */
+import { createHash } from 'node:crypto'
 import { Inject, Injectable } from '@nestjs/common'
-import { isSyncEntity, mergeClassFor, type MergeClass, type SyncEntity } from '@loro/core'
+import { mergeClassFor, type MergeClass } from '@loro/core'
+import {
+  ChangeSchema,
+  MAX_SYNC_BYTES,
+  PushEnvelopeSchema,
+  PullRequestSchema,
+  validatePushBatch,
+  type PushOp,
+  type PushResponse,
+  type PullResponse,
+} from '@loro/core/api/target'
 import { SERVER_CLOCK, type ServerClock } from '../common/clock.js'
 import { LoroError } from '../common/errors.js'
-import { mergeAvailable, mergeRow, type FieldValue, type StoredRow } from './merge.js'
-import { SYNC_REPOSITORY, type SyncRepository } from './sync.repository.js'
+import {
+  advanceHlc,
+  clampHlc,
+  decodeHlc,
+  encodeHlc,
+  mergeAvailable,
+  mergeRow,
+  type FieldValue,
+  type StoredRow,
+} from './merge.js'
+import {
+  SYNC_REPOSITORY,
+  type Alias,
+  type ClockCorrection,
+  type SyncRepository,
+  type SyncTransaction,
+} from './sync.repository.js'
 
-/**
- * The wire shape, as a client may actually send it — not as we wish it were. `fields`
- * is optional because a delete legitimately carries none, and because this is
- * untrusted input: the guards below have to survive it being absent.
- */
-export interface PushOp {
-  seq: number
-  entity: string
-  entity_id: string
-  op: 'upsert' | 'delete'
-  fields?: Record<string, FieldValue>
-  deleted_at?: number | null
+export interface SyncPrincipal {
+  userId: string
+  deviceId: string
+  sessionId: string
 }
-
-export interface PushBody {
-  client_hlc?: string
-  ops: PushOp[]
-}
-
-export interface PullBody {
-  since?: string
-  limit?: number
-}
-
-/** Why one op in a batch was not applied. The rest of the batch still is. */
-export interface RejectedOp {
-  seq: number
-  code: string
-  field?: string
-}
-
-export interface PushResponse {
-  accepted: number[]
-  rejected: RejectedOp[]
-  conflicts: string[]
-  server_hlc: string
-  server_time: number
-}
-
-export interface PullResponse {
-  changes: StoredRow[]
-  next: string
-  has_more: boolean
-  server_hlc: string
-}
-
 export interface StatusResponse {
   merge: string
   entities: number
 }
-
-const MAX_OPS = 500
+export type { PushOp }
 
 @Injectable()
 export class SyncService {
@@ -78,111 +50,274 @@ export class SyncService {
     @Inject(SERVER_CLOCK) private readonly clock: ServerClock,
   ) {}
 
-  async push(body: PushBody): Promise<PushResponse> {
-    const ops = body.ops
-    if (!Array.isArray(ops)) throw new LoroError('VALIDATION_FAILED', "'ops' must be an array")
-    if (ops.length > MAX_OPS) {
-      throw new LoroError('VALIDATION_FAILED', `batch of ${ops.length} exceeds the ${MAX_OPS} cap`)
-    }
-
-    const accepted: number[] = []
-    const rejected: RejectedOp[] = []
-    const conflicts: string[] = []
-
-    for (const op of ops) {
-      // One bad op does not fail the batch: the client would retry the whole thing and
-      // the bad op would fail again. Each is accepted or rejected on its own.
-      if (!isSyncEntity(op.entity)) {
-        rejected.push({ seq: op.seq, code: 'schema_unknown' })
-        continue
+  async push(principal: SyncPrincipal, input: unknown): Promise<PushResponse> {
+    const envelope = PushEnvelopeSchema.safeParse(input)
+    if (!envelope.success) throw new LoroError('VALIDATION_FAILED', 'Invalid sync envelope')
+    if (Buffer.byteLength(JSON.stringify(envelope.data)) > MAX_SYNC_BYTES)
+      throw new LoroError('VALIDATION_FAILED', 'Sync batch exceeds the byte limit')
+    const batch = validatePushBatch(envelope.data)
+    if (!(await this.rows.consume(principal.userId, this.clock.now())))
+      throw new LoroError('RATE_LIMITED', undefined, { retry_after: 60 })
+    return this.rows.transaction(principal.userId, async (tx) => {
+      const response: PushResponse = {
+        accepted: [],
+        rejected: batch.rejected,
+        conflicts: [],
+        aliases: [],
+        clock_corrections: [],
+        server_hlc: '',
+        server_time: this.clock.now(),
       }
-
-      const declared = declaredClasses(op.entity, op.fields ?? {})
-      if (!declared.ok) {
-        rejected.push({ seq: op.seq, code: 'VALIDATION_FAILED', field: declared.undeclared })
-        continue
-      }
-
-      const local = (await this.rows.get(op.entity, op.entity_id)) ?? blankRow(op)
-      const outcome = mergeRow(local, {
-        entity: op.entity,
-        id: op.entity_id,
-        fields: op.fields ?? {},
-        deleted_at:
-          op.op === 'delete' ? (op.deleted_at ?? this.clock.now()) : (op.deleted_at ?? null),
-        classes: declared.classes,
+      const indices = new Map<number, number>()
+      envelope.data.ops.forEach((value, index) => {
+        if (
+          value &&
+          typeof value === 'object' &&
+          'seq' in value &&
+          typeof value.seq === 'number' &&
+          !indices.has(value.seq)
+        )
+          indices.set(value.seq, index)
       })
-
-      await this.rows.put(outcome.row)
-      conflicts.push(...outcome.conflicts)
-      accepted.push(op.seq)
-    }
-
-    return {
-      accepted,
-      rejected,
-      conflicts,
-      server_hlc: this.serverHlc(),
-      // Lets the client detect its own clock skew.
-      server_time: this.clock.now(),
-    }
+      for (const op of batch.valid) {
+        const digest = createHash('sha256').update(canonicalJson(op)).digest('hex')
+        const replay = await tx.receipt(principal.deviceId, op.seq)
+        if (replay) {
+          if (replay.digest !== digest) {
+            response.rejected.push({
+              seq: op.seq,
+              index: indices.get(op.seq) ?? 0,
+              code: 'VALIDATION_FAILED',
+            })
+          } else {
+            response.accepted.push(op.seq)
+            response.conflicts.push(...replay.conflicts)
+            response.aliases?.push(...replay.aliases)
+            response.clock_corrections?.push(...replay.clockCorrections)
+          }
+          continue
+        }
+        if (op.entity === 'user_phrase' && op.op === 'upsert') {
+          const existing = await tx.get(op.entity, await tx.canonical(op.entity_id))
+          const missingIdentity =
+            !existing &&
+            (op.fields.phraseId === undefined ||
+              op.fields.targetLocale === undefined ||
+              op.fields.source === undefined ||
+              op.fields.addedAt === undefined)
+          const identityChanged = ['phraseId', 'targetLocale'].some((field) => {
+            const value = (op.fields as Record<string, { v: unknown }>)[field]
+            const previous = existing?.fields[field]
+            return previous !== undefined && value !== undefined && previous.v !== value.v
+          })
+          if (missingIdentity || identityChanged) {
+            response.rejected.push({
+              seq: op.seq,
+              index: indices.get(op.seq) ?? 0,
+              code: 'VALIDATION_FAILED',
+            })
+            continue
+          }
+          if (op.replaces) {
+            const previousId = await tx.canonical(op.replaces.id)
+            const previous = await tx.get('user_phrase', previousId)
+            const validReplacement =
+              existing?.deleted_at == null &&
+              previous?.deleted_at === op.replaces.deleted_at &&
+              typeof op.fields.phraseId?.v === 'string' &&
+              previous.fields['phraseId']?.v === op.fields.phraseId.v &&
+              previous.fields['targetLocale']?.v === op.fields.targetLocale?.v &&
+              previousId !== op.entity_id
+            if (!validReplacement) {
+              response.rejected.push({
+                seq: op.seq,
+                index: indices.get(op.seq) ?? 0,
+                code: 'VALIDATION_FAILED',
+              })
+              continue
+            }
+          }
+        }
+        const aliases: Alias[] = []
+        const clockCorrections: ClockCorrection[] = []
+        const remote = await rowOp(tx, op, aliases, response.server_time, clockCorrections)
+        const local = (await tx.get(remote.entity, remote.id)) ?? {
+          entity: remote.entity,
+          id: remote.id,
+          fields: {},
+          deleted_at: null,
+        }
+        const outcome = mergeRow(local, remote)
+        if (outcome.changed) await tx.put(outcome.row)
+        await tx.accept(principal.deviceId, op.seq, {
+          digest,
+          conflicts: outcome.conflicts,
+          aliases,
+          clockCorrections,
+        })
+        response.accepted.push(op.seq)
+        response.conflicts.push(...outcome.conflicts)
+        response.aliases?.push(...aliases)
+        response.clock_corrections?.push(...clockCorrections)
+      }
+      response.server_hlc = advanceHlc(
+        (await tx.head()).hlc,
+        response.server_time,
+        batch.client_hlc,
+      )
+      await tx.setHlc(response.server_hlc)
+      return response
+    })
   }
 
-  /**
-   * `since` and `limit` are accepted and IGNORED, and `has_more` is always false: this
-   * returns every row of every learner. A known defect with a plan of its own —
-   * plans/06-fix-sync-pull-cursor-and-scoping.md — kept exactly as it was so that fix
-   * is a behaviour change made deliberately, in one place, with its own tests.
-   */
-  async pull(_body: PullBody): Promise<PullResponse> {
-    return {
-      changes: await this.rows.all(),
-      // Two reads, not one: `next` and `server_hlc` were two separate `Date.now()`
-      // calls and may differ by a millisecond. Collapsing them would be a response
-      // change, small but real.
-      next: this.serverHlc(),
-      has_more: false,
-      server_hlc: this.serverHlc(),
-    }
+  async pull(principal: SyncPrincipal, input: unknown): Promise<PullResponse> {
+    const parsed = PullRequestSchema.safeParse(input)
+    if (!parsed.success) throw new LoroError('VALIDATION_FAILED', 'Invalid pull request')
+    if (!(await this.rows.consume(principal.userId, this.clock.now())))
+      throw new LoroError('RATE_LIMITED', undefined, { retry_after: 60 })
+    return this.rows.transaction(principal.userId, async (tx) => {
+      const head = await tx.head()
+      const cursor =
+        parsed.data.since === null
+          ? { after: 0, watermark: null }
+          : await tx.cursor(parsed.data.since)
+      if (!cursor) throw new LoroError('CURSOR_EXPIRED')
+      const watermark = cursor.watermark ?? head.revision
+      const candidates = await tx.changes(cursor.after, watermark, parsed.data.limit + 1)
+      const page = candidates.slice(0, parsed.data.limit)
+      const has_more = candidates.length > parsed.data.limit
+      const next = await tx.saveCursor({
+        after: has_more ? (page.at(-1)?.revision ?? cursor.after) : watermark,
+        watermark: has_more ? watermark : null,
+      })
+      const server_hlc = advanceHlc(head.hlc, this.clock.now())
+      await tx.setHlc(server_hlc)
+      return {
+        changes: await Promise.all(
+          page.map(async ({ row }) => wireRow(await canonicalReferences(tx, row))),
+        ),
+        aliases: await tx.aliases(),
+        next,
+        has_more,
+        server_hlc,
+      }
+    })
   }
 
-  /** Diagnostic: is the shared Rust merge actually loaded? */
-  async status(): Promise<StatusResponse> {
-    return {
-      merge: mergeAvailable() ? 'loro-core (wasm)' : 'unavailable — run pnpm core-rs:build',
-      entities: await this.rows.count(),
-    }
-  }
-
-  /**
-   * The server's HLC. `0000:srv` is a placeholder for a real logical counter and node id,
-   * which arrive with persistence (plans/13) — the client only uses this to order and to
-   * detect skew today.
-   */
-  private serverHlc(): string {
-    return `${this.clock.now()}:0000:srv`
+  async status(principal: SyncPrincipal): Promise<StatusResponse> {
+    if (!(await this.rows.consume(principal.userId, this.clock.now())))
+      throw new LoroError('RATE_LIMITED', undefined, { retry_after: 60 })
+    return this.rows.transaction(principal.userId, async (tx) => ({
+      merge: mergeAvailable() ? 'loro-core (wasm)' : 'unavailable',
+      entities: await tx.count(),
+    }))
   }
 }
 
-type DeclaredClasses =
-  { ok: true; classes: Record<string, MergeClass> } | { ok: false; undeclared: string }
-
-/**
- * EVERY field must have a declared merge class. An undeclared field is a silent
- * data-loss bug, so it is reported rather than guessed at — the first one found wins,
- * because the op is rejected whole either way.
- */
-function declaredClasses(entity: SyncEntity, fields: Record<string, FieldValue>): DeclaredClasses {
+async function rowOp(
+  tx: SyncTransaction,
+  op: PushOp,
+  aliases: Alias[],
+  serverTime: number,
+  clockCorrections: ClockCorrection[],
+) {
+  const fields: Record<string, FieldValue> = {}
   const classes: Record<string, MergeClass> = {}
-  for (const field of Object.keys(fields)) {
-    const cls = mergeClassFor(entity, field)
-    if (cls === undefined) return { ok: false, undeclared: field }
-    classes[field] = cls
+  if (op.op === 'upsert') {
+    for (const [key, field] of Object.entries(
+      op.fields as Record<string, { v: unknown; hlc: string }>,
+    )) {
+      const cls = mergeClassFor(op.entity, key)
+      if (cls === undefined) throw new LoroError('VALIDATION_FAILED', 'Undeclared sync field')
+      const corrected = clampHlc(field.hlc, serverTime)
+      if (corrected !== field.hlc)
+        clockCorrections.push({ seq: op.seq, field: key, from: field.hlc, to: corrected })
+      fields[key] = { v: field.v, hlc: decodeHlc(corrected) }
+      classes[key] = cls
+    }
   }
-  return { ok: true, classes }
+  let id = op.entity_id
+  if (op.entity === 'user_phrase') {
+    const existing = await tx.get('user_phrase', id)
+    const locale = fields['targetLocale']?.v ?? existing?.fields['targetLocale']?.v
+    const catalogId = fields['phraseId']?.v ?? existing?.fields['phraseId']?.v
+    id = await tx.canonical(
+      id,
+      typeof locale === 'string' ? locale : undefined,
+      typeof catalogId === 'string' ? catalogId : undefined,
+      op.op === 'upsert' && op.replaces
+        ? { ...op.replaces, id: await tx.canonical(op.replaces.id) }
+        : undefined,
+    )
+    if (id !== op.entity_id) aliases.push({ from: op.entity_id, to: id })
+  } else {
+    // Log and Refrain references converge with their phrase; local recording paths
+    // cannot enter here because the shared schemas reject undeclared fields.
+    const phraseId = fields['phraseId']
+    if (typeof phraseId?.v === 'string') phraseId.v = await tx.canonical(phraseId.v)
+    const setIds = fields['setIds']
+    if (Array.isArray(setIds?.v)) {
+      const values = setIds.v as string[]
+      setIds.v = [...new Set(await Promise.all(values.map((value) => tx.canonical(value))))]
+    }
+  }
+  return {
+    entity: op.entity,
+    id,
+    fields,
+    classes,
+    deleted_at: op.op === 'delete' ? op.deleted_at : null,
+  }
 }
 
-/** A row this server has never seen. The merge treats it as an empty local side. */
-function blankRow(op: PushOp): StoredRow {
-  return { entity: op.entity, id: op.entity_id, fields: {}, deleted_at: null }
+function wireRow(row: StoredRow): PullResponse['changes'][number] {
+  return ChangeSchema.parse({
+    entity: row.entity,
+    entity_id: row.id,
+    deleted_at: row.deleted_at,
+    ...(row.entity === 'user_phrase' &&
+    row.deleted_at !== null &&
+    typeof row.fields['phraseId']?.v === 'string'
+      ? {
+          catalog_identity: {
+            phraseId: row.fields['phraseId'].v,
+            targetLocale: row.fields['targetLocale']?.v,
+          },
+        }
+      : {}),
+    fields:
+      row.deleted_at === null
+        ? Object.fromEntries(
+            Object.entries(row.fields).map(([key, field]) => [
+              key,
+              { v: field.v, hlc: encodeHlc(field.hlc) },
+            ]),
+          )
+        : {},
+  })
+}
+
+/** Historic append-only entries keep their content while references follow durable aliases. */
+async function canonicalReferences(tx: SyncTransaction, stored: StoredRow): Promise<StoredRow> {
+  const row = structuredClone(stored)
+  if (row.entity === 'user_phrase') row.id = await tx.canonical(row.id)
+  else {
+    const phrase = row.fields['phraseId']
+    if (typeof phrase?.v === 'string') phrase.v = await tx.canonical(phrase.v)
+    const set = row.fields['setIds']
+    if (Array.isArray(set?.v))
+      set.v = [...new Set(await Promise.all((set.v as string[]).map((id) => tx.canonical(id))))]
+  }
+  return row
+}
+
+/** Stable idempotency digest independent of a JSON object's insertion order. */
+function canonicalJson(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(',')}]`
+  if (value !== null && typeof value === 'object')
+    return `{${Object.entries(value)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, entry]) => `${JSON.stringify(key)}:${canonicalJson(entry)}`)
+      .join(',')}}`
+  return JSON.stringify(value)
 }

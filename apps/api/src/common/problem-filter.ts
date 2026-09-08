@@ -33,8 +33,11 @@ export class ProblemDetailsFilter implements ExceptionFilter {
     const ctx = host.switchToHttp()
     const problem = this.problemFor(exception, ctx.getRequest<Request>())
     const response = ctx.getResponse<Response>()
-    if (/^\/v1\/auth\//i.test(ctx.getRequest<Request>().path))
-      response.setHeader('Cache-Control', 'no-store')
+    if (exception instanceof LoroError && exception.status === 429) {
+      const retry = exception.extra['retry_after']
+      if (typeof retry === 'number' && Number.isFinite(retry) && retry > 0)
+        response.setHeader('Retry-After', Math.ceil(retry))
+    }
     response.status(problem.status).type(PROBLEM_MEDIA_TYPE).json(problem)
   }
 
@@ -45,10 +48,10 @@ export class ProblemDetailsFilter implements ExceptionFilter {
     }
     // An error we did not model: log the detail, return none of it. `user_id` only —
     // never a payload.
+    // Drivers/providers may put SQL parameters or credentials in exception text.
+    // Logs retain only the route and exception class, never the original message.
     this.logger.error(
-      /^\/v1\/auth\//i.test(req.path)
-        ? `${req.method} /v1/auth/[redacted] — internal error`
-        : `${req.method} ${req.url} — ${String(exception)}`,
+      `${req.method} ${req.path} — ${exception instanceof Error ? exception.name : 'UnknownError'}`,
     )
     return toProblemDetails(exception)
   }

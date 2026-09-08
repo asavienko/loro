@@ -31,9 +31,35 @@ export const config = {
 
   port: (): number => Number(process.env['PORT'] ?? 3000),
 
+  databaseUrl: (): string | undefined => process.env['DATABASE_URL'],
+  allowedOrigins: (): string[] =>
+    (process.env['CORS_ALLOWED_ORIGINS'] ?? '')
+      .split(',')
+      .map((origin) => origin.trim())
+      .filter(Boolean),
+
   /**
    * Production refuses to start without the shared WASM merge; development warns.
    * See main.ts for why the two differ.
    */
   isProduction: (): boolean => process.env['NODE_ENV'] === 'production',
+
+  /** Auth is unavailable until an ES256 signing key and provider are configured. */
+  authSettings: () => ({
+    privateKeyPem: process.env['AUTH_PRIVATE_KEY_PEM'],
+    issuer: process.env['AUTH_ISSUER'] ?? 'https://api.loro.app',
+    audience: process.env['AUTH_AUDIENCE'] ?? 'loro-mobile',
+    keyId: process.env['AUTH_KEY_ID'] ?? 'primary',
+    emailHashKey: process.env['AUTH_EMAIL_HASH_KEY'],
+    magicDeliveryUrl: process.env['AUTH_MAGIC_DELIVERY_URL'],
+    magicDeliveryToken: process.env['AUTH_MAGIC_DELIVERY_TOKEN'],
+    googleClientIds: (process.env['GOOGLE_CLIENT_IDS'] ?? '')
+      .split(',')
+      .map((id) => id.trim())
+      .filter(Boolean),
+    appleClientIds: (process.env['APPLE_CLIENT_IDS'] ?? '')
+      .split(',')
+      .map((id) => id.trim())
+      .filter(Boolean),
+  }),
 } as const

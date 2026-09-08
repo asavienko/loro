@@ -208,7 +208,19 @@ export const fieldsByEntity = {
 }
 export type SyncEntity = keyof typeof fieldsByEntity
 export function rowIdFor(entity: SyncEntity) {
-  if (entity === 'refrain_day' || entity === 'streak_day') return LocalDateSchema
+  // Legacy Spanish days remain readable. New course days cannot collide across targets.
+  if (entity === 'refrain_day')
+    return z.union([
+      LocalDateSchema,
+      z.string().refine((value) => {
+        const separator = value.indexOf(':')
+        return (
+          ['es-ES', 'bg-BG', 'ru-RU'].includes(value.slice(0, separator)) &&
+          LocalDateSchema.safeParse(value.slice(separator + 1)).success
+        )
+      }, 'Expected a course locale and local date'),
+    ])
+  if (entity === 'streak_day') return LocalDateSchema
   if (entity === 'settings') return z.literal('settings')
   return Id
 }
@@ -231,7 +243,23 @@ function opFor<K extends SyncEntity>(entity: K) {
   ])
 }
 export const PushOpSchema = z.union([
-  opFor('user_phrase'),
+  z.union([
+    z.strictObject({
+      seq: N,
+      entity: z.literal('user_phrase'),
+      entity_id: Id,
+      op: z.literal('upsert'),
+      fields: UserPhraseFieldsSchema,
+      replaces: z.strictObject({ id: Id, deleted_at: T }).optional(),
+    }),
+    z.strictObject({
+      seq: N,
+      entity: z.literal('user_phrase'),
+      entity_id: Id,
+      op: z.literal('delete'),
+      deleted_at: T,
+    }),
+  ]),
   opFor('settings'),
   opFor('refrain_day'),
   opFor('streak_day'),
@@ -273,10 +301,18 @@ export function validatePushBatch(input: unknown) {
 }
 export const PushResponseSchema = z.looseObject({
   accepted: z.array(N),
+  aliases: z
+    .array(z.strictObject({ from: Id, to: Id }))
+    .max(MAX_SYNC_OPS)
+    .optional(),
   rejected: z.array(SyncRejectionSchema),
   conflicts: z.array(z.string()),
   server_hlc: HlcSchema,
   server_time: T,
+  /** Receipt-scoped normalization survives a lost response and later replay. */
+  clock_corrections: z
+    .array(z.strictObject({ seq: N, field: z.string(), from: HlcSchema, to: HlcSchema }))
+    .optional(),
 })
 export const PullRequestSchema = z.strictObject({
   since: CursorSchema.nullable(),
@@ -299,7 +335,26 @@ function changeFor<K extends SyncEntity>(entity: K) {
   ])
 }
 export const ChangeSchema = z.union([
-  changeFor('user_phrase'),
+  z.union([
+    z.strictObject({
+      entity: z.literal('user_phrase'),
+      entity_id: Id,
+      fields: UserPhraseFieldsSchema,
+      deleted_at: z.null(),
+    }),
+    z.strictObject({
+      entity: z.literal('user_phrase'),
+      entity_id: Id,
+      fields: z.strictObject({}),
+      deleted_at: T,
+      catalog_identity: z
+        .strictObject({
+          phraseId: CatalogIdSchema,
+          targetLocale: z.enum(['es-ES', 'bg-BG', 'ru-RU']),
+        })
+        .optional(),
+    }),
+  ]),
   changeFor('settings'),
   changeFor('refrain_day'),
   changeFor('streak_day'),
@@ -310,6 +365,7 @@ export const ChangeSchema = z.union([
   changeFor('attempt'),
 ])
 export const PullResponseSchema = z.looseObject({
+  aliases: z.array(z.strictObject({ from: Id, to: Id })).optional(),
   changes: z.array(ChangeSchema).max(500),
   next: CursorSchema,
   has_more: z.boolean(),

@@ -1,8 +1,8 @@
 /**
  * The bridge to `loro-core`'s WASM build.
  *
- * `serde-wasm-bindgen` emits Rust maps as JS `Map`s, so this module normalises them
- * to plain objects at the boundary — the rest of the API never sees the difference.
+ * The shared JSON bridge preserves nested objects and explicit null values across
+ * WASM, matching the native bridge and the target sync wire.
  */
 
 import { createRequire } from 'node:module'
@@ -45,12 +45,6 @@ export interface MergeOutcome {
   conflicts: string[]
 }
 
-interface WasmOutcome {
-  row: { entity: string; id: string; fields: Map<string, FieldValue>; deleted_at: number | null }
-  changed: boolean
-  conflicts: string[]
-}
-
 /**
  * Loaded through normal package resolution, not a path relative to this file. The
  * relative path differed between `tsx src/main.ts` (dev), `dist/main.js` (the bundle),
@@ -61,7 +55,7 @@ interface WasmOutcome {
  * `createRequire` because wasm-pack's nodejs target emits CommonJS.
  */
 interface WasmCore {
-  merge_row: (l: unknown, r: unknown) => WasmOutcome
+  core_call: (method: string, inputJson: string) => string
 }
 
 const core: WasmCore | null = (() => {
@@ -75,7 +69,38 @@ const core: WasmCore | null = (() => {
 })()
 
 export function mergeAvailable(): boolean {
-  return core !== null
+  return core !== null && typeof core.core_call === 'function'
+}
+
+/** HLC arithmetic is canonical Rust, including backward wall-clock handling. */
+export function advanceHlc(previous: string, wallMs: number, remote?: string): string {
+  if (!core) throw new Error('loro-core wasm is not built')
+  return JSON.parse(
+    core.core_call(
+      remote === undefined ? 'hlc_tick' : 'hlc_receive',
+      JSON.stringify({
+        previous,
+        wallMs,
+        nodeId: 'srv',
+        ...(remote === undefined ? {} : { remote, clampRemote: true }),
+      }),
+    ),
+  ) as string
+}
+
+export function clampHlc(value: string, wallMs: number): string {
+  if (!core) throw new Error('loro-core wasm is not built')
+  return JSON.parse(core.core_call('hlc_clamp', JSON.stringify({ value, wallMs }))) as string
+}
+
+export function decodeHlc(value: string): Hlc {
+  const [physical, logical, node_id] = value.split(':')
+  if (physical === undefined || logical === undefined || node_id === undefined)
+    throw new Error('Invalid HLC')
+  return { physical: Number(physical), logical: Number(logical), node_id }
+}
+export function encodeHlc(value: Hlc): string {
+  return `${value.physical}:${String(value.logical).padStart(4, '0')}:${value.node_id}`
 }
 
 /**
@@ -100,15 +125,7 @@ export function mergeRow(local: StoredRow, remote: RowOp): MergeOutcome {
   const classes = Object.fromEntries(
     Object.entries(remote.classes).map(([field, cls]) => [field, WASM_MERGE_CLASS[cls]]),
   )
-  const out = core.merge_row(local, { ...remote, classes })
-  return {
-    row: {
-      entity: out.row.entity,
-      id: out.row.id,
-      fields: Object.fromEntries(out.row.fields),
-      deleted_at: out.row.deleted_at,
-    },
-    changed: out.changed,
-    conflicts: out.conflicts,
-  }
+  return JSON.parse(
+    core.core_call('merge_row', JSON.stringify({ local, remote: { ...remote, classes } })),
+  ) as MergeOutcome
 }

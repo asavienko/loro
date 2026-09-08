@@ -1,4 +1,3 @@
-import { authSettings } from './auth/settings.js'
 /**
  * Loro API.
  *
@@ -9,10 +8,12 @@ import { authSettings } from './auth/settings.js'
 
 import { NestFactory } from '@nestjs/core'
 import { Logger } from '@nestjs/common'
+import type { NestExpressApplication } from '@nestjs/platform-express'
 import { AppModule } from './app.module.js'
 import { config } from './common/config.js'
 import { ProblemDetailsFilter } from './common/problem-filter.js'
 import { mergeAvailable } from './sync/merge.js'
+import { DATABASE, type SqlDatabase } from './database/database.js'
 
 async function bootstrap(): Promise<void> {
   // Refuse to start in production without the shared merge. Serving sync with a
@@ -26,35 +27,34 @@ async function bootstrap(): Promise<void> {
     new Logger('bootstrap').warn(`${msg}. /v1/sync will return 500 and readiness is degraded.`)
   }
 
-  const app = await NestFactory.create(AppModule, { bufferLogs: false })
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    bufferLogs: false,
+    bodyParser: false,
+  })
+  // Bound parser allocation; the sync service enforces its smaller shared 512 KiB cap.
+  app.useBodyParser('json', { limit: '1mb' })
+  app.enableCors({
+    origin: config.allowedOrigins(),
+    methods: ['GET', 'POST'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'X-Loro-Device',
+      'X-Loro-App',
+      'Idempotency-Key',
+    ],
+    credentials: false,
+    exposedHeaders: ['Retry-After'],
+  })
 
   app.setGlobalPrefix('v1')
-  const auth = authSettings()
-  if (auth)
-    app.enableCors({
-      origin: [
-        ...new Set(
-          auth.redirects
-            .filter((url) => url.startsWith('https:'))
-            .map((url) => new URL(url).origin),
-        ),
-      ],
-      methods: ['GET', 'POST'],
-      allowedHeaders: ['Content-Type', 'Authorization'],
-    })
-  app.enableShutdownHooks()
-  // Request validation is explicit in the controllers rather than decorator-based, so the
-  // contract is readable in one place per route.
-  //
-  // This comment used to claim the guards were "Zod schemas shared with the client
-  // (packages/core)". They are not, and never were: `zod` is a dependency of both
-  // packages and the repo contains no schema. Sharing them with the client is still the
-  // right destination — the mobile outbox has to PRODUCE these shapes — but writing it
-  // here as though it were done meant every reader believed the contract was
-  // single-sourced when each side hand-rolls its own. See plans/52.
-  //
+  // Auth and sync install the shared target Zod contracts at their boundary.
   // RFC 9457 for every error. Never a stack trace, never SQL text.
   app.useGlobalFilters(new ProblemDetailsFilter())
+  if (config.isProduction() && !(await app.get<SqlDatabase>(DATABASE).ready())) {
+    await app.close()
+    throw new Error('Durable database is unavailable')
+  }
 
   const port = config.port()
   await app.listen(port, '0.0.0.0')

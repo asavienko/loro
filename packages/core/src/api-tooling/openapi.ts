@@ -148,8 +148,8 @@ export function buildOpenApi(kind: 'current' | 'target') {
       version: '1.0.0',
       description:
         kind === 'current'
-          ? 'Observed development API. No authentication, tenant isolation or durable storage. Not for multi-user deployment.'
-          : 'Planned API, not implemented. Draft operations/components are non-release contracts with explicit gates. Runtime refinements are documented in api-contracts.md.',
+          ? 'Implemented API. Authenticated tenant-scoped sync and identity require configured Postgres, signing keys and identity/email providers. Other implemented content and stub AI routes retain their declared behavior.'
+          : 'Target API; consult current API for implemented operations. Draft operations/components are non-release contracts with explicit gates. Runtime refinements are documented in api-contracts.md.',
     },
     servers: [{ url: kind === 'current' ? 'http://localhost:3000/v1' : 'https://api.loro.app/v1' }],
     paths,

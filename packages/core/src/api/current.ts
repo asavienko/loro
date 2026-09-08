@@ -1,24 +1,67 @@
-import { oauthOperations } from './oauth-operations.js'
 import { withExamples, currentExamples } from './examples.js'
-/** Observed development surface. Not a production safety or input-validation guarantee. */
+/** Implemented HTTP surface. Content and AI retain their documented development behavior. */
 import { z } from 'zod'
 import { CatalogPhraseSchema } from './catalog.js'
 import type { Operation } from './operation.js'
+import { ErrorCodeSchema, HlcSchema, ResourceIdSchema, RowIdSchema } from './common.js'
+import {
+  type PushOpSchema,
+  type SyncRejectionSchema as RejectionSchema,
+  type ChangeSchema as StoredRowSchema,
+  PushRequestSchema,
+  PushResponseSchema,
+  PullRequestSchema,
+  PullResponseSchema,
+  MAX_SYNC_BYTES,
+} from './sync.js'
+import {
+  SignInRequestSchema,
+  SignInResponseSchema,
+  MagicLinkRequestSchema,
+  MagicLinkResponseSchema,
+  MagicVerifyRequestSchema,
+  RefreshRequestSchema,
+  TokenResponseSchema,
+  ClaimRequestSchema,
+  ClaimResultSchema,
+  UserSchema,
+} from './account.js'
+export { ErrorCodeSchema, HlcSchema } from './common.js'
+export {
+  PushOpSchema,
+  PushRequestSchema,
+  PushResponseSchema,
+  PullRequestSchema,
+  PullResponseSchema,
+  SyncRejectionSchema as RejectionSchema,
+  ChangeSchema as StoredRowSchema,
+} from './sync.js'
+export type { PushRequest, PushResponse, PullRequest, PullResponse } from './sync.js'
+export {
+  SignInRequestSchema,
+  SignInResponseSchema,
+  MagicLinkRequestSchema,
+  MagicLinkResponseSchema,
+  MagicVerifyRequestSchema,
+  RefreshRequestSchema,
+  TokenResponseSchema,
+  ClaimRequestSchema,
+  ClaimResultSchema,
+} from './account.js'
+export type {
+  SignInRequest,
+  SignInResponse,
+  MagicLinkRequest,
+  MagicLinkResponse,
+  MagicVerifyRequest,
+  RefreshRequest,
+  TokenResponse,
+  ClaimRequest,
+  ClaimResult,
+} from './account.js'
 export { CatalogPhraseSchema, WordGlossSchema } from './catalog.js'
 export type { CatalogPhrase, WordGloss } from './catalog.js'
 
-export const ErrorCodeSchema = z.enum([
-  'UNAUTHENTICATED',
-  'FORBIDDEN',
-  'PLAN_REQUIRED',
-  'SCHEMA_TOO_OLD',
-  'RATE_LIMITED',
-  'BUDGET_EXCEEDED',
-  'VALIDATION_FAILED',
-  'PROVIDER_UNAVAILABLE',
-  'INTERNAL',
-  'NOT_FOUND',
-])
 export const ProblemSchema = z.looseObject({
   type: z.string(),
   title: z.string(),
@@ -26,53 +69,19 @@ export const ProblemSchema = z.looseObject({
   detail: z.string().optional(),
   code: ErrorCodeSchema,
 })
-export const HlcSchema = z.object({
-  physical: z.number(),
-  logical: z.number(),
-  node_id: z.string(),
+export const FieldSchema = z.strictObject({ v: z.unknown(), hlc: HlcSchema })
+export const StatusResponseSchema = z.looseObject({
+  merge: z.string(),
+  entities: z.int().nonnegative(),
 })
-export const FieldSchema = z.object({ v: z.unknown(), hlc: HlcSchema })
-export const PushOpSchema = z.object({
-  seq: z.number(),
-  entity: z.string(),
-  entity_id: z.string(),
-  op: z.enum(['upsert', 'delete']),
-  fields: z.record(z.string(), FieldSchema).optional(),
-  deleted_at: z.number().nullable().optional(),
+export const AuthCapabilitiesSchema = z.looseObject({
+  apple: z.boolean(),
+  google: z.boolean(),
+  email: z.boolean(),
 })
-export const PushRequestSchema = z.object({
-  client_hlc: z.string().optional(),
-  ops: z.array(PushOpSchema).max(500),
-})
-export const RejectionSchema = z.object({
-  seq: z.number(),
-  code: z.string(),
-  field: z.string().optional(),
-})
-export const PushResponseSchema = z.looseObject({
-  accepted: z.array(z.number()),
-  rejected: z.array(RejectionSchema),
-  conflicts: z.array(z.string()),
-  server_hlc: z.string(),
-  server_time: z.number(),
-})
-export const PullRequestSchema = z.object({
-  since: z.string().optional(),
-  limit: z.number().optional(),
-})
-export const StoredRowSchema = z.object({
-  entity: z.string(),
-  id: z.string(),
-  fields: z.record(z.string(), FieldSchema),
-  deleted_at: z.number().nullable().optional(),
-})
-export const PullResponseSchema = z.looseObject({
-  changes: z.array(StoredRowSchema),
-  next: z.string(),
-  has_more: z.literal(false),
-  server_hlc: z.string(),
-})
-export const StatusResponseSchema = z.looseObject({ merge: z.string(), entities: z.number() })
+export const MeResponseSchema = z.looseObject({ user: UserSchema, device_id: ResourceIdSchema })
+export type AuthCapabilities = z.infer<typeof AuthCapabilitiesSchema>
+export type MeResponse = z.infer<typeof MeResponseSchema>
 export const HealthSchema = z.looseObject({ status: z.literal('ok'), version: z.string() })
 export const ReadinessSchema = z.looseObject({
   status: z.enum(['ok', 'degraded']),
@@ -136,10 +145,6 @@ export const SceneResponseSchema = z.looseObject({
   scene: SceneSchema,
 })
 export const ThemesSchema = z.looseObject({ themes: z.array(z.string()), provider: z.string() })
-export type PushRequest = z.infer<typeof PushRequestSchema>
-export type PushResponse = z.infer<typeof PushResponseSchema>
-export type PullRequest = z.infer<typeof PullRequestSchema>
-export type PullResponse = z.infer<typeof PullResponseSchema>
 export type SceneResponse = z.infer<typeof SceneResponseSchema>
 export type Problem = z.infer<typeof ProblemSchema>
 
@@ -150,7 +155,21 @@ const errors = {
 } as const
 const base = { status: 'implemented', auth: 'none', requirements: ['F-04'], owner: 66 } as const
 const lang = z.literal('es-ES').optional()
-const legacyOperations = withExamples(
+const noStore = { 'Cache-Control': z.literal('no-store') }
+const deviceHeaders = { 'X-Loro-Device': ResourceIdSchema }
+const protectedErrors = {
+  ...errors,
+  401: { schema: ProblemSchema, mediaType: 'application/problem+json' },
+  403: { schema: ProblemSchema, mediaType: 'application/problem+json' },
+  409: { schema: ProblemSchema, mediaType: 'application/problem+json' },
+  429: { schema: ProblemSchema, mediaType: 'application/problem+json' },
+  503: { schema: ProblemSchema, mediaType: 'application/problem+json' },
+} as const
+const authBase = { ...base, owner: 67, requirements: ['F-01', 'F-02', 'F-07'] } as const
+const syncBase = { ...base, owner: 68, auth: 'bearer', headers: deviceHeaders } as const
+const signInBehavior =
+  'Verify configured provider proof, register the installation and create a session. Tokens expire after 900 seconds; local data must be uploaded before the claim is complete. Provider capabilities describe configured methods. No anonymous identifier grants server access.'
+export const currentOperations = withExamples(
   [
     {
       ...base,
@@ -171,9 +190,10 @@ const legacyOperations = withExamples(
       id: 'readiness',
       method: 'get',
       path: '/health/ready',
-      summary: 'WASM readiness',
+      summary: 'Database and WASM readiness',
       responses: { 200: { schema: ReadinessSchema }, 503: { schema: ReadinessSchema } },
-      behavior: '503 is JSON checks, not RFC 9457. Content and WASM only.',
+      behavior:
+        '503 is JSON checks, not RFC 9457. Checks bundled content, canonical WASM merge and the real PostgreSQL connection.',
     },
     {
       ...base,
@@ -207,35 +227,145 @@ const legacyOperations = withExamples(
       behavior: 'Unknown pack returns 422; preserves authored membership order.',
     },
     {
-      ...base,
+      ...authBase,
+      id: 'authCapabilities',
+      method: 'get',
+      path: '/auth/capabilities',
+      summary: 'Configured sign-in methods',
+      responses: { 200: { schema: AuthCapabilitiesSchema, headers: noStore } },
+      behavior:
+        'Reports configured Apple, Google and email sign-in methods. False means unavailable; no simulated provider success.',
+    },
+    {
+      ...authBase,
+      id: 'authApple',
+      method: 'post',
+      path: '/auth/apple',
+      summary: 'Sign in with Apple',
+      request: { schema: SignInRequestSchema },
+      responses: { 200: { schema: SignInResponseSchema, headers: noStore }, ...protectedErrors },
+      behavior: signInBehavior,
+    },
+    {
+      ...authBase,
+      id: 'authGoogle',
+      method: 'post',
+      path: '/auth/google',
+      summary: 'Sign in with Google',
+      request: { schema: SignInRequestSchema },
+      responses: { 200: { schema: SignInResponseSchema, headers: noStore }, ...protectedErrors },
+      behavior: signInBehavior,
+    },
+    {
+      ...authBase,
+      id: 'authMagicLink',
+      method: 'post',
+      path: '/auth/magic-link',
+      summary: 'Request sign-in code',
+      request: { schema: MagicLinkRequestSchema },
+      responses: { 202: { schema: MagicLinkResponseSchema, headers: noStore }, ...protectedErrors },
+      behavior:
+        'Valid email requests receive 202 when the configured delivery service accepts them. Rate limited; email existence is not disclosed. An unavailable delivery service returns 503.',
+    },
+    {
+      ...authBase,
+      id: 'authMagicVerify',
+      method: 'post',
+      path: '/auth/magic-link/verify',
+      summary: 'Verify sign-in code',
+      request: { schema: MagicVerifyRequestSchema },
+      responses: { 200: { schema: SignInResponseSchema, headers: noStore }, ...protectedErrors },
+      behavior:
+        'Consume a valid unexpired email code once, then register the installation and return session tokens. Limited attempts; local progress remains pending until sync acknowledges it.',
+    },
+    {
+      ...authBase,
+      id: 'authRefresh',
+      method: 'post',
+      path: '/auth/refresh',
+      summary: 'Rotate refresh token',
+      request: { schema: RefreshRequestSchema },
+      responses: { 200: { schema: TokenResponseSchema, headers: noStore }, ...protectedErrors },
+      behavior:
+        'Rotate the refresh token transactionally. Reuse revokes the session family; clients refresh once, single-flight, then re-authenticate while retaining their outbox.',
+    },
+    {
+      ...authBase,
+      id: 'authLogout',
+      method: 'post',
+      path: '/auth/logout',
+      auth: 'bearer',
+      summary: 'Revoke the current session',
+      responses: {
+        204: {
+          schema: z.never(),
+          headers: noStore,
+          description: 'Session revoked; no response body.',
+        },
+        ...protectedErrors,
+      },
+      behavior:
+        'Revoke the authenticated session without deleting local learner data. An optional device header must agree with the authenticated device.',
+    },
+    {
+      ...authBase,
+      id: 'authClaim',
+      method: 'post',
+      path: '/auth/claim',
+      auth: 'bearer',
+      headers: { ...deviceHeaders, 'Idempotency-Key': RowIdSchema },
+      summary: 'Record authenticated local-data claim',
+      request: { schema: ClaimRequestSchema },
+      responses: { 200: { schema: ClaimResultSchema, headers: noStore }, ...protectedErrors },
+      behavior:
+        'Device header/body must agree and belong to the authenticated session; Idempotency-Key equals request_id. The claim is durable and idempotent. upload_required is true; the client completes the claim only after full local upload is acknowledged.',
+    },
+    {
+      ...authBase,
+      id: 'accountRead',
+      method: 'get',
+      path: '/me',
+      auth: 'bearer',
+      summary: 'Current account and device',
+      responses: { 200: { schema: MeResponseSchema, headers: noStore }, ...protectedErrors },
+      behavior:
+        'Return server-derived user identity and authenticated device ID. An optional device header must agree with the authenticated device.',
+    },
+    {
+      ...syncBase,
       id: 'syncPush',
       method: 'post',
       path: '/sync/push',
-      summary: 'Development merge harness',
-      request: { schema: PushRequestSchema, examples: [{ name: 'empty', value: { ops: [] } }] },
-      responses: { 201: { schema: PushResponseSchema }, ...errors },
+      summary: 'Durable account-scoped merge',
+      request: {
+        schema: PushRequestSchema,
+        description: 'Validate the envelope, then classify each operation independently.',
+      },
+      responses: { 200: { schema: PushResponseSchema, headers: noStore }, ...protectedErrors },
+      maxBodyBytes: MAX_SYNC_BYTES,
       behavior:
-        'Nest default 201. Unscoped memory. Partial rejection: schema_unknown or VALIDATION_FAILED. Field HLC objects. Input checks are incomplete; schema describes intended well-formed calls, not all accidentally accepted inputs.',
+        'Bearer and registered device required. PostgreSQL transaction, canonical Rust merge, encoded field HLCs, per-operation rejection, principal/device/sequence replay protection. Receipts preserve exact field clock corrections across retries. Catalog duplicates return aliases; explicit re-add requires replaces naming an observed matching tombstone and creates a new generation. Only accepted sequences are acknowledged.',
     },
     {
-      ...base,
+      ...syncBase,
       id: 'syncPull',
       method: 'post',
       path: '/sync/pull',
-      summary: 'All development rows',
+      summary: 'Account-scoped cursor page',
       request: { schema: PullRequestSchema },
-      responses: { 201: { schema: PullResponseSchema }, ...errors },
+      responses: { 200: { schema: PullResponseSchema, headers: noStore }, ...protectedErrors },
       behavior:
-        'Ignores since and limit; every process row; no tenant scope; next is a placeholder HLC.',
+        'since=null bootstraps. Opaque account-bound cursor pages durable changes with limit 1–500; invalid cursors return CURSOR_EXPIRED. Rows have entity_id and explicit deleted_at. Catalog tombstones expose only optional catalog_identity, never learner text. Apply returned aliases, rows and cursor atomically on the device.',
     },
     {
-      ...base,
+      ...syncBase,
       id: 'syncStatus',
       method: 'post',
       path: '/sync/status',
-      summary: 'Development diagnostic',
-      responses: { 201: { schema: StatusResponseSchema } },
-      behavior: 'WASM availability and global row count; not production sync health.',
+      summary: 'Authenticated sync diagnostic',
+      responses: { 200: { schema: StatusResponseSchema, headers: noStore }, ...protectedErrors },
+      behavior:
+        'Bearer and matching registered device required. Reports real WASM availability and the authenticated account row count.',
     },
     {
       ...base,
@@ -260,11 +390,6 @@ const legacyOperations = withExamples(
   ] as const satisfies readonly Operation[],
   currentExamples,
 )
-
-export const currentOperations: readonly Operation[] = [
-  ...legacyOperations,
-  ...oauthOperations(ProblemSchema),
-]
 
 export type { Operation, ResponseContract } from './operation.js'
 

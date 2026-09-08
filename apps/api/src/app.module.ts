@@ -16,7 +16,11 @@ import { ContentController } from './content/content.controller.js'
 import { SyncController } from './sync/sync.controller.js'
 import { SyncService } from './sync/sync.service.js'
 import { SYNC_REPOSITORY } from './sync/sync.repository.js'
-import { InMemorySyncRepository } from './sync/sync.repository.memory.js'
+import { PostgresSyncRepository } from './sync/sync.repository.postgres.js'
+import { DATABASE, PostgresDatabase } from './database/database.js'
+import { AuthController, MeController } from './auth/auth.controller.js'
+import { AuthService } from './auth/auth.service.js'
+import { AuthGuard } from './auth/auth.guard.js'
 import { AiController } from './ai/ai.controller.js'
 import { AiService } from './ai/ai.service.js'
 import { SCENE_PROVIDERS, type SceneProvider } from './ai/scene-provider.js'
@@ -30,6 +34,8 @@ import { StubSceneProvider } from './ai/scene-provider.stub.js'
     LearningContentController,
     SyncController,
     AiController,
+    AuthController,
+    MeController,
   ],
   providers: [
     AiService,
@@ -43,8 +49,10 @@ import { StubSceneProvider } from './ai/scene-provider.stub.js'
       inject: [StubSceneProvider],
     },
     SyncService,
-    // Postgres lands with plans/13; it replaces this line and nothing else.
-    { provide: SYNC_REPOSITORY, useClass: InMemorySyncRepository },
+    AuthService,
+    AuthGuard,
+    { provide: DATABASE, useClass: PostgresDatabase },
+    { provide: SYNC_REPOSITORY, useClass: PostgresSyncRepository },
     // The wall clock, so a test can pin `server_hlc` instead of matching a regex.
     { provide: SERVER_CLOCK, useValue: systemClock },
   ],
