@@ -22,6 +22,7 @@ echo "── wasm (for apps/api — the server runs the SAME merge as the client
 # at the build that never produced the file. Opt out explicitly or not at all.
 if command -v wasm-pack >/dev/null 2>&1; then
   wasm-pack build --target nodejs --out-dir pkg
+  node scripts/embed-wasm.mjs
 elif [[ "${LORO_SKIP_WASM:-}" == "1" ]]; then
   echo "  wasm-pack not found; LORO_SKIP_WASM=1 set — skipping."
   echo "  apps/api built from this tree will report merge: unavailable."
@@ -52,8 +53,8 @@ if [[ "$MOBILE" == true ]]; then
 
   echo "── Android ──"
   if command -v cargo-ndk >/dev/null 2>&1; then
-    cargo ndk -t arm64-v8a -t armeabi-v7a -t x86_64 \
-      -o ../../apps/mobile/android/app/src/main/jniLibs build --release
+    bash ../../apps/mobile/modules/loro-core/scripts/build-android.sh \
+      "$PWD/../../apps/mobile/modules/loro-core/android/build/rust-jniLibs"
   else
     echo "  cargo-ndk not found. Install it with: cargo install cargo-ndk"
   fi

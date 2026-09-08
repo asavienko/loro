@@ -12,6 +12,7 @@
 #![allow(clippy::module_name_repetitions)]
 
 pub mod asr;
+pub mod bridge;
 pub mod calendar;
 pub mod dsp;
 pub mod fsrs;
@@ -37,7 +38,8 @@ uniffi::setup_scaffolding!();
 // ─────────────────────────────────────────────────────────────────────────────
 
 /// The learner's declaration of how hard a phrase is for them.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize, uniffi::Enum)]
+#[serde(rename_all = "lowercase")]
 pub enum Difficulty {
     /// Shown as "Easy".
     Easy,
@@ -135,6 +137,13 @@ pub struct LatencySample {
 #[cfg(target_arch = "wasm32")]
 mod wasm {
     use wasm_bindgen::prelude::*;
+
+    /// The same JSON boundary invoked by native Expo modules.
+    #[wasm_bindgen]
+    pub fn core_call(method: &str, input: &str) -> Result<String, JsValue> {
+        crate::bridge::core_call(method.to_string(), input.to_string())
+            .map_err(|e| JsValue::from_str(&e.to_string()))
+    }
 
     /// Merge one row, from the server side. Byte-identical to the client path.
     ///

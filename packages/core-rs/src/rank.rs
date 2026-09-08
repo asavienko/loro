@@ -55,25 +55,30 @@ pub fn repeat_target(difficulty: Difficulty) -> u32 {
 #[must_use]
 #[uniffi::export]
 pub fn stream_rank(p: &PhraseState, now_ms: i64) -> i32 {
-    let mut r = i32::try_from(p.plays).unwrap_or(i32::MAX);
+    stream_rank_values(p.plays, p.difficulty, p.loved, p.srs_due, now_ms)
+}
 
-    r += match p.difficulty {
+/// Scalar boundary for platforms that do not need the entire phrase record.
+#[must_use]
+pub fn stream_rank_values(
+    plays: u32,
+    difficulty: Difficulty,
+    loved: bool,
+    due: Option<i64>,
+    now_ms: i64,
+) -> i32 {
+    let r = i32::try_from(plays).unwrap_or(i32::MAX);
+    let offset = match difficulty {
         Difficulty::Hard => HARD_OFFSET,
         Difficulty::Easy => EASY_OFFSET,
         Difficulty::Med => MED_OFFSET,
-    };
-
-    if p.loved {
-        r += LOVED_OFFSET;
-    }
-
-    if let Some(due) = p.srs_due {
-        if due <= now_ms {
-            r += DUE_OFFSET;
-        }
-    }
-
-    r
+    } + if loved { LOVED_OFFSET } else { 0 }
+        + if due.is_some_and(|due| due <= now_ms) {
+            DUE_OFFSET
+        } else {
+            0
+        };
+    r.saturating_add(offset)
 }
 
 /// Order the active queue. Excludes learned phrases.
