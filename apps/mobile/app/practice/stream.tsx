@@ -11,7 +11,7 @@ import { useMemo } from 'react'
 import { ScrollView, StyleSheet, View } from 'react-native'
 import { router } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { streamStats, type Difficulty, type PhraseState } from '@loro/core'
+import { streamStats, isActive, type Difficulty } from '@loro/core'
 import { copy, themeLabel } from '../../src/lib/copy'
 import { DifficultySelector, EmptyState, PhraseRow } from '../../src/ui/components'
 import {
@@ -39,24 +39,14 @@ import {
   surface,
 } from '../../src/ui/theme'
 import { toView, useApp, type PhraseView } from '../../src/store'
+import { audioSpeech, useAudioSpeech } from '../../src/lib/audioSpeech'
+import { rustCoreFacade } from '../../src/store/coreFacade'
+import { deviceClock } from '../../src/lib/clock'
 /** How many phrases "Up next" shows. */
 const UP_NEXT_ROWS = 7
 /** The two gaps in this screen that no `space` step names. */
 const RERATE_GAP = 7
 const PILL_GAP = 5
-/**
- * The queue's rank — `plays + (hard −6 | easy +4) + (loved −3)`, ascending.
- *
- * ── Deliberately LOCAL, and knowingly divergent ──
- * `store/index.ts` and `core-rs/src/rank.rs:57` (`stream_rank`) compute the same rank and both
- * subtract 4 for a phrase whose SRS review is due. This copy omits that term, so the queue the
- * learner scrolls is ordered differently from the one `StreamEngine.plan()` would produce —
- * defect 1 in plans/52, owned by plans/05-fix-shared-maths-duplication. Adding the missing term
- * reorders the visible queue, which this refactor promises not to do, so the formula is left
- * byte-for-byte as it was and merely given a name and this note.
- */
-const rank = (p: PhraseState): number =>
-  p.plays + (p.difficulty === 'hard' ? -6 : p.difficulty === 'easy' ? 4 : 0) + (p.loved ? -3 : 0)
 export default function Stream() {
   useLocale()
   const insets = useSafeAreaInsets()
@@ -69,15 +59,18 @@ export default function Stream() {
   const setCursor = (streamCursor: number): void => {
     useApp.setState({ streamCursor })
   }
-  const queue = useMemo(
-    () =>
-      phrases
-        .filter((p) => !p.learned)
-        .slice()
-        .sort((a, b) => rank(a) - rank(b) || a.id.localeCompare(b.id))
-        .map(toView),
-    [phrases, nativeLanguage],
-  )
+  const queue = useMemo(() => {
+    const now = deviceClock.now()
+    return phrases
+      .filter(isActive)
+      .slice()
+      .sort(
+        (a, b) =>
+          rustCoreFacade.streamRank(a, now) - rustCoreFacade.streamRank(b, now) ||
+          a.id.localeCompare(b.id),
+      )
+      .map(toView)
+  }, [phrases, nativeLanguage])
   const stats = streamStats(phrases)
   const position = cursor % Math.max(1, queue.length)
   const current = queue[position]
@@ -152,6 +145,11 @@ function NowPlayingCard({
   onNext: () => void
 }) {
   useLocale()
+  const locale = useApp((state) => state.targetLocale)
+  const recordPlay = useApp((state) => state.recordPlay)
+  const audio = useAudioSpeech(locale)
+  const playing =
+    audio.phraseId === phrase.id && (audio.playback === 'playing' || audio.playback === 'loading')
   return (
     <DarkCard>
       <Row justify="space-between">
@@ -176,8 +174,29 @@ function NowPlayingCard({
       </Stack>
 
       <Text variant="captionSm" color={onDark.tertiary} align="center" style={s.repeatRow}>
-        {copy.stream.audioNote}
+        {!audio.canPlay
+          ? copy.stream.audioNote
+          : audio.playback === 'error'
+            ? copy.audioSpeech.error
+            : copy.audioSpeech.tts}
       </Text>
+      {audio.canPlay && (
+        <Pressable
+          feedback="button"
+          accessibilityLabel={playing ? copy.audioSpeech.stop : copy.audioSpeech.play}
+          onPress={() => {
+            if (playing) void audioSpeech.stopPlayback()
+            else
+              void audioSpeech.play(phrase.id, phrase.targetText, locale, 0.92, () => {
+                recordPlay(phrase.id)
+              })
+          }}
+        >
+          <Text variant="body" color={onDark.primary} align="center">
+            {playing ? copy.audioSpeech.stop : copy.audioSpeech.play}
+          </Text>
+        </Pressable>
+      )}
       <TransportBar onPrevious={onPrevious} onNext={onNext} />
     </DarkCard>
   )

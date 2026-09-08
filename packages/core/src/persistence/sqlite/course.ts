@@ -23,8 +23,13 @@ export class SqlCourseTable implements CourseTable {
   }
   save(row: CourseRow): void {
     this.deps.driver.run(
-      `INSERT OR REPLACE INTO course_session
-      (user_id, target_locale, onboarded, selected_id, stream_cursor, refrain_session) VALUES (?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO course_session
+      (user_id, target_locale, onboarded, selected_id, stream_cursor, refrain_session) VALUES (?, ?, ?, ?, ?, ?)
+      ON CONFLICT(user_id, target_locale) DO UPDATE SET
+        onboarded = excluded.onboarded,
+        selected_id = excluded.selected_id,
+        stream_cursor = excluded.stream_cursor,
+        refrain_session = excluded.refrain_session`,
       [
         this.deps.userId,
         row.targetLocale,

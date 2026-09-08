@@ -10,6 +10,7 @@
  */
 
 import {
+  userPhraseId,
   DEFAULT_REP_TARGET,
   RefrainEngine,
   StreamEngine,
@@ -23,7 +24,7 @@ import {
 } from '@loro/core'
 import type { StoreApi } from 'zustand'
 import { deviceClock } from '../lib/clock'
-import { jsCoreFacade } from './coreFacade'
+import { rustCoreFacade } from './coreFacade'
 import { useApp } from './store'
 import type { AppState } from './types'
 
@@ -43,6 +44,8 @@ export function createEngineContext(
   core: LoroCoreFacade,
 ): EngineContext {
   const state = store.getState()
+  // A context belongs to the attempt/course that created it. A later language or
+  // account switch must not redirect an asynchronous recording to another row set.
   const phrases = state.phrases
   /**
    * The store's array, read through the SAME eligibility rule as the repositories.
@@ -76,6 +79,9 @@ export function createEngineContext(
     trip: deps.trip,
     flags: deps.flags,
     seed: deps.seed,
+    ...(state.refrainDay === deps.clock.localDay()
+      ? { refrainSet: state.refrainSet.map(userPhraseId) }
+      : {}),
   }
 }
 
@@ -100,8 +106,8 @@ const productionEngineDeps: EngineContextDeps = {
 
 /** Zero-argument production wrapper retained for existing route call sites. */
 export function engineContext(): EngineContext {
-  return createEngineContext(useApp, productionEngineDeps, jsCoreFacade)
+  return createEngineContext(useApp, productionEngineDeps, rustCoreFacade)
 }
 
 export const streamEngine = new StreamEngine()
-export const refrainEngine = new RefrainEngine()
+export const refrainEngine = new RefrainEngine(engineContext)

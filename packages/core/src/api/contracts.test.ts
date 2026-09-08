@@ -127,7 +127,7 @@ describe('target wire boundaries (F-04)', () => {
       srsState: field('review'),
     }
     expect(target.UserPhraseFieldsSchema.safeParse(fields).success).toBe(true)
-    for (const key of target.fsrsFields) {
+    for (const key of target.fsrsFields.filter((field) => field !== 'srsAlgorithm')) {
       const partial = Object.fromEntries(Object.entries(fields).filter(([name]) => name !== key))
       expect(target.UserPhraseFieldsSchema.safeParse(partial).success).toBe(false)
     }
@@ -139,7 +139,15 @@ describe('target wire boundaries (F-04)', () => {
       }).success,
     ).toBe(true)
   })
-  it('requires explicit target tombstones while preserving current omitted deletion', () => {
+  it('requires explicit tombstones in implemented and target sync', () => {
+    expect(
+      CurrentPull.safeParse({
+        changes: [{ entity: 'user_phrase', entity_id: id, fields: {}, deleted_at: null }],
+        next: 'opaque_cursor_example',
+        server_hlc: hlc,
+        has_more: false,
+      }).success,
+    ).toBe(true)
     expect(
       CurrentPull.safeParse({
         changes: [{ entity: 'user_phrase', id, fields: {} }],
@@ -147,7 +155,7 @@ describe('target wire boundaries (F-04)', () => {
         server_hlc: hlc,
         has_more: false,
       }).success,
-    ).toBe(true)
+    ).toBe(false)
     expect(
       target.ChangeSchema.safeParse({
         entity: 'user_phrase',
@@ -424,7 +432,8 @@ describe('AI and privacy contracts', () => {
 
 describe('registry and generated OpenAPI', () => {
   it('publishes only implemented routes in current and excludes drafts from stable exports', () => {
-    expect(currentOperations).toHaveLength(18)
+    expect(currentOperations).toHaveLength(25)
+    expect(new Set(currentOperations.map((op) => op.status))).toEqual(new Set(['implemented']))
     expect(Object.keys(buildOpenApi('current').paths).sort()).toEqual(
       [...new Set(currentOperations.map((o) => o.path))].sort(),
     )
@@ -432,6 +441,27 @@ describe('registry and generated OpenAPI', () => {
     expect('TripSyncOpSchema' in target).toBe(false)
     expect(new Set(target.targetOperations.map((op) => op.status))).toEqual(new Set(['planned']))
     for (const op of draft.draftOperations) expect(op.unresolved?.length ?? 0).toBeGreaterThan(0)
+  })
+  it('publishes the authenticated runtime sync and session boundaries', () => {
+    for (const id of ['syncPush', 'syncPull', 'syncStatus', 'authClaim']) {
+      const operation = currentOperations.find((op) => op.id === id)
+      expect(operation?.auth).toBe('bearer')
+      expect(operation?.headers?.['X-Loro-Device']?.safeParse(undefined).success).toBe(false)
+      expect(operation?.responses[200]).toBeDefined()
+      expect(operation?.responses[201]).toBeUndefined()
+    }
+    expect(currentOperations.find((op) => op.id === 'syncPull')?.request?.schema).toBe(
+      target.PullRequestSchema,
+    )
+    expect(currentOperations.find((op) => op.id === 'syncPush')?.request?.schema).toBe(
+      target.PushRequestSchema,
+    )
+    const logout = buildOpenApi('current').paths['/auth/logout']?.['post']
+    const response = z
+      .object({ responses: z.record(z.string(), z.object({ content: z.unknown().optional() })) })
+      .parse(logout)
+    expect(response.responses['204']?.content).toBeUndefined()
+    expect(currentOperations.find((op) => op.id === 'accountRead')?.auth).toBe('bearer')
   })
   it('validates examples, unique operation IDs, and path parameter coverage', () => {
     for (const operations of [

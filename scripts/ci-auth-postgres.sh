@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# A disposable local database: auth tests drop their tables, so never use a developer DB.
+# A disposable local database for every durable auth, OAuth, migration and sync integration test.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 container=''
@@ -14,7 +14,7 @@ container=$(docker run --detach --rm \
   -p 127.0.0.1::5432 postgres:16-alpine)
 ready=false
 for ((attempt=0; attempt<30; attempt++)); do
-  if docker exec "$container" pg_isready -U postgres -d loro_auth_test >/dev/null 2>&1; then
+  if docker exec "$container" pg_isready -h 127.0.0.1 -U postgres -d loro_auth_test >/dev/null 2>&1; then
     ready=true
     break
   fi
@@ -27,5 +27,5 @@ if [[ "$ready" != true ]]; then
 fi
 address=$(docker port "$container" 5432/tcp)
 port=${address##*:}
-AUTH_TEST_DATABASE_URL="postgres://postgres:loro-test-only@127.0.0.1:$port/loro_auth_test" \
-  pnpm --filter @loro/api exec vitest run src/auth/auth.test.ts
+LORO_TEST_DATABASE_URL="postgres://postgres:loro-test-only@127.0.0.1:$port/loro_auth_test" \
+  pnpm --filter @loro/api exec vitest run --maxWorkers=1

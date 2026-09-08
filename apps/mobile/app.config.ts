@@ -15,7 +15,7 @@ import type { ExpoConfig } from 'expo/config'
 
 const VERSION = '0.1.0'
 const localApk = process.env['LORO_LOCAL_APK'] === '1'
-const previewPlugins: NonNullable<ExpoConfig['plugins']> = localApk
+const splashPlugins: NonNullable<ExpoConfig['plugins']> = localApk
   ? [
       [
         'expo-splash-screen',
@@ -27,7 +27,7 @@ const previewPlugins: NonNullable<ExpoConfig['plugins']> = localApk
         },
       ],
     ]
-  : []
+  : ['./plugins/with-default-splash-icon.cjs']
 
 export default (): ExpoConfig => ({
   name: localApk ? 'Loro Preview' : 'Loro',
@@ -41,7 +41,6 @@ export default (): ExpoConfig => ({
   splash: {
     backgroundColor: '#f6f2ea', // surface.app
     resizeMode: 'contain',
-    image: localApk ? undefined : './assets/images/splash.png',
   },
 
   updates: {
@@ -63,7 +62,7 @@ export default (): ExpoConfig => ({
     infoPlist: {
       // The promise, at the moment of decision.
       NSMicrophoneUsageDescription:
-        'Loro listens while you practise speaking. Your recordings are scored on this device and never uploaded.',
+        'Loro listens while you practise speaking. Speech is recognized on this device and recordings are never uploaded.',
       NSSpeechRecognitionUsageDescription:
         'Speech recognition runs on your device so you can practise offline.',
       NSCameraUsageDescription: 'Photograph a sign or menu to add the phrases you see.',
@@ -84,7 +83,6 @@ export default (): ExpoConfig => ({
     adaptiveIcon: localApk
       ? undefined
       : {
-          foregroundImage: './assets/images/adaptive-icon.png',
           backgroundColor: '#f6f2ea',
         },
     permissions: [
@@ -104,11 +102,9 @@ export default (): ExpoConfig => ({
     ],
   },
 
-  // Only plugins for INSTALLED packages. The native modules (loro-audio,
-  // loro-speech, loro-core) and notifications remain future work. Account browser and
-  // secure storage plugins are installed below — see README.md.
+  // Local Expo modules in ./modules are discovered by Expo autolinking during prebuild.
   plugins: [
-    ...previewPlugins,
+    ...splashPlugins,
     'expo-router',
     'expo-web-browser',
     'expo-secure-store',

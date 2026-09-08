@@ -19,8 +19,9 @@ export type MergeClass =
   | 'max'
   /**
    * Merged AS A GROUP, taking whichever side has the later `srsLastReview`.
-   * Taking `stability` from one device and `due` from another would produce a
-   * scheduling state no algorithm ever computed.
+   * Equal review times use the review anchor HLC. Policy provenance travels with
+   * the state: mixing stability, due or algorithm from different devices would
+   * produce a scheduling state no algorithm ever computed.
    */
   | 'latest-review'
   /** No merge; union by primary key. */
@@ -80,6 +81,7 @@ export const FIELD_POLICY: Readonly<Record<SyncEntity, FieldMap>> = {
     srsLastReview: 'latest-review',
     srsLapses: 'latest-review',
     srsState: 'latest-review',
+    srsAlgorithm: 'latest-review',
 
     // Loop B — repsToday is day-scoped, so LWW on the pair is correct
     repsToday: 'lww',

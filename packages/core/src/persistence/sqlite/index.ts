@@ -15,7 +15,8 @@ import { SqlCourseTable } from './course.js'
  */
 
 import type { SqlDriver } from '../driver.js'
-import { dropAll, migrate } from '../migrations.js'
+import { readText } from '../driver.js'
+import { migrate } from '../migrations.js'
 import { LOCAL_USER_ID, type Persistence } from '../tables.js'
 import { SqlPhraseTable } from './phrase.js'
 import { SqlSettingsTable } from './settings.js'
@@ -53,12 +54,44 @@ export function openSqlPersistence(
     settings: new SqlSettingsTable(synced),
     refrainDay: new SqlRefrainDayTable(deps),
     practiceDays: new SqlPracticeDayTable(deps),
-    outbox: new SqlOutboxTable(driver),
+    outbox: new SqlOutboxTable(driver, userId),
     wipe: () => {
-      // Drop and recreate rather than DELETE: a dropped table leaves no rows to recover
-      // from the freelist, which is what erasure has to mean.
-      dropAll(driver)
-      migrate(driver, at)
+      wipeOwner(driver, userId)
     },
   }
+}
+
+/**
+ * Clear one learner without erasing another owner's records or reusing an outbox seq.
+ * A late acknowledgement for an erased op must never match a later local write.
+ * Installation-wide metadata belongs to the default local learner; explicit owners do
+ * not own those tables. Account binding, device identity and clock survive a local wipe
+ * so erasure cannot change which account may upload this installation's future writes.
+ * This clears logical records, not forensic storage remnants.
+ */
+function wipeOwner(driver: SqlDriver, userId: string): void {
+  driver.transaction(() => {
+    const tables = driver.all(
+      `SELECT name FROM sqlite_master WHERE type = 'table'
+       AND name NOT LIKE 'sqlite_%' AND name != 'schema_version'`,
+    )
+    for (const row of tables) {
+      const name = readText(row, 'name')
+      const table = `"${name.replaceAll('"', '""')}"`
+      const ownerScoped = driver
+        .all(`PRAGMA table_info(${table})`)
+        .some((column) => column['name'] === 'user_id')
+      if (ownerScoped) driver.run(`DELETE FROM ${table} WHERE user_id = ?`, [userId])
+      else if (userId === LOCAL_USER_ID) {
+        if (name === 'kv') {
+          driver.exec(`DELETE FROM kv WHERE k NOT IN ('sync.account', 'device_id', 'last_hlc')`)
+        } else if (name === 'sync_state') {
+          // An active sync store retains its singleton across a local learning reset.
+          driver.exec(
+            'UPDATE sync_state SET cursor=NULL, failures=0, next_attempt_at=0, server_hlc=NULL WHERE id=1',
+          )
+        } else driver.exec(`DELETE FROM ${table}`)
+      }
+    }
+  })
 }

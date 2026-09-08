@@ -6,34 +6,35 @@ Guidance for Claude Code working in this repository.
 
 **Loro** — a mobile app (iOS + Android) that teaches Spanish, Bulgarian, and Russian by the phrase.
 
-Early implementation. **What exists:** the docs, 7 of the v1.1 design package's 23 learner screens
-plus the Languages and Account utilities and app shell in `apps/mobile/app/`, an API with 21
-endpoints (in-memory learning sync and PostgreSQL accounts), the Rust core, the design tokens,
-31-phrase Spanish/Bulgarian/Russian starter catalogs (new translations await bilingual review), and
-the local persistence layer (schema, migrations, repositories, outbox — driver-agnostic and tested
-against real SQLite), plus a dev-only generated token/component workbench. 619 JS/TS tests, 131 Rust
-tests, and 138 distinct browser E2E tests cover the implemented behavior. **What doesn't:** the
-native modules (audio, speech, ASR, widgets), the on-device SQLite driver, and the other 16 learner
-screens — so nothing runnable today exercises audio or the microphone, which is half of what this
-app is, and the app store is still in memory.
+Early implementation. **What exists:** eight of the v1.1 design package's 23 learner screens,
+Languages and Account utilities, the shared shell and a developer workbench. Local progress and
+course/session state commit to native OP-SQLite or browser SQLite before rendering. Rust owns FSRS,
+ranking, selection, matching, clocks and merge through generated WASM/UniFFI bridges. Native modules
+provide foreground device TTS and strictly on-device ASR with an offline Speak reveal fallback. The
+API stores accounts, sessions and tenant-scoped sync in PostgreSQL. Optional Google/Apple and email
+sign-in connect durable local progress to cross-device sync.
+
+The three 31-phrase Spanish/Bulgarian/Russian starters still await bilingual review. The other 15
+learner screens, production recorded audio/cache, background audio, measured onset latency, DSP,
+widgets and account export/erasure remain. Android compilation and an airplane-mode emulator
+persistence/reveal smoke passed; full iOS and physical-device speech/convergence acceptance remain
+release gates. See [persistent practice](docs/process/persistent-practice.md) and
+[plan 94](plans/94-persistent-practice-and-account-integration.md) for scoped evidence.
 
 The spine supports pull-down to open its menu; sheets dismiss by pulling their dedicated handle.
-Practice routes disable native back-swipe. Native touch validation remains a release gate.
+Practice routes disable native back-swipe. Native touch validation remains a release gate. Today
+owns its root header and day rows; other routes retain their stack header with a Today escape for
+cold entries. Onboarding keeps step-back navigation. More, full session exits and travelling audio
+remain in plans 56/62/64/81.
 
-**The shared spine/switcher now wraps Today, Add, Progress, Stream, Refrain, and phrase detail.**
-`src/lib/navigation.ts` declares the built hubs used by the switcher and Today's rail. Today owns
-its root header and day-as-hairline-rows treatment; other routes retain their stack header with a
-Today escape for cold entries. Onboarding keeps step-back navigation. More, ongoing work, durable
-resume, session exits and travelling audio still belong to plans 56/59/62/64/81.
-
-API contracts now live in `packages/core/src/api/` with current/target/draft entry points and
-generated OpenAPI. `pnpm check` includes contract drift checks. OAuth contracts and mobile readiness
-validation are wired; learning-sync contracts remain unwired;
-[the contract guide](docs/architecture/api-contracts.md) records that boundary.
+API contracts live in `packages/core/src/api/` with current/target/draft entry points and generated
+OpenAPI. Auth and sync runtime boundaries consume the shared schemas; remaining migration limits are
+recorded in [the contract guide](docs/architecture/api-contracts.md). `pnpm check` includes contract
+and generated-core drift checks.
 
 The standalone preview can use the [AWS HTTPS gateway](docs/process/public-api.md). Account checks
-real readiness independently of sign-in. Only read-only health/content/provider discovery is public;
-learning storage, sync, audio and speech remain incomplete. Deployment validates the exact Docker
+real readiness independently of sign-in. The existing public gateway exposes read-only routes;
+merging authenticated sync does not deploy or enable it there. Deployment validates the exact Docker
 image with `scripts/ci-api-image.sh` before transfer.
 
 ## Keep this file current
@@ -123,10 +124,10 @@ prototype-only and **must not** be carried into the app — see the divergence t
   that isn't about regenerating it.
 - **Plans live in `plans/`, numbered.** One markdown file per plan: a two-digit number, then
   kebab-case named for the topic — `plans/60-authoritative-core-maths.md`. The 2026-09-07 review
-  leaves 30 active plans within 56–88; completed 54/55/79/84/85 are under
+  recorded 30 active plans within 56–88; completed 54/55/79/84/85 are under
   `plans/archive/2026-09-07/` with compatibility symlinks. Plans 01–52 remain under
   `plans/archive/2026-07-30/`; completed 53 remains at its protected original path. The next new
-  plan number is 94. A new plan takes the next free number and gets a row in
+  plan number is 95. A new plan takes the next free number and gets a row in
   [`plans/README.md`](plans/README.md). **Numbers are never reused** — a gap is left rather than
   backfilled, so a link written against a number can't come to mean a different plan. Not in
   `docs/`: that holds the durable spec. Not in a temp directory either — a plan you can't find again
@@ -210,13 +211,14 @@ snapshot using local Expo prebuild and Gradle. `pnpm apk:github` also uploads it
 prerelease; add `--publish` to publish the prerelease after upload verification. No GitHub Actions
 or EAS build is invoked. JDK 17 and Android SDK 36 are required. Native projects stay temporary;
 `apps/mobile/android` is not a source checkout. See `docs/process/local-apk.md` for signing,
-configuration and release boundaries. This does not implement the native audio/SQLite bridges.
+configuration and release boundaries. Native core/audio/SQLite modules are now included; an APK
+build alone does not prove physical-device speech or production signing.
 
 ## Running and testing
 
 `pnpm local:up` decrypts the SOPS API environment and builds/starts the API and Expo web containers,
-including WASM. `pnpm local:down` stops them. Optional data services use the `infra` Compose
-profile; runtime storage is still in memory. See
+including WASM. `pnpm local:down` stops them. PostgreSQL and auth configuration are required for
+account/sync runtime; follow the current Compose profile and setup in
 [`local-development.md`](docs/process/local-development.md) for age identity setup.
 
 **Use Node 22.** The repo pins it (`.nvmrc`, `engines`), and `pnpm` is installed only under that
@@ -225,27 +227,29 @@ than "wrong Node". Run `nvm use 22` first, every time. `cargo` lives in `~/.carg
 be off PATH.
 
 ```bash
-pnpm check                          # the gate: 23 turbo tasks, all green today
-pnpm test:e2e                       # 134 learner tests: routes/states, clock, a11y, text scale
+pnpm ci:local                       # full local CI; GitHub Actions stays disabled
+pnpm check                          # fast lint/type/test/content/drift gate
+pnpm test:e2e                       # learner routes/states, clock, a11y, text scale
 pnpm test:e2e:workbench             # 3 tests: dev-only tokens/component inspection surface
 pnpm test:e2e:bundle                # the @smoke subset against the production web export
-pnpm --filter @loro/api dev         # :3000 — no Docker, no keys, no database
+pnpm --filter @loro/api dev         # :3000; requires PostgreSQL/auth configuration
 pnpm --filter @loro/mobile bundle   # proves the app compiles; needs no simulator
 npx expo start --web                # from apps/mobile — fastest way to see the screens
 ```
 
-- **The API needs no Docker.** Persistence isn't wired — the sync store is an in-memory `Map` and AI
-  is stubbed (`AI_PROVIDER=stub`), so skip `dev:up` unless you're building the repository layer.
-  `/v1/health/ready` returns 503 if the WASM merge is missing, which is the check worth watching.
+- **The API uses PostgreSQL for accounts and sync.** Configure the encrypted environment and
+  database before starting it. `/v1/health/ready` checks actual database/WASM availability; missing
+  dependencies are not replaced with a production in-memory fallback.
 - **Local Android preview builds are verified:** `pnpm apk:local` uses Java/Android SDK and a
-  temporary Expo prebuild. There is no committed `apps/mobile/android` or `ios` project. iOS still
-  needs full Xcode. The APK build is not evidence of native audio/SQLite bridges or device tests.
+  temporary Expo prebuild. Native projects remain generated and ignored. Custom core/audio/SQLite
+  modules require a native build; Expo Go is unsupported. iOS still needs full Xcode.
 - **Native builds are a separate local gate:** `pnpm ci:local:native` requires macOS/Xcode,
   installed Rust targets, cargo-ndk and an Android NDK. It builds libraries only. EAS and
   device-farm scaffolds are inactive; no command in local CI queues a cloud build.
-- **Browser E2E protects current web behavior, not missing native behavior.** The five hand-checks
-  in `onboarding.md` have no implementation behind them yet. `pnpm ci:local` runs learner, workbench
-  and production browser suites; `pnpm check` stays the fast gate.
+- **Browser E2E cannot verify native speech.** `pnpm ci:local` runs learner, workbench and
+  production browser suites. The Android offline persistence/reveal smoke is recorded separately in
+  [persistent practice](docs/process/persistent-practice.md); installed voices/models,
+  interruptions, physical devices and iOS remain additional acceptance work.
 - **Two accessibility props never reach a browser**, so a green E2E run says nothing about them:
   react-native-web's allowlist forwards neither `accessibilityLanguage` (hence no `lang="es-ES"` in
   the DOM) nor `accessibilityHint`. `check:lang` is the gate for the first, which is why it scans
@@ -253,10 +257,9 @@ npx expo start --web                # from apps/mobile — fastest way to see th
   entirely — `src/ui/primitives/Pressable.tsx` and `src/ui/primitives/bars.tsx` therefore set the
   flat `aria-*` forms as well; `src/ui/primitives/index.ts` explains why. Check any new
   accessibility prop against `createDOMProps`; silence is the failure mode.
-- **`packages/core-rs` tests are almost all inline `#[cfg(test)]`.** The one integration file is
-  `tests/parity.rs` (the calendar cross-language check). The others named in
-  [`testing-strategy.md`](docs/process/testing-strategy.md) (`sim.rs`, `merge.rs`, `golden/`) don't
-  exist, so don't assume a scheduling or DSP change is covered.
+- **Rust tests include inline units and integration targets.** Reference scheduling vectors,
+  cross-language calendar parity and simulation checks supplement mobile/browser tests. The DSP
+  physical-device quality gate remains separate from these deterministic checks.
 - **`cargo` is off the PATH that `pnpm`/`turbo` see.** `pnpm check` looks green while the four
   `@loro/core-rs` tasks are cache hits, then fails with `cargo: command not found` the moment a Rust
   file changes. Run `export PATH="$HOME/.cargo/bin:$PATH"` first.
@@ -279,17 +282,18 @@ npx expo start --web                # from apps/mobile — fastest way to see th
 | `apps/api/`               | NestJS backend                                                            |
 | `packages/core/`          | Shared TS domain, engine contracts, API schemas — **used by app AND api** |
 | `…/core/src/persistence/` | Schema, migrations, repositories, outbox. Handwritten SQL, no ORM         |
-| `apps/mobile/src/data/`   | Node SQLite test driver today; plan 59 adds the on-device driver          |
+| `apps/mobile/src/data/`   | Native/browser SQLite drivers, hydration, repository writes and sync      |
 | `packages/core-rs/`       | Rust: FSRS, sync merge, ranking, DSP. All reproducible maths              |
 | `packages/design-tokens/` | Tokens extracted from the blueprint + generators                          |
-| `packages/content/`       | The Spanish catalog, schema-validated                                     |
+| `packages/content/`       | Spanish/Bulgarian/Russian catalogs and review/validation gates            |
 
 ## Backend testing infrastructure
 
 [Plan 88](plans/88-low-cost-backend-infrastructure.md) selects one Frankfurt EC2 instance with local
-PostgreSQL and private S3 at a $25–35/month target. It is not provisioned. Shared access requires
-66/67's persistence, auth and isolation; mobile sync has additional 59/68 gates. Do not add managed
-dev/staging stacks, Redis, CDN or live providers to this phase. Start with
+PostgreSQL and private S3 at a $25–35/month target. Plan 91 records the restricted EC2 deployment;
+the full durable shared-testing profile still needs its own operational acceptance. The new
+account/sync runtime must pass that deployment gate before shared access is enabled. Do not add
+managed dev/staging stacks, Redis, CDN or live providers to this phase. Start with
 [environments](docs/process/environments.md) and the
 [testing runbook](docs/runbooks/backend-testing.md). Plan 73 owns production decisions; plan 86 owns
 provider adapters.
@@ -302,13 +306,13 @@ provider adapters.
 - **Every syncable field needs a declared merge class** in `packages/core/src/sync/fieldPolicy.ts`.
   CI fails without one, because a missing class is a silent data-loss bug
   ([sync-protocol.md](docs/architecture/sync-protocol.md)).
-- **The practice loop is a plug-in.** Stream and Refrain implement one interface today; every future
-  engine must maintain every progress signal, including ones it doesn't display (rule 5). The
+- **The practice loop is a plug-in.** Stream, Refrain and Speak implement one interface today; every
+  future engine must maintain every progress signal, including ones it doesn't display (rule 5). The
   conformance suite enforces this for implemented engines
   ([practice-engines.md](docs/architecture/practice-engines.md)).
-- **Offline-first is the target invariant, not a feature toggle.** The persistence primitives and
-  outbox exist, but the running app remains in memory until plan 59 makes the device database the
-  source of truth ([offline.md](docs/architecture/offline.md)).
+- **Offline-first is the runtime invariant.** The device/browser database is the source of truth;
+  local writes and outbox changes commit before store projections publish. Network and sign-in are
+  optional for practice ([offline.md](docs/architecture/offline.md)).
 - **Independent content delivery is a target, not current behavior.** Plan 61 adds the updater and
   artifact path that will let a phrase fix ship without an app release
   ([ADR-0009](docs/architecture/adr/0009-content-pipeline-and-packs.md)).
@@ -334,24 +338,27 @@ The UI follows the native language (`en`, `bg`, `ru`); targets are `es-ES`, `bg-
 excluding matching pairs. Use `loadLearningCatalog`, neutral targetText/translation views and the
 reactive `copy.ts` adapter over bundled i18next/ICU resources in `src/lib/i18n/`. Shared UI receives
 translated props. The Languages route is reachable from Today's switcher. Course progress and resume
-state are separate; the streak is global. Schema 2 repositories exist, but plan 59 still owns device
-persistence. New linguistic content is pending bilingual review; audio/ASR/DSP capabilities remain
-disabled. Plan 87 now tracks review and multilingual acceptance only; plan 59 owns device wiring and
-correction of the remaining `INSERT OR REPLACE` in `sqlite/course.ts`. Plan 60 owns the
-ASCII-oriented matcher/fabricated FSRS-cloze fallback and missing nightly `tests/sim` target.
+state are separate; the streak is global. Device/browser hydration and transactional writes are
+implemented. New linguistic content is pending bilingual review; TTS/ASR availability is checked per
+device and target, while DSP stays unavailable. Plan 87 owns bilingual/multilingual acceptance;
+plans 59/60 own persistence and canonical runtime behavior. Never replace a missing voice, model or
+measurement with a simulated result.
 
-## Google/Apple accounts (plan 89)
+## Optional accounts (plans 67/89/94)
 
-Optional `/account` identity is implemented with server-side provider verification, PostgreSQL
-accounts/refresh families and native SecureStore. Browser credentials remain in memory. Auth-enabled
-deployments fail closed on legacy sync/AI until tenant isolation lands. Learning data is untouched;
-anonymous claim/merge, deletion/export and live provider/device verification remain separate work.
-See [provider setup](docs/architecture/google-apple-auth.md).
+`/account` offers Google/Apple and email sign-in backed by PostgreSQL accounts, rotating refresh
+families and tenant-scoped sync. Native refresh credentials use SecureStore; browser credentials
+remain in memory. Installation binding prevents another account from uploading existing local
+progress. Sign-out retains learning data. Live provider/email configuration, account linking,
+export/erasure and physical-device convergence remain separate acceptance work. See
+[provider setup](docs/architecture/google-apple-auth.md) and
+[persistent practice](docs/process/persistent-practice.md).
 
 ## EC2 development deployment (plan 91)
 
 `infra/ec2/template.yaml` and `scripts/provision-ec2.sh` provision a restricted development host;
 `scripts/deploy-ec2.sh` builds/transfers the API image and health-gates replacement with rollback.
-API access uses an SSH tunnel, pending auth and persistence. Deployed in eu-central-1; readiness,
-SSH tunnel access and manual rollback verified on 2026-09-07. See
+Administrative API access uses an SSH tunnel; the optional HTTPS gateway remains read-only until the
+authenticated durable runtime is separately deployed and verified. Deployed in eu-central-1;
+readiness, SSH tunnel access and manual rollback verified on 2026-09-07. See
 [`ec2-deployment.md`](docs/process/ec2-deployment.md).

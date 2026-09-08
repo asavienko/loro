@@ -7,7 +7,7 @@ Architecture: [mobile-app.md](../../docs/architecture/mobile-app.md) · Stack ra
 
 ## What's here
 
-Seven of the v1.1 design package's 23 learner screens, plus the app shell — the demonstrable core
+Eight of the v1.1 design package's 23 learner screens, plus the app shell — the demonstrable core
 loop:
 
 | Route              | Screen                                                                      |
@@ -19,9 +19,12 @@ loop:
 | `practice/stream`  | The SRS stream                                                              |
 | `phrase/[id]`      | One phrase: its signals, its history, its hooks                             |
 | `progress`         | Mastery, ladder, and the rollup from those tags                             |
+| `practice/speak`   | On-device speech or offline word reveal                                     |
+| `languages`        | Native and learning language selection                                      |
+| `account`          | Optional Google/Apple/email sign-in and sync status                         |
 | `_layout`          | Router shell + toast host                                                   |
 
-The other 16 learner screens — chat, the prosody and pronunciation labs, the Run, trips, settings —
+The other 15 learner screens — chat, the prosody and pronunciation labs, the Run, trips, settings —
 are authored. The original 21 are in [screen-catalog.md](../../docs/design/screen-catalog.md); plan
 79 owns registration of the two v1.1 chat screens.
 
@@ -49,10 +52,12 @@ Include default and relevant selected, disabled, loading, empty, error, long-cop
 large-text, reduced-motion, and accent states. Then run the workbench suite; update its narrow
 screenshot baseline with `pnpm test:e2e:workbench:update` only after visually reviewing the change.
 
-Native `ios`/`android` projects and dev clients do not exist yet; plan 58 owns that substrate.
+Native `ios`/`android` projects are generated with Expo prebuild and ignored in Git. Local modules
+autolink from `modules/`. The core/audio/SQLite modules require a native development build. See
+[persistent practice setup and validation](../../docs/process/persistent-practice.md).
 
-When native audio and speech arrive, test them on hardware: simulators do not faithfully reproduce
-audio sessions, microphone behaviour, routing, lock-screen playback, or interruptions.
+Test native audio and speech on hardware: simulators do not faithfully reproduce audio sessions,
+microphone behaviour, routing, lock-screen playback, or interruptions.
 
 `bundle` runs an iOS `expo export`. It proves that Metro can resolve and emit the production bundle,
 which catches failures that `typecheck` cannot see. It does not compile a native project, exercise
@@ -67,18 +72,19 @@ development workbench. They complement, rather than replace, native device check
 ## Current shape
 
 ```
-app/                  seven learner routes plus the root layout
-src/store/            in-memory app state, actions, selectors, and engine adapters
-src/data/             Node SQLite driver used only by persistence tests
+app/                  eight learner routes, Languages/Account utilities and root layout
+src/store/            committed repository projections, actions and engine adapters
+src/data/             native/browser SQLite, hydration, repositories and sync
 src/ui/primitives/    domain-free controls and layout
 src/ui/components/    reusable domain-aware composites
 src/lib/              copy, clock, wave positions, IDs, and formatting helpers
-packages/core/        domain types, Stream/Refrain engines, persistence, sync policy
+packages/core/        domain types, Stream/Refrain/Speak engines, persistence, sync policy
 ```
 
-Today additionally owns the v1.1 navigation chrome — spine, root header, rail, day rows, switcher —
-as route-local blocks, because it is the only surface carrying them today. Plan 81 mounts the spine
-on every non-sheet surface from the route table, and that is when they become shared components.
+The shared spine and switcher wrap built routes. Pull down on the spine to open the switcher; sheets
+dismiss through their dedicated pull handle. Practice routes disable native back-swipe. Today owns
+its root header, rail and day rows; other screens retain stack headers and a Today escape for cold
+entries.
 
 Routes currently own their screen-specific hooks and named components. Reuse moves downward:
 domain-free pieces go in `src/ui/primitives/`, while a component used by multiple screens and typed
@@ -90,49 +96,51 @@ secure-storage, and learner-copy rules. The fuller `features/domain/data/platfor
 [mobile-app.md](../../docs/architecture/mobile-app.md) is the migration target, not a description of
 directories already present.
 
-Practice engines already live in `@loro/core` and are headless. Mobile assembles their
-`EngineContext` in `src/store/engines.ts`; the current repository adapter reads the Zustand phrase
-array, and `src/store/coreFacade.ts` is a temporary JavaScript stand-in for the unwired Rust bridge.
+Practice engines live in `@loro/core` and are headless. Mobile assembles their `EngineContext` in
+`src/store/engines.ts` from committed repository projections. `src/store/coreFacade.ts` calls the
+canonical Rust implementation through embedded browser WASM or the native UniFFI module; the
+compatibility name `jsCoreFacade` does not select an approximate JavaScript algorithm.
 
-## Native code (target; not present yet)
+## Native modules and remaining platform work
 
 ```
-modules/loro-audio/     playback · capture · rate · routing · interruptions · lock screen
-modules/loro-speech/    on-device ASR · device TTS
-modules/loro-core/      UniFFI bindings for the Rust core
-targets/ios-widget/     WidgetKit + ActivityKit
-targets/android-widget/ Glance
+modules/loro-core/          generated UniFFI core bridge
+modules/loro-audio-speech/  foreground device TTS and on-device ASR
+src/data/                  OP-SQLite adapter and browser SQLite adapter
 ```
 
-`loro-audio` is the highest-skill work in the project
-([ADR-0007](../../docs/architecture/adr/0007-audio-pipeline.md)). Its API has one property worth
-understanding before touching it:
+Native playback uses installed offline voices. Recognition requires a platform-supported on-device
+path for the selected language; otherwise Speak offers word reveal. Transcripts stay local, no API
+returns PCM to JavaScript, and no recorded audio is uploaded. Latency remains `null` until measured
+native onset detection exists. See [persistent practice](../../docs/process/persistent-practice.md).
 
-> **`stopRecording()` returns a `bufferId`, not bytes.** PCM stays in native memory and is handed to
-> `loro-core` by handle. There is no JS API that returns audio, so the code to upload it does not
-> exist and would have to be deliberately added to a native module.
+Recorded-asset cache, background/lock-screen playback, retained-buffer DSP, widget targets and
+notifications remain feature-plan work. The future recording API passes native buffer handles to
+Rust, never bytes through JavaScript
+([ADR-0011](../../docs/architecture/adr/0011-analytics-and-privacy.md)). Android compilation and an
+offline emulator persistence/reveal smoke do not establish installed voice/model quality or
+physical-device speech acceptance. Full iOS native validation remains gated on an available Xcode
+SDK.
 
-That's how the on-screen privacy promise is kept structurally rather than by remembering not to
-break it ([ADR-0011](../../docs/architecture/adr/0011-analytics-and-privacy.md)).
+## State ownership
 
-## State target — three tiers, no overlap
+| Tier          | Holds                                                          | Mechanism                                                |
+| ------------- | -------------------------------------------------------------- | -------------------------------------------------------- |
+| **Durable**   | phrases, ratings, tags, schedules, course/day state and outbox | SQLite transaction before publishing a render projection |
+| **Session**   | resumable practice checkpoint and transitions                  | SQLite; current projection in Zustand                    |
+| **Ephemeral** | sheet open, toast, scroll, animation values                    | React state / Zustand / Reanimated                       |
 
-| Tier          | Holds                                       | Mechanism                             |
-| ------------- | ------------------------------------------- | ------------------------------------- |
-| **Durable**   | phrases, ratings, tags, schedules, trips    | SQLite, read through **live queries** |
-| **Session**   | current rep, revealed words, engine phase   | Zustand, persisted per transition     |
-| **Ephemeral** | sheet open, toast, scroll, animation values | React state / Reanimated              |
-
-The schema, migrations, repositories, and outbox exist in `@loro/core` and are tested through the
-Node driver against real SQLite. The running app does not open them: all app data, including
-onboarding, phrases, progress days, and today's frozen Refrain set, lives only in Zustand and is
-lost on reload. Plan 59 adds the device driver, hydration, repository-backed writes, and session
-resume; only then does the three-tier table become true.
+Startup migrates and hydrates all courses before learner routes render. Native uses OP-SQLite; web
+uses SQL.js with atomic local-storage snapshots and an exclusive tab lock. A failed commit or
+corrupt database shows recovery and retains the original data. Phrase removal and its 2.6-second
+Undo window are durable; expired removals become tombstones. Practice never waits for account or
+network access.
 
 ## The checks that block merge
 
 ```bash
-pnpm check                              # lint, types, unit tests, content and static a11y
+pnpm ci:local                           # full local gate, including browser suites
+pnpm check                              # fast lint, types, unit tests, content and static a11y
 pnpm test:e2e                           # routes, states, flows, a11y and text scale
 pnpm --filter @loro/mobile bundle       # Metro resolves a production iOS export
 ```
@@ -162,9 +170,9 @@ with the first release build rather than now.
 5. **Describe every state once.** Add each learner-visible state to `e2e/states.ts` in the same
    change. The manifest gives it route coverage, axe coverage, and 200%/310% text-scale coverage;
    add focused behavior assertions in the route's spec as well.
-6. **Do not build against a future dependency.** Native audio, ASR, Rust bindings, device SQLite,
-   Skia, widgets, and notifications need their planned substrate and platform wrappers first. Keep
-   an honest unavailable state until the real capability exists; never fabricate a score or delay.
+6. **Consume real capability state.** Core, SQLite and foreground speech have platform ports;
+   widgets, notifications, DSP and background audio still need their owning feature integration.
+   Keep an honest unavailable state until a capability exists; never fabricate a score or delay.
 
 Every phrase row still opens phrase detail. The warming card is also still the performance canary,
 but today its band colour is selected during a React render and gradient bands fall back to a solid
@@ -175,9 +183,10 @@ the current screen as evidence that animation or 60 fps has been implemented.
 
 Choose native and learning languages on the welcome page or through Today → switcher → Languages.
 English/Bulgarian/Russian UI follows the native choice; Spanish/Bulgarian/Russian starter courses
-keep separate in-memory collections, daily sets and resume state. Each target has 31 phrases. New
-translations are pending bilingual review. Schema 2 supports language settings and sessions, but
-production hydration/write-through still belongs to plan 59.
+keep separate durable collections, daily sets and resume state. Each target has 31 phrases. New
+translations are pending bilingual review. Forward migrations support language settings, sessions
+and sync reconciliation; plans 59/94 wire hydration and transactional writes. Physical-device
+acceptance of all seven pairs remains in plan 87.
 
 Use `src/lib/copy.ts` for reactive localized copy and `useLearningCatalog()` for the selected pair.
 `src/lib/i18n/` bundles all translations; screens subscribe with `useLocale()`. A target text uses
@@ -186,6 +195,9 @@ To avoid another checkout's dev server, set `LORO_E2E_PORT=8095 pnpm test:e2e` f
 
 ## Optional Account utility
 
-`/account` adds Google/Apple sign-in and sign-up through the switcher, with SecureStore for native
-refresh credentials and memory-only browser sessions. Local learning state is retained on sign-out.
+`/account` offers Google/Apple and email/code sign-in through the switcher, real API readiness and
+sync status. Native refresh credentials use SecureStore; browser sessions stay in page memory. An
+installation binds to its verified account before uploading progress; sign-out retains local
+learning state. Foreground/connectivity/write events trigger bounded outbox retries. Account
+export/erasure, rescue UI and OS background sync remain future work.
 [Configuration, provider setup and release boundaries](../../docs/architecture/google-apple-auth.md).

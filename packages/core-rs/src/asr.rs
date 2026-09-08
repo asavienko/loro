@@ -8,6 +8,8 @@
 //! Ported from the blueprint's `matchTranscript` (`Loro.dc.html:2674–2683`).
 //! See docs/architecture/audio-speech.md#matching
 
+use unicode_normalization::UnicodeNormalization;
+
 /// Normalise for comparison: lowercase, strip diacritics, strip everything that
 /// isn't alphanumeric or ñ.
 ///
@@ -15,7 +17,9 @@
 #[must_use]
 #[uniffi::export]
 pub fn normalize(s: &str) -> String {
-    s.to_lowercase()
+    s.nfc()
+        .collect::<String>()
+        .to_lowercase()
         .chars()
         .map(strip_diacritic)
         .filter(|c| c.is_alphanumeric() || *c == 'ñ')
@@ -74,7 +78,14 @@ pub fn match_tokens(
         .collect();
     let target_norm: Vec<String> = target.iter().map(|t| normalize(t)).collect();
 
-    let start = revealed as usize;
+    let start = (revealed as usize).min(target_norm.len());
+    if target_norm.is_empty() || target_norm.iter().any(String::is_empty) {
+        return MatchResult {
+            revealed: 0,
+            just_index: -1,
+            complete: false,
+        };
+    }
     let mut cursor = 0usize;
     let mut matched = start;
 
@@ -174,6 +185,17 @@ mod tests {
 
     // The tests tokenise with the crate's own `tokenize` rather than a local copy of it:
     // a private duplicate would silently stop matching the tokenizer under test.
+
+    #[test]
+    fn multilingual_and_composed_forms_match_without_losing_distinct_letters() {
+        assert_eq!(normalize("ban\u{303}o"), normalize("baño"));
+        for phrase in ["Къде е банята?", "Где находится ванная?", "Ещё чай"]
+        {
+            assert!(match_tokens(&tokenize(phrase), &tokenize(phrase), 0, false).complete);
+        }
+        assert!(!match_tokens(&tokenize("hola"), &tokenize("!!!"), 1, false).complete);
+        assert_eq!(match_tokens(&[], &tokenize("hola"), 100, false).revealed, 1);
+    }
 
     #[test]
     fn tokenizing_splits_on_any_run_of_whitespace() {

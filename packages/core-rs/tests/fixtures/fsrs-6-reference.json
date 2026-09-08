@@ -1,0 +1,254 @@
+{
+  "source": "open-spaced-repetition/ts-fsrs",
+  "revision": "c8ca282edc3fe1cdfa1c24912437938b63a25cb3",
+  "vectors": [
+    {
+      "name": "initial-1",
+      "prior": null,
+      "elapsed": 0,
+      "grade": 1,
+      "next": {
+        "difficulty": 6.4133,
+        "stability": 0.212
+      }
+    },
+    {
+      "name": "review-0-1",
+      "prior": {
+        "difficulty": 5,
+        "stability": 10
+      },
+      "elapsed": 0,
+      "grade": 1,
+      "next": {
+        "difficulty": 8.34176237,
+        "stability": 3.05124894
+      }
+    },
+    {
+      "name": "review-1-1",
+      "prior": {
+        "difficulty": 5,
+        "stability": 10
+      },
+      "elapsed": 1,
+      "grade": 1,
+      "next": {
+        "difficulty": 8.34176237,
+        "stability": 1.2086474
+      }
+    },
+    {
+      "name": "review-30-1",
+      "prior": {
+        "difficulty": 5,
+        "stability": 10
+      },
+      "elapsed": 30,
+      "grade": 1,
+      "next": {
+        "difficulty": 8.34176237,
+        "stability": 1.6162163
+      }
+    },
+    {
+      "name": "review-3650-1",
+      "prior": {
+        "difficulty": 5,
+        "stability": 10
+      },
+      "elapsed": 3650,
+      "grade": 1,
+      "next": {
+        "difficulty": 8.34176237,
+        "stability": 3.1544593
+      }
+    },
+    {
+      "name": "initial-2",
+      "prior": null,
+      "elapsed": 0,
+      "grade": 2,
+      "next": {
+        "difficulty": 5.11217071,
+        "stability": 1.2931
+      }
+    },
+    {
+      "name": "review-0-2",
+      "prior": {
+        "difficulty": 5,
+        "stability": 10
+      },
+      "elapsed": 0,
+      "grade": 2,
+      "next": {
+        "difficulty": 6.66599536,
+        "stability": 10
+      }
+    },
+    {
+      "name": "review-1-2",
+      "prior": {
+        "difficulty": 5,
+        "stability": 10
+      },
+      "elapsed": 1,
+      "grade": 2,
+      "next": {
+        "difficulty": 6.66599536,
+        "stability": 11.8325715
+      }
+    },
+    {
+      "name": "review-30-2",
+      "prior": {
+        "difficulty": 5,
+        "stability": 10
+      },
+      "elapsed": 30,
+      "grade": 2,
+      "next": {
+        "difficulty": 6.66599536,
+        "stability": 36.19554855
+      }
+    },
+    {
+      "name": "review-3650-2",
+      "prior": {
+        "difficulty": 5,
+        "stability": 10
+      },
+      "elapsed": 3650,
+      "grade": 2,
+      "next": {
+        "difficulty": 6.66599536,
+        "stability": 107.12623949
+      }
+    },
+    {
+      "name": "initial-3",
+      "prior": null,
+      "elapsed": 0,
+      "grade": 3,
+      "next": {
+        "difficulty": 2.11810397,
+        "stability": 2.3065
+      }
+    },
+    {
+      "name": "review-0-3",
+      "prior": {
+        "difficulty": 5,
+        "stability": 10
+      },
+      "elapsed": 0,
+      "grade": 3,
+      "next": {
+        "difficulty": 4.99022837,
+        "stability": 10
+      }
+    },
+    {
+      "name": "review-1-3",
+      "prior": {
+        "difficulty": 5,
+        "stability": 10
+      },
+      "elapsed": 1,
+      "grade": 3,
+      "next": {
+        "difficulty": 4.99022837,
+        "stability": 13.04717575
+      }
+    },
+    {
+      "name": "review-30-3",
+      "prior": {
+        "difficulty": 5,
+        "stability": 10
+      },
+      "elapsed": 30,
+      "grade": 3,
+      "next": {
+        "difficulty": 4.99022837,
+        "stability": 53.55761316
+      }
+    },
+    {
+      "name": "review-3650-3",
+      "prior": {
+        "difficulty": 5,
+        "stability": 10
+      },
+      "elapsed": 3650,
+      "grade": 3,
+      "next": {
+        "difficulty": 4.99022837,
+        "stability": 171.50023194
+      }
+    },
+    {
+      "name": "initial-4",
+      "prior": null,
+      "elapsed": 0,
+      "grade": 4,
+      "next": {
+        "difficulty": 1,
+        "stability": 8.2956
+      }
+    },
+    {
+      "name": "review-0-4",
+      "prior": {
+        "difficulty": 5,
+        "stability": 10
+      },
+      "elapsed": 0,
+      "grade": 4,
+      "next": {
+        "difficulty": 3.31446137,
+        "stability": 15.53430795
+      }
+    },
+    {
+      "name": "review-1-4",
+      "prior": {
+        "difficulty": 5,
+        "stability": 10
+      },
+      "elapsed": 1,
+      "grade": 4,
+      "next": {
+        "difficulty": 3.31446137,
+        "stability": 15.70705546
+      }
+    },
+    {
+      "name": "review-30-4",
+      "prior": {
+        "difficulty": 5,
+        "stability": 10
+      },
+      "elapsed": 30,
+      "grade": 4,
+      "next": {
+        "difficulty": 3.31446137,
+        "stability": 91.57905369
+      }
+    },
+    {
+      "name": "review-3650-4",
+      "prior": {
+        "difficulty": 5,
+        "stability": 10
+      },
+      "elapsed": 3650,
+      "grade": 4,
+      "next": {
+        "difficulty": 3.31446137,
+        "stability": 312.4737844
+      }
+    }
+  ]
+}

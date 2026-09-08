@@ -2,19 +2,28 @@
 
 - **Requirement IDs:** `F-03`, `F-04`, `F-07`
 - **Milestone:** M2
-- **Status:** 🟡 Outbox, field policies and server Rust merge foundations exist. The mobile sync
-  loop and device convergence remain; integration needs 59, the merge-binding slice of 60, and
-  66/67.
+- **Status:** 🟡 Durable mobile push/pull, tenant-scoped PostgreSQL, Rust merge, catalog identity
+  reconciliation and transactional cursor/ACK handling are implemented. OS background execution,
+  rescue/export, load and physical-device convergence acceptance remain; hardware and lifecycle
+  policy are the remaining gates.
 - **Depends on:** 59 device persistence; 60 mobile merge binding only, not FSRS; 66 tenant cursor
   API; 67 identity.
-- **Reviewed:** 2026-09-07 against merged baseline `2d9e8c3`.
+- **Reviewed:** 2026-09-08 during plan-94 integration.
 
-## Verified starting point
+## Implemented scope
 
-`packages/core/src/sync/fieldPolicy.ts`, persistence outbox tests and API WASM merge tests are
-inputs. The app has no HTTP client or sync scheduler. `refrain_day.substituted` still lacks a
-declared merge class; resolve the day wire identity including targetLocale and decide whether the
-field syncs before any client sends it. Course resume metadata stays device-local.
+The mobile service starts after persistence hydration and authenticated account binding. Local
+writes, foreground/connectivity events and bounded retries trigger immutable outbox batches;
+practice never awaits HTTP. Acknowledgement, Rust merge/apply and pull cursors commit together.
+Attempts, cursors, dead letters, aliases and exact receipt clock corrections survive relaunch.
+Account/device checks around asynchronous work prevent stale credentials from uploading another
+account's state.
+
+The PostgreSQL server scopes rows, replay receipts and snapshot cursors to the tenant/device.
+Catalog duplicates converge through identity aliases; deletion/re-add proofs protect tombstones.
+Target-scoped day identities and `substituted` have declared merge policy. Device-local course
+checkpoints and private chat content are excluded. Real SQLite/PostgreSQL and HTTP tests cover
+retries, interrupted apply, aliases, account changes, two-device sync and tenant isolation.
 
 ## Outcome
 
@@ -23,24 +32,17 @@ cursor-based push/pull loop. Network failure is ordinary state, not a practice f
 
 ## Remaining work
 
-1. [ ] Consume plan 66's principal-scoped cursor API and plan 67's tokens; verify the server
-       contract with tenant isolation tests before enabling the client. Keep server
-       repository/pagination implementation in 66. Finalize target-scoped Refrain-day identity and
-       the substituted field policy together with 66; exclude device-local course checkpoints and
-       private chat threads.
-2. [ ] Build the mobile scheduler for transactional outbox batching, idempotent push, cursor pull,
-       Rust merge/apply, acknowledgement, compaction, retry/backoff/jitter, and
-       foreground/background triggers.
-3. [ ] Persist cursors, attempts, dead letters, conflict/rescue metadata, and server clock
-       observations. Never advance a cursor before local apply commits.
-4. [ ] Define schema/version mismatch, tombstone retention, local clock anomaly, auth expiry,
-       account reconciliation, catalog-phrase identity reconciliation across device-created row ids,
-       and content-version interaction.
-5. [ ] Expose a privacy-safe debug/rescue surface and support bundle without learner audio or
-       sensitive phrase text by default.
-6. [ ] Add deterministic simulations/property tests and real two-device tests for partitions,
-       duplicate/ reordered batches, crashes between stages, large libraries, sign-in merge,
-       erasure, and replay.
+1. [ ] Add OS background execution under platform policy; current scheduling runs while the app is
+       active and reacts to foreground/connectivity changes.
+2. [ ] Complete tombstone retention, server compaction and content-version operational policy;
+       extend schema-version mismatch and long-offline recovery acceptance without discarding data.
+3. [ ] Expose privacy-safe debug/rescue/export and support bundles. Durable rejected operations
+       already keep an actionable account error; learner-facing repair remains to do.
+4. [ ] Expand deterministic fault histories and physical two-device tests for prolonged partitions,
+       reordered delivery, process death, clock anomalies, account lifecycle and erasure.
+5. [ ] Measure the 2,000-phrase and 10× load budgets against deployed durable PostgreSQL and target
+       hardware. Passing isolated two-device HTTP tests does not establish production convergence or
+       latency budgets.
 
 ## Acceptance criteria
 

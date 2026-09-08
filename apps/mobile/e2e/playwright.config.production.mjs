@@ -23,7 +23,7 @@
 
 import process from 'node:process'
 import { defineConfig } from '@playwright/test'
-import { isCI, sharedTiming, sharedUse } from './config.shared.mjs'
+import { accountEnvironment, isCI, sharedTiming, sharedUse } from './config.shared.mjs'
 
 const port = Number(process.env.LORO_E2E_PORT ?? 8083)
 const exportDir = '.expo-export-web'
@@ -52,6 +52,6 @@ export default defineConfig({
     reuseExistingServer: !isCI,
     stdout: 'ignore',
     stderr: 'pipe',
-    env: { EXPO_NO_TELEMETRY: '1' },
+    env: accountEnvironment,
   },
 })

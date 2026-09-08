@@ -1,5 +1,6 @@
 import { reachAccount } from './accountFlow'
 import { localeText, onboardPair } from './languageFlow'
+import { openStorageFailure, openStorageLoading } from './persistenceFlow'
 /**
  * Every learner-visible STATE the app can be in, and how to reach it by clicking.
  *
@@ -51,6 +52,20 @@ export interface AppState {
 }
 
 export const STATES: AppState[] = [
+  {
+    name: 'storage · opening progress',
+    route: '/',
+    firstRun: true,
+    spec: 'F-02 durable hydration',
+    reach: openStorageLoading,
+  },
+  {
+    name: 'storage · recovery preserves data',
+    route: '/',
+    firstRun: true,
+    spec: 'F-02 non-destructive migration recovery',
+    reach: openStorageFailure,
+  },
   ...(
     [
       'discoveryError',
@@ -63,13 +78,47 @@ export const STATES: AppState[] = [
       'localSignOut',
       'backendUnavailable',
       'backendChecking',
+      'email',
+      'code',
+      'connected',
+      'invalid-code',
+      'sync-unavailable',
+      'signed-out',
     ] as const
   ).map((scenario): AppState => ({
     name: `account · ${scenario}`,
     route: '/account',
-    spec: '§ F-01 Account',
-    reach: (page) => reachAccount(page, scenario),
+    spec: 'F-01/F-04 optional sign-in and sync',
+    reach: async (page) => {
+      await reachAccount(page, scenario)
+    },
   })),
+  ...(['initial', 'partial', 'revealed'] as const).map((step): AppState => ({
+    name: `speak · ${step} reveal`,
+    route: '/practice/speak',
+    spec: 'P3-25 on-device speech reveal fallback',
+    reach: async (page) => {
+      await page.getByRole('button', { name: /, open the menu$/ }).click()
+      await page.getByRole('button', { name: 'Speak', exact: true }).click()
+      const reveal = page.getByRole('button', { name: 'Reveal a word', exact: true })
+      await expect(reveal).toBeVisible()
+      if (step !== 'initial') await reveal.click()
+      if (step === 'revealed') {
+        while (await reveal.isEnabled()) await reveal.click()
+        await expect(page.getByText('Phrase revealed. Try saying it aloud.')).toBeVisible()
+      }
+    },
+  })),
+  {
+    name: 'speak · empty',
+    route: '/practice/speak',
+    firstRun: true,
+    spec: 'P3-25 empty practice',
+    reach: async (page) => {
+      await page.goto('/practice/speak')
+      await expect(page.getByRole('button', { name: 'Add phrases', exact: true })).toBeVisible()
+    },
+  },
   ...(['bg', 'ru'] as const).flatMap((native) =>
     (['today', 'stream', 'add', 'progress', 'refrain'] as const).map((surface): AppState => ({
       name: `${surface} · ${native} course`,
@@ -493,6 +542,15 @@ export async function enter(
   state: AppState,
   onboard: (page: Page) => Promise<void>,
 ): Promise<void> {
+  // The exhaustive geometry suites reuse one browser page. Each manifest entry is
+  // an independent learner, while production reloads now correctly retain progress.
+  if (page.url().startsWith('http')) {
+    await page.evaluate(() => {
+      localStorage.clear()
+      sessionStorage.clear()
+    })
+    await page.goto('about:blank')
+  }
   if (state.firstRun !== true) await onboard(page)
   await state.reach(page)
 }

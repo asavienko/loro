@@ -19,6 +19,16 @@ const workspaceRoot = path.resolve(projectRoot, '../..')
 const config = getDefaultConfig(projectRoot)
 
 config.watchFolders = [workspaceRoot]
+// Native and Rust build products are large, rapidly changing trees, never JS inputs.
+// Keeping them out also prevents native compilation from triggering learner-page reloads.
+const escapePath = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+const existingBlocks = config.resolver.blockList ?? []
+config.resolver.blockList = [
+  ...(Array.isArray(existingBlocks) ? existingBlocks : [existingBlocks]),
+  new RegExp(`^${escapePath(path.join(workspaceRoot, 'packages/core-rs/target'))}[/\\\\]`),
+  new RegExp(`^${escapePath(projectRoot)}[/\\\\](?:android|ios)[/\\\\]`),
+  new RegExp(`^${escapePath(projectRoot)}[/\\\\]modules[/\\\\][^/\\\\]+[/\\\\]build[/\\\\]`),
+]
 config.resolver.nodeModulesPaths = [
   path.resolve(projectRoot, 'node_modules'),
   path.resolve(workspaceRoot, 'node_modules'),
@@ -30,6 +40,15 @@ const defaultResolveRequest = config.resolver.resolveRequest
 
 config.resolver.resolveRequest = (context, moduleName, platform) => {
   const resolve = defaultResolveRequest ?? context.resolveRequest
+
+  // sql.js embeds an offline asm.js SQLite build. Its Node-only branches are never
+  // evaluated in the browser; do not ask Metro to bundle native Node builtins there.
+  if (
+    platform === 'web' &&
+    (context.originModulePath ?? '').includes(`${path.sep}sql.js${path.sep}`) &&
+    (moduleName === 'node:fs' || moduleName === 'node:crypto')
+  )
+    return { type: 'empty' }
 
   // Relative '.js' specifier from inside a workspace package -> try the extensionless
   // form first, so Metro picks up the .ts/.tsx source.

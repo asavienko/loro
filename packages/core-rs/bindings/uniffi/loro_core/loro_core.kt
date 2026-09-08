@@ -678,6 +678,8 @@ internal object IntegrityCheckingUniffiLib {
     ): Int
     external fun uniffi_loro_core_checksum_func_tokenize(
     ): Int
+    external fun uniffi_loro_core_checksum_func_core_call(
+    ): Int
     external fun uniffi_loro_core_checksum_func_days_between(
     ): Int
     external fun uniffi_loro_core_checksum_func_streak(
@@ -704,7 +706,17 @@ internal object IntegrityCheckingUniffiLib {
     ): Int
     external fun uniffi_loro_core_checksum_func_nudge_difficulty(
     ): Int
+    external fun uniffi_loro_core_checksum_func_review_grade(
+    ): Int
+    external fun uniffi_loro_core_checksum_func_initialize(
+    ): Int
+    external fun uniffi_loro_core_checksum_func_rerate(
+    ): Int
     external fun uniffi_loro_core_checksum_func_retrievability(
+    ): Int
+    external fun uniffi_loro_core_checksum_func_review(
+    ): Int
+    external fun uniffi_loro_core_checksum_func_review_confidence(
     ): Int
     external fun uniffi_loro_core_checksum_func_climb(
     ): Int
@@ -726,6 +738,8 @@ internal object IntegrityCheckingUniffiLib {
     ): Int
     external fun uniffi_loro_core_checksum_func_beat_ms_for_mode(
     ): Int
+    external fun uniffi_loro_core_checksum_func_cloze_mask(
+    ): Int
     external fun uniffi_loro_core_checksum_func_effort_state(
     ): Int
     external fun uniffi_loro_core_checksum_func_mode_for_rep(
@@ -733,6 +747,10 @@ internal object IntegrityCheckingUniffiLib {
     external fun uniffi_loro_core_checksum_func_model_rate_for_mode(
     ): Int
     external fun uniffi_loro_core_checksum_func_refrain_set_size(
+    ): Int
+    external fun uniffi_loro_core_checksum_func_select_refrain_set(
+    ): Int
+    external fun uniffi_loro_core_checksum_func_clamp_to_server(
     ): Int
     external fun uniffi_loro_core_checksum_func_is_skewed(
     ): Int
@@ -758,6 +776,8 @@ internal object UniffiLib {
     external fun uniffi_loro_core_fn_func_normalize(`s`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     external fun uniffi_loro_core_fn_func_tokenize(`phrase`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_loro_core_fn_func_core_call(`method`: RustBuffer.ByValue,`input`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     external fun uniffi_loro_core_fn_func_days_between(`a`: RustBuffer.ByValue,`b`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
@@ -785,8 +805,18 @@ internal object UniffiLib {
     ): Float
     external fun uniffi_loro_core_fn_func_nudge_difficulty(`current`: Float,`declared`: RustBuffer.ByValue,`tags`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Float
-    external fun uniffi_loro_core_fn_func_retrievability(`daysSinceReview`: Float,`stability`: Float,uniffi_out_err: UniffiRustCallStatus, 
-    ): Float
+    external fun uniffi_loro_core_fn_func_review_grade(`success`: Byte,`hintsUsed`: Int,`selfGrade`: RustBuffer.ByValue,`confidence`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_loro_core_fn_func_initialize(`declared`: RustBuffer.ByValue,`tags`: RustBuffer.ByValue,`atMs`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_loro_core_fn_func_rerate(`state`: RustBuffer.ByValue,`declared`: RustBuffer.ByValue,`tags`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_loro_core_fn_func_retrievability(`daysSinceReview`: Double,`stability`: Double,uniffi_out_err: UniffiRustCallStatus, 
+    ): Double
+    external fun uniffi_loro_core_fn_func_review(`state`: RustBuffer.ByValue,`grade`: RustBuffer.ByValue,`atMs`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_loro_core_fn_func_review_confidence(`state`: RustBuffer.ByValue,`confidence`: RustBuffer.ByValue,`atMs`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
     external fun uniffi_loro_core_fn_func_climb(`current`: RustBuffer.ByValue,`target`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     external fun uniffi_loro_core_fn_func_draw(`deck`: RustBuffer.ByValue,`seed`: Long,`exclude`: RustBuffer.ByValue,`nowMs`: Long,uniffi_out_err: UniffiRustCallStatus, 
@@ -807,6 +837,8 @@ internal object UniffiLib {
     ): Int
     external fun uniffi_loro_core_fn_func_beat_ms_for_mode(`mode`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Int
+    external fun uniffi_loro_core_fn_func_cloze_mask(`text`: RustBuffer.ByValue,`language`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
     external fun uniffi_loro_core_fn_func_effort_state(`reps`: Int,`automaticityPct`: Byte,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     external fun uniffi_loro_core_fn_func_mode_for_rep(`repIndex`: Int,uniffi_out_err: UniffiRustCallStatus, 
@@ -815,6 +847,10 @@ internal object UniffiLib {
     ): RustBuffer.ByValue
     external fun uniffi_loro_core_fn_func_refrain_set_size(`dailyMinutes`: Int,uniffi_out_err: UniffiRustCallStatus, 
     ): Int
+    external fun uniffi_loro_core_fn_func_select_refrain_set(`candidates`: RustBuffer.ByValue,`size`: Int,`tripPhraseIds`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_loro_core_fn_func_clamp_to_server(`value`: RustBuffer.ByValue,`serverMs`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
     external fun uniffi_loro_core_fn_func_is_skewed(`client`: RustBuffer.ByValue,`serverMs`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): Byte
     external fun uniffi_loro_core_fn_func_receive(`last`: RustBuffer.ByValue,`remote`: RustBuffer.ByValue,`wallMs`: Long,`nodeId`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
@@ -949,6 +985,9 @@ private fun uniffiCheckApiChecksums(lib: IntegrityCheckingUniffiLib) {
     if (lib.uniffi_loro_core_checksum_func_tokenize() != 50042) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
+    if (lib.uniffi_loro_core_checksum_func_core_call() != 43046) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
     if (lib.uniffi_loro_core_checksum_func_days_between() != 61716) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
@@ -988,7 +1027,22 @@ private fun uniffiCheckApiChecksums(lib: IntegrityCheckingUniffiLib) {
     if (lib.uniffi_loro_core_checksum_func_nudge_difficulty() != 10246) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_loro_core_checksum_func_retrievability() != 7937) {
+    if (lib.uniffi_loro_core_checksum_func_review_grade() != 5503) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_loro_core_checksum_func_initialize() != 10030) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_loro_core_checksum_func_rerate() != 38115) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_loro_core_checksum_func_retrievability() != 3854) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_loro_core_checksum_func_review() != 25686) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_loro_core_checksum_func_review_confidence() != 30479) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_loro_core_checksum_func_climb() != 50333) {
@@ -1021,6 +1075,9 @@ private fun uniffiCheckApiChecksums(lib: IntegrityCheckingUniffiLib) {
     if (lib.uniffi_loro_core_checksum_func_beat_ms_for_mode() != 18787) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
+    if (lib.uniffi_loro_core_checksum_func_cloze_mask() != 8541) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
     if (lib.uniffi_loro_core_checksum_func_effort_state() != 42974) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
@@ -1031,6 +1088,12 @@ private fun uniffiCheckApiChecksums(lib: IntegrityCheckingUniffiLib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_loro_core_checksum_func_refrain_set_size() != 44059) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_loro_core_checksum_func_select_refrain_set() != 22613) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_loro_core_checksum_func_clamp_to_server() != 51700) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_loro_core_checksum_func_is_skewed() != 16657) {
@@ -1280,6 +1343,29 @@ public object FfiConverterFloat: FfiConverter<Float, Float> {
 /**
  * @suppress
  */
+public object FfiConverterDouble: FfiConverter<Double, Double> {
+    override fun lift(value: Double): Double {
+        return value
+    }
+
+    override fun read(buf: ByteBuffer): Double {
+        return buf.getDouble()
+    }
+
+    override fun lower(value: Double): Double {
+        return value
+    }
+
+    override fun allocationSize(value: Double) = 8UL
+
+    override fun write(value: Double, buf: ByteBuffer) {
+        buf.putDouble(value)
+    }
+}
+
+/**
+ * @suppress
+ */
 public object FfiConverterBoolean: FfiConverter<Boolean, Byte> {
     override fun lift(value: Byte): Boolean {
         return value.toInt() != 0
@@ -1481,33 +1567,43 @@ public object FfiConverterTypeFix: FfiConverterRustBuffer<Fix> {
 
 
 /**
- * A phrase's memory state.
+ * Complete atomic scheduler group, including algorithm provenance.
  */
 data class FsrsState (
     /**
-     * Days until retrievability decays to the review threshold.
+     * Days until recall reaches 90%, NOT the selected scheduling threshold.
      */
-    var `stability`: kotlin.Float
+    var `stability`: kotlin.Double
     , 
     /**
-     * Intrinsic difficulty for this learner, 1..10.
+     * Intrinsic difficulty in 1..10.
      */
-    var `difficulty`: kotlin.Float
+    var `difficulty`: kotlin.Double
     , 
     /**
-     * Next review, epoch ms.
+     * Next review, epoch milliseconds.
      */
     var `due`: kotlin.Long
     , 
     /**
-     * Last review, epoch ms.
+     * Last observed review, epoch milliseconds; absent for new cards.
      */
     var `lastReview`: kotlin.Long?
     , 
     /**
-     * Failed reviews.
+     * Failed established reviews (not repeated learning failures).
      */
     var `lapses`: kotlin.UInt
+    , 
+    /**
+     * Learning lifecycle.
+     */
+    var `state`: CardState
+    , 
+    /**
+     * Versioned algorithm, parameters and Loro policy identifier.
+     */
+    var `algorithm`: kotlin.String
     
 ){
     
@@ -1524,28 +1620,34 @@ data class FsrsState (
 public object FfiConverterTypeFsrsState: FfiConverterRustBuffer<FsrsState> {
     override fun read(buf: ByteBuffer): FsrsState {
         return FsrsState(
-            FfiConverterFloat.read(buf),
-            FfiConverterFloat.read(buf),
+            FfiConverterDouble.read(buf),
+            FfiConverterDouble.read(buf),
             FfiConverterLong.read(buf),
             FfiConverterOptionalLong.read(buf),
             FfiConverterUInt.read(buf),
+            FfiConverterTypeCardState.read(buf),
+            FfiConverterString.read(buf),
         )
     }
 
     override fun allocationSize(value: FsrsState) = (
-            FfiConverterFloat.allocationSize(value.`stability`) +
-            FfiConverterFloat.allocationSize(value.`difficulty`) +
+            FfiConverterDouble.allocationSize(value.`stability`) +
+            FfiConverterDouble.allocationSize(value.`difficulty`) +
             FfiConverterLong.allocationSize(value.`due`) +
             FfiConverterOptionalLong.allocationSize(value.`lastReview`) +
-            FfiConverterUInt.allocationSize(value.`lapses`)
+            FfiConverterUInt.allocationSize(value.`lapses`) +
+            FfiConverterTypeCardState.allocationSize(value.`state`) +
+            FfiConverterString.allocationSize(value.`algorithm`)
     )
 
     override fun write(value: FsrsState, buf: ByteBuffer) {
-            FfiConverterFloat.write(value.`stability`, buf)
-            FfiConverterFloat.write(value.`difficulty`, buf)
+            FfiConverterDouble.write(value.`stability`, buf)
+            FfiConverterDouble.write(value.`difficulty`, buf)
             FfiConverterLong.write(value.`due`, buf)
             FfiConverterOptionalLong.write(value.`lastReview`, buf)
             FfiConverterUInt.write(value.`lapses`, buf)
+            FfiConverterTypeCardState.write(value.`state`, buf)
+            FfiConverterString.write(value.`algorithm`, buf)
     }
 }
 
@@ -2030,6 +2132,101 @@ public object FfiConverterTypePlannedNotification: FfiConverterRustBuffer<Planne
 
 
 /**
+ * Selection inputs independent of the larger native phrase-state record.
+ */
+data class RefrainCandidate (
+    /**
+     * The learner's phrase row id.
+     */
+    var `id`: kotlin.String
+    , 
+    /**
+     * Learner-declared difficulty, used when automaticity ties.
+     */
+    var `difficulty`: Difficulty
+    , 
+    /**
+     * A learned phrase has left the active stream.
+     */
+    var `learned`: kotlin.Boolean
+    , 
+    /**
+     * A graduated phrase has left Refrain rotation.
+     */
+    var `graduated`: kotlin.Boolean
+    , 
+    /**
+     * Distinct local days locked in; one through three take first priority.
+     */
+    var `lockInDays`: kotlin.UInt
+    , 
+    /**
+     * Historical automaticity percentage.
+     */
+    var `automaticity`: kotlin.UByte
+    , 
+    /**
+     * Total practice repetitions; zero means new material.
+     */
+    var `reps`: kotlin.UInt
+    , 
+    /**
+     * Epoch milliseconds, to fill with the earliest unpractised phrase first.
+     */
+    var `addedAt`: kotlin.Long
+    
+){
+    
+
+    
+
+    
+    companion object
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeRefrainCandidate: FfiConverterRustBuffer<RefrainCandidate> {
+    override fun read(buf: ByteBuffer): RefrainCandidate {
+        return RefrainCandidate(
+            FfiConverterString.read(buf),
+            FfiConverterTypeDifficulty.read(buf),
+            FfiConverterBoolean.read(buf),
+            FfiConverterBoolean.read(buf),
+            FfiConverterUInt.read(buf),
+            FfiConverterUByte.read(buf),
+            FfiConverterUInt.read(buf),
+            FfiConverterLong.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: RefrainCandidate) = (
+            FfiConverterString.allocationSize(value.`id`) +
+            FfiConverterTypeDifficulty.allocationSize(value.`difficulty`) +
+            FfiConverterBoolean.allocationSize(value.`learned`) +
+            FfiConverterBoolean.allocationSize(value.`graduated`) +
+            FfiConverterUInt.allocationSize(value.`lockInDays`) +
+            FfiConverterUByte.allocationSize(value.`automaticity`) +
+            FfiConverterUInt.allocationSize(value.`reps`) +
+            FfiConverterLong.allocationSize(value.`addedAt`)
+    )
+
+    override fun write(value: RefrainCandidate, buf: ByteBuffer) {
+            FfiConverterString.write(value.`id`, buf)
+            FfiConverterTypeDifficulty.write(value.`difficulty`, buf)
+            FfiConverterBoolean.write(value.`learned`, buf)
+            FfiConverterBoolean.write(value.`graduated`, buf)
+            FfiConverterUInt.write(value.`lockInDays`, buf)
+            FfiConverterUByte.write(value.`automaticity`, buf)
+            FfiConverterUInt.write(value.`reps`, buf)
+            FfiConverterLong.write(value.`addedAt`, buf)
+    }
+}
+
+
+
+/**
  * The three skill axes for a phrase.
  */
 data class SkillAxes (
@@ -2081,6 +2278,57 @@ public object FfiConverterTypeSkillAxes: FfiConverterRustBuffer<SkillAxes> {
             FfiConverterUByte.write(value.`production`, buf)
     }
 }
+
+
+
+/**
+ * Scheduler lifecycle; Loro uses one explicit ten-minute learning/relearning step.
+ */
+
+enum class CardState {
+    
+    /**
+     * No review evidence yet.
+     */
+    NEW,
+    /**
+     * Initial recall has not succeeded.
+     */
+    LEARNING,
+    /**
+     * Established scheduled review.
+     */
+    REVIEW,
+    /**
+     * A scheduled review failed.
+     */
+    RELEARNING;
+
+    
+
+
+    companion object
+}
+
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeCardState: FfiConverterRustBuffer<CardState> {
+    override fun read(buf: ByteBuffer) = try {
+        CardState.values()[buf.getInt() - 1]
+    } catch (e: IndexOutOfBoundsException) {
+        throw RuntimeException("invalid enum value, something is very wrong!!", e)
+    }
+
+    override fun allocationSize(value: CardState) = 4UL
+
+    override fun write(value: CardState, buf: ByteBuffer) {
+        buf.putInt(value.ordinal + 1)
+    }
+}
+
+
 
 
 
@@ -2150,8 +2398,8 @@ public object FfiConverterTypeCategory: FfiConverterRustBuffer<Category> {
 /**
  * The learner's five-level confidence rating (the Memory-model screen), mapped to a grade.
  *
- * `Strong` maps to `Good` with a stability bonus applied by the caller — it's better
- * than Good but not instant.
+ * `Strong` maps to `Good`; `review_confidence` applies the documented 10% stability
+ * bonus in the canonical core.
  */
 
 enum class Confidence {
@@ -2202,6 +2450,77 @@ public object FfiConverterTypeConfidence: FfiConverterRustBuffer<Confidence> {
 }
 
 
+
+
+
+
+
+/**
+ * A rejected call never substitutes a schedule or a successful production gate.
+ */
+sealed class CoreException: kotlin.Exception() {
+    
+    /**
+     * An unknown method, invalid argument, or invalid scheduling state.
+     */
+    class InvalidInput(
+        
+        /**
+         * Actionable rejection reason.
+         */
+        val `reason`: kotlin.String
+        ) : CoreException() {
+        override val message
+            get() = "reason=${ `reason` }"
+    }
+    
+
+    
+
+
+    companion object ErrorHandler : UniffiRustCallStatusErrorHandler<CoreException> {
+        override fun lift(error_buf: RustBuffer.ByValue): CoreException = FfiConverterTypeCoreError.lift(error_buf)
+    }
+
+    
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeCoreError : FfiConverterRustBuffer<CoreException> {
+    override fun read(buf: ByteBuffer): CoreException {
+        
+
+        return when(buf.getInt()) {
+            1 -> CoreException.InvalidInput(
+                FfiConverterString.read(buf),
+                )
+            else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
+        }
+    }
+
+    override fun allocationSize(value: CoreException): ULong {
+        return when(value) {
+            is CoreException.InvalidInput -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`reason`)
+            )
+        }
+    }
+
+    override fun write(value: CoreException, buf: ByteBuffer) {
+        when(value) {
+            is CoreException.InvalidInput -> {
+                buf.putInt(1)
+                FfiConverterString.write(value.`reason`, buf)
+                Unit
+            }
+        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
+    }
+
+}
 
 
 
@@ -2411,6 +2730,122 @@ public object FfiConverterTypeFixKind: FfiConverterRustBuffer<FixKind> {
 
 
 
+
+
+/**
+ * Explicit invalid-input failures cross both WASM and native bindings.
+ */
+sealed class FsrsException: kotlin.Exception() {
+    
+    /**
+     * Non-finite values, invalid memory state, or inconsistent lifecycle.
+     */
+    class InvalidState(
+        ) : FsrsException() {
+        override val message
+            get() = ""
+    }
+    
+    /**
+     * Negative, backward or unsafe epoch milliseconds.
+     */
+    class InvalidTime(
+        ) : FsrsException() {
+        override val message
+            get() = ""
+    }
+    
+    /**
+     * An unknown algorithm needs an explicit migration; recognized preview is supported.
+     */
+    class UnsupportedAlgorithm(
+        ) : FsrsException() {
+        override val message
+            get() = ""
+    }
+    
+    /**
+     * A due timestamp or lapse counter cannot be represented.
+     */
+    class Overflow(
+        ) : FsrsException() {
+        override val message
+            get() = ""
+    }
+    
+
+    
+
+
+    companion object ErrorHandler : UniffiRustCallStatusErrorHandler<FsrsException> {
+        override fun lift(error_buf: RustBuffer.ByValue): FsrsException = FfiConverterTypeFsrsError.lift(error_buf)
+    }
+
+    
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeFsrsError : FfiConverterRustBuffer<FsrsException> {
+    override fun read(buf: ByteBuffer): FsrsException {
+        
+
+        return when(buf.getInt()) {
+            1 -> FsrsException.InvalidState()
+            2 -> FsrsException.InvalidTime()
+            3 -> FsrsException.UnsupportedAlgorithm()
+            4 -> FsrsException.Overflow()
+            else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
+        }
+    }
+
+    override fun allocationSize(value: FsrsException): ULong {
+        return when(value) {
+            is FsrsException.InvalidState -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+            )
+            is FsrsException.InvalidTime -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+            )
+            is FsrsException.UnsupportedAlgorithm -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+            )
+            is FsrsException.Overflow -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+            )
+        }
+    }
+
+    override fun write(value: FsrsException, buf: ByteBuffer) {
+        when(value) {
+            is FsrsException.InvalidState -> {
+                buf.putInt(1)
+                Unit
+            }
+            is FsrsException.InvalidTime -> {
+                buf.putInt(2)
+                Unit
+            }
+            is FsrsException.UnsupportedAlgorithm -> {
+                buf.putInt(3)
+                Unit
+            }
+            is FsrsException.Overflow -> {
+                buf.putInt(4)
+                Unit
+            }
+        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
+    }
+
+}
+
+
+
 /**
  * The four grades FSRS understands.
  */
@@ -2532,8 +2967,9 @@ enum class MergeClass {
      */
     MAX,
     /**
-     * Merged as a group, by the later `srs_last_review`. Mixing FSRS fields across
-     * devices would produce a state no algorithm ever computed.
+     * Merged as a group, by the later `srs_last_review`, then its group HLC when
+     * actual review times tie. Mixing FSRS fields across devices would produce a
+     * state no algorithm ever computed.
      */
     LATEST_REVIEW,
     /**
@@ -3059,6 +3495,38 @@ public object FfiConverterOptionalTypeDraw: FfiConverterRustBuffer<Draw?> {
 /**
  * @suppress
  */
+public object FfiConverterOptionalTypeConfidence: FfiConverterRustBuffer<Confidence?> {
+    override fun read(buf: ByteBuffer): Confidence? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeConfidence.read(buf)
+    }
+
+    override fun allocationSize(value: Confidence?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeConfidence.allocationSize(value)
+        }
+    }
+
+    override fun write(value: Confidence?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeConfidence.write(value, buf)
+        }
+    }
+}
+
+
+
+
+/**
+ * @suppress
+ */
 public object FfiConverterOptionalTypeFinisherCard: FfiConverterRustBuffer<FinisherCard?> {
     override fun read(buf: ByteBuffer): FinisherCard? {
         if (buf.get().toInt() == 0) {
@@ -3081,6 +3549,66 @@ public object FfiConverterOptionalTypeFinisherCard: FfiConverterRustBuffer<Finis
         } else {
             buf.put(1)
             FfiConverterTypeFinisherCard.write(value, buf)
+        }
+    }
+}
+
+
+
+
+/**
+ * @suppress
+ */
+public object FfiConverterOptionalTypeGrade: FfiConverterRustBuffer<Grade?> {
+    override fun read(buf: ByteBuffer): Grade? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeGrade.read(buf)
+    }
+
+    override fun allocationSize(value: Grade?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeGrade.allocationSize(value)
+        }
+    }
+
+    override fun write(value: Grade?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeGrade.write(value, buf)
+        }
+    }
+}
+
+
+
+
+/**
+ * @suppress
+ */
+public object FfiConverterSequenceUInt: FfiConverterRustBuffer<List<kotlin.UInt>> {
+    override fun read(buf: ByteBuffer): List<kotlin.UInt> {
+        val len = buf.getInt()
+        return List<kotlin.UInt>(len) {
+            FfiConverterUInt.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<kotlin.UInt>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.map { FfiConverterUInt.allocationSize(it) }.sum()
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<kotlin.UInt>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterUInt.write(it, buf)
         }
     }
 }
@@ -3165,6 +3693,34 @@ public object FfiConverterSequenceTypePhraseState: FfiConverterRustBuffer<List<P
         buf.putInt(value.size)
         value.iterator().forEach {
             FfiConverterTypePhraseState.write(it, buf)
+        }
+    }
+}
+
+
+
+
+/**
+ * @suppress
+ */
+public object FfiConverterSequenceTypeRefrainCandidate: FfiConverterRustBuffer<List<RefrainCandidate>> {
+    override fun read(buf: ByteBuffer): List<RefrainCandidate> {
+        val len = buf.getInt()
+        return List<RefrainCandidate>(len) {
+            FfiConverterTypeRefrainCandidate.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<RefrainCandidate>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.map { FfiConverterTypeRefrainCandidate.allocationSize(it) }.sum()
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<RefrainCandidate>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypeRefrainCandidate.write(it, buf)
         }
     }
 }
@@ -3276,6 +3832,25 @@ public object FfiConverterSequenceTypeTag: FfiConverterRustBuffer<List<Tag>> {
     
         
         FfiConverterString.lower(`phrase`),_status)
+}
+    )
+    }
+    
+
+        /**
+         * Invoke a canonical operation with JSON arguments and a JSON result.
+         *
+         * # Errors
+         * Unknown operations, malformed arguments and invalid domain state return a typed error.
+         */
+    @Throws(CoreException::class) fun `coreCall`(`method`: kotlin.String, `input`: kotlin.String): kotlin.String {
+            return FfiConverterString.lift(
+    uniffiRustCallWithError(CoreException) { _status ->
+    UniffiLib.uniffi_loro_core_fn_func_core_call(
+    
+        
+        FfiConverterString.lower(`method`),
+        FfiConverterString.lower(`input`),_status)
 }
     )
     }
@@ -3517,18 +4092,122 @@ public object FfiConverterSequenceTypeTag: FfiConverterRustBuffer<List<Tag>> {
     
 
         /**
-         * Retrievability at `t` days after the last review, in the blueprint's display form.
+         * Map observed recall evidence to the grade used by every practice engine.
          *
-         * The Memory-model screen plots exactly this curve, so it must stay the shape the
-         * screen draws.
-         */ fun `retrievability`(`daysSinceReview`: kotlin.Float, `stability`: kotlin.Float): kotlin.Float {
-            return FfiConverterFloat.lift(
+         * An explicit four-grade self-rating takes precedence over confidence;
+         * otherwise a failed recall is Again, a hinted success Hard, and an unhinted
+         * success Good. Passive listening and skipped attempts must not call this function.
+         */ fun `reviewGrade`(`success`: kotlin.Boolean, `hintsUsed`: kotlin.UInt, `selfGrade`: Grade?, `confidence`: Confidence?): Grade {
+            return FfiConverterTypeGrade.lift(
     uniffiRustCall() { _status ->
+    UniffiLib.uniffi_loro_core_fn_func_review_grade(
+    
+        
+        FfiConverterBoolean.lower(`success`),
+        FfiConverterUInt.lower(`hintsUsed`),
+        FfiConverterOptionalTypeGrade.lower(`selfGrade`),
+        FfiConverterOptionalTypeConfidence.lower(`confidence`),_status)
+}
+    )
+    }
+    
+
+        /**
+         * Create a new card without pretending that adding a phrase is a recall observation.
+         *
+         * # Errors
+         * Rejects unsafe timestamps.
+         */
+    @Throws(FsrsException::class) fun `initialize`(`declared`: Difficulty, `tags`: List<Tag>, `atMs`: kotlin.Long): FsrsState {
+            return FfiConverterTypeFsrsState.lift(
+    uniffiRustCallWithError(FsrsException) { _status ->
+    UniffiLib.uniffi_loro_core_fn_func_initialize(
+    
+        
+        FfiConverterTypeDifficulty.lower(`declared`),
+        FfiConverterSequenceTypeTag.lower(`tags`),
+        FfiConverterLong.lower(`atMs`),_status)
+}
+    )
+    }
+    
+
+        /**
+         * Apply a changed declaration without manufacturing a review or rescheduling it.
+         *
+         * # Errors
+         * Rejects corrupt or foreign state using the same validation as review.
+         */
+    @Throws(FsrsException::class) fun `rerate`(`state`: FsrsState, `declared`: Difficulty, `tags`: List<Tag>): FsrsState {
+            return FfiConverterTypeFsrsState.lift(
+    uniffiRustCallWithError(FsrsException) { _status ->
+    UniffiLib.uniffi_loro_core_fn_func_rerate(
+    
+        
+        FfiConverterTypeFsrsState.lower(`state`),
+        FfiConverterTypeDifficulty.lower(`declared`),
+        FfiConverterSequenceTypeTag.lower(`tags`),_status)
+}
+    )
+    }
+    
+
+        /**
+         * FSRS-6 power curve. Stability is the interval at 90% recall.
+         *
+         * # Errors
+         * Rejects non-finite, negative elapsed time or nonpositive stability.
+         */
+    @Throws(FsrsException::class) fun `retrievability`(`daysSinceReview`: kotlin.Double, `stability`: kotlin.Double): kotlin.Double {
+            return FfiConverterDouble.lift(
+    uniffiRustCallWithError(FsrsException) { _status ->
     UniffiLib.uniffi_loro_core_fn_func_retrievability(
     
         
-        FfiConverterFloat.lower(`daysSinceReview`),
-        FfiConverterFloat.lower(`stability`),_status)
+        FfiConverterDouble.lower(`daysSinceReview`),
+        FfiConverterDouble.lower(`stability`),_status)
+}
+    )
+    }
+    
+
+        /**
+         * Apply an observed grade with full card state, no randomized interval fuzz.
+         *
+         * # Errors
+         * Rejects corrupt/unknown state, backward time and timestamp/counter overflow.
+         * Recognized preview evidence is updated directly and adopts the current policy
+         * only here, after an actual review; deserialization never changes memory or due.
+         */
+    @Throws(FsrsException::class) fun `review`(`state`: FsrsState, `grade`: Grade, `atMs`: kotlin.Long): FsrsState {
+            return FfiConverterTypeFsrsState.lift(
+    uniffiRustCallWithError(FsrsException) { _status ->
+    UniffiLib.uniffi_loro_core_fn_func_review(
+    
+        
+        FfiConverterTypeFsrsState.lower(`state`),
+        FfiConverterTypeGrade.lower(`grade`),
+        FfiConverterLong.lower(`atMs`),_status)
+}
+    )
+    }
+    
+
+        /**
+         * Apply Loro confidence policy; Strong adds 10% stability to Good and recomputes due.
+         *
+         * # Errors
+         * Same validation and overflow failures as `review`.
+         */
+    @Throws(FsrsException::class) fun `reviewConfidence`(`state`: FsrsState, `confidence`: Confidence, `atMs`: kotlin.Long): FsrsState {
+            return FfiConverterTypeFsrsState.lift(
+    uniffiRustCallWithError(FsrsException) { _status ->
+    UniffiLib.uniffi_loro_core_fn_func_review_confidence(
+    
+        
+        FfiConverterTypeFsrsState.lower(`state`),
+        FfiConverterTypeConfidence.lower(`confidence`),
+        FfiConverterLong.lower(`atMs`),_status)
 }
     )
     }
@@ -3707,6 +4386,26 @@ public object FfiConverterSequenceTypeTag: FfiConverterRustBuffer<List<Tag>> {
     
 
         /**
+         * Which whitespace-delimited token to blank for Cloze mode.
+         *
+         * The longest alphabetic content token wins; equal lengths prefer the first token.
+         * Punctuation and case do not affect selection. Explicit language-specific function
+         * words are excluded; unsupported languages and phrases without content return no
+         * mask. This deterministic lexical heuristic is not a part-of-speech classifier.
+         */ fun `clozeMask`(`text`: kotlin.String, `language`: kotlin.String): List<kotlin.UInt> {
+            return FfiConverterSequenceUInt.lift(
+    uniffiRustCall() { _status ->
+    UniffiLib.uniffi_loro_core_fn_func_cloze_mask(
+    
+        
+        FfiConverterString.lower(`text`),
+        FfiConverterString.lower(`language`),_status)
+}
+    )
+    }
+    
+
+        /**
          * Map repetitions and automaticity to a semantic state; presentation owns the wording.
          */ fun `effortState`(`reps`: kotlin.UInt, `automaticityPct`: kotlin.UByte): EffortState {
             return FfiConverterTypeEffortState.lift(
@@ -3758,6 +4457,45 @@ public object FfiConverterSequenceTypeTag: FfiConverterRustBuffer<List<Tag>> {
     
         
         FfiConverterUInt.lower(`dailyMinutes`),_status)
+}
+    )
+    }
+    
+
+        /**
+         * Choose today's closed set.
+         *
+         * Priority order: phrases mid-graduation → today's trip drop → weakest by
+         * automaticity → new material. Persisted once per day and **never recomputed
+         * mid-day**, so a learner can always finish the set they were shown.
+         * The caller owns the local-day boundary and persistence. This pure selector only
+         * chooses eligible ids and never reads a clock. Ties use Unicode scalar ordering
+         * rather than locale-sensitive collation, so devices cannot disagree.
+         */ fun `selectRefrainSet`(`candidates`: List<RefrainCandidate>, `size`: kotlin.UInt, `tripPhraseIds`: List<kotlin.String>): List<kotlin.String> {
+            return FfiConverterSequenceString.lift(
+    uniffiRustCall() { _status ->
+    UniffiLib.uniffi_loro_core_fn_func_select_refrain_set(
+    
+        
+        FfiConverterSequenceTypeRefrainCandidate.lower(`candidates`),
+        FfiConverterUInt.lower(`size`),
+        FfiConverterSequenceString.lower(`tripPhraseIds`),_status)
+}
+    )
+    }
+    
+
+        /**
+         * Clamp an implausibly future reading toward an authoritative server wall time.
+         * The write remains valid; its erroneous physical clock cannot dominate indefinitely.
+         */ fun `clampToServer`(`value`: Hlc, `serverMs`: kotlin.Long): Hlc {
+            return FfiConverterTypeHlc.lift(
+    uniffiRustCall() { _status ->
+    UniffiLib.uniffi_loro_core_fn_func_clamp_to_server(
+    
+        
+        FfiConverterTypeHlc.lower(`value`),
+        FfiConverterLong.lower(`serverMs`),_status)
 }
     )
     }

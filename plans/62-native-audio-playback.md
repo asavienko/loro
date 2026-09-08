@@ -2,17 +2,22 @@
 
 - **Requirement IDs:** `AS-01`, `AS-02`, `AS-04`, `P3-01`…`P3-11`, `LB-05`, `LB-09`, `LB-23`
 - **Milestone:** M1/M2
-- **Status:** — Playback implementation remains to do; device integration needs 58 and an approved
-  plan-61 seed batch. Playback contracts can be specified before Q-15 is resolved.
+- **Status:** 🟡 Native foreground device TTS and Phrase Detail/Stream controls are implemented.
+  Recorded assets/cache, queue/rate/background/lock-screen transport and hardware acceptance remain;
+  approved assets still depend on Q-15 even though ElevenLabs is selected.
 - **Depends on:** 58 native workspace; 61 approved seed assets; 86 only for remote asset/TTS
   adapters.
-- **Reviewed:** 2026-09-07 against merged baseline `2d9e8c3`.
+- **Reviewed:** 2026-09-08 during plan-94 integration; release gates below remain explicit.
 
-## Verified starting point
+## Implemented scope
 
-No native playback module or verified disk cache exists. Stream is explicitly manual browsing, and
-Phrase Detail omits unavailable playback. `LANGUAGE_CAPABILITIES` is false for all targets. Restore
-indicators only from the real native state; preserve the truthfulness delivered by 55/84.
+`modules/loro-audio-speech` owns foreground native speech playback and exposes real availability,
+state and completion events. Phrase Detail and Stream consume installed offline target-language
+voices; missing voice data produces an unavailable state. No audio bytes enter JavaScript.
+
+ElevenLabs is the selected production TTS provider (2026-09-07). Plan 61 still needs reviewed,
+licensed seed assets with pinned provenance before recorded playback/cache can be accepted. The
+current device-TTS fallback does not imply those assets or background transport exist.
 
 ## Outcome
 
@@ -22,20 +27,16 @@ without returning PCM to JavaScript.
 
 ## Remaining work
 
-1. [ ] Implement one native playback state machine for
-       item/queue/rate/position/buffering/interruption/ route change. Screens subscribe; they do not
-       own playback.
-2. [ ] Key assets/cache and fallback availability by target locale/voice/version. Implement verified
-       disk cache, atomic downloads, eviction/pinning, bundled assets, device-TTS fallback, and
-       prefetch hooks using plan-61 manifests.
-3. [ ] Support specified rates, previous/next/repeat, headphones/Bluetooth, audio focus, lock-screen
-       transport, background policy, and silent/degraded states.
-4. [ ] Expose commands and metadata/events only. PCM stays native; capture buffers later cross
-       modules by opaque handle.
-5. [ ] Integrate Phrase Detail and Stream first, replacing plan-55 honest placeholders with real
-       position/repeat behavior; leave Today/Refrain completion to plan 64.
-6. [ ] Add deterministic native fakes plus device tests for interruptions, unplug, Bluetooth,
-       offline, corrupt cache, missing asset, fallback, and process/background transitions.
+1. [ ] Extend the native state machine for item/queue/rate/position/buffering/interruption and route
+       changes; screens subscribe to one session instead of creating competing players.
+2. [ ] Consume plan-61 locale/voice/version manifests for verified disk cache, atomic downloads,
+       eviction/pinning, bundled assets and prefetch hooks. Retain installed-device TTS fallback.
+3. [ ] Implement specified rates, previous/next/repeat, headphones/Bluetooth, audio focus,
+       lock-screen transport and the documented background policy.
+4. [ ] Integrate real recorded position/repeat behavior in Phrase Detail/Stream, then hand off
+       Today/Refrain orchestration to plan 64.
+5. [ ] Add physical-device interruption/unplug/Bluetooth/offline/cache/fallback/background tests.
+       The existing emulator lacks voices and proves only truthful unavailability.
 
 ## Acceptance criteria
 

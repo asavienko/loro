@@ -1,3 +1,4 @@
+import { rustCoreFacade } from '../../src/store/coreFacade'
 import { useLocale } from '../../src/lib/i18n'
 /**
  * The Refrain — THE v1 hero. Loro.dc.html:1405–1532, logic 3343–3424.
@@ -18,19 +19,17 @@ import { useLocale } from '../../src/lib/i18n'
  * token or lives in this file's `StyleSheet`.
  */
 
-import { useCallback, useEffect, useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { Platform, ScrollView, StyleSheet, View } from 'react-native'
 import { router } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useBottomBar } from '../../src/ui/BottomBarContext'
 import {
-  automaticity,
   DEFAULT_REP_TARGET,
   REFRAIN_MODES,
   repsToday as repsTodayOf,
   warmBand,
   type RefrainMode,
-  type SessionHandle,
 } from '@loro/core'
 import {
   Button,
@@ -57,6 +56,7 @@ import {
 import { engineContext, refrainEngine, toView, useApp, type PhraseView } from '../../src/store'
 import { copy } from '../../src/lib/copy'
 import { deviceClock } from '../../src/lib/clock'
+import { newId } from '../../src/lib/ids'
 /** One warming band's resolved style. The bands are a design token, not a screen decision. */
 type WarmingStyle = (typeof warming)[ReturnType<typeof warmBand>]
 export default function Refrain() {
@@ -116,7 +116,13 @@ export default function Refrain() {
 
         <ModeStrip mode={mode} />
 
-        <WarmingCard mode={mode} phrase={phrase} auto={auto} bandStyle={session.bandStyle} />
+        <WarmingCard
+          mode={mode}
+          phrase={phrase}
+          auto={auto}
+          bandStyle={session.bandStyle}
+          clozeMask={session.clozeMask}
+        />
 
         <Card>
           <AutomaticityMeter auto={auto} />
@@ -151,6 +157,7 @@ export default function Refrain() {
 // The session
 // ─────────────────────────────────────────────────────────────────────────────
 interface RefrainSession {
+  clozeMask: readonly number[]
   /** Today's frozen set, in the order the learner will see it. */
   set: PhraseView[]
   /** The phrase on screen. `undefined` while the engine's plan is still resolving. */
@@ -180,15 +187,8 @@ function useRefrainSession(): RefrainSession {
   const applyDelta = useApp((s) => s.applyDelta)
   const ensureRefrainSet = useApp((s) => s.ensureRefrainSet)
   const { session, cursor, done } = useApp((state) => state.refrainResume)
-  const setSession = useCallback((session: SessionHandle): void => {
-    useApp.setState((state) => ({ refrainResume: { ...state.refrainResume, session } }))
-  }, [])
-  const setCursor = useCallback((cursor: number): void => {
-    useApp.setState((state) => ({ refrainResume: { ...state.refrainResume, cursor } }))
-  }, [])
-  const setDone = useCallback((done: boolean): void => {
-    useApp.setState((state) => ({ refrainResume: { ...state.refrainResume, done } }))
-  }, [])
+  const targetLocale = useApp((state) => state.targetLocale)
+  const busy = useRef(false)
   // Entering the Refrain is one of the moments the day must be re-checked: a learner who
   // opened the app before midnight and starts practising after it needs today's set.
   useEffect(() => {
@@ -197,17 +197,30 @@ function useRefrainSession(): RefrainSession {
   useEffect(() => {
     if (useApp.getState().refrainResume.session !== null) return
     let cancelled = false
-    void refrainEngine.plan(engineContext()).then((plan) => {
-      if (cancelled) return
-      setSession({ sessionId: `refrain:${String(plan.items.length)}`, plan, cursor: 0 })
-      setCursor(0)
-    })
+    void refrainEngine
+      .plan(engineContext())
+      .then((plan) => {
+        if (cancelled) return
+        useApp.setState({
+          refrainResume: {
+            session: { sessionId: newId(), plan, cursor: 0 },
+            cursor: 0,
+            done: false,
+            lastLatency: null,
+            history: [],
+          },
+        })
+      })
+      .catch(() => {
+        if (!cancelled)
+          useApp.getState().showToast(`${copy.persistence.error} ${copy.persistence.retry}`)
+      })
     return () => {
       cancelled = true
     }
     // Re-planned when the day's set changes, not on every rep: the plan is the day's
     // work, and re-planning mid-phrase would restart the mode sequence.
-  }, [refrainSet])
+  }, [refrainSet, targetLocale])
   const item = session?.plan.items[cursor]
   const storePhrase = useMemo(
     () => (item === undefined ? undefined : phrases.find((p) => p.id === item.phraseId)),
@@ -223,44 +236,84 @@ function useRefrainSession(): RefrainSession {
    * yesterday reads as 0 rather than inflating the card.
    */
   const dayReps = storePhrase === undefined ? 0 : repsTodayOf(storePhrase, deviceClock.localDay())
-  const auto = automaticity(dayReps, DEFAULT_REP_TARGET)
+  const auto = rustCoreFacade.automaticity(dayReps, DEFAULT_REP_TARGET)
   const band = warmBand(auto)
   const bandStyle = warming[band]
   const locked = auto >= 100
+  // A foreground event covers wake-up; a tap also covers staying awake across midnight.
+  // Re-plan first, so yesterday's absolute rep index cannot become today's progress.
+  const ensureCurrentDay = useCallback(() => {
+    if (useApp.getState().refrainDay === deviceClock.localDay()) return true
+    try {
+      ensureRefrainSet()
+    } catch {
+      useApp.getState().showToast(`${copy.persistence.error} ${copy.persistence.retry}`)
+    }
+    return false
+  }, [ensureRefrainSet])
   const doRep = useCallback(() => {
-    if (session === null || item === undefined || locked) return
-    // This button confirms practice, not speech onset. No microphone measurement exists yet.
-
-    // The engine owns every progress signal, including the ones this screen never shows
-    // (rule 5). The store applies the delta; nothing here computes a field.
+    if (busy.current || !ensureCurrentDay()) return
+    if (session === null || item === undefined || storePhrase === undefined || locked) return
+    busy.current = true
+    const ctx = engineContext()
+    const at = deviceClock.now()
+    const localDay = deviceClock.localDay()
+    const streakDay = deviceClock.streakDay()
+    // Keep the last rep visible for the lock-in moment. The checkpoint and outcome
+    // commit together; a failed write leaves this exact attempt available to retry.
+    const nextCursor =
+      session.plan.items[cursor + 1]?.phraseId === item.phraseId ? cursor + 1 : cursor
     void refrainEngine
       .record(
         { ...session, cursor },
-        {
-          itemId: item.itemId,
-          outcome: 'success',
-          latencyMs: null,
-          hintsUsed: 0,
-          at: deviceClock.now(),
-        },
+        { itemId: item.itemId, outcome: 'success', latencyMs: null, hintsUsed: 0, at },
+        ctx,
       )
-      .then(applyDelta)
-    // Advance only WITHIN the phrase. On its last rep the cursor stays put, so the card
-    // reaches 100% and the learner sees the lock-in — the reward moment of the screen —
-    // instead of being moved on before it renders. Leaving the phrase is their tap.
-    if (session.plan.items[cursor + 1]?.phraseId === item.phraseId) setCursor(cursor + 1)
-  }, [session, item, cursor, locked, applyDelta])
+      .then((delta) => {
+        applyDelta(delta, {
+          attemptId: `${session.sessionId}:${item.itemId}`,
+          targetLocale,
+          localDay,
+          streakDay,
+          sessionId: session.sessionId,
+          expectedCursor: cursor,
+          expectedPhrase: storePhrase,
+          checkpoint: {
+            lastLatency: null,
+            history: [],
+            session: { ...session, cursor: nextCursor },
+            cursor: nextCursor,
+            done: false,
+          },
+        })
+      })
+      .catch(() => {
+        useApp.getState().showToast(`${copy.persistence.error} ${copy.persistence.retry}`)
+      })
+      .finally(() => {
+        busy.current = false
+      })
+  }, [session, item, cursor, locked, applyDelta, targetLocale, storePhrase, ensureCurrentDay])
   /** Jump to the first item of the next phrase in the plan. */
   const nextPhrase = useCallback(() => {
-    const items = session?.plan.items ?? []
-    const current = items[cursor]?.phraseId
-    const nextIndex = items.findIndex((i, n) => n > cursor && i.phraseId !== current)
-    if (nextIndex < 0) {
-      setDone(true)
-      return
+    if (busy.current || !ensureCurrentDay() || session === null) return
+    const current = session.plan.items[cursor]?.phraseId
+    const nextIndex = session.plan.items.findIndex((i, n) => n > cursor && i.phraseId !== current)
+    const nextCursor = nextIndex < 0 ? cursor : nextIndex
+    try {
+      useApp.setState({
+        refrainResume: {
+          lastLatency: null,
+          history: [],
+          session: { ...session, cursor: nextCursor },
+          cursor: nextCursor,
+          done: nextIndex < 0,
+        },
+      })
+    } catch {
+      useApp.getState().showToast(`${copy.persistence.error} ${copy.persistence.retry}`)
     }
-    setCursor(nextIndex)
-  }, [session, cursor])
+  }, [session, cursor, ensureCurrentDay])
   const set = useMemo(
     () =>
       refrainSet
@@ -282,6 +335,7 @@ function useRefrainSession(): RefrainSession {
     phrase,
     phraseNumber,
     mode,
+    clozeMask: item?.prompt.clozeMask ?? [],
     dayReps,
     auto,
     bandStyle,
@@ -332,11 +386,13 @@ function WarmingCard({
   phrase,
   auto,
   bandStyle,
+  clozeMask,
 }: {
   mode: RefrainMode
   phrase: PhraseView
   auto: number
   bandStyle: WarmingStyle
+  clozeMask: readonly number[]
 }) {
   useLocale()
   return (
@@ -364,7 +420,7 @@ function WarmingCard({
         </Text>
       </Row>
 
-      <WarmingPrompt mode={mode} phrase={phrase} color={bandStyle.text} />
+      <WarmingPrompt mode={mode} phrase={phrase} color={bandStyle.text} clozeMask={clozeMask} />
     </View>
   )
 }
@@ -373,10 +429,12 @@ function WarmingPrompt({
   mode,
   phrase,
   color,
+  clozeMask,
 }: {
   mode: RefrainMode
   phrase: PhraseView
   color: string
+  clozeMask: readonly number[]
 }) {
   useLocale()
   switch (mode) {
@@ -397,7 +455,12 @@ function WarmingPrompt({
       return (
         <>
           <Text variant="title1" color={color} align="center" lang="target">
-            {cloze(phrase.targetText)}
+            {phrase.targetText
+              .split(/\s+/)
+              .map((word, index) =>
+                clozeMask.includes(index) ? copy.refrain.prompt.clozeBlank : word,
+              )
+              .join(' ')}
           </Text>
           <Text variant="caption" color={color} align="center">
             {phrase.translation}
@@ -611,47 +674,3 @@ const s = StyleSheet.create({
   },
   doneCta: { width: '100%', marginTop: space['3'] },
 })
-/**
- * Blank the most informative content word — never an article or preposition.
- *
- * Kept here, and kept as written. It disagrees with the `clozeMask: [1]` the RefrainEngine
- * records, which is a real defect owned by plans/05 — but the disagreement is about WHICH word
- * the learner sees blanked, so "fixing" it here would change the screen rather than reconcile
- * the two. See plans/52 §"Defects found".
- */
-function cloze(targetText: string): string {
-  const stop = new Set([
-    'el',
-    'la',
-    'los',
-    'las',
-    'un',
-    'una',
-    'de',
-    'del',
-    'a',
-    'al',
-    'en',
-    'por',
-    'para',
-    'y',
-    'o',
-    'que',
-    'me',
-    'te',
-    'se',
-    'lo',
-  ])
-  const words = targetText.split(' ')
-  let best = -1
-  let bestLen = 0
-  words.forEach((w, i) => {
-    const bare = w.replace(/[¿?¡!,.]/g, '').toLowerCase()
-    if (!stop.has(bare) && bare.length > bestLen) {
-      bestLen = bare.length
-      best = i
-    }
-  })
-  if (best < 0) return targetText
-  return words.map((w, i) => (i === best ? copy.refrain.prompt.clozeBlank : w)).join(' ')
-}

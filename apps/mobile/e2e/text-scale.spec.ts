@@ -56,6 +56,9 @@ for (const scale of SCALES) {
     }
   })
   test(`text at ${scale * 100}% never clips or overflows`, async ({ page }) => {
+    // This one test visits all 71 states. The 200% sweep measured nearly 90 seconds
+    // after adding durable storage and the complete provider/email account states.
+    test.setTimeout(120_000)
     const problems: string[] = []
 
     for (const state of STATES) {

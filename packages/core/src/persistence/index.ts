@@ -42,3 +42,5 @@ export {
   openSqlPersistence,
 } from './sqlite/index.js'
 export { openMemoryPersistence } from './memory.js'
+export { decodeCheckpoint, encodeCheckpoint, type CourseCheckpoint } from './checkpoint.js'
+export { synchronousResult } from './transaction.js'

@@ -3,19 +3,23 @@
 - **Requirement IDs:** `F-04`, `LB-03`, `LB-21`, `LB-24`, `P3-02`, `P3-04`, `P3-30`…`P3-40`,
   `P3B-01`…`P3B-08`
 - **Milestone:** M1/M2
-- **Status:** 🟡 Rust rank, matching, calendar, ladder and merge exist; FSRS review, cloze/set
-  selection and app bindings remain. Pure Rust and WASM work can start now; native adapters need 58.
+- **Status:** 🟡 Canonical Rust FSRS, ranking, Unicode matching, cloze/selection and mobile bindings
+  are implemented with reference/parity checks. Broader device-floor and policy acceptance remains;
+  DSP and production speech measurements are separate gates.
 - **Depends on:** 53 completed; 58 only for native integration; 87 supplies existing language/course
   identities.
-- **Reviewed:** 2026-09-07 against merged baseline `2d9e8c3`.
+- **Reviewed:** 2026-09-08 during plan-94 integration; release gates below remain explicit.
 
-## Verified starting point
+## Implemented scope
 
-`packages/core-rs/src/fsrs/mod.rs` and `select.rs` still contain unimplemented functions.
-`apps/mobile/src/store/coreFacade.ts` still supplies made-up FSRS intervals, a fixed cloze mask and
-duplicate rank/matching; its ASCII-oriented matching strips Cyrillic. API WASM merge is real, but
-mobile binding parity is missing. Prioritize replacement of these stand-ins before exposing more
-measured learning behavior.
+`packages/core-rs` now owns scheduling, ranking, cloze/set selection, Unicode token matching, HLC
+and sync merge. The mobile facade calls the same generated Rust dispatcher through native UniFFI or
+embedded browser WASM; no approximate JavaScript fallback computes learner scheduling.
+
+Reference scheduling vectors and multilingual fixtures exercise the native and shipped-WASM
+boundaries. The selected FSRS policy and exact reference version live in
+[scheduling](../docs/architecture/scheduling.md). Bindings are generated, committed and
+drift-checked; `jsCoreFacade` is only a compatibility name for the canonical boundary.
 
 ## Outcome
 
@@ -25,25 +29,14 @@ ports and parity fixtures, never a second algorithm or fabricated fallback.
 
 ## Remaining work
 
-1. [ ] Define canonical inputs/outputs, units, error handling, and deterministic seed/clock
-       injection for each function before extending bindings.
-2. [ ] Implement FSRS against the selected reference version and parameter set; add
-       official/reference vectors, calendar-boundary cases, lapse histories, and cross-language
-       parity.
-3. [ ] Implement cloze and priority set selection with function-word/content rules, eligibility,
-       graduation, tag drill, frozen-day, and deterministic tie behavior.
-4. [ ] Make rank and token matching use Rust everywhere; specify empty target behavior, Unicode
-       normalization and language-specific cloze inputs for es-ES/bg-BG/ru-RU. Add Cyrillic and
-       combining mark parity fixtures so unsupported scripts cannot collapse to empty tokens.
-       Consume onboarding goal/level and course identity in canonical selection instead of
-       discarding their effect.
-5. [ ] Generate UniFFI/WASM bindings and wire the mobile/API adapters. Web uses WASM or a proven
-       parity boundary, not `jsCoreFacade` approximations.
-6. [ ] Delete fake intervals, fixed `[1]` masks, duplicate stream rank formulas, and divergent
-       matcher copies only after parity and integration tests pass.
-7. [ ] Add the missing `tests/sim` target called by nightly CI and property/simulation tests for
-       monotonicity, bounded results, deterministic replay, no impossible schedules, and all engine
-       progress signals.
+1. [ ] Extend deterministic histories/simulations and measured device-floor budgets as new engines
+       and selection policies land. Preserve official reference and native/WASM parity fixtures.
+2. [ ] Complete multilingual cloze/selection acceptance with bilingual reviewers; canonical
+       deterministic behavior does not itself approve linguistic content.
+3. [ ] Verify full iOS/device bridge execution with plan 58. Keep missing runtime artifacts fatal
+       and recoverable rather than substituting a second algorithm.
+4. [ ] Feed future Review/Memory and experiment surfaces with the same canonical outputs and
+       explicitly reviewed policy changes. DSP scoring remains in plan 77.
 
 ## Acceptance criteria
 

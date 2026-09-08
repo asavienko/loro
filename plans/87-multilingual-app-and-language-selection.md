@@ -3,12 +3,12 @@
 - **Requirement IDs:** `F-08`, `F-02`, `P2-03`, `P2-31`
 - **Milestone:** M1/M2 foundation and release acceptance
 - **Status:** 🟡 Seven-pair UI/catalog/course/API and schema-2 foundations are implemented.
-  Bilingual sign-off and device/release integration proof remain; human review gates linguistic
-  release and 59 gates durable device evidence. No additional language-selection implementation is
-  pending.
+  Bilingual sign-off and all-pair physical-device/release proof remain; human review gates
+  linguistic release and the device harness gates complete durability evidence. No additional
+  language-selection implementation is pending.
 - **Depends on:** 59 for device hydration/write-through; 61 for reviewed content publication; 72 for
   release gates. Audio/ASR/DSP are separately owned by 58/62/63/77.
-- **Reviewed:** 2026-09-07 against merged baseline `2d9e8c3`.
+- **Reviewed:** 2026-09-08 during plan-94 integration.
 
 ## Implemented scope — retain, do not rebuild
 
@@ -19,10 +19,13 @@ selection, neutral targetText/translation views, 31-phrase starters per target, 
 routes and backward-compatible English/Spanish routes are implemented.
 
 `apps/mobile/src/store/languages.test.ts`, `src/data/languages.test.ts` and `e2e/languages.spec.ts`
-cover pair validation, separate in-memory course progress/resume, late deltas, migration and browser
-flows. Schema 2 already stores atomic languagePair, target-scoped Refrain days and device-local
-course checkpoints. The running app still uses memory. `packages/content/src/releaseCheck.ts`
-rejects pending bilingual review; every audio/ASR/scoring capability remains false.
+cover pair validation, separate durable course progress/resume, late deltas, migration and browser
+flows. Forward migrations preserve atomic languagePair, target-scoped Refrain days and device-local
+course checkpoints; native/browser hydration and writes are integrated.
+`packages/content/src/releaseCheck.ts` rejects pending bilingual review. Runtime TTS/ASR
+availability is checked on each device for the selected language; reviewed production assets and DSP
+remain gated. Native EN/BG/RU plural formatting and scaled-text fixes from the Android preview are
+retained.
 
 ## Remaining work
 

@@ -26,7 +26,7 @@ import {
 } from '@loro/core'
 
 /** Every signal a delta can carry. `phraseId` names the row, so it is not a signal. */
-type DeltaField = Exclude<keyof ProgressDelta, 'phraseId'>
+type DeltaField = Exclude<keyof ProgressDelta, 'phraseId' | 'review'>
 
 /** How one signal reaches the row. Returns only the fields it owns. */
 type DeltaWrite = (p: PhraseState, d: ProgressDelta) => Partial<PhraseState>
@@ -186,21 +186,22 @@ function bumpAxis(current: number, delta: number | undefined): number {
 /**
  * FSRS state, merged as a group.
  *
- * `lapses` and `state` are carried rather than computed: no engine reports them, and
- * the real transitions are FSRS's own (plans/17-fsrs-implementation-and-parity.md).
- * Guessing them here would put a made-up card state behind the memory-model screen.
+ * The canonical scheduler supplies review time, lapses and state together. Older
+ * engine deltas preserve existing values until they supply this metadata too.
  */
 function nextSrs(
   prev: FsrsState | null,
   next: NonNullable<ProgressDelta['srs']>,
   at: number | null,
 ): FsrsState {
+  const algorithm = next.algorithm ?? prev?.algorithm
   return {
     stability: next.stability,
     difficulty: next.difficulty,
     due: next.due,
-    lastReview: at ?? prev?.lastReview ?? null,
-    lapses: prev?.lapses ?? 0,
-    state: prev?.state ?? 'learning',
+    lastReview: next.lastReview ?? at ?? prev?.lastReview ?? null,
+    lapses: next.lapses ?? prev?.lapses ?? 0,
+    state: next.state ?? prev?.state ?? 'learning',
+    ...(algorithm === undefined ? {} : { algorithm }),
   }
 }

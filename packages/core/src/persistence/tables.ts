@@ -139,6 +139,8 @@ export interface OutboxOp {
   readonly hlc: string
   readonly createdAt: number
   readonly attempts: number
+  /** Proof of an observed catalog tombstone when deliberately adding it again. */
+  readonly replaces?: { readonly id: string; readonly deleted_at: number }
 }
 
 /** What a caller appends. `seq` is the store's to assign. */
@@ -154,6 +156,7 @@ export interface OutboxAppend {
    */
   readonly hlc: string
   readonly createdAt: number
+  readonly replaces?: { readonly id: string; readonly deleted_at: number }
 }
 
 export interface OutboxTable {

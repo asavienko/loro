@@ -14,11 +14,13 @@ import type {
   Difficulty,
   PhraseState,
   ProgressDelta,
+  RefrainDayRow,
   Tag,
   UserPhraseId,
 } from '@loro/core'
-import type { AppData } from './state'
+import type { AppData, RefrainResume } from './state'
 import type { OwnPhraseDraft } from './phraseFactory'
+import type { LearnerStorage } from '../data/learner'
 
 export interface AppActions {
   setLanguages: (nativeLanguage: NativeLanguage, targetLocale: TargetLocale) => void
@@ -53,7 +55,7 @@ export interface AppActions {
    * The ONLY write path for a practice outcome. A screen calls `engine.record(...)` and
    * hands the result here; nothing else writes a progress field.
    */
-  applyDelta: (delta: ProgressDelta) => void
+  applyDelta: (delta: ProgressDelta, context?: PracticeCommitContext) => void
   select: (id: string | null) => void
   showToast: (message: string, undo?: () => void) => void
   clearToast: () => void
@@ -68,6 +70,25 @@ export interface AppActions {
 
 export type AppState = AppData & AppActions
 
+/** Capture before asynchronous engine work; the commit rejects stale or repeated outcomes. */
+export interface PracticeCommitContext {
+  readonly attemptId?: string
+  readonly targetLocale?: TargetLocale
+  readonly localDay?: string
+  readonly streakDay?: string
+  readonly expectedPhrase?: PhraseState
+  readonly sessionId?: string
+  readonly expectedCursor?: number
+  readonly refrainCursor?: number
+  readonly checkpoint?: RefrainResume
+  readonly phraseId?: UserPhraseId
+  readonly review?: {
+    readonly at: number
+    readonly grade: 1 | 2 | 3 | 4
+    readonly algorithm: string
+  }
+}
+
 /**
  * What the store needs from the platform.
  *
@@ -77,6 +98,8 @@ export type AppState = AppData & AppActions
 export interface StoreDeps {
   clock: Clock
   newId: () => UserPhraseId
+  storage?: LearnerStorage
+  onPersistenceError?: (error: unknown) => void
 }
 
 /**
@@ -91,6 +114,8 @@ export interface SliceContext {
   readonly set: StoreApi<AppState>['setState']
   readonly get: StoreApi<AppState>['getState']
   readonly deps: StoreDeps
+  readonly loadRefrainDay: (day: string, target: TargetLocale) => RefrainDayRow | null
+  readonly hasCatalog: (id: string, target: TargetLocale) => boolean
 }
 
 /**

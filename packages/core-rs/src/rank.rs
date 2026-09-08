@@ -55,25 +55,71 @@ pub fn repeat_target(difficulty: Difficulty) -> u32 {
 #[must_use]
 #[uniffi::export]
 pub fn stream_rank(p: &PhraseState, now_ms: i64) -> i32 {
-    let mut r = i32::try_from(p.plays).unwrap_or(i32::MAX);
+    stream_rank_values(p.plays, p.difficulty, p.loved, p.srs_due, now_ms)
+}
 
-    r += match p.difficulty {
+/// Scalar boundary for platforms that do not need the entire phrase record.
+#[must_use]
+pub fn stream_rank_values(
+    plays: u32,
+    difficulty: Difficulty,
+    loved: bool,
+    due: Option<i64>,
+    now_ms: i64,
+) -> i32 {
+    let r = i32::try_from(plays).unwrap_or(i32::MAX);
+    let offset = match difficulty {
         Difficulty::Hard => HARD_OFFSET,
         Difficulty::Easy => EASY_OFFSET,
         Difficulty::Med => MED_OFFSET,
-    };
+    } + if loved { LOVED_OFFSET } else { 0 }
+        + if due.is_some_and(|due| due <= now_ms) {
+            DUE_OFFSET
+        } else {
+            0
+        };
+    r.saturating_add(offset)
+}
 
-    if p.loved {
-        r += LOVED_OFFSET;
-    }
+/// Minimal scheduling input for an ordered stream; eligibility uses the app/domain rule.
+#[derive(serde::Deserialize)]
+pub struct StreamCandidate {
+    /// Stable learner phrase identity.
+    pub id: String,
+    /// True only for live, unlearned, ungraduated phrases.
+    pub active: bool,
+    /// Number of completed listens.
+    pub plays: u32,
+    /// Learner-declared difficulty.
+    pub difficulty: Difficulty,
+    /// Whether the learner loves the phrase.
+    pub loved: bool,
+    /// Actual scheduled review time, if any.
+    pub due: Option<i64>,
+}
 
-    if let Some(due) = p.srs_due {
-        if due <= now_ms {
-            r += DUE_OFFSET;
-        }
-    }
-
-    r
+/// Order eligible stream candidates with platform-independent ID ties.
+#[must_use]
+pub fn order_stream_candidates(candidates: &[StreamCandidate], now_ms: i64) -> Vec<String> {
+    let mut active: Vec<_> = candidates
+        .iter()
+        .filter(|candidate| candidate.active)
+        .collect();
+    active.sort_by(|a, b| {
+        stream_rank_values(a.plays, a.difficulty, a.loved, a.due, now_ms)
+            .cmp(&stream_rank_values(
+                b.plays,
+                b.difficulty,
+                b.loved,
+                b.due,
+                now_ms,
+            ))
+            .then_with(|| a.id.cmp(&b.id))
+    });
+    active
+        .into_iter()
+        .map(|candidate| candidate.id.clone())
+        .collect()
 }
 
 /// Order the active queue. Excludes learned phrases.

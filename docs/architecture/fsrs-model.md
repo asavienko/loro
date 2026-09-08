@@ -1,0 +1,91 @@
+# FSRS-6 model and Loro scheduling policy
+
+**Status:** implementation decision for plan 60 (`F-04`, `LB-03`, `LB-21`).
+
+The scheduler uses FSRS-6's power forgetting curve with published default parameters, retaining
+Loro's authored **50% desired retention**. Stability means the interval at **90% recall**, as in
+FSRS. It does not mean the interval at Loro's review threshold. The prototype's exponential
+`0.5^(t/S)` curve is not the canonical model; the future Memory screen must display the power curve
+and mark the separately calculated 50% review interval. Authored design artifacts remain unchanged.
+This resolves the technical curve/version question without changing the learner's 50% threshold or
+claiming that this threshold is empirically optimal.
+
+## Pinned reference
+
+Equations, parameter values and numerical rounding follow
+[ts-fsrs revision c8ca282edc3fe1cdfa1c24912437938b63a25cb3](https://github.com/open-spaced-repetition/ts-fsrs/tree/c8ca282edc3fe1cdfa1c24912437938b63a25cb3/packages/fsrs/src),
+particularly `algorithm.ts` and `constant.ts`. FSRS-6 uses the following vector:
+
+```text
+[0.212, 1.2931, 2.3065, 8.2956, 6.4133, 0.8334, 3.0194, 0.001,
+ 1.8722, 0.1666, 0.796, 1.4835, 0.0614, 0.2629, 1.6483, 0.6014,
+ 1.8729, 0.5425, 0.0912, 0.0658, 0.1542]
+```
+
+`decay = -w[20]`, `factor = exp(log(0.9) / decay) - 1`, and `R(t,S) = (1 + factor*t/S)^decay`. The
+next interval is `S * (0.5^(1/decay)-1)/factor`, rounded to whole days and bounded to 1–36,500 days.
+There is no random fuzz. Computation and persisted stability/difficulty use f64; intermediate
+reference outputs round to eight decimals. Reference vectors tolerate absolute error below 1e-7; the
+upstream multi-review history tolerates 1e-4. Transport parity requires exact due milliseconds,
+grades and states. All timestamps must be nonnegative safe JS integers.
+
+Elapsed time is the floor of elapsed milliseconds divided by 86,400,000. This is an elapsed
+24-hour-day model, independent of timezone and DST; local course/day/streak keys remain separate.
+Reviews in the first 24 hours use FSRS-6 short-term updates. Negative/backward time, nonfinite
+memory values, inconsistent lifecycle, foreign provenance and overflow return explicit errors.
+Review at the same millisecond is mathematically supported; replay rejection belongs to plan 59's
+stable attempt ID transaction, not timestamp guessing in the scheduler.
+
+## Explicit Loro adaptations
+
+These are tested separately from upstream reference vectors:
+
+- Canonical initialization creates `new` state, stability zero, no last review and no synthetic
+  review. The app keeps an unreviewed phrase's scheduler state null until its first review. First
+  observed recall initializes stability from the grade's reference parameter, while retaining the
+  existing declared difficulty prior: Easy 3.5, Learning 5.0, Difficult 7.5; Remember adds .8, Words
+  adds .4, Pron/Useful add nothing. Later observations update difficulty canonically.
+- Loro uses a single ten-minute learning/relearning step. Again schedules that step; Hard while
+  learning schedules fifteen minutes; Good/Easy graduate to the computed interval. These are
+  explicit practice-step policies, not purported FSRS-computed ten-minute stability values. A failed
+  established review increments lapses once and enters `relearning`; repeated relearning failures do
+  not increment it. New/learning failures stay `learning`.
+- Confidence Forgot/Shaky/Ok/Strong/Instant maps to Again/Hard/Good/Good/Easy. Strong applies the
+  already documented 10% stability bonus and recomputes the due date. Ordinary `review` applies no
+  confidence bonus. Re-rating uses the existing bounded one-point difficulty nudge; it does not
+  reset stability, due, history or lapses.
+- Passive listening, skip and a missing core are not review evidence. The application must not
+  synthesize a grade or measured latency merely to call this scheduler.
+
+The atomic persisted result is stability, difficulty, due, last review, lapses, card state and
+`algorithm = fsrs-6-default-c8ca282-loro-v1`. The ID identifies defaults and adaptations together; a
+changed parameter vector or policy needs a new ID and explicit migration. The known persisted
+preview policy `fsrs-6/py-fsrs-6.3.2/default-90-no-steps` used the same FSRS-6 parameters with f32
+storage, 90% desired retention and no learning steps. Its stability and difficulty are real FSRS
+memory evidence. Compatibility widens those stored numbers to f64 without changing them, and retains
+due, last review, lapses, phase and all phrase progress. No loading, migration or rerating
+manufactures a review or resets the schedule. The next **observed** review updates that existing
+memory and emits the canonical 50% policy identifier and its learning/relearning phase.
+
+Older transport records missing provenance use that known preview identifier at the compatibility
+boundary. Unknown explicit identifiers are rejected and preserved for a future explicit conversion;
+no state is classified by guessing from its stability or interval. Same-review causal rerating keeps
+the observed review time and synchronizes the complete group using its shared HLC tie-breaker. The
+append-only review record stores the actual time, grade and algorithm alongside the progress
+transaction; historical reviews are never reconstructed.
+
+## Evidence and limits
+
+`tests/fixtures/fsrs-6-reference.json` was generated by executing the pinned upstream
+`FSRSAlgorithm.next_state` for all grades at initialization and elapsed times 0, 1, 30 and 3650 with
+stability 10/difficulty 5. The inline history matches upstream's published short-term example. The
+365-day `tests/sim.rs` uses seed `0x5f59_6036_5001`, 64 cards and a twenty-review daily cap;
+oldest-due-first ordering with ID ties carries overflow unchanged into subsequent days. It checks
+finite bounded state, due times, lapses and exact replay. The cap is a simulation scenario, not a
+new production policy. Neither reference parity nor simulation establishes pedagogical efficacy,
+speech accuracy or native bridge correctness.
+
+## Upstream license
+
+The equations implementation is derived from ts-fsrs, MIT licensed. The upstream copyright notice
+and license are retained in [fsrs-upstream-license.txt](fsrs-upstream-license.txt).

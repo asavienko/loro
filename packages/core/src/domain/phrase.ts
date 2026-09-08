@@ -173,6 +173,11 @@ export interface CatalogPhrase {
 // Learner state — private, synced, per-user
 // ─────────────────────────────────────────────────────────────────────────────
 
+/** Versioned canonical policy; Rust owns the implementation and matching wire identifier. */
+export const FSRS_ALGORITHM = 'fsrs-6-default-c8ca282-loro-v1'
+/** Known persisted 90% preview policy, retained without discarding real memory evidence. */
+export const LEGACY_PREVIEW_ALGORITHM = 'fsrs-6/py-fsrs-6.3.2/default-90-no-steps'
+
 export interface FsrsState {
   readonly stability: number
   readonly difficulty: number
@@ -180,6 +185,8 @@ export interface FsrsState {
   readonly lastReview: number | null
   readonly lapses: number
   readonly state: 'new' | 'learning' | 'review' | 'relearning'
+  /** Absent only on older preview wire records; persistence retains explicit provenance. */
+  readonly algorithm?: string
 }
 
 export interface PhraseState {

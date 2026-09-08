@@ -180,8 +180,8 @@ export function runConformanceSuite(engine: PracticeEngine, opts: ConformanceOpt
       if (firstItem === undefined) return
       const session = { sessionId: 's1', plan, cursor: 0 }
       const attempt = opts.makeSuccessAttempt(firstItem.itemId)
-      const once = await engine.record(session, attempt)
-      const twice = await engine.record(session, attempt)
+      const once = await engine.record(session, attempt, ctx)
+      const twice = await engine.record(session, attempt, ctx)
       expect(twice).toEqual(once)
     })
 
@@ -233,7 +233,7 @@ async function recordPhraseWork(
 
   const deltas: ProgressDelta[] = []
   for (const item of items) {
-    deltas.push(await engine.record(session, opts.makeSuccessAttempt(item.itemId)))
+    deltas.push(await engine.record(session, opts.makeSuccessAttempt(item.itemId), ctx))
   }
   return deltas
 }

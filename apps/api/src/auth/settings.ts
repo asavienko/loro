@@ -1,5 +1,7 @@
 /** All auth deployment configuration is read here. Never expose secrets to the app. */
 import type { OAuthProvider } from '@loro/core/api/oauth'
+import { config } from '../common/config.js'
+import { AccessTokens } from './auth.tokens.js'
 export interface AuthSettings {
   databaseUrl: string
   publicUrl: string
@@ -13,21 +15,21 @@ export interface AuthSettings {
   applePrivateKey: string
 }
 export function authSettings(): AuthSettings | undefined {
-  const env = process.env
-  if (env['AUTH_ENABLED'] !== 'true') return undefined
-  const required = (name: string): string => {
-    const value = env[name]
+  const raw = config.oauthSettings()
+  if (raw.enabled !== 'true') return undefined
+  const required = (name: string, value: string | undefined): string => {
     if (!value) throw new Error(`Missing auth configuration: ${name}`)
     return value
   }
-  const publicUrl = required('AUTH_PUBLIC_URL').replace(/\/$/, '')
+  const publicUrl = required('AUTH_PUBLIC_URL', raw.publicUrl).replace(/\/$/, '')
   const origin = new URL(publicUrl)
   if (origin.protocol !== 'https:' || origin.origin !== publicUrl)
     throw new Error('AUTH_PUBLIC_URL requires an exact HTTPS origin')
-  const signingKey = required('AUTH_SIGNING_KEY')
-  if (Buffer.byteLength(signingKey) < 32)
+  const signingKey = raw.signingKey ?? ''
+  if (!config.authSettings().privateKeyPem && Buffer.byteLength(signingKey) < 32)
     throw new Error('AUTH_SIGNING_KEY requires at least 32 bytes')
-  const redirects = required('AUTH_REDIRECT_URIS')
+  new AccessTokens(config.authSettings())
+  const redirects = required('AUTH_REDIRECT_URIS', raw.redirectsRaw)
     .split(',')
     .map((v) => v.trim())
   for (const redirect of redirects) {
@@ -44,16 +46,16 @@ export function authSettings(): AuthSettings | undefined {
       )
   }
   return {
-    databaseUrl: required('DATABASE_URL'),
+    databaseUrl: required('DATABASE_URL', config.databaseUrl()),
     publicUrl,
     redirects,
     signingKey,
-    googleClientId: env['GOOGLE_CLIENT_ID'] ?? '',
-    googleClientSecret: env['GOOGLE_CLIENT_SECRET'] ?? '',
-    appleClientId: env['APPLE_CLIENT_ID'] ?? '',
-    appleTeamId: env['APPLE_TEAM_ID'] ?? '',
-    appleKeyId: env['APPLE_KEY_ID'] ?? '',
-    applePrivateKey: (env['APPLE_PRIVATE_KEY'] ?? '').replace(/\\n/g, '\n'),
+    googleClientId: raw.googleClientId ?? '',
+    googleClientSecret: raw.googleClientSecret ?? '',
+    appleClientId: raw.appleClientId ?? '',
+    appleTeamId: raw.appleTeamId ?? '',
+    appleKeyId: raw.appleKeyId ?? '',
+    applePrivateKey: (raw.applePrivateKey ?? '').replace(/\\n/g, '\n'),
   }
 }
 export function providerEnabled(settings: AuthSettings, provider: OAuthProvider): boolean {

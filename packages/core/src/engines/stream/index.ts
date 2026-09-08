@@ -45,10 +45,11 @@ export class StreamEngine implements PracticeEngine {
     // rank = plays + (hard -6 | easy +4) + (loved -3) + (due -4), ascending.
     // `plays` dominates, which round-robins naturally: everything is heard before
     // anything repeats, and the offsets bias WHICH comes sooner without starving.
-    const ordered = [...active].sort(
-      (a, b) =>
-        ctx.core.streamRank(a, now) - ctx.core.streamRank(b, now) || a.id.localeCompare(b.id),
-    )
+    const byId = new Map(active.map((phrase) => [phrase.id, phrase]))
+    const ordered = ctx.core.orderStream(active, now).flatMap((id) => {
+      const phrase = byId.get(id)
+      return phrase === undefined ? [] : [phrase]
+    })
 
     // One item per repetition, so the UI's repeat pips map 1:1 onto items.
     const items: PracticeItem[] = ordered.flatMap((phrase) => {
@@ -93,9 +94,8 @@ export class StreamEngine implements PracticeEngine {
         // invent one. Rule 4.
         latencyMs: null,
       }),
-      // Rule 5: listening is exposure, so it advances perception only. No FSRS
+      // Rule 5: listening is exposure. No DSP score or FSRS
       // write — recognition without production is not a review.
-      axes: { perception: 1 },
     })
   }
 

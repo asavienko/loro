@@ -47,6 +47,7 @@ export * from './persistence/index.js'
 // Engine implementations. v1 ships stream + refrain; the rest land per the roadmap.
 export {
   StreamEngine,
+  SpeakEngine,
   streamStats,
   RefrainEngine,
   REFRAIN_MODES,
