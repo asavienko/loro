@@ -37,9 +37,13 @@ for attempt in {1..10}; do
   sleep 1
 done
 [[ $(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/v1/health/ready) == 200 ]]
-for path in /v1/sync/pull /v1/ai/scene /v1/health/ready/extra; do
+for path in /v1/ai/scene /v1/health/ready/extra; do
   [[ $(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:8080$path") == 404 ]]
 done
 [[ $(curl -s -X POST -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/v1/health/ready) == 405 ]]
+case $(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/v1/sync/pull) in
+  404|405) ;; # Read-only rejects the route; account profile rejects its GET method.
+  *) exit 1 ;;
+esac
 echo 'Proxy health and deny probes passed; verify account flows before enabling gateway AccountAccess.'
 REMOTE
