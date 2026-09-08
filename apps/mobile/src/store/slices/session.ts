@@ -17,6 +17,7 @@ export const createSessionSlice: Slice<'completeOnboarding' | 'reset' | 'setLang
   set,
   get,
   deps,
+  hasCatalog,
 }) => ({
   setLanguages: (nativeLanguage, targetLocale) => {
     assertLanguagePair(nativeLanguage, targetLocale)
@@ -62,9 +63,13 @@ export const createSessionSlice: Slice<'completeOnboarding' | 'reset' | 'setLang
     const ids = new Set(
       packIds.flatMap((id) => catalog.packs.find((pack) => pack.id === id)?.phrases ?? []),
     )
-    const seeded = [...ids].map((id) =>
-      blankPhraseState(deps.newId(), catalogPhraseId(id), 'starter', now),
-    )
+    const existing = get().phrases
+    const seeded = [...ids]
+      .filter(
+        (id) =>
+          !existing.some((phrase) => phrase.phraseId === id) && !hasCatalog(id, get().targetLocale),
+      )
+      .map((id) => blankPhraseState(deps.newId(), catalogPhraseId(id), 'starter', now))
 
     set({
       onboarded: true,
@@ -74,7 +79,7 @@ export const createSessionSlice: Slice<'completeOnboarding' | 'reset' | 'setLang
       // this field exists to close.
       level,
       dailyMinutes,
-      phrases: seeded,
+      phrases: [...existing, ...seeded],
       refrainSet: [],
       refrainDay: null,
       refrainSubstituted: [],
@@ -86,6 +91,6 @@ export const createSessionSlice: Slice<'completeOnboarding' | 'reset' | 'setLang
   // cleared here for free. The enumerated version left `dailyMinutes` and
   // `streakDays` behind — the previous learner's settings, on a shared device.
   reset: () => {
-    set({ ...INITIAL_STATE })
+    set(INITIAL_STATE)
   },
 })

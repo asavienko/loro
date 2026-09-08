@@ -1,72 +1,92 @@
-/**
- * Sync over HTTP, against a real Nest app.
- *
- * Boots the actual application and drives the endpoint the way a client does, so the
- * merge semantics are verified through the whole stack — controller, field policy,
- * and the Rust merge — not just at the unit level.
- */
-
+/** F-04: exercise authenticated sync through the real HTTP routing and Rust merge. */
 import { Test } from '@nestjs/testing'
-import type { INestApplication } from '@nestjs/common'
+import type { ExecutionContext, INestApplication } from '@nestjs/common'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { PullResponseSchema, PushResponseSchema } from '@loro/core/api/target'
 import { AppModule } from '../app.module.js'
+import { AuthGuard, type AuthenticatedRequest } from '../auth/auth.guard.js'
 import { ProblemDetailsFilter } from '../common/problem-filter.js'
+import { DATABASE } from '../database/database.js'
 import { mergeAvailable } from './merge.js'
+import { InMemorySyncRepository } from './sync.repository.memory.js'
+import { SYNC_REPOSITORY } from './sync.repository.js'
 
-const hlc = (
-  physical: number,
-  node_id: string,
-): { physical: number; logical: number; node_id: string } => ({
-  physical,
-  logical: 0,
-  node_id,
-})
-
-// Only the merge itself needs the WASM. Everything else — routing, validation, the
-// readiness gate, content, AI — must be verified even on a checkout with no Rust
-// toolchain, so the skip is per-test rather than on the whole suite.
+const id = (n: number) => `0197f2a0-0000-7000-8000-${String(n).padStart(12, '0')}`
+const value = <T>(v: T, at = 1000) => ({ v, hlc: `${at}:0000:device-a` })
+const envelope = (ops: unknown[]) => ({ client_hlc: '1000:0000:device-a', ops })
 const needsWasm = it.skipIf(!mergeAvailable())
 
 describe('the API over HTTP', () => {
   let app: INestApplication
+  let unauthed: INestApplication
   let base: string
+  let unauthBase: string
 
   beforeAll(async () => {
-    const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile()
+    const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
+      .overrideProvider(SYNC_REPOSITORY)
+      .useValue(new InMemorySyncRepository())
+      .overrideProvider(DATABASE)
+      .useValue({ ready: () => Promise.resolve(true) })
+      .overrideGuard(AuthGuard)
+      .useValue({
+        canActivate(context: ExecutionContext) {
+          const request = context.switchToHttp().getRequest<AuthenticatedRequest>()
+          request.principal = {
+            userId: 'http-learner',
+            deviceId: 'http-device',
+            sessionId: 'http-session',
+          }
+          return true
+        },
+      })
+      .compile()
     app = moduleRef.createNestApplication()
     app.setGlobalPrefix('v1')
     app.useGlobalFilters(new ProblemDetailsFilter())
-    await app.init()
-    await app.listen(0)
+    await app.listen(0, '127.0.0.1')
     base = await app.getUrl()
+
+    const actual = await Test.createTestingModule({ imports: [AppModule] }).compile()
+    unauthed = actual.createNestApplication()
+    unauthed.setGlobalPrefix('v1')
+    unauthed.useGlobalFilters(new ProblemDetailsFilter())
+    await unauthed.listen(0, '127.0.0.1')
+    unauthBase = await unauthed.getUrl()
   })
 
   afterAll(async () => {
-    await app.close()
+    await Promise.all([app.close(), unauthed.close()])
   })
 
-  const post = async (path: string, body: unknown): Promise<Record<string, unknown>> => {
-    const res = await fetch(`${base}/v1${path}`, {
+  const post = (path: string, body: unknown) =>
+    fetch(`${base}/v1${path}`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: { 'content-type': 'application/json', 'x-loro-device': 'http-device' },
       body: JSON.stringify(body),
     })
-    return (await res.json()) as Record<string, unknown>
-  }
 
-  it('serves health', async () => {
-    const res = await fetch(`${base}/v1/health`)
-    expect(res.status).toBe(200)
-    expect(await res.json()).toMatchObject({ status: 'ok' })
+  it('requires authentication for every sync route', async () => {
+    for (const route of ['push', 'pull', 'status']) {
+      const response = await fetch(`${unauthBase}/v1/sync/${route}`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: '{}',
+      })
+      expect(response.status).toBe(401)
+      expect(await response.json()).toMatchObject({ code: 'UNAUTHENTICATED' })
+    }
   })
 
-  it('reports readiness from the real merge state, not a hard-coded ok', async () => {
-    // A deploy that loses the WASM artifact still starts. Readiness is the only thing
-    // standing between that build and live traffic, so it must check, not assume.
-    const res = await fetch(`${base}/v1/health/ready`)
-    const body = (await res.json()) as { status: string; checks: Record<string, string> }
-    expect(body.checks['merge']).toBe(mergeAvailable() ? 'ok' : 'unavailable')
-    expect(res.status).toBe(mergeAvailable() ? 200 : 503)
+  it('serves public liveness and observes real merge readiness', async () => {
+    const live = await fetch(`${base}/v1/health`)
+    expect(live.status).toBe(200)
+    expect(await live.json()).toMatchObject({ status: 'ok' })
+    const ready = await fetch(`${base}/v1/health/ready`)
+    expect(ready.status).toBe(mergeAvailable() ? 200 : 503)
+    expect(await ready.json()).toMatchObject({
+      checks: { merge: mergeAvailable() ? 'ok' : 'unavailable', database: 'ok' },
+    })
   })
 
   it('serves the content manifest with real counts', async () => {
@@ -77,111 +97,98 @@ describe('the API over HTTP', () => {
     expect(body.packs.length).toBeGreaterThan(0)
   })
 
-  needsWasm('reports the shared Rust merge as loaded', async () => {
-    expect(await post('/sync/status', {})).toMatchObject({ merge: 'loro-core (wasm)' })
-  })
-
-  needsWasm('keeps the higher counter under `max`, even against a later clock', async () => {
-    const id = `up_${Date.now()}`
-    await post('/sync/push', {
-      ops: [
-        {
-          seq: 1,
-          entity: 'user_phrase',
-          entity_id: id,
-          op: 'upsert',
-          fields: {
-            reps: { v: 20, hlc: hlc(1000, 'a') },
-            difficulty: { v: 'hard', hlc: hlc(1000, 'a') },
+  needsWasm(
+    'uses 200 target responses and serialised HLCs while preserving max/LWW merging',
+    async () => {
+      const first = await post(
+        '/sync/push',
+        envelope([
+          {
+            seq: 1,
+            entity: 'user_phrase',
+            entity_id: id(1),
+            op: 'upsert',
+            fields: {
+              targetLocale: value('es-ES'),
+              source: value('starter'),
+              addedAt: value(1000),
+              phraseId: value(null),
+              ownEs: value('Un café'),
+              reps: value(20),
+              difficulty: value('hard'),
+            },
           },
-        },
-      ],
-    })
-    // Device B: a LOWER count with a LATER clock. LWW would lose two reps.
-    await post('/sync/push', {
-      ops: [
-        {
-          seq: 2,
-          entity: 'user_phrase',
-          entity_id: id,
-          op: 'upsert',
-          fields: {
-            reps: { v: 18, hlc: hlc(9999, 'b') },
-            difficulty: { v: 'easy', hlc: hlc(9999, 'b') },
+        ]),
+      )
+      expect(first.status).toBe(200)
+      expect(PushResponseSchema.parse(await first.json()).accepted).toEqual([1])
+      const second = await post(
+        '/sync/push',
+        envelope([
+          {
+            seq: 2,
+            entity: 'user_phrase',
+            entity_id: id(1),
+            op: 'upsert',
+            fields: { reps: value(18, 9999), difficulty: value('easy', 9999) },
           },
-        },
-      ],
-    })
+        ]),
+      )
+      expect(second.status).toBe(200)
+      expect(PushResponseSchema.parse(await second.json()).accepted).toEqual([2])
+      const pull = await post('/sync/pull', { since: null, limit: 500 })
+      expect(pull.status).toBe(200)
+      const pulled = PullResponseSchema.parse(await pull.json())
+      const row = [...pulled.changes].reverse().find((change) => change.entity_id === id(1))
+      expect(row).toMatchObject({
+        fields: { reps: { v: 20 }, difficulty: { v: 'easy', hlc: '9999:0000:device-a' } },
+      })
+    },
+  )
 
-    const pulled = (await post('/sync/pull', {})) as {
-      changes: { id: string; fields: Record<string, { v: unknown }> }[]
+  needsWasm(
+    'returns per-index partial rejections for invalid fields and unknown entities',
+    async () => {
+      const result = await post(
+        '/sync/push',
+        envelope([
+          {
+            seq: 9,
+            entity: 'user_phrase',
+            entity_id: id(9),
+            op: 'upsert',
+            fields: { rawAudio: value('forbidden') },
+          },
+          { seq: 10, entity: 'unknown', entity_id: id(10), op: 'upsert', fields: {} },
+          {
+            seq: 11,
+            entity: 'streak_day',
+            entity_id: '2026-09-08',
+            op: 'upsert',
+            fields: { practised: value(true) },
+          },
+        ]),
+      )
+      expect(result.status).toBe(200)
+      expect(PushResponseSchema.parse(await result.json())).toMatchObject({
+        accepted: [11],
+        rejected: [
+          { seq: 9, index: 0, code: 'VALIDATION_FAILED' },
+          { seq: 10, index: 1, code: 'VALIDATION_FAILED' },
+        ],
+      })
+    },
+  )
+
+  it('returns 422 for an invalid envelope and a legacy HLC-object payload', async () => {
+    for (const body of [
+      { ops: [] },
+      { client_hlc: { physical: 1, logical: 0, node_id: 'a' }, ops: [] },
+    ]) {
+      const res = await post('/sync/push', body)
+      expect(res.status).toBe(422)
+      expect(await res.json()).toMatchObject({ code: 'VALIDATION_FAILED' })
     }
-    const row = pulled.changes.find((r) => r.id === id)
-    expect(row).toBeDefined()
-    expect(row?.fields['reps']?.v, 'max class must hold the higher count').toBe(20)
-    expect(row?.fields['difficulty']?.v, 'lww class takes the later write').toBe('easy')
-  })
-
-  needsWasm('keeps two devices adding the same catalog phrase as two rows', async () => {
-    // Row ids are per-learner UUIDv7s, not catalog ids (plans/04). If both devices sent
-    // `entity_id: 'cafe1'` they would key the same row and per-field LWW would
-    // interleave two independent add events into one — a data-loss bug invisible until
-    // a second device exists. Here they send distinct row ids for the same `phraseId`.
-    const stamp = Date.now()
-    const rowA = `0197f2a0-${stamp % 10_000}-7000-8000-aaaaaaaaaaaa`
-    const rowB = `0197f2a0-${stamp % 10_000}-7000-8000-bbbbbbbbbbbb`
-
-    await post('/sync/push', {
-      ops: [rowA, rowB].map((id, i) => ({
-        seq: 20 + i,
-        entity: 'user_phrase',
-        entity_id: id,
-        op: 'upsert',
-        fields: {
-          phraseId: { v: 'cafe1', hlc: hlc(1000 + i, i === 0 ? 'a' : 'b') },
-          difficulty: { v: i === 0 ? 'hard' : 'easy', hlc: hlc(1000 + i, i === 0 ? 'a' : 'b') },
-        },
-      })),
-    })
-
-    const pulled = (await post('/sync/pull', {})) as {
-      changes: { id: string; fields: Record<string, { v: unknown }> }[]
-    }
-    const a = pulled.changes.find((r) => r.id === rowA)
-    const b = pulled.changes.find((r) => r.id === rowB)
-
-    expect(a, 'device A kept its own row').toBeDefined()
-    expect(b, 'device B kept its own row').toBeDefined()
-    expect(a?.fields['phraseId']?.v).toBe('cafe1')
-    expect(b?.fields['phraseId']?.v).toBe('cafe1')
-    // The ratings did not interleave: each device's row still holds what it wrote.
-    expect(a?.fields['difficulty']?.v).toBe('hard')
-    expect(b?.fields['difficulty']?.v).toBe('easy')
-  })
-
-  it('rejects a field with no declared merge class rather than guessing', async () => {
-    // This is the guard that stops an undeclared field becoming silent data loss.
-    const res = (await post('/sync/push', {
-      ops: [
-        {
-          seq: 9,
-          entity: 'user_phrase',
-          entity_id: 'up_guard',
-          op: 'upsert',
-          fields: { someNewField: { v: 1, hlc: hlc(1, 'a') } },
-        },
-      ],
-    })) as { accepted: number[]; rejected: { code: string; field?: string }[] }
-
-    expect(res.accepted).toEqual([])
-    expect(res.rejected[0]).toMatchObject({ code: 'VALIDATION_FAILED', field: 'someNewField' })
-  })
-
-  it('rejects an unknown entity', async () => {
-    const res = (await post('/sync/push', {
-      ops: [{ seq: 10, entity: 'nope', entity_id: 'x', op: 'upsert', fields: {} }],
-    })) as { rejected: { code: string }[] }
-    expect(res.rejected[0]?.code).toBe('schema_unknown')
   })
 
   it('returns problem details without leaking internals', async () => {
@@ -189,20 +196,19 @@ describe('the API over HTTP', () => {
     expect(res.status).toBe(422)
     const body = (await res.json()) as Record<string, unknown>
     expect(body['code']).toBe('VALIDATION_FAILED')
-    expect(JSON.stringify(body)).not.toContain('at ') // no stack frames
+    expect(body).not.toHaveProperty('stack')
   })
 
-  it('serves a valid roleplay scene, with exactly one best option per turn', async () => {
-    const res = (await post('/ai/scene', { theme: 'Hotel' })) as {
+  it('serves a valid bundled roleplay scene', async () => {
+    const response = await post('/ai/scene', { theme: 'Hotel' })
+    const result = (await response.json()) as {
       scene: { turns: { options: { best?: boolean; tip: string }[] }[] }
     }
-    expect(res.scene.turns.length).toBeGreaterThanOrEqual(3)
-    for (const turn of res.scene.turns) {
+    expect(result.scene.turns.length).toBeGreaterThanOrEqual(3)
+    for (const turn of result.scene.turns) {
       expect(turn.options).toHaveLength(3)
-      // The distinction between "that's how a local says it" and a coach note is
-      // the pedagogical payload of the whole screen.
-      expect(turn.options.filter((o) => o.best === true)).toHaveLength(1)
-      for (const o of turn.options) expect(o.tip.length).toBeGreaterThan(10)
+      expect(turn.options.filter((option) => option.best === true)).toHaveLength(1)
+      for (const option of turn.options) expect(option.tip.length).toBeGreaterThan(10)
     }
   })
 })

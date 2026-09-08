@@ -55,11 +55,11 @@ artifacts' own working names), so this table is the reliable mapping.
 ## Current implementation and browser coverage
 
 This is the repository inventory, not a claim that a built route already satisfies every behaviour
-below. As of 2026-07-30, **7 of the 23 learner screens have Expo routes**. The other 16 remain
+below. As of 2026-09-08, **8 of the 23 learner screens have Expo routes**. The other 15 remain
 target behaviour in the blueprint and functional spec; they must not be treated as runnable app
 surfaces. `apps/mobile/app/_layout.tsx` is the shell and is not counted as a learner screen.
 
-The browser suites exercise **22 declared learner-visible states across all 7 routes** through
+The browser suites exercise the declared learner-visible states across all built routes through
 [`apps/mobile/e2e/states.ts`](../../apps/mobile/e2e/states.ts). A route being present is only the
 first coverage gate: sheets, empty states, completion states, and other materially different views
 need their own manifest entries.
@@ -70,7 +70,8 @@ need their own manifest entries.
 | 2     | Add phrases          | `/add`                     | `add · discover`; `add · browse grid`; `add · theme drilled`; `add · theme fully added`; `add · difficulty sheet`; `add · no matches` |
 | 3     | Phrase detail        | `/phrase/[id]`             | `phrase detail`; `phrase detail · edited`; `phrase detail · unknown id` (the remove confirmation lands on Today)                      |
 | 4     | Adaptive stream      | `/practice/stream`         | `stream · first phrase`; `stream · all learned`                                                                                       |
-| 5–10  | Loop A practice      | — not implemented          | —                                                                                                                                     |
+| 5 | Speak to progress | `/practice/speak` | `speak · initial reveal`; `speak · partial reveal`; `speak · revealed reveal`; `speak · empty` |
+| 6–10 | Remaining Loop A practice | — not implemented | — |
 | 11    | Today                | `/`                        | `today · seeded`; `today · switcher`; `today · nothing in rotation`; `today · remove undo offered`                                    |
 | 12    | The Refrain          | `/practice/refrain`        | `refrain · first rep`; `refrain · locked in`; `refrain · set complete`                                                                |
 | 13–14 | Run and Phrasebook   | — not implemented          | —                                                                                                                                     |
@@ -80,6 +81,7 @@ need their own manifest entries.
 | 20–21 | Survival, Souvenir   | — not implemented          | —                                                                                                                                     |
 | 22–23 | Open chat, Inspector | — not implemented          | —                                                                                                                                     |
 
+Languages, Account and storage opening/recovery are utility/shell states in the same manifest.
 The state names above are the executable inventory; the numbered sections in this catalog and the
 functional spec remain the product taxonomy. The `spec` labels in `states.ts` use those canonical
 section numbers; new coverage must link to the actual heading rather than copy a neighbouring label.
@@ -318,7 +320,7 @@ not record plays, and the phrase card explains that audio is unavailable.
 
 ---
 
-## Current-surface divergences — the seven built routes
+## Current-surface divergences
 
 Every place a built route departs from the applicable authored `renderVals()`, with the reason and
 the plan that closes it. Audited screen by screen against `Loro.dc.html`'s logic classes and `sc-if`
@@ -369,6 +371,15 @@ an inert control shaped like a working one is not.
 | Speed chip 1× · 1.25× · 1.5× · 0.75× (`cycleSpeed`, `2559`)     | Absent                                       | `P3-06` | Plan 62. Nothing to set a rate on.                                                        |
 | Animated equaliser (`606–611`)                                  | Absent                                       | `P3-03` | Plan 62. It animates unconditionally in the blueprint, which reads as "audio is playing". |
 | Up-next rows carry `♥` and a difficulty pill that cycles on tap | The pill is decorative; the row opens detail | `P3-09` | One action per row (`accessibility.md`); the row states the action it has.                |
+
+### 5 · Speak
+
+The route implements capability-gated on-device recognition and assisted reveal from
+`Loro.dc.html:688–739`. An unavailable platform/language has working reveal/skip controls; reveal
+never claims spoken success. Transcript matching uses the canonical Rust boundary. Prompt-to-onset
+latency remains null until native onset measurement is validated. Physical-device speech accuracy,
+installed-language coverage and audible model playback still require the acceptance described in
+[plan 63](../../plans/63-native-speech-speak-and-latency.md).
 
 ### 11 · Today
 

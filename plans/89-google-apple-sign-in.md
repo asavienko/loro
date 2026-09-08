@@ -3,7 +3,7 @@
 - **Requirement IDs:** `F-01`, `F-02`, `F-07`
 - **Status:** ✅ Implemented and verified. Live provider configuration and native device
   verification remain deployment/release prerequisites.
-- **Parent:** 67; intentionally implements identity separately from unfinished plans 59/66/68.
+- **Parent:** 67; plan 94 integrates this completed provider identity with durable plans 59/66/68.
 
 ## Scope
 
@@ -12,8 +12,10 @@ Google and Apple, nonce/state validation, PKCE-bound one-use app handoff, Postgr
 refresh-family persistence, short-lived access JWTs, refresh rotation and revocation. Native refresh
 credentials use SecureStore; browser credentials stay in memory. First sign-in creates an account;
 subsequent sign-ins use provider issuer/subject, never email-based automatic linking. Local learning
-data is untouched. No claim, sync, export, deletion or magic-link implementation is implied.
-Provider consoles, deployment secrets and real-device verification are external setup.
+data is retained on sign-out. This plan's original identity delivery is now integrated with plan
+94's installation binding, email/code sign-in and tenant-scoped progress sync. Export/deletion and
+deliberate account linking remain in plan 67. Provider consoles, deployment secrets and real-device
+verification are external setup.
 
 ## Sequence and verification
 
@@ -26,9 +28,9 @@ Provider consoles, deployment secrets and real-device verification are external 
 
 The authored artifacts do not specify sign-in. Account is an optional utility in the existing
 spine/switcher, composing existing primitives. English/Bulgarian/Russian copy explains account
-creation and the current lack of cloud sync. Sign-out retains local learning data.
+creation and real connection/sync status. Sign-out retains local learning data.
 
-## Verification record (2026-09-07)
+## Original verification record (2026-09-07)
 
 - `pnpm check`: 23/23 tasks pass; 601 JS/TS tests pass by default, with the PostgreSQL-only
   concurrency test also passing in its dedicated run (602 total).
@@ -38,3 +40,12 @@ creation and the current lack of cloud sync. Sign-out retains local learning dat
 - `pnpm --filter @loro/mobile bundle`: iOS Hermes export succeeds.
 - Provider JWT fixtures and browser transport are test-only. No real Google/Apple credentials,
   production deployment, account merge, or physical-device sign-in is claimed.
+
+## Integration record (plan 94)
+
+The Google/Apple authorization-code flow, nonce/state validation, PKCE one-use handoff and
+provider-subject identity are preserved while session issuance and learning sync share the durable
+authenticated account. Legacy credentials require a safe upgrade/re-authentication path; they are
+not copied into a new identity by email. Merged-suite validation is recorded in
+[plan 94](94-persistent-practice-and-account-integration.md). Historical counts above describe the
+original plan-89 delivery, not the merged runtime.

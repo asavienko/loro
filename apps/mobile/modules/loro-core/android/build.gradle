@@ -1,0 +1,54 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'app.loro'
+version = '0.1.0'
+
+def rustProject = file('../../../../../packages/core-rs')
+def rustOutput = layout.buildDirectory.dir('rust-jniLibs')
+def rustTargets = (findProperty('reactNativeArchitectures') ?: 'arm64-v8a,armeabi-v7a,x86,x86_64').toString()
+
+android {
+  if (rootProject.hasProperty('ndkPath')) {
+    ndkPath rootProject.ext.ndkPath
+  }
+  if (rootProject.hasProperty('ndkVersion')) {
+    ndkVersion rootProject.ext.ndkVersion
+  }
+  namespace 'expo.modules.lorocore'
+  defaultConfig {
+    versionCode 1
+    versionName '0.1.0'
+    consumerProguardFiles 'consumer-rules.pro'
+  }
+  sourceSets {
+    main {
+      java.srcDir new File(rustProject, 'bindings')
+      jniLibs.srcDir rustOutput
+    }
+  }
+}
+
+dependencies {
+  // Use the Android AAR: it contains libjnidispatch for every supported ABI.
+  // 5.18.1 includes the fixes for Android devices using 16 KiB memory pages.
+  implementation 'net.java.dev.jna:jna:5.18.1@aar'
+}
+
+def buildLoroRust = tasks.register('buildLoroRust', Exec) {
+  inputs.files(fileTree(new File(rustProject, 'src')), new File(rustProject, 'Cargo.toml'), new File(rustProject, 'Cargo.lock'))
+  inputs.file('../scripts/build-android.sh')
+  inputs.property('architectures', rustTargets)
+  inputs.property('minSdk', providers.provider { android.defaultConfig.minSdkVersion.apiLevel })
+  inputs.property('ndkVersion', providers.provider { android.ndkVersion })
+  outputs.dir(rustOutput)
+  doFirst {
+    environment 'ANDROID_NDK_HOME', android.ndkDirectory.absolutePath
+    environment 'LORO_ANDROID_MIN_SDK', android.defaultConfig.minSdkVersion.apiLevel.toString()
+    commandLine 'bash', file('../scripts/build-android.sh').absolutePath, rustOutput.get().asFile.absolutePath, rustTargets
+  }
+}
+
+tasks.named('preBuild').configure { dependsOn buildLoroRust }

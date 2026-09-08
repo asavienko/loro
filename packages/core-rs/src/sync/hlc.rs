@@ -72,9 +72,9 @@ impl Ord for Hlc {
 #[must_use]
 #[uniffi::export]
 pub fn tick(last: &Hlc, wall_ms: i64, node_id: &str) -> Hlc {
-    let physical = last.physical.max(wall_ms);
+    let mut physical = last.physical.max(wall_ms);
     let logical = if physical == last.physical {
-        last.logical + 1
+        advance(&mut physical, last.logical)
     } else {
         0
     };
@@ -89,13 +89,13 @@ pub fn tick(last: &Hlc, wall_ms: i64, node_id: &str) -> Hlc {
 #[must_use]
 #[uniffi::export]
 pub fn receive(last: &Hlc, remote: &Hlc, wall_ms: i64, node_id: &str) -> Hlc {
-    let physical = last.physical.max(remote.physical).max(wall_ms);
+    let mut physical = last.physical.max(remote.physical).max(wall_ms);
     let logical = if physical == last.physical && physical == remote.physical {
-        last.logical.max(remote.logical) + 1
+        advance(&mut physical, last.logical.max(remote.logical))
     } else if physical == last.physical {
-        last.logical + 1
+        advance(&mut physical, last.logical)
     } else if physical == remote.physical {
-        remote.logical + 1
+        advance(&mut physical, remote.logical)
     } else {
         0
     };
@@ -104,6 +104,14 @@ pub fn receive(last: &Hlc, remote: &Hlc, wall_ms: i64, node_id: &str) -> Hlc {
         logical,
         node_id: node_id.to_string(),
     }
+}
+
+/// Carry a full logical counter into the next physical millisecond.
+fn advance(physical: &mut i64, logical: u32) -> u32 {
+    logical.checked_add(1).unwrap_or_else(|| {
+        *physical = physical.saturating_add(1);
+        0
+    })
 }
 
 /// Hours of clock skew beyond which the client clamps toward server time.
@@ -116,7 +124,23 @@ pub const MAX_SKEW_HOURS: i64 = 24;
 #[must_use]
 #[uniffi::export]
 pub fn is_skewed(client: &Hlc, server_ms: i64) -> bool {
-    client.physical - server_ms > MAX_SKEW_HOURS * MS_PER_HOUR
+    client.physical.saturating_sub(server_ms) > MAX_SKEW_HOURS * MS_PER_HOUR
+}
+
+/// Clamp an implausibly future reading toward an authoritative server wall time.
+/// The write remains valid; its erroneous physical clock cannot dominate indefinitely.
+#[must_use]
+#[uniffi::export]
+pub fn clamp_to_server(value: &Hlc, server_ms: i64) -> Hlc {
+    if is_skewed(value, server_ms) {
+        Hlc {
+            physical: server_ms,
+            logical: value.logical,
+            node_id: value.node_id.clone(),
+        }
+    } else {
+        value.clone()
+    }
 }
 
 #[cfg(test)]

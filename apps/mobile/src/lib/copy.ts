@@ -1,6 +1,8 @@
 /** F-08. Reactive readers translate at access time; domain and UI layers share this adapter. */
 import { message, formatBuckets, currentNativeLanguage } from './i18n'
+import { persistenceCopy } from './i18n/persistence'
 export const copy = {
+  persistence: persistenceCopy,
   account: {
     backend: {
       get checking() {
@@ -22,32 +24,14 @@ export const copy = {
         return message('account.backend.retry')
       },
     },
-    get retry() {
-      return message('account.retry')
-    },
-    get title() {
-      return message('account.title')
-    },
-    get intro() {
-      return message('account.intro')
-    },
-    get localData() {
-      return message('account.localData')
-    },
     get google() {
       return message('account.google')
     },
     get apple() {
       return message('account.apple')
     },
-    get signedIn() {
-      return message('account.signedIn')
-    },
-    get signOut() {
-      return message('account.signOut')
-    },
-    get unavailable() {
-      return message('account.unavailable')
+    get localData() {
+      return message('account.localData')
     },
     get busy() {
       return message('account.busy')
@@ -55,11 +39,177 @@ export const copy = {
     get error() {
       return message('account.error')
     },
+    get 'provider-error'() {
+      return message('account.error')
+    },
     get cancelled() {
       return message('account.cancelled')
     },
     get localSignOut() {
       return message('account.localSignOut')
+    },
+    get retry() {
+      return message('account.retry')
+    },
+    get providersUnavailable() {
+      return message('account.providersUnavailable')
+    },
+    get 'upgrade-sign-in'() {
+      return message('account.upgrade-sign-in')
+    },
+    get 'upgrade-offline'() {
+      return message('account.upgrade-offline')
+    },
+    get title() {
+      return message('account.title')
+    },
+    get intro() {
+      return message('account.intro')
+    },
+    get email() {
+      return message('account.email')
+    },
+    get code() {
+      return message('account.code')
+    },
+    get send() {
+      return message('account.send')
+    },
+    get verify() {
+      return message('account.verify')
+    },
+    get sent() {
+      return message('account.sent')
+    },
+    get working() {
+      return message('account.working')
+    },
+    get signedIn() {
+      return message('account.signedIn')
+    },
+    get signOut() {
+      return message('account.signOut')
+    },
+    get signOutNote() {
+      return message('account.signOutNote')
+    },
+    get syncNow() {
+      return message('account.syncNow')
+    },
+    get syncing() {
+      return message('account.syncing')
+    },
+    get synced() {
+      return message('account.synced')
+    },
+    get syncPending() {
+      return message('account.syncPending')
+    },
+    get syncError() {
+      return message('account.syncError')
+    },
+    get unconfigured() {
+      return message('account.unconfigured')
+    },
+    get network() {
+      return message('account.network')
+    },
+    get 'invalid-code'() {
+      return message('account.invalid-code')
+    },
+    get unavailable() {
+      return message('account.unavailable')
+    },
+    get 'account-mismatch'() {
+      return message('account.account-mismatch')
+    },
+    get storage() {
+      return message('account.storage')
+    },
+    get webNote() {
+      return message('account.webNote')
+    },
+    get differentEmail() {
+      return message('account.differentEmail')
+    },
+  },
+  audioSpeech: {
+    get hear() {
+      return message('audioSpeech.hear')
+    },
+    get stop() {
+      return message('audioSpeech.stop')
+    },
+    get play() {
+      return message('audioSpeech.play')
+    },
+    get tts() {
+      return message('audioSpeech.tts')
+    },
+    get unavailable() {
+      return message('audioSpeech.unavailable')
+    },
+    get error() {
+      return message('audioSpeech.error')
+    },
+    get loading() {
+      return message('audioSpeech.loading')
+    },
+    get playing() {
+      return message('audioSpeech.playing')
+    },
+    get speakTitle() {
+      return message('audioSpeech.speakTitle')
+    },
+    get speakIntro() {
+      return message('audioSpeech.speakIntro')
+    },
+    get privacy() {
+      return message('audioSpeech.privacy')
+    },
+    get revealMode() {
+      return message('audioSpeech.revealMode')
+    },
+    get reveal() {
+      return message('audioSpeech.reveal')
+    },
+    get listen() {
+      return message('audioSpeech.listen')
+    },
+    get listening() {
+      return message('audioSpeech.listening')
+    },
+    get stopListening() {
+      return message('audioSpeech.stopListening')
+    },
+    get heardNothing() {
+      return message('audioSpeech.heardNothing')
+    },
+    get retry() {
+      return message('audioSpeech.retry')
+    },
+    get revealedDone() {
+      return message('audioSpeech.revealedDone')
+    },
+    get spokenDone() {
+      return message('audioSpeech.spokenDone')
+    },
+    get next() {
+      return message('audioSpeech.next')
+    },
+    get skip() {
+      return message('audioSpeech.skip')
+    },
+    get practiceSpeak() {
+      return message('audioSpeech.practiceSpeak')
+    },
+    wordProgress: (revealed: number, total: number): string =>
+      message('audioSpeech.wordProgress', { revealed, total }),
+    get hiddenWord() {
+      return message('audioSpeech.hiddenWord')
+    },
+    get saveError() {
+      return message('audioSpeech.saveError')
     },
   },
   languages: {

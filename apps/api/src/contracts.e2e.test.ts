@@ -1,56 +1,95 @@
-/** F-04: exercise the observed API, without installing target validation middleware. */
+/** F-04: unchanged content/AI contracts plus the implemented authenticated target sync. */
 import { Test } from '@nestjs/testing'
-import type { INestApplication } from '@nestjs/common'
+import type { ExecutionContext, INestApplication } from '@nestjs/common'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { currentOperations, ProblemSchema, ReadinessSchema } from '@loro/core/api/current'
+import { targetOperations } from '@loro/core/api/target'
 import { AppModule } from './app.module.js'
+import { AuthGuard, type AuthenticatedRequest } from './auth/auth.guard.js'
 import { ProblemDetailsFilter } from './common/problem-filter.js'
+import { DATABASE } from './database/database.js'
+import { InMemorySyncRepository } from './sync/sync.repository.memory.js'
+import { SYNC_REPOSITORY } from './sync/sync.repository.js'
 import { mergeAvailable } from './sync/merge.js'
 import * as mergeModule from './sync/merge.js'
 
 let app: INestApplication
 let base: string
 beforeAll(async () => {
-  const module = await Test.createTestingModule({ imports: [AppModule] }).compile()
+  const module = await Test.createTestingModule({ imports: [AppModule] })
+    .overrideProvider(SYNC_REPOSITORY)
+    .useValue(new InMemorySyncRepository())
+    .overrideProvider(DATABASE)
+    .useValue({ ready: () => Promise.resolve(true) })
+    .overrideGuard(AuthGuard)
+    .useValue({
+      canActivate(context: ExecutionContext) {
+        const request = context.switchToHttp().getRequest<AuthenticatedRequest>()
+        request.principal = {
+          userId: 'contract-learner',
+          deviceId: 'contract-device',
+          sessionId: 'contract-session',
+        }
+        return true
+      },
+    })
+    .compile()
   app = module.createNestApplication()
   app.setGlobalPrefix('v1')
   app.useGlobalFilters(new ProblemDetailsFilter())
-  await app.init()
-  await app.listen(0)
+  await app.listen(0, '127.0.0.1')
   base = await app.getUrl()
 })
 afterAll(async () => {
   await app.close()
 })
 
+const rowId = '0197f2a0-0000-7000-8000-000000000001'
+const headers = { 'content-type': 'application/json', 'x-loro-device': 'contract-device' }
 const requests: Record<string, { suffix?: string; body?: unknown }> = {
   contentPack: { suffix: '?id=cafe' },
   contentDiff: { suffix: '?from=0' },
   syncPush: {
     body: {
+      client_hlc: '1000:0000:contract',
       ops: [
         {
           seq: 1,
           entity: 'user_phrase',
-          entity_id: 'contract-row',
+          entity_id: rowId,
           op: 'upsert',
-          fields: { reps: { v: 2, hlc: { physical: 1, logical: 0, node_id: 'contract' } } },
+          fields: {
+            targetLocale: { v: 'es-ES', hlc: '1000:0000:contract' },
+            source: { v: 'starter', hlc: '1000:0000:contract' },
+            addedAt: { v: 1000, hlc: '1000:0000:contract' },
+            phraseId: { v: 'cafe1', hlc: '1000:0000:contract' },
+            reps: { v: 2, hlc: '1000:0000:contract' },
+          },
         },
       ],
     },
   },
-  syncPull: { body: { since: 'ignored', limit: 1 } },
-  syncStatus: { body: {} },
+  syncPull: { body: { since: null, limit: 1 } },
   aiScene: { body: {} },
 }
-describe('current HTTP contracts', () => {
-  it('returns the readiness checks body on a real HTTP 503 when WASM is unavailable', async () => {
+const unchanged = currentOperations.filter(
+  (operation) =>
+    ['health', 'readiness'].includes(operation.id) ||
+    operation.id.startsWith('content') ||
+    operation.id.startsWith('ai'),
+)
+const migrated = targetOperations.filter((operation) =>
+  ['syncPush', 'syncPull'].includes(operation.id),
+)
+
+describe('implemented HTTP contracts', () => {
+  it('returns readiness checks JSON on a real 503 when WASM is unavailable', async () => {
     const unavailable = vi.spyOn(mergeModule, 'mergeAvailable').mockReturnValue(false)
     try {
-      const res = await fetch(`${base}/v1/health/ready`)
-      expect(res.status).toBe(503)
-      expect(res.headers.get('content-type')).toContain('application/json')
-      expect(ReadinessSchema.parse(await res.json())).toMatchObject({
+      const response = await fetch(`${base}/v1/health/ready`)
+      expect(response.status).toBe(503)
+      expect(response.headers.get('content-type')).toContain('application/json')
+      expect(ReadinessSchema.parse(await response.json())).toMatchObject({
         status: 'degraded',
         checks: { merge: 'unavailable' },
       })
@@ -59,67 +98,75 @@ describe('current HTTP contracts', () => {
     }
   })
 
-  it('requires the real WASM for contract verification', () => {
+  it('requires real WASM for contract verification', () => {
     expect(mergeAvailable()).toBe(true)
   })
-  // Configured auth routes have their own HTTP suite with a verified identity-provider seam.
-  for (const operation of currentOperations.filter(
-    (operation) => !operation.id.startsWith('oauth'),
-  )) {
+
+  for (const operation of [...unchanged, ...migrated]) {
     it(`${operation.method} ${operation.path}`, async () => {
-      const req = requests[operation.id]
-      const res = await fetch(`${base}/v1${operation.path}${req?.suffix ?? ''}`, {
+      const request = requests[operation.id]
+      const response = await fetch(`${base}/v1${operation.path}${request?.suffix ?? ''}`, {
         method: operation.method.toUpperCase(),
         ...(operation.method === 'post'
-          ? {
-              headers: { 'content-type': 'application/json' },
-              body: JSON.stringify(req?.body ?? {}),
-            }
+          ? { headers, body: JSON.stringify(request?.body ?? {}) }
           : {}),
       })
-      const status = operation.method === 'post' ? 201 : 200
-      expect(res.status).toBe(status)
-      const response = operation.responses[res.status]
-      expect(response).toBeDefined()
-      response?.schema.parse(await res.json())
+      const expectedStatus = operation.id.startsWith('sync')
+        ? 200
+        : operation.method === 'post'
+          ? 201
+          : 200
+      expect(response.status).toBe(expectedStatus)
+      const contract = operation.responses[response.status]
+      expect(contract).toBeDefined()
+      contract?.schema.parse(await response.json())
     })
   }
-  it('keeps unknown-pack 422 and per-op partial rejection distinct', async () => {
+
+  it('keeps unknown-pack 422 and sync per-op partial rejection distinct', async () => {
     const missing = await fetch(`${base}/v1/content/pack?id=missing`)
     expect(missing.status).toBe(422)
     expect(ProblemSchema.parse(await missing.json()).code).toBe('VALIDATION_FAILED')
-    const res = await fetch(`${base}/v1/sync/push`, {
+    const response = await fetch(`${base}/v1/sync/push`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers,
       body: JSON.stringify({
+        client_hlc: '1000:0000:contract',
         ops: [
-          { seq: 2, entity: 'unknown', entity_id: 'x', op: 'upsert' },
+          { seq: 2, entity: 'unknown', entity_id: rowId, op: 'upsert' },
           {
             seq: 3,
             entity: 'user_phrase',
-            entity_id: 'x',
+            entity_id: rowId,
             op: 'upsert',
-            fields: { bad: { v: 1, hlc: { physical: 1, logical: 0, node_id: 'contract' } } },
+            fields: { bad: { v: 1, hlc: '1000:0000:contract' } },
           },
-          { seq: 4, entity: 'user_phrase', entity_id: 'contract-row', op: 'delete', deleted_at: 2 },
+          { seq: 4, entity: 'user_phrase', entity_id: rowId, op: 'delete', deleted_at: 2000 },
         ],
       }),
     })
-    expect(res.status).toBe(201)
-    expect(await res.json()).toMatchObject({
+    expect(response.status).toBe(200)
+    expect(await response.json()).toMatchObject({
       accepted: [4],
       rejected: [
-        { seq: 2, code: 'schema_unknown' },
-        { seq: 3, code: 'VALIDATION_FAILED', field: 'bad' },
+        { seq: 2, index: 0, code: 'VALIDATION_FAILED' },
+        { seq: 3, index: 1, code: 'VALIDATION_FAILED' },
       ],
     })
   })
-  it('documents framework malformed JSON and missing-route problems', async () => {
-    const malformed = await fetch(`${base}/v1/sync/push`, {
+
+  it('rejects a device header inconsistent with the authenticated session', async () => {
+    const response = await fetch(`${base}/v1/sync/pull`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: '{',
+      headers: { ...headers, 'x-loro-device': 'other-device' },
+      body: JSON.stringify({ since: null }),
     })
+    expect(response.status).toBe(403)
+    expect(ProblemSchema.parse(await response.json()).code).toBe('FORBIDDEN')
+  })
+
+  it('documents framework malformed JSON and missing-route problems', async () => {
+    const malformed = await fetch(`${base}/v1/sync/push`, { method: 'POST', headers, body: '{' })
     expect(malformed.status).toBe(400)
     expect(ProblemSchema.parse(await malformed.json()).code).toBe('INTERNAL')
     const missing = await fetch(`${base}/v1/missing`)

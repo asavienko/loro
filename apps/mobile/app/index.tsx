@@ -1,3 +1,4 @@
+import { rustCoreFacade } from '../src/store/coreFacade'
 import { useLocale } from '../src/lib/i18n'
 /**
  * Today — the ritual home, drawn on the v1.1 navigation shell.
@@ -32,7 +33,6 @@ import { useBottomBar } from '../src/ui/BottomBarContext'
 import {
   DEFAULT_REP_TARGET,
   LOCK_IN_DAYS_TO_GRADUATE,
-  automaticity,
   repsToday as repsTodayOf,
   streak as streakOf,
 } from '@loro/core'
@@ -119,7 +119,7 @@ export default function Today() {
       return {
         ...toView(p),
         repsToday: reps,
-        automaticity: automaticity(reps, DEFAULT_REP_TARGET),
+        automaticity: rustCoreFacade.automaticity(reps, DEFAULT_REP_TARGET),
       }
     })
   const lockedIn = set.filter(isLockedIn).length

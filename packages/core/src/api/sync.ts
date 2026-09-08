@@ -1,4 +1,5 @@
 import { supportsPair } from '../domain/languages.js'
+import { FSRS_ALGORITHM, LEGACY_PREVIEW_ALGORITHM } from '../domain/phrase.js'
 /** Target sync values, independent of storage/merge implementations. F-01/F-02/F-04. */
 import { z } from 'zod'
 import {
@@ -21,6 +22,9 @@ import { FIELD_POLICY } from '../sync/fieldPolicy.js'
 
 export const MAX_SYNC_OPS = 500
 export const MAX_SYNC_BYTES = 512 * 1024
+/** Only known scheduling policies may label persisted state; absence remains a legacy wire case. */
+export const FsrsAlgorithmSchema = z.enum([FSRS_ALGORITHM, LEGACY_PREVIEW_ALGORITHM])
+export type FsrsAlgorithm = z.infer<typeof FsrsAlgorithmSchema>
 const Note = z.string().max(2000)
 const Source = z.enum([
   'starter',
@@ -71,6 +75,7 @@ export const userPhraseValues = {
   srsLastReview: T.nullable(),
   srsLapses: N,
   srsState: z.enum(['new', 'learning', 'review', 'relearning']),
+  srsAlgorithm: FsrsAlgorithmSchema,
   repsToday: N,
   repsTodayDay: LocalDateSchema.nullable(),
   automaticity: z.number().min(0).max(100),
@@ -124,7 +129,20 @@ export const reviewLogValues = {
   stability: z.number().nonnegative(),
   difficulty: z.number().min(0).max(10),
   due: T,
+  algorithm: FsrsAlgorithmSchema,
+  targetLocale: userPhraseValues.targetLocale,
+  lastReview: T.nullable(),
+  lapses: N,
+  state: userPhraseValues.srsState,
 }
+/** Complete journal evidence; historical logs may carry only the known algorithm. */
+export const reviewLogJournalFields = [
+  'algorithm',
+  'targetLocale',
+  'lastReview',
+  'lapses',
+  'state',
+] as const
 export const latencySampleValues = {
   ...LogBase,
   engine: EngineSchema,
@@ -184,7 +202,12 @@ export const UserPhraseFieldsSchema = z
   .partial()
   .superRefine((fields, ctx) => {
     const present = fsrsFields.filter((key) => Object.hasOwn(fields, key))
-    if (present.length > 0 && present.length !== fsrsFields.length)
+    // Six-field preview operations remain byte-for-byte equivalent after validation, so an
+    // already-receipted sequence keeps its original digest. The runtime assigns known legacy
+    // provenance only after replay lookup; provenance never travels apart from schedule state.
+    const completeLegacyGroup =
+      !Object.hasOwn(fields, 'srsAlgorithm') && present.length === fsrsFields.length - 1
+    if (present.length > 0 && present.length !== fsrsFields.length && !completeLegacyGroup)
       ctx.addIssue({
         code: 'custom',
         message: 'FSRS update must carry the complete latest-review group',
@@ -195,12 +218,30 @@ export const UserPhraseFieldsSchema = z
       ctx.addIssue({ code: 'custom', message: 'Creating an own phrase requires Spanish text' })
   })
 const SettingsFields = z.strictObject(fieldShape(settingsValues)).partial()
+export const ReviewLogFieldsSchema = z
+  .strictObject(fieldShape(reviewLogValues))
+  .partial({ algorithm: true, targetLocale: true, lastReview: true, lapses: true, state: true })
+  .superRefine((fields, ctx) => {
+    // Earlier persisted/attempted logs already carried an algorithm without journal state.
+    // Keep those operations unchanged for receipt replay; they remain shadow records only.
+    const present = reviewLogJournalFields.filter(
+      (key) => key !== 'algorithm' && Object.hasOwn(fields, key),
+    )
+    if (
+      present.length > 0 &&
+      (present.length !== reviewLogJournalFields.length - 1 || !Object.hasOwn(fields, 'algorithm'))
+    )
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Review journal provenance and scheduling state must travel together',
+      })
+  })
 export const fieldsByEntity = {
   user_phrase: UserPhraseFieldsSchema,
   settings: SettingsFields,
   refrain_day: z.strictObject(fieldShape(refrainDayValues)).partial(),
   streak_day: z.strictObject(fieldShape(streakDayValues)).partial(),
-  review_log: z.strictObject(fieldShape(reviewLogValues)),
+  review_log: ReviewLogFieldsSchema,
   latency_sample: z.strictObject(fieldShape(latencySampleValues)),
   take: z.strictObject(fieldShape(takeValues)),
   session: z.strictObject(fieldShape(sessionValues)),
@@ -208,7 +249,19 @@ export const fieldsByEntity = {
 }
 export type SyncEntity = keyof typeof fieldsByEntity
 export function rowIdFor(entity: SyncEntity) {
-  if (entity === 'refrain_day' || entity === 'streak_day') return LocalDateSchema
+  // Legacy Spanish days remain readable. New course days cannot collide across targets.
+  if (entity === 'refrain_day')
+    return z.union([
+      LocalDateSchema,
+      z.string().refine((value) => {
+        const separator = value.indexOf(':')
+        return (
+          ['es-ES', 'bg-BG', 'ru-RU'].includes(value.slice(0, separator)) &&
+          LocalDateSchema.safeParse(value.slice(separator + 1)).success
+        )
+      }, 'Expected a course locale and local date'),
+    ])
+  if (entity === 'streak_day') return LocalDateSchema
   if (entity === 'settings') return z.literal('settings')
   return Id
 }
@@ -231,7 +284,23 @@ function opFor<K extends SyncEntity>(entity: K) {
   ])
 }
 export const PushOpSchema = z.union([
-  opFor('user_phrase'),
+  z.union([
+    z.strictObject({
+      seq: N,
+      entity: z.literal('user_phrase'),
+      entity_id: Id,
+      op: z.literal('upsert'),
+      fields: UserPhraseFieldsSchema,
+      replaces: z.strictObject({ id: Id, deleted_at: T }).optional(),
+    }),
+    z.strictObject({
+      seq: N,
+      entity: z.literal('user_phrase'),
+      entity_id: Id,
+      op: z.literal('delete'),
+      deleted_at: T,
+    }),
+  ]),
   opFor('settings'),
   opFor('refrain_day'),
   opFor('streak_day'),
@@ -273,10 +342,18 @@ export function validatePushBatch(input: unknown) {
 }
 export const PushResponseSchema = z.looseObject({
   accepted: z.array(N),
+  aliases: z
+    .array(z.strictObject({ from: Id, to: Id }))
+    .max(MAX_SYNC_OPS)
+    .optional(),
   rejected: z.array(SyncRejectionSchema),
   conflicts: z.array(z.string()),
   server_hlc: HlcSchema,
   server_time: T,
+  /** Receipt-scoped normalization survives a lost response and later replay. */
+  clock_corrections: z
+    .array(z.strictObject({ seq: N, field: z.string(), from: HlcSchema, to: HlcSchema }))
+    .optional(),
 })
 export const PullRequestSchema = z.strictObject({
   since: CursorSchema.nullable(),
@@ -299,7 +376,26 @@ function changeFor<K extends SyncEntity>(entity: K) {
   ])
 }
 export const ChangeSchema = z.union([
-  changeFor('user_phrase'),
+  z.union([
+    z.strictObject({
+      entity: z.literal('user_phrase'),
+      entity_id: Id,
+      fields: UserPhraseFieldsSchema,
+      deleted_at: z.null(),
+    }),
+    z.strictObject({
+      entity: z.literal('user_phrase'),
+      entity_id: Id,
+      fields: z.strictObject({}),
+      deleted_at: T,
+      catalog_identity: z
+        .strictObject({
+          phraseId: CatalogIdSchema,
+          targetLocale: z.enum(['es-ES', 'bg-BG', 'ru-RU']),
+        })
+        .optional(),
+    }),
+  ]),
   changeFor('settings'),
   changeFor('refrain_day'),
   changeFor('streak_day'),
@@ -310,6 +406,7 @@ export const ChangeSchema = z.union([
   changeFor('attempt'),
 ])
 export const PullResponseSchema = z.looseObject({
+  aliases: z.array(z.strictObject({ from: Id, to: Id })).optional(),
   changes: z.array(ChangeSchema).max(500),
   next: CursorSchema,
   has_more: z.boolean(),

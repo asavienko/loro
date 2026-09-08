@@ -1,41 +1,37 @@
-/**
- * Sync — docs/architecture/sync-protocol.md
- *
- * Routes only. The arbitration is in `SyncService`, which needs no HTTP to test, and the
- * merge itself is in `loro-core`: THE SERVER RUNS THE SAME MERGE AS THE CLIENT. Two
- * implementations of a conflict rule diverge, and the divergence shows up months later
- * as a learner losing a rating (ADR-0002).
- */
-
-import { Body, Controller, Inject, Post } from '@nestjs/common'
-import {
-  SyncService,
-  type PullBody,
-  type PullResponse,
-  type PushBody,
-  type PushResponse,
-  type StatusResponse,
-} from './sync.service.js'
+import { Body, Controller, Header, HttpCode, Inject, Post, Req, UseGuards } from '@nestjs/common'
+import { AuthGuard, type AuthenticatedRequest } from '../auth/auth.guard.js'
+import { LoroError } from '../common/errors.js'
+import { SyncService } from './sync.service.js'
 
 @Controller('sync')
+@UseGuards(AuthGuard)
 export class SyncController {
-  // Explicit @Inject: the dev runner is esbuild-based and does not emit
-  // `design:paramtypes`, so type-only constructor injection resolves to undefined.
   constructor(@Inject(SyncService) private readonly sync: SyncService) {}
 
+  private device(request: AuthenticatedRequest) {
+    if (request.headers['x-loro-device'] !== request.principal.deviceId)
+      throw new LoroError('FORBIDDEN')
+    return request.principal
+  }
+
   @Post('push')
-  push(@Body() body: PushBody): Promise<PushResponse> {
-    return this.sync.push(body)
+  @HttpCode(200)
+  @Header('Cache-Control', 'no-store')
+  push(@Req() request: AuthenticatedRequest, @Body() body: unknown) {
+    return this.sync.push(this.device(request), body)
   }
 
   @Post('pull')
-  pull(@Body() body: PullBody): Promise<PullResponse> {
-    return this.sync.pull(body)
+  @HttpCode(200)
+  @Header('Cache-Control', 'no-store')
+  pull(@Req() request: AuthenticatedRequest, @Body() body: unknown) {
+    return this.sync.pull(this.device(request), body)
   }
 
-  /** Diagnostic: is the shared Rust merge actually loaded? */
   @Post('status')
-  status(): Promise<StatusResponse> {
-    return this.sync.status()
+  @HttpCode(200)
+  @Header('Cache-Control', 'no-store')
+  status(@Req() request: AuthenticatedRequest) {
+    return this.sync.status(this.device(request))
   }
 }

@@ -1,11 +1,12 @@
 //! Set selection and cloze masking — Loop B's daily choices.
 //!
-//! **Status: partial.** Automaticity and the mode rotation are implemented; the full
-//! priority-ordered set selection lands in M2 with the Refrain.
-//!
 //! See docs/architecture/scheduling.md#3--automaticity--loop-b
 
-use crate::PhraseState;
+use std::collections::HashSet;
+
+use serde::{Deserialize, Serialize};
+
+use crate::Difficulty;
 
 /// Reps per phrase per day. Overlearning is deliberate: the target does **not**
 /// shorten when rep 1 was perfect (`Loro.dc.html:1536`, `3361`).
@@ -69,7 +70,8 @@ pub fn refrain_set_size(daily_minutes: u32) -> u32 {
 ///
 /// Six reps of one phrase are six different cognitive events — imitation, synchrony,
 /// compression, generation, translation, free recall — not one event six times.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize, uniffi::Enum)]
+#[serde(rename_all = "lowercase")]
 pub enum RefrainMode {
     /// Hear it, then say it back.
     Echo,
@@ -153,14 +155,98 @@ pub fn effort_state(reps: u32, automaticity_pct: u8) -> EffortState {
     }
 }
 
-/// Which tokens to blank for Cloze mode.
+/// Which whitespace-delimited token to blank for Cloze mode.
 ///
-/// # Panics
-/// Not yet implemented — lands in M2. Must select the most informative **content**
-/// word, never an article or preposition.
+/// The longest alphabetic content token wins; equal lengths prefer the first token.
+/// Punctuation and case do not affect selection. Explicit language-specific function
+/// words are excluded; unsupported languages and phrases without content return no
+/// mask. This deterministic lexical heuristic is not a part-of-speech classifier.
 #[must_use]
-pub fn cloze_mask(_es: &str) -> Vec<u32> {
-    todo!("M2: select the most informative content word, never a function word")
+#[uniffi::export]
+// Keep owned inputs at the public FFI boundary, matching the JSON bridge.
+#[allow(clippy::needless_pass_by_value)]
+pub fn cloze_mask(text: String, language: String) -> Vec<u32> {
+    let locale_prefix = language.split(['-', '_']).next().unwrap_or("");
+    let stop_words = match locale_prefix.to_ascii_lowercase().as_str() {
+        "es" => SPANISH_FUNCTION_WORDS,
+        "bg" => BULGARIAN_FUNCTION_WORDS,
+        "ru" => RUSSIAN_FUNCTION_WORDS,
+        _ => return Vec::new(),
+    };
+    let mut longest = 0;
+    let mut selected = None;
+    for (index, token) in text.split_whitespace().enumerate() {
+        let bare: String = token.chars().filter(|c| c.is_alphabetic()).collect();
+        let word = bare.to_lowercase();
+        let length = word.chars().count();
+        if length > longest && !stop_words.split_whitespace().any(|stop| stop == word) {
+            longest = length;
+            selected = u32::try_from(index).ok();
+        }
+    }
+    selected.into_iter().collect()
+}
+
+// Keep the inventory in the canonical core so every platform masks the same token.
+// These cover articles, prepositions, conjunctions, pronouns and common auxiliaries.
+const SPANISH_FUNCTION_WORDS: &str = "a al ante bajo cabe con contra de del desde durante en entre \
+    hacia hasta mediante para por según sin so sobre tras través versus vía el la los las lo un una unos \
+    unas y e ni o u pero aunque sino pues porque que como cuando donde mientras si me te se nos os \
+    le les yo tú tu usted ustedes él ella ello nosotros nosotras vosotros vosotras ellos ellas mí \
+    ti sí mi mis tus su sus nuestro nuestra nuestros nuestras vuestro vuestra vuestros vuestras \
+    este esta estos estas ese esa esos esas aquel aquella aquellos aquellas esto eso aquello \
+    soy eres es somos sois son sea seas sean ser sido siendo era eras éramos erais eran fui fuiste \
+    fue fuimos fuisteis fueron he has ha hemos habéis han haber habido hay había habías habíamos \
+    habíais habían estoy estás está estamos estáis están estar estado estando no más menos muy tan \
+    tanto tanta tantos tantas cada todo toda todos todas algún alguno alguna algunos algunas \
+    ningún ninguno ninguna nada nadie algo alguien cual cuales cuál cuáles quien quienes quién \
+    quiénes qué cómo cuándo dónde cuánto cuánta cuántos cuántas cuyo cuya cuyos cuyas";
+
+const BULGARIAN_FUNCTION_WORDS: &str = "и или но а че ако да не без в във до за зад из към край \
+    между на над о от по под пред през при с със след срещу сред у чрез около покрай извън въпреки \
+    освен според аз ти той тя то ние вие те ме те го я ни ви ги ми му ѝ й им си се мен мене тебе \
+    него нея нас вас тях мой моя мое мои моят моята моето моите твой твоя твое твои твоята твоето \
+    твоите наш наша наше наши ваш ваша ваше ваши негов негова негово негови неин нейна нейно нейни \
+    техен тяхна тяхно техни този тази това тези онзи онази онова онези кой коя кое кои какъв каква \
+    какво какви който която което които никой никоя никое никои някой някоя някое някои всеки всяка \
+    всяко всички всичко нищо нещо сам сама само съм си е сме сте са бях беше бяхме бяхте бяха бъда \
+    бъдеш бъде бъдем бъдете бъдат бил била било били ще щях щеше щяхме щяхте щяха ли дали защото \
+    понеже затова когато докато където както макар обаче защо как кога къде тук там тогава \
+    един една едно едни едната едното едните единят единият много малко още вече";
+
+const RUSSIAN_FUNCTION_WORDS: &str = "и а но да или либо что чтобы если когда где как потому поэтому \
+    пока хотя ведь без безо в во до для из изо к ко между на над надо о об обо от ото по под подо \
+    перед передо при про ради с со сквозь среди у через изза изпод вокруг вдоль вместо внутри вне возле \
+    вследствие мимо напротив около после посреди против согласно я ты он она оно мы вы они меня \
+    тебя его него её ее неё нее нас вас их мне тебе ему ей нам вам им мной мною тобой тобою ним ней нами вами \
+    ними себе себя собой собою кто кого кому кем чём чем что чей чья чьё чье чьи мой моя моё мое \
+    мои твой твоя твоё твое твои наш наша наше наши ваш ваша ваше ваши свой своя своё свое свои \
+    этот эта это эти тот та то те такого такой такая такое такие который которая которое которые \
+    каждый каждая каждое каждые весь вся всё все никто никого ничего ничто никуда некоторый \
+    некоторая некоторое некоторые какой какая какое какие сколько столько не ни бы б же ж ли ль \
+    уже ещё еще только даже вот вон очень тоже также лишь ну есть был была было были быть буду \
+    будешь будет будем будете будут пусть пускай";
+
+/// Selection inputs independent of the larger native phrase-state record.
+#[derive(Debug, Clone, Serialize, Deserialize, uniffi::Record)]
+#[serde(rename_all = "camelCase")]
+pub struct RefrainCandidate {
+    /// The learner's phrase row id.
+    pub id: String,
+    /// Learner-declared difficulty, used when automaticity ties.
+    pub difficulty: Difficulty,
+    /// A learned phrase has left the active stream.
+    pub learned: bool,
+    /// A graduated phrase has left Refrain rotation.
+    pub graduated: bool,
+    /// Distinct local days locked in; one through three take first priority.
+    pub lock_in_days: u32,
+    /// Historical automaticity percentage.
+    pub automaticity: u8,
+    /// Total practice repetitions; zero means new material.
+    pub reps: u32,
+    /// Epoch milliseconds, to fill with the earliest unpractised phrase first.
+    pub added_at: i64,
 }
 
 /// Choose today's closed set.
@@ -168,21 +254,285 @@ pub fn cloze_mask(_es: &str) -> Vec<u32> {
 /// Priority order: phrases mid-graduation → today's trip drop → weakest by
 /// automaticity → new material. Persisted once per day and **never recomputed
 /// mid-day**, so a learner can always finish the set they were shown.
-///
-/// # Panics
-/// Not yet implemented — lands in M2.
+/// The caller owns the local-day boundary and persistence. This pure selector only
+/// chooses eligible ids and never reads a clock. Ties use Unicode scalar ordering
+/// rather than locale-sensitive collation, so devices cannot disagree.
 #[must_use]
+#[uniffi::export]
+// Keep owned inputs at the public FFI boundary, matching the JSON bridge.
+#[allow(clippy::needless_pass_by_value)]
 pub fn select_refrain_set(
-    _candidates: &[PhraseState],
-    _size: u32,
-    _local_day: &str,
+    candidates: Vec<RefrainCandidate>,
+    size: u32,
+    trip_phrase_ids: Vec<String>,
 ) -> Vec<String> {
-    todo!("M2: priority-ordered selection; see docs/architecture/scheduling.md")
+    let size = usize::try_from(size).unwrap_or(usize::MAX);
+    let eligible: Vec<_> = candidates
+        .iter()
+        .filter(|p| !p.learned && !p.graduated)
+        .collect();
+    let trip: HashSet<_> = trip_phrase_ids.iter().collect();
+    let mut picked = Vec::new();
+    let mut seen = HashSet::new();
+    let mut take = |p: &RefrainCandidate| {
+        if picked.len() < size && seen.insert(p.id.clone()) {
+            picked.push(p.id.clone());
+        }
+    };
+
+    let mut rotating: Vec<_> = eligible
+        .iter()
+        .copied()
+        .filter(|p| p.lock_in_days > 0 && p.lock_in_days < LOCK_IN_DAYS_TO_GRADUATE)
+        .collect();
+    rotating.sort_by(|a, b| b.lock_in_days.cmp(&a.lock_in_days).then(a.id.cmp(&b.id)));
+    for p in rotating {
+        take(p);
+    }
+
+    let mut trip_drop: Vec<_> = eligible
+        .iter()
+        .copied()
+        .filter(|p| trip.contains(&p.id))
+        .collect();
+    trip_drop.sort_by(|a, b| a.id.cmp(&b.id));
+    for p in trip_drop {
+        take(p);
+    }
+
+    let mut practiced: Vec<_> = eligible.iter().copied().filter(|p| p.reps > 0).collect();
+    practiced.sort_by(|a, b| {
+        a.automaticity
+            .cmp(&b.automaticity)
+            .then(difficulty_weight(b.difficulty).cmp(&difficulty_weight(a.difficulty)))
+            .then(a.id.cmp(&b.id))
+    });
+    for p in practiced {
+        take(p);
+    }
+
+    let mut new: Vec<_> = eligible.iter().copied().filter(|p| p.reps == 0).collect();
+    new.sort_by(|a, b| a.added_at.cmp(&b.added_at).then(a.id.cmp(&b.id)));
+    for p in new {
+        take(p);
+    }
+    picked
+}
+
+const fn difficulty_weight(difficulty: Difficulty) -> u8 {
+    match difficulty {
+        Difficulty::Easy => 0,
+        Difficulty::Med => 1,
+        Difficulty::Hard => 2,
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn candidate(id: &str) -> RefrainCandidate {
+        RefrainCandidate {
+            id: id.to_owned(),
+            difficulty: Difficulty::Med,
+            learned: false,
+            graduated: false,
+            lock_in_days: 0,
+            automaticity: 0,
+            reps: 0,
+            added_at: 0,
+        }
+    }
+
+    #[test]
+    fn cloze_masks_content_in_each_supported_language() {
+        for (phrase, language, expected) in [
+            ("Durante el verano", "es-ES", vec![2]),
+            ("¿Dónde está la estación?", "es", vec![3]),
+            ("Според нея дом", "bg-BG", vec![2]),
+            ("Искам чаша вода.", "bg", vec![0]),
+            ("Согласно ей дом", "ru-RU", vec![2]),
+            ("Где ближайший ресторан?", "ru", vec![1]),
+        ] {
+            assert_eq!(
+                cloze_mask(phrase.to_owned(), language.to_owned()),
+                expected,
+                "{phrase}"
+            );
+        }
+    }
+
+    #[test]
+    fn cloze_uses_whitespace_tokens_unicode_length_and_earliest_ties() {
+        assert_eq!(
+            cloze_mask("  ¿Café?\t  Agua.\n té  ".to_owned(), "ES_es".to_owned()),
+            vec![0]
+        );
+        assert_eq!(
+            cloze_mask("чай молоко".to_owned(), "ru".to_owned()),
+            vec![1]
+        );
+    }
+
+    #[test]
+    fn cloze_does_not_invent_a_content_word() {
+        for (phrase, language) in [
+            ("", "es"),
+            ("¿?! 123 —", "es"),
+            ("Él y ella durante", "es"),
+            ("със нея въпреки", "bg"),
+            ("он из-за неё", "ru"),
+            ("some content", "en"),
+        ] {
+            assert!(cloze_mask(phrase.to_owned(), language.to_owned()).is_empty());
+        }
+    }
+
+    #[test]
+    fn every_declared_function_word_is_excluded() {
+        for (words, language) in [
+            (SPANISH_FUNCTION_WORDS, "es"),
+            (BULGARIAN_FUNCTION_WORDS, "bg"),
+            (RUSSIAN_FUNCTION_WORDS, "ru"),
+        ] {
+            assert!(cloze_mask(words.to_owned(), language.to_owned()).is_empty());
+        }
+    }
+
+    #[test]
+    fn selector_applies_all_four_priorities_without_duplicates() {
+        let mut rotating = candidate("rotating");
+        rotating.lock_in_days = 2;
+        rotating.reps = 12;
+        rotating.automaticity = 100;
+        let trip = candidate("trip");
+        let mut weak = candidate("weak");
+        weak.reps = 1;
+        weak.automaticity = 17;
+        let new = candidate("new");
+        assert_eq!(
+            select_refrain_set(
+                vec![new, weak, trip.clone(), rotating.clone(), rotating],
+                4,
+                vec![trip.id, "rotating".to_owned(), "absent".to_owned()]
+            ),
+            ["rotating", "trip", "weak", "new"]
+        );
+    }
+
+    #[test]
+    fn selector_excludes_both_forms_of_inactive_phrase() {
+        let mut learned = candidate("learned");
+        learned.learned = true;
+        learned.lock_in_days = 3;
+        let mut graduated = candidate("graduated");
+        graduated.graduated = true;
+        graduated.reps = 1;
+        assert_eq!(
+            select_refrain_set(
+                vec![learned, graduated, candidate("active")],
+                8,
+                vec!["learned".to_owned(), "graduated".to_owned()]
+            ),
+            ["active"]
+        );
+    }
+
+    #[test]
+    fn selector_limits_output_and_handles_empty_inputs() {
+        assert!(select_refrain_set(vec![candidate("one")], 0, vec![]).is_empty());
+        assert!(select_refrain_set(vec![], 8, vec![]).is_empty());
+        assert_eq!(
+            select_refrain_set(vec![candidate("one")], u32::MAX, vec![]),
+            ["one"]
+        );
+        assert_eq!(
+            select_refrain_set(vec![candidate("two"), candidate("one")], 1, vec![]),
+            ["one"]
+        );
+    }
+
+    #[test]
+    fn rotation_prefers_the_nearest_graduation_then_lexical_ids() {
+        let candidates = [("z", 3), ("a", 3), ("b", 1), ("c", 2)]
+            .map(|(id, days)| {
+                let mut phrase = candidate(id);
+                phrase.lock_in_days = days;
+                phrase
+            })
+            .to_vec();
+        assert_eq!(
+            select_refrain_set(candidates, 4, vec![]),
+            ["a", "z", "c", "b"]
+        );
+    }
+
+    #[test]
+    fn weakness_precedes_difficulty_and_lexical_ids_break_ties() {
+        let candidates = [
+            ("strong", 90, Difficulty::Hard),
+            ("easy", 50, Difficulty::Easy),
+            ("medium", 50, Difficulty::Med),
+            ("z-hard", 50, Difficulty::Hard),
+            ("a-hard", 50, Difficulty::Hard),
+            ("weak", 17, Difficulty::Easy),
+        ]
+        .map(|(id, automaticity, difficulty)| {
+            let mut phrase = candidate(id);
+            phrase.reps = 1;
+            phrase.automaticity = automaticity;
+            phrase.difficulty = difficulty;
+            phrase
+        })
+        .to_vec();
+        assert_eq!(
+            select_refrain_set(candidates, 6, vec![]),
+            ["weak", "a-hard", "z-hard", "medium", "easy", "strong"]
+        );
+    }
+
+    #[test]
+    fn new_material_prefers_oldest_addition_and_locale_independent_ids() {
+        let candidates = [("z", 10), ("ä", 10), ("A", 10), ("a", 20)]
+            .map(|(id, added_at)| {
+                let mut phrase = candidate(id);
+                phrase.added_at = added_at;
+                phrase
+            })
+            .to_vec();
+        assert_eq!(
+            select_refrain_set(candidates, 4, vec![]),
+            ["A", "z", "ä", "a"]
+        );
+    }
+
+    #[test]
+    fn selection_does_not_depend_on_candidate_or_trip_order() {
+        let candidates = ["z", "a", "b", "c"].map(candidate).to_vec();
+        let expected =
+            select_refrain_set(candidates.clone(), 3, vec!["z".to_owned(), "b".to_owned()]);
+        for shift in 0..candidates.len() {
+            let mut reordered = candidates.clone();
+            reordered.rotate_left(shift);
+            reordered.reverse();
+            assert_eq!(
+                select_refrain_set(reordered, 3, vec!["b".to_owned(), "z".to_owned()]),
+                expected
+            );
+        }
+        assert_eq!(expected, ["b", "z", "a"]);
+    }
+
+    #[test]
+    fn selection_record_uses_the_same_wire_fields_as_the_app() {
+        let wire = serde_json::json!({
+            "id": "coffee", "difficulty": "hard", "learned": false,
+            "graduated": false, "lockInDays": 1, "automaticity": 50,
+            "reps": 3, "addedAt": 1_789_000_000_000_i64,
+        });
+        let candidate: RefrainCandidate = serde_json::from_value(wire.clone()).unwrap();
+        assert_eq!(serde_json::to_value(candidate).unwrap(), wire);
+    }
 
     #[test]
     fn automaticity_reaches_a_hundred_at_the_target() {

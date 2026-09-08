@@ -4,7 +4,7 @@
   "info": {
     "title": "Loro target API",
     "version": "1.0.0",
-    "description": "Planned API, not implemented. Draft operations/components are non-release contracts with explicit gates. Runtime refinements are documented in api-contracts.md."
+    "description": "Target API; consult current API for implemented operations. Draft operations/components are non-release contracts with explicit gates. Runtime refinements are documented in api-contracts.md."
   },
   "servers": [
     {
@@ -6092,9 +6092,16 @@
                 "pattern": "^[a-zA-Z0-9_-]+$"
               },
               "created_at": {
-                "type": "integer",
-                "minimum": 0,
-                "maximum": 9007199254740991
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
               }
             },
             "required": [
@@ -6372,6 +6379,37 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 16384
+          },
+          "device": {
+            "type": "object",
+            "properties": {
+              "installation_id": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+              },
+              "platform": {
+                "type": "string",
+                "enum": [
+                  "ios",
+                  "android",
+                  "web"
+                ]
+              },
+              "app_version": {
+                "type": "string",
+                "maxLength": 100
+              }
+            },
+            "required": [
+              "installation_id",
+              "platform",
+              "app_version"
+            ],
+            "additionalProperties": false
+          },
+          "anon_id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
           }
         },
         "required": [
@@ -6463,6 +6501,28 @@
               "maximum": 9007199254740991
             }
           },
+          "aliases": {
+            "maxItems": 500,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "from": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+                },
+                "to": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+                }
+              },
+              "required": [
+                "from",
+                "to"
+              ],
+              "additionalProperties": false
+            }
+          },
           "rejected": {
             "type": "array",
             "items": {
@@ -6518,6 +6578,37 @@
             "type": "integer",
             "minimum": 0,
             "maximum": 9007199254740991
+          },
+          "clock_corrections": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "seq": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "field": {
+                  "type": "string"
+                },
+                "from": {
+                  "type": "string",
+                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                },
+                "to": {
+                  "type": "string",
+                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                }
+              },
+              "required": [
+                "seq",
+                "field",
+                "from",
+                "to"
+              ],
+              "additionalProperties": false
+            }
           }
         },
         "required": [
@@ -7091,6 +7182,27 @@
                               ],
                               "additionalProperties": false
                             },
+                            "srsAlgorithm": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "type": "string",
+                                  "enum": [
+                                    "fsrs-6-default-c8ca282-loro-v1",
+                                    "fsrs-6/py-fsrs-6.3.2/default-90-no-steps"
+                                  ]
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
                             "repsToday": {
                               "type": "object",
                               "properties": {
@@ -7315,6 +7427,25 @@
                               "additionalProperties": false
                             }
                           },
+                          "additionalProperties": false
+                        },
+                        "replaces": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+                            },
+                            "deleted_at": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 9007199254740991
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "deleted_at"
+                          ],
                           "additionalProperties": false
                         }
                       },
@@ -7746,9 +7877,16 @@
                           "const": "refrain_day"
                         },
                         "entity_id": {
-                          "type": "string",
-                          "format": "date",
-                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                            },
+                            {
+                              "type": "string"
+                            }
+                          ]
                         },
                         "op": {
                           "type": "string",
@@ -7875,9 +8013,16 @@
                           "const": "refrain_day"
                         },
                         "entity_id": {
-                          "type": "string",
-                          "format": "date",
-                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                            },
+                            {
+                              "type": "string"
+                            }
+                          ]
                         },
                         "op": {
                           "type": "string",
@@ -8141,6 +8286,117 @@
                                   "type": "integer",
                                   "minimum": 0,
                                   "maximum": 9007199254740991
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "algorithm": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "type": "string",
+                                  "enum": [
+                                    "fsrs-6-default-c8ca282-loro-v1",
+                                    "fsrs-6/py-fsrs-6.3.2/default-90-no-steps"
+                                  ]
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "targetLocale": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "type": "string",
+                                  "enum": [
+                                    "es-ES",
+                                    "bg-BG",
+                                    "ru-RU"
+                                  ]
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "lastReview": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "anyOf": [
+                                    {
+                                      "type": "integer",
+                                      "minimum": 0,
+                                      "maximum": 9007199254740991
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "lapses": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "state": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "type": "string",
+                                  "enum": [
+                                    "new",
+                                    "learning",
+                                    "review",
+                                    "relearning"
+                                  ]
                                 },
                                 "hlc": {
                                   "type": "string",
@@ -9053,6 +9309,27 @@
       "syncPull_200": {
         "type": "object",
         "properties": {
+          "aliases": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "from": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+                },
+                "to": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+                }
+              },
+              "required": [
+                "from",
+                "to"
+              ],
+              "additionalProperties": false
+            }
+          },
           "changes": {
             "maxItems": 500,
             "type": "array",
@@ -9599,6 +9876,27 @@
                               ],
                               "additionalProperties": false
                             },
+                            "srsAlgorithm": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "type": "string",
+                                  "enum": [
+                                    "fsrs-6-default-c8ca282-loro-v1",
+                                    "fsrs-6/py-fsrs-6.3.2/default-90-no-steps"
+                                  ]
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
                             "repsToday": {
                               "type": "object",
                               "properties": {
@@ -9857,6 +10155,28 @@
                           "type": "integer",
                           "minimum": 0,
                           "maximum": 9007199254740991
+                        },
+                        "catalog_identity": {
+                          "type": "object",
+                          "properties": {
+                            "phraseId": {
+                              "type": "string",
+                              "pattern": "^[a-z0-9]{2,12}$"
+                            },
+                            "targetLocale": {
+                              "type": "string",
+                              "enum": [
+                                "es-ES",
+                                "bg-BG",
+                                "ru-RU"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "phraseId",
+                            "targetLocale"
+                          ],
+                          "additionalProperties": false
                         }
                       },
                       "required": [
@@ -10234,9 +10554,16 @@
                           "const": "refrain_day"
                         },
                         "entity_id": {
-                          "type": "string",
-                          "format": "date",
-                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                            },
+                            {
+                              "type": "string"
+                            }
+                          ]
                         },
                         "fields": {
                           "type": "object",
@@ -10356,9 +10683,16 @@
                           "const": "refrain_day"
                         },
                         "entity_id": {
-                          "type": "string",
-                          "format": "date",
-                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                            },
+                            {
+                              "type": "string"
+                            }
+                          ]
                         },
                         "fields": {
                           "type": "object",
@@ -10601,6 +10935,117 @@
                                   "type": "integer",
                                   "minimum": 0,
                                   "maximum": 9007199254740991
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "algorithm": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "type": "string",
+                                  "enum": [
+                                    "fsrs-6-default-c8ca282-loro-v1",
+                                    "fsrs-6/py-fsrs-6.3.2/default-90-no-steps"
+                                  ]
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "targetLocale": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "type": "string",
+                                  "enum": [
+                                    "es-ES",
+                                    "bg-BG",
+                                    "ru-RU"
+                                  ]
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "lastReview": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "anyOf": [
+                                    {
+                                      "type": "integer",
+                                      "minimum": 0,
+                                      "maximum": 9007199254740991
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "lapses": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "state": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "type": "string",
+                                  "enum": [
+                                    "new",
+                                    "learning",
+                                    "review",
+                                    "relearning"
+                                  ]
                                 },
                                 "hlc": {
                                   "type": "string",
@@ -22165,9 +22610,16 @@
             "pattern": "^[a-zA-Z0-9_-]+$"
           },
           "created_at": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 9007199254740991
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "deletion_scheduled_for": {
             "anyOf": [
@@ -22911,6 +23363,27 @@
                               ],
                               "additionalProperties": false
                             },
+                            "srsAlgorithm": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "type": "string",
+                                  "enum": [
+                                    "fsrs-6-default-c8ca282-loro-v1",
+                                    "fsrs-6/py-fsrs-6.3.2/default-90-no-steps"
+                                  ]
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
                             "repsToday": {
                               "type": "object",
                               "properties": {
@@ -23135,6 +23608,25 @@
                               "additionalProperties": false
                             }
                           },
+                          "additionalProperties": false
+                        },
+                        "replaces": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+                            },
+                            "deleted_at": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 9007199254740991
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "deleted_at"
+                          ],
                           "additionalProperties": false
                         }
                       },
@@ -23566,9 +24058,16 @@
                           "const": "refrain_day"
                         },
                         "entity_id": {
-                          "type": "string",
-                          "format": "date",
-                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                            },
+                            {
+                              "type": "string"
+                            }
+                          ]
                         },
                         "op": {
                           "type": "string",
@@ -23695,9 +24194,16 @@
                           "const": "refrain_day"
                         },
                         "entity_id": {
-                          "type": "string",
-                          "format": "date",
-                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                            },
+                            {
+                              "type": "string"
+                            }
+                          ]
                         },
                         "op": {
                           "type": "string",
@@ -23961,6 +24467,117 @@
                                   "type": "integer",
                                   "minimum": 0,
                                   "maximum": 9007199254740991
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "algorithm": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "type": "string",
+                                  "enum": [
+                                    "fsrs-6-default-c8ca282-loro-v1",
+                                    "fsrs-6/py-fsrs-6.3.2/default-90-no-steps"
+                                  ]
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "targetLocale": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "type": "string",
+                                  "enum": [
+                                    "es-ES",
+                                    "bg-BG",
+                                    "ru-RU"
+                                  ]
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "lastReview": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "anyOf": [
+                                    {
+                                      "type": "integer",
+                                      "minimum": 0,
+                                      "maximum": 9007199254740991
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "lapses": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "state": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "type": "string",
+                                  "enum": [
+                                    "new",
+                                    "learning",
+                                    "review",
+                                    "relearning"
+                                  ]
                                 },
                                 "hlc": {
                                   "type": "string",
@@ -34002,6 +34619,27 @@
                               ],
                               "additionalProperties": false
                             },
+                            "srsAlgorithm": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "type": "string",
+                                  "enum": [
+                                    "fsrs-6-default-c8ca282-loro-v1",
+                                    "fsrs-6/py-fsrs-6.3.2/default-90-no-steps"
+                                  ]
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
                             "repsToday": {
                               "type": "object",
                               "properties": {
@@ -34260,6 +34898,28 @@
                           "type": "integer",
                           "minimum": 0,
                           "maximum": 9007199254740991
+                        },
+                        "catalog_identity": {
+                          "type": "object",
+                          "properties": {
+                            "phraseId": {
+                              "type": "string",
+                              "pattern": "^[a-z0-9]{2,12}$"
+                            },
+                            "targetLocale": {
+                              "type": "string",
+                              "enum": [
+                                "es-ES",
+                                "bg-BG",
+                                "ru-RU"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "phraseId",
+                            "targetLocale"
+                          ],
+                          "additionalProperties": false
                         }
                       },
                       "required": [
@@ -34637,9 +35297,16 @@
                           "const": "refrain_day"
                         },
                         "entity_id": {
-                          "type": "string",
-                          "format": "date",
-                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                            },
+                            {
+                              "type": "string"
+                            }
+                          ]
                         },
                         "fields": {
                           "type": "object",
@@ -34759,9 +35426,16 @@
                           "const": "refrain_day"
                         },
                         "entity_id": {
-                          "type": "string",
-                          "format": "date",
-                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                            },
+                            {
+                              "type": "string"
+                            }
+                          ]
                         },
                         "fields": {
                           "type": "object",
@@ -35004,6 +35678,117 @@
                                   "type": "integer",
                                   "minimum": 0,
                                   "maximum": 9007199254740991
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "algorithm": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "type": "string",
+                                  "enum": [
+                                    "fsrs-6-default-c8ca282-loro-v1",
+                                    "fsrs-6/py-fsrs-6.3.2/default-90-no-steps"
+                                  ]
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "targetLocale": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "type": "string",
+                                  "enum": [
+                                    "es-ES",
+                                    "bg-BG",
+                                    "ru-RU"
+                                  ]
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "lastReview": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "anyOf": [
+                                    {
+                                      "type": "integer",
+                                      "minimum": 0,
+                                      "maximum": 9007199254740991
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "lapses": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                "hlc": {
+                                  "type": "string",
+                                  "pattern": "^\\d{1,16}:\\d{4,10}:[A-Za-z0-9_-]{1,128}$"
+                                }
+                              },
+                              "required": [
+                                "v",
+                                "hlc"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "state": {
+                              "type": "object",
+                              "properties": {
+                                "v": {
+                                  "type": "string",
+                                  "enum": [
+                                    "new",
+                                    "learning",
+                                    "review",
+                                    "relearning"
+                                  ]
                                 },
                                 "hlc": {
                                   "type": "string",

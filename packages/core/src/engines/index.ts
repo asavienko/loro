@@ -9,6 +9,7 @@
 
 export * from './types.js'
 export { StreamEngine, streamStats } from './stream/index.js'
+export { SpeakEngine } from './speak.js'
 
 export {
   RefrainEngine,

@@ -258,6 +258,11 @@ RustBuffer uniffi_loro_core_fn_func_normalize(RustBuffer s, RustCallStatus *_Non
 RustBuffer uniffi_loro_core_fn_func_tokenize(RustBuffer phrase, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_CORE_CALL
+#define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_CORE_CALL
+RustBuffer uniffi_loro_core_fn_func_core_call(RustBuffer method, RustBuffer input, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_DAYS_BETWEEN
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_DAYS_BETWEEN
 RustBuffer uniffi_loro_core_fn_func_days_between(RustBuffer a, RustBuffer b, RustCallStatus *_Nonnull out_status
@@ -323,9 +328,34 @@ float uniffi_loro_core_fn_func_initial_difficulty(RustBuffer declared, RustBuffe
 float uniffi_loro_core_fn_func_nudge_difficulty(float current, RustBuffer declared, RustBuffer tags, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_REVIEW_GRADE
+#define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_REVIEW_GRADE
+RustBuffer uniffi_loro_core_fn_func_review_grade(int8_t success, uint32_t hints_used, RustBuffer self_grade, RustBuffer confidence, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_INITIALIZE
+#define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_INITIALIZE
+RustBuffer uniffi_loro_core_fn_func_initialize(RustBuffer declared, RustBuffer tags, int64_t at_ms, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_RERATE
+#define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_RERATE
+RustBuffer uniffi_loro_core_fn_func_rerate(RustBuffer state, RustBuffer declared, RustBuffer tags, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_RETRIEVABILITY
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_RETRIEVABILITY
-float uniffi_loro_core_fn_func_retrievability(float days_since_review, float stability, RustCallStatus *_Nonnull out_status
+double uniffi_loro_core_fn_func_retrievability(double days_since_review, double stability, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_REVIEW
+#define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_REVIEW
+RustBuffer uniffi_loro_core_fn_func_review(RustBuffer state, RustBuffer grade, int64_t at_ms, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_REVIEW_CONFIDENCE
+#define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_REVIEW_CONFIDENCE
+RustBuffer uniffi_loro_core_fn_func_review_confidence(RustBuffer state, RustBuffer confidence, int64_t at_ms, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_CLIMB
@@ -378,6 +408,11 @@ uint8_t uniffi_loro_core_fn_func_automaticity(uint32_t reps_today, uint32_t targ
 uint32_t uniffi_loro_core_fn_func_beat_ms_for_mode(RustBuffer mode, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_CLOZE_MASK
+#define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_CLOZE_MASK
+RustBuffer uniffi_loro_core_fn_func_cloze_mask(RustBuffer text, RustBuffer language, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_EFFORT_STATE
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_EFFORT_STATE
 RustBuffer uniffi_loro_core_fn_func_effort_state(uint32_t reps, uint8_t automaticity_pct, RustCallStatus *_Nonnull out_status
@@ -396,6 +431,16 @@ RustBuffer uniffi_loro_core_fn_func_model_rate_for_mode(RustBuffer mode, RustCal
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_REFRAIN_SET_SIZE
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_REFRAIN_SET_SIZE
 uint32_t uniffi_loro_core_fn_func_refrain_set_size(uint32_t daily_minutes, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_SELECT_REFRAIN_SET
+#define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_SELECT_REFRAIN_SET
+RustBuffer uniffi_loro_core_fn_func_select_refrain_set(RustBuffer candidates, uint32_t size, RustBuffer trip_phrase_ids, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_CLAMP_TO_SERVER
+#define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_CLAMP_TO_SERVER
+RustBuffer uniffi_loro_core_fn_func_clamp_to_server(RustBuffer value, int64_t server_ms, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_IS_SKEWED
@@ -691,6 +736,12 @@ uint16_t uniffi_loro_core_checksum_func_tokenize(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_CORE_CALL
+#define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_CORE_CALL
+uint16_t uniffi_loro_core_checksum_func_core_call(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_DAYS_BETWEEN
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_DAYS_BETWEEN
 uint16_t uniffi_loro_core_checksum_func_days_between(void
@@ -769,9 +820,39 @@ uint16_t uniffi_loro_core_checksum_func_nudge_difficulty(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_REVIEW_GRADE
+#define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_REVIEW_GRADE
+uint16_t uniffi_loro_core_checksum_func_review_grade(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_INITIALIZE
+#define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_INITIALIZE
+uint16_t uniffi_loro_core_checksum_func_initialize(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_RERATE
+#define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_RERATE
+uint16_t uniffi_loro_core_checksum_func_rerate(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_RETRIEVABILITY
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_RETRIEVABILITY
 uint16_t uniffi_loro_core_checksum_func_retrievability(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_REVIEW
+#define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_REVIEW
+uint16_t uniffi_loro_core_checksum_func_review(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_REVIEW_CONFIDENCE
+#define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_REVIEW_CONFIDENCE
+uint16_t uniffi_loro_core_checksum_func_review_confidence(void
     
 );
 #endif
@@ -835,6 +916,12 @@ uint16_t uniffi_loro_core_checksum_func_beat_ms_for_mode(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_CLOZE_MASK
+#define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_CLOZE_MASK
+uint16_t uniffi_loro_core_checksum_func_cloze_mask(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_EFFORT_STATE
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_EFFORT_STATE
 uint16_t uniffi_loro_core_checksum_func_effort_state(void
@@ -856,6 +943,18 @@ uint16_t uniffi_loro_core_checksum_func_model_rate_for_mode(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_REFRAIN_SET_SIZE
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_REFRAIN_SET_SIZE
 uint16_t uniffi_loro_core_checksum_func_refrain_set_size(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_SELECT_REFRAIN_SET
+#define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_SELECT_REFRAIN_SET
+uint16_t uniffi_loro_core_checksum_func_select_refrain_set(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_CLAMP_TO_SERVER
+#define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_CLAMP_TO_SERVER
+uint16_t uniffi_loro_core_checksum_func_clamp_to_server(void
     
 );
 #endif

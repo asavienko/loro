@@ -30,7 +30,7 @@ const AT = 1_785_231_660_000
  * `packages/core/src/sync/fieldPolicy.test.ts` — a field nobody classified is a signal the
  * learner earned and the store threw away.
  */
-const EVERY_SIGNAL: Required<ProgressDelta> = {
+const EVERY_SIGNAL: Required<Omit<ProgressDelta, 'review'>> = {
   phraseId: userPhraseId('0197f2a0-0000-7000-8000-000000000001'),
   reps: 1,
   plays: 1,
@@ -353,8 +353,9 @@ describe('a real engine delta, round-tripped', () => {
     expect(after.lastPracticedAt).toBe(AT)
     expect(after.srs).not.toBeNull()
     expect(after.srs?.due).toBeGreaterThan(AT)
-    expect(after.axProduction).toBeGreaterThan(0)
-    expect(after.axRecall).toBeGreaterThan(0)
+    // Manual confirmation has no measured DSP evidence for production quality.
+    expect(after.axProduction).toBe(0)
+    expect(after.axRecall).toBe(0)
   })
 
   it('resumes a phrase already part-way through today rather than restarting it', async () => {

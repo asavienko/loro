@@ -1,0 +1,816 @@
+{
+  "reference": "https://github.com/open-spaced-repetition/py-fsrs/tree/v6.3.2",
+  "package": "fsrs==6.3.2",
+  "policy": {
+    "parameters": [
+      0.212, 1.2931, 2.3065, 8.2956, 6.4133, 0.8334, 3.0194, 0.001, 1.8722, 0.1666, 0.796, 1.4835, 0.0614, 0.2629,
+      1.6483, 0.6014, 1.8729, 0.5425, 0.0912, 0.0658, 0.1542
+    ],
+    "desired_retention": 0.9,
+    "learning_steps": [],
+    "relearning_steps": [],
+    "maximum_interval": 36500,
+    "enable_fuzzing": false
+  },
+  "storage_precision": "f32",
+  "cases": [
+    {
+      "name": "first_again",
+      "state": {
+        "stability": 0.0,
+        "difficulty": 5.0,
+        "due": 1709164800000,
+        "last_review": null,
+        "lapses": 0
+      },
+      "grade": "again",
+      "at_ms": 1709164800000,
+      "expected": {
+        "stability": 0.21199999749660492,
+        "difficulty": 6.413300037384033,
+        "due": 1709251200000,
+        "last_review": 1709164800000,
+        "lapses": 0
+      }
+    },
+    {
+      "name": "first_hard",
+      "state": {
+        "stability": 0.0,
+        "difficulty": 5.0,
+        "due": 1709164800000,
+        "last_review": null,
+        "lapses": 0
+      },
+      "grade": "hard",
+      "at_ms": 1709164800000,
+      "expected": {
+        "stability": 1.2930999994277954,
+        "difficulty": 5.112170696258545,
+        "due": 1709251200000,
+        "last_review": 1709164800000,
+        "lapses": 0
+      }
+    },
+    {
+      "name": "first_good",
+      "state": {
+        "stability": 0.0,
+        "difficulty": 5.0,
+        "due": 1709164800000,
+        "last_review": null,
+        "lapses": 0
+      },
+      "grade": "good",
+      "at_ms": 1709164800000,
+      "expected": {
+        "stability": 2.30649995803833,
+        "difficulty": 2.1181039810180664,
+        "due": 1709337600000,
+        "last_review": 1709164800000,
+        "lapses": 0
+      }
+    },
+    {
+      "name": "first_easy",
+      "state": {
+        "stability": 0.0,
+        "difficulty": 5.0,
+        "due": 1709164800000,
+        "last_review": null,
+        "lapses": 0
+      },
+      "grade": "easy",
+      "at_ms": 1709164800000,
+      "expected": {
+        "stability": 8.295599937438965,
+        "difficulty": 1.0,
+        "due": 1709856000000,
+        "last_review": 1709164800000,
+        "lapses": 0
+      }
+    },
+    {
+      "name": "elapsed_0_again",
+      "state": {
+        "stability": 5.0,
+        "difficulty": 5.0,
+        "due": 1709251200000,
+        "last_review": 1709164800000,
+        "lapses": 2
+      },
+      "grade": "again",
+      "at_ms": 1709164800000,
+      "expected": {
+        "stability": 1.596817970275879,
+        "difficulty": 8.34176254272461,
+        "due": 1709337600000,
+        "last_review": 1709164800000,
+        "lapses": 3
+      }
+    },
+    {
+      "name": "elapsed_0_hard",
+      "state": {
+        "stability": 5.0,
+        "difficulty": 5.0,
+        "due": 1709251200000,
+        "last_review": 1709164800000,
+        "lapses": 2
+      },
+      "grade": "hard",
+      "at_ms": 1709164800000,
+      "expected": {
+        "stability": 5.0,
+        "difficulty": 6.6659955978393555,
+        "due": 1709596800000,
+        "last_review": 1709164800000,
+        "lapses": 2
+      }
+    },
+    {
+      "name": "elapsed_0_good",
+      "state": {
+        "stability": 5.0,
+        "difficulty": 5.0,
+        "due": 1709251200000,
+        "last_review": 1709164800000,
+        "lapses": 2
+      },
+      "grade": "good",
+      "at_ms": 1709164800000,
+      "expected": {
+        "stability": 5.0,
+        "difficulty": 4.990228176116943,
+        "due": 1709596800000,
+        "last_review": 1709164800000,
+        "lapses": 2
+      }
+    },
+    {
+      "name": "elapsed_0_easy",
+      "state": {
+        "stability": 5.0,
+        "difficulty": 5.0,
+        "due": 1709251200000,
+        "last_review": 1709164800000,
+        "lapses": 2
+      },
+      "grade": "easy",
+      "at_ms": 1709164800000,
+      "expected": {
+        "stability": 8.129609107971191,
+        "difficulty": 3.3144614696502686,
+        "due": 1709856000000,
+        "last_review": 1709164800000,
+        "lapses": 2
+      }
+    },
+    {
+      "name": "elapsed_600000_again",
+      "state": {
+        "stability": 5.0,
+        "difficulty": 5.0,
+        "due": 1709251200000,
+        "last_review": 1709164800000,
+        "lapses": 2
+      },
+      "grade": "again",
+      "at_ms": 1709165400000,
+      "expected": {
+        "stability": 1.596817970275879,
+        "difficulty": 8.34176254272461,
+        "due": 1709338200000,
+        "last_review": 1709165400000,
+        "lapses": 3
+      }
+    },
+    {
+      "name": "elapsed_600000_hard",
+      "state": {
+        "stability": 5.0,
+        "difficulty": 5.0,
+        "due": 1709251200000,
+        "last_review": 1709164800000,
+        "lapses": 2
+      },
+      "grade": "hard",
+      "at_ms": 1709165400000,
+      "expected": {
+        "stability": 5.0,
+        "difficulty": 6.6659955978393555,
+        "due": 1709597400000,
+        "last_review": 1709165400000,
+        "lapses": 2
+      }
+    },
+    {
+      "name": "elapsed_600000_good",
+      "state": {
+        "stability": 5.0,
+        "difficulty": 5.0,
+        "due": 1709251200000,
+        "last_review": 1709164800000,
+        "lapses": 2
+      },
+      "grade": "good",
+      "at_ms": 1709165400000,
+      "expected": {
+        "stability": 5.0,
+        "difficulty": 4.990228176116943,
+        "due": 1709597400000,
+        "last_review": 1709165400000,
+        "lapses": 2
+      }
+    },
+    {
+      "name": "elapsed_600000_easy",
+      "state": {
+        "stability": 5.0,
+        "difficulty": 5.0,
+        "due": 1709251200000,
+        "last_review": 1709164800000,
+        "lapses": 2
+      },
+      "grade": "easy",
+      "at_ms": 1709165400000,
+      "expected": {
+        "stability": 8.129609107971191,
+        "difficulty": 3.3144614696502686,
+        "due": 1709856600000,
+        "last_review": 1709165400000,
+        "lapses": 2
+      }
+    },
+    {
+      "name": "elapsed_86399999_again",
+      "state": {
+        "stability": 5.0,
+        "difficulty": 5.0,
+        "due": 1709251200000,
+        "last_review": 1709164800000,
+        "lapses": 2
+      },
+      "grade": "again",
+      "at_ms": 1709251199999,
+      "expected": {
+        "stability": 1.596817970275879,
+        "difficulty": 8.34176254272461,
+        "due": 1709423999999,
+        "last_review": 1709251199999,
+        "lapses": 3
+      }
+    },
+    {
+      "name": "elapsed_86399999_hard",
+      "state": {
+        "stability": 5.0,
+        "difficulty": 5.0,
+        "due": 1709251200000,
+        "last_review": 1709164800000,
+        "lapses": 2
+      },
+      "grade": "hard",
+      "at_ms": 1709251199999,
+      "expected": {
+        "stability": 5.0,
+        "difficulty": 6.6659955978393555,
+        "due": 1709683199999,
+        "last_review": 1709251199999,
+        "lapses": 2
+      }
+    },
+    {
+      "name": "elapsed_86399999_good",
+      "state": {
+        "stability": 5.0,
+        "difficulty": 5.0,
+        "due": 1709251200000,
+        "last_review": 1709164800000,
+        "lapses": 2
+      },
+      "grade": "good",
+      "at_ms": 1709251199999,
+      "expected": {
+        "stability": 5.0,
+        "difficulty": 4.990228176116943,
+        "due": 1709683199999,
+        "last_review": 1709251199999,
+        "lapses": 2
+      }
+    },
+    {
+      "name": "elapsed_86399999_easy",
+      "state": {
+        "stability": 5.0,
+        "difficulty": 5.0,
+        "due": 1709251200000,
+        "last_review": 1709164800000,
+        "lapses": 2
+      },
+      "grade": "easy",
+      "at_ms": 1709251199999,
+      "expected": {
+        "stability": 8.129609107971191,
+        "difficulty": 3.3144614696502686,
+        "due": 1709942399999,
+        "last_review": 1709251199999,
+        "lapses": 2
+      }
+    },
+    {
+      "name": "elapsed_86400000_again",
+      "state": {
+        "stability": 5.0,
+        "difficulty": 5.0,
+        "due": 1709251200000,
+        "last_review": 1709164800000,
+        "lapses": 2
+      },
+      "grade": "again",
+      "at_ms": 1709251200000,
+      "expected": {
+        "stability": 0.8457261919975281,
+        "difficulty": 8.34176254272461,
+        "due": 1709337600000,
+        "last_review": 1709251200000,
+        "lapses": 3
+      }
+    },
+    {
+      "name": "elapsed_86400000_hard",
+      "state": {
+        "stability": 5.0,
+        "difficulty": 5.0,
+        "due": 1709251200000,
+        "last_review": 1709164800000,
+        "lapses": 2
+      },
+      "grade": "hard",
+      "at_ms": 1709251200000,
+      "expected": {
+        "stability": 6.966099262237549,
+        "difficulty": 6.6659955978393555,
+        "due": 1709856000000,
+        "last_review": 1709251200000,
+        "lapses": 2
+      }
+    },
+    {
+      "name": "elapsed_86400000_good",
+      "state": {
+        "stability": 5.0,
+        "difficulty": 5.0,
+        "due": 1709251200000,
+        "last_review": 1709164800000,
+        "lapses": 2
+      },
+      "grade": "good",
+      "at_ms": 1709251200000,
+      "expected": {
+        "stability": 8.269204139709473,
+        "difficulty": 4.990228176116943,
+        "due": 1709942400000,
+        "last_review": 1709251200000,
+        "lapses": 2
+      }
+    },
+    {
+      "name": "elapsed_86400000_easy",
+      "state": {
+        "stability": 5.0,
+        "difficulty": 5.0,
+        "due": 1709251200000,
+        "last_review": 1709164800000,
+        "lapses": 2
+      },
+      "grade": "easy",
+      "at_ms": 1709251200000,
+      "expected": {
+        "stability": 11.122891426086426,
+        "difficulty": 3.3144614696502686,
+        "due": 1710201600000,
+        "last_review": 1709251200000,
+        "lapses": 2
+      }
+    },
+    {
+      "name": "elapsed_259200000_again",
+      "state": {
+        "stability": 5.0,
+        "difficulty": 5.0,
+        "due": 1709251200000,
+        "last_review": 1709164800000,
+        "lapses": 2
+      },
+      "grade": "again",
+      "at_ms": 1709424000000,
+      "expected": {
+        "stability": 0.905779242515564,
+        "difficulty": 8.34176254272461,
+        "due": 1709510400000,
+        "last_review": 1709424000000,
+        "lapses": 3
+      }
+    },
+    {
+      "name": "elapsed_259200000_hard",
+      "state": {
+        "stability": 5.0,
+        "difficulty": 5.0,
+        "due": 1709251200000,
+        "last_review": 1709164800000,
+        "lapses": 2
+      },
+      "grade": "hard",
+      "at_ms": 1709424000000,
+      "expected": {
+        "stability": 10.054617881774902,
+        "difficulty": 6.6659955978393555,
+        "due": 1710288000000,
+        "last_review": 1709424000000,
+        "lapses": 2
+      }
+    },
+    {
+      "name": "elapsed_259200000_good",
+      "state": {
+        "stability": 5.0,
+        "difficulty": 5.0,
+        "due": 1709251200000,
+        "last_review": 1709164800000,
+        "lapses": 2
+      },
+      "grade": "good",
+      "at_ms": 1709424000000,
+      "expected": {
+        "stability": 13.404751777648926,
+        "difficulty": 4.990228176116943,
+        "due": 1710547200000,
+        "last_review": 1709424000000,
+        "lapses": 2
+      }
+    },
+    {
+      "name": "elapsed_259200000_easy",
+      "state": {
+        "stability": 5.0,
+        "difficulty": 5.0,
+        "due": 1709251200000,
+        "last_review": 1709164800000,
+        "lapses": 2
+      },
+      "grade": "easy",
+      "at_ms": 1709424000000,
+      "expected": {
+        "stability": 20.741260528564453,
+        "difficulty": 3.3144614696502686,
+        "due": 1711238400000,
+        "last_review": 1709424000000,
+        "lapses": 2
+      }
+    },
+    {
+      "name": "elapsed_31536000000_again",
+      "state": {
+        "stability": 5.0,
+        "difficulty": 5.0,
+        "due": 1709251200000,
+        "last_review": 1709164800000,
+        "lapses": 2
+      },
+      "grade": "again",
+      "at_ms": 1740700800000,
+      "expected": {
+        "stability": 1.7940921783447266,
+        "difficulty": 8.34176254272461,
+        "due": 1740873600000,
+        "last_review": 1740700800000,
+        "lapses": 3
+      }
+    },
+    {
+      "name": "elapsed_31536000000_hard",
+      "state": {
+        "stability": 5.0,
+        "difficulty": 5.0,
+        "due": 1709251200000,
+        "last_review": 1709164800000,
+        "lapses": 2
+      },
+      "grade": "hard",
+      "at_ms": 1740700800000,
+      "expected": {
+        "stability": 47.11868667602539,
+        "difficulty": 6.6659955978393555,
+        "due": 1744761600000,
+        "last_review": 1740700800000,
+        "lapses": 2
+      }
+    },
+    {
+      "name": "elapsed_31536000000_good",
+      "state": {
+        "stability": 5.0,
+        "difficulty": 5.0,
+        "due": 1709251200000,
+        "last_review": 1709164800000,
+        "lapses": 2
+      },
+      "grade": "good",
+      "at_ms": 1740700800000,
+      "expected": {
+        "stability": 75.03439331054688,
+        "difficulty": 4.990228176116943,
+        "due": 1747180800000,
+        "last_review": 1740700800000,
+        "lapses": 2
+      }
+    },
+    {
+      "name": "elapsed_31536000000_easy",
+      "state": {
+        "stability": 5.0,
+        "difficulty": 5.0,
+        "due": 1709251200000,
+        "last_review": 1709164800000,
+        "lapses": 2
+      },
+      "grade": "easy",
+      "at_ms": 1740700800000,
+      "expected": {
+        "stability": 136.16741943359375,
+        "difficulty": 3.3144614696502686,
+        "due": 1752451200000,
+        "last_review": 1740700800000,
+        "lapses": 2
+      }
+    },
+    {
+      "name": "history_0",
+      "state": {
+        "stability": 0.0,
+        "difficulty": 5.0,
+        "due": 1709164800000,
+        "last_review": null,
+        "lapses": 0
+      },
+      "grade": "again",
+      "at_ms": 1709164800000,
+      "expected": {
+        "stability": 0.21199999749660492,
+        "difficulty": 6.413300037384033,
+        "due": 1709251200000,
+        "last_review": 1709164800000,
+        "lapses": 0
+      }
+    },
+    {
+      "name": "history_1",
+      "state": {
+        "stability": 0.21199999749660492,
+        "difficulty": 6.413300037384033,
+        "due": 1709251200000,
+        "last_review": 1709164800000,
+        "lapses": 0
+      },
+      "grade": "hard",
+      "at_ms": 1709165400000,
+      "expected": {
+        "stability": 0.21199999749660492,
+        "difficulty": 7.604209899902344,
+        "due": 1709251800000,
+        "last_review": 1709165400000,
+        "lapses": 0
+      }
+    },
+    {
+      "name": "history_2",
+      "state": {
+        "stability": 0.21199999749660492,
+        "difficulty": 7.604209899902344,
+        "due": 1709251800000,
+        "last_review": 1709165400000,
+        "lapses": 0
+      },
+      "grade": "good",
+      "at_ms": 1709166000000,
+      "expected": {
+        "stability": 0.24668918550014496,
+        "difficulty": 7.59183406829834,
+        "due": 1709252400000,
+        "last_review": 1709166000000,
+        "lapses": 0
+      }
+    },
+    {
+      "name": "history_3",
+      "state": {
+        "stability": 0.24668918550014496,
+        "difficulty": 7.59183406829834,
+        "due": 1709252400000,
+        "last_review": 1709166000000,
+        "lapses": 0
+      },
+      "grade": "good",
+      "at_ms": 1709252400000,
+      "expected": {
+        "stability": 1.5622445344924927,
+        "difficulty": 7.579470634460449,
+        "due": 1709425200000,
+        "last_review": 1709252400000,
+        "lapses": 0
+      }
+    },
+    {
+      "name": "history_4",
+      "state": {
+        "stability": 1.5622445344924927,
+        "difficulty": 7.579470634460449,
+        "due": 1709425200000,
+        "last_review": 1709252400000,
+        "lapses": 0
+      },
+      "grade": "easy",
+      "at_ms": 1709684400000,
+      "expected": {
+        "stability": 11.800827980041504,
+        "difficulty": 6.755870819091797,
+        "due": 1710721200000,
+        "last_review": 1709684400000,
+        "lapses": 0
+      }
+    },
+    {
+      "name": "history_5",
+      "state": {
+        "stability": 11.800827980041504,
+        "difficulty": 6.755870819091797,
+        "due": 1710721200000,
+        "last_review": 1709684400000,
+        "lapses": 0
+      },
+      "grade": "again",
+      "at_ms": 1712276400000,
+      "expected": {
+        "stability": 1.6818374395370483,
+        "difficulty": 8.918905258178711,
+        "due": 1712449200000,
+        "last_review": 1712276400000,
+        "lapses": 1
+      }
+    },
+    {
+      "name": "history_6",
+      "state": {
+        "stability": 1.6818374395370483,
+        "difficulty": 8.918905258178711,
+        "due": 1712449200000,
+        "last_review": 1712276400000,
+        "lapses": 1
+      },
+      "grade": "again",
+      "at_ms": 1712277000000,
+      "expected": {
+        "stability": 0.5770388841629028,
+        "difficulty": 9.62987995147705,
+        "due": 1712363400000,
+        "last_review": 1712277000000,
+        "lapses": 2
+      }
+    },
+    {
+      "name": "history_7",
+      "state": {
+        "stability": 0.5770388841629028,
+        "difficulty": 9.62987995147705,
+        "due": 1712363400000,
+        "last_review": 1712277000000,
+        "lapses": 2
+      },
+      "grade": "good",
+      "at_ms": 1712277600000,
+      "expected": {
+        "stability": 0.6286442279815674,
+        "difficulty": 9.615478515625,
+        "due": 1712364000000,
+        "last_review": 1712277600000,
+        "lapses": 2
+      }
+    },
+    {
+      "name": "history_8",
+      "state": {
+        "stability": 0.6286442279815674,
+        "difficulty": 9.615478515625,
+        "due": 1712364000000,
+        "last_review": 1712277600000,
+        "lapses": 2
+      },
+      "grade": "hard",
+      "at_ms": 1712364000000,
+      "expected": {
+        "stability": 1.0455232858657837,
+        "difficulty": 9.729965209960938,
+        "due": 1712450400000,
+        "last_review": 1712364000000,
+        "lapses": 2
+      }
+    },
+    {
+      "name": "history_9",
+      "state": {
+        "stability": 1.0455232858657837,
+        "difficulty": 9.729965209960938,
+        "due": 1712450400000,
+        "last_review": 1712364000000,
+        "lapses": 2
+      },
+      "grade": "good",
+      "at_ms": 1714524000000,
+      "expected": {
+        "stability": 4.15734338760376,
+        "difficulty": 9.715463638305664,
+        "due": 1714869600000,
+        "last_review": 1714524000000,
+        "lapses": 2
+      }
+    },
+    {
+      "name": "history_10",
+      "state": {
+        "stability": 4.15734338760376,
+        "difficulty": 9.715463638305664,
+        "due": 1714869600000,
+        "last_review": 1714524000000,
+        "lapses": 2
+      },
+      "grade": "easy",
+      "at_ms": 1730076000000,
+      "expected": {
+        "stability": 25.72730255126953,
+        "difficulty": 9.605612754821777,
+        "due": 1732322400000,
+        "last_review": 1730076000000,
+        "lapses": 2
+      }
+    },
+    {
+      "name": "interval_boundary_2.5",
+      "state": {
+        "stability": 2.5,
+        "difficulty": 5.0,
+        "due": 1709251200000,
+        "last_review": 1709164800000,
+        "lapses": 0
+      },
+      "grade": "hard",
+      "at_ms": 1709164800000,
+      "expected": {
+        "stability": 2.5,
+        "difficulty": 6.6659955978393555,
+        "due": 1709337600000,
+        "last_review": 1709164800000,
+        "lapses": 0
+      }
+    },
+    {
+      "name": "interval_boundary_3.5",
+      "state": {
+        "stability": 3.5,
+        "difficulty": 5.0,
+        "due": 1709251200000,
+        "last_review": 1709164800000,
+        "lapses": 0
+      },
+      "grade": "hard",
+      "at_ms": 1709164800000,
+      "expected": {
+        "stability": 3.5,
+        "difficulty": 6.6659955978393555,
+        "due": 1709510400000,
+        "last_review": 1709164800000,
+        "lapses": 0
+      }
+    },
+    {
+      "name": "interval_boundary_100000.0",
+      "state": {
+        "stability": 100000.0,
+        "difficulty": 5.0,
+        "due": 1709251200000,
+        "last_review": 1709164800000,
+        "lapses": 0
+      },
+      "grade": "hard",
+      "at_ms": 1709164800000,
+      "expected": {
+        "stability": 100000.0,
+        "difficulty": 6.6659955978393555,
+        "due": 4862764800000,
+        "last_review": 1709164800000,
+        "lapses": 0
+      }
+    }
+  ]
+}

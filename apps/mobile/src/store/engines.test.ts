@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { makePhrase } from '@loro/core/testing'
 import { userPhraseId, type Clock } from '@loro/core'
 import { createEngineContext } from './engines'
 import { jsCoreFacade } from './coreFacade'
@@ -11,6 +12,27 @@ const fixedClock: Clock = {
 }
 
 describe('createEngineContext', () => {
+  it('keeps the origin course snapshot while asynchronous practice finishes', async () => {
+    const store = createAppStore({ clock: fixedClock, newId: () => userPhraseId('test-row') })
+    const original = makePhrase('origin')
+    store.setState({ phrases: [original], targetLocale: 'es-ES' })
+    const context = createEngineContext(
+      store,
+      {
+        clock: fixedClock,
+        waveTimes: [],
+        repTarget: 6,
+        trip: null,
+        flags: { bool: (_key, fallback) => fallback, number: (_key, fallback) => fallback },
+        seed: 1,
+      },
+      jsCoreFacade,
+    )
+    store.setState({ phrases: [makePhrase('other-course')], targetLocale: 'bg-BG' })
+    expect(await context.phrases.byId(original.id)).toBe(original)
+    expect(await context.phrases.all()).toEqual([original])
+  })
+
   it('assembles only the supplied store and engine dependencies', async () => {
     const store = createAppStore({ clock: fixedClock, newId: () => userPhraseId('test-row') })
     store.setState({ dailyMinutes: 20 })

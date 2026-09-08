@@ -3,7 +3,6 @@ import type { Operation } from './operation.js'
 import {
   OAuthExchangeSchema,
   OAuthProviderSchema,
-  OAuthRefreshSchema,
   OAuthSessionSchema,
   OAuthStartSchema,
   OAuthStartResponseSchema,
@@ -17,7 +16,7 @@ export function oauthOperations(problem: z.ZodType): readonly Operation[] {
     owner: 89,
     requirements: ['F-01', 'F-02', 'F-07'],
     behavior:
-      'Optional identity-only flow. Requires configured PostgreSQL and providers; no claim or sync. All responses are no-store.',
+      'Configured Google/Apple OAuth verifies nonce and both app/provider PKCE where supported, then creates the same registered-device session used by email sign-in and account-scoped sync. All responses are no-store.',
   } as const
   const errors = Object.fromEntries(
     [401, 422, 429, 503, 500].map((status) => [
@@ -71,24 +70,6 @@ export function oauthOperations(problem: z.ZodType): readonly Operation[] {
       summary: 'Redeem app handoff',
       request: { schema: OAuthExchangeSchema },
       responses: { 200: { schema: OAuthSessionSchema }, ...errors },
-    },
-    {
-      ...base,
-      id: 'oauthRefresh',
-      method: 'post',
-      path: '/auth/refresh',
-      summary: 'Rotate refresh family',
-      request: { schema: OAuthRefreshSchema },
-      responses: { 200: { schema: OAuthSessionSchema }, ...errors },
-    },
-    {
-      ...base,
-      id: 'oauthLogout',
-      method: 'post',
-      path: '/auth/logout',
-      summary: 'Revoke refresh family',
-      request: { schema: OAuthRefreshSchema },
-      responses: { 204: { schema: z.null() }, ...errors },
     },
     {
       ...base,

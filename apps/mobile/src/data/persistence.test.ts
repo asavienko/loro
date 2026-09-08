@@ -172,6 +172,7 @@ describe.each(implementations)('%s repositories', (_name, open) => {
       id: userPhraseId('0197f2a0-0000-7000-8000-aaaaaaaaaaaa'),
       note: 'sounds like "coffee"',
       srs: {
+        algorithm: 'fsrs-6-default-c8ca282-loro-v1',
         stability: 3.5,
         difficulty: 6.25,
         due: AT + 86_400_000,
@@ -766,17 +767,18 @@ describe('the outbox', () => {
     expect(db.outbox.pending(10).map((o) => o.attempts)).toEqual([0])
   })
 
-  it('folds a new lww write into an op that has already failed, keeping its attempts', () => {
-    // Nothing was accepted, so the two writes are still one write — and the retry history
-    // belongs to the QUEUE SLOT, not to the value that happened to be in it.
+  it('keeps attempted payloads immutable and queues later writes separately', () => {
+    // A failed response may follow an accepted server write. Its retry must retain the
+    // exact payload for that sequence while later edits receive their own sequence.
     write({ difficulty: { v: 'hard', hlc: 'h1' } })
     db.outbox.recordFailure([1], 'offline')
     write({ difficulty: { v: 'easy', hlc: 'h2' } })
 
     const ops = db.outbox.pending(10)
-    expect(ops).toHaveLength(1)
-    expect(ops[0]?.fields['difficulty']).toEqual({ v: 'easy', hlc: 'h2' })
+    expect(ops).toHaveLength(2)
+    expect(ops[0]?.fields['difficulty']).toEqual({ v: 'hard', hlc: 'h1' })
     expect(ops[0]?.attempts).toBe(1)
+    expect(ops[1]?.fields['difficulty']).toEqual({ v: 'easy', hlc: 'h2' })
   })
 
   it('compacts by merging, and never by dropping a write', () => {
@@ -1019,6 +1021,23 @@ describe('erasure leaves nothing behind', () => {
       refrainSession: null,
     })
     driver.run(`INSERT INTO kv (k, v) VALUES ('last-sync-cursor', 'c-42')`)
+    driver.run(
+      'INSERT INTO sync_catalog_tombstones(id,phrase_id,target_locale,deleted_at) VALUES(?,?,?,?)',
+      [gone, 'b', 'es-ES', AT],
+    )
+    driver.run("INSERT INTO local_metadata(user_id,key,value) VALUES('local','test','private')")
+    driver.run(
+      "INSERT INTO session_checkpoint(user_id,target_locale,payload) VALUES('local','es-ES','{}')",
+    )
+    driver.run(
+      "INSERT INTO committed_attempt(user_id,target_locale,attempt_id) VALUES('local','es-ES','attempt-1')",
+    )
+    driver.run(
+      `INSERT INTO review_event(user_id,target_locale,attempt_id,phrase_id,reviewed_at,rating,
+         algorithm,stability,difficulty,due,last_review,lapses,state)
+       VALUES('local','es-ES','attempt-1',?, ?,3,'fsrs',1,5,?, ?,0,'review')`,
+      [kept, AT, AT, AT],
+    )
     for (const id of [kept, gone]) {
       db.outbox.append({
         entity: 'user_phrase',
@@ -1055,8 +1074,8 @@ describe('erasure leaves nothing behind', () => {
     expect(currentVersion(driver)).toBe(SCHEMA_VERSION)
     expect(migrate(driver, AT).applied, 'no migration is owed').toEqual([])
 
-    // The seq counter restarts too: `DROP TABLE` takes the `sqlite_sequence` row with it, so
-    // a re-registered learner's first op is seq 1 and cannot be confused with an old ack.
+    // Sequence ids survive erasure: a delayed acknowledgement for an erased op must
+    // never match a fresh write from this same installation.
     db.phrases.upsert({ ...makePhrase('a'), id: userPhraseId('id-new') })
     db.outbox.append({
       entity: 'user_phrase',
@@ -1067,11 +1086,11 @@ describe('erasure leaves nothing behind', () => {
       createdAt: AT,
     })
     expect(db.phrases.count()).toBe(1)
-    expect(db.outbox.pending(10).map((o) => o.seq)).toEqual([1])
+    expect(db.outbox.pending(10).map((o) => o.seq)).toEqual([3])
   })
 
   it('erases nothing when the wrapping transaction rolls back', () => {
-    // `wipe()` drops and recreates tables, so under a caller it runs in a savepoint. An
+    // `wipe()` deletes records atomically, so under a caller it runs in a savepoint. An
     // erasure that half-committed would be worse than one that failed outright.
     expect(() =>
       driver.transaction(() => {

@@ -11,6 +11,14 @@ export const DESTINATIONS = [
     counted: false,
   },
   {
+    href: '/practice/speak',
+    get label() {
+      return copy.audioSpeech.speakTitle
+    },
+    rail: false,
+    counted: false,
+  },
+  {
     href: '/',
     get label() {
       return copy.today.title

@@ -17,9 +17,10 @@ import {
   type SqlValue,
 } from '../driver.js'
 import type { FieldWrite, OutboxAppend, OutboxOp, OutboxTable } from '../tables.js'
+import { LOCAL_USER_ID } from '../tables.js'
 import { mergeClassOf } from '../../sync/fieldPolicy.js'
 
-const OUTBOX_SELECT = `SELECT seq, entity, entity_id, op, payload, hlc, created_at, attempts FROM outbox`
+const OUTBOX_SELECT = `SELECT seq, entity, entity_id, op, payload, hlc, created_at, attempts, replaces FROM outbox`
 
 /**
  * Whether a field may be folded into an already-queued op for the same row.
@@ -42,7 +43,9 @@ function maxFolding(entity: string, field: string): boolean {
 }
 
 function rowToOp(row: SqlRow): OutboxOp {
+  const replaces = readJson<OutboxOp['replaces'] | null>(row, 'replaces', null)
   return {
+    ...(replaces ? { replaces } : {}),
     seq: readInt(row, 'seq'),
     entity: readText(row, 'entity'),
     entityId: readText(row, 'entity_id'),
@@ -55,12 +58,18 @@ function rowToOp(row: SqlRow): OutboxOp {
 }
 
 export class SqlOutboxTable implements OutboxTable {
-  constructor(private readonly driver: SqlDriver) {}
+  constructor(
+    private readonly driver: SqlDriver,
+    private readonly userId: string = LOCAL_USER_ID,
+  ) {}
 
   append(op: OutboxAppend): void {
     const fields = Object.keys(op.fields)
     const foldable =
-      op.op === 'upsert' && fields.length > 0 && fields.every((f) => coalescable(op.entity, f))
+      op.op === 'upsert' &&
+      op.replaces === undefined &&
+      fields.length > 0 &&
+      fields.every((f) => coalescable(op.entity, f))
 
     if (foldable) {
       // The NEWEST queued op for this row, whatever kind it is — not the newest upsert.
@@ -70,13 +79,19 @@ export class SqlOutboxTable implements OutboxTable {
       // The reverse case ("never coalesces a delete into an edit") was already guarded;
       // this direction was not.
       const pending = this.newestPendingOp(op.entity, op.entityId)
-      if (pending !== null && pending.op === 'upsert') {
+      if (
+        pending !== null &&
+        pending.op === 'upsert' &&
+        pending.attempts === 0 &&
+        pending.replaces === undefined
+      ) {
         // Replace the earlier values in place rather than queueing a second op: two `lww`
         // writes to the same field are one write as far as the server is concerned, and a
         // learner who taps a rating four times should not cost four round trips.
-        this.driver.run('UPDATE outbox SET payload = ?, hlc = ? WHERE seq = ?', [
+        this.driver.run('UPDATE outbox SET payload = ?, hlc = ? WHERE user_id = ? AND seq = ?', [
           JSON.stringify({ ...pending.fields, ...op.fields }),
           op.hlc,
+          this.userId,
           pending.seq,
         ])
         return
@@ -84,9 +99,18 @@ export class SqlOutboxTable implements OutboxTable {
     }
 
     this.driver.run(
-      `INSERT INTO outbox (entity, entity_id, op, payload, hlc, created_at)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [op.entity, op.entityId, op.op, JSON.stringify(op.fields), op.hlc, op.createdAt],
+      `INSERT INTO outbox (user_id, entity, entity_id, op, payload, hlc, created_at, replaces)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        this.userId,
+        op.entity,
+        op.entityId,
+        op.op,
+        JSON.stringify(op.fields),
+        op.hlc,
+        op.createdAt,
+        op.replaces ? JSON.stringify(op.replaces) : null,
+      ],
     )
   }
 
@@ -94,9 +118,9 @@ export class SqlOutboxTable implements OutboxTable {
     const row = firstRow(
       this.driver,
       `${OUTBOX_SELECT}
-       WHERE entity = ? AND entity_id = ?
+       WHERE user_id = ? AND entity = ? AND entity_id = ?
        ORDER BY seq DESC LIMIT 1`,
-      [entity, entityId],
+      [this.userId, entity, entityId],
     )
     return row === null ? null : rowToOp(row)
   }
@@ -105,28 +129,34 @@ export class SqlOutboxTable implements OutboxTable {
     return this.driver
       .all(
         `${OUTBOX_SELECT}
+         WHERE user_id = ?
          ORDER BY seq LIMIT ?`,
-        [limit],
+        [this.userId, limit],
       )
       .map(rowToOp)
   }
 
   ack(seqs: readonly number[]): void {
     if (seqs.length === 0) return
-    this.driver.run(`DELETE FROM outbox WHERE seq IN (${placeholders(seqs.length)})`, seqs)
+    this.driver.run(
+      `DELETE FROM outbox WHERE user_id = ? AND seq IN (${placeholders(seqs.length)})`,
+      [this.userId, ...seqs],
+    )
   }
 
   recordFailure(seqs: readonly number[], error: string): void {
     if (seqs.length === 0) return
     this.driver.run(
       `UPDATE outbox SET attempts = attempts + 1, last_error = ?
-       WHERE seq IN (${placeholders(seqs.length)})`,
-      [error, ...seqs] as SqlValue[],
+       WHERE user_id = ? AND seq IN (${placeholders(seqs.length)})`,
+      [error, this.userId, ...seqs] as SqlValue[],
     )
   }
 
   size(): number {
-    const row = firstRow(this.driver, 'SELECT COUNT(*) AS n FROM outbox')
+    const row = firstRow(this.driver, 'SELECT COUNT(*) AS n FROM outbox WHERE user_id = ?', [
+      this.userId,
+    ])
     return row === null ? 0 : readInt(row, 'n')
   }
 
@@ -173,7 +203,7 @@ export class SqlOutboxTable implements OutboxTable {
   private foldForward(ops: readonly OutboxOp[]): number {
     if (ops.length < 2) return 0
     const target = ops[0]
-    if (target === undefined) return 0
+    if (target === undefined || !isFoldable(target)) return 0
 
     const merged: Record<string, FieldWrite> = { ...target.fields }
     const dropped: number[] = []
@@ -199,8 +229,9 @@ export class SqlOutboxTable implements OutboxTable {
     }
 
     if (dropped.length === 0) return 0
-    this.driver.run('UPDATE outbox SET payload = ? WHERE seq = ?', [
+    this.driver.run('UPDATE outbox SET payload = ? WHERE user_id = ? AND seq = ?', [
       JSON.stringify(merged),
+      this.userId,
       target.seq,
     ])
     this.ack(dropped)
@@ -215,7 +246,7 @@ export class SqlOutboxTable implements OutboxTable {
  * no fields is `true`, so without it a delete reported itself as foldable.
  */
 function isFoldable(op: OutboxOp): boolean {
-  if (op.op !== 'upsert') return false
+  if (op.op !== 'upsert' || op.attempts > 0 || op.replaces !== undefined) return false
   return Object.entries(op.fields).every(
     ([field, write]) =>
       coalescable(op.entity, field) ||
@@ -236,7 +267,7 @@ function upsertRuns(ops: readonly OutboxOp[]): OutboxOp[][] {
   const runs: OutboxOp[][] = []
   let current: OutboxOp[] = []
   for (const op of ops) {
-    if (op.op === 'upsert') {
+    if (op.op === 'upsert' && op.attempts === 0) {
       current.push(op)
     } else if (current.length > 0) {
       runs.push(current)

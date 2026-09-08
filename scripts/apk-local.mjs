@@ -19,7 +19,7 @@ const upload = args.includes('--upload')
 const publish = args.includes('--publish')
 if (args.includes('--help')) {
   console.log(
-    'Usage: pnpm apk:local [--upload] [--publish]\nBuilds the clean committed checkout. --upload creates a draft GitHub prerelease; --publish also publishes it.\nOptional EXPO_PUBLIC_API_URL must be an HTTPS URL ending in /v1. Requires Node 22, JDK 17, Android SDK and gh for uploads.',
+    'Usage: pnpm apk:local [--upload] [--publish]\nBuilds the clean committed checkout. --upload creates a draft GitHub prerelease; --publish also publishes it.\nOptional EXPO_PUBLIC_API_URL must be an HTTPS URL ending in /v1. Requires Node 22, JDK 17, Android SDK/NDK, Rust with cargo-ndk and Android targets, and gh for uploads.',
   )
   process.exit(0)
 }
@@ -35,6 +35,9 @@ const env = {
   EXPO_NO_TELEMETRY: '1',
   EXPO_NO_DOTENV: '1',
   LORO_LOCAL_APK: '1',
+  CMAKE_BUILD_PARALLEL_LEVEL: process.env.CMAKE_BUILD_PARALLEL_LEVEL || '2',
+  CARGO_BUILD_JOBS: process.env.CARGO_BUILD_JOBS || '2',
+  PATH: `${join(homedir(), '.cargo', 'bin')}:${process.env.PATH || ''}`,
 }
 const api = process.env.EXPO_PUBLIC_API_URL || ''
 if (api) {
@@ -86,6 +89,12 @@ run('java', ['-version'])
 env.ANDROID_HOME ||= env.ANDROID_SDK_ROOT || join(homedir(), 'Library/Android/sdk')
 if (!existsSync(join(env.ANDROID_HOME, 'platform-tools')))
   throw new Error('Set ANDROID_HOME to an installed Android SDK.')
+run('cargo', ['ndk', '--version'])
+const rustTargets = run('rustup', ['target', 'list', '--installed'], root, true).split('\n')
+for (const target of ['aarch64-linux-android', 'x86_64-linux-android']) {
+  if (!rustTargets.includes(target))
+    throw new Error(`Install the Rust target: rustup target add ${target}`)
+}
 let repo
 if (upload) {
   repo = run(
@@ -143,6 +152,12 @@ try {
   const entries = run('unzip', ['-Z1', apk], root, true).split('\n')
   if (!entries.includes('assets/index.android.bundle'))
     throw new Error('APK is missing its bundled JavaScript.')
+  for (const abi of ['arm64-v8a', 'x86_64']) {
+    if (!entries.includes(`lib/${abi}/libloro_core.so`))
+      throw new Error(`APK is missing the Rust runtime for ${abi}.`)
+    if (!entries.includes(`lib/${abi}/libop-sqlite.so`))
+      throw new Error(`APK is missing the SQLite runtime for ${abi}.`)
+  }
   const checksum = createHash('sha256').update(readFileSync(apk)).digest('hex')
   const checksumFile = `${apk}.sha256`
   writeFileSync(checksumFile, `${checksum}  loro-preview-${short}.apk\n`)

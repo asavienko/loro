@@ -20,6 +20,7 @@ export default tseslint.config(
       '**/target/**',
       '**/.expo/**',
       '**/bindings/**',
+      '**/browser/loro_core.js',
     ],
   },
 

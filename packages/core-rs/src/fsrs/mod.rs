@@ -1,27 +1,23 @@
-//! FSRS — the scheduling algorithm.
-//!
-//! **Status: skeleton.** The types, the grade mapping, the interval formatter, and the
-//! difficulty prior are implemented. The core stability/difficulty update is a port of
-//! the reference implementation and lands in M0 with parity tests
-//! (`tests/fsrs_parity.rs`).
-//!
-//! FSRS was chosen because the blueprint's Memory-model screen already *is* FSRS made
-//! visible — it plots `R(t) = 0.5^(t/S)`, marks a 50% review threshold, and reports
-//! stability in days (`Loro.dc.html:963–1037`). Anything else would mean that screen
-//! lies about the algorithm behind it. See ADR-0004.
+//! Canonical FSRS-6 memory updates with explicit Loro scheduling policy.
+//! See `docs/architecture/fsrs-model.md` for the pinned reference and adaptations.
 
 use crate::{Difficulty, Tag};
 
 /// The four grades FSRS understands.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize, uniffi::Enum)]
+#[serde(rename_all = "lowercase")]
 pub enum Grade {
     /// Couldn't recall it.
+    #[serde(alias = "Again")]
     Again,
     /// Recalled with difficulty.
+    #[serde(alias = "Hard")]
     Hard,
     /// Recalled.
+    #[serde(alias = "Good")]
     Good,
     /// Recalled instantly.
+    #[serde(alias = "Easy")]
     Easy,
 }
 
@@ -38,26 +34,86 @@ impl Grade {
     }
 }
 
-/// A phrase's memory state.
-#[derive(Debug, Clone, Copy, uniffi::Record)]
+/// Scheduler lifecycle; Loro uses one explicit ten-minute learning/relearning step.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize, uniffi::Enum)]
+#[serde(rename_all = "lowercase")]
+pub enum CardState {
+    /// No review evidence yet.
+    New,
+    /// Initial recall has not succeeded.
+    Learning,
+    /// Established scheduled review.
+    Review,
+    /// A scheduled review failed.
+    Relearning,
+}
+
+/// Complete atomic scheduler group, including algorithm provenance.
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, uniffi::Record)]
+#[serde(try_from = "StoredFsrsState")]
 pub struct FsrsState {
-    /// Days until retrievability decays to the review threshold.
-    pub stability: f32,
-    /// Intrinsic difficulty for this learner, 1..10.
-    pub difficulty: f32,
-    /// Next review, epoch ms.
+    /// Days until recall reaches 90%, NOT the selected scheduling threshold.
+    pub stability: f64,
+    /// Intrinsic difficulty in 1..10.
+    pub difficulty: f64,
+    /// Next review, epoch milliseconds.
     pub due: i64,
-    /// Last review, epoch ms.
+    /// Last observed review, epoch milliseconds; absent for new cards.
     pub last_review: Option<i64>,
-    /// Failed reviews.
+    /// Failed established reviews (not repeated learning failures).
     pub lapses: u32,
+    /// Learning lifecycle.
+    pub state: CardState,
+    /// Versioned algorithm, parameters and Loro policy identifier.
+    pub algorithm: String,
+}
+
+// Compatibility is structural and lossless. The unversioned preview stored real
+// FSRS-6 memory with 90% due dates and no learning steps. Reading that evidence must
+// not initialize a new card or silently change the due date. The next real review
+// applies the current policy and writes its explicit provenance atomically.
+#[derive(serde::Deserialize)]
+struct StoredFsrsState {
+    stability: f64,
+    difficulty: f64,
+    due: i64,
+    last_review: Option<i64>,
+    lapses: u32,
+    state: Option<CardState>,
+    algorithm: Option<String>,
+}
+
+impl TryFrom<StoredFsrsState> for FsrsState {
+    type Error = &'static str;
+
+    fn try_from(stored: StoredFsrsState) -> Result<Self, Self::Error> {
+        if stored.algorithm.as_deref() == Some(ALGORITHM) && stored.state.is_none() {
+            return Err("canonical FSRS state is missing its learning lifecycle");
+        }
+        Ok(Self {
+            stability: stored.stability,
+            difficulty: stored.difficulty,
+            due: stored.due,
+            last_review: stored.last_review,
+            lapses: stored.lapses,
+            state: stored.state.unwrap_or(if stored.last_review.is_some() {
+                CardState::Review
+            } else {
+                CardState::New
+            }),
+            algorithm: stored
+                .algorithm
+                .unwrap_or_else(|| LEGACY_PREVIEW_ALGORITHM.into()),
+        })
+    }
 }
 
 /// The learner's five-level confidence rating (the Memory-model screen), mapped to a grade.
 ///
-/// `Strong` maps to `Good` with a stability bonus applied by the caller — it's better
-/// than Good but not instant.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]
+/// `Strong` maps to `Good`; `review_confidence` applies the documented 10% stability
+/// bonus in the canonical core.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize, uniffi::Enum)]
+#[serde(rename_all = "lowercase")]
 pub enum Confidence {
     /// Blank.
     Forgot,
@@ -116,6 +172,32 @@ pub fn grade_for_confidence(c: Confidence) -> Grade {
     }
 }
 
+/// Map observed recall evidence to the grade used by every practice engine.
+///
+/// An explicit four-grade self-rating takes precedence over confidence;
+/// otherwise a failed recall is Again, a hinted success Hard, and an unhinted
+/// success Good. Passive listening and skipped attempts must not call this function.
+#[must_use]
+#[uniffi::export]
+pub fn review_grade(
+    success: bool,
+    hints_used: u32,
+    self_grade: Option<Grade>,
+    confidence: Option<Confidence>,
+) -> Grade {
+    if let Some(grade) = self_grade {
+        grade
+    } else if let Some(confidence) = confidence {
+        grade_for_confidence(confidence)
+    } else if !success {
+        Grade::Again
+    } else if hints_used > 0 {
+        Grade::Hard
+    } else {
+        Grade::Good
+    }
+}
+
 /// Seed FSRS difficulty from the learner's own declaration.
 ///
 /// This is Loro's structural advantage over every other app using FSRS: the learner
@@ -155,18 +237,14 @@ pub fn nudge_difficulty(current: f32, declared: Difficulty, tags: &[Tag]) -> f32
     (current + delta).clamp(DIFFICULTY_MIN, DIFFICULTY_MAX)
 }
 
-/// Retrievability at `t` days after the last review, in the blueprint's display form.
-///
-/// The Memory-model screen plots exactly this curve, so it must stay the shape the
-/// screen draws.
-#[must_use]
-#[uniffi::export]
-pub fn retrievability(days_since_review: f32, stability: f32) -> f32 {
-    if stability <= 0.0 {
-        return 0.0;
-    }
-    0.5_f32.powf(days_since_review / stability)
-}
+mod scheduler;
+pub use scheduler::{
+    initialize, reference_initial_memory, rerate, retrievability, review, review_confidence,
+    FsrsError, ALGORITHM, DESIRED_RETENTION, LEGACY_PREVIEW_ALGORITHM,
+};
+
+/// Complete current parameter and policy identifier, retained for existing callers.
+pub const SCHEDULER_VERSION: &str = ALGORITHM;
 
 // ── Display thresholds for `format_interval` (`Loro.dc.html:3009`) ───────────────────
 
@@ -213,16 +291,6 @@ pub fn daily_review_cap(daily_minutes: u32, multiplier: u32) -> u32 {
     daily_minutes * multiplier
 }
 
-/// Apply a review and produce the next state.
-///
-/// # Panics
-/// Not yet implemented — lands in M0 with `tests/fsrs_parity.rs` asserting parity
-/// against the reference implementation.
-#[must_use]
-pub fn review(_state: FsrsState, _grade: Grade, _at_ms: i64) -> FsrsState {
-    todo!("M0: port the FSRS update with parity tests against the reference implementation")
-}
-
 #[cfg(test)]
 mod tests {
     #![allow(clippy::float_cmp)] // exact-zero sentinels are deliberate here
@@ -230,12 +298,31 @@ mod tests {
     use super::*;
 
     #[test]
+    fn observed_review_grade_mapping_has_one_explicit_precedence() {
+        assert_eq!(review_grade(false, 0, None, None), Grade::Again);
+        assert_eq!(review_grade(true, 1, None, None), Grade::Hard);
+        assert_eq!(review_grade(true, 0, None, None), Grade::Good);
+        assert_eq!(
+            review_grade(true, 0, None, Some(Confidence::Instant)),
+            Grade::Easy
+        );
+        assert_eq!(
+            review_grade(true, 0, None, Some(Confidence::Forgot)),
+            Grade::Again
+        );
+        assert_eq!(
+            review_grade(true, 0, Some(Grade::Hard), Some(Confidence::Instant)),
+            Grade::Hard,
+        );
+    }
+
+    #[test]
     fn confidence_maps_onto_four_grades() {
         for (confidence, grade) in [
             (Confidence::Forgot, Grade::Again),
             (Confidence::Shaky, Grade::Hard),
             (Confidence::Ok, Grade::Good),
-            // Strong is better than Good but not instant; the bonus is the caller's.
+            // The grade mapping is separate from review_confidence's stability bonus.
             (Confidence::Strong, Grade::Good),
             (Confidence::Instant, Grade::Easy),
         ] {
@@ -317,10 +404,11 @@ mod tests {
     }
 
     #[test]
-    fn retrievability_halves_at_one_stability_period() {
-        assert!((retrievability(3.0, 3.0) - 0.5).abs() < 0.001);
-        assert!((retrievability(0.0, 3.0) - 1.0).abs() < 0.001);
-        assert!(retrievability(9.0, 3.0) < 0.2);
+    fn retrievability_uses_fsrs_ninety_percent_stability() {
+        assert!((retrievability(3.0, 3.0).unwrap() - 0.9).abs() < 0.000_001);
+        assert_eq!(retrievability(0.0, 3.0).unwrap(), 1.0);
+        assert!(retrievability(-1.0, 3.0).is_err());
+        assert!(retrievability(1.0, 0.0).is_err());
     }
 
     #[test]

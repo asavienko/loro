@@ -1,3 +1,4 @@
+import { rustCoreFacade } from '../coreFacade'
 import { EMPTY_REFRAIN_RESUME } from '../state'
 /**
  * The learner's collection: adding a phrase, removing it, and the flags they set on it.
@@ -140,7 +141,7 @@ export const createPhrasesSlice: Slice<
     },
 
     setDifficulty: (id, d) => {
-      updatePhrase(ctx, id, () => ({ difficulty: d }))
+      updatePhrase(ctx, id, (phrase) => ({ difficulty: d, srs: rustCoreFacade.rerate(phrase, d) }))
       // The toast explains the CONSEQUENCE — that's what teaches the model.
       //
       get().showToast(copy.toast.difficulty[d])

@@ -1,3 +1,7 @@
+import { fakeCore } from '../testing/index.js'
+import { selectRefrainSet as selectCanonicalSet } from './refrain/index.js'
+const selectRefrainSet = (...args: Parameters<ReturnType<typeof fakeCore>['selectRefrainSet']>) =>
+  selectCanonicalSet(fakeCore(), ...args)
 /**
  * Engine tests: the shared conformance suite plus each engine's own rules.
  *
@@ -5,7 +9,7 @@
  * reason engines are headless. See docs/architecture/practice-engines.md
  */
 
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { runConformanceSuite } from './conformance.js'
 import { StreamEngine, streamStats } from './stream/index.js'
 import {
@@ -16,7 +20,6 @@ import {
   modeForRep,
   modelRateForMode,
   refrainSetSize,
-  selectRefrainSet,
   warmBand,
   REFRAIN_MODES,
 } from './refrain/index.js'
@@ -43,8 +46,9 @@ describe('StreamEngine', () => {
     makeEmptyContext: () => makeContext([]),
     makeSuccessAttempt: success,
     signals: {
-      maintains: ['reps', 'plays', 'lastPracticedAt', 'latencySampleMs', 'axes'],
+      maintains: ['reps', 'plays', 'lastPracticedAt', 'latencySampleMs'],
       exempt: {
+        axes: 'no measured DSP evidence is available from passive listening',
         srs: 'passive listening is exposure, not a review — recognition without production',
         repsToday: 'the stream is open-ended; it has no daily rep target to count against',
         automaticity: 'derived from repsToday, which the stream does not keep',
@@ -73,6 +77,21 @@ describe('StreamEngine', () => {
     ])
     const plan = await new StreamEngine().plan(ctx)
     expect(plan.items[0]!.phraseId).toBe('hard')
+  })
+
+  it('preserves canonical ordering instead of calculating its own rank or tie-break', async () => {
+    const phrases = [makePhrase('a'), makePhrase('z')]
+    const ctx = makeContext(phrases)
+    const ordering = vi
+      .spyOn(ctx.core, 'orderStream')
+      .mockReturnValue([userPhraseId('z'), userPhraseId('a')])
+    const rank = vi.spyOn(ctx.core, 'streamRank').mockImplementation(() => {
+      throw new Error('Engine must use canonical ordering')
+    })
+    const plan = await new StreamEngine().plan(ctx)
+    expect([...new Set(plan.items.map((item) => item.phraseId))]).toEqual(['z', 'a'])
+    expect(ordering).toHaveBeenCalledWith(phrases, T0)
+    expect(rank).not.toHaveBeenCalled()
   })
 
   it('surfaces loved phrases sooner', async () => {
@@ -118,6 +137,9 @@ describe('StreamEngine', () => {
       success(plan.items[0]!.itemId),
     )
     expect(delta.latencySampleMs).toBeNull()
+    expect(delta.axes).toBeUndefined()
+    expect(delta.srs).toBeUndefined()
+    expect(delta.review).toBeUndefined()
   })
 
   it('is an open-ended session', async () => {
@@ -141,7 +163,7 @@ describe('RefrainEngine', () => {
   runConformanceSuite(new RefrainEngine(), {
     makeContext: () => makeContext(),
     makeEmptyContext: () => makeContext([]),
-    makeSuccessAttempt: success,
+    makeSuccessAttempt: (itemId) => success(itemId, { transcript: 'recognized phrase' }),
     signals: {
       maintains: [
         'reps',
@@ -153,9 +175,9 @@ describe('RefrainEngine', () => {
         'lockedInToday',
         'rung',
         'stumbles',
-        'axes',
       ],
       exempt: {
+        axes: 'manual practice and recognition do not provide measured DSP axis scores',
         plays: 'a play is a stream listen-through; the Refrain counts reps, not plays',
         staleReset: 'Loop C staleness lands with the Phrasebook (plans/23), not here',
         cueLevel: 'prosody cueing needs the DSP (plans/19, plans/27); no engine writes it yet',
@@ -183,6 +205,36 @@ describe('RefrainEngine', () => {
       const plan = await engine.plan(ctx)
       expect(new Set(plan.items.map((i) => i.phraseId)).size, `${minutes} min`).toBe(size)
     }
+  })
+
+  it('uses canonical sizing, modes, tempo and automaticity for planning and recording', async () => {
+    const engine = new RefrainEngine()
+    const ctx = makeContext([makePhrase('one'), makePhrase('two')], {
+      settings: { dailyMinutes: 10, waveTimes: [], repTarget: 1 },
+    })
+    const setSize = vi.spyOn(ctx.core, 'refrainSetSize').mockReturnValue(1)
+    const mode = vi.spyOn(ctx.core, 'modeForRep').mockReturnValue('speed')
+    const rate = vi.spyOn(ctx.core, 'modelRateForMode').mockReturnValue(1.07)
+    const beat = vi.spyOn(ctx.core, 'beatMsForMode').mockReturnValue(531)
+    const auto = vi.spyOn(ctx.core, 'automaticity').mockReturnValueOnce(43).mockReturnValue(87)
+    const plan = await engine.plan(ctx)
+    expect(plan.items).toHaveLength(1)
+    expect(plan.items[0]).toMatchObject({
+      mode: 'speed',
+      audio: { rate: 1.07 },
+      meta: { beatMs: 531, automaticity: 43, warmBand: 'warm' },
+    })
+    expect(setSize).toHaveBeenCalledWith(10)
+    expect(mode).toHaveBeenCalledWith(0)
+    expect(rate).toHaveBeenCalledWith('speed')
+    expect(beat).toHaveBeenCalledWith('speed')
+    const delta = await engine.record(
+      { sessionId: 's', plan, cursor: 0 },
+      success(plan.items[0]!.itemId),
+    )
+    expect(delta.automaticity).toBe(87)
+    expect(auto).toHaveBeenNthCalledWith(1, 0, 1)
+    expect(auto).toHaveBeenNthCalledWith(2, 1, 1)
   })
 
   it('rotates the mode across the six reps of a phrase', async () => {
@@ -236,12 +288,92 @@ describe('RefrainEngine', () => {
     expect(unmeasured.latencySampleMs).toBeNull()
   })
 
+  it('keeps persisted daily membership and order even when later priorities change', async () => {
+    const ctx = makeContext(
+      [makePhrase('new-hard', { difficulty: 'hard' }), makePhrase('first'), makePhrase('second')],
+      {
+        refrainSet: [userPhraseId('second'), userPhraseId('first')],
+      },
+    )
+    const plan = await new RefrainEngine().plan(ctx)
+    expect([...new Set(plan.items.map((item) => item.phraseId))]).toEqual(['second', 'first'])
+    expect((await new RefrainEngine().plan({ ...ctx, refrainSet: [] })).items).toEqual([])
+  })
+
   it('writes FSRS state even though the screen shows no interval (rule 5)', async () => {
     const engine = new RefrainEngine()
     const plan = await engine.plan(makeContext([makePhrase('one')]))
     const delta = await engine.record({ sessionId: 's', plan, cursor: 0 }, success('one#0'))
     expect(delta.srs).toBeDefined()
     expect(delta.srs!.due).toBeGreaterThan(T0)
+    expect(delta.review).toEqual({ grade: 3, at: T0, algorithm: 'test-fsrs' })
+  })
+
+  it('uses the latest provided context and canonical grade to record the review', async () => {
+    const engine = new RefrainEngine()
+    const planning = makeContext([makePhrase('one')])
+    const plan = await engine.plan(planning)
+    const updated = makePhrase('one', { reps: 18 })
+    const current = makeContext([updated])
+    const grade = vi.spyOn(current.core, 'reviewGrade').mockReturnValue(4)
+    const review = vi.spyOn(current.core, 'fsrsReview')
+    const attempt = success('one#0', { confidence: 'instant' })
+    const delta = await engine.record({ sessionId: 's', plan, cursor: 0 }, attempt, current)
+    expect(grade).toHaveBeenCalledWith(attempt)
+    expect(review).toHaveBeenCalledWith(updated, 4, T0, 'instant')
+    expect(delta.review).toEqual({ grade: 4, at: T0, algorithm: 'test-fsrs' })
+  })
+
+  it('reads the constructor context when a resumed plan has no planning context', async () => {
+    const ctx = makeContext([makePhrase('one')])
+    const plan = await new RefrainEngine().plan(ctx)
+    const engine = new RefrainEngine(() => ctx)
+    const delta = await engine.record({ sessionId: 's', plan, cursor: 0 }, success('one#0'))
+    expect(delta.review).toEqual({ grade: 3, at: T0, algorithm: 'test-fsrs' })
+  })
+
+  it('passes confidence only when no explicit self-grade supersedes it', async () => {
+    const engine = new RefrainEngine()
+    const ctx = makeContext([makePhrase('one')])
+    const review = vi.spyOn(ctx.core, 'fsrsReview')
+    const plan = await engine.plan(ctx)
+    const delta = await engine.record(
+      { sessionId: 's', plan, cursor: 0 },
+      success('one#0', { selfGrade: 'hard', confidence: 'instant' }),
+    )
+    expect(review).toHaveBeenCalledWith(
+      await ctx.phrases.byId(userPhraseId('one')),
+      2,
+      T0,
+      undefined,
+    )
+    expect(delta.review?.grade).toBe(2)
+  })
+
+  it('keeps skipped attempts and missing schedule writes out of review evidence', async () => {
+    const engine = new RefrainEngine()
+    const ctx = makeContext([makePhrase('one')])
+    const review = vi.spyOn(ctx.core, 'fsrsReview')
+    const plan = await engine.plan(ctx)
+    const session = { sessionId: 's', plan, cursor: 0 }
+    const skipped = await engine.record(session, success('one#0', { outcome: 'skipped' }))
+    expect(skipped.srs).toBeUndefined()
+    expect(skipped.review).toBeUndefined()
+    expect(review).not.toHaveBeenCalled()
+    review.mockReturnValue(undefined)
+    const missing = await engine.record(session, success('one#0'))
+    expect(missing.srs).toBeUndefined()
+    expect(missing.review).toBeUndefined()
+  })
+
+  it('rejects a canonical schedule that lacks an algorithm identifier', async () => {
+    const engine = new RefrainEngine()
+    const ctx = makeContext([makePhrase('one')])
+    vi.spyOn(ctx.core, 'fsrsReview').mockReturnValue({ stability: 3, difficulty: 5, due: T0 + 1 })
+    const plan = await engine.plan(ctx)
+    await expect(
+      engine.record({ sessionId: 's', plan, cursor: 0 }, success('one#0')),
+    ).rejects.toThrow('identify its algorithm')
   })
 
   it('grades a hinted rep lower than a clean one', async () => {
@@ -257,8 +389,12 @@ describe('RefrainEngine', () => {
     const engine = new RefrainEngine()
     const plan = await engine.plan(makeContext([makePhrase('one')]))
     const session = { sessionId: 's', plan, cursor: 0 }
-    expect((await engine.record(session, success('one#3'))).rung).toBe(LadderRung.Bent)
-    expect((await engine.record(session, success('one#4'))).rung).toBe(LadderRung.Bent)
+    expect(
+      (await engine.record(session, success('one#3', { transcript: 'recognized phrase' }))).rung,
+    ).toBe(LadderRung.Bent)
+    expect((await engine.record(session, success('one#4', { selfGrade: 'good' }))).rung).toBe(
+      LadderRung.Bent,
+    )
   })
 
   it('earns Pressure-tested for a fast Speed rep', async () => {
@@ -266,7 +402,7 @@ describe('RefrainEngine', () => {
     const plan = await engine.plan(makeContext([makePhrase('one')]))
     const delta = await engine.record(
       { sessionId: 's', plan, cursor: 0 },
-      success('one#2', { latencyMs: 620 }),
+      success('one#2', { latencyMs: 620, transcript: 'recognized phrase' }),
     )
     expect(delta.rung).toBe(LadderRung.PressureTested)
   })
@@ -282,13 +418,15 @@ describe('RefrainEngine', () => {
     expect(delta.reps).toBe(0)
   })
 
-  it('advances recall faster in Cold mode', async () => {
+  it('manual taps never claim production depth or synthetic DSP scores', async () => {
     const engine = new RefrainEngine()
     const plan = await engine.plan(makeContext([makePhrase('one')]))
     const session = { sessionId: 's', plan, cursor: 0 }
-    const echo = await engine.record(session, success('one#0'))
-    const cold = await engine.record(session, success('one#5'))
-    expect(cold.axes!.recall!).toBeGreaterThan(echo.axes!.recall!)
+    for (const rep of [0, 2, 3, 4, 5]) {
+      const delta = await engine.record(session, success(`one#${rep}`, { latencyMs: 620 }))
+      expect(delta.rung).toBeUndefined()
+      expect(delta.axes).toBeUndefined()
+    }
   })
 })
 

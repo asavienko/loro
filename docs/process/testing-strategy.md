@@ -8,18 +8,18 @@ web or in-memory evidence.
 
 ## Current automated layers
 
-| Layer                      | Command                                     | Current evidence                                                 |
-| -------------------------- | ------------------------------------------- | ---------------------------------------------------------------- |
-| Workspace unit/integration | `pnpm test`                                 | 432 JS/TS tests across core, mobile, API, content and tokens     |
-| Rust unit/parity           | `pnpm core-rs:test`                         | 125 inline unit tests plus 6 tests in `tests/parity.rs`          |
-| Fast repository gate       | `pnpm check`                                | lint, typecheck, both test sets, content, a11y/copy and contrast |
-| Browser E2E                | `pnpm test:e2e`                             | 61 Playwright tests over every implemented route/state           |
-| Production export smoke    | `pnpm test:e2e:bundle`                      | `@smoke` flows against a fresh Expo web export                   |
-| Build proof                | mobile `bundle`; API `build` then readiness | CI-only additions to the local fast gate                         |
+| Layer                      | Command                                         | Current evidence                                                     |
+| -------------------------- | ----------------------------------------------- | -------------------------------------------------------------------- |
+| Workspace unit/integration | `pnpm test`; `bash scripts/ci-auth-postgres.sh` | 799 JS/TS tests; 35 API cases require the disposable PostgreSQL gate |
+| Rust unit/parity           | `pnpm core-rs:test`                             | 169 unit/integration cases, including scheduler reference parity     |
+| Fast repository gate       | `pnpm check`                                    | lint, typecheck, both test sets, content, a11y/copy and contrast     |
+| Browser E2E                | `pnpm test:e2e`                                 | 155 Playwright tests over 71 implemented states                      |
+| Production export smoke    | `pnpm test:e2e:bundle`                          | `@smoke` flows against a fresh Expo web export                       |
+| Build proof                | `pnpm ci:local`; `pnpm apk:local`               | Local bundles, API image/readiness and a separate Android APK gate   |
 
 There is no React Native Testing Library suite, Maestro suite, device-farm execution, DSP recording
-golden corpus, scheduler simulation, native contract test, or global coverage threshold today.
-Workflows that mention some of those are scaffolds; see [ci-cd.md](ci-cd.md).
+golden corpus or global coverage threshold today. Native acceptance remains a separate evidence
+matrix; see [persistent practice](persistent-practice.md) and [ci-cd.md](ci-cd.md).
 
 ## What the current tests actually cover
 
@@ -27,13 +27,13 @@ Workflows that mention some of those are scaffolds; see [ci-cd.md](ci-cd.md).
 
 Almost all Rust tests are inline `#[cfg(test)]` in `src/`. They cover ASR text matching, calendar
 and streak rules, deterministic selection/ranking, FSRS helpers, ladder rules, notification policy,
-HLC/merge semantics and deterministic DSP helpers. `tests/parity.rs` is the only integration test;
-it checks six calendar/effort fixtures. It does **not** execute generated Swift, Kotlin and WASM
-bindings against one another.
+HLC/merge semantics and deterministic DSP helpers. Integration tests cover calendar/effort parity,
+FSRS reference vectors and scheduler simulation. Mobile boundary tests execute the shipped WASM. The
+automated local gate does **not** execute a physical Swift/Kotlin/WASM device parity matrix.
 
 `benches/core_benches.rs` exists and CI runs Criterion. No checked-in comparison baseline currently
-makes “greater than 10% regression” an enforced assertion. `tests/golden.rs`, `tests/sim.rs` and a
-recording corpus do not exist.
+makes “greater than 10% regression” an enforced assertion. `tests/sim.rs` now exercises scheduling;
+`tests/golden.rs` and a recording corpus do not exist.
 
 ### Shared TypeScript and mobile
 
@@ -42,15 +42,17 @@ driver-agnostic SQLite schema/repositories/outbox. Mobile tests cover the clock,
 catalog/store views, `applyDelta`, practice-engine integration and persistence against Node's real
 SQLite driver.
 
-This proves repository semantics against SQLite, not on-device hydration: `apps/mobile` has no
-op-sqlite driver yet, and the running app store remains in memory.
+The runtime uses OP-SQLite on device and durable SQL.js snapshots in browsers. Tests cover both
+preview schema upgrades, checkpoint/attempt atomicity, owner-scoped outboxes, rollback and reload.
+Node/browser coverage does not replace physical-device upgrade and process-death acceptance.
 
 ### API
 
-API tests cover the ten current HTTP endpoints, sync guards and merge classes through the built
-WASM, content responses, problem details and the stub AI scene path. They run against an in-memory
-sync repository. Auth, Postgres tenant isolation, anonymous claim/sign-in merge, two-device
-partition/reconvergence and 30-day offline replay are not implemented or tested.
+The current contract registry has 25 operations. API tests cover Google/Apple/email identity, legacy
+account/session upgrades, refresh rotation/replay, device/tenant isolation, durable sync
+receipts/cursors, WASM merge, content, problem details and stub AI. Disposable PostgreSQL tests run
+the actual HTTP controllers and transactions. Physical two-device partition/reconvergence, long
+offline histories and production provider/load acceptance remain separate release gates.
 
 ### Playwright web E2E
 
@@ -58,7 +60,10 @@ partition/reconvergence and 30-day offline replay are not implemented or tested.
 and text-scale suites consume it, so a new state must be added there in the same change. Current
 coverage includes screen behaviour, navigation and cross-screen rollups, both day keys and multi-day
 progression, axe, keyboard interaction, 44 px targets, and 200%/310% text scale. The suite has an
-enforced eight-minute global timeout and runs serially in a phone-sized Chromium viewport.
+enforced twelve-minute global timeout and runs serially in a phone-sized Chromium viewport. The
+integrated 155-test/71-state suite reached its former eight-minute limit after 149 passing tests.
+The two whole-manifest text-scale sweeps have two-minute per-test budgets; ordinary tests retain 90
+seconds. Every state and layout assertion remains in the gate.
 
 The production-export suite runs only the `@smoke` subset. It proves that representative flows load
 from shipped web assets; it is not a second full behaviour run.

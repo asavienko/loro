@@ -21,9 +21,26 @@ import { BottomBarProvider } from '../src/ui/BottomBarContext'
 import { Pressable, Text } from '../src/ui/primitives'
 import { NavigationMenu } from '../src/ui/components/NavigationMenu'
 import { DESTINATIONS, placeForPath } from '../src/lib/navigation'
+import { startAccountSync } from '../src/services/accountSync'
+import { PersistenceGate } from '../src/store/PersistenceGate'
+import { completeBrowserSignIn } from '../src/auth/runtime'
+
+// The OAuth popup must notify its opener before hydration asks for the database's writer lease.
+completeBrowserSignIn()
 
 export default function RootLayout() {
+  return (
+    <PersistenceGate>
+      <ReadyLayout />
+    </PersistenceGate>
+  )
+}
+
+function ReadyLayout() {
   useLocale()
+  useEffect(() => {
+    void startAccountSync()
+  }, [])
   useEffect(() => {
     const state = useApp.getState()
     if (!state.languageChosen && !state.onboarded) {
@@ -130,6 +147,10 @@ export default function RootLayout() {
                   options={{ title: copy.nav.stream, gestureEnabled: false }}
                 />
                 <Stack.Screen name="account" options={{ title: copy.account.title }} />
+                <Stack.Screen
+                  name="practice/speak"
+                  options={{ title: copy.audioSpeech.speakTitle, gestureEnabled: false }}
+                />
                 <Stack.Screen name="languages" options={{ title: copy.languages.title }} />
                 <Stack.Screen name="progress" options={{ title: copy.nav.progress }} />
                 {devToolsAreAvailable() ? (

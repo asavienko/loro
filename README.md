@@ -12,26 +12,32 @@ and every buildable artifact — a running app and a running API.
 
 ## Status
 
-**A running web app and a running API.** Seven of the v1.1 design package's 23 learner screens, plus
-the app shell and Languages and Account utilities, are built — the demonstrable core loop: onboard →
-add and tag a phrase → practise → see progress. The remaining 16 learner screens include trips,
-labs, settings, chat, and alternative loops.
+**A running app with durable practice and optional account sync.** Eight of the v1.1 design
+package's 23 learner screens, Languages and Account utilities and the shared shell are built:
+onboard → add/tag a phrase → practise → see saved progress. Speak adds on-device recognition with an
+offline reveal fallback. The remaining 15 learner screens include trips, labs, settings, chat and
+alternative loops.
 
-```
-pnpm bootstrap && pnpm check     →  23/23 tasks at the last green baseline
-pnpm test:e2e                    →  134 learner browser tests across every implemented state
-pnpm test:e2e:workbench          →  3 dev-workbench browser tests
-pnpm --filter @loro/mobile bundle →  production Expo/Metro export proof
-pnpm --filter @loro/api start     →  21 endpoints on :3000/v1
+```bash
+pnpm ci:local                       # full local CI; GitHub Actions stays disabled
+pnpm check                          # fast lint/type/test/content/drift gate
+pnpm test:e2e                       # every implemented learner route/state
+pnpm test:e2e:workbench             # development workbench
+pnpm --filter @loro/mobile bundle   # production Expo/Metro export
+pnpm --filter @loro/api start       # configured PostgreSQL/auth API on :3000/v1
 ```
 
-| Area                   | Tests | State                                                                                                                                                                                           |
-| ---------------------- | ----: | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Documentation          |     — | Product, architecture, design, process and decision guides, testing runbooks, and 14 ADRs                                                                                                       |
-| Toolchain              |     — | Installs, builds, lints, typechecks, and tests from a clean clone                                                                                                                               |
-| **`loro-core`** (Rust) |   131 | Ranking, ASR matching, calendar, ladder, notification policy, HLC, and sync merge implemented. FSRS, Refrain selection, and DSP remain incomplete ([status](packages/core-rs/README.md#status)) |
-| **JS/TS workspaces**   |   619 | Core engines/persistence, content validation, API seams, mobile state/UI, and design tokens                                                                                                     |
-| **Browser E2E**        |   138 | 134 learner tests, 3 dev-workbench tests, and 1 production-only route-unavailability contract; bundle smoke re-runs a four-test subset                                                          |
+| Area                  | Implemented scope                                                                                                           |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| **Local progress**    | Native OP-SQLite and browser SQLite; atomic progress, session and outbox writes; recovery preserves original data           |
+| **Canonical core**    | Rust FSRS, ranking, selection, cloze, Unicode matching, clocks and merge through generated WASM/UniFFI boundaries           |
+| **Native speech**     | Foreground device TTS and strictly on-device ASR; explicit unavailable states and offline word reveal                       |
+| **Accounts and sync** | Optional Google/Apple/email sign-in, secure native refresh storage, PostgreSQL accounts and tenant-scoped cross-device sync |
+| **Validation**        | Unit/integration suites, real SQLite/PostgreSQL, browser state/accessibility/text-scale checks and separate native evidence |
+
+Exact validation scope and native limits are recorded in
+[plan 94](plans/94-persistent-practice-and-account-integration.md) and the
+[persistent practice guide](docs/process/persistent-practice.md).
 
 **What the build already caught:** eight colours in the blueprint's palette that fail WCAG AA (the
 worst at 2.44:1, genuinely unreadable) plus one that only passes at a declared size floor; a drop
@@ -44,21 +50,24 @@ reporting itself healthy. Details in
 Shared API schemas, current/target OpenAPI specifications and the
 [backend integration inventory](docs/architecture/backend-integration-inventory.md) now exist.
 [Contract usage and migration](docs/architecture/api-contracts.md) distinguish current behavior,
-planned interfaces and gated drafts; the Google/Apple OAuth slice now validates requests and
-connects the Account utility. Learning sync remains unwired.
+planned interfaces and gated drafts. Authentication and learning sync consume shared runtime
+contracts and connect the Account utility to durable local progress.
 
-**Not built yet:** the on-device SQLite driver/integration (the reusable persistence layer exists),
-durable learning-data API storage, the live AI provider, native audio/ASR/widgets, and 16 learner
-screens. See the refreshed [`plans/README.md`](plans/README.md).
+**Remaining:** production recorded audio/cache, background/lock-screen playback, measured onset
+latency and DSP, widgets, account export/erasure, live AI and 15 learner screens. Physical-device
+speech/convergence, full iOS validation and bilingual review remain release gates. See
+[`plans/README.md`](plans/README.md).
 
-**Live connectivity:** the [AWS HTTPS gateway](docs/process/public-api.md) reaches the EC2 API.
-Account checks readiness independently of sign-in; public access is limited to read-only routes. See
-the [readiness review](docs/reviews/2026-09-08-readiness.md) for remaining essential features.
+**Live connectivity:** the [AWS HTTPS gateway](docs/process/public-api.md) reaches the restricted
+EC2 API. Account checks readiness independently of sign-in; the deployed gateway exposes read-only
+routes. Merging this runtime does not deploy or expose authenticated sync there. The
+[2026-09-08 readiness review](docs/reviews/2026-09-08-readiness.md) is dated deployment evidence;
+[plan 94](plans/94-persistent-practice-and-account-integration.md) records later implementation.
 
-**Selected durable backend testing setup, not provisioned:** one Frankfurt EC2 instance with local
-PostgreSQL and private S3, targeting $25–35/month. Shared tester access waits for durable data,
-authentication and tenant isolation. Start with [environments](docs/process/environments.md),
-[plan 88](plans/88-low-cost-backend-infrastructure.md) and the
+**Backend testing:** [plan 88](plans/88-low-cost-backend-infrastructure.md) selects Frankfurt EC2,
+local PostgreSQL and private S3 at a $25–35/month target. Plan 91 records the restricted EC2
+deployment. Shared account/sync access still needs deployment and recovery verification with the new
+durable runtime. Start with [environments](docs/process/environments.md) and the
 [testing operations runbook](docs/runbooks/backend-testing.md).
 
 Start at [`docs/process/onboarding.md`](docs/process/onboarding.md).
@@ -115,11 +124,11 @@ Everything else is indexed in [`docs/README.md`](docs/README.md).
 
 ## Target system shape
 
-The diagram below is the intended architecture, not the current inventory. Today the web app uses an
-in-memory Zustand store, the API uses in-memory sync storage and a stub AI provider, and none of the
-native modules or cloud data services shown here is wired. The [status](#status) above and
-[`docs/architecture/overview.md`](docs/architecture/overview.md) distinguish the implemented seams
-from their targets.
+The diagram below includes future surfaces. Device/browser SQLite, the native Rust and speech
+modules, PostgreSQL accounts and sync are wired. Zustand holds committed render projections and
+ephemeral state. Recorded/background audio, widgets and live AI remain future integration. The
+[status](#status) above and [`docs/architecture/overview.md`](docs/architecture/overview.md)
+distinguish the implemented seams from their targets.
 
 ```mermaid
 graph TB
@@ -173,16 +182,16 @@ Full detail: [`docs/architecture/overview.md`](docs/architecture/overview.md).
 
 Each links to its ADR — the reasoning, alternatives, and consequences.
 
-| Decision                                                                                      | Why                                                                          |
-| --------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| [React Native + Expo](docs/architecture/adr/0001-cross-platform-react-native-expo.md)         | One TS codebase for 21 screens; Expo Modules where we need real native audio |
-| [A Rust core](docs/architecture/adr/0002-shared-rust-core.md)                                 | Scheduler and DSP must be bit-identical on iOS, Android, and the server      |
-| [Offline-first SQLite + delta sync](docs/architecture/adr/0003-offline-first-sqlite-sync.md)  | Survival mode on a foreign SIM is a product requirement, not a nicety        |
-| [FSRS for scheduling](docs/architecture/adr/0004-fsrs-scheduler.md)                           | The blueprint's forgetting-curve screen _is_ FSRS made visible               |
-| [On-device ASR, cloud fallback](docs/architecture/adr/0005-on-device-asr-cloud-fallback.md)   | Speaking is the core loop; it cannot require a network                       |
-| [Pluggable practice engines](docs/architecture/adr/0006-pluggable-practice-engines.md)        | The blueprint deliberately left three philosophies open; so do we            |
-| [NestJS + Postgres](docs/architecture/adr/0008-backend-nestjs-postgres.md)                    | We own the sync protocol and the content pipeline                            |
-| [Recorded audio never leaves the device](docs/architecture/adr/0011-analytics-and-privacy.md) | The prosody screen promises it in writing                                    |
+| Decision                                                                                         | Why                                                                                  |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
+| [React Native + Expo](docs/architecture/adr/0001-cross-platform-react-native-expo.md)            | One TS codebase for 23 learner screens; Expo Modules where we need real native audio |
+| [A Rust core](docs/architecture/adr/0002-shared-rust-core.md)                                    | Scheduler and DSP must be bit-identical on iOS, Android, and the server              |
+| [Offline-first SQLite + delta sync](docs/architecture/adr/0003-offline-first-sqlite-sync.md)     | Survival mode on a foreign SIM is a product requirement, not a nicety                |
+| [FSRS for scheduling](docs/architecture/adr/0004-fsrs-scheduler.md)                              | The blueprint's forgetting-curve screen _is_ FSRS made visible                       |
+| [On-device ASR and offline fallback](docs/architecture/adr/0005-on-device-asr-cloud-fallback.md) | Speaking is the core loop; it cannot require a network                               |
+| [Pluggable practice engines](docs/architecture/adr/0006-pluggable-practice-engines.md)           | The blueprint deliberately left three philosophies open; so do we                    |
+| [NestJS + Postgres](docs/architecture/adr/0008-backend-nestjs-postgres.md)                       | We own the sync protocol and the content pipeline                                    |
+| [Recorded audio never leaves the device](docs/architecture/adr/0011-analytics-and-privacy.md)    | The prosody screen promises it in writing                                            |
 
 ---
 
@@ -206,10 +215,12 @@ with `pnpm apk:github`. See [APK prerequisites and signing boundaries](docs/proc
 Open questions that still need an owner:
 [`docs/decisions/open-questions.md`](docs/decisions/open-questions.md).
 
-## Google/Apple accounts (plan 89)
+## Optional accounts (plans 67/89/94)
 
-Optional `/account` identity is implemented with server-side provider verification, PostgreSQL
-accounts/refresh families and native SecureStore. Browser credentials remain in memory. Auth-enabled
-deployments fail closed on legacy sync/AI until tenant isolation lands. Learning data is untouched;
-anonymous claim/merge, deletion/export and live provider/device verification remain separate work.
-See [provider setup](docs/architecture/google-apple-auth.md).
+`/account` combines Google/Apple and email sign-in, independent API readiness and durable progress
+sync. PostgreSQL stores accounts, refresh families and tenant-scoped data. Native refresh
+credentials use SecureStore; browser credentials stay in page memory. Installation binding prevents
+cross-account uploads, and sign-out retains local learning data. Account linking/export/erasure and
+real provider/device acceptance remain separate work. See
+[provider setup](docs/architecture/google-apple-auth.md) and
+[persistent practice](docs/process/persistent-practice.md).

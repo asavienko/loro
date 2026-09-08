@@ -52,32 +52,38 @@ is byte-identical across that move — verified, not assumed.
 
 ## Status
 
-**131 tests passing** (125 inline + 6 in `tests/parity.rs`). **Clippy clean under `-D warnings`,
-`cargo fmt` clean.**
+Rust unit, official reference, compatibility, calendar and deterministic simulation suites run
+through `cargo test`. Browser parity exercises the same generated WASM bytes; native tests exercise
+the generated UniFFI boundary. Run clippy with `-D warnings` and `cargo fmt --check` before changes
+land.
 
-| Module        | State                                                                                        |
-| ------------- | -------------------------------------------------------------------------------------------- |
-| `rank`        | **Implemented** + tests — stream rank and repeat targets are blueprint contracts             |
-| `asr`         | **Implemented** + tests — normalisation and forward-walk matching                            |
-| `calendar`    | **Implemented** + tests — day boundaries, streak grace, timezone travel                      |
-| `ladder`      | **Implemented** + tests — rungs, need score, the deterministic draw                          |
-| `sync::hlc`   | **Implemented** + tests — HLC arithmetic and skew detection                                  |
-| `sync::merge` | **Implemented** + tests — `merge_row` with all five merge classes                            |
-| `notify`      | **Implemented** + tests — the full notification policy                                       |
-| `select`      | Partial — automaticity, modes, and labels done; `select_refrain_set` and `cloze_mask` are M2 |
-| `fsrs`        | Partial — grade mapping, difficulty prior, curve, formatting done; `review()` is M0          |
-| `dsp`         | Skeleton — normalisation, bands, correlation, axes, fix selection done; the pipeline is M3   |
+The [FSRS model and policy](../../docs/architecture/fsrs-model.md) pins FSRS-6, 50% desired
+retention, minute learning steps and declared difficulty priors. Existing 90% preview schedules
+retain their memory and history until an actual review adopts the canonical policy; state is never
+reset on load.
 
-Seven `todo!()`s remain: FSRS review; cloze and Refrain-set selection; and DSP pitch, alignment,
-score, and pipeline stages. Plans 60 and 77 own them. None of these functions is safe to call in a
-production path: a `todo!()` is a panic, not a degraded result. The mobile app therefore still uses
-TypeScript fallbacks for several Rust-owned calculations; that is current state, not an approved
-second source of truth.
+| Module        | State                                                                                      |
+| ------------- | ------------------------------------------------------------------------------------------ |
+| `rank`        | **Implemented** + tests — stream rank and repeat targets are blueprint contracts           |
+| `asr`         | **Implemented** + tests — normalisation and forward-walk matching                          |
+| `calendar`    | **Implemented** + tests — day boundaries, streak grace, timezone travel                    |
+| `ladder`      | **Implemented** + tests — rungs, need score, the deterministic draw                        |
+| `sync::hlc`   | **Implemented** + tests — HLC arithmetic and skew detection                                |
+| `sync::merge` | **Implemented** + tests — `merge_row` with all five merge classes                          |
+| `notify`      | **Implemented** + tests — the full notification policy                                     |
+| `select`      | **Implemented** — priority set selection and multilingual cloze, used by app engines       |
+| `fsrs`        | **Implemented** — FSRS-6 reference review, real due dates, native/WASM parity              |
+| `dsp`         | Skeleton — normalisation, bands, correlation, axes, fix selection done; the pipeline is M3 |
 
-The bindings are also partial. UniFFI derives records/enums and exports annotated functions, while
-the WASM module currently exposes only `merge_row`. There is no mobile native module consuming the
-generated bindings yet. A Rust implementation is not integrated until its generated UniFFI and/or
-WASM surface, adapter, and boundary tests land together.
+DSP pitch, alignment, scoring and pipeline placeholders remain evidence-gated by plan 77. They are
+not exposed as real scores. Scheduling, cloze/selection, ranking and token matching use the
+canonical Rust implementation through the checked JSON dispatch in `bridge.rs`.
+
+`core_call` crosses both WASM and the synchronous Expo native module. `browser/` embeds generated
+WASM for offline startup; Swift/Kotlin bindings are generated into `bindings/`. The app's adapter
+maps types and catalog text without reimplementing scheduling maths. Browser source/output drift is
+checked by `pnpm check`; full rebuilt parity uses `scripts/embed-wasm.mjs --verify-build` after a
+WASM build. Native module build and physical-device acceptance are separate from algorithm parity.
 
 ## Rules
 

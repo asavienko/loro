@@ -82,6 +82,11 @@ const CATALOG = {
     title: 'Not found',
     client: 'log — a 404 on a route the client knows is a bug. Never retry blindly',
   },
+  CURSOR_EXPIRED: {
+    status: 409,
+    title: 'Sync cursor is not available',
+    client: 'restart a full pull while retaining local writes',
+  },
 } as const satisfies Record<string, ErrorSpec>
 
 export type ErrorCode = keyof typeof CATALOG

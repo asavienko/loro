@@ -78,6 +78,7 @@ export class OAuthIdentityProvider implements IdentityProvider {
       google ? 'https://oauth2.googleapis.com/token' : `${APPLE_ISSUER}/auth/token`,
       {
         method: 'POST',
+        redirect: 'error',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({
           grant_type: 'authorization_code',

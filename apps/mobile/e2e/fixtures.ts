@@ -1,12 +1,14 @@
 import { test as base, expect, type Page } from '@playwright/test'
 import { todayMarker } from './states'
+import { consumeExpectedResourceError } from './expectedResourceErrors'
 
 export const test = base.extend<{ consoleHealth: undefined }>({
   consoleHealth: [
     async ({ page }, use) => {
       const errors: string[] = []
       page.on('console', (message) => {
-        if (message.type() === 'error') errors.push(`console: ${message.text()}`)
+        if (message.type() === 'error' && !consumeExpectedResourceError(page, message))
+          errors.push(`console: ${message.text()}`)
       })
       page.on('pageerror', (error) => {
         errors.push(`page: ${error.message}`)
@@ -36,9 +38,8 @@ interface OnboardingChoices {
 }
 
 /**
- * Establish state only through the learner-visible first-run flow. The app store is
- * intentionally in memory today, so localStorage shortcuts would test a state shape
- * that production does not have.
+ * Establish durable state through the learner-visible first-run flow, including its
+ * real repository writes and canonical selection.
  */
 export async function onboard(page: Page, choices: OnboardingChoices = {}): Promise<void> {
   const {

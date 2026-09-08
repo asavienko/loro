@@ -1,6 +1,7 @@
 # Generated — fix the generator, not the output. See ADR-0013 / ADR-0014.
 packages/design-tokens/out/
 packages/core-rs/bindings/
+packages/core-rs/browser/
 packages/core-rs/pkg/
 packages/core-rs/target/
 docs/architecture/openapi.*.json
