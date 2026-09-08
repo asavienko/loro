@@ -40,9 +40,8 @@ export const sharedTiming = {
   fullyParallel: false,
   forbidOnly: isCI,
   retries: isCI ? 2 : 0,
-  // Serial, deliberately: the suite is well under its budget and a shared Expo dev server
-  // is one fewer thing to reason about. Worth revisiting around 40 specs — and the budget
-  // below is what will say when.
+  // Serial, deliberately: preserve deterministic browser/clock behavior across the shared
+  // Expo dev server. The bounded suite budget includes the whole-state geometry sweeps.
   workers: 1,
   /**
    * Per test, not per suite — and three tests are whole-manifest SWEEPS.
@@ -55,8 +54,8 @@ export const sharedTiming = {
    * a ~12 s sweep at ~38 s. Playwright waiting for a control to stop being obscured is correct
    * behaviour and worth keeping visible rather than forcing the click past it.
    *
-   * `globalTimeout` below is the real budget guard; this only has to be larger than the slowest
-   * single test.
+   * Whole-manifest text-scale sweeps set their own two-minute budget as states grow.
+   * Ordinary tests retain this timeout; `globalTimeout` bounds the complete run.
    */
   timeout: 90_000,
   expect: { timeout: 5_000 },
@@ -65,9 +64,9 @@ export const sharedTiming = {
    *
    * `testing-strategy.md:218` puts E2E last in value per minute and plan 37's risks section
    * names suite runtime as the thing that erodes the fast feedback loop. A budget nobody
-   * measures is a budget that is already gone, so this fails the run instead: eight minutes
-   * against the ~4 the whole suite takes today, which leaves room to grow and still catches
-   * a spec that hangs or quietly waits on a timeout.
+   * measures is a budget that is already gone. The integrated 155-test / 71-state suite
+   * reached the old eight-minute cap after 149 passing tests, before its final text-scale
+   * sweep. Twelve minutes keeps every state and assertion while bounding the larger workload.
    */
-  globalTimeout: 8 * 60_000,
+  globalTimeout: 12 * 60_000,
 }
