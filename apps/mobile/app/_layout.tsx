@@ -121,8 +121,14 @@ export default function RootLayout() {
                 <Stack.Screen name="add" options={{ title: copy.nav.add }} />
                 {/* Empty on purpose — the hero IS the title. See copy.nav.phrase. */}
                 <Stack.Screen name="phrase/[id]" options={{ title: copy.nav.phrase }} />
-                <Stack.Screen name="practice/refrain" options={{ title: copy.nav.refrain }} />
-                <Stack.Screen name="practice/stream" options={{ title: copy.nav.stream }} />
+                <Stack.Screen
+                  name="practice/refrain"
+                  options={{ title: copy.nav.refrain, gestureEnabled: false }}
+                />
+                <Stack.Screen
+                  name="practice/stream"
+                  options={{ title: copy.nav.stream, gestureEnabled: false }}
+                />
                 <Stack.Screen name="account" options={{ title: copy.account.title }} />
                 <Stack.Screen name="languages" options={{ title: copy.languages.title }} />
                 <Stack.Screen name="progress" options={{ title: copy.nav.progress }} />

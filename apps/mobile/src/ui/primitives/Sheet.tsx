@@ -6,16 +6,15 @@
  * the scrim's upper half is a labelled `Pressable` rather than a bare `onTouchEnd`. Its name
  * is a prop because it is learner-facing copy, and `e2e/add.spec.ts` finds it by that name.
  *
- * ── What it does not do ──
- * The grabber is drawn and inert. The drag-to-dismiss gesture belongs to
- * plans/48-app-shell-failure-states-and-input.md; this component changes no behaviour.
+ * Pull down on the dedicated handle to dismiss; content keeps its scroll gestures.
  */
 
 import type { ReactNode } from 'react'
 import { Modal, Platform, StyleSheet, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { line, radius, sheet, surface, webLayout } from '../theme'
+import { line, MIN_TAP, radius, sheet, surface, webLayout } from '../theme'
 import { Pressable } from './Pressable'
+import { usePullDown } from './usePullDown'
 
 export function Sheet({
   visible,
@@ -30,6 +29,7 @@ export function Sheet({
   children: ReactNode
 }) {
   const insets = useSafeAreaInsets()
+  const pullHandlers = usePullDown(onDismiss)
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onDismiss}>
@@ -44,7 +44,9 @@ export function Sheet({
         </Pressable>
 
         <View style={[s.panel, { paddingBottom: insets.bottom + sheet.padding }]}>
-          <View style={s.handle} />
+          <View testID="sheet-pull-handle" style={s.pullHandle} {...pullHandlers}>
+            <View style={s.handle} />
+          </View>
           {children}
         </View>
       </View>
@@ -64,6 +66,12 @@ const s = StyleSheet.create({
     borderTopRightRadius: radius['3xl'],
     padding: sheet.padding,
     gap: sheet.gap,
+  },
+  pullHandle: {
+    minHeight: MIN_TAP,
+    justifyContent: 'center',
+    touchAction: 'none',
+    userSelect: 'none',
   },
   handle: {
     width: sheet.handle.width,

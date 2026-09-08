@@ -140,3 +140,9 @@ in eu-central-1; readiness and manual rollback verified | Existing image; 66–6
 | [92](92-android-ec2-readiness.md) | Standalone Android HTTPS connectivity and readiness evidence |
 M1/M2 | ✅ HTTPS, APK and emulator checks verified; essential learning gaps recorded | 58/91; 59–68
 for learning readiness |
+
+## Mobile shell gestures
+
+| Plan                              | Scope                                  | Status                                                                                    |
+| --------------------------------- | -------------------------------------- | ----------------------------------------------------------------------------------------- |
+| [93](93-mobile-shell-gestures.md) | Pull-down switcher and sheet dismissal | 🟡 Implemented; full local CI passes; physical-device verification remains a release gate |
