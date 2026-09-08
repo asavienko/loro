@@ -59,16 +59,17 @@ speech/convergence, full iOS validation and bilingual review remain release gate
 [`plans/README.md`](plans/README.md).
 
 **Live connectivity:** the [AWS HTTPS gateway](docs/process/public-api.md) reaches the restricted
-EC2 API. Account checks readiness independently of sign-in; the deployed gateway exposes read-only
-routes. Merging this runtime does not deploy or expose authenticated sync there. The
+EC2 API. Account checks readiness independently of sign-in. Google development sign-in and guarded
+sync now reach persistent PostgreSQL; live consent-to-device verification remains open. See the
+[current deployment](docs/process/ec2-deployment.md). The
 [2026-09-08 readiness review](docs/reviews/2026-09-08-readiness.md) is dated deployment evidence;
 [plan 94](plans/94-persistent-practice-and-account-integration.md) records later implementation.
 
 **Backend testing:** [plan 88](plans/88-low-cost-backend-infrastructure.md) selects Frankfurt EC2,
 local PostgreSQL and private S3 at a $25–35/month target. Plan 91 records the restricted EC2
-deployment. Shared account/sync access still needs deployment and recovery verification with the new
-durable runtime. Start with [environments](docs/process/environments.md) and the
-[testing operations runbook](docs/runbooks/backend-testing.md).
+deployment. The narrower account deployment has passed readiness and an isolated restore; the full
+backup/monitoring profile remains open. Start with [environments](docs/process/environments.md) and
+the [testing operations runbook](docs/runbooks/backend-testing.md).
 
 Start at [`docs/process/onboarding.md`](docs/process/onboarding.md).
 

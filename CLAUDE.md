@@ -33,9 +33,10 @@ recorded in [the contract guide](docs/architecture/api-contracts.md). `pnpm chec
 and generated-core drift checks.
 
 The standalone preview can use the [AWS HTTPS gateway](docs/process/public-api.md). Account checks
-real readiness independently of sign-in. The existing public gateway exposes read-only routes;
-merging authenticated sync does not deploy or enable it there. Deployment validates the exact Docker
-image with `scripts/ci-api-image.sh` before transfer.
+real readiness independently of sign-in. The development gateway now exposes Google sign-in and
+guarded sync backed by private PostgreSQL. Google is in testing mode; live consent-to-device
+verification remains open. Deployment validates the exact Docker image with
+`scripts/ci-api-image.sh` before transfer.
 
 ## Keep this file current
 
@@ -363,7 +364,8 @@ export/erasure and physical-device convergence remain separate acceptance work. 
 
 `infra/ec2/template.yaml` and `scripts/provision-ec2.sh` provision a restricted development host;
 `scripts/deploy-ec2.sh` builds/transfers the API image and health-gates replacement with rollback.
-Administrative API access uses an SSH tunnel; the optional HTTPS gateway remains read-only until the
-authenticated durable runtime is separately deployed and verified. Deployed in eu-central-1;
-readiness, SSH tunnel access and manual rollback verified on 2026-09-07. See
+Administrative API access uses an SSH tunnel. The eu-central-1 HTTPS gateway enables development
+Google sign-in and guarded sync with private persistent PostgreSQL. Durable readiness, isolated
+restore and public auth-boundary probes passed on 2026-09-08; final device consent and the full
+backup/monitoring profile remain separate gates. See
 [`ec2-deployment.md`](docs/process/ec2-deployment.md).

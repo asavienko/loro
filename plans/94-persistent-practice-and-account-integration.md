@@ -144,9 +144,13 @@ audio interruptions and two-device convergence still require the release accepta
 
 ## Server Google sign-in follow-up (F-01/F-04, 2026-09-08)
 
-In progress: new Google Cloud project/client, encrypted EC2 runtime/database configuration, private
-persistent PostgreSQL, configured candidate releases with pre-migration backup, and opt-in HTTPS
-auth/sync forwarding. Focused gateway/release tests cover request bodies, callback redirects, CORS,
-header exclusion, access disabled by default and backup failure retaining the current API. Live
-cutover and sign-in verification must be recorded before this slice is complete. The broader native,
-multilingual and production operational gates above remain separate.
+Deployed: Google Cloud project/client, encrypted EC2 runtime/database configuration, private
+persistent PostgreSQL, configured candidate releases with pre-migration backup and opt-in HTTPS
+auth/sync forwarding. Focused tests cover bodies, callbacks, CORS, header exclusion and backup
+failure retaining the current API.
+
+Image `loro-api:0efdb14f2a20-20260908201218` passed fast checks, 171 isolated PostgreSQL API tests,
+exact-image validation, a 20-table isolated restore and public Google start/cancellation/anonymous
+access-denial probes. Google remains in testing mode. Full live consent-to-device verification is
+pending because the in-app browser blocks the AWS hostname; a device result is requested. The
+broader native, multilingual and production operational gates remain separate.
