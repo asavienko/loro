@@ -69,7 +69,7 @@ region. This destroys the instance and its disk. No database or backup is provis
 The template follows AWS's
 [instance metadata options](https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-properties-ec2-instance-metadataoptions.html).
 
-The verified deployed image below predates main's optional Google/Apple account support. The
+The historical 2026-09-07 image below predates main's optional Google/Apple account support. The
 deployment script leaves that integration disabled; provider credentials and PostgreSQL are not
 provisioned here. Merging repository changes does not replace the running EC2 image.
 
@@ -93,3 +93,11 @@ ingress is restricted to the provisioning machine's public IPv4 /32. If it chang
 stack's AdminCidr using the provisioning script with the same region/network/key parameters. The key
 pair was imported separately and is not deleted with the stack. The verification tunnel was closed
 after testing; use the command above to open one when needed.
+
+## Current release — 2026-09-08
+
+Image `loro-api:26dc09e2a27a-20260908114912` is healthy. It includes provider discovery and the
+multilingual content API; provider credentials and PostgreSQL remain unconfigured. The standalone
+APK can use the [read-only HTTPS gateway](public-api.md). See the
+[readiness review](../reviews/2026-09-08-readiness.md) for verified capabilities and missing
+essentials. The public gateway does not expose the legacy sync or AI routes.

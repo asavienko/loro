@@ -1,9 +1,9 @@
 # Stack and Android readiness — 2026-09-08
 
 **Verdict: development preview; not ready for production learning.** Standalone HTTPS access is
-implemented, EC2 is healthy, and a fresh APK/device check is being completed. Essential durable
-learning, audio/speech and account/sync features remain incomplete. A green health response does not
-establish these capabilities.
+implemented, EC2 is healthy, and the new APK passed Android emulator connection checks. Essential
+durable learning, audio/speech and account/sync features remain incomplete. A green health response
+does not establish these capabilities.
 
 ## Scope and baseline
 
@@ -53,7 +53,7 @@ readiness client now use a timed AbortController, tested with the static method 
 | --------------------------------------------------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------ |
 | Onboarding, Add, phrase detail, manual Stream/Refrain, Progress | Implemented with browser coverage                      | Native device matrix and durable state                                                                 |
 | Seven language pairs, three 31-phrase starter catalogs          | Bundled and served by the live API                     | Bilingual sign-off; content expansion                                                                  |
-| Standalone Android installation                                 | Local release APK pipeline exists; development signing | New connected APK/device evidence below; store signing is separate                                     |
+| Standalone Android installation                                 | Local release APK pipeline exists; development signing | Connected APK verified below; physical device matrix and store signing remain                          |
 | Internet API connection                                         | Real HTTPS readiness and read-only content access      | Does not activate account or sync                                                                      |
 | Device persistence and crash resume                             | **Missing**                                            | Plan 59: wire SQLite driver, hydration and transactional writes; current store resets on process death |
 | Durable server learning data                                    | **Missing**                                            | Plan 66: Postgres learning repository, migrations, tenant cursors and backups                          |
@@ -75,6 +75,14 @@ cover implemented behavior; they cannot prove missing native functionality.
 
 Pending final connected-APK build, emulator online/offline checks and completion of local
 validation.
+
+## Dependency review
+
+A fresh `pnpm audit --prod --json` reported 16 high and eight moderate findings, with no critical
+findings. The report includes transitive Expo/build dependencies; it is not proof that every finding
+is exploitable in the APK or API. No broad dependency upgrade was included in this connection fix.
+Dependency remediation and reachability review remain release work. The raw audit is retained under
+`.local-builds/readiness/dependency-audit.json`.
 
 ## Next essential delivery slices
 

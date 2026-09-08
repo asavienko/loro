@@ -138,5 +138,5 @@ setup and native verification remain deployment prerequisites |
 in eu-central-1; readiness and manual rollback verified | Existing image; 66–68 for public service |
 
 | [92](92-android-ec2-readiness.md) | Standalone Android HTTPS connectivity and readiness evidence |
-M1/M2 | 🟡 Gateway and connection check in progress; native learning/sync remain with their owners |
-58/91; 59–68 for learning readiness |
+M1/M2 | ✅ HTTPS, APK and emulator checks verified; essential learning gaps recorded | 58/91; 59–68
+for learning readiness |

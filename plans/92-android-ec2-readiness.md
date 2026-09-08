@@ -1,9 +1,10 @@
 # Android and EC2 readiness
 
 - **Requirement IDs:** F-03, F-04, F-09
-- **Status:** 🟡 Reviewing and implementing standalone HTTPS connectivity. Live deployment, APK
-  device verification and readiness evidence remain. Full learning readiness is blocked by device
-  persistence (59), canonical maths (60), audio/speech (61–63), and tenant sync (66–68).
+- **Status:** ✅ Standalone HTTPS connection, updated EC2 deployment, APK/emulator proof and
+  readiness review completed. Essential production learning remains with plans 59–68 and their
+  audio/quality gates; it is not claimed by this audit. See
+  [the evidence](../docs/reviews/2026-09-08-readiness.md).
 
 ## Scope
 
