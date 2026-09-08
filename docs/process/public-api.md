@@ -43,7 +43,14 @@ requires updating this stack. Do not delete the base EC2 stack while this gatewa
 
 Read `ApiUrl` from the completed gateway stack. Check `/health/ready`, multilingual content with
 explicit `native` and `target` queries, and `/auth/providers`. Verify `/sync/pull`, `/ai/scene` and
-POST `/health/ready` are denied before building:
+POST `/health/ready` are denied before building. The repeatable probe checks all seven language
+pairs:
+
+```bash
+node scripts/check-public-api.mjs https://AWS_GATEWAY_HOST/v1
+```
+
+Build the APK:
 
 ```bash
 EXPO_PUBLIC_API_URL=https://AWS_GATEWAY_HOST/v1 pnpm apk:local
