@@ -36,6 +36,7 @@
   ],
   "dependencies": {
     "@expo/metro-runtime": "~6.1.2",
+    "@formatjs/intl-pluralrules": "^6.3.13",
     "@loro/content": "workspace:*",
     "@loro/core": "workspace:*",
     "@loro/design-tokens": "workspace:*",

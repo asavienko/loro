@@ -286,3 +286,8 @@ prove native voice availability or native screen-reader pronunciation.
 F-08 runtime accessibility divergence: tag chips cap their width to their container and allow their
 labels to wrap. Web CTA labels use natural line height so 310% text-only zoom cannot paint Cyrillic
 glyphs outside the button. Native line-height tokens and the CTA minimum height remain unchanged.
+
+F-08 Android text-size correction: Today's time column uses the authored 34-px width as a minimum
+and grows to keep the complete time visible (`Navigation.dc.html:125–143`). The Add search field
+uses a 46-px minimum height so enlarged input text can fit. The text-scale suite measures complete
+wave times and input text height at 200% and 310%, in addition to the full screen-state sweep.

@@ -2,12 +2,24 @@ import { expect, test, onboard } from './fixtures'
 import { NATIVE_LANGUAGES, TARGET_LOCALES, supportsPair } from '@loro/core'
 import { localeText as resources, onboardPair } from './languageFlow'
 
+test.beforeEach(async ({ page }) => {
+  // Reproduce Hermes' missing API before the application initializes, for every language pair.
+  await page.addInitScript(() => {
+    Object.defineProperty(Intl, 'PluralRules', {
+      configurable: true,
+      writable: true,
+      value: undefined,
+    })
+  })
+})
+
 for (const native of NATIVE_LANGUAGES)
   for (const target of TARGET_LOCALES) {
     if (!supportsPair(native, target)) continue
     test(`F-08: ${native} → ${target} onboarding, content and practice`, async ({ page }) => {
       const text = resources[native]
       await onboardPair(page, native, target)
+      await expect(page.locator('body')).not.toContainText(/\{[^}]*\}/)
       await page.getByRole('button', { name: text['today.rail.add'], exact: true }).click()
       await expect(page.getByRole('textbox', { name: text['a11y.add.searchInput'] })).toBeVisible()
       // Add a real suggestion through the sheet, then inspect practice and progress.
@@ -24,6 +36,7 @@ for (const native of NATIVE_LANGUAGES)
       await page.getByRole('link', { name: text['a11y.common.back'], exact: true }).click()
       await page.getByRole('button', { name: text['common.progress'], exact: true }).click()
       await expect(page.getByText(text['progress.mastery.title'])).toBeVisible()
+      await expect(page.locator('body')).not.toContainText(/\{[^}]*\}/)
     })
   }
 

@@ -618,7 +618,7 @@ const s = StyleSheet.create({
   searchField: { paddingHorizontal: 13 },
   /** 14 at weight 600 sits between `caption` and `bodySm`, so it is not a type variant. */
   searchInput: {
-    height: 46,
+    minHeight: 46,
     paddingHorizontal: space['3'],
     fontSize: 14,
     fontWeight: '600',
