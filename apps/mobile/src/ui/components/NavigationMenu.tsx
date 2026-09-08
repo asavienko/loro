@@ -1,3 +1,4 @@
+import { usePullDown } from '../primitives/usePullDown'
 import { useState } from 'react'
 import { ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -32,11 +33,18 @@ export function NavigationMenu({
   }[]
 }) {
   const [visible, setVisible] = useState(false)
+  const pullHandlers = usePullDown(() => {
+    setVisible(true)
+  })
   const { height } = useWindowDimensions()
   const insets = useSafeAreaInsets()
   return (
     <>
-      <View style={[s.spine, { paddingTop: insets.top }]}>
+      <View
+        testID="navigation-pull-handle"
+        style={[s.spine, { paddingTop: insets.top }]}
+        {...pullHandlers}
+      >
         <Pressable
           feedback="row"
           accessibilityLabel={openLabel}
@@ -115,6 +123,8 @@ const HANDLE_GAP = 5
 const ROW_PADDING = 13
 const s = StyleSheet.create({
   spine: {
+    touchAction: 'none',
+    userSelect: 'none',
     minHeight: SPINE_HEIGHT,
     paddingHorizontal: space['5'],
     justifyContent: 'center',

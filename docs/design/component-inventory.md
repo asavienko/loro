@@ -38,7 +38,7 @@ Primitives are domain-free. Their public exports come from `primitives/index.ts`
 | `Pill`          | Static `label`, optional emoji, `tone: neutral\|accent\|onDark`, five sizes, colour overrides                        |
 | `Chip`          | Selectable label; `variant: tag\|scenario\|toggle`, `tone: tint\|solid`, explicit role/state                         |
 | `Segmented`     | Generic options/value/change; `variant: pill\|track`, button or radio role                                           |
-| `Sheet`         | `visible`, `onDismiss`, required learner-facing `dismissLabel`; slide modal with tappable backdrop; grabber is inert |
+| `Sheet`         | `visible`, `onDismiss`, required learner-facing `dismissLabel`; slide modal with tappable backdrop; pull-down handle dismisses |
 | `ProgressBar`   | Clamped 0–1 value, colour/track/height/radius, optional label; labelled or hidden, never unnamed                     |
 | `Dots`          | Count, filled count, optional size; simple accent pips                                                               |
 | `EmojiTile`     | Decorative emoji square with size/radius/background/font-size overrides                                              |
@@ -119,7 +119,7 @@ surrounding row already announces the value. Never create an unnamed progressbar
 
 ### `Sheet` and `ActionBar`
 
-The sheet backdrop is a labelled button; its grabber is not a drag handle yet. `ActionBar` reads the
+The sheet backdrop is a labelled button; its touch-sized grabber area supports swipe-down dismissal. `ActionBar` reads the
 safe-area inset but does not measure its own height, so each route uses a named clearance token.
 Replacing those values with measurement is a behaviour/layout change and needs text-scale E2E
 verification.
