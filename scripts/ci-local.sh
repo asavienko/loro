@@ -39,7 +39,7 @@ fi
 command -v wasm-pack >/dev/null || { echo 'Install wasm-pack: cargo install wasm-pack --locked' >&2; exit 1; }
 docker info >/dev/null
 # The auth suite drops tables; only the isolated PostgreSQL helper may set this URL.
-unset AUTH_TEST_DATABASE_URL
+unset AUTH_TEST_DATABASE_URL LORO_TEST_DATABASE_URL
 run pnpm install --frozen-lockfile
 run pnpm core-rs:build
 test -f packages/core-rs/pkg/loro_core_bg.wasm
@@ -56,9 +56,9 @@ if [[ -n "${CI_BASE_REF:-}" ]]; then
 else
   echo 'Commit range not provided; set CI_BASE_REF to validate branch commits.'
 fi
-if [[ -n "$(git status --porcelain -- packages/design-tokens/out packages/core-rs/bindings)" ]]; then
+if [[ -n "$(git status --porcelain -- packages/design-tokens/out packages/core-rs/bindings packages/core-rs/browser)" ]]; then
   echo 'Generated output differs from Git. Review and commit regenerated output.' >&2
-  git status --short -- packages/design-tokens/out packages/core-rs/bindings
+  git status --short -- packages/design-tokens/out packages/core-rs/bindings packages/core-rs/browser
   exit 1
 fi
 run pnpm test:e2e:install

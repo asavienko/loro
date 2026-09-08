@@ -1,9 +1,10 @@
 # Local containers and encrypted environment
 
-The root Compose stack runs the current API and Expo web app. It builds the Rust/WASM merge inside
-Docker; no host Rust, Postgres, Redis or provider account is needed. The running app and API still
-store learner state in memory. Containers do not implement native audio, device persistence, mobile
-networking, or live AI.
+The root Compose stack runs the current API, PostgreSQL and Expo web app. It builds the Rust/WASM
+merge inside Docker; no host Rust, Postgres or provider account is needed. Browser practice uses
+durable local SQLite snapshots; account and sync rows live in PostgreSQL. Provider/email sign-in
+requires the separately configured credentials in [persistent practice](persistent-practice.md).
+Containers serve the browser and API; native speech requires an installed device build.
 
 ## Start and stop
 
@@ -20,9 +21,10 @@ nvm use 22
 pnpm local:up
 ```
 
-This decrypts the API environment, builds the image and waits for both health checks. The initial
-build downloads Node/Rust dependencies and takes several minutes. Open <http://localhost:8081>; API
-readiness is <http://localhost:3000/v1/health/ready> and must report the merge engine available.
+This decrypts the API environment, builds the image and waits for the database, API and web health
+checks. The initial build downloads Node/Rust dependencies and takes several minutes. Open
+<http://localhost:8081>; API readiness is <http://localhost:3000/v1/health/ready> and must report
+both database and merge engine available.
 
 ```bash
 pnpm local:logs
@@ -33,7 +35,7 @@ Source is copied into the image. Run `pnpm local:up` again after code changes. F
 the existing host development commands instead. This stack serves the browser; it does not run an
 iOS simulator or Android emulator. Ports bind to loopback.
 
-Optional infrastructure, for developing future persistence/content integrations:
+Optional Redis and MinIO infrastructure for future content/provider integrations:
 
 ```bash
 docker compose --profile infra up -d --wait
@@ -42,9 +44,9 @@ docker compose --profile infra down
 ```
 
 Postgres is on 5432, Redis on 6379, MinIO on 9000 and its console on 9001. Their local credentials
-remain in `apps/api/docker-compose.yml`. They are not used by today's in-memory API. Do not run the
-legacy infrastructure stack at the same time: the ports overlap. `down --volumes` deletes data;
-ordinary `local:down` retains it.
+remain in `apps/api/docker-compose.yml`. PostgreSQL starts with the default stack and stores durable
+auth/sync data; Redis and MinIO remain optional. Do not run the legacy infrastructure stack at the
+same time: the ports overlap. `down --volumes` deletes data; ordinary `local:down` retains it.
 
 ## SOPS / age
 

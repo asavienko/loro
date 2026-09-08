@@ -13,6 +13,9 @@ use EAS or submit anything to Google Play.
   NDK/CMake versions requested by the generated project. Set `ANDROID_HOME` or `ANDROID_SDK_ROOT`;
   macOS defaults to `~/Library/Android/sdk`.
 - `git`, `tar`, `unzip`, and authenticated `gh` for uploads (`gh auth login`).
+- Rust and `cargo-ndk` on PATH, with `aarch64-linux-android` and `x86_64-linux-android` installed
+  through `rustup target add`. Gradle builds the Rust library with its own NDK and selected ABIs
+  before packaging the app; no copied library from a developer checkout is used.
 - A clean committed checkout. For uploads, the source commit must already exist in this GitHub repo.
   The script does not push code branches or silently change the source commit.
 
@@ -66,14 +69,17 @@ its hash before optionally publishing. Failed verification leaves a draft for in
 
 This uses Gradle's release variant with Expo's **development signing key**, not a production signing
 identity. JavaScript/Hermes is bundled, the Android manifest is non-debuggable, and Metro is not
-needed. The runner verifies the APK signature, application ID and bundled JavaScript before upload.
+needed. The runner verifies the APK signature, application ID, bundled JavaScript and both Rust and
+SQLite shared libraries for each requested ABI before upload.
 
 The local-build config uses `app.loro.android.preview` and the name “Loro Preview”, separate from
 the planned production app. OTA/EAS placeholders and missing production icon/splash image references
 are excluded only for this preview. Android uses the generated template icon and an explicit
 transparent splash drawable, preserving a background-only launch screen. Store signing, branded
 native assets and version-code policy remain release work. A verified build is not a device-test
-result: audio/ASR, native persistence and Rust module bridges remain unimplemented.
+result: SQLite, Rust and foreground device speech modules are implemented, while physical-device
+audio/ASR acceptance, iOS builds and background playback remain separate gates. See
+[persistent practice](persistent-practice.md) for the recorded platform evidence.
 
 The implementation follows
 [Expo's local build flow](https://docs.expo.dev/guides/local-app-production/) and
