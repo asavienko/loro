@@ -5,9 +5,13 @@ import { File as ExpoFile } from 'expo-file-system'
 import {
   MAX_OWN_PHRASE_TEXT_CODE_UNITS,
   type NativeLanguage,
+  type PhraseHandoffSource,
   type PhraseState,
   type TargetLocale,
 } from '@loro/core'
+import type { DisplayPhrase as CatalogPhrase } from '../../src/store/learningCatalog'
+import { ownedTargetTexts } from './ownedPhrases'
+import { targetLanguageInputProps } from './targetLanguage'
 import { Button, Card, SectionHeader, Stack, Text } from '../../src/ui/primitives'
 import { border, ink, line, semantic, space } from '../../src/ui/theme'
 import { copy } from '../../src/lib/copy'
@@ -35,6 +39,7 @@ import { readBoundedImportFile } from '../../src/lib/readBoundedImportFile'
 
 export function ImportPhrases({
   owned,
+  catalog,
   addOwnPhrase,
   importDrafts,
   targetLocale,
@@ -43,7 +48,11 @@ export function ImportPhrases({
   clearImportDraft,
 }: {
   owned: readonly PhraseState[]
-  addOwnPhrase: (draft: { targetText: string; translation: string }) => string
+  catalog: readonly CatalogPhrase[]
+  addOwnPhrase: (
+    draft: { targetText: string; translation: string },
+    o?: { source?: PhraseHandoffSource },
+  ) => string
   importDrafts: ImportDrafts
   targetLocale: TargetLocale
   nativeLanguage: NativeLanguage
@@ -68,14 +77,7 @@ export function ImportPhrases({
       fileRequest.current += 1
     }
   }, [nativeLanguage, targetLocale])
-  const existing = useMemo(
-    () =>
-      owned.flatMap((phrase) => {
-        const view = phrase.phraseId === null ? [phrase.ownEs] : []
-        return view.filter((text): text is string => typeof text === 'string')
-      }),
-    [owned],
-  )
+  const existing = useMemo(() => ownedTargetTexts(owned, catalog), [owned, catalog])
   const preview = () => {
     fileRequest.current += 1
     const exceedsLimit = isImportTooLarge(input)
@@ -185,7 +187,10 @@ export function ImportPhrases({
       const key = importedPhraseKey(candidate.targetText)
       if (keys.has(key)) continue
       try {
-        addOwnPhrase({ targetText: candidate.targetText, translation: candidate.translation })
+        addOwnPhrase(
+          { targetText: candidate.targetText, translation: candidate.translation },
+          { source: 'import' },
+        )
         keys.add(key)
         savedLines.add(candidate.line)
         savedTargetTexts.push(candidate.targetText)
@@ -297,6 +302,7 @@ export function ImportPhrases({
                     placeholder={copy.add.import.targetPlaceholder}
                     placeholderTextColor={ink.muted2}
                     accessibilityLabel={copy.a11y.add.importTarget(candidate.line)}
+                    {...targetLanguageInputProps()}
                     style={s.reviewInput}
                   />
                   <TextInput

@@ -7,9 +7,10 @@ Guidance for Claude Code working in this repository.
 **Loro** — a mobile app (iOS + Android) that teaches Spanish, Bulgarian, and Russian by the phrase.
 
 Early implementation. **What exists:** eight of the v1.1 design package's 23 learner screens,
-Languages, Account, More and Settings utilities, the shared shell and a developer workbench. Local
-progress and course/session state commit to native OP-SQLite or browser SQLite before rendering.
-Rust owns FSRS, ranking, selection, matching, clocks and merge through generated WASM/UniFFI
+Languages, Account, More and Settings utilities, the shared shell and a developer workbench.
+Discover offers Add your own and bundled topic suggestions; live `/v1/phrases/suggest` stays behind
+Q-21. Local progress and course/session state commit to native OP-SQLite or browser SQLite before
+rendering. Rust owns FSRS, ranking, selection, matching, clocks and merge through generated WASM/UniFFI
 bridges. Native modules provide foreground device TTS and strictly on-device ASR with an offline
 Speak reveal fallback. The API stores accounts, sessions and tenant-scoped sync in PostgreSQL.
 Optional Google/Apple and email sign-in connect durable local progress to cross-device sync.
@@ -151,13 +152,14 @@ prototype-only and **must not** be carried into the app — see the divergence t
   redirect files; update references to the actual archive path and rebase the moved plan's relative
   links. Keep completed records out of the active index. Archive a finished plan in the same change.
   Plan 53 was archived at user request on 2026-09-09; its former original-path exception no longer
-  applies. The next new plan number is 97; recheck concurrent worktrees and untracked `plans/` files
-  before allocating an ID — the README/CLAUDE "next is N" sentence can lag. A new plan takes the next
-  free number and gets a row in [`plans/README.md`](plans/README.md).
-  **Numbers are never reused** — a gap is left rather than backfilled, so a link written against a
-  number can't come to mean a different plan. Not in `docs/`: that holds the durable spec. Not in a
-  temp directory either — a plan you can't find again is a plan you rewrite. Name the requirement ID
-  inside the plan so it ties back to the branch and the PR.
+  applies. Plan 97 owns generative Discover reach. The next new plan number is 98; recheck concurrent
+  worktrees and untracked `plans/` files before allocating an ID — the README/CLAUDE "next is N"
+  sentence can lag. A new plan takes the next free number and gets a row in
+  [`plans/README.md`](plans/README.md). **Numbers are never reused** — a gap is left rather than
+  backfilled, so a link written against a number can't come to mean a different plan. Not in
+  `docs/`: that holds the durable spec. Not in a temp directory either — a plan you can't find
+  again is a plan you rewrite. Name the requirement ID inside the plan so it ties back to the
+  branch and the PR.
 - Implemented-slice plans 56–68, 70–73, 75–77, 80–82, 86–88, 90 and 93–96 were archived at user
   request on 2026-09-09 with their partial status and remaining scope preserved in
   `plans/archive/2026-09-09/`; direct links in the roadmap index retain their ownership. This
@@ -352,8 +354,9 @@ Unresolved decisions with owners and dates:
 [`docs/decisions/open-questions.md`](docs/decisions/open-questions.md). Active roadmap gates are
 **Q-15** (production audio), **Q-07** (trip semantics), **Q-05** (loop experiment and conditional
 Run), **Q-14** (Refrain peak accessibility), **Q-08/Q-12** (pricing and billing), **Q-17** (rail
-priority), **Q-16/Q-18–Q-20** (chat launch, budget and retention), plus bilingual review and the DSP
-quality gate. Gates apply to their named slices; offline chat and spike preparation may proceed.
+priority), **Q-16/Q-18–Q-20** (chat launch, budget and retention), **Q-21** (Discover suggest), plus
+bilingual review and the DSP quality gate. Gates apply to their named slices; offline chat and
+spike preparation may proceed.
 Work whose dependencies do not cross those gates should continue.
 
 ## Python

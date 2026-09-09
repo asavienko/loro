@@ -1,17 +1,27 @@
 import { useState } from 'react'
-import type { Difficulty, Tag } from '@loro/core'
+import type { Difficulty, PhraseHandoff, PhraseHandoffSource, Tag, Theme } from '@loro/core'
 import type { DisplayPhrase as CatalogPhrase } from '../../src/store/learningCatalog'
 
-/** What the learner is about to add: the phrase the sheet is open on, and its draft rating. */
+export type SheetPhrase =
+  | { kind: 'catalog'; phrase: CatalogPhrase }
+  | {
+      kind: 'own'
+      source: PhraseHandoffSource
+      targetText: string
+      translation: string
+      theme?: Theme
+      emoji?: string
+    }
+
+/** What the learner is about to add: a catalog row or an own-phrase handoff. */
 export interface AddDraft {
-  phrase: CatalogPhrase | null
+  phrase: SheetPhrase | null
   difficulty: Difficulty
   tags: Tag[]
-  open: (phrase: CatalogPhrase) => void
-  /**
-   * Dismiss WITHOUT clearing the draft — reopening the sheet keeps what was picked, which is
-   * what the hand-rolled version did. Only a confirmed add resets it.
-   */
+  openCatalog: (phrase: CatalogPhrase) => void
+  openHandoff: (handoff: PhraseHandoff) => void
+  setOwnField: (field: 'targetText' | 'translation', value: string) => void
+  /** Dismiss clears tagging so a later row does not inherit abandoned difficulty or tags. */
   close: () => void
   setDifficulty: (difficulty: Difficulty) => void
   toggleTag: (tag: Tag) => void
@@ -20,16 +30,37 @@ export interface AddDraft {
 }
 
 export function useAddDraft(): AddDraft {
-  const [phrase, setPhrase] = useState<CatalogPhrase | null>(null)
+  const [phrase, setPhrase] = useState<SheetPhrase | null>(null)
   const [difficulty, setDifficulty] = useState<Difficulty>('med')
   const [tags, setTags] = useState<Tag[]>([])
   return {
     phrase,
     difficulty,
     tags,
-    open: setPhrase,
+    openCatalog: (next) => {
+      setPhrase({ kind: 'catalog', phrase: next })
+      setDifficulty('med')
+      setTags([])
+    },
+    openHandoff: (handoff) => {
+      setPhrase({
+        kind: 'own',
+        source: handoff.source,
+        targetText: handoff.draft.targetText,
+        translation: handoff.draft.translation,
+        ...(handoff.draft.theme === undefined ? {} : { theme: handoff.draft.theme }),
+        ...(handoff.draft.emoji === undefined ? {} : { emoji: handoff.draft.emoji }),
+      })
+      setDifficulty('med')
+      setTags([])
+    },
+    setOwnField: (field, value) => {
+      setPhrase((cur) => (cur?.kind === 'own' ? { ...cur, [field]: value } : cur))
+    },
     close: () => {
       setPhrase(null)
+      setDifficulty('med')
+      setTags([])
     },
     setDifficulty,
     toggleTag: (tag) => {

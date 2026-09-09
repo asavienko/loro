@@ -1,10 +1,10 @@
 # Active plans
 
-This index lists only the **35 plans with remaining work**. Completed records and historical
+This index lists only the **36 plans with remaining work**. Completed records and historical
 snapshots are kept in [the archive](archive/README.md), without compatibility symlinks or redirect
 files in this directory. Links point directly to each plan's actual location.
 
-The highest assigned ID is **96** and the next new plan is **97**. Recheck concurrent worktrees and
+The highest assigned ID is **97** and the next new plan is **98**. Recheck concurrent worktrees and
 untracked `plans/` files before allocating; the "next is N" sentence can lag. Numbers are never
 reused; 49 remains an existing gap. When a plan finishes, archive it in the same change and list it
 only in the archive index.
@@ -12,12 +12,12 @@ only in the archive index.
 Implemented-slice owners from 56–68, 70–73, 75–77, 80–82, 86–88, 90 and 93–96 are stored in
 [the 2026-09-09 archive](archive/2026-09-09/README.md) at user request. Their partial statuses and
 outstanding scope remain indexed below; archiving does not imply completion. Only the still-unbuilt
-or decision-gated files 69, 74, 78 and 83 remain in this directory.
+or decision-gated files 69, 74, 78, 83 and 97 remain in this directory.
 
 The [post-main review](../docs/reviews/2026-09-09-post-main-plan-review.md) records the six runtime
 and validation findings as fixed, including the follow-up Refrain completion and touch-target
 repairs. No additional whole plan meets its acceptance criteria. Delivered implementation slices are
-recorded in the [dated archive](archive/2026-09-09/IMPLEMENTED-SLICES.md); all 35 remaining-work
+recorded in the [dated archive](archive/2026-09-09/IMPLEMENTED-SLICES.md); all 36 remaining-work
 owners are retained. Continue with device/provider acceptance, then integrate the remaining
 daily-loop, Review, content and lifecycle slices.
 
@@ -160,6 +160,7 @@ feature↔release-completion cycle. See each plan's checkboxes for executable ta
 | [94](archive/2026-09-09/94-persistent-practice-and-account-integration.md) | Integrated persistence, canonical core, speech and account sync             | M1/M2       | 🟡 Runtime/fast/format gates pass; full/device CI remains                                                    | 54/85 ✅; coordinated 58–60/62–63/66–68 slices                  |
 | [95](archive/2026-09-09/95-parallel-local-ci.md)                           | Dependency-aware parallel full local CI                                     | M2          | 🟡 Scheduler, cancellation, Git inventory and source identity fixes implemented; runtime comparison remains  | 72; no external blocker for measurements                        |
 | [96](archive/2026-09-09/96-account-sign-in-screens.md)                     | Account method chooser, email/code flow and provider sign-in states         | M2          | 🟡 UI/browser/client slices implemented; visual, native and live-provider evidence remains                   | 67/68/86; provider configuration and device evidence            |
+| [97](97-generative-discover-and-phrase-reach.md)                           | Guarded generative Discover reach and shared add-handoff                    | M3          | 🟡 Own-phrase floor, bundled suggestions and stub suggest exist; Q-21 gates live traffic                     | 59/61; 76/86 live path; 82/83 consume handoff; Q-21             |
 
 Plan 88 owns the selected AWS testing profile and
 [operations runbook](../docs/runbooks/backend-testing.md); plan 73 retains production operations.
@@ -171,7 +172,7 @@ Render testing recommendation in 86 is superseded by 88.
 - Begin from verified existing code; do not rebuild completed contracts, localization, menus or
   tests.
 - Keep one owner per behavior: 56 route policy, 81 chrome; 59 durable checkpoints, 64 wave
-  transitions; 66 server cursors, 68 client convergence; 86 vendor controls, 76/82 product AI.
+  transitions; 66 server cursors, 68 client convergence; 86 vendor controls, 76/82/97 product AI.
 - Future surfaces consume the selected language pair and real capability states. Preserve personal
   meaning language, course isolation and global streak semantics; never silently substitute Spanish.
 - Every new learner state lands with its manifest row and E2E checks. Native behavior requires
@@ -179,7 +180,8 @@ Render testing recommendation in 86 is superseded by 88.
   device.
 - Release decisions remain in `docs/decisions/open-questions.md`: Q-15 audio; Q-07 trips; Q-05
   experiment/Run; Q-14 peak; Q-08/Q-12 billing; Q-17 rail priority; Q-16 chat launch, Q-18 budget,
-  Q-19 local retention and Q-20 provider retention. No decision is silently resolved by this reset.
+  Q-19 local retention, Q-20 provider retention and Q-21 Discover suggest. No decision is silently
+  resolved by this reset.
 - Keep each plan/status row current and commit coherent requirement-tagged chunks with `pnpm check`
   green. Archive a finished plan in the same change; never delete historical records or reuse
   numbers.

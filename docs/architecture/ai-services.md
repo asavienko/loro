@@ -27,10 +27,12 @@ Every learner-facing AI path has a **bundled fallback** that is good, not merely
 | **Coach notes** for free-speech replies                           | Yes                | Yes             | The scene's pre-authored tip                |
 | **Open-chat turns, suggestions and feedback**                     | Yes                | Yes             | Authored topic/reply graphs                 |
 | **Translation** for Import and Capture                            | Yes                | Yes             | Leave untranslated; the learner can type it |
+| **Discover phrase suggestions**                                   | Yes                | Yes             | Catalog, scenarios, Add your own, bundled topics |
 | **Content enrichment** — `resp`, `words`, `example`, `hint`       | No, authoring-time | No              | Human authoring                             |
+| **Catalog/scenario drafts**                                       | No, authoring-time | No              | Human review; `review_required`             |
 | **Phrase-quality review** — flag stiff or unnatural catalog lines | No, CI             | No              | Human review                                |
 
-Rows 5 and 6 are where the LLM earns most of its value: enriching 600 phrases with respellings,
+The authoring-time enrichment rows are where the LLM earns most of its value: enriching 600 phrases with respellings,
 glosses, examples, and memory hooks is weeks of work, and a draft-then-review pipeline turns it into
 days. That work happens offline, in CI, with a human gate
 ([`process/content-authoring.md`](../process/content-authoring.md)) — so no learner ever waits on it

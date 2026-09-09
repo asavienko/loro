@@ -442,6 +442,7 @@ provider may make replies less repetitive when policy, budget, and safety gates 
 | AI-03 | Translation and normalisation for imported and captured lines                                                                                                     | v1.1 |                                                                      |
 | AI-04 | Reserved; no implementation may upload recorded learner audio                                                                                                     | —    | P3D-12 remains excluded unless a real on-device design exists        |
 | AI-05 | Every learner-visible AI path is bounded, rate-limited, schema/safety validated, and has a useful bundled fallback; cache only where privacy and semantics permit | v1.1 | Open chat remains subject to `P3E-17`…`P3E-18`                       |
+| AI-06 | Guarded Discover phrase suggestions: catalog-first, marked own-phrase candidates, explicit add; live traffic gated by Q-21                                      | v1.1 | [plan 97](../../plans/97-generative-discover-and-phrase-reach.md)    |
 
 ## Cross-cutting: notifications
 

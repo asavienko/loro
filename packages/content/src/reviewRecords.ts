@@ -76,7 +76,8 @@ function exactEntries(
 }
 
 function recordMaterialSha256(value: RecordValue): string | undefined {
-  if (!Array.isArray(value.ui) || !Array.isArray(value.courses)) return undefined
+  if (!Array.isArray(value.ui) || !Array.isArray(value.courses) || !Array.isArray(value.topics))
+    return undefined
   const ui = value.ui.map((entry) => {
     if (!isRecord(entry) || typeof entry.locale !== 'string' || typeof entry.sha256 !== 'string')
       return undefined
@@ -96,11 +97,21 @@ function recordMaterialSha256(value: RecordValue): string | undefined {
       sha256: entry.sha256,
     }
   })
-  if (ui.some((entry) => entry === undefined) || courses.some((entry) => entry === undefined))
+  const topics = value.topics.map((entry) => {
+    if (!isRecord(entry) || typeof entry.id !== 'string' || typeof entry.sha256 !== 'string')
+      return undefined
+    return { id: entry.id, sha256: entry.sha256 }
+  })
+  if (
+    ui.some((entry) => entry === undefined) ||
+    courses.some((entry) => entry === undefined) ||
+    topics.some((entry) => entry === undefined)
+  )
     return undefined
   return reviewMaterialSha256({
     ui: ui as { locale: string; sha256: string }[],
     courses: courses as { nativeLanguage: string; targetLocale: string; sha256: string }[],
+    topics: topics as { id: string; sha256: string }[],
   })
 }
 
@@ -137,6 +148,14 @@ export function validateReviewRecord(packet: ReviewPacket, record: unknown): voi
         String(expected.nativeLanguage),
         String(expected.targetLocale).split('-')[0] ?? '',
       ],
+    ),
+    ...exactEntries(
+      packet.topics,
+      value.topics,
+      'Topic',
+      (candidate, expected) => candidate.id === expected.id,
+      (candidate) => candidate.material,
+      () => ['en', 'es', 'bg', 'ru'],
     ),
   ]
   if (problems.length > 0) throw new Error(problems.join(' '))

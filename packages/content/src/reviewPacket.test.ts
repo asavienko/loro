@@ -19,6 +19,10 @@ function approvedRecord() {
       ...entry,
       review: review([entry.nativeLanguage, entry.targetLocale.split('-')[0]!]),
     })),
+    topics: packet.topics.map((entry) => ({
+      ...entry,
+      review: review(['en', 'es', 'bg', 'ru']),
+    })),
   }
 }
 
@@ -27,7 +31,8 @@ describe('F-08 bilingual review material', () => {
     const packet = buildReviewPacket()
     expect(packet.ui.map(({ locale }) => locale)).toEqual(['en', 'bg', 'ru'])
     expect(packet.courses).toHaveLength(7)
-    for (const entry of [...packet.ui, ...packet.courses]) {
+    expect(packet.topics.map(({ id }) => id)).toEqual(['discover-bundled'])
+    for (const entry of [...packet.ui, ...packet.courses, ...packet.topics]) {
       expect(entry.review.status).toBe('pending')
       expect(entry.review.reviewer).toBeNull()
       expect(entry.sha256).toMatch(/^[a-f0-9]{64}$/)

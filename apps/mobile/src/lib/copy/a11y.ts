@@ -49,6 +49,16 @@ export const a11yCopy = {
     get opensSheet() {
       return message('a11y.add.opensSheet')
     },
+    ownRow: (query: string): string => message('a11y.add.ownRow', { query }),
+    suggestedRow: (es: string, en: string): string =>
+      message('a11y.add.suggestedRow', { es, en }),
+    get sheetTarget() {
+      return message('a11y.add.sheetTarget')
+    },
+    get sheetMeaning() {
+      return message('a11y.add.sheetMeaning')
+    },
+    nearestScenario: (label: string): string => message('a11y.add.nearestScenario', { label }),
   },
   onboarding: {
     goalValue: (goal: string): string => message('onboarding.goalValue', { goal }),
