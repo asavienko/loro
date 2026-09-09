@@ -67,7 +67,7 @@ dependency-aware sequence of deliverables, not a requirement to complete whole p
 | 5        | [71](71-settings-telemetry-and-experiments.md), [57](57-runtime-design-system.md)                                                                                               | Durable general Settings and privacy controls, using supported runtime visuals; telemetry/flags are separate                      |
 | 6        | [67](67-anonymous-auth-and-account-lifecycle.md), [68](68-sync-and-offline-convergence.md)                                                                                      | Reviewed lifecycle policy, management/export/erasure, repair and stale-device enforcement; background execution follows           |
 | 7        | [62](62-native-audio-playback.md), [63](63-native-speech-speak-and-latency.md) → [64](64-today-and-refrain-production-loop.md), [81](81-navigation-spine-switcher-and-more.md)  | Shared native session/cache/background transport, measured onset, audible loop and travelling presentation                        |
-| 8        | [65](65-import-and-capture.md)                                                                                                                                                  | Bounded offline file input and durable draft/retry recovery; OCR later                                                            |
+| 8        | [65](65-import-and-capture.md)                                                                                                                                                  | On-device OCR Capture after native permission support                                                                             |
 | 9        | [58](58-native-workspace-and-device-ci.md), [72](72-release-quality-gates.md), [87](87-multilingual-app-and-language-selection.md), [88](88-low-cost-backend-infrastructure.md) | Start alongside priority 1: native builds/device evidence, release matrix, real bilingual review and off-host recovery/operations |
 
 ### Existing delivery to preserve
@@ -75,7 +75,8 @@ dependency-aware sequence of deliverables, not a requirement to complete whole p
 - `check:routes`, built-hub navigation metadata and More's static groups already exist. The missing
   work is exhaustive authored surface policy, consumer integration, counts/search and exits/resume.
 - Paste import already revalidates field/batch limits at edit/save and retains rejected/write-failed
-  rows through in-session storage recovery. File input and durable draft relaunch are still missing.
+  rows through in-session storage recovery. Bounded UTF-8 `.txt`/`.tsv` input and course-bound
+  draft relaunch/retry are implemented; OCR remains.
 - The local fast gate runs native collector fixtures; full local CI runs a separate pseudo-locale
   suite. Full state/native evidence remains open. Review-record validation recomputes actual
   material digests and checks declared reviewer languages; real approvals and release-path wiring
@@ -123,7 +124,7 @@ feature↔release-completion cycle. See each plan's checkboxes for executable ta
 | [62](62-native-audio-playback.md)                       | Recorded playback, cache and background transport                           | M1/M2       | 🟡 TTS and queued-session cancellation done; Q-15/hardware remain                     | 58; 61 approved seed; 86 remote adapters                        |
 | [63](63-native-speech-speak-and-latency.md)             | Per-target ASR acceptance and measured onset                                | M2          | 🟡 ASR/Speak/reveal and event validation done; hardware/onset remain                  | 58; 60 matching; 62 clock/buffers; target models                |
 | [64](64-today-and-refrain-production-loop.md)           | Durable timed waves, real Refrain audio and tag drills                      | M2          | 🟡 Manual loop and focused clock refresh done; production behavior remains            | 59/60/62/63; Q-14 peak only; 81 presentation                    |
-| [65](65-import-and-capture.md)                          | Offline reviewed Import, then on-device OCR Capture                         | M2/M3       | 🟡 Paste limits/partial-save recovery done; files/durable drafts/OCR remain           | 56/59; OCR 58; optional assistance 76/86                        |
+| [65](65-import-and-capture.md)                          | Offline reviewed Import, then on-device OCR Capture                         | M2/M3       | 🟡 File/paste review and durable local recovery done; OCR remains                     | 56/59; OCR 58; optional assistance 76/86                        |
 | [66](66-backend-contract-data-and-security.md)          | Durable backend and operational/security acceptance                         | M2          | 🟡 Postgres/auth/sync/content-v2 done; image/load proof remains                       | 54/85 ✅; 67 lifecycle; 86 providers                            |
 | [67](67-anonymous-auth-and-account-lifecycle.md)        | Account linking, recovery, export and erasure                               | M2          | 🟡 Identity/binding/sync and email race guard done; lifecycle gates remain            | 59/66 runtime; 86 providers; lifecycle policy                   |
 | [68](68-sync-and-offline-convergence.md)                | Background, rescue and device/load convergence proof                        | M2          | 🟡 Durable sync and bounded cursor recovery done; acceptance remains                  | 59/60/66/67 runtime; device/load environment                    |

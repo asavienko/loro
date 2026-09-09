@@ -5,7 +5,8 @@
 - **Status:** 🟡 Own-phrase identity/store, language ownership and reviewed offline paste import
   exist. Paste review enforces 50 nonempty rows, 20,000 UTF-16 code units per batch and 2,000 per
   persisted field through edit/save. Partial saves retain rejected/write-failed rows through storage
-  recovery. File input, durable draft relaunch/retry and OCR remain; OCR needs 58, optional
+  recovery. Local `.txt`/`.tsv` selection, strict UTF-8/bounds rejection, cancellation and
+  course-bound local draft recovery now reuse that review. OCR remains; it needs 58, optional
   translation 76/86.
 - **Depends on:** 56 input/navigation; 59 persistence; 58 camera/OCR substrate; 76/86 only for
   optional guarded text assistance.
@@ -21,8 +22,8 @@ complete. The roadmap index continues to track its unfinished scope.
 
 `apps/mobile/src/store/phraseFactory.ts` and phrase actions already create stable learner-owned rows
 with target and meaning language. Discover/Browse and tagging are built. Add now supplies local line
-parsing, review/edit and durable accepted rows; file input and camera/OCR do not exist. Plan 63 owns
-speech, not camera infrastructure; offline local import must not depend on live AI.
+parsing, reviewed `.txt`/`.tsv` file selection, edit and durable accepted rows. Camera/OCR does not
+exist. Plan 63 owns speech, not camera infrastructure; offline local import must not depend on live AI.
 
 ## What already exists
 
@@ -33,15 +34,15 @@ Discover/Browse and the difficulty/tag sheet exist. This plan does not rebuild t
 
 ### Import
 
-1. [ ] Add bounded offline file selection/reading, supported format/encoding rules and cancellation.
-       Reuse current normalization, duplicate/field/batch validation and review UI. Reject
-       unsupported encodings, excessive bytes/rows and malformed files without silently importing a
-       prefix.
-2. [ ] Extend recovery across relaunch: define durable draft ownership, stable row identity and
-       saved/remaining checkpoints so process death after a partial save cannot duplicate rows or
-       lose edits. Bind drafts to target/meaning language; resolve course switches explicitly. Reuse
-       each accepted phrase's existing transactional local/outbox write and availability in detail,
-       Stream, Today, tags and audio fallback; integrate future search through 81.
+1. [x] Add bounded offline file selection/reading, supported format/encoding rules and cancellation.
+       `.txt` and `.tsv` files decode strictly as UTF-8 within the review budget; format, byte and
+       encoding failures leave existing input intact, and cancellation is inert. The result still
+       enters the existing normalization, duplicate/field/batch validation and review UI.
+2. [x] Extend recovery across relaunch with a local, course-bound draft checkpoint. Stable own-phrase
+       ids and the existing transactional phrase/outbox write ensure a crash after a partial save
+       can only leave the saved line as a duplicate review row, never create it twice. Saved rows
+       leave the checkpoint; remaining edits persist. The checkpoint is device-local and excluded
+       from sync. A different course does not consume it.
 3. [ ] Treat translation/enrichment as optional asynchronous assistance; failure never blocks the
        local target-language phrase.
 
@@ -61,8 +62,8 @@ CRLF, LF and CR line endings share the same row count and parsing. Preview, ever
 recheck the shared persisted field limit and total reviewed batch. Partial save removes only
 committed rows; rejected and write-failed edits remain. `PersistenceGate` keeps hydrated routes
 mounted behind its recovery modal, retaining the in-memory draft through a failed write/retry.
-Parser, store/gate and browser regressions cover these paths. This is not durable draft storage:
-process death/relaunch, file/encoding input and OCR remain under the delivery order below.
+Parser, store/gate and browser regressions cover these paths. File decoding and durable draft
+relaunch/retry now cover the local import boundary; OCR remains under the delivery order below.
 
 ## Acceptance criteria
 
@@ -73,13 +74,7 @@ process death/relaunch, file/encoding input and OCR remain under the delivery or
 
 ## Delivery order and gates
 
-1. Extend the shipped paste-review path with bounded offline file input, encoding/format errors,
-   duplicate review and cancellation. Reuse the phrase factory and 59 transaction/outbox boundary.
-2. Define and deliver durable draft/checkpoint recovery using 59 before claiming relaunch support.
-   Preserve the implemented in-session partial-save behavior. Test mixed valid/invalid/duplicate
-   rows, failure after one committed row, process death, correction and retry: saved rows appear
-   exactly once with their outbox work; remaining edits and course provenance survive.
-3. Deliver OCR separately after the 58 native permission harness is available; denial returns to
+1. Deliver OCR separately after the 58 native permission harness is available; denial returns to
    Import without losing text. Optional text assistance from 76/86 must never gate offline import,
    and OCR images stay on device without a separately approved upload contract.
 

@@ -20,3 +20,7 @@ export function writeLocalValue(driver: SqlDriver, key: string, value: string): 
     value,
   ])
 }
+
+export function deleteLocalValue(driver: SqlDriver, key: string): void {
+  driver.run('DELETE FROM kv WHERE k = ?', [key])
+}

@@ -575,6 +575,18 @@ export const copy = {
       get preview() {
         return message('add.import.preview')
       },
+      get chooseFile() {
+        return message('add.import.chooseFile')
+      },
+      get unsupportedFormat() {
+        return message('add.import.unsupportedFormat')
+      },
+      get fileTooLarge() {
+        return message('add.import.fileTooLarge')
+      },
+      get unsupportedEncoding() {
+        return message('add.import.unsupportedEncoding')
+      },
       tooLarge: (rows: number, characters: number): string =>
         message('add.import.tooLarge', { rows, characters }),
       tooLong: (characters: number): string => message('add.import.tooLong', { characters }),

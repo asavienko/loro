@@ -26,7 +26,8 @@ import {
   writePracticeReview,
 } from './practiceRecords'
 import { decodeDevicePreferences } from '../lib/devicePreferences'
-import { readLocalValue, writeLocalValue } from './database'
+import { decodeImportDraft } from '../lib/importDraft'
+import { deleteLocalValue, readLocalValue, writeLocalValue } from './database'
 import { deferPhraseDelete, flushPendingDeletes, undoPendingPhraseDelete } from './pendingDeletes'
 import { resolveLearnerAliases } from './aliases'
 
@@ -243,6 +244,7 @@ export function createLearnerStorage(database: RuntimeDatabase, clock: Clock): L
     return {
       ...INITIAL_STATE,
       devicePreferences: decodeDevicePreferences(readLocalValue(driver, 'device_preferences')),
+      importDraft: decodeImportDraft(readLocalValue(driver, 'import-draft')),
       ...active,
       ...pair,
       courses: Object.fromEntries(
@@ -422,26 +424,27 @@ export function createLearnerStorage(database: RuntimeDatabase, clock: Clock): L
         }
         writePracticeReview(database, attempt, next, clock)
         const settings = persistence.settings.load()
-        persistence.settings.save({
-          onboarded: next.onboarded,
-          languagePair: { nativeLanguage: next.nativeLanguage, targetLocale: next.targetLocale },
-          goal: next.goal,
-          level: next.level,
-          dailyMinutes: next.dailyMinutes,
-          waveTimes: settings?.waveTimes ?? ['08:00', '13:00', '19:00'],
-        })
-        append(
-          'settings',
-          'settings',
-          settings === null
-            ? settingsFields(next)
-            : changedFields(settingsFields(previous), settingsFields(next)),
-        )
+        const changedSettings = changedFields(settingsFields(previous), settingsFields(next))
+        // A local import checkpoint must not manufacture a settings sync operation. Settings are
+        // initialized by the first settings change, then retained on each later settings write.
+        if (Object.keys(changedSettings).length > 0) {
+          persistence.settings.save({
+            onboarded: next.onboarded,
+            languagePair: { nativeLanguage: next.nativeLanguage, targetLocale: next.targetLocale },
+            goal: next.goal,
+            level: next.level,
+            dailyMinutes: next.dailyMinutes,
+            waveTimes: settings?.waveTimes ?? ['08:00', '13:00', '19:00'],
+          })
+          append('settings', 'settings', settings === null ? settingsFields(next) : changedSettings)
+        }
         writeLocalValue(
           driver,
           'device_preferences',
           JSON.stringify(decodeDevicePreferences(JSON.stringify(next.devicePreferences))),
         )
+        if (next.importDraft === null) deleteLocalValue(driver, 'import-draft')
+        else writeLocalValue(driver, 'import-draft', JSON.stringify(next.importDraft))
         writeLocalValue(driver, 'language_chosen', String(next.languageChosen))
         for (const day of next.practiceDays) {
           if (previous.practiceDays.includes(day)) continue

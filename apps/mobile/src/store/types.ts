@@ -20,9 +20,12 @@ import type {
 } from '@loro/core'
 import type { AppData, RefrainResume } from './state'
 import type { OwnPhraseDraft } from './phraseFactory'
+import type { ImportDraft } from '../lib/importDraft'
 import type { LearnerStorage } from '../data/learner'
 
 export interface AppActions {
+  saveImportDraft: (draft: ImportDraft) => void
+  clearImportDraft: () => void
   setAnalyticsConsent: (consent: boolean) => void
   setLanguages: (nativeLanguage: NativeLanguage, targetLocale: TargetLocale) => void
   /**
