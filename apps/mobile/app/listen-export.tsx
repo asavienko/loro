@@ -12,6 +12,7 @@ import {
   listeningShareFilename,
   type ListeningRepeats,
 } from '@loro/core'
+import { accountClient } from '../src/lib/account/runtime'
 import { audioCache } from '../src/lib/audioCache'
 import { audioSpeech, useAudioSpeech } from '../src/lib/audioSpeech'
 import { apiUrl } from '../src/lib/backend'
@@ -30,8 +31,13 @@ import {
   type ListenProgress,
   type ListenViewModel,
 } from '../src/lib/listenCompanion'
-import { fixtureListenView, listenScenarioFromSearch, type ListenScenario } from '../src/lib/listenFixtures'
+import {
+  fixtureListenView,
+  listenScenarioFromSearch,
+  type ListenScenario,
+} from '../src/lib/listenFixtures'
 import { AudioCacheError, type AudioCacheObject } from '../src/lib/audioCacheController'
+import { TtsRenderError } from '../src/lib/ttsRenderClient'
 import { useApp } from '../src/store'
 import { toView } from '../src/store/view'
 import { Pressable, Screen, SectionLabel, Stack, Text, Button } from '../src/ui/primitives'
@@ -55,6 +61,7 @@ export default function ListenExport() {
   const [durationMs, setDurationMs] = useState<number | null>(null)
   const [cacheComplete, setCacheComplete] = useState(false)
   const [diskFull, setDiskFull] = useState(false)
+  const [quotaExceeded, setQuotaExceeded] = useState(false)
   const clips = useRef<readonly AudioCacheObject[]>([])
   const abort = useRef<AbortController | null>(null)
 
@@ -109,7 +116,7 @@ export default function ListenExport() {
     nativeCache: audioCache.available,
     sessionBusy,
     diskFull,
-    quotaExceeded: false,
+    quotaExceeded,
     cacheComplete,
     progress,
     durationMs,
@@ -123,12 +130,21 @@ export default function ListenExport() {
     abort.current?.abort()
     abort.current = new AbortController()
     setDiskFull(false)
+    setQuotaExceeded(false)
     setPhase('generating')
     void prepareListeningBatch({
       cache: audioCache,
       locale,
       phrases: lines,
       repeats,
+      credentials: async () => {
+        const client = accountClient()
+        if (client === null) return null
+        const token = await client.getAccessToken()
+        const deviceId = client.getSnapshot().session?.deviceId
+        if (!token || deviceId === undefined || deviceId.length === 0) return null
+        return { token, deviceId }
+      },
       signal: abort.current.signal,
       onProgress: setProgress,
     })
@@ -148,6 +164,10 @@ export default function ListenExport() {
         setPhase('error')
         if (error instanceof AudioCacheError && error.code === 'disk-full') {
           setDiskFull(true)
+          setCacheComplete(false)
+        }
+        if (error instanceof TtsRenderError && error.code === 'quota') {
+          setQuotaExceeded(true)
           setCacheComplete(false)
         }
       })

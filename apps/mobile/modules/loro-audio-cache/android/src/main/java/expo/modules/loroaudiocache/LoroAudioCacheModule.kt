@@ -25,6 +25,8 @@ class DownloadOptions : Record {
   @Field var expectedSha256: String = ""
   @Field var logicalKey: String = ""
   @Field var pinClass: String = "listening"
+  @Field var authorization: String? = null
+  @Field var deviceId: String? = null
 }
 
 class ConcatenateOptions : Record {
@@ -70,6 +72,19 @@ class LoroAudioCacheModule : Module() {
       connection.instanceFollowRedirects = false
       connection.connectTimeout = 15_000
       connection.readTimeout = 15_000
+      val authorization = options.authorization
+      if (!authorization.isNullOrBlank()) {
+        connection.setRequestProperty("Authorization", authorization)
+      }
+      val deviceId = options.deviceId
+      if (!deviceId.isNullOrBlank()) {
+        connection.setRequestProperty("X-Loro-Device", deviceId)
+      }
+      val status = connection.responseCode
+      if (status != HttpURLConnection.HTTP_OK) {
+        (connection.errorStream ?: connection.inputStream)?.close()
+        throw failure("failed")
+      }
       val bytes = connection.inputStream.use { it.readBytes() }
       val digest = sha256(bytes)
       if (digest != options.expectedSha256.lowercase()) throw failure("checksum-mismatch")

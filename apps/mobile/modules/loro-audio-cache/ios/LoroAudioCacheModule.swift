@@ -8,6 +8,8 @@ struct LoroCacheDownloadOptions: Record {
   @Field var expectedSha256: String = ""
   @Field var logicalKey: String = ""
   @Field var pinClass: String = "listening"
+  @Field var authorization: String? = nil
+  @Field var deviceId: String? = nil
 }
 
 struct LoroCacheConcatenateOptions: Record {
@@ -84,11 +86,23 @@ private let session: URLSession = {
       throw failure("invalid-url")
     }
     var data: Data?
+    var status = 0
     var error: Error?
     let lock = DispatchSemaphore(value: 0)
     io.sync { self.task?.cancel() }
-    let task = session.dataTask(with: remote) { payload, _, failed in
+    var request = URLRequest(url: remote)
+    request.timeoutInterval = 15
+    request.httpShouldHandleCookies = false
+    request.cachePolicy = .reloadIgnoringLocalCacheData
+    if let authorization = options.authorization, !authorization.isEmpty {
+      request.setValue(authorization, forHTTPHeaderField: "Authorization")
+    }
+    if let deviceId = options.deviceId, !deviceId.isEmpty {
+      request.setValue(deviceId, forHTTPHeaderField: "X-Loro-Device")
+    }
+    let task = session.dataTask(with: request) { payload, response, failed in
       data = payload
+      status = (response as? HTTPURLResponse)?.statusCode ?? 0
       error = failed
       lock.signal()
     }
@@ -99,7 +113,7 @@ private let session: URLSession = {
     if let error, (error as NSError).code == NSURLErrorCancelled {
       throw failure("cancelled")
     }
-    guard let bytes = data, error == nil else { throw failure("failed") }
+    guard let bytes = data, error == nil, status == 200 else { throw failure("failed") }
     let digest = SHA256.hash(data: bytes).map { String(format: "%02x", $0) }.joined()
     guard digest == options.expectedSha256.lowercased() else { throw failure("checksum-mismatch") }
     let file = try store(bytes: bytes, sha256: digest, key: options.logicalKey, pin: options.pinClass)
@@ -322,10 +336,7 @@ private final class RedirectDeny: NSObject, URLSessionTaskDelegate {
     newRequest request: URLRequest,
     completionHandler: @escaping (URLRequest?) -> Void
   ) {
-    guard let url = request.url, url.scheme == "https", url.user == nil, url.password == nil else {
-      completionHandler(nil)
-      return
-    }
-    completionHandler(request)
+    // Never follow redirects: a Bearer header must not hop to another host.
+    completionHandler(nil)
   }
 }

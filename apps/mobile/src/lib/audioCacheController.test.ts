@@ -11,7 +11,8 @@ function fixture() {
   const native = {
     download: vi.fn((): Promise<AudioCacheObject> =>
       Promise.resolve({
-        fileUri: 'file:///cache/sha256/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.m4a',
+        fileUri:
+          'file:///cache/sha256/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.m4a',
         ms: 1420,
         sha256: 'a'.repeat(64),
       }),
@@ -110,5 +111,23 @@ describe('listening cache controller', () => {
       { fileUri: 'https://cdn.loro.test/clip.m4a', ms: 1, sha256: 'a'.repeat(64) },
     ])
     await expect(f.controller.loadListeningBatch()).resolves.toBeNull()
+  })
+
+  it('passes an authorization header through to native and still refuses credentialed URLs', async () => {
+    const f = fixture()
+    await f.controller.download({
+      url: 'https://api.loro.test/v1/tts/assets/aa',
+      expectedSha256: 'a'.repeat(64),
+      logicalKey: 'listening|es-ES',
+      pinClass: 'listening',
+      authorization: 'Bearer access',
+      deviceId: 'device-1',
+    })
+    expect(f.native.download).toHaveBeenCalledWith(
+      expect.objectContaining({
+        authorization: 'Bearer access',
+        deviceId: 'device-1',
+      }),
+    )
   })
 })

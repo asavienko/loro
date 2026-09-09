@@ -14,6 +14,7 @@ import {
   shareListeningBatch,
 } from './listenCompanion'
 import { fixtureListenView } from './listenFixtures'
+import { TtsRenderError } from './ttsRenderClient'
 
 describe('listening companion', () => {
   it('keeps generate unavailable until Q-15 pins two licensed voices', () => {
@@ -144,6 +145,70 @@ describe('listening companion', () => {
       }),
     ).rejects.toBeInstanceOf(AudioCacheError)
     expect(LISTENING_SHARE_ENABLED).toBe(false)
+  })
+
+  it('stops on licensed quota and forwards the bearer to native download', async () => {
+    const download = vi.fn(() =>
+      Promise.resolve({
+        fileUri: 'file:///clip.m4a',
+        ms: 1000,
+        sha256: 'a'.repeat(64),
+      }),
+    )
+    const cache = new AudioCacheController({
+      download,
+      lookup: vi.fn(() => Promise.resolve(null)),
+      cancel: vi.fn(() => Promise.resolve(undefined)),
+      pin: vi.fn(() => Promise.resolve(undefined)),
+      unpin: vi.fn(() => Promise.resolve(undefined)),
+      concatenate: vi.fn(),
+      share: vi.fn(() => Promise.resolve(undefined)),
+    })
+    const voices = [{ id: 'voice-a' }, { id: 'voice-b' }]
+    await expect(
+      prepareListeningBatch({
+        cache,
+        locale: 'es-ES',
+        phrases: [{ id: 'row-1', targetText: 'Hola', learnerAuthored: false }],
+        repeats: 2,
+        voices,
+        modelId: 'eleven_multilingual_v2',
+        credentials: () => Promise.resolve({ token: 'access', deviceId: 'device-1' }),
+        digest: () => Promise.resolve('a'.repeat(64)),
+        network: () => Promise.resolve(true),
+        render: () => Promise.reject(new TtsRenderError('quota')),
+      }),
+    ).rejects.toMatchObject({ code: 'quota' })
+    const ready = await prepareListeningBatch({
+      cache,
+      locale: 'es-ES',
+      phrases: [{ id: 'row-1', targetText: 'Hola', learnerAuthored: false }],
+      repeats: 2,
+      voices,
+      modelId: 'eleven_multilingual_v2',
+      credentials: () => Promise.resolve({ token: 'access', deviceId: 'device-1' }),
+      digest: () => Promise.resolve('a'.repeat(64)),
+      network: () => Promise.resolve(true),
+      render: () =>
+        Promise.resolve({
+          uri: `sha256/${'a'.repeat(64)}`,
+          sha256: 'a'.repeat(64),
+          ms: 1000,
+          cached: false,
+          download_url: `https://api.loro.test/v1/tts/assets/${'a'.repeat(64)}`,
+          voice_id: 'voice-a',
+          model_id: 'eleven_multilingual_v2',
+          asset_class: 'listening',
+        }),
+    })
+    expect(ready.phase).toBe('ready')
+    expect(download).toHaveBeenCalledWith(
+      expect.objectContaining({
+        authorization: 'Bearer access',
+        deviceId: 'device-1',
+        pinClass: 'listening',
+      }),
+    )
   })
 
   it('restores a previously saved complete batch without network', async () => {

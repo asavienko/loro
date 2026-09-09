@@ -24,9 +24,11 @@ const response = {
 
 describe('listening TTS client', () => {
   it('parses recorded metadata and rejects audio bytes in JSON', async () => {
-    const send = vi.fn<typeof fetch>().mockResolvedValue(
-      new Response(JSON.stringify(response), { headers: { 'content-type': 'application/json' } }),
-    )
+    const send = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(
+        new Response(JSON.stringify(response), { headers: { 'content-type': 'application/json' } }),
+      )
     const result = await requestListeningRender(request, 'https://api.loro.test/v1', send)
     expect(result.download_url).toMatch(/^https:/)
     expect(result).not.toHaveProperty('audio')
@@ -44,5 +46,24 @@ describe('listening TTS client', () => {
     await expect(requestListeningRender(request, undefined)).rejects.toMatchObject({
       code: 'not-configured',
     })
+  })
+
+  it('sends a bearer session and maps 429 to quota without reading audio bytes', async () => {
+    const send = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(
+        new Response(JSON.stringify(response), { headers: { 'content-type': 'application/json' } }),
+      )
+    await requestListeningRender(request, 'https://api.loro.test/v1', send, {
+      token: 'access',
+      deviceId: 'device-1',
+    })
+    const headers = send.mock.calls[0]?.[1]?.headers as Record<string, string>
+    expect(headers.Authorization).toBe('Bearer access')
+    expect(headers['X-Loro-Device']).toBe('device-1')
+    const quota = vi.fn<typeof fetch>().mockResolvedValue(new Response(null, { status: 429 }))
+    await expect(
+      requestListeningRender(request, 'https://api.loro.test/v1', quota),
+    ).rejects.toMatchObject({ code: 'quota' })
   })
 })
