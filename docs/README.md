@@ -1,5 +1,8 @@
 # Loro documentation
 
+[Screen capture plan review — 2026-09-09](reviews/2026-09-09-screen-capture-plan-review.md) compares
+the screenshot command with its strengthened plan and records suggested fixes.
+
 [Twenty-plan implementation review — 2026-09-09](reviews/2026-09-09-twenty-plan-implementation.md)
 records required fixes, verification gaps and next work for the twenty selected plans.
 
