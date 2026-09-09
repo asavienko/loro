@@ -17,6 +17,10 @@ Plans 56–65 are stored in [the 2026-09-09 archive](archive/2026-09-09/README.m
 Their partial statuses and outstanding scope remain indexed below; archiving does not imply
 completion.
 
+The [2026-09-09 implementation review](../docs/reviews/2026-09-09-twenty-plan-implementation.md)
+records changes requested after the next twenty bounded slices. Each selected plan remains partial;
+the review includes import validation fixes, commit-check failures and per-plan follow-up work.
+
 ## Current scope
 
 - Eight of 23 authored learner screens, Languages/Account, the shared shell and the dev workbench

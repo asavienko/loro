@@ -6,10 +6,9 @@ Guidance for Claude Code working in this repository.
 
 **Loro** — a mobile app (iOS + Android) that teaches Spanish, Bulgarian, and Russian by the phrase.
 
-Early implementation. **What exists:** nine of the v1.1 design package's 23 learner screens,
-Languages and Account utilities, the shared shell, initial More reachability and a developer
-workbench. Local progress and
-course/session state commit to native OP-SQLite or browser SQLite before rendering. Rust owns FSRS,
+Early implementation. **What exists:** eight of the v1.1 design package's 23 learner screens,
+Languages, Account and More utilities, the shared shell and a developer workbench. Local progress
+and course/session state commit to native OP-SQLite or browser SQLite before rendering. Rust owns FSRS,
 ranking, selection, matching, clocks and merge through generated WASM/UniFFI bridges. Native modules
 provide foreground device TTS and strictly on-device ASR with an offline Speak reveal fallback. The
 API stores accounts, sessions and tenant-scoped sync in PostgreSQL. Optional Google/Apple and email
@@ -31,8 +30,10 @@ destination list; metadata grouping/search, full session exits and travelling au
 
 API contracts live in `packages/core/src/api/` with current/target/draft entry points and generated
 OpenAPI. Auth, sync and content-query runtime boundaries consume the shared schemas; remaining
-migration limits are recorded in [the contract guide](docs/architecture/api-contracts.md). `pnpm
-check` includes route ownership, contract and generated-core drift checks.
+migration limits are recorded in [the contract guide](docs/architecture/api-contracts.md).
+`pnpm check` includes route ownership, contract and generated-core drift checks. The
+[twenty-plan review](docs/reviews/2026-09-09-twenty-plan-implementation.md) records outstanding
+import validation and integration fixes; the twenty plans have partial deliveries.
 
 The standalone preview can use the [AWS HTTPS gateway](docs/process/public-api.md). Account checks
 real readiness independently of sign-in. The development gateway now exposes Google sign-in and
@@ -242,7 +243,7 @@ be off PATH.
 pnpm ci:local                       # full local CI; GitHub Actions stays disabled
 pnpm check                          # fast lint/type/test/content/drift gate
 pnpm test:e2e                       # learner routes/states, clock, a11y, text scale
-pnpm test:e2e:workbench             # 3 tests: dev-only tokens/component inspection surface
+pnpm test:e2e:workbench             # dev-only tokens/component inspection surface
 pnpm test:e2e:bundle                # the @smoke subset against the production web export
 pnpm --filter @loro/api dev         # :3000; requires PostgreSQL/auth configuration
 pnpm --filter @loro/mobile bundle   # proves the app compiles; needs no simulator
