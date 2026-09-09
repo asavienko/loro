@@ -54,6 +54,7 @@ function phrasesFor(targetLocale: TargetLocale): LearningPhrase[] {
       emoji: p.emoji,
       ...(p.register ? { register: p.register } : {}),
       ...(p.cefr ? { cefr: p.cefr } : {}),
+      ...(targetLocale === 'es-ES' && p.audio ? { audio: p.audio } : {}),
       ...(targetLocale === 'es-ES'
         ? {
             teaching: {
