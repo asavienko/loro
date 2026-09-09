@@ -23,6 +23,7 @@ import type { OwnPhraseDraft } from './phraseFactory'
 import type { LearnerStorage } from '../data/learner'
 
 export interface AppActions {
+  setAnalyticsConsent: (consent: boolean) => void
   setLanguages: (nativeLanguage: NativeLanguage, targetLocale: TargetLocale) => void
   /**
    * Commit the first-run answers and seed the stream.

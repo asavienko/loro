@@ -90,6 +90,37 @@ describe('native audio metadata boundary', () => {
     })
     expect(f.controller.getSnapshot().playback).toBe('idle')
   })
+  it.each(['playback', 'recognition'] as const)(
+    'does not start cancelled %s after waiting in the native command queue',
+    async (kind) => {
+      const f = fixture()
+      let releaseStop = (): void => undefined
+      f.native.stopPlayback.mockImplementationOnce(
+        () =>
+          new Promise<void>((resolve) => {
+            releaseStop = resolve
+          }),
+      )
+      await f.controller.stopPlayback()
+      await vi.waitFor(() => {
+        expect(f.native.stopPlayback).toHaveBeenCalledOnce()
+      })
+
+      const pending =
+        kind === 'playback' ? f.controller.play('p', 'Hola', 'es-ES') : f.controller.listen('es-ES')
+      // Let the request pass its initial cancellation check and join the queue.
+      await Promise.resolve()
+      if (kind === 'playback') await f.controller.stopPlayback()
+      else await f.controller.stopListening()
+      releaseStop()
+      await pending
+
+      expect(f.native.play).not.toHaveBeenCalled()
+      expect(f.native.startListening).not.toHaveBeenCalled()
+      expect(f.controller.getSnapshot().playback).toBe('idle')
+      expect(f.controller.getSnapshot().speech).toBeNull()
+    },
+  )
   it('continues the shared native session after a rejected command', async () => {
     const f = fixture()
     f.native.stopPlayback.mockRejectedValueOnce(new Error('native stop failed'))

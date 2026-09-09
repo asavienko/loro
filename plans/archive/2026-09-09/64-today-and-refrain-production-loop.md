@@ -31,6 +31,18 @@ Today route/layout, frozen daily set, streak/day logic, basic Refrain six-mode U
 warming meter, completion screen, browser state coverage, and `applyDelta` write path are
 implemented.
 
+## Focused clock-refresh slice (2026-09-09)
+
+Today now refreshes at minute boundaries while focused and immediately on foreground return. This
+updates the current wave/CTA and invokes the existing frozen-day transaction at midnight; no new
+persistence or completion inference is introduced. Browser regressions cover a wave-time transition,
+same-day foreground jump and open-screen midnight. Timed enforcement, banked tail, filtered drills,
+audio/ASR and native transition acceptance remain open.
+
+Validation: target-file ESLint passed; `today.spec.ts` passed all five cases and the existing
+`day-boundary.spec.ts` passed all seven cases, including retained streak and DST/grace behavior.
+Full local CI and native/device evidence are not claimed by this slice.
+
 ## Remaining work
 
 1. [ ] Make wave availability, labels, completion, banked/yesterday tail, all-graduated state, and

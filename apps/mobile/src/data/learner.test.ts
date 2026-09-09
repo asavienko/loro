@@ -471,3 +471,69 @@ describe('repository-backed learner state', () => {
     ).toHaveLength(1)
   })
 })
+
+describe('F-05/F-06 device-local analytics consent', () => {
+  it('defaults off on an existing installation without changing synced settings', () => {
+    const db = open()
+    db.store
+      .getState()
+      .completeOnboarding({ goal: 'travel', level: 'beg', dailyMinutes: 10, packIds: [] })
+    const settings = db.persistence.settings.load()
+    const outbox = db.driver.all('SELECT * FROM outbox')
+    db.store.getState().setAnalyticsConsent(true)
+    expect(db.persistence.settings.load()).toEqual(settings)
+    expect(db.driver.all('SELECT * FROM outbox')).toEqual(outbox)
+    expect(db.storage.load().devicePreferences.analyticsConsent).toBe(true)
+  })
+
+  it('survives reopening, revokes durably, and preserves progress and active course state', () => {
+    const path = diskPath()
+    const db = open(path)
+    expect(db.store.getState().devicePreferences.analyticsConsent).toBe(false)
+    db.store.setState({ phrases: [makePhrase('consent-phrase')], streamCursor: 3, onboarded: true })
+    const before = db.storage.load()
+    db.store.getState().setAnalyticsConsent(true)
+    expect(db.storage.load()).toEqual({
+      ...before,
+      devicePreferences: { version: 1, analyticsConsent: true },
+    })
+    db.driver.close()
+    const reopened = open(path)
+    expect(reopened.store.getState().devicePreferences.analyticsConsent).toBe(true)
+    expect(reopened.store.getState().phrases).toEqual(before.phrases)
+    expect(reopened.store.getState().streamCursor).toBe(3)
+    reopened.store.getState().setAnalyticsConsent(false)
+    reopened.driver.close()
+    expect(open(path).store.getState().devicePreferences.analyticsConsent).toBe(false)
+  })
+
+  it.each([
+    'not-json',
+    '{}',
+    '{"version":2,"analyticsConsent":true}',
+    '{"version":1,"analyticsConsent":"true"}',
+  ])('fails closed when loading invalid or unsupported preferences: %s', (value) => {
+    const db = open()
+    writeLocalValue(db.driver, 'device_preferences', value)
+    expect(db.storage.load().devicePreferences.analyticsConsent).toBe(false)
+  })
+
+  it('reset clears consent and invalid runtime updates cannot grant it', () => {
+    const db = open()
+    expect(() => { db.store.getState().setAnalyticsConsent('true' as unknown as boolean); }).toThrow()
+    expect(db.storage.load().devicePreferences.analyticsConsent).toBe(false)
+    db.store.getState().setAnalyticsConsent(true)
+    db.store.getState().reset()
+    expect(db.storage.load().devicePreferences.analyticsConsent).toBe(false)
+  })
+
+  it('does not publish consent if its SQLite write fails', () => {
+    const db = open()
+    db.driver.run(
+      "CREATE TRIGGER reject_consent BEFORE INSERT ON kv WHEN NEW.k = 'device_preferences' BEGIN SELECT RAISE(ABORT, 'write failed'); END",
+    )
+    expect(() => { db.store.getState().setAnalyticsConsent(true); }).toThrow('write failed')
+    expect(db.store.getState().devicePreferences.analyticsConsent).toBe(false)
+    expect(db.storage.load().devicePreferences.analyticsConsent).toBe(false)
+  })
+})

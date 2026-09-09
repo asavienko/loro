@@ -24,6 +24,12 @@ clears credentials and attempts server revocation while retaining learner data. 
 continues, and known offline state preserves refresh credentials; ambiguous rotation requires
 sign-in. Tenant-scoped sync and catalog identity reconciliation live in 66/68.
 
+Email code delivery and verification now use the same in-flight admission guard as OAuth: repeated
+actions cannot supersede an active sign-in, credential restore or refresh rotation. Focused client
+tests cover repeated verification/resend, delivery, restoration and rotation; they establish local
+race behavior only, not real provider or multi-device acceptance. Existing Account working states
+and disabled controls are unchanged.
+
 ## Outcome
 
 A learner starts offline without an account, later signs in without losing or duplicating progress,

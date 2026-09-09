@@ -11,6 +11,15 @@
 - **Reviewed:** 2026-09-09 against checkout `42f4d57`; source/plan review only, no new device or
   deployment acceptance.
 
+## 2026-09-09 bounded recovery slice
+
+Expired cursors now retain their reset and enter persisted backoff when expiry consumes the final
+pull attempt. The client cannot report successful convergence before fetching the replacement
+snapshot. Real SQLite fault tests cover a local write arriving during cursor expiry, replay after
+the pull budget is exhausted, and an incompatible successful HTTP response retaining the exact
+pending wire payloads and existing cursor. These deterministic histories do not establish physical
+process-death, long-offline tombstone policy, or deployed load acceptance.
+
 ## Implemented scope
 
 The mobile service starts after persistence hydration and authenticated account binding. Local

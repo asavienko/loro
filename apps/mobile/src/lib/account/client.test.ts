@@ -49,6 +49,92 @@ function setup() {
 }
 const ok = (body: unknown) => new Response(JSON.stringify(body), { status: 200 })
 describe('anonymous-first account lifecycle', () => {
+  it('keeps the first email verification authoritative when repeated or interrupted by resend', async () => {
+    const { client, fetch, saved, bindAccount } = setup()
+    let finish!: (response: Response) => void
+    fetch.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve
+        }),
+    )
+    const pending = client.verifyCode('learner@example.com', '123456')
+    await client.verifyCode('learner@example.com', '123456')
+    await client.requestCode('learner@example.com')
+    expect(fetch).toHaveBeenCalledTimes(1)
+    finish(ok(signedIn))
+    await pending
+    expect(client.getSnapshot()).toMatchObject({ status: 'signed-in', error: null })
+    expect(bindAccount).toHaveBeenCalledTimes(1)
+    expect(saved()).toContain('refresh')
+  })
+  it('does not duplicate code delivery or verify before the pending code request completes', async () => {
+    const { client, fetch } = setup()
+    let finish!: (response: Response) => void
+    fetch.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve
+        }),
+    )
+    const pending = client.requestCode('learner@example.com')
+    await client.requestCode('learner@example.com')
+    await client.verifyCode('learner@example.com', '123456')
+    expect(fetch).toHaveBeenCalledTimes(1)
+    finish(ok({ status: 'accepted' }))
+    await pending
+    expect(client.getSnapshot().status).toBe('code-sent')
+    fetch.mockResolvedValueOnce(ok(signedIn))
+    await client.verifyCode('learner@example.com', '123456')
+    expect(client.getSnapshot().status).toBe('signed-in')
+  })
+  it('preserves a pending refresh when email actions repeat during rotation', async () => {
+    const { client, fetch, advance, saved } = setup()
+    fetch.mockResolvedValueOnce(ok(signedIn))
+    await client.verifyCode('learner@example.com', '123456')
+    advance()
+    let finish!: (response: Response) => void
+    fetch.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve
+        }),
+    )
+    const pending = client.getAccessToken()
+    await vi.waitFor(() => {
+      expect(fetch).toHaveBeenCalledTimes(2)
+    })
+    await client.requestCode('learner@example.com')
+    await client.verifyCode('learner@example.com', '123456')
+    expect(fetch).toHaveBeenCalledTimes(2)
+    finish(ok({ access_token: 'next', refresh_token: 'rotated', expires_in: 900 }))
+    expect(await pending).toBe('next')
+    expect(saved()).toContain('rotated')
+    expect(client.getSnapshot()).toMatchObject({ status: 'signed-in', error: null })
+  })
+  it('waits for credential restoration before allowing email actions', async () => {
+    const { deps, fetch } = setup()
+    let finish!: (value: string | null) => void
+    const client = new AccountClient({
+      ...deps,
+      vault: {
+        ...deps.vault,
+        read: () =>
+          new Promise((resolve) => {
+            finish = resolve
+          }),
+      },
+    })
+    const pending = client.restore()
+    await client.requestCode('learner@example.com')
+    await client.verifyCode('learner@example.com', '123456')
+    expect(fetch).not.toHaveBeenCalled()
+    finish(null)
+    await pending
+    fetch.mockResolvedValueOnce(ok({ status: 'accepted' }))
+    await client.requestCode('learner@example.com')
+    expect(client.getSnapshot().status).toBe('code-sent')
+  })
   it.each(['google', 'apple'] as const)(
     'connects %s through the same device-bound session and vault as email',
     async (provider) => {
