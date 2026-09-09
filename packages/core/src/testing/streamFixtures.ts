@@ -48,7 +48,7 @@ function streamRankKey(
 
 /** Hard 4, med 3, easy 2. Loro.dc.html:2526. */
 export function fixtureRepeatTarget(difficulty: Difficulty): number {
-  return REPEAT_TARGET[difficulty] ?? missingFixture('repeatTarget', difficulty)
+  return REPEAT_TARGET[difficulty]
 }
 
 /** `plays` plus the documented offsets. Loro.dc.html:2527. */
