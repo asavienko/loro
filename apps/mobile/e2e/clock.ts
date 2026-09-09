@@ -48,6 +48,18 @@ export async function atInstant(page: Page, local: LocalInstant): Promise<void> 
 }
 
 /**
+ * Freeze `Date` at a learner-local instant without pausing timers.
+ *
+ * STATES-driven `enter()` needs an open-wave wall clock so Today is not next-wave locked,
+ * but account provider discovery uses fetch + `setTimeout` abort. `clock.install()` pauses
+ * those timers and leaves Google disabled.
+ */
+export async function fixWallClock(page: Page, local: LocalInstant): Promise<void> {
+  await page.clock.setFixedTime(await epochFor(page, local))
+  await expectPageReads(page, local)
+}
+
+/**
  * Move the clock to another learner-local instant without running the timers in between.
  *
  * This is what a phone asleep across midnight actually does, and it is why the app listens

@@ -5,7 +5,7 @@
  * and coverage. Account mocks stay in `accountFlow.ts`.
  */
 import { expect, type Locator, type Page } from '@playwright/test'
-import { atInstant } from '../clock'
+import { fixWallClock } from '../clock'
 
 export const REFRAIN_REPS = [
   'Say it',
@@ -34,11 +34,7 @@ export async function enter(
   // After 19:00 Madrid wall time, Today shows the next-wave lock instead of Start the * wave.
   // Install once, before the first app navigation; later entries on the same page keep it.
   if (!frozenClockPages.has(page)) {
-    await atInstant(page, OPEN_WAVE_INSTANT)
-    // install() pauses timers. Account provider discovery uses fetch + setTimeout
-    // abort; a paused clock leaves Google disabled and never shows Try again.
-    // Resume so time flows from the open-wave instant; Today stays on the morning wave.
-    await page.clock.resume()
+    await fixWallClock(page, OPEN_WAVE_INSTANT)
     frozenClockPages.add(page)
   }
   // The exhaustive geometry suites reuse one browser page. Each manifest entry is
