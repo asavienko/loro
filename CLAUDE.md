@@ -26,7 +26,8 @@ Practice routes disable native back-swipe. Native touch validation remains a rel
 owns its root header and day rows; other routes retain their stack header with a Today escape for
 cold entries. Onboarding keeps step-back navigation. More is reachable through the existing
 destination registry and grouped More utility; exhaustive route laws, counts/search, full session
-exits and travelling audio remain in plans 56/62/64/81.
+exits and travelling audio remain in plans 56/62/64/81. Rust owns a pure notification candidate
+planner; native scheduling, widgets and device evidence remain in plan 70.
 
 API contracts live in `packages/core/src/api/` with current/target/draft entry points and generated
 OpenAPI. Auth, sync and content-query runtime boundaries consume the shared schemas; remaining
