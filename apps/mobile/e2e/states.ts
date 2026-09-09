@@ -53,6 +53,18 @@ export interface AppState {
 
 export const STATES: AppState[] = [
   {
+    name: 'today · paused Refrain resume',
+    route: '/',
+    spec: 'NAV-13/NAV-14 pause and course-preserving resume',
+    reach: async (page) => {
+      await page.getByRole('button', { name: /Start the .* wave/ }).click()
+      await expect(page.getByRole('button', { name: 'Say it', exact: true })).toBeVisible()
+      await page.getByRole('button', { name: 'Leave practice', exact: true }).click()
+      await page.getByRole('button', { name: 'Pause the wave', exact: true }).click()
+      await expect(page.getByRole('button', { name: 'Resume the wave', exact: true })).toBeVisible()
+    },
+  },
+  {
     name: 'more · built destinations',
     route: '/more',
     spec: 'NAV-01/NAV-08 built destination reachability',

@@ -16,6 +16,7 @@ export function NavigationMenu({
   reveal,
   chevron,
   destinations,
+  ongoing,
 }: {
   place: string
   openLabel: string
@@ -31,6 +32,7 @@ export function NavigationMenu({
     currentLabel: string
     onPress: () => void
   }[]
+  ongoing?: { label: string; onPress: () => void; heading: string } | undefined
 }) {
   const [visible, setVisible] = useState(false)
   const pullHandlers = usePullDown(() => {
@@ -60,6 +62,21 @@ export function NavigationMenu({
             {reveal}
           </Text>
         </Pressable>
+        {ongoing !== undefined && (
+          <Pressable
+            feedback="row"
+            accessibilityLabel={ongoing.label}
+            onPress={ongoing.onPress}
+            style={s.ongoing}
+          >
+            <Text variant="captionSm" color={ink.muted}>
+              {ongoing.heading}
+            </Text>
+            <Text variant="captionSm" color={ink.ink}>
+              {ongoing.label}
+            </Text>
+          </Pressable>
+        )}
       </View>
       <Sheet
         visible={visible}
@@ -138,6 +155,7 @@ const s = StyleSheet.create({
     minHeight: SPINE_HEIGHT,
     alignSelf: 'flex-start',
   },
+  ongoing: { marginLeft: 'auto', flexDirection: 'row', alignItems: 'center', gap: space['1'] },
   place: { fontSize: PLACE_SIZE },
   caret: { fontSize: CARET_SIZE },
   grow: { flex: 1 },

@@ -20,7 +20,7 @@ import { ThemeProvider } from '../src/ui/ThemeProvider'
 import { BottomBarProvider } from '../src/ui/BottomBarContext'
 import { Pressable, Text } from '../src/ui/primitives'
 import { NavigationMenu } from '../src/ui/components/NavigationMenu'
-import { DESTINATIONS, placeForPath } from '../src/lib/navigation'
+import { DESTINATIONS, placeForPath, surfaceLawForPath } from '../src/lib/navigation'
 import { startAccountSync } from '../src/services/accountSync'
 import { PersistenceGate } from '../src/store/PersistenceGate'
 import { completeBrowserSignIn } from '../src/auth/runtime'
@@ -52,6 +52,12 @@ function ReadyLayout() {
   // happened to remember to ask.
   useDayRollover()
   const pathname = usePathname()
+  const surfaceLaw = surfaceLawForPath(pathname)
+  const refrainResume = useApp((state) => state.refrainResume)
+  const refrainRep =
+    refrainResume.session === null || refrainResume.done
+      ? null
+      : Math.min(refrainResume.cursor + 1, refrainResume.session.plan.items.length)
   const constrainWidth = Platform.OS === 'web' && !pathname.startsWith('/dev/')
   const place = placeForPath(pathname)
 
@@ -78,6 +84,20 @@ function ReadyLayout() {
                 hereLabel={copy.today.switcher.here}
                 reveal={copy.common.marks.reveal}
                 chevron={copy.common.chevron.right}
+                ongoing={
+                  surfaceLaw?.surfaceClass === 'session' || refrainRep === null
+                    ? undefined
+                    : {
+                        heading: copy.nav.ongoing.heading,
+                        label: copy.nav.ongoing.refrain(refrainRep),
+                        onPress: () => {
+                          router.dismissTo({
+                            pathname: '/practice/refrain',
+                            params: { wave: refrainResume.wave ?? 'morning' },
+                          })
+                        },
+                      }
+                }
                 destinations={DESTINATIONS.map((destination) => ({
                   label: destination.label,
                   current: pathname === destination.href,

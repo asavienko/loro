@@ -157,3 +157,24 @@ test('More lists built destinations and retains a return to More', async ({ page
   }
   await expect(page).toHaveURL(/\/more$/)
 })
+
+test('a Refrain exit pauses durably for Today to resume, or ends without losing earned work', async ({
+  page,
+}) => {
+  await onboard(page)
+  await page.getByRole('button', { name: /Start the .* wave/ }).click()
+  await expect(page.getByRole('button', { name: 'Say it', exact: true })).toBeVisible()
+
+  await page.getByRole('button', { name: 'Leave practice', exact: true }).click()
+  await expect(page.getByRole('dialog')).toBeVisible()
+  await page.getByRole('button', { name: 'Pause the wave', exact: true }).click()
+  await expect(todayMarker(page)).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Resume the wave', exact: true })).toBeVisible()
+
+  await page.getByRole('button', { name: 'Resume the wave', exact: true }).click()
+  await expect(page).toHaveURL(/\/practice\/refrain/)
+  await page.getByRole('button', { name: 'Leave practice', exact: true }).click()
+  await page.getByRole('button', { name: 'End it here', exact: true }).click()
+  await expect(todayMarker(page)).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Resume the wave', exact: true })).toHaveCount(0)
+})

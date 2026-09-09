@@ -19,9 +19,9 @@ import { useLocale } from '../../src/lib/i18n'
  * token or lives in this file's `StyleSheet`.
  */
 
-import { useCallback, useEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Platform, ScrollView, StyleSheet, View } from 'react-native'
-import { router } from 'expo-router'
+import { router, useLocalSearchParams, useNavigation } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useBottomBar } from '../../src/ui/BottomBarContext'
 import {
@@ -39,6 +39,7 @@ import {
   ProgressBar,
   Row,
   Screen,
+  Sheet,
   Text,
 } from '../../src/ui/primitives'
 import { ActionBar, EmptyState } from '../../src/ui/components'
@@ -71,12 +72,13 @@ export default function Refrain() {
   useLocale()
   const insets = useSafeAreaInsets()
   const { height: bottomBarHeight } = useBottomBar()
-  const completedWaves = useApp((s) => s.refrainWaves)
+  const { wave: requestedWave } = useLocalSearchParams<{ wave?: string }>()
   const scheduledWave = waveSchedule(
     ['morning', 'midday', 'evening'] as const,
     PRODUCTION_WAVE_TIMES,
     localTimeLabel(),
   ).find((item) => item.position === 'next')?.key
+  const completedWaves = useApp((state) => state.refrainWaves)
   const entry = waveEntry(
     ['morning', 'midday', 'evening'] as const,
     PRODUCTION_WAVE_TIMES,
@@ -86,11 +88,34 @@ export default function Refrain() {
         wave === 'morning' || wave === 'midday' || wave === 'evening',
     ),
   )
-  // A URL is not authority to bypass timing. When a link names an old wave after time moved on,
-  // the active scheduled wave wins; this also keeps a stale resume from reopening a completion.
+  // A route parameter is not authority to bypass the scheduler. Resume is allowed only for
+  // the currently ready wave, so a stale link cannot reopen a completed wave.
   const selectedWave = entry.kind === 'ready' ? entry.wave.key : (scheduledWave ?? 'morning')
   const session = useRefrainSession(selectedWave, entry.kind === 'ready')
   const { set, phrase, mode, auto, dayReps, locked, phraseNumber, wave } = session
+  const [exitVisible, setExitVisible] = useState(false)
+  const navigation = useNavigation()
+  const leaveLabel = copy.nav.exit.leave
+  useEffect(() => {
+    // Refrain is a Session surface: an implicit Back would strand an unlabelled checkpoint.
+    // Its only exit first offers the three authored outcomes below.
+    navigation.setOptions({
+      headerLeft: () => (
+        <Pressable
+          feedback="smallButton"
+          accessibilityLabel={leaveLabel}
+          onPress={() => {
+            setExitVisible(true)
+          }}
+          style={{ minHeight: 44, justifyContent: 'center', paddingHorizontal: space['3'] }}
+        >
+          <Text variant="bodySm" color={accent.accentInk}>
+            {copy.common.chevron.left}
+          </Text>
+        </Pressable>
+      ),
+    })
+  }, [leaveLabel, navigation])
   if (set.length === 0) {
     return (
       <Screen>
@@ -103,28 +128,6 @@ export default function Refrain() {
               router.replace('/add')
             },
           }}
-        />
-      </Screen>
-    )
-  }
-  if (entry.kind === 'locked') {
-    return (
-      <Screen>
-        <EmptyState
-          title={copy.refrain.unavailable.title(entry.next.time)}
-          body={copy.refrain.unavailable.body}
-          action={{ label: copy.refrain.done.cta, onPress: () => router.replace('/') }}
-        />
-      </Screen>
-    )
-  }
-  if (entry.kind === 'complete') {
-    return (
-      <Screen>
-        <EmptyState
-          title={copy.refrain.unavailable.complete}
-          body={copy.refrain.unavailable.body}
-          action={{ label: copy.refrain.done.cta, onPress: () => router.replace('/') }}
         />
       </Screen>
     )
@@ -203,7 +206,55 @@ export default function Refrain() {
           <MicButton mode={mode} onPress={session.doRep} />
         )}
       </ActionBar>
+      <ExitSheet
+        visible={exitVisible}
+        onKeepGoing={() => {
+          setExitVisible(false)
+        }}
+        onPause={() => {
+          // The checkpoint was committed when its plan/last rep was committed. Only leave after
+          // that transaction has acknowledged; this handler never publishes a speculative pause.
+          setExitVisible(false)
+          router.replace('/')
+        }}
+        onEnd={() => {
+          try {
+            useApp.getState().endRefrainSession()
+            setExitVisible(false)
+            router.replace('/')
+          } catch {
+            useApp.getState().showToast(`${copy.persistence.error} ${copy.persistence.retry}`)
+          }
+        }}
+      />
     </Screen>
+  )
+}
+
+function ExitSheet({
+  visible,
+  onPause,
+  onEnd,
+  onKeepGoing,
+}: {
+  visible: boolean
+  onPause: () => void
+  onEnd: () => void
+  onKeepGoing: () => void
+}) {
+  useLocale()
+  return (
+    <Sheet visible={visible} onDismiss={onKeepGoing} dismissLabel={copy.a11y.common.dismiss}>
+      <Text variant="title3" color={ink.ink}>
+        {copy.nav.exit.title}
+      </Text>
+      <Button label={copy.nav.exit.pause} onPress={onPause} />
+      <Button label={copy.nav.exit.end} variant="secondary" onPress={onEnd} />
+      <Button label={copy.nav.exit.keepGoing} variant="secondary" onPress={onKeepGoing} />
+      <Text variant="captionSm" color={ink.muted}>
+        {copy.nav.exit.note}
+      </Text>
+    </Sheet>
   )
 }
 // ─────────────────────────────────────────────────────────────────────────────
@@ -235,26 +286,22 @@ interface RefrainSession {
  * RefrainEngine's decisions — the screen used to re-derive them, which is how the
  * card's warmth and the stored value came to disagree.
  */
-function useRefrainSession(
-  wave: 'morning' | 'midday' | 'evening',
-  enabled: boolean,
-): RefrainSession {
+function useRefrainSession(wave: 'morning' | 'midday' | 'evening'): RefrainSession {
   const phrases = useApp((s) => s.phrases)
   const refrainSet = useApp((s) => s.refrainSet)
   const applyDelta = useApp((s) => s.applyDelta)
   const ensureRefrainSet = useApp((s) => s.ensureRefrainSet)
   const completeRefrainWave = useApp((s) => s.completeRefrainWave)
-  const { session, cursor, done } = useApp((state) => state.refrainResume)
+  const { session, cursor, done, wave: resumedWave } = useApp((state) => state.refrainResume)
+  const activeWave = resumedWave ?? wave
   const targetLocale = useApp((state) => state.targetLocale)
   const busy = useRef(false)
   // Entering the Refrain is one of the moments the day must be re-checked: a learner who
   // opened the app before midnight and starts practising after it needs today's set.
   useEffect(() => {
-    if (!enabled) return
     ensureRefrainSet()
-  }, [enabled, ensureRefrainSet])
+  }, [ensureRefrainSet])
   useEffect(() => {
-    if (!enabled) return
     if (useApp.getState().refrainResume.session !== null) return
     let cancelled = false
     void refrainEngine
@@ -264,6 +311,7 @@ function useRefrainSession(
         useApp.setState({
           refrainResume: {
             session: { sessionId: newId(), plan, cursor: 0 },
+            wave,
             cursor: 0,
             done: false,
             lastLatency: null,
@@ -280,7 +328,7 @@ function useRefrainSession(
     }
     // Re-planned when the day's set changes, not on every rep: the plan is the day's
     // work, and re-planning mid-phrase would restart the mode sequence.
-  }, [enabled, refrainSet, targetLocale])
+  }, [refrainSet, targetLocale])
   const item = session?.plan.items[cursor]
   const storePhrase = useMemo(
     () => (item === undefined ? undefined : phrases.find((p) => p.id === item.phraseId)),
@@ -339,6 +387,7 @@ function useRefrainSession(
           expectedCursor: cursor,
           expectedPhrase: storePhrase,
           checkpoint: {
+            wave: activeWave,
             lastLatency: null,
             history: [],
             session: { ...session, cursor: nextCursor },
@@ -362,18 +411,19 @@ function useRefrainSession(
     const nextCursor = nextIndex < 0 ? cursor : nextIndex
     try {
       const checkpoint = {
+        wave: activeWave,
         lastLatency: null,
         history: [],
         session: { ...session, cursor: nextCursor },
         cursor: nextCursor,
         done: nextIndex < 0,
       }
-      if (nextIndex < 0) completeRefrainWave(wave, checkpoint)
+      if (nextIndex < 0) completeRefrainWave(activeWave, checkpoint)
       else useApp.setState({ refrainResume: checkpoint })
     } catch {
       useApp.getState().showToast(`${copy.persistence.error} ${copy.persistence.retry}`)
     }
-  }, [session, cursor, ensureCurrentDay, completeRefrainWave, wave])
+  }, [session, cursor, ensureCurrentDay, completeRefrainWave, activeWave])
   const set = useMemo(
     () =>
       refrainSet
@@ -391,7 +441,7 @@ function useRefrainSession(
   // not an empty screen.
   const exhausted = session !== null && cursor >= session.plan.items.length
   return {
-    wave,
+    wave: activeWave,
     set,
     phrase,
     phraseNumber,

@@ -108,7 +108,6 @@ export const copy = {
     get syncError() {
       return message('account.syncError')
     },
-    syncQuarantined: (count: number): string => message('account.syncQuarantined', { count }),
     get unconfigured() {
       return message('account.unconfigured')
     },
@@ -235,56 +234,6 @@ export const copy = {
     personalMeaning: (language: string): string =>
       message('languages.personalMeaning', { language }),
   },
-  settings: {
-    get title() {
-      return message('settings.title')
-    },
-    get language() {
-      return message('settings.language')
-    },
-    get languageDetail() {
-      return message('settings.languageDetail')
-    },
-    get appearance() {
-      return message('settings.appearance')
-    },
-    get accent() {
-      return message('settings.accent')
-    },
-    get accentCoral() {
-      return message('settings.accentCoral')
-    },
-    get accentSunset() {
-      return message('settings.accentSunset')
-    },
-    get accentTeal() {
-      return message('settings.accentTeal')
-    },
-    get accentBerry() {
-      return message('settings.accentBerry')
-    },
-    get motion() {
-      return message('settings.motion')
-    },
-    get motionSystem() {
-      return message('settings.motionSystem')
-    },
-    get motionReduced() {
-      return message('settings.motionReduced')
-    },
-    get privacy() {
-      return message('settings.privacy')
-    },
-    get analytics() {
-      return message('settings.analytics')
-    },
-    get analyticsDetail() {
-      return message('settings.analyticsDetail')
-    },
-    get saveError() {
-      return message('settings.saveError')
-    },
-  },
   common: {
     get addPhrases() {
       return message('common.addPhrases')
@@ -373,6 +322,33 @@ export const copy = {
     },
     get phrasePlace() {
       return message('nav.phrasePlace')
+    },
+    ongoing: {
+      get heading() {
+        return message('nav.ongoing.heading')
+      },
+      refrain: (rep: number): string => message('nav.ongoing.refrain', { rep }),
+      count: (count: number): string => message('nav.ongoing.count', { count }),
+    },
+    exit: {
+      get leave() {
+        return message('nav.exit.leave')
+      },
+      get title() {
+        return message('nav.exit.title')
+      },
+      get pause() {
+        return message('nav.exit.pause')
+      },
+      get end() {
+        return message('nav.exit.end')
+      },
+      get keepGoing() {
+        return message('nav.exit.keepGoing')
+      },
+      get note() {
+        return message('nav.exit.note')
+      },
     },
     moreGroups: {
       get lately() {
@@ -499,6 +475,9 @@ export const copy = {
           return message('today.cta.startWave.evening')
         },
       },
+      get resumeRefrain() {
+        return message('today.cta.resumeRefrain')
+      },
       waitForWave: (time: string): string => message('today.cta.waitForWave', { time }),
       get complete() {
         return message('today.cta.complete')
@@ -624,18 +603,6 @@ export const copy = {
       },
       get preview() {
         return message('add.import.preview')
-      },
-      get chooseFile() {
-        return message('add.import.chooseFile')
-      },
-      get unsupportedFormat() {
-        return message('add.import.unsupportedFormat')
-      },
-      get fileTooLarge() {
-        return message('add.import.fileTooLarge')
-      },
-      get unsupportedEncoding() {
-        return message('add.import.unsupportedEncoding')
       },
       tooLarge: (rows: number, characters: number): string =>
         message('add.import.tooLarge', { rows, characters }),
@@ -918,15 +885,6 @@ export const copy = {
       },
       get body() {
         return message('refrain.empty.body')
-      },
-    },
-    unavailable: {
-      title: (time: string): string => message('refrain.unavailable.title', { time }),
-      get complete() {
-        return message('refrain.unavailable.complete')
-      },
-      get body() {
-        return message('refrain.unavailable.body')
       },
     },
     modes: {
