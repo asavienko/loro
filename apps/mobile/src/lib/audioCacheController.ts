@@ -32,6 +32,8 @@ export interface NativeAudioCache {
   unpin(logicalKeys: readonly string[]): Promise<void>
   concatenate(request: AudioCacheConcatenateRequest): Promise<AudioCacheObject>
   share(fileUri: string): Promise<void>
+  saveListeningBatch?(clips: readonly AudioCacheObject[]): Promise<void>
+  loadListeningBatch?(): Promise<AudioCacheObject[] | null>
 }
 
 export type AudioCacheErrorCode =
@@ -128,5 +130,19 @@ export class AudioCacheController {
     } catch (error) {
       throw asCacheError(error)
     }
+  }
+
+  /** Persist a complete batch so airplane-mode relaunch can play without generate. */
+  saveListeningBatch(clips: readonly AudioCacheObject[]): Promise<void> {
+    if (this.native?.saveListeningBatch === undefined) return Promise.resolve()
+    return this.native.saveListeningBatch(clips)
+  }
+
+  async loadListeningBatch(): Promise<AudioCacheObject[] | null> {
+    if (this.native?.loadListeningBatch === undefined) return null
+    const clips = await this.native.loadListeningBatch()
+    if (clips === null || clips.length === 0) return null
+    if (clips.some((clip) => !clip.fileUri.startsWith('file:'))) return null
+    return clips
   }
 }

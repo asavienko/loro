@@ -24,6 +24,8 @@ function fixture() {
       sha256: 'b'.repeat(64),
     })),
     share: vi.fn(async () => undefined),
+    saveListeningBatch: vi.fn(async () => undefined),
+    loadListeningBatch: vi.fn(async () => null),
   } satisfies NativeAudioCache
   return { native, controller: new AudioCacheController(native) }
 }
@@ -89,5 +91,20 @@ describe('listening cache controller', () => {
     })
     expect(f.native.concatenate).not.toHaveBeenCalled()
     expect(f.native.share).not.toHaveBeenCalled()
+  })
+
+  it('restores a complete file-URI batch and rejects non-file URIs', async () => {
+    const f = fixture()
+    const clip: AudioCacheObject = {
+      fileUri: 'file:///cache/clip.m4a',
+      ms: 1420,
+      sha256: 'a'.repeat(64),
+    }
+    f.native.loadListeningBatch = vi.fn(async () => [clip])
+    await expect(f.controller.loadListeningBatch()).resolves.toEqual([clip])
+    f.native.loadListeningBatch = vi.fn(async () => [
+      { fileUri: 'https://cdn.loro.test/clip.m4a', ms: 1, sha256: 'a'.repeat(64) },
+    ])
+    await expect(f.controller.loadListeningBatch()).resolves.toBeNull()
   })
 })

@@ -10,6 +10,7 @@ import {
   listenViewModel,
   playListeningSequence,
   prepareListeningBatch,
+  restoreListeningBatch,
   shareListeningBatch,
 } from './listenCompanion'
 import { fixtureListenView } from './listenFixtures'
@@ -140,5 +141,21 @@ describe('listening companion', () => {
       }),
     ).rejects.toBeInstanceOf(AudioCacheError)
     expect(LISTENING_SHARE_ENABLED).toBe(false)
+  })
+
+  it('restores a previously saved complete batch without network', async () => {
+    const clip = { fileUri: 'file:///cache/clip.m4a', ms: 1000, sha256: 'a'.repeat(64) }
+    const cache = new AudioCacheController({
+      download: vi.fn(),
+      lookup: vi.fn(),
+      cancel: vi.fn(async () => undefined),
+      pin: vi.fn(async () => undefined),
+      unpin: vi.fn(async () => undefined),
+      concatenate: vi.fn(),
+      share: vi.fn(async () => undefined),
+      saveListeningBatch: vi.fn(async () => undefined),
+      loadListeningBatch: vi.fn(async () => [clip]),
+    })
+    await expect(restoreListeningBatch(cache)).resolves.toEqual([clip])
   })
 })

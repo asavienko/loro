@@ -52,6 +52,14 @@ public final class LoroAudioCacheModule: Module {
     AsyncFunction("share") { (fileUri: String) in
       try self.controller.share(fileUri)
     }
+
+    AsyncFunction("saveListeningBatch") { (clips: [[String: Any]]) in
+      try self.controller.saveBatch(clips)
+    }
+
+    AsyncFunction("loadListeningBatch") { () -> [[String: Any?]]? in
+      self.controller.loadBatch()
+    }
   }
 }
 
@@ -102,7 +110,34 @@ private let session: URLSession = {
     guard let row = index()[logicalKey], let path = row["path"] as? String else { return nil }
     let url = URL(fileURLWithPath: path)
     guard FileManager.default.fileExists(atPath: url.path) else { return nil }
+    mutateIndex { table in
+      table[logicalKey]?["accessed"] = Date().timeIntervalSince1970
+    }
     return payload(url: url, sha256: row["sha256"] as? String, ms: row["ms"] as? Int)
+  }
+
+  func saveBatch(_ clips: [[String: Any]]) throws {
+    let url = try cacheDirectory().appendingPathComponent("listening-batch.json")
+    let data = try JSONSerialization.data(withJSONObject: clips)
+    try data.write(to: url, options: .atomic)
+  }
+
+  func loadBatch() -> [[String: Any?]]? {
+    guard let url = try? cacheDirectory().appendingPathComponent("listening-batch.json"),
+      let data = try? Data(contentsOf: url),
+      let clips = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]]
+    else { return nil }
+    var verified: [[String: Any?]] = []
+    for clip in clips {
+      guard let fileUri = clip["fileUri"] as? String,
+        let sha256 = clip["sha256"] as? String,
+        let file = URL(string: fileUri),
+        file.isFileURL,
+        FileManager.default.fileExists(atPath: file.path)
+      else { return nil }
+      verified.append(["fileUri": fileUri, "ms": clip["ms"], "sha256": sha256])
+    }
+    return verified.isEmpty ? nil : verified
   }
 
   func cancel() {
@@ -199,6 +234,7 @@ private let session: URLSession = {
       throw failure("disk-full")
     }
     let ms = measuredMs(file)
+    let accessed = Date().timeIntervalSince1970
     mutateIndex { table in
       table[key] = [
         "path": file.path,
@@ -206,6 +242,7 @@ private let session: URLSession = {
         "ms": ms as Any,
         "pinned": pin == "listening",
         "bytes": bytes.count,
+        "accessed": accessed,
       ]
     }
     evictIfNeeded()
@@ -258,7 +295,10 @@ private let session: URLSession = {
     let used = unpinned.values.reduce(Int64(0)) { $0 + Int64(($1["bytes"] as? Int) ?? 0) }
     guard used > budget else { return }
     var remaining = used
-    for (key, row) in unpinned {
+    let oldest = unpinned.sorted { lhs, rhs in
+      (lhs.value["accessed"] as? Double ?? 0) < (rhs.value["accessed"] as? Double ?? 0)
+    }
+    for (key, row) in oldest {
       if remaining <= budget { break }
       if let path = row["path"] as? String {
         try? FileManager.default.removeItem(atPath: path)
@@ -282,6 +322,10 @@ private final class RedirectDeny: NSObject, URLSessionTaskDelegate {
     newRequest request: URLRequest,
     completionHandler: @escaping (URLRequest?) -> Void
   ) {
-    completionHandler(nil)
+    guard let url = request.url, url.scheme == "https", url.user == nil, url.password == nil else {
+      completionHandler(nil)
+      return
+    }
+    completionHandler(request)
   }
 }

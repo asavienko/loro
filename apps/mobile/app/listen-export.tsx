@@ -24,6 +24,7 @@ import {
   listenViewModel,
   playListeningSequence,
   prepareListeningBatch,
+  restoreListeningBatch,
   shareListeningBatch,
   type ListenPhase,
   type ListenProgress,
@@ -72,6 +73,22 @@ export default function ListenExport() {
       void isNetworkAvailable().then(setNetwork)
     })
   }, [])
+
+  useEffect(() => {
+    if (scenario !== null) return
+    void restoreListeningBatch(audioCache).then((stored) => {
+      if (stored === null) return
+      clips.current = stored
+      const measured = stored.reduce<number | null>((sum, clip) => {
+        if (sum === null || clip.ms === null) return null
+        return sum + clip.ms
+      }, 0)
+      setDurationMs(measured)
+      setCacheComplete(true)
+      setPhase('ready')
+      setProgress({ done: stored.length, total: stored.length, failed: 0 })
+    })
+  }, [scenario])
 
   useEffect(
     () => () => {
@@ -123,6 +140,7 @@ export default function ListenExport() {
         setCacheComplete(result.phase === 'ready')
         setPhase(result.phase)
         setProgress(result.progress)
+        if (result.phase === 'ready') void audioCache.saveListeningBatch(result.clips)
       })
       .catch((error: unknown) => {
         setPhase('error')
@@ -157,6 +175,12 @@ export default function ListenExport() {
       .catch(() => {
         setPhase('error')
       })
+  }
+
+  const playDeviceLine = (): void => {
+    const line = lines[0]
+    if (line === undefined || !audio.canPlay) return
+    void audioSpeech.play(line.id, line.targetText, locale, 1)
   }
 
   const share = (): void => {
@@ -283,10 +307,12 @@ export default function ListenExport() {
             disabled={!view.shareEnabled}
             variant="secondary"
           />
-          {audio.canPlay && !view.listenEnabled ? (
-            <Text variant="caption" color={ink.muted}>
-              {copy.listenExport.deviceFallback}
-            </Text>
+          {audio.canPlay && lines.length > 0 && scenario === null && !view.listenEnabled ? (
+            <Button
+              label={copy.listenExport.deviceFallback}
+              onPress={playDeviceLine}
+              variant="secondary"
+            />
           ) : null}
         </Stack>
       </ScrollView>
