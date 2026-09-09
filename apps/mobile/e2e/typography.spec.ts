@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test'
 import { expect, onboard, test } from './fixtures'
-import { open, startWave } from './states'
+import { open, startWave } from './helpers'
 
 /** Measure glyphs using the rendered production text styles, not the width of a flex box. */
 async function expectStableNumerals(page: Page) {

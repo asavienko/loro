@@ -7,7 +7,15 @@ import { oauthOperations } from './oauth-operations.js'
 import { z } from 'zod'
 import { CatalogPhraseSchema } from './catalog.js'
 import type { Operation } from './operation.js'
-import { ErrorCodeSchema, HlcSchema, ResourceIdSchema, RowIdSchema } from './common.js'
+import {
+  HlcSchema,
+  ResourceIdSchema,
+  RowIdSchema,
+  ProblemSchema,
+  HealthSchema,
+} from './common.js'
+import { DiffSchema } from './content.js'
+import { SceneSchema, type Scene } from './ai.js'
 import {
   type PushOpSchema,
   type SyncRejectionSchema as RejectionSchema,
@@ -30,7 +38,12 @@ import {
   ClaimResultSchema,
   UserSchema,
 } from './account.js'
-export { ErrorCodeSchema, HlcSchema } from './common.js'
+export { ErrorCodeSchema, HlcSchema, ProblemSchema, HealthSchema } from './common.js'
+export type { Problem, Health, ErrorCode } from './common.js'
+export { DiffSchema } from './content.js'
+export type { Diff } from './content.js'
+export { SceneSchema } from './ai.js'
+export type { Scene } from './ai.js'
 export {
   PushOpSchema,
   PushRequestSchema,
@@ -66,13 +79,6 @@ export type {
 export { CatalogPhraseSchema, WordGlossSchema } from './catalog.js'
 export type { CatalogPhrase, WordGloss } from './catalog.js'
 
-export const ProblemSchema = z.looseObject({
-  type: z.string(),
-  title: z.string(),
-  status: z.int(),
-  detail: z.string().optional(),
-  code: ErrorCodeSchema,
-})
 export const FieldSchema = z.strictObject({ v: z.unknown(), hlc: HlcSchema })
 export const StatusResponseSchema = z.looseObject({
   merge: z.string(),
@@ -86,11 +92,11 @@ export const AuthCapabilitiesSchema = z.looseObject({
 export const MeResponseSchema = z.looseObject({ user: UserSchema, device_id: ResourceIdSchema })
 export type AuthCapabilities = z.infer<typeof AuthCapabilitiesSchema>
 export type MeResponse = z.infer<typeof MeResponseSchema>
-export const HealthSchema = z.looseObject({ status: z.literal('ok'), version: z.string() })
 export const ReadinessSchema = z.looseObject({
   status: z.enum(['ok', 'degraded']),
   checks: z.record(z.string(), z.string()),
 })
+/** Implemented `/content/manifest`. Target ManifestSchema needs resource_base, checksums and assets. */
 export const ManifestSchema = z.looseObject({
   catalog_version: z.number(),
   lang: z.string(),
@@ -111,33 +117,14 @@ export const ManifestSchema = z.looseObject({
   audio_base: z.string(),
   min_app_version: z.string(),
 })
-export const DiffSchema = z.looseObject({
-  from: z.number(),
-  to: z.number(),
-  upserts: z.array(CatalogPhraseSchema),
-  deprecations: z.array(z.object({ id: z.string(), deprecated_by: z.string() })),
-  full_resync_required: z.boolean(),
-})
+/** Implemented `/content/pack`. Target PackSchema requires catalog_version and a count refine. */
 export const PackSchema = z.looseObject({
   id: z.string(),
   label: z.string(),
   promised_count: z.number(),
   phrases: z.array(CatalogPhraseSchema),
 })
-const Line = z.object({ es: z.string(), en: z.string() })
-export const SceneOptionSchema = Line.extend({
-  best: z.boolean().optional(),
-  tip: z.string(),
-  phrase_id: z.string().optional(),
-})
-export const SceneSchema = z.object({
-  place: z.string(),
-  city: z.string(),
-  emoji: z.string(),
-  role: z.string(),
-  turns: z.array(z.object({ npc: Line, options: z.array(SceneOptionSchema) })),
-  closer: Line,
-})
+/** Implemented `/ai/scene` envelope. Target request/response need provenance and ResourceId scene_id. */
 export const SceneRequestSchema = z.object({
   theme: z.string().optional(),
   level: z.string().optional(),
@@ -150,7 +137,6 @@ export const SceneResponseSchema = z.looseObject({
 })
 export const ThemesSchema = z.looseObject({ themes: z.array(z.string()), provider: z.string() })
 export type SceneResponse = z.infer<typeof SceneResponseSchema>
-export type Problem = z.infer<typeof ProblemSchema>
 
 const errors = {
   400: { schema: ProblemSchema, mediaType: 'application/problem+json' },
@@ -402,8 +388,6 @@ export const currentOperations = withExamples(
 
 export type { Operation, ResponseContract } from './operation.js'
 
-export type ErrorCode = z.infer<typeof ErrorCodeSchema>
-
 export type Hlc = z.infer<typeof HlcSchema>
 
 export type Field = z.infer<typeof FieldSchema>
@@ -416,19 +400,13 @@ export type StoredRow = z.infer<typeof StoredRowSchema>
 
 export type StatusResponse = z.infer<typeof StatusResponseSchema>
 
-export type Health = z.infer<typeof HealthSchema>
-
 export type Readiness = z.infer<typeof ReadinessSchema>
 
 export type Manifest = z.infer<typeof ManifestSchema>
 
-export type Diff = z.infer<typeof DiffSchema>
-
 export type Pack = z.infer<typeof PackSchema>
 
-export type SceneOption = z.infer<typeof SceneOptionSchema>
-
-export type Scene = z.infer<typeof SceneSchema>
+export type SceneOption = Scene['turns'][number]['options'][number]
 
 export type SceneRequest = z.infer<typeof SceneRequestSchema>
 

@@ -44,6 +44,11 @@ import type { SyncedTableDeps } from './deps.js'
  * can be authored. The other two are derived below, so a column added here without its
  * parameter is a COMPILE error rather than a row whose every later column holds its
  * neighbour's value.
+ *
+ * Syncable SQL names are drift-checked against `USER_PHRASE_SYNC_FIELDS` in
+ * `syncableColumns.test.ts`. Identity and HLC columns stay listed here because they are
+ * not merge-policy fields. Do not reorder to match the wire map — INSERT pairs by name,
+ * and `phraseToParams` is positional against this authored order.
  */
 export const PHRASE_COLUMN_NAMES = [
   'id',

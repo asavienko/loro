@@ -11,7 +11,7 @@ import {
   type PushOp,
   type PushResponse,
   type PullResponse,
-} from '@loro/core/api/target'
+} from '@loro/core/api/sync'
 import { SERVER_CLOCK, type ServerClock } from '../common/clock.js'
 import { LoroError } from '../common/errors.js'
 import {

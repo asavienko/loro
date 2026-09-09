@@ -23,7 +23,7 @@ import {
   startWave,
   todayMarker,
   trickyRow,
-} from './states'
+} from './helpers'
 
 test('phrase feedback stays above the primary action and follows navigation', async ({ page }) => {
   await atInstant(page, '2026-07-30T10:00')

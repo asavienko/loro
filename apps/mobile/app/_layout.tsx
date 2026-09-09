@@ -25,10 +25,8 @@ import { startAccountSync } from '../src/services/accountSync'
 import { PersistenceGate } from '../src/store/PersistenceGate'
 import { completeBrowserSignIn } from '../src/auth/runtime'
 import { localTimeLabel } from '../src/lib/clock'
-import { PRODUCTION_WAVE_TIMES } from '../src/store'
+import { PRODUCTION_WAVES, PRODUCTION_WAVE_TIMES, type ProductionWave } from '../src/store'
 import { waveEntryWithResume } from '../src/lib/waves'
-
-const WAVES = ['morning', 'midday', 'evening'] as const
 
 // The OAuth popup must notify its opener before hydration asks for the database's writer lease.
 completeBrowserSignIn()
@@ -50,7 +48,7 @@ function ReadyLayout() {
   useEffect(() => {
     const state = useApp.getState()
     if (!state.languageChosen && !state.onboarded) {
-      useApp.setState({ nativeLanguage: detectNativeLanguage(getLocales()[0]?.languageTag) })
+      state.previewNativeLanguage(detectNativeLanguage(getLocales()[0]?.languageTag))
     }
   }, [])
   // Mounted once, app-wide: every screen gets the new day, not just the one that
@@ -61,12 +59,11 @@ function ReadyLayout() {
   const refrainResume = useApp((state) => state.refrainResume)
   const refrainWaves = useApp((state) => state.refrainWaves)
   const ongoingEntry = waveEntryWithResume(
-    WAVES,
+    PRODUCTION_WAVES,
     PRODUCTION_WAVE_TIMES,
     localTimeLabel(),
-    refrainWaves.filter(
-      (wave): wave is (typeof WAVES)[number] =>
-        wave === 'morning' || wave === 'midday' || wave === 'evening',
+    refrainWaves.filter((wave): wave is ProductionWave =>
+      PRODUCTION_WAVES.includes(wave as ProductionWave),
     ),
     refrainResume,
   )

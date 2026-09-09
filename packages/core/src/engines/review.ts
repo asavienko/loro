@@ -13,7 +13,13 @@ import type {
   SessionPlan,
   SessionSummary,
 } from './types.js'
-import { distinctPhrases, itemAtCursor, itemFor, universalDelta, workedItems } from './common.js'
+import {
+  canonicalReviewDelta,
+  distinctPhrases,
+  itemAtCursor,
+  itemFor,
+  workedItems,
+} from './common.js'
 
 export type ReviewFocus = 'pronunciation' | 'memory-hook' | 'high-use' | 'recall'
 
@@ -152,14 +158,14 @@ export class ReviewEngine implements PracticeEngine {
       throw new Error('Review phrase belongs to another target course')
     if (!isDue(phrase, attempt.at)) throw new Error('Review phrase is no longer due')
 
-    const grade = ctx.core.reviewGrade(attempt)
-    const srs = ctx.core.fsrsReview(phrase, grade, attempt.at)
-    if (!srs?.algorithm) throw new Error('Canonical review must identify its algorithm')
-    return {
-      ...universalDelta(item, attempt, { reps: 1, latencyMs: null }),
-      srs,
-      review: { grade, at: attempt.at, algorithm: srs.algorithm },
-    }
+    return canonicalReviewDelta(
+      ctx,
+      item,
+      attempt,
+      phrase,
+      { reps: 1, latencyMs: null },
+      { required: true },
+    )
   }
 
   summarize(session: SessionHandle): Promise<SessionSummary> {

@@ -27,7 +27,7 @@ import {
   repsTodayRow,
   startWave,
   streakValue,
-} from './states'
+} from './helpers'
 
 test('the date line names the learner’s day, not the runner’s', async ({ page }) => {
   await atInstant(page, '2026-03-10T22:00')

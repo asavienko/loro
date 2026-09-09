@@ -1,4 +1,4 @@
-import { currentTargetLocale, useLocale } from '../src/lib/i18n'
+import { useLocale } from '../src/lib/i18n'
 /**
  * Add phrases — Loro.dc.html:222–427, logic 2176–2433.
  *
@@ -12,44 +12,32 @@ import { currentTargetLocale, useLocale } from '../src/lib/i18n'
  * ABOUT TO ADD. Splitting the state that way is what let the render collapse: the sheet no
  * longer reads the search box's state, and the list no longer reads the draft's.
  */
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { Platform, ScrollView, StyleSheet, TextInput, View } from 'react-native'
-import * as DocumentPicker from 'expo-document-picker'
-import { File as ExpoFile } from 'expo-file-system'
+import { ScrollView, StyleSheet, TextInput, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import {
   BROWSABLE_THEMES,
-  foldSearchText,
   MAX_OWN_PHRASE_TEXT_CODE_UNITS,
   TAGS,
   candidateIsAddable,
-  canonicalPhraseText,
-  containsPromptInjection,
   ownPhraseIsAddable,
-  filterNewCandidates,
-  isExactLibraryMatch,
-  matchNearestScenario,
   phraseHandoff,
-  shouldOfferOwnPhrase,
-  shouldRequestSuggestions,
   typedOwnPhraseHandoff,
   type BrowsableTheme,
   type Difficulty,
-  type NativeLanguage,
   type PhraseCandidate,
-  type PhraseHandoff,
-  type PhraseHandoffSource,
-  type PhraseState,
   type Tag,
-  type TargetLocale,
-  type Theme,
 } from '@loro/core'
 import {
-  bundledTopicSuggestions,
   useLearningCatalog,
   type DisplayPhrase as CatalogPhrase,
 } from '../src/store/learningCatalog'
 import { OWN_PHRASE_FALLBACK } from '../src/store/phraseFactory'
+import { ImportPhrases } from './_add/ImportPhrases'
+import type { AddMode } from './_add/mode'
+import { targetLanguageInputProps } from './_add/targetLanguage'
+import { useAddDraft, type SheetPhrase } from './_add/useAddDraft'
+import { useDiscoverReach } from './_add/useDiscoverReach'
+import { useSuggestions } from './_add/useSuggestions'
 import {
   Button,
   Card,
@@ -68,29 +56,10 @@ import {
   type SegmentedOption,
 } from '../src/ui/primitives'
 import { DifficultySelector, PhraseRow, TagChips } from '../src/ui/components'
-import { accent, border, ink, line, radius, semantic, space, surface } from '../src/ui/theme'
-import { copy, themeLabel } from '../src/lib/copy'
+import { accent, border, ink, line, radius, space, surface } from '../src/ui/theme'
+import { copy } from '../src/lib/copy'
 import { useApp } from '../src/store'
-import {
-  importedPhraseKey,
-  importInputForCandidates,
-  isImportTooLarge,
-  isReviewedImportTooLarge,
-  IMPORT_MAX_CHARACTERS,
-  IMPORT_MAX_ROWS,
-  normalizeImportedText,
-  parseImportedPhrases,
-  reviewImportedCandidates,
-  unsavedImportCandidates,
-  type ImportCandidate,
-} from '../src/lib/importPhrases'
-import {
-  IMPORT_MAX_FILE_BYTES,
-  decodeImportFile,
-  type ImportFileError,
-} from '../src/lib/importFile'
-import { importDraftKey, type ImportDrafts } from '../src/lib/importDraft'
-import { readBoundedImportFile } from '../src/lib/readBoundedImportFile'
+import { importDraftKey } from '../src/lib/importDraft'
 /**
  * The themes Browse offers.
  *
@@ -100,19 +69,12 @@ import { readBoundedImportFile } from '../src/lib/readBoundedImportFile'
 // a11y-lang: English UI category labels. "Café" is the English loanword, and a screen
 // reader should read this list in the interface language, not Spanish.
 const THEMES = BROWSABLE_THEMES
-type Mode = 'discover' | 'browse' | 'import'
 /** The discover / browse switch. The ids are state; only their labels are copy. */
-const MODES: readonly SegmentedOption<Mode>[] = [
+const MODES: readonly SegmentedOption<AddMode>[] = [
   { value: 'discover', label: copy.add.modes.discover },
   { value: 'browse', label: copy.add.modes.browse },
   { value: 'import', label: copy.add.modes.import },
 ]
-/**
- * Diacritic-insensitive fold, so "alergico" finds "alérgico" (`e2e/add.spec.ts:9`).
- *
- * Case-folding remains search behavior; the shared helper owns only diacritic folding.
- */
-const norm = foldSearchText
 /**
  * The three numbers this screen passes as PROPS, where a `StyleSheet` cannot hold them.
  *
@@ -131,321 +93,7 @@ const metrics = {
   sheetPhrase: 11,
   /** `‹ Themes` → the drilled theme's title, per the authored header (`Loro.dc.html:304`). */
   drilledTitle: 8,
-  /** Debounce before bundled Discover garnish so typing never blocks the keyboard. */
-  suggestDebounce: 280,
 } as const
-// ─── State ───────────────────────────────────────────────────────────────────
-/** What the learner is looking at: the mode, the filters, and the list they produce. */
-interface Suggestions {
-  mode: Mode
-  query: string
-  scenario: string | null
-  /**
-   * The drilled theme, or `null` on the grid. Narrower than the `string` it was, because the
-   * drilled header now looks its label up in `copy.add.themes` — which is keyed exhaustively by
-   * `BrowsableTheme`, so the key set and the copy table cannot drift apart without a type error.
-   */
-  browseTheme: BrowsableTheme | null
-  /** The rows to offer, in order. */
-  phrases: readonly CatalogPhrase[]
-  /** What the list is showing, in the learner's terms. */
-  contextLabel: string
-  /** Switching mode drops the theme drill-down and the query, as it always did. */
-  setMode: (mode: Mode) => void
-  setQuery: (query: string) => void
-  /** Tapping the active scenario clears it. */
-  toggleScenario: (id: string) => void
-  browse: (theme: BrowsableTheme) => void
-  backToThemes: () => void
-  /** How many of a theme's phrases the learner does not own yet — the tile's count. */
-  countFor: (theme: string) => number
-  /** After a confirmed add: anchor on that theme, so the next list is "more like it". */
-  anchorOn: (theme: string) => void
-  /** Confirmed custom add: clear the query without moving the association theme. */
-  clearDiscoverQuery: () => void
-}
-/**
- * The suggestion algorithm, unchanged.
- *
- * Every branch, every order and both limits are the ones the screen shipped with: a drilled
- * theme wins, then a search over es/en/theme capped at 8, then a scenario's own arc, then
- * the association anchor's theme first and everything else after, capped at 6. It arguably
- * belongs in `@loro/core` (plans/60 wants to rank these) — moving it now would risk changing
- * the ORDER or the COUNT of what a learner sees, which is the one thing this refactor
- * promises not to do.
- */
-function useSuggestions(owned: readonly PhraseState[]): Suggestions {
-  const { phrases: catalogPhrases, scenarios } = useLearningCatalog()
-  const [mode, setModeState] = useState<Mode>('discover')
-  const [query, setQuery] = useState('')
-  const [scenario, setScenario] = useState<string | null>(null)
-  const [browseTheme, setBrowseTheme] = useState<BrowsableTheme | null>(null)
-  // The association anchor: after adding, suggestions become "more like that".
-  const [anchorTheme, setAnchorTheme] = useState<string | null>(null)
-  // Joined on the CATALOG id, not the row id. They happen to be equal today, but
-  // they are different id spaces — a learner-authored phrase has a row id and no
-  // catalog id — and `UserPhraseId`/`CatalogPhraseId` are branded so the join can't
-  // drift silently. `Set<string>` because the catalog's own ids are unbranded.
-  const ownedCatalogIds = useMemo(
-    () => new Set<string>(owned.flatMap((p) => (p.phraseId === null ? [] : [p.phraseId]))),
-    [owned],
-  )
-  const pool = useMemo(
-    () => catalogPhrases.filter((p) => !ownedCatalogIds.has(p.id)),
-    [ownedCatalogIds, catalogPhrases],
-  )
-  const phrases = useMemo(() => {
-    if (mode === 'browse' && browseTheme !== null) {
-      return pool.filter((p) => p.theme === browseTheme)
-    }
-    const q = norm(query.trim())
-    if (q.length >= 1) {
-      return pool
-        .filter(
-          (p) =>
-            norm(p.targetText).includes(q) ||
-            norm(p.translation).includes(q) ||
-            norm(themeLabel(p.theme)).includes(q),
-        )
-        .slice(0, 8)
-    }
-    if (scenario !== null) {
-      const sc = scenarios.find((s) => s.id === scenario)
-      return (sc?.phrases ?? [])
-        .map((id) => pool.find((p) => p.id === id))
-        .filter((p): p is CatalogPhrase => p !== undefined)
-    }
-    if (anchorTheme !== null) {
-      // Association: same-theme first, then everything else.
-      const same = pool.filter((p) => p.theme === anchorTheme)
-      const rest = pool.filter((p) => p.theme !== anchorTheme)
-      return [...same, ...rest].slice(0, 6)
-    }
-    return pool.slice(0, 6)
-  }, [mode, browseTheme, query, scenario, anchorTheme, pool, scenarios])
-  const contextLabel =
-    query.trim().length > 0
-      ? phrases.length > 0
-        ? copy.add.context.matches(query.trim())
-        : copy.add.context.noMatches
-      : scenario !== null
-        ? copy.add.context.forScenario(scenarios.find((s) => s.id === scenario)?.label ?? '')
-        : anchorTheme !== null
-          ? copy.add.context.moreLike(themeLabel(anchorTheme))
-          : copy.add.context.popular
-  return {
-    mode,
-    query,
-    scenario,
-    browseTheme,
-    phrases,
-    contextLabel,
-    setMode: (next) => {
-      setModeState(next)
-      setBrowseTheme(null)
-      setQuery('')
-    },
-    setQuery,
-    toggleScenario: (id) => {
-      setScenario((cur) => (cur === id ? null : id))
-      setQuery('')
-      setAnchorTheme(null)
-    },
-    browse: setBrowseTheme,
-    backToThemes: () => {
-      setBrowseTheme(null)
-    },
-    countFor: (theme) => pool.filter((p) => p.theme === theme).length,
-    anchorOn: (theme) => {
-      setAnchorTheme(theme)
-      setQuery('')
-      setScenario(null)
-    },
-    /** Authored confirm always clears the query (`Loro.dc.html:2325`); custom keeps the theme. */
-    clearDiscoverQuery: () => {
-      setQuery('')
-      setScenario(null)
-    },
-  }
-}
-/** What the learner is about to add: a catalog row or an own-phrase handoff. */
-type SheetPhrase =
-  | { kind: 'catalog'; phrase: CatalogPhrase }
-  | {
-      kind: 'own'
-      source: PhraseHandoffSource
-      targetText: string
-      translation: string
-      theme?: Theme
-      emoji?: string
-    }
-
-function ownDraftIsAddable(sheet: Extract<SheetPhrase, { kind: 'own' }>): boolean {
-  return sheet.source === 'custom' ? ownPhraseIsAddable(sheet) : candidateIsAddable(sheet)
-}
-
-interface AddDraft {
-  phrase: SheetPhrase | null
-  difficulty: Difficulty
-  tags: Tag[]
-  openCatalog: (phrase: CatalogPhrase) => void
-  openHandoff: (handoff: PhraseHandoff) => void
-  setOwnField: (field: 'targetText' | 'translation', value: string) => void
-  /** Dismiss clears tagging so a later row does not inherit abandoned difficulty or tags. */
-  close: () => void
-  setDifficulty: (difficulty: Difficulty) => void
-  toggleTag: (tag: Tag) => void
-  /** After a confirmed add: the sheet closes and the draft returns to its defaults. */
-  reset: () => void
-}
-function useAddDraft(): AddDraft {
-  const [phrase, setPhrase] = useState<SheetPhrase | null>(null)
-  const [difficulty, setDifficulty] = useState<Difficulty>('med')
-  const [tags, setTags] = useState<Tag[]>([])
-  return {
-    phrase,
-    difficulty,
-    tags,
-    openCatalog: (next) => {
-      setPhrase({ kind: 'catalog', phrase: next })
-      setDifficulty('med')
-      setTags([])
-    },
-    openHandoff: (handoff) => {
-      setPhrase({
-        kind: 'own',
-        source: handoff.source,
-        targetText: handoff.draft.targetText,
-        translation: handoff.draft.translation,
-        ...(handoff.draft.theme === undefined ? {} : { theme: handoff.draft.theme }),
-        ...(handoff.draft.emoji === undefined ? {} : { emoji: handoff.draft.emoji }),
-      })
-      setDifficulty('med')
-      setTags([])
-    },
-    setOwnField: (field, value) => {
-      setPhrase((cur) => (cur?.kind === 'own' ? { ...cur, [field]: value } : cur))
-    },
-    close: () => {
-      setPhrase(null)
-      setDifficulty('med')
-      setTags([])
-    },
-    setDifficulty,
-    toggleTag: (tag) => {
-      setTags((cur) => (cur.includes(tag) ? cur.filter((x) => x !== tag) : [...cur, tag]))
-    },
-    reset: () => {
-      setPhrase(null)
-      setDifficulty('med')
-      setTags([])
-    },
-  }
-}
-
-function ownedPhraseLines(
-  owned: readonly PhraseState[],
-  catalog: readonly CatalogPhrase[],
-): { targetText: string; translation: string }[] {
-  const catalogById = new Map(catalog.map((phrase) => [phrase.id, phrase]))
-  const lines: { targetText: string; translation: string }[] = []
-  for (const row of owned) {
-    if (row.phraseId === null) {
-      if (row.ownEs !== undefined && row.ownEs.length > 0) {
-        lines.push({ targetText: row.ownEs, translation: row.ownEn ?? '' })
-      }
-      continue
-    }
-    const phrase = catalogById.get(row.phraseId)
-    if (phrase !== undefined) {
-      lines.push({ targetText: phrase.targetText, translation: phrase.translation })
-    }
-  }
-  return lines
-}
-
-function ownedTargetTexts(
-  owned: readonly PhraseState[],
-  catalog: readonly CatalogPhrase[],
-): string[] {
-  return ownedPhraseLines(owned, catalog).map((line) => line.targetText)
-}
-
-function targetLanguageInputProps() {
-  const language = currentTargetLocale()
-  return {
-    accessibilityLanguage: language,
-    ...(Platform.OS === 'web' ? { lang: language } : {}),
-  }
-}
-
-function useDiscoverReach(
-  mode: Mode,
-  query: string,
-  catalogHits: readonly CatalogPhrase[],
-  catalog: readonly CatalogPhrase[],
-  owned: readonly PhraseState[],
-  scenarios: readonly { id: string; label: string; emoji: string }[],
-  nativeLanguage: NativeLanguage,
-  targetLocale: TargetLocale,
-): {
-  offerOwn: boolean
-  nearest: { id: string; label: string; emoji: string } | null
-  generating: boolean
-  suggested: readonly PhraseCandidate[]
-} {
-  const nearest = mode === 'discover' ? matchNearestScenario(query, scenarios) : null
-  const existingTexts = useMemo(
-    () => [...ownedTargetTexts(owned, catalog), ...catalog.map((phrase) => phrase.targetText)],
-    [owned, catalog],
-  )
-  const exact = useMemo(
-    () => isExactLibraryMatch(query, catalog) || isExactLibraryMatch(query, ownedPhraseLines(owned, catalog)),
-    [query, catalog, owned],
-  )
-  const offerOwn = mode === 'discover' && shouldOfferOwnPhrase(query, exact)
-  const wantSuggest =
-    mode === 'discover' && shouldRequestSuggestions(query, catalogHits.length, exact)
-  const requestKey = `${nativeLanguage}:${targetLocale}:${canonicalPhraseText(query)}`
-  const [generating, setGenerating] = useState(false)
-  const [suggested, setSuggested] = useState<{ key: string; rows: PhraseCandidate[] }>({
-    key: '',
-    rows: [],
-  })
-  const seq = useRef(0)
-  useEffect(() => {
-    const id = ++seq.current
-    if (!wantSuggest) {
-      setGenerating(false)
-      setSuggested({ key: '', rows: [] })
-      return
-    }
-    setGenerating(true)
-    const handle = setTimeout(() => {
-      if (id !== seq.current) return
-      const rows = containsPromptInjection(query)
-        ? []
-        : filterNewCandidates(
-            bundledTopicSuggestions(query, nativeLanguage, targetLocale),
-            existingTexts,
-          )
-      if (id !== seq.current) return
-      setSuggested({ key: requestKey, rows })
-      setGenerating(false)
-    }, metrics.suggestDebounce)
-    return () => {
-      clearTimeout(handle)
-    }
-  }, [wantSuggest, query, nativeLanguage, targetLocale, existingTexts, requestKey])
-  const visibleSuggested = wantSuggest && suggested.key === requestKey ? suggested.rows : []
-  return {
-    offerOwn,
-    nearest,
-    generating: wantSuggest && (generating || suggested.key !== requestKey),
-    suggested: visibleSuggested,
-  }
-}
-// ─── The screen ──────────────────────────────────────────────────────────────
 export default function Add() {
   useLocale()
   const insets = useSafeAreaInsets()
@@ -483,7 +131,7 @@ export default function Add() {
       draft.reset()
       return
     }
-    if (!ownDraftIsAddable(sheet)) return
+    if (sheet.source === 'custom' ? !ownPhraseIsAddable(sheet) : !candidateIsAddable(sheet)) return
     addOwnPhrase(
       {
         targetText: sheet.targetText,
@@ -621,8 +269,8 @@ function AddHeader({
   onScenarioToggle,
 }: {
   ownedCount: number
-  mode: Mode
-  onModeChange: (mode: Mode) => void
+  mode: AddMode
+  onModeChange: (mode: AddMode) => void
   query: string
   onQueryChange: (query: string) => void
   scenario: string | null
@@ -794,29 +442,6 @@ function SuggestionList({
     </>
   )
 }
-/** The `+` circle on a suggestion row. Decorative — the row's own name is the affordance. */
-function AddGlyph() {
-  useLocale()
-  return (
-    <View style={s.addGlyph}>
-      <Text variant="headline" color={accent.accentInk}>
-        {copy.add.addGlyph}
-      </Text>
-    </View>
-  )
-}
-
-function SuggestedGlyph() {
-  useLocale()
-  return (
-    <View style={s.suggestedGlyph}>
-      <Text variant="headline" color={ink.ink2}>
-        {copy.add.addGlyph}
-      </Text>
-    </View>
-  )
-}
-
 function NearestScenarioHint({
   scenario,
   selected,
@@ -882,7 +507,7 @@ function SuggestedList({
       </Text>
       {candidates.map((candidate) => (
         <PhraseRow
-          key={canonicalPhraseText(candidate.targetText)}
+          key={canonicalSuggestedKey(candidate)}
           variant="suggestion"
           targetText={candidate.targetText}
           translation={candidate.translation}
@@ -902,311 +527,33 @@ function SuggestedList({
   )
 }
 
-/**
- * A deliberately local, offline-only import review. Parsing is separate from persistence so a
- * pasted line never becomes a learner row until this surface's explicit Add action.
- */
-function ImportPhrases({
-  owned,
-  catalog,
-  addOwnPhrase,
-  importDrafts,
-  targetLocale,
-  nativeLanguage,
-  saveImportDraft,
-  clearImportDraft,
-}: {
-  owned: readonly PhraseState[]
-  catalog: readonly CatalogPhrase[]
-  addOwnPhrase: (
-    draft: { targetText: string; translation: string },
-    o?: { source?: PhraseHandoffSource },
-  ) => string
-  importDrafts: ImportDrafts
-  targetLocale: TargetLocale
-  nativeLanguage: NativeLanguage
-  saveImportDraft: (draft: {
-    targetLocale: TargetLocale
-    nativeLanguage: NativeLanguage
-    input: string
-  }) => void
-  clearImportDraft: () => void
-}) {
+function canonicalSuggestedKey(candidate: PhraseCandidate): string {
+  return `${candidate.targetText}\u0000${candidate.translation}`
+}
+
+function SuggestedGlyph() {
   useLocale()
-  const restored = importDrafts[importDraftKey({ targetLocale, nativeLanguage })]?.input ?? ''
-  const [input, setInput] = useState(restored)
-  const [review, setReview] = useState<ImportCandidate[] | null>(null)
-  const [tooLarge, setTooLarge] = useState(false)
-  const [saveFailed, setSaveFailed] = useState(false)
-  const [fileError, setFileError] = useState<ImportFileError | null>(null)
-  const fileRequest = useRef(0)
-  useEffect(() => {
-    fileRequest.current += 1
-    return () => {
-      fileRequest.current += 1
-    }
-  }, [nativeLanguage, targetLocale])
-  const existing = useMemo(() => ownedTargetTexts(owned, catalog), [owned, catalog])
-  const preview = () => {
-    fileRequest.current += 1
-    const exceedsLimit = isImportTooLarge(input)
-    setTooLarge(exceedsLimit)
-    setSaveFailed(false)
-    setReview(exceedsLimit ? null : parseImportedPhrases(input, existing))
-  }
-  const persistDraft = (value: string): boolean => {
-    try {
-      saveImportDraft({ targetLocale, nativeLanguage, input: value })
-      return true
-    } catch {
-      setSaveFailed(true)
-      return false
-    }
-  }
-  const updateInput = (value: string) => {
-    fileRequest.current += 1
-    if (!persistDraft(value)) return
-    setInput(value)
-    setTooLarge(false)
-    setSaveFailed(false)
-    setFileError(null)
-    setReview(null)
-  }
-  const chooseFile = async () => {
-    const request = fileRequest.current + 1
-    fileRequest.current = request
-    setFileError(null)
-    try {
-      const picked = await DocumentPicker.getDocumentAsync({
-        type: ['text/plain', 'text/tab-separated-values'],
-        // Android document providers return content:// URIs when cache copying is disabled.
-        // ExpoFile's stream() is backed by a random-access local file and rejects those URIs.
-        // Cache first, then retain the bounded reader so decoding still has a hard byte limit.
-        copyToCacheDirectory: true,
-        multiple: false,
-        base64: false,
-      })
-      if (request !== fileRequest.current || picked.canceled) return
-      const asset = picked.assets[0]
-      if (asset === undefined) return
-      if (asset.size !== undefined && asset.size > IMPORT_MAX_FILE_BYTES) {
-        setFileError('too-large')
-        return
-      }
-      const stream =
-        asset.file === undefined
-          ? new ExpoFile(asset.uri).stream()
-          : (asset.file.stream() as ReadableStream<Uint8Array>)
-      const bytes = await readBoundedImportFile(stream, IMPORT_MAX_FILE_BYTES)
-      if (request !== fileRequest.current) return
-      if (bytes === null) {
-        setFileError('too-large')
-        return
-      }
-      const result = decodeImportFile({ name: asset.name, bytes })
-      if (!result.ok) {
-        setFileError(result.error)
-        return
-      }
-      updateInput(result.text)
-    } catch {
-      if (request === fileRequest.current) setFileError('unsupported-encoding')
-    }
-  }
-  const update = (index: number, field: 'targetText' | 'translation', value: string) => {
-    fileRequest.current += 1
-    setSaveFailed(false)
-    if (review === null) return
-    const updated = reviewImportedCandidates(
-      review.map((candidate, candidateIndex) =>
-        candidateIndex === index
-          ? { ...candidate, [field]: normalizeImportedText(value) }
-          : candidate,
-      ),
-      existing,
-    )
-    const persistedInput = importInputForCandidates(updated)
-    if (!persistDraft(persistedInput)) return
-    setReview(updated)
-    setInput(persistedInput)
-  }
-  const accepted = (review ?? []).filter(
-    (candidate) =>
-      candidate.issue === null && candidate.targetText !== '' && candidate.translation !== '',
-  )
-  const reviewedBatchTooLarge = review !== null && isReviewedImportTooLarge(review)
-  const save = () => {
-    fileRequest.current += 1
-    if (review === null || reviewedBatchTooLarge) return
-    const checked = reviewImportedCandidates(review, existing)
-    if (isReviewedImportTooLarge(checked)) {
-      setReview(checked)
-      return
-    }
-    const acceptedChecked = checked.filter((candidate) => candidate.issue === null)
-    if (acceptedChecked.length === 0) {
-      setReview(checked)
-      return
-    }
-    const keys = new Set(existing.map(importedPhraseKey))
-    const savedLines = new Set<number>()
-    const savedTargetTexts: string[] = []
-    let failed = false
-    for (const candidate of acceptedChecked) {
-      const key = importedPhraseKey(candidate.targetText)
-      if (keys.has(key)) continue
-      try {
-        addOwnPhrase(
-          { targetText: candidate.targetText, translation: candidate.translation },
-          { source: 'import' },
-        )
-        keys.add(key)
-        savedLines.add(candidate.line)
-        savedTargetTexts.push(candidate.targetText)
-      } catch {
-        failed = true
-        break
-      }
-    }
-    const remaining = unsavedImportCandidates(checked, savedLines)
-    if (remaining.length === 0) {
-      setInput('')
-      setReview(null)
-      setSaveFailed(false)
-      clearImportDraft()
-      return
-    }
-    const remainingInput = importInputForCandidates(remaining)
-    setInput(remainingInput)
-    setReview(reviewImportedCandidates(remaining, [...existing, ...savedTargetTexts]))
-    setSaveFailed(failed)
-    saveImportDraft({ targetLocale, nativeLanguage, input: remainingInput })
-  }
   return (
-    <Stack gap={space['3']}>
-      <Stack gap={space['1']}>
-        <Text variant="title3" color={ink.ink}>
-          {copy.add.import.title}
-        </Text>
-        <Text variant="caption" color={ink.muted}>
-          {copy.add.import.help}
-        </Text>
-      </Stack>
-      <Card padding={0} style={s.importInputCard}>
-        <TextInput
-          multiline
-          value={input}
-          onChangeText={updateInput}
-          placeholder={copy.add.import.placeholder}
-          placeholderTextColor={ink.muted2}
-          accessibilityLabel={copy.a11y.add.importInput}
-          style={s.importInput}
-        />
-      </Card>
-      <Button
-        label={copy.add.import.chooseFile}
-        variant="secondary"
-        onPress={() => {
-          void chooseFile()
-        }}
-      />
-      {fileError !== null && (
-        <View accessibilityRole="alert">
-          <Text variant="caption" color={semantic.warn.text}>
-            {fileError === 'unsupported-format'
-              ? copy.add.import.unsupportedFormat
-              : fileError === 'too-large'
-                ? copy.add.import.fileTooLarge
-                : copy.add.import.unsupportedEncoding}
-          </Text>
-        </View>
-      )}
-      {saveFailed && (
-        <View accessibilityRole="alert">
-          <Text variant="caption" color={semantic.warn.text}>
-            {copy.add.import.saveFailed}
-          </Text>
-        </View>
-      )}
-      <Button label={copy.add.import.preview} variant="secondary" onPress={preview} />
-      {tooLarge && (
-        <View accessibilityRole="alert">
-          <Text variant="caption" color={semantic.warn.text}>
-            {copy.add.import.tooLarge(IMPORT_MAX_ROWS, IMPORT_MAX_CHARACTERS)}
-          </Text>
-        </View>
-      )}
-      {review !== null && (
-        <Stack gap={space['2']}>
-          <SectionHeader
-            variant="caption"
-            label={copy.add.import.review(accepted.length)}
-            hint={copy.add.import.reviewHint}
-          />
-          {reviewedBatchTooLarge && (
-            <View accessibilityRole="alert">
-              <Text variant="caption" color={semantic.warn.text}>
-                {copy.add.import.tooLarge(IMPORT_MAX_ROWS, IMPORT_MAX_CHARACTERS)}
-              </Text>
-            </View>
-          )}
-          {review.length === 0 ? (
-            <Card>
-              <Text variant="caption" color={ink.muted}>
-                {copy.add.import.empty}
-              </Text>
-            </Card>
-          ) : (
-            review.map((candidate, index) => (
-              <Card
-                key={candidate.line}
-                style={candidate.issue === null ? undefined : s.importIssue}
-              >
-                <Stack gap={space['2']}>
-                  <TextInput
-                    value={candidate.targetText}
-                    onChangeText={(value) => {
-                      update(index, 'targetText', value)
-                    }}
-                    placeholder={copy.add.import.targetPlaceholder}
-                    placeholderTextColor={ink.muted2}
-                    accessibilityLabel={copy.a11y.add.importTarget(candidate.line)}
-                    {...targetLanguageInputProps()}
-                    style={s.reviewInput}
-                  />
-                  <TextInput
-                    value={candidate.translation}
-                    onChangeText={(value) => {
-                      update(index, 'translation', value)
-                    }}
-                    placeholder={copy.add.import.meaningPlaceholder}
-                    placeholderTextColor={ink.muted2}
-                    accessibilityLabel={copy.a11y.add.importMeaning(candidate.line)}
-                    style={s.reviewInput}
-                  />
-                  {candidate.issue !== null && (
-                    <Text variant="captionSm" color={semantic.warn.text}>
-                      {candidate.issue === 'duplicate'
-                        ? copy.add.import.duplicate
-                        : candidate.issue === 'too-long'
-                          ? copy.add.import.tooLong(MAX_OWN_PHRASE_TEXT_CODE_UNITS)
-                          : copy.add.import.invalid}
-                    </Text>
-                  )}
-                </Stack>
-              </Card>
-            ))
-          )}
-          <Button
-            label={copy.add.import.add(accepted.length)}
-            onPress={save}
-            disabled={accepted.length === 0 || reviewedBatchTooLarge}
-          />
-        </Stack>
-      )}
-    </Stack>
+    <View style={s.suggestedGlyph}>
+      <Text variant="headline" color={accent.accentInk}>
+        {copy.add.addGlyph}
+      </Text>
+    </View>
   )
 }
+
+/** The `+` circle on a suggestion row. Decorative — the row's own name is the affordance. */
+function AddGlyph() {
+  useLocale()
+  return (
+    <View style={s.addGlyph}>
+      <Text variant="headline" color={accent.accentInk}>
+        {copy.add.addGlyph}
+      </Text>
+    </View>
+  )
+}
+
 /** ── The tagging sheet: where the connective thread starts ── */
 function TaggingSheet({
   phrase,
@@ -1231,7 +578,10 @@ function TaggingSheet({
   const catalog = phrase?.kind === 'catalog' ? phrase.phrase : null
   const own = phrase?.kind === 'own' ? phrase : null
   const canConfirm =
-    phrase === null ? false : phrase.kind === 'catalog' || ownDraftIsAddable(phrase)
+    phrase === null
+      ? false
+      : phrase.kind === 'catalog' ||
+        (phrase.source === 'custom' ? ownPhraseIsAddable(phrase) : candidateIsAddable(phrase))
   return (
     <Sheet visible={phrase !== null} onDismiss={onDismiss} dismissLabel={copy.a11y.common.dismiss}>
       {/* The guard stays INSIDE the sheet: `Modal` mounts its children either way. */}
@@ -1379,52 +729,30 @@ const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  suggestedGlyph: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    borderWidth: border.hairline,
-    borderColor: line.default,
-    alignItems: 'center',
-    justifyContent: 'center',
+  // ── TaggingSheet ──
+  sheetPhraseLines: { flex: 1 },
+  sheetInput: {
+    minHeight: 38,
+    fontSize: 16,
+    fontWeight: '700',
+    color: ink.ink,
   },
   ownRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     alignItems: 'center',
     gap: 11,
     backgroundColor: surface.card,
     borderWidth: border.selected,
     borderColor: accent.accent,
     borderRadius: radius.lg,
-    padding: 14,
+    padding: 12,
   },
-  sheetInput: {
-    minHeight: 44,
-    paddingHorizontal: space['2'],
-    color: ink.ink,
-    borderBottomWidth: border.hairline,
-    borderBottomColor: line.default,
+  suggestedGlyph: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: accent.wash,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  // ── Import review ──
-  importInputCard: { paddingHorizontal: 13 },
-  importInput: {
-    minHeight: 132,
-    paddingHorizontal: space['3'],
-    paddingVertical: space['3'],
-    fontSize: 14,
-    fontWeight: '600',
-    color: ink.ink,
-    textAlignVertical: 'top',
-  },
-  reviewInput: {
-    minHeight: 44,
-    paddingHorizontal: space['2'],
-    color: ink.ink,
-    borderBottomWidth: border.hairline,
-    borderBottomColor: line.default,
-  },
-  importIssue: { borderColor: semantic.warn.text, borderWidth: border.hairline },
-  // ── TaggingSheet ──
-  sheetPhraseLines: { flex: 1 },
 })

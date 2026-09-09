@@ -54,6 +54,8 @@ test('discovery normalizes groups and index routes and excludes only infrastruct
     for (const file of [
       'index.tsx',
       '_layout.tsx',
+      '_add/ImportPhrases.tsx',
+      'practice/_emptyPractice.tsx',
       '+not-found.tsx',
       'dev/tokens.tsx',
       '(learner)/phrase/[id].tsx',
