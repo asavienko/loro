@@ -76,3 +76,4 @@ export {
 export type { EffortState, RefrainMode, WarmBand } from './engines/index.js'
 
 export * from './domain/languages.js'
+export * from './listening/index.js'
