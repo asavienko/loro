@@ -51,12 +51,12 @@ Expo/RN packages onto that sequence versus device-owned work.
 - Native OP-SQLite and browser SQLite commit progress, checkpoints and outbox atomically before
   publishing state. Canonical Rust FSRS, selection, matching, ranking, clocks and merge run through
   generated native/browser boundaries.
-- Foreground device TTS, strict on-device ASR and Speak reveal fallback are implemented. Plan 98
-  adds the ElevenLabs transport, authoring render, gated on-demand render and catalog-file playback
-  with device-TTS fallback. Plan 99 adds the listening-class cache and `/listen-export` composer.
-  Recorded pack cache, background transport, measured onset/DSP, widgets and physical-device
-  speech acceptance remain. Q-15 still gates licensed, reviewed production assets; Q-22 gates
-  sharing neural audio out of the app. In-app listen from a filled cache does not wait on Q-22.
+- Foreground device TTS, strict on-device ASR, Speak reveal fallback, plan-98 catalog TTS, and the
+  listening-class file cache/`/listen-export` composer are implemented. Production licensed voices
+  remain Q-15; share-out-of-app remains Q-22; native airplane-mode listen evidence remains. Recorded
+  pack cache, background transport, measured onset/DSP, widgets and physical-device speech
+  acceptance remain. Q-15 still gates licensed, reviewed production assets; Q-22 gates sharing
+  neural audio out of the app. In-app listen from a filled cache does not wait on Q-22.
 - PostgreSQL accounts and tenant-scoped sync connect optional Google/Apple/email sign-in to durable
   progress. Account linking/export/erasure, OS background sync and production provider/service
   configuration remain. EC2 now exposes Google development sign-in and guarded sync backed by
@@ -88,8 +88,8 @@ Expo/RN packages onto that sequence versus device-owned work.
    adapters. Prepare [77](archive/2026-09-09/77-dsp-and-speech-labs.md)'s evidence spike and
    [82](archive/2026-09-09/82-guided-chat-domain-and-service.md)'s offline schemas/topic/eval work
    without activating gated production features.
-   [99](99-batch-phrase-audio-export.md) specifies an online-first listening companion: generate
-   licensed multi-voice clips, cache them, listen offline from disk. Production generation waits on
+   [99](99-batch-phrase-audio-export.md) landed the online-first listening companion composer,
+   listening-class cache, and fail-closed render. Production generation waits on
    Q-15; share-out-of-app waits on Q-22. Device TTS is a labeled fallback, not the first slice.
 3. **Remaining device/service integration:** approved 61 assets→recorded/background 62; 62
    clock/buffer substrate→63 onset latency; 66 operational acceptance + 67 account lifecycle→68
@@ -172,7 +172,7 @@ feature↔release-completion cycle. See each plan's checkboxes for executable ta
 | [96](archive/2026-09-09/96-account-sign-in-screens.md)                     | Account method chooser, email/code flow and provider sign-in states         | M2          | 🟡 UI/browser/client slices implemented; visual, native and live-provider evidence remains                   | 67/68/86; provider configuration and device evidence            |
 | [97](97-generative-discover-and-phrase-reach.md)                           | Guarded generative Discover reach and shared add-handoff                    | M3          | 🟡 Own-phrase floor, bundled suggestions and stub suggest exist; Q-21 gates live traffic                     | 59/61; 76/86 live path; 82/83 consume handoff; Q-21             |
 | [98](98-voice-and-tts-integration.md)                                      | ElevenLabs TTS, catalog render and device-TTS fallback                      | M1/M2       | 🟡 Adapter/render/gated API/file playback in progress; Q-15 production seed remains                          | 86/61/62 slices; Q-15 live seed                                 |
-| [99](99-batch-phrase-audio-export.md)                                      | Online multi-voice listen cache; optional share of concatenated clips       | M2          | ⛔ Q-15 generation; ⛔ Q-22 share-out-of-app; composer/cache contract unblocked                             | 56/81 route; 59 phrases; 62 cache/session; 86/61/66/98 render; Q-15/Q-22 |
+| [99](99-batch-phrase-audio-export.md)                                      | Online multi-voice listen cache; optional share of concatenated clips       | M2          | 🟡 Composer/cache/contract/E2E landed; ⛔ Q-15 production voices; ⛔ Q-22 share; 58/72 airplane-mode listen evidence | 56/81 route; 59 phrases; 62 cache/session; 86/61/66/98 render; Q-15/Q-22 |
 
 Plan 88 owns the selected AWS testing profile and
 [operations runbook](../docs/runbooks/backend-testing.md); plan 73 retains production operations.

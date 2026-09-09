@@ -1088,16 +1088,18 @@ authored learner screen. See [account implementation](../architecture/google-app
 
 Optional `/listen-export` utility (plan 99); not one of the 23 authored learner screens. The learner
 selects the active-course batch and a repeat count of 2–5 (default 3). The primary path **generates
-licensed neural takes online** (ElevenLabs selected; adapter not implemented), **caches each
-phrase×voice clip on device**, then plays that cache with no network. Each phrase is spoken that
-many times, rotating through distinct licensed voices for the target locale. The primary action
-requires at least two approved listening voices; otherwise the control is unavailable. First-time
-generation needs network; a cache hit does not. Empty-cache airplane mode is unavailable, not a
-silent device-TTS export. Device TTS may play a labeled in-app fallback on a miss.
+licensed neural takes online** (ElevenLabs selected; transport is fail-closed until Q-15 pins
+licensed voices), **caches each phrase×voice clip on device**, then plays that cache with no network.
+Each phrase is spoken that many times, rotating through distinct licensed voices for the target
+locale. The primary action requires at least two approved listening voices; otherwise the control
+is unavailable. First-time generation needs network; a cache hit does not. Empty-cache airplane
+mode is unavailable, not a silent device-TTS export. Device TTS may play a labeled in-app fallback
+on a miss.
 
 Duration is measured or `null`, never estimated. This is a listening companion: it does not record
 practice, include learner recordings, or replace canonical one-voice reference audio. Learner-authored
 text is sent to cloud TTS only after explicit confirmation. Concatenating cached clips into one
-AAC/M4A for the OS share sheet waits on Q-22. Browser may show the composer and must mark generate,
-cache, listen, and export unavailable until a real native path exists. See
+AAC/M4A for the OS share sheet waits on Q-22; the share control is disabled with honest copy. Browser
+shows the composer and marks generate, cache, listen, and export unavailable until native cache is
+present; fixtures in development do not present stub audio as licensed neural quality. See
 [plan 99](../../plans/99-batch-phrase-audio-export.md).
