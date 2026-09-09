@@ -26,6 +26,8 @@ export type AccountStatus =
 export type AccountErrorCode =
   | 'unconfigured'
   | 'network'
+  | 'rate-limited'
+  | 'invalid-email'
   | 'invalid-code'
   | 'unavailable'
   | 'account-mismatch'
@@ -58,6 +60,17 @@ interface Dependencies {
 interface SavedCredential extends AccountSession {
   installationId: string
   refreshToken: string
+}
+type RequestKind = 'provider' | 'email-request' | 'email-verify' | 'refresh' | 'logout' | 'other'
+
+function classifyResponse(status: number, kind: RequestKind): AccountErrorCode {
+  if (status === 429) return 'rate-limited'
+  if ((status === 400 || status === 422) && kind === 'email-request') return 'invalid-email'
+  if ((status === 400 || status === 401 || status === 422) && kind === 'email-verify')
+    return 'invalid-code'
+  if ((status === 400 || status === 401 || status === 422) && kind === 'provider')
+    return 'provider-error'
+  return 'unavailable'
 }
 function readCredential(raw: string): SavedCredential | null {
   let value: unknown
@@ -97,6 +110,7 @@ export class AccountClient {
   private refreshFlight: Promise<string | null> | null = null
   private restoreFlight: Promise<void> | null = null
   private vaultWrites: Promise<void> = Promise.resolve()
+  private attemptControllers = new Map<number, Set<AbortController>>()
   constructor(private readonly deps: Dependencies) {}
   get configured(): boolean {
     return this.deps.baseUrl !== null
@@ -121,9 +135,16 @@ export class AccountClient {
     path: string,
     body: unknown,
     bearer?: { token: string; deviceId: string },
+    generation?: number,
+    kind: RequestKind = 'other',
   ): Promise<unknown> {
     if (!this.deps.baseUrl) throw new AccountError('unconfigured')
     const controller = new AbortController()
+    if (generation !== undefined) {
+      const controllers = this.attemptControllers.get(generation) ?? new Set<AbortController>()
+      controllers.add(controller)
+      this.attemptControllers.set(generation, controllers)
+    }
     const timeout = setTimeout(() => {
       controller.abort()
     }, 15_000)
@@ -143,12 +164,7 @@ export class AccountClient {
         credentials: 'omit',
         signal: controller.signal,
       })
-      if (!response.ok)
-        throw new AccountError(
-          response.status === 401 || response.status === 400 || response.status === 422
-            ? 'invalid-code'
-            : 'unavailable',
-        )
+      if (!response.ok) throw new AccountError(classifyResponse(response.status, kind))
       if (response.status === 204) return null
       const text = await response.text()
       if (text.length > 32_768) throw new AccountError('unavailable')
@@ -158,7 +174,16 @@ export class AccountClient {
       throw new AccountError('network')
     } finally {
       clearTimeout(timeout)
+      if (generation !== undefined) {
+        const controllers = this.attemptControllers.get(generation)
+        controllers?.delete(controller)
+        if (controllers?.size === 0) this.attemptControllers.delete(generation)
+      }
     }
+  }
+  private abortAttempt(generation: number): void {
+    for (const controller of this.attemptControllers.get(generation) ?? []) controller.abort()
+    this.attemptControllers.delete(generation)
   }
   private fail(error: unknown): void {
     this.publish({
@@ -231,28 +256,38 @@ export class AccountClient {
         )
     }
   }
-  async signIn(provider: OAuthProvider): Promise<void> {
+  async signIn(provider: OAuthProvider, windowName?: string): Promise<void> {
     if (this.restoreFlight || this.refreshFlight || this.state.status === 'working') return
     const generation = ++this.generation
     this.publish({ status: 'working', error: null })
     try {
       if (!this.deps.authorization) throw new AccountError('unconfigured')
-      const exchange = await authorizeProvider(provider, {
-        ...this.deps.authorization,
-        request: (path, body) => this.post(path, body),
-        isCurrent: () => generation === this.generation,
-      })
+      const exchange = await authorizeProvider(
+        provider,
+        {
+          ...this.deps.authorization,
+          request: (path, body) => this.post(path, body, undefined, generation, 'provider'),
+          isCurrent: () => generation === this.generation,
+        },
+        windowName,
+      )
       if (generation !== this.generation) return
       if (!exchange) {
         this.publish({ status: 'cancelled' })
         return
       }
       const response = SignInResponseSchema.parse(
-        await this.post('/auth/exchange', {
-          ...exchange,
-          device: this.deps.device,
-          anon_id: this.deps.anonId,
-        }),
+        await this.post(
+          '/auth/exchange',
+          {
+            ...exchange,
+            device: this.deps.device,
+            anon_id: this.deps.anonId,
+          },
+          undefined,
+          generation,
+          'provider',
+        ),
       )
       if (generation === this.generation) await this.accept(response, generation)
     } catch (error) {
@@ -260,13 +295,28 @@ export class AccountClient {
         this.fail(error instanceof AccountError ? error : new AccountError('provider-error'))
     }
   }
+
+  /**
+   * Cancel only the current sign-in attempt. This deliberately does not sign out an existing
+   * session: a provider window is an in-flight operation, not an authenticated account state.
+   * Generation invalidation makes late start/callback/exchange results inert.
+   */
+  cancelSignIn(): void {
+    if (this.state.status !== 'working') return
+    const generation = this.generation
+    this.generation += 1
+    this.abortAttempt(generation)
+    this.publish({ status: 'cancelled', error: null })
+  }
   async requestCode(email: string): Promise<void> {
     if (this.restoreFlight || this.refreshFlight || this.state.status === 'working') return
     const generation = ++this.generation
     this.publish({ status: 'working', error: null })
     try {
+      const request = MagicLinkRequestSchema.safeParse({ email: email.trim() })
+      if (!request.success) throw new AccountError('invalid-email')
       MagicLinkResponseSchema.parse(
-        await this.post('/auth/magic-link', MagicLinkRequestSchema.parse({ email: email.trim() })),
+        await this.post('/auth/magic-link', request.data, undefined, generation, 'email-request'),
       )
       if (generation === this.generation) this.publish({ status: 'code-sent' })
     } catch (error) {
@@ -278,14 +328,21 @@ export class AccountClient {
     const generation = ++this.generation
     this.publish({ status: 'working', error: null })
     try {
-      const request = MagicVerifyRequestSchema.parse({
+      const request = MagicVerifyRequestSchema.safeParse({
         email: email.trim(),
         code: code.trim(),
         anon_id: this.deps.anonId,
         device: this.deps.device,
       })
+      if (!request.success) throw new AccountError('invalid-code')
       const response = SignInResponseSchema.parse(
-        await this.post('/auth/magic-link/verify', request),
+        await this.post(
+          '/auth/magic-link/verify',
+          request.data,
+          undefined,
+          generation,
+          'email-verify',
+        ),
       )
       if (generation !== this.generation) return
       await this.accept(response, generation)
@@ -294,28 +351,43 @@ export class AccountClient {
     }
   }
   private async accept(response: SignInResponse, generation: number): Promise<void> {
-    try {
-      this.deps.bindAccount(response.user.id)
-    } catch {
-      await this.revoke(response)
-      throw new AccountError('account-mismatch')
-    }
     const saved: SavedCredential = {
       accountId: response.user.id,
       deviceId: response.device_id,
       installationId: this.deps.device.installation_id,
       refreshToken: response.refresh_token,
     }
+    const serialized = JSON.stringify(saved)
+    if (generation !== this.generation) {
+      await this.revoke(response)
+      return
+    }
     try {
       await this.save(async () => {
-        await this.deps.vault.write(JSON.stringify(saved))
+        await this.deps.vault.write(serialized)
         await this.deps.vault.clearLegacy?.()
       })
     } catch {
       await this.revoke(response)
       throw new AccountError('storage')
     }
-    if (generation !== this.generation) return
+    if (generation !== this.generation) {
+      await this.clearSaved(serialized)
+      await this.revoke(response)
+      return
+    }
+    try {
+      this.deps.bindAccount(response.user.id)
+    } catch {
+      await this.clearSaved(serialized)
+      await this.revoke(response)
+      throw new AccountError('account-mismatch')
+    }
+    if (generation !== this.generation) {
+      await this.clearSaved(serialized)
+      await this.revoke(response)
+      return
+    }
     this.credential = saved
     this.accessToken = response.access_token
     this.expiresAt = this.deps.now() + response.expires_in * 1000
@@ -324,6 +396,15 @@ export class AccountClient {
       error: null,
       session: { accountId: saved.accountId, deviceId: saved.deviceId },
     })
+  }
+  private async clearSaved(serialized: string): Promise<void> {
+    try {
+      await this.save(async () => {
+        if ((await this.deps.vault.read()) === serialized) await this.deps.vault.clear()
+      })
+    } catch {
+      /* Cleanup is best effort; never admit a credential after cancellation. */
+    }
   }
   private async revoke(response: SignInResponse): Promise<void> {
     try {
@@ -362,7 +443,13 @@ export class AccountClient {
       })
       if (generation !== this.generation) return null
       const response = TokenResponseSchema.parse(
-        await this.post('/auth/refresh', { refresh_token: saved.refreshToken }),
+        await this.post(
+          '/auth/refresh',
+          { refresh_token: saved.refreshToken },
+          undefined,
+          undefined,
+          'refresh',
+        ),
       )
       if (generation !== this.generation) return null
       const replacement = { ...saved, refreshToken: response.refresh_token }
@@ -386,7 +473,9 @@ export class AccountClient {
     const token = this.deps.now() < this.expiresAt ? this.accessToken : null
     const session = this.state.session
     const credential = this.credential
+    const previousGeneration = this.generation
     const generation = ++this.generation
+    this.abortAttempt(previousGeneration)
     this.accessToken = null
     this.credential = null
     this.publish({ status: 'signed-out', session: null, error: null })
