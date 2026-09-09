@@ -5,7 +5,6 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { LISTENING_ASSET_CLASS, LISTENING_CODEC } from '@loro/core'
 import { TtsService } from './tts.service.js'
-import type { TtsTransport } from './transport.js'
 
 const text = 'Me pone un cortado, por favor'
 const phraseHash = createHash('sha256').update(text, 'utf8').digest('hex')
@@ -27,7 +26,7 @@ describe('listening-class TTS render', () => {
     const cacheDir = await mkdtemp(join(tmpdir(), 'loro-tts-listen-'))
     liveEnv(cacheDir)
     const synthesize = vi.fn()
-    const tts = new TtsService({ synthesize } as TtsTransport, { now: () => 1 })
+    const tts = new TtsService({ synthesize }, { now: () => 1 })
     await expect(
       tts.render({
         userId: 'learner',
@@ -50,7 +49,7 @@ describe('listening-class TTS render', () => {
     const cacheDir = await mkdtemp(join(tmpdir(), 'loro-tts-listen-model-'))
     liveEnv(cacheDir)
     const synthesize = vi.fn()
-    const tts = new TtsService({ synthesize } as TtsTransport, { now: () => 1 })
+    const tts = new TtsService({ synthesize }, { now: () => 1 })
     await expect(
       tts.render({
         userId: 'learner',
