@@ -7,7 +7,7 @@ import Constants from 'expo-constants'
 import type { AuthorizationPorts } from './client'
 import { configuredNativeRedirectUri } from './redirect'
 import { accountClient } from '../lib/account/runtime'
-import { apiUrl as api, requestWithTimeout } from '../lib/backend'
+import { publicApiUrl, requestWithTimeout } from '../lib/backend'
 
 const base64url = (value: string): string =>
   value.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
@@ -57,6 +57,7 @@ export function beginSignIn(provider: OAuthProvider): Promise<boolean> {
   })
 }
 export async function availableProviders(): Promise<OAuthProvider[]> {
+  const api = publicApiUrl()
   if (!api) return []
   const response = await requestWithTimeout(`${api}/auth/providers`, {
     method: 'GET',
@@ -74,6 +75,7 @@ export async function availableCapabilities(): Promise<{
   google: boolean
   email: boolean
 }> {
+  const api = publicApiUrl()
   if (!api) return { apple: false, google: false, email: false }
   const response = await requestWithTimeout(`${api}/auth/capabilities`, {
     method: 'GET',

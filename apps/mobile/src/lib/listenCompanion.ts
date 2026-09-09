@@ -27,7 +27,7 @@ import {
   type AudioCacheController,
   type AudioCacheObject,
 } from './audioCacheController'
-import { apiUrl } from './backend'
+import { publicApiUrl } from './backend'
 import { requestListeningRender, TtsRenderError, type TtsCredentials } from './ttsRenderClient'
 import { digestListeningText } from './listeningDigest'
 import { isNetworkAvailable } from './connectivity'
@@ -219,7 +219,7 @@ export async function prepareListeningBatch(deps: PrepareListeningDeps): Promise
       phrase_id: take.phraseId,
     }
     try {
-      const meta = await render(request, deps.baseUrl ?? apiUrl)
+      const meta = await render(request, deps.baseUrl ?? publicApiUrl())
       const stored = await deps.cache.download({
         url: meta.download_url,
         expectedSha256: meta.sha256,
