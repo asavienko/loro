@@ -8,7 +8,8 @@
   home-rail priority, not reachability work.
 - **Depends on:** 55/79/84 completed; 56 route contract, 57 shared state APIs; 59/64 checkpoints and
   62 playback for later slices.
-- **Reviewed:** 2026-09-07 against merged baseline `2d9e8c3`.
+- **Reviewed:** 2026-09-09 against checkout `42f4d57`; source/plan review only, no new device or
+  deployment acceptance.
 
 ## Verified starting point
 
@@ -17,9 +18,11 @@ phrase detail and Languages. `apps/mobile/src/lib/navigation.ts` supplies transl
 Today's rail. `NavigationMenu.tsx` and `apps/mobile/e2e/navigation.spec.ts` cover menu navigation,
 cold Today escapes, warm Back and Escape/focus restoration. Onboarding retains step-back behavior.
 
-There is no `/more`, exhaustive surface registry, ongoing-work selector, exit sheet, durable resume
-or travelling audio. Today is the only implemented home; the future conditional-home resolver is
-still work, not a seam to claim already exists.
+There is no `/more`, ongoing-work selector, exit sheet or travelling audio. The complete
+built/planned surface inventory and onboarding/Today home resolver already exist. Durable course
+checkpoints and Refrain resume are implemented by 59/64; this plan still needs their cross-route
+presentation and full exit laws. Additional product-dependent homes need approved feature semantics
+and extended route metadata from 56.
 
 ## Source and ownership
 
@@ -27,7 +30,8 @@ still work, not a seam to claim already exists.
 Plan 56 owns the single route declaration, parsing/guards, conditional-home resolution, failure
 policy and `check:routes`. This plan owns presentation and interaction against those values; it must
 not create a second route table or navigation store. Plan 59 owns checkpoint persistence, 64 owns
-wave transitions, 62 owns playback truth and 70 owns native lock-screen mirrors.
+wave transitions, 62 owns playback truth and audio lock-screen transport; 70 owns trip widgets/Live
+Activity.
 
 ## Remaining work
 
@@ -58,6 +62,16 @@ wave transitions, 62 owns playback truth and 70 owns native lock-screen mirrors.
 7. [ ] Complete sheet gesture/focus ownership, safe-area/keyboard behavior, meaningful translated
        names, minimum touch targets, reduced motion and 200%/310% reflow; feed real components
        to 80.
+
+## Delivery order and gates
+
+1. Consume 56's extended metadata to deliver More and contextual groups first. Existing checkpoints
+   from 59/64 already supply resume data; this plan owns presentation, not another persistence
+   store.
+2. Add explicit exit/collision sheets next with durable acknowledgement and course-preserving
+   resume. Preserve the gestures already implemented in 93 and feed their native checks into 58/72.
+3. Add travelling audio only after 62 supplies real session position/state. Q-17 gates final rail
+   priorities, not reachability or More; Q-07 still gates trip-dependent home behavior.
 
 ## Verification and acceptance
 

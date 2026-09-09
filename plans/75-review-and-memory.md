@@ -6,7 +6,8 @@
   72's shared harness as it develops, without waiting for whole-release sign-off.
 - **Depends on:** 59 history/resume; 60 FSRS/selection; 56/81 route laws; 57 chart primitives; 72
   applicable harness only.
-- **Reviewed:** 2026-09-08 against integrated runtime `e013141`; unfinished scope retained.
+- **Reviewed:** 2026-09-09 against checkout `42f4d57`; source/plan review only, no new device or
+  deployment acceptance.
 
 Previous starting point: [archived snapshot](archive/2026-09-08/75-review-and-memory.md).
 
@@ -41,6 +42,17 @@ retrievability/lapses without manufacturing a curve, history, or confidence valu
 - Review outcomes write only through `applyDelta`/repository transaction and survive relaunch/sync.
 - No-data and low-confidence states show no invented trend.
 - Native and browser states meet plan-72 gates.
+
+## Delivery order and gates
+
+1. Define Review queue/grade/attempt/undo contracts against the existing 59/60 persistence and
+   canonical FSRS first. Do not add a second scheduler or synthesize missing review history.
+2. Deliver the Review engine and route before Memory visualization. Define whether Undo is a new
+   compensating event or another reviewed operation, and verify retry/sync behavior with 68 before
+   exposing it; never rewrite an acknowledged review silently.
+3. Build accessible Memory charts from canonical outputs and retained history, with geometric
+   assertions in `e2e/render.spec.ts`. Use 56/57/81 slices and 72's shared harness as they land;
+   whole-release sign-off, Q-05 and live providers are not prerequisites to this feature.
 
 ## Out of scope
 

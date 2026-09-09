@@ -8,7 +8,8 @@
   policy are the remaining gates.
 - **Depends on:** 59 device persistence; 60 mobile merge binding only, not FSRS; 66 tenant cursor
   API; 67 identity.
-- **Reviewed:** 2026-09-08 during plan-94 integration.
+- **Reviewed:** 2026-09-09 against checkout `42f4d57`; source/plan review only, no new device or
+  deployment acceptance.
 
 ## Implemented scope
 
@@ -52,6 +53,17 @@ cursor-based push/pull loop. Network failure is ordinary state, not a practice f
 - Any crash/retry point converges without loss or duplicate effects.
 - Practice screens never await the network or show a spinner for a local write.
 - p95 sync meets the documented budget for a 2,000-phrase fixture at projected and 10× load.
+
+## Delivery order and gates
+
+1. Agree tombstone/compaction and long-offline recovery policy with 66/67 before adding destructive
+   cleanup. Test expired cursors and schema mismatch while preserving unsent local writes.
+2. Add bounded OS background scheduling and repair/export on the existing sync service. Foreground
+   convergence must still work when the OS declines background time; keep account binding checks
+   around asynchronous work and reuse 67's export/lifecycle contracts.
+3. Expand deterministic fault histories first, then use 58 devices and 88's synthetic load profile
+   for measurements. Verify server state, both local databases and pending outboxes together; an
+   empty outbox alone is not convergence evidence.
 
 ## Out of scope
 

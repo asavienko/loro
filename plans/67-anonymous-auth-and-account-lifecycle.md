@@ -8,7 +8,8 @@
   gate those slices.
 - **Depends on:** 85 completed; 66 durable principal-aware backend; 59 device identity/state; 86
   provider verification/email adapters.
-- **Reviewed:** 2026-09-08 during plan-94 integration.
+- **Reviewed:** 2026-09-09 against checkout `42f4d57`; source/plan review only, no new device or
+  deployment acceptance.
 
 ## Implemented scope
 
@@ -33,8 +34,9 @@ principal.
 
 1. [ ] Complete loss/reinstall/backup-restore/device-rotation and recovery policy with
        learner-facing management. Browser reload requiring sign-in is intentional credential policy.
-2. [ ] Configure real Google/Apple/email providers and verify their native flows on supported
-       devices. Never link providers automatically by matching email.
+2. [ ] Retain the recorded Google development configuration; complete its consent-to-device
+       verification, then configure unavailable Apple/email providers and verify supported devices.
+       Never link providers automatically by matching email.
 3. [ ] Add deliberate account-linking and cross-account migration/recovery flows with reviewed
        conflict handling; current binding protects existing data by rejecting another account.
 4. [ ] Implement account/device management, export, deletion/tombstone propagation, consent/version
@@ -49,6 +51,17 @@ principal.
 - Cross-tenant read/write attempts fail at controller, service, and repository tests.
 - Export/deletion completes across device, server, content metadata, analytics, and backups per
   policy.
+
+## Delivery order and gates
+
+1. Record recovery/linking/deletion policy against current shared contracts before wiring new
+   lifecycle states. Reuse the existing account IDs, installation binding, refresh families and
+   OAuth exchange; email equality must never link identities automatically.
+2. Deliver management/export/erasure with local data ownership explicit. Coordinate stale-device
+   deletion enforcement with 68, backend records with 66 and backup retention/recovery with 88.
+   Restoring a backup must not silently revive an erased account.
+3. Reuse the recorded Google development setup for end-to-end device acceptance; Apple/email
+   availability remains separate. Preserve local practice and outbox data through interrupted flows.
 
 ## Out of scope
 

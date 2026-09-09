@@ -4,11 +4,12 @@
 - **Milestone:** M1/M2
 - **Status:** — English as a selectable learning target and default is confirmed. Contract and
   implementation work can proceed; the English dialect remains to be confirmed and catalog release
-  needs bilingual review. Reuse implemented plan-59 durable selection; generated audio depends on
-  plans 61/62.
+  needs bilingual review. Full plan-87 sign-off is not required to start contract work. Reuse
+  implemented plan-59 durable selection; generated audio depends on plans 61/62.
 - **Depends on:** 87 existing language contracts, selector, and course isolation; 85 API contracts;
   59 for durable device storage; 61 for independently delivered catalogs and ElevenLabs assets.
-- **Reviewed:** 2026-09-08 against integrated runtime `e013141`; confirmed decision retained.
+- **Reviewed:** 2026-09-09 against checkout `42f4d57`; source/plan review only, no new device or
+  deployment acceptance.
 
 Previous starting point:
 [archived snapshot](archive/2026-09-08/90-default-english-content-language.md).
@@ -84,6 +85,18 @@ Existing course progress and personal translations survive the change.
   invalid pairs, switching, accessibility, and text scaling in learner E2E.
 - Run `pnpm check`, `pnpm test:e2e`, and production bundle checks. Require bilingual content review
   before release; device relaunch/offline persistence proof stays gated on plan 59.
+
+## Delivery order and gates
+
+1. Record the canonical English dialect before freezing locale IDs, catalog identities or voice
+   mappings. Keep the confirmed English-default decision; `en-US` remains a proposal until
+   confirmed.
+2. Deliver shared registry/configuration/API contracts first, then the reviewed starter and app
+   default/selection integration. Reuse the existing durable course state, including legacy
+   migration.
+3. Extend 87/72's supported-pair review/test matrix in the same change. English-native learners
+   still choose a different target; existing learners keep saved selections. Text implementation
+   does not wait for generated audio, whose release remains with 61/62 and Q-15.
 
 ## Out of scope
 

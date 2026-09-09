@@ -6,7 +6,8 @@
   exist. File import and OCR remain; OCR needs 58, and optional translation needs 76/86.
 - **Depends on:** 56 input/navigation; 59 persistence; 58 camera/OCR substrate; 76/86 only for
   optional guarded text assistance.
-- **Reviewed:** 2026-09-07 against merged baseline `2d9e8c3`.
+- **Reviewed:** 2026-09-09 against checkout `42f4d57`; source/plan review only, no new device or
+  deployment acceptance.
 
 **Archive disposition (2026-09-09):** Archived at user request after integration review. The partial
 status and remaining acceptance criteria below are retained; archival does not mark this plan
@@ -50,6 +51,16 @@ Discover/Browse and the difficulty/tag sheet exist. This plan does not rebuild t
 - Duplicate/partial/oversize inputs are recoverable and cannot freeze the UI.
 - Imported/captured phrases survive relaunch, sync safely, and use device-TTS fallback when needed.
 - Camera denial has a tested, non-shaming Import fallback.
+
+## Delivery order and gates
+
+1. Extend the shipped paste-review path with bounded offline file input, encoding/format errors,
+   duplicate review and cancellation. Reuse the phrase factory and 59 transaction/outbox boundary.
+2. Preserve reviewed target/meaning language and stable identities across retry, partial acceptance
+   and relaunch. Define the batch/recovery boundary before writes so retry cannot duplicate rows.
+3. Deliver OCR separately after the 58 native permission harness is available; denial returns to
+   Import without losing text. Optional text assistance from 76/86 must never gate offline import,
+   and OCR images stay on device without a separately approved upload contract.
 
 ## Out of scope
 
