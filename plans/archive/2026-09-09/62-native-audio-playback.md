@@ -7,7 +7,8 @@
   approved assets still depend on Q-15 even though ElevenLabs is selected.
 - **Depends on:** 58 native workspace; 61 approved seed assets; 86 only for remote asset/TTS
   adapters.
-- **Reviewed:** 2026-09-08 during plan-94 integration; release gates below remain explicit.
+- **Reviewed:** 2026-09-09 against checkout `42f4d57`; source/plan review only, no new device or
+  deployment acceptance.
 
 **Archive disposition (2026-09-09):** Archived at user request after integration review. The partial
 status and remaining acceptance criteria below are retained; archival does not mark this plan
@@ -50,6 +51,16 @@ without returning PCM to JavaScript.
 - Cached/bundled phrases play in airplane mode; failures degrade honestly without killing a session.
 - Audio continues or pauses across navigation/background exactly as the documented policy states.
 - No JS API or log contains audio bytes.
+
+## Delivery order and gates
+
+1. Extend the existing serialized native session with position/queue/rate/interruption events;
+   define the shared monotonic-clock handoff with 63 before onset measurement work.
+2. Integrate 61's verified cache identity and approved assets, then background/lock-screen control.
+   Plan 62 owns audio transport, 81 its in-app travelling presentation, and 70 trip/widget state;
+   ordinary background playback must not wait for the blocked trip lifecycle.
+3. Record per-target physical-device playback and interruption evidence through 58/72. Fixtures may
+   verify state transitions while Q-15 is open; they cannot establish production asset quality.
 
 ## Out of scope
 

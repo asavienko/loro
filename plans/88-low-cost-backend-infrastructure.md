@@ -2,13 +2,15 @@
 
 - **Requirement IDs:** `F-01`, `F-02`, `F-04`, `F-07`, `F-09`
 - **Milestone:** M2 testing; production operations remain in plan 73.
-- **Status:** 🟡 Restricted EC2/HTTPS deployment and durable account/sync source exist. Shared
-  authenticated access, retained storage, backups/restore, load and operational acceptance remain.
-  Reconcile infrastructure ownership with the deployed CloudFormation stacks before provisioning; do
-  not rebuild the host or identity/sync runtime from the earlier proposal.
+- **Status:** 🟡 EC2/HTTPS, durable account/sync deployment, Google testing access and an isolated
+  restore are recorded. Full consent-to-device proof, retained storage, scheduled off-host backups,
+  load and operational acceptance remain. Reconcile infrastructure ownership with the deployed
+  CloudFormation stacks before provisioning; do not rebuild the host or identity/sync runtime from
+  the earlier proposal.
 - **Depends on:** 66 exact API image and backend foundations; 67 shared access; 61/86 content
   adapters only when activated. Whole-plan completion is not an infrastructure prerequisite.
-- **Reviewed:** 2026-09-08 against integrated runtime `e013141`; unfinished scope retained.
+- **Reviewed:** 2026-09-09 against checkout `42f4d57`; source/plan review only, no new device or
+  deployment acceptance.
 
 Previous starting point:
 [archived snapshot](archive/2026-09-08/88-low-cost-backend-infrastructure.md).
@@ -17,10 +19,13 @@ Previous starting point:
 
 [Backend architecture](../docs/architecture/backend.md#testing-infrastructure),
 [environments](../docs/process/environments.md), [CI/CD](../docs/process/ci-cd.md#backend-deploys)
-and the [testing runbook](../docs/runbooks/backend-testing.md) describe this selected profile.
-Documentation is complete. Plan 91 provides a CloudFormation-provisioned SSH-only development API;
-the broader testing stack and operational evidence remain outstanding. Plans 66–68/94 now supply the
-durable runtime; verify the deployed artifact and access policy separately.
+and the [testing runbook](../docs/runbooks/backend-testing.md) describe this selected profile. Plan
+91 provides a CloudFormation-managed host with restricted administrative SSH and a guarded HTTPS
+account gateway. The 2026-09-08 account-release record in `docs/process/ec2-deployment.md` reports
+PostgreSQL/WASM readiness, Google start/cancellation, anonymous auth/sync rejection and an isolated
+20-table restore. Live consent-to-device proof, scheduled off-host recovery and the full testing
+profile remain outstanding. Reverify the deployed artifact and access policy before operational
+changes; this review does not claim a fresh AWS probe.
 
 ## Outcome and scope
 
@@ -93,12 +98,14 @@ Cost controls:
       replace EC2; deployment scripts remain local.
 - [ ] Protect the state bucket, backups and data volume from routine destruction. Retain PostgreSQL
       data across instance replacement and explicitly pin its availability zone.
-- [ ] Mount the data volume by filesystem UUID before Compose starts. A missing mount must fail
-      startup rather than silently create a fresh database on the root disk.
+- [ ] If a separate retained data volume is selected, mount it by filesystem UUID before Compose
+      starts. A missing mount must fail startup rather than silently create a fresh database on the
+      root disk.
 - [ ] Preserve restricted ingress and the existing HTTPS gateway unless a reviewed migration changes
       it. PostgreSQL must remain private. Require IMDSv2, scoped instance permissions and separate
       infrastructure/deployment IAM roles; verify SSH/proxy access against the runbook.
-- [ ] Store secrets in standard-tier SSM SecureString parameters. An idempotent bootstrap command
+- [ ] Retain the current SOPS-to-restricted-runtime-file path until an SSM migration is recorded. If
+      selected, use standard-tier SSM SecureString parameters. An idempotent bootstrap command
       creates missing values without printing them; Terraform never reads their values. Fetch
       secrets into restricted runtime files and verify container access to temporary AWS
       credentials.
@@ -156,6 +163,17 @@ Backups and recovery:
 - [ ] Verify restoration before inviting testers and repeat monthly in an isolated environment.
 - [ ] Document host replacement, reattaching retained storage, full restore from S3, secret
       recovery, certificate renewal, security updates and teardown.
+
+## Delivery order and gates
+
+1. Inventory existing resource ownership, image/schema identity and gateway configuration before any
+   migration. Reuse the recorded account deployment and restore procedure; refresh evidence against
+   the candidate image rather than treating a dated successful probe as current acceptance.
+2. Close off-host backup, restore, retained-storage and monitoring gaps first. Keep existing SOPS,
+   CloudFormation and local transfer paths unless a specific migration is justified and recorded.
+3. Use synthetic accounts for service/load checks after 66; add physical-device convergence after
+   58/68. Supply private storage configuration to 61/86 independently of whole-plan completion. A
+   missing device cannot be replaced by an infrastructure-only convergence claim.
 
 ## Monitoring and acceptance
 

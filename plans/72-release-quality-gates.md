@@ -8,7 +8,8 @@
   sign-off and 87 owns bilingual sign-off.
 - **Depends on:** 58 device harness; 57 visual APIs; owning feature acceptance slices as they land.
   This shared harness is not a prerequisite to finish every feature before work starts.
-- **Reviewed:** 2026-09-08 against integrated runtime `e013141`; unfinished scope retained.
+- **Reviewed:** 2026-09-09 against checkout `42f4d57`; source/plan review only, no new device or
+  deployment acceptance.
 
 Previous starting point: [archived snapshot](archive/2026-09-08/72-release-quality-gates.md).
 
@@ -58,7 +59,18 @@ have simulation/property/golden tests.
 - CI fails on missing state ownership, generated drift, critical golden/property regressions, or
   budget regression beyond approved tolerance.
 
+## Delivery order and gates
+
+1. Start shared harnesses, pseudo-locale and evidence reporting now; do not wait for every feature
+   to finish. Device runners come from 58, feature assertions from their owning plans.
+2. Derive the release pair matrix from the supported registry and reviewed release set. Seven pairs
+   are the current baseline; plan 90 must extend fixtures when English lands. New language support
+   does not imply reviewed content or native speech availability.
+3. Separate harness completion from feature/release sign-off. Enforce Q-14 peak review, 87 bilingual
+   evidence and applicable physical-device gates without making unrelated work depend on them. Run
+   checks locally; preserve the disabled GitHub Actions policy.
+
 ## Out of scope
 
-Feature implementation, production alerting, new target languages beyond the approved seven pairs,
-and a meaningless global coverage percentage.
+Feature implementation, production alerting, new target-language implementation (plan 90 owns
+English; this plan consumes its approved pair matrix), and a meaningless global coverage percentage.

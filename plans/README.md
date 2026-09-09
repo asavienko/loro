@@ -72,6 +72,29 @@ completion.
    handoff and live release gates apply to their specific slices. Labs follow the recorded DSP
    decision; Run/ladder Phrasebook follows Q-05 and comparative evidence.
 
+## Next implementation priorities — reviewed 2026-09-09
+
+Source/plan review against `42f4d57` recommends the following order for the remaining slices: **58,
+56, 57, 72, 66, 88, 86, 87, 90, 81, 71, 67, 68, 61, 62, 63, 64, 75, 65, 80**. Each selected plan now
+records its delivery order and scoped gates. This is a priority queue, not a requirement to complete
+each whole plan before starting the next. Native harnesses (58/72), bilingual review coordination
+(87), and independent backend/UI work can progress together.
+
+- Extend existing foundations: surface inventory/basic home resolution, durable onboarding/course
+  settings, control-state APIs, account identity and sync already exist. Finish their missing
+  slices.
+- Archived 56–65 remain archived with compatibility links; these priorities refer to their recorded
+  unfinished scope, not a repeat of the integrated ten implementation slices.
+- Seven language pairs remain the current baseline. Plan 90 extends the contract after English
+  dialect confirmation; 87/72 then consume the expanded review/test matrix. Existing-pair sign-off
+  does not block contract implementation, while unreviewed content remains release-gated.
+- Plans 66/88 preserve the recorded Google development deployment and isolated restore evidence.
+  Refresh deployed-state evidence before operations; full device consent, off-host recovery,
+  monitoring and load acceptance remain open. This review performed no new deployment/device tests.
+- Plans 59/60/93/94 retain their acceptance ownership; their existing runtime is an input, not a
+  separate rebuild. Q-07, Q-15, Q-14, Q-17 and account lifecycle policies still gate their named
+  slices.
+
 ## Remaining roadmap
 
 Dependencies refer to the named deliverable slice, not automatically the whole plan. In particular,

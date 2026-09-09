@@ -8,7 +8,8 @@
   production audio only, bilingual sign-off is coordinated by 87.
 - **Depends on:** 53/85 completed; 59 for client atomic activation; 86 for provider/storage
   adapters; 87 for bilingual review.
-- **Reviewed:** 2026-09-07 against merged baseline `2d9e8c3`.
+- **Reviewed:** 2026-09-09 against checkout `42f4d57`; source/plan review only, no new device or
+  deployment acceptance.
 
 **Provider decision (2026-09-07):** ElevenLabs selected. Q-15 still gates production audio on
 voice/model selection, production rights, pronunciation review and budget.
@@ -20,10 +21,12 @@ complete. The roadmap index continues to track its unfinished scope.
 ## Verified starting point
 
 `packages/content/` supplies 31-phrase es-ES/bg-BG/ru-RU starters and neutral learning catalogs;
-`releaseCheck.ts` rejects pending bilingual review. `delivery.ts` verifies a signed, complete,
-content-addressed manifest before host activation. Independent publication, client activation and
-approved audio do not exist. Preserve the old English/Spanish API as a compatibility adapter; use
-plan 85's delivered content schemas for the new pipeline.
+`releaseCheck.ts` rejects pending bilingual review. `delivery.ts` provides transport-independent
+manifest/resource verification with injected signature, digest and catalog validators. A production
+trust store, signing/key-rotation policy and fetch/activation implementation remain required.
+Independent publication, client activation and approved audio do not exist. Preserve the old
+English/Spanish API as a compatibility adapter; use plan 85's delivered content schemas for the new
+pipeline.
 
 ## Outcome
 
@@ -35,8 +38,8 @@ without overwriting learner state.
 
 1. [ ] Decide voice provenance, licensing, consent, pronunciation review, provider fallback,
        regional storage, and deletion obligations. Record the decision before bulk rendering.
-2. [ ] Define immutable asset IDs, hashes, codecs, loudness/rate metadata, pack/version manifests,
-       ETags, signatures, compatibility, rollback, and retention.
+2. [ ] Extend the existing immutable manifest/resource contracts with locale/voice identity, codecs,
+       loudness/rate metadata, ETags, signatures, compatibility, rollback, and retention.
 3. [ ] Build the authoring pipeline for validation, enrichment, translation review, TTS/render
        intake, audio normalization, reference feature generation, human QA, and publication.
 4. [ ] Build the client catalog updater/storage/prefetch contract with atomic activation and safe
@@ -93,6 +96,18 @@ approval of any voice's production rights. Q-15 remains open for the asset evide
   missing credentials, exhausted budget, and failed renders cannot produce a publishable pack.
 - Adapter tests and `pnpm check` pass; approved live verification records usage and review evidence
   without credentials. Native playback claims require plan-62 device verification.
+
+## Delivery order and gates
+
+1. Reconcile `delivery.ts` with shared API content schemas before publication work: define the wire
+   mapping, signed bytes, trust/key rotation, locale identity and version/rollback policy. Retain
+   the injected Metro-safe validator boundary; do not import Node authoring code into mobile.
+2. Implement text-only publication and crash-safe atomic client activation first using 59 storage
+   and 86 transports. Cover interrupted download/install, signature/hash failure, insufficient disk
+   and preservation of learner-owned phrases; failed updates retain the last usable release.
+3. Coordinate reviewed catalogs with 87/90. Q-15 gates licensed production audio, not text delivery
+   or fixture-based adapter work. Hand a pinned approved seed/manifest to 62 before claiming real
+   recorded-playback acceptance.
 
 ## Out of scope
 
