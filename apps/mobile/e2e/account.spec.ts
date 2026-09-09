@@ -1,6 +1,7 @@
 import { expect, onboard, openFirstPhrase, test } from './fixtures'
 import {
   ACCOUNT_LABEL,
+  backFromCodeToEmail,
   finishSignIn,
   mockAccountService,
   openAccount,
@@ -15,6 +16,16 @@ async function returnToToday(page: Parameters<typeof openAccount>[0]): Promise<v
   await page.getByRole('dialog').getByRole('button', { name: 'Today', exact: true }).click()
   await expect(todayMarker(page)).toBeVisible()
 }
+
+test('named back from the code screen returns to the editable email entry', async ({ page }) => {
+  await mockAccountService(page)
+  await onboard(page)
+  await openAccount(page)
+  await requestCode(page)
+  await backFromCodeToEmail(page)
+  await expect(page.getByRole('button', { name: 'Continue with Google' })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Send sign-in code', exact: true })).toBeEnabled()
+})
 
 test('optional email sign-in syncs and sign-out keeps durable local practice', async ({ page }) => {
   await mockAccountService(page)

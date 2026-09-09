@@ -138,28 +138,49 @@ export default function Account() {
     }
   }, [capabilityAttempt, client])
 
+  const resetAttempt = (): void => {
+    setFeedback(null)
+    setCode('')
+    setSubmittedEmail('')
+    setConfirmedEmail(null)
+    setActiveProvider(null)
+  }
+
+  const cancelAttemptIfBusy = (): void => {
+    if (busy) client?.cancelSignIn()
+  }
+
+  const backToEmail = (): void => {
+    cancelAttemptIfBusy()
+    setCode('')
+    setFeedback(null)
+    setView('email')
+  }
+
+  const backToMethods = (): void => {
+    cancelAttemptIfBusy()
+    resetAttempt()
+    setView('methods')
+  }
+
   useEffect(() => {
     if (Platform.OS !== 'android') return
     const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
-      if (busy) return true
       if (view === 'code') {
-        setCode('')
-        setFeedback(null)
-        setView('email')
+        backToEmail()
         return true
       }
       if (view === 'email') {
-        {
-          backToMethods()
-        }
+        backToMethods()
         return true
       }
+      cancelAttemptIfBusy()
       return false
     })
     return () => {
       subscription.remove()
     }
-  }, [busy, view])
+  }, [busy, client, view])
 
   const headerTitle =
     view === 'email'
@@ -170,25 +191,11 @@ export default function Account() {
   const headerBackLabel =
     view === 'email' ? copy.account.signInOptions : view === 'code' ? copy.account.emailBack : null
 
-  const resetAttempt = (): void => {
-    setFeedback(null)
-    setCode('')
-    setSubmittedEmail('')
-    setConfirmedEmail(null)
-    setActiveProvider(null)
-  }
-
   const leaveToPractice = (): void => {
-    if (busy) client?.cancelSignIn()
+    cancelAttemptIfBusy()
     resetAttempt()
     setFreshConfirmation(false)
     router.replace('/')
-  }
-
-  const backToMethods = (): void => {
-    if (busy) client?.cancelSignIn()
-    resetAttempt()
-    setView('methods')
   }
 
   const startEmail = (): void => {
@@ -244,14 +251,18 @@ export default function Account() {
     if (!client || busy) return
     setFeedback(null)
     setActiveProvider(provider)
-    void beginSignIn(provider).catch(() => {
-      const result = client.getSnapshot()
-      setActiveProvider(null)
-      setFeedback({
-        tone: 'danger',
-        text: result.error ? errorCopy(result.error) : copy.account.error,
+    void beginSignIn(provider)
+      .then((started) => {
+        if (!started) setActiveProvider(null)
       })
-    })
+      .catch(() => {
+        const result = client.getSnapshot()
+        setActiveProvider(null)
+        setFeedback({
+          tone: 'danger',
+          text: result.error ? errorCopy(result.error) : copy.account.error,
+        })
+      })
   }
 
   const cancelProvider = (): void => {
@@ -291,8 +302,7 @@ export default function Account() {
                     feedback="smallButton"
                     accessibilityRole="link"
                     accessibilityLabel={headerBackLabel}
-                    onPress={backToMethods}
-                    disabled={busy}
+                    onPress={view === 'code' ? backToEmail : backToMethods}
                     style={styles.headerTarget}
                   >
                     <Text variant="title2" color={ink.ink}>
@@ -397,12 +407,7 @@ export default function Account() {
               }}
               onVerify={() => void verifyCode()}
               onResend={() => void resendCode()}
-              onChangeEmail={() => {
-                if (busy) return
-                setCode('')
-                setFeedback(null)
-                setView('email')
-              }}
+              onChangeEmail={backToEmail}
               feedback={feedback}
               footer={footer}
             />
@@ -526,9 +531,7 @@ function ProviderMethod({
   return (
     <MethodButton
       icon={active && busy ? '◌' : provider === 'google' ? 'G' : ''}
-      label={
-        active && busy ? copy.account.connecting(provider === 'google' ? 'Google' : 'Apple') : label
-      }
+      label={active && busy ? copy.account.connecting(provider) : label}
       disabled={busy || !available}
       onPress={onPress}
     />
@@ -687,7 +690,6 @@ function CodeEntry({
           accessibilityRole="link"
           accessibilityLabel={copy.account.differentEmail}
           onPress={onChangeEmail}
-          disabled={busy}
           style={styles.linkTarget}
         >
           <Text align="center" color={accent.accentInk}>

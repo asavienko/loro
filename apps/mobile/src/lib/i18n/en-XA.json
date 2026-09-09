@@ -419,6 +419,8 @@
   "account.cancelSignIn": "[!! Cááncëël sïïgn-ïïn !!]",
   "account.secureWindow": "[!! Cöömplëëtëë sïïgn-ïïn ïïn thëë sëëcüürëë wïïndööw. !!]",
   "account.connecting": "[!! Cöönnëëctïïng töö {provider}… !!]",
+  "account.googleName": "[!! Gööööglëë !!]",
+  "account.appleName": "[!! ÁÁpplëë !!]",
   "account.discoveryError": "[!! Sïïgn-ïïn ööptïïööns áárëë tëëmpööráárïïly üünáávááïïlááblëë. Try áágááïïn. !!]",
   "account.methodUnavailable": "[!! Thïïs sïïgn-ïïn mëëthööd ïïs üünáávááïïlááblëë rïïght nööw. !!]",
   "account.codeLabel": "[!! Sïïgn-ïïn cöödëë !!]",

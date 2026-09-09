@@ -187,6 +187,13 @@ export async function requestCode(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Send sign-in code', exact: true }).click()
   await expect(page.getByRole('textbox', { name: 'Sign-in code' })).toBeVisible()
 }
+export async function backFromCodeToEmail(page: Page): Promise<void> {
+  await page.getByRole('link', { name: 'Email address', exact: true }).click()
+  await expect(page.getByRole('textbox', { name: 'Sign-in code' })).toHaveCount(0)
+  await expect(page.getByRole('textbox', { name: 'Email address' })).toHaveValue(
+    'learner@example.com',
+  )
+}
 export async function finishSignIn(page: Page, expectSync = true): Promise<void> {
   await page.getByRole('textbox', { name: 'Sign-in code' }).fill('123456')
   await page.getByRole('button', { name: 'Verify and sign in', exact: true }).click()
