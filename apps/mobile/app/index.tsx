@@ -64,7 +64,7 @@ import {
 import { PRODUCTION_WAVE_TIMES, toView, useApp, type PhraseView } from '../src/store'
 import { copy } from '../src/lib/copy'
 import { deviceClock, localDateLabel, localTimeLabel } from '../src/lib/clock'
-import { waveSchedule, type ScheduledWave, type WavePosition } from '../src/lib/waves'
+import { waveEntry, waveSchedule, type ScheduledWave, type WavePosition } from '../src/lib/waves'
 /** Full automaticity: six reps in one day. The badge, the bar's colour and the count agree. */
 const isLockedIn = (p: Pick<PhraseView, 'automaticity'>): boolean => p.automaticity >= 100
 /**
@@ -166,10 +166,19 @@ export default function Today() {
     WAVES.includes(wave as WaveKey),
   )
   const waves = waveSchedule(WAVES, PRODUCTION_WAVE_TIMES, localTimeLabel(), completedWaves)
-  const nextWaveKey = waves.find((wave) => wave.position === 'next')?.key ?? WAVES[0]
-  const startWave = (wave = nextWaveKey): void => {
+  const entry = waveEntry(WAVES, PRODUCTION_WAVE_TIMES, localTimeLabel(), completedWaves)
+  const startWave = (wave: WaveKey): void => {
     router.push({ pathname: '/practice/refrain', params: { wave } })
   }
+  const canStartWave = set.length > 0 && entry.kind === 'ready'
+  const ctaLabel =
+    set.length === 0
+      ? copy.today.cta.empty
+      : entry.kind === 'ready'
+        ? copy.today.cta.startWave[entry.wave.key]
+        : entry.kind === 'locked'
+          ? copy.today.cta.waitForWave(entry.next.time)
+          : copy.today.cta.complete
   return (
     <Screen>
       {/*
@@ -199,7 +208,7 @@ export default function Today() {
           totalReps={totalReps}
           // With nothing in rotation the wave is not a way in, and the row must not say it is
           // while the CTA below says the opposite.
-          onStartWave={set.length === 0 ? undefined : startWave}
+          onStartWave={canStartWave ? startWave : undefined}
         />
         <TodaySet set={set} lockedIn={lockedIn} />
         <BankedTail graduated={graduated} />
@@ -208,11 +217,13 @@ export default function Today() {
       <ActionBar>
         <Button
           size="cta"
-          label={set.length === 0 ? copy.today.cta.empty : copy.today.cta.startWave[nextWaveKey]}
-          disabled={set.length === 0}
-          accessibilityHint={copy.a11y.today.startHint(set.length, DEFAULT_REP_TARGET)}
+          label={ctaLabel}
+          disabled={!canStartWave}
+          accessibilityHint={
+            canStartWave ? copy.a11y.today.startHint(set.length, DEFAULT_REP_TARGET) : undefined
+          }
           onPress={() => {
-            startWave()
+            if (entry.kind === 'ready') startWave(entry.wave.key)
           }}
         />
       </ActionBar>
