@@ -14,10 +14,10 @@
   treated as a live AI path; 87 bilingual review before production lyrics quality claims; 88 private
   S3 when server artifacts leave the API host. 74 only if Product ties the surface to an
   entitlement.
-- **Reviewed:** 2026-09-09 against `origin/main` at `d153d82`. Current plans, PRD, catalog/phrase
-  models, copy/i18n, API contract status, privacy ADRs, and published ElevenLabs Music docs were
-  inspected. No ElevenLabs Music adapter exists in this repository today; ElevenLabs is selected
-  only as the cloud **TTS** provider (Q-15).
+- **Reviewed:** 2026-09-09 against `origin/main` at `d153d82`, then re-checked the same day against
+  current `origin/main` (still `d153d82`) and live ElevenLabs Music docs. No ElevenLabs Music
+  adapter exists in this repository; ElevenLabs is selected only as the cloud **TTS** provider
+  (Q-15). See [Review (2026-09-09)](#review-2026-09-09).
 - **Blueprint:** new design — do not edit authored artifacts under `design/`.
 
 ## Outcome
@@ -88,10 +88,10 @@ Selection is against the **joined `PhraseView` rows of the active course** (curr
 | Course | The active pair only. Never silently substitute Spanish or another target. |
 | Default pool | Active stream rows (`isActive`: not `learned` and `graduatedAt === null`). |
 | Explicit extras | Loved or recently practiced rows may be included when the learner taps them; they stay course-scoped. |
-| First slice | **Catalog-backed rows only** (`phraseId !== null` and a resolvable `CatalogPhrase`). Custom, import, and capture phrases wait for a later slice: their text is P2, unreviewed, and easier to leak private notes or pasted documents. |
-| Size | Minimum 3, maximum 8 selected `UserPhraseId`s. |
-| Order | Learner order is preserved and sent as `phrase_ids` in that order so verses can follow it. |
-| Identity | Requests carry opaque `user_phrase_id` + `catalog_phrase_id`. The API re-loads catalog text server-side from the published catalog version. The client must not be the only source of sung text. |
+| First slice | **Catalog-backed rows only** (`phraseId !== null` and a resolvable `CatalogPhrase` without `deprecatedBy`). Custom, import, and capture phrases wait for a later slice: their text is P2, unreviewed, and easier to leak private notes or pasted documents. |
+| Size | Minimum 3, maximum 8 selected rows. The picker keys rows by `UserPhraseId`; the API and `LyricDocument` carry **ordered unique `catalog_phrase_id`s**. Duplicate catalog ids collapse; do not send two user rows that resolve to the same catalog phrase. |
+| Order | Learner order is preserved as that catalog-id list so verses can follow it. |
+| Identity | `user_phrase_id` stays on the device for picker/preset state. The lyrics request sends only catalog ids plus locales. The API re-loads catalog text from the published catalog for that `target_locale` (`loadLearningCatalog` already exists on the API). Reject unknown, wrong-locale, or deprecated ids. The client must not be the only source of sung text. |
 | Session | Selection is ephemeral UI state until the learner confirms lyrics. A confirmed lyric document becomes durable (local first). |
 
 ### What is never selected or sent
@@ -175,9 +175,10 @@ Bounds must fit ElevenLabs Music composition limits (see [ElevenLabs Music](#ele
 Server-side, after Zod parse and before the learner sees lyrics:
 
 1. **Coverage.** Every selected catalog `targetText` appears at least once as a full lyric line or a
-   contiguous span inside a line, after Unicode NFC and a single-space fold. Accent-insensitive
-   matching is allowed for Spanish; do not “helpfully” rewrite the phrase (`dónde está` must remain
-   those words, not a synonym).
+   contiguous span inside a line, after Unicode NFC and a single-space fold. Locale-specific folds
+   are allowed only when they do not change the teaching words (Spanish accent-insensitive matching
+   is in; do not invent a bg/ru fold that drops `ё`/`й` or otherwise rewrites the phrase). Do not
+   “helpfully” substitute synonyms (`dónde está` must remain those words).
 2. **No extras as if they were selected.** Invented connecting words are allowed; invented extra
    **catalog phrases** and invented learner stats are not.
 3. **No fake numbers.** Reject output that includes percentages, latencies, streak counts, or
@@ -186,11 +187,12 @@ Server-side, after Zod parse and before the learner sees lyrics:
    `looksLikeSpanish`, generalized per `target_locale`).
 5. **Safety.** Treat any learner-supplied custom text in later slices as untrusted data, not
    instructions. Refuse disallowed content; do not solicit personal data.
-6. **Copyright hygiene for the next hop.** Reject titles/lines that look like famous song titles or
-   include artist names — ElevenLabs will reject those as `bad_prompt` /
-   `bad_composition_plan` anyway ([Music Terms](https://elevenlabs.io/music-terms), 26 May 2026:
-   artist/songwriter names, song/album titles, label/publisher names, and substantial copyrighted
-   lyrics are prohibited inputs).
+6. **Copyright hygiene for the next hop.** Music Terms (26 May 2026) prohibit **any** artist/
+   songwriter name, **any** song or album title, label/publisher names, and substantial copyrighted
+   lyrics as Input — not only famous ones. Keep `LyricDocument.title` on the review screen; **do
+   not** copy it into `composition_plan` text. Section labels stay generic (`[Verse 1]`,
+   `[Chorus]`). Reject lines that include artist names or look like a lifted copyrighted lyric.
+   Vendor `bad_prompt` / `bad_composition_plan` is a backstop, not the first filter.
 
 One repair attempt that feeds validator errors back to the model; then the
 [bundled floor](#bundled-fallback). Never ship an unvalidated lyric document.
@@ -236,9 +238,10 @@ the retrieved date.
 | Detailed compose: `POST /v1/music/detailed` (audio + composition plan + metadata) | [Compose detailed](https://elevenlabs.io/docs/api-reference/music/compose-detailed) |
 | Create a plan from a prompt: composition-plan API | [Create composition plan](https://elevenlabs.io/docs/api-reference/music/create-composition-plan) |
 | `prompt` XOR `composition_plan` | Compose reference |
+| `composition_plan` is a **union**: music_v1-shaped `MusicPrompt` (`sections` / `lines` / global styles) **or** music_v2 `CompositionPlan` (`chunks` / `text` / per-chunk styles). Pin **`music_v2` + `chunks`**. Do not send the `MusicPrompt` schema with `music_v2` unless the then-current OpenAPI says that pairing is valid. | Compose / compose-detailed references retrieved 2026-09-09 |
 | Models: `music_v1` (default in the compose reference), `music_v2` (recommended; `music_v1` is “outclassed”) | Compose reference; [Models](https://elevenlabs.io/docs/overview/models) |
 | `music_v2` languages listed as `en`, `es`, `de`, `ja`, and more | Models overview table |
-| Marketing: vocals in many languages; “native-like quality in 11” (examples include English, Portuguese, Italian, Finnish, Greek) | [Eleven Music API](https://elevenlabs.io/eleven-music-api) |
+| Marketing: vocals in **59** languages; “native-like quality in 11” (examples include English, Portuguese, Italian, Finnish, Greek). Bulgarian and Russian are still **not named**. | [Eleven Music API](https://elevenlabs.io/eleven-music-api) |
 | Paid API only; Free plan music concurrency **0** | [Music quickstart](https://elevenlabs.io/docs/eleven-api/guides/cookbooks/music); Models concurrency table |
 | Music concurrency: Starter/Creator/Pro **2**; Scale/Business **5**; Enterprise highest | [Models — concurrency](https://elevenlabs.io/docs/overview/models) |
 | API list price **$0.15 per minute** of generated music (taxes extra; ElevenLabs may change prices) | [API pricing](https://elevenlabs.io/pricing/api) retrieved 2026-09-09 |
@@ -247,8 +250,9 @@ the retrieved date.
 | `seed` cannot be combined with `prompt`; exact reproducibility is **not** guaranteed | Compose reference |
 | `force_instrumental` only with `prompt` (so this product, which needs vocals, uses a composition plan and does **not** set `force_instrumental`) | Compose reference |
 | Copyrighted prompts/plans return `bad_prompt` / `bad_composition_plan` with a suggestion when possible; harmful prompts get no suggestion | Music quickstart |
-| Optional C2PA signing for mp3 (`sign_with_c2pa`); optional `store_for_inpainting` | Compose reference |
-| EU residency host `https://api.eu.residency.elevenlabs.io` exists | Compose servers list |
+| Optional C2PA signing for mp3 (`sign_with_c2pa`, vendor default **false**); optional `store_for_inpainting` | Compose reference |
+| `compose_detailed` also accepts `with_timestamps` and `with_waveform_visual` (both default false). Do not draw a decorative waveform from the latter. | [Compose detailed](https://elevenlabs.io/docs/api-reference/music/compose-detailed) |
+| Residency hosts: `api.eu.residency.elevenlabs.io`, plus US / India / Singapore. Prefer EU only if counsel wants EU processing. | Compose servers list |
 | Official JS SDK `@elevenlabs/elevenlabs-js` (`client.music.compose`) | Compose reference / quickstart |
 | Music Terms (26 May 2026): prohibited industries; prohibited inputs (artist/songwriter names, song/album titles, publisher/label names, substantial copyrighted lyrics); no impersonation of recording artists; output not guaranteed unique | [Music Terms](https://elevenlabs.io/music-terms) |
 | Marketing: broad commercial use on **paid** plans; film/TV/large studio game rights need Enterprise; see also Eleven Music v1 terms / model-specific terms | [Eleven Music API](https://elevenlabs.io/eleven-music-api) |
@@ -256,33 +260,49 @@ the retrieved date.
 **Not established by current public docs (leave open):** whether Loro’s in-app playback + on-device
 cache of learner-requested songs is covered by the self-serve commercial table; required learner-
 visible attribution; Bulgarian/Russian **music** vocal quality (Spanish is listed on `music_v2`;
-bg/ru are not named in that table). Counsel must read the Music Terms, Model-Specific Terms, and
-the commercial-rights table before production.
+bg/ru are not named in that table); whether a composition plan sings catalog phrases verbatim
+enough for teaching. Counsel must read the Music Terms, Model-Specific Terms, and the
+commercial-rights table before production.
 
 ### How Loro passes lyrics (decision)
 
 **Do not** send a single prose `prompt` that embeds lyrics. ElevenLabs may interpret or drop them.
+**Do not** call `composition_plan.create` to invent structure from a prompt — that would rewrite
+our phrases.
 
-**Do** build a `music_v2` `composition_plan` on the server from the **already validated**
+**Do** build a `music_v2` `CompositionPlan` (`chunks`) on the server from the **already validated**
 `LyricDocument`:
 
-- Each lyric section becomes one chunk (or `MusicPrompt` section if the adapter targets that
-  schema).
-- Chunk `text` is `[Section name]` plus the lyric lines. No artist names. Optional `{soft vocal}`
-  cues only from a Loro allowlist, never from the model freely.
+- Each lyric section becomes one chunk. Chunk `text` is a generic `[Verse 1]` / `[Chorus]` label
+  plus the lyric lines. No artist names. No `LyricDocument.title`. Optional `{soft vocal}` cues
+  only from a Loro allowlist, never from the model freely.
 - `positive_styles` / `negative_styles` come from the selected [style pack](#loro-style-packs), in
-  English, with ≥6 strings on the first chunk as the vendor docs recommend.
-- `duration_ms` per section: product default **8 000–15 000** (within 3 000–120 000). Total song
-  target **35–60 s** so a 3-style request stays near **2–3 billed minutes**.
-- `context_adherence`: `high` so later chunks keep the same lyrics/style.
+  English, with ≥6 strings on the first chunk as the vendor docs recommend. Leave
+  `negative_styles` empty unless the pack explicitly avoids something.
+- `duration_ms` per chunk: product default **8 000–15 000** (within 3 000–120 000). **Total**
+  `sum(duration_ms)` target **35–60 s** so a 3-style request stays near **2–3 billed minutes**.
+  That budget is a constraint on the lyric document: pack 3–8 phrases into a few sections (for
+  example two verses + chorus), not one 8–15 s verse per phrase. An 8-phrase one-line-per-verse
+  layout at 8 s already exceeds 60 s. Prompt + validator reject plans whose chunk durations sum
+  outside 35–60 s (still inside the vendor 3 s–10 min cap).
+- `context_adherence`: `high` (vendor default). This means later chunks stay musically consistent
+  with their neighbors. It is **not** a guarantee that every catalog phrase is sung verbatim.
+- Leave `conditioning_ref` / `AudioRefChunk` unset. Do not condition style B on style A’s
+  `song_id` (that is audio Input under the Music Terms).
 - `model_id`: **`music_v2`** (pin in config; do not silently float to `music_v1`).
-- Prefer `compose` / `compose_detailed` with that plan. Use `compose_detailed` when we persist
-  returned composition-plan + `song_metadata` for provenance. Do not enable `store_for_inpainting`
-  unless a later slice owns inpainting and its retention story.
-- `sign_with_c2pa`: default **true** for mp3 once legal confirms it is appropriate; record the
-  choice in provenance.
-- Output format: start with vendor default (`auto` → mp3 for v2). Do not ask the mobile client to
-  decode an undocumented container.
+- Prefer `compose` / `compose_detailed` with that hand-built plan. Use `compose_detailed` when we
+  persist the returned plan + `song_metadata` for provenance. Do **not** show vendor
+  `song_metadata.title` / genres as the learner’s title. Do not enable `store_for_inpainting`,
+  `with_waveform_visual`, or streaming in v1. `with_timestamps` waits for a later slice that
+  treats vendor timestamps as real metadata, not an estimate.
+- `sign_with_c2pa`: product default **true** for mp3 once legal confirms it is appropriate
+  (vendor default is false); record the choice in provenance.
+- Output format: start with vendor default (`auto` → `mp3_48000_192` for v2). Do not ask the
+  mobile client to decode an undocumented container.
+
+A composition plan is the **control surface** for lyrics, not a lock. Pedagogical fidelity is
+enforced on the lyric document the learner reviews. Sung intelligibility and phrase preservation
+in the mp3 are a quality gate ([Q-21g](#open-questions)), including for `es-ES`.
 
 The API maps Loro style IDs → style arrays. The client never sends raw ElevenLabs style strings.
 
@@ -329,7 +349,8 @@ At the retrieved **$0.15/min** list price:
 These figures are for budgeting and tests with **fixtures**. They must **not** be shown to a learner
 as a live “price” unless Product later decides to surface a real, metered number. If the UI mentions
 cost at all, it is a qualitative “uses your song allowance” string, not an invented dollar amount
-(non-negotiable: no fake numbers).
+(non-negotiable: no fake numbers). Three styles still bill as three generations; dispatch them
+within the workspace Music concurrency (typically 2), not as a naive fan-out.
 
 Per-principal monthly music budget and a global daily cap live next to the existing
 `AI_MONTHLY_BUDGET_USD_PER_USER` / `AI_DAILY_BUDGET_USD_GLOBAL` as **separate** music keys (for
@@ -343,7 +364,7 @@ capped.
 | Failure | Learner-visible outcome |
 | --- | --- |
 | Offline / timeout | Honest unavailable; keep lyrics; offer retry; play any cached style |
-| `429` / concurrency headers | Queue server-side with a short bound; then fail. Do not hammer. Music concurrency is **2** on common paid tiers. |
+| `429` / concurrency headers | Queue server-side with a short bound; then fail. Do not hammer. Music concurrency is **2** on Starter/Creator/Pro and **5** on Scale/Business (Free is **0**). A default 3-style request must be **serialized or paired**, not three parallel `compose` calls. |
 | `bad_prompt` / `bad_composition_plan` | Do **not** auto-apply the vendor’s rewritten prompt (it may drop our phrases). Surface a generic safety/copyright failure and keep the lyric review. Log only codes. |
 | Harmful-content reject (no suggestion) | Same generic refusal. |
 | Invalid / truncated audio | Fail the style; other styles may still succeed. |
@@ -391,15 +412,16 @@ player/cache  ◄── job + signed GET ─────┘                 (com
 | `apps/api` | Coordinators, authz, budgets, adapters, redaction. Credentials stay here. |
 | `apps/mobile` | Routes, copy, picker, review, player wiring. |
 | `packages/core-rs` | **Out of scope.** No new maths. Do not run DSP on generated songs as if they were native references. |
-| Plan 86 integrations | `integrations/elevenlabs/music.ts` **separate** from future TTS transport. `MUSIC_PROVIDER=stub\|elevenlabs`. Never `TTS_PROVIDER`. |
+| Plan 86 integrations | `integrations/elevenlabs/music.ts` **separate** from the existing TTS checklist (plan 86 item 5 / plan 61 is catalog TTS only). `MUSIC_PROVIDER=stub\|elevenlabs`. Never `TTS_PROVIDER`. |
 
 ### Contracts
 
 Add draft operations (names illustrative) gated like chat:
 
-- `POST /v1/music/lyrics` — authenticated or anonymous principal with budget; body:
-  `target_locale`, `meaning_language`, ordered `catalog_phrase_ids`, optional tag buckets. Response:
-  `LyricDocument` + `provenance` + `fallback` boolean + `cached` boolean.
+- `POST /v1/music/lyrics` — any **authenticated** principal (including plan-67
+  installation-bound / anonymous accounts) with a budget. **No** unauthenticated public route.
+  Body: `target_locale`, `meaning_language`, ordered unique `catalog_phrase_ids` (3–8), optional
+  tag buckets. Response: `LyricDocument` + `provenance` + `fallback` boolean + `cached` boolean.
 - `POST /v1/music/renders` — `lyric_document_id` (server-held) + `style_ids[]`. Response: job ids
   and per-style status. No audio bytes on the JSON response.
 - `GET /v1/music/tracks/{id}` — authorized download or 302 to a short-lived object URL.
@@ -409,8 +431,9 @@ Promote current/target only after Q-21. Examples in OpenAPI remain fixtures, nev
 
 ### Persistence and sync
 
-- Lyric documents and track metadata persist locally so review/playback survive a process kill
-  (`F-03` for **cached** artifacts).
+- Lyric documents and track metadata persist locally so review/playback survive a process kill.
+  `F-03` is consumed as the **offline floor** of this garnish (picker, cached play, lyrics-only
+  card). `/music` is not a daily practice surface and does not reclassify Today/Refrain.
 - v1: **no ordinary sync** of lyrics or audio. Cross-device replay is a later decision that needs
   merge classes, tenant isolation tests, and a size/cost story.
 - Account erasure (`F-07`) must delete server jobs and objects and local files. Export may include
@@ -454,7 +477,8 @@ cloud ASR, voice clone, “anonymous sampling”). This feature:
 - **never** accepts a recording handle, path, or bytes on any new type or route
 - **never** uses ElevenLabs Speech-to-Speech, voice clone, or instant voice clone
 - **never** sends catalog reference PCM or device TTS buffers to Music (Music Terms treat sound
-  recordings as Input; we will not upload audio references in v1)
+  recordings as Input; leave `conditioning_ref` / `AudioRefChunk` unset; we will not upload audio
+  references in v1)
 
 Generated mp3 files are **vendor output** requested by the learner, stored as their artifact. They
 are not P0. They are also not public catalog audio (`P5`) until a content-lead publishing path
@@ -481,9 +505,12 @@ flag that pretends to authorize recording upload.
 New design, declared before it is reachable:
 
 1. Add `{ id: 'phrase-music', path: '/music', kind: 'learner', availability: 'planned' }` to
-   `SURFACES` and a `SURFACE_LAWS` row: `push`, `occasional`, `resumable: false`.
-2. When the route is built, add a More destination in group `practice` (not the rail, not Today’s
-   daily CTA). Plan 81 owns chrome/laws; plan 56 owns registry/recovery.
+   `SURFACES` **and** a matching `SURFACE_LAWS` row in the same change (`Record<SurfaceId, …>` is
+   exhaustive): `push`, `occasional`, `resumable: false`. Cached tracks are files, not session
+   resume.
+2. When the route is built, add a More `DESTINATIONS` row in group `practice` with
+   `resume: 'none'` (not `practice-session`), not the rail, not Today’s daily CTA. Plan 81 owns
+   chrome/laws; plan 56 owns registry/recovery.
 3. Do not add this to the 23-screen catalog as if it were authored. A short note in
    `docs/design/screen-catalog.md` under utilities / later surfaces is enough when the route is
    declared.
@@ -525,7 +552,7 @@ used twice. Shared player chrome that is truly shared with Stream/Speak belongs 
 | --- | --- |
 | `AI-05` | Bounded, rate-limited, schema/safety-validated learner-visible AI with a useful fallback |
 | `AI-04` | No implementation may upload recorded learner audio |
-| `F-03` | Offline-first: picker + cached playback + lyrics-only floor without network |
+| `F-03` | Offline floor of this garnish: picker + cached playback + lyrics-only card without network |
 | `F-07` | Export/erasure includes generated lyric/audio artifacts |
 | `F-08` | Target vs UI language; all seven pairs considered; no silent Spanish |
 | `AS-04` | Later playback/transport reuse — not a license to treat songs as catalog TTS |
@@ -534,6 +561,12 @@ used twice. Shared player chrome that is truly shared with Stream/Speak belongs 
 
 `AI-01` / `AI-02` / `AS-01` are **adjacent** (LLM scenes, authoring enrichment, phrase TTS). Do not
 reuse them as if they specified songs.
+
+[ADR-0010](../docs/architecture/adr/0010-llm-roleplay-and-guardrails.md) currently lists Roleplay,
+chat, coach notes, and import/capture translation as the only runtime LLM uses. This plan does
+**not** silently expand that accepted list. When Product accepts the surface, amend ADR-0010 to
+add phrase-song lyrics as another garnish path with the same five hard rules. Until then, treat
+the addition as proposed.
 
 ### Proposed IDs (land in `docs/product/prd.md` only when Product accepts the surface)
 
@@ -610,14 +643,19 @@ Flow spec: select → lyrics → confirm → (fixture) play. `render.spec.ts` on
 
 ### Acceptance criteria (implementation later)
 
-- Catalog phrase selection cannot exceed bounds or cross course.
-- Every accepted lyric document covers every selected phrase or is the marked bundled floor.
-- Multi-style renders share one lyric hash and differ only by `style_id` / plan styles.
-- No recorded audio field exists on the wire or in JS types.
+- Catalog phrase selection cannot exceed bounds or cross course; the API rejects unknown,
+  wrong-locale, deprecated, or duplicate catalog ids.
+- Every accepted lyric document covers every selected phrase or is the marked bundled floor, and
+  its planned chunk durations sum to 35–60 s.
+- Multi-style renders share one lyric hash and differ only by `style_id` / plan styles; they are
+  not dispatched in parallel beyond the workspace Music concurrency.
+- No recorded audio field, PCM handle, or `conditioning_ref` exists on the wire or in JS types.
 - Offline replay of a cached track does not call the network.
 - CI never spends against ElevenLabs or Anthropic.
 - No `ProgressDelta` is written because a song played.
 - Generated tracks are labelled as generated, not as “native reference”.
+- Sung phrase preservation is not assumed from a 200 on `compose`; it is a named quality gate
+  (Q-21g).
 
 ## Implementation slices (separate later commits)
 
@@ -652,6 +690,7 @@ ElevenLabs **TTS** checklist in plan 61/86 stays on Q-15.
 | Q-21d | How many included songs/month, and is the surface Plus-gated? | Product + Q-08/Q-12 | Entitlement copy |
 | Q-21e | Required C2PA / learner attribution wording | Counsel | Production mp3 flags and copy |
 | Q-21f | `music_v2` vocal quality for `bg-BG` and `ru-RU` | Content + tech | Enabling those targets for **vocals** (es-ES may proceed earlier if review passes) |
+| Q-21g | Does a `music_v2` composition plan sing the selected phrases clearly enough to ship? | Content + tech | Production quality claims for **all** targets, including `es-ES` |
 | — | Async job queue vs synchronous HTTP | Backend | Only if p95 generation exceeds a single request budget; plan 86 still defers Redis until a consumer exists |
 
 ## Dependencies and ownership
@@ -705,5 +744,34 @@ as 76/82 vs 86).
 ## Docs this plan does not change yet
 
 Durable specs stay in `docs/` when Product accepts the surface: PRD `P3F-*` rows, a short
-`ai-services.md` table row, a privacy-class row, and optionally Q-21 in
-`docs/decisions/open-questions.md`. This file is the implementation owner until then.
+`ai-services.md` table row, a privacy-class row, an ADR-0010 garnish-path amendment, and
+optionally Q-21 in `docs/decisions/open-questions.md`. This file is the implementation owner
+until then. Do **not** add Q-21 to the global open-questions list from this planning change.
+
+## Review (2026-09-09)
+
+Adversarial re-read of this plan against `origin/main` at `d153d82` and live public ElevenLabs
+Music docs (compose, compose-detailed, models, API pricing, Music Terms 26 May 2026, Music API
+marketing, music quickstart). Repo checks: PRD IDs, `PhraseView` / `isActive`,
+`SceneRequestSchema` tag buckets, `draftGates` (no music key yet; last global Q is Q-20),
+`fieldPolicy` (no song entity), `AI_PROVIDER` / `TTS_PROVIDER` stubs, unregistered Anthropic
+transport, `SURFACES` / `SURFACE_LAWS` / More `practice` group, copy/`en-XA`, and plan 86’s
+TTS-only ElevenLabs checklist.
+
+**Held:** optional garnish (not a 23-screen / daily-loop path); catalog-only 3–8 selection;
+guarded LLM + repair-once + bundled lyrics floor; `composition_plan` over a lyrics-in-prompt;
+Loro-owned style packs (no vendor genre enum); `MUSIC_PROVIDER` ≠ `TTS_PROVIDER`; local-only v1
+(no `fieldPolicy`); no `ProgressDelta`; recorded PCM never on the wire; `/music` via More;
+proposed `P3F-01`…`12` and `Q-21` do not collide; live spend stays off CI; authored design
+untouched; Q-21 stays out of `open-questions.md`.
+
+**Adjusted in this pass (not implementation):** request identity is catalog ids only;
+deprecated/wrong-locale rejection; 35–60 s total vs 3–8 phrases; pin `music_v2` **chunks** (not
+the v1 `MusicPrompt` union member); `context_adherence` is musical, not a lyric lock; sung
+fidelity is Q-21g; titles stay off the vendor wire; `conditioning_ref` unset; serialize styles
+against concurrency 2; authenticated principals only; ADR-0010 amendment deferred until Product
+accepts; residency hosts listed beyond EU; `compose_detailed` waveform/timestamp flags called
+out.
+
+`CLAUDE.md` already carries the next plan number (**97**). No extra feature pointer was added
+there; the active owner stays this file and `plans/README.md`.
