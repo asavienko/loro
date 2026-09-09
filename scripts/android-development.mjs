@@ -13,6 +13,11 @@ export function validateDevelopmentArguments(args) {
         'The Android development command builds and launches Loro Development only. Use pnpm apk:local for a standalone Preview APK.',
       )
     }
+    if (argument === '--app-id' || argument.startsWith('--app-id=')) {
+      throw new Error(
+        'The Android development command owns the Loro Development app ID. Use pnpm apk:local for a standalone Preview APK.',
+      )
+    }
     const variant = argument === '--variant' ? args[index + 1] : undefined
     const equalsVariant = argument.startsWith('--variant=')
       ? argument.slice('--variant='.length)
@@ -29,9 +34,13 @@ export function validateDevelopmentArguments(args) {
 }
 
 export function developmentEnvironment(source) {
-  const env = { ...source, LORO_ANDROID_DEV_CLIENT: '1' }
-  delete env.LORO_LOCAL_APK
-  return env
+  return {
+    ...source,
+    LORO_ANDROID_DEV_CLIENT: '1',
+    // Expo dotenv loading preserves explicit process values, so this also prevents a local
+    // Preview-only .env value from selecting the wrong generated Android identity.
+    LORO_LOCAL_APK: '0',
+  }
 }
 
 function run(command, args, env) {
