@@ -9,8 +9,9 @@
   waits on Q-05.
 - **Depends on:** 59 durable settings; 56/81 routes; 67/68 only for account-scoped sync; 86 for
   telemetry/config transport; 87 implemented language selection.
-- **Reviewed:** 2026-09-09 against checkout `42f4d57`; source/plan review only, no new device or
-  deployment acceptance.
+- **Reviewed:** 2026-09-09 against `aafa61f`; current source, tests and retained review records
+  inspected. This plan refresh supplies no new runtime, device or deployment acceptance.
+- **Priority:** 5; local Settings/privacy controls with 57.
 
 ## Verified starting point
 
@@ -56,14 +57,20 @@ course-session repositories when wiring durable settings; do not recreate an ind
 
 ## Delivery order and gates
 
-1. Extend current SQLite settings for local preferences and general Settings UI first. Reuse
-   existing onboarding/language writes; coordinate theme values with 57 and route metadata with
-   56/81.
+1. Deliver a reachable general Settings surface and privacy consent control using existing SQLite
+   onboarding/language/device-preference writes. Register the route and each state through 56/81.
+   Persist before rendering success; show recoverable write failures. Prove changes and consent
+   revocation survive relaunch without changing course, progress or active checkpoints. With 57,
+   expose only preferences backed by working runtime capabilities; downloads/audio controls follow
+   their actual owners rather than appearing as nonfunctional settings.
 2. Classify every new setting as device-local or account-scoped before migration. Add merge policy
    only for syncable fields, then integrate 67/68; local settings must work without sign-in.
-3. Deliver allowlisted telemetry/consent and safe flag defaults separately. Align deletion/export
-   with 67 and transport with 86. Q-05 gates experiment activation; no consent field may authorize
-   recorded-audio upload or restore the excluded legacy cloud-ASR/voice-clone fields.
+3. Deliver allowlisted telemetry queue/transport and safe flag defaults separately from Settings.
+   The existing consent field defaults off and enables no collector by itself. Test that revocation
+   stops collection, clears pending events according to policy and prevents in-flight retry from
+   resuming uploads. Align deletion/export with 67 and transport with 86. Q-05 gates experiment
+   activation; no consent field may authorize recorded-audio upload or restore the excluded legacy
+   cloud-ASR/voice-clone fields.
 
 ## Out of scope
 

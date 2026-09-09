@@ -9,8 +9,9 @@
   only, bilingual sign-off is coordinated by 87.
 - **Depends on:** 53/85 completed; 59 for client atomic activation; 86 for provider/storage
   adapters; 87 for bilingual review.
-- **Reviewed:** 2026-09-09 against checkout `42f4d57`; source/plan review only, no new device or
-  deployment acceptance.
+- **Reviewed:** 2026-09-09 against `aafa61f`; current source, tests and retained review records
+  inspected. This plan refresh supplies no new runtime, device or deployment acceptance.
+- **Priority:** 4; text delivery with 66/86.
 
 **Provider decision (2026-09-07):** ElevenLabs selected. Q-15 still gates production audio on
 voice/model selection, production rights, pronunciation review and budget.
@@ -22,12 +23,16 @@ complete. The roadmap index continues to track its unfinished scope.
 ## Verified starting point
 
 `packages/content/` supplies 31-phrase es-ES/bg-BG/ru-RU starters and neutral learning catalogs;
-`releaseCheck.ts` rejects pending bilingual review. `delivery.ts` provides transport-independent
-manifest/resource verification with injected signature, digest and catalog validators. A production
-trust store, signing/key-rotation policy and fetch/activation implementation remain required.
-Independent publication, client activation and approved audio do not exist. Preserve the old
-English/Spanish API as a compatibility adapter; use plan 85's delivered content schemas for the new
-pipeline.
+`releaseCheck.ts` now loads the current material-digest record and validates retained payload
+hashes, locale/course identities, attributable approvals and reviewer-language coverage. Actual
+approvals remain outstanding. `delivery.ts` provides transport-independent manifest/resource
+verification with injected signature, digest and catalog validators. A production trust store,
+signing/key-rotation policy and fetch/activation implementation remain required. Independent
+publication, client activation and approved audio do not exist. Preserve the old English/Spanish API
+as a compatibility adapter; use plan 85's delivered content schemas for the new pipeline.
+`content:enrich`, `content:render` and `content:publish` are declared scripts whose source
+entrypoints are absent at this revision; implementing the authoring commands remains part of this
+plan.
 
 **2026-09-09 verifier slice:** The Metro-safe boundary accepts an unknown manifest and rejects
 malformed manifest/signature/resource shapes with `MANIFEST_INVALID` before cryptography. Valid JSON
@@ -46,8 +51,11 @@ without overwriting learner state.
 
 1. [ ] Decide voice provenance, licensing, consent, pronunciation review, provider fallback,
        regional storage, and deletion obligations. Record the decision before bulk rendering.
-2. [ ] Extend the existing immutable manifest/resource contracts with locale/voice identity, codecs,
-       loudness/rate metadata, ETags, signatures, compatibility, rollback, and retention.
+2. [ ] Reconcile `packages/content/src/delivery.ts` with shared API content and learning-content
+       schemas: signed bytes, locale/pair identity, catalog adaptation, trust/key rotation, version
+       collisions and rollback. Existing signature/hash/semantic-version validation is reusable; the
+       current API manifest is not automatically its wire format. Retain ETag and retention policy;
+       the later audio slice adds voice identity, codecs and loudness/rate metadata.
 3. [ ] Build the authoring pipeline for validation, enrichment, translation review, TTS/render
        intake, audio normalization, reference feature generation, human QA, and publication.
 4. [ ] Build the client catalog updater/storage/prefetch contract with atomic activation and safe
@@ -62,8 +70,9 @@ without overwriting learner state.
 ## ElevenLabs integration (`AS-01`, `AS-02`, `AS-05`, `AS-06`)
 
 Provider selected by the user on 2026-09-07. Integrate the plan-86 ElevenLabs adapter into the
-server-side content rendering pipeline behind `pnpm content:render`; credential provisioning alone
-does not implement TTS. Keep native playback and device-TTS fallback in plan 62.
+server-side content rendering pipeline behind `pnpm content:render` (currently a declared script
+whose implementation is absent); credential provisioning alone does not implement TTS. Keep native
+playback and device-TTS fallback in plan 62.
 
 1. Consume the plan-86 provider adapter and configuration validation for `TTS_PROVIDER=elevenlabs`,
    `TTS_API_KEY`, and `TTS_VOICE_ES_ES`. Explicitly load the protected environment for the content
@@ -97,7 +106,9 @@ approval of any voice's production rights. Q-15 remains open for the asset evide
 ## Acceptance criteria
 
 - A bad, partial, unsigned, incompatible, or rolled-back pack cannot replace the last good pack.
-- Every production phrase has verified text, metadata, audio ownership, checksums, and fallback.
+- Text-only delivery acceptance requires reviewed text/teaching metadata, identity and checksums; it
+  does not imply recorded audio. Audio-enabled releases additionally require verified rights, pinned
+  voice/codec metadata and fallback.
 - Content update changes catalog/assets without requiring an app release or mutating learner rows.
 - The pipeline is reproducible, budgeted, and reports per-check quality failures.
 - Explicit ElevenLabs mode renders a reviewed seed batch with pinned provenance and real audio;
@@ -112,7 +123,11 @@ approval of any voice's production rights. Q-15 remains open for the asset evide
    the injected Metro-safe validator boundary; do not import Node authoring code into mobile.
 2. Implement text-only publication and crash-safe atomic client activation first using 59 storage
    and 86 transports. Cover interrupted download/install, signature/hash failure, insufficient disk
-   and preservation of learner-owned phrases; failed updates retain the last usable release.
+   and preservation of learner-owned phrases, per-course progress and active checkpoints; failed
+   updates retain the last usable release. Prove an old/new version is selected atomically after
+   process death, and that a concurrent course change cannot activate data for the wrong course.
+   Wire exact-material approval into publication with 87/72; fixture releases never authorize
+   shipping unreviewed content.
 3. Coordinate reviewed catalogs with 87/90. Q-15 gates licensed production audio, not text delivery
    or fixture-based adapter work. Hand a pinned approved seed/manifest to 62 before claiming real
    recorded-playback acceptance.

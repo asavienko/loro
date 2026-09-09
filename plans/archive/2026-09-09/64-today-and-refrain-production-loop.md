@@ -7,8 +7,9 @@
   and measurement need 62/63, with Q-14 blocking peak sign-off only.
 - **Depends on:** 55/84 completed; 59 persistence, 60 selection/maths, 62 playback, 63 speech; 81
   presents exit/resume state.
-- **Reviewed:** 2026-09-09 against checkout `42f4d57`; source/plan review only, no new device or
-  deployment acceptance.
+- **Reviewed:** 2026-09-09 against `aafa61f`; current source, tests and retained review records
+  inspected. This plan refresh supplies no new runtime, device or deployment acceptance.
+- **Priority:** 2; timed waves/tag drills, then priority 7 audible integration.
 
 Previous starting point: [archived snapshot](../2026-09-08/64-today-and-refrain-production-loop.md).
 
@@ -45,8 +46,10 @@ Full local CI and native/device evidence are not claimed by this slice.
 
 ## Remaining work
 
-1. [ ] Make wave availability, labels, completion, banked/yesterday tail, all-graduated state, and
-       next-action copy derive from persisted scheduling state and the real clock.
+1. [ ] Enforce timed-wave entry at both Today actions and direct/resumed practice entry. Existing
+       `waveSchedule` labels, persisted completion and focused clock refresh are inputs, not new
+       implementation. Define banked/yesterday tail, all-graduated and next-action behavior from
+       persisted scheduling state; elapsed time never implies completion.
 2. [ ] Extend acceptance of the implemented course checkpoint/resume path at every wave transition.
        Preserve stale-result rejection and the shared global streak. With plan 59 owning checkpoint
        writes and plan 81 their presentation, complete midnight, timezone, interruption, abandon and
@@ -69,8 +72,10 @@ Full local CI and native/device evidence are not claimed by this slice.
 
 ## Delivery order and gates
 
-1. Finish scheduling-derived wave availability, day rollover and tag-filtered drills on existing
-   59/60 state first. Preserve durable completion/selection from the integrated implementation.
+1. Deliver enforced wave entry, tail/empty/all-graduated states and tag-filtered drills on existing
+   59/60 state. Cover pre-first-wave, exact boundaries, foreground time jumps, midnight/DST and
+   course changes; labels and permitted actions must agree. A drill's actual candidate IDs must
+   match its selected tag. Reuse the focused clock refresh and durable completion/selection.
 2. Consume 62 playback and 63 speech/measurement events for the audible loop; keep manual/reveal
    completion and null timing honest while a native capability is unavailable. Plan 81 presents
    exits/resume, while this plan owns wave transitions and 59 owns their transaction boundary.

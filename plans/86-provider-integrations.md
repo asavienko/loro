@@ -8,8 +8,9 @@
   feature slice and applicable product decision.
 - **Depends on:** 85 completed; 66 backend seams; owning feature slices in 61/65/67/71/74/76/82; 88
   supplies testing infrastructure and 73 owns production operations.
-- **Reviewed:** 2026-09-09 against checkout `42f4d57`; source/plan review only, no new device or
-  deployment acceptance.
+- **Reviewed:** 2026-09-09 against `aafa61f`; current source, tests and retained review records
+  inspected. This plan refresh supplies no new runtime, device or deployment acceptance.
+- **Priority:** 4; content storage adapters first; later adapters follow their consuming feature.
 
 ## Current evidence
 
@@ -92,13 +93,18 @@ language/course identity in asset selection, requests and cache keys.
 
 ## Delivery order and gates
 
-1. Reuse existing identity and Anthropic transports. Add shared bounded execution/configuration
-   controls, then the email/S3/ElevenLabs adapters required by 67/61. Test with deterministic
-   fixtures.
-2. Agree the content publication/download contract with 61 before S3 wiring; 88 supplies private
+1. Agree the content publication/download contract with 61 before S3 wiring; 88 supplies private
    resources and IAM. Keep authenticated URL issuance separate from resource downloads, and never
    forward API bearer credentials to an arbitrary manifest URL.
-3. Production rendering still waits for Q-15; live AI waits for its feature's consent, budget and
+2. For priority 4, deliver the S3 publication/download adapters and bounded configuration,
+   deadlines, cancellation and integrity handling consumed by 61. Test expired URLs, oversized or
+   truncated bodies, wrong hashes and credential redaction with deterministic fixtures. Private
+   resource/IAM provisioning can proceed before full plan-88 operational acceptance.
+3. Reuse identity transports for priority-6 email/lifecycle work and add ElevenLabs with the plan-61
+   rendering slice. Common controls grow with these consumers. When live AI is scheduled, give
+   Anthropic admission a shared application lifetime and add principal/global spend reservation and
+   reconciliation; constructing a transport per request must not reset its concurrency limit.
+4. Production rendering still waits for Q-15; live AI waits for its feature's consent, budget and
    evaluation gates. Provider credentials or a passing transport test do not close those gates.
 
 ## Acceptance and delivery

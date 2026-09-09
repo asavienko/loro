@@ -8,8 +8,9 @@
   harnesses, Q-14 blocks peak sign-off and 87 owns bilingual sign-off.
 - **Depends on:** 58 device harness; 57 visual APIs; owning feature acceptance slices as they land.
   This shared harness is not a prerequisite to finish every feature before work starts.
-- **Reviewed:** 2026-09-09; baseline review at `42f4d57`, followed by the pseudo-locale slice and
-  focused unit/browser checks below. No new native-device or deployment acceptance.
+- **Reviewed:** 2026-09-09 against `aafa61f`; current source, tests and retained review records
+  inspected. This plan refresh supplies no new runtime, device or deployment acceptance.
+- **Priority:** 9; start alongside priority 1 and grow with each feature.
 
 Previous starting point: [archived snapshot](archive/2026-09-08/72-release-quality-gates.md).
 
@@ -20,7 +21,11 @@ Previous starting point: [archived snapshot](archive/2026-09-08/72-release-quali
 accessibility/performance matrix is demonstrated. Rust simulation and parity targets exist under
 `packages/core-rs/tests/` and run through the local Rust gate. GitHub Actions remains disabled;
 `.github/workflows-disabled/` contains historical references, not active release enforcement. This
-plan owns the remaining native, content-release and measured-budget gate wiring.
+plan owns the remaining native, content-release and measured-budget gate wiring. Normal `pnpm check`
+already runs native collector fixtures, and `ci:local` already runs the dedicated pseudo-locale
+server/suite. `@loro/content check:release` verifies exact-material review evidence but is not
+invoked by `ci:local`; distinguish draft-development CI from approved-content release enforcement
+rather than requiring pending human sign-off for every development change.
 
 ## Outcome
 
@@ -73,14 +78,20 @@ have simulation/property/golden tests.
 
 ## Delivery order and gates
 
-1. Start shared harnesses, pseudo-locale and evidence reporting now; do not wait for every feature
-   to finish. Device runners come from 58, feature assertions from their owning plans.
+1. Start alongside priority 1. Extend the existing dedicated pseudo-locale smoke to the applicable
+   state/text-scale and locale date/number matrix; retain the separate normal-locale server and
+   production-disable case. Device runners come from 58, feature assertions from their owning plans.
+   Add retained per-artifact pass/fail/blocked evidence with links and explicit missing
+   prerequisites; do not rebuild the collector fixture or pseudo command wiring.
 2. Derive the release pair matrix from the supported registry and reviewed release set. Seven pairs
    are the current baseline; plan 90 must extend fixtures when English lands. New language support
    does not imply reviewed content or native speech availability.
-3. Separate harness completion from feature/release sign-off. Enforce Q-14 peak review, 87 bilingual
-   evidence and applicable physical-device gates without making unrelated work depend on them. Run
-   checks locally; preserve the disabled GitHub Actions policy.
+3. Wire exact-digest `check:release` into the approved content/release path with 61/87; prove
+   missing, stale, mutated or incompletely approved records block release while draft development
+   remains testable. Existing validator regression tests already cover payload identity and
+   reviewer-language coverage. Separate harness completion from feature/release sign-off. Enforce
+   Q-14 peak review, 87 bilingual evidence and applicable physical-device gates without making
+   unrelated work depend on them. Run checks locally; preserve the disabled GitHub Actions policy.
 
 ## Out of scope
 
