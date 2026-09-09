@@ -2,8 +2,9 @@ import { spawn, execFileSync } from 'node:child_process'
 import { createServer } from 'node:net'
 import { setTimeout } from 'node:timers/promises'
 
-// Never connect this check to a developer/deployed database or inherit provider secrets.
-const container = `loro-built-api-check-${process.pid}`
+// Never connect this check to a developer/deployed database or inherit provider secrets. Local CI
+// supplies a run-specific name so parent cleanup can remove the container after forced termination.
+const container = process.env.LORO_API_SMOKE_CONTAINER ?? `loro-built-api-check-${process.pid}`
 let child
 let spawnError
 let stopping = false
