@@ -13,21 +13,25 @@ Android widget, notification scheduler, snapshot publisher, or `expo-notificatio
 service permissions, URL scheme, and background-audio capability; those declarations do not render,
 schedule, or deliver anything.
 
-The reusable part that does exist is smaller: `packages/core-rs/src/notify.rs` defines the seven
-categories and unit-tests quiet hours, the daily cap, opt-outs, conditional waves, trip gating, the
-language-pack threshold, and category deep-link strings. It does **not** yet implement the
-`planNotifications` function shown below, choose delivery times, schedule OS notifications, publish
-a widget snapshot, or select a phrase of the moment. `apps/mobile/src/lib/clock.ts` and Rust
-calendar rules provide day semantics, but neither is connected to a native rollover callback.
+The reusable part that exists is intentionally bounded: `packages/core-rs/src/notify.rs` defines
+the seven categories and unit-tests quiet hours, the daily cap, opt-outs, conditional waves, trip
+gating, the language-pack threshold and category deep-link strings. Its `plan_notifications` pure
+planner takes platform-resolved candidate instants and returns the permitted, ordered subset with
+stable IDs, semantic copy keys, deep links and foreground-suppression intent. It rejects malformed
+or duplicate IDs rather than guessing an OS replacement, and filters a category unless its
+destination is available. It does **not** calculate timezone/DST instants, schedule or cancel OS
+notifications, translate copy, publish a widget snapshot, or select a phrase of the moment.
+`apps/mobile/src/lib/clock.ts` and Rust calendar rules provide day semantics, but neither is
+connected to a native rollover callback.
 
 ### Prerequisites for adding the surfaces
 
-Before scheduling, complete a pure planner whose output includes stable notification identifiers,
-delivery timestamps, category, copy key, and destination; test replacement/cancellation, foreground
-suppression, timezone travel, DST, permission denial, and the absolute daily cap. Then add the
-platform adapter and reschedule hooks for foreground, settings, practice completion, trip changes,
-and local-day rollover. A scheduled notification must never depend on JavaScript waking at delivery
-time.
+Before scheduling, the pure planner is available and has unit coverage for stable identifiers,
+delivery timestamps, category, copy key, destination availability, quiet hours and the absolute
+daily cap. The platform adapter must add replacement/cancellation, foreground suppression,
+timezone travel, DST, permission denial and reschedule hooks for foreground, settings, practice
+completion, trip changes and local-day rollover. A scheduled notification must never depend on
+JavaScript waking at delivery time.
 
 Before widgets, define and version the snapshot at the shared boundary, add atomic platform storage,
 publish after the local transaction commits, and make stale/missing/audio-missing states explicit.
@@ -224,7 +228,7 @@ Arrival date reached
 
 | Test                        | Method                                                                                               |
 | --------------------------- | ---------------------------------------------------------------------------------------------------- |
-| Notification policy         | Present: Rust unit tests for caps, quiet hours, opt-outs and gates. Required: complete planner tests |
+| Notification policy         | Present: Rust policy and planner tests for candidate ordering, IDs, cap, quiet hours, opt-outs and gates. Required: platform scheduling tests |
 | Widget snapshot correctness | Unit test the selection ladder; golden-file the snapshot for known states                            |
 | Widget rendering            | Xcode previews / Glance previews for every state, including empty and no-trip                        |
 | Offline widget play         | Manual: airplane mode, tap ▶ on the lock screen, audio plays without launching the app               |
