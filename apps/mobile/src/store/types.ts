@@ -22,11 +22,14 @@ import type { AppData, RefrainResume } from './state'
 import type { OwnPhraseDraft } from './phraseFactory'
 import type { ImportDraft } from '../lib/importDraft'
 import type { LearnerStorage } from '../data/learner'
+import type { AccentName } from '../ui/theme'
+import type { DevicePreferences } from '../lib/devicePreferences'
 
 export interface AppActions {
   saveImportDraft: (draft: ImportDraft) => void
   clearImportDraft: () => void
   setAnalyticsConsent: (consent: boolean) => void
+  setVisualPreferences: (accent: AccentName, motion: DevicePreferences['motion']) => void
   setLanguages: (nativeLanguage: NativeLanguage, targetLocale: TargetLocale) => void
   /**
    * Commit the first-run answers and seed the stream.

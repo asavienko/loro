@@ -3,10 +3,9 @@
 - **Requirement IDs:** `F-05`, `F-06`, `F-08`, `F-09`, `LB-27`, `P3-12`; measurement for `Q-01`,
   `Q-02`, `Q-03`, `Q-05`, `Q-06`
 - **Milestone:** M2/M3
-- **Status:** 🟡 Language settings and installation-local analytics consent persist through SQLite.
-  General Settings UI, remaining preferences, telemetry and remote flags remain; the consent control
-  awaits Settings UI and the event queue/transport is not implemented. Only experiment activation
-  waits on Q-05.
+- **Status:** 🟡 Language, installation-local privacy, accent and motion preferences persist through
+  SQLite. General Settings exposes those supported controls; telemetry and remote flags remain.
+  The event queue/transport is not implemented. Only experiment activation waits on Q-05.
 - **Depends on:** 59 durable settings; 56/81 routes; 67/68 only for account-scoped sync; 86 for
   telemetry/config transport; 87 implemented language selection.
 - **Reviewed:** 2026-09-09 against `aafa61f`; current source, tests and retained review records
@@ -90,3 +89,12 @@ exclusion, progress preservation, and write-failure rollback. This is a persiste
 is no Settings consent control, event collection/queue, retention/export/erasure pipeline, remote
 flag assignment or experiment activation yet. Theme, audio, notification and practice preferences
 remain separately scoped work.
+
+## Delivered Settings UI slice — 2026-09-09
+
+`/settings` is reachable from the shared menu and More. It links to the existing language-pair flow,
+offers the generated Coral/Sunset/Teal/Berry accents and system/reduced motion through the real
+runtime provider, and exposes the existing analytics-consent control. Version 2 device preferences
+migrate version-1 consent, remain installation-local and never enter the sync outbox. Audio,
+downloads, notifications, telemetry transport, flags, experiments and dark theme remain outside
+this slice.

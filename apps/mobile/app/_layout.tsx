@@ -38,6 +38,7 @@ export default function RootLayout() {
 
 function ReadyLayout() {
   useLocale()
+  const preferences = useApp((state) => state.devicePreferences)
   useEffect(() => {
     void startAccountSync()
   }, [])
@@ -55,7 +56,10 @@ function ReadyLayout() {
   const place = placeForPath(pathname)
 
   return (
-    <ThemeProvider>
+    <ThemeProvider
+      accent={preferences.accent}
+      reducedMotion={preferences.motion === 'reduced' ? true : undefined}
+    >
       <SafeAreaProvider style={styles.canvas}>
         <StatusBar style="dark" />
         <View
@@ -147,6 +151,7 @@ function ReadyLayout() {
                   options={{ title: copy.nav.stream, gestureEnabled: false }}
                 />
                 <Stack.Screen name="account" options={{ title: copy.account.title }} />
+                <Stack.Screen name="settings" options={{ title: copy.settings.title }} />
                 <Stack.Screen
                   name="practice/speak"
                   options={{ title: copy.audioSpeech.speakTitle, gestureEnabled: false }}

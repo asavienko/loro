@@ -66,6 +66,17 @@ export const STATES: AppState[] = [
     },
   },
   {
+    name: 'settings · durable visual and privacy preferences',
+    route: '/settings',
+    spec: 'F-05/F-06 local settings',
+    reach: async (page) => {
+      await page.getByRole('button', { name: /, open the menu$/ }).click()
+      await page.getByRole('dialog').getByRole('button', { name: 'Settings', exact: true }).click()
+      await expect(page.getByRole('radiogroup', { name: 'Accent colour' })).toBeVisible()
+      await expect(page.getByRole('checkbox', { name: 'Share anonymous analytics' })).toBeVisible()
+    },
+  },
+  {
     name: 'storage · opening progress',
     route: '/',
     firstRun: true,

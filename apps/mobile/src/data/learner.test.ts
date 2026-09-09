@@ -538,7 +538,7 @@ describe('F-05/F-06 device-local analytics consent', () => {
     db.store.getState().setAnalyticsConsent(true)
     expect(db.storage.load()).toEqual({
       ...before,
-      devicePreferences: { version: 1, analyticsConsent: true },
+      devicePreferences: { version: 2, analyticsConsent: true, accent: 'coral', motion: 'system' },
     })
     db.driver.close()
     const reopened = open(path)
@@ -559,6 +559,35 @@ describe('F-05/F-06 device-local analytics consent', () => {
     const db = open()
     writeLocalValue(db.driver, 'device_preferences', value)
     expect(db.storage.load().devicePreferences.analyticsConsent).toBe(false)
+  })
+
+  it('migrates v1 consent and persists visual preferences without changing synced settings', () => {
+    const path = diskPath()
+    const first = open(path)
+    writeLocalValue(first.driver, 'device_preferences', '{"version":1,"analyticsConsent":true}')
+    first.driver.close()
+    const db = open(path)
+    expect(db.store.getState().devicePreferences).toEqual({
+      version: 2,
+      analyticsConsent: true,
+      accent: 'coral',
+      motion: 'system',
+    })
+    db.store
+      .getState()
+      .completeOnboarding({ goal: 'travel', level: 'beg', dailyMinutes: 10, packIds: [] })
+    const settings = db.persistence.settings.load()
+    const outbox = db.driver.all('SELECT * FROM outbox')
+    db.store.getState().setVisualPreferences('teal', 'reduced')
+    expect(db.persistence.settings.load()).toEqual(settings)
+    expect(db.driver.all('SELECT * FROM outbox')).toEqual(outbox)
+    db.driver.close()
+    expect(open(path).store.getState().devicePreferences).toEqual({
+      version: 2,
+      analyticsConsent: true,
+      accent: 'teal',
+      motion: 'reduced',
+    })
   })
 
   it('reset clears consent and invalid runtime updates cannot grant it', () => {
