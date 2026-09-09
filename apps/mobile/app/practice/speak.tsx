@@ -14,6 +14,7 @@ import { AudioControls } from '../../src/ui/components/AudioControls'
 import { Button, Card, Row, Screen, Stack, Text } from '../../src/ui/primitives'
 import { ink, space } from '../../src/ui/theme'
 
+/** Speak session is ephemeral React state until a named plan owns interruption resume. */
 function useSpeakSession(): {
   locale: TargetLocale
   session: SessionHandle | null
