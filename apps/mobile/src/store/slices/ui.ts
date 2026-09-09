@@ -6,15 +6,23 @@
  */
 
 import type { Slice } from '../types'
+import { importDraftKey } from '../../lib/importDraft'
 
 export const createUiSlice: Slice<
   'select' | 'showToast' | 'clearToast' | 'saveImportDraft' | 'clearImportDraft'
-> = ({ set }) => ({
+> = ({ get, set }) => ({
   saveImportDraft: (importDraft) => {
-    set({ importDraft })
+    set({
+      importDraft,
+      importDrafts: { ...get().importDrafts, [importDraftKey(importDraft)]: importDraft },
+    })
   },
   clearImportDraft: () => {
-    set({ importDraft: null })
+    const current = get().importDraft
+    if (current === null) return
+    const drafts = { ...get().importDrafts }
+    delete drafts[importDraftKey(current)]
+    set({ importDraft: null, importDrafts: drafts })
   },
   select: (id) => {
     set({ selectedId: id })

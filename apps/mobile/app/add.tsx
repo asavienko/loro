@@ -15,6 +15,7 @@ import { useLocale } from '../src/lib/i18n'
 import { useMemo, useState } from 'react'
 import { ScrollView, StyleSheet, TextInput, View } from 'react-native'
 import * as DocumentPicker from 'expo-document-picker'
+import { File } from 'expo-file-system'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import {
   BROWSABLE_THEMES,
@@ -66,7 +67,13 @@ import {
   unsavedImportCandidates,
   type ImportCandidate,
 } from '../src/lib/importPhrases'
-import { decodeImportFile, type ImportFileError } from '../src/lib/importFile'
+import {
+  IMPORT_MAX_FILE_BYTES,
+  decodeImportFile,
+  type ImportFileError,
+} from '../src/lib/importFile'
+import { importDraftKey, type ImportDrafts } from '../src/lib/importDraft'
+import { readBoundedImportFile } from '../src/lib/readBoundedImportFile'
 /**
  * The themes Browse offers.
  *
@@ -281,7 +288,7 @@ export default function Add() {
   const owned = useApp((s) => s.phrases)
   const addPhrase = useApp((s) => s.addPhrase)
   const addOwnPhrase = useApp((s) => s.addOwnPhrase)
-  const importDraft = useApp((s) => s.importDraft)
+  const importDrafts = useApp((s) => s.importDrafts)
   const saveImportDraft = useApp((s) => s.saveImportDraft)
   const clearImportDraft = useApp((s) => s.clearImportDraft)
   const targetLocale = useApp((s) => s.targetLocale)
@@ -316,7 +323,7 @@ export default function Add() {
           <ImportPhrases
             owned={owned}
             addOwnPhrase={addOwnPhrase}
-            importDraft={importDraft}
+            importDrafts={importDrafts}
             targetLocale={targetLocale}
             nativeLanguage={nativeLanguage}
             saveImportDraft={saveImportDraft}
@@ -569,7 +576,7 @@ function AddGlyph() {
 function ImportPhrases({
   owned,
   addOwnPhrase,
-  importDraft,
+  importDrafts,
   targetLocale,
   nativeLanguage,
   saveImportDraft,
@@ -577,11 +584,7 @@ function ImportPhrases({
 }: {
   owned: readonly PhraseState[]
   addOwnPhrase: (draft: { targetText: string; translation: string }) => string
-  importDraft: {
-    readonly targetLocale: TargetLocale
-    readonly nativeLanguage: NativeLanguage
-    readonly input: string
-  } | null
+  importDrafts: ImportDrafts
   targetLocale: TargetLocale
   nativeLanguage: NativeLanguage
   saveImportDraft: (draft: {
@@ -592,10 +595,7 @@ function ImportPhrases({
   clearImportDraft: () => void
 }) {
   useLocale()
-  const restored =
-    importDraft?.targetLocale === targetLocale && importDraft.nativeLanguage === nativeLanguage
-      ? importDraft.input
-      : ''
+  const restored = importDrafts[importDraftKey({ targetLocale, nativeLanguage })]?.input ?? ''
   const [input, setInput] = useState(restored)
   const [review, setReview] = useState<ImportCandidate[] | null>(null)
   const [tooLarge, setTooLarge] = useState(false)
@@ -633,9 +633,16 @@ function ImportPhrases({
     if (picked.canceled) return
     const asset = picked.assets[0]
     if (asset === undefined) return
+    if (asset.size !== undefined && asset.size > IMPORT_MAX_FILE_BYTES) {
+      setFileError('too-large')
+      return
+    }
     try {
-      const response = await fetch(asset.uri)
-      const bytes = new Uint8Array(await response.arrayBuffer())
+      const bytes = await readBoundedImportFile(new File(asset.uri).stream(), IMPORT_MAX_FILE_BYTES)
+      if (bytes === null) {
+        setFileError('too-large')
+        return
+      }
       const result = decodeImportFile({ name: asset.name, bytes })
       if (!result.ok) {
         setFileError(result.error)
@@ -648,18 +655,19 @@ function ImportPhrases({
   }
   const update = (index: number, field: 'targetText' | 'translation', value: string) => {
     setSaveFailed(false)
-    setReview((current) =>
-      current === null
-        ? null
-        : reviewImportedCandidates(
-            current.map((candidate, candidateIndex) =>
-              candidateIndex === index
-                ? { ...candidate, [field]: normalizeImportedText(value) }
-                : candidate,
-            ),
-            existing,
-          ),
+    if (review === null) return
+    const updated = reviewImportedCandidates(
+      review.map((candidate, candidateIndex) =>
+        candidateIndex === index
+          ? { ...candidate, [field]: normalizeImportedText(value) }
+          : candidate,
+      ),
+      existing,
     )
+    const persistedInput = importInputForCandidates(updated)
+    setReview(updated)
+    setInput(persistedInput)
+    saveImportDraft({ targetLocale, nativeLanguage, input: persistedInput })
   }
   const accepted = (review ?? []).filter(
     (candidate) =>
