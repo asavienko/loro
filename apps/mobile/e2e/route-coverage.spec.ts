@@ -74,7 +74,10 @@ function discoverRoutes(appDirectory: string): string[] {
   visit(appDirectory, files)
 
   return files
-    .filter((file) => file.endsWith('.tsx') && !file.endsWith(`${sep}_layout.tsx`))
+    .filter(
+      (file) =>
+        file.endsWith('.tsx') && !file.split(sep).some((segment) => segment.startsWith('_')),
+    )
     .map((file) => {
       const route = relative(appDirectory, file)
         .split(sep)
@@ -87,13 +90,20 @@ function discoverRoutes(appDirectory: string): string[] {
 }
 
 function isLearnerRoute(route: string): boolean {
-  return route !== '/dev' && !route.startsWith('/dev/') && !route.startsWith('/+')
+  return (
+    route !== '/dev' &&
+    !route.startsWith('/dev/') &&
+    !route.startsWith('/+') &&
+    !route.split('/').some((segment) => segment.startsWith('_'))
+  )
 }
 
 function visit(directory: string, files: string[]): void {
   for (const entry of readdirSync(directory, { withFileTypes: true })) {
     const path = join(directory, entry.name)
-    if (entry.isDirectory()) visit(path, files)
+    if (entry.isDirectory()) {
+      if (!entry.name.startsWith('_')) visit(path, files)
+    } else if (!entry.name.startsWith('_')) files.push(path)
     else files.push(path)
   }
 }

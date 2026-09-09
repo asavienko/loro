@@ -68,10 +68,12 @@ pnpm --filter @loro/api dev
 curl localhost:3000/v1/health/ready
 ```
 
-The API has ten endpoints, uses an in-memory sync repository, and stubs AI. It needs no database,
-Docker or credentials. Readiness is the useful check because it returns 503 when the shared WASM
-merge engine is missing. Docker Compose is present for future persistence work, but persistence is
-not wired and there are no migration or seed scripts.
+The API stores accounts, sessions and tenant-scoped sync in PostgreSQL and merges through the
+shared Rust/WASM engine. Configure the encrypted environment and `DATABASE_URL` before starting it
+— follow [`local-development.md`](local-development.md). `/v1/health/ready` checks actual
+database/WASM availability; there is no production in-memory fallback. `InMemorySyncRepository` is
+a test adapter under `apps/api/src/sync/testing/`. AI scenes are bundled stubs; live providers are
+not registered. See [`apps/api/README.md`](../../apps/api/README.md).
 
 ### Mobile app in a browser
 
@@ -86,9 +88,9 @@ For a compile proof without opening a browser:
 pnpm --filter @loro/mobile bundle
 ```
 
-Do not begin with `expo run:ios` or `expo run:android`. The repository has no native projects yet;
-those commands require a platform toolchain and an initial prebuild. Expo Go may render the current
-JS-only screens, but it cannot prove the missing custom native behaviour.
+Custom core/audio/SQLite modules require a native build; Expo Go is unsupported. Native Android
+and iOS projects are generated and gitignored. `pnpm apk:local` is the local Android preview;
+iOS still needs full Xcode. See [`apps/mobile/README.md`](../../apps/mobile/README.md).
 
 ## 5 · Verify a learner-visible change
 
@@ -110,17 +112,17 @@ misleading.
 ## 6 · Where the current code lives
 
 ```text
-apps/mobile/app/          Expo Router routes: seven learner screens plus the shell
-apps/mobile/src/lib/      copy, clock and formatting
-apps/mobile/src/store/    in-memory app state and practice-engine integration
+apps/mobile/app/          Expo Router routes: eight learner screens plus Languages/Account/More/Settings, shell and workbench
+apps/mobile/src/lib/      copy, clock, account session and formatting
+apps/mobile/src/store/    Zustand slices; local SQLite commits before publication
 apps/mobile/src/ui/       primitives, components and UI tokens
-apps/mobile/src/data/     Node SQLite test driver and persistence integration tests
+apps/mobile/src/data/     native/browser SQLite drivers, learner load/commit and sync
 apps/mobile/e2e/          Playwright web behaviour, accessibility and text-scale gate
-apps/api/                 NestJS API with an in-memory sync repository
+apps/api/                 NestJS API with PostgreSQL accounts/sync; memory repo is test-only
 packages/core/            shared TS domain, engines, contracts and persistence
-packages/core-rs/         Rust maths, DSP and merge
+packages/core-rs/         Rust maths, DSP and merge (WASM/UniFFI)
 packages/design-tokens/   token source, generator and committed output
-packages/content/         31-phrase catalog and validation
+packages/content/         Spanish/Bulgarian/Russian catalogs and review gates
 ```
 
 Directories described in older architecture plans (`features/`, `platform/`, native `modules/`,

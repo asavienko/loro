@@ -11,7 +11,11 @@ import { DEFAULT_REP_TARGET, repsToday, selectRefrainSet } from '@loro/core'
 import type { Slice } from '../types'
 
 export const createRefrainSlice: Slice<
-  'ensureRefrainSet' | 'completeRefrainWave' | 'endRefrainSession'
+  | 'ensureRefrainSet'
+  | 'beginRefrainSession'
+  | 'saveRefrainCheckpoint'
+  | 'completeRefrainWave'
+  | 'endRefrainSession'
 > = ({ set, get, deps, loadRefrainDay }) => ({
   ensureRefrainSet: () => {
     const day = deps.clock.localDay()
@@ -65,6 +69,21 @@ export const createRefrainSlice: Slice<
       refrainSet: [...st.refrainSet, ...fill],
       refrainSubstituted: [...st.refrainSubstituted, ...fill],
     })
+  },
+  beginRefrainSession: (plan, wave) => {
+    set({
+      refrainResume: {
+        session: { sessionId: deps.newId(), plan, cursor: 0 },
+        wave,
+        cursor: 0,
+        done: false,
+        lastLatency: null,
+        history: [],
+      },
+    })
+  },
+  saveRefrainCheckpoint: (checkpoint) => {
+    set({ refrainResume: checkpoint })
   },
   completeRefrainWave: (wave, checkpoint) => {
     const state = get()

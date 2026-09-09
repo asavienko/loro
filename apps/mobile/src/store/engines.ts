@@ -13,6 +13,7 @@ import {
   userPhraseId,
   DEFAULT_REP_TARGET,
   RefrainEngine,
+  SpeakEngine,
   StreamEngine,
   isActive,
   isDue,
@@ -88,11 +89,14 @@ export function createEngineContext(
 /**
  * The wave schedule the production engines run on — and the one Today's day list renders.
  *
- * Exported so the screen cannot drift from the scheduler. The times are SETTINGS, not copy:
+ * Keys are structure (Loop B's three waves, in this order). Times are SETTINGS, not copy:
  * Today used to print its own 12-hour display strings out of `copy.today.waves` ("1:00",
  * "7:00") beside these 24-hour ones, so the screen and the engine could disagree about when
- * the midday wave is and nothing would fail.
+ * the midday wave is and nothing would fail. Both are exported so screens cannot drift from
+ * the scheduler; `lib/waves.ts` stays a generic zipper over whatever keys a caller passes.
  */
+export const PRODUCTION_WAVES = ['morning', 'midday', 'evening'] as const
+export type ProductionWave = (typeof PRODUCTION_WAVES)[number]
 export const PRODUCTION_WAVE_TIMES = ['08:00', '13:00', '19:00'] as const
 
 const productionEngineDeps: EngineContextDeps = {
@@ -111,3 +115,4 @@ export function engineContext(): EngineContext {
 
 export const streamEngine = new StreamEngine()
 export const refrainEngine = new RefrainEngine(engineContext)
+export const speakEngine = new SpeakEngine()

@@ -1,21 +1,18 @@
-import { createRemoteJWKSet, jwtVerify } from 'jose'
+import { jwtVerify } from 'jose'
 import { LoroError } from '../common/errors.js'
+import { IDENTITY_ISSUERS, identityJwks } from './jwks.js'
 
 export type IdentityProvider = 'apple' | 'google'
 
 /** Fixed public key URLs; a user-supplied JWT never chooses a network destination. */
 const providers = {
   google: {
-    issuer: ['https://accounts.google.com', 'accounts.google.com'],
-    keys: createRemoteJWKSet(new URL('https://www.googleapis.com/oauth2/v3/certs'), {
-      timeoutDuration: 5_000,
-    }),
+    issuer: IDENTITY_ISSUERS.google,
+    keys: identityJwks('google'),
   },
   apple: {
-    issuer: ['https://appleid.apple.com'],
-    keys: createRemoteJWKSet(new URL('https://appleid.apple.com/auth/keys'), {
-      timeoutDuration: 5_000,
-    }),
+    issuer: IDENTITY_ISSUERS.apple,
+    keys: identityJwks('apple'),
   },
 } as const
 

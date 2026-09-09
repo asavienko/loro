@@ -14,16 +14,15 @@ import type {
   PracticeSettings,
 } from '../engines/types.js'
 import type { Difficulty, PhraseState, Tag } from '../domain/phrase.js'
-import { LadderRung } from '../domain/phrase.js'
+import { isActive, isDue, LadderRung } from '../domain/phrase.js'
 import { fakeSelectRefrainSet } from './selection.js'
 import {
-  automaticity,
-  refrainSetSize,
-  modeForRep,
-  modelRateForMode,
-  beatMsForMode,
-  type RefrainMode,
-} from '../engines/refrain/index.js'
+  fixtureAutomaticity,
+  fixtureBeatMsForMode,
+  fixtureModeForRep,
+  fixtureModelRateForMode,
+  fixtureRefrainSetSize,
+} from './refrainFixtures.js'
 import { userPhraseId, catalogPhraseId } from '../domain/ids.js'
 
 /** A fixed instant, so every fixture is reproducible. 2026-07-28T09:41:00Z. */
@@ -137,16 +136,18 @@ export function fakeRepository(phrases: readonly PhraseState[]): PhraseRepositor
   return {
     all: () => Promise.resolve(snapshot),
     byId: (id) => Promise.resolve(snapshot.find((p) => p.id === id) ?? null),
-    active: () => Promise.resolve(snapshot.filter((p) => !p.learned)),
-    due: (at) => Promise.resolve(snapshot.filter((p) => p.srs !== null && p.srs.due <= at)),
+    active: () => Promise.resolve(snapshot.filter(isActive)),
+    due: (at) => Promise.resolve(snapshot.filter((p) => isDue(p, at))),
   }
 }
 
 /**
- * A faithful stand-in for loro-core.
+ * A stand-in for loro-core in `@loro/core` tests.
  *
- * `streamRank` and `repeatTarget` mirror the Rust implementation exactly, because
- * they're blueprint contracts and the tests assert on their behaviour.
+ * Refrain numbers come from documented fixtures (`refrainFixtures.ts`), not a second
+ * copy of the Rust formulae. Unknown inputs throw. `streamRank` and `repeatTarget` still
+ * mirror the blueprint ranks the stream tests assert on. `fsrsReview` is a labelled test
+ * double — not canonical FSRS.
  */
 export function fakeCore(): LoroCoreFacade {
   return {
@@ -180,15 +181,16 @@ export function fakeCore(): LoroCoreFacade {
     },
 
     selectRefrainSet: fakeSelectRefrainSet,
-    automaticity,
-    refrainSetSize,
-    modeForRep,
-    modelRateForMode: (mode) => modelRateForMode(mode as RefrainMode),
-    beatMsForMode: (mode) => beatMsForMode(mode as RefrainMode),
+    automaticity: fixtureAutomaticity,
+    refrainSetSize: fixtureRefrainSetSize,
+    modeForRep: fixtureModeForRep,
+    modelRateForMode: fixtureModelRateForMode,
+    beatMsForMode: fixtureBeatMsForMode,
 
     // Deterministic stand-in: blank the second token.
     clozeMask: () => [1],
 
+    // Labelled test double — not the canonical FSRS policy in core-rs.
     fsrsReview: (_state, grade, at) => {
       const days = grade === 1 ? 0.007 : grade === 2 ? 1 : grade === 3 ? 3 : 5
       return {

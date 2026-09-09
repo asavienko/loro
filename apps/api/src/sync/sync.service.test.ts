@@ -1,34 +1,21 @@
 /** F-02/F-04: tenant isolation, durable receipts, and the target sync wire. */
 import { describe, expect, it } from 'vitest'
-import { PullResponseSchema, PushResponseSchema, type PushOp } from '@loro/core/api/target'
+import { PullResponseSchema, PushResponseSchema } from '@loro/core/api/target'
 import type { AuthPrincipal } from '../auth/auth.tokens.js'
 import type { ServerClock } from '../common/clock.js'
 import { mergeAvailable } from './merge.js'
-import { InMemorySyncRepository } from './sync.repository.memory.js'
+import { InMemorySyncRepository } from './testing/sync.repository.memory.js'
+import { fieldValue, phraseUpsert, syncEnvelope, testRowId } from './testing/fixtures.js'
 import { SyncService } from './sync.service.js'
 
 const userA: AuthPrincipal = { userId: 'learner-a', deviceId: 'device-a', sessionId: 'session-a' }
 const deviceB: AuthPrincipal = { ...userA, deviceId: 'device-b', sessionId: 'session-b' }
 const userB: AuthPrincipal = { userId: 'learner-b', deviceId: 'device-a', sessionId: 'session-c' }
-const id = (n: number): string => `0197f2a0-0000-7000-8000-${String(n).padStart(12, '0')}`
-const value = <T>(v: T, at = 1000) => ({ v, hlc: `${at}:0000:device-a` })
+const id = testRowId
+const value = fieldValue
 const frozen: ServerClock = { now: () => 1_700_000_000_000 }
-const envelope = (ops: unknown[]) => ({ client_hlc: '1000:0000:device-a', ops })
-type PhraseFields = Extract<PushOp, { entity: 'user_phrase'; op: 'upsert' }>['fields']
-const upsert = (seq: number, row = id(seq), fields: PhraseFields = { reps: value(1) }): PushOp => ({
-  seq,
-  entity: 'user_phrase',
-  entity_id: row,
-  op: 'upsert',
-  fields: {
-    targetLocale: value('es-ES'),
-    source: value('starter'),
-    addedAt: value(1000),
-    phraseId: value(null),
-    ownEs: value('Un café'),
-    ...fields,
-  },
-})
+const envelope = syncEnvelope
+const upsert = phraseUpsert
 const setup = () => {
   const repository = new InMemorySyncRepository()
   return { repository, sync: new SyncService(repository, frozen) }

@@ -1,5 +1,5 @@
 import { expect, onboard, openFirstPhrase, test } from './fixtures'
-import { startWave } from './states'
+import { startWave } from './helpers'
 import { openStorageFailure } from './persistenceFlow'
 
 test('F-02/LB-01: duplicate completion and reload preserve one rep and its next checkpoint', async ({

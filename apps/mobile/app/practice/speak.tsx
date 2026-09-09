@@ -1,50 +1,81 @@
 /** P3-20/P3-25 · Loro.dc.html:680–732. Native-only ASR; reveal remains completable offline. */
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { ScrollView, View } from 'react-native'
-import { router } from 'expo-router'
-import { isActive, SpeakEngine, type SessionHandle, type TargetLocale } from '@loro/core'
+import { isActive, type PhraseState, type SessionHandle, type TargetLocale } from '@loro/core'
 import { copy } from '../../src/lib/copy'
+import { PracticeEmptyState } from './_emptyPractice'
 import { useLocale } from '../../src/lib/i18n'
 import { coreAvailable } from '../../src/lib/core'
 import { audioSpeech, useAudioSpeech } from '../../src/lib/audioSpeech'
 import { deviceClock } from '../../src/lib/clock'
 import { newId } from '../../src/lib/ids'
-import { engineContext, toView, useApp, type PhraseView } from '../../src/store'
-import { EmptyState } from '../../src/ui/components'
+import { engineContext, speakEngine, toView, useApp, type PhraseView } from '../../src/store'
 import { AudioControls } from '../../src/ui/components/AudioControls'
 import { Button, Card, Row, Screen, Stack, Text } from '../../src/ui/primitives'
 import { ink, space } from '../../src/ui/theme'
 
-const speakEngine = new SpeakEngine()
+function useSpeakSession(): {
+  locale: TargetLocale
+  session: SessionHandle | null
+  phrase: PhraseState | undefined
+  advance: () => void
+} {
+  const phrases = useApp((state) => state.phrases)
+  const locale = useApp((state) => state.targetLocale)
+  const activeKey = phrases
+    .filter(isActive)
+    .map((phrase) => phrase.id)
+    .join('\0')
+  const [session, setSession] = useState<SessionHandle | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    void speakEngine.plan(engineContext()).then((plan) => {
+      if (cancelled) return
+      setSession({ sessionId: newId(), plan, cursor: 0 })
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [locale, activeKey])
+
+  const items = session?.plan.items ?? []
+  const item =
+    session === null || items.length === 0 ? undefined : items[session.cursor % items.length]
+  const phrase =
+    item === undefined ? undefined : phrases.find((candidate) => candidate.id === item.phraseId)
+
+  return {
+    locale,
+    session,
+    phrase,
+    advance: () => {
+      setSession((current) =>
+        current === null ? current : { ...current, cursor: current.cursor + 1 },
+      )
+    },
+  }
+}
 
 export default function Speak() {
   useLocale()
-  const phrases = useApp((state) => state.phrases)
-  const locale = useApp((state) => state.targetLocale)
-  const [cursor, setCursor] = useState(0)
-  const queue = phrases.filter(isActive)
-  const phrase = queue[cursor % Math.max(1, queue.length)]
+  const { locale, session, phrase, advance } = useSpeakSession()
+  const empty = useApp((state) => state.phrases.filter(isActive).length === 0)
   return (
     <Screen>
-      {phrase === undefined ? (
-        <EmptyState
+      {empty ? (
+        <PracticeEmptyState
           title={copy.stream.empty.title}
           body={copy.stream.empty.body}
-          action={{
-            label: copy.stream.empty.action,
-            onPress: () => {
-              router.push('/add')
-            },
-          }}
+          actionLabel={copy.stream.empty.action}
         />
-      ) : (
+      ) : phrase === undefined || session === null ? null : (
         <SpeakingPhrase
-          key={`${locale}:${phrase.id}:${cursor}`}
+          key={`${locale}:${phrase.id}:${session.cursor}`}
           phrase={toView(phrase)}
           locale={locale}
-          onNext={() => {
-            setCursor((value) => value + 1)
-          }}
+          session={session}
+          onNext={advance}
         />
       )}
     </Screen>
@@ -54,10 +85,12 @@ export default function Speak() {
 function SpeakingPhrase({
   phrase,
   locale,
+  session,
   onNext,
 }: {
   phrase: PhraseView
   locale: TargetLocale
+  session: SessionHandle
   onNext: () => void
 }) {
   useLocale()
@@ -114,35 +147,20 @@ function SpeakingPhrase({
       revealedRef.current = Math.max(revealedRef.current, matched.revealed)
       setRevealed(revealedRef.current)
       if (!matched.complete) return
+      const item =
+        session.plan.items.length === 0
+          ? undefined
+          : session.plan.items[session.cursor % session.plan.items.length]
+      if (item?.phraseId !== phrase.id) return
       completeRef.current = true
       const localDay = deviceClock.localDay()
       const streakDay = deviceClock.streakDay()
       void audioSpeech.stopListening()
-      const session: SessionHandle = {
-        sessionId: event.id,
-        cursor: 0,
-        plan: {
-          engineId: 'speak',
-          closed: true,
-          estimatedMs: 0,
-          items: [
-            {
-              itemId: `${phrase.id}#speak`,
-              phraseId: phrase.id,
-              mode: 'speak',
-              prompt: { show: 'meaning' },
-              gate: { kind: 'asr-full' },
-              audio: null,
-              meta: {},
-            },
-          ],
-        },
-      }
       void speakEngine
         .record(
           session,
           {
-            itemId: `${phrase.id}#speak`,
+            itemId: item.itemId,
             outcome: 'success',
             hintsUsed: hintsRef.current,
             latencyMs: event.latencyMs,
@@ -168,7 +186,7 @@ function SpeakingPhrase({
     } catch {
       setRecognitionFailed(true)
     }
-  }, [audio.speech, applyDelta, phrase.id, tokens, locale, attemptId])
+  }, [audio.speech, applyDelta, phrase.id, tokens, locale, attemptId, session])
 
   const revealWord = (): void => {
     if (completeRef.current) return
