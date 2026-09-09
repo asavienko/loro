@@ -24,9 +24,16 @@ historical findings must not be requeued as current defects. Whole-plan acceptan
 
 ## Current scope
 
-- Eight of 23 authored learner screens, Languages/Account, the shared shell and the dev workbench
-  are built. Fifteen learner screens remain. Main's pull gestures and Android text-scale/readiness
-  fixes are retained.
+**Current review at `828d296`: changes requested.** The
+[33-plan review](../docs/reviews/2026-09-09-thirty-three-plan-implementation.md) records a Refrain
+checkpoint regression, exit/resume inconsistencies, import recovery/read gaps, stale native bindings
+and failing lint/pseudo-locale/navigation gates. Its per-plan matrix and repair order supersede
+older implementation-wave acceptance claims. Historical validation remains valid only for its
+recorded revision and scope.
+
+- Eight of 23 authored learner screens, Languages/Account/More/Settings, the shared shell and the
+  dev workbench are built. Fifteen learner screens remain. Main's pull gestures and Android
+  text-scale/readiness fixes are retained.
 - UI/native languages are en/bg/ru; targets are es-ES/bg-BG/ru-RU excluding matching pairs: seven
   pairs and three 31-phrase starter catalogs. Durable course progress/resume is separate; the streak
   is global. Bilingual review remains outstanding.
@@ -75,8 +82,8 @@ dependency-aware sequence of deliverables, not a requirement to complete whole p
 - `check:routes`, built-hub navigation metadata and More's static groups already exist. The missing
   work is exhaustive authored surface policy, consumer integration, counts/search and exits/resume.
 - Paste import already revalidates field/batch limits at edit/save and retains rejected/write-failed
-  rows through in-session storage recovery. Bounded UTF-8 `.txt`/`.tsv` input and course-bound
-  draft relaunch/retry are implemented; OCR remains.
+  rows through in-session storage recovery. Bounded UTF-8 `.txt`/`.tsv` input and course-bound draft
+  relaunch/retry are implemented; OCR remains.
 - The local fast gate runs native collector fixtures; full local CI runs a separate pseudo-locale
   suite. Full state/native evidence remains open. Review-record validation recomputes actual
   material digests and checks declared reviewer languages; real approvals and release-path wiring
@@ -130,16 +137,16 @@ feature↔release-completion cycle. See each plan's checkboxes for executable ta
 | [68](68-sync-and-offline-convergence.md)                | Background, rescue and device/load convergence proof                        | M2          | 🟡 Durable sync and bounded cursor recovery done; acceptance remains                  | 59/60/66/67 runtime; device/load environment                    |
 | [69](69-trip-domain-and-arc.md)                         | Course-bound trip lifecycle and six-screen arc                              | M2          | ⛔ Q-07 trip/relocation semantics                                                     | 56/59/60/61; Q-07                                               |
 | [70](70-survival-widgets-and-notifications.md)          | Airplane-mode Survival, widgets and notifications                           | M2          | 🟡 Rust policy/candidate planner done; native integration remains                     | 58/61/62/69; 56 deep links                                      |
-| [71](71-settings-telemetry-and-experiments.md)          | General Settings, consent, telemetry and flags                              | M2/M3       | 🟡 Local analytics consent persists safely; UI/telemetry/flags remain                 | 59; 56/81; 67/68 account sync only; 86                          |
+| [71](71-settings-telemetry-and-experiments.md)          | General Settings, consent, telemetry and flags                              | M2/M3       | 🟡 Settings accent/motion/consent UI exists; remaining controls/telemetry/flags open  | 59; 56/81; 67/68 account sync only; 86                          |
 | [72](72-release-quality-gates.md)                       | Native release matrix, pseudo-locale and measured budgets                   | M2          | 🟡 Pseudo-locale/fixture gate done; native/layout proof remains                       | 58/57; feature slices; Q-14 peak; 87 review                     |
 | [73](73-delivery-observability-and-slos.md)             | Production/store delivery, diagnostics and objectives from testing evidence | M2/M4       | 🟡 Scaffolds exist; production/native evidence remains                                | 58/66/72 applicable artifacts; 86 adapters; 88 testing evidence |
 | [74](74-monetization-and-entitlements.md)               | Approved purchases and offline-safe entitlements                            | M2          | ⛔ Q-08 package/pricing; Q-12 billing                                                 | 59/67/73; 86 selected adapter                                   |
-| [75](75-review-and-memory.md)                           | Course-scoped Review and real Memory curves                                 | M3          | 🟡 Candidate boundary/tag priority done; engine/routes/Memory remain                  | 59/60; 56/57/81; 72 shared harness only                         |
+| [75](75-review-and-memory.md)                           | Course-scoped Review and real Memory curves                                 | M3          | 🟡 Pure Review engine exists; lint, daily budget, durable route and Memory remain     | 59/60; 56/57/81; 72 shared harness only                         |
 | [76](76-roleplay-and-live-ai.md)                        | Locale-aware bundled Roleplay and guarded live service                      | M3          | 🟡 Bundled/provider seams exist; runtime/evals remain                                 | 59/62/63/66/67/71; 86 controls                                  |
 | [77](77-dsp-and-speech-labs.md)                         | DSP evidence spike, then calibrated labs                                    | M1 spike/M3 | 🟡 Helpers exist; production ⛔ quality gate                                          | Spike prep now; device/reference slices 58/60–63/72             |
 | [78](78-conditional-run-and-phrasebook.md)              | Conditional Run and ladder Phrasebook                                       | M5          | ⛔ Q-05 plus comparative M3 evidence                                                  | 59/60/71; applicable 72 gates                                   |
 | [80](80-dev-design-system-workbench.md)                 | Finish production-state and multilingual specimens                          | M1/M2       | 🟡 All 33 exports registered; state/long-copy coverage remains                        | 57 state APIs; 81 future chrome; 87 language UI                 |
-| [81](81-navigation-spine-switcher-and-more.md)          | More, ongoing work, exits, resume and travelling audio                      | M1/M2       | 🟡 Shared menu/grouped More done; exits/resume/search and Q-17 remain                 | 56/57; 59/64 checkpoints; 62 audio                              |
+| [81](81-navigation-spine-switcher-and-more.md)          | More, ongoing work, exits, resume and travelling audio                      | M1/M2       | 🟡 Exit/resume code added but regressed; repair R1–R3 before search/transport         | 56/57; 59/64 checkpoints; 62 audio                              |
 | [82](82-guided-chat-domain-and-service.md)              | Offline chat domain/graphs and guarded service                              | M3          | 🟡 Drafts exist; offline work can start; scoped Q gates                               | 79/85 ✅; 59/61; live 66/67/86; Q-19 retention                  |
 | [83](83-open-chat-and-message-inspector.md)             | Open chat and Message inspector                                             | M3          | — Text first; Q-16 release enablement                                                 | 56/57/59/81/82; voice 62/63; Review handoff 75                  |
 | [86](86-provider-integrations.md)                       | Shared provider controls and approved vendor adapters                       | M2/M3       | 🟡 Anthropic process-local admission done; other controls/adapters remain             | 85 ✅; 66; owning feature/decision slices; 88 testing resources |
@@ -147,7 +154,7 @@ feature↔release-completion cycle. See each plan's checkboxes for executable ta
 | [88](88-low-cost-backend-infrastructure.md)             | Shared EC2/Postgres/S3 testing and recovery                                 | M2 testing  | 🟡 Restricted host/backup collector done; recovery acceptance remains                 | 66/67 deployed runtime; 59/68 devices; 61/86 content            |
 | [90](90-default-english-content-language.md)            | English default learning content and course selection                       | M1/M2       | 🟡 Shared registry integration done; dialect/review/device gates remain               | 87/85; 59 persistence; 61/62 audio                              |
 | [93](93-mobile-shell-gestures.md)                       | Pull-down switcher and sheet dismissal                                      | M1/M2       | 🟡 Implemented; physical-device touch verification remains                            | Shared shell; device evidence                                   |
-| [94](94-persistent-practice-and-account-integration.md) | Integrated persistence, canonical core, speech and account sync             | M1/M2       | 🟡 Runtime and aggregate CI passed; hardware and service acceptance remain            | 54/85 ✅; coordinated 58–60/62–63/66–68 slices                  |
+| [94](94-persistent-practice-and-account-integration.md) | Integrated persistence, canonical core, speech and account sync             | M1/M2       | 🟡 Historical aggregate CI passed; current wave has regressions and failing gates     | 54/85 ✅; coordinated 58–60/62–63/66–68 slices                  |
 
 Plan 88 owns the selected AWS testing profile and
 [operations runbook](../docs/runbooks/backend-testing.md); plan 73 retains production operations.

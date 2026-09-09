@@ -15,6 +15,12 @@
 
 ## Verified starting point
 
+**Review of the later `828d296` implementation:** Refrain exit/resume and ongoing presentation now
+exist, but the new wave field fails the shared checkpoint codec and exit/ongoing policies disagree.
+Repair [R1–R3 in the 33-plan review](../docs/reviews/2026-09-09-thirty-three-plan-implementation.md)
+before treating this slice as accepted. The following inventory describes the earlier `aafa61f`
+starting point; search and travelling audio remain unbuilt.
+
 `apps/mobile/app/_layout.tsx` mounts shared chrome over Today, Add, Progress, Stream, Refrain,
 phrase detail and Languages. `apps/mobile/src/lib/navigation.ts` supplies translated built hubs and
 Today's rail. `NavigationMenu.tsx` and `apps/mobile/e2e/navigation.spec.ts` cover menu navigation,
