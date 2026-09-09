@@ -1,7 +1,7 @@
 const assert = require('node:assert/strict')
 const { test } = require('node:test')
 
-const { applyDebugIdentity } = require('./with-dev-client-identity.cjs')
+const { applyDebugIdentity, replaceLoroSchemes } = require('./with-dev-client-identity.cjs')
 
 const buildGradle = `android {
     buildTypes {
@@ -28,4 +28,41 @@ test('fails if Expo changes the generated debug build-type shape', () => {
     () => applyDebugIdentity('android { buildTypes { release { } } }'),
     /Unable to find Android debug build type/,
   )
+})
+
+test('replaces only Loro-owned Android schemes when prebuild reuses a native project', () => {
+  const manifest = {
+    manifest: {
+      application: [
+        {
+          activity: [
+            {
+              $: { 'android:launchMode': 'singleTask' },
+              'intent-filter': [
+                {
+                  action: [{ $: { 'android:name': 'android.intent.action.VIEW' } }],
+                  category: [
+                    { $: { 'android:name': 'android.intent.category.DEFAULT' } },
+                    { $: { 'android:name': 'android.intent.category.BROWSABLE' } },
+                  ],
+                  data: [
+                    { $: { 'android:scheme': 'loro' } },
+                    { $: { 'android:scheme': 'loro-dev' } },
+                    { $: { 'android:scheme': 'unrelated' } },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  }
+
+  const result = replaceLoroSchemes(manifest, 'loro-dev')
+  const data = result.manifest.application[0].activity[0]['intent-filter'][0].data
+    .filter(Boolean)
+    .map((entry) => entry.$['android:scheme'])
+
+  assert.deepEqual(data.sort(), ['loro-dev', 'unrelated'])
 })

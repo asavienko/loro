@@ -15,7 +15,8 @@ import type { ExpoConfig } from 'expo/config'
 
 const VERSION = '0.1.0'
 const localApk = process.env['LORO_LOCAL_APK'] === '1'
-const androidDevelopmentClient = process.env['LORO_ANDROID_DEV_CLIENT'] === '1'
+const androidDevelopmentClient = !localApk && process.env['LORO_ANDROID_DEV_CLIENT'] === '1'
+const nativeRedirectUri = androidDevelopmentClient ? 'loro-dev://account' : 'loro://account'
 const splashPlugins: NonNullable<ExpoConfig['plugins']> = localApk
   ? [
       [
@@ -120,6 +121,7 @@ export default (): ExpoConfig => ({
   },
 
   extra: {
+    nativeRedirectUri,
     eas: localApk ? undefined : { projectId: 'PLACEHOLDER' },
   },
 })

@@ -47,7 +47,7 @@
     "ci:local:native": "bash scripts/ci-local.sh native",
     "ci:local:audit": "bash scripts/ci-local.sh audit",
     "native:evidence": "node scripts/native-device-evidence.mjs",
-    "test:android-config": "node --test apps/mobile/plugins/with-dev-client-identity.test.cjs",
+    "test:android-config": "node --test apps/mobile/plugins/app-config.test.cjs apps/mobile/plugins/with-dev-client-identity.test.cjs scripts/apk-environment.test.mjs",
     "apk:local": "node scripts/apk-local.mjs",
     "apk:github": "node scripts/apk-local.mjs --upload",
     "test:deploy": "node --test scripts/ec2-release.test.mjs scripts/ec2-gateway.test.mjs",

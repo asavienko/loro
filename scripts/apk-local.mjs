@@ -12,6 +12,7 @@ import {
 import { tmpdir, homedir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { apkBuildEnvironment } from './apk-environment.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const args = process.argv.slice(2)
@@ -29,16 +30,7 @@ if (args.some((arg) => !['--upload', '--publish'].includes(arg)) || (publish && 
 if (process.env.GITHUB_ACTIONS)
   throw new Error('Run APK builds locally. GitHub Actions is disabled.')
 if (process.versions.node.split('.')[0] !== '22') throw new Error('Use Node 22: nvm use 22')
-const env = {
-  ...process.env,
-  CI: '1',
-  EXPO_NO_TELEMETRY: '1',
-  EXPO_NO_DOTENV: '1',
-  LORO_LOCAL_APK: '1',
-  CMAKE_BUILD_PARALLEL_LEVEL: process.env.CMAKE_BUILD_PARALLEL_LEVEL || '2',
-  CARGO_BUILD_JOBS: process.env.CARGO_BUILD_JOBS || '2',
-  PATH: `${join(homedir(), '.cargo', 'bin')}:${process.env.PATH || ''}`,
-}
+const env = apkBuildEnvironment(process.env, join(homedir(), '.cargo', 'bin'))
 const api = process.env.EXPO_PUBLIC_API_URL || ''
 if (api) {
   const url = new URL(api)

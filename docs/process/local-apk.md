@@ -47,7 +47,9 @@ Account shows the actual server connection and keeps sign-in availability separa
 The URL is public configuration embedded in the APK. It must not contain credentials, query strings
 or fragments. The snapshot excludes ignored local environment files; Expo dotenv loading is
 disabled. Other inherited `EXPO_PUBLIC_*` values are cleared. No API keys or backend secrets belong
-in this build. The backend must register the existing `loro://account` redirect for sign-in.
+in this build. The backend must register `loro://account` for Preview sign-in. The Metro-dependent
+Android development client uses `loro-dev://account`; add that exact redirect to its development
+backend only when testing sign-in from that client.
 
 ## Upload to GitHub
 
