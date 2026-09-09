@@ -19,6 +19,8 @@ function pendingReview() {
   }
 }
 
+export type ReviewPacket = ReturnType<typeof buildReviewPacket>
+
 export function buildReviewPacket() {
   const ui = NATIVE_LANGUAGES.map((locale) => {
     const resources: unknown = JSON.parse(
