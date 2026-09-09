@@ -403,10 +403,13 @@ reached every engine at once through `engineContext()`, and was invisible in a C
 UTC.
 
 The arithmetic itself is `core-rs/src/calendar.rs` (`streak_day_for`, `streak_survives`, `streak`).
-Until the UniFFI bridge lands, `packages/core/src/domain/calendar.ts` mirrors it, and
-`calendar.fixtures.json` is asserted by both languages so a divergence fails the build. Wall-clock
-ms — epoch ms shifted by the device's UTC offset — is the boundary convention: the crate has no
-timezone database, so the shift happens in `clock.ts` and never in Rust.
+UniFFI already exports those functions. Production JS still uses the TypeScript mirror in
+`packages/core/src/domain/calendar.ts` via `streakDayFor` in `apps/mobile/src/lib/clock.ts`; the
+JSON WASM `bridge.rs` does not dispatch calendar methods. `calendar.fixtures.json` is asserted by
+both languages so a divergence fails the build. Keep the TS module until plan 70 widgets call
+UniFFI directly. Wall-clock ms — epoch ms shifted by the device's UTC offset — is the boundary
+convention: the crate has no timezone database, so the shift happens in `clock.ts` and never in
+Rust.
 
 - **Timezone travel** never breaks a streak. If the local date moves backward (flying west), the day
   is not re-counted; if it jumps forward, no day is marked missed.

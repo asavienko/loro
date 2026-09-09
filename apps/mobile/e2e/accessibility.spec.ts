@@ -29,7 +29,8 @@
 import AxeBuilder from '@axe-core/playwright'
 import type { Page } from '@playwright/test'
 import { expect, onboard, test } from './fixtures'
-import { enter, openFirstPhrase, startWave, STATES, todayMarker } from './states'
+import { enter, openFirstPhrase, startWave, todayMarker } from './helpers'
+import { STATES } from './states'
 
 const WCAG = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']
 

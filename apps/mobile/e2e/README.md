@@ -78,7 +78,8 @@ as exactly that.
 | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
 | `fixtures.ts`                     | `onboard()`, plus the gate that fails any test emitting a browser console error or uncaught page error                                      |
 | `clock.ts`                        | Instants written in the learner's wall clock; the zone is read back from the browser, and the helper asserts the page agrees                |
-| `states.ts`                       | The manifest, `enter()`, and the navigation and assertion helpers                                                                           |
+| `states.ts`                       | The manifest: one STATES row still buys a11y, text-scale and coverage                                                                       |
+| `helpers/`                        | `enter()`, `doOneRep` / `lockIn`, and the shared navigation and assertion helpers. Account mocks stay in `accountFlow.ts`                   |
 | `config.shared.mjs`               | Browser, timezone, artifact, and runtime-budget defaults shared by learner, production, and workbench suites                                |
 | `playwright.config.workbench.mjs` | Starts the development server for the isolated `/dev/tokens` contract; its specs live under `workbench/`                                    |
 | `serveExport.ts`                  | Serves the production export. Extensionless paths fall back to `index.html`; anything with an extension 404s, so a missing asset is visible |

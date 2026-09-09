@@ -11,9 +11,10 @@ losing their phrase library.
 
 The `api/` Zod schemas now describe current, planned and gated-draft wire surfaces, with inferred
 types and generated OpenAPI. Import them explicitly through `@loro/core/api/current`, `/target`, or
-`/draft`; they are not exported from the domain root. Existing Nest controllers are not yet wired to
-target validation. See [the contract guide](../../docs/architecture/api-contracts.md). Persistence
-remains raw SQL against `SqlDriver`; no Drizzle schema exists.
+`/draft`; they are not exported from the domain root. Auth, sync and content-query Nest controllers
+consume the shared schemas; remaining migration limits are in
+[the contract guide](../../docs/architecture/api-contracts.md). Persistence remains raw SQL against
+`SqlDriver`; no Drizzle schema exists.
 [ADR-0003’s amendment](../../docs/architecture/adr/0003-offline-first-sqlite-sync.md#amendment--2026-07-30--handwritten-sql-on-the-client-no-orm)
 records the client choice and its costs; Drizzle remains the server’s choice.
 
@@ -24,16 +25,19 @@ src/
 ├── api-tooling/          # build-time OpenAPI generation; no runtime exports
 ├── domain/               # the vocabulary of the product
 │   ├── phrase.ts         # PhraseState, CatalogPhrase, Difficulty, Tag, LadderRung
-│   ├── calendar.ts       # day keys and streaks — mirrors core-rs until UniFFI lands
+│   ├── calendar.ts       # day keys and streaks — TS mirror; UniFFI exports exist, JS still uses this
 │   └── ids.ts            # branded id types + UUIDv7 generation (injected entropy)
 ├── engines/              # the PracticeEngine contract and its implementations
 │   ├── types.ts          # the contract, and where ProgressDelta declares rule 5
-│   ├── common.ts         # ← what every engine shares, incl. `universalDelta` (rule 5)
+│   ├── common.ts         # ← `universalDelta` + `canonicalReviewDelta` (rule 5 / FSRS)
 │   ├── conformance.ts    # every engine must pass this
 │   ├── stream/           # hands-free listening
-│   └── refrain/          # the Daily Refrain — the v1 hero
+│   ├── refrain/          # the Daily Refrain — the v1 hero
+│   ├── speak.ts          # on-device production
+│   └── review.ts         # explicit-grade review boundary
 ├── sync/
-│   └── fieldPolicy.ts    # ← EVERY syncable field declares its merge class here
+│   ├── fieldPolicy.ts    # ← EVERY syncable field declares its merge class here
+│   └── syncableColumns.ts # SQL ↔ wire names consumed by mobile persist/sync
 ├── persistence/          # schema, migrations, repositories, outbox — driver-agnostic
 │   ├── driver.ts         # the SqlDriver contract + row/query helpers
 │   ├── tables.ts         # what the app needs from storage, as interfaces
@@ -48,20 +52,15 @@ is where `node:sqlite` lives; the tests in here are the parts that need no datab
 
 ## Current implementation boundary
 
-This package currently contains two engines: `StreamEngine` and `RefrainEngine`. The other five
-values in `EngineId` are contract reservations, not implementations, and there is no engine registry
-in this package yet. Mobile constructs the two implemented engines in its store layer.
+This package currently implements Stream, Refrain, Speak and Review. The other `EngineId` values
+are contract reservations. Mobile constructs the implemented engines in its store layer and talks
+to Rust through the generated WASM/UniFFI facade (`rustCoreFacade`). TypeScript Refrain helpers
+remain for fixtures only; production numbers come from the crate. Do not add a second FSRS or
+ranker in TypeScript ([ADR-0002](../../docs/architecture/adr/0002-shared-rust-core.md)).
 
-The Refrain implementation is intentionally an interim seam. Its TypeScript currently owns mode
-rotation, automaticity, daily-set selection, and a placeholder FSRS write because the corresponding
-Rust `cloze_mask`, `select_refrain_set`, and `fsrs::review` functions are not implemented or wired.
-The mobile facade also supplies fallbacks for Rust-owned maths. Do not copy those fallbacks into a
-new engine: [plan 60](../../plans/archive/2026-09-09/60-authoritative-core-maths.md) replaces them
-with generated UniFFI/WASM-backed adapters and parity tests.
-
-Persistence contracts and repositories exist here, but the running app still uses its in-memory
-store. `openMemoryPersistence()` is a real web-capable implementation of these contracts; it is not
-evidence that mobile SQLite is wired.
+Persistence contracts and repositories live here. The running app writes native OP-SQLite or
+browser SQLite through `apps/mobile/src/data/` before rendering. `openMemoryPersistence()` is the
+web-capable implementation of these contracts, not a stand-in for device storage.
 
 ## The two things that matter most here
 

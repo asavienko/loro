@@ -33,6 +33,11 @@ export interface AppActions {
   setVisualPreferences: (accent: AccentName, motion: DevicePreferences['motion']) => void
   setLanguages: (nativeLanguage: NativeLanguage, targetLocale: TargetLocale) => void
   /**
+   * First-run UI language guess from the device locale. Must not mark the pair
+   * chosen — that is `setLanguages` after the learner confirms.
+   */
+  previewNativeLanguage: (nativeLanguage: NativeLanguage) => void
+  /**
    * Commit the first-run answers and seed the stream.
    *
    * Every field the four questions collect is REQUIRED, including `level`, which nothing reads

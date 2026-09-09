@@ -2,8 +2,8 @@
 import { generateKeyPairSync, randomUUID } from 'node:crypto'
 import type { INestApplication } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
-import { Pool } from 'pg'
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
+import type { Pool } from 'pg'
+import { afterAll, beforeAll, expect, it, vi } from 'vitest'
 import {
   PullResponseSchema,
   PushResponseSchema,
@@ -14,12 +14,22 @@ import { AppModule } from '../app.module.js'
 import { ProblemDetailsFilter } from '../common/problem-filter.js'
 import { mergeAvailable } from '../sync/merge.js'
 
-const databaseUrl = process.env['LORO_TEST_DATABASE_URL']
-const rowId = (n: number) => `0197f2a0-0000-7000-8000-${String(n).padStart(12, '0')}`
+import {
+  LORO_TEST_DATABASE_URL,
+  connectAdmin,
+  createSearchPathSchema,
+  describePostgres,
+  dropIsolatedSchema,
+  isolatedSchemaName,
+} from '../testing/postgres-schema.js'
+import { testRowId } from '../sync/testing/fixtures.js'
+
+const databaseUrl = LORO_TEST_DATABASE_URL
+const rowId = testRowId
 const deliveryUrl = 'https://auth-sync-delivery.example.test/send'
 
-describe.skipIf(!databaseUrl)('signed-in cross-device sync with real PostgreSQL and HTTP', () => {
-  const schema = `auth_sync_test_${randomUUID().replaceAll('-', '')}`
+describePostgres('signed-in cross-device sync with real PostgreSQL and HTTP', () => {
+  const schema = isolatedSchemaName('auth_sync_test')
   const deliveries = new Map<string, string>()
   let admin: Pool | undefined
   let app: INestApplication | undefined
@@ -27,13 +37,10 @@ describe.skipIf(!databaseUrl)('signed-in cross-device sync with real PostgreSQL 
   let schemaCreated = false
 
   beforeAll(async () => {
-    admin = new Pool({ connectionString: databaseUrl })
+    admin = connectAdmin(databaseUrl)
     // Only a locally generated hexadecimal identifier enters this SQL string.
-    await admin.query(`CREATE SCHEMA ${schema}`)
+    vi.stubEnv('DATABASE_URL', await createSearchPathSchema(admin, schema, databaseUrl))
     schemaCreated = true
-    const scopedUrl = new URL(databaseUrl!)
-    scopedUrl.searchParams.set('options', `-csearch_path=${schema}`)
-    vi.stubEnv('DATABASE_URL', scopedUrl.toString())
     vi.stubEnv(
       'AUTH_PRIVATE_KEY_PEM',
       generateKeyPairSync('ec', { namedCurve: 'prime256v1' })
@@ -77,7 +84,7 @@ describe.skipIf(!databaseUrl)('signed-in cross-device sync with real PostgreSQL 
 
   afterAll(async () => {
     await app?.close()
-    if (schemaCreated) await admin?.query(`DROP SCHEMA ${schema} CASCADE`)
+    if (schemaCreated && admin) await dropIsolatedSchema(admin, schema)
     await admin?.end()
     vi.unstubAllGlobals()
     vi.unstubAllEnvs()

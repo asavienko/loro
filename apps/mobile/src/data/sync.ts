@@ -1,88 +1,20 @@
-import {
-  mergeClassOf,
-  PHRASE_WIRE_TO_SQL,
-  SETTINGS_WIRE_TO_SQL,
-  type OutboxOp,
-  type Persistence,
-  type SqlDriver,
-  type SqlRow,
-  type SqlValue,
-  type MergeClass,
-} from '@loro/core'
-import { mergeRow } from '../lib/core'
+import { type OutboxOp, type Persistence, type SqlDriver, type SqlRow } from '@loro/core'
 import { decodeField, outboxToWire } from '../lib/sync/codec'
 import { SyncError, type SyncLocalStore } from '../lib/sync/types'
-
-interface Hlc {
-  physical: number
-  logical: number
-  node_id: string
-}
-interface Field {
-  v: unknown
-  hlc: Hlc
-}
-interface Row {
-  entity: string
-  id: string
-  fields: Record<string, Field>
-  deleted_at: number | null
-}
-function firstRow(driver: SqlDriver, sql: string, params: readonly SqlValue[] = []): SqlRow | null {
-  return driver.all(sql, params)[0] ?? null
-}
-function readText(row: SqlRow, field: string): string {
-  const value = row[field]
-  if (typeof value !== 'string') throw new SyncError('INVALID_LOCAL_ROW')
-  return value
-}
-const RUST_CLASSES: Record<
-  MergeClass,
-  'Lww' | 'Max' | 'LatestReview' | 'AppendOnly' | 'Tombstone'
-> = {
-  lww: 'Lww',
-  max: 'Max',
-  'latest-review': 'LatestReview',
-  'append-only': 'AppendOnly',
-  tombstone: 'Tombstone',
-}
-const PHRASE_COLUMNS = PHRASE_WIRE_TO_SQL
-const SETTINGS_COLUMNS = SETTINGS_WIRE_TO_SQL
-const BOOL_FIELDS = new Set([
-  'loved',
-  'learned',
-  'engineExplicit',
-  'analyticsOptOut',
-  'practised',
-  'notifications',
-])
-const REVIEW_RATINGS: Readonly<Record<string, number>> = { again: 1, hard: 2, good: 3, easy: 4 }
-function parseHlc(value: string): Hlc {
-  const parts = value.split(':')
-  if (parts.length !== 3 || !parts[2]) throw new SyncError('INVALID_HLC')
-  return { physical: Number(parts[0]), logical: Number(parts[1]), node_id: parts[2] }
-}
-function encodeHlc(value: Hlc): string {
-  return `${value.physical}:${String(value.logical).padStart(4, '0')}:${value.node_id}`
-}
-function blank(entity: string, id: string): Row {
-  return { entity, id, fields: {}, deleted_at: null }
-}
-function sqlValue(value: unknown): SqlValue {
-  if (value === null || typeof value === 'string' || typeof value === 'number') return value
-  if (typeof value === 'boolean') return value ? 1 : 0
-  return JSON.stringify(value)
-}
-function merge(local: Row, remote: Row): Row {
-  const classes = Object.fromEntries(
-    Object.keys(remote.fields).map((field) => {
-      const policy = mergeClassOf(remote.entity, field)
-      if (!policy) throw new SyncError('UNKNOWN_FIELD')
-      return [field, RUST_CLASSES[policy]]
-    }),
-  )
-  return mergeRow(local, { ...remote, classes }).row
-}
+import { applyRemoteRow, writeColumns } from './sync/apply'
+import {
+  BOOL_FIELDS,
+  PHRASE_COLUMNS,
+  SETTINGS_COLUMNS,
+  blank,
+  encodeHlc,
+  firstRow,
+  merge,
+  parseHlc,
+  readText,
+  type Field,
+  type Row,
+} from './sync/row'
 
 /** All local apply, acknowledgement and cursor transitions are SQLite transactions. */
 export function createSqlSyncStore(options: {
@@ -243,169 +175,9 @@ export function createSqlSyncStore(options: {
       userId,
     ])
   }
-  function writeColumns(
-    table: string,
-    keys: Readonly<Record<string, SqlValue>>,
-    values: Readonly<Record<string, SqlValue>>,
-  ): void {
-    const entries = Object.entries({ ...keys, ...values })
-    driver.run(
-      `INSERT INTO ${table}(${entries.map(([name]) => name).join(',')}) VALUES(${entries.map(() => '?').join(',')}) ON CONFLICT(${Object.keys(keys).join(',')}) DO UPDATE SET ${Object.keys(
-        values,
-      )
-        .map((name) => `${name}=excluded.${name}`)
-        .join(',')}`,
-      entries.map(([, value]) => value),
-    )
-  }
-  function applyReview(row: Row, values: Readonly<Record<string, unknown>>): void {
-    const target = values['targetLocale']
-    const grade = values['grade']
-    const rating = typeof grade === 'string' ? REVIEW_RATINGS[grade] : undefined
-    // Older journal rows do not include the full scheduler snapshot. Keep them in
-    // sync_rows until a complete record exists; never manufacture state or lapses.
-    if (
-      (target !== 'es-ES' && target !== 'bg-BG' && target !== 'ru-RU') ||
-      typeof rating !== 'number' ||
-      typeof values['algorithm'] !== 'string' ||
-      typeof values['state'] !== 'string' ||
-      typeof values['phraseId'] !== 'string' ||
-      typeof values['at'] !== 'number' ||
-      typeof values['stability'] !== 'number' ||
-      typeof values['difficulty'] !== 'number' ||
-      typeof values['due'] !== 'number' ||
-      typeof values['lapses'] !== 'number' ||
-      (values['lastReview'] !== null && typeof values['lastReview'] !== 'number')
-    )
-      return
-    const prefix = `review-id:${target}:`
-    const mapping = driver
-      .all("SELECT k FROM kv WHERE v=? AND k LIKE 'review-id:%'", [row.id])
-      .find((entry) => readText(entry, 'k').startsWith(prefix))
-    // A local review's wire UUID is deliberately distinct from the practice attempt
-    // id. Reuse its durable mapping so a server echo cannot count the review twice.
-    const attemptId = mapping ? readText(mapping, 'k').slice(prefix.length) : `remote:${row.id}`
-    if (row.deleted_at !== null) {
-      driver.run('DELETE FROM review_event WHERE user_id=? AND target_locale=? AND attempt_id=?', [
-        userId,
-        target,
-        attemptId,
-      ])
-      return
-    }
-    driver.run(
-      `INSERT INTO review_event(user_id,target_locale,attempt_id,phrase_id,reviewed_at,rating,algorithm,stability,difficulty,due,last_review,lapses,state)
-       VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(user_id,target_locale,attempt_id) DO NOTHING`,
-      [
-        userId,
-        target,
-        attemptId,
-        sqlValue(values['phraseId']),
-        sqlValue(values['at']),
-        rating,
-        sqlValue(values['algorithm']),
-        sqlValue(values['stability']),
-        sqlValue(values['difficulty']),
-        sqlValue(values['due']),
-        sqlValue(values['lastReview']),
-        sqlValue(values['lapses']),
-        sqlValue(values['state']),
-      ],
-    )
-  }
   function apply(row: Row, serverHlc: string): void {
     saveShadow(row)
-    const values = Object.fromEntries(
-      Object.entries(row.fields).map(([key, field]) => [key, field.v]),
-    )
-    const fieldHlc = JSON.stringify(
-      Object.fromEntries(
-        Object.entries(row.fields).map(([key, field]) => [key, encodeHlc(field.hlc)]),
-      ),
-    )
-    if (row.entity === 'user_phrase') {
-      if (row.deleted_at !== null) {
-        const pending = pendingDeletes()
-        if (pending[row.id]) {
-          Reflect.deleteProperty(pending, row.id)
-          writeKv('pending_phrase_deletes', pending)
-        }
-        driver.run(
-          'UPDATE user_phrase SET deleted_at=?,field_hlc=?,updated_hlc=? WHERE user_id=? AND id=?',
-          [row.deleted_at, fieldHlc, serverHlc, userId, row.id],
-        )
-        return
-      }
-      if (
-        (!values['phraseId'] && !values['ownEs']) ||
-        typeof values['source'] !== 'string' ||
-        typeof values['addedAt'] !== 'number'
-      )
-        throw new SyncError('INCOMPLETE_PHRASE')
-      const columns: Record<string, SqlValue> = {
-        user_id: userId,
-        field_hlc: fieldHlc,
-        updated_hlc: serverHlc,
-      }
-      for (const [key, field] of Object.entries(row.fields)) {
-        const column = PHRASE_COLUMNS[key]
-        if (column) columns[column] = sqlValue(field.v)
-      }
-      // The Rust tombstone, never a LWW scalar, owns deletion.
-      columns['deleted_at'] = pendingDeletes()[row.id]?.at ?? row.deleted_at
-      writeColumns('user_phrase', { id: row.id }, columns)
-      const target = typeof values['targetLocale'] === 'string' ? values['targetLocale'] : 'es-ES'
-      writeColumns('course_session', { user_id: userId, target_locale: target }, { onboarded: 1 })
-    } else if (row.entity === 'review_log') {
-      applyReview(row, values)
-    } else if (row.entity === 'settings') {
-      if (row.deleted_at !== null) return
-      const columns: Record<string, SqlValue> = { field_hlc: fieldHlc, updated_hlc: serverHlc }
-      for (const [key, field] of Object.entries(row.fields)) {
-        const column = SETTINGS_COLUMNS[key]
-        if (column) columns[column] = sqlValue(field.v)
-      }
-      writeColumns('settings', { user_id: userId }, columns)
-    } else if (row.entity === 'streak_day') {
-      if (row.deleted_at !== null) {
-        driver.run('DELETE FROM streak_day WHERE user_id=? AND local_day=?', [userId, row.id])
-        return
-      }
-      writeColumns(
-        'streak_day',
-        { user_id: userId, local_day: row.id },
-        {
-          practised: values['practised'] === false ? 0 : 1,
-          minutes: typeof values['minutes'] === 'number' ? values['minutes'] : 0,
-        },
-      )
-    } else if (row.entity === 'refrain_day') {
-      const day = row.id.slice(-10)
-      const idTarget = row.id.includes(':') ? row.id.split(':')[0] : 'es-ES'
-      const target = typeof values['targetLocale'] === 'string' ? values['targetLocale'] : idTarget
-      if (target !== 'es-ES' && target !== 'bg-BG' && target !== 'ru-RU')
-        throw new SyncError('INVALID_COURSE')
-      if (row.deleted_at !== null) {
-        driver.run('DELETE FROM refrain_day WHERE user_id=? AND target_locale=? AND local_day=?', [
-          userId,
-          target,
-          day,
-        ])
-        return
-      }
-      const waves = Array.isArray(values['waves'])
-        ? values['waves'].map((wave: unknown) =>
-            typeof wave === 'object' && wave && 'wave' in wave ? wave.wave : wave,
-          )
-        : []
-      writeColumns(
-        'refrain_day',
-        { user_id: userId, target_locale: target, local_day: day },
-        { set_ids: JSON.stringify(values['setIds'] ?? []), waves: JSON.stringify(waves) },
-      )
-    }
-    // Reviewed append-only wire entities have no learner UI yet. Their validated rows
-    // remain durable in sync_rows so an older screen set never stalls account convergence.
+    applyRemoteRow(driver, userId, row, serverHlc, pendingDeletes(), writeKv)
   }
   function quarantine(op: OutboxOp, code: string): void {
     driver.run(
@@ -635,6 +407,7 @@ export function createSqlSyncStore(options: {
             change.catalog_identity
           ) {
             writeColumns(
+              driver,
               'sync_catalog_tombstones',
               { id: change.entity_id },
               {

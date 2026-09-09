@@ -1,6 +1,6 @@
 /** Test adapter only. The application composition root always chooses Postgres. */
 import { randomBytes } from 'node:crypto'
-import type { StoredRow } from './merge.js'
+import type { StoredRow } from '../merge.js'
 import type {
   Alias,
   Cursor,
@@ -8,7 +8,7 @@ import type {
   Replacement,
   SyncRepository,
   SyncTransaction,
-} from './sync.repository.js'
+} from '../sync.repository.js'
 
 interface MemoryState {
   revision: number

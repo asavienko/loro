@@ -13,7 +13,7 @@ weeks with the API unreachable ([overview.md](overview.md#the-ten-rules), rule 2
 > merge, and validated bundled AI scenes. Account and sync rows live in PostgreSQL. Redis, MinIO,
 > queues, a warehouse, and external AI/TTS services remain unused, and billing, analytics, TTS and
 > workers remain unimplemented. `InMemorySyncRepository` is a test adapter only
-> (`sync.repository.memory.ts`). See [plan 89](google-apple-auth.md). The target map and
+> (`sync/testing/sync.repository.memory.ts`). See [plan 89](google-apple-auth.md). The target map and
 > infrastructure below guide extension; they are not an inventory of running code.
 
 ---
