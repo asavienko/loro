@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { LISTENING_ASSET_CLASS, REFERENCE_ASSET_CLASS, listeningClipKey } from '../listening/index.js'
+import fixture from './fixtures/tts-render-listening.json'
 import { TtsRequestSchema, TtsResponseSchema } from './draft.js'
 
 const hash = 'a'.repeat(64)
@@ -72,5 +73,10 @@ describe('POST /tts/render listening-class contract', () => {
     expect(listeningClipKey({ ...shared, assetClass: LISTENING_ASSET_CLASS })).not.toBe(
       listeningClipKey({ ...shared, assetClass: REFERENCE_ASSET_CLASS }),
     )
+  })
+
+  it('matches the recorded listening render fixture', () => {
+    expect(TtsRequestSchema.parse(fixture.request).asset_class).toBe('listening')
+    expect(TtsResponseSchema.parse(fixture.response).download_url).toMatch(/^https:/)
   })
 })
