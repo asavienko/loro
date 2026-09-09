@@ -23,6 +23,7 @@
     "test": "vitest run",
     "lint": "eslint src",
     "review:export": "tsx src/exportReviewPacket.ts",
+    "draft:phrases": "tsx src/draftPhrases.ts",
     "check:release": "tsx src/releaseCheck.ts"
   },
   "dependencies": {
