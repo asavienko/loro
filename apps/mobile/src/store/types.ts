@@ -74,6 +74,11 @@ export interface AppActions {
   ensureRefrainSet: () => void
   /** Record one completed, named wave with the day's durable Refrain state. */
   completeRefrainWave: (wave: 'morning' | 'midday' | 'evening', checkpoint: RefrainResume) => void
+  /**
+   * Deliberately finish an in-progress Refrain session. This clears only its resumable
+   * checkpoint; practice already earned through `applyDelta` remains intact.
+   */
+  endRefrainSession: () => void
   reset: () => void
 }
 

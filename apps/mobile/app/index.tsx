@@ -116,6 +116,7 @@ export default function Today() {
   const phrases = useApp((s) => s.phrases)
   const refrainSet = useApp((s) => s.refrainSet)
   const refrainWaves = useApp((s) => s.refrainWaves)
+  const refrainResume = useApp((s) => s.refrainResume)
   const ensure = useApp((s) => s.ensureRefrainSet)
   const practiceDays = useApp((s) => s.practiceDays)
   // Derived, never stored — the same function the widget will call (ADR-0002).
@@ -167,18 +168,24 @@ export default function Today() {
   )
   const waves = waveSchedule(WAVES, PRODUCTION_WAVE_TIMES, localTimeLabel(), completedWaves)
   const entry = waveEntry(WAVES, PRODUCTION_WAVE_TIMES, localTimeLabel(), completedWaves)
-  const startWave = (wave: WaveKey): void => {
+  const nextWaveKey = waves.find((wave) => wave.position === 'next')?.key ?? WAVES[0]
+  const resumeWave = refrainResume.wave ?? nextWaveKey
+  const resumeRep =
+    refrainResume.session === null
+      ? null
+      : Math.min(refrainResume.cursor + 1, refrainResume.session.plan.items.length)
+  // A checkpoint is resumable only while its wave remains the scheduler's active entry.
+  // A stale row must never reopen an already completed or future wave.
+  const hasResume =
+    entry.kind === 'ready' &&
+    resumeWave === entry.wave.key &&
+    resumeRep !== null &&
+    !refrainResume.done &&
+    resumeRep > 0
+  const canStartWave = set.length > 0 && entry.kind === 'ready'
+  const startWave = (wave = nextWaveKey): void => {
     router.push({ pathname: '/practice/refrain', params: { wave } })
   }
-  const canStartWave = set.length > 0 && entry.kind === 'ready'
-  const ctaLabel =
-    set.length === 0
-      ? copy.today.cta.empty
-      : entry.kind === 'ready'
-        ? copy.today.cta.startWave[entry.wave.key]
-        : entry.kind === 'locked'
-          ? copy.today.cta.waitForWave(entry.next.time)
-          : copy.today.cta.complete
   return (
     <Screen>
       {/*
@@ -202,6 +209,14 @@ export default function Today() {
           },
         ]}
       >
+        {hasResume && (
+          <ResumeRow
+            label={copy.nav.ongoing.refrain(resumeRep)}
+            onPress={() => {
+              router.push({ pathname: '/practice/refrain', params: { wave: resumeWave } })
+            }}
+          />
+        )}
         <DayList
           waves={waves}
           setSize={set.length}
@@ -217,17 +232,42 @@ export default function Today() {
       <ActionBar>
         <Button
           size="cta"
-          label={ctaLabel}
+          label={
+            set.length === 0
+              ? copy.today.cta.empty
+              : hasResume
+                ? copy.today.cta.resumeRefrain
+                : entry.kind === 'ready'
+                  ? copy.today.cta.startWave[entry.wave.key]
+                  : entry.kind === 'locked'
+                    ? copy.today.cta.waitForWave(entry.next.time)
+                    : copy.today.cta.complete
+          }
           disabled={!canStartWave}
           accessibilityHint={
             canStartWave ? copy.a11y.today.startHint(set.length, DEFAULT_REP_TARGET) : undefined
           }
           onPress={() => {
-            if (entry.kind === 'ready') startWave(entry.wave.key)
+            if (entry.kind === 'ready') startWave(hasResume ? resumeWave : entry.wave.key)
           }}
         />
       </ActionBar>
     </Screen>
+  )
+}
+
+/** The sole resume affordance on the resolved home (`Navigation.dc.html:520–571`). */
+function ResumeRow({ label, onPress }: { label: string; onPress: () => void }) {
+  useLocale()
+  return (
+    <Pressable feedback="row" accessibilityLabel={label} onPress={onPress} style={s.resumeRow}>
+      <Text variant="body" color={ink.ink} style={s.grow}>
+        {label}
+      </Text>
+      <Text variant="captionSm" color={accent.accentInk}>
+        {copy.common.chevron.right}
+      </Text>
+    </Pressable>
   )
 }
 /**
@@ -602,6 +642,14 @@ const s = StyleSheet.create({
     minWidth: NAV.railMinWidth,
   },
   railText: { fontSize: NAV_TEXT.rail },
+  resumeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space['2'],
+    paddingVertical: NAV.rowPadY,
+    borderBottomWidth: border.hairline,
+    borderBottomColor: line.subtle,
+  },
   // ── the hairline list every block below the chrome is made of ──
   hairline: { borderBottomWidth: border.hairline, borderBottomColor: line.subtle },
   dayRow: { paddingVertical: NAV.rowPadY },

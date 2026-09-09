@@ -23,6 +23,8 @@ export interface Toast {
 /** Everything the store holds. Actions live in `slices/`; this is only the data. */
 export interface RefrainResume {
   session: SessionHandle | null
+  /** The wave that owns this checkpoint. Older local checkpoints omit it and remain resumable. */
+  wave?: 'morning' | 'midday' | 'evening'
   cursor: number
   lastLatency: number | null
   history: (number | null)[]
