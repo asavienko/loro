@@ -50,6 +50,7 @@ apply.
 | Tests, refactors, generated output, commits or merges          | [Validation](references/validation.md)          | `package.json`, `scripts/ci-local.sh`, `apps/mobile/e2e/`                                 |
 | Run locally, APK, environment, provider or EC2 work            | [Operations](references/operations.md)          | `docs/process/ci-cd.md`, `docs/process/local-development.md`, `docs/process/local-apk.md` |
 | Explain an earlier decision or reconcile contradictory history | [History and provenance](references/history.md) | Dated chat index and supersession notes; then current source                              |
+| Create, review, update, complete or archive plans              | [Plan management](references/plans.md)          | `plans/README.md`, `plans/archive/README.md`, owning plan and acceptance evidence         |
 
 ## Resolve truth and scope before editing
 
@@ -67,11 +68,9 @@ apply.
 - **Unfinished work:** check the plan's remaining acceptance criteria and named gates. Continue
   independent slices. A selected provider, compiled module or passing browser test does not close
   linguistic, hardware, account-configuration or release gates.
-- **Plans:** update an existing owner before inventing a replacement. Number new plans above all
-  known active/archived IDs, check concurrent work when relevant, and update `plans/README.md`.
-  Archive completed records under `plans/archive/<date>/` and list them only in the archive index.
-  Update references directly; do not leave compatibility symlinks or redirect files in `plans/`.
-  Plan 53's former original-path exception was retired at user request on 2026-09-09.
+- **Plans:** follow [plan management](references/plans.md) when changing the roadmap or an owning
+  plan. Keep completed records only in the archive; active listings show remaining work. Link
+  directly to the actual files, without compatibility symlinks or redirect files.
 
 Keep task notes to the requirement, owned files, key decision, verified commands and remaining gate.
 Prefer an existing seam over a new framework. For a behavior-preserving refactor, retain existing
