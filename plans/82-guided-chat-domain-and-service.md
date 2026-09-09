@@ -3,8 +3,9 @@
 - **Requirement IDs:** `P3E-01`…`P3E-10`, `P3E-16`…`P3E-18`, `AI-05`, `F-03`, `F-04`, `AS-01`,
   `AS-02`
 - **Milestone:** M3 / v1.1
-- **Status:** 🟡 Gated draft wire shapes exist; chat domain, bundled graphs, persistence and
-  coordinator remain. Offline schema/content/eval work can start now. Q-19 gates retention,
+- **Status:** 🟡 The bundled topic-graph schema and deterministic traversal exist in core; authored
+  topic packs, local chat domain/persistence and coordinator remain. Offline content/eval work can
+  start now. Q-19 gates retention,
   Q-18/Q-20 live traffic, and Q-16 release enablement.
 - **Depends on:** 79/85 completed; 59 for device storage; 61 for content publication; 66/67/86 for
   live service; 68 only for the explicit kept-phrase sync boundary.
@@ -12,10 +13,12 @@
 
 ## Verified starting point
 
-`packages/core/src/api/draft.ts` carries chat draft schemas; no ChatThread repositories, topic/reply
-graphs, chat endpoint or coordinator exists. Plan 86's Anthropic transport is unregistered. Start
-with offline domain/content contracts and evals, reuse compatible draft shapes, and promote them
-only after the relevant decisions.
+`packages/core/src/api/draft.ts` carries chat draft schemas. The shared
+`packages/core/src/api/chat-topic.ts` validates bounded authored topic/reply graphs and advances
+only through their declared edges; it creates neither turns nor text. No `ChatThread` repository,
+authored topic pack, chat endpoint or coordinator exists. Plan 86's Anthropic transport is
+unregistered. Start with offline content/evals, reuse compatible draft shapes, and promote wire
+contracts only after the relevant decisions.
 
 ## Outcome
 
@@ -43,7 +46,8 @@ Production keeps these invariants:
 
 ## Remaining work
 
-1. [ ] Review/reuse plan 85's gated draft request/result shapes, define the missing local domain,
+1. [ ] Define the missing local domain around the existing offline graph contract and review/reuse
+       plan 85's gated draft request/result shapes,
        and promote wire contracts only after their decision gates. Define shared schemas for
        `ChatThread`, `ChatTurn`, `ChatTopic`, `ChatPace`, `ChatSuggestion`, `ChatCorrection`,
        `ChatAlternative`, `ChatGloss`, provider request/result, fallback provenance, safety outcome,
