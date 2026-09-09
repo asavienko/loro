@@ -1,1 +1,0 @@
-archive/2026-07-30/52-solid-kiss-dry-refactor.md

@@ -15,6 +15,8 @@ import type { ExpoConfig } from 'expo/config'
 
 const VERSION = '0.1.0'
 const localApk = process.env['LORO_LOCAL_APK'] === '1'
+const androidDevelopmentClient = !localApk && process.env['LORO_ANDROID_DEV_CLIENT'] === '1'
+const nativeRedirectUri = androidDevelopmentClient ? 'loro-dev://account' : 'loro://account'
 const splashPlugins: NonNullable<ExpoConfig['plugins']> = localApk
   ? [
       [
@@ -34,7 +36,9 @@ export default (): ExpoConfig => ({
   slug: 'loro',
   version: VERSION,
   orientation: 'default',
-  scheme: 'loro',
+  // Keep the development client separate from Preview and the future production app so
+  // `expo run:android` can launch the correct installation without Android's app chooser.
+  scheme: androidDevelopmentClient ? 'loro-dev' : 'loro',
   userInterfaceStyle: 'light', // dark theme is v1.1
   newArchEnabled: true,
 
@@ -78,7 +82,11 @@ export default (): ExpoConfig => ({
   },
 
   android: {
-    package: localApk ? 'app.loro.android.preview' : 'app.loro.android',
+    package: localApk
+      ? 'app.loro.android.preview'
+      : androidDevelopmentClient
+        ? 'app.loro.android.dev'
+        : 'app.loro.android',
     versionCode: 1,
     adaptiveIcon: localApk
       ? undefined
@@ -109,6 +117,7 @@ export default (): ExpoConfig => ({
     'expo-web-browser',
     'expo-secure-store',
     ['expo-localization', { supportedLocales: ['en', 'bg', 'ru'] }],
+    './plugins/with-dev-client-identity.cjs',
   ],
 
   experiments: {
@@ -116,6 +125,7 @@ export default (): ExpoConfig => ({
   },
 
   extra: {
+    nativeRedirectUri,
     eas: localApk ? undefined : { projectId: 'PLACEHOLDER' },
   },
 })

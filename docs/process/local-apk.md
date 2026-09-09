@@ -4,6 +4,12 @@ This is the local testing APK path for F-03 / plan 58. GitHub Actions remains di
 uses Expo prebuild and Gradle on your machine and uploads files through the GitHub CLI. It does not
 use EAS or submit anything to Google Play.
 
+`pnpm --filter @loro/mobile android` is the Metro-dependent debug workflow and rejects release
+variants, custom APKs and caller-supplied app IDs. It forces the Development build flag even when a
+local dotenv file selects Preview. Use this Preview APK workflow for a standalone release build.
+Development also rejects positional project paths and declares its package directly in the generated
+native project so a fresh Metro session can resolve it. Preview retains its own package.
+
 ## Prerequisites
 
 - Node 22 and pnpm 9.12.0 (`nvm use 22`).
@@ -47,7 +53,9 @@ Account shows the actual server connection and keeps sign-in availability separa
 The URL is public configuration embedded in the APK. It must not contain credentials, query strings
 or fragments. The snapshot excludes ignored local environment files; Expo dotenv loading is
 disabled. Other inherited `EXPO_PUBLIC_*` values are cleared. No API keys or backend secrets belong
-in this build. The backend must register the existing `loro://account` redirect for sign-in.
+in this build. The backend must register `loro://account` for Preview sign-in. The Metro-dependent
+Android development client uses `loro-dev://account`; add that exact redirect to its development
+backend only when testing sign-in from that client.
 
 ## Upload to GitHub
 
@@ -86,6 +94,20 @@ The implementation follows
 [GitHub CLI release commands](https://cli.github.com/manual/gh_release_create).
 
 ## Verified build
+
+### Open emulator startup report
+
+[ANDROID-2026-09-09-01](../reviews/2026-09-09-android-script-load.md) records an “Unable to load
+script” startup failure in the installed debuggable `app.loro.android` APK: it has no embedded
+JavaScript bundle and fails when launched without Metro. The separately installed
+`app.loro.android.preview` APK contains the bundle and was verified to cold-launch into onboarding
+without Metro. Open **Loro Preview** for standalone testing. The affected debug APK's source and
+recovery with matching Metro remain unverified; port forwarding alone does not start Metro. Future
+debug builds use `app.loro.android.dev` and the **Loro Development** launcher label, so they cannot
+be mistaken for the standalone application. Its `loro-dev://` scheme also keeps Expo's debug launch
+link separate from Preview's `loro://` scheme.
+
+### 2026-09-07 build evidence
 
 On 2026-09-07, commit `6891fe5316a4` produced a 45,511,837-byte APK for both configured ABIs.
 Signature, non-debuggable preview manifest, bundled JavaScript and downloaded GitHub asset checksum

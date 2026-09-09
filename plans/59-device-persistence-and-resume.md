@@ -1,1 +1,0 @@
-archive/2026-09-09/59-device-persistence-and-resume.md

@@ -67,18 +67,18 @@ automatically.
 
 Store server values in the encrypted environment or deployment secret manager:
 
-| Variable                                             | Value                                                                                                                                                       |
-| ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `AUTH_ENABLED`                                       | `true` enables browser OAuth; `false` disables all sign-in. Omitted keeps browser OAuth disabled but permits explicitly configured direct-ID/email methods. |
-| `DATABASE_URL`                                       | PostgreSQL URL, with transport security configured by the deployment.                                                                                       |
-| `AUTH_PUBLIC_URL`                                    | Exact HTTPS API origin without `/v1`.                                                                                                                       |
-| `AUTH_PRIVATE_KEY_PEM`                               | Preferred PKCS8 P-256 private key for ES256 Loro access tokens.                                                                                             |
-| `AUTH_SIGNING_KEY`                                   | Compatibility HS256 fallback when the PEM is absent; random secret of at least 32 bytes.                                                                    |
-| `AUTH_ISSUER`, `AUTH_KEY_ID`                         | Optional issuer override (otherwise `AUTH_PUBLIC_URL`, then `https://api.loro.app`) and key ID (`primary`).                                                 |
-| `AUTH_REDIRECT_URIS`                                 | Exact comma-separated return URLs, e.g. `loro://account,https://your-web-host/account`; no wildcard, query or fragment.                                     |
-| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`           | Google Web application client, including native browser flows.                                                                                              |
-| `APPLE_CLIENT_ID`                                    | Apple Services ID for browser OAuth.                                                                                                                        |
-| `APPLE_TEAM_ID`, `APPLE_KEY_ID`, `APPLE_PRIVATE_KEY` | Apple team, key ID and PEM `.p8`; escaped newlines supported.                                                                                               |
+| Variable                                             | Value                                                                                                                                                                                                          |
+| ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `AUTH_ENABLED`                                       | `true` enables browser OAuth; `false` disables all sign-in. Omitted keeps browser OAuth disabled but permits explicitly configured direct-ID/email methods.                                                    |
+| `DATABASE_URL`                                       | PostgreSQL URL, with transport security configured by the deployment.                                                                                                                                          |
+| `AUTH_PUBLIC_URL`                                    | Exact HTTPS API origin without `/v1`.                                                                                                                                                                          |
+| `AUTH_PRIVATE_KEY_PEM`                               | Preferred PKCS8 P-256 private key for ES256 Loro access tokens.                                                                                                                                                |
+| `AUTH_SIGNING_KEY`                                   | Compatibility HS256 fallback when the PEM is absent; random secret of at least 32 bytes.                                                                                                                       |
+| `AUTH_ISSUER`, `AUTH_KEY_ID`                         | Optional issuer override (otherwise `AUTH_PUBLIC_URL`, then `https://api.loro.app`) and key ID (`primary`).                                                                                                    |
+| `AUTH_REDIRECT_URIS`                                 | Exact comma-separated return URLs, e.g. `loro://account,https://your-web-host/account`; add `loro-dev://account` only when enabling sign-in in the Android development client. No wildcard, query or fragment. |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`           | Google Web application client, including native browser flows.                                                                                                                                                 |
+| `APPLE_CLIENT_ID`                                    | Apple Services ID for browser OAuth.                                                                                                                                                                           |
+| `APPLE_TEAM_ID`, `APPLE_KEY_ID`, `APPLE_PRIVATE_KEY` | Apple team, key ID and PEM `.p8`; escaped newlines supported.                                                                                                                                                  |
 
 Incomplete provider credentials leave that provider unavailable. Invalid required OAuth settings or
 unreachable configured PostgreSQL fail startup. An explicitly disabled content-only deployment can

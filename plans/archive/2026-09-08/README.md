@@ -7,9 +7,9 @@
 
 ## Completed plans
 
-These bounded deliveries are complete within their recorded scope. Their original paths remain
-compatibility symlinks. Historical verification is preserved; it does not establish current live
-provider, production or physical-device acceptance.
+These bounded deliveries are complete within their recorded scope. References link directly to this
+archive; compatibility symlinks were removed on 2026-09-09. Historical verification is preserved; it
+does not establish current live provider, production or physical-device acceptance.
 
 | Plan                               | Completed scope                                             | Remaining owners                                                                 |
 | ---------------------------------- | ----------------------------------------------------------- | -------------------------------------------------------------------------------- |
@@ -23,19 +23,23 @@ The old versions below contained obsolete starting points or instructions. They 
 historical snapshots with relative links rebased. Their existing plan IDs and active paths continue
 to own unfinished work; no feature was marked done merely to archive old wording.
 
-| Snapshot                                      | Reason and remaining work                                                                                                 | Current owner                                              |
-| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| [64](64-today-and-refrain-production-loop.md) | Durable checkpoints/resume now exist; production loop and device acceptance remain.                                       | [Active 64](../../64-today-and-refrain-production-loop.md) |
-| [72](72-release-quality-gates.md)             | Local CI and Rust simulations exist; native/content/performance release gates remain.                                     | [Active 72](../../72-release-quality-gates.md)             |
-| [75](75-review-and-memory.md)                 | Canonical Rust FSRS exists; Review/Memory screens and session behavior remain.                                            | [Active 75](../../75-review-and-memory.md)                 |
-| [88](88-low-cost-backend-infrastructure.md)   | Restricted EC2/HTTPS deployment exists; shared-service recovery/load acceptance and infrastructure reconciliation remain. | [Active 88](../../88-low-cost-backend-infrastructure.md)   |
-| [90](90-default-english-content-language.md)  | English learning-target/default semantics are confirmed; implementation, dialect and reviewed content remain.             | [Active 90](../../90-default-english-content-language.md)  |
+| Snapshot                                      | Reason and remaining work                                                                                                 | Current owner                                                      |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| [64](64-today-and-refrain-production-loop.md) | Durable checkpoints/resume now exist; production loop and device acceptance remain.                                       | [Active 64](../2026-09-09/64-today-and-refrain-production-loop.md) |
+| [72](72-release-quality-gates.md)             | Local CI and Rust simulations exist; native/content/performance release gates remain.                                     | [Active 72](../../72-release-quality-gates.md)                     |
+| [75](75-review-and-memory.md)                 | Canonical Rust FSRS exists; Review/Memory screens and session behavior remain.                                            | [Active 75](../../75-review-and-memory.md)                         |
+| [88](88-low-cost-backend-infrastructure.md)   | Restricted EC2/HTTPS deployment exists; shared-service recovery/load acceptance and infrastructure reconciliation remain. | [Active 88](../../88-low-cost-backend-infrastructure.md)           |
+| [90](90-default-english-content-language.md)  | English learning-target/default semantics are confirmed; implementation, dialect and reviewed content remain.             | [Active 90](../../90-default-english-content-language.md)          |
 
 The [old roadmap baseline](roadmap-baseline.md) is also retained. The
 [current roadmap](../../../docs/product/roadmap.md) now points to integrated scope and the current
 plan numbering. The separate dated deployment review in `docs/reviews/` remains historical evidence.
 
 ## Preserved boundaries
+
+The boundaries and verification below record the 2026-09-08 archival operation. The subsequent
+2026-09-09 cleanup removed compatibility symlinks and archived plan 53; see the
+[archive index](../README.md).
 
 - No plan was renumbered and no new plan ID was allocated. The next new ID remains 95.
 - All 33 plans with remaining work remain in the [active index](../../README.md).
