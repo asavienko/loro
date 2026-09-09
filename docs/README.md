@@ -1,5 +1,10 @@
 # Loro documentation
 
+[Refactoring strategies — 2026-09-09](reviews/2026-09-09-refactoring-strategies.md) inventories
+structural cleanup of **shipped** code: dual TS/Rust numbers, contract schema forks, practice-route
+store holes, and docs that lag `AppModule`. It is not an implementation plan and does not claim
+whole-plan acceptance.
+
 [Screen capture plan review — 2026-09-09](reviews/2026-09-09-screen-capture-plan-review.md) compares
 the screenshot command with its strengthened plan and records suggested fixes.
 
