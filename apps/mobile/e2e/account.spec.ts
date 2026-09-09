@@ -1,6 +1,5 @@
 import { expect, onboard, openFirstPhrase, test } from './fixtures'
 import {
-  ACCOUNT_API,
   ACCOUNT_LABEL,
   finishSignIn,
   mockAccountService,
@@ -28,7 +27,7 @@ test('optional email sign-in syncs and sign-out keeps durable local practice', a
   expect(browserStorage).not.toContain('e2e-refresh')
   expect(browserStorage).not.toContain('e2e-email-access')
   await page.getByRole('button', { name: 'Sign out', exact: true }).click()
-  await expect(page.getByRole('textbox', { name: 'Email address' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Continue with email', exact: true })).toBeVisible()
   await returnToToday(page)
   await expect(page.getByRole('button', { name: /Stream, 10 phrases/ })).toBeVisible()
 })
@@ -40,7 +39,7 @@ test('web reload retains progress while requiring a fresh sign-in', async ({ pag
   await requestCode(page)
   await finishSignIn(page)
   await page.reload()
-  await expect(page.getByRole('textbox', { name: 'Email address' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Continue with email', exact: true })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Continue with Google' })).toBeEnabled()
   await returnToToday(page)
 })
@@ -65,7 +64,7 @@ test('Google and email share the account sync session and preserve local phrase 
     ]),
   )
   await page.getByRole('button', { name: 'Sign out', exact: true }).click()
-  await expect(page.getByRole('textbox', { name: 'Email address' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Continue with email', exact: true })).toBeVisible()
   await page.goto(phraseUrl)
   await expect(page.getByRole('radio', { name: 'Difficult', exact: true })).toBeChecked()
   await page.getByRole('radio', { name: 'Easy', exact: true }).click()
@@ -132,7 +131,9 @@ for (const scenario of ['error', 'cancelled'] as const) {
     const service = await reachAccount(page, scenario)
     await expect(page.getByRole('button', { name: 'Sign out', exact: true })).toHaveCount(0)
     await expect(page.getByRole('button', { name: 'Continue with Apple' })).toBeEnabled()
-    await expect(page.getByRole('textbox', { name: 'Email address' })).toBeVisible()
+    await expect(
+      page.getByRole('button', { name: 'Continue with email', exact: true }),
+    ).toBeVisible()
     expect(service.requests.filter((request) => request.path.endsWith('/auth/exchange'))).toEqual(
       [],
     )
@@ -140,19 +141,3 @@ for (const scenario of ['error', 'cancelled'] as const) {
     await returnToToday(page)
   })
 }
-
-test('backend connection recovers independently of sign-in and preserves local practice', async ({
-  page,
-}) => {
-  await onboard(page)
-  await reachAccount(page, 'backendUnavailable')
-  await page
-    .context()
-    .route(`${ACCOUNT_API}/health/ready`, (route) =>
-      route.fulfill({ json: { status: 'ok', checks: { content: 'ok', merge: 'ok' } } }),
-    )
-  await page.getByRole('button', { name: 'Check connection', exact: true }).click()
-  await expect(page.getByText('Server connected.', { exact: true })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Sign out', exact: true })).toHaveCount(0)
-  await returnToToday(page)
-})

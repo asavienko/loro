@@ -416,6 +416,11 @@ installed-language coverage and audible model playback still require the accepta
 
 ## Account utility (F-01)
 
-`/account` is the optional Google/Apple identity utility implemented by plan 89. It uses the shared
-spine and push header, outside the 23 authored learner screens. Its intended-design extension and
-states are recorded in [functional-spec.md](../product/functional-spec.md#f-01-account).
+`/account` is the optional identity utility implemented by plans 89 and 96. It uses the shared spine
+and push header, outside the 23 authored learner screens. The route presents a method chooser,
+separate email and code views, provider connecting/cancelled/failed states, immediate sign-in
+confirmation and returning-account management with actual sync status. Email and provider
+credentials remain in the account runtime; the route never renders fabricated provider identity.
+Its intended-design extension and state inventory are recorded in
+[functional-spec.md](../product/functional-spec.md#f-01-account) and
+[the account screen plan](../../plans/96-account-sign-in-screens.md).

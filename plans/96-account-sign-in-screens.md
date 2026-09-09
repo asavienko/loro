@@ -2,9 +2,9 @@
 
 - **Requirement IDs:** F-01, F-02; F-05/F-06/F-08 for theme, accessibility and localization.
 - **Milestone:** M2, optional account utility.
-- **Status:** — Planned; implementation has not started. Existing auth, persistence and shell
-  support the first slices. Real Google/Apple/email acceptance requires configured services and
-  native devices; those gates do not block UI, capability consumption or cancellation work.
+- **Status:** 🟡 In progress; the method chooser, email/code flow, provider states, confirmation,
+  management view and browser/unit coverage are implemented. Native keyboard/provider acceptance,
+  visual capture review and live email delivery remain open evidence gates.
 - **Reviewed:** 2026-09-09 against `50d0eb1`, including both image boards, their prompts, SVG and
   current account/API/E2E source. No live provider or device acceptance was performed.
 - **Depends on:** delivered 67/89/94 account runtime; 56/81/93 shell; 57 controls; 87 localization;
@@ -263,26 +263,26 @@ specimens and their coverage. Runtime renderer dependencies require native build
 
 ### State inventory and flows
 
-- [ ] Register all eight designed states in `e2e/states.ts`, reached through real controls with
+- [x] Register all eight designed states in `e2e/states.ts`, reached through real controls with
       deterministic mocked transport; exercise connecting/cancelled/failed for both providers.
 - [ ] Add operational states: discovery pending/failure, partial/zero capability, unconfigured,
       sending/resending/verifying, resend accepted/failed/throttled, invalid email, network failure,
       blocked popup, storage failure/mismatch, returning-account sync states and local sign-out.
-- [ ] Update `accountFlow.ts` to choose email first and use new labels. Preserve existing transport,
+- [x] Update `accountFlow.ts` to choose email first and use new labels. Preserve existing transport,
       tenant/device binding, memory-only browser credential, local retention and sync assertions.
 - [ ] Cover double taps, resend/verify collisions, change-email late responses, pending navigation,
       old popup cleanup after new attempts, duplicate callbacks and sign-out during sync.
-- [ ] Confirmation while sync is pending/failed never claims up-to-date progress. Unknown identity
+- [x] Confirmation while sync is pending/failed never claims up-to-date progress. Unknown identity
       is omitted. Returning account exposes sync/sign-out; another account cannot adopt local data.
-- [ ] Sign-out/reload retain course/checkpoints/local changes. Cancellation creates no session or
+- [x] Sign-out/reload retain course/checkpoints/local changes. Cancellation creates no session or
       sync. In integration, use actual external provider surfaces; no fake consent form or
       production test bypass. E2E fake providers remain transport fixtures only.
-- [ ] Replace the readiness-panel E2E expectation deliberately; retain backend health unit coverage
+- [x] Replace the readiness-panel E2E expectation deliberately; retain backend health unit coverage
       and cover service failure plus the available practice exit in the new account flow.
 
 ### Visual, localization and native evidence
 
-- [ ] One shared spine, one named back control, at most one filled primary CTA per view. Method rows
+- [x] One shared spine, one named back control, at most one filled primary CTA per view. Method rows
       have equal treatment and stable positions while feedback changes.
 - [ ] Compare actual captures against both boards at small-phone and larger viewports. Check hero
       bounds, typography, alignment, spacing and scroll reachability using the existing
@@ -324,6 +324,7 @@ providers, billing, new auth protocol, sync scheduler replacement, production in
 provider consent UI and edits to authored artifacts. The provider-email fallback in section 2 is
 explicit; no profile implementation or fabricated address is implied.
 
-This planning task changes documentation only. Planning validation consists of scoped Markdown
-formatting/link checks, `git diff --check` and the repository fast gate. Report any baseline or
-environment failures separately; those checks are not implementation acceptance.
+The browser and client slices are implemented in the working tree. Keep this plan 🟡 until the
+remaining visual, native and live-provider evidence is recorded; those gates are independent of
+the local UI implementation. Validation evidence for this slice is the account client suite,
+mobile lint/typecheck and the six account browser scenarios.
