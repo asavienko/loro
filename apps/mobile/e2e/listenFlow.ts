@@ -1,5 +1,23 @@
 import { expect, type Page } from '@playwright/test'
-import { LISTEN_SCENARIOS, type ListenScenario } from '../src/lib/listenFixtures'
+
+/** Keep in lockstep with `src/lib/listenFixtures.ts`. E2E must not import app source. */
+export const LISTEN_SCENARIOS = [
+  'empty',
+  'needs-network',
+  'generating',
+  'partial-failure',
+  'ready-to-listen',
+  'playing',
+  'share-unavailable',
+  'share-ready',
+  'cancelled',
+  'disk-full',
+  'session-busy',
+  'voices-unapproved',
+  'not-configured',
+] as const
+
+export type ListenScenario = (typeof LISTEN_SCENARIOS)[number]
 
 export const LISTEN_TITLE = 'Listen to your phrases'
 export const LISTEN_NAV = 'Listen'
@@ -37,5 +55,3 @@ export async function openListenScenario(page: Page, scenario: ListenScenario): 
   await expect(page.getByText(LISTEN_TITLE)).toBeVisible()
   await expect(page.getByText(LISTEN_STATUS[scenario])).toBeVisible()
 }
-
-export { LISTEN_SCENARIOS, type ListenScenario }
