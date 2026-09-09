@@ -1,5 +1,7 @@
 import type { LyricDocument, MusicStyleId } from '@loro/core'
-import type { MusicRenderJob } from '@loro/core/api/draft'
+
+export type MusicJobStatus = 'queued' | 'ready' | 'failed' | 'unknown_spend'
+export type MusicErrorCode = 'provider' | 'copyright' | 'budget' | 'invalid_audio' | 'unavailable'
 
 export interface StoredLyricDocument {
   readonly id: string
@@ -22,8 +24,8 @@ export interface StoredMusicJob {
   readonly byteLength: number | null
   readonly durationMs: number | null
   readonly providerSongId: string | null
-  readonly status: MusicRenderJob['status']
-  readonly errorCode: MusicRenderJob['error_code']
+  readonly status: MusicJobStatus
+  readonly errorCode: MusicErrorCode | null
   readonly spendMicros: number
   readonly createdAt: number
 }
@@ -50,41 +52,46 @@ export class MemoryMusicRepository implements MusicRepository {
   private readonly jobs = new Map<string, StoredMusicJob>()
   private readonly objects = new Map<string, MusicObjectRecord>()
 
-  async saveLyric(record: StoredLyricDocument): Promise<void> {
+  saveLyric(record: StoredLyricDocument): Promise<void> {
     this.lyrics.set(`${record.userId}:${record.id}`, record)
+    return Promise.resolve()
   }
 
-  async getLyric(id: string, userId: string): Promise<StoredLyricDocument | null> {
-    return this.lyrics.get(`${userId}:${id}`) ?? null
+  getLyric(id: string, userId: string): Promise<StoredLyricDocument | null> {
+    return Promise.resolve(this.lyrics.get(`${userId}:${id}`) ?? null)
   }
 
-  async saveJob(record: StoredMusicJob): Promise<void> {
+  saveJob(record: StoredMusicJob): Promise<void> {
     this.jobs.set(`${record.userId}:${record.jobId}`, record)
+    return Promise.resolve()
   }
 
-  async getJob(jobId: string, userId: string): Promise<StoredMusicJob | null> {
-    return this.jobs.get(`${userId}:${jobId}`) ?? null
+  getJob(jobId: string, userId: string): Promise<StoredMusicJob | null> {
+    return Promise.resolve(this.jobs.get(`${userId}:${jobId}`) ?? null)
   }
 
-  async listJobs(lyricDocumentId: string, userId: string): Promise<StoredMusicJob[]> {
-    return [...this.jobs.values()].filter(
-      (job) => job.userId === userId && job.lyricDocumentId === lyricDocumentId,
+  listJobs(lyricDocumentId: string, userId: string): Promise<StoredMusicJob[]> {
+    return Promise.resolve(
+      [...this.jobs.values()].filter(
+        (job) => job.userId === userId && job.lyricDocumentId === lyricDocumentId,
+      ),
     )
   }
 
-  async getJobByTrack(trackId: string, userId: string): Promise<StoredMusicJob | null> {
-    return (
+  getJobByTrack(trackId: string, userId: string): Promise<StoredMusicJob | null> {
+    return Promise.resolve(
       [...this.jobs.values()].find((job) => job.userId === userId && job.trackId === trackId) ??
-      null
+        null,
     )
   }
 
-  async putObject(record: MusicObjectRecord): Promise<void> {
+  putObject(record: MusicObjectRecord): Promise<void> {
     this.objects.set(record.sha256, record)
+    return Promise.resolve()
   }
 
-  async getObject(sha256: string): Promise<MusicObjectRecord | null> {
-    return this.objects.get(sha256) ?? null
+  getObject(sha256: string): Promise<MusicObjectRecord | null> {
+    return Promise.resolve(this.objects.get(sha256) ?? null)
   }
 }
 

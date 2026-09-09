@@ -26,7 +26,7 @@ export interface MusicComposeResult {
   readonly cached: boolean
 }
 
-export type MusicComposeFailure = {
+export interface MusicComposeFailure {
   readonly kind:
     'bad_prompt' | 'bad_composition_plan' | 'rate_limited' | 'invalid_audio' | 'unavailable'
 }
@@ -52,7 +52,7 @@ export class ElevenLabsMusicAdapter implements MusicAdapter {
     } = {},
   ) {}
 
-  async compose(document: LyricDocument, pack: MusicStylePack): Promise<MusicComposeOutcome> {
+  compose(document: LyricDocument, pack: MusicStylePack): Promise<MusicComposeOutcome> {
     const plan = lyricDocumentToCompositionPlan(document, pack)
     const planHash = sha256Json(plan)
     const cacheKey = sha256Json({
@@ -64,29 +64,29 @@ export class ElevenLabsMusicAdapter implements MusicAdapter {
       output_format: 'wav_fixture',
     })
     const cached = this.cache.get(cacheKey)
-    if (cached) return { ok: true, result: { ...cached, cached: true } }
+    if (cached) return Promise.resolve({ ok: true, result: { ...cached, cached: true } })
 
     const provider = this.options.provider ?? process.env['MUSIC_PROVIDER'] ?? 'stub'
     if (provider !== 'elevenlabs') {
       const result = fixtureResult(plan, planHash, this.options.fixture ?? 'compose')
       if (result.ok) this.cache.set(cacheKey, result.result)
-      return result
+      return Promise.resolve(result)
     }
 
     const fixture = this.options.fixture
     if (fixture !== undefined) {
       const result = fixtureResult(plan, planHash, fixture)
       if (result.ok) this.cache.set(cacheKey, result.result)
-      return result
+      return Promise.resolve(result)
     }
 
     const apiKey = this.options.apiKey ?? process.env['MUSIC_API_KEY']
     if (!apiKey) {
-      return { ok: false, failure: { kind: 'unavailable' } }
+      return Promise.resolve({ ok: false, failure: { kind: 'unavailable' } })
     }
     // Live HTTP is intentionally unimplemented until Q-21. A configured key without
     // an explicit paid-smoke fixture must not spend.
-    return { ok: false, failure: { kind: 'unavailable' } }
+    return Promise.resolve({ ok: false, failure: { kind: 'unavailable' } })
   }
 }
 
@@ -126,7 +126,10 @@ function fixtureResult(
     return { ok: false, failure: { kind: name } }
   }
   if (name === 'rate_limited') return { ok: false, failure: { kind: 'rate_limited' } }
-  if (name === 'truncated' || fixture.body.byteLength < 32) {
+  if (
+    name === 'truncated' ||
+    (fixture.body instanceof Uint8Array && fixture.body.byteLength < 32)
+  ) {
     return { ok: false, failure: { kind: 'invalid_audio' } }
   }
   const bytes = fixture.body instanceof Uint8Array ? fixture.body : MUSIC_FIXTURE_WAV

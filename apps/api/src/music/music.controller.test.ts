@@ -86,7 +86,8 @@ describe('music HTTP authz and stub journey (p3f-11)', () => {
     const ready = renderBody.jobs.filter((job) => job.status === 'ready')
     expect(ready.length).toBeGreaterThanOrEqual(2)
     const trackId = ready[0]?.track_id
-    expect(trackId).toBeTruthy()
+    expect(typeof trackId).toBe('string')
+    if (typeof trackId !== 'string') throw new Error('expected track id')
 
     const own = await fetch(`${base}/music/tracks/${trackId}`, {
       headers: { Authorization: 'Bearer token-a' },

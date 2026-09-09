@@ -38,9 +38,9 @@ describe('lyrics coordinator (ai-05)', () => {
   it('repairs once then falls back when the model stays invalid', async () => {
     let calls = 0
     const model: LyricsModel = {
-      propose: async () => {
+      propose: () => {
         calls += 1
-        return { invalid: true }
+        return Promise.resolve({ invalid: true })
       },
     }
     const response = await new LyricsCoordinator(model).lyrics(request, 'user-a')

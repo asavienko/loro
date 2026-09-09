@@ -27,7 +27,7 @@ export interface LyricsModel {
 export class LyricsCoordinator {
   private readonly cache = new Map<string, MusicLyricsResponse>()
 
-  constructor(private readonly model: LyricsModel | undefined = undefined) {}
+  constructor(private readonly model?: LyricsModel) {}
 
   async lyrics(request: MusicLyricsRequest, principalId: string): Promise<MusicLyricsResponse> {
     void principalId

@@ -1,6 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common'
+import { isMusicStyleId } from '@loro/core'
 import { DATABASE, type SqlDatabase } from '../database/database.js'
 import type {
+  MusicErrorCode,
+  MusicJobStatus,
   MusicObjectRecord,
   MusicRepository,
   StoredLyricDocument,
@@ -33,7 +36,7 @@ export class PostgresMusicRepository implements MusicRepository {
   }
 
   async getLyric(id: string, userId: string): Promise<StoredLyricDocument | null> {
-    const result = await this.database.query<Record<string, unknown>>(
+    const result = await this.database.query(
       `SELECT id, user_id, document_json, document_hash, fallback, created_at
        FROM music_lyric_documents WHERE id = $1 AND user_id = $2`,
       [id, userId],
@@ -41,10 +44,10 @@ export class PostgresMusicRepository implements MusicRepository {
     const row = result.rows[0]
     if (row === undefined) return null
     return {
-      id: String(row['id']),
-      userId: String(row['user_id']),
+      id: asText(row['id']),
+      userId: asText(row['user_id']),
       document: row['document_json'] as StoredLyricDocument['document'],
-      documentHash: String(row['document_hash']),
+      documentHash: asText(row['document_hash']),
       fallback: Boolean(row['fallback']),
       createdAt: Number(row['created_at']),
     }
@@ -86,7 +89,7 @@ export class PostgresMusicRepository implements MusicRepository {
   }
 
   async getJob(jobId: string, userId: string): Promise<StoredMusicJob | null> {
-    const result = await this.database.query<Record<string, unknown>>(
+    const result = await this.database.query(
       `SELECT * FROM music_jobs WHERE id = $1 AND user_id = $2`,
       [jobId, userId],
     )
@@ -94,7 +97,7 @@ export class PostgresMusicRepository implements MusicRepository {
   }
 
   async listJobs(lyricDocumentId: string, userId: string): Promise<StoredMusicJob[]> {
-    const result = await this.database.query<Record<string, unknown>>(
+    const result = await this.database.query(
       `SELECT * FROM music_jobs WHERE lyric_document_id = $1 AND user_id = $2`,
       [lyricDocumentId, userId],
     )
@@ -104,7 +107,7 @@ export class PostgresMusicRepository implements MusicRepository {
   }
 
   async getJobByTrack(trackId: string, userId: string): Promise<StoredMusicJob | null> {
-    const result = await this.database.query<Record<string, unknown>>(
+    const result = await this.database.query(
       `SELECT * FROM music_jobs WHERE track_id = $1 AND user_id = $2`,
       [trackId, userId],
     )
@@ -124,42 +127,75 @@ export class PostgresMusicRepository implements MusicRepository {
   }
 
   async getObject(sha256: string): Promise<MusicObjectRecord | null> {
-    const result = await this.database.query<Record<string, unknown>>(
+    const result = await this.database.query(
       `SELECT sha256, content_type, body FROM music_objects WHERE sha256 = $1`,
       [sha256],
     )
     const row = result.rows[0]
     if (row === undefined) return null
     const body = row['body']
-    const bytes = body instanceof Uint8Array ? body : Buffer.from(body as string)
+    const bytes = body instanceof Uint8Array ? body : Buffer.from(asText(body))
     return {
-      sha256: String(row['sha256']),
-      contentType: String(row['content_type']),
+      sha256: asText(row['sha256']),
+      contentType: asText(row['content_type']),
       bytes: new Uint8Array(bytes),
     }
   }
 }
 
+function asText(value: unknown): string {
+  if (typeof value !== 'string') throw new Error('expected text column')
+  return value
+}
+
+function asTextOrNull(value: unknown): string | null {
+  if (value === null || value === undefined) return null
+  return asText(value)
+}
+
+function asStyleId(value: unknown): StoredMusicJob['styleId'] {
+  const text = asText(value)
+  if (!isMusicStyleId(text)) throw new Error('expected music style id')
+  return text
+}
+
+function asJobStatus(value: unknown): MusicJobStatus {
+  if (value === 'queued' || value === 'ready' || value === 'failed' || value === 'unknown_spend') {
+    return value
+  }
+  throw new Error('expected music job status')
+}
+
+function asErrorCode(value: unknown): MusicErrorCode | null {
+  if (value === null || value === undefined) return null
+  if (
+    value === 'provider' ||
+    value === 'copyright' ||
+    value === 'budget' ||
+    value === 'invalid_audio' ||
+    value === 'unavailable'
+  ) {
+    return value
+  }
+  throw new Error('expected music error code')
+}
+
 function rowToJob(row: Record<string, unknown> | undefined): StoredMusicJob | null {
   if (row === undefined) return null
   return {
-    jobId: String(row['id']),
-    userId: String(row['user_id']),
-    lyricDocumentId: String(row['lyric_document_id']),
-    trackId:
-      row['track_id'] === null || row['track_id'] === undefined ? null : String(row['track_id']),
-    styleId: row['style_id'] as StoredMusicJob['styleId'],
-    modelId: String(row['model_id']),
-    planHash: String(row['plan_hash']),
-    sha256: row['sha256'] === null || row['sha256'] === undefined ? null : String(row['sha256']),
+    jobId: asText(row['id']),
+    userId: asText(row['user_id']),
+    lyricDocumentId: asText(row['lyric_document_id']),
+    trackId: asTextOrNull(row['track_id']),
+    styleId: asStyleId(row['style_id']),
+    modelId: asText(row['model_id']),
+    planHash: asText(row['plan_hash']),
+    sha256: asTextOrNull(row['sha256']),
     byteLength: row['byte_length'] === null ? null : Number(row['byte_length']),
     durationMs: row['duration_ms'] === null ? null : Number(row['duration_ms']),
-    providerSongId:
-      row['provider_song_id'] === null || row['provider_song_id'] === undefined
-        ? null
-        : String(row['provider_song_id']),
-    status: row['status'] as StoredMusicJob['status'],
-    errorCode: (row['error_code'] ?? null) as StoredMusicJob['errorCode'],
+    providerSongId: asTextOrNull(row['provider_song_id']),
+    status: asJobStatus(row['status']),
+    errorCode: asErrorCode(row['error_code']),
     spendMicros: Number(row['spend_micros'] ?? 0),
     createdAt: Number(row['created_at']),
   }

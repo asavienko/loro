@@ -11,7 +11,11 @@ describe('music log redaction', () => {
     })
     expect(JSON.stringify(redacted)).not.toMatch(/cortado|llevar/i)
     expect(redacted).toMatchObject({ job_id: 'job_1', style_id: 'acoustic_folk' })
-    expect(() => assertNoLyricLeak(JSON.stringify(redacted))).not.toThrow()
-    expect(() => assertNoLyricLeak('served Me pone un cortado')).toThrow(/leaked/)
+    expect(() => {
+      assertNoLyricLeak(JSON.stringify(redacted))
+    }).not.toThrow()
+    expect(() => {
+      assertNoLyricLeak('served Me pone un cortado')
+    }).toThrow(/leaked/)
   })
 })
