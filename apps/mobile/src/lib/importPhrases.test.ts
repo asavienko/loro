@@ -3,8 +3,12 @@ import {
   IMPORT_MAX_CHARACTERS,
   IMPORT_MAX_ROWS,
   isImportTooLarge,
+  isReviewedImportTooLarge,
   parseImportedPhrases,
+  reviewImportedCandidates,
+  type ImportCandidate,
 } from './importPhrases'
+import { MAX_OWN_PHRASE_TEXT_CODE_UNITS } from '@loro/core'
 
 describe('offline phrase import', () => {
   it('normalizes Unicode and whitespace without changing the reviewed text meaning', () => {
@@ -45,5 +49,47 @@ describe('bounded offline import review', () => {
     expect(isImportTooLarge(atLimit + 'Extra | Extra')).toBe(true)
     expect(parseImportedPhrases(atLimit + 'Extra | Extra', [])).toEqual([])
     expect(parseImportedPhrases('Extra | Extra', [])).toHaveLength(1)
+  })
+
+  it('shares the sync field limit for targets and meanings without truncating drafts', () => {
+    const atLimit = 'a'.repeat(MAX_OWN_PHRASE_TEXT_CODE_UNITS)
+    const overLimit = `${atLimit}a`
+    expect(parseImportedPhrases(`${atLimit} | ${atLimit}`, [])).toEqual([
+      { line: 1, targetText: atLimit, translation: atLimit, issue: null },
+    ])
+    expect(parseImportedPhrases(`${overLimit} | meaning`, [])).toMatchObject([
+      { targetText: overLimit, issue: 'too-long' },
+    ])
+    expect(parseImportedPhrases(`target | ${overLimit}`, [])).toMatchObject([
+      { translation: overLimit, issue: 'too-long' },
+    ])
+  })
+
+  it('rechecks an edited draft against field and normalized batch limits', () => {
+    const draft = parseImportedPhrases('Hola | Hello', [])
+    const edited = reviewImportedCandidates(
+      [{ ...draft[0]!, targetText: '😀'.repeat(MAX_OWN_PHRASE_TEXT_CODE_UNITS) }],
+      [],
+    )
+    // Emoji use two UTF-16 units each, matching the persisted Zod boundary.
+    expect(edited[0]).toMatchObject({ issue: 'too-long', targetText: '😀'.repeat(2_000) })
+
+    const rows: ImportCandidate[] = Array.from({ length: IMPORT_MAX_ROWS }, (_, index) => ({
+      line: index + 1,
+      targetText: `a${index}`,
+      translation: 'b',
+      issue: null,
+    }))
+    expect(isReviewedImportTooLarge(rows)).toBe(false)
+    const oversized = reviewImportedCandidates(
+      rows.map((candidate, index) =>
+        index === 0
+          ? { ...candidate, translation: 'e\u0301'.repeat(IMPORT_MAX_CHARACTERS) }
+          : candidate,
+      ),
+      [],
+    )
+    expect(isReviewedImportTooLarge(oversized)).toBe(true)
+    expect(oversized[0]).toMatchObject({ translation: 'é'.repeat(IMPORT_MAX_CHARACTERS) })
   })
 })

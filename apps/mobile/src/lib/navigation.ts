@@ -99,7 +99,13 @@ export function resolveDeepLink(input: string, onboarded: boolean): DeepLinkReso
   }
 }
 
-/** The currently built hubs. Rails and the shared switcher consume this same declaration. */
+export const NAVIGATION_GROUPS = ['lately', 'phrases', 'practice', 'you'] as const
+export type NavigationGroup = (typeof NAVIGATION_GROUPS)[number]
+
+/**
+ * The currently built hubs. Rails, the shared switcher, deep-link home behavior and More consume
+ * this one declaration; planned surfaces remain declared above but cannot become destinations.
+ */
 export const DESTINATIONS = [
   {
     href: '/more',
@@ -108,6 +114,12 @@ export const DESTINATIONS = [
     },
     rail: false,
     counted: false,
+    routeClass: 'utility',
+    parent: 'today',
+    home: 'today',
+    group: 'you',
+    exit: 'stack-or-home',
+    resume: 'none',
   },
   {
     href: '/account',
@@ -116,6 +128,12 @@ export const DESTINATIONS = [
     },
     rail: false,
     counted: false,
+    routeClass: 'utility',
+    parent: 'today',
+    home: 'today',
+    group: 'you',
+    exit: 'stack-or-home',
+    resume: 'none',
   },
   {
     href: '/practice/speak',
@@ -124,6 +142,12 @@ export const DESTINATIONS = [
     },
     rail: false,
     counted: false,
+    routeClass: 'learner',
+    parent: 'today',
+    home: 'today',
+    group: 'practice',
+    exit: 'stack-or-home',
+    resume: 'practice-session',
   },
   {
     href: '/',
@@ -132,6 +156,12 @@ export const DESTINATIONS = [
     },
     rail: false,
     counted: false,
+    routeClass: 'learner',
+    parent: 'today',
+    home: 'today',
+    group: 'lately',
+    exit: 'none',
+    resume: 'none',
   },
   {
     href: '/practice/stream',
@@ -140,6 +170,12 @@ export const DESTINATIONS = [
     },
     rail: true,
     counted: true,
+    routeClass: 'learner',
+    parent: 'today',
+    home: 'today',
+    group: 'practice',
+    exit: 'stack-or-home',
+    resume: 'practice-session',
   },
   {
     href: '/practice/refrain',
@@ -148,6 +184,12 @@ export const DESTINATIONS = [
     },
     rail: false,
     counted: false,
+    routeClass: 'learner',
+    parent: 'today',
+    home: 'today',
+    group: 'practice',
+    exit: 'stack-or-home',
+    resume: 'practice-session',
   },
   {
     href: '/add',
@@ -156,6 +198,12 @@ export const DESTINATIONS = [
     },
     rail: true,
     counted: false,
+    routeClass: 'learner',
+    parent: 'today',
+    home: 'today',
+    group: 'phrases',
+    exit: 'stack-or-home',
+    resume: 'none',
   },
   {
     href: '/progress',
@@ -164,6 +212,12 @@ export const DESTINATIONS = [
     },
     rail: true,
     counted: false,
+    routeClass: 'learner',
+    parent: 'today',
+    home: 'today',
+    group: 'phrases',
+    exit: 'stack-or-home',
+    resume: 'none',
   },
   {
     href: '/languages',
@@ -172,8 +226,21 @@ export const DESTINATIONS = [
     },
     rail: false,
     counted: false,
+    routeClass: 'utility',
+    parent: 'today',
+    home: 'today',
+    group: 'you',
+    exit: 'stack-or-home',
+    resume: 'none',
   },
 ] as const
+
+export function destinationsForGroup(group: NavigationGroup) {
+  return DESTINATIONS.filter(
+    (destination) =>
+      destination.group === group && destination.href !== '/' && destination.href !== '/more',
+  )
+}
 
 export function placeForPath(path: string): string | undefined {
   if (builtSurfaceForPath(path)?.id === 'phrase-detail') return copy.nav.phrasePlace

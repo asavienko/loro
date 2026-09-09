@@ -18,6 +18,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import {
   BROWSABLE_THEMES,
   foldSearchText,
+  MAX_OWN_PHRASE_TEXT_CODE_UNITS,
   TAGS,
   type BrowsableTheme,
   type Difficulty,
@@ -52,6 +53,7 @@ import { useApp } from '../src/store'
 import {
   importedPhraseKey,
   isImportTooLarge,
+  isReviewedImportTooLarge,
   IMPORT_MAX_CHARACTERS,
   IMPORT_MAX_ROWS,
   normalizeImportedText,
@@ -587,9 +589,19 @@ function ImportPhrases({
     (candidate) =>
       candidate.issue === null && candidate.targetText !== '' && candidate.translation !== '',
   )
+  const reviewedBatchTooLarge = review !== null && isReviewedImportTooLarge(review)
   const save = () => {
+    if (review === null || reviewedBatchTooLarge) return
+    const checked = reviewImportedCandidates(review, existing)
+    if (
+      isReviewedImportTooLarge(checked) ||
+      checked.some((candidate) => candidate.issue !== null)
+    ) {
+      setReview(checked)
+      return
+    }
     const keys = new Set(existing.map(importedPhraseKey))
-    for (const candidate of accepted) {
+    for (const candidate of checked) {
       const key = importedPhraseKey(candidate.targetText)
       if (keys.has(key)) continue
       keys.add(key)
@@ -638,6 +650,13 @@ function ImportPhrases({
             label={copy.add.import.review(accepted.length)}
             hint={copy.add.import.reviewHint}
           />
+          {reviewedBatchTooLarge && (
+            <View accessibilityRole="alert">
+              <Text variant="caption" color={semantic.warn.text}>
+                {copy.add.import.tooLarge(IMPORT_MAX_ROWS, IMPORT_MAX_CHARACTERS)}
+              </Text>
+            </View>
+          )}
           {review.length === 0 ? (
             <Card>
               <Text variant="caption" color={ink.muted}>
@@ -675,7 +694,9 @@ function ImportPhrases({
                     <Text variant="captionSm" color={semantic.warn.text}>
                       {candidate.issue === 'duplicate'
                         ? copy.add.import.duplicate
-                        : copy.add.import.invalid}
+                        : candidate.issue === 'too-long'
+                          ? copy.add.import.tooLong(MAX_OWN_PHRASE_TEXT_CODE_UNITS)
+                          : copy.add.import.invalid}
                     </Text>
                   )}
                 </Stack>
@@ -685,7 +706,7 @@ function ImportPhrases({
           <Button
             label={copy.add.import.add(accepted.length)}
             onPress={save}
-            disabled={accepted.length === 0}
+            disabled={accepted.length === 0 || reviewedBatchTooLarge}
           />
         </Stack>
       )}
