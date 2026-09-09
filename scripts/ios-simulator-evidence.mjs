@@ -22,7 +22,13 @@ export function selectSimulator(inventory, serial) {
   return eligible[0]
 }
 
-export function collectIosEvidence({ serial, packageName, output, run = spawnSync }) {
+export function collectIosEvidence({
+  serial,
+  packageName,
+  output,
+  artifactRevision,
+  run = spawnSync,
+}) {
   const command = (tool, args) => {
     const result = run(tool, args, { encoding: 'utf8', timeout: 30_000 })
     if (result.error || result.status !== 0)
@@ -54,10 +60,10 @@ export function collectIosEvidence({ serial, packageName, output, run = spawnSyn
     packageName,
     runtime: device.runtime,
     deviceName: device.name,
-    artifactRevision: null,
+    artifactRevision: artifactRevision ?? null,
     checks: { device: 'captured', installedPackage: 'present', screenshot: 'captured' },
     limits: [
-      'The installed app revision is unverified; correlate with retained build metadata.',
+      'The declared artifact revision identifies the intended build; retain independent build metadata before accepting it.',
       'The screenshot captures the current simulator screen; app launch and scenario outcomes are not asserted.',
       'This read-only collection does not prove clean iOS compilation, minimum OS support, physical-device speech, permissions, persistence, lifecycle or interruption acceptance.',
     ],

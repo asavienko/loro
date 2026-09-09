@@ -100,11 +100,12 @@ those existing advisories are not resolved by this workflow.
 
 ## Native evidence collection (plan 58)
 
-`pnpm native:evidence` captures Android device metadata, permissions, logs and the current screen.
-For an already installed iOS simulator app, use:
+`pnpm native:evidence --artifact-revision GIT_REVISION` captures Android device metadata,
+permissions, logs and the current screen, bound to the retained revision of the installed build. For
+an already installed iOS simulator app, use:
 
 ```bash
-pnpm native:evidence --platform ios --package app.loro.ios --serial SIMULATOR-UDID
+pnpm native:evidence --platform ios --package app.loro.ios --serial SIMULATOR-UDID --artifact-revision GIT_REVISION
 ```
 
 Full Xcode must be selected with an installed simulator runtime and a booted simulator. Omitting
