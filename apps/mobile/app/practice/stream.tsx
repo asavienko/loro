@@ -141,7 +141,7 @@ function NowPlayingCard({
   useLocale()
   const locale = useApp((state) => state.targetLocale)
   const recordPlay = useApp((state) => state.recordPlay)
-  const audio = useAudioSpeech(locale)
+  const audio = useAudioSpeech(locale, phrase.catalog?.audio)
   const playing =
     audio.phraseId === phrase.id && (audio.playback === 'playing' || audio.playback === 'loading')
   return (
@@ -172,7 +172,9 @@ function NowPlayingCard({
           ? copy.stream.audioNote
           : audio.playback === 'error'
             ? copy.audioSpeech.error
-            : copy.audioSpeech.tts}
+            : audio.source === 'catalog'
+              ? copy.audioSpeech.catalog
+              : copy.audioSpeech.tts}
       </Text>
       {audio.canPlay && (
         <Pressable
@@ -181,9 +183,16 @@ function NowPlayingCard({
           onPress={() => {
             if (playing) void audioSpeech.stopPlayback()
             else
-              void audioSpeech.play(phrase.id, phrase.targetText, locale, 0.92, () => {
-                recordPlay(phrase.id)
-              })
+              void audioSpeech.play(
+                phrase.id,
+                phrase.targetText,
+                locale,
+                0.92,
+                () => {
+                  recordPlay(phrase.id)
+                },
+                phrase.catalog?.audio,
+              )
           }}
         >
           <Text variant="body" color={onDark.primary} align="center">
