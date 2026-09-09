@@ -15,7 +15,7 @@ import {
 import { accountClient } from '../src/lib/account/runtime'
 import { audioCache } from '../src/lib/audioCache'
 import { audioSpeech, useAudioSpeech } from '../src/lib/audioSpeech'
-import { publicApiUrl } from '../src/lib/backend'
+import { bundledApiUrl } from '../src/lib/account/config'
 import { isNetworkAvailable, onNetworkAvailable } from '../src/lib/connectivity'
 import { copy } from '../src/lib/copy'
 import { deviceClock } from '../src/lib/clock'
@@ -112,7 +112,7 @@ export default function ListenExport() {
     phrases: lines,
     repeats,
     network,
-    configured: publicApiUrl() !== undefined,
+    configured: bundledApiUrl() !== null,
     nativeCache: audioCache.available,
     sessionBusy,
     diskFull,
