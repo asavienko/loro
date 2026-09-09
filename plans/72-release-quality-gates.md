@@ -39,8 +39,9 @@ have simulation/property/golden tests.
   learning text. The explicit development flag enables it; production ignores the flag.
 - Generator drift and ICU structure are checked by the normal mobile unit gate. Focused i18n,
   pseudo-locale and missing-PluralRules regression tests pass (11 tests).
-- The opt-in browser smoke passed expanded-copy onboarding and Today's horizontal fit on 2026-09-09.
-  This is a harness slice, not all-state clipping or native acceptance; see
+- The opt-in browser smoke covers expanded-copy onboarding, Today's horizontal fit and Add's
+  interactive mode controls/horizontal fit. This is a harness slice, not all-state clipping or
+  native acceptance; see
   [localization](../docs/process/localization.md#development-pseudo-locale-f-08-plan-72).
 - Native matrices, long-content/text-scale pseudo sweeps, locale date coverage and measured budgets
   remain. Q-14 and plan 87's bilingual evidence still own their existing sign-off gates.

@@ -25,11 +25,12 @@ custom modules. Generated bindings and embedded browser WASM have drift checks.
 `pnpm native:evidence` now captures a read-only, timestamped Android device evidence bundle under
 the ignored local-build directory. `--platform ios` now collects Xcode version, booted simulator
 metadata, installed-bundle presence and a verified PNG artifact, with explicit missing prerequisite
-and ambiguous-device errors. The CLI requires `--artifact-revision`; normal `pnpm check` runs
-hardware-free collector fixtures. The supplied revision is a caller declaration, not verification of
-the installed binary. Correlating it with a retained build/package digest and explicit scenario
-results remains required. No new iOS runtime or physical-device acceptance is claimed. See the
-native evidence section of [APK setup](../../../docs/process/local-apk.md).
+and ambiguous-device errors. The CLI requires a Git revision and a retained build file; it resolves
+the revision locally and records the file's SHA-256 and byte size. Normal `pnpm check` runs
+hardware-free collector fixtures. This identifies the reviewed bytes but does not verify the
+installed binary. Correlating them with app build metadata and explicit scenario results remains
+required. No new iOS runtime or physical-device acceptance is claimed. See the native evidence
+section of [APK setup](../../../docs/process/local-apk.md).
 
 The implementation passed Android debug/release compilation, module packaging and an airplane-mode
 emulator persistence/reveal smoke. Swift syntax/podspec and host UniFFI smoke passed, but full iOS

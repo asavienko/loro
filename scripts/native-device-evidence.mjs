@@ -1,5 +1,6 @@
 import { spawnSync } from 'node:child_process'
-import { mkdirSync, writeFileSync } from 'node:fs'
+import { createHash } from 'node:crypto'
+import { mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { resolve, relative, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { collectIosEvidence } from './ios-simulator-evidence.mjs'
@@ -14,6 +15,7 @@ export function parseArguments(args) {
     serial: undefined,
     output: undefined,
     artifactRevision: undefined,
+    artifact: undefined,
   }
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index]
@@ -22,7 +24,8 @@ export function parseArguments(args) {
       arg === '--package' ||
       arg === '--output' ||
       arg === '--platform' ||
-      arg === '--artifact-revision'
+      arg === '--artifact-revision' ||
+      arg === '--artifact'
     ) {
       const value = args[++index]
       if (!value || value.startsWith('--')) throw new Error(`${arg} requires a value.`)
@@ -31,6 +34,7 @@ export function parseArguments(args) {
       if (arg === '--package') result.packageName = value
       if (arg === '--output') result.output = value
       if (arg === '--artifact-revision') result.artifactRevision = value
+      if (arg === '--artifact') result.artifact = value
     } else if (arg === '--help') result.help = true
     else throw new Error(`Unknown option: ${arg}`)
   }
@@ -49,6 +53,36 @@ export function parseArguments(args) {
   return result
 }
 
+function isWithin(base, candidate) {
+  const path = relative(base, candidate)
+  return path === '' || (!path.startsWith(`..${sep}`) && path !== '..')
+}
+
+/**
+ * Bind an evidence bundle to immutable bytes as well as a Git object. This establishes the
+ * retained-build side of the correlation; it cannot prove that those bytes are installed.
+ */
+export function artifactIdentity(rootPath, artifactRevision, artifact) {
+  if (!artifact) throw new Error('Pass --artifact with the retained build file.')
+  const artifactPath = resolve(rootPath, artifact)
+  const localBuilds = resolve(rootPath, '.local-builds')
+  if (!isWithin(localBuilds, artifactPath))
+    throw new Error('Artifact must remain inside .local-builds.')
+  let stats
+  try {
+    stats = statSync(artifactPath)
+  } catch {
+    throw new Error('Artifact file does not exist.')
+  }
+  if (!stats.isFile()) throw new Error('Artifact must be a regular file.')
+  return {
+    revision: artifactRevision,
+    file: relative(rootPath, artifactPath),
+    sha256: createHash('sha256').update(readFileSync(artifactPath)).digest('hex'),
+    bytes: stats.size,
+  }
+}
+
 export function evidenceOutput(rootPath, requested) {
   const base = resolve(rootPath, '.local-builds', 'native-evidence')
   const output = resolve(requested || resolve(base, new Date().toISOString().replaceAll(':', '-')))
@@ -60,6 +94,16 @@ export function evidenceOutput(rootPath, requested) {
     return output
   if (output === base) return output
   throw new Error('Evidence output must remain inside .local-builds/native-evidence.')
+}
+
+function resolveRevision(revision) {
+  const result = spawnSync('git', ['rev-parse', '--verify', `${revision}^{commit}`], {
+    cwd: root,
+    encoding: 'utf8',
+  })
+  if (result.error || result.status !== 0)
+    throw new Error('Artifact revision must resolve to a commit in this checkout.')
+  return result.stdout.trim()
 }
 
 function command(adb, serial, argv, capture = true) {
@@ -74,7 +118,14 @@ function command(adb, serial, argv, capture = true) {
   return result.stdout
 }
 
-export function collectEvidence({ adb = 'adb', serial, packageName, output, artifactRevision }) {
+export function collectEvidence({
+  adb = 'adb',
+  serial,
+  packageName,
+  output,
+  artifactRevision,
+  artifact,
+}) {
   mkdirSync(output, { recursive: true })
   const devices = command(adb, undefined, ['devices', '-l'])
   const selected =
@@ -91,6 +142,7 @@ export function collectEvidence({ adb = 'adb', serial, packageName, output, arti
     serial: selected,
     packageName,
     artifactRevision: artifactRevision ?? null,
+    artifact: artifact ?? null,
     checks: {
       device: 'captured',
       installedPackage: 'captured',
@@ -99,7 +151,7 @@ export function collectEvidence({ adb = 'adb', serial, packageName, output, arti
       screenshot: 'captured',
     },
     limits: [
-      'This collector records evidence only; it does not grant permissions or claim speech, lifecycle, interruption, or iOS acceptance.',
+      'This collector records evidence only; it does not verify the installed bytes or claim speech, lifecycle, interruption, or iOS acceptance.',
       'Review the artifacts on a supported physical device before closing the native acceptance gates.',
     ],
   }
@@ -124,7 +176,7 @@ function main() {
   const options = parseArguments(process.argv.slice(2))
   if (options.help) {
     console.log(
-      'Usage: pnpm native:evidence --artifact-revision GIT_REVISION [--platform android|ios] [--serial DEVICE] [--package PACKAGE] [--output PATH]',
+      'Usage: pnpm native:evidence --artifact-revision GIT_REVISION --artifact .local-builds/RETAINED_BUILD [--platform android|ios] [--serial DEVICE] [--package PACKAGE] [--output PATH]',
     )
     console.log(
       'Captures read-only Android device or booted iOS simulator evidence under .local-builds/native-evidence/.',
@@ -135,9 +187,11 @@ function main() {
     throw new Error(
       'Pass --artifact-revision with the retained Git revision of the installed build.',
     )
+  const revision = resolveRevision(options.artifactRevision)
+  const artifact = artifactIdentity(root, revision, options.artifact)
   const output = evidenceOutput(root, options.output)
   const collector = options.platform === 'ios' ? collectIosEvidence : collectEvidence
-  const manifest = collector({ ...options, output })
+  const manifest = collector({ ...options, artifactRevision: revision, artifact, output })
   console.log(`Native evidence captured for ${manifest.packageName}: ${output}`)
 }
 

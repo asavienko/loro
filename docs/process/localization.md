@@ -70,10 +70,11 @@ LORO_E2E_PORT=8192 pnpm test:e2e:pseudo-locale
 
 The normal unit gate fails if the committed fixture drifts or any ICU argument/selector contract
 changes. The local release gate starts a dedicated pseudo-locale server for the browser smoke, which
-completes onboarding with expanded interface labels and checks Today's horizontal fit. The ordinary
-browser suite skips this debug-only smoke; it continues to assert the real translations. Full
-pseudo-locale state/text-scale sweeps, long personal-content fixtures and native clipping review
-remain open. Browser geometry is not native accessibility acceptance.
+completes onboarding with expanded interface labels and checks Today's horizontal fit plus Add's
+three interactive mode controls and horizontal fit. The ordinary browser suite skips this debug-only
+smoke; it continues to assert the real translations. Full pseudo-locale state/text-scale sweeps,
+long personal-content fixtures and native clipping review remain open. Browser geometry is not
+native accessibility acceptance.
 
 ## Content and service contracts
 
