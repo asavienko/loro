@@ -21,7 +21,7 @@ import { useLocale } from '../../src/lib/i18n'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Platform, ScrollView, StyleSheet, View } from 'react-native'
-import { router, useLocalSearchParams, useNavigation } from 'expo-router'
+import { router, useNavigation } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useBottomBar } from '../../src/ui/BottomBarContext'
 import {
@@ -72,7 +72,6 @@ export default function Refrain() {
   useLocale()
   const insets = useSafeAreaInsets()
   const { height: bottomBarHeight } = useBottomBar()
-  const { wave: requestedWave } = useLocalSearchParams<{ wave?: string }>()
   const scheduledWave = waveSchedule(
     ['morning', 'midday', 'evening'] as const,
     PRODUCTION_WAVE_TIMES,
@@ -128,6 +127,28 @@ export default function Refrain() {
               router.replace('/add')
             },
           }}
+        />
+      </Screen>
+    )
+  }
+  if (entry.kind === 'locked') {
+    return (
+      <Screen>
+        <EmptyState
+          title={copy.refrain.unavailable.title(entry.next.time)}
+          body={copy.refrain.unavailable.body}
+          action={{ label: copy.refrain.done.cta, onPress: () => router.replace('/') }}
+        />
+      </Screen>
+    )
+  }
+  if (entry.kind === 'complete') {
+    return (
+      <Screen>
+        <EmptyState
+          title={copy.refrain.unavailable.complete}
+          body={copy.refrain.unavailable.body}
+          action={{ label: copy.refrain.done.cta, onPress: () => router.replace('/') }}
         />
       </Screen>
     )
@@ -286,7 +307,10 @@ interface RefrainSession {
  * RefrainEngine's decisions — the screen used to re-derive them, which is how the
  * card's warmth and the stored value came to disagree.
  */
-function useRefrainSession(wave: 'morning' | 'midday' | 'evening'): RefrainSession {
+function useRefrainSession(
+  wave: 'morning' | 'midday' | 'evening',
+  enabled: boolean,
+): RefrainSession {
   const phrases = useApp((s) => s.phrases)
   const refrainSet = useApp((s) => s.refrainSet)
   const applyDelta = useApp((s) => s.applyDelta)
@@ -299,9 +323,11 @@ function useRefrainSession(wave: 'morning' | 'midday' | 'evening'): RefrainSessi
   // Entering the Refrain is one of the moments the day must be re-checked: a learner who
   // opened the app before midnight and starts practising after it needs today's set.
   useEffect(() => {
+    if (!enabled) return
     ensureRefrainSet()
-  }, [ensureRefrainSet])
+  }, [enabled, ensureRefrainSet])
   useEffect(() => {
+    if (!enabled) return
     if (useApp.getState().refrainResume.session !== null) return
     let cancelled = false
     void refrainEngine
@@ -328,7 +354,7 @@ function useRefrainSession(wave: 'morning' | 'midday' | 'evening'): RefrainSessi
     }
     // Re-planned when the day's set changes, not on every rep: the plan is the day's
     // work, and re-planning mid-phrase would restart the mode sequence.
-  }, [refrainSet, targetLocale])
+  }, [enabled, refrainSet, targetLocale])
   const item = session?.plan.items[cursor]
   const storePhrase = useMemo(
     () => (item === undefined ? undefined : phrases.find((p) => p.id === item.phraseId)),

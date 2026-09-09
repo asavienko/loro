@@ -82,6 +82,7 @@ export const SURFACE_LAWS: Record<SurfaceId, SurfaceLaw> = {
   'message-inspector': { surfaceClass: 'push', expectedUse: 'often', resumable: false },
   languages: { surfaceClass: 'push', expectedUse: 'occasional', resumable: false },
   account: { surfaceClass: 'push', expectedUse: 'occasional', resumable: false },
+  settings: { surfaceClass: 'push', expectedUse: 'occasional', resumable: false },
   more: { surfaceClass: 'push', expectedUse: 'often', resumable: false },
 }
 
