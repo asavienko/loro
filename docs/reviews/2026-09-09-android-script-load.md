@@ -1,8 +1,8 @@
 # Android emulator: Loro cannot load its JavaScript bundle
 
 - **Bug ID:** ANDROID-2026-09-09-01
-- **Status:** Open — reproduced on cold launch; missing bundle confirmed in the installed debuggable
-  Loro APK. Launching the separately installed Loro Preview is a verified workaround.
+- **Status:** Fixed in the current source — the standalone Preview build remains the correct
+  no-Metro path, while the debug build now has its own launcher, package and launch scheme.
 - **Impact:** Blocks entry to every learner screen on the reported emulator installation.
   Distribution-wide impact and data loss are not established.
 - **Requirement / owner:** F-03 (offline practice); Android build and device acceptance in
@@ -88,7 +88,11 @@ or server connectivity. Networking was not disabled for this comparison.
 
 ![Preview startup comparison](evidence/2026-09-09-android-script-load/preview-launch.png)
 
-No app data was cleared, APK replaced or Metro configuration changed. Preview was left open.
+No app data was cleared, APK replaced or Metro configuration changed during diagnosis. After the fix
+was verified, the obsolete `app.loro.android` installation was uninstalled from this emulator. Its
+on-device directory measured 9,284 KiB immediately before removal; no claim is made about the
+meaning of individual cached or database files. Preview and the new development app remain
+installed.
 
 ## Expected behavior and diagnosis
 
@@ -105,11 +109,10 @@ its runtime attempts asset loading and fails while no host Metro server is liste
 cannot function as a standalone installation in this state. The installed Preview has its bundle and
 starts successfully.
 
-**Remaining uncertainty:** why this particular development binary was installed/launched for this
-test, which source built it, and whether its Metro configuration would work when a matching server
-is available. No release-packaging regression was reproduced. Missing bundling is expected for
-normal Metro-dependent debug variants; using that artifact for standalone testing is the confirmed
-workflow mismatch. A separate loader/configuration defect has not been ruled out.
+**Root cause:** a Metro-dependent debug installation used the same `app.loro.android` package,
+“Loro” launcher label and `loro://` scheme as the app intended for standalone use. With Metro
+stopped, it could only fail at JavaScript loading. The shared scheme also made Android offer several
+Loro installations when Expo launched the development link.
 
 Relevant source at the investigated commit:
 
@@ -135,7 +138,27 @@ adb -s emulator-5554 shell am start -W -n app.loro.android/.MainActivity
 Actual: the red script-loading screen appears; app-scoped logcat records
 `java.lang.RuntimeException: Unable to load script` in `loadJSBundleFromAssets`.
 
-## Workaround and closure criteria
+## Resolution and verification
+
+The current source now makes the build mode visible and routable:
+
+- The Android debug Gradle variant appends `.dev` and labels its launcher **Loro Development**.
+- `pnpm --filter @loro/mobile android` synchronizes native configuration before compiling, then runs
+  with `LORO_ANDROID_DEV_CLIENT=1`. That setting gives only this development build the `loro-dev://`
+  scheme.
+- The bundled `app.loro.android.preview` / **Loro Preview** build retains `loro://` and is the
+  standalone path.
+
+On the same Pixel_8_API_36 emulator, the supported developer command built and installed
+`app.loro.android.dev`, opened `loro-dev://expo-development-client/?url=…`, started Metro and
+reached the learner UI. The foreground activity was
+`app.loro.android.dev/app.loro.android.MainActivity`; React Native logged `Running "main"`; no
+`Unable to load script` message appeared. The Android resolver did not appear.
+
+The debug variant requires the command's Metro process to remain running. Preview was launched again
+after verification with Metro stopped and is left in the foreground.
+
+## Standalone use
 
 For standalone testing, open the installed **Loro Preview** application. This exact command was
 verified to reach onboarding without starting Metro:
@@ -144,14 +167,6 @@ verified to reach onboarding without starting Metro:
 adb -s emulator-5554 shell am start -W -n app.loro.android.preview/.MainActivity
 ```
 
-For source development, identify the source that built the debug APK, start matching Metro, verify
-its `/status` endpoint and configure emulator access to its actual port. This recovery path was not
-exercised; `adb reverse` alone cannot start Metro.
-
-Before closing the underlying workflow issue, document and verify the intended emulator launch path
-and correlate its APK with source metadata. Any future standalone build must retain the existing
-bundle/manifest checks and pass an emulator cold-launch smoke without Metro. Full offline practice
+The existing [local APK runbook](../process/local-apk.md) remains the standalone workflow. It
+requires the bundle/manifest checks and a separate emulator cold-launch smoke; full offline practice
 and persistence acceptance remain separate gates.
-
-No implementation files changed. See the [local APK runbook](../process/local-apk.md) for the
-existing standalone build path.
