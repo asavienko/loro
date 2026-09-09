@@ -8,6 +8,7 @@ struct LoroPlaybackOptions: Record {
   @Field var text: String = ""
   @Field var locale: String = ""
   @Field var rate: Double = 1
+  @Field var uri: String = ""
 }
 
 struct LoroListeningOptions: Record {
@@ -70,9 +71,10 @@ public final class LoroAudioSpeechModule: Module {
 
 /// Owns the audio session and all recorded buffers. This class exposes only text
 /// and lifecycle events; no file, PCM, waveform, or audio handle reaches JS.
-private final class LoroAudioSpeechController: NSObject, AVSpeechSynthesizerDelegate {
+private final class LoroAudioSpeechController: NSObject, AVSpeechSynthesizerDelegate, AVAudioPlayerDelegate {
   private var emit: ((String, [String: Any]) -> Void)?
   private var synthesizer = AVSpeechSynthesizer()
+  private var filePlayer: AVAudioPlayer?
   private var audioEngine = AVAudioEngine()
   private let audioSession = AVAudioSession.sharedInstance()
   private var observers: [NSObjectProtocol] = []
@@ -109,15 +111,23 @@ private final class LoroAudioSpeechController: NSObject, AVSpeechSynthesizerDele
   }
 
   func play(_ options: LoroPlaybackOptions) throws {
-    guard !options.id.isEmpty, !options.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+    guard !options.id.isEmpty else {
+      emit?("playback", ["id": options.id, "state": "error", "error": "voice-unavailable"])
+      throw failure("A playback request ID is required.")
+    }
+    cancelListening()
+    stopPlayback()
+    if !options.uri.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+      try playFile(options)
+      return
+    }
+    guard !options.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
       options.rate.isFinite, options.rate > 0,
       let voice = installedVoice(locale: options.locale)
     else {
       emit?("playback", ["id": options.id, "state": "error", "error": "voice-unavailable"])
       throw failure("A device voice is unavailable for this language.")
     }
-    cancelListening()
-    stopPlayback()
     do {
       try audioSession.setCategory(.playback, mode: .spokenAudio, options: [.duckOthers])
       try audioSession.setActive(true)
@@ -142,9 +152,42 @@ private final class LoroAudioSpeechController: NSObject, AVSpeechSynthesizerDele
     let id = activePlaybackID
     activePlaybackID = nil
     utteranceIDs.removeAll()
+    filePlayer?.stop()
+    filePlayer = nil
     synthesizer.stopSpeaking(at: .immediate)
     if let id { emit?("playback", ["id": id, "state": "stopped"]) }
     deactivateIfIdle()
+  }
+
+  private func playFile(_ options: LoroPlaybackOptions) throws {
+    guard let url = URL(string: options.uri),
+      url.scheme?.lowercased() == "file"
+    else {
+      emit?("playback", ["id": options.id, "state": "error", "error": "file-unavailable"])
+      throw failure("Catalog audio is not a playable file.")
+    }
+    do {
+      try audioSession.setCategory(.playback, mode: .spokenAudio, options: [.duckOthers])
+      try audioSession.setActive(true)
+      let player = try AVAudioPlayer(contentsOf: url)
+      player.delegate = self
+      player.enableRate = true
+      if options.rate.isFinite, options.rate > 0 {
+        player.rate = Float(min(2, max(0.5, options.rate)))
+      }
+      filePlayer = player
+      activePlaybackID = options.id
+      guard player.play() else {
+        filePlayer = nil
+        activePlaybackID = nil
+        throw failure("Catalog audio could not start.")
+      }
+      emit?("playback", ["id": options.id, "state": "playing"])
+    } catch {
+      emit?("playback", ["id": options.id, "state": "error", "error": "file-unavailable"])
+      deactivateIfIdle()
+      throw error
+    }
   }
 
   func startListening(_ options: LoroListeningOptions,
@@ -366,6 +409,16 @@ private final class LoroAudioSpeechController: NSObject, AVSpeechSynthesizerDele
 
   private func failure(_ message: String) -> NSError {
     NSError(domain: "LoroAudioSpeech", code: 1, userInfo: [NSLocalizedDescriptionKey: message])
+  }
+
+  func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
+    DispatchQueue.main.async { [weak self] in
+      guard let self, self.filePlayer === player, let id = self.activePlaybackID else { return }
+      self.filePlayer = nil
+      self.activePlaybackID = nil
+      self.emit?("playback", ["id": id, "state": flag ? "ended" : "error"])
+      self.deactivateIfIdle()
+    }
   }
 
   func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didStart utterance: AVSpeechUtterance) {

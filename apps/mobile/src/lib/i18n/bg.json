@@ -234,6 +234,7 @@
   "stream.lovedBadge": "♥ Любима",
   "settings.accentCoral": "Корал",
   "audioSpeech.tts": "Глас на устройството · нужен е инсталиран офлайн глас",
+  "audioSpeech.catalog": "Каталожен запис · произносителен ориентир",
   "add.browseTitle": "{theme} · остават {left, number}",
   "toast.difficulty.easy": "Лесна — премества се назад",
   "today.lockedIn": "{locked, number} от {total, number} затвърдени",

@@ -12,6 +12,9 @@ export const audioSpeechCopy = {
   get tts() {
     return message('audioSpeech.tts')
   },
+  get catalog() {
+    return message('audioSpeech.catalog')
+  },
   get unavailable() {
     return message('audioSpeech.unavailable')
   },
