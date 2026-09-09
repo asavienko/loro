@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Pressable, SectionLabel, Sheet, Text } from '../primitives'
-import { border, ink, line, space } from '../theme'
+import { border, ink, line, MIN_TAP, space } from '../theme'
 
 /** Navigation.dc.html:95–102, 380–397. No invented ongoing work or unbuilt destinations. */
 export function NavigationMenu({
@@ -155,7 +155,13 @@ const s = StyleSheet.create({
     minHeight: SPINE_HEIGHT,
     alignSelf: 'flex-start',
   },
-  ongoing: { marginLeft: 'auto', flexDirection: 'row', alignItems: 'center', gap: space['1'] },
+  ongoing: {
+    marginLeft: 'auto',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space['1'],
+    minHeight: MIN_TAP,
+  },
   place: { fontSize: PLACE_SIZE },
   caret: { fontSize: CARET_SIZE },
   grow: { flex: 1 },
