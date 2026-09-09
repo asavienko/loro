@@ -192,6 +192,7 @@ function ReadyLayout() {
                 <Stack.Screen name="more" options={{ title: copy.nav.more }} />
                 <Stack.Screen name="languages" options={{ title: copy.languages.title }} />
                 <Stack.Screen name="progress" options={{ title: copy.nav.progress }} />
+                <Stack.Screen name="listen-export" options={{ title: copy.nav.listenExport }} />
                 {devToolsAreAvailable() ? (
                   <Stack.Screen name="dev/tokens" options={{ headerShown: false }} />
                 ) : null}

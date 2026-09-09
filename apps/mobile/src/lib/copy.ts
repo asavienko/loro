@@ -19,6 +19,7 @@ import { streamCopy } from './copy/stream'
 import { progressCopy } from './copy/progress'
 import { toastCopy } from './copy/toast'
 import { a11yCopy } from './copy/a11y'
+import { listenExportCopy } from './copy/listenExport'
 
 export const copy = {
   persistence: persistenceCopy,
@@ -40,6 +41,7 @@ export const copy = {
   progress: progressCopy,
   toast: toastCopy,
   a11y: a11yCopy,
+  listenExport: listenExportCopy,
 }
 
 export function themeLabel(theme: string): string {
