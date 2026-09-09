@@ -20,9 +20,9 @@ The three locally actionable findings are implemented on this branch. A partial 
 removes only rows that committed successfully, preserving rejected and write-failed rows with their
 edits for correction. Review-record validation recomputes each retained UI/catalog digest, verifies
 UI/course identity and combined material identity, and requires declared reviewer-language coverage
-for each entry. The implementation adds focused unit and browser regression coverage. Final local CI
-remains the integration gate; real bilingual reviewer evidence remains a separate acceptance
-requirement.
+for each entry. The implementation adds focused unit and browser regression coverage. The full
+`CI_BASE_REF=origin/main pnpm ci:local` gate passed after these changes; real bilingual reviewer
+evidence remains a separate acceptance requirement.
 
 ## Findings
 
