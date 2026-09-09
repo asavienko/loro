@@ -10,7 +10,7 @@
   },
   "scripts": {
     "bootstrap": "./scripts/bootstrap.sh",
-    "check": "pnpm test:deploy && pnpm contracts:check && pnpm --filter @loro/core-rs check:browser && turbo run lint typecheck test content:validate check:a11y check:contrast",
+    "check": "pnpm check:routes && pnpm test:deploy && pnpm contracts:check && pnpm --filter @loro/core-rs check:browser && turbo run lint typecheck test content:validate check:a11y check:contrast",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint -- --fix",
@@ -49,7 +49,8 @@
     "native:evidence": "node scripts/native-device-evidence.mjs",
     "apk:local": "node scripts/apk-local.mjs",
     "apk:github": "node scripts/apk-local.mjs --upload",
-    "test:deploy": "node --test scripts/ec2-release.test.mjs scripts/ec2-gateway.test.mjs",
+    "check:routes": "node --test scripts/check-routes.test.mjs && node scripts/check-routes.mjs",
+    "test:deploy": "node --test scripts/ec2-release.test.mjs scripts/ec2-gateway.test.mjs scripts/ec2-backup.test.mjs",
     "test:native:evidence": "node --test scripts/native-device-evidence.test.mjs"
   },
   "devDependencies": {

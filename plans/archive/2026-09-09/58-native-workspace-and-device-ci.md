@@ -22,7 +22,12 @@ and native foreground audio/speech; OP-SQLite supplies the device driver. Expo G
 custom modules. Generated bindings and embedded browser WASM have drift checks.
 
 `pnpm native:evidence` now captures a read-only, timestamped Android device evidence bundle under
-the ignored local-build directory; its fixture tests protect command construction and redaction.
+the ignored local-build directory. `--platform ios` now collects Xcode version, booted simulator
+metadata, installed-bundle presence and a verified PNG artifact, with explicit missing prerequisite
+and ambiguous-device errors. Fixture tests cover command construction and failure behavior; no new
+iOS runtime or physical-device acceptance is claimed. Installed artifact revision remains unverified
+until correlated with retained build metadata. See the native evidence section of
+[APK setup](../../../docs/process/local-apk.md).
 
 The implementation passed Android debug/release compilation, module packaging and an airplane-mode
 emulator persistence/reveal smoke. Swift syntax/podspec and host UniFFI smoke passed, but full iOS

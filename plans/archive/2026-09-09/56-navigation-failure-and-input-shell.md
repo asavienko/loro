@@ -3,8 +3,9 @@
 - **Requirement IDs:** `P1-02`, `P2-03`, `P2-07`, `P2-09`, `P2-14`, `P4-01`, `P4-06`, `P5-02`,
   `P5-08`, `F-03`, `N-01`…`N-03`
 - **Milestone:** M1
-- **Status:** 🟡 Typed surface inventory and guarded unknown-link recovery are implemented. Full
-  route laws, failure boundaries, keyboard and list work remain; native input proof needs 58.
+- **Status:** 🟡 Typed surface inventory, guarded unknown-link recovery and route/state drift checks
+  are implemented. Full route laws, failure boundaries, keyboard and list work remain; native input
+  proof needs 58.
 - **Depends on:** 53/55/79/84 completed; 81 consumes the route contract; 58 only for native
   verification.
 - **Reviewed:** 2026-09-09 against checkout `42f4d57`; source/plan review only, no new device or
@@ -37,7 +38,7 @@ can scale beyond the three 31-phrase starter catalogs.
 1. [ ] Extend the basic conditional-home resolver with modal routes and target-course deep-link
        contracts in the implemented pure surface registry. Keep target routes declared but unbuilt
        and unreachable until their screen files land. This plan owns metadata/guards and
-       `check:routes`; plan 81 owns menu/More rendering.
+       `check:routes` (implemented); plan 81 owns menu/More rendering.
 2. [ ] Replace route-specific back guesses with tested laws for first-run, add/detail, practice,
        trip, settings, notifications, widgets, and unknown deep links.
 3. [ ] Add route-level error boundaries and explicit loading, empty, degradable, recoverable, and
@@ -45,7 +46,7 @@ can scale beyond the three 31-phrase starter catalogs.
 4. [ ] Complete text input focus/keyboard behavior and camera/import fallback navigation.
 5. [ ] Virtualize catalog, phrase, suggestion, and future trip lists with stable keys and an
        explicit empty/error contract.
-6. [ ] Enforce route/state ownership so every new route and learner-visible state enters the E2E
+6. [x] Enforce route/state ownership so every new route and learner-visible state enters the E2E
        manifest in the same change.
 
 ## Acceptance criteria
@@ -69,3 +70,16 @@ can scale beyond the three 31-phrase starter catalogs.
 ## Out of scope
 
 Trip business logic, notification scheduling, visual redesign, and native universal-link setup.
+
+## 2026-09-09 route ownership slice (P1-02, F-03)
+
+The local `check:routes` gate compares built and planned `SURFACES` with actual Expo screen files
+and the runtime-expanded `STATES` manifest. It rejects absent built screens, reachable planned
+screens, undeclared routes, missing/stale state ownership, duplicate identifiers and missing state
+spec references. Route groups and index files normalize to their public paths; developer and Expo
+infrastructure routes remain outside the learner contract.
+
+Validation: five Node tests pass, including the current checkout and negative fixtures. This is a
+structural guard; it does not prove that every rendered state was registered or replace the E2E
+accessibility, text-scale and learner-flow suites. Modal/course contracts, conditional trip homes,
+route failure UI, keyboard and list acceptance remain open with their existing gates.

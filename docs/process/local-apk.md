@@ -97,3 +97,25 @@ drawable. No emulator/device launch or sign-in backend was tested.
 Workspace checks and 128 learner browser tests passed after the dependency fix. Dependency audit
 reported 16 high and 8 moderate advisories before and after that fix, with no new advisory IDs;
 those existing advisories are not resolved by this workflow.
+
+## Native evidence collection (plan 58)
+
+`pnpm native:evidence` captures Android device metadata, permissions, logs and the current screen.
+For an already installed iOS simulator app, use:
+
+```bash
+pnpm native:evidence --platform ios --package app.loro.ios --serial SIMULATOR-UDID
+```
+
+Full Xcode must be selected with an installed simulator runtime and a booted simulator. Omitting
+`--serial` requires exactly one available booted simulator. The collector checks that the requested
+bundle is installed, then retains Xcode version, selected device/runtime metadata, the current
+screen PNG and a manifest under `.local-builds/native-evidence/`. It does not launch or install an
+app, read app data, grant permissions or collect simulator-wide logs. Use a test simulator and
+review screenshots before sharing them. Fixtures exercise collection and prerequisite failures; they
+do not constitute a device run.
+
+The installed artifact revision remains explicitly unverified: retain and correlate the app's build
+metadata separately. A screenshot does not establish that the app is foregrounded or a scenario
+passed. Clean iOS compilation, minimum OS floors, physical-device permissions/speech, persistence,
+lifecycle and interruption scenarios remain plan 58 acceptance gates.

@@ -3,10 +3,11 @@
 - **Requirement IDs:** `F-01`, `F-02`, `F-04`, `F-07`, `F-09`
 - **Milestone:** M2 testing; production operations remain in plan 73.
 - **Status:** 🟡 EC2/HTTPS, durable account/sync deployment, Google testing access and an isolated
-  restore are recorded. Full consent-to-device proof, retained storage, scheduled off-host backups,
-  load and operational acceptance remain. Reconcile infrastructure ownership with the deployed
-  CloudFormation stacks before provisioning; do not rebuild the host or identity/sync runtime from
-  the earlier proposal.
+  restore are recorded. A locally tested backup collector now validates complete archives and
+  records image/schema/role recovery metadata under the deployment lock. Full consent-to-device
+  proof, retained storage, scheduled off-host backups, load and operational acceptance remain.
+  Reconcile infrastructure ownership with the deployed CloudFormation stacks before provisioning; do
+  not rebuild the host or identity/sync runtime from the earlier proposal.
 - **Depends on:** 66 exact API image and backend foundations; 67 shared access; 61/86 content
   adapters only when activated. Whole-plan completion is not an infrastructure prerequisite.
 - **Reviewed:** 2026-09-09 against checkout `42f4d57`; source/plan review only, no new device or
@@ -150,6 +151,12 @@ disabled; do not restore the historical automatic dev→staging chain or add an 
 
 Backups and recovery:
 
+- Implemented preparation: `scripts/ec2-backup.sh` produces atomic, root-only local recovery bundles
+  with archive validation, image/schema/role metadata and SHA-256 manifests. Eight isolated
+  command-fixture tests cover success, lock contention, failed/empty dumps, corrupt archive data,
+  missing metadata and checksum failure. These are local failure-path checks, not PostgreSQL restore
+  or AWS evidence. Scheduling, verified S3 upload and release integration remain unbuilt; no
+  nightly/off-host acceptance box is closed by this collector.
 - [ ] Run nightly compressed custom-format PostgreSQL dumps and pre-migration dumps. Include
       role/grant recovery instructions and image/schema metadata; a database dump alone does not
       recreate cluster roles.
