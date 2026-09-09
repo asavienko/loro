@@ -3,6 +3,7 @@ import type { INestApplication } from '@nestjs/common'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { LoroError } from '../common/errors.js'
 import { ProblemDetailsFilter } from '../common/problem-filter.js'
+import { SERVER_CLOCK } from '../common/clock.js'
 import { AuthGuard } from '../auth/auth.guard.js'
 import { AuthService } from '../auth/auth.service.js'
 import { MusicController } from './music.controller.js'
@@ -30,6 +31,7 @@ beforeAll(async () => {
       MusicService,
       { provide: AuthService, useValue: auth },
       { provide: MUSIC_REPOSITORY, useClass: MemoryMusicRepository },
+      { provide: SERVER_CLOCK, useValue: { now: () => 1_721_558_400_123 } },
     ],
   }).compile()
   app = module.createNestApplication()
@@ -108,5 +110,19 @@ describe('music HTTP authz and stub journey (p3f-11)', () => {
       headers: { Authorization: 'Bearer token-b' },
     })
     expect(other.status).toBe(404)
+
+    const otherLyrics = await post('/music/lyrics', 'token-b', {
+      target_locale: 'es-ES',
+      meaning_language: 'en',
+      catalog_phrase_ids: ['cafe1', 'cafe2', 'cafe3'],
+    })
+    expect(otherLyrics.status).toBe(200)
+    const otherBody = (await otherLyrics.json()) as { lyric_document_id: string }
+    expect(otherBody.lyric_document_id).not.toBe(lyricsBody.lyric_document_id)
+    const otherRenders = await post('/music/renders', 'token-b', {
+      lyric_document_id: otherBody.lyric_document_id,
+      style_ids: ['acoustic_folk', 'modern_pop'],
+    })
+    expect(otherRenders.status).toBe(200)
   })
 })

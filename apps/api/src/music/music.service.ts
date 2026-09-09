@@ -11,6 +11,8 @@ import {
 } from '@loro/core/api/draft'
 import { resolveMusicStylePacks } from '@loro/content'
 import type { AuthPrincipal } from '../auth/auth.tokens.js'
+import { config } from '../common/config.js'
+import { SERVER_CLOCK, type ServerClock } from '../common/clock.js'
 import { LoroError } from '../common/errors.js'
 import { ElevenLabsMusicAdapter, composeStyles } from '../integrations/elevenlabs/music.js'
 import { MusicBudget } from './budget.js'
@@ -28,10 +30,13 @@ export class MusicService {
   private readonly adapter: ElevenLabsMusicAdapter
   private readonly budget: MusicBudget
 
-  constructor(@Inject(MUSIC_REPOSITORY) private readonly repository: MusicRepository) {
+  constructor(
+    @Inject(MUSIC_REPOSITORY) private readonly repository: MusicRepository,
+    @Inject(SERVER_CLOCK) private readonly clock: ServerClock,
+  ) {
     this.lyrics = new LyricsCoordinator()
     this.adapter = new ElevenLabsMusicAdapter({
-      provider: process.env['MUSIC_PROVIDER'] ?? 'stub',
+      provider: config.musicProvider(),
     })
     this.budget = new MusicBudget()
   }
@@ -45,7 +50,7 @@ export class MusicService {
       document: response.document,
       documentHash: createHash('sha256').update(JSON.stringify(response.document)).digest('hex'),
       fallback: response.fallback,
-      createdAt: 0,
+      createdAt: this.clock.now(),
     })
     return response
   }
@@ -54,16 +59,17 @@ export class MusicService {
     const request = parse(MusicRendersRequestSchema, body)
     const stored = await this.repository.getLyric(request.lyric_document_id, principal.userId)
     if (stored === null) throw new LoroError('NOT_FOUND')
-    if (!this.budget.canSpend(principal.userId, 1)) {
+    const packs = resolveMusicStylePacks(request.style_ids)
+    if (!this.budget.canSpend(principal.userId, packs.length)) {
       throw new LoroError('BUDGET_EXCEEDED')
     }
-    const packs = resolveMusicStylePacks(request.style_ids)
     const outcomes = await composeStyles(this.adapter, stored.document, packs, 2)
+    this.budget.record(principal.userId, packs.length)
     const jobs: MusicRendersResponse['jobs'] = []
     for (const [index, pack] of packs.entries()) {
       const outcome = outcomes[index]
-      const jobId = jobIdFor(stored.id, pack.style_id)
-      const trackId = `track_${pack.style_id}_${stored.id.slice(-8)}`
+      const jobId = scopedMusicId('job', principal.userId, stored.id, pack.style_id)
+      const trackId = scopedMusicId('track', principal.userId, stored.id, pack.style_id)
       if (outcome?.ok === true) {
         await this.repository.putObject({
           sha256: outcome.result.sha256,
@@ -82,6 +88,7 @@ export class MusicService {
           durationMs: outcome.result.durationMs,
           status: 'ready',
           errorCode: null,
+          createdAt: this.clock.now(),
         })
         await this.repository.saveJob(job)
         jobs.push(toWireJob(job, trackId))
@@ -99,6 +106,7 @@ export class MusicService {
           durationMs: null,
           status: outcome?.failure.kind === 'unavailable' ? 'unknown_spend' : 'failed',
           errorCode,
+          createdAt: this.clock.now(),
         })
         await this.repository.saveJob(job)
         jobs.push(toWireJob(job, null))
@@ -149,8 +157,16 @@ function parse<T>(
   return result.data
 }
 
-function jobIdFor(lyricId: string, styleId: string): string {
-  return `job_${styleId}_${lyricId.slice(-8)}`
+function scopedMusicId(
+  kind: 'job' | 'track',
+  userId: string,
+  lyricId: string,
+  styleId: string,
+): string {
+  return `${kind}_${createHash('sha256')
+    .update(`${userId}\0${lyricId}\0${styleId}`)
+    .digest('hex')
+    .slice(0, 16)}`
 }
 
 function storedJob(

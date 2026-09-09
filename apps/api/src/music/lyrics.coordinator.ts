@@ -30,17 +30,22 @@ export class LyricsCoordinator {
   constructor(private readonly model?: LyricsModel) {}
 
   async lyrics(request: MusicLyricsRequest, principalId: string): Promise<MusicLyricsResponse> {
-    void principalId
-    const { phrases, catalogVersion } = resolveMusicCatalogPhrases(
+    const { phrases, catalog, catalogVersion } = resolveMusicCatalogPhrases(
       request.catalog_phrase_ids,
       request.target_locale,
       request.meaning_language,
     )
     const cacheKey = lyricsCacheKey(request, catalogVersion)
     const cached = this.cache.get(cacheKey)
-    if (cached) return { ...cached, cached: true }
+    if (cached) {
+      return {
+        ...cached,
+        lyric_document_id: lyricDocumentId(principalId, cached.document),
+        cached: true,
+      }
+    }
 
-    const floor = this.floor(phrases, request, catalogVersion)
+    const floor = this.floor(phrases, catalog, request, catalogVersion, principalId)
     if (this.model === undefined) {
       this.cache.set(cacheKey, floor)
       return floor
@@ -52,9 +57,9 @@ export class LyricsCoordinator {
       meaningLanguage: request.meaning_language,
       catalogVersion,
     })
-    const firstValid = validateLyricDocument(first, phrases, phrases)
+    const firstValid = validateLyricDocument(first, phrases, catalog)
     if (firstValid.ok) {
-      const live = served(firstValid.document, 'live', false)
+      const live = served(firstValid.document, 'live', false, principalId)
       this.cache.set(cacheKey, live)
       return live
     }
@@ -66,9 +71,9 @@ export class LyricsCoordinator {
       catalogVersion,
       repairErrors: firstValid.errors,
     })
-    const repairedValid = validateLyricDocument(repaired, phrases, phrases)
+    const repairedValid = validateLyricDocument(repaired, phrases, catalog)
     if (repairedValid.ok) {
-      const live = served(repairedValid.document, 'live', false)
+      const live = served(repairedValid.document, 'live', false, principalId)
       this.cache.set(cacheKey, live)
       return live
     }
@@ -79,8 +84,10 @@ export class LyricsCoordinator {
 
   private floor(
     phrases: CatalogLyricLine[],
+    catalog: readonly CatalogLyricLine[],
     request: MusicLyricsRequest,
     catalogVersion: number,
+    principalId: string,
   ): MusicLyricsResponse {
     const document = bundledLyricDocument(
       phrases,
@@ -88,9 +95,9 @@ export class LyricsCoordinator {
       request.meaning_language,
       catalogVersion,
     )
-    const valid = validateLyricDocument(document, phrases, phrases)
+    const valid = validateLyricDocument(document, phrases, catalog)
     if (!valid.ok) throw new LoroError('INTERNAL', 'Bundled lyrics failed validation')
-    return served(valid.document, 'bundled', true)
+    return served(valid.document, 'bundled', true, principalId)
   }
 }
 
@@ -98,9 +105,10 @@ function served(
   document: LyricDocument,
   provenance: MusicLyricsResponse['provenance'],
   fallback: boolean,
+  principalId: string,
 ): MusicLyricsResponse {
   return {
-    lyric_document_id: lyricDocumentId(document),
+    lyric_document_id: lyricDocumentId(principalId, document),
     document,
     provenance,
     fallback,
@@ -108,8 +116,11 @@ function served(
   }
 }
 
-export function lyricDocumentId(document: LyricDocument): string {
-  return `lyric_${createHash('sha256').update(JSON.stringify(document.phrase_ids)).digest('hex').slice(0, 16)}`
+export function lyricDocumentId(principalId: string, document: LyricDocument): string {
+  return `lyric_${createHash('sha256')
+    .update(JSON.stringify({ principalId, document }))
+    .digest('hex')
+    .slice(0, 16)}`
 }
 
 export function lyricsCacheKey(request: MusicLyricsRequest, catalogVersion: number): string {
