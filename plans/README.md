@@ -135,6 +135,7 @@ feature↔release-completion cycle. See each plan's checkboxes for executable ta
 | [90](90-default-english-content-language.md)                      | English default learning content and course selection                       | M1/M2       | 🟡 Shared registry integration done; dialect/review/device gates remain     | 87/85; 59 persistence; 61/62 audio                              |
 | [93](93-mobile-shell-gestures.md)                                 | Pull-down switcher and sheet dismissal                                      | M1/M2       | 🟡 Implemented; physical-device touch verification remains                  | Shared shell; device evidence                                   |
 | [94](94-persistent-practice-and-account-integration.md)           | Integrated persistence, canonical core, speech and account sync             | M1/M2       | 🟡 Runtime and aggregate CI passed; hardware and service acceptance remain  | 54/85 ✅; coordinated 58–60/62–63/66–68 slices                  |
+| [95](95-parallel-local-ci.md)                                     | Dependency-aware parallel full local CI                                     | M2          | 🟡 Fixes implemented; matched serial/cold/warm runtime comparison remains   | 72; no external blocker for measurements                        |
 
 Plan 88 owns the selected AWS testing profile and
 [operations runbook](../docs/runbooks/backend-testing.md); plan 73 retains production operations.
