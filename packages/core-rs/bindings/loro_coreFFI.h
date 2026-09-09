@@ -46,25 +46,25 @@ typedef struct RustCallStatus {
 #endif // def UNIFFI_SHARED_H
 #ifndef UNIFFI_FFIDEF_RUST_FUTURE_CONTINUATION_CALLBACK
 #define UNIFFI_FFIDEF_RUST_FUTURE_CONTINUATION_CALLBACK
-typedef void (*UniffiRustFutureContinuationCallback)(uint64_t, int8_
+typedef void (*UniffiRustFutureContinuationCallback)(uint64_t, int8_t
     );
 
 #endif
 #ifndef UNIFFI_FFIDEF_FOREIGN_FUTURE_DROPPED_CALLBACK
 #define UNIFFI_FFIDEF_FOREIGN_FUTURE_DROPPED_CALLBACK
-typedef void (*UniffiForeignFutureDroppedCallback)(uint64_
+typedef void (*UniffiForeignFutureDroppedCallback)(uint64_t
     );
 
 #endif
 #ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_FREE
 #define UNIFFI_FFIDEF_CALLBACK_INTERFACE_FREE
-typedef void (*UniffiCallbackInterfaceFree)(uint64_
+typedef void (*UniffiCallbackInterfaceFree)(uint64_t
     );
 
 #endif
 #ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_CLONE
 #define UNIFFI_FFIDEF_CALLBACK_INTERFACE_CLONE
-typedef uint64_t (*UniffiCallbackInterfaceClone)(uint64_
+typedef uint64_t (*UniffiCallbackInterfaceClone)(uint64_t
     );
 
 #endif

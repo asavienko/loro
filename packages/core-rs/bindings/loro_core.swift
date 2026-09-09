@@ -52,7 +52,7 @@ fileprivate extension ForeignBytes {
 //
 // Conforms to `FfiConverter` so the compiler enforces the full converter
 // method set. Only the scope-bound `lower(_:_body:)` overload is sound —
-// zero-copy byte buffers only flow foreign -> Rust, and only in argumen
+// zero-copy byte buffers only flow foreign -> Rust, and only in argument
 // position. The four protocol-witness methods (`lift`, `lower`, `read`,
 // `write`) `fatalError` at runtime if anyone reaches them.
 //
@@ -168,7 +168,7 @@ fileprivate func readDouble(_ reader: inout (data: Data, offset: Data.Index)) th
 
 // Indicates if the offset has reached the end of the buffer.
 fileprivate func hasRemaining(_ reader: (data: Data, offset: Data.Index)) -> Bool {
-    return reader.offset < reader.data.coun
+    return reader.offset < reader.data.count
 }
 
 // Define writer functionality.  Normally this would be defined in a class or
@@ -258,7 +258,7 @@ extension FfiConverterRustBuffer {
           return RustBuffer(bytes: writer)
     }
 }
-// An error type for FFI errors. These errors occur at the UniFFI level, no
+// An error type for FFI errors. These errors occur at the UniFFI level, not
 // the library level.
 fileprivate enum UniffiInternalError: LocalizedError {
     case bufferOverflow
@@ -399,7 +399,7 @@ private func uniffiTraitInterfaceCallWithError<T, E>(
     }
 }
 // Initial value and increment amount for handles.
-// These ensure that SWIFT handles always have the lowest bit se
+// These ensure that SWIFT handles always have the lowest bit set
 fileprivate let UNIFFI_HANDLEMAP_INITIAL: UInt64 = 1
 fileprivate let UNIFFI_HANDLEMAP_DELTA: UInt64 = 2
 
@@ -441,7 +441,7 @@ fileprivate final class UniffiHandleMap<T>: @unchecked Sendable {
         }
     }
 
-    @discardableResul
+    @discardableResult
     func remove(handle: UInt64) throws -> T {
         try lock.withLock {
             guard let obj = map.removeValue(forKey: handle) else {
@@ -453,7 +453,7 @@ fileprivate final class UniffiHandleMap<T>: @unchecked Sendable {
 
     var count: Int {
         get {
-            map.coun
+            map.count
         }
     }
 }
@@ -546,8 +546,8 @@ fileprivate struct FfiConverterInt64: FfiConverterPrimitive {
 @_documentation(visibility: private)
 #endif
 fileprivate struct FfiConverterFloat: FfiConverterPrimitive {
-    typealias FfiType = Floa
-    typealias SwiftType = Floa
+    typealias FfiType = Float
+    typealias SwiftType = Float
 
     public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> Float {
         return try lift(readFloat(&buf))
@@ -1338,7 +1338,7 @@ public struct NotifyContext: Equatable, Hashable {
         self.enabled = enabled
         self.alreadyScheduled = alreadyScheduled
         self.tripActive = tripActive
-        self.revealModeCount = revealModeCoun
+        self.revealModeCount = revealModeCount
     }
 
 
@@ -1528,7 +1528,7 @@ public struct PhraseState: Equatable, Hashable {
         self.learned = learned
         self.plays = plays
         self.reps = reps
-        self.lastPracticedAt = lastPracticedA
+        self.lastPracticedAt = lastPracticedAt
         self.srsDue = srsDue
         self.srsStability = srsStability
         self.srsDifficulty = srsDifficulty
@@ -1813,7 +1813,7 @@ public struct RefrainCandidate: Equatable, Hashable {
         self.lockInDays = lockInDays
         self.automaticity = automaticity
         self.reps = reps
-        self.addedAt = addedA
+        self.addedAt = addedAt
     }
 
 
@@ -2182,7 +2182,7 @@ public enum Confidence: Equatable, Hashable {
     /**
      * Blank.
      */
-    case forgo
+    case forgot
     /**
      * Guessed.
      */
@@ -2198,7 +2198,7 @@ public enum Confidence: Equatable, Hashable {
     /**
      * Automatic.
      */
-    case instan
+    case instant
 
 
 
@@ -2220,7 +2220,7 @@ public struct FfiConverterTypeConfidence: FfiConverterRustBuffer {
         let variant: Int32 = try readInt(&buf)
         switch variant {
 
-        case 1: return .forgo
+        case 1: return .forgot
 
         case 2: return .shaky
 
@@ -2228,7 +2228,7 @@ public struct FfiConverterTypeConfidence: FfiConverterRustBuffer {
 
         case 4: return .strong
 
-        case 5: return .instan
+        case 5: return .instant
 
         default: throw UniffiInternalError.unexpectedEnumCase
         }
@@ -2468,7 +2468,7 @@ public enum EffortState: Equatable, Hashable {
     /**
      * At least two thirds automatic.
      */
-    case ho
+    case hot
     /**
      * Fully automatic at the daily target.
      */
@@ -2500,7 +2500,7 @@ public struct FfiConverterTypeEffortState: FfiConverterRustBuffer {
 
         case 3: return .warm
 
-        case 4: return .ho
+        case 4: return .hot
 
         case 5: return .peak
 
@@ -2956,7 +2956,7 @@ public enum LadderRung: Equatable, Hashable {
     /**
      * Change its form.
      */
-    case ben
+    case bent
     /**
      * Use it somewhere it wasn't taught.
      */
@@ -2992,7 +2992,7 @@ public struct FfiConverterTypeLadderRung: FfiConverterRustBuffer {
 
         case 1: return .accumulated
 
-        case 2: return .ben
+        case 2: return .bent
 
         case 3: return .transferred
 
@@ -3374,7 +3374,7 @@ public enum RejectReason: Equatable, Hashable {
     /**
      * Far shorter than the reference.
      */
-    case tooShor
+    case tooShort
     /**
      * The alignment cost was too high — they probably said something else.
      */
@@ -3404,7 +3404,7 @@ public struct FfiConverterTypeRejectReason: FfiConverterRustBuffer {
 
         case 2: return .noVoicing
 
-        case 3: return .tooShor
+        case 3: return .tooShort
 
         case 4: return .unalignable
 
@@ -3596,7 +3596,7 @@ extension TakeResult: Sendable {}
 @_documentation(visibility: private)
 #endif
 public struct FfiConverterTypeTakeResult: FfiConverterRustBuffer {
-    typealias SwiftType = TakeResul
+    typealias SwiftType = TakeResult
 
     public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> TakeResult {
         let variant: Int32 = try readInt(&buf)
@@ -4113,7 +4113,7 @@ public func matchTokens(heard: [String], target: [String], revealed: UInt32, fuz
 })
 }
 /**
- * Normalise for comparison: lowercase, strip diacritics, strip everything tha
+ * Normalise for comparison: lowercase, strip diacritics, strip everything that
  * isn't alphanumeric or ñ.
  *
  * So `¿Cuánto cuesta?` matches `cuanto cuesta`, and `dónde` matches `donde`.
@@ -4570,7 +4570,7 @@ public func planNotifications(ctx: NotifyContext, candidates: [NotificationCandi
 /**
  * How many times a phrase repeats before the stream advances.
  *
- * From `Loro.dc.html:2526`. Visible to the learner: rating something Difficul
+ * From `Loro.dc.html:2526`. Visible to the learner: rating something Difficult
  * makes it repeat more, and the toast says so.
  */
 public func repeatTarget(difficulty: Difficulty) -> UInt32  {
@@ -4767,7 +4767,7 @@ private enum InitializationResult {
     case contractVersionMismatch
     case apiChecksumMismatch
 }
-// Use a global variable to perform the versioning checks. Swift ensures tha
+// Use a global variable to perform the versioning checks. Swift ensures that
 // the code inside is only computed once.
 private let initializationResult: InitializationResult = {
     // Get the bindings contract version from our ComponentInterface

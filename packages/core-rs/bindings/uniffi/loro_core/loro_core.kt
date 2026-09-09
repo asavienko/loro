@@ -12,7 +12,7 @@ package uniffi.loro_core
 //
 // However, it's important that the details of how this helper code works (e.g. the
 // way that different builtin types are passed across the FFI) exactly match what's
-// expected by the Rust code on the other side of the interface. In practice righ
+// expected by the Rust code on the other side of the interface. In practice right
 // now that means coming from the exact some version of `uniffi` that was used to
 // compile the Rust component. The easiest way to ensure this is to bundle the Kotlin
 // helpers directly inline like we're doing here.
@@ -103,7 +103,7 @@ internal open class ForeignBytes : Structure() {
 //
 // Only `lower` is valid — zero-copy byte buffers only flow foreign -> Rust,
 // and only in argument position. `lift`, `read`, `write`, and
-// `allocationSize` have no sound implementation here and all panic a
+// `allocationSize` have no sound implementation here and all panic at
 // runtime. The `FfiConverter` interface is implemented so that the
 // compiler enforces the full method set (rather than relying on eyeball).
 //
@@ -261,8 +261,8 @@ interface UniffiRustCallStatusErrorHandler<E> {
     fun lift(error_buf: RustBuffer.ByValue): E;
 }
 
-// Helpers for calling Rus
-// In practice we usually need to be synchronized to call this safely, so it doesn'
+// Helpers for calling Rust
+// In practice we usually need to be synchronized to call this safely, so it doesn't
 // synchronize itself
 
 // Call a rust function that returns a Result<>.  Pass in the Error class companion that corresponds to the Err
@@ -344,7 +344,7 @@ internal inline fun<T, reified E: Throwable> uniffiTraitInterfaceCallWithError(
     }
 }
 // Initial value and increment amount for handles.
-// These ensure that Kotlin-generated handles always have the lowest bit se
+// These ensure that Kotlin-generated handles always have the lowest bit set
 private const val UNIFFI_HANDLEMAP_INITIAL = 1.toLong()
 private const val UNIFFI_HANDLEMAP_DELTA = 2.toLong()
 
@@ -353,13 +353,13 @@ private const val UNIFFI_HANDLEMAP_DELTA = 2.toLong()
 // This is used pass an opaque 64-bit handle representing a foreign object to the Rust code.
 internal class UniffiHandleMap<T: Any> {
     private val map = ConcurrentHashMap<Long, T>()
-    // Star
+    // Start
     private val counter = java.util.concurrent.atomic.AtomicLong(UNIFFI_HANDLEMAP_INITIAL)
 
-    val size: In
+    val size: Int
         get() = map.size
 
-    // Insert a new object into the handle map and get a handle for i
+    // Insert a new object into the handle map and get a handle for it
     fun insert(obj: T): Long {
         val handle = counter.getAndAdd(UNIFFI_HANDLEMAP_DELTA)
         map.put(handle, obj)
@@ -673,97 +673,97 @@ internal object IntegrityCheckingUniffiLib {
         uniffiCheckApiChecksums(this)
     }
     external fun uniffi_loro_core_checksum_func_match_tokens(
-    ): In
+    ): Int
     external fun uniffi_loro_core_checksum_func_normalize(
-    ): In
+    ): Int
     external fun uniffi_loro_core_checksum_func_tokenize(
-    ): In
+    ): Int
     external fun uniffi_loro_core_checksum_func_core_call(
-    ): In
+    ): Int
     external fun uniffi_loro_core_checksum_func_days_between(
-    ): In
+    ): Int
     external fun uniffi_loro_core_checksum_func_streak(
-    ): In
+    ): Int
     external fun uniffi_loro_core_checksum_func_streak_day_for(
-    ): In
+    ): Int
     external fun uniffi_loro_core_checksum_func_streak_survives(
-    ): In
+    ): Int
     external fun uniffi_loro_core_checksum_func_normalize_f0(
-    ): In
+    ): Int
     external fun uniffi_loro_core_checksum_func_advance_axes(
-    ): In
+    ): Int
     external fun uniffi_loro_core_checksum_func_band(
-    ): In
+    ): Int
     external fun uniffi_loro_core_checksum_func_earns_level_up(
-    ): In
+    ): Int
     external fun uniffi_loro_core_checksum_func_daily_review_cap(
-    ): In
+    ): Int
     external fun uniffi_loro_core_checksum_func_format_interval(
-    ): In
+    ): Int
     external fun uniffi_loro_core_checksum_func_grade_for_confidence(
-    ): In
+    ): Int
     external fun uniffi_loro_core_checksum_func_initial_difficulty(
-    ): In
+    ): Int
     external fun uniffi_loro_core_checksum_func_nudge_difficulty(
-    ): In
+    ): Int
     external fun uniffi_loro_core_checksum_func_review_grade(
-    ): In
+    ): Int
     external fun uniffi_loro_core_checksum_func_initialize(
-    ): In
+    ): Int
     external fun uniffi_loro_core_checksum_func_rerate(
-    ): In
+    ): Int
     external fun uniffi_loro_core_checksum_func_retrievability(
-    ): In
+    ): Int
     external fun uniffi_loro_core_checksum_func_review(
-    ): In
+    ): Int
     external fun uniffi_loro_core_checksum_func_review_confidence(
-    ): In
+    ): Int
     external fun uniffi_loro_core_checksum_func_climb(
-    ): In
+    ): Int
     external fun uniffi_loro_core_checksum_func_draw(
-    ): In
+    ): Int
     external fun uniffi_loro_core_checksum_func_need(
-    ): In
+    ): Int
     external fun uniffi_loro_core_checksum_func_copy_key_for(
-    ): In
+    ): Int
     external fun uniffi_loro_core_checksum_func_deep_link_for(
-    ): In
+    ): Int
     external fun uniffi_loro_core_checksum_func_is_quiet_hour(
-    ): In
+    ): Int
     external fun uniffi_loro_core_checksum_func_may_fire(
-    ): In
+    ): Int
     external fun uniffi_loro_core_checksum_func_plan_notifications(
-    ): In
+    ): Int
     external fun uniffi_loro_core_checksum_func_repeat_target(
-    ): In
+    ): Int
     external fun uniffi_loro_core_checksum_func_stream_rank(
-    ): In
+    ): Int
     external fun uniffi_loro_core_checksum_func_automaticity(
-    ): In
+    ): Int
     external fun uniffi_loro_core_checksum_func_beat_ms_for_mode(
-    ): In
+    ): Int
     external fun uniffi_loro_core_checksum_func_cloze_mask(
-    ): In
+    ): Int
     external fun uniffi_loro_core_checksum_func_effort_state(
-    ): In
+    ): Int
     external fun uniffi_loro_core_checksum_func_mode_for_rep(
-    ): In
+    ): Int
     external fun uniffi_loro_core_checksum_func_model_rate_for_mode(
-    ): In
+    ): Int
     external fun uniffi_loro_core_checksum_func_refrain_set_size(
-    ): In
+    ): Int
     external fun uniffi_loro_core_checksum_func_select_refrain_set(
-    ): In
+    ): Int
     external fun uniffi_loro_core_checksum_func_clamp_to_server(
-    ): In
+    ): Int
     external fun uniffi_loro_core_checksum_func_is_skewed(
-    ): In
+    ): Int
     external fun uniffi_loro_core_checksum_func_receive(
-    ): In
+    ): Int
     external fun uniffi_loro_core_checksum_func_tick(
-    ): In
+    ): Int
     external fun ffi_loro_core_uniffi_contract_version(
-    ): In
+    ): Int
 
 
 }
@@ -786,7 +786,7 @@ internal object UniffiLib {
     external fun uniffi_loro_core_fn_func_days_between(`a`: RustBuffer.ByValue,`b`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus,
     ): RustBuffer.ByValue
     external fun uniffi_loro_core_fn_func_streak(`practiceDays`: RustBuffer.ByValue,`today`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus,
-    ): In
+    ): Int
     external fun uniffi_loro_core_fn_func_streak_day_for(`atMs`: Long,`localMidnightMs`: Long,uniffi_out_err: UniffiRustCallStatus,
     ): RustBuffer.ByValue
     external fun uniffi_loro_core_fn_func_streak_survives(`lastDay`: RustBuffer.ByValue,`today`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus,
@@ -796,19 +796,19 @@ internal object UniffiLib {
     external fun uniffi_loro_core_fn_func_advance_axes(`current`: RustBuffer.ByValue,`score`: Byte,`cueLevel`: Byte,uniffi_out_err: UniffiRustCallStatus,
     ): RustBuffer.ByValue
     external fun uniffi_loro_core_fn_func_band(`score`: Byte,uniffi_out_err: UniffiRustCallStatus,
-    ): In
+    ): Int
     external fun uniffi_loro_core_fn_func_earns_level_up(`score`: Byte,`cueLevel`: Byte,`threshold`: Byte,uniffi_out_err: UniffiRustCallStatus,
     ): Byte
     external fun uniffi_loro_core_fn_func_daily_review_cap(`dailyMinutes`: Int,`multiplier`: Int,uniffi_out_err: UniffiRustCallStatus,
-    ): In
+    ): Int
     external fun uniffi_loro_core_fn_func_format_interval(`days`: Float,uniffi_out_err: UniffiRustCallStatus,
     ): RustBuffer.ByValue
     external fun uniffi_loro_core_fn_func_grade_for_confidence(`c`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus,
     ): RustBuffer.ByValue
     external fun uniffi_loro_core_fn_func_initial_difficulty(`declared`: RustBuffer.ByValue,`tags`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus,
-    ): Floa
+    ): Float
     external fun uniffi_loro_core_fn_func_nudge_difficulty(`current`: Float,`declared`: RustBuffer.ByValue,`tags`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus,
-    ): Floa
+    ): Float
     external fun uniffi_loro_core_fn_func_review_grade(`success`: Byte,`hintsUsed`: Int,`selfGrade`: RustBuffer.ByValue,`confidence`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus,
     ): RustBuffer.ByValue
     external fun uniffi_loro_core_fn_func_initialize(`declared`: RustBuffer.ByValue,`tags`: RustBuffer.ByValue,`atMs`: Long,uniffi_out_err: UniffiRustCallStatus,
@@ -826,7 +826,7 @@ internal object UniffiLib {
     external fun uniffi_loro_core_fn_func_draw(`deck`: RustBuffer.ByValue,`seed`: Long,`exclude`: RustBuffer.ByValue,`nowMs`: Long,uniffi_out_err: UniffiRustCallStatus,
     ): RustBuffer.ByValue
     external fun uniffi_loro_core_fn_func_need(`p`: RustBuffer.ByValue,`nowMs`: Long,uniffi_out_err: UniffiRustCallStatus,
-    ): In
+    ): Int
     external fun uniffi_loro_core_fn_func_copy_key_for(`category`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus,
     ): RustBuffer.ByValue
     external fun uniffi_loro_core_fn_func_deep_link_for(`category`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus,
@@ -838,13 +838,13 @@ internal object UniffiLib {
     external fun uniffi_loro_core_fn_func_plan_notifications(`ctx`: RustBuffer.ByValue,`candidates`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus,
     ): RustBuffer.ByValue
     external fun uniffi_loro_core_fn_func_repeat_target(`difficulty`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus,
-    ): In
+    ): Int
     external fun uniffi_loro_core_fn_func_stream_rank(`p`: RustBuffer.ByValue,`nowMs`: Long,uniffi_out_err: UniffiRustCallStatus,
-    ): In
+    ): Int
     external fun uniffi_loro_core_fn_func_automaticity(`repsToday`: Int,`target`: Int,uniffi_out_err: UniffiRustCallStatus,
-    ): In
+    ): Int
     external fun uniffi_loro_core_fn_func_beat_ms_for_mode(`mode`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus,
-    ): In
+    ): Int
     external fun uniffi_loro_core_fn_func_cloze_mask(`text`: RustBuffer.ByValue,`language`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus,
     ): RustBuffer.ByValue
     external fun uniffi_loro_core_fn_func_effort_state(`reps`: Int,`automaticityPct`: Byte,uniffi_out_err: UniffiRustCallStatus,
@@ -854,7 +854,7 @@ internal object UniffiLib {
     external fun uniffi_loro_core_fn_func_model_rate_for_mode(`mode`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus,
     ): RustBuffer.ByValue
     external fun uniffi_loro_core_fn_func_refrain_set_size(`dailyMinutes`: Int,uniffi_out_err: UniffiRustCallStatus,
-    ): In
+    ): Int
     external fun uniffi_loro_core_fn_func_select_refrain_set(`candidates`: RustBuffer.ByValue,`size`: Int,`tripPhraseIds`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus,
     ): RustBuffer.ByValue
     external fun uniffi_loro_core_fn_func_clamp_to_server(`value`: RustBuffer.ByValue,`serverMs`: Long,uniffi_out_err: UniffiRustCallStatus,
@@ -870,105 +870,105 @@ internal object UniffiLib {
     external fun ffi_loro_core_rustbuffer_from_bytes(`bytes`: ForeignBytes.ByValue,uniffi_out_err: UniffiRustCallStatus,
     ): RustBuffer.ByValue
     external fun ffi_loro_core_rustbuffer_free(`buf`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus,
-    ): Uni
+    ): Unit
     external fun ffi_loro_core_rustbuffer_reserve(`buf`: RustBuffer.ByValue,`additional`: Long,uniffi_out_err: UniffiRustCallStatus,
     ): RustBuffer.ByValue
     external fun ffi_loro_core_rust_future_poll_u8(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
-    ): Uni
+    ): Unit
     external fun ffi_loro_core_rust_future_cancel_u8(`handle`: Long,
-    ): Uni
+    ): Unit
     external fun ffi_loro_core_rust_future_free_u8(`handle`: Long,
-    ): Uni
+    ): Unit
     external fun ffi_loro_core_rust_future_complete_u8(`handle`: Long,uniffi_out_err: UniffiRustCallStatus,
-    ): In
+    ): Int
     external fun ffi_loro_core_rust_future_poll_i8(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
-    ): Uni
+    ): Unit
     external fun ffi_loro_core_rust_future_cancel_i8(`handle`: Long,
-    ): Uni
+    ): Unit
     external fun ffi_loro_core_rust_future_free_i8(`handle`: Long,
-    ): Uni
+    ): Unit
     external fun ffi_loro_core_rust_future_complete_i8(`handle`: Long,uniffi_out_err: UniffiRustCallStatus,
     ): Byte
     external fun ffi_loro_core_rust_future_poll_u16(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
-    ): Uni
+    ): Unit
     external fun ffi_loro_core_rust_future_cancel_u16(`handle`: Long,
-    ): Uni
+    ): Unit
     external fun ffi_loro_core_rust_future_free_u16(`handle`: Long,
-    ): Uni
+    ): Unit
     external fun ffi_loro_core_rust_future_complete_u16(`handle`: Long,uniffi_out_err: UniffiRustCallStatus,
-    ): In
+    ): Int
     external fun ffi_loro_core_rust_future_poll_i16(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
-    ): Uni
+    ): Unit
     external fun ffi_loro_core_rust_future_cancel_i16(`handle`: Long,
-    ): Uni
+    ): Unit
     external fun ffi_loro_core_rust_future_free_i16(`handle`: Long,
-    ): Uni
+    ): Unit
     external fun ffi_loro_core_rust_future_complete_i16(`handle`: Long,uniffi_out_err: UniffiRustCallStatus,
-    ): Shor
+    ): Short
     external fun ffi_loro_core_rust_future_poll_u32(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
-    ): Uni
+    ): Unit
     external fun ffi_loro_core_rust_future_cancel_u32(`handle`: Long,
-    ): Uni
+    ): Unit
     external fun ffi_loro_core_rust_future_free_u32(`handle`: Long,
-    ): Uni
+    ): Unit
     external fun ffi_loro_core_rust_future_complete_u32(`handle`: Long,uniffi_out_err: UniffiRustCallStatus,
-    ): In
+    ): Int
     external fun ffi_loro_core_rust_future_poll_i32(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
-    ): Uni
+    ): Unit
     external fun ffi_loro_core_rust_future_cancel_i32(`handle`: Long,
-    ): Uni
+    ): Unit
     external fun ffi_loro_core_rust_future_free_i32(`handle`: Long,
-    ): Uni
+    ): Unit
     external fun ffi_loro_core_rust_future_complete_i32(`handle`: Long,uniffi_out_err: UniffiRustCallStatus,
-    ): In
+    ): Int
     external fun ffi_loro_core_rust_future_poll_u64(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
-    ): Uni
+    ): Unit
     external fun ffi_loro_core_rust_future_cancel_u64(`handle`: Long,
-    ): Uni
+    ): Unit
     external fun ffi_loro_core_rust_future_free_u64(`handle`: Long,
-    ): Uni
+    ): Unit
     external fun ffi_loro_core_rust_future_complete_u64(`handle`: Long,uniffi_out_err: UniffiRustCallStatus,
     ): Long
     external fun ffi_loro_core_rust_future_poll_i64(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
-    ): Uni
+    ): Unit
     external fun ffi_loro_core_rust_future_cancel_i64(`handle`: Long,
-    ): Uni
+    ): Unit
     external fun ffi_loro_core_rust_future_free_i64(`handle`: Long,
-    ): Uni
+    ): Unit
     external fun ffi_loro_core_rust_future_complete_i64(`handle`: Long,uniffi_out_err: UniffiRustCallStatus,
     ): Long
     external fun ffi_loro_core_rust_future_poll_f32(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
-    ): Uni
+    ): Unit
     external fun ffi_loro_core_rust_future_cancel_f32(`handle`: Long,
-    ): Uni
+    ): Unit
     external fun ffi_loro_core_rust_future_free_f32(`handle`: Long,
-    ): Uni
+    ): Unit
     external fun ffi_loro_core_rust_future_complete_f32(`handle`: Long,uniffi_out_err: UniffiRustCallStatus,
-    ): Floa
+    ): Float
     external fun ffi_loro_core_rust_future_poll_f64(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
-    ): Uni
+    ): Unit
     external fun ffi_loro_core_rust_future_cancel_f64(`handle`: Long,
-    ): Uni
+    ): Unit
     external fun ffi_loro_core_rust_future_free_f64(`handle`: Long,
-    ): Uni
+    ): Unit
     external fun ffi_loro_core_rust_future_complete_f64(`handle`: Long,uniffi_out_err: UniffiRustCallStatus,
     ): Double
     external fun ffi_loro_core_rust_future_poll_rust_buffer(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
-    ): Uni
+    ): Unit
     external fun ffi_loro_core_rust_future_cancel_rust_buffer(`handle`: Long,
-    ): Uni
+    ): Unit
     external fun ffi_loro_core_rust_future_free_rust_buffer(`handle`: Long,
-    ): Uni
+    ): Unit
     external fun ffi_loro_core_rust_future_complete_rust_buffer(`handle`: Long,uniffi_out_err: UniffiRustCallStatus,
     ): RustBuffer.ByValue
     external fun ffi_loro_core_rust_future_poll_void(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
-    ): Uni
+    ): Unit
     external fun ffi_loro_core_rust_future_cancel_void(`handle`: Long,
-    ): Uni
+    ): Unit
     external fun ffi_loro_core_rust_future_free_void(`handle`: Long,
-    ): Uni
+    ): Unit
     external fun ffi_loro_core_rust_future_complete_void(`handle`: Long,uniffi_out_err: UniffiRustCallStatus,
-    ): Uni
+    ): Unit
 
 
 }
@@ -1131,7 +1131,7 @@ public fun uniffiEnsureInitialized() {
     UniffiLib
 }
 
-// Async suppor
+// Async support
 
 // Public interface members begin here.
 
@@ -1139,7 +1139,7 @@ public fun uniffiEnsureInitialized() {
 // Interface implemented by anything that can contain an object reference.
 //
 // Such types expose a `destroy()` method that must be called to cleanly
-// dispose of the contained objects. Failure to call this method may resul
+// dispose of the contained objects. Failure to call this method may result
 // in memory leaks.
 //
 // The easiest way to ensure this method is called is to use the `.use`
@@ -1197,7 +1197,7 @@ inline fun <T : Disposable?, R> T.use(block: (T) -> R) =
 /**
  * Placeholder object used to signal that we're constructing an interface with a FFI handle.
  *
- * This is the first argument for interface constructors that input a raw handle. It exists is tha
+ * This is the first argument for interface constructors that input a raw handle. It exists is that
  * so we can avoid signature conflicts when an interface has a regular constructor than inputs a
  * Long.
  *
@@ -1498,7 +1498,7 @@ data class Draw (
 
 
 
-    companion objec
+    companion object
 }
 
 /**
@@ -1550,7 +1550,7 @@ data class Fix (
 
 
 
-    companion objec
+    companion object
 }
 
 /**
@@ -1607,7 +1607,7 @@ data class FsrsState (
     /**
      * Failed established reviews (not repeated learning failures).
      */
-    var `lapses`: kotlin.UIn
+    var `lapses`: kotlin.UInt
     ,
     /**
      * Learning lifecycle.
@@ -1625,7 +1625,7 @@ data class FsrsState (
 
 
 
-    companion objec
+    companion object
 }
 
 /**
@@ -1679,7 +1679,7 @@ data class Hlc (
     /**
      * Tiebreaker within the same millisecond.
      */
-    var `logical`: kotlin.UIn
+    var `logical`: kotlin.UInt
     ,
     /**
      * Stable per installation.
@@ -1692,7 +1692,7 @@ data class Hlc (
 
 
 
-    companion objec
+    companion object
 }
 
 /**
@@ -1733,7 +1733,7 @@ data class LatencySample (
     /**
      * Rep index within the phrase.
      */
-    var `repIndex`: kotlin.UIn
+    var `repIndex`: kotlin.UInt
     ,
     /**
      * Measured milliseconds, or `None` if onset was never detected.
@@ -1746,7 +1746,7 @@ data class LatencySample (
 
 
 
-    companion objec
+    companion object
 }
 
 /**
@@ -1780,12 +1780,12 @@ data class MatchResult (
     /**
      * How many leading target tokens are now revealed. Only ever increases.
      */
-    var `revealed`: kotlin.UIn
+    var `revealed`: kotlin.UInt
     ,
     /**
      * The index just revealed, for the "just said" highlight. `-1` if none.
      */
-    var `justIndex`: kotlin.In
+    var `justIndex`: kotlin.Int
     ,
     /**
      * Whether the whole phrase has been produced — the production gate.
@@ -1798,7 +1798,7 @@ data class MatchResult (
 
 
 
-    companion objec
+    companion object
 }
 
 /**
@@ -1855,12 +1855,12 @@ data class NotificationCandidate (
     /**
      * Local wall-clock hour at delivery, 0..23.
      */
-    var `hour`: kotlin.UIn
+    var `hour`: kotlin.UInt
     ,
     /**
      * Local wall-clock minute at delivery, 0..59.
      */
-    var `minute`: kotlin.UIn
+    var `minute`: kotlin.UInt
     ,
     /**
      * Whether the category's destination is built and can safely receive a deep link.
@@ -1873,7 +1873,7 @@ data class NotificationCandidate (
 
 
 
-    companion objec
+    companion object
 }
 
 /**
@@ -1919,7 +1919,7 @@ data class NotifyContext (
     /**
      * Local hour now, 0..23.
      */
-    var `hour`: kotlin.UIn
+    var `hour`: kotlin.UInt
     ,
     /**
      * Has the learner already practised today?
@@ -1939,7 +1939,7 @@ data class NotifyContext (
     /**
      * Already scheduled today.
      */
-    var `alreadyScheduled`: kotlin.UIn
+    var `alreadyScheduled`: kotlin.UInt
     ,
     /**
      * Is a trip active?
@@ -1949,7 +1949,7 @@ data class NotifyContext (
     /**
      * Reveal-mode fallbacks recently, for the language-pack prompt.
      */
-    var `revealModeCount`: kotlin.UIn
+    var `revealModeCount`: kotlin.UInt
 
 ){
 
@@ -1957,7 +1957,7 @@ data class NotifyContext (
 
 
 
-    companion objec
+    companion object
 }
 
 /**
@@ -2031,12 +2031,12 @@ data class PhraseState (
     /**
      * Stream play count.
      */
-    var `plays`: kotlin.UIn
+    var `plays`: kotlin.UInt
     ,
     /**
      * Total reps across all engines.
      */
-    var `reps`: kotlin.UIn
+    var `reps`: kotlin.UInt
     ,
     /**
      * Epoch ms.
@@ -2061,7 +2061,7 @@ data class PhraseState (
     /**
      * Reps today, valid only for `reps_today_day`.
      */
-    var `repsToday`: kotlin.UIn
+    var `repsToday`: kotlin.UInt
     ,
     /**
      * The `local_day` `reps_today` belongs to.
@@ -2071,7 +2071,7 @@ data class PhraseState (
     /**
      * Distinct days locked in; 4 → graduated.
      */
-    var `lockInDays`: kotlin.UIn
+    var `lockInDays`: kotlin.UInt
     ,
     /**
      * Ladder rung.
@@ -2081,7 +2081,7 @@ data class PhraseState (
     /**
      * Failed productions, floor 0.
      */
-    var `stumbles`: kotlin.UIn
+    var `stumbles`: kotlin.UInt
     ,
     /**
      * Prosody cue level, 0..3.
@@ -2094,7 +2094,7 @@ data class PhraseState (
 
 
 
-    companion objec
+    companion object
 }
 
 /**
@@ -2188,12 +2188,12 @@ data class PlannedNotification (
     /**
      * Local hour to fire at.
      */
-    var `hour`: kotlin.UIn
+    var `hour`: kotlin.UInt
     ,
     /**
      * Local minute.
      */
-    var `minute`: kotlin.UIn
+    var `minute`: kotlin.UInt
     ,
     /**
      * Semantic copy key. The platform translates this at delivery; no learner copy lives in Rust.
@@ -2216,7 +2216,7 @@ data class PlannedNotification (
 
 
 
-    companion objec
+    companion object
 }
 
 /**
@@ -2288,7 +2288,7 @@ data class RefrainCandidate (
     /**
      * Distinct local days locked in; one through three take first priority.
      */
-    var `lockInDays`: kotlin.UIn
+    var `lockInDays`: kotlin.UInt
     ,
     /**
      * Historical automaticity percentage.
@@ -2298,7 +2298,7 @@ data class RefrainCandidate (
     /**
      * Total practice repetitions; zero means new material.
      */
-    var `reps`: kotlin.UIn
+    var `reps`: kotlin.UInt
     ,
     /**
      * Epoch milliseconds, to fill with the earliest unpractised phrase first.
@@ -2311,7 +2311,7 @@ data class RefrainCandidate (
 
 
 
-    companion objec
+    companion object
 }
 
 /**
@@ -2381,7 +2381,7 @@ data class SkillAxes (
 
 
 
-    companion objec
+    companion object
 }
 
 /**
@@ -2437,7 +2437,7 @@ enum class CardState {
 
 
 
-    companion objec
+    companion object
 }
 
 
@@ -2500,7 +2500,7 @@ enum class Category {
 
 
 
-    companion objec
+    companion object
 }
 
 
@@ -2558,7 +2558,7 @@ enum class Confidence {
 
 
 
-    companion objec
+    companion object
 }
 
 
@@ -2645,7 +2645,7 @@ public object FfiConverterTypeCoreError : FfiConverterRustBuffer<CoreException> 
             is CoreException.InvalidInput -> {
                 buf.putInt(1)
                 FfiConverterString.write(value.`reason`, buf)
-                Uni
+                Unit
             }
         }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
     }
@@ -2676,7 +2676,7 @@ enum class Difficulty {
 
 
 
-    companion objec
+    companion object
 }
 
 
@@ -2731,7 +2731,7 @@ enum class EffortState {
 
 
 
-    companion objec
+    companion object
 }
 
 
@@ -2782,7 +2782,7 @@ enum class FinisherCard {
 
 
 
-    companion objec
+    companion object
 }
 
 
@@ -2835,7 +2835,7 @@ enum class FixKind {
 
 
 
-    companion objec
+    companion object
 }
 
 
@@ -2955,19 +2955,19 @@ public object FfiConverterTypeFsrsError : FfiConverterRustBuffer<FsrsException> 
         when(value) {
             is FsrsException.InvalidState -> {
                 buf.putInt(1)
-                Uni
+                Unit
             }
             is FsrsException.InvalidTime -> {
                 buf.putInt(2)
-                Uni
+                Unit
             }
             is FsrsException.UnsupportedAlgorithm -> {
                 buf.putInt(3)
-                Uni
+                Unit
             }
             is FsrsException.Overflow -> {
                 buf.putInt(4)
-                Uni
+                Unit
             }
         }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
     }
@@ -3002,7 +3002,7 @@ enum class Grade {
 
 
 
-    companion objec
+    companion object
 }
 
 
@@ -3057,7 +3057,7 @@ enum class LadderRung {
 
 
 
-    companion objec
+    companion object
 }
 
 
@@ -3114,7 +3114,7 @@ enum class MergeClass {
 
 
 
-    companion objec
+    companion object
 }
 
 
@@ -3201,7 +3201,7 @@ public object FfiConverterTypeNotificationPlanError : FfiConverterRustBuffer<Not
             is NotificationPlanException.InvalidCandidate -> {
                 buf.putInt(1)
                 FfiConverterString.write(value.`reason`, buf)
-                Uni
+                Unit
             }
         }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
     }
@@ -3247,7 +3247,7 @@ enum class RefrainMode {
 
 
 
-    companion objec
+    companion object
 }
 
 
@@ -3298,7 +3298,7 @@ enum class RejectReason {
 
 
 
-    companion objec
+    companion object
 }
 
 
@@ -3349,7 +3349,7 @@ enum class Tag {
 
 
 
-    companion objec
+    companion object
 }
 
 
@@ -3407,7 +3407,7 @@ sealed class TakeResult {
     {
 
 
-        companion objec
+        companion object
     }
 
     /**
@@ -3422,7 +3422,7 @@ sealed class TakeResult {
     {
 
 
-        companion objec
+        companion object
     }
 
 
@@ -3432,7 +3432,7 @@ sealed class TakeResult {
 
 
 
-    companion objec
+    companion object
 }
 
 /**
@@ -3485,12 +3485,12 @@ public object FfiConverterTypeTakeResult : FfiConverterRustBuffer<TakeResult>{
                 FfiConverterSequenceFloat.write(value.`contour`, buf)
                 FfiConverterUInt.write(value.`worstSyllable`, buf)
                 FfiConverterString.write(value.`fixCode`, buf)
-                Uni
+                Unit
             }
             is TakeResult.Rejected -> {
                 buf.putInt(2)
                 FfiConverterTypeRejectReason.write(value.`reason`, buf)
-                Uni
+                Unit
             }
         }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
     }
@@ -4064,7 +4064,7 @@ public object FfiConverterSequenceTypeTag: FfiConverterRustBuffer<List<Tag>> {
 
 
         /**
-         * Normalise for comparison: lowercase, strip diacritics, strip everything tha
+         * Normalise for comparison: lowercase, strip diacritics, strip everything that
          * isn't alphanumeric or ñ.
          *
          * So `¿Cuánto cuesta?` matches `cuanto cuesta`, and `dónde` matches `donde`.
@@ -4618,7 +4618,7 @@ public object FfiConverterSequenceTypeTag: FfiConverterRustBuffer<List<Tag>> {
         /**
          * How many times a phrase repeats before the stream advances.
          *
-         * From `Loro.dc.html:2526`. Visible to the learner: rating something Difficul
+         * From `Loro.dc.html:2526`. Visible to the learner: rating something Difficult
          * makes it repeat more, and the toast says so.
          */ fun `repeatTarget`(`difficulty`: Difficulty): kotlin.UInt {
             return FfiConverterUInt.lift(
