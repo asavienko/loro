@@ -78,8 +78,8 @@ availability for each language still need physical-device and bilingual acceptan
 
 The following native evidence was captured before the aggregate merge. Final integrated source,
 browser and API validation is recorded in
-[plan 94](../../plans/94-persistent-practice-and-account-integration.md); emulator evidence does not
-establish physical microphone or speaker acceptance.
+[plan 94](../../plans/archive/2026-09-09/94-persistent-practice-and-account-integration.md);
+emulator evidence does not establish physical microphone or speaker acceptance.
 
 - Rust: 145 unit tests and 7 integration tests, including 42 FSRS reference vectors.
 - Shipped WASM: reference scheduling vectors plus multilingual matching, cloze, HLC and merge.

@@ -9,6 +9,10 @@
 - **Depends on:** Existing contracts in 85 and persistence correctness in 54; implements coordinated
   slices of 58–60, 62–63 and 66–68.
 
+**Archive disposition (2026-09-09):** Archived at user request after implemented slices landed. The
+partial status and remaining acceptance criteria are retained; archival does not mark this plan
+complete. The roadmap index continues to track its unfinished scope.
+
 ## User request
 
 Implement persistent progress, audio/on-device speech, canonical scheduling, cross-device sync and
@@ -86,7 +90,7 @@ implemented foreground slice. Latency remains null. Native ASR accuracy, install
 availability, hardware interruptions and the full physical-device persistence/convergence matrix
 need device/bilingual acceptance. Account export/erasure and rescue UI, OS background sync,
 load/security-image acceptance and production service configuration remain with their feature plans.
-See [runtime setup](../docs/process/persistent-practice.md).
+See [runtime setup](../../../docs/process/persistent-practice.md).
 
 ## Main integration
 
@@ -118,7 +122,7 @@ the validated runtime.
   readiness in content-only mode.
 - Rust Criterion benchmarks completed; this run does not establish a comparative performance
   regression baseline. GitHub Actions remained disabled, and nothing was deployed.
-- [Account and Speak review captures](../docs/reviews/2026-09-08-aggregate/README.md) show the
+- [Account and Speak review captures](../../../docs/reviews/2026-09-08-aggregate/README.md) show the
   production web export with the existing test transport; they are not live-provider or native
   speech acceptance.
 
@@ -159,8 +163,7 @@ broader native, multilingual and production operational gates remain separate.
 
 ## Post-main review and archive disposition — 2026-09-09
 
-The [review at `de81744`](../docs/reviews/2026-09-09-post-main-plan-review.md) records this plan's
-current contribution, resolved implementation findings, remaining work and gates.
-[Delivered slices](archive/2026-09-09/IMPLEMENTED-SLICES.md) are retained in the archive; this plan
-remains incomplete. Earlier verification is dated evidence, not acceptance of the current combined
-branch.
+The [review at `de81744`](../../../docs/reviews/2026-09-09-post-main-plan-review.md) records this
+plan's current contribution, resolved implementation findings, remaining work and gates.
+[Delivered slices](IMPLEMENTED-SLICES.md) are retained in the archive; this plan remains incomplete.
+Earlier verification is dated evidence, not acceptance of the current combined branch.

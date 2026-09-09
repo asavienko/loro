@@ -194,10 +194,10 @@ the library), calendar, health.
 ## Retention
 
 The testing log/backup policy below follows
-[plan 88](../../plans/88-low-cost-backend-infrastructure.md). The remaining learner-data rows
-describe feature policies, not implemented storage. Plan 73 must record production backup/recovery
-retention before real learner data is admitted; no 35-day PITR service is provisioned or required
-for the testing host.
+[plan 88](../../plans/archive/2026-09-09/88-low-cost-backend-infrastructure.md). The remaining
+learner-data rows describe feature policies, not implemented storage. Plan 73 must record production
+backup/recovery retention before real learner data is admitted; no 35-day PITR service is
+provisioned or required for the testing host.
 
 | Data                                     | Client                                      | Server                                                  |
 | ---------------------------------------- | ------------------------------------------- | ------------------------------------------------------- |

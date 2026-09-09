@@ -12,6 +12,10 @@
 - **Number allocation:** 95 is allocated to parallel local CI in another worktree; 96 follows
   inspection of active, archived and concurrent plan files.
 
+**Archive disposition (2026-09-09):** Archived at user request after implemented slices landed. The
+partial status and remaining acceptance criteria are retained; archival does not mark this plan
+complete. The roadmap index continues to track its unfinished scope.
+
 ## 1. Outcome and ownership
 
 Replace the combined `/account` form with the supplied method chooser, email entry, code entry,
@@ -21,30 +25,29 @@ resend, alongside the visual changes.
 
 This plan owns the presentation and interaction increment.
 [Plan 67](67-anonymous-auth-and-account-lifecycle.md) continues to own identity, linking, recovery,
-export and erasure; [89](archive/2026-09-08/89-google-apple-sign-in.md) records the provider
-foundation; [94](94-persistent-practice-and-account-integration.md) owns integrated
-account/persistence acceptance. [68](68-sync-and-offline-convergence.md) owns convergence. Reuse
-these stacks.
+export and erasure; [89](../2026-09-08/89-google-apple-sign-in.md) records the provider foundation;
+[94](94-persistent-practice-and-account-integration.md) owns integrated account/persistence
+acceptance. [68](68-sync-and-offline-convergence.md) owns convergence. Reuse these stacks.
 
 The utility remains outside the 23 authored learner screens. These user-supplied concepts extend its
 intended design; the shared spine and named-back rules still follow `Navigation.dc.html:35–40`.
 Preserve the original design artifacts. During implementation, update
-[F-01 in the functional spec](../docs/product/functional-spec.md#f-01-account) and the
-[account catalog entry](../docs/design/screen-catalog.md#account-utility-f-01) to distinguish the
-new behavior from the old readiness/form layout.
+[F-01 in the functional spec](../../../docs/product/functional-spec.md#f-01-account) and the
+[account catalog entry](../../../docs/design/screen-catalog.md#account-utility-f-01) to distinguish
+the new behavior from the old readiness/form layout.
 
 ## 2. Asset inventory and design decisions
 
-Source: [`output/imagegen/account-sign-in-v2/`](../output/imagegen/account-sign-in-v2/).
+Source: [`output/imagegen/account-sign-in-v2/`](../../../output/imagegen/account-sign-in-v2/).
 
-| Asset                                                                                            | Use                                                                                                  |
-| ------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
-| [account-email-flow.png](../output/imagegen/account-sign-in-v2/account-email-flow.png)           | Five panels: choose method, enter email, enter code, invalid code, signed in.                        |
-| [provider-sign-in-states.png](../output/imagegen/account-sign-in-v2/provider-sign-in-states.png) | Five panels: ready, connecting, cancelled, failed, signed in; apply to Google and Apple.             |
-| [prompts.md](../output/imagegen/account-sign-in-v2/prompts.md)                                   | Copy, equal method buttons, single code input, optional-practice footer, no connection details.      |
-| [provider-states-prompt.md](../output/imagegen/account-sign-in-v2/provider-states-prompt.md)     | Stable button positions, provider-specific progress, enabled cancel action and neutral cancellation. |
-| [linked-cards.svg](../output/imagegen/account-sign-in-v2/linked-cards.svg)                       | Transparent vector geometry; contains fixed source colors and large outer padding.                   |
-| [linked-cards-ivory.png](../output/imagegen/account-sign-in-v2/linked-cards-ivory.png)           | Raster reference with opaque ivory canvas; not a transparent theme-aware overlay.                    |
+| Asset                                                                                                  | Use                                                                                                  |
+| ------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| [account-email-flow.png](../../../output/imagegen/account-sign-in-v2/account-email-flow.png)           | Five panels: choose method, enter email, enter code, invalid code, signed in.                        |
+| [provider-sign-in-states.png](../../../output/imagegen/account-sign-in-v2/provider-sign-in-states.png) | Five panels: ready, connecting, cancelled, failed, signed in; apply to Google and Apple.             |
+| [prompts.md](../../../output/imagegen/account-sign-in-v2/prompts.md)                                   | Copy, equal method buttons, single code input, optional-practice footer, no connection details.      |
+| [provider-states-prompt.md](../../../output/imagegen/account-sign-in-v2/provider-states-prompt.md)     | Stable button positions, provider-specific progress, enabled cancel action and neutral cancellation. |
+| [linked-cards.svg](../../../output/imagegen/account-sign-in-v2/linked-cards.svg)                       | Transparent vector geometry; contains fixed source colors and large outer padding.                   |
+| [linked-cards-ivory.png](../../../output/imagegen/account-sign-in-v2/linked-cards-ivory.png)           | Raster reference with opaque ivory canvas; not a transparent theme-aware overlay.                    |
 
 There are eight distinct designed states: method-ready and signed-in appear on both boards. Phone
 frames, board titles, panel captions and the Apple-equivalence note are not app UI. The card bars
@@ -325,6 +328,6 @@ provider consent UI and edits to authored artifacts. The provider-email fallback
 explicit; no profile implementation or fabricated address is implied.
 
 The browser and client slices are implemented in the working tree. Keep this plan 🟡 until the
-remaining visual, native and live-provider evidence is recorded; those gates are independent of
-the local UI implementation. Validation evidence for this slice is the account client suite,
-mobile lint/typecheck and the six account browser scenarios.
+remaining visual, native and live-provider evidence is recorded; those gates are independent of the
+local UI implementation. Validation evidence for this slice is the account client suite, mobile
+lint/typecheck and the six account browser scenarios.

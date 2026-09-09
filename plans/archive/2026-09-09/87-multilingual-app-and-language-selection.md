@@ -12,6 +12,10 @@
   inspected. This plan refresh supplies no new runtime, device or deployment acceptance.
 - **Priority:** 9; start bilingual review alongside priority 1.
 
+**Archive disposition (2026-09-09):** Archived at user request after implemented slices landed. The
+partial status and remaining acceptance criteria are retained; archival does not mark this plan
+complete. The roadmap index continues to track its unfinished scope.
+
 ## Implemented scope — retain, do not rebuild
 
 `packages/core/src/domain/languages.ts` defines native/UI languages en/bg/ru and targets
@@ -33,7 +37,7 @@ retained.
 
 `pnpm --silent --filter @loro/content review:export` exports all three bundled UI resources and
 seven actual adapted course catalogs with material SHA-256 identifiers and pending reviewer records.
-The [record workflow](../packages/content/reviews/README.md) preserves reviewer attribution,
+The [record workflow](../../../packages/content/reviews/README.md) preserves reviewer attribution,
 findings, version changes and handoff expectations. `releaseCheck.ts` consumes the record named by
 the current combined material digest. `reviewRecords.ts` recomputes retained payload hashes,
 validates locale/course and combined identity, and requires declared reviewer languages covering
@@ -100,8 +104,7 @@ contracts and 86 for providers, so its stable number is 87. The merge preserves 
 
 ## Post-main review and archive disposition — 2026-09-09
 
-The [review at `de81744`](../docs/reviews/2026-09-09-post-main-plan-review.md) records this plan's
-current contribution, remaining work and gates.
-[Delivered slices](archive/2026-09-09/IMPLEMENTED-SLICES.md) are retained in the archive; this plan
-remains incomplete. Earlier verification is dated evidence, not acceptance of the current combined
-branch.
+The [review at `de81744`](../../../docs/reviews/2026-09-09-post-main-plan-review.md) records this
+plan's current contribution, remaining work and gates. [Delivered slices](IMPLEMENTED-SLICES.md) are
+retained in the archive; this plan remains incomplete. Earlier verification is dated evidence, not
+acceptance of the current combined branch.
