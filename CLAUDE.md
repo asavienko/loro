@@ -151,8 +151,9 @@ prototype-only and **must not** be carried into the app — see the divergence t
   redirect files; update references to the actual archive path and rebase the moved plan's relative
   links. Keep completed records out of the active index. Archive a finished plan in the same change.
   Plan 53 was archived at user request on 2026-09-09; its former original-path exception no longer
-  applies. The next new plan number is 97; recheck concurrent allocations before creating a plan. A
-  new plan takes the next free number and gets a row in [`plans/README.md`](plans/README.md).
+  applies. The next new plan number is 97; recheck concurrent worktrees and untracked `plans/` files
+  before allocating an ID — the README/CLAUDE "next is N" sentence can lag. A new plan takes the next
+  free number and gets a row in [`plans/README.md`](plans/README.md).
   **Numbers are never reused** — a gap is left rather than backfilled, so a link written against a
   number can't come to mean a different plan. Not in `docs/`: that holds the durable spec. Not in a
   temp directory either — a plan you can't find again is a plan you rewrite. Name the requirement ID
