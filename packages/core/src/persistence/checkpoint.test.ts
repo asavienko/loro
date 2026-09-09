@@ -41,6 +41,22 @@ describe('checkpoint input boundary', () => {
   it('round trips the session content signature', () => {
     expect(decodeCheckpoint(encodeCheckpoint(checkpoint))).toEqual(checkpoint)
   })
+
+  it('round trips the owning Refrain wave and rejects unknown wave keys', () => {
+    const withWave = {
+      ...checkpoint,
+      refrainResume: { ...checkpoint.refrainResume, wave: 'midday' as const },
+    }
+    expect(decodeCheckpoint(encodeCheckpoint(withWave))).toEqual(withWave)
+    expect(
+      decodeCheckpoint(
+        JSON.stringify({
+          ...withWave,
+          refrainResume: { ...withWave.refrainResume, wave: 'overnight' },
+        }),
+      ),
+    ).toBeNull()
+  })
   it.each([
     { mode: 'unsupported' },
     { meta: { repIndex: 1.5, repTarget: 6 } },

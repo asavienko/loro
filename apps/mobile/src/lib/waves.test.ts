@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { waveEntry, waveSchedule } from './waves'
+import { waveEntry, waveEntryWithResume, waveSchedule } from './waves'
 
 const KEYS = ['morning', 'midday', 'evening'] as const
 const TIMES = ['08:00', '13:00', '19:00'] as const
@@ -72,8 +72,14 @@ describe('waveEntry', () => {
   })
 
   it('opens a wave exactly at its time and moves missed work to the latest open wave', () => {
-    expect(waveEntry(KEYS, TIMES, '08:00')).toMatchObject({ kind: 'ready', wave: { key: 'morning' } })
-    expect(waveEntry(KEYS, TIMES, '14:00')).toMatchObject({ kind: 'ready', wave: { key: 'midday' } })
+    expect(waveEntry(KEYS, TIMES, '08:00')).toMatchObject({
+      kind: 'ready',
+      wave: { key: 'morning' },
+    })
+    expect(waveEntry(KEYS, TIMES, '14:00')).toMatchObject({
+      kind: 'ready',
+      wave: { key: 'midday' },
+    })
   })
 
   it('does not re-open a persisted completion and waits for the next scheduled wave', () => {
@@ -96,5 +102,26 @@ describe('waveEntry', () => {
       kind: 'ready',
       wave: { key: 'midday' },
     })
+  })
+})
+
+describe('waveEntryWithResume', () => {
+  const paused = { session: { id: 'session' }, wave: 'morning' as const, done: false }
+
+  it('keeps a valid paused wave authoritative after a later wave opens', () => {
+    expect(waveEntryWithResume(KEYS, TIMES, '13:00', [], paused)).toEqual({
+      kind: 'resume',
+      wave: 'morning',
+    })
+  })
+
+  it('never reopens a completed wave and preserves safe legacy fallback', () => {
+    expect(waveEntryWithResume(KEYS, TIMES, '13:00', ['morning'], paused)).toMatchObject({
+      kind: 'ready',
+      wave: { key: 'midday' },
+    })
+    expect(
+      waveEntryWithResume(KEYS, TIMES, '13:00', [], { session: { id: 'legacy' }, done: false }),
+    ).toEqual({ kind: 'resume', wave: 'midday' })
   })
 })

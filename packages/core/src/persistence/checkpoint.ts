@@ -12,6 +12,8 @@ export interface CourseCheckpoint {
   readonly streamCursor: number
   readonly refrainResume: {
     readonly session: SessionHandle | null
+    /** The timed wave that owns this checkpoint; absent records are pre-wave snapshots. */
+    readonly wave?: 'morning' | 'midday' | 'evening'
     readonly cursor: number
     readonly lastLatency: number | null
     readonly history: (number | null)[]
@@ -162,8 +164,12 @@ function checkpoint(value: unknown): value is CourseCheckpoint {
   const resume = value.refrainResume
   return (
     record(resume) &&
-    keys(resume, ['session', 'cursor', 'lastLatency', 'history', 'done']) &&
+    keys(resume, ['session', 'wave', 'cursor', 'lastLatency', 'history', 'done']) &&
     (resume.session === null || session(resume.session)) &&
+    (resume.wave === undefined ||
+      resume.wave === 'morning' ||
+      resume.wave === 'midday' ||
+      resume.wave === 'evening') &&
     count(resume.cursor) &&
     (resume.session === null
       ? resume.cursor === 0

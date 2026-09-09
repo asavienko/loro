@@ -24,6 +24,11 @@ import { DESTINATIONS, placeForPath, surfaceLawForPath } from '../src/lib/naviga
 import { startAccountSync } from '../src/services/accountSync'
 import { PersistenceGate } from '../src/store/PersistenceGate'
 import { completeBrowserSignIn } from '../src/auth/runtime'
+import { localTimeLabel } from '../src/lib/clock'
+import { PRODUCTION_WAVE_TIMES } from '../src/store'
+import { waveEntryWithResume } from '../src/lib/waves'
+
+const WAVES = ['morning', 'midday', 'evening'] as const
 
 // The OAuth popup must notify its opener before hydration asks for the database's writer lease.
 completeBrowserSignIn()
@@ -54,10 +59,34 @@ function ReadyLayout() {
   const pathname = usePathname()
   const surfaceLaw = surfaceLawForPath(pathname)
   const refrainResume = useApp((state) => state.refrainResume)
+  const refrainWaves = useApp((state) => state.refrainWaves)
+  const ongoingEntry = waveEntryWithResume(
+    WAVES,
+    PRODUCTION_WAVE_TIMES,
+    localTimeLabel(),
+    refrainWaves.filter(
+      (wave): wave is (typeof WAVES)[number] =>
+        wave === 'morning' || wave === 'midday' || wave === 'evening',
+    ),
+    refrainResume,
+  )
   const refrainRep =
-    refrainResume.session === null || refrainResume.done
+    ongoingEntry.kind !== 'resume' || refrainResume.session === null
       ? null
       : Math.min(refrainResume.cursor + 1, refrainResume.session.plan.items.length)
+  const ongoing =
+    surfaceLaw?.surfaceClass === 'session' || refrainRep === null || ongoingEntry.kind !== 'resume'
+      ? undefined
+      : {
+          heading: copy.nav.ongoing.heading,
+          label: copy.nav.ongoing.refrain(refrainRep),
+          onPress: () => {
+            router.dismissTo({
+              pathname: '/practice/refrain',
+              params: { wave: ongoingEntry.wave },
+            })
+          },
+        }
   const constrainWidth = Platform.OS === 'web' && !pathname.startsWith('/dev/')
   const place = placeForPath(pathname)
 
@@ -84,20 +113,7 @@ function ReadyLayout() {
                 hereLabel={copy.today.switcher.here}
                 reveal={copy.common.marks.reveal}
                 chevron={copy.common.chevron.right}
-                ongoing={
-                  surfaceLaw?.surfaceClass === 'session' || refrainRep === null
-                    ? undefined
-                    : {
-                        heading: copy.nav.ongoing.heading,
-                        label: copy.nav.ongoing.refrain(refrainRep),
-                        onPress: () => {
-                          router.dismissTo({
-                            pathname: '/practice/refrain',
-                            params: { wave: refrainResume.wave ?? 'morning' },
-                          })
-                        },
-                      }
-                }
+                ongoing={ongoing}
                 destinations={DESTINATIONS.map((destination) => ({
                   label: destination.label,
                   current: pathname === destination.href,

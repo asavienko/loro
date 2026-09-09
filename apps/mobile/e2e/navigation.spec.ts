@@ -134,7 +134,9 @@ test('pull gestures open the menu and dismiss only the sheet', async ({ page }) 
   await expect(page.getByRole('dialog')).toBeVisible()
 })
 
-test('More lists built destinations and retains a return to More', async ({ page }) => {
+test('More retains ordinary parent returns and uses the Refrain exit policy for active work', async ({
+  page,
+}) => {
   await mockAccountService(page)
   await onboard(page)
   await page.getByRole('button', { name: /, open the menu$/ }).click()
@@ -143,7 +145,6 @@ test('More lists built destinations and retains a return to More', async ({ page
     ['Sign in & sync', '/account'],
     ['Speak', '/practice/speak'],
     ['Stream', '/practice/stream'],
-    ['The Refrain', '/practice/refrain'],
     ['Add', '/add'],
     ['Progress', '/progress'],
     ['Settings', '/settings'],
@@ -155,7 +156,12 @@ test('More lists built destinations and retains a return to More', async ({ page
     await expect(page).toHaveURL(new RegExp(`${path}$`))
     await back(page)
   }
-  await expect(page).toHaveURL(/\/more$/)
+  await page.getByRole('button', { name: 'The Refrain', exact: true }).click()
+  await expect(page).toHaveURL(/\/practice\/refrain$/)
+  await expect(page.getByRole('button', { name: 'Leave practice', exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Leave practice', exact: true }).click()
+  await page.getByRole('button', { name: 'End it here', exact: true }).click()
+  await expect(todayMarker(page)).toBeVisible()
 })
 
 test('a Refrain exit pauses durably for Today to resume, or ends without losing earned work', async ({
