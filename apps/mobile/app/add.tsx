@@ -649,7 +649,10 @@ function ImportPhrases({
     try {
       const picked = await DocumentPicker.getDocumentAsync({
         type: ['text/plain', 'text/tab-separated-values'],
-        copyToCacheDirectory: false,
+        // Android document providers return content:// URIs when cache copying is disabled.
+        // ExpoFile's stream() is backed by a random-access local file and rejects those URIs.
+        // Cache first, then retain the bounded reader so decoding still has a hard byte limit.
+        copyToCacheDirectory: true,
         multiple: false,
         base64: false,
       })

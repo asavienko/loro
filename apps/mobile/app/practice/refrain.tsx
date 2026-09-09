@@ -64,18 +64,21 @@ import {
   type PhraseView,
 } from '../../src/store'
 import { copy } from '../../src/lib/copy'
-import { deviceClock, localTimeLabel } from '../../src/lib/clock'
+import { deviceClock } from '../../src/lib/clock'
 import { newId } from '../../src/lib/ids'
 import { waveEntryWithResume, waveSchedule } from '../../src/lib/waves'
+import { useLocalMinute } from '../../src/lib/useLocalMinute'
 /** One warming band's resolved style. The bands are a design token, not a screen decision. */
 type WarmingStyle = (typeof warming)[ReturnType<typeof warmBand>]
 const WAVES = ['morning', 'midday', 'evening'] as const
 type WaveKey = (typeof WAVES)[number]
 export default function Refrain() {
   useLocale()
+  const localMinute = useLocalMinute()
+  const now = localMinute.slice(11)
   const insets = useSafeAreaInsets()
   const { height: bottomBarHeight } = useBottomBar()
-  const scheduledWave = waveSchedule(WAVES, PRODUCTION_WAVE_TIMES, localTimeLabel()).find(
+  const scheduledWave = waveSchedule(WAVES, PRODUCTION_WAVE_TIMES, now).find(
     (item) => item.position === 'next',
   )?.key
   const completedWaves = useApp((state) => state.refrainWaves)
@@ -83,7 +86,7 @@ export default function Refrain() {
   const entry = waveEntryWithResume(
     WAVES,
     PRODUCTION_WAVE_TIMES,
-    localTimeLabel(),
+    now,
     completedWaves.filter(
       (wave): wave is WaveKey => wave === 'morning' || wave === 'midday' || wave === 'evening',
     ),

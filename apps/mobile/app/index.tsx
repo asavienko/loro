@@ -25,9 +25,9 @@ import { useLocale } from '../src/lib/i18n'
  * in the shared root layout, using the same built-destination declaration as this rail.
  */
 
-import { useCallback, useEffect, useState } from 'react'
-import { AppState, ScrollView, StyleSheet, View } from 'react-native'
-import { Redirect, router, useFocusEffect } from 'expo-router'
+import { useEffect } from 'react'
+import { ScrollView, StyleSheet, View } from 'react-native'
+import { Redirect, router } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useBottomBar } from '../src/ui/BottomBarContext'
 import {
@@ -64,6 +64,7 @@ import {
 import { PRODUCTION_WAVE_TIMES, toView, useApp, type PhraseView } from '../src/store'
 import { copy } from '../src/lib/copy'
 import { deviceClock, localDateLabel, localTimeLabel } from '../src/lib/clock'
+import { useLocalMinute } from '../src/lib/useLocalMinute'
 import {
   waveEntryWithResume,
   waveSchedule,
@@ -86,35 +87,6 @@ type WaveKey = (typeof WAVES)[number]
  */
 const RAIL = DESTINATIONS.filter((destination) => destination.rail)
 
-/** Refresh existing day/wave projections while Today is visible, including wake and clock changes. */
-const LOCAL_MINUTE_MS = 60_000
-
-function useTodayMinute(): string {
-  const read = (): string => `${deviceClock.localDay()}T${localTimeLabel()}`
-  const [minute, setMinute] = useState(read)
-  useFocusEffect(
-    useCallback(() => {
-      let timer: ReturnType<typeof setTimeout> | undefined
-      const refresh = (): void => {
-        if (timer !== undefined) clearTimeout(timer)
-        setMinute(`${deviceClock.localDay()}T${localTimeLabel()}`)
-        // Align to the next minute rather than drifting from when the route mounted.
-        timer = setTimeout(refresh, LOCAL_MINUTE_MS - (deviceClock.now() % LOCAL_MINUTE_MS))
-      }
-      refresh()
-      const subscription = AppState.addEventListener('change', (status) => {
-        if (timer !== undefined) clearTimeout(timer)
-        if (status === 'active') refresh()
-      })
-      return () => {
-        if (timer !== undefined) clearTimeout(timer)
-        subscription.remove()
-      }
-    }, []),
-  )
-  return minute
-}
-
 export default function Today() {
   useLocale()
   const onboarded = useApp((s) => s.onboarded)
@@ -126,7 +98,7 @@ export default function Today() {
   const practiceDays = useApp((s) => s.practiceDays)
   // Derived, never stored — the same function the widget will call (ADR-0002).
   const streak = streakOf(practiceDays, deviceClock.streakDay())
-  const localMinute = useTodayMinute()
+  const localMinute = useLocalMinute()
   const insets = useSafeAreaInsets()
   const { height: bottomBarHeight } = useBottomBar()
 
