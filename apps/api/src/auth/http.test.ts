@@ -1,9 +1,9 @@
 /** F-01/F-02/F-04: real HTTP OAuth and shared bearer-authenticated PostgreSQL sync. */
-import { generateKeyPairSync, randomUUID } from 'node:crypto'
-import { Pool } from 'pg'
+import { generateKeyPairSync } from 'node:crypto'
+import type { Pool } from 'pg'
 import { Test } from '@nestjs/testing'
 import type { INestApplication } from '@nestjs/common'
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
+import { afterAll, beforeAll, expect, it, vi } from 'vitest'
 import {
   PullResponseSchema,
   PushResponseSchema,
@@ -22,7 +22,16 @@ import { AUTH_RUNTIME } from './runtime.js'
 import { OAuthFlowService, hash, secret } from './oauth-flow.service.js'
 import type { AuthSettings } from './settings.js'
 
-const testUrl = process.env['LORO_TEST_DATABASE_URL']
+import {
+  LORO_TEST_DATABASE_URL,
+  connectAdmin,
+  createSearchPathSchema,
+  describePostgres,
+  dropIsolatedSchema,
+  isolatedSchemaName,
+} from '../testing/postgres-schema.js'
+
+const testUrl = LORO_TEST_DATABASE_URL
 const now = 1_800_000_000_000
 const key = generateKeyPairSync('ec', { namedCurve: 'prime256v1' })
   .privateKey.export({ type: 'pkcs8', format: 'pem' })
@@ -41,24 +50,22 @@ const fields = {
   reps: { v: 4, hlc: `${now}:0000:browser` },
 }
 
-describe.skipIf(!testUrl)('browser OAuth HTTP flow with shared durable sync', () => {
+describePostgres('browser OAuth HTTP flow with shared durable sync', () => {
   let admin: Pool
   let app: INestApplication
   let auth: AuthService
   let base: string
-  const schema = `oauth_http_${randomUUID().replaceAll('-', '')}`
+  const schema = isolatedSchemaName('oauth_http')
 
   beforeAll(async () => {
-    admin = new Pool({ connectionString: testUrl })
-    await admin.query(`CREATE SCHEMA ${schema}`)
-    const url = new URL(testUrl!)
-    url.searchParams.set('options', `-csearch_path=${schema}`)
-    vi.stubEnv('DATABASE_URL', url.toString())
+    admin = connectAdmin(testUrl)
+    const databaseUrl = await createSearchPathSchema(admin, schema, testUrl)
+    vi.stubEnv('DATABASE_URL', databaseUrl)
     vi.stubEnv('AUTH_ENABLED', 'true')
     vi.stubEnv('AUTH_PRIVATE_KEY_PEM', key)
     vi.stubEnv('AUTH_ISSUER', 'https://api.example.test')
     const settings: AuthSettings = {
-      databaseUrl: url.toString(),
+      databaseUrl,
       publicUrl: 'https://api.example.test',
       redirects: ['loro://account'],
       signingKey: 'test-key-that-is-longer-than-32-bytes',
@@ -100,7 +107,7 @@ describe.skipIf(!testUrl)('browser OAuth HTTP flow with shared durable sync', ()
   })
   afterAll(async () => {
     await app.close()
-    await admin.query(`DROP SCHEMA ${schema} CASCADE`)
+    await dropIsolatedSchema(admin, schema)
     await admin.end()
     vi.unstubAllEnvs()
   })

@@ -39,7 +39,7 @@ import {
   streakChip,
   streakText,
   streakValue,
-} from './states'
+} from './helpers'
 
 /** `LOCK_IN_DAYS_TO_GRADUATE` — four distinct lock-in days retires a phrase. */
 const LOCK_IN_DAYS_TO_GRADUATE = 4

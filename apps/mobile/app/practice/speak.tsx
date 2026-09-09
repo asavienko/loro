@@ -1,16 +1,15 @@
 /** P3-20/P3-25 · Loro.dc.html:680–732. Native-only ASR; reveal remains completable offline. */
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { ScrollView, View } from 'react-native'
-import { router } from 'expo-router'
 import { isActive, type PhraseState, type SessionHandle, type TargetLocale } from '@loro/core'
 import { copy } from '../../src/lib/copy'
+import { PracticeEmptyState } from './_emptyPractice'
 import { useLocale } from '../../src/lib/i18n'
 import { coreAvailable } from '../../src/lib/core'
 import { audioSpeech, useAudioSpeech } from '../../src/lib/audioSpeech'
 import { deviceClock } from '../../src/lib/clock'
 import { newId } from '../../src/lib/ids'
 import { engineContext, speakEngine, toView, useApp, type PhraseView } from '../../src/store'
-import { EmptyState } from '../../src/ui/components'
 import { AudioControls } from '../../src/ui/components/AudioControls'
 import { Button, Card, Row, Screen, Stack, Text } from '../../src/ui/primitives'
 import { ink, space } from '../../src/ui/theme'
@@ -65,15 +64,10 @@ export default function Speak() {
   return (
     <Screen>
       {empty ? (
-        <EmptyState
+        <PracticeEmptyState
           title={copy.stream.empty.title}
           body={copy.stream.empty.body}
-          action={{
-            label: copy.stream.empty.action,
-            onPress: () => {
-              router.push('/add')
-            },
-          }}
+          actionLabel={copy.stream.empty.action}
         />
       ) : phrase === undefined || session === null ? null : (
         <SpeakingPhrase

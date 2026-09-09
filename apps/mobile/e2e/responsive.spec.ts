@@ -1,5 +1,6 @@
 import { test, expect, onboard } from './fixtures'
-import { STATES, enter } from './states'
+import { enter } from './helpers'
+import { STATES } from './states'
 
 test('enlarged difficulty labels, queue phrases and detail actions remain readable', async ({
   page,

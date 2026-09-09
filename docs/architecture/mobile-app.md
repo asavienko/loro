@@ -306,7 +306,9 @@ Unit tests cover the mobile store, clocks, copy ownership, core engines, persist
 real SQLite statements through the Node driver. The browser suite covers the behavior that can
 actually run today.
 
-`e2e/states.ts` is the learner-visible state manifest. `route-coverage.spec.ts` proves every route
+`e2e/states.ts` is the learner-visible state manifest. Click helpers (`enter`, `doOneRep`,
+`lockIn`, markers) live in `e2e/helpers/`; account mocks stay in `accountFlow.ts`.
+`route-coverage.spec.ts` proves every route
 has an owner and every declared route exists; accessibility and text-scale suites enter the same
 states by clicking as a learner would. A new state belongs in the manifest in the same coherent
 change as the implementation.

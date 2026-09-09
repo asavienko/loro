@@ -1,7 +1,8 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { expect, onboard, test } from './fixtures'
-import { enter, STATES } from './states'
+import { enter } from './helpers'
+import { STATES } from './states'
 
 const runDir = process.env.LORO_SCREENSHOT_RUN_DIR
 if (runDir === undefined) throw new Error('LORO_SCREENSHOT_RUN_DIR was not configured.')

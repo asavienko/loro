@@ -9,41 +9,18 @@ import {
 } from '@loro/core/api/target'
 import type { OAuthProvider } from '@loro/core/api/oauth'
 import { authorizeProvider, type AuthorizationPorts } from '../../auth/client'
+import { readCredential, type SavedCredential } from './credentials'
+import { AccountError, type AccountState, type CredentialVault } from './types'
 
-export interface CredentialVault {
-  read(): Promise<string | null>
-  write(value: string): Promise<void>
-  clear(): Promise<void>
-  readLegacy?(): Promise<string | null>
-  clearLegacy?(): Promise<void>
-}
-export interface AccountSession {
-  accountId: string
-  deviceId: string
-}
-export type AccountStatus =
-  'signed-out' | 'working' | 'code-sent' | 'signed-in' | 'error' | 'cancelled'
-export type AccountErrorCode =
-  | 'unconfigured'
-  | 'network'
-  | 'invalid-code'
-  | 'unavailable'
-  | 'account-mismatch'
-  | 'storage'
-  | 'provider-error'
-  | 'localSignOut'
-  | 'upgrade-sign-in'
-  | 'upgrade-offline'
-export interface AccountState {
-  status: AccountStatus
-  session: AccountSession | null
-  error: AccountErrorCode | null
-}
-export class AccountError extends Error {
-  constructor(readonly code: AccountErrorCode) {
-    super(code)
-  }
-}
+export type {
+  AccountErrorCode,
+  AccountSession,
+  AccountState,
+  AccountStatus,
+  CredentialVault,
+} from './types'
+export { AccountError } from './types'
+
 interface Dependencies {
   baseUrl: string | null
   device: DeviceRegistration
@@ -54,36 +31,6 @@ interface Dependencies {
   isOnline?(): Promise<boolean>
   fetch?: typeof globalThis.fetch
   authorization?: AuthorizationPorts
-}
-interface SavedCredential extends AccountSession {
-  installationId: string
-  refreshToken: string
-}
-function readCredential(raw: string): SavedCredential | null {
-  let value: unknown
-  try {
-    value = JSON.parse(raw)
-  } catch {
-    return null
-  }
-  if (typeof value !== 'object' || value === null) return null
-  if (
-    !('accountId' in value) ||
-    typeof value.accountId !== 'string' ||
-    !('deviceId' in value) ||
-    typeof value.deviceId !== 'string' ||
-    !('installationId' in value) ||
-    typeof value.installationId !== 'string' ||
-    !('refreshToken' in value) ||
-    typeof value.refreshToken !== 'string'
-  )
-    return null
-  return {
-    accountId: value.accountId,
-    deviceId: value.deviceId,
-    installationId: value.installationId,
-    refreshToken: value.refreshToken,
-  }
 }
 
 /** F-01/F-02. Credentials never enter progress storage; refresh is single-flight and never replayed. */

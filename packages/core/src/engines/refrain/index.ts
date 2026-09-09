@@ -30,11 +30,11 @@ import type {
 } from '../types.js'
 import {
   availableWhenActive,
+  canonicalReviewDelta,
   distinctPhrases,
   itemAtCursor,
   itemFor,
   metaNumber,
-  universalDelta,
   workedItems,
 } from '../common.js'
 import type { PhraseState } from '../../domain/phrase.js'
@@ -237,21 +237,8 @@ export class RefrainEngine implements PracticeEngine {
     // Rule 5: a Refrain rep is an implicit FSRS review even though this screen
     // never shows an interval. Rust maps explicit ratings or the attempt's outcome
     // and hints; manual taps remain self-reported practice.
-    const grade = ctx.core.reviewGrade(attempt)
     const phrase = await ctx.phrases.byId(item.phraseId)
     if (phrase === null) throw new Error('The practised phrase no longer exists')
-    const srs =
-      attempt.outcome === 'skipped'
-        ? undefined
-        : ctx.core.fsrsReview(
-            phrase,
-            grade,
-            attempt.at,
-            attempt.selfGrade === undefined ? attempt.confidence : undefined,
-          )
-
-    if (srs !== undefined && !srs.algorithm)
-      throw new Error('Canonical review must identify its algorithm')
 
     const productionEvidence =
       Boolean(attempt.transcript?.trim()) || attempt.selfGrade !== undefined
@@ -271,17 +258,21 @@ export class RefrainEngine implements PracticeEngine {
       attempt.latencyMs < 800
 
     return Promise.resolve({
-      ...universalDelta(item, attempt, {
-        reps: success ? 1 : 0,
-        // MEASURED or null. Never derived from the rep index.
-        latencyMs: attempt.latencyMs,
-      }),
+      ...canonicalReviewDelta(
+        ctx,
+        item,
+        attempt,
+        phrase,
+        {
+          reps: success ? 1 : 0,
+          // MEASURED or null. Never derived from the rep index.
+          latencyMs: attempt.latencyMs,
+        },
+        { skip: attempt.outcome === 'skipped' },
+      ),
       repsToday: repsTodayAfter,
       automaticity: auto,
       lockedInToday: auto >= 100,
-      ...(srs === undefined
-        ? {}
-        : { srs, review: { grade, at: attempt.at, algorithm: srs.algorithm ?? '' } }),
       ...(earnsPressure
         ? { rung: LadderRung.PressureTested }
         : earnsBent

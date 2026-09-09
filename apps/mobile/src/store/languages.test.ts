@@ -62,6 +62,16 @@ describe('F-08 course isolation', () => {
     expect(toView(row).translation).toBe('Добро утро')
     expect(toView(row).meaningLanguage).toBe('bg')
   })
+  it('guesses the device language without marking the pair chosen', () => {
+    expect(useApp.getState().languageChosen).toBe(false)
+    useApp.getState().previewNativeLanguage('bg')
+    expect(useApp.getState().nativeLanguage).toBe('bg')
+    expect(useApp.getState().languageChosen).toBe(false)
+    seed()
+    useApp.getState().previewNativeLanguage('ru')
+    expect(useApp.getState().nativeLanguage).toBe('bg')
+    expect(useApp.getState().languageChosen).toBe(true)
+  })
   it('rejects a matching pair atomically', () => {
     const before = useApp.getState()
     expect(() => {

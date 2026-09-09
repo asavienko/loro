@@ -1,7 +1,7 @@
 import { mockAccountService } from './accountFlow'
 import { atInstant } from './clock'
 import { expect, onboard, test } from './fixtures'
-import { back, open, todayMarker } from './states'
+import { back, open, todayMarker } from './helpers'
 
 test('cold learner links provide a home escape without browser history', async ({ page }) => {
   for (const route of [

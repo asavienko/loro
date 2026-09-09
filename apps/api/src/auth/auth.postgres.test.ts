@@ -1,7 +1,7 @@
 /** Real PostgreSQL transaction/replay tests; set LORO_TEST_DATABASE_URL to an isolated server. */
 import { generateKeyPairSync, randomUUID } from 'node:crypto'
 import { Pool } from 'pg'
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterAll, afterEach, beforeAll, beforeEach, expect, it, vi } from 'vitest'
 import {
   SignInResponseSchema,
   RefreshRequestSchema,
@@ -23,8 +23,17 @@ import {
   newRefreshToken,
 } from './auth.tokens.js'
 
-const testUrl = process.env['LORO_TEST_DATABASE_URL']
-const suite = describe.skipIf(!testUrl)
+import {
+  LORO_TEST_DATABASE_URL,
+  connectAdmin,
+  createIsolatedSchema,
+  describePostgres,
+  dropIsolatedSchema,
+  isolatedSchemaName,
+} from '../testing/postgres-schema.js'
+
+const testUrl = LORO_TEST_DATABASE_URL
+const suite = describePostgres
 const key = generateKeyPairSync('ec', { namedCurve: 'prime256v1' })
   .privateKey.export({ type: 'pkcs8', format: 'pem' })
   .toString()
@@ -53,10 +62,10 @@ suite('durable authentication with PostgreSQL', () => {
   const deliveries = new Map<string, string>()
 
   beforeAll(async () => {
-    schema = `auth_test_${randomUUID().replaceAll('-', '')}`
-    admin = new Pool({ connectionString: testUrl })
+    schema = isolatedSchemaName('auth_test')
+    admin = connectAdmin(testUrl)
     // The only identifier interpolation is a locally generated hexadecimal name.
-    await admin.query(`CREATE SCHEMA ${schema}`)
+    await createIsolatedSchema(admin, schema)
     pool = new Pool({ connectionString: testUrl, options: `-c search_path=${schema}` })
     await pool.query(AUTH_MIGRATION_SQL)
     database = {
@@ -115,7 +124,7 @@ suite('durable authentication with PostgreSQL', () => {
   })
   afterAll(async () => {
     await pool.end()
-    await admin.query(`DROP SCHEMA ${schema} CASCADE`)
+    await dropIsolatedSchema(admin, schema)
     await admin.end()
   })
 
@@ -289,7 +298,7 @@ suite('durable authentication with PostgreSQL', () => {
 })
 
 suite('upgrade of existing browser authentication data', () => {
-  const schema = `auth_upgrade_${randomUUID().replaceAll('-', '')}`
+  const schema = isolatedSchemaName('auth_upgrade')
   const accountId = randomUUID()
   const oldSessionIds = [randomUUID(), randomUUID(), randomUUID()]
   const oldTokens = [newRefreshToken(), newRefreshToken(), newRefreshToken()]
@@ -315,8 +324,8 @@ suite('upgrade of existing browser authentication data', () => {
   let auth: AuthService
 
   beforeAll(async () => {
-    admin = new Pool({ connectionString: testUrl })
-    await admin.query(`CREATE SCHEMA ${schema}`)
+    admin = connectAdmin(testUrl)
+    await createIsolatedSchema(admin, schema)
     setup = new Pool({ connectionString: testUrl, options: `-csearch_path=${schema}` })
     // Frozen deployed schema, independent of the new OAuth repository implementation.
     await setup.query(`
@@ -368,7 +377,7 @@ suite('upgrade of existing browser authentication data', () => {
   afterAll(async () => {
     await database.onModuleDestroy()
     await setup.end()
-    await admin.query(`DROP SCHEMA ${schema} CASCADE`)
+    await dropIsolatedSchema(admin, schema)
     await admin.end()
     vi.unstubAllEnvs()
   })

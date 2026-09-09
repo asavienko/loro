@@ -12,7 +12,7 @@
 
 import { DatabaseSync } from 'node:sqlite'
 import type { SqlDriver, SqlRow, SqlValue } from '@loro/core'
-import { synchronousResult } from '@loro/core'
+import { withSavepoints } from './savepoints'
 
 export interface NodeSqliteDriver extends SqlDriver {
   /** Escape hatch for a test that needs to assert on the schema itself. */
@@ -28,8 +28,6 @@ export function openNodeSqlite(path = ':memory:'): NodeSqliteDriver {
   // Nested `transaction()` calls use savepoints so an inner rollback cannot silently
   // commit the outer one. `migrate()` and `compact()` both wrap work, and a caller may
   // reasonably wrap either.
-  let depth = 0
-
   return {
     db,
 
@@ -48,23 +46,9 @@ export function openNodeSqlite(path = ':memory:'): NodeSqliteDriver {
         .map(toRow)
     },
 
-    transaction(fn) {
-      const outer = depth === 0
-      const name = `sp_${String(depth)}`
-      db.exec(outer ? 'BEGIN' : `SAVEPOINT ${name}`)
-      depth++
-      try {
-        const result = synchronousResult(fn())
-        db.exec(outer ? 'COMMIT' : `RELEASE ${name}`)
-        return result
-      } catch (error) {
-        db.exec(outer ? 'ROLLBACK' : `ROLLBACK TO ${name}`)
-        if (!outer) db.exec(`RELEASE ${name}`)
-        throw error
-      } finally {
-        depth--
-      }
-    },
+    transaction: withSavepoints((sql) => {
+      db.exec(sql)
+    }),
 
     close() {
       db.close()

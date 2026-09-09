@@ -48,7 +48,7 @@ function ReadyLayout() {
   useEffect(() => {
     const state = useApp.getState()
     if (!state.languageChosen && !state.onboarded) {
-      useApp.setState({ nativeLanguage: detectNativeLanguage(getLocales()[0]?.languageTag) })
+      state.previewNativeLanguage(detectNativeLanguage(getLocales()[0]?.languageTag))
     }
   }, [])
   // Mounted once, app-wide: every screen gets the new day, not just the one that

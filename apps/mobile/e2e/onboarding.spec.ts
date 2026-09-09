@@ -1,5 +1,5 @@
 import { expect, test } from './fixtures'
-import { railCount, todayMarker } from './states'
+import { railCount, todayMarker } from './helpers'
 
 test(
   'P1-01..P1-09: completes all six onboarding steps and seeds the stream',

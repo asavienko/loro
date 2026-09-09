@@ -23,6 +23,25 @@ describe('synchronous SQLite transaction boundary', () => {
       db.close()
     }
   })
+  it('rolls back an inner savepoint without discarding the outer transaction', () => {
+    const db = openNodeSqlite()
+    try {
+      db.exec('CREATE TABLE items(value INTEGER)')
+      db.transaction(() => {
+        db.run('INSERT INTO items VALUES(1)')
+        expect(() => {
+          db.transaction(() => {
+            db.run('INSERT INTO items VALUES(2)')
+            throw new Error('inner')
+          })
+        }).toThrow('inner')
+        db.run('INSERT INTO items VALUES(3)')
+      })
+      expect(db.all('SELECT value FROM items ORDER BY value')).toEqual([{ value: 1 }, { value: 3 }])
+    } finally {
+      db.close()
+    }
+  })
   it('rejects Promise results before commit, including nested transaction callbacks', () => {
     const db = openNodeSqlite()
     try {
