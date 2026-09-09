@@ -51,12 +51,15 @@ export const config = {
    * Cloud TTS. Default stub spends no provider credits. A key is not a Q-15 voice licence.
    * `TTS_STUB_RENDER=1` is test-only metadata; it is never licensed neural quality.
    */
-  ttsSettings: () => ({
-    provider: process.env['TTS_PROVIDER'] ?? 'stub',
-    apiKey: process.env['TTS_API_KEY'] ?? '',
-    modelId: process.env['TTS_MODEL_ID'] || null,
-    stubRender: process.env['TTS_STUB_RENDER'] === '1',
-  }),
+  ttsSettings: () => {
+    const modelId = process.env['TTS_MODEL_ID']
+    return {
+      provider: process.env['TTS_PROVIDER'] ?? 'stub',
+      apiKey: process.env['TTS_API_KEY'] ?? '',
+      modelId: modelId !== undefined && modelId.length > 0 ? modelId : null,
+      stubRender: process.env['TTS_STUB_RENDER'] === '1',
+    }
+  },
 
   /** Raw browser OAuth configuration; auth/settings.ts validates deployment requirements. */
   oauthSettings: () => ({
