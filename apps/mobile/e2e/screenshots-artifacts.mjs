@@ -19,6 +19,7 @@ export function initialManifest(repository) {
       fixedTime: '2026-09-09T10:00:00 Europe/Madrid',
       revision: git(repository, ['rev-parse', 'HEAD']),
       dirty: git(repository, ['status', '--porcelain']).length > 0,
+      browser: { name: null, version: null },
       viewport: { width: 390, height: 844 },
     },
     states: states.map((state) => ({
@@ -35,6 +36,21 @@ export function writeManifest(runDir, manifest) {
   writeFileSync(join(runDir, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`)
 }
 
+export function finalizeManifest(runDir, manifest) {
+  manifest.completedAt = new Date().toISOString()
+  manifest.counts = countStates(manifest.states)
+  writeManifest(runDir, manifest)
+  writeGallery(runDir, manifest)
+  return manifest
+}
+
+export function formatSummary(runDir, manifest) {
+  const counts = manifest.counts ?? countStates(manifest.states)
+  const label = manifest.status === 'passed' ? 'Screen images' : 'Screen image run failed'
+  const error = manifest.error === undefined ? '' : `\nError: ${manifest.error}`
+  return `${label}: ${counts.passed} passed, ${counts.failed} failed, ${counts['not-run']} not run.${error}\nGallery: ${join(runDir, 'index.html')}`
+}
+
 export function readManifest(runDir) {
   return JSON.parse(readFileSync(join(runDir, 'manifest.json'), 'utf8'))
 }
@@ -42,7 +58,10 @@ export function readManifest(runDir) {
 export function failedManifest(message, existing) {
   const manifest = existing ?? {
     version: 1,
-    run: { startedAt: new Date().toISOString() },
+    run: {
+      startedAt: new Date().toISOString(),
+      browser: { name: null, version: null },
+    },
     states: [],
   }
   manifest.status = 'failed'
