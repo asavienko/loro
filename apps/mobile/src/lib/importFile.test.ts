@@ -5,14 +5,18 @@ const encoder = new TextEncoder()
 
 describe('offline import files', () => {
   it('accepts only UTF-8 text and tab-separated files', () => {
-    expect(decodeImportFile({ name: 'phrases.txt', bytes: encoder.encode('Hola | Hello') })).toEqual({
+    expect(
+      decodeImportFile({ name: 'phrases.txt', bytes: encoder.encode('Hola | Hello') }),
+    ).toEqual({
       ok: true,
       text: 'Hola | Hello',
     })
-    expect(decodeImportFile({ name: 'phrases.tsv', bytes: encoder.encode('Hola\tHello') })).toEqual({
-      ok: true,
-      text: 'Hola\tHello',
-    })
+    expect(decodeImportFile({ name: 'phrases.tsv', bytes: encoder.encode('Hola\tHello') })).toEqual(
+      {
+        ok: true,
+        text: 'Hola\tHello',
+      },
+    )
     expect(decodeImportFile({ name: 'phrases.csv', bytes: encoder.encode('Hola,Hello') })).toEqual({
       ok: false,
       error: 'unsupported-format',

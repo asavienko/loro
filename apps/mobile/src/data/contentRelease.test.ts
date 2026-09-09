@@ -149,4 +149,35 @@ describe('signed content release activation', () => {
       driver.close()
     }
   })
+
+  it('fails closed when the installed release pointer is corrupt', async () => {
+    const driver = openNodeSqlite()
+    try {
+      driver.exec('CREATE TABLE kv(k TEXT PRIMARY KEY, v TEXT NOT NULL)')
+      const newer = fixture(2)
+      await activateContentRelease({
+        driver,
+        manifest: newer.manifest,
+        resources: new Map([[catalogResourceId(bundledCatalog.lang), newer.bytes]]),
+        appVersion: '1.0.0',
+        verifier,
+        installCatalog: () => undefined,
+      })
+      driver.run('UPDATE kv SET v = ? WHERE k = ?', ['{not-json', 'content.release.es-ES'])
+      const older = fixture(1)
+      await expect(
+        activateContentRelease({
+          driver,
+          manifest: older.manifest,
+          resources: new Map([[catalogResourceId(bundledCatalog.lang), older.bytes]]),
+          appVersion: '1.0.0',
+          verifier,
+          installCatalog: () => undefined,
+        }),
+      ).rejects.toThrow('Corrupt installed content release pointer')
+      expect(readLocalValue(driver, 'content.release.es-ES')).toBe('{not-json')
+    } finally {
+      driver.close()
+    }
+  })
 })

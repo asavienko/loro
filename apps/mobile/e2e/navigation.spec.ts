@@ -1,4 +1,5 @@
 import { mockAccountService } from './accountFlow'
+import { atInstant } from './clock'
 import { expect, onboard, test } from './fixtures'
 import { back, open, todayMarker } from './states'
 
@@ -137,6 +138,7 @@ test('pull gestures open the menu and dismiss only the sheet', async ({ page }) 
 test('More retains ordinary parent returns and uses the Refrain exit policy for active work', async ({
   page,
 }) => {
+  await atInstant(page, '2026-04-06T10:00')
   await mockAccountService(page)
   await onboard(page)
   await page.getByRole('button', { name: /, open the menu$/ }).click()
@@ -167,20 +169,28 @@ test('More retains ordinary parent returns and uses the Refrain exit policy for 
 test('a Refrain exit pauses durably for Today to resume, or ends without losing earned work', async ({
   page,
 }) => {
+  await atInstant(page, '2026-04-06T10:00')
   await onboard(page)
   await page.getByRole('button', { name: /Start the .* wave/ }).click()
   await expect(page.getByRole('button', { name: 'Say it', exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Say it', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Chorus it', exact: true })).toBeVisible()
 
   await page.getByRole('button', { name: 'Leave practice', exact: true }).click()
   await expect(page.getByRole('dialog')).toBeVisible()
   await page.getByRole('button', { name: 'Pause the wave', exact: true }).click()
   await expect(todayMarker(page)).toBeVisible()
   await expect(page.getByRole('button', { name: 'Resume the wave', exact: true })).toBeVisible()
+  await page.reload()
+  await expect(page.getByRole('button', { name: 'Resume the wave', exact: true })).toBeVisible()
 
   await page.getByRole('button', { name: 'Resume the wave', exact: true }).click()
   await expect(page).toHaveURL(/\/practice\/refrain/)
+  await expect(page.getByRole('button', { name: 'Chorus it', exact: true })).toBeVisible()
   await page.getByRole('button', { name: 'Leave practice', exact: true }).click()
   await page.getByRole('button', { name: 'End it here', exact: true }).click()
   await expect(todayMarker(page)).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Resume the wave', exact: true })).toHaveCount(0)
+  await page.reload()
   await expect(page.getByRole('button', { name: 'Resume the wave', exact: true })).toHaveCount(0)
 })
