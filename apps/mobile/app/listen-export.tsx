@@ -338,6 +338,8 @@ function statusCopy(scenario: ListenScenario | null, view: ListenViewModel): str
   if (scenario === 'disk-full') return copy.listenExport.status['disk-full']
   if (scenario === 'session-busy') return copy.listenExport.status['session-busy']
   if (scenario === 'voices-unapproved') return copy.listenExport.status['voices-unapproved']
+  if (scenario === 'voices-single') return copy.listenExport.status['voices-single']
+  if (scenario === 'quota') return copy.listenExport.status.quota
   if (scenario === 'not-configured') return copy.listenExport.status['not-configured']
   if (view.phase === 'generating') return copy.listenExport.status.generating
   if (view.phase === 'playing') return copy.listenExport.status.playing

@@ -14,6 +14,8 @@ export const LISTEN_SCENARIOS = [
   'disk-full',
   'session-busy',
   'voices-unapproved',
+  'voices-single',
+  'quota',
   'not-configured',
 ] as const
 
@@ -39,6 +41,8 @@ export const LISTEN_STATUS: Record<ListenScenario, string> = {
   'disk-full': 'Not enough storage to save listening audio. The last complete batch is unchanged.',
   'session-busy': 'Stop the current audio session before preparing or playing listening audio.',
   'voices-unapproved': 'Licensed listening voices are not approved yet.',
+  'voices-single': 'One licensed listening voice is not enough. This companion needs at least two.',
+  quota: 'Listening generation is paused because the licensed quota is exhausted.',
   'not-configured': 'Listening generation is not configured on this device.',
 }
 
