@@ -17,7 +17,7 @@
     "validate:stress": "tsx src/validate.ts --only stress",
     "validate:length": "tsx src/validate.ts --only length",
     "enrich": "tsx src/enrich.ts",
-    "render": "tsx src/render.ts",
+    "render": "tsx src/renderCli.ts",
     "publish": "tsx src/publish.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
@@ -39,6 +39,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./fs": "./src/fs.ts",
-    "./types": "./src/types.ts"
+    "./types": "./src/types.ts",
+    "./audio-duration": "./src/audioDuration.ts"
   }
 }
