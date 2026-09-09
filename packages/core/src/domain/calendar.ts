@@ -17,7 +17,7 @@
  * `calendar.fixtures.json` is asserted by BOTH `calendar.test.ts` and
  * `core-rs/tests/parity.rs`, so a divergence fails the build in one language or the
  * other. When the bridge lands this module is deleted, not maintained — see
- * plans/05-fix-shared-maths-duplication.md.
+ * plans/archive/2026-07-30/05-fix-shared-maths-duplication.md.
  *
  * ── The wall-ms convention ──
  * Every `*WallMs` argument is LOCAL wall-clock milliseconds: epoch ms shifted by the

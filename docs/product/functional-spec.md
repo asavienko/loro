@@ -758,8 +758,9 @@ Ladder palette: Accumulated `#5f6b78` · Bent `#7f6a44` · Transferred `#8a6810`
 
   **Not built yet, and the screen must not imply it is.** No tag-filtered session exists:
   `RefrainEngine.plan()` practises today's frozen set, which has no relationship to the tag that was
-  tapped. Until [plan 64](../../plans/64-today-and-refrain-production-loop.md) §4 lands a genuinely
-  filtered set — over [plan 60](../../plans/60-authoritative-core-maths.md)'s tag-scoped selection —
+  tapped. Until [plan 64](../../plans/archive/2026-09-09/64-today-and-refrain-production-loop.md) §4
+  lands a genuinely filtered set — over
+  [plan 60](../../plans/archive/2026-09-09/60-authoritative-core-maths.md)'s tag-scoped selection —
   a tricky row is a **non-interactive rollup**: no chevron, no hint, no toast, and no navigation. It
   used to navigate to the unfiltered Refrain and toast _"Drilling 4 “pronunciation” phrases"_, which
   names a consequence that did not happen and is exactly what

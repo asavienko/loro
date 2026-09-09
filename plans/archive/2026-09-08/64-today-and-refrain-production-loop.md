@@ -1,6 +1,6 @@
 > Historical snapshot archived on 2026-09-08 (F-04). Its starting point is superseded; unfinished
-> work remains in [active plan 64](../../64-today-and-refrain-production-loop.md). This is not a
-> completion record.
+> work remains in [active plan 64](../2026-09-09/64-today-and-refrain-production-loop.md). This is
+> not a completion record.
 
 # Finish Today and the Refrain as a production loop
 

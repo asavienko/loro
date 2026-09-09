@@ -82,7 +82,7 @@ language/course identity in asset selection, requests and cache keys.
        and fallback checks pass. Keep live chat disabled while Q-18/Q-20 remain open. Supply guarded
        text-only enrichment and translation transports when requested by plans 61/65.
 5. [ ] Implement the ElevenLabs transport and deterministic failure/redaction tests for the
-       [plan-61 integration checklist](61-content-and-audio-assets.md#elevenlabs-integration-as-01-as-02-as-05-as-06).
+       [plan-61 integration checklist](archive/2026-09-09/61-content-and-audio-assets.md#elevenlabs-integration-as-01-as-02-as-05-as-06).
        Adapter implementation can proceed with fixtures; Q-15 gates live production rendering. Add
        licensed TTS, billing and privacy-safe diagnostics adapters only as their feature and
        decision gates pass; no recorded learner audio or voice-clone transport.

@@ -29,38 +29,38 @@ old citations; archive-local links are rebased to valid destinations.
 Each linked plan records a source-backed starting point, the remaining task list, dependency slices
 and acceptance criteria. No remaining plan was archived merely because its foundational code exists.
 
-| Plan                                                      | Review disposition                                                                    |
-| --------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| [56](../../56-navigation-failure-and-input-shell.md)      | 🟡 Built hubs/escapes done; full shell remains                                        |
-| [57](../../57-runtime-design-system.md)                   | 🟡 Provider exists; fonts/state APIs remain                                           |
-| [58](../../58-native-workspace-and-device-ci.md)          | 🟡 CI scaffolds exist; app/bridge proof remains                                       |
-| [59](../../59-device-persistence-and-resume.md)           | 🟡 Schema 2 exists; device wiring remains                                             |
-| [60](../../60-authoritative-core-maths.md)                | 🟡 Rust helpers exist; algorithms/adapters remain                                     |
-| [61](../../61-content-and-audio-assets.md)                | 🟡 Starters/contracts exist; Q-15 gates audio                                         |
-| [62](../../62-native-audio-playback.md)                   | — Needs native substrate and approved seed assets                                     |
-| [63](../../63-native-speech-speak-and-latency.md)         | — Needs audio/recognition integration and evidence                                    |
-| [64](../../64-today-and-refrain-production-loop.md)       | 🟡 Manual loop exists; production behavior remains                                    |
-| [65](../../65-import-and-capture.md)                      | 🟡 Own-phrase seam exists; input surfaces remain                                      |
-| [66](../../66-backend-contract-data-and-security.md)      | 🟡 Contracts exist; service/data/security remain                                      |
-| [67](../../67-anonymous-auth-and-account-lifecycle.md)    | — Runtime needs durable backend/device identity                                       |
-| [68](../../68-sync-and-offline-convergence.md)            | 🟡 Outbox/merge exist; client/convergence remain                                      |
-| [69](../../69-trip-domain-and-arc.md)                     | ⛔ Q-07 trip/relocation semantics                                                     |
-| [70](../../70-survival-widgets-and-notifications.md)      | — Native integration remains; Rust policy exists                                      |
-| [71](../../71-settings-telemetry-and-experiments.md)      | 🟡 Language/engine seams exist; Q-05 experiment only                                  |
-| [72](../../72-release-quality-gates.md)                   | 🟡 Web/i18n gates exist; native proof remains                                         |
-| [73](../../73-delivery-observability-and-slos.md)         | 🟡 Workflow scaffolds exist; operational proof remains                                |
-| [74](../../74-monetization-and-entitlements.md)           | ⛔ Q-08 package/pricing; Q-12 billing                                                 |
-| [75](../../75-review-and-memory.md)                       | — No routes/engine; needs durable canonical FSRS                                      |
-| [76](../../76-roleplay-and-live-ai.md)                    | 🟡 Bundled/provider seams exist; runtime/evals remain                                 |
-| [77](../../77-dsp-and-speech-labs.md)                     | 🟡 Helpers exist; production ⛔ quality gate                                          |
-| [78](../../78-conditional-run-and-phrasebook.md)          | ⛔ Q-05 plus comparative M3 evidence                                                  |
-| [80](../../80-dev-design-system-workbench.md)             | 🟡 Workbench exists; register new components now                                      |
-| [81](../../81-navigation-spine-switcher-and-more.md)      | 🟡 Shared menu exists; Q-17 final rail priorities                                     |
-| [82](../../82-guided-chat-domain-and-service.md)          | 🟡 Drafts exist; offline work can start; scoped Q gates                               |
-| [83](../../83-open-chat-and-message-inspector.md)         | — Text first; Q-16 release enablement                                                 |
-| [86](../../86-provider-integrations.md)                   | 🟡 Anthropic transport merged; registration remains                                   |
-| [87](../../87-multilingual-app-and-language-selection.md) | 🟡 Seven-pair foundation done; review/durability gates                                |
-| [88](../../88-low-cost-backend-infrastructure.md)         | — Preserved from current main; AWS testing infrastructure is planned, not provisioned |
+| Plan                                                         | Review disposition                                                                    |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------------- |
+| [56](../2026-09-09/56-navigation-failure-and-input-shell.md) | 🟡 Built hubs/escapes done; full shell remains                                        |
+| [57](../2026-09-09/57-runtime-design-system.md)              | 🟡 Provider exists; fonts/state APIs remain                                           |
+| [58](../2026-09-09/58-native-workspace-and-device-ci.md)     | 🟡 CI scaffolds exist; app/bridge proof remains                                       |
+| [59](../2026-09-09/59-device-persistence-and-resume.md)      | 🟡 Schema 2 exists; device wiring remains                                             |
+| [60](../2026-09-09/60-authoritative-core-maths.md)           | 🟡 Rust helpers exist; algorithms/adapters remain                                     |
+| [61](../2026-09-09/61-content-and-audio-assets.md)           | 🟡 Starters/contracts exist; Q-15 gates audio                                         |
+| [62](../2026-09-09/62-native-audio-playback.md)              | — Needs native substrate and approved seed assets                                     |
+| [63](../2026-09-09/63-native-speech-speak-and-latency.md)    | — Needs audio/recognition integration and evidence                                    |
+| [64](../2026-09-09/64-today-and-refrain-production-loop.md)  | 🟡 Manual loop exists; production behavior remains                                    |
+| [65](../2026-09-09/65-import-and-capture.md)                 | 🟡 Own-phrase seam exists; input surfaces remain                                      |
+| [66](../../66-backend-contract-data-and-security.md)         | 🟡 Contracts exist; service/data/security remain                                      |
+| [67](../../67-anonymous-auth-and-account-lifecycle.md)       | — Runtime needs durable backend/device identity                                       |
+| [68](../../68-sync-and-offline-convergence.md)               | 🟡 Outbox/merge exist; client/convergence remain                                      |
+| [69](../../69-trip-domain-and-arc.md)                        | ⛔ Q-07 trip/relocation semantics                                                     |
+| [70](../../70-survival-widgets-and-notifications.md)         | — Native integration remains; Rust policy exists                                      |
+| [71](../../71-settings-telemetry-and-experiments.md)         | 🟡 Language/engine seams exist; Q-05 experiment only                                  |
+| [72](../../72-release-quality-gates.md)                      | 🟡 Web/i18n gates exist; native proof remains                                         |
+| [73](../../73-delivery-observability-and-slos.md)            | 🟡 Workflow scaffolds exist; operational proof remains                                |
+| [74](../../74-monetization-and-entitlements.md)              | ⛔ Q-08 package/pricing; Q-12 billing                                                 |
+| [75](../../75-review-and-memory.md)                          | — No routes/engine; needs durable canonical FSRS                                      |
+| [76](../../76-roleplay-and-live-ai.md)                       | 🟡 Bundled/provider seams exist; runtime/evals remain                                 |
+| [77](../../77-dsp-and-speech-labs.md)                        | 🟡 Helpers exist; production ⛔ quality gate                                          |
+| [78](../../78-conditional-run-and-phrasebook.md)             | ⛔ Q-05 plus comparative M3 evidence                                                  |
+| [80](../../80-dev-design-system-workbench.md)                | 🟡 Workbench exists; register new components now                                      |
+| [81](../../81-navigation-spine-switcher-and-more.md)         | 🟡 Shared menu exists; Q-17 final rail priorities                                     |
+| [82](../../82-guided-chat-domain-and-service.md)             | 🟡 Drafts exist; offline work can start; scoped Q gates                               |
+| [83](../../83-open-chat-and-message-inspector.md)            | — Text first; Q-16 release enablement                                                 |
+| [86](../../86-provider-integrations.md)                      | 🟡 Anthropic transport merged; registration remains                                   |
+| [87](../../87-multilingual-app-and-language-selection.md)    | 🟡 Seven-pair foundation done; review/durability gates                                |
+| [88](../../88-low-cost-backend-infrastructure.md)            | — Preserved from current main; AWS testing infrastructure is planned, not provisioned |
 
 ## Scope corrections and newly recorded debt
 

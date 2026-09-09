@@ -9,8 +9,8 @@
 - **Status:** — Planned; infrastructure preparation can start now. Shared access requires the
   persistence/security slice of 66 and authentication/tenant isolation from 67; mobile sync testing
   additionally requires the relevant device and convergence slices of 59/68. The restricted EC2
-  deployment in [plan 91](../../91-ec2-backend-deployment.md) is live; this plan still owns
-  PostgreSQL, S3, TLS, Terraform and shared testing readiness.
+  deployment in [plan 91](91-ec2-backend-deployment.md) is live; this plan still owns PostgreSQL,
+  S3, TLS, Terraform and shared testing readiness.
 - **Depends on:** 66 exact API image and backend foundations; 67 shared access; 61/86 content
   adapters only when activated. Whole-plan completion is not an infrastructure prerequisite.
 - **Reviewed:** 2026-09-07; user selected Frankfurt, a small tester group and a $25–35 monthly

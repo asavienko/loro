@@ -112,9 +112,9 @@ Targets: `aarch64-apple-ios`, `aarch64-apple-ios-sim`, `aarch64-linux-android`,
 Before extending a module, define the canonical input/output and units, add reference or parity
 vectors, implement the pure Rust function, export it through the required generated bindings, and
 wire the adapter without a fabricated fallback. Remove any duplicate TypeScript implementation only
-after boundary parity passes. [Plan 60](../../plans/60-authoritative-core-maths.md) owns this
-sequence for rank, FSRS, cloze/set selection, and token matching; plan 77 owns the evidence-gated
-DSP work.
+after boundary parity passes.
+[Plan 60](../../plans/archive/2026-09-09/60-authoritative-core-maths.md) owns this sequence for
+rank, FSRS, cloze/set selection, and token matching; plan 77 owns the evidence-gated DSP work.
 
 ## Performance budgets
 
