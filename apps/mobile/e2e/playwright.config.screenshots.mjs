@@ -38,6 +38,6 @@ export default defineConfig({
     reuseExistingServer: false,
     stdout: 'ignore',
     stderr: 'pipe',
-    env: accountEnvironment,
+    env: { ...accountEnvironment, EXPO_PUBLIC_PSEUDO_LOCALE: '0' },
   },
 })

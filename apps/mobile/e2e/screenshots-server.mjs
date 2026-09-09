@@ -20,8 +20,8 @@ if (!Number.isInteger(port) || port < 1 || port > 65_535) {
   }
   process.once('SIGINT', () => stop('SIGINT'))
   process.once('SIGTERM', () => stop('SIGTERM'))
-  child.once('exit', (code, signal) => {
-    process.exitCode = code ?? (signal === null ? 1 : 0)
+  child.once('exit', (code) => {
+    process.exitCode = code ?? 1
   })
 }
 
