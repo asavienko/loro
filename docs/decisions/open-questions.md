@@ -28,6 +28,7 @@ review.
 | [Q-19](#q-19) | How long are local chat threads retained?                              | **open** | **Product + privacy**   | **Plan 82 persistence**        | **2026-08-06**           |
 | [Q-20](#q-20) | May a provider retain chat text, and for how long?                     | **open** | **Privacy + backend**   | **Plan 82 provider contract**  | **2026-08-06**           |
 | [Q-21](#q-21) | May Discover request live phrase suggestions, and under what eval/budget? | **leaning** | **Product + privacy** | **Plan 97 live suggest**     | **Before live garnish**  |
+| [Q-22](#q-22) | May licensed neural TTS audio be shared as a learner-owned file?    | **open** | **Privacy + content**   | **Plan 99 share-out-of-app**    | **Before neural export** |
 
 ---
 
@@ -255,7 +256,10 @@ to the shipped course catalog or mean the integration is implemented.
 
 Plan 61 records the rendering/configuration/seed-verification checklist; plan 86 owns the vendor
 adapter and common controls. Adapter work may proceed with fixtures before Q-15 passes. A
-provisioned API key is not evidence of voice quality or production rights.
+provisioned API key is not evidence of voice quality or production rights. Plan 99's online
+listening generation and on-device cache of those clips wait on this question for production
+voices. Adapter and composer fixtures may proceed. Share-out-of-app of neural audio additionally
+waits on [Q-22](#q-22). Device TTS is a labeled in-app fallback, not a bypass of this gate.
 
 **Still needed before production rendering:** select and review the model and `es-ES` voice ID and
 fallback, with separate coverage/review before enabling `bg-BG` or `ru-RU`; document commercial and
@@ -264,7 +268,9 @@ pronunciation review and replacement policy; and set the budget for 150 v1-spine
 600 v1 phrases.
 
 The 150→600 target remains the Spanish milestone goal; Bulgarian/Russian course expansion needs its
-own approved scope. This decision authorizes assets, not playback architecture. Learner recordings
+own approved scope. Plan 96 additionally needs ≥2 licensed **listening** voice IDs per enabled
+target, distinct from the catalog reference voice; that is still this question, not a second
+provider. This decision authorizes assets, not playback architecture. Learner recordings
 remain subject to the separate non-negotiable that PCM never leaves native memory/the device.
 
 ---
@@ -378,6 +384,33 @@ usable offline. Audio is structurally absent from the type. Telemetry contains n
 text.
 
 **Decision owner/date:** Product + privacy, 2026-09-09.
+
+---
+
+<a id="q-22"></a>
+
+### Q-22 · May licensed neural TTS audio be shared off-device as a learner-owned file?
+
+In-app cache keeps model audio inside Loro. A listening export writes an AAC/M4A the learner can
+copy into Files, Music, or a car player. That is redistribution of synthesised speech, which Q-15
+does not by itself decide.
+
+Plan 99's **primary path** is online generation plus on-device cache, then in-app listen from disk.
+That in-app cache is the same privacy class as planned catalog audio (`AS-01`): it stays in the app
+and still needs Q-15 for production voices. It does **not** answer this question.
+
+**Still needed before neural share-out-of-app:** commercial and personal-copy rights for each pinned
+listening voice; whether the learner may keep the file after uninstall; deletion if a voice licence
+is withdrawn; and an honest UI that never implies a neural voice when the clip was device-TTS
+fallback.
+
+**Invariant while open:** plan 99 may specify and, after Q-15, ship **in-app** cache and in-app
+listen of licensed neural clips. It must not write ElevenLabs (or other licensed neural) audio to a
+shareable learner-owned file, and must not present device-TTS output as that neural file. A
+device-TTS-only export is not the v1 companion and is out of scope for the first slices.
+
+**Decision owner/date:** Privacy + content, 2026-09-09. Not resolved by the 2026-09-09 online-first
+listening-cache specification. Q-21 remains Discover live suggest.
 
 ---
 

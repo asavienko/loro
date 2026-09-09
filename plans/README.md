@@ -1,10 +1,10 @@
 # Active plans
 
-This index lists only the **37 plans with remaining work**. Completed records and historical
+This index lists only the **38 plans with remaining work**. Completed records and historical
 snapshots are kept in [the archive](archive/README.md), without compatibility symlinks or redirect
 files in this directory. Links point directly to each plan's actual location.
 
-The highest assigned ID is **98** and the next new plan is **99**. Recheck concurrent worktrees and
+The highest assigned ID is **99** and the next new plan is **100**. Recheck concurrent worktrees and
 untracked `plans/` files before allocating; the "next is N" sentence can lag. Numbers are never
 reused; 49 remains an existing gap. When a plan finishes, archive it in the same change and list it
 only in the archive index.
@@ -12,14 +12,15 @@ only in the archive index.
 Implemented-slice owners from 56–68, 70–73, 75–77, 80–82, 86–88, 90 and 93–96 are stored in
 [the 2026-09-09 archive](archive/2026-09-09/README.md) at user request. Their partial statuses and
 outstanding scope remain indexed below; archiving does not imply completion. Only the still-unbuilt
-or decision-gated files 69, 74, 78, 83, 97 and 98 remain in this directory.
+or decision-gated files 69, 74, 78, 83, 97, 98 and 99 remain in this directory.
 
 The [post-main review](../docs/reviews/2026-09-09-post-main-plan-review.md) records the six runtime
 and validation findings as fixed, including the follow-up Refrain completion and touch-target
 repairs. No additional whole plan meets its acceptance criteria. Delivered implementation slices are
-recorded in the [dated archive](archive/2026-09-09/IMPLEMENTED-SLICES.md); all 37 remaining-work
-owners are retained. Continue with device/provider acceptance, then integrate the remaining
-daily-loop, Review, content and lifecycle slices.
+recorded in the [dated archive](archive/2026-09-09/IMPLEMENTED-SLICES.md); all 38 remaining-work
+owners are retained, including [99](99-batch-phrase-audio-export.md) for online-first listening
+generation and on-device cache (share-out-of-app still ⛔ Q-22). Continue with device/provider
+acceptance, then integrate the remaining daily-loop, Review, content and lifecycle slices.
 
 The [2026-09-09 implementation review](../docs/reviews/2026-09-09-twenty-plan-implementation.md)
 records changes requested after the next twenty bounded slices. Each selected plan remains partial;
@@ -52,9 +53,10 @@ Expo/RN packages onto that sequence versus device-owned work.
   generated native/browser boundaries.
 - Foreground device TTS, strict on-device ASR and Speak reveal fallback are implemented. Plan 98
   adds the ElevenLabs transport, authoring render, gated on-demand render and catalog-file playback
-  with device-TTS fallback. Recorded pack cache, background transport, measured onset/DSP, widgets
-  and physical-device speech acceptance remain. Q-15 still gates licensed, reviewed production
-  assets.
+  with device-TTS fallback. Plan 99 adds the listening-class cache and `/listen-export` composer.
+  Recorded pack cache, background transport, measured onset/DSP, widgets and physical-device
+  speech acceptance remain. Q-15 still gates licensed, reviewed production assets; Q-22 gates
+  sharing neural audio out of the app. In-app listen from a filled cache does not wait on Q-22.
 - PostgreSQL accounts and tenant-scoped sync connect optional Google/Apple/email sign-in to durable
   progress. Account linking/export/erasure, OS background sync and production provider/service
   configuration remain. EC2 now exposes Google development sign-in and guarded sync backed by
@@ -86,6 +88,9 @@ Expo/RN packages onto that sequence versus device-owned work.
    adapters. Prepare [77](archive/2026-09-09/77-dsp-and-speech-labs.md)'s evidence spike and
    [82](archive/2026-09-09/82-guided-chat-domain-and-service.md)'s offline schemas/topic/eval work
    without activating gated production features.
+   [99](99-batch-phrase-audio-export.md) specifies an online-first listening companion: generate
+   licensed multi-voice clips, cache them, listen offline from disk. Production generation waits on
+   Q-15; share-out-of-app waits on Q-22. Device TTS is a labeled fallback, not the first slice.
 3. **Remaining device/service integration:** approved 61 assets→recorded/background 62; 62
    clock/buffer substrate→63 onset latency; 66 operational acceptance + 67 account lifecycle→68
    lifecycle convergence. Existing native SQLite, foreground speech and authenticated sync are
@@ -167,6 +172,7 @@ feature↔release-completion cycle. See each plan's checkboxes for executable ta
 | [96](archive/2026-09-09/96-account-sign-in-screens.md)                     | Account method chooser, email/code flow and provider sign-in states         | M2          | 🟡 UI/browser/client slices implemented; visual, native and live-provider evidence remains                   | 67/68/86; provider configuration and device evidence            |
 | [97](97-generative-discover-and-phrase-reach.md)                           | Guarded generative Discover reach and shared add-handoff                    | M3          | 🟡 Own-phrase floor, bundled suggestions and stub suggest exist; Q-21 gates live traffic                     | 59/61; 76/86 live path; 82/83 consume handoff; Q-21             |
 | [98](98-voice-and-tts-integration.md)                                      | ElevenLabs TTS, catalog render and device-TTS fallback                      | M1/M2       | 🟡 Adapter/render/gated API/file playback in progress; Q-15 production seed remains                          | 86/61/62 slices; Q-15 live seed                                 |
+| [99](99-batch-phrase-audio-export.md)                                      | Online multi-voice listen cache; optional share of concatenated clips       | M2          | ⛔ Q-15 generation; ⛔ Q-22 share-out-of-app; composer/cache contract unblocked                             | 56/81 route; 59 phrases; 62 cache/session; 86/61/66/98 render; Q-15/Q-22 |
 
 Plan 88 owns the selected AWS testing profile and
 [operations runbook](../docs/runbooks/backend-testing.md); plan 73 retains production operations.
@@ -178,7 +184,9 @@ Render testing recommendation in 86 is superseded by 88.
 - Begin from verified existing code; do not rebuild completed contracts, localization, menus or
   tests.
 - Keep one owner per behavior: 56 route policy, 81 chrome; 59 durable checkpoints, 64 wave
-  transitions; 66 server cursors, 68 client convergence; 86 vendor controls, 76/82/97 product AI.
+  transitions; 66 server cursors, 68 client convergence; 86 vendor controls, 76/82/97 product AI;
+  99 listening-class cache and companion UX, 62 in-app playback/download cache, 67 JSON account
+  export. Plan 96 remains the archived account sign-in screens.
 - Future surfaces consume the selected language pair and real capability states. Preserve personal
   meaning language, course isolation and global streak semantics; never silently substitute Spanish.
 - Every new learner state lands with its manifest row and E2E checks. Native behavior requires
@@ -186,8 +194,8 @@ Render testing recommendation in 86 is superseded by 88.
   device.
 - Release decisions remain in `docs/decisions/open-questions.md`: Q-15 audio; Q-07 trips; Q-05
   experiment/Run; Q-14 peak; Q-08/Q-12 billing; Q-17 rail priority; Q-16 chat launch, Q-18 budget,
-  Q-19 local retention, Q-20 provider retention and Q-21 Discover suggest. No decision is silently
-  resolved by this reset.
+  Q-19 local retention, Q-20 provider retention, Q-21 Discover suggest and Q-22 listening-file
+  redistribution. No decision is silently resolved by this reset.
 - Keep each plan/status row current and commit coherent requirement-tagged chunks with `pnpm check`
   green. Archive a finished plan in the same change; never delete historical records or reuse
   numbers.

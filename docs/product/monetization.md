@@ -89,7 +89,8 @@ a price.
 | Cost                            | Estimate        | Notes                                                     |
 | ------------------------------- | --------------- | --------------------------------------------------------- |
 | TTS (catalog)                   | ~$0             | Rendered once at content build, served from CDN           |
-| TTS (learner phrases)           | ~$0.01          | On-device TTS by default; server render only if requested |
+| TTS (learner phrases)           | ~$0.01          | Practice: on-device TTS by default; server render only if requested |
+| TTS (listening companion)       | unpriced        | Plan 96: on-demand multi-voice neural takes, cached on device; not catalog reference |
 | ASR                             | ~$0             | On-device; reveal mode is the unavailable fallback        |
 | LLM roleplay + coach notes      | ~$0.10–0.30     | Cached scenes; the dominant AI cost                       |
 | Prosody / pronunciation scoring | $0              | 🔒 On-device by design                                    |
