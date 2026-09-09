@@ -1,1 +1,0 @@
-archive/2026-09-09/56-navigation-failure-and-input-shell.md

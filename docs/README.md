@@ -1,5 +1,8 @@
 # Loro documentation
 
+[Twenty-plan implementation review — 2026-09-09](reviews/2026-09-09-twenty-plan-implementation.md)
+records required fixes, verification gaps and next work for the twenty selected plans.
+
 [Stack and Android readiness — 2026-09-08](reviews/2026-09-08-readiness.md) records the live AWS
 endpoint and APK evidence at that date. Later persistent-practice implementation and remaining
 release gates are recorded in [plan 94](../plans/94-persistent-practice-and-account-integration.md).

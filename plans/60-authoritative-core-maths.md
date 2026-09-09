@@ -1,1 +1,0 @@
-archive/2026-09-09/60-authoritative-core-maths.md

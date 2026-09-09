@@ -6,7 +6,8 @@
   speech modules are implemented. Full iOS compilation, physical-device harness coverage and
   production signing still require SDK/device/signing evidence.
 - **Depends on:** 53 completed; no unfinished plan blocks native workspace setup.
-- **Reviewed:** 2026-09-08 during plan-94 integration; release gates below remain explicit.
+- **Reviewed:** 2026-09-09 against checkout `42f4d57`; source/plan review only, no new device or
+  deployment acceptance.
 
 **Archive disposition (2026-09-09):** Archived at user request after integration review. The partial
 status and remaining acceptance criteria below are retained; archival does not mark this plan
@@ -21,7 +22,12 @@ and native foreground audio/speech; OP-SQLite supplies the device driver. Expo G
 custom modules. Generated bindings and embedded browser WASM have drift checks.
 
 `pnpm native:evidence` now captures a read-only, timestamped Android device evidence bundle under
-the ignored local-build directory; its fixture tests protect command construction and redaction.
+the ignored local-build directory. `--platform ios` now collects Xcode version, booted simulator
+metadata, installed-bundle presence and a verified PNG artifact, with explicit missing prerequisite
+and ambiguous-device errors. Fixture tests cover command construction and failure behavior; no new
+iOS runtime or physical-device acceptance is claimed. Installed artifact revision remains unverified
+until correlated with retained build metadata. See the native evidence section of
+[APK setup](../../../docs/process/local-apk.md).
 
 The implementation passed Android debug/release compilation, module packaging and an airplane-mode
 emulator persistence/reveal smoke. Swift syntax/podspec and host UniFFI smoke passed, but full iOS
@@ -52,6 +58,17 @@ modules, generated native projects, UniFFI bindings, device SQLite, permissions,
 - Generated projects/plugins are reproducible and drift-checked.
 - TypeScript can call a safe Rust smoke function without hand-editing bindings.
 - Device tests can launch, seed state, exercise permissions, and collect logs/screenshots.
+
+## Delivery order and gates
+
+1. Extend `native:evidence` and the local build harness with iOS build/launch and physical-device
+   collection. Detect missing Xcode/SDK/device inputs explicitly; Android evidence is not iOS proof.
+2. Use one evidence matrix with plans 59/60/63/68/87/93 and shared enforcement in 72. Each row
+   records artifact revision, device/OS, target language, scenario, result and retained evidence.
+   Collect once and reference it from the feature owner; do not duplicate persistence or gesture
+   implementations.
+3. Keep development harness delivery separate from production signing/store work in 73. No cloud
+   builds or GitHub Actions are required by this plan.
 
 ## Out of scope
 

@@ -7,12 +7,12 @@ Guidance for Claude Code working in this repository.
 **Loro** — a mobile app (iOS + Android) that teaches Spanish, Bulgarian, and Russian by the phrase.
 
 Early implementation. **What exists:** eight of the v1.1 design package's 23 learner screens,
-Languages and Account utilities, the shared shell and a developer workbench. Local progress and
-course/session state commit to native OP-SQLite or browser SQLite before rendering. Rust owns FSRS,
-ranking, selection, matching, clocks and merge through generated WASM/UniFFI bridges. Native modules
-provide foreground device TTS and strictly on-device ASR with an offline Speak reveal fallback. The
-API stores accounts, sessions and tenant-scoped sync in PostgreSQL. Optional Google/Apple and email
-sign-in connect durable local progress to cross-device sync.
+Languages, Account and More utilities, the shared shell and a developer workbench. Local progress
+and course/session state commit to native OP-SQLite or browser SQLite before rendering. Rust owns
+FSRS, ranking, selection, matching, clocks and merge through generated WASM/UniFFI bridges. Native
+modules provide foreground device TTS and strictly on-device ASR with an offline Speak reveal
+fallback. The API stores accounts, sessions and tenant-scoped sync in PostgreSQL. Optional
+Google/Apple and email sign-in connect durable local progress to cross-device sync.
 
 The three 31-phrase Spanish/Bulgarian/Russian starters still await bilingual review. The other 15
 learner screens, production recorded audio/cache, background audio, measured onset latency, DSP,
@@ -24,13 +24,16 @@ release gates. See [persistent practice](docs/process/persistent-practice.md) an
 The spine supports pull-down to open its menu; sheets dismiss by pulling their dedicated handle.
 Practice routes disable native back-swipe. Native touch validation remains a release gate. Today
 owns its root header and day rows; other routes retain their stack header with a Today escape for
-cold entries. Onboarding keeps step-back navigation. More, full session exits and travelling audio
-remain in plans 56/62/64/81.
+cold entries. Onboarding keeps step-back navigation. More is reachable through the existing
+destination list; metadata grouping/search, full session exits and travelling audio remain in plans
+56/62/64/81.
 
 API contracts live in `packages/core/src/api/` with current/target/draft entry points and generated
-OpenAPI. Auth and sync runtime boundaries consume the shared schemas; remaining migration limits are
-recorded in [the contract guide](docs/architecture/api-contracts.md). `pnpm check` includes contract
-and generated-core drift checks.
+OpenAPI. Auth, sync and content-query runtime boundaries consume the shared schemas; remaining
+migration limits are recorded in [the contract guide](docs/architecture/api-contracts.md).
+`pnpm check` includes route ownership, contract and generated-core drift checks. The
+[twenty-plan review](docs/reviews/2026-09-09-twenty-plan-implementation.md) records outstanding
+import validation and integration fixes; the twenty plans have partial deliveries.
 
 The standalone preview can use the [AWS HTTPS gateway](docs/process/public-api.md). Account checks
 real readiness independently of sign-in. The development gateway now exposes Google sign-in and
@@ -128,29 +131,29 @@ prototype-only and **must not** be carried into the app — see the divergence t
   `mobile` at once is one that cannot be reverted in pieces when it turns out to be wrong. Don't mix
   a refactor into a fix, and don't let generated output (bindings, tokens) ride along in a commit
   that isn't about regenerating it.
-- **Plans live in `plans/`, numbered.** One markdown file per plan: a two-digit number, then
-  kebab-case named for the topic — `plans/60-authoritative-core-maths.md`. The 2026-09-07 review
-  recorded 30 active plans within 56–88; completed 54/55/79/84/85 are under
-  `plans/archive/2026-09-07/` with compatibility symlinks. Completed 89/91/92 and superseded
-  planning snapshots are under `plans/archive/2026-09-08/`; snapshots retain current owners for
-  unfinished work. Plans 01–52 remain under `plans/archive/2026-07-30/`; completed 53 remains at its
-  protected original path. The next new plan number is 95. A new plan takes the next free number and
-  gets a row in [`plans/README.md`](plans/README.md). **Numbers are never reused** — a gap is left
-  rather than backfilled, so a link written against a number can't come to mean a different plan.
-  Not in `docs/`: that holds the durable spec. Not in a temp directory either — a plan you can't
-  find again is a plan you rewrite. Name the requirement ID inside the plan so it ties back to the
-  branch and the PR.
+- **Active plans live in `plans/`, numbered.** One markdown file per plan: a two-digit number, then
+  kebab-case named for the topic — `plans/93-mobile-shell-gestures.md`. Completed plans and
+  superseded snapshots live only in `plans/archive/<date>/`, indexed by
+  [`plans/archive/README.md`](plans/archive/README.md). Do not create compatibility symlinks or
+  redirect files; update references to the actual archive path and rebase the moved plan's relative
+  links. Keep completed records out of the active index. Plan 53 was archived at user request on
+  2026-09-09; its former original-path exception no longer applies. The next new plan number is 95.
+  A new plan takes the next free number and gets a row in [`plans/README.md`](plans/README.md).
+  **Numbers are never reused** — a gap is left rather than backfilled, so a link written against a
+  number can't come to mean a different plan. Not in `docs/`: that holds the durable spec. Not in a
+  temp directory either — a plan you can't find again is a plan you rewrite. Name the requirement ID
+  inside the plan so it ties back to the branch and the PR.
 - Plans 56–65 were archived at user request on 2026-09-09 with their partial status and remaining
-  scope preserved in `plans/archive/2026-09-09/`; compatibility symlinks and the roadmap index
-  retain their ownership. This archival does not mean their acceptance criteria are complete.
+  scope preserved in `plans/archive/2026-09-09/`; direct links in the roadmap index retain their
+  ownership. This archival does not mean their acceptance criteria are complete.
 - **A plan records its own status, and is archived rather than deleted.** Put a `**Status:**` line
   in the plan's header block when work starts, and mark its row in
   [`plans/README.md`](plans/README.md): `🟡` in progress or partly implemented, `⛔` blocked by a
   named decision/evidence gate, `—` ready when dependencies pass, or `✅` implemented. A `🟡` must
   say what is left **and what blocks it**. Archived plans stay on disk as the verified record of why
   the code looks the way it does. The 2026-07-30 reset and legacy-to-active mapping are in
-  [`plans/archive/2026-07-30/REVIEW.md`](plans/archive/2026-07-30/REVIEW.md). Plan 53 is a protected
-  completed exception; do not edit or move it without explicit user direction.
+  [`plans/archive/2026-07-30/REVIEW.md`](plans/archive/2026-07-30/REVIEW.md). Preserve historical
+  implementation evidence when archiving; adjust only location references and archive metadata.
 - **`pnpm ci:local`** is the full local CI gate; `pnpm check` is the fast development gate.
 - **Keep E2E coverage in step with functionality while developing it.** Add or adjust the
   learner-visible behavior in `apps/mobile/e2e/` in the same coherent change as the functionality,
@@ -240,7 +243,7 @@ be off PATH.
 pnpm ci:local                       # full local CI; GitHub Actions stays disabled
 pnpm check                          # fast lint/type/test/content/drift gate
 pnpm test:e2e                       # learner routes/states, clock, a11y, text scale
-pnpm test:e2e:workbench             # 3 tests: dev-only tokens/component inspection surface
+pnpm test:e2e:workbench             # dev-only tokens/component inspection surface
 pnpm test:e2e:bundle                # the @smoke subset against the production web export
 pnpm --filter @loro/api dev         # :3000; requires PostgreSQL/auth configuration
 pnpm --filter @loro/mobile bundle   # proves the app compiles; needs no simulator

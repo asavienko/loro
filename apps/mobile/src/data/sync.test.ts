@@ -13,6 +13,7 @@ import { openNodeSqlite } from './driver.node'
 import { createSqlSyncStore } from './sync'
 import { deferPhraseDelete, undoPendingPhraseDelete } from './pendingDeletes'
 import { createSyncClient } from '../lib/sync/client'
+import { createHttpSyncTransport } from '../lib/sync/transport'
 import { outboxToWire } from '../lib/sync/codec'
 import { SyncError, type SyncSession, type SyncTransport } from '../lib/sync/types'
 
@@ -679,6 +680,95 @@ describe('durable sync and canonical Rust merge', () => {
     resolve(response([db.local.pending(100)[0]!.seq]))
     expect(await running).toEqual({ status: 'account-changed' })
     expect(db.persistence.outbox.size()).toBe(1)
+  })
+  it('recovers an expired cursor without discarding a write made during the failed pull', async () => {
+    const db = database()
+    db.local.applyPage(page([phraseChange()], 'expired'))
+    const pull = vi
+      .fn<SyncTransport['pull']>()
+      .mockImplementationOnce(() => {
+        append(db, { loved: field(true, '3000:0001:device') })
+        return Promise.reject(new SyncError('CURSOR_EXPIRED'))
+      })
+      .mockResolvedValue(page([phraseChange({ loved: field(false) })], 'fresh'))
+    const push = vi
+      .fn<SyncTransport['push']>()
+      .mockImplementation((request) => Promise.resolve(response(request.ops.map((op) => op.seq))))
+    const options = {
+      local: db.local,
+      transport: { push, pull },
+      getSession: () => session,
+      now: () => 1000,
+      random: () => 0,
+    }
+    expect(await createSyncClient(options).run()).toMatchObject({ status: 'pending', pulled: 1 })
+    expect(pull.mock.calls.map(([request]) => request.since)).toEqual(['expired', null])
+    expect(db.local.state().cursor).toBe('fresh')
+    expect(db.driver.all('SELECT loved FROM user_phrase WHERE id=?', [ID])).toEqual([{ loved: 1 }])
+    expect(db.local.pending(100)).toHaveLength(1)
+    expect(push).not.toHaveBeenCalled()
+    expect(await createSyncClient(options).run()).toMatchObject({ status: 'synced', pushed: 1 })
+    expect(db.local.pending(100)).toEqual([])
+    expect(db.driver.all('SELECT loved FROM user_phrase WHERE id=?', [ID])).toEqual([{ loved: 1 }])
+  })
+  it('does not report convergence when cursor expiry consumes the final pull attempt', async () => {
+    const db = database()
+    let now = 1000
+    const pull = vi.fn<SyncTransport['pull']>().mockImplementation(() => {
+      const attempt = pull.mock.calls.length
+      if (attempt === 100) return Promise.reject(new SyncError('CURSOR_EXPIRED'))
+      return Promise.resolve({ ...page([], `cursor${attempt}`), has_more: attempt < 100 })
+    })
+    const options = {
+      local: db.local,
+      transport: { push: vi.fn<SyncTransport['push']>(), pull },
+      getSession: () => session,
+      now: () => now,
+      random: () => 0,
+    }
+    expect(await createSyncClient(options).run()).toEqual({
+      status: 'error',
+      code: 'PAGE_BUDGET',
+      retryAt: 1500,
+    })
+    expect(pull).toHaveBeenCalledTimes(100)
+    expect(db.local.state()).toMatchObject({ cursor: null, failures: 1 })
+    now = 1500
+    expect(await createSyncClient(options).run()).toMatchObject({ status: 'synced' })
+    expect(pull.mock.calls[100]?.[0].since).toBeNull()
+    expect(db.local.state()).toMatchObject({ cursor: 'cursor101', failures: 0 })
+  })
+  it('preserves pending payloads and the cursor when a successful response has an incompatible schema', async () => {
+    const db = database()
+    seed(db)
+    db.local.applyPage(page([], 'existing'))
+    const pending = db.local.pending(100)
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(JSON.stringify({ ...response([]), accepted: 'incompatible' }), {
+        status: 200,
+      }),
+    )
+    const options = {
+      local: db.local,
+      transport: createHttpSyncTransport({
+        baseUrl: 'https://sync.example.test/v1',
+        getAccessToken: () => Promise.resolve('test-token'),
+        getSession: () => session,
+        fetch: fetcher,
+      }),
+      getSession: () => session,
+      now: () => 1000,
+      random: () => 0,
+    }
+    expect(await createSyncClient(options).run()).toMatchObject({
+      status: 'error',
+      code: 'SYNC_UNAVAILABLE',
+    })
+    expect(db.local.pending(100).map(outboxToWire)).toEqual(pending.map(outboxToWire))
+    expect(db.local.state()).toMatchObject({ cursor: 'existing', quarantined: 0 })
+    expect(db.driver.all('SELECT id FROM user_phrase')).toEqual([{ id: ID }])
+    expect(await createSyncClient(options).run()).toEqual({ status: 'backoff' })
+    expect(fetcher).toHaveBeenCalledTimes(1)
   })
   it('validates typed JSON fields and paired scheduling fields before transport', () => {
     const op: OutboxOp = {

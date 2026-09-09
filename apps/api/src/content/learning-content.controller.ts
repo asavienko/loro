@@ -1,6 +1,11 @@
 /** F-08. Versioned neutral payloads; /content retains the original es/en wire contract. */
 import { Controller, Get, Query } from '@nestjs/common'
-import { isNativeLanguage, isTargetLocale, supportsPair, LANGUAGE_CAPABILITIES } from '@loro/core'
+import { LANGUAGE_CAPABILITIES } from '@loro/core'
+import {
+  LearningCatalogQuerySchema,
+  LearningDiffQuerySchema,
+  LearningPackQuerySchema,
+} from '@loro/core/api/current'
 import { loadLearningCatalog } from '@loro/content'
 import { LoroError } from '../common/errors.js'
 
@@ -37,8 +42,8 @@ export class LearningContentController {
     @Query('target') target = 'es-ES',
     @Query('native') native = 'en',
   ) {
-    if (!/^\d+$/.test(from) || !Number.isSafeInteger(Number(from)))
-      throw new LoroError('VALIDATION_FAILED', 'Invalid catalog version')
+    const query = LearningDiffQuerySchema.safeParse({ from, target, native })
+    if (!query.success) throw new LoroError('VALIDATION_FAILED')
     const catalog = this.catalog(target, native)
     return {
       from: Number(from),
@@ -52,6 +57,8 @@ export class LearningContentController {
   }
   @Get('pack')
   pack(@Query('id') id: string, @Query('target') target = 'es-ES', @Query('native') native = 'en') {
+    const query = LearningPackQuerySchema.safeParse({ id, target, native })
+    if (!query.success) throw new LoroError('VALIDATION_FAILED')
     const catalog = this.catalog(target, native)
     const pack = catalog.packs.find((p) => p.id === id)
     if (!pack) throw new LoroError('VALIDATION_FAILED', 'Unknown pack')
@@ -64,9 +71,8 @@ export class LearningContentController {
     }
   }
   private catalog(target: string, native: string) {
-    if (!isNativeLanguage(native) || !isTargetLocale(target) || !supportsPair(native, target)) {
-      throw new LoroError('VALIDATION_FAILED', 'Unsupported language pair')
-    }
-    return loadLearningCatalog(target, native)
+    const query = LearningCatalogQuerySchema.safeParse({ target, native })
+    if (!query.success) throw new LoroError('VALIDATION_FAILED', 'Unsupported language pair')
+    return loadLearningCatalog(query.data.target, query.data.native)
   }
 }

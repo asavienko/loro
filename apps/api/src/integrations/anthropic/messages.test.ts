@@ -10,6 +10,7 @@ const options: AnthropicOptions = {
   maxTokens: 100,
   maxRequestBytes: 4096,
   maxResponseBytes: 4096,
+  maxConcurrentRequests: 1,
 }
 const request = {
   system: 'Trusted test instruction',
@@ -40,6 +41,73 @@ function setup(value: unknown = envelope(), changes: Partial<AnthropicOptions> =
 }
 
 describe('Anthropic provider-only messages adapter', () => {
+  it('holds capacity through streamed body parsing and rejects overlap without sending', async () => {
+    let finish!: () => void
+    const body = new ReadableStream<Uint8Array>({
+      start(controller) {
+        finish = () => {
+          controller.enqueue(new TextEncoder().encode(JSON.stringify(envelope())))
+          controller.close()
+        }
+      },
+    })
+    const send = vi.fn<typeof fetch>().mockResolvedValueOnce(new Response(body))
+    send.mockImplementation(() => Promise.resolve(response(envelope())))
+    const client = new AnthropicMessages(options, send)
+    const pending = client.generate(request)
+    const rejected = await client.generate(request).catch((error: unknown) => error)
+    expect(rejected).toBeInstanceOf(AnthropicFailure)
+    expect(rejected).toMatchObject({
+      code: 'capacity',
+      message: 'Anthropic request failed: capacity',
+    })
+    expect(send).toHaveBeenCalledTimes(1)
+    finish()
+    await expect(pending).resolves.toHaveProperty('value.ok', true)
+    await expect(client.generate(request)).resolves.toHaveProperty('value.ok', true)
+    expect(send).toHaveBeenCalledTimes(2)
+  })
+
+  it.each(['transport', 'status', 'parse'])(
+    'releases capacity after a %s failure without retrying it',
+    async (failure) => {
+      const send = vi.fn<typeof fetch>()
+      if (failure === 'transport') send.mockRejectedValueOnce(new Error('private details'))
+      if (failure === 'status') send.mockResolvedValueOnce(new Response('private', { status: 429 }))
+      if (failure === 'parse')
+        send.mockResolvedValueOnce(response(envelope('private invalid JSON')))
+      send.mockImplementation(() => Promise.resolve(response(envelope())))
+      const client = new AnthropicMessages(options, send)
+      await expect(client.generate(request)).rejects.toBeInstanceOf(AnthropicFailure)
+      expect(send).toHaveBeenCalledTimes(1)
+      await expect(client.generate(request)).resolves.toHaveProperty('value.ok', true)
+      expect(send).toHaveBeenCalledTimes(2)
+    },
+  )
+
+  it('releases capacity after an in-flight cancellation has settled', async () => {
+    const send = vi.fn<typeof fetch>().mockImplementationOnce(
+      async (_url, init) =>
+        new Promise<Response>((_resolve, reject) => {
+          init!.signal!.addEventListener(
+            'abort',
+            () => {
+              reject(new Error('cancelled'))
+            },
+            { once: true },
+          )
+        }),
+    )
+    send.mockImplementation(() => Promise.resolve(response(envelope())))
+    const client = new AnthropicMessages(options, send)
+    const controller = new AbortController()
+    const pending = client.generate({ ...request, signal: controller.signal })
+    controller.abort()
+    await expect(client.generate(request)).rejects.toMatchObject({ code: 'capacity' })
+    await expect(pending).rejects.toMatchObject({ code: 'cancelled' })
+    await expect(client.generate(request)).resolves.toHaveProperty('value.ok', true)
+  })
+
   it('sends one bounded structured text request and returns independently validated output', async () => {
     const { client, send } = setup()
     expect(await client.generate(request)).toEqual({
@@ -162,6 +230,9 @@ describe('Anthropic provider-only messages adapter', () => {
     )
     const client = new AnthropicMessages({ ...options, timeoutMs: 10 }, send)
     await expect(client.generate(request)).rejects.toMatchObject({ code: 'timeout' })
+    send.mockImplementation(() => Promise.resolve(response(envelope())))
+    await expect(client.generate(request)).resolves.toHaveProperty('value.ok', true)
+    expect(send).toHaveBeenCalledTimes(2)
   })
 
   it('rejects invalid configuration without revealing credentials', () => {

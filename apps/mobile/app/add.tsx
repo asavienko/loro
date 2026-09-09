@@ -18,6 +18,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import {
   BROWSABLE_THEMES,
   foldSearchText,
+  MAX_OWN_PHRASE_TEXT_CODE_UNITS,
   TAGS,
   type BrowsableTheme,
   type Difficulty,
@@ -51,9 +52,15 @@ import { copy, themeLabel } from '../src/lib/copy'
 import { useApp } from '../src/store'
 import {
   importedPhraseKey,
+  importInputForCandidates,
+  isImportTooLarge,
+  isReviewedImportTooLarge,
+  IMPORT_MAX_CHARACTERS,
+  IMPORT_MAX_ROWS,
   normalizeImportedText,
   parseImportedPhrases,
   reviewImportedCandidates,
+  unsavedImportCandidates,
   type ImportCandidate,
 } from '../src/lib/importPhrases'
 /**
@@ -552,6 +559,8 @@ function ImportPhrases({
   useLocale()
   const [input, setInput] = useState('')
   const [review, setReview] = useState<ImportCandidate[] | null>(null)
+  const [tooLarge, setTooLarge] = useState(false)
+  const [saveFailed, setSaveFailed] = useState(false)
   const existing = useMemo(
     () =>
       owned.flatMap((phrase) => {
@@ -561,9 +570,13 @@ function ImportPhrases({
     [owned],
   )
   const preview = () => {
-    setReview(parseImportedPhrases(input, existing))
+    const exceedsLimit = isImportTooLarge(input)
+    setTooLarge(exceedsLimit)
+    setSaveFailed(false)
+    setReview(exceedsLimit ? null : parseImportedPhrases(input, existing))
   }
   const update = (index: number, field: 'targetText' | 'translation', value: string) => {
+    setSaveFailed(false)
     setReview((current) =>
       current === null
         ? null
@@ -581,16 +594,46 @@ function ImportPhrases({
     (candidate) =>
       candidate.issue === null && candidate.targetText !== '' && candidate.translation !== '',
   )
+  const reviewedBatchTooLarge = review !== null && isReviewedImportTooLarge(review)
   const save = () => {
+    if (review === null || reviewedBatchTooLarge) return
+    const checked = reviewImportedCandidates(review, existing)
+    if (isReviewedImportTooLarge(checked)) {
+      setReview(checked)
+      return
+    }
+    const acceptedChecked = checked.filter((candidate) => candidate.issue === null)
+    if (acceptedChecked.length === 0) {
+      setReview(checked)
+      return
+    }
     const keys = new Set(existing.map(importedPhraseKey))
-    for (const candidate of accepted) {
+    const savedLines = new Set<number>()
+    const savedTargetTexts: string[] = []
+    let failed = false
+    for (const candidate of acceptedChecked) {
       const key = importedPhraseKey(candidate.targetText)
       if (keys.has(key)) continue
-      keys.add(key)
-      addOwnPhrase({ targetText: candidate.targetText, translation: candidate.translation })
+      try {
+        addOwnPhrase({ targetText: candidate.targetText, translation: candidate.translation })
+        keys.add(key)
+        savedLines.add(candidate.line)
+        savedTargetTexts.push(candidate.targetText)
+      } catch {
+        failed = true
+        break
+      }
     }
-    setInput('')
-    setReview(null)
+    const remaining = unsavedImportCandidates(checked, savedLines)
+    if (remaining.length === 0) {
+      setInput('')
+      setReview(null)
+      setSaveFailed(false)
+      return
+    }
+    setInput(importInputForCandidates(remaining))
+    setReview(reviewImportedCandidates(remaining, [...existing, ...savedTargetTexts]))
+    setSaveFailed(failed)
   }
   return (
     <Stack gap={space['3']}>
@@ -608,6 +651,8 @@ function ImportPhrases({
           value={input}
           onChangeText={(value) => {
             setInput(value)
+            setTooLarge(false)
+            setSaveFailed(false)
             setReview(null)
           }}
           placeholder={copy.add.import.placeholder}
@@ -617,6 +662,13 @@ function ImportPhrases({
         />
       </Card>
       <Button label={copy.add.import.preview} variant="secondary" onPress={preview} />
+      {tooLarge && (
+        <View accessibilityRole="alert">
+          <Text variant="caption" color={semantic.warn.text}>
+            {copy.add.import.tooLarge(IMPORT_MAX_ROWS, IMPORT_MAX_CHARACTERS)}
+          </Text>
+        </View>
+      )}
       {review !== null && (
         <Stack gap={space['2']}>
           <SectionHeader
@@ -624,6 +676,20 @@ function ImportPhrases({
             label={copy.add.import.review(accepted.length)}
             hint={copy.add.import.reviewHint}
           />
+          {reviewedBatchTooLarge && (
+            <View accessibilityRole="alert">
+              <Text variant="caption" color={semantic.warn.text}>
+                {copy.add.import.tooLarge(IMPORT_MAX_ROWS, IMPORT_MAX_CHARACTERS)}
+              </Text>
+            </View>
+          )}
+          {saveFailed && (
+            <View accessibilityRole="alert">
+              <Text variant="caption" color={semantic.warn.text}>
+                {copy.add.import.saveFailed}
+              </Text>
+            </View>
+          )}
           {review.length === 0 ? (
             <Card>
               <Text variant="caption" color={ink.muted}>
@@ -661,7 +727,9 @@ function ImportPhrases({
                     <Text variant="captionSm" color={semantic.warn.text}>
                       {candidate.issue === 'duplicate'
                         ? copy.add.import.duplicate
-                        : copy.add.import.invalid}
+                        : candidate.issue === 'too-long'
+                          ? copy.add.import.tooLong(MAX_OWN_PHRASE_TEXT_CODE_UNITS)
+                          : copy.add.import.invalid}
                     </Text>
                   )}
                 </Stack>
@@ -671,7 +739,7 @@ function ImportPhrases({
           <Button
             label={copy.add.import.add(accepted.length)}
             onPress={save}
-            disabled={accepted.length === 0}
+            disabled={accepted.length === 0 || reviewedBatchTooLarge}
           />
         </Stack>
       )}

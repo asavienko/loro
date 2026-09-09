@@ -25,6 +25,7 @@ import {
   validatePractice,
   writePracticeReview,
 } from './practiceRecords'
+import { decodeDevicePreferences } from '../lib/devicePreferences'
 import { readLocalValue, writeLocalValue } from './database'
 import { deferPhraseDelete, flushPendingDeletes, undoPendingPhraseDelete } from './pendingDeletes'
 import { resolveLearnerAliases } from './aliases'
@@ -241,6 +242,7 @@ export function createLearnerStorage(database: RuntimeDatabase, clock: Clock): L
     if (!active) throw new Error('Missing active course')
     return {
       ...INITIAL_STATE,
+      devicePreferences: decodeDevicePreferences(readLocalValue(driver, 'device_preferences')),
       ...active,
       ...pair,
       courses: Object.fromEntries(
@@ -434,6 +436,11 @@ export function createLearnerStorage(database: RuntimeDatabase, clock: Clock): L
           settings === null
             ? settingsFields(next)
             : changedFields(settingsFields(previous), settingsFields(next)),
+        )
+        writeLocalValue(
+          driver,
+          'device_preferences',
+          JSON.stringify(decodeDevicePreferences(JSON.stringify(next.devicePreferences))),
         )
         writeLocalValue(driver, 'language_chosen', String(next.languageChosen))
         for (const day of next.practiceDays) {

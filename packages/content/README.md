@@ -61,12 +61,16 @@ pnpm content:validate
 pnpm --filter @loro/content validate --strict
 pnpm --filter @loro/content validate --only packs,refs,drops
 pnpm --filter @loro/content test
+pnpm --silent --filter @loro/content review:export > /tmp/loro-review.json
 ```
 
 The package manifest reserves `enrich`, `render`, and `publish`, but their source files are not
 implemented. Consequently `pnpm content:enrich`, `pnpm content:render`, and `pnpm content:publish`
 currently fail and must not be documented or automated as working steps. The content workflow has
 explicit TODO jobs for rendering and publication.
+
+The [bilingual review workflow](reviews/README.md) exports versioned UI and actual course material
+with pending review records. Exporting is preparation, not linguistic approval.
 
 ## What validation actually enforces
 

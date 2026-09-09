@@ -1,6 +1,11 @@
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { View } from 'react-native'
-import * as componentExports from '../ui/components'
+import * as barrelComponents from '../ui/components'
+import { AudioControls } from '../ui/components/AudioControls'
+import { LanguageChoices } from '../ui/components/LanguageChoices'
+import { NavigationMenu } from '../ui/components/NavigationMenu'
+
+const componentExports = { ...barrelComponents, AudioControls, LanguageChoices, NavigationMenu }
 import * as primitiveExports from '../ui/primitives'
 import { onDark, semantic, space } from '../ui/theme'
 import {
@@ -40,6 +45,7 @@ export type ProductionComponentReference = (typeof PRODUCTION_COMPONENTS)[Produc
 export interface ProductionSpecimen {
   readonly name: ProductionComponentName
   readonly component: ProductionComponentReference
+  readonly disposition: 'rendered' | 'interaction-owned'
   readonly group: 'primitive' | 'component'
   readonly states: readonly SpecimenState[]
   readonly render?: (() => ReactNode) | undefined
@@ -230,6 +236,18 @@ const PRIMITIVE_METADATA = {
   },
 } as const satisfies Record<keyof typeof primitiveExports, SpecimenMetadata>
 
+function LanguageChoicesSpecimen() {
+  const [selected, setSelected] = useState<'en' | 'bg' | 'ru'>('bg')
+  return (
+    <LanguageChoices
+      title="Workbench language choices"
+      values={['en', 'bg', 'ru']}
+      selected={selected}
+      onSelect={setSelected}
+    />
+  )
+}
+
 const COMPONENT_METADATA = {
   ActionBar: {
     states: ['default', 'long-copy', 'text-200', 'text-310'],
@@ -279,6 +297,50 @@ const COMPONENT_METADATA = {
     ],
     contextualNote: 'Rendered with the owning route’s exhaustive domain tag labels.',
   },
+  AudioControls: {
+    states: ['disabled'],
+    render: () => (
+      <AudioControls
+        label="Unavailable specimen audio"
+        note="No device audio in this specimen."
+        enabled={false}
+        onPress={noop}
+      />
+    ),
+  },
+  LanguageChoices: {
+    states: ['default', 'selected', 'text-200', 'text-310'],
+    render: () => <LanguageChoicesSpecimen />,
+  },
+  NavigationMenu: {
+    states: ['default', 'selected', 'text-200', 'text-310'],
+    render: () => (
+      <NavigationMenu
+        place="Workbench"
+        openLabel="Open specimen navigation"
+        title="Specimen navigation"
+        groupLabel="Destinations"
+        dismissLabel="Close specimen navigation"
+        hereLabel="You are here"
+        reveal="⌄"
+        chevron="›"
+        destinations={[
+          {
+            label: 'Workbench',
+            current: true,
+            currentLabel: 'Workbench, current destination',
+            onPress: noop,
+          },
+          {
+            label: 'Example destination',
+            current: false,
+            currentLabel: 'Example destination',
+            onPress: noop,
+          },
+        ]}
+      />
+    ),
+  },
 } as const satisfies Record<keyof typeof componentExports, SpecimenMetadata>
 
 export const PRODUCTION_SPECIMENS: readonly ProductionSpecimen[] = [
@@ -286,12 +348,16 @@ export const PRODUCTION_SPECIMENS: readonly ProductionSpecimen[] = [
     name,
     component: primitiveExports[name],
     group: 'primitive' as const,
+    disposition:
+      'render' in PRIMITIVE_METADATA[name] ? ('rendered' as const) : ('interaction-owned' as const),
     ...PRIMITIVE_METADATA[name],
   })),
   ...(Object.keys(COMPONENT_METADATA) as (keyof typeof componentExports)[]).map((name) => ({
     name,
     component: componentExports[name],
     group: 'component' as const,
+    disposition:
+      'render' in COMPONENT_METADATA[name] ? ('rendered' as const) : ('interaction-owned' as const),
     ...COMPONENT_METADATA[name],
   })),
 ]

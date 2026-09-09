@@ -1,1 +1,0 @@
-archive/2026-09-09/61-content-and-audio-assets.md

@@ -1,1 +1,0 @@
-archive/2026-09-07/84-visual-ui-ux-audit.md

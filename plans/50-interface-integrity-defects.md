@@ -1,1 +1,0 @@
-archive/2026-07-30/50-interface-integrity-defects.md

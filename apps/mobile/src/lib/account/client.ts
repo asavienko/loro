@@ -261,6 +261,7 @@ export class AccountClient {
     }
   }
   async requestCode(email: string): Promise<void> {
+    if (this.restoreFlight || this.refreshFlight || this.state.status === 'working') return
     const generation = ++this.generation
     this.publish({ status: 'working', error: null })
     try {
@@ -273,6 +274,7 @@ export class AccountClient {
     }
   }
   async verifyCode(email: string, code: string): Promise<void> {
+    if (this.restoreFlight || this.refreshFlight || this.state.status === 'working') return
     const generation = ++this.generation
     this.publish({ status: 'working', error: null })
     try {

@@ -1,7 +1,7 @@
 # Post-refactor SOLID / KISS / DRY integrity pass
 
 - **Requirement IDs:** cross-cutting; `F-05`, `F-06`, plus the mobile layer rules in
-  [`mobile-app.md`](../docs/architecture/mobile-app.md#layers)
+  [`mobile-app.md`](../../../docs/architecture/mobile-app.md#layers)
 - **Milestone:** M1
 - **Size:** M, split into behavior-preserving, independently reversible commits
 - **Status:** ✅ Implemented 2026-07-30 with one coordinator and three parallel agents. The frozen
@@ -10,18 +10,20 @@
   API production build, generated-output drift checks, and scoped formatting all pass. The global
   formatter is presently obscured by a concurrent, unrelated roadmap/design import in the shared
   worktree; no Plan 53 implementation file is among its findings.
-- **Depends on:** [52-solid-kiss-dry-refactor](52-solid-kiss-dry-refactor.md) ✅
-- **Coordinates with:** [05](05-fix-shared-maths-duplication.md),
-  [18](18-select-rs-cloze-and-set-selection.md), [34](34-design-system-completion.md),
-  [39](39-security-hardening-api.md), [47](47-typography-motion-and-haptics.md), and
-  [50](50-interface-integrity-defects.md)
+- **Depends on:** [52-solid-kiss-dry-refactor](../2026-07-30/52-solid-kiss-dry-refactor.md) ✅
+- **Coordinates with:** [05](../2026-07-30/05-fix-shared-maths-duplication.md),
+  [18](../2026-07-30/18-select-rs-cloze-and-set-selection.md),
+  [34](../2026-07-30/34-design-system-completion.md),
+  [39](../2026-07-30/39-security-hardening-api.md),
+  [47](../2026-07-30/47-typography-motion-and-haptics.md), and
+  [50](../2026-07-30/50-interface-integrity-defects.md)
 
 ## Why this is a follow-up, not a replay
 
-[Plan 52](52-solid-kiss-dry-refactor.md) already centralized mobile copy, split the UI and store,
-decomposed persistence, installed API provider/repository seams, named Rust constants, added tests,
-and held the E2E suite byte-identical. Repeating that exercise would replace working, focused code
-with speculative abstractions and violate KISS.
+[Plan 52](../2026-07-30/52-solid-kiss-dry-refactor.md) already centralized mobile copy, split the UI
+and store, decomposed persistence, installed API provider/repository seams, named Rust constants,
+added tests, and held the E2E suite byte-identical. Repeating that exercise would replace working,
+focused code with speculative abstractions and violate KISS.
 
 The new audit found four residual, behavior-preserving seams worth fixing:
 

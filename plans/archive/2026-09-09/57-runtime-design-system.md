@@ -3,10 +3,12 @@
 - **Requirement IDs:** `F-05`, `F-06`, `LB-25`…`LB-28`
 - **Milestone:** M1/M2
 - **Status:** 🟡 Runtime accent, text-scale, reduced-motion and production control loading/focus
-  states exist. Fonts, dark theme, haptics and motion remain; font provenance is still needed.
+  states exist. Shared text now consumes the generated tabular numeral variant. Fonts, dark theme,
+  haptics and motion remain; font provenance and native font rendering proof are still needed.
 - **Depends on:** 53/55 completed; 58 for device proof; 71 consumes durable theme settings; 80
   consumes production specimens.
-- **Reviewed:** 2026-09-07 against merged baseline `2d9e8c3`.
+- **Reviewed:** 2026-09-09 against checkout `42f4d57`; source/plan review only, no new device or
+  deployment acceptance.
 
 **Archive disposition (2026-09-09):** Archived at user request after integration review. The partial
 status and remaining acceptance criteria below are retained; archival does not mark this plan
@@ -38,7 +40,9 @@ have not been migrated for learner-selectable themes.
 1. [ ] License/bundle/load the specified sans and italic serif fonts; hold splash only for required
        startup assets and prove fallback behavior.
 2. [ ] Implement shared runtime motion primitives, reduced-motion substitutions, press feedback,
-       numeric tabular figures, and route transitions from generated tokens.
+       numeric tabular figures, and route transitions from generated tokens. Tabular figures now
+       apply through shared `Text`, with a browser geometry regression covering Today, Progress and
+       practice. Native digit advances remain under the device proof gate.
 3. [ ] Add a small haptic port with platform availability and accessibility policy; never couple
        haptic success to practice outcome.
 4. [ ] Connect the existing accent provider to learner settings and add dark theme with contrast
@@ -55,6 +59,16 @@ have not been migrated for learner-selectable themes.
 - Motion/haptic behavior follows availability and reduced-motion settings.
 - Every accent/dark combination passes contrast checks; learner numbers do not jitter.
 - Component gallery covers default/pressed/disabled/loading/error/long-copy states.
+
+## Delivery order and gates
+
+1. Retain the shipped production control states. Deliver fonts/fallbacks and motion/haptic ports as
+   separate changes; font licensing and native availability must be recorded before use.
+2. Define theme values with 71: this plan owns runtime visuals and contrast, while 71 owns durable
+   preference storage. Existing state APIs already unblock 80; full dark-theme delivery does not.
+3. Use 72's evolving native/reduced-motion harness and supply real specimens to 80 in each UI
+   change. Keep peak-card design approval under Q-14 rather than resolving it through an incidental
+   token edit.
 
 ## Out of scope
 

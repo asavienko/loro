@@ -33,10 +33,10 @@
 
   **Ten defects found, none fixed as behavior changes** — see "Defects found while reading" below.
   Three safe ones were folded in (`isSyncEntity`, `dropAll`, the undeclared `NOT_FOUND`). A
-  follow-up ownership audit in [53](../../53-post-refactor-solid-kiss-dry-audit.md) found the
-  original 05/06/50 routing was too coarse: 05 owns maths/token matching, 18 owns set eligibility,
-  39 owns API validation, 50 owns rendered integrity, and the local SQLite merge defects still need
-  a focused correctness plan.
+  follow-up ownership audit in [53](../2026-09-09/53-post-refactor-solid-kiss-dry-audit.md) found
+  the original 05/06/50 routing was too coarse: 05 owns maths/token matching, 18 owns set
+  eligibility, 39 owns API validation, 50 owns rendered integrity, and the local SQLite merge
+  defects still need a focused correctness plan.
 
 - **Depends on:** nothing. **Overlaps, and lands part of:**
   - [48-app-shell-failure-states-and-input](48-app-shell-failure-states-and-input.md) **§3 and §3a**

@@ -8,7 +8,8 @@
   language-selection implementation is pending.
 - **Depends on:** 59 for device hydration/write-through; 61 for reviewed content publication; 72 for
   release gates. Audio/ASR/DSP are separately owned by 58/62/63/77.
-- **Reviewed:** 2026-09-08 during plan-94 integration.
+- **Reviewed:** 2026-09-09 against checkout `42f4d57`; source/plan review only, no new device or
+  deployment acceptance.
 
 ## Implemented scope — retain, do not rebuild
 
@@ -26,6 +27,14 @@ course checkpoints; native/browser hydration and writes are integrated.
 availability is checked on each device for the selected language; reviewed production assets and DSP
 remain gated. Native EN/BG/RU plural formatting and scaled-text fixes from the Android preview are
 retained.
+
+## Review preparation delivered — 2026-09-09
+
+`pnpm --silent --filter @loro/content review:export` exports all three bundled UI resources and
+seven actual adapted course catalogs with material SHA-256 identifiers and pending reviewer records.
+The [record workflow](../packages/content/reviews/README.md) preserves reviewer attribution,
+findings, version changes and handoff expectations. No reviewer has been assigned or approval
+recorded by this change. Exporting does not satisfy the human or device acceptance gates below.
 
 ## Remaining work
 
@@ -49,6 +58,16 @@ retained.
        Plans 60–63 own Unicode matching, voices and ASR; 76/82 own reviewed AI/topic coverage; 77
        owns scoring evidence. Unsupported speech stays unavailable/reveal-only until its owner
        passes.
+
+## Delivery order and gates
+
+1. Start reviewer coordination and versioned sign-off records now while device harnesses develop.
+   Review the actual bundled UI and teaching fields; structural parity is not linguistic approval.
+2. Keep the current seven-pair acceptance baseline explicit. Plan 90 owns adding English; extend
+   this review matrix to the newly supported pairs only when that contract/catalog lands. Do not
+   make all existing-pair sign-offs a prerequisite to implementing the English contract.
+3. Hand approved artifacts to 61 and evidence to 72; use 59/58 for durability. Native capability
+   checks remain per device/target and are not enabled by content sign-off.
 
 ## Acceptance and archive condition
 
