@@ -94,6 +94,20 @@ describe('AS-07 listening identity', () => {
     expect(contentAddressFilename(digestA)).toBe(`sha256/${digestA}.m4a`)
   })
 
+  it('rejects an unknown codec or asset class instead of colliding keys', () => {
+    const base = {
+      assetClass: LISTENING_ASSET_CLASS,
+      locale: 'es-ES' as const,
+      phraseId: 'row-1',
+      textDigest: digestA,
+      voiceId: 'voice-a',
+      modelId: 'model',
+      codec: LISTENING_CODEC,
+    }
+    expect(() => listeningClipKey({ ...base, codec: 'mp3' })).toThrow(/AAC codec/)
+    expect(() => listeningClipKey({ ...base, assetClass: 'practice' })).toThrow(/asset class/)
+  })
+
   it('normalises target text so equivalent whitespace is one phrase', () => {
     expect(normalizeListeningText('  Un  café,   por favor. ')).toBe('Un café, por favor.')
   })

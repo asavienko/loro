@@ -4,17 +4,16 @@ import {
   LISTENING_ASSET_CLASS,
   LISTENING_CODEC,
   REFERENCE_ASSET_CLASS,
-  type AudioAssetClass,
 } from './constants.js'
 
 export interface ListeningClipIdentity {
-  readonly assetClass: AudioAssetClass
+  readonly assetClass: string
   readonly locale: TargetLocale
   readonly phraseId: string
   readonly textDigest: string
   readonly voiceId: string
   readonly modelId: string
-  readonly codec: typeof LISTENING_CODEC
+  readonly codec: string
 }
 
 const IDENTITY_SEPARATOR = '\u001f'
