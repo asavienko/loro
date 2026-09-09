@@ -1,0 +1,44 @@
+import { mkdirSync } from 'node:fs'
+import { join } from 'node:path'
+import { expect, onboard, test } from './fixtures'
+import { enter, STATES } from './states'
+
+const runDir = process.env.LORO_SCREENSHOT_RUN_DIR
+if (runDir === undefined) throw new Error('LORO_SCREENSHOT_RUN_DIR was not configured.')
+
+const FIXED_TIME = '2026-09-09T08:00:00.000Z'
+
+for (const state of STATES) {
+  test(`capture: ${state.name}`, async ({ page }) => {
+    // Keep the visual date and time repeatable without freezing app timers such as toasts.
+    await page.clock.setFixedTime(FIXED_TIME)
+    await enter(page, state, onboard)
+    await page.evaluate(async () => {
+      await document.fonts.ready
+    })
+
+    const undo = page.getByRole('button', { name: 'Undo', exact: true })
+    const preservesUndo = state.name === 'today · remove undo offered'
+    if (preservesUndo) await expect(undo).toBeVisible()
+
+    const image = join(runDir, 'images', filenameFor(state.name))
+    mkdirSync(join(runDir, 'images'), { recursive: true })
+    await page.screenshot({ path: image, animations: 'disabled', caret: 'hide' })
+
+    // This state exists to capture the window while Undo is available, not its later settled UI.
+    if (preservesUndo) await expect(undo).toBeVisible()
+  })
+}
+
+function filenameFor(name: string): string {
+  const slug = name
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 72)
+  let hash = 2166136261
+  for (const char of name) hash = Math.imul(hash ^ (char.codePointAt(0) ?? 0), 16777619)
+  return `${slug || 'state'}-${(hash >>> 0).toString(16).padStart(8, '0')}.png`
+}
