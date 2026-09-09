@@ -53,4 +53,17 @@ describe('checkpoint input boundary', () => {
     Object.assign(item ?? {}, patch)
     expect(decodeCheckpoint(JSON.stringify(value))).toBeNull()
   })
+
+  it.each(['2026-02-29', '2025-04-31', '2025-02-29'])(
+    'discards a checkpoint with an impossible local day: %s',
+    (localDay) => {
+      const value = { ...checkpoint, localDay }
+      expect(decodeCheckpoint(JSON.stringify(value))).toBeNull()
+    },
+  )
+
+  it('discards a checkpoint whose displayed and engine cursors disagree', () => {
+    const value = { ...checkpoint, refrainResume: { ...checkpoint.refrainResume, cursor: 1 } }
+    expect(decodeCheckpoint(JSON.stringify(value))).toBeNull()
+  })
 })

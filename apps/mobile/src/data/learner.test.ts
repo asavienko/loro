@@ -242,6 +242,16 @@ describe('repository-backed learner state', () => {
     expect(db.storage.load().phrases[0]?.id).toBe(db.delta.phraseId)
     expect(db.storage.load().refrainResume.session).toBeNull()
   })
+  it('discards a persisted checkpoint whose displayed and engine cursors disagree', () => {
+    const db = preparedPractice()
+    const resume = db.store.getState().refrainResume
+    db.driver.run('UPDATE course_session SET refrain_session=?', [
+      JSON.stringify({ ...resume, version: 1, localDay: DAY, cursor: 1 }),
+    ])
+    const restored = db.storage.load()
+    expect(restored.phrases[0]?.id).toBe(db.delta.phraseId)
+    expect(restored.refrainResume).toEqual(expect.objectContaining({ session: null, cursor: 0 }))
+  })
   it('reopens every course, phrase identity, streak day, settings and resume cursor', () => {
     const path = diskPath()
     const first = open(path)
@@ -427,7 +437,7 @@ describe('repository-backed learner state', () => {
     db.store.setState({
       refrainResume: {
         ...db.store.getState().refrainResume,
-        session: sessionFor(db.store.getState().refrainSet[0]!),
+        session: { ...sessionFor(db.store.getState().refrainSet[0]!), cursor: 9 },
         cursor: 9,
       },
     })
