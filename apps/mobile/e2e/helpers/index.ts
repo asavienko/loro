@@ -35,6 +35,10 @@ export async function enter(
   // Install once, before the first app navigation; later entries on the same page keep it.
   if (!frozenClockPages.has(page)) {
     await atInstant(page, OPEN_WAVE_INSTANT)
+    // install() pauses timers. Account provider discovery uses fetch + setTimeout
+    // abort; a paused clock leaves Google disabled and never shows Try again.
+    // Resume so time flows from the open-wave instant; Today stays on the morning wave.
+    await page.clock.resume()
     frozenClockPages.add(page)
   }
   // The exhaustive geometry suites reuse one browser page. Each manifest entry is
