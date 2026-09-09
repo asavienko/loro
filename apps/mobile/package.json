@@ -17,6 +17,7 @@
     "test:e2e:workbench:update": "playwright test --config e2e/playwright.config.workbench.mjs --update-snapshots",
     "test:e2e:bundle": "playwright test --config e2e/playwright.config.production.mjs",
     "test:e2e:install": "playwright install chromium",
+    "screenshots": "node e2e/screenshots-runner.mjs",
     "lint": "eslint app src scripts e2e",
     "check:lang": "tsx scripts/a11yChecks.ts lang",
     "check:chart-summaries": "tsx scripts/a11yChecks.ts chart-summaries",
