@@ -28,6 +28,14 @@ availability is checked on each device for the selected language; reviewed produ
 remain gated. Native EN/BG/RU plural formatting and scaled-text fixes from the Android preview are
 retained.
 
+## Review preparation delivered — 2026-09-09
+
+`pnpm --silent --filter @loro/content review:export` exports all three bundled UI resources and
+seven actual adapted course catalogs with material SHA-256 identifiers and pending reviewer records.
+The [record workflow](../packages/content/reviews/README.md) preserves reviewer attribution,
+findings, version changes and handoff expectations. No reviewer has been assigned or approval
+recorded by this change. Exporting does not satisfy the human or device acceptance gates below.
+
 ## Remaining work
 
 1. [ ] Arrange independent bilingual review of UI resources, starter translations and pair-specific

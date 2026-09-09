@@ -9,15 +9,17 @@
 - **Depends on:** 54/85 completed; coordinates with 67 for principal identity and 86 for provider
   adapters; no native prerequisite.
 - **Reviewed:** 2026-09-09 against checkout `42f4d57`; source/plan review only, no new device or
-  deployment acceptance.
+  deployment acceptance. Subsequent local content-contract validation on 2026-09-09 passed the
+  shared schema/registry suite, registered HTTP contract tests, controller pair checks and
+  core/API typechecks; image, load and operational gates remain open.
 
 ## Implemented scope
 
 The runtime uses PostgreSQL repositories for accounts, device/session identity, sync rows, immutable
 push receipts, cursor snapshots and server clocks. In-memory stores are isolated test adapters.
-Auth/sync controllers consume shared schemas; the contract guide records remaining current→target
-migration boundaries. Transactions serialize tenant writes and protect replay, tombstone/catalog
-identity reconciliation and cursor consistency.
+Auth/sync controllers and multilingual content queries consume shared schemas; the contract guide
+records remaining current→target migration boundaries. Transactions serialize tenant writes and
+protect replay, tombstone/catalog identity reconciliation and cursor consistency.
 
 Real-Postgres tests cover authentication, refresh/replay and two-device tenant-scoped sync,
 including HTTP controllers. Readiness checks real database/WASM dependencies. Request bounds,
@@ -37,10 +39,11 @@ practice dependency.
 ## Remaining work
 
 1. [ ] Finish documented current→target runtime validation for remaining endpoints while retaining
-       compatibility and keeping draft contracts gated. Include the three implemented
-       `/v1/content/v2/*` learning-catalog routes missing from the current OpenAPI registry;
-       reconcile operation counts from the generated registry, not stale prose. Preserve per-item
-       batch rejection.
+       compatibility and keeping draft contracts gated. The three implemented `/v1/content/v2/*`
+       learning-catalog routes are now registered with shared request/response schemas (28 current
+       operations); scalar query, language-pair and version validation is enforced with HTTP
+       regression coverage. Legacy content and AI boundaries remain. Preserve per-item batch
+       rejection.
 2. [ ] Complete content-version/audit/retention repositories as their owning features need them;
        exercise migrations, backup restore and rollback with the new durable runtime.
 3. [ ] Verify the exact production image with configured PostgreSQL/auth, non-root/WASM readiness,

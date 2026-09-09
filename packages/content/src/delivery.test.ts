@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { bundledCatalog } from './catalog.js'
 import {
   canonicalJson,
@@ -54,6 +54,45 @@ async function verify(
 }
 
 describe('immutable content release verification', () => {
+  it.each([
+    null,
+    [],
+    {},
+    { ...fixture(), signature: null },
+    { ...fixture(), signature: { algorithm: 'ed25519', keyId: 42, value: 'signed' } },
+    { ...fixture(), resources: null },
+    { ...fixture(), resources: [null] },
+    { ...fixture(), resources: [{ ...fixture().resources[0]!, kind: 'executable' }] },
+  ])('rejects malformed wire manifests before invoking cryptography: %j', async (manifest) => {
+    const verifySignature = vi.fn(() => Promise.resolve(true))
+    await expect(
+      verifyContentRelease({
+        manifest,
+        resources: new Map(),
+        appVersion: '1.0.0',
+        verifier: { digest, verifySignature, validateCatalog: () => true },
+      }),
+    ).rejects.toMatchObject({ code: 'MANIFEST_INVALID' })
+    expect(verifySignature).not.toHaveBeenCalled()
+  })
+
+  it.each([null, [], {}, { lang: 'es-ES', catalogVersion: 1, phrases: null }])(
+    'rejects valid JSON with a malformed catalog shape: %j',
+    async (catalog) => {
+      const bytes = encoder.encode(JSON.stringify(catalog))
+      const hash = await digest(bytes)
+      const descriptor = {
+        ...fixture().resources[0]!,
+        sha256: hash,
+        uri: `sha256/${hash}.json`,
+        bytes: bytes.byteLength,
+      }
+      await expect(
+        verify(fixture({ resources: [descriptor] }), new Map([[descriptor.id, bytes]])),
+      ).rejects.toMatchObject({ code: 'CATALOG_INVALID' })
+    },
+  )
+
   it('accepts a signed, complete, version-matched catalog', async () => {
     await expect(verify()).resolves.toBeUndefined()
   })
@@ -122,6 +161,31 @@ describe('immutable content release verification', () => {
         },
       }),
     ).rejects.toMatchObject({ code: 'APP_TOO_OLD' })
+  })
+
+  it.each([
+    ['1.0.0-rc.1', '1.0.0', false],
+    ['1.0.0-beta.2', '1.0.0-beta.11', false],
+    ['1.0.0-beta.11', '1.0.0-beta.2', true],
+    ['1.0.0-beta', '1.0.0-beta.1', false],
+    ['1.0.0-1', '1.0.0-alpha', false],
+    ['1.0.0', '1.0.0-rc.1', true],
+    ['1.0.0+build.2', '1.0.0+build.1', true],
+    ['1.0.0-beta.01', '1.0.0-beta.1', false],
+    ['01.0.0', '1.0.0', false],
+  ])('checks app %s against compatibility floor %s', async (appVersion, minimum, accepted) => {
+    const result = verifyContentRelease({
+      manifest: fixture({ minAppVersion: minimum }),
+      resources: new Map([[catalogResourceId(bundledCatalog.lang), catalogBytes]]),
+      appVersion,
+      verifier: {
+        digest,
+        verifySignature: () => Promise.resolve(true),
+        validateCatalog: () => true,
+      },
+    })
+    if (accepted) await expect(result).resolves.toEqual(bundledCatalog)
+    else await expect(result).rejects.toMatchObject({ code: 'APP_TOO_OLD' })
   })
 
   it('requires the activation host to validate the decoded catalog', async () => {

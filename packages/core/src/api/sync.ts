@@ -1,4 +1,9 @@
-import { supportsPair } from '../domain/languages.js'
+import {
+  NATIVE_LANGUAGES,
+  TARGET_LOCALES,
+  isTargetLocale,
+  supportsPair,
+} from '../domain/languages.js'
 import { FSRS_ALGORITHM, LEGACY_PREVIEW_ALGORITHM } from '../domain/phrase.js'
 /** Target sync values, independent of storage/merge implementations. F-01/F-02/F-04. */
 import { z } from 'zod'
@@ -39,8 +44,8 @@ const Source = z.enum([
   'chat',
 ])
 export const userPhraseValues = {
-  targetLocale: z.enum(['es-ES', 'bg-BG', 'ru-RU']),
-  ownMeaningLanguage: z.enum(['en', 'bg', 'ru']),
+  targetLocale: z.enum(TARGET_LOCALES),
+  ownMeaningLanguage: z.enum(NATIVE_LANGUAGES),
   phraseId: CatalogIdSchema.nullable(),
   ownEs: z.string().min(1).max(2000),
   ownEn: Note,
@@ -91,8 +96,8 @@ export const userPhraseValues = {
 export const settingsValues = {
   languagePair: z
     .strictObject({
-      nativeLanguage: z.enum(['en', 'bg', 'ru']),
-      targetLocale: z.enum(['es-ES', 'bg-BG', 'ru-RU']),
+      nativeLanguage: z.enum(NATIVE_LANGUAGES),
+      targetLocale: z.enum(TARGET_LOCALES),
     })
     .refine(
       (pair) => supportsPair(pair.nativeLanguage, pair.targetLocale),
@@ -117,7 +122,7 @@ const Wave = z.strictObject({
   completedAt: T.nullable(),
 })
 export const refrainDayValues = {
-  targetLocale: z.enum(['es-ES', 'bg-BG', 'ru-RU']),
+  targetLocale: z.enum(TARGET_LOCALES),
   setIds: z.array(Id).max(100),
   waves: z.array(Wave).max(3),
 }
@@ -256,7 +261,7 @@ export function rowIdFor(entity: SyncEntity) {
       z.string().refine((value) => {
         const separator = value.indexOf(':')
         return (
-          ['es-ES', 'bg-BG', 'ru-RU'].includes(value.slice(0, separator)) &&
+          isTargetLocale(value.slice(0, separator)) &&
           LocalDateSchema.safeParse(value.slice(separator + 1)).success
         )
       }, 'Expected a course locale and local date'),
@@ -391,7 +396,7 @@ export const ChangeSchema = z.union([
       catalog_identity: z
         .strictObject({
           phraseId: CatalogIdSchema,
-          targetLocale: z.enum(['es-ES', 'bg-BG', 'ru-RU']),
+          targetLocale: z.enum(TARGET_LOCALES),
         })
         .optional(),
     }),

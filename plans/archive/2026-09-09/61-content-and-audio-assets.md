@@ -4,8 +4,9 @@
   `AS-05`, `AS-06`
 - **Milestone:** M1 → M3
 - **Status:** 🟡 Validated starter catalogs, content API contracts and an immutable manifest
-  verifier exist. Delivery/updater, reviewed expansion and production audio remain; Q-15 blocks
-  production audio only, bilingual sign-off is coordinated by 87.
+  verifier with malformed-input rejection and semantic-version compatibility checks exist.
+  Delivery/updater, reviewed expansion and production audio remain; Q-15 blocks production audio
+  only, bilingual sign-off is coordinated by 87.
 - **Depends on:** 53/85 completed; 59 for client atomic activation; 86 for provider/storage
   adapters; 87 for bilingual review.
 - **Reviewed:** 2026-09-09 against checkout `42f4d57`; source/plan review only, no new device or
@@ -27,6 +28,13 @@ trust store, signing/key-rotation policy and fetch/activation implementation rem
 Independent publication, client activation and approved audio do not exist. Preserve the old
 English/Spanish API as a compatibility adapter; use plan 85's delivered content schemas for the new
 pipeline.
+
+**2026-09-09 verifier slice:** The Metro-safe boundary accepts an unknown manifest and rejects
+malformed manifest/signature/resource shapes with `MANIFEST_INVALID` before cryptography. Valid JSON
+with a malformed catalog shape fails with `CATALOG_INVALID`. Compatibility floors now respect
+semantic-version prerelease precedence and ignore build metadata. Focused verification covers these
+rejections alongside signature/hash, partial-release, rollback and version-collision cases. This is
+verification-library coverage, not evidence of client activation or a published signed release.
 
 ## Outcome
 
