@@ -1,10 +1,10 @@
 # M1 DSP spike evidence protocol
 
-This protocol prepares the evidence gate in [plan 77](../../plans/77-dsp-and-speech-labs.md). It
-does not implement DSP, capture, calibration, device quality, or a learner surface. The only
-per-take inputs accepted by the evaluator are derived score and worst-syllable candidate plus two
-independent human annotations. It rejects raw audio, PCM, native buffer identifiers, transcripts,
-paths, and identifying fields.
+This protocol prepares the evidence gate in
+[plan 77](../../plans/archive/2026-09-09/77-dsp-and-speech-labs.md). It does not implement DSP,
+capture, calibration, device quality, or a learner surface. The only per-take inputs accepted by the
+evaluator are derived score and worst-syllable candidate plus two independent human annotations. It
+rejects raw audio, PCM, native buffer identifiers, transcripts, paths, and identifying fields.
 
 ## Preregistered M1 study
 

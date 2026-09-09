@@ -9,6 +9,8 @@ import android.content.pm.PackageManager
 import android.media.AudioAttributes
 import android.media.AudioFocusRequest
 import android.media.AudioManager
+import android.media.MediaPlayer
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -36,6 +38,7 @@ class PlaybackOptions : Record {
   @Field var text: String = ""
   @Field var locale: String = ""
   @Field var rate: Double = 1.0
+  @Field var uri: String = ""
 }
 
 class ListeningOptions : Record {
@@ -62,6 +65,7 @@ class LoroAudioSpeechModule : Module() {
   private var destroyed = false
   private var foreground = true
   private var tts: TextToSpeech? = null
+  private var mediaPlayer: MediaPlayer? = null
   private var ttsReady = false
   private var ttsInitializing = false
   private var ttsGeneration = 0L
@@ -115,7 +119,15 @@ class LoroAudioSpeechModule : Module() {
     }.runOnQueue(Queues.MAIN)
 
     AsyncFunction("play") { options: PlaybackOptions, promise: Promise ->
-      if (options.id.isBlank() || options.text.isBlank() ||
+      if (options.id.isBlank()) {
+        promise.reject("ERR_INVALID_PLAYBACK", "Invalid speech playback request", null)
+        return@AsyncFunction
+      }
+      if (options.uri.isNotBlank()) {
+        playCatalog(options, promise)
+        return@AsyncFunction
+      }
+      if (options.text.isBlank() ||
         options.text.length > TextToSpeech.getMaxSpeechInputLength() ||
         !options.rate.isFinite() || options.rate !in 0.5..2.0
       ) {
@@ -241,6 +253,55 @@ class LoroAudioSpeechModule : Module() {
         receiverContext?.unregisterReceiver(noisyReceiver)
         receiverContext = null
       }
+    }
+  }
+
+  private fun playCatalog(options: PlaybackOptions, promise: Promise) {
+    stopSpeech()
+    stopPlayback()
+    val generation = playbackGeneration
+    val context = appContext.reactContext
+    val uri = Uri.parse(options.uri)
+    val scheme = uri.scheme?.lowercase()
+    if (context == null || (scheme != "file" && scheme != "content")) {
+      playbackEvent(options.id, "error", "file_unavailable")
+      promise.reject("ERR_AUDIO_UNAVAILABLE", "Catalog audio is not a playable file", null)
+      return
+    }
+    try {
+      if (!acquireFocus()) {
+        playbackEvent(options.id, "error", "playback_unavailable")
+        promise.reject("ERR_AUDIO_UNAVAILABLE", "Offline playback could not start", null)
+        return
+      }
+      val player = MediaPlayer()
+      mediaPlayer = player
+      player.setAudioAttributes(audioAttributes)
+      player.setDataSource(context, uri)
+      player.setOnCompletionListener {
+        main.post {
+          if (generation == playbackGeneration) finishPlayback(playbackToken, "ended")
+        }
+      }
+      player.setOnErrorListener { _, _, _ ->
+        main.post {
+          if (generation == playbackGeneration) finishPlayback(playbackToken, "error", "file_unavailable")
+        }
+        true
+      }
+      player.prepare()
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && options.rate.isFinite() && options.rate > 0) {
+        player.playbackParams = player.playbackParams.setSpeed(options.rate.toFloat().coerceIn(0.5f, 2.0f))
+      }
+      playbackId = options.id
+      playbackToken = "loro-$generation"
+      player.start()
+      playbackEvent(options.id, "playing")
+      promise.resolve()
+    } catch (error: Exception) {
+      stopPlayback()
+      playbackEvent(options.id, "error", "file_unavailable")
+      promise.reject("ERR_AUDIO_UNAVAILABLE", "Catalog playback failed", error)
     }
   }
 
@@ -460,6 +521,11 @@ class LoroAudioSpeechModule : Module() {
     val id = playbackId
     playbackId = null
     playbackToken = null
+    mediaPlayer?.setOnCompletionListener(null)
+    mediaPlayer?.setOnErrorListener(null)
+    mediaPlayer?.reset()
+    mediaPlayer?.release()
+    mediaPlayer = null
     tts?.stop()
     if (id != null) playbackEvent(id, "stopped")
     if (speechId == null) abandonFocus()
@@ -470,6 +536,11 @@ class LoroAudioSpeechModule : Module() {
     val id = playbackId ?: return
     playbackId = null
     playbackToken = null
+    mediaPlayer?.setOnCompletionListener(null)
+    mediaPlayer?.setOnErrorListener(null)
+    mediaPlayer?.reset()
+    mediaPlayer?.release()
+    mediaPlayer = null
     playbackEvent(id, state, error)
     if (speechId == null) abandonFocus()
   }

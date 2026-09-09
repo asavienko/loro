@@ -4456,6 +4456,202 @@
         }
       }
     },
+    "/phrases/suggest": {
+      "post": {
+        "operationId": "phraseSuggest",
+        "summary": "Guarded Discover own-phrase suggestions",
+        "description": "No audio field. Stub and bundled topics are the development default. No production live request until Q-21. Invalid, unsafe or unmatched queries return zero candidates with fallback. Never writes catalog rows. Cache only folded query, pair and content version.",
+        "tags": [
+          "phrases"
+        ],
+        "security": [],
+        "parameters": [
+          {
+            "name": "X-Loro-App",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/authApple_header_X_Loro_App"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Guarded Discover own-phrase suggestions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/phraseSuggest_200"
+                },
+                "examples": {
+                  "illustrative": {
+                    "value": {
+                      "fallback": true,
+                      "provenance": "bundled",
+                      "candidates": [
+                        {
+                          "target_text": "¿Dónde está la farmacia de guardia?",
+                          "translation": "Where is the all-night pharmacy?",
+                          "theme": "Survival",
+                          "emoji": "💊",
+                          "provenance": "bundled",
+                          "source": "generated",
+                          "needs_review": true
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Code selects client recovery; never render internal detail verbatim.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Code selects client recovery; never render internal detail verbatim.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Code selects client recovery; never render internal detail verbatim.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Code selects client recovery; never render internal detail verbatim.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Code selects client recovery; never render internal detail verbatim.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Code selects client recovery; never render internal detail verbatim.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Code selects client recovery; never render internal detail verbatim.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_429_Retry_After"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_429_Retry_After"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_429_Retry_After"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_429_X_RateLimit_Reset"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Code selects client recovery; never render internal detail verbatim.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Code selects client recovery; never render internal detail verbatim.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            }
+          }
+        },
+        "x-loro-auth-boundary": "none",
+        "x-loro-status": "draft",
+        "x-loro-owner-plan": 97,
+        "x-loro-requirements": [
+          "F-04"
+        ],
+        "x-loro-gates": [
+          "Q-21"
+        ],
+        "x-loro-unresolved": [
+          "Live enablement, per-pair eval thresholds, shared AI spend cap and provider retention"
+        ],
+        "x-loro-max-body-bytes": 8192,
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/phraseSuggest_request"
+              },
+              "examples": {
+                "illustrative": {
+                  "value": {
+                    "target_locale": "es-ES",
+                    "native_language": "en",
+                    "query": "pharmacy"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/tts/render": {
       "post": {
         "operationId": "ttsRender",
@@ -7602,7 +7798,8 @@
                                     "capture",
                                     "related",
                                     "drop",
-                                    "chat"
+                                    "chat",
+                                    "generated"
                                   ]
                                 },
                                 "hlc": {
@@ -10296,7 +10493,8 @@
                                     "capture",
                                     "related",
                                     "drop",
-                                    "chat"
+                                    "chat",
+                                    "generated"
                                   ]
                                 },
                                 "hlc": {
@@ -15634,7 +15832,8 @@
                             "capture",
                             "related",
                             "drop",
-                            "chat"
+                            "chat",
+                            "generated"
                           ]
                         },
                         "difficulty": {
@@ -23275,6 +23474,162 @@
         ],
         "additionalProperties": false
       },
+      "phraseSuggest_200": {
+        "type": "object",
+        "properties": {
+          "fallback": {
+            "type": "boolean"
+          },
+          "provenance": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "live",
+                  "bundled",
+                  "cache"
+                ]
+              },
+              {
+                "type": "string",
+                "const": "unavailable"
+              }
+            ]
+          },
+          "candidates": {
+            "maxItems": 6,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "target_text": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                },
+                "translation": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                },
+                "theme": {
+                  "type": "string",
+                  "enum": [
+                    "Café",
+                    "Dining",
+                    "Travel",
+                    "Directions",
+                    "Shopping",
+                    "Small talk",
+                    "Survival",
+                    "Hotel",
+                    "Imported",
+                    "Mine",
+                    "Captured"
+                  ]
+                },
+                "emoji": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 8
+                },
+                "register": {
+                  "type": "string",
+                  "enum": [
+                    "neutral",
+                    "casual",
+                    "formal"
+                  ]
+                },
+                "provenance": {
+                  "type": "string",
+                  "enum": [
+                    "live",
+                    "bundled",
+                    "cache"
+                  ]
+                },
+                "source": {
+                  "type": "string",
+                  "enum": [
+                    "generated",
+                    "custom",
+                    "chat",
+                    "import"
+                  ]
+                },
+                "needs_review": {
+                  "type": "boolean",
+                  "const": true
+                }
+              },
+              "required": [
+                "target_text",
+                "translation",
+                "provenance",
+                "source",
+                "needs_review"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "fallback",
+          "provenance",
+          "candidates"
+        ],
+        "additionalProperties": false
+      },
+      "phraseSuggest_request": {
+        "type": "object",
+        "properties": {
+          "target_locale": {
+            "type": "string",
+            "enum": [
+              "es-ES",
+              "bg-BG",
+              "ru-RU"
+            ]
+          },
+          "native_language": {
+            "type": "string",
+            "enum": [
+              "en",
+              "bg",
+              "ru"
+            ]
+          },
+          "query": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 200
+          },
+          "level": {
+            "type": "string",
+            "enum": [
+              "beg",
+              "some",
+              "conf"
+            ]
+          },
+          "exclude_catalog_ids": {
+            "maxItems": 64,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 32
+            }
+          }
+        },
+        "required": [
+          "target_locale",
+          "native_language",
+          "query"
+        ],
+        "additionalProperties": false
+      },
       "ttsRender_200": {
         "type": "object",
         "properties": {
@@ -24386,7 +24741,8 @@
                                     "capture",
                                     "related",
                                     "drop",
-                                    "chat"
+                                    "chat",
+                                    "generated"
                                   ]
                                 },
                                 "hlc": {
@@ -27816,7 +28172,8 @@
                             "capture",
                             "related",
                             "drop",
-                            "chat"
+                            "chat",
+                            "generated"
                           ]
                         },
                         "difficulty": {
@@ -35642,7 +35999,8 @@
                                     "capture",
                                     "related",
                                     "drop",
-                                    "chat"
+                                    "chat",
+                                    "generated"
                                   ]
                                 },
                                 "hlc": {

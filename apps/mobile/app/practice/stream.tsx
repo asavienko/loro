@@ -13,7 +13,8 @@ import { router } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { streamStats, isActive, type Difficulty } from '@loro/core'
 import { copy, themeLabel } from '../../src/lib/copy'
-import { DifficultySelector, EmptyState, PhraseRow } from '../../src/ui/components'
+import { PracticeEmptyState } from './_emptyPractice'
+import { DifficultySelector, PhraseRow } from '../../src/ui/components'
 import {
   Chip,
   DarkCard,
@@ -56,9 +57,7 @@ export default function Stream() {
   const toggleLoved = useApp((s) => s.toggleLoved)
   const markLearned = useApp((s) => s.markLearned)
   const cursor = useApp((state) => state.streamCursor)
-  const setCursor = (streamCursor: number): void => {
-    useApp.setState({ streamCursor })
-  }
+  const setCursor = useApp((state) => state.setStreamCursor)
   const queue = useMemo(() => {
     const now = deviceClock.now()
     return phrases
@@ -77,15 +76,10 @@ export default function Stream() {
   if (queue.length === 0 || current === undefined) {
     return (
       <Screen>
-        <EmptyState
+        <PracticeEmptyState
           title={copy.stream.empty.title}
           body={copy.stream.empty.body}
-          action={{
-            label: copy.stream.empty.action,
-            onPress: () => {
-              router.push('/add')
-            },
-          }}
+          actionLabel={copy.stream.empty.action}
           gap={space['2']}
         />
       </Screen>
@@ -147,7 +141,7 @@ function NowPlayingCard({
   useLocale()
   const locale = useApp((state) => state.targetLocale)
   const recordPlay = useApp((state) => state.recordPlay)
-  const audio = useAudioSpeech(locale)
+  const audio = useAudioSpeech(locale, phrase.catalog?.audio)
   const playing =
     audio.phraseId === phrase.id && (audio.playback === 'playing' || audio.playback === 'loading')
   return (
@@ -178,7 +172,9 @@ function NowPlayingCard({
           ? copy.stream.audioNote
           : audio.playback === 'error'
             ? copy.audioSpeech.error
-            : copy.audioSpeech.tts}
+            : audio.source === 'catalog'
+              ? copy.audioSpeech.catalog
+              : copy.audioSpeech.tts}
       </Text>
       {audio.canPlay && (
         <Pressable
@@ -187,9 +183,16 @@ function NowPlayingCard({
           onPress={() => {
             if (playing) void audioSpeech.stopPlayback()
             else
-              void audioSpeech.play(phrase.id, phrase.targetText, locale, 0.92, () => {
-                recordPlay(phrase.id)
-              })
+              void audioSpeech.play(
+                phrase.id,
+                phrase.targetText,
+                locale,
+                0.92,
+                () => {
+                  recordPlay(phrase.id)
+                },
+                phrase.catalog?.audio,
+              )
           }}
         >
           <Text variant="body" color={onDark.primary} align="center">

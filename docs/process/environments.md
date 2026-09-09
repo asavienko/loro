@@ -1,19 +1,20 @@
 # Environments
 
 Use local development today and one shared AWS testing environment when
-[plan 88](../../plans/88-low-cost-backend-infrastructure.md) is implemented. The testing design is
-selected, but no cloud deployment, database integration or shared-user access is established yet.
+[plan 88](../../plans/archive/2026-09-09/88-low-cost-backend-infrastructure.md) is implemented. The
+testing design is selected, but no cloud deployment, database integration or shared-user access is
+established yet.
 
-| Concern        | Local: implemented                                   | Testing: selected, not provisioned                         |
-| -------------- | ---------------------------------------------------- | ---------------------------------------------------------- |
-| API            | NestJS on port 3000; memory sync repository          | Same production image on one Frankfurt EC2 instance        |
-| Database       | Optional Docker PostgreSQL; API does not connect yet | PostgreSQL 16 on retained encrypted EC2 storage            |
-| Object storage | Optional MinIO for adapter development               | Private S3 content, backup and Terraform-state buckets     |
-| AI / TTS       | Bundled AI scenes; no TTS runtime                    | AI remains stubbed; TTS disabled                           |
-| Access         | Developer-only; current sync has no tenant boundary  | Small tester group after authentication and isolation pass |
-| Deploy         | Host commands or root Docker Compose                 | Manual, immutable image, required CI, maintenance downtime |
-| Data           | Local fixtures; memory state disappears on restart   | Synthetic data; nightly and pre-migration backups          |
-| Cost           | No cloud services required                           | $25–35/month planning budget, excluding tax and providers  |
+| Concern        | Local: implemented                                        | Testing: selected, not provisioned                         |
+| -------------- | --------------------------------------------------------- | ---------------------------------------------------------- |
+| API            | NestJS on port 3000; memory sync repository               | Same production image on one Frankfurt EC2 instance        |
+| Database       | Optional Docker PostgreSQL; API does not connect yet      | PostgreSQL 16 on retained encrypted EC2 storage            |
+| Object storage | Optional MinIO for adapter development                    | Private S3 content, backup and Terraform-state buckets     |
+| AI / TTS       | Bundled AI scenes; TTS adapter stubbed, `/tts/render` 503 | AI remains stubbed; TTS disabled                           |
+| Access         | Developer-only; current sync has no tenant boundary       | Small tester group after authentication and isolation pass |
+| Deploy         | Host commands or root Docker Compose                      | Manual, immutable image, required CI, maintenance downtime |
+| Data           | Local fixtures; memory state disappears on restart        | Synthetic data; nightly and pre-migration backups          |
+| Cost           | No cloud services required                                | $25–35/month planning budget, excluding tax and providers  |
 
 There is no separate cloud dev/staging stack, managed database, Redis, CDN or live-provider budget
 in this phase. Historical environment names in workflow scaffolds are not deployed services.
@@ -49,13 +50,14 @@ There are no `db:migrate` or `db:seed` package scripts yet; starting containers 
 durable. The bundled catalogs contain 31 phrases per target language. They are loaded from the
 package, not seeded by a server database job. Bilingual review and audio capabilities have their own
 gates. Setting a public API URL does not create the missing mobile HTTP/sync client. AI returns
-bundled fixtures; live provider and TTS runtime integrations remain unfinished.
+bundled fixtures. The TTS adapter is stubbed (`TTS_PROVIDER=stub`); live ElevenLabs seed audio
+remains Q-15. Cloud ASR is not a runtime.
 
 ## Testing
 
 One `testing` environment in `eu-central-1`, with resource limits and staged access gates in
-[plan 88](../../plans/88-low-cost-backend-infrastructure.md). Its hostname is an input using an
-existing domain, not an assumed `loro.app` deployment.
+[plan 88](../../plans/archive/2026-09-09/88-low-cost-backend-infrastructure.md). Its hostname is an
+input using an existing domain, not an assumed `loro.app` deployment.
 
 1. Prepare infrastructure and test recovery with synthetic fixtures. Keep unfinished API routes
    inaccessible externally.
@@ -101,6 +103,14 @@ truth. Entries in `.env.example` without a reader are reserved for future adapte
 | `NODE_ENV`                          | `production` makes missing WASM fatal at startup; use it for the deployed image   |
 | `PORT`                              | HTTP listener; defaults to 3000                                                   |
 | `AI_PROVIDER`                       | Defaults to `stub`; only the stub is registered in the runtime                    |
+| `TTS_PROVIDER`                      | Defaults to `stub`; ElevenLabs requires key, model and `TTS_VOICE_ES_ES`          |
+| `TTS_API_KEY`                       | Required only in `elevenlabs` mode; never logged                                  |
+| `TTS_MODEL`                         | Pinned model id; empty in stub mode                                               |
+| `TTS_OUTPUT_FORMAT`                 | Defaults to `mp3_44100_128`; conversion to AAC is the authoring CLI's job         |
+| `TTS_VOICE_ES_ES`                   | Required in ElevenLabs mode; never invent a production id in code                 |
+| `TTS_VOICE_BG_BG`                   | Optional until that locale is rendered; never substituted for another locale      |
+| `TTS_VOICE_RU_RU`                   | Optional until that locale is rendered                                            |
+| `TTS_CACHE_DIR`                     | Process-local identity cache for `/tts/render`; defaults to os tmpdir             |
 | `MUSIC_PROVIDER`                    | Defaults to `stub`; fixture music only. Live ElevenLabs Music stays behind Q-21   |
 | `MUSIC_MONTHLY_BUDGET_USD_PER_USER` | Separate from `AI_MONTHLY_BUDGET_USD_PER_USER`; `0` means unlimited in stub       |
 | `MUSIC_DAILY_BUDGET_USD_GLOBAL`     | Separate global music cap; `0` means unlimited in stub                            |

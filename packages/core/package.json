@@ -17,7 +17,9 @@
     "./api/chat-topic": "./src/api/chat-topic.ts",
     "./api/target": "./src/api/target.ts",
     "./api/draft": "./src/api/draft.ts",
-    "./api/oauth": "./src/api/oauth.ts"
+    "./api/oauth": "./src/api/oauth.ts",
+    "./api/account": "./src/api/account.ts",
+    "./api/sync": "./src/api/sync.ts"
   },
   "scripts": {
     "build": "tsc -b",

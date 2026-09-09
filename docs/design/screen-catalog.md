@@ -347,8 +347,8 @@ an inert control shaped like a working one is not.
 
 | Authored                                                                          | Built                              | ID      | Why                                                                                                                |
 | --------------------------------------------------------------------------------- | ---------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------ |
-| Three modes — Discover · Browse · **Import** (`2351`)                             | Two; no Import segment             | `P2-14` | [Plan 65](../../plans/archive/2026-09-09/65-import-and-capture.md). A third segment leading nowhere is a row to nowhere.              |
-| `custom` free-text add row (`2372`)                                               | Absent                             | `P2-09` | Plan 65. `addOwnPhrase` exists in the store; no surface offers it.                                                 |
+| Three modes — Discover · Browse · **Import** (`2351`)                             | Built                              | `P2-14` | [Plan 65](../../plans/archive/2026-09-09/65-import-and-capture.md). Import is a third Discover segment, not a fourth reach layer.     |
+| `custom` free-text add row (`2372`)                                               | Built (plan 97)                    | `P2-07` | Discover Add your own; generated candidates use the same sheet and stay own-phrases. Live suggest is Q-21. |
 | `+ Add all N` (`canAddAll`, `2374`, `308`, `315`)                                 | Absent                             | `P2-08` | Plan 65 with Import; bulk add needs the tagging sheet's answer for N phrases at once.                              |
 | In-your-stream strip (`hasRecent`, `recent`, `2384–2397`)                         | Absent                             | `P2-03` | [Plan 56](../../plans/archive/2026-09-09/56-navigation-failure-and-input-shell.md)'s list work; Today's rail carries the count today. |
 | Search field's `✕` clear (`showClear`, `2419`)                                    | Absent                             | `P2-07` | Plan 56 owns input behaviour.                                                                                      |
@@ -419,6 +419,11 @@ installed-language coverage and audible model playback still require the accepta
 
 ## Account utility (F-01)
 
-`/account` is the optional Google/Apple identity utility implemented by plan 89. It uses the shared
-spine and push header, outside the 23 authored learner screens. Its intended-design extension and
-states are recorded in [functional-spec.md](../product/functional-spec.md#f-01-account).
+`/account` is the optional identity utility implemented by plans 89 and 96. It uses the shared spine
+and push header, outside the 23 authored learner screens. The route presents a method chooser,
+separate email and code views, provider connecting/cancelled/failed states, immediate sign-in
+confirmation and returning-account management with actual sync status. Email and provider
+credentials remain in the account runtime; the route never renders fabricated provider identity.
+Its intended-design extension and state inventory are recorded in
+[functional-spec.md](../product/functional-spec.md#f-01-account) and
+[the account screen plan](../../plans/archive/2026-09-09/96-account-sign-in-screens.md).

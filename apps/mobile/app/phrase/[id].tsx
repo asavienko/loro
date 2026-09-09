@@ -46,7 +46,7 @@ import {
 } from '../../src/ui/theme'
 import { copy, themeLabel } from '../../src/lib/copy'
 import { toView, useApp } from '../../src/store'
-import { audioSpeech, useAudioSpeech } from '../../src/lib/audioSpeech'
+import { audioSpeech, audioPlaybackNote, useAudioSpeech } from '../../src/lib/audioSpeech'
 import { AudioControls } from '../../src/ui/components/AudioControls'
 /**
  * The gap between a section's label and its body, on all five labelled sections. Not a `space`
@@ -65,14 +65,17 @@ export default function PhraseDetail() {
   const { height: bottomBarHeight } = useBottomBar()
   const phrases = useApp((s) => s.phrases)
   const targetLocale = useApp((s) => s.targetLocale)
-  const audio = useAudioSpeech(targetLocale)
+  const state = phrases.find((p) => p.id === id)
+  const audio = useAudioSpeech(
+    targetLocale,
+    state === undefined ? undefined : toView(state).catalog?.audio,
+  )
   const setDifficulty = useApp((s) => s.setDifficulty)
   const toggleTag = useApp((s) => s.toggleTag)
   const toggleLoved = useApp((s) => s.toggleLoved)
   const markLearned = useApp((s) => s.markLearned)
   const removePhrase = useApp((s) => s.removePhrase)
   const setNote = useApp((s) => s.setNote)
-  const state = phrases.find((p) => p.id === id)
   if (state === undefined) {
     return <PhraseNotFound />
   }
@@ -126,18 +129,14 @@ export default function PhraseDetail() {
               ? copy.audioSpeech.stop
               : copy.audioSpeech.play
           }
-          note={
-            !audio.canPlay
-              ? copy.audioSpeech.unavailable
-              : audio.phraseId === p.id && audio.playback === 'error'
-                ? copy.audioSpeech.error
-                : copy.audioSpeech.tts
-          }
+          note={audioPlaybackNote(audio.source, audio.phraseId === p.id ? audio.playback : 'idle')}
           enabled={audio.canPlay}
           onPress={() => {
-            if (audio.phraseId === p.id && audio.playback === 'playing')
+            if (audio.phraseId === p.id && audio.playback === 'playing') {
               void audioSpeech.stopPlayback()
-            else void audioSpeech.play(p.id, p.targetText, targetLocale)
+            } else {
+              void audioSpeech.play(p.id, p.targetText, targetLocale, 0.92, undefined, cat?.audio)
+            }
           }}
         />
         <Button

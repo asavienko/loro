@@ -1,0 +1,107 @@
+import { message } from '../i18n'
+export const a11yCopy = {
+  common: {
+    get back() {
+      return message('a11y.common.back')
+    },
+    get dismiss() {
+      return message('a11y.common.dismiss')
+    },
+    get undo() {
+      return message('a11y.common.undo')
+    },
+    get removeFromLoved() {
+      return message('a11y.common.removeFromLoved')
+    },
+    get opensPhraseDetails() {
+      return message('a11y.common.opensPhraseDetails')
+    },
+  },
+  today: {
+    phraseRow: (es: string, pct: number, day: number, days: number): string =>
+      message('a11y.today.phraseRow', { es, pct, day, days }),
+    startHint: (phrases: number, repsEach: number): string =>
+      message('a11y.today.startHint', { phrases, repsEach }),
+    place: (place: string): string => message('a11y.today.place', { place }),
+    railCount: (label: string, phrases: number): string =>
+      message('a11y.today.railCount', { label, phrases }),
+    nextWaveRow: (title: string, detail: string): string =>
+      message('a11y.today.nextWaveRow', { title, detail }),
+    banked: (count: number): string => message('a11y.today.banked', { count }),
+    hereNow: (place: string): string => message('a11y.today.hereNow', { place }),
+  },
+  add: {
+    get searchInput() {
+      return message('a11y.add.searchInput')
+    },
+    get importInput() {
+      return message('a11y.add.importInput')
+    },
+    importTarget: (line: number): string => message('a11y.add.importTarget', { line }),
+    importMeaning: (line: number): string => message('a11y.add.importMeaning', { line }),
+    themeTile: (theme: string, remaining: string): string =>
+      message('a11y.add.themeTile', { theme, remaining }),
+    get backToThemes() {
+      return message('a11y.add.backToThemes')
+    },
+    suggestionRow: (es: string, en: string): string =>
+      message('a11y.add.suggestionRow', { es, en }),
+    get opensSheet() {
+      return message('a11y.add.opensSheet')
+    },
+    ownRow: (query: string): string => message('a11y.add.ownRow', { query }),
+    suggestedRow: (es: string, en: string): string =>
+      message('a11y.add.suggestedRow', { es, en }),
+    get sheetTarget() {
+      return message('a11y.add.sheetTarget')
+    },
+    get sheetMeaning() {
+      return message('a11y.add.sheetMeaning')
+    },
+    nearestScenario: (label: string): string => message('a11y.add.nearestScenario', { label }),
+  },
+  onboarding: {
+    goalValue: (goal: string): string => message('onboarding.goalValue', { goal }),
+    option: (label: string, sub: string): string =>
+      message('a11y.onboarding.option', { label, sub }),
+  },
+  phrase: {
+    get markLoved() {
+      return message('a11y.phrase.markLoved')
+    },
+    get markStillLearning() {
+      return message('a11y.phrase.markStillLearning')
+    },
+    currentHook: (note: string): string => message('a11y.phrase.currentHook', { note }),
+    useHook: (hook: string): string => message('a11y.phrase.useHook', { hook }),
+  },
+  refrain: {
+    card: (cue: string, es: string, pct: number): string =>
+      message('a11y.refrain.card', { cue, es, pct }),
+  },
+  stream: {
+    get previous() {
+      return message('a11y.stream.previous')
+    },
+    get next() {
+      return message('a11y.stream.next')
+    },
+    get skip() {
+      return message('a11y.stream.skip')
+    },
+    get loveThisPhrase() {
+      return message('a11y.stream.loveThisPhrase')
+    },
+    queueRow: (es: string, en: string, difficulty: string): string =>
+      message('a11y.stream.queueRow', { es, en, difficulty }),
+  },
+  progress: {
+    weekSummary: (practisedDays: number): string =>
+      message('a11y.progress.weekSummary', { practisedDays }),
+    trickyRow: (label: string, count: number): string =>
+      message('a11y.progress.trickyRow', { label, count }),
+    get trickyHint() {
+      return message('a11y.progress.trickyHint')
+    },
+  },
+}

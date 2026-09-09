@@ -1,4 +1,5 @@
 import { toSpeechEvent, type NativeSpeechEvent, type SpeechEvent } from './speechEvent'
+import { resolveCatalogAudioUri, type CatalogAudio } from './catalogAudio'
 
 /** AS-01/AS-03. Only native metadata crosses this boundary; never audio bytes. */
 export interface AudioAvailability {
@@ -16,6 +17,8 @@ export interface PlaybackRequest {
   text: string
   locale: string
   rate: number
+  /** Native-playable file URI. Never PCM, never a recording handle. */
+  uri?: string
 }
 export interface NativeAudioSpeech {
   availability(locale: string): Promise<AudioAvailability>
@@ -106,6 +109,7 @@ export class AudioSpeechController {
     locale: string,
     rate = 0.92,
     onEnded?: () => void,
+    audio?: CatalogAudio | null,
   ): Promise<void> {
     const id = `play-${++this.serial}`
     this.playId = id
@@ -113,14 +117,13 @@ export class AudioSpeechController {
     this.update({ phraseId, playback: 'loading' })
     await this.stopListening()
     if (this.playId !== id) return
+    const uri = resolveCatalogAudioUri(audio)
     try {
       const native = this.native
       if (native === null) throw new Error('native-audio-unavailable')
       await this.runNative(() => {
-        // A stop or replacement can arrive while an earlier native command
-        // holds the queue. Recheck ownership at execution, not only enqueue.
         if (this.playId !== id) return Promise.resolve()
-        return native.play({ id, text, locale, rate })
+        return native.play({ id, text, locale, rate, ...(uri === undefined ? {} : { uri }) })
       })
     } catch {
       if (this.playId !== id) return

@@ -1,4 +1,4 @@
-import { expect, onboard, test } from './fixtures'
+import { expect, onboard, openFirstPhrase, test } from './fixtures'
 
 test('Speak reveals offline without claiming a spoken completion', async ({ page }) => {
   await onboard(page)
@@ -15,6 +15,14 @@ test('Speak reveals offline without claiming a spoken completion', async ({ page
   await expect(page.getByText('You said the whole phrase.')).toBeHidden()
   await page.getByRole('button', { name: 'Next phrase', exact: true }).click()
   await expect(page.getByText(/^0 of \d+ words revealed$/)).toBeVisible()
+})
+
+test('phrase detail does not claim catalog audio when none is bundled', async ({ page }) => {
+  await onboard(page)
+  await openFirstPhrase(page)
+  await expect(page.getByText('Catalog recording · pronunciation reference')).toHaveCount(0)
+  await expect(page.getByText('Audio is unavailable on this device.')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Play phrase', exact: true })).toBeDisabled()
 })
 
 test('Speak skip advances without unlocking or claiming progress', async ({ page }) => {

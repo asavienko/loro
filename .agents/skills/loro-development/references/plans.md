@@ -11,11 +11,15 @@ authoritative. A request to review or organize plans does not authorize implemen
   completed records and historical snapshots. A missing former path is not a missing plan.
 - Update the existing owner instead of duplicating its unfinished scope. When an archived snapshot
   names a current owner, follow that owner. User-archived partial plans can still own remaining
-  work.
-- For a new plan, inspect active, archived and untracked IDs, and concurrent worktrees when
-  relevant. Allocate above the highest assigned number; never reuse gaps or hardcode the next ID in
-  this skill. Use `plans/NN-topic.md`, include requirement IDs, scope, dependencies and acceptance
-  criteria, and add its row to the active index. Durable specifications belong in `docs/`.
+  work. Listening companions, licensed multi-voice export, lyrics/music and Discover generation
+  must not take plan 61's canonical reference audio, on-device ASR, or `ProgressDelta`.
+- For a new plan, inspect active, archived and untracked IDs, then `context.mjs --full` for sibling
+  worktrees. Allocate above the highest assigned number across those trees; never reuse gaps or
+  hardcode the next ID in this skill. Use `plans/NN-topic.md`, include requirement IDs, scope,
+  dependencies and acceptance criteria, and add its row to the active index. Durable specifications
+  belong in `docs/`. A review document is not a numbered plan.
+- Cursor prompts that say "implement the attached plan" and "do not edit the plan file" are
+  authorization to implement, not to rewrite the plan.
 
 ## Maintain honest status
 
@@ -25,19 +29,49 @@ land. Record what was implemented, actual validation evidence, remaining work an
 | Status | Use when                                                                                                                             |
 | ------ | ------------------------------------------------------------------------------------------------------------------------------------ |
 | `—`    | Implementation remains; identify technical prerequisites for starting it.                                                            |
-| `🟡`   | Work is in progress or partially implemented; state what remains and what blocks it, or that nothing external blocks the next slice. |
+| `🟡`   | Work is in progress or partly implemented; state what remains and what blocks it, or that nothing external blocks the next slice. |
 | `⛔`   | A named decision or evidence gate blocks the stated slice; preserve any independent work that can proceed.                           |
 | `✅`   | The recorded scope and its acceptance criteria are complete, with evidence; archive it in the same change.                           |
 
 Implemented runtime with outstanding required device, linguistic or service acceptance stays
 partial. A merged PR, passing browser suite or archive location alone is not completion evidence. Do
 not shrink acceptance criteria or silently transfer unfinished work just to mark a plan done.
+Shipped-code refactoring reviews are not a license to archive remaining-work owners.
+
+## Finish a plan
+
+When the recorded scope and acceptance criteria are complete, **archive the plan in the same
+change**. Do not leave a finished plan in `plans/` or as an active-index row.
+
+```bash
+node .agents/skills/loro-development/scripts/archive-plan.mjs --date YYYY-MM-DD <id>
+```
+
+The helper moves the file to `plans/archive/<date>/` and rebases Markdown links plus `plans/NN-`
+path references. Then:
+
+1. Confirm the moved record is `✅` with evidence.
+2. Remove its row from the active index and list it in `plans/archive/README.md` and the dated
+   archive index.
+3. Update remaining CLAUDE.md / guidance claims if they named the old path or count.
+4. Leave no compatibility symlink, redirect file or duplicate at the former path.
+
+For a user request to archive implemented-but-unfinished plans, pass `--unfinished`. That keeps the
+partial/blocked status, inserts a disposition note, and leaves remaining-work rows in the active
+index with direct archive links. Archiving is not completion. Do not archive a `🟡` remaining-work
+owner unless that unfinished request is explicit.
+
+Keep archive-only PRs free of unrelated feature files. Git may treat `plans/96-…` moving to archive
+while another branch adds `plans/96-…` as a rename.
+
+Helper tests: `node --test .agents/skills/loro-development/scripts/archive-plan.test.mjs`.
 
 ## Archive without clutter
 
 1. Move a completed plan to `plans/archive/YYYY-MM-DD/` using the archival date. Preserve its ID,
    filename, implementation record and original completion date. Plan 53 has no original-path
-   exception; its former protection was retired at user request.
+   exception; its former protection was retired at user request. Use the helper above rather than
+   hand-moving files.
 2. Remove its row from the active index and list it in `plans/archive/README.md` and the dated
    archive index. Keep completed records out of the top-level plan directory and active roadmap.
    Dependencies may still refer to completed work by ID or direct archive link.

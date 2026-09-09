@@ -1,7 +1,7 @@
 /** Composition helpers; there is only one database pool and one session engine. */
 import { Inject, Injectable, type OnModuleDestroy, type OnModuleInit } from '@nestjs/common'
 import type { AuthSettings } from './settings.js'
-import { OAuthFlowService } from './service.js'
+import { OAuthFlowService } from './oauth-flow.service.js'
 import { OAuthIdentityProvider } from './provider.js'
 import { systemClock } from '../common/clock.js'
 import { AUTH_RUNTIME } from './runtime.js'

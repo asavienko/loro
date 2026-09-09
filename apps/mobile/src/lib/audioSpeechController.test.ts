@@ -3,15 +3,17 @@ import {
   AudioSpeechController,
   type NativeAudioSpeech,
   type PlaybackEvent,
+  type PlaybackRequest,
   type SpeechEvent,
 } from './audioSpeechController'
+import { clearCatalogAudioFiles, registerCatalogAudioFile } from './catalogAudio'
 
 function fixture() {
   let onPlayback: (event: PlaybackEvent) => void = () => undefined
   let onSpeech: (event: SpeechEvent) => void = () => undefined
   const native = {
     availability: vi.fn(() => Promise.resolve({ playback: true, recognition: true })),
-    play: vi.fn(() => Promise.resolve()),
+    play: vi.fn((_request: PlaybackRequest) => Promise.resolve()),
     stopPlayback: vi.fn(() => Promise.resolve()),
     startListening: vi.fn(() => Promise.resolve()),
     stopListening: vi.fn(() => Promise.resolve()),
@@ -148,5 +150,23 @@ describe('native audio metadata boundary', () => {
     expect(controller.getSnapshot().speech?.state).toBe('unavailable')
     await controller.play('p', 'Hola', 'es-ES')
     expect(controller.getSnapshot().playback).toBe('error')
+  })
+  it('plays a registered catalog file and omits uri when the file is missing', async () => {
+    const f = fixture()
+    const sha256 = 'd'.repeat(64)
+    registerCatalogAudioFile(sha256, 'file:///tmp/clip.m4a')
+    await f.controller.play('p', 'Hola', 'es-ES', 0.92, undefined, {
+      uri: `sha256/${sha256}`,
+      sha256,
+    })
+    expect(f.native.play).toHaveBeenCalledWith(
+      expect.objectContaining({ uri: 'file:///tmp/clip.m4a', text: 'Hola' }),
+    )
+    clearCatalogAudioFiles()
+    await f.controller.play('p', 'Hola', 'es-ES', 0.92, undefined, {
+      uri: `sha256/${sha256}`,
+      sha256,
+    })
+    expect(f.native.play.mock.calls[1]?.[0]).not.toHaveProperty('uri')
   })
 })

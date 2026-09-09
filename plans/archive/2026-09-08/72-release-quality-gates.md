@@ -1,6 +1,6 @@
 > Historical snapshot archived on 2026-09-08 (F-04). Its starting point is superseded; unfinished
-> work remains in [active plan 72](../../72-release-quality-gates.md). This is not a completion
-> record.
+> work remains in [active plan 72](../2026-09-09/72-release-quality-gates.md). This is not a
+> completion record.
 
 # Release quality gates: accessibility, performance, localization, and complete testing
 

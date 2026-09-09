@@ -35,7 +35,7 @@ section of [APK setup](../../../docs/process/local-apk.md).
 The implementation passed Android debug/release compilation, module packaging and an airplane-mode
 emulator persistence/reveal smoke. Swift syntax/podspec and host UniFFI smoke passed, but full iOS
 compilation needs the unavailable Xcode SDK. This evidence does not prove physical-device speech or
-production signing. See [plan 94](../../94-persistent-practice-and-account-integration.md),
+production signing. See [plan 94](94-persistent-practice-and-account-integration.md),
 [persistent practice](../../../docs/process/persistent-practice.md) and
 [APK setup](../../../docs/process/local-apk.md).
 

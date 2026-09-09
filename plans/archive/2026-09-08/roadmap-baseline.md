@@ -66,10 +66,10 @@ source evidence; 30 plans remain active, with no renumbering.
 5. Add Review/Memory (75), guarded Roleplay (76), private chat and inspector (82/83), then
    evidence-approved labs (77) and conditional Run/ladder Phrasebook (78).
 
-Plan [88](../../88-low-cost-backend-infrastructure.md), added on main during this review, owns the
-approved AWS testing environment. Infrastructure preparation can start now; shared access requires
-the relevant 66/67 slices, and mobile sync testing adds 59/68. Production operations remain with 73.
-The highest assigned plan is 88 and the next number is 89.
+Plan [88](../2026-09-09/88-low-cost-backend-infrastructure.md), added on main during this review,
+owns the approved AWS testing environment. Infrastructure preparation can start now; shared access
+requires the relevant 66/67 slices, and mobile sync testing adds 59/68. Production operations remain
+with 73. The highest assigned plan is 88 and the next number is 89.
 
 ## Scoped decision gates
 

@@ -14,12 +14,14 @@ import { EMPTY_REFRAIN_RESUME, INITIAL_STATE } from '../state'
 import type { Slice } from '../types'
 import { importDraftKey } from '../../lib/importDraft'
 
-export const createSessionSlice: Slice<'completeOnboarding' | 'reset' | 'setLanguages'> = ({
-  set,
-  get,
-  deps,
-  hasCatalog,
-}) => ({
+export const createSessionSlice: Slice<
+  'completeOnboarding' | 'reset' | 'setLanguages' | 'previewNativeLanguage'
+> = ({ set, get, deps, hasCatalog }) => ({
+  previewNativeLanguage: (nativeLanguage) => {
+    const current = get()
+    if (current.languageChosen || current.onboarded) return
+    set({ nativeLanguage })
+  },
   setLanguages: (nativeLanguage, targetLocale) => {
     assertLanguagePair(nativeLanguage, targetLocale)
     const current = get()

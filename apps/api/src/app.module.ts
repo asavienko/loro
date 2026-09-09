@@ -1,8 +1,8 @@
 import { AuthLifecycle, buildAuth } from './auth/module.js'
-import { OAuthController } from './auth/controller.js'
+import { OAuthController } from './auth/oauth.controller.js'
 import { AUTH_RUNTIME } from './auth/runtime.js'
 import { authSettings } from './auth/settings.js'
-import { AuthBoundaryGuard } from './auth/guard.js'
+import { AuthBoundaryGuard } from './auth/auth-boundary.guard.js'
 import { APP_GUARD } from '@nestjs/core'
 import type { SqlDatabase } from './database/database.js'
 import { LearningContentController } from './content/learning-content.controller.js'
@@ -28,6 +28,7 @@ import { AuthController, MeController } from './auth/auth.controller.js'
 import { AuthService } from './auth/auth.service.js'
 import { AuthGuard } from './auth/auth.guard.js'
 import { AiController } from './ai/ai.controller.js'
+import { PhrasesController } from './ai/phrases.controller.js'
 import { AiService } from './ai/ai.service.js'
 import { SCENE_PROVIDERS, type SceneProvider } from './ai/scene-provider.js'
 import { StubSceneProvider } from './ai/scene-provider.stub.js'
@@ -35,6 +36,9 @@ import { MusicController } from './music/music.controller.js'
 import { MusicService } from './music/music.service.js'
 import { MUSIC_REPOSITORY } from './music/repository.js'
 import { PostgresMusicRepository } from './music/repository.postgres.js'
+import { TtsController } from './tts/tts.controller.js'
+import { TtsService } from './tts/tts.service.js'
+import { TTS_TRANSPORT, createTtsTransport } from './tts/transport.js'
 
 @Module({
   controllers: [
@@ -43,7 +47,9 @@ import { PostgresMusicRepository } from './music/repository.postgres.js'
     LearningContentController,
     SyncController,
     AiController,
+    PhrasesController,
     MusicController,
+    TtsController,
     AuthController,
     MeController,
     OAuthController,
@@ -61,6 +67,8 @@ import { PostgresMusicRepository } from './music/repository.postgres.js'
       useFactory: (...providers: SceneProvider[]): SceneProvider[] => providers,
       inject: [StubSceneProvider],
     },
+    TtsService,
+    { provide: TTS_TRANSPORT, useFactory: createTtsTransport },
     SyncService,
     AuthService,
     AuthGuard,

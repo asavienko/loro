@@ -15,8 +15,6 @@ export type AccountScenario =
   | 'cancelled'
   | 'signedIn'
   | 'localSignOut'
-  | 'backendUnavailable'
-  | 'backendChecking'
   | 'email'
   | 'code'
   | 'connected'
@@ -60,22 +58,18 @@ export async function mockAccountService(
       authorization: request.headers().authorization,
       deviceId: request.headers()['x-loro-device'],
     })
-    if (path.endsWith('/health/ready')) {
-      if (mode === 'backendChecking') return
-      await route.fulfill({
-        json:
-          mode === 'backendUnavailable'
-            ? { status: 'degraded', checks: { content: 'ok', merge: 'unavailable' } }
-            : { status: 'ok', checks: { content: 'ok', merge: 'ok' } },
-      })
-      return
-    }
     if (path.endsWith('/auth/providers')) {
       await route.fulfill({
         json:
           mode === 'discoveryError'
             ? {}
             : { providers: mode === 'unavailable' ? [] : ['google', 'apple'] },
+      })
+      return
+    }
+    if (path.endsWith('/auth/capabilities')) {
+      await route.fulfill({
+        json: { apple: true, google: true, email: mode !== 'unavailable' },
       })
       return
     }
@@ -188,14 +182,25 @@ export async function openAccount(page: Page): Promise<void> {
   await expect(page).toHaveURL(/\/account$/)
 }
 export async function requestCode(page: Page): Promise<void> {
+  await page.getByRole('button', { name: 'Continue with email', exact: true }).click()
   await page.getByRole('textbox', { name: 'Email address' }).fill('learner@example.com')
   await page.getByRole('button', { name: 'Send sign-in code', exact: true }).click()
-  await expect(page.getByRole('textbox', { name: 'Six-digit code' })).toBeVisible()
+  await expect(page.getByRole('textbox', { name: 'Sign-in code' })).toBeVisible()
 }
-export async function finishSignIn(page: Page): Promise<void> {
-  await page.getByRole('textbox', { name: 'Six-digit code' }).fill('123456')
-  await page.getByRole('button', { name: 'Sign in', exact: true }).click()
-  await expect(page.getByText('Your account is connected.')).toBeVisible()
+export async function backFromCodeToEmail(page: Page): Promise<void> {
+  await page.getByRole('link', { name: 'Email address', exact: true }).click()
+  await expect(page.getByRole('textbox', { name: 'Sign-in code' })).toHaveCount(0)
+  await expect(page.getByRole('textbox', { name: 'Email address' })).toHaveValue(
+    'learner@example.com',
+  )
+}
+export async function finishSignIn(page: Page, expectSync = true): Promise<void> {
+  await page.getByRole('textbox', { name: 'Sign-in code' }).fill('123456')
+  await page.getByRole('button', { name: 'Verify and sign in', exact: true }).click()
+  await expect(page.getByText('You’re signed in', { exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Back to practice', exact: true }).click()
+  await openAccount(page)
+  if (expectSync) await expect(page.getByText('Your progress is up to date.')).toBeVisible()
 }
 export async function signInWithProvider(
   page: Page,
@@ -207,17 +212,27 @@ export async function signInWithProvider(
   const popup = await popupPromise
   await expect(popup.getByRole('link', { name: 'Finish provider sign-in' })).toBeVisible()
   if (scenario === 'busy') {
-    await expect(page.getByText('Connecting…', { exact: true })).toBeVisible()
+    await expect(page.getByText(`Connecting to ${provider}…`, { exact: true })).toBeVisible()
     return
   }
   if (scenario === 'cancelled') await popup.close()
   else await popup.getByRole('link', { name: 'Finish provider sign-in' }).click()
-  if (scenario === 'error') await expect(page.getByText(/We could not complete/)).toBeVisible()
-  else if (scenario === 'cancelled') await expect(page.getByText(/Sign-in cancelled/)).toBeVisible()
-  else await expect(page.getByText('Your account is connected.')).toBeVisible()
+  if (scenario === 'error') await expect(page.getByText(/We couldn’t sign you in/)).toBeVisible()
+  else if (scenario === 'cancelled')
+    await expect(page.getByText(/Sign-in was cancelled/)).toBeVisible()
+  else {
+    await expect(page.getByText('You’re signed in', { exact: true })).toBeVisible()
+    await page.getByRole('button', { name: 'Back to practice', exact: true }).click()
+    await openAccount(page)
+    await expect(page.getByText('Your progress is up to date.')).toBeVisible()
+  }
 }
 
-export async function reachAccount(page: Page, scenario: AccountScenario): Promise<AccountService> {
+export async function reachAccount(
+  page: Page,
+  scenario: AccountScenario,
+  provider: 'Google' | 'Apple' = 'Google',
+): Promise<AccountService> {
   const service = await mockAccountService(page, scenario)
   if (scenario === 'sync-rejected') {
     await page
@@ -228,18 +243,6 @@ export async function reachAccount(page: Page, scenario: AccountScenario): Promi
     await page.goto('/')
   }
   await openAccount(page)
-  if (scenario === 'backendUnavailable' || scenario === 'backendChecking') {
-    await expect(
-      page.getByText(
-        scenario === 'backendUnavailable'
-          ? 'Server unavailable. You can continue practising locally.'
-          : 'Checking server connection…',
-        { exact: true },
-      ),
-    ).toBeVisible()
-    return service
-  }
-  await expect(page.getByText('Server connected.', { exact: true })).toBeVisible()
   if (scenario === 'discoveryError') {
     await expect(page.getByRole('button', { name: 'Try again', exact: true })).toBeVisible()
     return service
@@ -255,7 +258,7 @@ export async function reachAccount(page: Page, scenario: AccountScenario): Promi
     return service
   }
   await expect(google).toBeEnabled()
-  await expect(page.getByRole('textbox', { name: 'Email address' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Continue with email', exact: true })).toBeEnabled()
   if (scenario === 'ready' || scenario === 'email') return service
   if (
     scenario === 'code' ||
@@ -268,14 +271,14 @@ export async function reachAccount(page: Page, scenario: AccountScenario): Promi
     await requestCode(page)
     if (scenario === 'code') return service
     if (scenario === 'invalid-code') {
-      await page.getByRole('textbox', { name: 'Six-digit code' }).fill('000000')
-      await page.getByRole('button', { name: 'Sign in', exact: true }).click()
+      await page.getByRole('textbox', { name: 'Sign-in code' }).fill('000000')
+      await page.getByRole('button', { name: 'Verify and sign in', exact: true }).click()
       await expect(
-        page.getByText('That code could not be verified. Check it or request another code.'),
+        page.getByText('That code didn’t work. Try again or request a new one.'),
       ).toBeVisible()
       return service
     }
-    await finishSignIn(page)
+    await finishSignIn(page, scenario !== 'sync-unavailable' && scenario !== 'sync-rejected')
     if (scenario === 'sync-unavailable') {
       await expect(
         page.getByText('Your progress is saved here. Sync will retry when you are connected.'),
@@ -287,15 +290,16 @@ export async function reachAccount(page: Page, scenario: AccountScenario): Promi
         ),
       ).toBeVisible()
     } else {
-      await expect(page.getByText('Your progress is up to date.')).toBeVisible()
       if (scenario === 'signed-out') {
         await page.getByRole('button', { name: 'Sign out', exact: true }).click()
-        await expect(page.getByRole('textbox', { name: 'Email address' })).toBeVisible()
+        await expect(
+          page.getByRole('button', { name: 'Continue with email', exact: true }),
+        ).toBeVisible()
       }
     }
     return service
   }
-  await signInWithProvider(page, 'Google', scenario === 'localSignOut' ? 'signedIn' : scenario)
+  await signInWithProvider(page, provider, scenario === 'localSignOut' ? 'signedIn' : scenario)
   if (scenario === 'signedIn')
     await expect(page.getByText('Your progress is up to date.')).toBeVisible()
   if (scenario === 'localSignOut') {

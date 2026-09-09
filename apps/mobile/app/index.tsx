@@ -61,7 +61,14 @@ import {
   space,
   surface,
 } from '../src/ui/theme'
-import { PRODUCTION_WAVE_TIMES, toView, useApp, type PhraseView } from '../src/store'
+import {
+  PRODUCTION_WAVES,
+  PRODUCTION_WAVE_TIMES,
+  toView,
+  useApp,
+  type PhraseView,
+  type ProductionWave,
+} from '../src/store'
 import { copy } from '../src/lib/copy'
 import { deviceClock, localDateLabel, localTimeLabel } from '../src/lib/clock'
 import { useLocalMinute } from '../src/lib/useLocalMinute'
@@ -73,12 +80,8 @@ import {
 } from '../src/lib/waves'
 /** Full automaticity: six reps in one day. The badge, the bar's colour and the count agree. */
 const isLockedIn = (p: Pick<PhraseView, 'automaticity'>): boolean => p.automaticity >= 100
-/**
- * The three waves, in order. STRUCTURE lives here; their times are engine settings
- * (`PRODUCTION_WAVE_TIMES`) and their words are copy (`copy.today.waves`).
- */
-const WAVES = ['morning', 'midday', 'evening'] as const
-type WaveKey = (typeof WAVES)[number]
+/** Structure is `PRODUCTION_WAVES`; times are settings; words are `copy.today.waves`. */
+type WaveKey = ProductionWave
 /**
  * The rail: the built destinations, side by side on a hairline, out of the thumb arc
  * (`Navigation.dc.html:130–137`). `counted` marks the one that carries a number — the authored
@@ -141,17 +144,22 @@ export default function Today() {
    * has entries, and keeps the CTA labelled if it ever does not.
    */
   const completedWaves = refrainWaves.filter((wave): wave is WaveKey =>
-    WAVES.includes(wave as WaveKey),
+    PRODUCTION_WAVES.includes(wave as WaveKey),
   )
-  const waves = waveSchedule(WAVES, PRODUCTION_WAVE_TIMES, localTimeLabel(), completedWaves)
+  const waves = waveSchedule(
+    PRODUCTION_WAVES,
+    PRODUCTION_WAVE_TIMES,
+    localTimeLabel(),
+    completedWaves,
+  )
   const entry = waveEntryWithResume(
-    WAVES,
+    PRODUCTION_WAVES,
     PRODUCTION_WAVE_TIMES,
     localTimeLabel(),
     completedWaves,
     refrainResume,
   )
-  const nextWaveKey = waves.find((wave) => wave.position === 'next')?.key ?? WAVES[0]
+  const nextWaveKey = waves.find((wave) => wave.position === 'next')?.key ?? PRODUCTION_WAVES[0]
   const resumeWave = refrainResume.wave ?? nextWaveKey
   const resumeRep =
     refrainResume.session === null
