@@ -1,10 +1,10 @@
 # Active plans
 
-This index lists only the **36 plans with remaining work**. Completed records and historical
+This index lists only the **37 plans with remaining work**. Completed records and historical
 snapshots are kept in [the archive](archive/README.md), without compatibility symlinks or redirect
 files in this directory. Links point directly to each plan's actual location.
 
-The highest assigned ID is **97** and the next new plan is **98**. Recheck concurrent worktrees and
+The highest assigned ID is **98** and the next new plan is **99**. Recheck concurrent worktrees and
 untracked `plans/` files before allocating; the "next is N" sentence can lag. Numbers are never
 reused; 49 remains an existing gap. When a plan finishes, archive it in the same change and list it
 only in the archive index.
@@ -12,12 +12,12 @@ only in the archive index.
 Implemented-slice owners from 56–68, 70–73, 75–77, 80–82, 86–88, 90 and 93–96 are stored in
 [the 2026-09-09 archive](archive/2026-09-09/README.md) at user request. Their partial statuses and
 outstanding scope remain indexed below; archiving does not imply completion. Only the still-unbuilt
-or decision-gated files 69, 74, 78, 83 and 97 remain in this directory.
+or decision-gated files 69, 74, 78, 83, 97 and 98 remain in this directory.
 
 The [post-main review](../docs/reviews/2026-09-09-post-main-plan-review.md) records the six runtime
 and validation findings as fixed, including the follow-up Refrain completion and touch-target
 repairs. No additional whole plan meets its acceptance criteria. Delivered implementation slices are
-recorded in the [dated archive](archive/2026-09-09/IMPLEMENTED-SLICES.md); all 36 remaining-work
+recorded in the [dated archive](archive/2026-09-09/IMPLEMENTED-SLICES.md); all 37 remaining-work
 owners are retained. Continue with device/provider acceptance, then integrate the remaining
 daily-loop, Review, content and lifecycle slices.
 
@@ -47,9 +47,11 @@ Expo/RN packages onto that sequence versus device-owned work.
 - Native OP-SQLite and browser SQLite commit progress, checkpoints and outbox atomically before
   publishing state. Canonical Rust FSRS, selection, matching, ranking, clocks and merge run through
   generated native/browser boundaries.
-- Foreground device TTS, strict on-device ASR and Speak reveal fallback are implemented. Recorded
-  assets/cache, background transport, measured onset/DSP, widgets and physical-device speech
-  acceptance remain. ElevenLabs is selected; Q-15 still gates licensed, reviewed production assets.
+- Foreground device TTS, strict on-device ASR and Speak reveal fallback are implemented. Plan 98
+  adds the ElevenLabs transport, authoring render, gated on-demand render and catalog-file playback
+  with device-TTS fallback. Recorded pack cache, background transport, measured onset/DSP, widgets
+  and physical-device speech acceptance remain. Q-15 still gates licensed, reviewed production
+  assets.
 - PostgreSQL accounts and tenant-scoped sync connect optional Google/Apple/email sign-in to durable
   progress. Account linking/export/erasure, OS background sync and production provider/service
   configuration remain. EC2 now exposes Google development sign-in and guarded sync backed by
@@ -130,8 +132,8 @@ feature↔release-completion cycle. See each plan's checkboxes for executable ta
 | [58](archive/2026-09-09/58-native-workspace-and-device-ci.md)              | Native workspace and device harness                                         | M1          | 🟡 Bridges, local APK and simulator collector exist; iOS/device/signing proof remains                        | 53 ✅; SDK/device/signing evidence                              |
 | [59](archive/2026-09-09/59-device-persistence-and-resume.md)               | Durable SQLite and crash/session acceptance                                 | M1          | 🟡 Runtime done; wider device/upgrade/lifecycle evidence remains                                             | 54 ✅; 58 device harness; 67 erasure UI                         |
 | [60](archive/2026-09-09/60-authoritative-core-maths.md)                    | Canonical core policy and binding acceptance                                | M1/M2       | 🟡 Rust/runtime/parity done; device and linguistic acceptance remain                                         | 53 ✅; 58 devices; 87 bilingual review                          |
-| [61](archive/2026-09-09/61-content-and-audio-assets.md)                    | Versioned content delivery, reviewed expansion and audio                    | M1–M3       | 🟡 Starters, contracts and verifier hardening done; Q-15 gates audio                                         | 85 ✅; 59 activation; 86 adapters; 87 review                    |
-| [62](archive/2026-09-09/62-native-audio-playback.md)                       | Recorded playback, cache and background transport                           | M1/M2       | 🟡 TTS and queued-session cancellation done; Q-15/hardware remain                                            | 58; 61 approved seed; 86 remote adapters                        |
+| [61](archive/2026-09-09/61-content-and-audio-assets.md)                    | Versioned content delivery, reviewed expansion and audio                    | M1–M3       | 🟡 Starters, verifier and plan-98 render/TTS adapter done; Q-15 still gates production audio                 | 85 ✅; 59 activation; 86/98 adapters; 87 review                 |
+| [62](archive/2026-09-09/62-native-audio-playback.md)                       | Recorded playback, cache and background transport                           | M1/M2       | 🟡 Device TTS, cancellation and plan-98 catalog-file fallback done; cache/background/hardware remain         | 58; 61 approved seed; 86/98 remote adapters                     |
 | [63](archive/2026-09-09/63-native-speech-speak-and-latency.md)             | Per-target ASR acceptance and measured onset                                | M2          | 🟡 ASR/Speak/reveal and event validation done; hardware/onset remain                                         | 58; 60 matching; 62 clock/buffers; target models                |
 | [64](archive/2026-09-09/64-today-and-refrain-production-loop.md)           | Durable timed waves, real Refrain audio and tag drills                      | M2          | 🟡 Wave-aware resume/timed entry done; test-clock, drills/audio and peak acceptance remain                   | 59/60/62/63; Q-14 peak only; 81 presentation                    |
 | [65](archive/2026-09-09/65-import-and-capture.md)                          | Offline reviewed Import, then on-device OCR Capture                         | M2/M3       | 🟡 Paste/draft and browser picker/request isolation done; native proof and OCR remain                        | 56/59; OCR 58; optional assistance 76/86                        |
@@ -152,7 +154,7 @@ feature↔release-completion cycle. See each plan's checkboxes for executable ta
 | [81](archive/2026-09-09/81-navigation-spine-switcher-and-more.md)          | More, ongoing work, exits, resume and travelling audio                      | M1/M2       | 🟡 Refrain exit/resume done; full session laws, search/counts/transport and Q-17 remain                      | 56/57; 59/64 checkpoints; 62 audio                              |
 | [82](archive/2026-09-09/82-guided-chat-domain-and-service.md)              | Offline chat domain/graphs and guarded service                              | M3          | 🟡 Graph foundation exists; duplicate choice IDs are rejected; content/persistence and scoped Q gates remain | 79/85 ✅; 59/61; live 66/67/86; Q-19 retention                  |
 | [83](83-open-chat-and-message-inspector.md)                                | Open chat and Message inspector                                             | M3          | — Text first; Q-16 release enablement                                                                        | 56/57/59/81/82; voice 62/63; Review handoff 75                  |
-| [86](archive/2026-09-09/86-provider-integrations.md)                       | Shared provider controls and approved vendor adapters                       | M2/M3       | 🟡 Anthropic process-local admission done; other controls/adapters remain                                    | 85 ✅; 66; owning feature/decision slices; 88 testing resources |
+| [86](archive/2026-09-09/86-provider-integrations.md)                       | Shared provider controls and approved vendor adapters                       | M2/M3       | 🟡 Anthropic admission and plan-98 ElevenLabs transport done; S3/other controls remain                       | 85 ✅; 66; owning feature/decision slices; 88 testing resources |
 | [87](archive/2026-09-09/87-multilingual-app-and-language-selection.md)     | Bilingual sign-off and all-pair device/release proof                        | M1/M2       | 🟡 Seven-pair runtime/review packet done; review/device acceptance remains                                   | Human review; 59/58 device harness; 61/72                       |
 | [88](archive/2026-09-09/88-low-cost-backend-infrastructure.md)             | Shared EC2/Postgres/S3 testing and recovery                                 | M2 testing  | 🟡 Host/backup tools recorded; off-host recovery/load/operations acceptance remains                          | 66/67 deployed runtime; 59/68 devices; 61/86 content            |
 | [90](archive/2026-09-09/90-default-english-content-language.md)            | English default learning content and course selection                       | M1/M2       | 🟡 Shared registry integration done; dialect/review/device gates remain                                      | 87/85; 59 persistence; 61/62 audio                              |
@@ -161,6 +163,7 @@ feature↔release-completion cycle. See each plan's checkboxes for executable ta
 | [95](archive/2026-09-09/95-parallel-local-ci.md)                           | Dependency-aware parallel full local CI                                     | M2          | 🟡 Scheduler, cancellation, Git inventory and source identity fixes implemented; runtime comparison remains  | 72; no external blocker for measurements                        |
 | [96](archive/2026-09-09/96-account-sign-in-screens.md)                     | Account method chooser, email/code flow and provider sign-in states         | M2          | 🟡 UI/browser/client slices implemented; visual, native and live-provider evidence remains                   | 67/68/86; provider configuration and device evidence            |
 | [97](97-generative-discover-and-phrase-reach.md)                           | Guarded generative Discover reach and shared add-handoff                    | M3          | 🟡 Own-phrase floor, bundled suggestions and stub suggest exist; Q-21 gates live traffic                     | 59/61; 76/86 live path; 82/83 consume handoff; Q-21             |
+| [98](98-voice-and-tts-integration.md)                                      | ElevenLabs TTS, catalog render and device-TTS fallback                      | M1/M2       | 🟡 Adapter/render/gated API/file playback in progress; Q-15 production seed remains                          | 86/61/62 slices; Q-15 live seed                                 |
 
 Plan 88 owns the selected AWS testing profile and
 [operations runbook](../docs/runbooks/backend-testing.md); plan 73 retains production operations.

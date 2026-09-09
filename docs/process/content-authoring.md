@@ -169,17 +169,27 @@ Recorded as a PR approval from the reviewer, required by CODEOWNERS on `packages
 ## 4 · Render and extract
 
 ```bash
-pnpm content:render --ids cafe1        # or --all for a full rebuild
+pnpm content:render --ids cafe1 --dry-run
+pnpm content:render --ids cafe1 --ceiling 5000
 ```
 
-The `tts-render` worker:
+`packages/content/src/render.ts` is Node-only. It injects the ElevenLabs transport from the API
+package so Metro never imports it. `--dry-run` estimates characters without calling the provider.
+Verified sha256 files with matching voice/locale provenance are skipped. Stub mode, unknown
+providers, exhausted ceilings and failed renders cannot write a publishable pack. Duration is
+measured from the file; it is never estimated from text. Conversion from the provider format to AAC
+64 kbps mono 24 kHz is the CLI's job when an encoder is supplied; identity write is the default so
+CI never needs ffmpeg.
 
-1. Renders `es-ES` neural TTS, AAC 64 kbps mono 24 kHz.
-2. Content-addresses it by `sha256` and uploads to storage → CDN.
-3. Extracts the **14-point normalised `f0_native` contour** (what the prosody chart draws).
-4. Derives **syllable spans** with stress and duration weights from the audio and `resp_ipa`.
-5. Quantises **reference MFCC** for DTW alignment (2–6 KB, fetched lazily by lab users).
-6. Writes all of it back into the phrase record.
+Live seed rendering still needs Q-15 voice/rights/listen review. Files land in gitignored
+`.render-cache/`; S3/CDN publication is not this slice. F0 / syllable / MFCC extraction remains
+plan 77.
+
+The later `tts-render` worker still owns:
+
+1. Uploading checksummed catalog audio to storage → CDN.
+2. Extracting the **14-point normalised `f0_native` contour**.
+3. Deriving **syllable spans** and reference MFCC.
 
 Idempotent and content-addressed, so a rerun is cheap and safe
 ([`../architecture/prosody-dsp.md`](../architecture/prosody-dsp.md#native-reference-data)).
