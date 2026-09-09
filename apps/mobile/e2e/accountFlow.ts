@@ -217,10 +217,7 @@ export async function signInWithProvider(
   else await expect(page.getByText('Your account is connected.')).toBeVisible()
 }
 
-export async function reachAccount(
-  page: Page,
-  scenario: AccountScenario,
-): Promise<AccountService> {
+export async function reachAccount(page: Page, scenario: AccountScenario): Promise<AccountService> {
   const service = await mockAccountService(page, scenario)
   if (scenario === 'sync-rejected') {
     await page
