@@ -3,9 +3,10 @@
 - **Requirement IDs:** `P3-30`…`P3-40`, `P3B-01`…`P3B-08`
 - **Milestone:** M3
 - **Status:** 🟡 The course-scoped Review engine now creates a finite due queue and records explicit
-  grades through canonical FSRS deltas; a reachable route, durable Review checkpoint/resume contract,
-  and Memory remain. Undo is blocked on reviewed plan-68 compensation/retry semantics; it must not be
-  exposed by the initial Review route.
+  grades through canonical FSRS deltas; a reachable route, durable Review checkpoint/resume
+  contract, and Memory remain. Canonical due order, cross-session daily budget and conformance also
+  remain. Undo is blocked on reviewed plan-68 compensation/retry semantics; it must not be exposed
+  by the initial Review route.
 - **Depends on:** 59 history/resume; 60 FSRS/selection; 56/81 route laws; 57 chart primitives; 72
   applicable harness only.
 - **Reviewed:** 2026-09-09 against `aafa61f`; current source, tests and retained review records
@@ -32,7 +33,8 @@ retrievability/lapses without manufacturing a curve, history, or confidence valu
        unscheduled phrases. The pure engine's explicit-grade attempt contract and local
        `committed_attempt` idempotency boundary exist; the route must persist and validate a stable
        event identity, target course, local day, phrase identity and content before resuming. Keep
-       Undo a separate 68-owned compensation contract; it is not a prerequisite for the initial route.
+       Undo a separate 68-owned compensation contract; it is not a prerequisite for the initial
+       route.
 2. [ ] Wire the conforming Review engine into a reachable route. It plans target-course due rows in
        repository order, caps daily work at `dailyMinutes × 4`, requires a learner-declared grade,
        and calls only the canonical FSRS facade. Persist grades through `applyDelta`,
@@ -80,8 +82,8 @@ the authored pronunciation → memory hook → useful → recall precedence.
 
 `ReviewEngine` now consumes that boundary for already-due rows. It preserves repository-provided
 order, caps the finite queue at `dailyMinutes × 4`, requires an explicit self-grade, and delegates
-the resulting schedule to the canonical FSRS facade. Its delta carries canonical review evidence,
-so the existing `applyDelta` transaction can write a phrase, `committed_attempt`, `review_event` and
+the resulting schedule to the canonical FSRS facade. Its delta carries canonical review evidence, so
+the existing `applyDelta` transaction can write a phrase, `committed_attempt`, `review_event` and
 outbox record atomically once the route supplies a stable attempt ID. It does not rank, create a
 schedule for an unscheduled phrase, infer history from a schedule, or fabricate intervals. The next
 slice must add the durable Review checkpoint and route resume validation for target course,
@@ -92,3 +94,11 @@ is a prompt policy and does not claim available ASR/DSP or a measured pronunciat
 Focused tests cover course/custom/legacy isolation, due boundaries, graduation/learned exclusions,
 missing schedules, mixed tags, retained provenance and invalid clocks. No route or new
 learner-visible state is introduced by this slice.
+
+## Post-main review and archive disposition — 2026-09-09
+
+The [review at `de81744`](../docs/reviews/2026-09-09-post-main-plan-review.md) records this plan's
+current contribution, remaining work and gates.
+[Delivered slices](archive/2026-09-09/IMPLEMENTED-SLICES.md) are retained in the archive; this plan
+remains incomplete. Earlier verification is dated evidence, not acceptance of the current combined
+branch.

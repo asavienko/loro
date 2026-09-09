@@ -3,8 +3,8 @@
 - **Requirement IDs:** `F-03`, `P5-06`, `P5-08`…`P5-11`, `N-01`…`N-04`, `LB-09`
 - **Milestone:** M2
 - **Status:** 🟡 The Rust policy and pure candidate planner are implemented; native Survival,
-  widgets and notification integration remain to do and need 58/62/69. Q-07 still prevents
-  trip candidates from being supplied.
+  widgets and notification integration remain to do and need 58/62/69. Q-07 still prevents trip
+  candidates from being supplied.
 - **Depends on:** 58 native targets; 61 manifests; 62 playback/cache; 69 approved trip lifecycle; 56
   deep-link laws.
 - **Reviewed:** 2026-09-07 against merged baseline `2d9e8c3`.
@@ -51,3 +51,11 @@ state and never shame a missed day.
 ## Out of scope
 
 Remote push campaigns, social widgets, marketing notifications, and billing promotion.
+
+## Post-main review and archive disposition — 2026-09-09
+
+The [review at `de81744`](../docs/reviews/2026-09-09-post-main-plan-review.md) records this plan's
+current contribution, remaining work and gates.
+[Delivered slices](archive/2026-09-09/IMPLEMENTED-SLICES.md) are retained in the archive; this plan
+remains incomplete. Earlier verification is dated evidence, not acceptance of the current combined
+branch.

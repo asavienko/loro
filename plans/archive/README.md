@@ -16,6 +16,12 @@ files remain in the active directory.
 Archiving preserves the status recorded in each plan. Plans 56–65 still own unfinished work and
 remain linked from the active roadmap; historical snapshots do not replace their current owners.
 
+## Implemented slices with remaining plan owners
+
+[Post-main implementation record](2026-09-09/IMPLEMENTED-SLICES.md) archives delivered slices of the
+33 requested plans. It closes no additional whole plan; remaining defects and acceptance stay in the
+active roadmap.
+
 ## Completed plans
 
 | Plan                                                      | Implemented scope                                                                                                   |

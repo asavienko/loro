@@ -55,3 +55,10 @@ ports and parity fixtures, never a second algorithm or fabricated fallback.
 ## Out of scope
 
 DSP scoring, UI curves, live sync merge changes, and experiment analysis.
+
+## Post-main review and archive disposition — 2026-09-09
+
+The [review at `de81744`](../../../docs/reviews/2026-09-09-post-main-plan-review.md) records this
+plan's current contribution, remaining work and gates. [Delivered slices](IMPLEMENTED-SLICES.md) are
+retained in the archive; this plan remains incomplete. Earlier verification is dated evidence, not
+acceptance of the current combined branch.

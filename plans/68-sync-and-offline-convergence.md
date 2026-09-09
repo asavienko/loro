@@ -94,3 +94,11 @@ block practice.
 ## Out of scope
 
 Content-asset downloading, trip audio prefetch, server-active practice, and collaboration features.
+
+## Post-main review and archive disposition — 2026-09-09
+
+The [review at `de81744`](../docs/reviews/2026-09-09-post-main-plan-review.md) records this plan's
+current contribution, remaining work and gates.
+[Delivered slices](archive/2026-09-09/IMPLEMENTED-SLICES.md) are retained in the archive; this plan
+remains incomplete. Earlier verification is dated evidence, not acceptance of the current combined
+branch.
