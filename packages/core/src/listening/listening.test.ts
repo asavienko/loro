@@ -19,6 +19,7 @@ import {
   isLearnerAuthoredListeningText,
   listeningBlockers,
   listeningClipKey,
+  listeningRepeatChoices,
   listeningShareFilename,
   listeningVoiceSequence,
   normalizeListeningText,
@@ -118,6 +119,7 @@ describe('AS-07 listening batch', () => {
     expect(clampListeningRepeats(LISTENING_REPEATS_DEFAULT)).toBe(3)
     expect(clampListeningRepeats(1)).toBe(2)
     expect(clampListeningRepeats(9)).toBe(5)
+    expect(listeningRepeatChoices()).toEqual([2, 3, 4, 5])
     expect(REPEAT_TARGET.hard).toBe(4)
     expect(REPEAT_TARGET.med).toBe(3)
     expect(REPEAT_TARGET.easy).toBe(2)
