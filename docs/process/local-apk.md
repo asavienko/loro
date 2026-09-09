@@ -96,7 +96,8 @@ JavaScript bundle and fails when launched without Metro. The separately installe
 without Metro. Open **Loro Preview** for standalone testing. The affected debug APK's source and
 recovery with matching Metro remain unverified; port forwarding alone does not start Metro. Future
 debug builds use `app.loro.android.dev` and the **Loro Development** launcher label, so they cannot
-be mistaken for the standalone application.
+be mistaken for the standalone application. Its `loro-dev://` scheme also keeps Expo's debug launch
+link separate from Preview's `loro://` scheme.
 
 ### 2026-09-07 build evidence
 

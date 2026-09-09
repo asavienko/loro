@@ -15,6 +15,7 @@ import type { ExpoConfig } from 'expo/config'
 
 const VERSION = '0.1.0'
 const localApk = process.env['LORO_LOCAL_APK'] === '1'
+const androidDevelopmentClient = process.env['LORO_ANDROID_DEV_CLIENT'] === '1'
 const splashPlugins: NonNullable<ExpoConfig['plugins']> = localApk
   ? [
       [
@@ -34,7 +35,9 @@ export default (): ExpoConfig => ({
   slug: 'loro',
   version: VERSION,
   orientation: 'default',
-  scheme: 'loro',
+  // Keep the development client separate from Preview and the future production app so
+  // `expo run:android` can launch the correct installation without Android's app chooser.
+  scheme: androidDevelopmentClient ? 'loro-dev' : 'loro',
   userInterfaceStyle: 'light', // dark theme is v1.1
   newArchEnabled: true,
 
