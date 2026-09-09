@@ -17,6 +17,8 @@ export type AccountStatus =
 export type AccountErrorCode =
   | 'unconfigured'
   | 'network'
+  | 'rate-limited'
+  | 'invalid-email'
   | 'invalid-code'
   | 'unavailable'
   | 'account-mismatch'

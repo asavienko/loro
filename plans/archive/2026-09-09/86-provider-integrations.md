@@ -12,6 +12,10 @@
   inspected. This plan refresh supplies no new runtime, device or deployment acceptance.
 - **Priority:** 4; content storage adapters first; later adapters follow their consuming feature.
 
+**Archive disposition (2026-09-09):** Archived at user request after implemented slices landed. The
+partial status and remaining acceptance criteria are retained; archival does not mark this plan
+complete. The roadmap index continues to track its unfinished scope.
+
 ## Current evidence
 
 `apps/api/src/integrations/anthropic/messages.ts` implements text-only structured requests,
@@ -83,7 +87,7 @@ language/course identity in asset selection, requests and cache keys.
        and fallback checks pass. Keep live chat disabled while Q-18/Q-20 remain open. Supply guarded
        text-only enrichment and translation transports when requested by plans 61/65.
 5. [ ] Implement the ElevenLabs transport and deterministic failure/redaction tests for the
-       [plan-61 integration checklist](archive/2026-09-09/61-content-and-audio-assets.md#elevenlabs-integration-as-01-as-02-as-05-as-06).
+       [plan-61 integration checklist](61-content-and-audio-assets.md#elevenlabs-integration-as-01-as-02-as-05-as-06).
        Adapter implementation can proceed with fixtures; Q-15 gates live production rendering. Add
        licensed TTS, billing and privacy-safe diagnostics adapters only as their feature and
        decision gates pass; no recorded learner audio or voice-clone transport.
@@ -120,8 +124,7 @@ device tests. Update runtime registration and inventory only after the implement
 
 ## Post-main review and archive disposition — 2026-09-09
 
-The [review at `de81744`](../docs/reviews/2026-09-09-post-main-plan-review.md) records this plan's
-current contribution, remaining work and gates.
-[Delivered slices](archive/2026-09-09/IMPLEMENTED-SLICES.md) are retained in the archive; this plan
-remains incomplete. Earlier verification is dated evidence, not acceptance of the current combined
-branch.
+The [review at `de81744`](../../../docs/reviews/2026-09-09-post-main-plan-review.md) records this
+plan's current contribution, remaining work and gates. [Delivered slices](IMPLEMENTED-SLICES.md) are
+retained in the archive; this plan remains incomplete. Earlier verification is dated evidence, not
+acceptance of the current combined branch.

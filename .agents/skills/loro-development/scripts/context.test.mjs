@@ -90,6 +90,34 @@ test('filename lookup includes archive paths, stays bounded and composes with fu
   assert.equal(run(f.script, ['98-', '--full']).stdout, run(f.script, ['--full', '98-']).stdout)
 })
 
+test('full mode lists sibling worktrees and extra plan ids without mutating them', (t) => {
+  const f = fixture(t)
+  git(f.root, 'update-ref', 'refs/remotes/origin/main', 'HEAD')
+  const other = join(f.root, '..', `loro-context-wt-${process.pid}`)
+  t.after(() => {
+    try {
+      git(f.root, 'worktree', 'remove', '--force', other)
+    } catch {
+      rmSync(other, { recursive: true, force: true })
+    }
+  })
+  git(f.root, 'worktree', 'add', '--quiet', '--detach', other)
+  mkdirSync(join(other, 'plans'), { recursive: true })
+  writeFileSync(join(other, 'plans/99-other.md'), 'Same-ID collision\n')
+  writeFileSync(join(other, 'plans/100-extra.md'), 'Concurrent allocation\n')
+  const compact = run(f.script, [])
+  const full = run(f.script, ['--full'])
+  const status = git(other, 'status', '--porcelain=v1')
+  assert.equal(compact.status, 0)
+  assert.equal(full.status, 0)
+  assert.doesNotMatch(compact.stdout, /Git worktrees:/)
+  assert.match(full.stdout, /Git worktrees: 2 including this checkout/)
+  assert.match(full.stdout, /Sibling checkouts/)
+  assert.match(full.stdout, /99 .*plans\/99-other\.md untracked/)
+  assert.match(full.stdout, /100 .*plans\/100-extra\.md untracked/)
+  assert.equal(git(other, 'status', '--porcelain=v1'), status)
+})
+
 test('detached checkout without cached remote or dependencies is reported without setup', (t) => {
   const f = fixture(t)
   git(f.root, 'checkout', '--quiet', '--detach')

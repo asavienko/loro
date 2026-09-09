@@ -55,8 +55,9 @@ work, and correction must recover without losing the draft.
 
 ### R2 — P2: fix the four commit subjects before the full CI gate
 
-**Owner:** integration / [72](../../plans/72-release-quality-gates.md). **Locations:** subjects of
-`b389109`, `bbe2f16`, `77f417d`, `b0e389f`; `scripts/ci-local.sh:54–57` and `commitlint.config.cjs`.
+**Owner:** integration / [72](../../plans/archive/2026-09-09/72-release-quality-gates.md).
+**Locations:** subjects of `b389109`, `bbe2f16`, `77f417d`, `b0e389f`; `scripts/ci-local.sh:54–57`
+and `commitlint.config.cjs`.
 
 All four new subjects end in uppercase `(F-04)`. The repository requires lowercase subjects. The
 read-only check `pnpm exec commitlint --from 6776cb2 --to HEAD` failed for all four with
@@ -73,9 +74,9 @@ its base ref. Preserve the policy that GitHub Actions remains disabled.
 ### R3 — P2: correct completion and screen-inventory claims
 
 **Owner:** [56](../../plans/archive/2026-09-09/56-navigation-failure-and-input-shell.md),
-[81](../../plans/81-navigation-spine-switcher-and-more.md), and integration documentation.
-**Locations at reviewed HEAD:** `CLAUDE.md:9–19`, `apps/mobile/src/lib/navigation.ts:36`,
-`docs/design/screen-catalog.md:198–207`.
+[81](../../plans/archive/2026-09-09/81-navigation-spine-switcher-and-more.md), and integration
+documentation. **Locations at reviewed HEAD:** `CLAUDE.md:9–19`,
+`apps/mobile/src/lib/navigation.ts:36`, `docs/design/screen-catalog.md:198–207`.
 
 The previous handoff says the selected plans were implemented, although their own status records
 correctly leave substantial work open. It should say “implemented one bounded slice per selected
@@ -159,28 +160,28 @@ interaction-owned disclosure and continue the multilingual/long-copy state matri
 The owning plans remain authoritative. This table sequences follow-up work without replacing or
 renumbering them. A named external gate blocks only its dependent slice.
 
-| Plan                                                                          | Delivered in the reviewed range                             | Next implementation or acceptance work                                                                                                   |
-| ----------------------------------------------------------------------------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| [58](../../plans/archive/2026-09-09/58-native-workspace-and-device-ci.md)     | iOS simulator artifact collector                            | Automate fixtures (I1); correlate build identity, run clean iOS build and device scenarios (I3).                                         |
-| [56](../../plans/archive/2026-09-09/56-navigation-failure-and-input-shell.md) | Route/file/state ownership gate                             | Add shared route laws/metadata, then recovery, keyboard and list behavior; feed 81 (I2).                                                 |
-| [57](../../plans/archive/2026-09-09/57-runtime-design-system.md)              | Shared tabular numerals and browser geometry check          | Establish font provenance/loading and native numeric rendering; implement remaining motion, haptics and theme APIs.                      |
-| [72](../../plans/72-release-quality-gates.md)                                 | Development pseudo-locale and fixture drift check           | Repair commit validation (R2), automate dedicated pseudo/device-fixture gates (I1), then complete layout/native/performance evidence.    |
-| [66](../../plans/66-backend-contract-data-and-security.md)                    | Shared content-v2 schemas/query validation/OpenAPI          | Migrate remaining legacy content/AI boundaries; validate PostgreSQL and exact API image/security/load behavior.                          |
-| [88](../../plans/88-low-cost-backend-infrastructure.md)                       | Verified local backup preparation                           | Prove isolated restore, then verified off-host storage, retention and monitoring (I3).                                                   |
-| [86](../../plans/86-provider-integrations.md)                                 | Per-Anthropic-instance concurrency admission                | Supply a shared provider-pool lifetime and owning feature integration; add account limits/spend reservation before live use.             |
-| [87](../../plans/87-multilingual-app-and-language-selection.md)               | Three-locale/seven-pair review packet                       | Obtain real bilingual reviews and implement exact-digest sign-off validation (I4).                                                       |
-| [90](../../plans/90-default-english-content-language.md)                      | Existing sync schemas derive language IDs from the registry | Resolve canonical English dialect, then add registry/catalog/default/migration integration; release needs reviewed content.              |
-| [81](../../plans/81-navigation-spine-switcher-and-more.md)                    | Initial More destination list                               | Consume 56 metadata for grouping/search; implement exits/resume/ongoing work; audio depends on 62 (I2).                                  |
-| [71](../../plans/71-settings-telemetry-and-experiments.md)                    | Transactional local analytics consent, default off          | Add Settings UI, then consent-aware queue/transport and revocation behavior; Q-05 applies to experiment activation.                      |
-| [67](../../plans/67-anonymous-auth-and-account-lifecycle.md)                  | Email auth in-flight guards                                 | Resolve lifecycle/recovery policy, then linking/export/erasure and provider/device acceptance.                                           |
-| [68](../../plans/68-sync-and-offline-convergence.md)                          | Bounded expired-cursor recovery and SQLite histories        | Define retention/rescue and review-compensation semantics; implement OS scheduling and device/load convergence proof.                    |
-| [61](../../plans/archive/2026-09-09/61-content-and-audio-assets.md)           | Malformed-input and semantic-version verifier hardening     | Reconcile signed wire/trust policy and transactional client activation (I4); Q-15 gates production audio assets.                         |
-| [62](../../plans/archive/2026-09-09/62-native-audio-playback.md)              | Cancel queued native commands before execution              | Implement recorded asset/cache/transport and shared native clock/buffer ownership; validate background/interruption behavior.            |
-| [63](../../plans/archive/2026-09-09/63-native-speech-speak-and-latency.md)    | Reject malformed native speech metadata                     | Integrate 62 clock/buffer substrate for measured onset, then target/model/permission/device acceptance; retain null for unknown latency. |
-| [64](../../plans/archive/2026-09-09/64-today-and-refrain-production-loop.md)  | Focused/foreground minute and day refresh                   | Implement timed wave enforcement, filtered drills/banked tail and actual audible orchestration; Q-14 owns peak sign-off.                 |
-| [75](../../plans/75-review-and-memory.md)                                     | Review candidate partition and tag-focus policy             | Implement engine and durable grade/session/resume contracts, then routes and real Memory curves; Undo needs 68 compensation semantics.   |
-| [65](../../plans/archive/2026-09-09/65-import-and-capture.md)                 | Paste batch caps and recoverable preview error              | Fix R1 first; then file/encoding handling and batch-write recovery; native OCR remains a later slice.                                    |
-| [80](../../plans/80-dev-design-system-workbench.md)                           | 33 declared component exports and new specimens             | Close export-discovery gaps (I5), then real multilingual/long-copy and production-state coverage.                                        |
+| Plan                                                                               | Delivered in the reviewed range                             | Next implementation or acceptance work                                                                                                   |
+| ---------------------------------------------------------------------------------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| [58](../../plans/archive/2026-09-09/58-native-workspace-and-device-ci.md)          | iOS simulator artifact collector                            | Automate fixtures (I1); correlate build identity, run clean iOS build and device scenarios (I3).                                         |
+| [56](../../plans/archive/2026-09-09/56-navigation-failure-and-input-shell.md)      | Route/file/state ownership gate                             | Add shared route laws/metadata, then recovery, keyboard and list behavior; feed 81 (I2).                                                 |
+| [57](../../plans/archive/2026-09-09/57-runtime-design-system.md)                   | Shared tabular numerals and browser geometry check          | Establish font provenance/loading and native numeric rendering; implement remaining motion, haptics and theme APIs.                      |
+| [72](../../plans/archive/2026-09-09/72-release-quality-gates.md)                   | Development pseudo-locale and fixture drift check           | Repair commit validation (R2), automate dedicated pseudo/device-fixture gates (I1), then complete layout/native/performance evidence.    |
+| [66](../../plans/archive/2026-09-09/66-backend-contract-data-and-security.md)      | Shared content-v2 schemas/query validation/OpenAPI          | Migrate remaining legacy content/AI boundaries; validate PostgreSQL and exact API image/security/load behavior.                          |
+| [88](../../plans/archive/2026-09-09/88-low-cost-backend-infrastructure.md)         | Verified local backup preparation                           | Prove isolated restore, then verified off-host storage, retention and monitoring (I3).                                                   |
+| [86](../../plans/archive/2026-09-09/86-provider-integrations.md)                   | Per-Anthropic-instance concurrency admission                | Supply a shared provider-pool lifetime and owning feature integration; add account limits/spend reservation before live use.             |
+| [87](../../plans/archive/2026-09-09/87-multilingual-app-and-language-selection.md) | Three-locale/seven-pair review packet                       | Obtain real bilingual reviews and implement exact-digest sign-off validation (I4).                                                       |
+| [90](../../plans/archive/2026-09-09/90-default-english-content-language.md)        | Existing sync schemas derive language IDs from the registry | Resolve canonical English dialect, then add registry/catalog/default/migration integration; release needs reviewed content.              |
+| [81](../../plans/archive/2026-09-09/81-navigation-spine-switcher-and-more.md)      | Initial More destination list                               | Consume 56 metadata for grouping/search; implement exits/resume/ongoing work; audio depends on 62 (I2).                                  |
+| [71](../../plans/archive/2026-09-09/71-settings-telemetry-and-experiments.md)      | Transactional local analytics consent, default off          | Add Settings UI, then consent-aware queue/transport and revocation behavior; Q-05 applies to experiment activation.                      |
+| [67](../../plans/archive/2026-09-09/67-anonymous-auth-and-account-lifecycle.md)    | Email auth in-flight guards                                 | Resolve lifecycle/recovery policy, then linking/export/erasure and provider/device acceptance.                                           |
+| [68](../../plans/archive/2026-09-09/68-sync-and-offline-convergence.md)            | Bounded expired-cursor recovery and SQLite histories        | Define retention/rescue and review-compensation semantics; implement OS scheduling and device/load convergence proof.                    |
+| [61](../../plans/archive/2026-09-09/61-content-and-audio-assets.md)                | Malformed-input and semantic-version verifier hardening     | Reconcile signed wire/trust policy and transactional client activation (I4); Q-15 gates production audio assets.                         |
+| [62](../../plans/archive/2026-09-09/62-native-audio-playback.md)                   | Cancel queued native commands before execution              | Implement recorded asset/cache/transport and shared native clock/buffer ownership; validate background/interruption behavior.            |
+| [63](../../plans/archive/2026-09-09/63-native-speech-speak-and-latency.md)         | Reject malformed native speech metadata                     | Integrate 62 clock/buffer substrate for measured onset, then target/model/permission/device acceptance; retain null for unknown latency. |
+| [64](../../plans/archive/2026-09-09/64-today-and-refrain-production-loop.md)       | Focused/foreground minute and day refresh                   | Implement timed wave enforcement, filtered drills/banked tail and actual audible orchestration; Q-14 owns peak sign-off.                 |
+| [75](../../plans/archive/2026-09-09/75-review-and-memory.md)                       | Review candidate partition and tag-focus policy             | Implement engine and durable grade/session/resume contracts, then routes and real Memory curves; Undo needs 68 compensation semantics.   |
+| [65](../../plans/archive/2026-09-09/65-import-and-capture.md)                      | Paste batch caps and recoverable preview error              | Fix R1 first; then file/encoding handling and batch-write recovery; native OCR remains a later slice.                                    |
+| [80](../../plans/archive/2026-09-09/80-dev-design-system-workbench.md)             | 33 declared component exports and new specimens             | Close export-discovery gaps (I5), then real multilingual/long-copy and production-state coverage.                                        |
 
 ## Verification and limits
 

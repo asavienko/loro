@@ -112,6 +112,67 @@ describe('anonymous-first account lifecycle', () => {
     expect(saved()).toContain('rotated')
     expect(client.getSnapshot()).toMatchObject({ status: 'signed-in', error: null })
   })
+  it('reports when provider sign-in cannot start during restore, refresh or another attempt', async () => {
+    const restore = setup()
+    let finishRestore!: (value: string | null) => void
+    const restoring = new AccountClient({
+      ...restore.deps,
+      authorization: {
+        random: () => 'v'.repeat(43),
+        challenge: () => Promise.resolve('c'.repeat(43)),
+        redirect: 'loro://account',
+        authorize: vi.fn(),
+      },
+      vault: {
+        ...restore.deps.vault,
+        read: () =>
+          new Promise((resolve) => {
+            finishRestore = resolve
+          }),
+      },
+    })
+    const pendingRestore = restoring.restore()
+    expect(await restoring.signIn('google')).toBe(false)
+    expect(restore.fetch).not.toHaveBeenCalled()
+    expect(restoring.getSnapshot().status).toBe('signed-out')
+    finishRestore(null)
+    await pendingRestore
+
+    const { client, fetch } = setup()
+    let finishRequest!: (response: Response) => void
+    fetch.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          finishRequest = resolve
+        }),
+    )
+    const pendingCode = client.requestCode('learner@example.com')
+    expect(await client.signIn('apple')).toBe(false)
+    expect(client.getSnapshot().status).toBe('working')
+    expect(fetch).toHaveBeenCalledTimes(1)
+    finishRequest(ok({ status: 'accepted' }))
+    await pendingCode
+
+    const refresh = setup()
+    refresh.fetch.mockResolvedValueOnce(ok(signedIn))
+    await refresh.client.verifyCode('learner@example.com', '123456')
+    refresh.advance()
+    let finishRefresh!: (response: Response) => void
+    refresh.fetch.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          finishRefresh = resolve
+        }),
+    )
+    const pendingRefresh = refresh.client.getAccessToken()
+    await vi.waitFor(() => {
+      expect(refresh.fetch).toHaveBeenCalledTimes(2)
+    })
+    expect(await refresh.client.signIn('google')).toBe(false)
+    expect(refresh.fetch).toHaveBeenCalledTimes(2)
+    finishRefresh(ok({ access_token: 'next', refresh_token: 'rotated', expires_in: 900 }))
+    expect(await pendingRefresh).toBe('next')
+  })
   it('waits for credential restoration before allowing email actions', async () => {
     const { deps, fetch } = setup()
     let finish!: (value: string | null) => void
@@ -156,7 +217,7 @@ describe('anonymous-first account lifecycle', () => {
           authorize: () => Promise.resolve(`loro://account?state=${state}&ticket=${ticket}`),
         },
       })
-      await client.signIn(provider)
+      await expect(client.signIn(provider)).resolves.toBe(true)
       expect(fetch.mock.calls[1]?.[1]?.body).toBe(
         JSON.stringify({
           ticket,
@@ -266,6 +327,15 @@ describe('anonymous-first account lifecycle', () => {
     expect(client.getSnapshot().status).toBe('code-sent')
     expect(fetch.mock.calls[0]?.[1]?.body).toBe(JSON.stringify({ email: 'learner@example.com' }))
   })
+  it('classifies delivery throttling separately from an invalid verification code', async () => {
+    const { client, fetch } = setup()
+    fetch.mockResolvedValueOnce(new Response(null, { status: 429 }))
+    await client.requestCode('learner@example.com')
+    expect(client.getSnapshot()).toMatchObject({ status: 'error', error: 'rate-limited' })
+    fetch.mockResolvedValueOnce(new Response(null, { status: 401 }))
+    await client.verifyCode('learner@example.com', '123456')
+    expect(client.getSnapshot()).toMatchObject({ status: 'error', error: 'invalid-code' })
+  })
   it('stores refresh credentials before publishing a verified account', async () => {
     const { client, fetch, saved, bindAccount } = setup()
     fetch.mockResolvedValue(ok(signedIn))
@@ -335,6 +405,42 @@ describe('anonymous-first account lifecycle', () => {
     finish(ok(signedIn))
     await pending
     expect(client.getSnapshot().session).toBeNull()
+    expect(saved()).toBeNull()
+  })
+  it('cancels a pending verification before it can bind or save an account', async () => {
+    const { client, fetch, saved, bindAccount } = setup()
+    let finish!: (response: Response) => void
+    fetch.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve
+        }),
+    )
+    const pending = client.verifyCode('learner@example.com', '123456')
+    client.cancelSignIn()
+    finish(ok(signedIn))
+    await pending
+    expect(client.getSnapshot()).toMatchObject({ status: 'cancelled', session: null, error: null })
+    expect(bindAccount).not.toHaveBeenCalled()
+    expect(saved()).toBeNull()
+  })
+  it('cleans an admission that is cancelled while secure storage is committing', async () => {
+    const { client, deps, fetch, saved, bindAccount } = setup()
+    let finishWrite!: () => void
+    deps.vault.write = () =>
+      new Promise((resolve) => {
+        finishWrite = resolve
+      })
+    fetch.mockResolvedValueOnce(ok(signedIn))
+    const pending = client.verifyCode('learner@example.com', '123456')
+    await vi.waitFor(() => {
+      expect(finishWrite).toBeTypeOf('function')
+    })
+    client.cancelSignIn()
+    finishWrite()
+    await pending
+    expect(client.getSnapshot()).toMatchObject({ status: 'cancelled', session: null, error: null })
+    expect(bindAccount).not.toHaveBeenCalled()
     expect(saved()).toBeNull()
   })
   it('clears stale keychain credentials belonging to a removed installation', async () => {

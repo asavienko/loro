@@ -119,8 +119,9 @@ S3-compatible storage behind a CDN.** Workers run from the same image with a dif
 
 ## Amendment — 2026-09-07 — single-instance testing infrastructure
 
-The user selected [plan 88](../../../plans/88-low-cost-backend-infrastructure.md): one On-Demand EC2
-instance in Frankfurt with the API and PostgreSQL, private S3, Caddy HTTPS and a $25–35/month
+The user selected
+[plan 88](../../../plans/archive/2026-09-09/88-low-cost-backend-infrastructure.md): one On-Demand
+EC2 instance in Frankfurt with the API and PostgreSQL, private S3, Caddy HTTPS and a $25–35/month
 target. This supersedes the original assumption that managed PostgreSQL/Redis, workers and a CDN are
 required for testing. None is provisioned by this documentation decision.
 

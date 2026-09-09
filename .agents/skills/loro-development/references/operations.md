@@ -10,6 +10,8 @@ port; start the API only when the task needs it. For the documented container wo
 `docs/process/local-development.md` and use `pnpm local:up`. It builds a source snapshot: after code
 changes rebuild before claiming the container exercises the change. Verify both the UI and
 `/v1/health/ready`, including the Rust merge check. HTTP 200 from a generic route is insufficient.
+Cloud or default images may lack Docker, `wasm-pack` or PostgreSQL; that is not a substitute for
+`pnpm ci:local` on a machine that has those tools.
 
 `AI_PROVIDER=stub` allows local work without buying provider access. Inspect current auth/data
 configuration before assuming every API mode is database-free. Optional Compose infrastructure does

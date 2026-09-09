@@ -114,8 +114,6 @@ export const STATES: AppState[] = [
       'cancelled',
       'signedIn',
       'localSignOut',
-      'backendUnavailable',
-      'backendChecking',
       'email',
       'code',
       'connected',

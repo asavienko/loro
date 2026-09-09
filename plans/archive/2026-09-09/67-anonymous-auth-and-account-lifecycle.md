@@ -12,6 +12,10 @@
   inspected. This plan refresh supplies no new runtime, device or deployment acceptance.
 - **Priority:** 6; account lifecycle with 68.
 
+**Archive disposition (2026-09-09):** Archived at user request after implemented slices landed. The
+partial status and remaining acceptance criteria are retained; archival does not mark this plan
+complete. The roadmap index continues to track its unfinished scope.
+
 ## Implemented scope
 
 First use and local practice require no account. Optional Google/Apple and email/code sign-in use
@@ -38,6 +42,10 @@ and can export/delete data. Every server row and rate budget is scoped to an aut
 principal.
 
 ## Remaining work
+
+[Plan 96](96-account-sign-in-screens.md) owns the new method chooser, email/code screens, provider
+feedback and confirmation. It consumes this plan's runtime and preserves its lifecycle ownership;
+the visual redesign does not close the acceptance gates below.
 
 1. [ ] Complete loss/reinstall/backup-restore/device-rotation and recovery policy with
        learner-facing management. Browser reload requiring sign-in is intentional credential policy.
@@ -81,8 +89,7 @@ Paid entitlements, social profiles, enterprise identity, and sync scheduling det
 
 ## Post-main review and archive disposition — 2026-09-09
 
-The [review at `de81744`](../docs/reviews/2026-09-09-post-main-plan-review.md) records this plan's
-current contribution, remaining work and gates.
-[Delivered slices](archive/2026-09-09/IMPLEMENTED-SLICES.md) are retained in the archive; this plan
-remains incomplete. Earlier verification is dated evidence, not acceptance of the current combined
-branch.
+The [review at `de81744`](../../../docs/reviews/2026-09-09-post-main-plan-review.md) records this
+plan's current contribution, remaining work and gates. [Delivered slices](IMPLEMENTED-SLICES.md) are
+retained in the archive; this plan remains incomplete. Earlier verification is dated evidence, not
+acceptance of the current combined branch.

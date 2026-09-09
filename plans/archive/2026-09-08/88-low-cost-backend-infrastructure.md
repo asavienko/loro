@@ -1,6 +1,6 @@
 > Historical snapshot archived on 2026-09-08 (F-04). Its starting point is superseded; unfinished
-> work remains in [active plan 88](../../88-low-cost-backend-infrastructure.md). This is not a
-> completion record.
+> work remains in [active plan 88](../2026-09-09/88-low-cost-backend-infrastructure.md). This is not
+> a completion record.
 
 # Affordable AWS backend for testing
 
