@@ -50,7 +50,10 @@ export interface AppActions {
     o?: { difficulty?: Difficulty; tags?: Tag[]; source?: PhraseState['source'] },
   ) => void
   /** Returns the new row id, because the caller has no other way to name the row. */
-  addOwnPhrase: (draft: OwnPhraseDraft, o?: { difficulty?: Difficulty; tags?: Tag[] }) => string
+  addOwnPhrase: (
+    draft: OwnPhraseDraft,
+    o?: { difficulty?: Difficulty; tags?: Tag[]; source?: PhraseState['source'] },
+  ) => string
   removePhrase: (id: string) => void
   setDifficulty: (id: string, d: Difficulty) => void
   toggleTag: (id: string, t: Tag) => void

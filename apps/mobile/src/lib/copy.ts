@@ -726,6 +726,33 @@ export const copy = {
     get confirm() {
       return message('add.confirm')
     },
+    own: {
+      get action() {
+        return message('add.own.action')
+      },
+      get hint() {
+        return message('add.own.hint')
+      },
+    },
+    suggested: {
+      get title() {
+        return message('add.suggested.title')
+      },
+      get looking() {
+        return message('add.suggested.looking')
+      },
+      get provenance() {
+        return message('add.suggested.provenance')
+      },
+    },
+    sheet: {
+      get targetPlaceholder() {
+        return message('add.sheet.targetPlaceholder')
+      },
+      get meaningPlaceholder() {
+        return message('add.sheet.meaningPlaceholder')
+      },
+    },
     import: {
       get title() {
         return message('add.import.title')
@@ -1403,6 +1430,16 @@ export const copy = {
       },
       suggestionRow: (es: string, en: string): string =>
         message('a11y.add.suggestionRow', { es, en }),
+      ownRow: (query: string): string => message('a11y.add.ownRow', { query }),
+      suggestedRow: (es: string, en: string): string =>
+        message('a11y.add.suggestedRow', { es, en }),
+      get sheetTarget() {
+        return message('a11y.add.sheetTarget')
+      },
+      get sheetMeaning() {
+        return message('a11y.add.sheetMeaning')
+      },
+      nearestScenario: (label: string): string => message('a11y.add.nearestScenario', { label }),
       get opensSheet() {
         return message('a11y.add.opensSheet')
       },

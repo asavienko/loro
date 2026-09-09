@@ -426,5 +426,17 @@
   "account.codeLabel": "Код для входа",
   "account.rate-limited": "Слишком много попыток. Подождите немного и попробуйте снова.",
   "account.invalid-email": "Введите действительный адрес электронной почты, чтобы продолжить.",
-  "account.deviceProgress": "Ваш прогресс остаётся сохранённым на этом устройстве."
+  "account.deviceProgress": "Ваш прогресс остаётся сохранённым на этом устройстве.",
+  "add.own.action": "Добавить свою",
+  "add.own.hint": "Это останется вашей фразой. Значение вы добавите на следующем экране.",
+  "add.suggested.title": "Подходит к теме",
+  "add.suggested.looking": "Ищу фразы…",
+  "add.suggested.provenance": "Предложение — не из библиотеки",
+  "add.sheet.targetPlaceholder": "Фраза на изучаемом языке",
+  "add.sheet.meaningPlaceholder": "Ваше значение",
+  "a11y.add.ownRow": "Добавить «{query}» как свою фразу",
+  "a11y.add.suggestedRow": "Предложение: {es}. {en}",
+  "a11y.add.sheetTarget": "Фраза для добавления",
+  "a11y.add.sheetMeaning": "Значение",
+  "a11y.add.nearestScenario": "Фразы для {label}"
 }

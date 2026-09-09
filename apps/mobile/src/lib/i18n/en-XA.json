@@ -426,5 +426,17 @@
   "account.codeLabel": "[!! Sïïgn-ïïn cöödëë !!]",
   "account.rate-limited": "[!! Töööö máány ááttëëmpts. Plëëáásëë wááïït áá lïïttlëë áánd try áágááïïn. !!]",
   "account.invalid-email": "[!! ËËntëër áá váálïïd ëëmááïïl ááddrëëss töö cööntïïnüüëë. !!]",
-  "account.deviceProgress": "[!! Yööüür pröögrëëss stááys sáávëëd öön thïïs dëëvïïcëë. !!]"
+  "account.deviceProgress": "[!! Yööüür pröögrëëss stááys sáávëëd öön thïïs dëëvïïcëë. !!]",
+  "add.own.action": "[!! ÁÁdd yööüür ööwn !!]",
+  "add.own.hint": "[!! Thïïs stááys yööüür phráásëë. ÁÁdd áá mëëáánïïng öön thëë nëëxt scrëëëën. !!]",
+  "add.suggested.title": "[!! Süüggëëstëëd föör thïïs !!]",
+  "add.suggested.looking": "[!! Löööökïïng föör phráásëës… !!]",
+  "add.suggested.provenance": "[!! Süüggëëstëëd — nööt frööm thëë lïïbrááry !!]",
+  "add.sheet.targetPlaceholder": "[!! Phráásëë ïïn thëë láángüüáágëë yööüü''rëë lëëáárnïïng !!]",
+  "add.sheet.meaningPlaceholder": "[!! Yööüür mëëáánïïng !!]",
+  "a11y.add.ownRow": "[!! ÁÁdd {query} áás yööüür ööwn phráásëë !!]",
+  "a11y.add.suggestedRow": "[!! Süüggëëstëëd: {es}. {en} !!]",
+  "a11y.add.sheetTarget": "[!! Phráásëë töö áádd !!]",
+  "a11y.add.sheetMeaning": "[!! Mëëáánïïng !!]",
+  "a11y.add.nearestScenario": "[!! Phráásëës föör {label} !!]"
 }

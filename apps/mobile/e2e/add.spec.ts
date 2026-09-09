@@ -11,7 +11,32 @@ test('P2-02..P2-24: discovers, tags, adds, associates, and undoes a phrase', asy
 
   await search.fill('not in this catalog')
   await expect(page.getByText('No matches in the library')).toBeVisible()
-  await expect(page.getByText(/Nothing more to suggest here/)).toBeVisible()
+  await expect(page.getByText('Add your own')).toBeVisible()
+  await expect(page.getByText(/Nothing more to suggest here/)).toHaveCount(0)
+
+  await search.fill('dinner tonight')
+  await expect(page.getByRole('button', { name: 'Phrases for Dinner reservation' })).toBeVisible()
+
+  await search.fill('pharmacy')
+  await expect(
+    page.getByText('Looking for phrases…').or(page.getByText('Suggested for this')),
+  ).toBeVisible()
+  await expect(page.getByText('Suggested for this')).toBeVisible()
+  await expect(page.getByText('Suggested — not from the library')).toBeVisible()
+  const suggested = page.getByRole('button', { name: /farmacia de guardia/ })
+  await suggested.click()
+  await expect(page.getByRole('textbox', { name: 'Phrase to add' })).toBeVisible()
+  await page.getByRole('button', { name: 'Add to my stream' }).click()
+  await expect(page.getByRole('alert')).toContainText('Added')
+  await page.getByRole('button', { name: 'Undo' }).click()
+
+  await search.fill('not in this catalog')
+  await page.getByRole('button', { name: /Add .* as your own phrase/ }).click()
+  await page.getByRole('textbox', { name: 'Meaning' }).fill('A phrase I need')
+  await page.getByRole('button', { name: 'Add to my stream' }).click()
+  await expect(page.getByText('11 in stream')).toBeVisible()
+  await page.getByRole('button', { name: 'Undo' }).click()
+  await expect(page.getByText('10 in stream')).toBeVisible()
 
   await search.fill('')
   await page.getByRole('button', { name: 'Dinner reservation' }).click()

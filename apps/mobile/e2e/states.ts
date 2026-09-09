@@ -418,6 +418,42 @@ export const STATES: AppState[] = [
       await open(page, 'Add')
       await page.getByRole('textbox', { name: 'Search phrases' }).fill('not in this catalog')
       await expect(page.getByText('No matches in the library')).toBeVisible()
+      await expect(page.getByText('Add your own')).toBeVisible()
+    },
+  },
+  {
+    name: 'add · discover own',
+    route: '/add',
+    spec: '§2 Add, add your own sheet',
+    reach: async (page) => {
+      await open(page, 'Add')
+      await page.getByRole('textbox', { name: 'Search phrases' }).fill('not in this catalog')
+      await page.getByRole('button', { name: /Add .* as your own phrase/ }).click()
+      await expect(page.getByRole('dialog')).toBeVisible()
+      await expect(page.getByRole('textbox', { name: 'Phrase to add' })).toBeVisible()
+    },
+  },
+  {
+    name: 'add · discover generating',
+    route: '/add',
+    spec: '§2 Add, suggested loading',
+    reach: async (page) => {
+      await open(page, 'Add')
+      await page.getByRole('textbox', { name: 'Search phrases' }).fill('pharmacy')
+      await expect(
+        page.getByText('Looking for phrases…').or(page.getByText('Suggested for this')),
+      ).toBeVisible()
+    },
+  },
+  {
+    name: 'add · discover suggested',
+    route: '/add',
+    spec: '§2 Add, suggested garnish',
+    reach: async (page) => {
+      await open(page, 'Add')
+      await page.getByRole('textbox', { name: 'Search phrases' }).fill('pharmacy')
+      await expect(page.getByText('Suggested for this')).toBeVisible()
+      await expect(page.getByRole('button', { name: /farmacia de guardia/ })).toBeVisible()
     },
   },
   {

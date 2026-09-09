@@ -244,6 +244,29 @@ describe('learner-authored phrases', () => {
     expect(view.catalog).toBeNull()
   })
 
+  it('records generated and chat keep-line sources on own-phrase rows', () => {
+    const generatedId = useApp
+      .getState()
+      .addOwnPhrase(
+        {
+          targetText: '¿Dónde está la farmacia de guardia?',
+          translation: 'Where is the all-night pharmacy?',
+        },
+        { source: 'generated' },
+      )
+    const chatId = useApp
+      .getState()
+      .addOwnPhrase(
+        { targetText: 'La cuenta, por favor.', translation: 'The bill, please.' },
+        { source: 'chat' },
+      )
+    expect(useApp.getState().phrases.find((row) => row.id === generatedId)?.source).toBe(
+      'generated',
+    )
+    expect(useApp.getState().phrases.find((row) => row.id === chatId)?.source).toBe('chat')
+    expect(useApp.getState().phrases.find((row) => row.id === generatedId)?.phraseId).toBeNull()
+  })
+
   it('does not collide with a catalog phrase of the same text, or with itself', () => {
     const a = useApp.getState().addOwnPhrase({ targetText: 'Vale', translation: 'OK' })
     const b = useApp.getState().addOwnPhrase({ targetText: 'Vale', translation: 'OK' })

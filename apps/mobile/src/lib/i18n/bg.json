@@ -426,5 +426,17 @@
   "account.codeLabel": "Код за вход",
   "account.rate-limited": "Твърде много опити. Изчакайте малко и опитайте отново.",
   "account.invalid-email": "Въведете валиден имейл адрес, за да продължите.",
-  "account.deviceProgress": "Напредъкът ви остава запазен на това устройство."
+  "account.deviceProgress": "Напредъкът ви остава запазен на това устройство.",
+  "add.own.action": "Добави своя",
+  "add.own.hint": "Това остава твоя фраза. На следващия екран добавяш значение.",
+  "add.suggested.title": "Предложени за това",
+  "add.suggested.looking": "Търся фрази…",
+  "add.suggested.provenance": "Предложено — не е от библиотеката",
+  "add.sheet.targetPlaceholder": "Фраза на изучавания език",
+  "add.sheet.meaningPlaceholder": "Твоето значение",
+  "a11y.add.ownRow": "Добави „{query}“ като своя фраза",
+  "a11y.add.suggestedRow": "Предложено: {es}. {en}",
+  "a11y.add.sheetTarget": "Фраза за добавяне",
+  "a11y.add.sheetMeaning": "Значение",
+  "a11y.add.nearestScenario": "Фрази за {label}"
 }

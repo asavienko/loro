@@ -22,17 +22,33 @@ import {
   foldSearchText,
   MAX_OWN_PHRASE_TEXT_CODE_UNITS,
   TAGS,
+  candidateIsAddable,
+  canonicalPhraseText,
+  containsPromptInjection,
+  filterNewCandidates,
+  isExactLibraryMatch,
+  matchNearestScenario,
+  phraseHandoff,
+  shouldOfferOwnPhrase,
+  shouldRequestSuggestions,
+  typedOwnPhraseHandoff,
   type BrowsableTheme,
   type Difficulty,
   type NativeLanguage,
+  type PhraseCandidate,
+  type PhraseHandoff,
+  type PhraseHandoffSource,
   type PhraseState,
   type Tag,
   type TargetLocale,
+  type Theme,
 } from '@loro/core'
 import {
+  bundledTopicSuggestions,
   useLearningCatalog,
   type DisplayPhrase as CatalogPhrase,
 } from '../src/store/learningCatalog'
+import { OWN_PHRASE_FALLBACK } from '../src/store/phraseFactory'
 import {
   Button,
   Card,
@@ -114,6 +130,8 @@ const metrics = {
   sheetPhrase: 11,
   /** `‹ Themes` → the drilled theme's title, per the authored header (`Loro.dc.html:304`). */
   drilledTitle: 8,
+  /** Debounce before bundled Discover garnish so typing never blocks the keyboard. */
+  suggestDebounce: 280,
 } as const
 // ─── State ───────────────────────────────────────────────────────────────────
 /** What the learner is looking at: the mode, the filters, and the list they produce. */
@@ -242,12 +260,24 @@ function useSuggestions(owned: readonly PhraseState[]): Suggestions {
     },
   }
 }
-/** What the learner is about to add: the phrase the sheet is open on, and its draft rating. */
+/** What the learner is about to add: a catalog row or an own-phrase handoff. */
+type SheetPhrase =
+  | { kind: 'catalog'; phrase: CatalogPhrase }
+  | {
+      kind: 'own'
+      source: PhraseHandoffSource
+      targetText: string
+      translation: string
+      theme?: Theme
+      emoji?: string
+    }
 interface AddDraft {
-  phrase: CatalogPhrase | null
+  phrase: SheetPhrase | null
   difficulty: Difficulty
   tags: Tag[]
-  open: (phrase: CatalogPhrase) => void
+  openCatalog: (phrase: CatalogPhrase) => void
+  openHandoff: (handoff: PhraseHandoff) => void
+  setOwnField: (field: 'targetText' | 'translation', value: string) => void
   /**
    * Dismiss WITHOUT clearing the draft — reopening the sheet keeps what was picked, which is
    * what the hand-rolled version did. Only a confirmed add resets it.
@@ -259,14 +289,29 @@ interface AddDraft {
   reset: () => void
 }
 function useAddDraft(): AddDraft {
-  const [phrase, setPhrase] = useState<CatalogPhrase | null>(null)
+  const [phrase, setPhrase] = useState<SheetPhrase | null>(null)
   const [difficulty, setDifficulty] = useState<Difficulty>('med')
   const [tags, setTags] = useState<Tag[]>([])
   return {
     phrase,
     difficulty,
     tags,
-    open: setPhrase,
+    openCatalog: (next) => {
+      setPhrase({ kind: 'catalog', phrase: next })
+    },
+    openHandoff: (handoff) => {
+      setPhrase({
+        kind: 'own',
+        source: handoff.source,
+        targetText: handoff.draft.targetText,
+        translation: handoff.draft.translation,
+        ...(handoff.draft.theme === undefined ? {} : { theme: handoff.draft.theme }),
+        ...(handoff.draft.emoji === undefined ? {} : { emoji: handoff.draft.emoji }),
+      })
+    },
+    setOwnField: (field, value) => {
+      setPhrase((cur) => (cur?.kind === 'own' ? { ...cur, [field]: value } : cur))
+    },
     close: () => {
       setPhrase(null)
     },
@@ -281,6 +326,78 @@ function useAddDraft(): AddDraft {
     },
   }
 }
+
+function ownedTargetTexts(
+  owned: readonly PhraseState[],
+  catalog: readonly CatalogPhrase[],
+): string[] {
+  const catalogById = new Map(catalog.map((phrase) => [phrase.id, phrase.targetText]))
+  const texts: string[] = []
+  for (const row of owned) {
+    if (row.phraseId === null) {
+      if (row.ownEs !== undefined && row.ownEs.length > 0) texts.push(row.ownEs)
+      continue
+    }
+    const target = catalogById.get(row.phraseId)
+    if (target !== undefined) texts.push(target)
+  }
+  return texts
+}
+
+function useDiscoverReach(
+  mode: Mode,
+  query: string,
+  catalogHits: readonly CatalogPhrase[],
+  catalog: readonly CatalogPhrase[],
+  owned: readonly PhraseState[],
+  scenarios: readonly { id: string; label: string; emoji: string }[],
+  nativeLanguage: NativeLanguage,
+  targetLocale: TargetLocale,
+): {
+  offerOwn: boolean
+  nearest: { id: string; label: string; emoji: string } | null
+  generating: boolean
+  suggested: readonly PhraseCandidate[]
+} {
+  const exact = useMemo(() => isExactLibraryMatch(query, catalog), [query, catalog])
+  const offerOwn = mode === 'discover' && shouldOfferOwnPhrase(query, exact)
+  const nearest = mode === 'discover' ? matchNearestScenario(query, scenarios) : null
+  const wantSuggest =
+    mode === 'discover' && shouldRequestSuggestions(query, catalogHits.length, exact)
+  const existingTexts = useMemo(
+    () => [...ownedTargetTexts(owned, catalog), ...catalog.map((phrase) => phrase.targetText)],
+    [owned, catalog],
+  )
+  const [generating, setGenerating] = useState(false)
+  const [suggested, setSuggested] = useState<PhraseCandidate[]>([])
+  const seq = useRef(0)
+  useEffect(() => {
+    const id = ++seq.current
+    if (!wantSuggest) {
+      setGenerating(false)
+      setSuggested([])
+      return
+    }
+    setGenerating(true)
+    setSuggested([])
+    const handle = setTimeout(() => {
+      if (id !== seq.current) return
+      const rows = containsPromptInjection(query)
+        ? []
+        : filterNewCandidates(
+            bundledTopicSuggestions(query, nativeLanguage, targetLocale),
+            existingTexts,
+          )
+      if (id !== seq.current) return
+      setSuggested(rows)
+      setGenerating(false)
+    }, metrics.suggestDebounce)
+    return () => {
+      clearTimeout(handle)
+    }
+  }, [wantSuggest, query, nativeLanguage, targetLocale, existingTexts])
+  return { offerOwn, nearest, generating, suggested }
+}
 // ─── The screen ──────────────────────────────────────────────────────────────
 export default function Add() {
   useLocale()
@@ -293,19 +410,52 @@ export default function Add() {
   const clearImportDraft = useApp((s) => s.clearImportDraft)
   const targetLocale = useApp((s) => s.targetLocale)
   const nativeLanguage = useApp((s) => s.nativeLanguage)
+  const { phrases: catalogPhrases, scenarios } = useLearningCatalog()
   const list = useSuggestions(owned)
   const draft = useAddDraft()
+  const reach = useDiscoverReach(
+    list.mode,
+    list.query,
+    list.phrases,
+    catalogPhrases,
+    owned,
+    scenarios,
+    nativeLanguage,
+    targetLocale,
+  )
   const confirmAdd = (): void => {
-    const phrase = draft.phrase
-    if (phrase === null) return
-    addPhrase(phrase.id, {
-      difficulty: draft.difficulty,
-      tags: draft.tags,
-      source: 'discover',
-    })
-    list.anchorOn(phrase.theme)
+    const sheet = draft.phrase
+    if (sheet === null) return
+    if (sheet.kind === 'catalog') {
+      addPhrase(sheet.phrase.id, {
+        difficulty: draft.difficulty,
+        tags: draft.tags,
+        source: 'discover',
+      })
+      list.anchorOn(sheet.phrase.theme)
+      draft.reset()
+      return
+    }
+    if (!candidateIsAddable(sheet)) return
+    addOwnPhrase(
+      {
+        targetText: sheet.targetText,
+        translation: sheet.translation,
+        ...(sheet.theme === undefined ? {} : { theme: sheet.theme }),
+        ...(sheet.emoji === undefined ? {} : { emoji: sheet.emoji }),
+      },
+      { difficulty: draft.difficulty, tags: draft.tags, source: sheet.source },
+    )
+    if (sheet.source !== 'custom' && sheet.theme !== undefined) list.anchorOn(sheet.theme)
     draft.reset()
   }
+  const showCatalogEmpty =
+    list.phrases.length === 0 &&
+    (list.browseTheme !== null ||
+      !(
+        list.mode === 'discover' &&
+        (reach.offerOwn || reach.generating || reach.suggested.length > 0)
+      ))
   return (
     <Screen>
       <AddHeader
@@ -353,11 +503,47 @@ export default function Add() {
               )}
             </Row>
 
-            <SuggestionList
-              phrases={list.phrases}
-              drilledTheme={list.browseTheme !== null}
-              onSelect={draft.open}
-            />
+            {list.mode === 'discover' && reach.nearest !== null ? (
+              <NearestScenarioHint
+                scenario={reach.nearest}
+                selected={list.scenario === reach.nearest.id}
+                onToggle={list.toggleScenario}
+              />
+            ) : null}
+
+            {list.phrases.length > 0 || showCatalogEmpty ? (
+              <SuggestionList
+                phrases={list.phrases}
+                drilledTheme={list.browseTheme !== null}
+                onSelect={draft.openCatalog}
+              />
+            ) : null}
+
+            {list.mode === 'discover' && reach.generating ? (
+              <View accessibilityLiveRegion="polite">
+                <Text variant="caption" color={ink.muted}>
+                  {copy.add.suggested.looking}
+                </Text>
+              </View>
+            ) : null}
+
+            {list.mode === 'discover' && !reach.generating && reach.suggested.length > 0 ? (
+              <SuggestedList
+                candidates={reach.suggested}
+                onSelect={(candidate) => {
+                  draft.openHandoff(phraseHandoff(candidate))
+                }}
+              />
+            ) : null}
+
+            {list.mode === 'discover' && reach.offerOwn ? (
+              <OwnPhraseRow
+                query={list.query.trim()}
+                onPress={() => {
+                  draft.openHandoff(typedOwnPhraseHandoff(list.query))
+                }}
+              />
+            ) : null}
           </>
         )}
       </ScrollView>
@@ -368,6 +554,7 @@ export default function Add() {
         tags={draft.tags}
         onDifficultyChange={draft.setDifficulty}
         onToggleTag={draft.toggleTag}
+        onOwnFieldChange={draft.setOwnField}
         onDismiss={draft.close}
         onConfirm={confirmAdd}
       />
@@ -567,6 +754,102 @@ function AddGlyph() {
         {copy.add.addGlyph}
       </Text>
     </View>
+  )
+}
+
+function SuggestedGlyph() {
+  useLocale()
+  return (
+    <View style={s.suggestedGlyph}>
+      <Text variant="headline" color={ink.ink2}>
+        {copy.add.addGlyph}
+      </Text>
+    </View>
+  )
+}
+
+function NearestScenarioHint({
+  scenario,
+  selected,
+  onToggle,
+}: {
+  scenario: { id: string; label: string; emoji: string }
+  selected: boolean
+  onToggle: (id: string) => void
+}) {
+  useLocale()
+  return (
+    <Chip
+      variant="scenario"
+      tone="solid"
+      emoji={scenario.emoji}
+      label={copy.add.context.forScenario(scenario.label)}
+      selected={selected}
+      accessibilityLabel={copy.a11y.add.nearestScenario(scenario.label)}
+      onPress={() => {
+        onToggle(scenario.id)
+      }}
+    />
+  )
+}
+
+function OwnPhraseRow({ query, onPress }: { query: string; onPress: () => void }) {
+  useLocale()
+  return (
+    <Pressable
+      feedback="row"
+      accessibilityLabel={copy.a11y.add.ownRow(query)}
+      accessibilityHint={copy.a11y.add.opensSheet}
+      onPress={onPress}
+      style={s.ownRow}
+    >
+      <Text variant="title3">{OWN_PHRASE_FALLBACK.emoji}</Text>
+      <View style={s.grow}>
+        <Text variant="bodySm" color={ink.ink} lang="target">
+          {query}
+        </Text>
+        <Text variant="captionSm" color={ink.muted}>
+          {copy.add.own.action}
+        </Text>
+      </View>
+      <AddGlyph />
+    </Pressable>
+  )
+}
+
+function SuggestedList({
+  candidates,
+  onSelect,
+}: {
+  candidates: readonly PhraseCandidate[]
+  onSelect: (candidate: PhraseCandidate) => void
+}) {
+  useLocale()
+  return (
+    <>
+      <SectionLabel>{copy.add.suggested.title}</SectionLabel>
+      <Text variant="captionSm" color={ink.muted}>
+        {copy.add.suggested.provenance}
+      </Text>
+      {candidates.map((candidate) => (
+        <PhraseRow
+          key={canonicalPhraseText(candidate.targetText)}
+          variant="suggestion"
+          targetText={candidate.targetText}
+          translation={candidate.translation}
+          emoji={candidate.emoji ?? OWN_PHRASE_FALLBACK.emoji}
+          accessibilityLabel={copy.a11y.add.suggestedRow(
+            candidate.targetText,
+            candidate.translation,
+          )}
+          accessibilityHint={copy.a11y.add.opensSheet}
+          onPress={() => {
+            onSelect(candidate)
+          }}
+          trailing={<SuggestedGlyph />}
+        />
+      ))}
+    </>
   )
 }
 
@@ -880,36 +1163,80 @@ function TaggingSheet({
   tags,
   onDifficultyChange,
   onToggleTag,
+  onOwnFieldChange,
   onDismiss,
   onConfirm,
 }: {
-  phrase: CatalogPhrase | null
+  phrase: SheetPhrase | null
   difficulty: Difficulty
   tags: readonly Tag[]
   onDifficultyChange: (difficulty: Difficulty) => void
   onToggleTag: (tag: Tag) => void
+  onOwnFieldChange: (field: 'targetText' | 'translation', value: string) => void
   onDismiss: () => void
   onConfirm: () => void
 }) {
   useLocale()
+  const catalog = phrase?.kind === 'catalog' ? phrase.phrase : null
+  const own = phrase?.kind === 'own' ? phrase : null
+  const canConfirm =
+    phrase === null ? false : phrase.kind === 'catalog' || candidateIsAddable(phrase)
   return (
     <Sheet visible={phrase !== null} onDismiss={onDismiss} dismissLabel={copy.a11y.common.dismiss}>
       {/* The guard stays INSIDE the sheet: `Modal` mounts its children either way. */}
       {phrase !== null && (
         <>
-          <Card>
-            <Row gap={metrics.sheetPhrase}>
-              <EmojiTile emoji={phrase.emoji} />
-              <View style={s.sheetPhraseLines}>
-                <Text variant="headline" color={ink.ink} lang="target">
-                  {phrase.targetText}
-                </Text>
-                <Text variant="captionSm" color={ink.muted}>
-                  {phrase.translation}
-                </Text>
-              </View>
-            </Row>
-          </Card>
+          {catalog !== null ? (
+            <Card>
+              <Row gap={metrics.sheetPhrase}>
+                <EmojiTile emoji={catalog.emoji} />
+                <View style={s.sheetPhraseLines}>
+                  <Text variant="headline" color={ink.ink} lang="target">
+                    {catalog.targetText}
+                  </Text>
+                  <Text variant="captionSm" color={ink.muted}>
+                    {catalog.translation}
+                  </Text>
+                </View>
+              </Row>
+            </Card>
+          ) : null}
+          {own !== null ? (
+            <Stack gap={space['2']}>
+              <Card>
+                <Row gap={metrics.sheetPhrase}>
+                  <EmojiTile emoji={own.emoji ?? OWN_PHRASE_FALLBACK.emoji} />
+                  <View style={s.sheetPhraseLines}>
+                    <TextInput
+                      value={own.targetText}
+                      onChangeText={(value) => {
+                        onOwnFieldChange('targetText', value)
+                      }}
+                      placeholder={copy.add.sheet.targetPlaceholder}
+                      placeholderTextColor={ink.muted2}
+                      accessibilityLabel={copy.a11y.add.sheetTarget}
+                      maxLength={MAX_OWN_PHRASE_TEXT_CODE_UNITS}
+                      style={s.sheetInput}
+                    />
+                    <TextInput
+                      value={own.translation}
+                      onChangeText={(value) => {
+                        onOwnFieldChange('translation', value)
+                      }}
+                      placeholder={copy.add.sheet.meaningPlaceholder}
+                      placeholderTextColor={ink.muted2}
+                      accessibilityLabel={copy.a11y.add.sheetMeaning}
+                      maxLength={MAX_OWN_PHRASE_TEXT_CODE_UNITS}
+                      style={s.sheetInput}
+                    />
+                  </View>
+                </Row>
+              </Card>
+              <Text variant="captionSm" color={ink.muted}>
+                {copy.add.own.hint}
+              </Text>
+            </Stack>
+          ) : null}
 
           <Stack gap={metrics.sheetGroup}>
             <Text variant="caption" color={ink.ink}>
@@ -942,7 +1269,7 @@ function TaggingSheet({
             />
           </Stack>
 
-          <Button label={copy.add.confirm} onPress={onConfirm} />
+          <Button label={copy.add.confirm} onPress={onConfirm} disabled={!canConfirm} />
         </>
       )}
     </Sheet>
@@ -999,6 +1326,33 @@ const s = StyleSheet.create({
     backgroundColor: accent.wash,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  suggestedGlyph: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    borderWidth: border.hairline,
+    borderColor: line.default,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  ownRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: 11,
+    backgroundColor: surface.card,
+    borderWidth: border.selected,
+    borderColor: accent.accent,
+    borderRadius: radius.lg,
+    padding: 14,
+  },
+  sheetInput: {
+    minHeight: 44,
+    paddingHorizontal: space['2'],
+    color: ink.ink,
+    borderBottomWidth: border.hairline,
+    borderBottomColor: line.default,
   },
   // ── Import review ──
   importInputCard: { paddingHorizontal: 13 },
