@@ -36,6 +36,10 @@ import { expect, type Page } from '@playwright/test'
  */
 export type LocalInstant = string
 
+/** Mid-morning so Today has an open wave when the runner is after local midnight. */
+export const MANIFEST_CLOCK: LocalInstant = '2026-04-06T10:00'
+const installedClocks = new WeakSet<Page>()
+
 /**
  * Install a frozen clock reading `local` in the browser's pinned timezone.
  *
@@ -44,7 +48,14 @@ export type LocalInstant = string
  */
 export async function atInstant(page: Page, local: LocalInstant): Promise<void> {
   await page.clock.install({ time: await epochFor(page, local) })
+  installedClocks.add(page)
   await expectPageReads(page, local)
+}
+
+/** Pin an open-wave instant unless the spec already installed a clock. */
+export async function ensureManifestClock(page: Page): Promise<void> {
+  if (installedClocks.has(page)) return
+  await atInstant(page, MANIFEST_CLOCK)
 }
 
 /**
