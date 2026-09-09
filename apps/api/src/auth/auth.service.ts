@@ -9,7 +9,7 @@ import type {
   SignInResponse,
   TokenResponse,
   User,
-} from '@loro/core/api/target'
+} from '@loro/core/api/account'
 import { SERVER_CLOCK, type ServerClock } from '../common/clock.js'
 import { config } from '../common/config.js'
 import { LoroError } from '../common/errors.js'

@@ -4,6 +4,7 @@ import {
   decodeCheckpoint,
   encodeCheckpoint,
   TARGET_LOCALES,
+  USER_PHRASE_SYNC_FIELDS,
   type Clock,
   type FieldWrite,
   type PhraseState,
@@ -46,9 +47,11 @@ type Values = Record<string, string | number | boolean | null>
 export function phraseFields(phrase: PhraseState): Values {
   const { srs } = phrase
   const result: Values = {}
-  for (const [key, value] of Object.entries(phrase)) {
-    if (key === 'id' || key === 'srs' || value === undefined) continue
-    result[key] = Array.isArray(value)
+  for (const { wire } of USER_PHRASE_SYNC_FIELDS) {
+    if (wire === 'deletedAt' || wire.startsWith('srs')) continue
+    const value = phrase[wire as keyof PhraseState]
+    if (value === undefined) continue
+    result[wire] = Array.isArray(value)
       ? JSON.stringify(value)
       : (value as string | number | boolean | null)
   }

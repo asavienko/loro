@@ -37,7 +37,7 @@ describe('F-08 course isolation', () => {
     const spanish = useApp.getState().phrases[0]
     if (!spanish) throw new Error('Missing seed')
     useApp.getState().applyDelta({ phraseId: spanish.id, reps: 1 })
-    useApp.setState({ streamCursor: 2 })
+    useApp.getState().setStreamCursor(2)
     const before = useApp.getState()
     useApp.getState().setLanguages('en', 'bg-BG')
     expect(useApp.getState().phrases).toHaveLength(0)

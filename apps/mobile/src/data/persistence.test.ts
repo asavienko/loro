@@ -36,7 +36,7 @@ import { openNodeSqlite } from './driver.node'
 const AT = 1_785_231_660_000
 const DAY = '2026-07-28'
 
-/** A deterministic stand-in for core-rs's HLC, which has no JS bridge yet. */
+/** A deterministic stand-in for production HLC ticks (`hlc_tick` is already bridged). */
 function fakeHlc(): () => string {
   let n = 0
   return () => `${String(AT)}:${String(n++).padStart(4, '0')}:test`

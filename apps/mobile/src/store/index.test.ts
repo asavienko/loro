@@ -16,6 +16,8 @@ import {
   dataOf,
   INITIAL_STATE,
   packs,
+  PRODUCTION_WAVES,
+  PRODUCTION_WAVE_TIMES,
   toView,
   useApp,
 } from './index'
@@ -45,6 +47,7 @@ describe('the public surface', () => {
     expect(Object.keys(store).sort()).toEqual(
       [
         'INITIAL_STATE',
+        'PRODUCTION_WAVES',
         'PRODUCTION_WAVE_TIMES',
         'addPracticeDay',
         'applyDeltaToPhrase',
@@ -57,6 +60,7 @@ describe('the public surface', () => {
         'packs',
         'refrainEngine',
         'scenarios',
+        'speakEngine',
         'streamEngine',
         'toView',
         'useApp',
@@ -64,6 +68,8 @@ describe('the public surface', () => {
         'useViews',
       ].sort(),
     )
+    expect(PRODUCTION_WAVES).toEqual(['morning', 'midday', 'evening'])
+    expect(PRODUCTION_WAVE_TIMES).toHaveLength(PRODUCTION_WAVES.length)
   })
 })
 
@@ -299,6 +305,71 @@ describe('persistence failures', () => {
     ).toThrow(failure)
     expect(reported).toEqual([failure])
     expect(isolated.getState().phrases).toEqual([])
+  })
+})
+
+describe('typed practice writes', () => {
+  const emptyPlan = {
+    engineId: 'refrain' as const,
+    items: [],
+    estimatedMs: 0,
+    closed: true,
+  }
+
+  it('moves the stream cursor through the practice action', () => {
+    useApp.getState().setStreamCursor(4)
+    expect(useApp.getState().streamCursor).toBe(4)
+  })
+
+  it('opens a Refrain session with the same resume identity the route used to write', () => {
+    const isolated = createAppStore({
+      clock: {
+        now: () => 1_785_231_660_000,
+        localDay: () => '2026-07-28',
+        streakDay: () => '2026-07-28',
+      },
+      newId: createUserPhraseIds({
+        now: () => 1_785_231_660_000,
+        bytes: (count) => new Uint8Array(count).fill(9),
+      }),
+    })
+
+    isolated.getState().beginRefrainSession(emptyPlan, 'morning')
+
+    const resume = isolated.getState().refrainResume
+    expect(resume.wave).toBe('morning')
+    expect(resume.cursor).toBe(0)
+    expect(resume.done).toBe(false)
+    expect(resume.lastLatency).toBeNull()
+    expect(resume.history).toEqual([])
+    expect(resume.session).toEqual({
+      sessionId: resume.session?.sessionId,
+      plan: emptyPlan,
+      cursor: 0,
+    })
+    expect(resume.session?.sessionId).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[0-9a-f]{4}-[0-9a-f]{12}$/,
+    )
+  })
+
+  it('writes a mid-session checkpoint without completing the wave', () => {
+    useApp.getState().beginRefrainSession(emptyPlan, 'midday')
+    const session = useApp.getState().refrainResume.session
+    expect(session).not.toBeNull()
+    if (session === null) return
+
+    const checkpoint = {
+      session: { ...session, cursor: 2 },
+      wave: 'midday' as const,
+      cursor: 2,
+      done: false,
+      lastLatency: null,
+      history: [],
+    }
+    useApp.getState().saveRefrainCheckpoint(checkpoint)
+
+    expect(useApp.getState().refrainResume).toEqual(checkpoint)
+    expect(useApp.getState().refrainWaves).toEqual([])
   })
 })
 

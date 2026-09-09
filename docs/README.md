@@ -5,6 +5,11 @@ structural cleanup of **shipped** code: dual TS/Rust numbers, contract schema fo
 store holes, and docs that lag `AppModule`. It is not an implementation plan and does not claim
 whole-plan acceptance.
 
+[Native libraries and approaches — 2026-09-09](reviews/2026-09-09-native-libraries-and-approaches.md)
+is a companion to that sequence: Expo/RN keep-vs-adopt-vs-avoid for touches, switches, haptics,
+speech, persistence, notifications and widgets. It does not replace A–G and does not install
+packages.
+
 [Screen capture plan review — 2026-09-09](reviews/2026-09-09-screen-capture-plan-review.md) compares
 the screenshot command with its strengthened plan and records suggested fixes.
 

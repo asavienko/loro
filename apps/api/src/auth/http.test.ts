@@ -19,7 +19,7 @@ import { ProblemDetailsFilter } from '../common/problem-filter.js'
 import { DATABASE, PostgresDatabase } from '../database/database.js'
 import { AuthService } from './auth.service.js'
 import { AUTH_RUNTIME } from './runtime.js'
-import { OAuthFlowService, hash, secret } from './service.js'
+import { OAuthFlowService, hash, secret } from './oauth-flow.service.js'
 import type { AuthSettings } from './settings.js'
 
 const testUrl = process.env['LORO_TEST_DATABASE_URL']

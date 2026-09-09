@@ -12,11 +12,13 @@
  * ── Why this file exists at all ──
  * `core-rs` owns every number that must be identical across platforms (ADR-0002), and
  * these are such numbers — the widget computes a streak natively, with no JS in reach.
- * The app has no UniFFI bridge yet (plans/09-native-toolchain-and-dev-client.md), so
- * this is the stand-in, and it is kept honest rather than trusted:
- * `calendar.fixtures.json` is asserted by BOTH `calendar.test.ts` and
+ * UniFFI already exports `streak_day_for` (and the rest of this module). Production JS
+ * still uses this TypeScript mirror via `streakDayFor` in `apps/mobile/src/lib/clock.ts`.
+ * The JSON WASM `bridge.rs` does not dispatch calendar methods (HLC is bridged). Parity
+ * fixtures (`calendar.fixtures.json`) are asserted by both `calendar.test.ts` and
  * `core-rs/tests/parity.rs`, so a divergence fails the build in one language or the
- * other. When the bridge lands this module is deleted, not maintained — see
+ * other. This module stays the JS owner until plan 70's widgets call UniFFI directly —
+ * do not delete it because the native export exists. See
  * plans/archive/2026-07-30/05-fix-shared-maths-duplication.md.
  *
  * ── The wall-ms convention ──

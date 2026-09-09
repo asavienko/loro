@@ -3,11 +3,11 @@ import { randomBytes, createHash } from 'node:crypto'
 import { LoroError } from '../common/errors.js'
 import type { ServerClock } from '../common/clock.js'
 import type { OAuthProvider } from '@loro/core/api/oauth'
-import type { DeviceRegistration, SignInResponse } from '@loro/core/api/target'
+import type { DeviceRegistration, SignInResponse } from '@loro/core/api/account'
 import type { SqlDatabase } from '../database/database.js'
 import type { AuthSettings } from './settings.js'
 import { providerEnabled } from './settings.js'
-import type { IdentityProvider } from './provider.js'
+import type { OAuthIdentity } from './provider.js'
 import type { AuthService } from './auth.service.js'
 import { OAuthRepository } from './repository.js'
 
@@ -22,7 +22,7 @@ export class OAuthFlowService {
   constructor(
     readonly settings: AuthSettings,
     private readonly database: SqlDatabase,
-    private readonly provider: IdentityProvider,
+    private readonly provider: OAuthIdentity,
     private readonly sessions: AuthService,
     private readonly clock: ServerClock,
   ) {

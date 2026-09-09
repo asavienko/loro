@@ -95,37 +95,6 @@ export const DEFAULT_REP_TARGET = 6
 /** Distinct lock-in days before a phrase graduates out of rotation. */
 export const LOCK_IN_DAYS_TO_GRADUATE = 4
 
-/** Set size from the learner's daily-minutes answer. */
-// These pure helper exports remain for API compatibility and deterministic fixtures.
-// Production engines obtain the corresponding values from the canonical core facade.
-export function refrainSetSize(dailyMinutes: number): number {
-  if (dailyMinutes <= 5) return 3
-  if (dailyMinutes <= 10) return 5
-  return 8
-}
-
-/** The mode for a rep index, clamped at the last. Reps past Cold stay Cold. */
-export function modeForRep(repIndex: number): RefrainMode {
-  const i = Math.min(Math.max(repIndex, 0), REFRAIN_MODES.length - 1)
-  return REFRAIN_MODES[i] ?? 'cold'
-}
-
-/** Model-audio rate, or null when the mode deliberately withholds the model. */
-export function modelRateForMode(mode: RefrainMode): number | null {
-  return mode === 'speed' ? 1.15 : mode === 'echo' || mode === 'chorus' ? 0.95 : null
-}
-
-/** Beat tempo. Speed mode's faster beat is the only cue that it differs. */
-export function beatMsForMode(mode: RefrainMode): number {
-  return mode === 'speed' ? 340 : 720
-}
-
-/** `min(100, round(reps / target * 100))`. Blueprint contract. */
-export function automaticity(repsToday: number, target: number): number {
-  if (target <= 0) return 0
-  return Math.min(100, Math.round((repsToday / target) * 100))
-}
-
 /** The four warming bands. The card's colour IS the feedback signal. */
 export type WarmBand = 'cold' | 'warm' | 'hot' | 'peak'
 

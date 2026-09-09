@@ -3198,7 +3198,8 @@
         "type": "object",
         "properties": {
           "type": {
-            "type": "string"
+            "type": "string",
+            "format": "uri"
           },
           "title": {
             "type": "string"
@@ -3207,9 +3208,6 @@
             "type": "integer",
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
-          },
-          "detail": {
-            "type": "string"
           },
           "code": {
             "type": "string",
@@ -3226,6 +3224,12 @@
               "NOT_FOUND",
               "CURSOR_EXPIRED"
             ]
+          },
+          "detail": {
+            "type": "string"
+          },
+          "min_app_version": {
+            "type": "string"
           }
         },
         "required": [
@@ -4247,10 +4251,14 @@
         "type": "object",
         "properties": {
           "from": {
-            "type": "number"
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
           },
           "to": {
-            "type": "number"
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
           },
           "upserts": {
             "type": "array",
@@ -4458,7 +4466,7 @@
                 "theme",
                 "emoji"
               ],
-              "additionalProperties": false
+              "additionalProperties": {}
             }
           },
           "deprecations": {
@@ -4467,17 +4475,19 @@
               "type": "object",
               "properties": {
                 "id": {
-                  "type": "string"
+                  "type": "string",
+                  "pattern": "^[a-z0-9]{2,12}$"
                 },
                 "deprecated_by": {
-                  "type": "string"
+                  "type": "string",
+                  "pattern": "^[a-z0-9]{2,12}$"
                 }
               },
               "required": [
                 "id",
                 "deprecated_by"
               ],
-              "additionalProperties": false
+              "additionalProperties": {}
             }
           },
           "full_resync_required": {
@@ -10656,18 +10666,28 @@
             "type": "object",
             "properties": {
               "place": {
-                "type": "string"
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2000
               },
               "city": {
-                "type": "string"
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2000
               },
               "emoji": {
-                "type": "string"
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 8
               },
               "role": {
-                "type": "string"
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2000
               },
               "turns": {
+                "minItems": 3,
+                "maxItems": 4,
                 "type": "array",
                 "items": {
                   "type": "object",
@@ -10676,10 +10696,14 @@
                       "type": "object",
                       "properties": {
                         "es": {
-                          "type": "string"
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 2000
                         },
                         "en": {
-                          "type": "string"
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 2000
                         }
                       },
                       "required": [
@@ -10689,24 +10713,33 @@
                       "additionalProperties": false
                     },
                     "options": {
+                      "minItems": 3,
+                      "maxItems": 3,
                       "type": "array",
                       "items": {
                         "type": "object",
                         "properties": {
                           "es": {
-                            "type": "string"
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 2000
                           },
                           "en": {
-                            "type": "string"
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 2000
                           },
                           "best": {
                             "type": "boolean"
                           },
                           "tip": {
-                            "type": "string"
+                            "type": "string",
+                            "minLength": 10,
+                            "maxLength": 1000
                           },
                           "phrase_id": {
-                            "type": "string"
+                            "type": "string",
+                            "pattern": "^[a-z0-9]{2,12}$"
                           }
                         },
                         "required": [
@@ -10729,10 +10762,14 @@
                 "type": "object",
                 "properties": {
                   "es": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
                   },
                   "en": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
                   }
                 },
                 "required": [
