@@ -46,25 +46,25 @@ typedef struct RustCallStatus {
 #endif // def UNIFFI_SHARED_H
 #ifndef UNIFFI_FFIDEF_RUST_FUTURE_CONTINUATION_CALLBACK
 #define UNIFFI_FFIDEF_RUST_FUTURE_CONTINUATION_CALLBACK
-typedef void (*UniffiRustFutureContinuationCallback)(uint64_t, int8_t
+typedef void (*UniffiRustFutureContinuationCallback)(uint64_t, int8_
     );
 
 #endif
 #ifndef UNIFFI_FFIDEF_FOREIGN_FUTURE_DROPPED_CALLBACK
 #define UNIFFI_FFIDEF_FOREIGN_FUTURE_DROPPED_CALLBACK
-typedef void (*UniffiForeignFutureDroppedCallback)(uint64_t
+typedef void (*UniffiForeignFutureDroppedCallback)(uint64_
     );
 
 #endif
 #ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_FREE
 #define UNIFFI_FFIDEF_CALLBACK_INTERFACE_FREE
-typedef void (*UniffiCallbackInterfaceFree)(uint64_t
+typedef void (*UniffiCallbackInterfaceFree)(uint64_
     );
 
 #endif
 #ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_CLONE
 #define UNIFFI_FFIDEF_CALLBACK_INTERFACE_CLONE
-typedef uint64_t (*UniffiCallbackInterfaceClone)(uint64_t
+typedef uint64_t (*UniffiCallbackInterfaceClone)(uint64_
     );
 
 #endif
@@ -373,6 +373,11 @@ RustBuffer uniffi_loro_core_fn_func_draw(RustBuffer deck, uint64_t seed, RustBuf
 uint32_t uniffi_loro_core_fn_func_need(RustBuffer p, int64_t now_ms, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_COPY_KEY_FOR
+#define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_COPY_KEY_FOR
+RustBuffer uniffi_loro_core_fn_func_copy_key_for(RustBuffer category, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_DEEP_LINK_FOR
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_DEEP_LINK_FOR
 RustBuffer uniffi_loro_core_fn_func_deep_link_for(RustBuffer category, RustCallStatus *_Nonnull out_status
@@ -386,6 +391,11 @@ int8_t uniffi_loro_core_fn_func_is_quiet_hour(uint32_t hour, RustCallStatus *_No
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_MAY_FIRE
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_MAY_FIRE
 int8_t uniffi_loro_core_fn_func_may_fire(RustBuffer category, RustBuffer ctx, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_PLAN_NOTIFICATIONS
+#define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_PLAN_NOTIFICATIONS
+RustBuffer uniffi_loro_core_fn_func_plan_notifications(RustBuffer ctx, RustBuffer candidates, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_FN_FUNC_REPEAT_TARGET
@@ -721,265 +731,277 @@ void ffi_loro_core_rust_future_complete_void(uint64_t handle, RustCallStatus *_N
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_MATCH_TOKENS
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_MATCH_TOKENS
 uint16_t uniffi_loro_core_checksum_func_match_tokens(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_NORMALIZE
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_NORMALIZE
 uint16_t uniffi_loro_core_checksum_func_normalize(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_TOKENIZE
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_TOKENIZE
 uint16_t uniffi_loro_core_checksum_func_tokenize(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_CORE_CALL
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_CORE_CALL
 uint16_t uniffi_loro_core_checksum_func_core_call(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_DAYS_BETWEEN
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_DAYS_BETWEEN
 uint16_t uniffi_loro_core_checksum_func_days_between(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_STREAK
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_STREAK
 uint16_t uniffi_loro_core_checksum_func_streak(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_STREAK_DAY_FOR
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_STREAK_DAY_FOR
 uint16_t uniffi_loro_core_checksum_func_streak_day_for(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_STREAK_SURVIVES
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_STREAK_SURVIVES
 uint16_t uniffi_loro_core_checksum_func_streak_survives(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_NORMALIZE_F0
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_NORMALIZE_F0
 uint16_t uniffi_loro_core_checksum_func_normalize_f0(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_ADVANCE_AXES
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_ADVANCE_AXES
 uint16_t uniffi_loro_core_checksum_func_advance_axes(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_BAND
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_BAND
 uint16_t uniffi_loro_core_checksum_func_band(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_EARNS_LEVEL_UP
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_EARNS_LEVEL_UP
 uint16_t uniffi_loro_core_checksum_func_earns_level_up(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_DAILY_REVIEW_CAP
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_DAILY_REVIEW_CAP
 uint16_t uniffi_loro_core_checksum_func_daily_review_cap(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_FORMAT_INTERVAL
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_FORMAT_INTERVAL
 uint16_t uniffi_loro_core_checksum_func_format_interval(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_GRADE_FOR_CONFIDENCE
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_GRADE_FOR_CONFIDENCE
 uint16_t uniffi_loro_core_checksum_func_grade_for_confidence(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_INITIAL_DIFFICULTY
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_INITIAL_DIFFICULTY
 uint16_t uniffi_loro_core_checksum_func_initial_difficulty(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_NUDGE_DIFFICULTY
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_NUDGE_DIFFICULTY
 uint16_t uniffi_loro_core_checksum_func_nudge_difficulty(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_REVIEW_GRADE
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_REVIEW_GRADE
 uint16_t uniffi_loro_core_checksum_func_review_grade(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_INITIALIZE
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_INITIALIZE
 uint16_t uniffi_loro_core_checksum_func_initialize(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_RERATE
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_RERATE
 uint16_t uniffi_loro_core_checksum_func_rerate(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_RETRIEVABILITY
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_RETRIEVABILITY
 uint16_t uniffi_loro_core_checksum_func_retrievability(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_REVIEW
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_REVIEW
 uint16_t uniffi_loro_core_checksum_func_review(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_REVIEW_CONFIDENCE
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_REVIEW_CONFIDENCE
 uint16_t uniffi_loro_core_checksum_func_review_confidence(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_CLIMB
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_CLIMB
 uint16_t uniffi_loro_core_checksum_func_climb(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_DRAW
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_DRAW
 uint16_t uniffi_loro_core_checksum_func_draw(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_NEED
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_NEED
 uint16_t uniffi_loro_core_checksum_func_need(void
-    
+
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_COPY_KEY_FOR
+#define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_COPY_KEY_FOR
+uint16_t uniffi_loro_core_checksum_func_copy_key_for(void
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_DEEP_LINK_FOR
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_DEEP_LINK_FOR
 uint16_t uniffi_loro_core_checksum_func_deep_link_for(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_IS_QUIET_HOUR
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_IS_QUIET_HOUR
 uint16_t uniffi_loro_core_checksum_func_is_quiet_hour(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_MAY_FIRE
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_MAY_FIRE
 uint16_t uniffi_loro_core_checksum_func_may_fire(void
-    
+
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_PLAN_NOTIFICATIONS
+#define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_PLAN_NOTIFICATIONS
+uint16_t uniffi_loro_core_checksum_func_plan_notifications(void
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_REPEAT_TARGET
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_REPEAT_TARGET
 uint16_t uniffi_loro_core_checksum_func_repeat_target(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_STREAM_RANK
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_STREAM_RANK
 uint16_t uniffi_loro_core_checksum_func_stream_rank(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_AUTOMATICITY
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_AUTOMATICITY
 uint16_t uniffi_loro_core_checksum_func_automaticity(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_BEAT_MS_FOR_MODE
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_BEAT_MS_FOR_MODE
 uint16_t uniffi_loro_core_checksum_func_beat_ms_for_mode(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_CLOZE_MASK
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_CLOZE_MASK
 uint16_t uniffi_loro_core_checksum_func_cloze_mask(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_EFFORT_STATE
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_EFFORT_STATE
 uint16_t uniffi_loro_core_checksum_func_effort_state(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_MODE_FOR_REP
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_MODE_FOR_REP
 uint16_t uniffi_loro_core_checksum_func_mode_for_rep(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_MODEL_RATE_FOR_MODE
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_MODEL_RATE_FOR_MODE
 uint16_t uniffi_loro_core_checksum_func_model_rate_for_mode(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_REFRAIN_SET_SIZE
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_REFRAIN_SET_SIZE
 uint16_t uniffi_loro_core_checksum_func_refrain_set_size(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_SELECT_REFRAIN_SET
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_SELECT_REFRAIN_SET
 uint16_t uniffi_loro_core_checksum_func_select_refrain_set(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_CLAMP_TO_SERVER
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_CLAMP_TO_SERVER
 uint16_t uniffi_loro_core_checksum_func_clamp_to_server(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_IS_SKEWED
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_IS_SKEWED
 uint16_t uniffi_loro_core_checksum_func_is_skewed(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_RECEIVE
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_RECEIVE
 uint16_t uniffi_loro_core_checksum_func_receive(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_TICK
 #define UNIFFI_FFIDEF_UNIFFI_LORO_CORE_CHECKSUM_FUNC_TICK
 uint16_t uniffi_loro_core_checksum_func_tick(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_FFI_LORO_CORE_UNIFFI_CONTRACT_VERSION
 #define UNIFFI_FFIDEF_FFI_LORO_CORE_UNIFFI_CONTRACT_VERSION
 uint32_t ffi_loro_core_uniffi_contract_version(void
-    
+
 );
 #endif
 
