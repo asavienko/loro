@@ -10,8 +10,8 @@
   adapters; no native prerequisite.
 - **Reviewed:** 2026-09-09 against checkout `42f4d57`; source/plan review only, no new device or
   deployment acceptance. Subsequent local content-contract validation on 2026-09-09 passed the
-  shared schema/registry suite, registered HTTP contract tests, controller pair checks and
-  core/API typechecks; image, load and operational gates remain open.
+  shared schema/registry suite, registered HTTP contract tests, controller pair checks and core/API
+  typechecks; image, load and operational gates remain open.
 
 ## Implemented scope
 

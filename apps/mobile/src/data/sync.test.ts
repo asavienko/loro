@@ -743,13 +743,11 @@ describe('durable sync and canonical Rust merge', () => {
     seed(db)
     db.local.applyPage(page([], 'existing'))
     const pending = db.local.pending(100)
-    const fetcher = vi
-      .fn<typeof fetch>()
-      .mockResolvedValue(
-        new Response(JSON.stringify({ ...response([]), accepted: 'incompatible' }), {
-          status: 200,
-        }),
-      )
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(JSON.stringify({ ...response([]), accepted: 'incompatible' }), {
+        status: 200,
+      }),
+    )
     const options = {
       local: db.local,
       transport: createHttpSyncTransport({

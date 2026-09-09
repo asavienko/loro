@@ -8,11 +8,11 @@ Guidance for Claude Code working in this repository.
 
 Early implementation. **What exists:** eight of the v1.1 design package's 23 learner screens,
 Languages, Account and More utilities, the shared shell and a developer workbench. Local progress
-and course/session state commit to native OP-SQLite or browser SQLite before rendering. Rust owns FSRS,
-ranking, selection, matching, clocks and merge through generated WASM/UniFFI bridges. Native modules
-provide foreground device TTS and strictly on-device ASR with an offline Speak reveal fallback. The
-API stores accounts, sessions and tenant-scoped sync in PostgreSQL. Optional Google/Apple and email
-sign-in connect durable local progress to cross-device sync.
+and course/session state commit to native OP-SQLite or browser SQLite before rendering. Rust owns
+FSRS, ranking, selection, matching, clocks and merge through generated WASM/UniFFI bridges. Native
+modules provide foreground device TTS and strictly on-device ASR with an offline Speak reveal
+fallback. The API stores accounts, sessions and tenant-scoped sync in PostgreSQL. Optional
+Google/Apple and email sign-in connect durable local progress to cross-device sync.
 
 The three 31-phrase Spanish/Bulgarian/Russian starters still await bilingual review. The other 15
 learner screens, production recorded audio/cache, background audio, measured onset latency, DSP,
