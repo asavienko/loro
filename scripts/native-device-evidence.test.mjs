@@ -120,14 +120,22 @@ test('iOS collection retains actual artifacts without copying app containers or 
     return { status: 0, stdout }
   }
   try {
+    const artifact = {
+      revision: '26bdd146',
+      file: '.local-builds/preview.ipa',
+      sha256: 'a'.repeat(64),
+      bytes: 20,
+    }
     const manifest = collectIosEvidence({
       packageName: 'app.loro.ios',
       output,
       artifactRevision: '26bdd146',
+      artifact,
       run,
     })
     assert.equal(manifest.deviceKind, 'simulator')
     assert.equal(manifest.artifactRevision, '26bdd146')
+    assert.deepEqual(manifest.artifact, artifact)
     assert.deepEqual(JSON.parse(readFileSync(join(output, 'manifest.json'))), manifest)
     assert.deepEqual(calls[2], [
       'xcrun',

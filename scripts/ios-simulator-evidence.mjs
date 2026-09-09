@@ -27,6 +27,7 @@ export function collectIosEvidence({
   packageName,
   output,
   artifactRevision,
+  artifact,
   run = spawnSync,
 }) {
   const command = (tool, args) => {
@@ -61,6 +62,7 @@ export function collectIosEvidence({
     runtime: device.runtime,
     deviceName: device.name,
     artifactRevision: artifactRevision ?? null,
+    artifact: artifact ?? null,
     checks: { device: 'captured', installedPackage: 'present', screenshot: 'captured' },
     limits: [
       'The declared artifact revision identifies the intended build; retain independent build metadata before accepting it.',
