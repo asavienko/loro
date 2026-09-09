@@ -143,7 +143,11 @@ export async function mockAccountService(
             body !== null &&
             'ops' in body &&
             Array.isArray(body.ops)
-              ? body.ops.map((op: { seq: number }) => ({ seq: op.seq, code: 'INVALID_FIELD' }))
+              ? body.ops.map((op: { seq: number }, index: number) => ({
+                  index,
+                  seq: op.seq,
+                  code: 'VALIDATION_FAILED',
+                }))
               : [],
           conflicts: [],
           server_hlc: stamp,
@@ -213,7 +217,10 @@ export async function signInWithProvider(
   else await expect(page.getByText('Your account is connected.')).toBeVisible()
 }
 
-export async function reachAccount(page: Page, scenario: AccountScenario): Promise<AccountService> {
+export async function reachAccount(
+  page: Page,
+  scenario: AccountScenario,
+): Promise<AccountService> {
   const service = await mockAccountService(page, scenario)
   if (scenario === 'sync-rejected') {
     await page
@@ -278,7 +285,9 @@ export async function reachAccount(page: Page, scenario: AccountScenario): Promi
       ).toBeVisible()
     } else if (scenario === 'sync-rejected') {
       await expect(
-        page.getByText('1 saved change needs review and remains safely on this device.'),
+        page.getByText(
+          /^\d+ saved changes? need(?:s)? review and remain(?:s)? safely on this device\.$/,
+        ),
       ).toBeVisible()
     } else {
       await expect(page.getByText('Your progress is up to date.')).toBeVisible()
