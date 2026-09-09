@@ -37,8 +37,14 @@ export function writeManifest(runDir, manifest) {
 }
 
 export function finalizeManifest(runDir, manifest) {
+  validatePassedStates(runDir, manifest)
   manifest.completedAt = new Date().toISOString()
   manifest.counts = countStates(manifest.states)
+  if (
+    manifest.status === 'passed' &&
+    (manifest.error !== undefined || manifest.counts.failed > 0 || manifest.counts['not-run'] > 0)
+  )
+    manifest.status = 'failed'
   writeManifest(runDir, manifest)
   writeGallery(runDir, manifest)
   return manifest
@@ -79,6 +85,17 @@ export function pngProblem(path) {
   return width === 390 && height === 844
     ? undefined
     : `Expected 390×844 PNG, received ${width}×${height}.`
+}
+
+export function validatePassedStates(runDir, manifest) {
+  for (const state of manifest.states) {
+    if (state.status !== 'passed') continue
+    const problem = pngProblem(join(runDir, state.image))
+    if (problem !== undefined) {
+      state.status = 'failed'
+      state.error = problem
+    }
+  }
 }
 
 export function filenameFor(name) {
