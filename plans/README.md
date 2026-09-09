@@ -27,6 +27,10 @@ records the earlier Refrain checkpoint/navigation, draft-storage and generated-b
 post-main review records the follow-up import, content, graph, deterministic-test and format fixes;
 platform/device acceptance remains separate.
 
+The [refactoring-strategies review](../docs/reviews/2026-09-09-refactoring-strategies.md)
+inventories structural debt in existing code and separates it from unfinished plan work. It does not
+open a new plan.
+
 ## Current scope
 
 - Eight of 23 authored learner screens, Languages/Account, the shared shell and the dev workbench
