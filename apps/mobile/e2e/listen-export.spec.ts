@@ -23,7 +23,7 @@ test('the listen companion is a Phrases utility with honest unavailable generate
   await expect(page.getByText('No licensed listening voices are approved yet.')).toBeVisible()
 })
 
-test('Q-21 share stays unavailable while the share-ready fixture can show the gated control', async ({
+test('Q-22 share stays unavailable while the share-ready fixture can show the gated control', async ({
   page,
 }) => {
   await onboard(page)

@@ -167,7 +167,7 @@ describe('AS-07 listening batch', () => {
     expect(new Set(batch.map((take) => take.phraseId)).size).toBe(1)
   })
 
-  it('fails closed without approved voices, native cache, or Q-21 share', () => {
+  it('fails closed without approved voices, native cache, or Q-22 share', () => {
     expect(APPROVED_LISTENING_VOICES['es-ES']).toHaveLength(0)
     expect(LISTENING_MIN_VOICES).toBe(2)
     expect(canShareListening()).toBe(false)

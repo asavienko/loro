@@ -21,7 +21,7 @@ export const REFERENCE_ASSET_CLASS = 'reference' as const
 export type AudioAssetClass = typeof LISTENING_ASSET_CLASS | typeof REFERENCE_ASSET_CLASS
 
 /**
- * Q-21 remains open: neural listening audio must not leave the app as a learner-owned file.
+ * Q-22 remains open: neural listening audio must not leave the app as a learner-owned file.
  * Native mux/share exists behind this flag and must stay false until the question is answered.
  */
 export const LISTENING_SHARE_ENABLED = false
