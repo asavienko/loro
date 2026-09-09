@@ -6,6 +6,7 @@ import { Test } from '@nestjs/testing'
 import type { ExecutionContext, INestApplication } from '@nestjs/common'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { silenceWav } from '@loro/content/audio-duration'
+import { LISTENING_ASSET_CLASS, LISTENING_CODEC, REFERENCE_ASSET_CLASS } from '@loro/core'
 import { TtsResponseSchema } from '@loro/core/api/draft'
 import { ProblemSchema } from '@loro/core/api/current'
 import { AuthGuard, type AuthenticatedRequest } from '../auth/auth.guard.js'
@@ -26,6 +27,15 @@ const provenance = {
   voiceId: 'voice-es',
   outputFormat: 'mp3_44100_128',
   locale: 'es-ES',
+}
+const referenceBody = {
+  text,
+  lang: 'es-ES' as const,
+  phrase_hash: phraseHash,
+  voice_id: 'voice-es',
+  model_id: 'test-model',
+  asset_class: REFERENCE_ASSET_CLASS,
+  codec: LISTENING_CODEC,
 }
 
 function liveEnv(cacheDir: string): void {
@@ -55,7 +65,7 @@ describe('gated POST /tts/render', () => {
       tts.render({
         userId: 'learner',
         ip: '127.0.0.1',
-        body: { text, lang: 'es-ES', phrase_hash: phraseHash },
+        body: referenceBody,
       }),
     ).rejects.toMatchObject({ code: 'PROVIDER_UNAVAILABLE', status: 503 })
   })
@@ -72,13 +82,16 @@ describe('gated POST /tts/render', () => {
       }),
     )
     const tts = new TtsService(transport(synthesize), { now: () => 1_000 })
-    const body = { text, lang: 'es-ES', phrase_hash: phraseHash }
+    const body = referenceBody
     const first = TtsResponseSchema.parse(
       await tts.render({ userId: 'learner', ip: '127.0.0.1', body }),
     )
     expect(first.cached).toBe(false)
     expect(first.ms).toBe(200)
     expect(first.uri).toBe(`sha256/${first.sha256}`)
+    expect(first.download_url).toMatch(/\/v1\/tts\/assets\/[a-f0-9]{64}$/)
+    expect(first.asset_class).toBe(REFERENCE_ASSET_CLASS)
+    expect(first).not.toHaveProperty('audio')
     const second = await tts.render({ userId: 'learner', ip: '127.0.0.1', body })
     expect(second).toMatchObject({ cached: true, sha256: first.sha256, ms: 200 })
     expect(synthesize).toHaveBeenCalledTimes(1)
@@ -94,6 +107,25 @@ describe('gated POST /tts/render', () => {
     ).rejects.toMatchObject({ code: 'VALIDATION_FAILED' })
   })
 
+  it('fails closed for listening-class when voices are unapproved', async () => {
+    const cacheDir = await mkdtemp(join(tmpdir(), 'loro-tts-'))
+    liveEnv(cacheDir)
+    const synthesize = vi.fn()
+    const tts = new TtsService(transport(synthesize), { now: () => 1 })
+    await expect(
+      tts.render({
+        userId: 'learner',
+        ip: '127.0.0.1',
+        body: {
+          ...referenceBody,
+          asset_class: LISTENING_ASSET_CLASS,
+          voice_id: 'unapproved-voice',
+        },
+      }),
+    ).rejects.toMatchObject({ code: 'PROVIDER_UNAVAILABLE' })
+    expect(synthesize).not.toHaveBeenCalled()
+  })
+
   it('does not serve a checksum-mismatched cache file and will not treat it as cached', async () => {
     const cacheDir = await mkdtemp(join(tmpdir(), 'loro-tts-'))
     liveEnv(cacheDir)
@@ -106,7 +138,7 @@ describe('gated POST /tts/render', () => {
       }),
     )
     const tts = new TtsService(transport(synthesize), { now: () => 1_000 })
-    const body = { text, lang: 'es-ES', phrase_hash: phraseHash }
+    const body = referenceBody
     const first = await tts.render({ userId: 'learner', ip: '127.0.0.1', body })
     await writeFile(join(cacheDir, `${first.sha256}.bin`), Buffer.from('tampered-audio'))
     await expect(tts.asset(first.sha256)).rejects.toMatchObject({ code: 'NOT_FOUND' })
@@ -129,7 +161,7 @@ describe('gated POST /tts/render', () => {
       ),
       { now: () => 1_000 },
     )
-    const body = { text, lang: 'es-ES', phrase_hash: phraseHash }
+    const body = referenceBody
     for (let index = 0; index < 100; index += 1) {
       await tts.render({ userId: 'learner', ip: '127.0.0.1', body })
     }
@@ -150,7 +182,7 @@ describe('gated POST /tts/render', () => {
       tts.render({
         userId: 'learner',
         ip: '127.0.0.1',
-        body: { text, lang: 'es-ES', phrase_hash: phraseHash },
+        body: referenceBody,
       }),
     ).rejects.toBeInstanceOf(LoroError)
   })
@@ -205,13 +237,13 @@ describe('authenticated TTS HTTP surface', () => {
       const unauthenticated = await fetch(`${base}/v1/tts/render`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ text, lang: 'es-ES', phrase_hash: phraseHash }),
+        body: JSON.stringify(referenceBody),
       })
       expect(unauthenticated.status).toBe(401)
       const created = await fetch(`${base}/v1/tts/render`, {
         method: 'POST',
         headers: { 'content-type': 'application/json', authorization: 'Bearer test' },
-        body: JSON.stringify({ text, lang: 'es-ES', phrase_hash: phraseHash }),
+        body: JSON.stringify(referenceBody),
       })
       expect(created.status).toBe(200)
       const body = TtsResponseSchema.parse(await created.json())

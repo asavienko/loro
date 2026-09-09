@@ -1,5 +1,6 @@
 /**
  * Gated learner TTS. Text only. Draft until Q-15. Never accepts recordings or clones voices.
+ * Listening-class renders fail closed until Q-15 pins ≥2 licensed voices (AS-07).
  */
 
 import { createHash } from 'node:crypto'
@@ -7,7 +8,15 @@ import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { Inject, Injectable } from '@nestjs/common'
 import { audioDurationMs } from '@loro/content/audio-duration'
-import { TtsRequestSchema, TtsResponseSchema, type TtsResponse } from '@loro/core/api/draft'
+import {
+  APPROVED_LISTENING_VOICES,
+  LISTENING_ASSET_CLASS,
+  LISTENING_MIN_VOICES,
+  LISTENING_MODEL_ID,
+  REFERENCE_ASSET_CLASS,
+  normalizeListeningText,
+} from '@loro/core'
+import { TtsRequestSchema, TtsResponseSchema, type TtsRequest, type TtsResponse } from '@loro/core/api/draft'
 import { config } from '../common/config.js'
 import { SERVER_CLOCK, type ServerClock } from '../common/clock.js'
 import { LoroError, RATE_LIMITS } from '../common/errors.js'
@@ -34,6 +43,35 @@ function failureToHttp(code: TtsFailureCode): never {
   throw new LoroError('PROVIDER_UNAVAILABLE')
 }
 
+function ttsPublicOrigin(): string {
+  const raw = process.env['AUTH_PUBLIC_URL'] ?? process.env['AUTH_ISSUER'] ?? 'https://api.loro.app'
+  return raw.replace(/\/$/, '')
+}
+
+function downloadUrl(sha256: string): string {
+  return `${ttsPublicOrigin()}/v1/tts/assets/${sha256}`
+}
+
+function metadata(input: {
+  sha256: string
+  ms: number
+  cached: boolean
+  voiceId: string
+  modelId: string
+  assetClass: TtsRequest['asset_class']
+}): TtsResponse {
+  return TtsResponseSchema.parse({
+    uri: `sha256/${input.sha256}`,
+    sha256: input.sha256,
+    ms: input.ms,
+    cached: input.cached,
+    download_url: downloadUrl(input.sha256),
+    voice_id: input.voiceId,
+    model_id: input.modelId,
+    asset_class: input.assetClass,
+  })
+}
+
 @Injectable()
 export class TtsService {
   private readonly hits = new Map<string, number[]>()
@@ -56,26 +94,29 @@ export class TtsService {
     }
     const request = TtsRequestSchema.safeParse(input.body)
     if (!request.success) throw new LoroError('VALIDATION_FAILED')
-    const textHash = digestUtf8(request.data.text)
+    const text = normalizeListeningText(request.data.text)
+    const textHash = digestUtf8(text)
     if (textHash !== request.data.phrase_hash) throw new LoroError('VALIDATION_FAILED')
-    let voiceId: string
-    try {
-      voiceId = voiceForLocale(parsedConfig.voices, request.data.lang)
-    } catch {
-      throw new LoroError('PROVIDER_UNAVAILABLE')
+    if (request.data.model_id !== parsedConfig.model) {
+      throw new LoroError('PROVIDER_UNAVAILABLE', 'TTS model is not pinned')
     }
+    const voiceId = this.approvedVoice(request.data, parsedConfig.voices)
     this.take(input.userId, input.ip)
-    const voiceVersion = `${parsedConfig.model}:${voiceId}`
-    const identity = digestUtf8(`${input.userId}:${textHash}:${request.data.lang}:${voiceVersion}`)
-    const cached = await this.readIdentity(identity)
-    if (cached !== null) return TtsResponseSchema.parse({ ...cached, cached: true })
+    const voiceVersion = `${request.data.asset_class}:${parsedConfig.model}:${voiceId}`
+    const identity = digestUtf8(
+      `${input.userId}:${textHash}:${request.data.lang}:${voiceVersion}`,
+    )
+    const cached = await this.readIdentity(identity, request.data)
+    if (cached !== null) return cached
     const pending = this.inflight.get(identity)
     if (pending !== undefined) return pending
     const work = this.synthesize({
       identity,
-      text: request.data.text,
+      text,
       locale: request.data.lang,
       voiceId,
+      modelId: request.data.model_id,
+      assetClass: request.data.asset_class,
     })
     this.inflight.set(identity, work)
     try {
@@ -90,6 +131,38 @@ export class TtsService {
     const file = await this.readAsset(sha256)
     if (file === null) throw new LoroError('NOT_FOUND')
     return file
+  }
+
+  private approvedVoice(
+    request: TtsRequest,
+    catalogVoices: Readonly<Record<string, string>>,
+  ): string {
+    if (request.asset_class === LISTENING_ASSET_CLASS) {
+      const roster = APPROVED_LISTENING_VOICES[request.lang]
+      if (roster.length < LISTENING_MIN_VOICES) {
+        throw new LoroError('PROVIDER_UNAVAILABLE', 'Licensed listening voices are not approved')
+      }
+      if (LISTENING_MODEL_ID === null || request.model_id !== LISTENING_MODEL_ID) {
+        throw new LoroError('PROVIDER_UNAVAILABLE', 'Listening model is not pinned')
+      }
+      if (!roster.some((voice) => voice.id === request.voice_id && voice.licensed)) {
+        throw new LoroError('PROVIDER_UNAVAILABLE', 'Listening voice is not an approved licensed id')
+      }
+      return request.voice_id
+    }
+    if (request.asset_class !== REFERENCE_ASSET_CLASS) {
+      throw new LoroError('VALIDATION_FAILED')
+    }
+    let catalogVoice: string
+    try {
+      catalogVoice = voiceForLocale(catalogVoices, request.lang)
+    } catch {
+      throw new LoroError('PROVIDER_UNAVAILABLE')
+    }
+    if (request.voice_id !== catalogVoice) {
+      throw new LoroError('PROVIDER_UNAVAILABLE', 'Reference voice does not match the catalog pin')
+    }
+    return catalogVoice
   }
 
   private take(userId: string, ip: string): void {
@@ -115,7 +188,10 @@ export class TtsService {
     return true
   }
 
-  private async readIdentity(identity: string): Promise<Omit<TtsResponse, 'cached'> | null> {
+  private async readIdentity(
+    identity: string,
+    request: TtsRequest,
+  ): Promise<TtsResponse | null> {
     try {
       const mapped = JSON.parse(
         await readFile(join(config.ttsCacheDir(), 'id', `${identity}.json`), 'utf8'),
@@ -125,7 +201,14 @@ export class TtsService {
         return null
       }
       if ((await this.readAsset(mapped.sha256)) === null) return null
-      return { uri: `sha256/${mapped.sha256}`, sha256: mapped.sha256, ms: mapped.ms }
+      return metadata({
+        sha256: mapped.sha256,
+        ms: mapped.ms,
+        cached: true,
+        voiceId: request.voice_id,
+        modelId: request.model_id,
+        assetClass: request.asset_class,
+      })
     } catch {
       return null
     }
@@ -154,6 +237,8 @@ export class TtsService {
     text: string
     locale: string
     voiceId: string
+    modelId: string
+    assetClass: TtsRequest['asset_class']
   }): Promise<TtsResponse> {
     let result
     try {
@@ -185,11 +270,13 @@ export class TtsService {
       join(dir, 'id', `${input.identity}.json`),
       `${JSON.stringify({ sha256, ms })}\n`,
     )
-    return TtsResponseSchema.parse({
-      uri: `sha256/${sha256}`,
+    return metadata({
       sha256,
       ms,
       cached: false,
+      voiceId: input.voiceId,
+      modelId: input.modelId,
+      assetClass: input.assetClass,
     })
   }
 }
