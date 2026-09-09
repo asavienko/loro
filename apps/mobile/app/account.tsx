@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import {
   ActivityIndicator,
   BackHandler,
@@ -154,11 +154,12 @@ export default function Account() {
     }
   }, [busy, view])
 
-  const headerTitle = useMemo(() => {
-    if (view === 'email') return copy.account.signInOptions
-    if (view === 'code') return copy.account.emailBack
-    return copy.account.title
-  }, [view])
+  const headerTitle =
+    view === 'email'
+      ? copy.account.signInOptions
+      : view === 'code'
+        ? copy.account.emailBack
+        : copy.account.title
   const headerBackLabel =
     view === 'email' ? copy.account.signInOptions : view === 'code' ? copy.account.emailBack : null
 
