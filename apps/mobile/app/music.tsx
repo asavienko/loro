@@ -360,11 +360,6 @@ export default function Music() {
                 onPress={confirmStyles}
                 disabled={!canConfirmStyles || unavailable || busy}
               />
-              {busy ? (
-                <Text variant="caption" color={ink.ink2}>
-                  {copy.music.state.generating}
-                </Text>
-              ) : null}
             </Stack>
           ) : null}
 
