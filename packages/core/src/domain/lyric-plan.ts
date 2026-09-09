@@ -2,7 +2,22 @@
  * Composition-plan geometry for phrase songs. Durations are planned here so lyrics
  * and ElevenLabs chunks share one 35–60 s budget (plan 96).
  */
-import type { LyricDocument, MusicV2CompositionPlan } from '../api/music.js'
+export interface MusicV2Chunk {
+  readonly text: string
+  readonly duration_ms: number
+  readonly positive_styles: string[]
+  readonly negative_styles: string[]
+}
+
+export interface MusicV2CompositionPlan {
+  readonly chunks: MusicV2Chunk[]
+  readonly context_adherence: 'high'
+}
+
+export interface MusicLyricPlanInput {
+  readonly title: { readonly target: string; readonly translation: string }
+  readonly sections: readonly { readonly name: string; readonly lines: readonly string[] }[]
+}
 
 export const MUSIC_MIN_PHRASES = 3
 export const MUSIC_MAX_PHRASES = 8
@@ -82,7 +97,7 @@ export function plannedTotalDurationMs(sectionCount: number): number | null {
 }
 
 export function lyricDocumentToCompositionPlan(
-  document: LyricDocument,
+  document: MusicLyricPlanInput,
   pack: MusicStylePack,
 ): MusicV2CompositionPlan {
   const durations = planSectionDurations(document.sections.length)
@@ -107,7 +122,7 @@ export function lyricDocumentToCompositionPlan(
 /** True when a review-only title that is not a sung line leaked onto the vendor wire. */
 export function compositionPlanLeaksReviewTitle(
   plan: MusicV2CompositionPlan,
-  document: LyricDocument,
+  document: MusicLyricPlanInput,
 ): boolean {
   const sung = new Set(document.sections.flatMap((section) => section.lines))
   const haystack = plan.chunks.map((chunk) => chunk.text).join('\n')

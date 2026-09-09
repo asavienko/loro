@@ -8,6 +8,8 @@ import {
   type LyricDocument,
   type LyricUsedPhrase,
 } from '../api/music.js'
+
+export type { LyricDocument, LyricUsedPhrase }
 import type { NativeLanguage, TargetLocale } from './languages.js'
 import { supportsPair } from './languages.js'
 import { MUSIC_MIN_SECTIONS_FOR_DURATION, plannedTotalDurationMs } from './lyric-plan.js'
@@ -47,7 +49,7 @@ export function foldLyricText(value: string): string {
 export function looksLikeTargetLanguage(text: string, locale: TargetLocale): boolean {
   const letters = text.normalize('NFC').replace(/[^\p{L}]/gu, '')
   if (letters.length === 0) return false
-  const units = [...letters]
+  const units = Array.from(letters)
   if (locale === 'es-ES') {
     const latin = units.filter((letter) => /\p{Script=Latin}/u.test(letter)).length
     return latin / units.length >= 0.8
