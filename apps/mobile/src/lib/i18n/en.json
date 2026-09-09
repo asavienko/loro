@@ -419,6 +419,8 @@
   "account.cancelSignIn": "Cancel sign-in",
   "account.secureWindow": "Complete sign-in in the secure window.",
   "account.connecting": "Connecting to {provider}…",
+  "account.googleName": "Google",
+  "account.appleName": "Apple",
   "account.discoveryError": "Sign-in options are temporarily unavailable. Try again.",
   "account.methodUnavailable": "This sign-in method is unavailable right now.",
   "account.codeLabel": "Sign-in code",

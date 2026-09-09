@@ -41,7 +41,7 @@ export function completeBrowserSignIn(): void {
   }
 }
 /** Open on the click before fetching OAuth start so browser popup policy permits sign-in. */
-export function beginSignIn(provider: OAuthProvider): Promise<void> {
+export function beginSignIn(provider: OAuthProvider): Promise<boolean> {
   const client = accountClient()
   if (!client) return Promise.reject(new Error('Account unavailable'))
   // Keep the surface owned by this attempt. A fixed popup name lets an old finally

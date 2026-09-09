@@ -419,6 +419,8 @@
   "account.cancelSignIn": "Отменить вход",
   "account.secureWindow": "Завершите вход в защищённом окне.",
   "account.connecting": "Подключаемся к {provider}…",
+  "account.googleName": "Google",
+  "account.appleName": "Apple",
   "account.discoveryError": "Способы входа временно недоступны. Попробуйте ещё раз.",
   "account.methodUnavailable": "Этот способ входа сейчас недоступен.",
   "account.codeLabel": "Код для входа",

@@ -256,8 +256,8 @@ export class AccountClient {
         )
     }
   }
-  async signIn(provider: OAuthProvider, windowName?: string): Promise<void> {
-    if (this.restoreFlight || this.refreshFlight || this.state.status === 'working') return
+  async signIn(provider: OAuthProvider, windowName?: string): Promise<boolean> {
+    if (this.restoreFlight || this.refreshFlight || this.state.status === 'working') return false
     const generation = ++this.generation
     this.publish({ status: 'working', error: null })
     try {
@@ -271,10 +271,10 @@ export class AccountClient {
         },
         windowName,
       )
-      if (generation !== this.generation) return
+      if (generation !== this.generation) return true
       if (!exchange) {
         this.publish({ status: 'cancelled' })
-        return
+        return true
       }
       const response = SignInResponseSchema.parse(
         await this.post(
@@ -294,6 +294,7 @@ export class AccountClient {
       if (generation === this.generation)
         this.fail(error instanceof AccountError ? error : new AccountError('provider-error'))
     }
+    return true
   }
 
   /**

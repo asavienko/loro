@@ -200,7 +200,17 @@ export const copy = {
     get secureWindow() {
       return message('account.secureWindow')
     },
-    connecting: (provider: string): string => message('account.connecting', { provider }),
+    get googleName() {
+      return message('account.googleName')
+    },
+    get appleName() {
+      return message('account.appleName')
+    },
+    connecting: (provider: 'google' | 'apple'): string =>
+      message('account.connecting', {
+        provider:
+          provider === 'google' ? message('account.googleName') : message('account.appleName'),
+      }),
     get discoveryError() {
       return message('account.discoveryError')
     },
