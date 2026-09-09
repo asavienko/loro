@@ -13,9 +13,10 @@ offer recovery rather than automatic reset.
 Authenticated client sync replays the durable outbox and applies canonical Rust merges locally. The
 API uses Postgres for account state, sync rows, revision cursors and idempotency receipts. No
 practice action waits for the API. Native foreground TTS and on-device recognition are implemented,
-with reveal-mode degradation; approved audio clips/cache, background playback, DSP, widgets,
-online listening generation / on-device listen cache, shareable neural listening-file export and
-the native device-floor acceptance matrix remain open. See
+with reveal-mode degradation. The listening-class file cache and `/listen-export` composer exist;
+production licensed voices remain Q-15, share-out-of-app remains Q-22, and native airplane-mode
+listen of a previously cached batch remains an evidence gate. Approved catalog audio clips/cache,
+background playback, DSP, widgets and the native device-floor acceptance matrix remain open. See
 [setup and verified limits](../process/persistent-practice.md).
 
 ## The acceptance test
@@ -54,7 +55,7 @@ not evidence that the current app implements that deck.
 
 Sign-in, purchase verification, sync and genuinely server-only generation may be unavailable. The UI
 must distinguish “queued”, “not downloaded” and “requires connection”; it must not display a fake
-success or a fabricated score. Plan 96 listening generation is server-only on a cache miss: first
+success or a fabricated score. Plan 97 listening generation is server-only on a cache miss: first
 prepare needs network; a verified on-disk batch then plays in airplane mode. Imported/captured
 content can become usable locally only when its local parsing/capture implementation actually exists.
 
@@ -83,7 +84,7 @@ This is a delivery checklist, not a claim about current behaviour.
 | Learner state and progress         | Persist across force-quit and device restart          | SQLite runtime; Android force-stop and browser reload verified |
 | Review scheduling                  | Plan and record locally from authoritative core maths | Canonical Rust scheduling and transactional writes             |
 | Audio for owned/daily/trip phrases | Play verified local assets                            | Foreground device TTS; recorded cache/prefetch remain          |
-| Listening companion (`AS-07`)      | Play a previously cached phrase×voice batch from disk | Not implemented; first generate needs network (plan 99)        |
+| Listening companion (`AS-07`)      | Play a previously cached phrase×voice batch from disk | Composer and native file-URI cache landed; first generate needs network and Q-15 voices (plan 99) |
 | Speech/ASR/pronunciation/prosody   | Use on-device modules and real measurements           | Strict native ASR with reveal fallback; DSP/onset remain       |
 | Sync                               | Queue locally and converge later                      | Authenticated Postgres/client replay and merge implemented     |
 | Trips/widgets/notifications        | Derive from durable local calendar state              | Not implemented                                                |

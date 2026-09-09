@@ -3,24 +3,27 @@
 - **Requirement IDs:** `AS-07`, `AS-01`, `F-03`
 - **Number allocation:** 96 is archived account screens; 97 is generative Discover; 98 is catalog TTS (AS-01). This listening companion is 99.
 - **Milestone:** M2
-- **Status:** ⛔ Online generation of licensed listening voices is blocked on
-  [Q-15](../docs/decisions/open-questions.md#q-15). Share-out-of-app of those clips is blocked on
-  [Q-22](../docs/decisions/open-questions.md#q-22). The `/listen-export` composer, cache-key
-  contract, and honest unavailable states can be specified now. Device TTS is a labeled fallback,
-  not the primary path.
+- **Status:** 🟡 Composer, listening-class TTS contract, fail-closed ElevenLabs transport,
+  native file-URI cache/`playFile`, batch restore, `/listen-export` copy/E2E, and Q-22 mux/share
+  fail-closed are implemented. Production licensed voices remain ⛔
+  [Q-15](../docs/decisions/open-questions.md#q-15). Share-out-of-app remains ⛔
+  [Q-22](../docs/decisions/open-questions.md#q-22). Native airplane-mode listen of a previously
+  cached batch is still an evidence gate (58/72). Device TTS is a labeled fallback, not the
+  primary path.
 - **Depends on:** 56 route declaration; 81 More destination; 59 active-course phrase inventory; 87
   target locale; 62 disk cache, atomic download, and exclusive playback session; 86 ElevenLabs
   transport; 61 asset identity and checksum policy for model audio; 58/72 for native evidence. The
   draft `POST /tts/render` route is a 66+86 implementation input (61 owns identity rules) — this
   plan consumes it and does not add a second TTS client.
-- **Reviewed:** 2026-09-09 against `d153d82` plus native speech, catalog audio schema, and owners
-  56/61/62/67/81/86. Specification only; no runtime, device, or deployment acceptance.
+- **Reviewed:** 2026-09-09 specification against `d153d82`; implementation pass 2026-09-09 for
+  contract, cache, composer, restore, and fail-closed transports. Live voices, share-out-of-app,
+  and native airplane-mode listen remain gated.
 
 ## Outcome
 
 A learner prepares a batch of active-course phrases for **listening**, not practice. The app
-**renders multi-voice takes online** (ElevenLabs is the selected provider; the adapter is not
-implemented), **caches each phrase×voice clip on device**, then plays that cache in airplane mode.
+**renders multi-voice takes online** (ElevenLabs is the selected provider; the transport is
+fail-closed until Q-15 pins licensed voices), **caches each phrase×voice clip on device**, then plays that cache in airplane mode.
 Optionally, after [Q-22](../docs/decisions/open-questions.md#q-22), native code concatenates those
 same cached clips into one AAC/M4A and shares it through the OS share sheet.
 
@@ -39,37 +42,36 @@ replace in-app background transport (`AS-04` / plan 62).
 | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | [61](archive/2026-09-09/61-content-and-audio-assets.md)                                 | Catalog render, one consistent reference voice per variant, signed packs               | Multi-voice listening clips would invalidate the “one voice forever” pronunciation reference and `f0_native`    |
 | [62](archive/2026-09-09/62-native-audio-playback.md)                                    | In-app session, cache, rates, lock-screen / background transport                       | Stream keeps audio inside practice playback; this plan owns batch selection, listening-class pins, and share-out |
-| [67](67-anonymous-auth-and-account-lifecycle.md)                                       | GDPR JSON export of phrases and progress (`F-07`)                                      | JSON is not listenable; mixing file-share TTS with account portability would blur privacy and entitlement        |
-| [86](86-provider-integrations.md)                                                      | Vendor transports, including the unimplemented ElevenLabs adapter                      | Adapter is shared input; this plan owns the listening product, cache identity, and UX                            |
+| [67](archive/2026-09-09/67-anonymous-auth-and-account-lifecycle.md)                                       | GDPR JSON export of phrases and progress (`F-07`)                                      | JSON is not listenable; mixing file-share TTS with account portability would blur privacy and entitlement        |
+| [86](archive/2026-09-09/86-provider-integrations.md)                                                      | Vendor transports, including the fail-closed ElevenLabs TTS adapter                    | Adapter is shared input; this plan owns the listening product, cache identity, and UX                            |
 
 Canonical in-app reference audio stays one reviewed voice per variant. Multi-voice rotation is
 listening-only and must never become the DSP or Speak model.
 
-## Verified starting point
+## Verified starting point (pre-implementation)
 
-- Starter catalogs are text-only. `packages/content` has no `.m4a`/`.mp3` assets; `audioCheck`
+- Starter catalogs remain text-only. `packages/content` has no `.m4a`/`.mp3` assets; `audioCheck`
   currently warns that catalog rows have no rendered audio. Phrase `audio` is `{ uri, sha256, ms }`
-  with no voice-id or listening-class field.
-- `apps/mobile/modules/loro-audio-speech` plays **one** installed offline target voice to the
-  speaker. iOS picks the first matching `AVSpeechSynthesisVoice`; Android picks the highest-quality
-  offline `Voice`. There is no enumerate-voices API, no synthesize-to-file API, no download-to-disk
-  API, and no concatenate/mux API. JavaScript never receives PCM, and that boundary stays.
+  with no voice-id or listening-class field — listening identity is a separate cache key, not a
+  catalog mutation.
+- `apps/mobile/modules/loro-audio-speech` still plays one installed offline target voice for
+  practice TTS. This plan added `playFile` for cached `file://` clips and a **separate**
+  `loro-audio-cache` module for HTTPS download. JavaScript never receives PCM.
 - Phrase Detail / Stream already consume device TTS. Browser E2E cannot prove native speech.
-- There is no share-sheet, `expo-sharing`, listening cache, or `/listen-export` route. `SURFACES` in
-  `apps/mobile/src/lib/navigation.ts` has no listen utility. `/more` lists only built destinations
-  from `DESTINATIONS`.
 - Account JSON export (`F-07`) remains unimplemented in plan 67 and is a different artifact.
-- Draft `POST /tts/render` (`packages/core/src/api/draft.ts`) accepts `{ text, lang, phrase_hash }`
-  and returns `{ uri: sha256/…, sha256, ms, cached }`. It has no listening-class or voice-id field.
-  Owner in the draft contract is 61; plan 61’s remaining work is the catalog `content:render`
-  worker and marks the **live** learner TTS endpoint out of scope. That gap is a prerequisite, not
-  silent 96 work.
 - Q-15 still blocks production ElevenLabs voices. A provisioned API key is not a voice licence and
   is not redistribution permission. Q-22 still blocks sharing licensed neural audio as a
   learner-owned file. Neither question is resolved by this plan.
 - ADR-0011: learner PCM never leaves native memory; no JS API returns audio bytes; a P0 alert fires
-  on any network request **originating in the audio module**. Model-audio HTTP therefore must not
-  be issued by `loro-audio-speech`.
+  on any network request **originating in the audio module**. Model-audio HTTP is issued by
+  `loro-audio-cache`, not `loro-audio-speech`.
+
+**Current implementation (2026-09-09).** `/listen-export` is a built Phrases utility. `POST /tts/render`
+accepts `voice_id`, `model_id`, `asset_class`, and metadata-only JSON. `loro-audio-cache` downloads
+and pins listening clips, restores a complete batch across relaunch, and keeps mux/share behind
+`LISTENING_SHARE_ENABLED = false`. `playFile` plays `file://` URIs. JavaScript still never receives PCM.
+`APPROVED_LISTENING_VOICES` is empty and `LISTENING_MODEL_ID` is null, so generate fails closed.
+Native airplane-mode listen of a filled cache is not yet evidenced.
 
 ## Product shape (working assumptions)
 
@@ -241,26 +243,27 @@ API exists; that API still returns a file URI only.
 
 ## Remaining work
 
-1. [ ] Keep
+1. [x] Keep
        [functional-spec.md](../docs/product/functional-spec.md#as-07-batch-phrase-listening-export)
        aligned as the UI is built. Copy lives in `copy.ts`; no learner-facing literals in `app/`.
-2. [ ] Declare `/listen-export` in plan 56’s surface table as a **utility** (`push`, occasional,
+2. [x] Declare `/listen-export` in plan 56’s surface table as a **utility** (`push`, occasional,
        Phrases / More). Do not number it as learner screen 24. Add the destination only when the
        route is `built`. Plan 81 consumes that declaration; do not create a second route table.
-3. [ ] Agree the listening-class extension to `POST /tts/render` (or successor) with 61/66/86:
+3. [x] Agree the listening-class extension to `POST /tts/render` (or successor) with 61/66/86:
        voice id, model pin, asset class, metadata-only JSON, native download of bytes. Fixture the
        client against recorded responses; normal CI must not call ElevenLabs.
-4. [ ] Consume plan 62’s cache downloader: atomic write, sha256 verify, file URI out, listening pin
+4. [x] Consume plan 62’s cache downloader: atomic write, sha256 verify, file URI out, listening pin
        class, named budget, resume, cancel, disk-full. Pause or refuse if an in-app play/listen
-       session is active.
-5. [ ] Build the utility UI: course-scoped phrase count, repeat stepper (2–5), licensed voice
+       session is active. Native airplane-mode proof that a filled cache survives force-quit
+       remains 58/72.
+5. [x] Build the utility UI: course-scoped phrase count, repeat stepper (2–5), licensed voice
        roster (real pinned names/ids after Q-15; honest empty before), generate/prepare with
        progress, cancel, resume from partial, in-app listen from cache, share (hidden or disabled
        with Q-22 copy while that question is open), measured duration or `null`, and honest empty /
        needs-network / quota / error states. Browser may preview the composer and must mark
        generate, cache, listen, and export unavailable until a real native/web encoder exists; do
        not fake a download.
-6. [ ] Add learner E2E states for empty course, needs-network cache miss, generating, partial
+6. [x] Add learner E2E states for empty course, needs-network cache miss, generating, partial
        failure, ready-to-listen (cache complete), in-app playing, share unavailable (Q-22), share
        ready (when allowed), cancellation, disk-full, and session-busy. Browser suites cover copy,
        a11y and text scale. Native airplane-mode listen of a **previously cached** batch is the
@@ -292,25 +295,28 @@ API exists; that API still returns a file URI only.
 
 ## Delivery order and gates
 
-1. **Route + composer + cache contract (this plan, unblocked).** `/listen-export` UI, keys, honest
-   unavailable generate/listen/share. Fixtures only. Browser remains an honest unavailable
-   generator.
+1. **Route + composer + cache contract (landed).** `/listen-export` UI, keys, honest
+   unavailable generate/listen/share. Fixtures only in `__DEV__`. Browser remains an honest
+   unavailable generator.
 2. **On-demand render + native cache (⛔ Q-15 for production voices; 86/61/66 for the live route).**
-   Prepare writes listening-class clips; in-app play from file URIs. Device TTS fallback stays
-   labeled. Adapter fixtures may land before Q-15; live ElevenLabs must not.
+   Listening-class contract, fail-closed ElevenLabs transport, and native file-URI cache/`playFile`
+   landed. Prepare cannot mint licensed clips until Q-15 pins ≥2 voices and a model. Device TTS
+   fallback stays labeled. Adapter fixtures must not be presented as licensed quality. Live
+   ElevenLabs must not run in CI.
 3. **Airplane-mode in-app listen.** Native evidence that a complete cache survives force-quit with
-   no network. This is the offline listening companion. It does **not** require Q-22.
-4. **Concatenated share (⛔ Q-22).** Native mux of cached clips, share sheet, external-player
-   airplane-mode listen. Blocked until licensed neural audio may leave the app as a learner-owned
-   file.
+   no network. This is the offline listening companion. It does **not** require Q-22. Still open.
+4. **Concatenated share (⛔ Q-22).** Native mux of cached clips exists behind `LISTENING_SHARE_ENABLED`
+   and stays false. Share sheet copy is unavailable. Blocked until licensed neural audio may leave
+   the app as a learner-owned file.
 
 ## Out of scope
 
 In-app Stream/Refrain playback policy, background lock-screen transport, DSP/ASR, learner-recording
 export, account JSON/erasure, playlist apps as a backend, changing the one-voice pronunciation
-reference, implementing the ElevenLabs adapter, implementing signed catalog packs, shipping a
+reference, implementing signed catalog packs, shipping a
 device-TTS-first export as the v1 companion, and fabricating voices when fewer than two licensed
-listening voices are approved.
+listening voices are approved. The ElevenLabs transport exists and fails closed; live licensed
+voices remain Q-15.
 
 ## Review findings (2026-09-09)
 
@@ -337,8 +343,9 @@ Recorded so the next implementation pass does not re-discover them.
    so.
 7. **P3-02 and one-voice-forever stay independent.** Repeats 2–5 default 3; Stream remains
    difficulty-based. Listening voices never write `f0_native`.
-8. **Native module cannot enumerate or mux today.** Fallback in-app device TTS can use the existing
-   speaker path. Cache download and concatenate are new 62/96 native surface, not a JS encoder.
+8. **Native module could not enumerate or mux at specification time.** Fallback in-app device
+   TTS uses the existing speaker path. Cache download and concatenate live in `loro-audio-cache`
+   (plan 99 consuming plan 62), not a JS encoder. Mux/share stays behind Q-22.
 9. **Browser cannot prove the product.** Composer E2E is copy/a11y only. Offline listen needs a
    device with a filled cache.
 10. **Learner-authored text is a privacy event.** Catalog text is Q-15. User-typed lines need

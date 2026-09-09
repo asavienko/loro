@@ -427,9 +427,10 @@ Its intended-design extension and state inventory are recorded in
 
 ## Listening companion utility (AS-07)
 
-`/listen-export` is a planned More/Phrases utility owned by
+`/listen-export` is a built More/Phrases utility owned by
 [plan 99](../../plans/99-batch-phrase-audio-export.md). It is not learner screen 24. It generates
 licensed multi-voice takes online, caches each phrase×voice clip on device, and plays that cache
-offline. Concatenating the cache into a shareable AAC/M4A waits on Q-22. It does not replace Stream,
-catalog reference audio, or account JSON export. States are recorded in
+offline. Production voices wait on Q-15; concatenating the cache into a shareable AAC/M4A waits on
+Q-22. It does not replace Stream, catalog reference audio, or account JSON export. States are
+recorded in
 [functional-spec.md](../product/functional-spec.md#as-07-batch-phrase-listening-export).
