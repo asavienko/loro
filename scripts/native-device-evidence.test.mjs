@@ -8,18 +8,24 @@ test('uses the preview package and accepts bounded device options', () => {
     packageName: defaultPackage,
     serial: undefined,
     output: undefined,
+    artifactRevision: undefined,
   })
   assert.deepEqual(parseArguments(['--serial', 'R5CT1234', '--package', 'app.loro.android']), {
     platform: 'android',
     packageName: 'app.loro.android',
     serial: 'R5CT1234',
     output: undefined,
+    artifactRevision: undefined,
   })
 })
 
 test('rejects unsafe adb values and output outside local artifacts', () => {
   assert.throws(() => parseArguments(['--serial', 'device;rm']), /unsupported characters/)
   assert.throws(() => parseArguments(['--package', 'not-a-package']), /application identifier/)
+  assert.throws(
+    () => parseArguments(['--artifact-revision', 'not a revision']),
+    /Artifact revision/,
+  )
   assert.throws(() => evidenceOutput('/repo', '/tmp/evidence'), /must remain inside/)
 })
 
@@ -45,6 +51,10 @@ test('iOS CLI selects its bundle default regardless of option order', () => {
     'app.test.ios',
   )
   assert.throws(() => parseArguments(['--platform', 'macos']), /Platform/)
+})
+
+test('captures a bounded retained artifact revision', () => {
+  assert.equal(parseArguments(['--artifact-revision', '26bdd146']).artifactRevision, '26bdd146')
 })
 
 test('iOS collection requires an unambiguous available booted simulator', () => {
@@ -84,9 +94,14 @@ test('iOS collection retains actual artifacts without copying app containers or 
     return { status: 0, stdout }
   }
   try {
-    const manifest = collectIosEvidence({ packageName: 'app.loro.ios', output, run })
+    const manifest = collectIosEvidence({
+      packageName: 'app.loro.ios',
+      output,
+      artifactRevision: '26bdd146',
+      run,
+    })
     assert.equal(manifest.deviceKind, 'simulator')
-    assert.equal(manifest.artifactRevision, null)
+    assert.equal(manifest.artifactRevision, '26bdd146')
     assert.deepEqual(JSON.parse(readFileSync(join(output, 'manifest.json'))), manifest)
     assert.deepEqual(calls[2], [
       'xcrun',

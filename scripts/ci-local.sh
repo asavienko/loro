@@ -68,6 +68,7 @@ browser() {
   run env LORO_E2E_PORT="$port" pnpm "$1"
 }
 browser test:e2e
+browser test:e2e:pseudo-locale
 browser test:e2e:workbench
 browser test:e2e:bundle
 run pnpm --filter @loro/mobile bundle

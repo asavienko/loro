@@ -13,16 +13,24 @@ export function parseArguments(args) {
     packageName: undefined,
     serial: undefined,
     output: undefined,
+    artifactRevision: undefined,
   }
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index]
-    if (arg === '--serial' || arg === '--package' || arg === '--output' || arg === '--platform') {
+    if (
+      arg === '--serial' ||
+      arg === '--package' ||
+      arg === '--output' ||
+      arg === '--platform' ||
+      arg === '--artifact-revision'
+    ) {
       const value = args[++index]
       if (!value || value.startsWith('--')) throw new Error(`${arg} requires a value.`)
       if (arg === '--platform') result.platform = value
       if (arg === '--serial') result.serial = value
       if (arg === '--package') result.packageName = value
       if (arg === '--output') result.output = value
+      if (arg === '--artifact-revision') result.artifactRevision = value
     } else if (arg === '--help') result.help = true
     else throw new Error(`Unknown option: ${arg}`)
   }
@@ -36,6 +44,8 @@ export function parseArguments(args) {
     throw new Error('Package must be a valid application identifier.')
   if (result.serial && !/^[A-Za-z0-9._:-]+$/.test(result.serial))
     throw new Error('Device serial contains unsupported characters.')
+  if (result.artifactRevision && !/^[a-f0-9]{7,64}$/i.test(result.artifactRevision))
+    throw new Error('Artifact revision must be a 7-64 character Git revision.')
   return result
 }
 
@@ -64,7 +74,7 @@ function command(adb, serial, argv, capture = true) {
   return result.stdout
 }
 
-export function collectEvidence({ adb = 'adb', serial, packageName, output }) {
+export function collectEvidence({ adb = 'adb', serial, packageName, output, artifactRevision }) {
   mkdirSync(output, { recursive: true })
   const devices = command(adb, undefined, ['devices', '-l'])
   const selected =
@@ -80,6 +90,7 @@ export function collectEvidence({ adb = 'adb', serial, packageName, output }) {
     collectedAt: new Date().toISOString(),
     serial: selected,
     packageName,
+    artifactRevision: artifactRevision ?? null,
     checks: {
       device: 'captured',
       installedPackage: 'captured',
@@ -113,13 +124,17 @@ function main() {
   const options = parseArguments(process.argv.slice(2))
   if (options.help) {
     console.log(
-      'Usage: pnpm native:evidence [--platform android|ios] [--serial DEVICE] [--package PACKAGE] [--output PATH]',
+      'Usage: pnpm native:evidence --artifact-revision GIT_REVISION [--platform android|ios] [--serial DEVICE] [--package PACKAGE] [--output PATH]',
     )
     console.log(
       'Captures read-only Android device or booted iOS simulator evidence under .local-builds/native-evidence/.',
     )
     return
   }
+  if (!options.artifactRevision)
+    throw new Error(
+      'Pass --artifact-revision with the retained Git revision of the installed build.',
+    )
   const output = evidenceOutput(root, options.output)
   const collector = options.platform === 'ios' ? collectIosEvidence : collectEvidence
   const manifest = collector({ ...options, output })
