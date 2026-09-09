@@ -6,7 +6,11 @@
  * data-loss bug into a build failure.
  *
  * See docs/architecture/sync-protocol.md#per-field-lww
+ *
+ * Phrase and settings merge classes are authored with SQL names in `syncableColumns.ts`.
  */
+
+import { SETTINGS_MERGE_POLICY, USER_PHRASE_MERGE_POLICY } from './syncableColumns.js'
 
 export type MergeClass =
   /** Highest HLC wins. For learner-set scalars. */
@@ -29,6 +33,11 @@ export type MergeClass =
   /** A delete wins over a concurrent edit at any HLC. */
   | 'tombstone'
 
+/**
+ * Merge-policy entity names. Includes trip / trip_drop / trip_phrase for planned
+ * merge (plan 69 / Q-07). The wire envelope's `SyncEntity` in `api/sync.ts` does not
+ * list those — do not collapse the two types or add trip entities to the wire here.
+ */
 export type SyncEntity =
   | 'user_phrase'
   | 'trip'
@@ -46,61 +55,8 @@ export type SyncEntity =
 type FieldMap = Readonly<Record<string, MergeClass>>
 
 export const FIELD_POLICY: Readonly<Record<SyncEntity, FieldMap>> = {
-  user_phrase: {
-    targetLocale: 'lww',
-    ownMeaningLanguage: 'lww',
-    // identity — set once, never merged
-    phraseId: 'lww',
-    // The learner's own text, for rows with no catalog entry (`phraseId: null`).
-    // LWW because these are learner-set scalars and an edit on either device should
-    // win by clock; there is no counter or schedule to merge as a group.
-    ownEs: 'lww',
-    ownEn: 'lww',
-    ownTheme: 'lww',
-    ownEmoji: 'lww',
-    source: 'lww',
-
-    // the learner's signals
-    difficulty: 'lww',
-    tags: 'lww',
-    loved: 'lww',
-    learned: 'lww',
-    note: 'lww',
-
-    // monotonic counters — MUST be max, not lww
-    plays: 'max',
-    reps: 'max',
-    addedAt: 'lww',
-    lastPracticedAt: 'max',
-    graduatedAt: 'lww',
-
-    // FSRS — merged as a unit
-    srsStability: 'latest-review',
-    srsDifficulty: 'latest-review',
-    srsDue: 'latest-review',
-    srsLastReview: 'latest-review',
-    srsLapses: 'latest-review',
-    srsState: 'latest-review',
-    srsAlgorithm: 'latest-review',
-
-    // Loop B — repsToday is day-scoped, so LWW on the pair is correct
-    repsToday: 'lww',
-    repsTodayDay: 'lww',
-    automaticity: 'lww',
-    lockInDays: 'max',
-
-    // Loop C — rung is monotonic by design ("you only climb or hold")
-    rung: 'max',
-    stumbles: 'lww',
-
-    // prosody — cueLevel never decreases; axes only rise
-    cueLevel: 'max',
-    axPerception: 'max',
-    axRecall: 'max',
-    axProduction: 'max',
-
-    deletedAt: 'tombstone',
-  },
+  // Phrase merge classes are authored next to SQL names in `syncableColumns.ts`.
+  user_phrase: USER_PHRASE_MERGE_POLICY,
 
   trip: {
     city: 'lww',
@@ -130,23 +86,7 @@ export const FIELD_POLICY: Readonly<Record<SyncEntity, FieldMap>> = {
     firstUsedAbroadAt: 'lww',
   },
 
-  settings: {
-    // Native/target selection merges atomically to avoid unsupported hybrid pairs.
-    languagePair: 'lww',
-    goal: 'lww',
-    level: 'lww',
-    dailyMinutes: 'lww',
-    activeEngine: 'lww',
-    engineExplicit: 'lww',
-    waveTimes: 'lww',
-    reminderTime: 'lww',
-    notifications: 'lww',
-    accent: 'lww',
-    theme: 'lww',
-    analyticsOptOut: 'lww',
-    cloudAsrConsent: 'lww',
-    voiceCloneConsent: 'lww',
-  },
+  settings: SETTINGS_MERGE_POLICY,
 
   refrain_day: {
     targetLocale: 'lww',

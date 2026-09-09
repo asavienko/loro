@@ -94,6 +94,8 @@ export const ProblemSchema = z
   })
 export type Problem = z.infer<typeof ProblemSchema>
 export type Hlc = z.infer<typeof HlcSchema>
+export const HealthSchema = z.looseObject({ status: z.literal('ok'), version: z.string() })
+export type Health = z.infer<typeof HealthSchema>
 export const targetErrors = Object.fromEntries(
   [...new Set(Object.values(errorStatus))].map((status) => [
     status,

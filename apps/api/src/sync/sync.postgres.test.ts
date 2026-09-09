@@ -1,31 +1,27 @@
 /** F-04: real PostgreSQL restart, rollback and concurrent receipts. Set LORO_TEST_DATABASE_URL. */
 import { randomUUID } from 'node:crypto'
-import { Pool } from 'pg'
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
+import type { Pool } from 'pg'
+import { afterAll, beforeAll, expect, it, vi } from 'vitest'
 import type { AuthPrincipal } from '../auth/auth.tokens.js'
 import { PostgresDatabase } from '../database/database.js'
+import {
+  LORO_TEST_DATABASE_URL,
+  connectAdmin,
+  createSearchPathSchema,
+  describePostgres,
+  dropIsolatedSchema,
+  isolatedSchemaName,
+} from '../testing/postgres-schema.js'
 import { mergeAvailable, type StoredRow } from './merge.js'
 import { PostgresSyncRepository } from './sync.repository.postgres.js'
 import { SyncService } from './sync.service.js'
+import { fieldValue, phraseUpsert, syncEnvelope, testRowId } from './testing/fixtures.js'
 
-const databaseUrl = process.env['LORO_TEST_DATABASE_URL']
-const id = (n: number) => `0197f2a0-0000-7000-8000-${String(n).padStart(12, '0')}`
-const value = <T>(v: T, at = 1000) => ({ v, hlc: `${at}:0000:device-a` })
-const envelope = (ops: unknown[]) => ({ client_hlc: '1000:0000:device-a', ops })
-const phrase = (seq: number, rowId = id(seq)) => ({
-  seq,
-  entity: 'user_phrase',
-  entity_id: rowId,
-  op: 'upsert',
-  fields: {
-    targetLocale: value('es-ES'),
-    source: value('starter'),
-    addedAt: value(1000),
-    phraseId: value(null),
-    ownEs: value('Un café'),
-    reps: value(2),
-  },
-})
+const databaseUrl = LORO_TEST_DATABASE_URL
+const id = testRowId
+const value = fieldValue
+const envelope = syncEnvelope
+const phrase = (seq: number, rowId = id(seq)) => phraseUpsert(seq, rowId, { reps: value(2) })
 const principal = (userId: string): AuthPrincipal => ({
   userId,
   deviceId: 'device-a',
@@ -33,9 +29,9 @@ const principal = (userId: string): AuthPrincipal => ({
 })
 const clock = { now: () => 1_700_000_000_000 }
 
-describe.skipIf(!databaseUrl)('sync against real PostgreSQL', () => {
+describePostgres('sync against real PostgreSQL', () => {
   let admin: Pool
-  const schema = `sync_test_${randomUUID().replaceAll('-', '')}`
+  const schema = isolatedSchemaName('sync_test')
   const databases: PostgresDatabase[] = []
   const database = () => {
     const db = new PostgresDatabase()
@@ -44,16 +40,13 @@ describe.skipIf(!databaseUrl)('sync against real PostgreSQL', () => {
   }
 
   beforeAll(async () => {
-    admin = new Pool({ connectionString: databaseUrl })
-    await admin.query(`CREATE SCHEMA ${schema}`)
-    const integrationUrl = new URL(databaseUrl!)
-    integrationUrl.searchParams.set('options', `-csearch_path=${schema}`)
-    vi.stubEnv('DATABASE_URL', integrationUrl.toString())
+    admin = connectAdmin(databaseUrl)
+    vi.stubEnv('DATABASE_URL', await createSearchPathSchema(admin, schema, databaseUrl))
   })
 
   afterAll(async () => {
     await Promise.all(databases.map((db) => db.onModuleDestroy()))
-    await admin.query(`DROP SCHEMA ${schema} CASCADE`)
+    await dropIsolatedSchema(admin, schema)
     await admin.end()
     vi.unstubAllEnvs()
   })

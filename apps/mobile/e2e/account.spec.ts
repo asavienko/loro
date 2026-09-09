@@ -9,7 +9,7 @@ import {
   requestCode,
   signInWithProvider,
 } from './accountFlow'
-import { todayMarker } from './states'
+import { todayMarker } from './helpers'
 
 async function returnToToday(page: Parameters<typeof openAccount>[0]): Promise<void> {
   await page.getByRole('button', { name: `${ACCOUNT_LABEL}, open the menu` }).click()

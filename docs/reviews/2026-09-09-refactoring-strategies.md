@@ -4,14 +4,78 @@
 **Requirements:** structural cleanup of existing implementation (F-02/F-03/F-04, P3-20/P3-25,
 NAV-\*, ADR-0002/0003/0006), not product completion.
 
-**Disposition: document only.** This review does not implement the refactors, does not open a
-numbered plan, and does not claim whole-plan acceptance. Device, bilingual, provider and remaining
-learner-screen work stay with their owners in [plans/README.md](../../plans/README.md).
+**Disposition: document only** when written. **A–G of the sequence below landed in the working
+tree on 2026-09-09** (not a numbered plan, not whole-plan acceptance). Native-library package
+installs (`expo-haptics`, RNGH, Maestro, keyboard-controller, widgets) were not part of that pass.
 
 The store, engine contract, handwritten SQL and generated Rust bridges are already the right shape.
 The expensive debt is **dual ownership of numbers and maps**, **practice routes that live beside
 those contracts**, and **docs that still describe an earlier backend**. A rewrite of `features/` or
 a second maths layer would make the next fifteen screens harder, not easier.
+
+---
+
+## Implementation status — 2026-09-09
+
+A–G from [Sequencing](#sequencing) are in the working tree. No new native packages. E2E specs were
+not rewritten. Device, bilingual and provider gates stay with their plans.
+
+| Item | Status | What landed | What did not |
+| ---- | ------ | ----------- | ------------ |
+| **A** | landed | `fakeRepository` uses `isActive`/`isDue`; TS Refrain formulae removed; `fakeCore()` looks up `refrainFixtures.ts`; leftover `order_stream(PhraseState)` deleted in favor of `order_stream_candidates` | FSRS stays a labelled test double |
+| **B** | landed | Current `Problem`/`Health`/`Diff`/`Scene` import shared modules; Nest auth/sync parse `account`/`sync` not `target`; generated `openapi.current.json` updated | Implemented `/content/manifest` and `/content/pack` envelopes stay local (target needs `resource_base`, checksums, count refine). `LocaleSchema` still `es-ES`. Framework 400/`INTERNAL` is not forced through status-coupled `ProblemSchema` |
+| **C** | landed | `backend.md` Postgres-current; `/more` `/settings` in `mobile-app.md`; UniFFI/HLC/`jsCoreFacade` comments | TS calendar kept; clocks not unified |
+| **D** | landed | `PRODUCTION_WAVES` next to times; `setStreamCursor`; `beginRefrainSession` | Wave lock / resume identity unchanged |
+| **E** | landed | `speakEngine` export; Speak `plan()` once per course/queue; cursor from the session handle | Reveal/skip still non-production; `StreamEngine.plan()` unwired |
+| **F** | landed | `syncableColumns.ts` next to `fieldPolicy`; SQL drift-checked; mobile `PHRASE_WIRE_TO_SQL` / `phraseFields` consume it; both `SyncEntity` types documented | No generic upsert; trip entities stay off the wire |
+| **G** | landed | `oauth-flow.service.ts` / `oauth.controller.ts` / `auth-boundary.guard.ts`; shared `jwks.ts`; OAuth port renamed `OAuthIdentity` | Both `/me` shapes kept; no Nest `AuthModule` |
+
+**As-you-touch leftovers from this table later landed** (see
+[2026-09-10 continued](#implementation-status--2026-09-10-continued)): auth collaborators, E2E
+helpers, driver `withSavepoints`. UniFFI regenerate-and-diff `--check` still waits on the next
+generator edit.
+
+**Must wait:** unchanged (`StreamEngine.plan()`, `features/` rewrite, delete TS calendar, trip on the
+wire, WarmingCard, Q-14, Nest `AuthModule`, unify `/me`).
+
+---
+
+## Implementation status — 2026-09-10
+
+As-you-touch / P1 splits from [§7](#7-oversized-modules-to-split-along-existing-seams--p1-as-you-touch)
+and the FSRS `record` extract landed in the working tree. No new native packages. E2E locators and
+copy keys were not rewritten. Device, bilingual and provider gates stay with their plans.
+
+| Item | Status | What landed | What did not |
+| ---- | ------ | ----------- | ------------ |
+| Add extract | landed | `app/_add/` holds `ImportPhrases`, `useSuggestions`, `useAddDraft` | ThemeGrid / TaggingSheet stay route-local |
+| `useRefrainSession` | landed | `app/practice/_useRefrainSession.ts` uses `beginRefrainSession` | WarmingCard stays in `refrain.tsx` (Q-14) |
+| `copy.ts` sections | landed | `src/lib/copy/*.ts` barrel-re-exported; `themeLabel` stays on the barrel | Copy keys unchanged |
+| learner / sync split | landed | `learnerFields` / `learnerLoad`; `sync/row.ts` + `sync/apply.ts` | Push/pull still live in `sync.ts` |
+| Eligibility extract | landed | `eligibility.test.ts` + `persistence.harness.ts`; one adversarial history | Other persistence cases stay in `persistence.test.ts` |
+| API test harness | landed | `testing/postgres-schema.ts`; shared `sync/testing/fixtures.ts`; memory repo under `sync/testing/` | Postgres suites still skip without `LORO_TEST_DATABASE_URL` |
+| `ci-local.mjs` | landed | `scripts/ci-local/{root,inventory,jobs,workspace}.mjs`; job graph unchanged | Scheduler behavior unchanged |
+| `canonicalReviewDelta` | landed | Speak / Refrain / Review `record()` share `engines/common.ts` | Engines not merged |
+| Practice empty-state | landed | `practice/_emptyPractice.tsx` takes labels; Stream/Speak share `copy.stream.empty` | Not store-aware |
+| Account client | landed | `lib/account/{types,credentials}.ts`; `client.ts` re-exports | Refresh/session stay one class (generation-coupled) |
+| Stale docs (same class as C) | landed | `core/README.md`, `onboarding.md`, `scheduling.md`, `backend.md` memory-repo path | TS calendar kept; clocks not unified |
+
+---
+
+## Implementation status — 2026-09-10 continued
+
+The three leftover as-you-touch splits from [§7](#7-oversized-modules-to-split-along-existing-seams--p1-as-you-touch)
+and [§8](#8-generated-artifacts-and-remaining-dual-maths--p1p2), plus one remaining raw
+`useApp.setState` of the same class as D, landed in the working tree. No new native packages.
+E2E locators and copy keys were not rewritten. Device, bilingual and provider gates stay with
+their plans. Still not committed.
+
+| Item | Status | What landed | What did not |
+| ---- | ------ | ----------- | ------------ |
+| Auth collaborators | landed | `auth.session.ts` (`createSession`, legacy refresh) and `auth.claim.ts` (`recordClaim`) behind the same Nest `AuthService` | No Nest `AuthModule`; both `/me` shapes kept; magic/refresh/rate-limit stay the provider's public surface |
+| E2E helpers | landed | `doOneRep` / `lockIn` / `enter` / markers moved to `e2e/helpers/`; specs import helpers; `STATES` stays the a11y/text-scale/coverage row | `accountFlow.ts` remains the mock owner; locators unchanged |
+| Driver savepoints | landed | `withSavepoints(run)` shared by `driver.opsqlite.ts` (`BEGIN IMMEDIATE`) and `driver.node.ts` (`BEGIN`) | Web driver still snapshots localStorage itself |
+| `previewNativeLanguage` | landed | First-run locale guess is a session-slice action; `_layout.tsx` no longer calls `useApp.setState` | `setLanguages` still marks the pair chosen |
 
 ---
 
@@ -279,7 +343,7 @@ Both pairs are live in [`app.module.ts`](../../apps/api/src/app.module.ts) 36–
 
 | File                      | Role                                              |
 | ------------------------- | ------------------------------------------------- |
-| `auth/auth.service.ts`    | Account/session engine (555 lines)                |
+| `auth/auth.service.ts`    | Account/session engine (orchestrator; session/claim collaborators extracted) |
 | `auth/service.ts`         | Browser OAuth handoff (`OAuthFlowService`)        |
 | `auth/auth.controller.ts` | Direct Google/Apple/email + `GET /me`             |
 | `auth/controller.ts`      | PKCE start/callback/exchange + `GET /auth/me`     |
@@ -358,7 +422,7 @@ unify `apps/api/src/common/clock.ts` with mobile `clock.ts` (API file already ex
 | [`apps/mobile/src/data/learner.ts`](../../apps/mobile/src/data/learner.ts)                   |   476 | Load vs commit vs `phraseFields`.                                                                                                                         |
 | [`apps/mobile/src/data/persistence.test.ts`](../../apps/mobile/src/data/persistence.test.ts) |  1299 | Eligibility block (~401–488) as its own file; keep one adversarial history.                                                                               |
 | [`apps/mobile/src/lib/account/client.ts`](../../apps/mobile/src/lib/account/client.ts)       |   414 | Session vs vault vs refresh under `lib/account/`. `src/auth/` is the OAuth port — not a duplicate.                                                        |
-| [`apps/api/src/auth/auth.service.ts`](../../apps/api/src/auth/auth.service.ts)               |   555 | Collaborators behind the same Nest provider when editing sign-in/claim.                                                                                   |
+| [`apps/api/src/auth/auth.service.ts`](../../apps/api/src/auth/auth.service.ts)               |   377 | **Landed 2026-09-10.** `auth.session.ts` / `auth.claim.ts` sit behind the same Nest provider. Magic, refresh and rate-limit stay on `AuthService`.         |
 | [`scripts/ci-local.mjs`](../../scripts/ci-local.mjs)                                         |  1067 | `inventory` / `jobs` / `workspace` / `main` as already-exported helpers. Do not change the job graph. `ci-local.test.mjs` already treats it as a library. |
 
 **WAVES triplication — P0-small, do now.** Identical `['morning', 'midday', 'evening']` in
@@ -376,9 +440,9 @@ share `copy.stream.empty`. A route-local helper taking labels; not a store-aware
 `sync.service.test.ts` (819) and `sync.postgres.test.ts`. Keep the memory repository; move it under
 `sync/testing/` so it cannot look production-ready.
 
-**E2E `states.ts` (763) — as you touch new screens.** Manifest + helpers (597–763) in one file. Move
-`doOneRep` / `lockIn` to `e2e/helpers/`; keep `STATES` as the single row that buys a11y, text-scale
-and coverage. `accountFlow.ts` is the mock owner, not a duplicate.
+**E2E `states.ts` helpers — landed 2026-09-10.** `doOneRep` / `lockIn` / `enter` / markers live in
+`e2e/helpers/`. `STATES` remains the single row that buys a11y, text-scale and coverage.
+`accountFlow.ts` is the mock owner, not a duplicate. New screens still add a `STATES` row.
 
 **Do not** extract Today `DayRow` / `NavRail` ahead of plans 56/81. **Do not** split `navigation.ts`
 (313) — it is the declaration table for planned surfaces.
@@ -404,46 +468,49 @@ on-disk Spanish; `multilingual.ts` adapts with hardcoded `cafe1` exceptions (36�
 gates do not run on the transformed catalogs — structural at the package boundary, but bilingual
 review (plan 87) owns acceptance. Do not delete the cortado exception as cleanup.
 
-**Driver savepoints ×3:** `driver.opsqlite.ts` 24–39 and `driver.node.ts` 28–31 are the same
-nested-transaction scaffold; web (`driver.web.ts`) is legitimately different (localStorage
-snapshot). Extract a tiny `withSavepoints(run)` used by native/node only — P2, as you touch drivers.
+**Driver savepoints — landed 2026-09-10.** Native/node share `withSavepoints(run)` in
+`savepoints.ts`. Web (`driver.web.ts`) stays different (localStorage snapshot).
 
-**FSRS `record` triplication — P2.** Speak 66–79, Refrain 271–315, Review 155–162 all do
-`reviewGrade` → `fsrsReview` → algorithm check → `universalDelta` + `srs`. Extract
-`canonicalReviewDelta(...)` in `engines/common.ts` when adding the next engine. Do not merge the
-engines.
+**FSRS `record` triplication — landed 2026-09-10.** Speak, Refrain and Review `record()` call
+`canonicalReviewDelta(...)` in `engines/common.ts`. Do not merge the engines.
 
 ---
 
 ## Sequencing
 
 ```
-now, parallel:
-  A. fakeRepository + seal TS Refrain numbers     (core / core-rs tests)
-  B. current.ts import shared schemas             (contracts:generate/check)
+landed:
+  A. fakeRepository + seal TS Refrain numbers
+  B. current.ts import shared schemas (implemented manifest/pack envelopes remain)
   C. backend.md + mobile-app routes + stale comments
   D. PRODUCTION_WAVES + typed setStreamCursor / beginRefrainSession
+  E. Speak plan() wiring
+  F. phrase column map next to fieldPolicy
+  G. rename API auth files + shared JWKS
 
-then, can overlap:
-  E. Speak plan() wiring                          (after D’s action pattern)
-  F. phrase column map next to fieldPolicy        (before any new sync field)
-  G. rename API auth files + shared JWKS          (when next touching auth)
+landed (2026-09-10):
+  add.tsx extract · useRefrainSession · copy.ts sections · learner/sync split
+  eligibility extract · Postgres test harness · ci-local.mjs modules
+  canonicalReviewDelta · practice empty-state · account types/credentials
+  auth.session/claim collaborators · e2e/helpers · withSavepoints · previewNativeLanguage
 
-as you touch:
-  add.tsx import extract · copy.ts sections · learner/sync split
-  Postgres test harness · ci-local.mjs modules · canonicalReviewDelta
+as you touch (next edit of those files only):
+  UniFFI regenerate-and-diff `--check` when touching the generator
 
 must wait:
   StreamEngine.plan()          → plan 62 audio
   features/ folder rewrite     → second call site or unreadable route
   delete TS calendar           → plan 70 widgets + bridge dispatch
   trip SyncEntity on the wire  → Q-07 / plan 69
-  Nest AuthModule split        → optional with G, not a prerequisite
+  Nest AuthModule split        → optional after G, not a prerequisite
   WarmingCard → ui/components  → Q-14 / second engine
 ```
 
-A–D do not share files. E depends on D. F should land before plan 68 adds fields. G should not
-silently change `/me` JSON.
+A–G landed in the working tree (see the [implementation status](#implementation-status--2026-09-09)).
+The 2026-09-10 passes landed the as-you-touch splits listed above (see
+[implementation status — 2026-09-10](#implementation-status--2026-09-10) and
+[continued](#implementation-status--2026-09-10-continued)). E depended on D. F
+should stay ahead of plan 68 adding fields. G did not change `/me` JSON.
 
 ---
 
@@ -488,7 +555,7 @@ silently change `/me` JSON.
 - One device `Date` owner (`apps/mobile/src/lib/clock.ts`) with ESLint.
 - Engine `common.ts` (`universalDelta`, `availableWhenActive`) and conformance.
 - SQL in `@loro/core` persistence; mobile injects `SqlDriver`. No live `INSERT OR REPLACE`.
-- Eligibility parity tests for memory/SQL/store (`persistence.test.ts` ~414–488).
+- Eligibility parity tests for memory/SQL/store (`eligibility.test.ts`).
 - Merge: TS `fieldPolicy` + Rust `merge.rs`.
 - Audio: `audioSpeech.ts` → controller → `bridge` / `bridge.native` — layers, not copies.
 - Core: `lib/core.ts` JSON call → WASM/UniFFI; `jsCoreFacade` is an alias.

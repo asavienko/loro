@@ -1,6 +1,6 @@
 import { atInstant, jumpTo, returnToForeground, runFor } from './clock'
 import { expect, onboard, test } from './fixtures'
-import { START_WAVE, bankedRow, railCount, repsTodayRow, streakChip } from './states'
+import { START_WAVE, bankedRow, railCount, repsTodayRow, streakChip } from './helpers'
 
 test(
   'LB-01..LB-08: Today exposes the finite set, the day, and every built destination',

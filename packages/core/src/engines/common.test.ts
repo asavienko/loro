@@ -6,13 +6,14 @@
  * WITH, so a new engine inherits the guarantee instead of re-deriving it.
  */
 
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import {
   availableWhenActive,
   distinctPhrases,
   itemAtCursor,
   itemFor,
   metaNumber,
+  canonicalReviewDelta,
   universalDelta,
   workedItems,
 } from './common.js'
@@ -126,6 +127,69 @@ describe('session plumbing', () => {
 
   it('counts distinct phrases, not items', () => {
     expect(distinctPhrases([item('a#0', 'a'), item('a#1', 'a'), item('b#0', 'b')])).toBe(2)
+  })
+})
+
+describe('canonicalReviewDelta', () => {
+  it('attaches graded FSRS evidence when the facade returns an algorithm', () => {
+    const phrase = makePhrase('one')
+    const ctx = makeContext([phrase])
+    vi.spyOn(ctx.core, 'reviewGrade').mockReturnValue(3)
+    vi.spyOn(ctx.core, 'fsrsReview').mockReturnValue({
+      stability: 2,
+      difficulty: 4,
+      due: T0 + 86_400_000,
+      algorithm: 'fsrs-6',
+    })
+
+    const delta = canonicalReviewDelta(ctx, item('one#0'), attempt('one#0'), phrase, {
+      reps: 1,
+      latencyMs: 940,
+    })
+
+    expect(delta.review).toEqual({ grade: 3, at: T0, algorithm: 'fsrs-6' })
+    expect(delta.srs?.algorithm).toBe('fsrs-6')
+    expect(delta.reps).toBe(1)
+  })
+
+  it('omits review evidence when the attempt is skipped', () => {
+    const phrase = makePhrase('one')
+    const ctx = makeContext([phrase])
+    const review = vi.spyOn(ctx.core, 'fsrsReview')
+
+    const delta = canonicalReviewDelta(
+      ctx,
+      item('one#0'),
+      attempt('one#0', { outcome: 'skipped' }),
+      phrase,
+      { reps: 0, latencyMs: null },
+      { skip: true },
+    )
+
+    expect(review).not.toHaveBeenCalled()
+    expect(delta.srs).toBeUndefined()
+    expect(delta.review).toBeUndefined()
+  })
+
+  it('refuses a scheduled review that lost its algorithm identity', () => {
+    const phrase = makePhrase('one')
+    const ctx = makeContext([phrase])
+    vi.spyOn(ctx.core, 'fsrsReview').mockReturnValue({
+      stability: 2,
+      difficulty: 4,
+      due: T0 + 1,
+    })
+
+    expect(() =>
+      canonicalReviewDelta(
+        ctx,
+        item('one#0'),
+        attempt('one#0'),
+        phrase,
+        { reps: 1, latencyMs: null },
+        { required: true },
+      ),
+    ).toThrow(/algorithm/)
   })
 })
 

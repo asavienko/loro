@@ -99,12 +99,18 @@ pub struct StreamCandidate {
 }
 
 /// Order eligible stream candidates with platform-independent ID ties.
+///
+/// Eligibility is the caller's `active` flag (`isActive` in TypeScript: not learned and
+/// not graduated). This crate's `PhraseState` has no `graduated_at`, so production WASM
+/// uses this candidate path rather than filtering a phrase record here.
 #[must_use]
 pub fn order_stream_candidates(candidates: &[StreamCandidate], now_ms: i64) -> Vec<String> {
     let mut active: Vec<_> = candidates
         .iter()
         .filter(|candidate| candidate.active)
         .collect();
+    // Stable sort with the id as a tiebreaker, so the order is deterministic
+    // regardless of input order — the conformance suite depends on this.
     active.sort_by(|a, b| {
         stream_rank_values(a.plays, a.difficulty, a.loved, a.due, now_ms)
             .cmp(&stream_rank_values(
@@ -120,20 +126,6 @@ pub fn order_stream_candidates(candidates: &[StreamCandidate], now_ms: i64) -> V
         .into_iter()
         .map(|candidate| candidate.id.clone())
         .collect()
-}
-
-/// Order the active queue. Excludes learned phrases.
-#[must_use]
-pub fn order_stream(phrases: &[PhraseState], now_ms: i64) -> Vec<String> {
-    let mut active: Vec<&PhraseState> = phrases.iter().filter(|p| !p.learned).collect();
-    // Stable sort with the id as a tiebreaker, so the order is deterministic
-    // regardless of input order — the conformance suite depends on this.
-    active.sort_by(|a, b| {
-        stream_rank(a, now_ms)
-            .cmp(&stream_rank(b, now_ms))
-            .then_with(|| a.id.cmp(&b.id))
-    });
-    active.into_iter().map(|p| p.id.clone()).collect()
 }
 
 #[cfg(test)]
@@ -224,22 +216,45 @@ mod tests {
         assert_eq!(stream_rank(&due, 1_000) + 4, stream_rank(&not_due, 1_000));
     }
 
+    fn candidate(
+        id: &str,
+        difficulty: Difficulty,
+        plays: u32,
+        loved: bool,
+        active: bool,
+    ) -> StreamCandidate {
+        StreamCandidate {
+            id: id.to_string(),
+            active,
+            plays,
+            difficulty,
+            loved,
+            due: None,
+        }
+    }
+
     #[test]
-    fn learned_phrases_leave_the_stream() {
-        let mut learned = phrase("l", Difficulty::Med, 0, false);
-        learned.learned = true;
-        let active = phrase("a", Difficulty::Med, 0, false);
-        let order = order_stream(&[learned, active], 0);
+    fn inactive_candidates_leave_the_stream() {
+        let learned = candidate("l", Difficulty::Med, 0, false, false);
+        let graduated = candidate("g", Difficulty::Med, 0, false, false);
+        let active = candidate("a", Difficulty::Med, 0, false, true);
+        let order = order_stream_candidates(&[learned, graduated, active], 0);
         assert_eq!(order, vec!["a".to_string()]);
     }
 
     #[test]
     fn ordering_is_deterministic_regardless_of_input_order() {
-        let a = phrase("a", Difficulty::Med, 3, false);
-        let b = phrase("b", Difficulty::Med, 3, false);
+        let a = candidate("a", Difficulty::Med, 3, false, true);
+        let b = candidate("b", Difficulty::Med, 3, false, true);
         assert_eq!(
-            order_stream(&[a.clone(), b.clone()], 0),
-            order_stream(&[b, a], 0)
+            order_stream_candidates(&[a, b], 0),
+            order_stream_candidates(
+                &[
+                    candidate("b", Difficulty::Med, 3, false, true),
+                    candidate("a", Difficulty::Med, 3, false, true)
+                ],
+                0
+            )
         );
     }
 }

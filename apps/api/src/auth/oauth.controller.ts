@@ -14,7 +14,7 @@ import {
 } from '@nestjs/common'
 import type { Request, Response } from 'express'
 import { OAuthExchangeSchema, OAuthProviderSchema, OAuthStartSchema } from '@loro/core/api/oauth'
-import type { OAuthFlowService } from './service.js'
+import type { OAuthFlowService } from './oauth-flow.service.js'
 import { AuthService } from './auth.service.js'
 import { AuthGuard, type AuthenticatedRequest } from './auth.guard.js'
 import { AUTH_RUNTIME } from './runtime.js'

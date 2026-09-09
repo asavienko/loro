@@ -1,5 +1,5 @@
 import { expect, onboard, openFirstPhrase, test } from './fixtures'
-import { railCount, trickyRow } from './states'
+import { railCount, trickyRow } from './helpers'
 
 test('P2-30..P2-40: edits every phrase control and propagates tags to Progress', async ({
   page,
