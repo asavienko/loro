@@ -66,8 +66,8 @@ export const sharedTiming = {
    * names suite runtime as the thing that erodes the fast feedback loop. A budget nobody
    * measures is a budget that is already gone. The integrated 155-test / 71-state suite
    * reached the old eight-minute cap after 149 passing tests, before its final text-scale
-   * sweep. Fourteen minutes keeps the plan-96 music states and whole-manifest sweeps
-   * while still bounding the workload.
+   * sweep. Twenty-four minutes keeps the plan-96 music states plus two 3.5-minute
+   * text-scale walks while still bounding the workload.
    */
-  globalTimeout: 14 * 60_000,
+  globalTimeout: 24 * 60_000,
 }
