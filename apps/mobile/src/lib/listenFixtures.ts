@@ -1,6 +1,7 @@
 import { LISTENING_REPEATS_DEFAULT, type ListeningBlocker } from '@loro/core'
 import { listenViewModel, type ListenPhase, type ListenProgress, type ListenViewModel } from './listenCompanion'
 
+/** Keep in lockstep with `e2e/listenFlow.ts`. Playwright cannot import this file. */
 export const LISTEN_SCENARIOS = [
   'empty',
   'needs-network',
