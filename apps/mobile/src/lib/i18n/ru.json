@@ -84,6 +84,7 @@
   "add.import.meaningPlaceholder": "Твоё значение",
   "add.import.duplicate": "Уже есть в твоём потоке. Исправь её, чтобы сохранить отдельной фразой.",
   "add.import.invalid": "Добавь и фразу, и значение.",
+  "add.import.saveFailed": "Мы сохранили всё, что смогли. Оставшиеся фразы всё ещё здесь.",
   "add.import.add": "Добавить {count, plural, one {# проверенную фразу} few {# проверенные фразы} many {# проверенных фраз} other {# проверенные фразы}}",
   "onboarding.welcome.greeting": "{greeting} Я Лоро",
   "onboarding.welcome.title": "Учи {targetName}\nфраза за фразой",

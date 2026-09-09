@@ -89,6 +89,7 @@
   "add.import.meaningPlaceholder": "[!! Yööüür mëëáánïïng !!]",
   "add.import.duplicate": "[!! ÁÁlrëëáády ïïn yööüür strëëáám. ËËdïït ïït töö këëëëp ïït áás áá sëëpááráátëë phráásëë. !!]",
   "add.import.invalid": "[!! ÁÁdd bööth áá phráásëë áánd ïïts mëëáánïïng. !!]",
+  "add.import.saveFailed": "[!! Wëë sáávëëd wháát wëë cööüüld. Yööüür rëëmááïïnïïng phráásëës áárëë stïïll hëërëë. !!]",
   "add.import.add": "[!! ÁÁdd {count, plural, one {# rëëvïïëëwëëd phráásëë} other {# rëëvïïëëwëëd phráásëës}} !!]",
   "onboarding.welcome.greeting": "[!! {greeting} ÏÏ''m Lööröö !!]",
   "onboarding.welcome.title": "[!! Lëëáárn {targetName}\nby thëë phráásëë !!]",

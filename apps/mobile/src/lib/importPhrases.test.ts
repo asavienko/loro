@@ -2,10 +2,12 @@ import { describe, expect, it } from 'vitest'
 import {
   IMPORT_MAX_CHARACTERS,
   IMPORT_MAX_ROWS,
+  importInputForCandidates,
   isImportTooLarge,
   isReviewedImportTooLarge,
   parseImportedPhrases,
   reviewImportedCandidates,
+  unsavedImportCandidates,
   type ImportCandidate,
 } from './importPhrases'
 import { MAX_OWN_PHRASE_TEXT_CODE_UNITS } from '@loro/core'
@@ -91,5 +93,24 @@ describe('bounded offline import review', () => {
     )
     expect(isReviewedImportTooLarge(oversized)).toBe(true)
     expect(oversized[0]).toMatchObject({ translation: 'é'.repeat(IMPORT_MAX_CHARACTERS) })
+  })
+
+  it('serializes only the review rows still awaiting correction after a partial save', () => {
+    expect(
+      importInputForCandidates([
+        { line: 2, targetText: 'Edited draft', translation: '', issue: 'invalid' },
+        { line: 3, targetText: 'Still here', translation: 'Meaning', issue: 'duplicate' },
+      ]),
+    ).toBe('Edited draft | \nStill here | Meaning')
+  })
+
+  it('retains the failed row and every later row when a batch write stops part-way through', () => {
+    const candidates: ImportCandidate[] = [
+      { line: 1, targetText: 'Saved', translation: 'Saved meaning', issue: null },
+      { line: 2, targetText: 'Failed', translation: 'Failed meaning', issue: null },
+      { line: 3, targetText: 'Later', translation: '', issue: 'invalid' },
+    ]
+    expect(unsavedImportCandidates(candidates, new Set([1]))).toEqual(candidates.slice(1))
+    expect(unsavedImportCandidates(candidates, new Set())).toEqual(candidates)
   })
 })
