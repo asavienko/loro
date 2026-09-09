@@ -4,6 +4,9 @@ This is the local testing APK path for F-03 / plan 58. GitHub Actions remains di
 uses Expo prebuild and Gradle on your machine and uploads files through the GitHub CLI. It does not
 use EAS or submit anything to Google Play.
 
+`pnpm --filter @loro/mobile android` is the Metro-dependent debug workflow and rejects release
+variants. Use this Preview APK workflow for a standalone release build.
+
 ## Prerequisites
 
 - Node 22 and pnpm 9.12.0 (`nvm use 22`).

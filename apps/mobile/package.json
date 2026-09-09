@@ -6,7 +6,7 @@
   "scripts": {
     "start": "expo start",
     "ios": "expo run:ios",
-    "android": "LORO_ANDROID_DEV_CLIENT=1 expo prebuild --platform android --no-install && LORO_ANDROID_DEV_CLIENT=1 expo run:android --app-id app.loro.android.dev",
+    "android": "node ../../scripts/android-development.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
