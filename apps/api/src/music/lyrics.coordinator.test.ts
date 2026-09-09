@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { bundledLyricDocument } from '@loro/core'
 import { LyricsCoordinator, type LyricsModel } from './lyrics.coordinator.js'
 import { LoroError } from '../common/errors.js'
 
@@ -56,5 +57,41 @@ describe('lyrics coordinator (ai-05)', () => {
     expect(first.cached).toBe(false)
     expect(second.cached).toBe(true)
     expect(second.lyric_document_id).toBe(first.lyric_document_id)
+  })
+
+  it('gives each principal a distinct lyric document id for the same phrases', async () => {
+    const coordinator = new LyricsCoordinator()
+    const first = await coordinator.lyrics(request, 'user-a')
+    const second = await coordinator.lyrics(request, 'user-b')
+    expect(second.cached).toBe(true)
+    expect(second.lyric_document_id).not.toBe(first.lyric_document_id)
+    expect(second.document.phrase_ids).toEqual(first.document.phrase_ids)
+  })
+
+  it('falls back when the model inserts an unselected catalog phrase', async () => {
+    const model: LyricsModel = {
+      propose: ({ phrases, targetLocale, meaningLanguage, catalogVersion }) => {
+        const document = bundledLyricDocument(
+          phrases,
+          targetLocale,
+          meaningLanguage,
+          catalogVersion,
+        )
+        return Promise.resolve({
+          ...document,
+          sections: document.sections.map((section, index) =>
+            index === 2
+              ? { ...section, lines: [...section.lines, 'La cuenta, por favor'] }
+              : section,
+          ),
+        })
+      },
+    }
+    const response = await new LyricsCoordinator(model).lyrics(request, 'user-a')
+    expect(response.fallback).toBe(true)
+    expect(response.provenance).toBe('bundled')
+    expect(response.document.sections.flatMap((section) => section.lines)).not.toContain(
+      'La cuenta, por favor',
+    )
   })
 })

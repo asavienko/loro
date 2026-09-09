@@ -111,7 +111,9 @@ truth. Entries in `.env.example` without a reader are reserved for future adapte
 | `TTS_VOICE_BG_BG`                   | Optional until that locale is rendered; never substituted for another locale      |
 | `TTS_VOICE_RU_RU`                   | Optional until that locale is rendered                                            |
 | `TTS_CACHE_DIR`                     | Process-local identity cache for `/tts/render`; defaults to os tmpdir             |
-| `MUSIC_PROVIDER`                    | Defaults to `stub`; fixture music only. Live ElevenLabs Music stays behind Q-21   |
+| `MUSIC_PROVIDER`                    | Defaults to `stub`; fixture music only. Never `TTS_PROVIDER`. Live spend is Q-21  |
+| `MUSIC_API_KEY`                     | Server-only Music credential; unused while `MUSIC_PROVIDER=stub`                  |
+| `MUSIC_BASE_URL`                    | Defaults to `https://api.elevenlabs.io`; residency host is an ops/Q-21 choice     |
 | `MUSIC_MONTHLY_BUDGET_USD_PER_USER` | Separate from `AI_MONTHLY_BUDGET_USD_PER_USER`; `0` means unlimited in stub       |
 | `MUSIC_DAILY_BUDGET_USD_GLOBAL`     | Separate global music cap; `0` means unlimited in stub                            |
 | `CDN_BASE_URL`                      | Legacy content manifest `audio_base`; no CDN or working audio download is implied |

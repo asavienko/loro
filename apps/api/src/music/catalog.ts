@@ -7,7 +7,7 @@ export function resolveMusicCatalogPhrases(
   catalogPhraseIds: readonly string[],
   targetLocale: string,
   meaningLanguage: string,
-): { phrases: CatalogLyricLine[]; catalogVersion: number } {
+): { phrases: CatalogLyricLine[]; catalog: CatalogLyricLine[]; catalogVersion: number } {
   if (!isTargetLocale(targetLocale) || !isNativeLanguage(meaningLanguage)) {
     throw new LoroError('VALIDATION_FAILED', 'Unsupported language pair')
   }
@@ -36,7 +36,16 @@ export function resolveMusicCatalogPhrases(
       translation: phraseMeaning(phrase, meaningLanguage),
     })
   }
-  return { phrases, catalogVersion: catalog.catalogVersion }
+  return {
+    phrases,
+    catalog: catalog.phrases.map((entry) => ({
+      id: entry.id,
+      targetText: entry.targetText,
+      translation: phraseMeaning(entry, meaningLanguage),
+      deprecatedBy: entry.deprecatedBy,
+    })),
+    catalogVersion: catalog.catalogVersion,
+  }
 }
 
 export function assertCourseLocales(
