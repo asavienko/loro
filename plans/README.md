@@ -12,10 +12,11 @@ Their partial statuses and outstanding scope remain indexed below; archiving doe
 completion.
 
 The [post-main review](../docs/reviews/2026-09-09-post-main-plan-review.md) records the six runtime
-and validation findings as fixed. No additional whole plan meets its acceptance criteria. Delivered
-implementation slices are recorded in the [dated archive](archive/2026-09-09/IMPLEMENTED-SLICES.md);
-all 33 remaining-work owners are retained. Continue with full/device/provider acceptance, then
-integrate the remaining daily-loop, Review, content and lifecycle slices.
+and validation findings as fixed, including the follow-up Refrain completion and touch-target
+repairs. No additional whole plan meets its acceptance criteria. Delivered implementation slices are
+recorded in the [dated archive](archive/2026-09-09/IMPLEMENTED-SLICES.md); all 33 remaining-work
+owners are retained. Continue with device/provider acceptance, then integrate the remaining
+daily-loop, Review, content and lifecycle slices.
 
 The [2026-09-09 implementation review](../docs/reviews/2026-09-09-twenty-plan-implementation.md)
 records changes requested after the next twenty bounded slices. Each selected plan remains partial;

@@ -19,8 +19,8 @@ See [the integration review](../2026-09-08/TOP-TEN-IMPLEMENTATION-REVIEW.md) for
 [Implemented slices](IMPLEMENTED-SLICES.md) records delivered checkpoint/navigation, draft-storage,
 Settings, engine, generated-binding and evidence-tool work at `de81744`. The
 [post-main review](../../../docs/reviews/2026-09-09-post-main-plan-review.md) records six resolved
-findings and the 33-plan remaining-work matrix. No additional whole plan is marked complete or
-moved.
+findings, the follow-up Refrain acceptance repairs and the 33-plan remaining-work matrix. No
+additional whole plan is marked complete or moved.
 
 ## Archive navigation
 
