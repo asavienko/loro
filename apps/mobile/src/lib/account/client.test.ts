@@ -266,6 +266,15 @@ describe('anonymous-first account lifecycle', () => {
     expect(client.getSnapshot().status).toBe('code-sent')
     expect(fetch.mock.calls[0]?.[1]?.body).toBe(JSON.stringify({ email: 'learner@example.com' }))
   })
+  it('classifies delivery throttling separately from an invalid verification code', async () => {
+    const { client, fetch } = setup()
+    fetch.mockResolvedValueOnce(new Response(null, { status: 429 }))
+    await client.requestCode('learner@example.com')
+    expect(client.getSnapshot()).toMatchObject({ status: 'error', error: 'rate-limited' })
+    fetch.mockResolvedValueOnce(new Response(null, { status: 401 }))
+    await client.verifyCode('learner@example.com', '123456')
+    expect(client.getSnapshot()).toMatchObject({ status: 'error', error: 'invalid-code' })
+  })
   it('stores refresh credentials before publishing a verified account', async () => {
     const { client, fetch, saved, bindAccount } = setup()
     fetch.mockResolvedValue(ok(signedIn))
@@ -335,6 +344,42 @@ describe('anonymous-first account lifecycle', () => {
     finish(ok(signedIn))
     await pending
     expect(client.getSnapshot().session).toBeNull()
+    expect(saved()).toBeNull()
+  })
+  it('cancels a pending verification before it can bind or save an account', async () => {
+    const { client, fetch, saved, bindAccount } = setup()
+    let finish!: (response: Response) => void
+    fetch.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve
+        }),
+    )
+    const pending = client.verifyCode('learner@example.com', '123456')
+    client.cancelSignIn()
+    finish(ok(signedIn))
+    await pending
+    expect(client.getSnapshot()).toMatchObject({ status: 'cancelled', session: null, error: null })
+    expect(bindAccount).not.toHaveBeenCalled()
+    expect(saved()).toBeNull()
+  })
+  it('cleans an admission that is cancelled while secure storage is committing', async () => {
+    const { client, deps, fetch, saved, bindAccount } = setup()
+    let finishWrite!: () => void
+    deps.vault.write = () =>
+      new Promise((resolve) => {
+        finishWrite = resolve
+      })
+    fetch.mockResolvedValueOnce(ok(signedIn))
+    const pending = client.verifyCode('learner@example.com', '123456')
+    await vi.waitFor(() => {
+      expect(finishWrite).toBeTypeOf('function')
+    })
+    client.cancelSignIn()
+    finishWrite()
+    await pending
+    expect(client.getSnapshot()).toMatchObject({ status: 'cancelled', session: null, error: null })
+    expect(bindAccount).not.toHaveBeenCalled()
     expect(saved()).toBeNull()
   })
   it('clears stale keychain credentials belonging to a removed installation', async () => {

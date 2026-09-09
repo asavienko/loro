@@ -1,3 +1,4 @@
+import { AuthCapabilitiesSchema } from '@loro/core/api/current'
 import { OAuthProvidersSchema, type OAuthProvider } from '@loro/core/api/oauth'
 import { Platform } from 'react-native'
 import * as Crypto from 'expo-crypto'
@@ -22,9 +23,9 @@ export const authorizationPorts: AuthorizationPorts = {
     Platform.OS === 'web' && typeof window !== 'undefined'
       ? `${window.location.origin}/account`
       : configuredNativeRedirectUri(Constants.expoConfig?.extra?.nativeRedirectUri),
-  authorize: async (url, redirect) => {
+  authorize: async (url, redirect, windowName = 'loro-sign-in') => {
     const result = await WebBrowser.openAuthSessionAsync(url, redirect, {
-      windowName: 'loro-sign-in',
+      windowName,
     })
     return result.type === 'success' ? result.url : null
   },
@@ -43,12 +44,15 @@ export function completeBrowserSignIn(): void {
 export function beginSignIn(provider: OAuthProvider): Promise<void> {
   const client = accountClient()
   if (!client) return Promise.reject(new Error('Account unavailable'))
+  // Keep the surface owned by this attempt. A fixed popup name lets an old finally
+  // handler close a newer attempt that reused the same browser window.
+  const popupName = `loro-sign-in-${base64url(String.fromCharCode(...Crypto.getRandomBytes(12)))}`
   const popup =
     Platform.OS === 'web'
-      ? window.open('about:blank', 'loro-sign-in', 'popup,width=500,height=700')
+      ? window.open('about:blank', popupName, 'popup,width=500,height=700')
       : null
   if (Platform.OS === 'web' && !popup) return Promise.reject(new Error('Popup blocked'))
-  return client.signIn(provider).finally(() => {
+  return client.signIn(provider, popupName).finally(() => {
     popup?.close()
   })
 }
@@ -62,4 +66,21 @@ export async function availableProviders(): Promise<OAuthProvider[]> {
   })
   if (!response.ok) throw new Error('Provider discovery unavailable')
   return OAuthProvidersSchema.parse(await response.json()).providers
+}
+
+/** Read configured email delivery independently from browser OAuth discovery. */
+export async function availableCapabilities(): Promise<{
+  apple: boolean
+  google: boolean
+  email: boolean
+}> {
+  if (!api) return { apple: false, google: false, email: false }
+  const response = await requestWithTimeout(`${api}/auth/capabilities`, {
+    method: 'GET',
+    credentials: 'omit',
+    cache: 'no-store',
+    redirect: 'error',
+  })
+  if (!response.ok) throw new Error('Authentication capabilities unavailable')
+  return AuthCapabilitiesSchema.parse(await response.json())
 }
