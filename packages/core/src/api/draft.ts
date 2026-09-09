@@ -23,6 +23,13 @@ import { fieldShape } from './sync.js'
 import { WordGlossSchema } from './catalog.js'
 import { DeviceRegistrationSchema, UserSchema } from './account.js'
 import { ChatTopicResourceSchema } from './chat-topic.js'
+import {
+  MusicLyricsRequestSchema,
+  MusicLyricsResponseSchema,
+  MusicRendersRequestSchema,
+  MusicRendersResponseSchema,
+  MusicTrackResponseSchema,
+} from './music.js'
 
 export const draftGates = {
   trip: ['Q-07'],
@@ -30,6 +37,8 @@ export const draftGates = {
   tts: ['Q-15'],
   chat: ['Q-16', 'Q-18', 'Q-19', 'Q-20'],
   config: ['Q-05'],
+  // Plan-local until Product records Q-21 globally. Do not add it to open-questions.md from this slice.
+  music: ['Q-21'],
 } as const
 export const tripValues = {
   city: TextSchema,
@@ -433,6 +442,55 @@ export const draftOperations = withExamples(
       behavior:
         'Private principal-scoped cache; stable assignments; expired/unknown flags disabled. No experiment activation or guessed exposure event while Q-05 remains open.',
     },
+    {
+      ...base,
+      id: 'musicLyrics',
+      method: 'post',
+      path: '/music/lyrics',
+      owner: 96,
+      gates: draftGates.music,
+      unresolved: [
+        'Q-21 enablement, commercial rights, attribution, provider retention and live lyric quality',
+      ],
+      summary: 'Build a validated lyric document from catalog phrase ids',
+      headers: idempotencyHeaders,
+      request: { schema: MusicLyricsRequestSchema },
+      responses: { 200: { schema: MusicLyricsResponseSchema }, ...targetErrors },
+      maxBodyBytes: 32 * 1024,
+      behavior:
+        'Authenticated principals only. Server reloads catalog text; client ids are not the sung-text source. Repair-once then bundled lyrics-only floor. No recordings, notes, or progress fields.',
+    },
+    {
+      ...base,
+      id: 'musicRenders',
+      method: 'post',
+      path: '/music/renders',
+      owner: 96,
+      gates: draftGates.music,
+      unresolved: [
+        'Q-21 paid Music access, commercial rights, C2PA/attribution and vocal quality (Q-21g)',
+      ],
+      summary: 'Render one lyric document in 2–4 Loro style packs',
+      headers: idempotencyHeaders,
+      request: { schema: MusicRendersRequestSchema },
+      responses: { 200: { schema: MusicRendersResponseSchema }, ...targetErrors },
+      behavior:
+        'Same lyric hash for every style. music_v2 chunks only; no title on the vendor wire; no conditioning_ref. Serialize within Music concurrency 2. Partial style success is first-class. No audio bytes on the JSON response.',
+    },
+    {
+      ...base,
+      id: 'musicTrack',
+      method: 'get',
+      path: '/music/tracks/{track_id}',
+      owner: 96,
+      gates: draftGates.music,
+      unresolved: ['Q-21 download/cache rights and short-lived object URLs'],
+      summary: 'Authorized generated-track metadata',
+      pathParams: { track_id: Key },
+      responses: { 200: { schema: MusicTrackResponseSchema }, ...targetErrors },
+      behavior:
+        'Principal-scoped. Other accounts see NOT_FOUND. Duration is file or provider metadata, never an estimate. Bytes are fetched from download_path, not this JSON body.',
+    },
   ] as const satisfies readonly Operation[],
   draftExamples,
 )
@@ -490,3 +548,19 @@ export type Devices = z.infer<typeof DevicesSchema>
 export type Account = z.infer<typeof AccountSchema>
 
 export type Config = z.infer<typeof ConfigSchema>
+export {
+  LyricDocumentSchema,
+  MusicLyricsRequestSchema,
+  MusicLyricsResponseSchema,
+  MusicRendersRequestSchema,
+  MusicRendersResponseSchema,
+  MusicTrackResponseSchema,
+} from './music.js'
+export type {
+  LyricDocument,
+  MusicLyricsRequest,
+  MusicLyricsResponse,
+  MusicRendersRequest,
+  MusicRendersResponse,
+  MusicTrackResponse,
+} from './music.js'
