@@ -63,19 +63,21 @@ describe('listening companion', () => {
   })
 
   it('skips verified cache hits and keeps completed clips on cancel', async () => {
-    const lookup = vi.fn(async (key: string) =>
-      key.includes('hit')
-        ? { fileUri: 'file:///clip.m4a', ms: 1000, sha256: 'a'.repeat(64) }
-        : null,
+    const lookup = vi.fn((key: string) =>
+      Promise.resolve(
+        key.includes('hit')
+          ? { fileUri: 'file:///clip.m4a', ms: 1000, sha256: 'a'.repeat(64) }
+          : null,
+      ),
     )
     const cache = new AudioCacheController({
       download: vi.fn(),
       lookup,
-      cancel: vi.fn(async () => undefined),
-      pin: vi.fn(async () => undefined),
-      unpin: vi.fn(async () => undefined),
+      cancel: vi.fn(() => Promise.resolve(undefined)),
+      pin: vi.fn(() => Promise.resolve(undefined)),
+      unpin: vi.fn(() => Promise.resolve(undefined)),
       concatenate: vi.fn(),
-      share: vi.fn(async () => undefined),
+      share: vi.fn(() => Promise.resolve(undefined)),
     })
     const abort = new AbortController()
     abort.abort()
@@ -98,10 +100,11 @@ describe('listening companion', () => {
   })
 
   it('plays cached file URIs with named gaps and never muxes while Q-21 is open', async () => {
-    const playFile = vi.fn(async (_id: string, _uri: string, onEnded?: () => void) => {
+    const playFile = vi.fn((_id: string, _uri: string, onEnded?: () => void) => {
       onEnded?.()
+      return Promise.resolve()
     })
-    const wait = vi.fn(async () => undefined)
+    const wait = vi.fn(() => Promise.resolve(undefined))
     await playListeningSequence({
       clips: [
         { fileUri: 'file:///a.m4a', ms: 1000, sha256: 'a'.repeat(64) },
@@ -125,11 +128,11 @@ describe('listening companion', () => {
     const cache = new AudioCacheController({
       download: vi.fn(),
       lookup: vi.fn(),
-      cancel: vi.fn(async () => undefined),
-      pin: vi.fn(async () => undefined),
-      unpin: vi.fn(async () => undefined),
+      cancel: vi.fn(() => Promise.resolve(undefined)),
+      pin: vi.fn(() => Promise.resolve(undefined)),
+      unpin: vi.fn(() => Promise.resolve(undefined)),
       concatenate: vi.fn(),
-      share: vi.fn(async () => undefined),
+      share: vi.fn(() => Promise.resolve(undefined)),
     })
     await expect(
       shareListeningBatch(cache, {
@@ -148,13 +151,13 @@ describe('listening companion', () => {
     const cache = new AudioCacheController({
       download: vi.fn(),
       lookup: vi.fn(),
-      cancel: vi.fn(async () => undefined),
-      pin: vi.fn(async () => undefined),
-      unpin: vi.fn(async () => undefined),
+      cancel: vi.fn(() => Promise.resolve(undefined)),
+      pin: vi.fn(() => Promise.resolve(undefined)),
+      unpin: vi.fn(() => Promise.resolve(undefined)),
       concatenate: vi.fn(),
-      share: vi.fn(async () => undefined),
-      saveListeningBatch: vi.fn(async () => undefined),
-      loadListeningBatch: vi.fn(async () => [clip]),
+      share: vi.fn(() => Promise.resolve(undefined)),
+      saveListeningBatch: vi.fn(() => Promise.resolve(undefined)),
+      loadListeningBatch: vi.fn(() => Promise.resolve([clip])),
     })
     await expect(restoreListeningBatch(cache)).resolves.toEqual([clip])
   })

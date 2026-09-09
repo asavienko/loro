@@ -9,23 +9,27 @@ import {
 
 function fixture() {
   const native = {
-    download: vi.fn(async (): Promise<AudioCacheObject> => ({
-      fileUri: 'file:///cache/sha256/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.m4a',
-      ms: 1420,
-      sha256: 'a'.repeat(64),
-    })),
-    lookup: vi.fn(async () => null),
-    cancel: vi.fn(async () => undefined),
-    pin: vi.fn(async () => undefined),
-    unpin: vi.fn(async () => undefined),
-    concatenate: vi.fn(async () => ({
-      fileUri: 'file:///cache/loro-es-ES-2026-09-09-listen.m4a',
-      ms: 8000,
-      sha256: 'b'.repeat(64),
-    })),
-    share: vi.fn(async () => undefined),
-    saveListeningBatch: vi.fn(async () => undefined),
-    loadListeningBatch: vi.fn(async () => null),
+    download: vi.fn((): Promise<AudioCacheObject> =>
+      Promise.resolve({
+        fileUri: 'file:///cache/sha256/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.m4a',
+        ms: 1420,
+        sha256: 'a'.repeat(64),
+      }),
+    ),
+    lookup: vi.fn(() => Promise.resolve(null)),
+    cancel: vi.fn(() => Promise.resolve(undefined)),
+    pin: vi.fn(() => Promise.resolve(undefined)),
+    unpin: vi.fn(() => Promise.resolve(undefined)),
+    concatenate: vi.fn(() =>
+      Promise.resolve({
+        fileUri: 'file:///cache/loro-es-ES-2026-09-09-listen.m4a',
+        ms: 8000,
+        sha256: 'b'.repeat(64),
+      }),
+    ),
+    share: vi.fn(() => Promise.resolve(undefined)),
+    saveListeningBatch: vi.fn(() => Promise.resolve(undefined)),
+    loadListeningBatch: vi.fn(() => Promise.resolve(null)),
   } satisfies NativeAudioCache
   return { native, controller: new AudioCacheController(native) }
 }
@@ -100,11 +104,13 @@ describe('listening cache controller', () => {
       ms: 1420,
       sha256: 'a'.repeat(64),
     }
-    f.native.loadListeningBatch = vi.fn(async () => [clip])
+    f.native.loadListeningBatch = vi.fn(() => Promise.resolve([clip]))
     await expect(f.controller.loadListeningBatch()).resolves.toEqual([clip])
-    f.native.loadListeningBatch = vi.fn(async () => [
-      { fileUri: 'https://cdn.loro.test/clip.m4a', ms: 1, sha256: 'a'.repeat(64) },
-    ])
+    f.native.loadListeningBatch = vi.fn(() =>
+      Promise.resolve([
+        { fileUri: 'https://cdn.loro.test/clip.m4a', ms: 1, sha256: 'a'.repeat(64) },
+      ]),
+    )
     await expect(f.controller.loadListeningBatch()).resolves.toBeNull()
   })
 })
