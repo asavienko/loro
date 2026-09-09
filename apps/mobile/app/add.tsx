@@ -14,6 +14,7 @@ import { useLocale } from '../src/lib/i18n'
  */
 import { useMemo, useState } from 'react'
 import { ScrollView, StyleSheet, TextInput, View } from 'react-native'
+import * as DocumentPicker from 'expo-document-picker'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import {
   BROWSABLE_THEMES,
@@ -22,8 +23,10 @@ import {
   TAGS,
   type BrowsableTheme,
   type Difficulty,
+  type NativeLanguage,
   type PhraseState,
   type Tag,
+  type TargetLocale,
 } from '@loro/core'
 import {
   useLearningCatalog,
@@ -63,6 +66,7 @@ import {
   unsavedImportCandidates,
   type ImportCandidate,
 } from '../src/lib/importPhrases'
+import { decodeImportFile, type ImportFileError } from '../src/lib/importFile'
 /**
  * The themes Browse offers.
  *
@@ -277,6 +281,11 @@ export default function Add() {
   const owned = useApp((s) => s.phrases)
   const addPhrase = useApp((s) => s.addPhrase)
   const addOwnPhrase = useApp((s) => s.addOwnPhrase)
+  const importDraft = useApp((s) => s.importDraft)
+  const saveImportDraft = useApp((s) => s.saveImportDraft)
+  const clearImportDraft = useApp((s) => s.clearImportDraft)
+  const targetLocale = useApp((s) => s.targetLocale)
+  const nativeLanguage = useApp((s) => s.nativeLanguage)
   const list = useSuggestions(owned)
   const draft = useAddDraft()
   const confirmAdd = (): void => {
@@ -304,7 +313,15 @@ export default function Add() {
 
       <ScrollView contentContainerStyle={[s.body, { paddingBottom: insets.bottom + space['5'] }]}>
         {list.mode === 'import' ? (
-          <ImportPhrases owned={owned} addOwnPhrase={addOwnPhrase} />
+          <ImportPhrases
+            owned={owned}
+            addOwnPhrase={addOwnPhrase}
+            importDraft={importDraft}
+            targetLocale={targetLocale}
+            nativeLanguage={nativeLanguage}
+            saveImportDraft={saveImportDraft}
+            clearImportDraft={clearImportDraft}
+          />
         ) : list.mode === 'browse' && list.browseTheme === null ? (
           <ThemeGrid countFor={list.countFor} onSelect={list.browse} />
         ) : (
@@ -552,15 +569,38 @@ function AddGlyph() {
 function ImportPhrases({
   owned,
   addOwnPhrase,
+  importDraft,
+  targetLocale,
+  nativeLanguage,
+  saveImportDraft,
+  clearImportDraft,
 }: {
   owned: readonly PhraseState[]
   addOwnPhrase: (draft: { targetText: string; translation: string }) => string
+  importDraft: {
+    readonly targetLocale: TargetLocale
+    readonly nativeLanguage: NativeLanguage
+    readonly input: string
+  } | null
+  targetLocale: TargetLocale
+  nativeLanguage: NativeLanguage
+  saveImportDraft: (draft: {
+    targetLocale: TargetLocale
+    nativeLanguage: NativeLanguage
+    input: string
+  }) => void
+  clearImportDraft: () => void
 }) {
   useLocale()
-  const [input, setInput] = useState('')
+  const restored =
+    importDraft?.targetLocale === targetLocale && importDraft.nativeLanguage === nativeLanguage
+      ? importDraft.input
+      : ''
+  const [input, setInput] = useState(restored)
   const [review, setReview] = useState<ImportCandidate[] | null>(null)
   const [tooLarge, setTooLarge] = useState(false)
   const [saveFailed, setSaveFailed] = useState(false)
+  const [fileError, setFileError] = useState<ImportFileError | null>(null)
   const existing = useMemo(
     () =>
       owned.flatMap((phrase) => {
@@ -574,6 +614,37 @@ function ImportPhrases({
     setTooLarge(exceedsLimit)
     setSaveFailed(false)
     setReview(exceedsLimit ? null : parseImportedPhrases(input, existing))
+  }
+  const updateInput = (value: string) => {
+    setInput(value)
+    setTooLarge(false)
+    setSaveFailed(false)
+    setFileError(null)
+    setReview(null)
+    saveImportDraft({ targetLocale, nativeLanguage, input: value })
+  }
+  const chooseFile = async () => {
+    setFileError(null)
+    const picked = await DocumentPicker.getDocumentAsync({
+      type: ['text/plain', 'text/tab-separated-values'],
+      copyToCacheDirectory: false,
+      multiple: false,
+    })
+    if (picked.canceled) return
+    const asset = picked.assets[0]
+    if (asset === undefined) return
+    try {
+      const response = await fetch(asset.uri)
+      const bytes = new Uint8Array(await response.arrayBuffer())
+      const result = decodeImportFile({ name: asset.name, bytes })
+      if (!result.ok) {
+        setFileError(result.error)
+        return
+      }
+      updateInput(result.text)
+    } catch {
+      setFileError('unsupported-encoding')
+    }
   }
   const update = (index: number, field: 'targetText' | 'translation', value: string) => {
     setSaveFailed(false)
@@ -629,11 +700,14 @@ function ImportPhrases({
       setInput('')
       setReview(null)
       setSaveFailed(false)
+      clearImportDraft()
       return
     }
-    setInput(importInputForCandidates(remaining))
+    const remainingInput = importInputForCandidates(remaining)
+    setInput(remainingInput)
     setReview(reviewImportedCandidates(remaining, [...existing, ...savedTargetTexts]))
     setSaveFailed(failed)
+    saveImportDraft({ targetLocale, nativeLanguage, input: remainingInput })
   }
   return (
     <Stack gap={space['3']}>
@@ -649,18 +723,25 @@ function ImportPhrases({
         <TextInput
           multiline
           value={input}
-          onChangeText={(value) => {
-            setInput(value)
-            setTooLarge(false)
-            setSaveFailed(false)
-            setReview(null)
-          }}
+          onChangeText={updateInput}
           placeholder={copy.add.import.placeholder}
           placeholderTextColor={ink.muted2}
           accessibilityLabel={copy.a11y.add.importInput}
           style={s.importInput}
         />
       </Card>
+      <Button label={copy.add.import.chooseFile} variant="secondary" onPress={chooseFile} />
+      {fileError !== null && (
+        <View accessibilityRole="alert">
+          <Text variant="caption" color={semantic.warn.text}>
+            {fileError === 'unsupported-format'
+              ? copy.add.import.unsupportedFormat
+              : fileError === 'too-large'
+                ? copy.add.import.fileTooLarge
+                : copy.add.import.unsupportedEncoding}
+          </Text>
+        </View>
+      )}
       <Button label={copy.add.import.preview} variant="secondary" onPress={preview} />
       {tooLarge && (
         <View accessibilityRole="alert">

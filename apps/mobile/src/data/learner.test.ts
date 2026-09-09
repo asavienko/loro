@@ -482,6 +482,39 @@ describe('repository-backed learner state', () => {
   })
 })
 
+describe('P2-07 durable import drafts', () => {
+  it('restores a course-bound local draft after relaunch and clears it after completion', () => {
+    const path = diskPath()
+    const db = open(path)
+    const draft = { targetLocale: 'es-ES' as const, nativeLanguage: 'en' as const, input: 'Hola | Hi' }
+    const outboxBefore = db.persistence.outbox.pending(100)
+    db.store.getState().saveImportDraft(draft)
+    expect(db.storage.load().importDraft).toEqual(draft)
+    expect(db.persistence.outbox.pending(100)).toEqual(outboxBefore)
+
+    db.driver.close()
+    const reopened = open(path)
+    expect(reopened.store.getState().importDraft).toEqual(draft)
+    reopened.store.getState().clearImportDraft()
+    expect(reopened.storage.load().importDraft).toBeNull()
+  })
+
+  it('does not publish a draft if its local checkpoint write fails', () => {
+    const db = open()
+    db.driver.run(
+      "CREATE TRIGGER reject_import_draft BEFORE INSERT ON kv WHEN NEW.k = 'import-draft' BEGIN SELECT RAISE(ABORT, 'draft write failed'); END",
+    )
+    expect(() => {
+      db.store.getState().saveImportDraft({
+        targetLocale: 'es-ES',
+        nativeLanguage: 'en',
+        input: 'Hola | Hi',
+      })
+    }).toThrow('draft write failed')
+    expect(db.store.getState().importDraft).toBeNull()
+  })
+})
+
 describe('F-05/F-06 device-local analytics consent', () => {
   it('defaults off on an existing installation without changing synced settings', () => {
     const db = open()

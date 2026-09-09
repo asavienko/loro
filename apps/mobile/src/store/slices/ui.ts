@@ -7,7 +7,15 @@
 
 import type { Slice } from '../types'
 
-export const createUiSlice: Slice<'select' | 'showToast' | 'clearToast'> = ({ set }) => ({
+export const createUiSlice: Slice<
+  'select' | 'showToast' | 'clearToast' | 'saveImportDraft' | 'clearImportDraft'
+> = ({ set }) => ({
+  saveImportDraft: (importDraft) => {
+    set({ importDraft })
+  },
+  clearImportDraft: () => {
+    set({ importDraft: null })
+  },
   select: (id) => {
     set({ selectedId: id })
   },
