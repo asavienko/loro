@@ -66,7 +66,8 @@ export const sharedTiming = {
    * names suite runtime as the thing that erodes the fast feedback loop. A budget nobody
    * measures is a budget that is already gone. The integrated 155-test / 71-state suite
    * reached the old eight-minute cap after 149 passing tests, before its final text-scale
-   * sweep. Twelve minutes keeps every state and assertion while bounding the larger workload.
+   * sweep. Eighteen minutes keeps the listen-export fixture states (AS-07) plus existing
+   * sweeps while bounding the larger workload.
    */
-  globalTimeout: 12 * 60_000,
+  globalTimeout: 18 * 60_000,
 }
