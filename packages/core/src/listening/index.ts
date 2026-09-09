@@ -32,6 +32,7 @@ export {
   canListenFromCache,
   canShareListening,
   clampListeningRepeats,
+  listeningRepeatChoices,
   listeningBlockers,
   listeningCodec,
   listeningModelIsPinned,

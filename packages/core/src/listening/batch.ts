@@ -26,6 +26,13 @@ export function clampListeningRepeats(value: number): ListeningRepeats {
   return value as ListeningRepeats
 }
 
+export function listeningRepeatChoices(): readonly ListeningRepeats[] {
+  const count = LISTENING_REPEATS_MAX - LISTENING_REPEATS_MIN + 1
+  return Array.from({ length: count }, (_, index) =>
+    clampListeningRepeats(LISTENING_REPEATS_MIN + index),
+  )
+}
+
 export function approvedListeningVoices(locale: TargetLocale): readonly ListeningVoice[] {
   return APPROVED_LISTENING_VOICES[locale]
 }
