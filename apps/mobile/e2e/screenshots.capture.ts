@@ -17,9 +17,11 @@ for (const state of STATES) {
       await document.fonts.ready
     })
 
+    const toast = page.locator('[role="alert"][aria-live="polite"]')
     const undo = page.getByRole('button', { name: 'Undo', exact: true })
     const preservesUndo = state.name === 'today · remove undo offered'
     if (preservesUndo) await expect(undo).toBeVisible()
+    else await expect(toast).toBeHidden()
 
     const image = join(runDir, 'images', filenameFor(state.name))
     mkdirSync(join(runDir, 'images'), { recursive: true })
