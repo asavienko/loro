@@ -26,10 +26,10 @@ to own unfinished work; no feature was marked done merely to archive old wording
 | Snapshot                                      | Reason and remaining work                                                                                                 | Current owner                                                      |
 | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
 | [64](64-today-and-refrain-production-loop.md) | Durable checkpoints/resume now exist; production loop and device acceptance remain.                                       | [Active 64](../2026-09-09/64-today-and-refrain-production-loop.md) |
-| [72](72-release-quality-gates.md)             | Local CI and Rust simulations exist; native/content/performance release gates remain.                                     | [Active 72](../../72-release-quality-gates.md)                     |
-| [75](75-review-and-memory.md)                 | Canonical Rust FSRS exists; Review/Memory screens and session behavior remain.                                            | [Active 75](../../75-review-and-memory.md)                         |
-| [88](88-low-cost-backend-infrastructure.md)   | Restricted EC2/HTTPS deployment exists; shared-service recovery/load acceptance and infrastructure reconciliation remain. | [Active 88](../../88-low-cost-backend-infrastructure.md)           |
-| [90](90-default-english-content-language.md)  | English learning-target/default semantics are confirmed; implementation, dialect and reviewed content remain.             | [Active 90](../../90-default-english-content-language.md)          |
+| [72](72-release-quality-gates.md)             | Local CI and Rust simulations exist; native/content/performance release gates remain.                                     | [Active 72](../2026-09-09/72-release-quality-gates.md)             |
+| [75](75-review-and-memory.md)                 | Canonical Rust FSRS exists; Review/Memory screens and session behavior remain.                                            | [Active 75](../2026-09-09/75-review-and-memory.md)                 |
+| [88](88-low-cost-backend-infrastructure.md)   | Restricted EC2/HTTPS deployment exists; shared-service recovery/load acceptance and infrastructure reconciliation remain. | [Active 88](../2026-09-09/88-low-cost-backend-infrastructure.md)   |
+| [90](90-default-english-content-language.md)  | English learning-target/default semantics are confirmed; implementation, dialect and reviewed content remain.             | [Active 90](../2026-09-09/90-default-english-content-language.md)  |
 
 The [old roadmap baseline](roadmap-baseline.md) is also retained. The
 [current roadmap](../../../docs/product/roadmap.md) now points to integrated scope and the current

@@ -3,10 +3,10 @@
 **Status: partial implementation; full operational acceptance remains open.** The existing
 CloudFormation-managed EC2, private PostgreSQL, SOPS runtime files and HTTPS gateway are recorded in
 [EC2 deployment](../process/ec2-deployment.md). This runbook specifies the remaining single-host
-testing profile in [plan 88](../../plans/88-low-cost-backend-infrastructure.md). The local backup
-collector below is implemented; off-host recovery, scheduling, retained storage and monitoring still
-need implementation and live verification. Do not use local-development Compose against EC2 or treat
-these checklists as completed checks.
+testing profile in [plan 88](../../plans/archive/2026-09-09/88-low-cost-backend-infrastructure.md).
+The local backup collector below is implemented; off-host recovery, scheduling, retained storage and
+monitoring still need implementation and live verification. Do not use local-development Compose
+against EC2 or treat these checklists as completed checks.
 
 ## Before provisioning
 
@@ -155,4 +155,4 @@ CloudFormation stack deletes the instance disk and local database/backups; retai
 must be verified before teardown. Retained-volume protection is still outstanding.
 
 Production capacity, uninterrupted deployment, managed failover and production retention remain
-decisions for [plan 73](../../plans/73-delivery-observability-and-slos.md).
+decisions for [plan 73](../../plans/archive/2026-09-09/73-delivery-observability-and-slos.md).

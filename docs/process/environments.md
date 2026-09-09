@@ -1,8 +1,9 @@
 # Environments
 
 Use local development today and one shared AWS testing environment when
-[plan 88](../../plans/88-low-cost-backend-infrastructure.md) is implemented. The testing design is
-selected, but no cloud deployment, database integration or shared-user access is established yet.
+[plan 88](../../plans/archive/2026-09-09/88-low-cost-backend-infrastructure.md) is implemented. The
+testing design is selected, but no cloud deployment, database integration or shared-user access is
+established yet.
 
 | Concern        | Local: implemented                                   | Testing: selected, not provisioned                         |
 | -------------- | ---------------------------------------------------- | ---------------------------------------------------------- |
@@ -54,8 +55,8 @@ bundled fixtures; live provider and TTS runtime integrations remain unfinished.
 ## Testing
 
 One `testing` environment in `eu-central-1`, with resource limits and staged access gates in
-[plan 88](../../plans/88-low-cost-backend-infrastructure.md). Its hostname is an input using an
-existing domain, not an assumed `loro.app` deployment.
+[plan 88](../../plans/archive/2026-09-09/88-low-cost-backend-infrastructure.md). Its hostname is an
+input using an existing domain, not an assumed `loro.app` deployment.
 
 1. Prepare infrastructure and test recovery with synthetic fixtures. Keep unfinished API routes
    inaccessible externally.

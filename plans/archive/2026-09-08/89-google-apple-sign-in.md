@@ -50,5 +50,5 @@ The Google/Apple authorization-code flow, nonce/state validation, PKCE one-use h
 provider-subject identity are preserved while session issuance and learning sync share the durable
 authenticated account. Legacy credentials require a safe upgrade/re-authentication path; they are
 not copied into a new identity by email. Merged-suite validation is recorded in
-[plan 94](../../94-persistent-practice-and-account-integration.md). Historical counts above describe
-the original plan-89 delivery, not the merged runtime.
+[plan 94](../2026-09-09/94-persistent-practice-and-account-integration.md). Historical counts above
+describe the original plan-89 delivery, not the merged runtime.

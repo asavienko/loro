@@ -7,6 +7,10 @@
 - **Depends on:** [72](72-release-quality-gates.md), existing `scripts/ci-local.sh` gates
 - **Reviewed:** 2026-09-09
 
+**Archive disposition (2026-09-09):** Archived at user request after implemented slices landed. The
+partial status and remaining acceptance criteria are retained; archival does not mark this plan
+complete. The roadmap index continues to track its unfinished scope.
+
 ## Outcome
 
 The full local gate uses dependency-aware bounded concurrency while preserving every existing check.
@@ -48,9 +52,10 @@ The hardened parallel full gate passed after the fixes on 2026-09-09 with
 `CI_BASE_REF=origin/main LORO_CI_JOBS=2`: preparation, `pnpm check`, PostgreSQL/auth, four isolated
 browser suites, mobile bundle, API smoke/image checks and Criterion benchmarks. The learner suite
 reported 167 passed and one expected skip. The retained report is
-[`.ci-local-reports/20260909151451797-47255/`](../.ci-local-reports/20260909151451797-47255/), with
-matching authored and generated source identities recorded in its summary and source-identity files.
-A matched serial baseline and three warm-run measurements remain before marking the plan complete.
+[`.ci-local-reports/20260909151451797-47255/`](../../../.ci-local-reports/20260909151451797-47255/),
+with matching authored and generated source identities recorded in its summary and source-identity
+files. A matched serial baseline and three warm-run measurements remain before marking the plan
+complete.
 
 ## Review follow-up — 2026-09-09
 
@@ -62,9 +67,10 @@ guarantees.
 
 ### 1. Stop all command sequences on cancellation and bound cleanup
 
-**Finding:** In [`ci-local.mjs`](../scripts/ci-local.mjs), interrupting an offline install could
-advance to the online fallback. `runCommand` could also permit launches after cancellation. Process
-cleanup sent only SIGTERM, so a child that ignored it could keep the runner waiting indefinitely.
+**Finding:** In [`ci-local.mjs`](../../../scripts/ci-local.mjs), interrupting an offline install
+could advance to the online fallback. `runCommand` could also permit launches after cancellation.
+Process cleanup sent only SIGTERM, so a child that ignored it could keep the runner waiting
+indefinitely.
 
 **Suggested fix:**
 

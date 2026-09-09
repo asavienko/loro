@@ -40,11 +40,12 @@ apps/api/src/
 
 Plan [85](../../plans/archive/2026-09-07/85-backend-integration-contracts.md) supplies shared
 current/target/draft wire schemas, OpenAPI and HTTP conformance tests. Plan
-[66](../../plans/66-backend-contract-data-and-security.md) retains boundary integration, durable
-repositories, safe defaults, and the image contract. Plans
-[67](../../plans/67-anonymous-auth-and-account-lifecycle.md) and
-[68](../../plans/68-sync-and-offline-convergence.md) add identity and safe convergence. Plan
-[76](../../plans/76-roleplay-and-live-ai.md) adds a guarded live provider.
+[66](../../plans/archive/2026-09-09/66-backend-contract-data-and-security.md) retains boundary
+integration, durable repositories, safe defaults, and the image contract. Plans
+[67](../../plans/archive/2026-09-09/67-anonymous-auth-and-account-lifecycle.md) and
+[68](../../plans/archive/2026-09-09/68-sync-and-offline-convergence.md) add identity and safe
+convergence. Plan [76](../../plans/archive/2026-09-09/76-roleplay-and-live-ai.md) adds a guarded
+live provider.
 
 ## Target module map
 
@@ -229,9 +230,9 @@ job that confirms zero rows remain.
 
 ## Testing infrastructure
 
-[Plan 88](../../plans/88-low-cost-backend-infrastructure.md) selects this topology for a small
-tester group. It is not provisioned, and starting PostgreSQL does not connect the current in-memory
-API.
+[Plan 88](../../plans/archive/2026-09-09/88-low-cost-backend-infrastructure.md) selects this
+topology for a small tester group. It is not provisioned, and starting PostgreSQL does not connect
+the current in-memory API.
 
 ```mermaid
 flowchart LR

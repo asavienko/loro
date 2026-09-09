@@ -33,11 +33,36 @@ Implemented runtime with outstanding required device, linguistic or service acce
 partial. A merged PR, passing browser suite or archive location alone is not completion evidence. Do
 not shrink acceptance criteria or silently transfer unfinished work just to mark a plan done.
 
+## Finish a plan
+
+When the recorded scope and acceptance criteria are complete, **archive the plan in the same
+change**. Do not leave a finished plan in `plans/` or as an active-index row.
+
+```bash
+node .agents/skills/loro-development/scripts/archive-plan.mjs --date YYYY-MM-DD <id>
+```
+
+The helper moves the file to `plans/archive/<date>/` and rebases Markdown links plus `plans/NN-`
+path references. Then:
+
+1. Confirm the moved record is `✅` with evidence.
+2. Remove its row from the active index and list it in `plans/archive/README.md` and the dated
+   archive index.
+3. Update remaining CLAUDE.md / guidance claims if they named the old path or count.
+4. Leave no compatibility symlink, redirect file or duplicate at the former path.
+
+For a user request to archive implemented-but-unfinished plans, pass `--unfinished`. That keeps the
+partial/blocked status, inserts a disposition note, and leaves remaining-work rows in the active
+index with direct archive links. Archiving is not completion.
+
+Helper tests: `node --test .agents/skills/loro-development/scripts/archive-plan.test.mjs`.
+
 ## Archive without clutter
 
 1. Move a completed plan to `plans/archive/YYYY-MM-DD/` using the archival date. Preserve its ID,
    filename, implementation record and original completion date. Plan 53 has no original-path
-   exception; its former protection was retired at user request.
+   exception; its former protection was retired at user request. Use the helper above rather than
+   hand-moving files.
 2. Remove its row from the active index and list it in `plans/archive/README.md` and the dated
    archive index. Keep completed records out of the top-level plan directory and active roadmap.
    Dependencies may still refer to completed work by ID or direct archive link.
