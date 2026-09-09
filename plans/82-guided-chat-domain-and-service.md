@@ -4,9 +4,9 @@
   `AS-02`
 - **Milestone:** M3 / v1.1
 - **Status:** 🟡 The bundled topic-graph schema and deterministic traversal exist in core; authored
-  topic packs, local chat domain/persistence and coordinator remain. Duplicate suggestion IDs must
-  be rejected before use (post-main B4). Offline content/eval work can start now. Q-19 gates
-  retention, Q-18/Q-20 live traffic, and Q-16 release enablement.
+  topic packs, local chat domain/persistence and coordinator remain. Duplicate suggestion IDs are
+  rejected before use (post-main B4). Offline content/eval work can start now. Q-19 gates retention,
+  Q-18/Q-20 live traffic, and Q-16 release enablement.
 - **Depends on:** 79/85 completed; 59 for device storage; 61 for content publication; 66/67/86 for
   live service; 68 only for the explicit kept-phrase sync boundary.
 - **Reviewed:** 2026-09-07 against merged baseline `2d9e8c3`.

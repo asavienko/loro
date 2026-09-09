@@ -2,12 +2,12 @@
 
 - **Requirement IDs:** `P2-07`, `P2-09`, `P2-10`, `P2-15`, `AI-03`
 - **Milestone:** Import M2; Capture M3
-- **Status:** 🟡 Own-phrase identity/store, language ownership and reviewed offline paste import
-  exist. Paste review enforces 50 nonempty rows, 20,000 UTF-16 code units per batch and 2,000 per
-  persisted field through edit/save. Partial saves retain rejected/write-failed rows through storage
-  recovery. Edited TSV and pair-scoped storage are implemented. File selection still needs a web
-  reader, picker-error handling and late-result/pair invalidation (post-main B1/B2); native provider
-  acceptance and OCR remain. OCR needs 58, optional translation 76/86.
+- **Status:** 🟡 Own-phrase identity/store, language ownership and reviewed offline paste/file
+  import exist. Paste review enforces 50 nonempty rows, 20,000 UTF-16 code units per batch and 2,000
+  per persisted field through edit/save. Partial saves retain rejected/write-failed rows through
+  storage recovery. Edited TSV, pair-scoped storage, browser file reading and request invalidation
+  are implemented; native provider acceptance and OCR remain. OCR needs 58, optional translation
+  76/86.
 - **Depends on:** 56 input/navigation; 59 persistence; 58 camera/OCR substrate; 76/86 only for
   optional guarded text assistance.
 - **Reviewed:** 2026-09-09 against `aafa61f`; current source, tests and retained review records
@@ -38,7 +38,9 @@ Discover/Browse and the difficulty/tag sheet exist. This plan does not rebuild t
 1. [x] Add bounded offline file selection/reading, supported format/encoding rules and cancellation.
        `.txt` and `.tsv` files decode strictly as UTF-8 within the review budget; format, byte and
        encoding failures leave existing input intact, and cancellation is inert. The result still
-       enters the existing normalization, duplicate/field/batch validation and review UI.
+       enters the existing normalization, duplicate/field/batch validation and review UI. Web uses
+       the picker-provided `File`; native uses its provider URI. Selection is request-scoped and
+       stale results cannot replace an edited or switched pair.
 2. [x] Extend recovery across relaunch with a local, course-bound draft checkpoint. Stable
        own-phrase ids and the existing transactional phrase/outbox write ensure a crash after a
        partial save can only leave the saved line as a duplicate review row, never create it twice.
@@ -86,6 +88,6 @@ Bulk catalog authoring, cloud image retention, handwriting promises, and automat
 ## Post-main review and archive disposition — 2026-09-09
 
 The [review at `de81744`](../../../docs/reviews/2026-09-09-post-main-plan-review.md) records this
-plan's current contribution, remaining work and gates. [Delivered slices](IMPLEMENTED-SLICES.md) are
-retained in the archive; this plan remains incomplete. Earlier verification is dated evidence, not
-acceptance of the current combined branch.
+plan's current contribution, resolved import findings and remaining gates.
+[Delivered slices](IMPLEMENTED-SLICES.md) are retained in the archive; this plan remains incomplete.
+Earlier verification is dated evidence, not acceptance of the current combined branch.

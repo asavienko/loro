@@ -1,11 +1,11 @@
 # Persistent practice, native speech, canonical core and account sync
 
 - **Requirement IDs:** `F-01`…`F-04`, `F-07`, `F-08`, `AS-01`…`AS-06`, `LB-01`…`LB-27`
-- **Status:** 🟡 Runtime implemented; historical aggregate local CI passed. Post-main `de81744`
-  passes the fast gate but requires import, deterministic navigation-test and formatting repairs
-  before combined CI acceptance. Remaining gates are full iOS native validation, physical-device
-  speech/convergence acceptance, approved ElevenLabs assets (Q-15), background transport and
-  production identity/email configuration; see the remaining scope below.
+- **Status:** 🟡 Runtime implemented; historical aggregate local CI passed. Post-main repairs for
+  import, deterministic navigation tests and formatting now pass the fast and format gates.
+  Remaining gates are full iOS native validation, physical-device speech/convergence acceptance,
+  approved ElevenLabs assets (Q-15), background transport and production identity/email
+  configuration; see the remaining scope below.
 - **Depends on:** Existing contracts in 85 and persistence correctness in 54; implements coordinated
   slices of 58–60, 62–63 and 66–68.
 
@@ -160,7 +160,7 @@ broader native, multilingual and production operational gates remain separate.
 ## Post-main review and archive disposition — 2026-09-09
 
 The [review at `de81744`](../docs/reviews/2026-09-09-post-main-plan-review.md) records this plan's
-current contribution, remaining work and gates.
+current contribution, resolved implementation findings, remaining work and gates.
 [Delivered slices](archive/2026-09-09/IMPLEMENTED-SLICES.md) are retained in the archive; this plan
 remains incomplete. Earlier verification is dated evidence, not acceptance of the current combined
 branch.

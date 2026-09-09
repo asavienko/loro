@@ -13,8 +13,8 @@ Android widget, notification scheduler, snapshot publisher, or `expo-notificatio
 service permissions, URL scheme, and background-audio capability; those declarations do not render,
 schedule, or deliver anything.
 
-The reusable part that exists is intentionally bounded: `packages/core-rs/src/notify.rs` defines
-the seven categories and unit-tests quiet hours, the daily cap, opt-outs, conditional waves, trip
+The reusable part that exists is intentionally bounded: `packages/core-rs/src/notify.rs` defines the
+seven categories and unit-tests quiet hours, the daily cap, opt-outs, conditional waves, trip
 gating, the language-pack threshold and category deep-link strings. Its `plan_notifications` pure
 planner takes platform-resolved candidate instants and returns the permitted, ordered subset with
 stable IDs, semantic copy keys, deep links and foreground-suppression intent. It rejects malformed
@@ -28,10 +28,10 @@ connected to a native rollover callback.
 
 Before scheduling, the pure planner is available and has unit coverage for stable identifiers,
 delivery timestamps, category, copy key, destination availability, quiet hours and the absolute
-daily cap. The platform adapter must add replacement/cancellation, foreground suppression,
-timezone travel, DST, permission denial and reschedule hooks for foreground, settings, practice
-completion, trip changes and local-day rollover. A scheduled notification must never depend on
-JavaScript waking at delivery time.
+daily cap. The platform adapter must add replacement/cancellation, foreground suppression, timezone
+travel, DST, permission denial and reschedule hooks for foreground, settings, practice completion,
+trip changes and local-day rollover. A scheduled notification must never depend on JavaScript waking
+at delivery time.
 
 Before widgets, define and version the snapshot at the shared boundary, add atomic platform storage,
 publish after the local transaction commits, and make stale/missing/audio-missing states explicit.
@@ -226,13 +226,13 @@ Arrival date reached
 
 ## Testing
 
-| Test                        | Method                                                                                               |
-| --------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Test                        | Method                                                                                                                                        |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
 | Notification policy         | Present: Rust policy and planner tests for candidate ordering, IDs, cap, quiet hours, opt-outs and gates. Required: platform scheduling tests |
-| Widget snapshot correctness | Unit test the selection ladder; golden-file the snapshot for known states                            |
-| Widget rendering            | Xcode previews / Glance previews for every state, including empty and no-trip                        |
-| Offline widget play         | Manual: airplane mode, tap ▶ on the lock screen, audio plays without launching the app               |
-| Live Activity lifecycle     | Manual on a device — the simulator's Activity behaviour is not trustworthy                           |
-| Deep links                  | Maestro flows asserting each notification lands on the right screen                                  |
-| Day rollover                | Advance the device clock past midnight; assert widget and notifications both update                  |
-| Copy audit                  | Every string in both surfaces reviewed against the forbidden list, every release                     |
+| Widget snapshot correctness | Unit test the selection ladder; golden-file the snapshot for known states                                                                     |
+| Widget rendering            | Xcode previews / Glance previews for every state, including empty and no-trip                                                                 |
+| Offline widget play         | Manual: airplane mode, tap ▶ on the lock screen, audio plays without launching the app                                                        |
+| Live Activity lifecycle     | Manual on a device — the simulator's Activity behaviour is not trustworthy                                                                    |
+| Deep links                  | Maestro flows asserting each notification lands on the right screen                                                                           |
+| Day rollover                | Advance the device clock past midnight; assert widget and notifications both update                                                           |
+| Copy audit                  | Every string in both surfaces reviewed against the forbidden list, every release                                                              |
