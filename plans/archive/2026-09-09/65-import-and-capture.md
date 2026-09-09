@@ -3,7 +3,9 @@
 - **Requirement IDs:** `P2-07`, `P2-09`, `P2-10`, `P2-15`, `AI-03`
 - **Milestone:** Import M2; Capture M3
 - **Status:** 🟡 Own-phrase identity/store, language ownership and reviewed offline paste import
-  exist. File import and OCR remain; OCR needs 58, and optional translation needs 76/86.
+  exist, with bounded paste review (50 nonempty rows / 20,000 UTF-16 code units), preserved
+  oversized drafts and smaller-batch retry. File import and OCR remain; OCR needs 58, and optional
+  translation needs 76/86.
 - **Depends on:** 56 input/navigation; 59 persistence; 58 camera/OCR substrate; 76/86 only for
   optional guarded text assistance.
 - **Reviewed:** 2026-09-09 against checkout `42f4d57`; source/plan review only, no new device or
@@ -44,6 +46,14 @@ Discover/Browse and the difficulty/tag sheet exist. This plan does not rebuild t
 5. [ ] Show OCR text for correction before add; make cropping/rotation/multiple-lines explicit.
 6. [ ] If AI translation is enabled, validate output, mark provenance, apply budgets, and never
        upload an image without a separately approved privacy contract.
+
+### Delivered review limit slice (2026-09-09)
+
+Paste review rejects an entire oversized batch before normalizing or rendering rows; it never
+silently imports a prefix. The original text stays editable, and reducing it clears the warning.
+CRLF, LF and CR line endings share the same row count and parsing. Unit boundary tests and a browser
+recovery flow cover this slice; file/encoding input, batch persistence recovery and OCR remain under
+the delivery order below.
 
 ## Acceptance criteria
 

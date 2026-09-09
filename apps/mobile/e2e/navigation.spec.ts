@@ -1,3 +1,4 @@
+import { mockAccountService } from './accountFlow'
 import { expect, onboard, test } from './fixtures'
 import { back, open, todayMarker } from './states'
 
@@ -130,4 +131,29 @@ test('pull gestures open the menu and dismiss only the sheet', async ({ page }) 
   await touch.detach()
   await page.getByRole('button', { name: /, open the menu$/ }).click()
   await expect(page.getByRole('dialog')).toBeVisible()
+})
+
+test('More lists built destinations and retains a return to More', async ({ page }) => {
+  await mockAccountService(page)
+  await onboard(page)
+  await page.getByRole('button', { name: /, open the menu$/ }).click()
+  await page.getByRole('dialog').getByRole('button', { name: 'More', exact: true }).click()
+  for (const [label, path] of [
+    ['Sign in & sync', '/account'],
+    ['Speak', '/practice/speak'],
+    ['Stream', '/practice/stream'],
+    ['The Refrain', '/practice/refrain'],
+    ['Add', '/add'],
+    ['Progress', '/progress'],
+    ['Languages', '/languages'],
+  ] as const) {
+    await expect(page).toHaveURL(/\/more$/)
+    await expect(page.getByRole('button', { name: /Chat|Settings|Trips|Phrasebook/ })).toHaveCount(
+      0,
+    )
+    await page.getByRole('button', { name: label, exact: true }).click()
+    await expect(page).toHaveURL(new RegExp(`${path}$`))
+    await back(page)
+  }
+  await expect(page).toHaveURL(/\/more$/)
 })

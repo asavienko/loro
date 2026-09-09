@@ -51,6 +51,9 @@ import { copy, themeLabel } from '../src/lib/copy'
 import { useApp } from '../src/store'
 import {
   importedPhraseKey,
+  isImportTooLarge,
+  IMPORT_MAX_CHARACTERS,
+  IMPORT_MAX_ROWS,
   normalizeImportedText,
   parseImportedPhrases,
   reviewImportedCandidates,
@@ -552,6 +555,7 @@ function ImportPhrases({
   useLocale()
   const [input, setInput] = useState('')
   const [review, setReview] = useState<ImportCandidate[] | null>(null)
+  const [tooLarge, setTooLarge] = useState(false)
   const existing = useMemo(
     () =>
       owned.flatMap((phrase) => {
@@ -561,7 +565,9 @@ function ImportPhrases({
     [owned],
   )
   const preview = () => {
-    setReview(parseImportedPhrases(input, existing))
+    const exceedsLimit = isImportTooLarge(input)
+    setTooLarge(exceedsLimit)
+    setReview(exceedsLimit ? null : parseImportedPhrases(input, existing))
   }
   const update = (index: number, field: 'targetText' | 'translation', value: string) => {
     setReview((current) =>
@@ -608,6 +614,7 @@ function ImportPhrases({
           value={input}
           onChangeText={(value) => {
             setInput(value)
+            setTooLarge(false)
             setReview(null)
           }}
           placeholder={copy.add.import.placeholder}
@@ -617,6 +624,13 @@ function ImportPhrases({
         />
       </Card>
       <Button label={copy.add.import.preview} variant="secondary" onPress={preview} />
+      {tooLarge && (
+        <View accessibilityRole="alert">
+          <Text variant="caption" color={semantic.warn.text}>
+            {copy.add.import.tooLarge(IMPORT_MAX_ROWS, IMPORT_MAX_CHARACTERS)}
+          </Text>
+        </View>
+      )}
       {review !== null && (
         <Stack gap={space['2']}>
           <SectionHeader

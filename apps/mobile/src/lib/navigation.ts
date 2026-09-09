@@ -33,6 +33,7 @@ export const SURFACES = [
   { id: 'message-inspector', path: '/chat/message/[id]', kind: 'learner', availability: 'planned' },
   { id: 'languages', path: '/languages', kind: 'utility', availability: 'built' },
   { id: 'account', path: '/account', kind: 'utility', availability: 'built' },
+  { id: 'more', path: '/more', kind: 'utility', availability: 'built' },
 ] as const
 
 export type Surface = (typeof SURFACES)[number]
@@ -100,6 +101,14 @@ export function resolveDeepLink(input: string, onboarded: boolean): DeepLinkReso
 
 /** The currently built hubs. Rails and the shared switcher consume this same declaration. */
 export const DESTINATIONS = [
+  {
+    href: '/more',
+    get label() {
+      return copy.nav.more
+    },
+    rail: false,
+    counted: false,
+  },
   {
     href: '/account',
     get label() {

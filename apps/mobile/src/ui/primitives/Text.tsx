@@ -8,7 +8,7 @@ import { Platform } from 'react-native'
 import type { ReactNode } from 'react'
 import { StyleSheet, Text as RNText, type StyleProp, type TextStyle } from 'react-native'
 import { scaleTextStyle } from '../runtimeStyles'
-import { ink, space, type, type TypeVariant } from '../theme'
+import { ink, space, type, typography, type TypeVariant } from '../theme'
 import { useTheme } from '../ThemeProvider'
 
 export type { TypeVariant }
@@ -45,6 +45,9 @@ export function Text({
   const { textScale } = useTheme()
   const resolvedStyle = StyleSheet.flatten([
     type[variant],
+    // The authored rule covers every changing number, including counts embedded in copy.
+    // Applying it at the text boundary also covers future counters without caller opt-in.
+    { fontVariant: [typography.scale.serifNum.variant] },
     { color },
     align ? { textAlign: align } : null,
     style,

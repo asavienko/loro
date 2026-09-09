@@ -7,6 +7,13 @@ import type { NativeLanguage, TargetLocale } from '@loro/core'
 import en from './en.json'
 import bg from './bg.json'
 import ru from './ru.json'
+import pseudo from './en-XA.json'
+import { pseudoLocaleEnabled } from './pseudoMode'
+
+const usePseudoLocale = pseudoLocaleEnabled(
+  typeof __DEV__ !== 'undefined' && __DEV__,
+  process.env.EXPO_PUBLIC_PSEUDO_LOCALE,
+)
 
 export type MessageKey = keyof typeof en
 export const translationResources = { en, bg, ru }
@@ -15,17 +22,24 @@ void i18n
   .use(ICU)
   .use(initReactI18next)
   .init({
-    lng: 'en',
+    lng: usePseudoLocale ? 'en-XA' : 'en',
     fallbackLng: 'en',
     initAsync: false,
     keySeparator: false,
-    resources: { en: { translation: en }, bg: { translation: bg }, ru: { translation: ru } },
+    resources: {
+      en: { translation: en },
+      bg: { translation: bg },
+      ru: { translation: ru },
+      'en-XA': { translation: pseudo },
+    },
     interpolation: { escapeValue: false },
   })
 let activeTarget: TargetLocale = 'es-ES'
+let activeNative: NativeLanguage = 'en'
 export function setCopyLanguages(nativeLanguage: NativeLanguage, targetLocale: TargetLocale): void {
   activeTarget = targetLocale
-  void i18n.changeLanguage(nativeLanguage)
+  activeNative = nativeLanguage
+  void i18n.changeLanguage(usePseudoLocale ? 'en-XA' : nativeLanguage)
 }
 export function useLocale(): void {
   useTranslation()
@@ -34,6 +48,7 @@ export function currentTargetLocale(): TargetLocale {
   return activeTarget
 }
 export function currentNativeLanguage(): NativeLanguage {
+  if (i18n.language === 'en-XA') return activeNative
   return i18n.language === 'bg' ? 'bg' : i18n.language === 'ru' ? 'ru' : 'en'
 }
 const targetNames: Record<NativeLanguage, Record<TargetLocale, string>> = {

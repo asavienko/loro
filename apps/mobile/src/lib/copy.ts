@@ -314,6 +314,9 @@ export const copy = {
     },
   },
   nav: {
+    get more() {
+      return message('nav.more')
+    },
     get home() {
       return message('nav.home')
     },
@@ -553,6 +556,8 @@ export const copy = {
       get preview() {
         return message('add.import.preview')
       },
+      tooLarge: (rows: number, characters: number): string =>
+        message('add.import.tooLarge', { rows, characters }),
       review: (count: number): string => message('add.import.review', { count }),
       get reviewHint() {
         return message('add.import.reviewHint')

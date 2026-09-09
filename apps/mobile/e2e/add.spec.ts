@@ -109,3 +109,23 @@ test('P2-09/P2-10: reviews an offline import before persisting each accepted own
     page.getByText('Already in your stream. Edit it to keep it as a separate phrase.'),
   ).toBeVisible()
 })
+
+test('P2-09/P2-10: oversized import preserves the draft and recovers with a smaller batch', async ({
+  page,
+}) => {
+  await onboard(page)
+  await page.getByRole('button', { name: 'Add' }).click()
+  await page.getByRole('button', { name: 'import' }).click()
+  const input = page.getByRole('textbox', { name: 'Phrases to import' })
+  const oversized = Array.from({ length: 51 }, (_, index) => `Hola ${index} | Hi`).join('\n')
+  await input.fill(oversized)
+  await page.getByRole('button', { name: 'Review phrases' }).click()
+  await expect(page.getByRole('alert')).toContainText('Your text is still here')
+  await expect(input).toHaveValue(oversized)
+  await expect(page.getByRole('button', { name: /Add .* reviewed phrase/ })).toHaveCount(0)
+  await input.fill('Buenas noches | Good night')
+  await expect(page.getByRole('alert')).toHaveCount(0)
+  await page.getByRole('button', { name: 'Review phrases' }).click()
+  await page.getByRole('button', { name: 'Add 1 reviewed phrase' }).click()
+  await expect(page.getByText('11 in stream')).toBeVisible()
+})

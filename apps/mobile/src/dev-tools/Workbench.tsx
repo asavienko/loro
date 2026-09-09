@@ -452,7 +452,11 @@ function SpecimenGallery() {
         </Card>
         {PRODUCTION_SPECIMENS.map((specimen) => (
           <Card key={specimen.name}>
-            <SectionHeader label={specimen.name} hint={specimen.group} variant="caption" />
+            <SectionHeader
+              label={specimen.name}
+              hint={`${specimen.group} · ${specimen.disposition}`}
+              variant="caption"
+            />
             <Grid style={{ marginVertical: space['2'] }}>
               {specimen.states.map((state) => (
                 <Text key={state} variant="labelSm" color={ink.muted}>
