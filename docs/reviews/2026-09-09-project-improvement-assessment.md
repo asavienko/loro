@@ -579,11 +579,11 @@ landed (P1 code, this review):
   6. Speak session documented as ephemeral until interruption resume
   7. Parse legacy /content egress with current Manifest/Pack Zod
 
-as you touch:
-  8. LegacyLocaleSchema rename when common.ts is already in the diff
-  9. UniFFI --check when the generator is already in the diff
+landed with common.ts:
+  8. `LegacyLocaleSchema` alias; `LocaleSchema` remains the legacy `es-ES` literal
 
 as you touch:
+  9. UniFFI --check when the generator is already in the diff
   account.tsx / persistence.test.ts / sync tests / Today / onboarding / Progress
   (extract only at a second call site)
 
