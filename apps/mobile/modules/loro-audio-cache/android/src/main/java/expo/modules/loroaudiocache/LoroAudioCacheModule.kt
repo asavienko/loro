@@ -1,17 +1,22 @@
 package expo.modules.loroaudiocache
 
 import android.content.Intent
+import android.media.MediaExtractor
+import android.media.MediaFormat
 import android.media.MediaMetadataRetriever
+import android.media.MediaMuxer
 import android.net.Uri
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 import expo.modules.kotlin.records.Field
 import expo.modules.kotlin.records.Record
+import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
+import java.nio.ByteBuffer
 import java.security.MessageDigest
 import java.util.concurrent.atomic.AtomicReference
 
@@ -49,6 +54,8 @@ class LoroAudioCacheModule : Module() {
     }
     AsyncFunction("concatenate") { options: ConcatenateOptions -> concatenate(options) }
     AsyncFunction("share") { fileUri: String -> share(fileUri) }
+    AsyncFunction("saveListeningBatch") { clips: List<Map<String, Any?>> -> saveBatch(clips) }
+    AsyncFunction("loadListeningBatch") { loadBatch() }
   }
 
   private fun download(options: DownloadOptions): Map<String, Any?> {
@@ -81,7 +88,45 @@ class LoroAudioCacheModule : Module() {
     val row = index().optJSONObject(logicalKey) ?: return null
     val path = row.optString("path")
     if (path.isBlank() || !File(path).isFile) return null
+    row.put("accessed", System.currentTimeMillis())
+    val table = index()
+    table.put(logicalKey, row)
+    writeIndex(table)
     return payload(File(path), row.optString("sha256"), row.optInt("ms").takeIf { row.has("ms") && !row.isNull("ms") })
+  }
+
+  private fun saveBatch(clips: List<Map<String, Any?>>) {
+    val array = JSONArray()
+    clips.forEach { clip ->
+      array.put(JSONObject().apply {
+        put("fileUri", clip["fileUri"])
+        put("sha256", clip["sha256"])
+        if (clip["ms"] == null) put("ms", JSONObject.NULL) else put("ms", clip["ms"])
+      })
+    }
+    File(cacheDir(), "listening-batch.json").writeText(array.toString())
+  }
+
+  private fun loadBatch(): List<Map<String, Any?>>? {
+    val file = File(cacheDir(), "listening-batch.json")
+    if (!file.isFile) return null
+    val array = runCatching { JSONArray(file.readText()) }.getOrNull() ?: return null
+    val clips = mutableListOf<Map<String, Any?>>()
+    for (i in 0 until array.length()) {
+      val row = array.optJSONObject(i) ?: return null
+      val fileUri = row.optString("fileUri")
+      val sha256 = row.optString("sha256")
+      val uri = Uri.parse(fileUri)
+      if (uri.scheme != "file" || uri.path.isNullOrBlank() || !File(uri.path!!).isFile) return null
+      clips.add(
+        mapOf(
+          "fileUri" to fileUri,
+          "sha256" to sha256,
+          "ms" to row.opt("ms").takeIf { it != JSONObject.NULL },
+        ),
+      )
+    }
+    return clips.takeIf { it.isNotEmpty() }
   }
 
   private fun cancel() {
@@ -99,8 +144,64 @@ class LoroAudioCacheModule : Module() {
   private fun concatenate(options: ConcatenateOptions): Map<String, Any?> {
     if (!shareEnabled) throw failure("share-gated")
     if (options.fileUris.isEmpty() || options.outputName.isBlank()) throw failure("failed")
-    // Mux of licensed neural audio is implemented only after Q-21. The flag above fails closed.
-    throw failure("share-gated")
+    val output = File(cacheDir(), options.outputName)
+    if (output.exists()) output.delete()
+    val muxer = MediaMuxer(output.absolutePath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
+    var track = -1
+    var started = false
+    var timelineUs = 0L
+    val takes = maxOf(1, options.takesPerPhrase.toInt())
+    try {
+      options.fileUris.forEachIndexed { index, fileUri ->
+        val uri = Uri.parse(fileUri)
+        if (uri.scheme != "file" || uri.path.isNullOrBlank()) throw failure("invalid-url")
+        val extractor = MediaExtractor()
+        extractor.setDataSource(uri.path)
+        val audioIndex = (0 until extractor.trackCount).firstOrNull { trackIndex ->
+          extractor.getTrackFormat(trackIndex).getString(MediaFormat.KEY_MIME)?.startsWith("audio/") == true
+        } ?: run {
+          extractor.release()
+          throw failure("failed")
+        }
+        extractor.selectTrack(audioIndex)
+        val format = extractor.getTrackFormat(audioIndex)
+        if (!started) {
+          track = muxer.addTrack(format)
+          muxer.start()
+          started = true
+        }
+        val buffer = ByteBuffer.allocate(64 * 1024)
+        val info = android.media.MediaCodec.BufferInfo()
+        while (true) {
+          val size = extractor.readSampleData(buffer, 0)
+          if (size < 0) break
+          info.offset = 0
+          info.size = size
+          info.flags = extractor.sampleFlags
+          info.presentationTimeUs = timelineUs + extractor.sampleTime.coerceAtLeast(0)
+          muxer.writeSampleData(track, buffer, info)
+          extractor.advance()
+        }
+        val duration = if (format.containsKey(MediaFormat.KEY_DURATION)) format.getLong(MediaFormat.KEY_DURATION) else 0L
+        timelineUs += duration
+        val last = index == options.fileUris.lastIndex
+        if (!last) {
+          val gapMs = if ((index + 1) % takes == 0) options.interGapMs else options.intraGapMs
+          timelineUs += (gapMs * 1000).toLong()
+        }
+        extractor.release()
+      }
+      muxer.stop()
+    } catch (error: Exception) {
+      runCatching { muxer.release() }
+      output.delete()
+      if (error.message == "share-gated" || error.message == "invalid-url" || error.message == "failed") throw error
+      throw failure("failed")
+    }
+    muxer.release()
+    val bytes = output.readBytes()
+    val digest = sha256(bytes)
+    return payload(output, digest, measuredMs(output))
   }
 
   private fun share(fileUri: String) {
@@ -136,6 +237,7 @@ class LoroAudioCacheModule : Module() {
       if (ms != null) put("ms", ms) else put("ms", JSONObject.NULL)
       put("pinned", pin == "listening")
       put("bytes", bytes.size)
+      put("accessed", System.currentTimeMillis())
     })
     writeIndex(table)
     evictIfNeeded()
@@ -192,6 +294,7 @@ class LoroAudioCacheModule : Module() {
       }
     }
     if (used <= budget) return
+    unpinned.sortBy { key -> table.optJSONObject(key)?.optLong("accessed") ?: 0L }
     for (key in unpinned) {
       if (used <= budget) break
       val row = table.optJSONObject(key) ?: continue

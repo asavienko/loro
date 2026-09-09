@@ -303,3 +303,10 @@ export async function playListeningSequence(input: {
 }
 
 export { LISTENING_REPEATS_DEFAULT }
+
+/** Force-quit must still see a complete pinned batch. Missing files are a miss, not a hit. */
+export async function restoreListeningBatch(
+  cache: AudioCacheController,
+): Promise<readonly AudioCacheObject[] | null> {
+  return cache.loadListeningBatch()
+}
