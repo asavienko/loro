@@ -82,7 +82,9 @@ test('entering the Refrain on a new day rolls the set without a foreground event
   )
 })
 
-test('a session inside the grace window counts for the evening it continues', async ({ page }) => {
+test('the streak grace window keeps the prior evening practice before the next wave opens', async ({
+  page,
+}) => {
   await atInstant(page, '2026-03-10T23:50')
   await onboard(page)
   await doOneRep(page)
@@ -94,10 +96,12 @@ test('a session inside the grace window counts for the evening it continues', as
 
   // 01:30 is inside the four-hour grace, so this rep belongs to the 10th — the same streak
   // day as the one before it. A second distinct day here would mean the grace window was
-  // not applied, and the learner would be shown a two-day streak they did not earn.
+  // not applied, and the learner would be shown a two-day streak they did not earn. The next
+  // wave remains closed until 08:00; the timed-entry guard must not be bypassed to manufacture
+  // another rep during the grace period.
   await jumpTo(page, '2026-03-11T01:30')
   await returnToForeground(page)
-  await doOneRep(page)
+  await expect(page.getByText('Next wave starts at 08:00')).toBeVisible()
 
   await openProgress(page)
   await expect(page.getByLabel('Last seven days: practised on 1 of them.')).toBeVisible()
