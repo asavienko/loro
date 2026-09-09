@@ -97,7 +97,10 @@ export class TtsService {
     const text = normalizeListeningText(request.data.text)
     const textHash = digestUtf8(text)
     if (textHash !== request.data.phrase_hash) throw new LoroError('VALIDATION_FAILED')
-    if (request.data.model_id !== parsedConfig.model) {
+    if (
+      request.data.asset_class !== LISTENING_ASSET_CLASS &&
+      request.data.model_id !== parsedConfig.model
+    ) {
       throw new LoroError('PROVIDER_UNAVAILABLE', 'TTS model is not pinned')
     }
     const voiceId = this.approvedVoice(request.data, parsedConfig.voices)

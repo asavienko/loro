@@ -45,4 +45,27 @@ describe('listening-class TTS render', () => {
     ).rejects.toMatchObject({ code: 'PROVIDER_UNAVAILABLE' })
     expect(synthesize).not.toHaveBeenCalled()
   })
+
+  it('does not spend catalog TTS credits when the listening roster is empty', async () => {
+    const cacheDir = await mkdtemp(join(tmpdir(), 'loro-tts-listen-model-'))
+    liveEnv(cacheDir)
+    const synthesize = vi.fn()
+    const tts = new TtsService({ synthesize } as TtsTransport, { now: () => 1 })
+    await expect(
+      tts.render({
+        userId: 'learner',
+        ip: '127.0.0.1',
+        body: {
+          text,
+          lang: 'es-ES',
+          phrase_hash: phraseHash,
+          voice_id: 'voice-a',
+          model_id: 'listening-model-unpinned',
+          asset_class: LISTENING_ASSET_CLASS,
+          codec: LISTENING_CODEC,
+        },
+      }),
+    ).rejects.toMatchObject({ code: 'PROVIDER_UNAVAILABLE' })
+    expect(synthesize).not.toHaveBeenCalled()
+  })
 })
