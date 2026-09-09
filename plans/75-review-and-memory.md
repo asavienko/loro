@@ -6,13 +6,16 @@
   72's shared harness as it develops, without waiting for whole-release sign-off.
 - **Depends on:** 59 history/resume; 60 FSRS/selection; 56/81 route laws; 57 chart primitives; 72
   applicable harness only.
-- **Reviewed:** 2026-09-07 against merged baseline `2d9e8c3`.
+- **Reviewed:** 2026-09-08 against integrated runtime `e013141`; unfinished scope retained.
+
+Previous starting point: [archived snapshot](archive/2026-09-08/75-review-and-memory.md).
 
 ## Verified starting point
 
-Neither Review nor Memory has an app route or production engine. SRS fields/types and partial Rust
-functions exist, but `coreFacade.ts` still fabricates review intervals. Course histories must remain
-isolated; missing history is not a zero-confidence curve.
+Neither Review nor Memory has an app route or production engine. Canonical Rust FSRS and durable
+practice history are implemented through plans 59/60/94; `coreFacade.ts` delegates to Rust without a
+fabricated interval fallback. Build these surfaces on those existing boundaries. Course histories
+must remain isolated; missing history is not a zero-confidence curve.
 
 ## Outcome
 

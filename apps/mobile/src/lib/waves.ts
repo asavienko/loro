@@ -28,6 +28,8 @@ export interface ScheduledWave<Key extends string> {
   /** `HH:MM`, from the engine settings. */
   readonly time: string
   readonly position: WavePosition
+  /** Present only when the persisted day row records this wave as finished. */
+  readonly completed?: true
 }
 
 /**
@@ -41,6 +43,7 @@ export function waveSchedule<Key extends string>(
   keys: readonly Key[],
   times: readonly string[],
   now: string,
+  completed: readonly Key[] = [],
 ): ScheduledWave<Key>[] {
   const scheduled = keys.flatMap((key, i) => {
     const time = times[i]
@@ -49,8 +52,10 @@ export function waveSchedule<Key extends string>(
   const arrived = scheduled.filter((wave) => wave.time <= now).length
   // Before the first wave's time nothing has arrived, and the first one is what is next.
   const current = Math.max(0, arrived - 1)
+  const finished = new Set(completed)
   return scheduled.map((wave, i) => ({
     ...wave,
     position: i < current ? 'passed' : i === current ? 'next' : 'later',
+    ...(finished.has(wave.key) ? { completed: true as const } : {}),
   }))
 }

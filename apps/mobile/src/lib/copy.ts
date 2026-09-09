@@ -364,6 +364,9 @@ export const copy = {
       },
       nextWave: (manner: string, phrases: number): string =>
         message('today.day.nextWave', { manner, phrases }),
+      get completed() {
+        return message('today.day.completed')
+      },
     },
     waves: {
       morning: {
@@ -440,6 +443,9 @@ export const copy = {
       },
       get browse() {
         return message('add.modes.browse')
+      },
+      get import() {
+        return message('add.modes.import')
       },
     },
     get searchPlaceholder() {
@@ -533,6 +539,40 @@ export const copy = {
     },
     get confirm() {
       return message('add.confirm')
+    },
+    import: {
+      get title() {
+        return message('add.import.title')
+      },
+      get help() {
+        return message('add.import.help')
+      },
+      get placeholder() {
+        return message('add.import.placeholder')
+      },
+      get preview() {
+        return message('add.import.preview')
+      },
+      review: (count: number): string => message('add.import.review', { count }),
+      get reviewHint() {
+        return message('add.import.reviewHint')
+      },
+      get empty() {
+        return message('add.import.empty')
+      },
+      get targetPlaceholder() {
+        return message('add.import.targetPlaceholder')
+      },
+      get meaningPlaceholder() {
+        return message('add.import.meaningPlaceholder')
+      },
+      get duplicate() {
+        return message('add.import.duplicate')
+      },
+      get invalid() {
+        return message('add.import.invalid')
+      },
+      add: (count: number): string => message('add.import.add', { count }),
     },
   },
   onboarding: {
@@ -1138,6 +1178,11 @@ export const copy = {
       get searchInput() {
         return message('a11y.add.searchInput')
       },
+      get importInput() {
+        return message('a11y.add.importInput')
+      },
+      importTarget: (line: number): string => message('a11y.add.importTarget', { line }),
+      importMeaning: (line: number): string => message('a11y.add.importMeaning', { line }),
       themeTile: (theme: string, remaining: string): string =>
         message('a11y.add.themeTile', { theme, remaining }),
       get backToThemes() {

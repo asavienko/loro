@@ -108,6 +108,28 @@ describe('migrations', () => {
     expect(() => migrate(driver, AT)).toThrow(/Refusing to run/)
   })
 
+  it('refuses an incomplete migration history without altering the damaged database', () => {
+    // A committed migration cannot normally leave this state: its schema and receipt share
+    // one transaction. Treat an interrupted external restore or file corruption as a
+    // recovery case instead of trusting MAX(version) and skipping the missing schema.
+    const latest = MIGRATIONS.at(-1)
+    if (!latest) throw new Error('Missing migrations')
+    expect(currentVersion(driver)).toBe(0)
+    driver.run('INSERT INTO schema_version (version, name, applied_at) VALUES (?, ?, ?)', [
+      latest.version,
+      latest.name,
+      AT,
+    ])
+
+    expect(() => migrate(driver, AT)).toThrow(/migration history is incomplete at v1/)
+    expect(driver.all('SELECT version, name, applied_at FROM schema_version')).toEqual([
+      { version: latest.version, name: latest.name, applied_at: AT },
+    ])
+    expect(
+      driver.all("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'user_phrase'"),
+    ).toEqual([])
+  })
+
   it('enforces the no-duplicate-catalog-phrase rule in the database', () => {
     migrate(driver, AT)
     const insert = (id: string): void => {

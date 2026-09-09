@@ -76,6 +76,7 @@ function snapshotCourse(state: AppData): CourseState {
     streamCursor: state.streamCursor,
     refrainResume: state.refrainResume,
     refrainDay: state.refrainDay,
+    refrainWaves: state.refrainWaves,
     refrainSet: state.refrainSet,
     refrainSubstituted: state.refrainSubstituted,
   }
@@ -223,6 +224,7 @@ export function createLearnerStorage(database: RuntimeDatabase, clock: Clock): L
         refrainResume: EMPTY_REFRAIN_RESUME,
         refrainSet: day?.setIds.filter((id) => ids.has(id)) ?? [],
         refrainDay: day?.localDay ?? null,
+        refrainWaves: day?.waves ?? [],
         refrainSubstituted: day?.substituted.filter((id) => ids.has(id)) ?? [],
       }
       const course = courses[targetLocale]
@@ -394,13 +396,13 @@ export function createLearnerStorage(database: RuntimeDatabase, clock: Clock): L
               targetLocale,
               localDay: course.refrainDay,
               setIds: course.refrainSet,
-              waves: existing?.waves ?? [],
+              waves: course.refrainWaves,
               substituted: course.refrainSubstituted,
             })
             const nextDay: Values = {
               targetLocale,
               setIds: JSON.stringify(course.refrainSet),
-              waves: JSON.stringify(existing?.waves ?? []),
+              waves: JSON.stringify(course.refrainWaves),
             }
             const oldDay: Values = existing
               ? {

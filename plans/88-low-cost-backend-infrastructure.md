@@ -2,15 +2,16 @@
 
 - **Requirement IDs:** `F-01`, `F-02`, `F-04`, `F-07`, `F-09`
 - **Milestone:** M2 testing; production operations remain in plan 73.
-- **Status:** — Planned; infrastructure preparation can start now. Shared access requires the
-  persistence/security slice of 66 and authentication/tenant isolation from 67; mobile sync testing
-  additionally requires the relevant device and convergence slices of 59/68. The restricted EC2
-  deployment in [plan 91](91-ec2-backend-deployment.md) is live; this plan still owns PostgreSQL,
-  S3, TLS, Terraform and shared testing readiness.
+- **Status:** 🟡 Restricted EC2/HTTPS deployment and durable account/sync source exist. Shared
+  authenticated access, retained storage, backups/restore, load and operational acceptance remain.
+  Reconcile infrastructure ownership with the deployed CloudFormation stacks before provisioning; do
+  not rebuild the host or identity/sync runtime from the earlier proposal.
 - **Depends on:** 66 exact API image and backend foundations; 67 shared access; 61/86 content
   adapters only when activated. Whole-plan completion is not an infrastructure prerequisite.
-- **Reviewed:** 2026-09-07; user selected Frankfurt, a small tester group and a $25–35 monthly
-  budget.
+- **Reviewed:** 2026-09-08 against integrated runtime `e013141`; unfinished scope retained.
+
+Previous starting point:
+[archived snapshot](archive/2026-09-08/88-low-cost-backend-infrastructure.md).
 
 ## Documentation
 
@@ -18,13 +19,16 @@
 [environments](../docs/process/environments.md), [CI/CD](../docs/process/ci-cd.md#backend-deploys)
 and the [testing runbook](../docs/runbooks/backend-testing.md) describe this selected profile.
 Documentation is complete. Plan 91 provides a CloudFormation-provisioned SSH-only development API;
-the broader testing stack, runtime wiring and operational evidence remain outstanding.
+the broader testing stack and operational evidence remain outstanding. Plans 66–68/94 now supply the
+durable runtime; verify the deployed artifact and access policy separately.
 
 ## Outcome and scope
 
 Provide one always-on testing environment in **Frankfurt (`eu-central-1`)**, targeting
-**$25–35/month**. Deliver Terraform, deployment configuration and an operations runbook. This plan
-owns the testing infrastructure; plan 73 retains production operations ownership.
+**$25–35/month**. Complete infrastructure ownership, deployment configuration and the operations
+runbook against the existing resources. The earlier Terraform migration proposal needs an explicit
+import/ownership decision before execution. This plan owns the testing infrastructure; plan 73
+retains production operations ownership.
 
 Keep one instance, with PostgreSQL on that instance and S3 for durable object storage and backups.
 Use synthetic test data, accept brief maintenance downtime and one failure domain, and make no
@@ -39,36 +43,30 @@ Readiness stages:
 3. **Mobile sync testing:** additionally require the relevant device-persistence and convergence
    work from plans 59/68. Completing all of plan 68 is not an infrastructure prerequisite.
 
-## Architecture and operating budget
+## Existing deployment and remaining architecture decisions
 
-```text
-Tester devices -- HTTPS --> EC2
-                            |-- Caddy
-                            |-- NestJS API
-                            `-- PostgreSQL 16 --> S3 backups
+Plans 91/92 record an Amazon Linux development host managed by CloudFormation, local image
+build/transfer over restricted SSH, and an API Gateway/Lambda HTTPS preview. These are the starting
+point. Source integration does not establish which runtime image or routes are deployed today.
 
-API -- authorized downloads --> private S3 content
-GitHub Actions -- OIDC / SSM --> deployment
-```
+Retain one Frankfurt EC2 instance, local PostgreSQL and private S3 within the selected budget.
+Inventory stacks, storage, gateway policy, runtime configuration and immutable image identity before
+changing them. Verify authenticated shared access with synthetic accounts before inviting testers.
 
-| Component      | Selected configuration                                               |
-| -------------- | -------------------------------------------------------------------- |
-| Compute        | One On-Demand `t3.small`, x86-64, 2 vCPU / 2 GiB RAM                 |
-| Host           | Ubuntu 24.04 LTS; Docker Compose managed by systemd                  |
-| Disk           | Encrypted gp3: 16 GiB root and separate 20 GiB data volume           |
-| Network        | One VPC, public subnet, internet gateway and Elastic IP              |
-| TLS            | Caddy with automatic certificate renewal; existing-domain subdomain  |
-| Storage        | Separate private S3 buckets for content, backups and Terraform state |
-| Administration | AWS Systems Manager; no inbound SSH                                  |
-| Registry       | Private ECR; immutable release images                                |
+The archived proposal selected Ubuntu, Caddy, separate data volumes, Terraform state, ECR and SSM.
+These are migration/design candidates, not evidence of deployed resources or permission to replace
+them. Decide reuse/import/migration explicitly, retaining the protection, recovery and acceptance
+requirements below. GitHub Actions remains disabled; build, test and deploy locally using the
+existing scripts. No managed staging stack, Redis, CDN or idle workers are required.
 
 Use **standard CPU credits** for predictable compute cost and monitor credit depletion: sustained
 CPU demand can be throttled. See
 [AWS instance documentation](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/burstable-credits-baseline-concepts.html).
 
-Start with an API memory limit of 512 MiB, PostgreSQL at 640 MiB and Caddy at 128 MiB, leaving room
-for the host and agents. Set the Node heap below its container limit. Start PostgreSQL with 128 MiB
-shared buffers, 30 connections maximum and an API pool of five. Validate these limits under load.
+Start with an API memory limit of 512 MiB, PostgreSQL at 640 MiB and a local proxy, if used, at 128
+MiB, leaving room for the host and agents. Set the Node heap below its container limit. Start
+PostgreSQL with 128 MiB shared buffers, 30 connections maximum and an API pool of five. Validate
+these limits under load.
 
 Cost controls:
 
@@ -79,7 +77,7 @@ Cost controls:
   tax, domain registration, external CI charges and paid providers.
 - Configure actual-spend and forecast notifications at $25 and $35. These notify; they do not cap
   spending.
-- Keep AI stubbed and TTS disabled. Build images in CI, never on EC2.
+- Keep AI stubbed and TTS disabled. Build images with local CI, never on EC2.
 - Exclude RDS, NAT Gateway, load balancer, Kubernetes, CDN, Redis, workers, Spot instances and
   additional permanent environments. Revisit local Redis only when an implemented feature needs it.
 - Document shutdown costs: stopped EC2 still incurs disk and retained public-IP charges.
@@ -87,19 +85,19 @@ Cost controls:
 
 ## Provisioning, configuration and storage
 
-- [ ] Put Terraform under `infra/terraform/`, with separate bootstrap and testing roots. Bootstrap
-      the state bucket, then migrate bootstrap state into it. Enable versioning and native S3
-      locking; no DynamoDB lock table. Pin Terraform/provider versions and commit the provider
-      lockfile.
-      [Terraform S3 backend](https://developer.hashicorp.com/terraform/language/backend/s3)
-- [ ] Keep infrastructure ownership in Terraform and application releases in deployment scripts.
-      Changing an image must not replace EC2.
+- [ ] Record ownership of the existing CloudFormation resources. Decide whether to retain them or
+      import/migrate to Terraform without duplicate resources or destructive replacement. If
+      Terraform is selected, use separate bootstrap/testing roots, versioned S3 state with native
+      locking and pinned providers. Preserve the existing deployment until migration is verified.
+- [ ] Keep infrastructure ownership separate from application releases. Changing an image must not
+      replace EC2; deployment scripts remain local.
 - [ ] Protect the state bucket, backups and data volume from routine destruction. Retain PostgreSQL
       data across instance replacement and explicitly pin its availability zone.
 - [ ] Mount the data volume by filesystem UUID before Compose starts. A missing mount must fail
       startup rather than silently create a fresh database on the root disk.
-- [ ] Expose only ports 80/443. PostgreSQL has no published host port. Require IMDSv2, scoped
-      instance permissions and separate infrastructure/deployment IAM roles.
+- [ ] Preserve restricted ingress and the existing HTTPS gateway unless a reviewed migration changes
+      it. PostgreSQL must remain private. Require IMDSv2, scoped instance permissions and separate
+      infrastructure/deployment IAM roles; verify SSH/proxy access against the runbook.
 - [ ] Store secrets in standard-tier SSM SecureString parameters. An idempotent bootstrap command
       creates missing values without printing them; Terraform never reads their values. Fetch
       secrets into restricted runtime files and verify container access to temporary AWS
@@ -117,16 +115,19 @@ Cost controls:
       backend/environment guides, and align plans 73/86 with this ownership when implementation
       starts.
 
-Required deployment inputs: AWS account, existing-domain hostname/DNS access and notification email.
-Provisioning fails clearly when these are absent.
+Required inputs include the AWS account and notification destination. Custom-domain/DNS inputs are
+required only if a reviewed TLS migration needs them; the existing AWS HTTPS hostname does not.
+Provisioning fails clearly when an input for the selected path is absent.
 
 ## Deployment and recovery
 
-Use one GitHub `testing` environment with manual deployment of a commit that has passed required CI.
-Remove the current automatic dev→staging deployment chain from the testing path.
+Use local deployment scripts for a committed artifact that passed local CI. GitHub Actions is
+disabled; do not restore the historical automatic dev→staging chain or add an OIDC workflow.
 
 - [ ] Build with the repository's pinned Node/pnpm versions and real Rust/WASM artifact. Test and
-      scan the exact `linux/amd64` image, then deploy its digest through OIDC and SSM.
+      scan the exact `linux/amd64` image, then transfer/deploy that same immutable artifact using
+      the existing local release tooling. A registry/SSM migration requires a recorded ownership
+      plan.
 - [ ] Pin database/proxy images too. Keep database major upgrades separate from application deploys.
 - [ ] Serialize deployments and backups with a host lock.
 - [ ] Deploy in this order: pull image → enable maintenance response → stop API → complete and
@@ -164,8 +165,9 @@ Backups and recovery:
 - [ ] Alert on instance failure, repeated API-health failure, memory above 85% for ten minutes, disk
       above 80%, depleted CPU credits and backup age exceeding 26 hours. Configure missing heartbeat
       data as a failure. Verify notification delivery.
-- [ ] Pass Terraform validation, safe second-plan output and no unexpected replacement.
-- [ ] Verify valid TLS, blocked SSH/database access and rejected unsigned S3 downloads.
+- [ ] Validate the selected infrastructure owner and prove an idempotent second plan/change set with
+      no unexpected replacement. If migrating to Terraform, verify import and state recovery.
+- [ ] Verify valid TLS, blocked unauthorized SSH/database access and rejected unsigned S3 downloads.
 - [ ] Verify database survival across API restart, reboot and instance replacement.
 - [ ] Reject cross-user reads/writes using two authenticated synthetic accounts.
 - [ ] Pass S3 adapter smoke tests when that adapter lands.

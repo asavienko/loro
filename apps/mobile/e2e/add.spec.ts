@@ -84,3 +84,28 @@ test('P2-08: a finished theme says it is finished, not that the library is empty
   await expect(page.getByText(/Nothing more to suggest here/)).toHaveCount(0)
   await expect(page.getByRole('textbox', { name: 'Search phrases' })).toHaveCount(0)
 })
+
+test('P2-09/P2-10: reviews an offline import before persisting each accepted own phrase', async ({
+  page,
+}) => {
+  await onboard(page)
+  await page.getByRole('button', { name: 'Add' }).click()
+  await page.getByRole('button', { name: 'import' }).click()
+  const input = page.getByRole('textbox', { name: 'Phrases to import' })
+  await input.fill('¿Dónde está la estación? | Where is the station?\nIncomplete')
+  await page.getByRole('button', { name: 'Review phrases' }).click()
+
+  await expect(page.getByText('Add both a phrase and its meaning.')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Add 1 reviewed phrase' })).toBeVisible()
+  await page.getByRole('button', { name: 'Add 1 reviewed phrase' }).click()
+
+  await expect(page.getByText('11 in stream')).toBeVisible()
+  // The row is now an own phrase in the same stream projection, while the incomplete line
+  // was never saved. A reload in persistence coverage proves the durable half.
+  await page.getByRole('button', { name: 'import' }).click()
+  await input.fill('¿Donde esta la estacion? | Duplicate')
+  await page.getByRole('button', { name: 'Review phrases' }).click()
+  await expect(
+    page.getByText('Already in your stream. Edit it to keep it as a separate phrase.'),
+  ).toBeVisible()
+})

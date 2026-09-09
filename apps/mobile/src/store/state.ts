@@ -41,6 +41,8 @@ export interface CourseState {
   selectedId: string | null
   refrainSet: string[]
   refrainDay: string | null
+  /** Wave keys completed on `refrainDay`, in completion order. */
+  refrainWaves: string[]
   refrainSubstituted: string[]
 }
 export interface AppData {
@@ -88,6 +90,8 @@ export interface AppData {
   // Refrain day state — chosen once, FROZEN. "You always see today."
   refrainSet: string[]
   refrainDay: string | null
+  /** Wave keys completed on `refrainDay`, in completion order. */
+  refrainWaves: string[]
   /**
    * Ids substituted into today's set after it was frozen, because their original was
    * deleted. Kept so the frozen-set promise stays legible: the set was not re-rolled,
@@ -118,6 +122,7 @@ export const INITIAL_STATE: AppData = {
   practiceDays: [],
   refrainSet: [],
   refrainDay: null,
+  refrainWaves: [],
   refrainSubstituted: [],
 }
 
@@ -140,6 +145,7 @@ export function dataOf(state: AppData): AppData {
     practiceDays: state.practiceDays,
     refrainSet: state.refrainSet,
     refrainDay: state.refrainDay,
+    refrainWaves: state.refrainWaves,
     refrainSubstituted: state.refrainSubstituted,
   }
 }

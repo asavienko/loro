@@ -65,6 +65,8 @@ export interface AppActions {
    * a set that lost a member.
    */
   ensureRefrainSet: () => void
+  /** Record one completed, named wave with the day's durable Refrain state. */
+  completeRefrainWave: (wave: 'morning' | 'midday' | 'evening', checkpoint: RefrainResume) => void
   reset: () => void
 }
 

@@ -48,6 +48,18 @@ test('F-05: inspection controls are named, stateful, and keyboard operable', asy
   await expect(nextAccent).toHaveAttribute('aria-pressed', 'true')
 })
 
+test('F-05: production interaction specimens expose busy and forced focus feedback', async ({
+  page,
+}) => {
+  const loading = page.getByRole('button', { name: 'Pending production action' })
+  await expect(loading).toHaveAttribute('aria-busy', 'true')
+  await expect(loading).toHaveAttribute('aria-disabled', 'true')
+
+  const forced = page.getByRole('button', { name: 'Pressed and focused production action' })
+  await expect(forced).toHaveCSS('outline-width', '2px')
+  await expect(forced).toHaveCSS('outline-style', 'solid')
+})
+
 test('F-05: remains usable at the authored phone size and 310% text', async ({ page }) => {
   const textScale = page.getByRole('group', { name: 'Text scale' })
   const deviceSize = page.getByRole('group', { name: 'Device size' })

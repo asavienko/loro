@@ -34,6 +34,7 @@ export const createSessionSlice: Slice<'completeOnboarding' | 'reset' | 'setLang
       selectedId: current.selectedId,
       refrainSet: current.refrainSet,
       refrainDay: current.refrainDay,
+      refrainWaves: current.refrainWaves,
       refrainSubstituted: current.refrainSubstituted,
     }
     const destination = current.courses[targetLocale] ?? {
@@ -44,6 +45,7 @@ export const createSessionSlice: Slice<'completeOnboarding' | 'reset' | 'setLang
       selectedId: null,
       refrainSet: [],
       refrainDay: null,
+      refrainWaves: [],
       refrainSubstituted: [],
     }
     set({
@@ -82,6 +84,7 @@ export const createSessionSlice: Slice<'completeOnboarding' | 'reset' | 'setLang
       phrases: [...existing, ...seeded],
       refrainSet: [],
       refrainDay: null,
+      refrainWaves: [],
       refrainSubstituted: [],
     })
     get().ensureRefrainSet()

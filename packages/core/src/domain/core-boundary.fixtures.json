@@ -1,0 +1,65 @@
+{
+  "cloze": [
+    {
+      "why": "Spanish strips punctuation but keeps the longest content token",
+      "text": "¿Dónde está la estación?",
+      "language": "es-ES",
+      "expect": [3]
+    },
+    {
+      "why": "Bulgarian function words cannot become a cloze answer",
+      "text": "Според нея дом",
+      "language": "bg-BG",
+      "expect": [2]
+    },
+    {
+      "why": "Russian locale aliases use the same lexical policy",
+      "text": "Где ближайший ресторан?",
+      "language": "ru_RU",
+      "expect": [1]
+    },
+    {
+      "why": "unsupported target languages do not invent a mask",
+      "text": "some content",
+      "language": "en-US",
+      "expect": []
+    }
+  ],
+  "matchTokens": [
+    {
+      "why": "Spanish combines decomposed enye and ignores punctuation",
+      "heard": ["donde", "esta", "el", "ban\u0303o"],
+      "target": ["¿Dónde", "está", "el", "baño?"],
+      "revealed": 0,
+      "expect": { "revealed": 4, "justIndex": 3, "complete": true }
+    },
+    {
+      "why": "Bulgarian keeps Cyrillic order and tolerates inserted recognizer tokens",
+      "heard": ["Къде", "ъъ", "е", "банята"],
+      "target": ["Къде", "е", "банята?"],
+      "revealed": 0,
+      "expect": { "revealed": 3, "justIndex": 2, "complete": true }
+    },
+    {
+      "why": "Russian partial recognition advances only its matching prefix",
+      "heard": ["Где", "ванная"],
+      "target": ["Где", "находится", "ванная?"],
+      "revealed": 0,
+      "expect": { "revealed": 1, "justIndex": 0, "complete": false }
+    },
+    {
+      "why": "an existing reveal remains monotonic after a worse utterance",
+      "heard": ["Где"],
+      "target": ["Где", "находится", "ванная?"],
+      "revealed": 2,
+      "expect": { "revealed": 2, "justIndex": -1, "complete": false }
+    },
+    {
+      "why": "an empty target is never a completed production",
+      "heard": ["hola"],
+      "target": [],
+      "revealed": 0,
+      "expect": { "revealed": 0, "justIndex": -1, "complete": false }
+    }
+  ]
+}

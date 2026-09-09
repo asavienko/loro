@@ -21,7 +21,7 @@ import { useLocale } from '../../src/lib/i18n'
 
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { Platform, ScrollView, StyleSheet, View } from 'react-native'
-import { router } from 'expo-router'
+import { router, useLocalSearchParams } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useBottomBar } from '../../src/ui/BottomBarContext'
 import {
@@ -53,18 +53,36 @@ import {
   surface,
   warming,
 } from '../../src/ui/theme'
-import { engineContext, refrainEngine, toView, useApp, type PhraseView } from '../../src/store'
+import {
+  engineContext,
+  PRODUCTION_WAVE_TIMES,
+  refrainEngine,
+  toView,
+  useApp,
+  type PhraseView,
+} from '../../src/store'
 import { copy } from '../../src/lib/copy'
-import { deviceClock } from '../../src/lib/clock'
+import { deviceClock, localTimeLabel } from '../../src/lib/clock'
 import { newId } from '../../src/lib/ids'
+import { waveSchedule } from '../../src/lib/waves'
 /** One warming band's resolved style. The bands are a design token, not a screen decision. */
 type WarmingStyle = (typeof warming)[ReturnType<typeof warmBand>]
 export default function Refrain() {
   useLocale()
   const insets = useSafeAreaInsets()
   const { height: bottomBarHeight } = useBottomBar()
-  const session = useRefrainSession()
-  const { set, phrase, mode, auto, dayReps, locked, phraseNumber } = session
+  const { wave: requestedWave } = useLocalSearchParams<{ wave?: string }>()
+  const scheduledWave = waveSchedule(
+    ['morning', 'midday', 'evening'] as const,
+    PRODUCTION_WAVE_TIMES,
+    localTimeLabel(),
+  ).find((item) => item.position === 'next')?.key
+  const selectedWave =
+    requestedWave === 'morning' || requestedWave === 'midday' || requestedWave === 'evening'
+      ? requestedWave
+      : (scheduledWave ?? 'morning')
+  const session = useRefrainSession(selectedWave)
+  const { set, phrase, mode, auto, dayReps, locked, phraseNumber, wave } = session
   if (set.length === 0) {
     return (
       <Screen>
@@ -108,9 +126,14 @@ export default function Refrain() {
         }}
       >
         <Row justify="space-between">
-          <Text variant="caption" color={ink.ink}>
-            {copy.refrain.phraseCounter(phraseNumber, set.length)}
-          </Text>
+          <View>
+            <Text variant="captionSm" color={ink.muted}>
+              {copy.today.waves[wave].title}
+            </Text>
+            <Text variant="caption" color={ink.ink}>
+              {copy.refrain.phraseCounter(phraseNumber, set.length)}
+            </Text>
+          </View>
           <Dots count={set.length} filled={phraseNumber - 1} />
         </Row>
 
@@ -157,6 +180,7 @@ export default function Refrain() {
 // The session
 // ─────────────────────────────────────────────────────────────────────────────
 interface RefrainSession {
+  wave: 'morning' | 'midday' | 'evening'
   clozeMask: readonly number[]
   /** Today's frozen set, in the order the learner will see it. */
   set: PhraseView[]
@@ -181,11 +205,12 @@ interface RefrainSession {
  * RefrainEngine's decisions — the screen used to re-derive them, which is how the
  * card's warmth and the stored value came to disagree.
  */
-function useRefrainSession(): RefrainSession {
+function useRefrainSession(wave: 'morning' | 'midday' | 'evening'): RefrainSession {
   const phrases = useApp((s) => s.phrases)
   const refrainSet = useApp((s) => s.refrainSet)
   const applyDelta = useApp((s) => s.applyDelta)
   const ensureRefrainSet = useApp((s) => s.ensureRefrainSet)
+  const completeRefrainWave = useApp((s) => s.completeRefrainWave)
   const { session, cursor, done } = useApp((state) => state.refrainResume)
   const targetLocale = useApp((state) => state.targetLocale)
   const busy = useRef(false)
@@ -301,19 +326,19 @@ function useRefrainSession(): RefrainSession {
     const nextIndex = session.plan.items.findIndex((i, n) => n > cursor && i.phraseId !== current)
     const nextCursor = nextIndex < 0 ? cursor : nextIndex
     try {
-      useApp.setState({
-        refrainResume: {
-          lastLatency: null,
-          history: [],
-          session: { ...session, cursor: nextCursor },
-          cursor: nextCursor,
-          done: nextIndex < 0,
-        },
-      })
+      const checkpoint = {
+        lastLatency: null,
+        history: [],
+        session: { ...session, cursor: nextCursor },
+        cursor: nextCursor,
+        done: nextIndex < 0,
+      }
+      if (nextIndex < 0) completeRefrainWave(wave, checkpoint)
+      else useApp.setState({ refrainResume: checkpoint })
     } catch {
       useApp.getState().showToast(`${copy.persistence.error} ${copy.persistence.retry}`)
     }
-  }, [session, cursor, ensureCurrentDay])
+  }, [session, cursor, ensureCurrentDay, completeRefrainWave, wave])
   const set = useMemo(
     () =>
       refrainSet
@@ -331,6 +356,7 @@ function useRefrainSession(): RefrainSession {
   // not an empty screen.
   const exhausted = session !== null && cursor >= session.plan.items.length
   return {
+    wave,
     set,
     phrase,
     phraseNumber,

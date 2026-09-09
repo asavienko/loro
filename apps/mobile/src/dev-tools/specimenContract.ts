@@ -50,9 +50,9 @@ export type SpecimenState =
 
 export const SPECIMEN_STATE_MATRIX = [
   { id: 'default', status: 'available' },
-  { id: 'pressed-focused', status: 'pending-plan-57' },
+  { id: 'pressed-focused', status: 'available' },
   { id: 'disabled', status: 'available' },
-  { id: 'loading', status: 'pending-plan-57' },
+  { id: 'loading', status: 'available' },
   { id: 'empty', status: 'available' },
   { id: 'error', status: 'available' },
   { id: 'selected', status: 'available' },
@@ -64,7 +64,7 @@ export const SPECIMEN_STATE_MATRIX = [
   { id: 'accent', status: 'inspection-context' },
 ] as const satisfies readonly {
   readonly id: SpecimenState
-  readonly status: 'available' | 'interactive' | 'inspection-context' | 'pending-plan-57'
+  readonly status: 'available' | 'interactive' | 'inspection-context'
 }[]
 
 export const PLAN_80_PENDING_NAVIGATION = [
