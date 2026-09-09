@@ -25,6 +25,11 @@ import { openStorageFailure, openStorageLoading } from './persistenceFlow'
  */
 
 import { expect, type Locator, type Page } from '@playwright/test'
+import { atInstant } from './clock'
+
+/** Mid-morning so Today has an open wave even when the runner is after midnight. */
+const MANIFEST_CLOCK = '2026-04-06T10:00'
+const pinnedManifestClock = new WeakSet<Page>()
 
 const REFRAIN_REPS = [
   'Say it',
@@ -716,6 +721,10 @@ export async function enter(
       sessionStorage.clear()
     })
     await page.goto('about:blank')
+  }
+  if (!pinnedManifestClock.has(page)) {
+    await atInstant(page, MANIFEST_CLOCK)
+    pinnedManifestClock.add(page)
   }
   if (state.firstRun !== true) await onboard(page)
   await state.reach(page)
