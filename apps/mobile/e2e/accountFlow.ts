@@ -183,7 +183,7 @@ export async function signInWithProvider(
   const popup = await popupPromise
   await expect(popup.getByRole('link', { name: 'Finish provider sign-in' })).toBeVisible()
   if (scenario === 'busy') {
-    await expect(page.getByText('Connecting to Google…', { exact: true })).toBeVisible()
+    await expect(page.getByText(`Connecting to ${provider}…`, { exact: true })).toBeVisible()
     return
   }
   if (scenario === 'cancelled') await popup.close()
@@ -199,7 +199,11 @@ export async function signInWithProvider(
   }
 }
 
-export async function reachAccount(page: Page, scenario: AccountScenario): Promise<AccountService> {
+export async function reachAccount(
+  page: Page,
+  scenario: AccountScenario,
+  provider: 'Google' | 'Apple' = 'Google',
+): Promise<AccountService> {
   const service = await mockAccountService(page, scenario)
   await openAccount(page)
   if (scenario === 'discoveryError') {
@@ -251,7 +255,7 @@ export async function reachAccount(page: Page, scenario: AccountScenario): Promi
     }
     return service
   }
-  await signInWithProvider(page, 'Google', scenario === 'localSignOut' ? 'signedIn' : scenario)
+  await signInWithProvider(page, provider, scenario === 'localSignOut' ? 'signedIn' : scenario)
   if (scenario === 'signedIn')
     await expect(page.getByText('Your progress is up to date.')).toBeVisible()
   if (scenario === 'localSignOut') {
