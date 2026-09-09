@@ -10,7 +10,7 @@
   },
   "scripts": {
     "bootstrap": "./scripts/bootstrap.sh",
-    "check": "pnpm check:routes && pnpm test:android-config && pnpm test:deploy && pnpm test:native:evidence && pnpm test:dsp:spike && pnpm test:core-rs-build && pnpm contracts:check && pnpm --filter @loro/core-rs check:browser && turbo run lint typecheck test content:validate check:a11y check:contrast",
+    "check": "pnpm check:routes && pnpm test:android-config && pnpm test:deploy && pnpm test:ci-local && pnpm test:native:evidence && pnpm test:dsp:spike && pnpm test:core-rs-build && pnpm contracts:check && pnpm --filter @loro/core-rs check:browser && turbo run lint typecheck test content:validate check:a11y check:contrast",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint -- --fix",
@@ -56,7 +56,8 @@
     "test:native:evidence": "node --test scripts/native-device-evidence.test.mjs",
     "test:dsp:spike": "node --test scripts/dsp-spike-evidence.test.mjs",
     "test:core-rs-build": "node --test scripts/core-rs-build.test.mjs",
-    "test:android-config": "node --test apps/mobile/plugins/app-config.test.cjs apps/mobile/plugins/with-dev-client-identity.test.cjs scripts/android-development.test.mjs scripts/apk-environment.test.mjs"
+    "test:android-config": "node --test apps/mobile/plugins/app-config.test.cjs apps/mobile/plugins/with-dev-client-identity.test.cjs scripts/android-development.test.mjs scripts/apk-environment.test.mjs",
+    "test:ci-local": "node --test scripts/ci-local.test.mjs"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.6.1",

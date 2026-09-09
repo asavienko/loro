@@ -4,7 +4,7 @@ This index lists only the **33 plans with remaining work**. Completed records an
 snapshots are kept in [the archive](archive/README.md), without compatibility symlinks or redirect
 files in this directory. Links point directly to each plan's actual location.
 
-The highest assigned ID is **94** and the next new plan is **95**. Numbers are never reused; 49
+The highest assigned ID is **95** and the next new plan is **96**. Numbers are never reused; 49
 remains an existing gap. Keep completed records in the archive index when a plan finishes.
 
 Plans 56–65 are stored in [the 2026-09-09 archive](archive/2026-09-09/README.md) at user request.
@@ -147,6 +147,7 @@ feature↔release-completion cycle. See each plan's checkboxes for executable ta
 | [90](90-default-english-content-language.md)                      | English default learning content and course selection                       | M1/M2       | 🟡 Shared registry integration done; dialect/review/device gates remain                                      | 87/85; 59 persistence; 61/62 audio                              |
 | [93](93-mobile-shell-gestures.md)                                 | Pull-down switcher and sheet dismissal                                      | M1/M2       | 🟡 Implemented; physical-device touch verification remains                                                   | Shared shell; device evidence                                   |
 | [94](94-persistent-practice-and-account-integration.md)           | Integrated persistence, canonical core, speech and account sync             | M1/M2       | 🟡 Runtime/fast/format gates pass; full/device CI remains                                                    | 54/85 ✅; coordinated 58–60/62–63/66–68 slices                  |
+| [95](95-parallel-local-ci.md)                                     | Dependency-aware parallel full local CI                                     | M2          | 🟡 Scheduler, cancellation, Git inventory and source identity fixes implemented; runtime comparison remains  | 72; no external blocker for measurements                        |
 
 Plan 88 owns the selected AWS testing profile and
 [operations runbook](../docs/runbooks/backend-testing.md); plan 73 retains production operations.
