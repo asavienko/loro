@@ -1,8 +1,9 @@
 # Loro documentation
 
 [Post-main 33-plan review — 2026-09-09](reviews/2026-09-09-post-main-plan-review.md) is the current
-review of `de81744`: six findings, all 33 plan dispositions and the implemented-slice archive. The
-earlier review below records history; its blanket import-remediation claim is superseded.
+review of `de81744`: six resolved findings, all 33 plan dispositions and the implemented-slice
+archive. The earlier review below records history; its blanket import-remediation claim is
+superseded.
 
 [33-plan implementation review — 2026-09-09](reviews/2026-09-09-thirty-three-plan-implementation.md)
 records the review of `828d296`, its resolved implementation defects, and remaining work options for

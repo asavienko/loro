@@ -21,12 +21,11 @@ persistence/reveal smoke passed; full iOS and physical-device speech/convergence
 release gates. See [persistent practice](docs/process/persistent-practice.md) and
 [plan 94](plans/94-persistent-practice-and-account-integration.md) for scoped evidence.
 
-The [post-main 33-plan review](docs/reviews/2026-09-09-post-main-plan-review.md) at `de81744`
-confirms wave-aware checkpoint/resume repairs, durable draft storage and regenerated bindings.
-Changes remain requested: browser file import uses an unsupported native reader, picker failures and
-late results are unguarded, content rollback metadata fails open, and chat choice IDs can be
-ambiguous. Fast and daytime Add/navigation checks pass; formatting and time-dependent navigation
-acceptance still need repair. No whole plan is newly complete; the
+The [post-main 33-plan review](docs/reviews/2026-09-09-post-main-plan-review.md) records the six
+review findings as fixed: browser file import uses the picker-provided file, picker results are
+request-scoped and pair-safe, corrupt release pointers fail closed, chat choice IDs are unique, and
+active-session E2E navigation uses a deterministic open-wave clock. The format gate and fast checks
+are green; full/device/provider acceptance remains open. No whole plan is newly complete; the
 [implemented-slice archive](plans/archive/2026-09-09/IMPLEMENTED-SLICES.md) retains delivered work.
 
 The spine supports pull-down to open its menu; sheets dismiss by pulling their dedicated handle.
