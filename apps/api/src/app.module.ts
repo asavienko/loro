@@ -32,6 +32,9 @@ import { PhrasesController } from './ai/phrases.controller.js'
 import { AiService } from './ai/ai.service.js'
 import { SCENE_PROVIDERS, type SceneProvider } from './ai/scene-provider.js'
 import { StubSceneProvider } from './ai/scene-provider.stub.js'
+import { TtsController } from './tts/tts.controller.js'
+import { TtsService } from './tts/tts.service.js'
+import { TTS_TRANSPORT, createTtsTransport } from './tts/transport.js'
 
 @Module({
   controllers: [
@@ -41,6 +44,7 @@ import { StubSceneProvider } from './ai/scene-provider.stub.js'
     SyncController,
     AiController,
     PhrasesController,
+    TtsController,
     AuthController,
     MeController,
     OAuthController,
@@ -56,6 +60,8 @@ import { StubSceneProvider } from './ai/scene-provider.stub.js'
       useFactory: (...providers: SceneProvider[]): SceneProvider[] => providers,
       inject: [StubSceneProvider],
     },
+    TtsService,
+    { provide: TTS_TRANSPORT, useFactory: createTtsTransport },
     SyncService,
     AuthService,
     AuthGuard,
