@@ -2,7 +2,12 @@ import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { defaultStyleIds, renderLocalStyles, requestLocalLyrics } from './client'
+import {
+  defaultStyleIds,
+  musicGenerationBlocked,
+  renderLocalStyles,
+  requestLocalLyrics,
+} from './client'
 import { FIXTURE_WAV_DURATION_MS } from './wav'
 
 const root = dirname(fileURLToPath(import.meta.url))
@@ -40,6 +45,13 @@ describe('device music stub (p3f-03 / p3f-06)', () => {
     expect(
       unavailable.every((track) => track.uri === null && track.errorCode === 'unavailable'),
     ).toBe(true)
+  })
+
+  it('blocks generation when offline unless a fixture is driving the journey', () => {
+    expect(musicGenerationBlocked(false, undefined)).toBe(true)
+    expect(musicGenerationBlocked(true, undefined)).toBe(false)
+    expect(musicGenerationBlocked(false, 'playing')).toBe(false)
+    expect(musicGenerationBlocked(true, 'unavailable')).toBe(true)
   })
 })
 

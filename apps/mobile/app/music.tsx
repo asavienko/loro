@@ -14,6 +14,7 @@ import { useLocale } from '../src/lib/i18n'
 import {
   defaultStyleIds,
   isMusicUiState,
+  musicGenerationBlocked,
   renderLocalStyles,
   requestLocalLyrics,
   type MusicLyricsView,
@@ -64,6 +65,7 @@ export default function Music() {
   const [tracks, setTracks] = useState<MusicTrackView[]>([])
   const [step, setStep] = useState<'pick' | 'lyrics' | 'styles' | 'play'>('pick')
   const [busy, setBusy] = useState(false)
+  const [offlineBlocked, setOfflineBlocked] = useState(false)
   const [playStyle, setPlayStyle] = useState<MusicStyleId | null>(null)
   const [playing, setPlaying] = useState(false)
   const [knownDurationMs, setKnownDurationMs] = useState<number | null>(null)
@@ -118,7 +120,10 @@ export default function Music() {
   const canRequest = selectionInBounds(selectedIds)
   const canConfirmStyles =
     styleIds.length >= MUSIC_MIN_STYLES && styleIds.length <= MUSIC_MAX_STYLES
-  const unavailable = fixture === 'unavailable'
+  const unavailable =
+    fixture === 'unavailable' ||
+    offlineBlocked ||
+    (fixture === undefined && typeof navigator !== 'undefined' && navigator.onLine === false)
   const readyTracks = tracks.filter((track) => track.status === 'ready')
   const failedTracks = tracks.filter((track) => track.status === 'failed')
 
@@ -151,6 +156,10 @@ export default function Music() {
 
   const confirmStyles = (): void => {
     if (!canConfirmStyles || lyrics === null) return
+    if (musicGenerationBlocked(typeof navigator === 'undefined' || navigator.onLine, fixture)) {
+      setOfflineBlocked(true)
+      return
+    }
     if (unavailable) return
     if (fixture === 'generating') {
       setBusy(true)
@@ -285,7 +294,7 @@ export default function Music() {
               </Text>
               {lyrics.document.sections.map((section) => (
                 <Stack key={section.name} gap={space['2']}>
-                  <SectionLabel>{section.name}</SectionLabel>
+                  <SectionLabel>{copy.music.lyrics.section(section.name)}</SectionLabel>
                   {section.lines.map((line) => (
                     <Text key={line} variant="body" color={ink.ink} lang="target">
                       {line}

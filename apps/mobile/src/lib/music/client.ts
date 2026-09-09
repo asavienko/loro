@@ -115,6 +115,16 @@ export function defaultStyleIds(): MusicStyleId[] {
   return [MUSIC_STYLE_IDS[0], MUSIC_STYLE_IDS[1], MUSIC_STYLE_IDS[2]]
 }
 
+/** Fixtures may still play; a real offline learner gets the honest unavailable state. */
+export function musicGenerationBlocked(
+  online: boolean,
+  fixture: MusicUiState | undefined,
+): boolean {
+  if (fixture === 'unavailable') return true
+  if (fixture !== undefined) return false
+  return !online
+}
+
 export function isMusicUiState(value: string | undefined): value is MusicUiState {
   return (
     value === 'empty' ||
