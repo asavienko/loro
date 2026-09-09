@@ -1,4 +1,4 @@
-# ElevenLabs TTS transport — plan 86 / 97 / AS-01
+# ElevenLabs TTS transport — plan 86 / 98 / AS-01
 
 `ElevenLabsTts` is a provider-local HTTP adapter. Nest registration, cache identity and learner
 fallback live in the TTS module. Authoring `content:render` injects the same class.

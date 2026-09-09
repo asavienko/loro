@@ -10,7 +10,7 @@
   Import/OCR remains separate; 76/86 transport/spend for a future live path; 82/83 consume the
   keep-line handoff
 - **Number allocation:** 97 follows inspection of active, archived and concurrent plan files. 95
-  and 96 are archived. The next new plan is 98.
+  and 96 are archived. Plan 98 owns voice/TTS. The next new plan is 99.
 
 ## Outcome
 

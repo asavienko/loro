@@ -10,16 +10,19 @@ Early implementation. **What exists:** eight of the v1.1 design package's 23 lea
 Languages, Account, More and Settings utilities, the shared shell and a developer workbench.
 Discover offers Add your own and bundled topic suggestions; live `/v1/phrases/suggest` stays behind
 Q-21. Local progress and course/session state commit to native OP-SQLite or browser SQLite before
-rendering. Rust owns FSRS, ranking, selection, matching, clocks and merge through generated WASM/UniFFI
-bridges. Native modules provide foreground device TTS and strictly on-device ASR with an offline
-Speak reveal fallback. The API stores accounts, sessions and tenant-scoped sync in PostgreSQL.
-Optional Google/Apple and email sign-in connect durable local progress to cross-device sync.
+rendering. Rust owns FSRS, ranking, selection, matching, clocks and merge through generated
+WASM/UniFFI bridges. Native modules provide foreground device TTS, catalog-file playback when a
+checksummed clip is on disk, and strictly on-device ASR with an offline Speak reveal fallback. The
+API stores accounts, sessions and tenant-scoped sync in PostgreSQL and exposes a gated,
+stub-by-default `POST /tts/render`. Optional Google/Apple and email sign-in connect durable local
+progress to cross-device sync.
 
 The three 31-phrase Spanish/Bulgarian/Russian starters still await bilingual review. The other 15
-learner screens, production recorded audio/cache, background audio, measured onset latency, DSP,
-widgets and account export/erasure remain. Android compilation and an airplane-mode emulator
-persistence/reveal smoke passed; full iOS and physical-device speech/convergence acceptance remain
-release gates. See [persistent practice](docs/process/persistent-practice.md) and
+learner screens, licensed production seed audio (Q-15), the 150 MB LRU cache, background audio,
+measured onset latency, DSP, widgets and account export/erasure remain. Cloud ASR is forbidden.
+Android compilation and an airplane-mode emulator persistence/reveal smoke passed; full iOS and
+physical-device speech/convergence acceptance remain release gates. See
+[persistent practice](docs/process/persistent-practice.md) and
 [plan 94](plans/archive/2026-09-09/94-persistent-practice-and-account-integration.md) for scoped
 evidence.
 
@@ -152,10 +155,11 @@ prototype-only and **must not** be carried into the app — see the divergence t
   redirect files; update references to the actual archive path and rebase the moved plan's relative
   links. Keep completed records out of the active index. Archive a finished plan in the same change.
   Plan 53 was archived at user request on 2026-09-09; its former original-path exception no longer
-  applies. Plan 97 owns generative Discover reach. The next new plan number is 98; recheck concurrent
-  worktrees and untracked `plans/` files before allocating an ID — the README/CLAUDE "next is N"
-  sentence can lag. A new plan takes the next free number and gets a row in
-  [`plans/README.md`](plans/README.md). **Numbers are never reused** — a gap is left rather than
+  applies. Plan 97 owns generative Discover reach. Plan 98 owns the ElevenLabs adapter,
+  `content:render`, gated `/tts/render` and catalog-file playback. The next new plan number is 99;
+  recheck concurrent worktrees and untracked `plans/` files before allocating an ID — the
+  README/CLAUDE "next is N" sentence can lag. A new plan takes the next free number and gets a row
+  in [`plans/README.md`](plans/README.md). **Numbers are never reused** — a gap is left rather than
   backfilled, so a link written against a number can't come to mean a different plan. Not in
   `docs/`: that holds the durable spec. Not in a temp directory either — a plan you can't find
   again is a plan you rewrite. Name the requirement ID inside the plan so it ties back to the
