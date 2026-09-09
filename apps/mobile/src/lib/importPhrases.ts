@@ -4,7 +4,7 @@
  * until the learner explicitly accepts it on the Import surface.
  */
 
-import { foldSearchText, MAX_OWN_PHRASE_TEXT_CODE_UNITS } from '@loro/core'
+import { canonicalPhraseText, MAX_OWN_PHRASE_TEXT_CODE_UNITS } from '@loro/core'
 
 /** Keep review rendering bounded; batch and field lengths are JavaScript UTF-16 code units. */
 export const IMPORT_MAX_CHARACTERS = 20_000
@@ -95,7 +95,7 @@ export function normalizeImportedText(value: string): string {
 
 /** A matching key only for local duplicate review; stored text keeps its authored accents. */
 export function importedPhraseKey(value: string): string {
-  return foldSearchText(normalizeImportedText(value))
+  return canonicalPhraseText(normalizeImportedText(value))
 }
 
 export function parseImportedPhrases(

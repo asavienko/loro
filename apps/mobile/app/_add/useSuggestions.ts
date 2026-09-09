@@ -32,6 +32,8 @@ export interface Suggestions {
   countFor: (theme: string) => number
   /** After a confirmed add: anchor on that theme, so the next list is "more like it". */
   anchorOn: (theme: string) => void
+  /** Confirmed custom add: clear the query without moving the association theme. */
+  clearDiscoverQuery: () => void
 }
 
 /**
@@ -128,6 +130,10 @@ export function useSuggestions(owned: readonly PhraseState[]): Suggestions {
     countFor: (theme) => pool.filter((p) => p.theme === theme).length,
     anchorOn: (theme) => {
       setAnchorTheme(theme)
+      setQuery('')
+      setScenario(null)
+    },
+    clearDiscoverQuery: () => {
       setQuery('')
       setScenario(null)
     },

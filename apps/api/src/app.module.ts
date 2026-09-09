@@ -28,6 +28,7 @@ import { AuthController, MeController } from './auth/auth.controller.js'
 import { AuthService } from './auth/auth.service.js'
 import { AuthGuard } from './auth/auth.guard.js'
 import { AiController } from './ai/ai.controller.js'
+import { PhrasesController } from './ai/phrases.controller.js'
 import { AiService } from './ai/ai.service.js'
 import { SCENE_PROVIDERS, type SceneProvider } from './ai/scene-provider.js'
 import { StubSceneProvider } from './ai/scene-provider.stub.js'
@@ -39,6 +40,7 @@ import { StubSceneProvider } from './ai/scene-provider.stub.js'
     LearningContentController,
     SyncController,
     AiController,
+    PhrasesController,
     AuthController,
     MeController,
     OAuthController,

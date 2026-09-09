@@ -105,6 +105,33 @@ export const addCopy = {
   get confirm() {
     return message('add.confirm')
   },
+  own: {
+    get action() {
+      return message('add.own.action')
+    },
+    get hint() {
+      return message('add.own.hint')
+    },
+  },
+  suggested: {
+    get title() {
+      return message('add.suggested.title')
+    },
+    get looking() {
+      return message('add.suggested.looking')
+    },
+    get provenance() {
+      return message('add.suggested.provenance')
+    },
+  },
+  sheet: {
+    get targetPlaceholder() {
+      return message('add.sheet.targetPlaceholder')
+    },
+    get meaningPlaceholder() {
+      return message('add.sheet.meaningPlaceholder')
+    },
+  },
   import: {
     get title() {
       return message('add.import.title')

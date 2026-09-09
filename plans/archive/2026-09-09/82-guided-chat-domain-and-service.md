@@ -82,10 +82,11 @@ Production keeps these invariants:
        four prototype regexes as if they were general correction. A failed/low-confidence correction
        is omitted; it never invents a rule. UI-facing counts derive from the returned correction
        array.
-8. [ ] Define phrase handoff factories for original, corrected, and alternative lines. Preserve
-       source attribution and register/note metadata, deduplicate through canonical phrase identity,
-       and keep the `addPhrase` write explicit. Define queue-for-review semantics without mutating
-       progress or schedules outside their owning repository/engine contract.
+8. [ ] Consume plan 97's phrase handoff factories for original, corrected, and alternative lines.
+       Preserve source attribution and register/note metadata, deduplicate through canonical phrase
+       identity, and keep the `addPhrase` / `addOwnPhrase` write explicit. Define queue-for-review
+       semantics without mutating progress or schedules outside their owning repository/engine
+       contract.
 9. [ ] Build an evaluation corpus covering CEFR fit, Spain/LatAm policy, gender/profile agreement,
        correctness, explanation quality, register, suggestion usefulness, safety, prompt injection,
        long/empty/mixed-language input, latency, cost, fallback continuity, and schema failures.

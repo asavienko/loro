@@ -426,5 +426,17 @@
   "account.codeLabel": "Sign-in code",
   "account.rate-limited": "Too many attempts. Please wait a little and try again.",
   "account.invalid-email": "Enter a valid email address to continue.",
-  "account.deviceProgress": "Your progress stays saved on this device."
+  "account.deviceProgress": "Your progress stays saved on this device.",
+  "add.own.action": "Add your own",
+  "add.own.hint": "This stays your phrase. Add a meaning on this sheet.",
+  "add.suggested.title": "Suggested for this",
+  "add.suggested.looking": "Looking for phrases…",
+  "add.suggested.provenance": "Suggested — not from the library",
+  "add.sheet.targetPlaceholder": "Phrase in the language you're learning",
+  "add.sheet.meaningPlaceholder": "Your meaning",
+  "a11y.add.ownRow": "Add {query} as your own phrase",
+  "a11y.add.suggestedRow": "Suggested: {es}. {en}",
+  "a11y.add.sheetTarget": "Phrase to add",
+  "a11y.add.sheetMeaning": "Meaning",
+  "a11y.add.nearestScenario": "Phrases for {label}"
 }

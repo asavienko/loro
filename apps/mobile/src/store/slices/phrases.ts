@@ -73,7 +73,7 @@ export const createPhrasesSlice: Slice<
 
     addOwnPhrase: (draft, o = {}) => {
       const next = {
-        ...newOwnPhrase(deps.newId(), draft, deps.clock.now()),
+        ...newOwnPhrase(deps.newId(), draft, deps.clock.now(), o.source ?? 'custom'),
         ownMeaningLanguage: get().nativeLanguage,
         targetLocale: get().targetLocale,
         difficulty: o.difficulty ?? 'med',
