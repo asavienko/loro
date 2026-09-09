@@ -6,7 +6,7 @@ import {
   TokenResponseSchema,
   type DeviceRegistration,
   type SignInResponse,
-} from '@loro/core/api/target'
+} from '@loro/core/api/account'
 import type { OAuthProvider } from '@loro/core/api/oauth'
 import { authorizeProvider, type AuthorizationPorts } from '../../auth/client'
 import { readCredential, type SavedCredential } from './credentials'
