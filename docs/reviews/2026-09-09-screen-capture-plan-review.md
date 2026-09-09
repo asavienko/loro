@@ -4,11 +4,11 @@
 
 **Implementation reviewed:** `65b64e9..28234cd` (`f33b04a` plus `28234cd`)
 
-**Fixes implemented:** `0a73fb9`
+**Fixes implemented:** `0a73fb9`, `180e096`
 
-**Status:** R1–R4 are implemented in `0a73fb9`; post-fix capture and lifecycle validation are
-recorded below. Restoring the owning numbered plan and completing its visual-sampling record remain
-process follow-ups.
+**Status:** R1–R4 are implemented in `0a73fb9` and `180e096`; post-fix capture and lifecycle
+validation are recorded below. Restoring the owning numbered plan and completing its visual-sampling
+record remain process follow-ups.
 
 **Related learner coverage:** F-06 (light theme), F-08 (defined language states).
 
@@ -55,14 +55,15 @@ number and does not mark the work complete.
 
 ## Post-review fix status
 
-`0a73fb9` implements every code fix identified here:
+`0a73fb9` and `180e096` implement every code fix identified here:
 
 - **R1:** The runner owns the direct Playwright process, installs signal handlers before preflight,
   forwards SIGINT/SIGTERM to its process group, gives Playwright an 8-second graceful web-server
   shutdown window, and force-kills the group only as a bounded fallback. The Expo wrapper owns its
   direct child group and applies the same bounded escalation.
 - **R2:** A passed state is written only after its PNG exists, has a PNG signature and is exactly
-  390×844. The end-of-run validation remains in place for later artifact deletion or corruption.
+  390×844. The end-of-run validation also runs in launcher fallback finalization, protecting the
+  interrupted gallery from later artifact deletion or corruption.
 - **R3:** Preflight, spawn, interruption and reporter finalization use the same totals, error and
   absolute gallery-path summary. Every finalized manifest has `completedAt` and `counts`.
 - **R4:** The manifest starts with unavailable browser metadata and the capture fixture records the
@@ -115,9 +116,9 @@ and clean up only processes owned by the probe.
 
 **Blocking completion of the incremental artifact contract.**
 
-**Implemented in `0a73fb9`.** `onTestEnd` validates the expected PNG before writing `passed`, while
-`onEnd` repeats the check as a defense against later artifact changes. Missing and wrong-sized
-artifacts retain actionable state-level errors.
+**Implemented in `0a73fb9` and `180e096`.** `onTestEnd` validates the expected PNG before writing
+`passed`, while finalization repeats the check in both the reporter and launcher fallback. Missing
+and wrong-sized artifacts retain actionable state-level errors.
 
 Location: [screenshots.reporter.mjs](../../apps/mobile/e2e/screenshots.reporter.mjs), lines 17–37
 and 55–61; fallback finalization is in
@@ -194,10 +195,11 @@ that prelaunch failures remain readable with unavailable browser metadata.
 
 These are observations from this review unless explicitly labeled historical:
 
-- **Post-fix full capture:** `test-results/screenshots/2026-09-09T14-07-30-067Z-1ed092f5/` contains
+- **Post-fix full capture:** `test-results/screenshots/2026-09-09T14-12-01-437Z-baadfffb/` contains
   74 passed states, 74 PNGs, no missing or dimension-mismatched artifacts, a route-grouped gallery,
-  `run.browser` set to `{name: "chromium", version: "151.0.7922.34"}`, and `dirty: false` at
-  revision `dd9ea428ca08524b7f8f1197ba0e73d62c1780c1`.
+  and `run.browser` set to `{name: "chromium", version: "151.0.7922.34"}` at revision
+  `180e096e36632a2d29cca37ae6b1bc7ce3a55ab0`. The manifest correctly reports `dirty: true` because
+  the review record itself was being updated; the code was committed at that revision.
 - **Post-fix lifecycle probes:** SIGTERM during preflight, SIGTERM after one capture, SIGINT after
   one capture, and SIGTERM after the dedicated server became reachable all exited nonzero within
   0.5–0.6 seconds, finalized failed manifests, stopped their ports, and left no owned capture
