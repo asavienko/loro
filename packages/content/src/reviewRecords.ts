@@ -1,7 +1,7 @@
 /** F-08: release-time validation for attributable reviews of the exact bundled material. */
 import type { ReviewPacket } from './reviewPacket.js'
 
-type Review = {
+interface Review {
   readonly status?: unknown
   readonly reviewer?: unknown
   readonly reviewerLanguages?: unknown
@@ -10,7 +10,7 @@ type Review = {
   readonly signOffEvidence?: unknown
 }
 
-type Material = {
+interface Material {
   readonly sha256?: unknown
   readonly review?: Review
 }
