@@ -29,7 +29,7 @@ function fixture() {
     ),
     share: vi.fn(() => Promise.resolve(undefined)),
     saveListeningBatch: vi.fn(() => Promise.resolve(undefined)),
-    loadListeningBatch: vi.fn(() => Promise.resolve(null)),
+    loadListeningBatch: vi.fn((): Promise<AudioCacheObject[] | null> => Promise.resolve(null)),
   } satisfies NativeAudioCache
   return { native, controller: new AudioCacheController(native) }
 }
@@ -104,13 +104,11 @@ describe('listening cache controller', () => {
       ms: 1420,
       sha256: 'a'.repeat(64),
     }
-    f.native.loadListeningBatch = vi.fn(() => Promise.resolve([clip]))
+    f.native.loadListeningBatch.mockResolvedValueOnce([clip])
     await expect(f.controller.loadListeningBatch()).resolves.toEqual([clip])
-    f.native.loadListeningBatch = vi.fn(() =>
-      Promise.resolve([
-        { fileUri: 'https://cdn.loro.test/clip.m4a', ms: 1, sha256: 'a'.repeat(64) },
-      ]),
-    )
+    f.native.loadListeningBatch.mockResolvedValueOnce([
+      { fileUri: 'https://cdn.loro.test/clip.m4a', ms: 1, sha256: 'a'.repeat(64) },
+    ])
     await expect(f.controller.loadListeningBatch()).resolves.toBeNull()
   })
 })
