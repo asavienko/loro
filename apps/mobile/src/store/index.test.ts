@@ -260,10 +260,15 @@ describe('learner-authored phrases', () => {
         { targetText: 'La cuenta, por favor.', translation: 'The bill, please.' },
         { source: 'chat' },
       )
+    const importId = useApp.getState().addOwnPhrase(
+      { targetText: 'Buenos días.', translation: 'Good morning.' },
+      { source: 'import' },
+    )
     expect(useApp.getState().phrases.find((row) => row.id === generatedId)?.source).toBe(
       'generated',
     )
     expect(useApp.getState().phrases.find((row) => row.id === chatId)?.source).toBe('chat')
+    expect(useApp.getState().phrases.find((row) => row.id === importId)?.source).toBe('import')
     expect(useApp.getState().phrases.find((row) => row.id === generatedId)?.phraseId).toBeNull()
   })
 
