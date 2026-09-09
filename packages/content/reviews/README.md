@@ -31,8 +31,10 @@ reviewer or linguistic findings are invented. The exporter writes only to stdout
 4. After fixes, export new material. Retain the old record; a changed digest requires review of the
    changed material. Never copy old approval onto a new digest without actual reviewer confirmation.
 5. Hand attributable approvals and exact artifacts to plans 61/72. Run
-   `pnpm --filter @loro/content check:release`; it currently remains blocked by the pending corpus.
+   `pnpm --filter @loro/content check:release`; it loads only the record named after the current
+   material digest and rejects stale digests, missing entry approvals and incomplete
+   reviewer/sign-off fields. It remains blocked until real bilingual review records exist.
 
-The exporter does not consume sign-offs or relax the release gate. A future release integration must
-verify the supplied evidence against the exact shipped material before changing release status.
-Actual reviewer coordination and all-pair physical-device acceptance remain outstanding.
+The exporter does not consume sign-offs or relax the release gate. The release check verifies the
+supplied evidence against the exact shipped material before changing release status. Actual reviewer
+coordination and all-pair physical-device acceptance remain outstanding.

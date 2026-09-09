@@ -1,5 +1,21 @@
 import { describe, expect, it } from 'vitest'
 import { buildReviewPacket } from './reviewPacket.js'
+import { validateReviewRecord } from './reviewRecords.js'
+
+function approvedRecord() {
+  const packet = JSON.parse(JSON.stringify(buildReviewPacket()))
+  for (const entry of [...packet.ui, ...packet.courses]) {
+    entry.review = {
+      status: 'approved',
+      reviewer: 'Bilingual reviewer',
+      reviewerLanguages: ['en', 'bg'],
+      reviewedAt: '2026-09-09T12:00:00.000Z',
+      findings: [],
+      signOffEvidence: 'review-system:record-123',
+    }
+  }
+  return packet
+}
 
 describe('F-08 bilingual review material', () => {
   it('exports all supported courses and UI resources without granting approval', () => {
@@ -31,5 +47,15 @@ describe('F-08 bilingual review material', () => {
     ).toBe('A coffee with a little milk, please')
     expect(spanish.catalog.phrases.some((phrase) => phrase.teaching?.en)).toBe(true)
     expect(bulgarian.catalog.phrases.every((phrase) => phrase.teaching === undefined)).toBe(true)
+  })
+
+  it('accepts only complete attributable approvals for the current material digest', () => {
+    const record = approvedRecord()
+    expect(() => validateReviewRecord(buildReviewPacket(), record)).not.toThrow()
+    record.courses[0].review.signOffEvidence = ''
+    expect(() => validateReviewRecord(buildReviewPacket(), record)).toThrow(/attributable approval/)
+    record.courses[0].review.signOffEvidence = 'review-system:record-123'
+    record.materialSha256 = '0'.repeat(64)
+    expect(() => validateReviewRecord(buildReviewPacket(), record)).toThrow(/does not match/)
   })
 })
