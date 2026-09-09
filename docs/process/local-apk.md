@@ -5,7 +5,8 @@ uses Expo prebuild and Gradle on your machine and uploads files through the GitH
 use EAS or submit anything to Google Play.
 
 `pnpm --filter @loro/mobile android` is the Metro-dependent debug workflow and rejects release
-variants. Use this Preview APK workflow for a standalone release build.
+variants and custom APKs. It clears an inherited Preview build flag. Use this Preview APK workflow
+for a standalone release build.
 
 ## Prerequisites
 
