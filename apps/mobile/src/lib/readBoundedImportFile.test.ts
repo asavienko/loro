@@ -4,7 +4,9 @@ import { readBoundedImportFile } from './readBoundedImportFile'
 function stream(chunks: readonly Uint8Array[]): ReadableStream<Uint8Array> {
   return new ReadableStream({
     start(controller) {
-      chunks.forEach((chunk) => controller.enqueue(chunk))
+      chunks.forEach((chunk) => {
+        controller.enqueue(chunk)
+      })
       controller.close()
     },
   })

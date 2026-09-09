@@ -11,6 +11,7 @@ import {
   type SessionHandle,
 } from '@loro/core'
 import { makePhrase } from '@loro/core/testing'
+import { accents, defaultAccent, type AccentName } from '@loro/design-tokens'
 import { createAppStore, reloadStorePersistence } from '../store/store'
 import { INITIAL_STATE } from '../store/state'
 import { createLearnerStorage } from './learner'
@@ -613,6 +614,8 @@ describe('F-05/F-06 device-local analytics consent', () => {
   })
 
   it('migrates v1 consent and persists visual preferences without changing synced settings', () => {
+    const alternateAccent = Object.keys(accents).find((accent) => accent !== defaultAccent)
+    if (alternateAccent === undefined) throw new Error('Expected a non-default accent')
     const path = diskPath()
     const first = open(path)
     writeLocalValue(first.driver, 'device_preferences', '{"version":1,"analyticsConsent":true}')
@@ -629,14 +632,14 @@ describe('F-05/F-06 device-local analytics consent', () => {
       .completeOnboarding({ goal: 'travel', level: 'beg', dailyMinutes: 10, packIds: [] })
     const settings = db.persistence.settings.load()
     const outbox = db.driver.all('SELECT * FROM outbox')
-    db.store.getState().setVisualPreferences('teal', 'reduced')
+    db.store.getState().setVisualPreferences(alternateAccent as AccentName, 'reduced')
     expect(db.persistence.settings.load()).toEqual(settings)
     expect(db.driver.all('SELECT * FROM outbox')).toEqual(outbox)
     db.driver.close()
     expect(open(path).store.getState().devicePreferences).toEqual({
       version: 2,
       analyticsConsent: true,
-      accent: 'teal',
+      accent: alternateAccent as AccentName,
       motion: 'reduced',
     })
   })

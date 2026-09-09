@@ -20,9 +20,11 @@ export const createUiSlice: Slice<
   clearImportDraft: () => {
     const current = get().importDraft
     if (current === null) return
-    const drafts = { ...get().importDrafts }
-    delete drafts[importDraftKey(current)]
-    set({ importDraft: null, importDrafts: drafts })
+    const key = importDraftKey(current)
+    const importDrafts = Object.fromEntries(
+      Object.entries(get().importDrafts).filter(([draftKey]) => draftKey !== key),
+    )
+    set({ importDraft: null, importDrafts })
   },
   select: (id) => {
     set({ selectedId: id })

@@ -48,8 +48,8 @@ export type WaveEntry<Key extends string> =
  * projection, so a learner who pauses a morning wave at 13:00 is offered that same morning work
  * by Today, the spine and Refrain instead of three contradictory actions.
  */
-export type RefrainCheckpoint<Key extends string> = {
-  readonly session: unknown | null
+export interface RefrainCheckpoint<Key extends string> {
+  readonly session: object | null
   readonly wave?: Key
   readonly done: boolean
 }
