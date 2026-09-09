@@ -8,7 +8,13 @@ import {
   TextInput,
   View,
 } from 'react-native'
-import { accountClient, useAccount, useSyncStatus, syncNow } from '../src/lib/account/runtime'
+import {
+  accountClient,
+  useAccount,
+  useSyncRepair,
+  useSyncStatus,
+  syncNow,
+} from '../src/lib/account/runtime'
 import { availableProviders, beginSignIn, completeBrowserSignIn } from '../src/auth/runtime'
 import { checkBackend, type BackendStatus } from '../src/lib/backend'
 import { copy } from '../src/lib/copy'
@@ -23,6 +29,7 @@ export default function Account() {
   useLocale()
   const state = useAccount()
   const sync = useSyncStatus()
+  const repair = useSyncRepair()
   const client = accountClient()
   const [email, setEmail] = useState('')
   const [code, setCode] = useState('')
@@ -94,6 +101,9 @@ export default function Account() {
                           ? copy.account.syncError
                           : copy.account.syncPending}
                   </Text>
+                  {repair.quarantined > 0 && (
+                    <Text>{copy.account.syncQuarantined(repair.quarantined)}</Text>
+                  )}
                 </View>
                 <Button
                   label={copy.account.syncNow}

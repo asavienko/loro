@@ -96,6 +96,7 @@ export const STATES: AppState[] = [
       'connected',
       'invalid-code',
       'sync-unavailable',
+      'sync-rejected',
       'signed-out',
     ] as const
   ).map((scenario): AppState => ({

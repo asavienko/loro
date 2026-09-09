@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { waveSchedule } from './waves'
+import { waveEntry, waveSchedule } from './waves'
 
 const KEYS = ['morning', 'midday', 'evening'] as const
 const TIMES = ['08:00', '13:00', '19:00'] as const
@@ -60,5 +60,41 @@ describe('waveSchedule', () => {
     expect(waveSchedule(['morning'], TIMES, '20:00')).toEqual([
       { key: 'morning', time: '08:00', position: 'next' },
     ])
+  })
+})
+
+describe('waveEntry', () => {
+  it('locks entry before the first scheduled wave while retaining the next wave', () => {
+    expect(waveEntry(KEYS, TIMES, '07:59')).toMatchObject({
+      kind: 'locked',
+      next: { key: 'morning', time: '08:00' },
+    })
+  })
+
+  it('opens a wave exactly at its time and moves missed work to the latest open wave', () => {
+    expect(waveEntry(KEYS, TIMES, '08:00')).toMatchObject({ kind: 'ready', wave: { key: 'morning' } })
+    expect(waveEntry(KEYS, TIMES, '14:00')).toMatchObject({ kind: 'ready', wave: { key: 'midday' } })
+  })
+
+  it('does not re-open a persisted completion and waits for the next scheduled wave', () => {
+    expect(waveEntry(KEYS, TIMES, '08:30', ['morning'])).toMatchObject({
+      kind: 'locked',
+      next: { key: 'midday', time: '13:00' },
+    })
+  })
+
+  it('reports a finished day only when every scheduled wave was persisted as complete', () => {
+    expect(waveEntry(KEYS, TIMES, '20:00', ['morning', 'midday'])).toMatchObject({
+      kind: 'ready',
+      wave: { key: 'evening' },
+    })
+    expect(waveEntry(KEYS, TIMES, '20:00', KEYS)).toEqual({ kind: 'complete' })
+  })
+
+  it('keeps an earlier persisted gap resumable after a later wave is complete', () => {
+    expect(waveEntry(KEYS, TIMES, '20:00', ['evening'])).toMatchObject({
+      kind: 'ready',
+      wave: { key: 'midday' },
+    })
   })
 })

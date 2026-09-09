@@ -108,6 +108,7 @@ export const copy = {
     get syncError() {
       return message('account.syncError')
     },
+    syncQuarantined: (count: number): string => message('account.syncQuarantined', { count }),
     get unconfigured() {
       return message('account.unconfigured')
     },
@@ -447,6 +448,10 @@ export const copy = {
         get evening() {
           return message('today.cta.startWave.evening')
         },
+      },
+      waitForWave: (time: string): string => message('today.cta.waitForWave', { time }),
+      get complete() {
+        return message('today.cta.complete')
       },
     },
   },
@@ -851,6 +856,15 @@ export const copy = {
       },
       get body() {
         return message('refrain.empty.body')
+      },
+    },
+    unavailable: {
+      title: (time: string): string => message('refrain.unavailable.title', { time }),
+      get complete() {
+        return message('refrain.unavailable.complete')
+      },
+      get body() {
+        return message('refrain.unavailable.body')
       },
     },
     modes: {

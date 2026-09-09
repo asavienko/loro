@@ -22,6 +22,7 @@ export type AccountScenario =
   | 'connected'
   | 'invalid-code'
   | 'sync-unavailable'
+  | 'sync-rejected'
   | 'signed-out'
 
 type ServiceMode = AccountScenario | 'success'
@@ -123,10 +124,22 @@ export async function mockAccountService(
       await route.fulfill({
         json: {
           accepted:
-            typeof body === 'object' && body !== null && 'ops' in body && Array.isArray(body.ops)
-              ? body.ops.map((op: { seq: number }) => op.seq)
+            mode === 'sync-rejected'
+              ? []
+              : typeof body === 'object' &&
+                  body !== null &&
+                  'ops' in body &&
+                  Array.isArray(body.ops)
+                ? body.ops.map((op: { seq: number }) => op.seq)
+                : [],
+          rejected:
+            mode === 'sync-rejected' &&
+            typeof body === 'object' &&
+            body !== null &&
+            'ops' in body &&
+            Array.isArray(body.ops)
+              ? body.ops.map((op: { seq: number }) => ({ seq: op.seq, code: 'INVALID_FIELD' }))
               : [],
-          rejected: [],
           conflicts: [],
           server_hlc: stamp,
           server_time: 100,
@@ -197,6 +210,14 @@ export async function signInWithProvider(
 
 export async function reachAccount(page: Page, scenario: AccountScenario): Promise<AccountService> {
   const service = await mockAccountService(page, scenario)
+  if (scenario === 'sync-rejected') {
+    await page
+      .getByRole('button', { name: /0 percent automatic/ })
+      .first()
+      .click()
+    await page.getByRole('radio', { name: 'Difficult', exact: true }).click()
+    await page.goto('/')
+  }
   await openAccount(page)
   if (scenario === 'backendUnavailable' || scenario === 'backendChecking') {
     await expect(
@@ -232,6 +253,7 @@ export async function reachAccount(page: Page, scenario: AccountScenario): Promi
     scenario === 'connected' ||
     scenario === 'invalid-code' ||
     scenario === 'sync-unavailable' ||
+    scenario === 'sync-rejected' ||
     scenario === 'signed-out'
   ) {
     await requestCode(page)
@@ -248,6 +270,10 @@ export async function reachAccount(page: Page, scenario: AccountScenario): Promi
     if (scenario === 'sync-unavailable') {
       await expect(
         page.getByText('Your progress is saved here. Sync will retry when you are connected.'),
+      ).toBeVisible()
+    } else if (scenario === 'sync-rejected') {
+      await expect(
+        page.getByText('1 saved change needs review and remains safely on this device.'),
       ).toBeVisible()
     } else {
       await expect(page.getByText('Your progress is up to date.')).toBeVisible()

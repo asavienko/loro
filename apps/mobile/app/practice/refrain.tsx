@@ -21,7 +21,7 @@ import { useLocale } from '../../src/lib/i18n'
 
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { Platform, ScrollView, StyleSheet, View } from 'react-native'
-import { router, useLocalSearchParams } from 'expo-router'
+import { router } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useBottomBar } from '../../src/ui/BottomBarContext'
 import {
@@ -64,24 +64,32 @@ import {
 import { copy } from '../../src/lib/copy'
 import { deviceClock, localTimeLabel } from '../../src/lib/clock'
 import { newId } from '../../src/lib/ids'
-import { waveSchedule } from '../../src/lib/waves'
+import { waveEntry, waveSchedule } from '../../src/lib/waves'
 /** One warming band's resolved style. The bands are a design token, not a screen decision. */
 type WarmingStyle = (typeof warming)[ReturnType<typeof warmBand>]
 export default function Refrain() {
   useLocale()
   const insets = useSafeAreaInsets()
   const { height: bottomBarHeight } = useBottomBar()
-  const { wave: requestedWave } = useLocalSearchParams<{ wave?: string }>()
+  const completedWaves = useApp((s) => s.refrainWaves)
   const scheduledWave = waveSchedule(
     ['morning', 'midday', 'evening'] as const,
     PRODUCTION_WAVE_TIMES,
     localTimeLabel(),
   ).find((item) => item.position === 'next')?.key
-  const selectedWave =
-    requestedWave === 'morning' || requestedWave === 'midday' || requestedWave === 'evening'
-      ? requestedWave
-      : (scheduledWave ?? 'morning')
-  const session = useRefrainSession(selectedWave)
+  const entry = waveEntry(
+    ['morning', 'midday', 'evening'] as const,
+    PRODUCTION_WAVE_TIMES,
+    localTimeLabel(),
+    completedWaves.filter(
+      (wave): wave is 'morning' | 'midday' | 'evening' =>
+        wave === 'morning' || wave === 'midday' || wave === 'evening',
+    ),
+  )
+  // A URL is not authority to bypass timing. When a link names an old wave after time moved on,
+  // the active scheduled wave wins; this also keeps a stale resume from reopening a completion.
+  const selectedWave = entry.kind === 'ready' ? entry.wave.key : (scheduledWave ?? 'morning')
+  const session = useRefrainSession(selectedWave, entry.kind === 'ready')
   const { set, phrase, mode, auto, dayReps, locked, phraseNumber, wave } = session
   if (set.length === 0) {
     return (
@@ -95,6 +103,28 @@ export default function Refrain() {
               router.replace('/add')
             },
           }}
+        />
+      </Screen>
+    )
+  }
+  if (entry.kind === 'locked') {
+    return (
+      <Screen>
+        <EmptyState
+          title={copy.refrain.unavailable.title(entry.next.time)}
+          body={copy.refrain.unavailable.body}
+          action={{ label: copy.refrain.done.cta, onPress: () => router.replace('/') }}
+        />
+      </Screen>
+    )
+  }
+  if (entry.kind === 'complete') {
+    return (
+      <Screen>
+        <EmptyState
+          title={copy.refrain.unavailable.complete}
+          body={copy.refrain.unavailable.body}
+          action={{ label: copy.refrain.done.cta, onPress: () => router.replace('/') }}
         />
       </Screen>
     )
@@ -205,7 +235,10 @@ interface RefrainSession {
  * RefrainEngine's decisions — the screen used to re-derive them, which is how the
  * card's warmth and the stored value came to disagree.
  */
-function useRefrainSession(wave: 'morning' | 'midday' | 'evening'): RefrainSession {
+function useRefrainSession(
+  wave: 'morning' | 'midday' | 'evening',
+  enabled: boolean,
+): RefrainSession {
   const phrases = useApp((s) => s.phrases)
   const refrainSet = useApp((s) => s.refrainSet)
   const applyDelta = useApp((s) => s.applyDelta)
@@ -217,9 +250,11 @@ function useRefrainSession(wave: 'morning' | 'midday' | 'evening'): RefrainSessi
   // Entering the Refrain is one of the moments the day must be re-checked: a learner who
   // opened the app before midnight and starts practising after it needs today's set.
   useEffect(() => {
+    if (!enabled) return
     ensureRefrainSet()
-  }, [ensureRefrainSet])
+  }, [enabled, ensureRefrainSet])
   useEffect(() => {
+    if (!enabled) return
     if (useApp.getState().refrainResume.session !== null) return
     let cancelled = false
     void refrainEngine
@@ -245,7 +280,7 @@ function useRefrainSession(wave: 'morning' | 'midday' | 'evening'): RefrainSessi
     }
     // Re-planned when the day's set changes, not on every rep: the plan is the day's
     // work, and re-planning mid-phrase would restart the mode sequence.
-  }, [refrainSet, targetLocale])
+  }, [enabled, refrainSet, targetLocale])
   const item = session?.plan.items[cursor]
   const storePhrase = useMemo(
     () => (item === undefined ? undefined : phrases.find((p) => p.id === item.phraseId)),

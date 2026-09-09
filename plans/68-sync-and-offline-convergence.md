@@ -22,6 +22,11 @@ the pull budget is exhausted, and an incompatible successful HTTP response retai
 pending wire payloads and existing cursor. These deterministic histories do not establish physical
 process-death, long-offline tombstone policy, or deployed load acceptance.
 
+The Account screen also distinguishes a durable quarantined-operation count from ordinary pending
+network work. It reports the count without exposing payload contents; Sync now can retry normal work
+but never deletes or resends quarantined payloads. A policy-backed correction, rescue or export flow
+remains required before those records become actionable.
+
 ## Implemented scope
 
 The mobile service starts after persistence hydration and authenticated account binding. Local
