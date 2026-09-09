@@ -5,7 +5,7 @@
 **Reviewed HEAD:** `eb0c36bfc26b7db5f7861f2815ed61de8b0f3f9c`.  
 **Comparison:** local `origin/main` at `42f4d574dc1b798714b04848714d2a5693b8bf1f` through reviewed
 HEAD. No remote refresh was performed.  
-**Verdict:** Changes requested — three P2 findings remain.
+**Verdict at review:** Changes requested — three P2 findings remained.
 
 This is a second review of the twenty-plan implementation and its remediation, with particular
 attention to the fixes claimed in the [first review](2026-09-09-twenty-plan-implementation.md). The
@@ -13,6 +13,16 @@ review inspected the branch diff and relevant callers, tests and contracts acros
 navigation, content delivery/review, persistence/consent, provider admission, speech, and local
 quality/evidence tooling. The concrete findings below were reproduced. This review adds
 documentation; it does not implement the fixes or claim whole-plan acceptance.
+
+## Follow-up implemented — 2026-09-09
+
+The three locally actionable findings are implemented on this branch. A partial import save now
+removes only rows that committed successfully, preserving rejected and write-failed rows with their
+edits for correction. Review-record validation recomputes each retained UI/catalog digest, verifies
+UI/course identity and combined material identity, and requires declared reviewer-language coverage
+for each entry. The implementation adds focused unit and browser regression coverage. Final local CI
+remains the integration gate; real bilingual reviewer evidence remains a separate acceptance
+requirement.
 
 ## Findings
 
