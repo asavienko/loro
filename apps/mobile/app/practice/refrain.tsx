@@ -170,6 +170,20 @@ export default function Refrain() {
       </Screen>
     )
   }
+  // A finished session owns the immediate post-practice screen even when the next scheduled
+  // wave is still locked. The completion checkpoint is the learner's current result; replacing
+  // it with the next-wave gate would hide the reward and make a successful session look blocked.
+  if (session.finished) {
+    const day = deviceClock.localDay()
+    return (
+      <Screen>
+        <DoneState
+          worked={set.length}
+          totalReps={set.reduce((n, p) => n + repsTodayOf(p, day), 0)}
+        />
+      </Screen>
+    )
+  }
   if (entry.kind === 'locked') {
     return (
       <Screen>
@@ -198,17 +212,6 @@ export default function Refrain() {
               router.replace('/')
             },
           }}
-        />
-      </Screen>
-    )
-  }
-  if (session.finished) {
-    const day = deviceClock.localDay()
-    return (
-      <Screen>
-        <DoneState
-          worked={set.length}
-          totalReps={set.reduce((n, p) => n + repsTodayOf(p, day), 0)}
         />
       </Screen>
     )
