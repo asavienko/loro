@@ -9,6 +9,7 @@ import {
   MUSIC_STYLE_IDS,
 } from '@loro/core'
 import type { MusicStyleId } from '@loro/core'
+import { isNetworkAvailable } from '../src/lib/connectivity'
 import { copy } from '../src/lib/copy'
 import { useLocale } from '../src/lib/i18n'
 import {
@@ -66,6 +67,7 @@ export default function Music() {
   const [step, setStep] = useState<'pick' | 'lyrics' | 'styles' | 'play'>('pick')
   const [busy, setBusy] = useState(false)
   const [offlineBlocked, setOfflineBlocked] = useState(false)
+  const [online, setOnline] = useState(true)
   const [playStyle, setPlayStyle] = useState<MusicStyleId | null>(null)
   const [playing, setPlaying] = useState(false)
   const [knownDurationMs, setKnownDurationMs] = useState<number | null>(null)
@@ -116,14 +118,24 @@ export default function Music() {
     }
   }, [player])
 
+  useEffect(() => {
+    let cancelled = false
+    const refresh = (): void => {
+      void isNetworkAvailable().then((value) => {
+        if (!cancelled) setOnline(value)
+      })
+    }
+    refresh()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   const selectedCount = selectedIds.length
   const canRequest = selectionInBounds(selectedIds)
   const canConfirmStyles =
     styleIds.length >= MUSIC_MIN_STYLES && styleIds.length <= MUSIC_MAX_STYLES
-  const unavailable =
-    fixture === 'unavailable' ||
-    offlineBlocked ||
-    (fixture === undefined && typeof navigator !== 'undefined' && navigator.onLine === false)
+  const unavailable = offlineBlocked || musicGenerationBlocked(online, fixture)
   const readyTracks = tracks.filter((track) => track.status === 'ready')
   const failedTracks = tracks.filter((track) => track.status === 'failed')
 
@@ -156,28 +168,31 @@ export default function Music() {
 
   const confirmStyles = (): void => {
     if (!canConfirmStyles || lyrics === null) return
-    if (musicGenerationBlocked(typeof navigator === 'undefined' || navigator.onLine, fixture)) {
-      setOfflineBlocked(true)
-      return
-    }
-    if (unavailable) return
-    if (fixture === 'generating') {
+    void isNetworkAvailable().then((onlineNow) => {
+      setOnline(onlineNow)
+      if (musicGenerationBlocked(onlineNow, fixture)) {
+        setOfflineBlocked(true)
+        return
+      }
+      setOfflineBlocked(false)
+      if (fixture === 'generating') {
+        setBusy(true)
+        setStep('styles')
+        return
+      }
+      const mode = fixture === 'error' ? 'error' : fixture === 'partial' ? 'partial' : 'ok'
+      if (mode === 'error') {
+        setTracks(renderLocalStyles(styleIds, mode))
+        setStep('lyrics')
+        return
+      }
       setBusy(true)
-      setStep('styles')
-      return
-    }
-    const mode = fixture === 'error' ? 'error' : fixture === 'partial' ? 'partial' : 'ok'
-    if (mode === 'error') {
-      setTracks(renderLocalStyles(styleIds, mode))
-      setStep('lyrics')
-      return
-    }
-    setBusy(true)
-    const next = renderLocalStyles(styleIds, mode)
-    setTracks(next)
-    setBusy(false)
-    setStep('play')
-    setPlayStyle(next.find((track) => track.status === 'ready')?.styleId ?? null)
+      const next = renderLocalStyles(styleIds, mode)
+      setTracks(next)
+      setBusy(false)
+      setStep('play')
+      setPlayStyle(next.find((track) => track.status === 'ready')?.styleId ?? null)
+    })
   }
 
   const playTrack = (track: MusicTrackView): void => {
