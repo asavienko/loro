@@ -1,4 +1,5 @@
 import { test as base, expect, type Page } from '@playwright/test'
+import { ensureManifestClock } from './clock'
 import { todayMarker } from './states'
 import { consumeExpectedResourceError } from './expectedResourceErrors'
 
@@ -49,6 +50,7 @@ export async function onboard(page: Page, choices: OnboardingChoices = {}): Prom
     packs = ['Café & ordering', 'Getting around'],
   } = choices
 
+  await ensureManifestClock(page)
   await page.goto('/')
   await expect(page).toHaveURL(/\/onboarding$/)
   await page.getByRole('button', { name: "Let's go →" }).click()
