@@ -3,8 +3,9 @@
 - **Requirement IDs:** `F-05`, `F-06`, `LB-25`…`LB-28`
 - **Milestone:** M1/M2
 - **Status:** 🟡 Runtime accent, text-scale, reduced-motion and production control loading/focus
-  states exist. Shared text now consumes the generated tabular numeral variant. Fonts, dark theme,
-  haptics and motion remain; font provenance and native font rendering proof are still needed.
+  states exist. Accent and motion now consume installation-local Settings values. Shared text now
+  consumes the generated tabular numeral variant. Fonts, dark theme, haptics and motion remain;
+  font provenance and native font rendering proof are still needed.
 - **Depends on:** 53/55 completed; 58 for device proof; 71 owns durable theme settings; 80 consumes
   production specimens.
 - **Reviewed:** 2026-09-09 against `aafa61f`; current source, tests and retained review records

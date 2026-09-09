@@ -50,13 +50,14 @@ test('the shared menu connects every built hub and returns from phrase detail', 
   for (const [label, path] of [
     ['Add', '/add'],
     ['Progress', '/progress'],
+    ['Settings', '/settings'],
     ['Stream', '/practice/stream'],
     ['The Refrain', '/practice/refrain'],
     ['Today', '/'],
   ] as const) {
     await page.getByRole('button', { name: /, open the menu$/ }).click()
     const sheet = page.getByRole('dialog')
-    await expect(sheet.getByRole('button', { name: /Chat|Settings|Trips/ })).toHaveCount(0)
+    await expect(sheet.getByRole('button', { name: /Chat|Trips/ })).toHaveCount(0)
     await sheet.getByRole('button', { name: label, exact: true }).click()
     await expect(page).toHaveURL(new RegExp(`${path}$`))
     await expect(sheet).toBeHidden()
@@ -145,12 +146,11 @@ test('More lists built destinations and retains a return to More', async ({ page
     ['The Refrain', '/practice/refrain'],
     ['Add', '/add'],
     ['Progress', '/progress'],
+    ['Settings', '/settings'],
     ['Languages', '/languages'],
   ] as const) {
     await expect(page).toHaveURL(/\/more$/)
-    await expect(page.getByRole('button', { name: /Chat|Settings|Trips|Phrasebook/ })).toHaveCount(
-      0,
-    )
+    await expect(page.getByRole('button', { name: /Chat|Trips|Phrasebook/ })).toHaveCount(0)
     await page.getByRole('button', { name: label, exact: true }).click()
     await expect(page).toHaveURL(new RegExp(`${path}$`))
     await back(page)

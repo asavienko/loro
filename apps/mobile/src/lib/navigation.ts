@@ -33,6 +33,7 @@ export const SURFACES = [
   { id: 'message-inspector', path: '/chat/message/[id]', kind: 'learner', availability: 'planned' },
   { id: 'languages', path: '/languages', kind: 'utility', availability: 'built' },
   { id: 'account', path: '/account', kind: 'utility', availability: 'built' },
+  { id: 'settings', path: '/settings', kind: 'utility', availability: 'built' },
   { id: 'more', path: '/more', kind: 'utility', availability: 'built' },
 ] as const
 
@@ -125,6 +126,20 @@ export const DESTINATIONS = [
     href: '/account',
     get label() {
       return copy.account.title
+    },
+    rail: false,
+    counted: false,
+    routeClass: 'utility',
+    parent: 'today',
+    home: 'today',
+    group: 'you',
+    exit: 'stack-or-home',
+    resume: 'none',
+  },
+  {
+    href: '/settings',
+    get label() {
+      return copy.settings.title
     },
     rail: false,
     counted: false,
