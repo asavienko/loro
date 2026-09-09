@@ -90,6 +90,20 @@ sources separately. No password or session/token value is printed, but database 
 account data and require restricted recovery access. Existing pre-release dumps remain separate and
 are not these bundles.
 
+After a completed bundle is copied to a restricted recovery location, run the offline verifier from
+a checked-out revision that includes it:
+
+```bash
+node scripts/ec2-backup-verify.mjs /restricted/recovery/backup-YYYYMMDDTHHMMSSZ-XXXXXXXX
+```
+
+It rejects incomplete manifests, tampered files, unsafe permissions, missing recovery metadata and a
+missing active-database safeguard. Save its output with the recovery record. A passing result only
+establishes local bundle integrity; it does not establish that a remote upload succeeded, that the
+copy is retained, or that PostgreSQL restore, tenant isolation or the two-hour recovery target
+passed. Use [the recovery-drill record](templates/testing-recovery-drill.md) for those separate
+observations.
+
 - Create nightly compressed custom-format PostgreSQL dumps and pre-migration dumps. Include
   role/grant recovery information and image/schema metadata. The API role is not a superuser.
 - Serialize with deployments. Fail on dump/upload/checksum errors; mark success only after the

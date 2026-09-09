@@ -33,12 +33,63 @@ export const SURFACES = [
   { id: 'message-inspector', path: '/chat/message/[id]', kind: 'learner', availability: 'planned' },
   { id: 'languages', path: '/languages', kind: 'utility', availability: 'built' },
   { id: 'account', path: '/account', kind: 'utility', availability: 'built' },
+  { id: 'settings', path: '/settings', kind: 'utility', availability: 'built' },
   { id: 'more', path: '/more', kind: 'utility', availability: 'built' },
 ] as const
 
 export type Surface = (typeof SURFACES)[number]
 export type SurfaceId = Surface['id']
 export type BuiltSurface = Extract<Surface, { availability: 'built' }>
+
+/** `Navigation.dc.html:40–76`: every declared surface has one authored navigation law. */
+export type SurfaceClass = 'root' | 'push' | 'flow' | 'session' | 'sheet'
+export type ExpectedUse = 'daily' | 'often' | 'occasional' | 'setup'
+export interface SurfaceLaw {
+  readonly surfaceClass: SurfaceClass
+  readonly expectedUse: ExpectedUse
+  /** Session and flow work can be returned to without changing its target course. */
+  readonly resumable: boolean
+}
+
+/**
+ * Metadata remains separate from availability: a planned surface has an authored law, but it is
+ * never made reachable by that fact alone. Consumers use this instead of inferring navigation
+ * behaviour from a route's filename or from the current stack.
+ */
+export const SURFACE_LAWS: Record<SurfaceId, SurfaceLaw> = {
+  onboarding: { surfaceClass: 'flow', expectedUse: 'setup', resumable: true },
+  add: { surfaceClass: 'push', expectedUse: 'often', resumable: false },
+  'phrase-detail': { surfaceClass: 'push', expectedUse: 'often', resumable: false },
+  stream: { surfaceClass: 'session', expectedUse: 'daily', resumable: true },
+  speak: { surfaceClass: 'session', expectedUse: 'daily', resumable: true },
+  review: { surfaceClass: 'session', expectedUse: 'daily', resumable: true },
+  roleplay: { surfaceClass: 'session', expectedUse: 'occasional', resumable: true },
+  memory: { surfaceClass: 'push', expectedUse: 'occasional', resumable: false },
+  pronunciation: { surfaceClass: 'session', expectedUse: 'occasional', resumable: true },
+  prosody: { surfaceClass: 'session', expectedUse: 'occasional', resumable: true },
+  today: { surfaceClass: 'root', expectedUse: 'daily', resumable: false },
+  refrain: { surfaceClass: 'session', expectedUse: 'daily', resumable: true },
+  run: { surfaceClass: 'session', expectedUse: 'occasional', resumable: true },
+  phrasebook: { surfaceClass: 'push', expectedUse: 'often', resumable: false },
+  progress: { surfaceClass: 'push', expectedUse: 'often', resumable: false },
+  arrival: { surfaceClass: 'root', expectedUse: 'daily', resumable: false },
+  countdown: { surfaceClass: 'push', expectedUse: 'often', resumable: false },
+  'daily-drop': { surfaceClass: 'push', expectedUse: 'daily', resumable: false },
+  widget: { surfaceClass: 'push', expectedUse: 'occasional', resumable: false },
+  survival: { surfaceClass: 'session', expectedUse: 'occasional', resumable: true },
+  souvenir: { surfaceClass: 'push', expectedUse: 'occasional', resumable: false },
+  chat: { surfaceClass: 'root', expectedUse: 'often', resumable: true },
+  'message-inspector': { surfaceClass: 'push', expectedUse: 'often', resumable: false },
+  languages: { surfaceClass: 'push', expectedUse: 'occasional', resumable: false },
+  account: { surfaceClass: 'push', expectedUse: 'occasional', resumable: false },
+  settings: { surfaceClass: 'push', expectedUse: 'occasional', resumable: false },
+  more: { surfaceClass: 'push', expectedUse: 'often', resumable: false },
+}
+
+export function surfaceLawForPath(path: string): SurfaceLaw | undefined {
+  const surface = builtSurfaceForPath(path)
+  return surface === undefined ? undefined : SURFACE_LAWS[surface.id]
+}
 
 /** A route is a safe app-relative URL, never a host URL or a malformed path. */
 function appPath(input: string): string | undefined {
@@ -125,6 +176,20 @@ export const DESTINATIONS = [
     href: '/account',
     get label() {
       return copy.account.title
+    },
+    rail: false,
+    counted: false,
+    routeClass: 'utility',
+    parent: 'today',
+    home: 'today',
+    group: 'you',
+    exit: 'stack-or-home',
+    resume: 'none',
+  },
+  {
+    href: '/settings',
+    get label() {
+      return copy.settings.title
     },
     rail: false,
     counted: false,

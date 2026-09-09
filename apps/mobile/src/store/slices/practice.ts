@@ -58,7 +58,17 @@ export const createPracticeSlice: Slice<'recordPlay' | 'applyDelta'> = ({ set, g
         context?.checkpoint ??
         (context?.refrainCursor === undefined
           ? undefined
-          : { ...(resume ?? st.refrainResume), cursor: context.refrainCursor })
+          : {
+              ...(resume ?? st.refrainResume),
+              cursor: context.refrainCursor,
+              // The engine receives the session cursor when it records the next
+              // attempt. Keep that immutable snapshot in lockstep with the displayed
+              // cursor so a durable resume cannot replay a different item.
+              session:
+                resume?.session === null || resume?.session === undefined
+                  ? null
+                  : { ...resume.session, cursor: context.refrainCursor },
+            })
       const update = (phrases: typeof st.phrases): typeof st.phrases =>
         phrases.map((p) => (p.id === delta.phraseId ? applyDeltaToPhrase(p, delta, day) : p))
       return {

@@ -302,6 +302,35 @@ describe('persistence failures', () => {
   })
 })
 
+describe('Refrain exits', () => {
+  it('ends only the resumable checkpoint, keeping already earned practice', () => {
+    const phrase = someCatalogId()
+    useApp.getState().addPhrase(phrase)
+    const row = useApp.getState().phrases[0]
+    expect(row).toBeDefined()
+    if (row === undefined) return
+    useApp.setState({
+      refrainResume: {
+        session: {
+          sessionId: 'session',
+          cursor: 1,
+          plan: { engineId: 'refrain', items: [], estimatedMs: 0, closed: true },
+        },
+        cursor: 1,
+        done: false,
+        lastLatency: null,
+        history: [],
+      },
+    })
+    useApp.getState().applyDelta({ phraseId: row.id, reps: 1 })
+
+    useApp.getState().endRefrainSession()
+
+    expect(useApp.getState().refrainResume).toEqual(INITIAL_STATE.refrainResume)
+    expect(useApp.getState().phrases[0]?.reps).toBe(1)
+  })
+})
+
 // ─────────────────────────────────────────────────────────────────────────────
 // The invariants (plans/07)
 // ─────────────────────────────────────────────────────────────────────────────

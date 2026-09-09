@@ -8,8 +8,9 @@
   gate those slices.
 - **Depends on:** 85 completed; 66 durable principal-aware backend; 59 device identity/state; 86
   provider verification/email adapters.
-- **Reviewed:** 2026-09-09 against checkout `42f4d57`; source/plan review only, no new device or
-  deployment acceptance.
+- **Reviewed:** 2026-09-09 against `aafa61f`; current source, tests and retained review records
+  inspected. This plan refresh supplies no new runtime, device or deployment acceptance.
+- **Priority:** 6; account lifecycle with 68.
 
 ## Implemented scope
 
@@ -64,15 +65,28 @@ the visual redesign does not close the acceptance gates below.
 
 ## Delivery order and gates
 
-1. Record recovery/linking/deletion policy against current shared contracts before wiring new
-   lifecycle states. Reuse the existing account IDs, installation binding, refresh families and
-   OAuth exchange; email equality must never link identities automatically.
+1. Record a reviewed lifecycle state/action table for signed-out, bound, expired, lost/reinstalled,
+   linked and erased accounts before wiring new states. Specify local-data ownership on sign-out,
+   cross-account conflict choices, export scope, offline deletion and backup-retention behavior.
+   Unresolved destructive behavior stays gated; read-only management/export contracts may proceed.
+   Reuse the existing account IDs, installation binding, refresh families and OAuth exchange; email
+   equality must never link identities automatically.
 2. Deliver management/export/erasure with local data ownership explicit. Coordinate stale-device
    deletion enforcement with 68, backend records with 66 and backup retention/recovery with 88.
-   Restoring a backup must not silently revive an erased account.
+   Restoring a backup must not silently revive an erased account. Give deletion/export requests
+   stable identities and resumable status; test retries, interrupted refresh, offline stale-device
+   uploads and restored backups with two synthetic accounts. Keep sign-out distinct from erasure.
 3. Reuse the recorded Google development setup for end-to-end device acceptance; Apple/email
    availability remains separate. Preserve local practice and outbox data through interrupted flows.
 
 ## Out of scope
 
 Paid entitlements, social profiles, enterprise identity, and sync scheduling details.
+
+## Post-main review and archive disposition — 2026-09-09
+
+The [review at `de81744`](../docs/reviews/2026-09-09-post-main-plan-review.md) records this plan's
+current contribution, remaining work and gates.
+[Delivered slices](archive/2026-09-09/IMPLEMENTED-SLICES.md) are retained in the archive; this plan
+remains incomplete. Earlier verification is dated evidence, not acceptance of the current combined
+branch.

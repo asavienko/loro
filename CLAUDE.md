@@ -7,12 +7,12 @@ Guidance for Claude Code working in this repository.
 **Loro** — a mobile app (iOS + Android) that teaches Spanish, Bulgarian, and Russian by the phrase.
 
 Early implementation. **What exists:** eight of the v1.1 design package's 23 learner screens,
-Languages, Account and More utilities, the shared shell and a developer workbench. Local progress
-and course/session state commit to native OP-SQLite or browser SQLite before rendering. Rust owns
-FSRS, ranking, selection, matching, clocks and merge through generated WASM/UniFFI bridges. Native
-modules provide foreground device TTS and strictly on-device ASR with an offline Speak reveal
-fallback. The API stores accounts, sessions and tenant-scoped sync in PostgreSQL. Optional
-Google/Apple and email sign-in connect durable local progress to cross-device sync.
+Languages, Account, More and Settings utilities, the shared shell and a developer workbench. Local
+progress and course/session state commit to native OP-SQLite or browser SQLite before rendering.
+Rust owns FSRS, ranking, selection, matching, clocks and merge through generated WASM/UniFFI
+bridges. Native modules provide foreground device TTS and strictly on-device ASR with an offline
+Speak reveal fallback. The API stores accounts, sessions and tenant-scoped sync in PostgreSQL.
+Optional Google/Apple and email sign-in connect durable local progress to cross-device sync.
 
 The three 31-phrase Spanish/Bulgarian/Russian starters still await bilingual review. The other 15
 learner screens, production recorded audio/cache, background audio, measured onset latency, DSP,
@@ -21,19 +21,31 @@ persistence/reveal smoke passed; full iOS and physical-device speech/convergence
 release gates. See [persistent practice](docs/process/persistent-practice.md) and
 [plan 94](plans/94-persistent-practice-and-account-integration.md) for scoped evidence.
 
+The [post-main 33-plan review](docs/reviews/2026-09-09-post-main-plan-review.md) records the six
+review findings as fixed: browser file import uses the picker-provided file, picker results are
+request-scoped and pair-safe, corrupt release pointers fail closed, chat choice IDs are unique, and
+active-session E2E navigation uses a deterministic open-wave clock. Refrain completion remains
+visible before a future-wave lock, and its persistent resume action meets the touch-target floor.
+The fast and full local checks are green; device/provider acceptance remains open. No whole plan is
+newly complete; the [implemented-slice archive](plans/archive/2026-09-09/IMPLEMENTED-SLICES.md)
+retains delivered work.
+
 The spine supports pull-down to open its menu; sheets dismiss by pulling their dedicated handle.
 Practice routes disable native back-swipe. Native touch validation remains a release gate. Today
 owns its root header and day rows; other routes retain their stack header with a Today escape for
 cold entries. Onboarding keeps step-back navigation. More is reachable through the existing
-destination list; metadata grouping/search, full session exits and travelling audio remain in plans
-56/62/64/81.
+destination registry and grouped More utility; exhaustive route laws, counts/search, full session
+exits and travelling audio remain in plans 56/62/64/81. Rust owns a pure notification candidate
+planner; native scheduling, widgets and device evidence remain in plan 70.
 
 API contracts live in `packages/core/src/api/` with current/target/draft entry points and generated
 OpenAPI. Auth, sync and content-query runtime boundaries consume the shared schemas; remaining
 migration limits are recorded in [the contract guide](docs/architecture/api-contracts.md).
 `pnpm check` includes route ownership, contract and generated-core drift checks. The
-[twenty-plan review](docs/reviews/2026-09-09-twenty-plan-implementation.md) records outstanding
-import validation and integration fixes; the twenty plans have partial deliveries.
+[twenty-plan review](docs/reviews/2026-09-09-twenty-plan-implementation.md) and follow-up retain
+remediation history; import validation/recovery and exact-material review fixes are implemented. The
+[nine-priority queue](plans/README.md#next-implementation-priorities--reviewed-2026-09-09) sequences
+the remaining slices, with device/content/operations acceptance starting alongside priority 1.
 
 The standalone preview can use the [AWS HTTPS gateway](docs/process/public-api.md). Account checks
 real readiness independently of sign-in. The development gateway now exposes Google sign-in and

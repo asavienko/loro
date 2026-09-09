@@ -12,6 +12,7 @@
  */
 
 import { DEFAULT_DEVICE_PREFERENCES, type DevicePreferences } from '../lib/devicePreferences'
+import type { ImportDraft, ImportDrafts } from '../lib/importDraft'
 import type { NativeLanguage, TargetLocale, PhraseState, SessionHandle } from '@loro/core'
 
 export interface Toast {
@@ -22,6 +23,8 @@ export interface Toast {
 /** Everything the store holds. Actions live in `slices/`; this is only the data. */
 export interface RefrainResume {
   session: SessionHandle | null
+  /** The wave that owns this checkpoint. Older local checkpoints omit it and remain resumable. */
+  wave?: 'morning' | 'midday' | 'evening'
   cursor: number
   lastLatency: number | null
   history: (number | null)[]
@@ -48,6 +51,10 @@ export interface CourseState {
 }
 export interface AppData {
   devicePreferences: DevicePreferences
+  /** Local-only reviewed-import checkpoint; never part of a course or sync entity. */
+  importDraft: ImportDraft | null
+  /** One local import checkpoint per language pair. */
+  importDrafts: ImportDrafts
   streamCursor: number
   refrainResume: RefrainResume
   nativeLanguage: NativeLanguage
@@ -109,6 +116,8 @@ export interface AppData {
  */
 export const INITIAL_STATE: AppData = {
   devicePreferences: DEFAULT_DEVICE_PREFERENCES,
+  importDraft: null,
+  importDrafts: {},
   streamCursor: 0,
   refrainResume: EMPTY_REFRAIN_RESUME,
   nativeLanguage: 'en',
@@ -133,6 +142,8 @@ export const INITIAL_STATE: AppData = {
 export function dataOf(state: AppData): AppData {
   return {
     devicePreferences: state.devicePreferences,
+    importDraft: state.importDraft,
+    importDrafts: state.importDrafts,
     nativeLanguage: state.nativeLanguage,
     targetLocale: state.targetLocale,
     languageChosen: state.languageChosen,

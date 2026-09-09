@@ -29,21 +29,39 @@ export function useAccount(): AccountState {
   )
 }
 export type SyncDisplayStatus = 'pending' | 'syncing' | 'synced' | 'error'
-let syncStatus: SyncDisplayStatus = 'pending'
+export interface SyncDisplayState {
+  status: SyncDisplayStatus
+  /** Permanent wire rejections await a policy-backed correction flow. */
+  quarantined: number
+}
+const initialSyncState: SyncDisplayState = { status: 'pending', quarantined: 0 }
+let syncState = initialSyncState
 let runSync: (() => Promise<void>) | null = null
 export function configureAccountSync(run: () => Promise<void>): void {
   runSync = run
 }
-export function publishSyncStatus(value: SyncDisplayStatus): void {
-  if (value === syncStatus) return
-  syncStatus = value
+export function publishSyncStatus(
+  value: SyncDisplayStatus,
+  quarantined = syncState.quarantined,
+): void {
+  const next = { status: value, quarantined: Math.max(0, quarantined) }
+  if (next.status === syncState.status && next.quarantined === syncState.quarantined) return
+  syncState = next
   for (const listener of listeners) listener()
 }
 export function useSyncStatus(): SyncDisplayStatus {
   return useSyncExternalStore(
     subscribe,
-    () => syncStatus,
+    () => syncState.status,
     () => 'pending',
+  )
+}
+/** Retrying sync never alters quarantined payloads. */
+export function useSyncRepair(): Pick<SyncDisplayState, 'quarantined'> {
+  return useSyncExternalStore(
+    subscribe,
+    () => syncState,
+    () => initialSyncState,
   )
 }
 export async function syncNow(): Promise<void> {

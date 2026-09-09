@@ -1,5 +1,6 @@
 import { learningContentOperations, learningContentExamples } from './learning-content.js'
 export * from './learning-content.js'
+export * from './content-release.js'
 import { withExamples, currentExamples } from './examples.js'
 import { oauthOperations } from './oauth-operations.js'
 /** Implemented HTTP surface. Content and AI retain their documented development behavior. */

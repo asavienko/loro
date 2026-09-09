@@ -20,6 +20,7 @@ export type AccountScenario =
   | 'connected'
   | 'invalid-code'
   | 'sync-unavailable'
+  | 'sync-rejected'
   | 'signed-out'
 
 type ServiceMode = AccountScenario | 'success'
@@ -41,6 +42,11 @@ export async function mockAccountService(
   for (const popup of page.context().pages()) {
     if (popup !== page) await popup.close()
   }
+  // Replace the previous scenario's handlers. Playwright evaluates context routes in
+  // registration order, so leaving an earlier mock installed makes a later state inherit its
+  // response (for example, sync-unavailable instead of sync-rejected).
+  await page.context().unroute(`${ACCOUNT_API}/**`)
+  await page.context().unroute('https://provider.loro.test/**')
   const requests: AccountRequest[] = []
   await page.context().route(`${ACCOUNT_API}/**`, async (route) => {
     const request = route.request()
@@ -117,10 +123,26 @@ export async function mockAccountService(
       await route.fulfill({
         json: {
           accepted:
-            typeof body === 'object' && body !== null && 'ops' in body && Array.isArray(body.ops)
-              ? body.ops.map((op: { seq: number }) => op.seq)
+            mode === 'sync-rejected'
+              ? []
+              : typeof body === 'object' &&
+                  body !== null &&
+                  'ops' in body &&
+                  Array.isArray(body.ops)
+                ? body.ops.map((op: { seq: number }) => op.seq)
+                : [],
+          rejected:
+            mode === 'sync-rejected' &&
+            typeof body === 'object' &&
+            body !== null &&
+            'ops' in body &&
+            Array.isArray(body.ops)
+              ? body.ops.map((op: { seq: number }, index: number) => ({
+                  index,
+                  seq: op.seq,
+                  code: 'VALIDATION_FAILED',
+                }))
               : [],
-          rejected: [],
           conflicts: [],
           server_hlc: stamp,
           server_time: 100,
@@ -205,6 +227,14 @@ export async function reachAccount(
   provider: 'Google' | 'Apple' = 'Google',
 ): Promise<AccountService> {
   const service = await mockAccountService(page, scenario)
+  if (scenario === 'sync-rejected') {
+    await page
+      .getByRole('button', { name: /0 percent automatic/ })
+      .first()
+      .click()
+    await page.getByRole('radio', { name: 'Difficult', exact: true }).click()
+    await page.goto('/')
+  }
   await openAccount(page)
   if (scenario === 'discoveryError') {
     await expect(page.getByRole('button', { name: 'Try again', exact: true })).toBeVisible()
@@ -228,6 +258,7 @@ export async function reachAccount(
     scenario === 'connected' ||
     scenario === 'invalid-code' ||
     scenario === 'sync-unavailable' ||
+    scenario === 'sync-rejected' ||
     scenario === 'signed-out'
   ) {
     await requestCode(page)
@@ -244,6 +275,12 @@ export async function reachAccount(
     if (scenario === 'sync-unavailable') {
       await expect(
         page.getByText('Your progress is saved here. Sync will retry when you are connected.'),
+      ).toBeVisible()
+    } else if (scenario === 'sync-rejected') {
+      await expect(
+        page.getByText(
+          /^\d+ saved changes? need(?:s)? review and remain(?:s)? safely on this device\.$/,
+        ),
       ).toBeVisible()
     } else {
       if (scenario === 'signed-out') {

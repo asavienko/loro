@@ -42,6 +42,10 @@ implement a duplicate managed dev/staging stack here.
        rehearsal, image/dependency scans and production recovery drills. Coordinate shared harnesses
        with 72 and feature tests with their owning plans.
 
+Local preparation exists under plan 88: the backup-bundle verifier and recovery-drill record make
+integrity evidence explicit without asserting an off-host upload or restore. Production recovery
+objectives remain unselected until an isolated testing drill supplies the corresponding evidence.
+
 ## Acceptance criteria
 
 - Production uses the same verified immutable artifact and a documented promotion/recovery policy.
@@ -54,3 +58,11 @@ implement a duplicate managed dev/staging stack here.
 
 Rebuilding plan 88, requiring 24/7 staffing before demand justifies it, product analytics design,
 feature implementation and speculative 100k-MAU infrastructure.
+
+## Post-main review and archive disposition — 2026-09-09
+
+The [review at `de81744`](../docs/reviews/2026-09-09-post-main-plan-review.md) records this plan's
+current contribution, remaining work and gates.
+[Delivered slices](archive/2026-09-09/IMPLEMENTED-SLICES.md) are retained in the archive; this plan
+remains incomplete. Earlier verification is dated evidence, not acceptance of the current combined
+branch.

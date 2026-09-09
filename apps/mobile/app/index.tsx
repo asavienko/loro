@@ -25,9 +25,9 @@ import { useLocale } from '../src/lib/i18n'
  * in the shared root layout, using the same built-destination declaration as this rail.
  */
 
-import { useCallback, useEffect, useState } from 'react'
-import { AppState, ScrollView, StyleSheet, View } from 'react-native'
-import { Redirect, router, useFocusEffect } from 'expo-router'
+import { useEffect } from 'react'
+import { ScrollView, StyleSheet, View } from 'react-native'
+import { Redirect, router } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useBottomBar } from '../src/ui/BottomBarContext'
 import {
@@ -64,7 +64,13 @@ import {
 import { PRODUCTION_WAVE_TIMES, toView, useApp, type PhraseView } from '../src/store'
 import { copy } from '../src/lib/copy'
 import { deviceClock, localDateLabel, localTimeLabel } from '../src/lib/clock'
-import { waveSchedule, type ScheduledWave, type WavePosition } from '../src/lib/waves'
+import { useLocalMinute } from '../src/lib/useLocalMinute'
+import {
+  waveEntryWithResume,
+  waveSchedule,
+  type ScheduledWave,
+  type WavePosition,
+} from '../src/lib/waves'
 /** Full automaticity: six reps in one day. The badge, the bar's colour and the count agree. */
 const isLockedIn = (p: Pick<PhraseView, 'automaticity'>): boolean => p.automaticity >= 100
 /**
@@ -81,46 +87,18 @@ type WaveKey = (typeof WAVES)[number]
  */
 const RAIL = DESTINATIONS.filter((destination) => destination.rail)
 
-/** Refresh existing day/wave projections while Today is visible, including wake and clock changes. */
-const LOCAL_MINUTE_MS = 60_000
-
-function useTodayMinute(): string {
-  const read = (): string => `${deviceClock.localDay()}T${localTimeLabel()}`
-  const [minute, setMinute] = useState(read)
-  useFocusEffect(
-    useCallback(() => {
-      let timer: ReturnType<typeof setTimeout> | undefined
-      const refresh = (): void => {
-        if (timer !== undefined) clearTimeout(timer)
-        setMinute(`${deviceClock.localDay()}T${localTimeLabel()}`)
-        // Align to the next minute rather than drifting from when the route mounted.
-        timer = setTimeout(refresh, LOCAL_MINUTE_MS - (deviceClock.now() % LOCAL_MINUTE_MS))
-      }
-      refresh()
-      const subscription = AppState.addEventListener('change', (status) => {
-        if (timer !== undefined) clearTimeout(timer)
-        if (status === 'active') refresh()
-      })
-      return () => {
-        if (timer !== undefined) clearTimeout(timer)
-        subscription.remove()
-      }
-    }, []),
-  )
-  return minute
-}
-
 export default function Today() {
   useLocale()
   const onboarded = useApp((s) => s.onboarded)
   const phrases = useApp((s) => s.phrases)
   const refrainSet = useApp((s) => s.refrainSet)
   const refrainWaves = useApp((s) => s.refrainWaves)
+  const refrainResume = useApp((s) => s.refrainResume)
   const ensure = useApp((s) => s.ensureRefrainSet)
   const practiceDays = useApp((s) => s.practiceDays)
   // Derived, never stored — the same function the widget will call (ADR-0002).
   const streak = streakOf(practiceDays, deviceClock.streakDay())
-  const localMinute = useTodayMinute()
+  const localMinute = useLocalMinute()
   const insets = useSafeAreaInsets()
   const { height: bottomBarHeight } = useBottomBar()
 
@@ -166,7 +144,21 @@ export default function Today() {
     WAVES.includes(wave as WaveKey),
   )
   const waves = waveSchedule(WAVES, PRODUCTION_WAVE_TIMES, localTimeLabel(), completedWaves)
+  const entry = waveEntryWithResume(
+    WAVES,
+    PRODUCTION_WAVE_TIMES,
+    localTimeLabel(),
+    completedWaves,
+    refrainResume,
+  )
   const nextWaveKey = waves.find((wave) => wave.position === 'next')?.key ?? WAVES[0]
+  const resumeWave = refrainResume.wave ?? nextWaveKey
+  const resumeRep =
+    refrainResume.session === null
+      ? null
+      : Math.min(refrainResume.cursor + 1, refrainResume.session.plan.items.length)
+  const hasResume = entry.kind === 'resume' && resumeRep !== null && resumeRep > 0
+  const canStartWave = set.length > 0 && (entry.kind === 'ready' || entry.kind === 'resume')
   const startWave = (wave = nextWaveKey): void => {
     router.push({ pathname: '/practice/refrain', params: { wave } })
   }
@@ -193,13 +185,21 @@ export default function Today() {
           },
         ]}
       >
+        {hasResume && (
+          <ResumeRow
+            label={copy.nav.ongoing.refrain(resumeRep)}
+            onPress={() => {
+              router.push({ pathname: '/practice/refrain', params: { wave: resumeWave } })
+            }}
+          />
+        )}
         <DayList
           waves={waves}
           setSize={set.length}
           totalReps={totalReps}
           // With nothing in rotation the wave is not a way in, and the row must not say it is
           // while the CTA below says the opposite.
-          onStartWave={set.length === 0 ? undefined : startWave}
+          onStartWave={canStartWave ? startWave : undefined}
         />
         <TodaySet set={set} lockedIn={lockedIn} />
         <BankedTail graduated={graduated} />
@@ -208,15 +208,45 @@ export default function Today() {
       <ActionBar>
         <Button
           size="cta"
-          label={set.length === 0 ? copy.today.cta.empty : copy.today.cta.startWave[nextWaveKey]}
-          disabled={set.length === 0}
-          accessibilityHint={copy.a11y.today.startHint(set.length, DEFAULT_REP_TARGET)}
+          label={
+            set.length === 0
+              ? copy.today.cta.empty
+              : hasResume
+                ? copy.today.cta.resumeRefrain
+                : entry.kind === 'resume'
+                  ? copy.today.cta.resumeRefrain
+                  : entry.kind === 'ready'
+                    ? copy.today.cta.startWave[entry.wave.key]
+                    : entry.kind === 'locked'
+                      ? copy.today.cta.waitForWave(entry.next.time)
+                      : copy.today.cta.complete
+          }
+          disabled={!canStartWave}
+          accessibilityHint={
+            canStartWave ? copy.a11y.today.startHint(set.length, DEFAULT_REP_TARGET) : undefined
+          }
           onPress={() => {
-            startWave()
+            if (entry.kind === 'resume' || entry.kind === 'ready')
+              startWave(entry.kind === 'resume' ? entry.wave : entry.wave.key)
           }}
         />
       </ActionBar>
     </Screen>
+  )
+}
+
+/** The sole resume affordance on the resolved home (`Navigation.dc.html:520–571`). */
+function ResumeRow({ label, onPress }: { label: string; onPress: () => void }) {
+  useLocale()
+  return (
+    <Pressable feedback="row" accessibilityLabel={label} onPress={onPress} style={s.resumeRow}>
+      <Text variant="body" color={ink.ink} style={s.grow}>
+        {label}
+      </Text>
+      <Text variant="captionSm" color={accent.accentInk}>
+        {copy.common.chevron.right}
+      </Text>
+    </Pressable>
   )
 }
 /**
@@ -299,7 +329,7 @@ function DayList({
 }) {
   useLocale()
   return (
-    <View>
+    <View testID="today-day-list">
       <SectionLabel>{copy.today.day.heading}</SectionLabel>
       {waves.map((wave) => {
         const { title, manner } = copy.today.waves[wave.key]
@@ -591,6 +621,14 @@ const s = StyleSheet.create({
     minWidth: NAV.railMinWidth,
   },
   railText: { fontSize: NAV_TEXT.rail },
+  resumeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space['2'],
+    paddingVertical: NAV.rowPadY,
+    borderBottomWidth: border.hairline,
+    borderBottomColor: line.subtle,
+  },
   // ── the hairline list every block below the chrome is made of ──
   hairline: { borderBottomWidth: border.hairline, borderBottomColor: line.subtle },
   dayRow: { paddingVertical: NAV.rowPadY },

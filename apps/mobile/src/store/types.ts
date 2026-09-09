@@ -20,10 +20,16 @@ import type {
 } from '@loro/core'
 import type { AppData, RefrainResume } from './state'
 import type { OwnPhraseDraft } from './phraseFactory'
+import type { ImportDraft } from '../lib/importDraft'
 import type { LearnerStorage } from '../data/learner'
+import type { AccentName } from '../ui/theme'
+import type { DevicePreferences } from '../lib/devicePreferences'
 
 export interface AppActions {
+  saveImportDraft: (draft: ImportDraft) => void
+  clearImportDraft: () => void
   setAnalyticsConsent: (consent: boolean) => void
+  setVisualPreferences: (accent: AccentName, motion: DevicePreferences['motion']) => void
   setLanguages: (nativeLanguage: NativeLanguage, targetLocale: TargetLocale) => void
   /**
    * Commit the first-run answers and seed the stream.
@@ -68,6 +74,11 @@ export interface AppActions {
   ensureRefrainSet: () => void
   /** Record one completed, named wave with the day's durable Refrain state. */
   completeRefrainWave: (wave: 'morning' | 'midday' | 'evening', checkpoint: RefrainResume) => void
+  /**
+   * Deliberately finish an in-progress Refrain session. This clears only its resumable
+   * checkpoint; practice already earned through `applyDelta` remains intact.
+   */
+  endRefrainSession: () => void
   reset: () => void
 }
 

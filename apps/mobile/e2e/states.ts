@@ -53,6 +53,18 @@ export interface AppState {
 
 export const STATES: AppState[] = [
   {
+    name: 'today · paused Refrain resume',
+    route: '/',
+    spec: 'NAV-13/NAV-14 pause and course-preserving resume',
+    reach: async (page) => {
+      await page.getByRole('button', { name: /Start the .* wave/ }).click()
+      await expect(page.getByRole('button', { name: 'Say it', exact: true })).toBeVisible()
+      await page.getByRole('button', { name: 'Leave practice', exact: true }).click()
+      await page.getByRole('button', { name: 'Pause the wave', exact: true }).click()
+      await expect(page.getByRole('button', { name: 'Resume the wave', exact: true })).toBeVisible()
+    },
+  },
+  {
     name: 'more · built destinations',
     route: '/more',
     spec: 'NAV-01/NAV-08 built destination reachability',
@@ -63,6 +75,17 @@ export const STATES: AppState[] = [
       await expect(page.getByText('Practice', { exact: true })).toBeVisible()
       await expect(page.getByText('You', { exact: true })).toBeVisible()
       await expect(page.getByRole('button', { name: 'Languages', exact: true })).toBeVisible()
+    },
+  },
+  {
+    name: 'settings · durable visual and privacy preferences',
+    route: '/settings',
+    spec: 'F-05/F-06 local settings',
+    reach: async (page) => {
+      await page.getByRole('button', { name: /, open the menu$/ }).click()
+      await page.getByRole('dialog').getByRole('button', { name: 'Settings', exact: true }).click()
+      await expect(page.getByRole('radiogroup', { name: 'Accent colour' })).toBeVisible()
+      await expect(page.getByRole('checkbox', { name: 'Share anonymous analytics' })).toBeVisible()
     },
   },
   {
@@ -94,6 +117,7 @@ export const STATES: AppState[] = [
       'connected',
       'invalid-code',
       'sync-unavailable',
+      'sync-rejected',
       'signed-out',
     ] as const
   ).map((scenario): AppState => ({
@@ -639,7 +663,10 @@ export async function startWave(page: Page): Promise<void> {
  * one thing only this screen has.
  */
 export function todayMarker(page: Page): Locator {
-  return page.getByText('Your day', { exact: true })
+  // Expo Router retains an exiting screen briefly for its transition. The app-visible tree has
+  // one Today list, but react-native-web can retain a duplicate DOM node until that transition
+  // completes, so use the stable entering list for immediate post-exit assertions.
+  return page.locator('[data-testid="today-day-list"]:visible')
 }
 
 /** One rep, from Today and back to Today. */

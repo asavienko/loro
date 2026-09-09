@@ -9,6 +9,7 @@
  */
 
 export * from './types.js'
+export * from './roleplay.js'
 export * from './delivery.js'
 export { bundledCatalog } from './catalog.js'
 
