@@ -1,5 +1,5 @@
 import { useLocalSearchParams } from 'expo-router'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { ScrollView, StyleSheet } from 'react-native'
 import {
   isActive,
@@ -68,46 +68,44 @@ export default function Music() {
   const [playing, setPlaying] = useState(false)
   const [knownDurationMs, setKnownDurationMs] = useState<number | null>(null)
   const [player, setPlayer] = useState<{ pause: () => void } | null>(null)
+  const fixtureHydrated = useRef<string | undefined>(undefined)
 
   useEffect(() => {
-    if (fixture === 'selected' || fixture === 'lyrics' || fixture === 'fallback') {
-      setSelectedIds(uniqueCatalogIds(rows).slice(0, MUSIC_MIN_PHRASES))
+    if (fixture === undefined || fixtureHydrated.current === fixture) return
+    if (fixture === 'unavailable') {
+      fixtureHydrated.current = fixture
+      setStep('styles')
+      return
     }
-    if (
-      fixture === 'lyrics' ||
-      fixture === 'fallback' ||
-      fixture === 'generating' ||
-      fixture === 'partial' ||
-      fixture === 'playing' ||
-      fixture === 'error'
-    ) {
-      const ids = uniqueCatalogIds(rows).slice(0, MUSIC_MIN_PHRASES)
-      if (ids.length >= MUSIC_MIN_PHRASES) {
-        const next = requestLocalLyrics(ids, targetLocale, meaningLanguage, {
-          fallback: fixture === 'fallback',
-        })
-        setSelectedIds(ids)
-        setLyrics(next)
-        setStep(
-          fixture === 'generating'
-            ? 'styles'
-            : fixture === 'partial' || fixture === 'playing'
-              ? 'play'
-              : 'lyrics',
-        )
-        if (fixture === 'generating') setBusy(true)
-        if (fixture === 'partial') setTracks(renderLocalStyles(defaultStyleIds(), 'partial'))
-        if (fixture === 'playing') {
-          const ready = renderLocalStyles(defaultStyleIds(), 'ok')
-          setTracks(ready)
-          setPlayStyle(ready[0]?.styleId ?? null)
-          setKnownDurationMs(FIXTURE_WAV_DURATION_MS)
-          setPlaying(true)
-        }
-        if (fixture === 'error') setTracks(renderLocalStyles(defaultStyleIds(), 'error'))
-      }
+
+    const ids = uniqueCatalogIds(rows).slice(0, MUSIC_MIN_PHRASES)
+    if (ids.length < MUSIC_MIN_PHRASES) return
+
+    fixtureHydrated.current = fixture
+    setSelectedIds(ids)
+    if (fixture === 'selected') return
+
+    const next = requestLocalLyrics(ids, targetLocale, meaningLanguage, {
+      fallback: fixture === 'fallback',
+    })
+    setLyrics(next)
+    setStep(
+      fixture === 'generating'
+        ? 'styles'
+        : fixture === 'partial' || fixture === 'playing'
+          ? 'play'
+          : 'lyrics',
+    )
+    if (fixture === 'generating') setBusy(true)
+    if (fixture === 'partial') setTracks(renderLocalStyles(defaultStyleIds(), 'partial'))
+    if (fixture === 'playing') {
+      const ready = renderLocalStyles(defaultStyleIds(), 'ok')
+      setTracks(ready)
+      setPlayStyle(ready[0]?.styleId ?? null)
+      setKnownDurationMs(FIXTURE_WAV_DURATION_MS)
+      setPlaying(true)
     }
-    if (fixture === 'unavailable') setStep('styles')
+    if (fixture === 'error') setTracks(renderLocalStyles(defaultStyleIds(), 'error'))
   }, [fixture, meaningLanguage, rows, targetLocale])
 
   useEffect(() => {
