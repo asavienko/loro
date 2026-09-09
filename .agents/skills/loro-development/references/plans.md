@@ -11,11 +11,15 @@ authoritative. A request to review or organize plans does not authorize implemen
   completed records and historical snapshots. A missing former path is not a missing plan.
 - Update the existing owner instead of duplicating its unfinished scope. When an archived snapshot
   names a current owner, follow that owner. User-archived partial plans can still own remaining
-  work.
-- For a new plan, inspect active, archived and untracked IDs, and concurrent worktrees when
-  relevant. Allocate above the highest assigned number; never reuse gaps or hardcode the next ID in
-  this skill. Use `plans/NN-topic.md`, include requirement IDs, scope, dependencies and acceptance
-  criteria, and add its row to the active index. Durable specifications belong in `docs/`.
+  work. Listening companions, licensed multi-voice export, lyrics/music and Discover generation
+  must not take plan 61's canonical reference audio, on-device ASR, or `ProgressDelta`.
+- For a new plan, inspect active, archived and untracked IDs, then `context.mjs --full` for sibling
+  worktrees. Allocate above the highest assigned number across those trees; never reuse gaps or
+  hardcode the next ID in this skill. Use `plans/NN-topic.md`, include requirement IDs, scope,
+  dependencies and acceptance criteria, and add its row to the active index. Durable specifications
+  belong in `docs/`. A review document is not a numbered plan.
+- Cursor prompts that say "implement the attached plan" and "do not edit the plan file" are
+  authorization to implement, not to rewrite the plan.
 
 ## Maintain honest status
 
@@ -25,13 +29,14 @@ land. Record what was implemented, actual validation evidence, remaining work an
 | Status | Use when                                                                                                                             |
 | ------ | ------------------------------------------------------------------------------------------------------------------------------------ |
 | `—`    | Implementation remains; identify technical prerequisites for starting it.                                                            |
-| `🟡`   | Work is in progress or partially implemented; state what remains and what blocks it, or that nothing external blocks the next slice. |
+| `🟡`   | Work is in progress or partly implemented; state what remains and what blocks it, or that nothing external blocks the next slice. |
 | `⛔`   | A named decision or evidence gate blocks the stated slice; preserve any independent work that can proceed.                           |
 | `✅`   | The recorded scope and its acceptance criteria are complete, with evidence; archive it in the same change.                           |
 
 Implemented runtime with outstanding required device, linguistic or service acceptance stays
 partial. A merged PR, passing browser suite or archive location alone is not completion evidence. Do
 not shrink acceptance criteria or silently transfer unfinished work just to mark a plan done.
+Shipped-code refactoring reviews are not a license to archive remaining-work owners.
 
 ## Finish a plan
 
@@ -53,7 +58,11 @@ path references. Then:
 
 For a user request to archive implemented-but-unfinished plans, pass `--unfinished`. That keeps the
 partial/blocked status, inserts a disposition note, and leaves remaining-work rows in the active
-index with direct archive links. Archiving is not completion.
+index with direct archive links. Archiving is not completion. Do not archive a `🟡` remaining-work
+owner unless that unfinished request is explicit.
+
+Keep archive-only PRs free of unrelated feature files. Git may treat `plans/96-…` moving to archive
+while another branch adds `plans/96-…` as a rename.
 
 Helper tests: `node --test .agents/skills/loro-development/scripts/archive-plan.test.mjs`.
 
