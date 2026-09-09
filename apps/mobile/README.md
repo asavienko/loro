@@ -37,6 +37,18 @@ pnpm test:e2e:workbench                 # dev-only tokens and component inspecti
 cd apps/mobile && npx expo start --web  # fastest way to inspect current screens
 ```
 
+### Android emulator
+
+```bash
+pnpm --filter @loro/mobile android
+```
+
+This installs **Loro Development** (`app.loro.android.dev`) and starts Metro. Keep the command
+running while using that debug build; it intentionally has no embedded JavaScript bundle. For an
+emulator installation that must open without Metro, build and install **Loro Preview** with
+[`pnpm apk:local`](../../docs/process/local-apk.md). The preview is the separately identified,
+bundled release variant used for standalone acceptance.
+
 With the development server running, open `/dev/tokens` for the design-system workbench. It needs no
 account, service, secret, or native module. The route is deliberately unavailable in a production
 export and is never linked from learner navigation; `pnpm test:e2e:bundle` proves both properties.
