@@ -13,7 +13,6 @@ import {
   LISTENING_ASSET_CLASS,
   LISTENING_MIN_VOICES,
   LISTENING_MODEL_ID,
-  REFERENCE_ASSET_CLASS,
   normalizeListeningText,
 } from '@loro/core'
 import { TtsRequestSchema, TtsResponseSchema, type TtsRequest, type TtsResponse } from '@loro/core/api/draft'
@@ -152,9 +151,6 @@ export class TtsService {
         throw new LoroError('PROVIDER_UNAVAILABLE', 'Listening voice is not an approved licensed id')
       }
       return request.voice_id
-    }
-    if (request.asset_class !== REFERENCE_ASSET_CLASS) {
-      throw new LoroError('VALIDATION_FAILED')
     }
     let catalogVoice: string
     try {
