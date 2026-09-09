@@ -52,7 +52,7 @@ fileprivate extension ForeignBytes {
 //
 // Conforms to `FfiConverter` so the compiler enforces the full converter
 // method set. Only the scope-bound `lower(_:_body:)` overload is sound —
-// zero-copy byte buffers only flow foreign -> Rust, and only in argument
+// zero-copy byte buffers only flow foreign -> Rust, and only in argumen
 // position. The four protocol-witness methods (`lift`, `lower`, `read`,
 // `write`) `fatalError` at runtime if anyone reaches them.
 //
@@ -168,7 +168,7 @@ fileprivate func readDouble(_ reader: inout (data: Data, offset: Data.Index)) th
 
 // Indicates if the offset has reached the end of the buffer.
 fileprivate func hasRemaining(_ reader: (data: Data, offset: Data.Index)) -> Bool {
-    return reader.offset < reader.data.count
+    return reader.offset < reader.data.coun
 }
 
 // Define writer functionality.  Normally this would be defined in a class or
@@ -258,7 +258,7 @@ extension FfiConverterRustBuffer {
           return RustBuffer(bytes: writer)
     }
 }
-// An error type for FFI errors. These errors occur at the UniFFI level, not
+// An error type for FFI errors. These errors occur at the UniFFI level, no
 // the library level.
 fileprivate enum UniffiInternalError: LocalizedError {
     case bufferOverflow
@@ -398,8 +398,8 @@ private func uniffiTraitInterfaceCallWithError<T, E>(
         callStatus.pointee.errorBuf = FfiConverterString.lower(String(describing: error))
     }
 }
-// Initial value and increment amount for handles. 
-// These ensure that SWIFT handles always have the lowest bit set
+// Initial value and increment amount for handles.
+// These ensure that SWIFT handles always have the lowest bit se
 fileprivate let UNIFFI_HANDLEMAP_INITIAL: UInt64 = 1
 fileprivate let UNIFFI_HANDLEMAP_DELTA: UInt64 = 2
 
@@ -441,7 +441,7 @@ fileprivate final class UniffiHandleMap<T>: @unchecked Sendable {
         }
     }
 
-    @discardableResult
+    @discardableResul
     func remove(handle: UInt64) throws -> T {
         try lock.withLock {
             guard let obj = map.removeValue(forKey: handle) else {
@@ -453,7 +453,7 @@ fileprivate final class UniffiHandleMap<T>: @unchecked Sendable {
 
     var count: Int {
         get {
-            map.count
+            map.coun
         }
     }
 }
@@ -546,8 +546,8 @@ fileprivate struct FfiConverterInt64: FfiConverterPrimitive {
 @_documentation(visibility: private)
 #endif
 fileprivate struct FfiConverterFloat: FfiConverterPrimitive {
-    typealias FfiType = Float
-    typealias SwiftType = Float
+    typealias FfiType = Floa
+    typealias SwiftType = Floa
 
     public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> Float {
         return try lift(readFloat(&buf))
@@ -681,7 +681,7 @@ public struct Draw: Equatable, Hashable {
     public init(
         /**
          * The dealt card.
-         */card: FinisherCard, 
+         */card: FinisherCard,
         /**
          * The phrase it targets.
          */targetId: String) {
@@ -689,9 +689,9 @@ public struct Draw: Equatable, Hashable {
         self.targetId = targetId
     }
 
-    
 
-    
+
+
 }
 
 #if compiler(>=6)
@@ -705,7 +705,7 @@ public struct FfiConverterTypeDraw: FfiConverterRustBuffer {
     public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> Draw {
         return
             try Draw(
-                card: FfiConverterTypeFinisherCard.read(from: &buf), 
+                card: FfiConverterTypeFinisherCard.read(from: &buf),
                 targetId: FfiConverterString.read(from: &buf)
         )
     }
@@ -754,10 +754,10 @@ public struct Fix: Equatable, Hashable {
     public init(
         /**
          * What kind.
-         */kind: FixKind, 
+         */kind: FixKind,
         /**
          * Which template fired, e.g. `es.trill.rr`. Logged as `fix_code`.
-         */code: String, 
+         */code: String,
         /**
          * The syllable it refers to, if any.
          */syllableIndex: UInt32?) {
@@ -766,9 +766,9 @@ public struct Fix: Equatable, Hashable {
         self.syllableIndex = syllableIndex
     }
 
-    
 
-    
+
+
 }
 
 #if compiler(>=6)
@@ -782,8 +782,8 @@ public struct FfiConverterTypeFix: FfiConverterRustBuffer {
     public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> Fix {
         return
             try Fix(
-                kind: FfiConverterTypeFixKind.read(from: &buf), 
-                code: FfiConverterString.read(from: &buf), 
+                kind: FfiConverterTypeFixKind.read(from: &buf),
+                code: FfiConverterString.read(from: &buf),
                 syllableIndex: FfiConverterOptionUInt32.read(from: &buf)
         )
     }
@@ -849,22 +849,22 @@ public struct FsrsState: Equatable, Hashable {
     public init(
         /**
          * Days until recall reaches 90%, NOT the selected scheduling threshold.
-         */stability: Double, 
+         */stability: Double,
         /**
          * Intrinsic difficulty in 1..10.
-         */difficulty: Double, 
+         */difficulty: Double,
         /**
          * Next review, epoch milliseconds.
-         */due: Int64, 
+         */due: Int64,
         /**
          * Last observed review, epoch milliseconds; absent for new cards.
-         */lastReview: Int64?, 
+         */lastReview: Int64?,
         /**
          * Failed established reviews (not repeated learning failures).
-         */lapses: UInt32, 
+         */lapses: UInt32,
         /**
          * Learning lifecycle.
-         */state: CardState, 
+         */state: CardState,
         /**
          * Versioned algorithm, parameters and Loro policy identifier.
          */algorithm: String) {
@@ -877,9 +877,9 @@ public struct FsrsState: Equatable, Hashable {
         self.algorithm = algorithm
     }
 
-    
 
-    
+
+
 }
 
 #if compiler(>=6)
@@ -893,12 +893,12 @@ public struct FfiConverterTypeFsrsState: FfiConverterRustBuffer {
     public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> FsrsState {
         return
             try FsrsState(
-                stability: FfiConverterDouble.read(from: &buf), 
-                difficulty: FfiConverterDouble.read(from: &buf), 
-                due: FfiConverterInt64.read(from: &buf), 
-                lastReview: FfiConverterOptionInt64.read(from: &buf), 
-                lapses: FfiConverterUInt32.read(from: &buf), 
-                state: FfiConverterTypeCardState.read(from: &buf), 
+                stability: FfiConverterDouble.read(from: &buf),
+                difficulty: FfiConverterDouble.read(from: &buf),
+                due: FfiConverterInt64.read(from: &buf),
+                lastReview: FfiConverterOptionInt64.read(from: &buf),
+                lapses: FfiConverterUInt32.read(from: &buf),
+                state: FfiConverterTypeCardState.read(from: &buf),
                 algorithm: FfiConverterString.read(from: &buf)
         )
     }
@@ -952,10 +952,10 @@ public struct Hlc: Equatable, Hashable {
     public init(
         /**
          * Wall-clock milliseconds, monotonically non-decreasing.
-         */physical: Int64, 
+         */physical: Int64,
         /**
          * Tiebreaker within the same millisecond.
-         */logical: UInt32, 
+         */logical: UInt32,
         /**
          * Stable per installation.
          */nodeId: String) {
@@ -964,9 +964,9 @@ public struct Hlc: Equatable, Hashable {
         self.nodeId = nodeId
     }
 
-    
 
-    
+
+
 }
 
 #if compiler(>=6)
@@ -980,8 +980,8 @@ public struct FfiConverterTypeHlc: FfiConverterRustBuffer {
     public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> Hlc {
         return
             try Hlc(
-                physical: FfiConverterInt64.read(from: &buf), 
-                logical: FfiConverterUInt32.read(from: &buf), 
+                physical: FfiConverterInt64.read(from: &buf),
+                logical: FfiConverterUInt32.read(from: &buf),
                 nodeId: FfiConverterString.read(from: &buf)
         )
     }
@@ -1031,7 +1031,7 @@ public struct LatencySample: Equatable, Hashable {
     public init(
         /**
          * Rep index within the phrase.
-         */repIndex: UInt32, 
+         */repIndex: UInt32,
         /**
          * Measured milliseconds, or `None` if onset was never detected.
          */ms: UInt32?) {
@@ -1039,9 +1039,9 @@ public struct LatencySample: Equatable, Hashable {
         self.ms = ms
     }
 
-    
 
-    
+
+
 }
 
 #if compiler(>=6)
@@ -1055,7 +1055,7 @@ public struct FfiConverterTypeLatencySample: FfiConverterRustBuffer {
     public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> LatencySample {
         return
             try LatencySample(
-                repIndex: FfiConverterUInt32.read(from: &buf), 
+                repIndex: FfiConverterUInt32.read(from: &buf),
                 ms: FfiConverterOptionUInt32.read(from: &buf)
         )
     }
@@ -1104,10 +1104,10 @@ public struct MatchResult: Equatable, Hashable {
     public init(
         /**
          * How many leading target tokens are now revealed. Only ever increases.
-         */revealed: UInt32, 
+         */revealed: UInt32,
         /**
          * The index just revealed, for the "just said" highlight. `-1` if none.
-         */justIndex: Int32, 
+         */justIndex: Int32,
         /**
          * Whether the whole phrase has been produced — the production gate.
          */complete: Bool) {
@@ -1116,9 +1116,9 @@ public struct MatchResult: Equatable, Hashable {
         self.complete = complete
     }
 
-    
 
-    
+
+
 }
 
 #if compiler(>=6)
@@ -1132,8 +1132,8 @@ public struct FfiConverterTypeMatchResult: FfiConverterRustBuffer {
     public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> MatchResult {
         return
             try MatchResult(
-                revealed: FfiConverterUInt32.read(from: &buf), 
-                justIndex: FfiConverterInt32.read(from: &buf), 
+                revealed: FfiConverterUInt32.read(from: &buf),
+                justIndex: FfiConverterInt32.read(from: &buf),
                 complete: FfiConverterBool.read(from: &buf)
         )
     }
@@ -1158,6 +1158,120 @@ public func FfiConverterTypeMatchResult_lift(_ buf: RustBuffer) throws -> MatchR
 #endif
 public func FfiConverterTypeMatchResult_lower(_ value: MatchResult) -> RustBuffer {
     return FfiConverterTypeMatchResult.lower(value)
+}
+
+
+/**
+ * One notification the platform is considering for this local day.
+ *
+ * The platform resolves timezone and daylight-saving-time rules into `delivery_at_ms` before
+ * calling this pure planner. Rust deliberately receives that resolved instant rather than trying
+ * to maintain a second timezone database. `hour` and `minute` preserve the local wall-clock
+ * value so quiet-hours policy remains visible and testable here.
+ */
+public struct NotificationCandidate: Equatable, Hashable {
+    /**
+     * Stable identifier used by the platform to replace or cancel a scheduled notification.
+     */
+    public var id: String
+    /**
+     * The semantic category that owns the policy and translated copy.
+     */
+    public var category: Category
+    /**
+     * Resolved delivery instant in epoch milliseconds.
+     */
+    public var deliveryAtMs: Int64
+    /**
+     * Local wall-clock hour at delivery, 0..23.
+     */
+    public var hour: UInt32
+    /**
+     * Local wall-clock minute at delivery, 0..59.
+     */
+    public var minute: UInt32
+    /**
+     * Whether the category's destination is built and can safely receive a deep link.
+     */
+    public var destinationAvailable: Bool
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Stable identifier used by the platform to replace or cancel a scheduled notification.
+         */id: String,
+        /**
+         * The semantic category that owns the policy and translated copy.
+         */category: Category,
+        /**
+         * Resolved delivery instant in epoch milliseconds.
+         */deliveryAtMs: Int64,
+        /**
+         * Local wall-clock hour at delivery, 0..23.
+         */hour: UInt32,
+        /**
+         * Local wall-clock minute at delivery, 0..59.
+         */minute: UInt32,
+        /**
+         * Whether the category's destination is built and can safely receive a deep link.
+         */destinationAvailable: Bool) {
+        self.id = id
+        self.category = category
+        self.deliveryAtMs = deliveryAtMs
+        self.hour = hour
+        self.minute = minute
+        self.destinationAvailable = destinationAvailable
+    }
+
+
+
+
+}
+
+#if compiler(>=6)
+extension NotificationCandidate: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeNotificationCandidate: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> NotificationCandidate {
+        return
+            try NotificationCandidate(
+                id: FfiConverterString.read(from: &buf),
+                category: FfiConverterTypeCategory.read(from: &buf),
+                deliveryAtMs: FfiConverterInt64.read(from: &buf),
+                hour: FfiConverterUInt32.read(from: &buf),
+                minute: FfiConverterUInt32.read(from: &buf),
+                destinationAvailable: FfiConverterBool.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: NotificationCandidate, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.id, into: &buf)
+        FfiConverterTypeCategory.write(value.category, into: &buf)
+        FfiConverterInt64.write(value.deliveryAtMs, into: &buf)
+        FfiConverterUInt32.write(value.hour, into: &buf)
+        FfiConverterUInt32.write(value.minute, into: &buf)
+        FfiConverterBool.write(value.destinationAvailable, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeNotificationCandidate_lift(_ buf: RustBuffer) throws -> NotificationCandidate {
+    return try FfiConverterTypeNotificationCandidate.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeNotificationCandidate_lower(_ value: NotificationCandidate) -> RustBuffer {
+    return FfiConverterTypeNotificationCandidate.lower(value)
 }
 
 
@@ -1199,22 +1313,22 @@ public struct NotifyContext: Equatable, Hashable {
     public init(
         /**
          * Local hour now, 0..23.
-         */hour: UInt32, 
+         */hour: UInt32,
         /**
          * Has the learner already practised today?
-         */practisedToday: Bool, 
+         */practisedToday: Bool,
         /**
          * Was the previous wave completed? Gates the next wave nudge.
-         */previousWaveCompleted: Bool, 
+         */previousWaveCompleted: Bool,
         /**
          * Which categories the learner has enabled.
-         */enabled: [Category], 
+         */enabled: [Category],
         /**
          * Already scheduled today.
-         */alreadyScheduled: UInt32, 
+         */alreadyScheduled: UInt32,
         /**
          * Is a trip active?
-         */tripActive: Bool, 
+         */tripActive: Bool,
         /**
          * Reveal-mode fallbacks recently, for the language-pack prompt.
          */revealModeCount: UInt32) {
@@ -1224,12 +1338,12 @@ public struct NotifyContext: Equatable, Hashable {
         self.enabled = enabled
         self.alreadyScheduled = alreadyScheduled
         self.tripActive = tripActive
-        self.revealModeCount = revealModeCount
+        self.revealModeCount = revealModeCoun
     }
 
-    
 
-    
+
+
 }
 
 #if compiler(>=6)
@@ -1243,12 +1357,12 @@ public struct FfiConverterTypeNotifyContext: FfiConverterRustBuffer {
     public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> NotifyContext {
         return
             try NotifyContext(
-                hour: FfiConverterUInt32.read(from: &buf), 
-                practisedToday: FfiConverterBool.read(from: &buf), 
-                previousWaveCompleted: FfiConverterBool.read(from: &buf), 
-                enabled: FfiConverterSequenceTypeCategory.read(from: &buf), 
-                alreadyScheduled: FfiConverterUInt32.read(from: &buf), 
-                tripActive: FfiConverterBool.read(from: &buf), 
+                hour: FfiConverterUInt32.read(from: &buf),
+                practisedToday: FfiConverterBool.read(from: &buf),
+                previousWaveCompleted: FfiConverterBool.read(from: &buf),
+                enabled: FfiConverterSequenceTypeCategory.read(from: &buf),
+                alreadyScheduled: FfiConverterUInt32.read(from: &buf),
+                tripActive: FfiConverterBool.read(from: &buf),
                 revealModeCount: FfiConverterUInt32.read(from: &buf)
         )
     }
@@ -1358,52 +1472,52 @@ public struct PhraseState: Equatable, Hashable {
     public init(
         /**
          * The learner's row id.
-         */id: String, 
+         */id: String,
         /**
          * Learner-declared difficulty.
-         */difficulty: Difficulty, 
+         */difficulty: Difficulty,
         /**
          * Active tags.
-         */tags: [Tag], 
+         */tags: [Tag],
         /**
          * Surfaces more often.
-         */loved: Bool, 
+         */loved: Bool,
         /**
          * Left the active stream, still in review.
-         */learned: Bool, 
+         */learned: Bool,
         /**
          * Stream play count.
-         */plays: UInt32, 
+         */plays: UInt32,
         /**
          * Total reps across all engines.
-         */reps: UInt32, 
+         */reps: UInt32,
         /**
          * Epoch ms.
-         */lastPracticedAt: Int64?, 
+         */lastPracticedAt: Int64?,
         /**
          * FSRS due date, epoch ms.
-         */srsDue: Int64?, 
+         */srsDue: Int64?,
         /**
          * FSRS stability, in days.
-         */srsStability: Float?, 
+         */srsStability: Float?,
         /**
          * FSRS difficulty, 1..10.
-         */srsDifficulty: Float?, 
+         */srsDifficulty: Float?,
         /**
          * Reps today, valid only for `reps_today_day`.
-         */repsToday: UInt32, 
+         */repsToday: UInt32,
         /**
          * The `local_day` `reps_today` belongs to.
-         */repsTodayDay: String?, 
+         */repsTodayDay: String?,
         /**
          * Distinct days locked in; 4 → graduated.
-         */lockInDays: UInt32, 
+         */lockInDays: UInt32,
         /**
          * Ladder rung.
-         */rung: LadderRung, 
+         */rung: LadderRung,
         /**
          * Failed productions, floor 0.
-         */stumbles: UInt32, 
+         */stumbles: UInt32,
         /**
          * Prosody cue level, 0..3.
          */cueLevel: UInt8) {
@@ -1414,7 +1528,7 @@ public struct PhraseState: Equatable, Hashable {
         self.learned = learned
         self.plays = plays
         self.reps = reps
-        self.lastPracticedAt = lastPracticedAt
+        self.lastPracticedAt = lastPracticedA
         self.srsDue = srsDue
         self.srsStability = srsStability
         self.srsDifficulty = srsDifficulty
@@ -1426,9 +1540,9 @@ public struct PhraseState: Equatable, Hashable {
         self.cueLevel = cueLevel
     }
 
-    
 
-    
+
+
 }
 
 #if compiler(>=6)
@@ -1442,22 +1556,22 @@ public struct FfiConverterTypePhraseState: FfiConverterRustBuffer {
     public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> PhraseState {
         return
             try PhraseState(
-                id: FfiConverterString.read(from: &buf), 
-                difficulty: FfiConverterTypeDifficulty.read(from: &buf), 
-                tags: FfiConverterSequenceTypeTag.read(from: &buf), 
-                loved: FfiConverterBool.read(from: &buf), 
-                learned: FfiConverterBool.read(from: &buf), 
-                plays: FfiConverterUInt32.read(from: &buf), 
-                reps: FfiConverterUInt32.read(from: &buf), 
-                lastPracticedAt: FfiConverterOptionInt64.read(from: &buf), 
-                srsDue: FfiConverterOptionInt64.read(from: &buf), 
-                srsStability: FfiConverterOptionFloat.read(from: &buf), 
-                srsDifficulty: FfiConverterOptionFloat.read(from: &buf), 
-                repsToday: FfiConverterUInt32.read(from: &buf), 
-                repsTodayDay: FfiConverterOptionString.read(from: &buf), 
-                lockInDays: FfiConverterUInt32.read(from: &buf), 
-                rung: FfiConverterTypeLadderRung.read(from: &buf), 
-                stumbles: FfiConverterUInt32.read(from: &buf), 
+                id: FfiConverterString.read(from: &buf),
+                difficulty: FfiConverterTypeDifficulty.read(from: &buf),
+                tags: FfiConverterSequenceTypeTag.read(from: &buf),
+                loved: FfiConverterBool.read(from: &buf),
+                learned: FfiConverterBool.read(from: &buf),
+                plays: FfiConverterUInt32.read(from: &buf),
+                reps: FfiConverterUInt32.read(from: &buf),
+                lastPracticedAt: FfiConverterOptionInt64.read(from: &buf),
+                srsDue: FfiConverterOptionInt64.read(from: &buf),
+                srsStability: FfiConverterOptionFloat.read(from: &buf),
+                srsDifficulty: FfiConverterOptionFloat.read(from: &buf),
+                repsToday: FfiConverterUInt32.read(from: &buf),
+                repsTodayDay: FfiConverterOptionString.read(from: &buf),
+                lockInDays: FfiConverterUInt32.read(from: &buf),
+                rung: FfiConverterTypeLadderRung.read(from: &buf),
+                stumbles: FfiConverterUInt32.read(from: &buf),
                 cueLevel: FfiConverterUInt8.read(from: &buf)
         )
     }
@@ -1504,9 +1618,17 @@ public func FfiConverterTypePhraseState_lower(_ value: PhraseState) -> RustBuffe
  */
 public struct PlannedNotification: Equatable, Hashable {
     /**
+     * Stable identifier passed to the platform scheduler.
+     */
+    public var id: String
+    /**
      * Its category.
      */
     public var category: Category
+    /**
+     * Resolved delivery instant in epoch milliseconds.
+     */
+    public var deliveryAtMs: Int64
     /**
      * Local hour to fire at.
      */
@@ -1516,34 +1638,58 @@ public struct PlannedNotification: Equatable, Hashable {
      */
     public var minute: UInt32
     /**
+     * Semantic copy key. The platform translates this at delivery; no learner copy lives in Rust.
+     */
+    public var copyKey: String
+    /**
      * Deep link, so it lands on the right surface rather than the home screen.
      */
     public var deepLink: String
+    /**
+     * Native adapters must suppress presentation while the app is foregrounded.
+     */
+    public var suppressWhenForeground: Bool
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
     public init(
         /**
+         * Stable identifier passed to the platform scheduler.
+         */id: String,
+        /**
          * Its category.
-         */category: Category, 
+         */category: Category,
+        /**
+         * Resolved delivery instant in epoch milliseconds.
+         */deliveryAtMs: Int64,
         /**
          * Local hour to fire at.
-         */hour: UInt32, 
+         */hour: UInt32,
         /**
          * Local minute.
-         */minute: UInt32, 
+         */minute: UInt32,
+        /**
+         * Semantic copy key. The platform translates this at delivery; no learner copy lives in Rust.
+         */copyKey: String,
         /**
          * Deep link, so it lands on the right surface rather than the home screen.
-         */deepLink: String) {
+         */deepLink: String,
+        /**
+         * Native adapters must suppress presentation while the app is foregrounded.
+         */suppressWhenForeground: Bool) {
+        self.id = id
         self.category = category
+        self.deliveryAtMs = deliveryAtMs
         self.hour = hour
         self.minute = minute
+        self.copyKey = copyKey
         self.deepLink = deepLink
+        self.suppressWhenForeground = suppressWhenForeground
     }
 
-    
 
-    
+
+
 }
 
 #if compiler(>=6)
@@ -1557,18 +1703,26 @@ public struct FfiConverterTypePlannedNotification: FfiConverterRustBuffer {
     public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> PlannedNotification {
         return
             try PlannedNotification(
-                category: FfiConverterTypeCategory.read(from: &buf), 
-                hour: FfiConverterUInt32.read(from: &buf), 
-                minute: FfiConverterUInt32.read(from: &buf), 
-                deepLink: FfiConverterString.read(from: &buf)
+                id: FfiConverterString.read(from: &buf),
+                category: FfiConverterTypeCategory.read(from: &buf),
+                deliveryAtMs: FfiConverterInt64.read(from: &buf),
+                hour: FfiConverterUInt32.read(from: &buf),
+                minute: FfiConverterUInt32.read(from: &buf),
+                copyKey: FfiConverterString.read(from: &buf),
+                deepLink: FfiConverterString.read(from: &buf),
+                suppressWhenForeground: FfiConverterBool.read(from: &buf)
         )
     }
 
     public static func write(_ value: PlannedNotification, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.id, into: &buf)
         FfiConverterTypeCategory.write(value.category, into: &buf)
+        FfiConverterInt64.write(value.deliveryAtMs, into: &buf)
         FfiConverterUInt32.write(value.hour, into: &buf)
         FfiConverterUInt32.write(value.minute, into: &buf)
+        FfiConverterString.write(value.copyKey, into: &buf)
         FfiConverterString.write(value.deepLink, into: &buf)
+        FfiConverterBool.write(value.suppressWhenForeground, into: &buf)
     }
 }
 
@@ -1630,25 +1784,25 @@ public struct RefrainCandidate: Equatable, Hashable {
     public init(
         /**
          * The learner's phrase row id.
-         */id: String, 
+         */id: String,
         /**
          * Learner-declared difficulty, used when automaticity ties.
-         */difficulty: Difficulty, 
+         */difficulty: Difficulty,
         /**
          * A learned phrase has left the active stream.
-         */learned: Bool, 
+         */learned: Bool,
         /**
          * A graduated phrase has left Refrain rotation.
-         */graduated: Bool, 
+         */graduated: Bool,
         /**
          * Distinct local days locked in; one through three take first priority.
-         */lockInDays: UInt32, 
+         */lockInDays: UInt32,
         /**
          * Historical automaticity percentage.
-         */automaticity: UInt8, 
+         */automaticity: UInt8,
         /**
          * Total practice repetitions; zero means new material.
-         */reps: UInt32, 
+         */reps: UInt32,
         /**
          * Epoch milliseconds, to fill with the earliest unpractised phrase first.
          */addedAt: Int64) {
@@ -1659,12 +1813,12 @@ public struct RefrainCandidate: Equatable, Hashable {
         self.lockInDays = lockInDays
         self.automaticity = automaticity
         self.reps = reps
-        self.addedAt = addedAt
+        self.addedAt = addedA
     }
 
-    
 
-    
+
+
 }
 
 #if compiler(>=6)
@@ -1678,13 +1832,13 @@ public struct FfiConverterTypeRefrainCandidate: FfiConverterRustBuffer {
     public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> RefrainCandidate {
         return
             try RefrainCandidate(
-                id: FfiConverterString.read(from: &buf), 
-                difficulty: FfiConverterTypeDifficulty.read(from: &buf), 
-                learned: FfiConverterBool.read(from: &buf), 
-                graduated: FfiConverterBool.read(from: &buf), 
-                lockInDays: FfiConverterUInt32.read(from: &buf), 
-                automaticity: FfiConverterUInt8.read(from: &buf), 
-                reps: FfiConverterUInt32.read(from: &buf), 
+                id: FfiConverterString.read(from: &buf),
+                difficulty: FfiConverterTypeDifficulty.read(from: &buf),
+                learned: FfiConverterBool.read(from: &buf),
+                graduated: FfiConverterBool.read(from: &buf),
+                lockInDays: FfiConverterUInt32.read(from: &buf),
+                automaticity: FfiConverterUInt8.read(from: &buf),
+                reps: FfiConverterUInt32.read(from: &buf),
                 addedAt: FfiConverterInt64.read(from: &buf)
         )
     }
@@ -1739,10 +1893,10 @@ public struct SkillAxes: Equatable, Hashable {
     public init(
         /**
          * Recognising it.
-         */perception: UInt8, 
+         */perception: UInt8,
         /**
          * Retrieving it.
-         */recall: UInt8, 
+         */recall: UInt8,
         /**
          * Saying it.
          */production: UInt8) {
@@ -1751,9 +1905,9 @@ public struct SkillAxes: Equatable, Hashable {
         self.production = production
     }
 
-    
 
-    
+
+
 }
 
 #if compiler(>=6)
@@ -1767,8 +1921,8 @@ public struct FfiConverterTypeSkillAxes: FfiConverterRustBuffer {
     public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SkillAxes {
         return
             try SkillAxes(
-                perception: FfiConverterUInt8.read(from: &buf), 
-                recall: FfiConverterUInt8.read(from: &buf), 
+                perception: FfiConverterUInt8.read(from: &buf),
+                recall: FfiConverterUInt8.read(from: &buf),
                 production: FfiConverterUInt8.read(from: &buf)
         )
     }
@@ -1801,7 +1955,7 @@ public func FfiConverterTypeSkillAxes_lower(_ value: SkillAxes) -> RustBuffer {
  */
 
 public enum CardState: Equatable, Hashable {
-    
+
     /**
      * No review evidence yet.
      */
@@ -1838,38 +1992,38 @@ public struct FfiConverterTypeCardState: FfiConverterRustBuffer {
     public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> CardState {
         let variant: Int32 = try readInt(&buf)
         switch variant {
-        
+
         case 1: return .new
-        
+
         case 2: return .learning
-        
+
         case 3: return .review
-        
+
         case 4: return .relearning
-        
+
         default: throw UniffiInternalError.unexpectedEnumCase
         }
     }
 
     public static func write(_ value: CardState, into buf: inout [UInt8]) {
         switch value {
-        
-        
+
+
         case .new:
             writeInt(&buf, Int32(1))
-        
-        
+
+
         case .learning:
             writeInt(&buf, Int32(2))
-        
-        
+
+
         case .review:
             writeInt(&buf, Int32(3))
-        
-        
+
+
         case .relearning:
             writeInt(&buf, Int32(4))
-        
+
         }
     }
 }
@@ -1896,7 +2050,7 @@ public func FfiConverterTypeCardState_lower(_ value: CardState) -> RustBuffer {
  */
 
 public enum Category: Equatable, Hashable {
-    
+
     /**
      * One a day, at a learner-chosen time. On by default.
      */
@@ -1945,56 +2099,56 @@ public struct FfiConverterTypeCategory: FfiConverterRustBuffer {
     public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> Category {
         let variant: Int32 = try readInt(&buf)
         switch variant {
-        
+
         case 1: return .dailyReminder
-        
+
         case 2: return .waveNudge
-        
+
         case 3: return .tripDrop
-        
+
         case 4: return .tripMilestone
-        
+
         case 5: return .arrival
-        
+
         case 6: return .`return`
-        
+
         case 7: return .languagePack
-        
+
         default: throw UniffiInternalError.unexpectedEnumCase
         }
     }
 
     public static func write(_ value: Category, into buf: inout [UInt8]) {
         switch value {
-        
-        
+
+
         case .dailyReminder:
             writeInt(&buf, Int32(1))
-        
-        
+
+
         case .waveNudge:
             writeInt(&buf, Int32(2))
-        
-        
+
+
         case .tripDrop:
             writeInt(&buf, Int32(3))
-        
-        
+
+
         case .tripMilestone:
             writeInt(&buf, Int32(4))
-        
-        
+
+
         case .arrival:
             writeInt(&buf, Int32(5))
-        
-        
+
+
         case .`return`:
             writeInt(&buf, Int32(6))
-        
-        
+
+
         case .languagePack:
             writeInt(&buf, Int32(7))
-        
+
         }
     }
 }
@@ -2024,11 +2178,11 @@ public func FfiConverterTypeCategory_lower(_ value: Category) -> RustBuffer {
  */
 
 public enum Confidence: Equatable, Hashable {
-    
+
     /**
      * Blank.
      */
-    case forgot
+    case forgo
     /**
      * Guessed.
      */
@@ -2044,7 +2198,7 @@ public enum Confidence: Equatable, Hashable {
     /**
      * Automatic.
      */
-    case instant
+    case instan
 
 
 
@@ -2065,44 +2219,44 @@ public struct FfiConverterTypeConfidence: FfiConverterRustBuffer {
     public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> Confidence {
         let variant: Int32 = try readInt(&buf)
         switch variant {
-        
-        case 1: return .forgot
-        
+
+        case 1: return .forgo
+
         case 2: return .shaky
-        
+
         case 3: return .ok
-        
+
         case 4: return .strong
-        
-        case 5: return .instant
-        
+
+        case 5: return .instan
+
         default: throw UniffiInternalError.unexpectedEnumCase
         }
     }
 
     public static func write(_ value: Confidence, into buf: inout [UInt8]) {
         switch value {
-        
-        
+
+
         case .forgot:
             writeInt(&buf, Int32(1))
-        
-        
+
+
         case .shaky:
             writeInt(&buf, Int32(2))
-        
-        
+
+
         case .ok:
             writeInt(&buf, Int32(3))
-        
-        
+
+
         case .strong:
             writeInt(&buf, Int32(4))
-        
-        
+
+
         case .instant:
             writeInt(&buf, Int32(5))
-        
+
         }
     }
 }
@@ -2127,11 +2281,11 @@ public func FfiConverterTypeConfidence_lower(_ value: Confidence) -> RustBuffer 
 /**
  * A rejected call never substitutes a schedule or a successful production gate.
  */
-public 
+public
 enum CoreError: Swift.Error, Equatable, Hashable, Foundation.LocalizedError {
 
-    
-    
+
+
     /**
      * An unknown method, invalid argument, or invalid scheduling state.
      */
@@ -2141,15 +2295,15 @@ enum CoreError: Swift.Error, Equatable, Hashable, Foundation.LocalizedError {
          */reason: String
     )
 
-    
 
-    
 
-    
+
+
+
     public var errorDescription: String? {
         String(reflecting: self)
     }
-    
+
 }
 
 #if compiler(>=6)
@@ -2166,9 +2320,9 @@ public struct FfiConverterTypeCoreError: FfiConverterRustBuffer {
         let variant: Int32 = try readInt(&buf)
         switch variant {
 
-        
 
-        
+
+
         case 1: return .InvalidInput(
             reason: try FfiConverterString.read(from: &buf)
             )
@@ -2180,14 +2334,14 @@ public struct FfiConverterTypeCoreError: FfiConverterRustBuffer {
     public static func write(_ value: CoreError, into buf: inout [UInt8]) {
         switch value {
 
-        
 
-        
-        
+
+
+
         case let .InvalidInput(reason):
             writeInt(&buf, Int32(1))
             FfiConverterString.write(reason, into: &buf)
-            
+
         }
     }
 }
@@ -2213,7 +2367,7 @@ public func FfiConverterTypeCoreError_lower(_ value: CoreError) -> RustBuffer {
  */
 
 public enum Difficulty: Equatable, Hashable {
-    
+
     /**
      * Shown as "Easy".
      */
@@ -2246,32 +2400,32 @@ public struct FfiConverterTypeDifficulty: FfiConverterRustBuffer {
     public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> Difficulty {
         let variant: Int32 = try readInt(&buf)
         switch variant {
-        
+
         case 1: return .easy
-        
+
         case 2: return .med
-        
+
         case 3: return .hard
-        
+
         default: throw UniffiInternalError.unexpectedEnumCase
         }
     }
 
     public static func write(_ value: Difficulty, into buf: inout [UInt8]) {
         switch value {
-        
-        
+
+
         case .easy:
             writeInt(&buf, Int32(1))
-        
-        
+
+
         case .med:
             writeInt(&buf, Int32(2))
-        
-        
+
+
         case .hard:
             writeInt(&buf, Int32(3))
-        
+
         }
     }
 }
@@ -2298,7 +2452,7 @@ public func FfiConverterTypeDifficulty_lower(_ value: Difficulty) -> RustBuffer 
  */
 
 public enum EffortState: Equatable, Hashable {
-    
+
     /**
      * No repetitions yet; presentation invites the learner to begin.
      */
@@ -2314,7 +2468,7 @@ public enum EffortState: Equatable, Hashable {
     /**
      * At least two thirds automatic.
      */
-    case hot
+    case ho
     /**
      * Fully automatic at the daily target.
      */
@@ -2339,44 +2493,44 @@ public struct FfiConverterTypeEffortState: FfiConverterRustBuffer {
     public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> EffortState {
         let variant: Int32 = try readInt(&buf)
         switch variant {
-        
+
         case 1: return .ready
-        
+
         case 2: return .cold
-        
+
         case 3: return .warm
-        
-        case 4: return .hot
-        
+
+        case 4: return .ho
+
         case 5: return .peak
-        
+
         default: throw UniffiInternalError.unexpectedEnumCase
         }
     }
 
     public static func write(_ value: EffortState, into buf: inout [UInt8]) {
         switch value {
-        
-        
+
+
         case .ready:
             writeInt(&buf, Int32(1))
-        
-        
+
+
         case .cold:
             writeInt(&buf, Int32(2))
-        
-        
+
+
         case .warm:
             writeInt(&buf, Int32(3))
-        
-        
+
+
         case .hot:
             writeInt(&buf, Int32(4))
-        
-        
+
+
         case .peak:
             writeInt(&buf, Int32(5))
-        
+
         }
     }
 }
@@ -2403,7 +2557,7 @@ public func FfiConverterTypeEffortState_lower(_ value: EffortState) -> RustBuffe
  */
 
 public enum FinisherCard: Equatable, Hashable {
-    
+
     /**
      * "the Rally" — make it pliable. Accumulated → Bent.
      */
@@ -2440,38 +2594,38 @@ public struct FfiConverterTypeFinisherCard: FfiConverterRustBuffer {
     public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> FinisherCard {
         let variant: Int32 = try readInt(&buf)
         switch variant {
-        
+
         case 1: return .bend
-        
+
         case 2: return .transfer
-        
+
         case 3: return .pressure
-        
+
         case 4: return .deploy
-        
+
         default: throw UniffiInternalError.unexpectedEnumCase
         }
     }
 
     public static func write(_ value: FinisherCard, into buf: inout [UInt8]) {
         switch value {
-        
-        
+
+
         case .bend:
             writeInt(&buf, Int32(1))
-        
-        
+
+
         case .transfer:
             writeInt(&buf, Int32(2))
-        
-        
+
+
         case .pressure:
             writeInt(&buf, Int32(3))
-        
-        
+
+
         case .deploy:
             writeInt(&buf, Int32(4))
-        
+
         }
     }
 }
@@ -2498,7 +2652,7 @@ public func FfiConverterTypeFinisherCard_lower(_ value: FinisherCard) -> RustBuf
  */
 
 public enum FixKind: Equatable, Hashable {
-    
+
     /**
      * The contour's overall shape is wrong (a question that doesn't rise, etc.).
      * Outranks everything on the prosody screen.
@@ -2537,38 +2691,38 @@ public struct FfiConverterTypeFixKind: FfiConverterRustBuffer {
     public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> FixKind {
         let variant: Int32 = try readInt(&buf)
         switch variant {
-        
+
         case 1: return .contourShape
-        
+
         case 2: return .stressPosition
-        
+
         case 3: return .segmental
-        
+
         case 4: return .none
-        
+
         default: throw UniffiInternalError.unexpectedEnumCase
         }
     }
 
     public static func write(_ value: FixKind, into buf: inout [UInt8]) {
         switch value {
-        
-        
+
+
         case .contourShape:
             writeInt(&buf, Int32(1))
-        
-        
+
+
         case .stressPosition:
             writeInt(&buf, Int32(2))
-        
-        
+
+
         case .segmental:
             writeInt(&buf, Int32(3))
-        
-        
+
+
         case .none:
             writeInt(&buf, Int32(4))
-        
+
         }
     }
 }
@@ -2593,11 +2747,11 @@ public func FfiConverterTypeFixKind_lower(_ value: FixKind) -> RustBuffer {
 /**
  * Explicit invalid-input failures cross both WASM and native bindings.
  */
-public 
+public
 enum FsrsError: Swift.Error, Equatable, Hashable, Foundation.LocalizedError {
 
-    
-    
+
+
     /**
      * Non-finite values, invalid memory state, or inconsistent lifecycle.
      */
@@ -2615,15 +2769,15 @@ enum FsrsError: Swift.Error, Equatable, Hashable, Foundation.LocalizedError {
      */
     case Overflow
 
-    
 
-    
 
-    
+
+
+
     public var errorDescription: String? {
         String(reflecting: self)
     }
-    
+
 }
 
 #if compiler(>=6)
@@ -2640,9 +2794,9 @@ public struct FfiConverterTypeFsrsError: FfiConverterRustBuffer {
         let variant: Int32 = try readInt(&buf)
         switch variant {
 
-        
 
-        
+
+
         case 1: return .InvalidState
         case 2: return .InvalidTime
         case 3: return .UnsupportedAlgorithm
@@ -2655,25 +2809,25 @@ public struct FfiConverterTypeFsrsError: FfiConverterRustBuffer {
     public static func write(_ value: FsrsError, into buf: inout [UInt8]) {
         switch value {
 
-        
 
-        
-        
+
+
+
         case .InvalidState:
             writeInt(&buf, Int32(1))
-        
-        
+
+
         case .InvalidTime:
             writeInt(&buf, Int32(2))
-        
-        
+
+
         case .UnsupportedAlgorithm:
             writeInt(&buf, Int32(3))
-        
-        
+
+
         case .Overflow:
             writeInt(&buf, Int32(4))
-        
+
         }
     }
 }
@@ -2699,7 +2853,7 @@ public func FfiConverterTypeFsrsError_lower(_ value: FsrsError) -> RustBuffer {
  */
 
 public enum Grade: Equatable, Hashable {
-    
+
     /**
      * Couldn't recall it.
      */
@@ -2736,38 +2890,38 @@ public struct FfiConverterTypeGrade: FfiConverterRustBuffer {
     public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> Grade {
         let variant: Int32 = try readInt(&buf)
         switch variant {
-        
+
         case 1: return .again
-        
+
         case 2: return .hard
-        
+
         case 3: return .good
-        
+
         case 4: return .easy
-        
+
         default: throw UniffiInternalError.unexpectedEnumCase
         }
     }
 
     public static func write(_ value: Grade, into buf: inout [UInt8]) {
         switch value {
-        
-        
+
+
         case .again:
             writeInt(&buf, Int32(1))
-        
-        
+
+
         case .hard:
             writeInt(&buf, Int32(2))
-        
-        
+
+
         case .good:
             writeInt(&buf, Int32(3))
-        
-        
+
+
         case .easy:
             writeInt(&buf, Int32(4))
-        
+
         }
     }
 }
@@ -2794,7 +2948,7 @@ public func FfiConverterTypeGrade_lower(_ value: Grade) -> RustBuffer {
  */
 
 public enum LadderRung: Equatable, Hashable {
-    
+
     /**
      * Recognise and repeat it.
      */
@@ -2802,7 +2956,7 @@ public enum LadderRung: Equatable, Hashable {
     /**
      * Change its form.
      */
-    case bent
+    case ben
     /**
      * Use it somewhere it wasn't taught.
      */
@@ -2835,44 +2989,44 @@ public struct FfiConverterTypeLadderRung: FfiConverterRustBuffer {
     public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> LadderRung {
         let variant: Int32 = try readInt(&buf)
         switch variant {
-        
+
         case 1: return .accumulated
-        
-        case 2: return .bent
-        
+
+        case 2: return .ben
+
         case 3: return .transferred
-        
+
         case 4: return .pressureTested
-        
+
         case 5: return .deployed
-        
+
         default: throw UniffiInternalError.unexpectedEnumCase
         }
     }
 
     public static func write(_ value: LadderRung, into buf: inout [UInt8]) {
         switch value {
-        
-        
+
+
         case .accumulated:
             writeInt(&buf, Int32(1))
-        
-        
+
+
         case .bent:
             writeInt(&buf, Int32(2))
-        
-        
+
+
         case .transferred:
             writeInt(&buf, Int32(3))
-        
-        
+
+
         case .pressureTested:
             writeInt(&buf, Int32(4))
-        
-        
+
+
         case .deployed:
             writeInt(&buf, Int32(5))
-        
+
         }
     }
 }
@@ -2899,7 +3053,7 @@ public func FfiConverterTypeLadderRung_lower(_ value: LadderRung) -> RustBuffer 
  */
 
 public enum MergeClass: Equatable, Hashable {
-    
+
     /**
      * Highest HLC wins. Learner-set scalars.
      */
@@ -2942,44 +3096,44 @@ public struct FfiConverterTypeMergeClass: FfiConverterRustBuffer {
     public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> MergeClass {
         let variant: Int32 = try readInt(&buf)
         switch variant {
-        
+
         case 1: return .lww
-        
+
         case 2: return .max
-        
+
         case 3: return .latestReview
-        
+
         case 4: return .appendOnly
-        
+
         case 5: return .tombstone
-        
+
         default: throw UniffiInternalError.unexpectedEnumCase
         }
     }
 
     public static func write(_ value: MergeClass, into buf: inout [UInt8]) {
         switch value {
-        
-        
+
+
         case .lww:
             writeInt(&buf, Int32(1))
-        
-        
+
+
         case .max:
             writeInt(&buf, Int32(2))
-        
-        
+
+
         case .latestReview:
             writeInt(&buf, Int32(3))
-        
-        
+
+
         case .appendOnly:
             writeInt(&buf, Int32(4))
-        
-        
+
+
         case .tombstone:
             writeInt(&buf, Int32(5))
-        
+
         }
     }
 }
@@ -3002,6 +3156,90 @@ public func FfiConverterTypeMergeClass_lower(_ value: MergeClass) -> RustBuffer 
 
 
 /**
+ * A malformed notification candidate is a programming error, never a reason to guess a schedule.
+ */
+public
+enum NotificationPlanError: Swift.Error, Equatable, Hashable, Foundation.LocalizedError {
+
+
+
+    /**
+     * A candidate cannot be safely handed to an operating-system scheduler.
+     */
+    case InvalidCandidate(
+        /**
+         * Actionable validation failure.
+         */reason: String
+    )
+
+
+
+
+
+
+    public var errorDescription: String? {
+        String(reflecting: self)
+    }
+
+}
+
+#if compiler(>=6)
+extension NotificationPlanError: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeNotificationPlanError: FfiConverterRustBuffer {
+    typealias SwiftType = NotificationPlanError
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> NotificationPlanError {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+
+
+
+
+        case 1: return .InvalidCandidate(
+            reason: try FfiConverterString.read(from: &buf)
+            )
+
+         default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: NotificationPlanError, into buf: inout [UInt8]) {
+        switch value {
+
+
+
+
+
+        case let .InvalidCandidate(reason):
+            writeInt(&buf, Int32(1))
+            FfiConverterString.write(reason, into: &buf)
+
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeNotificationPlanError_lift(_ buf: RustBuffer) throws -> NotificationPlanError {
+    return try FfiConverterTypeNotificationPlanError.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeNotificationPlanError_lower(_ value: NotificationPlanError) -> RustBuffer {
+    return FfiConverterTypeNotificationPlanError.lower(value)
+}
+
+
+/**
  * The manner of one rep. From the blueprint (`Loro.dc.html:3353–3360`).
  *
  * Six reps of one phrase are six different cognitive events — imitation, synchrony,
@@ -3009,7 +3247,7 @@ public func FfiConverterTypeMergeClass_lower(_ value: MergeClass) -> RustBuffer 
  */
 
 public enum RefrainMode: Equatable, Hashable {
-    
+
     /**
      * Hear it, then say it back.
      */
@@ -3054,50 +3292,50 @@ public struct FfiConverterTypeRefrainMode: FfiConverterRustBuffer {
     public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> RefrainMode {
         let variant: Int32 = try readInt(&buf)
         switch variant {
-        
+
         case 1: return .echo
-        
+
         case 2: return .chorus
-        
+
         case 3: return .speed
-        
+
         case 4: return .cloze
-        
+
         case 5: return .call
-        
+
         case 6: return .cold
-        
+
         default: throw UniffiInternalError.unexpectedEnumCase
         }
     }
 
     public static func write(_ value: RefrainMode, into buf: inout [UInt8]) {
         switch value {
-        
-        
+
+
         case .echo:
             writeInt(&buf, Int32(1))
-        
-        
+
+
         case .chorus:
             writeInt(&buf, Int32(2))
-        
-        
+
+
         case .speed:
             writeInt(&buf, Int32(3))
-        
-        
+
+
         case .cloze:
             writeInt(&buf, Int32(4))
-        
-        
+
+
         case .call:
             writeInt(&buf, Int32(5))
-        
-        
+
+
         case .cold:
             writeInt(&buf, Int32(6))
-        
+
         }
     }
 }
@@ -3124,7 +3362,7 @@ public func FfiConverterTypeRefrainMode_lower(_ value: RefrainMode) -> RustBuffe
  */
 
 public enum RejectReason: Equatable, Hashable {
-    
+
     /**
      * Too much background noise.
      */
@@ -3136,7 +3374,7 @@ public enum RejectReason: Equatable, Hashable {
     /**
      * Far shorter than the reference.
      */
-    case tooShort
+    case tooShor
     /**
      * The alignment cost was too high — they probably said something else.
      */
@@ -3161,38 +3399,38 @@ public struct FfiConverterTypeRejectReason: FfiConverterRustBuffer {
     public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> RejectReason {
         let variant: Int32 = try readInt(&buf)
         switch variant {
-        
+
         case 1: return .lowSnr
-        
+
         case 2: return .noVoicing
-        
-        case 3: return .tooShort
-        
+
+        case 3: return .tooShor
+
         case 4: return .unalignable
-        
+
         default: throw UniffiInternalError.unexpectedEnumCase
         }
     }
 
     public static func write(_ value: RejectReason, into buf: inout [UInt8]) {
         switch value {
-        
-        
+
+
         case .lowSnr:
             writeInt(&buf, Int32(1))
-        
-        
+
+
         case .noVoicing:
             writeInt(&buf, Int32(2))
-        
-        
+
+
         case .tooShort:
             writeInt(&buf, Int32(3))
-        
-        
+
+
         case .unalignable:
             writeInt(&buf, Int32(4))
-        
+
         }
     }
 }
@@ -3219,7 +3457,7 @@ public func FfiConverterTypeRejectReason_lower(_ value: RejectReason) -> RustBuf
  */
 
 public enum Tag: Equatable, Hashable {
-    
+
     /**
      * The sounds are the problem.
      */
@@ -3256,38 +3494,38 @@ public struct FfiConverterTypeTag: FfiConverterRustBuffer {
     public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> Tag {
         let variant: Int32 = try readInt(&buf)
         switch variant {
-        
+
         case 1: return .pron
-        
+
         case 2: return .remember
-        
+
         case 3: return .useful
-        
+
         case 4: return .words
-        
+
         default: throw UniffiInternalError.unexpectedEnumCase
         }
     }
 
     public static func write(_ value: Tag, into buf: inout [UInt8]) {
         switch value {
-        
-        
+
+
         case .pron:
             writeInt(&buf, Int32(1))
-        
-        
+
+
         case .remember:
             writeInt(&buf, Int32(2))
-        
-        
+
+
         case .useful:
             writeInt(&buf, Int32(3))
-        
-        
+
+
         case .words:
             writeInt(&buf, Int32(4))
-        
+
         }
     }
 }
@@ -3314,23 +3552,23 @@ public func FfiConverterTypeTag_lower(_ value: Tag) -> RustBuffer {
  */
 
 public enum TakeResult: Equatable, Hashable {
-    
+
     /**
      * A real score.
      */
     case scored(
         /**
          * 40..99.
-         */overall: UInt8, 
+         */overall: UInt8,
         /**
          * Per-syllable accuracy, 40..99.
-         */syllables: Data, 
+         */syllables: Data,
         /**
          * The learner's normalised contour, for display and the sparkline.
-         */contour: [Float], 
+         */contour: [Float],
         /**
          * Index of the weakest syllable.
-         */worstSyllable: UInt32, 
+         */worstSyllable: UInt32,
         /**
          * Which feedback template to show.
          */fixCode: String
@@ -3358,26 +3596,26 @@ extension TakeResult: Sendable {}
 @_documentation(visibility: private)
 #endif
 public struct FfiConverterTypeTakeResult: FfiConverterRustBuffer {
-    typealias SwiftType = TakeResult
+    typealias SwiftType = TakeResul
 
     public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> TakeResult {
         let variant: Int32 = try readInt(&buf)
         switch variant {
-        
+
         case 1: return .scored(overall: try FfiConverterUInt8.read(from: &buf), syllables: try FfiConverterData.read(from: &buf), contour: try FfiConverterSequenceFloat.read(from: &buf), worstSyllable: try FfiConverterUInt32.read(from: &buf), fixCode: try FfiConverterString.read(from: &buf)
         )
-        
+
         case 2: return .rejected(reason: try FfiConverterTypeRejectReason.read(from: &buf)
         )
-        
+
         default: throw UniffiInternalError.unexpectedEnumCase
         }
     }
 
     public static func write(_ value: TakeResult, into buf: inout [UInt8]) {
         switch value {
-        
-        
+
+
         case let .scored(overall,syllables,contour,worstSyllable,fixCode):
             writeInt(&buf, Int32(1))
             FfiConverterUInt8.write(overall, into: &buf)
@@ -3385,12 +3623,12 @@ public struct FfiConverterTypeTakeResult: FfiConverterRustBuffer {
             FfiConverterSequenceFloat.write(contour, into: &buf)
             FfiConverterUInt32.write(worstSyllable, into: &buf)
             FfiConverterString.write(fixCode, into: &buf)
-            
-        
+
+
         case let .rejected(reason):
             writeInt(&buf, Int32(2))
             FfiConverterTypeRejectReason.write(reason, into: &buf)
-            
+
         }
     }
 }
@@ -3705,6 +3943,31 @@ fileprivate struct FfiConverterSequenceString: FfiConverterRustBuffer {
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterSequenceTypeNotificationCandidate: FfiConverterRustBuffer {
+    typealias SwiftType = [NotificationCandidate]
+
+    public static func write(_ value: [NotificationCandidate], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeNotificationCandidate.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [NotificationCandidate] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [NotificationCandidate]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeNotificationCandidate.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterSequenceTypePhraseState: FfiConverterRustBuffer {
     typealias SwiftType = [PhraseState]
 
@@ -3722,6 +3985,31 @@ fileprivate struct FfiConverterSequenceTypePhraseState: FfiConverterRustBuffer {
         seq.reserveCapacity(Int(len))
         for _ in 0 ..< len {
             seq.append(try FfiConverterTypePhraseState.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterSequenceTypePlannedNotification: FfiConverterRustBuffer {
+    typealias SwiftType = [PlannedNotification]
+
+    public static func write(_ value: [PlannedNotification], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypePlannedNotification.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [PlannedNotification] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [PlannedNotification]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypePlannedNotification.read(from: &buf))
         }
         return seq
     }
@@ -3825,7 +4113,7 @@ public func matchTokens(heard: [String], target: [String], revealed: UInt32, fuz
 })
 }
 /**
- * Normalise for comparison: lowercase, strip diacritics, strip everything that
+ * Normalise for comparison: lowercase, strip diacritics, strip everything tha
  * isn't alphanumeric or ñ.
  *
  * So `¿Cuánto cuesta?` matches `cuanto cuesta`, and `dónde` matches `donde`.
@@ -4209,6 +4497,20 @@ public func need(p: PhraseState, nowMs: Int64) -> UInt32  {
 })
 }
 /**
+ * The semantic copy key for a notification category.
+ *
+ * This deliberately returns a key rather than learner-facing text. Native adapters resolve the
+ * key through the same bundled copy resources as the app at delivery time.
+ */
+public func copyKeyFor(category: Category) -> String  {
+    return try!  FfiConverterString.lift(try! rustCall() {
+        uniffiCallStatus in
+    uniffi_loro_core_fn_func_copy_key_for(
+        FfiConverterTypeCategory_lower(category),uniffiCallStatus
+    )
+})
+}
+/**
  * The deep link for a category. A notification that opens the home screen has wasted
  * the learner's attention.
  */
@@ -4244,9 +4546,31 @@ public func mayFire(category: Category, ctx: NotifyContext) -> Bool  {
 })
 }
 /**
+ * Select the safe subset of locally resolved notification candidates.
+ *
+ * The platform owns calculating real delivery instants, handling permission state, replacing or
+ * cancelling the returned stable IDs, and suppressing foreground presentation. This function owns
+ * only shared policy: category opt-outs, quiet hours, conditionality, route availability and the
+ * absolute per-day cap. It has no trip lifecycle semantics, so a caller may simply omit trip
+ * candidates until Q-07 is resolved.
+ *
+ * # Errors
+ * Returns an error for malformed or duplicate candidate identifiers instead of guessing which OS
+ * schedule to replace.
+ */
+public func planNotifications(ctx: NotifyContext, candidates: [NotificationCandidate])throws  -> [PlannedNotification]  {
+    return try  FfiConverterSequenceTypePlannedNotification.lift(try rustCallWithError(FfiConverterTypeNotificationPlanError_lift) {
+        uniffiCallStatus in
+    uniffi_loro_core_fn_func_plan_notifications(
+        FfiConverterTypeNotifyContext_lower(ctx),
+        FfiConverterSequenceTypeNotificationCandidate.lower(candidates),uniffiCallStatus
+    )
+})
+}
+/**
  * How many times a phrase repeats before the stream advances.
  *
- * From `Loro.dc.html:2526`. Visible to the learner: rating something Difficult
+ * From `Loro.dc.html:2526`. Visible to the learner: rating something Difficul
  * makes it repeat more, and the toast says so.
  */
 public func repeatTarget(difficulty: Difficulty) -> UInt32  {
@@ -4443,7 +4767,7 @@ private enum InitializationResult {
     case contractVersionMismatch
     case apiChecksumMismatch
 }
-// Use a global variable to perform the versioning checks. Swift ensures that
+// Use a global variable to perform the versioning checks. Swift ensures tha
 // the code inside is only computed once.
 private let initializationResult: InitializationResult = {
     // Get the bindings contract version from our ComponentInterface
@@ -4531,6 +4855,9 @@ private let initializationResult: InitializationResult = {
     if (uniffi_loro_core_checksum_func_need() != 14278) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_loro_core_checksum_func_copy_key_for() != 34469) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_loro_core_checksum_func_deep_link_for() != 25113) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -4538,6 +4865,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_loro_core_checksum_func_may_fire() != 35123) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_loro_core_checksum_func_plan_notifications() != 41196) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_loro_core_checksum_func_repeat_target() != 48455) {
