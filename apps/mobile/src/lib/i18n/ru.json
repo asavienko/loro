@@ -234,6 +234,7 @@
   "stream.lovedBadge": "♥ Любимая",
   "settings.accentCoral": "Коралловый",
   "audioSpeech.tts": "Голос устройства · нужен установленный офлайн-голос",
+  "audioSpeech.catalog": "Запись из каталога · произносительный ориентир",
   "add.browseTitle": "{theme} · осталось {left, number}",
   "toast.difficulty.easy": "Лёгкая — отодвигается назад",
   "today.lockedIn": "Закреплено {locked, number} из {total, number}",

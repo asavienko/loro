@@ -234,6 +234,7 @@
   "stream.lovedBadge": "[!! ♥ Löövëëd !!]",
   "settings.accentCoral": "[!! Cööráál !!]",
   "audioSpeech.tts": "[!! Dëëvïïcëë vööïïcëë · wöörks wïïth áán ïïnstáállëëd ööfflïïnëë vööïïcëë !!]",
+  "audioSpeech.catalog": "[!! Cáátáálöög rëëcöördïïng · pröönüüncïïáátïïöön rëëfëërëëncëë !!]",
   "add.browseTitle": "[!! {theme} · {left, number} lëëft !!]",
   "toast.difficulty.easy": "[!! ËËáásy — drïïftïïng töö thëë bááck !!]",
   "today.lockedIn": "[!! {locked, number} ööf {total, number} lööckëëd ïïn !!]",

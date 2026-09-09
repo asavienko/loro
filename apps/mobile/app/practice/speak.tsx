@@ -6,7 +6,7 @@ import { copy } from '../../src/lib/copy'
 import { PracticeEmptyState } from './_emptyPractice'
 import { useLocale } from '../../src/lib/i18n'
 import { coreAvailable } from '../../src/lib/core'
-import { audioSpeech, useAudioSpeech } from '../../src/lib/audioSpeech'
+import { audioSpeech, audioPlaybackNote, useAudioSpeech } from '../../src/lib/audioSpeech'
 import { deviceClock } from '../../src/lib/clock'
 import { newId } from '../../src/lib/ids'
 import { engineContext, speakEngine, toView, useApp, type PhraseView } from '../../src/store'
@@ -94,7 +94,7 @@ function SpeakingPhrase({
   onNext: () => void
 }) {
   useLocale()
-  const audio = useAudioSpeech(locale)
+  const audio = useAudioSpeech(locale, phrase.catalog?.audio)
   const applyDelta = useApp((state) => state.applyDelta)
   const tokens = useMemo(
     () => phrase.targetText.trim().split(/\s+/).filter(Boolean),
@@ -197,7 +197,8 @@ function SpeakingPhrase({
     revealedRef.current = next
     setRevealed(next)
     const word = tokens[next - 1]
-    if (word !== undefined && audio.canPlay) void audioSpeech.play(phrase.id, word, locale, 0.85)
+    if (word !== undefined && audio.devicePlayback)
+      void audioSpeech.play(phrase.id, word, locale, 0.85)
     if (next === tokens.length) {
       completeRef.current = true
       setDone(true)
@@ -285,13 +286,7 @@ function SpeakingPhrase({
       </Card>
       <AudioControls
         label={audio.playback === 'playing' ? copy.audioSpeech.stop : copy.audioSpeech.hear}
-        note={
-          audio.canPlay
-            ? audio.playback === 'error'
-              ? copy.audioSpeech.error
-              : copy.audioSpeech.tts
-            : copy.audioSpeech.unavailable
-        }
+        note={audioPlaybackNote(audio.source, audio.playback)}
         enabled={audio.canPlay}
         onPress={() => {
           if (audio.playback === 'playing') void audioSpeech.stopPlayback()
@@ -300,7 +295,14 @@ function SpeakingPhrase({
               hintsRef.current += 1
               setHints(hintsRef.current)
             }
-            void audioSpeech.play(phrase.id, phrase.targetText, locale)
+            void audioSpeech.play(
+              phrase.id,
+              phrase.targetText,
+              locale,
+              0.92,
+              undefined,
+              phrase.catalog?.audio,
+            )
           }
         }}
       />

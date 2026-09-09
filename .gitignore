@@ -90,6 +90,9 @@ maestro-debug-output/
 .DS_Store
 Thumbs.db
 
+# Catalog TTS render cache (plan 98). Never commit stub or failed audio.
+packages/content/.render-cache/
+
 # ── logs ──
 *.log
 npm-debug.log*
