@@ -31,6 +31,7 @@ import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 import expo.modules.kotlin.records.Field
 import expo.modules.kotlin.records.Record
+import java.io.File
 import java.util.Locale
 
 class PlaybackOptions : Record {
@@ -44,6 +45,11 @@ class PlaybackOptions : Record {
 class ListeningOptions : Record {
   @Field var id: String = ""
   @Field var locale: String = ""
+}
+
+class FilePlaybackOptions : Record {
+  @Field var id: String = ""
+  @Field var fileUri: String = ""
 }
 
 private open class SilentRecognitionListener : RecognitionListener {
@@ -66,6 +72,7 @@ class LoroAudioSpeechModule : Module() {
   private var foreground = true
   private var tts: TextToSpeech? = null
   private var mediaPlayer: MediaPlayer? = null
+  private var filePlayer: MediaPlayer? = null
   private var ttsReady = false
   private var ttsInitializing = false
   private var ttsGeneration = 0L
@@ -116,6 +123,10 @@ class LoroAudioSpeechModule : Module() {
           promise.resolve(mapOf("playback" to playback, "recognition" to recognition))
         }
       }
+    }.runOnQueue(Queues.MAIN)
+
+    AsyncFunction("playFile") { options: FilePlaybackOptions, promise: Promise ->
+      playCachedFile(options, promise)
     }.runOnQueue(Queues.MAIN)
 
     AsyncFunction("play") { options: PlaybackOptions, promise: Promise ->
@@ -516,6 +527,75 @@ class LoroAudioSpeechModule : Module() {
     if (playbackId == null) abandonFocus()
   }
 
+  private fun playCachedFile(options: FilePlaybackOptions, promise: Promise) {
+    val uri = Uri.parse(options.fileUri)
+    val path = uri.path
+    if (options.id.isBlank() || uri.scheme != "file" || path.isNullOrBlank() || !File(path).isFile) {
+      playbackEvent(options.id, "error", "file_unavailable")
+      promise.reject("ERR_AUDIO_UNAVAILABLE", "Cached listening file is unavailable", null)
+      return
+    }
+    stopSpeech()
+    stopPlayback()
+    val generation = playbackGeneration
+    try {
+      if (!acquireFocus()) {
+        playbackEvent(options.id, "error", "playback_unavailable")
+        promise.reject("ERR_AUDIO_UNAVAILABLE", "Cached listening playback could not start", null)
+        return
+      }
+      val player = MediaPlayer()
+      filePlayer = player
+      playbackId = options.id
+      playbackToken = "file-$generation"
+      player.setAudioAttributes(audioAttributes)
+      player.setOnCompletionListener {
+        main.post { finishFilePlayback(generation, "ended") }
+      }
+      player.setOnErrorListener { _, _, _ ->
+        main.post { finishFilePlayback(generation, "error", "file_playback_failed") }
+        true
+      }
+      player.setDataSource(path)
+      player.prepare()
+      if (generation != playbackGeneration || destroyed || !foreground) {
+        stopFilePlayer()
+        playbackId = null
+        playbackToken = null
+        promise.reject("ERR_CANCELLED", "Playback was cancelled", null)
+        return
+      }
+      player.start()
+      playbackEvent(options.id, "playing")
+      promise.resolve()
+    } catch (error: Exception) {
+      stopFilePlayer()
+      playbackId = null
+      playbackToken = null
+      playbackEvent(options.id, "error", "file_playback_failed")
+      promise.reject("ERR_AUDIO_UNAVAILABLE", "Cached listening playback failed", error)
+    }
+  }
+
+  private fun stopFilePlayer() {
+    val player = filePlayer
+    filePlayer = null
+    player?.setOnCompletionListener(null)
+    player?.setOnErrorListener(null)
+    runCatching { player?.stop() }
+    player?.release()
+  }
+
+  private fun finishFilePlayback(generation: Long, state: String, error: String? = null) {
+    if (generation != playbackGeneration) return
+    val id = playbackId ?: return
+    playbackId = null
+    playbackToken = null
+    stopFilePlayer()
+    playbackEvent(id, state, error)
+    if (speechId == null) abandonFocus()
+  }
+
   private fun stopPlayback() {
     playbackGeneration += 1
     val id = playbackId
@@ -527,6 +607,7 @@ class LoroAudioSpeechModule : Module() {
     mediaPlayer?.release()
     mediaPlayer = null
     tts?.stop()
+    stopFilePlayer()
     if (id != null) playbackEvent(id, "stopped")
     if (speechId == null) abandonFocus()
   }

@@ -1,0 +1,144 @@
+import { describe, expect, it, vi } from 'vitest'
+import {
+  LISTENING_INTER_GAP_MS,
+  LISTENING_INTRA_GAP_MS,
+  LISTENING_MIN_VOICES,
+  LISTENING_SHARE_ENABLED,
+} from '@loro/core'
+import { AudioCacheController, AudioCacheError } from './audioCacheController'
+import {
+  listenViewModel,
+  playListeningSequence,
+  prepareListeningBatch,
+  shareListeningBatch,
+} from './listenCompanion'
+import { fixtureListenView } from './listenFixtures'
+
+describe('listening companion', () => {
+  it('keeps generate unavailable until Q-15 pins two licensed voices', () => {
+    const view = listenViewModel({
+      phase: 'idle',
+      locale: 'es-ES',
+      phrases: [{ id: 'row-1', targetText: 'Hola', learnerAuthored: false }],
+      repeats: 3,
+      network: true,
+      configured: true,
+      nativeCache: true,
+      sessionBusy: false,
+      diskFull: false,
+      quotaExceeded: false,
+      cacheComplete: false,
+      progress: { done: 0, total: 0, failed: 0 },
+      durationMs: null,
+    })
+    expect(view.voices).toHaveLength(0)
+    expect(view.voices.length).toBeLessThan(LISTENING_MIN_VOICES)
+    expect(view.generateEnabled).toBe(false)
+    expect(view.blockers).toContain('voices-unapproved')
+    expect(view.blockers).toContain('model-unpinned')
+    expect(LISTENING_SHARE_ENABLED).toBe(false)
+    expect(view.shareEnabled).toBe(false)
+  })
+
+  it('plays from cache without network and keeps Q-21 share closed', () => {
+    const view = listenViewModel({
+      phase: 'ready',
+      locale: 'es-ES',
+      phrases: [{ id: 'row-1', targetText: 'Hola', learnerAuthored: false }],
+      repeats: 3,
+      network: false,
+      configured: true,
+      nativeCache: true,
+      sessionBusy: false,
+      diskFull: false,
+      quotaExceeded: false,
+      cacheComplete: true,
+      progress: { done: 9, total: 9, failed: 0 },
+      durationMs: 1420,
+    })
+    expect(view.listenEnabled).toBe(true)
+    expect(view.shareEnabled).toBe(false)
+    expect(view.generateEnabled).toBe(false)
+  })
+
+  it('skips verified cache hits and keeps completed clips on cancel', async () => {
+    const lookup = vi.fn(async (key: string) =>
+      key.includes('hit')
+        ? { fileUri: 'file:///clip.m4a', ms: 1000, sha256: 'a'.repeat(64) }
+        : null,
+    )
+    const cache = new AudioCacheController({
+      download: vi.fn(),
+      lookup,
+      cancel: vi.fn(async () => undefined),
+      pin: vi.fn(async () => undefined),
+      unpin: vi.fn(async () => undefined),
+      concatenate: vi.fn(),
+      share: vi.fn(async () => undefined),
+    })
+    const abort = new AbortController()
+    abort.abort()
+    const result = await prepareListeningBatch({
+      cache,
+      locale: 'es-ES',
+      phrases: [{ id: 'row-1', targetText: 'Hola', learnerAuthored: false }],
+      repeats: 3,
+      signal: abort.signal,
+    })
+    expect(result.phase).toBe('cancelled')
+  })
+
+  it('fixtures honest composer states without claiming licensed neural audio', () => {
+    expect(fixtureListenView('voices-unapproved').blockers).toContain('voices-unapproved')
+    expect(fixtureListenView('share-unavailable').shareEnabled).toBe(false)
+    expect(fixtureListenView('share-ready').shareEnabled).toBe(true)
+    expect(fixtureListenView('generating').phase).toBe('generating')
+    expect(fixtureListenView('empty').phraseCount).toBe(0)
+  })
+
+  it('plays cached file URIs with named gaps and never muxes while Q-21 is open', async () => {
+    const playFile = vi.fn(async (_id: string, _uri: string, onEnded?: () => void) => {
+      onEnded?.()
+    })
+    const wait = vi.fn(async () => undefined)
+    await playListeningSequence({
+      clips: [
+        { fileUri: 'file:///a.m4a', ms: 1000, sha256: 'a'.repeat(64) },
+        { fileUri: 'file:///b.m4a', ms: 1000, sha256: 'b'.repeat(64) },
+        { fileUri: 'file:///c.m4a', ms: 1000, sha256: 'c'.repeat(64) },
+      ],
+      repeats: 2,
+      playFile,
+      wait,
+    })
+    expect(playFile).toHaveBeenCalledTimes(3)
+    expect(wait).toHaveBeenNthCalledWith(1, LISTENING_INTRA_GAP_MS, undefined)
+    expect(wait).toHaveBeenNthCalledWith(2, LISTENING_INTER_GAP_MS, undefined)
+    await expect(
+      playListeningSequence({
+        clips: [{ fileUri: 'https://cdn.loro.test/clip.m4a', ms: 1, sha256: 'a'.repeat(64) }],
+        repeats: 2,
+        playFile,
+      }),
+    ).rejects.toMatchObject({ code: 'invalid-url' })
+    const cache = new AudioCacheController({
+      download: vi.fn(),
+      lookup: vi.fn(),
+      cancel: vi.fn(async () => undefined),
+      pin: vi.fn(async () => undefined),
+      unpin: vi.fn(async () => undefined),
+      concatenate: vi.fn(),
+      share: vi.fn(async () => undefined),
+    })
+    await expect(
+      shareListeningBatch(cache, {
+        fileUris: ['file:///a.m4a'],
+        intraGapMs: LISTENING_INTRA_GAP_MS,
+        interGapMs: LISTENING_INTER_GAP_MS,
+        takesPerPhrase: 2,
+        outputName: 'loro-es-ES-2026-09-09-listen.m4a',
+      }),
+    ).rejects.toBeInstanceOf(AudioCacheError)
+    expect(LISTENING_SHARE_ENABLED).toBe(false)
+  })
+})
