@@ -8,10 +8,9 @@
   not close full shared-service acceptance.
 - **Depends on:** 54/85 completed; coordinates with 67 for principal identity and 86 for provider
   adapters; no native prerequisite.
-- **Reviewed:** 2026-09-09 against checkout `42f4d57`; source/plan review only, no new device or
-  deployment acceptance. Subsequent local content-contract validation on 2026-09-09 passed the
-  shared schema/registry suite, registered HTTP contract tests, controller pair checks and core/API
-  typechecks; image, load and operational gates remain open.
+- **Reviewed:** 2026-09-09 against `aafa61f`; current source, tests and retained review records
+  inspected. This plan refresh supplies no new runtime, device or deployment acceptance.
+- **Priority:** 4; content boundaries with 61/86; acceptance alongside priority 9.
 
 ## Implemented scope
 
@@ -24,6 +23,10 @@ protect replay, tombstone/catalog identity reconciliation and cursor consistency
 Real-Postgres tests cover authentication, refresh/replay and two-device tenant-scoped sync,
 including HTTP controllers. Readiness checks real database/WASM dependencies. Request bounds,
 exact-origin CORS, non-leaking problems and authenticated principals protect runtime requests.
+
+The 2026-09-09 content-contract delivery recorded passing shared schema/registry, registered HTTP
+contract and controller-pair tests plus core/API typechecks. These retained results do not close
+image, load or operational acceptance.
 
 Main's exact-image gate and restricted EC2/HTTPS preview tooling are retained. The 2026-09-08
 account-release record in `docs/process/ec2-deployment.md` reports a deployed durable image,
@@ -63,10 +66,15 @@ practice dependency.
 
 ## Delivery order and gates
 
-1. Reconcile the registered routes with shared current contracts, then migrate remaining content
-   boundaries with 61. Do not activate draft AI, account-management or trip contracts incidentally.
+1. Complete the plan-61 publication/download wire boundary first, preserving legacy content
+   compatibility and the implemented v2 query validation. Derive request/response parsing and
+   generated OpenAPI from shared schemas; prove rejected locale/version/manifest inputs fail before
+   publication or activation. Migrate unrelated legacy/AI endpoints in later owner-specific changes;
+   do not activate draft AI, account-management or trip contracts incidentally.
 2. Keep exact-image/PostgreSQL tests local and isolated. Reuse `ci-api-image.sh`, the real database
-   tests and existing tenant/session runtime; 88 owns deployed load/recovery evidence.
+   tests and existing tenant/session runtime; 88 owns deployed load/recovery evidence. Retain the
+   tested image digest, schema version and report together. A historical passing local gate or
+   readiness response is not a fresh security scan, load result or deployed-image identity.
 3. Coordinate lifecycle repositories with 67 and provider budgets with 86. Neither full account
    lifecycle nor a paid provider is required to finish the existing endpoint-validation slice.
 

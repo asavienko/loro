@@ -25,15 +25,17 @@ The spine supports pull-down to open its menu; sheets dismiss by pulling their d
 Practice routes disable native back-swipe. Native touch validation remains a release gate. Today
 owns its root header and day rows; other routes retain their stack header with a Today escape for
 cold entries. Onboarding keeps step-back navigation. More is reachable through the existing
-destination list; metadata grouping/search, full session exits and travelling audio remain in plans
-56/62/64/81.
+destination registry and grouped More utility; exhaustive route laws, counts/search, full session
+exits and travelling audio remain in plans 56/62/64/81.
 
 API contracts live in `packages/core/src/api/` with current/target/draft entry points and generated
 OpenAPI. Auth, sync and content-query runtime boundaries consume the shared schemas; remaining
 migration limits are recorded in [the contract guide](docs/architecture/api-contracts.md).
 `pnpm check` includes route ownership, contract and generated-core drift checks. The
-[twenty-plan review](docs/reviews/2026-09-09-twenty-plan-implementation.md) records outstanding
-import validation and integration fixes; the twenty plans have partial deliveries.
+[twenty-plan review](docs/reviews/2026-09-09-twenty-plan-implementation.md) and follow-up retain
+remediation history; import validation/recovery and exact-material review fixes are implemented. The
+[nine-priority queue](plans/README.md#next-implementation-priorities--reviewed-2026-09-09) sequences
+the remaining slices, with device/content/operations acceptance starting alongside priority 1.
 
 The standalone preview can use the [AWS HTTPS gateway](docs/process/public-api.md). Account checks
 real readiness independently of sign-in. The development gateway now exposes Google sign-in and

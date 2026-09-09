@@ -7,8 +7,9 @@
   compensation/retry semantics; the engine and route can proceed without exposing Undo.
 - **Depends on:** 59 history/resume; 60 FSRS/selection; 56/81 route laws; 57 chart primitives; 72
   applicable harness only.
-- **Reviewed:** 2026-09-09 against checkout `42f4d57`; source/plan review only, no new device or
-  deployment acceptance.
+- **Reviewed:** 2026-09-09 against `aafa61f`; current source, tests and retained review records
+  inspected. This plan refresh supplies no new runtime, device or deployment acceptance.
+- **Priority:** 3; Review engine/route before Memory.
 
 Previous starting point: [archived snapshot](archive/2026-09-08/75-review-and-memory.md).
 
@@ -26,10 +27,14 @@ retrievability/lapses without manufacturing a curve, history, or confidence valu
 
 ## Remaining work
 
-1. [ ] Define target-course-scoped Review session/queue/grade/resume/undo/interruption contracts and
-       route states against canonical FSRS units and repository writes.
-2. [ ] Implement tag-aware selection and all due/empty/no-history/mixed/custom-phrase states with
-       deterministic fixtures.
+1. [ ] Define target-course-scoped Review queue/grade/attempt/checkpoint contracts and a
+       first-review policy for unscheduled phrases. Specify units, stable event identity,
+       retry/idempotency and resume validation before implementing the engine. Keep Undo a separate
+       68-owned compensation contract; it is not a prerequisite for the initial route.
+2. [ ] Extend the implemented candidate partition/tag-focus policy into canonical selection and a
+       conforming Review engine. Persist grades through `applyDelta`, attempt/history and checkpoint
+       writes in one transaction before publishing state. Add due/empty/no-history/mixed/custom
+       route states with deterministic fixtures.
 3. [ ] Render Memory axes/curve/points/labels from actual histories and model outputs; state
        honestly when insufficient data exists.
 4. [ ] Implement accessible chart summaries, focus order, Dynamic Type, reduced motion, and color-
@@ -46,8 +51,10 @@ retrievability/lapses without manufacturing a curve, history, or confidence valu
 
 ## Delivery order and gates
 
-1. Define Review queue/grade/attempt/undo contracts against the existing 59/60 persistence and
-   canonical FSRS first. Do not add a second scheduler or synthesize missing review history.
+1. Define Review queue/grade/attempt/checkpoint contracts against 59/60, then implement the engine
+   and reachable route. Verify a grade changes the canonical due state, survives relaunch and sync,
+   and is not applied twice after retry or interruption. Use current 56/57/81 APIs; no full-plan
+   completion, live provider or production recorded audio is required.
 2. Deliver the Review engine and route before Memory visualization. Define whether Undo is a new
    compensating event or another reviewed operation, and verify retry/sync behavior with 68 before
    exposing it; never rewrite an acknowledged review silently.

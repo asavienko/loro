@@ -7,8 +7,9 @@
   latency remain; full acceptance requires installed models and hardware evidence.
 - **Depends on:** 58 native workspace; 60 matching/bindings; 62 shared audio clock/session; 87
   language identities.
-- **Reviewed:** 2026-09-09 against checkout `42f4d57`; source/plan review only, no new device or
-  deployment acceptance.
+- **Reviewed:** 2026-09-09 against `aafa61f`; current source, tests and retained review records
+  inspected. This plan refresh supplies no new runtime, device or deployment acceptance.
+- **Priority:** 7; measured onset after 62; existing ASR acceptance starts with priority 9.
 
 **Archive disposition (2026-09-09):** Archived at user request after integration review. The partial
 status and remaining acceptance criteria below are retained; archival does not mark this plan
@@ -44,9 +45,11 @@ Speak to Progress with reveal-mode degradation.
 
 1. [ ] Validate es-ES/bg-BG/ru-RU separately on supported physical devices, recording on-device
        model availability, install requirements, latency, battery, accents and failure thresholds.
-2. [ ] Add native ring-buffer handles and VAD/onset timestamps tied to the playback monotonic clock.
-       JavaScript may receive timestamps/handles, never audio bytes; preserve raw measured samples
-       where the data model requires them.
+2. [ ] Add native ring-buffer handles and VAD/onset timestamps using the shared 62/60 contract.
+       Define release on completion, cancellation, failure and session replacement; test stale
+       handles and mismatched session generations. JavaScript may receive timestamps/opaque handles,
+       never PCM samples; audio remains in native memory. Preserve unrounded onset measurements
+       separately from the existing transcript/status events.
 3. [ ] Exercise permission denial/revocation, silence/noise, interruption, long pauses and offline
        recognition on hardware. Unsupported targets retain reveal mode.
 4. [ ] Validate measured-vs-null display and native-speaker acceptance before enabling timing or
@@ -67,7 +70,9 @@ Speak to Progress with reveal-mode degradation.
    independently of recorded-asset delivery. Keep unsupported targets usable through reveal.
 2. Agree timestamp units, prompt-end event, native buffer ownership/release and cancellation with
    62/60 before exposing onset measurement. Include stale-session, silence/noise and interruption
-   fixtures; only real native monotonic-clock measurements may replace null latency.
+   fixtures; only real native monotonic-clock measurements may replace null latency. Do not reuse
+   ASR callback arrival as speech onset. Verify native handle cleanup and measured-vs-null states
+   through interruption, unavailable models and prompt cancellation before connecting 64.
 3. Feed measured results to 64 and device evidence to 72; include English only after plan 90's
    locale contract and separate capability review. Successful recognition is not DSP scoring proof.
 

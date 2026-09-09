@@ -3,14 +3,15 @@
 - **Requirement IDs:** `NAV-01`…`NAV-16`, `F-03`, `P1-02`, `P2-14`, `P4-06`, `P5-08`, `AS-04`
 - **Milestone:** M1/M2
 - **Status:** 🟡 Shared built-page spine/switcher, translated hubs and cold-entry escapes are
-  implemented, including a More list of declared built destinations. Grouped More, owned-phrase
-  search, ongoing/contextual groups, full flow/session laws, durable resume and transport remain.
-  Consume 56's metadata; 59/64 supply checkpoints and 62 supplies audio. Q-17 gates final home-rail
-  priority, not reachability work.
+  implemented, including More grouped from shared built-destination policy. Owned-phrase search,
+  real counts, ongoing/contextual groups, full flow/session laws, resume presentation and transport
+  remain. Consume 56's metadata; 59/64 supply checkpoints and 62 supplies audio. Q-17 gates final
+  home-rail priority, not reachability work.
 - **Depends on:** 55/79/84 completed; 56 route contract, 57 shared state APIs; 59/64 checkpoints and
   62 playback for later slices.
-- **Reviewed:** 2026-09-09 against checkout `42f4d57`; source/plan review only, no new device or
-  deployment acceptance.
+- **Reviewed:** 2026-09-09 against `aafa61f`; current source, tests and retained review records
+  inspected. This plan refresh supplies no new runtime, device or deployment acceptance.
+- **Priority:** 1; exits/resume with 56, then priority 7 audio presentation.
 
 ## Verified starting point
 
@@ -19,9 +20,10 @@ phrase detail and Languages. `apps/mobile/src/lib/navigation.ts` supplies transl
 Today's rail. `NavigationMenu.tsx` and `apps/mobile/e2e/navigation.spec.ts` cover menu navigation,
 cold Today escapes, warm Back and Escape/focus restoration. Onboarding retains step-back behavior.
 
-The `/more` utility now lists the existing translated built destinations from `DESTINATIONS`,
-excluding home and itself, with a shared-menu entry and normal stack return. It adds no second route
-table, invented counts or planned destinations. There is no ongoing-work selector, exit sheet or
+The `/more` utility renders translated Lately/Phrases/Practice/You groups from `NAVIGATION_GROUPS`
+and `destinationsForGroup`, excluding home, itself and empty groups. It has a shared-menu entry and
+normal stack return. Grouping and built-hub parent/home/exit/resume metadata already exist; counts,
+search and contextual/ongoing selectors do not. There is no ongoing-work selector, exit sheet or
 travelling audio. The complete built/planned surface inventory and onboarding/Today home resolver
 already exist. Durable course checkpoints and Refrain resume are implemented by 59/64; this plan
 still needs their cross-route presentation and full exit laws. Additional product-dependent homes
@@ -42,19 +44,20 @@ Activity.
 
 ## Remaining work
 
-1. [ ] Consume plan 56's exhaustive metadata: surface class, translated place/parent, built/hub,
-       expectedUse, practice source with target course, resumability and rail/More grouping.
-       Preserve all currently reachable hubs, including Languages. Resolve Q-17 before final daily
-       rail priorities; store rails on each approved resolved home, not as a Today-only assumption.
+1. [ ] Extend consumption beyond the existing built-hub group policy to plan 56's exhaustive
+       metadata: surface class, translated place/parent, built/hub, expectedUse, practice source
+       with target course, resumability and rail/More grouping. Preserve all currently reachable
+       hubs, including Languages. Resolve Q-17 before final daily rail priorities; store rails on
+       each approved resolved home, not as a Today-only assumption.
 2. [ ] Evolve existing chrome into the repeated production components needed by actual call sites.
        Root has no Back; Push names its real destination or cold resolved home; Flow steps back with
        answers preserved; Session disables implicit exits; Sheet owns focus and the only active
        escape.
-3. [ ] Add More and switcher groups from selectors: Ongoing first, contextual flow steps, built
-       destinations, then Lately/Phrases/Practice/You with real counts and conditional trip entries.
-       Hide unbuilt/empty groups. Expose search over owned phrases using the existing phrase
-       data/list surface; reserve the ladder Phrasebook/Run product for gated plan 78. Do not create
-       a dead `/phrasebook` link or log search text.
+3. [ ] Extend existing More grouping and switcher presentation with selectors: Ongoing first,
+       contextual flow steps, built destinations, then Lately/Phrases/Practice/You with real counts
+       and conditional trip entries. Hide unbuilt/empty groups. Expose search over owned phrases
+       using the existing phrase data/list surface; reserve the ladder Phrasebook/Run product for
+       gated plan 78. Do not create a dead `/phrasebook` link or log search text.
 4. [ ] Show one/multiple ongoing items and implement NAV-13/14: Pause, End and Keep going; persisted
        checkpoint acknowledgement; a single primary Resume action on the resolved home; focus
        restoration and no underlying exit while a sheet is active. A language/course switch must not
@@ -72,13 +75,15 @@ Activity.
 
 ## Delivery order and gates
 
-1. Consume 56's extended metadata to deliver More and contextual groups first. Existing checkpoints
-   from 59/64 already supply resume data; this plan owns presentation, not another persistence
+1. Complete explicit session/flow exits with 56's work-at-stake policy and existing checkpoints.
+   Pause must acknowledge the durable write before leaving; End preserves earned progress; Keep
+   going restores focus. Show ongoing work and a primary Resume action without a second session
    store.
-2. Add explicit exit/collision sheets next with durable acknowledgement and course-preserving
-   resume. Preserve the gestures already implemented in 93 and feed their native checks into 58/72.
-3. Add travelling audio only after 62 supplies real session position/state. Q-17 gates final rail
-   priorities, not reachability or More; Q-07 still gates trip-dependent home behavior.
+2. Prove course-preserving resume after relaunch and queued deep-link collisions, including rejected
+   writes and deleted/stale sources. Keep existing menu gestures and first-run escapes. Reuse More's
+   groups, then add real counts and owned-phrase search; final rail ordering remains Q-17-gated.
+3. At priority 7, consume 62's real session position/state for travelling audio and 64's wave
+   transitions. Do not delay non-audio exits/resume for recorded assets or onset measurement.
 
 ## Verification and acceptance
 
@@ -94,12 +99,10 @@ Activity.
 
 ## Delivery sequence
 
-1. [ ] More/contextual navigation on the completed route-contract slice (NAV-01/NAV-08). The initial
-       built-destination More surface is implemented. Lately/Phrases/Practice/You grouping,
-       owned-phrase search and contextual work remain pending the extended plan-56 metadata and
-       selectors; this initial list does not claim their acceptance.
-2. [ ] Session/flow exits and persisted resume integration (NAV-13/NAV-14).
-3. [ ] Travelling transport and device verification (NAV-15/NAV-16).
+1. [ ] Session/flow exits, ongoing work and persisted resume integration (NAV-13/NAV-14), with 56.
+2. [ ] Complete More/contextual selectors, useful counts and owned-phrase search (NAV-01/NAV-08).
+       Static built-destination grouping is already implemented; preserve it.
+3. [ ] Travelling transport and physical-device verification (NAV-15/NAV-16), after 62.
 
 Native universal-link provisioning, route business logic, persistence/audio internals and OS widgets
 remain with their owners. No authored artifact changes are required.

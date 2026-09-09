@@ -8,8 +8,9 @@
   language-selection implementation is pending.
 - **Depends on:** 59 for device hydration/write-through; 61 for reviewed content publication; 72 for
   release gates. Audio/ASR/DSP are separately owned by 58/62/63/77.
-- **Reviewed:** 2026-09-09 against checkout `42f4d57`; source/plan review only, no new device or
-  deployment acceptance.
+- **Reviewed:** 2026-09-09 against `aafa61f`; current source, tests and retained review records
+  inspected. This plan refresh supplies no new runtime, device or deployment acceptance.
+- **Priority:** 9; start bilingual review alongside priority 1.
 
 ## Implemented scope — retain, do not rebuild
 
@@ -33,8 +34,12 @@ retained.
 `pnpm --silent --filter @loro/content review:export` exports all three bundled UI resources and
 seven actual adapted course catalogs with material SHA-256 identifiers and pending reviewer records.
 The [record workflow](../packages/content/reviews/README.md) preserves reviewer attribution,
-findings, version changes and handoff expectations. No reviewer has been assigned or approval
-recorded by this change. Exporting does not satisfy the human or device acceptance gates below.
+findings, version changes and handoff expectations. `releaseCheck.ts` consumes the record named by
+the current combined material digest. `reviewRecords.ts` recomputes retained payload hashes,
+validates locale/course and combined identity, and requires declared reviewer languages covering
+English plus the UI locale or both languages of a course. Mutation, stale-record and incomplete
+approval regressions exist. The review directory currently contains no approved material record;
+exporting and validator fixtures do not satisfy human or device acceptance.
 
 ## Remaining work
 
@@ -61,8 +66,11 @@ recorded by this change. Exporting does not satisfy the human or device acceptan
 
 ## Delivery order and gates
 
-1. Start reviewer coordination and versioned sign-off records now while device harnesses develop.
-   Review the actual bundled UI and teaching fields; structural parity is not linguistic approval.
+1. Start reviewer coordination alongside priority 1 using the existing deterministic exporter.
+   Assign coverage for all three UI locales and seven course pairs, retain actual findings/sign-off,
+   and re-export changed material after fixes. Existing approvals cannot be copied to a new digest
+   without reviewer confirmation. The validator/workflow is implemented; obtaining real evidence and
+   integrating its release invocation with 61/72 are the next deliverables.
 2. Keep the current seven-pair acceptance baseline explicit. Plan 90 owns adding English; extend
    this review matrix to the newly supported pairs only when that contract/catalog lands. Do not
    make all existing-pair sign-offs a prerequisite to implementing the English contract.

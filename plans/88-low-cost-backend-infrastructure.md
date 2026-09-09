@@ -10,8 +10,9 @@
   not rebuild the host or identity/sync runtime from the earlier proposal.
 - **Depends on:** 66 exact API image and backend foundations; 67 shared access; 61/86 content
   adapters only when activated. Whole-plan completion is not an infrastructure prerequisite.
-- **Reviewed:** 2026-09-09 against checkout `42f4d57`; source/plan review only, no new device or
-  deployment acceptance.
+- **Reviewed:** 2026-09-09 against `aafa61f`; current source, tests and retained review records
+  inspected. This plan refresh supplies no new runtime, device or deployment acceptance.
+- **Priority:** 9; start recovery/operations acceptance alongside priority 1.
 
 Previous starting point:
 [archived snapshot](archive/2026-09-08/88-low-cost-backend-infrastructure.md).
@@ -176,9 +177,16 @@ Backups and recovery:
 1. Inventory existing resource ownership, image/schema identity and gateway configuration before any
    migration. Reuse the recorded account deployment and restore procedure; refresh evidence against
    the candidate image rather than treating a dated successful probe as current acceptance.
-2. Close off-host backup, restore, retained-storage and monitoring gaps first. Keep existing SOPS,
+2. Start alongside priority 1 with the existing backup collector: add verified private S3 upload,
+   scheduled nightly/pre-migration runs, retention and backup-age alerts. Restore a retained
+   off-host bundle into an isolated database and verify roles/grants, schema, synthetic accounts and
+   tenant isolation against its recorded image. Retain upload/checksum and restore results together;
+   command fixtures and the dated local restore do not prove this path. Keep existing SOPS,
    CloudFormation and local transfer paths unless a specific migration is justified and recorded.
-3. Use synthetic accounts for service/load checks after 66; add physical-device convergence after
+   Coordinate deletion/recovery records with 67/68 before accepting backup restoration for
+   lifecycle-enabled accounts.
+3. Verify retained-storage/host-replacement recovery and alert delivery, then use synthetic accounts
+   for service/load checks against 66's exact candidate image; add physical-device convergence after
    58/68. Supply private storage configuration to 61/86 independently of whole-plan completion. A
    missing device cannot be replaced by an infrastructure-only convergence claim.
 
