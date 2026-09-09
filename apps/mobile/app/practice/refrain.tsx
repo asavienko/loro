@@ -176,7 +176,12 @@ export default function Refrain() {
         <EmptyState
           title={copy.refrain.unavailable.title(entry.next.time)}
           body={copy.refrain.unavailable.body}
-          action={{ label: copy.refrain.done.cta, onPress: () => router.replace('/') }}
+          action={{
+            label: copy.refrain.done.cta,
+            onPress: () => {
+              router.replace('/')
+            },
+          }}
         />
       </Screen>
     )
@@ -187,7 +192,12 @@ export default function Refrain() {
         <EmptyState
           title={copy.refrain.unavailable.complete}
           body={copy.refrain.unavailable.body}
-          action={{ label: copy.refrain.done.cta, onPress: () => router.replace('/') }}
+          action={{
+            label: copy.refrain.done.cta,
+            onPress: () => {
+              router.replace('/')
+            },
+          }}
         />
       </Screen>
     )

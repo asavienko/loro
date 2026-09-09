@@ -8,7 +8,7 @@ import { useApp } from '../src/store'
 import { Pressable, Screen, SectionLabel, Stack, Text } from '../src/ui/primitives'
 import { border, ink, line, space, surface } from '../src/ui/theme'
 
-const ACCENTS: readonly AccentName[] = ['coral', 'sunset', 'teal', 'berry']
+const ACCENTS = Object.keys(accents) as AccentName[]
 
 /** F-05/F-06: only durable settings with an implemented runtime effect appear here. */
 export default function Settings() {
@@ -36,7 +36,9 @@ export default function Settings() {
             <SettingRow
               label={copy.languages.title}
               detail={copy.settings.languageDetail}
-              onPress={() => router.push('/languages')}
+              onPress={() => {
+                router.push('/languages')
+              }}
             />
           </Stack>
           <Stack gap={space['1']}>
@@ -48,7 +50,11 @@ export default function Settings() {
                   key={accent}
                   accent={accent}
                   selected={preferences.accent === accent}
-                  onPress={() => save(() => setVisualPreferences(accent, preferences.motion))}
+                  onPress={() => {
+                    save(() => {
+                      setVisualPreferences(accent, preferences.motion)
+                    })
+                  }}
                 />
               ))}
             </View>
@@ -57,12 +63,20 @@ export default function Settings() {
               <ChoiceRow
                 label={copy.settings.motionSystem}
                 selected={preferences.motion === 'system'}
-                onPress={() => save(() => setVisualPreferences(preferences.accent, 'system'))}
+                onPress={() => {
+                  save(() => {
+                    setVisualPreferences(preferences.accent, 'system')
+                  })
+                }}
               />
               <ChoiceRow
                 label={copy.settings.motionReduced}
                 selected={preferences.motion === 'reduced'}
-                onPress={() => save(() => setVisualPreferences(preferences.accent, 'reduced'))}
+                onPress={() => {
+                  save(() => {
+                    setVisualPreferences(preferences.accent, 'reduced')
+                  })
+                }}
               />
             </View>
           </Stack>
@@ -73,7 +87,11 @@ export default function Settings() {
               label={copy.settings.analytics}
               detail={copy.settings.analyticsDetail}
               selected={preferences.analyticsConsent}
-              onPress={() => save(() => setAnalyticsConsent(!preferences.analyticsConsent))}
+              onPress={() => {
+                save(() => {
+                  setAnalyticsConsent(!preferences.analyticsConsent)
+                })
+              }}
             />
           </Stack>
           {saveError && (

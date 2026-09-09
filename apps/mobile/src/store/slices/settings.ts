@@ -1,4 +1,4 @@
-import { accents, type AccentName } from '@loro/design-tokens'
+import { accents } from '@loro/design-tokens'
 import type { Slice } from '../types'
 
 /** F-05/F-06: preference writes use the same transactional learner path as onboarding. */
@@ -13,9 +13,9 @@ export const createSettingsSlice: Slice<'setAnalyticsConsent' | 'setVisualPrefer
   },
   setVisualPreferences: (accent, motion) => {
     if (!(accent in accents)) throw new Error('Unknown accent')
-    if (motion !== 'system' && motion !== 'reduced') throw new Error('Unknown motion preference')
+    if (!['system', 'reduced'].includes(motion)) throw new Error('Unknown motion preference')
     set((state) => ({
-      devicePreferences: { ...state.devicePreferences, accent: accent as AccentName, motion },
+      devicePreferences: { ...state.devicePreferences, accent, motion },
     }))
   },
 })

@@ -66,8 +66,9 @@ describe('signed content release activation', () => {
         resources: new Map([[catalogResourceId(bundledCatalog.lang), release.bytes]]),
         appVersion: '1.0.0',
         verifier,
-        installCatalog: (catalog) =>
-          driver.run('INSERT INTO catalog_install VALUES(?)', [catalog.lang]),
+        installCatalog: (catalog) => {
+          driver.run('INSERT INTO catalog_install VALUES(?)', [catalog.lang])
+        },
       })
       expect(driver.all('SELECT * FROM catalog_install')).toEqual([{ id: 'es-ES' }])
       expect(readInstalledContentRelease(driver, 'es-ES')).toEqual({
@@ -93,7 +94,9 @@ describe('signed content release activation', () => {
         resources: new Map([[catalogResourceId(bundledCatalog.lang), first.bytes]]),
         appVersion: '1.0.0',
         verifier,
-        installCatalog: () => driver.run('INSERT INTO catalog_install VALUES(?)', ['old']),
+        installCatalog: () => {
+          driver.run('INSERT INTO catalog_install VALUES(?)', ['old'])
+        },
       })
       const next = fixture(bundledCatalog.catalogVersion + 1)
       await expect(

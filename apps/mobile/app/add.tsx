@@ -738,7 +738,13 @@ function ImportPhrases({
           style={s.importInput}
         />
       </Card>
-      <Button label={copy.add.import.chooseFile} variant="secondary" onPress={chooseFile} />
+      <Button
+        label={copy.add.import.chooseFile}
+        variant="secondary"
+        onPress={() => {
+          void chooseFile()
+        }}
+      />
       {fileError !== null && (
         <View accessibilityRole="alert">
           <Text variant="caption" color={semantic.warn.text}>
