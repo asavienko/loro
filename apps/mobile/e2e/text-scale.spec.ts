@@ -57,9 +57,9 @@ for (const scale of SCALES) {
     }
   })
   test(`text at ${scale * 100}% never clips or overflows`, async ({ page }) => {
-    // This one test visits all 71 states. The 200% sweep measured nearly 90 seconds
-    // after adding durable storage and the complete provider/email account states.
-    test.setTimeout(120_000)
+    // This one test visits every learner state, including the plan-96 music garnish.
+    // The 200% sweep was already near 90 seconds at 71 states; music adds nine more.
+    test.setTimeout(240_000)
     const problems: string[] = []
 
     for (const state of STATES) {
