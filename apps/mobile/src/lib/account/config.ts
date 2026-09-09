@@ -14,3 +14,9 @@ export function accountApiUrl(value: string | undefined): string | null {
     return null
   }
 }
+
+/** Expo inlines this dotted access in the client bundle. Call at runtime. */
+export function bundledApiUrl(): string | null {
+  const endpoint: unknown = process.env.EXPO_PUBLIC_API_URL
+  return accountApiUrl(typeof endpoint === 'string' ? endpoint : undefined)
+}

@@ -10,7 +10,7 @@ import { receiveHlc } from '../lib/core'
 import { randomBytes } from '../lib/entropy'
 import { AccountClient } from '../lib/account/client'
 import { authorizationPorts } from '../auth/runtime'
-import { accountApiUrl } from '../lib/account/config'
+import { bundledApiUrl } from '../lib/account/config'
 import { credentialVault } from '../lib/account/vault'
 import { configureAccount, configureAccountSync, publishSyncStatus } from '../lib/account/runtime'
 import { createSyncClient, createHttpSyncTransport } from '../lib/sync'
@@ -27,9 +27,7 @@ export function startAccountSync(): Promise<void> {
 }
 async function start(): Promise<void> {
   const db = await getRuntimeDatabase()
-  // Expo only inlines this exact dotted EXPO_PUBLIC access in the client bundle.
-  const endpoint: unknown = process.env.EXPO_PUBLIC_API_URL
-  const baseUrl = accountApiUrl(typeof endpoint === 'string' ? endpoint : undefined)
+  const baseUrl = bundledApiUrl()
   const local = createSqlSyncStore({
     ...db,
     now: () => deviceClock.now(),
