@@ -41,10 +41,10 @@ function encodeBase64(bytes: Uint8Array): string {
     const b = bytes[index + 1] ?? 0
     const c = bytes[index + 2] ?? 0
     const triple = (a << 16) | (b << 8) | c
-    output += chars[(triple >> 18) & 63]
-    output += chars[(triple >> 12) & 63]
-    output += index + 1 < bytes.length ? chars[(triple >> 6) & 63] : '='
-    output += index + 2 < bytes.length ? chars[triple & 63] : '='
+    output += chars[(triple >> 18) & 63] ?? '='
+    output += chars[(triple >> 12) & 63] ?? '='
+    output += index + 1 < bytes.length ? (chars[(triple >> 6) & 63] ?? '=') : '='
+    output += index + 2 < bytes.length ? (chars[triple & 63] ?? '=') : '='
   }
   return output
 }

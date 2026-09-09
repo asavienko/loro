@@ -25,9 +25,11 @@ describe('device music stub (p3f-03 / p3f-06)', () => {
   it('renders fixture tracks, partial success, and unavailable without network uris', () => {
     const ready = renderLocalStyles(defaultStyleIds(), 'ok')
     expect(ready).toHaveLength(3)
-    expect(ready.every((track) => track.generated && track.uri?.startsWith('data:audio/wav'))).toBe(
-      true,
-    )
+    expect(ready.map((track) => track.uri ?? '')).toEqual([
+      expect.stringMatching(/^data:audio\/wav;/),
+      expect.stringMatching(/^data:audio\/wav;/),
+      expect.stringMatching(/^data:audio\/wav;/),
+    ])
     expect(ready[0]?.durationMs).toBe(FIXTURE_WAV_DURATION_MS)
 
     const partial = renderLocalStyles(defaultStyleIds(), 'partial')

@@ -18,7 +18,6 @@ import {
   requestLocalLyrics,
   type MusicLyricsView,
   type MusicTrackView,
-  type MusicUiState,
 } from '../src/lib/music/client'
 import {
   MUSIC_MIN_PHRASES,
