@@ -10,6 +10,7 @@
  */
 
 import { Controller, Get, Query } from '@nestjs/common'
+import { ManifestSchema, PackSchema } from '@loro/core/api/current'
 import { loadCatalog, type CatalogPhrase } from '@loro/content'
 import { config } from '../common/config.js'
 import { LoroError } from '../common/errors.js'
@@ -69,7 +70,7 @@ export class ContentController {
   @Get('manifest')
   manifest(@Query('lang') lang = 'es-ES'): ManifestResponse {
     this.assertLang(lang)
-    return {
+    return ManifestSchema.parse({
       catalog_version: catalog.catalogVersion,
       lang: catalog.lang,
       phrase_count: catalog.phrases.length,
@@ -90,7 +91,7 @@ export class ContentController {
       })),
       audio_base: config.cdnBaseUrl(),
       min_app_version: MIN_APP_VERSION,
-    }
+    })
   }
 
   /** Only the phrases changed since version N. */
@@ -123,14 +124,14 @@ export class ContentController {
     const pack = catalog.packs.find((p) => p.id === id)
     if (pack === undefined) throw new LoroError('VALIDATION_FAILED', `unknown pack '${id}'`)
 
-    return {
+    return PackSchema.parse({
       id: pack.id,
       label: pack.label,
       promised_count: pack.promisedCount,
       phrases: pack.phrases
         .map((pid) => phrasesById.get(pid))
         .filter((p): p is CatalogPhrase => p !== undefined),
-    }
+    })
   }
 
   private assertLang(lang: string): void {

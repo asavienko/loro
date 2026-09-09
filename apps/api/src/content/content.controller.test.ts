@@ -1,10 +1,22 @@
 import { createHash } from 'node:crypto'
 import { describe, expect, it } from 'vitest'
+import { ManifestSchema, PackSchema } from '@loro/core/api/current'
 import type { LoroError } from '../common/errors.js'
 import { ContentController } from './content.controller.js'
 
 describe('ContentController pack responses', () => {
   const controller = new ContentController()
+
+  it('parses manifest egress with the current envelope', () => {
+    expect(ManifestSchema.parse(controller.manifest())).toMatchObject({
+      lang: 'es-ES',
+      phrase_count: expect.any(Number),
+    })
+  })
+
+  it('parses pack egress with the current envelope', () => {
+    expect(PackSchema.parse(controller.pack('cafe')).id).toBe('cafe')
+  })
 
   it('preserves the exact catalog order and response bytes', () => {
     const body = JSON.stringify(controller.pack('cafe'))
