@@ -97,3 +97,11 @@ Multilingual work initially used 85 on its isolated branch. The merged roadmap r
 contracts and 86 for providers, so its stable number is 87. The merge preserves 54's wave writes,
 55's onboarding/undo, and 84's manual practice without fabricated speech latency. Historical
 477-test/90-E2E counts described the isolated branch, not the current integrated baseline.
+
+## Post-main review and archive disposition — 2026-09-09
+
+The [review at `de81744`](../docs/reviews/2026-09-09-post-main-plan-review.md) records this plan's
+current contribution, remaining work and gates.
+[Delivered slices](archive/2026-09-09/IMPLEMENTED-SLICES.md) are retained in the archive; this plan
+remains incomplete. Earlier verification is dated evidence, not acceptance of the current combined
+branch.

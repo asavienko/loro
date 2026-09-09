@@ -92,3 +92,10 @@ Validation: five Node tests pass, including the current checkout and negative fi
 structural guard; it does not prove that every rendered state was registered or replace the E2E
 accessibility, text-scale and learner-flow suites. Modal/course contracts, conditional trip homes,
 route failure UI, keyboard and list acceptance remain open with their existing gates.
+
+## Post-main review and archive disposition — 2026-09-09
+
+The [review at `de81744`](../../../docs/reviews/2026-09-09-post-main-plan-review.md) records this
+plan's current contribution, remaining work and gates. [Delivered slices](IMPLEMENTED-SLICES.md) are
+retained in the archive; this plan remains incomplete. Earlier verification is dated evidence, not
+acceptance of the current combined branch.

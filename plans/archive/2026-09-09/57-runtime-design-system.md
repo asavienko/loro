@@ -4,8 +4,8 @@
 - **Milestone:** M1/M2
 - **Status:** 🟡 Runtime accent, text-scale, reduced-motion and production control loading/focus
   states exist. Accent and motion now consume installation-local Settings values. Shared text now
-  consumes the generated tabular numeral variant. Fonts, dark theme, haptics and motion remain;
-  font provenance and native font rendering proof are still needed.
+  consumes the generated tabular numeral variant. Fonts, dark theme, haptics and motion remain; font
+  provenance and native font rendering proof are still needed.
 - **Depends on:** 53/55 completed; 58 for device proof; 71 owns durable theme settings; 80 consumes
   production specimens.
 - **Reviewed:** 2026-09-09 against `aafa61f`; current source, tests and retained review records
@@ -77,3 +77,10 @@ have not been migrated for learner-selectable themes.
 ## Out of scope
 
 Plan-53 generator work, one-off screen components, Skia lab drawings, and product behavior changes.
+
+## Post-main review and archive disposition — 2026-09-09
+
+The [review at `de81744`](../../../docs/reviews/2026-09-09-post-main-plan-review.md) records this
+plan's current contribution, remaining work and gates. [Delivered slices](IMPLEMENTED-SLICES.md) are
+retained in the archive; this plan remains incomplete. Earlier verification is dated evidence, not
+acceptance of the current combined branch.

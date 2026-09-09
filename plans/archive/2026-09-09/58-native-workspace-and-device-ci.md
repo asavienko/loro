@@ -79,3 +79,10 @@ modules, generated native projects, UniFFI bindings, device SQLite, permissions,
 ## Out of scope
 
 Production persistence, playback, recognition, widgets, OCR, purchases, or store submission.
+
+## Post-main review and archive disposition — 2026-09-09
+
+The [review at `de81744`](../../../docs/reviews/2026-09-09-post-main-plan-review.md) records this
+plan's current contribution, remaining work and gates. [Delivered slices](IMPLEMENTED-SLICES.md) are
+retained in the archive; this plan remains incomplete. Earlier verification is dated evidence, not
+acceptance of the current combined branch.

@@ -21,11 +21,13 @@ persistence/reveal smoke passed; full iOS and physical-device speech/convergence
 release gates. See [persistent practice](docs/process/persistent-practice.md) and
 [plan 94](plans/94-persistent-practice-and-account-integration.md) for scoped evidence.
 
-The [33-plan implementation review](docs/reviews/2026-09-09-thirty-three-plan-implementation.md)
-records the `828d296` findings and their remediation: wave-aware Refrain checkpoints now survive
-SQLite reload, all shell surfaces share one ongoing-work policy, import drafts are pair-scoped and
-file reads are bounded, and native notification bindings are regenerated. Fast and focused browser
-gates pass; full local CI and device/provider acceptance remain separate release gates.
+The [post-main 33-plan review](docs/reviews/2026-09-09-post-main-plan-review.md) at `de81744`
+confirms wave-aware checkpoint/resume repairs, durable draft storage and regenerated bindings.
+Changes remain requested: browser file import uses an unsupported native reader, picker failures and
+late results are unguarded, content rollback metadata fails open, and chat choice IDs can be
+ambiguous. Fast and daytime Add/navigation checks pass; formatting and time-dependent navigation
+acceptance still need repair. No whole plan is newly complete; the
+[implemented-slice archive](plans/archive/2026-09-09/IMPLEMENTED-SLICES.md) retains delivered work.
 
 The spine supports pull-down to open its menu; sheets dismiss by pulling their dedicated handle.
 Practice routes disable native back-swipe. Native touch validation remains a release gate. Today
