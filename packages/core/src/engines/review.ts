@@ -154,8 +154,7 @@ export class ReviewEngine implements PracticeEngine {
 
     const grade = ctx.core.reviewGrade(attempt)
     const srs = ctx.core.fsrsReview(phrase, grade, attempt.at)
-    if (srs === undefined || !srs.algorithm)
-      throw new Error('Canonical review must identify its algorithm')
+    if (!srs?.algorithm) throw new Error('Canonical review must identify its algorithm')
     return {
       ...universalDelta(item, attempt, { reps: 1, latencyMs: null }),
       srs,

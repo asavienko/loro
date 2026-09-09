@@ -121,7 +121,8 @@ describe('ReviewEngine (P3-30)', () => {
     const engine = new ReviewEngine('es-ES')
     const plan = await engine.plan(ctx)
     const session = { sessionId: 'review-session', plan, cursor: 0 }
-    const { selfGrade: _grade, ...ungraded } = attempt('due#review')
+    const { selfGrade, ...ungraded } = attempt('due#review')
+    expect(selfGrade).toBeDefined()
     await expect(engine.record(session, ungraded, ctx)).rejects.toThrow('explicit learner grade')
     const delta = await engine.record(session, attempt('due#review', 'easy'), ctx)
     expect(delta).toMatchObject({

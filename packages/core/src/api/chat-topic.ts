@@ -35,7 +35,11 @@ export const ChatTopicResourceSchema = z
     if (ids.size !== topic.nodes.length || !ids.has(topic.start_node)) {
       ctx.addIssue({ code: 'custom', message: 'Topic nodes must have unique IDs and a start node' })
     }
-    if (topic.nodes.some((node) => node.suggestions.some((suggestion) => !ids.has(suggestion.next_node)))) {
+    if (
+      topic.nodes.some((node) =>
+        node.suggestions.some((suggestion) => !ids.has(suggestion.next_node)),
+      )
+    ) {
       ctx.addIssue({ code: 'custom', message: 'All graph references must resolve to a node' })
     }
   })

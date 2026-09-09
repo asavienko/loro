@@ -48,12 +48,18 @@ export function acceptsAudioSessionTransition(
   previous: NativeAudioSessionState | null,
   next: unknown,
 ): next is NativeAudioSessionState {
-  if (!sessionIdentity(next) || typeof next.state !== 'string' || !(next.state in stateTransitions)) {
+  if (
+    !sessionIdentity(next) ||
+    typeof next.state !== 'string' ||
+    !(next.state in stateTransitions)
+  ) {
     return false
   }
-  if (previous === null) return next.state === 'idle' || next.state === 'playback' || next.state === 'capture'
+  if (previous === null)
+    return next.state === 'idle' || next.state === 'playback' || next.state === 'capture'
   if (next.generation < previous.generation) return false
-  if (next.generation > previous.generation) return next.state === 'idle' || next.state === 'playback' || next.state === 'capture'
+  if (next.generation > previous.generation)
+    return next.state === 'idle' || next.state === 'playback' || next.state === 'capture'
   if (next.sessionId !== previous.sessionId) return false
   return stateTransitions[previous.state].includes(next.state as AudioSessionState)
 }
