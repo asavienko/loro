@@ -71,7 +71,9 @@ accepts `voice_id`, `model_id`, `asset_class`, and metadata-only JSON. `loro-aud
 and pins listening clips, restores a complete batch across relaunch, and keeps mux/share behind
 `LISTENING_SHARE_ENABLED = false`. `playFile` plays `file://` URIs. JavaScript still never receives PCM.
 `APPROVED_LISTENING_VOICES` is empty and `LISTENING_MODEL_ID` is null, so generate fails closed.
-Native airplane-mode listen of a filled cache is not yet evidenced.
+The render client attaches an optional bearer session and maps 429 to quota; native download
+sends that Authorization header and refuses redirects so the token cannot hop hosts. JavaScript
+still never receives PCM. Native airplane-mode listen of a filled cache is not yet evidenced.
 
 ## Product shape (working assumptions)
 
@@ -142,10 +144,9 @@ Text-only render or authorized download of **model audio**:
 
 Never: learner PCM, mic buffers, transcripts, progress JSON, or JS-held audio bytes.
 
-The draft `POST /tts/render` body is insufficient (`text`, `lang`, `phrase_hash` only). A shared
-contract change (not this plan’s adapter) must add a licensed listening `voice_id` / model pin and
-an asset-class discriminator so listening clips cannot collide with `AS-01` reference audio. Until
-that lands, 97 must not call a one-voice catalog render and relabel it.
+`POST /tts/render` now carries a licensed listening `voice_id` / model pin and an asset-class
+discriminator so listening clips cannot collide with `AS-01` reference audio. This plan consumes
+that contract and must not call a one-voice catalog render and relabel it.
 
 **Response shape (working assumption):** `{ downloadUrl, uri: sha256/…, sha256, ms, voiceId,
 assetClass: 'listening' }`. The HTTP body that JavaScript parses is **metadata**. Audio bytes travel
@@ -331,7 +332,7 @@ Recorded so the next implementation pass does not re-discover them.
    slice.
 3. **Live TTS route has no remaining-work owner.** Draft `POST /tts/render` is owned by 61 in the
    contract, but plan 61’s catalog worker is `content:render` and the live endpoint is out of
-   scope. 97 must consume 66+86+61 rather than grow a client.
+   scope. 99 must consume 66+86+61 rather than grow a client.
 4. **Contract cannot express listening variety.** `TtsRequestSchema` has no voice id or asset
    class; catalog `audio` is one `{ uri, sha256, ms }`. Collision with `AS-01` is a silent product
    bug if ignored.
