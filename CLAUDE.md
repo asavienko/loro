@@ -7,12 +7,12 @@ Guidance for Claude Code working in this repository.
 **Loro** — a mobile app (iOS + Android) that teaches Spanish, Bulgarian, and Russian by the phrase.
 
 Early implementation. **What exists:** eight of the v1.1 design package's 23 learner screens,
-Languages, Account and More utilities, the shared shell and a developer workbench. Local progress
-and course/session state commit to native OP-SQLite or browser SQLite before rendering. Rust owns
-FSRS, ranking, selection, matching, clocks and merge through generated WASM/UniFFI bridges. Native
-modules provide foreground device TTS and strictly on-device ASR with an offline Speak reveal
-fallback. The API stores accounts, sessions and tenant-scoped sync in PostgreSQL. Optional
-Google/Apple and email sign-in connect durable local progress to cross-device sync.
+Languages, Account, More and Settings utilities, the shared shell and a developer workbench. Local
+progress and course/session state commit to native OP-SQLite or browser SQLite before rendering.
+Rust owns FSRS, ranking, selection, matching, clocks and merge through generated WASM/UniFFI
+bridges. Native modules provide foreground device TTS and strictly on-device ASR with an offline
+Speak reveal fallback. The API stores accounts, sessions and tenant-scoped sync in PostgreSQL.
+Optional Google/Apple and email sign-in connect durable local progress to cross-device sync.
 
 The three 31-phrase Spanish/Bulgarian/Russian starters still await bilingual review. The other 15
 learner screens, production recorded audio/cache, background audio, measured onset latency, DSP,
@@ -20,6 +20,12 @@ widgets and account export/erasure remain. Android compilation and an airplane-m
 persistence/reveal smoke passed; full iOS and physical-device speech/convergence acceptance remain
 release gates. See [persistent practice](docs/process/persistent-practice.md) and
 [plan 94](plans/94-persistent-practice-and-account-integration.md) for scoped evidence.
+
+The [33-plan implementation review](docs/reviews/2026-09-09-thirty-three-plan-implementation.md)
+records the `828d296` findings and their remediation: wave-aware Refrain checkpoints now survive
+SQLite reload, all shell surfaces share one ongoing-work policy, import drafts are pair-scoped and
+file reads are bounded, and native notification bindings are regenerated. Fast and focused browser
+gates pass; full local CI and device/provider acceptance remain separate release gates.
 
 The spine supports pull-down to open its menu; sheets dismiss by pulling their dedicated handle.
 Practice routes disable native back-swipe. Native touch validation remains a release gate. Today

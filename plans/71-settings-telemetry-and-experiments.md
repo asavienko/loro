@@ -4,8 +4,8 @@
   `Q-02`, `Q-03`, `Q-05`, `Q-06`
 - **Milestone:** M2/M3
 - **Status:** 🟡 Language, installation-local privacy, accent and motion preferences persist through
-  SQLite. General Settings exposes those supported controls; telemetry and remote flags remain.
-  The event queue/transport is not implemented. Only experiment activation waits on Q-05.
+  SQLite. General Settings exposes those supported controls; telemetry and remote flags remain. The
+  event queue/transport is not implemented. Only experiment activation waits on Q-05.
 - **Depends on:** 59 durable settings; 56/81 routes; 67/68 only for account-scoped sync; 86 for
   telemetry/config transport; 87 implemented language selection.
 - **Reviewed:** 2026-09-09 against `aafa61f`; current source, tests and retained review records
@@ -15,10 +15,11 @@
 ## Verified starting point
 
 `apps/mobile/app/languages.tsx`, the reactive copy adapter and atomic languagePair already exist.
-`apps/mobile/src/store/engines.ts` supplies local resolution/flag seams; no general Settings route
-or event upload pipeline exists. `src/data/learner.ts` already saves and hydrates onboarding goal,
-level, dailyMinutes and the language pair through SQLite. Reuse language/course settings from 87. Do
-not wait for the entire sync plan to build local privacy/preferences.
+`apps/mobile/src/store/engines.ts` supplies local resolution/flag seams. General Settings now
+exposes accent, motion and analytics consent; no event upload pipeline exists. `src/data/learner.ts`
+saves and hydrates onboarding goal, level, dailyMinutes and the language pair through SQLite. Reuse
+language/course settings from 87. Do not wait for the entire sync plan to build local
+privacy/preferences.
 
 ## Outcome
 
@@ -96,5 +97,5 @@ remain separately scoped work.
 offers the generated Coral/Sunset/Teal/Berry accents and system/reduced motion through the real
 runtime provider, and exposes the existing analytics-consent control. Version 2 device preferences
 migrate version-1 consent, remain installation-local and never enter the sync outbox. Audio,
-downloads, notifications, telemetry transport, flags, experiments and dark theme remain outside
-this slice.
+downloads, notifications, telemetry transport, flags, experiments and dark theme remain outside this
+slice.
