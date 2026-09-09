@@ -61,7 +61,7 @@ And the corollary that makes it durable:
 | PCM lives in **native memory only**; `stopRecording()` returns a `bufferId`, not bytes | There is no JS API that yields audio, so upload code does not exist and would have to be deliberately added to a native module ([ADR-0007](0007-audio-pipeline.md)) |
 | DSP runs in `loro-core` on a native thread, taking the buffer by handle                | Scoring never surfaces audio                                                                                                                                        |
 | Buffer released within 50 ms of scoring                                                | Also a memory budget ([performance.md](../performance.md#memory))                                                                                                   |
-| Audio is **never written to disk**                                                     | Nothing to attach to a crash report, nothing to find in a backup                                                                                                    |
+| Audio is **never written to disk** (learner recordings)            | Nothing to attach to a crash report, nothing to find in a backup. Licensed model-audio files are a different object — see the 2026-09-09 amendment |
 | `take` stores numbers and a normalised contour — no audio, no path                     | [data-model.md](../data-model.md)                                                                                                                                   |
 | Crash reporter configured with **no attachments**                                      |                                                                                                                                                                     |
 | **A P0 alert on any network request originating in the audio module**                  | There should never be one ([observability.md](../observability.md#alerting))                                                                                        |
@@ -142,3 +142,22 @@ because our AI use is text generation from a prompt, not personalisation from a 
 - A regulator or platform requirement forces a change in what we can say on screen.
 - On-device acoustic models become small enough to bundle, which would raise accuracy with no change
   to the promise. This is the likeliest and happiest trigger.
+
+## Amendment — 2026-09-09 · learner PCM vs licensed model-audio files
+
+The table row “Audio is **never written to disk**” applies to **learner recordings** (mic PCM,
+waveforms, take buffers). It does not forbid caching licensed **model** audio (catalog reference
+clips, `POST /tts/render` output, plan 99 listening-class takes) as checksummed files in the app
+cache.
+
+Those model files still:
+
+- never include learner PCM
+- reach JavaScript only as file URIs and numeric metadata, never as PCM, base64, or a readable
+  buffer
+- are downloaded by the plan 62 cache module, not by a network client inside the speech/capture
+  module (the P0 alert on audio-module HTTP remains)
+- leave the app as a learner-owned share file only after [Q-22](../../decisions/open-questions.md#q-22)
+
+Sending learner-authored **text** to cloud TTS is a separate consent event (plan 99). It is not
+consent to upload recordings and does not resolve Q-15 or Q-22.

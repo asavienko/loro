@@ -10,7 +10,8 @@ The system end to end. Read this before any other architecture document.
 > mobile outbox. Google/Apple/email identity is optional. See
 > [persistent practice](../process/persistent-practice.md) and [the plans](../../plans/README.md).
 >
-> The diagrams include future surfaces: recorded-asset cache/background audio, measured onset and
+> The diagrams include future surfaces: recorded-asset cache/background audio, online listening
+> generation with on-device listen cache, shareable neural listening-file export, measured onset and
 > DSP, widgets, independent content delivery, live AI and most remaining learner screens are still
 > planned. Android compilation and an airplane-mode emulator smoke do not replace physical-device
 > speech/convergence or full iOS acceptance.
@@ -70,8 +71,10 @@ graph TB
   LORO --> OBS
 ```
 
-Note what is **not** an external dependency of the learner's daily loop: the LLM, the neural TTS
-provider, and the network itself. A learner can practise for weeks with none of them.
+Note what is **not** an external dependency of the learner's **daily practice** loop: the LLM, the
+neural TTS provider, and the network itself. A learner can practise for weeks with none of them.
+Plan 96 listening generation is the exception that **does** need the network on a cache miss; after
+a successful cache, airplane-mode listen uses disk only. That companion is not a practice surface.
 
 ## C4 · Level 2 — Containers
 
@@ -271,7 +274,7 @@ Versions are the pins chosen at authoring time — **re-verify at kickoff**
 | Cache / queues | Redis 7 + BullMQ, deferred                          | Add only with an implemented consumer and budget        |
 | Storage / CDN  | Private S3; CDN deferred                            | Authorized content downloads through plans 61/86        |
 | AI             | Anthropic Claude                                    | Roleplay, coach notes, content enrichment               |
-| TTS            | Managed neural TTS                                  | Catalog/reference audio at build time                   |
+| TTS            | Managed neural TTS                                  | Catalog/reference audio at build time; on-demand listening-class clips (plan 99) |
 | Auth           | Apple / Google / email magic link; own JWT issuance | Anonymous-first upgrade path                            |
 | Deploy         | One EC2, Compose, Terraform; maintenance deploys    | [backend.md](backend.md#deployment)                     |
 

@@ -281,7 +281,7 @@ Three tiers, in preference order:
 | Tier                               | Used for                                   | Quality                                                        |
 | ---------------------------------- | ------------------------------------------ | -------------------------------------------------------------- |
 | **1 · Pre-rendered catalog audio** | Every catalog phrase                       | Best; identical for every learner; the pronunciation reference |
-| **2 · Server-rendered on demand**  | Learner phrases, when online and requested | Good; cached to the file cache and to the outbox for reuse     |
+| **2 · Server-rendered on demand**  | Learner phrases, and plan 99 listening-class voices | Good; cached to the file cache; listening clips never reuse reference IDs |
 | **3 · On-device TTS**              | Learner phrases offline; any cache miss    | Variable by platform/locale; acceptable but visibly worse      |
 
 **Rule: the prosody and pronunciation labs are catalog-only.** They need a trustworthy native
@@ -290,12 +290,26 @@ reference contour, and a device-synthesised voice is not one
 
 **Cache.** Content-addressed by `sha256`, LRU-evicted, with pinned sets that are never evicted:
 today's Refrain set, the whole trip set, and everything in the current stream queue. Cache size cap
-150 MB; pinned content is exempt and reported separately in Settings.
+150 MB; pinned content is exempt and reported separately in Settings. Plan 96 listening clips are a
+**separate pin class** (`assetClass: listening`) keyed by phrase id, text digest, voice id, locale
+and codec; they must not share `AS-01` reference asset IDs and must not evict practice pins. A
+listening budget is named in plan 97 and measured when the cache exists — do not treat 150 MB as
+evidence for that class.
 
 **Word-level audio.** The word-by-word chips speak individual words. Where the chip text is a
 fragment (`¿Dón`), the phrase's `words[].say` field supplies the real word (`dónde`) — the blueprint
 does this at `Loro.dc.html:2483`. Word audio uses tier 3 (device TTS); rendering 600 phrases × 5
 words is not worth the storage.
+
+**Listening companion (plan 99, `AS-07`).** Online-first: render licensed multi-voice takes
+(ElevenLabs selected; adapter not implemented), cache each phrase×voice clip on device, then play
+from disk with no network. This is not the pronunciation reference, not Stream, and not account JSON
+export. Native cache download and playback return file URIs only; JavaScript still must not receive
+PCM. In-app listen from a filled cache waits on Q-15 for production voices, not on Q-22.
+Share-out-of-app of concatenated neural clips waits on Q-22. Device TTS is a labeled in-app fallback
+on a cache miss, not the primary generator. The foreground module today can only speak one device
+voice to the speaker; cache download, listening pins, and concatenate remain to be built in plan 62
+plus this companion.
 
 ---
 

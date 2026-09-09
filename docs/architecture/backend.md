@@ -214,10 +214,10 @@ fallback at every failure boundary.
 
 | Endpoint           | Purpose                                                                                                      |
 | ------------------ | ------------------------------------------------------------------------------------------------------------ |
-| `POST /tts/render` | Render a learner-authored phrase; cached and content-addressed, so a common phrase is rendered once globally |
+| `POST /tts/render` | Render approved target text as model speech; cached and content-addressed. Catalog **reference** audio is not rendered here — that is the `tts-render` worker. Plan 96 listening-class voices reuse this path only after a voice-id / asset-class extension so they cannot share reference IDs. |
 
-Catalog audio is **not** rendered here — it's built by the `tts-render` worker at content build
-time. Recorded learner audio never leaves the device; no backend endpoint may accept it.
+Recorded learner audio never leaves the device; no backend endpoint may accept it. JavaScript
+clients receive checksum metadata and an authorized download URL, not PCM.
 
 <a id="billing"></a>
 
