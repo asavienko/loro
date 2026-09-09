@@ -194,9 +194,10 @@ that prelaunch failures remain readable with unavailable browser metadata.
 
 These are observations from this review unless explicitly labeled historical:
 
-- **Post-fix full capture:** `test-results/screenshots/2026-09-09T13-58-37-886Z-8319f13c/` contains
+- **Post-fix full capture:** `test-results/screenshots/2026-09-09T14-07-30-067Z-1ed092f5/` contains
   74 passed states, 74 PNGs, no missing or dimension-mismatched artifacts, a route-grouped gallery,
-  and `run.browser` set to `{name: "chromium", version: "151.0.7922.34"}`.
+  `run.browser` set to `{name: "chromium", version: "151.0.7922.34"}`, and `dirty: false` at
+  revision `dd9ea428ca08524b7f8f1197ba0e73d62c1780c1`.
 - **Post-fix lifecycle probes:** SIGTERM during preflight, SIGTERM after one capture, SIGINT after
   one capture, and SIGTERM after the dedicated server became reachable all exited nonzero within
   0.5–0.6 seconds, finalized failed manifests, stopped their ports, and left no owned capture
@@ -228,8 +229,8 @@ These are observations from this review unless explicitly labeled historical:
 - Raw local probe outputs are retained in the ignored `test-results/screenshots-review/` folder. The
   concrete results above are retained here so the review survives artifact cleanup.
 - **Review document validation:** relative links resolve, scoped Prettier and `git diff --check`
-  pass. `pnpm check` exited zero; all 23 Turbo tasks were cache hits. This is the fast repository
-  gate, not a new full capture or native acceptance run.
+  pass. `pnpm check` exited zero with 23 successful Turbo tasks. This is the fast repository gate,
+  not a native acceptance run.
 
 The post-fix probes cover the demonstrated failure cases, occupied ports, SIGINT/SIGTERM during
 startup and after a capture, independent run preservation and an unrelated listener. The full
