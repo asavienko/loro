@@ -1058,17 +1058,20 @@ Native-language changes preserve learning progress and personal translations. Se
 
 ## F-01 Account
 
-Optional `/account` utility in the shared spine/switcher (plan 89); it does not gate onboarding or
-practice. Continue with Google/Apple creates an account on first sign-in and signs in on later
-visits. Provider buttons are unavailable when not configured; the learner can still practise.
-Pending requests disable actions. Cancellation and errors retain all local data and allow retry.
-Signed-in state offers Sign out. Sign-out retains learning data and explicitly reports when remote
-revocation cannot be confirmed. All copy follows the native language. Cloud sync is not promised.
-The utility follows `Navigation.dc.html:35–40` and is an intended-design extension, not a new
-numbered authored learner screen. See
-[account implementation](../architecture/google-apple-auth.md).
+Optional `/account` utility in the shared spine/switcher (plans 89 and 96); it does not gate
+onboarding or practice. The first view offers equal Google, Apple and email methods when their
+capabilities are available, plus an explicit path back to practice. Provider sign-in opens the
+existing secure authorization surface and shows provider-specific connecting, cancellation and
+failure feedback. Email sign-in is a password-free two-step flow: send a six-digit code to a
+validated address, then verify that code. Pending operations disable competing actions; cancellation
+and errors retain local learning data and allow retry.
 
-The Account utility also checks the configured server's readiness on entry and on Check connection.
-It displays checking, connected, unavailable, or unconfigured status. A successful check requires
-valid content and merge readiness, not just HTTP 200. This does not enable sign-in or sync. Local
-practice remains available after failure. The status copy follows the selected native language.
+Successful local account admission shows a confirmation view with **Back to practice**. The email
+address is shown there only for the just-verified email attempt; provider or restored sessions
+expose no fabricated identity. Returning visits show the account management view with the actual
+sync status, **Sync now** and **Sign out**. Sign-out retains learning data and reports when remote
+revocation cannot be confirmed. Sync status remains separate from sign-in confirmation, and practice
+remains available when sign-in or sync is unavailable. All copy follows the native language. The
+utility follows `Navigation.dc.html:35–40` and is an intended-design extension, not a new numbered
+authored learner screen. See [account implementation](../architecture/google-apple-auth.md) and
+[the account screen plan](../../plans/archive/2026-09-09/96-account-sign-in-screens.md).

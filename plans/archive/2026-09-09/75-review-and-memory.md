@@ -13,7 +13,11 @@
   inspected. This plan refresh supplies no new runtime, device or deployment acceptance.
 - **Priority:** 3; Review engine/route before Memory.
 
-Previous starting point: [archived snapshot](archive/2026-09-08/75-review-and-memory.md).
+Previous starting point: [archived snapshot](../2026-09-08/75-review-and-memory.md).
+
+**Archive disposition (2026-09-09):** Archived at user request after implemented slices landed. The
+partial status and remaining acceptance criteria are retained; archival does not mark this plan
+complete. The roadmap index continues to track its unfinished scope.
 
 ## Verified starting point
 
@@ -97,8 +101,7 @@ learner-visible state is introduced by this slice.
 
 ## Post-main review and archive disposition — 2026-09-09
 
-The [review at `de81744`](../docs/reviews/2026-09-09-post-main-plan-review.md) records this plan's
-current contribution, remaining work and gates.
-[Delivered slices](archive/2026-09-09/IMPLEMENTED-SLICES.md) are retained in the archive; this plan
-remains incomplete. Earlier verification is dated evidence, not acceptance of the current combined
-branch.
+The [review at `de81744`](../../../docs/reviews/2026-09-09-post-main-plan-review.md) records this
+plan's current contribution, remaining work and gates. [Delivered slices](IMPLEMENTED-SLICES.md) are
+retained in the archive; this plan remains incomplete. Earlier verification is dated evidence, not
+acceptance of the current combined branch.

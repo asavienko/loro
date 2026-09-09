@@ -108,6 +108,8 @@ for (const state of STATES) {
 }
 
 test('every interactive element meets the 44 px touch target', async ({ page }) => {
+  // Account method-chooser states made this whole-manifest walk outgrow the 90 s default.
+  test.setTimeout(180_000)
   const offenders: string[] = []
 
   for (const state of STATES) {

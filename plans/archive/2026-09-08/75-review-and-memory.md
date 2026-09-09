@@ -1,5 +1,6 @@
 > Historical snapshot archived on 2026-09-08 (F-04). Its starting point is superseded; unfinished
-> work remains in [active plan 75](../../75-review-and-memory.md). This is not a completion record.
+> work remains in [active plan 75](../2026-09-09/75-review-and-memory.md). This is not a completion
+> record.
 
 # Real FSRS Review and Memory surfaces
 

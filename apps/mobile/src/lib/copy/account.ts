@@ -66,7 +66,7 @@ export const accountCopy = {
     return message('account.email')
   },
   get code() {
-    return message('account.code')
+    return message('account.codeLabel')
   },
   get send() {
     return message('account.send')
@@ -111,6 +111,12 @@ export const accountCopy = {
   get network() {
     return message('account.network')
   },
+  get 'rate-limited'() {
+    return message('account.rate-limited')
+  },
+  get 'invalid-email'() {
+    return message('account.invalid-email')
+  },
   get 'invalid-code'() {
     return message('account.invalid-code')
   },
@@ -128,5 +134,83 @@ export const accountCopy = {
   },
   get differentEmail() {
     return message('account.differentEmail')
+  },
+  get deviceProgress() {
+    return message('account.deviceProgress')
+  },
+  get heroTitle() {
+    return message('account.heroTitle')
+  },
+  get heroBody() {
+    return message('account.heroBody')
+  },
+  get emailMethod() {
+    return message('account.emailMethod')
+  },
+  get emailTitle() {
+    return message('account.emailTitle')
+  },
+  get emailBody() {
+    return message('account.emailBody')
+  },
+  get codeTitle() {
+    return message('account.codeTitle')
+  },
+  codeSentTo: (email: string): string => message('account.codeSentTo', { email }),
+  get codePlaceholder() {
+    return message('account.codePlaceholder')
+  },
+  get codeHint() {
+    return message('account.codeHint')
+  },
+  get resend() {
+    return message('account.resend')
+  },
+  get codeResent() {
+    return message('account.codeResent')
+  },
+  get backToOptions() {
+    return message('account.backToOptions')
+  },
+  get keepPractising() {
+    return message('account.keepPractising')
+  },
+  get backToPractice() {
+    return message('account.backToPractice')
+  },
+  get confirmationTitle() {
+    return message('account.confirmationTitle')
+  },
+  get confirmationBody() {
+    return message('account.confirmationBody')
+  },
+  get signInOptions() {
+    return message('account.signInOptions')
+  },
+  get emailBack() {
+    return message('account.emailBack')
+  },
+  get cancelSignIn() {
+    return message('account.cancelSignIn')
+  },
+  get secureWindow() {
+    return message('account.secureWindow')
+  },
+  get googleName() {
+    return message('account.googleName')
+  },
+  get appleName() {
+    return message('account.appleName')
+  },
+  connecting: (provider: 'google' | 'apple'): string =>
+    message('account.connecting', {
+      provider:
+        provider === 'google' ? message('account.googleName') : message('account.appleName'),
+    }),
+  get discoveryError() {
+    return message('account.discoveryError')
+  },
+  get methodUnavailable() {
+    return message('account.methodUnavailable')
   },
 }
