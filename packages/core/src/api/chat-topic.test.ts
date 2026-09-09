@@ -51,4 +51,21 @@ describe('bundled chat topic graphs (P3E-01)', () => {
       "Suggestion 'thanks' does not belong to 'welcome'",
     )
   })
+
+  it('rejects duplicate suggestion IDs within one node', () => {
+    const duplicate = ChatTopicResourceSchema.safeParse({
+      ...topic,
+      nodes: [
+        {
+          ...topic.nodes[0],
+          suggestions: [
+            ...topic.nodes[0]!.suggestions,
+            { ...topic.nodes[0]!.suggestions[0]!, next_node: 'welcome' },
+          ],
+        },
+        topic.nodes[1],
+      ],
+    })
+    expect(duplicate.success).toBe(false)
+  })
 })

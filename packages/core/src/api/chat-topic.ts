@@ -35,6 +35,16 @@ export const ChatTopicResourceSchema = z
     if (ids.size !== topic.nodes.length || !ids.has(topic.start_node)) {
       ctx.addIssue({ code: 'custom', message: 'Topic nodes must have unique IDs and a start node' })
     }
+    topic.nodes.forEach((node, nodeIndex) => {
+      const suggestionIds = new Set(node.suggestions.map((suggestion) => suggestion.id))
+      if (suggestionIds.size !== node.suggestions.length) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['nodes', nodeIndex, 'suggestions'],
+          message: 'Suggestion IDs must be unique within a node',
+        })
+      }
+    })
     if (
       topic.nodes.some((node) =>
         node.suggestions.some((suggestion) => !ids.has(suggestion.next_node)),
