@@ -38,6 +38,10 @@ principal.
 
 ## Remaining work
 
+[Plan 96](96-account-sign-in-screens.md) owns the new method chooser, email/code screens, provider
+feedback and confirmation. It consumes this plan's runtime and preserves its lifecycle ownership;
+the visual redesign does not close the acceptance gates below.
+
 1. [ ] Complete loss/reinstall/backup-restore/device-rotation and recovery policy with
        learner-facing management. Browser reload requiring sign-in is intentional credential policy.
 2. [ ] Retain the recorded Google development configuration; complete its consent-to-device
