@@ -11,7 +11,13 @@ import {
 } from 'react-native'
 import { router, Stack as RouteStack } from 'expo-router'
 import type { OAuthProvider } from '@loro/core/api/oauth'
-import { accountClient, syncNow, useAccount, useSyncStatus } from '../src/lib/account/runtime'
+import {
+  accountClient,
+  syncNow,
+  useAccount,
+  useSyncRepair,
+  useSyncStatus,
+} from '../src/lib/account/runtime'
 import {
   availableCapabilities,
   availableProviders,
@@ -42,6 +48,7 @@ export default function Account() {
   useLocale()
   const state = useAccount()
   const sync = useSyncStatus()
+  const repair = useSyncRepair()
   const client = accountClient()
   const { textScale, accent } = useTheme()
   const [view, setView] = useState<ViewState>(state.session ? 'account' : 'methods')
@@ -406,6 +413,7 @@ export default function Account() {
           {view === 'account' && state.session && (
             <AccountManagement
               sync={sync}
+              quarantined={repair.quarantined}
               onSync={() => void syncNow()}
               onSignOut={() => {
                 if (!client) return
@@ -725,10 +733,12 @@ function Confirmation({
 
 function AccountManagement({
   sync,
+  quarantined,
   onSync,
   onSignOut,
 }: {
   sync: 'pending' | 'syncing' | 'synced' | 'error'
+  quarantined: number
   onSync: () => void
   onSignOut: () => void
 }) {
@@ -748,6 +758,7 @@ function AccountManagement({
                 ? copy.account.syncError
                 : copy.account.syncPending}
         </Text>
+        {quarantined > 0 && <Text>{copy.account.syncQuarantined(quarantined)}</Text>}
       </View>
       <Button
         size="cta"

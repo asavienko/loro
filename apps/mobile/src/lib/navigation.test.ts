@@ -42,7 +42,7 @@ describe('built navigation destinations', () => {
   })
   it('names contextual phrase pages without exposing onboarding or developer pages in the menu', () => {
     expect(placeForPath('/phrase/missing')).toBe('Phrase')
-    for (const path of ['/onboarding', '/dev/tokens', '/settings', '/chat', '/unknown']) {
+    for (const path of ['/onboarding', '/dev/tokens', '/chat', '/unknown']) {
       expect(placeForPath(path)).toBeUndefined()
     }
   })
@@ -67,6 +67,7 @@ describe('surface registry and deep-link guard', () => {
       'progress',
       'languages',
       'account',
+      'settings',
       'more',
     ])
   })

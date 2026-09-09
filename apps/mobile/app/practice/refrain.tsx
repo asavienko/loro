@@ -19,9 +19,9 @@ import { useLocale } from '../../src/lib/i18n'
  * token or lives in this file's `StyleSheet`.
  */
 
-import { useCallback, useEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Platform, ScrollView, StyleSheet, View } from 'react-native'
-import { router, useLocalSearchParams } from 'expo-router'
+import { router, useNavigation } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useBottomBar } from '../../src/ui/BottomBarContext'
 import {
@@ -39,6 +39,7 @@ import {
   ProgressBar,
   Row,
   Screen,
+  Sheet,
   Text,
 } from '../../src/ui/primitives'
 import { ActionBar, EmptyState } from '../../src/ui/components'
@@ -46,6 +47,7 @@ import {
   accent,
   actionBar,
   ink,
+  MIN_TAP,
   onDark,
   radius,
   semantic,
@@ -62,27 +64,99 @@ import {
   type PhraseView,
 } from '../../src/store'
 import { copy } from '../../src/lib/copy'
-import { deviceClock, localTimeLabel } from '../../src/lib/clock'
+import { deviceClock } from '../../src/lib/clock'
 import { newId } from '../../src/lib/ids'
-import { waveSchedule } from '../../src/lib/waves'
+import { waveEntryWithResume, waveSchedule } from '../../src/lib/waves'
+import { useLocalMinute } from '../../src/lib/useLocalMinute'
 /** One warming band's resolved style. The bands are a design token, not a screen decision. */
 type WarmingStyle = (typeof warming)[ReturnType<typeof warmBand>]
+const WAVES = ['morning', 'midday', 'evening'] as const
+type WaveKey = (typeof WAVES)[number]
 export default function Refrain() {
   useLocale()
+  const localMinute = useLocalMinute()
+  const now = localMinute.slice(11)
   const insets = useSafeAreaInsets()
   const { height: bottomBarHeight } = useBottomBar()
-  const { wave: requestedWave } = useLocalSearchParams<{ wave?: string }>()
-  const scheduledWave = waveSchedule(
-    ['morning', 'midday', 'evening'] as const,
+  const scheduledWave = waveSchedule(WAVES, PRODUCTION_WAVE_TIMES, now).find(
+    (item) => item.position === 'next',
+  )?.key
+  const completedWaves = useApp((state) => state.refrainWaves)
+  const refrainResume = useApp((state) => state.refrainResume)
+  const entry = waveEntryWithResume(
+    WAVES,
     PRODUCTION_WAVE_TIMES,
-    localTimeLabel(),
-  ).find((item) => item.position === 'next')?.key
+    now,
+    completedWaves.filter(
+      (wave): wave is WaveKey => wave === 'morning' || wave === 'midday' || wave === 'evening',
+    ),
+    refrainResume,
+  )
+  // A route parameter is never authority. The persisted checkpoint is shared with Today and the
+  // spine, and therefore wins while it remains valid for this local day.
   const selectedWave =
-    requestedWave === 'morning' || requestedWave === 'midday' || requestedWave === 'evening'
-      ? requestedWave
-      : (scheduledWave ?? 'morning')
-  const session = useRefrainSession(selectedWave)
+    entry.kind === 'resume'
+      ? entry.wave
+      : entry.kind === 'ready'
+        ? entry.wave.key
+        : (scheduledWave ?? 'morning')
+  const session = useRefrainSession(selectedWave, entry.kind === 'ready' || entry.kind === 'resume')
   const { set, phrase, mode, auto, dayReps, locked, phraseNumber, wave } = session
+  const [exitVisible, setExitVisible] = useState(false)
+  const navigation = useNavigation()
+  const leaveLabel = copy.nav.exit.leave
+  const hasActiveSession =
+    set.length > 0 &&
+    (entry.kind === 'ready' || entry.kind === 'resume') &&
+    !session.finished &&
+    phrase !== undefined
+  useEffect(() => {
+    // The session-only exit is present only while the sheet it opens is mounted. Cold, locked
+    // and terminal Refrain entries retain the shared Today/Back stack exit.
+    navigation.setOptions({
+      headerLeft: () =>
+        hasActiveSession ? (
+          <Pressable
+            feedback="smallButton"
+            accessibilityLabel={leaveLabel}
+            onPress={() => {
+              setExitVisible(true)
+            }}
+            style={{ minHeight: MIN_TAP, justifyContent: 'center', paddingHorizontal: space['3'] }}
+          >
+            <Text variant="bodySm" color={accent.accentInk}>
+              {copy.common.chevron.left}
+            </Text>
+          </Pressable>
+        ) : navigation.canGoBack() ? (
+          <Pressable
+            feedback="icon"
+            accessibilityRole="link"
+            accessibilityLabel={copy.a11y.common.back}
+            onPress={() => {
+              router.back()
+            }}
+          >
+            <Text variant="title2" color={ink.ink}>
+              {copy.common.chevron.left}
+            </Text>
+          </Pressable>
+        ) : (
+          <Pressable
+            feedback="smallButton"
+            style={{ minHeight: MIN_TAP, justifyContent: 'center', paddingHorizontal: space['3'] }}
+            accessibilityLabel={copy.nav.home}
+            onPress={() => {
+              router.replace('/')
+            }}
+          >
+            <Text variant="bodySm" color={accent.accentInk}>
+              {copy.nav.home}
+            </Text>
+          </Pressable>
+        ),
+    })
+  }, [hasActiveSession, leaveLabel, navigation])
   if (set.length === 0) {
     return (
       <Screen>
@@ -99,6 +173,9 @@ export default function Refrain() {
       </Screen>
     )
   }
+  // A finished session owns the immediate post-practice screen even when the next scheduled
+  // wave is still locked. The completion checkpoint is the learner's current result; replacing
+  // it with the next-wave gate would hide the reward and make a successful session look blocked.
   if (session.finished) {
     const day = deviceClock.localDay()
     return (
@@ -106,6 +183,38 @@ export default function Refrain() {
         <DoneState
           worked={set.length}
           totalReps={set.reduce((n, p) => n + repsTodayOf(p, day), 0)}
+        />
+      </Screen>
+    )
+  }
+  if (entry.kind === 'locked') {
+    return (
+      <Screen>
+        <EmptyState
+          title={copy.refrain.unavailable.title(entry.next.time)}
+          body={copy.refrain.unavailable.body}
+          action={{
+            label: copy.refrain.done.cta,
+            onPress: () => {
+              router.replace('/')
+            },
+          }}
+        />
+      </Screen>
+    )
+  }
+  if (entry.kind === 'complete') {
+    return (
+      <Screen>
+        <EmptyState
+          title={copy.refrain.unavailable.complete}
+          body={copy.refrain.unavailable.body}
+          action={{
+            label: copy.refrain.done.cta,
+            onPress: () => {
+              router.replace('/')
+            },
+          }}
         />
       </Screen>
     )
@@ -173,7 +282,55 @@ export default function Refrain() {
           <MicButton mode={mode} onPress={session.doRep} />
         )}
       </ActionBar>
+      <ExitSheet
+        visible={exitVisible}
+        onKeepGoing={() => {
+          setExitVisible(false)
+        }}
+        onPause={() => {
+          // The checkpoint was committed when its plan/last rep was committed. Only leave after
+          // that transaction has acknowledged; this handler never publishes a speculative pause.
+          setExitVisible(false)
+          router.replace('/')
+        }}
+        onEnd={() => {
+          try {
+            useApp.getState().endRefrainSession()
+            setExitVisible(false)
+            router.replace('/')
+          } catch {
+            useApp.getState().showToast(`${copy.persistence.error} ${copy.persistence.retry}`)
+          }
+        }}
+      />
     </Screen>
+  )
+}
+
+function ExitSheet({
+  visible,
+  onPause,
+  onEnd,
+  onKeepGoing,
+}: {
+  visible: boolean
+  onPause: () => void
+  onEnd: () => void
+  onKeepGoing: () => void
+}) {
+  useLocale()
+  return (
+    <Sheet visible={visible} onDismiss={onKeepGoing} dismissLabel={copy.a11y.common.dismiss}>
+      <Text variant="title3" color={ink.ink}>
+        {copy.nav.exit.title}
+      </Text>
+      <Button label={copy.nav.exit.pause} onPress={onPause} />
+      <Button label={copy.nav.exit.end} variant="secondary" onPress={onEnd} />
+      <Button label={copy.nav.exit.keepGoing} variant="secondary" onPress={onKeepGoing} />
+      <Text variant="captionSm" color={ink.muted}>
+        {copy.nav.exit.note}
+      </Text>
+    </Sheet>
   )
 }
 // ─────────────────────────────────────────────────────────────────────────────
@@ -205,21 +362,27 @@ interface RefrainSession {
  * RefrainEngine's decisions — the screen used to re-derive them, which is how the
  * card's warmth and the stored value came to disagree.
  */
-function useRefrainSession(wave: 'morning' | 'midday' | 'evening'): RefrainSession {
+function useRefrainSession(
+  wave: 'morning' | 'midday' | 'evening',
+  enabled: boolean,
+): RefrainSession {
   const phrases = useApp((s) => s.phrases)
   const refrainSet = useApp((s) => s.refrainSet)
   const applyDelta = useApp((s) => s.applyDelta)
   const ensureRefrainSet = useApp((s) => s.ensureRefrainSet)
   const completeRefrainWave = useApp((s) => s.completeRefrainWave)
-  const { session, cursor, done } = useApp((state) => state.refrainResume)
+  const { session, cursor, done, wave: resumedWave } = useApp((state) => state.refrainResume)
+  const activeWave = resumedWave ?? wave
   const targetLocale = useApp((state) => state.targetLocale)
   const busy = useRef(false)
   // Entering the Refrain is one of the moments the day must be re-checked: a learner who
   // opened the app before midnight and starts practising after it needs today's set.
   useEffect(() => {
+    if (!enabled) return
     ensureRefrainSet()
-  }, [ensureRefrainSet])
+  }, [enabled, ensureRefrainSet])
   useEffect(() => {
+    if (!enabled) return
     if (useApp.getState().refrainResume.session !== null) return
     let cancelled = false
     void refrainEngine
@@ -229,6 +392,7 @@ function useRefrainSession(wave: 'morning' | 'midday' | 'evening'): RefrainSessi
         useApp.setState({
           refrainResume: {
             session: { sessionId: newId(), plan, cursor: 0 },
+            wave,
             cursor: 0,
             done: false,
             lastLatency: null,
@@ -245,7 +409,7 @@ function useRefrainSession(wave: 'morning' | 'midday' | 'evening'): RefrainSessi
     }
     // Re-planned when the day's set changes, not on every rep: the plan is the day's
     // work, and re-planning mid-phrase would restart the mode sequence.
-  }, [refrainSet, targetLocale])
+  }, [enabled, refrainSet, targetLocale])
   const item = session?.plan.items[cursor]
   const storePhrase = useMemo(
     () => (item === undefined ? undefined : phrases.find((p) => p.id === item.phraseId)),
@@ -304,6 +468,7 @@ function useRefrainSession(wave: 'morning' | 'midday' | 'evening'): RefrainSessi
           expectedCursor: cursor,
           expectedPhrase: storePhrase,
           checkpoint: {
+            wave: activeWave,
             lastLatency: null,
             history: [],
             session: { ...session, cursor: nextCursor },
@@ -327,18 +492,19 @@ function useRefrainSession(wave: 'morning' | 'midday' | 'evening'): RefrainSessi
     const nextCursor = nextIndex < 0 ? cursor : nextIndex
     try {
       const checkpoint = {
+        wave: activeWave,
         lastLatency: null,
         history: [],
         session: { ...session, cursor: nextCursor },
         cursor: nextCursor,
         done: nextIndex < 0,
       }
-      if (nextIndex < 0) completeRefrainWave(wave, checkpoint)
+      if (nextIndex < 0) completeRefrainWave(activeWave, checkpoint)
       else useApp.setState({ refrainResume: checkpoint })
     } catch {
       useApp.getState().showToast(`${copy.persistence.error} ${copy.persistence.retry}`)
     }
-  }, [session, cursor, ensureCurrentDay, completeRefrainWave, wave])
+  }, [session, cursor, ensureCurrentDay, completeRefrainWave, activeWave])
   const set = useMemo(
     () =>
       refrainSet
@@ -356,7 +522,7 @@ function useRefrainSession(wave: 'morning' | 'midday' | 'evening'): RefrainSessi
   // not an empty screen.
   const exhausted = session !== null && cursor >= session.plan.items.length
   return {
-    wave,
+    wave: activeWave,
     set,
     phrase,
     phraseNumber,

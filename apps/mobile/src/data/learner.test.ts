@@ -11,6 +11,7 @@ import {
   type SessionHandle,
 } from '@loro/core'
 import { makePhrase } from '@loro/core/testing'
+import { accents, defaultAccent, type AccentName } from '@loro/design-tokens'
 import { createAppStore, reloadStorePersistence } from '../store/store'
 import { INITIAL_STATE } from '../store/state'
 import { createLearnerStorage } from './learner'
@@ -242,6 +243,37 @@ describe('repository-backed learner state', () => {
     expect(db.storage.load().phrases[0]?.id).toBe(db.delta.phraseId)
     expect(db.storage.load().refrainResume.session).toBeNull()
   })
+  it('discards a persisted checkpoint whose displayed and engine cursors disagree', () => {
+    const db = preparedPractice()
+    const resume = db.store.getState().refrainResume
+    db.driver.run('UPDATE course_session SET refrain_session=?', [
+      JSON.stringify({ ...resume, version: 1, localDay: DAY, cursor: 1 }),
+    ])
+    const restored = db.storage.load()
+    expect(restored.phrases[0]?.id).toBe(db.delta.phraseId)
+    expect(restored.refrainResume).toEqual(expect.objectContaining({ session: null, cursor: 0 }))
+  })
+  it('preserves a paused Refrain wave through the real course-session hydration path', () => {
+    const path = diskPath()
+    const first = open(path)
+    const phrase = makePhrase('paused-wave')
+    first.store.setState({ phrases: [phrase], onboarded: true })
+    first.store.getState().ensureRefrainSet()
+    first.store.setState({
+      refrainResume: {
+        ...first.store.getState().refrainResume,
+        session: sessionFor(phrase.id),
+        wave: 'morning',
+      },
+    })
+    first.driver.close()
+
+    const reopened = open(path)
+    expect(reopened.store.getState().refrainResume).toMatchObject({
+      session: expect.objectContaining({ sessionId: 'session-1' }),
+      wave: 'morning',
+    })
+  })
   it('reopens every course, phrase identity, streak day, settings and resume cursor', () => {
     const path = diskPath()
     const first = open(path)
@@ -427,7 +459,7 @@ describe('repository-backed learner state', () => {
     db.store.setState({
       refrainResume: {
         ...db.store.getState().refrainResume,
-        session: sessionFor(db.store.getState().refrainSet[0]!),
+        session: { ...sessionFor(db.store.getState().refrainSet[0]!), cursor: 9 },
         cursor: 9,
       },
     })
@@ -472,6 +504,69 @@ describe('repository-backed learner state', () => {
   })
 })
 
+describe('P2-07 durable import drafts', () => {
+  it('restores a course-bound local draft after relaunch and clears it after completion', () => {
+    const path = diskPath()
+    const db = open(path)
+    const draft = {
+      targetLocale: 'es-ES' as const,
+      nativeLanguage: 'en' as const,
+      input: 'Hola | Hi',
+    }
+    const outboxBefore = db.persistence.outbox.pending(100)
+    db.store.getState().saveImportDraft(draft)
+    expect(db.storage.load().importDraft).toEqual(draft)
+    expect(db.persistence.outbox.pending(100)).toEqual(outboxBefore)
+
+    db.driver.close()
+    const reopened = open(path)
+    expect(reopened.store.getState().importDraft).toEqual(draft)
+    reopened.store.getState().clearImportDraft()
+    expect(reopened.storage.load().importDraft).toBeNull()
+  })
+
+  it('does not publish a draft if its local checkpoint write fails', () => {
+    const db = open()
+    db.driver.run(
+      "CREATE TRIGGER reject_import_draft BEFORE INSERT ON kv WHEN NEW.k = 'import-drafts' BEGIN SELECT RAISE(ABORT, 'draft write failed'); END",
+    )
+    expect(() => {
+      db.store.getState().saveImportDraft({
+        targetLocale: 'es-ES',
+        nativeLanguage: 'en',
+        input: 'Hola | Hi',
+      })
+    }).toThrow('draft write failed')
+    expect(db.store.getState().importDraft).toBeNull()
+  })
+
+  it('keeps drafts for distinct language pairs through a switch and relaunch', () => {
+    const path = diskPath()
+    const first = open(path)
+    const spanish = {
+      targetLocale: 'es-ES' as const,
+      nativeLanguage: 'en' as const,
+      input: 'Hola | Hi',
+    }
+    const russian = {
+      targetLocale: 'ru-RU' as const,
+      nativeLanguage: 'en' as const,
+      input: 'Привет | Hi',
+    }
+    first.store.getState().saveImportDraft(spanish)
+    first.store.getState().setLanguages('en', 'ru-RU')
+    first.store.getState().saveImportDraft(russian)
+    first.store.getState().setLanguages('en', 'es-ES')
+    expect(first.store.getState().importDraft).toEqual(spanish)
+    first.driver.close()
+
+    const reopened = open(path)
+    expect(reopened.store.getState().importDraft).toEqual(spanish)
+    reopened.store.getState().setLanguages('en', 'ru-RU')
+    expect(reopened.store.getState().importDraft).toEqual(russian)
+  })
+})
+
 describe('F-05/F-06 device-local analytics consent', () => {
   it('defaults off on an existing installation without changing synced settings', () => {
     const db = open()
@@ -495,7 +590,7 @@ describe('F-05/F-06 device-local analytics consent', () => {
     db.store.getState().setAnalyticsConsent(true)
     expect(db.storage.load()).toEqual({
       ...before,
-      devicePreferences: { version: 1, analyticsConsent: true },
+      devicePreferences: { version: 2, analyticsConsent: true, accent: 'coral', motion: 'system' },
     })
     db.driver.close()
     const reopened = open(path)
@@ -516,6 +611,37 @@ describe('F-05/F-06 device-local analytics consent', () => {
     const db = open()
     writeLocalValue(db.driver, 'device_preferences', value)
     expect(db.storage.load().devicePreferences.analyticsConsent).toBe(false)
+  })
+
+  it('migrates v1 consent and persists visual preferences without changing synced settings', () => {
+    const alternateAccent = Object.keys(accents).find((accent) => accent !== defaultAccent)
+    if (alternateAccent === undefined) throw new Error('Expected a non-default accent')
+    const path = diskPath()
+    const first = open(path)
+    writeLocalValue(first.driver, 'device_preferences', '{"version":1,"analyticsConsent":true}')
+    first.driver.close()
+    const db = open(path)
+    expect(db.store.getState().devicePreferences).toEqual({
+      version: 2,
+      analyticsConsent: true,
+      accent: 'coral',
+      motion: 'system',
+    })
+    db.store
+      .getState()
+      .completeOnboarding({ goal: 'travel', level: 'beg', dailyMinutes: 10, packIds: [] })
+    const settings = db.persistence.settings.load()
+    const outbox = db.driver.all('SELECT * FROM outbox')
+    db.store.getState().setVisualPreferences(alternateAccent as AccentName, 'reduced')
+    expect(db.persistence.settings.load()).toEqual(settings)
+    expect(db.driver.all('SELECT * FROM outbox')).toEqual(outbox)
+    db.driver.close()
+    expect(open(path).store.getState().devicePreferences).toEqual({
+      version: 2,
+      analyticsConsent: true,
+      accent: alternateAccent as AccentName,
+      motion: 'reduced',
+    })
   })
 
   it('reset clears consent and invalid runtime updates cannot grant it', () => {

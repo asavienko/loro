@@ -6,7 +6,9 @@ image=${1:-loro-api:local-check}
 if [[ $# == 0 ]]; then
   docker build --platform linux/amd64 -f apps/api/Dockerfile -t "$image" .
 fi
-name="loro-image-check-$$"
+# The local CI parent supplies a run-specific prefix so it can remove these resources if SIGKILL
+# bypasses this script's EXIT trap. Direct invocations retain the PID-based default.
+name="${LORO_API_IMAGE_CHECK_PREFIX:-loro-image-check-$$}"
 network="$name-network"
 database="$name-database"
 content="$name-content"

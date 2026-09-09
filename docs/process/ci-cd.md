@@ -24,24 +24,38 @@ pnpm ci:local
 Alternatively `bash scripts/ci-local.sh` selects Node 22 through nvm when available, including when
 pnpm is initially off PATH. The runner exits on failure and refuses to run in GitHub Actions. It
 sets `CI=1` so Playwright starts fresh servers and uses its strict CI behavior, and forces Turbo
-checks to execute instead of accepting cached task results. Workspace concurrency defaults to two
-tasks to limit local CPU/memory contention; override with `LORO_CI_CONCURRENCY` if needed.
+checks to execute instead of accepting cached task results. The full runner schedules independent
+jobs with a bounded default of two (`LORO_CI_JOBS`); Turbo's internal task limit remains separately
+configurable with `LORO_CI_CONCURRENCY`.
 
-The full gate runs, in order:
+The full gate runs in dependency-aware phases:
 
-1. Frozen-lockfile dependency installation; host/WASM/UniFFI, design-token and Expo route-type
-   generation. Route types are refreshed with the installed Expo SDK before typechecking to avoid
-   stale declarations after switching branches.
-2. `pnpm check`: contracts, lint, typecheck, JS/TS/Rust tests, content and accessibility checks. The
-   auth transaction tests also run against a disposable PostgreSQL 16 container on a free localhost
-   port, removed after success or failure. Existing database URLs are ignored because these tests
-   drop tables. The golden DSP target also runs if implemented; no missing harness is reported as
-   passing.
-3. Formatting; optional commit-range lint; generated-output drift (including untracked output).
-4. Chromium installation; learner, workbench and production-export browser suites.
-5. Mobile Metro/Hermes export; API build, boot and readiness with the actual WASM merge engine. The
-   API smoke check selects a free port and cleans up its child process on success or failure.
-6. Criterion benchmarks with short warm-up and measurement windows.
+1. Frozen-lockfile dependency installation, then host/WASM/UniFFI, design-token, Expo route-type and
+   Chromium preparation jobs run concurrently. Route types are refreshed with the installed Expo SDK
+   before typechecking.
+2. `pnpm check`: contracts, lint, typecheck, JS/TS/Rust tests, content and accessibility checks.
+   This phase stays exclusive because Turbo and generated artifacts share the checkout.
+3. Auth/PostgreSQL, optional golden tests, formatting, optional commit-range lint and generated
+   drift checks run concurrently. The auth transaction tests use a disposable PostgreSQL 16
+   container; missing golden targets are reported as omitted.
+4. Learner, pseudo-locale, workbench and production-export browser suites, mobile export, and API
+   build/smoke/image verification run concurrently in separate temporary source workspaces. Each
+   workspace has its own Expo/Metro cache, temporary directory, port, export output and reports;
+   Playwright remains single-worker inside each suite.
+5. Criterion benchmarks run exclusively with short warm-up and measurement windows.
+
+`LORO_CI_JOBS=1` restores serial top-level scheduling. A lock prevents two full runs from sharing a
+checkout. Each run writes logs, an event stream and `summary.json` under `.ci-local-reports/<run>`;
+temporary workspaces and owned child processes are cleaned up on failure or interruption.
+Cancellation stops install fallbacks and queued commands, then escalates owned process groups from
+SIGTERM to SIGKILL after a bounded grace period. Cleanup waits for those groups before removing
+workspaces and removes the run-owned API containers, network and image even when shell traps were
+skipped. The workspace snapshot comes from Git's NUL-delimited tracked and non-ignored inventory,
+plus the required generated WASM, bindings, token output and Expo declarations. It preserves
+working-tree edits and deletions, omits secrets, dependencies and native build output, and rejects
+symlinks that escape the source tree. Authored source and commit identity are captured before
+validation, matched against the snapshot, checked between phases and rechecked after benchmarks;
+generated input identity is recorded separately.
 
 To validate branch commits, provide a locally available base ref:
 
@@ -51,9 +65,9 @@ CI_BASE_REF=origin/main pnpm ci:local
 
 Without `CI_BASE_REF`, commit lint is explicitly omitted; no network fetch or push is performed.
 `pnpm check` remains the fast development command. Full CI installs dependencies/browsers when
-needed but never publishes, deploys, queues EAS, or calls GitHub. Do not run concurrent full gates
-in the same checkout: generated files and build output are shared. Each browser suite selects a free
-local port through `LORO_E2E_PORT`, leaving existing development servers alone.
+needed but never publishes, deploys, queues EAS, or calls GitHub. The full runner's checkout lock
+prevents unsafe concurrent runs; isolated suites select their own free local ports and leave
+existing development servers alone.
 
 Record the checked commit, commands and results in the PR. No GitHub status check is required by
 this policy. If a repository rule later requires an old Actions check, remove that obsolete check

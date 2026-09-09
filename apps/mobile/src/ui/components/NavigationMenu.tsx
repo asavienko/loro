@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Pressable, SectionLabel, Sheet, Text } from '../primitives'
-import { border, ink, line, space } from '../theme'
+import { border, ink, line, MIN_TAP, space } from '../theme'
 
 /** Navigation.dc.html:95–102, 380–397. No invented ongoing work or unbuilt destinations. */
 export function NavigationMenu({
@@ -16,6 +16,7 @@ export function NavigationMenu({
   reveal,
   chevron,
   destinations,
+  ongoing,
 }: {
   place: string
   openLabel: string
@@ -31,6 +32,7 @@ export function NavigationMenu({
     currentLabel: string
     onPress: () => void
   }[]
+  ongoing?: { label: string; onPress: () => void; heading: string } | undefined
 }) {
   const [visible, setVisible] = useState(false)
   const pullHandlers = usePullDown(() => {
@@ -60,6 +62,21 @@ export function NavigationMenu({
             {reveal}
           </Text>
         </Pressable>
+        {ongoing !== undefined && (
+          <Pressable
+            feedback="row"
+            accessibilityLabel={ongoing.label}
+            onPress={ongoing.onPress}
+            style={s.ongoing}
+          >
+            <Text variant="captionSm" color={ink.muted}>
+              {ongoing.heading}
+            </Text>
+            <Text variant="captionSm" color={ink.ink}>
+              {ongoing.label}
+            </Text>
+          </Pressable>
+        )}
       </View>
       <Sheet
         visible={visible}
@@ -137,6 +154,13 @@ const s = StyleSheet.create({
     gap: HANDLE_GAP,
     minHeight: SPINE_HEIGHT,
     alignSelf: 'flex-start',
+  },
+  ongoing: {
+    marginLeft: 'auto',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space['1'],
+    minHeight: MIN_TAP,
   },
   place: { fontSize: PLACE_SIZE },
   caret: { fontSize: CARET_SIZE },

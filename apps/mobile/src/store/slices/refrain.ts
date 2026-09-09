@@ -10,12 +10,9 @@ import { EMPTY_REFRAIN_RESUME } from '../state'
 import { DEFAULT_REP_TARGET, repsToday, selectRefrainSet } from '@loro/core'
 import type { Slice } from '../types'
 
-export const createRefrainSlice: Slice<'ensureRefrainSet' | 'completeRefrainWave'> = ({
-  set,
-  get,
-  deps,
-  loadRefrainDay,
-}) => ({
+export const createRefrainSlice: Slice<
+  'ensureRefrainSet' | 'completeRefrainWave' | 'endRefrainSession'
+> = ({ set, get, deps, loadRefrainDay }) => ({
   ensureRefrainSet: () => {
     const day = deps.clock.localDay()
     const st = get()
@@ -80,5 +77,10 @@ export const createRefrainSlice: Slice<'ensureRefrainSet' | 'completeRefrainWave
         ? state.refrainWaves
         : [...state.refrainWaves, wave],
     })
+  },
+  endRefrainSession: () => {
+    // A learner may stop a wave without undoing completed reps. The store transaction around
+    // this action commits the cleared checkpoint before the route leaves the session.
+    set({ refrainResume: EMPTY_REFRAIN_RESUME })
   },
 })

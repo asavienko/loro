@@ -7,8 +7,9 @@
   approved assets still depend on Q-15 even though ElevenLabs is selected.
 - **Depends on:** 58 native workspace; 61 approved seed assets; 86 only for remote asset/TTS
   adapters.
-- **Reviewed:** 2026-09-09 against checkout `42f4d57`; source/plan review only, no new device or
-  deployment acceptance.
+- **Reviewed:** 2026-09-09 against `aafa61f`; current source, tests and retained review records
+  inspected. This plan refresh supplies no new runtime, device or deployment acceptance.
+- **Priority:** 7; shared audio session, then integration with 63/64/81.
 
 **Archive disposition (2026-09-09):** Archived at user request after integration review. The partial
 status and remaining acceptance criteria below are retained; archival does not mark this plan
@@ -60,14 +61,27 @@ without returning PCM to JavaScript.
 
 ## Delivery order and gates
 
-1. Extend the existing serialized native session with position/queue/rate/interruption events;
-   define the shared monotonic-clock handoff with 63 before onset measurement work.
+1. Extend the existing serialized native session with position/queue/rate/interruption events; agree
+   the prompt-end timestamp units, session generation, native-buffer ownership and cancellation
+   contract with 63/60 before either implements timing. Retain cancellation checks at execution
+   time. Fixture state-machine work may start while Q-15 is open; approved assets gate real
+   cache/playback acceptance, not design of the session contract.
 2. Integrate 61's verified cache identity and approved assets, then background/lock-screen control.
    Plan 62 owns audio transport, 81 its in-app travelling presentation, and 70 trip/widget state;
    ordinary background playback must not wait for the blocked trip lifecycle.
-3. Record per-target physical-device playback and interruption evidence through 58/72. Fixtures may
+3. Hand the same session truth to 64 for audible orchestration and 81 for one travelling transport.
+   Test pause/end, starting a competing practice session, background/foreground and stale completion
+   events; there must be no second player or JS-estimated position.
+4. Record per-target physical-device playback and interruption evidence through 58/72. Fixtures may
    verify state transitions while Q-15 is open; they cannot establish production asset quality.
 
 ## Out of scope
 
 Microphone capture, ASR, DSP, catalog production, and trip prefetch policy.
+
+## Post-main review and archive disposition — 2026-09-09
+
+The [review at `de81744`](../../../docs/reviews/2026-09-09-post-main-plan-review.md) records this
+plan's current contribution, remaining work and gates. [Delivered slices](IMPLEMENTED-SLICES.md) are
+retained in the archive; this plan remains incomplete. Earlier verification is dated evidence, not
+acceptance of the current combined branch.

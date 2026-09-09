@@ -1,4 +1,4 @@
-import { atInstant, runFor } from './clock'
+import { atInstant, jumpTo, returnToForeground, runFor } from './clock'
 import { expect, onboard, test } from './fixtures'
 import { repsTodayRow, startWave } from './states'
 
@@ -64,6 +64,19 @@ test(
     await expect(page.getByLabel(/Last seven days: practised on 1 of them/)).toBeVisible()
   },
 )
+
+test('opens a scheduled wave when its local time arrives on an already-open route', async ({
+  page,
+}) => {
+  await atInstant(page, '2026-05-04T07:59')
+  await onboard(page)
+  await page.goto('/practice/refrain')
+  await expect(page.getByText(/Next wave starts at/)).toBeVisible()
+
+  await jumpTo(page, '2026-05-04T08:00')
+  await returnToForeground(page)
+  await expect(page.getByRole('button', { name: 'Say it', exact: true })).toBeVisible()
+})
 
 test('LB-27: manual confirmation never reports speech latency', async ({ page }) => {
   await atInstant(page, '2026-05-04T10:00')

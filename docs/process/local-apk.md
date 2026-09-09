@@ -122,12 +122,13 @@ those existing advisories are not resolved by this workflow.
 
 ## Native evidence collection (plan 58)
 
-`pnpm native:evidence --artifact-revision GIT_REVISION` captures Android device metadata,
-permissions, logs and the current screen, bound to the retained revision of the installed build. For
-an already installed iOS simulator app, use:
+`pnpm native:evidence --artifact-revision GIT_REVISION --artifact .local-builds/RETAINED_BUILD`
+captures Android device metadata, permissions, logs and the current screen. The collector resolves
+the revision to a local Git commit and records the retained build file's SHA-256 and byte size in
+the evidence manifest. For an already installed iOS simulator app, use:
 
 ```bash
-pnpm native:evidence --platform ios --package app.loro.ios --serial SIMULATOR-UDID --artifact-revision GIT_REVISION
+pnpm native:evidence --platform ios --package app.loro.ios --serial SIMULATOR-UDID --artifact-revision GIT_REVISION --artifact .local-builds/RETAINED_BUILD
 ```
 
 Full Xcode must be selected with an installed simulator runtime and a booted simulator. Omitting
@@ -138,7 +139,8 @@ app, read app data, grant permissions or collect simulator-wide logs. Use a test
 review screenshots before sharing them. Fixtures exercise collection and prerequisite failures; they
 do not constitute a device run.
 
-The installed artifact revision remains explicitly unverified: retain and correlate the app's build
-metadata separately. A screenshot does not establish that the app is foregrounded or a scenario
-passed. Clean iOS compilation, minimum OS floors, physical-device permissions/speech, persistence,
-lifecycle and interruption scenarios remain plan 58 acceptance gates.
+The installed artifact remains explicitly unverified: the retained file hash identifies reviewed
+bytes, but does not prove those bytes are installed. Retain and correlate the app's build metadata
+separately. A screenshot does not establish that the app is foregrounded or a scenario passed. Clean
+iOS compilation, minimum OS floors, physical-device permissions/speech, persistence, lifecycle and
+interruption scenarios remain plan 58 acceptance gates.

@@ -60,18 +60,67 @@ pub struct NotifyContext {
     pub reveal_mode_count: u32,
 }
 
+/// One notification the platform is considering for this local day.
+///
+/// The platform resolves timezone and daylight-saving-time rules into `delivery_at_ms` before
+/// calling this pure planner. Rust deliberately receives that resolved instant rather than trying
+/// to maintain a second timezone database. `hour` and `minute` preserve the local wall-clock
+/// value so quiet-hours policy remains visible and testable here.
+#[derive(Debug, Clone, uniffi::Record)]
+pub struct NotificationCandidate {
+    /// Stable identifier used by the platform to replace or cancel a scheduled notification.
+    pub id: String,
+    /// The semantic category that owns the policy and translated copy.
+    pub category: Category,
+    /// Resolved delivery instant in epoch milliseconds.
+    pub delivery_at_ms: i64,
+    /// Local wall-clock hour at delivery, 0..23.
+    pub hour: u32,
+    /// Local wall-clock minute at delivery, 0..59.
+    pub minute: u32,
+    /// Whether the category's destination is built and can safely receive a deep link.
+    pub destination_available: bool,
+}
+
 /// One planned notification.
 #[derive(Debug, Clone, uniffi::Record)]
 pub struct PlannedNotification {
+    /// Stable identifier passed to the platform scheduler.
+    pub id: String,
     /// Its category.
     pub category: Category,
+    /// Resolved delivery instant in epoch milliseconds.
+    pub delivery_at_ms: i64,
     /// Local hour to fire at.
     pub hour: u32,
     /// Local minute.
     pub minute: u32,
+    /// Semantic copy key. The platform translates this at delivery; no learner copy lives in Rust.
+    pub copy_key: String,
     /// Deep link, so it lands on the right surface rather than the home screen.
     pub deep_link: String,
+    /// Native adapters must suppress presentation while the app is foregrounded.
+    pub suppress_when_foreground: bool,
 }
+
+/// A malformed notification candidate is a programming error, never a reason to guess a schedule.
+#[derive(Debug, uniffi::Error)]
+pub enum NotificationPlanError {
+    /// A candidate cannot be safely handed to an operating-system scheduler.
+    InvalidCandidate {
+        /// Actionable validation failure.
+        reason: String,
+    },
+}
+
+impl std::fmt::Display for NotificationPlanError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::InvalidCandidate { reason } => f.write_str(reason),
+        }
+    }
+}
+impl std::error::Error for NotificationPlanError {}
 
 /// Whether an hour falls in quiet hours.
 #[must_use]
@@ -124,6 +173,97 @@ pub fn deep_link_for(category: Category) -> String {
     .to_string()
 }
 
+/// The semantic copy key for a notification category.
+///
+/// This deliberately returns a key rather than learner-facing text. Native adapters resolve the
+/// key through the same bundled copy resources as the app at delivery time.
+#[must_use]
+#[uniffi::export]
+pub fn copy_key_for(category: Category) -> String {
+    match category {
+        Category::DailyReminder => "notifications.dailyReminder",
+        Category::WaveNudge => "notifications.waveNudge",
+        Category::TripDrop => "notifications.tripDrop",
+        Category::TripMilestone => "notifications.tripMilestone",
+        Category::Arrival => "notifications.arrival",
+        Category::Return => "notifications.return",
+        Category::LanguagePack => "notifications.languagePack",
+    }
+    .to_string()
+}
+
+/// Select the safe subset of locally resolved notification candidates.
+///
+/// The platform owns calculating real delivery instants, handling permission state, replacing or
+/// cancelling the returned stable IDs, and suppressing foreground presentation. This function owns
+/// only shared policy: category opt-outs, quiet hours, conditionality, route availability and the
+/// absolute per-day cap. It has no trip lifecycle semantics, so a caller may simply omit trip
+/// candidates until Q-07 is resolved.
+///
+/// # Errors
+/// Returns an error for malformed or duplicate candidate identifiers instead of guessing which OS
+/// schedule to replace.
+#[uniffi::export]
+pub fn plan_notifications(
+    ctx: &NotifyContext,
+    candidates: Vec<NotificationCandidate>,
+) -> Result<Vec<PlannedNotification>, NotificationPlanError> {
+    let mut seen = std::collections::HashSet::new();
+    for candidate in &candidates {
+        if candidate.id.is_empty() {
+            return Err(NotificationPlanError::InvalidCandidate {
+                reason: "Notification candidate ID must not be empty".to_string(),
+            });
+        }
+        if !seen.insert(&candidate.id) {
+            return Err(NotificationPlanError::InvalidCandidate {
+                reason: format!("Duplicate notification candidate ID: {}", candidate.id),
+            });
+        }
+        if candidate.delivery_at_ms < 0 {
+            return Err(NotificationPlanError::InvalidCandidate {
+                reason: "Notification delivery time must be non-negative".to_string(),
+            });
+        }
+        if candidate.hour > 23 || candidate.minute > 59 {
+            return Err(NotificationPlanError::InvalidCandidate {
+                reason: "Notification local time must be a valid hour and minute".to_string(),
+            });
+        }
+    }
+
+    let mut ordered = candidates;
+    ordered.sort_by(|a, b| {
+        a.delivery_at_ms
+            .cmp(&b.delivery_at_ms)
+            .then_with(|| a.id.cmp(&b.id))
+    });
+
+    let mut scheduled = Vec::new();
+    let mut policy = ctx.clone();
+    for candidate in ordered {
+        if !candidate.destination_available {
+            continue;
+        }
+        policy.hour = candidate.hour;
+        if !may_fire(candidate.category, &policy) {
+            continue;
+        }
+        scheduled.push(PlannedNotification {
+            id: candidate.id,
+            category: candidate.category,
+            delivery_at_ms: candidate.delivery_at_ms,
+            hour: candidate.hour,
+            minute: candidate.minute,
+            copy_key: copy_key_for(candidate.category),
+            deep_link: deep_link_for(candidate.category),
+            suppress_when_foreground: true,
+        });
+        policy.already_scheduled += 1;
+    }
+    Ok(scheduled)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -151,6 +291,22 @@ mod tests {
             already_scheduled: 0,
             trip_active: true,
             reveal_mode_count: REVEAL_MODE_THRESHOLD,
+        }
+    }
+
+    fn candidate(
+        id: &str,
+        category: Category,
+        delivery_at_ms: i64,
+        hour: u32,
+    ) -> NotificationCandidate {
+        NotificationCandidate {
+            id: id.to_string(),
+            category,
+            delivery_at_ms,
+            hour,
+            minute: 15,
+            destination_available: true,
         }
     }
 
@@ -270,5 +426,72 @@ mod tests {
             assert!(!seen.contains(&link), "{cat:?} reuses {link}");
             seen.push(link);
         }
+    }
+
+    #[test]
+    fn planner_orders_safe_candidates_and_preserves_scheduler_contract() {
+        let plan = plan_notifications(
+            &ctx(),
+            vec![
+                candidate("wave", Category::WaveNudge, 1_800, 13),
+                candidate("daily", Category::DailyReminder, 900, 9),
+            ],
+        )
+        .expect("valid candidates plan");
+
+        assert_eq!(
+            plan.iter().map(|item| item.id.as_str()).collect::<Vec<_>>(),
+            ["daily", "wave"]
+        );
+        assert_eq!(plan[0].delivery_at_ms, 900);
+        assert_eq!(plan[0].copy_key, "notifications.dailyReminder");
+        assert_eq!(plan[0].deep_link, "loro://practice");
+        assert!(plan.iter().all(|item| item.suppress_when_foreground));
+    }
+
+    #[test]
+    fn planner_applies_cap_quiet_hours_and_destination_availability_per_candidate() {
+        let mut c = ctx();
+        c.already_scheduled = MAX_PER_DAY - 1;
+        let mut unavailable = candidate("unavailable", Category::DailyReminder, 100, 9);
+        unavailable.destination_available = false;
+        let plan = plan_notifications(
+            &c,
+            vec![
+                unavailable,
+                candidate("quiet", Category::WaveNudge, 200, QUIET_START_HOUR),
+                candidate("one-left", Category::DailyReminder, 300, 9),
+                candidate("past-cap", Category::LanguagePack, 400, 10),
+            ],
+        )
+        .expect("valid candidates plan");
+
+        assert_eq!(
+            plan.iter().map(|item| item.id.as_str()).collect::<Vec<_>>(),
+            ["one-left"]
+        );
+    }
+
+    #[test]
+    fn planner_rejects_ambiguous_or_invalid_platform_requests() {
+        let duplicate = plan_notifications(
+            &ctx(),
+            vec![
+                candidate("same", Category::DailyReminder, 100, 9),
+                candidate("same", Category::WaveNudge, 200, 10),
+            ],
+        );
+        assert!(matches!(
+            duplicate,
+            Err(NotificationPlanError::InvalidCandidate { .. })
+        ));
+
+        let mut invalid_time = candidate("bad-time", Category::DailyReminder, 100, 24);
+        invalid_time.minute = 60;
+        let invalid = plan_notifications(&ctx(), vec![invalid_time]);
+        assert!(matches!(
+            invalid,
+            Err(NotificationPlanError::InvalidCandidate { .. })
+        ));
     }
 }

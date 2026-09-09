@@ -150,6 +150,28 @@ export const currentExamples: Readonly<Record<string, WireExample>> = {
   aiThemes: { responses: { 200: { themes: ['Café', 'Hotel'], provider: 'stub' } } },
 }
 export const targetExamples: Readonly<Record<string, WireExample>> = {
+  contentReleaseManifest: {
+    responses: {
+      200: {
+        manifestVersion: 1,
+        catalogVersion: 1,
+        lang: 'es-ES',
+        phraseCount: 1,
+        minAppVersion: '1.0.0',
+        resources: [
+          {
+            id: 'catalog-es-ES',
+            kind: 'catalog',
+            version: 1,
+            uri: `sha256/${hash}.json`,
+            sha256: hash,
+            bytes: 1,
+          },
+        ],
+        signature: { algorithm: 'ed25519', keyId: 'release-1', value: 'illustrative-signature' },
+      },
+    },
+  },
   health: { responses: { 200: health } },
   readiness: { responses: { 200: ready, 503: unready } },
   authApple: { request: signIn, responses: { 200: signedIn } },

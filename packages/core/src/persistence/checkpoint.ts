@@ -12,6 +12,8 @@ export interface CourseCheckpoint {
   readonly streamCursor: number
   readonly refrainResume: {
     readonly session: SessionHandle | null
+    /** The timed wave that owns this checkpoint; absent records are pre-wave snapshots. */
+    readonly wave?: 'morning' | 'midday' | 'evening'
     readonly cursor: number
     readonly lastLatency: number | null
     readonly history: (number | null)[]
@@ -40,6 +42,16 @@ function text(value: unknown): value is string {
 }
 function latency(value: unknown): boolean {
   return value === null || number(value)
+}
+function localDay(value: unknown): value is string {
+  if (typeof value !== 'string' || !/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(value))
+    return false
+  const year = Number(value.slice(0, 4))
+  const month = Number(value.slice(5, 7))
+  const day = Number(value.slice(8, 10))
+  const leapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0)
+  const daysInMonth = [31, leapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+  return day <= (daysInMonth[month - 1] ?? 0)
 }
 function prompt(value: unknown): boolean {
   return (
@@ -142,8 +154,7 @@ function checkpoint(value: unknown): value is CourseCheckpoint {
     value.version !== 1 ||
     typeof value.targetLocale !== 'string' ||
     !isTargetLocale(value.targetLocale) ||
-    typeof value.localDay !== 'string' ||
-    !/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(value.localDay) ||
+    !localDay(value.localDay) ||
     (value.contentSignature !== undefined &&
       (typeof value.contentSignature !== 'string' || value.contentSignature.length > MAX_BYTES)) ||
     !count(value.revision) ||
@@ -153,12 +164,17 @@ function checkpoint(value: unknown): value is CourseCheckpoint {
   const resume = value.refrainResume
   return (
     record(resume) &&
-    keys(resume, ['session', 'cursor', 'lastLatency', 'history', 'done']) &&
+    keys(resume, ['session', 'wave', 'cursor', 'lastLatency', 'history', 'done']) &&
     (resume.session === null || session(resume.session)) &&
+    (resume.wave === undefined ||
+      resume.wave === 'morning' ||
+      resume.wave === 'midday' ||
+      resume.wave === 'evening') &&
     count(resume.cursor) &&
     (resume.session === null
       ? resume.cursor === 0
-      : resume.cursor <= resume.session.plan.items.length) &&
+      : resume.cursor === resume.session.cursor &&
+        resume.cursor <= resume.session.plan.items.length) &&
     latency(resume.lastLatency) &&
     Array.isArray(resume.history) &&
     resume.history.length <= MAX_ITEMS &&

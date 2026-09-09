@@ -1,79 +1,95 @@
 # Validation and integration
 
-Inspect current package scripts before copying commands. Use Node 22 and put Cargo on PATH in each
-fresh shell. Install with `pnpm install --frozen-lockfile` when dependencies are absent. Do not run
-the broad bootstrap script merely to discover what it installs or changes.
+Use current package scripts, Node 22 and Cargo on PATH. Install absent dependencies with
+`pnpm install --frozen-lockfile`; avoid broad bootstrap for discovery.
 
-A fresh checkout can fail mobile typecheck on web-only styles such as `touchAction` because ignored
-`apps/mobile/expo-env.d.ts` is absent. It loads Expo's React Native Web type extensions.
-`node scripts/ci-expo-routes.mjs` generates route declarations, not this environment declaration.
-Regenerate through the installed Expo CLI instead of changing valid styles or hand-editing output:
+## Fresh-checkout prerequisites
+
+Use `context.mjs --full` before build/typecheck setup. Missing ignored `apps/mobile/expo-env.d.ts`
+causes misleading web-style errors such as `touchAction`. `node scripts/ci-expo-routes.mjs`
+generates route declarations, not that environment declaration. Generate the latter from the
+repository root through the installed Expo CLI:
 
 ```bash
 node -e 'const path = require("node:path"); const cli = path.dirname(require.resolve("@expo/cli/package.json")); require(path.join(cli, "build/src/start/server/type-generation/expo-env.js")).writeExpoEnvDTS(path.resolve("apps/mobile")).catch(error => { console.error(error); process.exitCode = 1 })'
 ```
 
-This installed SDK entry point was verified for the current Expo version; inspect it again after an
-SDK upgrade. Run from the repository root. Keep both generated declarations untracked.
+Keep both declarations untracked. Recheck this internal SDK entry point after Expo upgrades; do not
+change valid styles to compensate for missing generated types.
 
 ## Match checks to the change
 
-| Change                          | Checks                                                                                                |
-| ------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| Any coherent development commit | Relevant focused checks, `pnpm check`, scoped formatting, `git diff --check`                          |
-| Learner-visible behavior        | Corresponding flow/state coverage, then `pnpm test:e2e` before committing                             |
-| Workbench/theme                 | Relevant learner checks plus `pnpm test:e2e:workbench`; use `pnpm test:e2e:bundle` for release gating |
-| Tokens                          | `pnpm tokens:build`, inspect generated diff and contrast gates                                        |
-| Rust/bindings                   | Relevant cargo tests, `pnpm core-rs:build`, generated drift and platform parity                       |
-| HTTP schema                     | `pnpm contracts:generate`, `pnpm contracts:check`, runtime tests where wired                          |
-| Auth/server persistence         | `bash scripts/ci-auth-postgres.sh` using its isolated database                                        |
-| Container packaging             | `bash scripts/ci-api-image.sh`; host/workspace success does not prove runtime dependencies            |
-| Merge/distribution              | `CI_BASE_REF=origin/main pnpm ci:local` when that script exists; inspect separate native/audit gates  |
+| Change              | Checks                                                                             |
+| ------------------- | ---------------------------------------------------------------------------------- |
+| Development commit  | Focused checks, `pnpm check`, scoped formatting, `git diff --check`                |
+| Learner behavior    | Update flow/state coverage; `pnpm test:e2e` before committing                      |
+| Workbench/theme     | Relevant learner checks plus `pnpm test:e2e:workbench`                             |
+| Tokens              | `pnpm tokens:build`, generated diff and contrast checks                            |
+| Rust/bindings       | Cargo tests, `pnpm core-rs:build`, drift and platform parity                       |
+| HTTP schema         | `pnpm contracts:generate`, `pnpm contracts:check`, wired runtime tests             |
+| Auth/persistence    | `bash scripts/ci-auth-postgres.sh` with its isolated database                      |
+| Container packaging | `bash scripts/ci-api-image.sh` against the exact image                             |
+| Merge/distribution  | `CI_BASE_REF=origin/main pnpm ci:local`; separate native/audit gates as applicable |
 
-`pnpm check` is the fast gate; it does not replace browser or native acceptance. Current local CI
-orchestrates installs, generated output, PostgreSQL, formatting/commitlint,
-browser/workbench/export, API image smoke and benchmarks. Read `scripts/ci-local.sh` and
-`docs/process/ci-cd.md` for the current stages. GitHub Actions stays disabled unless the user
-explicitly changes that policy. Do not enable or dispatch it to satisfy a stale PR/process document.
+For docs/skill edits, check affected links, metadata and changed helpers plus the required fast
+gate. This helper's tests are
+`node --test .agents/skills/loro-development/scripts/context.test.mjs`. Local skill edits need no
+learner E2E or APK build; requested merges still require full CI. GitHub Actions stays disabled
+unless the user changes that policy.
 
-For docs/skill-only work, validate links, metadata and any new helper; there is no reason to add
-learner E2E tests or rebuild an APK. Preserve the repository's required fast gate.
+## Shorten review/fix cycles
 
-## Avoid repeated expensive runs
+Inspect changes since the reviewed revision and the original finding's callers on a follow-up. A
+whole-branch review still covers the complete requested diff. Reproduce through the real boundary:
+import helper tests missed parent-gate unmounts and lossy serialization; Android wrapper tests
+missed Expo dotenv loading and separately restarted Metro sessions. Validate bounds through
+entry/edit/save and recovery, not only the initial parser. For shared mobile imports, run the
+production bundler early: Node-only dependencies can pass unit/type checks and break Metro.
 
-Use focused tests while editing, then the required full gate after source stabilizes. Keep logs in a
-task-specific ignored/temp location; report the exit code and relevant failure, not the whole
-successful log. Reuse valid build caches. A new source change or rebase invalidates affected
-evidence; a commentary update or commit-message-only correction does not require rebuilding the
-unchanged app. Rerun the failed check and any checks invalidated by its fix.
+## Reuse evidence, avoid duplicate runs
 
-Set an unused `LORO_E2E_PORT` for an isolated run. `CI=1` prevents accidental reuse of another
-task's server. Multiple suites in one worktree also share report/output paths; serialize them or
-configure distinct outputs using the installed Playwright CLI. Separate worktrees avoid source
-reloads during accepted suites. Stop only processes started by the task.
+Use focused checks while editing, then the required aggregate gate on stable source. Full CI already
+includes `pnpm check`; avoid running it immediately beforehand unless a development commit requires
+it. Keep the runner's forced checks and required stages.
 
-If many tests fail after the first navigation/setup timeout, inspect that trace and the Expo log
-before rewriting selectors. Past causes included shared server termination and concurrent Metro
-reloads. A cold-build timing regression also disappeared with `LORO_CI_CONCURRENCY=1`; diagnose
-contention and rerun unchanged tests before altering a performance threshold.
+Retain SHA plus dirty scope/source digest, base ref, command/config, exit status and log path in
+existing task/review notes. Reuse only while relevant source, dependencies, configuration and
+generated inputs match. A source change/rebase invalidates affected evidence; a message-only amend
+needs commitlint, not an app rebuild. An old green chat without matching inputs is insufficient.
+Partial/timed-out CI is not a full pass; targeted recovery proves only named checks. Use documented
+resumption only when supported; otherwise complete the required full run before integration.
 
-Scope formatting to changed authored source. Never apply repository-wide `pnpm format` to solve one
-failing file: it can rewrite unrelated documents or authored design. Generated files are regenerated
-by their owner and inspected separately. Report pre-existing failures honestly; do not call the full
-gate green if only focused checks passed.
+Read `scripts/ci-local.sh` and `docs/process/ci-cd.md` before choosing concurrency. If the shell
+runner delegates to `scripts/ci-local.mjs`, use its bounded scheduler, isolated workspaces and
+summary report. Older runners are serial; `LORO_CI_CONCURRENCY` bounds Turbo, not browser jobs. Do
+not import an unfinished runner from another task for an unrelated change.
 
-## Commits and merges
+For standalone browser runs, use `CI=1` and an unused `LORO_E2E_PORT`. Ports alone do not isolate
+shared reports/exports or Metro source reloads: serialize suites or use separate workspaces and
+outputs. Stop only owned processes. Diagnose the first navigation/setup failure and Expo trace
+before changing selectors. For contention, reduce concurrency before relaxing a timing threshold.
 
-Preserve `AGENTS.md → CLAUDE.md`. Use `codex/<REQ-ID>-<topic>` branches and the scopes in
-`commitlint.config.cjs`. Commit coherent, green changes as they finish. Lowercase requirement IDs in
-commit subjects (for example `(f-03)`) satisfy the actual `subject-case` rule; uppercase IDs in
-documentation remain canonical. Write multiline GitHub bodies through a file/structured argument.
+Keep task-specific logs outside tracked source. Read summaries and the first actionable error;
+retain the running session ID and wait instead of relaunching. Report completed exits, not merely
+started checks. Format changed authored files only; never use repository-wide `pnpm format` to fix
+one file. Regenerate owned output instead of hand-editing it.
 
-When merging is requested, inspect current remote main, worktree ownership and actual PR state.
-Squash merges can leave original branch commits non-ancestors; `git branch --no-merged` alone does
-not prove missing functionality. Check merged PRs, patches and relevant files. Preserve concurrent
-auth/navigation/translation work during conflict resolution, regenerate owned output, and validate
-the combined tree. Never overwrite a dirty main checkout just to make it match the remote.
+## Only when the user requests agents
 
-Verify the resulting remote merge and final status. A push is not a merge; a merge is not a
-deployment; an uploaded draft APK is not a published release. Report which one actually happened.
+Partition by independent ownership, not plan count. Supply requirement, owned paths, relevant
+reference and focused checks. One integrator owns shared manifests, generators, indexes and staging
+in a shared checkout. Integrate stable slices before aggregate CI; avoid a full pipeline per agent.
+Isolate mutating builds and source where concurrent execution is necessary. Agent reports include
+checked inputs and results for integration review; they do not replace combined-tree checks.
+
+## Commits and integration
+
+Preserve `AGENTS.md → CLAUDE.md`. Use `codex/<REQ-ID>-<topic>` and actual commitlint scopes.
+Lowercase subject IDs, such as `(f-03)`, satisfy `subject-case`; documentation IDs remain uppercase.
+Commit coherent green chunks. Use a file/structured argument for multiline GitHub bodies.
+
+For a requested merge, refresh remote state and inspect checkout ownership. Squash merges mean
+`git branch --no-merged` alone cannot identify missing work: inspect PR/patch/content evidence.
+Preserve concurrent edits, regenerate owned output and validate the combined tree. Never overwrite a
+dirty main checkout. Verify the remote merge and final worktree; distinguish push, merge,
+deployment, draft upload and publication in the result.

@@ -73,6 +73,8 @@ coverage/
 .nyc_output/
 test-results/
 playwright-report/
+.ci-local-reports/
+.ci-local.lock
 maestro-debug-output/
 *.hprof
 

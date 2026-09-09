@@ -26,7 +26,8 @@ import {
   writePracticeReview,
 } from './practiceRecords'
 import { decodeDevicePreferences } from '../lib/devicePreferences'
-import { readLocalValue, writeLocalValue } from './database'
+import { decodeImportDraft, decodeImportDrafts, importDraftKey } from '../lib/importDraft'
+import { deleteLocalValue, readLocalValue, writeLocalValue } from './database'
 import { deferPhraseDelete, flushPendingDeletes, undoPendingPhraseDelete } from './pendingDeletes'
 import { resolveLearnerAliases } from './aliases'
 
@@ -112,6 +113,7 @@ function parseResume(
           : {}),
         refrainResume: {
           session: value['session'],
+          ...(value['wave'] === undefined ? {} : { wave: value['wave'] }),
           cursor: value['cursor'],
           done: value['done'],
           lastLatency: value['lastLatency'],
@@ -240,9 +242,17 @@ export function createLearnerStorage(database: RuntimeDatabase, clock: Clock): L
     }
     const active = courses[pair.targetLocale]
     if (!active) throw new Error('Missing active course')
+    const importDrafts = decodeImportDrafts(readLocalValue(driver, 'import-drafts'))
+    const legacyDraft = decodeImportDraft(readLocalValue(driver, 'import-draft'))
+    const recoveredDrafts =
+      Object.keys(importDrafts).length > 0 || legacyDraft === null
+        ? importDrafts
+        : { [importDraftKey(legacyDraft)]: legacyDraft }
     return {
       ...INITIAL_STATE,
       devicePreferences: decodeDevicePreferences(readLocalValue(driver, 'device_preferences')),
+      importDraft: recoveredDrafts[`${pair.nativeLanguage}:${pair.targetLocale}`] ?? legacyDraft,
+      importDrafts: recoveredDrafts,
       ...active,
       ...pair,
       courses: Object.fromEntries(
@@ -422,26 +432,29 @@ export function createLearnerStorage(database: RuntimeDatabase, clock: Clock): L
         }
         writePracticeReview(database, attempt, next, clock)
         const settings = persistence.settings.load()
-        persistence.settings.save({
-          onboarded: next.onboarded,
-          languagePair: { nativeLanguage: next.nativeLanguage, targetLocale: next.targetLocale },
-          goal: next.goal,
-          level: next.level,
-          dailyMinutes: next.dailyMinutes,
-          waveTimes: settings?.waveTimes ?? ['08:00', '13:00', '19:00'],
-        })
-        append(
-          'settings',
-          'settings',
-          settings === null
-            ? settingsFields(next)
-            : changedFields(settingsFields(previous), settingsFields(next)),
-        )
+        const changedSettings = changedFields(settingsFields(previous), settingsFields(next))
+        // A local import checkpoint must not manufacture a settings sync operation. Settings are
+        // initialized by the first settings change, then retained on each later settings write.
+        if (Object.keys(changedSettings).length > 0) {
+          persistence.settings.save({
+            onboarded: next.onboarded,
+            languagePair: { nativeLanguage: next.nativeLanguage, targetLocale: next.targetLocale },
+            goal: next.goal,
+            level: next.level,
+            dailyMinutes: next.dailyMinutes,
+            waveTimes: settings?.waveTimes ?? ['08:00', '13:00', '19:00'],
+          })
+          append('settings', 'settings', settings === null ? settingsFields(next) : changedSettings)
+        }
         writeLocalValue(
           driver,
           'device_preferences',
           JSON.stringify(decodeDevicePreferences(JSON.stringify(next.devicePreferences))),
         )
+        writeLocalValue(driver, 'import-drafts', JSON.stringify(next.importDrafts))
+        // One release wrote this single-pair key. Delete only after the map has committed so
+        // an interrupted migration can still recover the learner's draft on the next launch.
+        deleteLocalValue(driver, 'import-draft')
         writeLocalValue(driver, 'language_chosen', String(next.languageChosen))
         for (const day of next.practiceDays) {
           if (previous.practiceDays.includes(day)) continue

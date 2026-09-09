@@ -20,10 +20,15 @@ import { ThemeProvider } from '../src/ui/ThemeProvider'
 import { BottomBarProvider } from '../src/ui/BottomBarContext'
 import { Pressable, Text } from '../src/ui/primitives'
 import { NavigationMenu } from '../src/ui/components/NavigationMenu'
-import { DESTINATIONS, placeForPath } from '../src/lib/navigation'
+import { DESTINATIONS, placeForPath, surfaceLawForPath } from '../src/lib/navigation'
 import { startAccountSync } from '../src/services/accountSync'
 import { PersistenceGate } from '../src/store/PersistenceGate'
 import { completeBrowserSignIn } from '../src/auth/runtime'
+import { localTimeLabel } from '../src/lib/clock'
+import { PRODUCTION_WAVE_TIMES } from '../src/store'
+import { waveEntryWithResume } from '../src/lib/waves'
+
+const WAVES = ['morning', 'midday', 'evening'] as const
 
 // The OAuth popup must notify its opener before hydration asks for the database's writer lease.
 completeBrowserSignIn()
@@ -38,6 +43,7 @@ export default function RootLayout() {
 
 function ReadyLayout() {
   useLocale()
+  const preferences = useApp((state) => state.devicePreferences)
   useEffect(() => {
     void startAccountSync()
   }, [])
@@ -51,11 +57,44 @@ function ReadyLayout() {
   // happened to remember to ask.
   useDayRollover()
   const pathname = usePathname()
+  const surfaceLaw = surfaceLawForPath(pathname)
+  const refrainResume = useApp((state) => state.refrainResume)
+  const refrainWaves = useApp((state) => state.refrainWaves)
+  const ongoingEntry = waveEntryWithResume(
+    WAVES,
+    PRODUCTION_WAVE_TIMES,
+    localTimeLabel(),
+    refrainWaves.filter(
+      (wave): wave is (typeof WAVES)[number] =>
+        wave === 'morning' || wave === 'midday' || wave === 'evening',
+    ),
+    refrainResume,
+  )
+  const refrainRep =
+    ongoingEntry.kind !== 'resume' || refrainResume.session === null
+      ? null
+      : Math.min(refrainResume.cursor + 1, refrainResume.session.plan.items.length)
+  const ongoing =
+    surfaceLaw?.surfaceClass === 'session' || refrainRep === null || ongoingEntry.kind !== 'resume'
+      ? undefined
+      : {
+          heading: copy.nav.ongoing.heading,
+          label: copy.nav.ongoing.refrain(refrainRep),
+          onPress: () => {
+            router.dismissTo({
+              pathname: '/practice/refrain',
+              params: { wave: ongoingEntry.wave },
+            })
+          },
+        }
   const constrainWidth = Platform.OS === 'web' && !pathname.startsWith('/dev/')
   const place = placeForPath(pathname)
 
   return (
-    <ThemeProvider>
+    <ThemeProvider
+      accent={preferences.accent}
+      reducedMotion={preferences.motion === 'reduced' ? true : undefined}
+    >
       <SafeAreaProvider style={styles.canvas}>
         <StatusBar style="dark" />
         <View
@@ -74,6 +113,7 @@ function ReadyLayout() {
                 hereLabel={copy.today.switcher.here}
                 reveal={copy.common.marks.reveal}
                 chevron={copy.common.chevron.right}
+                ongoing={ongoing}
                 destinations={DESTINATIONS.map((destination) => ({
                   label: destination.label,
                   current: pathname === destination.href,
@@ -147,6 +187,7 @@ function ReadyLayout() {
                   options={{ title: copy.nav.stream, gestureEnabled: false }}
                 />
                 <Stack.Screen name="account" options={{ title: copy.account.title }} />
+                <Stack.Screen name="settings" options={{ title: copy.settings.title }} />
                 <Stack.Screen
                   name="practice/speak"
                   options={{ title: copy.audioSpeech.speakTitle, gestureEnabled: false }}

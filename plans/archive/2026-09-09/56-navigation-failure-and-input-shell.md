@@ -4,12 +4,13 @@
   `P5-08`, `F-03`, `N-01`…`N-03`
 - **Milestone:** M1
 - **Status:** 🟡 Typed surface inventory, guarded unknown-link recovery and route/state drift checks
-  are implemented. Full route laws, failure boundaries, keyboard and list work remain; native input
-  proof needs 58.
+  and built-destination policy/group metadata are implemented. Exhaustive route laws, failure
+  boundaries, keyboard and list work remain; native input proof needs 58.
 - **Depends on:** 53/55/79/84 completed; 81 consumes the route contract; 58 only for native
   verification.
-- **Reviewed:** 2026-09-09 against checkout `42f4d57`; source/plan review only, no new device or
-  deployment acceptance.
+- **Reviewed:** 2026-09-09 against `aafa61f`; current source, tests and retained review records
+  inspected. This plan refresh supplies no new runtime, device or deployment acceptance.
+- **Priority:** 1; route laws with 81.
 
 **Archive disposition (2026-09-09):** Archived at user request after integration review. The partial
 status and remaining acceptance criteria below are retained; archival does not mark this plan
@@ -21,10 +22,13 @@ complete. The roadmap index continues to track its unfinished scope.
 planned routes and resolves unknown deep links to safe recovery. It also supplies translated built
 hubs to Today and the shared switcher. `apps/mobile/app/_layout.tsx` and
 `apps/mobile/e2e/navigation.spec.ts` cover cold Today escapes, warm Back and menu navigation. The
-registry includes all 23 learner surfaces plus Languages/Account, and `conditionalHome` handles
-onboarding versus Today. Surface-class/parent/frequency/resume metadata, product-dependent homes and
-a `check:routes` gate remain absent. Extend these declarations and resolver; do not replace the
-working menu.
+registry includes all 23 learner surfaces plus Languages/Account/More, and `conditionalHome` handles
+onboarding versus Today. `DESTINATIONS` already declares parent/home, group, exit and resume values
+for built hubs; More consumes its groups. `check:routes` already checks files and manifest
+ownership. The current `routeClass: learner | utility` is not the authored
+Root/Push/Flow/Session/Sheet classification (`Navigation.dc.html:40–76`). Exhaustive surface laws,
+frequency, course/source parsing and their consumer integration remain. Extend the existing registry
+and resolver without introducing a second navigation authority.
 
 ## Outcome
 
@@ -35,10 +39,12 @@ can scale beyond the three 31-phrase starter catalogs.
 
 ## Remaining work
 
-1. [ ] Extend the basic conditional-home resolver with modal routes and target-course deep-link
-       contracts in the implemented pure surface registry. Keep target routes declared but unbuilt
-       and unreachable until their screen files land. This plan owns metadata/guards and
-       `check:routes` (implemented); plan 81 owns menu/More rendering.
+1. [ ] Extend the existing declarations with authored surface classes, expected-use frequency, modal
+       ownership and target-course/practice-source deep-link contracts; derive built-hub policy from
+       the same authority. Extend the basic conditional-home resolver only as approved product
+       semantics require. Keep target routes declared but unbuilt and unreachable until their screen
+       files land. This plan owns metadata/guards and `check:routes` (implemented); plan 81 owns
+       menu/More rendering.
 2. [ ] Replace route-specific back guesses with tested laws for first-run, add/detail, practice,
        trip, settings, notifications, widgets, and unknown deep links.
 3. [ ] Add route-level error boundaries and explicit loading, empty, degradable, recoverable, and
@@ -59,13 +65,16 @@ can scale beyond the three 31-phrase starter catalogs.
 
 ## Delivery order and gates
 
-1. Extend `SURFACES` and `conditionalHome` first, with pure tests and a route-drift check, then hand
-   their metadata to 81. Keep the existing first-run guard and planned-route fallback.
-2. Deliver recovery/input/list changes independently of unbuilt trip/chat screens. Q-07 still owns
-   trip-home semantics; metadata alone must not make a planned route reachable.
-3. Coordinate work-at-stake/deep-link collision rules with 81: 56 owns the decision and guarded
-   destination; 81 owns the sheet and focus behavior. Validate current routes before adding new
-   ones.
+1. Complete pure route/source parsing and the work-at-stake decision for built routes, then wire the
+   layout, deep links and switcher to it. Reuse `check:routes` and current metadata. Plan 81 owns
+   the exit/collision sheet; 56 owns whether navigation may proceed and the queued destination.
+2. Deliver a practice → attempted exit → pause → relaunch → resume journey with 81 and existing
+   plan-59 checkpoints. Include cold entry, wrong-course/deleted sources, course changes and a
+   checkpoint-write failure that keeps the current work available. Never navigate on an uncommitted
+   pause acknowledgement.
+3. Follow with route-level recovery, keyboard and scaled-list behavior. Each new state enters the
+   E2E manifest with learner-reached flows. Native back/focus/keyboard proof runs through 58/72.
+   Q-07 gates trip-home semantics and Q-17 final rail ordering, not current-route safety.
 
 ## Out of scope
 
@@ -83,3 +92,10 @@ Validation: five Node tests pass, including the current checkout and negative fi
 structural guard; it does not prove that every rendered state was registered or replace the E2E
 accessibility, text-scale and learner-flow suites. Modal/course contracts, conditional trip homes,
 route failure UI, keyboard and list acceptance remain open with their existing gates.
+
+## Post-main review and archive disposition — 2026-09-09
+
+The [review at `de81744`](../../../docs/reviews/2026-09-09-post-main-plan-review.md) records this
+plan's current contribution, remaining work and gates. [Delivered slices](IMPLEMENTED-SLICES.md) are
+retained in the archive; this plan remains incomplete. Earlier verification is dated evidence, not
+acceptance of the current combined branch.

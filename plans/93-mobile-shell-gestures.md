@@ -1,7 +1,9 @@
 # 93 — Mobile shell gestures
 
-**Status:** 🟡 Implemented; all local checks pass. Native device validation remains a release gate.
-**Requirement IDs:** NAV-04, NAV-06, NAV-08 (session gestures, sheet dismissal and switcher).
+**Status:** 🟡 Browser gesture implementation and regression are verified; the dated aggregate
+checks below are historical. Physical-device and assistive-technology acceptance remains a release
+gate. Post-main review at `de81744` confirms the focused browser gesture test passes. **Requirement
+IDs:** NAV-04, NAV-06, NAV-08 (session gestures, sheet dismissal and switcher).
 
 Implement the pull-down switcher and sheet dismissal specified by `Navigation.dc.html:474` and
 `Navigation.dc.html:681–685`. Keep practice-session back gestures disabled. Preserve buttons,
@@ -24,3 +26,11 @@ Merge validation against `734028a`: `CI_BASE_REF=origin/main LORO_CI_CONCURRENCY
 passed, including 134 learner E2E tests, 3 workbench tests, 4 production-bundle tests, native/WASM
 core generation, PostgreSQL auth tests, mobile/API builds, API/container smoke checks and Rust
 benchmarks. Physical-device gesture validation is still outstanding.
+
+## Post-main review and archive disposition — 2026-09-09
+
+The [review at `de81744`](../docs/reviews/2026-09-09-post-main-plan-review.md) records this plan's
+current contribution, remaining work and gates.
+[Delivered slices](archive/2026-09-09/IMPLEMENTED-SLICES.md) are retained in the archive; this plan
+remains incomplete. Earlier verification is dated evidence, not acceptance of the current combined
+branch.

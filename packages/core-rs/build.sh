@@ -41,6 +41,11 @@ if [[ -f "target/release/libloro_core.${LIB_EXT}" ]]; then
     --library "target/release/libloro_core.${LIB_EXT}" \
     --language swift --language kotlin \
     --out-dir bindings
+  # UniFFI 0.31 currently leaves trailing whitespace in generated Swift/Kotlin when a record gains
+  # documented fields. Normalize the generator output here so committed generated bindings satisfy
+  # the repository's whitespace gate on every host; never repair individual generated lines.
+  find bindings -type f \( -name '*.swift' -o -name '*.kt' -o -name '*.h' \) \
+    -exec perl -pi -e 's/[ \t]+$//' {} +
 else
   echo "  Shared library not found; skipping binding generation."
 fi

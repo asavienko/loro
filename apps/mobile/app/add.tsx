@@ -12,8 +12,10 @@ import { useLocale } from '../src/lib/i18n'
  * ABOUT TO ADD. Splitting the state that way is what let the render collapse: the sheet no
  * longer reads the search box's state, and the list no longer reads the draft's.
  */
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { ScrollView, StyleSheet, TextInput, View } from 'react-native'
+import * as DocumentPicker from 'expo-document-picker'
+import { File as ExpoFile } from 'expo-file-system'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import {
   BROWSABLE_THEMES,
@@ -22,8 +24,10 @@ import {
   TAGS,
   type BrowsableTheme,
   type Difficulty,
+  type NativeLanguage,
   type PhraseState,
   type Tag,
+  type TargetLocale,
 } from '@loro/core'
 import {
   useLearningCatalog,
@@ -63,6 +67,13 @@ import {
   unsavedImportCandidates,
   type ImportCandidate,
 } from '../src/lib/importPhrases'
+import {
+  IMPORT_MAX_FILE_BYTES,
+  decodeImportFile,
+  type ImportFileError,
+} from '../src/lib/importFile'
+import { importDraftKey, type ImportDrafts } from '../src/lib/importDraft'
+import { readBoundedImportFile } from '../src/lib/readBoundedImportFile'
 /**
  * The themes Browse offers.
  *
@@ -277,6 +288,11 @@ export default function Add() {
   const owned = useApp((s) => s.phrases)
   const addPhrase = useApp((s) => s.addPhrase)
   const addOwnPhrase = useApp((s) => s.addOwnPhrase)
+  const importDrafts = useApp((s) => s.importDrafts)
+  const saveImportDraft = useApp((s) => s.saveImportDraft)
+  const clearImportDraft = useApp((s) => s.clearImportDraft)
+  const targetLocale = useApp((s) => s.targetLocale)
+  const nativeLanguage = useApp((s) => s.nativeLanguage)
   const list = useSuggestions(owned)
   const draft = useAddDraft()
   const confirmAdd = (): void => {
@@ -304,7 +320,16 @@ export default function Add() {
 
       <ScrollView contentContainerStyle={[s.body, { paddingBottom: insets.bottom + space['5'] }]}>
         {list.mode === 'import' ? (
-          <ImportPhrases owned={owned} addOwnPhrase={addOwnPhrase} />
+          <ImportPhrases
+            key={importDraftKey({ targetLocale, nativeLanguage })}
+            owned={owned}
+            addOwnPhrase={addOwnPhrase}
+            importDrafts={importDrafts}
+            targetLocale={targetLocale}
+            nativeLanguage={nativeLanguage}
+            saveImportDraft={saveImportDraft}
+            clearImportDraft={clearImportDraft}
+          />
         ) : list.mode === 'browse' && list.browseTheme === null ? (
           <ThemeGrid countFor={list.countFor} onSelect={list.browse} />
         ) : (
@@ -552,15 +577,38 @@ function AddGlyph() {
 function ImportPhrases({
   owned,
   addOwnPhrase,
+  importDrafts,
+  targetLocale,
+  nativeLanguage,
+  saveImportDraft,
+  clearImportDraft,
 }: {
   owned: readonly PhraseState[]
   addOwnPhrase: (draft: { targetText: string; translation: string }) => string
+  importDrafts: ImportDrafts
+  targetLocale: TargetLocale
+  nativeLanguage: NativeLanguage
+  saveImportDraft: (draft: {
+    targetLocale: TargetLocale
+    nativeLanguage: NativeLanguage
+    input: string
+  }) => void
+  clearImportDraft: () => void
 }) {
   useLocale()
-  const [input, setInput] = useState('')
+  const restored = importDrafts[importDraftKey({ targetLocale, nativeLanguage })]?.input ?? ''
+  const [input, setInput] = useState(restored)
   const [review, setReview] = useState<ImportCandidate[] | null>(null)
   const [tooLarge, setTooLarge] = useState(false)
   const [saveFailed, setSaveFailed] = useState(false)
+  const [fileError, setFileError] = useState<ImportFileError | null>(null)
+  const fileRequest = useRef(0)
+  useEffect(() => {
+    fileRequest.current += 1
+    return () => {
+      fileRequest.current += 1
+    }
+  }, [nativeLanguage, targetLocale])
   const existing = useMemo(
     () =>
       owned.flatMap((phrase) => {
@@ -570,25 +618,87 @@ function ImportPhrases({
     [owned],
   )
   const preview = () => {
+    fileRequest.current += 1
     const exceedsLimit = isImportTooLarge(input)
     setTooLarge(exceedsLimit)
     setSaveFailed(false)
     setReview(exceedsLimit ? null : parseImportedPhrases(input, existing))
   }
-  const update = (index: number, field: 'targetText' | 'translation', value: string) => {
+  const persistDraft = (value: string): boolean => {
+    try {
+      saveImportDraft({ targetLocale, nativeLanguage, input: value })
+      return true
+    } catch {
+      setSaveFailed(true)
+      return false
+    }
+  }
+  const updateInput = (value: string) => {
+    fileRequest.current += 1
+    if (!persistDraft(value)) return
+    setInput(value)
+    setTooLarge(false)
     setSaveFailed(false)
-    setReview((current) =>
-      current === null
-        ? null
-        : reviewImportedCandidates(
-            current.map((candidate, candidateIndex) =>
-              candidateIndex === index
-                ? { ...candidate, [field]: normalizeImportedText(value) }
-                : candidate,
-            ),
-            existing,
-          ),
+    setFileError(null)
+    setReview(null)
+  }
+  const chooseFile = async () => {
+    const request = fileRequest.current + 1
+    fileRequest.current = request
+    setFileError(null)
+    try {
+      const picked = await DocumentPicker.getDocumentAsync({
+        type: ['text/plain', 'text/tab-separated-values'],
+        // Android document providers return content:// URIs when cache copying is disabled.
+        // ExpoFile's stream() is backed by a random-access local file and rejects those URIs.
+        // Cache first, then retain the bounded reader so decoding still has a hard byte limit.
+        copyToCacheDirectory: true,
+        multiple: false,
+        base64: false,
+      })
+      if (request !== fileRequest.current || picked.canceled) return
+      const asset = picked.assets[0]
+      if (asset === undefined) return
+      if (asset.size !== undefined && asset.size > IMPORT_MAX_FILE_BYTES) {
+        setFileError('too-large')
+        return
+      }
+      const stream =
+        asset.file === undefined
+          ? new ExpoFile(asset.uri).stream()
+          : (asset.file.stream() as ReadableStream<Uint8Array>)
+      const bytes = await readBoundedImportFile(stream, IMPORT_MAX_FILE_BYTES)
+      if (request !== fileRequest.current) return
+      if (bytes === null) {
+        setFileError('too-large')
+        return
+      }
+      const result = decodeImportFile({ name: asset.name, bytes })
+      if (!result.ok) {
+        setFileError(result.error)
+        return
+      }
+      updateInput(result.text)
+    } catch {
+      if (request === fileRequest.current) setFileError('unsupported-encoding')
+    }
+  }
+  const update = (index: number, field: 'targetText' | 'translation', value: string) => {
+    fileRequest.current += 1
+    setSaveFailed(false)
+    if (review === null) return
+    const updated = reviewImportedCandidates(
+      review.map((candidate, candidateIndex) =>
+        candidateIndex === index
+          ? { ...candidate, [field]: normalizeImportedText(value) }
+          : candidate,
+      ),
+      existing,
     )
+    const persistedInput = importInputForCandidates(updated)
+    if (!persistDraft(persistedInput)) return
+    setReview(updated)
+    setInput(persistedInput)
   }
   const accepted = (review ?? []).filter(
     (candidate) =>
@@ -596,6 +706,7 @@ function ImportPhrases({
   )
   const reviewedBatchTooLarge = review !== null && isReviewedImportTooLarge(review)
   const save = () => {
+    fileRequest.current += 1
     if (review === null || reviewedBatchTooLarge) return
     const checked = reviewImportedCandidates(review, existing)
     if (isReviewedImportTooLarge(checked)) {
@@ -629,11 +740,14 @@ function ImportPhrases({
       setInput('')
       setReview(null)
       setSaveFailed(false)
+      clearImportDraft()
       return
     }
-    setInput(importInputForCandidates(remaining))
+    const remainingInput = importInputForCandidates(remaining)
+    setInput(remainingInput)
     setReview(reviewImportedCandidates(remaining, [...existing, ...savedTargetTexts]))
     setSaveFailed(failed)
+    saveImportDraft({ targetLocale, nativeLanguage, input: remainingInput })
   }
   return (
     <Stack gap={space['3']}>
@@ -649,18 +763,38 @@ function ImportPhrases({
         <TextInput
           multiline
           value={input}
-          onChangeText={(value) => {
-            setInput(value)
-            setTooLarge(false)
-            setSaveFailed(false)
-            setReview(null)
-          }}
+          onChangeText={updateInput}
           placeholder={copy.add.import.placeholder}
           placeholderTextColor={ink.muted2}
           accessibilityLabel={copy.a11y.add.importInput}
           style={s.importInput}
         />
       </Card>
+      <Button
+        label={copy.add.import.chooseFile}
+        variant="secondary"
+        onPress={() => {
+          void chooseFile()
+        }}
+      />
+      {fileError !== null && (
+        <View accessibilityRole="alert">
+          <Text variant="caption" color={semantic.warn.text}>
+            {fileError === 'unsupported-format'
+              ? copy.add.import.unsupportedFormat
+              : fileError === 'too-large'
+                ? copy.add.import.fileTooLarge
+                : copy.add.import.unsupportedEncoding}
+          </Text>
+        </View>
+      )}
+      {saveFailed && (
+        <View accessibilityRole="alert">
+          <Text variant="caption" color={semantic.warn.text}>
+            {copy.add.import.saveFailed}
+          </Text>
+        </View>
+      )}
       <Button label={copy.add.import.preview} variant="secondary" onPress={preview} />
       {tooLarge && (
         <View accessibilityRole="alert">
@@ -680,13 +814,6 @@ function ImportPhrases({
             <View accessibilityRole="alert">
               <Text variant="caption" color={semantic.warn.text}>
                 {copy.add.import.tooLarge(IMPORT_MAX_ROWS, IMPORT_MAX_CHARACTERS)}
-              </Text>
-            </View>
-          )}
-          {saveFailed && (
-            <View accessibilityRole="alert">
-              <Text variant="caption" color={semantic.warn.text}>
-                {copy.add.import.saveFailed}
               </Text>
             </View>
           )}

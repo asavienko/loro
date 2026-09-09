@@ -20,10 +20,11 @@ route unavailability check exist. The original implementation commits are `be024
 `7eefcf2` and `5ee247f`; plan 84 subsequently reviewed the rendered workbench.
 
 `specimenContract.ts` marks forced pressed/focused and loading states available after plan 57
-integration. Reuse and verify these production APIs; do not implement them again. Its registry lists
-30 components and six pending navigation names, while production now also exports `NavigationMenu`
-and `LanguageChoices`. Registration must follow actual production exports, not obsolete prototype
-names. The authored reference remains `Design System.dc.html`.
+integration. Reuse and verify these production APIs; do not implement them again. Its registry now
+covers 33 exports, including `NavigationMenu`, `LanguageChoices` and direct-import `AudioControls`.
+Registration drift is tested; multilingual/state/navigation specimen coverage remains. The earlier
+30-component inventory is superseded by the registry slice recorded below. The authored reference
+remains `Design System.dc.html`.
 
 ## Remaining work
 
@@ -80,3 +81,11 @@ navigation uses the production sheet with inert destinations, and audio remains 
 Focused registry tests pass. Combined fast and browser gates are retained by the parent integration
 run because this checkout has concurrent feature edits. Multilingual long-copy, per-component state
 matrices and future plan-81 APIs remain open; they are not closed by registering current components.
+
+## Post-main review and archive disposition — 2026-09-09
+
+The [review at `de81744`](../docs/reviews/2026-09-09-post-main-plan-review.md) records this plan's
+current contribution, remaining work and gates.
+[Delivered slices](archive/2026-09-09/IMPLEMENTED-SLICES.md) are retained in the archive; this plan
+remains incomplete. Earlier verification is dated evidence, not acceptance of the current combined
+branch.

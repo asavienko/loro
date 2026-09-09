@@ -8,27 +8,12 @@
  * See docs/architecture/ai-services.md and ADR-0010.
  */
 
-export interface SceneOption {
-  es: string
-  en: string
-  best?: boolean
-  tip: string
-  phrase_id?: string
-}
+import type { RoleplayOption, RoleplayScene, RoleplayTurn } from '@loro/content'
 
-export interface SceneTurn {
-  npc: { es: string; en: string }
-  options: SceneOption[]
-}
-
-export interface Scene {
-  place: string
-  city: string
-  emoji: string
-  role: string
-  turns: SceneTurn[]
-  closer: { es: string; en: string }
-}
+/** API compatibility name; the shared content type is also safe for the local app floor. */
+export type Scene = RoleplayScene
+export type SceneTurn = RoleplayTurn
+export type SceneOption = RoleplayOption
 
 /** Why a scene was rejected. `reason` is for logs, never for a learner. */
 export interface SceneCheck {

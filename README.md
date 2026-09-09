@@ -13,10 +13,15 @@ and every buildable artifact — a running app and a running API.
 ## Status
 
 **A running app with durable practice and optional account sync.** Eight of the v1.1 design
-package's 23 learner screens, Languages and Account utilities and the shared shell are built:
-onboard → add/tag a phrase → practise → see saved progress. Speak adds on-device recognition with an
-offline reveal fallback. The remaining 15 learner screens include trips, labs, settings, chat and
+package's 23 learner screens, Languages/Account/More/Settings utilities and the shared shell are
+built: onboard → add/tag a phrase → practise → see saved progress. Speak adds on-device recognition
+with an offline reveal fallback. The remaining 15 learner screens include trips, labs, chat and
 alternative loops.
+
+The [current 33-plan review](docs/reviews/2026-09-09-thirty-three-plan-implementation.md) records
+the `828d296` findings and their remediation: Refrain checkpoints persist, import recovery is
+bounded and pair-scoped, native bindings are current, and the fast/navigation gates pass. The
+inventory below describes existing components; it does not establish device or release acceptance.
 
 ```bash
 pnpm ci:local                       # full local CI; GitHub Actions stays disabled

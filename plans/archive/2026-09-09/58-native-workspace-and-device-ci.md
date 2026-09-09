@@ -6,8 +6,9 @@
   speech modules are implemented. Full iOS compilation, physical-device harness coverage and
   production signing still require SDK/device/signing evidence.
 - **Depends on:** 53 completed; no unfinished plan blocks native workspace setup.
-- **Reviewed:** 2026-09-09 against checkout `42f4d57`; source/plan review only, no new device or
-  deployment acceptance.
+- **Reviewed:** 2026-09-09 against `aafa61f`; current source, tests and retained review records
+  inspected. This plan refresh supplies no new runtime, device or deployment acceptance.
+- **Priority:** 9; start alongside priority 1, not after priority 8.
 
 **Archive disposition (2026-09-09):** Archived at user request after integration review. The partial
 status and remaining acceptance criteria below are retained; archival does not mark this plan
@@ -24,10 +25,12 @@ custom modules. Generated bindings and embedded browser WASM have drift checks.
 `pnpm native:evidence` now captures a read-only, timestamped Android device evidence bundle under
 the ignored local-build directory. `--platform ios` now collects Xcode version, booted simulator
 metadata, installed-bundle presence and a verified PNG artifact, with explicit missing prerequisite
-and ambiguous-device errors. Fixture tests cover command construction and failure behavior; no new
-iOS runtime or physical-device acceptance is claimed. Installed artifact revision remains unverified
-until correlated with retained build metadata. See the native evidence section of
-[APK setup](../../../docs/process/local-apk.md).
+and ambiguous-device errors. The CLI requires a Git revision and a retained build file; it resolves
+the revision locally and records the file's SHA-256 and byte size. Normal `pnpm check` runs
+hardware-free collector fixtures. This identifies the reviewed bytes but does not verify the
+installed binary. Correlating them with app build metadata and explicit scenario results remains
+required. No new iOS runtime or physical-device acceptance is claimed. See the native evidence
+section of [APK setup](../../../docs/process/local-apk.md).
 
 The implementation passed Android debug/release compilation, module packaging and an airplane-mode
 emulator persistence/reveal smoke. Swift syntax/podspec and host UniFFI smoke passed, but full iOS
@@ -61,15 +64,25 @@ modules, generated native projects, UniFFI bindings, device SQLite, permissions,
 
 ## Delivery order and gates
 
-1. Extend `native:evidence` and the local build harness with iOS build/launch and physical-device
-   collection. Detect missing Xcode/SDK/device inputs explicitly; Android evidence is not iOS proof.
+1. Start alongside priority 1. Extend `native:evidence` and the local build harness with clean iOS
+   build/launch and physical-device scenario execution; retain the current collector/fixture gate.
+   Detect missing Xcode/SDK/device inputs explicitly; Android evidence is not iOS proof.
 2. Use one evidence matrix with plans 59/60/63/68/87/93 and shared enforcement in 72. Each row
-   records artifact revision, device/OS, target language, scenario, result and retained evidence.
-   Collect once and reference it from the feature owner; do not duplicate persistence or gesture
-   implementations.
+   records artifact revision and package digest/build correlation, device/OS, target language,
+   scenario, result and retained evidence. Missing SDK/model/device inputs must be marked blocked or
+   unavailable, never passed. Link exact scenario results rather than treating a screenshot of the
+   currently open app as execution evidence. Collect once and reference it from the feature owner;
+   do not duplicate persistence or gesture implementations.
 3. Keep development harness delivery separate from production signing/store work in 73. No cloud
    builds or GitHub Actions are required by this plan.
 
 ## Out of scope
 
 Production persistence, playback, recognition, widgets, OCR, purchases, or store submission.
+
+## Post-main review and archive disposition — 2026-09-09
+
+The [review at `de81744`](../../../docs/reviews/2026-09-09-post-main-plan-review.md) records this
+plan's current contribution, remaining work and gates. [Delivered slices](IMPLEMENTED-SLICES.md) are
+retained in the archive; this plan remains incomplete. Earlier verification is dated evidence, not
+acceptance of the current combined branch.

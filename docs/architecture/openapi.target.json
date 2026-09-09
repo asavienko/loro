@@ -2259,6 +2259,92 @@
         ]
       }
     },
+    "/content/release/manifest": {
+      "get": {
+        "operationId": "contentReleaseManifest",
+        "summary": "Signed immutable content-release manifest",
+        "description": "Only publishes exact-material-approved releases. Resource bytes are fetched by content address without forwarding API credentials, verified on device, and atomically activated with the last good release retained on failure.",
+        "tags": [
+          "content"
+        ],
+        "security": [],
+        "parameters": [
+          {
+            "name": "lang",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/contentReleaseManifest_query_lang"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Signed immutable content-release manifest",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/contentReleaseManifest_200"
+                },
+                "examples": {
+                  "illustrative": {
+                    "value": {
+                      "manifestVersion": 1,
+                      "catalogVersion": 1,
+                      "lang": "es-ES",
+                      "phraseCount": 1,
+                      "minAppVersion": "1.0.0",
+                      "resources": [
+                        {
+                          "id": "catalog-es-ES",
+                          "kind": "catalog",
+                          "version": 1,
+                          "uri": "sha256/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.json",
+                          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                          "bytes": 1
+                        }
+                      ],
+                      "signature": {
+                        "algorithm": "ed25519",
+                        "keyId": "release-1",
+                        "value": "illustrative-signature"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            }
+          }
+        },
+        "x-loro-auth-boundary": "none",
+        "x-loro-status": "planned",
+        "x-loro-owner-plan": 61,
+        "x-loro-requirements": [
+          "F-04",
+          "AS-01"
+        ]
+      }
+    },
     "/ai/scene": {
       "post": {
         "operationId": "aiScene",
@@ -12674,6 +12760,123 @@
           "catalog_version"
         ],
         "additionalProperties": {}
+      },
+      "contentReleaseManifest_query_lang": {
+        "type": "string",
+        "pattern": "^[a-z]{2,3}-[A-Z]{2}$"
+      },
+      "contentReleaseManifest_200": {
+        "type": "object",
+        "properties": {
+          "manifestVersion": {
+            "type": "number",
+            "const": 1
+          },
+          "catalogVersion": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          },
+          "lang": {
+            "type": "string",
+            "pattern": "^[a-z]{2,3}-[A-Z]{2}$"
+          },
+          "phraseCount": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "minAppVersion": {
+            "type": "string",
+            "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-([0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*))?(?:\\+[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?$"
+          },
+          "resources": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[a-zA-Z0-9_-]+$"
+                },
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "catalog",
+                    "pack",
+                    "scenarios",
+                    "drops",
+                    "audio",
+                    "reference"
+                  ]
+                },
+                "version": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "uri": {
+                  "type": "string",
+                  "pattern": "^sha256\\/[a-f0-9]{64}\\.json$"
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "bytes": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "id",
+                "kind",
+                "version",
+                "uri",
+                "sha256",
+                "bytes"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "signature": {
+            "type": "object",
+            "properties": {
+              "algorithm": {
+                "type": "string",
+                "const": "ed25519"
+              },
+              "keyId": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_-]{1,128}$"
+              },
+              "value": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_-]+$"
+              }
+            },
+            "required": [
+              "algorithm",
+              "keyId",
+              "value"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "manifestVersion",
+          "catalogVersion",
+          "lang",
+          "phraseCount",
+          "minAppVersion",
+          "resources",
+          "signature"
+        ],
+        "additionalProperties": false
       },
       "aiScene_header_Accept": {
         "type": "string",

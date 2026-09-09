@@ -121,3 +121,11 @@ localization system, enabling live speech, or treating a language switch as prog
 
 Authored locally as plan 88 before refreshing main. Main already assigned 88 to AWS testing and 89
 to sign-in, so this plan is published as 90. Existing assigned plan numbers are preserved.
+
+## Post-main review and archive disposition — 2026-09-09
+
+The [review at `de81744`](../docs/reviews/2026-09-09-post-main-plan-review.md) records this plan's
+current contribution, remaining work and gates.
+[Delivered slices](archive/2026-09-09/IMPLEMENTED-SLICES.md) are retained in the archive; this plan
+remains incomplete. Earlier verification is dated evidence, not acceptance of the current combined
+branch.

@@ -104,6 +104,7 @@ async function start(): Promise<void> {
           : result.status === 'error' && result.code === 'ACCOUNT_MISMATCH'
             ? 'error'
             : 'pending',
+        'quarantined' in result ? result.quarantined : local.state().quarantined,
       )
     } catch {
       publishSyncStatus('error')
