@@ -1,8 +1,10 @@
 # Refactoring strategies for shipped code — 2026-09-09
 
-**Reviewed:** 2026-09-09. **Branch:** `main`. **HEAD:** `382507c66b4eb2be9bedb60bbe1eea30d13b0c35`.
-**Requirements:** structural cleanup of existing implementation (F-02/F-03/F-04, P3-20/P3-25,
-NAV-\*, ADR-0002/0003/0006), not product completion.
+**Reviewed:** 2026-09-09. **Branch:** `main`. **HEAD:** `706858ceadd59fb317ed687d7160136b53bdebd9`.
+**Status note:** A–G and the 2026-09-10 extracts are in that commit. The “still not committed”
+sentence below is historical; do not treat it as current. **Requirements:** structural cleanup of
+existing implementation (F-02/F-03/F-04, P3-20/P3-25, NAV-\*, ADR-0002/0003/0006), not product
+completion.
 
 **Disposition: document only** when written. **A–G of the sequence below landed in the working tree
 on 2026-09-09** (not a numbered plan, not whole-plan acceptance). Native-library package installs
@@ -73,7 +75,7 @@ The three leftover as-you-touch splits from
 [§8](#8-generated-artifacts-and-remaining-dual-maths--p1p2), plus one remaining raw
 `useApp.setState` of the same class as D, landed in the working tree. No new native packages. E2E
 locators and copy keys were not rewritten. Device, bilingual and provider gates stay with their
-plans. Still not committed.
+plans. Committed in `706858c`.
 
 | Item                    | Status | What landed                                                                                                                              | What did not                                                                                              |
 | ----------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
