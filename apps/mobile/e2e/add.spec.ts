@@ -165,11 +165,13 @@ test('P2-09/P2-10: a partial import save retains rejected edited rows for correc
     name: 'Imported phrase on line 3',
     exact: true,
   })
-  await incompleteTarget.fill('Edited draft that must survive')
+  // The review permits a separator inside an edited target. Its retained input must encode that
+  // value without turning part of the phrase into the meaning on the next review.
+  await incompleteTarget.fill('Edited | draft that must survive')
   await page.getByRole('button', { name: 'Add 1 reviewed phrase' }).click()
 
   await expect(page.getByText('11 in stream')).toBeVisible()
-  await expect(incompleteTarget).toHaveValue('Edited draft that must survive')
+  await expect(incompleteTarget).toHaveValue('Edited | draft that must survive')
   await expect(
     page.getByRole('textbox', { name: 'Imported phrase on line 2', exact: true }),
   ).toHaveValue('Hola nueva')
@@ -177,10 +179,17 @@ test('P2-09/P2-10: a partial import save retains rejected edited rows for correc
     page.getByRole('textbox', { name: 'Imported phrase on line 4', exact: true }),
   ).toHaveValue(overLimit)
 
+  await page.getByRole('button', { name: 'Review phrases' }).click()
+  await expect(
+    page.getByRole('textbox', { name: 'Imported phrase on line 2', exact: true }),
+  ).toHaveValue('Edited | draft that must survive')
+
   await page
-    .getByRole('textbox', { name: 'Meaning for imported phrase on line 3', exact: true })
+    .getByRole('textbox', { name: 'Meaning for imported phrase on line 2', exact: true })
     .fill('Saved after correction')
   await page.getByRole('button', { name: 'Add 1 reviewed phrase' }).click()
   await expect(page.getByText('12 in stream')).toBeVisible()
-  await expect(incompleteTarget).toHaveCount(0)
+  await expect(
+    page.getByRole('textbox', { name: 'Imported phrase on line 2', exact: true }),
+  ).toHaveCount(0)
 })

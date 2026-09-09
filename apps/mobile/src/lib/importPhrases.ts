@@ -38,11 +38,47 @@ export function isReviewedImportTooLarge(candidates: readonly ImportCandidate[])
   )
 }
 
-/** Keep a partially saved review editable without leaving already-persisted rows in its draft. */
+/**
+ * Keep a partially saved review editable without leaving already-persisted rows in its draft.
+ *
+ * A reviewed field may contain the same `|` separator accepted by the paste parser. Escape
+ * separators and backslashes here, then decode them in `parseImportedPhrases`, so rebuilding the
+ * input never changes the phrase the learner reviewed.
+ */
 export function importInputForCandidates(candidates: readonly ImportCandidate[]): string {
   return candidates
-    .map(({ targetText, translation }) => `${targetText} | ${translation}`)
+    .map(
+      ({ targetText, translation }) =>
+        `${escapeImportField(targetText)}\t${escapeImportField(translation)}`,
+    )
     .join('\n')
+}
+
+function escapeImportField(value: string): string {
+  return value.replace(/\\/gu, '\\\\').replace(/[\t|]/gu, '\\$&')
+}
+
+function splitImportedLine(line: string): string[] {
+  const fields = ['']
+  let escaped = false
+  for (const character of line) {
+    const current = fields.length - 1
+    if (escaped) {
+      fields[current] = `${fields[current] ?? ''}${character}`
+      escaped = false
+    } else if (character === '\\') {
+      escaped = true
+    } else if (character === '\t' || character === '|') {
+      fields.push('')
+    } else {
+      fields[current] = `${fields[current] ?? ''}${character}`
+    }
+  }
+  if (escaped) {
+    const current = fields.length - 1
+    fields[current] = `${fields[current] ?? ''}\\`
+  }
+  return fields
 }
 
 /** A failed write stays in the review: only rows confirmed by the store leave the draft. */
@@ -70,7 +106,7 @@ export function parseImportedPhrases(
   return reviewImportedCandidates(
     input.split(/\r\n|[\r\n]/u).flatMap((line, index) => {
       if (line.trim() === '') return []
-      const pieces = line.split(/\t|\|/u)
+      const pieces = splitImportedLine(line)
       return [
         {
           line: index + 1,
