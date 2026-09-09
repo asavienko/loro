@@ -2,7 +2,9 @@ import { OAuthProvidersSchema, type OAuthProvider } from '@loro/core/api/oauth'
 import { Platform } from 'react-native'
 import * as Crypto from 'expo-crypto'
 import * as WebBrowser from 'expo-web-browser'
+import Constants from 'expo-constants'
 import type { AuthorizationPorts } from './client'
+import { configuredNativeRedirectUri } from './redirect'
 import { accountClient } from '../lib/account/runtime'
 import { apiUrl as api, requestWithTimeout } from '../lib/backend'
 
@@ -19,7 +21,7 @@ export const authorizationPorts: AuthorizationPorts = {
   redirect:
     Platform.OS === 'web' && typeof window !== 'undefined'
       ? `${window.location.origin}/account`
-      : 'loro://account',
+      : configuredNativeRedirectUri(Constants.expoConfig?.extra?.nativeRedirectUri),
   authorize: async (url, redirect) => {
     const result = await WebBrowser.openAuthSessionAsync(url, redirect, {
       windowName: 'loro-sign-in',

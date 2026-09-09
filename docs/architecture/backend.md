@@ -38,8 +38,8 @@ apps/api/src/
 | `SERVER_CLOCK`    | system wall clock                                    | Override in tests; persistence later supplies durable HLC state             |
 | `config`          | one reader/default per environment variable          | Add accessors in `common/config.ts`, not scattered `process.env` reads      |
 
-Plan [85](../../plans/85-backend-integration-contracts.md) supplies shared current/target/draft wire
-schemas, OpenAPI and HTTP conformance tests. Plan
+Plan [85](../../plans/archive/2026-09-07/85-backend-integration-contracts.md) supplies shared
+current/target/draft wire schemas, OpenAPI and HTTP conformance tests. Plan
 [66](../../plans/66-backend-contract-data-and-security.md) retains boundary integration, durable
 repositories, safe defaults, and the image contract. Plans
 [67](../../plans/67-anonymous-auth-and-account-lifecycle.md) and

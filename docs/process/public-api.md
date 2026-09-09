@@ -1,9 +1,10 @@
 # Standalone Android API access
 
-Requirement F-03; implementation tracked in [plan 92](../../plans/92-android-ec2-readiness.md). The
-gateway defaults to read-only development access. The optional account profile forwards
-Google/Apple/email authentication and guarded sync only after a durable API is deployed. Readiness
-checks both PostgreSQL and WASM; it does not prove a live provider sign-in.
+Requirement F-03; implementation tracked in
+[plan 92](../../plans/archive/2026-09-08/92-android-ec2-readiness.md). The gateway defaults to
+read-only development access. The optional account profile forwards Google/Apple/email
+authentication and guarded sync only after a durable API is deployed. Readiness checks both
+PostgreSQL and WASM; it does not prove a live provider sign-in.
 
 ## Deployed topology
 

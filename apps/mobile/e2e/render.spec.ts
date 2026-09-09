@@ -24,7 +24,7 @@
  * track and its fills, and of nothing else on these screens. A legend row holds text, so it is
  * excluded by construction rather than by a selector that a restyle would break.
  *
- * See plans/55-current-surface-truth-and-fidelity.md §5.
+ * See plans/archive/2026-09-07/55-current-surface-truth-and-fidelity.md §5.
  */
 
 import type { Page } from '@playwright/test'

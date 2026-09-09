@@ -14,6 +14,18 @@ export interface AuthSettings {
   appleKeyId: string
   applePrivateKey: string
 }
+const nativeRedirects = new Set(['loro://account', 'loro-dev://account'])
+
+export function isAllowedAuthRedirect(redirect: string, url = new URL(redirect)): boolean {
+  return (
+    (url.protocol === 'https:' || nativeRedirects.has(redirect)) &&
+    !url.search &&
+    !url.hash &&
+    !url.username &&
+    !url.password
+  )
+}
+
 export function authSettings(): AuthSettings | undefined {
   const raw = config.oauthSettings()
   if (raw.enabled !== 'true') return undefined
@@ -34,15 +46,9 @@ export function authSettings(): AuthSettings | undefined {
     .map((v) => v.trim())
   for (const redirect of redirects) {
     const url = new URL(redirect)
-    if (
-      (url.protocol !== 'https:' && redirect !== 'loro://account') ||
-      url.search ||
-      url.hash ||
-      url.username ||
-      url.password
-    )
+    if (!isAllowedAuthRedirect(redirect, url))
       throw new Error(
-        'Auth redirects must be exact HTTPS URLs or loro://account, without query/fragment',
+        'Auth redirects must be exact HTTPS URLs, loro://account, or loro-dev://account, without query/fragment',
       )
   }
   return {
