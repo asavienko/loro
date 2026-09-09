@@ -66,7 +66,7 @@ export class AiService {
   }
 
   themes(): string[] {
-    return bundledThemes()
+    return [...bundledThemes()]
   }
 
   /**

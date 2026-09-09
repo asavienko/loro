@@ -2,19 +2,20 @@
 
 - **Requirement IDs:** `P3A-01`…`P3A-10`, `AI-01`, `AI-02`, `AI-03`, `AI-05`
 - **Milestone:** M3
-- **Status:** 🟡 Bundled scene validation/provider injection and an independent Anthropic transport
-  exist. Guarded runtime orchestration, locale content, Roleplay and evaluation remain; integration
-  needs 59/62/63/66/67 and provider controls from 86.
+- **Status:** 🟡 A versioned, shared bundled scene catalog, scene validation/provider injection and
+  an independent Anthropic transport exist. Guarded runtime orchestration, locale content, Roleplay
+  and evaluation remain; integration needs 59/62/63/66/67 and provider controls from 86.
 - **Depends on:** 59 persistence; 62/63 spoken states; 66 API/security; 67 identity/budgets; 71
   consent/flags; 86 provider controls.
 - **Reviewed:** 2026-09-07 against merged baseline `2d9e8c3`.
 
 ## Verified starting point
 
-`apps/api/src/ai/` serves validated bundled/stub scenes; `integrations/anthropic/messages.ts` is
-tested but unregistered. The current scene stub rejects pairs other than en → es-ES. Reuse the
-transport, add approved per-pair content and evaluation, and never describe transport tests as
-language-quality proof.
+`packages/content/src/roleplay.ts` owns the versioned local catalog shared by the API fallback and
+future mobile Roleplay route; `apps/api/src/ai/` validates and serves that catalog through its stub
+provider. `integrations/anthropic/messages.ts` is tested but unregistered. The current scene stub
+rejects pairs other than en → es-ES. Reuse the transport, add approved per-pair content and
+evaluation, and never describe transport tests as language-quality proof.
 
 ## Outcome
 
