@@ -68,9 +68,7 @@ export const MUSIC_STYLE_PACKS: Readonly<Record<MusicStyleId, MusicStylePack>> =
 
 export function musicStylePack(styleId: string): MusicStylePack {
   if (!isMusicStyleId(styleId)) throw new Error(`Unknown music style: ${styleId}`)
-  const pack = MUSIC_STYLE_PACKS[styleId]
-  if (pack === undefined) throw new Error(`Unknown music style: ${styleId}`)
-  return pack
+  return MUSIC_STYLE_PACKS[styleId]
 }
 
 export function resolveMusicStylePacks(styleIds: readonly string[]): MusicStylePack[] {
