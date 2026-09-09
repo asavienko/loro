@@ -7,15 +7,22 @@ import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 
 const args = process.argv.slice(2)
-if (args.length > 1) {
-  process.stderr.write('Usage: node context.mjs [filename-keyword]\n')
-  process.exit(2)
-}
-if (args[0] === '--help') {
+const usage = 'Usage: node context.mjs [--full] [filename-keyword]\n'
+const full = args.includes('--full')
+const keywords = args.filter((arg) => !arg.startsWith('--'))
+if (args.length === 1 && args[0] === '--help') {
   process.stdout.write(
-    'Usage: node context.mjs [filename-keyword]\nReads the skill checkout, from any working directory. No mutations or network calls.\n',
+    `${usage}Compact checkout summary by default; --full adds setup and plan inventory.\nReads the skill checkout, from any working directory. No mutations or network calls.\n`,
   )
   process.exit(0)
+}
+if (
+  keywords.length > 1 ||
+  args.filter((arg) => arg === '--full').length > 1 ||
+  args.some((arg) => arg.startsWith('--') && arg !== '--full')
+) {
+  process.stderr.write(usage)
+  process.exit(2)
 }
 
 const skillDir = dirname(fileURLToPath(import.meta.url))
@@ -37,9 +44,8 @@ try {
     `HEAD: ${git(root, 'rev-parse', '--short=12', 'HEAD')} (${git(root, 'branch', '--show-current') || 'detached'})`,
   )
   say(
-    `Node: ${process.versions.node}${process.versions.node.split('.')[0] === '22' ? '' : ' — use Node 22 before pnpm'}`,
+    `Node: ${process.versions.node}; ${pkg.packageManager}${process.versions.node.split('.')[0] === '22' ? '' : ' — use Node 22 before pnpm'}`,
   )
-  say(`Package manager: ${pkg.packageManager}`)
   say(
     `Dependencies: ${existsSync(join(root, 'node_modules/.modules.yaml')) ? 'installed directory present; versions not verified' : 'install required: pnpm install --frozen-lockfile'}`,
   )
@@ -63,67 +69,71 @@ try {
   const status = git(root, 'status', '--short')
   const changes = status ? status.split('\n') : []
   say(`Worktree: ${changes.length ? 'changes present' : 'clean'}`)
-  changes.slice(0, 16).forEach((line) => say(`  ${line}`))
-  if (changes.length > 16)
-    say(`  ... ${changes.length - 16} more status entries; inspect git status`)
+  const limit = full ? 16 : 6
+  changes.slice(0, limit).forEach((line) => say(`  ${line}`))
+  if (changes.length > limit)
+    say(`  ... ${changes.length - limit} more status entries; inspect git status`)
 
-  say('\nAvailable package scripts:')
-  const wanted = [
-    'check',
-    'ci:local',
-    'ci:local:native',
-    'ci:local:audit',
-    'test:e2e',
-    'test:e2e:workbench',
-    'test:e2e:bundle',
-    'core-rs:build',
-    'tokens:build',
-    'contracts:generate',
-    'local:up',
-    'apk:local',
-    'apk:github',
-  ]
-  say(`  ${wanted.filter((name) => pkg.scripts?.[name]).join(', ')}`)
-  const missing = wanted.filter((name) => !pkg.scripts?.[name])
-  if (missing.length) say(`  Missing in this checkout: ${missing.join(', ')}`)
-  say('  Read scripts before running them; availability is not authorization or validation.')
+  const files = full || keywords.length ? git(root, 'ls-files').split('\n') : []
+  if (full) {
+    say('\nAvailable package scripts:')
+    const wanted = [
+      'check',
+      'ci:local',
+      'ci:local:native',
+      'ci:local:audit',
+      'test:e2e',
+      'test:e2e:workbench',
+      'test:e2e:bundle',
+      'core-rs:build',
+      'tokens:build',
+      'contracts:generate',
+      'local:up',
+      'apk:local',
+      'apk:github',
+    ]
+    say(`  ${wanted.filter((name) => pkg.scripts?.[name]).join(', ')}`)
+    const missing = wanted.filter((name) => !pkg.scripts?.[name])
+    if (missing.length) say(`  Missing in this checkout: ${missing.join(', ')}`)
+    say('  Read scripts before running them; availability is not authorization or validation.')
 
-  const files = git(root, 'ls-files').split('\n')
-  const plans = files.filter((file) => /^plans\/(?:.*\/)?\d+-[^/]+\.md$/.test(file))
-  const highest = Math.max(0, ...plans.map((file) => Number(file.match(/\/(\d+)-[^/]+\.md$/)[1])))
-  say(
-    `\nHighest tracked plan ID, including archive: ${highest || 'none'} (not a reservation; check untracked/concurrent plans).`,
-  )
-  say('Runtime source directories (presence does not prove wiring or device acceptance):')
-  for (const path of [
-    'apps/mobile/src/data',
-    'apps/mobile/modules',
-    'apps/mobile/ios',
-    'apps/mobile/android',
-    'apps/api/src/auth',
-    'apps/api/src/sync',
-  ]) {
-    say(`  ${path}: ${existsSync(join(root, path)) ? 'present' : 'absent'}`)
-  }
-  say(
-    `Generated WASM: ${existsSync(join(root, 'packages/core-rs/pkg/loro_core_bg.wasm')) ? 'present; drift not checked' : 'absent'}`,
-  )
-
-  for (const path of ['apps/mobile/expo-env.d.ts', 'apps/mobile/.expo/types/router.d.ts']) {
+    const plans = files.filter((file) => /^plans\/(?:.*\/)?\d+-[^/]+\.md$/.test(file))
+    const highest = Math.max(0, ...plans.map((file) => Number(file.match(/\/(\d+)-[^/]+\.md$/)[1])))
     say(
-      `Expo generated declaration: ${path}: ${existsSync(join(root, path)) ? 'present' : 'absent; see validation reference before mobile typecheck'}`,
+      `\nHighest tracked plan ID, including archive: ${highest || 'none'} (not a reservation; check untracked/concurrent plans).`,
     )
+    say('Runtime source directories (presence does not prove wiring or device acceptance):')
+    for (const path of [
+      'apps/mobile/src/data',
+      'apps/mobile/modules',
+      'apps/mobile/ios',
+      'apps/mobile/android',
+      'apps/api/src/auth',
+      'apps/api/src/sync',
+    ]) {
+      say(`  ${path}: ${existsSync(join(root, path)) ? 'present' : 'absent'}`)
+    }
+    say(
+      `Generated WASM: ${existsSync(join(root, 'packages/core-rs/pkg/loro_core_bg.wasm')) ? 'present; drift not checked' : 'absent'}`,
+    )
+
+    for (const path of ['apps/mobile/expo-env.d.ts', 'apps/mobile/.expo/types/router.d.ts']) {
+      say(
+        `Expo generated declaration: ${path}: ${existsSync(join(root, path)) ? 'present' : 'absent; see validation reference before mobile typecheck'}`,
+      )
+    }
   }
 
-  if (args[0]) {
-    const keyword = args[0].toLowerCase()
+  if (keywords.length) {
+    const keyword = keywords[0].toLowerCase()
     const matches = files.filter(
       (file) => !file.startsWith('design/') && file.toLowerCase().includes(keyword),
     )
-    say(`\nTracked filename matches for ${JSON.stringify(args[0])}: ${matches.length}`)
+    say(`\nTracked filename matches for ${JSON.stringify(keywords[0])}: ${matches.length}`)
     matches.slice(0, 16).forEach((file) => say(`  ${file}`))
     if (matches.length > 16) say('  ... narrow the keyword or use rg in the owning directory')
   }
+  if (!full) say('More: --full for setup/plans; [filename-keyword] for tracked paths.')
 } catch (error) {
   process.stderr.write(`Loro context failed: ${error.message.split('\n')[0]}\n`)
   process.exitCode = 1
