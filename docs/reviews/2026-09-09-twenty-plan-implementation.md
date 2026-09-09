@@ -6,6 +6,22 @@ foundations landed for all 20 selected plans, but none of these deliveries compl
 Keep their partial statuses and named acceptance gates. This review changes documentation only;
 runtime fixes and commit-history changes are outstanding.
 
+## Follow-up implemented — 2026-09-09
+
+The locally actionable findings below are now addressed on this branch. Import review shares the
+2,000 UTF-16-code-unit persisted field bound, revalidates every edit and reviewed batch before a
+write, and keeps rejected draft text visible. The normal local check runs the hardware-free native
+evidence fixtures; full local CI runs a separate pseudo-locale browser server. More now consumes
+shared built-destination route policy and renders authored groups. Review release checks require a
+current-material record with complete attributable approvals. Workbench export discovery recurses
+through supported source files and named barrel exports. Native evidence requires a retained Git
+revision in its manifest.
+
+The review does not fabricate the external evidence its findings called for: bilingual reviewers, a
+physical-device/iOS scenario run, an isolated PostgreSQL restore, and off-host retained backups
+remain explicit plan 58/87/88 acceptance gates. Content delivery still needs its separate client
+activation and API-wire reconciliation under plan 61.
+
 ## Required changes
 
 ### R1 — P2: enforce field and batch limits throughout import review
