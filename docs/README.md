@@ -9,6 +9,9 @@ Everything written down, indexed. Four sections plus decisions.
 [Persistent practice and account sync](process/persistent-practice.md) — runtime setup, native
 limits and validation.
 
+[Android emulator script-loading bug — 2026-09-09](reviews/2026-09-09-android-script-load.md) —
+reproduced debug-APK startup failure, missing bundle evidence and verified Preview workaround.
+
 [Local containers and encrypted environment](process/local-development.md) — Docker Compose, SOPS
 and age.
 

@@ -87,6 +87,19 @@ The implementation follows
 
 ## Verified build
 
+### Open emulator startup report
+
+[ANDROID-2026-09-09-01](../reviews/2026-09-09-android-script-load.md) records an “Unable to load
+script” startup failure in the installed debuggable `app.loro.android` APK: it has no embedded
+JavaScript bundle and fails when launched without Metro. The separately installed
+`app.loro.android.preview` APK contains the bundle and was verified to cold-launch into onboarding
+without Metro. Open **Loro Preview** for standalone testing. The affected debug APK's source and
+recovery with matching Metro remain unverified; port forwarding alone does not start Metro. Future
+debug builds use `app.loro.android.dev` and the **Loro Development** launcher label, so they cannot
+be mistaken for the standalone application.
+
+### 2026-09-07 build evidence
+
 On 2026-09-07, commit `6891fe5316a4` produced a 45,511,837-byte APK for both configured ABIs.
 Signature, non-debuggable preview manifest, bundled JavaScript and downloaded GitHub asset checksum
 passed. The artifact is in
