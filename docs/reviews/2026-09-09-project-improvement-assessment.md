@@ -573,11 +573,13 @@ landed (docs/decision P0, this review):
   3. Patch onboarding.md opening + mobile-app.md State/Engines
      (same class as leftover item C)
 
-next, small code (P1, anytime a matching file is open):
+landed (P1 code, this review):
   4. Production account/sync import account + sync, not api/target
   5. Fixture-seal fakeCore.streamRank / repeatTarget
-  6. Speak session checkpoint or an explicit ephemeral comment
+  6. Speak session documented as ephemeral until interruption resume
   7. Parse legacy /content egress with current Manifest/Pack Zod
+
+as you touch:
   8. LegacyLocaleSchema rename when common.ts is already in the diff
   9. UniFFI --check when the generator is already in the diff
 
