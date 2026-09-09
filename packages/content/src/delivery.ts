@@ -77,7 +77,8 @@ export class ContentReleaseError extends Error {
 
 const encoder = new TextEncoder()
 const sha256Pattern = /^[a-f0-9]{64}$/
-const semverPattern = /^(\d+)\.(\d+)\.(\d+)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/
+const semverPattern =
+  /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/
 
 /** Stable JSON is the only byte sequence that may be signed or hashed for a manifest. */
 export function canonicalJson(value: unknown): string {
@@ -119,6 +120,7 @@ function isSafeVersion(value: number): boolean {
 function versionParts(value: string): [number, number, number] | undefined {
   const match = semverPattern.exec(value)
   if (match === null) return undefined
+  if (match[4]?.split('.').some((part) => /^0\d+$/.test(part))) return undefined
   const parts = match.slice(1, 4).map(Number)
   if (parts.some((part) => !Number.isSafeInteger(part))) return undefined
   return parts as [number, number, number]
@@ -128,14 +130,48 @@ function appSatisfiesMinimum(appVersion: string, minAppVersion: string): boolean
   const actual = versionParts(appVersion)
   const minimum = versionParts(minAppVersion)
   if (actual === undefined || minimum === undefined) return false
-  return (
-    actual[0] > minimum[0] ||
-    (actual[0] === minimum[0] && actual[1] > minimum[1]) ||
-    (actual[0] === minimum[0] && actual[1] === minimum[1] && actual[2] >= minimum[2])
-  )
+  for (const index of [0, 1, 2] as const) {
+    if (actual[index] !== minimum[index]) return actual[index] > minimum[index]
+  }
+  const prerelease = (version: string): string[] | undefined => {
+    const withoutBuild = version.split('+')[0] ?? ''
+    const separator = withoutBuild.indexOf('-')
+    return separator === -1 ? undefined : withoutBuild.slice(separator + 1).split('.')
+  }
+  const actualPre = prerelease(appVersion)
+  const minimumPre = prerelease(minAppVersion)
+  if (actualPre === undefined) return true
+  if (minimumPre === undefined) return false
+  for (let index = 0; index < Math.max(actualPre.length, minimumPre.length); index++) {
+    const left = actualPre[index]
+    const right = minimumPre[index]
+    if (left === undefined) return false
+    if (right === undefined) return true
+    if (left === right) continue
+    const leftNumeric = /^\d+$/.test(left)
+    const rightNumeric = /^\d+$/.test(right)
+    if (leftNumeric && rightNumeric)
+      return left.length !== right.length ? left.length > right.length : left > right
+    if (leftNumeric !== rightNumeric) return rightNumeric
+    return left > right
+  }
+  return true
 }
 
-function validateManifest(manifest: ContentManifest): void {
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value)
+}
+
+function validateManifest(value: unknown): asserts value is ContentManifest {
+  if (
+    !isRecord(value) ||
+    typeof value['lang'] !== 'string' ||
+    typeof value['minAppVersion'] !== 'string' ||
+    !Array.isArray(value['resources']) ||
+    !isRecord(value['signature'])
+  )
+    fail('MANIFEST_INVALID', 'manifest must contain identity, resources and signature fields')
+  const manifest = value as unknown as ContentManifest
   if (manifest.manifestVersion !== CONTENT_MANIFEST_VERSION)
     fail('MANIFEST_INVALID', `unsupported manifest version '${manifest.manifestVersion}'`)
   if (!isSafeVersion(manifest.catalogVersion))
@@ -148,6 +184,8 @@ function validateManifest(manifest: ContentManifest): void {
     fail('MANIFEST_INVALID', 'minAppVersion must be a semantic version')
   if (
     manifest.signature.algorithm !== 'ed25519' ||
+    typeof manifest.signature.keyId !== 'string' ||
+    typeof manifest.signature.value !== 'string' ||
     !/^[A-Za-z0-9_-]{1,128}$/.test(manifest.signature.keyId) ||
     !/^[A-Za-z0-9_-]+$/.test(manifest.signature.value)
   )
@@ -155,6 +193,13 @@ function validateManifest(manifest: ContentManifest): void {
 
   const ids = new Set<string>()
   for (const resource of manifest.resources) {
+    if (
+      !isRecord(resource) ||
+      typeof resource.id !== 'string' ||
+      typeof resource.sha256 !== 'string' ||
+      !['catalog', 'pack', 'scenarios', 'drops', 'audio', 'reference'].includes(resource.kind)
+    )
+      fail('MANIFEST_INVALID', 'resource must contain a supported kind, id and digest')
     if (!/^[A-Za-z0-9_-]{1,128}$/.test(resource.id) || ids.has(resource.id))
       fail('MANIFEST_INVALID', `resource id '${resource.id}' is missing, invalid, or duplicated`)
     ids.add(resource.id)
@@ -184,7 +229,7 @@ function validateManifest(manifest: ContentManifest): void {
  * this function succeeds and their own storage transaction commits.
  */
 export async function verifyContentRelease(input: {
-  readonly manifest: ContentManifest
+  readonly manifest: unknown
   readonly resources: ReadonlyMap<string, Uint8Array>
   readonly appVersion: string
   readonly installed?: InstalledCatalog
@@ -221,12 +266,15 @@ export async function verifyContentRelease(input: {
       fail('PARTIAL_RELEASE', `resource '${descriptor.id}' failed its integrity check`)
   }
 
-  let catalog: Catalog
+  let decoded: unknown
   try {
-    catalog = JSON.parse(new TextDecoder().decode(resources.get(catalogDescriptor.id))) as Catalog
+    decoded = JSON.parse(new TextDecoder().decode(resources.get(catalogDescriptor.id)))
   } catch {
     fail('CATALOG_INVALID', 'catalog resource is not valid JSON')
   }
+  if (!isRecord(decoded) || !Array.isArray(decoded['phrases']))
+    fail('CATALOG_INVALID', 'catalog must be an object with a phrase array')
+  const catalog = decoded as unknown as Catalog
   if (
     catalog.lang !== manifest.lang ||
     catalog.catalogVersion !== manifest.catalogVersion ||

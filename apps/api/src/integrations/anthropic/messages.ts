@@ -1,6 +1,8 @@
 /** Provider-only transport. Runtime routes/guards are deliberately not registered here.
  * https://platform.claude.com/docs/en/build-with-claude/structured-outputs
  */
+import { ProviderConcurrency } from '../provider-concurrency.js'
+
 export type AnthropicFailureCode =
   | 'configuration'
   | 'input'
@@ -8,6 +10,7 @@ export type AnthropicFailureCode =
   | 'timeout'
   | 'unavailable'
   | 'rate_limited'
+  | 'capacity'
   | 'invalid_output'
 
 /** Never retain provider bodies, credentials, prompts, or underlying error causes. */
@@ -25,6 +28,7 @@ export interface AnthropicOptions {
   maxTokens: number
   maxRequestBytes: number
   maxResponseBytes: number
+  maxConcurrentRequests: number
 }
 
 export interface StructuredMessage<T> {
@@ -92,6 +96,7 @@ async function boundedJson(response: Response, limit: number): Promise<unknown> 
 /** Exactly one outbound attempt; retry/spend/fallback policy belongs to the guarded service. */
 export class AnthropicMessages {
   private readonly options: Readonly<AnthropicOptions>
+  private readonly concurrency: ProviderConcurrency
 
   constructor(
     options: AnthropicOptions,
@@ -102,6 +107,7 @@ export class AnthropicMessages {
       options.maxTokens,
       options.maxRequestBytes,
       options.maxResponseBytes,
+      options.maxConcurrentRequests,
     ]
     if (
       !options.apiKey.trim() ||
@@ -112,6 +118,7 @@ export class AnthropicMessages {
       throw new AnthropicFailure('configuration')
     }
     this.options = Object.freeze({ ...options })
+    this.concurrency = new ProviderConcurrency(options.maxConcurrentRequests)
   }
 
   async generate<T>(input: StructuredMessage<T>): Promise<AnthropicResult<T>> {
@@ -146,6 +153,8 @@ export class AnthropicMessages {
     if (Buffer.byteLength(body, 'utf8') > this.options.maxRequestBytes) {
       throw new AnthropicFailure('input')
     }
+    const release = this.concurrency.acquire()
+    if (!release) throw new AnthropicFailure('capacity')
     const deadline = AbortSignal.timeout(this.options.timeoutMs)
     const signal = input.signal ? AbortSignal.any([input.signal, deadline]) : deadline
     try {
@@ -204,6 +213,8 @@ export class AnthropicMessages {
       if (deadline.aborted) throw new AnthropicFailure('timeout')
       if (error instanceof AnthropicFailure) throw error
       throw new AnthropicFailure('unavailable')
+    } finally {
+      release()
     }
   }
 }

@@ -48,6 +48,7 @@ const rowId = '0197f2a0-0000-7000-8000-000000000001'
 const headers = { 'content-type': 'application/json', 'x-loro-device': 'contract-device' }
 const requests: Record<string, { suffix?: string; body?: unknown }> = {
   contentPack: { suffix: '?id=cafe' },
+  learningContentPack: { suffix: '?id=cafe' },
   contentDiff: { suffix: '?from=0' },
   syncPush: {
     body: {
@@ -76,6 +77,7 @@ const unchanged = currentOperations.filter(
   (operation) =>
     ['health', 'readiness'].includes(operation.id) ||
     operation.id.startsWith('content') ||
+    operation.id.startsWith('learningContent') ||
     operation.id.startsWith('ai'),
 )
 const migrated = targetOperations.filter((operation) =>
@@ -172,5 +174,24 @@ describe('implemented HTTP contracts', () => {
     const missing = await fetch(`${base}/v1/missing`)
     expect(missing.status).toBe(404)
     expect(ProblemSchema.parse(await missing.json()).code).toBe('NOT_FOUND')
+  })
+})
+
+describe('F-04 malformed multilingual catalog HTTP queries', () => {
+  it.each([
+    'manifest?target=bg-BG&native=bg',
+    'manifest?target=es-ES&target=bg-BG',
+    'manifest?native=fr',
+    'diff?from=1&from=2',
+    'diff?from=9007199254740992',
+    'diff?from=1e2',
+    'pack',
+    'pack?id=cafe&id=cafe',
+    'pack?id=missing',
+  ])('returns a validation problem for %s', async (query) => {
+    const response = await fetch(`${base}/v1/content/v2/${query}`)
+    expect(response.status).toBe(422)
+    expect(response.headers.get('content-type')).toContain('application/problem+json')
+    expect(ProblemSchema.parse(await response.json()).code).toBe('VALIDATION_FAILED')
   })
 })

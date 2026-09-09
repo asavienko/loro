@@ -2,8 +2,9 @@
 
 - **Requirement IDs:** `P3-30`…`P3-40`, `P3B-01`…`P3B-08`
 - **Milestone:** M3
-- **Status:** — Review and Memory remain to do; need 59 durable history and 60 canonical FSRS. Use
-  72's shared harness as it develops, without waiting for whole-release sign-off.
+- **Status:** 🟡 Review candidate boundary and tag-focus policy implemented; engine, route, durable
+  session/grade/resume contracts and Memory remain. Undo is blocked on reviewed plan-68
+  compensation/retry semantics; the engine and route can proceed without exposing Undo.
 - **Depends on:** 59 history/resume; 60 FSRS/selection; 56/81 route laws; 57 chart primitives; 72
   applicable harness only.
 - **Reviewed:** 2026-09-09 against checkout `42f4d57`; source/plan review only, no new device or
@@ -57,3 +58,24 @@ retrievability/lapses without manufacturing a curve, history, or confidence valu
 ## Out of scope
 
 Experimenting with another scheduler, coaching AI, prosody scores, and Run ladder logic.
+
+## Implemented slice — 2026-09-09
+
+`packages/core/src/engines/review.ts` partitions live repository rows by target course and canonical
+`isDue` eligibility, preserving repository order. It distinguishes an empty course, missing
+schedules, nothing due and due candidates; mixed scheduled/unscheduled courses retain the
+unscheduled rows separately. Graduation does not suppress due reviews; learner-marked learned
+phrases do. Legacy rows remain Spanish and custom phrases use the same eligibility. Tag focus uses
+the authored pronunciation → memory hook → useful → recall precedence.
+
+This is an input boundary, not a Review engine or a durable session contract. It does not rank,
+create schedules, infer history from a schedule, or fabricate intervals. The next slice must connect
+canonical selection and explicit self-grades to `ProgressDelta` and transactional attempt,
+review-event and checkpoint writes. Resume must validate target course, clock/day, phrase identity
+and content before continuing. Undo stays unavailable until plan 68 defines an idempotent
+compensating operation; acknowledged events must never be silently rewritten. A pronunciation focus
+is a prompt policy and does not claim available ASR/DSP or a measured pronunciation score.
+
+Focused tests cover course/custom/legacy isolation, due boundaries, graduation/learned exclusions,
+missing schedules, mixed tags, retained provenance and invalid clocks. No route or new
+learner-visible state is introduced by this slice.

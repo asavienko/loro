@@ -2,10 +2,10 @@
 
 - **Requirement IDs:** `F-08`, `P2-03`, `P2-31`
 - **Milestone:** M1/M2
-- **Status:** — English as a selectable learning target and default is confirmed. Contract and
-  implementation work can proceed; the English dialect remains to be confirmed and catalog release
-  needs bilingual review. Full plan-87 sign-off is not required to start contract work. Reuse
-  implemented plan-59 durable selection; generated audio depends on plans 61/62.
+- **Status:** 🟡 Shared sync language validation now derives from the existing domain registry,
+  including course-day keys and catalog tombstones. English target/default integration remains
+  blocked on canonical dialect confirmation; catalog release also needs bilingual review.
+  Configuration readers, English catalog, bootstrap/onboarding defaults and migration remain.
 - **Depends on:** 87 existing language contracts, selector, and course isolation; 85 API contracts;
   59 for durable device storage; 61 for independently delivered catalogs and ElevenLabs assets.
 - **Reviewed:** 2026-09-09 against checkout `42f4d57`; source/plan review only, no new device or
@@ -85,6 +85,20 @@ Existing course progress and personal translations survive the change.
   invalid pairs, switching, accessibility, and text scaling in learner E2E.
 - Run `pnpm check`, `pnpm test:e2e`, and production bundle checks. Require bilingual content review
   before release; device relaunch/offline persistence proof stays gated on plan 59.
+
+## Implemented slice — 2026-09-09
+
+- Sync phrase fields, settings, Refrain days and catalog tombstones derive supported language enums
+  from `NATIVE_LANGUAGES` / `TARGET_LOCALES`; course-day keys use `isTargetLocale`. The app, catalog
+  loader and sync contracts now share the existing registry rather than separate sync allowlists.
+- Contract conformance covers the native/target matrix, all supported target boundary shapes,
+  same-language exclusion, malformed course dates and legacy date-only Refrain keys.
+- This is a behavior-preserving prerequisite for work item 2. It does not add an English locale,
+  configuration reader, default selection, catalog or audio mapping. The generated wire contracts
+  remain unchanged (`pnpm contracts:check` passed). Canonical English dialect remains an explicit
+  decision gate.
+- Focused sync language/provenance suites passed (10 tests). Integrated `pnpm check` and learner E2E
+  remain required for delivery of the combined worktree; this slice adds no learner-visible state.
 
 ## Delivery order and gates
 
