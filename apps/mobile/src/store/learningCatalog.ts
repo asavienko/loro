@@ -40,3 +40,5 @@ export function displayPhrase(
   displayPhrases(target, native)
   return indexes.get(`${target}/${native}`)?.get(id)
 }
+
+export { bundledTopicSuggestions } from '@loro/content'

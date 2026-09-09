@@ -80,9 +80,14 @@ export const OWN_PHRASE_FALLBACK: { readonly theme: Theme; readonly emoji: strin
  * A row for a phrase with no catalog entry: `phraseId` is null and the text lives on
  * the row itself. This is the seam Import (`P2-09`, `P2-10`) and Capture plug into.
  */
-export function newOwnPhrase(id: UserPhraseId, draft: OwnPhraseDraft, now: number): PhraseState {
+export function newOwnPhrase(
+  id: UserPhraseId,
+  draft: OwnPhraseDraft,
+  now: number,
+  source: PhraseState['source'] = 'custom',
+): PhraseState {
   return {
-    ...blankPhraseState(id, null, 'custom', now),
+    ...blankPhraseState(id, null, source, now),
     ownEs: draft.targetText,
     ownEn: draft.translation,
     // Resolved once at write time so the stored row is complete rather than depending on
