@@ -1,10 +1,10 @@
 # Active plans
 
-This index lists only the **33 plans with remaining work**. Completed records and historical
+This index lists only the **34 plans with remaining work**. Completed records and historical
 snapshots are kept in [the archive](archive/README.md), without compatibility symlinks or redirect
 files in this directory. Links point directly to each plan's actual location.
 
-The highest assigned ID is **95** and the next new plan is **96**. Numbers are never reused; 49
+The highest assigned ID is **96** and the next new plan is **97**. Numbers are never reused; 49
 remains an existing gap. Keep completed records in the archive index when a plan finishes.
 
 Plans 56–65 are stored in [the 2026-09-09 archive](archive/2026-09-09/README.md) at user request.
@@ -14,8 +14,9 @@ completion.
 The [post-main review](../docs/reviews/2026-09-09-post-main-plan-review.md) records the six runtime
 and validation findings as fixed, including the follow-up Refrain completion and touch-target
 repairs. No additional whole plan meets its acceptance criteria. Delivered implementation slices are
-recorded in the [dated archive](archive/2026-09-09/IMPLEMENTED-SLICES.md); all 33 remaining-work
-owners are retained. Continue with device/provider acceptance, then integrate the remaining
+recorded in the [dated archive](archive/2026-09-09/IMPLEMENTED-SLICES.md); the previous 33
+remaining-work owners are retained, and [96](96-phrase-music-generation.md) adds a later
+lyrics-plus-music garnish. Continue with device/provider acceptance, then integrate the remaining
 daily-loop, Review, content and lifecycle slices.
 
 The [2026-09-09 implementation review](../docs/reviews/2026-09-09-twenty-plan-implementation.md)
@@ -86,6 +87,8 @@ open a new plan.
 5. **Later surfaces:** 59/60→75; bundled/guarded provider foundations→76 and 82→83. Voice, Review
    handoff and live release gates apply to their specific slices. Labs follow the recorded DSP
    decision; Run/ladder Phrasebook follows Q-05 and comparative evidence.
+   [96](96-phrase-music-generation.md) plans optional phrase-selected lyrics and multi-style
+   ElevenLabs Music; it is garnish, not daily-loop work, and live spend waits on proposed Q-21.
 
 ## Next implementation priorities — reviewed 2026-09-09
 
@@ -152,6 +155,7 @@ feature↔release-completion cycle. See each plan's checkboxes for executable ta
 | [93](93-mobile-shell-gestures.md)                                 | Pull-down switcher and sheet dismissal                                      | M1/M2       | 🟡 Implemented; physical-device touch verification remains                                                   | Shared shell; device evidence                                   |
 | [94](94-persistent-practice-and-account-integration.md)           | Integrated persistence, canonical core, speech and account sync             | M1/M2       | 🟡 Runtime/fast/format gates pass; full/device CI remains                                                    | 54/85 ✅; coordinated 58–60/62–63/66–68 slices                  |
 | [95](95-parallel-local-ci.md)                                     | Dependency-aware parallel full local CI                                     | M2          | 🟡 Scheduler, cancellation, Git inventory and source identity fixes implemented; runtime comparison remains  | 72; no external blocker for measurements                        |
+| [96](96-phrase-music-generation.md)                               | Lyrics from selected phrases, then multi-style ElevenLabs Music             | later       | — Planning complete; live LLM/Music spend gated by proposed Q-21 and 86/61/62                                | 86/76/82 patterns; 61/62 storage/playback; 56/81 route; Q-21    |
 
 Plan 88 owns the selected AWS testing profile and
 [operations runbook](../docs/runbooks/backend-testing.md); plan 73 retains production operations.
