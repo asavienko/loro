@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1536" height="1024" viewBox="0 0 1536 1024" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">Linked phrase and progress cards</title>
+  <desc id="desc">Two ivory cards connected by an orange loop. One contains three phrase strokes, the other four ascending orange bars. The background is transparent.</desc>
+  <g id="connector" stroke="#D44B00" stroke-width="17" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M653 307C685 242 727 207 775 214C842 213 894 267 924 337"/>
+    <path d="M662 630C691 677 724 709 771 707C809 709 844 690 871 662"/>
+  </g>
+  <g id="accent-rays" stroke="#D44B00" stroke-width="18" stroke-linecap="round">
+    <path d="M201 375L252 420"/>
+    <path d="M166 518L229 500"/>
+    <path d="M1279 411L1327 365"/>
+    <path d="M1307 483L1371 491"/>
+  </g>
+  <g id="phrase-card">
+    <path d="M377 355L640 311C688 303 718 324 730 369L757 533C766 584 746 620 700 633L424 675C377 684 346 663 336 617L313 453C305 404 326 367 377 355Z" fill="#FCF8EF" stroke="#192023" stroke-width="12" stroke-linejoin="round"/>
+    <g id="phrase-strokes" stroke="#131B1E" stroke-width="17" stroke-linecap="round">
+      <path d="M410 475L648 428"/>
+      <path d="M420 527L646 484"/>
+      <path d="M429 580L547 557"/>
+    </g>
+  </g>
+  <g id="progress-card">
+    <path d="M900 337L1146 368C1194 374 1225 405 1219 453L1194 618C1188 666 1156 695 1108 688L862 656C813 650 786 620 792 573L816 409C822 360 852 331 900 337Z" fill="#FCF8EF" stroke="#FFC69F" stroke-width="12" stroke-linejoin="round"/>
+    <g id="progress-bars" fill="#D44B00" transform="rotate(8.5 1009 522)">
+      <rect x="905" y="549" width="38" height="57" rx="10"/>
+      <rect x="960" y="514" width="38" height="92" rx="10"/>
+      <rect x="1014" y="476" width="38" height="130" rx="10"/>
+      <rect x="1068" y="423" width="38" height="183" rx="10"/>
+    </g>
+  </g>
+</svg>

@@ -1,10 +1,31 @@
 # History and provenance
 
-Reviewed on 2026-09-08 for F-03. This is an optional decision index, not startup reading and not
-evidence that an old implementation is present now. Current repository source and applicable
-authored design remain authoritative for implementation and intended behavior respectively.
+Reviewed on 2026-09-08, with a focused 2026-09-09 update for F-03. This is an optional decision
+index, not startup reading and not evidence that an old implementation is present now. Current
+repository source and applicable authored design remain authoritative for implementation and
+intended behavior respectively.
 
-## Coverage and limitations
+## September 9 workflow update
+
+Reviewed recent task requests, outcomes and selected commands; verified the skill and serial CI
+runner at `50d0eb1`. The parallel runner was unfinished in a separate checkout at review time, so
+its capabilities must be detected from current source. These observations refine the existing
+references; they do not require replaying all earlier chats or copying their commands wholesale.
+
+| Task                                | Session ID                             | Reusable lesson                                                                                                                                      |
+| ----------------------------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Create repository development skill | `01a08144-b1be-7e80-8b79-f9be48c7f0b5` | Missing Expo declarations caused repeated fast-gate failures; check generated prerequisites before typecheck.                                        |
+| Review app readiness and plans      | `01a082b2-5d19-7703-9fd5-43846271fbb1` | Cross-agent content integration passed unit checks but broke mobile bundling; test that boundary early and integrate before aggregate CI.            |
+| Update from main                    | `01a08588-c1bc-7610-9438-9c60c36d4494` | Repeated import fixes missed parent unmounts and lossy round trips; reproduce through callers and retain revision-specific evidence between reviews. |
+| Android emulator bug                | `01a085e4-87c0-7122-a861-199c0acc7ccc` | Wrapper-only tests missed later dotenv and Metro restart behavior; preserve separate build, launch and reconnect evidence.                           |
+| parallel CI checks                  | `01a08636-c730-7ca0-876f-06fb1a3afc78` | Use bounded runner-owned concurrency and isolated outputs when implemented; active implementation is not delivered evidence.                         |
+
+For future history retrieval, search this index by topic, read the matching task's recent user/final
+messages, then inspect only the command/error needed to settle the question. Empty/truncated task
+items are not evidence of no work; use the matching local transcript when exact evidence is needed.
+Stop once current source or the relevant decision resolves the question.
+
+## Original September 8 coverage and limitations
 
 The review enumerated the desktop project's active and archived tasks, then checked the local Codex
 thread index by Loro project, checkout and Git origin. This found **37 top-level sessions**
@@ -19,10 +40,10 @@ treat historical instructions as new authorization. Active tasks were reviewed a
 later work may supersede findings. No private transcripts, credentials, user-specific addresses or
 raw logs are required to use this skill.
 
-The implementation baseline for this skill is `origin/main` at `f1dde4c` (2026-09-08). The original
-task checkout was older (`442d434`), demonstrating why a fresh context check matters. Persistence
-and broader native/account integration were still being reconciled in other worktrees; their
-reported completion was not promoted to a claim about this baseline.
+The original review baseline was `origin/main` at `f1dde4c` (2026-09-08). The original task checkout
+was older (`442d434`), demonstrating why a fresh context check matters. Persistence and broader
+native/account integration were still being reconciled in other worktrees; their reported completion
+was not promoted to a claim about this baseline.
 
 ## Decisions that supersede older advice
 

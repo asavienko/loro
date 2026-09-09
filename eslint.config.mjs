@@ -44,6 +44,7 @@ export default tseslint.config(
             'apps/mobile/vitest.config.ts',
             'apps/mobile/app.config.ts',
             'apps/mobile/index.js',
+            'scripts/list-e2e-states.mjs',
           ],
         },
         tsconfigRootDir: import.meta.dirname,
@@ -268,5 +269,18 @@ export default tseslint.config(
   {
     files: ['**/*.config.{ts,mjs,js}', 'apps/mobile/index.js'],
     ...tseslint.configs.disableTypeChecked,
+  },
+
+  // Playwright's global setup and reporter hooks are JavaScript plug-in entry points. They
+  // exchange JSON and Playwright-owned objects at runtime, so lint their syntax without
+  // pretending those untyped external values are application data.
+  {
+    files: [
+      'apps/mobile/e2e/screenshots*.mjs',
+      'apps/mobile/e2e/playwright.config.screenshots.mjs',
+      'scripts/list-e2e-states.mjs',
+    ],
+    ...tseslint.configs.disableTypeChecked,
+    languageOptions: { globals: { process: 'readonly', console: 'readonly' } },
   },
 )
