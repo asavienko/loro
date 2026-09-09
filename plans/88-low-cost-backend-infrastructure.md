@@ -153,11 +153,12 @@ disabled; do not restore the historical automatic dev→staging chain or add an 
 Backups and recovery:
 
 - Implemented preparation: `scripts/ec2-backup.sh` produces atomic, root-only local recovery bundles
-  with archive validation, image/schema/role metadata and SHA-256 manifests. Eight isolated
-  command-fixture tests cover success, lock contention, failed/empty dumps, corrupt archive data,
-  missing metadata and checksum failure. These are local failure-path checks, not PostgreSQL restore
-  or AWS evidence. Scheduling, verified S3 upload and release integration remain unbuilt; no
-  nightly/off-host acceptance box is closed by this collector.
+  with archive validation, image/schema/role metadata and SHA-256 manifests. The offline
+  `scripts/ec2-backup-verify.mjs` validates a copied bundle's required metadata, restrictive modes,
+  checksums and active-database safeguard before an operator records a drill. Local command-fixture
+  tests cover collector failure paths and verifier tamper/permission/manifest safeguards. These are
+  local integrity checks, not PostgreSQL restore or AWS evidence. Scheduling, verified S3 upload and
+  release integration remain unbuilt; no nightly/off-host acceptance box is closed by this tooling.
 - [ ] Run nightly compressed custom-format PostgreSQL dumps and pre-migration dumps. Include
       role/grant recovery instructions and image/schema metadata; a database dump alone does not
       recreate cluster roles.

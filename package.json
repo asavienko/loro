@@ -51,7 +51,7 @@
     "apk:local": "node scripts/apk-local.mjs",
     "apk:github": "node scripts/apk-local.mjs --upload",
     "check:routes": "node --test scripts/check-routes.test.mjs && node scripts/check-routes.mjs",
-    "test:deploy": "node --test scripts/ec2-release.test.mjs scripts/ec2-gateway.test.mjs scripts/ec2-backup.test.mjs",
+    "test:deploy": "node --test scripts/ec2-release.test.mjs scripts/ec2-gateway.test.mjs scripts/ec2-backup.test.mjs scripts/ec2-backup-verify.test.mjs",
     "test:native:evidence": "node --test scripts/native-device-evidence.test.mjs"
   },
   "devDependencies": {
