@@ -108,6 +108,7 @@ export const copy = {
     get syncError() {
       return message('account.syncError')
     },
+    syncQuarantined: (count: number): string => message('account.syncQuarantined', { count }),
     get unconfigured() {
       return message('account.unconfigured')
     },
@@ -233,6 +234,56 @@ export const copy = {
     },
     personalMeaning: (language: string): string =>
       message('languages.personalMeaning', { language }),
+  },
+  settings: {
+    get title() {
+      return message('settings.title')
+    },
+    get language() {
+      return message('settings.language')
+    },
+    get languageDetail() {
+      return message('settings.languageDetail')
+    },
+    get appearance() {
+      return message('settings.appearance')
+    },
+    get accent() {
+      return message('settings.accent')
+    },
+    get accentCoral() {
+      return message('settings.accentCoral')
+    },
+    get accentSunset() {
+      return message('settings.accentSunset')
+    },
+    get accentTeal() {
+      return message('settings.accentTeal')
+    },
+    get accentBerry() {
+      return message('settings.accentBerry')
+    },
+    get motion() {
+      return message('settings.motion')
+    },
+    get motionSystem() {
+      return message('settings.motionSystem')
+    },
+    get motionReduced() {
+      return message('settings.motionReduced')
+    },
+    get privacy() {
+      return message('settings.privacy')
+    },
+    get analytics() {
+      return message('settings.analytics')
+    },
+    get analyticsDetail() {
+      return message('settings.analyticsDetail')
+    },
+    get saveError() {
+      return message('settings.saveError')
+    },
   },
   common: {
     get addPhrases() {
@@ -604,6 +655,18 @@ export const copy = {
       get preview() {
         return message('add.import.preview')
       },
+      get chooseFile() {
+        return message('add.import.chooseFile')
+      },
+      get unsupportedFormat() {
+        return message('add.import.unsupportedFormat')
+      },
+      get fileTooLarge() {
+        return message('add.import.fileTooLarge')
+      },
+      get unsupportedEncoding() {
+        return message('add.import.unsupportedEncoding')
+      },
       tooLarge: (rows: number, characters: number): string =>
         message('add.import.tooLarge', { rows, characters }),
       tooLong: (characters: number): string => message('add.import.tooLong', { characters }),
@@ -885,6 +948,15 @@ export const copy = {
       },
       get body() {
         return message('refrain.empty.body')
+      },
+    },
+    unavailable: {
+      title: (time: string): string => message('refrain.unavailable.title', { time }),
+      get complete() {
+        return message('refrain.unavailable.complete')
+      },
+      get body() {
+        return message('refrain.unavailable.body')
       },
     },
     modes: {
