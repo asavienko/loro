@@ -30,3 +30,4 @@ export function loadCatalog(lang = 'es-ES'): Catalog {
 }
 
 export * from './multilingual.js'
+export * from './style-packs.js'
