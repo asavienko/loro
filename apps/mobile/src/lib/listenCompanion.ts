@@ -22,20 +22,18 @@ import {
   type TargetLocale,
 } from '@loro/core'
 import type { TtsRequest } from '@loro/core/api/draft'
-import { AudioCacheError, type AudioCacheController, type AudioCacheObject } from './audioCacheController'
+import {
+  AudioCacheError,
+  type AudioCacheController,
+  type AudioCacheObject,
+} from './audioCacheController'
 import { apiUrl } from './backend'
-import { requestListeningRender, TtsRenderError } from './ttsRenderClient'
+import { requestListeningRender, TtsRenderError, type TtsCredentials } from './ttsRenderClient'
 import { digestListeningText } from './listeningDigest'
 import { isNetworkAvailable } from './connectivity'
 
 export type ListenPhase =
-  | 'idle'
-  | 'generating'
-  | 'partial'
-  | 'cancelled'
-  | 'ready'
-  | 'playing'
-  | 'error'
+  'idle' | 'generating' | 'partial' | 'cancelled' | 'ready' | 'playing' | 'error'
 
 export interface ListenProgress {
   done: number
@@ -137,6 +135,9 @@ export interface PrepareListeningDeps {
   baseUrl?: string | undefined
   digest?: (text: string) => Promise<string>
   render?: typeof requestListeningRender
+  credentials?: () => Promise<TtsCredentials | null>
+  voices?: readonly { id: string }[]
+  modelId?: string | null
   network?: () => Promise<boolean>
   onProgress?: (progress: ListenProgress) => void
   signal?: AbortSignal
@@ -147,10 +148,14 @@ export async function prepareListeningBatch(deps: PrepareListeningDeps): Promise
   progress: ListenProgress
   clips: readonly AudioCacheObject[]
 }> {
-  const voices = approvedListeningVoices(deps.locale)
+  const voices = deps.voices ?? approvedListeningVoices(deps.locale)
+  const modelId = deps.modelId === undefined ? LISTENING_MODEL_ID : deps.modelId
   const takes = planListeningBatch(deps.phrases, voices, deps.repeats)
   const digest = deps.digest ?? digestListeningText
-  const render = deps.render ?? requestListeningRender
+  const credentials = deps.credentials === undefined ? null : await deps.credentials()
+  const render =
+    deps.render ??
+    ((request, baseUrl) => requestListeningRender(request, baseUrl, fetch, credentials))
   const clips: AudioCacheObject[] = []
   let failed = 0
   const keys: string[] = []
@@ -177,7 +182,6 @@ export async function prepareListeningBatch(deps: PrepareListeningDeps): Promise
       }
     }
     const textDigest = await digest(take.targetText)
-    const modelId = LISTENING_MODEL_ID
     if (modelId === null) {
       failed += 1
       deps.onProgress?.({ done: clips.length, total: takes.length, failed })
@@ -221,6 +225,12 @@ export async function prepareListeningBatch(deps: PrepareListeningDeps): Promise
         expectedSha256: meta.sha256,
         logicalKey,
         pinClass: 'listening',
+        ...(credentials === null
+          ? {}
+          : {
+              authorization: `Bearer ${credentials.token}`,
+              deviceId: credentials.deviceId,
+            }),
       })
       clips.push(stored)
     } catch (error) {
@@ -232,6 +242,7 @@ export async function prepareListeningBatch(deps: PrepareListeningDeps): Promise
         }
       }
       if (error instanceof AudioCacheError && error.code === 'disk-full') throw error
+      if (error instanceof TtsRenderError && error.code === 'quota') throw error
       if (error instanceof TtsRenderError || error instanceof AudioCacheError) failed += 1
       else failed += 1
     }
@@ -290,9 +301,7 @@ export async function playListeningSequence(input: {
     if (input.signal?.aborted) throw new AudioCacheError('cancelled')
     if (!clip.fileUri.startsWith('file:')) throw new AudioCacheError('invalid-url')
     await new Promise<void>((resolve, reject) => {
-      void input
-        .playFile(`${LISTEN_PLAYBACK_PREFIX}${index}`, clip.fileUri, resolve)
-        .catch(reject)
+      void input.playFile(`${LISTEN_PLAYBACK_PREFIX}${index}`, clip.fileUri, resolve).catch(reject)
     })
     const last = index === input.clips.length - 1
     if (!last) {

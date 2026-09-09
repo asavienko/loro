@@ -14,6 +14,9 @@ export interface AudioCacheDownloadRequest {
   expectedSha256: string
   logicalKey: string
   pinClass: AudioPinClass
+  /** Bearer value only — never a credentialed URL. Native sends this header. */
+  authorization?: string
+  deviceId?: string
 }
 
 export interface AudioCacheConcatenateRequest {
