@@ -423,4 +423,4 @@ confirmation and returning-account management with actual sync status. Email and
 credentials remain in the account runtime; the route never renders fabricated provider identity.
 Its intended-design extension and state inventory are recorded in
 [functional-spec.md](../product/functional-spec.md#f-01-account) and
-[the account screen plan](../../plans/96-account-sign-in-screens.md).
+[the account screen plan](../../plans/archive/2026-09-09/96-account-sign-in-screens.md).

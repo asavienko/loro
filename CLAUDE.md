@@ -19,7 +19,8 @@ learner screens, production recorded audio/cache, background audio, measured ons
 widgets and account export/erasure remain. Android compilation and an airplane-mode emulator
 persistence/reveal smoke passed; full iOS and physical-device speech/convergence acceptance remain
 release gates. See [persistent practice](docs/process/persistent-practice.md) and
-[plan 94](plans/94-persistent-practice-and-account-integration.md) for scoped evidence.
+[plan 94](plans/archive/2026-09-09/94-persistent-practice-and-account-integration.md) for scoped
+evidence.
 
 The [post-main 33-plan review](docs/reviews/2026-09-09-post-main-plan-review.md) records the six
 review findings as fixed: browser file import uses the picker-provided file, picker results are
@@ -144,22 +145,22 @@ prototype-only and **must not** be carried into the app — see the divergence t
   a refactor into a fix, and don't let generated output (bindings, tokens) ride along in a commit
   that isn't about regenerating it.
 - **Active plans live in `plans/`, numbered.** One markdown file per plan: a two-digit number, then
-  kebab-case named for the topic — `plans/93-mobile-shell-gestures.md`. Completed plans and
-  superseded snapshots live only in `plans/archive/<date>/`, indexed by
+  kebab-case named for the topic — `plans/NN-topic.md`. Completed plans and superseded snapshots
+  live only in `plans/archive/<date>/`, indexed by
   [`plans/archive/README.md`](plans/archive/README.md). Do not create compatibility symlinks or
   redirect files; update references to the actual archive path and rebase the moved plan's relative
-  links. Keep completed records out of the active index. Plan 53 was archived at user request on
-  2026-09-09; its former original-path exception no longer applies. Plan 95 is allocated in a
-  concurrent worktree; plan 96 owns the account sign-in screens. The next new plan number is 97;
-  recheck concurrent allocations before creating a plan. A new plan takes the next free number and
-  gets a row in [`plans/README.md`](plans/README.md). **Numbers are never reused** — a gap is left
-  rather than backfilled, so a link written against a number can't come to mean a different plan.
-  Not in `docs/`: that holds the durable spec. Not in a temp directory either — a plan you can't
-  find again is a plan you rewrite. Name the requirement ID inside the plan so it ties back to the
-  branch and the PR.
-- Plans 56–65 were archived at user request on 2026-09-09 with their partial status and remaining
-  scope preserved in `plans/archive/2026-09-09/`; direct links in the roadmap index retain their
-  ownership. This archival does not mean their acceptance criteria are complete.
+  links. Keep completed records out of the active index. Archive a finished plan in the same change.
+  Plan 53 was archived at user request on 2026-09-09; its former original-path exception no longer
+  applies. The next new plan number is 97; recheck concurrent allocations before creating a plan. A
+  new plan takes the next free number and gets a row in [`plans/README.md`](plans/README.md).
+  **Numbers are never reused** — a gap is left rather than backfilled, so a link written against a
+  number can't come to mean a different plan. Not in `docs/`: that holds the durable spec. Not in a
+  temp directory either — a plan you can't find again is a plan you rewrite. Name the requirement ID
+  inside the plan so it ties back to the branch and the PR.
+- Implemented-slice plans 56–68, 70–73, 75–77, 80–82, 86–88, 90 and 93–96 were archived at user
+  request on 2026-09-09 with their partial status and remaining scope preserved in
+  `plans/archive/2026-09-09/`; direct links in the roadmap index retain their ownership. This
+  archival does not mean their acceptance criteria are complete.
 - **A plan records its own status, and is archived rather than deleted.** Put a `**Status:**` line
   in the plan's header block when work starts, and mark its row in
   [`plans/README.md`](plans/README.md): `🟡` in progress or partly implemented, `⛔` blocked by a
@@ -316,12 +317,12 @@ npx expo start --web                # from apps/mobile — fastest way to see th
 
 ## Backend testing infrastructure
 
-[Plan 88](plans/88-low-cost-backend-infrastructure.md) selects one Frankfurt EC2 instance with local
-PostgreSQL and private S3 at a $25–35/month target. Plan 91 records the restricted EC2 deployment;
-the full durable shared-testing profile still needs its own operational acceptance. The new
-account/sync runtime must pass that deployment gate before shared access is enabled. Do not add
-managed dev/staging stacks, Redis, CDN or live providers to this phase. Start with
-[environments](docs/process/environments.md) and the
+[Plan 88](plans/archive/2026-09-09/88-low-cost-backend-infrastructure.md) selects one Frankfurt EC2
+instance with local PostgreSQL and private S3 at a $25–35/month target. Plan 91 records the
+restricted EC2 deployment; the full durable shared-testing profile still needs its own operational
+acceptance. The new account/sync runtime must pass that deployment gate before shared access is
+enabled. Do not add managed dev/staging stacks, Redis, CDN or live providers to this phase. Start
+with [environments](docs/process/environments.md) and the
 [testing runbook](docs/runbooks/backend-testing.md). Plan 73 owns production decisions; plan 86 owns
 provider adapters.
 

@@ -41,7 +41,7 @@ pnpm --filter @loro/api start       # configured PostgreSQL/auth API on :3000/v1
 | **Validation**        | Unit/integration suites, real SQLite/PostgreSQL, browser state/accessibility/text-scale checks and separate native evidence |
 
 Exact validation scope and native limits are recorded in
-[plan 94](plans/94-persistent-practice-and-account-integration.md) and the
+[plan 94](plans/archive/2026-09-09/94-persistent-practice-and-account-integration.md) and the
 [persistent practice guide](docs/process/persistent-practice.md).
 
 **What the build already caught:** eight colours in the blueprint's palette that fail WCAG AA (the
@@ -68,13 +68,15 @@ EC2 API. Account checks readiness independently of sign-in. Google development s
 sync now reach persistent PostgreSQL; live consent-to-device verification remains open. See the
 [current deployment](docs/process/ec2-deployment.md). The
 [2026-09-08 readiness review](docs/reviews/2026-09-08-readiness.md) is dated deployment evidence;
-[plan 94](plans/94-persistent-practice-and-account-integration.md) records later implementation.
+[plan 94](plans/archive/2026-09-09/94-persistent-practice-and-account-integration.md) records later
+implementation.
 
-**Backend testing:** [plan 88](plans/88-low-cost-backend-infrastructure.md) selects Frankfurt EC2,
-local PostgreSQL and private S3 at a $25–35/month target. Plan 91 records the restricted EC2
-deployment. The narrower account deployment has passed readiness and an isolated restore; the full
-backup/monitoring profile remains open. Start with [environments](docs/process/environments.md) and
-the [testing operations runbook](docs/runbooks/backend-testing.md).
+**Backend testing:** [plan 88](plans/archive/2026-09-09/88-low-cost-backend-infrastructure.md)
+selects Frankfurt EC2, local PostgreSQL and private S3 at a $25–35/month target. Plan 91 records the
+restricted EC2 deployment. The narrower account deployment has passed readiness and an isolated
+restore; the full backup/monitoring profile remains open. Start with
+[environments](docs/process/environments.md) and the
+[testing operations runbook](docs/runbooks/backend-testing.md).
 
 Start at [`docs/process/onboarding.md`](docs/process/onboarding.md).
 

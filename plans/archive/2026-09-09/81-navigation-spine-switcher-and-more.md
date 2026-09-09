@@ -13,11 +13,16 @@
   inspected. This plan refresh supplies no new runtime, device or deployment acceptance.
 - **Priority:** 1; exits/resume with 56, then priority 7 audio presentation.
 
+**Archive disposition (2026-09-09):** Archived at user request after implemented slices landed. The
+partial status and remaining acceptance criteria are retained; archival does not mark this plan
+complete. The roadmap index continues to track its unfinished scope.
+
 ## Verified starting point
 
 **Review of the later `828d296` implementation:** Refrain exit/resume and ongoing presentation now
 exist, but the new wave field fails the shared checkpoint codec and exit/ongoing policies disagree.
-Repair [R1–R3 in the 33-plan review](../docs/reviews/2026-09-09-thirty-three-plan-implementation.md)
+Repair
+[R1–R3 in the 33-plan review](../../../docs/reviews/2026-09-09-thirty-three-plan-implementation.md)
 before treating this slice as accepted. The following inventory describes the earlier `aafa61f`
 starting point; search and travelling audio remain unbuilt.
 
@@ -115,8 +120,7 @@ remain with their owners. No authored artifact changes are required.
 
 ## Post-main review and archive disposition — 2026-09-09
 
-The [review at `de81744`](../docs/reviews/2026-09-09-post-main-plan-review.md) records this plan's
-current contribution, remaining work and gates.
-[Delivered slices](archive/2026-09-09/IMPLEMENTED-SLICES.md) are retained in the archive; this plan
-remains incomplete. Earlier verification is dated evidence, not acceptance of the current combined
-branch.
+The [review at `de81744`](../../../docs/reviews/2026-09-09-post-main-plan-review.md) records this
+plan's current contribution, remaining work and gates. [Delivered slices](IMPLEMENTED-SLICES.md) are
+retained in the archive; this plan remains incomplete. Earlier verification is dated evidence, not
+acceptance of the current combined branch.

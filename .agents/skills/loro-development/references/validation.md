@@ -32,10 +32,10 @@ change valid styles to compensate for missing generated types.
 | Merge/distribution  | `CI_BASE_REF=origin/main pnpm ci:local`; separate native/audit gates as applicable |
 
 For docs/skill edits, check affected links, metadata and changed helpers plus the required fast
-gate. This helper's tests are
-`node --test .agents/skills/loro-development/scripts/context.test.mjs`. Local skill edits need no
-learner E2E or APK build; requested merges still require full CI. GitHub Actions stays disabled
-unless the user changes that policy.
+gate. Skill helper tests are
+`node --test .agents/skills/loro-development/scripts/context.test.mjs .agents/skills/loro-development/scripts/archive-plan.test.mjs`.
+Local skill edits need no learner E2E or APK build; requested merges still require full CI. GitHub
+Actions stays disabled unless the user changes that policy.
 
 ## Shorten review/fix cycles
 

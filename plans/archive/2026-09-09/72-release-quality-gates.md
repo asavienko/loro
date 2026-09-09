@@ -12,7 +12,11 @@
   inspected. This plan refresh supplies no new runtime, device or deployment acceptance.
 - **Priority:** 9; start alongside priority 1 and grow with each feature.
 
-Previous starting point: [archived snapshot](archive/2026-09-08/72-release-quality-gates.md).
+Previous starting point: [archived snapshot](../2026-09-08/72-release-quality-gates.md).
+
+**Archive disposition (2026-09-09):** Archived at user request after implemented slices landed. The
+partial status and remaining acceptance criteria are retained; archival does not mark this plan
+complete. The roadmap index continues to track its unfinished scope.
 
 ## Verified starting point
 
@@ -42,7 +46,7 @@ have simulation/property/golden tests.
 - The opt-in browser smoke covers expanded-copy onboarding, Today's horizontal fit and Add's
   interactive mode controls/horizontal fit. This is a harness slice, not all-state clipping or
   native acceptance; see
-  [localization](../docs/process/localization.md#development-pseudo-locale-f-08-plan-72).
+  [localization](../../../docs/process/localization.md#development-pseudo-locale-f-08-plan-72).
 - Native matrices, long-content/text-scale pseudo sweeps, locale date coverage and measured budgets
   remain. Q-14 and plan 87's bilingual evidence still own their existing sign-off gates.
 
@@ -101,8 +105,7 @@ English; this plan consumes its approved pair matrix), and a meaningless global 
 
 ## Post-main review and archive disposition — 2026-09-09
 
-The [review at `de81744`](../docs/reviews/2026-09-09-post-main-plan-review.md) records this plan's
-current contribution, resolved deterministic/format findings, remaining work and gates.
-[Delivered slices](archive/2026-09-09/IMPLEMENTED-SLICES.md) are retained in the archive; this plan
-remains incomplete. Earlier verification is dated evidence, not acceptance of the current combined
-branch.
+The [review at `de81744`](../../../docs/reviews/2026-09-09-post-main-plan-review.md) records this
+plan's current contribution, resolved deterministic/format findings, remaining work and gates.
+[Delivered slices](IMPLEMENTED-SLICES.md) are retained in the archive; this plan remains incomplete.
+Earlier verification is dated evidence, not acceptance of the current combined branch.

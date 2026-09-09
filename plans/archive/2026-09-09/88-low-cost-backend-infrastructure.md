@@ -14,15 +14,19 @@
   inspected. This plan refresh supplies no new runtime, device or deployment acceptance.
 - **Priority:** 9; start recovery/operations acceptance alongside priority 1.
 
-Previous starting point:
-[archived snapshot](archive/2026-09-08/88-low-cost-backend-infrastructure.md).
+Previous starting point: [archived snapshot](../2026-09-08/88-low-cost-backend-infrastructure.md).
+
+**Archive disposition (2026-09-09):** Archived at user request after implemented slices landed. The
+partial status and remaining acceptance criteria are retained; archival does not mark this plan
+complete. The roadmap index continues to track its unfinished scope.
 
 ## Documentation
 
-[Backend architecture](../docs/architecture/backend.md#testing-infrastructure),
-[environments](../docs/process/environments.md), [CI/CD](../docs/process/ci-cd.md#backend-deploys)
-and the [testing runbook](../docs/runbooks/backend-testing.md) describe this selected profile. Plan
-91 provides a CloudFormation-managed host with restricted administrative SSH and a guarded HTTPS
+[Backend architecture](../../../docs/architecture/backend.md#testing-infrastructure),
+[environments](../../../docs/process/environments.md),
+[CI/CD](../../../docs/process/ci-cd.md#backend-deploys) and the
+[testing runbook](../../../docs/runbooks/backend-testing.md) describe this selected profile. Plan 91
+provides a CloudFormation-managed host with restricted administrative SSH and a guarded HTTPS
 account gateway. The 2026-09-08 account-release record in `docs/process/ec2-deployment.md` reports
 PostgreSQL/WASM readiness, Google start/cancellation, anonymous auth/sync rejection and an isolated
 20-table restore. Live consent-to-device proof, scheduled off-host recovery and the full testing
@@ -219,8 +223,7 @@ auth, mobile sync, content delivery or production availability as implemented.
 
 ## Post-main review and archive disposition — 2026-09-09
 
-The [review at `de81744`](../docs/reviews/2026-09-09-post-main-plan-review.md) records this plan's
-current contribution, remaining work and gates.
-[Delivered slices](archive/2026-09-09/IMPLEMENTED-SLICES.md) are retained in the archive; this plan
-remains incomplete. Earlier verification is dated evidence, not acceptance of the current combined
-branch.
+The [review at `de81744`](../../../docs/reviews/2026-09-09-post-main-plan-review.md) records this
+plan's current contribution, remaining work and gates. [Delivered slices](IMPLEMENTED-SLICES.md) are
+retained in the archive; this plan remains incomplete. Earlier verification is dated evidence, not
+acceptance of the current combined branch.
