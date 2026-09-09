@@ -2,28 +2,38 @@ import { spawnSync } from 'node:child_process'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { resolve, relative, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { collectIosEvidence } from './ios-simulator-evidence.mjs'
 
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)))
 export const defaultPackage = 'app.loro.android.preview'
 
 export function parseArguments(args) {
-  const result = { packageName: defaultPackage, serial: undefined, output: undefined }
+  const result = {
+    platform: 'android',
+    packageName: undefined,
+    serial: undefined,
+    output: undefined,
+  }
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index]
-    if (arg === '--serial' || arg === '--package' || arg === '--output') {
+    if (arg === '--serial' || arg === '--package' || arg === '--output' || arg === '--platform') {
       const value = args[++index]
       if (!value || value.startsWith('--')) throw new Error(`${arg} requires a value.`)
+      if (arg === '--platform') result.platform = value
       if (arg === '--serial') result.serial = value
       if (arg === '--package') result.packageName = value
       if (arg === '--output') result.output = value
     } else if (arg === '--help') result.help = true
     else throw new Error(`Unknown option: ${arg}`)
   }
+  if (!['android', 'ios'].includes(result.platform))
+    throw new Error('Platform must be android or ios.')
+  result.packageName ??= result.platform === 'ios' ? 'app.loro.ios' : defaultPackage
   if (
     !result.help &&
     (!/^[A-Za-z0-9._-]+$/.test(result.packageName) || !result.packageName.includes('.'))
   )
-    throw new Error('Package must be a valid Android application identifier.')
+    throw new Error('Package must be a valid application identifier.')
   if (result.serial && !/^[A-Za-z0-9._:-]+$/.test(result.serial))
     throw new Error('Device serial contains unsupported characters.')
   return result
@@ -102,12 +112,17 @@ export function collectEvidence({ adb = 'adb', serial, packageName, output }) {
 function main() {
   const options = parseArguments(process.argv.slice(2))
   if (options.help) {
-    console.log('Usage: pnpm native:evidence [--serial DEVICE] [--package PACKAGE] [--output PATH]')
-    console.log('Captures read-only Android device evidence under .local-builds/native-evidence/.')
+    console.log(
+      'Usage: pnpm native:evidence [--platform android|ios] [--serial DEVICE] [--package PACKAGE] [--output PATH]',
+    )
+    console.log(
+      'Captures read-only Android device or booted iOS simulator evidence under .local-builds/native-evidence/.',
+    )
     return
   }
   const output = evidenceOutput(root, options.output)
-  const manifest = collectEvidence({ ...options, output })
+  const collector = options.platform === 'ios' ? collectIosEvidence : collectEvidence
+  const manifest = collector({ ...options, output })
   console.log(`Native evidence captured for ${manifest.packageName}: ${output}`)
 }
 
