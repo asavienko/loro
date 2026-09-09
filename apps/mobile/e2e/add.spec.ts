@@ -138,7 +138,7 @@ test('P2-09/P2-10: edited import fields keep their draft and cannot bypass sync-
   await page.getByRole('button', { name: 'import' }).click()
   await page.getByRole('textbox', { name: 'Phrases to import' }).fill('Hola | Hello')
   await page.getByRole('button', { name: 'Review phrases' }).click()
-  const target = page.getByRole('textbox', { name: 'Phrase 1' })
+  const target = page.getByRole('textbox', { name: 'Imported phrase on line 1', exact: true })
   const overLimit = 'a'.repeat(2_001)
   await target.fill(overLimit)
   await expect(page.getByText(/can each have up to 2000 characters/)).toBeVisible()
