@@ -2,7 +2,7 @@
 // Read-only local context. No network, package installation or environment-value reads.
 import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
-import { dirname, join } from 'node:path'
+import { basename, dirname, join } from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 
@@ -12,7 +12,7 @@ const full = args.includes('--full')
 const keywords = args.filter((arg) => !arg.startsWith('--'))
 if (args.length === 1 && args[0] === '--help') {
   process.stdout.write(
-    `${usage}Compact checkout summary by default; --full adds setup and plan inventory.\nReads the skill checkout, from any working directory. No mutations or network calls.\n`,
+    `${usage}Compact checkout summary by default; --full adds setup, worktrees and plan inventory.\nReads the skill checkout, from any working directory. No mutations or network calls.\n`,
   )
   process.exit(0)
 }
@@ -27,11 +27,56 @@ if (
 
 const skillDir = dirname(fileURLToPath(import.meta.url))
 function git(cwd, ...gitArgs) {
+  const env = { ...process.env, GIT_OPTIONAL_LOCKS: '0' }
+  delete env.GIT_DIR
+  delete env.GIT_WORK_TREE
+  delete env.GIT_INDEX_FILE
   return execFileSync('git', ['-C', cwd, ...gitArgs], {
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],
-    env: { ...process.env, GIT_OPTIONAL_LOCKS: '0' },
+    env,
   }).trimEnd()
+}
+
+function parseWorktrees(raw) {
+  const trees = []
+  let current = {}
+  for (const line of `${raw}\n`.split('\n')) {
+    if (line.startsWith('worktree ')) current = { path: line.slice(9) }
+    else if (line.startsWith('HEAD ')) current.head = line.slice(5, 17)
+    else if (line.startsWith('branch '))
+      current.branch = line.slice(7).replace(/^refs\/heads\//, '')
+    else if (line === '' && current.path) {
+      trees.push(current)
+      current = {}
+    }
+  }
+  return trees
+}
+
+function worktreeLabel(path, root) {
+  if (path === root) return 'this'
+  return `${basename(dirname(path))}/${basename(path)}`
+}
+
+function planFiles(cwd) {
+  try {
+    const tracked = git(cwd, 'ls-files', '--', 'plans').split('\n').filter(Boolean)
+    const others = git(cwd, 'ls-files', '--others', '--exclude-standard', '--', 'plans')
+      .split('\n')
+      .filter(Boolean)
+    return [
+      ...tracked.map((file) => ({ file, untracked: false })),
+      ...others.map((file) => ({ file, untracked: true })),
+    ]
+  } catch {
+    return []
+  }
+}
+
+function planId(file) {
+  const match = file.match(/(?:^|\/)(\d+)-[^/]+\.md$/)
+  return match ? Number(match[1]) : 0
 }
 
 try {
@@ -74,8 +119,15 @@ try {
   if (changes.length > limit)
     say(`  ... ${changes.length - limit} more status entries; inspect git status`)
 
+  let trees = []
+  try {
+    trees = parseWorktrees(git(root, 'worktree', 'list', '--porcelain'))
+  } catch {
+    trees = []
+  }
   const files = full || keywords.length ? git(root, 'ls-files').split('\n') : []
   if (full) {
+    if (trees.length) say(`Git worktrees: ${trees.length} including this checkout`)
     say('\nAvailable package scripts:')
     const wanted = [
       'check',
@@ -102,6 +154,46 @@ try {
     say(
       `\nHighest tracked plan ID, including archive: ${highest || 'none'} (not a reservation; check untracked/concurrent plans).`,
     )
+    if (trees.length) {
+      const listLimit = 12
+      say('Sibling checkouts (presence is not unique unmerged work):')
+      const ordered = [
+        ...trees.filter((tree) => tree.path === root),
+        ...trees.filter((tree) => tree.path !== root),
+      ]
+      ordered.slice(0, listLimit).forEach((tree) => {
+        const branch = tree.branch || 'detached'
+        say(`  ${branch} ${tree.head || '?'} ${worktreeLabel(tree.path, root)}`)
+      })
+      if (ordered.length > listLimit)
+        say(`  ... ${ordered.length - listLimit} more; git worktree list`)
+    }
+    const extras = []
+    const seen = new Set()
+    for (const tree of trees) {
+      if (tree.path === root) continue
+      for (const entry of planFiles(tree.path)) {
+        const id = planId(entry.file)
+        if (!id || id < highest) continue
+        const key = `${id}\0${tree.branch || 'detached'}\0${entry.file}`
+        if (seen.has(key)) continue
+        seen.add(key)
+        extras.push(
+          `${id} ${tree.branch || 'detached'} ${entry.file}${entry.untracked ? ' untracked' : ''}`,
+        )
+      }
+    }
+    for (const entry of planFiles(root)) {
+      if (!entry.untracked) continue
+      const id = planId(entry.file)
+      if (!id) continue
+      extras.push(`${id} this-checkout ${entry.file} untracked`)
+    }
+    if (extras.length) {
+      say('Plan IDs from other worktrees or untracked files (not a reservation):')
+      extras.slice(0, 8).forEach((line) => say(`  ${line}`))
+      if (extras.length > 8) say(`  ... ${extras.length - 8} more; inspect git worktree list`)
+    }
     say('Runtime source directories (presence does not prove wiring or device acceptance):')
     for (const path of [
       'apps/mobile/src/data',
@@ -133,7 +225,7 @@ try {
     matches.slice(0, 16).forEach((file) => say(`  ${file}`))
     if (matches.length > 16) say('  ... narrow the keyword or use rg in the owning directory')
   }
-  if (!full) say('More: --full for setup/plans; [filename-keyword] for tracked paths.')
+  if (!full) say('More: --full for setup/plans/worktrees; [filename-keyword] for tracked paths.')
 } catch (error) {
   process.stderr.write(`Loro context failed: ${error.message.split('\n')[0]}\n`)
   process.exitCode = 1
