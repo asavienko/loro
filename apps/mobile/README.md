@@ -45,13 +45,13 @@ workbench's bytes are tree-shaken out of the export.
 
 The workbench reads generated values from `@loro/design-tokens` and registers all 33 exported
 production components, with a source-drift check for omissions. It renders the components used by
-learner routes. When a value is wrong, edit its source under
-`packages/design-tokens/tokens/` and regenerate the committed output with `pnpm tokens:build`—never
-edit `packages/design-tokens/out/` by hand. When adding or changing a reusable component, add its
-named states to the production specimen registry rather than creating a workbench-only lookalike.
-Include default and relevant selected, disabled, loading, empty, error, long-copy, Spanish,
-large-text, reduced-motion, and accent states. Then run the workbench suite; update its narrow
-screenshot baseline with `pnpm test:e2e:workbench:update` only after visually reviewing the change.
+learner routes. When a value is wrong, edit its source under `packages/design-tokens/tokens/` and
+regenerate the committed output with `pnpm tokens:build`—never edit `packages/design-tokens/out/` by
+hand. When adding or changing a reusable component, add its named states to the production specimen
+registry rather than creating a workbench-only lookalike. Include default and relevant selected,
+disabled, loading, empty, error, long-copy, Spanish, large-text, reduced-motion, and accent states.
+Then run the workbench suite; update its narrow screenshot baseline with
+`pnpm test:e2e:workbench:update` only after visually reviewing the change.
 
 Native `ios`/`android` projects are generated with Expo prebuild and ignored in Git. Local modules
 autolink from `modules/`. The core/audio/SQLite modules require a native development build. See

@@ -24,8 +24,8 @@ cannot issue competing native-session commands.
 
 The 2026-09-09 follow-up rechecks request ownership when a queued native command actually executes.
 Stopping playback or listening while an earlier command is pending now prevents the cancelled
-request from starting later. Controller regressions reproduced both failures before the fix and
-pass afterward (eight tests); focused ESLint also passes. This is a cancellation guarantee for the
+request from starting later. Controller regressions reproduced both failures before the fix and pass
+afterward (eight tests); focused ESLint also passes. This is a cancellation guarantee for the
 existing foreground session, not evidence for recorded playback, background transport or devices.
 
 ElevenLabs is the selected production TTS provider (2026-09-07). Plan 61 still needs reviewed,

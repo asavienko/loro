@@ -520,7 +520,9 @@ describe('F-05/F-06 device-local analytics consent', () => {
 
   it('reset clears consent and invalid runtime updates cannot grant it', () => {
     const db = open()
-    expect(() => { db.store.getState().setAnalyticsConsent('true' as unknown as boolean); }).toThrow()
+    expect(() => {
+      db.store.getState().setAnalyticsConsent('true' as unknown as boolean)
+    }).toThrow()
     expect(db.storage.load().devicePreferences.analyticsConsent).toBe(false)
     db.store.getState().setAnalyticsConsent(true)
     db.store.getState().reset()
@@ -532,7 +534,9 @@ describe('F-05/F-06 device-local analytics consent', () => {
     db.driver.run(
       "CREATE TRIGGER reject_consent BEFORE INSERT ON kv WHEN NEW.k = 'device_preferences' BEGIN SELECT RAISE(ABORT, 'write failed'); END",
     )
-    expect(() => { db.store.getState().setAnalyticsConsent(true); }).toThrow('write failed')
+    expect(() => {
+      db.store.getState().setAnalyticsConsent(true)
+    }).toThrow('write failed')
     expect(db.store.getState().devicePreferences.analyticsConsent).toBe(false)
     expect(db.storage.load().devicePreferences.analyticsConsent).toBe(false)
   })
