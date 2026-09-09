@@ -1,5 +1,6 @@
 /** F-08: the metrics.md taxonomy. No arbitrary props or learner-text fields. */
 import { z } from 'zod'
+import { PHRASE_SOURCES } from '../domain/phrase.js'
 import {
   CountSchema as N,
   TimestampSchema as T,
@@ -43,18 +44,7 @@ const Surface = z.enum([
 ])
 const Mode = z.enum(['echo', 'chorus', 'speed', 'cloze', 'call', 'cold'])
 const Wave = z.enum(['morning', 'midday', 'evening'])
-const Source = z.enum([
-  'starter',
-  'discover',
-  'scenario',
-  'browse',
-  'custom',
-  'import',
-  'capture',
-  'related',
-  'drop',
-  'chat',
-])
+const Source = z.enum(PHRASE_SOURCES)
 const permission = {
   permission: z.enum(['microphone', 'camera', 'speech', 'notifications']),
   granted: z.boolean().optional(),

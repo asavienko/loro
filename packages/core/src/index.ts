@@ -14,6 +14,7 @@ export * from './domain/ids.js'
 export * from './domain/phrase.js'
 export * from './domain/calendar.js'
 export * from './domain/text.js'
+export * from './domain/phraseReach.js'
 
 export type {
   EngineId,

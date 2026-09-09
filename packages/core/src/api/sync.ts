@@ -8,6 +8,7 @@ import {
   FSRS_ALGORITHM,
   LEGACY_PREVIEW_ALGORITHM,
   MAX_OWN_PHRASE_TEXT_CODE_UNITS,
+  PHRASE_SOURCES,
 } from '../domain/phrase.js'
 /** Target sync values, independent of storage/merge implementations. F-01/F-02/F-04. */
 import { z } from 'zod'
@@ -35,18 +36,7 @@ export const MAX_SYNC_BYTES = 512 * 1024
 export const FsrsAlgorithmSchema = z.enum([FSRS_ALGORITHM, LEGACY_PREVIEW_ALGORITHM])
 export type FsrsAlgorithm = z.infer<typeof FsrsAlgorithmSchema>
 const Note = z.string().max(MAX_OWN_PHRASE_TEXT_CODE_UNITS)
-const Source = z.enum([
-  'starter',
-  'discover',
-  'scenario',
-  'browse',
-  'custom',
-  'import',
-  'capture',
-  'related',
-  'drop',
-  'chat',
-])
+const Source = z.enum(PHRASE_SOURCES)
 export const userPhraseValues = {
   targetLocale: z.enum(TARGET_LOCALES),
   ownMeaningLanguage: z.enum(NATIVE_LANGUAGES),

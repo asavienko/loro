@@ -5502,7 +5502,8 @@
                                     "capture",
                                     "related",
                                     "drop",
-                                    "chat"
+                                    "chat",
+                                    "generated"
                                   ]
                                 },
                                 "hlc": {
@@ -8196,7 +8197,8 @@
                                     "capture",
                                     "related",
                                     "drop",
-                                    "chat"
+                                    "chat",
+                                    "generated"
                                   ]
                                 },
                                 "hlc": {
