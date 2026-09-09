@@ -4,18 +4,21 @@ import { validateReviewRecord } from './reviewRecords.js'
 
 function approvedRecord() {
   const packet = buildReviewPacket()
-  const review = {
+  const review = (reviewerLanguages: string[]) => ({
     status: 'approved' as const,
     reviewer: 'Bilingual reviewer',
-    reviewerLanguages: ['en', 'bg'],
+    reviewerLanguages,
     reviewedAt: '2026-09-09T12:00:00.000Z',
     findings: [],
     signOffEvidence: 'review-system:record-123',
-  }
+  })
   return {
     ...packet,
-    ui: packet.ui.map((entry) => ({ ...entry, review })),
-    courses: packet.courses.map((entry) => ({ ...entry, review })),
+    ui: packet.ui.map((entry) => ({ ...entry, review: review(['en', entry.locale]) })),
+    courses: packet.courses.map((entry) => ({
+      ...entry,
+      review: review([entry.nativeLanguage, entry.targetLocale.split('-')[0]!]),
+    })),
   }
 }
 
@@ -51,7 +54,7 @@ describe('F-08 bilingual review material', () => {
     expect(bulgarian.catalog.phrases.every((phrase) => phrase.teaching === undefined)).toBe(true)
   })
 
-  it('accepts only complete attributable approvals for the current material digest', () => {
+  it('accepts only complete attributable approvals for the exact current material', () => {
     const record = approvedRecord()
     expect(() => {
       validateReviewRecord(buildReviewPacket(), record)
@@ -69,5 +72,57 @@ describe('F-08 bilingual review material', () => {
     expect(() => {
       validateReviewRecord(buildReviewPacket(), stale)
     }).toThrow(/does not match/)
+
+    const changedResource = {
+      ...record,
+      ui: record.ui.map((entry, index) =>
+        index === 0 ? { ...entry, resources: { unrelated: 'material never shipped' } } : entry,
+      ),
+    }
+    expect(() => {
+      validateReviewRecord(buildReviewPacket(), changedResource)
+    }).toThrow(/digest/)
+
+    const changedCatalog = {
+      ...record,
+      courses: record.courses.map((entry, index) =>
+        index === 0
+          ? { ...entry, nativeLanguage: 'ru', catalog: { ...entry.catalog, phrases: [] } }
+          : entry,
+      ),
+    }
+    expect(() => {
+      validateReviewRecord(buildReviewPacket(), changedCatalog)
+    }).toThrow(/identity|digest/)
+  })
+
+  it('requires each reviewer to cover the exact UI locale or course pair', () => {
+    const record = approvedRecord()
+    const englishOnly = {
+      ...record,
+      ui: record.ui.map((entry) => ({
+        ...entry,
+        review: { ...entry.review, reviewerLanguages: ['en'] },
+      })),
+      courses: record.courses.map((entry) => ({
+        ...entry,
+        review: { ...entry.review, reviewerLanguages: ['en'] },
+      })),
+    }
+    expect(() => {
+      validateReviewRecord(buildReviewPacket(), englishOnly)
+    }).toThrow(/attributable approval/)
+
+    const unknownLanguage = {
+      ...record,
+      ui: record.ui.map((entry) =>
+        entry.locale === 'bg'
+          ? { ...entry, review: { ...entry.review, reviewerLanguages: ['en', 'Bulgarian'] } }
+          : entry,
+      ),
+    }
+    expect(() => {
+      validateReviewRecord(buildReviewPacket(), unknownLanguage)
+    }).toThrow(/attributable approval/)
   })
 })

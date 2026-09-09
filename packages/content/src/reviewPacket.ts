@@ -4,8 +4,27 @@ import { readFileSync } from 'node:fs'
 import { NATIVE_LANGUAGES, TARGET_LOCALES, supportsPair } from '@loro/core'
 import { loadLearningCatalog } from './multilingual.js'
 
-function digest(value: unknown): string {
+/** The review record uses the same byte identity as the exported packet. */
+export function reviewEntrySha256(value: unknown): string {
   return createHash('sha256').update(JSON.stringify(value)).digest('hex')
+}
+
+export function reviewMaterialSha256(material: {
+  readonly ui: readonly { readonly locale: string; readonly sha256: string }[]
+  readonly courses: readonly {
+    readonly nativeLanguage: string
+    readonly targetLocale: string
+    readonly sha256: string
+  }[]
+}): string {
+  return reviewEntrySha256({
+    ui: material.ui.map(({ locale, sha256 }) => ({ locale, sha256 })),
+    courses: material.courses.map(({ nativeLanguage, targetLocale, sha256 }) => ({
+      nativeLanguage,
+      targetLocale,
+      sha256,
+    })),
+  })
 }
 
 function pendingReview() {
@@ -29,7 +48,7 @@ export function buildReviewPacket() {
         'utf8',
       ),
     )
-    return { locale, sha256: digest(resources), resources, review: pendingReview() }
+    return { locale, sha256: reviewEntrySha256(resources), resources, review: pendingReview() }
   })
   const courses = NATIVE_LANGUAGES.flatMap((nativeLanguage) =>
     TARGET_LOCALES.filter((targetLocale) => supportsPair(nativeLanguage, targetLocale)).map(
@@ -38,7 +57,7 @@ export function buildReviewPacket() {
         return {
           nativeLanguage,
           targetLocale,
-          sha256: digest(catalog),
+          sha256: reviewEntrySha256(catalog),
           catalog,
           review: pendingReview(),
         }
@@ -49,14 +68,7 @@ export function buildReviewPacket() {
     schemaVersion: 1,
     requirement: 'F-08',
     // Exclude mutable review records from the identity of the material being reviewed.
-    materialSha256: digest({
-      ui: ui.map(({ locale, sha256 }) => ({ locale, sha256 })),
-      courses: courses.map(({ nativeLanguage, targetLocale, sha256 }) => ({
-        nativeLanguage,
-        targetLocale,
-        sha256,
-      })),
-    }),
+    materialSha256: reviewMaterialSha256({ ui, courses }),
     ui,
     courses,
   }
