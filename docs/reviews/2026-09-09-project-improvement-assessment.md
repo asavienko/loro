@@ -41,14 +41,18 @@ few contract/import holes A–G left on purpose or only half-closed:
    add a third schema language for no sync-correctness gain.
 3. **Finish the doc-inventory pass** that A–G called item C. `backend.md` and the mobile route table
    were patched; [`mobile-app.md`](../architecture/mobile-app.md) §State still says a process kill
-   loses all data and that `coreFacade.ts` is a JS stand-in;
-   [`onboarding.md`](../process/onboarding.md) opens by denying native modules and SQLite that §4–6
-   then describe as present.
+   loses all data and that `coreFacade.ts` is a JS stand-in, and its layer table omits live
+   `src/auth/` and `src/services/`; [`onboarding.md`](../process/onboarding.md) opens by denying
+   native modules and SQLite that §4–6 then describe as present;
+   [`overview.md`](../architecture/overview.md) still lists "Postgres 16 + Drizzle".
 4. **Stop importing `@loro/core/api/target` from production account/sync clients.** Auth/sync
    schemas already live in `account.ts` / `sync.ts`. Target remains the roadmap document.
 5. **Keep current Manifest/Pack as documented weaker envelopes** until plan 61 ships `resource_base`
-   and checksums. Do not "fix" them to the target schemas as cleanup.
-6. **Split the remaining oversized routes as you touch them** (`account.tsx`, Today, onboarding,
+   and checksums. Do not "fix" them to the target schemas as cleanup. Do parse legacy `/content/*`
+   responses with the current Zod envelopes so egress matches OpenAPI.
+6. **Checkpoint Speak session the way Refrain does**, or document it as explicitly ephemeral.
+   `speak.tsx` still holds `SessionHandle` in `useState`, so a remount drops mid-phrase work.
+7. **Split the remaining oversized routes as you touch them** (`account.tsx`, Today, onboarding,
    Progress). Do not extract one-call-site cards (WarmingCard, ThemeGrid, ChoiceRow).
 
 Everything else that looks like debt is an unfinished plan, a named gate, or a dual that must stay
@@ -218,10 +222,12 @@ from the handwritten `ON CONFLICT` discipline that already exists on the client.
 
 **Strategy.** Amend ADR-0008: NestJS + Postgres + `pg` + handwritten SQL is current; Drizzle is a
 revisit if the server schema grows past roughly a dozen tables or operators need a migration runner.
-Redis/BullMQ wait for a real rate-limit or queue owner (plans 76/86), not for tidiness. Correct the
-native-libraries Drizzle row when that file is next edited.
+Redis/BullMQ wait for a real rate-limit or queue owner (plans 76/86), not for tidiness. The
+native-libraries server-Drizzle row is already corrected to `pg`. Also patch
+[`overview.md`](../architecture/overview.md) L270 ("Postgres 16 + Drizzle"). Compose Redis/MinIO
+stay unused scaffolds — comment them as future, do not wire them.
 
-**Blast radius:** ADR-0008 + one companion sentence. Do not install `drizzle-orm`.
+**Blast radius:** ADR-0008, `overview.md`. Do not install `drizzle-orm`.
 
 ### 3. Onboarding and mobile-app "Current" paragraphs still lie — P0, docs now
 
@@ -237,9 +243,11 @@ calendar comments, then stopped.
 
 **Strategy.** One docs PR: opening inventory, bootstrap claims, test counts, and the `modules/`
 sentence. Keep the honest "browser E2E is not device acceptance" warning. Update `mobile-app.md`
-§State/§Engines as in item 1.
+§State/§Engines as in item 1, and add `src/auth/` (OAuth ports) and `src/services/` (account sync)
+to the current-directory table. ESLint blocks for not-yet-created `engines/` / `domain/` stay as
+target reservations — do not create empty folders.
 
-**Blast radius:** `onboarding.md`, `mobile-app.md`. No product behaviour.
+**Blast radius:** `onboarding.md`, `mobile-app.md`, `overview.md`. No product behaviour.
 
 ### 4. Production clients still import `api/target` — P1, refactor soon
 
@@ -272,6 +280,28 @@ current-registry change.
 
 **Strategy.** Same as Refrain: documented fixtures or a WASM-backed fake. Keep `fsrsReview`
 labelled. Do this in the change that next edits stream ranking tests, not as a standalone rewrite.
+
+### 5b. Speak session lives in React state — P1, as you touch Speak
+
+**What is wrong.** Refrain checkpoints `refrainResume` through the store. Speak plans through
+`speakEngine` (A–G item E) but keeps the handle in route `useState`
+([`speak.tsx`](../../apps/mobile/app/practice/speak.tsx) 29). A remount or process death drops
+mid-phrase reveal/heard state. ADR-0012's session tier is "Zustand, checkpointed at transitions".
+
+**Strategy.** Add a speak-resume slice next to refrain, or write a one-line comment that Speak
+session is ephemeral until a named plan owns interruption resume. Do not invent latency or mark
+reveal as spoken success while doing it.
+
+### 5c. Legacy content HTTP egress is unparsed — P1, as you touch content
+
+**What is wrong.** [`content.controller.ts`](../../apps/api/src/content/content.controller.ts)
+builds Manifest/Pack with local interfaces. Current Zod envelopes exist and are what OpenAPI
+documents. Nest does not parse egress. Learning-content (v2) already consumes shared current
+schemas.
+
+**Strategy.** `ManifestSchema` / `PackSchema` from `current.ts` on the way out. Do not swap in
+target `resource_base` checksums. Leave the missing service layer — the catalog is still a bundled
+constant.
 
 ### 6. Oversized modules that survived the 2026-09-10 split — P1/P2, as you touch
 
@@ -453,13 +483,13 @@ These are lint or CI, not reviewer memory:
 | Phrase SQL ↔ wire ↔ merge stay one list                         | `syncableColumns` drift tests                      |
 | Eligibility is one rule in domain, SQL and store                | `eligibility.test.ts`                              |
 | Generated tokens / WASM embed / OpenAPI do not drift            | `pnpm check` / `contracts:check` / `check:browser` |
-| Conventional commit type + scope                                | commitlint                                         |
-| No staged secrets                                               | Gitleaks pre-commit                                |
+| Conventional commit type + scope                                | commitlint (requirement IDs are convention only)   |
+| No staged secrets                                               | Gitleaks pre-commit (this hook is gitleaks-only)   |
 | New learner-visible STATE gets an `e2e/states.ts` row           | route-coverage spec                                |
 
 ### Documented and followed in code
 
-- Progress writes only through `applyDelta` / `ProgressDelta` classes.
+- Progress writes only through `applyDelta` / `ProgressDelta` classes (tests + review, not ESLint).
 - `INSERT OR REPLACE` is gone; upserts name the columns they own and never touch `field_hlc` or
   `deleted_at`.
 - Store actions wrap persistence; routes call named actions, not raw `setState`.
@@ -479,7 +509,8 @@ These are lint or CI, not reviewer memory:
 | ADR-0008 Drizzle + Redis as current                                | `pg` + SQL; Redis unused                                                  |
 | `mobile-app.md` process-kill loses store; JS `coreFacade`          | SQLite hydrate; Rust facade                                               |
 | `onboarding.md` opening: no native modules / SQLite; seven screens | Eight screens + utilities; modules exist; browser still cannot prove them |
-| Native-libraries "Keep server Drizzle"                             | Drizzle is not a dependency                                               |
+| Native-libraries "Keep server Drizzle"                             | Corrected to `pg` + handwritten SQL                                       |
+| `overview.md` "Postgres 16 + Drizzle"                              | Server is `pg` + SQL                                                      |
 | ADR-0001 "EAS gives us builds"                                     | Local APK / disabled Actions. EAS is not the pipeline.                    |
 
 ### Approaches for the next screens and services
@@ -544,8 +575,10 @@ next, docs/decision only (this review's P0):
 next, small code (P1, anytime a matching file is open):
   4. Production account/sync import account + sync, not api/target
   5. Fixture-seal fakeCore.streamRank / repeatTarget
-  6. LegacyLocaleSchema rename when common.ts is already in the diff
-  7. UniFFI --check when the generator is already in the diff
+  6. Speak session checkpoint or an explicit ephemeral comment
+  7. Parse legacy /content egress with current Manifest/Pack Zod
+  8. LegacyLocaleSchema rename when common.ts is already in the diff
+  9. UniFFI --check when the generator is already in the diff
 
 as you touch:
   account.tsx / persistence.test.ts / sync tests / Today / onboarding / Progress
@@ -626,6 +659,10 @@ path-by-path against every Nest decorator. Lockfile versions were read from mani
 companion's earlier resolution, not re-resolved here. Live `/me` versus `/auth/me` against the
 deployed gateway was not exercised. Test-count figures in `onboarding.md` were compared to
 `testing-strategy.md`, not re-run.
+
+A–G landing claims and the must-wait list were rechecked at `706858c` (all 25 landed items hold; the
+twelve must-wait items remain). DSP `todo!` macros stay plan-gated. Husky's pre-commit file runs
+Gitleaks only; lint-staged is configured in `package.json` and is not that hook.
 
 This review does not replace the A–G inventory or the native library matrix. If those files' HEAD
 SHAs age, bump only their status tables; keep this file's three questions and the ADR amendment
