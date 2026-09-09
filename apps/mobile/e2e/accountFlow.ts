@@ -278,7 +278,7 @@ export async function reachAccount(
       ).toBeVisible()
       return service
     }
-    await finishSignIn(page, scenario !== 'sync-unavailable')
+    await finishSignIn(page, scenario !== 'sync-unavailable' && scenario !== 'sync-rejected')
     if (scenario === 'sync-unavailable') {
       await expect(
         page.getByText('Your progress is saved here. Sync will retry when you are connected.'),
