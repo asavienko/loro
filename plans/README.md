@@ -4,9 +4,10 @@ This index lists only the **35 plans with remaining work**. Completed records an
 snapshots are kept in [the archive](archive/README.md), without compatibility symlinks or redirect
 files in this directory. Links point directly to each plan's actual location.
 
-The highest assigned ID is **96** and the next new plan is **97**. Recheck concurrent allocations
-before creating a plan. Numbers are never reused; 49 remains an existing gap. When a plan finishes,
-archive it in the same change and list it only in the archive index.
+The highest assigned ID is **96** and the next new plan is **97**. Recheck concurrent worktrees and
+untracked `plans/` files before allocating; the "next is N" sentence can lag. Numbers are never
+reused; 49 remains an existing gap. When a plan finishes, archive it in the same change and list it
+only in the archive index.
 
 Implemented-slice owners from 56–68, 70–73, 75–77, 80–82, 86–88, 90 and 93–96 are stored in
 [the 2026-09-09 archive](archive/2026-09-09/README.md) at user request. Their partial statuses and

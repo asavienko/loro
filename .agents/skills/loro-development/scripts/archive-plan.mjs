@@ -155,11 +155,19 @@ export function rewriteRepository(files, contents, moves, options) {
   return out
 }
 
+function gitEnv() {
+  const env = { ...process.env, GIT_OPTIONAL_LOCKS: '0' }
+  delete env.GIT_DIR
+  delete env.GIT_WORK_TREE
+  delete env.GIT_INDEX_FILE
+  return env
+}
+
 function git(cwd, ...args) {
   return execFileSync('git', ['-C', cwd, ...args], {
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],
-    env: { ...process.env, GIT_OPTIONAL_LOCKS: '0' },
+    env: gitEnv(),
   }).trimEnd()
 }
 
@@ -201,6 +209,7 @@ function main(argv = process.argv.slice(2)) {
   mkdirSync(posixPath.join(root, `plans/archive/${date}`), { recursive: true })
   execFileSync('git', ['-C', root, 'mv', ...moves.keys(), `plans/archive/${date}/`], {
     stdio: 'inherit',
+    env: gitEnv(),
   })
   for (const [file, content] of rewritten) {
     writeFileSync(posixPath.join(root, file), content)

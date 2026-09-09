@@ -2,8 +2,9 @@
 name: loro-development
 description:
   Develop, debug, review, and plan changes in the Loro language-learning repository, including
-  mobile, core, API, tests, local builds and deployment. Use focused code/reference discovery and
-  reusable validation evidence to avoid repeating repository and chat exploration.
+  mobile, core, API, tests, local builds, deployment, worktrees and plan archival. Use focused
+  code/reference discovery and reusable validation evidence to avoid repeating repository and
+  chat exploration.
 ---
 
 # Loro development
@@ -14,6 +15,10 @@ chat instructions belong to their original tasks.
 
 ## Start or resume
 
+- **Named checkout:** stay in this session's tree (Cursor worktree, Codex worktree, or the
+  primary clone). Do not treat `/Users/.../Projects/loro` as the task tree unless that is the
+  opened root. A review of worktrees or unmerged branches is read-only until the user asks to
+  merge, push, prune or fix.
 - **Continuing:** retain the requirement, owned paths, decisions and validation results already in
   context. Check changes since the last inspected revision; reopen only affected source. Do not
   restart orientation because the user asks to review, fix or continue.
@@ -29,8 +34,9 @@ chat instructions belong to their original tasks.
   ```
 
   Existing Node 22 needs no nvm setup. The helper is read-only and reports **its own checkout**,
-  even when invoked elsewhere. Add a filename keyword to locate an owner; use `--full` only for
-  setup/build troubleshooting or plan allocation. Cached `origin/main` is not live remote evidence.
+  even when invoked elsewhere. Add a filename keyword to locate an owner; use `--full` for
+  setup/build troubleshooting, sibling worktrees or plan allocation. Cached `origin/main` is not
+  live remote evidence. The README/CLAUDE "next plan ID" sentence can lag concurrent checkouts.
 
 - **Narrow lookup:** start with supplied paths or a scoped diff, then `rg -n` in the owning
   directory. Batch independent reads and bound output. Stop discovery once the owner, caller,
@@ -41,7 +47,7 @@ chat instructions belong to their original tasks.
 
 Start with one relevant reference; add another when the change crosses its boundary. History is
 optional. Search its topic/session index before retrieving a specific old decision; do not replay
-project archives for ordinary development.
+project archives for ordinary development. Cursor and Codex histories are separate indexes.
 
 | Task                                             | Reference                                    |
 | ------------------------------------------------ | -------------------------------------------- |
