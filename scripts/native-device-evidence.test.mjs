@@ -1,6 +1,15 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { defaultPackage, evidenceOutput, parseArguments } from './native-device-evidence.mjs'
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import {
+  artifactIdentity,
+  defaultPackage,
+  evidenceOutput,
+  parseArguments,
+} from './native-device-evidence.mjs'
+import { collectIosEvidence, selectSimulator } from './ios-simulator-evidence.mjs'
 
 test('uses the preview package and accepts bounded device options', () => {
   assert.deepEqual(parseArguments([]), {
@@ -9,6 +18,7 @@ test('uses the preview package and accepts bounded device options', () => {
     serial: undefined,
     output: undefined,
     artifactRevision: undefined,
+    artifact: undefined,
   })
   assert.deepEqual(parseArguments(['--serial', 'R5CT1234', '--package', 'app.loro.android']), {
     platform: 'android',
@@ -16,6 +26,7 @@ test('uses the preview package and accepts bounded device options', () => {
     serial: 'R5CT1234',
     output: undefined,
     artifactRevision: undefined,
+    artifact: undefined,
   })
 })
 
@@ -36,10 +47,25 @@ test('keeps requested evidence nested below the ignored artifact directory', () 
   )
 })
 
-import { mkdtempSync, rmSync, writeFileSync, readFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { join } from 'node:path'
-import { collectIosEvidence, selectSimulator } from './ios-simulator-evidence.mjs'
+test('binds evidence to retained artifact bytes and rejects paths outside local builds', () => {
+  const root = mkdtempSync(join(tmpdir(), 'loro-native-evidence-'))
+  try {
+    const builds = join(root, '.local-builds')
+    mkdirSync(builds)
+    const artifact = join(builds, 'preview.apk')
+    writeFileSync(artifact, 'retained build bytes')
+    assert.deepEqual(artifactIdentity(root, '26bdd146', artifact), {
+      revision: '26bdd146',
+      file: '.local-builds/preview.apk',
+      sha256: '619096ee1e9fd24fb9d2a779439fb1343aa5a546273ed99cc55307ed63fa37ff',
+      bytes: 20,
+    })
+    assert.throws(() => artifactIdentity(root, '26bdd146', join(root, 'outside.apk')), /inside/)
+    assert.throws(() => artifactIdentity(root, '26bdd146', builds), /regular file/)
+  } finally {
+    rmSync(root, { recursive: true, force: true })
+  }
+})
 
 const simulator = { udid: 'A123', name: 'iPhone', state: 'Booted', isAvailable: true }
 const inventory = { devices: { 'com.apple.CoreSimulator.SimRuntime.iOS-18-0': [simulator] } }
