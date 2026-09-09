@@ -2,10 +2,74 @@
 
 **Date:** 2026-09-09
 
-**Reviewed range:** `42f4d574dc1b..b2a19cba8381aee2fd3a19335fdc0fcf666d3837`
+**Reviewed range:** `42f4d574dc1b..HEAD`
 
-**Verdict:** Resolved. The Android command now accepts only its Metro-dependent debug variant, and
-the Preview APK workflow owns standalone release builds.
+**Verdict:** Resolved. The development command rejects every input that could install a different
+APK and clears the Preview-only build flag before synchronizing native configuration.
+
+## Review of commit 67ed861 and the complete branch
+
+### 6. [P2] Validate or reject custom APKs before forwarding `--binary`
+
+**Status:** Resolved. The command rejects both `--binary path` and `--binary=path` before prebuild,
+so it cannot install an arbitrary APK while targeting Loro Development.
+
+**Location:** `scripts/android-development.mjs:35–39`.
+
+`pnpm --filter @loro/mobile android --binary /path/to/loro-preview.apk` passes the new validator
+because no non-debug `--variant` is present. The wrapper forwards the binary together with its fixed
+`--app-id app.loro.android.dev`. Expo skips compilation when `--binary` is provided and installs
+that APK, but uses the configured Development activity as the launch target. Supplying the
+standalone Preview APK therefore installs Preview and opens the existing Development installation,
+or fails to launch if Development is absent. The default debug variant does not constrain an
+externally supplied APK.
+
+The command rejects `--binary` before prebuild and directs standalone APK use to `pnpm apk:local`.
+
+**Original evidence:** invoked `runAndroidDevelopment` with `spawnSync` intercepted in memory; the
+recorded second command was
+`pnpm exec expo run:android --app-id app.loro.android.dev --binary /tmp/loro-preview.apk`. Inspected
+the installed Expo CLI's `runAndroidAsync`: it skips Gradle for `options.binary`, installs the
+supplied path, and forwards `props.launchActivity` and `props.customAppId` to the launcher. No
+actual APK was installed during this review. The regression test now covers both binary forms.
+
+### 7. [P2] Clear or reject the Preview build flag in the development command
+
+**Status:** Resolved. The command removes `LORO_LOCAL_APK` from its subprocess environment while
+setting `LORO_ANDROID_DEV_CLIENT=1`, preserving Preview precedence only for the standalone runner.
+
+**Location:** `scripts/android-development.mjs:36`.
+
+With `LORO_LOCAL_APK=1` exported, running the ordinary Android command preserves that flag while
+setting `LORO_ANDROID_DEV_CLIENT=1`. Preview deliberately takes precedence in `app.config.ts`: the
+resulting base package is `app.loro.android.preview`, the scheme is `loro`, and the callback is
+`loro://account`. The debug Gradle suffix then produces `app.loro.android.preview.dev`, while the
+command still launches `app.loro.android.dev`. This either opens an older Development app or fails,
+and the newly installed debug package also competes with Preview for `loro://` callbacks.
+
+The command removes `LORO_LOCAL_APK` from its subprocess environment. Preview precedence remains
+unchanged in the standalone runner, and the regression test asserts the exact development
+environment.
+
+**Original evidence:** intercepted the wrapper's subprocess calls with `LORO_LOCAL_APK=1`, then
+evaluated Expo config under the captured build flags. Observed package `app.loro.android.preview`,
+scheme `loro`, callback `loro://account`, and launch argument `app.loro.android.dev`. The `.dev`
+suffix is verified in the branch's Gradle plugin. No native project was generated during this
+review. The regression test now proves that the wrapper omits `LORO_LOCAL_APK`.
+
+### Current verification
+
+- `pnpm test:android-config` covers nine cases, including both binary forms and the sanitized
+  subprocess environment.
+- Intercepted command execution confirms `--variant release` starts zero subprocesses.
+- Direct command checks confirm rejected release and binary inputs start no native subprocesses.
+- Reviewed the full branch's config plugin, runtime callback selection, API redirect validation, APK
+  environment, command scripts, tests and documentation. Earlier findings 1–5 remain resolved within
+  their stated scope.
+- Prior `pnpm check`, emulator and PostgreSQL results remain historical evidence. Full local CI has
+  no recorded final success; live provider sign-in and a rebuilt emulator launch were not repeated
+  for this review.
+- This resolution implements findings 6 and 7 and updates their owning documentation.
 
 ## Follow-up review
 

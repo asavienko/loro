@@ -8,6 +8,11 @@ const mobileRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../apps/mob
 export function validateDevelopmentArguments(args) {
   for (let index = 0; index < args.length; index += 1) {
     const argument = args[index]
+    if (argument === '--binary' || argument.startsWith('--binary=')) {
+      throw new Error(
+        'The Android development command builds and launches Loro Development only. Use pnpm apk:local for a standalone Preview APK.',
+      )
+    }
     const variant = argument === '--variant' ? args[index + 1] : undefined
     const equalsVariant = argument.startsWith('--variant=')
       ? argument.slice('--variant='.length)
@@ -23,6 +28,12 @@ export function validateDevelopmentArguments(args) {
   }
 }
 
+export function developmentEnvironment(source) {
+  const env = { ...source, LORO_ANDROID_DEV_CLIENT: '1' }
+  delete env.LORO_LOCAL_APK
+  return env
+}
+
 function run(command, args, env) {
   const result = spawnSync(command, args, { cwd: mobileRoot, env, stdio: 'inherit' })
   if (result.error || result.status !== 0)
@@ -33,7 +44,7 @@ function run(command, args, env) {
 
 export function runAndroidDevelopment(args) {
   validateDevelopmentArguments(args)
-  const env = { ...process.env, LORO_ANDROID_DEV_CLIENT: '1' }
+  const env = developmentEnvironment(process.env)
   const pnpm = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm'
   run(pnpm, ['exec', 'expo', 'prebuild', '--platform', 'android', '--no-install'], env)
   run(pnpm, ['exec', 'expo', 'run:android', '--app-id', developmentAppId, ...args], env)

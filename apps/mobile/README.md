@@ -51,8 +51,8 @@ must open without Metro, build and install **Loro Preview** with
 bundled release variant used for standalone acceptance.
 
 The command accepts Expo's debug launch options, including `--device`, but rejects non-debug
-`--variant` values before it changes the generated project. Use `pnpm apk:local` for a standalone
-release build.
+`--variant` values and custom `--binary` APKs before it changes the generated project. It also
+clears an inherited `LORO_LOCAL_APK` flag. Use `pnpm apk:local` for a standalone release build.
 
 With the development server running, open `/dev/tokens` for the design-system workbench. It needs no
 account, service, secret, or native module. The route is deliberately unavailable in a production
