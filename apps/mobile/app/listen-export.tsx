@@ -54,6 +54,7 @@ export default function ListenExport() {
   const [progress, setProgress] = useState<ListenProgress>(emptyProgress)
   const [durationMs, setDurationMs] = useState<number | null>(null)
   const [cacheComplete, setCacheComplete] = useState(false)
+  const [diskFull, setDiskFull] = useState(false)
   const clips = useRef<readonly AudioCacheObject[]>([])
   const abort = useRef<AbortController | null>(null)
 
@@ -107,7 +108,7 @@ export default function ListenExport() {
     configured: apiUrl !== undefined,
     nativeCache: audioCache.available,
     sessionBusy,
-    diskFull: false,
+    diskFull,
     quotaExceeded: false,
     cacheComplete,
     progress,
@@ -121,6 +122,7 @@ export default function ListenExport() {
     if (!generateEnabled) return
     abort.current?.abort()
     abort.current = new AbortController()
+    setDiskFull(false)
     setPhase('generating')
     void prepareListeningBatch({
       cache: audioCache,
@@ -144,7 +146,10 @@ export default function ListenExport() {
       })
       .catch((error: unknown) => {
         setPhase('error')
-        if (error instanceof AudioCacheError && error.code === 'disk-full') setCacheComplete(false)
+        if (error instanceof AudioCacheError && error.code === 'disk-full') {
+          setDiskFull(true)
+          setCacheComplete(false)
+        }
       })
   }
 
