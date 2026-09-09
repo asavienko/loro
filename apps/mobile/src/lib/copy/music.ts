@@ -39,6 +39,17 @@ export const musicCopy = {
     get confirm() {
       return message('music.lyrics.confirm')
     },
+    section: (name: 'Verse 1' | 'Verse 2' | 'Verse 3' | 'Chorus' | 'Bridge' | 'Outro'): string => {
+      const keys = {
+        'Verse 1': 'music.sections.verse1',
+        'Verse 2': 'music.sections.verse2',
+        'Verse 3': 'music.sections.verse3',
+        Chorus: 'music.sections.chorus',
+        Bridge: 'music.sections.bridge',
+        Outro: 'music.sections.outro',
+      } as const
+      return message(keys[name])
+    },
   },
   styles: {
     get heading() {
