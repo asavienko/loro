@@ -11,6 +11,10 @@
   live service; 68 only for the explicit kept-phrase sync boundary.
 - **Reviewed:** 2026-09-07 against merged baseline `2d9e8c3`.
 
+**Archive disposition (2026-09-09):** Archived at user request after implemented slices landed. The
+partial status and remaining acceptance criteria are retained; archival does not mark this plan
+complete. The roadmap index continues to track its unfinished scope.
+
 ## Verified starting point
 
 `packages/core/src/api/draft.ts` carries chat draft schemas. The shared
@@ -117,8 +121,7 @@ unbounded memory, autonomous tools, social chat, teacher dashboards, and learner
 
 ## Post-main review and archive disposition — 2026-09-09
 
-The [review at `de81744`](../docs/reviews/2026-09-09-post-main-plan-review.md) records this plan's
-current contribution, remaining work and gates.
-[Delivered slices](archive/2026-09-09/IMPLEMENTED-SLICES.md) are retained in the archive; this plan
-remains incomplete. Earlier verification is dated evidence, not acceptance of the current combined
-branch.
+The [review at `de81744`](../../../docs/reviews/2026-09-09-post-main-plan-review.md) records this
+plan's current contribution, remaining work and gates. [Delivered slices](IMPLEMENTED-SLICES.md) are
+retained in the archive; this plan remains incomplete. Earlier verification is dated evidence, not
+acceptance of the current combined branch.

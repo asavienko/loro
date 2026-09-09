@@ -64,6 +64,8 @@ editing, then the required stable-source gate in [validation](references/validat
 compact continuation record in the existing review/plan or task context: revision and dirty scope,
 decision, commands/results/log paths, remaining gate and next step. Avoid a second status document.
 
-Update affected implementation claims and plan status in the same change. Finish with the result,
-completed validation, commit/artifact location and material remaining gate. Recheck the requested
-end state after a write, merge, build or deployment; distinguish each operation's result.
+Update affected implementation claims and plan status in the same change. When a plan's recorded
+scope is finished, archive it in that same change — do not leave a completed plan in `plans/`.
+Follow [plan management](references/plans.md). Finish with the result, completed validation,
+commit/artifact location and material remaining gate. Recheck the requested end state after a write,
+merge, build or deployment; distinguish each operation's result.

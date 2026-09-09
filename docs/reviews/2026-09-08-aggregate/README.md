@@ -21,5 +21,5 @@ microphone, recognition or speaker acceptance.
 
 ![Speak reveal fallback before revealing any words](speak.png)
 
-See [plan 94](../../../plans/94-persistent-practice-and-account-integration.md) for the complete
-validation evidence and remaining native/service gates.
+See [plan 94](../../../plans/archive/2026-09-09/94-persistent-practice-and-account-integration.md)
+for the complete validation evidence and remaining native/service gates.

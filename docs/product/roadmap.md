@@ -12,8 +12,8 @@ Account, the shared shell and the developer workbench exist. Native/browser SQLi
 progress and resume, canonical Rust scheduling/matching/merge, foreground device TTS, on-device
 ASR/reveal, PostgreSQL accounts and authenticated sync are implemented. The
 [persistent practice guide](../process/persistent-practice.md) and
-[plan 94](../../plans/94-persistent-practice-and-account-integration.md) record validation
-boundaries.
+[plan 94](../../plans/archive/2026-09-09/94-persistent-practice-and-account-integration.md) record
+validation boundaries.
 
 The seven supported language pairs and three 31-phrase starters still need bilingual sign-off.
 English as a learning target/default remains in plan 90. Full iOS compilation, physical-device

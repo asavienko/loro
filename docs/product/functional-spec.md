@@ -1067,11 +1067,11 @@ validated address, then verify that code. Pending operations disable competing a
 and errors retain local learning data and allow retry.
 
 Successful local account admission shows a confirmation view with **Back to practice**. The email
-address is shown there only for the just-verified email attempt; provider or restored sessions expose
-no fabricated identity. Returning visits show the account management view with the actual sync
-status, **Sync now** and **Sign out**. Sign-out retains learning data and reports when remote
+address is shown there only for the just-verified email attempt; provider or restored sessions
+expose no fabricated identity. Returning visits show the account management view with the actual
+sync status, **Sync now** and **Sign out**. Sign-out retains learning data and reports when remote
 revocation cannot be confirmed. Sync status remains separate from sign-in confirmation, and practice
 remains available when sign-in or sync is unavailable. All copy follows the native language. The
 utility follows `Navigation.dc.html:35–40` and is an intended-design extension, not a new numbered
 authored learner screen. See [account implementation](../architecture/google-apple-auth.md) and
-[the account screen plan](../../plans/96-account-sign-in-screens.md).
+[the account screen plan](../../plans/archive/2026-09-09/96-account-sign-in-screens.md).
