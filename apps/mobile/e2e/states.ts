@@ -642,7 +642,9 @@ export const STATES: AppState[] = [
     spec: 'plan 96 P3F-09 / AI-05 phrase-song garnish',
     reach: async (page) => {
       await openMusicFixture(page, 'generating')
-      await expect(page.getByText('Making your songs')).toBeVisible()
+      await expect(
+        page.getByRole('button', { name: 'Making your songs', exact: true }),
+      ).toBeVisible()
     },
   },
   {
