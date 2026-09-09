@@ -30,9 +30,12 @@ records the earlier Refrain checkpoint/navigation, draft-storage and generated-b
 post-main review records the follow-up import, content, graph, deterministic-test and format fixes;
 platform/device acceptance remains separate.
 
-The [refactoring-strategies review](../docs/reviews/2026-09-09-refactoring-strategies.md)
-inventories structural debt in existing code and separates it from unfinished plan work. It does not
-open a new plan. The
+The
+[whole-project improvement assessment](../docs/reviews/2026-09-09-project-improvement-assessment.md)
+covers remaining refactors, the keep/adopt/avoid tool matrix for every package, and practices that
+are enforced versus stale. It does not open a new plan. The
+[refactoring-strategies review](../docs/reviews/2026-09-09-refactoring-strategies.md) inventories
+structural debt in existing code and separates it from unfinished plan work. The
 [native-libraries companion](../docs/reviews/2026-09-09-native-libraries-and-approaches.md) maps
 Expo/RN packages onto that sequence versus device-owned work.
 
