@@ -1,10 +1,24 @@
-import { NATIVE_LANGUAGES, TARGET_LOCALES, type NativeLanguage, type TargetLocale } from '@loro/core'
+import {
+  NATIVE_LANGUAGES,
+  TARGET_LOCALES,
+  type NativeLanguage,
+  type TargetLocale,
+} from '@loro/core'
 
 /** A local-only checkpoint. It never enters the sync outbox or an account payload. */
 export interface ImportDraft {
   readonly targetLocale: TargetLocale
   readonly nativeLanguage: NativeLanguage
   readonly input: string
+}
+
+export type ImportDrafts = Readonly<Record<string, ImportDraft>>
+
+export function importDraftKey({
+  nativeLanguage,
+  targetLocale,
+}: Pick<ImportDraft, 'nativeLanguage' | 'targetLocale'>): string {
+  return `${nativeLanguage}:${targetLocale}`
 }
 
 export function decodeImportDraft(value: string | null): ImportDraft | null {
@@ -28,5 +42,22 @@ export function decodeImportDraft(value: string | null): ImportDraft | null {
     }
   } catch {
     return null
+  }
+}
+
+/** A malformed entry is discarded without losing valid drafts for the learner's other pairs. */
+export function decodeImportDrafts(value: string | null): ImportDrafts {
+  if (value === null) return {}
+  try {
+    const parsed: unknown = JSON.parse(value)
+    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return {}
+    return Object.fromEntries(
+      Object.entries(parsed).flatMap(([key, draft]) => {
+        const decoded = decodeImportDraft(JSON.stringify(draft))
+        return decoded !== null && key === importDraftKey(decoded) ? [[key, decoded]] : []
+      }),
+    )
+  } catch {
+    return {}
   }
 }

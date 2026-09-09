@@ -12,6 +12,7 @@ import type { CourseState } from '../state'
 import { blankPhraseState } from '../phraseFactory'
 import { EMPTY_REFRAIN_RESUME, INITIAL_STATE } from '../state'
 import type { Slice } from '../types'
+import { importDraftKey } from '../../lib/importDraft'
 
 export const createSessionSlice: Slice<'completeOnboarding' | 'reset' | 'setLanguages'> = ({
   set,
@@ -23,7 +24,12 @@ export const createSessionSlice: Slice<'completeOnboarding' | 'reset' | 'setLang
     assertLanguagePair(nativeLanguage, targetLocale)
     const current = get()
     if (targetLocale === current.targetLocale) {
-      set({ nativeLanguage, languageChosen: true, toast: null })
+      set({
+        nativeLanguage,
+        importDraft: current.importDrafts[importDraftKey({ nativeLanguage, targetLocale })] ?? null,
+        languageChosen: true,
+        toast: null,
+      })
       return
     }
     const snapshot: CourseState = {
@@ -52,6 +58,7 @@ export const createSessionSlice: Slice<'completeOnboarding' | 'reset' | 'setLang
       ...destination,
       nativeLanguage,
       targetLocale,
+      importDraft: current.importDrafts[importDraftKey({ nativeLanguage, targetLocale })] ?? null,
       languageChosen: true,
       courses: { ...current.courses, [current.targetLocale]: snapshot },
       toast: null,
