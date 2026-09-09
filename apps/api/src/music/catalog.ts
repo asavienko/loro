@@ -1,5 +1,5 @@
 import { targetForPhraseId, loadLearningCatalog, phraseMeaning } from '@loro/content'
-import type { CatalogLyricLine, NativeLanguage, TargetLocale } from '@loro/core'
+import type { CatalogLyricLine, TargetLocale } from '@loro/core'
 import { isNativeLanguage, isTargetLocale, supportsPair } from '@loro/core'
 import { LoroError } from '../common/errors.js'
 
@@ -33,8 +33,7 @@ export function resolveMusicCatalogPhrases(
     phrases.push({
       id: phrase.id,
       targetText: phrase.targetText,
-      translation: phraseMeaning(phrase, meaningLanguage as NativeLanguage),
-      ...(phrase.deprecatedBy === undefined ? {} : { deprecatedBy: phrase.deprecatedBy }),
+      translation: phraseMeaning(phrase, meaningLanguage),
     })
   }
   return { phrases, catalogVersion: catalog.catalogVersion }

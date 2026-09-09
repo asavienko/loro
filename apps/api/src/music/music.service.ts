@@ -6,7 +6,6 @@ import {
   MusicRendersRequestSchema,
   type MusicLyricsRequest,
   type MusicLyricsResponse,
-  type MusicRenderJob,
   type MusicRendersResponse,
   type MusicTrackResponse,
 } from '@loro/core/api/draft'
@@ -16,7 +15,12 @@ import { LoroError } from '../common/errors.js'
 import { ElevenLabsMusicAdapter, composeStyles } from '../integrations/elevenlabs/music.js'
 import { MusicBudget } from './budget.js'
 import { LyricsCoordinator } from './lyrics.coordinator.js'
-import { MUSIC_REPOSITORY, type MusicRepository, type StoredMusicJob } from './repository.js'
+import {
+  MUSIC_REPOSITORY,
+  type MusicErrorCode,
+  type MusicRepository,
+  type StoredMusicJob,
+} from './repository.js'
 
 @Injectable()
 export class MusicService {
@@ -55,7 +59,7 @@ export class MusicService {
     }
     const packs = resolveMusicStylePacks(request.style_ids)
     const outcomes = await composeStyles(this.adapter, stored.document, packs, 2)
-    const jobs: MusicRenderJob[] = []
+    const jobs: MusicRendersResponse['jobs'] = []
     for (const [index, pack] of packs.entries()) {
       const outcome = outcomes[index]
       const jobId = jobIdFor(stored.id, pack.style_id)
@@ -105,7 +109,7 @@ export class MusicService {
 
   async trackMetadata(principal: AuthPrincipal, trackId: string): Promise<MusicTrackResponse> {
     const job = await this.jobForTrack(trackId, principal.userId)
-    if (job === null || job.sha256 === null || job.status !== 'ready') {
+    if (job?.sha256 == null || job.status !== 'ready') {
       throw new LoroError('NOT_FOUND')
     }
     return {
@@ -125,7 +129,7 @@ export class MusicService {
     trackId: string,
   ): Promise<{ bytes: Uint8Array; contentType: string }> {
     const job = await this.jobForTrack(trackId, principal.userId)
-    if (job === null || job.sha256 === null) throw new LoroError('NOT_FOUND')
+    if (job?.sha256 == null) throw new LoroError('NOT_FOUND')
     const object = await this.repository.getObject(job.sha256)
     if (object === null) throw new LoroError('NOT_FOUND')
     return { bytes: object.bytes, contentType: object.contentType }
@@ -162,7 +166,10 @@ function storedJob(
   }
 }
 
-function toWireJob(job: StoredMusicJob, trackId: string | null): MusicRenderJob {
+function toWireJob(
+  job: StoredMusicJob,
+  trackId: string | null,
+): MusicRendersResponse['jobs'][number] {
   return {
     job_id: job.jobId,
     style_id: job.styleId,
@@ -181,7 +188,7 @@ function errorFor(
     | 'invalid_audio'
     | 'unavailable'
     | undefined,
-): MusicRenderJob['error_code'] {
+): MusicErrorCode {
   if (kind === 'bad_prompt' || kind === 'bad_composition_plan') return 'copyright'
   if (kind === 'rate_limited' || kind === 'unavailable') return 'unavailable'
   if (kind === 'invalid_audio') return 'invalid_audio'
