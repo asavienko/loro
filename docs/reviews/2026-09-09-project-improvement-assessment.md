@@ -592,8 +592,8 @@ must not: section below
 ```
 
 Do **not** open plan 97 for this list. A review is not a numbered plan
-([plan management](../../.agents/skills/loro-development/references/plans.md)). Items 1–3 are a docs
-PR. Items 4–7 ride along with the next owner of those files.
+([plan management](../../.agents/skills/loro-development/references/plans.md)). Items 1–8 are in
+the working tree. UniFFI `--check` still waits for the next generator edit.
 
 Native-device library work (haptics, Maestro, keyboard-controller, notifications, Skia) proceeds
 **in parallel** under its plan owners and must not share a PR with items 1–4.
