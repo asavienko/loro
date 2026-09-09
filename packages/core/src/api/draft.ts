@@ -22,6 +22,7 @@ import {
 import { fieldShape } from './sync.js'
 import { WordGlossSchema } from './catalog.js'
 import { DeviceRegistrationSchema, UserSchema } from './account.js'
+import { ChatTopicResourceSchema } from './chat-topic.js'
 
 export const draftGates = {
   trip: ['Q-07'],
@@ -195,35 +196,7 @@ export function validateChatExchange(request: unknown, response: unknown) {
   }
   return result
 }
-export const ChatTopicResourceSchema = z
-  .strictObject({
-    version: N,
-    topic_id: Key,
-    start_node: Key,
-    nodes: z
-      .array(
-        z.strictObject({
-          id: Key,
-          reply: LineSchema,
-          suggestions: z
-            .array(LineSchema.extend({ id: Key, next_node: Key, register: RegisterSchema }))
-            .min(1)
-            .max(5),
-          glosses: z.array(WordGlossSchema).max(24),
-        }),
-      )
-      .min(1)
-      .max(500),
-  })
-  .superRefine((topic, ctx) => {
-    const ids = new Set(topic.nodes.map((n) => n.id))
-    if (
-      ids.size !== topic.nodes.length ||
-      !ids.has(topic.start_node) ||
-      topic.nodes.some((n) => n.suggestions.some((s) => !ids.has(s.next_node)))
-    )
-      ctx.addIssue({ code: 'custom', message: 'All graph references must resolve to unique nodes' })
-  })
+export { ChatTopicResourceSchema } from './chat-topic.js'
 export const TtsRequestSchema = z.strictObject({
   text: TextSchema,
   lang: LocaleSchema,
