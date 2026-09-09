@@ -73,7 +73,7 @@ graph TB
 
 Note what is **not** an external dependency of the learner's **daily practice** loop: the LLM, the
 neural TTS provider, and the network itself. A learner can practise for weeks with none of them.
-Plan 97 listening generation is the exception that **does** need the network on a cache miss; after
+Plan 99 listening generation is the exception that **does** need the network on a cache miss; after
 a successful cache, airplane-mode listen uses disk only. That companion is not a practice surface.
 
 ## C4 · Level 2 — Containers
