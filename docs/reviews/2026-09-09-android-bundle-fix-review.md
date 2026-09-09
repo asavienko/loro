@@ -4,8 +4,129 @@
 
 **Reviewed range:** `42f4d574dc1b..HEAD`
 
-**Verdict:** Resolved. The development command rejects every input that could install a different
-APK and clears the Preview-only build flag before synchronizing native configuration.
+**Verdict:** Resolved. The Development wrapper owns its package identity across caller arguments,
+inherited variables and Expo dotenv loading.
+
+## Review of commit 6ec714d and the complete branch
+
+### 8. [P2] Prevent forwarded `--app-id` from overriding the Development launch target
+
+**Status:** Resolved. The wrapper rejects every caller-supplied `--app-id` form before prebuild and
+retains its single generated Development launch ID.
+
+**Location:** `scripts/android-development.mjs:50`.
+
+**Original behavior:** the validator permitted `--app-id app.loro.android.preview` and its equals
+form. The wrapper appended these arguments after its own `--app-id app.loro.android.dev`, and Expo's
+argument parser uses the last value. Consequently, the command builds and installs Development but
+attempts to launch an activity in Preview. Launch can fail because that package or activity is
+absent, or target an existing installation instead of the app just built. The fixed package argument
+is therefore not enforced.
+
+**Evidence:** passed both forms through `validateDevelopmentArguments`, then parsed the exact
+combined argument order with the installed Expo CLI's `assertWithOptionsArgs`. Both returned
+`app.loro.android.preview`. Expo's `resolveLaunchPropsAsync` uses that value as `customAppId` and as
+the package component of `launchActivity`. No APK installation was needed for this reproduction.
+
+**Possible solutions:**
+
+1. **Implemented: reject caller-supplied `--app-id` before prebuild.** The existing argument
+   validator rejects both `--app-id value` and `--app-id=value`, including empty or missing values.
+   The command explains that it owns the Development package. Even the matching Development ID can
+   be rejected as redundant, giving this option the same simple contract as `--binary`. Keep exactly
+   one wrapper-generated `--app-id app.loro.android.dev` in the Expo invocation. This is the
+   smallest change and makes an unsupported request visible instead of silently ignoring it.
+2. **Alternative: accept only an explicit matching ID.** Parse every occurrence, reject missing,
+   empty or conflicting values before prebuild, and strip accepted occurrences before forwarding
+   arguments. This preserves callers that already pass `app.loro.android.dev`, but requires more
+   parsing and duplicate-option tests. A later matching value must not conceal an earlier conflict.
+3. **Broader alternative: allowlist supported launch options.** Parse supported device, port, cache,
+   bundler and debug-variant options; reject identity overrides and positional project-root
+   overrides, then construct the Expo arguments explicitly. This also prevents a caller from
+   redirecting `run:android` to a different project than the one synchronized by prebuild. It is a
+   larger CLI contract change and needs documentation plus compatibility checks against the
+   installed Expo options.
+
+Appending the fixed ID last would exploit the current parser's last-value rule, but silently discard
+the user's request. Prefer explicit validation over relying on duplicate-option precedence.
+
+**Verification:** the Android configuration suite covers separated, equals and missing `--app-id`
+forms alongside valid debug arguments. Direct invocations with both Preview-ID forms exit before
+prebuild, so no native project is synchronized.
+
+### 9. [P2] Keep Expo dotenv loading from restoring the Preview flag
+
+**Status:** Resolved. The Development subprocess environment now sets `LORO_LOCAL_APK='0'` and
+`LORO_ANDROID_DEV_CLIENT='1'`, which keeps Expo dotenv loading from selecting Preview.
+
+**Location:** `scripts/android-development.mjs:31–34`.
+
+**Original behavior:** deleting `LORO_LOCAL_APK` from the child environment made it available for
+Expo to populate from the mobile project's `.env` files. Both `expo prebuild` and `expo run:android`
+call `@expo/env.load(projectRoot)` before reading configuration. If a local `.env` contains
+`LORO_LOCAL_APK=1`, the ordinary Development command again selects Preview's base package, `loro`
+scheme and `loro://account` callback. The debug suffix produces `app.loro.android.preview.dev`,
+while the wrapper still launches `app.loro.android.dev`.
+
+**Evidence:** created an isolated temporary `.env` containing only `LORO_LOCAL_APK=1`, started a
+Node child with `developmentEnvironment(process.env)`, and invoked the installed Expo dotenv loader
+followed by the real mobile config reader. The result was:
+
+```json
+{
+  "previewFlag": "1",
+  "developmentFlag": "1",
+  "package": "app.loro.android.preview",
+  "scheme": "loro",
+  "callback": "loro://account"
+}
+```
+
+The temporary fixture was removed. No workspace environment file or native project was changed. The
+current environment unit test checks only the object before Expo loads dotenv, so it misses this
+boundary.
+
+**Possible solutions:**
+
+1. **Implemented: explicitly set `LORO_LOCAL_APK='0'` in the Development subprocess environment.**
+   Set it after spreading the inherited environment, alongside `LORO_ANDROID_DEV_CLIENT='1'`, and
+   pass the same environment to prebuild and run. The config enables Preview only for the exact
+   value `'1'`; an explicit process value also prevents ordinary Expo dotenv loading from filling
+   the key. This keeps `.env` support for legitimate development settings and overrides an inherited
+   Preview value without changing the standalone runner's Preview precedence. Update the existing
+   unit test and documentation from “removes the flag” to “forces Development mode.”
+2. **Alternative: load dotenv, then reject a conflicting Preview configuration.** Resolve the same
+   dotenv files and mode Expo will use, detect `LORO_LOCAL_APK=1`, and fail before prebuild with a
+   message identifying the conflicting setting. This makes configuration mistakes explicit, but
+   requires users to remove the conflict and introduces responsibility for matching Expo's loader. A
+   check made before dotenv loading would reproduce the current gap. Keep the validated values fixed
+   in the child environment so subsequent loading cannot change the selected identity.
+3. **Alternative with a larger tradeoff: disable dotenv for both subprocesses.** Set
+   `EXPO_NO_DOTENV=1` and explicitly select the two build flags. This closes the demonstrated path,
+   but would also stop loading development settings such as `EXPO_PUBLIC_API_URL` from local files.
+   Use it only with an intentional, documented replacement for that configuration workflow; it is
+   unnecessary for this narrow fix.
+
+Do not reverse the global config precedence merely to fix the Development wrapper: the standalone
+Preview runner must remain protected against an inherited Development flag.
+
+**Verification:** a fresh Node subprocess loads a temporary `.env` containing `LORO_LOCAL_APK=1`
+through the installed Expo loader, then reads the real mobile config. The explicit process value
+survives; the config reports base package `app.loro.android`, scheme `loro-dev` and callback
+`loro-dev://account`. A non-secret sentinel from the fixture also loads, showing that ordinary
+dotenv settings remain available. The fixture is removed after the test.
+
+### Verification for this review
+
+- Reviewed all branch source changes, owning documentation and the relevant installed Expo parser,
+  launch resolver and environment loader.
+- Fresh `pnpm test:android-config`: eleven tests passed.
+- Fresh focused mobile redirect and API redirect validation suites: two tests passed in each.
+- Branch commitlint and `git diff --check origin/main...HEAD` passed.
+- The two reproductions above exercise installed dependency behavior without installing APKs or
+  starting Metro. No new emulator launch, provider sign-in or full local-CI run was performed.
+- `pnpm check`, scoped formatting and `git diff --check` passed after the final source change.
+  Device launch verification remains a separate acceptance check.
 
 ## Review of commit 67ed861 and the complete branch
 
@@ -35,8 +156,8 @@ actual APK was installed during this review. The regression test now covers both
 
 ### 7. [P2] Clear or reject the Preview build flag in the development command
 
-**Status:** Resolved. The command removes `LORO_LOCAL_APK` from its subprocess environment while
-setting `LORO_ANDROID_DEV_CLIENT=1`, preserving Preview precedence only for the standalone runner.
+**Status:** Resolved. The command forces `LORO_LOCAL_APK=0` while setting
+`LORO_ANDROID_DEV_CLIENT=1`, preserving Preview precedence only for the standalone runner.
 
 **Location:** `scripts/android-development.mjs:36`.
 
@@ -47,9 +168,9 @@ resulting base package is `app.loro.android.preview`, the scheme is `loro`, and 
 command still launches `app.loro.android.dev`. This either opens an older Development app or fails,
 and the newly installed debug package also competes with Preview for `loro://` callbacks.
 
-The command removes `LORO_LOCAL_APK` from its subprocess environment. Preview precedence remains
-unchanged in the standalone runner, and the regression test asserts the exact development
-environment.
+The command forces `LORO_LOCAL_APK=0` in its subprocess environment. Preview precedence remains
+unchanged in the standalone runner, and the regression tests assert the exact development
+environment and real Expo dotenv behavior.
 
 **Original evidence:** intercepted the wrapper's subprocess calls with `LORO_LOCAL_APK=1`, then
 evaluated Expo config under the captured build flags. Observed package `app.loro.android.preview`,
