@@ -14,6 +14,7 @@ function fixture() {
   const native = {
     availability: vi.fn(() => Promise.resolve({ playback: true, recognition: true })),
     play: vi.fn((_request: PlaybackRequest) => Promise.resolve()),
+    playFile: vi.fn(() => Promise.resolve()),
     stopPlayback: vi.fn(() => Promise.resolve()),
     startListening: vi.fn(() => Promise.resolve()),
     stopListening: vi.fn(() => Promise.resolve()),
@@ -168,5 +169,16 @@ describe('native audio metadata boundary', () => {
       sha256,
     })
     expect(f.native.play.mock.calls[1]?.[0]).not.toHaveProperty('uri')
+  })
+  it('plays a cached file URI and refuses network URIs so JS never receives audio bytes', async () => {
+    const f = fixture()
+    await f.controller.playFile('listen:0', 'file:///cache/clip.m4a')
+    expect(f.native.playFile).toHaveBeenCalledWith({
+      id: 'play-1',
+      fileUri: 'file:///cache/clip.m4a',
+    })
+    await f.controller.playFile('listen:0', 'https://cdn.loro.test/clip.m4a')
+    expect(f.native.playFile).toHaveBeenCalledTimes(1)
+    expect(f.controller.getSnapshot().playback).toBe('error')
   })
 })
