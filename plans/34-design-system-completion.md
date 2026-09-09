@@ -1,1 +1,0 @@
-archive/2026-07-30/34-design-system-completion.md

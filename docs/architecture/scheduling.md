@@ -16,9 +16,10 @@ native/browser boundary.
 | Trip drops     | Content data exists                                                           | Trip scheduling/service/persistence/routes                       |
 | Day boundaries | Calendar parity, durable day keys, frozen sets and resume                     | Physical timezone/process-death matrix and OS lifecycle coverage |
 
-[Plan 88](../../plans/88-persistent-practice-and-account-integration.md) integrates the canonical
-slice of [plan 60](../../plans/60-authoritative-core-maths.md). Future mechanisms below remain
-product contracts until their routes/engines are built; existing runtime results use real inputs.
+[Plan 94](../../plans/94-persistent-practice-and-account-integration.md) integrates the canonical
+slice of [plan 60](../../plans/archive/2026-09-09/60-authoritative-core-maths.md). Future mechanisms
+below remain product contracts until their routes/engines are built; existing runtime results use
+real inputs.
 
 Five independent mechanisms, one per progress signal:
 

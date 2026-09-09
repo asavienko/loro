@@ -131,29 +131,29 @@ prototype-only and **must not** be carried into the app — see the divergence t
   `mobile` at once is one that cannot be reverted in pieces when it turns out to be wrong. Don't mix
   a refactor into a fix, and don't let generated output (bindings, tokens) ride along in a commit
   that isn't about regenerating it.
-- **Plans live in `plans/`, numbered.** One markdown file per plan: a two-digit number, then
-  kebab-case named for the topic — `plans/60-authoritative-core-maths.md`. The 2026-09-07 review
-  recorded 30 active plans within 56–88; completed 54/55/79/84/85 are under
-  `plans/archive/2026-09-07/` with compatibility symlinks. Completed 89/91/92 and superseded
-  planning snapshots are under `plans/archive/2026-09-08/`; snapshots retain current owners for
-  unfinished work. Plans 01–52 remain under `plans/archive/2026-07-30/`; completed 53 remains at its
-  protected original path. The next new plan number is 95. A new plan takes the next free number and
-  gets a row in [`plans/README.md`](plans/README.md). **Numbers are never reused** — a gap is left
-  rather than backfilled, so a link written against a number can't come to mean a different plan.
-  Not in `docs/`: that holds the durable spec. Not in a temp directory either — a plan you can't
-  find again is a plan you rewrite. Name the requirement ID inside the plan so it ties back to the
-  branch and the PR.
+- **Active plans live in `plans/`, numbered.** One markdown file per plan: a two-digit number, then
+  kebab-case named for the topic — `plans/93-mobile-shell-gestures.md`. Completed plans and
+  superseded snapshots live only in `plans/archive/<date>/`, indexed by
+  [`plans/archive/README.md`](plans/archive/README.md). Do not create compatibility symlinks or
+  redirect files; update references to the actual archive path and rebase the moved plan's relative
+  links. Keep completed records out of the active index. Plan 53 was archived at user request on
+  2026-09-09; its former original-path exception no longer applies. The next new plan number is 95.
+  A new plan takes the next free number and gets a row in [`plans/README.md`](plans/README.md).
+  **Numbers are never reused** — a gap is left rather than backfilled, so a link written against a
+  number can't come to mean a different plan. Not in `docs/`: that holds the durable spec. Not in a
+  temp directory either — a plan you can't find again is a plan you rewrite. Name the requirement ID
+  inside the plan so it ties back to the branch and the PR.
 - Plans 56–65 were archived at user request on 2026-09-09 with their partial status and remaining
-  scope preserved in `plans/archive/2026-09-09/`; compatibility symlinks and the roadmap index
-  retain their ownership. This archival does not mean their acceptance criteria are complete.
+  scope preserved in `plans/archive/2026-09-09/`; direct links in the roadmap index retain their
+  ownership. This archival does not mean their acceptance criteria are complete.
 - **A plan records its own status, and is archived rather than deleted.** Put a `**Status:**` line
   in the plan's header block when work starts, and mark its row in
   [`plans/README.md`](plans/README.md): `🟡` in progress or partly implemented, `⛔` blocked by a
   named decision/evidence gate, `—` ready when dependencies pass, or `✅` implemented. A `🟡` must
   say what is left **and what blocks it**. Archived plans stay on disk as the verified record of why
   the code looks the way it does. The 2026-07-30 reset and legacy-to-active mapping are in
-  [`plans/archive/2026-07-30/REVIEW.md`](plans/archive/2026-07-30/REVIEW.md). Plan 53 is a protected
-  completed exception; do not edit or move it without explicit user direction.
+  [`plans/archive/2026-07-30/REVIEW.md`](plans/archive/2026-07-30/REVIEW.md). Preserve historical
+  implementation evidence when archiving; adjust only location references and archive metadata.
 - **`pnpm ci:local`** is the full local CI gate; `pnpm check` is the fast development gate.
 - **Keep E2E coverage in step with functionality while developing it.** Add or adjust the
   learner-visible behavior in `apps/mobile/e2e/` in the same coherent change as the functionality,

@@ -56,8 +56,8 @@ The Refrain implementation is intentionally an interim seam. Its TypeScript curr
 rotation, automaticity, daily-set selection, and a placeholder FSRS write because the corresponding
 Rust `cloze_mask`, `select_refrain_set`, and `fsrs::review` functions are not implemented or wired.
 The mobile facade also supplies fallbacks for Rust-owned maths. Do not copy those fallbacks into a
-new engine: [plan 60](../../plans/60-authoritative-core-maths.md) replaces them with generated
-UniFFI/WASM-backed adapters and parity tests.
+new engine: [plan 60](../../plans/archive/2026-09-09/60-authoritative-core-maths.md) replaces them
+with generated UniFFI/WASM-backed adapters and parity tests.
 
 Persistence contracts and repositories exist here, but the running app still uses its in-memory
 store. `openMemoryPersistence()` is a real web-capable implementation of these contracts; it is not

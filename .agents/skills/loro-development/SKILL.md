@@ -69,7 +69,9 @@ apply.
   linguistic, hardware, account-configuration or release gates.
 - **Plans:** update an existing owner before inventing a replacement. Number new plans above all
   known active/archived IDs, check concurrent work when relevant, and update `plans/README.md`.
-  Preserve completed plan 53 at its original path. Archive records instead of deleting them.
+  Archive completed records under `plans/archive/<date>/` and list them only in the archive index.
+  Update references directly; do not leave compatibility symlinks or redirect files in `plans/`.
+  Plan 53's former original-path exception was retired at user request on 2026-09-09.
 
 Keep task notes to the requirement, owned files, key decision, verified commands and remaining gate.
 Prefer an existing seam over a new framework. For a behavior-preserving refactor, retain existing

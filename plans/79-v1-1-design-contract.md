@@ -1,1 +1,0 @@
-archive/2026-09-07/79-v1-1-design-contract.md
