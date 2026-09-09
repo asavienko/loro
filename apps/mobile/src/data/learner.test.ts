@@ -252,6 +252,27 @@ describe('repository-backed learner state', () => {
     expect(restored.phrases[0]?.id).toBe(db.delta.phraseId)
     expect(restored.refrainResume).toEqual(expect.objectContaining({ session: null, cursor: 0 }))
   })
+  it('preserves a paused Refrain wave through the real course-session hydration path', () => {
+    const path = diskPath()
+    const first = open(path)
+    const phrase = makePhrase('paused-wave')
+    first.store.setState({ phrases: [phrase], onboarded: true })
+    first.store.getState().ensureRefrainSet()
+    first.store.setState({
+      refrainResume: {
+        ...first.store.getState().refrainResume,
+        session: sessionFor(phrase.id),
+        wave: 'morning',
+      },
+    })
+    first.driver.close()
+
+    const reopened = open(path)
+    expect(reopened.store.getState().refrainResume).toMatchObject({
+      session: expect.objectContaining({ sessionId: 'session-1' }),
+      wave: 'morning',
+    })
+  })
   it('reopens every course, phrase identity, streak day, settings and resume cursor', () => {
     const path = diskPath()
     const first = open(path)
@@ -486,7 +507,11 @@ describe('P2-07 durable import drafts', () => {
   it('restores a course-bound local draft after relaunch and clears it after completion', () => {
     const path = diskPath()
     const db = open(path)
-    const draft = { targetLocale: 'es-ES' as const, nativeLanguage: 'en' as const, input: 'Hola | Hi' }
+    const draft = {
+      targetLocale: 'es-ES' as const,
+      nativeLanguage: 'en' as const,
+      input: 'Hola | Hi',
+    }
     const outboxBefore = db.persistence.outbox.pending(100)
     db.store.getState().saveImportDraft(draft)
     expect(db.storage.load().importDraft).toEqual(draft)
@@ -502,7 +527,7 @@ describe('P2-07 durable import drafts', () => {
   it('does not publish a draft if its local checkpoint write fails', () => {
     const db = open()
     db.driver.run(
-      "CREATE TRIGGER reject_import_draft BEFORE INSERT ON kv WHEN NEW.k = 'import-draft' BEGIN SELECT RAISE(ABORT, 'draft write failed'); END",
+      "CREATE TRIGGER reject_import_draft BEFORE INSERT ON kv WHEN NEW.k = 'import-drafts' BEGIN SELECT RAISE(ABORT, 'draft write failed'); END",
     )
     expect(() => {
       db.store.getState().saveImportDraft({
@@ -512,6 +537,32 @@ describe('P2-07 durable import drafts', () => {
       })
     }).toThrow('draft write failed')
     expect(db.store.getState().importDraft).toBeNull()
+  })
+
+  it('keeps drafts for distinct language pairs through a switch and relaunch', () => {
+    const path = diskPath()
+    const first = open(path)
+    const spanish = {
+      targetLocale: 'es-ES' as const,
+      nativeLanguage: 'en' as const,
+      input: 'Hola | Hi',
+    }
+    const russian = {
+      targetLocale: 'ru-RU' as const,
+      nativeLanguage: 'en' as const,
+      input: 'Привет | Hi',
+    }
+    first.store.getState().saveImportDraft(spanish)
+    first.store.getState().setLanguages('en', 'ru-RU')
+    first.store.getState().saveImportDraft(russian)
+    first.store.getState().setLanguages('en', 'es-ES')
+    expect(first.store.getState().importDraft).toEqual(spanish)
+    first.driver.close()
+
+    const reopened = open(path)
+    expect(reopened.store.getState().importDraft).toEqual(spanish)
+    reopened.store.getState().setLanguages('en', 'ru-RU')
+    expect(reopened.store.getState().importDraft).toEqual(russian)
   })
 })
 

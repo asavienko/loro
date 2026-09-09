@@ -47,6 +47,7 @@ import {
   accent,
   actionBar,
   ink,
+  MIN_TAP,
   onDark,
   radius,
   semantic,
@@ -65,56 +66,94 @@ import {
 import { copy } from '../../src/lib/copy'
 import { deviceClock, localTimeLabel } from '../../src/lib/clock'
 import { newId } from '../../src/lib/ids'
-import { waveEntry, waveSchedule } from '../../src/lib/waves'
+import { waveEntryWithResume, waveSchedule } from '../../src/lib/waves'
 /** One warming band's resolved style. The bands are a design token, not a screen decision. */
 type WarmingStyle = (typeof warming)[ReturnType<typeof warmBand>]
+const WAVES = ['morning', 'midday', 'evening'] as const
+type WaveKey = (typeof WAVES)[number]
 export default function Refrain() {
   useLocale()
   const insets = useSafeAreaInsets()
   const { height: bottomBarHeight } = useBottomBar()
-  const scheduledWave = waveSchedule(
-    ['morning', 'midday', 'evening'] as const,
-    PRODUCTION_WAVE_TIMES,
-    localTimeLabel(),
-  ).find((item) => item.position === 'next')?.key
+  const scheduledWave = waveSchedule(WAVES, PRODUCTION_WAVE_TIMES, localTimeLabel()).find(
+    (item) => item.position === 'next',
+  )?.key
   const completedWaves = useApp((state) => state.refrainWaves)
-  const entry = waveEntry(
-    ['morning', 'midday', 'evening'] as const,
+  const refrainResume = useApp((state) => state.refrainResume)
+  const entry = waveEntryWithResume(
+    WAVES,
     PRODUCTION_WAVE_TIMES,
     localTimeLabel(),
     completedWaves.filter(
-      (wave): wave is 'morning' | 'midday' | 'evening' =>
-        wave === 'morning' || wave === 'midday' || wave === 'evening',
+      (wave): wave is WaveKey => wave === 'morning' || wave === 'midday' || wave === 'evening',
     ),
+    refrainResume,
   )
-  // A route parameter is not authority to bypass the scheduler. Resume is allowed only for
-  // the currently ready wave, so a stale link cannot reopen a completed wave.
-  const selectedWave = entry.kind === 'ready' ? entry.wave.key : (scheduledWave ?? 'morning')
-  const session = useRefrainSession(selectedWave, entry.kind === 'ready')
+  // A route parameter is never authority. The persisted checkpoint is shared with Today and the
+  // spine, and therefore wins while it remains valid for this local day.
+  const selectedWave =
+    entry.kind === 'resume'
+      ? entry.wave
+      : entry.kind === 'ready'
+        ? entry.wave.key
+        : (scheduledWave ?? 'morning')
+  const session = useRefrainSession(selectedWave, entry.kind === 'ready' || entry.kind === 'resume')
   const { set, phrase, mode, auto, dayReps, locked, phraseNumber, wave } = session
   const [exitVisible, setExitVisible] = useState(false)
   const navigation = useNavigation()
   const leaveLabel = copy.nav.exit.leave
+  const hasActiveSession =
+    set.length > 0 &&
+    (entry.kind === 'ready' || entry.kind === 'resume') &&
+    !session.finished &&
+    phrase !== undefined
   useEffect(() => {
-    // Refrain is a Session surface: an implicit Back would strand an unlabelled checkpoint.
-    // Its only exit first offers the three authored outcomes below.
+    // The session-only exit is present only while the sheet it opens is mounted. Cold, locked
+    // and terminal Refrain entries retain the shared Today/Back stack exit.
     navigation.setOptions({
-      headerLeft: () => (
-        <Pressable
-          feedback="smallButton"
-          accessibilityLabel={leaveLabel}
-          onPress={() => {
-            setExitVisible(true)
-          }}
-          style={{ minHeight: 44, justifyContent: 'center', paddingHorizontal: space['3'] }}
-        >
-          <Text variant="bodySm" color={accent.accentInk}>
-            {copy.common.chevron.left}
-          </Text>
-        </Pressable>
-      ),
+      headerLeft: () =>
+        hasActiveSession ? (
+          <Pressable
+            feedback="smallButton"
+            accessibilityLabel={leaveLabel}
+            onPress={() => {
+              setExitVisible(true)
+            }}
+            style={{ minHeight: MIN_TAP, justifyContent: 'center', paddingHorizontal: space['3'] }}
+          >
+            <Text variant="bodySm" color={accent.accentInk}>
+              {copy.common.chevron.left}
+            </Text>
+          </Pressable>
+        ) : navigation.canGoBack() ? (
+          <Pressable
+            feedback="icon"
+            accessibilityRole="link"
+            accessibilityLabel={copy.a11y.common.back}
+            onPress={() => {
+              router.back()
+            }}
+          >
+            <Text variant="title2" color={ink.ink}>
+              {copy.common.chevron.left}
+            </Text>
+          </Pressable>
+        ) : (
+          <Pressable
+            feedback="smallButton"
+            style={{ minHeight: MIN_TAP, justifyContent: 'center', paddingHorizontal: space['3'] }}
+            accessibilityLabel={copy.nav.home}
+            onPress={() => {
+              router.replace('/')
+            }}
+          >
+            <Text variant="bodySm" color={accent.accentInk}>
+              {copy.nav.home}
+            </Text>
+          </Pressable>
+        ),
     })
-  }, [leaveLabel, navigation])
+  }, [hasActiveSession, leaveLabel, navigation])
   if (set.length === 0) {
     return (
       <Screen>

@@ -64,7 +64,12 @@ import {
 import { PRODUCTION_WAVE_TIMES, toView, useApp, type PhraseView } from '../src/store'
 import { copy } from '../src/lib/copy'
 import { deviceClock, localDateLabel, localTimeLabel } from '../src/lib/clock'
-import { waveEntry, waveSchedule, type ScheduledWave, type WavePosition } from '../src/lib/waves'
+import {
+  waveEntryWithResume,
+  waveSchedule,
+  type ScheduledWave,
+  type WavePosition,
+} from '../src/lib/waves'
 /** Full automaticity: six reps in one day. The badge, the bar's colour and the count agree. */
 const isLockedIn = (p: Pick<PhraseView, 'automaticity'>): boolean => p.automaticity >= 100
 /**
@@ -167,22 +172,21 @@ export default function Today() {
     WAVES.includes(wave as WaveKey),
   )
   const waves = waveSchedule(WAVES, PRODUCTION_WAVE_TIMES, localTimeLabel(), completedWaves)
-  const entry = waveEntry(WAVES, PRODUCTION_WAVE_TIMES, localTimeLabel(), completedWaves)
+  const entry = waveEntryWithResume(
+    WAVES,
+    PRODUCTION_WAVE_TIMES,
+    localTimeLabel(),
+    completedWaves,
+    refrainResume,
+  )
   const nextWaveKey = waves.find((wave) => wave.position === 'next')?.key ?? WAVES[0]
   const resumeWave = refrainResume.wave ?? nextWaveKey
   const resumeRep =
     refrainResume.session === null
       ? null
       : Math.min(refrainResume.cursor + 1, refrainResume.session.plan.items.length)
-  // A checkpoint is resumable only while its wave remains the scheduler's active entry.
-  // A stale row must never reopen an already completed or future wave.
-  const hasResume =
-    entry.kind === 'ready' &&
-    resumeWave === entry.wave.key &&
-    resumeRep !== null &&
-    !refrainResume.done &&
-    resumeRep > 0
-  const canStartWave = set.length > 0 && entry.kind === 'ready'
+  const hasResume = entry.kind === 'resume' && resumeRep !== null && resumeRep > 0
+  const canStartWave = set.length > 0 && (entry.kind === 'ready' || entry.kind === 'resume')
   const startWave = (wave = nextWaveKey): void => {
     router.push({ pathname: '/practice/refrain', params: { wave } })
   }
@@ -237,18 +241,21 @@ export default function Today() {
               ? copy.today.cta.empty
               : hasResume
                 ? copy.today.cta.resumeRefrain
-                : entry.kind === 'ready'
-                  ? copy.today.cta.startWave[entry.wave.key]
-                  : entry.kind === 'locked'
-                    ? copy.today.cta.waitForWave(entry.next.time)
-                    : copy.today.cta.complete
+                : entry.kind === 'resume'
+                  ? copy.today.cta.resumeRefrain
+                  : entry.kind === 'ready'
+                    ? copy.today.cta.startWave[entry.wave.key]
+                    : entry.kind === 'locked'
+                      ? copy.today.cta.waitForWave(entry.next.time)
+                      : copy.today.cta.complete
           }
           disabled={!canStartWave}
           accessibilityHint={
             canStartWave ? copy.a11y.today.startHint(set.length, DEFAULT_REP_TARGET) : undefined
           }
           onPress={() => {
-            if (entry.kind === 'ready') startWave(hasResume ? resumeWave : entry.wave.key)
+            if (entry.kind === 'resume' || entry.kind === 'ready')
+              startWave(entry.kind === 'resume' ? entry.wave : entry.wave.key)
           }}
         />
       </ActionBar>
@@ -350,7 +357,7 @@ function DayList({
 }) {
   useLocale()
   return (
-    <View>
+    <View testID="today-day-list">
       <SectionLabel>{copy.today.day.heading}</SectionLabel>
       {waves.map((wave) => {
         const { title, manner } = copy.today.waves[wave.key]

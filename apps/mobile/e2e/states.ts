@@ -665,7 +665,10 @@ export async function startWave(page: Page): Promise<void> {
  * one thing only this screen has.
  */
 export function todayMarker(page: Page): Locator {
-  return page.getByText('Your day', { exact: true })
+  // Expo Router retains an exiting screen briefly for its transition. The app-visible tree has
+  // one Today list, but react-native-web can retain a duplicate DOM node until that transition
+  // completes, so use the stable entering list for immediate post-exit assertions.
+  return page.locator('[data-testid="today-day-list"]:visible')
 }
 
 /** One rep, from Today and back to Today. */

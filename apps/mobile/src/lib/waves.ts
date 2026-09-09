@@ -43,6 +43,37 @@ export type WaveEntry<Key extends string> =
   | { readonly kind: 'locked'; readonly next: ScheduledWave<Key> }
   | { readonly kind: 'complete' }
 
+/**
+ * The persisted session is the authority while it is valid for today. Every surface uses this
+ * projection, so a learner who pauses a morning wave at 13:00 is offered that same morning work
+ * by Today, the spine and Refrain instead of three contradictory actions.
+ */
+export type RefrainCheckpoint<Key extends string> = {
+  readonly session: unknown | null
+  readonly wave?: Key
+  readonly done: boolean
+}
+
+export type ResumableWaveEntry<Key extends string> =
+  WaveEntry<Key> | { readonly kind: 'resume'; readonly wave: Key }
+
+export function waveEntryWithResume<Key extends string>(
+  keys: readonly Key[],
+  times: readonly string[],
+  now: string,
+  completed: readonly Key[],
+  resume: RefrainCheckpoint<Key>,
+): ResumableWaveEntry<Key> {
+  const scheduled = waveEntry(keys, times, now, completed)
+  if (resume.session === null || resume.done) return scheduled
+
+  // Legacy records predate `wave`. They can only safely resume when the scheduler can identify
+  // their current open wave; never guess one from a locked or completed day.
+  const wave = resume.wave ?? (scheduled.kind === 'ready' ? scheduled.wave.key : undefined)
+  if (wave === undefined || !keys.includes(wave) || completed.includes(wave)) return scheduled
+  return { kind: 'resume', wave }
+}
+
 export function waveEntry<Key extends string>(
   keys: readonly Key[],
   times: readonly string[],
