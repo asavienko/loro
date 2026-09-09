@@ -45,7 +45,7 @@ if [[ -f "target/release/libloro_core.${LIB_EXT}" ]]; then
   # documented fields. Normalize the generator output here so committed generated bindings satisfy
   # the repository's whitespace gate on every host; never repair individual generated lines.
   find bindings -type f \( -name '*.swift' -o -name '*.kt' -o -name '*.h' \) \
-    -exec perl -pi -e 's/[ \\t]+$//' {} +
+    -exec perl -pi -e 's/[ \t]+$//' {} +
 else
   echo "  Shared library not found; skipping binding generation."
 fi
