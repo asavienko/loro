@@ -325,6 +325,6 @@ provider consent UI and edits to authored artifacts. The provider-email fallback
 explicit; no profile implementation or fabricated address is implied.
 
 The browser and client slices are implemented in the working tree. Keep this plan 🟡 until the
-remaining visual, native and live-provider evidence is recorded; those gates are independent of
-the local UI implementation. Validation evidence for this slice is the account client suite,
-mobile lint/typecheck and the six account browser scenarios.
+remaining visual, native and live-provider evidence is recorded; those gates are independent of the
+local UI implementation. Validation evidence for this slice is the account client suite, mobile
+lint/typecheck and the six account browser scenarios.
