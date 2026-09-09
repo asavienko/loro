@@ -55,7 +55,7 @@ not evidence that the current app implements that deck.
 
 Sign-in, purchase verification, sync and genuinely server-only generation may be unavailable. The UI
 must distinguish “queued”, “not downloaded” and “requires connection”; it must not display a fake
-success or a fabricated score. Plan 97 listening generation is server-only on a cache miss: first
+success or a fabricated score. Plan 99 listening generation is server-only on a cache miss: first
 prepare needs network; a verified on-disk batch then plays in airplane mode. Imported/captured
 content can become usable locally only when its local parsing/capture implementation actually exists.
 
