@@ -257,7 +257,13 @@ export default tseslint.config(
 
   // ── CLIs: stdout IS the output ──
   {
-    files: ['**/scripts/**', '**/src/validate.ts', '**/src/generate.ts', '**/src/checkContrast.ts'],
+    files: [
+      '**/scripts/**',
+      '**/src/validate.ts',
+      '**/src/generate.ts',
+      '**/src/checkContrast.ts',
+      '**/src/renderCli.ts',
+    ],
     rules: {
       'no-console': 'off',
     },

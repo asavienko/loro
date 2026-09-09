@@ -234,6 +234,7 @@
   "stream.lovedBadge": "♥ Loved",
   "settings.accentCoral": "Coral",
   "audioSpeech.tts": "Device voice · works with an installed offline voice",
+  "audioSpeech.catalog": "Catalog recording · pronunciation reference",
   "add.browseTitle": "{theme} · {left, number} left",
   "toast.difficulty.easy": "Easy — drifting to the back",
   "today.lockedIn": "{locked, number} of {total, number} locked in",

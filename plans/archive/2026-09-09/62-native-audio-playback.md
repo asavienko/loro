@@ -44,7 +44,8 @@ without returning PCM to JavaScript.
 1. [ ] Extend the native state machine for item/queue/rate/position/buffering/interruption and route
        changes; screens subscribe to one session instead of creating competing players.
 2. [ ] Consume plan-61 locale/voice/version manifests for verified disk cache, atomic downloads,
-       eviction/pinning, bundled assets and prefetch hooks. Retain installed-device TTS fallback.
+       eviction/pinning, bundled assets and prefetch hooks. Plan 98 adds foreground file-URI
+       playback with installed-device TTS fallback; the LRU cache and prefetch remain.
 3. [ ] Implement specified rates, previous/next/repeat, headphones/Bluetooth, audio focus,
        lock-screen transport and the documented background policy.
 4. [ ] Integrate real recorded position/repeat behavior in Phrase Detail/Stream, then hand off

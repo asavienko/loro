@@ -86,11 +86,9 @@ language/course identity in asset selection, requests and cache keys.
 4. [ ] Wire Anthropic only through plans 76/82 after their semantics, evaluations, identity, budget
        and fallback checks pass. Keep live chat disabled while Q-18/Q-20 remain open. Supply guarded
        text-only enrichment and translation transports when requested by plans 61/65.
-5. [ ] Implement the ElevenLabs transport and deterministic failure/redaction tests for the
-       [plan-61 integration checklist](61-content-and-audio-assets.md#elevenlabs-integration-as-01-as-02-as-05-as-06).
-       Adapter implementation can proceed with fixtures; Q-15 gates live production rendering. Add
-       licensed TTS, billing and privacy-safe diagnostics adapters only as their feature and
-       decision gates pass; no recorded learner audio or voice-clone transport.
+5. [x] ElevenLabs transport and deterministic failure/redaction tests — executed by
+       [plan 98](../../98-voice-and-tts-integration.md). Q-15 still gates live production
+       rendering. No recorded learner audio or voice-clone transport.
 6. [ ] Cover malformed output, oversized/stalled bodies, cancellation, credential failures,
        ambiguous spend, replay and log redaction. Add bounded paid smoke tests only when explicitly
        enabled, separate from ordinary CI and the $25–35 infrastructure allowance.

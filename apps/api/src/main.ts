@@ -74,6 +74,7 @@ async function bootstrap(): Promise<void> {
   // Read through the same accessor the service uses, so the banner cannot name a
   // provider the service isn't actually running.
   logger.log(`AI provider: ${config.aiProvider()}`)
+  logger.log(`TTS provider: ${config.ttsProvider()}`)
 }
 
 void bootstrap()
