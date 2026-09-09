@@ -59,6 +59,9 @@ export const STATES: AppState[] = [
     reach: async (page) => {
       await page.getByRole('button', { name: /, open the menu$/ }).click()
       await page.getByRole('dialog').getByRole('button', { name: 'More', exact: true }).click()
+      await expect(page.getByText('Phrases', { exact: true })).toBeVisible()
+      await expect(page.getByText('Practice', { exact: true })).toBeVisible()
+      await expect(page.getByText('You', { exact: true })).toBeVisible()
       await expect(page.getByRole('button', { name: 'Languages', exact: true })).toBeVisible()
     },
   },

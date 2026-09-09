@@ -4,9 +4,9 @@
  * until the learner explicitly accepts it on the Import surface.
  */
 
-import { foldSearchText } from '@loro/core'
+import { foldSearchText, MAX_OWN_PHRASE_TEXT_CODE_UNITS } from '@loro/core'
 
-/** Keep review rendering and synchronous normalization bounded on older devices. */
+/** Keep review rendering bounded; batch and field lengths are JavaScript UTF-16 code units. */
 export const IMPORT_MAX_CHARACTERS = 20_000
 export const IMPORT_MAX_ROWS = 50
 
@@ -20,7 +20,22 @@ export interface ImportCandidate {
   readonly line: number
   readonly targetText: string
   readonly translation: string
-  readonly issue: 'invalid' | 'duplicate' | null
+  readonly issue: 'invalid' | 'duplicate' | 'too-long' | null
+}
+
+/** The normalized text is what can be persisted, so it is what consumes the reviewed batch budget. */
+export function reviewedImportCodeUnits(candidates: readonly ImportCandidate[]): number {
+  return candidates.reduce(
+    (total, { targetText, translation }) => total + targetText.length + translation.length + 4,
+    0,
+  )
+}
+
+export function isReviewedImportTooLarge(candidates: readonly ImportCandidate[]): boolean {
+  return (
+    candidates.length > IMPORT_MAX_ROWS ||
+    reviewedImportCodeUnits(candidates) > IMPORT_MAX_CHARACTERS
+  )
 }
 
 export function normalizeImportedText(value: string): string {
@@ -65,6 +80,11 @@ export function reviewImportedCandidates(
     const translation = normalizeImportedText(candidate.translation)
     if (targetText === '' || translation === '')
       return { ...candidate, targetText, translation, issue: 'invalid' }
+    if (
+      targetText.length > MAX_OWN_PHRASE_TEXT_CODE_UNITS ||
+      translation.length > MAX_OWN_PHRASE_TEXT_CODE_UNITS
+    )
+      return { ...candidate, targetText, translation, issue: 'too-long' }
     const key = importedPhraseKey(targetText)
     if (seen.has(key)) return { ...candidate, targetText, translation, issue: 'duplicate' }
     seen.add(key)

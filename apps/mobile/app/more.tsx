@@ -2,8 +2,8 @@ import { router } from 'expo-router'
 import { ScrollView, StyleSheet } from 'react-native'
 import { copy } from '../src/lib/copy'
 import { useLocale } from '../src/lib/i18n'
-import { DESTINATIONS } from '../src/lib/navigation'
-import { Pressable, Screen, SectionLabel, Text } from '../src/ui/primitives'
+import { destinationsForGroup, NAVIGATION_GROUPS } from '../src/lib/navigation'
+import { Pressable, Screen, SectionLabel, Stack, Text } from '../src/ui/primitives'
 import { border, ink, line, space } from '../src/ui/theme'
 
 /** NAV-01/NAV-08; Navigation.dc.html:494–496. Only declared, built destinations. */
@@ -12,16 +12,27 @@ export default function More() {
   return (
     <Screen>
       <ScrollView contentContainerStyle={s.content}>
-        <SectionLabel>{copy.today.switcher.go}</SectionLabel>
-        {DESTINATIONS.filter(({ href }) => href !== '/' && href !== '/more').map((destination) => (
-          <DestinationRow key={destination.href} destination={destination} />
-        ))}
+        {NAVIGATION_GROUPS.map((group) => {
+          const destinations = destinationsForGroup(group)
+          return destinations.length === 0 ? null : (
+            <Stack key={group} gap={space['1']}>
+              <SectionLabel>{copy.nav.moreGroups[group]}</SectionLabel>
+              {destinations.map((destination) => (
+                <DestinationRow key={destination.href} destination={destination} />
+              ))}
+            </Stack>
+          )
+        })}
       </ScrollView>
     </Screen>
   )
 }
 
-function DestinationRow({ destination }: { destination: (typeof DESTINATIONS)[number] }) {
+function DestinationRow({
+  destination,
+}: {
+  destination: ReturnType<typeof destinationsForGroup>[number]
+}) {
   return (
     <Pressable
       feedback="row"

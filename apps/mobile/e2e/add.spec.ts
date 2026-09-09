@@ -129,3 +129,23 @@ test('P2-09/P2-10: oversized import preserves the draft and recovers with a smal
   await page.getByRole('button', { name: 'Add 1 reviewed phrase' }).click()
   await expect(page.getByText('11 in stream')).toBeVisible()
 })
+
+test('P2-09/P2-10: edited import fields keep their draft and cannot bypass sync-safe limits', async ({
+  page,
+}) => {
+  await onboard(page)
+  await page.getByRole('button', { name: 'Add' }).click()
+  await page.getByRole('button', { name: 'import' }).click()
+  await page.getByRole('textbox', { name: 'Phrases to import' }).fill('Hola | Hello')
+  await page.getByRole('button', { name: 'Review phrases' }).click()
+  const target = page.getByRole('textbox', { name: 'Phrase 1' })
+  const overLimit = 'a'.repeat(2_001)
+  await target.fill(overLimit)
+  await expect(page.getByText(/can each have up to 2000 characters/)).toBeVisible()
+  await expect(target).toHaveValue(overLimit)
+  await expect(page.getByRole('button', { name: 'Add 0 reviewed phrases' })).toBeDisabled()
+  await target.fill('Hola de nuevo')
+  await expect(page.getByText(/can each have up to 2000 characters/)).toHaveCount(0)
+  await page.getByRole('button', { name: 'Add 1 reviewed phrase' }).click()
+  await expect(page.getByText('11 in stream')).toBeVisible()
+})

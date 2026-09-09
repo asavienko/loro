@@ -4,7 +4,11 @@ import {
   isTargetLocale,
   supportsPair,
 } from '../domain/languages.js'
-import { FSRS_ALGORITHM, LEGACY_PREVIEW_ALGORITHM } from '../domain/phrase.js'
+import {
+  FSRS_ALGORITHM,
+  LEGACY_PREVIEW_ALGORITHM,
+  MAX_OWN_PHRASE_TEXT_CODE_UNITS,
+} from '../domain/phrase.js'
 /** Target sync values, independent of storage/merge implementations. F-01/F-02/F-04. */
 import { z } from 'zod'
 import {
@@ -30,7 +34,7 @@ export const MAX_SYNC_BYTES = 512 * 1024
 /** Only known scheduling policies may label persisted state; absence remains a legacy wire case. */
 export const FsrsAlgorithmSchema = z.enum([FSRS_ALGORITHM, LEGACY_PREVIEW_ALGORITHM])
 export type FsrsAlgorithm = z.infer<typeof FsrsAlgorithmSchema>
-const Note = z.string().max(2000)
+const Note = z.string().max(MAX_OWN_PHRASE_TEXT_CODE_UNITS)
 const Source = z.enum([
   'starter',
   'discover',
@@ -47,7 +51,7 @@ export const userPhraseValues = {
   targetLocale: z.enum(TARGET_LOCALES),
   ownMeaningLanguage: z.enum(NATIVE_LANGUAGES),
   phraseId: CatalogIdSchema.nullable(),
-  ownEs: z.string().min(1).max(2000),
+  ownEs: z.string().min(1).max(MAX_OWN_PHRASE_TEXT_CODE_UNITS),
   ownEn: Note,
   ownTheme: z.enum([
     'Café',

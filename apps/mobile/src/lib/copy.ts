@@ -323,6 +323,20 @@ export const copy = {
     get phrasePlace() {
       return message('nav.phrasePlace')
     },
+    moreGroups: {
+      get lately() {
+        return message('nav.moreGroups.lately')
+      },
+      get phrases() {
+        return message('nav.moreGroups.phrases')
+      },
+      get practice() {
+        return message('nav.moreGroups.practice')
+      },
+      get you() {
+        return message('nav.moreGroups.you')
+      },
+    },
     get add() {
       return message('nav.add')
     },
@@ -558,6 +572,7 @@ export const copy = {
       },
       tooLarge: (rows: number, characters: number): string =>
         message('add.import.tooLarge', { rows, characters }),
+      tooLong: (characters: number): string => message('add.import.tooLong', { characters }),
       review: (count: number): string => message('add.import.review', { count }),
       get reviewHint() {
         return message('add.import.reviewHint')
