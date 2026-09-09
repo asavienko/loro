@@ -300,6 +300,20 @@ export const STATES: AppState[] = [
   },
   { name: 'add · discover', route: '/add', spec: '§2 Add', reach: (page) => open(page, 'Add') },
   {
+    name: 'add · import review',
+    route: '/add',
+    spec: '§2 Add, reviewed Import',
+    reach: async (page) => {
+      await open(page, 'Add')
+      await click(page, 'import')
+      await page
+        .getByRole('textbox', { name: 'Phrases to import' })
+        .fill('¿Dónde está la estación? | Where is the station?')
+      await click(page, 'Review phrases')
+      await expect(page.getByRole('button', { name: 'Add 1 reviewed phrase' })).toBeVisible()
+    },
+  },
+  {
     name: 'add · browse grid',
     route: '/add',
     spec: '§2 Add, browse',

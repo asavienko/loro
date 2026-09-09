@@ -10,9 +10,13 @@
  * the failure mode.
  */
 
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Pressable as RNPressable, type StyleProp, type ViewStyle } from 'react-native'
-import { resolvePressScale } from '../runtimeStyles'
+import {
+  isPressableUnavailable,
+  resolveForcedInteractionState,
+  resolvePressScale,
+} from '../runtimeStyles'
 import { HIT_SLOP, MIN_TAP, press } from '../theme'
 import { useTheme } from '../ThemeProvider'
 
@@ -20,6 +24,8 @@ export function Pressable({
   onPress,
   feedback = 'button',
   disabled,
+  loading,
+  forcedState,
   selected,
   accessibilityLabel,
   accessibilityHint,
@@ -35,6 +41,16 @@ export function Pressable({
   onPress?: (() => void) | undefined
   feedback?: keyof typeof press | undefined
   disabled?: boolean | undefined
+  /**
+   * A pending action cannot be activated twice. The control remains named, announces busy, and
+   * receives the disabled state on native and web. Wrappers choose the visible busy treatment.
+   */
+  loading?: boolean | undefined
+  /**
+   * Holds real press and focus feedback for an inspection specimen. This is presentation-only:
+   * it neither focuses the element nor changes its action semantics.
+   */
+  forcedState?: 'pressed-focused' | undefined
   /**
    * REQUIRED whenever the role is `radio` or `checkbox`.
    *
@@ -53,12 +69,21 @@ export function Pressable({
   style?: StyleProp<ViewStyle> | undefined
   children: ReactNode
 }) {
-  const { reducedMotion } = useTheme()
+  const { accent, reducedMotion } = useTheme()
   const checkable = accessibilityRole === 'radio' || accessibilityRole === 'checkbox'
+  const unavailable = isPressableUnavailable(Boolean(disabled), Boolean(loading))
+  const forced = resolveForcedInteractionState(forcedState)
+  const [focused, setFocused] = useState(false)
   return (
     <RNPressable
       onPress={onPress}
-      disabled={disabled}
+      disabled={unavailable}
+      onFocus={() => {
+        setFocused(true)
+      }}
+      onBlur={() => {
+        setFocused(false)
+      }}
       accessible
       accessibilityRole={accessibilityRole}
       accessibilityLabel={accessibilityLabel}
@@ -69,15 +94,20 @@ export function Pressable({
       // native reader expects. `checked` is emitted only for the roles that define it — a
       // button carrying `aria-checked` is its own violation.
       accessibilityState={{
-        disabled: Boolean(disabled),
+        disabled: unavailable,
+        ...(loading ? { busy: true } : {}),
         ...(checkable ? { checked: Boolean(selected) } : {}),
       }}
+      aria-disabled={unavailable}
+      {...(loading ? { 'aria-busy': true } : {})}
       {...(checkable ? { 'aria-checked': Boolean(selected) } : {})}
       hitSlop={HIT_SLOP}
       style={({ pressed }) => {
+        const activePress = pressed || forced.pressed
+        const activeFocus = focused || forced.focused
         const scale = resolvePressScale({
-          pressed,
-          disabled: Boolean(disabled),
+          pressed: activePress,
+          disabled: unavailable,
           reducedMotion,
           scale: press[feedback],
         })
@@ -90,7 +120,15 @@ export function Pressable({
           feedback === 'icon' ? iconTapTarget : null,
           style,
           scale === null ? null : { transform: [{ scale }] },
-          disabled ? { opacity: 0.55 } : null,
+          activeFocus && !unavailable
+            ? {
+                outlineWidth: 2,
+                outlineStyle: 'solid',
+                outlineColor: accent.accent,
+                outlineOffset: 2,
+              }
+            : null,
+          unavailable ? { opacity: 0.55 } : null,
         ]
       }}
     >

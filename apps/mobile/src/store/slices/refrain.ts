@@ -10,7 +10,7 @@ import { EMPTY_REFRAIN_RESUME } from '../state'
 import { DEFAULT_REP_TARGET, repsToday, selectRefrainSet } from '@loro/core'
 import type { Slice } from '../types'
 
-export const createRefrainSlice: Slice<'ensureRefrainSet'> = ({
+export const createRefrainSlice: Slice<'ensureRefrainSet' | 'completeRefrainWave'> = ({
   set,
   get,
   deps,
@@ -28,6 +28,7 @@ export const createRefrainSlice: Slice<'ensureRefrainSet'> = ({
         refrainResume: EMPTY_REFRAIN_RESUME,
         refrainSet: saved?.setIds ?? [...selectRefrainSet(rustCoreFacade, st.phrases, size)],
         refrainDay: day,
+        refrainWaves: saved?.waves ?? [],
         refrainSubstituted: saved?.substituted ?? [],
       })
       // A timezone change can revisit a frozen day. Restore its membership, then
@@ -66,6 +67,18 @@ export const createRefrainSlice: Slice<'ensureRefrainSet'> = ({
       refrainResume: EMPTY_REFRAIN_RESUME,
       refrainSet: [...st.refrainSet, ...fill],
       refrainSubstituted: [...st.refrainSubstituted, ...fill],
+    })
+  },
+  completeRefrainWave: (wave, checkpoint) => {
+    const state = get()
+    // A completion is a fact about the current frozen day. Do not let a delayed finish
+    // resurrect yesterday's row after midnight.
+    if (state.refrainDay !== deps.clock.localDay()) return
+    set({
+      refrainResume: checkpoint,
+      refrainWaves: state.refrainWaves.includes(wave)
+        ? state.refrainWaves
+        : [...state.refrainWaves, wave],
     })
   },
 })

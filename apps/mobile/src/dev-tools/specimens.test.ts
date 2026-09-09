@@ -17,11 +17,11 @@ describe('production specimen registry', () => {
     )
     expect(SPECIMEN_STATE_MATRIX.find((state) => state.id === 'loading')).toEqual({
       id: 'loading',
-      status: 'pending-plan-57',
+      status: 'available',
     })
     expect(SPECIMEN_STATE_MATRIX.find((state) => state.id === 'pressed-focused')).toEqual({
       id: 'pressed-focused',
-      status: 'pending-plan-57',
+      status: 'available',
     })
   })
 

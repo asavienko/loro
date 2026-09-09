@@ -284,6 +284,8 @@ export function migrate(driver: SqlDriver, at: number): MigrationResult {
     )
   }
 
+  assertCompleteMigrationHistory(driver, from)
+
   const applied: number[] = []
   for (const migration of [...MIGRATIONS].sort((a, b) => a.version - b.version)) {
     if (migration.version <= from) continue
@@ -302,6 +304,32 @@ export function migrate(driver: SqlDriver, at: number): MigrationResult {
   }
 
   return { from, to: currentVersion(driver), applied }
+}
+
+/**
+ * A migration is committed with its schema_version row in one transaction. If the file is
+ * damaged outside that boundary, MAX(version) alone is unsafe: it would skip a missing
+ * earlier migration and let later repository reads fail in less diagnosable ways. Refuse
+ * to write the file until recovery tooling has inspected it; do not "repair" history by
+ * inventing rows, because that can hide missing learner tables. The name is descriptive:
+ * accepted historical previews used a different label for migration 3.
+ */
+function assertCompleteMigrationHistory(driver: SqlDriver, through: number): void {
+  if (through === 0) return
+  const actual = new Set(
+    driver
+      .all('SELECT version FROM schema_version WHERE version <= ? ORDER BY version', [through])
+      .map((row) => readInt(row, 'version')),
+  )
+  const expected = MIGRATIONS.filter((migration) => migration.version <= through)
+  for (const migration of expected) {
+    if (!actual.has(migration.version)) {
+      throw new Error(
+        `migration history is incomplete at v${migration.version}; ` +
+          'refusing to write this database until it is recovered.',
+      )
+    }
+  }
 }
 
 /**

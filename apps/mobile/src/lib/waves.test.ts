@@ -41,6 +41,14 @@ describe('waveSchedule', () => {
     ])
   })
 
+  it('carries only recorded completions as learner facts', () => {
+    expect(waveSchedule(KEYS, TIMES, '14:00', ['morning'])).toEqual([
+      { key: 'morning', time: '08:00', position: 'passed', completed: true },
+      { key: 'midday', time: '13:00', position: 'next' },
+      { key: 'evening', time: '19:00', position: 'later' },
+    ])
+  })
+
   it('drops a wave the scheduler has no time for rather than inventing one', () => {
     expect(waveSchedule(KEYS, ['08:00'], '09:00')).toEqual([
       { key: 'morning', time: '08:00', position: 'next' },

@@ -2,11 +2,16 @@
 
 - **Requirement IDs:** `F-08`, `P2-03`, `P2-31`
 - **Milestone:** M1/M2
-- **Status:** Planned; ready for requirements clarification and contract work. Confirm
-  content-language semantics before implementation; English catalog release needs bilingual review,
-  durable device selection depends on plan 59, and generated audio depends on plans 61/62.
+- **Status:** — English as a selectable learning target and default is confirmed. Contract and
+  implementation work can proceed; the English dialect remains to be confirmed and catalog release
+  needs bilingual review. Reuse implemented plan-59 durable selection; generated audio depends on
+  plans 61/62.
 - **Depends on:** 87 existing language contracts, selector, and course isolation; 85 API contracts;
   59 for durable device storage; 61 for independently delivered catalogs and ElevenLabs assets.
+- **Reviewed:** 2026-09-08 against integrated runtime `e013141`; confirmed decision retained.
+
+Previous starting point:
+[archived snapshot](archive/2026-09-08/90-default-english-content-language.md).
 
 ## Outcome
 

@@ -1,3 +1,5 @@
+import { toSpeechEvent, type NativeSpeechEvent, type SpeechEvent } from './speechEvent'
+
 /** AS-01/AS-03. Only native metadata crosses this boundary; never audio bytes. */
 export interface AudioAvailability {
   playback: boolean
@@ -8,13 +10,7 @@ export interface PlaybackEvent {
   state: 'playing' | 'ended' | 'stopped' | 'error'
   error?: string
 }
-export interface SpeechEvent {
-  id: string
-  state: 'listening' | 'partial' | 'final' | 'unavailable' | 'error'
-  transcript: string
-  /** No validated native onset measurement yet. Never derive this from ASR timing. */
-  latencyMs: null
-}
+export type { SpeechEvent } from './speechEvent'
 export interface PlaybackRequest {
   id: string
   text: string
@@ -28,7 +24,7 @@ export interface NativeAudioSpeech {
   startListening(request: { id: string; locale: string }): Promise<void>
   stopListening(): Promise<void>
   addListener(event: 'playback', callback: (event: PlaybackEvent) => void): { remove(): void }
-  addListener(event: 'speech', callback: (event: SpeechEvent) => void): { remove(): void }
+  addListener(event: 'speech', callback: (event: NativeSpeechEvent) => void): { remove(): void }
 }
 export interface AudioSnapshot {
   phraseId: string | null
@@ -39,6 +35,13 @@ export interface AudioSnapshot {
 /** A single native session shared by all routes. Canceled/stale events cannot write progress. */
 export class AudioSpeechController {
   private serial = 0
+  /**
+   * Native playback and recognition share one audio session. Keep commands in
+   * issue order so a late stop cannot run before an in-flight native play.
+   * State still changes synchronously below, which makes cancelled work stale
+   * before its queued native command gets a chance to run.
+   */
+  private nativeTail: Promise<void> = Promise.resolve()
   private playId: string | null = null
   private listenId: string | null = null
   private didPlay: (() => void) | null = null
@@ -58,7 +61,9 @@ export class AudioSpeechController {
       this.update({ playback: event.state === 'error' ? 'error' : 'idle' })
       if (event.state === 'ended') complete?.()
     })
-    native?.addListener('speech', (event) => {
+    native?.addListener('speech', (payload) => {
+      const event = toSpeechEvent(payload)
+      if (event === null) return
       if (event.id !== this.listenId) return
       if (event.state !== 'listening' && event.state !== 'partial') this.listenId = null
       this.update({ speech: event })
@@ -75,6 +80,17 @@ export class AudioSpeechController {
     this.listeners.forEach((listener) => {
       listener()
     })
+  }
+  private runNative(command: () => Promise<void>): Promise<void> {
+    const run = (): Promise<void> => command()
+    const result = this.nativeTail.then(run, run)
+    // Keep later commands usable after a platform rejection. Each caller
+    // handles the rejection for its own state transition.
+    this.nativeTail = result.then(
+      () => undefined,
+      () => undefined,
+    )
+    return result
   }
   async availability(locale: string): Promise<AudioAvailability> {
     return (
@@ -98,8 +114,9 @@ export class AudioSpeechController {
     await this.stopListening()
     if (this.playId !== id) return
     try {
-      if (this.native === null) throw new Error('native-audio-unavailable')
-      await this.native.play({ id, text, locale, rate })
+      const native = this.native
+      if (native === null) throw new Error('native-audio-unavailable')
+      await this.runNative(() => native.play({ id, text, locale, rate }))
     } catch {
       if (this.playId !== id) return
       this.playId = null
@@ -107,11 +124,17 @@ export class AudioSpeechController {
       this.update({ playback: 'error' })
     }
   }
-  async stopPlayback(): Promise<void> {
+  stopPlayback(): Promise<void> {
     this.playId = null
     this.didPlay = null
     this.update({ playback: 'idle' })
-    await this.native?.stopPlayback().catch(() => undefined)
+    // Cancellation is visible immediately. Its native command remains ordered
+    // behind any pending command, but a route must never wait for a permission
+    // dialog or stalled recognizer before it can leave playback state.
+    void this.runNative(() => this.native?.stopPlayback() ?? Promise.resolve()).catch(
+      () => undefined,
+    )
+    return Promise.resolve()
   }
   async listen(locale: string): Promise<void> {
     const id = `speech-${++this.serial}`
@@ -120,17 +143,21 @@ export class AudioSpeechController {
     await this.stopPlayback()
     if (this.listenId !== id) return
     try {
-      if (this.native === null) throw new Error('native-speech-unavailable')
-      await this.native.startListening({ id, locale })
+      const native = this.native
+      if (native === null) throw new Error('native-speech-unavailable')
+      await this.runNative(() => native.startListening({ id, locale }))
     } catch {
       if (this.listenId !== id) return
       this.listenId = null
       this.update({ speech: { id, state: 'unavailable', transcript: '', latencyMs: null } })
     }
   }
-  async stopListening(): Promise<void> {
+  stopListening(): Promise<void> {
     this.listenId = null
     this.update({ speech: null })
-    await this.native?.stopListening().catch(() => undefined)
+    void this.runNative(() => this.native?.stopListening() ?? Promise.resolve()).catch(
+      () => undefined,
+    )
+    return Promise.resolve()
   }
 }

@@ -84,7 +84,7 @@ test('the primary action stays reachable at 310% text', async ({ page }) => {
   // And it still works, which `toBeVisible` alone does not establish — a covered element is
   // visible and unclickable.
   await start.click()
-  await expect(page).toHaveURL(/\/practice\/refrain$/)
+  await expect(page).toHaveURL((url) => url.pathname === '/practice/refrain')
 })
 
 test('onboarding can still be completed at 310% text', async ({ page }) => {

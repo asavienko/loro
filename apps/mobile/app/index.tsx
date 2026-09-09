@@ -86,6 +86,7 @@ export default function Today() {
   const onboarded = useApp((s) => s.onboarded)
   const phrases = useApp((s) => s.phrases)
   const refrainSet = useApp((s) => s.refrainSet)
+  const refrainWaves = useApp((s) => s.refrainWaves)
   const ensure = useApp((s) => s.ensureRefrainSet)
   const practiceDays = useApp((s) => s.practiceDays)
   // Derived, never stored — the same function the widget will call (ADR-0002).
@@ -131,10 +132,13 @@ export default function Today() {
    * screen guessing at what the scheduler knows. `??` is unreachable while `PRODUCTION_WAVE_TIMES`
    * has entries, and keeps the CTA labelled if it ever does not.
    */
-  const waves = waveSchedule(WAVES, PRODUCTION_WAVE_TIMES, localTimeLabel())
+  const completedWaves = refrainWaves.filter((wave): wave is WaveKey =>
+    WAVES.includes(wave as WaveKey),
+  )
+  const waves = waveSchedule(WAVES, PRODUCTION_WAVE_TIMES, localTimeLabel(), completedWaves)
   const nextWaveKey = waves.find((wave) => wave.position === 'next')?.key ?? WAVES[0]
-  const startWave = (): void => {
-    router.push('/practice/refrain')
+  const startWave = (wave = nextWaveKey): void => {
+    router.push({ pathname: '/practice/refrain', params: { wave } })
   }
   return (
     <Screen>
@@ -177,7 +181,9 @@ export default function Today() {
           label={set.length === 0 ? copy.today.cta.empty : copy.today.cta.startWave[nextWaveKey]}
           disabled={set.length === 0}
           accessibilityHint={copy.a11y.today.startHint(set.length, DEFAULT_REP_TARGET)}
-          onPress={startWave}
+          onPress={() => {
+            startWave()
+          }}
         />
       </ActionBar>
     </Screen>
@@ -248,8 +254,7 @@ function NavRail({ inStream }: { inStream: number }) {
  * (`Navigation.dc.html:121–156`).
  *
  * Only the next wave is full weight and only it carries a second line; the ones the clock has
- * gone past recede. No wave says "done", because nothing yet records that one was finished — see
- * `src/lib/waves.ts`.
+ * gone past recede. Completed waves carry the authored "done" state from the durable course day.
  */
 function DayList({
   waves,
@@ -260,7 +265,7 @@ function DayList({
   waves: readonly ScheduledWave<WaveKey>[]
   setSize: number
   totalReps: number
-  onStartWave: (() => void) | undefined
+  onStartWave: ((wave: WaveKey) => void) | undefined
 }) {
   useLocale()
   return (
@@ -269,7 +274,7 @@ function DayList({
       {waves.map((wave) => {
         const { title, manner } = copy.today.waves[wave.key]
         const detail = copy.today.day.nextWave(manner, setSize)
-        const next = wave.position === 'next'
+        const next = wave.position === 'next' && !wave.completed
         return (
           <DayRow
             key={wave.key}
@@ -277,8 +282,15 @@ function DayList({
             title={title}
             meta={next ? detail : undefined}
             position={wave.position}
+            completed={wave.completed ?? false}
             accessibilityLabel={next ? copy.a11y.today.nextWaveRow(title, detail) : undefined}
-            onPress={next ? onStartWave : undefined}
+            onPress={
+              next && onStartWave
+                ? () => {
+                    onStartWave(wave.key)
+                  }
+                : undefined
+            }
           />
         )
       })}
@@ -295,13 +307,14 @@ function DayList({
  * One row of the day: a time column, what it is, and — when it is next — the way in.
  *
  * A hairline row, not a card: "no card sits where a hairline will do". The authored row also has a
- * status slot ("done"), left out until a wave's completion is a fact this app holds.
+ * status slot ("done"), rendered when durable course state records the completed wave.
  */
 function DayRow({
   time,
   title,
   meta,
   position,
+  completed = false,
   last = false,
   accessibilityLabel,
   onPress,
@@ -310,6 +323,7 @@ function DayRow({
   title: string
   meta?: string | undefined
   position: WavePosition
+  completed?: boolean | undefined
   last?: boolean | undefined
   /**
    * Set when the row would otherwise be read wrong: a number alone in the time column, or a
@@ -319,7 +333,7 @@ function DayRow({
   onPress?: (() => void) | undefined
 }) {
   useLocale()
-  const next = position === 'next'
+  const next = position === 'next' && !completed
   const row = (
     <Row align={meta === undefined ? 'center' : 'baseline'} gap={NAV.rowGap} style={s.dayRow}>
       <Text variant="bodySm" color={next ? accent.accentInk : ink.muted} style={s.dayTime}>
@@ -336,6 +350,11 @@ function DayRow({
         {meta !== undefined && (
           <Text variant="captionSm" color={ink.muted} style={s.dayMeta}>
             {meta}
+          </Text>
+        )}
+        {completed && (
+          <Text variant="captionSm" color={ink.muted}>
+            {copy.today.day.completed}
           </Text>
         )}
       </View>

@@ -46,9 +46,16 @@ import {
   type SegmentedOption,
 } from '../src/ui/primitives'
 import { DifficultySelector, PhraseRow, TagChips } from '../src/ui/components'
-import { accent, border, ink, line, radius, space, surface } from '../src/ui/theme'
+import { accent, border, ink, line, radius, semantic, space, surface } from '../src/ui/theme'
 import { copy, themeLabel } from '../src/lib/copy'
 import { useApp } from '../src/store'
+import {
+  importedPhraseKey,
+  normalizeImportedText,
+  parseImportedPhrases,
+  reviewImportedCandidates,
+  type ImportCandidate,
+} from '../src/lib/importPhrases'
 /**
  * The themes Browse offers.
  *
@@ -58,11 +65,12 @@ import { useApp } from '../src/store'
 // a11y-lang: English UI category labels. "Café" is the English loanword, and a screen
 // reader should read this list in the interface language, not Spanish.
 const THEMES = BROWSABLE_THEMES
-type Mode = 'discover' | 'browse'
+type Mode = 'discover' | 'browse' | 'import'
 /** The discover / browse switch. The ids are state; only their labels are copy. */
 const MODES: readonly SegmentedOption<Mode>[] = [
   { value: 'discover', label: copy.add.modes.discover },
   { value: 'browse', label: copy.add.modes.browse },
+  { value: 'import', label: copy.add.modes.import },
 ]
 /**
  * Diacritic-insensitive fold, so "alergico" finds "alérgico" (`e2e/add.spec.ts:9`).
@@ -261,6 +269,7 @@ export default function Add() {
   const insets = useSafeAreaInsets()
   const owned = useApp((s) => s.phrases)
   const addPhrase = useApp((s) => s.addPhrase)
+  const addOwnPhrase = useApp((s) => s.addOwnPhrase)
   const list = useSuggestions(owned)
   const draft = useAddDraft()
   const confirmAdd = (): void => {
@@ -287,7 +296,9 @@ export default function Add() {
       />
 
       <ScrollView contentContainerStyle={[s.body, { paddingBottom: insets.bottom + space['5'] }]}>
-        {list.mode === 'browse' && list.browseTheme === null ? (
+        {list.mode === 'import' ? (
+          <ImportPhrases owned={owned} addOwnPhrase={addOwnPhrase} />
+        ) : list.mode === 'browse' && list.browseTheme === null ? (
           <ThemeGrid countFor={list.countFor} onSelect={list.browse} />
         ) : (
           <>
@@ -526,6 +537,147 @@ function AddGlyph() {
     </View>
   )
 }
+
+/**
+ * A deliberately local, offline-only import review. Parsing is separate from persistence so a
+ * pasted line never becomes a learner row until this surface's explicit Add action.
+ */
+function ImportPhrases({
+  owned,
+  addOwnPhrase,
+}: {
+  owned: readonly PhraseState[]
+  addOwnPhrase: (draft: { targetText: string; translation: string }) => string
+}) {
+  useLocale()
+  const [input, setInput] = useState('')
+  const [review, setReview] = useState<ImportCandidate[] | null>(null)
+  const existing = useMemo(
+    () =>
+      owned.flatMap((phrase) => {
+        const view = phrase.phraseId === null ? [phrase.ownEs] : []
+        return view.filter((text): text is string => typeof text === 'string')
+      }),
+    [owned],
+  )
+  const preview = () => {
+    setReview(parseImportedPhrases(input, existing))
+  }
+  const update = (index: number, field: 'targetText' | 'translation', value: string) => {
+    setReview((current) =>
+      current === null
+        ? null
+        : reviewImportedCandidates(
+            current.map((candidate, candidateIndex) =>
+              candidateIndex === index
+                ? { ...candidate, [field]: normalizeImportedText(value) }
+                : candidate,
+            ),
+            existing,
+          ),
+    )
+  }
+  const accepted = (review ?? []).filter(
+    (candidate) =>
+      candidate.issue === null && candidate.targetText !== '' && candidate.translation !== '',
+  )
+  const save = () => {
+    const keys = new Set(existing.map(importedPhraseKey))
+    for (const candidate of accepted) {
+      const key = importedPhraseKey(candidate.targetText)
+      if (keys.has(key)) continue
+      keys.add(key)
+      addOwnPhrase({ targetText: candidate.targetText, translation: candidate.translation })
+    }
+    setInput('')
+    setReview(null)
+  }
+  return (
+    <Stack gap={space['3']}>
+      <Stack gap={space['1']}>
+        <Text variant="title3" color={ink.ink}>
+          {copy.add.import.title}
+        </Text>
+        <Text variant="caption" color={ink.muted}>
+          {copy.add.import.help}
+        </Text>
+      </Stack>
+      <Card padding={0} style={s.importInputCard}>
+        <TextInput
+          multiline
+          value={input}
+          onChangeText={(value) => {
+            setInput(value)
+            setReview(null)
+          }}
+          placeholder={copy.add.import.placeholder}
+          placeholderTextColor={ink.muted2}
+          accessibilityLabel={copy.a11y.add.importInput}
+          style={s.importInput}
+        />
+      </Card>
+      <Button label={copy.add.import.preview} variant="secondary" onPress={preview} />
+      {review !== null && (
+        <Stack gap={space['2']}>
+          <SectionHeader
+            variant="caption"
+            label={copy.add.import.review(accepted.length)}
+            hint={copy.add.import.reviewHint}
+          />
+          {review.length === 0 ? (
+            <Card>
+              <Text variant="caption" color={ink.muted}>
+                {copy.add.import.empty}
+              </Text>
+            </Card>
+          ) : (
+            review.map((candidate, index) => (
+              <Card
+                key={candidate.line}
+                style={candidate.issue === null ? undefined : s.importIssue}
+              >
+                <Stack gap={space['2']}>
+                  <TextInput
+                    value={candidate.targetText}
+                    onChangeText={(value) => {
+                      update(index, 'targetText', value)
+                    }}
+                    placeholder={copy.add.import.targetPlaceholder}
+                    placeholderTextColor={ink.muted2}
+                    accessibilityLabel={copy.a11y.add.importTarget(candidate.line)}
+                    style={s.reviewInput}
+                  />
+                  <TextInput
+                    value={candidate.translation}
+                    onChangeText={(value) => {
+                      update(index, 'translation', value)
+                    }}
+                    placeholder={copy.add.import.meaningPlaceholder}
+                    placeholderTextColor={ink.muted2}
+                    accessibilityLabel={copy.a11y.add.importMeaning(candidate.line)}
+                    style={s.reviewInput}
+                  />
+                  {candidate.issue !== null && (
+                    <Text variant="captionSm" color={semantic.warn.text}>
+                      {candidate.issue === 'duplicate'
+                        ? copy.add.import.duplicate
+                        : copy.add.import.invalid}
+                    </Text>
+                  )}
+                </Stack>
+              </Card>
+            ))
+          )}
+          <Button
+            label={copy.add.import.add(accepted.length)}
+            onPress={save}
+            disabled={accepted.length === 0}
+          />
+        </Stack>
+      )}
+    </Stack>
+  )
+}
 /** ── The tagging sheet: where the connective thread starts ── */
 function TaggingSheet({
   phrase,
@@ -653,6 +805,25 @@ const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  // ── Import review ──
+  importInputCard: { paddingHorizontal: 13 },
+  importInput: {
+    minHeight: 132,
+    paddingHorizontal: space['3'],
+    paddingVertical: space['3'],
+    fontSize: 14,
+    fontWeight: '600',
+    color: ink.ink,
+    textAlignVertical: 'top',
+  },
+  reviewInput: {
+    minHeight: 44,
+    paddingHorizontal: space['2'],
+    color: ink.ink,
+    borderBottomWidth: border.hairline,
+    borderBottomColor: line.default,
+  },
+  importIssue: { borderColor: semantic.warn.text, borderWidth: border.hairline },
   // ── TaggingSheet ──
   sheetPhraseLines: { flex: 1 },
 })

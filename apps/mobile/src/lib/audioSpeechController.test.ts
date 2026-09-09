@@ -66,6 +66,39 @@ describe('native audio metadata boundary', () => {
     await pending
     expect(f.native.play).not.toHaveBeenCalled()
   })
+  it('serializes a late stop behind an in-flight native play', async () => {
+    const f = fixture()
+    let releasePlay = (): void => undefined
+    f.native.play.mockImplementationOnce(
+      () =>
+        new Promise<void>((resolve) => {
+          releasePlay = resolve
+        }),
+    )
+
+    const play = f.controller.play('p', 'Hola', 'es-ES')
+    await vi.waitFor(() => {
+      expect(f.native.play).toHaveBeenCalledOnce()
+    })
+    const stop = f.controller.stopPlayback()
+    expect(f.native.stopPlayback).not.toHaveBeenCalled()
+
+    releasePlay()
+    await Promise.all([play, stop])
+    await vi.waitFor(() => {
+      expect(f.native.stopPlayback).toHaveBeenCalledOnce()
+    })
+    expect(f.controller.getSnapshot().playback).toBe('idle')
+  })
+  it('continues the shared native session after a rejected command', async () => {
+    const f = fixture()
+    f.native.stopPlayback.mockRejectedValueOnce(new Error('native stop failed'))
+
+    await f.controller.stopPlayback()
+    await f.controller.listen('es-ES')
+
+    expect(f.native.startListening).toHaveBeenCalledWith({ id: 'speech-1', locale: 'es-ES' })
+  })
   it('invalidates old recognition when changing phrase and never accepts a stale transcript', async () => {
     const f = fixture()
     await f.controller.listen('es-ES')

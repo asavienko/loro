@@ -17,6 +17,7 @@ test(
     tag: '@smoke',
   },
   async ({ page }) => {
+    await atInstant(page, '2026-05-04T10:00')
     await onboard(page)
     await startWave(page)
 
@@ -53,6 +54,7 @@ test(
     await expect(page.getByText('30', { exact: true }).filter({ visible: true })).toBeVisible()
 
     await page.getByRole('button', { name: 'Back to today' }).click()
+    await expect(page.getByText('done', { exact: true }).filter({ visible: true })).toBeVisible()
     await expect(page.getByText('5 of 5 locked in').filter({ visible: true })).toBeVisible()
     await expect(repsTodayRow(page, 30)).toBeVisible()
 

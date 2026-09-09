@@ -192,6 +192,31 @@ describe('repository-backed learner state', () => {
     expect(db.store.getState().phrases.some((phrase) => phrase.phraseId === removed)).toBe(false)
   })
 
+  it('persists an explicitly accepted own phrase with its current language pair and sync op', () => {
+    const path = diskPath()
+    const first = open(path)
+    first.store.getState().setLanguages('bg', 'ru-RU')
+    const id = first.store
+      .getState()
+      .addOwnPhrase({ targetText: 'Доброе утро', translation: 'Добро утро' })
+    expect(first.persistence.outbox.pending(100)).toEqual(
+      expect.arrayContaining([expect.objectContaining({ entity: 'user_phrase', entityId: id })]),
+    )
+    first.driver.close()
+
+    const reopened = open(path)
+    expect(reopened.store.getState().phrases).toContainEqual(
+      expect.objectContaining({
+        id,
+        phraseId: null,
+        ownEs: 'Доброе утро',
+        ownEn: 'Добро утро',
+        ownMeaningLanguage: 'bg',
+        targetLocale: 'ru-RU',
+      }),
+    )
+  })
+
   it('stages nested onboarding actions and keeps transient error toasts usable when writes fail', () => {
     const db = open()
     const previous = db.store.getState()
@@ -267,6 +292,19 @@ describe('repository-backed learner state', () => {
     reopened.store.getState().setLanguages('en', 'es-ES')
     expect(reopened.store.getState().phrases[0]).toMatchObject({ id: phrase.id, reps: 1 })
     expect(reopened.store.getState().refrainResume.cursor).toBe(1)
+  })
+
+  it('persists a completed Refrain wave with its frozen day', () => {
+    const path = diskPath()
+    const first = open(path)
+    first.store.setState({ onboarded: true, phrases: [makePhrase('wave')] })
+    first.store.getState().ensureRefrainSet()
+    first.store.getState().completeRefrainWave('morning', first.store.getState().refrainResume)
+    first.driver.close()
+
+    const reopened = open(path)
+    expect(reopened.store.getState().refrainWaves).toEqual(['morning'])
+    expect(reopened.persistence.refrainDay.load(DAY)?.waves).toEqual(['morning'])
   })
 
   it('does not publish progress or a cursor when appending the matching outbox operation fails', () => {

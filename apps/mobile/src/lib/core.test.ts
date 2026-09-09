@@ -5,6 +5,7 @@ import { coreCall, nextHlc, receiveHlc, mergeRow, type CoreRow } from './core'
 import { rustCoreFacade } from '../store/coreFacade'
 import previewVectors from '../../../../packages/core-rs/tests/fixtures/fsrs_v6_3_2.json'
 import reference from '../../../../packages/core-rs/tests/fixtures/fsrs-6-reference.json'
+import boundaryFixtures from '../../../../packages/core/src/domain/core-boundary.fixtures.json'
 
 const gradeNumber = { again: 1, hard: 2, good: 3, easy: 4 } as const
 interface WireState extends Omit<FsrsState, 'lastReview' | 'algorithm'> {
@@ -142,6 +143,22 @@ describe('the production Rust boundary', () => {
       rustCoreFacade.matchTokens(['Къде', 'е', 'банята'], ['Къде', 'е', 'банята?'], 0).complete,
     ).toBe(true)
     expect(rustCoreFacade.matchTokens(['Где', 'ванная'], ['Где', 'ванная?'], 0).complete).toBe(true)
+  })
+
+  it('matches multilingual cloze and speech fixtures through shipped WASM', () => {
+    for (const fixture of boundaryFixtures.cloze) {
+      expect(coreCall('cloze_mask', fixture), fixture.why).toEqual(fixture.expect)
+    }
+    for (const fixture of boundaryFixtures.matchTokens) {
+      expect(
+        coreCall('match_tokens', {
+          heard: fixture.heard,
+          target: fixture.target,
+          revealed: fixture.revealed,
+        }),
+        fixture.why,
+      ).toEqual(fixture.expect)
+    }
   })
 
   it('uses canonical rank, active eligibility and deterministic unfinished/trip priorities', () => {
