@@ -1,5 +1,11 @@
 # Loro documentation
 
+[Whole-project improvement assessment — 2026-09-09](reviews/2026-09-09-project-improvement-assessment.md)
+answers what to refactor, which tools and libraries to keep or avoid, and which practices are
+enforced versus stale, across mobile, core, Rust, API, content, tokens and CI. It is not a numbered
+plan and does not claim product acceptance. The two companions below remain authoritative in their
+narrower scopes.
+
 [Refactoring strategies — 2026-09-09](reviews/2026-09-09-refactoring-strategies.md) inventories
 structural cleanup of **shipped** code: dual TS/Rust numbers, contract schema forks, practice-route
 store holes, and docs that lag `AppModule`. It is not an implementation plan and does not claim
