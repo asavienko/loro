@@ -8,6 +8,41 @@ describe('native speech event boundary', () => {
     ).toEqual({ id: 'speech-1', state: 'final', transcript: 'Hola', latencyMs: null })
   })
 
+  it('accepts only an explicit same-session monotonic onset measurement', () => {
+    expect(
+      toSpeechEvent({
+        id: 'speech-1',
+        state: 'final',
+        transcript: 'Hola',
+        latencyMs: 42,
+        onset: {
+          sessionId: 'speech-1',
+          generation: 2,
+          clock: 'monotonic-ms',
+          promptEndedAtMs: 101.25,
+          speechOnsetAtMs: 834.5,
+        },
+      }),
+    ).toEqual({ id: 'speech-1', state: 'final', transcript: 'Hola', latencyMs: 733.25 })
+  })
+
+  it('keeps malformed or foreign onset metadata unmeasured', () => {
+    expect(
+      toSpeechEvent({
+        id: 'speech-1',
+        state: 'final',
+        transcript: 'Hola',
+        onset: {
+          sessionId: 'speech-2',
+          generation: 2,
+          clock: 'monotonic-ms',
+          promptEndedAtMs: 8,
+          speechOnsetAtMs: 4,
+        },
+      }),
+    ).toEqual({ id: 'speech-1', state: 'final', transcript: 'Hola', latencyMs: null })
+  })
+
   it('accepts only complete speech lifecycle metadata', () => {
     expect(toSpeechEvent({ id: 'speech-1', state: 'final', transcript: 42 })).toBeNull()
     expect(toSpeechEvent({ id: 'speech-1', state: 'onset', transcript: 'Hola' })).toBeNull()
