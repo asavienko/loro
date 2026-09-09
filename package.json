@@ -23,6 +23,7 @@
     "test:e2e:workbench:update": "pnpm --filter @loro/mobile test:e2e:workbench:update",
     "test:e2e:bundle": "pnpm --filter @loro/mobile test:e2e:bundle",
     "test:e2e:install": "pnpm --filter @loro/mobile test:e2e:install",
+    "screenshots": "pnpm --filter @loro/mobile screenshots",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "tokens:build": "pnpm --filter @loro/design-tokens build",
