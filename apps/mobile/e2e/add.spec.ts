@@ -149,3 +149,38 @@ test('P2-09/P2-10: edited import fields keep their draft and cannot bypass sync-
   await page.getByRole('button', { name: 'Add 1 reviewed phrase' }).click()
   await expect(page.getByText('11 in stream')).toBeVisible()
 })
+
+test('P2-09/P2-10: a partial import save retains rejected edited rows for correction', async ({
+  page,
+}) => {
+  await onboard(page)
+  await page.getByRole('button', { name: 'Add' }).click()
+  await page.getByRole('button', { name: 'import' }).click()
+  const overLimit = 'a'.repeat(2_001)
+  await page
+    .getByRole('textbox', { name: 'Phrases to import' })
+    .fill(`Hola nueva | New hello\nHola nueva | Duplicate\nIncomplete\n${overLimit} | Meaning`)
+  await page.getByRole('button', { name: 'Review phrases' }).click()
+  const incompleteTarget = page.getByRole('textbox', {
+    name: 'Imported phrase on line 3',
+    exact: true,
+  })
+  await incompleteTarget.fill('Edited draft that must survive')
+  await page.getByRole('button', { name: 'Add 1 reviewed phrase' }).click()
+
+  await expect(page.getByText('11 in stream')).toBeVisible()
+  await expect(incompleteTarget).toHaveValue('Edited draft that must survive')
+  await expect(
+    page.getByRole('textbox', { name: 'Imported phrase on line 2', exact: true }),
+  ).toHaveValue('Hola nueva')
+  await expect(
+    page.getByRole('textbox', { name: 'Imported phrase on line 4', exact: true }),
+  ).toHaveValue(overLimit)
+
+  await page
+    .getByRole('textbox', { name: 'Meaning for imported phrase on line 3', exact: true })
+    .fill('Saved after correction')
+  await page.getByRole('button', { name: 'Add 1 reviewed phrase' }).click()
+  await expect(page.getByText('12 in stream')).toBeVisible()
+  await expect(incompleteTarget).toHaveCount(0)
+})

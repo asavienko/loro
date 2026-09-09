@@ -84,6 +84,7 @@
   "add.import.meaningPlaceholder": "Твоето значение",
   "add.import.duplicate": "Вече е в потока ти. Промени я, за да я запазиш като отделна фраза.",
   "add.import.invalid": "Добави и фраза, и значение.",
+  "add.import.saveFailed": "Запазихме каквото успяхме. Останалите ти фрази са още тук.",
   "add.import.add": "Добави {count, plural, one {# прегледана фраза} other {# прегледани фрази}}",
   "onboarding.welcome.greeting": "{greeting} Аз съм Лоро",
   "onboarding.welcome.title": "Учи {targetName}\nфраза по фраза",

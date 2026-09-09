@@ -592,6 +592,9 @@ export const copy = {
       get invalid() {
         return message('add.import.invalid')
       },
+      get saveFailed() {
+        return message('add.import.saveFailed')
+      },
       add: (count: number): string => message('add.import.add', { count }),
     },
   },

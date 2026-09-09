@@ -89,6 +89,7 @@
   "add.import.meaningPlaceholder": "Your meaning",
   "add.import.duplicate": "Already in your stream. Edit it to keep it as a separate phrase.",
   "add.import.invalid": "Add both a phrase and its meaning.",
+  "add.import.saveFailed": "We saved what we could. Your remaining phrases are still here.",
   "add.import.add": "Add {count, plural, one {# reviewed phrase} other {# reviewed phrases}}",
   "onboarding.welcome.greeting": "{greeting} I'm Loro",
   "onboarding.welcome.title": "Learn {targetName}\nby the phrase",

@@ -52,6 +52,7 @@ import { copy, themeLabel } from '../src/lib/copy'
 import { useApp } from '../src/store'
 import {
   importedPhraseKey,
+  importInputForCandidates,
   isImportTooLarge,
   isReviewedImportTooLarge,
   IMPORT_MAX_CHARACTERS,
@@ -59,6 +60,7 @@ import {
   normalizeImportedText,
   parseImportedPhrases,
   reviewImportedCandidates,
+  unsavedImportCandidates,
   type ImportCandidate,
 } from '../src/lib/importPhrases'
 /**
@@ -558,6 +560,7 @@ function ImportPhrases({
   const [input, setInput] = useState('')
   const [review, setReview] = useState<ImportCandidate[] | null>(null)
   const [tooLarge, setTooLarge] = useState(false)
+  const [saveFailed, setSaveFailed] = useState(false)
   const existing = useMemo(
     () =>
       owned.flatMap((phrase) => {
@@ -569,9 +572,11 @@ function ImportPhrases({
   const preview = () => {
     const exceedsLimit = isImportTooLarge(input)
     setTooLarge(exceedsLimit)
+    setSaveFailed(false)
     setReview(exceedsLimit ? null : parseImportedPhrases(input, existing))
   }
   const update = (index: number, field: 'targetText' | 'translation', value: string) => {
+    setSaveFailed(false)
     setReview((current) =>
       current === null
         ? null
@@ -603,14 +608,32 @@ function ImportPhrases({
       return
     }
     const keys = new Set(existing.map(importedPhraseKey))
+    const savedLines = new Set<number>()
+    const savedTargetTexts: string[] = []
+    let failed = false
     for (const candidate of acceptedChecked) {
       const key = importedPhraseKey(candidate.targetText)
       if (keys.has(key)) continue
-      keys.add(key)
-      addOwnPhrase({ targetText: candidate.targetText, translation: candidate.translation })
+      try {
+        addOwnPhrase({ targetText: candidate.targetText, translation: candidate.translation })
+        keys.add(key)
+        savedLines.add(candidate.line)
+        savedTargetTexts.push(candidate.targetText)
+      } catch {
+        failed = true
+        break
+      }
     }
-    setInput('')
-    setReview(null)
+    const remaining = unsavedImportCandidates(checked, savedLines)
+    if (remaining.length === 0) {
+      setInput('')
+      setReview(null)
+      setSaveFailed(false)
+      return
+    }
+    setInput(importInputForCandidates(remaining))
+    setReview(reviewImportedCandidates(remaining, [...existing, ...savedTargetTexts]))
+    setSaveFailed(failed)
   }
   return (
     <Stack gap={space['3']}>
@@ -629,6 +652,7 @@ function ImportPhrases({
           onChangeText={(value) => {
             setInput(value)
             setTooLarge(false)
+            setSaveFailed(false)
             setReview(null)
           }}
           placeholder={copy.add.import.placeholder}
@@ -656,6 +680,13 @@ function ImportPhrases({
             <View accessibilityRole="alert">
               <Text variant="caption" color={semantic.warn.text}>
                 {copy.add.import.tooLarge(IMPORT_MAX_ROWS, IMPORT_MAX_CHARACTERS)}
+              </Text>
+            </View>
+          )}
+          {saveFailed && (
+            <View accessibilityRole="alert">
+              <Text variant="caption" color={semantic.warn.text}>
+                {copy.add.import.saveFailed}
               </Text>
             </View>
           )}

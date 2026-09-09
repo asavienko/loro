@@ -38,6 +38,21 @@ export function isReviewedImportTooLarge(candidates: readonly ImportCandidate[])
   )
 }
 
+/** Keep a partially saved review editable without leaving already-persisted rows in its draft. */
+export function importInputForCandidates(candidates: readonly ImportCandidate[]): string {
+  return candidates
+    .map(({ targetText, translation }) => `${targetText} | ${translation}`)
+    .join('\n')
+}
+
+/** A failed write stays in the review: only rows confirmed by the store leave the draft. */
+export function unsavedImportCandidates(
+  candidates: readonly ImportCandidate[],
+  savedLines: ReadonlySet<number>,
+): ImportCandidate[] {
+  return candidates.filter((candidate) => !savedLines.has(candidate.line))
+}
+
 export function normalizeImportedText(value: string): string {
   return value.normalize('NFC').replace(/\s+/gu, ' ').trim()
 }
