@@ -1,5 +1,6 @@
 import { reachAccount } from './accountFlow'
 import { localeText, onboardPair } from './languageFlow'
+import { openListenExport, openListenScenario, LISTEN_SCENARIOS, LISTEN_STATUS } from './listenFlow'
 import { openStorageFailure, openStorageLoading } from './persistenceFlow'
 /**
  * Every learner-visible STATE the app can be in, and how to reach it by clicking.
@@ -77,8 +78,29 @@ export const STATES: AppState[] = [
       await expect(page.getByText('Practice', { exact: true })).toBeVisible()
       await expect(page.getByText('You', { exact: true })).toBeVisible()
       await expect(page.getByRole('button', { name: 'Languages', exact: true })).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Listen', exact: true })).toBeVisible()
     },
   },
+  {
+    name: 'listen-export · honest unavailable',
+    route: '/listen-export',
+    spec: 'AS-07 Batch phrase listening export',
+    reach: async (page) => {
+      await openListenExport(page)
+      await expect(
+        page.getByText('Licensed listening voices are not approved yet.', { exact: true }),
+      ).toBeVisible()
+    },
+  },
+  ...LISTEN_SCENARIOS.map((scenario) => ({
+    name: `listen-export · ${scenario}`,
+    route: '/listen-export',
+    spec: 'AS-07 Batch phrase listening export',
+    reach: async (page: Page) => {
+      await openListenScenario(page, scenario)
+      await expect(page.getByText(LISTEN_STATUS[scenario], { exact: true })).toBeVisible()
+    },
+  })),
   {
     name: 'settings · durable visual and privacy preferences',
     route: '/settings',

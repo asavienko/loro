@@ -104,4 +104,12 @@ export const a11yCopy = {
       return message('a11y.progress.trickyHint')
     },
   },
+  listenExport: {
+    get status() {
+      return message('a11y.listenExport.status')
+    },
+    get repeats() {
+      return message('a11y.listenExport.repeats')
+    },
+  },
 }
