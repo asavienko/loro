@@ -6,6 +6,7 @@ import {
   appHeaders,
   syncHeaders,
   cacheHeaders,
+  ProblemSchema,
   targetErrors,
   CountSchema,
   LocaleSchema,
@@ -22,6 +23,7 @@ import {
   MAX_SYNC_BYTES,
 } from './sync.js'
 import { ManifestSchema, DiffSchema, PackSchema, FullCatalogSchema } from './content.js'
+import { contentReleaseOperations } from './content-release.js'
 import {
   SceneRequestSchema,
   SceneResponseSchema,
@@ -261,6 +263,7 @@ export const targetOperations = withExamples(
       behavior:
         'Unknown pack NOT_FOUND. Membership/count/order and checksum agree; offline cached pack remains usable. Current query route needs migration, not silent replacement.',
     },
+    ...contentReleaseOperations(ProblemSchema),
     {
       ...base,
       id: 'aiScene',

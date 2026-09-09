@@ -3,10 +3,10 @@
 - **Requirement IDs:** content targets for M1/M2/M3, `AS-01`, `AS-02`, `P2-12`, `P2-32`, `P2-33`,
   `AS-05`, `AS-06`
 - **Milestone:** M1 → M3
-- **Status:** 🟡 Validated starter catalogs, content API contracts and an immutable manifest
-  verifier with malformed-input rejection and semantic-version compatibility checks exist.
-  Delivery/updater, reviewed expansion and production audio remain; Q-15 blocks production audio
-  only, bilingual sign-off is coordinated by 87.
+- **Status:** 🟡 Validated starter catalogs, a shared signed-release wire contract and an immutable
+  verifier exist. The mobile-safe local activation seam verifies candidates and commits the catalog
+  installation with its release pointer; fetching/publication, reviewed expansion and production
+  audio remain. Q-15 blocks production audio only, bilingual sign-off is coordinated by 87.
 - **Depends on:** 53/85 completed; 59 for client atomic activation; 86 for provider/storage
   adapters; 87 for bilingual review.
 - **Reviewed:** 2026-09-09 against `aafa61f`; current source, tests and retained review records
@@ -27,9 +27,11 @@ complete. The roadmap index continues to track its unfinished scope.
 hashes, locale/course identities, attributable approvals and reviewer-language coverage. Actual
 approvals remain outstanding. `delivery.ts` provides transport-independent manifest/resource
 verification with injected signature, digest and catalog validators. A production trust store,
-signing/key-rotation policy and fetch/activation implementation remain required. Independent
-publication, client activation and approved audio do not exist. Preserve the old English/Spanish API
-as a compatibility adapter; use plan 85's delivered content schemas for the new pipeline.
+signing/key-rotation policy and fetch/publication implementation remain required. The mobile local
+activation seam rechecks monotonic catalog identity inside its SQLite transaction and keeps the old
+pointer on an installation failure; it does not fetch, persist catalog rows itself, or authorize a
+release. Independent publication and approved audio do not exist. Preserve the old English/Spanish
+API as a compatibility adapter; use plan 85's delivered content schemas for the new pipeline.
 `content:enrich`, `content:render` and `content:publish` are declared scripts whose source
 entrypoints are absent at this revision; implementing the authoring commands remains part of this
 plan.
@@ -51,15 +53,15 @@ without overwriting learner state.
 
 1. [ ] Decide voice provenance, licensing, consent, pronunciation review, provider fallback,
        regional storage, and deletion obligations. Record the decision before bulk rendering.
-2. [ ] Reconcile `packages/content/src/delivery.ts` with shared API content and learning-content
-       schemas: signed bytes, locale/pair identity, catalog adaptation, trust/key rotation, version
-       collisions and rollback. Existing signature/hash/semantic-version validation is reusable; the
-       current API manifest is not automatically its wire format. Retain ETag and retention policy;
-       the later audio slice adds voice identity, codecs and loudness/rate metadata.
+2. [ ] Complete the signed-release transport boundary: `delivery.ts` now consumes the shared planned
+       API wire schema and the generated target OpenAPI documents the separate release manifest.
+       Define locale/pair adaptation, trust/key rotation, ETag and retention policy before runtime
+       publication; the legacy/current manifests remain compatibility views, not signed releases.
 3. [ ] Build the authoring pipeline for validation, enrichment, translation review, TTS/render
        intake, audio normalization, reference feature generation, human QA, and publication.
-4. [ ] Build the client catalog updater/storage/prefetch contract with atomic activation and safe
-       fallback to the bundled seed.
+4. [ ] Wire a downloader, release storage and catalog-row installer into the tested local activation
+       seam. It must bound bytes/cancellation, retain the bundled/last-good release on failure and
+       preserve learner-owned phrases, per-course progress and active checkpoints.
 5. [ ] Produce an approved es-ES seed batch before bulk work; preserve the existing 150→600 Spanish
        milestone target. Record separately approved bg-BG/ru-RU expansion and voice coverage rather
        than silently multiplying that target. Plan 87 owns starter bilingual sign-off; expanded
