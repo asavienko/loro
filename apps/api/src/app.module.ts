@@ -31,6 +31,10 @@ import { AiController } from './ai/ai.controller.js'
 import { AiService } from './ai/ai.service.js'
 import { SCENE_PROVIDERS, type SceneProvider } from './ai/scene-provider.js'
 import { StubSceneProvider } from './ai/scene-provider.stub.js'
+import { MusicController } from './music/music.controller.js'
+import { MusicService } from './music/music.service.js'
+import { MUSIC_REPOSITORY } from './music/repository.js'
+import { PostgresMusicRepository } from './music/repository.postgres.js'
 
 @Module({
   controllers: [
@@ -39,12 +43,15 @@ import { StubSceneProvider } from './ai/scene-provider.stub.js'
     LearningContentController,
     SyncController,
     AiController,
+    MusicController,
     AuthController,
     MeController,
     OAuthController,
   ],
   providers: [
     AiService,
+    MusicService,
+    { provide: MUSIC_REPOSITORY, useClass: PostgresMusicRepository },
     StubSceneProvider,
     {
       // Every scene provider, collected for `AiService` to key by name. Adding Claude

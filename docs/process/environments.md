@@ -96,13 +96,16 @@ replicas, CDN and uninterrupted deployment are not prerequisites for this testin
 [`apps/api/src/common/config.ts`](../../apps/api/src/common/config.ts) is the runtime source of
 truth. Entries in `.env.example` without a reader are reserved for future adapters.
 
-| Variable              | Current behavior                                                                  |
-| --------------------- | --------------------------------------------------------------------------------- |
-| `NODE_ENV`            | `production` makes missing WASM fatal at startup; use it for the deployed image   |
-| `PORT`                | HTTP listener; defaults to 3000                                                   |
-| `AI_PROVIDER`         | Defaults to `stub`; only the stub is registered in the runtime                    |
-| `CDN_BASE_URL`        | Legacy content manifest `audio_base`; no CDN or working audio download is implied |
-| `npm_package_version` | Version reported by health; defaults to `0.0.0` outside the package runner        |
+| Variable                            | Current behavior                                                                  |
+| ----------------------------------- | --------------------------------------------------------------------------------- |
+| `NODE_ENV`                          | `production` makes missing WASM fatal at startup; use it for the deployed image   |
+| `PORT`                              | HTTP listener; defaults to 3000                                                   |
+| `AI_PROVIDER`                       | Defaults to `stub`; only the stub is registered in the runtime                    |
+| `MUSIC_PROVIDER`                    | Defaults to `stub`; fixture music only. Live ElevenLabs Music stays behind Q-21   |
+| `MUSIC_MONTHLY_BUDGET_USD_PER_USER` | Separate from `AI_MONTHLY_BUDGET_USD_PER_USER`; `0` means unlimited in stub       |
+| `MUSIC_DAILY_BUDGET_USD_GLOBAL`     | Separate global music cap; `0` means unlimited in stub                            |
+| `CDN_BASE_URL`                      | Legacy content manifest `audio_base`; no CDN or working audio download is implied |
+| `npm_package_version`               | Version reported by health; defaults to `0.0.0` outside the package runner        |
 
 ### Testing configuration to implement
 
