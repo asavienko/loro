@@ -12,6 +12,7 @@ import type {
   TargetLocale,
   Clock,
   Difficulty,
+  PhraseHandoffSource,
   PhraseState,
   ProgressDelta,
   RefrainDayRow,
@@ -52,7 +53,7 @@ export interface AppActions {
   /** Returns the new row id, because the caller has no other way to name the row. */
   addOwnPhrase: (
     draft: OwnPhraseDraft,
-    o?: { difficulty?: Difficulty; tags?: Tag[]; source?: PhraseState['source'] },
+    o?: { difficulty?: Difficulty; tags?: Tag[]; source?: PhraseHandoffSource },
   ) => string
   removePhrase: (id: string) => void
   setDifficulty: (id: string, d: Difficulty) => void

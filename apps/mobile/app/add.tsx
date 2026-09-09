@@ -1,4 +1,4 @@
-import { useLocale } from '../src/lib/i18n'
+import { currentTargetLocale, useLocale } from '../src/lib/i18n'
 /**
  * Add phrases — Loro.dc.html:222–427, logic 2176–2433.
  *
@@ -13,7 +13,7 @@ import { useLocale } from '../src/lib/i18n'
  * longer reads the search box's state, and the list no longer reads the draft's.
  */
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ScrollView, StyleSheet, TextInput, View } from 'react-native'
+import { Platform, ScrollView, StyleSheet, TextInput, View } from 'react-native'
 import * as DocumentPicker from 'expo-document-picker'
 import { File as ExpoFile } from 'expo-file-system'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -343,21 +343,40 @@ function useAddDraft(): AddDraft {
   }
 }
 
+function ownedPhraseLines(
+  owned: readonly PhraseState[],
+  catalog: readonly CatalogPhrase[],
+): { targetText: string; translation: string }[] {
+  const catalogById = new Map(catalog.map((phrase) => [phrase.id, phrase]))
+  const lines: { targetText: string; translation: string }[] = []
+  for (const row of owned) {
+    if (row.phraseId === null) {
+      if (row.ownEs !== undefined && row.ownEs.length > 0) {
+        lines.push({ targetText: row.ownEs, translation: row.ownEn ?? '' })
+      }
+      continue
+    }
+    const phrase = catalogById.get(row.phraseId)
+    if (phrase !== undefined) {
+      lines.push({ targetText: phrase.targetText, translation: phrase.translation })
+    }
+  }
+  return lines
+}
+
 function ownedTargetTexts(
   owned: readonly PhraseState[],
   catalog: readonly CatalogPhrase[],
 ): string[] {
-  const catalogById = new Map(catalog.map((phrase) => [phrase.id, phrase.targetText]))
-  const texts: string[] = []
-  for (const row of owned) {
-    if (row.phraseId === null) {
-      if (row.ownEs !== undefined && row.ownEs.length > 0) texts.push(row.ownEs)
-      continue
-    }
-    const target = catalogById.get(row.phraseId)
-    if (target !== undefined) texts.push(target)
+  return ownedPhraseLines(owned, catalog).map((line) => line.targetText)
+}
+
+function targetLanguageInputProps() {
+  const language = currentTargetLocale()
+  return {
+    accessibilityLanguage: language,
+    ...(Platform.OS === 'web' ? { lang: language } : {}),
   }
-  return texts
 }
 
 function useDiscoverReach(
@@ -380,13 +399,10 @@ function useDiscoverReach(
     () => [...ownedTargetTexts(owned, catalog), ...catalog.map((phrase) => phrase.targetText)],
     [owned, catalog],
   )
-  const exact = useMemo(() => {
-    if (isExactLibraryMatch(query, catalog)) return true
-    return isExactLibraryMatch(
-      query,
-      ownedTargetTexts(owned, catalog).map((targetText) => ({ targetText, translation: '' })),
-    )
-  }, [query, catalog, owned])
+  const exact = useMemo(
+    () => isExactLibraryMatch(query, catalog) || isExactLibraryMatch(query, ownedPhraseLines(owned, catalog)),
+    [query, catalog, owned],
+  )
   const offerOwn = mode === 'discover' && shouldOfferOwnPhrase(query, exact)
   const wantSuggest =
     mode === 'discover' && shouldRequestSuggestions(query, catalogHits.length, exact)
@@ -505,6 +521,7 @@ export default function Add() {
           <ImportPhrases
             key={importDraftKey({ targetLocale, nativeLanguage })}
             owned={owned}
+            catalog={catalogPhrases}
             addOwnPhrase={addOwnPhrase}
             importDrafts={importDrafts}
             targetLocale={targetLocale}
@@ -891,6 +908,7 @@ function SuggestedList({
  */
 function ImportPhrases({
   owned,
+  catalog,
   addOwnPhrase,
   importDrafts,
   targetLocale,
@@ -899,7 +917,11 @@ function ImportPhrases({
   clearImportDraft,
 }: {
   owned: readonly PhraseState[]
-  addOwnPhrase: (draft: { targetText: string; translation: string }) => string
+  catalog: readonly CatalogPhrase[]
+  addOwnPhrase: (
+    draft: { targetText: string; translation: string },
+    o?: { source?: PhraseHandoffSource },
+  ) => string
   importDrafts: ImportDrafts
   targetLocale: TargetLocale
   nativeLanguage: NativeLanguage
@@ -924,14 +946,7 @@ function ImportPhrases({
       fileRequest.current += 1
     }
   }, [nativeLanguage, targetLocale])
-  const existing = useMemo(
-    () =>
-      owned.flatMap((phrase) => {
-        const view = phrase.phraseId === null ? [phrase.ownEs] : []
-        return view.filter((text): text is string => typeof text === 'string')
-      }),
-    [owned],
-  )
+  const existing = useMemo(() => ownedTargetTexts(owned, catalog), [owned, catalog])
   const preview = () => {
     fileRequest.current += 1
     const exceedsLimit = isImportTooLarge(input)
@@ -1041,7 +1056,10 @@ function ImportPhrases({
       const key = importedPhraseKey(candidate.targetText)
       if (keys.has(key)) continue
       try {
-        addOwnPhrase({ targetText: candidate.targetText, translation: candidate.translation })
+        addOwnPhrase(
+          { targetText: candidate.targetText, translation: candidate.translation },
+          { source: 'import' },
+        )
         keys.add(key)
         savedLines.add(candidate.line)
         savedTargetTexts.push(candidate.targetText)
@@ -1153,6 +1171,7 @@ function ImportPhrases({
                     placeholder={copy.add.import.targetPlaceholder}
                     placeholderTextColor={ink.muted2}
                     accessibilityLabel={copy.a11y.add.importTarget(candidate.line)}
+                    {...targetLanguageInputProps()}
                     style={s.reviewInput}
                   />
                   <TextInput
@@ -1247,6 +1266,7 @@ function TaggingSheet({
                       placeholder={copy.add.sheet.targetPlaceholder}
                       placeholderTextColor={ink.muted2}
                       accessibilityLabel={copy.a11y.add.sheetTarget}
+                      {...targetLanguageInputProps()}
                       maxLength={MAX_OWN_PHRASE_TEXT_CODE_UNITS}
                       style={s.sheetInput}
                     />
