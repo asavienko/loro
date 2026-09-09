@@ -9,6 +9,12 @@
 import type { TargetLocale, NativeLanguage } from './languages.js'
 import type { CatalogPhraseId, UserPhraseId } from './ids.js'
 
+/**
+ * The maximum persisted length for learner-authored phrase text and meanings, measured in
+ * JavaScript UTF-16 code units. API schemas and every local input path share this limit.
+ */
+export const MAX_OWN_PHRASE_TEXT_CODE_UNITS = 2_000
+
 // ─────────────────────────────────────────────────────────────────────────────
 // The learner's two signals — the connective thread
 // docs/product/learning-model.md#the-two-signals

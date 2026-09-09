@@ -12,6 +12,13 @@ code: no provider response, input, API key, or underlying cause is retained. Suc
 include provider-reported input/output tokens for later budget reconciliation; absent optional cache
 counts remain null. The adapter does not estimate cost or treat missing usage as zero.
 
+`maxConcurrentRequests` is required configuration. A reusable process-local admission control holds
+a permit from HTTP dispatch through response parsing and cleanup. Excess concurrent calls fail
+immediately with the fixed `capacity` code, without queueing or making a provider request. Reuse one
+`AnthropicMessages` instance for a provider pool; separate instances/processes have independent
+limits. Cancellation releases capacity only when the transport settles. This bounds local active
+work; it does not implement account rate limits or reserve provider spend.
+
 The response parser must enforce the eventual runtime schema and semantic/safety requirements.
 Provider JSON-schema guidance alone is not validation. Schema and system prompt are trusted
 server-authored configuration; learner text belongs only in bounded message content. Only text
@@ -21,11 +28,12 @@ message fields are serialized, never arbitrary attachments or tools.
 
 Plan 85's contracts and this transport were merged in `2d9e8c3`; the isolated contract-task handoff
 is complete. Before registration, consume the relevant stable contracts and implement
-identity/entitlement guards, rate/concurrency controls, atomic budget reservations and
-reconciliation, approved retention, request-context policy, semantic/safety evaluation, and bundled
-fallback. These controls are not implemented by this low-level transport. The service must account
-for possible provider charges on timeouts; a timed-out request is not evidence of zero spend. Retry
-only under the owning idempotency and spend policy, never automatically inside the adapter.
+identity/entitlement guards, account/distributed rate and concurrency controls, atomic budget
+reservations and reconciliation, approved retention, request-context policy, semantic/safety
+evaluation, and bundled fallback. Those feature controls remain outside this low-level transport.
+The service must account for possible provider charges on timeouts; a timed-out request is not
+evidence of zero spend. Retry only under the owning idempotency and spend policy, never
+automatically inside the adapter.
 
 Credentials and production text are not needed for tests. An injected fetch exercises deterministic
 failure modes; a loopback server on an ephemeral port proves a stalled HTTP body is aborted. No live

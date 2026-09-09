@@ -31,9 +31,12 @@ const states = new Set<SpeechEvent['state']>([
  * A real latency protocol must replace this adapter with validated provenance
  * and a shared monotonic-clock contract.
  */
-export function toSpeechEvent(payload: NativeSpeechEvent): SpeechEvent | null {
+export function toSpeechEvent(payload: unknown): SpeechEvent | null {
+  if (typeof payload !== 'object' || payload === null || Array.isArray(payload)) return null
+  if (!('id' in payload) || !('transcript' in payload) || !('state' in payload)) return null
   if (
     typeof payload.id !== 'string' ||
+    payload.id.trim().length === 0 ||
     typeof payload.transcript !== 'string' ||
     typeof payload.state !== 'string' ||
     !states.has(payload.state as SpeechEvent['state'])

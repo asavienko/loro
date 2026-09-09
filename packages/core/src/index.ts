@@ -7,7 +7,7 @@
  *   • Reproducible maths belongs in @loro/core-rs, not here (ADR-0002). `domain/calendar.ts`
  *     is a declared exception with an expiry date: it mirrors `core-rs/src/calendar.rs`
  *     until the UniFFI bridge exists, and a shared fixture fails the build if the two
- *     drift. See its header, and plans/05-fix-shared-maths-duplication.md.
+ *     drift. See its header, and plans/archive/2026-07-30/05-fix-shared-maths-duplication.md.
  */
 
 export * from './domain/ids.js'

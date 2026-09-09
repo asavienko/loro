@@ -116,7 +116,12 @@ export class AudioSpeechController {
     try {
       const native = this.native
       if (native === null) throw new Error('native-audio-unavailable')
-      await this.runNative(() => native.play({ id, text, locale, rate }))
+      await this.runNative(() => {
+        // A stop or replacement can arrive while an earlier native command
+        // holds the queue. Recheck ownership at execution, not only enqueue.
+        if (this.playId !== id) return Promise.resolve()
+        return native.play({ id, text, locale, rate })
+      })
     } catch {
       if (this.playId !== id) return
       this.playId = null
@@ -145,7 +150,10 @@ export class AudioSpeechController {
     try {
       const native = this.native
       if (native === null) throw new Error('native-speech-unavailable')
-      await this.runNative(() => native.startListening({ id, locale }))
+      await this.runNative(() => {
+        if (this.listenId !== id) return Promise.resolve()
+        return native.startListening({ id, locale })
+      })
     } catch {
       if (this.listenId !== id) return
       this.listenId = null

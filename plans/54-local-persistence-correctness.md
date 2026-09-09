@@ -1,1 +1,0 @@
-archive/2026-09-07/54-local-persistence-correctness.md

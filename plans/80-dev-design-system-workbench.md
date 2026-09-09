@@ -4,11 +4,12 @@
 - **Milestone:** M1/M2, alongside the owning UI features
 - **Status:** 🟡 Workbench, token enumeration, contrast reports, inspection controls and production
   exclusion are implemented. Production-state and navigation/language specimen coverage remains; new
-  state APIs need 57 and future navigation components need 81. Existing component registration can
-  start now.
+  state APIs are supplied by 57 and future navigation components need 81. Current component
+  registration and export drift coverage are implemented.
 - **Depends on:** 53 completed; 57 production state APIs; 81 future navigation components; 87
   implemented language UI.
-- **Reviewed:** 2026-09-07 against merged baseline `2d9e8c3`.
+- **Reviewed:** 2026-09-09 against checkout `42f4d57`; source/plan review only, no new device or
+  deployment acceptance.
 
 ## Verified starting point
 
@@ -18,18 +19,19 @@ controls, device viewport and production specimens. Three workbench browser test
 route unavailability check exist. The original implementation commits are `be024be`, `5632ce1`,
 `7eefcf2` and `5ee247f`; plan 84 subsequently reviewed the rendered workbench.
 
-`specimenContract.ts` still marks forced pressed/focused and loading states pending. Its registry
-lists 30 components and six pending navigation names, while production now also exports
-`NavigationMenu` and `LanguageChoices`. Registration must follow actual production exports, not
-obsolete prototype names. The authored reference remains `Design System.dc.html`.
+`specimenContract.ts` marks forced pressed/focused and loading states available after plan 57
+integration. Reuse and verify these production APIs; do not implement them again. Its registry lists
+30 components and six pending navigation names, while production now also exports `NavigationMenu`
+and `LanguageChoices`. Registration must follow actual production exports, not obsolete prototype
+names. The authored reference remains `Design System.dc.html`.
 
 ## Remaining work
 
-1. [ ] Reconcile the registry with current exported components, including NavigationMenu and
+1. [x] Reconcile the registry with current exported components, including NavigationMenu and
        LanguageChoices. State explicitly whether each export is rendered, interaction-owned or
        internal; add a drift assertion that catches a new component being omitted.
-2. [ ] Consume plan 57's actual loading and forced pressed/focused APIs when they exist. Verify the
-       same component under default, disabled, error, selected, long-copy and motion variants; no
+2. [ ] Consume plan 57's implemented loading and forced pressed/focused APIs. Verify the same
+       component under default, disabled, error, selected, long-copy and motion variants; no
        demonstration-only clone or loading prop invented inside the workbench.
 3. [ ] Add Bulgarian/Russian and translated long-copy specimens alongside Spanish, testing 200% and
        310% with font size, line height and letter spacing. Inspection must not mutate learner
@@ -52,8 +54,29 @@ obsolete prototype names. The authored reference remains `Design System.dc.html`
 - `pnpm check`, `pnpm test:e2e:workbench` and `pnpm test:e2e:bundle` pass. Run learner E2E when
   shared component behavior changes; keep developer states outside the learner manifest.
 
+## Delivery order and gates
+
+1. Register current exports and add a drift check now. Loading/pressed/focused APIs are already
+   available; verify their coverage instead of waiting for all of plan 57.
+2. Add real Bulgarian/Russian and long-copy specimens, then English-target cases when 90 lands. Keep
+   inspection state separate from persisted learner preferences.
+3. Replace pending chrome specimens only when 81 supplies actual reusable components. Preserve
+   production exclusion and scoped workbench checks; number-bearing learner chart geometry belongs
+   to the owning feature's `e2e/render.spec.ts`, not a screenshot-only claim.
+
 ## Delivery boundary
 
 Commit registry/language coverage first (F-05), then each dependency-backed state addition (F-06).
 Plan 57 owns component behavior and theme implementation; 81 owns navigation. This plan owns only
 their inspection coverage. Do not rebuild the route, token pipeline, contrast report or gallery.
+
+## 2026-09-09 registry slice
+
+Registered all 33 component definitions, including direct-import AudioControls, LanguageChoices and
+NavigationMenu. Gallery entries now declare rendered or interaction-owned disposition; no exported
+internal components exist. The source-scanning unit assertion catches newly exported components
+omitted from barrels or the registry. Language selection stays in specimen-local React state,
+navigation uses the production sheet with inert destinations, and audio remains explicitly disabled.
+Focused registry tests pass. Combined fast and browser gates are retained by the parent integration
+run because this checkout has concurrent feature edits. Multilingual long-copy, per-component state
+matrices and future plan-81 APIs remain open; they are not closed by registering current components.

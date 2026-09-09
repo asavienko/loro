@@ -3,19 +3,22 @@
 - **Requirement IDs:** `F-05`, `F-06`, `F-08`, `F-09`, `LB-27`, `P3-12`; measurement for `Q-01`,
   `Q-02`, `Q-03`, `Q-05`, `Q-06`
 - **Milestone:** M2/M3
-- **Status:** 🟡 Language settings, copy resources and engine flag seams exist. General Settings,
-  durable preferences, telemetry and remote flags remain; local settings work needs 59, while only
-  experiment activation waits on Q-05.
+- **Status:** 🟡 Language settings and installation-local analytics consent persist through SQLite.
+  General Settings UI, remaining preferences, telemetry and remote flags remain; the consent control
+  awaits Settings UI and the event queue/transport is not implemented. Only experiment activation
+  waits on Q-05.
 - **Depends on:** 59 durable settings; 56/81 routes; 67/68 only for account-scoped sync; 86 for
   telemetry/config transport; 87 implemented language selection.
-- **Reviewed:** 2026-09-07 against merged baseline `2d9e8c3`.
+- **Reviewed:** 2026-09-09 against checkout `42f4d57`; source/plan review only, no new device or
+  deployment acceptance.
 
 ## Verified starting point
 
 `apps/mobile/app/languages.tsx`, the reactive copy adapter and atomic languagePair already exist.
 `apps/mobile/src/store/engines.ts` supplies local resolution/flag seams; no general Settings route
-or event upload pipeline exists. Reuse language/course settings from 87. Do not wait for the entire
-sync plan to build local privacy/preferences.
+or event upload pipeline exists. `src/data/learner.ts` already saves and hydrates onboarding goal,
+level, dailyMinutes and the language pair through SQLite. Reuse language/course settings from 87. Do
+not wait for the entire sync plan to build local privacy/preferences.
 
 ## Outcome
 
@@ -29,9 +32,9 @@ course-session repositories when wiring durable settings; do not recreate an ind
 ## Remaining work
 
 1. [ ] Define the settings schema, defaults, migrations, device-vs-account scope, sync policy,
-       reset, and lossless engine switching. Make existing in-memory onboarding answers durable
-       through plan 59; preserve languagePair as one atomic value and keep session/course changes
-       lossless.
+       reset, and lossless engine switching. Extend the existing durable onboarding fields in
+       `src/data/learner.ts` (goal, level and dailyMinutes), rather than adding another persistence
+       path; preserve languagePair as one atomic value and keep session/course changes lossless.
 2. [ ] Build settings/practice/privacy/download/debug routes through the navigation and design
        systems.
 3. [ ] Define typed event names/properties, consent, retention, redaction, local queue, upload
@@ -51,6 +54,32 @@ course-session repositories when wiring durable settings; do not recreate an ind
 - An experiment cannot start without exposure, common outcome, guardrails, owner, and stop rule.
 - Disabled/unknown/expired flags choose documented safe product behavior.
 
+## Delivery order and gates
+
+1. Extend current SQLite settings for local preferences and general Settings UI first. Reuse
+   existing onboarding/language writes; coordinate theme values with 57 and route metadata with
+   56/81.
+2. Classify every new setting as device-local or account-scoped before migration. Add merge policy
+   only for syncable fields, then integrate 67/68; local settings must work without sign-in.
+3. Deliver allowlisted telemetry/consent and safe flag defaults separately. Align deletion/export
+   with 67 and transport with 86. Q-05 gates experiment activation; no consent field may authorize
+   recorded-audio upload or restore the excluded legacy cloud-ASR/voice-clone fields.
+
 ## Out of scope
 
 Ad-tech tracking, raw audio analytics, pricing experiments, and Run/Phrasebook implementation.
+
+## Delivered slice — 2026-09-09
+
+`F-05`/`F-06`: version 1 device preferences now store analytics consent, off by default, in the
+existing SQLite `kv` table via `src/data/learner.ts`. This is installation-local, excluded from
+settings sync/outbox, and does not grant audio/transcript upload permission. Missing, malformed or
+unsupported versions read as consent off; no SQL migration is needed for the existing key/value
+table. Reset clears consent. The store action commits before publishing and preserves current
+course/progress state. Existing onboarding and atomic language-pair settings retain their owner.
+
+Real SQLite tests cover relaunch, durable revocation, absent/malformed/future data, reset, outbox
+exclusion, progress preservation, and write-failure rollback. This is a persistence seam only: there
+is no Settings consent control, event collection/queue, retention/export/erasure pipeline, remote
+flag assignment or experiment activation yet. Theme, audio, notification and practice preferences
+remain separately scoped work.

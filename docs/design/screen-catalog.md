@@ -202,9 +202,10 @@ paired live phones rather than six additional screens.
   built-hub switcher on Today, Add, Progress, Stream, Refrain, and phrase detail. Today additionally
   owns the root header band, text rail, and day-as-hairline-rows treatment. Every shared-menu
   surface has a switcher state in the browser manifest; onboarding retains its step-based
-  navigation. The spine's ongoing chip, the travelling transport, the exit sheet, resume, named
-  back, and `/more` remain plan 81's, on plan 56's route table — none of them has state behind it
-  yet.
+  navigation. `/more` now lists built destinations from the shared registry and has a browser
+  state; it is a utility, not one of the 23 authored learner screens. Grouping/search, the spine's
+  ongoing chip, travelling transport, exit sheet, resume and full named-back policy remain plan
+  81's, on plan 56's route metadata.
 - The existing stack headers now provide a labelled Today escape when a cold entry has no stack
   history (plan 84). Warm entries retain native Back. Today redirects to onboarding if setup is
   incomplete. This fixes direct Add/Progress/practice/detail dead ends; it is not the full plan-81
@@ -336,19 +337,19 @@ an inert control shaped like a working one is not.
 | ---------------------------------------------------------------------- | ------------------------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------ |
 | Ready summary values are a second label set — `Upcoming trip` (`2153`) | The option's own label — `A trip coming up` | `P1-08`          | A summary of the answers reads back the words they were offered in. Two label sets can disagree.             |
 | Summary rows carry emoji (`2155–2159`)                                 | Label and value only                        | `P1-08`          | Presentational; the four rows and their values are the requirement.                                          |
-| `goal`/`level` steer content (`2079–2083` helpers)                     | Both stored, neither read                   | `P1-03`, `P1-04` | Set selection is [plan 60](../../plans/60-authoritative-core-maths.md); storing first is plan 50 §3's order. |
+| `goal`/`level` steer content (`2079–2083` helpers)                     | Both stored, neither read                   | `P1-03`, `P1-04` | Set selection is [plan 60](../../plans/archive/2026-09-09/60-authoritative-core-maths.md); storing first is plan 50 §3's order. |
 | `goal = trip` opens the trip flow                                      | Always exits to Today                       | `P1-10`          | [Plan 69](../../plans/69-trip-domain-and-arc.md) owns the trip arc. Nothing offers a trip.                   |
 
 ### 2 · Add phrases
 
 | Authored                                                                          | Built                              | ID      | Why                                                                                                                |
 | --------------------------------------------------------------------------------- | ---------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------ |
-| Three modes — Discover · Browse · **Import** (`2351`)                             | Two; no Import segment             | `P2-14` | [Plan 65](../../plans/65-import-and-capture.md). A third segment leading nowhere is a row to nowhere.              |
+| Three modes — Discover · Browse · **Import** (`2351`)                             | Two; no Import segment             | `P2-14` | [Plan 65](../../plans/archive/2026-09-09/65-import-and-capture.md). A third segment leading nowhere is a row to nowhere.              |
 | `custom` free-text add row (`2372`)                                               | Absent                             | `P2-09` | Plan 65. `addOwnPhrase` exists in the store; no surface offers it.                                                 |
 | `+ Add all N` (`canAddAll`, `2374`, `308`, `315`)                                 | Absent                             | `P2-08` | Plan 65 with Import; bulk add needs the tagging sheet's answer for N phrases at once.                              |
-| In-your-stream strip (`hasRecent`, `recent`, `2384–2397`)                         | Absent                             | `P2-03` | [Plan 56](../../plans/56-navigation-failure-and-input-shell.md)'s list work; Today's rail carries the count today. |
+| In-your-stream strip (`hasRecent`, `recent`, `2384–2397`)                         | Absent                             | `P2-03` | [Plan 56](../../plans/archive/2026-09-09/56-navigation-failure-and-input-shell.md)'s list work; Today's rail carries the count today. |
 | Search field's `✕` clear (`showClear`, `2419`)                                    | Absent                             | `P2-07` | Plan 56 owns input behaviour.                                                                                      |
-| `♪` per suggestion row, and in the sheet (`playSheet`, `2426`)                    | Absent                             | `AS-01` | No audio module ([plan 62](../../plans/62-native-audio-playback.md)). A ♪ that plays nothing claims playback.      |
+| `♪` per suggestion row, and in the sheet (`playSheet`, `2426`)                    | Absent                             | `AS-01` | No audio module ([plan 62](../../plans/archive/2026-09-09/62-native-audio-playback.md)). A ♪ that plays nothing claims playback.      |
 | The sheet edits an owned phrase (`sheetEditing`, `Save changes`, `removeEditing`) | Add-only; editing is phrase detail | `P2-26` | One editor per control, reached from the row it belongs to. Two would drift.                                       |
 
 ### 3 · Phrase detail
@@ -379,13 +380,13 @@ The route implements capability-gated on-device recognition and assisted reveal 
 never claims spoken success. Transcript matching uses the canonical Rust boundary. Prompt-to-onset
 latency remains null until native onset measurement is validated. Physical-device speech accuracy,
 installed-language coverage and audible model playback still require the acceptance described in
-[plan 63](../../plans/63-native-speech-speak-and-latency.md).
+[plan 63](../../plans/archive/2026-09-09/63-native-speech-speak-and-latency.md).
 
 ### 11 · Today
 
 | Authored                                                     | Built                                 | ID      | Why                                                                                                                                                 |
 | ------------------------------------------------------------ | ------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Waves are `done` / `ready` / `locked` (`3309–3311`)          | `passed` / `next` / `later`           | `LB-03` | Nothing records that a wave was FINISHED — [plan 64](../../plans/64-today-and-refrain-production-loop.md) §1–2. `passed` is a fact about the clock. |
+| Waves are `done` / `ready` / `locked` (`3309–3311`)          | `passed` / `next` / `later`           | `LB-03` | Nothing records that a wave was FINISHED — [plan 64](../../plans/archive/2026-09-09/64-today-and-refrain-production-loop.md) §1–2. `passed` is a fact about the clock. |
 | Wave times `8:00` · `1:00` · `7:00`, hardcoded               | `PRODUCTION_WAVE_TIMES`, 24-hour      | `LB-03` | `1:00` is wrong for 13:00, and two sources for one fact drift. Fixed by NAV-16.                                                                     |
 | Ambient loop row and its transport (`toggleAmbient`, `1357`) | Absent                                | `LB-05` | Plan 62. A loop control with no audio behind it is the clearest possible false claim.                                                               |
 | Fading tail (`tail`, `1370–1375`)                            | Absent                                | `LB-06` | Nothing tracks a phrase leaving rotation. Plan 64.                                                                                                  |
@@ -407,7 +408,7 @@ installed-language coverage and audible model playback still require the accepta
 
 | Authored                                                                                                          | Built                                          | ID      | Why                                                                                                                                                                        |
 | ----------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Week / All time range toggle (`1794–1796`)                                                                        | Absent — one range                             | `P4-01` | The two stats it switches are the fabricated ones; with a real history it returns. [Plan 59](../../plans/59-device-persistence-and-resume.md), then 60.                    |
+| Week / All time range toggle (`1794–1796`)                                                                        | Absent — one range                             | `P4-01` | The two stats it switches are the fabricated ones; with a real history it returns. [Plan 59](../../plans/archive/2026-09-09/59-device-persistence-and-resume.md), then 60.                    |
 | Stats are `minutes listened` · `phrases in stream` · `reviews done`, at `84`/`38` and `20.6h`/`410` (`2839–2840`) | `phrases in stream` · `reps done` · `mastered` | `P4-03` | Nothing measures listening time (no audio) or reviews (no SRS session). Two of three stats had no source, so they were replaced by two that do.                            |
 | `Best` streak `14` (`2865`)                                                                                       | Absent                                         | `P4-02` | A best streak needs a history longer than the session. Plan 59.                                                                                                            |
 | Milestones: `7-day streak` at `6 of 7 — one more day!`, `First Café pack` (`2857–2860`)                           | `First tagged phrase`, `First locked in`       | `P4-07` | Both authored subs are literals, and "one more day" is a nudge about a missed day (non-negotiable 3). The two replacements are earned by signals that cannot go backwards. |

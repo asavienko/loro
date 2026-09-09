@@ -25,6 +25,7 @@ import { createPhrasesSlice } from './slices/phrases'
 import { createPracticeSlice } from './slices/practice'
 import { createRefrainSlice } from './slices/refrain'
 import { createSessionSlice } from './slices/session'
+import { createSettingsSlice } from './slices/settings'
 import { createUiSlice } from './slices/ui'
 import type { AppState, PracticeCommitContext, SliceContext, StoreDeps } from './types'
 import type { LearnerStorage } from '../data/learner'
@@ -104,6 +105,7 @@ export function createAppStore(deps: StoreDeps): UseBoundStore<StoreApi<AppState
       ...createPracticeSlice(ctx),
       ...createRefrainSlice(ctx),
       ...createUiSlice(ctx),
+      ...createSettingsSlice(ctx),
     }
     const wrapped = Object.fromEntries(
       Object.entries(actions).map(([name, action]) => [

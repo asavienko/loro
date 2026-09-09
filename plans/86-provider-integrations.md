@@ -2,12 +2,14 @@
 
 - **Requirement IDs:** `F-01`–`F-04`, `F-07`, `AS-01`–`AS-06`, `AI-01`–`AI-05`, `P3E-*`
 - **Milestone:** M2/M3, phased testing
-- **Status:** 🟡 Tested Anthropic transport and plan-85 contracts are merged. Common provider
-  controls, remaining adapters and runtime wiring remain; each needs its owning feature slice and
-  applicable product decision.
+- **Status:** 🟡 Tested Anthropic transport, Google/Apple identity verification and plan-85
+  contracts are merged. Process-local concurrency admission now bounds the Anthropic transport.
+  Remaining common provider controls, adapters and runtime wiring remain; each needs its owning
+  feature slice and applicable product decision.
 - **Depends on:** 85 completed; 66 backend seams; owning feature slices in 61/65/67/71/74/76/82; 88
   supplies testing infrastructure and 73 owns production operations.
-- **Reviewed:** 2026-09-07 against merged contracts/transport in `2d9e8c3` and the agreed plan 88.
+- **Reviewed:** 2026-09-09 against checkout `42f4d57`; source/plan review only, no new device or
+  deployment acceptance.
 
 ## Current evidence
 
@@ -15,6 +17,13 @@
 mandatory result parsing, bounded bytes/deadlines, reported usage and sanitized failures without
 automatic retries or redirects. Its deterministic/loopback tests exist. Nest still registers only
 `StubSceneProvider`; the transport is not a live AI feature.
+
+The shared `integrations/provider-concurrency.ts` admission primitive and Anthropic's required
+`maxConcurrentRequests` configuration reject excess calls before dispatch, with no waiting queue or
+retry. Permits cover response handling and release after settled success, failure or cancellation;
+duplicate release cannot increase capacity. Deterministic tests cover overlap, streamed bodies,
+failure/cancellation recovery and fixed rejection metadata. Limits apply to one transport instance
+in one process; account/distributed admission and atomic spend remain unimplemented.
 
 The former fixed-worktree restriction and wait-for-plan-85 instructions applied to work before the
 merge and are removed. Use normal repository branches, isolated test resources and shared contracts;
@@ -61,21 +70,36 @@ language/course identity in asset selection, requests and cache keys.
 1. [ ] Add common credential/configuration validation, deadlines, concurrency limits, atomic spend
        reservation/reconciliation, rate limits, circuit breaking and redacted metadata. Account for
        ambiguous provider charges on timeout; do not retry solely because a result is absent.
-2. [ ] Supply plan-67 identity verification and email adapters with deterministic signature,
-       delivery and failure tests. Keep account state and token issuance in 67.
+       Process-local concurrency admission is implemented for Anthropic; the remaining controls and
+       feature-level composition are still open.
+2. [ ] Reuse `auth/provider.ts` and `auth/auth.providers.ts` for the implemented OAuth exchange and
+       direct identity-proof paths. Add missing email delivery and common transport hardening with
+       deterministic signature, delivery and failure tests; do not create a second auth stack. Keep
+       account state and token issuance in 67.
 3. [ ] Supply plan-61 S3 upload/download and asset-integrity adapters with scoped permissions and
        expiry handling. Use local fixtures first; verify against private testing S3 when available.
 4. [ ] Wire Anthropic only through plans 76/82 after their semantics, evaluations, identity, budget
        and fallback checks pass. Keep live chat disabled while Q-18/Q-20 remain open. Supply guarded
        text-only enrichment and translation transports when requested by plans 61/65.
 5. [ ] Implement the ElevenLabs transport and deterministic failure/redaction tests for the
-       [plan-61 integration checklist](61-content-and-audio-assets.md#elevenlabs-integration-as-01-as-02-as-05-as-06).
+       [plan-61 integration checklist](archive/2026-09-09/61-content-and-audio-assets.md#elevenlabs-integration-as-01-as-02-as-05-as-06).
        Adapter implementation can proceed with fixtures; Q-15 gates live production rendering. Add
        licensed TTS, billing and privacy-safe diagnostics adapters only as their feature and
        decision gates pass; no recorded learner audio or voice-clone transport.
 6. [ ] Cover malformed output, oversized/stalled bodies, cancellation, credential failures,
        ambiguous spend, replay and log redaction. Add bounded paid smoke tests only when explicitly
        enabled, separate from ordinary CI and the $25–35 infrastructure allowance.
+
+## Delivery order and gates
+
+1. Reuse existing identity and Anthropic transports. Add shared bounded execution/configuration
+   controls, then the email/S3/ElevenLabs adapters required by 67/61. Test with deterministic
+   fixtures.
+2. Agree the content publication/download contract with 61 before S3 wiring; 88 supplies private
+   resources and IAM. Keep authenticated URL issuance separate from resource downloads, and never
+   forward API bearer credentials to an arbitrary manifest URL.
+3. Production rendering still waits for Q-15; live AI waits for its feature's consent, budget and
+   evaluation gates. Provider credentials or a passing transport test do not close those gates.
 
 ## Acceptance and delivery
 

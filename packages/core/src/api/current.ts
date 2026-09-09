@@ -1,3 +1,5 @@
+import { learningContentOperations, learningContentExamples } from './learning-content.js'
+export * from './learning-content.js'
 import { withExamples, currentExamples } from './examples.js'
 import { oauthOperations } from './oauth-operations.js'
 /** Implemented HTTP surface. Content and AI retain their documented development behavior. */
@@ -173,6 +175,7 @@ const signInBehavior =
 export const currentOperations = withExamples(
   [
     ...oauthOperations(ProblemSchema),
+    ...learningContentOperations(ProblemSchema),
     {
       ...base,
       id: 'health',
@@ -393,7 +396,7 @@ export const currentOperations = withExamples(
       behavior: 'Exposes configured provider name; not provider health.',
     },
   ] as const satisfies readonly Operation[],
-  currentExamples,
+  { ...currentExamples, ...learningContentExamples },
 )
 
 export type { Operation, ResponseContract } from './operation.js'

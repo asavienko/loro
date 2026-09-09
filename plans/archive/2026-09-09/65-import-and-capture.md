@@ -3,10 +3,13 @@
 - **Requirement IDs:** `P2-07`, `P2-09`, `P2-10`, `P2-15`, `AI-03`
 - **Milestone:** Import M2; Capture M3
 - **Status:** 🟡 Own-phrase identity/store, language ownership and reviewed offline paste import
-  exist. File import and OCR remain; OCR needs 58, and optional translation needs 76/86.
+  exist, with bounded paste review (50 nonempty rows / 20,000 UTF-16 code units), preserved
+  oversized drafts and smaller-batch retry. File import and OCR remain; OCR needs 58, and optional
+  translation needs 76/86.
 - **Depends on:** 56 input/navigation; 59 persistence; 58 camera/OCR substrate; 76/86 only for
   optional guarded text assistance.
-- **Reviewed:** 2026-09-07 against merged baseline `2d9e8c3`.
+- **Reviewed:** 2026-09-09 against checkout `42f4d57`; source/plan review only, no new device or
+  deployment acceptance.
 
 **Archive disposition (2026-09-09):** Archived at user request after integration review. The partial
 status and remaining acceptance criteria below are retained; archival does not mark this plan
@@ -44,12 +47,30 @@ Discover/Browse and the difficulty/tag sheet exist. This plan does not rebuild t
 6. [ ] If AI translation is enabled, validate output, mark provenance, apply budgets, and never
        upload an image without a separately approved privacy contract.
 
+### Delivered review limit slice (2026-09-09)
+
+Paste review rejects an entire oversized batch before normalizing or rendering rows; it never
+silently imports a prefix. The original text stays editable, and reducing it clears the warning.
+CRLF, LF and CR line endings share the same row count and parsing. Unit boundary tests and a browser
+recovery flow cover this slice; file/encoding input, batch persistence recovery and OCR remain under
+the delivery order below.
+
 ## Acceptance criteria
 
 - Import works fully offline and never creates a row without learner review.
 - Duplicate/partial/oversize inputs are recoverable and cannot freeze the UI.
 - Imported/captured phrases survive relaunch, sync safely, and use device-TTS fallback when needed.
 - Camera denial has a tested, non-shaming Import fallback.
+
+## Delivery order and gates
+
+1. Extend the shipped paste-review path with bounded offline file input, encoding/format errors,
+   duplicate review and cancellation. Reuse the phrase factory and 59 transaction/outbox boundary.
+2. Preserve reviewed target/meaning language and stable identities across retry, partial acceptance
+   and relaunch. Define the batch/recovery boundary before writes so retry cannot duplicate rows.
+3. Deliver OCR separately after the 58 native permission harness is available; denial returns to
+   Import without losing text. Optional text assistance from 76/86 must never gate offline import,
+   and OCR images stay on device without a separately approved upload contract.
 
 ## Out of scope
 

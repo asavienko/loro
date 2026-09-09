@@ -314,11 +314,28 @@ export const copy = {
     },
   },
   nav: {
+    get more() {
+      return message('nav.more')
+    },
     get home() {
       return message('nav.home')
     },
     get phrasePlace() {
       return message('nav.phrasePlace')
+    },
+    moreGroups: {
+      get lately() {
+        return message('nav.moreGroups.lately')
+      },
+      get phrases() {
+        return message('nav.moreGroups.phrases')
+      },
+      get practice() {
+        return message('nav.moreGroups.practice')
+      },
+      get you() {
+        return message('nav.moreGroups.you')
+      },
     },
     get add() {
       return message('nav.add')
@@ -553,6 +570,9 @@ export const copy = {
       get preview() {
         return message('add.import.preview')
       },
+      tooLarge: (rows: number, characters: number): string =>
+        message('add.import.tooLarge', { rows, characters }),
+      tooLong: (characters: number): string => message('add.import.tooLong', { characters }),
       review: (count: number): string => message('add.import.review', { count }),
       get reviewHint() {
         return message('add.import.reviewHint')
@@ -571,6 +591,9 @@ export const copy = {
       },
       get invalid() {
         return message('add.import.invalid')
+      },
+      get saveFailed() {
+        return message('add.import.saveFailed')
       },
       add: (count: number): string => message('add.import.add', { count }),
     },

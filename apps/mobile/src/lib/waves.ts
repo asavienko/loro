@@ -8,13 +8,10 @@
  *
  * Two things this deliberately does NOT do:
  *
- *   • **Claim a wave was completed.** Nothing persists per-wave completion yet — plan 64 owns
- *     that — so a wave whose time has gone by is `passed`, a fact about the clock, and never
- *     `done`, which would be a fact about the learner this app cannot know (non-negotiable 2).
- *     The authored day row draws `passed` with the receding ink it uses for `done`
- *     (`--day-done-ink`), and prints no status word beside it.
+ *   • **Infer completion from the clock.** Only the persisted completed-wave keys set
+ *     `completed`; an elapsed hour alone remains `passed`, never a learner achievement.
  *   • **Enforce the schedule.** `next` is presentation. The Refrain stays reachable at any hour,
- *     exactly as it was before; timed enforcement is plan 64's, together with wave persistence.
+ *     exactly as it was before; timed enforcement remains plan 64's next slice.
  *
  * Times are zero-padded 24-hour `HH:MM` — the shape `EngineContext.settings.waveTimes` stores and
  * `clock.localTimeLabel()` returns — so they compare as plain strings and neither side is parsed.

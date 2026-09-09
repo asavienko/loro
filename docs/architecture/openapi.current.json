@@ -571,6 +571,298 @@
         ]
       }
     },
+    "/content/v2/manifest": {
+      "get": {
+        "operationId": "learningContentManifest",
+        "summary": "Multilingual bundled manifest",
+        "description": "Defaults to es-ES/en. Matching native/target languages are rejected. Real membership counts; no ETag or Cache-Control.",
+        "tags": [
+          "content"
+        ],
+        "security": [],
+        "parameters": [
+          {
+            "name": "target",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/learningContentManifest_query_target"
+            }
+          },
+          {
+            "name": "native",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/learningContentManifest_query_native"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Multilingual bundled manifest",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/learningContentManifest_200"
+                },
+                "examples": {
+                  "illustrative": {
+                    "value": {
+                      "targetLocale": "es-ES",
+                      "nativeLanguage": "en",
+                      "catalogVersion": 1,
+                      "reviewStatus": "legacy",
+                      "phraseCount": 1,
+                      "capabilities": {
+                        "audio": false,
+                        "asr": false,
+                        "pronunciationScoring": false
+                      },
+                      "packs": [
+                        {
+                          "id": "cafe",
+                          "label": "Café",
+                          "emoji": "☕",
+                          "count": 1,
+                          "onboarding": true
+                        }
+                      ],
+                      "scenarios": []
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/oauthStart_401"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/oauthStart_401"
+                }
+              }
+            }
+          }
+        },
+        "x-loro-auth-boundary": "none",
+        "x-loro-status": "implemented",
+        "x-loro-owner-plan": 66,
+        "x-loro-requirements": [
+          "F-04",
+          "F-08"
+        ]
+      }
+    },
+    "/content/v2/diff": {
+      "get": {
+        "operationId": "learningContentDiff",
+        "summary": "Multilingual bundled catalog snapshot",
+        "description": "Decimal safe-integer version. Same version returns no upserts; every other version returns the full bundled catalog with fullResyncRequired. Deprecations are empty. Matching native/target languages are rejected.",
+        "tags": [
+          "content"
+        ],
+        "security": [],
+        "parameters": [
+          {
+            "name": "target",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/learningContentManifest_query_target"
+            }
+          },
+          {
+            "name": "native",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/learningContentManifest_query_native"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/learningContentDiff_query_from"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Multilingual bundled catalog snapshot",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/learningContentDiff_200"
+                },
+                "examples": {
+                  "illustrative": {
+                    "value": {
+                      "targetLocale": "es-ES",
+                      "nativeLanguage": "en",
+                      "from": 0,
+                      "to": 1,
+                      "upserts": [
+                        {
+                          "id": "cafe1",
+                          "targetLocale": "es-ES",
+                          "targetText": "Un café, por favor.",
+                          "translations": {
+                            "en": "A coffee, please."
+                          },
+                          "theme": "Café",
+                          "emoji": "☕"
+                        }
+                      ],
+                      "deprecations": [],
+                      "fullResyncRequired": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/oauthStart_401"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/oauthStart_401"
+                }
+              }
+            }
+          }
+        },
+        "x-loro-auth-boundary": "none",
+        "x-loro-status": "implemented",
+        "x-loro-owner-plan": 66,
+        "x-loro-requirements": [
+          "F-04",
+          "F-08"
+        ]
+      }
+    },
+    "/content/v2/pack": {
+      "get": {
+        "operationId": "learningContentPack",
+        "summary": "Multilingual bundled pack",
+        "description": "Unknown pack or unsupported language pair returns 422. Neutral targetText/translations payload; legacy content routes remain unchanged.",
+        "tags": [
+          "content"
+        ],
+        "security": [],
+        "parameters": [
+          {
+            "name": "target",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/learningContentManifest_query_target"
+            }
+          },
+          {
+            "name": "native",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/learningContentManifest_query_native"
+            }
+          },
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/learningContentPack_query_id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Multilingual bundled pack",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/learningContentPack_200"
+                },
+                "examples": {
+                  "illustrative": {
+                    "value": {
+                      "targetLocale": "es-ES",
+                      "nativeLanguage": "en",
+                      "id": "cafe",
+                      "label": "Café",
+                      "phrases": [
+                        {
+                          "id": "cafe1",
+                          "targetLocale": "es-ES",
+                          "targetText": "Un café, por favor.",
+                          "translations": {
+                            "en": "A coffee, please."
+                          },
+                          "theme": "Café",
+                          "emoji": "☕"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/oauthStart_401"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "RFC 9457 problem; code selects recovery.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/oauthStart_401"
+                }
+              }
+            }
+          }
+        },
+        "x-loro-auth-boundary": "none",
+        "x-loro-status": "implemented",
+        "x-loro-owner-plan": 66,
+        "x-loro-requirements": [
+          "F-04",
+          "F-08"
+        ]
+      }
+    },
     "/health": {
       "get": {
         "operationId": "health",
@@ -3147,6 +3439,667 @@
           "created_at"
         ],
         "additionalProperties": {}
+      },
+      "learningContentManifest_query_target": {
+        "default": "es-ES",
+        "type": "string",
+        "enum": [
+          "es-ES",
+          "bg-BG",
+          "ru-RU"
+        ]
+      },
+      "learningContentManifest_query_native": {
+        "default": "en",
+        "type": "string",
+        "enum": [
+          "en",
+          "bg",
+          "ru"
+        ]
+      },
+      "learningContentManifest_200": {
+        "type": "object",
+        "properties": {
+          "targetLocale": {
+            "type": "string",
+            "enum": [
+              "es-ES",
+              "bg-BG",
+              "ru-RU"
+            ]
+          },
+          "nativeLanguage": {
+            "type": "string",
+            "enum": [
+              "en",
+              "bg",
+              "ru"
+            ]
+          },
+          "catalogVersion": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "reviewStatus": {
+            "type": "string",
+            "enum": [
+              "pending-bilingual-review",
+              "legacy"
+            ]
+          },
+          "phraseCount": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "capabilities": {
+            "type": "object",
+            "properties": {
+              "audio": {
+                "type": "boolean"
+              },
+              "asr": {
+                "type": "boolean"
+              },
+              "pronunciationScoring": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "audio",
+              "asr",
+              "pronunciationScoring"
+            ],
+            "additionalProperties": false
+          },
+          "packs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                },
+                "emoji": {
+                  "type": "string"
+                },
+                "count": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "onboarding": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "id",
+                "label",
+                "emoji",
+                "count",
+                "onboarding"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "scenarios": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                },
+                "emoji": {
+                  "type": "string"
+                },
+                "count": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "id",
+                "label",
+                "emoji",
+                "count"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "targetLocale",
+          "nativeLanguage",
+          "catalogVersion",
+          "reviewStatus",
+          "phraseCount",
+          "capabilities",
+          "packs",
+          "scenarios"
+        ],
+        "additionalProperties": false
+      },
+      "learningContentDiff_query_from": {
+        "default": "0",
+        "type": "string",
+        "pattern": "^\\d+$"
+      },
+      "learningContentDiff_200": {
+        "type": "object",
+        "properties": {
+          "targetLocale": {
+            "type": "string",
+            "enum": [
+              "es-ES",
+              "bg-BG",
+              "ru-RU"
+            ]
+          },
+          "nativeLanguage": {
+            "type": "string",
+            "enum": [
+              "en",
+              "bg",
+              "ru"
+            ]
+          },
+          "from": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "to": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "upserts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "targetLocale": {
+                  "type": "string",
+                  "enum": [
+                    "es-ES",
+                    "bg-BG",
+                    "ru-RU"
+                  ]
+                },
+                "targetText": {
+                  "type": "string"
+                },
+                "translations": {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string",
+                    "enum": [
+                      "en",
+                      "bg",
+                      "ru"
+                    ]
+                  },
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                },
+                "theme": {
+                  "type": "string",
+                  "enum": [
+                    "Café",
+                    "Dining",
+                    "Travel",
+                    "Directions",
+                    "Shopping",
+                    "Small talk",
+                    "Survival",
+                    "Hotel"
+                  ]
+                },
+                "emoji": {
+                  "type": "string"
+                },
+                "register": {
+                  "type": "string",
+                  "enum": [
+                    "neutral",
+                    "casual",
+                    "formal"
+                  ]
+                },
+                "cefr": {
+                  "type": "string",
+                  "enum": [
+                    "A1",
+                    "A2",
+                    "B1",
+                    "B2"
+                  ]
+                },
+                "teaching": {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string",
+                    "enum": [
+                      "en",
+                      "bg",
+                      "ru"
+                    ]
+                  },
+                  "additionalProperties": {
+                    "type": "object",
+                    "properties": {
+                      "resp": {
+                        "type": "string"
+                      },
+                      "hint": {
+                        "type": "string"
+                      },
+                      "note": {
+                        "type": "string"
+                      },
+                      "words": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "targetText": {
+                              "type": "string"
+                            },
+                            "gloss": {
+                              "type": "string"
+                            },
+                            "say": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "targetText",
+                            "gloss"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "example": {
+                        "type": "object",
+                        "properties": {
+                          "targetText": {
+                            "type": "string"
+                          },
+                          "translation": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "targetText",
+                          "translation"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "respIpa": {
+                  "type": "string"
+                },
+                "audio": {
+                  "type": "object",
+                  "properties": {
+                    "uri": {
+                      "type": "string"
+                    },
+                    "sha256": {
+                      "type": "string",
+                      "pattern": "^[a-f0-9]{64}$"
+                    },
+                    "ms": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "uri",
+                    "sha256",
+                    "ms"
+                  ],
+                  "additionalProperties": false
+                },
+                "f0Native": {
+                  "minItems": 14,
+                  "maxItems": 14,
+                  "type": "array",
+                  "items": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  }
+                },
+                "syl": {
+                  "maxItems": 24,
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "t": {
+                        "type": "string",
+                        "maxLength": 12
+                      },
+                      "stress": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "dur": {
+                        "type": "number",
+                        "exclusiveMinimum": 0
+                      }
+                    },
+                    "required": [
+                      "t",
+                      "stress",
+                      "dur"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "deprecatedBy": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "targetLocale",
+                "targetText",
+                "translations",
+                "theme",
+                "emoji"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "deprecations": {
+            "type": "array",
+            "items": {
+              "not": {}
+            }
+          },
+          "fullResyncRequired": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "targetLocale",
+          "nativeLanguage",
+          "from",
+          "to",
+          "upserts",
+          "deprecations",
+          "fullResyncRequired"
+        ],
+        "additionalProperties": false
+      },
+      "learningContentPack_query_id": {
+        "type": "string",
+        "minLength": 1
+      },
+      "learningContentPack_200": {
+        "type": "object",
+        "properties": {
+          "targetLocale": {
+            "type": "string",
+            "enum": [
+              "es-ES",
+              "bg-BG",
+              "ru-RU"
+            ]
+          },
+          "nativeLanguage": {
+            "type": "string",
+            "enum": [
+              "en",
+              "bg",
+              "ru"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "phrases": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "targetLocale": {
+                  "type": "string",
+                  "enum": [
+                    "es-ES",
+                    "bg-BG",
+                    "ru-RU"
+                  ]
+                },
+                "targetText": {
+                  "type": "string"
+                },
+                "translations": {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string",
+                    "enum": [
+                      "en",
+                      "bg",
+                      "ru"
+                    ]
+                  },
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                },
+                "theme": {
+                  "type": "string",
+                  "enum": [
+                    "Café",
+                    "Dining",
+                    "Travel",
+                    "Directions",
+                    "Shopping",
+                    "Small talk",
+                    "Survival",
+                    "Hotel"
+                  ]
+                },
+                "emoji": {
+                  "type": "string"
+                },
+                "register": {
+                  "type": "string",
+                  "enum": [
+                    "neutral",
+                    "casual",
+                    "formal"
+                  ]
+                },
+                "cefr": {
+                  "type": "string",
+                  "enum": [
+                    "A1",
+                    "A2",
+                    "B1",
+                    "B2"
+                  ]
+                },
+                "teaching": {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string",
+                    "enum": [
+                      "en",
+                      "bg",
+                      "ru"
+                    ]
+                  },
+                  "additionalProperties": {
+                    "type": "object",
+                    "properties": {
+                      "resp": {
+                        "type": "string"
+                      },
+                      "hint": {
+                        "type": "string"
+                      },
+                      "note": {
+                        "type": "string"
+                      },
+                      "words": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "targetText": {
+                              "type": "string"
+                            },
+                            "gloss": {
+                              "type": "string"
+                            },
+                            "say": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "targetText",
+                            "gloss"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "example": {
+                        "type": "object",
+                        "properties": {
+                          "targetText": {
+                            "type": "string"
+                          },
+                          "translation": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "targetText",
+                          "translation"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "respIpa": {
+                  "type": "string"
+                },
+                "audio": {
+                  "type": "object",
+                  "properties": {
+                    "uri": {
+                      "type": "string"
+                    },
+                    "sha256": {
+                      "type": "string",
+                      "pattern": "^[a-f0-9]{64}$"
+                    },
+                    "ms": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "uri",
+                    "sha256",
+                    "ms"
+                  ],
+                  "additionalProperties": false
+                },
+                "f0Native": {
+                  "minItems": 14,
+                  "maxItems": 14,
+                  "type": "array",
+                  "items": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  }
+                },
+                "syl": {
+                  "maxItems": 24,
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "t": {
+                        "type": "string",
+                        "maxLength": 12
+                      },
+                      "stress": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "dur": {
+                        "type": "number",
+                        "exclusiveMinimum": 0
+                      }
+                    },
+                    "required": [
+                      "t",
+                      "stress",
+                      "dur"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "deprecatedBy": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "targetLocale",
+                "targetText",
+                "translations",
+                "theme",
+                "emoji"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "targetLocale",
+          "nativeLanguage",
+          "id",
+          "label",
+          "phrases"
+        ],
+        "additionalProperties": false
       },
       "health_200": {
         "type": "object",

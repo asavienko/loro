@@ -29,6 +29,9 @@ export const PRODUCTION_COMPONENT_NAMES = [
   'PhraseRow',
   'StatRow',
   'TagChips',
+  'AudioControls',
+  'LanguageChoices',
+  'NavigationMenu',
 ] as const
 
 export type RegisteredProductionComponentName = (typeof PRODUCTION_COMPONENT_NAMES)[number]
@@ -86,5 +89,8 @@ export const PENDING_NAVIGATION_SPECIMENS: readonly PendingNavigationSpecimen[] 
   PLAN_80_PENDING_NAVIGATION.map((name) => ({
     name,
     status: 'pending-plan-81',
-    reason: 'Intentionally pending plan 81; the workbench does not draw a lookalike.',
+    reason:
+      name === 'Spine'
+        ? 'The current spine is rendered as NavigationMenu; a separate Spine API remains pending plan 81.'
+        : 'This named API remains pending plan 81; the workbench does not draw a lookalike.',
   }))

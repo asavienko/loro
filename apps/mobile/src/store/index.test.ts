@@ -21,6 +21,7 @@ import {
 } from './index'
 import { PRACTICE_DAY_RETENTION } from './state'
 import { copy } from '../lib/copy'
+import type { LearnerStorage } from '../data/learner'
 
 /** A catalog id that definitely exists, whatever the catalog currently holds. */
 const someCatalogId = (): string => {
@@ -262,6 +263,42 @@ describe('learner-authored phrases', () => {
     const row = useApp.getState().phrases.find((p) => p.id === id)
     expect(toView(row!).theme).toBe('Dining')
     expect(toView(row!).emoji).toBe('🧾')
+  })
+})
+
+describe('persistence failures', () => {
+  it('reports a failed phrase write without publishing its partial row', () => {
+    const failure = new Error('disk full')
+    const reported: unknown[] = []
+    const storage = {
+      load: () => INITIAL_STATE,
+      commit: () => {
+        throw failure
+      },
+      hasAttempt: () => false,
+      hasCatalog: () => false,
+      erase: () => INITIAL_STATE,
+      refrainDay: () => null,
+    } as LearnerStorage
+    const isolated = createAppStore({
+      clock: {
+        now: () => 1_785_231_660_000,
+        localDay: () => '2026-07-28',
+        streakDay: () => '2026-07-28',
+      },
+      newId: createUserPhraseIds({
+        now: () => 1_785_231_660_000,
+        bytes: (count) => new Uint8Array(count).fill(7),
+      }),
+      storage,
+      onPersistenceError: (error) => reported.push(error),
+    })
+
+    expect(() =>
+      isolated.getState().addOwnPhrase({ targetText: 'Hola', translation: 'Hi' }),
+    ).toThrow(failure)
+    expect(reported).toEqual([failure])
+    expect(isolated.getState().phrases).toEqual([])
   })
 })
 

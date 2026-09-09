@@ -1,1 +1,0 @@
-archive/2026-07-30/18-select-rs-cloze-and-set-selection.md

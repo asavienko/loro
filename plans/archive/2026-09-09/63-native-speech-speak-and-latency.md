@@ -7,7 +7,8 @@
   latency remain; full acceptance requires installed models and hardware evidence.
 - **Depends on:** 58 native workspace; 60 matching/bindings; 62 shared audio clock/session; 87
   language identities.
-- **Reviewed:** 2026-09-08 during plan-94 integration; release gates below remain explicit.
+- **Reviewed:** 2026-09-09 against checkout `42f4d57`; source/plan review only, no new device or
+  deployment acceptance.
 
 **Archive disposition (2026-09-09):** Archived at user request after integration review. The partial
 status and remaining acceptance criteria below are retained; archival does not mark this plan
@@ -26,6 +27,12 @@ airplane-mode Android emulator with no voice/model confirmed the unavailable/rev
 microphone permission request. It did not validate successful ASR or a language's accuracy. The JS
 boundary validates native speech events and deliberately drops numeric timing until a native
 monotonic-clock measurement exists.
+
+The runtime speech-event adapter also rejects null, non-object, incomplete and empty-session
+payloads without throwing. Only the validated lifecycle fields are projected into app state;
+unexpected native fields and numeric callback timing are discarded. Unit fixtures cover every
+existing speech state, including empty transcripts for silence/error/unavailable handling. This is
+boundary hardening, not new physical-device recognition or onset acceptance.
 
 ## Outcome
 
@@ -53,6 +60,16 @@ Speak to Progress with reveal-mode degradation.
 - Speak is completable offline with ASR or reveal mode and writes progress only through
   `applyDelta`.
 - Native-speaker acceptance and device-floor latency/accuracy thresholds are recorded with fixtures.
+
+## Delivery order and gates
+
+1. Continue per-target device ASR/permission acceptance on the existing recognition/reveal path
+   independently of recorded-asset delivery. Keep unsupported targets usable through reveal.
+2. Agree timestamp units, prompt-end event, native buffer ownership/release and cancellation with
+   62/60 before exposing onset measurement. Include stale-session, silence/noise and interruption
+   fixtures; only real native monotonic-clock measurements may replace null latency.
+3. Feed measured results to 64 and device evidence to 72; include English only after plan 90's
+   locale contract and separate capability review. Successful recognition is not DSP scoring proof.
 
 ## Out of scope
 

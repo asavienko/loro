@@ -1,3 +1,8 @@
+import {
+  LearningManifestSchema,
+  LearningPackSchema,
+  LearningDiffSchema,
+} from '@loro/core/api/current'
 import { describe, expect, it } from 'vitest'
 import { LearningContentController } from './learning-content.controller.js'
 import { ContentController } from './content.controller.js'
@@ -12,7 +17,15 @@ describe('F-08 versioned content API', () => {
           expect(() => controller.manifest(target, native)).toThrow()
           continue
         }
-        expect(controller.manifest(target, native).phraseCount).toBe(31)
+        expect(LearningManifestSchema.parse(controller.manifest(target, native)).phraseCount).toBe(
+          31,
+        )
+        expect(LearningPackSchema.safeParse(controller.pack('cafe', target, native)).success).toBe(
+          true,
+        )
+        expect(LearningDiffSchema.safeParse(controller.diff('0', target, native)).success).toBe(
+          true,
+        )
         expect(controller.pack('cafe', target, native).phrases).toHaveLength(4)
         expect(controller.diff('0', target, native).upserts[0]?.targetLocale).toBe(target)
         expect(controller.diff('1', target, native).upserts).toHaveLength(0)

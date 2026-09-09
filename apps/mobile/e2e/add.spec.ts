@@ -109,3 +109,87 @@ test('P2-09/P2-10: reviews an offline import before persisting each accepted own
     page.getByText('Already in your stream. Edit it to keep it as a separate phrase.'),
   ).toBeVisible()
 })
+
+test('P2-09/P2-10: oversized import preserves the draft and recovers with a smaller batch', async ({
+  page,
+}) => {
+  await onboard(page)
+  await page.getByRole('button', { name: 'Add' }).click()
+  await page.getByRole('button', { name: 'import' }).click()
+  const input = page.getByRole('textbox', { name: 'Phrases to import' })
+  const oversized = Array.from({ length: 51 }, (_, index) => `Hola ${index} | Hi`).join('\n')
+  await input.fill(oversized)
+  await page.getByRole('button', { name: 'Review phrases' }).click()
+  await expect(page.getByRole('alert')).toContainText('Your text is still here')
+  await expect(input).toHaveValue(oversized)
+  await expect(page.getByRole('button', { name: /Add .* reviewed phrase/ })).toHaveCount(0)
+  await input.fill('Buenas noches | Good night')
+  await expect(page.getByRole('alert')).toHaveCount(0)
+  await page.getByRole('button', { name: 'Review phrases' }).click()
+  await page.getByRole('button', { name: 'Add 1 reviewed phrase' }).click()
+  await expect(page.getByText('11 in stream')).toBeVisible()
+})
+
+test('P2-09/P2-10: edited import fields keep their draft and cannot bypass sync-safe limits', async ({
+  page,
+}) => {
+  await onboard(page)
+  await page.getByRole('button', { name: 'Add' }).click()
+  await page.getByRole('button', { name: 'import' }).click()
+  await page.getByRole('textbox', { name: 'Phrases to import' }).fill('Hola | Hello')
+  await page.getByRole('button', { name: 'Review phrases' }).click()
+  const target = page.getByRole('textbox', { name: 'Imported phrase on line 1', exact: true })
+  const overLimit = 'a'.repeat(2_001)
+  await target.fill(overLimit)
+  await expect(page.getByText(/can each have up to 2000 characters/)).toBeVisible()
+  await expect(target).toHaveValue(overLimit)
+  await expect(page.getByRole('button', { name: 'Add 0 reviewed phrases' })).toBeDisabled()
+  await target.fill('Hola de nuevo')
+  await expect(page.getByText(/can each have up to 2000 characters/)).toHaveCount(0)
+  await page.getByRole('button', { name: 'Add 1 reviewed phrase' }).click()
+  await expect(page.getByText('11 in stream')).toBeVisible()
+})
+
+test('P2-09/P2-10: a partial import save retains rejected edited rows for correction', async ({
+  page,
+}) => {
+  await onboard(page)
+  await page.getByRole('button', { name: 'Add' }).click()
+  await page.getByRole('button', { name: 'import' }).click()
+  const overLimit = 'a'.repeat(2_001)
+  await page
+    .getByRole('textbox', { name: 'Phrases to import' })
+    .fill(`Hola nueva | New hello\nHola nueva | Duplicate\nIncomplete\n${overLimit} | Meaning`)
+  await page.getByRole('button', { name: 'Review phrases' }).click()
+  const incompleteTarget = page.getByRole('textbox', {
+    name: 'Imported phrase on line 3',
+    exact: true,
+  })
+  // The review permits a separator inside an edited target. Its retained input must encode that
+  // value without turning part of the phrase into the meaning on the next review.
+  await incompleteTarget.fill('Edited | draft that must survive')
+  await page.getByRole('button', { name: 'Add 1 reviewed phrase' }).click()
+
+  await expect(page.getByText('11 in stream')).toBeVisible()
+  await expect(incompleteTarget).toHaveValue('Edited | draft that must survive')
+  await expect(
+    page.getByRole('textbox', { name: 'Imported phrase on line 2', exact: true }),
+  ).toHaveValue('Hola nueva')
+  await expect(
+    page.getByRole('textbox', { name: 'Imported phrase on line 4', exact: true }),
+  ).toHaveValue(overLimit)
+
+  await page.getByRole('button', { name: 'Review phrases' }).click()
+  await expect(
+    page.getByRole('textbox', { name: 'Imported phrase on line 2', exact: true }),
+  ).toHaveValue('Edited | draft that must survive')
+
+  await page
+    .getByRole('textbox', { name: 'Meaning for imported phrase on line 2', exact: true })
+    .fill('Saved after correction')
+  await page.getByRole('button', { name: 'Add 1 reviewed phrase' }).click()
+  await expect(page.getByText('12 in stream')).toBeVisible()
+  await expect(
+    page.getByRole('textbox', { name: 'Imported phrase on line 2', exact: true }),
+  ).toHaveCount(0)
+})

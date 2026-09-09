@@ -1,1 +1,0 @@
-archive/2026-07-30/47-typography-motion-and-haptics.md

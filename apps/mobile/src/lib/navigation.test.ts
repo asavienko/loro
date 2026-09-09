@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
   DESTINATIONS,
+  destinationsForGroup,
+  NAVIGATION_GROUPS,
   SURFACES,
   builtSurfaceForPath,
   conditionalHome,
@@ -19,6 +21,24 @@ describe('built navigation destinations', () => {
     expect(
       DESTINATIONS.filter((destination) => destination.rail).map((destination) => destination.href),
     ).toEqual(['/practice/stream', '/add', '/progress'])
+  })
+
+  it('gives every built destination one route policy for More and the switcher', () => {
+    expect(
+      new Set(
+        NAVIGATION_GROUPS.flatMap(destinationsForGroup).map((destination) => destination.href),
+      ),
+    ).toEqual(
+      new Set(
+        DESTINATIONS.filter(({ href }) => href !== '/' && href !== '/more').map(({ href }) => href),
+      ),
+    )
+    for (const destination of DESTINATIONS) {
+      expect(destination.parent).toBe('today')
+      expect(destination.home).toBe('today')
+      expect(destination.exit).toBe(destination.href === '/' ? 'none' : 'stack-or-home')
+      expect(['learner', 'utility']).toContain(destination.routeClass)
+    }
   })
   it('names contextual phrase pages without exposing onboarding or developer pages in the menu', () => {
     expect(placeForPath('/phrase/missing')).toBe('Phrase')
@@ -47,6 +67,7 @@ describe('surface registry and deep-link guard', () => {
       'progress',
       'languages',
       'account',
+      'more',
     ])
   })
 

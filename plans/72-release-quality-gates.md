@@ -4,11 +4,12 @@
   Q-14
 - **Milestone:** M2
 - **Status:** 🟡 Browser state/a11y/text-scale, geometry, bundle and i18n checks exist. Native
-  matrices, pseudo-locale and measured budgets remain; 58 enables device harnesses, Q-14 blocks peak
-  sign-off and 87 owns bilingual sign-off.
+  matrices, full pseudo-locale layout sweeps and measured budgets remain; 58 enables device
+  harnesses, Q-14 blocks peak sign-off and 87 owns bilingual sign-off.
 - **Depends on:** 58 device harness; 57 visual APIs; owning feature acceptance slices as they land.
   This shared harness is not a prerequisite to finish every feature before work starts.
-- **Reviewed:** 2026-09-08 against integrated runtime `e013141`; unfinished scope retained.
+- **Reviewed:** 2026-09-09; baseline review at `42f4d57`, followed by the pseudo-locale slice and
+  focused unit/browser checks below. No new native-device or deployment acceptance.
 
 Previous starting point: [archived snapshot](archive/2026-09-08/72-release-quality-gates.md).
 
@@ -27,12 +28,24 @@ Release claims are measured on native devices and production bundles. Every rout
 semantic, text-scale, localization, performance, and recovery coverage; critical domain properties
 have simulation/property/golden tests.
 
+## Implemented slice — development pseudo-locale (2026-09-09)
+
+- Generated `en-XA` UI fixture preserves ICU arguments, select/plural structure and interpolated
+  learning text. The explicit development flag enables it; production ignores the flag.
+- Generator drift and ICU structure are checked by the normal mobile unit gate. Focused i18n,
+  pseudo-locale and missing-PluralRules regression tests pass (11 tests).
+- The opt-in browser smoke passed expanded-copy onboarding and Today's horizontal fit on 2026-09-09.
+  This is a harness slice, not all-state clipping or native acceptance; see
+  [localization](../docs/process/localization.md#development-pseudo-locale-f-08-plan-72).
+- Native matrices, long-content/text-scale pseudo sweeps, locale date coverage and measured budgets
+  remain. Q-14 and plan 87's bilingual evidence still own their existing sign-off gates.
+
 ## Remaining work
 
 1. [ ] Resolve Q-14 and define native screen-reader announcement/focus behavior for the Refrain
        peak. Complete VoiceOver/TalkBack, switch/keyboard, contrast, touch target, reduced motion,
        language, caption/transcript, and 200%/310% text passes.
-2. [ ] Extend the existing i18next/ICU runtime with a pseudo-locale and locale-aware date/number
+2. [ ] Extend the implemented pseudo-locale with full state/text-scale and locale-aware date/number
        coverage; audit all seven pairs, native accessibilityLanguage and translated copy. Include
        plan 87's content release check in release CI without recreating language
        selection/resources.
@@ -58,7 +71,18 @@ have simulation/property/golden tests.
 - CI fails on missing state ownership, generated drift, critical golden/property regressions, or
   budget regression beyond approved tolerance.
 
+## Delivery order and gates
+
+1. Start shared harnesses, pseudo-locale and evidence reporting now; do not wait for every feature
+   to finish. Device runners come from 58, feature assertions from their owning plans.
+2. Derive the release pair matrix from the supported registry and reviewed release set. Seven pairs
+   are the current baseline; plan 90 must extend fixtures when English lands. New language support
+   does not imply reviewed content or native speech availability.
+3. Separate harness completion from feature/release sign-off. Enforce Q-14 peak review, 87 bilingual
+   evidence and applicable physical-device gates without making unrelated work depend on them. Run
+   checks locally; preserve the disabled GitHub Actions policy.
+
 ## Out of scope
 
-Feature implementation, production alerting, new target languages beyond the approved seven pairs,
-and a meaningless global coverage percentage.
+Feature implementation, production alerting, new target-language implementation (plan 90 owns
+English; this plan consumes its approved pair matrix), and a meaningless global coverage percentage.

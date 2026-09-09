@@ -2,8 +2,9 @@
 
 **Implemented foundation (F-08, plan 87):** bundled English, Bulgarian and Russian UI; Spanish,
 Bulgarian and Russian starter catalogs; language selection and separate course state. New linguistic
-content awaits bilingual review. Device persistence still depends on plan 59. Audio, ASR and DSP
-capabilities remain unavailable until their native implementations and language validation land.
+content awaits bilingual review. Native/browser persistence and foreground device TTS/on-device ASR
+are implemented; voice/model availability and physical-device acceptance remain language-specific.
+DSP stays unavailable until its separate measurement gate passes.
 
 ## Language choices
 
@@ -44,6 +45,35 @@ bundled message, and the seven language-pair browser flows exercise the same sta
 - Dense rows must accommodate expansion and Cyrillic at 200% and 310% text scale.
 - Target text uses `lang="target"`; the text primitive resolves the active target locale. Native
   `accessibilityLanguage` and the explicit web `lang` attribute are both set.
+
+## Development pseudo-locale (F-08, plan 72)
+
+`en-XA.json` is an ICU-preserving generated fixture of the English interface. Accented, doubled
+vowels expand literal UI copy and `[!! … !!]` delimiters make missing coverage visible. Named
+arguments, plural/select branches, catalog text and learner-entered values stay unchanged. It is a
+debug UI override, not a supported native language or course; selected native/target language IDs
+continue to govern the learning data. This first fixture does not replace the seven-pair matrix.
+
+Start a fresh development server with the explicit flag (restart after changing it):
+
+```bash
+EXPO_PUBLIC_PSEUDO_LOCALE=1 pnpm --filter @loro/mobile start --web
+```
+
+Production builds ignore this flag. Regenerate after changing English interface resources:
+
+```bash
+pnpm --filter @loro/mobile exec tsx scripts/generatePseudoLocale.ts
+pnpm --filter @loro/mobile exec vitest run src/lib/i18n/pseudoLocale.test.ts
+LORO_E2E_PORT=8192 pnpm test:e2e:pseudo-locale
+```
+
+The normal unit gate fails if the committed fixture drifts or any ICU argument/selector contract
+changes. The local release gate starts a dedicated pseudo-locale server for the browser smoke, which
+completes onboarding with expanded interface labels and checks Today's horizontal fit. The ordinary
+browser suite skips this debug-only smoke; it continues to assert the real translations. Full
+pseudo-locale state/text-scale sweeps, long personal-content fixtures and native clipping review
+remain open. Browser geometry is not native accessibility acceptance.
 
 ## Content and service contracts
 

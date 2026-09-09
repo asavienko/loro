@@ -16,9 +16,10 @@ native/browser boundary.
 | Trip drops     | Content data exists                                                           | Trip scheduling/service/persistence/routes                       |
 | Day boundaries | Calendar parity, durable day keys, frozen sets and resume                     | Physical timezone/process-death matrix and OS lifecycle coverage |
 
-[Plan 88](../../plans/88-persistent-practice-and-account-integration.md) integrates the canonical
-slice of [plan 60](../../plans/60-authoritative-core-maths.md). Future mechanisms below remain
-product contracts until their routes/engines are built; existing runtime results use real inputs.
+[Plan 94](../../plans/94-persistent-practice-and-account-integration.md) integrates the canonical
+slice of [plan 60](../../plans/archive/2026-09-09/60-authoritative-core-maths.md). Future mechanisms
+below remain product contracts until their routes/engines are built; existing runtime results use
+real inputs.
 
 Five independent mechanisms, one per progress signal:
 
@@ -245,16 +246,15 @@ Three waves (`Loro.dc.html:3306–3310`), spaced for real spacing effects. Defau
 wave stays available until midnight local. Missing a wave is not a failure — the reps simply move to
 the next one.
 
-The defaults/settings shape exist today, and `refrain_day.waves` is a readable, writable,
-reopen-safe column on both persistence implementations (`RefrainDayRow.waves` — the wave keys the
-learner finished). Timed wave enforcement, a WRITER for that column, local notification scheduling,
-and relaunch-safe behavior do not exist. Plan 64 owns the production loop.
+The defaults/settings shape and durable completed-wave writes exist today. `refrain_day.waves`
+records finished wave keys per course/day; a clock-passed wave alone never counts as completed.
+Today refreshes at each minute boundary while focused and on foreground return, so its wave labels
+and frozen day follow the real clock without requiring navigation. A midnight refresh uses the
+existing transactional `ensureRefrainSet` path and preserves prior practice history.
 
-What Today does with that today is **presentation only**: `apps/mobile/src/lib/waves.ts` marks the
-last wave whose time has arrived as the next one — before the first arrives, the first — so the day
-list and the CTA name the wave the clock is on. Earlier waves recede and say nothing about whether
-they were practised, because no per-wave completion is recorded; and nothing is enforced, so the
-Refrain stays reachable at any hour, exactly as it was when readiness was a position in an array.
+`apps/mobile/src/lib/waves.ts` marks the last wave whose time has arrived as next (the first before
+any arrives). This remains presentation: Refrain is reachable at any hour. Timed enforcement,
+notification scheduling, audible orchestration and device acceptance remain plan 64 work.
 
 ### Latency
 

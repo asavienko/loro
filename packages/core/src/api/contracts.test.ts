@@ -432,7 +432,7 @@ describe('AI and privacy contracts', () => {
 
 describe('registry and generated OpenAPI', () => {
   it('publishes only implemented routes in current and excludes drafts from stable exports', () => {
-    expect(currentOperations).toHaveLength(25)
+    expect(currentOperations).toHaveLength(28)
     expect(new Set(currentOperations.map((op) => op.status))).toEqual(new Set(['implemented']))
     expect(Object.keys(buildOpenApi('current').paths).sort()).toEqual(
       [...new Set(currentOperations.map((o) => o.path))].sort(),
