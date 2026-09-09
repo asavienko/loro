@@ -27,7 +27,7 @@ test('uses separate callback identities for development and Preview Android buil
   const development = configFor({ LORO_ANDROID_DEV_CLIENT: '1', LORO_LOCAL_APK: undefined })
   const preview = configFor({ LORO_ANDROID_DEV_CLIENT: '1', LORO_LOCAL_APK: '1' })
 
-  assert.equal(development.android.package, 'app.loro.android')
+  assert.equal(development.android.package, 'app.loro.android.dev')
   assert.equal(development.scheme, 'loro-dev')
   assert.equal(development.extra.nativeRedirectUri, 'loro-dev://account')
   assert.equal(preview.android.package, 'app.loro.android.preview')

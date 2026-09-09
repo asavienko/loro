@@ -15,6 +15,25 @@ test('allows debug development arguments', () => {
     validateDevelopmentArguments(['--variant', 'debug', '--device', 'Pixel']),
   )
   assert.doesNotThrow(() => validateDevelopmentArguments(['--variant=debug']))
+  assert.doesNotThrow(() => validateDevelopmentArguments(['--device', '--no-bundler']))
+  assert.doesNotThrow(() => validateDevelopmentArguments(['-d', 'Pixel 8', '-p', '8082']))
+  assert.doesNotThrow(() => validateDevelopmentArguments(['--device=Pixel', '--port=8082']))
+})
+
+test('rejects project overrides without confusing option values with projects', () => {
+  for (const args of [
+    ['/tmp/another-mobile'],
+    ['../another-mobile'],
+    ['--device', 'Pixel', '../another-mobile'],
+    ['--port=8082', '../another-mobile'],
+    ['--', '../another-mobile'],
+    ['--unknown'],
+    ['--no-install=true'],
+  ]) {
+    assert.throws(() => validateDevelopmentArguments(args), /Project overrides are not supported/)
+  }
+  assert.throws(() => validateDevelopmentArguments(['--port']), /Missing value/)
+  assert.throws(() => validateDevelopmentArguments(['--port', '../another-mobile']), /port must/)
 })
 
 test('rejects release variants before synchronizing a development project', () => {
@@ -104,7 +123,7 @@ test('keeps the development identity when Expo loads a Preview dotenv value', ()
     assert.deepEqual(JSON.parse(child.stdout), {
       localApk: '0',
       sentinel: 'loaded',
-      package: 'app.loro.android',
+      package: 'app.loro.android.dev',
       scheme: 'loro-dev',
       nativeRedirectUri: 'loro-dev://account',
     })

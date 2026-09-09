@@ -142,7 +142,9 @@ Actual: the red script-loading screen appears; app-scoped logcat records
 
 The current source now makes the build mode visible and routable:
 
-- The Android debug Gradle variant appends `.dev` and labels its launcher **Loro Development**.
+- Development configuration declares `app.loro.android.dev` directly and labels its launcher **Loro
+  Development**. The plugin reconciles the earlier suffix-based generated project so a fresh Metro
+  launcher can discover the installed package without a custom app-ID override.
 - `pnpm --filter @loro/mobile android` synchronizes native configuration before compiling, then runs
   with `LORO_ANDROID_DEV_CLIENT=1`. That setting gives only this development build the `loro-dev://`
   scheme.
@@ -157,6 +159,13 @@ reached the learner UI. The foreground activity was
 
 The debug variant requires the command's Metro process to remain running. Preview was launched again
 after verification with Metro stopped and is left in the foreground.
+
+The subsequent launch-identity fix was rebuilt and installed without clearing app data. A separate
+Metro restart (`pnpm --filter @loro/mobile start --dev-client --port 8097`) then reopened
+`app.loro.android.dev/.MainActivity` with the `a` shortcut and rendered Today with existing
+progress. This supersedes the earlier activity namespace above; the installed package ID remains the
+same. See the
+[fresh Metro launch evidence](evidence/2026-09-09-android-script-load/fresh-metro-launch.png).
 
 ## Standalone use
 

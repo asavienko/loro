@@ -11,11 +11,17 @@ const debugIdentity = `debug {
             signingConfig signingConfigs.debug
         }`
 
-function applyDebugIdentity(contents) {
-  if (contents.includes(marker)) return contents
+function applyDebugIdentity(contents, developmentPackage = false) {
+  const identity = developmentPackage
+    ? debugIdentity.replace('            applicationIdSuffix ".dev"\n', '')
+    : debugIdentity
+  // Reconcile previously generated projects when moving the ID into defaultConfig.
+  const withoutSuffix = debugIdentity.replace('            applicationIdSuffix ".dev"\n', '')
+  if (contents.includes(debugIdentity)) return contents.replace(debugIdentity, identity)
+  if (contents.includes(withoutSuffix)) return contents.replace(withoutSuffix, identity)
   if (!contents.includes(debugBlock))
     throw new Error('Unable to find Android debug build type for the Loro development identity.')
-  return contents.replace(debugBlock, debugIdentity)
+  return contents.replace(debugBlock, identity)
 }
 
 const loroSchemes = ['loro', 'loro-dev']
@@ -31,7 +37,10 @@ function replaceLoroSchemes(manifest, scheme) {
 function withDevClientIdentity(config) {
   const scheme = config.scheme
   config = withAppBuildGradle(config, (mod) => {
-    mod.modResults.contents = applyDebugIdentity(mod.modResults.contents)
+    mod.modResults.contents = applyDebugIdentity(
+      mod.modResults.contents,
+      config.android?.package === 'app.loro.android.dev',
+    )
     return mod
   })
   return withAndroidManifest(config, (mod) => {

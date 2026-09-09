@@ -2,10 +2,114 @@
 
 **Date:** 2026-09-09
 
-**Reviewed range:** `42f4d574dc1b..HEAD`
+**Reviewed range:** `42f4d574dc1b..db23f4b` (eight commits; 26 changed files).
 
-**Verdict:** Resolved. The Development wrapper owns its package identity across caller arguments,
-inherited variables and Expo dotenv loading.
+**Verdict:** Findings 10 and 11 are implemented in the current fix. The wrapper rejects project
+overrides, and Development is declared directly in the generated native package and namespace.
+Validation for this fix is recorded below; earlier evidence remains dated to its original review.
+
+## Whole-branch review at db23f4b
+
+GitHub reports no PR for `codex/F-03-android-bundle-bug-report`. This review covers the entire
+branch diff against its merge base with refreshed `origin/main`, rather than only the latest fix.
+Remote main is now `aafa61f8`; the merge base remains `42f4d574dc1b`. This is not validation of a
+merged result with the newer main.
+
+### 10. [P2] Reject positional project overrides before prebuild
+
+**Status:** Resolved. Supported options are parsed explicitly; positional project paths and unknown
+options fail before any native subprocess starts. Device and port values remain supported.
+
+**Location:** `scripts/android-development.mjs:59`.
+
+`pnpm --filter @loro/mobile android /path/to/another-checkout/apps/mobile` passes the validator.
+Prebuild still synchronizes this wrapper's mobile directory, but Expo interprets the forwarded
+positional argument as the project root for `run:android`. That second command can build/install a
+different project's APK while still launching `app.loro.android.dev`. With another Loro checkout
+containing an older generated native project, this can reopen the existing Development installation
+instead of the newly built app, or fail because the requested activity is absent. A fixed subprocess
+working directory does not constrain Expo's positional project argument.
+
+**Evidence:** intercepted both wrapper subprocess calls without executing them, then ran the second
+call's arguments through the installed Expo `resolveStringOrBooleanArgsAsync`. Supplying
+`/tmp/loro-preview-checkout` kept prebuild's working directory at this checkout's `apps/mobile`, but
+the parsed run project became `/tmp/loro-preview-checkout`. No alternate checkout was created and no
+native command or APK installation occurred.
+
+**Suggested fix:** explicitly validate supported launch arguments and reject positional project
+overrides before any subprocess starts. Account for values belonging to `--device`/`-d`,
+`--port`/`-p` and `--variant`, including equals forms. Keep both commands bound to the same mobile
+directory. Test an absolute and relative trailing project path alongside valid option values;
+rejected inputs must invoke zero subprocesses.
+
+### 11. [P2] Preserve the Development identity when restarting Metro separately
+
+**Status:** Resolved. Development config now sets `android.package` to `app.loro.android.dev`.
+Prebuild generates that package and activity namespace directly, and the plugin removes its previous
+owned suffix when migrating an existing project. Preview remains `app.loro.android.preview`.
+
+**Location:** `apps/mobile/plugins/with-dev-client-identity.cjs:10`.
+
+The new debug suffix changes the installed package to `app.loro.android.dev`, but the config and
+Gradle base application ID remain `app.loro.android`. After stopping the wrapper's Metro process,
+running `pnpm --filter @loro/mobile start --dev-client` and pressing `a` starts a fresh Expo
+launcher without the wrapper's custom launch properties. Expo resolves the unsuffixed ID and reports
+`No development build (app.loro.android) for this project is installed`, even when Development is
+installed. Exporting `LORO_ANDROID_DEV_CLIENT=1` alone does not repair the package lookup.
+
+The initial wrapper launch is unaffected: it passes a custom package and fully qualified activity.
+Expo also caches those properties for subsequent `a` presses in that same launcher session. The
+regression concerns a fresh Metro session, or an existing separately started Metro session reused by
+the wrapper; it is not a failure of every `a` press.
+
+**Evidence:** exercised the installed `AndroidAppIdResolver` with the real mobile config and both
+Development flags set. It resolved `app.loro.android`. Then exercised Expo's fresh Android custom
+runtime launcher with device access stubbed to represent only `app.loro.android.dev` installed: it
+queried the unsuffixed package and emitted the error above. Native-project source inspection
+confirms the same lookup behavior: Expo's `getApplicationIdAsync` reads `applicationId` from Gradle
+without applying `applicationIdSuffix`. No real device state was changed by this probe.
+
+**Suggested fix:** provide a Metro-only Development entry point that carries the package and full
+activity into the launcher, or represent the Development package in config/generated native defaults
+so Expo's ordinary resolver matches it. Preserve Preview's release identity and callback scheme.
+Verify both the initial build/launch and a separate Metro restart with only Development installed;
+also test reuse of a server started before the build command.
+
+### Validation and coverage
+
+- Inspected all changed source, tests, build scripts and documentation, including the original bug
+  report and retained logcat evidence. Reviewed callback selection, exact API redirect validation,
+  Preview build-environment sanitization, Gradle identity and owned manifest schemes.
+- Fresh `pnpm check` completed with exit 0: all eleven Android configuration tests passed; Turbo
+  reported 23/23 successful tasks, all from cache. This reuses valid source checks rather than
+  claiming a fresh execution of every unit suite.
+- Branch commitlint, scoped source formatting and `git diff --check origin/main...HEAD` passed.
+- The two diagnostic probes above exercised the current wrapper and installed Expo implementation.
+  Existing tests do not exercise positional project selection or a fresh Metro launch session.
+- No full `pnpm ci:local`, merged-main build, APK rebuild, device launch or live provider sign-in
+  was performed in this review. Earlier emulator evidence remains historical and does not close
+  these newly identified paths. Those limits describe the original review; see the subsequent fix
+  validation below.
+
+### Fix validation for findings 10 and 11
+
+- Android configuration tests cover positional-path rejection, valid device/port options, migration
+  from the old suffix, and a fresh installed Expo launcher resolving Development through a native
+  Gradle fixture. Device access is stubbed in that regression test.
+- A real Development prebuild generated package and namespace `app.loro.android.dev`, with no
+  additional suffix, a matching Kotlin MainActivity package and only the owned `loro-dev` scheme.
+- The installed package name is unchanged from previous Development builds. Rebuild once to update
+  the activity namespace; no uninstall or learner-data deletion is required.
+- Intercepted wrapper execution confirms rejected absolute/relative project overrides start zero
+  subprocesses, while valid device/port arguments retain the same mobile directory for both steps.
+- `pnpm check` completed with exit 0 (13 Android configuration tests; 23/23 Turbo tasks successful).
+- The real Android debug build succeeded and updated the existing installation on Pixel_8_API_36.
+  After stopping that Metro process, a fresh
+  `pnpm --filter @loro/mobile start --dev-client --port 8097` session reopened the force-stopped app
+  using `a`. The foreground activity was `app.loro.android.dev/.MainActivity`; Today rendered with
+  existing progress. No app data was cleared.
+  [Fresh Metro launch screenshot](evidence/2026-09-09-android-script-load/fresh-metro-launch.png).
+- Full local CI and live provider sign-in were not rerun for this fix.
 
 ## Review of commit 6ec714d and the complete branch
 
