@@ -15,6 +15,8 @@ export const LISTEN_SCENARIOS = [
   'disk-full',
   'session-busy',
   'voices-unapproved',
+  'voices-single',
+  'quota',
   'not-configured',
 ] as const
 
@@ -66,6 +68,8 @@ export function fixtureListenView(scenario: ListenScenario): ListenViewModel {
     'disk-full': ['disk-full'],
     'session-busy': ['session-busy'],
     'voices-unapproved': ['voices-unapproved', 'model-unpinned'],
+    'voices-single': ['voices-single'],
+    quota: ['quota'],
     'not-configured': ['not-configured'],
   }
   const phase: Record<ListenScenario, ListenPhase> = {
@@ -81,6 +85,8 @@ export function fixtureListenView(scenario: ListenScenario): ListenViewModel {
     'disk-full': 'error',
     'session-busy': 'idle',
     'voices-unapproved': 'idle',
+    'voices-single': 'idle',
+    quota: 'idle',
     'not-configured': 'idle',
   }
   const view = base({
@@ -94,6 +100,7 @@ export function fixtureListenView(scenario: ListenScenario): ListenViewModel {
     nativeCache: scenario !== 'not-configured',
     sessionBusy: scenario === 'session-busy',
     diskFull: scenario === 'disk-full',
+    quotaExceeded: scenario === 'quota',
     cacheComplete: scenario === 'ready-to-listen' || scenario === 'playing' || scenario === 'share-ready' || scenario === 'share-unavailable',
     progress:
       scenario === 'generating'
