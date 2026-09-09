@@ -1,9 +1,10 @@
 import { join } from 'node:path'
 import {
   failedManifest,
+  finalizeManifest,
+  formatSummary,
   pngProblem,
   readManifest,
-  writeGallery,
   writeManifest,
 } from './screenshots-artifacts.mjs'
 
@@ -22,8 +23,17 @@ export default class ScreenshotReporter {
     if (entry === undefined) return
 
     entry.status = result.status === 'passed' ? 'passed' : 'failed'
-    if (result.errors.length > 0)
+    if (result.status === 'passed') {
+      const problem = pngProblem(join(this.runDir, entry.image))
+      if (problem !== undefined) {
+        entry.status = 'failed'
+        entry.error = problem
+      }
+    } else if (result.errors.length > 0) {
       entry.error = result.errors.map((error) => error.message ?? String(error)).join('\n\n')
+    } else {
+      entry.error = `Capture finished with status: ${result.status}.`
+    }
     writeManifest(this.runDir, manifest)
   }
 
@@ -63,13 +73,9 @@ export default class ScreenshotReporter {
       manifest.error === undefined && counts.failed === 0 && counts['not-run'] === 0
         ? 'passed'
         : 'failed'
-    manifest.completedAt = new Date().toISOString()
     manifest.counts = counts
-    writeManifest(this.runDir, manifest)
-    writeGallery(this.runDir, manifest)
-    console.log(
-      `${manifest.status === 'passed' ? 'Screen images' : 'Screen image run failed'}: ${counts.passed} passed, ${counts.failed} failed, ${counts['not-run']} not run.\nGallery: ${join(this.runDir, 'index.html')}`,
-    )
+    finalizeManifest(this.runDir, manifest)
+    console.log(formatSummary(this.runDir, manifest))
     return manifest.status === 'passed' ? undefined : { status: 'failed' }
   }
 }

@@ -7,6 +7,7 @@ does not have.
 
 ```bash
 nvm use 22
+pnpm install --frozen-lockfile
 pnpm test:e2e:install   # once per machine
 pnpm test:e2e           # the gate
 pnpm test:e2e:workbench # the dev-only design-system surface

@@ -1,4 +1,4 @@
-import { mkdirSync } from 'node:fs'
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { expect, onboard, test } from './fixtures'
 import { enter, STATES } from './states'
@@ -7,6 +7,25 @@ const runDir = process.env.LORO_SCREENSHOT_RUN_DIR
 if (runDir === undefined) throw new Error('LORO_SCREENSHOT_RUN_DIR was not configured.')
 
 const FIXED_TIME = '2026-09-09T08:00:00.000Z'
+
+interface CaptureManifest {
+  run: {
+    browser: {
+      name: string | null
+      version: string | null
+    }
+  }
+}
+
+test.beforeAll(({ browser }) => {
+  const manifestPath = join(runDir, 'manifest.json')
+  const manifest = JSON.parse(readFileSync(manifestPath, 'utf8')) as CaptureManifest
+  manifest.run.browser = {
+    name: browser.browserType().name(),
+    version: browser.version(),
+  }
+  writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`)
+})
 
 for (const state of STATES) {
   test(`capture: ${state.name}`, async ({ page }) => {
