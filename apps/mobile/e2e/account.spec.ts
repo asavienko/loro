@@ -17,6 +17,31 @@ async function returnToToday(page: Parameters<typeof openAccount>[0]): Promise<v
   await expect(todayMarker(page)).toBeVisible()
 }
 
+test('fresh email confirmation does not invite practising without an account', async ({ page }) => {
+  await mockAccountService(page)
+  await onboard(page)
+  await openAccount(page)
+  await requestCode(page)
+  await page.getByRole('textbox', { name: 'Sign-in code' }).fill('123456')
+  await page.getByRole('button', { name: 'Verify and sign in', exact: true }).click()
+  await expect(page.getByText('You’re signed in', { exact: true })).toBeVisible()
+  await expect(page.getByText('Keep practising without an account')).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Back to practice', exact: true })).toBeVisible()
+})
+
+test('a provider outage still offers email sign-in', async ({ page }) => {
+  await onboard(page)
+  await reachAccount(page, 'unavailable')
+  await expect(page.getByRole('button', { name: 'Continue with email', exact: true })).toBeEnabled()
+})
+
+test('every method being down does not promise email sign-in', async ({ page }) => {
+  await onboard(page)
+  await reachAccount(page, 'allUnavailable')
+  await expect(page.getByRole('button', { name: 'Continue with email', exact: true })).toBeDisabled()
+  await expect(page.getByText('You can sign in by email.')).toHaveCount(0)
+})
+
 test('named back from the code screen returns to the editable email entry', async ({ page }) => {
   await mockAccountService(page)
   await onboard(page)
@@ -34,6 +59,11 @@ test('optional email sign-in syncs and sign-out keeps durable local practice', a
   await requestCode(page)
   await finishSignIn(page)
   await expect(page.getByText('Your progress is up to date.')).toBeVisible()
+  await expect(
+    page.getByText(
+      'On the web, sign in again after reloading. Your practice progress stays saved.',
+    ),
+  ).toBeVisible()
   const browserStorage = await page.evaluate(() => JSON.stringify({ localStorage, sessionStorage }))
   expect(browserStorage).not.toContain('e2e-refresh')
   expect(browserStorage).not.toContain('e2e-email-access')

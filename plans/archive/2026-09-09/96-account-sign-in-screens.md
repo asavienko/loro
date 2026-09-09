@@ -266,8 +266,10 @@ specimens and their coverage. Runtime renderer dependencies require native build
 
 ### State inventory and flows
 
-- [x] Register all eight designed states in `e2e/states.ts`, reached through real controls with
-      deterministic mocked transport; exercise connecting/cancelled/failed for both providers.
+- [x] Register the designed method, email, code, invalid-code, provider connecting/cancelled/failed
+      and confirmation states in `e2e/states.ts`, reached through real controls with deterministic
+      mocked transport; exercise connecting/cancelled/failed for both providers. Email entry and
+      fresh confirmation stay on those screens instead of advancing to management.
 - [ ] Add operational states: discovery pending/failure, partial/zero capability, unconfigured,
       sending/resending/verifying, resend accepted/failed/throttled, invalid email, network failure,
       blocked popup, storage failure/mismatch, returning-account sync states and local sign-out.

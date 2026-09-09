@@ -106,6 +106,7 @@ export const STATES: AppState[] = [
     [
       'discoveryError',
       'unavailable',
+      'allUnavailable',
       'ready',
       'busy',
       'error',
@@ -114,6 +115,7 @@ export const STATES: AppState[] = [
       'localSignOut',
       'email',
       'code',
+      'confirmation',
       'connected',
       'invalid-code',
       'sync-unavailable',
@@ -123,7 +125,7 @@ export const STATES: AppState[] = [
   ).map((scenario): AppState => ({
     name: `account · ${scenario}`,
     route: '/account',
-    spec: 'F-01/F-04 optional sign-in and sync',
+    spec: 'F-01 Account',
     reach: async (page) => {
       await reachAccount(page, scenario)
     },

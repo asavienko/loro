@@ -9,6 +9,7 @@ const providerState = 's'.repeat(43)
 export type AccountScenario =
   | 'discoveryError'
   | 'unavailable'
+  | 'allUnavailable'
   | 'ready'
   | 'busy'
   | 'error'
@@ -17,6 +18,7 @@ export type AccountScenario =
   | 'localSignOut'
   | 'email'
   | 'code'
+  | 'confirmation'
   | 'connected'
   | 'invalid-code'
   | 'sync-unavailable'
@@ -63,13 +65,16 @@ export async function mockAccountService(
         json:
           mode === 'discoveryError'
             ? {}
-            : { providers: mode === 'unavailable' ? [] : ['google', 'apple'] },
+            : {
+                providers:
+                  mode === 'unavailable' || mode === 'allUnavailable' ? [] : ['google', 'apple'],
+              },
       })
       return
     }
     if (path.endsWith('/auth/capabilities')) {
       await route.fulfill({
-        json: { apple: true, google: true, email: mode !== 'unavailable' },
+        json: { apple: true, google: true, email: mode !== 'allUnavailable' },
       })
       return
     }
@@ -248,20 +253,42 @@ export async function reachAccount(
     return service
   }
   const google = page.getByRole('button', { name: 'Continue with Google' })
-  if (scenario === 'unavailable') {
+  if (scenario === 'unavailable' || scenario === 'allUnavailable') {
     await expect(google).toBeDisabled()
-    await expect(
-      page.getByText(
-        'Google and Apple sign-in are unavailable right now. You can sign in by email.',
-      ),
-    ).toBeVisible()
+    if (scenario === 'unavailable') {
+      await expect(
+        page.getByRole('button', { name: 'Continue with email', exact: true }),
+      ).toBeEnabled()
+      await expect(
+        page.getByText(
+          'Google and Apple sign-in are unavailable right now. You can sign in by email.',
+        ),
+      ).toBeVisible()
+    } else {
+      await expect(
+        page.getByRole('button', { name: 'Continue with email', exact: true }),
+      ).toBeDisabled()
+      await expect(
+        page.getByText(
+          'Sign-in methods are unavailable right now. You can keep practising on this device.',
+        ),
+      ).toBeVisible()
+      await expect(page.getByText('You can sign in by email.')).toHaveCount(0)
+    }
     return service
   }
   await expect(google).toBeEnabled()
   await expect(page.getByRole('button', { name: 'Continue with email', exact: true })).toBeEnabled()
-  if (scenario === 'ready' || scenario === 'email') return service
+  if (scenario === 'ready') return service
+  if (scenario === 'email') {
+    await page.getByRole('button', { name: 'Continue with email', exact: true }).click()
+    await expect(page.getByRole('textbox', { name: 'Email address' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Send sign-in code', exact: true })).toBeVisible()
+    return service
+  }
   if (
     scenario === 'code' ||
+    scenario === 'confirmation' ||
     scenario === 'connected' ||
     scenario === 'invalid-code' ||
     scenario === 'sync-unavailable' ||
@@ -270,6 +297,14 @@ export async function reachAccount(
   ) {
     await requestCode(page)
     if (scenario === 'code') return service
+    if (scenario === 'confirmation') {
+      await page.getByRole('textbox', { name: 'Sign-in code' }).fill('123456')
+      await page.getByRole('button', { name: 'Verify and sign in', exact: true }).click()
+      await expect(page.getByText('You’re signed in', { exact: true })).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Back to practice', exact: true })).toBeVisible()
+      await expect(page.getByText('Keep practising without an account')).toHaveCount(0)
+      return service
+    }
     if (scenario === 'invalid-code') {
       await page.getByRole('textbox', { name: 'Sign-in code' }).fill('000000')
       await page.getByRole('button', { name: 'Verify and sign in', exact: true }).click()
@@ -284,6 +319,10 @@ export async function reachAccount(
         page.getByText('Your progress is saved here. Sync will retry when you are connected.'),
       ).toBeVisible()
     } else if (scenario === 'sync-rejected') {
+      await expect(page.getByText('Your progress is up to date.')).toHaveCount(0)
+      await expect(
+        page.getByText('Sync needs attention. Your local progress is safe.'),
+      ).toBeVisible()
       await expect(
         page.getByText(
           /^\d+ saved changes? need(?:s)? review and remain(?:s)? safely on this device\.$/,

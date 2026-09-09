@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import {
   ActivityIndicator,
   BackHandler,
@@ -9,7 +9,7 @@ import {
   TextInput,
   View,
 } from 'react-native'
-import { router, Stack as RouteStack } from 'expo-router'
+import { router, Stack as RouteStack, useNavigation } from 'expo-router'
 import type { OAuthProvider } from '@loro/core/api/oauth'
 import {
   accountClient,
@@ -24,6 +24,7 @@ import {
   beginSignIn,
   completeBrowserSignIn,
 } from '../src/auth/runtime'
+import { methodNotice, methodUnavailableHint } from '../src/lib/account/availability'
 import { copy } from '../src/lib/copy'
 import { useLocale } from '../src/lib/i18n'
 import { Button, Pressable, Row, Screen, Stack, Text } from '../src/ui/primitives'
@@ -50,6 +51,7 @@ export default function Account() {
   const sync = useSyncStatus()
   const repair = useSyncRepair()
   const client = accountClient()
+  const navigation = useNavigation()
   const { textScale, accent } = useTheme()
   const [view, setView] = useState<ViewState>(state.session ? 'account' : 'methods')
   const [freshConfirmation, setFreshConfirmation] = useState(false)
@@ -66,13 +68,16 @@ export default function Account() {
   const [capabilityAttempt, setCapabilityAttempt] = useState(0)
 
   const busy = state.status === 'working'
+  const attemptActive = busy || activeProvider !== null
   const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
   const submitted = submittedEmail || email.trim()
-  const allMethodsUnavailable =
-    providerStatus === 'ready' &&
-    capabilityStatus === 'ready' &&
-    providers.length === 0 &&
-    !emailAvailable
+  const notice = methodNotice({
+    configured: Boolean(client?.configured),
+    providerStatus,
+    capabilityStatus,
+    providerCount: providers.length,
+    emailAvailable,
+  })
 
   useEffect(() => {
     completeBrowserSignIn()
@@ -149,6 +154,20 @@ export default function Account() {
   const cancelAttemptIfBusy = (): void => {
     if (busy) client?.cancelSignIn()
   }
+
+  const abandonRoute = useCallback(() => {
+    if (state.status === 'working') client?.cancelSignIn()
+    setFeedback(null)
+    setCode('')
+    setSubmittedEmail('')
+    setConfirmedEmail(null)
+    setActiveProvider(null)
+    setFreshConfirmation(false)
+  }, [client, state.status])
+
+  useEffect(() => {
+    return navigation.addListener('beforeRemove', abandonRoute)
+  }, [abandonRoute, navigation])
 
   const backToEmail = (): void => {
     cancelAttemptIfBusy()
@@ -294,7 +313,9 @@ export default function Account() {
       <RouteStack.Screen
         options={{
           title: headerTitle,
-          gestureEnabled: view === 'methods' || view === 'account',
+          gestureEnabled:
+            !attemptActive &&
+            (view === 'methods' || view === 'confirmation' || view === 'account'),
           ...(headerBackLabel
             ? {
                 headerLeft: () => (
@@ -334,7 +355,8 @@ export default function Account() {
                 <ProviderMethod
                   provider="google"
                   label={copy.account.google}
-                  available={providerStatus === 'ready' && providers.includes('google')}
+                  ready={providerStatus === 'ready'}
+                  available={providers.includes('google')}
                   active={activeProvider === 'google'}
                   busy={busy}
                   onPress={() => {
@@ -344,7 +366,8 @@ export default function Account() {
                 <ProviderMethod
                   provider="apple"
                   label={copy.account.apple}
-                  available={providerStatus === 'ready' && providers.includes('apple')}
+                  ready={providerStatus === 'ready'}
+                  available={providers.includes('apple')}
                   active={activeProvider === 'apple'}
                   busy={busy}
                   onPress={() => {
@@ -355,20 +378,32 @@ export default function Account() {
                   icon="✉"
                   label={copy.account.emailMethod}
                   disabled={busy || capabilityStatus !== 'ready' || !emailAvailable}
+                  hint={
+                    methodUnavailableHint({
+                      busy,
+                      ready: capabilityStatus === 'ready',
+                      available: emailAvailable,
+                    })
+                      ? copy.account.methodUnavailable
+                      : undefined
+                  }
                   onPress={startEmail}
                 />
               </Stack>
               {busy && activeProvider ? <ProviderProgress onCancel={cancelProvider} /> : null}
-              {providerStatus === 'error' || capabilityStatus === 'error' ? (
+              {notice === 'checking' ? (
+                <SignInFeedback tone="info" text={copy.account.checkingMethods} />
+              ) : notice === 'discoveryError' ? (
                 <SignInFeedback tone="warning" text={copy.account.discoveryError} />
-              ) : allMethodsUnavailable ? (
+              ) : notice === 'allUnavailable' ? (
+                <SignInFeedback tone="info" text={copy.account.methodsUnavailable} />
+              ) : notice === 'providersUnavailable' ? (
                 <SignInFeedback tone="info" text={copy.account.providersUnavailable} />
+              ) : notice === 'unconfigured' ? (
+                <SignInFeedback tone="info" text={copy.account.unconfigured} />
               ) : null}
               {feedback && <SignInFeedback tone={feedback.tone} text={feedback.text} />}
-              {!client?.configured && (
-                <SignInFeedback tone="info" text={copy.account.unconfigured} />
-              )}
-              {(providerStatus === 'error' || capabilityStatus === 'error') && (
+              {notice === 'discoveryError' && (
                 <Button
                   variant="secondary"
                   label={copy.account.retry}
@@ -413,7 +448,7 @@ export default function Account() {
             />
           )}
           {view === 'confirmation' && (
-            <Confirmation email={confirmedEmail} onContinue={leaveToPractice} footer={footer} />
+            <Confirmation email={confirmedEmail} onContinue={leaveToPractice} />
           )}
           {view === 'account' && state.session && (
             <AccountManagement
@@ -488,17 +523,19 @@ function MethodButton({
   icon,
   label,
   disabled,
+  hint,
   onPress,
 }: {
   icon: string
   label: string
   disabled: boolean
+  hint?: string | undefined
   onPress: () => void
 }) {
   return (
     <Pressable
       accessibilityLabel={label}
-      accessibilityHint={disabled ? copy.account.methodUnavailable : undefined}
+      accessibilityHint={hint}
       disabled={disabled}
       onPress={onPress}
       style={[styles.methodButton, disabled && styles.methodDisabled]}
@@ -516,6 +553,7 @@ function MethodButton({
 function ProviderMethod({
   provider,
   label,
+  ready,
   available,
   active,
   busy,
@@ -523,6 +561,7 @@ function ProviderMethod({
 }: {
   provider: OAuthProvider
   label: string
+  ready: boolean
   available: boolean
   active: boolean
   busy: boolean
@@ -532,7 +571,12 @@ function ProviderMethod({
     <MethodButton
       icon={active && busy ? '◌' : provider === 'google' ? 'G' : ''}
       label={active && busy ? copy.account.connecting(provider) : label}
-      disabled={busy || !available}
+      disabled={busy || !ready || !available}
+      hint={
+        methodUnavailableHint({ busy, ready, available })
+          ? copy.account.methodUnavailable
+          : undefined
+      }
       onPress={onPress}
     />
   )
@@ -705,11 +749,9 @@ function CodeEntry({
 function Confirmation({
   email,
   onContinue,
-  footer,
 }: {
   email: string | null
   onContinue: () => void
-  footer: ReactNode
 }) {
   return (
     <>
@@ -728,7 +770,9 @@ function Confirmation({
         </Text>
       </Stack>
       <Button size="cta" label={copy.account.backToPractice} onPress={onContinue} />
-      {footer}
+      <Text align="center" color={ink.muted}>
+        {copy.account.deviceProgress}
+      </Text>
     </>
   )
 }
@@ -772,6 +816,11 @@ function AccountManagement({
       <Text align="center" color={ink.muted}>
         {copy.account.signOutNote}
       </Text>
+      {Platform.OS === 'web' && (
+        <Text align="center" color={ink.muted}>
+          {copy.account.webNote}
+        </Text>
+      )}
       <Button variant="secondary" label={copy.account.signOut} onPress={onSignOut} />
     </Stack>
   )

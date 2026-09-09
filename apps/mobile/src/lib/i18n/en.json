@@ -426,5 +426,7 @@
   "account.codeLabel": "Sign-in code",
   "account.rate-limited": "Too many attempts. Please wait a little and try again.",
   "account.invalid-email": "Enter a valid email address to continue.",
-  "account.deviceProgress": "Your progress stays saved on this device."
+  "account.deviceProgress": "Your progress stays saved on this device.",
+  "account.checkingMethods": "Checking which sign-in methods are available.",
+  "account.methodsUnavailable": "Sign-in methods are unavailable right now. You can keep practising on this device."
 }

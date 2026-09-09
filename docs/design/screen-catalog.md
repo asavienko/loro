@@ -421,6 +421,8 @@ and push header, outside the 23 authored learner screens. The route presents a m
 separate email and code views, provider connecting/cancelled/failed states, immediate sign-in
 confirmation and returning-account management with actual sync status. Email and provider
 credentials remain in the account runtime; the route never renders fabricated provider identity.
-Its intended-design extension and state inventory are recorded in
+Browser coverage includes method, email, code, confirmation, provider, management and
+capability-outage states in [`apps/mobile/e2e/states.ts`](../../apps/mobile/e2e/states.ts). Its
+intended-design extension and remaining native/provider gates are recorded in
 [functional-spec.md](../product/functional-spec.md#f-01-account) and
 [the account screen plan](../../plans/archive/2026-09-09/96-account-sign-in-screens.md).

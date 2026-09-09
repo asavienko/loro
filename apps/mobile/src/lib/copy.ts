@@ -214,6 +214,12 @@ export const copy = {
     get discoveryError() {
       return message('account.discoveryError')
     },
+    get checkingMethods() {
+      return message('account.checkingMethods')
+    },
+    get methodsUnavailable() {
+      return message('account.methodsUnavailable')
+    },
     get methodUnavailable() {
       return message('account.methodUnavailable')
     },

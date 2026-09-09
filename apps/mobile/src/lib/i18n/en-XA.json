@@ -426,5 +426,7 @@
   "account.codeLabel": "[!! Sïïgn-ïïn cöödëë !!]",
   "account.rate-limited": "[!! Töööö máány ááttëëmpts. Plëëáásëë wááïït áá lïïttlëë áánd try áágááïïn. !!]",
   "account.invalid-email": "[!! ËËntëër áá váálïïd ëëmááïïl ááddrëëss töö cööntïïnüüëë. !!]",
-  "account.deviceProgress": "[!! Yööüür pröögrëëss stááys sáávëëd öön thïïs dëëvïïcëë. !!]"
+  "account.deviceProgress": "[!! Yööüür pröögrëëss stááys sáávëëd öön thïïs dëëvïïcëë. !!]",
+  "account.checkingMethods": "[!! Chëëckïïng whïïch sïïgn-ïïn mëëthööds áárëë áávááïïlááblëë. !!]",
+  "account.methodsUnavailable": "[!! Sïïgn-ïïn mëëthööds áárëë üünáávááïïlááblëë rïïght nööw. Yööüü cáán këëëëp prááctïïsïïng öön thïïs dëëvïïcëë. !!]"
 }
