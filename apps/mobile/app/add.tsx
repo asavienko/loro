@@ -593,15 +593,17 @@ function ImportPhrases({
   const save = () => {
     if (review === null || reviewedBatchTooLarge) return
     const checked = reviewImportedCandidates(review, existing)
-    if (
-      isReviewedImportTooLarge(checked) ||
-      checked.some((candidate) => candidate.issue !== null)
-    ) {
+    if (isReviewedImportTooLarge(checked)) {
+      setReview(checked)
+      return
+    }
+    const acceptedChecked = checked.filter((candidate) => candidate.issue === null)
+    if (acceptedChecked.length === 0) {
       setReview(checked)
       return
     }
     const keys = new Set(existing.map(importedPhraseKey))
-    for (const candidate of checked) {
+    for (const candidate of acceptedChecked) {
       const key = importedPhraseKey(candidate.targetText)
       if (keys.has(key)) continue
       keys.add(key)
