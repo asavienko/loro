@@ -95,13 +95,15 @@ describe('bounded offline import review', () => {
     expect(oversized[0]).toMatchObject({ translation: 'é'.repeat(IMPORT_MAX_CHARACTERS) })
   })
 
-  it('serializes only the review rows still awaiting correction after a partial save', () => {
-    expect(
-      importInputForCandidates([
-        { line: 2, targetText: 'Edited draft', translation: '', issue: 'invalid' },
-        { line: 3, targetText: 'Still here', translation: 'Meaning', issue: 'duplicate' },
-      ]),
-    ).toBe('Edited draft | \nStill here | Meaning')
+  it('round-trips reviewed fields containing the import separators after a partial save', () => {
+    const draft: ImportCandidate[] = [
+      { line: 2, targetText: 'A | B', translation: '', issue: 'invalid' },
+      { line: 3, targetText: 'Still here', translation: 'Meaning | with \\ slash', issue: null },
+    ]
+    expect(parseImportedPhrases(importInputForCandidates(draft), [])).toEqual([
+      { ...draft[0], line: 1 },
+      { ...draft[1], line: 2 },
+    ])
   })
 
   it('retains the failed row and every later row when a batch write stops part-way through', () => {

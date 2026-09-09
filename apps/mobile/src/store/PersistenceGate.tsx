@@ -1,20 +1,37 @@
-import { useEffect, type ReactNode } from 'react'
-import { ActivityIndicator, Platform, ScrollView, StyleSheet, View } from 'react-native'
+import { useEffect, useRef, type ReactNode } from 'react'
+import { ActivityIndicator, Modal, Platform, ScrollView, StyleSheet, View } from 'react-native'
 import { copy } from '../lib/copy'
 import { useLocale } from '../lib/i18n'
 import { Pressable, Text } from '../ui/primitives'
 import { accent, ink, MIN_TAP, space, surface, webLayout } from '../ui/theme'
 import { ThemeProvider } from '../ui/ThemeProvider'
 import { initializeAppPersistence, usePersistence } from './persistence'
+import { shouldKeepMountedRoutes } from './persistenceGateState'
 
 /** Prevent onboarding effects and practice actions from running before durable hydration. */
 export function PersistenceGate({ children }: { children: ReactNode }) {
   useLocale()
   const status = usePersistence((state) => state.status)
+  const hasBeenReady = useRef(false)
+  if (status === 'ready') hasBeenReady.current = true
   useEffect(() => {
     void initializeAppPersistence()
   }, [])
-  if (status === 'ready') return children
+  const keepRoutesMounted = shouldKeepMountedRoutes(status, hasBeenReady.current)
+  return (
+    <>
+      {keepRoutesMounted ? children : <PersistenceRecovery />}
+      {hasBeenReady.current && status !== 'ready' && (
+        <Modal visible transparent onRequestClose={() => undefined}>
+          <PersistenceRecovery />
+        </Modal>
+      )}
+    </>
+  )
+}
+
+function PersistenceRecovery() {
+  const status = usePersistence((state) => state.status)
   return (
     <ThemeProvider>
       <View style={styles.canvas}>
