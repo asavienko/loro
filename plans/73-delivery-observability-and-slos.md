@@ -42,6 +42,10 @@ implement a duplicate managed dev/staging stack here.
        rehearsal, image/dependency scans and production recovery drills. Coordinate shared harnesses
        with 72 and feature tests with their owning plans.
 
+Local preparation exists under plan 88: the backup-bundle verifier and recovery-drill record make
+integrity evidence explicit without asserting an off-host upload or restore. Production recovery
+objectives remain unselected until an isolated testing drill supplies the corresponding evidence.
+
 ## Acceptance criteria
 
 - Production uses the same verified immutable artifact and a documented promotion/recovery policy.
