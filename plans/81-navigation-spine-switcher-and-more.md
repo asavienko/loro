@@ -3,9 +3,10 @@
 - **Requirement IDs:** `NAV-01`…`NAV-16`, `F-03`, `P1-02`, `P2-14`, `P4-06`, `P5-08`, `AS-04`
 - **Milestone:** M1/M2
 - **Status:** 🟡 Shared built-page spine/switcher, translated hubs and cold-entry escapes are
-  implemented. More, ongoing/contextual groups, full flow/session laws, durable resume and transport
-  remain. Consume 56's metadata; 59/64 supply checkpoints and 62 supplies audio. Q-17 gates final
-  home-rail priority, not reachability work.
+  implemented, including a More list of declared built destinations. Grouped More, owned-phrase
+  search, ongoing/contextual groups, full flow/session laws, durable resume and transport remain.
+  Consume 56's metadata; 59/64 supply checkpoints and 62 supplies audio. Q-17 gates final home-rail
+  priority, not reachability work.
 - **Depends on:** 55/79/84 completed; 56 route contract, 57 shared state APIs; 59/64 checkpoints and
   62 playback for later slices.
 - **Reviewed:** 2026-09-09 against checkout `42f4d57`; source/plan review only, no new device or
@@ -18,11 +19,17 @@ phrase detail and Languages. `apps/mobile/src/lib/navigation.ts` supplies transl
 Today's rail. `NavigationMenu.tsx` and `apps/mobile/e2e/navigation.spec.ts` cover menu navigation,
 cold Today escapes, warm Back and Escape/focus restoration. Onboarding retains step-back behavior.
 
-There is no `/more`, ongoing-work selector, exit sheet or travelling audio. The complete
-built/planned surface inventory and onboarding/Today home resolver already exist. Durable course
-checkpoints and Refrain resume are implemented by 59/64; this plan still needs their cross-route
-presentation and full exit laws. Additional product-dependent homes need approved feature semantics
-and extended route metadata from 56.
+The `/more` utility now lists the existing translated built destinations from `DESTINATIONS`,
+excluding home and itself, with a shared-menu entry and normal stack return. It adds no second route
+table, invented counts or planned destinations. There is no ongoing-work selector, exit sheet or
+travelling audio. The complete built/planned surface inventory and onboarding/Today home resolver
+already exist. Durable course checkpoints and Refrain resume are implemented by 59/64; this plan
+still needs their cross-route presentation and full exit laws. Additional product-dependent homes
+need approved feature semantics and extended route metadata from 56.
+
+The initial More slice passed navigation and route-manifest E2E (including every destination and
+return to More), navigation/i18n unit checks and scoped lint. Its manifest state participates in the
+full accessibility/text-scale suites; full combined CI and native acceptance remain separate.
 
 ## Source and ownership
 
@@ -87,7 +94,10 @@ Activity.
 
 ## Delivery sequence
 
-1. [ ] More/contextual navigation on the completed route-contract slice (NAV-01/NAV-08).
+1. [ ] More/contextual navigation on the completed route-contract slice (NAV-01/NAV-08). The initial
+       built-destination More surface is implemented. Lately/Phrases/Practice/You grouping,
+       owned-phrase search and contextual work remain pending the extended plan-56 metadata and
+       selectors; this initial list does not claim their acceptance.
 2. [ ] Session/flow exits and persisted resume integration (NAV-13/NAV-14).
 3. [ ] Travelling transport and device verification (NAV-15/NAV-16).
 

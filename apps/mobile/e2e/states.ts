@@ -53,6 +53,16 @@ export interface AppState {
 
 export const STATES: AppState[] = [
   {
+    name: 'more · built destinations',
+    route: '/more',
+    spec: 'NAV-01/NAV-08 built destination reachability',
+    reach: async (page) => {
+      await page.getByRole('button', { name: /, open the menu$/ }).click()
+      await page.getByRole('dialog').getByRole('button', { name: 'More', exact: true }).click()
+      await expect(page.getByRole('button', { name: 'Languages', exact: true })).toBeVisible()
+    },
+  },
+  {
     name: 'storage · opening progress',
     route: '/',
     firstRun: true,
@@ -299,6 +309,20 @@ export const STATES: AppState[] = [
     },
   },
   { name: 'add · discover', route: '/add', spec: '§2 Add', reach: (page) => open(page, 'Add') },
+  {
+    name: 'add · oversized import',
+    route: '/add',
+    spec: '§2 Add, bounded Import recovery',
+    reach: async (page) => {
+      await open(page, 'Add')
+      await click(page, 'import')
+      await page
+        .getByRole('textbox', { name: 'Phrases to import' })
+        .fill(Array.from({ length: 51 }, (_, index) => `Hola ${index} | Hi`).join('\n'))
+      await click(page, 'Review phrases')
+      await expect(page.getByRole('alert')).toContainText('Your text is still here')
+    },
+  },
   {
     name: 'add · import review',
     route: '/add',

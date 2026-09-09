@@ -11,8 +11,8 @@ frames, 10 navigation, 4 practice, and 3 progress. Four additional JSX files und
 `ui_kits/loro-app/` compose reference screens and do not belong to the component count. Likewise,
 the adjacent CSS token files contain 246 unique custom-property names, not the headline's 245.
 
-All reusable app UI lives under `apps/mobile/src/ui/`. Seven learner screens plus the shell use 24
-exported primitives and 6 exported composites. There is no `src/ui/charts/` directory yet.
+All reusable app UI lives under `apps/mobile/src/ui/`. Learner screens and the shell use 24
+exported primitives and 9 exported composites (including direct module exports). There is no `src/ui/charts/` directory yet.
 
 ## Current primitives · `src/ui/primitives/`
 
@@ -74,12 +74,29 @@ v1.1 shell uses the same size rather than its own metrics.
 
 The authored package has ten (`components/navigation/`): `Spine`, `ScreenHeader`, `NavRail`,
 `DayRow`, `SwitcherHandle`, `SwitcherSheet`, `ArrivalNote`, `ExitSheet`, `ResumeStrip`,
-`TransportStrip`. **None is an app component yet.** Today draws the first four plus a minimal
-switcher as route-local blocks with the authored geometry transcribed beside them, because it is the
-only surface carrying the shell and a component used once is not reuse. Plan 81 mounts the spine on
-every non-sheet surface from the route table; promoting these into `src/ui/components/` belongs to
-that change, together with the props the single call site does not exercise — the ongoing chip,
-`DayRow`'s `status` slot, and the other six components.
+`TransportStrip`. **The authored names are not one-to-one app exports.** `NavigationMenu` implements the shared
+spine handle and destination sheet; other named headers, exits, resume and transport remain under
+plan 81. The workbench renders that real menu and preserves future named APIs as pending.
+
+The direct-module composites also include:
+
+| Component | Current contract and use |
+| --- | --- |
+| `AudioControls` | Passed label/note/enabled/callback; metadata-only native audio action |
+| `LanguageChoices` | Controlled values/selected/onSelect with localized language names and radio semantics |
+| `NavigationMenu` | Passed labels/destinations; shared spine handle and dismissible destination sheet |
+
+## Workbench coverage (plan 80)
+
+The registry covers all 33 production component exports, including direct-module `AudioControls`,
+`LanguageChoices` and `NavigationMenu`. A source-based drift test checks component definitions as
+well as the type-checked barrel contract, so bypassing a barrel cannot hide a new component.
+`Sheet`, `ActionBar`, `DifficultySelector` and `TagChips` are explicitly interaction-owned; all
+other exports render in the gallery. There are no exported internal components in this inventory.
+Language choice inspection uses local React state and cannot change learner preferences. Navigation
+inspection opens the production menu and closes to the same workbench route. Audio inspection is
+honestly disabled and does not issue device commands. Full multilingual long-copy/state coverage
+and future named navigation APIs remain plan-80 work.
 
 ## What is not implemented
 

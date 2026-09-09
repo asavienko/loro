@@ -96,3 +96,21 @@ test('F-05: remains usable at the authored phone size and 310% text', async ({ p
     metrics.clientWidth + 1,
   )
 })
+
+test('F-05: direct production exports support local language and navigation inspection', async ({
+  page,
+}) => {
+  const choices = page.getByRole('radiogroup', { name: 'Workbench language choices' })
+  await expect(choices.getByRole('radio', { name: 'Български' })).toBeChecked()
+  const russian = choices.getByRole('radio', { name: 'Русский' })
+  await russian.focus()
+  await russian.press('Enter')
+  await expect(russian).toBeChecked()
+  await expect(choices.getByRole('radio', { name: 'Български' })).not.toBeChecked()
+  await page.getByRole('button', { name: 'Open specimen navigation' }).click()
+  await expect(page.getByLabel('Workbench, current destination', { exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Example destination', exact: true }).click()
+  await expect(page.getByText('Specimen navigation', { exact: true })).not.toBeVisible()
+  await expect(page).toHaveURL(/\/dev\/tokens/)
+  await expect(page.getByRole('button', { name: 'Unavailable specimen audio' })).toBeDisabled()
+})

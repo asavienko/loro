@@ -47,6 +47,7 @@ describe('surface registry and deep-link guard', () => {
       'progress',
       'languages',
       'account',
+      'more',
     ])
   })
 

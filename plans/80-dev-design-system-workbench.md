@@ -4,8 +4,8 @@
 - **Milestone:** M1/M2, alongside the owning UI features
 - **Status:** 🟡 Workbench, token enumeration, contrast reports, inspection controls and production
   exclusion are implemented. Production-state and navigation/language specimen coverage remains; new
-  state APIs are supplied by 57 and future navigation components need 81. Existing component
-  registration can start now.
+  state APIs are supplied by 57 and future navigation components need 81. Current component
+  registration and export drift coverage are implemented.
 - **Depends on:** 53 completed; 57 production state APIs; 81 future navigation components; 87
   implemented language UI.
 - **Reviewed:** 2026-09-09 against checkout `42f4d57`; source/plan review only, no new device or
@@ -27,7 +27,7 @@ names. The authored reference remains `Design System.dc.html`.
 
 ## Remaining work
 
-1. [ ] Reconcile the registry with current exported components, including NavigationMenu and
+1. [x] Reconcile the registry with current exported components, including NavigationMenu and
        LanguageChoices. State explicitly whether each export is rendered, interaction-owned or
        internal; add a drift assertion that catches a new component being omitted.
 2. [ ] Consume plan 57's implemented loading and forced pressed/focused APIs. Verify the same
@@ -69,3 +69,14 @@ names. The authored reference remains `Design System.dc.html`.
 Commit registry/language coverage first (F-05), then each dependency-backed state addition (F-06).
 Plan 57 owns component behavior and theme implementation; 81 owns navigation. This plan owns only
 their inspection coverage. Do not rebuild the route, token pipeline, contrast report or gallery.
+
+## 2026-09-09 registry slice
+
+Registered all 33 component definitions, including direct-import AudioControls, LanguageChoices and
+NavigationMenu. Gallery entries now declare rendered or interaction-owned disposition; no exported
+internal components exist. The source-scanning unit assertion catches newly exported components
+omitted from barrels or the registry. Language selection stays in specimen-local React state,
+navigation uses the production sheet with inert destinations, and audio remains explicitly disabled.
+Focused registry tests pass. Combined fast and browser gates are retained by the parent integration
+run because this checkout has concurrent feature edits. Multilingual long-copy, per-component state
+matrices and future plan-81 APIs remain open; they are not closed by registering current components.

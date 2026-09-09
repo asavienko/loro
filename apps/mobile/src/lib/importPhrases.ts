@@ -6,6 +6,16 @@
 
 import { foldSearchText } from '@loro/core'
 
+/** Keep review rendering and synchronous normalization bounded on older devices. */
+export const IMPORT_MAX_CHARACTERS = 20_000
+export const IMPORT_MAX_ROWS = 50
+
+/** Reject the whole batch rather than silently losing the tail of the learner's work. */
+export function isImportTooLarge(input: string): boolean {
+  if (input.length > IMPORT_MAX_CHARACTERS) return true
+  return input.split(/\r\n|[\r\n]/u).filter((line) => line.trim() !== '').length > IMPORT_MAX_ROWS
+}
+
 export interface ImportCandidate {
   readonly line: number
   readonly targetText: string
@@ -26,8 +36,9 @@ export function parseImportedPhrases(
   input: string,
   existingTargetTexts: readonly string[],
 ): ImportCandidate[] {
+  if (isImportTooLarge(input)) return []
   return reviewImportedCandidates(
-    input.split(/\r?\n/u).flatMap((line, index) => {
+    input.split(/\r\n|[\r\n]/u).flatMap((line, index) => {
       if (line.trim() === '') return []
       const pieces = line.split(/\t|\|/u)
       return [

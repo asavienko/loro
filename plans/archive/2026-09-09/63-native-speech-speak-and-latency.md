@@ -28,6 +28,12 @@ microphone permission request. It did not validate successful ASR or a language'
 boundary validates native speech events and deliberately drops numeric timing until a native
 monotonic-clock measurement exists.
 
+The runtime speech-event adapter also rejects null, non-object, incomplete and empty-session
+payloads without throwing. Only the validated lifecycle fields are projected into app state;
+unexpected native fields and numeric callback timing are discarded. Unit fixtures cover every
+existing speech state, including empty transcripts for silence/error/unavailable handling. This is
+boundary hardening, not new physical-device recognition or onset acceptance.
+
 ## Outcome
 
 The app captures speech by opaque native handle, performs validated on-device target-language

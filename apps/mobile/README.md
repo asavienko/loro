@@ -43,8 +43,9 @@ export and is never linked from learner navigation; `pnpm test:e2e:bundle` prove
 That assertion is behavioral: because the route is statically imported, it does not claim that the
 workbench's bytes are tree-shaken out of the export.
 
-The workbench reads generated values from `@loro/design-tokens` and renders the production
-components used by learner routes. When a value is wrong, edit its source under
+The workbench reads generated values from `@loro/design-tokens` and registers all 33 exported
+production components, with a source-drift check for omissions. It renders the components used by
+learner routes. When a value is wrong, edit its source under
 `packages/design-tokens/tokens/` and regenerate the committed output with `pnpm tokens:build`—never
 edit `packages/design-tokens/out/` by hand. When adding or changing a reusable component, add its
 named states to the production specimen registry rather than creating a workbench-only lookalike.

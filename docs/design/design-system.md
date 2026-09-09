@@ -155,8 +155,11 @@ The generated scale is:
 
 The generated rules require tabular numerals for changing numbers and tracking on uppercase labels.
 The current React Native mapping implements the 12 sans metric variants from `display` through
-`prose`/`labelSm`, but it does not yet load the families, expose the two serif variants, or apply a
-tabular-numeral variant. Spanish nodes do work today: `lang="es"` on the `Text` primitive becomes
+`prose`/`labelSm`, but it does not yet load the families or expose the two serif variants. Shared
+`Text` applies the generated `tabular-nums` variant to every style, including counters embedded in
+translated copy. The typography E2E checks equal digit advances in the current browser fallback
+font on Today, Progress and practice; native font rendering still requires device proof.
+Spanish nodes do work today: `lang="es"` on the `Text` primitive becomes
 `accessibilityLanguage="es-ES"`; the source scanner protects this because react-native-web does not
 forward that property.
 
