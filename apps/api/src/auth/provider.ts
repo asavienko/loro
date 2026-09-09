@@ -1,16 +1,19 @@
-import { createRemoteJWKSet, importPKCS8, jwtVerify, SignJWT, type JWTVerifyGetKey } from 'jose'
+import { importPKCS8, jwtVerify, SignJWT, type JWTVerifyGetKey } from 'jose'
 import type { OAuthProvider } from '@loro/core/api/oauth'
 import type { AuthSettings } from './settings.js'
+import { APPLE_ISSUER, GOOGLE_ISSUER, IDENTITY_ISSUERS, identityJwks } from './jwks.js'
 
-const GOOGLE_ISSUER = 'https://accounts.google.com'
-const APPLE_ISSUER = 'https://appleid.apple.com'
-const googleKeys = createRemoteJWKSet(new URL('https://www.googleapis.com/oauth2/v3/certs'))
-const appleKeys = createRemoteJWKSet(new URL('https://appleid.apple.com/auth/keys'))
+const GOOGLE_AUTH = `${GOOGLE_ISSUER}/o/oauth2/v2/auth`
+const APPLE_AUTH = `${APPLE_ISSUER}/auth/authorize`
+const GOOGLE_TOKEN = 'https://oauth2.googleapis.com/token'
+const APPLE_TOKEN = `${APPLE_ISSUER}/auth/token`
+
 export interface ProviderIdentity {
   subject: string
   provider: OAuthProvider
 }
-export interface IdentityProvider {
+/** Browser OAuth authorization + code exchange. Distinct from `IdentityProvider` (`apple` | `google`) in `auth.providers.ts`. */
+export interface OAuthIdentity {
   authorizationUrl(provider: OAuthProvider, state: string, nonce: string, challenge: string): string
   exchange(
     provider: OAuthProvider,
@@ -20,12 +23,12 @@ export interface IdentityProvider {
     now: number,
   ): Promise<ProviderIdentity>
 }
-export class OAuthIdentityProvider implements IdentityProvider {
+export class OAuthIdentityProvider implements OAuthIdentity {
   constructor(
     private readonly settings: AuthSettings,
     private readonly keys: { google: JWTVerifyGetKey; apple: JWTVerifyGetKey } = {
-      google: googleKeys,
-      apple: appleKeys,
+      google: identityJwks('google'),
+      apple: identityJwks('apple'),
     },
   ) {}
   private callback(provider: OAuthProvider): string {
@@ -38,9 +41,7 @@ export class OAuthIdentityProvider implements IdentityProvider {
     challenge: string,
   ): string {
     const google = provider === 'google'
-    const url = new URL(
-      google ? `${GOOGLE_ISSUER}/o/oauth2/v2/auth` : `${APPLE_ISSUER}/auth/authorize`,
-    )
+    const url = new URL(google ? GOOGLE_AUTH : APPLE_AUTH)
     url.search = new URLSearchParams({
       client_id: google ? this.settings.googleClientId : this.settings.appleClientId,
       redirect_uri: this.callback(provider),
@@ -74,23 +75,20 @@ export class OAuthIdentityProvider implements IdentityProvider {
           .setIssuedAt(seconds)
           .setExpirationTime(seconds + 300)
           .sign(await importPKCS8(this.settings.applePrivateKey, 'ES256'))
-    const response = await fetch(
-      google ? 'https://oauth2.googleapis.com/token' : `${APPLE_ISSUER}/auth/token`,
-      {
-        method: 'POST',
-        redirect: 'error',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          grant_type: 'authorization_code',
-          code,
-          client_id: clientId,
-          client_secret: secret,
-          redirect_uri: this.callback(provider),
-          ...(google ? { code_verifier: verifier } : {}),
-        }),
-        signal: AbortSignal.timeout(10_000),
-      },
-    )
+    const response = await fetch(google ? GOOGLE_TOKEN : APPLE_TOKEN, {
+      method: 'POST',
+      redirect: 'error',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'authorization_code',
+        code,
+        client_id: clientId,
+        client_secret: secret,
+        redirect_uri: this.callback(provider),
+        ...(google ? { code_verifier: verifier } : {}),
+      }),
+      signal: AbortSignal.timeout(10_000),
+    })
     if (!response.ok) throw new Error('Provider exchange failed')
     const body: unknown = await response.json()
     if (
@@ -101,7 +99,7 @@ export class OAuthIdentityProvider implements IdentityProvider {
     )
       throw new Error('Missing identity token')
     const { payload } = await jwtVerify(body.id_token, this.keys[provider], {
-      issuer: google ? [GOOGLE_ISSUER, 'accounts.google.com'] : APPLE_ISSUER,
+      issuer: [...IDENTITY_ISSUERS[provider]],
       audience: clientId,
       algorithms: ['RS256'],
       currentDate: new Date(now),

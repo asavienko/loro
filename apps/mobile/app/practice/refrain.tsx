@@ -57,39 +57,39 @@ import {
 } from '../../src/ui/theme'
 import {
   engineContext,
+  PRODUCTION_WAVES,
   PRODUCTION_WAVE_TIMES,
   refrainEngine,
   toView,
   useApp,
   type PhraseView,
+  type ProductionWave,
 } from '../../src/store'
 import { copy } from '../../src/lib/copy'
 import { deviceClock } from '../../src/lib/clock'
-import { newId } from '../../src/lib/ids'
 import { waveEntryWithResume, waveSchedule } from '../../src/lib/waves'
 import { useLocalMinute } from '../../src/lib/useLocalMinute'
 /** One warming band's resolved style. The bands are a design token, not a screen decision. */
 type WarmingStyle = (typeof warming)[ReturnType<typeof warmBand>]
-const WAVES = ['morning', 'midday', 'evening'] as const
-type WaveKey = (typeof WAVES)[number]
+type WaveKey = ProductionWave
 export default function Refrain() {
   useLocale()
   const localMinute = useLocalMinute()
   const now = localMinute.slice(11)
   const insets = useSafeAreaInsets()
   const { height: bottomBarHeight } = useBottomBar()
-  const scheduledWave = waveSchedule(WAVES, PRODUCTION_WAVE_TIMES, now).find(
+  const scheduledWave = waveSchedule(PRODUCTION_WAVES, PRODUCTION_WAVE_TIMES, now).find(
     (item) => item.position === 'next',
   )?.key
   const completedWaves = useApp((state) => state.refrainWaves)
   const refrainResume = useApp((state) => state.refrainResume)
+  const endRefrainSession = useApp((state) => state.endRefrainSession)
+  const showToast = useApp((state) => state.showToast)
   const entry = waveEntryWithResume(
-    WAVES,
+    PRODUCTION_WAVES,
     PRODUCTION_WAVE_TIMES,
     now,
-    completedWaves.filter(
-      (wave): wave is WaveKey => wave === 'morning' || wave === 'midday' || wave === 'evening',
-    ),
+    completedWaves.filter((wave): wave is WaveKey => PRODUCTION_WAVES.includes(wave as WaveKey)),
     refrainResume,
   )
   // A route parameter is never authority. The persisted checkpoint is shared with Today and the
@@ -99,7 +99,7 @@ export default function Refrain() {
       ? entry.wave
       : entry.kind === 'ready'
         ? entry.wave.key
-        : (scheduledWave ?? 'morning')
+        : (scheduledWave ?? PRODUCTION_WAVES[0])
   const session = useRefrainSession(selectedWave, entry.kind === 'ready' || entry.kind === 'resume')
   const { set, phrase, mode, auto, dayReps, locked, phraseNumber, wave } = session
   const [exitVisible, setExitVisible] = useState(false)
@@ -295,11 +295,11 @@ export default function Refrain() {
         }}
         onEnd={() => {
           try {
-            useApp.getState().endRefrainSession()
+            endRefrainSession()
             setExitVisible(false)
             router.replace('/')
           } catch {
-            useApp.getState().showToast(`${copy.persistence.error} ${copy.persistence.retry}`)
+            showToast(`${copy.persistence.error} ${copy.persistence.retry}`)
           }
         }}
       />
@@ -337,7 +337,7 @@ function ExitSheet({
 // The session
 // ─────────────────────────────────────────────────────────────────────────────
 interface RefrainSession {
-  wave: 'morning' | 'midday' | 'evening'
+  wave: WaveKey
   clozeMask: readonly number[]
   /** Today's frozen set, in the order the learner will see it. */
   set: PhraseView[]
@@ -362,15 +362,15 @@ interface RefrainSession {
  * RefrainEngine's decisions — the screen used to re-derive them, which is how the
  * card's warmth and the stored value came to disagree.
  */
-function useRefrainSession(
-  wave: 'morning' | 'midday' | 'evening',
-  enabled: boolean,
-): RefrainSession {
+function useRefrainSession(wave: WaveKey, enabled: boolean): RefrainSession {
   const phrases = useApp((s) => s.phrases)
   const refrainSet = useApp((s) => s.refrainSet)
   const applyDelta = useApp((s) => s.applyDelta)
   const ensureRefrainSet = useApp((s) => s.ensureRefrainSet)
+  const beginRefrainSession = useApp((s) => s.beginRefrainSession)
+  const saveRefrainCheckpoint = useApp((s) => s.saveRefrainCheckpoint)
   const completeRefrainWave = useApp((s) => s.completeRefrainWave)
+  const showToast = useApp((s) => s.showToast)
   const { session, cursor, done, wave: resumedWave } = useApp((state) => state.refrainResume)
   const activeWave = resumedWave ?? wave
   const targetLocale = useApp((state) => state.targetLocale)
@@ -389,27 +389,17 @@ function useRefrainSession(
       .plan(engineContext())
       .then((plan) => {
         if (cancelled) return
-        useApp.setState({
-          refrainResume: {
-            session: { sessionId: newId(), plan, cursor: 0 },
-            wave,
-            cursor: 0,
-            done: false,
-            lastLatency: null,
-            history: [],
-          },
-        })
+        beginRefrainSession(plan, wave)
       })
       .catch(() => {
-        if (!cancelled)
-          useApp.getState().showToast(`${copy.persistence.error} ${copy.persistence.retry}`)
+        if (!cancelled) showToast(`${copy.persistence.error} ${copy.persistence.retry}`)
       })
     return () => {
       cancelled = true
     }
     // Re-planned when the day's set changes, not on every rep: the plan is the day's
     // work, and re-planning mid-phrase would restart the mode sequence.
-  }, [enabled, refrainSet, targetLocale])
+  }, [enabled, refrainSet, targetLocale, beginRefrainSession, showToast])
   const item = session?.plan.items[cursor]
   const storePhrase = useMemo(
     () => (item === undefined ? undefined : phrases.find((p) => p.id === item.phraseId)),
@@ -436,10 +426,10 @@ function useRefrainSession(
     try {
       ensureRefrainSet()
     } catch {
-      useApp.getState().showToast(`${copy.persistence.error} ${copy.persistence.retry}`)
+      showToast(`${copy.persistence.error} ${copy.persistence.retry}`)
     }
     return false
-  }, [ensureRefrainSet])
+  }, [ensureRefrainSet, showToast])
   const doRep = useCallback(() => {
     if (busy.current || !ensureCurrentDay()) return
     if (session === null || item === undefined || storePhrase === undefined || locked) return
@@ -478,12 +468,23 @@ function useRefrainSession(
         })
       })
       .catch(() => {
-        useApp.getState().showToast(`${copy.persistence.error} ${copy.persistence.retry}`)
+        showToast(`${copy.persistence.error} ${copy.persistence.retry}`)
       })
       .finally(() => {
         busy.current = false
       })
-  }, [session, item, cursor, locked, applyDelta, targetLocale, storePhrase, ensureCurrentDay])
+  }, [
+    session,
+    item,
+    cursor,
+    locked,
+    applyDelta,
+    targetLocale,
+    storePhrase,
+    ensureCurrentDay,
+    showToast,
+    activeWave,
+  ])
   /** Jump to the first item of the next phrase in the plan. */
   const nextPhrase = useCallback(() => {
     if (busy.current || !ensureCurrentDay() || session === null) return
@@ -500,11 +501,19 @@ function useRefrainSession(
         done: nextIndex < 0,
       }
       if (nextIndex < 0) completeRefrainWave(activeWave, checkpoint)
-      else useApp.setState({ refrainResume: checkpoint })
+      else saveRefrainCheckpoint(checkpoint)
     } catch {
-      useApp.getState().showToast(`${copy.persistence.error} ${copy.persistence.retry}`)
+      showToast(`${copy.persistence.error} ${copy.persistence.retry}`)
     }
-  }, [session, cursor, ensureCurrentDay, completeRefrainWave, activeWave])
+  }, [
+    session,
+    cursor,
+    ensureCurrentDay,
+    completeRefrainWave,
+    saveRefrainCheckpoint,
+    activeWave,
+    showToast,
+  ])
   const set = useMemo(
     () =>
       refrainSet

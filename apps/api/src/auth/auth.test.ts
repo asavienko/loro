@@ -7,9 +7,9 @@ import type { OAuthProvider } from '@loro/core/api/oauth'
 import { PostgresDatabase } from '../database/database.js'
 import { AuthService } from './auth.service.js'
 import { tokenHash } from './auth.tokens.js'
-import { OAuthFlowService, hash, secret } from './service.js'
+import { OAuthFlowService, hash, secret } from './oauth-flow.service.js'
 import type { AuthSettings } from './settings.js'
-import type { IdentityProvider } from './provider.js'
+import type { OAuthIdentity } from './provider.js'
 
 const testUrl = process.env['LORO_TEST_DATABASE_URL']
 const key = generateKeyPairSync('ec', { namedCurve: 'prime256v1' })
@@ -42,12 +42,12 @@ describe.skipIf(!testUrl)('browser OAuth with durable shared accounts', () => {
   let auth: AuthService
   let now: number
   let schema: string
-  const providerExchange = vi.fn<IdentityProvider['exchange']>((provider, code) =>
+  const providerExchange = vi.fn<OAuthIdentity['exchange']>((provider, code) =>
     code === 'invalid'
       ? Promise.reject(new Error('provider-private-detail'))
       : Promise.resolve({ provider, subject: code }),
   )
-  const provider: IdentityProvider = {
+  const provider: OAuthIdentity = {
     authorizationUrl: (p, state, nonce, challenge) =>
       `https://provider.example/${p}?${new URLSearchParams({ state, nonce, code_challenge: challenge }).toString()}`,
     exchange: providerExchange,

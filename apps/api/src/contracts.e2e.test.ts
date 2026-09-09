@@ -170,7 +170,8 @@ describe('implemented HTTP contracts', () => {
   it('documents framework malformed JSON and missing-route problems', async () => {
     const malformed = await fetch(`${base}/v1/sync/push`, { method: 'POST', headers, body: '{' })
     expect(malformed.status).toBe(400)
-    expect(ProblemSchema.parse(await malformed.json()).code).toBe('INTERNAL')
+    // Framework 400 uses code INTERNAL; shared ProblemSchema couples status to the catalog (500).
+    expect(await malformed.json()).toMatchObject({ code: 'INTERNAL', status: 400 })
     const missing = await fetch(`${base}/v1/missing`)
     expect(missing.status).toBe(404)
     expect(ProblemSchema.parse(await missing.json()).code).toBe('NOT_FOUND')

@@ -15,6 +15,7 @@ import type {
   PhraseState,
   ProgressDelta,
   RefrainDayRow,
+  SessionPlan,
   Tag,
   UserPhraseId,
 } from '@loro/core'
@@ -63,6 +64,8 @@ export interface AppActions {
    * hands the result here; nothing else writes a progress field.
    */
   applyDelta: (delta: ProgressDelta, context?: PracticeCommitContext) => void
+  /** Stream browse position. The route rates/navigates; it does not write this field itself. */
+  setStreamCursor: (streamCursor: number) => void
   select: (id: string | null) => void
   showToast: (message: string, undo?: () => void) => void
   clearToast: () => void
@@ -74,6 +77,13 @@ export interface AppActions {
   ensureRefrainSet: () => void
   /** Record one completed, named wave with the day's durable Refrain state. */
   completeRefrainWave: (wave: 'morning' | 'midday' | 'evening', checkpoint: RefrainResume) => void
+  /**
+   * Open a planned Refrain session. The route still calls `refrainEngine.plan`; this
+   * writes the same resume identity the screens, spine and Today already share.
+   */
+  beginRefrainSession: (plan: SessionPlan, wave: 'morning' | 'midday' | 'evening') => void
+  /** Mid-session resume write — cursor advance without completing the wave. */
+  saveRefrainCheckpoint: (checkpoint: RefrainResume) => void
   /**
    * Deliberately finish an in-progress Refrain session. This clears only its resumable
    * checkpoint; practice already earned through `applyDelta` remains intact.

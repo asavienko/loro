@@ -56,9 +56,7 @@ export default function Stream() {
   const toggleLoved = useApp((s) => s.toggleLoved)
   const markLearned = useApp((s) => s.markLearned)
   const cursor = useApp((state) => state.streamCursor)
-  const setCursor = (streamCursor: number): void => {
-    useApp.setState({ streamCursor })
-  }
+  const setCursor = useApp((state) => state.setStreamCursor)
   const queue = useMemo(() => {
     const now = deviceClock.now()
     return phrases

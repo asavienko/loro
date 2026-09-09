@@ -4,14 +4,37 @@
 **Requirements:** structural cleanup of existing implementation (F-02/F-03/F-04, P3-20/P3-25,
 NAV-\*, ADR-0002/0003/0006), not product completion.
 
-**Disposition: document only.** This review does not implement the refactors, does not open a
-numbered plan, and does not claim whole-plan acceptance. Device, bilingual, provider and remaining
-learner-screen work stay with their owners in [plans/README.md](../../plans/README.md).
+**Disposition: document only** when written. **A–G of the sequence below landed in the working
+tree on 2026-09-09** (not a numbered plan, not whole-plan acceptance). Native-library package
+installs (`expo-haptics`, RNGH, Maestro, keyboard-controller, widgets) were not part of that pass.
 
 The store, engine contract, handwritten SQL and generated Rust bridges are already the right shape.
 The expensive debt is **dual ownership of numbers and maps**, **practice routes that live beside
 those contracts**, and **docs that still describe an earlier backend**. A rewrite of `features/` or
 a second maths layer would make the next fifteen screens harder, not easier.
+
+---
+
+## Implementation status — 2026-09-09
+
+A–G from [Sequencing](#sequencing) are in the working tree. No new native packages. E2E specs were
+not rewritten. Device, bilingual and provider gates stay with their plans.
+
+| Item | Status | What landed | What did not |
+| ---- | ------ | ----------- | ------------ |
+| **A** | landed | `fakeRepository` uses `isActive`/`isDue`; TS Refrain formulae removed; `fakeCore()` looks up `refrainFixtures.ts`; leftover `order_stream(PhraseState)` deleted in favor of `order_stream_candidates` | FSRS stays a labelled test double |
+| **B** | landed | Current `Problem`/`Health`/`Diff`/`Scene` import shared modules; Nest auth/sync parse `account`/`sync` not `target`; generated `openapi.current.json` updated | Implemented `/content/manifest` and `/content/pack` envelopes stay local (target needs `resource_base`, checksums, count refine). `LocaleSchema` still `es-ES`. Framework 400/`INTERNAL` is not forced through status-coupled `ProblemSchema` |
+| **C** | landed | `backend.md` Postgres-current; `/more` `/settings` in `mobile-app.md`; UniFFI/HLC/`jsCoreFacade` comments | TS calendar kept; clocks not unified |
+| **D** | landed | `PRODUCTION_WAVES` next to times; `setStreamCursor`; `beginRefrainSession` | Wave lock / resume identity unchanged |
+| **E** | landed | `speakEngine` export; Speak `plan()` once per course/queue; cursor from the session handle | Reveal/skip still non-production; `StreamEngine.plan()` unwired |
+| **F** | landed | `syncableColumns.ts` next to `fieldPolicy`; SQL drift-checked; mobile `PHRASE_WIRE_TO_SQL` / `phraseFields` consume it; both `SyncEntity` types documented | No generic upsert; trip entities stay off the wire |
+| **G** | landed | `oauth-flow.service.ts` / `oauth.controller.ts` / `auth-boundary.guard.ts`; shared `jwks.ts`; OAuth port renamed `OAuthIdentity` | Both `/me` shapes kept; no Nest `AuthModule` |
+
+**Still as-you-touch:** `add.tsx` extract, `copy.ts` sections, learner/sync module split, Postgres
+test harness, `ci-local.mjs` modules, `canonicalReviewDelta`, practice empty-state helper.
+
+**Must wait:** unchanged (`StreamEngine.plan()`, `features/` rewrite, delete TS calendar, trip on the
+wire, WarmingCard, Q-14).
 
 ---
 
@@ -418,16 +441,14 @@ engines.
 ## Sequencing
 
 ```
-now, parallel:
-  A. fakeRepository + seal TS Refrain numbers     (core / core-rs tests)
-  B. current.ts import shared schemas             (contracts:generate/check)
+landed:
+  A. fakeRepository + seal TS Refrain numbers
+  B. current.ts import shared schemas (implemented manifest/pack envelopes remain)
   C. backend.md + mobile-app routes + stale comments
   D. PRODUCTION_WAVES + typed setStreamCursor / beginRefrainSession
-
-then, can overlap:
-  E. Speak plan() wiring                          (after D’s action pattern)
-  F. phrase column map next to fieldPolicy        (before any new sync field)
-  G. rename API auth files + shared JWKS          (when next touching auth)
+  E. Speak plan() wiring
+  F. phrase column map next to fieldPolicy
+  G. rename API auth files + shared JWKS
 
 as you touch:
   add.tsx import extract · copy.ts sections · learner/sync split
@@ -438,12 +459,12 @@ must wait:
   features/ folder rewrite     → second call site or unreadable route
   delete TS calendar           → plan 70 widgets + bridge dispatch
   trip SyncEntity on the wire  → Q-07 / plan 69
-  Nest AuthModule split        → optional with G, not a prerequisite
+  Nest AuthModule split        → optional after G, not a prerequisite
   WarmingCard → ui/components  → Q-14 / second engine
 ```
 
-A–D do not share files. E depends on D. F should land before plan 68 adds fields. G should not
-silently change `/me` JSON.
+A–G landed in the working tree (see the [implementation status](#implementation-status--2026-09-09)).
+E depended on D. F should stay ahead of plan 68 adding fields. G did not change `/me` JSON.
 
 ---
 

@@ -245,6 +245,11 @@ export const ReviewLogFieldsSchema = z
         message: 'Review journal provenance and scheduling state must travel together',
       })
   })
+/**
+ * Wire entities that may appear on push/pull. This is a different `SyncEntity` from
+ * `fieldPolicy.ts`: policy includes trip / trip_drop / trip_phrase for planned merge
+ * (plan 69 / Q-07). Those names stay off this envelope until that decision ships.
+ */
 export const fieldsByEntity = {
   user_phrase: UserPhraseFieldsSchema,
   settings: SettingsFields,

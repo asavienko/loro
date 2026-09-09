@@ -2,6 +2,9 @@
 
 F-01/F-02/F-07: optional sign-in, real identity proof and durable session revocation. The
 composition root supplies `DATABASE`, `SERVER_CLOCK`, `AuthService` and `AuthGuard`.
+Browser OAuth lives in `oauth-flow.service.ts` / `oauth.controller.ts`; the AI account
+boundary is `auth-boundary.guard.ts`. Native ID-token and code-exchange JWKS share
+`jwks.ts`. `GET /me` and `GET /auth/me` keep distinct response shapes.
 `AUTH_MIGRATION_SQL` is installed with the database migration.
 
 - Apple/Google use fixed HTTPS JWKS endpoints, RS256 signatures, required subject/expiry/issued-at,
