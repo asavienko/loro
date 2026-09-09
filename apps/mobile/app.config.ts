@@ -109,6 +109,7 @@ export default (): ExpoConfig => ({
     'expo-web-browser',
     'expo-secure-store',
     ['expo-localization', { supportedLocales: ['en', 'bg', 'ru'] }],
+    './plugins/with-dev-client-identity.cjs',
   ],
 
   experiments: {
