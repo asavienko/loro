@@ -54,7 +54,8 @@ export const sharedTiming = {
    * a ~12 s sweep at ~38 s. Playwright waiting for a control to stop being obscured is correct
    * behaviour and worth keeping visible rather than forcing the click past it.
    *
-   * Whole-manifest text-scale and touch-target sweeps set a three-minute budget as states grow.
+   * Whole-manifest text-scale and touch-target sweeps set a five-minute budget as listen
+   * companion states join the account and practice inventory.
    * Ordinary tests retain this timeout; `globalTimeout` bounds the complete run.
    */
   timeout: 90_000,
