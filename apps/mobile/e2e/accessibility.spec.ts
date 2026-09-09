@@ -107,6 +107,8 @@ for (const state of STATES) {
 }
 
 test('every interactive element meets the 44 px touch target', async ({ page }) => {
+  // Whole-manifest sweep: nine plan-96 music states pushed this past the 90 s default.
+  test.setTimeout(240_000)
   const offenders: string[] = []
 
   for (const state of STATES) {
