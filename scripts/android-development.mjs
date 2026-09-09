@@ -30,6 +30,32 @@ export function validateDevelopmentArguments(args) {
         'The Android development command supports only the debug variant. Use pnpm apk:local for the standalone Preview APK.',
       )
     }
+    const [option, ...inlineParts] = argument.split('=')
+    const hasInlineValue = inlineParts.length > 0
+    if (['--variant', '--port', '-p', '--device', '-d'].includes(option)) {
+      const optional = option === '--device' || option === '-d'
+      const value = hasInlineValue ? inlineParts.join('=') : args[index + 1]
+      if (value === undefined || value.startsWith('-')) {
+        if (optional && !hasInlineValue) continue
+        throw new Error(`Missing value for ${option}`)
+      }
+      if (!value) throw new Error(`Missing value for ${option}`)
+      if (option === '--port' || option === '-p') {
+        if (!/^\d+$/.test(value) || Number(value) < 1 || Number(value) > 65535)
+          throw new Error('The Android development port must be between 1 and 65535.')
+      }
+      if (!hasInlineValue) index += 1
+      continue
+    }
+    if (
+      ['--no-build-cache', '--no-install', '--no-bundler', '--all-arch', '--help', '-h'].includes(
+        argument,
+      )
+    )
+      continue
+    throw new Error(
+      `Unsupported Android development argument: ${argument}. Project overrides are not supported.`,
+    )
   }
 }
 
@@ -55,6 +81,10 @@ export function runAndroidDevelopment(args) {
   validateDevelopmentArguments(args)
   const env = developmentEnvironment(process.env)
   const pnpm = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm'
+  if (args.includes('--help') || args.includes('-h')) {
+    run(pnpm, ['exec', 'expo', 'run:android', '--help'], env)
+    return
+  }
   run(pnpm, ['exec', 'expo', 'prebuild', '--platform', 'android', '--no-install'], env)
   run(pnpm, ['exec', 'expo', 'run:android', '--app-id', developmentAppId, ...args], env)
 }

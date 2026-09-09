@@ -55,6 +55,16 @@ The command accepts Expo's debug launch options, including `--device`, but rejec
 the generated project. It forces `LORO_LOCAL_APK=0`, including when a local dotenv file selects
 Preview. Use `pnpm apk:local` for a standalone release build.
 
+The wrapper accepts device (`--device`/`-d`), port (`--port`/`-p`), debug variant, cache,
+dependency-install and bundler options. Positional project paths and unknown options are rejected
+before prebuild. Both build steps always use this mobile project.
+
+After building Development, Metro can be restarted with
+`pnpm --filter @loro/mobile start --dev-client`; press `a` to reopen the installed app. Rebuild once
+with the Android command after upgrading an older suffix-based Development installation. The
+generated native project now declares `app.loro.android.dev` directly, including its activity
+namespace, so a fresh Expo launcher can resolve the installed package.
+
 With the development server running, open `/dev/tokens` for the design-system workbench. It needs no
 account, service, secret, or native module. The route is deliberately unavailable in a production
 export and is never linked from learner navigation; `pnpm test:e2e:bundle` proves both properties.

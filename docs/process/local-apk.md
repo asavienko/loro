@@ -7,6 +7,8 @@ use EAS or submit anything to Google Play.
 `pnpm --filter @loro/mobile android` is the Metro-dependent debug workflow and rejects release
 variants, custom APKs and caller-supplied app IDs. It forces the Development build flag even when a
 local dotenv file selects Preview. Use this Preview APK workflow for a standalone release build.
+Development also rejects positional project paths and declares its package directly in the generated
+native project so a fresh Metro session can resolve it. Preview retains its own package.
 
 ## Prerequisites
 

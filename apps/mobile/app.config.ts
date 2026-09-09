@@ -82,7 +82,11 @@ export default (): ExpoConfig => ({
   },
 
   android: {
-    package: localApk ? 'app.loro.android.preview' : 'app.loro.android',
+    package: localApk
+      ? 'app.loro.android.preview'
+      : androidDevelopmentClient
+        ? 'app.loro.android.dev'
+        : 'app.loro.android',
     versionCode: 1,
     adaptiveIcon: localApk
       ? undefined
