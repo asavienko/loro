@@ -11,6 +11,7 @@
  * progress field is `delta.ts`.
  */
 
+import { DEFAULT_DEVICE_PREFERENCES, type DevicePreferences } from '../lib/devicePreferences'
 import type { NativeLanguage, TargetLocale, PhraseState, SessionHandle } from '@loro/core'
 
 export interface Toast {
@@ -46,6 +47,7 @@ export interface CourseState {
   refrainSubstituted: string[]
 }
 export interface AppData {
+  devicePreferences: DevicePreferences
   streamCursor: number
   refrainResume: RefrainResume
   nativeLanguage: NativeLanguage
@@ -106,6 +108,7 @@ export interface AppData {
  * `reset()` spreads this, so a field added here is cleared by reset for free.
  */
 export const INITIAL_STATE: AppData = {
+  devicePreferences: DEFAULT_DEVICE_PREFERENCES,
   streamCursor: 0,
   refrainResume: EMPTY_REFRAIN_RESUME,
   nativeLanguage: 'en',
@@ -129,6 +132,7 @@ export const INITIAL_STATE: AppData = {
 /** The data half of the repository projection, for assertions and local transactions. */
 export function dataOf(state: AppData): AppData {
   return {
+    devicePreferences: state.devicePreferences,
     nativeLanguage: state.nativeLanguage,
     targetLocale: state.targetLocale,
     languageChosen: state.languageChosen,

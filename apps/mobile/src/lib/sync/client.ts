@@ -91,6 +91,9 @@ export function createSyncClient(options: {
           ) {
             local.resetCursor()
             restarted = true
+            // Resetting an expired cursor is not a completed snapshot. Preserve
+            // the reset for the next run when this attempt exhausted the budget.
+            if (page === MAX_PAGES_PER_RUN - 1) throw new SyncError('PAGE_BUDGET')
             continue
           }
           throw error

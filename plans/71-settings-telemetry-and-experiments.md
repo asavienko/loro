@@ -3,9 +3,10 @@
 - **Requirement IDs:** `F-05`, `F-06`, `F-08`, `F-09`, `LB-27`, `P3-12`; measurement for `Q-01`,
   `Q-02`, `Q-03`, `Q-05`, `Q-06`
 - **Milestone:** M2/M3
-- **Status:** 🟡 Language settings, copy resources and engine flag seams exist. General Settings,
-  durable preferences, telemetry and remote flags remain; local settings work needs 59, while only
-  experiment activation waits on Q-05.
+- **Status:** 🟡 Language settings and installation-local analytics consent persist through SQLite.
+  General Settings UI, remaining preferences, telemetry and remote flags remain; the consent control
+  awaits Settings UI and the event queue/transport is not implemented. Only experiment activation
+  waits on Q-05.
 - **Depends on:** 59 durable settings; 56/81 routes; 67/68 only for account-scoped sync; 86 for
   telemetry/config transport; 87 implemented language selection.
 - **Reviewed:** 2026-09-09 against checkout `42f4d57`; source/plan review only, no new device or
@@ -67,3 +68,18 @@ course-session repositories when wiring durable settings; do not recreate an ind
 ## Out of scope
 
 Ad-tech tracking, raw audio analytics, pricing experiments, and Run/Phrasebook implementation.
+
+## Delivered slice — 2026-09-09
+
+`F-05`/`F-06`: version 1 device preferences now store analytics consent, off by default, in the
+existing SQLite `kv` table via `src/data/learner.ts`. This is installation-local, excluded from
+settings sync/outbox, and does not grant audio/transcript upload permission. Missing, malformed or
+unsupported versions read as consent off; no SQL migration is needed for the existing key/value
+table. Reset clears consent. The store action commits before publishing and preserves current
+course/progress state. Existing onboarding and atomic language-pair settings retain their owner.
+
+Real SQLite tests cover relaunch, durable revocation, absent/malformed/future data, reset, outbox
+exclusion, progress preservation, and write-failure rollback. This is a persistence seam only: there
+is no Settings consent control, event collection/queue, retention/export/erasure pipeline, remote
+flag assignment or experiment activation yet. Theme, audio, notification and practice preferences
+remain separately scoped work.

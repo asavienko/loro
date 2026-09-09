@@ -21,9 +21,9 @@ still target architecture.
 - Entitlements, Redis, TLS termination/pinning, audit logs, account deletion/export, analytics,
   TTS/chat and voice-clone endpoints remain unimplemented. General rate-limit middleware and the
   structured logging pipeline remain targets; unexpected auth errors are explicitly redacted.
-- Native account refresh uses Expo SecureStore; web session credentials remain in memory. Analytics
-  consent, local analytics queue and on-device SQLite integration remain unimplemented. Current
-  learning state remains in memory.
+- Native account refresh uses Expo SecureStore; web session credentials remain in memory. Learning
+  state and installation-local analytics consent persist in device/browser SQLite. Consent defaults
+  off and resets off; the Settings control and local analytics queue remain unimplemented.
 - `app.config.ts` declares purpose strings, selected manifest permissions, blocked Android
   permissions, the URL scheme, and an App Group entitlement. Runtime, in-context permission prompts
   and native targets are not implemented, and no store privacy manifest/data-safety artifact exists.
@@ -241,8 +241,10 @@ personalisation from a corpus ([ai-services.md](ai-services.md)).
 
 ## Consent surfaces
 
-The target architecture has one explicit, revocable consent. It is off by default and stored in
-`settings`.
+The target architecture has one explicit, revocable consent. Analytics consent defaults off. Its
+versioned device preference is stored in SQLite `kv` through the learner transaction and is excluded
+from account settings sync. Missing, malformed or unsupported versions fail closed. This persistence
+seam exists; the following prompt, Settings UI and event queue remain targets.
 
 | Consent       | Asked when                                  | Effect if declined                      |
 | ------------- | ------------------------------------------- | --------------------------------------- |

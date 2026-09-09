@@ -1,4 +1,4 @@
-import { atInstant } from './clock'
+import { atInstant, jumpTo, returnToForeground, runFor } from './clock'
 import { expect, onboard, test } from './fixtures'
 import { START_WAVE, bankedRow, railCount, repsTodayRow, streakChip } from './states'
 
@@ -88,7 +88,32 @@ test('NAV-16: the next wave is the one the clock is on', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Start the evening wave' })).toBeEnabled()
 
   // A wave whose hour has gone by recedes, and says nothing about whether it was practised:
-  // nothing records per-wave completion yet, so nothing may claim it (plan 64).
+  // this learner has no recorded wave completions, so none may be claimed.
   await expect(page.getByText('Morning wave', { exact: true })).toBeVisible()
   await expect(page.getByText('done', { exact: true })).toHaveCount(0)
+})
+
+test('LB-01: Today updates the current wave while open and when returning to foreground', async ({
+  page,
+}) => {
+  await atInstant(page, '2026-04-06T12:59:50')
+  await onboard(page)
+  await expect(page.getByRole('button', { name: 'Start the morning wave' })).toBeEnabled()
+  await runFor(page, 10_000)
+  await expect(page.getByRole('button', { name: 'Start the midday wave' })).toBeEnabled()
+  await expect(
+    page.getByRole('button', { name: 'Midday wave. Re-rep, from memory · 5 phrases' }),
+  ).toBeVisible()
+  await jumpTo(page, '2026-04-06T20:30')
+  await returnToForeground(page)
+  await expect(page.getByRole('button', { name: 'Start the evening wave' })).toBeEnabled()
+})
+
+test('LB-01: Today rolls an open day at midnight without a foreground event', async ({ page }) => {
+  await atInstant(page, '2026-04-06T23:59:50')
+  await onboard(page)
+  await runFor(page, 10_000)
+  await expect(page.getByText('Tuesday, April 7')).toBeVisible()
+  await expect(repsTodayRow(page, 0)).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Start the morning wave' })).toBeEnabled()
 })
