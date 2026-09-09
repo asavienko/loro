@@ -31,6 +31,7 @@
 
 import type { Page } from '@playwright/test'
 import { expect, onboard, test } from './fixtures'
+import { atInstant } from './clock'
 import { enter, START_WAVE, STATES, todayMarker } from './states'
 
 /** 200% is the documented promise; 310% is iOS's largest accessibility size. */
@@ -72,6 +73,7 @@ for (const scale of SCALES) {
 }
 
 test('the primary action stays reachable at 310% text', async ({ page }) => {
+  await atInstant(page, '2026-04-06T10:00')
   await onboard(page)
   await scaleText(page, 3.1)
 

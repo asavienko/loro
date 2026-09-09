@@ -12,10 +12,10 @@ import { useLocale } from '../src/lib/i18n'
  * ABOUT TO ADD. Splitting the state that way is what let the render collapse: the sheet no
  * longer reads the search box's state, and the list no longer reads the draft's.
  */
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { ScrollView, StyleSheet, TextInput, View } from 'react-native'
 import * as DocumentPicker from 'expo-document-picker'
-import { File } from 'expo-file-system'
+import { File as ExpoFile } from 'expo-file-system'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import {
   BROWSABLE_THEMES,
@@ -321,6 +321,7 @@ export default function Add() {
       <ScrollView contentContainerStyle={[s.body, { paddingBottom: insets.bottom + space['5'] }]}>
         {list.mode === 'import' ? (
           <ImportPhrases
+            key={importDraftKey({ targetLocale, nativeLanguage })}
             owned={owned}
             addOwnPhrase={addOwnPhrase}
             importDrafts={importDrafts}
@@ -601,6 +602,13 @@ function ImportPhrases({
   const [tooLarge, setTooLarge] = useState(false)
   const [saveFailed, setSaveFailed] = useState(false)
   const [fileError, setFileError] = useState<ImportFileError | null>(null)
+  const fileRequest = useRef(0)
+  useEffect(() => {
+    fileRequest.current += 1
+    return () => {
+      fileRequest.current += 1
+    }
+  }, [nativeLanguage, targetLocale])
   const existing = useMemo(
     () =>
       owned.flatMap((phrase) => {
@@ -610,35 +618,54 @@ function ImportPhrases({
     [owned],
   )
   const preview = () => {
+    fileRequest.current += 1
     const exceedsLimit = isImportTooLarge(input)
     setTooLarge(exceedsLimit)
     setSaveFailed(false)
     setReview(exceedsLimit ? null : parseImportedPhrases(input, existing))
   }
+  const persistDraft = (value: string): boolean => {
+    try {
+      saveImportDraft({ targetLocale, nativeLanguage, input: value })
+      return true
+    } catch {
+      setSaveFailed(true)
+      return false
+    }
+  }
   const updateInput = (value: string) => {
+    fileRequest.current += 1
+    if (!persistDraft(value)) return
     setInput(value)
     setTooLarge(false)
     setSaveFailed(false)
     setFileError(null)
     setReview(null)
-    saveImportDraft({ targetLocale, nativeLanguage, input: value })
   }
   const chooseFile = async () => {
+    const request = fileRequest.current + 1
+    fileRequest.current = request
     setFileError(null)
-    const picked = await DocumentPicker.getDocumentAsync({
-      type: ['text/plain', 'text/tab-separated-values'],
-      copyToCacheDirectory: false,
-      multiple: false,
-    })
-    if (picked.canceled) return
-    const asset = picked.assets[0]
-    if (asset === undefined) return
-    if (asset.size !== undefined && asset.size > IMPORT_MAX_FILE_BYTES) {
-      setFileError('too-large')
-      return
-    }
     try {
-      const bytes = await readBoundedImportFile(new File(asset.uri).stream(), IMPORT_MAX_FILE_BYTES)
+      const picked = await DocumentPicker.getDocumentAsync({
+        type: ['text/plain', 'text/tab-separated-values'],
+        copyToCacheDirectory: false,
+        multiple: false,
+        base64: false,
+      })
+      if (request !== fileRequest.current || picked.canceled) return
+      const asset = picked.assets[0]
+      if (asset === undefined) return
+      if (asset.size !== undefined && asset.size > IMPORT_MAX_FILE_BYTES) {
+        setFileError('too-large')
+        return
+      }
+      const stream =
+        asset.file === undefined
+          ? new ExpoFile(asset.uri).stream()
+          : (asset.file.stream() as ReadableStream<Uint8Array>)
+      const bytes = await readBoundedImportFile(stream, IMPORT_MAX_FILE_BYTES)
+      if (request !== fileRequest.current) return
       if (bytes === null) {
         setFileError('too-large')
         return
@@ -650,10 +677,11 @@ function ImportPhrases({
       }
       updateInput(result.text)
     } catch {
-      setFileError('unsupported-encoding')
+      if (request === fileRequest.current) setFileError('unsupported-encoding')
     }
   }
   const update = (index: number, field: 'targetText' | 'translation', value: string) => {
+    fileRequest.current += 1
     setSaveFailed(false)
     if (review === null) return
     const updated = reviewImportedCandidates(
@@ -665,9 +693,9 @@ function ImportPhrases({
       existing,
     )
     const persistedInput = importInputForCandidates(updated)
+    if (!persistDraft(persistedInput)) return
     setReview(updated)
     setInput(persistedInput)
-    saveImportDraft({ targetLocale, nativeLanguage, input: persistedInput })
   }
   const accepted = (review ?? []).filter(
     (candidate) =>
@@ -675,6 +703,7 @@ function ImportPhrases({
   )
   const reviewedBatchTooLarge = review !== null && isReviewedImportTooLarge(review)
   const save = () => {
+    fileRequest.current += 1
     if (review === null || reviewedBatchTooLarge) return
     const checked = reviewImportedCandidates(review, existing)
     if (isReviewedImportTooLarge(checked)) {
@@ -756,6 +785,13 @@ function ImportPhrases({
           </Text>
         </View>
       )}
+      {saveFailed && (
+        <View accessibilityRole="alert">
+          <Text variant="caption" color={semantic.warn.text}>
+            {copy.add.import.saveFailed}
+          </Text>
+        </View>
+      )}
       <Button label={copy.add.import.preview} variant="secondary" onPress={preview} />
       {tooLarge && (
         <View accessibilityRole="alert">
@@ -775,13 +811,6 @@ function ImportPhrases({
             <View accessibilityRole="alert">
               <Text variant="caption" color={semantic.warn.text}>
                 {copy.add.import.tooLarge(IMPORT_MAX_ROWS, IMPORT_MAX_CHARACTERS)}
-              </Text>
-            </View>
-          )}
-          {saveFailed && (
-            <View accessibilityRole="alert">
-              <Text variant="caption" color={semantic.warn.text}>
-                {copy.add.import.saveFailed}
               </Text>
             </View>
           )}

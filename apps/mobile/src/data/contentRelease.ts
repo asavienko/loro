@@ -51,12 +51,13 @@ export function readInstalledContentRelease(
       ((value as Record<string, unknown>)['catalogVersion'] as number) > 0 &&
       typeof (value as Record<string, unknown>)['catalogSha256'] === 'string' &&
       /^[a-f0-9]{64}$/.test((value as Record<string, unknown>)['catalogSha256'] as string)
-    )
+    ) {
       return value as StoredRelease
+    }
   } catch {
-    // A corrupt pointer is not a release. The next verified candidate may replace it.
+    throw new Error(`Corrupt installed content release pointer for ${lang}`)
   }
-  return undefined
+  throw new Error(`Corrupt installed content release pointer for ${lang}`)
 }
 
 export async function activateContentRelease(input: {

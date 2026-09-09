@@ -16,7 +16,6 @@
 import { atInstant, runFor } from './clock'
 import { expect, onboard, test } from './fixtures'
 import {
-  back,
   click,
   open,
   openFirstPhrase,
@@ -158,6 +157,7 @@ test('browser Back and Forward keep the learner’s state', async ({ page }) => 
 })
 
 test('pressing a rep twice counts twice, and never lands between modes', async ({ page }) => {
+  await atInstant(page, '2026-04-06T10:00')
   await onboard(page)
   await startWave(page)
 
@@ -171,7 +171,9 @@ test('pressing a rep twice counts twice, and never lands between modes', async (
     '33',
   )
 
-  await back(page)
+  await page.getByRole('button', { name: 'Leave practice', exact: true }).click()
+  await expect(page.getByRole('dialog')).toBeVisible()
+  await page.getByRole('button', { name: 'Pause the wave', exact: true }).click()
   await expect(todayMarker(page)).toBeVisible()
   await expect(repsTodayRow(page, 2)).toBeVisible()
 })

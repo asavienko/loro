@@ -44,6 +44,11 @@ export async function mockAccountService(
   for (const popup of page.context().pages()) {
     if (popup !== page) await popup.close()
   }
+  // Replace the previous scenario's handlers. Playwright evaluates context routes in
+  // registration order, so leaving an earlier mock installed makes a later state inherit its
+  // response (for example, sync-unavailable instead of sync-rejected).
+  await page.context().unroute(`${ACCOUNT_API}/**`)
+  await page.context().unroute('https://provider.loro.test/**')
   const requests: AccountRequest[] = []
   await page.context().route(`${ACCOUNT_API}/**`, async (route) => {
     const request = route.request()

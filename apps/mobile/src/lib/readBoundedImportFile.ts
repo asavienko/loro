@@ -1,6 +1,8 @@
 /** Read selected file bytes without building an unbounded buffer from a provider URI. */
 interface ByteReader {
-  read: () => Promise<{ readonly done: true } | { readonly done: false; readonly value: Uint8Array }>
+  read: () => Promise<
+    { readonly done: true } | { readonly done: false; readonly value: Uint8Array }
+  >
   cancel: () => Promise<void>
   releaseLock: () => void
 }

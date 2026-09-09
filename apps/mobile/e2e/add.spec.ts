@@ -110,6 +110,21 @@ test('P2-09/P2-10: reviews an offline import before persisting each accepted own
   ).toBeVisible()
 })
 
+test('P2-09: imports a browser text file through the bounded reader', async ({ page }) => {
+  await onboard(page)
+  await page.getByRole('button', { name: 'Add' }).click()
+  await page.getByRole('button', { name: 'import' }).click()
+  const chooserPromise = page.waitForEvent('filechooser')
+  await page.getByRole('button', { name: 'Choose a text file' }).click()
+  const chooser = await chooserPromise
+  await chooser.setFiles({
+    name: 'phrases.tsv',
+    mimeType: 'text/tab-separated-values',
+    buffer: Buffer.from('Hola\tHello'),
+  })
+  await expect(page.getByRole('textbox', { name: 'Phrases to import' })).toHaveValue('Hola\tHello')
+})
+
 test('P2-09/P2-10: oversized import preserves the draft and recovers with a smaller batch', async ({
   page,
 }) => {
