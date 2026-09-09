@@ -3,7 +3,7 @@
  * `review_required: true` is mandatory. These files never load through `loadCatalog`.
  */
 import { z } from 'zod'
-import { NATIVE_LANGUAGES, TARGET_LOCALES, supportsPair } from '@loro/core'
+import { BROWSABLE_THEMES, NATIVE_LANGUAGES, TARGET_LOCALES, supportsPair } from '@loro/core'
 import { PHRASE_SUGGEST_MAX_WORDS, phraseWordCount } from '@loro/core'
 
 const pairOk = (value: { native_language: string; target_locale: string }) =>
@@ -20,7 +20,7 @@ export const PhraseAuthoringDraftSchema = z
         z.strictObject({
           target_text: z.string().trim().min(1).max(120),
           translation: z.string().trim().min(1).max(140),
-          theme: z.string().min(1).max(32),
+          theme: z.enum(BROWSABLE_THEMES),
           emoji: z.string().min(1).max(8),
         }),
       )

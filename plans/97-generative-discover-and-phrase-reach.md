@@ -52,7 +52,7 @@ Offline Discover remains complete: catalog, scenarios, nearest-scenario hint and
 3. [x] Discover P2-07 Add your own row and nearest-scenario hint, with E2E states.
 4. [x] Authoring-time draft schema, stub drafter and validators; drafts cannot enter the bundled
        catalog.
-5. [x] Guarded `/v1/phrases/suggest` stub, schema/safety, silent empty fallback and eval corpus.
+5. [x] Guarded `/v1/phrases/suggest` stub, schema/safety, silent empty fallback and stub/safety eval.
        Live Anthropic dispatch stays off until Q-21.
 6. [x] Discover Suggested-for-this section, editable tagging, provenance, stale-request cancel.
 7. [ ] Q-21 live enablement: eval thresholds, spend caps shared with other AI paths, provider

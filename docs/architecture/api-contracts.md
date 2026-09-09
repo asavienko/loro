@@ -169,6 +169,7 @@ return the exact original correction even when their response `server_time` adva
 | Billing webhook                                    | Q-12: actual provider wire format, signature headers and acknowledgement. Request schema is `never`; no fabricated signature scheme is published |
 | Extended account read/devices/revoke/logout        | Plan 67 richer transport/UX review; current `/me` and 204 logout are implemented                                                                 |
 | Remote configuration                               | Q-05 and plan 71: registered flags, stable assignment/exposure and experiment authorization                                                      |
+| Discover `POST /v1/phrases/suggest`                | Q-21: live garnish, spend caps, provider retention. Draft schema already backs the stub; live dispatch stays off. Auth/rate/body caps stay with the Q-21 enablement. |
 
 Draft operations carry `x-loro-gates`, `x-loro-unresolved`, and `x-loro-auth-boundary`. An empty
 gate array means an identified roadmap review, **not** an implemented route. The webhook's

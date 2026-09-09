@@ -25,6 +25,7 @@ import {
   candidateIsAddable,
   canonicalPhraseText,
   containsPromptInjection,
+  ownPhraseIsAddable,
   filterNewCandidates,
   isExactLibraryMatch,
   matchNearestScenario,
@@ -160,6 +161,8 @@ interface Suggestions {
   countFor: (theme: string) => number
   /** After a confirmed add: anchor on that theme, so the next list is "more like it". */
   anchorOn: (theme: string) => void
+  /** Confirmed custom add: clear the query without moving the association theme. */
+  clearDiscoverQuery: () => void
 }
 /**
  * The suggestion algorithm, unchanged.
@@ -258,6 +261,11 @@ function useSuggestions(owned: readonly PhraseState[]): Suggestions {
       setQuery('')
       setScenario(null)
     },
+    /** Authored confirm always clears the query (`Loro.dc.html:2325`); custom keeps the theme. */
+    clearDiscoverQuery: () => {
+      setQuery('')
+      setScenario(null)
+    },
   }
 }
 /** What the learner is about to add: a catalog row or an own-phrase handoff. */
@@ -271,6 +279,11 @@ type SheetPhrase =
       theme?: Theme
       emoji?: string
     }
+
+function ownDraftIsAddable(sheet: Extract<SheetPhrase, { kind: 'own' }>): boolean {
+  return sheet.source === 'custom' ? ownPhraseIsAddable(sheet) : candidateIsAddable(sheet)
+}
+
 interface AddDraft {
   phrase: SheetPhrase | null
   difficulty: Difficulty
@@ -278,10 +291,7 @@ interface AddDraft {
   openCatalog: (phrase: CatalogPhrase) => void
   openHandoff: (handoff: PhraseHandoff) => void
   setOwnField: (field: 'targetText' | 'translation', value: string) => void
-  /**
-   * Dismiss WITHOUT clearing the draft — reopening the sheet keeps what was picked, which is
-   * what the hand-rolled version did. Only a confirmed add resets it.
-   */
+  /** Dismiss clears tagging so a later row does not inherit abandoned difficulty or tags. */
   close: () => void
   setDifficulty: (difficulty: Difficulty) => void
   toggleTag: (tag: Tag) => void
@@ -298,6 +308,8 @@ function useAddDraft(): AddDraft {
     tags,
     openCatalog: (next) => {
       setPhrase({ kind: 'catalog', phrase: next })
+      setDifficulty('med')
+      setTags([])
     },
     openHandoff: (handoff) => {
       setPhrase({
@@ -308,12 +320,16 @@ function useAddDraft(): AddDraft {
         ...(handoff.draft.theme === undefined ? {} : { theme: handoff.draft.theme }),
         ...(handoff.draft.emoji === undefined ? {} : { emoji: handoff.draft.emoji }),
       })
+      setDifficulty('med')
+      setTags([])
     },
     setOwnField: (field, value) => {
       setPhrase((cur) => (cur?.kind === 'own' ? { ...cur, [field]: value } : cur))
     },
     close: () => {
       setPhrase(null)
+      setDifficulty('med')
+      setTags([])
     },
     setDifficulty,
     toggleTag: (tag) => {
@@ -359,27 +375,36 @@ function useDiscoverReach(
   generating: boolean
   suggested: readonly PhraseCandidate[]
 } {
-  const exact = useMemo(() => isExactLibraryMatch(query, catalog), [query, catalog])
-  const offerOwn = mode === 'discover' && shouldOfferOwnPhrase(query, exact)
   const nearest = mode === 'discover' ? matchNearestScenario(query, scenarios) : null
-  const wantSuggest =
-    mode === 'discover' && shouldRequestSuggestions(query, catalogHits.length, exact)
   const existingTexts = useMemo(
     () => [...ownedTargetTexts(owned, catalog), ...catalog.map((phrase) => phrase.targetText)],
     [owned, catalog],
   )
+  const exact = useMemo(() => {
+    if (isExactLibraryMatch(query, catalog)) return true
+    return isExactLibraryMatch(
+      query,
+      ownedTargetTexts(owned, catalog).map((targetText) => ({ targetText, translation: '' })),
+    )
+  }, [query, catalog, owned])
+  const offerOwn = mode === 'discover' && shouldOfferOwnPhrase(query, exact)
+  const wantSuggest =
+    mode === 'discover' && shouldRequestSuggestions(query, catalogHits.length, exact)
+  const requestKey = `${nativeLanguage}:${targetLocale}:${canonicalPhraseText(query)}`
   const [generating, setGenerating] = useState(false)
-  const [suggested, setSuggested] = useState<PhraseCandidate[]>([])
+  const [suggested, setSuggested] = useState<{ key: string; rows: PhraseCandidate[] }>({
+    key: '',
+    rows: [],
+  })
   const seq = useRef(0)
   useEffect(() => {
     const id = ++seq.current
     if (!wantSuggest) {
       setGenerating(false)
-      setSuggested([])
+      setSuggested({ key: '', rows: [] })
       return
     }
     setGenerating(true)
-    setSuggested([])
     const handle = setTimeout(() => {
       if (id !== seq.current) return
       const rows = containsPromptInjection(query)
@@ -389,14 +414,20 @@ function useDiscoverReach(
             existingTexts,
           )
       if (id !== seq.current) return
-      setSuggested(rows)
+      setSuggested({ key: requestKey, rows })
       setGenerating(false)
     }, metrics.suggestDebounce)
     return () => {
       clearTimeout(handle)
     }
-  }, [wantSuggest, query, nativeLanguage, targetLocale, existingTexts])
-  return { offerOwn, nearest, generating, suggested }
+  }, [wantSuggest, query, nativeLanguage, targetLocale, existingTexts, requestKey])
+  const visibleSuggested = wantSuggest && suggested.key === requestKey ? suggested.rows : []
+  return {
+    offerOwn,
+    nearest,
+    generating: wantSuggest && (generating || suggested.key !== requestKey),
+    suggested: visibleSuggested,
+  }
 }
 // ─── The screen ──────────────────────────────────────────────────────────────
 export default function Add() {
@@ -436,7 +467,7 @@ export default function Add() {
       draft.reset()
       return
     }
-    if (!candidateIsAddable(sheet)) return
+    if (!ownDraftIsAddable(sheet)) return
     addOwnPhrase(
       {
         targetText: sheet.targetText,
@@ -447,6 +478,7 @@ export default function Add() {
       { difficulty: draft.difficulty, tags: draft.tags, source: sheet.source },
     )
     if (sheet.source !== 'custom' && sheet.theme !== undefined) list.anchorOn(sheet.theme)
+    else list.clearDiscoverQuery()
     draft.reset()
   }
   const showCatalogEmpty =
@@ -511,6 +543,15 @@ export default function Add() {
               />
             ) : null}
 
+            {list.mode === 'discover' && reach.offerOwn ? (
+              <OwnPhraseRow
+                query={list.query.trim()}
+                onPress={() => {
+                  draft.openHandoff(typedOwnPhraseHandoff(list.query))
+                }}
+              />
+            ) : null}
+
             {list.phrases.length > 0 || showCatalogEmpty ? (
               <SuggestionList
                 phrases={list.phrases}
@@ -532,15 +573,6 @@ export default function Add() {
                 candidates={reach.suggested}
                 onSelect={(candidate) => {
                   draft.openHandoff(phraseHandoff(candidate))
-                }}
-              />
-            ) : null}
-
-            {list.mode === 'discover' && reach.offerOwn ? (
-              <OwnPhraseRow
-                query={list.query.trim()}
-                onPress={() => {
-                  draft.openHandoff(typedOwnPhraseHandoff(list.query))
                 }}
               />
             ) : null}
@@ -805,7 +837,7 @@ function OwnPhraseRow({ query, onPress }: { query: string; onPress: () => void }
     >
       <Text variant="title3">{OWN_PHRASE_FALLBACK.emoji}</Text>
       <View style={s.grow}>
-        <Text variant="bodySm" color={ink.ink} lang="target">
+        <Text variant="bodySm" color={ink.ink}>
           {query}
         </Text>
         <Text variant="captionSm" color={ink.muted}>
@@ -1180,7 +1212,7 @@ function TaggingSheet({
   const catalog = phrase?.kind === 'catalog' ? phrase.phrase : null
   const own = phrase?.kind === 'own' ? phrase : null
   const canConfirm =
-    phrase === null ? false : phrase.kind === 'catalog' || candidateIsAddable(phrase)
+    phrase === null ? false : phrase.kind === 'catalog' || ownDraftIsAddable(phrase)
   return (
     <Sheet visible={phrase !== null} onDismiss={onDismiss} dismissLabel={copy.a11y.common.dismiss}>
       {/* The guard stays INSIDE the sheet: `Modal` mounts its children either way. */}

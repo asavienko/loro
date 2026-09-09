@@ -50,7 +50,32 @@ const INJECTION = /ignore\s+(previous|all)\s+instructions|you are now\b|system\s
 
 /** Folded identity for duplicate detection. Catalog and owned lines share this key. */
 export function canonicalPhraseText(value: string): string {
-  return foldSearchText(value).replace(/\s+/g, ' ').trim()
+  return foldSearchText(value)
+    .replace(/\s+/g, ' ')
+    .replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, '')
+    .trim()
+}
+
+/** Whole tokens after folding, so "chair" does not match "hair" and "in" does not match dinner. */
+export function foldedPhraseTokens(value: string): string[] {
+  return canonicalPhraseText(value)
+    .split(/[^\p{L}\p{N}]+/u)
+    .filter((token) => token.length > 0)
+}
+
+/**
+ * True when every keyword token appears as a query token, or as a prefix of one when the
+ * keyword is a stem of four or more letters (`peluquer`, `лекарств`, `загуб`).
+ */
+export function queryHasKeyword(query: string, keyword: string): boolean {
+  const needles = foldedPhraseTokens(keyword)
+  if (needles.length === 0) return false
+  const haystack = foldedPhraseTokens(query)
+  return needles.every((needle) =>
+    haystack.some(
+      (token) => token === needle || (needle.length >= 4 && token.startsWith(needle)),
+    ),
+  )
 }
 
 export function phraseWordCount(value: string): number {
@@ -100,17 +125,25 @@ const SCENARIO_ALIASES: Readonly<Record<string, readonly string[]>> = {
   lost: ['lost', 'directions', 'загуб', 'потерял'],
 }
 
+function queryMatchesScenarioLabel(query: string, label: string): boolean {
+  if (queryHasKeyword(query, label)) return true
+  const haystack = foldedPhraseTokens(query)
+  return foldedPhraseTokens(label).some(
+    (needle) =>
+      needle.length >= 4 &&
+      haystack.some((token) => token === needle || token.startsWith(needle)),
+  )
+}
+
 export function matchNearestScenario(
   query: string,
   scenarios: readonly ScenarioHint[],
 ): ScenarioHint | null {
-  const folded = canonicalPhraseText(query)
-  if (folded.length < OWN_PHRASE_QUERY_MIN) return null
+  if (foldedPhraseTokens(query).join('').length < OWN_PHRASE_QUERY_MIN) return null
   for (const scenario of scenarios) {
-    const label = canonicalPhraseText(scenario.label)
-    if (label.length > 0 && (folded.includes(label) || label.includes(folded))) return scenario
+    if (queryMatchesScenarioLabel(query, scenario.label)) return scenario
     const aliases = SCENARIO_ALIASES[scenario.id] ?? []
-    if (aliases.some((alias) => folded.includes(canonicalPhraseText(alias)))) return scenario
+    if (aliases.some((alias) => queryHasKeyword(query, alias))) return scenario
   }
   return null
 }
@@ -168,7 +201,7 @@ export function chatKeepLineHandoff(input: {
   })
 }
 
-export function candidateIsAddable(candidate: {
+export function ownPhraseIsAddable(candidate: {
   readonly targetText: string
   readonly translation: string
 }): boolean {
@@ -178,9 +211,16 @@ export function candidateIsAddable(candidate: {
     target.length > 0 &&
     meaning.length > 0 &&
     target.length <= MAX_OWN_PHRASE_TEXT_CODE_UNITS &&
-    meaning.length <= MAX_OWN_PHRASE_TEXT_CODE_UNITS &&
-    phraseWordCount(target) <= PHRASE_SUGGEST_MAX_WORDS
+    meaning.length <= MAX_OWN_PHRASE_TEXT_CODE_UNITS
   )
+}
+
+/** Generated / chat / import candidates also stay within the spoken-practice word cap. */
+export function candidateIsAddable(candidate: {
+  readonly targetText: string
+  readonly translation: string
+}): boolean {
+  return ownPhraseIsAddable(candidate) && phraseWordCount(candidate.targetText) <= PHRASE_SUGGEST_MAX_WORDS
 }
 
 export function suggestCacheKey(input: {

@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import { NATIVE_LANGUAGES, TARGET_LOCALES, supportsPair } from '@loro/core'
 import { loadLearningCatalog } from './multilingual.js'
+import { topicReviewSnapshot } from './topicSuggestions.js'
 
 /** The review record uses the same byte identity as the exported packet. */
 export function reviewEntrySha256(value: unknown): string {
@@ -16,6 +17,7 @@ export function reviewMaterialSha256(material: {
     readonly targetLocale: string
     readonly sha256: string
   }[]
+  readonly topics: readonly { readonly id: string; readonly sha256: string }[]
 }): string {
   return reviewEntrySha256({
     ui: material.ui.map(({ locale, sha256 }) => ({ locale, sha256 })),
@@ -24,6 +26,7 @@ export function reviewMaterialSha256(material: {
       targetLocale,
       sha256,
     })),
+    topics: material.topics.map(({ id, sha256 }) => ({ id, sha256 })),
   })
 }
 
@@ -64,12 +67,22 @@ export function buildReviewPacket() {
       },
     ),
   )
+  const snapshot = topicReviewSnapshot()
+  const topics = [
+    {
+      id: 'discover-bundled',
+      sha256: reviewEntrySha256(snapshot),
+      material: snapshot,
+      review: pendingReview(),
+    },
+  ]
   return {
     schemaVersion: 1,
     requirement: 'F-08',
     // Exclude mutable review records from the identity of the material being reviewed.
-    materialSha256: reviewMaterialSha256({ ui, courses }),
+    materialSha256: reviewMaterialSha256({ ui, courses, topics }),
     ui,
     courses,
+    topics,
   }
 }

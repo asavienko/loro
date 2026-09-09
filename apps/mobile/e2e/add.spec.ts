@@ -35,6 +35,7 @@ test('P2-02..P2-24: discovers, tags, adds, associates, and undoes a phrase', asy
   await page.getByRole('textbox', { name: 'Meaning' }).fill('A phrase I need')
   await page.getByRole('button', { name: 'Add to my stream' }).click()
   await expect(page.getByText('11 in stream')).toBeVisible()
+  await expect(page.getByText('Add your own')).toHaveCount(0)
   await page.getByRole('button', { name: 'Undo' }).click()
   await expect(page.getByText('10 in stream')).toBeVisible()
 
