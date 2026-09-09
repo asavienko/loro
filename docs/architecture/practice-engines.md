@@ -172,15 +172,15 @@ export interface EngineContext {
 
 ### Current implementation status
 
-| Engine ID       | Contract | Headless engine | Mobile route | Current limitation                                                                          |
-| --------------- | -------- | --------------- | ------------ | ------------------------------------------------------------------------------------------- |
-| `stream`        | Yes      | Implemented     | Implemented  | Audio is not native/background-capable; ranking reaches it through a TS facade fallback     |
-| `refrain`       | Yes      | Implemented     | Implemented  | No real audio/ASR; set selection, cloze, and FSRS still use interim TS/fabricated fallbacks |
-| `srs`           | Reserved | Not implemented | No           | Requires authoritative FSRS and durable due state                                           |
-| `prosody`       | Reserved | Not implemented | No           | Requires the evidence-gated DSP/native capture pipeline                                     |
-| `pronunciation` | Reserved | Not implemented | No           | Requires the evidence-gated DSP/native capture pipeline                                     |
-| `roleplay`      | Reserved | Not implemented | No           | Requires speech plus guarded live/offline AI behavior                                       |
-| `run`           | Reserved | Not implemented | No           | Conditional on loop evidence and durable ladder history                                     |
+| Engine ID       | Contract | Headless engine | Mobile route | Current limitation                                                                              |
+| --------------- | -------- | --------------- | ------------ | ----------------------------------------------------------------------------------------------- |
+| `stream`        | Yes      | Implemented     | Implemented  | Route is still a rating surface; `StreamEngine.plan()` waits on plan 62 audio. Ranking is Rust. |
+| `refrain`       | Yes      | Implemented     | Implemented  | Native TTS/ASR exist; browser E2E cannot prove them. Selection and FSRS are Rust.               |
+| `srs`           | Reserved | Not implemented | No           | Requires authoritative FSRS and durable due state                                               |
+| `prosody`       | Reserved | Not implemented | No           | Requires the evidence-gated DSP/native capture pipeline                                         |
+| `pronunciation` | Reserved | Not implemented | No           | Requires the evidence-gated DSP/native capture pipeline                                         |
+| `roleplay`      | Reserved | Not implemented | No           | Requires speech plus guarded live/offline AI behavior                                           |
+| `run`           | Reserved | Not implemented | No           | Conditional on loop evidence and durable ladder history                                         |
 
 The sections that follow specify target behavior for extension. Only Stream and Refrain describe
 classes that exist today. `EngineId` membership does not mean an engine, registry entry, screen, or

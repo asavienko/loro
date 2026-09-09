@@ -1,10 +1,9 @@
 # API contract
 
-**Status: shared contracts exist; service integration remains pending.** Plan 85 adds Zod schemas,
+**Status: shared contracts and an implemented auth/sync API exist.** Plan 85 added Zod schemas,
 inferred types, examples, an integration inventory and generated OpenAPI 3.1 documents. The running
-Nest API still has ten development routes, local interfaces/partial checks, an unscoped in-memory
-sync repository and a stub AI provider. No auth, durable storage, live provider, billing, account,
-analytics or mobile network integration is implemented by the contract work.
+Nest API uses PostgreSQL for accounts and tenant-scoped sync, WASM merge, and bundled AI/content
+stubs. Billing, live Anthropic, account export/erasure and OS background sync remain plan-owned.
 
 - [Current OpenAPI](openapi.current.json): the observed development surface.
 - [Target OpenAPI](openapi.target.json): planned routes plus clearly marked gated drafts.
@@ -18,21 +17,22 @@ navigation guide; request/response fields and examples are generated rather than
 
 ## Implemented surface
 
-Current base: `http://localhost:3000/v1`. All routes are unauthenticated. Sync is a development
-harness, **not a safe multi-user service**.
+Current base: `http://localhost:3000/v1`. Health and bundled content are unauthenticated. Auth and
+sync require a bearer session and device binding. Sync is tenant-scoped PostgreSQL, **not** a global
+in-memory harness.
 
-| Method | Route                  | Success   | Current behavior                                                        |
-| ------ | ---------------------- | --------- | ----------------------------------------------------------------------- |
-| GET    | `/health`              | 200       | Liveness                                                                |
-| GET    | `/health/ready`        | 200 / 503 | Content/WASM checks; 503 is JSON checks, not a problem body             |
-| GET    | `/content/manifest`    | 200       | Bundled catalog counts; no ETag/cache headers                           |
-| GET    | `/content/diff`        | 200       | Whole catalog for older versions; no history                            |
-| GET    | `/content/pack?id=...` | 200       | Query-based lookup; unknown pack 422                                    |
-| POST   | `/sync/push`           | 201       | Per-operation merge/rejection; structured field HLCs                    |
-| POST   | `/sync/pull`           | 201       | All in-memory rows; ignores cursor/limit; live tombstone may be omitted |
-| POST   | `/sync/status`         | 201       | Global row count and WASM diagnostic                                    |
-| POST   | `/ai/scene`            | 201       | Stub/bundled JSON, optional level ignored                               |
-| GET    | `/ai/themes`           | 200       | Bundled themes and configured provider name                             |
+| Method | Route                  | Success   | Current behavior                                            |
+| ------ | ---------------------- | --------- | ----------------------------------------------------------- |
+| GET    | `/health`              | 200       | Liveness                                                    |
+| GET    | `/health/ready`        | 200 / 503 | Content/WASM checks; 503 is JSON checks, not a problem body |
+| GET    | `/content/manifest`    | 200       | Bundled catalog counts; no ETag/cache headers               |
+| GET    | `/content/diff`        | 200       | Whole catalog for older versions; no history                |
+| GET    | `/content/pack?id=...` | 200       | Query-based lookup; unknown pack 422                        |
+| POST   | `/sync/push`           | 201       | Per-operation merge/rejection; structured field HLCs        |
+| POST   | `/sync/pull`           | 201       | Tenant-scoped page; honours `since` / `limit` / `has_more`  |
+| POST   | `/sync/status`         | 201       | Global row count and WASM diagnostic                        |
+| POST   | `/ai/scene`            | 201       | Stub/bundled JSON, optional level ignored                   |
+| GET    | `/ai/themes`           | 200       | Bundled themes and configured provider name                 |
 
 These statuses and bodies are verified over HTTP. Target schemas do not silently change them.
 
