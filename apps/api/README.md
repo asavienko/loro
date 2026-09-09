@@ -1,8 +1,9 @@
 # @loro/api
 
 NestJS backend with durable PostgreSQL authentication and tenant-scoped sync, the shared Rust/WASM
-merge and HLC, bundled multilingual content, and bundled AI scenes. Redis, live AI/TTS, billing,
-account export/deletion jobs, and background workers remain unimplemented.
+merge and HLC, bundled multilingual content, bundled AI scenes, and a gated stub TTS render. Redis,
+live AI/ElevenLabs seed audio, billing, account export/deletion jobs, and background workers remain
+unimplemented. Cloud ASR and voice cloning are not offered.
 
 ## Run
 
@@ -51,13 +52,15 @@ All paths have the `/v1` prefix. Content and health remain public.
 | POST     | `/sync/push`, `/sync/pull`, `/sync/status`                     | Bearer and matching `X-Loro-Device` required                    |
 | POST     | `/ai/scene`                                                    | Bundled, validated roleplay scene                               |
 | GET      | `/ai/themes`                                                   | Available bundled themes                                        |
+| POST     | `/tts/render`                                                  | Authenticated; stub/Q-15 incomplete → 503; identity JSON only   |
+| GET      | `/tts/assets/:sha256`                                          | Authenticated checksum bytes from the process disk cache        |
 
-OAuth uses `@loro/core/api/oauth`; other auth and sync use `@loro/core/api/target` schemas at the
-transport boundary. Push validates the shared envelope, its 500-operation/512-KiB caps, then each
-operation independently; malformed writes cannot authorize extra fields such as recording paths or
-audio. Creating a phrase requires `targetLocale`, `phraseId`, `source` and `addedAt`; subsequent
-updates may be partial. Catalog identity is immutable within a row. New own phrases also require
-their text under the shared schema.
+OAuth uses `@loro/core/api/oauth`; other auth and sync use `@loro/core/api/account` and
+`@loro/core/api/sync` schemas at the transport boundary. Push validates the shared envelope, its
+500-operation/512-KiB caps, then each operation independently; malformed writes cannot authorize
+extra fields such as recording paths or audio. Creating a phrase requires `targetLocale`,
+`phraseId`, `source` and `addedAt`; subsequent updates may be partial. Catalog identity is immutable
+within a row. New own phrases also require their text under the shared schema.
 
 ## Convergence and durability
 

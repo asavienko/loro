@@ -1,17 +1,26 @@
 /** F-01/F-02/F-04: browser OAuth handoff uses the durable shared account/session engine. */
-import { generateKeyPairSync, randomUUID } from 'node:crypto'
-import { Pool } from 'pg'
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { generateKeyPairSync } from 'node:crypto'
+import type { Pool } from 'pg'
+import { afterAll, afterEach, beforeAll, beforeEach, expect, it, vi } from 'vitest'
 import { SignInResponseSchema, type DeviceRegistration } from '@loro/core/api/target'
 import type { OAuthProvider } from '@loro/core/api/oauth'
 import { PostgresDatabase } from '../database/database.js'
 import { AuthService } from './auth.service.js'
 import { tokenHash } from './auth.tokens.js'
-import { OAuthFlowService, hash, secret } from './service.js'
+import { OAuthFlowService, hash, secret } from './oauth-flow.service.js'
 import type { AuthSettings } from './settings.js'
-import type { IdentityProvider } from './provider.js'
+import type { OAuthIdentity } from './provider.js'
 
-const testUrl = process.env['LORO_TEST_DATABASE_URL']
+import {
+  LORO_TEST_DATABASE_URL,
+  connectAdmin,
+  createSearchPathSchema,
+  describePostgres,
+  dropIsolatedSchema,
+  isolatedSchemaName,
+} from '../testing/postgres-schema.js'
+
+const testUrl = LORO_TEST_DATABASE_URL
 const key = generateKeyPairSync('ec', { namedCurve: 'prime256v1' })
   .privateKey.export({ type: 'pkcs8', format: 'pem' })
   .toString()
@@ -35,19 +44,19 @@ const settings: AuthSettings = {
   applePrivateKey: 'test-only',
 }
 
-describe.skipIf(!testUrl)('browser OAuth with durable shared accounts', () => {
+describePostgres('browser OAuth with durable shared accounts', () => {
   let admin: Pool
   let database: PostgresDatabase
   let service: OAuthFlowService
   let auth: AuthService
   let now: number
   let schema: string
-  const providerExchange = vi.fn<IdentityProvider['exchange']>((provider, code) =>
+  const providerExchange = vi.fn<OAuthIdentity['exchange']>((provider, code) =>
     code === 'invalid'
       ? Promise.reject(new Error('provider-private-detail'))
       : Promise.resolve({ provider, subject: code }),
   )
-  const provider: IdentityProvider = {
+  const provider: OAuthIdentity = {
     authorizationUrl: (p, state, nonce, challenge) =>
       `https://provider.example/${p}?${new URLSearchParams({ state, nonce, code_challenge: challenge }).toString()}`,
     exchange: providerExchange,
@@ -59,15 +68,12 @@ describe.skipIf(!testUrl)('browser OAuth with durable shared accounts', () => {
   }
 
   beforeAll(() => {
-    admin = new Pool({ connectionString: testUrl })
+    admin = connectAdmin(testUrl)
   })
   beforeEach(async () => {
     now = 1_800_000_000_000
-    schema = `oauth_service_${randomUUID().replaceAll('-', '')}`
-    await admin.query(`CREATE SCHEMA ${schema}`)
-    const url = new URL(testUrl!)
-    url.searchParams.set('options', `-csearch_path=${schema}`)
-    vi.stubEnv('DATABASE_URL', url.toString())
+    schema = isolatedSchemaName('oauth_service')
+    vi.stubEnv('DATABASE_URL', await createSearchPathSchema(admin, schema, testUrl))
     vi.stubEnv('AUTH_ENABLED', 'true')
     vi.stubEnv('AUTH_PRIVATE_KEY_PEM', key)
     vi.stubEnv('AUTH_ISSUER', settings.publicUrl)
@@ -76,7 +82,7 @@ describe.skipIf(!testUrl)('browser OAuth with durable shared accounts', () => {
   })
   afterEach(async () => {
     await database.onModuleDestroy()
-    await admin.query(`DROP SCHEMA ${schema} CASCADE`)
+    await dropIsolatedSchema(admin, schema)
     vi.restoreAllMocks()
     vi.unstubAllEnvs()
   })

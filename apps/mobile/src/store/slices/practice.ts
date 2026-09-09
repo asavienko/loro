@@ -12,7 +12,15 @@ import { addPracticeDay } from '../state'
 import type { Slice } from '../types'
 import type { UserPhraseId } from '@loro/core'
 
-export const createPracticeSlice: Slice<'recordPlay' | 'applyDelta'> = ({ set, get, deps }) => ({
+export const createPracticeSlice: Slice<'recordPlay' | 'applyDelta' | 'setStreamCursor'> = ({
+  set,
+  get,
+  deps,
+}) => ({
+  setStreamCursor: (streamCursor) => {
+    set({ streamCursor })
+  },
+
   recordPlay: (id) => {
     // A play is an observation, not a computed score, so it goes through the same
     // single write path as everything else.

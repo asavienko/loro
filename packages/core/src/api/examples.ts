@@ -303,6 +303,26 @@ export const draftExamples: Readonly<Record<string, WireExample>> = {
       },
     },
   },
+  phraseSuggest: {
+    request: { target_locale: 'es-ES', native_language: 'en', query: 'pharmacy' },
+    responses: {
+      200: {
+        fallback: true,
+        provenance: 'bundled',
+        candidates: [
+          {
+            target_text: '¿Dónde está la farmacia de guardia?',
+            translation: 'Where is the all-night pharmacy?',
+            theme: 'Survival',
+            emoji: '💊',
+            provenance: 'bundled',
+            source: 'generated',
+            needs_review: true,
+          },
+        ],
+      },
+    },
+  },
   ttsRender: {
     request: { text: line.es, lang: 'es-ES', phrase_hash: hash },
     responses: { 200: { uri: `sha256/${hash}`, sha256: hash, ms: 1420, cached: true } },

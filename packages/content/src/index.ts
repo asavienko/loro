@@ -12,6 +12,7 @@ export * from './types.js'
 export * from './roleplay.js'
 export * from './delivery.js'
 export { bundledCatalog } from './catalog.js'
+export { bundledTopicSuggestions } from './topicSuggestions.js'
 
 import { bundledCatalog } from './catalog.js'
 import type { Catalog } from './types.js'

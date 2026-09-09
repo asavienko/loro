@@ -7,15 +7,15 @@ new work is extending toward.
 
 ## Implementation status
 
-The Expo Router app implements eight learner screens plus Languages, Account and the shell. SQLite
-backs progress and course resume; generated Rust handles scheduling and merge. Local Expo modules
-provide foreground device TTS/on-device ASR. Postgres auth/sync is optional for practice. Native
-projects are generated from app configuration; see
+The Expo Router app implements eight learner screens plus Languages, Account, More, Settings and
+the shell. SQLite backs progress and course resume; generated Rust handles scheduling and merge.
+Local Expo modules provide foreground device TTS/on-device ASR. Postgres auth/sync is optional
+for practice. Native projects are generated from app configuration; see
 [runtime evidence](../process/persistent-practice.md).
 
-| Area                  | Implemented now                                                                             | Target                                                                          |
-| --------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| Routes                | Today, onboarding, Add, phrase detail, Stream, Speak, Refrain, Progress, Languages, Account | The remaining blueprint routes, trips, settings, labs, and Run                  |
+| Area                  | Implemented now                                                                                          | Target                                                         |
+| --------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| Routes                | Today, onboarding, Add, phrase detail, Stream, Speak, Refrain, Progress, Languages, Account, More, Settings | The remaining blueprint routes, trips, labs, and Run        |
 | Domain and engines    | Domain contracts plus Stream/Refrain/Speak engines in `@loro/core`                          | All engines behind the same `PracticeEngine` contract                           |
 | App state             | Repository projections in Zustand; durable writes commit to SQLite first                    | SQLite as durable truth; Zustand only for resumable sessions                    |
 | Persistence           | OP-SQLite on device, durable SQL.js on web; transactional repositories and outbox           | Physical-device upgrade/process-death acceptance                                |
@@ -122,6 +122,8 @@ Expo Router typed routes are enabled in `app.config.ts`. The route files on disk
 | `/practice/speak`   | On-device recognition or offline reveal; truthful engine progress            |
 | `/account`          | Optional email sign-in, sync status and sign-out                             |
 | `/languages`        | Native/target selection with durable independent course state                |
+| `/more`             | Grouped destination list for built surfaces                                  |
+| `/settings`         | Durable visual and analytics preferences                                     |
 | `/progress`         | Mastery, ladder, streak, and tag rollups derived from store rows             |
 
 `_layout.tsx` owns the native stack, headers, safe-area provider, app-wide day rollover, and toast
@@ -304,7 +306,9 @@ Unit tests cover the mobile store, clocks, copy ownership, core engines, persist
 real SQLite statements through the Node driver. The browser suite covers the behavior that can
 actually run today.
 
-`e2e/states.ts` is the learner-visible state manifest. `route-coverage.spec.ts` proves every route
+`e2e/states.ts` is the learner-visible state manifest. Click helpers (`enter`, `doOneRep`,
+`lockIn`, markers) live in `e2e/helpers/`; account mocks stay in `accountFlow.ts`.
+`route-coverage.spec.ts` proves every route
 has an owner and every declared route exists; accessibility and text-scale suites enter the same
 states by clicking as a learner would. A new state belongs in the manifest in the same coherent
 change as the implementation.

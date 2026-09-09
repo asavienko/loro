@@ -17,7 +17,7 @@ import {
   MagicVerifyRequestSchema,
   RefreshRequestSchema,
   SignInRequestSchema,
-} from '@loro/core/api/target'
+} from '@loro/core/api/account'
 import { LoroError } from '../common/errors.js'
 import { AuthGuard, type AuthenticatedRequest } from './auth.guard.js'
 import { AuthService } from './auth.service.js'

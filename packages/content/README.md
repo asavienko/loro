@@ -44,6 +44,9 @@ src/
 ├── fs.ts              # Node-only disk loader for authoring tools
 ├── types.ts           # Catalog, phrase, pack, scenario, and drop types
 ├── checks.ts          # pure validation checks
+├── render.ts          # Node-only catalog TTS pipeline; Metro must not import this
+├── renderCli.ts       # pnpm content:render
+├── audioDuration.ts   # container duration; never estimates from text
 ├── validate.ts        # validation CLI
 └── index.ts           # public loadCatalog() and bundledCatalog exports
 ```
@@ -62,12 +65,12 @@ pnpm --filter @loro/content validate --strict
 pnpm --filter @loro/content validate --only packs,refs,drops
 pnpm --filter @loro/content test
 pnpm --silent --filter @loro/content review:export > /tmp/loro-review.json
+pnpm content:render --dry-run --all
 ```
 
-The package manifest reserves `enrich`, `render`, and `publish`, but their source files are not
-implemented. Consequently `pnpm content:enrich`, `pnpm content:render`, and `pnpm content:publish`
-currently fail and must not be documented or automated as working steps. The content workflow has
-explicit TODO jobs for rendering and publication.
+The package implements `content:render` (`src/render.ts`, Node-only). Stub and failed renders cannot
+publish. Live ElevenLabs seed audio remains Q-15. `content:enrich` and `content:publish` are still
+unimplemented.
 
 The [bilingual review workflow](reviews/README.md) exports versioned UI and actual course material
 with pending review records. Exporting is preparation, not linguistic approval.

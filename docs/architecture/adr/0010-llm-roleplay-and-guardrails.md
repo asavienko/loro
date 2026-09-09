@@ -3,7 +3,8 @@
 - **Status:** Accepted
 - **Date:** 2026-07-28
 - **Deciders:** Product, tech lead, content lead
-- **Amended:** 2026-07-30 to register the authored open-chat surfaces
+- **Amended:** 2026-07-30 to register the authored open-chat surfaces; 2026-09-09 to allow
+  runtime own-phrase suggestions on Discover (plan 97 / AI-06), never catalog rows
 
 ## Context
 
@@ -68,8 +69,9 @@ content changes. Output quality must be enforced, not assumed.
 ### 1 · AI is a garnish, never a dependency
 
 No LLM on any daily-loop path. Roleplay, guarded open-chat turns and feedback, coach notes on
-free-speech replies, and import/capture translation are the only runtime uses, and each degrades
-cleanly.
+free-speech replies, import/capture translation, and Discover own-phrase suggestions are the only
+runtime uses, and each degrades cleanly. Discover suggestions are optional garnish on catalog
+search; adding, listening, repeating, rating and reviewing never require the provider.
 
 ### 2 · Every learner-facing AI path has a bundled fallback that is _good_
 
@@ -81,6 +83,10 @@ Open chat likewise ships versioned authored topic/reply graphs with coherent con
 suggestions, translations and inspector material. Offline, over budget, unsafe, timed out or invalid
 live turns continue through those graphs without a fake typing delay. Stable scenes and prompts may
 be cached; personalized thread turns are not shared-response cache material.
+
+Discover phrase reach ships catalog search, authored scenarios, a nearest-scenario hint and Add your
+own as the good floor. Bundled topic suggestions may appear for a few known situations. Live
+`/v1/phrases/suggest` stays off until Q-21; failure is silent empty suggestions, never a paywall.
 
 ### 3 · Output is validated against pedagogical invariants, not just a schema
 
@@ -103,7 +109,7 @@ has been lost.
 
 ### 5 · Learner text is data, never instructions
 
-Learner-authored phrase and bounded chat text reaches prompts. It is passed as a delimited field in
+Learner-authored phrase, Discover query text and bounded chat text reaches prompts. It is passed as a delimited field in
 a user turn, never concatenated into the system prompt; delimiters are stripped from the content;
 lengths and turn counts are capped; and the model has **no tools, no retrieval, and no cross-tenant
 context** ([threat-model.md](../threat-model.md#b7--prompt-injection--the-ai-boundary)).
@@ -117,7 +123,8 @@ release decisions, not defaults an implementation may invent.
 
 | Not used for                          | Why                                                                                                                             |
 | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| Generating catalog phrases at runtime | Unreviewed content would reach learners                                                                                         |
+| Generating catalog phrases at runtime | Unreviewed content would look official. Authoring-time drafts stay `review_required` until a human merge.                       |
+| Runtime own-phrase suggestions without provenance, edit, or an explicit add | Plan 97 allows marked, editable candidates only; they never receive a catalog id |
 | Scoring pronunciation                 | It's signal processing, must run offline, and audio must not leave the device                                                   |
 | Auto-tagging phrases                  | Difficulty and tags are the _learner's_ declaration — the entire connective thread                                              |
 | Auto-adding suggested phrases         | Rule 6: nothing enters the stream without an explicit tap                                                                       |

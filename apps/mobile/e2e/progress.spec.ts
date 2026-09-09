@@ -1,5 +1,5 @@
 import { expect, onboard, openFirstPhrase, test } from './fixtures'
-import { trickyRow } from './states'
+import { trickyRow } from './helpers'
 
 test('P4-02..P4-08: reports real zero-state data and rolls up a learner tag', async ({ page }) => {
   await onboard(page)

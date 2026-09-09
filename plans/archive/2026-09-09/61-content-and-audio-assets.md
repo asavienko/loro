@@ -32,9 +32,8 @@ activation seam rechecks monotonic catalog identity inside its SQLite transactio
 pointer on an installation failure; it does not fetch, persist catalog rows itself, or authorize a
 release. Independent publication and approved audio do not exist. Preserve the old English/Spanish
 API as a compatibility adapter; use plan 85's delivered content schemas for the new pipeline.
-`content:enrich`, `content:render` and `content:publish` are declared scripts whose source
-entrypoints are absent at this revision; implementing the authoring commands remains part of this
-plan.
+`content:enrich` and `content:publish` remain unimplemented. `content:render` is owned by
+[plan 98](../../98-voice-and-tts-integration.md); live seed audio still waits on Q-15.
 
 **2026-09-09 verifier slice:** The Metro-safe boundary accepts an unknown manifest and rejects
 malformed manifest/signature/resource shapes with `MANIFEST_INVALID` before cryptography. Valid JSON
@@ -71,10 +70,9 @@ without overwriting learner state.
 
 ## ElevenLabs integration (`AS-01`, `AS-02`, `AS-05`, `AS-06`)
 
-Provider selected by the user on 2026-09-07. Integrate the plan-86 ElevenLabs adapter into the
-server-side content rendering pipeline behind `pnpm content:render` (currently a declared script
-whose implementation is absent); credential provisioning alone does not implement TTS. Keep native
-playback and device-TTS fallback in plan 62.
+Provider selected by the user on 2026-09-07. [Plan 98](../../98-voice-and-tts-integration.md)
+executes the adapter, `pnpm content:render` and device-TTS fallback. Credential provisioning alone
+does not approve a production voice. Keep remaining native cache/background work in plan 62.
 
 1. Consume the plan-86 provider adapter and configuration validation for `TTS_PROVIDER=elevenlabs`,
    `TTS_API_KEY`, and `TTS_VOICE_ES_ES`. Explicitly load the protected environment for the content

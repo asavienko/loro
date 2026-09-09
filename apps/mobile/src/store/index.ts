@@ -16,7 +16,8 @@
  *   store.ts        createAppStore + the app's instance
  *   selectors.ts    derived read-side hooks
  *   engines.ts      the engines and the EngineContext they run against
- *   coreFacade.ts   a TEMPORARY JS stand-in for packages/core-rs (ADR-0002, plans/05)
+ *   coreFacade.ts   rustCoreFacade over the generated Rust bridge; `jsCoreFacade` is an
+ *                   alias, not a JS stand-in (ADR-0002)
  *
  * Two rules the whole store holds:
  *   • The day comes from the injected `Clock`, never from a `Date` — one wrong line
@@ -43,10 +44,12 @@ export type { AppState, StoreDeps } from './types'
 export { useMastery, useViews } from './selectors'
 
 export {
+  PRODUCTION_WAVES,
   PRODUCTION_WAVE_TIMES,
   createEngineContext,
   engineContext,
   refrainEngine,
+  speakEngine,
   streamEngine,
 } from './engines'
-export type { EngineContextDeps } from './engines'
+export type { EngineContextDeps, ProductionWave } from './engines'

@@ -1,3 +1,6 @@
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+
 /**
  * Environment access, in one place.
  *
@@ -91,4 +94,22 @@ export const config = {
         .filter(Boolean),
     }
   },
+
+  /**
+   * TTS env for `parseTtsConfig`. Live ElevenLabs still needs Q-15; stub is the local default.
+   * Voice IDs are never hardcoded here.
+   */
+  ttsEnv: (): NodeJS.Dict<string> => ({
+    TTS_PROVIDER: process.env['TTS_PROVIDER'],
+    TTS_API_KEY: process.env['TTS_API_KEY'],
+    TTS_MODEL: process.env['TTS_MODEL'],
+    TTS_OUTPUT_FORMAT: process.env['TTS_OUTPUT_FORMAT'],
+    TTS_VOICE_ES_ES: process.env['TTS_VOICE_ES_ES'],
+    TTS_VOICE_BG_BG: process.env['TTS_VOICE_BG_BG'],
+    TTS_VOICE_RU_RU: process.env['TTS_VOICE_RU_RU'],
+  }),
+
+  ttsProvider: (): string => config.ttsEnv()['TTS_PROVIDER'] ?? 'stub',
+
+  ttsCacheDir: (): string => process.env['TTS_CACHE_DIR'] ?? join(tmpdir(), 'loro-tts-cache'),
 } as const

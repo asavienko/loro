@@ -12,9 +12,11 @@ import type {
   TargetLocale,
   Clock,
   Difficulty,
+  PhraseHandoffSource,
   PhraseState,
   ProgressDelta,
   RefrainDayRow,
+  SessionPlan,
   Tag,
   UserPhraseId,
 } from '@loro/core'
@@ -31,6 +33,11 @@ export interface AppActions {
   setAnalyticsConsent: (consent: boolean) => void
   setVisualPreferences: (accent: AccentName, motion: DevicePreferences['motion']) => void
   setLanguages: (nativeLanguage: NativeLanguage, targetLocale: TargetLocale) => void
+  /**
+   * First-run UI language guess from the device locale. Must not mark the pair
+   * chosen — that is `setLanguages` after the learner confirms.
+   */
+  previewNativeLanguage: (nativeLanguage: NativeLanguage) => void
   /**
    * Commit the first-run answers and seed the stream.
    *
@@ -50,7 +57,10 @@ export interface AppActions {
     o?: { difficulty?: Difficulty; tags?: Tag[]; source?: PhraseState['source'] },
   ) => void
   /** Returns the new row id, because the caller has no other way to name the row. */
-  addOwnPhrase: (draft: OwnPhraseDraft, o?: { difficulty?: Difficulty; tags?: Tag[] }) => string
+  addOwnPhrase: (
+    draft: OwnPhraseDraft,
+    o?: { difficulty?: Difficulty; tags?: Tag[]; source?: PhraseHandoffSource },
+  ) => string
   removePhrase: (id: string) => void
   setDifficulty: (id: string, d: Difficulty) => void
   toggleTag: (id: string, t: Tag) => void
@@ -63,6 +73,8 @@ export interface AppActions {
    * hands the result here; nothing else writes a progress field.
    */
   applyDelta: (delta: ProgressDelta, context?: PracticeCommitContext) => void
+  /** Stream browse position. The route rates/navigates; it does not write this field itself. */
+  setStreamCursor: (streamCursor: number) => void
   select: (id: string | null) => void
   showToast: (message: string, undo?: () => void) => void
   clearToast: () => void
@@ -74,6 +86,13 @@ export interface AppActions {
   ensureRefrainSet: () => void
   /** Record one completed, named wave with the day's durable Refrain state. */
   completeRefrainWave: (wave: 'morning' | 'midday' | 'evening', checkpoint: RefrainResume) => void
+  /**
+   * Open a planned Refrain session. The route still calls `refrainEngine.plan`; this
+   * writes the same resume identity the screens, spine and Today already share.
+   */
+  beginRefrainSession: (plan: SessionPlan, wave: 'morning' | 'midday' | 'evening') => void
+  /** Mid-session resume write — cursor advance without completing the wave. */
+  saveRefrainCheckpoint: (checkpoint: RefrainResume) => void
   /**
    * Deliberately finish an in-progress Refrain session. This clears only its resumable
    * checkpoint; practice already earned through `applyDelta` remains intact.

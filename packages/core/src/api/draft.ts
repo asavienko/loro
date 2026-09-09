@@ -30,6 +30,7 @@ import {
   MusicRendersResponseSchema,
   MusicTrackResponseSchema,
 } from './music.js'
+import { PhraseSuggestRequestSchema, PhraseSuggestResponseSchema } from './phrase-suggest.js'
 
 export const draftGates = {
   trip: ['Q-07'],
@@ -37,8 +38,10 @@ export const draftGates = {
   tts: ['Q-15'],
   chat: ['Q-16', 'Q-18', 'Q-19', 'Q-20'],
   config: ['Q-05'],
-  // Plan-local until Product records Q-21 globally. Do not add it to open-questions.md from this slice.
+  // Music still uses the plan-local Q-21 id from phrase-music. Main recorded the same
+  // number globally as Discover suggest. Both stay gated; Product must split or share.
   music: ['Q-21'],
+  discoverSuggest: ['Q-21'],
 } as const
 export const tripValues = {
   city: TextSchema,
@@ -299,6 +302,24 @@ export const draftOperations = withExamples(
     },
     {
       ...base,
+      id: 'phraseSuggest',
+      method: 'post',
+      path: '/phrases/suggest',
+      owner: 97,
+      auth: 'none',
+      gates: draftGates.discoverSuggest,
+      unresolved: [
+        'Live enablement, per-pair eval thresholds, shared AI spend cap and provider retention',
+      ],
+      summary: 'Guarded Discover own-phrase suggestions',
+      request: { schema: PhraseSuggestRequestSchema },
+      responses: { 200: { schema: PhraseSuggestResponseSchema }, ...targetErrors },
+      maxBodyBytes: 8 * 1024,
+      behavior:
+        'No audio field. Stub and bundled topics are the development default. No production live request until Q-21. Invalid, unsafe or unmatched queries return zero candidates with fallback. Never writes catalog rows. Cache only folded query, pair and content version.',
+    },
+    {
+      ...base,
       id: 'ttsRender',
       method: 'post',
       path: '/tts/render',
@@ -536,6 +557,14 @@ export type DropResource = z.infer<typeof DropResourceSchema>
 export type ChatPace = z.infer<typeof ChatPaceSchema>
 
 export type ChatTopicResource = z.infer<typeof ChatTopicResourceSchema>
+export type { PhraseSuggestRequest, PhraseSuggestResponse } from './phrase-suggest.js'
+export {
+  PhraseSuggestRequestSchema,
+  PhraseSuggestResponseSchema,
+  validatePhraseSuggestExchange,
+  unavailableSuggestResponse,
+  assertAddableCandidates,
+} from './phrase-suggest.js'
 
 export type BillingVerifyRequest = z.infer<typeof BillingVerifyRequestSchema>
 

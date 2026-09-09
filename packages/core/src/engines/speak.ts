@@ -12,9 +12,9 @@ import type {
 } from './types.js'
 import {
   availableWhenActive,
+  canonicalReviewDelta,
   itemAtCursor,
   itemFor,
-  universalDelta,
   workedItems,
   distinctPhrases,
 } from './common.js'
@@ -63,20 +63,11 @@ export class SpeakEngine implements PracticeEngine {
     if (ctx === undefined) throw new Error('Speak requires its canonical engine context')
     const phrase = await ctx.phrases.byId(item.phraseId)
     if (phrase === null) throw new Error('Speak phrase no longer exists')
-    const grade = ctx.core.reviewGrade(attempt)
-    const srs = ctx.core.fsrsReview(
-      phrase,
-      grade,
-      attempt.at,
-      attempt.selfGrade === undefined ? attempt.confidence : undefined,
-    )
-    if (srs !== undefined && !srs.algorithm)
-      throw new Error('Canonical review must identify its algorithm')
     return {
-      ...universalDelta(item, attempt, { reps: 1, latencyMs: attempt.latencyMs }),
-      ...(srs === undefined
-        ? {}
-        : { srs, review: { grade, at: attempt.at, algorithm: srs.algorithm ?? '' } }),
+      ...canonicalReviewDelta(ctx, item, attempt, phrase, {
+        reps: 1,
+        latencyMs: attempt.latencyMs,
+      }),
       rung: Math.max(phrase.rung, LadderRung.Bent),
       staleReset: true,
     }

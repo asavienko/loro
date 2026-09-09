@@ -29,7 +29,8 @@
 import AxeBuilder from '@axe-core/playwright'
 import type { Page } from '@playwright/test'
 import { expect, onboard, test } from './fixtures'
-import { enter, openFirstPhrase, startWave, STATES, todayMarker } from './states'
+import { enter, openFirstPhrase, startWave, todayMarker } from './helpers'
+import { STATES } from './states'
 
 const WCAG = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']
 
@@ -107,7 +108,7 @@ for (const state of STATES) {
 }
 
 test('every interactive element meets the 44 px touch target', async ({ page }) => {
-  // Whole-manifest sweep: nine plan-96 music states pushed this past the 90 s default.
+  // Account method-chooser plus nine plan-96 music states outgrow the 90 s default.
   test.setTimeout(240_000)
   const offenders: string[] = []
 

@@ -4,7 +4,7 @@ import { OAuthStartResponseSchema, type OAuthProvider } from '@loro/core/api/oau
 export interface AuthorizationPorts {
   random: () => string
   challenge: (verifier: string) => Promise<string>
-  authorize: (url: string, redirect: string) => Promise<string | null>
+  authorize: (url: string, redirect: string, windowName?: string) => Promise<string | null>
   redirect: string
 }
 export interface AuthPorts extends AuthorizationPorts {
@@ -14,6 +14,7 @@ export interface AuthPorts extends AuthorizationPorts {
 export async function authorizeProvider(
   provider: OAuthProvider,
   ports: AuthPorts,
+  windowName?: string,
 ): Promise<{ ticket: string; code_verifier: string } | null> {
   const verifier = ports.random()
   const start = OAuthStartResponseSchema.parse(
@@ -23,7 +24,7 @@ export async function authorizeProvider(
     }),
   )
   if (!ports.isCurrent()) return null
-  const callback = await ports.authorize(start.authorization_url, ports.redirect)
+  const callback = await ports.authorize(start.authorization_url, ports.redirect, windowName)
   if (!callback || !ports.isCurrent()) return null
   const url = new URL(callback)
   const redirect = new URL(ports.redirect)

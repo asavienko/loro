@@ -32,7 +32,8 @@
 import type { Page } from '@playwright/test'
 import { expect, onboard, test } from './fixtures'
 import { atInstant } from './clock'
-import { enter, START_WAVE, STATES, todayMarker } from './states'
+import { enter, START_WAVE, todayMarker } from './helpers'
+import { STATES } from './states'
 
 /** 200% is the documented promise; 310% is iOS's largest accessibility size. */
 const SCALES = [2, 3.1] as const
@@ -57,8 +58,7 @@ for (const scale of SCALES) {
     }
   })
   test(`text at ${scale * 100}% never clips or overflows`, async ({ page }) => {
-    // This one test visits every learner state, including the plan-96 music garnish.
-    // The 200% sweep was already near 90 seconds at 71 states; music adds nine more.
+    // Whole-manifest walk: F-01 account states plus the plan-96 music garnish.
     test.setTimeout(240_000)
     const problems: string[] = []
 

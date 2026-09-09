@@ -64,8 +64,20 @@ real theme/text-scale/motion seam; an unsupported state is labeled as such. Use 
 report, not a copied WCAG calculation. Its dedicated E2E suite and the production route
 unavailability suite prove different things; unavailability does not prove bundle tree-shaking.
 
+`/account` is a stepped utility (methods → email → code → confirmation, then management). Named header
+back must match hardware back: code returns to the email draft, email returns to methods. Busy back
+cancels the in-flight attempt instead of trapping the learner. Connecting copy uses short localized
+provider names, not English literals and not the "Continue with …" strings. Provider marks, live
+email and native keyboard/OTP remain separate evidence gates.
+
 Before audio/speech work, read `docs/architecture/audio-speech.md` and inspect current
 `apps/mobile/modules/` and platform adapters. Availability must reflect the real module, permission
 and installed language. Reveal/skip must remain usable without reporting spoken success or invented
-latency. Device TTS/reference downloads do not authorize recording upload. Full offline launch,
-interruption, microphone and background behavior require the relevant native/device evidence.
+latency. Device TTS/reference downloads do not authorize recording upload. Licensed neural voices
+for a listening export are not installed device voices. Generated music/lyrics are never
+pronunciation references and never write `ProgressDelta`. Full offline launch, interruption,
+microphone and background behavior require the relevant native/device evidence.
+
+Do not add native packages from a library-review chat. Keep Expo SDK 54 (New Architecture already
+on), Expo Router, OP-SQLite + sql.js, and expo-secure-store unless a later plan changes them. Local
+Maestro belongs to plans 58/72; it is not a cloud device farm.

@@ -111,9 +111,9 @@ commands; it must not be treated as a working release procedure. Tags do not sta
 
 ### Future EC2 testing deployment
 
-[Plan 88](../../plans/88-low-cost-backend-infrastructure.md) owns one EC2 testing deployment. The
-`dev`/`staging`/`production` chain and traffic-shift echoes in the archived workflows are
-scaffolding to replace, not a required test topology.
+[Plan 88](../../plans/archive/2026-09-09/88-low-cost-backend-infrastructure.md) owns one EC2 testing
+deployment. The `dev`/`staging`/`production` chain and traffic-shift echoes in the archived
+workflows are scaffolding to replace, not a required test topology.
 
 The implemented path must:
 

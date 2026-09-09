@@ -10,19 +10,23 @@ Early implementation. **What exists:** eight of the v1.1 design package's 23 lea
 Languages, Account, More and Settings utilities, the shared shell and a developer workbench.
 `/music` (Phrase songs) is a later garnish via More — picker, lyric review, style confirm, and
 fixture playback. Default CI uses `MUSIC_PROVIDER=stub` and never calls ElevenLabs or Anthropic.
-Local progress and course/session state commit to native OP-SQLite or browser SQLite before
+Discover offers Add your own and bundled topic suggestions; live `/v1/phrases/suggest` stays behind
+Q-21. Local progress and course/session state commit to native OP-SQLite or browser SQLite before
 rendering. Rust owns FSRS, ranking, selection, matching, clocks and merge through generated
-WASM/UniFFI bridges. Native modules provide foreground device TTS and strictly on-device ASR with an
-offline Speak reveal fallback. The API stores accounts, sessions and tenant-scoped sync in
-PostgreSQL. Optional Google/Apple and email sign-in connect durable local progress to cross-device
-sync.
+WASM/UniFFI bridges. Native modules provide foreground device TTS, catalog-file playback when a
+checksummed clip is on disk, and strictly on-device ASR with an offline Speak reveal fallback. The
+API stores accounts, sessions and tenant-scoped sync in PostgreSQL and exposes a gated,
+stub-by-default `POST /tts/render`. Optional Google/Apple and email sign-in connect durable local
+progress to cross-device sync.
 
 The three 31-phrase Spanish/Bulgarian/Russian starters still await bilingual review. The other 15
-learner screens, production recorded audio/cache, background audio, measured onset latency, DSP,
-widgets and account export/erasure remain. Android compilation and an airplane-mode emulator
-persistence/reveal smoke passed; full iOS and physical-device speech/convergence acceptance remain
-release gates. See [persistent practice](docs/process/persistent-practice.md) and
-[plan 94](plans/94-persistent-practice-and-account-integration.md) for scoped evidence.
+learner screens, licensed production seed audio (Q-15), the 150 MB LRU cache, background audio,
+measured onset latency, DSP, widgets and account export/erasure remain. Cloud ASR is forbidden.
+Android compilation and an airplane-mode emulator persistence/reveal smoke passed; full iOS and
+physical-device speech/convergence acceptance remain release gates. See
+[persistent practice](docs/process/persistent-practice.md) and
+[plan 94](plans/archive/2026-09-09/94-persistent-practice-and-account-integration.md) for scoped
+evidence.
 
 The [post-main 33-plan review](docs/reviews/2026-09-09-post-main-plan-review.md) records the six
 review findings as fixed: browser file import uses the picker-provided file, picker results are
@@ -147,20 +151,27 @@ prototype-only and **must not** be carried into the app — see the divergence t
   a refactor into a fix, and don't let generated output (bindings, tokens) ride along in a commit
   that isn't about regenerating it.
 - **Active plans live in `plans/`, numbered.** One markdown file per plan: a two-digit number, then
-  kebab-case named for the topic — `plans/93-mobile-shell-gestures.md`. Completed plans and
-  superseded snapshots live only in `plans/archive/<date>/`, indexed by
+  kebab-case named for the topic — `plans/NN-topic.md`. Completed plans and superseded snapshots
+  live only in `plans/archive/<date>/`, indexed by
   [`plans/archive/README.md`](plans/archive/README.md). Do not create compatibility symlinks or
   redirect files; update references to the actual archive path and rebase the moved plan's relative
-  links. Keep completed records out of the active index. Plan 53 was archived at user request on
-  2026-09-09; its former original-path exception no longer applies. The next new plan number is 97.
-  A new plan takes the next free number and gets a row in [`plans/README.md`](plans/README.md).
-  **Numbers are never reused** — a gap is left rather than backfilled, so a link written against a
-  number can't come to mean a different plan. Not in `docs/`: that holds the durable spec. Not in a
-  temp directory either — a plan you can't find again is a plan you rewrite. Name the requirement ID
-  inside the plan so it ties back to the branch and the PR.
-- Plans 56–65 were archived at user request on 2026-09-09 with their partial status and remaining
-  scope preserved in `plans/archive/2026-09-09/`; direct links in the roadmap index retain their
-  ownership. This archival does not mean their acceptance criteria are complete.
+  links. Keep completed records out of the active index. Archive a finished plan in the same change.
+  Plan 53 was archived at user request on 2026-09-09; its former original-path exception no longer
+  applies. Main archived account-sign-in as plan 96; this branch still has phrase-music at
+  [`plans/96-phrase-music-generation.md`](plans/96-phrase-music-generation.md) under the same number
+  (unresolved ID collision). Plan 97 owns generative Discover reach. Plan 98 owns the ElevenLabs
+  adapter, `content:render`, gated `/tts/render` and catalog-file playback. The next new plan number
+  is 99; recheck concurrent worktrees and untracked `plans/` files before allocating an ID — the
+  README/CLAUDE "next is N" sentence can lag. A new plan takes the next free number and gets a row
+  in [`plans/README.md`](plans/README.md). **Numbers are never reused** — a gap is left rather than
+  backfilled, so a link written against a number can't come to mean a different plan. Not in
+  `docs/`: that holds the durable spec. Not in a temp directory either — a plan you can't find
+  again is a plan you rewrite. Name the requirement ID inside the plan so it ties back to the
+  branch and the PR.
+- Implemented-slice plans 56–68, 70–73, 75–77, 80–82, 86–88, 90 and 93–96 were archived at user
+  request on 2026-09-09 with their partial status and remaining scope preserved in
+  `plans/archive/2026-09-09/`; direct links in the roadmap index retain their ownership. This
+  archival does not mean their acceptance criteria are complete.
 - **A plan records its own status, and is archived rather than deleted.** Put a `**Status:**` line
   in the plan's header block when work starts, and mark its row in
   [`plans/README.md`](plans/README.md): `🟡` in progress or partly implemented, `⛔` blocked by a
@@ -317,12 +328,12 @@ npx expo start --web                # from apps/mobile — fastest way to see th
 
 ## Backend testing infrastructure
 
-[Plan 88](plans/88-low-cost-backend-infrastructure.md) selects one Frankfurt EC2 instance with local
-PostgreSQL and private S3 at a $25–35/month target. Plan 91 records the restricted EC2 deployment;
-the full durable shared-testing profile still needs its own operational acceptance. The new
-account/sync runtime must pass that deployment gate before shared access is enabled. Do not add
-managed dev/staging stacks, Redis, CDN or live providers to this phase. Start with
-[environments](docs/process/environments.md) and the
+[Plan 88](plans/archive/2026-09-09/88-low-cost-backend-infrastructure.md) selects one Frankfurt EC2
+instance with local PostgreSQL and private S3 at a $25–35/month target. Plan 91 records the
+restricted EC2 deployment; the full durable shared-testing profile still needs its own operational
+acceptance. The new account/sync runtime must pass that deployment gate before shared access is
+enabled. Do not add managed dev/staging stacks, Redis, CDN or live providers to this phase. Start
+with [environments](docs/process/environments.md) and the
 [testing runbook](docs/runbooks/backend-testing.md). Plan 73 owns production decisions; plan 86 owns
 provider adapters.
 
@@ -351,8 +362,9 @@ Unresolved decisions with owners and dates:
 [`docs/decisions/open-questions.md`](docs/decisions/open-questions.md). Active roadmap gates are
 **Q-15** (production audio), **Q-07** (trip semantics), **Q-05** (loop experiment and conditional
 Run), **Q-14** (Refrain peak accessibility), **Q-08/Q-12** (pricing and billing), **Q-17** (rail
-priority), **Q-16/Q-18–Q-20** (chat launch, budget and retention), plus bilingual review and the DSP
-quality gate. Gates apply to their named slices; offline chat and spike preparation may proceed.
+priority), **Q-16/Q-18–Q-20** (chat launch, budget and retention), **Q-21** (Discover suggest), plus
+bilingual review and the DSP quality gate. Gates apply to their named slices; offline chat and
+spike preparation may proceed.
 Work whose dependencies do not cross those gates should continue.
 
 ## Python

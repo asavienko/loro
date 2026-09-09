@@ -27,6 +27,7 @@ review.
 | [Q-18](#q-18) | Who can use live chat, and what is its provider budget?                | **open** | **Product + finance**   | **Plan 82 live provider**      | **2026-08-06**           |
 | [Q-19](#q-19) | How long are local chat threads retained?                              | **open** | **Product + privacy**   | **Plan 82 persistence**        | **2026-08-06**           |
 | [Q-20](#q-20) | May a provider retain chat text, and for how long?                     | **open** | **Privacy + backend**   | **Plan 82 provider contract**  | **2026-08-06**           |
+| [Q-21](#q-21) | May Discover request live phrase suggestions, and under what eval/budget? | **leaning** | **Product + privacy** | **Plan 97 live suggest**     | **Before live garnish**  |
 
 ---
 
@@ -354,6 +355,29 @@ structurally absent; prompts/logs/telemetry contain no thread text or ASR transc
 development defaults to the bundled path.
 
 **Decision owner/date:** Privacy + backend, 2026-08-06.
+
+---
+
+<a id="q-21"></a>
+
+### Q-21 · May Discover request live phrase suggestions, and under what eval/budget?
+
+Catalog search, authored scenarios, Add your own and bundled topic packs are enough for an honest
+offline Discover. A live `/v1/phrases/suggest` path would extend reach for situations the library
+does not cover, at the cost of unreviewed language reaching the learner as **marked, editable
+own-phrase candidates**.
+
+**Leaning:** share the existing per-user/global AI spend cap; keep live Discover garnish **off**
+until a named eval corpus passes per target/native pair (naturalness, length, register, safety,
+injection, no silent Spanish substitution). Cache only `(folded_query, pair, content_version)`.
+Provider retention follows the same unresolved bar as Q-20; until then the stub returns bundled or
+empty suggestions with no production request.
+
+**Invariant while open:** no production live suggest request. Bundled topics and Add your own remain
+usable offline. Audio is structurally absent from the type. Telemetry contains no query or phrase
+text.
+
+**Decision owner/date:** Product + privacy, 2026-09-09.
 
 ---
 

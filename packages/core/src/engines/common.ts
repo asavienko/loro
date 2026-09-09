@@ -16,6 +16,7 @@
  * See docs/architecture/practice-engines.md
  */
 
+import type { PhraseState } from '../domain/phrase.js'
 import type {
   Attempt,
   Availability,
@@ -121,5 +122,36 @@ export function universalDelta(
     ...(signals.plays === undefined ? {} : { plays: signals.plays }),
     lastPracticedAt: attempt.at,
     latencySampleMs: signals.latencyMs,
+  }
+}
+
+/**
+ * The FSRS half of `record()`: grade → `fsrsReview` → algorithm identity → `review`.
+ * Speak, Refrain and Review differ in selection and extra signals, not this path.
+ */
+export function canonicalReviewDelta(
+  ctx: EngineContext,
+  item: PracticeItem,
+  attempt: Attempt,
+  phrase: PhraseState,
+  signals: UniversalSignals,
+  options: { skip?: boolean; required?: boolean } = {},
+): ProgressDelta {
+  const grade = ctx.core.reviewGrade(attempt)
+  const srs = options.skip
+    ? undefined
+    : ctx.core.fsrsReview(
+        phrase,
+        grade,
+        attempt.at,
+        attempt.selfGrade === undefined ? attempt.confidence : undefined,
+      )
+  if (options.required ? !srs?.algorithm : srs !== undefined && !srs.algorithm)
+    throw new Error('Canonical review must identify its algorithm')
+  return {
+    ...universalDelta(item, attempt, signals),
+    ...(srs === undefined
+      ? {}
+      : { srs, review: { grade, at: attempt.at, algorithm: srs.algorithm ?? '' } }),
   }
 }

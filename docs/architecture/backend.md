@@ -7,13 +7,14 @@ The `api` service and its supporting infrastructure. Rationale:
 verifying purchases. **What it is not for:** running a practice session. A learner can practise for
 weeks with the API unreachable ([overview.md](overview.md#the-ten-rules), rule 2).
 
-> **Status (2026-09-07): partially implemented; testing infrastructure selected, not provisioned.**
-> The Nest service currently provides health, bundled content, in-memory sync through the shared
-> Rust/WASM merge, and validated bundled AI scenes. Learning data does not connect to Postgres,
-> Redis, MinIO, queues, a warehouse, or external AI/TTS services, and billing, analytics, TTS and
-> workers remain unimplemented. Optional Google/Apple auth and PostgreSQL accounts now exist
-> ([plan 89](google-apple-auth.md)). The target map and infrastructure below guide extension; they
-> are not an inventory of running code.
+> **Status (2026-09-09): partially implemented; accounts and tenant-scoped sync use Postgres.** The
+> Nest service currently provides health, bundled content, optional Google/Apple/email auth,
+> authenticated sync through `PostgresDatabase` / `PostgresSyncRepository` and the shared Rust/WASM
+> merge, validated bundled AI scenes, and a gated stub TTS render. Account and sync rows live in
+> PostgreSQL. Redis, MinIO, queues and a warehouse remain unused. Live ElevenLabs seed audio remains
+> Q-15. Billing, analytics and workers remain unimplemented. `InMemorySyncRepository` is a test
+> adapter only (`sync/testing/sync.repository.memory.ts`). See [plan 89](google-apple-auth.md). The
+> target map and infrastructure below guide extension; they are not an inventory of running code.
 
 ---
 
@@ -24,27 +25,33 @@ apps/api/src/
 ├── main.ts                    # /v1 prefix, problem filter, production WASM startup gate
 ├── app.module.ts              # repository/provider/clock choices
 ├── ai/                        # bundled scenes, provider seam, validation, 2 routes
+├── auth/                      # Google/Apple/email identity, sessions, /me
 ├── common/                    # clock, config, problem-details catalog/filter
 ├── content/                   # legacy and multilingual manifest/diff/pack, 6 routes
-├── health/                    # liveness and WASM-aware readiness, 2 routes
-├── integrations/              # tested Anthropic transport, not registered with Nest
-└── sync/                      # push/pull/status, WASM adapter, memory repository, 3 routes
+├── database/                  # Postgres client; additive schema on first use
+├── health/                    # liveness and WASM/database-aware readiness, 2 routes
+├── integrations/              # tested Anthropic and ElevenLabs transports; TTS stub is default
+├── tts/                       # gated POST /tts/render + checksum asset; stub 503s
+└── sync/                      # push/pull/status, WASM adapter, Postgres repository, 3 routes
 ```
 
-| Implemented seam  | Current adapter                                      | Extension path                                                              |
-| ----------------- | ---------------------------------------------------- | --------------------------------------------------------------------------- |
-| `SYNC_REPOSITORY` | `InMemorySyncRepository`, process-local and unscoped | Add a user-scoped Postgres repository and select it only in `app.module.ts` |
-| `SCENE_PROVIDERS` | `StubSceneProvider`                                  | Register provider adapters; keep validation and fallback in `AiService`     |
-| `SERVER_CLOCK`    | system wall clock                                    | Override in tests; persistence later supplies durable HLC state             |
-| `config`          | one reader/default per environment variable          | Add accessors in `common/config.ts`, not scattered `process.env` reads      |
+| Implemented seam  | Current adapter                                                                | Extension path                                                          |
+| ----------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------- |
+| `DATABASE`        | `PostgresDatabase`                                                             | Override in tests; Redis and MinIO remain unimplemented                 |
+| `SYNC_REPOSITORY` | `PostgresSyncRepository`, tenant-scoped. `InMemorySyncRepository` is test-only | Keep selecting the production adapter only in `app.module.ts`           |
+| `SCENE_PROVIDERS` | `StubSceneProvider`                                                            | Register provider adapters; keep validation and fallback in `AiService` |
+| `TTS_TRANSPORT`   | `StubTts` unless `TTS_PROVIDER=elevenlabs` with Q-15 config                    | Keep one process instance; stub returns 503, never fake audio           |
+| `SERVER_CLOCK`    | system wall clock                                                              | Override in tests; per-account HLC state is already durable in Postgres |
+| `config`          | one reader/default per environment variable                                    | Add accessors in `common/config.ts`, not scattered `process.env` reads  |
 
 Plan [85](../../plans/archive/2026-09-07/85-backend-integration-contracts.md) supplies shared
 current/target/draft wire schemas, OpenAPI and HTTP conformance tests. Plan
-[66](../../plans/66-backend-contract-data-and-security.md) retains boundary integration, durable
-repositories, safe defaults, and the image contract. Plans
-[67](../../plans/67-anonymous-auth-and-account-lifecycle.md) and
-[68](../../plans/68-sync-and-offline-convergence.md) add identity and safe convergence. Plan
-[76](../../plans/76-roleplay-and-live-ai.md) adds a guarded live provider.
+[66](../../plans/archive/2026-09-09/66-backend-contract-data-and-security.md) retains boundary
+integration, durable repositories, safe defaults, and the image contract. Plans
+[67](../../plans/archive/2026-09-09/67-anonymous-auth-and-account-lifecycle.md) and
+[68](../../plans/archive/2026-09-09/68-sync-and-offline-convergence.md) add identity and safe
+convergence. Plan [76](../../plans/archive/2026-09-09/76-roleplay-and-live-ai.md) adds a guarded
+live provider.
 
 ## Target module map
 
@@ -140,16 +147,17 @@ transactional: either the anon identity is bound and the merge is queued, or not
 
 <a id="sync"></a>
 
-### `sync` — current skeleton, target protocol
+### `sync` — current Postgres + WASM merge; reconciliation worker is target
 
-Thin. All the logic is in the shared merge function.
+Thin. All the merge logic is in the shared function.
 
-Today `SyncService` calls the real WASM merge and rejects undeclared fields, but storage is one
-process-wide `Map`. There is no authenticated principal or transaction, the repository key is only
-`(entity, id)`, `pull` ignores `since`/`limit` and returns every row, and the server HLC has a fixed
-logical counter/node id. The sketch below is target code: its transaction and `user.id` scoping are
-not implemented. Until plans 66–68 land, this is a single-process development harness, not a safe
-multi-user sync service.
+Today `AppModule` selects `PostgresSyncRepository`. `SyncService` requires an authenticated
+principal, runs each push/pull in a user-scoped transaction, keys rows by `(user_id, entity, id)`,
+honours `since`/`limit` on pull, and advances a durable per-account HLC. The same WASM merge used by
+the client rejects undeclared fields. `InMemorySyncRepository` exists only for tests. Redis, object
+storage, and a reconciliation worker remain unimplemented. The sketch below is the
+merge-in-transaction shape; the running service also handles receipts, aliases and clock
+corrections. Remaining lifecycle and device-convergence work stays with plans 66–68.
 
 ```ts
 @Post('push')
@@ -229,9 +237,9 @@ job that confirms zero rows remain.
 
 ## Testing infrastructure
 
-[Plan 88](../../plans/88-low-cost-backend-infrastructure.md) selects this topology for a small
-tester group. It is not provisioned, and starting PostgreSQL does not connect the current in-memory
-API.
+[Plan 88](../../plans/archive/2026-09-09/88-low-cost-backend-infrastructure.md) selects this
+topology for a small tester group. PostgreSQL is the current account and sync store; Redis and MinIO
+remain unused by the running API.
 
 ```mermaid
 flowchart LR
@@ -316,35 +324,39 @@ backend-specific target measures:
 | Errors                             | RFC 9457 problem details; no stack traces, no internal identifiers                               |
 | Dependencies                       | Lockfile committed, automated updates, CI blocks on known-critical advisories                    |
 
-What is enforced now is narrower: production bootstrap refuses to run without the WASM merge;
-readiness observes merge availability; accepted sync fields must have a declared merge class;
-provider scenes are validated; and the global exception filter emits problem details without stack
-traces or internal error text. Auth, tenant scoping, request-schema boundary wiring, rate limits,
-structured-log redaction, database isolation, and learner-audio handling are not implemented and
-must not be credited as controls.
+What is enforced now is narrower than the target table: production bootstrap refuses to run without
+the WASM merge when a database is configured; readiness observes merge and database availability;
+accepted sync fields must have a declared merge class; provider scenes are validated; the global
+exception filter emits problem details without stack traces or internal error text; auth and
+tenant-scoped Postgres queries are live; and sync applies a per-account request limit.
+Structured-log redaction and a general rate-limit layer remain incomplete. Recorded learner audio is
+still never accepted by the backend.
 
 ---
 
 ## Local development
 
-The API runs on the host for fast reload and needs none of the compose services today. Use compose
-only while building repository/cache/object-storage layers; starting it does not make the API
-persistent because there is no database client or migration layer yet.
+The API needs PostgreSQL and the encrypted environment for accounts and sync. Host
+`pnpm --filter @loro/api dev` is the fast-reload path; compose supplies the database. Redis and
+MinIO stay unused by the current service. There is no in-memory production fallback —
+`InMemorySyncRepository` is a test adapter only.
 
 ```bash
 pnpm core-rs:build              # build the real WASM merge once
+pnpm --filter @loro/api dev:up  # local PostgreSQL for accounts and sync
 pnpm --filter @loro/api dev     # starts the API on :3000
 curl localhost:3000/v1/health/ready
-
-# Optional infrastructure for persistence work; unused by the current service
-pnpm --filter @loro/api dev:up
 pnpm --filter @loro/api dev:down
 ```
 
-There are no `db:migrate` or `db:seed` package scripts. The current sync repository starts empty and
-loses all rows at process restart.
+Redis and MinIO remain optional compose profiles and are unused by the current service.
+
+There are no `db:migrate` or `db:seed` package scripts. On first use the API installs its additive
+schema in one PostgreSQL transaction. Account and sync rows persist in Postgres across process
+restarts.
 
 AI scenes are stubbed locally by default (`AI_PROVIDER=stub`) and return bundled fallbacks. No live
 provider is registered: setting `AI_PROVIDER=anthropic` only logs a warning and still returns a
-bundled scene. There is no TTS controller or provider despite future TTS variables in
-`.env.example`.
+bundled scene. TTS defaults to stub (`TTS_PROVIDER=stub`): authenticated `POST /v1/tts/render`
+returns 503 so the client uses device TTS. The ElevenLabs adapter is fixture-tested and never called
+from CI. Live seed audio remains Q-15. There is no voice-clone route.

@@ -75,8 +75,12 @@ The existing JSON authoring schema remains in place, with compatibility tests, i
 The current document describes implemented request boundaries and responses. Legacy content/AI
 schemas describe well-formed caller intent; they do not promise compatibility with every malformed
 input those routes may accidentally accept. `sync/status` is an authenticated account diagnostic,
-not a learner progress total. The current registry omits the three learning-catalog v2 routes listed
-in the multilingual section below.
+not a learner progress total. The current registry includes the three `/content/v2/*`
+learning-catalog routes (28 operations total); see the multilingual section below. Errors and
+liveness use the shared `ProblemSchema` / `HealthSchema`. Legacy `/content/manifest`, `/content/pack`
+and `/ai/*` envelopes stay the implemented payloads: target Manifest/Pack/Scene require
+`resource_base`, checksums, `catalog_version`, provenance and ResourceId `scene_id` the stubs do not
+return.
 
 Stable learner row/log keys are UUIDv7. New `user_phrase` rows require `targetLocale`, `phraseId`,
 `source` and `addedAt` so another device can materialize them; updates may be partial. Settings uses
@@ -169,6 +173,7 @@ return the exact original correction even when their response `server_time` adva
 | Billing webhook                                    | Q-12: actual provider wire format, signature headers and acknowledgement. Request schema is `never`; no fabricated signature scheme is published |
 | Extended account read/devices/revoke/logout        | Plan 67 richer transport/UX review; current `/me` and 204 logout are implemented                                                                 |
 | Remote configuration                               | Q-05 and plan 71: registered flags, stable assignment/exposure and experiment authorization                                                      |
+| Discover `POST /v1/phrases/suggest`                | Q-21: live garnish, spend caps, provider retention. Draft schema already backs the stub; live dispatch stays off. Auth/rate/body caps stay with the Q-21 enablement. |
 
 Draft operations carry `x-loro-gates`, `x-loro-unresolved`, and `x-loro-auth-boundary`. An empty
 gate array means an identified roadmap review, **not** an implemented route. The webhook's

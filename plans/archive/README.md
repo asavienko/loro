@@ -6,15 +6,16 @@ files remain in the active directory.
 
 ## Dated records
 
-| Archive                            | Contents                                                             |
-| ---------------------------------- | -------------------------------------------------------------------- |
-| [2026-07-30](2026-07-30/REVIEW.md) | Historical plans 01–52 and the roadmap reset; 49 is an existing gap. |
-| [2026-09-07](2026-09-07/README.md) | Completed 54/55/79/84/85 and the evidence/ownership review.          |
-| [2026-09-08](2026-09-08/README.md) | Completed 89/91/92, superseded snapshots and integration records.    |
-| [2026-09-09](2026-09-09/README.md) | Completed 53 and the user-archived, partly implemented plans 56–65.  |
+| Archive                            | Contents                                                                                               |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| [2026-07-30](2026-07-30/REVIEW.md) | Historical plans 01–52 and the roadmap reset; 49 is an existing gap.                                   |
+| [2026-09-07](2026-09-07/README.md) | Completed 54/55/79/84/85 and the evidence/ownership review.                                            |
+| [2026-09-08](2026-09-08/README.md) | Completed 89/91/92, superseded snapshots and integration records.                                      |
+| [2026-09-09](2026-09-09/README.md) | Completed 53 and user-archived, partly implemented plans 56–68, 70–73, 75–77, 80–82, 86–88, 90, 93–96. |
 
-Archiving preserves the status recorded in each plan. Plans 56–65 still own unfinished work and
-remain linked from the active roadmap; historical snapshots do not replace their current owners.
+Archiving preserves the status recorded in each plan. User-archived implemented-slice plans still
+own unfinished work and remain linked from the active roadmap; historical snapshots do not replace
+their current owners. Only 69, 74, 78 and 83 remain as files in the top-level plan directory.
 
 ## Implemented slices with remaining plan owners
 

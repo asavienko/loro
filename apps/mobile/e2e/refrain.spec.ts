@@ -1,6 +1,6 @@
 import { atInstant, jumpTo, returnToForeground, runFor } from './clock'
 import { expect, onboard, test } from './fixtures'
-import { repsTodayRow, startWave } from './states'
+import { repsTodayRow, startWave } from './helpers'
 
 const reps = [
   { label: 'Say it', cue: 'Read it, then say it back', automaticity: 0 },

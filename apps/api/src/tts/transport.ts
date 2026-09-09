@@ -1,0 +1,34 @@
+/** Process-wide TTS transport. Nest registers this once; callers never construct per request. */
+
+import {
+  ElevenLabsTts,
+  StubTts,
+  parseTtsConfig,
+  type TtsRequest,
+  type TtsResult,
+} from '../integrations/elevenlabs/tts.js'
+import { config } from '../common/config.js'
+
+export const TTS_TRANSPORT = Symbol('TTS_TRANSPORT')
+
+export interface TtsTransport {
+  synthesize(input: TtsRequest): Promise<TtsResult>
+}
+
+export function createTtsTransport(): TtsTransport {
+  try {
+    const parsed = parseTtsConfig(config.ttsEnv())
+    if (parsed.provider !== 'elevenlabs') return new StubTts()
+    return new ElevenLabsTts({
+      apiKey: parsed.apiKey,
+      model: parsed.model,
+      outputFormat: parsed.outputFormat,
+      timeoutMs: 20_000,
+      maxRequestBytes: 16_384,
+      maxResponseBytes: 2_000_000,
+      maxConcurrentRequests: 2,
+    })
+  } catch {
+    return new StubTts()
+  }
+}

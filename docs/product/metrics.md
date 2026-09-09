@@ -128,7 +128,7 @@ can count them without reading them.
 
 | Event               | Key properties                                                                                                                                               |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `phrase_added`      | `phrase_id`, `source` (starter \| discover \| scenario \| browse \| custom \| import \| capture \| related \| drop \| chat), `difficulty`, `tags[]`, `theme` |
+| `phrase_added`      | `phrase_id`, `source` (starter \| discover \| scenario \| browse \| custom \| import \| capture \| related \| drop \| chat \| generated), `difficulty`, `tags[]`, `theme` |
 | `phrase_removed`    | `phrase_id`, `owned_days`, `reps_at_removal`                                                                                                                 |
 | `phrase_rated`      | `phrase_id`, `field` (difficulty \| tags \| loved \| learned), `from`, `to`, `surface`                                                                       |
 | `phrase_note_set`   | `phrase_id`, `source` (typed \| suggestion)                                                                                                                  |

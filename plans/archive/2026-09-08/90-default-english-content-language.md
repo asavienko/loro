@@ -1,6 +1,6 @@
 > Historical snapshot archived on 2026-09-08 (F-04). Its starting point is superseded; unfinished
-> work remains in [active plan 90](../../90-default-english-content-language.md). This is not a
-> completion record.
+> work remains in [active plan 90](../2026-09-09/90-default-english-content-language.md). This is
+> not a completion record.
 
 # English default and selectable content language
 

@@ -113,16 +113,21 @@ export type BrowsableTheme = (typeof BROWSABLE_THEMES)[number]
 export type Register = 'neutral' | 'casual' | 'formal'
 export type Cefr = 'A1' | 'A2' | 'B1' | 'B2'
 
-export type PhraseSource =
-  | 'starter'
-  | 'discover'
-  | 'scenario'
-  | 'browse'
-  | 'custom'
-  | 'import'
-  | 'capture'
-  | 'related'
-  | 'drop'
+export const PHRASE_SOURCES = [
+  'starter',
+  'discover',
+  'scenario',
+  'browse',
+  'custom',
+  'import',
+  'capture',
+  'related',
+  'drop',
+  'chat',
+  'generated',
+] as const
+
+export type PhraseSource = (typeof PHRASE_SOURCES)[number]
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Catalog — immutable, shipped, never written by the app

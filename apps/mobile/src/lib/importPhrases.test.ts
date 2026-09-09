@@ -31,6 +31,9 @@ describe('offline phrase import', () => {
     expect(parseImportedPhrases('Que tal | How are you?', ['Qué tal'])).toEqual([
       { line: 1, targetText: 'Que tal', translation: 'How are you?', issue: 'duplicate' },
     ])
+    expect(parseImportedPhrases('¡Hola! | Hi', ['Hola'])).toEqual([
+      { line: 1, targetText: '¡Hola!', translation: 'Hi', issue: 'duplicate' },
+    ])
   })
 })
 
