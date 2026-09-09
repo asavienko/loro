@@ -80,7 +80,7 @@ without returning PCM to JavaScript.
 
 ## Out of scope
 
-Microphone capture, ASR, DSP, catalog production, trip prefetch policy, and the plan 97 listen
+Microphone capture, ASR, DSP, catalog production, trip prefetch policy, and the plan 99 listen
 utility / concatenate-share product. This plan supplies the download-to-disk cache and exclusive
 session those features consume.
 

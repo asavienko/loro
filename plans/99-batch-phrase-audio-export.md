@@ -265,10 +265,10 @@ API exists; that API still returns a file URI only.
        not fake a download.
 6. [x] Add learner E2E states for empty course, needs-network cache miss, generating, partial
        failure, ready-to-listen (cache complete), in-app playing, share unavailable (Q-22), share
-       ready (when allowed), cancellation, disk-full, and session-busy. Browser suites cover copy,
-       a11y and text scale. Native airplane-mode listen of a **previously cached** batch is the
-       acceptance for offline listening; native share of the concatenated file is the acceptance
-       for Q-22 export.
+       ready (when allowed), cancellation, disk-full, session-busy, quota, and voices-single.
+       Browser suites cover copy, a11y and text scale. Native airplane-mode listen of a
+       **previously cached** batch is the acceptance for offline listening; native share of the
+       concatenated file is the acceptance for Q-22 export.
 7. [ ] After Q-15: pin ≥2 listening voice IDs per enabled target, licence, budget, and
        pronunciation review **without** replacing the canonical reference voice. After Q-22: enable
        share of concatenated cached clips and document personal-copy / deletion-on-licence-withdrawal

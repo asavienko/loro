@@ -60,7 +60,7 @@ practice dependency.
 5. [ ] Complete principal-scoped live-provider budgets/timeouts with plan 86 before activating live
        AI; shared tester access remains gated on the deployment/operational evidence in 88/91. When
        86's ElevenLabs adapter exists, host draft `POST /tts/render` (metadata + authorized download
-       URL, never learner PCM) using plan 61 identity rules. Listening-class voice ids are a plan 97
+       URL, never learner PCM) using plan 61 identity rules. Listening-class voice ids are a plan 99
        consumer; Q-15 still gates live rendering.
 
 ## Acceptance criteria

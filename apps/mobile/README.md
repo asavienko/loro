@@ -22,7 +22,7 @@ loop:
 | `practice/speak`   | On-device speech or offline word reveal                                     |
 | `languages`        | Native and learning language selection                                      |
 | `account`          | Optional Google/Apple/email sign-in and sync status                         |
-| `listen-export`    | Listening companion: generate, cache, listen; share gated on Q-21        |
+| `listen-export`    | Listening companion: generate, cache, listen; share gated on Q-22        |
 | `_layout`          | Router shell + toast host                                                   |
 
 The other 15 learner screens — chat, the prosody and pronunciation labs, the Run, trips, settings —
@@ -136,7 +136,7 @@ compatibility name `jsCoreFacade` does not select an approximate JavaScript algo
 ```
 modules/loro-core/          generated UniFFI core bridge
 modules/loro-audio-speech/  foreground device TTS, on-device ASR, file-URI playback
-modules/loro-audio-cache/   listening-class download, pin, restore, and Q-21-gated mux/share
+modules/loro-audio-cache/   listening-class download, pin, restore, and Q-22-gated mux/share
 src/data/                  OP-SQLite adapter and browser SQLite adapter
 ```
 

@@ -38,7 +38,7 @@ class ConcatenateOptions : Record {
 /** Model-audio file cache. HTTP lives here, not in the speech module (ADR-0011). */
 class LoroAudioCacheModule : Module() {
   private val budget = 64L * 1024L * 1024L
-  private val shareEnabled = false
+  private val shareEnabled = false // Q-22: neural listening audio must not leave the app
   private val current = AtomicReference<HttpURLConnection?>(null)
 
   override fun definition() = ModuleDefinition {

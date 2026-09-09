@@ -79,7 +79,7 @@ describe('listening cache controller', () => {
     expect(f.native.download).not.toHaveBeenCalled()
   })
 
-  it('keeps concatenate and share closed while Q-21 is open', async () => {
+  it('keeps concatenate and share closed while Q-22 is open', async () => {
     const f = fixture()
     await expect(
       f.controller.concatenate({

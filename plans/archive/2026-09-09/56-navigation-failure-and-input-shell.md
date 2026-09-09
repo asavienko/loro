@@ -44,7 +44,7 @@ can scale beyond the three 31-phrase starter catalogs.
        the same authority. Extend the basic conditional-home resolver only as approved product
        semantics require. Keep target routes declared but unbuilt and unreachable until their screen
        files land. This plan owns metadata/guards and `check:routes` (implemented); plan 81 owns
-       menu/More rendering. When plan 97 is ready to declare it, add `/listen-export` as a planned
+       menu/More rendering. When plan 99 is ready to declare it, add `/listen-export` as a planned
        utility (`push`, occasional, Phrases/More). Do not number it as learner screen 24.
 2. [ ] Replace route-specific back guesses with tested laws for first-run, add/detail, practice,
        trip, settings, notifications, widgets, and unknown deep links.

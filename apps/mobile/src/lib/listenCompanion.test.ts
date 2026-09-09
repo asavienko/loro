@@ -41,7 +41,7 @@ describe('listening companion', () => {
     expect(view.shareEnabled).toBe(false)
   })
 
-  it('plays from cache without network and keeps Q-21 share closed', () => {
+  it('plays from cache without network and keeps Q-22 share closed', () => {
     const view = listenViewModel({
       phase: 'ready',
       locale: 'es-ES',
@@ -99,7 +99,7 @@ describe('listening companion', () => {
     expect(fixtureListenView('empty').phraseCount).toBe(0)
   })
 
-  it('plays cached file URIs with named gaps and never muxes while Q-21 is open', async () => {
+  it('plays cached file URIs with named gaps and never muxes while Q-22 is open', async () => {
     const playFile = vi.fn((_id: string, _uri: string, onEnded?: () => void) => {
       onEnded?.()
       return Promise.resolve()

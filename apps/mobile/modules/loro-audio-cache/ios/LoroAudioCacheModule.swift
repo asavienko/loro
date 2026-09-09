@@ -65,7 +65,7 @@ public final class LoroAudioCacheModule: Module {
 
 private final class LoroAudioCacheController {
   private let budget: Int64 = 64 * 1024 * 1024
-  private let shareEnabled = false
+  private let shareEnabled = false // Q-22: neural listening audio must not leave the app
   private var task: URLSessionDataTask?
 private let session: URLSession = {
     let config = URLSessionConfiguration.ephemeral
