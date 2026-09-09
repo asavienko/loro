@@ -2,12 +2,49 @@
 
 **Date:** 2026-09-09
 
-**Reviewed range:** `42f4d574dc1b..HEAD`
+**Reviewed range:** `42f4d574dc1b..b2a19cba8381aee2fd3a19335fdc0fcf666d3837`
 
-**Verdict:** Resolved. The launch workflow, native callback identities, and standalone build
-configuration are isolated and covered by regression tests.
+**Verdict:** Resolved. The Android command now accepts only its Metro-dependent debug variant, and
+the Preview APK workflow owns standalone release builds.
 
-## Findings
+## Follow-up review
+
+### 5. [P2] Match the launch identity to the requested Android variant
+
+**Status:** Resolved. The Android wrapper validates arguments before prebuild and rejects every
+non-debug or incomplete `--variant` value. It directs standalone release use to `pnpm apk:local`,
+which selects the separate Preview identity.
+
+**Location:** `apps/mobile/package.json:9`.
+
+`pnpm --filter @loro/mobile android --variant release` forwards the variant to Expo while the
+wrapper still forces `LORO_ANDROID_DEV_CLIENT=1` and `--app-id app.loro.android.dev`. The plugin
+adds `.dev` only to the debug build type (`with-dev-client-identity.cjs:7–12`), so the release APK
+uses `app.loro.android`. Expo consequently installs the release package but targets Development when
+opening the app. With Development installed, a tester can see that older app instead of the release
+just built; without it, launch fails. The release also inherits `loro-dev` in its main manifest and
+callback configuration, competing with Development for its links.
+
+The implementation explicitly rejects non-debug variants before prebuild and directs standalone
+users to `pnpm apk:local`. The Android command therefore cannot generate a release project with the
+development scheme or launch package.
+
+**Evidence:** the regression test covers `--variant release`, `--variant=release`, and a missing
+variant value; direct invocation with `--variant release` exits before prebuild. A release build is
+not needed because this command no longer permits a release variant.
+
+### Verification during the follow-up review
+
+- Reviewed all changed source, tests, build scripts and documentation against `origin/main`.
+- `pnpm test:android-config`: seven tests pass, including release-variant rejection.
+- Focused mobile callback tests: two pass; API redirect validation tests: two pass.
+- Scoped plugin/build-environment formatting and branch commitlint pass.
+- Earlier emulator installation/handler checks, `pnpm check`, and PostgreSQL validation are prior
+  evidence, not fresh runs in this review. Full local CI still has no recorded final success; live
+  provider sign-in and release-variant launch were not exercised here.
+- This follow-up implements and records the resolution for finding 5.
+
+## Earlier findings and resolutions
 
 ### 1. [P1] Keep OAuth callbacks consistent with the development scheme
 
