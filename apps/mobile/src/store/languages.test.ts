@@ -37,7 +37,7 @@ describe('F-08 course isolation', () => {
     const spanish = useApp.getState().phrases[0]
     if (!spanish) throw new Error('Missing seed')
     useApp.getState().applyDelta({ phraseId: spanish.id, reps: 1 })
-    useApp.setState({ streamCursor: 2 })
+    useApp.getState().setStreamCursor(2)
     const before = useApp.getState()
     useApp.getState().setLanguages('en', 'bg-BG')
     expect(useApp.getState().phrases).toHaveLength(0)
@@ -61,6 +61,16 @@ describe('F-08 course isolation', () => {
     if (!row) throw new Error('Missing own phrase')
     expect(toView(row).translation).toBe('Добро утро')
     expect(toView(row).meaningLanguage).toBe('bg')
+  })
+  it('guesses the device language without marking the pair chosen', () => {
+    expect(useApp.getState().languageChosen).toBe(false)
+    useApp.getState().previewNativeLanguage('bg')
+    expect(useApp.getState().nativeLanguage).toBe('bg')
+    expect(useApp.getState().languageChosen).toBe(false)
+    seed()
+    useApp.getState().previewNativeLanguage('ru')
+    expect(useApp.getState().nativeLanguage).toBe('bg')
+    expect(useApp.getState().languageChosen).toBe(true)
   })
   it('rejects a matching pair atomically', () => {
     const before = useApp.getState()

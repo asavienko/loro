@@ -29,7 +29,7 @@
 
 import type { Page } from '@playwright/test'
 import { expect, onboard, test } from './fixtures'
-import { open, startWave } from './states'
+import { open, startWave } from './helpers'
 
 interface Box {
   readonly width: number

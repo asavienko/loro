@@ -13,7 +13,8 @@ import { router } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { streamStats, isActive, type Difficulty } from '@loro/core'
 import { copy, themeLabel } from '../../src/lib/copy'
-import { DifficultySelector, EmptyState, PhraseRow } from '../../src/ui/components'
+import { PracticeEmptyState } from './_emptyPractice'
+import { DifficultySelector, PhraseRow } from '../../src/ui/components'
 import {
   Chip,
   DarkCard,
@@ -56,9 +57,7 @@ export default function Stream() {
   const toggleLoved = useApp((s) => s.toggleLoved)
   const markLearned = useApp((s) => s.markLearned)
   const cursor = useApp((state) => state.streamCursor)
-  const setCursor = (streamCursor: number): void => {
-    useApp.setState({ streamCursor })
-  }
+  const setCursor = useApp((state) => state.setStreamCursor)
   const queue = useMemo(() => {
     const now = deviceClock.now()
     return phrases
@@ -77,15 +76,10 @@ export default function Stream() {
   if (queue.length === 0 || current === undefined) {
     return (
       <Screen>
-        <EmptyState
+        <PracticeEmptyState
           title={copy.stream.empty.title}
           body={copy.stream.empty.body}
-          action={{
-            label: copy.stream.empty.action,
-            onPress: () => {
-              router.push('/add')
-            },
-          }}
+          actionLabel={copy.stream.empty.action}
           gap={space['2']}
         />
       </Screen>

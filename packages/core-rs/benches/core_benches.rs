@@ -14,7 +14,7 @@ use criterion::{criterion_group, criterion_main, Criterion};
 use loro_core::asr::{match_tokens, tokenize};
 use loro_core::ladder::{draw, need};
 use loro_core::notify::{may_fire, Category, NotifyContext};
-use loro_core::rank::{order_stream, stream_rank};
+use loro_core::rank::{order_stream_candidates, stream_rank, StreamCandidate};
 use loro_core::{Difficulty, LadderRung, PhraseState};
 use std::hint::black_box;
 
@@ -62,10 +62,23 @@ fn bench_rank(c: &mut Criterion) {
         b.iter(|| stream_rank(black_box(&p), black_box(NOW)));
     });
 
-    // The design target is a 2 000-phrase library.
-    let deck: Vec<PhraseState> = (0..2000).map(phrase).collect();
+    // The design target is a 2 000-phrase library. Production orders `StreamCandidate`s
+    // whose `active` flag is the app's `isActive` rule, not a PhraseState filter here.
+    let deck: Vec<StreamCandidate> = (0..2000)
+        .map(|i| {
+            let p = phrase(i);
+            StreamCandidate {
+                id: p.id,
+                active: !p.learned,
+                plays: p.plays,
+                difficulty: p.difficulty,
+                loved: p.loved,
+                due: p.srs_due,
+            }
+        })
+        .collect();
     c.bench_function("order_stream/2000", |b| {
-        b.iter(|| order_stream(black_box(&deck), black_box(NOW)));
+        b.iter(|| order_stream_candidates(black_box(&deck), black_box(NOW)));
     });
 }
 

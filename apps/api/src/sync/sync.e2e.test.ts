@@ -8,7 +8,7 @@ import { AuthGuard, type AuthenticatedRequest } from '../auth/auth.guard.js'
 import { ProblemDetailsFilter } from '../common/problem-filter.js'
 import { DATABASE } from '../database/database.js'
 import { mergeAvailable } from './merge.js'
-import { InMemorySyncRepository } from './sync.repository.memory.js'
+import { InMemorySyncRepository } from './testing/sync.repository.memory.js'
 import { SYNC_REPOSITORY } from './sync.repository.js'
 
 const id = (n: number) => `0197f2a0-0000-7000-8000-${String(n).padStart(12, '0')}`

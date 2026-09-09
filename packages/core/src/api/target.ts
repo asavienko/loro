@@ -7,6 +7,7 @@ import {
   syncHeaders,
   cacheHeaders,
   ProblemSchema,
+  HealthSchema,
   targetErrors,
   CountSchema,
   LocaleSchema,
@@ -64,7 +65,6 @@ export * from './account.js'
 export * from './analytics.js'
 export type { Operation } from './operation.js'
 
-export const HealthSchema = z.looseObject({ status: z.literal('ok'), version: z.string() })
 export const ReadinessSchema = z.looseObject({
   status: z.enum(['ok', 'degraded']),
   checks: z.record(ResourceIdSchema, z.enum(['ok', 'unavailable'])),
@@ -396,7 +396,7 @@ export const targetComponents = {
   AccountExport: AccountExportSchema,
 }
 
-export type Health = z.infer<typeof HealthSchema>
+export type { Health } from './common.js'
 
 export type Readiness = z.infer<typeof ReadinessSchema>
 

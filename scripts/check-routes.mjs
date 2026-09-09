@@ -9,13 +9,20 @@ export function discoverLearnerRoutes(appDirectory) {
   function visit(directory) {
     for (const entry of readdirSync(directory, { withFileTypes: true })) {
       const file = join(directory, entry.name)
-      if (entry.isDirectory()) visit(file)
-      else if (/\.[jt]sx?$/.test(entry.name) && !/^_layout\.[jt]sx?$/.test(entry.name)) {
+      if (entry.isDirectory()) {
+        // Expo Router: `_` folders are private colocated modules, not routes.
+        if (entry.name.startsWith('_')) continue
+        visit(file)
+      } else if (/\.[jt]sx?$/.test(entry.name) && !entry.name.startsWith('_')) {
         const segments = relative(appDirectory, file)
           .replace(/\.[jt]sx?$/, '')
           .split(/[\\/]/)
           .filter((segment) => !/^\(.+\)$/.test(segment))
-        if (segments.some((segment) => segment.startsWith('+')) || segments[0] === 'dev') continue
+        if (
+          segments.some((segment) => segment.startsWith('+') || segment.startsWith('_')) ||
+          segments[0] === 'dev'
+        )
+          continue
         if (segments.at(-1) === 'index') segments.pop()
         routes.push(`/${segments.join('/')}`)
       }

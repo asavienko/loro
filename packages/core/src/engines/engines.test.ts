@@ -12,18 +12,8 @@ const selectRefrainSet = (...args: Parameters<ReturnType<typeof fakeCore>['selec
 import { describe, expect, it, vi } from 'vitest'
 import { runConformanceSuite } from './conformance.js'
 import { StreamEngine, streamStats } from './stream/index.js'
-import {
-  RefrainEngine,
-  automaticity,
-  beatMsForMode,
-  effortState,
-  modeForRep,
-  modelRateForMode,
-  refrainSetSize,
-  warmBand,
-  REFRAIN_MODES,
-} from './refrain/index.js'
-import { makeContext, makePhrase, seedFixture, T0 } from '../testing/index.js'
+import { RefrainEngine, effortState, warmBand, REFRAIN_MODES } from './refrain/index.js'
+import { fakeRepository, makeContext, makePhrase, seedFixture, T0 } from '../testing/index.js'
 import type { Attempt } from './types.js'
 import { LadderRung } from '../domain/phrase.js'
 import { userPhraseId } from '../domain/ids.js'
@@ -68,6 +58,13 @@ describe('StreamEngine', () => {
     const ids = new Set(plan.items.map((i) => i.phraseId))
     // shp1 is learned in the blueprint's seed.
     expect(ids.has('shp1' as never)).toBe(false)
+  })
+
+  it('excludes graduated phrases from the queue', async () => {
+    const plan = await new StreamEngine().plan(
+      makeContext([makePhrase('grad', { graduatedAt: T0 }), makePhrase('ok')]),
+    )
+    expect(new Set(plan.items.map((i) => i.phraseId))).toEqual(new Set(['ok']))
   })
 
   it('orders difficult before easy at equal play counts', async () => {
@@ -484,13 +481,37 @@ describe('refrain set selection', () => {
   })
 })
 
+describe('fakeRepository eligibility', () => {
+  const due = {
+    stability: 1,
+    difficulty: 5,
+    due: T0,
+    lastReview: T0,
+    lapses: 0,
+    state: 'review' as const,
+  }
+
+  it('uses isActive and isDue rather than a second copy of the rule', async () => {
+    const repo = fakeRepository([
+      makePhrase('grad', { graduatedAt: T0 }),
+      { ...makePhrase('grad-due', { graduatedAt: T0 }), srs: due },
+      { ...makePhrase('learned', { learned: true }), srs: due },
+      { ...makePhrase('due'), srs: due },
+      makePhrase('fresh'),
+    ])
+    expect((await repo.active()).map((p) => p.id)).toEqual(['due', 'fresh'])
+    expect((await repo.due(T0)).map((p) => p.id)).toEqual(['grad-due', 'due'])
+  })
+})
+
 describe('refrain mechanics', () => {
   it('reaches 100% automaticity at the target', () => {
-    expect(automaticity(0, 6)).toBe(0)
-    expect(automaticity(3, 6)).toBe(50)
-    expect(automaticity(6, 6)).toBe(100)
-    expect(automaticity(12, 6)).toBe(100)
-    expect(automaticity(3, 0)).toBe(0)
+    const core = fakeCore()
+    expect(core.automaticity(0, 6)).toBe(0)
+    expect(core.automaticity(3, 6)).toBe(50)
+    expect(core.automaticity(6, 6)).toBe(100)
+    expect(core.automaticity(12, 6)).toBe(100)
+    expect(core.automaticity(3, 0)).toBe(0)
   })
 
   it('warms through four bands', () => {
@@ -508,23 +529,34 @@ describe('refrain mechanics', () => {
   })
 
   it('holds at Cold past the last mode', () => {
-    expect(modeForRep(5)).toBe('cold')
-    expect(modeForRep(99)).toBe('cold')
+    const core = fakeCore()
+    expect(core.modeForRep(5)).toBe('cold')
+    expect(core.modeForRep(99)).toBe('cold')
   })
 
   it('speeds up the beat only in Speed mode', () => {
-    expect(beatMsForMode('speed')).toBe(340)
-    expect(beatMsForMode('echo')).toBe(720)
+    const core = fakeCore()
+    expect(core.beatMsForMode('speed')).toBe(340)
+    expect(core.beatMsForMode('echo')).toBe(720)
   })
 
   it('plays Speed faster than Echo', () => {
-    expect(modelRateForMode('speed')!).toBeGreaterThan(modelRateForMode('echo')!)
-    expect(modelRateForMode('cold')).toBeNull()
+    const core = fakeCore()
+    expect(core.modelRateForMode('speed')!).toBeGreaterThan(core.modelRateForMode('echo')!)
+    expect(core.modelRateForMode('cold')).toBeNull()
   })
 
   it('sizes the set from daily minutes', () => {
-    expect(refrainSetSize(5)).toBe(3)
-    expect(refrainSetSize(10)).toBe(5)
-    expect(refrainSetSize(20)).toBe(8)
+    const core = fakeCore()
+    expect(core.refrainSetSize(5)).toBe(3)
+    expect(core.refrainSetSize(10)).toBe(5)
+    expect(core.refrainSetSize(20)).toBe(8)
+  })
+
+  it('refuses undocumented core numbers instead of computing them', () => {
+    const core = fakeCore()
+    expect(() => core.automaticity(7, 6)).toThrow(/no automaticity fixture/)
+    expect(() => core.refrainSetSize(6)).toThrow(/no refrainSetSize fixture/)
+    expect(() => core.modeForRep(6)).toThrow(/no modeForRep fixture/)
   })
 })

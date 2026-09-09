@@ -32,7 +32,8 @@
 import type { Page } from '@playwright/test'
 import { expect, onboard, test } from './fixtures'
 import { atInstant } from './clock'
-import { enter, START_WAVE, STATES, todayMarker } from './states'
+import { enter, START_WAVE, todayMarker } from './helpers'
+import { STATES } from './states'
 
 /** 200% is the documented promise; 310% is iOS's largest accessibility size. */
 const SCALES = [2, 3.1] as const

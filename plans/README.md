@@ -32,7 +32,9 @@ platform/device acceptance remains separate.
 
 The [refactoring-strategies review](../docs/reviews/2026-09-09-refactoring-strategies.md)
 inventories structural debt in existing code and separates it from unfinished plan work. It does not
-open a new plan.
+open a new plan. The
+[native-libraries companion](../docs/reviews/2026-09-09-native-libraries-and-approaches.md) maps
+Expo/RN packages onto that sequence versus device-owned work.
 
 ## Current scope
 

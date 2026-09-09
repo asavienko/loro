@@ -113,5 +113,5 @@ export const rustCoreFacade: LoroCoreFacade = {
   matchTokens: (heard, target, revealed) => coreCall('match_tokens', { heard, target, revealed }),
 }
 
-/** Compatibility name for older tests; this object executes Rust, without a JS fallback. */
+/** Alias of `rustCoreFacade` for older tests — not a JS stand-in; there is no JS fallback. */
 export const jsCoreFacade = rustCoreFacade
