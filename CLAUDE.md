@@ -24,9 +24,11 @@ release gates. See [persistent practice](docs/process/persistent-practice.md) an
 The [post-main 33-plan review](docs/reviews/2026-09-09-post-main-plan-review.md) records the six
 review findings as fixed: browser file import uses the picker-provided file, picker results are
 request-scoped and pair-safe, corrupt release pointers fail closed, chat choice IDs are unique, and
-active-session E2E navigation uses a deterministic open-wave clock. The format gate and fast checks
-are green; full/device/provider acceptance remains open. No whole plan is newly complete; the
-[implemented-slice archive](plans/archive/2026-09-09/IMPLEMENTED-SLICES.md) retains delivered work.
+active-session E2E navigation uses a deterministic open-wave clock. Refrain completion remains
+visible before a future-wave lock, and its persistent resume action meets the touch-target floor.
+The fast and full local checks are green; device/provider acceptance remains open. No whole plan is
+newly complete; the [implemented-slice archive](plans/archive/2026-09-09/IMPLEMENTED-SLICES.md)
+retains delivered work.
 
 The spine supports pull-down to open its menu; sheets dismiss by pulling their dedicated handle.
 Practice routes disable native back-swipe. Native touch validation remains a release gate. Today

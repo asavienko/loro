@@ -1,12 +1,13 @@
 # Post-main review of the 33 implementation plans
 
 **Reviewed:** 2026-09-09. **Branch:** `codex/P3-30-review-engine`. **Initial revision:**
-`de81744c7531c20f44d6eacda6be2461d521d62b`; **resolution commits:** `518abb9`, `24dd313`. **Base:**
-incorporated `origin/main` at `65b64e97bd2f6221552e3d356138976881424b07`. **Requirements:**
-F-02/F-03/F-04/F-05/F-08/F-09, NAV-*, P2-07/P2-09/P2-10, P3-30 and P3E-01.
+`de81744c7531c20f44d6eacda6be2461d521d62b`; **resolution commits:** `518abb9`, `24dd313`, `7175335`,
+`4e61f95`, `a798440`, `66b7f95`, `5d8f36f`. **Base:** incorporated `origin/main` at
+`65b64e97bd2f6221552e3d356138976881424b07`. **Requirements:** F-02/F-03/F-04/F-05/F-08/F-09, NAV-*,
+P2-07/P2-09/P2-10, P3-30 and P3E-01.
 
 **Disposition: implementation defects fixed; release acceptance remains open.** The six findings in
-this review are now covered by runtime guards, focused tests and a green fast/format gate. All 33
+this review are now covered by runtime guards, focused tests and a green full local gate. All 33
 plans retain work or required acceptance. **No additional whole plan qualifies as complete.**
 Completed implementation slices are recorded in the
 [dated archive](../../plans/archive/2026-09-09/IMPLEMENTED-SLICES.md), with their remaining owners.
@@ -94,7 +95,9 @@ new production guard correctly locks entry before 08:00, making these tests time
 
 **Resolution:** active-session navigation tests freeze an open-wave instant before onboarding. The
 pause test now records a rep, pauses, reloads, resumes the same cursor/wave, ends, reloads and
-confirms the resume action is gone. Boundary and pre-wave guard tests remain separate.
+confirms the resume action is gone. The finished-session screen retains precedence over the next
+wave lock, and the persistent spine resume control meets the 44 px touch-target floor. Boundary and
+pre-wave guard tests remain separate.
 
 **Fix:** freeze an open-wave time before onboarding in active-session tests. Add separate tests for
 pre-wave, boundary crossing, paused earlier waves and midnight. In particular, the test named
