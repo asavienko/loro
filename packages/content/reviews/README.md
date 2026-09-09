@@ -22,9 +22,12 @@ reviewer or linguistic findings are invented. The exporter writes only to stdout
 2. Assign each locale/pair to an independent bilingual reviewer. In its `review`, record the real
    `reviewer`, `reviewerLanguages`, `reviewedAt` (ISO date), `findings` and `signOffEvidence` (a
    durable review reference). Use status `pending`, `changes-requested`, or `approved` only as
-   justified by that review. Findings should identify a resource key or phrase/pack/scenario id, the
-   issue, proposed correction and resolution. Missing teaching fields must be explicitly considered;
-   approval of translations does not supply missing pronunciation teaching.
+   justified by that review. `reviewerLanguages` uses `en`, `bg`, `ru` and `es`: an English source
+   and translated UI record must cover both languages, while a course record must cover its native
+   language and the language part of its target locale. Findings should identify a resource key or
+   phrase/pack/scenario id, the issue, proposed correction and resolution. Missing teaching fields
+   must be explicitly considered; approval of translations does not supply missing pronunciation
+   teaching.
 3. Review ICU placeholders/plurals, naturalness, tone, Cyrillic, target text, native meanings,
    teaching guidance and cultural adaptations. Check rendered context and 200%/310% text separately;
    this JSON export cannot establish layout, speech or device behavior.
