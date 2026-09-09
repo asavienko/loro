@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+import * as content from '@loro/content'
 import { livePhraseSuggestEnabled, suggestPhrases } from './phrase-suggest.js'
 
 describe('phrase suggest eval corpus', () => {
@@ -43,5 +44,28 @@ describe('phrase suggest eval corpus', () => {
         audio: 'abc',
       }),
     ).toThrow()
+  })
+
+  it('falls back silently when bundled rows fail addable checks', () => {
+    const spy = vi.spyOn(content, 'bundledTopicSuggestions').mockReturnValue([
+      {
+        targetText: Array.from({ length: 13 }, () => 'palabra').join(' '),
+        translation: 'too long',
+        provenance: 'bundled',
+        source: 'generated',
+        needsReview: true,
+      },
+    ])
+    try {
+      const miss = suggestPhrases({
+        target_locale: 'es-ES',
+        native_language: 'en',
+        query: 'pharmacy',
+      })
+      expect(miss.candidates).toEqual([])
+      expect(miss.provenance).toBe('unavailable')
+    } finally {
+      spy.mockRestore()
+    }
   })
 })

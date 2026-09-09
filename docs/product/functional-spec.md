@@ -185,9 +185,11 @@ The busiest screen in the app. Header shows a live "_N_ in stream" pill.
   2. scenario active → `For: <scenario label>`
   3. association anchor set → `More like "<last added phrase>"`
   4. otherwise → `Popular starters`
-- **Add your own** — appears when the query is ≥2 chars and doesn't exactly match a library phrase.
-  Rendered as a distinct accented row. Plan 97 implements this floor (P2-07); the query opens the
-  tagging sheet with editable target and meaning.
+- **Add your own** — appears when the query is ≥2 chars and doesn't exactly match a library or
+  already-owned phrase. Rendered as a distinct accented row above the suggestions
+  (`Loro.dc.html:319–323`). Plan 97 implements this floor (P2-07); the query opens the tagging
+  sheet with editable target and meaning. A confirmed add always clears the query
+  (`Loro.dc.html:2325`); custom keeps the current association theme.
 - **Nearest scenario** — a non-LLM hint when the query clearly matches an authored scenario label
   or alias. Tapping it uses the existing scenario chip path.
 - **Suggested for this** — optional garnish when library hits are thin. Bundled topic packs may

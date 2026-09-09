@@ -7,7 +7,9 @@ import {
   filterNewCandidates,
   isExactLibraryMatch,
   matchNearestScenario,
+  ownPhraseIsAddable,
   phraseHandoff,
+  queryHasKeyword,
   shouldOfferOwnPhrase,
   shouldRequestSuggestions,
   suggestCacheKey,
@@ -34,8 +36,10 @@ const generated = (targetText: string): PhraseCandidate => ({
 })
 
 describe('phrase reach identity', () => {
-  it('treats accented and casing variants as the same line', () => {
+  it('treats accented, casing and wrapping punctuation as the same line', () => {
     expect(canonicalPhraseText('  Álérgico  ')).toBe(canonicalPhraseText('alergico'))
+    expect(canonicalPhraseText('¡Hola!')).toBe(canonicalPhraseText('Hola'))
+    expect(isExactLibraryMatch('Un café, por favor', catalog)).toBe(true)
   })
 
   it('offers Add your own only for a non-exact query of two or more characters', () => {
@@ -58,7 +62,16 @@ describe('phrase reach identity', () => {
 describe('nearest scenario', () => {
   it('matches an alias without replacing catalog search', () => {
     expect(matchNearestScenario('restaurant tonight', scenarios)?.id).toBe('dinner')
+    expect(matchNearestScenario('dinner', scenarios)?.id).toBe('dinner')
     expect(matchNearestScenario('xyzzy', scenarios)).toBeNull()
+  })
+
+  it('requires whole tokens, not substrings of the label or alias', () => {
+    expect(matchNearestScenario('in', scenarios)).toBeNull()
+    expect(matchNearestScenario('constraint', scenarios)).toBeNull()
+    expect(matchNearestScenario('restore account', scenarios)).toBeNull()
+    expect(queryHasKeyword('chair', 'hair')).toBe(false)
+    expect(queryHasKeyword('pharmacy nearby', 'pharmacy')).toBe(true)
   })
 })
 
@@ -85,12 +98,12 @@ describe('handoff and dedup', () => {
 
   it('refuses an empty meaning or an overlong spoken line', () => {
     expect(candidateIsAddable({ targetText: 'Hola', translation: '' })).toBe(false)
-    expect(
-      candidateIsAddable({
-        targetText: Array.from({ length: 13 }, () => 'palabra').join(' '),
-        translation: 'too long',
-      }),
-    ).toBe(false)
+    const longOwn = {
+      targetText: Array.from({ length: 13 }, () => 'palabra').join(' '),
+      translation: 'too long',
+    }
+    expect(candidateIsAddable(longOwn)).toBe(false)
+    expect(ownPhraseIsAddable(longOwn)).toBe(true)
   })
 })
 

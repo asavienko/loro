@@ -3,9 +3,9 @@
  * Pair-specific; an unknown pair returns nothing rather than Spanish.
  */
 import type { NativeLanguage, TargetLocale, Theme } from '@loro/core'
-import { canonicalPhraseText, type PhraseCandidate } from '@loro/core'
+import { queryHasKeyword, type PhraseCandidate } from '@loro/core'
 
-interface BundledLine {
+export interface BundledLine {
   readonly targetText: string
   readonly translation: string
   readonly emoji: string
@@ -19,43 +19,56 @@ interface TopicPack {
   >
 }
 
-const pharmacyEs = (translation: string): BundledLine[] => [
-  {
-    targetText: '¿Dónde está la farmacia de guardia?',
-    translation,
-    emoji: '💊',
-    theme: 'Survival',
-  },
-  {
-    targetText: '¿Tiene algo para el dolor de cabeza?',
-    translation:
-      translation === 'Where is the all-night pharmacy?'
-        ? 'Do you have something for a headache?'
-        : translation === 'Къде е дежурната аптека?'
-          ? 'Имате ли нещо против главоболие?'
-          : 'У вас есть что-нибудь от головной боли?',
-    emoji: '💊',
-    theme: 'Survival',
-  },
-  {
-    targetText: 'Necesito este medicamento.',
-    translation:
-      translation === 'Where is the all-night pharmacy?'
-        ? 'I need this medicine.'
-        : translation === 'Къде е дежурната аптека?'
-          ? 'Имам нужда от това лекарство.'
-          : 'Мне нужно это лекарство.',
-    emoji: '💊',
-    theme: 'Survival',
-  },
-]
+const PHARMACY_ES_MEANING: Readonly<
+  Record<NativeLanguage, readonly [pharmacy: string, headache: string, medicine: string]>
+> = {
+  en: [
+    'Where is the all-night pharmacy?',
+    'Do you have something for a headache?',
+    'I need this medicine.',
+  ],
+  bg: [
+    'Къде е дежурната аптека?',
+    'Имате ли нещо против главоболие?',
+    'Имам нужда от това лекарство.',
+  ],
+  ru: [
+    'Где ночная аптека?',
+    'У вас есть что-нибудь от головной боли?',
+    'Мне нужно это лекарство.',
+  ],
+}
+
+const pharmacyEs = (native: NativeLanguage): BundledLine[] => {
+  const [pharmacy, headache, medicine] = PHARMACY_ES_MEANING[native]
+  return [
+    {
+      targetText: '¿Dónde está la farmacia de guardia?',
+      translation: pharmacy,
+      emoji: '💊',
+      theme: 'Survival',
+    },
+    {
+      targetText: '¿Tiene algo para el dolor de cabeza?',
+      translation: headache,
+      emoji: '💊',
+      theme: 'Survival',
+    },
+    {
+      targetText: 'Necesito este medicamento.',
+      translation: medicine,
+      emoji: '💊',
+      theme: 'Survival',
+    },
+  ]
+}
 
 const PHARMACY: TopicPack = {
   keywords: ['pharmacy', 'farmacia', 'chemist', 'аптека', 'drugstore', 'pharmacist', 'лекарств'],
   lines: {
-    'en:es-ES': pharmacyEs('Where is the all-night pharmacy?'),
-    'bg:es-ES': pharmacyEs('Къде е дежурната аптека?'),
-    'ru:es-ES': pharmacyEs('Где ночная аптека?'),
+    'en:es-ES': pharmacyEs('en'),
+    'bg:es-ES': pharmacyEs('bg'),
+    'ru:es-ES': pharmacyEs('ru'),
     'en:bg-BG': [
       {
         targetText: 'Къде е дежурната аптека?',
@@ -167,15 +180,25 @@ const HAIRCUT: TopicPack = {
 
 const TOPICS: readonly TopicPack[] = [PHARMACY, HAIRCUT]
 
+/** Stable Discover garnish identity for F-08 review hashing. */
+export function topicReviewSnapshot(): readonly {
+  readonly keywords: readonly string[]
+  readonly lines: Readonly<Record<string, readonly BundledLine[]>>
+}[] {
+  return TOPICS.map((topic) => ({
+    keywords: topic.keywords,
+    lines: Object.fromEntries(Object.entries(topic.lines)),
+  }))
+}
+
 export function bundledTopicSuggestions(
   query: string,
   nativeLanguage: NativeLanguage,
   targetLocale: TargetLocale,
 ): PhraseCandidate[] {
-  const folded = canonicalPhraseText(query)
   const key = `${nativeLanguage}:${targetLocale}` as const
   for (const topic of TOPICS) {
-    if (!topic.keywords.some((keyword) => folded.includes(canonicalPhraseText(keyword)))) continue
+    if (!topic.keywords.some((keyword) => queryHasKeyword(query, keyword))) continue
     const lines = topic.lines[key]
     if (lines === undefined) return []
     return lines.map((line) => ({
