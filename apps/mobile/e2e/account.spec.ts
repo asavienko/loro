@@ -123,12 +123,17 @@ test('Apple sign-in uses the same authenticated sync session', async ({ page }) 
   )
 })
 
-for (const scenario of ['error', 'cancelled'] as const) {
-  test(`${scenario === 'error' ? 'rejected callback state' : 'cancelled provider sign-in'} creates no exchange or app session`, async ({
+for (const [provider, scenario] of [
+  ['Google', 'error'],
+  ['Google', 'cancelled'],
+  ['Apple', 'error'],
+  ['Apple', 'cancelled'],
+] as const) {
+  test(`${provider} ${scenario === 'error' ? 'rejected callback state' : 'cancelled provider sign-in'} creates no exchange or app session`, async ({
     page,
   }) => {
     await onboard(page)
-    const service = await reachAccount(page, scenario)
+    const service = await reachAccount(page, scenario, provider)
     await expect(page.getByRole('button', { name: 'Sign out', exact: true })).toHaveCount(0)
     await expect(page.getByRole('button', { name: 'Continue with Apple' })).toBeEnabled()
     await expect(
