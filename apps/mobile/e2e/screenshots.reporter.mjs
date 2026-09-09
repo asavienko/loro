@@ -5,6 +5,7 @@ import {
   formatSummary,
   pngProblem,
   readManifest,
+  validatePassedStates,
   writeManifest,
 } from './screenshots-artifacts.mjs'
 
@@ -52,14 +53,7 @@ export default class ScreenshotReporter {
     }
     if (this.errors.length > 0)
       manifest.error = [manifest.error, ...this.errors].filter(Boolean).join('\n\n')
-    for (const entry of manifest.states) {
-      if (entry.status !== 'passed') continue
-      const problem = pngProblem(join(this.runDir, entry.image))
-      if (problem !== undefined) {
-        entry.status = 'failed'
-        entry.error = problem
-      }
-    }
+    validatePassedStates(this.runDir, manifest)
 
     if (result.status !== 'passed')
       manifest.error = [manifest.error, `Playwright finished with status: ${result.status}.`]
