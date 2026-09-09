@@ -356,11 +356,9 @@ export default function Music() {
                 </Text>
               ) : null}
               <Button
-                label={copy.music.styles.confirm}
+                label={busy ? copy.music.state.generating : copy.music.styles.confirm}
                 onPress={confirmStyles}
-                disabled={!canConfirmStyles || unavailable}
-                loading={busy}
-                accessibilityHint={busy ? copy.music.state.generating : undefined}
+                disabled={!canConfirmStyles || unavailable || busy}
               />
               {busy ? (
                 <Text variant="caption" color={ink.ink2}>
