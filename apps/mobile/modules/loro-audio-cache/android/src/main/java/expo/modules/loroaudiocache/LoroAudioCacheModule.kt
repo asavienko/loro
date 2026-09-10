@@ -188,9 +188,10 @@ class LoroAudioCacheModule : Module() {
     try {
       options.fileUris.forEachIndexed { index, fileUri ->
         val uri = Uri.parse(fileUri)
-        if (uri.scheme != "file" || uri.path.isNullOrBlank()) throw failure("invalid-url")
+        val path = uri.path
+        if (uri.scheme != "file" || path.isNullOrBlank()) throw failure("invalid-url")
         val extractor = MediaExtractor()
-        extractor.setDataSource(uri.path)
+        extractor.setDataSource(path)
         val audioIndex = (0 until extractor.trackCount).firstOrNull { trackIndex ->
           extractor.getTrackFormat(trackIndex).getString(MediaFormat.KEY_MIME)?.startsWith("audio/") == true
         } ?: run {
