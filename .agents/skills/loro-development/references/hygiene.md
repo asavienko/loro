@@ -14,11 +14,11 @@ One call site stays local to the route. Two or more and domain-free →
 `apps/mobile/src/ui/primitives`. Two or more with domain types → `apps/mobile/src/ui/components`.
 Shared UI never imports the store or `copy`.
 
-| Shape                    | Use                                                                                        | Do not                                                                   |
-| ------------------------ | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------ |
-| Labelled text            | `Field` — optional `bordered`, `invalid`, `multiline`, `clearLabel`+`clearGlyph`+`onClear` | Raw `TextInput` in `app/` or `src/`                                      |
-| 48 / 13 / hairline row   | `ListRow` with a **gap prop**                                                              | NavigationMenu, listen-export consent, Stream play, Account method tiles |
-| Language / audio / spine | Barrel `src/ui/components`                                                                 | Path imports of `LanguageChoices`, `AudioControls`, `NavigationMenu`     |
+| Shape                    | Use                                                                                                                                                                                     | Do not                                                                   |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| Labelled text            | `Field` — optional `bordered`, `invalid`, `multiline`, `clearLabel`+`clearGlyph`+`onClear`; `invalid` / `editable` set nested `accessibilityState` and `aria-invalid` / `aria-disabled` | Raw `TextInput` in `app/` or `src/`                                      |
+| 48 / 13 / hairline row   | `ListRow` with a **gap prop**                                                                                                                                                           | NavigationMenu, listen-export consent, Stream play, Account method tiles |
+| Language / audio / spine | Barrel `src/ui/components`                                                                                                                                                              | Path imports of `LanguageChoices`, `AudioControls`, `NavigationMenu`     |
 
 `copyOwnership.test.ts` may import `TextInput` — it asserts the copy-ownership lint. Workbench token
 search is a `Field`.
@@ -66,10 +66,10 @@ Knip/depcheck as a hard gate.
 
 ## Tool gates this plan owns
 
-| Gate                                               | Fails when                                                                               |
-| -------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `Field` / `ListRow` + `controlStyle.test.ts`       | A pixel on those shapes rounds or a token colour is replaced by a literal                |
-| ESLint `TextInput` ban + `scripts/check-reuse.mjs` | A new raw input, or a leftover **48/13/hairline** cluster (not every `ROW_PADDING = 13`) |
-| `packages/core-rs` UniFFI `--check`                | Host `libloro_core` exists and generated Swift/Kotlin/H differ from `bindings/`          |
-| `scripts/check-plan-index.mjs`                     | A top-level `plans/NN-*.md` has no README row, or “next is N” ≤ the highest ID           |
-| `.husky/pre-commit`                                | Gitleaks missing/fails, or lint-staged eslint/prettier/rustfmt fails on the staged set   |
+| Gate                                               | Fails when                                                                                                                                                   |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Field` / `ListRow` + `controlStyle.test.ts`       | A pixel on those shapes rounds or a token colour is replaced by a literal                                                                                    |
+| ESLint `TextInput` ban + `scripts/check-reuse.mjs` | A new raw input, or a leftover **48/13/hairline** cluster (not every `ROW_PADDING = 13`)                                                                     |
+| `packages/core-rs` UniFFI `--check`                | Host `libloro_core` exists and generated Swift/Kotlin/H differ from `bindings/`                                                                              |
+| `scripts/check-plan-index.mjs`                     | A top-level `plans/NN-*.md` has no README row, “next is N” ≤ the highest ID, or a top-level file reuses an archived ID without naming it in a collision note |
+| `.husky/pre-commit`                                | Gitleaks missing/fails, or lint-staged eslint/prettier/rustfmt fails on the staged set                                                                       |

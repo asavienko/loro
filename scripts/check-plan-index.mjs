@@ -19,8 +19,8 @@ export function discoverTopLevelPlans(plansDirectory) {
 }
 
 /** Archived `NN-*.md` files still occupy their IDs — numbers are never reused. */
-export function discoverAssignedIds(plansDirectory) {
-  const ids = new Set(discoverTopLevelPlans(plansDirectory).map((plan) => plan.id))
+export function discoverArchivedIds(plansDirectory) {
+  const ids = new Set()
   const archiveRoot = join(plansDirectory, 'archive')
   const stack = [archiveRoot]
   while (stack.length > 0) {
@@ -42,20 +42,37 @@ export function discoverAssignedIds(plansDirectory) {
   return [...ids].sort((left, right) => left - right)
 }
 
+export function discoverAssignedIds(plansDirectory) {
+  const ids = new Set([
+    ...discoverTopLevelPlans(plansDirectory).map((plan) => plan.id),
+    ...discoverArchivedIds(plansDirectory),
+  ])
+  return [...ids].sort((left, right) => left - right)
+}
+
 export function hasRowForPlan(readme, fileName) {
   const escaped = fileName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-  const row = new RegExp(
-    `^\\|\\s*\\[[^\\]]+\\]\\((?:[^)]*/)?${escaped}\\)`,
-    'm',
-  )
+  const row = new RegExp(`^\\|\\s*\\[[^\\]]+\\]\\((?:[^)]*/)?${escaped}\\)`, 'm')
   return row.test(readme)
 }
 
-export function documentedCollision(readme) {
-  return COLLISION_NOTE.test(readme)
+export function documentedCollision(readme, id) {
+  if (id === undefined) return COLLISION_NOTE.test(readme)
+  const idPattern = new RegExp(`\\b${id}s?\\b`)
+  const lines = readme.split('\n')
+  return lines.some((line, index) => {
+    if (!COLLISION_NOTE.test(line)) return false
+    const window = lines.slice(index, index + 3).join('\n')
+    return idPattern.test(window)
+  })
 }
 
-export function planIndexErrors({ plans, readme, assignedIds = plans.map((plan) => plan.id) }) {
+export function planIndexErrors({
+  plans,
+  readme,
+  assignedIds = plans.map((plan) => plan.id),
+  archivedIds = [],
+}) {
   const errors = []
   if (plans.length === 0) {
     errors.push('No top-level plans/NN-*.md files found')
@@ -64,18 +81,29 @@ export function planIndexErrors({ plans, readme, assignedIds = plans.map((plan) 
   const highest = Math.max(...assignedIds, ...plans.map((plan) => plan.id))
   const expectedNext = highest + 1
   const nextMatch = readme.match(NEXT_IS)
-  if (nextMatch === null) errors.push('README is missing a “next is N” / “next new plan is N” sentence')
+  if (nextMatch === null)
+    errors.push('README is missing a “next is N” / “next new plan is N” sentence')
   else if (Number(nextMatch[1]) !== expectedNext) {
-    errors.push(`README “next is ${nextMatch[1]}” must be ${expectedNext} (highest ID ${highest} + 1)`)
+    errors.push(
+      `README “next is ${nextMatch[1]}” must be ${expectedNext} (highest ID ${highest} + 1)`,
+    )
   }
   const highestMatch = readme.match(HIGHEST_IS)
   if (highestMatch !== null && Number(highestMatch[1]) !== highest) {
-    errors.push(`README highest assigned ID ${highestMatch[1]} does not match top-level max ${highest}`)
+    errors.push(
+      `README highest assigned ID ${highestMatch[1]} does not match assigned max ${highest}`,
+    )
   }
+  const archived = new Set(archivedIds)
   const byId = new Map()
   for (const plan of plans) {
     if (!hasRowForPlan(readme, plan.name)) {
       errors.push(`Top-level plan has no README row: ${plan.name}`)
+    }
+    if (archived.has(plan.id) && !documentedCollision(readme, plan.id)) {
+      errors.push(
+        `Top-level plan ${plan.name} reuses archived ID ${plan.id} — numbers are never reused`,
+      )
     }
     const group = byId.get(plan.id) ?? []
     group.push(plan.name)
@@ -83,9 +111,9 @@ export function planIndexErrors({ plans, readme, assignedIds = plans.map((plan) 
   }
   for (const [id, names] of byId) {
     if (names.length < 2) continue
-    if (!documentedCollision(readme)) {
+    if (!documentedCollision(readme, id)) {
       errors.push(
-        `Duplicate plan ID ${id} (${names.join(', ')}) needs a README collision note and a row for every file`,
+        `Duplicate plan ID ${id} (${names.join(', ')}) needs a README collision note naming ${id} and a row for every file`,
       )
     }
     for (const name of names) {
@@ -103,6 +131,7 @@ export function checkPlanIndex(root = resolve(dirname(fileURLToPath(import.meta.
   return planIndexErrors({
     plans: discoverTopLevelPlans(plansDirectory),
     assignedIds: discoverAssignedIds(plansDirectory),
+    archivedIds: discoverArchivedIds(plansDirectory),
     readme,
   })
 }
