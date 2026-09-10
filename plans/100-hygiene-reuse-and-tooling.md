@@ -268,7 +268,7 @@ coverage thresholds; a shared padded-Scroll primitive; hoisting `useLocale`.
 3. [x] `Field` primitive replacing every raw learner/dev `TextInput` listed above. `listRow` is a
        later slice. Copy stays props. Existing textbox accessible names stay. Workbench specimen,
        inventory row, `PRODUCTION_COMPONENT_NAMES`, Vitest pin, `fillField` helper.
-4. [ ] `listRow` token + `ListRow` primitive for Settings, More and Music only (48 / 13 / hairline;
+4. [x] `listRow` token + `ListRow` primitive for Settings, More and Music only (48 / 13 / hairline;
        gap is a prop). Children stay screen-specific. E2E names unchanged. Vitest pin like
        `controlStyle.test.ts`. Not NavigationMenu or listen-export consent.
 5. [ ] Barrel-export `LanguageChoices`, `AudioControls`, `NavigationMenu`; switch path imports. Keep

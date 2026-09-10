@@ -206,3 +206,13 @@ export const field = {
   borderWidth: 1,
   borderRadius: radius.lg,
 } as const
+
+/**
+ * `ListRow` — Settings, More and Music share 48 / 13 / hairline. Gap is a prop
+ * (Settings `space['3']`, More/Music `space['2.5']`) so this token does not average them.
+ * Hairline width lives on `border`; the colour is an accessibility decision on `listRowLook`.
+ */
+export const listRow = {
+  minHeight: 48,
+  paddingVertical: 13,
+} as const

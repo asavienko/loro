@@ -22,6 +22,7 @@ import {
   field,
   ink,
   line,
+  listRow,
   onDark,
   phraseRow,
   pillSize,
@@ -31,7 +32,7 @@ import {
   statRow,
   surface,
 } from '../theme'
-import { chipLook, fieldLook, segmentLook, segmentedTrackStyle } from './controlStyle'
+import { chipLook, fieldLook, listRowLook, segmentLook, segmentedTrackStyle } from './controlStyle'
 
 describe('chipLook · the tag toggle (app/add.tsx:473-483, app/phrase/[id].tsx:205-212)', () => {
   // `flexDirection`, `alignItems` and `gap` are the shared chip shape. `add.tsx` set all
@@ -265,6 +266,28 @@ describe('control tokens keep the value the screen had', () => {
   it('the tap floor and the selected border weight', () => {
     expect(MIN_TAP).toBe(44)
     expect(border).toEqual({ hairline: 1, selected: 1.5 })
+  })
+})
+
+describe('listRowLook · Settings / More / Music chrome (settings.tsx:206-212)', () => {
+  const chrome = {
+    minHeight: 48,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 13,
+    borderBottomWidth: 1,
+    borderBottomColor: line.subtle,
+  } as const
+
+  it('keeps the 48 / 13 / hairline cluster and leaves gap as a prop', () => {
+    expect(listRow.minHeight).toBe(48)
+    expect(listRow.paddingVertical).toBe(13)
+    expect(listRowLook(space['3'])).toEqual({
+      container: { ...chrome, gap: space['3'] },
+    })
+    expect(listRowLook(space['2.5'])).toEqual({
+      container: { ...chrome, gap: space['2.5'] },
+    })
   })
 })
 
