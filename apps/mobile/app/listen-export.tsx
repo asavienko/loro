@@ -24,6 +24,7 @@ import {
   isListenPlaybackId,
   listenStatusKind,
   listenViewModel,
+  listeningFixtureSeedEnabled,
   playListeningSequence,
   prepareListeningBatch,
   restoreListeningBatch,
@@ -129,7 +130,13 @@ export default function ListenExport() {
     durationMs,
   })
   const view = scenario === null ? live : fixtureListenView(scenario)
-  const fixtureMode = nativeDebug && audioCache.available && scenario === null
+  const fixtureMode =
+    scenario === null &&
+    listeningFixtureSeedEnabled({
+      licensedGenerate: view.generateEnabled,
+      nativeDebug,
+      nativeCache: audioCache.available,
+    })
   const generateEnabled =
     (view.generateEnabled ||
       (fixtureMode &&
