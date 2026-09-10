@@ -3,9 +3,10 @@
 - **Requirement IDs:** `F-02`, `F-03`, `F-04` (foundation hygiene that keeps those invariants cheap
   to extend); NAV consistency only where a second call site already exists
 - **Milestone:** M1 hygiene; runs in parallel with remaining product plans
-- **Status:** — Reviewed and extended 2026-09-10. Slices 1–2 (plan + route-table docs) landed.
-  Field, ListRow, barrel, snippets and tool gates have not started. Nothing external blocks them.
-  Product-owned extracts stay with their owners.
+- **Status:** — Reviewed, extended, and revised 2026-09-10 after merging main’s listen companion.
+  Slices 1–2 (plan + route-table docs, including `/listen-export`) landed. Roadmap
+  `prettier-ignore` landed. Field, ListRow, barrel, snippets and remaining tool gates have not
+  started. Nothing external blocks them. Product-owned extracts stay with their owners.
 - **Depends on:** the 2026-09-09 reviews as inventory (do not redo A–G); does **not** wait on
   Q-gates or device acceptance
 - **Number allocation:** 100. Main landed the listening companion as 99 (AS-07) while this plan
@@ -67,11 +68,51 @@ ListRow, and stale on slice 2.
 | First draft                                      | Change                                                                                                                                                                                                                                                |
 | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | “Four production surfaces” for Field             | **Six call-site groups:** Account email, Account code, Discover search, TaggingSheet target + meaning, Import paste + per-line fields, Workbench token search. One `Field` with optional clear / container border. Discover’s accent `Card` wraps it. |
-| ListRow = Settings + More + Music + maybe others | **Exactly those three** in the first extract (identical `MIN_ROW_HEIGHT = 48`, `ROW_PADDING = 13`, hairline). Music bilingual lines and Settings marker stay children.                                                                                |
+| ListRow = Settings + More + Music + maybe others | **Exactly those three** in the first extract (48 / 13 / hairline). Gap is a prop (Settings `space['3']`, More/Music `space['2.5']`). Music bilingual lines and Settings marker stay children. Not listen-export.                                      |
 | Ban raw `TextInput` in `app/**` only             | Ban in `apps/mobile/{app,src}/**` except `Field.tsx`, `copyOwnership.test.ts`, and `**/*.test.*`.                                                                                                                                                     |
-| `check-reuse.mjs` optional                       | **Required after** Field/ListRow land. Counts raw `TextInput` and leftover `MIN_ROW_HEIGHT` / `ROW_PADDING` literals outside the token/primitive.                                                                                                     |
+| `check-reuse.mjs` optional                       | **Required after** Field/ListRow land. Counts raw `TextInput` and leftover **48/13/hairline** clusters (named or inlined), not every `ROW_PADDING = 13`.                                                                                               |
 | Slice 2 = docs + review pointers                 | Review pointers done. Remainder is `/music` and `/dev/tokens` on the `mobile-app.md` route table — landed in this review commit.                                                                                                                      |
-| Evidence HEAD `70a8ecc` only                     | Base inventory still `70a8ecc`; review addenda from `e1dc9ff` working tree.                                                                                                                                                                           |
+| Evidence HEAD `70a8ecc` only                     | Superseded by the listen-companion revision below (`266ddae` / `66bc7ad`).                                                                                                                                                                           |
+
+## Review — 2026-09-10 (after main listen companion)
+
+Re-audited `266ddae` on `cursor/hygiene-reuse-plan-a2fa` after merging `origin/main` (`66bc7ad`).
+Main landed AS-07 as **plan 99** (`/listen-export`, `loro-audio-cache`, listening-class TTS). This
+file stays **100**. Field call sites are unchanged. ListRow, `check-reuse`, the steal list and
+slice 9 were stale.
+
+### Add
+
+| Item                                                              | Why it was missing                                                                                                                                                          | Slice        |
+| ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
+| Treat listen-export consent as **not** ListRow wave 1             | `listen-export.tsx` 442–454: `minHeight: MIN_TAP` (44) + `ROW_PADDING = 13` + hairline + checkbox. Plan 99. Same family as NavigationMenu, not the 48-px trio.               | 4 / do-not   |
+| `check-reuse` matches the **48/13/hairline cluster**, not names   | Settings inlined `minHeight: 48` / `paddingVertical: 13` (`settings.tsx` 206–212). A name-only scan misses Settings and flags listen-export / NavigationMenu `ROW_PADDING`. | 8            |
+| ListRow `gap` is a **prop**, not a token                          | Settings uses `space['3']`; More and Music use `space['2.5']`. Token is only 48 / 13 / hairline. Do not snap gap.                                                           | 4            |
+| `check-plan-index` allows **documented ID collisions**            | Two `96-*.md` files; 99 is listen; 100 is hygiene; next is 101. Fail if a top-level file has no row, or “next is N” is ≤ the highest ID.                                     | 11           |
+| Keep `loro-audio-cache` (`@loro/native-audio-cache`)              | New local Expo module from plan 99. Not unused-dep cleanup.                                                                                                                 | library      |
+| Record roadmap `prettier-ignore` as landed                        | `<!-- prettier-ignore -->` already sits above the remaining-roadmap table. Drop that sub-task from slice 9.                                                                 | 10 (landed)  |
+
+### Remove / do not do
+
+| Item the earlier draft implied                         | Why it leaves                                                                                          |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------ |
+| Fold listen-export into ListRow wave 1                 | 44 ≠ 48; consent checkbox; plan 99 owns the composer UX                                                |
+| Split `listen-export.tsx` / `listenCompanion.ts` here  | 468 / 407 lines; plan 99 as-you-touch, not a hygiene checkbox                                          |
+| Touch listen generate/cache/`playFile`/Q-22 mux        | Plan 99 / 62. Hygiene does not change audio sessions                                                   |
+| Count any `ROW_PADDING = 13` as a ListRow leftover     | False positive on listen-export and NavigationMenu                                                     |
+| Re-list `/listen-export` as remaining slice-2 work     | Already on the `mobile-app.md` route table. `+not-found` stays omitted (`check-routes` skips `+`)      |
+
+### Modify
+
+| Earlier claim                                         | Change                                                                                                                                                                                                 |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Settings uses named `MIN_ROW_HEIGHT` / `ROW_PADDING`  | Settings inlined 48 / 13; still a wave-1 call site. More/Music still name the constants.                                                                                                               |
+| ListRow trio is “identical” including gap             | Shared shape is 48 / 13 / hairline only. Preserve each screen’s gap.                                                                                                                                   |
+| Slice 9 = prettier-ignore + lint-staged + gitleaks    | prettier-ignore done. Remaining: wire `lint-staged` after Gitleaks; warn in `bootstrap.sh` / `onboarding.md` (watchman is warned; Gitleaks is not).                                                    |
+| Steal 56/57/67/70/71/77/81                            | Also 96 (music fixture `globalThis.Audio`) and 99 (listen companion).                                                                                                                                  |
+| “thirty-eight other rows”                             | Active roadmap now has **40** remaining-work rows.                                                                                                                                                     |
+| Field “six call-site groups” after listen             | Rechecked: no listen `TextInput`. Lines unchanged — Account 585/651; Discover `add.tsx` 305; TaggingSheet 611/623; Import 227/297/308; Workbench 545.                                                   |
+| Evidence HEAD `e1dc9ff` / `70a8ecc`                   | Inventory now `266ddae` after `origin/main` `66bc7ad`.                                                                                                                                                 |
 
 ## Relationship to the 2026-09-09 reviews
 
@@ -79,6 +120,7 @@ Three reviews already answered “what to refactor / which libraries / which pra
 **document-only** work. They remain the inventory. This plan is the missing **execution owner** for
 what they left as as-you-touch leftovers **plus** findings that appeared after `706858c` (music,
 Discover garnish, unused Field, duplicated list-row geometry, no editor snippets, dead lint-staged).
+The listen companion that landed on main is plan 99, not this plan.
 
 | Companion                                                                                | Still owns                                       | This plan does not redo                                                      |
 | ---------------------------------------------------------------------------------------- | ------------------------------------------------ | ---------------------------------------------------------------------------- |
@@ -86,7 +128,7 @@ Discover garnish, unused Field, duplicated list-row geometry, no editor snippets
 | [Whole-project assessment](../docs/reviews/2026-09-09-project-improvement-assessment.md) | Keep / adopt / avoid matrix and ADR amendments   | ADR-0012 / 0008 amendments (landed); installing new product libraries        |
 | [Native libraries](../docs/reviews/2026-09-09-native-libraries-and-approaches.md)        | Expo/RN keep-vs-adopt for speech, touch, widgets | Haptics, Maestro, keyboard-controller, Skia, FlashList, `expo-notifications` |
 
-**Do not redo A–G.** Rechecked at `70a8ecc` / `e1dc9ff`: `fakeRepository` uses `isActive` / `isDue`;
+**Do not redo A–G.** Rechecked at `266ddae` (still true after the listen merge): `fakeRepository` uses `isActive` / `isDue`;
 `fakeCore()` is fixture-sealed; production account/sync clients do not import `api/target` (tests
 may); `PRODUCTION_WAVES` / `setStreamCursor` / `beginRefrainSession` exist; Speak plans through
 `speakEngine` and documents the session as ephemeral; `syncableColumns` sits next to `FIELD_POLICY`;
@@ -99,7 +141,7 @@ Inspected: largest TS/Rust modules, `src/ui/{primitives,components}`, every `Tex
 `MIN_ROW_HEIGHT` / `ROW_PADDING` / `minHeight: 48` site, package manifests vs app-source imports,
 `eslint.config.mjs`, `scripts/`, `.husky/pre-commit`, root `lint-staged`, `.prettierignore`,
 `.agents/skills/`, `.cursor/`, `e2e/helpers` and textbox locators, `docs/architecture/mobile-app.md`
-route table, `bootstrap.sh`. Not a device run.
+route table, `bootstrap.sh`, `listen-export.tsx`, `listenCompanion.ts`. Not a device run.
 
 ### Cleanliness — what is left
 
@@ -112,6 +154,7 @@ route table, `bootstrap.sh`. Not a device run.
 | Speak session is React state                                  | `speak.tsx` comment: ephemeral until a named plan owns interruption resume                                                                                                                 | **Not this plan.** Do not invent resume.                                                                                                 |
 | `core-rs` `merge.rs` / `select.rs` / `scheduler.rs` are large | 716 / 652 / 546                                                                                                                                                                            | **Not this plan.** Complexity in the right crate (ADR-0002).                                                                             |
 | Music uses `globalThis.Audio` for fixture playback            | `music.tsx` ~206                                                                                                                                                                           | **Plan 96.** One audio session is 62; do not “fix” garnish playback here.                                                                |
+| Listen companion route and composer are large                 | `listen-export.tsx` 468, `listenCompanion.ts` 407                                                                                                                                          | **Plan 99.** Do not split or restyle from this plan.                                                                                     |
 
 ### Consistency — what is left
 
@@ -119,17 +162,17 @@ route table, `bootstrap.sh`. Not a device run.
 | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
 | Composites imported two ways                 | Barrel: `ActionBar`, `EmptyState`, `PhraseRow`, … Path imports: `LanguageChoices`, `AudioControls`, `NavigationMenu` (`languages.tsx`, `onboarding.tsx`, `speak.tsx`, `phrase/[id].tsx`, `_layout.tsx`) | **This plan**                                                                    |
 | Raw `TextInput` in six call-site groups      | Account email + code; Discover search (`add.tsx` 305); TaggingSheet target + meaning (`add.tsx` 611, 623); Import paste + line fields; Workbench token search; `copyOwnership.test.ts` is a fixture     | **This plan** — second-call-site rule already broken                             |
-| List-row geometry copied three times         | Identical `MIN_ROW_HEIGHT = 48` + `ROW_PADDING = 13` + hairline in `settings.tsx`, `more.tsx`, `music.tsx`. `NavigationMenu` shares 13/hairline only. Stream 48 is a play button. Account 13 is a card. | **This plan** (three identical rows only)                                        |
+| List-row geometry copied three times         | Settings inlines `minHeight: 48` + `paddingVertical: 13` + hairline (`settings.tsx` 206–212, gap `space['3']`). More/Music name `MIN_ROW_HEIGHT`/`ROW_PADDING` and use gap `space['2.5']`. NavigationMenu and listen-export consent share 13/hairline only (44 px). Stream 48 is a play button. Account 13 is a card. | **This plan** (the 48-px trio only; gap stays a prop)                            |
 | Tests still import `@loro/core/api/target`   | auth/sync/content tests and `contracts.e2e.test.ts`                                                                                                                                                     | **Keep.** Roadmap assertions. Production clients already use `account` / `sync`. |
 | `LocaleSchema` is the legacy `es-ES` literal | `LegacyLocaleSchema` alias already exists in `common.ts`                                                                                                                                                | **As you touch** a multilingual import of `common.ts`. Do not widen.             |
-| `mobile-app.md` route table                  | `/music` and `/dev/tokens` added in this review commit                                                                                                                                                  | **Landed** (slice 2)                                                             |
+| `mobile-app.md` route table                  | `/music`, `/listen-export` and `/dev/tokens` listed. `+not-found` omitted on purpose (`check-routes` skips `+`)                                                                                          | **Landed** (slice 2)                                                             |
 
 ### Library use — living policy (do not install from this plan)
 
 **Keep:** Expo SDK 54 + RN 0.81, Zustand write-through, OP-SQLite + sql.js, NestJS 11 + `pg`,
 Rust/`loro-core` via UniFFI and WASM, Zod 4, custom tokens, Ajv 2020-12, pnpm 9 + Turborepo, Vitest,
-Playwright, `pnpm ci:local`, local Expo modules `loro-core` / `loro-audio-speech`, `Pressable` +
-`usePullDown` + `Sheet`.
+Playwright, `pnpm ci:local`, local Expo modules `loro-core` / `loro-audio-speech` /
+`loro-audio-cache`, `Pressable` + `usePullDown` + `Sheet`.
 
 **Installed, unused in app source — leave until the named owner:**
 
@@ -162,7 +205,7 @@ domain types → `src/ui/components`. Store/copy stay out.
 | Shape                                                          | Call sites today                                                                                                                                                      | Action                                                                                                                                                                                |
 | -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Authored `SearchField` / labelled field                        | Account email + code; Discover search; TaggingSheet two fields; Import paste + line edits; Workbench search. Blueprint: `design/.../components/forms/SearchField.jsx` | **Extract `Field`** in `src/ui/primitives`. Optional clear and container border. Discover’s accent `Card` wraps it. Pass every string. 44 px (`MIN_TAP`). Native + `aria-*`. No kit.  |
-| Selectable / navigable list row                                | Settings `ChoiceRow`, More `DestinationRow`, Music phrase + style rows. Shared 48 / 13 / hairline                                                                     | **Extract `ListRow`** + `listRow` token. Domain-free slots, `selected`, role. Settings marker and Music bilingual lines stay children. Not `PhraseRow`. Not NavigationMenu in wave 1. |
+| Selectable / navigable list row                                | Settings `ChoiceRow`, More `DestinationRow`, Music phrase + style rows. Shared 48 / 13 / hairline; gap differs (`space['3']` vs `space['2.5']`)                       | **Extract `ListRow`** + `listRow` token. Domain-free slots, `selected`, role, **gap prop**. Settings marker and Music bilingual lines stay children. Not `PhraseRow`. Not NavigationMenu or listen-export consent in wave 1. |
 | `LanguageChoices` / `AudioControls` / `NavigationMenu`         | 2+ each, imported by path                                                                                                                                             | Re-export from `src/ui/components/index.ts`; switch callers to the barrel                                                                                                             |
 | `EmptyState` / `PracticeEmptyState`                            | Already shared                                                                                                                                                        | Keep. Refrain’s two-title empty is intentionally not `EmptyState`                                                                                                                     |
 | `ThemeGrid`, `TaggingSheet`, `WarmingCard`, `SignInFeedback`   | One each                                                                                                                                                              | **Wait.** Second caller or Q-14 / plan 67                                                                                                                                             |
@@ -207,11 +250,11 @@ enforced rules, not a second style guide.
 | ----------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
 | UniFFI generate `--check` (or a porcelain diff after generate + whitespace normalize)           | WASM already fail-closed; bindings can drift silently                                                     |
 | ESLint (or `check:fields`) banning raw `TextInput` in `app/` **and** `src/` once `Field` exists | Prevents the next screen — and Workbench — from hand-rolling another style                                |
-| `scripts/check-reuse.mjs` **in `pnpm check` after extracts**                                    | Counts raw `TextInput` and leftover `MIN_ROW_HEIGHT` / `ROW_PADDING` literals outside the token/primitive |
+| `scripts/check-reuse.mjs` **in `pnpm check` after extracts**                                    | Counts raw `TextInput` and leftover **48/13/hairline** list-row clusters (named or inlined). Ignore 13/hairline-only rows (NavigationMenu, listen-export) |
 | Wire `lint-staged` after Gitleaks in `.husky/pre-commit`                                        | The config already knows what to run; the hook never calls it                                             |
 | `bootstrap.sh` + onboarding warn if `gitleaks` is missing                                       | Fail closed at setup, not at the first commit                                                             |
-| Prettier-ignore (or lint-staged exclude) for the active-plan roadmap table                      | One cell change must not rewrite thirty-eight other rows                                                  |
-| `scripts/check-plan-index.mjs`                                                                  | README highest ID, “next is N”, and a row per top-level `plans/NN-*.md` must agree                        |
+| Prettier-ignore for the active-plan roadmap table                                               | **Landed.** One cell change must not rewrite the other 39 remaining-work rows                             |
+| `scripts/check-plan-index.mjs`                                                                  | README highest ID, “next is N” (must be highest+1), and a row per top-level `plans/NN-*.md`. Documented ID collisions (two 96s) are allowed when both files have rows |
 | Skill reference `references/hygiene.md` + Cursor rule                                           | Extract-at-two-sites, Field/ListRow, snippet names, unused-dep allowlist, do-not-adopt                    |
 | `fillField` E2E helper                                                                          | Textbox accessible name is the Field contract                                                             |
 
@@ -225,8 +268,9 @@ coverage thresholds; a shared padded-Scroll primitive; hoisting `useLocale`.
 3. [ ] `Field` primitive replacing every raw learner/dev `TextInput` listed above. `listRow` is a
        later slice. Copy stays props. Existing textbox accessible names stay. Workbench specimen,
        inventory row, `PRODUCTION_COMPONENT_NAMES`, Vitest pin, `fillField` helper.
-4. [ ] `listRow` token + `ListRow` primitive for Settings, More and Music only. Children stay
-       screen-specific. E2E names unchanged. Vitest pin like `controlStyle.test.ts`.
+4. [ ] `listRow` token + `ListRow` primitive for Settings, More and Music only (48 / 13 / hairline;
+       gap is a prop). Children stay screen-specific. E2E names unchanged. Vitest pin like
+       `controlStyle.test.ts`. Not NavigationMenu or listen-export consent.
 5. [ ] Barrel-export `LanguageChoices`, `AudioControls`, `NavigationMenu`; switch path imports. Keep
        the workbench source-drift test honest.
 6. [ ] Editor snippets (`.vscode/loro.code-snippets`), Cursor hygiene rule, and `loro-development`
@@ -234,15 +278,16 @@ coverage thresholds; a shared padded-Scroll primitive; hoisting `useLocale`.
 7. [ ] UniFFI regenerate-and-diff `--check` wired into `pnpm check` / core-rs check, analogous to
        `embed-wasm.mjs --check`. Do not hand-edit bindings.
 8. [ ] Ban raw `TextInput` in `apps/mobile/{app,src}/**` (exemptions above). `check-reuse.mjs` in
-       `pnpm check`.
+       `pnpm check` (48/13/hairline cluster, not any `ROW_PADDING = 13`).
 9. [ ] Pre-commit and setup: run `lint-staged` after Gitleaks; warn on missing Gitleaks in
-       `bootstrap.sh` / onboarding; prettier-ignore the active-plan roadmap table.
+       `bootstrap.sh` / `onboarding.md`. Roadmap `prettier-ignore` already landed.
 10. [ ] `scripts/check-plan-index.mjs` + a `pnpm check` entry so ID / row / “next is N” cannot
-        drift.
+        drift. Allow documented collisions (two 96s); require 99 listen + 100 hygiene; next is 101.
 
 **Working rule (not a checkbox):** when a product owner already has `account.tsx`, persistence
-tests, Today, onboarding or Progress in the diff, split along existing seams and extract only at the
-second call site. Do not open a folder-only `features/` rewrite.
+tests, Today, onboarding, Progress, `listen-export.tsx` or `listenCompanion.ts` in the diff, split
+along existing seams and extract only at the second call site. Do not open a folder-only
+`features/` rewrite. Listen and music splits stay with 99 / 96.
 
 ## Acceptance criteria
 
@@ -250,10 +295,12 @@ second call site. Do not open a folder-only `features/` rewrite.
   styles.
 - `apps/mobile/{app,src}/**` has no raw `react-native` `TextInput` after slices 3+8 except the
   listed test fixtures. Workbench search is a `Field`.
-- Settings, More and Music share `ListRow` + `listRow` token geometry; visible copy and roles stay
-  as they are today. Stream play and Account provider tiles are unchanged.
+- Settings, More and Music share `ListRow` + `listRow` token geometry (48 / 13 / hairline); each
+  keeps its current gap. Visible copy and roles stay as they are today. Stream play, Account
+  provider tiles, NavigationMenu and the listen-export consent row are unchanged.
 - Language/audio/navigation composites import from `src/ui/components` like the rest.
-- `mobile-app.md` lists every built route that exists on disk, including garnish and workbench.
+- `mobile-app.md` lists every built learner/utility route on disk, including garnish, listen
+  companion and workbench. Expo `+` files (`+not-found`) stay omitted.
 - Snippets, Cursor rule and the hygiene reference name the same rules ESLint already enforces (copy,
   `useLocale`, clock, tokens, `applyDelta`, dual a11y).
 - `pnpm check` fails if UniFFI bindings were regenerated and not committed, the same way WASM embed
@@ -267,16 +314,18 @@ second call site. Do not open a folder-only `features/` rewrite.
 
 ## Commit sequence
 
-1. `docs(docs): add 99 hygiene reuse and tooling (F-03)` — landed
-2. `docs(docs): extend 99 and list music/workbench routes (F-03)` — this review
-3. `feat(mobile): add Field primitive and replace raw TextInputs (F-03)`
-4. `feat(mobile): add ListRow token and share settings/more/music rows (F-03)`
-5. `refactor(mobile): barrel-export remaining composites (F-03)`
-6. `chore(docs): add loro snippets, cursor rule and hygiene skill (F-03)`
-7. `chore(core-rs): add UniFFI generate --check (F-03)`
-8. `chore(mobile): ban raw TextInput and add check-reuse (F-03)`
-9. `chore(ci): run lint-staged and warn on missing gitleaks (F-03)`
-10. `chore(docs): add plan-index drift check (F-03)`
+1. `docs(docs): add 99 hygiene reuse and tooling (F-03)` — landed (file later became 100)
+2. `docs(docs): extend 99 and list music/workbench routes (F-03)` — landed
+3. `docs(docs): merge main listen companion; hygiene takes 100` — landed
+4. `docs(docs): revise 100 after main listen companion (F-03)` — this review
+5. `feat(mobile): add Field primitive and replace raw TextInputs (F-03)`
+6. `feat(mobile): add ListRow token and share settings/more/music rows (F-03)`
+7. `refactor(mobile): barrel-export remaining composites (F-03)`
+8. `chore(docs): add loro snippets, cursor rule and hygiene skill (F-03)`
+9. `chore(core-rs): add UniFFI generate --check (F-03)`
+10. `chore(mobile): ban raw TextInput and add check-reuse (F-03)`
+11. `chore(ci): run lint-staged and warn on missing gitleaks (F-03)`
+12. `chore(docs): add plan-index drift check (F-03)`
 
 Each commit leaves `pnpm check` green. Field/ListRow commits include the matching E2E (existing
 locators), a workbench specimen and a Vitest pin. Do not mix a product screen into these commits.
@@ -294,13 +343,14 @@ Unless a later device or operational failure produces evidence against the ADRs,
   Worklets off 0.5.1.
 - Wire `StreamEngine.plan()`, delete TS `calendar.ts`, put trips on the wire, unify `/me`, or
   promote `WarmingCard`.
-- Checkpoint Speak, change wave lock, or touch music fixture playback.
+- Checkpoint Speak, change wave lock, touch music fixture playback, or change listen generate /
+  cache / `playFile` / Q-22 mux.
 - Change learner-facing copy keys or E2E locators “while extracting”.
 - Hand-edit `design-tokens/out/` or UniFFI bindings.
 - Register Anthropic, enable billing, or archive remaining-work plans because this file exists.
-- Steal plan 56/57/67/70/71/77/81 product slices.
-- Hoist `useLocale`, extract a padded Scroll, or fold NavigationMenu / Stream play / Account method
-  tiles into the first ListRow.
+- Steal plan 56/57/67/70/71/77/81/96/99 product slices.
+- Hoist `useLocale`, extract a padded Scroll, or fold NavigationMenu / listen-export consent /
+  Stream play / Account method tiles into the first ListRow.
 
 ## Verification
 
@@ -308,13 +358,13 @@ Unless a later device or operational failure produces evidence against the ADRs,
 | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Plan + indexes     | Links resolve; this file is plan 100; listen companion remains 99; CLAUDE “next is 101”                                                                    |
 | Docs / route table | `mobile-app.md` lists `/music`, `/listen-export` and `/dev/tokens`; `git diff --check`                                                                     |
-| Field / ListRow    | `pnpm --filter @loro/mobile` lint/typecheck/unit (including new pins); `pnpm test:e2e` for account, add, more, settings, music; `pnpm test:e2e:workbench` |
+| Field / ListRow    | `pnpm --filter @loro/mobile` lint/typecheck/unit (including new pins); `pnpm test:e2e` for account, add, more, settings, music; `pnpm test:e2e:workbench`. Do not require listen-export E2E changes. |
 | Barrel exports     | Mobile typecheck + workbench specimen contract                                                                                                            |
 | Snippets / skill   | Skill helper tests if the helper changes; otherwise link + recipe review                                                                                  |
 | UniFFI `--check`   | `pnpm --filter @loro/core-rs` check path; do not require `ci:local:native`                                                                                |
 | TextInput lint     | ESLint on a fixture that imports `TextInput` in `app/` or `src/dev-tools` must fail; `copyOwnership.test.ts` still passes                                 |
 | lint-staged        | A throwaway dirty `.ts` in a test repo, or a documented dry-run, shows eslint/prettier invoked after Gitleaks                                             |
-| Plan-index check   | Removing the 100 row from a copy of README fails the script                                                                                               |
+| Plan-index check   | Removing the 100 row from a copy of README fails; two 96 rows still pass; “next is 101” is required                                                       |
 
 Browser E2E does not prove native Field focus or TalkBack. That stays with plans 58/56.
 
@@ -327,8 +377,12 @@ Browser E2E does not prove native Field focus or TalkBack. That stays with plans
    lines are children, not a `PhraseRow`.
 3. **UniFFI `--check` host library.** Unchanged: skip with an explicit message when
    `libloro_core.{so,dylib}` is absent; fail when it exists and bindings differ.
-4. **lint-staged on `*.md` vs the roadmap table.** Recommendation: `<!-- prettier-ignore -->`
-   immediately above the remaining-roadmap table (or a lint-staged glob that skips
-   `plans/README.md`). Do not disable markdown Prettier repo-wide.
-5. **NavigationMenu wave 2.** After ListRow + specimen exist, decide whether the sheet row should
-   opt into the token without the 48 min-height. Not a blocker for wave 1.
+4. **lint-staged on `*.md` vs the roadmap table.** The `<!-- prettier-ignore -->` is already
+   above the table. Keep it. Do not disable markdown Prettier repo-wide. Slice 9 no longer
+   re-does this.
+5. **NavigationMenu and listen-export consent, wave 2.** After ListRow + specimen exist, decide
+   whether 13/hairline rows at `MIN_TAP` (44) should opt into the token without the 48 min-height.
+   Not a blocker for wave 1. Plan 99 owns listen-export copy and behavior either way.
+6. **`check-plan-index` vs ID collisions.** Recommendation: allow duplicate numeric prefixes only
+   when the README collision note exists and **every** matching top-level file has a row. Do not
+   invent a new number for archived account 96 or for listen 99.
