@@ -9,15 +9,16 @@
  * the input. Every string is a prop; this file does not import `copy`.
  *
  * The resolved chrome lives in `./controlStyle.ts` so a unit test can pin Account's 44 / 12 /
- * `line.strong` box. Call-site `style` overrides (Discover 46, sheet 38, Import 132) stay
- * local — those numbers have one home each.
+ * `line.strong` box. `invalid` and `editable` use both `accessibilityState` and `aria-*`
+ * because RNW drops the nested form. Call-site `style` overrides (Discover 46, sheet 38,
+ * Import 132) stay local — those numbers have one home each.
  */
 
 import { TextInput, type StyleProp, type TextInputProps, type TextStyle } from 'react-native'
 import { ink } from '../theme'
 import { IconButton } from './IconButton'
 import { Row } from './layout'
-import { fieldLook } from './controlStyle'
+import { fieldA11y, fieldLook } from './controlStyle'
 
 export function Field({
   accessibilityLabel,
@@ -70,11 +71,18 @@ export function Field({
   | 'editable'
   | 'style'
   | 'testID'
+  | 'accessibilityState'
 >) {
+  if (onClear !== undefined) {
+    if (clearLabel === undefined || clearGlyph === undefined) {
+      throw new Error('Field clear control requires clearLabel and clearGlyph')
+    }
+  }
   const look = fieldLook(bordered, invalid)
-  const showClear = onClear !== undefined && value.length > 0
+  const a11y = fieldA11y(invalid, editable)
   const input = (
     <TextInput
+      {...inputProps}
       testID={testID}
       accessibilityLabel={accessibilityLabel}
       accessibilityHint={accessibilityHint}
@@ -84,16 +92,16 @@ export function Field({
       placeholderTextColor={placeholderTextColor}
       multiline={multiline}
       editable={editable}
+      accessibilityState={a11y.accessibilityState}
+      aria-disabled={a11y['aria-disabled']}
+      aria-invalid={a11y['aria-invalid']}
       style={[look.input, multiline ? { textAlignVertical: 'top' } : null, style]}
-      {...inputProps}
       {...(lang !== undefined ? { lang } : {})}
     />
   )
 
-  if (!showClear) return input
-  if (clearLabel === undefined || clearGlyph === undefined) {
-    throw new Error('Field clear control requires clearLabel and clearGlyph')
-  }
+  if (onClear === undefined || clearLabel === undefined || clearGlyph === undefined) return input
+  if (value.length === 0) return input
   return (
     <Row align="center">
       {input}
