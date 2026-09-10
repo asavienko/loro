@@ -1,7 +1,7 @@
 # Backend integration inventory
 
-**Status:** Contract work, plan 85 (F-04). The mobile app has no HTTP client; seven learner routes
-exist and use local in-memory state. Ten development API routes exist; none authenticates callers.
+**Status:** Contract work from plan 85 (F-04) plus implemented account/sync clients. Eight learner
+routes plus Languages/Account/More/Settings exist. Durable local writes do not wait on the network.
 An endpoint in the target specification does not mean the server implements it.
 
 Source precedence: the [screen catalog](../design/screen-catalog.md) maps authored artifacts;

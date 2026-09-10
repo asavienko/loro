@@ -40,7 +40,9 @@ export const TagSchema = z.enum(['pron', 'remember', 'useful', 'words'])
 export const DifficultySchema = z.enum(['easy', 'med', 'hard'])
 export const GradeSchema = z.enum(['again', 'hard', 'good', 'easy'])
 export const RegisterSchema = z.enum(['neutral', 'casual', 'formal'])
-export const LocaleSchema = z.literal('es-ES')
+/** Legacy catalog/AI locale. v2 learning-content uses `TARGET_LOCALES`, not this. */
+export const LegacyLocaleSchema = z.literal('es-ES')
+export const LocaleSchema = LegacyLocaleSchema
 export const TextSchema = z.string().trim().min(1).max(2000)
 export const ScoreSchema = z.number().min(0).max(100).nullable()
 export const LatencySchema = CountSchema.nullable()

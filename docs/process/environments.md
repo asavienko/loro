@@ -98,21 +98,26 @@ replicas, CDN and uninterrupted deployment are not prerequisites for this testin
 [`apps/api/src/common/config.ts`](../../apps/api/src/common/config.ts) is the runtime source of
 truth. Entries in `.env.example` without a reader are reserved for future adapters.
 
-| Variable              | Current behavior                                                                  |
-| --------------------- | --------------------------------------------------------------------------------- |
-| `NODE_ENV`            | `production` makes missing WASM fatal at startup; use it for the deployed image   |
-| `PORT`                | HTTP listener; defaults to 3000                                                   |
-| `AI_PROVIDER`         | Defaults to `stub`; only the stub is registered in the runtime                    |
-| `TTS_PROVIDER`        | Defaults to `stub`; ElevenLabs requires key, model and `TTS_VOICE_ES_ES`          |
-| `TTS_API_KEY`         | Required only in `elevenlabs` mode; never logged                                  |
-| `TTS_MODEL`           | Pinned model id; empty in stub mode                                               |
-| `TTS_OUTPUT_FORMAT`   | Defaults to `mp3_44100_128`; conversion to AAC is the authoring CLI's job         |
-| `TTS_VOICE_ES_ES`     | Required in ElevenLabs mode; never invent a production id in code                 |
-| `TTS_VOICE_BG_BG`     | Optional until that locale is rendered; never substituted for another locale      |
-| `TTS_VOICE_RU_RU`     | Optional until that locale is rendered                                            |
-| `TTS_CACHE_DIR`       | Process-local identity cache for `/tts/render`; defaults to os tmpdir             |
-| `CDN_BASE_URL`        | Legacy content manifest `audio_base`; no CDN or working audio download is implied |
-| `npm_package_version` | Version reported by health; defaults to `0.0.0` outside the package runner        |
+| Variable                            | Current behavior                                                                  |
+| ----------------------------------- | --------------------------------------------------------------------------------- |
+| `NODE_ENV`                          | `production` makes missing WASM fatal at startup; use it for the deployed image   |
+| `PORT`                              | HTTP listener; defaults to 3000                                                   |
+| `AI_PROVIDER`                       | Defaults to `stub`; only the stub is registered in the runtime                    |
+| `TTS_PROVIDER`                      | Defaults to `stub`; ElevenLabs requires key, model and `TTS_VOICE_ES_ES`          |
+| `TTS_API_KEY`                       | Required only in `elevenlabs` mode; never logged                                  |
+| `TTS_MODEL`                         | Pinned model id; empty in stub mode                                               |
+| `TTS_OUTPUT_FORMAT`                 | Defaults to `mp3_44100_128`; conversion to AAC is the authoring CLI's job         |
+| `TTS_VOICE_ES_ES`                   | Required in ElevenLabs mode; never invent a production id in code                 |
+| `TTS_VOICE_BG_BG`                   | Optional until that locale is rendered; never substituted for another locale      |
+| `TTS_VOICE_RU_RU`                   | Optional until that locale is rendered                                            |
+| `TTS_CACHE_DIR`                     | Process-local identity cache for `/tts/render`; defaults to os tmpdir             |
+| `MUSIC_PROVIDER`                    | Defaults to `stub`; fixture music only. Never `TTS_PROVIDER`. Live spend is Q-21  |
+| `MUSIC_API_KEY`                     | Server-only Music credential; unused while `MUSIC_PROVIDER=stub`                  |
+| `MUSIC_BASE_URL`                    | Defaults to `https://api.elevenlabs.io`; residency host is an ops/Q-21 choice     |
+| `MUSIC_MONTHLY_BUDGET_USD_PER_USER` | Separate from `AI_MONTHLY_BUDGET_USD_PER_USER`; `0` means unlimited in stub       |
+| `MUSIC_DAILY_BUDGET_USD_GLOBAL`     | Separate global music cap; `0` means unlimited in stub                            |
+| `CDN_BASE_URL`                      | Legacy content manifest `audio_base`; no CDN or working audio download is implied |
+| `npm_package_version`               | Version reported by health; defaults to `0.0.0` outside the package runner        |
 
 ### Testing configuration to implement
 

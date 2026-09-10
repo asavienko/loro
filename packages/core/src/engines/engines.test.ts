@@ -558,5 +558,18 @@ describe('refrain mechanics', () => {
     expect(() => core.automaticity(7, 6)).toThrow(/no automaticity fixture/)
     expect(() => core.refrainSetSize(6)).toThrow(/no refrainSetSize fixture/)
     expect(() => core.modeForRep(6)).toThrow(/no modeForRep fixture/)
+    expect(() => core.streamRank(makePhrase('undocumented', { plays: 99 }), T0)).toThrow(
+      /no streamRank fixture/,
+    )
+  })
+
+  it('looks up documented stream rank and repeat targets', () => {
+    const core = fakeCore()
+    expect(core.repeatTarget('hard')).toBe(4)
+    expect(core.repeatTarget('med')).toBe(3)
+    expect(core.repeatTarget('easy')).toBe(2)
+    expect(
+      core.streamRank(makePhrase('hard', { difficulty: 'hard', loved: true, plays: 2 }), T0),
+    ).toBe(-7)
   })
 })

@@ -75,10 +75,16 @@ Same custom-anyway problem for content and AI.
 
 ## Decision
 
-**NestJS 11 on Node 22, Postgres 16 with Drizzle, Redis 7 for cache/rate limits/queues,
-S3-compatible storage behind a CDN.** Workers run from the same image with a different entrypoint.
+**NestJS 11 on Node 22, Postgres 16 with `pg` and handwritten SQL.** Redis, BullMQ and a CDN are a
+revisit, not current. Private S3 is the testing object store. Workers, when an owner exists, run
+from the same image with a different entrypoint.
 
 `loro-core` compiled to WASM runs the merge in the sync endpoint.
+
+The access layer was originally written here as "Postgres 16 with Drizzle, Redis 7…". There is no
+Drizzle or Redis in `apps/api`. Schema is additive SQL in `database/schema.ts` and
+`auth/auth.schema.ts`, executed through `pg`. Plan 88 already accepted an unprovisioned Redis for
+the testing host.
 
 ## Consequences
 
@@ -101,8 +107,9 @@ S3-compatible storage behind a CDN.** Workers run from the same image with a dif
 - **We own auth.** Mitigated by having no passwords at all — provider sign-in plus magic links
   removes the reset flows, the hashing decisions, and the breach liability
   ([security-privacy.md](../security-privacy.md#authentication)).
-- We own hosting and on-call. Mitigated by using managed Postgres and Redis, IaC for everything, and
-  keeping the service genuinely small (four route groups).
+- We own hosting and on-call. Mitigated by keeping the testing host to one EC2 + local PostgreSQL
+  (plan 88) and the service genuinely small (four route groups). Managed Redis waits on a real
+  rate-limit or queue owner.
 - More upfront work than Supabase. Recovered quickly, because the three hard parts were custom in
   every option.
 - WASM in Node for the merge is slightly unusual and adds a build step. Benchmarked; the merge is
@@ -129,3 +136,17 @@ The NestJS/PostgreSQL/shared-WASM decision stands. Testing accepts maintenance d
 failure domain, with nightly and pre-migration backups and verified restores. A 99.9% availability
 statement above is a historical production objective, not a promise for this host. Plan 73 owns
 production objectives and topology after testing evidence; plan 88 owns this testing deployment.
+
+## Amendment — 2026-09-09 · `pg` + handwritten SQL, Drizzle/Redis as revisit
+
+**What changed.** The original Decision named Drizzle and Redis 7 as current. HEAD's only database
+dependency is `pg`. Installing Drizzle as cleanup would add a third schema language (SQLite SQL,
+Postgres SQL, ORM) with no sync-correctness gain: client and server DDL stay separate, and
+`fieldPolicy` is what keeps them honest.
+
+**Current.** NestJS + Postgres + `pg` + authored SQL. Redis, BullMQ, MinIO-as-cache and workers
+remain unused scaffolds.
+
+**Revisit if…** the server schema grows past roughly a dozen tables or operators need a migration
+runner — then amend this ADR and install a runner, do not silently add an ORM. Adopt Redis/BullMQ
+when AI rate limits or a worker tier have a named owner (plans 76/86), not for tidiness.

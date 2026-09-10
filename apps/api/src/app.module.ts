@@ -32,6 +32,10 @@ import { PhrasesController } from './ai/phrases.controller.js'
 import { AiService } from './ai/ai.service.js'
 import { SCENE_PROVIDERS, type SceneProvider } from './ai/scene-provider.js'
 import { StubSceneProvider } from './ai/scene-provider.stub.js'
+import { MusicController } from './music/music.controller.js'
+import { MusicService } from './music/music.service.js'
+import { MUSIC_REPOSITORY } from './music/repository.js'
+import { PostgresMusicRepository } from './music/repository.postgres.js'
 import { TtsController } from './tts/tts.controller.js'
 import { TtsService } from './tts/tts.service.js'
 import { TTS_TRANSPORT, createTtsTransport } from './tts/transport.js'
@@ -44,6 +48,7 @@ import { TTS_TRANSPORT, createTtsTransport } from './tts/transport.js'
     SyncController,
     AiController,
     PhrasesController,
+    MusicController,
     TtsController,
     AuthController,
     MeController,
@@ -51,6 +56,8 @@ import { TTS_TRANSPORT, createTtsTransport } from './tts/transport.js'
   ],
   providers: [
     AiService,
+    MusicService,
+    { provide: MUSIC_REPOSITORY, useClass: PostgresMusicRepository },
     StubSceneProvider,
     {
       // Every scene provider, collected for `AiService` to key by name. Adding Claude

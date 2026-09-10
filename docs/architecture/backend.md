@@ -100,7 +100,7 @@ apps/api/src/
 ├── health/                  # GET /health, /health/ready
 │
 └── common/
-    ├── db/                   # Drizzle client, transactions
+    ├── db/                   # pg client, handwritten SQL, transactions
     ├── redis/
     ├── queue/                # BullMQ producers
     ├── telemetry/            # OTel, structured logging

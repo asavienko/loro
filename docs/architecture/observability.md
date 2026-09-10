@@ -21,8 +21,8 @@ feature design, not an inventory of running collectors or dashboards.
 - The API uses Nest's console logger and a global RFC 9457 exception filter. It has health and sync
   status endpoints, but no request correlation, structured allowlist logger, OpenTelemetry, metrics
   exporter, analytics ingest, dashboards, or alert routing.
-- Sync currently uses an in-memory repository. There is no client sync worker or mobile outbox
-  integration producing the outbox-age, conflict, claim, or merge signals described below.
+- Sync uses PostgreSQL in production/testing and a memory adapter in unit tests. The mobile outbox
+  client exists; it does not yet emit the outbox-age, conflict, claim, or merge signals below.
 - The learning metrics can be derived from domain records once persistence and consented analytics
   exist; there is currently no collection or warehouse path.
 

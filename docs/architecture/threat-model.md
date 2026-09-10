@@ -137,12 +137,12 @@ café scene".
 
 ### B6 · API ↔ data stores
 
-| Threat                                    | Mitigation                                                                                                                   |
-| ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| SQL injection                             | Target: parameterised queries via Drizzle. No server repository exists yet ([ADR-0008](adr/0008-backend-nestjs-postgres.md)) |
-| Cross-tenant read via a missing predicate | Repository layer requires `user_id`; no `db.query` in controllers; e2e test                                                  |
-| Redis cache poisoning                     | Keys are namespaced and derived server-side from validated input; never from raw client strings                              |
-| Backup exfiltration                       | Encrypted at rest, access audit-logged, restore requires break-glass approval                                                |
+| Threat                                    | Mitigation                                                                                                                          |
+| ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| SQL injection                             | Parameterised `pg` queries in handwritten SQL. Controllers do not concatenate SQL ([ADR-0008](adr/0008-backend-nestjs-postgres.md)) |
+| Cross-tenant read via a missing predicate | Repository layer requires `user_id`; no `db.query` in controllers; e2e test                                                         |
+| Redis cache poisoning                     | Keys are namespaced and derived server-side from validated input; never from raw client strings                                     |
+| Backup exfiltration                       | Encrypted at rest, access audit-logged, restore requires break-glass approval                                                       |
 
 ### B3 / B4 · On-device
 

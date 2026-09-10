@@ -8,6 +8,8 @@ Guidance for Claude Code working in this repository.
 
 Early implementation. **What exists:** eight of the v1.1 design package's 23 learner screens,
 Languages, Account, More, Settings and Listen utilities, the shared shell and a developer workbench.
+`/music` (Phrase songs) is a later garnish via More — picker, lyric review, style confirm, and
+fixture playback. Default CI uses `MUSIC_PROVIDER=stub` and never calls ElevenLabs or Anthropic.
 Discover offers Add your own and bundled topic suggestions; live `/v1/phrases/suggest` stays behind
 Q-21. Local progress and course/session state commit to native OP-SQLite or browser SQLite before
 rendering. Rust owns FSRS, ranking, selection, matching, clocks and merge through generated
@@ -163,9 +165,11 @@ prototype-only and **must not** be carried into the app — see the divergence t
   listening companion (generate, cache, in-app listen; share after Q-22). Licensed generate stays
   fail-closed until Q-15; filling `LISTENING_VOICE_DECISION` is the only switch (packet unsigned).
   File-URI generate/cache/listen is tested, including a labeled development fixture seed. iOS
-  `playFile` stops on background with Android. The next new plan number is 100; recheck concurrent
-  worktrees and untracked `plans/` files before allocating an ID — the README/CLAUDE "next is N"
-  sentence can lag. A new plan takes the next free number and gets a row in
+  `playFile` stops on background with Android. Active
+  [`plans/96-phrase-music-generation.md`](plans/96-phrase-music-generation.md) collides with archived
+  account-sign-in 96 (unresolved; do not reuse or drop either). The next new plan number is 100;
+  recheck concurrent worktrees and untracked `plans/` files before allocating an ID — the
+  README/CLAUDE "next is N" sentence can lag. A new plan takes the next free number and gets a row in
   [`plans/README.md`](plans/README.md). **Numbers are never reused** — a gap is left rather than
   backfilled, so a link written against a number can't come to mean a different plan. Not in
   `docs/`: that holds the durable spec. Not in a temp directory either — a plan you can't find again

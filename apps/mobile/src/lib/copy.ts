@@ -20,6 +20,7 @@ import { progressCopy } from './copy/progress'
 import { toastCopy } from './copy/toast'
 import { a11yCopy } from './copy/a11y'
 import { listenExportCopy } from './copy/listenExport'
+import { musicCopy } from './copy/music'
 
 export const copy = {
   persistence: persistenceCopy,
@@ -32,6 +33,7 @@ export const copy = {
   tags: tagsCopy,
   mastery: masteryCopy,
   nav: navCopy,
+  music: musicCopy,
   today: todayCopy,
   add: addCopy,
   onboarding: onboardingCopy,

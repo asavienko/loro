@@ -23,6 +23,7 @@ import {
   fixtureModelRateForMode,
   fixtureRefrainSetSize,
 } from './refrainFixtures.js'
+import { fixtureRepeatTarget, fixtureStreamRank } from './streamFixtures.js'
 import { userPhraseId, catalogPhraseId } from '../domain/ids.js'
 
 /** A fixed instant, so every fixture is reproducible. 2026-07-28T09:41:00Z. */
@@ -144,10 +145,9 @@ export function fakeRepository(phrases: readonly PhraseState[]): PhraseRepositor
 /**
  * A stand-in for loro-core in `@loro/core` tests.
  *
- * Refrain numbers come from documented fixtures (`refrainFixtures.ts`), not a second
- * copy of the Rust formulae. Unknown inputs throw. `streamRank` and `repeatTarget` still
- * mirror the blueprint ranks the stream tests assert on. `fsrsReview` is a labelled test
- * double — not canonical FSRS.
+ * Refrain and Stream numbers come from documented fixtures (`refrainFixtures.ts`,
+ * `streamFixtures.ts`), not a second copy of the Rust formulae. Unknown inputs throw.
+ * `fsrsReview` is a labelled test double — not canonical FSRS.
  */
 export function fakeCore(): LoroCoreFacade {
   return {
@@ -170,15 +170,8 @@ export function fakeCore(): LoroCoreFacade {
             : attempt.hintsUsed > 0
               ? 2
               : 3,
-    repeatTarget: (d) => (d === 'hard' ? 4 : d === 'easy' ? 2 : 3),
-
-    streamRank: (p, now) => {
-      let r = p.plays
-      r += p.difficulty === 'hard' ? -6 : p.difficulty === 'easy' ? 4 : 0
-      if (p.loved) r -= 3
-      if (p.srs !== null && p.srs.due <= now) r -= 4
-      return r
-    },
+    repeatTarget: fixtureRepeatTarget,
+    streamRank: fixtureStreamRank,
 
     selectRefrainSet: fakeSelectRefrainSet,
     automaticity: fixtureAutomaticity,
