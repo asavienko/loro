@@ -4,22 +4,22 @@
 - **Number allocation:** 96 is archived account screens; 97 is generative Discover; 98 is catalog
   TTS (AS-01). This listening companion is 99.
 - **Milestone:** M2
-- **Status:** 🟡 Composer, listening-class TTS contract, fail-closed ElevenLabs transport, native
-  file-URI cache/`playFile` with checksum-on-lookup, batch restore, `/listen-export` copy/E2E, a
-  labeled development fixture that **downloads over loopback HTTP** into that cache (native debug,
-  not Hermes `__DEV__`; not a `store()` bypass), file-URI generate/cache/listen tests, iOS/Android
-  `playFile`/download parity, the unsigned Q-15 listening-voice packet, and Q-22 mux/share
-  fail-closed are implemented. Production licensed voices remain ⛔
+- **Status:** 🟡 Composer, listening-class TTS contract, ElevenLabs transport, native file-URI
+  cache/`playFile` with checksum-on-lookup, batch restore, `/listen-export` copy/E2E, a labeled
+  development fixture that **downloads over loopback HTTP** into that cache (native debug, not
+  Hermes `__DEV__`; not a `store()` bypass), file-URI generate/cache/listen tests, iOS/Android
+  `playFile`/download parity, Q-15 leaning Voice Library pins in `LISTENING_VOICE_DECISION`, and
+  Q-22 mux/share fail-closed are implemented. Pronunciation review remains on
   [Q-15](../docs/decisions/open-questions.md#q-15). Share-out-of-app remains ⛔
   [Q-22](../docs/decisions/open-questions.md#q-22). On the `loro_listen` API 36 emulator
-  (`emulator-5554`, `app.loro.android.dev`), native `download()` fetched the labeled silent AAC
-  over loopback HTTP (20× `fixture-http-download` + sha256
+  (`emulator-5554`, `app.loro.android.dev`), native `download()` fetched the labeled silent AAC over
+  loopback HTTP (20× `fixture-http-download` + sha256
   `7450e588d78b20dabaccb960a9860951f2374de5d18756751f358578727cb6b0`), then airplane mode
   (`ping 8.8.8.8` unreachable) replayed that `file://` clip via `playFile`. That is not
-  physical-device 58/72 and not licensed Q-15 audio.
-  Device TTS is a labeled fallback, not the primary path.
-  `CI_BASE_REF=origin/main pnpm ci:local` passed at `bcd35dc` (learner E2E 197, workbench,
-  production-e2e, mobile-bundle, API image). Item 7 remains open.
+  physical-device 58/72 and not licensed Q-15 audio. Device TTS is a labeled fallback, not the
+  primary path. `CI_BASE_REF=origin/main pnpm ci:local` passed at `bcd35dc` (learner E2E 197,
+  workbench, production-e2e, mobile-bundle, API image). Item 7 pins are filled; pronunciation review
+  and Q-22 remain.
 - **Depends on:** 56 route declaration; 81 More destination; 59 active-course phrase inventory; 87
   target locale; 62 disk cache, atomic download, and exclusive playback session; 86 ElevenLabs
   transport; 61 asset identity and checksum policy for model audio; 58/72 for native evidence. The
@@ -29,15 +29,15 @@
   contract, cache, composer, restore, and fail-closed transports; 2026-09-10 checksum-on-lookup,
   development fixture seed, file-URI generate/cache/listen tests, emulator airplane-mode fixture
   listen, loopback HTTP download+hash+`playFile` on `loro_listen` (2026-09-10), and
-  `CI_BASE_REF=origin/main pnpm ci:local` green at `bcd35dc`. Live licensed voices,
-  share-out-of-app, and physical-device 58/72 remain gated.
+  `CI_BASE_REF=origin/main pnpm ci:local` green at `bcd35dc`. Live generate still needs a key;
+  share-out-of-app, pronunciation review, and physical-device 58/72 remain gated.
 
 ## Outcome
 
 A learner prepares a batch of active-course phrases for **listening**, not practice. The app
-**renders multi-voice takes online** (ElevenLabs is the selected provider; the transport is
-fail-closed until Q-15 pins licensed voices), **caches each phrase×voice clip on device**, then
-plays that cache in airplane mode. Optionally, after
+**renders multi-voice takes online** (ElevenLabs is the selected provider; pins live in
+`LISTENING_VOICE_DECISION`; stub/missing key still fail closed), **caches each phrase×voice clip on
+device**, then plays that cache in airplane mode. Optionally, after
 [Q-22](../docs/decisions/open-questions.md#q-22), native code concatenates those same cached clips
 into one AAC/M4A and shares it through the OS share sheet.
 
@@ -73,39 +73,37 @@ listening-only and must never become the DSP or Speak model.
   `loro-audio-cache` module for HTTPS download. JavaScript never receives PCM.
 - Phrase Detail / Stream already consume device TTS. Browser E2E cannot prove native speech.
 - Account JSON export (`F-07`) remains unimplemented in plan 67 and is a different artifact.
-- Q-15 still blocks production ElevenLabs voices. A provisioned API key is not a voice licence and
-  is not redistribution permission. Q-22 still blocks sharing licensed neural audio as a
-  learner-owned file. Neither question is resolved by this plan.
+- Q-15 leaning pins cover in-app generate. A provisioned API key is not a voice licence and is not
+  redistribution permission. Q-22 still blocks sharing licensed neural audio as a learner-owned
+  file. Neither question is resolved by this plan.
 - ADR-0011: learner PCM never leaves native memory; no JS API returns audio bytes; a P0 alert fires
   on any network request **originating in the audio module**. Model-audio HTTP is issued by
   `loro-audio-cache`, not `loro-audio-speech`.
 
 **Current implementation (2026-09-10).** `/listen-export` is a built Phrases utility.
-`POST /tts/render` accepts `voice_id`, `model_id`, `asset_class`, and metadata-only JSON.
-A mocked-allowlist API test proves listening-class `voice_id` + `asset_class: listening` with no
-PCM in JSON and no live ElevenLabs credits; production `LISTENING_VOICE_DECISION` stays empty.
-`loro-audio-cache` downloads and pins listening clips, verifies sha256 on lookup and batch restore,
-restores a complete batch across relaunch, and keeps mux/share behind
-`LISTENING_SHARE_ENABLED = false`. `playFile` plays `file://` URIs and stops when backgrounded on
-iOS and Android. JavaScript still never receives PCM. `LISTENING_VOICE_DECISION` stays empty
-(`modelId` null, no licensed IDs), so licensed generate fails closed. Filling that object is the
-only licensed-generate switch; see the
-[listening-voice packet](../docs/decisions/listening-voice-packet.md). Product docs do not pin
-listening voices; a decrypted API key would not be a licence. Native debug builds (`FLAG_DEBUGGABLE`
-/ iOS `DEBUG`, not Hermes `__DEV__`) seed a labeled silent AAC by serving it on loopback HTTP and
-calling the same `download()` path (sha256 verify + listening pin). Copy must not present it as
-licensed neural audio. The render client attaches an optional bearer
-session and maps 429 to quota; native download sends that Authorization header and refuses redirects
-so the token cannot hop hosts. Node tests prove prepare → HTTP download → checksummed
-`sha256/{hex}.m4a` → airplane replay from file URIs → restore, with share still gated. Learner
-listen-export E2E passed inside `pnpm ci:local` (197 passed, 2026-09-10).
-`CI_BASE_REF=origin/main pnpm ci:local` passed at `bcd35dc` after Docker install, a Linux workbench
-310% snapshot refresh (310×442), and bundling workspace TypeScript into the API image. An Android
-emulator (`loro_listen`, API 36) later exercised the real cache path: wipe cache, generate
-via loopback HTTP `download()` + sha256 verify + listening pin, then
-`cmd connectivity airplane-mode enable` and `playFile` of
-`file://…/sha256/7450e588….m4a`. Copy still labels that clip a development snapshot. That is not
-physical-device 58/72 and not Q-15 licensed audio.
+`POST /tts/render` accepts `voice_id`, `model_id`, `asset_class`, and metadata-only JSON. A
+mocked-allowlist API test proves listening-class `voice_id` + `asset_class: listening` with no PCM
+in JSON and no live ElevenLabs credits; production `LISTENING_VOICE_DECISION` holds the 2026-09-10
+Voice Library pins (in-app cache/playback only). `loro-audio-cache` downloads and pins listening
+clips, verifies sha256 on lookup and batch restore, restores a complete batch across relaunch, and
+keeps mux/share behind `LISTENING_SHARE_ENABLED = false`. `playFile` plays `file://` URIs and stops
+when backgrounded on iOS and Android. JavaScript still never receives PCM. Filling
+`LISTENING_VOICE_DECISION` is the licensed-generate switch; see the
+[listening-voice packet](../docs/decisions/listening-voice-packet.md). Product docs pin listening
+voices for in-app use; a decrypted API key is not a share licence. Native debug builds
+(`FLAG_DEBUGGABLE` / iOS `DEBUG`, not Hermes `__DEV__`) seed a labeled silent AAC by serving it on
+loopback HTTP and calling the same `download()` path (sha256 verify + listening pin). Copy must not
+present it as licensed neural audio. The render client attaches an optional bearer session and maps
+429 to quota; native download sends that Authorization header and refuses redirects so the token
+cannot hop hosts. Node tests prove prepare → HTTP download → checksummed `sha256/{hex}.m4a` →
+airplane replay from file URIs → restore, with share still gated. Learner listen-export E2E passed
+inside `pnpm ci:local` (197 passed, 2026-09-10). `CI_BASE_REF=origin/main pnpm ci:local` passed at
+`bcd35dc` after Docker install, a Linux workbench 310% snapshot refresh (310×442), and bundling
+workspace TypeScript into the API image. An Android emulator (`loro_listen`, API 36) later exercised
+the real cache path: wipe cache, generate via loopback HTTP `download()` + sha256 verify + listening
+pin, then `cmd connectivity airplane-mode enable` and `playFile` of `file://…/sha256/7450e588….m4a`.
+Copy still labels that clip a development snapshot. That is not physical-device 58/72 and not Q-15
+licensed audio.
 
 ## Product shape (working assumptions)
 
@@ -301,22 +299,21 @@ API exists; that API still returns a file URI only.
        failure, ready-to-listen (cache complete), in-app playing, share unavailable (Q-22), share
        ready (when allowed), cancellation, disk-full, session-busy, quota, and voices-single.
        Browser suites cover copy, a11y and text scale. Emulator airplane-mode listen of a
-       **HTTP-downloaded** development fixture batch is evidenced (`playFile` from `sha256/{hex}.m4a`
-       while `ping 8.8.8.8` is unreachable). Physical-device 58/72 and licensed Q-15 audio remain.
-       Native share of the concatenated file is the acceptance for Q-22 export.
-7. [ ] After Q-15: pin ≥2 listening voice IDs per enabled target, licence, budget, and pronunciation
-       review **without** replacing the canonical reference voice, using the
-       [listening-voice packet](../docs/decisions/listening-voice-packet.md). After Q-22: enable
-       share of concatenated cached clips and document personal-copy /
-       deletion-on-licence-withdrawal behaviour. Never re-render a reference clip under a
-       listening-variant ID.
+       **HTTP-downloaded** development fixture batch is evidenced (`playFile` from
+       `sha256/{hex}.m4a` while `ping 8.8.8.8` is unreachable). Physical-device 58/72 and licensed
+       Q-15 audio remain. Native share of the concatenated file is the acceptance for Q-22 export.
+7. [x] Pin ≥2 listening voice IDs per enabled target, distinct from catalog `TTS_VOICE_*`, in
+       `LISTENING_VOICE_DECISION` (2026-09-10). `licensed: true` is in-app cache/playback only.
+       Pronunciation review remains before calling pins production-quality. After Q-22: enable share
+       of concatenated cached clips and document personal-copy / deletion-on-licence-withdrawal
+       behaviour. Never re-render a reference clip under a listening-variant ID.
 
 ## Acceptance criteria
 
-- **Generate online, play offline:** with Q-15 voices available and network present, preparing the
-  active-course batch writes one verified clip per phrase×voice. After airplane mode, in-app play of
-  that batch uses only disk. A cache miss in airplane mode is unavailable (or labeled device-TTS
-  in-app), never a fabricated neural voice.
+- **Generate online, play offline:** with pinned voices, a configured key, and network present,
+  preparing the active-course batch writes one verified clip per phrase×voice. After airplane mode,
+  in-app play of that batch uses only disk. A cache miss in airplane mode is unavailable (or labeled
+  device-TTS in-app), never a fabricated neural voice.
 - Each phrase appears N times (the chosen 2–5) before the next phrase. Consecutive takes of the same
   phrase use different licensed voice IDs until the approved set is exhausted, then rotate. The
   on-screen roster matches the cache index and, when Q-22 allows, the shared file.
@@ -335,14 +332,14 @@ API exists; that API still returns a file URI only.
 1. **Route + composer + cache contract (landed).** `/listen-export` UI, keys, honest unavailable
    generate/listen/share. Development fixtures seed from native debug, not Hermes `__DEV__`. Browser
    remains an honest unavailable generator.
-2. **On-demand render + native cache (⛔ Q-15 for production voices; 86/61/66 for the live route).**
-   Listening-class contract, fail-closed ElevenLabs transport, and native file-URI cache/`playFile`
-   landed. Prepare cannot mint licensed clips until Q-15 pins ≥2 voices and a model. Device TTS
-   fallback stays labeled. Adapter fixtures must not be presented as licensed quality. Live
-   ElevenLabs must not run in CI.
+2. **On-demand render + native cache (Q-15 pins filled; pronunciation review and live key remain;
+   86/61/66 for the live route).** Listening-class contract, ElevenLabs transport, and native
+   file-URI cache/`playFile` landed. Prepare uses the pinned roster; stub/missing key still fail
+   closed. Device TTS fallback stays labeled. Adapter fixtures must not be presented as licensed
+   quality. Live ElevenLabs must not run in CI.
 3. **Airplane-mode in-app listen.** Emulator evidence (2026-09-10): debug APK with embedded bundle,
-   loopback HTTP fixture `download()` + sha256 + pin, airplane mode, `playFile` from `file://`.
-   This does **not** require Q-22. Physical-device 58/72 and licensed Q-15 generate remain open.
+   loopback HTTP fixture `download()` + sha256 + pin, airplane mode, `playFile` from `file://`. This
+   does **not** require Q-22. Physical-device 58/72 and pronunciation-reviewed generate remain open.
 4. **Concatenated share (⛔ Q-22).** Native mux of cached clips exists behind
    `LISTENING_SHARE_ENABLED` and stays false. Share sheet copy is unavailable. Blocked until
    licensed neural audio may leave the app as a learner-owned file.
@@ -353,7 +350,8 @@ In-app Stream/Refrain playback policy, background lock-screen transport, DSP/ASR
 export, account JSON/erasure, playlist apps as a backend, changing the one-voice pronunciation
 reference, implementing signed catalog packs, shipping a device-TTS-first export as the v1
 companion, and fabricating voices when fewer than two licensed listening voices are approved. The
-ElevenLabs transport exists and fails closed; live licensed voices remain Q-15.
+ElevenLabs transport uses the 2026-09-10 pins; live spend still needs a key. Pronunciation review
+remains on Q-15.
 
 ## Review findings (2026-09-09)
 

@@ -21,13 +21,13 @@ listening-class fail-closed path. Optional Google/Apple and email sign-in connec
 progress to cross-device sync.
 
 The three 31-phrase Spanish/Bulgarian/Russian starters still await bilingual review. The other 15
-learner screens, licensed production seed audio (Q-15), the 150 MB LRU cache, background audio,
-measured onset latency, DSP, widgets, production listening voices, shareable neural listening export
-(Q-22) and account export/erasure remain. Cloud ASR is forbidden. Android compilation and an
-airplane-mode emulator persistence/reveal smoke passed; a labeled listen-companion fixture also
-played from cache in emulator airplane mode (not Q-15 licensed audio, not physical-device 58/72).
-Full iOS and physical-device speech/convergence acceptance remain release gates. See
-[persistent practice](docs/process/persistent-practice.md) and
+learner screens, pronunciation-reviewed production seed audio (Q-15 leaning pins are in core; the
+listen remains), the 150 MB LRU cache, background audio, measured onset latency, DSP, widgets,
+shareable neural listening export (Q-22) and account export/erasure remain. Cloud ASR is forbidden.
+Android compilation and an airplane-mode emulator persistence/reveal smoke passed; a labeled
+listen-companion fixture also played from cache in emulator airplane mode (not Q-15 licensed audio,
+not physical-device 58/72). Full iOS and physical-device speech/convergence acceptance remain
+release gates. See [persistent practice](docs/process/persistent-practice.md) and
 [plan 94](plans/archive/2026-09-09/94-persistent-practice-and-account-integration.md) for scoped
 evidence.
 
@@ -162,15 +162,15 @@ prototype-only and **must not** be carried into the app — see the divergence t
   Plan 53 was archived at user request on 2026-09-09; its former original-path exception no longer
   applies. Plan 97 owns generative Discover reach. Plan 98 owns the ElevenLabs adapter,
   `content:render`, gated `/tts/render` and catalog-file playback. Plan 99 owns the online-first
-  listening companion (generate, cache, in-app listen; share after Q-22). Licensed generate stays
-  fail-closed until Q-15; filling `LISTENING_VOICE_DECISION` is the only switch (packet unsigned).
-  File-URI generate/cache/listen is tested, including a labeled development fixture seed. iOS
-  `playFile` stops on background with Android. Active
-  [`plans/96-phrase-music-generation.md`](plans/96-phrase-music-generation.md) collides with archived
-  account-sign-in 96 (unresolved; do not reuse or drop either). The next new plan number is 100;
-  recheck concurrent worktrees and untracked `plans/` files before allocating an ID — the
-  README/CLAUDE "next is N" sentence can lag. A new plan takes the next free number and gets a row in
-  [`plans/README.md`](plans/README.md). **Numbers are never reused** — a gap is left rather than
+  listening companion (generate, cache, in-app listen; share after Q-22). Licensed generate uses the
+  2026-09-10 `LISTENING_VOICE_DECISION` pins; stub/missing key still fail closed. Pronunciation
+  review remains on Q-15. Q-22 share stays off. File-URI generate/cache/listen is tested, including
+  a labeled development fixture seed. iOS `playFile` stops on background with Android. Active
+  [`plans/96-phrase-music-generation.md`](plans/96-phrase-music-generation.md) collides with
+  archived account-sign-in 96 (unresolved; do not reuse or drop either). The next new plan number is
+  100; recheck concurrent worktrees and untracked `plans/` files before allocating an ID — the
+  README/CLAUDE "next is N" sentence can lag. A new plan takes the next free number and gets a row
+  in [`plans/README.md`](plans/README.md). **Numbers are never reused** — a gap is left rather than
   backfilled, so a link written against a number can't come to mean a different plan. Not in
   `docs/`: that holds the durable spec. Not in a temp directory either — a plan you can't find again
   is a plan you rewrite. Name the requirement ID inside the plan so it ties back to the branch and
@@ -368,13 +368,14 @@ provider adapters.
 
 Unresolved decisions with owners and dates:
 [`docs/decisions/open-questions.md`](docs/decisions/open-questions.md). Active roadmap gates are
-**Q-15** (production audio), **Q-07** (trip semantics), **Q-05** (loop experiment and conditional
-Run), **Q-14** (Refrain peak accessibility), **Q-08/Q-12** (pricing and billing), **Q-17** (rail
-priority), **Q-16/Q-18–Q-20** (chat launch, budget and retention), **Q-21** (Discover suggest),
-**Q-22** (listening-file redistribution), plus bilingual review and the DSP quality gate. Gates
-apply to their named slices; offline chat and spike preparation may proceed. Plan 99 listening
-generation waits on Q-15; in-app cache/listen does not wait on Q-22; share-out-of-app does. Work
-whose dependencies do not cross those gates should continue.
+**Q-15** (pronunciation-reviewed production audio; Voice Library pins leaning 2026-09-10), **Q-07**
+(trip semantics), **Q-05** (loop experiment and conditional Run), **Q-14** (Refrain peak
+accessibility), **Q-08/Q-12** (pricing and billing), **Q-17** (rail priority), **Q-16/Q-18–Q-20**
+(chat launch, budget and retention), **Q-21** (Discover suggest), **Q-22** (listening-file
+redistribution), plus bilingual review and the DSP quality gate. Gates apply to their named slices;
+offline chat and spike preparation may proceed. Plan 99 listening generate is pinned for in-app
+cache; pronunciation review remains; in-app cache/listen does not wait on Q-22; share-out-of-app
+does. Work whose dependencies do not cross those gates should continue.
 
 ## Python
 

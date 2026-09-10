@@ -181,9 +181,9 @@ measured from the file; it is never estimated from text. Conversion from the pro
 64 kbps mono 24 kHz is the CLI's job when an encoder is supplied; identity write is the default so
 CI never needs ffmpeg.
 
-Live seed rendering still needs Q-15 voice/rights/listen review. Files land in gitignored
-`.render-cache/`; S3/CDN publication is not this slice. F0 / syllable / MFCC extraction remains
-plan 77.
+Live seed rendering still needs a content-lead listen of the pinned voices and a live `TTS_API_KEY`.
+Files land in gitignored `.render-cache/`; S3/CDN publication is not this slice. F0 / syllable /
+MFCC extraction remains plan 77.
 
 The later `tts-render` worker still owns:
 
@@ -200,7 +200,8 @@ catalog-wide re-render and a deliberate decision, not a config tweak. Plan 99 li
 are additional licensed takes for a listening companion; they must never replace this reference or
 be written into `audio.sha256` / `f0_native`. Pinning those takes is the
 [Q-15 listening-voice packet](../decisions/listening-voice-packet.md); `LISTENING_VOICE_DECISION`
-stays empty until signed.
+holds the 2026-09-10 in-app pins. Pronunciation review remains before calling them
+production-quality.
 
 ---
 

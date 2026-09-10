@@ -158,11 +158,11 @@ specifications.
 
 ## Decisions
 
-| Doc                                                              | Contents                                                |
-| ---------------------------------------------------------------- | ------------------------------------------------------- |
-| [open-questions.md](decisions/open-questions.md)                 | Unresolved, with owner and the date it blocks           |
-| [listening-voice-packet.md](decisions/listening-voice-packet.md) | Q-15 listening roster checklist; unsigned, fail-closed  |
-| [risks.md](decisions/risks.md)                                   | Risk register — likelihood, impact, mitigation, trigger |
+| Doc                                                              | Contents                                                 |
+| ---------------------------------------------------------------- | -------------------------------------------------------- |
+| [open-questions.md](decisions/open-questions.md)                 | Unresolved, with owner and the date it blocks            |
+| [listening-voice-packet.md](decisions/listening-voice-packet.md) | Q-15 listening/catalog pins; leaning, pronunciation open |
+| [risks.md](decisions/risks.md)                                   | Risk register — likelihood, impact, mitigation, trigger  |
 
 ---
 
