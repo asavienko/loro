@@ -82,6 +82,8 @@ listening-only and must never become the DSP or Speak model.
 
 **Current implementation (2026-09-10).** `/listen-export` is a built Phrases utility.
 `POST /tts/render` accepts `voice_id`, `model_id`, `asset_class`, and metadata-only JSON.
+A mocked-allowlist API test proves listening-class `voice_id` + `asset_class: listening` with no
+PCM in JSON and no live ElevenLabs credits; production `LISTENING_VOICE_DECISION` stays empty.
 `loro-audio-cache` downloads and pins listening clips, verifies sha256 on lookup and batch restore,
 restores a complete batch across relaunch, and keeps mux/share behind
 `LISTENING_SHARE_ENABLED = false`. `playFile` plays `file://` URIs and stops when backgrounded on
