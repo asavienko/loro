@@ -8,8 +8,10 @@
   cache/`playFile` with checksum-on-lookup, batch restore, `/listen-export` copy/E2E, a labeled
   development fixture that **downloads over loopback HTTP** into that cache (native debug, not
   Hermes `__DEV__`; not a `store()` bypass), file-URI generate/cache/listen tests, iOS/Android
-  `playFile`/download parity, Q-15 leaning Voice Library pins in `LISTENING_VOICE_DECISION`, and
-  Q-22 mux/share fail-closed are implemented. Pronunciation review remains on
+  `playFile`/download parity, Q-15 leaning Voice Library pins in `LISTENING_VOICE_DECISION`,
+  pinned listening generate into the native file-URI cache (ElevenLabs or labeled
+  `TTS_STUB_RENDER=1`), and Q-22 mux/share fail-closed are implemented. Browser generate stays
+  `native-unavailable` (no JS PCM download). Pronunciation review remains on
   [Q-15](../docs/decisions/open-questions.md#q-15). Share-out-of-app remains ⛔
   [Q-22](../docs/decisions/open-questions.md#q-22). On the `loro_listen` API 36 emulator
   (`emulator-5554`, `app.loro.android.dev`), native `download()` fetched the labeled silent AAC over
@@ -334,9 +336,10 @@ API exists; that API still returns a file URI only.
    remains an honest unavailable generator.
 2. **On-demand render + native cache (Q-15 pins filled; pronunciation review and live key remain;
    86/61/66 for the live route).** Listening-class contract, ElevenLabs transport, and native
-   file-URI cache/`playFile` landed. Prepare uses the pinned roster; stub/missing key still fail
-   closed. Device TTS fallback stays labeled. Adapter fixtures must not be presented as licensed
-   quality. Live ElevenLabs must not run in CI.
+   file-URI cache/`playFile` landed. Prepare uses the pinned roster. Default stub/missing key still
+   fail closed. `TTS_STUB_RENDER=1` is a labeled listening-class download path, not licensed neural
+   quality and not catalog publish. Browser generate stays unavailable until a real native/web
+   encoder exists. Device TTS fallback stays labeled. Live ElevenLabs must not run in CI.
 3. **Airplane-mode in-app listen.** Emulator evidence (2026-09-10): debug APK with embedded bundle,
    loopback HTTP fixture `download()` + sha256 + pin, airplane mode, `playFile` from `file://`. This
    does **not** require Q-22. Physical-device 58/72 and pronunciation-reviewed generate remain open.

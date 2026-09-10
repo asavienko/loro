@@ -287,7 +287,8 @@ fallback, not a bypass of this gate.
 
 **Still needed before calling these production-quality / shipping the seed batch:** content-lead
 listen of starter phrases; live `TTS_API_KEY` on a paid plan with Voice Library add-to-My-Voices;
-commercial redistribution for Q-22; physical-device 58/72. Learner recordings remain subject to the
+commercial redistribution for Q-22; physical-device 58/72. This environment had no decryptable
+`TTS_API_KEY`, so no live ElevenLabs seed was cached. Learner recordings remain subject to the
 separate non-negotiable that PCM never leaves native memory/the device.
 
 ---

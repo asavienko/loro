@@ -52,7 +52,7 @@ All paths have the `/v1` prefix. Content and health remain public.
 | POST     | `/sync/push`, `/sync/pull`, `/sync/status`                     | Bearer and matching `X-Loro-Device` required                    |
 | POST     | `/ai/scene`                                                    | Bundled, validated roleplay scene                               |
 | GET      | `/ai/themes`                                                   | Available bundled themes                                        |
-| POST     | `/tts/render`                                                  | Authenticated; stub/Q-15 incomplete → 503; identity JSON only   |
+| POST     | `/tts/render`                                                  | Authenticated; identity JSON only. Default stub 503; ElevenLabs or `TTS_STUB_RENDER=1` listening-class |
 | GET      | `/tts/assets/:sha256`                                          | Authenticated checksum bytes from the process disk cache        |
 
 OAuth uses `@loro/core/api/oauth`; other auth and sync use `@loro/core/api/account` and
