@@ -32,6 +32,7 @@ function fixture() {
     saveListeningBatch: vi.fn(() => Promise.resolve(undefined)),
     loadListeningBatch: vi.fn((): Promise<AudioCacheObject[] | null> => Promise.resolve(null)),
     installDevFixture: vi.fn(),
+    isDebuggable: vi.fn(() => false),
   } satisfies NativeAudioCache
   return { native, controller: new AudioCacheController(native) }
 }
@@ -128,6 +129,9 @@ describe('listening cache controller', () => {
     await expect(web.installDevFixture('listening|dev')).rejects.toMatchObject({
       code: 'native-unavailable',
     })
+    await expect(web.isDebuggable()).resolves.toBe(false)
+    f.native.isDebuggable.mockReturnValueOnce(true)
+    await expect(f.controller.isDebuggable()).resolves.toBe(true)
   })
 
   it('passes an authorization header through to native and still refuses credentialed URLs', async () => {
