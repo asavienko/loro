@@ -8,7 +8,7 @@ device/release acceptance.
 
 **Disposition: document only** when written. A–G and the ADR amendments landed afterwards. Remaining
 executable hygiene, Field/ListRow extracts, snippets and UniFFI `--check` are
-[plan 99](../../plans/99-hygiene-reuse-and-tooling.md). This review still does not implement
+[plan 100](../../plans/100-hygiene-reuse-and-tooling.md). This review still does not implement
 refactors, install packages, or archive remaining-work owners. Device, bilingual, provider and the
 fifteen unbuilt learner screens stay with [plans/README.md](../../plans/README.md).
 
@@ -594,9 +594,9 @@ must not: section below
 ```
 
 Do **not** open plan 97 for this list. Plan 97 is Discover reach.
-[Plan 99](../../plans/99-hygiene-reuse-and-tooling.md) is the execution owner for leftover
+[Plan 100](../../plans/100-hygiene-reuse-and-tooling.md) is the execution owner for leftover
 as-you-touch hygiene, the Field/ListRow extracts, snippets and UniFFI `--check`. Items 1–8 of this
-review are in the working tree. UniFFI `--check` is plan 99 slice 7.
+review are in the working tree. UniFFI `--check` is plan 100 slice 7.
 
 Native-device library work (haptics, Maestro, keyboard-controller, notifications, Skia) proceeds
 **in parallel** under its plan owners and must not share a PR with items 1–4.

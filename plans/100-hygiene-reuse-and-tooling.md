@@ -8,8 +8,9 @@
   Product-owned extracts stay with their owners.
 - **Depends on:** the 2026-09-09 reviews as inventory (do not redo A–G); does **not** wait on
   Q-gates or device acceptance
-- **Number allocation:** 99 follows inspection of active, archived and concurrent plan files.
-  Highest tracked ID was 98. The next new plan is 100.
+- **Number allocation:** 100. Main landed the listening companion as 99 (AS-07) while this plan
+  was still on a branch under the same number. Hygiene takes the next free ID. The next new plan
+  is 101.
 
 ## Outcome
 
@@ -54,7 +55,7 @@ ListRow, and stale on slice 2.
 | Treat Account `methodButton` as a ListRow                  | `account.tsx` 850–857 is a bordered card (`MIN_TAP`, radius, fill). Different shape.                                                        |
 | First-wave ListRow inside `NavigationMenu`                 | Same 13 / hairline, **no** 48 min-height; spine sheet E2E is load-bearing. Revisit only after ListRow exists and a specimen matches.        |
 | Closable checkbox for “split account/Today as you touch”   | That is a working rule, not acceptance. It would stay unchecked forever.                                                                    |
-| “Point the September reviews at plan 99” as remaining work | Landed in the plan-creation commit.                                                                                                         |
+| “Point the September reviews at this plan” as remaining work | Landed in the plan-creation commit (then numbered 99; now 100 after main’s listen companion).                                              |
 | Consolidate `useLocale()` into `Screen`                    | Breaks reactive copy. Document, do not extract.                                                                                             |
 | Shared padded `ScrollView` primitive                       | Eight screens use `padding: space['5']` but differ by inset, gap and `flexGrow`. Not one shape.                                             |
 | Knip/depcheck as a gate                                    | Unchanged. `expo-font` / Reanimated / RNGH are capacity.                                                                                    |
@@ -219,8 +220,8 @@ coverage thresholds; a shared padded-Scroll primitive; hoisting `useLocale`.
 
 ## Remaining work
 
-1. [x] Land this plan, index row, CLAUDE “next is 100”, and review pointers.
-2. [x] Docs: add `/music` and `/dev/tokens` to `mobile-app.md` current-route table (this review).
+1. [x] Land this plan, index row, CLAUDE “next is 101”, and review pointers.
+2. [x] Docs: add `/music`, `/listen-export` and `/dev/tokens` to `mobile-app.md` current-route table.
 3. [ ] `Field` primitive replacing every raw learner/dev `TextInput` listed above. `listRow` is a
        later slice. Copy stays props. Existing textbox accessible names stay. Workbench specimen,
        inventory row, `PRODUCTION_COMPONENT_NAMES`, Vitest pin, `fillField` helper.
@@ -305,15 +306,15 @@ Unless a later device or operational failure produces evidence against the ADRs,
 
 | Slice              | Gate                                                                                                                                                      |
 | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Plan + indexes     | Links resolve; plan 99 is the only new ID; CLAUDE “next is 100”                                                                                           |
-| Docs / route table | `mobile-app.md` lists `/music` and `/dev/tokens`; `git diff --check`                                                                                      |
+| Plan + indexes     | Links resolve; this file is plan 100; listen companion remains 99; CLAUDE “next is 101”                                                                    |
+| Docs / route table | `mobile-app.md` lists `/music`, `/listen-export` and `/dev/tokens`; `git diff --check`                                                                     |
 | Field / ListRow    | `pnpm --filter @loro/mobile` lint/typecheck/unit (including new pins); `pnpm test:e2e` for account, add, more, settings, music; `pnpm test:e2e:workbench` |
 | Barrel exports     | Mobile typecheck + workbench specimen contract                                                                                                            |
 | Snippets / skill   | Skill helper tests if the helper changes; otherwise link + recipe review                                                                                  |
 | UniFFI `--check`   | `pnpm --filter @loro/core-rs` check path; do not require `ci:local:native`                                                                                |
 | TextInput lint     | ESLint on a fixture that imports `TextInput` in `app/` or `src/dev-tools` must fail; `copyOwnership.test.ts` still passes                                 |
 | lint-staged        | A throwaway dirty `.ts` in a test repo, or a documented dry-run, shows eslint/prettier invoked after Gitleaks                                             |
-| Plan-index check   | Removing the 99 row from a copy of README fails the script                                                                                                |
+| Plan-index check   | Removing the 100 row from a copy of README fails the script                                                                                               |
 
 Browser E2E does not prove native Field focus or TalkBack. That stays with plans 58/56.
 

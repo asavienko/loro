@@ -61,10 +61,9 @@ resumption only when supported; otherwise complete the required full run before 
 
 Read `scripts/ci-local.sh` and `docs/process/ci-cd.md` before choosing concurrency. Detect the
 scripts in this checkout: the shell wrapper execs `scripts/ci-local.mjs` when present.
-`LORO_CI_JOBS` (default 2) bounds the dependency-aware scheduler; `LORO_CI_CONCURRENCY` still
-bounds Turbo. Isolated workspaces and `.ci-local-reports/` belong to that runner. Do not import a
-runner from another worktree. Plan 95 still records unmatched serial/cold/warm comparison as
-remaining.
+`LORO_CI_JOBS` (default 2) bounds the dependency-aware scheduler; `LORO_CI_CONCURRENCY` still bounds
+Turbo. Isolated workspaces and `.ci-local-reports/` belong to that runner. Do not import a runner
+from another worktree. Plan 95 still records unmatched serial/cold/warm comparison as remaining.
 
 For standalone browser runs, use `CI=1` and an unused `LORO_E2E_PORT`. Ports alone do not isolate
 shared reports/exports or Metro source reloads: serialize suites or use separate workspaces and
@@ -93,11 +92,11 @@ Commit coherent green chunks. Use a file/structured argument for multiline GitHu
 For a requested merge, refresh remote state and inspect checkout ownership. Squash merges mean
 `git branch --no-merged` alone cannot identify missing work: use `git cherry` plus PR/patch/content
 evidence. Leftover slice worktrees and merged PR branches are not a merge queue. GitHub's conflict
-or mergeable flag can be stale; fetch and integrate `origin/main` locally. Keep archive-only PRs
-off feature landings. Markdown wrapping can fail `pnpm check`; format the files you touched.
+or mergeable flag can be stale; fetch and integrate `origin/main` locally. Keep archive-only PRs off
+feature landings. Markdown wrapping can fail `pnpm check`; format the files you touched.
 
 Stay in the named worktree. Preserve concurrent edits, regenerate owned output and validate the
 combined tree. Never overwrite a dirty main checkout. Subagents may be unavailable; continue
 in-session rather than blocking. Verify the remote merge and final worktree; distinguish push,
-merge, PR, deployment, draft upload and publication in the result. A leftover open PR after a
-direct `main` push still needs its own conflict/close decision.
+merge, PR, deployment, draft upload and publication in the result. A leftover open PR after a direct
+`main` push still needs its own conflict/close decision.

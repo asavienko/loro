@@ -19,7 +19,8 @@ authoritative. A request to review or organize plans does not authorize implemen
   dependencies and acceptance criteria, and add its row to the active index. Durable specifications
   belong in `docs/`. A review document is not a numbered plan. Remaining hygiene, Field/ListRow
   extracts, snippets and UniFFI `--check` after the 2026-09-09 reviews are
-  [plan 99](../../../../plans/99-hygiene-reuse-and-tooling.md) — do not open a second hygiene plan.
+  [plan 100](../../../../plans/100-hygiene-reuse-and-tooling.md) — do not open a second hygiene
+  plan. Plan 99 is the listening companion.
 - Cursor prompts that say "implement the attached plan" and "do not edit the plan file" are
   authorization to implement, not to rewrite the plan.
 

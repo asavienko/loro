@@ -1,22 +1,39 @@
 import { test as base, expect, type Page } from '@playwright/test'
-import { ensureManifestClock } from './clock'
 import { todayMarker } from './helpers'
 import { consumeExpectedResourceError } from './expectedResourceErrors'
+import { mockAccountService } from './accountFlow'
+import { ensureOpenWaveClock } from './clock'
 
-export const test = base.extend<{ consoleHealth: undefined }>({
+export const test = base.extend<{ consoleHealth: undefined; accountApi: undefined }>({
   consoleHealth: [
     async ({ page }, use) => {
       const errors: string[] = []
       page.on('console', (message) => {
-        if (message.type() === 'error' && !consumeExpectedResourceError(page, message))
-          errors.push(`console: ${message.text()}`)
+        if (message.type() !== 'error' || consumeExpectedResourceError(page, message)) return
+        // Resource failures are recorded on requestfailed with the URL.
+        if (message.text().includes('ERR_CONNECTION_REFUSED')) return
+        errors.push(`console: ${message.text()}`)
       })
       page.on('pageerror', (error) => {
         errors.push(`page: ${error.message}`)
       })
+      page.on('requestfailed', (request) => {
+        const failure = request.failure()?.errorText ?? 'failed'
+        if (!/CONNECTION_REFUSED|NAME_NOT_RESOLVED|ERR_CONNECTION/.test(failure)) return
+        errors.push(`request: ${failure} ${request.method()} ${request.url()}`)
+      })
 
       await use(undefined)
       expect(errors, 'the app emitted browser errors').toEqual([])
+    },
+    { auto: true },
+  ],
+  // EXPO_PUBLIC_API_URL is inlined in the E2E bundle. Mock before the first navigation so
+  // hydration does not hit a real host (ERR_CONNECTION_REFUSED) and fail consoleHealth.
+  accountApi: [
+    async ({ page }, use) => {
+      await mockAccountService(page)
+      await use(undefined)
     },
     { auto: true },
   ],
@@ -50,7 +67,7 @@ export async function onboard(page: Page, choices: OnboardingChoices = {}): Prom
     packs = ['Café & ordering', 'Getting around'],
   } = choices
 
-  await ensureManifestClock(page)
+  await ensureOpenWaveClock(page)
   await page.goto('/')
   await expect(page).toHaveURL(/\/onboarding$/)
   await page.getByRole('button', { name: "Let's go →" }).click()

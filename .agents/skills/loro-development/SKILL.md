@@ -3,8 +3,8 @@ name: loro-development
 description:
   Develop, debug, review, and plan changes in the Loro language-learning repository, including
   mobile, core, API, tests, local builds, deployment, worktrees and plan archival. Use focused
-  code/reference discovery and reusable validation evidence to avoid repeating repository and
-  chat exploration.
+  code/reference discovery and reusable validation evidence to avoid repeating repository and chat
+  exploration.
 ---
 
 # Loro development
@@ -15,10 +15,10 @@ chat instructions belong to their original tasks.
 
 ## Start or resume
 
-- **Named checkout:** stay in this session's tree (Cursor worktree, Codex worktree, or the
-  primary clone). Do not treat `/Users/.../Projects/loro` as the task tree unless that is the
-  opened root. A review of worktrees or unmerged branches is read-only until the user asks to
-  merge, push, prune or fix.
+- **Named checkout:** stay in this session's tree (Cursor worktree, Codex worktree, or the primary
+  clone). Do not treat `/Users/.../Projects/loro` as the task tree unless that is the opened root. A
+  review of worktrees or unmerged branches is read-only until the user asks to merge, push, prune or
+  fix.
 - **Continuing:** retain the requirement, owned paths, decisions and validation results already in
   context. Check changes since the last inspected revision; reopen only affected source. Do not
   restart orientation because the user asks to review, fix or continue.

@@ -10,10 +10,11 @@ The system end to end. Read this before any other architecture document.
 > mobile outbox. Google/Apple/email identity is optional. See
 > [persistent practice](../process/persistent-practice.md) and [the plans](../../plans/README.md).
 >
-> The diagrams include future surfaces: recorded-asset cache/background audio, measured onset and
-> DSP, widgets, independent content delivery, live AI and most remaining learner screens are still
-> planned. Android compilation and an airplane-mode emulator smoke do not replace physical-device
-> speech/convergence or full iOS acceptance.
+> The diagrams include future surfaces: recorded-asset cache/background audio, production listening
+> voices and shareable neural listening-file export, measured onset and DSP, widgets, independent
+> content delivery, live AI and most remaining learner screens are still planned. Android
+> compilation and an airplane-mode emulator smoke do not replace physical-device speech/convergence
+> or full iOS acceptance.
 >
 > **Testing hosting:** plan 88 selects Frankfurt EC2, local PostgreSQL and private S3 at a
 > $25–35/month target; plan 91 records the restricted EC2 deployment and plan 92 its read-only HTTPS
@@ -70,8 +71,10 @@ graph TB
   LORO --> OBS
 ```
 
-Note what is **not** an external dependency of the learner's daily loop: the LLM, the neural TTS
-provider, and the network itself. A learner can practise for weeks with none of them.
+Note what is **not** an external dependency of the learner's **daily practice** loop: the LLM, the
+neural TTS provider, and the network itself. A learner can practise for weeks with none of them.
+Plan 99 listening generation is the exception that **does** need the network on a cache miss; after
+a successful cache, airplane-mode listen uses disk only. That companion is not a practice surface.
 
 ## C4 · Level 2 — Containers
 
@@ -263,17 +266,17 @@ Versions are the pins chosen at authoring time — **re-verify at kickoff**
 
 ### Backend
 
-| Concern        | Choice                                              | Why                                                     |
-| -------------- | --------------------------------------------------- | ------------------------------------------------------- |
-| Runtime        | Node 22 LTS                                         |                                                         |
-| Framework      | NestJS 11                                           | Module boundaries that survive growth; team familiarity |
-| DB             | Postgres 16 + `pg` + handwritten SQL                | Durable tenant-scoped server storage                    |
-| Cache / queues | Redis 7 + BullMQ, deferred                          | Add only with an implemented consumer and budget        |
-| Storage / CDN  | Private S3; CDN deferred                            | Authorized content downloads through plans 61/86        |
-| AI             | Anthropic Claude                                    | Roleplay, coach notes, content enrichment               |
-| TTS            | Managed neural TTS                                  | Catalog/reference audio at build time                   |
-| Auth           | Apple / Google / email magic link; own JWT issuance | Anonymous-first upgrade path                            |
-| Deploy         | One EC2, Compose, Terraform; maintenance deploys    | [backend.md](backend.md#deployment)                     |
+| Concern        | Choice                                              | Why                                                                              |
+| -------------- | --------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Runtime        | Node 22 LTS                                         |                                                                                  |
+| Framework      | NestJS 11                                           | Module boundaries that survive growth; team familiarity                          |
+| DB             | Postgres 16 + `pg` + handwritten SQL                | Durable tenant-scoped server storage                                             |
+| Cache / queues | Redis 7 + BullMQ, deferred                          | Add only with an implemented consumer and budget                                 |
+| Storage / CDN  | Private S3; CDN deferred                            | Authorized content downloads through plans 61/86                                 |
+| AI             | Anthropic Claude                                    | Roleplay, coach notes, content enrichment                                        |
+| TTS            | Managed neural TTS                                  | Catalog/reference audio at build time; on-demand listening-class clips (plan 99) |
+| Auth           | Apple / Google / email magic link; own JWT issuance | Anonymous-first upgrade path                                                     |
+| Deploy         | One EC2, Compose, Terraform; maintenance deploys    | [backend.md](backend.md#deployment)                                              |
 
 ### Shared
 

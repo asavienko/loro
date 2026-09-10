@@ -1,0 +1,22 @@
+{
+  "request": {
+    "text": "Un café, por favor.",
+    "lang": "es-ES",
+    "phrase_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "voice_id": "listening_voice_a",
+    "model_id": "eleven_multilingual_v2",
+    "asset_class": "listening",
+    "codec": "aac-64k-mono-24k",
+    "phrase_id": "cafe1"
+  },
+  "response": {
+    "uri": "sha256/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "ms": 1420,
+    "cached": true,
+    "download_url": "https://cdn.loro.test/sha256/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.m4a",
+    "voice_id": "listening_voice_a",
+    "model_id": "eleven_multilingual_v2",
+    "asset_class": "listening"
+  }
+}

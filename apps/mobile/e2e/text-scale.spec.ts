@@ -58,8 +58,8 @@ for (const scale of SCALES) {
     }
   })
   test(`text at ${scale * 100}% never clips or overflows`, async ({ page }) => {
-    // Whole-manifest walk: F-01 account states plus the plan-96 music garnish.
-    test.setTimeout(240_000)
+    // Whole-manifest walk: F-01 account, AS-07 listen, and plan-96 music states.
+    test.setTimeout(300_000)
     const problems: string[] = []
 
     for (const state of STATES) {

@@ -31,6 +31,12 @@ import {
   MusicTrackResponseSchema,
 } from './music.js'
 import { PhraseSuggestRequestSchema, PhraseSuggestResponseSchema } from './phrase-suggest.js'
+import { TARGET_LOCALES } from '../domain/languages.js'
+import {
+  LISTENING_ASSET_CLASS,
+  LISTENING_CODEC,
+  REFERENCE_ASSET_CLASS,
+} from '../listening/constants.js'
 
 export const draftGates = {
   trip: ['Q-07'],
@@ -209,16 +215,29 @@ export function validateChatExchange(request: unknown, response: unknown) {
   return result
 }
 export { ChatTopicResourceSchema } from './chat-topic.js'
+export const TtsLangSchema = z.enum(TARGET_LOCALES)
+export const TtsAssetClassSchema = z.enum([LISTENING_ASSET_CLASS, REFERENCE_ASSET_CLASS])
+export const TtsCodecSchema = z.literal(LISTENING_CODEC)
 export const TtsRequestSchema = z.strictObject({
   text: TextSchema,
-  lang: LocaleSchema,
+  lang: TtsLangSchema,
   phrase_hash: Sha256Schema,
+  voice_id: Key,
+  model_id: Key,
+  asset_class: TtsAssetClassSchema,
+  codec: TtsCodecSchema,
+  phrase_id: Key.optional(),
 })
-export const TtsResponseSchema = z.looseObject({
+export const TtsResponseSchema = z.strictObject({
   uri: z.string().regex(/^sha256\/[a-f0-9]{64}$/),
   sha256: Sha256Schema,
-  ms: z.int().positive(),
+  /** Native-measured duration in milliseconds, or null when the encoder did not report one. */
+  ms: z.int().positive().nullable(),
   cached: z.boolean(),
+  download_url: z.url(),
+  voice_id: Key,
+  model_id: Key,
+  asset_class: TtsAssetClassSchema,
 })
 export const BillingVerifyRequestSchema = z.strictObject({
   platform: z.enum(['ios', 'android']),
@@ -325,15 +344,16 @@ export const draftOperations = withExamples(
       path: '/tts/render',
       owner: 61,
       gates: draftGates.tts,
+      requirements: ['F-04', 'AS-01', 'AS-07'],
       unresolved: [
-        'Licensed voice, voice-version cache identity, rights, pronunciation review and budget',
+        'Licensed reference and ≥2 listening voice IDs per target, model pin, rights, pronunciation review and budget',
       ],
       summary: 'Render text as model speech',
       headers: idempotencyHeaders,
       request: { schema: TtsRequestSchema },
       responses: { 200: { schema: TtsResponseSchema }, ...targetErrors },
       behavior:
-        'Text only. Server recomputes hash and keys by text/locale/approved voice version. Device TTS on failure. Never accepts recordings.',
+        'Text only. JSON is metadata: download_url plus sha256/uri/ms/voice_id/asset_class. Native cache downloads bytes. Listening and reference never share identity. Server recomputes phrase_hash. Never accepts recordings or audio bytes in JSON.',
     },
     {
       ...base,

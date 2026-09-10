@@ -9,7 +9,7 @@ gates (NAV-\*, AS-\*, N-04, ADR-0001/0002/0003/0005/0007/0011), not product comp
 **Disposition: document only.** This review does not implement refactors, does not install packages,
 and does not claim device acceptance. It does not replace the refactoring-strategies sequence.
 Cross-cutting Field/ListRow extracts, snippets and UniFFI `--check` are
-[plan 99](../../plans/99-hygiene-reuse-and-tooling.md); this matrix still owns keep-vs-adopt for
+[plan 100](../../plans/100-hygiene-reuse-and-tooling.md); this matrix still owns keep-vs-adopt for
 native packages. Device, bilingual, provider and remaining learner-screen work stay with their
 owners in [plans/README.md](../../plans/README.md).
 

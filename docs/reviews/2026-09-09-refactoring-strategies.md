@@ -8,9 +8,9 @@ completion.
 
 **Disposition: document only** when written. **A–G of the sequence below landed in the working tree
 on 2026-09-09** (not whole-plan product acceptance). Remaining extracts, snippets and UniFFI
-`--check` are [plan 99](../../plans/99-hygiene-reuse-and-tooling.md). Native-library package
+`--check` are [plan 100](../../plans/100-hygiene-reuse-and-tooling.md). Native-library package
 installs (`expo-haptics`, RNGH, Maestro, keyboard-controller, widgets) stay with their product
-owners, not 99.
+owners, not 100.
 
 The store, engine contract, handwritten SQL and generated Rust bridges are already the right shape.
 The expensive debt is **dual ownership of numbers and maps**, **practice routes that live beside

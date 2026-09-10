@@ -81,7 +81,9 @@ does not approve a production voice. Keep remaining native cache/background work
 2. Pin the ElevenLabs model, voice ID, language, output format, and synthesis settings in versioned
    render metadata. Select and review an `es-ES` voice before the seed batch; add independently
    reviewed voice mappings for `bg-BG` and `ru-RU` before rendering those catalogs. Never silently
-   substitute a voice or re-render an approved reference under the same asset ID.
+   substitute a voice or re-render an approved reference under the same asset ID. Additional
+   licensed listening voices (plan 99, ≥2 per enabled target) are a distinct asset class after Q-15;
+   they do not replace this reference voice.
 3. Send approved catalog text only. Keep the key in SOPS/runtime secrets, redact credentials from
    logs/errors, and never expose it through `EXPO_PUBLIC_*`. No learner recordings enter this
    pipeline. Use Text-to-Speech access and voice-read permission without unrelated account access.
@@ -134,7 +136,10 @@ approval of any voice's production rights. Q-15 remains open for the asset evide
 
 ## Out of scope
 
-Playback implementation, live learner TTS endpoint, UI translation, and DSP scoring.
+Playback implementation, plan 99 listen UI, UI translation, and DSP scoring. The **live**
+`POST /tts/render` route is not this catalog worker: 66 wires it to the plan-86 adapter using this
+plan's asset-identity and checksum rules. Listening-class clips (plan 99) must not share reference
+audio IDs and must not be published as `AS-01` catalog `audio`.
 
 ## Post-main review and archive disposition — 2026-09-09
 

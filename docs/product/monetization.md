@@ -86,16 +86,17 @@ Rough monthly marginal cost of an active Plus learner. Assumptions are in
 [`architecture/ai-services.md`](../architecture/ai-services.md#cost-model); re-derive before setting
 a price.
 
-| Cost                            | Estimate        | Notes                                                     |
-| ------------------------------- | --------------- | --------------------------------------------------------- |
-| TTS (catalog)                   | ~$0             | Rendered once at content build, served from CDN           |
-| TTS (learner phrases)           | ~$0.01          | On-device TTS by default; server render only if requested |
-| ASR                             | ~$0             | On-device; reveal mode is the unavailable fallback        |
-| LLM roleplay + coach notes      | ~$0.10–0.30     | Cached scenes; the dominant AI cost                       |
-| Prosody / pronunciation scoring | $0              | 🔒 On-device by design                                    |
-| CDN + storage                   | ~$0.01          | ~10 MB/learner                                            |
-| Backend (sync, content, API)    | ~$0.03          |                                                           |
-| **Total**                       | **~$0.15–0.35** | Placeholder until pricing/provider decisions close        |
+| Cost                            | Estimate        | Notes                                                                                |
+| ------------------------------- | --------------- | ------------------------------------------------------------------------------------ |
+| TTS (catalog)                   | ~$0             | Rendered once at content build, served from CDN                                      |
+| TTS (learner phrases)           | ~$0.01          | Practice: on-device TTS by default; server render only if requested                  |
+| TTS (listening companion)       | unpriced        | Plan 99: on-demand multi-voice neural takes, cached on device; not catalog reference |
+| ASR                             | ~$0             | On-device; reveal mode is the unavailable fallback                                   |
+| LLM roleplay + coach notes      | ~$0.10–0.30     | Cached scenes; the dominant AI cost                                                  |
+| Prosody / pronunciation scoring | $0              | 🔒 On-device by design                                                               |
+| CDN + storage                   | ~$0.01          | ~10 MB/learner                                                                       |
+| Backend (sync, content, API)    | ~$0.03          |                                                                                      |
+| **Total**                       | **~$0.15–0.35** | Placeholder until pricing/provider decisions close                                   |
 
 The architecture keeps costs low **because** it pushes work to the device — on-device ASR and
 on-device DSP were chosen for privacy and offline function first

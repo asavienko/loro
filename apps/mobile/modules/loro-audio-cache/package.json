@@ -1,0 +1,7 @@
+{
+  "name": "@loro/native-audio-cache",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Native model-audio cache. Returns file URIs only; JavaScript never receives PCM.",
+  "license": "UNLICENSED"
+}
