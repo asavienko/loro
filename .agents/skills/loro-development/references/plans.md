@@ -20,7 +20,8 @@ authoritative. A request to review or organize plans does not authorize implemen
   belong in `docs/`. A review document is not a numbered plan. Remaining hygiene, Field/ListRow
   extracts, snippets and UniFFI `--check` after the 2026-09-09 reviews are
   [plan 100](../../../../plans/100-hygiene-reuse-and-tooling.md) — do not open a second hygiene
-  plan. Plan 99 is the listening companion.
+  plan. Plan 99 is the listening companion. Recipe prefixes and reuse gates are
+  [hygiene](hygiene.md).
 - Cursor prompts that say "implement the attached plan" and "do not edit the plan file" are
   authorization to implement, not to rewrite the plan.
 
