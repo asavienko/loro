@@ -10,15 +10,19 @@ Early implementation. **What exists:** eight of the v1.1 design package's 23 lea
 Languages, Account, More, Settings and Listen utilities, the shared shell and a developer workbench.
 `/music` (Phrase songs) is a later garnish via More — picker, lyric review, style confirm, and
 fixture playback. Default CI uses `MUSIC_PROVIDER=stub` and never calls ElevenLabs or Anthropic.
-Discover offers Add your own and bundled topic suggestions; live `/v1/phrases/suggest` stays behind
-Q-21. Local progress and course/session state commit to native OP-SQLite or browser SQLite before
-rendering. Rust owns FSRS, ranking, selection, matching, clocks and merge through generated
-WASM/UniFFI bridges. Native modules provide foreground device TTS, catalog-file playback when a
-checksummed clip is on disk, strictly on-device ASR with an offline Speak reveal fallback, and a
-listening-class file cache that returns file URIs only. The API stores accounts, sessions and
-tenant-scoped sync in PostgreSQL and exposes `POST /tts/render` with a
-listening-class fail-closed path (default stub 503; authenticated ElevenLabs or labeled
-`TTS_STUB_RENDER=1`, which may omit a bearer for local listening-class cache wiring).
+Discover offers Add your own and bundled topic suggestions; `/v1/phrases/suggest` uses bundled
+topics unless `ANTHROPIC_API_KEY` is set (Q-21 eval remains). Local progress and course/session
+state commit to native OP-SQLite or browser SQLite before rendering. Rust owns FSRS, ranking,
+selection, matching, clocks and merge through generated WASM/UniFFI bridges. Native modules provide
+catalog-file playback when a checksummed clip is on disk, strictly on-device ASR with an offline
+Speak reveal fallback, and a listening-class file cache that returns file URIs only. Stream, Phrase
+Detail and Refrain play catalog files or API reference TTS (`GET /tts/status`, anonymous
+`POST /tts/render` when `TTS_PROVIDER=elevenlabs`); they do not fall back to device TTS. Listen on
+web streams API download URLs; native still caches `file://`. Phrase songs call `/music/status` and
+the lyrics/render routes (stub fixtures need no music key). The API stores accounts, sessions and
+tenant-scoped sync in PostgreSQL. Default TTS stays stub 503; ElevenLabs reference and
+listening-class render may omit a bearer so web and APK can play. Labeled `TTS_STUB_RENDER=1` is
+local listening silence only.
 Optional Google/Apple and email sign-in connect durable local
 progress to cross-device sync.
 
@@ -165,10 +169,11 @@ prototype-only and **must not** be carried into the app — see the divergence t
   applies. Plan 97 owns generative Discover reach. Plan 98 owns the ElevenLabs adapter,
   `content:render`, gated `/tts/render` and catalog-file playback. Plan 99 owns the online-first
   listening companion (generate, cache, in-app listen; share after Q-22). Licensed generate uses the
-  2026-09-10 `LISTENING_VOICE_DECISION` pins when native cache exists and the TTS route is ElevenLabs
-  or labeled `TTS_STUB_RENDER=1`. Default stub/missing key still fail closed. Browser generate stays
-  `native-unavailable` (no JS PCM download). Pronunciation review remains on Q-15. Q-22 share stays
-  off. File-URI generate/cache/listen is tested, including a labeled development fixture seed. iOS `playFile` stops on background with Android. Active
+  2026-09-10 `LISTENING_VOICE_DECISION` pins when the TTS route is ElevenLabs or labeled
+  `TTS_STUB_RENDER=1`. Native still requires the file cache; web streams API download URLs (no JS
+  PCM API). Default stub/missing key still fail closed. Pronunciation review remains on Q-15. Q-22
+  share stays off. File-URI generate/cache/listen is tested, including a labeled development fixture
+  seed. iOS `playFile` stops on background with Android. Active
   [`plans/96-phrase-music-generation.md`](plans/96-phrase-music-generation.md) collides with
   archived account-sign-in 96 (unresolved; do not reuse or drop either). The next new plan number is
   100; recheck concurrent worktrees and untracked `plans/` files before allocating an ID — the

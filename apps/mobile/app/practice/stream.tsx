@@ -40,7 +40,7 @@ import {
   surface,
 } from '../../src/ui/theme'
 import { toView, useApp, type PhraseView } from '../../src/store'
-import { audioSpeech, useAudioSpeech } from '../../src/lib/audioSpeech'
+import { audioPlaybackNote, audioSpeech, useAudioSpeech } from '../../src/lib/audioSpeech'
 import { rustCoreFacade } from '../../src/store/coreFacade'
 import { deviceClock } from '../../src/lib/clock'
 /** How many phrases "Up next" shows. */
@@ -170,11 +170,7 @@ function NowPlayingCard({
       <Text variant="captionSm" color={onDark.tertiary} align="center" style={s.repeatRow}>
         {!audio.canPlay
           ? copy.stream.audioNote
-          : audio.playback === 'error'
-            ? copy.audioSpeech.error
-            : audio.source === 'catalog'
-              ? copy.audioSpeech.catalog
-              : copy.audioSpeech.tts}
+          : audioPlaybackNote(audio.source, audio.playback, audio.playbackError)}
       </Text>
       {audio.canPlay && (
         <Pressable

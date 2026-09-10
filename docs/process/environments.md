@@ -10,7 +10,7 @@ established yet.
 | API            | NestJS on port 3000; memory sync repository               | Same production image on one Frankfurt EC2 instance        |
 | Database       | Optional Docker PostgreSQL; API does not connect yet      | PostgreSQL 16 on retained encrypted EC2 storage            |
 | Object storage | Optional MinIO for adapter development                    | Private S3 content, backup and Terraform-state buckets     |
-| AI / TTS       | Bundled AI scenes; TTS adapter stubbed, `/tts/render` 503 | AI remains stubbed; TTS disabled                           |
+| AI / TTS       | Bundled AI scenes; TTS stub 503 until `TTS_PROVIDER=elevenlabs` | AI remains stubbed; TTS disabled unless the host sets keys |
 | Access         | Developer-only; current sync has no tenant boundary       | Small tester group after authentication and isolation pass |
 | Deploy         | Host commands or root Docker Compose                      | Manual, immutable image, required CI, maintenance downtime |
 | Data           | Local fixtures; memory state disappears on restart        | Synthetic data; nightly and pre-migration backups          |
@@ -103,8 +103,9 @@ truth. Entries in `.env.example` without a reader are reserved for future adapte
 | ----------------------------------- | ------------------------------------------------------------------------------------- |
 | `NODE_ENV`                          | `production` makes missing WASM fatal at startup; use it for the deployed image       |
 | `PORT`                              | HTTP listener; defaults to 3000                                                       |
+| `CORS_ALLOWED_ORIGINS`              | Comma-separated browser origins. Local compose includes 8081 and 8082                 |
 | `AI_PROVIDER`                       | Defaults to `stub`; only the stub is registered in the runtime                        |
-| `TTS_PROVIDER`                      | Defaults to `stub`; ElevenLabs requires key, model and `TTS_VOICE_ES_ES`              |
+| `TTS_PROVIDER`                      | Defaults to `stub`; `elevenlabs` enables `GET /tts/status` ready and anonymous catalog reference render |
 | `TTS_API_KEY`                       | Required only in `elevenlabs` mode; never logged                                      |
 | `TTS_MODEL`                         | Documented pin `eleven_multilingual_v2`; empty is valid in stub mode                  |
 | `TTS_OUTPUT_FORMAT`                 | Defaults to `mp3_44100_128`; conversion to AAC is the authoring CLI's job             |
@@ -134,6 +135,27 @@ never become AWS credentials. Private S3 content needs an authorized download pa
 
 All `EXPO_PUBLIC_*` configuration is public. It can contain a testing hostname when the mobile
 client lands, but never database, signing, AWS or provider secrets.
+
+### Practice audio on web and APK
+
+Stream, Phrase Detail and Refrain play a catalog file or `POST /v1/tts/render` reference audio.
+They do not use device TTS. Fill these on the API the app calls (`EXPO_PUBLIC_API_URL`):
+
+1. `TTS_PROVIDER=elevenlabs`
+2. `TTS_API_KEY` (your ElevenLabs key)
+3. `TTS_MODEL=eleven_multilingual_v2` and the pinned `TTS_VOICE_*` values already in `.env.example`
+4. `CORS_ALLOWED_ORIGINS` must include the Expo web origin (`http://localhost:8081` and
+   `http://localhost:8082` locally)
+5. Leave `AUTH_PUBLIC_URL` empty locally so `download_url` echoes the Host the client used
+
+`GET /v1/tts/status` is `{ "ready": true, "provider": "elevenlabs" }` only after those are set.
+Stub mode stays honestly unavailable. ElevenLabs 402 (empty credits) is a quota state, not
+device TTS. Listening-class generate uses the same key; web streams `download_url`, native
+still caches `file://`. Phrase songs call `GET /music/status` and the lyrics/render routes
+(stub fixtures need no `MUSIC_API_KEY`; live spend needs `MUSIC_PROVIDER=elevenlabs` and
+`MUSIC_API_KEY`). Discover `POST /phrases/suggest` uses bundled topics unless
+`ANTHROPIC_API_KEY` is set. Rebuild the APK after a client change; `EXPO_PUBLIC_API_URL` is
+baked in. The public EC2 HTTPS gateway does not expose `/tts` or `/ai`.
 
 ### Secrets
 

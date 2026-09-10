@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   AudioSpeechController,
   type NativeAudioSpeech,
@@ -6,7 +6,12 @@ import {
   type PlaybackRequest,
   type SpeechEvent,
 } from './audioSpeechController'
-import { clearCatalogAudioFiles, registerCatalogAudioFile } from './catalogAudio'
+import { clearCatalogAudioFiles, registerCatalogAudioFile, resolveCatalogAudioUri } from './catalogAudio'
+import { resolvePracticePlayable } from './practiceTts'
+
+vi.mock('./practiceTts', () => ({
+  resolvePracticePlayable: vi.fn(),
+}))
 
 function fixture() {
   let onPlayback: (event: PlaybackEvent) => void = () => undefined
@@ -40,6 +45,17 @@ function fixture() {
 }
 
 describe('native audio metadata boundary', () => {
+  beforeEach(() => {
+    vi.mocked(resolvePracticePlayable).mockImplementation(async ({ catalog }) => {
+      const uri = resolveCatalogAudioUri(catalog)
+      if (uri !== undefined) return { uri, source: 'catalog' }
+      return {
+        uri: 'https://cdn.loro.test/practice.m4a',
+        sha256: 'a'.repeat(64),
+        source: 'api-tts',
+      }
+    })
+  })
   it('counts a play once only after its actual completion, never a stop or stale event', async () => {
     const f = fixture()
     const complete = vi.fn()
@@ -168,9 +184,18 @@ describe('native audio metadata boundary', () => {
       uri: `sha256/${sha256}`,
       sha256,
     })
-    expect(f.native.play.mock.calls[1]?.[0]).not.toHaveProperty('uri')
+    expect(f.native.play.mock.calls[1]?.[0]).toEqual(
+      expect.objectContaining({ uri: 'https://cdn.loro.test/practice.m4a', text: 'Hola' }),
+    )
   })
-  it('plays a cached file URI and refuses network URIs so JS never receives audio bytes', async () => {
+  it('does not fall back to device TTS when catalog and API audio are both missing', async () => {
+    const f = fixture()
+    vi.mocked(resolvePracticePlayable).mockResolvedValueOnce(null)
+    await f.controller.play('p', 'Hola', 'es-ES')
+    expect(f.native.play).not.toHaveBeenCalled()
+    expect(f.controller.getSnapshot().playback).toBe('error')
+  })
+  it('plays a cached file URI on native and streams download URLs only on web', async () => {
     const f = fixture()
     await f.controller.playFile('listen:0', 'file:///cache/clip.m4a')
     expect(f.native.playFile).toHaveBeenCalledWith({
@@ -180,5 +205,20 @@ describe('native audio metadata boundary', () => {
     await f.controller.playFile('listen:0', 'https://cdn.loro.test/clip.m4a')
     expect(f.native.playFile).toHaveBeenCalledTimes(1)
     expect(f.controller.getSnapshot().playback).toBe('error')
+    const webNative = {
+      availability: vi.fn(() => Promise.resolve({ playback: false, recognition: false })),
+      play: vi.fn(() => Promise.resolve()),
+      stopPlayback: vi.fn(() => Promise.resolve()),
+      startListening: vi.fn(() => Promise.resolve()),
+      stopListening: vi.fn(() => Promise.resolve()),
+      addListener() {
+        return { remove: () => undefined }
+      },
+    }
+    const browser = new AudioSpeechController(webNative)
+    await browser.playFile('listen:0', 'https://cdn.loro.test/clip.m4a')
+    expect(webNative.play).toHaveBeenCalledWith(
+      expect.objectContaining({ uri: 'https://cdn.loro.test/clip.m4a' }),
+    )
   })
 })

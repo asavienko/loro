@@ -198,7 +198,7 @@ function SpeakingPhrase({
     revealedRef.current = next
     setRevealed(next)
     const word = tokens[next - 1]
-    if (word !== undefined && audio.devicePlayback)
+    if (word !== undefined && audio.canPlay)
       void audioSpeech.play(phrase.id, word, locale, 0.85)
     if (next === tokens.length) {
       completeRef.current = true
@@ -287,7 +287,7 @@ function SpeakingPhrase({
       </Card>
       <AudioControls
         label={audio.playback === 'playing' ? copy.audioSpeech.stop : copy.audioSpeech.hear}
-        note={audioPlaybackNote(audio.source, audio.playback)}
+        note={audioPlaybackNote(audio.source, audio.playback, audio.playbackError)}
         enabled={audio.canPlay}
         onPress={() => {
           if (audio.playback === 'playing') void audioSpeech.stopPlayback()

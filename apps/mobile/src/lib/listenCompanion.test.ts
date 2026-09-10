@@ -45,6 +45,46 @@ describe('listening companion', () => {
     expect(view.shareEnabled).toBe(false)
   })
 
+  it('enables generate and listen on web via remote playback without native cache', () => {
+    const view = listenViewModel({
+      phase: 'ready',
+      locale: 'es-ES',
+      phrases: [{ id: 'row-1', targetText: 'Hola', learnerAuthored: false }],
+      repeats: 3,
+      network: true,
+      configured: true,
+      nativeCache: false,
+      remotePlayback: true,
+      sessionBusy: false,
+      diskFull: false,
+      quotaExceeded: false,
+      cacheComplete: true,
+      progress: { done: 9, total: 9, failed: 0 },
+      durationMs: 1420,
+    })
+    expect(view.generateEnabled).toBe(true)
+    expect(view.listenEnabled).toBe(true)
+    expect(view.shareEnabled).toBe(false)
+    expect(view.blockers).not.toContain('native-unavailable')
+    const idle = listenViewModel({
+      phase: 'idle',
+      locale: 'es-ES',
+      phrases: [{ id: 'row-1', targetText: 'Hola', learnerAuthored: false }],
+      repeats: 3,
+      network: true,
+      configured: true,
+      nativeCache: false,
+      remotePlayback: true,
+      sessionBusy: false,
+      diskFull: false,
+      quotaExceeded: false,
+      cacheComplete: false,
+      progress: { done: 0, total: 0, failed: 0 },
+      durationMs: null,
+    })
+    expect(idle.generateEnabled).toBe(true)
+  })
+
   it('keeps generate and listen unavailable without native cache', () => {
     const view = listenViewModel({
       phase: 'ready',
@@ -120,6 +160,26 @@ describe('listening companion', () => {
     expect(result.phase).toBe('cancelled')
   })
 
+  it('surfaces a failed first render as a partial failure, not a ready generate state', () => {
+    const view = listenViewModel({
+      phase: 'error',
+      locale: 'es-ES',
+      phrases: [{ id: 'row-1', targetText: 'Hola', learnerAuthored: false }],
+      repeats: 3,
+      network: true,
+      configured: true,
+      nativeCache: false,
+      remotePlayback: true,
+      sessionBusy: false,
+      diskFull: false,
+      quotaExceeded: false,
+      cacheComplete: false,
+      progress: { done: 0, total: 15, failed: 0 },
+      durationMs: null,
+    })
+    expect(listenStatusKind(view)).toBe('partial-failure')
+  })
+
   it('fixtures honest composer states without claiming licensed neural audio', () => {
     expect(fixtureListenView('voices-unapproved').blockers).toContain('voices-unapproved')
     expect(fixtureListenView('share-unavailable').shareEnabled).toBe(false)
@@ -147,13 +207,12 @@ describe('listening companion', () => {
     expect(playFile).toHaveBeenCalledTimes(3)
     expect(wait).toHaveBeenNthCalledWith(1, LISTENING_INTRA_GAP_MS, undefined)
     expect(wait).toHaveBeenNthCalledWith(2, LISTENING_INTER_GAP_MS, undefined)
-    await expect(
-      playListeningSequence({
-        clips: [{ fileUri: 'https://cdn.loro.test/clip.m4a', ms: 1, sha256: 'a'.repeat(64) }],
-        repeats: 2,
-        playFile,
-      }),
-    ).rejects.toMatchObject({ code: 'invalid-url' })
+    await playListeningSequence({
+      clips: [{ fileUri: 'https://cdn.loro.test/clip.m4a', ms: 1, sha256: 'a'.repeat(64) }],
+      repeats: 2,
+      playFile,
+    })
+    expect(playFile).toHaveBeenCalledWith('listen:0', 'https://cdn.loro.test/clip.m4a', expect.any(Function))
     const cache = new AudioCacheController({
       download: vi.fn(),
       lookup: vi.fn(),
@@ -173,6 +232,34 @@ describe('listening companion', () => {
       }),
     ).rejects.toBeInstanceOf(AudioCacheError)
     expect(LISTENING_SHARE_ENABLED).toBe(false)
+  })
+
+  it('keeps download URLs when the native cache is missing', async () => {
+    const cache = new AudioCacheController(null)
+    const ready = await prepareListeningBatch({
+      cache,
+      locale: 'es-ES',
+      phrases: [{ id: 'row-1', targetText: 'Hola', learnerAuthored: false }],
+      repeats: 2,
+      voices: [{ id: 'voice-a' }, { id: 'voice-b' }],
+      modelId: 'eleven_multilingual_v2',
+      digest: () => Promise.resolve('a'.repeat(64)),
+      network: () => Promise.resolve(true),
+      baseUrl: 'http://127.0.0.1:3001/v1',
+      render: () =>
+        Promise.resolve({
+          uri: `sha256/${'a'.repeat(64)}`,
+          sha256: 'a'.repeat(64),
+          ms: 1000,
+          cached: false,
+          download_url: `http://127.0.0.1:3001/v1/tts/assets/${'a'.repeat(64)}`,
+          voice_id: 'voice-a',
+          model_id: 'eleven_multilingual_v2',
+          asset_class: 'listening',
+        }),
+    })
+    expect(ready.phase).toBe('ready')
+    expect(ready.clips[0]?.fileUri).toBe(`http://127.0.0.1:3001/v1/tts/assets/${'a'.repeat(64)}`)
   })
 
   it('stops on licensed quota and forwards the bearer to native download', async () => {
@@ -207,6 +294,19 @@ describe('listening companion', () => {
         render: () => Promise.reject(new TtsRenderError('quota')),
       }),
     ).rejects.toMatchObject({ code: 'quota' })
+    await expect(
+      prepareListeningBatch({
+        cache,
+        locale: 'es-ES',
+        phrases: [{ id: 'row-1', targetText: 'Hola', learnerAuthored: false }],
+        repeats: 2,
+        voices,
+        modelId: 'eleven_multilingual_v2',
+        digest: () => Promise.resolve('a'.repeat(64)),
+        network: () => Promise.resolve(true),
+        render: () => Promise.reject(new TtsRenderError('unavailable')),
+      }),
+    ).rejects.toMatchObject({ code: 'unavailable' })
     const ready = await prepareListeningBatch({
       cache,
       locale: 'es-ES',
