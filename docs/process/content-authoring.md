@@ -198,7 +198,9 @@ Idempotent and content-addressed, so a rerun is cheap and safe
 reference mid-learning, and would invalidate every `f0_native` contour. A voice change is a
 catalog-wide re-render and a deliberate decision, not a config tweak. Plan 99 listening-class voices
 are additional licensed takes for a listening companion; they must never replace this reference or
-be written into `audio.sha256` / `f0_native`.
+be written into `audio.sha256` / `f0_native`. Pinning those takes is the
+[Q-15 listening-voice packet](../decisions/listening-voice-packet.md); `LISTENING_VOICE_DECISION`
+stays empty until signed.
 
 ---
 

@@ -9,10 +9,12 @@ import { join } from 'node:path'
 import { Inject, Injectable } from '@nestjs/common'
 import { audioDurationMs } from '@loro/content/audio-duration'
 import {
-  APPROVED_LISTENING_VOICES,
   LISTENING_ASSET_CLASS,
   LISTENING_MIN_VOICES,
   LISTENING_MODEL_ID,
+  approvedListeningVoices,
+  isApprovedListeningVoice,
+  listeningModelIsPinned,
   normalizeListeningText,
 } from '@loro/core'
 import {
@@ -143,14 +145,14 @@ export class TtsService {
     catalogVoices: Readonly<Record<string, string>>,
   ): string {
     if (request.asset_class === LISTENING_ASSET_CLASS) {
-      const roster = APPROVED_LISTENING_VOICES[request.lang]
+      const roster = approvedListeningVoices(request.lang)
       if (roster.length < LISTENING_MIN_VOICES) {
         throw new LoroError('PROVIDER_UNAVAILABLE', 'Licensed listening voices are not approved')
       }
-      if (LISTENING_MODEL_ID === null || request.model_id !== LISTENING_MODEL_ID) {
+      if (!listeningModelIsPinned() || request.model_id !== LISTENING_MODEL_ID) {
         throw new LoroError('PROVIDER_UNAVAILABLE', 'Listening model is not pinned')
       }
-      if (!roster.some((voice) => voice.id === request.voice_id && voice.licensed)) {
+      if (!isApprovedListeningVoice(request.lang, request.voice_id)) {
         throw new LoroError(
           'PROVIDER_UNAVAILABLE',
           'Listening voice is not an approved licensed id',

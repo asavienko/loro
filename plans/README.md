@@ -89,8 +89,9 @@ Expo/RN packages onto that sequence versus device-owned work.
    [82](archive/2026-09-09/82-guided-chat-domain-and-service.md)'s offline schemas/topic/eval work
    without activating gated production features. [99](99-batch-phrase-audio-export.md) landed the
    online-first listening companion composer, listening-class cache, fail-closed render, and an
-   emulator airplane-mode fixture listen. Production generation waits on Q-15; share-out-of-app
-   waits on Q-22. Device TTS is a labeled fallback, not the first slice.
+   emulator airplane-mode fixture listen. Production generation waits on Q-15 (unsigned
+   listening-voice packet; `LISTENING_VOICE_DECISION` empty). Share-out-of-app waits on Q-22. Device
+   TTS is a labeled fallback, not the first slice.
 3. **Remaining device/service integration:** approved 61 assets→recorded/background 62; 62
    clock/buffer substrate→63 onset latency; 66 operational acceptance + 67 account lifecycle→68
    lifecycle convergence. Existing native SQLite, foreground speech and authenticated sync are

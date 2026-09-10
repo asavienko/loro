@@ -268,11 +268,14 @@ pronunciation review and replacement policy; and set the budget for 150 v1-spine
 600 v1 phrases.
 
 The 150→600 target remains the Spanish milestone goal; Bulgarian/Russian course expansion needs its
-own approved scope. Plan 97 additionally needs ≥2 licensed **listening** voice IDs per enabled
+own approved scope. Plan 99 additionally needs ≥2 licensed **listening** voice IDs per enabled
 target, distinct from the catalog reference voice; that is still this question, not a second
-provider. The listening-class transport exists and fails closed until those IDs are pinned. This
-decision authorizes assets, not playback architecture. Learner recordings remain subject to the
-separate non-negotiable that PCM never leaves native memory/the device.
+provider. The listening-class transport exists and fails closed until those IDs are pinned in
+[`LISTENING_VOICE_DECISION`](../../packages/core/src/listening/constants.ts). Filling that object is
+the only licensed-generate switch. The [listening-voice decision packet](listening-voice-packet.md)
+records the per-target checklist, unapproved public model/voice candidates, and what must be signed
+before a pin. This decision authorizes assets, not playback architecture. Learner recordings remain
+subject to the separate non-negotiable that PCM never leaves native memory/the device.
 
 ---
 
