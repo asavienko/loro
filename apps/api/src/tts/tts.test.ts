@@ -22,6 +22,7 @@ import { SERVER_CLOCK } from '../common/clock.js'
 import { LoroError } from '../common/errors.js'
 import { TtsFailure, StubTts } from '../integrations/elevenlabs/tts.js'
 import { TtsController } from './tts.controller.js'
+import { TtsGuard } from './tts.guard.js'
 import { TtsService } from './tts.service.js'
 import { TTS_TRANSPORT, type TtsTransport } from './transport.js'
 
@@ -234,7 +235,7 @@ describe('gated POST /tts/render', () => {
     expect(first.asset_class).toBe(LISTENING_ASSET_CLASS)
     expect(first.model_id).toBe(ELEVENLABS_MULTILINGUAL_V2)
     const asset = await tts.asset(first.sha256)
-    expect(asset.contentType).toBe('audio/wav')
+    expect(asset.contentType).toBe('audio/mp4')
     expect(asset.bytes.byteLength).toBeGreaterThan(32)
     await expect(
       tts.render({
@@ -339,7 +340,7 @@ describe('authenticated TTS HTTP surface', () => {
         { provide: SERVER_CLOCK, useValue: { now: () => 1_000 } },
       ],
     })
-      .overrideGuard(AuthGuard)
+      .overrideGuard(TtsGuard)
       .useValue({
         canActivate(context: ExecutionContext) {
           const request = context.switchToHttp().getRequest<AuthenticatedRequest>()
@@ -385,6 +386,70 @@ describe('authenticated TTS HTTP surface', () => {
       })
       expect(clone.status).toBe(404)
       expect(ProblemSchema.parse(await clone.json()).code).toBe('NOT_FOUND')
+    } finally {
+      await app.close()
+    }
+  })
+})
+
+describe('stub-render listening HTTP surface', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs()
+  })
+
+  it('allows unauthenticated listening-class render and asset GET when TTS_STUB_RENDER=1', async () => {
+    const cacheDir = await mkdtemp(join(tmpdir(), 'loro-tts-stub-http-'))
+    vi.stubEnv('TTS_PROVIDER', 'stub')
+    vi.stubEnv('TTS_STUB_RENDER', '1')
+    vi.stubEnv('TTS_CACHE_DIR', cacheDir)
+    vi.stubEnv('AUTH_PUBLIC_URL', 'http://127.0.0.1:3000')
+    const module = await Test.createTestingModule({
+      controllers: [TtsController],
+      providers: [
+        TtsService,
+        TtsGuard,
+        {
+          provide: AuthGuard,
+          useValue: {
+            canActivate() {
+              throw new LoroError('UNAUTHENTICATED')
+            },
+          },
+        },
+        { provide: TTS_TRANSPORT, useValue: new StubTts({ stubRender: true }) },
+        { provide: SERVER_CLOCK, useValue: { now: () => 1_000 } },
+      ],
+    }).compile()
+    const app: INestApplication = module.createNestApplication()
+    app.setGlobalPrefix('v1')
+    app.useGlobalFilters(new ProblemDetailsFilter())
+    await app.listen(0, '127.0.0.1')
+    const base = await app.getUrl()
+    try {
+      const catalog = await fetch(`${base}/v1/tts/render`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(referenceBody),
+      })
+      expect(catalog.status).toBe(401)
+      const created = await fetch(`${base}/v1/tts/render`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(pinnedListeningBody()),
+      })
+      expect(created.status).toBe(200)
+      const json: unknown = await created.json()
+      expect(json).not.toHaveProperty('audio')
+      const body = TtsResponseSchema.parse(json)
+      expect(body.asset_class).toBe(LISTENING_ASSET_CLASS)
+      expect(body.voice_id).toBe(pinnedListeningBody().voice_id)
+      expect(body.download_url).toMatch(
+        /^http:\/\/127\.0\.0\.1:3000\/v1\/tts\/assets\/[a-f0-9]{64}$/,
+      )
+      const asset = await fetch(`${base}/v1/tts/assets/${body.sha256}`)
+      expect(asset.status).toBe(200)
+      expect(asset.headers.get('content-type')).toMatch(/audio\/mp4/)
+      expect((await asset.arrayBuffer()).byteLength).toBeGreaterThan(32)
     } finally {
       await app.close()
     }

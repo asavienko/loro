@@ -1,5 +1,6 @@
 /**
- * Authenticated, text-only. Q-15 pins are in; pronunciation review remains.
+ * Text-only. Q-15 pins are in; pronunciation review remains.
+ * ElevenLabs stays authenticated. Labeled stub-render listening may be local/anonymous.
  * Never registers voice clone.
  */
 
@@ -16,11 +17,12 @@ import {
   StreamableFile,
   UseGuards,
 } from '@nestjs/common'
-import { AuthGuard, type AuthenticatedRequest } from '../auth/auth.guard.js'
+import type { AuthenticatedRequest } from '../auth/auth.guard.js'
+import { TtsGuard } from './tts.guard.js'
 import { TtsService } from './tts.service.js'
 
 @Controller('tts')
-@UseGuards(AuthGuard)
+@UseGuards(TtsGuard)
 export class TtsController {
   constructor(@Inject(TtsService) private readonly tts: TtsService) {}
 
