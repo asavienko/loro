@@ -41,7 +41,7 @@ export function ToastHost() {
       style={[s.wrap, { bottom: Math.max(bottomBarHeight, insets.bottom) + space['3'] }]}
       pointerEvents="box-none"
     >
-      <Arrival kind="popIn" key={toast.message}>
+      <Arrival kind="popIn" key={toast.message} style={s.arrival}>
         <View style={s.toast} accessibilityLiveRegion="polite" accessibilityRole="alert">
           <Text variant="captionSm" color={onDark.primary}>
             {toast.message}
@@ -68,7 +68,19 @@ export function ToastHost() {
 }
 
 const s = StyleSheet.create({
-  wrap: { position: 'absolute', left: 0, right: 0, alignItems: 'center' },
+  wrap: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  /**
+   * Cap width on Arrival, not the pill. Percentage `maxWidth` on the pill resolved
+   * against Arrival's shrink-wrapped width and was ignored, so `popIn`'s 8% overshoot
+   * pushed phrase-detail toasts to 398 px and failed the text-scale sweep.
+   */
+  arrival: { maxWidth: '92%', alignSelf: 'center' },
   /**
    * The one control that ever appears in a toast, and it was 47×33 with `hitSlop` counted —
    * under the 44 px floor, on the app's only undo. Nothing caught it because no declared state
@@ -90,6 +102,5 @@ const s = StyleSheet.create({
     paddingHorizontal: 15,
     paddingVertical: 11,
     borderRadius: radius.xl,
-    maxWidth: '92%',
   },
 })
