@@ -95,4 +95,5 @@ locale's voice. Do not present device TTS as the licensed pin.
 5. Live generate still needs `TTS_API_KEY`, `TTS_PROVIDER=elevenlabs`, a paid plan, and Voice
    Library add-to-My-Voices. Unlicensed, wrong-locale, duplicate, empty, or catalog IDs are ignored
    by `selectLicensedListeningVoices`. Native debug fixture voices (`dev-listen-*`) must never merge
-   into this object.
+   into this object. `TTS_STUB_RENDER=1` is labeled listening-class silence for local cache wiring,
+   not a bilingual seed and not catalog publish.
