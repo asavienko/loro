@@ -275,20 +275,19 @@ development remains stubbed. The ElevenLabs HTTP adapter, authoring `content:ren
 disabled-by-default `POST /tts/render`, and catalog-file playback with device-TTS fallback are
 implemented ([plan 98](../../plans/98-voice-and-tts-integration.md)). The listening-class path fails
 closed until Q-15 pins licensed voices and a model. Local development may use a labeled stub only
-when `TTS_STUB_RENDER=1`; CI must not spend provider credits, and stub audio must not be presented as
-licensed neural quality. Voice/model selection,
-production rights, pronunciation review and budget remain under
-[Q-15](../decisions/open-questions.md#q-15). Preserve approved audio as immutable,
-checksum-addressed assets with voice/model/settings provenance; a provider update must not silently
-replace a learner reference or its derived contours.
+when `TTS_STUB_RENDER=1`; CI must not spend provider credits, and stub audio must not be presented
+as licensed neural quality. Voice/model selection, production rights, pronunciation review and
+budget remain under [Q-15](../decisions/open-questions.md#q-15). Preserve approved audio as
+immutable, checksum-addressed assets with voice/model/settings provenance; a provider update must
+not silently replace a learner reference or its derived contours.
 
 Three tiers, in preference order:
 
-| Tier                               | Used for                                   | Quality                                                        |
-| ---------------------------------- | ------------------------------------------ | -------------------------------------------------------------- |
-| **1 · Pre-rendered catalog audio** | Every catalog phrase                       | Best; identical for every learner; the pronunciation reference |
+| Tier                               | Used for                                            | Quality                                                                   |
+| ---------------------------------- | --------------------------------------------------- | ------------------------------------------------------------------------- |
+| **1 · Pre-rendered catalog audio** | Every catalog phrase                                | Best; identical for every learner; the pronunciation reference            |
 | **2 · Server-rendered on demand**  | Learner phrases, and plan 99 listening-class voices | Good; cached to the file cache; listening clips never reuse reference IDs |
-| **3 · On-device TTS**              | Learner phrases offline; any cache miss    | Variable by platform/locale; acceptable but visibly worse      |
+| **3 · On-device TTS**              | Learner phrases offline; any cache miss             | Variable by platform/locale; acceptable but visibly worse                 |
 
 **Rule: the prosody and pronunciation labs are catalog-only.** They need a trustworthy native
 reference contour, and a device-synthesised voice is not one
@@ -299,8 +298,7 @@ today's Refrain set, the whole trip set, and everything in the current stream qu
 150 MB; pinned content is exempt and reported separately in Settings. Plan 99 listening clips are a
 **separate pin class** (`assetClass: listening`) keyed by phrase id, text digest, voice id, locale
 and codec; they must not share `AS-01` reference asset IDs and must not evict practice pins. The
-listening budget is 64 MB in `LISTENING_BUDGET_BYTES` and is distinct from the 150 MB
-practice cap.
+listening budget is 64 MB in `LISTENING_BUDGET_BYTES` and is distinct from the 150 MB practice cap.
 
 **Word-level audio.** The word-by-word chips speak individual words. Where the chip text is a
 fragment (`¿Dón`), the phrase's `words[].say` field supplies the real word (`dónde`) — the blueprint
@@ -312,11 +310,12 @@ words is not worth the storage.
 on device, then play from disk with no network. This is not the pronunciation reference, not Stream,
 and not account JSON export. Native cache download lives in `loro-audio-cache`, not the speech
 module. Playback of cached files uses `playFile` on `loro-audio-speech` with `file://` URIs only;
-JavaScript still must not receive PCM. In-app listen from a filled cache waits on Q-15 for
-production voices, not on Q-22. Share-out-of-app of concatenated neural clips waits on Q-22
-(`LISTENING_SHARE_ENABLED` stays false). Device TTS is a labeled in-app fallback on a cache miss,
-not the primary generator. Native airplane-mode listen of a previously cached batch remains an
-evidence gate.
+JavaScript still must not receive PCM. Lookup and batch restore re-hash the file; a mismatch is a
+miss. In-app listen from a filled cache waits on Q-15 for production voices, not on Q-22. Debug
+builds may seed a labeled fixture AAC into the same cache; that is not licensed neural audio.
+Share-out-of-app of concatenated neural clips waits on Q-22 (`LISTENING_SHARE_ENABLED` stays false).
+Device TTS is a labeled in-app fallback on a cache miss, not the primary generator. Native
+airplane-mode listen of a previously cached batch remains an evidence gate.
 
 ---
 
