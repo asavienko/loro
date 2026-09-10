@@ -359,13 +359,18 @@ export type ListenStatusKind =
 
 /** Idle generate-ready must not fall back to the empty-roster copy. */
 export function listenStatusKind(
-  view: Pick<ListenViewModel, 'phase' | 'blockers' | 'generateEnabled' | 'shareEnabled'>,
+  view: Pick<
+    ListenViewModel,
+    'phase' | 'blockers' | 'generateEnabled' | 'shareEnabled' | 'listenEnabled'
+  >,
 ): ListenStatusKind {
   if (view.phase === 'generating') return 'generating'
   if (view.phase === 'playing') return 'playing'
   if (view.phase === 'cancelled') return 'cancelled'
   if (view.phase === 'partial') return 'partial-failure'
-  if (view.phase === 'ready') return view.shareEnabled ? 'share-ready' : 'ready-to-listen'
+  if (view.phase === 'ready' && view.listenEnabled) {
+    return view.shareEnabled ? 'share-ready' : 'ready-to-listen'
+  }
   const blocker = view.blockers[0]
   if (
     blocker === 'empty' ||
