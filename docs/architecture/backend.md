@@ -11,10 +11,11 @@ weeks with the API unreachable ([overview.md](overview.md#the-ten-rules), rule 2
 > Nest service currently provides health, bundled content, optional Google/Apple/email auth,
 > authenticated sync through `PostgresDatabase` / `PostgresSyncRepository` and the shared Rust/WASM
 > merge, validated bundled AI scenes, and a gated stub TTS render. Account and sync rows live in
-> PostgreSQL. Redis, MinIO, queues and a warehouse remain unused. Live ElevenLabs seed audio remains
-> Q-15. Billing, analytics and workers remain unimplemented. `InMemorySyncRepository` is a test
-> adapter only (`sync/testing/sync.repository.memory.ts`). See [plan 89](google-apple-auth.md). The
-> target map and infrastructure below guide extension; they are not an inventory of running code.
+> PostgreSQL. Redis, MinIO, queues and a warehouse remain unused. Live ElevenLabs seed audio still
+> needs a key and a content-lead listen (Q-15 leaning). Billing, analytics and workers remain
+> unimplemented. `InMemorySyncRepository` is a test adapter only
+> (`sync/testing/sync.repository.memory.ts`). See [plan 89](google-apple-auth.md). The target map
+> and infrastructure below guide extension; they are not an inventory of running code.
 
 ---
 
@@ -40,7 +41,7 @@ apps/api/src/
 | `DATABASE`        | `PostgresDatabase`                                                             | Override in tests; Redis and MinIO remain unimplemented                 |
 | `SYNC_REPOSITORY` | `PostgresSyncRepository`, tenant-scoped. `InMemorySyncRepository` is test-only | Keep selecting the production adapter only in `app.module.ts`           |
 | `SCENE_PROVIDERS` | `StubSceneProvider`                                                            | Register provider adapters; keep validation and fallback in `AiService` |
-| `TTS_TRANSPORT`   | `StubTts` unless `TTS_PROVIDER=elevenlabs` with Q-15 config                    | Keep one process instance; stub returns 503, never fake audio           |
+| `TTS_TRANSPORT`   | `StubTts` unless `TTS_PROVIDER=elevenlabs` with key/model/voices               | Keep one process instance; stub returns 503, never fake audio           |
 | `SERVER_CLOCK`    | system wall clock                                                              | Override in tests; per-account HLC state is already durable in Postgres |
 | `config`          | one reader/default per environment variable                                    | Add accessors in `common/config.ts`, not scattered `process.env` reads  |
 
@@ -212,9 +213,9 @@ fallback at every failure boundary.
 
 ### `tts` — target
 
-| Endpoint           | Purpose                                                                                                                                                                                                                                                                                                                                         |
-| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `POST /tts/render` | Render approved target text as model speech; cached and content-addressed. Catalog **reference** audio is not rendered here — that is the `tts-render` worker. Plan 99 listening-class voices reuse this path with `voice_id` / `asset_class: listening` so they cannot share reference IDs. The transport fails closed until Q-15 pins voices. |
+| Endpoint           | Purpose                                                                                                                                                                                                                                                                                                                                                          |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `POST /tts/render` | Render approved target text as model speech; cached and content-addressed. Catalog **reference** audio is not rendered here — that is the `tts-render` worker. Plan 99 listening-class voices reuse this path with `voice_id` / `asset_class: listening` so they cannot share reference IDs. Wrong voice, unpinned model, missing key or stub still fail closed. |
 
 Recorded learner audio never leaves the device; no backend endpoint may accept it. JavaScript
 clients receive checksum metadata and an authorized download URL, not PCM.
@@ -359,4 +360,4 @@ AI scenes are stubbed locally by default (`AI_PROVIDER=stub`) and return bundled
 provider is registered: setting `AI_PROVIDER=anthropic` only logs a warning and still returns a
 bundled scene. TTS defaults to stub (`TTS_PROVIDER=stub`): authenticated `POST /v1/tts/render`
 returns 503 so the client uses device TTS. The ElevenLabs adapter is fixture-tested and never called
-from CI. Live seed audio remains Q-15. There is no voice-clone route.
+from CI. Live seed audio still needs a key and a content-lead listen. There is no voice-clone route.

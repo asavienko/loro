@@ -6,29 +6,29 @@ review.
 **Status** — `open` (needs an answer) · `leaning` (we have a working assumption, stated) ·
 `deferred` (deliberately not now) · `closed` (answered; kept for the record with the answer).
 
-| #             | Question                                                                  | Status      | Owner                   | Blocks                         | By                       |
-| ------------- | ------------------------------------------------------------------------- | ----------- | ----------------------- | ------------------------------ | ------------------------ |
-| [Q-01](#q-01) | Is 6 reps the right Refrain target?                                       | leaning     | Product                 | Tuning, not shipping           | M3                       |
-| [Q-02](#q-02) | Should graduation require a _cold_ lock-in?                               | open        | Product                 | Loop B correctness             | M3                       |
-| [Q-03](#q-03) | Does learner-declared difficulty stay accurate?                           | open        | Product                 | The whole thread's validity    | M3                       |
-| [Q-04](#q-04) | Should the ladder be the universal depth model?                           | leaning     | Tech lead               | Nothing — already mitigated    | M5                       |
-| [Q-05](#q-05) | Who owns the loop decision, and when?                                     | **open**    | **Product**             | **Experiment activation; Run** | **Before M3 experiment** |
-| [Q-06](#q-06) | Is the practice loop a setting or an assignment?                          | leaning     | Product                 | Settings UI, experiment design | M2                       |
-| [Q-07](#q-07) | How does trip mode serve "moving abroad"?                                 | **open**    | **Product**             | **Plan 69 trip state machine** | **Before plan 69**       |
-| [Q-08](#q-08) | Pricing, tiers, and the paywall                                           | **open**    | **Product**             | **v1 launch**                  | **M2 mid**               |
-| [Q-09](#q-09) | SQLCipher for the local database?                                         | deferred    | Tech lead               | Nothing today                  | Revisit at M4            |
-| [Q-10](#q-10) | A text-production mode for deaf learners?                                 | open        | Product + design        | Accessibility completeness     | M3                       |
-| [Q-12](#q-12) | Store mechanics: RevenueCat or direct?                                    | **open**    | **Backend**             | **Plan 74 implementation**     | **Before plan 74**       |
-| [Q-13](#q-13) | Is `es-419` a later target variant beyond the current starter courses?    | deferred    | Product                 | Nothing pre-v1                 | Post-v1                  |
-| [Q-14](#q-14) | How should the Refrain's peak card render its English subtitle?           | **open**    | **Design**              | **Plan 72 peak sign-off**      | **Before M2 release**    |
-| [Q-15](#q-15) | Which licensed voice and source produce production audio?                 | **open**    | **Content + tech lead** | **Plans 61 and 62 seed batch** | **Now**                  |
-| [Q-16](#q-16) | Is guided open chat committed v1.1 scope or an experiment?                | **open**    | **Product**             | **Chat release enablement**    | **2026-08-06**           |
-| [Q-17](#q-17) | Which daily destinations earn a home-rail slot?                           | **open**    | **Product + design**    | **Plan 81 rail ordering**      | **2026-08-06**           |
-| [Q-18](#q-18) | Who can use live chat, and what is its provider budget?                   | **open**    | **Product + finance**   | **Plan 82 live provider**      | **2026-08-06**           |
-| [Q-19](#q-19) | How long are local chat threads retained?                                 | **open**    | **Product + privacy**   | **Plan 82 persistence**        | **2026-08-06**           |
-| [Q-20](#q-20) | May a provider retain chat text, and for how long?                        | **open**    | **Privacy + backend**   | **Plan 82 provider contract**  | **2026-08-06**           |
-| [Q-21](#q-21) | May Discover request live phrase suggestions, and under what eval/budget? | **leaning** | **Product + privacy**   | **Plan 97 live suggest**       | **Before live garnish**  |
-| [Q-22](#q-22) | May licensed neural TTS audio be shared as a learner-owned file?          | **open**    | **Privacy + content**   | **Plan 99 share-out-of-app**   | **Before neural export** |
+| #             | Question                                                                  | Status      | Owner                 | Blocks                              | By                       |
+| ------------- | ------------------------------------------------------------------------- | ----------- | --------------------- | ----------------------------------- | ------------------------ |
+| [Q-01](#q-01) | Is 6 reps the right Refrain target?                                       | leaning     | Product               | Tuning, not shipping                | M3                       |
+| [Q-02](#q-02) | Should graduation require a _cold_ lock-in?                               | open        | Product               | Loop B correctness                  | M3                       |
+| [Q-03](#q-03) | Does learner-declared difficulty stay accurate?                           | open        | Product               | The whole thread's validity         | M3                       |
+| [Q-04](#q-04) | Should the ladder be the universal depth model?                           | leaning     | Tech lead             | Nothing — already mitigated         | M5                       |
+| [Q-05](#q-05) | Who owns the loop decision, and when?                                     | **open**    | **Product**           | **Experiment activation; Run**      | **Before M3 experiment** |
+| [Q-06](#q-06) | Is the practice loop a setting or an assignment?                          | leaning     | Product               | Settings UI, experiment design      | M2                       |
+| [Q-07](#q-07) | How does trip mode serve "moving abroad"?                                 | **open**    | **Product**           | **Plan 69 trip state machine**      | **Before plan 69**       |
+| [Q-08](#q-08) | Pricing, tiers, and the paywall                                           | **open**    | **Product**           | **v1 launch**                       | **M2 mid**               |
+| [Q-09](#q-09) | SQLCipher for the local database?                                         | deferred    | Tech lead             | Nothing today                       | Revisit at M4            |
+| [Q-10](#q-10) | A text-production mode for deaf learners?                                 | open        | Product + design      | Accessibility completeness          | M3                       |
+| [Q-12](#q-12) | Store mechanics: RevenueCat or direct?                                    | **open**    | **Backend**           | **Plan 74 implementation**          | **Before plan 74**       |
+| [Q-13](#q-13) | Is `es-419` a later target variant beyond the current starter courses?    | deferred    | Product               | Nothing pre-v1                      | Post-v1                  |
+| [Q-14](#q-14) | How should the Refrain's peak card render its English subtitle?           | **open**    | **Design**            | **Plan 72 peak sign-off**           | **Before M2 release**    |
+| [Q-15](#q-15) | Which licensed voice and source produce production audio?                 | **leaning** | **Product**           | **Pronunciation review; live seed** | **2026-09-10**           |
+| [Q-16](#q-16) | Is guided open chat committed v1.1 scope or an experiment?                | **open**    | **Product**           | **Chat release enablement**         | **2026-08-06**           |
+| [Q-17](#q-17) | Which daily destinations earn a home-rail slot?                           | **open**    | **Product + design**  | **Plan 81 rail ordering**           | **2026-08-06**           |
+| [Q-18](#q-18) | Who can use live chat, and what is its provider budget?                   | **open**    | **Product + finance** | **Plan 82 live provider**           | **2026-08-06**           |
+| [Q-19](#q-19) | How long are local chat threads retained?                                 | **open**    | **Product + privacy** | **Plan 82 persistence**             | **2026-08-06**           |
+| [Q-20](#q-20) | May a provider retain chat text, and for how long?                        | **open**    | **Privacy + backend** | **Plan 82 provider contract**       | **2026-08-06**           |
+| [Q-21](#q-21) | May Discover request live phrase suggestions, and under what eval/budget? | **leaning** | **Product + privacy** | **Plan 97 live suggest**            | **Before live garnish**  |
+| [Q-22](#q-22) | May licensed neural TTS audio be shared as a learner-owned file?          | **open**    | **Privacy + content** | **Plan 99 share-out-of-app**        | **Before neural export** |
 
 ---
 
@@ -245,37 +245,50 @@ Lean: (a) or (b). Needs the designer.
 
 ### Q-15 · Which licensed voice and source produce production audio?
 
-The bundled catalog contains text only. Plan 61 cannot render even its seed batch, and plan 62
-cannot validate the real cache/playback contract, until the source audio has clear provenance and
-production rights.
+The bundled catalog remains text-only on disk. Plan 61 still cannot ship a listened seed batch, and
+plan 62 cannot treat cached files as the pronunciation reference, until a content-lead listen
+passes.
 
 **Provider decision — 2026-09-07 (product owner): ElevenLabs is the selected cloud TTS provider**,
 including for Bulgarian and Polish audio evaluation. This supersedes the earlier Amazon Polly
 recommendation and the historical ElevenLabs rejection in archived plan 45. It does not add Polish
-to the shipped course catalog or mean the integration is implemented.
+to the shipped course catalog.
 
-Plan 61 records the rendering/configuration/seed-verification checklist; plan 86 owns the vendor
-adapter and common controls. Adapter work may proceed with fixtures before Q-15 passes. A
-provisioned API key is not evidence of voice quality or production rights. Plan 99's online
-listening generation and on-device cache of those clips wait on this question for production voices.
-Adapter and composer fixtures may proceed. Share-out-of-app of neural audio additionally waits on
-[Q-22](#q-22). Device TTS is a labeled in-app fallback, not a bypass of this gate.
+**Leaning — 2026-09-10 (product owner): pin `eleven_multilingual_v2` and the Voice Library IDs in
+the [listening-voice packet](listening-voice-packet.md) for in-app catalog reference (`AS-01`) and
+listening cache/playback (`AS-07`).** Filling
+[`CATALOG_REFERENCE_VOICES`](../../packages/core/src/listening/constants.ts) and
+[`LISTENING_VOICE_DECISION`](../../packages/core/src/listening/constants.ts) is the
+licensed-generate switch. Local and CI stay on `TTS_PROVIDER=stub` and must not spend credits. This
+pin does **not** claim a bilingual pronunciation listen happened, does not make the clips
+production-quality, and does **not** grant share-out-of-app ([Q-22](#q-22);
+`LISTENING_SHARE_ENABLED` stays false). Official default voices (Rachel `21m00Tcm4TlvDq8ikWAM` and
+siblings) expire 2026-12-31 and are rejected. Voice Library / PVC voices can be withdrawn; a
+withdrawn id fails closed rather than substituting another locale.
 
-**Still needed before production rendering:** select and review the model and `es-ES` voice ID and
-fallback, with separate coverage/review before enabling `bg-BG` or `ru-RU`; document commercial and
-redistribution rights, consent/provenance, regional storage and deletion obligations; define
-pronunciation review and replacement policy; and set the budget for 150 v1-spine phrases followed by
-600 v1 phrases.
+| Class     | Locale  | Voice ID               | Name          |
+| --------- | ------- | ---------------------- | ------------- |
+| Catalog   | `es-ES` | `t9LRTh3y1ioN00e9wsNh` | Aaron Abad    |
+| Catalog   | `bg-BG` | `406EiNlYvqFqcz3vsnOm` | Peter K       |
+| Catalog   | `ru-RU` | `1qd9R09Ljlx9V1Ok0t5S` | Ivan          |
+| Listening | `es-ES` | `KHCvMklQZZo0O30ERnVn` | Sara Martin 1 |
+| Listening | `es-ES` | `usTmJvQOCyW3nRcZ8OEo` | Dante         |
+| Listening | `bg-BG` | `M1ydWt7KnBCiuv4CnEDC` | Milena        |
+| Listening | `bg-BG` | `gdk0ZsvfAOobfbTtnx6p` | Kosta         |
+| Listening | `ru-RU` | `EDpEYNf6XIeKYRzYcx4I` | MARIIA_R      |
+| Listening | `ru-RU` | `ogi2DyUAKJb7CEdqqvlU` | Stanislav     |
 
-The 150→600 target remains the Spanish milestone goal; Bulgarian/Russian course expansion needs its
-own approved scope. Plan 99 additionally needs ≥2 licensed **listening** voice IDs per enabled
-target, distinct from the catalog reference voice; that is still this question, not a second
-provider. The listening-class transport exists and fails closed until those IDs are pinned in
-[`LISTENING_VOICE_DECISION`](../../packages/core/src/listening/constants.ts). Filling that object is
-the only licensed-generate switch. The [listening-voice decision packet](listening-voice-packet.md)
-records the per-target checklist, unapproved public model/voice candidates, and what must be signed
-before a pin. This decision authorizes assets, not playback architecture. Learner recordings remain
-subject to the separate non-negotiable that PCM never leaves native memory/the device.
+**Budget (character-based; no invented USD):** catalog is one take per phrase for 150 then 600;
+listening defaults to 3 takes/phrase rotating two IDs (`A`, `B`, `A`). Fail closed on 429/402.
+
+**Replacement:** a failed listen replaces that listening ID, or re-renders the whole catalog if the
+reference voice is wrong. Never silently substitute another locale. Device TTS is a labeled in-app
+fallback, not a bypass of this gate.
+
+**Still needed before calling these production-quality / shipping the seed batch:** content-lead
+listen of starter phrases; live `TTS_API_KEY` on a paid plan with Voice Library add-to-My-Voices;
+commercial redistribution for Q-22; physical-device 58/72. Learner recordings remain subject to the
+separate non-negotiable that PCM never leaves native memory/the device.
 
 ---
 
@@ -400,18 +413,18 @@ copy into Files, Music, or a car player. That is redistribution of synthesised s
 does not by itself decide.
 
 Plan 99's **primary path** is online generation plus on-device cache, then in-app listen from disk.
-That in-app cache is the same privacy class as planned catalog audio (`AS-01`): it stays in the app
-and still needs Q-15 for production voices. It does **not** answer this question.
+That in-app cache is the same privacy class as planned catalog audio (`AS-01`): it stays in the app.
+Q-15 leaning pins cover in-app generate; they do **not** answer this question.
 
 **Still needed before neural share-out-of-app:** commercial and personal-copy rights for each pinned
 listening voice; whether the learner may keep the file after uninstall; deletion if a voice licence
 is withdrawn; and an honest UI that never implies a neural voice when the clip was device-TTS
 fallback.
 
-**Invariant while open:** plan 99 may specify and, after Q-15, ship **in-app** cache and in-app
-listen of licensed neural clips. It must not write ElevenLabs (or other licensed neural) audio to a
-shareable learner-owned file, and must not present device-TTS output as that neural file. A
-device-TTS-only export is not the v1 companion and is out of scope for the first slices.
+**Invariant while open:** plan 99 may ship **in-app** cache and in-app listen of licensed neural
+clips. It must not write ElevenLabs (or other licensed neural) audio to a shareable learner-owned
+file, and must not present device-TTS output as that neural file. A device-TTS-only export is not
+the v1 companion and is out of scope for the first slices.
 
 **Decision owner/date:** Privacy + content, 2026-09-09. Not resolved by the 2026-09-09 online-first
 listening-cache specification. Q-21 remains Discover live suggest.

@@ -21,11 +21,12 @@ contract, but no platform module emits it yet, so latency remains `null` pending
 implementation and validation.
 
 Licensed production seed audio, the 150 MB LRU cache, background queues/lock-screen transport,
-native DSP buffers, production listening voices (Q-15), shareable neural listening export (Q-22),
-native airplane-mode listen evidence, and physical-device linguistic acceptance remain open. Android
-and iOS stop foreground playback, including cached `playFile`, when backgrounded. Cloud ASR is
-forbidden. See [runtime evidence](../process/persistent-practice.md); a successful build does not
-prove microphone accuracy or device-floor performance.
+native DSP buffers, pronunciation-reviewed catalog/listening audio (Q-15 leaning pins exist),
+shareable neural listening export (Q-22), native airplane-mode listen evidence, and physical-device
+linguistic acceptance remain open. Android and iOS stop foreground playback, including cached
+`playFile`, when backgrounded. Cloud ASR is forbidden. See
+[runtime evidence](../process/persistent-practice.md); a successful build does not prove microphone
+accuracy or device-floor performance.
 
 ## Requirements this has to satisfy
 
@@ -273,13 +274,14 @@ Onset detection is validated against 200 hand-labelled recordings; target ≤ ±
 is the planned source for pre-rendered catalog and server-rendered on-demand audio. Local
 development remains stubbed. The ElevenLabs HTTP adapter, authoring `content:render`, a
 disabled-by-default `POST /tts/render`, and catalog-file playback with device-TTS fallback are
-implemented ([plan 98](../../plans/98-voice-and-tts-integration.md)). The listening-class path fails
-closed until Q-15 pins licensed voices and a model. Local development may use a labeled stub only
-when `TTS_STUB_RENDER=1`; CI must not spend provider credits, and stub audio must not be presented
-as licensed neural quality. Voice/model selection, production rights, pronunciation review and
-budget remain under [Q-15](../decisions/open-questions.md#q-15). Preserve approved audio as
-immutable, checksum-addressed assets with voice/model/settings provenance; a provider update must
-not silently replace a learner reference or its derived contours.
+implemented ([plan 98](../../plans/98-voice-and-tts-integration.md)). Listening-class generate uses
+the 2026-09-10 `LISTENING_VOICE_DECISION` pins and still fails closed for a wrong voice, unpinned
+model, missing key, or stub provider. Local development may use a labeled stub only when
+`TTS_STUB_RENDER=1`; CI must not spend provider credits, and stub audio must not be presented as
+licensed neural quality. Pronunciation review remains before calling pins production-quality
+([Q-15](../decisions/open-questions.md#q-15)). Preserve approved audio as immutable,
+checksum-addressed assets with voice/model/settings provenance; a provider update must not silently
+replace a learner reference or its derived contours.
 
 Three tiers, in preference order:
 
@@ -306,21 +308,21 @@ does this at `Loro.dc.html:2483`. Word audio uses tier 3 (device TTS); rendering
 words is not worth the storage.
 
 **Listening companion (plan 99, `AS-07`).** Online-first: render licensed multi-voice takes
-(ElevenLabs selected; transport fails closed until Q-15 pins voices), cache each phrase×voice clip
-on device, then play from disk with no network. This is not the pronunciation reference, not Stream,
-and not account JSON export. Native cache download lives in `loro-audio-cache`, not the speech
-module. Playback of cached files uses `playFile` on `loro-audio-speech` with `file://` URIs only;
-JavaScript still must not receive PCM. Lookup and batch restore re-hash the file; a mismatch is a
-miss. Native download sends Authorization / `X-Loro-Device`, refuses redirects, disables HTTP
+(ElevenLabs `eleven_multilingual_v2` pins in `LISTENING_VOICE_DECISION`), cache each phrase×voice
+clip on device, then play from disk with no network. This is not the pronunciation reference, not
+Stream, and not account JSON export. Native cache download lives in `loro-audio-cache`, not the
+speech module. Playback of cached files uses `playFile` on `loro-audio-speech` with `file://` URIs
+only; JavaScript still must not receive PCM. Lookup and batch restore re-hash the file; a mismatch
+is a miss. Native download sends Authorization / `X-Loro-Device`, refuses redirects, disables HTTP
 caches, and does not wait for connectivity; iOS uses an ephemeral no-cookie session with a 15s
-resource timeout. In-app listen from a filled cache waits on Q-15 for production voices, not on
-Q-22. Debug builds may seed a labeled fixture AAC into the same cache; that is not licensed neural
-audio. Filling [`LISTENING_VOICE_DECISION`](../../packages/core/src/listening/constants.ts) is the
-only licensed-generate switch; see the
-[listening-voice packet](../decisions/listening-voice-packet.md). Share-out-of-app of concatenated
-neural clips waits on Q-22 (`LISTENING_SHARE_ENABLED` stays false). Device TTS is a labeled in-app
-fallback on a cache miss, not the primary generator. Native airplane-mode listen of a previously
-cached batch remains an evidence gate.
+resource timeout. In-app listen from a filled cache does not wait on Q-22. Debug builds may seed a
+labeled fixture AAC into the same cache; that is not licensed neural audio. Filling
+[`LISTENING_VOICE_DECISION`](../../packages/core/src/listening/constants.ts) is the
+licensed-generate switch; see the [listening-voice packet](../decisions/listening-voice-packet.md).
+Share-out-of-app of concatenated neural clips waits on Q-22 (`LISTENING_SHARE_ENABLED` stays false).
+Device TTS is a labeled in-app fallback on a cache miss, not the primary generator. Native
+airplane-mode listen of a previously cached batch remains an evidence gate. Pronunciation review
+remains before calling these clips production-quality.
 
 ---
 

@@ -54,11 +54,12 @@ baseline and historical estimates remain in
 
 ## Scoped decision gates
 
-Q-15 blocks production voice/assets, Q-07 trip semantics, Q-05 experiment activation/Run, Q-14 peak
-accessibility sign-off, Q-08/Q-12 monetization and Q-17 final rail priority. Q-16 gates chat
-release, Q-18 budget, Q-19 local retention, Q-20 provider retention and Q-22 neural listening-file
-redistribution. Plan 99 generates licensed listening clips online and caches them for offline in-app
-play; production voices wait on Q-15. Share-out-of-app of those clips waits on Q-22. Device TTS is a
+Q-15 leaning pins catalog/listening Voice Library IDs for in-app generate; pronunciation review
+still gates calling those clips production-quality. Q-07 trip semantics, Q-05 experiment
+activation/Run, Q-14 peak accessibility sign-off, Q-08/Q-12 monetization and Q-17 final rail
+priority. Q-16 gates chat release, Q-18 budget, Q-19 local retention, Q-20 provider retention and
+Q-22 neural listening-file redistribution. Plan 99 generates licensed listening clips online and
+caches them for offline in-app play. Share-out-of-app of those clips waits on Q-22. Device TTS is a
 labeled fallback, not a Q-15 bypass. The DSP production pipeline waits for its recorded quality
 decision. Bilingual sign-off remains separate from schema/key validation. Unrelated foundation,
 offline content and harness work can proceed. The
