@@ -1,3 +1,4 @@
+import 'react-native-reanimated'
 import { Stack, router, usePathname } from 'expo-router'
 import { useEffect, type ReactNode } from 'react'
 import { getLocales } from 'expo-localization'
