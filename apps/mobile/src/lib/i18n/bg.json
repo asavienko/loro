@@ -506,6 +506,7 @@
   "listenExport.status.generating": "Генериране на лицензирани записи за слушане…",
   "listenExport.status.partial-failure": "Някои записи за слушане не успяха. Готовите останаха на това устройство.",
   "listenExport.status.ready-to-listen": "Готово за слушане от кеша на устройството.",
+  "listenExport.status.ready-to-generate": "Готово за генериране на лицензирани записи за слушане в кеша на устройството.",
   "listenExport.status.playing": "Пускане на кеширано аудио за слушане.",
   "listenExport.status.share-unavailable": "Споделянето на лицензирано аудио за слушане още не е налично.",
   "listenExport.status.share-ready": "Сподели слетия файл за слушане.",

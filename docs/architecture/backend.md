@@ -359,5 +359,7 @@ restarts.
 AI scenes are stubbed locally by default (`AI_PROVIDER=stub`) and return bundled fallbacks. No live
 provider is registered: setting `AI_PROVIDER=anthropic` only logs a warning and still returns a
 bundled scene. TTS defaults to stub (`TTS_PROVIDER=stub`): authenticated `POST /v1/tts/render`
-returns 503 so the client uses device TTS. The ElevenLabs adapter is fixture-tested and never called
-from CI. Live seed audio still needs a key and a content-lead listen. There is no voice-clone route.
+returns 503 so the client uses device TTS, except labeled `TTS_STUB_RENDER=1` listening-class
+silence (checksum metadata + download URL; may omit a bearer locally). The ElevenLabs adapter is
+fixture-tested and never called from CI. Live seed audio still needs a key and a content-lead
+listen. There is no voice-clone route.

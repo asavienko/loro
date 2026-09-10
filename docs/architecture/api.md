@@ -112,12 +112,15 @@ local. Release/budget/retention gates Q-16/Q-18–Q-20 remain open; plan 82 owns
 ## TTS
 
 Draft `POST /tts/render` accepts **text only**, with a checksum-addressed model-audio **metadata**
-response (download URL + `sha256` + `ms`). Q-15 leaning pins live in core constants; live spend
-still needs a key, and pronunciation review remains before calling clips production-quality.
-Listening-class multi-voice requests (plan 99) need an additive voice id and `assetClass` so they
-cannot collide with catalog reference audio; the JS client must not receive audio bytes. Device TTS
-is the in-app fallback on a miss. No recorded-audio, ASR-upload or voice-clone endpoint exists or is
-authorized. Share-out-of-app of neural audio is Q-22, not this route.
+response (download URL + `sha256` + `ms`). Q-15 leaning pins live in core constants. Generate is
+enabled for listening-class when the roster is pinned and the provider is ElevenLabs, or when
+`TTS_STUB_RENDER=1` (labeled listening-class only). Stub-render listening may omit a bearer for
+local cache wiring; ElevenLabs still requires a session. Live spend still needs a key, and
+pronunciation review remains before calling clips production-quality. Default stub and CI stay
+closed. Listening-class multi-voice requests (plan 99) need an additive voice id and `assetClass`
+so they cannot collide with catalog reference audio; the JS client must not receive audio bytes.
+Device TTS is the in-app fallback on a miss. No recorded-audio, ASR-upload or voice-clone
+endpoint exists or is authorized. Share-out-of-app of neural audio is Q-22, not this route.
 
 ## Billing
 

@@ -50,8 +50,9 @@ There are no `db:migrate` or `db:seed` package scripts yet; starting containers 
 durable. The bundled catalogs contain 31 phrases per target language. They are loaded from the
 package, not seeded by a server database job. Bilingual review and audio capabilities have their own
 gates. Setting a public API URL does not create the missing mobile HTTP/sync client. AI returns
-bundled fixtures. The TTS adapter is stubbed (`TTS_PROVIDER=stub`); Q-15 pins are documented and
-live seed still needs a key plus pronunciation review. Cloud ASR is not a runtime.
+bundled fixtures. The TTS adapter is stubbed (`TTS_PROVIDER=stub`); Q-15 pins enable generate when
+native cache and ElevenLabs (or `TTS_STUB_RENDER=1` listening-class) are present. Live seed still
+needs a key plus pronunciation review. Cloud ASR is not a runtime.
 
 ## Testing
 
@@ -111,6 +112,7 @@ truth. Entries in `.env.example` without a reader are reserved for future adapte
 | `TTS_VOICE_BG_BG`                   | Documented pin `406EiNlYvqFqcz3vsnOm` (Peter K); never substituted for another locale |
 | `TTS_VOICE_RU_RU`                   | Documented pin `1qd9R09Ljlx9V1Ok0t5S` (Ivan)                                          |
 | `TTS_CACHE_DIR`                     | Process-local identity cache for `/tts/render`; defaults to os tmpdir                 |
+| `TTS_STUB_RENDER`                   | `1` labeled listening-class silence only; CI and catalog publish stay `0`; listening render/asset may omit a bearer |
 | `MUSIC_PROVIDER`                    | Defaults to `stub`; fixture music only. Never `TTS_PROVIDER`. Live spend is Q-21      |
 | `MUSIC_API_KEY`                     | Server-only Music credential; unused while `MUSIC_PROVIDER=stub`                      |
 | `MUSIC_BASE_URL`                    | Defaults to `https://api.elevenlabs.io`; residency host is an ops/Q-21 choice         |
