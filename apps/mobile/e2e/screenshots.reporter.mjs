@@ -1,10 +1,9 @@
-import { join } from 'node:path'
 import {
   failedManifest,
   finalizeManifest,
   formatSummary,
-  pngProblem,
   readManifest,
+  stateArtifactProblem,
   validatePassedStates,
   writeManifest,
 } from './screenshots-artifacts.mjs'
@@ -25,7 +24,7 @@ export default class ScreenshotReporter {
 
     entry.status = result.status === 'passed' ? 'passed' : 'failed'
     if (result.status === 'passed') {
-      const problem = pngProblem(join(this.runDir, entry.image))
+      const problem = stateArtifactProblem(this.runDir, entry)
       if (problem !== undefined) {
         entry.status = 'failed'
         entry.error = problem
