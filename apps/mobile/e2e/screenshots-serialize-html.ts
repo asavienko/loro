@@ -21,13 +21,13 @@ export async function prepareScreenCapture(): Promise<void> {
   })
 }
 
-/** Freeze the reached DOM as a script-free HTML document with inlined styles. */
+/** Freeze the reached DOM as a portable, script-free HTML document with inlined styles. */
 export async function serializeScreenHtml(): Promise<string> {
   const clone = document.documentElement.cloneNode(true) as HTMLElement
 
   for (const node of Array.from(
     clone.querySelectorAll(
-      'script, noscript, link[rel="modulepreload"], link[rel="preload"][as="script"], link[rel="prefetch"]',
+      'script, noscript, base, link[rel="modulepreload"], link[rel="preload"], link[rel="prefetch"], link[rel="icon"], link[rel="shortcut icon"], link[rel="apple-touch-icon"]',
     ),
   )) {
     node.remove()
@@ -36,11 +36,10 @@ export async function serializeScreenHtml(): Promise<string> {
   const css: string[] = []
   for (const sheet of Array.from(document.styleSheets)) {
     try {
-      css.push(
-        Array.from(sheet.cssRules)
-          .map((rule) => rule.cssText)
-          .join('\n'),
-      )
+      const text = Array.from(sheet.cssRules)
+        .map((rule) => rule.cssText)
+        .join('\n')
+      css.push(text.replace(/url\(\s*(['"]?)(?!data:|#)([^'")]+)\1\s*\)/gi, 'none'))
     } catch {
       // Cross-origin sheets stay out of the snapshot rather than throwing.
     }
@@ -84,9 +83,15 @@ export async function serializeScreenHtml(): Promise<string> {
       if (src === null || src === '' || src.startsWith('data:')) return
       try {
         const url = new URL(src, document.baseURI)
-        if (url.origin !== location.origin) return
+        if (url.origin !== location.origin) {
+          image.removeAttribute('src')
+          return
+        }
         const response = await fetch(url)
-        if (!response.ok) return
+        if (!response.ok) {
+          image.removeAttribute('src')
+          return
+        }
         const blob = await response.blob()
         const dataUrl = await new Promise<string>((resolve, reject) => {
           const reader = new FileReader()
@@ -100,14 +105,41 @@ export async function serializeScreenHtml(): Promise<string> {
         })
         image.setAttribute('src', dataUrl)
       } catch {
-        // Leave the original src; the snapshot still contains the markup.
+        image.removeAttribute('src')
       }
     }),
   )
+
+  for (const el of Array.from(clone.querySelectorAll('[src], [href], [srcset], [poster]'))) {
+    for (const attr of ['src', 'href', 'srcset', 'poster']) {
+      const value = el.getAttribute(attr)
+      if (
+        value === null ||
+        value === '' ||
+        value.startsWith('data:') ||
+        value.startsWith('#') ||
+        value.startsWith('mailto:')
+      )
+        continue
+      if (el.tagName === 'A' && attr === 'href') {
+        el.setAttribute('href', '#')
+        continue
+      }
+      el.removeAttribute(attr)
+    }
+  }
+
+  for (const node of Array.from(clone.querySelectorAll('link[href]'))) {
+    const href = node.getAttribute('href') ?? ''
+    if (!href.startsWith('data:')) node.remove()
+  }
 
   let lang = clone.getAttribute('lang')
   if (lang === null || lang === '') lang = document.documentElement.lang
   if (lang === '') lang = 'en'
   clone.setAttribute('lang', lang)
-  return `<!doctype html>\n${clone.outerHTML}`
+  // Write `<base href="./">` as text. A live `<base>` would serialize against the
+  // capture server URL and break as soon as the file is copied elsewhere.
+  const serialized = clone.outerHTML.replace(/<head([^>]*)>/i, '<head$1><base href="./">')
+  return `<!doctype html>\n${serialized}`
 }

@@ -43,9 +43,9 @@ for (const state of STATES) {
     else await expect(toast).toBeHidden()
 
     const image = join(runDir, 'images', filenameFor(state.name, 'png'))
-    const html = join(runDir, 'html', 'screens', filenameFor(state.name, 'html'))
+    const html = join(runDir, 'html', filenameFor(state.name, 'html'))
     mkdirSync(join(runDir, 'images'), { recursive: true })
-    mkdirSync(join(runDir, 'html', 'screens'), { recursive: true })
+    mkdirSync(join(runDir, 'html'), { recursive: true })
     await page.screenshot({ path: image, animations: 'disabled', caret: 'hide' })
     writeFileSync(html, await page.evaluate(serializeScreenHtml))
 

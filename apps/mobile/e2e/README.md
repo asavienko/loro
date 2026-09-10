@@ -16,13 +16,14 @@ pnpm screenshots        # 390 × 844 PNG + HTML snapshot for every declared lear
 ```
 
 `pnpm screenshots` starts its own Expo web server on port 8086 and writes a timestamped collection
-to `test-results/screenshots/`. Each run produces **two artifacts**: `images/index.html` (PNG
-gallery) and `html/index.html` (the reached DOM of every state, frozen as script-free HTML). Open
-the run's root `index.html` to choose between them. Set `LORO_E2E_PORT` when 8086 is occupied. The
-collection uses the same browser state flows and mocked account transport as the learner suite; it
-does not contact the live API or include the developer workbench, native screens, or authored
-blueprint mockups. A failed or interrupted run still writes a manifest and both galleries showing
-which states did not produce images or HTML.
+to `test-results/screenshots/`. Each run produces **two portable artifacts**: `images/` (PNG
+gallery) and `html/` (the reached DOM of every state, frozen as script-free HTML). Paths are
+relative, so copy or zip either folder — or the whole run — and `index.html` still opens. Screen
+HTML files can also be copied on their own. Open the run's root `index.html` to choose between the
+two artifacts. Set `LORO_E2E_PORT` when 8086 is occupied. The collection uses the same browser state
+flows and mocked account transport as the learner suite; it does not contact the live API or include
+the developer workbench, native screens, or authored blueprint mockups. A failed or interrupted run
+still writes a manifest and both galleries showing which states did not produce images or HTML.
 
 The workbench suite is separate on purpose. `/dev/tokens` is developer tooling rather than a
 learner-visible state, so it does not belong in `states.ts` and does not inflate learner route,

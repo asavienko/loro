@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { Buffer } from 'node:buffer'
-import { mkdtempSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { cpSync, existsSync, mkdtempSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
@@ -47,14 +47,29 @@ test('pngProblem and htmlProblem reject missing or malformed artifacts', () => {
     `${validHtml().replace('<body>', '<body><noscript>You need to enable JavaScript to run this app.</noscript>')}`,
   )
   assert.match(htmlProblem(join(dir, 'boot.html')), /noscript/)
+
+  writeFileSync(
+    join(dir, 'server.html'),
+    validHtml().replace(
+      '<h1>Today</h1>',
+      '<img src="http://127.0.0.1:8086/icon.png"><h1>Today</h1>',
+    ),
+  )
+  assert.match(htmlProblem(join(dir, 'server.html')), /capture server/)
+
+  writeFileSync(
+    join(dir, 'rooted.html'),
+    validHtml().replace('<h1>Today</h1>', '<img src="/assets/icon.png"><h1>Today</h1>'),
+  )
+  assert.match(htmlProblem(join(dir, 'rooted.html')), /root-absolute/)
 })
 
-test('writeArtifacts emits a hub plus separate image and HTML galleries', () => {
+test('writeArtifacts emits portable image and HTML folders', () => {
   const runDir = mkdtempSync(join(tmpdir(), 'loro-screenshots-run-'))
   const image = `images/${filenameFor('today · seeded', 'png')}`
-  const html = `html/screens/${filenameFor('today · seeded', 'html')}`
+  const html = `html/${filenameFor('today · seeded', 'html')}`
   mkdirSync(join(runDir, 'images'), { recursive: true })
-  mkdirSync(join(runDir, 'html', 'screens'), { recursive: true })
+  mkdirSync(join(runDir, 'html'), { recursive: true })
   writeFileSync(join(runDir, image), fixturePngBuffer())
   writeFileSync(join(runDir, html), validHtml())
 
@@ -79,13 +94,26 @@ test('writeArtifacts emits a hub plus separate image and HTML galleries', () => 
   const images = readFileSync(join(runDir, 'images', 'index.html'), 'utf8')
   const screens = readFileSync(join(runDir, 'html', 'index.html'), 'utf8')
 
-  assert.match(hub, /Loro screen artifacts/)
-  assert.match(hub, /images\/index\.html/)
-  assert.match(hub, /html\/index\.html/)
-  assert.match(images, /today-seeded-b843112d\.png/)
+  assert.match(hub, /<base href="\.\/">/)
+  assert.match(hub, /\.\/images\/index\.html/)
+  assert.match(hub, /\.\/html\/index\.html/)
+  assert.match(images, /\.\/today-seeded-b843112d\.png/)
   assert.doesNotMatch(images, /<iframe /)
-  assert.match(screens, /screens\/today-seeded-b843112d\.html/)
-  assert.match(screens, /<iframe /)
+  assert.match(screens, /\.\/today-seeded-b843112d\.html/)
+  assert.match(screens, /srcdoc=/)
+  assert.match(screens, /Me pone un cortado/)
+  assert.doesNotMatch(screens, /screens\//)
+  assert.doesNotMatch(screens, / src="/)
+
+  const exported = mkdtempSync(join(tmpdir(), 'loro-screenshots-export-'))
+  cpSync(join(runDir, 'html'), join(exported, 'html'), { recursive: true })
+  cpSync(join(runDir, 'images'), join(exported, 'images'), { recursive: true })
+  cpSync(join(runDir, 'index.html'), join(exported, 'index.html'))
+  assert.equal(existsSync(join(exported, 'html', filenameFor('today · seeded', 'html'))), true)
+  assert.equal(existsSync(join(exported, 'images', filenameFor('today · seeded', 'png'))), true)
+  const exportedGallery = readFileSync(join(exported, 'html', 'index.html'), 'utf8')
+  assert.match(exportedGallery, /\.\/today-seeded-b843112d\.html/)
+  assert.match(exportedGallery, /srcdoc=/)
 
   const summary = formatSummary(runDir, manifest)
   assert.match(summary, /Screen artifacts: 1 passed/)
@@ -106,7 +134,7 @@ test('a passed state without HTML is failed closed', () => {
         route: '/',
         spec: '§11 Today',
         image,
-        html: `html/screens/${filenameFor('today · seeded', 'html')}`,
+        html: `html/${filenameFor('today · seeded', 'html')}`,
         status: 'passed',
       },
     ],
@@ -126,7 +154,7 @@ function fixturePngBuffer() {
 
 function validHtml() {
   return `<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><title>Today</title></head>
-<body><main><h1>Today</h1><p>${'phrase '.repeat(40)}</p></main></body></html>
+<html lang="en"><head><meta charset="utf-8"><base href="./"><title>Today</title></head>
+<body><main><h1>Today</h1><p>Me pone un cortado ${'phrase '.repeat(40)}</p></main></body></html>
 `
 }

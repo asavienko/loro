@@ -6,7 +6,7 @@ const VIEWPORT = { width: 390, height: 844 }
 
 export function ensureRunDirectory(runDir) {
   mkdirSync(join(runDir, 'images'), { recursive: true })
-  mkdirSync(join(runDir, 'html', 'screens'), { recursive: true })
+  mkdirSync(join(runDir, 'html'), { recursive: true })
   mkdirSync(join(runDir, 'diagnostics'), { recursive: true })
 }
 
@@ -35,7 +35,7 @@ export function initialManifest(repository) {
       route: state.route,
       spec: state.spec,
       image: `images/${filenameFor(state.name, 'png')}`,
-      html: `html/screens/${filenameFor(state.name, 'html')}`,
+      html: `html/${filenameFor(state.name, 'html')}`,
       status: 'not-run',
     })),
   }
@@ -114,6 +114,11 @@ export function htmlProblem(path) {
   if (html.length < 200) return 'The HTML snapshot is empty.'
   if (/<noscript[\s>]/i.test(html) || /<script[\s>]/i.test(html))
     return 'The HTML snapshot still contains executable or noscript chrome.'
+  if (!/<base\s+href=["']\.\/["']/i.test(html))
+    return 'The HTML snapshot is missing a relative base href.'
+  if (/https?:\/\/(?:127\.0\.0\.1|localhost|\[::1\])/i.test(html))
+    return 'The HTML snapshot still points at the capture server.'
+  if (/(?:src|href)=["']\//i.test(html)) return 'The HTML snapshot still uses root-absolute paths.'
   return undefined
 }
 
@@ -219,12 +224,12 @@ function writeHub(runDir, manifest) {
   <article class="artifact">
     <h2>Images</h2>
     <p>${counts.passed} of ${manifest.states.length} states as 390 × 844 PNGs.</p>
-    <p><a href="images/index.html">Open the image gallery</a></p>
+    <p><a href="./images/index.html">Open the image gallery</a></p>
   </article>
   <article class="artifact">
     <h2>HTML</h2>
     <p>${counts.passed} of ${manifest.states.length} states as standalone HTML documents.</p>
-    <p><a href="html/index.html">Open the HTML gallery</a></p>
+    <p><a href="./html/index.html">Open the HTML gallery</a></p>
   </article>
 </div>`,
       extra: `.lead{max-width:40rem}.artifacts{display:flex;flex-wrap:wrap;gap:20px;margin-top:28px}.artifact{flex:1 1 280px;padding:20px;border:1px solid #c9c2b8;border-radius:16px;background:#fff}`,
@@ -255,11 +260,17 @@ function writeImageGallery(runDir, manifest) {
 
 function writeHtmlGallery(runDir, manifest) {
   const groups = groupedStates(manifest)
+  const snapshots = new Map()
+  for (const state of manifest.states) {
+    if (state.status !== 'passed' || state.html === undefined) continue
+    const path = join(runDir, state.html)
+    if (existsSync(path)) snapshots.set(state.html, readFileSync(path, 'utf8'))
+  }
   const sections = groups
     .map(
       ([route, states]) =>
         `<section id="${escapeHtml(routeId(route))}"><h2>${escapeHtml(route)}</h2><div class="grid">${states
-          .map((state) => htmlCard(state))
+          .map((state) => htmlCard(state, snapshots.get(state.html)))
           .join('')}</div></section>`,
     )
     .join('')
@@ -268,14 +279,18 @@ function writeHtmlGallery(runDir, manifest) {
     document({
       title: 'Loro screen HTML',
       heading: 'Loro screen HTML',
-      intro: `${statusLine(manifest)}${routeNav(groups)}<p class="lead">The reached DOM of every declared learner state, frozen as a script-free HTML document. Open a phone for the standalone snapshot.</p>`,
+      intro: `${statusLine(manifest)}${routeNav(groups)}<p class="lead">The reached DOM of every declared learner state, frozen as a portable HTML document. Copy this folder and open index.html; previews stay in the page and each phone still opens its sibling file.</p>`,
       body: sections,
     }),
   )
 }
 
+function siblingHref(path) {
+  return `./${encodeURI(basename(path ?? ''))}`
+}
+
 function imageCard(state) {
-  const href = encodeURI(basename(state.image ?? ''))
+  const href = siblingHref(state.image)
   const preview =
     state.status === 'passed'
       ? `<a class="phone" href="${href}"><span class="phone-screen"><img src="${href}" alt="${escapeHtml(state.name)}"></span></a>`
@@ -283,11 +298,11 @@ function imageCard(state) {
   return card(state, preview)
 }
 
-function htmlCard(state) {
-  const href = encodeURI(`screens/${basename(state.html ?? '')}`)
+function htmlCard(state, snapshot) {
+  const href = siblingHref(state.html)
   const preview =
-    state.status === 'passed'
-      ? `<a class="phone" href="${href}"><span class="phone-screen"><iframe src="${href}" title="${escapeHtml(state.name)}" tabindex="-1"></iframe></span></a>`
+    state.status === 'passed' && snapshot !== undefined
+      ? `<a class="phone" href="${href}"><span class="phone-screen"><iframe srcdoc="${escapeHtml(snapshot)}" title="${escapeHtml(state.name)}" tabindex="-1"></iframe></span></a>`
       : `<div class="phone"><div class="phone-screen missing">No HTML</div></div>`
   return card(state, preview)
 }
@@ -299,7 +314,7 @@ function card(state, preview) {
 
 function document({ title, heading, intro, body = '', extra = '' }) {
   return `<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${escapeHtml(title)}</title><style>
+<html lang="en"><head><meta charset="utf-8"><base href="./"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${escapeHtml(title)}</title><style>
 body{margin:24px;background:#f7f4ef;color:#211f1c;font:15px/1.45 system-ui,sans-serif}h1{margin-bottom:8px}h2{margin:0 0 16px}.lead{max-width:44rem}section{margin:36px 0;scroll-margin-top:16px}.toc{display:flex;flex-wrap:wrap;gap:8px 16px;margin:16px 0 8px}.toc a{color:#5c3d14}.grid{display:flex;flex-wrap:wrap;gap:24px}.card{width:206px}.phone{display:block;box-sizing:border-box;width:206px;height:438px;padding:8px;border-radius:28px;background:#211f1c;text-decoration:none}.phone-screen{display:block;position:relative;width:190px;height:422px;overflow:hidden;border-radius:20px;background:#fff}.phone-screen img,.phone-screen iframe{position:absolute;top:0;left:0;width:390px;height:844px;border:0;transform:scale(0.487);transform-origin:top left;pointer-events:none}.missing{display:grid;place-items:center;padding:16px;color:#211f1c}.meta{margin:10px 0 0}.status{font-weight:700}.passed{color:#176b3a}.failed,.not-run{color:#a63329}pre{white-space:pre-wrap;font-size:12px}${extra}
 </style></head>
 <body><h1>${escapeHtml(heading)}</h1>${intro}${body}</body></html>
