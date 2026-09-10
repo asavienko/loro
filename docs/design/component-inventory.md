@@ -12,7 +12,7 @@ frames, 10 navigation, 4 practice, and 3 progress. Four additional JSX files und
 the adjacent CSS token files contain 246 unique custom-property names, not the headline's 245.
 
 All reusable app UI lives under `apps/mobile/src/ui/`. Learner screens and the shell use 26
-exported primitives and 9 exported composites (including direct module exports). There is no `src/ui/charts/` directory yet.
+exported primitives and 9 exported composites. There is no `src/ui/charts/` directory yet.
 
 ## Current primitives · `src/ui/primitives/`
 
@@ -63,6 +63,9 @@ Composites may accept domain types, but do not import the store or learner-facin
 | `PhraseRow`          | Passed `es`, `en`, `emoji`, `queue\|suggestion`, labels/hint, and non-focusable trailing content                                 |
 | `StatRow`            | A row of passed `Stat` values; current call sites supply three                                                                   |
 | `TagChips`           | Passed tag order/labels/selected suffix and toggle callback; checkbox semantics and a visible selected mark                      |
+| `AudioControls`      | Passed label/note/enabled/callback; metadata-only native audio action                                                            |
+| `LanguageChoices`    | Controlled values/selected/onSelect with localized language names and radio semantics                                            |
+| `NavigationMenu`     | Passed labels/destinations; shared spine handle and dismissible destination sheet                                                |
 
 `ToastHost.tsx` is a deliberate app host, not a reusable composite: it subscribes to the store and
 reads toast copy. Keep store-aware hosts at the UI root rather than weakening the component-layer
@@ -80,19 +83,12 @@ The authored package has ten (`components/navigation/`): `Spine`, `ScreenHeader`
 spine handle and destination sheet; other named headers, exits, resume and transport remain under
 plan 81. The workbench renders that real menu and preserves future named APIs as pending.
 
-The direct-module composites also include:
-
-| Component | Current contract and use |
-| --- | --- |
-| `AudioControls` | Passed label/note/enabled/callback; metadata-only native audio action |
-| `LanguageChoices` | Controlled values/selected/onSelect with localized language names and radio semantics |
-| `NavigationMenu` | Passed labels/destinations; shared spine handle and dismissible destination sheet |
-
 ## Workbench coverage (plan 80)
 
-The registry covers all 35 production component exports, including direct-module `AudioControls`,
-`LanguageChoices` and `NavigationMenu`. A source-based drift test checks component definitions as
-well as the type-checked barrel contract, so bypassing a barrel cannot hide a new component.
+The registry covers all 35 production component exports. `AudioControls`, `LanguageChoices` and
+`NavigationMenu` import from the same `src/ui/components` barrel as the rest. A source-based drift
+test checks component definitions as well as the type-checked barrel contract, so bypassing a barrel
+cannot hide a new component.
 `Sheet`, `ActionBar`, `DifficultySelector` and `TagChips` are explicitly interaction-owned; all
 other exports render in the gallery. There are no exported internal components in this inventory.
 Language choice inspection uses local React state and cannot change learner preferences. Navigation

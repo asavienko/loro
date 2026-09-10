@@ -271,7 +271,7 @@ coverage thresholds; a shared padded-Scroll primitive; hoisting `useLocale`.
 4. [x] `listRow` token + `ListRow` primitive for Settings, More and Music only (48 / 13 / hairline;
        gap is a prop). Children stay screen-specific. E2E names unchanged. Vitest pin like
        `controlStyle.test.ts`. Not NavigationMenu or listen-export consent.
-5. [ ] Barrel-export `LanguageChoices`, `AudioControls`, `NavigationMenu`; switch path imports. Keep
+5. [x] Barrel-export `LanguageChoices`, `AudioControls`, `NavigationMenu`; switch path imports. Keep
        the workbench source-drift test honest.
 6. [ ] Editor snippets (`.vscode/loro.code-snippets`), Cursor hygiene rule, and `loro-development`
        `references/hygiene.md` for the recipe table. No new learner-facing strings.
