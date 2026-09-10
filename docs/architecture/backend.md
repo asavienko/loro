@@ -212,8 +212,8 @@ fallback at every failure boundary.
 
 ### `tts` — target
 
-| Endpoint           | Purpose                                                                                                      |
-| ------------------ | ------------------------------------------------------------------------------------------------------------ |
+| Endpoint           | Purpose                                                                                                                                                                                                                                                                                                                                         |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `POST /tts/render` | Render approved target text as model speech; cached and content-addressed. Catalog **reference** audio is not rendered here — that is the `tts-render` worker. Plan 99 listening-class voices reuse this path with `voice_id` / `asset_class: listening` so they cannot share reference IDs. The transport fails closed until Q-15 pins voices. |
 
 Recorded learner audio never leaves the device; no backend endpoint may accept it. JavaScript

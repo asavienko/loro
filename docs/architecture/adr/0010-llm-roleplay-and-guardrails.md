@@ -3,8 +3,8 @@
 - **Status:** Accepted
 - **Date:** 2026-07-28
 - **Deciders:** Product, tech lead, content lead
-- **Amended:** 2026-07-30 to register the authored open-chat surfaces; 2026-09-09 to allow
-  runtime own-phrase suggestions on Discover (plan 97 / AI-06), never catalog rows
+- **Amended:** 2026-07-30 to register the authored open-chat surfaces; 2026-09-09 to allow runtime
+  own-phrase suggestions on Discover (plan 97 / AI-06), never catalog rows
 
 ## Context
 
@@ -109,10 +109,11 @@ has been lost.
 
 ### 5 · Learner text is data, never instructions
 
-Learner-authored phrase, Discover query text and bounded chat text reaches prompts. It is passed as a delimited field in
-a user turn, never concatenated into the system prompt; delimiters are stripped from the content;
-lengths and turn counts are capped; and the model has **no tools, no retrieval, and no cross-tenant
-context** ([threat-model.md](../threat-model.md#b7--prompt-injection--the-ai-boundary)).
+Learner-authored phrase, Discover query text and bounded chat text reaches prompts. It is passed as
+a delimited field in a user turn, never concatenated into the system prompt; delimiters are stripped
+from the content; lengths and turn counts are capped; and the model has **no tools, no retrieval,
+and no cross-tenant context**
+([threat-model.md](../threat-model.md#b7--prompt-injection--the-ai-boundary)).
 
 Recorded chat audio never reaches the prompt or JavaScript. Native on-device ASR produces text; PCM
 remains handle-only native memory and is released locally. Raw thread text is excluded from
@@ -121,15 +122,15 @@ release decisions, not defaults an implementation may invent.
 
 ### Where AI is explicitly not used
 
-| Not used for                          | Why                                                                                                                             |
-| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| Generating catalog phrases at runtime | Unreviewed content would look official. Authoring-time drafts stay `review_required` until a human merge.                       |
-| Runtime own-phrase suggestions without provenance, edit, or an explicit add | Plan 97 allows marked, editable candidates only; they never receive a catalog id |
-| Scoring pronunciation                 | It's signal processing, must run offline, and audio must not leave the device                                                   |
-| Auto-tagging phrases                  | Difficulty and tags are the _learner's_ declaration — the entire connective thread                                              |
-| Auto-adding suggested phrases         | Rule 6: nothing enters the stream without an explicit tap                                                                       |
-| Deciding what to practise next        | Selection must be deterministic, reproducible on two platforms, offline, and auditable — that's what `loro-core` is for         |
-| Unbounded autonomous chat             | Open chat is topic-bounded, has authored offline continuations, no tools, bounded context and explicit safety/output validation |
+| Not used for                                                                | Why                                                                                                                             |
+| --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Generating catalog phrases at runtime                                       | Unreviewed content would look official. Authoring-time drafts stay `review_required` until a human merge.                       |
+| Runtime own-phrase suggestions without provenance, edit, or an explicit add | Plan 97 allows marked, editable candidates only; they never receive a catalog id                                                |
+| Scoring pronunciation                                                       | It's signal processing, must run offline, and audio must not leave the device                                                   |
+| Auto-tagging phrases                                                        | Difficulty and tags are the _learner's_ declaration — the entire connective thread                                              |
+| Auto-adding suggested phrases                                               | Rule 6: nothing enters the stream without an explicit tap                                                                       |
+| Deciding what to practise next                                              | Selection must be deterministic, reproducible on two platforms, offline, and auditable — that's what `loro-core` is for         |
+| Unbounded autonomous chat                                                   | Open chat is topic-bounded, has authored offline continuations, no tools, bounded context and explicit safety/output validation |
 
 ## Consequences
 

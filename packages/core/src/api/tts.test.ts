@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { LISTENING_ASSET_CLASS, REFERENCE_ASSET_CLASS, listeningClipKey } from '../listening/index.js'
+import {
+  LISTENING_ASSET_CLASS,
+  REFERENCE_ASSET_CLASS,
+  listeningClipKey,
+} from '../listening/index.js'
 import fixture from './fixtures/tts-render-listening.json'
 import { TtsRequestSchema, TtsResponseSchema } from './draft.js'
 
@@ -44,20 +48,19 @@ describe('POST /tts/render listening-class contract', () => {
         cached: true,
       }).success,
     ).toBe(false)
-    expect(
-      TtsResponseSchema.safeParse({ ...listeningResponse, audio: 'base64' }).success,
-    ).toBe(false)
+    expect(TtsResponseSchema.safeParse({ ...listeningResponse, audio: 'base64' }).success).toBe(
+      false,
+    )
     expect(TtsResponseSchema.parse({ ...listeningResponse, ms: null }).ms).toBeNull()
   })
 
   it('accepts bg-BG and ru-RU listening locales and rejects a one-voice catalog body', () => {
     expect(TtsRequestSchema.parse({ ...listeningRequest, lang: 'bg-BG' }).lang).toBe('bg-BG')
     expect(TtsRequestSchema.parse({ ...listeningRequest, lang: 'ru-RU' }).lang).toBe('ru-RU')
+    expect(TtsRequestSchema.safeParse({ ...listeningRequest, lang: 'en-US' }).success).toBe(false)
     expect(
-      TtsRequestSchema.safeParse({ ...listeningRequest, lang: 'en-US' }).success,
-    ).toBe(false)
-    expect(
-      TtsRequestSchema.parse({ ...listeningRequest, asset_class: REFERENCE_ASSET_CLASS }).asset_class,
+      TtsRequestSchema.parse({ ...listeningRequest, asset_class: REFERENCE_ASSET_CLASS })
+        .asset_class,
     ).toBe(REFERENCE_ASSET_CLASS)
   })
 

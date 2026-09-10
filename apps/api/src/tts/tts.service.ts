@@ -15,7 +15,12 @@ import {
   LISTENING_MODEL_ID,
   normalizeListeningText,
 } from '@loro/core'
-import { TtsRequestSchema, TtsResponseSchema, type TtsRequest, type TtsResponse } from '@loro/core/api/draft'
+import {
+  TtsRequestSchema,
+  TtsResponseSchema,
+  type TtsRequest,
+  type TtsResponse,
+} from '@loro/core/api/draft'
 import { config } from '../common/config.js'
 import { SERVER_CLOCK, type ServerClock } from '../common/clock.js'
 import { LoroError, RATE_LIMITS } from '../common/errors.js'
@@ -105,9 +110,7 @@ export class TtsService {
     const voiceId = this.approvedVoice(request.data, parsedConfig.voices)
     this.take(input.userId, input.ip)
     const voiceVersion = `${request.data.asset_class}:${parsedConfig.model}:${voiceId}`
-    const identity = digestUtf8(
-      `${input.userId}:${textHash}:${request.data.lang}:${voiceVersion}`,
-    )
+    const identity = digestUtf8(`${input.userId}:${textHash}:${request.data.lang}:${voiceVersion}`)
     const cached = await this.readIdentity(identity, request.data)
     if (cached !== null) return cached
     const pending = this.inflight.get(identity)
@@ -148,7 +151,10 @@ export class TtsService {
         throw new LoroError('PROVIDER_UNAVAILABLE', 'Listening model is not pinned')
       }
       if (!roster.some((voice) => voice.id === request.voice_id && voice.licensed)) {
-        throw new LoroError('PROVIDER_UNAVAILABLE', 'Listening voice is not an approved licensed id')
+        throw new LoroError(
+          'PROVIDER_UNAVAILABLE',
+          'Listening voice is not an approved licensed id',
+        )
       }
       return request.voice_id
     }
@@ -187,10 +193,7 @@ export class TtsService {
     return true
   }
 
-  private async readIdentity(
-    identity: string,
-    request: TtsRequest,
-  ): Promise<TtsResponse | null> {
+  private async readIdentity(identity: string, request: TtsRequest): Promise<TtsResponse | null> {
     try {
       const mapped = JSON.parse(
         await readFile(join(config.ttsCacheDir(), 'id', `${identity}.json`), 'utf8'),

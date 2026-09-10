@@ -29,13 +29,13 @@ const ok = {
 
 describe('phrase suggest contract', () => {
   it('rejects unsupported pairs, audio-shaped extras and short queries', () => {
-    expect(PhraseSuggestRequestSchema.safeParse({ ...request, native_language: 'es' }).success).toBe(
+    expect(
+      PhraseSuggestRequestSchema.safeParse({ ...request, native_language: 'es' }).success,
+    ).toBe(false)
+    expect(PhraseSuggestRequestSchema.safeParse({ ...request, query: 'x' }).success).toBe(false)
+    expect(PhraseSuggestRequestSchema.safeParse({ ...request, audio: 'anything' }).success).toBe(
       false,
     )
-    expect(PhraseSuggestRequestSchema.safeParse({ ...request, query: 'x' }).success).toBe(false)
-    expect(
-      PhraseSuggestRequestSchema.safeParse({ ...request, audio: 'anything' }).success,
-    ).toBe(false)
     expect(
       PhraseSuggestRequestSchema.safeParse({
         native_language: 'bg',

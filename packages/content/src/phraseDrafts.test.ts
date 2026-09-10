@@ -12,9 +12,7 @@ describe('authoring-time phrase drafts', () => {
     })
     expect(draft.review_required).toBe(true)
     expect(parsePhraseAuthoringDraft(draft).phrases).toHaveLength(1)
-    expect(() =>
-      parsePhraseAuthoringDraft({ ...draft, review_required: false }),
-    ).toThrow()
+    expect(() => parsePhraseAuthoringDraft({ ...draft, review_required: false })).toThrow()
     expect(loadCatalog().phrases.some((phrase) => 'review_required' in phrase)).toBe(false)
     expect(() =>
       parsePhraseAuthoringDraft({
@@ -36,15 +34,15 @@ describe('authoring-time phrase drafts', () => {
 
   it('requires explicit topic, target and native flags', () => {
     expect(() => parseDraftPhraseArgs([])).toThrow(/required/)
-    expect(() => parseDraftPhraseArgs(['--targt', 'es-ES', '--topic', 'x', '--native', 'en'])).toThrow(
-      /unknown flag/,
-    )
-    expect(parseDraftPhraseArgs(['--topic', 'pharmacy', '--target', 'bg-BG', '--native', 'en'])).toEqual(
-      {
-        topic: 'pharmacy',
-        target_locale: 'bg-BG',
-        native_language: 'en',
-      },
-    )
+    expect(() =>
+      parseDraftPhraseArgs(['--targt', 'es-ES', '--topic', 'x', '--native', 'en']),
+    ).toThrow(/unknown flag/)
+    expect(
+      parseDraftPhraseArgs(['--topic', 'pharmacy', '--target', 'bg-BG', '--native', 'en']),
+    ).toEqual({
+      topic: 'pharmacy',
+      target_locale: 'bg-BG',
+      native_language: 'en',
+    })
   })
 })

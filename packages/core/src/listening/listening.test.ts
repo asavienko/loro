@@ -73,9 +73,9 @@ describe('AS-07 listening identity', () => {
       modelId: 'eleven_multilingual_v2',
       codec: LISTENING_CODEC,
     }
-    expect(
-      listeningClipKey({ ...shared, assetClass: LISTENING_ASSET_CLASS }),
-    ).not.toBe(listeningClipKey({ ...shared, assetClass: REFERENCE_ASSET_CLASS }))
+    expect(listeningClipKey({ ...shared, assetClass: LISTENING_ASSET_CLASS })).not.toBe(
+      listeningClipKey({ ...shared, assetClass: REFERENCE_ASSET_CLASS }),
+    )
   })
 
   it('invalidates on text digest or voice change', () => {
@@ -113,9 +113,7 @@ describe('AS-07 listening identity', () => {
   })
 
   it('treats learner-authored rows as a cloud-TTS consent event', () => {
-    expect(
-      isLearnerAuthoredListeningText({ phraseId: null, source: 'custom' }),
-    ).toBe(true)
+    expect(isLearnerAuthoredListeningText({ phraseId: null, source: 'custom' })).toBe(true)
     expect(
       isLearnerAuthoredListeningText({ phraseId: catalogPhraseId('cafe1'), source: 'starter' }),
     ).toBe(false)

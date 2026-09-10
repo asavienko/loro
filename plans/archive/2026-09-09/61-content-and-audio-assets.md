@@ -82,8 +82,8 @@ does not approve a production voice. Keep remaining native cache/background work
    render metadata. Select and review an `es-ES` voice before the seed batch; add independently
    reviewed voice mappings for `bg-BG` and `ru-RU` before rendering those catalogs. Never silently
    substitute a voice or re-render an approved reference under the same asset ID. Additional
-   licensed listening voices (plan 99, ≥2 per enabled target) are a distinct asset class after
-   Q-15; they do not replace this reference voice.
+   licensed listening voices (plan 99, ≥2 per enabled target) are a distinct asset class after Q-15;
+   they do not replace this reference voice.
 3. Send approved catalog text only. Keep the key in SOPS/runtime secrets, redact credentials from
    logs/errors, and never expose it through `EXPO_PUBLIC_*`. No learner recordings enter this
    pipeline. Use Text-to-Speech access and voice-read permission without unrelated account access.

@@ -57,7 +57,8 @@ Sign-in, purchase verification, sync and genuinely server-only generation may be
 must distinguish “queued”, “not downloaded” and “requires connection”; it must not display a fake
 success or a fabricated score. Plan 99 listening generation is server-only on a cache miss: first
 prepare needs network; a verified on-disk batch then plays in airplane mode. Imported/captured
-content can become usable locally only when its local parsing/capture implementation actually exists.
+content can become usable locally only when its local parsing/capture implementation actually
+exists.
 
 Recorded audio never enters a deferred upload queue. Cloud ASR and every other recorded-audio upload
 are prohibited by the learner-facing promise and ADR-0011; consent is not an exception.
@@ -78,18 +79,18 @@ canned transcript in `ChatLogic` are prototype-only (`Loro Chat.dc.html:514`, `5
 
 This is a delivery checklist, not a claim about current behaviour.
 
-| Capability                         | Required offline result                               | Current implementation                                         |
-| ---------------------------------- | ----------------------------------------------------- | -------------------------------------------------------------- |
-| Implemented text screens/catalog   | Navigate and read bundled content                     | Bundled native/web content with cold-launch persistence        |
-| Learner state and progress         | Persist across force-quit and device restart          | SQLite runtime; Android force-stop and browser reload verified |
-| Review scheduling                  | Plan and record locally from authoritative core maths | Canonical Rust scheduling and transactional writes             |
-| Audio for owned/daily/trip phrases | Play verified local assets                            | Foreground device TTS; recorded cache/prefetch remain          |
+| Capability                         | Required offline result                               | Current implementation                                                                            |
+| ---------------------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Implemented text screens/catalog   | Navigate and read bundled content                     | Bundled native/web content with cold-launch persistence                                           |
+| Learner state and progress         | Persist across force-quit and device restart          | SQLite runtime; Android force-stop and browser reload verified                                    |
+| Review scheduling                  | Plan and record locally from authoritative core maths | Canonical Rust scheduling and transactional writes                                                |
+| Audio for owned/daily/trip phrases | Play verified local assets                            | Foreground device TTS; recorded cache/prefetch remain                                             |
 | Listening companion (`AS-07`)      | Play a previously cached phrase×voice batch from disk | Composer and native file-URI cache landed; first generate needs network and Q-15 voices (plan 99) |
-| Speech/ASR/pronunciation/prosody   | Use on-device modules and real measurements           | Strict native ASR with reveal fallback; DSP/onset remain       |
-| Sync                               | Queue locally and converge later                      | Authenticated Postgres/client replay and merge implemented     |
-| Trips/widgets/notifications        | Derive from durable local calendar state              | Not implemented                                                |
-| Open chat                          | Continue through bundled topic/reply graphs           | Authored prototype only; no route/domain/persistence           |
-| Live AI/translation/purchase       | Degrade or defer with honest copy                     | Server-side pieces are partial or absent                       |
+| Speech/ASR/pronunciation/prosody   | Use on-device modules and real measurements           | Strict native ASR with reveal fallback; DSP/onset remain                                          |
+| Sync                               | Queue locally and converge later                      | Authenticated Postgres/client replay and merge implemented                                        |
+| Trips/widgets/notifications        | Derive from durable local calendar state              | Not implemented                                                                                   |
+| Open chat                          | Continue through bundled topic/reply graphs           | Authored prototype only; no route/domain/persistence                                              |
+| Live AI/translation/purchase       | Degrade or defer with honest copy                     | Server-side pieces are partial or absent                                                          |
 
 A feature may be documented as offline only after its asset/data dependencies, cold-launch path and
 failure behaviour are implemented and tested.

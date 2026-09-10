@@ -1,5 +1,10 @@
 import { LISTENING_REPEATS_DEFAULT, type ListeningBlocker } from '@loro/core'
-import { listenViewModel, type ListenPhase, type ListenProgress, type ListenViewModel } from './listenCompanion'
+import {
+  listenViewModel,
+  type ListenPhase,
+  type ListenProgress,
+  type ListenViewModel,
+} from './listenCompanion'
 
 /** Keep in lockstep with `e2e/listenFlow.ts`. Playwright cannot import this file. */
 export const LISTEN_SCENARIOS = [
@@ -35,7 +40,9 @@ export function listenScenarioFromSearch(value: unknown): ListenScenario | null 
 
 const emptyProgress: ListenProgress = { done: 0, total: 0, failed: 0 }
 
-function base(changes: Partial<Parameters<typeof listenViewModel>[0]> & { phase: ListenPhase }): ListenViewModel {
+function base(
+  changes: Partial<Parameters<typeof listenViewModel>[0]> & { phase: ListenPhase },
+): ListenViewModel {
   return listenViewModel({
     locale: 'es-ES',
     phrases: [{ id: 'row-1', targetText: 'Un café, por favor.', learnerAuthored: false }],
@@ -101,7 +108,11 @@ export function fixtureListenView(scenario: ListenScenario): ListenViewModel {
     sessionBusy: scenario === 'session-busy',
     diskFull: scenario === 'disk-full',
     quotaExceeded: scenario === 'quota',
-    cacheComplete: scenario === 'ready-to-listen' || scenario === 'playing' || scenario === 'share-ready' || scenario === 'share-unavailable',
+    cacheComplete:
+      scenario === 'ready-to-listen' ||
+      scenario === 'playing' ||
+      scenario === 'share-ready' ||
+      scenario === 'share-unavailable',
     progress:
       scenario === 'generating'
         ? { done: 3, total: 12, failed: 0 }

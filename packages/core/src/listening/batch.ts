@@ -13,11 +13,7 @@ import {
 } from './constants.js'
 import { isLearnerAuthoredListeningText } from './identity.js'
 
-export type ListeningRepeats =
-  | typeof LISTENING_REPEATS_MIN
-  | 3
-  | 4
-  | typeof LISTENING_REPEATS_MAX
+export type ListeningRepeats = typeof LISTENING_REPEATS_MIN | 3 | 4 | typeof LISTENING_REPEATS_MAX
 
 export function clampListeningRepeats(value: number): ListeningRepeats {
   if (!Number.isInteger(value)) return LISTENING_REPEATS_DEFAULT

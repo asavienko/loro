@@ -50,8 +50,7 @@ export const a11yCopy = {
       return message('a11y.add.opensSheet')
     },
     ownRow: (query: string): string => message('a11y.add.ownRow', { query }),
-    suggestedRow: (es: string, en: string): string =>
-      message('a11y.add.suggestedRow', { es, en }),
+    suggestedRow: (es: string, en: string): string => message('a11y.add.suggestedRow', { es, en }),
     get sheetTarget() {
       return message('a11y.add.sheetTarget')
     },

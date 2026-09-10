@@ -1,10 +1,6 @@
 import type { TargetLocale } from '../domain/languages.js'
 import type { PhraseSource } from '../domain/phrase.js'
-import {
-  LISTENING_ASSET_CLASS,
-  LISTENING_CODEC,
-  REFERENCE_ASSET_CLASS,
-} from './constants.js'
+import { LISTENING_ASSET_CLASS, LISTENING_CODEC, REFERENCE_ASSET_CLASS } from './constants.js'
 
 export interface ListeningClipIdentity {
   readonly assetClass: string
@@ -38,7 +34,10 @@ export function listeningClipKey(identity: ListeningClipIdentity): string {
   if (!isListeningTextDigest(identity.textDigest)) {
     throw new Error('Listening text digest must be sha256 hex')
   }
-  if (identity.assetClass !== LISTENING_ASSET_CLASS && identity.assetClass !== REFERENCE_ASSET_CLASS)
+  if (
+    identity.assetClass !== LISTENING_ASSET_CLASS &&
+    identity.assetClass !== REFERENCE_ASSET_CLASS
+  )
     throw new Error('Unknown audio asset class')
   return [
     identity.assetClass,
@@ -61,15 +60,12 @@ export function contentAddressFilename(sha256: string): `sha256/${string}.m4a` {
 }
 
 export function listeningShareFilename(targetLocale: TargetLocale, localDay: string): string {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(localDay)) throw new Error('Share filename needs clock.localDay()')
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(localDay))
+    throw new Error('Share filename needs clock.localDay()')
   return `loro-${targetLocale}-${localDay}-listen.m4a`
 }
 
-const LEARNER_AUTHORED_SOURCES: ReadonlySet<PhraseSource> = new Set([
-  'custom',
-  'import',
-  'capture',
-])
+const LEARNER_AUTHORED_SOURCES: ReadonlySet<PhraseSource> = new Set(['custom', 'import', 'capture'])
 
 /** Catalog text is a Q-15 event; learner-authored text needs an extra confirmation. */
 export function isLearnerAuthoredListeningText(phrase: {

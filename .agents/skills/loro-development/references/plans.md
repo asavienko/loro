@@ -11,8 +11,8 @@ authoritative. A request to review or organize plans does not authorize implemen
   completed records and historical snapshots. A missing former path is not a missing plan.
 - Update the existing owner instead of duplicating its unfinished scope. When an archived snapshot
   names a current owner, follow that owner. User-archived partial plans can still own remaining
-  work. Listening companions, licensed multi-voice export, lyrics/music and Discover generation
-  must not take plan 61's canonical reference audio, on-device ASR, or `ProgressDelta`.
+  work. Listening companions, licensed multi-voice export, lyrics/music and Discover generation must
+  not take plan 61's canonical reference audio, on-device ASR, or `ProgressDelta`.
 - For a new plan, inspect active, archived and untracked IDs, then `context.mjs --full` for sibling
   worktrees. Allocate above the highest assigned number across those trees; never reuse gaps or
   hardcode the next ID in this skill. Use `plans/NN-topic.md`, include requirement IDs, scope,
@@ -26,12 +26,12 @@ authoritative. A request to review or organize plans does not authorize implemen
 Update the plan's header status and active-index row together as coherent implementation slices
 land. Record what was implemented, actual validation evidence, remaining work and its named gates.
 
-| Status | Use when                                                                                                                             |
-| ------ | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `—`    | Implementation remains; identify technical prerequisites for starting it.                                                            |
+| Status | Use when                                                                                                                          |
+| ------ | --------------------------------------------------------------------------------------------------------------------------------- |
+| `—`    | Implementation remains; identify technical prerequisites for starting it.                                                         |
 | `🟡`   | Work is in progress or partly implemented; state what remains and what blocks it, or that nothing external blocks the next slice. |
-| `⛔`   | A named decision or evidence gate blocks the stated slice; preserve any independent work that can proceed.                           |
-| `✅`   | The recorded scope and its acceptance criteria are complete, with evidence; archive it in the same change.                           |
+| `⛔`   | A named decision or evidence gate blocks the stated slice; preserve any independent work that can proceed.                        |
+| `✅`   | The recorded scope and its acceptance criteria are complete, with evidence; archive it in the same change.                        |
 
 Implemented runtime with outstanding required device, linguistic or service acceptance stays
 partial. A merged PR, passing browser suite or archive location alone is not completion evidence. Do

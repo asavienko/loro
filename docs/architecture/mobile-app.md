@@ -7,21 +7,21 @@ new work is extending toward.
 
 ## Implementation status
 
-The Expo Router app implements eight learner screens plus Languages, Account, More, Settings and
-the shell. SQLite backs progress and course resume; generated Rust handles scheduling and merge.
-Local Expo modules provide foreground device TTS/on-device ASR. Postgres auth/sync is optional
-for practice. Native projects are generated from app configuration; see
+The Expo Router app implements eight learner screens plus Languages, Account, More, Settings and the
+shell. SQLite backs progress and course resume; generated Rust handles scheduling and merge. Local
+Expo modules provide foreground device TTS/on-device ASR. Postgres auth/sync is optional for
+practice. Native projects are generated from app configuration; see
 [runtime evidence](../process/persistent-practice.md).
 
-| Area                  | Implemented now                                                                                          | Target                                                         |
-| --------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| Routes                | Today, onboarding, Add, phrase detail, Stream, Speak, Refrain, Progress, Languages, Account, More, Settings | The remaining blueprint routes, trips, labs, and Run        |
-| Domain and engines    | Domain contracts plus Stream/Refrain/Speak engines in `@loro/core`                          | All engines behind the same `PracticeEngine` contract                           |
-| App state             | Repository projections in Zustand; durable writes commit to SQLite first                    | SQLite as durable truth; Zustand only for resumable sessions                    |
-| Persistence           | OP-SQLite on device, durable SQL.js on web; transactional repositories and outbox           | Physical-device upgrade/process-death acceptance                                |
-| Rust core             | Generated WASM/UniFFI runtime bridge with reference parity                                  | Full iOS and device-floor acceptance                                            |
-| Native capabilities   | Local Expo modules provide foreground TTS and strictly on-device ASR                        | Audio, speech, ASR, DSP, notifications, purchases, and widgets through wrappers |
-| Automated UI coverage | Playwright on Expo Web, driven through learner-visible interactions                         | Keep web coverage and add native/device suites for native behavior              |
+| Area                  | Implemented now                                                                                             | Target                                                                          |
+| --------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Routes                | Today, onboarding, Add, phrase detail, Stream, Speak, Refrain, Progress, Languages, Account, More, Settings | The remaining blueprint routes, trips, labs, and Run                            |
+| Domain and engines    | Domain contracts plus Stream/Refrain/Speak engines in `@loro/core`                                          | All engines behind the same `PracticeEngine` contract                           |
+| App state             | Repository projections in Zustand; durable writes commit to SQLite first                                    | SQLite as durable truth; Zustand only for resumable sessions                    |
+| Persistence           | OP-SQLite on device, durable SQL.js on web; transactional repositories and outbox                           | Physical-device upgrade/process-death acceptance                                |
+| Rust core             | Generated WASM/UniFFI runtime bridge with reference parity                                                  | Full iOS and device-floor acceptance                                            |
+| Native capabilities   | Local Expo modules provide foreground TTS and strictly on-device ASR                                        | Audio, speech, ASR, DSP, notifications, purchases, and widgets through wrappers |
+| Automated UI coverage | Playwright on Expo Web, driven through learner-visible interactions                                         | Keep web coverage and add native/device suites for native behavior              |
 
 “Target” in this document is a constraint for extension work, not evidence that a folder, package,
 or capability already exists.
@@ -306,12 +306,11 @@ Unit tests cover the mobile store, clocks, copy ownership, core engines, persist
 real SQLite statements through the Node driver. The browser suite covers the behavior that can
 actually run today.
 
-`e2e/states.ts` is the learner-visible state manifest. Click helpers (`enter`, `doOneRep`,
-`lockIn`, markers) live in `e2e/helpers/`; account mocks stay in `accountFlow.ts`.
-`route-coverage.spec.ts` proves every route
-has an owner and every declared route exists; accessibility and text-scale suites enter the same
-states by clicking as a learner would. A new state belongs in the manifest in the same coherent
-change as the implementation.
+`e2e/states.ts` is the learner-visible state manifest. Click helpers (`enter`, `doOneRep`, `lockIn`,
+markers) live in `e2e/helpers/`; account mocks stay in `accountFlow.ts`. `route-coverage.spec.ts`
+proves every route has an owner and every declared route exists; accessibility and text-scale suites
+enter the same states by clicking as a learner would. A new state belongs in the manifest in the
+same coherent change as the implementation.
 
 ```bash
 nvm use 22

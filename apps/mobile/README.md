@@ -22,7 +22,7 @@ loop:
 | `practice/speak`   | On-device speech or offline word reveal                                     |
 | `languages`        | Native and learning language selection                                      |
 | `account`          | Optional Google/Apple/email sign-in and sync status                         |
-| `listen-export`    | Listening companion: generate, cache, listen; share gated on Q-22        |
+| `listen-export`    | Listening companion: generate, cache, listen; share gated on Q-22           |
 | `_layout`          | Router shell + toast host                                                   |
 
 The other 15 learner screens — chat, the prosody and pronunciation labs, the Run, trips, settings —
