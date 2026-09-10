@@ -20,6 +20,7 @@ import {
   contentAddressUri,
   isApprovedListeningVoice,
   isLearnerAuthoredListeningText,
+  isPinnedListeningModel,
   listeningAllowlistReady,
   listeningBlockers,
   listeningClipKey,
@@ -175,6 +176,7 @@ describe('AS-07 listening batch', () => {
     expect(LISTENING_VOICE_DECISION.voices['es-ES']).toHaveLength(0)
     expect(APPROVED_LISTENING_VOICES).toBe(LISTENING_VOICE_DECISION.voices)
     expect(LISTENING_MODEL_ID).toBe(LISTENING_VOICE_DECISION.modelId)
+    expect(isPinnedListeningModel('eleven_multilingual_v2')).toBe(false)
     expect(listeningAllowlistReady('es-ES')).toBe(false)
     expect(listeningAllowlistReady('bg-BG')).toBe(false)
     expect(listeningAllowlistReady('ru-RU')).toBe(false)

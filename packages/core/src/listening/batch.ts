@@ -180,6 +180,11 @@ export function listeningModelIsPinned(): boolean {
   return LISTENING_MODEL_ID !== null && LISTENING_MODEL_ID.length > 0
 }
 
+/** True only when Q-15 has pinned a non-empty model id that matches this request. */
+export function isPinnedListeningModel(modelId: string): boolean {
+  return listeningModelIsPinned() && LISTENING_MODEL_ID === modelId
+}
+
 export function listeningCodec(): typeof LISTENING_CODEC {
   return LISTENING_CODEC
 }
