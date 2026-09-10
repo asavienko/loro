@@ -110,24 +110,16 @@ for (const state of STATES) {
 test.describe('whole-manifest touch targets', () => {
   test.describe.configure({ retries: 0, timeout: 600_000 })
 
-  test(
-    'every interactive element meets the 44 px touch target',
-    {
-      // Collection-time timeout. test.setTimeout() inside describe.configure was
-      // ignored and the walk still died at five minutes on the last music states.
-      timeout: 600_000,
-    },
-    async ({ page }) => {
-      const offenders: string[] = []
+  test('every interactive element meets the 44 px touch target', async ({ page }) => {
+    const offenders: string[] = []
 
-      for (const state of STATES) {
-        await enter(page, state, onboard)
-        offenders.push(...(await tooSmall(page, state.name)))
-      }
+    for (const state of STATES) {
+      await enter(page, state, onboard)
+      offenders.push(...(await tooSmall(page, state.name)))
+    }
 
-      expect(offenders, 'interactive elements below the 44 px floor').toEqual([])
-    },
-  )
+    expect(offenders, 'interactive elements below the 44 px floor').toEqual([])
+  })
 })
 
 test('a radio and a checkbox report which one is chosen', async ({ page }) => {
