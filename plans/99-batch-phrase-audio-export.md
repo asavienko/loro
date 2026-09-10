@@ -17,11 +17,14 @@
   (`emulator-5554`, `app.loro.android.dev`), native `download()` fetched the labeled silent AAC over
   loopback HTTP (20× `fixture-http-download` + sha256
   `7450e588d78b20dabaccb960a9860951f2374de5d18756751f358578727cb6b0`), then airplane mode
-  (`ping 8.8.8.8` unreachable) replayed that `file://` clip via `playFile`. That is not
-  physical-device 58/72 and not licensed Q-15 audio. Device TTS is a labeled fallback, not the
-  primary path. `CI_BASE_REF=origin/main pnpm ci:local` passed at `bcd35dc` (learner E2E 197,
-  workbench, production-e2e, mobile-bundle, API image). Item 7 pins are filled; pronunciation review
-  and Q-22 remain.
+  (`ping 8.8.8.8` unreachable) replayed that `file://` clip via `playFile`. Debug fixture seed is
+  skipped when licensed generate is available (native cache + API URL + pins + network) so Generate
+  uses `POST /tts/render` + native `download()`, not `installDevFixture`. `TTS_STUB_RENDER=1` may
+  serve listening-class silence without a bearer for local cache wiring; it is not licensed neural
+  audio. That is not physical-device 58/72 and not licensed Q-15 audio. Device TTS is a labeled
+  fallback, not the primary path. `CI_BASE_REF=origin/main pnpm ci:local` passed at `bcd35dc`
+  (learner E2E 197, workbench, production-e2e, mobile-bundle, API image). Item 7 pins are filled;
+  pronunciation review and Q-22 remain.
 - **Depends on:** 56 route declaration; 81 More destination; 59 active-course phrase inventory; 87
   target locale; 62 disk cache, atomic download, and exclusive playback session; 86 ElevenLabs
   transport; 61 asset identity and checksum policy for model audio; 58/72 for native evidence. The
@@ -338,8 +341,11 @@ API exists; that API still returns a file URI only.
    86/61/66 for the live route).** Listening-class contract, ElevenLabs transport, and native
    file-URI cache/`playFile` landed. Prepare uses the pinned roster. Default stub/missing key still
    fail closed. `TTS_STUB_RENDER=1` is a labeled listening-class download path, not licensed neural
-   quality and not catalog publish. Browser generate stays unavailable until a real native/web
-   encoder exists. Device TTS fallback stays labeled. Live ElevenLabs must not run in CI.
+   quality and not catalog publish. With that flag, listening-class render and asset GET may omit a
+   bearer so a local device can fill the native cache; ElevenLabs still requires a session. Debug
+   APKs skip `installDevFixture` when licensed generate is available. Browser generate stays
+   unavailable until a real native/web encoder exists. Device TTS fallback stays labeled. Live
+   ElevenLabs must not run in CI.
 3. **Airplane-mode in-app listen.** Emulator evidence (2026-09-10): debug APK with embedded bundle,
    loopback HTTP fixture `download()` + sha256 + pin, airplane mode, `playFile` from `file://`. This
    does **not** require Q-22. Physical-device 58/72 and pronunciation-reviewed generate remain open.

@@ -52,8 +52,8 @@ All paths have the `/v1` prefix. Content and health remain public.
 | POST     | `/sync/push`, `/sync/pull`, `/sync/status`                     | Bearer and matching `X-Loro-Device` required                    |
 | POST     | `/ai/scene`                                                    | Bundled, validated roleplay scene                               |
 | GET      | `/ai/themes`                                                   | Available bundled themes                                        |
-| POST     | `/tts/render`                                                  | Authenticated; identity JSON only. Default stub 503; ElevenLabs or `TTS_STUB_RENDER=1` listening-class |
-| GET      | `/tts/assets/:sha256`                                          | Authenticated checksum bytes from the process disk cache        |
+| POST     | `/tts/render`                                                  | Authenticated ElevenLabs; identity JSON only. Default stub 503; `TTS_STUB_RENDER=1` listening-class may omit a bearer locally |
+| GET      | `/tts/assets/:sha256`                                          | Authenticated checksum bytes, or unauthenticated when stub-render listening is on |
 
 OAuth uses `@loro/core/api/oauth`; other auth and sync use `@loro/core/api/account` and
 `@loro/core/api/sync` schemas at the transport boundary. Push validates the shared envelope, its

@@ -277,8 +277,10 @@ disabled-by-default `POST /tts/render`, and catalog-file playback with device-TT
 implemented ([plan 98](../../plans/98-voice-and-tts-integration.md)). Listening-class generate uses
 the 2026-09-10 `LISTENING_VOICE_DECISION` pins and still fails closed for a wrong voice, unpinned
 model, missing key, or default stub. Local development may use a labeled stub only when
-`TTS_STUB_RENDER=1` (listening-class checksum metadata + download URL; not catalog publish). CI
-must not spend provider credits, and stub audio must not be presented as licensed neural quality. Pronunciation review remains before calling pins production-quality
+`TTS_STUB_RENDER=1` (listening-class checksum metadata + download URL; not catalog publish). That
+flag may omit a bearer for listening-class render/asset locally; ElevenLabs still requires a
+session. CI must not spend provider credits, and stub audio must not be presented as licensed neural
+quality. Pronunciation review remains before calling pins production-quality
 ([Q-15](../decisions/open-questions.md#q-15)). Preserve approved audio as immutable,
 checksum-addressed assets with voice/model/settings provenance; a provider update must not silently
 replace a learner reference or its derived contours.
