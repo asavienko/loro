@@ -31,6 +31,7 @@ export function Field({
   multiline = false,
   editable = true,
   clearLabel,
+  clearGlyph,
   onClear,
   style,
   testID,
@@ -50,6 +51,8 @@ export function Field({
   editable?: boolean | undefined
   /** Required when `onClear` is set — a glyph has no accessible name. */
   clearLabel?: string | undefined
+  /** Required when `onClear` is set. Pass owned copy; this file does not import `copy`. */
+  clearGlyph?: string | undefined
   onClear?: (() => void) | undefined
   style?: StyleProp<TextStyle> | undefined
   testID?: string | undefined
@@ -88,13 +91,13 @@ export function Field({
   )
 
   if (!showClear) return input
-  if (clearLabel === undefined) {
-    throw new Error('Field clear control requires clearLabel')
+  if (clearLabel === undefined || clearGlyph === undefined) {
+    throw new Error('Field clear control requires clearLabel and clearGlyph')
   }
   return (
     <Row align="center">
       {input}
-      <IconButton glyph="✕" label={clearLabel} onPress={onClear} />
+      <IconButton glyph={clearGlyph} label={clearLabel} onPress={onClear} />
     </Row>
   )
 }
