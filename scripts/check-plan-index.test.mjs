@@ -6,8 +6,10 @@ import test from 'node:test'
 import { fileURLToPath } from 'node:url'
 import {
   checkPlanIndex,
+  discoverArchivedIds,
   discoverAssignedIds,
   discoverTopLevelPlans,
+  documentedCollision,
   hasRowForPlan,
   planIndexErrors,
 } from './check-plan-index.mjs'
@@ -27,7 +29,8 @@ test('the working tree index matches top-level plans and next is highest assigne
 test('two 96 rows still pass when the collision is documented', () => {
   assert.equal(hasRowForPlan(readme, '96-phrase-music-generation.md'), true)
   assert.equal(hasRowForPlan(readme, '96-account-sign-in-screens.md'), true)
-  assert.match(readme, /collision/i)
+  assert.equal(documentedCollision(readme, 96), true)
+  assert.equal(documentedCollision(readme, 100), false)
 })
 
 test('removing a remaining top-level row from a copy of README fails', () => {
@@ -38,7 +41,9 @@ test('removing a remaining top-level row from a copy of README fails', () => {
     readme: stripped,
   })
   assert.ok(
-    errors.some((error) => error.includes('Top-level plan has no README row: 99-batch-phrase-audio-export.md')),
+    errors.some((error) =>
+      error.includes('Top-level plan has no README row: 99-batch-phrase-audio-export.md'),
+    ),
     errors.join('\n'),
   )
 })
@@ -50,7 +55,36 @@ test('“next is 101” is required while 100 is the highest assigned ID', () =>
     assignedIds: discoverAssignedIds(join(root, 'plans')),
     readme: lagged,
   })
-  assert.ok(errors.some((error) => error.includes('next is 100')), errors.join('\n'))
+  assert.ok(
+    errors.some((error) => error.includes('next is 100')),
+    errors.join('\n'),
+  )
+})
+
+test('reusing an archived ID as a new top-level file fails unless that ID is named in a collision note', () => {
+  const assigned = discoverAssignedIds(join(root, 'plans'))
+  const archived = discoverArchivedIds(join(root, 'plans'))
+  assert.ok(archived.includes(100), 'plan 100 must remain archived for this reuse pin')
+  const reused = planIndexErrors({
+    plans: [...discoverTopLevelPlans(join(root, 'plans')), { name: '100-oops.md', id: 100 }],
+    assignedIds: assigned,
+    archivedIds: archived,
+    readme: `${readme}\n| [100](100-oops.md) | oops |\n`,
+  })
+  assert.ok(
+    reused.some((error) => error.includes('reuses archived ID 100')),
+    reused.join('\n'),
+  )
+  const named = planIndexErrors({
+    plans: [{ name: '100-oops.md', id: 100 }],
+    assignedIds: [100],
+    archivedIds: [100],
+    readme: `Number collision (unresolved): two 100s.
+The highest assigned ID is **100** and the next new plan is **101**.
+| [100](100-oops.md) | oops |
+`,
+  })
+  assert.deepEqual(named, [])
 })
 
 test('duplicate top-level IDs fail without a collision note and pass with one', () => {
@@ -63,7 +97,10 @@ test('duplicate top-level IDs fail without a collision note and pass with one', 
       plans,
       readme: 'The highest assigned ID is **96** and the next new plan is **97**.\n',
     })
-    assert.ok(bare.some((error) => error.includes('Duplicate plan ID 96')), bare.join('\n'))
+    assert.ok(
+      bare.some((error) => error.includes('Duplicate plan ID 96')),
+      bare.join('\n'),
+    )
     const documented = planIndexErrors({
       plans,
       readme: `Number collision (unresolved): two 96s.
