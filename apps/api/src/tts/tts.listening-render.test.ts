@@ -11,6 +11,7 @@ import type { ExecutionContext, INestApplication } from '@nestjs/common'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { silenceWav } from '@loro/content/audio-duration'
 import { LISTENING_ASSET_CLASS, LISTENING_CODEC } from '@loro/core'
+import type * as loroCore from '@loro/core'
 import { TtsResponseSchema } from '@loro/core/api/draft'
 import { AuthGuard, type AuthenticatedRequest } from '../auth/auth.guard.js'
 import { ProblemDetailsFilter } from '../common/problem-filter.js'
@@ -29,7 +30,7 @@ const { LISTENING_TEST_MODEL, LISTENING_TEST_VOICES } = vi.hoisted(() => ({
 }))
 
 vi.mock('@loro/core', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@loro/core')>()
+  const actual = await importOriginal<typeof loroCore>()
   return {
     ...actual,
     listeningModelIsPinned: () => true,
