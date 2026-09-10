@@ -126,6 +126,19 @@ test('F-05: registers plan-100 motion primitives as production specimens', async
   ]) {
     await expect(page.getByText(name, { exact: true }).first()).toBeVisible()
   }
+  await expect(page.getByTestId('arrival')).toBeVisible()
+  await expect(page.getByTestId('warming-surface')).toBeVisible()
+  await expect(page.getByTestId('beat-bars')).toBeVisible()
+  await expect(page.getByTestId('equalizer')).toBeVisible()
+  await expect(page.getByTestId('pulse-ring')).toBeVisible()
+  await expect(page.getByTestId('unblur-word')).toBeVisible()
+
+  // Reduce Motion keeps the indicators; only the loop/glow goes. Browser E2E cannot
+  // prove 60 fps, but it can prove the specimens do not disappear behind the switch.
+  const reducedMotion = page.getByRole('switch', { name: 'Reduced motion' })
+  await reducedMotion.click()
+  await expect(reducedMotion).toBeChecked()
+  await expect(page.getByTestId('arrival')).toBeVisible()
   await expect(page.getByTestId('warming-surface')).toBeVisible()
   await expect(page.getByTestId('beat-bars')).toBeVisible()
   await expect(page.getByTestId('equalizer')).toBeVisible()

@@ -74,6 +74,7 @@ test('a toast expires on the blueprint’s own timings', async ({ page }) => {
   // clock's rounding.
   await page.getByRole('radio', { name: 'Difficult' }).click()
   const toast = page.getByRole('alert')
+  await expect(page.getByTestId('arrival')).toBeVisible()
   await expect(toast).toContainText('repeats more, comes back sooner')
   await runFor(page, 1_500)
   await expect(toast).toBeVisible()

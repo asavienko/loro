@@ -182,6 +182,7 @@ test('a toast is announced, not just drawn', async ({ page }) => {
   await page.getByRole('radio', { name: 'Difficult' }).click()
 
   const toast = page.getByRole('alert')
+  await expect(page.getByTestId('arrival')).toBeVisible()
   await expect(toast).toHaveAttribute('aria-live', 'polite')
   await expect(toast).toContainText('repeats more, comes back sooner')
 })
