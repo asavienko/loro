@@ -128,13 +128,13 @@ specifications.
 
 ## Design
 
-| Doc                                                     | Contents                                                                         |
-| ------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| [design-system.md](design/design-system.md)             | Authored visual reference, generated runtime tokens, and implementation status   |
-| [component-inventory.md](design/component-inventory.md) | Authored 39-component reference and current React Native component inventory     |
-| [motion.md](design/motion.md)                           | All 11 keyframe animations, the easing set, and the touch-feedback layer         |
-| [screen-catalog.md](design/screen-catalog.md)           | All 23 learner screens ↔ artifact ranges ↔ screenshots ↔ specs; shell separately |
-| [copy-and-tone.md](design/copy-and-tone.md)             | Voice, the Spanish/English rules, microcopy patterns, what we never say          |
+| Doc                                                     | Contents                                                                                                                                                |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [design-system.md](design/design-system.md)             | Authored visual reference, generated runtime tokens, and implementation status. Remaining interaction kit: [plan 100](../plans/100-ui-design-system.md) |
+| [component-inventory.md](design/component-inventory.md) | Authored 39-component reference and current React Native component inventory                                                                            |
+| [motion.md](design/motion.md)                           | All 11 keyframe animations, the easing set, and the touch-feedback layer                                                                                |
+| [screen-catalog.md](design/screen-catalog.md)           | All 23 learner screens ↔ artifact ranges ↔ screenshots ↔ specs; shell separately                                                                        |
+| [copy-and-tone.md](design/copy-and-tone.md)             | Voice, the Spanish/English rules, microcopy patterns, what we never say                                                                                 |
 
 ## Process
 

@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react'
 import { View } from 'react-native'
 import * as componentExports from '../ui/components'
 import * as primitiveExports from '../ui/primitives'
+import { BEAT_TEMPO_MS } from '../ui/motion'
 import { onDark, semantic, space } from '../ui/theme'
 import {
   PENDING_NAVIGATION_SPECIMENS,
@@ -250,6 +251,45 @@ const PRIMITIVE_METADATA = {
       >
         <primitiveExports.Text>Production list row</primitiveExports.Text>
       </primitiveExports.ListRow>
+    ),
+  },
+  Arrival: {
+    states: ['default', 'reduced-motion'],
+    render: () => (
+      <primitiveExports.Arrival kind="popIn">
+        <primitiveExports.Text>Reward arrival</primitiveExports.Text>
+      </primitiveExports.Arrival>
+    ),
+  },
+  WarmingSurface: {
+    states: ['default', 'reduced-motion', 'accent'],
+    render: () => (
+      <primitiveExports.WarmingSurface automaticity={50} style={{ padding: space['3'] }}>
+        <primitiveExports.Text>Warming specimen</primitiveExports.Text>
+      </primitiveExports.WarmingSurface>
+    ),
+  },
+  BeatBars: {
+    states: ['default', 'reduced-motion', 'accent'],
+    render: () => <primitiveExports.BeatBars tempoMs={BEAT_TEMPO_MS.default} />,
+  },
+  Equalizer: {
+    states: ['default', 'reduced-motion'],
+    render: () => <primitiveExports.Equalizer active />,
+  },
+  PulseRing: {
+    states: ['default', 'reduced-motion', 'accent'],
+    render: () => (
+      <primitiveExports.PulseRing active>
+        <primitiveExports.Button label="Listening specimen" onPress={noop} />
+      </primitiveExports.PulseRing>
+    ),
+  },
+  UnblurText: {
+    states: ['default', 'reduced-motion', 'spanish', 'text-200', 'text-310'],
+    render: () => (
+      // a11y-lang: UnblurText sets lang on the revealed target token.
+      <primitiveExports.UnblurText text={SAMPLE_SPANISH} revealed hiddenLabel="Hidden word" />
     ),
   },
 } as const satisfies Record<keyof typeof primitiveExports, SpecimenMetadata>

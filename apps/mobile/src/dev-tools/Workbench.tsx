@@ -9,13 +9,7 @@ import {
 } from '@loro/design-tokens'
 import { createContrastReport } from '@loro/design-tokens/contrast'
 import { createElement, useMemo, useState, type ReactNode } from 'react'
-import {
-  Platform,
-  Pressable as RNPressable,
-  ScrollView,
-  Text as RNText,
-  View,
-} from 'react-native'
+import { Platform, Pressable as RNPressable, ScrollView, Text as RNText, View } from 'react-native'
 import { ThemeProvider, useTheme, type TextScale } from '../ui/ThemeProvider'
 import { EmptyState, PhraseRow } from '../ui/components'
 import {
