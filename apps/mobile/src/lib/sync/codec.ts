@@ -1,5 +1,5 @@
 import type { OutboxOp } from '@loro/core'
-import { PushOpSchema, type PushOp } from '@loro/core/api/target'
+import { PushOpSchema, type PushOp } from '@loro/core/api/sync'
 
 const JSON_FIELDS: Readonly<Record<string, readonly string[]>> = {
   user_phrase: ['tags'],

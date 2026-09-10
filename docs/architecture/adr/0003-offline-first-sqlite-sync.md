@@ -174,14 +174,13 @@ lands (plan 58). `op-sqlite` is unchanged as the intended device driver.
   wrong type rather than casting, so the failure is at the boundary rather than a `NaN` on a
   progress screen.
 
-**This says nothing about the server.** [ADR-0008](0008-backend-nestjs-postgres.md) chooses Drizzle
-over Postgres for `apps/api`, and that decision stands untouched — it is a different runtime with a
-different constraint set (no driver portability requirement, no bundle size, migrations run by
-operators). What is now retracted is the ADR-0008 consequence that "Drizzle schemas are shared with
-the client, so client and server DDL come from one definition": the client's DDL is authored SQL, so
-the two definitions are separate and the sync contract — not a shared schema — is what keeps them
-honest. That contract is [`fieldPolicy.ts`](../sync-protocol.md#per-field-lww), and it is
-CI-enforced.
+**This says nothing about requiring the same access layer on the server.**
+[ADR-0008](0008-backend-nestjs-postgres.md) chooses NestJS + Postgres + `pg` + handwritten SQL for
+`apps/api` — a different runtime with a different constraint set (no driver portability requirement,
+no bundle size, migrations run by operators). What remains retracted is the withdrawn consequence
+that "Drizzle schemas are shared with the client": neither side uses Drizzle, the two DDL texts are
+separate, and the sync contract — not a shared schema — is what keeps them honest. That contract is
+[`fieldPolicy.ts`](../sync-protocol.md#per-field-lww), and it is CI-enforced.
 
 **Revisit if…** the client schema grows past roughly a dozen tables and the hand-authored statements
 start repeating a grammar rather than fifteen one-off queries; or a second client (a web app with

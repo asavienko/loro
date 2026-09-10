@@ -1,8 +1,9 @@
 # Developer onboarding
 
-This page describes the repository that exists today. Loro is still an early web-runnable Expo
-implementation: seven learner screens and the shell exist, but native audio, speech, ASR, widgets
-and the on-device SQLite driver do not. Do not treat a successful web run as proof of those systems.
+This page describes the repository that exists today. Eight learner screens plus Languages, Account,
+More, Settings, the shared shell and a developer workbench exist. Native modules (`loro-core`,
+`loro-audio-speech`) and device/browser SQLite are in the tree. Browser E2E is not device
+acceptance: it cannot prove installed voices, interruptions, process-death resume, or iOS.
 
 ---
 
@@ -36,8 +37,8 @@ rustup target add wasm32-unknown-unknown
 cargo install wasm-pack --locked
 ```
 
-Xcode, the Android SDK, EAS, Docker and `cargo-ndk` are not needed for the current local web/API
-loop. They become required only when work actually adds and exercises native or deployed surfaces.
+Xcode, the Android SDK, Docker and `cargo-ndk` are not needed for the current local web/API loop.
+They are required to exercise native modules, an APK, or a deployed API. EAS is not the pipeline.
 
 ## 3 · Bootstrap and verify
 
@@ -49,14 +50,15 @@ pnpm test:e2e
 ```
 
 `pnpm bootstrap` installs dependencies, regenerates tokens, builds the Rust host library/WASM and
-bindings, validates content, and creates app `.env` files. Its final printed API database and native
-device commands are legacy roadmap text: `db:migrate` and `db:seed` do not exist, and no generated
-`ios/` or `android/` project or custom native module exists yet.
+bindings, validates content, and creates app `.env` files. Its final printed API database commands
+are legacy roadmap text: `db:migrate` and `db:seed` do not exist. Native `ios/` and `android/`
+projects are generated and gitignored; custom modules live under `apps/mobile/modules/`.
 
-`pnpm check` is the fast local gate: workspace lint, type checking, 432 JS/TS tests, 131 Rust tests,
+`pnpm check` is the fast local gate: workspace lint, type checking, 799 JS/TS tests, 169 Rust tests,
 content validation, source accessibility checks, copy ownership and token contrast. It is not the
-entire CI pipeline: CI separately builds the API and mobile bundle, checks generated drift, runs
-browser E2E and the production-export smoke subset, and runs Rust benchmarks.
+entire CI pipeline: `pnpm ci:local` separately builds the API and mobile bundle, checks generated
+drift, runs browser E2E and the production-export smoke subset, and runs Rust benchmarks. GitHub
+Actions is disabled.
 
 ## 4 · Run what exists
 
@@ -68,12 +70,12 @@ pnpm --filter @loro/api dev
 curl localhost:3000/v1/health/ready
 ```
 
-The API stores accounts, sessions and tenant-scoped sync in PostgreSQL and merges through the
-shared Rust/WASM engine. Configure the encrypted environment and `DATABASE_URL` before starting it
-— follow [`local-development.md`](local-development.md). `/v1/health/ready` checks actual
-database/WASM availability; there is no production in-memory fallback. `InMemorySyncRepository` is
-a test adapter under `apps/api/src/sync/testing/`. AI scenes are bundled stubs; live providers are
-not registered. See [`apps/api/README.md`](../../apps/api/README.md).
+The API stores accounts, sessions and tenant-scoped sync in PostgreSQL and merges through the shared
+Rust/WASM engine. Configure the encrypted environment and `DATABASE_URL` before starting it — follow
+[`local-development.md`](local-development.md). `/v1/health/ready` checks actual database/WASM
+availability; there is no production in-memory fallback. `InMemorySyncRepository` is a test adapter
+under `apps/api/src/sync/testing/`. AI scenes are bundled stubs; live providers are not registered.
+See [`apps/api/README.md`](../../apps/api/README.md).
 
 ### Mobile app in a browser
 
@@ -88,9 +90,9 @@ For a compile proof without opening a browser:
 pnpm --filter @loro/mobile bundle
 ```
 
-Custom core/audio/SQLite modules require a native build; Expo Go is unsupported. Native Android
-and iOS projects are generated and gitignored. `pnpm apk:local` is the local Android preview;
-iOS still needs full Xcode. See [`apps/mobile/README.md`](../../apps/mobile/README.md).
+Custom core/audio/SQLite modules require a native build; Expo Go is unsupported. Native Android and
+iOS projects are generated and gitignored. `pnpm apk:local` is the local Android preview; iOS still
+needs full Xcode. See [`apps/mobile/README.md`](../../apps/mobile/README.md).
 
 ## 5 · Verify a learner-visible change
 
@@ -106,14 +108,16 @@ For every learner-visible route or state:
    `accessibilityHint`.
 
 The old five-device hand-checks (audio, mic, warming card, offline relaunch and sync) remain future
-acceptance gates. There is no implementation behind them today, so claiming they passed would be
-misleading.
+acceptance gates. Foreground TTS, on-device ASR and local SQLite exist; browser green is not proof
+they work on a physical device or iOS.
 
 ## 6 · Where the current code lives
 
 ```text
 apps/mobile/app/          Expo Router routes: eight learner screens plus Languages/Account/More/Settings, shell and workbench
 apps/mobile/src/lib/      copy, clock, account session and formatting
+apps/mobile/src/auth/     OAuth ports
+apps/mobile/src/services/ account-sync coordinator
 apps/mobile/src/store/    Zustand slices; local SQLite commits before publication
 apps/mobile/src/ui/       primitives, components and UI tokens
 apps/mobile/src/data/     native/browser SQLite drivers, learner load/commit and sync
@@ -125,8 +129,9 @@ packages/design-tokens/   token source, generator and committed output
 packages/content/         Spanish/Bulgarian/Russian catalogs and review gates
 ```
 
-Directories described in older architecture plans (`features/`, `platform/`, native `modules/`,
-widget `targets/`) are intended extension points, not current code.
+Directories described in older architecture plans (`features/`, `platform/`, widget `targets/`) are
+intended extension points, not current code. `apps/mobile/modules/` already holds `loro-core` and
+`loro-audio-speech`.
 
 ## 7 · First PR
 
@@ -147,11 +152,11 @@ See [git-workflow.md](git-workflow.md), [code-review.md](code-review.md), and
 
 ## Common problems
 
-| Symptom                                 | Fix                                                                                |
-| --------------------------------------- | ---------------------------------------------------------------------------------- |
-| `pnpm` not found                        | `nvm use 22`; pnpm is installed under Node 22                                      |
-| `cargo: command not found` inside Turbo | `export PATH="$HOME/.cargo/bin:$PATH"` before `pnpm check`                         |
-| API readiness is 503                    | `pnpm core-rs:build`, then restart the API                                         |
-| Playwright has no browser               | `pnpm test:e2e:install`                                                            |
-| Tokens or bindings drift                | Regenerate with `pnpm tokens:build` / `pnpm core-rs:build`; never hand-edit output |
-| Native run command fails                | Expected until native projects/modules and the platform toolchain are added        |
+| Symptom                                 | Fix                                                                                                         |
+| --------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `pnpm` not found                        | `nvm use 22`; pnpm is installed under Node 22                                                               |
+| `cargo: command not found` inside Turbo | `export PATH="$HOME/.cargo/bin:$PATH"` before `pnpm check`                                                  |
+| API readiness is 503                    | `pnpm core-rs:build`, then restart the API                                                                  |
+| Playwright has no browser               | `pnpm test:e2e:install`                                                                                     |
+| Tokens or bindings drift                | Regenerate with `pnpm tokens:build` / `pnpm core-rs:build`; never hand-edit output                          |
+| Native run command fails                | Use `pnpm apk:local` or Expo prebuild; install Xcode or the Android SDK. Expo Go cannot load custom modules |

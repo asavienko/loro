@@ -5,18 +5,17 @@ for the finished product. They are not the same thing yet.
 
 ## Implementation status
 
-| Area            | Current state                                                                                                                                                                    |
-| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Mobile runtime  | The Zustand app store is in memory and does not open a persistence adapter. Reloading the web target loses learner state.                                                        |
-| SQLite library  | Implemented in `packages/core/src/persistence/`; schema v1, migrations, repositories and an outbox are tested against real SQLite through `apps/mobile/src/data/driver.node.ts`. |
-| Device SQLite   | Not implemented. There is no `op-sqlite` driver or native composition root yet.                                                                                                  |
-| Web persistence | `openMemoryPersistence()` exists, but the live web store does not use it and it deliberately forgets data on reload.                                                             |
-| Catalog storage | The app reads `@loro/content`; catalog tables are not materialised into SQLite.                                                                                                  |
-| Server database | Not implemented. The sync API injects an in-memory `Map`, not Postgres.                                                                                                          |
+| Area            | Current state                                                                                                                                                                 |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Mobile runtime  | Zustand publishes a write-through projection. SQLite + outbox commit before publication. Physical-device process-death acceptance remains open.                               |
+| SQLite library  | Implemented in `packages/core/src/persistence/`; schema, migrations, repositories and an outbox are tested against real SQLite through `apps/mobile/src/data/driver.node.ts`. |
+| Device SQLite   | OP-SQLite driver is in the tree. Native composition uses the same repositories as the browser.                                                                                |
+| Web persistence | sql.js + localStorage snapshot. Reloading the web target keeps committed rows.                                                                                                |
+| Catalog storage | The app reads `@loro/content`; catalog tables are not materialised into SQLite.                                                                                               |
+| Server database | PostgreSQL for accounts and tenant-scoped sync. The in-memory sync repository is a test adapter.                                                                              |
 
-This distinction is a release concern: the persistence library proves SQL behaviour, but it does not
-make the app offline-durable until the mobile store is hydrated from it and every mutation is
-written through it.
+The persistence library is wired through the store. Remaining work is device/lifecycle acceptance,
+not a second write path.
 
 ## Migrations
 

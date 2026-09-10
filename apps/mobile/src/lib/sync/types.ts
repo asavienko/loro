@@ -1,5 +1,5 @@
 import type { OutboxOp } from '@loro/core'
-import type { PullRequest, PullResponse, PushRequest, PushResponse } from '@loro/core/api/target'
+import type { PullRequest, PullResponse, PushRequest, PushResponse } from '@loro/core/api/sync'
 
 export interface SyncSession {
   accountId: string
