@@ -1,7 +1,6 @@
 # Generative Discover and phrase reach
 
-- **Requirement IDs:** `P2-03`, `P2-04`, `P2-06`, `P2-07`, `AI-02`, `AI-05`, `AI-06`, `F-03`,
-  `F-04`
+- **Requirement IDs:** `P2-03`, `P2-04`, `P2-06`, `P2-07`, `AI-02`, `AI-05`, `AI-06`, `F-03`, `F-04`
 - **Milestone:** M3 garnish; authoring-time drafts may proceed now
 - **Status:** 🟡 Shared candidate/handoff, Discover Add-your-own floor, bundled topic suggestions
   and a stub `/v1/phrases/suggest` exist. Live provider traffic remains behind **Q-21**. Chat
@@ -9,8 +8,9 @@
 - **Depends on:** 59 persistence; 61/87 for authored catalog publication and bilingual review; 65
   Import/OCR remains separate; 76/86 transport/spend for a future live path; 82/83 consume the
   keep-line handoff
-- **Number allocation:** 97 follows inspection of active, archived and concurrent plan files. 95
-  and 96 are archived. Plan 98 owns voice/TTS. The next new plan is 99.
+- **Number allocation:** 97 follows inspection of active, archived and concurrent plan files. 95 and
+  96 are archived. Plan 98 owns voice/TTS. Plan 99 owns hygiene/reuse/tooling. The next new plan
+  is 100.
 
 ## Outcome
 
@@ -20,8 +20,9 @@ explicit tap.”
 
 Three layers share one add path:
 
-1. **Authored floor** — Discover search, Popular starters and scenario chips stay first. Authoring-time
-   generation may draft extra catalog/scenario lines for **human review**; it never publishes itself.
+1. **Authored floor** — Discover search, Popular starters and scenario chips stay first.
+   Authoring-time generation may draft extra catalog/scenario lines for **human review**; it never
+   publishes itself.
 2. **Discover garnish** — a clearly marked **Suggested for this** section may appear for a topic
    query with few library hits. Candidates are own-phrase drafts, not catalog rows.
 3. **Chat keep-line** — plan 82/83 render chat; this plan owns the shared candidate and add-handoff
@@ -52,8 +53,8 @@ Offline Discover remains complete: catalog, scenarios, nearest-scenario hint and
 3. [x] Discover P2-07 Add your own row and nearest-scenario hint, with E2E states.
 4. [x] Authoring-time draft schema, stub drafter and validators; drafts cannot enter the bundled
        catalog.
-5. [x] Guarded `/v1/phrases/suggest` stub, schema/safety, silent empty fallback and stub/safety eval.
-       Live Anthropic dispatch stays off until Q-21.
+5. [x] Guarded `/v1/phrases/suggest` stub, schema/safety, silent empty fallback and stub/safety
+       eval. Live Anthropic dispatch stays off until Q-21.
 6. [x] Discover Suggested-for-this section, editable tagging, provenance, stale-request cancel.
 7. [ ] Q-21 live enablement: eval thresholds, spend caps shared with other AI paths, provider
        retention, and pair-by-pair quality sign-off.
@@ -81,6 +82,6 @@ Offline Discover remains complete: catalog, scenarios, nearest-scenario hint and
 
 ## Out of scope
 
-Chat conversation UI, Roleplay scenes, OCR, bulk Add-all for generated sets, writing generated
-lines into the shared catalog, scoring or ranking practice with an LLM, a new home-rail destination
+Chat conversation UI, Roleplay scenes, OCR, bulk Add-all for generated sets, writing generated lines
+into the shared catalog, scoring or ranking practice with an LLM, a new home-rail destination
 (Q-17).
