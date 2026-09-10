@@ -1,4 +1,7 @@
-/** Draft until Q-15. Authenticated, text-only. Never registers voice clone. */
+/**
+ * Authenticated, text-only. Q-15 pins are in; pronunciation review remains.
+ * Never registers voice clone.
+ */
 
 import {
   Body,

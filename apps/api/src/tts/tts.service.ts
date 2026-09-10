@@ -1,7 +1,9 @@
 /**
  * Gated learner TTS. Text only. Never accepts recordings or clones voices.
  * Listening-class renders use LISTENING_VOICE_DECISION and still fail closed for a
- * wrong voice, unpinned model, missing key, or stub provider. CI must not spend credits.
+ * wrong voice, unpinned model, missing key, or default stub. `TTS_STUB_RENDER=1`
+ * is a labeled listening-class path (checksum metadata + download URL). CI stays
+ * on the default stub and must not spend credits.
  */
 
 import { createHash } from 'node:crypto'
@@ -95,23 +97,23 @@ export class TtsService {
     } catch {
       throw new LoroError('PROVIDER_UNAVAILABLE')
     }
-    if (parsedConfig.provider !== 'elevenlabs') {
-      throw new LoroError('PROVIDER_UNAVAILABLE')
-    }
     const request = TtsRequestSchema.safeParse(input.body)
     if (!request.success) throw new LoroError('VALIDATION_FAILED')
+    const listening = request.data.asset_class === LISTENING_ASSET_CLASS
+    const stubListening = parsedConfig.provider === 'stub' && parsedConfig.stubRender && listening
+    if (parsedConfig.provider !== 'elevenlabs' && !stubListening) {
+      throw new LoroError('PROVIDER_UNAVAILABLE')
+    }
     const text = normalizeListeningText(request.data.text)
     const textHash = digestUtf8(text)
     if (textHash !== request.data.phrase_hash) throw new LoroError('VALIDATION_FAILED')
-    if (
-      request.data.asset_class !== LISTENING_ASSET_CLASS &&
-      request.data.model_id !== parsedConfig.model
-    ) {
+    if (!listening && request.data.model_id !== parsedConfig.model) {
       throw new LoroError('PROVIDER_UNAVAILABLE', 'TTS model is not pinned')
     }
     const voiceId = this.approvedVoice(request.data, parsedConfig.voices)
     this.take(input.userId, input.ip)
-    const voiceVersion = `${request.data.asset_class}:${parsedConfig.model}:${voiceId}`
+    const renderModel = listening ? request.data.model_id : parsedConfig.model
+    const voiceVersion = `${request.data.asset_class}:${renderModel}:${voiceId}`
     const identity = digestUtf8(`${input.userId}:${textHash}:${request.data.lang}:${voiceVersion}`)
     const cached = await this.readIdentity(identity, request.data)
     if (cached !== null) return cached
@@ -122,8 +124,9 @@ export class TtsService {
       text,
       locale: request.data.lang,
       voiceId,
-      modelId: request.data.model_id,
+      modelId: renderModel,
       assetClass: request.data.asset_class,
+      allowStub: stubListening,
     })
     this.inflight.set(identity, work)
     try {
@@ -243,6 +246,7 @@ export class TtsService {
     voiceId: string
     modelId: string
     assetClass: TtsRequest['asset_class']
+    allowStub: boolean
   }): Promise<TtsResponse> {
     let result
     try {
@@ -250,12 +254,17 @@ export class TtsService {
         text: input.text,
         locale: input.locale,
         voiceId: input.voiceId,
+        modelId: input.modelId,
       })
     } catch (error) {
       if (isTtsFailure(error)) failureToHttp(error.code)
       throw new LoroError('PROVIDER_UNAVAILABLE')
     }
-    if (result.provenance.provider !== 'elevenlabs') {
+    const stubOk =
+      input.allowStub &&
+      input.assetClass === LISTENING_ASSET_CLASS &&
+      result.provenance.provider === 'stub'
+    if (result.provenance.provider !== 'elevenlabs' && !stubOk) {
       throw new LoroError('PROVIDER_UNAVAILABLE')
     }
     const ms = audioDurationMs(result.bytes)

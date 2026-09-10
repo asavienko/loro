@@ -338,6 +338,53 @@ export async function playListeningSequence(input: {
 
 export { LISTENING_REPEATS_DEFAULT }
 
+export type ListenStatusKind =
+  | 'empty'
+  | 'needs-network'
+  | 'generating'
+  | 'partial-failure'
+  | 'ready-to-listen'
+  | 'ready-to-generate'
+  | 'playing'
+  | 'share-ready'
+  | 'cancelled'
+  | 'disk-full'
+  | 'session-busy'
+  | 'voices-unapproved'
+  | 'not-configured'
+  | 'native-unavailable'
+  | 'model-unpinned'
+  | 'voices-single'
+  | 'quota'
+
+/** Idle generate-ready must not fall back to the empty-roster copy. */
+export function listenStatusKind(
+  view: Pick<ListenViewModel, 'phase' | 'blockers' | 'generateEnabled' | 'shareEnabled'>,
+): ListenStatusKind {
+  if (view.phase === 'generating') return 'generating'
+  if (view.phase === 'playing') return 'playing'
+  if (view.phase === 'cancelled') return 'cancelled'
+  if (view.phase === 'partial') return 'partial-failure'
+  if (view.phase === 'ready') return view.shareEnabled ? 'share-ready' : 'ready-to-listen'
+  const blocker = view.blockers[0]
+  if (
+    blocker === 'empty' ||
+    blocker === 'needs-network' ||
+    blocker === 'disk-full' ||
+    blocker === 'session-busy' ||
+    blocker === 'voices-unapproved' ||
+    blocker === 'not-configured' ||
+    blocker === 'native-unavailable' ||
+    blocker === 'model-unpinned' ||
+    blocker === 'voices-single' ||
+    blocker === 'quota'
+  ) {
+    return blocker
+  }
+  if (view.generateEnabled) return 'ready-to-generate'
+  return 'voices-unapproved'
+}
+
 /** Force-quit must still see a complete pinned batch. Missing files are a miss, not a hit. */
 export async function restoreListeningBatch(
   cache: AudioCacheController,

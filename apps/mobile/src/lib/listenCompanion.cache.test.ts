@@ -9,7 +9,9 @@ import {
   LISTENING_ASSET_CLASS,
   LISTENING_INTER_GAP_MS,
   LISTENING_INTRA_GAP_MS,
+  LISTENING_MODEL_ID,
   LISTENING_SHARE_ENABLED,
+  approvedListeningVoices,
 } from '@loro/core'
 import { AudioCacheController } from './audioCacheController'
 import { createFileAudioCache } from './audioCacheFile.test-support'
@@ -216,6 +218,44 @@ describe('listening generate → file cache → listen', () => {
         outputName: 'loro-es-ES-2026-09-10-listen.m4a',
       }),
     ).rejects.toMatchObject({ code: 'share-gated' })
+  })
+
+  it('uses pinned listening voices and download() without a fixture seed', async () => {
+    expect(LISTENING_MODEL_ID).not.toBeNull()
+    expect(approvedListeningVoices('es-ES').length).toBeGreaterThanOrEqual(2)
+    const native = createFileAudioCache(root, { fixtureBytes: fixture })
+    const cache = new AudioCacheController(native)
+    const ready = await prepareListeningBatch({
+      cache,
+      locale: 'es-ES',
+      phrases: [phrases[0]!],
+      repeats: 2,
+      digest: digestListeningText,
+      network: () => Promise.resolve(true),
+      credentials: () => Promise.resolve({ token: 'access', deviceId: 'device-1' }),
+      render: (request) => {
+        expect(approvedListeningVoices('es-ES').some((voice) => voice.id === request.voice_id)).toBe(
+          true,
+        )
+        expect(request.model_id).toBe(LISTENING_MODEL_ID)
+        expect(request.asset_class).toBe(LISTENING_ASSET_CLASS)
+        return Promise.resolve({
+          uri: `sha256/${digest}`,
+          sha256: digest,
+          ms: null,
+          cached: false,
+          download_url: downloadUrl(),
+          voice_id: request.voice_id,
+          model_id: request.model_id,
+          asset_class: LISTENING_ASSET_CLASS,
+        })
+      },
+    })
+    expect(ready.phase).toBe('ready')
+    expect(ready.clips).toHaveLength(2)
+    expect(ready.clips.every((clip) => clip.fileUri.startsWith('file:'))).toBe(true)
+    expect(lastAuth).toBe('Bearer access')
+    expect(lastDevice).toBe('device-1')
   })
 
   it('treats a checksum-mismatched file as a miss and refuses redirects', async () => {

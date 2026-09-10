@@ -1,5 +1,6 @@
 /** Provider-only TTS transport. Runtime routes are registered only by the owning Nest module. */
 
+import { silenceWav } from '@loro/content/audio-duration'
 import { ProviderConcurrency } from '../provider-concurrency.js'
 
 export type TtsFailureCode =
@@ -36,6 +37,8 @@ export interface TtsRequest {
   text: string
   locale: string
   voiceId: string
+  /** Pinned request model. Listening-class must send `LISTENING_MODEL_ID`. */
+  modelId?: string
   signal?: AbortSignal
 }
 
@@ -52,6 +55,10 @@ export interface TtsResult {
   /** Provider-reported character count when present; never estimated. */
   characterCount: number | null
 }
+
+/** Labeled local silence. Not licensed neural audio and not a catalog publish path. */
+const STUB_RENDER_DURATION_MS = 200
+const STUB_RENDER_FORMAT = 'wav-pcm16-24k'
 
 const ELEVENLABS_TTS = 'https://api.elevenlabs.io/v1/text-to-speech'
 const ALLOWED_AUDIO = new Set([
@@ -71,6 +78,7 @@ export function parseTtsConfig(env: NodeJS.Dict<string>): {
   model: string
   outputFormat: string
   voices: Readonly<Record<string, string>>
+  stubRender: boolean
 } {
   const provider = env['TTS_PROVIDER'] ?? 'stub'
   if (provider !== 'stub' && provider !== 'elevenlabs') {
@@ -89,7 +97,14 @@ export function parseTtsConfig(env: NodeJS.Dict<string>): {
       throw new TtsFailure('configuration')
     }
   }
-  return { provider, apiKey, model, outputFormat, voices }
+  return {
+    provider,
+    apiKey,
+    model,
+    outputFormat,
+    voices,
+    stubRender: provider === 'stub' && env['TTS_STUB_RENDER'] === '1',
+  }
 }
 
 export function voiceForLocale(voices: Readonly<Record<string, string>>, locale: string): string {
@@ -176,14 +191,15 @@ export class ElevenLabsTts {
     const text = input.text.trim()
     const voiceId = input.voiceId.trim()
     const locale = input.locale.trim()
-    if (!text || !voiceId || !locale || /[/?#]/.test(voiceId)) {
+    const model = (input.modelId ?? this.options.model).trim()
+    if (!text || !voiceId || !locale || !model || /[/?#]/.test(voiceId)) {
       throw new TtsFailure('input')
     }
     let body: string
     try {
       body = JSON.stringify({
         text,
-        model_id: this.options.model,
+        model_id: model,
         voice_settings: { stability: 0.5, similarity_boost: 0.75 },
       })
     } catch {
@@ -224,7 +240,7 @@ export class ElevenLabsTts {
         characterCount: count,
         provenance: {
           provider: 'elevenlabs',
-          model: this.options.model,
+          model,
           voiceId,
           outputFormat: this.options.outputFormat,
           locale,
@@ -241,10 +257,38 @@ export class ElevenLabsTts {
   }
 }
 
-/** Local default: never yields bytes that can be published as production audio. */
+/**
+ * Local default: never yields bytes that can be published as production audio.
+ * `stubRender: true` is a labeled listening-class path (`TTS_STUB_RENDER=1`) that still
+ * goes through checksum metadata + native `download()`. Catalog seed must not use it.
+ */
 export class StubTts {
-  synthesize(_input: TtsRequest): Promise<TtsResult> {
-    return Promise.reject(new TtsFailure('unavailable'))
+  constructor(private readonly options: { readonly stubRender?: boolean } = {}) {}
+
+  synthesize(input: TtsRequest): Promise<TtsResult> {
+    if (this.options.stubRender !== true) {
+      return Promise.reject(new TtsFailure('unavailable'))
+    }
+    const text = input.text.trim()
+    const voiceId = input.voiceId.trim()
+    const locale = input.locale.trim()
+    const model = (input.modelId ?? '').trim()
+    if (!text || !voiceId || !locale || !model || /[/?#]/.test(voiceId)) {
+      return Promise.reject(new TtsFailure('input'))
+    }
+    const bytes = silenceWav(STUB_RENDER_DURATION_MS)
+    return Promise.resolve({
+      bytes,
+      contentType: 'audio/wav',
+      characterCount: null,
+      provenance: {
+        provider: 'stub',
+        model,
+        voiceId,
+        outputFormat: STUB_RENDER_FORMAT,
+        locale,
+      },
+    })
   }
 }
 

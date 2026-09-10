@@ -7,6 +7,7 @@ import {
 } from '@loro/core'
 import { AudioCacheController, AudioCacheError } from './audioCacheController'
 import {
+  listenStatusKind,
   listenViewModel,
   playListeningSequence,
   prepareListeningBatch,
@@ -38,6 +39,7 @@ describe('listening companion', () => {
     expect(view.generateEnabled).toBe(true)
     expect(view.blockers).not.toContain('voices-unapproved')
     expect(view.blockers).not.toContain('model-unpinned')
+    expect(listenStatusKind(view)).toBe('ready-to-generate')
     expect(LISTENING_SHARE_ENABLED).toBe(false)
     expect(view.shareEnabled).toBe(false)
   })
@@ -63,6 +65,7 @@ describe('listening companion', () => {
     expect(view.listenEnabled).toBe(false)
     expect(view.shareEnabled).toBe(false)
     expect(view.blockers).toContain('native-unavailable')
+    expect(listenStatusKind(view)).toBe('native-unavailable')
   })
 
   it('plays from cache without network and keeps Q-22 share closed', () => {

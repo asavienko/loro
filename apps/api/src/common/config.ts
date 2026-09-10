@@ -98,6 +98,7 @@ export const config = {
   /**
    * TTS env for `parseTtsConfig`. Stub is the local default so CI never spends.
    * Catalog pins live in `CATALOG_REFERENCE_VOICES`; this reader still takes env.
+   * `TTS_STUB_RENDER=1` is labeled listening-class silence only; CI stays `0`.
    */
   ttsEnv: (): NodeJS.Dict<string> => ({
     TTS_PROVIDER: process.env['TTS_PROVIDER'],
@@ -107,6 +108,7 @@ export const config = {
     TTS_VOICE_ES_ES: process.env['TTS_VOICE_ES_ES'],
     TTS_VOICE_BG_BG: process.env['TTS_VOICE_BG_BG'],
     TTS_VOICE_RU_RU: process.env['TTS_VOICE_RU_RU'],
+    TTS_STUB_RENDER: process.env['TTS_STUB_RENDER'],
   }),
 
   ttsProvider: (): string => config.ttsEnv()['TTS_PROVIDER'] ?? 'stub',
