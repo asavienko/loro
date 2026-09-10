@@ -38,6 +38,7 @@ import {
 } from '../src/lib/listenFixtures'
 import { AudioCacheError, type AudioCacheObject } from '../src/lib/audioCacheController'
 import { TtsRenderError } from '../src/lib/ttsRenderClient'
+import { DEV_LISTENING_FIXTURE_MODEL_ID, devListeningFixtureVoices } from '../src/lib/devListening'
 import { useApp } from '../src/store'
 import { toView } from '../src/store/view'
 import { Pressable, Screen, SectionLabel, Stack, Text, Button } from '../src/ui/primitives'
@@ -122,8 +123,17 @@ export default function ListenExport() {
     durationMs,
   })
   const view = scenario === null ? live : fixtureListenView(scenario)
-  const generateEnabled = view.generateEnabled && (!needsConsent || consent)
-  const status = statusCopy(scenario, view)
+  const fixtureMode =
+    typeof __DEV__ !== 'undefined' && __DEV__ && audioCache.available && scenario === null
+  const generateEnabled =
+    (view.generateEnabled ||
+      (fixtureMode &&
+        lines.length > 0 &&
+        !diskFull &&
+        !sessionBusy &&
+        view.phase !== 'generating')) &&
+    (!needsConsent || consent)
+  const status = statusCopy(scenario, view, fixtureMode)
 
   const generate = (): void => {
     if (!generateEnabled) return
@@ -145,6 +155,13 @@ export default function ListenExport() {
         if (!token || deviceId === undefined || deviceId.length === 0) return null
         return { token, deviceId }
       },
+      ...(fixtureMode
+        ? {
+            voices: devListeningFixtureVoices(locale),
+            modelId: DEV_LISTENING_FIXTURE_MODEL_ID,
+            seedClip: (key: string) => audioCache.installDevFixture(key),
+          }
+        : {}),
       signal: abort.current.signal,
       onProgress: setProgress,
     })
@@ -239,7 +256,7 @@ export default function ListenExport() {
                 {copy.listenExport.progress(view.progress.done, view.progress.total)}
               </Text>
             ) : null}
-            {scenario !== null ? (
+            {scenario !== null || fixtureMode ? (
               <Text variant="caption" color={ink.muted}>
                 {copy.listenExport.fixtureNote}
               </Text>
@@ -345,7 +362,14 @@ export default function ListenExport() {
   )
 }
 
-function statusCopy(scenario: ListenScenario | null, view: ListenViewModel): string {
+function statusCopy(
+  scenario: ListenScenario | null,
+  view: ListenViewModel,
+  fixtureMode: boolean,
+): string {
+  if (fixtureMode && view.phase === 'generating') {
+    return copy.listenExport.status['fixture-generating']
+  }
   if (scenario === 'empty') return copy.listenExport.status.empty
   if (scenario === 'needs-network') return copy.listenExport.status['needs-network']
   if (scenario === 'generating') return copy.listenExport.status.generating

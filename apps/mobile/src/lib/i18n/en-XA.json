@@ -481,6 +481,7 @@
   "listenExport.status.model-unpinned": "[!! Thëë lïïcëënsëëd lïïstëënïïng möödëël ïïs nööt pïïnnëëd yëët. !!]",
   "listenExport.status.voices-single": "[!! ÖÖnëë lïïcëënsëëd lïïstëënïïng vööïïcëë ïïs nööt ëënööüügh. Thïïs cöömpáánïïöön nëëëëds áát lëëáást twöö. !!]",
   "listenExport.status.quota": "[!! Lïïstëënïïng gëënëëráátïïöön ïïs pááüüsëëd bëëcááüüsëë thëë lïïcëënsëëd qüüöötáá ïïs ëëxhááüüstëëd. !!]",
+  "listenExport.status.fixture-generating": "[!! Gëënëëráátïïng dëëvëëlööpmëënt lïïstëënïïng clïïps. Thïïs ïïs nööt lïïcëënsëëd nëëüüráál ááüüdïïöö. !!]",
   "a11y.listenExport.status": "[!! Lïïstëënïïng cöömpáánïïöön stáátüüs !!]",
   "a11y.listenExport.repeats": "[!! Rëëpëëááts pëër phráásëë !!]"
 }

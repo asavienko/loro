@@ -141,6 +141,11 @@ export interface PrepareListeningDeps {
   network?: () => Promise<boolean>
   onProgress?: (progress: ListenProgress) => void
   signal?: AbortSignal
+  /**
+   * `__DEV__` / tests only. Fills a cache miss with a file-URI clip and skips cloud TTS.
+   * Production licensed generate must omit this and go through render + native download.
+   */
+  seedClip?: (logicalKey: string) => Promise<AudioCacheObject>
 }
 
 export async function prepareListeningBatch(deps: PrepareListeningDeps): Promise<{
@@ -200,6 +205,24 @@ export async function prepareListeningBatch(deps: PrepareListeningDeps): Promise
     const hit = await deps.cache.lookup(logicalKey)
     if (hit !== null) {
       clips.push(hit)
+      deps.onProgress?.({ done: clips.length, total: takes.length, failed })
+      continue
+    }
+    if (deps.seedClip !== undefined) {
+      try {
+        const seeded = await deps.seedClip(logicalKey)
+        if (!seeded.fileUri.startsWith('file:')) throw new AudioCacheError('invalid-url')
+        clips.push(seeded)
+      } catch (error) {
+        if (error instanceof AudioCacheError && error.code === 'cancelled') {
+          return {
+            phase: 'cancelled',
+            progress: { done: clips.length, total: takes.length, failed },
+            clips,
+          }
+        }
+        failed += 1
+      }
       deps.onProgress?.({ done: clips.length, total: takes.length, failed })
       continue
     }

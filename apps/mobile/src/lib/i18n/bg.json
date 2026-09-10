@@ -481,6 +481,7 @@
   "listenExport.status.model-unpinned": "Лицензираният модел за слушане още не е фиксиран.",
   "listenExport.status.voices-single": "Един лицензиран глас за слушане не стига. Това допълнение има нужда от поне два.",
   "listenExport.status.quota": "Генерирането на аудио за слушане е спряно, защото лицензираната квота е изчерпана.",
+  "listenExport.status.fixture-generating": "Генериране на развойни записи за слушане. Това не е лицензирано невронно аудио.",
   "a11y.listenExport.status": "Състояние на слушането",
   "a11y.listenExport.repeats": "Повторения на фраза"
 }

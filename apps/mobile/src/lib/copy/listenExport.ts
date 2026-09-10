@@ -112,5 +112,8 @@ export const listenExportCopy = {
     get quota() {
       return message('listenExport.status.quota')
     },
+    get 'fixture-generating'() {
+      return message('listenExport.status.fixture-generating')
+    },
   },
 }

@@ -226,4 +226,36 @@ describe('listening companion', () => {
     })
     await expect(restoreListeningBatch(cache)).resolves.toEqual([clip])
   })
+
+  it('seeds fixture clips as file URIs without licensed render or network', async () => {
+    const cache = new AudioCacheController({
+      download: vi.fn(),
+      lookup: vi.fn(() => Promise.resolve(null)),
+      cancel: vi.fn(() => Promise.resolve(undefined)),
+      pin: vi.fn(() => Promise.resolve(undefined)),
+      unpin: vi.fn(() => Promise.resolve(undefined)),
+      concatenate: vi.fn(),
+      share: vi.fn(() => Promise.resolve(undefined)),
+    })
+    const ready = await prepareListeningBatch({
+      cache,
+      locale: 'es-ES',
+      phrases: [{ id: 'row-1', targetText: 'Hola', learnerAuthored: false }],
+      repeats: 2,
+      voices: [{ id: 'voice-a' }, { id: 'voice-b' }],
+      modelId: 'dev-listen-fixture',
+      digest: () => Promise.resolve('a'.repeat(64)),
+      network: () => Promise.resolve(false),
+      render: () => Promise.reject(new Error('licensed render must not run')),
+      seedClip: () =>
+        Promise.resolve({
+          fileUri: 'file:///cache/fixture.m4a',
+          ms: null,
+          sha256: 'a'.repeat(64),
+        }),
+    })
+    expect(ready.phase).toBe('ready')
+    expect(ready.clips).toHaveLength(2)
+    expect(ready.clips.every((clip) => clip.fileUri.startsWith('file:'))).toBe(true)
+  })
 })

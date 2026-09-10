@@ -37,6 +37,8 @@ export interface NativeAudioCache {
   share(fileUri: string): Promise<void>
   saveListeningBatch?(clips: readonly AudioCacheObject[]): Promise<void>
   loadListeningBatch?(): Promise<AudioCacheObject[] | null>
+  /** Debug builds only. Copies a bundled fixture clip; JavaScript still receives a file URI. */
+  installDevFixture?(logicalKey: string): Promise<AudioCacheObject>
 }
 
 export type AudioCacheErrorCode =
@@ -147,5 +149,21 @@ export class AudioCacheController {
     if (clips === null || clips.length === 0) return null
     if (clips.some((clip) => !clip.fileUri.startsWith('file:'))) return null
     return clips
+  }
+
+  /**
+   * `__DEV__` native only. Writes a labeled fixture AAC into the listening cache.
+   * Production licensed generate still waits on Q-15; this must not be presented as neural quality.
+   */
+  async installDevFixture(logicalKey: string): Promise<AudioCacheObject> {
+    if (this.native?.installDevFixture === undefined)
+      throw new AudioCacheError('native-unavailable')
+    try {
+      const result = await this.native.installDevFixture(logicalKey)
+      if (!result.fileUri.startsWith('file:')) throw new AudioCacheError('invalid-url')
+      return result
+    } catch (error) {
+      throw asCacheError(error)
+    }
   }
 }
