@@ -76,6 +76,9 @@ export const listenExportCopy = {
     get 'ready-to-listen'() {
       return message('listenExport.status.ready-to-listen')
     },
+    get 'ready-to-generate'() {
+      return message('listenExport.status.ready-to-generate')
+    },
     get playing() {
       return message('listenExport.status.playing')
     },

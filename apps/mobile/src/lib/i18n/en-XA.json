@@ -506,6 +506,7 @@
   "listenExport.status.generating": "[!! Gëënëëráátïïng lïïcëënsëëd lïïstëënïïng táákëës… !!]",
   "listenExport.status.partial-failure": "[!! Söömëë lïïstëënïïng clïïps fááïïlëëd. Cöömplëëtëëd clïïps stááyëëd öön thïïs dëëvïïcëë. !!]",
   "listenExport.status.ready-to-listen": "[!! Rëëáády töö lïïstëën frööm thëë öön-dëëvïïcëë cááchëë. !!]",
+  "listenExport.status.ready-to-generate": "[!! Rëëáády töö gëënëëráátëë lïïcëënsëëd lïïstëënïïng táákëës ïïntöö thëë öön-dëëvïïcëë cááchëë. !!]",
   "listenExport.status.playing": "[!! Plááyïïng cááchëëd lïïstëënïïng ááüüdïïöö. !!]",
   "listenExport.status.share-unavailable": "[!! Sháárïïng lïïcëënsëëd lïïstëënïïng ááüüdïïöö ïïs nööt áávááïïlááblëë yëët. !!]",
   "listenExport.status.share-ready": "[!! Sháárëë thëë cööncáátëënáátëëd lïïstëënïïng fïïlëë. !!]",

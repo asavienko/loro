@@ -506,6 +506,7 @@
   "listenExport.status.generating": "Generating licensed listening takes…",
   "listenExport.status.partial-failure": "Some listening clips failed. Completed clips stayed on this device.",
   "listenExport.status.ready-to-listen": "Ready to listen from the on-device cache.",
+  "listenExport.status.ready-to-generate": "Ready to generate licensed listening takes into the on-device cache.",
   "listenExport.status.playing": "Playing cached listening audio.",
   "listenExport.status.share-unavailable": "Sharing licensed listening audio is not available yet.",
   "listenExport.status.share-ready": "Share the concatenated listening file.",

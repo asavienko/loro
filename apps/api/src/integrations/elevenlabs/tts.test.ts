@@ -136,6 +136,14 @@ describe('ElevenLabs provider-only TTS adapter', () => {
     )
   })
 
+  it('sends the request model_id when it differs from the adapter default', async () => {
+    const { client, send } = setup()
+    await client.synthesize({ ...request, modelId: 'eleven_multilingual_v2' })
+    expect(JSON.parse(send.mock.calls[0]![1]!.body as string)).toMatchObject({
+      model_id: 'eleven_multilingual_v2',
+    })
+  })
+
   it('records provider character counts when they are a non-negative integer', async () => {
     const send = vi.fn<typeof fetch>().mockResolvedValue(
       new Response(audio, {
@@ -285,7 +293,7 @@ describe('ElevenLabs provider-only TTS adapter', () => {
 
 describe('TTS configuration and stub', () => {
   it('defaults to stub and rejects unknown providers', () => {
-    expect(parseTtsConfig({})).toMatchObject({ provider: 'stub', apiKey: '' })
+    expect(parseTtsConfig({})).toMatchObject({ provider: 'stub', apiKey: '', stubRender: false })
     expect(() => parseTtsConfig({ TTS_PROVIDER: 'polly' })).toThrow('configuration')
   })
 
@@ -302,6 +310,7 @@ describe('TTS configuration and stub', () => {
       }),
     ).toMatchObject({
       provider: 'elevenlabs',
+      stubRender: false,
       voices: { 'es-ES': 'voice-es', 'bg-BG': '', 'ru-RU': '' },
     })
   })
@@ -314,5 +323,27 @@ describe('TTS configuration and stub', () => {
 
   it('refuses stub synthesis so stub bytes cannot be published', async () => {
     await expect(new StubTts().synthesize(request)).rejects.toMatchObject({ code: 'unavailable' })
+  })
+
+  it('enables labeled stub render only when TTS_STUB_RENDER=1', async () => {
+    expect(parseTtsConfig({ TTS_PROVIDER: 'stub', TTS_STUB_RENDER: '1' }).stubRender).toBe(true)
+    expect(parseTtsConfig({ TTS_PROVIDER: 'stub', TTS_STUB_RENDER: '0' }).stubRender).toBe(false)
+    expect(
+      parseTtsConfig({
+        TTS_PROVIDER: 'elevenlabs',
+        TTS_API_KEY: 'k',
+        TTS_MODEL: 'eleven_multilingual_v2',
+        TTS_VOICE_ES_ES: 'voice-es',
+        TTS_STUB_RENDER: '1',
+      }).stubRender,
+    ).toBe(false)
+    const result = await new StubTts({ stubRender: true }).synthesize({
+      ...request,
+      modelId: 'eleven_multilingual_v2',
+    })
+    expect(result.provenance.provider).toBe('stub')
+    expect(result.contentType).toBe('audio/mp4')
+    expect(result.bytes.byteLength).toBeGreaterThan(32)
+    expect(Object.keys(result)).toEqual(['bytes', 'contentType', 'characterCount', 'provenance'])
   })
 })

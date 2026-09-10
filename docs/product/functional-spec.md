@@ -1089,7 +1089,8 @@ authored learner screen. See [account implementation](../architecture/google-app
 Optional `/listen-export` utility (plan 99); not one of the 23 authored learner screens. The learner
 selects the active-course batch and a repeat count of 2–5 (default 3). The primary path **generates
 licensed neural takes online** (ElevenLabs `eleven_multilingual_v2` pins in
-`LISTENING_VOICE_DECISION`; stub/missing key still fail closed), **caches each phrase×voice clip on
+`LISTENING_VOICE_DECISION`; default stub/missing key still fail closed;
+`TTS_STUB_RENDER=1` is labeled listening-class only), **caches each phrase×voice clip on
 device**, then plays that cache with no network. Each phrase is spoken that many times, rotating
 through distinct licensed voices for the target locale. The primary action requires at least two
 approved listening voices; otherwise the control is unavailable. First-time generation needs

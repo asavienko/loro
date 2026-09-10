@@ -7,7 +7,9 @@ import {
 } from '@loro/core'
 import { AudioCacheController, AudioCacheError } from './audioCacheController'
 import {
+  listenStatusKind,
   listenViewModel,
+  listeningFixtureSeedEnabled,
   playListeningSequence,
   prepareListeningBatch,
   restoreListeningBatch,
@@ -38,6 +40,7 @@ describe('listening companion', () => {
     expect(view.generateEnabled).toBe(true)
     expect(view.blockers).not.toContain('voices-unapproved')
     expect(view.blockers).not.toContain('model-unpinned')
+    expect(listenStatusKind(view)).toBe('ready-to-generate')
     expect(LISTENING_SHARE_ENABLED).toBe(false)
     expect(view.shareEnabled).toBe(false)
   })
@@ -63,6 +66,7 @@ describe('listening companion', () => {
     expect(view.listenEnabled).toBe(false)
     expect(view.shareEnabled).toBe(false)
     expect(view.blockers).toContain('native-unavailable')
+    expect(listenStatusKind(view)).toBe('native-unavailable')
   })
 
   it('plays from cache without network and keeps Q-22 share closed', () => {
@@ -84,6 +88,7 @@ describe('listening companion', () => {
     expect(view.listenEnabled).toBe(true)
     expect(view.shareEnabled).toBe(false)
     expect(view.generateEnabled).toBe(false)
+    expect(listenStatusKind(view)).toBe('ready-to-listen')
   })
 
   it('skips verified cache hits and keeps completed clips on cancel', async () => {
@@ -280,5 +285,29 @@ describe('listening companion', () => {
     expect(ready.phase).toBe('ready')
     expect(ready.clips).toHaveLength(2)
     expect(ready.clips.every((clip) => clip.fileUri.startsWith('file:'))).toBe(true)
+  })
+
+  it('does not seed the debug fixture when licensed generate is available', () => {
+    expect(
+      listeningFixtureSeedEnabled({
+        licensedGenerate: true,
+        nativeDebug: true,
+        nativeCache: true,
+      }),
+    ).toBe(false)
+    expect(
+      listeningFixtureSeedEnabled({
+        licensedGenerate: false,
+        nativeDebug: true,
+        nativeCache: true,
+      }),
+    ).toBe(true)
+    expect(
+      listeningFixtureSeedEnabled({
+        licensedGenerate: false,
+        nativeDebug: false,
+        nativeCache: true,
+      }),
+    ).toBe(false)
   })
 })
