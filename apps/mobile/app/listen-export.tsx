@@ -22,6 +22,7 @@ import { deviceClock } from '../src/lib/clock'
 import { useLocale } from '../src/lib/i18n'
 import {
   isListenPlaybackId,
+  listenStatusKind,
   listenViewModel,
   playListeningSequence,
   prepareListeningBatch,
@@ -389,27 +390,7 @@ function statusCopy(
   if (scenario === 'voices-single') return copy.listenExport.status['voices-single']
   if (scenario === 'quota') return copy.listenExport.status.quota
   if (scenario === 'not-configured') return copy.listenExport.status['not-configured']
-  if (view.phase === 'generating') return copy.listenExport.status.generating
-  if (view.phase === 'playing') return copy.listenExport.status.playing
-  if (view.phase === 'cancelled') return copy.listenExport.status.cancelled
-  if (view.phase === 'partial') return copy.listenExport.status['partial-failure']
-  if (view.phase === 'ready') {
-    return view.shareEnabled
-      ? copy.listenExport.status['share-ready']
-      : copy.listenExport.status['ready-to-listen']
-  }
-  const blocker = view.blockers[0]
-  if (blocker === 'empty') return copy.listenExport.status.empty
-  if (blocker === 'needs-network') return copy.listenExport.status['needs-network']
-  if (blocker === 'disk-full') return copy.listenExport.status['disk-full']
-  if (blocker === 'session-busy') return copy.listenExport.status['session-busy']
-  if (blocker === 'voices-unapproved') return copy.listenExport.status['voices-unapproved']
-  if (blocker === 'not-configured') return copy.listenExport.status['not-configured']
-  if (blocker === 'native-unavailable') return copy.listenExport.status['native-unavailable']
-  if (blocker === 'model-unpinned') return copy.listenExport.status['model-unpinned']
-  if (blocker === 'voices-single') return copy.listenExport.status['voices-single']
-  if (blocker === 'quota') return copy.listenExport.status.quota
-  return copy.listenExport.status['voices-unapproved']
+  return copy.listenExport.status[listenStatusKind(view)]
 }
 
 function RepeatStepper({

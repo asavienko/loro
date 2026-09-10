@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { mkdtemp } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { silenceWav } from '@loro/content/audio-duration'
 import {
   CATALOG_REFERENCE_VOICES,
   ELEVENLABS_MULTILINGUAL_V2,
@@ -10,6 +11,7 @@ import {
   LISTENING_CODEC,
   LISTENING_VOICE_DECISION,
 } from '@loro/core'
+import { TtsResponseSchema } from '@loro/core/api/draft'
 import { TtsService } from './tts.service.js'
 
 const text = 'Me pone un cortado, por favor'
@@ -89,5 +91,52 @@ describe('listening-class TTS render', () => {
       }),
     ).rejects.toMatchObject({ code: 'PROVIDER_UNAVAILABLE' })
     expect(synthesize).not.toHaveBeenCalled()
+  })
+
+  it('renders a pinned listening id with mocked ElevenLabs and no JSON PCM', async () => {
+    const cacheDir = await mkdtemp(join(tmpdir(), 'loro-tts-listen-ok-'))
+    liveEnv(cacheDir)
+    const listeningVoice = LISTENING_VOICE_DECISION.voices['es-ES'][0]
+    if (listeningVoice === undefined) throw new Error('expected pinned es-ES listening voice')
+    const wav = silenceWav(200)
+    const synthesize = vi.fn(() =>
+      Promise.resolve({
+        bytes: wav,
+        contentType: 'audio/wav',
+        provenance: {
+          provider: 'elevenlabs' as const,
+          model: ELEVENLABS_MULTILINGUAL_V2,
+          voiceId: listeningVoice.id,
+          outputFormat: 'mp3_44100_128',
+          locale: 'es-ES',
+        },
+        characterCount: null,
+      }),
+    )
+    const tts = new TtsService({ synthesize }, { now: () => 1 })
+    const raw = await tts.render({
+      userId: 'learner',
+      ip: '127.0.0.1',
+      body: {
+        text,
+        lang: 'es-ES',
+        phrase_hash: phraseHash,
+        voice_id: listeningVoice.id,
+        model_id: ELEVENLABS_MULTILINGUAL_V2,
+        asset_class: LISTENING_ASSET_CLASS,
+        codec: LISTENING_CODEC,
+      },
+    })
+    expect(raw).not.toHaveProperty('audio')
+    const body = TtsResponseSchema.parse(raw)
+    expect(body.voice_id).toBe(listeningVoice.id)
+    expect(body.model_id).toBe(ELEVENLABS_MULTILINGUAL_V2)
+    expect(body.asset_class).toBe(LISTENING_ASSET_CLASS)
+    expect(synthesize).toHaveBeenCalledWith(
+      expect.objectContaining({
+        voiceId: listeningVoice.id,
+        modelId: ELEVENLABS_MULTILINGUAL_V2,
+      }),
+    )
   })
 })

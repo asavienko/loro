@@ -19,6 +19,9 @@ test('the listen companion is a Phrases utility with honest unavailable generate
   await expect(page.getByRole('button', { name: LISTEN_SHARE })).toBeDisabled()
   await expect(page.getByText(LISTEN_STATUS['voices-unapproved'], { exact: true })).toHaveCount(0)
   await expect(page.getByText('On-device listening cache is not available here.')).toBeVisible()
+  await expect(
+    page.getByText('Ready to generate licensed listening takes into the on-device cache.'),
+  ).toHaveCount(0)
   await expect(page.getByText('Sara Martin 1')).toBeVisible()
   await expect(page.getByText('Dante', { exact: true })).toBeVisible()
   await expect(page.getByText(LISTEN_STATUS['share-unavailable'])).toHaveCount(0)

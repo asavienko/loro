@@ -506,6 +506,7 @@
   "listenExport.status.generating": "Создание лицензированных записей для прослушивания…",
   "listenExport.status.partial-failure": "Некоторые записи для прослушивания не удалось создать. Готовые остались на этом устройстве.",
   "listenExport.status.ready-to-listen": "Готово слушать из кэша на устройстве.",
+  "listenExport.status.ready-to-generate": "Готово создать лицензированные записи для прослушивания в кэш на устройстве.",
   "listenExport.status.playing": "Воспроизведение кэшированного аудио для прослушивания.",
   "listenExport.status.share-unavailable": "Обмен лицензированным аудио для прослушивания пока недоступен.",
   "listenExport.status.share-ready": "Поделиться объединённым файлом для прослушивания.",

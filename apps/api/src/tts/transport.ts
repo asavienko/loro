@@ -18,7 +18,9 @@ export interface TtsTransport {
 export function createTtsTransport(): TtsTransport {
   try {
     const parsed = parseTtsConfig(config.ttsEnv())
-    if (parsed.provider !== 'elevenlabs') return new StubTts()
+    if (parsed.provider !== 'elevenlabs') {
+      return new StubTts({ stubRender: parsed.stubRender })
+    }
     return new ElevenLabsTts({
       apiKey: parsed.apiKey,
       model: parsed.model,
