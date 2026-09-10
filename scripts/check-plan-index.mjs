@@ -18,6 +18,30 @@ export function discoverTopLevelPlans(plansDirectory) {
     }))
 }
 
+/** Archived `NN-*.md` files still occupy their IDs — numbers are never reused. */
+export function discoverAssignedIds(plansDirectory) {
+  const ids = new Set(discoverTopLevelPlans(plansDirectory).map((plan) => plan.id))
+  const archiveRoot = join(plansDirectory, 'archive')
+  const stack = [archiveRoot]
+  while (stack.length > 0) {
+    const current = stack.pop()
+    let entries
+    try {
+      entries = readdirSync(current, { withFileTypes: true })
+    } catch {
+      continue
+    }
+    for (const entry of entries) {
+      const path = join(current, entry.name)
+      if (entry.isDirectory()) stack.push(path)
+      else if (entry.isFile() && PLAN_FILE.test(entry.name)) {
+        ids.add(Number(entry.name.match(PLAN_FILE)?.[1]))
+      }
+    }
+  }
+  return [...ids].sort((left, right) => left - right)
+}
+
 export function hasRowForPlan(readme, fileName) {
   const escaped = fileName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
   const row = new RegExp(
@@ -31,13 +55,13 @@ export function documentedCollision(readme) {
   return COLLISION_NOTE.test(readme)
 }
 
-export function planIndexErrors({ plans, readme }) {
+export function planIndexErrors({ plans, readme, assignedIds = plans.map((plan) => plan.id) }) {
   const errors = []
   if (plans.length === 0) {
     errors.push('No top-level plans/NN-*.md files found')
     return errors
   }
-  const highest = Math.max(...plans.map((plan) => plan.id))
+  const highest = Math.max(...assignedIds, ...plans.map((plan) => plan.id))
   const expectedNext = highest + 1
   const nextMatch = readme.match(NEXT_IS)
   if (nextMatch === null) errors.push('README is missing a “next is N” / “next new plan is N” sentence')
@@ -74,9 +98,11 @@ export function planIndexErrors({ plans, readme }) {
 }
 
 export function checkPlanIndex(root = resolve(dirname(fileURLToPath(import.meta.url)), '..')) {
+  const plansDirectory = join(root, 'plans')
   const readme = readFileSync(join(root, 'plans/README.md'), 'utf8')
   return planIndexErrors({
-    plans: discoverTopLevelPlans(join(root, 'plans')),
+    plans: discoverTopLevelPlans(plansDirectory),
+    assignedIds: discoverAssignedIds(plansDirectory),
     readme,
   })
 }

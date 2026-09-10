@@ -2,7 +2,8 @@
 
 Cross-cutting recipes for a new route, copy section, E2E state, primitive, and the writes ESLint
 already owns. Product screens, audio, and accounts stay with their plans.
-[Plan 100](../../../../plans/100-hygiene-reuse-and-tooling.md) is the execution owner.
+[Plan 100](../../../../plans/archive/2026-09-10/100-hygiene-reuse-and-tooling.md) landed these
+recipes; do not open a second hygiene plan.
 
 Editor prefixes live in [`.vscode/loro.code-snippets`](../../../../.vscode/loro.code-snippets). The
 Cursor rule is [`.cursor/rules/loro-hygiene.mdc`](../../../../.cursor/rules/loro-hygiene.mdc).

@@ -3,9 +3,9 @@
 [Whole-project improvement assessment — 2026-09-09](reviews/2026-09-09-project-improvement-assessment.md)
 answers what to refactor, which tools and libraries to keep or avoid, and which practices are
 enforced versus stale, across mobile, core, Rust, API, content, tokens and CI. A–G and the ADR
-amendments it records have landed. Remaining executable hygiene, reuse and tooling is
-[plan 100](../plans/100-hygiene-reuse-and-tooling.md). The review itself is not product acceptance.
-The two companions below remain authoritative in their narrower scopes.
+amendments it records have landed. Executable hygiene, reuse and tooling from that review is
+[archived plan 100](../plans/archive/2026-09-10/100-hygiene-reuse-and-tooling.md). The review itself
+is not product acceptance. The two companions below remain authoritative in their narrower scopes.
 
 [Refactoring strategies — 2026-09-09](reviews/2026-09-09-refactoring-strategies.md) inventories
 structural cleanup of **shipped** code: dual TS/Rust numbers, contract schema forks, practice-route
