@@ -38,8 +38,10 @@ request-scoped and pair-safe, corrupt release pointers fail closed, chat choice 
 active-session E2E navigation uses a deterministic open-wave clock. Refrain completion remains
 visible before a future-wave lock, and its persistent resume action meets the touch-target floor.
 The fast and full local checks are green; device/provider acceptance remains open.
-[Plan 100](plans/archive/2026-09-10/100-hygiene-reuse-and-tooling.md) (Field, ListRow, reuse gates,
-UniFFI `--check`) is archived. The
+[Archived plan 100](plans/archive/2026-09-10/100-hygiene-reuse-and-tooling.md) (Field, ListRow,
+reuse gates, UniFFI `--check`) is complete. Active
+[`plans/100-ui-design-system.md`](plans/100-ui-design-system.md) is the shared motion/gesture kit
+under the same number (unresolved collision; do not reuse or drop either). The
 [implemented-slice archive](plans/archive/2026-09-09/IMPLEMENTED-SLICES.md) retains other delivered
 work.
 
@@ -172,8 +174,13 @@ prototype-only and **must not** be carried into the app — see the divergence t
   route is ElevenLabs or labeled `TTS_STUB_RENDER=1`. Default stub/missing key still fail closed.
   Browser generate stays `native-unavailable` (no JS PCM download). Pronunciation review remains on
   Q-15. Q-22 share stays off. File-URI generate/cache/listen is tested, including a labeled
-  development fixture seed. iOS `playFile` stops on background with Android. Plan 100 (hygiene,
-  Field/ListRow, snippets, UniFFI `--check`) is archived. The next new plan number is 101; recheck
+  development fixture seed. iOS `playFile` stops on background with Android. Archived plan 100 is
+  hygiene (Field/ListRow, snippets, UniFFI `--check`). Active
+  [`plans/100-ui-design-system.md`](plans/100-ui-design-system.md) is the shared UI interaction kit
+  (Reanimated adapter, UI-thread press/`sheetUp`, Arrival/warming/beat/equaliser/pulse/un-blur on
+  real routes; practice/form/chat composites wait for a second caller; device 60 fps remains 58/72)
+  under the same number (unresolved collision; do not reuse or drop either); 57 keeps
+  fonts/haptics/dark and 93 keeps spine/sheet pull laws. The next new plan number is 101; recheck
   concurrent worktrees and untracked `plans/` files before allocating an ID — the README/CLAUDE
   "next is N" sentence can lag. A new plan takes the next free number and gets a row in
   [`plans/README.md`](plans/README.md). **Numbers are never reused** — a gap is left rather than

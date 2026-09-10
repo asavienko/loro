@@ -30,7 +30,8 @@ test('two 96 rows still pass when the collision is documented', () => {
   assert.equal(hasRowForPlan(readme, '96-phrase-music-generation.md'), true)
   assert.equal(hasRowForPlan(readme, '96-account-sign-in-screens.md'), true)
   assert.equal(documentedCollision(readme, 96), true)
-  assert.equal(documentedCollision(readme, 100), false)
+  assert.equal(hasRowForPlan(readme, '100-ui-design-system.md'), true)
+  assert.equal(documentedCollision(readme, 100), true)
 })
 
 test('removing a remaining top-level row from a copy of README fails', () => {
@@ -65,14 +66,16 @@ test('reusing an archived ID as a new top-level file fails unless that ID is nam
   const assigned = discoverAssignedIds(join(root, 'plans'))
   const archived = discoverArchivedIds(join(root, 'plans'))
   assert.ok(archived.includes(100), 'plan 100 must remain archived for this reuse pin')
+  // 100 already has a documented collision (hygiene archive vs UI kit). Use a
+  // synthetic unused archived ID so this pin still fails without a note.
   const reused = planIndexErrors({
-    plans: [...discoverTopLevelPlans(join(root, 'plans')), { name: '100-oops.md', id: 100 }],
+    plans: [...discoverTopLevelPlans(join(root, 'plans')), { name: '50-oops.md', id: 50 }],
     assignedIds: assigned,
-    archivedIds: archived,
-    readme: `${readme}\n| [100](100-oops.md) | oops |\n`,
+    archivedIds: [...archived, 50],
+    readme: `${readme}\n| [50](50-oops.md) | oops |\n`,
   })
   assert.ok(
-    reused.some((error) => error.includes('reuses archived ID 100')),
+    reused.some((error) => error.includes('reuses archived ID 50')),
     reused.join('\n'),
   )
   const named = planIndexErrors({
