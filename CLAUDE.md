@@ -20,10 +20,10 @@ progress to cross-device sync.
 
 The three 31-phrase Spanish/Bulgarian/Russian starters still await bilingual review. The other 15
 learner screens, licensed production seed audio (Q-15), the 150 MB LRU cache, background audio,
-measured onset latency, DSP, widgets, production listening voices, shareable neural listening
-export (Q-22) and account export/erasure remain. Cloud ASR is forbidden.
-Android compilation and an airplane-mode emulator persistence/reveal smoke passed; full iOS and
-physical-device speech/convergence acceptance remain release gates. See
+measured onset latency, DSP, widgets, production listening voices, shareable neural listening export
+(Q-22) and account export/erasure remain. Cloud ASR is forbidden. Android compilation and an
+airplane-mode emulator persistence/reveal smoke passed; full iOS and physical-device
+speech/convergence acceptance remain release gates. See
 [persistent practice](docs/process/persistent-practice.md) and
 [plan 94](plans/archive/2026-09-09/94-persistent-practice-and-account-integration.md) for scoped
 evidence.
@@ -159,14 +159,15 @@ prototype-only and **must not** be carried into the app — see the divergence t
   Plan 53 was archived at user request on 2026-09-09; its former original-path exception no longer
   applies. Plan 97 owns generative Discover reach. Plan 98 owns the ElevenLabs adapter,
   `content:render`, gated `/tts/render` and catalog-file playback. Plan 99 owns the online-first
-  listening companion (generate, cache, in-app listen; share after Q-22). The next new plan number
-  is 100; recheck concurrent worktrees and untracked `plans/` files before allocating an ID — the
-  README/CLAUDE "next is N" sentence can lag. A new plan takes the next free number and gets a row
-  in [`plans/README.md`](plans/README.md). **Numbers are never reused** — a gap is left rather than
-  backfilled, so a link written against a number can't come to mean a different plan. Not in
-  `docs/`: that holds the durable spec. Not in a temp directory either — a plan you can't find
-  again is a plan you rewrite. Name the requirement ID inside the plan so it ties back to the
-  branch and the PR.
+  listening companion (generate, cache, in-app listen; share after Q-22). Licensed generate stays
+  fail-closed until Q-15; file-URI generate/cache/listen is tested, including a labeled development
+  fixture seed. The next new plan number is 100; recheck concurrent worktrees and untracked `plans/`
+  files before allocating an ID — the README/CLAUDE "next is N" sentence can lag. A new plan takes
+  the next free number and gets a row in [`plans/README.md`](plans/README.md). **Numbers are never
+  reused** — a gap is left rather than backfilled, so a link written against a number can't come to
+  mean a different plan. Not in `docs/`: that holds the durable spec. Not in a temp directory either
+  — a plan you can't find again is a plan you rewrite. Name the requirement ID inside the plan so it
+  ties back to the branch and the PR.
 - Implemented-slice plans 56–68, 70–73, 75–77, 80–82, 86–88, 90 and 93–96 were archived at user
   request on 2026-09-09 with their partial status and remaining scope preserved in
   `plans/archive/2026-09-09/`; direct links in the roadmap index retain their ownership. This
@@ -308,23 +309,23 @@ npx expo start --web                # from apps/mobile — fastest way to see th
 
 ## Where things live
 
-| Path                      | What                                                                      |
-| ------------------------- | ------------------------------------------------------------------------- |
-| `docs/`                   | All documentation — start at `docs/README.md`                             |
-| `apps/mobile/`            | Expo / React Native app; routes in `app/`, design system in `src/ui/`     |
-| `…/src/ui/primitives/`    | Domain-free components. Nothing here knows what a phrase is               |
-| `…/src/ui/components/`    | Composites that take domain types. Never the store, never `copy`          |
-| `…/src/ui/tokens/`        | Component geometry the generated tokens don't cover. Lint-exempt for hex  |
-| `…/src/lib/copy.ts`       | **Every** learner-facing string. The E2E suite asserts ~110 of them       |
-| `apps/mobile/e2e/`        | Playwright web E2E for every implemented route and cross-screen flow      |
-| `…/modules/loro-audio-cache/` | Listening-class download, pin, restore; file URIs only; Q-22 mux |
-| `apps/api/`               | NestJS backend                                                            |
-| `packages/core/`          | Shared TS domain, engine contracts, API schemas — **used by app AND api** |
-| `…/core/src/persistence/` | Schema, migrations, repositories, outbox. Handwritten SQL, no ORM         |
-| `apps/mobile/src/data/`   | Native/browser SQLite drivers, hydration, repository writes and sync      |
-| `packages/core-rs/`       | Rust: FSRS, sync merge, ranking, DSP. All reproducible maths              |
-| `packages/design-tokens/` | Tokens extracted from the blueprint + generators                          |
-| `packages/content/`       | Spanish/Bulgarian/Russian catalogs and review/validation gates            |
+| Path                          | What                                                                      |
+| ----------------------------- | ------------------------------------------------------------------------- |
+| `docs/`                       | All documentation — start at `docs/README.md`                             |
+| `apps/mobile/`                | Expo / React Native app; routes in `app/`, design system in `src/ui/`     |
+| `…/src/ui/primitives/`        | Domain-free components. Nothing here knows what a phrase is               |
+| `…/src/ui/components/`        | Composites that take domain types. Never the store, never `copy`          |
+| `…/src/ui/tokens/`            | Component geometry the generated tokens don't cover. Lint-exempt for hex  |
+| `…/src/lib/copy.ts`           | **Every** learner-facing string. The E2E suite asserts ~110 of them       |
+| `apps/mobile/e2e/`            | Playwright web E2E for every implemented route and cross-screen flow      |
+| `…/modules/loro-audio-cache/` | Listening-class download, pin, restore; file URIs only; Q-22 mux          |
+| `apps/api/`                   | NestJS backend                                                            |
+| `packages/core/`              | Shared TS domain, engine contracts, API schemas — **used by app AND api** |
+| `…/core/src/persistence/`     | Schema, migrations, repositories, outbox. Handwritten SQL, no ORM         |
+| `apps/mobile/src/data/`       | Native/browser SQLite drivers, hydration, repository writes and sync      |
+| `packages/core-rs/`           | Rust: FSRS, sync merge, ranking, DSP. All reproducible maths              |
+| `packages/design-tokens/`     | Tokens extracted from the blueprint + generators                          |
+| `packages/content/`           | Spanish/Bulgarian/Russian catalogs and review/validation gates            |
 
 ## Backend testing infrastructure
 
@@ -367,8 +368,8 @@ Run), **Q-14** (Refrain peak accessibility), **Q-08/Q-12** (pricing and billing)
 priority), **Q-16/Q-18–Q-20** (chat launch, budget and retention), **Q-21** (Discover suggest),
 **Q-22** (listening-file redistribution), plus bilingual review and the DSP quality gate. Gates
 apply to their named slices; offline chat and spike preparation may proceed. Plan 99 listening
-generation waits on Q-15; in-app cache/listen does not wait on Q-22; share-out-of-app does.
-Work whose dependencies do not cross those gates should continue.
+generation waits on Q-15; in-app cache/listen does not wait on Q-22; share-out-of-app does. Work
+whose dependencies do not cross those gates should continue.
 
 ## Python
 
