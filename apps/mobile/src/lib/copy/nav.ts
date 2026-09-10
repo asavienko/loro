@@ -63,4 +63,7 @@ export const navCopy = {
   get progress() {
     return message('nav.progress')
   },
+  get music() {
+    return message('nav.music')
+  },
 }

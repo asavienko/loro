@@ -1,6 +1,6 @@
 # Active plans
 
-This index lists only the **37 plans with remaining work**. Completed records and historical
+This index lists only the **38 plans with remaining work**. Completed records and historical
 snapshots are kept in [the archive](archive/README.md), without compatibility symlinks or redirect
 files in this directory. Links point directly to each plan's actual location.
 
@@ -9,16 +9,21 @@ untracked `plans/` files before allocating; the "next is N" sentence can lag. Nu
 reused; 49 remains an existing gap. When a plan finishes, archive it in the same change and list it
 only in the archive index.
 
+**Number collision (unresolved):** main archived account-sign-in as plan 96. This branch still
+owns phrase-music at [`96-phrase-music-generation.md`](96-phrase-music-generation.md) under the
+same ID. Both rows stay until Product assigns a new number; do not silently reuse or drop either.
+
 Implemented-slice owners from 56–68, 70–73, 75–77, 80–82, 86–88, 90 and 93–96 are stored in
 [the 2026-09-09 archive](archive/2026-09-09/README.md) at user request. Their partial statuses and
 outstanding scope remain indexed below; archiving does not imply completion. Only the still-unbuilt
-or decision-gated files 69, 74, 78, 83, 97 and 98 remain in this directory.
+or decision-gated files 69, 74, 78, 83, 96 (phrase-music), 97 and 98 remain in this directory.
 
 The [post-main review](../docs/reviews/2026-09-09-post-main-plan-review.md) records the six runtime
 and validation findings as fixed, including the follow-up Refrain completion and touch-target
 repairs. No additional whole plan meets its acceptance criteria. Delivered implementation slices are
-recorded in the [dated archive](archive/2026-09-09/IMPLEMENTED-SLICES.md); all 37 remaining-work
-owners are retained. Continue with device/provider acceptance, then integrate the remaining
+recorded in the [dated archive](archive/2026-09-09/IMPLEMENTED-SLICES.md); all 38 remaining-work
+owners are retained, including [phrase-music](96-phrase-music-generation.md). Continue with
+device/provider acceptance, then integrate the remaining
 daily-loop, Review, content and lifecycle slices.
 
 The [2026-09-09 implementation review](../docs/reviews/2026-09-09-twenty-plan-implementation.md)
@@ -98,6 +103,8 @@ Expo/RN packages onto that sequence versus device-owned work.
 5. **Later surfaces:** 59/60→75; bundled/guarded provider foundations→76 and 82→83. Voice, Review
    handoff and live release gates apply to their specific slices. Labs follow the recorded DSP
    decision; Run/ladder Phrasebook follows Q-05 and comparative evidence.
+   [96](96-phrase-music-generation.md) plans optional phrase-selected lyrics and multi-style
+   ElevenLabs Music; it is garnish, not daily-loop work, and live spend waits on proposed Q-21.
 
 ## Next implementation priorities — reviewed 2026-09-09
 
@@ -165,6 +172,7 @@ feature↔release-completion cycle. See each plan's checkboxes for executable ta
 | [94](archive/2026-09-09/94-persistent-practice-and-account-integration.md) | Integrated persistence, canonical core, speech and account sync             | M1/M2       | 🟡 Runtime/fast/format gates pass; full/device CI remains                                                    | 54/85 ✅; coordinated 58–60/62–63/66–68 slices                  |
 | [95](archive/2026-09-09/95-parallel-local-ci.md)                           | Dependency-aware parallel full local CI                                     | M2          | 🟡 Scheduler, cancellation, Git inventory and source identity fixes implemented; runtime comparison remains  | 72; no external blocker for measurements                        |
 | [96](archive/2026-09-09/96-account-sign-in-screens.md)                     | Account method chooser, email/code flow and provider sign-in states         | M2          | 🟡 UI/browser/client slices implemented; visual, native and live-provider evidence remains                   | 67/68/86; provider configuration and device evidence            |
+| [96](96-phrase-music-generation.md)                                       | Lyrics from selected phrases, then multi-style ElevenLabs Music             | later       | 🟡 Stub/fixture `/music` stack landed; live LLM/Music spend gated by proposed Q-21 and 86/61/62; **ID collides with archived account 96** | 86/76/82 patterns; 61/62 storage/playback; 56/81 route; Q-21    |
 | [97](97-generative-discover-and-phrase-reach.md)                           | Guarded generative Discover reach and shared add-handoff                    | M3          | 🟡 Own-phrase floor, bundled suggestions and stub suggest exist; Q-21 gates live traffic                     | 59/61; 76/86 live path; 82/83 consume handoff; Q-21             |
 | [98](98-voice-and-tts-integration.md)                                      | ElevenLabs TTS, catalog render and device-TTS fallback                      | M1/M2       | 🟡 Adapter/render/gated API/file playback in progress; Q-15 production seed remains                          | 86/61/62 slices; Q-15 live seed                                 |
 

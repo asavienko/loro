@@ -26,6 +26,15 @@ export const config = {
    */
   aiProvider: (): string => process.env['AI_PROVIDER'] ?? 'stub',
 
+  /** Lyrics model selector only. Never used to pick ElevenLabs Music. */
+  musicProvider: (): string => process.env['MUSIC_PROVIDER'] ?? 'stub',
+  musicMonthlyBudgetUsdPerUser: (): number =>
+    Number(process.env['MUSIC_MONTHLY_BUDGET_USD_PER_USER'] ?? '0'),
+  musicDailyBudgetUsdGlobal: (): number =>
+    Number(process.env['MUSIC_DAILY_BUDGET_USD_GLOBAL'] ?? '0'),
+  musicApiKey: (): string | undefined => process.env['MUSIC_API_KEY'],
+  musicBaseUrl: (): string => process.env['MUSIC_BASE_URL'] ?? 'https://api.elevenlabs.io',
+
   /** Where catalog audio is served from. MinIO locally, a CDN in production. */
   cdnBaseUrl: (): string => process.env['CDN_BASE_URL'] ?? 'http://localhost:9000/loro-content',
 

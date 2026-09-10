@@ -5,6 +5,7 @@
  * and coverage. Account mocks stay in `accountFlow.ts`.
  */
 import { expect, type Locator, type Page } from '@playwright/test'
+import { ensureManifestClock } from '../clock'
 
 export const REFRAIN_REPS = [
   'Say it',
@@ -35,6 +36,7 @@ export async function enter(
     })
     await page.goto('about:blank')
   }
+  await ensureManifestClock(page)
   if (state.firstRun !== true) await onboard(page)
   await state.reach(page)
 }
