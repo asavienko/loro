@@ -1,10 +1,10 @@
 # Active plans
 
-This index lists only the **38 plans with remaining work**. Completed records and historical
+This index lists only the **39 plans with remaining work**. Completed records and historical
 snapshots are kept in [the archive](archive/README.md), without compatibility symlinks or redirect
 files in this directory. Links point directly to each plan's actual location.
 
-The highest assigned ID is **98** and the next new plan is **99**. Recheck concurrent worktrees and
+The highest assigned ID is **99** and the next new plan is **100**. Recheck concurrent worktrees and
 untracked `plans/` files before allocating; the "next is N" sentence can lag. Numbers are never
 reused; 49 remains an existing gap. When a plan finishes, archive it in the same change and list it
 only in the archive index.
@@ -16,15 +16,16 @@ same ID. Both rows stay until Product assigns a new number; do not silently reus
 Implemented-slice owners from 56–68, 70–73, 75–77, 80–82, 86–88, 90 and 93–96 are stored in
 [the 2026-09-09 archive](archive/2026-09-09/README.md) at user request. Their partial statuses and
 outstanding scope remain indexed below; archiving does not imply completion. Only the still-unbuilt
-or decision-gated files 69, 74, 78, 83, 96 (phrase-music), 97 and 98 remain in this directory.
+or decision-gated files 69, 74, 78, 83, 96 (phrase-music), 97, 98 and 99 remain in this directory.
 
 The [post-main review](../docs/reviews/2026-09-09-post-main-plan-review.md) records the six runtime
 and validation findings as fixed, including the follow-up Refrain completion and touch-target
 repairs. No additional whole plan meets its acceptance criteria. Delivered implementation slices are
-recorded in the [dated archive](archive/2026-09-09/IMPLEMENTED-SLICES.md); all 38 remaining-work
-owners are retained, including [phrase-music](96-phrase-music-generation.md). Continue with
+recorded in the [dated archive](archive/2026-09-09/IMPLEMENTED-SLICES.md); all remaining-work
+owners are retained, including [phrase-music](96-phrase-music-generation.md) and
+[hygiene/reuse](99-hygiene-reuse-and-tooling.md). Continue with
 device/provider acceptance, then integrate the remaining
-daily-loop, Review, content and lifecycle slices.
+daily-loop, Review, content and lifecycle slices. Hygiene slices in 99 may proceed in parallel.
 
 The [2026-09-09 implementation review](../docs/reviews/2026-09-09-twenty-plan-implementation.md)
 records changes requested after the next twenty bounded slices. Each selected plan remains partial;
@@ -38,7 +39,8 @@ platform/device acceptance remains separate.
 The
 [whole-project improvement assessment](../docs/reviews/2026-09-09-project-improvement-assessment.md)
 covers remaining refactors, the keep/adopt/avoid tool matrix for every package, and practices that
-are enforced versus stale. It does not open a new plan. The
+are enforced versus stale. Remaining executable hygiene is
+[plan 99](99-hygiene-reuse-and-tooling.md). The
 [refactoring-strategies review](../docs/reviews/2026-09-09-refactoring-strategies.md) inventories
 structural debt in existing code and separates it from unfinished plan work. The
 [native-libraries companion](../docs/reviews/2026-09-09-native-libraries-and-approaches.md) maps
@@ -175,6 +177,7 @@ feature↔release-completion cycle. See each plan's checkboxes for executable ta
 | [96](96-phrase-music-generation.md)                                       | Lyrics from selected phrases, then multi-style ElevenLabs Music             | later       | 🟡 Stub/fixture `/music` stack landed; live LLM/Music spend gated by proposed Q-21 and 86/61/62; **ID collides with archived account 96** | 86/76/82 patterns; 61/62 storage/playback; 56/81 route; Q-21    |
 | [97](97-generative-discover-and-phrase-reach.md)                           | Guarded generative Discover reach and shared add-handoff                    | M3          | 🟡 Own-phrase floor, bundled suggestions and stub suggest exist; Q-21 gates live traffic                     | 59/61; 76/86 live path; 82/83 consume handoff; Q-21             |
 | [98](98-voice-and-tts-integration.md)                                      | ElevenLabs TTS, catalog render and device-TTS fallback                      | M1/M2       | 🟡 Adapter/render/gated API/file playback in progress; Q-15 production seed remains                          | 86/61/62 slices; Q-15 live seed                                 |
+| [99](99-hygiene-reuse-and-tooling.md)                                      | Field/ListRow, barrel consistency, snippets and UniFFI `--check`            | M1          | — Reviews remain inventory; A–G landed; extracts/tools not started                                           | 2026-09-09 reviews; do not steal 56/57/67/81                    |
 
 Plan 88 owns the selected AWS testing profile and
 [operations runbook](../docs/runbooks/backend-testing.md); plan 73 retains production operations.

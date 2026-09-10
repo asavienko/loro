@@ -7,9 +7,11 @@
 gates (NAV-\*, AS-\*, N-04, ADR-0001/0002/0003/0005/0007/0011), not product completion.
 
 **Disposition: document only.** This review does not implement refactors, does not install packages,
-does not open a numbered plan, and does not claim device acceptance. It does not replace the
-refactoring-strategies sequence. Device, bilingual, provider and remaining learner-screen work stay
-with their owners in [plans/README.md](../../plans/README.md).
+and does not claim device acceptance. It does not replace the refactoring-strategies sequence.
+Cross-cutting Field/ListRow extracts, snippets and UniFFI `--check` are
+[plan 99](../../plans/99-hygiene-reuse-and-tooling.md); this matrix still owns keep-vs-adopt for
+native packages. Device, bilingual, provider and remaining learner-screen work stay with their
+owners in [plans/README.md](../../plans/README.md).
 
 No earlier `docs/reviews/` file inventories native libraries against the current Expo SDK 54 tree.
 [2026-09-08-readiness.md](2026-09-08-readiness.md) is a dated stack/APK snapshot and is stale on
