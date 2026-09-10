@@ -127,6 +127,8 @@ Expo Router typed routes are enabled in `app.config.ts`. The route files on disk
 | `/more`             | Grouped destination list for built surfaces                                  |
 | `/settings`         | Durable visual and analytics preferences                                     |
 | `/progress`         | Mastery, ladder, streak, and tag rollups derived from store rows             |
+| `/music`            | Phrase-songs garnish via More; picker, lyric review, style confirm, fixtures |
+| `/dev/tokens`       | Developer workbench / token inspection (dev-only)                            |
 
 `_layout.tsx` owns the native stack, headers, safe-area provider, app-wide day rollover, and toast
 host. The Add tagging sheet is currently component state inside `/add`, not a route-level modal.
