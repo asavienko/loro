@@ -71,7 +71,10 @@ layout adaptations preserve the authored colors and metrics; the authored artifa
 The following are specified but not yet implemented: custom font loading/family assignment,
 learner-selectable accents, CSS-shadow/gradient-to-native rendering, most declared animations, Skia
 charts, and the component families required by the other 16 learner screens. The current `DarkCard`
-therefore uses flat `surface.dark`, and `Card` intentionally has no elevation prop.
+therefore uses flat `surface.dark`, and `Card` intentionally has no elevation prop. Plan 57 owns
+fonts, dark theme and the haptic port. [Plan 100](../../plans/100-ui-design-system.md) owns the
+shared motion adapter, gesture catalog and remaining-screen primitives that consume these tokens.
+Do not adopt a third-party UI kit to skip that kit.
 
 ## Visual character
 
@@ -205,3 +208,8 @@ animation by itself.
 The generated tokens, component-level metrics, implementation, and documentation must land in one
 coherent change. A token that no component can consume, or a component that bypasses the token front
 door, is unfinished system work.
+
+The remaining-screen interaction kit — Reanimated token playback, sheet/press physics, warming /
+beat / un-blur / `popIn`, and practice/chat composites extracted at two call sites — is
+[plan 100](../../plans/100-ui-design-system.md). Fonts, dark theme and haptics stay plan 57;
+workbench coverage stays plan 80; spine/sheet pull laws stay plan 93.

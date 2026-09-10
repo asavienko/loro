@@ -168,10 +168,13 @@ prototype-only and **must not** be carried into the app — see the divergence t
   2026-09-10 `LISTENING_VOICE_DECISION` pins when native cache exists and the TTS route is ElevenLabs
   or labeled `TTS_STUB_RENDER=1`. Default stub/missing key still fail closed. Browser generate stays
   `native-unavailable` (no JS PCM download). Pronunciation review remains on Q-15. Q-22 share stays
-  off. File-URI generate/cache/listen is tested, including a labeled development fixture seed. iOS `playFile` stops on background with Android. Active
+  off. File-URI generate/cache/listen is tested, including a labeled development fixture seed. iOS
+  `playFile` stops on background with Android. Plan 100 owns the shared UI interaction kit
+  (Reanimated motion adapter, gesture catalog, remaining-screen primitives); 57 keeps
+  fonts/haptics/dark and 93 keeps spine/sheet pull laws. Active
   [`plans/96-phrase-music-generation.md`](plans/96-phrase-music-generation.md) collides with
   archived account-sign-in 96 (unresolved; do not reuse or drop either). The next new plan number is
-  100; recheck concurrent worktrees and untracked `plans/` files before allocating an ID — the
+  101; recheck concurrent worktrees and untracked `plans/` files before allocating an ID — the
   README/CLAUDE "next is N" sentence can lag. A new plan takes the next free number and gets a row
   in [`plans/README.md`](plans/README.md). **Numbers are never reused** — a gap is left rather than
   backfilled, so a link written against a number can't come to mean a different plan. Not in
