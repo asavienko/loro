@@ -57,20 +57,28 @@ for (const scale of SCALES) {
       ).toBe(true)
     }
   })
-  test(`text at ${scale * 100}% never clips or overflows`, async ({ page }) => {
-    // Whole-manifest walk: F-01 account, AS-07 listen, and plan-96 music states.
-    test.setTimeout(300_000)
-    const problems: string[] = []
-
-    for (const state of STATES) {
-      await enter(page, state, onboard)
-      await scaleText(page, scale)
-      problems.push(...(await layoutProblems(page, state.name)))
-    }
-
-    expect(problems, `layout failures at ${scale * 100}% text`).toEqual([])
-  })
 }
+
+test.describe('whole-manifest text scale', () => {
+  test.describe.configure({ retries: 0 })
+
+  for (const scale of SCALES) {
+    test(`text at ${scale * 100}% never clips or overflows`, async ({ page }) => {
+      // Account, listen, music, and Reanimated kit surfaces. Five minutes is no
+      // longer enough for 100+ enter() calls; ten is. Do not retry a timeout.
+      test.setTimeout(600_000)
+      const problems: string[] = []
+
+      for (const state of STATES) {
+        await enter(page, state, onboard)
+        await scaleText(page, scale)
+        problems.push(...(await layoutProblems(page, state.name)))
+      }
+
+      expect(problems, `layout failures at ${scale * 100}% text`).toEqual([])
+    })
+  }
+})
 
 test('the primary action stays reachable at 310% text', async ({ page }) => {
   await atInstant(page, '2026-04-06T10:00')

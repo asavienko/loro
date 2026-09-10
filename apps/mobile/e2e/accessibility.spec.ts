@@ -107,17 +107,23 @@ for (const state of STATES) {
   })
 }
 
-test('every interactive element meets the 44 px touch target', async ({ page }) => {
-  // Account, listen-companion, and plan-96 music states outgrow the 90 s default.
-  test.setTimeout(300_000)
-  const offenders: string[] = []
+test.describe('whole-manifest touch targets', () => {
+  test.describe.configure({ retries: 0 })
 
-  for (const state of STATES) {
-    await enter(page, state, onboard)
-    offenders.push(...(await tooSmall(page, state.name)))
-  }
+  test('every interactive element meets the 44 px touch target', async ({ page }) => {
+    // One test walks every STATES row. Account, listen-companion, music, and
+    // Reanimated press/sheet/beat surfaces outgrow five minutes; ten covers the
+    // current manifest. Do not retry a timeout — it only burns the suite budget.
+    test.setTimeout(600_000)
+    const offenders: string[] = []
 
-  expect(offenders, 'interactive elements below the 44 px floor').toEqual([])
+    for (const state of STATES) {
+      await enter(page, state, onboard)
+      offenders.push(...(await tooSmall(page, state.name)))
+    }
+
+    expect(offenders, 'interactive elements below the 44 px floor').toEqual([])
+  })
 })
 
 test('a radio and a checkbox report which one is chosen', async ({ page }) => {
