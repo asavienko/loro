@@ -11,7 +11,7 @@ frames, 10 navigation, 4 practice, and 3 progress. Four additional JSX files und
 `ui_kits/loro-app/` compose reference screens and do not belong to the component count. Likewise,
 the adjacent CSS token files contain 246 unique custom-property names, not the headline's 245.
 
-All reusable app UI lives under `apps/mobile/src/ui/`. Learner screens and the shell use 24
+All reusable app UI lives under `apps/mobile/src/ui/`. Learner screens and the shell use 30
 exported primitives and 9 exported composites (including direct module exports). There is no `src/ui/charts/` directory yet.
 
 ## Current primitives · `src/ui/primitives/`
@@ -44,6 +44,12 @@ Primitives are domain-free. Their public exports come from `primitives/index.ts`
 | `EmojiTile`     | Decorative emoji square with size/radius/background/font-size overrides                                              |
 | `Dot`           | Decorative sized colour dot                                                                                          |
 | `StatTile`      | String value/label grouped into one accessible node                                                                  |
+| `Arrival`       | `popIn` / `stepIn` / `fadeIn` wrapper; `popIn` is rewards only                                                       |
+| `WarmingSurface`| Real `automaticity` 0–100; 500 ms colour; glow drops under Reduce Motion                                             |
+| `BeatBars`      | `tempoMs` (720 / 340); static under Reduce Motion                                                                    |
+| `Equalizer`     | Listening-only; stagger from `eqB`; static when inactive or Reduce Motion                                            |
+| `PulseRing`     | Listening-only ring around a control; static ring under Reduce Motion                                                |
+| `UnblurText`    | Word stays in layout; `hiddenLabel` until revealed; instant swap under Reduce Motion                                 |
 
 `controlStyle.ts` is private style algebra for `Chip` and `Segmented`; its unit test pins variant
 geometry. Files such as `bars.tsx`, `tiles.tsx`, and `surfaces.tsx` are source grouping, not extra
@@ -88,7 +94,7 @@ The direct-module composites also include:
 
 ## Workbench coverage (plan 80)
 
-The registry covers all 33 production component exports, including direct-module `AudioControls`,
+The registry covers all 39 production component exports, including direct-module `AudioControls`,
 `LanguageChoices` and `NavigationMenu`. A source-based drift test checks component definitions as
 well as the type-checked barrel contract, so bypassing a barrel cannot hide a new component.
 `Sheet`, `ActionBar`, `DifficultySelector` and `TagChips` are explicitly interaction-owned; all
@@ -101,7 +107,7 @@ and future named navigation APIs remain plan-80 work.
 ## What is not implemented
 
 The authored package still calls for reusable audio transport, microphone/listening states,
-phrase-detail rich content, practice/reveal/grade surfaces, warming/automaticity feedback, trip/drop
+phrase-detail rich content, practice/reveal/grade surfaces, trip/drop
 surfaces, roleplay/chat, navigation sheets, and progress/lab visualizations. None should be claimed
 as an app component until production code uses it. The plan 80 workbench may report an authored
 reference as pending, but a specimen does not make that reference a shipped app component.
@@ -136,7 +142,7 @@ surrounding row already announces the value. Never create an unnamed progressbar
 
 ### `Sheet` and `ActionBar`
 
-The sheet backdrop is a labelled button; its touch-sized grabber area supports swipe-down dismissal. `ActionBar` reads the
+The sheet presents with token `sheetUp` on the UI thread. The backdrop is a labelled button; its touch-sized grabber area supports swipe-down dismissal. `ActionBar` reads the
 safe-area inset but does not measure its own height, so each route uses a named clearance token.
 Replacing those values with measurement is a behaviour/layout change and needs text-scale E2E
 verification.

@@ -12,7 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { copy } from '../lib/copy'
 import { TOAST_MS, UNDO_TOAST_MS } from '../lib/toastTiming'
 import { useApp } from '../store'
-import { Pressable, Text } from './primitives'
+import { Arrival, Pressable, Text } from './primitives'
 import { HIT_SLOP, MIN_TAP, onDark, radius, space, surface } from './theme'
 import { useTheme } from './ThemeProvider'
 import { useBottomBar } from './BottomBarContext'
@@ -41,26 +41,28 @@ export function ToastHost() {
       style={[s.wrap, { bottom: Math.max(bottomBarHeight, insets.bottom) + space['3'] }]}
       pointerEvents="box-none"
     >
-      <View style={s.toast} accessibilityLiveRegion="polite" accessibilityRole="alert">
-        <Text variant="captionSm" color={onDark.primary}>
-          {toast.message}
-        </Text>
-        {toast.undo !== undefined && (
-          <Pressable
-            feedback="smallButton"
-            accessibilityLabel={copy.a11y.common.undo}
-            onPress={() => {
-              toast.undo?.()
-              clear()
-            }}
-            style={s.undo}
-          >
-            <Text variant="captionSm" color={accent.accentOnDark}>
-              {copy.toast.undo}
-            </Text>
-          </Pressable>
-        )}
-      </View>
+      <Arrival kind="popIn" key={toast.message}>
+        <View style={s.toast} accessibilityLiveRegion="polite" accessibilityRole="alert">
+          <Text variant="captionSm" color={onDark.primary}>
+            {toast.message}
+          </Text>
+          {toast.undo !== undefined && (
+            <Pressable
+              feedback="smallButton"
+              accessibilityLabel={copy.a11y.common.undo}
+              onPress={() => {
+                toast.undo?.()
+                clear()
+              }}
+              style={s.undo}
+            >
+              <Text variant="captionSm" color={accent.accentOnDark}>
+                {copy.toast.undo}
+              </Text>
+            </Pressable>
+          )}
+        </View>
+      </Arrival>
     </View>
   )
 }

@@ -114,3 +114,21 @@ test('F-05: direct production exports support local language and navigation insp
   await expect(page).toHaveURL(/\/dev\/tokens/)
   await expect(page.getByRole('button', { name: 'Unavailable specimen audio' })).toBeDisabled()
 })
+
+test('F-05: registers plan-100 motion primitives as production specimens', async ({ page }) => {
+  for (const name of [
+    'Arrival',
+    'WarmingSurface',
+    'BeatBars',
+    'Equalizer',
+    'PulseRing',
+    'UnblurText',
+  ]) {
+    await expect(page.getByText(name, { exact: true }).first()).toBeVisible()
+  }
+  await expect(page.getByTestId('warming-surface')).toBeVisible()
+  await expect(page.getByTestId('beat-bars')).toBeVisible()
+  await expect(page.getByTestId('equalizer')).toBeVisible()
+  await expect(page.getByTestId('pulse-ring')).toBeVisible()
+  await expect(page.getByTestId('unblur-word')).toBeVisible()
+})
