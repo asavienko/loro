@@ -57,7 +57,6 @@ export function UnblurText({
     const blur = interpolate(progress.value, [0, 1], [HIDDEN_BLUR_PX, 0])
     return {
       color,
-      opacity: interpolate(progress.value, [0, 1], [0.35, 1]),
       ...(Platform.OS === 'web' ? { filter: `blur(${blur}px)` } : {}),
     }
   })
