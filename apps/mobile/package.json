@@ -8,7 +8,7 @@
     "ios": "expo run:ios",
     "android": "node ../../scripts/android-development.mjs",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
+    "test": "vitest run && node --test e2e/screenshots-artifacts.test.mjs",
     "test:watch": "vitest",
     "test:e2e": "playwright test --config e2e/playwright.config.mjs",
     "test:e2e:pseudo-locale": "playwright test --config e2e/playwright.config.pseudo-locale.mjs",
