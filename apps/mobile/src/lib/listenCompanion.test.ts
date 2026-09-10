@@ -87,6 +87,7 @@ describe('listening companion', () => {
     expect(view.listenEnabled).toBe(true)
     expect(view.shareEnabled).toBe(false)
     expect(view.generateEnabled).toBe(false)
+    expect(listenStatusKind(view)).toBe('ready-to-listen')
   })
 
   it('skips verified cache hits and keeps completed clips on cancel', async () => {
