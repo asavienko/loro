@@ -112,7 +112,7 @@ truth. Entries in `.env.example` without a reader are reserved for future adapte
 | `TTS_VOICE_BG_BG`                   | Documented pin `406EiNlYvqFqcz3vsnOm` (Peter K); never substituted for another locale |
 | `TTS_VOICE_RU_RU`                   | Documented pin `1qd9R09Ljlx9V1Ok0t5S` (Ivan)                                          |
 | `TTS_CACHE_DIR`                     | Process-local identity cache for `/tts/render`; defaults to os tmpdir                 |
-| `TTS_STUB_RENDER`                   | `1` labeled listening-class silence only; CI and catalog publish stay `0`            |
+| `TTS_STUB_RENDER`                   | `1` labeled listening-class silence only; CI and catalog publish stay `0`; listening render/asset may omit a bearer |
 | `MUSIC_PROVIDER`                    | Defaults to `stub`; fixture music only. Never `TTS_PROVIDER`. Live spend is Q-21      |
 | `MUSIC_API_KEY`                     | Server-only Music credential; unused while `MUSIC_PROVIDER=stub`                      |
 | `MUSIC_BASE_URL`                    | Defaults to `https://api.elevenlabs.io`; residency host is an ops/Q-21 choice         |

@@ -16,8 +16,9 @@ rendering. Rust owns FSRS, ranking, selection, matching, clocks and merge throug
 WASM/UniFFI bridges. Native modules provide foreground device TTS, catalog-file playback when a
 checksummed clip is on disk, strictly on-device ASR with an offline Speak reveal fallback, and a
 listening-class file cache that returns file URIs only. The API stores accounts, sessions and
-tenant-scoped sync in PostgreSQL and exposes authenticated `POST /tts/render` with a
-listening-class fail-closed path (default stub 503; ElevenLabs or labeled `TTS_STUB_RENDER=1`).
+tenant-scoped sync in PostgreSQL and exposes `POST /tts/render` with a
+listening-class fail-closed path (default stub 503; authenticated ElevenLabs or labeled
+`TTS_STUB_RENDER=1`, which may omit a bearer for local listening-class cache wiring).
 Optional Google/Apple and email sign-in connect durable local
 progress to cross-device sync.
 
