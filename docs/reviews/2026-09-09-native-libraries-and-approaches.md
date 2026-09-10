@@ -7,10 +7,14 @@
 gates (NAV-\*, AS-\*, N-04, ADR-0001/0002/0003/0005/0007/0011), not product completion.
 
 **Disposition: document only at review time.** This review did not implement refactors, install
-packages, or claim device acceptance. [Plan 100](../../plans/100-ui-design-system.md) is now the
-executable owner for the shared motion/gesture/primitive kit this matrix describes. It does not
-replace the refactoring-strategies sequence. Device, bilingual, provider and remaining
-learner-screen work stay with their owners in [plans/README.md](../../plans/README.md).
+packages, or claim device acceptance. It does not replace the refactoring-strategies sequence.
+Cross-cutting Field/ListRow extracts, snippets and UniFFI `--check` landed in
+[archived plan 100](../../plans/archive/2026-09-10/100-hygiene-reuse-and-tooling.md). The shared
+motion/gesture/primitive kit this matrix describes is the other plan 100,
+[`100-ui-design-system.md`](../../plans/100-ui-design-system.md) (unresolved ID collision; do not
+silently reuse or drop either). This matrix still owns keep-vs-adopt for native packages. Device,
+bilingual, provider and remaining learner-screen work stay with their owners in
+[plans/README.md](../../plans/README.md).
 
 No earlier `docs/reviews/` file inventories native libraries against the current Expo SDK 54 tree.
 [2026-09-08-readiness.md](2026-09-08-readiness.md) is a dated stack/APK snapshot and is stale on

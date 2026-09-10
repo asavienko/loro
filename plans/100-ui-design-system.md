@@ -1,8 +1,11 @@
 # Production UI interaction design system
 
 - **Requirement IDs:** `F-05`, `F-06`, `LB-25`…`LB-28`, `NAV-04`, `NAV-06`
-- **Number allocation:** 99 is the online-first listening companion. This interaction kit is 100.
-  Highest assigned ID across this checkout, archive and sibling worktrees was 99.
+- **Number allocation:** 99 is the online-first listening companion. This interaction kit was
+  allocated 100 while hygiene was still on a branch. Main archived hygiene as
+  [`100-hygiene-reuse-and-tooling.md`](archive/2026-09-10/100-hygiene-reuse-and-tooling.md) under
+  the same ID (unresolved collision; do not silently reuse or drop either). Highest assigned ID is
+  100; the next new plan is 101.
 - **Milestone:** M1/M2 substrate for remaining learner screens
 - **Status:** 🟡 Adapter, UI-thread Pressable, `sheetUp`, Arrival, WarmingSurface, BeatBars,
   Equalizer, PulseRing and UnblurText are consumed by real routes and registered in the workbench.

@@ -19,16 +19,27 @@ import {
   accent,
   border,
   difficultyCard,
+  field,
   ink,
   line,
+  listRow,
   onDark,
   phraseRow,
   pillSize,
   radius,
+  semantic,
+  space,
   statRow,
   surface,
 } from '../theme'
-import { chipLook, segmentLook, segmentedTrackStyle } from './controlStyle'
+import {
+  chipLook,
+  fieldA11y,
+  fieldLook,
+  listRowLook,
+  segmentLook,
+  segmentedTrackStyle,
+} from './controlStyle'
 
 describe('chipLook · the tag toggle (app/add.tsx:473-483, app/phrase/[id].tsx:205-212)', () => {
   // `flexDirection`, `alignItems` and `gap` are the shared chip shape. `add.tsx` set all
@@ -262,5 +273,72 @@ describe('control tokens keep the value the screen had', () => {
   it('the tap floor and the selected border weight', () => {
     expect(MIN_TAP).toBe(44)
     expect(border).toEqual({ hairline: 1, selected: 1.5 })
+  })
+})
+
+describe('listRowLook · Settings / More / Music chrome (settings.tsx:206-212)', () => {
+  const chrome = {
+    minHeight: 48,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 13,
+    borderBottomWidth: 1,
+    borderBottomColor: line.subtle,
+  } as const
+
+  it('keeps the 48 / 13 / hairline cluster and leaves gap as a prop', () => {
+    expect(listRow.minHeight).toBe(48)
+    expect(listRow.paddingVertical).toBe(13)
+    expect(listRowLook(space['3'])).toEqual({
+      container: { ...chrome, gap: space['3'] },
+    })
+    expect(listRowLook(space['2.5'])).toEqual({
+      container: { ...chrome, gap: space['2.5'] },
+    })
+  })
+})
+
+describe('fieldLook · Account / Workbench chrome (account.tsx:862-871)', () => {
+  it('bordered idle matches the hand-rolled Account input', () => {
+    expect(field.minHeight).toBe(44)
+    expect(field.padding).toBe(space['3'])
+    expect(fieldLook(true)).toEqual({
+      input: {
+        minHeight: 44,
+        padding: space['3'],
+        color: ink.ink,
+        alignSelf: 'stretch',
+        borderWidth: 1,
+        borderColor: line.strong,
+        borderRadius: radius.lg,
+        backgroundColor: surface.card,
+      },
+    })
+  })
+
+  it('invalid uses the danger text token, not a literal', () => {
+    expect(fieldLook(true, true).input.borderColor).toBe(semantic.danger.text)
+  })
+
+  it('unbordered leaves Discover / sheet / Import wrappers to supply chrome', () => {
+    expect(fieldLook(false)).toEqual({
+      input: {
+        color: ink.ink,
+        alignSelf: 'stretch',
+      },
+    })
+  })
+
+  it('announces invalid and disabled in both accessibility forms', () => {
+    expect(fieldA11y(false, true)).toEqual({
+      accessibilityState: { disabled: false, invalid: false },
+      'aria-disabled': false,
+      'aria-invalid': false,
+    })
+    expect(fieldA11y(true, false)).toEqual({
+      accessibilityState: { disabled: true, invalid: true },
+      'aria-disabled': true,
+      'aria-invalid': true,
+    })
   })
 })

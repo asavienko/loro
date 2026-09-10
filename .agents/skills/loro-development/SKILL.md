@@ -56,6 +56,7 @@ project archives for ordinary development. Cursor and Codex histories are separa
 | Checks, review/fix cycles, commits, integration  | [Validation](references/validation.md)       |
 | Local runtime, APK, environment, EC2             | [Operations](references/operations.md)       |
 | Plan ownership, status, archival                 | [Plans](references/plans.md)                 |
+| Field/ListRow, snippets, reuse gates, UniFFI     | [Hygiene](references/hygiene.md)             |
 | Earlier decisions or contradictory reports       | [History](references/history.md)             |
 
 ## Work and finish

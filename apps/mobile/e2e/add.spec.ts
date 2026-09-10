@@ -1,4 +1,5 @@
 import { expect, onboard, test } from './fixtures'
+import { fillField } from './helpers'
 
 test('P2-02..P2-24: discovers, tags, adds, associates, and undoes a phrase', async ({ page }) => {
   await onboard(page)
@@ -6,7 +7,7 @@ test('P2-02..P2-24: discovers, tags, adds, associates, and undoes a phrase', asy
 
   await expect(page.getByText('10 in stream')).toBeVisible()
   const search = page.getByRole('textbox', { name: 'Search phrases' })
-  await search.fill('alergico')
+  await fillField(page, 'Search phrases', 'alergico')
   await expect(page.getByRole('button', { name: /Soy alérgico a los frutos secos/ })).toBeVisible()
 
   await search.fill('not in this catalog')
@@ -32,7 +33,7 @@ test('P2-02..P2-24: discovers, tags, adds, associates, and undoes a phrase', asy
 
   await search.fill('not in this catalog')
   await page.getByRole('button', { name: /Add .* as your own phrase/ }).click()
-  await page.getByRole('textbox', { name: 'Meaning' }).fill('A phrase I need')
+  await fillField(page, 'Meaning', 'A phrase I need')
   await page.getByRole('button', { name: 'Add to my stream' }).click()
   await expect(page.getByText('11 in stream')).toBeVisible()
   await expect(page.getByText('Add your own')).toHaveCount(0)

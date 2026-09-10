@@ -1,0 +1,152 @@
+{
+  "New Expo Router screen": {
+    "prefix": "loro-screen",
+    "description": "Learner/utility route: copy, useLocale, Screen, no new Date, states.ts reminder",
+    "body": [
+      "import { ScrollView } from 'react-native'",
+      "import { copy } from '../src/lib/copy'",
+      "import { useLocale } from '../src/lib/i18n'",
+      "import { Screen, Stack, Text } from '../src/ui/primitives'",
+      "import { space } from '../src/ui/theme'",
+      "",
+      "/** ${1:Requirement IDs}. Add a STATES row in e2e/states.ts in this change.",
+      " *  Register the path in src/lib/navigation.ts if it is a destination.",
+      " */",
+      "export default function ${2:RouteName}() {",
+      "  useLocale()",
+      "  return (",
+      "    <Screen>",
+      "      <ScrollView contentContainerStyle={{ padding: space['5'] }}>",
+      "        <Stack gap={space['5']}>",
+      "          <Text variant=\"title2\">{copy.${3:section}.${4:title}}</Text>",
+      "        </Stack>",
+      "      </ScrollView>",
+      "    </Screen>",
+      "  )",
+      "}",
+      ""
+    ]
+  },
+  "New copy section": {
+    "prefix": "loro-copy",
+    "description": "copy/*.ts adapter plus reminder to add en/bg/ru ICU keys",
+    "body": [
+      "import { message } from '../i18n'",
+      "",
+      "export const ${1:name}Copy = {",
+      "  get ${2:title}() {",
+      "    return message('${1:name}.${2:title}')",
+      "  },",
+      "}",
+      "",
+      "// Then: re-export from src/lib/copy.ts and add the ICU key to en.json, bg.json, and ru.json.",
+      "// No learner-facing string literals in apps/mobile/app/**."
+    ]
+  },
+  "i18n triple (en + bg + ru)": {
+    "prefix": "loro-i18n",
+    "description": "ICU key that must land in en.json, bg.json, and ru.json together",
+    "body": [
+      "\"${1:section.key}\": \"${2:English}\"",
+      "",
+      "// Mirror the same key in src/lib/i18n/bg.json and src/lib/i18n/ru.json.",
+      "// Missing bg/ru fails F-08 at runtime for those UI languages."
+    ]
+  },
+  "New E2E STATES row": {
+    "prefix": "loro-e2e-state",
+    "description": "Learner-visible state: enter / click / fillField; coverage/a11y/text-scale come free",
+    "body": [
+      "{",
+      "  name: '${1:route} · ${2:state}',",
+      "  route: '/${1:route}',",
+      "  spec: '${3:REQ-ID / spec section}',",
+      "  reach: async (page) => {",
+      "    await click(page, '${4:Visible button}')",
+      "    await fillField(page, '${5:Accessible textbox name}', '${6:value}')",
+      "  },",
+      "},"
+    ]
+  },
+  "New primitive": {
+    "prefix": "loro-primitive",
+    "description": "Domain-free primitive: tokens, dual a11y, barrel + workbench specimen",
+    "body": [
+      "import { Pressable } from './Pressable'",
+      "import { Text } from './Text'",
+      "",
+      "export function ${1:Name}({",
+      "  label,",
+      "  onPress,",
+      "}: {",
+      "  label: string",
+      "  onPress: () => void",
+      "}) {",
+      "  return (",
+      "    <Pressable",
+      "      feedback=\"${2:button}\"",
+      "      accessibilityRole=\"button\"",
+      "      accessibilityLabel={label}",
+      "      onPress={onPress}",
+      "    >",
+      "      <Text>{label}</Text>",
+      "    </Pressable>",
+      "  )",
+      "}",
+      "",
+      "// Dual accessibilityState + aria-* when the control is checkable or valued.",
+      "// Tokens only — no colour literals. Export from primitives/index.ts.",
+      "// Add a workbench specimen and PRODUCTION_COMPONENT_NAMES in the same change."
+    ]
+  },
+  "applyDelta / engine.record": {
+    "prefix": "loro-delta",
+    "description": "Practice write only through engine.record then applyDelta",
+    "body": [
+      "const delta = await ${1:engine}.record(${2:session}, ${3:event}, context)",
+      "applyDelta(delta, {",
+      "  attemptId,",
+      "  targetLocale,",
+      "  localDay,",
+      "  streakDay,",
+      "})",
+      "",
+      "// Never useApp.setState for a progress field. Increments / absolute / monotonic",
+      "// are declared on ProgressDelta and applied once in store/delta.ts."
+    ]
+  },
+  "SQLite upsert": {
+    "prefix": "loro-upsert",
+    "description": "ON CONFLICT DO UPDATE over owned columns; never INSERT OR REPLACE",
+    "body": [
+      "this.deps.driver.run(",
+      "  `INSERT INTO ${1:table} (${2:owned_columns}) VALUES (${3:placeholders})",
+      "   ON CONFLICT(${4:id}) DO UPDATE SET ${5:owned_set}`,",
+      "  ${6:params},",
+      ")",
+      "",
+      "// Do not touch field_hlc (merge) or deleted_at (softDelete).",
+      "// INSERT OR REPLACE is banned in persistence/ — it reverts unmentioned columns."
+    ]
+  },
+  "Shared Zod change": {
+    "prefix": "loro-zod",
+    "description": "Edit packages/core/src/api, generate contracts, then implement",
+    "body": [
+      "// 1. Edit the schema in packages/core/src/api/${1:current}.ts",
+      "// 2. pnpm contracts:generate",
+      "// 3. Implement the runtime against the generated contract",
+      "// Do not hand-edit generated OpenAPI."
+    ]
+  },
+  "useLocale in a copy reader": {
+    "prefix": "loro-locale",
+    "description": "Subscribe to copy in this component; do not hoist into Screen",
+    "body": [
+      "useLocale()",
+      "",
+      "// Required in every component that reads copy.*. Do not hoist into Screen —",
+      "// children would miss the language change and go stale."
+    ]
+  }
+}
