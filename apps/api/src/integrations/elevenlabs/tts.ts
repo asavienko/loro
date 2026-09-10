@@ -1,6 +1,6 @@
 /** Provider-only TTS transport. Runtime routes are registered only by the owning Nest module. */
 
-import { silenceWav } from '@loro/content/audio-duration'
+import { silenceAac } from '@loro/content/audio-duration'
 import { ProviderConcurrency } from '../provider-concurrency.js'
 
 export type TtsFailureCode =
@@ -56,9 +56,8 @@ export interface TtsResult {
   characterCount: number | null
 }
 
-/** Labeled local silence. Not licensed neural audio and not a catalog publish path. */
-const STUB_RENDER_DURATION_MS = 200
-const STUB_RENDER_FORMAT = 'wav-pcm16-24k'
+/** Labeled local silence AAC. Not licensed neural audio and not a catalog publish path. */
+const STUB_RENDER_FORMAT = 'aac-64k-mono-24k'
 
 const ELEVENLABS_TTS = 'https://api.elevenlabs.io/v1/text-to-speech'
 const ALLOWED_AUDIO = new Set([
@@ -276,10 +275,10 @@ export class StubTts {
     if (!text || !voiceId || !locale || !model || /[/?#]/.test(voiceId)) {
       return Promise.reject(new TtsFailure('input'))
     }
-    const bytes = silenceWav(STUB_RENDER_DURATION_MS)
+    const bytes = silenceAac()
     return Promise.resolve({
       bytes,
-      contentType: 'audio/wav',
+      contentType: 'audio/mp4',
       characterCount: null,
       provenance: {
         provider: 'stub',

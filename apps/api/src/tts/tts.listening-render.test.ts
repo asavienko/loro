@@ -17,11 +17,12 @@ import {
   LISTENING_VOICE_DECISION,
 } from '@loro/core'
 import { TtsResponseSchema } from '@loro/core/api/draft'
-import { AuthGuard, type AuthenticatedRequest } from '../auth/auth.guard.js'
+import type { AuthenticatedRequest } from '../auth/auth.guard.js'
 import { ProblemDetailsFilter } from '../common/problem-filter.js'
 import { SERVER_CLOCK } from '../common/clock.js'
 import { LoroError } from '../common/errors.js'
 import { TtsController } from './tts.controller.js'
+import { TtsGuard } from './tts.guard.js'
 import { TtsService } from './tts.service.js'
 import { TTS_TRANSPORT, type TtsTransport } from './transport.js'
 
@@ -146,7 +147,7 @@ describe('authenticated listening-class HTTP surface', () => {
         { provide: SERVER_CLOCK, useValue: { now: () => 1_000 } },
       ],
     })
-      .overrideGuard(AuthGuard)
+      .overrideGuard(TtsGuard)
       .useValue({
         canActivate(context: ExecutionContext) {
           const request = context.switchToHttp().getRequest<AuthenticatedRequest>()

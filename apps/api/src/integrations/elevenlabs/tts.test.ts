@@ -342,7 +342,7 @@ describe('TTS configuration and stub', () => {
       modelId: 'eleven_multilingual_v2',
     })
     expect(result.provenance.provider).toBe('stub')
-    expect(result.contentType).toBe('audio/wav')
+    expect(result.contentType).toBe('audio/mp4')
     expect(result.bytes.byteLength).toBeGreaterThan(32)
     expect(Object.keys(result)).toEqual(['bytes', 'contentType', 'characterCount', 'provenance'])
   })

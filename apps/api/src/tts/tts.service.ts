@@ -3,7 +3,8 @@
  * Listening-class renders use LISTENING_VOICE_DECISION and still fail closed for a
  * wrong voice, unpinned model, missing key, or default stub. `TTS_STUB_RENDER=1`
  * is a labeled listening-class path (checksum metadata + download URL). CI stays
- * on the default stub and must not spend credits.
+ * on the default stub and must not spend credits. Stub-render listening may be
+ * unauthenticated for local cache wiring; ElevenLabs still requires a bearer.
  */
 
 import { createHash } from 'node:crypto'
