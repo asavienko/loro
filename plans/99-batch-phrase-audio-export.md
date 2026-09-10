@@ -6,12 +6,16 @@
 - **Milestone:** M2
 - **Status:** 🟡 Composer, listening-class TTS contract, fail-closed ElevenLabs transport, native
   file-URI cache/`playFile` with checksum-on-lookup, batch restore, `/listen-export` copy/E2E, a
-  labeled development fixture seed, file-URI generate/cache/listen tests, and Q-22 mux/share
-  fail-closed are implemented. Production licensed voices remain ⛔
-  [Q-15](../docs/decisions/open-questions.md#q-15). Share-out-of-app remains ⛔
-  [Q-22](../docs/decisions/open-questions.md#q-22). Native airplane-mode listen of a previously
-  cached batch is still an evidence gate (58/72). Device TTS is a labeled fallback, not the primary
-  path. `pnpm check` is green on this slice; full `pnpm ci:local` needs Docker.
+  labeled development fixture seed (native debug, not Hermes `__DEV__`), file-URI
+  generate/cache/listen tests, and Q-22 mux/share fail-closed are implemented. Production licensed
+  voices remain ⛔ [Q-15](../docs/decisions/open-questions.md#q-15). Share-out-of-app remains ⛔
+  [Q-22](../docs/decisions/open-questions.md#q-22). An Android emulator in airplane mode played and
+  restored a **labeled development fixture** cache after force-stop; that is not physical-device
+  58/72 and not licensed Q-15 audio. Device TTS is a labeled fallback, not the primary path.
+  `pnpm check` and learner E2E (197 passed, including listen-export) are green on this slice. Full
+  `CI_BASE_REF=origin/main pnpm ci:local` ran with Docker; it failed later on an unrelated workbench
+  310% screenshot size (310×425 expected, 310×442 received). Production-e2e, mobile-bundle, and API
+  image verification were skipped after that isolated-verification failure.
 - **Depends on:** 56 route declaration; 81 More destination; 59 active-course phrase inventory; 87
   target locale; 62 disk cache, atomic download, and exclusive playback session; 86 ElevenLabs
   transport; 61 asset identity and checksum policy for model audio; 58/72 for native evidence. The
@@ -19,8 +23,9 @@
   plan consumes it and does not add a second TTS client.
 - **Reviewed:** 2026-09-09 specification against `d153d82`; implementation pass 2026-09-09 for
   contract, cache, composer, restore, and fail-closed transports; 2026-09-10 checksum-on-lookup,
-  development fixture seed, and file-URI generate/cache/listen tests. Live voices, share-out-of-app,
-  and native airplane-mode listen remain gated.
+  development fixture seed, file-URI generate/cache/listen tests, emulator airplane-mode fixture
+  listen, and a Docker `pnpm ci:local` run. Live licensed voices, share-out-of-app, physical-device
+  58/72, and a green full `ci:local` remain gated.
 
 ## Outcome
 
@@ -76,14 +81,19 @@ listening-only and must never become the DSP or Speak model.
 restores a complete batch across relaunch, and keeps mux/share behind
 `LISTENING_SHARE_ENABLED = false`. `playFile` plays `file://` URIs. JavaScript still never receives
 PCM. `APPROVED_LISTENING_VOICES` is empty and `LISTENING_MODEL_ID` is null, so licensed generate
-fails closed. Native debug builds can seed a labeled silent AAC fixture into that same cache; copy
-must not present it as licensed neural audio. The render client attaches an optional bearer session
-and maps 429 to quota; native download sends that Authorization header and refuses redirects so the
-token cannot hop hosts. Node tests prove prepare → HTTP download → checksummed `sha256/{hex}.m4a` →
-airplane replay from file URIs → restore, with share still gated. Learner listen-export E2E passed
-on this revision; an earlier full learner run was 197 passed (2026-09-10). `pnpm check` passed. Full
-`pnpm ci:local` was not run here because Docker is not installed. Native airplane-mode listen of a
-filled cache is not yet evidenced on a device.
+fails closed. Product docs do not pin listening voices; a decrypted API key would not be a licence.
+Native debug builds (`FLAG_DEBUGGABLE` / iOS `DEBUG`, not Hermes `__DEV__`) can seed a labeled
+silent AAC fixture into that same cache; copy must not present it as licensed neural audio. The
+render client attaches an optional bearer session and maps 429 to quota; native download sends that
+Authorization header and refuses redirects so the token cannot hop hosts. Node tests prove prepare →
+HTTP download → checksummed `sha256/{hex}.m4a` → airplane replay from file URIs → restore, with
+share still gated. Learner listen-export E2E passed inside `pnpm ci:local` (197 passed, 2026-09-10).
+`pnpm check` passed. Full `CI_BASE_REF=origin/main pnpm ci:local` ran after installing Docker; it
+failed on workbench screenshot size (Linux baseline 310×425, this host 310×442) and skipped
+production-e2e, mobile-bundle, and API image verification. An Android emulator (`loro_listen`, API
+36, airplane mode via `cmd connectivity airplane-mode enable`) generated the labeled fixture, played
+it from cache (`playFile` / MediaPlayer), and still showed ready-to-listen after `am force-stop`.
+That is not physical-device 58/72 and not Q-15 licensed audio.
 
 ## Product shape (working assumptions)
 
@@ -265,8 +275,8 @@ API exists; that API still returns a file URI only.
        against recorded responses; normal CI must not call ElevenLabs.
 4. [x] Consume plan 62’s cache downloader: atomic write, sha256 verify, file URI out, listening pin
        class, named budget, resume, cancel, disk-full. Pause or refuse if an in-app play/listen
-       session is active. Native airplane-mode proof that a filled cache survives force-quit remains
-       58/72.
+       session is active. An Android emulator airplane-mode listen of a labeled development fixture
+       cache survived force-stop (2026-09-10). Physical-device 58/72 and licensed Q-15 audio remain.
 5. [x] Build the utility UI: course-scoped phrase count, repeat stepper (2–5), licensed voice roster
        (real pinned names/ids after Q-15; honest empty before), generate/prepare with progress,
        cancel, resume from partial, in-app listen from cache, share (hidden or disabled with Q-22
@@ -277,9 +287,10 @@ API exists; that API still returns a file URI only.
 6. [x] Add learner E2E states for empty course, needs-network cache miss, generating, partial
        failure, ready-to-listen (cache complete), in-app playing, share unavailable (Q-22), share
        ready (when allowed), cancellation, disk-full, session-busy, quota, and voices-single.
-       Browser suites cover copy, a11y and text scale. Native airplane-mode listen of a **previously
-       cached** batch is the acceptance for offline listening; native share of the concatenated file
-       is the acceptance for Q-22 export.
+       Browser suites cover copy, a11y and text scale. An emulator airplane-mode listen of a
+       previously cached **development fixture** batch is evidenced; physical-device 58/72 and
+       licensed Q-15 audio remain. Native share of the concatenated file is the acceptance for Q-22
+       export.
 7. [ ] After Q-15: pin ≥2 listening voice IDs per enabled target, licence, budget, and pronunciation
        review **without** replacing the canonical reference voice. After Q-22: enable share of
        concatenated cached clips and document personal-copy / deletion-on-licence-withdrawal
@@ -307,15 +318,17 @@ API exists; that API still returns a file URI only.
 ## Delivery order and gates
 
 1. **Route + composer + cache contract (landed).** `/listen-export` UI, keys, honest unavailable
-   generate/listen/share. Fixtures only in `__DEV__`. Browser remains an honest unavailable
-   generator.
+   generate/listen/share. Development fixtures seed from native debug, not Hermes `__DEV__`. Browser
+   remains an honest unavailable generator.
 2. **On-demand render + native cache (⛔ Q-15 for production voices; 86/61/66 for the live route).**
    Listening-class contract, fail-closed ElevenLabs transport, and native file-URI cache/`playFile`
    landed. Prepare cannot mint licensed clips until Q-15 pins ≥2 voices and a model. Device TTS
    fallback stays labeled. Adapter fixtures must not be presented as licensed quality. Live
    ElevenLabs must not run in CI.
-3. **Airplane-mode in-app listen.** Native evidence that a complete cache survives force-quit with
-   no network. This is the offline listening companion. It does **not** require Q-22. Still open.
+3. **Airplane-mode in-app listen.** Emulator evidence (2026-09-10): airplane mode, debug APK with
+   embedded bundle, labeled fixture generate, `playFile` from cache, force-stop, cold start still
+   ready-to-listen. This does **not** require Q-22. Physical-device 58/72 and licensed Q-15 generate
+   remain open.
 4. **Concatenated share (⛔ Q-22).** Native mux of cached clips exists behind
    `LISTENING_SHARE_ENABLED` and stays false. Share sheet copy is unavailable. Blocked until
    licensed neural audio may leave the app as a learner-owned file.

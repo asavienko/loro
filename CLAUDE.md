@@ -22,8 +22,9 @@ The three 31-phrase Spanish/Bulgarian/Russian starters still await bilingual rev
 learner screens, licensed production seed audio (Q-15), the 150 MB LRU cache, background audio,
 measured onset latency, DSP, widgets, production listening voices, shareable neural listening export
 (Q-22) and account export/erasure remain. Cloud ASR is forbidden. Android compilation and an
-airplane-mode emulator persistence/reveal smoke passed; full iOS and physical-device
-speech/convergence acceptance remain release gates. See
+airplane-mode emulator persistence/reveal smoke passed; a labeled listen-companion fixture also
+played from cache in emulator airplane mode (not Q-15 licensed audio, not physical-device 58/72).
+Full iOS and physical-device speech/convergence acceptance remain release gates. See
 [persistent practice](docs/process/persistent-practice.md) and
 [plan 94](plans/archive/2026-09-09/94-persistent-practice-and-account-integration.md) for scoped
 evidence.
@@ -361,8 +362,6 @@ provider adapters.
 
 Unresolved decisions with owners and dates:
 [`docs/decisions/open-questions.md`](docs/decisions/open-questions.md). Active roadmap gates are
-**Q-15** (production audio), **Q-07** (trip semantics), **Q-05** (loop experiment and conditional
-Run), **Q-14** (Refrain peak accessibility), **Q-08/Q-12** (pricing and billing), **Q-17** (rail
 **Q-15** (production audio), **Q-07** (trip semantics), **Q-05** (loop experiment and conditional
 Run), **Q-14** (Refrain peak accessibility), **Q-08/Q-12** (pricing and billing), **Q-17** (rail
 priority), **Q-16/Q-18–Q-20** (chat launch, budget and retention), **Q-21** (Discover suggest),
