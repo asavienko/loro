@@ -10,7 +10,7 @@
   },
   "scripts": {
     "bootstrap": "./scripts/bootstrap.sh",
-    "check": "pnpm check:routes && pnpm check:reuse && pnpm test:android-config && pnpm test:deploy && pnpm test:ci-local && pnpm test:native:evidence && pnpm test:dsp:spike && pnpm test:core-rs-build && pnpm contracts:check && pnpm --filter @loro/core-rs check:browser && pnpm --filter @loro/core-rs check:uniffi && turbo run lint typecheck test content:validate check:a11y check:contrast",
+    "check": "pnpm check:routes && pnpm check:reuse && pnpm check:plan-index && pnpm test:android-config && pnpm test:deploy && pnpm test:ci-local && pnpm test:native:evidence && pnpm test:dsp:spike && pnpm test:core-rs-build && pnpm contracts:check && pnpm --filter @loro/core-rs check:browser && pnpm --filter @loro/core-rs check:uniffi && turbo run lint typecheck test content:validate check:a11y check:contrast",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint -- --fix",
@@ -53,6 +53,7 @@
     "apk:github": "node scripts/apk-local.mjs --upload",
     "check:routes": "node --test scripts/check-routes.test.mjs && node scripts/check-routes.mjs",
     "check:reuse": "node --test scripts/check-reuse.test.mjs && node scripts/check-reuse.mjs",
+    "check:plan-index": "node --test scripts/check-plan-index.test.mjs && node scripts/check-plan-index.mjs",
     "test:deploy": "node --test scripts/ec2-release.test.mjs scripts/ec2-gateway.test.mjs scripts/ec2-backup.test.mjs scripts/ec2-backup-verify.test.mjs",
     "test:native:evidence": "node --test scripts/native-device-evidence.test.mjs",
     "test:dsp:spike": "node --test scripts/dsp-spike-evidence.test.mjs",
