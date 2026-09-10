@@ -247,7 +247,7 @@ async function tooSmall(page: Page, state: string): Promise<string[]> {
   const found = await page.evaluate(
     ({ slop, min }) => {
       const selector = '[role="button"],[role="radio"],[role="checkbox"],[role="link"],input'
-      return Array.from(document.querySelectorAll(selector))
+      return Array.from(document.querySelectorAll<HTMLElement>(selector))
         .map((node) => {
           // Layout box, not getBoundingClientRect: Arrival popIn scales the toast
           // visually for 400 ms, and the transformed rect is not the hit target.
