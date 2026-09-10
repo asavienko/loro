@@ -16,11 +16,10 @@ rendering. Rust owns FSRS, ranking, selection, matching, clocks and merge throug
 WASM/UniFFI bridges. Native modules provide foreground device TTS, catalog-file playback when a
 checksummed clip is on disk, strictly on-device ASR with an offline Speak reveal fallback, and a
 listening-class file cache that returns file URIs only. The API stores accounts, sessions and
-tenant-scoped sync in PostgreSQL and exposes `POST /tts/render` with a
-listening-class fail-closed path (default stub 503; authenticated ElevenLabs or labeled
-`TTS_STUB_RENDER=1`, which may omit a bearer for local listening-class cache wiring).
-Optional Google/Apple and email sign-in connect durable local
-progress to cross-device sync.
+tenant-scoped sync in PostgreSQL and exposes `POST /tts/render` with a listening-class fail-closed
+path (default stub 503; authenticated ElevenLabs or labeled `TTS_STUB_RENDER=1`, which may omit a
+bearer for local listening-class cache wiring). Optional Google/Apple and email sign-in connect
+durable local progress to cross-device sync.
 
 The three 31-phrase Spanish/Bulgarian/Russian starters still await bilingual review. The other 15
 learner screens, pronunciation-reviewed production seed audio (Q-15 leaning pins are in core; the
@@ -313,7 +312,9 @@ npx expo start --web                # from apps/mobile — fastest way to see th
   physical-device quality gate remains separate from these deterministic checks.
 - **`cargo` is off the PATH that `pnpm`/`turbo` see.** `pnpm check` looks green while the four
   `@loro/core-rs` tasks are cache hits, then fails with `cargo: command not found` the moment a Rust
-  file changes. Run `export PATH="$HOME/.cargo/bin:$PATH"` first.
+  file changes. Run `export PATH="$HOME/.cargo/bin:$PATH"` first. If rustup lives outside `~/.cargo`
+  / `~/.rustup`, Turbo also needs `CARGO_HOME` and `RUSTUP_HOME` (`turbo.json`
+  `globalPassThroughEnv`). Do not export a `RUSTUP_TOOLCHAIN` older than the crate floor.
 - **Onboarding still runs ahead of the code.** `onboarding.md` §3 names undefined `db:migrate` /
   `db:seed` commands and its tree includes target-only feature, domain, platform, module, and target
   directories. [`apps/api/README.md`](apps/api/README.md) and
