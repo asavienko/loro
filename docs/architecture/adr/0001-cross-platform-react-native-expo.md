@@ -125,3 +125,11 @@ benefit.
   whole framework.
 - The audio module's interruption handling proves unworkable through a module boundary.
 - The team composition changes such that two native platforms become affordable.
+
+## Amendment — 2026-09-09 · local APK, not EAS
+
+The option-A pro "EAS gives us builds, OTA updates, and store submission" is not the current
+pipeline. Custom native modules rule out Expo Go. Android preview is `pnpm apk:local`; GitHub
+Actions is disabled; EAS is not a required gate ([`process/ci-cd.md`](../../process/ci-cd.md),
+[`process/local-apk.md`](../../process/local-apk.md)). Revisit EAS only if a later release process
+explicitly adopts it.

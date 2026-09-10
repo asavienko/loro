@@ -281,7 +281,7 @@ page.
 | ---------------- | ----------------------------------------------------------------------------------------------- |
 | Input validation | Zod schemas shared with the client — the contract cannot drift                                  |
 | Rate limits      | Per-user and per-IP, strictest on `/auth/*` and `/ai/*` ([api.md](api.md#rate-limits))          |
-| SQL              | Target: parameterised via Drizzle throughout. No server repository exists yet                   |
+| SQL              | Parameterised `pg` queries in handwritten SQL; Zod at the HTTP boundary                         |
 | Errors           | RFC 9457 problem details; no stack traces, no internal ids, no SQL text                         |
 | Logging          | Structured, with a redaction allowlist. `user_id` only, never email                             |
 | Headers          | HSTS, `X-Content-Type-Options`, restrictive CSP on any HTML surface                             |

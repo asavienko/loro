@@ -63,7 +63,9 @@ precisely the step people forget.
 
 **Option C**, with strict boundaries.
 
-### Durable state — read, never mirrored
+### Durable state — SQLite is truth; Zustand publishes the committed projection
+
+Historical sample (never shipped — Drizzle `useLiveQuery`; do not implement):
 
 ```ts
 // A screen subscribes to the database. There is no phrase array in a store.
@@ -76,7 +78,8 @@ const phrases = useLiveQuery(
 ```
 
 Every write goes through a repository, which updates the row **and** appends an outbox row in one
-transaction ([sync-protocol.md](../sync-protocol.md)). Live queries then push to every subscriber.
+transaction ([sync-protocol.md](../sync-protocol.md)). The store then publishes the committed
+projection. Screens subscribe to that projection, not to the driver.
 
 ### Session state — Zustand, one slice per engine, persisted
 
@@ -100,12 +103,13 @@ Never in a store, never persisted.
 
 ### The three prohibitions
 
-1. **No durable field lives in a Zustand store.** Difficulty, tags, `reps` — DB only.
-2. **No `useState` copy of a list a screen also subscribes to.**
-3. **No "refresh" function.** If a screen needs one, its data isn't coming from a live query, and
-   that's the bug.
+1. **No durable field is authored only in Zustand.** Difficulty, tags, `reps` are committed to
+   SQLite first; the store holds the published projection of those rows, not a second write path.
+2. **No `useState` copy of a list a screen also reads from the store.**
+3. **No "refresh" function that re-fetches durable rows after a local write.** If a screen needs
+   one, the write did not go through the store's persistence wrapper.
 
-Enforced by review, plus an ESLint rule flagging `useState` initialised from a repository call.
+Enforced by review. Do not implement the historical `useLiveQuery` sample; see the amendment.
 
 ## Consequences
 
@@ -115,8 +119,8 @@ Enforced by review, plus an ESLint rule flagging `useState` initialised from a r
   This is the single behaviour that makes the app feel like one object graph rather than several
   screens — the property the blueprint's shared store gives it.
 - No invalidation bugs, because there is no cache.
-- Very little boilerplate; a new screen is a query and a component.
-- Synchronous reads on the hot path.
+- Very little boilerplate; a new screen reads the committed projection and a component.
+- Synchronous reads on the hot path after hydration.
 - Engine session state is persisted, so interruptions are recoverable — which is also what the
   conformance suite's interruption-safety test checks
   ([practice-engines.md](../practice-engines.md#conformance)).
@@ -124,11 +128,10 @@ Enforced by review, plus an ESLint rule flagging `useState` initialised from a r
 
 ### Bad — accepted deliberately
 
-- **Live-query scoping needs care.** A subscription selecting all phrases re-renders on any phrase
-  change. Mitigated by narrow queries with the partial indexes in [data-model.md](../data-model.md),
-  and by memoising row components.
-- Two state mechanisms to learn. Mitigated by the boundary being unambiguous: durable → DB, session
-  → Zustand, ephemeral → React.
+- The store mirrors committed rows. Mitigated by one write path (`durableSet` / `applyDelta`) so the
+  projection cannot diverge from SQLite without a failed transaction.
+- Two state mechanisms to learn. Mitigated by the boundary being unambiguous: durable → SQLite then
+  projection, session → Zustand (checkpointed), ephemeral → React.
 - No time-travel devtools for durable state. In practice the DB _is_ the debuggable artefact — a
   `.sqlite` file pulled from a device explains a bug better than an action log.
 - Zustand's flexibility means session slices can drift in shape. Mitigated by typing each slice and
@@ -136,8 +139,29 @@ Enforced by review, plus an ESLint rule flagging `useState` initialised from a r
 
 ### Revisit if…
 
-- Live-query performance degrades at the 2 000-phrase design target beyond what narrowing and
-  memoisation fix. The fallback is a thin in-memory index maintained by the repository layer — still
-  one source of truth, but with a derived read model.
+- OP-SQLite reactivity is needed at the 2 000-phrase design target **and** a web equivalent exists.
+  Until both are true, do not add live queries or TanStack Query for learner rows.
 - We add a genuinely server-owned data surface (shared phrasebooks, a social feed), which would be
   real server state and would justify TanStack Query _for that surface only_.
+
+## Amendment — 2026-09-09 · write-through Zustand projection
+
+**What changed.** Option C named "live SQLite queries for durable state" and showed a Drizzle
+`useLiveQuery`. That sample was never built. There is no `useLiveQuery` / `liveQuery` caller, and
+ADR-0003 later banned a client ORM, so the sample cannot be implemented without reversing that
+amendment.
+
+HEAD is a **write-through projection**:
+
+| Piece             | What it is                                                                                                                         |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| SQLite            | Durable truth. Repositories and outbox commit in one transaction.                                                                  |
+| Zustand `AppData` | The published projection of committed rows (`phrases`, settings, per-course copies) plus session/ephemeral fields.                 |
+| `createAppStore`  | Replaces slice `set` and `api.setState` with `durableSet`, which runs `transact` so SQLite + outbox commit **before** publication. |
+
+Web sql.js and native OP-SQLite share that path. Screens subscribe to the store; they do not
+subscribe to the driver.
+
+**Why not live queries.** Native OP-SQLite reactivity has no sql.js equivalent. A live-query
+migration would split web and device, or add a second subscription mechanism the store split already
+closed. Phrase arrays in `AppData` are the projection, not a cache of a remote server.
