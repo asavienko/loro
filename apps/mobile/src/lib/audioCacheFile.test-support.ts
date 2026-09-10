@@ -124,11 +124,49 @@ export function createFileAudioCache(
       }
       return Promise.resolve(clips)
     },
-    installDevFixture(logicalKey: string): Promise<AudioCacheObject> {
+    async installDevFixture(logicalKey: string): Promise<AudioCacheObject> {
       const bytes = options.fixtureBytes
-      if (bytes === undefined) return Promise.reject(new Error('failed'))
+      if (bytes === undefined) throw new Error('failed')
       const digest = sha256(bytes)
-      return Promise.resolve(store(bytes, digest, logicalKey, 'listening'))
+      const server = http.createServer((_req, res) => {
+        res.writeHead(200, {
+          'Content-Type': 'audio/mp4',
+          'Content-Length': bytes.length,
+          Connection: 'close',
+        })
+        res.end(bytes)
+      })
+      await new Promise<void>((resolve, reject) => {
+        server.once('error', (error) => {
+          reject(error)
+        })
+        server.listen(0, '127.0.0.1', () => {
+          resolve()
+        })
+      })
+      const addr = server.address()
+      if (addr === null || typeof addr === 'string') {
+        server.close()
+        throw new Error('failed')
+      }
+      try {
+        return await cache.download({
+          url: `http://127.0.0.1:${addr.port}/listen-fixture.m4a`,
+          expectedSha256: digest,
+          logicalKey,
+          pinClass: 'listening',
+        })
+      } finally {
+        await new Promise<void>((resolve, reject) => {
+          server.close((error) => {
+            if (error) {
+              reject(error)
+              return
+            }
+            resolve()
+          })
+        })
+      }
     },
   }
 

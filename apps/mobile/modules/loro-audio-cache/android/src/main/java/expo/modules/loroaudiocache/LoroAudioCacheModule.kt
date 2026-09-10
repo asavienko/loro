@@ -7,6 +7,7 @@ import android.media.MediaFormat
 import android.media.MediaMetadataRetriever
 import android.media.MediaMuxer
 import android.net.Uri
+import android.util.Log
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 import expo.modules.kotlin.records.Field
@@ -16,6 +17,9 @@ import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
 import java.net.HttpURLConnection
+import java.net.InetAddress
+import java.net.ServerSocket
+import java.net.Socket
 import java.net.URL
 import java.nio.ByteBuffer
 import java.security.MessageDigest
@@ -94,7 +98,9 @@ class LoroAudioCacheModule : Module() {
       val bytes = connection.inputStream.use { it.readBytes() }
       val digest = sha256(bytes)
       if (digest != options.expectedSha256.lowercase()) throw failure("checksum-mismatch")
-      return store(bytes, digest, options.logicalKey, options.pinClass)
+      val stored = store(bytes, digest, options.logicalKey, options.pinClass)
+      Log.i(TAG, "download ok sha256=$digest pin=${options.pinClass}")
+      return stored
     } catch (error: Exception) {
       if (error.message == "cancelled") throw error
       if (error.message == "checksum-mismatch" || error.message == "disk-full" || error.message == "invalid-url") throw error
@@ -131,7 +137,51 @@ class LoroAudioCacheModule : Module() {
     if (!isDebuggable()) throw failure("failed")
     val bytes = android.util.Base64.decode(FIXTURE_BASE64, android.util.Base64.DEFAULT)
     val digest = sha256(bytes)
-    return store(bytes, digest, logicalKey, "listening")
+    val server = ServerSocket(0, 1, InetAddress.getByName("127.0.0.1"))
+    server.soTimeout = 15_000
+    val port = server.localPort
+    val worker = Thread({
+      try {
+        server.accept().use { socket -> serveHttpFixture(socket, bytes) }
+      } catch (_: Exception) {
+      } finally {
+        runCatching { server.close() }
+      }
+    }, "loro-listen-fixture-http")
+    worker.isDaemon = true
+    worker.start()
+    try {
+      val options = DownloadOptions()
+      options.url = "http://127.0.0.1:$port/listen-fixture.m4a"
+      options.expectedSha256 = digest
+      options.logicalKey = logicalKey
+      options.pinClass = "listening"
+      Log.i(TAG, "fixture-http-download sha256=$digest key=$logicalKey")
+      return download(options)
+    } finally {
+      runCatching { server.close() }
+      worker.join(2_000)
+    }
+  }
+
+  private fun serveHttpFixture(socket: Socket, body: ByteArray) {
+    socket.soTimeout = 15_000
+    val input = socket.getInputStream()
+    val buffer = ByteArray(4096)
+    val header = StringBuilder()
+    while (!header.contains("\r\n\r\n")) {
+      val n = input.read(buffer)
+      if (n <= 0) break
+      header.append(String(buffer, 0, n, Charsets.ISO_8859_1))
+      if (header.length > 8192) break
+    }
+    val preamble =
+      "HTTP/1.1 200 OK\r\nContent-Type: audio/mp4\r\nContent-Length: ${body.size}\r\nConnection: close\r\n\r\n"
+    socket.getOutputStream().use { output ->
+      output.write(preamble.toByteArray(Charsets.ISO_8859_1))
+      output.write(body)
+      output.flush()
+    }
   }
 
   private fun saveBatch(clips: List<Map<String, Any?>>) {
@@ -401,6 +451,8 @@ class LoroAudioCacheModule : Module() {
   private fun failure(code: String) = Exception(code)
 
   companion object {
+    private const val TAG = "LoroAudioCache"
+
     /** Silent AAC 24 kHz mono. Development fixture only — not licensed neural audio. */
     private const val FIXTURE_BASE64 =
       "AAAAHGZ0eXBNNEEgAAACAE00QSBpc29taXNvMgAAAAhmcmVlAAAAMW1kYXTeAgBMYXZjNjAuMzEuMTAyAAIwQA4BGCAHARggBwEYIAcBGCAHARggBwAAAxNtb292AAAAbG12aGQAAAAAAAAAAAAAAAAAAAPoAAAAyAABAAABAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAACPXRyYWsAAABcdGtoZAAAAAMAAAAAAAAAAAAAAAEAAAAAAAAAyAAAAAAAAAAAAAAAAQEAAAAAAQAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAACRlZHRzAAAAHGVsc3QAAAAAAAAAAQAAAMgAAAQAAAEAAAAAAbVtZGlhAAAAIG1kaGQAAAAAAAAAAAAAAAAAAF3AAAAWwFXEAAAAAAAtaGRscgAAAAAAAAAAc291bgAAAAAAAAAAAAAAAFNvdW5kSGFuZGxlcgAAAAFgbWluZgAAABBzbWhkAAAAAAAAAAAAAAAkZGluZgAAABxkcmVmAAAAAAAAAAEAAAAMdXJsIAAAAAEAAAEkc3RibAAAAGpzdHNkAAAAAAAAAAEAAABabXA0YQAAAAAAAAABAAAAAAAAAAAAAQAQAAAAAF3AAAAAAAA2ZXNkcwAAAAADgICAJQABAASAgIAXQBUAAAAAAPoAAAAFRwWAgIAFEwhW5QAGgICAAQIAAAAgc3R0cwAAAAAAAAACAAAABQAABAAAAAABAAACwAAAABxzdHNjAAAAAAAAAAEAAAABAAAABgAAAAEAAAAsc3RzegAAAAAAAAAAAAAABgAAABUAAAAEAAAABAAAAAQAAAAEAAAABAAAABRzdGNvAAAAAAAAAAEAAAAsAAAAGnNncGQBAAAAcm9sbAAAAAIAAAAB//8AAAAcc2JncAAAAAByb2xsAAAAAQAAAAYAAAABAAAAYnVkdGEAAABabWV0YQAAAAAAAAAhaGRscgAAAAAAAAAAbWRpcmFwcGwAAAAAAAAAAAAAAAAtaWxzdAAAACWpdG9vAAAAHWRhdGEAAAABAAAAAExhdmY2MC4xNi4xMDA="
