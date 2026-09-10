@@ -73,6 +73,9 @@ class LoroAudioCacheModule : Module() {
     current.getAndSet(connection)?.disconnect()
     try {
       connection.instanceFollowRedirects = false
+      connection.useCaches = false
+      connection.defaultUseCaches = false
+      connection.setRequestProperty("Cookie", "")
       connection.connectTimeout = 15_000
       connection.readTimeout = 15_000
       val authorization = options.authorization

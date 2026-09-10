@@ -41,6 +41,7 @@ describe('listening generate → file cache → listen', () => {
   let requests = 0
   let lastAuth: string | undefined
   let lastDevice: string | undefined
+  let lastCookie: string | string[] | undefined
   let server: ReturnType<typeof createServer> | undefined
 
   beforeAll(async () => {
@@ -74,6 +75,7 @@ describe('listening generate → file cache → listen', () => {
     server = createServer((req: IncomingMessage, res: ServerResponse) => {
       requests += 1
       lastAuth = req.headers.authorization
+      lastCookie = req.headers.cookie
       const deviceHeader = req.headers['x-loro-device']
       lastDevice = Array.isArray(deviceHeader) ? deviceHeader[0] : deviceHeader
       if (req.url === '/redirect') {
@@ -105,6 +107,7 @@ describe('listening generate → file cache → listen', () => {
     requests = 0
     lastAuth = undefined
     lastDevice = undefined
+    lastCookie = undefined
     rmSync(join(root, 'sha256'), { recursive: true, force: true })
     rmSync(join(root, 'index.json'), { force: true })
     rmSync(join(root, 'listening-batch.json'), { force: true })
@@ -154,6 +157,7 @@ describe('listening generate → file cache → listen', () => {
     expect(requests).toBe(4)
     expect(lastAuth).toBe('Bearer access')
     expect(lastDevice).toBe('device-1')
+    expect(lastCookie).toBeUndefined()
     for (const clip of ready.clips) {
       assertMetadataOnly(clip)
       expect(clip.sha256).toBe(digest)
