@@ -1,6 +1,7 @@
 package expo.modules.loroaudiocache
 
 import android.content.Intent
+import android.content.pm.ApplicationInfo
 import android.media.MediaExtractor
 import android.media.MediaFormat
 import android.media.MediaMetadataRetriever
@@ -58,6 +59,7 @@ class LoroAudioCacheModule : Module() {
     AsyncFunction("share") { fileUri: String -> share(fileUri) }
     AsyncFunction("saveListeningBatch") { clips: List<Map<String, Any?>> -> saveBatch(clips) }
     AsyncFunction("loadListeningBatch") { loadBatch() }
+    AsyncFunction("installDevFixture") { logicalKey: String -> installDevFixture(logicalKey) }
   }
 
   private fun download(options: DownloadOptions): Map<String, Any?> {
@@ -102,12 +104,26 @@ class LoroAudioCacheModule : Module() {
   private fun lookup(logicalKey: String): Map<String, Any?>? {
     val row = index().optJSONObject(logicalKey) ?: return null
     val path = row.optString("path")
-    if (path.isBlank() || !File(path).isFile) return null
+    val sha256 = row.optString("sha256")
+    val file = File(path)
+    val digest = sha256File(file)
+    if (path.isBlank() || digest == null || digest != sha256.lowercase()) {
+      forget(logicalKey)
+      return null
+    }
     row.put("accessed", System.currentTimeMillis())
     val table = index()
     table.put(logicalKey, row)
     writeIndex(table)
-    return payload(File(path), row.optString("sha256"), row.optInt("ms").takeIf { row.has("ms") && !row.isNull("ms") })
+    return payload(file, digest, row.optInt("ms").takeIf { row.has("ms") && !row.isNull("ms") })
+  }
+
+  private fun installDevFixture(logicalKey: String): Map<String, Any?> {
+    val flags = appContext.reactContext?.applicationInfo?.flags ?: 0
+    if (flags and ApplicationInfo.FLAG_DEBUGGABLE == 0) throw failure("failed")
+    val bytes = android.util.Base64.decode(FIXTURE_BASE64, android.util.Base64.DEFAULT)
+    val digest = sha256(bytes)
+    return store(bytes, digest, logicalKey, "listening")
   }
 
   private fun saveBatch(clips: List<Map<String, Any?>>) {
@@ -119,7 +135,7 @@ class LoroAudioCacheModule : Module() {
         if (clip["ms"] == null) put("ms", JSONObject.NULL) else put("ms", clip["ms"])
       })
     }
-    File(cacheDir(), "listening-batch.json").writeText(array.toString())
+    writeAtomically(File(cacheDir(), "listening-batch.json"), array.toString())
   }
 
   private fun loadBatch(): List<Map<String, Any?>>? {
@@ -132,7 +148,10 @@ class LoroAudioCacheModule : Module() {
       val fileUri = row.optString("fileUri")
       val sha256 = row.optString("sha256")
       val uri = Uri.parse(fileUri)
-      if (uri.scheme != "file" || uri.path.isNullOrBlank() || !File(uri.path!!).isFile) return null
+      val path = uri.path
+      if (uri.scheme != "file" || path.isNullOrBlank()) return null
+      val digest = sha256File(File(path))
+      if (digest == null || digest != sha256.lowercase()) return null
       clips.add(
         mapOf(
           "fileUri" to fileUri,
@@ -293,7 +312,52 @@ class LoroAudioCacheModule : Module() {
   }
 
   private fun writeIndex(table: JSONObject) {
-    indexFile().writeText(table.toString())
+    writeAtomically(indexFile(), table.toString())
+  }
+
+  private fun writeAtomically(file: File, text: String) {
+    val temp = File(file.path + ".tmp")
+    try {
+      FileOutputStream(temp).use { stream ->
+        stream.write(text.toByteArray())
+        stream.fd.sync()
+      }
+      if (file.exists()) file.delete()
+      if (!temp.renameTo(file)) {
+        temp.delete()
+        throw failure("disk-full")
+      }
+    } catch (error: Exception) {
+      temp.delete()
+      if (error.message == "disk-full") throw error
+      throw failure("disk-full")
+    }
+  }
+
+  private fun forget(logicalKey: String) {
+    val table = index()
+    val row = table.optJSONObject(logicalKey)
+    if (row != null) {
+      File(row.optString("path")).delete()
+      table.remove(logicalKey)
+      writeIndex(table)
+    }
+  }
+
+  private fun sha256File(file: File): String? {
+    if (!file.isFile) return null
+    return runCatching {
+      val digest = MessageDigest.getInstance("SHA-256")
+      file.inputStream().use { input ->
+        val buffer = ByteArray(8192)
+        while (true) {
+          val n = input.read(buffer)
+          if (n <= 0) break
+          digest.update(buffer, 0, n)
+        }
+      }
+      digest.digest().joinToString("") { "%02x".format(it) }
+    }.getOrNull()
   }
 
   private fun evictIfNeeded() {
@@ -326,4 +390,10 @@ class LoroAudioCacheModule : Module() {
   }
 
   private fun failure(code: String) = Exception(code)
+
+  companion object {
+    /** Silent AAC 24 kHz mono. Development fixture only — not licensed neural audio. */
+    private const val FIXTURE_BASE64 =
+      "AAAAHGZ0eXBNNEEgAAACAE00QSBpc29taXNvMgAAAAhmcmVlAAAAMW1kYXTeAgBMYXZjNjAuMzEuMTAyAAIwQA4BGCAHARggBwEYIAcBGCAHARggBwAAAxNtb292AAAAbG12aGQAAAAAAAAAAAAAAAAAAAPoAAAAyAABAAABAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAACPXRyYWsAAABcdGtoZAAAAAMAAAAAAAAAAAAAAAEAAAAAAAAAyAAAAAAAAAAAAAAAAQEAAAAAAQAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAACRlZHRzAAAAHGVsc3QAAAAAAAAAAQAAAMgAAAQAAAEAAAAAAbVtZGlhAAAAIG1kaGQAAAAAAAAAAAAAAAAAAF3AAAAWwFXEAAAAAAAtaGRscgAAAAAAAAAAc291bgAAAAAAAAAAAAAAAFNvdW5kSGFuZGxlcgAAAAFgbWluZgAAABBzbWhkAAAAAAAAAAAAAAAkZGluZgAAABxkcmVmAAAAAAAAAAEAAAAMdXJsIAAAAAEAAAEkc3RibAAAAGpzdHNkAAAAAAAAAAEAAABabXA0YQAAAAAAAAABAAAAAAAAAAAAAQAQAAAAAF3AAAAAAAA2ZXNkcwAAAAADgICAJQABAASAgIAXQBUAAAAAAPoAAAAFRwWAgIAFEwhW5QAGgICAAQIAAAAgc3R0cwAAAAAAAAACAAAABQAABAAAAAABAAACwAAAABxzdHNjAAAAAAAAAAEAAAABAAAABgAAAAEAAAAsc3RzegAAAAAAAAAAAAAABgAAABUAAAAEAAAABAAAAAQAAAAEAAAABAAAABRzdGNvAAAAAAAAAAEAAAAsAAAAGnNncGQBAAAAcm9sbAAAAAIAAAAB//8AAAAcc2JncAAAAAByb2xsAAAAAQAAAAYAAAABAAAAYnVkdGEAAABabWV0YQAAAAAAAAAhaGRscgAAAAAAAAAAbWRpcmFwcGwAAAAAAAAAAAAAAAAtaWxzdAAAACWpdG9vAAAAHWRhdGEAAAABAAAAAExhdmY2MC4xNi4xMDA="
+  }
 }
