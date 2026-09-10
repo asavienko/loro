@@ -69,12 +69,12 @@ layout adaptations preserve the authored colors and metrics; the authored artifa
   and renders current production specimens without entering the learner route/state manifest.
 
 The following are specified but not yet implemented: custom font loading/family assignment,
-learner-selectable accents, CSS-shadow/gradient-to-native rendering, most declared animations, Skia
+learner-selectable accents, CSS-shadow/gradient-to-native rendering, Skia
 charts, and the component families required by the other 16 learner screens. The current `DarkCard`
 therefore uses flat `surface.dark`, and `Card` intentionally has no elevation prop. Plan 57 owns
 fonts, dark theme and the haptic port. [Plan 100](../../plans/100-ui-design-system.md) owns the
-shared motion adapter, gesture catalog and remaining-screen primitives that consume these tokens.
-Do not adopt a third-party UI kit to skip that kit.
+shared motion adapter (now wired), gesture catalog and remaining-screen primitives that consume
+these tokens. Device 60 fps proof remains 58/72. Do not adopt a third-party UI kit to skip that kit.
 
 ## Visual character
 

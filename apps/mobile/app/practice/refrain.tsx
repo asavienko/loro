@@ -30,6 +30,8 @@ import {
   type RefrainMode,
 } from '@loro/core'
 import {
+  Arrival,
+  BeatBars,
   Button,
   Card,
   Dots,
@@ -39,7 +41,9 @@ import {
   Screen,
   Sheet,
   Text,
+  WarmingSurface,
 } from '../../src/ui/primitives'
+import { BEAT_TEMPO_MS } from '../../src/ui/motion'
 import { ActionBar, EmptyState } from '../../src/ui/components'
 import {
   accent,
@@ -240,6 +244,7 @@ export default function Refrain() {
         </Row>
 
         <ModeStrip mode={mode} />
+        <BeatBars tempoMs={mode === 'speed' ? BEAT_TEMPO_MS.speed : BEAT_TEMPO_MS.default} />
 
         <WarmingCard
           mode={mode}
@@ -373,22 +378,14 @@ function WarmingCard({
 }) {
   useLocale()
   return (
-    <View
+    <WarmingSurface
+      automaticity={auto}
       accessibilityLabel={copy.a11y.refrain.card(
         copy.refrain.modes[mode].cue,
         phrase.targetText,
         auto,
       )}
-      style={[
-        s.warmingCard,
-        {
-          // The gradient bands render as their base colour; a real gradient lands
-          // with Skia. The COLOUR PROGRESSION is the information, and it's here.
-          backgroundColor: bandStyle.bg.startsWith('linear-gradient')
-            ? (/#[0-9a-f]{6}/i.exec(bandStyle.bg)?.[0] ?? surface.card)
-            : bandStyle.bg,
-        },
-      ]}
+      style={s.warmingCard}
     >
       <Row gap={space['1.5']}>
         <Text variant="caption">{copy.refrain.modes[mode].icon}</Text>
@@ -398,7 +395,7 @@ function WarmingCard({
       </Row>
 
       <WarmingPrompt mode={mode} phrase={phrase} color={bandStyle.text} clozeMask={clozeMask} />
-    </View>
+    </WarmingSurface>
   )
 }
 /** Prompt content is mode-dependent: full → cloze → meaning → nothing. */
@@ -526,17 +523,19 @@ function MicButton({ mode, onPress }: { mode: RefrainMode; onPress: () => void }
 function LockedInBanner() {
   useLocale()
   return (
-    <Row gap={space['2.5']} style={s.lockedBanner}>
-      <Text style={s.lockedGem}>{copy.refrain.locked.gem}</Text>
-      <View style={s.lockedBody}>
-        <Text variant="caption" color={semantic.success.text}>
-          {copy.refrain.locked.title}
-        </Text>
-        <Text variant="captionSm" color={semantic.successMeta.text}>
-          {copy.refrain.locked.body}
-        </Text>
-      </View>
-    </Row>
+    <Arrival kind="popIn">
+      <Row gap={space['2.5']} style={s.lockedBanner}>
+        <Text style={s.lockedGem}>{copy.refrain.locked.gem}</Text>
+        <View style={s.lockedBody}>
+          <Text variant="caption" color={semantic.success.text}>
+            {copy.refrain.locked.title}
+          </Text>
+          <Text variant="captionSm" color={semantic.successMeta.text}>
+            {copy.refrain.locked.body}
+          </Text>
+        </View>
+      </Row>
+    </Arrival>
   )
 }
 /**
@@ -550,9 +549,11 @@ function DoneState({ worked, totalReps }: { worked: number; totalReps: number })
   useLocale()
   return (
     <ScrollView contentContainerStyle={s.centred}>
-      <View style={s.doneTile}>
-        <Text style={s.doneEmoji}>{copy.common.flame}</Text>
-      </View>
+      <Arrival kind="popIn">
+        <View style={s.doneTile}>
+          <Text style={s.doneEmoji}>{copy.common.flame}</Text>
+        </View>
+      </Arrival>
       <Text variant="title2" color={accent.accentInk} lang="target">
         {copy.refrain.done.headline}
       </Text>

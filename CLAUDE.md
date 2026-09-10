@@ -16,11 +16,10 @@ rendering. Rust owns FSRS, ranking, selection, matching, clocks and merge throug
 WASM/UniFFI bridges. Native modules provide foreground device TTS, catalog-file playback when a
 checksummed clip is on disk, strictly on-device ASR with an offline Speak reveal fallback, and a
 listening-class file cache that returns file URIs only. The API stores accounts, sessions and
-tenant-scoped sync in PostgreSQL and exposes `POST /tts/render` with a
-listening-class fail-closed path (default stub 503; authenticated ElevenLabs or labeled
-`TTS_STUB_RENDER=1`, which may omit a bearer for local listening-class cache wiring).
-Optional Google/Apple and email sign-in connect durable local
-progress to cross-device sync.
+tenant-scoped sync in PostgreSQL and exposes `POST /tts/render` with a listening-class fail-closed
+path (default stub 503; authenticated ElevenLabs or labeled `TTS_STUB_RENDER=1`, which may omit a
+bearer for local listening-class cache wiring). Optional Google/Apple and email sign-in connect
+durable local progress to cross-device sync.
 
 The three 31-phrase Spanish/Bulgarian/Russian starters still await bilingual review. The other 15
 learner screens, pronunciation-reviewed production seed audio (Q-15 leaning pins are in core; the
@@ -165,13 +164,15 @@ prototype-only and **must not** be carried into the app — see the divergence t
   applies. Plan 97 owns generative Discover reach. Plan 98 owns the ElevenLabs adapter,
   `content:render`, gated `/tts/render` and catalog-file playback. Plan 99 owns the online-first
   listening companion (generate, cache, in-app listen; share after Q-22). Licensed generate uses the
-  2026-09-10 `LISTENING_VOICE_DECISION` pins when native cache exists and the TTS route is ElevenLabs
-  or labeled `TTS_STUB_RENDER=1`. Default stub/missing key still fail closed. Browser generate stays
-  `native-unavailable` (no JS PCM download). Pronunciation review remains on Q-15. Q-22 share stays
-  off. File-URI generate/cache/listen is tested, including a labeled development fixture seed. iOS
-  `playFile` stops on background with Android. Plan 100 owns the shared UI interaction kit
-  (Reanimated motion adapter, gesture catalog, remaining-screen primitives); 57 keeps
-  fonts/haptics/dark and 93 keeps spine/sheet pull laws. Active
+  2026-09-10 `LISTENING_VOICE_DECISION` pins when native cache exists and the TTS route is
+  ElevenLabs or labeled `TTS_STUB_RENDER=1`. Default stub/missing key still fail closed. Browser
+  generate stays `native-unavailable` (no JS PCM download). Pronunciation review remains on Q-15.
+  Q-22 share stays off. File-URI generate/cache/listen is tested, including a labeled development
+  fixture seed. iOS `playFile` stops on background with Android. Plan 100 owns the shared UI
+  interaction kit (Reanimated adapter, UI-thread press/`sheetUp`,
+  Arrival/warming/beat/equaliser/pulse/un-blur on real routes; practice/form/chat composites wait
+  for a second caller; device 60 fps remains 58/72); 57 keeps fonts/haptics/dark and 93 keeps
+  spine/sheet pull laws. Active
   [`plans/96-phrase-music-generation.md`](plans/96-phrase-music-generation.md) collides with
   archived account-sign-in 96 (unresolved; do not reuse or drop either). The next new plan number is
   101; recheck concurrent worktrees and untracked `plans/` files before allocating an ID — the

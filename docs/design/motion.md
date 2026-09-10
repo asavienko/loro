@@ -22,8 +22,8 @@ for everything else. Nothing wobbles.
 **4 · Everything responds to touch.** No interactive element is silent on press.
 
 **5 · Off the JS thread.** Anything animating while audio plays runs via Reanimated on the UI
-thread. Runtime wiring of these tokens is [plan 100](../../plans/100-ui-design-system.md);
-Reanimated is installed and unused until that adapter lands.
+thread. Runtime wiring lives in [`apps/mobile/src/ui/motion.ts`](../../apps/mobile/src/ui/motion.ts)
+([plan 100](../../plans/100-ui-design-system.md)). Device 60 fps proof remains 58/72.
 
 ---
 
