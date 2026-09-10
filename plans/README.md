@@ -27,8 +27,8 @@ owners are retained, including [99](99-batch-phrase-audio-export.md) for online-
 generation and on-device cache (share-out-of-app still ⛔ Q-22),
 [hygiene/reuse](100-hygiene-reuse-and-tooling.md), and
 [phrase-music](96-phrase-music-generation.md). Continue with device/provider acceptance, then
-integrate the remaining daily-loop, Review, content and lifecycle slices. Hygiene slices in 100
-may proceed in parallel.
+integrate the remaining daily-loop, Review, content and lifecycle slices. Hygiene slices in 100 may
+proceed in parallel.
 
 The [2026-09-09 implementation review](../docs/reviews/2026-09-09-twenty-plan-implementation.md)
 records changes requested after the next twenty bounded slices. Each selected plan remains partial;
@@ -187,7 +187,7 @@ feature↔release-completion cycle. See each plan's checkboxes for executable ta
 | [97](97-generative-discover-and-phrase-reach.md)                           | Guarded generative Discover reach and shared add-handoff                    | M3          | 🟡 Own-phrase floor, bundled suggestions and stub suggest exist; Q-21 gates live traffic                                                  | 59/61; 76/86 live path; 82/83 consume handoff; Q-21                      |
 | [98](98-voice-and-tts-integration.md)                                      | ElevenLabs TTS, catalog render and device-TTS fallback                      | M1/M2       | 🟡 Adapter/render/gated API/file playback in progress; Q-15 catalog pins filled; live seed/listen remain                                  | 86/61/62 slices; Q-15 live seed                                          |
 | [99](99-batch-phrase-audio-export.md)                                      | Online multi-voice listen cache; optional share of concatenated clips       | M2          | 🟡 Composer/cache/E2E/emulator fixture; Q-15 pins filled; ⛔ pronunciation review; ⛔ Q-22; physical 58/72                                | 56/81 route; 59 phrases; 62 cache/session; 86/61/66/98 render; Q-15/Q-22 |
-| [100](100-hygiene-reuse-and-tooling.md)                                    | Field/ListRow, barrel consistency, snippets and UniFFI `--check`            | M1          | — Revised 2026-09-10 after main 99 listen; slices 1–2 + prettier-ignore landed; Field/ListRow/tools remain                               | 2026-09-09 reviews; do not steal 56/57/67/81/96/99                       |
+| [100](100-hygiene-reuse-and-tooling.md)                                    | Field/ListRow, barrel consistency, snippets and UniFFI `--check`            | M1          | 🟡 Slices 1–10 landed; `pnpm check` / Field–ListRow E2E / host UniFFI `--check` remain as evidence                                         | 2026-09-09 reviews; do not steal 56/57/67/81/96/99                       |
 
 Plan 88 owns the selected AWS testing profile and
 [operations runbook](../docs/runbooks/backend-testing.md); plan 73 retains production operations.
@@ -201,10 +201,9 @@ Render testing recommendation in 86 is superseded by 88.
 - Keep one owner per behavior: 56 route policy, 81 chrome; 59 durable checkpoints, 64 wave
   transitions; 66 server cursors, 68 client convergence; 86 vendor controls, 76/82/97 product AI; 99
   listening-class cache and companion UX, 100 leftover hygiene/Field/ListRow/tooling, 62 in-app
-  playback/download cache, 67 JSON account export.
-  Archived plan 96 remains the account sign-in screens. Active
-  [`96-phrase-music-generation.md`](96-phrase-music-generation.md) is the phrase-song garnish under
-  the same number (unresolved collision; do not reuse or drop either).
+  playback/download cache, 67 JSON account export. Archived plan 96 remains the account sign-in
+  screens. Active [`96-phrase-music-generation.md`](96-phrase-music-generation.md) is the
+  phrase-song garnish under the same number (unresolved collision; do not reuse or drop either).
 - Future surfaces consume the selected language pair and real capability states. Preserve personal
   meaning language, course isolation and global streak semantics; never silently substitute Spanish.
 - Every new learner state lands with its manifest row and E2E checks. Native behavior requires
