@@ -49,16 +49,41 @@ function failureToHttp(code: TtsFailureCode): never {
   if (code === 'rate_limited') {
     throw new LoroError('RATE_LIMITED', undefined, { retry_after: 60 })
   }
+  if (code === 'capacity') throw new LoroError('BUDGET_EXCEEDED')
   throw new LoroError('PROVIDER_UNAVAILABLE')
 }
 
-function ttsPublicOrigin(): string {
-  const raw = process.env['AUTH_PUBLIC_URL'] ?? process.env['AUTH_ISSUER'] ?? 'https://api.loro.app'
-  return raw.replace(/\/$/, '')
+function headerString(
+  headers: Record<string, unknown> | undefined,
+  name: string,
+): string | undefined {
+  const value = headers?.[name] ?? headers?.[name.toLowerCase()]
+  if (typeof value === 'string' && value.trim()) return value.trim()
+  if (Array.isArray(value) && typeof value[0] === 'string' && value[0].trim()) return value[0].trim()
+  return undefined
 }
 
-function downloadUrl(sha256: string): string {
-  return `${ttsPublicOrigin()}/v1/tts/assets/${sha256}`
+/** Prefer AUTH_PUBLIC_URL; otherwise echo the caller Host so emulator/LAN URLs stay reachable. */
+export function ttsDownloadOrigin(request?: {
+  protocol?: string
+  headers?: Record<string, unknown>
+}): string {
+  const configured = process.env['AUTH_PUBLIC_URL']?.trim()
+  if (configured) return configured.replace(/\/$/, '')
+  const host = headerString(request?.headers, 'host')
+  if (host) {
+    const forwarded = headerString(request?.headers, 'x-forwarded-proto')?.split(',')[0]?.trim()
+    const proto = forwarded ?? request?.protocol ?? 'http'
+    return `${proto}://${host}`
+  }
+  if (process.env['NODE_ENV'] !== 'production') {
+    return `http://127.0.0.1:${process.env['PORT'] ?? '3000'}`
+  }
+  return (process.env['AUTH_ISSUER'] ?? 'https://api.loro.app').replace(/\/$/, '')
+}
+
+function downloadUrl(sha256: string, publicOrigin?: string): string {
+  return `${(publicOrigin ?? ttsDownloadOrigin()).replace(/\/$/, '')}/v1/tts/assets/${sha256}`
 }
 
 function metadata(input: {
@@ -68,13 +93,14 @@ function metadata(input: {
   voiceId: string
   modelId: string
   assetClass: TtsRequest['asset_class']
+  publicOrigin?: string
 }): TtsResponse {
   return TtsResponseSchema.parse({
     uri: `sha256/${input.sha256}`,
     sha256: input.sha256,
     ms: input.ms,
     cached: input.cached,
-    download_url: downloadUrl(input.sha256),
+    download_url: downloadUrl(input.sha256, input.publicOrigin),
     voice_id: input.voiceId,
     model_id: input.modelId,
     asset_class: input.assetClass,
@@ -91,7 +117,21 @@ export class TtsService {
     @Inject(SERVER_CLOCK) private readonly clock: ServerClock,
   ) {}
 
-  async render(input: { userId: string; ip: string; body: unknown }): Promise<TtsResponse> {
+  status(): { ready: boolean; provider: string } {
+    try {
+      const parsed = parseTtsConfig(config.ttsEnv())
+      return { ready: parsed.provider === 'elevenlabs', provider: parsed.provider }
+    } catch {
+      return { ready: false, provider: 'unavailable' }
+    }
+  }
+
+  async render(input: {
+    userId: string
+    ip: string
+    body: unknown
+    publicOrigin?: string
+  }): Promise<TtsResponse> {
     let parsedConfig
     try {
       parsedConfig = parseTtsConfig(config.ttsEnv())
@@ -116,7 +156,7 @@ export class TtsService {
     const renderModel = listening ? request.data.model_id : parsedConfig.model
     const voiceVersion = `${request.data.asset_class}:${renderModel}:${voiceId}`
     const identity = digestUtf8(`${input.userId}:${textHash}:${request.data.lang}:${voiceVersion}`)
-    const cached = await this.readIdentity(identity, request.data)
+    const cached = await this.readIdentity(identity, request.data, input.publicOrigin)
     if (cached !== null) return cached
     const pending = this.inflight.get(identity)
     if (pending !== undefined) return pending
@@ -128,6 +168,7 @@ export class TtsService {
       modelId: renderModel,
       assetClass: request.data.asset_class,
       allowStub: stubListening,
+      ...(input.publicOrigin === undefined ? {} : { publicOrigin: input.publicOrigin }),
     })
     this.inflight.set(identity, work)
     try {
@@ -199,7 +240,11 @@ export class TtsService {
     return true
   }
 
-  private async readIdentity(identity: string, request: TtsRequest): Promise<TtsResponse | null> {
+  private async readIdentity(
+    identity: string,
+    request: TtsRequest,
+    publicOrigin?: string,
+  ): Promise<TtsResponse | null> {
     try {
       const mapped = JSON.parse(
         await readFile(join(config.ttsCacheDir(), 'id', `${identity}.json`), 'utf8'),
@@ -216,6 +261,7 @@ export class TtsService {
         voiceId: request.voice_id,
         modelId: request.model_id,
         assetClass: request.asset_class,
+        ...(publicOrigin === undefined ? {} : { publicOrigin }),
       })
     } catch {
       return null
@@ -248,6 +294,7 @@ export class TtsService {
     modelId: string
     assetClass: TtsRequest['asset_class']
     allowStub: boolean
+    publicOrigin?: string
   }): Promise<TtsResponse> {
     let result
     try {
@@ -291,6 +338,7 @@ export class TtsService {
       voiceId: input.voiceId,
       modelId: input.modelId,
       assetClass: input.assetClass,
+      ...(input.publicOrigin === undefined ? {} : { publicOrigin: input.publicOrigin }),
     })
   }
 }

@@ -19,11 +19,11 @@ describe('catalog audio identity', () => {
     expect(resolveCatalogAudioUri({ uri: `sha256/${sha256}`, sha256 })).toBeUndefined()
   })
 
-  it('prefers catalog files over device TTS when the file is present', () => {
+  it('prefers catalog files over API TTS when the file is present', () => {
     const sha256 = 'c'.repeat(64)
     registerCatalogAudioFile(sha256, 'https://example.test/clip.wav')
     expect(playbackSource({ uri: `sha256/${sha256}`, sha256 }, false)).toBe('catalog')
-    expect(playbackSource(undefined, true)).toBe('device-tts')
+    expect(playbackSource(undefined, true)).toBe('api-tts')
     expect(playbackSource(undefined, false)).toBe('unavailable')
     clearCatalogAudioFiles()
   })

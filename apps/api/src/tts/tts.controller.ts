@@ -1,6 +1,7 @@
 /**
  * Text-only. Q-15 pins are in; pronunciation review remains.
- * ElevenLabs stays authenticated. Labeled stub-render listening may be local/anonymous.
+ * Status is public. Catalog reference and listening-class may be anonymous when
+ * ElevenLabs is configured. Labeled stub-render listening may be local/anonymous.
  * Never registers voice clone.
  */
 
@@ -19,12 +20,19 @@ import {
 } from '@nestjs/common'
 import type { AuthenticatedRequest } from '../auth/auth.guard.js'
 import { TtsGuard } from './tts.guard.js'
-import { TtsService } from './tts.service.js'
+import { ttsDownloadOrigin, TtsService } from './tts.service.js'
 
 @Controller('tts')
 @UseGuards(TtsGuard)
 export class TtsController {
   constructor(@Inject(TtsService) private readonly tts: TtsService) {}
+
+  @Get('status')
+  @HttpCode(200)
+  @Header('Cache-Control', 'no-store')
+  status() {
+    return this.tts.status()
+  }
 
   @Post('render')
   @HttpCode(200)
@@ -34,6 +42,7 @@ export class TtsController {
       userId: request.principal.userId,
       ip: request.ip ?? '0.0.0.0',
       body,
+      publicOrigin: ttsDownloadOrigin(request),
     })
   }
 

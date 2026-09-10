@@ -1,10 +1,12 @@
 import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import {
   defaultStyleIds,
+  fetchMusicStatus,
   musicGenerationBlocked,
+  musicTrackContentUrl,
   renderLocalStyles,
   requestLocalLyrics,
 } from './client'
@@ -52,6 +54,23 @@ describe('device music stub (p3f-03 / p3f-06)', () => {
     expect(musicGenerationBlocked(true, undefined)).toBe(false)
     expect(musicGenerationBlocked(false, 'playing')).toBe(false)
     expect(musicGenerationBlocked(true, 'unavailable')).toBe(true)
+  })
+})
+
+describe('music API client', () => {
+  it('reads public status and rewrites a loopback track URL', async () => {
+    const send = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(JSON.stringify({ ready: true, provider: 'stub' }), {
+        headers: { 'content-type': 'application/json' },
+      }),
+    )
+    await expect(fetchMusicStatus('http://127.0.0.1:3001/v1', send)).resolves.toEqual({
+      ready: true,
+      provider: 'stub',
+    })
+    expect(
+      musicTrackContentUrl('http://10.0.2.2:3001/v1', 'track_folk'),
+    ).toBe('http://10.0.2.2:3001/v1/music/tracks/track_folk/content')
   })
 })
 

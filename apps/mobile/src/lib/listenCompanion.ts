@@ -28,6 +28,7 @@ import {
   type AudioCacheObject,
 } from './audioCacheController'
 import { bundledApiUrl } from './account/config'
+import { playableDownloadUrl } from './practiceTts'
 import { requestListeningRender, TtsRenderError, type TtsCredentials } from './ttsRenderClient'
 import { digestListeningText } from './listeningDigest'
 import { isNetworkAvailable } from './connectivity'
@@ -62,6 +63,7 @@ export function availabilityFromDevice(input: {
   network: boolean
   configured: boolean
   nativeCache: boolean
+  remotePlayback?: boolean
   sessionBusy: boolean
   diskFull: boolean
   quotaExceeded: boolean
@@ -73,6 +75,7 @@ export function availabilityFromDevice(input: {
     network: input.network,
     configured: input.configured,
     nativeCache: input.nativeCache,
+    ...(input.remotePlayback === undefined ? {} : { remotePlayback: input.remotePlayback }),
     sessionBusy: input.sessionBusy,
     diskFull: input.diskFull,
     quotaExceeded: input.quotaExceeded,
@@ -96,6 +99,7 @@ export function listenViewModel(input: {
   network: boolean
   configured: boolean
   nativeCache: boolean
+  remotePlayback?: boolean
   sessionBusy: boolean
   diskFull: boolean
   quotaExceeded: boolean
@@ -111,6 +115,7 @@ export function listenViewModel(input: {
     network: input.network,
     configured: input.configured,
     nativeCache: input.nativeCache,
+    ...(input.remotePlayback === undefined ? {} : { remotePlayback: input.remotePlayback }),
     sessionBusy: input.sessionBusy,
     diskFull: input.diskFull,
     quotaExceeded: input.quotaExceeded,
@@ -130,6 +135,7 @@ export function listenViewModel(input: {
       cacheComplete: input.cacheComplete,
       nativeCache: input.nativeCache,
       sessionBusy: input.sessionBusy,
+      ...(input.remotePlayback === undefined ? {} : { remotePlayback: input.remotePlayback }),
     }),
     shareEnabled: canShareListening() && input.cacheComplete && input.nativeCache,
     nativeCache: input.nativeCache,
@@ -155,6 +161,8 @@ export interface PrepareListeningDeps {
    * Production licensed generate must omit this and go through render + native download.
    */
   seedClip?: (logicalKey: string) => Promise<AudioCacheObject>
+  /** Web streams download URLs when the native cache is missing. */
+  remotePlayback?: boolean
 }
 
 export async function prepareListeningBatch(deps: PrepareListeningDeps): Promise<{
@@ -166,6 +174,7 @@ export async function prepareListeningBatch(deps: PrepareListeningDeps): Promise
   // seed may override voices/modelId/seedClip. Q-22 share stays off.
   const voices = deps.voices ?? approvedListeningVoices(deps.locale)
   const modelId = deps.modelId === undefined ? LISTENING_MODEL_ID : deps.modelId
+  const remotePlayback = deps.remotePlayback ?? !deps.cache.available
   const takes = planListeningBatch(deps.phrases, voices, deps.repeats)
   const digest = deps.digest ?? digestListeningText
   const credentials = deps.credentials === undefined ? null : await deps.credentials()
@@ -254,19 +263,33 @@ export async function prepareListeningBatch(deps: PrepareListeningDeps): Promise
     }
     try {
       const meta = await render(request, deps.baseUrl ?? bundledApiUrl() ?? undefined)
-      const stored = await deps.cache.download({
-        url: meta.download_url,
-        expectedSha256: meta.sha256,
-        logicalKey,
-        pinClass: 'listening',
-        ...(credentials === null
-          ? {}
-          : {
-              authorization: `Bearer ${credentials.token}`,
-              deviceId: credentials.deviceId,
-            }),
-      })
-      clips.push(stored)
+      const apiBase = deps.baseUrl ?? bundledApiUrl()
+      const downloadUrl =
+        apiBase === null || apiBase === undefined
+          ? meta.download_url
+          : playableDownloadUrl(meta.download_url, apiBase)
+      if (!deps.cache.available) {
+        if (remotePlayback !== true) throw new AudioCacheError('native-unavailable')
+        clips.push({
+          fileUri: downloadUrl,
+          sha256: meta.sha256,
+          ms: meta.ms,
+        })
+      } else {
+        const stored = await deps.cache.download({
+          url: downloadUrl,
+          expectedSha256: meta.sha256,
+          logicalKey,
+          pinClass: 'listening',
+          ...(credentials === null
+            ? {}
+            : {
+                authorization: `Bearer ${credentials.token}`,
+                deviceId: credentials.deviceId,
+              }),
+        })
+        clips.push(stored)
+      }
     } catch (error) {
       if (error instanceof AudioCacheError && error.code === 'cancelled') {
         return {
@@ -277,6 +300,13 @@ export async function prepareListeningBatch(deps: PrepareListeningDeps): Promise
       }
       if (error instanceof AudioCacheError && error.code === 'disk-full') throw error
       if (error instanceof TtsRenderError && error.code === 'quota') throw error
+      if (
+        error instanceof TtsRenderError &&
+        error.code === 'unavailable' &&
+        clips.length === 0
+      ) {
+        throw error
+      }
       if (error instanceof TtsRenderError || error instanceof AudioCacheError) failed += 1
       else failed += 1
     }
@@ -316,6 +346,10 @@ function delay(ms: number, signal?: AbortSignal): Promise<void> {
   })
 }
 
+function isPlayableListenUri(uri: string): boolean {
+  return /^(file:|https?:|blob:|data:)/i.test(uri)
+}
+
 export const LISTEN_PLAYBACK_PREFIX = 'listen:'
 
 export function isListenPlaybackId(phraseId: string | null): boolean {
@@ -333,7 +367,7 @@ export async function playListeningSequence(input: {
   const wait = input.wait ?? delay
   for (const [index, clip] of input.clips.entries()) {
     if (input.signal?.aborted) throw new AudioCacheError('cancelled')
-    if (!clip.fileUri.startsWith('file:')) throw new AudioCacheError('invalid-url')
+    if (!isPlayableListenUri(clip.fileUri)) throw new AudioCacheError('invalid-url')
     await new Promise<void>((resolve, reject) => {
       void input.playFile(`${LISTEN_PLAYBACK_PREFIX}${index}`, clip.fileUri, resolve).catch(reject)
     })
@@ -376,7 +410,7 @@ export function listenStatusKind(
   if (view.phase === 'generating') return 'generating'
   if (view.phase === 'playing') return 'playing'
   if (view.phase === 'cancelled') return 'cancelled'
-  if (view.phase === 'partial') return 'partial-failure'
+  if (view.phase === 'error' || view.phase === 'partial') return 'partial-failure'
   if (view.phase === 'ready' && view.listenEnabled) {
     return view.shareEnabled ? 'share-ready' : 'ready-to-listen'
   }

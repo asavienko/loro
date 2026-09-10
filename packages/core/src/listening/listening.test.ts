@@ -239,6 +239,28 @@ describe('AS-07 listening batch', () => {
     expect(canListenFromCache({ cacheComplete: true, nativeCache: true, sessionBusy: true })).toBe(
       false,
     )
+    expect(
+      canGenerateListening({
+        phraseCount: 10,
+        voiceCount: 2,
+        modelPinned: true,
+        network: true,
+        configured: true,
+        nativeCache: false,
+        remotePlayback: true,
+        sessionBusy: false,
+        diskFull: false,
+        quotaExceeded: false,
+      }),
+    ).toBe(true)
+    expect(
+      canListenFromCache({
+        cacheComplete: true,
+        nativeCache: false,
+        remotePlayback: true,
+        sessionBusy: false,
+      }),
+    ).toBe(true)
     expect(listeningShareFilename('es-ES', '2026-09-09')).toBe('loro-es-ES-2026-09-09-listen.m4a')
   })
 

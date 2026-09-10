@@ -25,6 +25,9 @@ export const config = {
    * which is what keeps the fallback path exercised (ADR-0010).
    */
   aiProvider: (): string => process.env['AI_PROVIDER'] ?? 'stub',
+  aiApiKey: (): string | undefined => process.env['ANTHROPIC_API_KEY'],
+  aiSuggestModel: (): string =>
+    process.env['AI_MODEL_TRANSLATE'] ?? 'claude-haiku-4-5-20251001',
 
   /** Lyrics model selector only. Never used to pick ElevenLabs Music. */
   musicProvider: (): string => process.env['MUSIC_PROVIDER'] ?? 'stub',

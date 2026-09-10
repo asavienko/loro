@@ -299,6 +299,22 @@ describe('gated POST /tts/render', () => {
     })
   })
 
+  it('maps a provider capacity failure to budget exceeded', async () => {
+    const cacheDir = await mkdtemp(join(tmpdir(), 'loro-tts-'))
+    liveEnv(cacheDir)
+    const tts = new TtsService(
+      transport(() => Promise.reject(new TtsFailure('capacity'))),
+      { now: () => 1 },
+    )
+    await expect(
+      tts.render({
+        userId: 'learner',
+        ip: '127.0.0.1',
+        body: referenceBody,
+      }),
+    ).rejects.toMatchObject({ code: 'BUDGET_EXCEEDED', status: 429 })
+  })
+
   it('maps provider failures without returning estimated duration', async () => {
     const cacheDir = await mkdtemp(join(tmpdir(), 'loro-tts-'))
     liveEnv(cacheDir)
@@ -386,6 +402,76 @@ describe('authenticated TTS HTTP surface', () => {
       })
       expect(clone.status).toBe(404)
       expect(ProblemSchema.parse(await clone.json()).code).toBe('NOT_FOUND')
+    } finally {
+      await app.close()
+    }
+  })
+})
+
+describe('anonymous catalog reference HTTP surface', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs()
+  })
+
+  it('publishes status and allows unauthenticated reference render when ElevenLabs is configured', async () => {
+    const cacheDir = await mkdtemp(join(tmpdir(), 'loro-tts-anon-'))
+    liveEnv(cacheDir)
+    vi.stubEnv('AUTH_PUBLIC_URL', '')
+    const synthesize = vi.fn(() =>
+      Promise.resolve({
+        bytes: wav,
+        contentType: 'audio/wav',
+        provenance,
+        characterCount: 12,
+      }),
+    )
+    const module = await Test.createTestingModule({
+      controllers: [TtsController],
+      providers: [
+        TtsService,
+        TtsGuard,
+        {
+          provide: AuthGuard,
+          useValue: {
+            canActivate() {
+              throw new LoroError('UNAUTHENTICATED')
+            },
+          },
+        },
+        { provide: TTS_TRANSPORT, useValue: transport(synthesize) },
+        { provide: SERVER_CLOCK, useValue: { now: () => 1_000 } },
+      ],
+    }).compile()
+    const app: INestApplication = module.createNestApplication()
+    app.setGlobalPrefix('v1')
+    app.useGlobalFilters(new ProblemDetailsFilter())
+    await app.listen(0, '127.0.0.1')
+    const base = await app.getUrl()
+    try {
+      const status = await fetch(`${base}/v1/tts/status`)
+      expect(status.status).toBe(200)
+      expect(await status.json()).toEqual({ ready: true, provider: 'elevenlabs' })
+      const listening = await fetch(`${base}/v1/tts/render`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(pinnedListeningBody()),
+      })
+      expect(listening.status).toBe(200)
+      expect(TtsResponseSchema.parse(await listening.json()).asset_class).toBe(LISTENING_ASSET_CLASS)
+      const created = await fetch(`${base}/v1/tts/render`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(referenceBody),
+      })
+      expect(created.status).toBe(200)
+      const json: unknown = await created.json()
+      expect(json).not.toHaveProperty('audio')
+      const body = TtsResponseSchema.parse(json)
+      expect(body.asset_class).toBe(REFERENCE_ASSET_CLASS)
+      expect(body.download_url).toMatch(new RegExp(`^${base}/v1/tts/assets/[a-f0-9]{64}$`))
+      const asset = await fetch(`${base}/v1/tts/assets/${body.sha256}`)
+      expect(asset.status).toBe(200)
+      expect((await asset.arrayBuffer()).byteLength).toBe(wav.byteLength)
     } finally {
       await app.close()
     }

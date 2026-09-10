@@ -55,7 +55,7 @@ export async function requestListeningRender(
     throw new TtsRenderError('unavailable')
   }
   if (!response.ok) {
-    if (response.status === 429) throw new TtsRenderError('quota')
+    if (response.status === 429 || response.status === 402) throw new TtsRenderError('quota')
     if (response.status === 422) throw new TtsRenderError('validation')
     throw new TtsRenderError('unavailable')
   }

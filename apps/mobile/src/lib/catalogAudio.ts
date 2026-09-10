@@ -31,9 +31,9 @@ export function resolveCatalogAudioUri(audio: CatalogAudio | null | undefined): 
 
 export function playbackSource(
   audio: CatalogAudio | null | undefined,
-  devicePlayback: boolean,
-): 'catalog' | 'device-tts' | 'unavailable' {
+  apiReady: boolean,
+): 'catalog' | 'api-tts' | 'unavailable' {
   if (resolveCatalogAudioUri(audio) !== undefined) return 'catalog'
-  if (devicePlayback) return 'device-tts'
+  if (apiReady) return 'api-tts'
   return 'unavailable'
 }

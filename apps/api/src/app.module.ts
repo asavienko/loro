@@ -33,8 +33,10 @@ import { AiService } from './ai/ai.service.js'
 import { SCENE_PROVIDERS, type SceneProvider } from './ai/scene-provider.js'
 import { StubSceneProvider } from './ai/scene-provider.stub.js'
 import { MusicController } from './music/music.controller.js'
+import { MusicGuard } from './music/music.guard.js'
 import { MusicService } from './music/music.service.js'
-import { MUSIC_REPOSITORY } from './music/repository.js'
+import { config } from './common/config.js'
+import { MUSIC_REPOSITORY, MemoryMusicRepository } from './music/repository.js'
 import { PostgresMusicRepository } from './music/repository.postgres.js'
 import { TtsController } from './tts/tts.controller.js'
 import { TtsGuard } from './tts/tts.guard.js'
@@ -58,7 +60,15 @@ import { TTS_TRANSPORT, createTtsTransport } from './tts/transport.js'
   providers: [
     AiService,
     MusicService,
-    { provide: MUSIC_REPOSITORY, useClass: PostgresMusicRepository },
+    MusicGuard,
+    {
+      provide: MUSIC_REPOSITORY,
+      useFactory: (database: SqlDatabase) =>
+        config.musicProvider() === 'elevenlabs'
+          ? new PostgresMusicRepository(database)
+          : new MemoryMusicRepository(),
+      inject: [DATABASE],
+    },
     StubSceneProvider,
     {
       // Every scene provider, collected for `AiService` to key by name. Adding Claude

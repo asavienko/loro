@@ -12,6 +12,9 @@ export const audioSpeechCopy = {
   get tts() {
     return message('audioSpeech.tts')
   },
+  get apiTts() {
+    return message('audioSpeech.apiTts')
+  },
   get catalog() {
     return message('audioSpeech.catalog')
   },
@@ -20,6 +23,9 @@ export const audioSpeechCopy = {
   },
   get error() {
     return message('audioSpeech.error')
+  },
+  get quota() {
+    return message('audioSpeech.quota')
   },
   get loading() {
     return message('audioSpeech.loading')

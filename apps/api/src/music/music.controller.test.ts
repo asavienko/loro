@@ -7,6 +7,7 @@ import { SERVER_CLOCK } from '../common/clock.js'
 import { AuthGuard } from '../auth/auth.guard.js'
 import { AuthService } from '../auth/auth.service.js'
 import { MusicController } from './music.controller.js'
+import { MusicGuard } from './music.guard.js'
 import { MusicService } from './music.service.js'
 import { MUSIC_REPOSITORY, MemoryMusicRepository } from './repository.js'
 
@@ -28,6 +29,7 @@ beforeAll(async () => {
     controllers: [MusicController],
     providers: [
       AuthGuard,
+      MusicGuard,
       MusicService,
       { provide: AuthService, useValue: auth },
       { provide: MUSIC_REPOSITORY, useClass: MemoryMusicRepository },
@@ -54,7 +56,10 @@ async function post(path: string, token: string, body: unknown) {
 }
 
 describe('music HTTP authz and stub journey (p3f-11)', () => {
-  it('refuses anonymous lyrics spend', async () => {
+  it('publishes status and allows anonymous stub lyrics', async () => {
+    const status = await fetch(`${base}/music/status`)
+    expect(status.status).toBe(200)
+    expect(await status.json()).toEqual({ ready: true, provider: 'stub' })
     const response = await fetch(`${base}/music/lyrics`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -64,7 +69,9 @@ describe('music HTTP authz and stub journey (p3f-11)', () => {
         catalog_phrase_ids: ['cafe1', 'cafe2', 'cafe3'],
       }),
     })
-    expect(response.status).toBe(401)
+    expect(response.status).toBe(200)
+    const body = (await response.json()) as { fallback: boolean }
+    expect(body.fallback).toBe(true)
   })
 
   it('creates lyrics, renders styles, and hides another principal’s track', async () => {
