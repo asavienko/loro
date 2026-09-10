@@ -265,7 +265,7 @@ coverage thresholds; a shared padded-Scroll primitive; hoisting `useLocale`.
 
 1. [x] Land this plan, index row, CLAUDE “next is 101”, and review pointers.
 2. [x] Docs: add `/music`, `/listen-export` and `/dev/tokens` to `mobile-app.md` current-route table.
-3. [ ] `Field` primitive replacing every raw learner/dev `TextInput` listed above. `listRow` is a
+3. [x] `Field` primitive replacing every raw learner/dev `TextInput` listed above. `listRow` is a
        later slice. Copy stays props. Existing textbox accessible names stay. Workbench specimen,
        inventory row, `PRODUCTION_COMPONENT_NAMES`, Vitest pin, `fillField` helper.
 4. [ ] `listRow` token + `ListRow` primitive for Settings, More and Music only (48 / 13 / hairline;

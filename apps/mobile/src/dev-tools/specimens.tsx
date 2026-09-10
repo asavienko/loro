@@ -234,6 +234,17 @@ const PRIMITIVE_METADATA = {
     states: ['default', 'empty', 'long-copy', 'text-200', 'text-310'],
     render: () => <primitiveExports.StatTile value="12" label="phrases" />,
   },
+  Field: {
+    states: ['default', 'disabled', 'error', 'long-copy', 'text-200', 'text-310'],
+    render: () => (
+      <primitiveExports.Field
+        bordered
+        accessibilityLabel="Production field"
+        value="Search tokens"
+        onChangeText={noop}
+      />
+    ),
+  },
 } as const satisfies Record<keyof typeof primitiveExports, SpecimenMetadata>
 
 function LanguageChoicesSpecimen() {

@@ -47,6 +47,11 @@ export async function click(page: Page, name: string): Promise<void> {
   await page.getByRole('button', { name }).click()
 }
 
+/** The Field contract: the textbox accessible name is the label. */
+export async function fillField(page: Page, name: string, value: string): Promise<void> {
+  await page.getByRole('textbox', { name }).fill(value)
+}
+
 export async function open(page: Page, name: string): Promise<void> {
   await click(page, name)
 }

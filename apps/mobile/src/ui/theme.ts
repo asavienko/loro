@@ -63,6 +63,7 @@ export {
   chip,
   difficultyCard,
   emptyState,
+  field,
   grid,
   phraseRow,
   pillSize,

@@ -6,7 +6,6 @@ import {
   Platform,
   ScrollView,
   StyleSheet,
-  TextInput,
   View,
 } from 'react-native'
 import { router, Stack as RouteStack } from 'expo-router'
@@ -26,7 +25,7 @@ import {
 } from '../src/auth/runtime'
 import { copy } from '../src/lib/copy'
 import { useLocale } from '../src/lib/i18n'
-import { Button, Pressable, Row, Screen, Stack, Text } from '../src/ui/primitives'
+import { Button, Field, Pressable, Row, Screen, Stack, Text } from '../src/ui/primitives'
 import { ink, line, MIN_TAP, radius, semantic, space, surface, type } from '../src/ui/theme'
 import { useTheme } from '../src/ui/ThemeProvider'
 import { scaleTextStyle } from '../src/ui/runtimeStyles'
@@ -582,7 +581,8 @@ function EmailEntry({
       </Stack>
       <Stack gap={space['2']} style={styles.form}>
         <Text variant="label">{copy.account.email}</Text>
-        <TextInput
+        <Field
+          bordered
           accessibilityLabel={copy.account.email}
           value={email}
           autoFocus
@@ -595,7 +595,7 @@ function EmailEntry({
           maxLength={EMAIL_MAX_LENGTH}
           returnKeyType="send"
           onSubmitEditing={onSend}
-          style={[styles.input, scaleTextStyle(type.body, textScale)]}
+          style={scaleTextStyle(type.body, textScale)}
         />
         {feedback && <SignInFeedback tone={feedback.tone} text={feedback.text} />}
         <Button
@@ -648,7 +648,9 @@ function CodeEntry({
       </Stack>
       <Stack gap={space['2']} style={styles.form}>
         <Text variant="label">{copy.account.code}</Text>
-        <TextInput
+        <Field
+          bordered
+          invalid={feedback?.tone === 'danger'}
           accessibilityLabel={copy.account.code}
           accessibilityHint={copy.account.codeHint}
           value={code}
@@ -661,11 +663,7 @@ function CodeEntry({
           placeholder={copy.account.codePlaceholder}
           returnKeyType="done"
           onSubmitEditing={onVerify}
-          style={[
-            styles.input,
-            scaleTextStyle(type.body, textScale),
-            feedback?.tone === 'danger' && { borderColor: semantic.danger.text },
-          ]}
+          style={scaleTextStyle(type.body, textScale)}
         />
         {feedback && <SignInFeedback tone={feedback.tone} text={feedback.text} />}
         <Button
@@ -859,16 +857,6 @@ const styles = StyleSheet.create({
   methodDisabled: { backgroundColor: line.subtle, borderColor: line.default },
   progress: { paddingTop: space['2'] },
   form: { marginTop: space['2'] },
-  input: {
-    minHeight: MIN_TAP,
-    padding: space['3'],
-    borderWidth: 1,
-    borderColor: line.strong,
-    borderRadius: radius.lg,
-    backgroundColor: surface.card,
-    color: ink.ink,
-    alignSelf: 'stretch',
-  },
   feedback: { borderWidth: 1, borderRadius: radius.lg, padding: space['3'] },
   footer: { marginTop: space['5'] },
   linkTarget: { minHeight: MIN_TAP, justifyContent: 'center' },

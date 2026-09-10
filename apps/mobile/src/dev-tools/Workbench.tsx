@@ -14,7 +14,6 @@ import {
   Pressable as RNPressable,
   ScrollView,
   Text as RNText,
-  TextInput,
   View,
 } from 'react-native'
 import { ThemeProvider, useTheme, type TextScale } from '../ui/ThemeProvider'
@@ -23,6 +22,7 @@ import {
   Button,
   Card,
   Chip,
+  Field,
   Grid,
   ProgressBar,
   Row,
@@ -542,23 +542,15 @@ function WorkbenchContent({ textScale }: { textScale: TextScale }) {
           <Text variant="captionSm" color={ink.muted}>
             {records.length} of {GENERATED_TOKEN_RECORDS.length} primitive leaves
           </Text>
-          <TextInput
+          <Field
+            bordered
             testID="token-search"
             accessibilityLabel="Search tokens"
             placeholder="Search name, value, group, use, or classification"
             placeholderTextColor={ink.muted}
             value={query}
             onChangeText={setQuery}
-            style={{
-              minHeight: 44,
-              marginTop: space['3'],
-              paddingHorizontal: space['3'],
-              borderWidth: 1,
-              borderColor: line.strong,
-              borderRadius: radius.lg,
-              color: ink.ink,
-              backgroundColor: surface.card,
-            }}
+            style={{ marginTop: space['3'] }}
           />
           {byGroup.map(({ group, records: groupRecords }) =>
             groupRecords.length === 0 ? null : (

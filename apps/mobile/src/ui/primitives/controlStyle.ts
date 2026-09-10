@@ -1,6 +1,6 @@
 /**
- * The style algebra behind `Chip` and `Segmented` — resolved from (variant, tone, selected)
- * to the exact style object each shape had when it was hand-rolled in a screen.
+ * The style algebra behind `Chip`, `Segmented` and `Field` — resolved from (variant, tone,
+ * selected) to the exact style object each shape had when it was hand-rolled in a screen.
  *
  * ── Why this is a separate, pure module ──
  * These two components replace five hand-rolled chips and two hand-rolled segmented controls,
@@ -13,15 +13,17 @@
  * is the only regression test the refactor gets, so it earns the indirection.
  */
 
-import type { ViewStyle } from 'react-native'
+import type { TextStyle, ViewStyle } from 'react-native'
 import {
   border,
   chip,
+  field,
   ink,
   line,
   onDark,
   radius,
   segmented,
+  semantic,
   surface,
   type TypeVariant,
 } from '../theme'
@@ -137,5 +139,24 @@ export function segmentLook(
     },
     textColor: selected ? onDark.primary : ink.ink3,
     textVariant: 'labelSm',
+  }
+}
+
+/** Account email/code and Workbench search (`account.tsx` 862–871, `Workbench.tsx` 552–561). */
+export function fieldLook(bordered: boolean, invalid = false): { input: TextStyle } {
+  if (!bordered) {
+    return { input: { color: ink.ink, alignSelf: 'stretch' } }
+  }
+  return {
+    input: {
+      minHeight: field.minHeight,
+      padding: field.padding,
+      color: ink.ink,
+      alignSelf: 'stretch',
+      borderWidth: field.borderWidth,
+      borderColor: invalid ? semantic.danger.text : line.strong,
+      borderRadius: field.borderRadius,
+      backgroundColor: surface.card,
+    },
   }
 }
