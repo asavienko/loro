@@ -42,6 +42,29 @@ describe('listening companion', () => {
     expect(view.shareEnabled).toBe(false)
   })
 
+  it('keeps generate and listen unavailable without native cache', () => {
+    const view = listenViewModel({
+      phase: 'ready',
+      locale: 'es-ES',
+      phrases: [{ id: 'row-1', targetText: 'Hola', learnerAuthored: false }],
+      repeats: 3,
+      network: true,
+      configured: true,
+      nativeCache: false,
+      sessionBusy: false,
+      diskFull: false,
+      quotaExceeded: false,
+      cacheComplete: true,
+      progress: { done: 9, total: 9, failed: 0 },
+      durationMs: 1420,
+    })
+    expect(view.nativeCache).toBe(false)
+    expect(view.generateEnabled).toBe(false)
+    expect(view.listenEnabled).toBe(false)
+    expect(view.shareEnabled).toBe(false)
+    expect(view.blockers).toContain('native-unavailable')
+  })
+
   it('plays from cache without network and keeps Q-22 share closed', () => {
     const view = listenViewModel({
       phase: 'ready',

@@ -5,7 +5,12 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { spawnSync } from 'node:child_process'
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
-import { LISTENING_ASSET_CLASS } from '@loro/core'
+import {
+  LISTENING_ASSET_CLASS,
+  LISTENING_INTER_GAP_MS,
+  LISTENING_INTRA_GAP_MS,
+  LISTENING_SHARE_ENABLED,
+} from '@loro/core'
 import { AudioCacheController } from './audioCacheController'
 import { createFileAudioCache } from './audioCacheFile.test-support'
 import {
@@ -357,5 +362,20 @@ describe('listening generate → file cache → listen', () => {
     }
     expect(await cache.lookup('practice-old')).toBeNull()
     expect(await cache.lookup('listening-keep')).not.toBeNull()
+  })
+
+  it('throws share-gated from native concatenate and share while Q-22 is closed', async () => {
+    expect(LISTENING_SHARE_ENABLED).toBe(false)
+    const native = createFileAudioCache(root, { fixtureBytes: fixture })
+    await expect(
+      native.concatenate({
+        fileUris: ['file:///clip.m4a'],
+        intraGapMs: LISTENING_INTRA_GAP_MS,
+        interGapMs: LISTENING_INTER_GAP_MS,
+        takesPerPhrase: 2,
+        outputName: 'loro-es-ES-2026-09-10-listen.m4a',
+      }),
+    ).rejects.toThrow('share-gated')
+    await expect(native.share('file:///clip.m4a')).rejects.toThrow('share-gated')
   })
 })
