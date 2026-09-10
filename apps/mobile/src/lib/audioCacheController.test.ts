@@ -31,6 +31,7 @@ function fixture() {
     share: vi.fn(() => Promise.resolve(undefined)),
     saveListeningBatch: vi.fn(() => Promise.resolve(undefined)),
     loadListeningBatch: vi.fn((): Promise<AudioCacheObject[] | null> => Promise.resolve(null)),
+    installDevFixture: vi.fn(),
   } satisfies NativeAudioCache
   return { native, controller: new AudioCacheController(native) }
 }
@@ -111,6 +112,22 @@ describe('listening cache controller', () => {
       { fileUri: 'https://cdn.loro.test/clip.m4a', ms: 1, sha256: 'a'.repeat(64) },
     ])
     await expect(f.controller.loadListeningBatch()).resolves.toBeNull()
+  })
+
+  it('installs a debug fixture as a file URI and refuses it without native', async () => {
+    const f = fixture()
+    f.native.installDevFixture.mockResolvedValueOnce({
+      fileUri: 'file:///cache/sha256/fixture.m4a',
+      ms: null,
+      sha256: 'a'.repeat(64),
+    })
+    await expect(f.controller.installDevFixture('listening|dev')).resolves.toMatchObject({
+      fileUri: 'file:///cache/sha256/fixture.m4a',
+    })
+    const web = new AudioCacheController(null)
+    await expect(web.installDevFixture('listening|dev')).rejects.toMatchObject({
+      code: 'native-unavailable',
+    })
   })
 
   it('passes an authorization header through to native and still refuses credentialed URLs', async () => {

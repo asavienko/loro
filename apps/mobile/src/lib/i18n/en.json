@@ -481,6 +481,7 @@
   "listenExport.status.model-unpinned": "The licensed listening model is not pinned yet.",
   "listenExport.status.voices-single": "One licensed listening voice is not enough. This companion needs at least two.",
   "listenExport.status.quota": "Listening generation is paused because the licensed quota is exhausted.",
+  "listenExport.status.fixture-generating": "Generating development listening clips. This is not licensed neural audio.",
   "a11y.listenExport.status": "Listening companion status",
   "a11y.listenExport.repeats": "Repeats per phrase"
 }
