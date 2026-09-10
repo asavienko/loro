@@ -37,9 +37,11 @@ review findings as fixed: browser file import uses the picker-provided file, pic
 request-scoped and pair-safe, corrupt release pointers fail closed, chat choice IDs are unique, and
 active-session E2E navigation uses a deterministic open-wave clock. Refrain completion remains
 visible before a future-wave lock, and its persistent resume action meets the touch-target floor.
-The fast and full local checks are green; device/provider acceptance remains open. No whole plan is
-newly complete; the [implemented-slice archive](plans/archive/2026-09-09/IMPLEMENTED-SLICES.md)
-retains delivered work.
+The fast and full local checks are green; device/provider acceptance remains open.
+[Plan 100](plans/archive/2026-09-10/100-hygiene-reuse-and-tooling.md) (Field, ListRow, reuse gates,
+UniFFI `--check`) is archived. The
+[implemented-slice archive](plans/archive/2026-09-09/IMPLEMENTED-SLICES.md) retains other delivered
+work.
 
 The spine supports pull-down to open its menu; sheets dismiss by pulling their dedicated handle.
 Practice routes disable native back-swipe. Native touch validation remains a release gate. Today
@@ -170,11 +172,11 @@ prototype-only and **must not** be carried into the app — see the divergence t
   route is ElevenLabs or labeled `TTS_STUB_RENDER=1`. Default stub/missing key still fail closed.
   Browser generate stays `native-unavailable` (no JS PCM download). Pronunciation review remains on
   Q-15. Q-22 share stays off. File-URI generate/cache/listen is tested, including a labeled
-  development fixture seed. iOS `playFile` stops on background with Android. Plan 100 owns remaining
-  hygiene, Field/ListRow extracts, snippets and UniFFI `--check`. The next new plan number is 101;
-  recheck concurrent worktrees and untracked `plans/` files before allocating an ID — the
-  README/CLAUDE "next is N" sentence can lag. A new plan takes the next free number and gets a row
-  in [`plans/README.md`](plans/README.md). **Numbers are never reused** — a gap is left rather than
+  development fixture seed. iOS `playFile` stops on background with Android. Plan 100 (hygiene,
+  Field/ListRow, snippets, UniFFI `--check`) is archived. The next new plan number is 101; recheck
+  concurrent worktrees and untracked `plans/` files before allocating an ID — the README/CLAUDE
+  "next is N" sentence can lag. A new plan takes the next free number and gets a row in
+  [`plans/README.md`](plans/README.md). **Numbers are never reused** — a gap is left rather than
   backfilled, so a link written against a number can't come to mean a different plan. Not in
   `docs/`: that holds the durable spec. Not in a temp directory either — a plan you can't find again
   is a plan you rewrite. Name the requirement ID inside the plan so it ties back to the branch and

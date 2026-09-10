@@ -3,10 +3,14 @@
 - **Requirement IDs:** `F-02`, `F-03`, `F-04` (foundation hygiene that keeps those invariants cheap
   to extend); NAV consistency only where a second call site already exists
 - **Milestone:** M1 hygiene; runs in parallel with remaining product plans
-- **Status:** 🟡 Slices 1–10 landed on `cursor/hygiene-reuse-plan-a2fa`. Remaining evidence is
-  `pnpm check`, focused Field/ListRow E2E, and UniFFI `--check` when `libloro_core` is present
-  (skips with an explicit message when the host library is absent). Nothing external blocks that
-  evidence. Product-owned extracts stay with their owners.
+- **Status:** ✅ Slices 1–10 landed on `cursor/hygiene-reuse-plan-a2fa` (`142342c`). `pnpm check` is
+  green. Focused Field/ListRow E2E passed (`account`, `add`, `navigation` More/Settings, `music`; 27
+  tests) and `pnpm test:e2e:workbench` (5 tests). UniFFI `--check` matched committed `bindings/`
+  with host `libloro_core.so` present. A throwaway raw `TextInput` under `src/dev-tools` fails
+  ESLint; `copyOwnership.test.ts` still passes. Pre-commit runs lint-staged after Gitleaks. Browser
+  walkthrough covered Discover/Tagging/Import Fields, More/Settings/Music ListRows, and Workbench
+  Search tokens. Account email Field is covered by mocked E2E; this host hides it when sign-in is
+  unavailable. Native Field focus / TalkBack stay with plans 58/56.
 - **Depends on:** the 2026-09-09 reviews as inventory (do not redo A–G); does **not** wait on
   Q-gates or device acceptance
 - **Number allocation:** 100. Main landed the listening companion as 99 (AS-07) while this plan was
@@ -121,11 +125,11 @@ what they left as as-you-touch leftovers **plus** findings that appeared after `
 Discover garnish, unused Field, duplicated list-row geometry, no editor snippets, dead lint-staged).
 The listen companion that landed on main is plan 99, not this plan.
 
-| Companion                                                                                | Still owns                                       | This plan does not redo                                                      |
-| ---------------------------------------------------------------------------------------- | ------------------------------------------------ | ---------------------------------------------------------------------------- |
-| [Refactoring strategies](../docs/reviews/2026-09-09-refactoring-strategies.md)           | A–G sequence and 2026-09-10 extracts (landed)    | Dual maths, `current.ts`, typed store actions, column map, JWKS rename       |
-| [Whole-project assessment](../docs/reviews/2026-09-09-project-improvement-assessment.md) | Keep / adopt / avoid matrix and ADR amendments   | ADR-0012 / 0008 amendments (landed); installing new product libraries        |
-| [Native libraries](../docs/reviews/2026-09-09-native-libraries-and-approaches.md)        | Expo/RN keep-vs-adopt for speech, touch, widgets | Haptics, Maestro, keyboard-controller, Skia, FlashList, `expo-notifications` |
+| Companion                                                                                      | Still owns                                       | This plan does not redo                                                      |
+| ---------------------------------------------------------------------------------------------- | ------------------------------------------------ | ---------------------------------------------------------------------------- |
+| [Refactoring strategies](../../../docs/reviews/2026-09-09-refactoring-strategies.md)           | A–G sequence and 2026-09-10 extracts (landed)    | Dual maths, `current.ts`, typed store actions, column map, JWKS rename       |
+| [Whole-project assessment](../../../docs/reviews/2026-09-09-project-improvement-assessment.md) | Keep / adopt / avoid matrix and ADR amendments   | ADR-0012 / 0008 amendments (landed); installing new product libraries        |
+| [Native libraries](../../../docs/reviews/2026-09-09-native-libraries-and-approaches.md)        | Expo/RN keep-vs-adopt for speech, touch, widgets | Haptics, Maestro, keyboard-controller, Skia, FlashList, `expo-notifications` |
 
 **Do not redo A–G.** Rechecked at `266ddae` (still true after the listen merge): `fakeRepository`
 uses `isActive` / `isDue`; `fakeCore()` is fixture-sealed; production account/sync clients do not
@@ -197,9 +201,9 @@ Native Testing Library as a **required** suite — optional, primitives only, wh
 
 ### Reusable components — extract now vs wait
 
-The rule in [`component-inventory.md`](../docs/design/component-inventory.md) is already correct:
-one call site stays local; two or more and domain-free → `src/ui/primitives`; two or more with
-domain types → `src/ui/components`. Store/copy stay out.
+The rule in [`component-inventory.md`](../../../docs/design/component-inventory.md) is already
+correct: one call site stays local; two or more and domain-free → `src/ui/primitives`; two or more
+with domain types → `src/ui/components`. Store/copy stay out.
 
 | Shape                                                          | Call sites today                                                                                                                                                      | Action                                                                                                                                                                                                                       |
 | -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -219,8 +223,8 @@ workbench drift test fails closed if an export is missing).
 
 There is **no** `.vscode/` directory, no `*.code-snippets`, and no Cursor rule pack beyond
 `.cursor/environment.json`. The only agent skill is
-[`loro-development`](../.agents/skills/loro-development/SKILL.md), which points at references but
-does not ship paste-ready recipes for the operations every new screen repeats.
+[`loro-development`](../../../.agents/skills/loro-development/SKILL.md), which points at references
+but does not ship paste-ready recipes for the operations every new screen repeats.
 
 This plan adds **checked-in** snippets, a Cursor rule, and a skill reference that encode the
 enforced rules, not a second style guide.
