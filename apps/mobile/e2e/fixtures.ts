@@ -1,8 +1,9 @@
 import { test as base, expect, type Page } from '@playwright/test'
 import { todayMarker } from './helpers'
 import { consumeExpectedResourceError } from './expectedResourceErrors'
+import { mockAccountService } from './accountFlow'
 
-export const test = base.extend<{ consoleHealth: undefined }>({
+export const test = base.extend<{ consoleHealth: undefined; accountApi: undefined }>({
   consoleHealth: [
     async ({ page }, use) => {
       const errors: string[] = []
@@ -16,6 +17,15 @@ export const test = base.extend<{ consoleHealth: undefined }>({
 
       await use(undefined)
       expect(errors, 'the app emitted browser errors').toEqual([])
+    },
+    { auto: true },
+  ],
+  // EXPO_PUBLIC_API_URL is inlined in the E2E bundle. Mock before the first navigation so
+  // hydration does not hit a real host (ERR_CONNECTION_REFUSED) and fail consoleHealth.
+  accountApi: [
+    async ({ page }, use) => {
+      await mockAccountService(page)
+      await use(undefined)
     },
     { auto: true },
   ],
