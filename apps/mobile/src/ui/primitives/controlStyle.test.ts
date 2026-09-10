@@ -32,7 +32,14 @@ import {
   statRow,
   surface,
 } from '../theme'
-import { chipLook, fieldLook, listRowLook, segmentLook, segmentedTrackStyle } from './controlStyle'
+import {
+  chipLook,
+  fieldA11y,
+  fieldLook,
+  listRowLook,
+  segmentLook,
+  segmentedTrackStyle,
+} from './controlStyle'
 
 describe('chipLook · the tag toggle (app/add.tsx:473-483, app/phrase/[id].tsx:205-212)', () => {
   // `flexDirection`, `alignItems` and `gap` are the shared chip shape. `add.tsx` set all
@@ -319,6 +326,19 @@ describe('fieldLook · Account / Workbench chrome (account.tsx:862-871)', () => 
         color: ink.ink,
         alignSelf: 'stretch',
       },
+    })
+  })
+
+  it('announces invalid and disabled in both accessibility forms', () => {
+    expect(fieldA11y(false, true)).toEqual({
+      accessibilityState: { disabled: false, invalid: false },
+      'aria-disabled': false,
+      'aria-invalid': false,
+    })
+    expect(fieldA11y(true, false)).toEqual({
+      accessibilityState: { disabled: true, invalid: true },
+      'aria-disabled': true,
+      'aria-invalid': true,
     })
   })
 })

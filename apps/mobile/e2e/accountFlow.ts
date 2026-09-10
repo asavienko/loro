@@ -309,6 +309,10 @@ export async function reachAccount(
       await expect(
         page.getByText('That code didn’t work. Try again or request a new one.'),
       ).toBeVisible()
+      await expect(page.getByRole('textbox', { name: 'Sign-in code' })).toHaveAttribute(
+        'aria-invalid',
+        'true',
+      )
       return service
     }
     await finishSignIn(page, scenario !== 'sync-unavailable' && scenario !== 'sync-rejected')

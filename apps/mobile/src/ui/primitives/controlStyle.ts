@@ -179,3 +179,23 @@ export function fieldLook(bordered: boolean, invalid = false): { input: TextStyl
     },
   }
 }
+
+/**
+ * Dual a11y for Field's valued states. Nested `accessibilityState` is what native readers
+ * use; RNW's `createDOMProps` only forwards flat `aria-invalid` / `aria-disabled`.
+ */
+export function fieldA11y(
+  invalid: boolean,
+  editable: boolean,
+): {
+  accessibilityState: { disabled: boolean; invalid: boolean }
+  'aria-disabled': boolean
+  'aria-invalid': boolean
+} {
+  const disabled = !editable
+  return {
+    accessibilityState: { disabled, invalid },
+    'aria-disabled': disabled,
+    'aria-invalid': invalid,
+  }
+}
