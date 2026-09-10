@@ -122,8 +122,10 @@ Unit/HTTP tests cover target validation, bearer/device enforcement, tenant isola
 rejections, Rust merge, cursor paging, alias reconciliation and tombstones. The optional real
 PostgreSQL suites create isolated schemas and exercise restart persistence, rollback, concurrent
 writes/refresh, one-use email codes, committed guess limits and refresh reuse revocation. They skip
-explicitly if `LORO_TEST_DATABASE_URL` is absent. Build with esbuild; workspace TypeScript packages
-are consumed as source.
+explicitly if `LORO_TEST_DATABASE_URL` is absent. Build with esbuild. Host/dev consume workspace
+TypeScript as source. The production image bundles `@loro/core` and `@loro/content` into
+`dist/main.js` because distroless Node 22.22 will not strip types under `node_modules` after
+`pnpm deploy`.
 
 Passing local tests does not configure a deployed database, identity provider, email sender, TLS,
 key rotation, backup/restore operations or account deletion/export jobs. Those release tasks remain
