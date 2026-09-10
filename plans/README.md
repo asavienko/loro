@@ -1,10 +1,10 @@
 # Active plans
 
-This index lists only the **39 plans with remaining work**. Completed records and historical
+This index lists only the **40 plans with remaining work**. Completed records and historical
 snapshots are kept in [the archive](archive/README.md), without compatibility symlinks or redirect
 files in this directory. Links point directly to each plan's actual location.
 
-The highest assigned ID is **99** and the next new plan is **100**. Recheck concurrent worktrees and
+The highest assigned ID is **100** and the next new plan is **101**. Recheck concurrent worktrees and
 untracked `plans/` files before allocating; the "next is N" sentence can lag. Numbers are never
 reused; 49 remains an existing gap. When a plan finishes, archive it in the same change and list it
 only in the archive index.
@@ -16,7 +16,8 @@ until Product assigns a new number; do not silently reuse or drop either.
 Implemented-slice owners from 56–68, 70–73, 75–77, 80–82, 86–88, 90 and 93–96 are stored in
 [the 2026-09-09 archive](archive/2026-09-09/README.md) at user request. Their partial statuses and
 outstanding scope remain indexed below; archiving does not imply completion. Only the still-unbuilt
-or decision-gated files 69, 74, 78, 83, 96 (phrase-music), 97, 98 and 99 remain in this directory.
+or decision-gated files 69, 74, 78, 83, 96 (phrase-music), 97, 98, 99 and 100 remain in this
+directory.
 
 The [post-main review](../docs/reviews/2026-09-09-post-main-plan-review.md) records the six runtime
 and validation findings as fixed, including the follow-up Refrain completion and touch-target
@@ -24,8 +25,10 @@ repairs. No additional whole plan meets its acceptance criteria. Delivered imple
 recorded in the [dated archive](archive/2026-09-09/IMPLEMENTED-SLICES.md); all 39 remaining-work
 owners are retained, including [99](99-batch-phrase-audio-export.md) for online-first listening
 generation and on-device cache (share-out-of-app still ⛔ Q-22) and
-[phrase-music](96-phrase-music-generation.md). Continue with device/provider acceptance, then
-integrate the remaining daily-loop, Review, content and lifecycle slices.
+[phrase-music](96-phrase-music-generation.md). [100](100-ui-design-system.md) owns the shared
+interaction kit (Reanimated motion adapter, gesture catalog, remaining-screen primitives) that
+those later surfaces consume. Continue with device/provider acceptance, then integrate the
+remaining daily-loop, Review, content and lifecycle slices.
 
 The [2026-09-09 implementation review](../docs/reviews/2026-09-09-twenty-plan-implementation.md)
 records changes requested after the next twenty bounded slices. Each selected plan remains partial;
@@ -88,7 +91,9 @@ Expo/RN packages onto that sequence versus device-owned work.
 2. **Available UI/content work:** [57](archive/2026-09-09/57-runtime-design-system.md) supplies real
    state APIs to [80](archive/2026-09-09/80-dev-design-system-workbench.md);
    [81](archive/2026-09-09/81-navigation-spine-switcher-and-more.md) extends the implemented More
-   and Refrain exits. Begin [87](archive/2026-09-09/87-multilingual-app-and-language-selection.md)'s
+   and Refrain exits. [100](100-ui-design-system.md) can start the motion adapter and UI-thread
+   press/sheet physics now; it does not steal 57 fonts/haptics/dark or 93 pull laws. Begin
+   [87](archive/2026-09-09/87-multilingual-app-and-language-selection.md)'s
    bilingual review and [61](archive/2026-09-09/61-content-and-audio-assets.md)'s real updater/asset
    adapters. Prepare [77](archive/2026-09-09/77-dsp-and-speech-labs.md)'s evidence spike and
    [82](archive/2026-09-09/82-guided-chat-domain-and-service.md)'s offline schemas/topic/eval work
@@ -182,6 +187,7 @@ feature↔release-completion cycle. See each plan's checkboxes for executable ta
 | [97](97-generative-discover-and-phrase-reach.md)                           | Guarded generative Discover reach and shared add-handoff                    | M3          | 🟡 Own-phrase floor, bundled suggestions and stub suggest exist; Q-21 gates live traffic                                                  | 59/61; 76/86 live path; 82/83 consume handoff; Q-21                      |
 | [98](98-voice-and-tts-integration.md)                                      | ElevenLabs TTS, catalog render and device-TTS fallback                      | M1/M2       | 🟡 Adapter/render/gated API/file playback in progress; Q-15 catalog pins filled; live seed/listen remain                                  | 86/61/62 slices; Q-15 live seed                                          |
 | [99](99-batch-phrase-audio-export.md)                                      | Online multi-voice listen cache; optional share of concatenated clips       | M2          | 🟡 Composer/cache/E2E/emulator fixture; Q-15 pins filled; ⛔ pronunciation review; ⛔ Q-22; physical 58/72                                | 56/81 route; 59 phrases; 62 cache/session; 86/61/66/98 render; Q-15/Q-22 |
+| [100](100-ui-design-system.md)                                             | Shared UI interaction kit: motion adapter, gestures, remaining-screen primitives | M1/M2       | — Tokens/Pressable/Sheet exist; Reanimated unused; first slices can start; device 60 fps remains 58/72                                 | ADR-0013 tokens; 57 fonts/haptics/dark; 80 specimens; 93 pull laws; 56/81 lists/chrome |
 
 Plan 88 owns the selected AWS testing profile and
 [operations runbook](../docs/runbooks/backend-testing.md); plan 73 retains production operations.
@@ -194,8 +200,9 @@ Render testing recommendation in 86 is superseded by 88.
   tests.
 - Keep one owner per behavior: 56 route policy, 81 chrome; 59 durable checkpoints, 64 wave
   transitions; 66 server cursors, 68 client convergence; 86 vendor controls, 76/82/97 product AI; 99
-  listening-class cache and companion UX, 62 in-app playback/download cache, 67 JSON account export.
-  Archived plan 96 remains the account sign-in screens. Active
+  listening-class cache and companion UX, 62 in-app playback/download cache, 67 JSON account export;
+  100 shared motion/gesture/primitive kit, 57 fonts/haptics/dark, 80 workbench specimens, 93
+  spine/sheet pull laws. Archived plan 96 remains the account sign-in screens. Active
   [`96-phrase-music-generation.md`](96-phrase-music-generation.md) is the phrase-song garnish under
   the same number (unresolved collision; do not reuse or drop either).
 - Future surfaces consume the selected language pair and real capability states. Preserve personal

@@ -165,3 +165,7 @@ For every reusable addition:
 
 Build components when a screen proves the abstraction. This keeps the system extendable without
 turning the blueprint's prototype catalog into a speculative second UI framework.
+
+The remaining-screen extraction map, Reanimated motion adapter and gesture catalog live in
+[plan 100](../../plans/100-ui-design-system.md). Do not pre-create `GradeRow` / `RevealCard` /
+chat bubbles as a gallery; land them in the same change as the first or second caller.
