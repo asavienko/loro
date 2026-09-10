@@ -28,6 +28,7 @@
     "lint": "cargo clippy --all-targets -- -D warnings && cargo fmt --check",
     "typecheck": "cargo check --all-targets --quiet",
     "clean": "cargo clean && rm -rf bindings pkg",
-    "check:browser": "node scripts/embed-wasm.mjs --check"
+    "check:browser": "node scripts/embed-wasm.mjs --check",
+    "check:uniffi": "node --test scripts/check-uniffi.test.mjs && node scripts/check-uniffi.mjs --check"
   }
 }
