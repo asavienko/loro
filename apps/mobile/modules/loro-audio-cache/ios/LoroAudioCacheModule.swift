@@ -66,6 +66,10 @@ public final class LoroAudioCacheModule: Module {
     AsyncFunction("installDevFixture") { (logicalKey: String) -> [String: Any?] in
       try self.controller.installDevFixture(logicalKey)
     }
+
+    Function("isDebuggable") { () -> Bool in
+      self.controller.isDebuggable()
+    }
   }
 }
 
@@ -141,6 +145,14 @@ private let session: URLSession = {
       table[logicalKey]?["accessed"] = Date().timeIntervalSince1970
     }
     return payload(url: url, sha256: digest, ms: row["ms"] as? Int)
+  }
+
+  func isDebuggable() -> Bool {
+    #if DEBUG
+      true
+    #else
+      false
+    #endif
   }
 
   func installDevFixture(_ logicalKey: String) throws -> [String: Any?] {

@@ -57,6 +57,7 @@ export default function ListenExport() {
   const [repeats, setRepeats] = useState<ListeningRepeats>(LISTENING_REPEATS_DEFAULT)
   const [consent, setConsent] = useState(false)
   const [network, setNetwork] = useState(true)
+  const [nativeDebug, setNativeDebug] = useState(false)
   const [phase, setPhase] = useState<ListenPhase>('idle')
   const [progress, setProgress] = useState<ListenProgress>(emptyProgress)
   const [durationMs, setDurationMs] = useState<number | null>(null)
@@ -81,6 +82,10 @@ export default function ListenExport() {
     return onNetworkAvailable(() => {
       void isNetworkAvailable().then(setNetwork)
     })
+  }, [])
+
+  useEffect(() => {
+    void audioCache.isDebuggable().then(setNativeDebug)
   }, [])
 
   useEffect(() => {
@@ -123,8 +128,7 @@ export default function ListenExport() {
     durationMs,
   })
   const view = scenario === null ? live : fixtureListenView(scenario)
-  const fixtureMode =
-    typeof __DEV__ !== 'undefined' && __DEV__ && audioCache.available && scenario === null
+  const fixtureMode = nativeDebug && audioCache.available && scenario === null
   const generateEnabled =
     (view.generateEnabled ||
       (fixtureMode &&

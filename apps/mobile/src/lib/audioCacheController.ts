@@ -39,6 +39,8 @@ export interface NativeAudioCache {
   loadListeningBatch?(): Promise<AudioCacheObject[] | null>
   /** Debug builds only. Copies a bundled fixture clip; JavaScript still receives a file URI. */
   installDevFixture?(logicalKey: string): Promise<AudioCacheObject>
+  /** Native FLAG_DEBUGGABLE / DEBUG. Hermes `__DEV__` is false in export:embed debug APKs. */
+  isDebuggable?(): boolean | Promise<boolean>
 }
 
 export type AudioCacheErrorCode =
@@ -152,7 +154,7 @@ export class AudioCacheController {
   }
 
   /**
-   * `__DEV__` native only. Writes a labeled fixture AAC into the listening cache.
+   * Native debug binaries only. Writes a labeled fixture AAC into the listening cache.
    * Production licensed generate still waits on Q-15; this must not be presented as neural quality.
    */
   async installDevFixture(logicalKey: string): Promise<AudioCacheObject> {
@@ -165,5 +167,10 @@ export class AudioCacheController {
     } catch (error) {
       throw asCacheError(error)
     }
+  }
+
+  async isDebuggable(): Promise<boolean> {
+    if (this.native?.isDebuggable === undefined) return false
+    return await this.native.isDebuggable()
   }
 }
