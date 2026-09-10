@@ -73,7 +73,8 @@ and pins listening clips, restores a complete batch across relaunch, and keeps m
 `APPROVED_LISTENING_VOICES` is empty and `LISTENING_MODEL_ID` is null, so generate fails closed.
 The render client attaches an optional bearer session and maps 429 to quota; native download
 sends that Authorization header and refuses redirects so the token cannot hop hosts. JavaScript
-still never receives PCM. Native airplane-mode listen of a filled cache is not yet evidenced.
+still never receives PCM. Learner `pnpm test:e2e` covers the route and fixture states (197 passed,
+2026-09-10). Native airplane-mode listen of a filled cache is not yet evidenced.
 
 ## Product shape (working assumptions)
 
