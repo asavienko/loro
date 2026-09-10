@@ -17,6 +17,15 @@ async function returnToToday(page: Parameters<typeof openAccount>[0]): Promise<v
   await expect(todayMarker(page)).toBeVisible()
 }
 
+test('an invalid sign-in code marks the field invalid for assistive tech', async ({ page }) => {
+  await onboard(page)
+  await reachAccount(page, 'invalid-code')
+  await expect(page.getByRole('textbox', { name: 'Sign-in code' })).toHaveAttribute(
+    'aria-invalid',
+    'true',
+  )
+})
+
 test('named back from the code screen returns to the editable email entry', async ({ page }) => {
   await mockAccountService(page)
   await onboard(page)

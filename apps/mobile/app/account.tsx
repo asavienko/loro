@@ -583,6 +583,7 @@ function EmailEntry({
         <Text variant="label">{copy.account.email}</Text>
         <Field
           bordered
+          invalid={feedback !== null && feedback.tone !== 'info'}
           accessibilityLabel={copy.account.email}
           value={email}
           autoFocus
@@ -650,7 +651,7 @@ function CodeEntry({
         <Text variant="label">{copy.account.code}</Text>
         <Field
           bordered
-          invalid={feedback?.tone === 'danger'}
+          invalid={feedback !== null && feedback.tone !== 'info'}
           accessibilityLabel={copy.account.code}
           accessibilityHint={copy.account.codeHint}
           value={code}
