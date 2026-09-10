@@ -64,11 +64,11 @@ real theme/text-scale/motion seam; an unsupported state is labeled as such. Use 
 report, not a copied WCAG calculation. Its dedicated E2E suite and the production route
 unavailability suite prove different things; unavailability does not prove bundle tree-shaking.
 
-`/account` is a stepped utility (methods → email → code → confirmation, then management). Named header
-back must match hardware back: code returns to the email draft, email returns to methods. Busy back
-cancels the in-flight attempt instead of trapping the learner. Connecting copy uses short localized
-provider names, not English literals and not the "Continue with …" strings. Provider marks, live
-email and native keyboard/OTP remain separate evidence gates.
+`/account` is a stepped utility (methods → email → code → confirmation, then management). Named
+header back must match hardware back: code returns to the email draft, email returns to methods.
+Busy back cancels the in-flight attempt instead of trapping the learner. Connecting copy uses short
+localized provider names, not English literals and not the "Continue with …" strings. Provider
+marks, live email and native keyboard/OTP remain separate evidence gates.
 
 Before audio/speech work, read `docs/architecture/audio-speech.md` and inspect current
 `apps/mobile/modules/` and platform adapters. Availability must reflect the real module, permission

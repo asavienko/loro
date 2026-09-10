@@ -1,9 +1,24 @@
 /** F-01/F-04. Simulated provider transport only; production has no test identity or bypass. */
-import { expect, type Page } from '@playwright/test'
+import { expect, type Page, type Route } from '@playwright/test'
 import { expectResourceError } from './expectedResourceErrors'
 
 export const ACCOUNT_LABEL = 'Sign in & sync'
 export const ACCOUNT_API = 'https://auth.loro.test/v1'
+
+/** Metro inlines `apps/mobile/.env` (`http://localhost:3000/v1`) into the web bundle. */
+function isE2eAccountApi(url: URL): boolean {
+  if (url.hostname === 'auth.loro.test') return true
+  return url.port === '3000' && (url.hostname === 'localhost' || url.hostname === '127.0.0.1')
+}
+
+const ACCOUNT_ROUTE_GLOBS = [
+  `${ACCOUNT_API}/**`,
+  '**/auth.loro.test/**',
+  'http://localhost:3000/**',
+  'http://127.0.0.1:3000/**',
+  '**/localhost:3000/**',
+  '**/127.0.0.1:3000/**',
+] as const
 const stamp = '0000000000100:000000:server'
 const providerState = 's'.repeat(43)
 export type AccountScenario =
@@ -45,12 +60,22 @@ export async function mockAccountService(
   // Replace the previous scenario's handlers. Playwright evaluates context routes in
   // registration order, so leaving an earlier mock installed makes a later state inherit its
   // response (for example, sync-unavailable instead of sync-rejected).
-  await page.context().unroute(`${ACCOUNT_API}/**`)
+  for (const glob of ACCOUNT_ROUTE_GLOBS) await page.context().unroute(glob)
+  await page.context().unroute(isE2eAccountApi)
   await page.context().unroute('https://provider.loro.test/**')
   const requests: AccountRequest[] = []
-  await page.context().route(`${ACCOUNT_API}/**`, async (route) => {
+  const fulfillAccount = async (route: Route) => {
     const request = route.request()
-    const path = new URL(request.url()).pathname
+    const url = new URL(request.url())
+    if (!isE2eAccountApi(url)) {
+      await route.continue()
+      return
+    }
+    const path = url.pathname
+    if (request.method() === 'OPTIONS') {
+      await route.fulfill({ status: 204 })
+      return
+    }
     const body: unknown = request.postData() ? request.postDataJSON() : null
     requests.push({
       path,
@@ -58,6 +83,12 @@ export async function mockAccountService(
       authorization: request.headers().authorization,
       deviceId: request.headers()['x-loro-device'],
     })
+    if (path.endsWith('/health/ready')) {
+      await route.fulfill({
+        json: { status: 'ok', checks: { content: 'ok', merge: 'ok' } },
+      })
+      return
+    }
     if (path.endsWith('/auth/providers')) {
       await route.fulfill({
         json:
@@ -163,7 +194,8 @@ export async function mockAccountService(
       return
     }
     throw new Error(`Unexpected account request: ${request.method()} ${path}`)
-  })
+  }
+  await page.context().route(isE2eAccountApi, fulfillAccount)
   await page.context().route('https://provider.loro.test/**', async (route) => {
     const callback = new URL('/account', page.url())
     callback.searchParams.set('state', mode === 'error' ? 'wrong' : providerState)

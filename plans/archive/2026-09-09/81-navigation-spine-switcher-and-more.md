@@ -68,7 +68,8 @@ Activity.
        contextual flow steps, built destinations, then Lately/Phrases/Practice/You with real counts
        and conditional trip entries. Hide unbuilt/empty groups. Expose search over owned phrases
        using the existing phrase data/list surface; reserve the ladder Phrasebook/Run product for
-       gated plan 78. Do not create a dead `/phrasebook` link or log search text.
+       gated plan 78. Do not create a dead `/phrasebook` link or log search text. When plan 56 marks
+       `/listen-export` `built`, add its More Phrases row from that declaration only.
 4. [ ] Show one/multiple ongoing items and implement NAV-13/14: Pause, End and Keep going; persisted
        checkpoint acknowledgement; a single primary Resume action on the resolved home; focus
        restoration and no underlying exit while a sheet is active. A language/course switch must not

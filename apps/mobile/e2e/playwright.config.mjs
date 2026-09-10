@@ -18,7 +18,9 @@ export default defineConfig({
     ...sharedUse,
   },
   webServer: {
-    command: `pnpm exec expo start --web --port ${port}`,
+    // `--clear` on CI so EXPO_PUBLIC_API_URL (account mocks) is not served from a
+    // previous Metro cache that inlined an unconfigured API and left Google disabled.
+    command: `pnpm exec expo start --web --port ${port}${isCI ? ' --clear' : ''}`,
     cwd: '..',
     url: `http://127.0.0.1:${port}/onboarding`,
     timeout: 120_000,

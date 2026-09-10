@@ -128,6 +128,14 @@ describe('ElevenLabs provider-only TTS adapter', () => {
     expect(init!.headers).toMatchObject({ 'xi-api-key': 'test-only-secret' })
   })
 
+  it('places the requested listening voice id on the path without remapping', async () => {
+    const { client, send } = setup()
+    await client.synthesize({ ...request, voiceId: 'listening-voice-a' })
+    expect(send.mock.calls[0]?.[0]).toBe(
+      'https://api.elevenlabs.io/v1/text-to-speech/listening-voice-a?output_format=mp3_44100_128',
+    )
+  })
+
   it('records provider character counts when they are a non-negative integer', async () => {
     const send = vi.fn<typeof fetch>().mockResolvedValue(
       new Response(audio, {

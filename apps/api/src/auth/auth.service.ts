@@ -212,7 +212,8 @@ export class AuthService {
           [tokenHash(refreshToken)],
         )
       ).rows[0]
-      if (!row) return upgradeLegacyRefresh(connection, this.clock, tokens, refreshToken, registration)
+      if (!row)
+        return upgradeLegacyRefresh(connection, this.clock, tokens, refreshToken, registration)
       if (row.revoked_at !== null) return null
       if (row.consumed_at !== null) {
         // Do not throw in this transaction: rollback would undo reuse revocation.

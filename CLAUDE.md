@@ -7,24 +7,27 @@ Guidance for Claude Code working in this repository.
 **Loro** — a mobile app (iOS + Android) that teaches Spanish, Bulgarian, and Russian by the phrase.
 
 Early implementation. **What exists:** eight of the v1.1 design package's 23 learner screens,
-Languages, Account, More and Settings utilities, the shared shell and a developer workbench.
+Languages, Account, More, Settings and Listen utilities, the shared shell and a developer workbench.
 `/music` (Phrase songs) is a later garnish via More — picker, lyric review, style confirm, and
 fixture playback. Default CI uses `MUSIC_PROVIDER=stub` and never calls ElevenLabs or Anthropic.
 Discover offers Add your own and bundled topic suggestions; live `/v1/phrases/suggest` stays behind
 Q-21. Local progress and course/session state commit to native OP-SQLite or browser SQLite before
 rendering. Rust owns FSRS, ranking, selection, matching, clocks and merge through generated
 WASM/UniFFI bridges. Native modules provide foreground device TTS, catalog-file playback when a
-checksummed clip is on disk, and strictly on-device ASR with an offline Speak reveal fallback. The
-API stores accounts, sessions and tenant-scoped sync in PostgreSQL and exposes a gated,
-stub-by-default `POST /tts/render`. Optional Google/Apple and email sign-in connect durable local
+checksummed clip is on disk, strictly on-device ASR with an offline Speak reveal fallback, and a
+listening-class file cache that returns file URIs only. The API stores accounts, sessions and
+tenant-scoped sync in PostgreSQL and exposes a gated, stub-by-default `POST /tts/render` with a
+listening-class fail-closed path. Optional Google/Apple and email sign-in connect durable local
 progress to cross-device sync.
 
 The three 31-phrase Spanish/Bulgarian/Russian starters still await bilingual review. The other 15
-learner screens, licensed production seed audio (Q-15), the 150 MB LRU cache, background audio,
-measured onset latency, DSP, widgets and account export/erasure remain. Cloud ASR is forbidden.
-Android compilation and an airplane-mode emulator persistence/reveal smoke passed; full iOS and
-physical-device speech/convergence acceptance remain release gates. See
-[persistent practice](docs/process/persistent-practice.md) and
+learner screens, pronunciation-reviewed production seed audio (Q-15 leaning pins are in core; the
+listen remains), the 150 MB LRU cache, background audio, measured onset latency, DSP, widgets,
+shareable neural listening export (Q-22) and account export/erasure remain. Cloud ASR is forbidden.
+Android compilation and an airplane-mode emulator persistence/reveal smoke passed; a labeled
+listen-companion fixture also played from cache in emulator airplane mode (not Q-15 licensed audio,
+not physical-device 58/72). Full iOS and physical-device speech/convergence acceptance remain
+release gates. See [persistent practice](docs/process/persistent-practice.md) and
 [plan 94](plans/archive/2026-09-09/94-persistent-practice-and-account-integration.md) for scoped
 evidence.
 
@@ -157,17 +160,21 @@ prototype-only and **must not** be carried into the app — see the divergence t
   redirect files; update references to the actual archive path and rebase the moved plan's relative
   links. Keep completed records out of the active index. Archive a finished plan in the same change.
   Plan 53 was archived at user request on 2026-09-09; its former original-path exception no longer
-  applies. Main archived account-sign-in as plan 96; this branch still has phrase-music at
-  [`plans/96-phrase-music-generation.md`](plans/96-phrase-music-generation.md) under the same number
-  (unresolved ID collision). Plan 97 owns generative Discover reach. Plan 98 owns the ElevenLabs
-  adapter, `content:render`, gated `/tts/render` and catalog-file playback. The next new plan number
-  is 99; recheck concurrent worktrees and untracked `plans/` files before allocating an ID — the
+  applies. Plan 97 owns generative Discover reach. Plan 98 owns the ElevenLabs adapter,
+  `content:render`, gated `/tts/render` and catalog-file playback. Plan 99 owns the online-first
+  listening companion (generate, cache, in-app listen; share after Q-22). Licensed generate uses the
+  2026-09-10 `LISTENING_VOICE_DECISION` pins; stub/missing key still fail closed. Pronunciation
+  review remains on Q-15. Q-22 share stays off. File-URI generate/cache/listen is tested, including
+  a labeled development fixture seed. iOS `playFile` stops on background with Android. Active
+  [`plans/96-phrase-music-generation.md`](plans/96-phrase-music-generation.md) collides with
+  archived account-sign-in 96 (unresolved; do not reuse or drop either). The next new plan number is
+  100; recheck concurrent worktrees and untracked `plans/` files before allocating an ID — the
   README/CLAUDE "next is N" sentence can lag. A new plan takes the next free number and gets a row
   in [`plans/README.md`](plans/README.md). **Numbers are never reused** — a gap is left rather than
   backfilled, so a link written against a number can't come to mean a different plan. Not in
-  `docs/`: that holds the durable spec. Not in a temp directory either — a plan you can't find
-  again is a plan you rewrite. Name the requirement ID inside the plan so it ties back to the
-  branch and the PR.
+  `docs/`: that holds the durable spec. Not in a temp directory either — a plan you can't find again
+  is a plan you rewrite. Name the requirement ID inside the plan so it ties back to the branch and
+  the PR.
 - Implemented-slice plans 56–68, 70–73, 75–77, 80–82, 86–88, 90 and 93–96 were archived at user
   request on 2026-09-09 with their partial status and remaining scope preserved in
   `plans/archive/2026-09-09/`; direct links in the roadmap index retain their ownership. This
@@ -309,22 +316,23 @@ npx expo start --web                # from apps/mobile — fastest way to see th
 
 ## Where things live
 
-| Path                      | What                                                                      |
-| ------------------------- | ------------------------------------------------------------------------- |
-| `docs/`                   | All documentation — start at `docs/README.md`                             |
-| `apps/mobile/`            | Expo / React Native app; routes in `app/`, design system in `src/ui/`     |
-| `…/src/ui/primitives/`    | Domain-free components. Nothing here knows what a phrase is               |
-| `…/src/ui/components/`    | Composites that take domain types. Never the store, never `copy`          |
-| `…/src/ui/tokens/`        | Component geometry the generated tokens don't cover. Lint-exempt for hex  |
-| `…/src/lib/copy.ts`       | **Every** learner-facing string. The E2E suite asserts ~110 of them       |
-| `apps/mobile/e2e/`        | Playwright web E2E for every implemented route and cross-screen flow      |
-| `apps/api/`               | NestJS backend                                                            |
-| `packages/core/`          | Shared TS domain, engine contracts, API schemas — **used by app AND api** |
-| `…/core/src/persistence/` | Schema, migrations, repositories, outbox. Handwritten SQL, no ORM         |
-| `apps/mobile/src/data/`   | Native/browser SQLite drivers, hydration, repository writes and sync      |
-| `packages/core-rs/`       | Rust: FSRS, sync merge, ranking, DSP. All reproducible maths              |
-| `packages/design-tokens/` | Tokens extracted from the blueprint + generators                          |
-| `packages/content/`       | Spanish/Bulgarian/Russian catalogs and review/validation gates            |
+| Path                          | What                                                                      |
+| ----------------------------- | ------------------------------------------------------------------------- |
+| `docs/`                       | All documentation — start at `docs/README.md`                             |
+| `apps/mobile/`                | Expo / React Native app; routes in `app/`, design system in `src/ui/`     |
+| `…/src/ui/primitives/`        | Domain-free components. Nothing here knows what a phrase is               |
+| `…/src/ui/components/`        | Composites that take domain types. Never the store, never `copy`          |
+| `…/src/ui/tokens/`            | Component geometry the generated tokens don't cover. Lint-exempt for hex  |
+| `…/src/lib/copy.ts`           | **Every** learner-facing string. The E2E suite asserts ~110 of them       |
+| `apps/mobile/e2e/`            | Playwright web E2E for every implemented route and cross-screen flow      |
+| `…/modules/loro-audio-cache/` | Listening-class download, pin, restore; file URIs only; Q-22 mux          |
+| `apps/api/`                   | NestJS backend                                                            |
+| `packages/core/`              | Shared TS domain, engine contracts, API schemas — **used by app AND api** |
+| `…/core/src/persistence/`     | Schema, migrations, repositories, outbox. Handwritten SQL, no ORM         |
+| `apps/mobile/src/data/`       | Native/browser SQLite drivers, hydration, repository writes and sync      |
+| `packages/core-rs/`           | Rust: FSRS, sync merge, ranking, DSP. All reproducible maths              |
+| `packages/design-tokens/`     | Tokens extracted from the blueprint + generators                          |
+| `packages/content/`           | Spanish/Bulgarian/Russian catalogs and review/validation gates            |
 
 ## Backend testing infrastructure
 
@@ -360,12 +368,14 @@ provider adapters.
 
 Unresolved decisions with owners and dates:
 [`docs/decisions/open-questions.md`](docs/decisions/open-questions.md). Active roadmap gates are
-**Q-15** (production audio), **Q-07** (trip semantics), **Q-05** (loop experiment and conditional
-Run), **Q-14** (Refrain peak accessibility), **Q-08/Q-12** (pricing and billing), **Q-17** (rail
-priority), **Q-16/Q-18–Q-20** (chat launch, budget and retention), **Q-21** (Discover suggest), plus
-bilingual review and the DSP quality gate. Gates apply to their named slices; offline chat and
-spike preparation may proceed.
-Work whose dependencies do not cross those gates should continue.
+**Q-15** (pronunciation-reviewed production audio; Voice Library pins leaning 2026-09-10), **Q-07**
+(trip semantics), **Q-05** (loop experiment and conditional Run), **Q-14** (Refrain peak
+accessibility), **Q-08/Q-12** (pricing and billing), **Q-17** (rail priority), **Q-16/Q-18–Q-20**
+(chat launch, budget and retention), **Q-21** (Discover suggest), **Q-22** (listening-file
+redistribution), plus bilingual review and the DSP quality gate. Gates apply to their named slices;
+offline chat and spike preparation may proceed. Plan 99 listening generate is pinned for in-app
+cache; pronunciation review remains; in-app cache/listen does not wait on Q-22; share-out-of-app
+does. Work whose dependencies do not cross those gates should continue.
 
 ## Python
 
