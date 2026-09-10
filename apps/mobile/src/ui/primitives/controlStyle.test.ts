@@ -19,16 +19,19 @@ import {
   accent,
   border,
   difficultyCard,
+  field,
   ink,
   line,
   onDark,
   phraseRow,
   pillSize,
   radius,
+  semantic,
+  space,
   statRow,
   surface,
 } from '../theme'
-import { chipLook, segmentLook, segmentedTrackStyle } from './controlStyle'
+import { chipLook, fieldLook, segmentLook, segmentedTrackStyle } from './controlStyle'
 
 describe('chipLook · the tag toggle (app/add.tsx:473-483, app/phrase/[id].tsx:205-212)', () => {
   // `flexDirection`, `alignItems` and `gap` are the shared chip shape. `add.tsx` set all
@@ -262,5 +265,37 @@ describe('control tokens keep the value the screen had', () => {
   it('the tap floor and the selected border weight', () => {
     expect(MIN_TAP).toBe(44)
     expect(border).toEqual({ hairline: 1, selected: 1.5 })
+  })
+})
+
+describe('fieldLook · Account / Workbench chrome (account.tsx:862-871)', () => {
+  it('bordered idle matches the hand-rolled Account input', () => {
+    expect(field.minHeight).toBe(44)
+    expect(field.padding).toBe(space['3'])
+    expect(fieldLook(true)).toEqual({
+      input: {
+        minHeight: 44,
+        padding: space['3'],
+        color: ink.ink,
+        alignSelf: 'stretch',
+        borderWidth: 1,
+        borderColor: line.strong,
+        borderRadius: radius.lg,
+        backgroundColor: surface.card,
+      },
+    })
+  })
+
+  it('invalid uses the danger text token, not a literal', () => {
+    expect(fieldLook(true, true).input.borderColor).toBe(semantic.danger.text)
+  })
+
+  it('unbordered leaves Discover / sheet / Import wrappers to supply chrome', () => {
+    expect(fieldLook(false)).toEqual({
+      input: {
+        color: ink.ink,
+        alignSelf: 'stretch',
+      },
+    })
   })
 })
