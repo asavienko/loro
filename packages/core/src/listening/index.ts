@@ -1,5 +1,8 @@
 export {
   APPROVED_LISTENING_VOICES,
+  CATALOG_REFERENCE_VOICES,
+  CATALOG_TTS_MODEL_ID,
+  ELEVENLABS_MULTILINGUAL_V2,
   LISTENING_ASSET_CLASS,
   LISTENING_BUDGET_BYTES,
   LISTENING_CODEC,
@@ -13,7 +16,9 @@ export {
   LISTENING_SHARE_ENABLED,
   LISTENING_VOICE_DECISION,
   REFERENCE_ASSET_CLASS,
+  isCatalogReferenceVoice,
   type AudioAssetClass,
+  type CatalogReferenceVoice,
   type ListeningVoice,
   type ListeningVoiceDecision,
 } from './constants.js'

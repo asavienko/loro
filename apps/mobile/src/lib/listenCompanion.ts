@@ -153,8 +153,8 @@ export async function prepareListeningBatch(deps: PrepareListeningDeps): Promise
   progress: ListenProgress
   clips: readonly AudioCacheObject[]
 }> {
-  // Licensed generate reads LISTENING_VOICE_DECISION (empty = fail-closed).
-  // Tests and native-debug fixture seed may override voices/modelId/seedClip.
+  // Licensed generate reads LISTENING_VOICE_DECISION. Tests and native-debug fixture
+  // seed may override voices/modelId/seedClip. Q-22 share stays off.
   const voices = deps.voices ?? approvedListeningVoices(deps.locale)
   const modelId = deps.modelId === undefined ? LISTENING_MODEL_ID : deps.modelId
   const takes = planListeningBatch(deps.phrases, voices, deps.repeats)

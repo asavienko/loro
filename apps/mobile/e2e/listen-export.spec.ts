@@ -17,10 +17,13 @@ test('the listen companion is a Phrases utility with honest unavailable generate
   await expect(page.getByRole('button', { name: LISTEN_GENERATE })).toBeDisabled()
   await expect(page.getByRole('button', { name: LISTEN_LISTEN })).toBeDisabled()
   await expect(page.getByRole('button', { name: LISTEN_SHARE })).toBeDisabled()
-  await expect(page.getByText(LISTEN_STATUS['voices-unapproved'], { exact: true })).toBeVisible()
+  await expect(page.getByText(LISTEN_STATUS['voices-unapproved'], { exact: true })).toHaveCount(0)
+  await expect(page.getByText('On-device listening cache is not available here.')).toBeVisible()
+  await expect(page.getByText('Sara Martin 1')).toBeVisible()
+  await expect(page.getByText('Dante', { exact: true })).toBeVisible()
   await expect(page.getByText(LISTEN_STATUS['share-unavailable'])).toHaveCount(0)
   await expect(page.getByText(LISTEN_FIXTURE_NOTE)).toHaveCount(0)
-  await expect(page.getByText('No licensed listening voices are approved yet.')).toBeVisible()
+  await expect(page.getByText('No licensed listening voices are approved yet.')).toHaveCount(0)
 })
 
 test('Q-22 share stays unavailable while the share-ready fixture can show the gated control', async ({

@@ -17,7 +17,7 @@ import { fixtureListenView } from './listenFixtures'
 import { TtsRenderError } from './ttsRenderClient'
 
 describe('listening companion', () => {
-  it('keeps generate unavailable until Q-15 pins two licensed voices', () => {
+  it('enables generate once Q-15 pins two licensed voices and keeps Q-22 share closed', () => {
     const view = listenViewModel({
       phase: 'idle',
       locale: 'es-ES',
@@ -33,11 +33,11 @@ describe('listening companion', () => {
       progress: { done: 0, total: 0, failed: 0 },
       durationMs: null,
     })
-    expect(view.voices).toHaveLength(0)
-    expect(view.voices.length).toBeLessThan(LISTENING_MIN_VOICES)
-    expect(view.generateEnabled).toBe(false)
-    expect(view.blockers).toContain('voices-unapproved')
-    expect(view.blockers).toContain('model-unpinned')
+    expect(view.voices.length).toBeGreaterThanOrEqual(LISTENING_MIN_VOICES)
+    expect(view.voices.map((voice) => voice.name)).toEqual(['Sara Martin 1', 'Dante'])
+    expect(view.generateEnabled).toBe(true)
+    expect(view.blockers).not.toContain('voices-unapproved')
+    expect(view.blockers).not.toContain('model-unpinned')
     expect(LISTENING_SHARE_ENABLED).toBe(false)
     expect(view.shareEnabled).toBe(false)
   })

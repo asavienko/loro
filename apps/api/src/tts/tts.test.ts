@@ -6,7 +6,14 @@ import { Test } from '@nestjs/testing'
 import type { ExecutionContext, INestApplication } from '@nestjs/common'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { silenceWav } from '@loro/content/audio-duration'
-import { LISTENING_ASSET_CLASS, LISTENING_CODEC, REFERENCE_ASSET_CLASS } from '@loro/core'
+import {
+  CATALOG_REFERENCE_VOICES,
+  ELEVENLABS_MULTILINGUAL_V2,
+  LISTENING_ASSET_CLASS,
+  LISTENING_CODEC,
+  LISTENING_VOICE_DECISION,
+  REFERENCE_ASSET_CLASS,
+} from '@loro/core'
 import { TtsResponseSchema } from '@loro/core/api/draft'
 import { ProblemSchema } from '@loro/core/api/current'
 import { AuthGuard, type AuthenticatedRequest } from '../auth/auth.guard.js'
@@ -120,6 +127,41 @@ describe('gated POST /tts/render', () => {
           ...referenceBody,
           asset_class: LISTENING_ASSET_CLASS,
           voice_id: 'unapproved-voice',
+          model_id: ELEVENLABS_MULTILINGUAL_V2,
+        },
+      }),
+    ).rejects.toMatchObject({ code: 'PROVIDER_UNAVAILABLE' })
+    expect(synthesize).not.toHaveBeenCalled()
+  })
+
+  it('rejects a catalog reference id and flash model as listening without synthesizing', async () => {
+    const cacheDir = await mkdtemp(join(tmpdir(), 'loro-tts-'))
+    liveEnv(cacheDir)
+    const synthesize = vi.fn()
+    const tts = new TtsService(transport(synthesize), { now: () => 1 })
+    const listeningVoice = LISTENING_VOICE_DECISION.voices['es-ES'][0]
+    if (listeningVoice === undefined) throw new Error('expected pinned es-ES listening voice')
+    await expect(
+      tts.render({
+        userId: 'learner',
+        ip: '127.0.0.1',
+        body: {
+          ...referenceBody,
+          asset_class: LISTENING_ASSET_CLASS,
+          voice_id: CATALOG_REFERENCE_VOICES['es-ES'].id,
+          model_id: ELEVENLABS_MULTILINGUAL_V2,
+        },
+      }),
+    ).rejects.toMatchObject({ code: 'PROVIDER_UNAVAILABLE' })
+    await expect(
+      tts.render({
+        userId: 'learner',
+        ip: '127.0.0.1',
+        body: {
+          ...referenceBody,
+          asset_class: LISTENING_ASSET_CLASS,
+          voice_id: listeningVoice.id,
+          model_id: 'eleven_flash_v2_5',
         },
       }),
     ).rejects.toMatchObject({ code: 'PROVIDER_UNAVAILABLE' })

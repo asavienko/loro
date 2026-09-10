@@ -9,6 +9,7 @@ import {
   LISTENING_REPEATS_MAX,
   LISTENING_REPEATS_MIN,
   LISTENING_SHARE_ENABLED,
+  isCatalogReferenceVoice,
   type ListeningVoice,
 } from './constants.js'
 import { isLearnerAuthoredListeningText } from './identity.js'
@@ -37,6 +38,7 @@ export function selectLicensedListeningVoices(
   const voices: ListeningVoice[] = []
   for (const voice of roster) {
     if (!voice.licensed || voice.locale !== locale || voice.id.length === 0) continue
+    if (isCatalogReferenceVoice(voice.id)) continue
     if (seen.has(voice.id)) continue
     seen.add(voice.id)
     voices.push(voice)
@@ -180,7 +182,7 @@ export function listeningModelIsPinned(): boolean {
   return LISTENING_MODEL_ID !== null && LISTENING_MODEL_ID.length > 0
 }
 
-/** True only when Q-15 has pinned a non-empty model id that matches this request. */
+/** True only when the pinned listening model id matches this request. */
 export function isPinnedListeningModel(modelId: string): boolean {
   return listeningModelIsPinned() && LISTENING_MODEL_ID === modelId
 }

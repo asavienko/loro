@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest'
+import { TARGET_LOCALES } from '../domain/languages.js'
 import { REPEAT_TARGET, type PhraseState } from '../domain/phrase.js'
 import { catalogPhraseId, userPhraseId } from '../domain/ids.js'
 import {
   APPROVED_LISTENING_VOICES,
+  CATALOG_REFERENCE_VOICES,
+  CATALOG_TTS_MODEL_ID,
+  ELEVENLABS_MULTILINGUAL_V2,
   LISTENING_ASSET_CLASS,
   LISTENING_CODEC,
   LISTENING_MIN_VOICES,
@@ -12,6 +16,7 @@ import {
   LISTENING_VOICE_DECISION,
   REFERENCE_ASSET_CLASS,
   activeListeningPhrases,
+  approvedListeningVoices,
   canGenerateListening,
   canListenFromCache,
   canShareListening,
@@ -19,6 +24,7 @@ import {
   contentAddressFilename,
   contentAddressUri,
   isApprovedListeningVoice,
+  isCatalogReferenceVoice,
   isLearnerAuthoredListeningText,
   isPinnedListeningModel,
   listeningAllowlistReady,
@@ -31,6 +37,9 @@ import {
   planListeningBatch,
   selectLicensedListeningVoices,
 } from './index.js'
+
+/** Official default voice that expires 2026-12-31. Must never be a Loro pin. */
+const EXPIRED_DEFAULT_RACHEL = '21m00Tcm4TlvDq8ikWAM'
 
 const digestA = 'a'.repeat(64)
 const digestB = 'b'.repeat(64)
@@ -171,32 +180,46 @@ describe('AS-07 listening batch', () => {
     expect(new Set(batch.map((take) => take.phraseId)).size).toBe(1)
   })
 
-  it('fails closed without approved voices, native cache, or Q-22 share', () => {
-    expect(LISTENING_VOICE_DECISION.modelId).toBeNull()
-    expect(LISTENING_VOICE_DECISION.voices['es-ES']).toHaveLength(0)
+  it('pins one catalog reference voice per locale, forever distinct from listening', () => {
+    expect(CATALOG_TTS_MODEL_ID).toBe(ELEVENLABS_MULTILINGUAL_V2)
+    const catalogIds = TARGET_LOCALES.map((locale) => CATALOG_REFERENCE_VOICES[locale].id)
+    expect(new Set(catalogIds).size).toBe(TARGET_LOCALES.length)
+    for (const locale of TARGET_LOCALES) {
+      const voice = CATALOG_REFERENCE_VOICES[locale]
+      expect(voice.locale).toBe(locale)
+      expect(voice.id.length).toBeGreaterThanOrEqual(20)
+      expect(voice.name.length).toBeGreaterThan(0)
+      expect(isCatalogReferenceVoice(voice.id)).toBe(true)
+    }
+    expect(isCatalogReferenceVoice(EXPIRED_DEFAULT_RACHEL)).toBe(false)
+  })
+
+  it('pins ≥2 licensed listening voices per locale on eleven_multilingual_v2', () => {
+    expect(LISTENING_VOICE_DECISION.modelId).toBe(ELEVENLABS_MULTILINGUAL_V2)
+    expect(LISTENING_MODEL_ID).toBe(ELEVENLABS_MULTILINGUAL_V2)
     expect(APPROVED_LISTENING_VOICES).toBe(LISTENING_VOICE_DECISION.voices)
-    expect(LISTENING_MODEL_ID).toBe(LISTENING_VOICE_DECISION.modelId)
-    expect(isPinnedListeningModel('eleven_multilingual_v2')).toBe(false)
-    expect(listeningAllowlistReady('es-ES')).toBe(false)
-    expect(listeningAllowlistReady('bg-BG')).toBe(false)
-    expect(listeningAllowlistReady('ru-RU')).toBe(false)
-    expect(isApprovedListeningVoice('es-ES', '21m00Tcm4TlvDq8ikWAM')).toBe(false)
+    expect(isPinnedListeningModel(ELEVENLABS_MULTILINGUAL_V2)).toBe(true)
+    expect(isPinnedListeningModel('eleven_flash_v2_5')).toBe(false)
     expect(LISTENING_MIN_VOICES).toBe(2)
     expect(canShareListening()).toBe(false)
     expect(LISTENING_SHARE_ENABLED).toBe(false)
-    expect(
-      listeningBlockers({
-        phraseCount: 10,
-        voiceCount: 0,
-        modelPinned: false,
-        network: true,
-        configured: false,
-        nativeCache: false,
-        sessionBusy: false,
-        diskFull: false,
-        quotaExceeded: false,
-      }),
-    ).toEqual(['voices-unapproved', 'model-unpinned', 'not-configured', 'native-unavailable'])
+    const listeningIds: string[] = []
+    for (const locale of TARGET_LOCALES) {
+      const voices = approvedListeningVoices(locale)
+      expect(listeningAllowlistReady(locale)).toBe(true)
+      expect(voices.length).toBeGreaterThanOrEqual(LISTENING_MIN_VOICES)
+      expect(new Set(voices.map((voice) => voice.id)).size).toBe(voices.length)
+      for (const voice of voices) {
+        expect(voice.licensed).toBe(true)
+        expect(voice.locale).toBe(locale)
+        expect(isCatalogReferenceVoice(voice.id)).toBe(false)
+        expect(isApprovedListeningVoice(locale, voice.id)).toBe(true)
+        listeningIds.push(voice.id)
+      }
+      expect(isApprovedListeningVoice(locale, CATALOG_REFERENCE_VOICES[locale].id)).toBe(false)
+      expect(isApprovedListeningVoice(locale, EXPIRED_DEFAULT_RACHEL)).toBe(false)
+    }
+    expect(new Set(listeningIds).size).toBe(listeningIds.length)
     expect(
       canGenerateListening({
         phraseCount: 10,
@@ -219,13 +242,33 @@ describe('AS-07 listening batch', () => {
     expect(listeningShareFilename('es-ES', '2026-09-09')).toBe('loro-es-ES-2026-09-09-listen.m4a')
   })
 
+  it('still reports empty-roster blockers and never enables Q-22 share', () => {
+    expect(
+      listeningBlockers({
+        phraseCount: 10,
+        voiceCount: 0,
+        modelPinned: false,
+        network: true,
+        configured: false,
+        nativeCache: false,
+        sessionBusy: false,
+        diskFull: false,
+        quotaExceeded: false,
+      }),
+    ).toEqual(['voices-unapproved', 'model-unpinned', 'not-configured', 'native-unavailable'])
+    expect(LISTENING_SHARE_ENABLED).toBe(false)
+    expect(canShareListening()).toBe(false)
+  })
+
   it('counts only licensed, locale-matching, unique ids toward the allowlist', () => {
+    const catalogEs = CATALOG_REFERENCE_VOICES['es-ES'].id
     const mixed = [
       { id: 'voice-a', locale: 'es-ES' as const, name: 'A', licensed: true },
       { id: 'voice-a', locale: 'es-ES' as const, name: 'A dup', licensed: true },
       { id: 'voice-b', locale: 'es-ES' as const, name: 'B', licensed: false },
       { id: 'voice-c', locale: 'bg-BG' as const, name: 'C', licensed: true },
       { id: '', locale: 'es-ES' as const, name: 'empty', licensed: true },
+      { id: catalogEs, locale: 'es-ES' as const, name: 'Aaron', licensed: true },
       { id: 'voice-d', locale: 'es-ES' as const, name: 'D', licensed: true },
     ]
     expect(selectLicensedListeningVoices(mixed, 'es-ES').map((voice) => voice.id)).toEqual([
