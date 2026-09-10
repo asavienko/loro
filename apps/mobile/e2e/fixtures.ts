@@ -2,6 +2,7 @@ import { test as base, expect, type Page } from '@playwright/test'
 import { todayMarker } from './helpers'
 import { consumeExpectedResourceError } from './expectedResourceErrors'
 import { mockAccountService } from './accountFlow'
+import { ensureOpenWaveClock } from './clock'
 
 export const test = base.extend<{ consoleHealth: undefined; accountApi: undefined }>({
   consoleHealth: [
@@ -66,6 +67,7 @@ export async function onboard(page: Page, choices: OnboardingChoices = {}): Prom
     packs = ['Café & ordering', 'Getting around'],
   } = choices
 
+  await ensureOpenWaveClock(page)
   await page.goto('/')
   await expect(page).toHaveURL(/\/onboarding$/)
   await page.getByRole('button', { name: "Let's go →" }).click()
