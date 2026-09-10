@@ -22,9 +22,9 @@ relative, so copy or zip either folder — or the whole run — and `index.html`
 gallery links to sibling files rather than inlining them. Screen HTML files can also be copied on
 their own. Open the run's root `index.html` to choose between the two artifacts. Set `LORO_E2E_PORT`
 when 8086 is occupied. The collection uses the same browser state flows and mocked account transport
-as the learner suite; it does not contact the live API or include
-the developer workbench, native screens, or authored blueprint mockups. A failed or interrupted run
-still writes a manifest and both galleries showing which states did not produce images or HTML.
+as the learner suite; it does not contact the live API or include the developer workbench, native
+screens, or authored blueprint mockups. A failed or interrupted run still writes a manifest and both
+galleries showing which states did not produce images or HTML.
 
 The workbench suite is separate on purpose. `/dev/tokens` is developer tooling rather than a
 learner-visible state, so it does not belong in `states.ts` and does not inflate learner route,
