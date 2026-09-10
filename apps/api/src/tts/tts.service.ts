@@ -11,10 +11,9 @@ import { audioDurationMs } from '@loro/content/audio-duration'
 import {
   LISTENING_ASSET_CLASS,
   LISTENING_MIN_VOICES,
-  LISTENING_MODEL_ID,
   approvedListeningVoices,
   isApprovedListeningVoice,
-  listeningModelIsPinned,
+  isPinnedListeningModel,
   normalizeListeningText,
 } from '@loro/core'
 import {
@@ -149,7 +148,7 @@ export class TtsService {
       if (roster.length < LISTENING_MIN_VOICES) {
         throw new LoroError('PROVIDER_UNAVAILABLE', 'Licensed listening voices are not approved')
       }
-      if (!listeningModelIsPinned() || request.model_id !== LISTENING_MODEL_ID) {
+      if (!isPinnedListeningModel(request.model_id)) {
         throw new LoroError('PROVIDER_UNAVAILABLE', 'Listening model is not pinned')
       }
       if (!isApprovedListeningVoice(request.lang, request.voice_id)) {
