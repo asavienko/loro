@@ -11,9 +11,12 @@
   `playFile`/download parity, the unsigned Q-15 listening-voice packet, and Q-22 mux/share
   fail-closed are implemented. Production licensed voices remain ⛔
   [Q-15](../docs/decisions/open-questions.md#q-15). Share-out-of-app remains ⛔
-  [Q-22](../docs/decisions/open-questions.md#q-22). An Android emulator in airplane mode previously
-  played a labeled fixture after a `store()` seed; native HTTP download+hash+`playFile` evidence
-  is the follow-up on the same AVD. That is not physical-device 58/72 and not licensed Q-15 audio.
+  [Q-22](../docs/decisions/open-questions.md#q-22). On the `loro_listen` API 36 emulator
+  (`emulator-5554`, `app.loro.android.dev`), native `download()` fetched the labeled silent AAC
+  over loopback HTTP (20× `fixture-http-download` + sha256
+  `7450e588d78b20dabaccb960a9860951f2374de5d18756751f358578727cb6b0`), then airplane mode
+  (`ping 8.8.8.8` unreachable) replayed that `file://` clip via `playFile`. That is not
+  physical-device 58/72 and not licensed Q-15 audio.
   Device TTS is a labeled fallback, not the primary path.
   `CI_BASE_REF=origin/main pnpm ci:local` passed at `bcd35dc` (learner E2E 197, workbench,
   production-e2e, mobile-bundle, API image). Item 7 remains open.
@@ -25,7 +28,8 @@
 - **Reviewed:** 2026-09-09 specification against `d153d82`; implementation pass 2026-09-09 for
   contract, cache, composer, restore, and fail-closed transports; 2026-09-10 checksum-on-lookup,
   development fixture seed, file-URI generate/cache/listen tests, emulator airplane-mode fixture
-  listen, and `CI_BASE_REF=origin/main pnpm ci:local` green at `bcd35dc`. Live licensed voices,
+  listen, loopback HTTP download+hash+`playFile` on `loro_listen` (2026-09-10), and
+  `CI_BASE_REF=origin/main pnpm ci:local` green at `bcd35dc`. Live licensed voices,
   share-out-of-app, and physical-device 58/72 remain gated.
 
 ## Outcome
@@ -95,10 +99,11 @@ so the token cannot hop hosts. Node tests prove prepare → HTTP download → ch
 listen-export E2E passed inside `pnpm ci:local` (197 passed, 2026-09-10).
 `CI_BASE_REF=origin/main pnpm ci:local` passed at `bcd35dc` after Docker install, a Linux workbench
 310% snapshot refresh (310×442), and bundling workspace TypeScript into the API image. An Android
-emulator (`loro_listen`, API 36, airplane mode via `cmd connectivity airplane-mode enable`)
-generated the labeled fixture, played it from cache (`playFile` / MediaPlayer), and still showed
-ready-to-listen after `am force-stop`. That is not physical-device 58/72 and not Q-15 licensed
-audio.
+emulator (`loro_listen`, API 36) later exercised the real cache path: wipe cache, generate
+via loopback HTTP `download()` + sha256 verify + listening pin, then
+`cmd connectivity airplane-mode enable` and `playFile` of
+`file://…/sha256/7450e588….m4a`. Copy still labels that clip a development snapshot. That is not
+physical-device 58/72 and not Q-15 licensed audio.
 
 ## Product shape (working assumptions)
 
@@ -280,8 +285,9 @@ API exists; that API still returns a file URI only.
        against recorded responses; normal CI must not call ElevenLabs.
 4. [x] Consume plan 62’s cache downloader: atomic write, sha256 verify, file URI out, listening pin
        class, named budget, resume, cancel, disk-full. Pause or refuse if an in-app play/listen
-       session is active. An Android emulator airplane-mode listen of a labeled development fixture
-       cache survived force-stop (2026-09-10). Physical-device 58/72 and licensed Q-15 audio remain.
+       session is active. An Android emulator (`loro_listen`) downloaded the labeled fixture over
+       loopback HTTP, verified sha256, pinned listening, and replayed `file://` in airplane mode
+       (2026-09-10). Physical-device 58/72 and licensed Q-15 audio remain.
 5. [x] Build the utility UI: course-scoped phrase count, repeat stepper (2–5), licensed voice roster
        (real pinned names/ids after Q-15; honest empty before), generate/prepare with progress,
        cancel, resume from partial, in-app listen from cache, share (hidden or disabled with Q-22
@@ -292,10 +298,10 @@ API exists; that API still returns a file URI only.
 6. [x] Add learner E2E states for empty course, needs-network cache miss, generating, partial
        failure, ready-to-listen (cache complete), in-app playing, share unavailable (Q-22), share
        ready (when allowed), cancellation, disk-full, session-busy, quota, and voices-single.
-       Browser suites cover copy, a11y and text scale. An emulator airplane-mode listen of a
-       previously cached **development fixture** batch is evidenced; physical-device 58/72 and
-       licensed Q-15 audio remain. Native share of the concatenated file is the acceptance for Q-22
-       export.
+       Browser suites cover copy, a11y and text scale. Emulator airplane-mode listen of a
+       **HTTP-downloaded** development fixture batch is evidenced (`playFile` from `sha256/{hex}.m4a`
+       while `ping 8.8.8.8` is unreachable). Physical-device 58/72 and licensed Q-15 audio remain.
+       Native share of the concatenated file is the acceptance for Q-22 export.
 7. [ ] After Q-15: pin ≥2 listening voice IDs per enabled target, licence, budget, and pronunciation
        review **without** replacing the canonical reference voice, using the
        [listening-voice packet](../docs/decisions/listening-voice-packet.md). After Q-22: enable
@@ -332,10 +338,9 @@ API exists; that API still returns a file URI only.
    landed. Prepare cannot mint licensed clips until Q-15 pins ≥2 voices and a model. Device TTS
    fallback stays labeled. Adapter fixtures must not be presented as licensed quality. Live
    ElevenLabs must not run in CI.
-3. **Airplane-mode in-app listen.** Emulator evidence (2026-09-10): airplane mode, debug APK with
-   embedded bundle, labeled fixture generate, `playFile` from cache, force-stop, cold start still
-   ready-to-listen. This does **not** require Q-22. Physical-device 58/72 and licensed Q-15 generate
-   remain open.
+3. **Airplane-mode in-app listen.** Emulator evidence (2026-09-10): debug APK with embedded bundle,
+   loopback HTTP fixture `download()` + sha256 + pin, airplane mode, `playFile` from `file://`.
+   This does **not** require Q-22. Physical-device 58/72 and licensed Q-15 generate remain open.
 4. **Concatenated share (⛔ Q-22).** Native mux of cached clips exists behind
    `LISTENING_SHARE_ENABLED` and stays false. Share sheet copy is unavailable. Blocked until
    licensed neural audio may leave the app as a learner-owned file.
