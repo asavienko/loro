@@ -68,19 +68,13 @@ export function ToastHost() {
 }
 
 const s = StyleSheet.create({
-  wrap: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-    overflow: 'hidden',
-  },
+  wrap: { position: 'absolute', left: 0, right: 0, alignItems: 'center' },
   /**
    * Cap width on Arrival, not the pill. Percentage `maxWidth` on the pill resolved
    * against Arrival's shrink-wrapped width and was ignored, so `popIn`'s 8% overshoot
    * pushed phrase-detail toasts to 398 px and failed the text-scale sweep.
    */
-  arrival: { maxWidth: '92%', alignSelf: 'center' },
+  arrival: { maxWidth: '92%', alignSelf: 'center', overflow: 'visible' },
   /**
    * The one control that ever appears in a toast, and it was 47×33 with `hitSlop` counted —
    * under the 44 px floor, on the app's only undo. Nothing caught it because no declared state
