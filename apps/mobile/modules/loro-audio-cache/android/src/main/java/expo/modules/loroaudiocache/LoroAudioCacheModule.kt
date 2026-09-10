@@ -60,6 +60,7 @@ class LoroAudioCacheModule : Module() {
     AsyncFunction("saveListeningBatch") { clips: List<Map<String, Any?>> -> saveBatch(clips) }
     AsyncFunction("loadListeningBatch") { loadBatch() }
     AsyncFunction("installDevFixture") { logicalKey: String -> installDevFixture(logicalKey) }
+    Function("isDebuggable") { isDebuggable() }
   }
 
   private fun download(options: DownloadOptions): Map<String, Any?> {
@@ -118,9 +119,13 @@ class LoroAudioCacheModule : Module() {
     return payload(file, digest, row.optInt("ms").takeIf { row.has("ms") && !row.isNull("ms") })
   }
 
-  private fun installDevFixture(logicalKey: String): Map<String, Any?> {
+  private fun isDebuggable(): Boolean {
     val flags = appContext.reactContext?.applicationInfo?.flags ?: 0
-    if (flags and ApplicationInfo.FLAG_DEBUGGABLE == 0) throw failure("failed")
+    return flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
+  }
+
+  private fun installDevFixture(logicalKey: String): Map<String, Any?> {
+    if (!isDebuggable()) throw failure("failed")
     val bytes = android.util.Base64.decode(FIXTURE_BASE64, android.util.Base64.DEFAULT)
     val digest = sha256(bytes)
     return store(bytes, digest, logicalKey, "listening")
@@ -188,8 +193,8 @@ class LoroAudioCacheModule : Module() {
     try {
       options.fileUris.forEachIndexed { index, fileUri ->
         val uri = Uri.parse(fileUri)
-        val path = uri.path
-        if (uri.scheme != "file" || path.isNullOrBlank()) throw failure("invalid-url")
+        val path = uri.path ?: throw failure("invalid-url")
+        if (uri.scheme != "file" || path.isBlank()) throw failure("invalid-url")
         val extractor = MediaExtractor()
         extractor.setDataSource(path)
         val audioIndex = (0 until extractor.trackCount).firstOrNull { trackIndex ->
