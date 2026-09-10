@@ -17,7 +17,13 @@ authoritative. A request to review or organize plans does not authorize implemen
   worktrees. Allocate above the highest assigned number across those trees; never reuse gaps or
   hardcode the next ID in this skill. Use `plans/NN-topic.md`, include requirement IDs, scope,
   dependencies and acceptance criteria, and add its row to the active index. Durable specifications
-  belong in `docs/`. A review document is not a numbered plan.
+  belong in `docs/`. A review document is not a numbered plan. Hygiene, Field/ListRow extracts,
+  snippets and UniFFI `--check` after the 2026-09-09 reviews are
+  [archived plan 100](../../../../plans/archive/2026-09-10/100-hygiene-reuse-and-tooling.md) — do
+  not open a second hygiene plan. Active
+  [`100-ui-design-system.md`](../../../../plans/100-ui-design-system.md) is the motion/gesture kit
+  under the same number (unresolved collision). Plan 99 is the listening companion. Recipe prefixes
+  and reuse gates are [hygiene](hygiene.md).
 - Cursor prompts that say "implement the attached plan" and "do not edit the plan file" are
   authorization to implement, not to rewrite the plan.
 

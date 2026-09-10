@@ -1,4 +1,5 @@
 import { expect, test } from '../fixtures'
+import { fillField } from '../helpers'
 
 const TOKEN_ROW = '[data-testid="token-row"]'
 
@@ -12,8 +13,8 @@ test('F-05: enumerates and searches generated tokens', async ({ page }) => {
   const initialCount = await rows.count()
   expect(initialCount, 'the workbench must enumerate generated token rows').toBeGreaterThan(0)
 
-  const search = page.getByRole('textbox', { name: 'Search tokens' })
-  await search.fill('accent')
+  await expect(page.getByRole('textbox', { name: 'Search tokens' })).toBeVisible()
+  await fillField(page, 'Search tokens', 'accent')
 
   await expect(rows.first()).toBeVisible()
   expect(await rows.count()).toBeLessThan(initialCount)

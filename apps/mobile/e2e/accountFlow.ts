@@ -1,6 +1,7 @@
 /** F-01/F-04. Simulated provider transport only; production has no test identity or bypass. */
 import { expect, type Page, type Route } from '@playwright/test'
 import { expectResourceError } from './expectedResourceErrors'
+import { fillField } from './helpers'
 
 export const ACCOUNT_LABEL = 'Sign in & sync'
 export const ACCOUNT_API = 'https://auth.loro.test/v1'
@@ -215,7 +216,7 @@ export async function openAccount(page: Page): Promise<void> {
 }
 export async function requestCode(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Continue with email', exact: true }).click()
-  await page.getByRole('textbox', { name: 'Email address' }).fill('learner@example.com')
+  await fillField(page, 'Email address', 'learner@example.com')
   await page.getByRole('button', { name: 'Send sign-in code', exact: true }).click()
   await expect(page.getByRole('textbox', { name: 'Sign-in code' })).toBeVisible()
 }
@@ -227,7 +228,7 @@ export async function backFromCodeToEmail(page: Page): Promise<void> {
   )
 }
 export async function finishSignIn(page: Page, expectSync = true): Promise<void> {
-  await page.getByRole('textbox', { name: 'Sign-in code' }).fill('123456')
+  await fillField(page, 'Sign-in code', '123456')
   await page.getByRole('button', { name: 'Verify and sign in', exact: true }).click()
   await expect(page.getByText('You’re signed in', { exact: true })).toBeVisible()
   await page.getByRole('button', { name: 'Back to practice', exact: true }).click()
@@ -303,11 +304,15 @@ export async function reachAccount(
     await requestCode(page)
     if (scenario === 'code') return service
     if (scenario === 'invalid-code') {
-      await page.getByRole('textbox', { name: 'Sign-in code' }).fill('000000')
+      await fillField(page, 'Sign-in code', '000000')
       await page.getByRole('button', { name: 'Verify and sign in', exact: true }).click()
       await expect(
         page.getByText('That code didn’t work. Try again or request a new one.'),
       ).toBeVisible()
+      await expect(page.getByRole('textbox', { name: 'Sign-in code' })).toHaveAttribute(
+        'aria-invalid',
+        'true',
+      )
       return service
     }
     await finishSignIn(page, scenario !== 'sync-unavailable' && scenario !== 'sync-rejected')

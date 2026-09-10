@@ -6,7 +6,7 @@ const port = Number(process.env.LORO_E2E_PORT ?? 8082)
 
 export default defineConfig({
   testDir: '.',
-  testIgnore: ['production-unavailable.spec.ts', 'workbench/**'],
+  testIgnore: ['production-unavailable.spec.ts', 'workbench/**', 'screenshots-artifacts.test.mjs'],
   outputDir: '../../../test-results/mobile-e2e',
   ...sharedTiming,
   reporter: [

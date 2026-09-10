@@ -47,6 +47,7 @@ fi
 command -v adb >/dev/null && ok "android sdk" || warn "Android SDK not found — you won't be able to build for Android."
 command -v docker >/dev/null && ok "docker" || warn "Docker not found — needed for the local API stack."
 command -v watchman >/dev/null || warn "watchman missing (recommended): brew install watchman"
+command -v gitleaks >/dev/null || warn "gitleaks missing (required to commit): brew install gitleaks"
 
 # ─────────────────────────────────────────────────────────────
 step "Installing dependencies"

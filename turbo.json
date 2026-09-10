@@ -3,6 +3,10 @@
   "ui": "tui",
   "globalDependencies": ["tsconfig.base.json", ".nvmrc"],
   "globalEnv": ["NODE_ENV", "CI"],
+  // Strict env mode hides rustup when CARGO_HOME/RUSTUP_HOME are not ~/.cargo.
+  // Pass the homes, not RUSTUP_TOOLCHAIN: a stale override (1.83 here) would
+  // hide the crate's rust-version 1.88 default.
+  "globalPassThroughEnv": ["CARGO_HOME", "RUSTUP_HOME"],
   "tasks": {
     "core-rs:build": {
       "inputs": ["packages/core-rs/src/**", "packages/core-rs/Cargo.toml", "packages/core-rs/*.udl"],

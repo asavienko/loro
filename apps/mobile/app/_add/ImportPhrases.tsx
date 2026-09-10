@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { StyleSheet, TextInput, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import * as DocumentPicker from 'expo-document-picker'
 import { File as ExpoFile } from 'expo-file-system'
 import {
@@ -12,7 +12,7 @@ import {
 import type { DisplayPhrase as CatalogPhrase } from '../../src/store/learningCatalog'
 import { ownedTargetTexts } from './ownedPhrases'
 import { targetLanguageInputProps } from './targetLanguage'
-import { Button, Card, SectionHeader, Stack, Text } from '../../src/ui/primitives'
+import { Button, Card, Field, SectionHeader, Stack, Text } from '../../src/ui/primitives'
 import { border, ink, line, semantic, space } from '../../src/ui/theme'
 import { copy } from '../../src/lib/copy'
 import { useLocale } from '../../src/lib/i18n'
@@ -224,7 +224,7 @@ export function ImportPhrases({
         </Text>
       </Stack>
       <Card padding={0} style={s.importInputCard}>
-        <TextInput
+        <Field
           multiline
           value={input}
           onChangeText={updateInput}
@@ -294,7 +294,7 @@ export function ImportPhrases({
                 style={candidate.issue === null ? undefined : s.importIssue}
               >
                 <Stack gap={space['2']}>
-                  <TextInput
+                  <Field
                     value={candidate.targetText}
                     onChangeText={(value) => {
                       update(index, 'targetText', value)
@@ -305,7 +305,7 @@ export function ImportPhrases({
                     {...targetLanguageInputProps()}
                     style={s.reviewInput}
                   />
-                  <TextInput
+                  <Field
                     value={candidate.translation}
                     onChangeText={(value) => {
                       update(index, 'translation', value)

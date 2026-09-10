@@ -10,7 +10,7 @@ import { audioSpeech, audioPlaybackNote, useAudioSpeech } from '../../src/lib/au
 import { deviceClock } from '../../src/lib/clock'
 import { newId } from '../../src/lib/ids'
 import { engineContext, speakEngine, toView, useApp, type PhraseView } from '../../src/store'
-import { AudioControls } from '../../src/ui/components/AudioControls'
+import { AudioControls } from '../../src/ui/components'
 import {
   Button,
   Card,

@@ -81,8 +81,10 @@ maestro-debug-output/
 # ── editors ──
 .idea/
 .vscode/*
+!.vscode/
 !.vscode/settings.json
 !.vscode/extensions.json
+!.vscode/loro.code-snippets
 *.swp
 *.swo
 

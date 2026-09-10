@@ -9,26 +9,31 @@ and untracked `plans/` files before allocating; the "next is N" sentence can lag
 reused; 49 remains an existing gap. When a plan finishes, archive it in the same change and list it
 only in the archive index.
 
-**Number collision (unresolved):** main archived account-sign-in as plan 96. Phrase-music lives at
-[`96-phrase-music-generation.md`](96-phrase-music-generation.md) under the same ID. Both rows stay
-until Product assigns a new number; do not silently reuse or drop either.
+**Number collisions (unresolved):** main archived account-sign-in as plan 96. Phrase-music lives at
+[`96-phrase-music-generation.md`](96-phrase-music-generation.md) under the same ID. Main also
+archived hygiene as plan 100
+([`100-hygiene-reuse-and-tooling.md`](archive/2026-09-10/100-hygiene-reuse-and-tooling.md)); the
+shared interaction kit lives at [`100-ui-design-system.md`](100-ui-design-system.md) under the same
+ID. All colliding rows stay until Product assigns a new number; do not silently reuse or drop
+either.
 
 Implemented-slice owners from 56–68, 70–73, 75–77, 80–82, 86–88, 90 and 93–96 are stored in
 [the 2026-09-09 archive](archive/2026-09-09/README.md) at user request. Their partial statuses and
 outstanding scope remain indexed below; archiving does not imply completion. Only the still-unbuilt
 or decision-gated files 69, 74, 78, 83, 96 (phrase-music), 97, 98, 99 and 100 remain in this
-directory.
+directory. Hygiene plan 100 is archived under the same number.
 
 The [post-main review](../docs/reviews/2026-09-09-post-main-plan-review.md) records the six runtime
 and validation findings as fixed, including the follow-up Refrain completion and touch-target
-repairs. No additional whole plan meets its acceptance criteria. Delivered implementation slices are
-recorded in the [dated archive](archive/2026-09-09/IMPLEMENTED-SLICES.md); all 39 remaining-work
-owners are retained, including [99](99-batch-phrase-audio-export.md) for online-first listening
-generation and on-device cache (share-out-of-app still ⛔ Q-22) and
-[phrase-music](96-phrase-music-generation.md). [100](100-ui-design-system.md) owns the shared
-interaction kit (Reanimated motion adapter, gesture catalog, remaining-screen primitives) that those
-later surfaces consume. Continue with device/provider acceptance, then integrate the remaining
-daily-loop, Review, content and lifecycle slices.
+repairs. [Archived plan 100](archive/2026-09-10/100-hygiene-reuse-and-tooling.md) met its hygiene
+acceptance. No additional whole plan meets its product acceptance criteria. Delivered implementation
+slices are recorded in the [dated archive](archive/2026-09-09/IMPLEMENTED-SLICES.md); all
+remaining-work owners are retained, including [99](99-batch-phrase-audio-export.md) for online-first
+listening generation and on-device cache (share-out-of-app still ⛔ Q-22),
+[phrase-music](96-phrase-music-generation.md), and [100](100-ui-design-system.md) for the shared
+interaction kit (Reanimated motion adapter, gesture catalog, remaining-screen primitives) that later
+surfaces consume. Continue with device/provider acceptance, then integrate the remaining daily-loop,
+Review, content and lifecycle slices.
 
 The [2026-09-09 implementation review](../docs/reviews/2026-09-09-twenty-plan-implementation.md)
 records changes requested after the next twenty bounded slices. Each selected plan remains partial;
@@ -42,7 +47,8 @@ platform/device acceptance remains separate.
 The
 [whole-project improvement assessment](../docs/reviews/2026-09-09-project-improvement-assessment.md)
 covers remaining refactors, the keep/adopt/avoid tool matrix for every package, and practices that
-are enforced versus stale. It does not open a new plan. The
+are enforced versus stale. Executable hygiene from those reviews is
+[archived plan 100](archive/2026-09-10/100-hygiene-reuse-and-tooling.md). The
 [refactoring-strategies review](../docs/reviews/2026-09-09-refactoring-strategies.md) inventories
 structural debt in existing code and separates it from unfinished plan work. The
 [native-libraries companion](../docs/reviews/2026-09-09-native-libraries-and-approaches.md) maps
@@ -146,6 +152,7 @@ Dependencies refer to the named deliverable slice, not automatically the whole p
 72 supplies shared harnesses to features and consumes their release evidence; it must not create a
 feature↔release-completion cycle. See each plan's checkboxes for executable tasks and acceptance.
 
+<!-- prettier-ignore -->
 | Plan                                                                       | Remaining outcome                                                                | Milestone   | Status / blocker                                                                                                                           | Prerequisites                                                                          |
 | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------- |
 | [56](archive/2026-09-09/56-navigation-failure-and-input-shell.md)          | Route laws, recovery, keyboard and scalable lists                                | M1          | 🟡 Registry, escapes and route/state drift gate done; shell remains                                                                        | 53/55/79/84 ✅; 58 for device proof                                                    |
@@ -187,7 +194,7 @@ feature↔release-completion cycle. See each plan's checkboxes for executable ta
 | [97](97-generative-discover-and-phrase-reach.md)                           | Guarded generative Discover reach and shared add-handoff                         | M3          | 🟡 Own-phrase floor, bundled suggestions and stub suggest exist; Q-21 gates live traffic                                                   | 59/61; 76/86 live path; 82/83 consume handoff; Q-21                                    |
 | [98](98-voice-and-tts-integration.md)                                      | ElevenLabs TTS, catalog render and device-TTS fallback                           | M1/M2       | 🟡 Adapter/render/gated API/file playback in progress; Q-15 catalog pins filled; live seed/listen remain                                   | 86/61/62 slices; Q-15 live seed                                                        |
 | [99](99-batch-phrase-audio-export.md)                                      | Online multi-voice listen cache; optional share of concatenated clips            | M2          | 🟡 Composer/cache/E2E/emulator fixture; Q-15 pins filled; ⛔ pronunciation review; ⛔ Q-22; physical 58/72                                 | 56/81 route; 59 phrases; 62 cache/session; 86/61/66/98 render; Q-15/Q-22               |
-| [100](100-ui-design-system.md)                                             | Shared UI interaction kit: motion adapter, gestures, remaining-screen primitives | M1/M2       | 🟡 Adapter/Pressable/Sheet/`sheetUp`/signature primitives on real routes; composites wait for a second caller; device 60 fps remains 58/72 | ADR-0013 tokens; 57 fonts/haptics/dark; 80 specimens; 93 pull laws; 56/81 lists/chrome |
+| [100](100-ui-design-system.md)                                             | Shared UI interaction kit: motion adapter, gestures, remaining-screen primitives | M1/M2       | 🟡 Adapter/Pressable/Sheet/`sheetUp`/signature primitives on real routes; composites wait for a second caller; device 60 fps remains 58/72; **ID collides with archived hygiene 100** | ADR-0013 tokens; 57 fonts/haptics/dark; 80 specimens; 93 pull laws; 56/81 lists/chrome |
 
 Plan 88 owns the selected AWS testing profile and
 [operations runbook](../docs/runbooks/backend-testing.md); plan 73 retains production operations.
@@ -200,11 +207,12 @@ Render testing recommendation in 86 is superseded by 88.
   tests.
 - Keep one owner per behavior: 56 route policy, 81 chrome; 59 durable checkpoints, 64 wave
   transitions; 66 server cursors, 68 client convergence; 86 vendor controls, 76/82/97 product AI; 99
-  listening-class cache and companion UX, 62 in-app playback/download cache, 67 JSON account export;
-  100 shared motion/gesture/primitive kit, 57 fonts/haptics/dark, 80 workbench specimens, 93
-  spine/sheet pull laws. Archived plan 96 remains the account sign-in screens. Active
-  [`96-phrase-music-generation.md`](96-phrase-music-generation.md) is the phrase-song garnish under
-  the same number (unresolved collision; do not reuse or drop either).
+  listening-class cache and companion UX, archived 100 for Field/ListRow/tooling, active 100 for the
+  shared motion/gesture/primitive kit, 62 in-app playback/download cache, 67 JSON account export, 57
+  fonts/haptics/dark, 80 workbench specimens, 93 spine/sheet pull laws. Archived plan 96 remains the
+  account sign-in screens. Active [`96-phrase-music-generation.md`](96-phrase-music-generation.md)
+  is the phrase-song garnish under the same number (unresolved collisions on 96 and 100; do not
+  reuse or drop either).
 - Future surfaces consume the selected language pair and real capability states. Preserve personal
   meaning language, course isolation and global streak semantics; never silently substitute Spanish.
 - Every new learner state lands with its manifest row and E2E checks. Native behavior requires
