@@ -8,9 +8,7 @@ export const ACCOUNT_API = 'https://auth.loro.test/v1'
 /** Metro inlines `apps/mobile/.env` (`http://localhost:3000/v1`) into the web bundle. */
 function isE2eAccountApi(url: URL): boolean {
   if (url.hostname === 'auth.loro.test') return true
-  return (
-    url.port === '3000' && (url.hostname === 'localhost' || url.hostname === '127.0.0.1')
-  )
+  return url.port === '3000' && (url.hostname === 'localhost' || url.hostname === '127.0.0.1')
 }
 
 const ACCOUNT_ROUTE_GLOBS = [

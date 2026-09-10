@@ -187,14 +187,14 @@ The busiest screen in the app. Header shows a live "_N_ in stream" pill.
   4. otherwise → `Popular starters`
 - **Add your own** — appears when the query is ≥2 chars and doesn't exactly match a library or
   already-owned phrase. Rendered as a distinct accented row above the suggestions
-  (`Loro.dc.html:319–323`). Plan 97 implements this floor (P2-07); the query opens the tagging
-  sheet with editable target and meaning. A confirmed add always clears the query
-  (`Loro.dc.html:2325`); custom keeps the current association theme.
-- **Nearest scenario** — a non-LLM hint when the query clearly matches an authored scenario label
-  or alias. Tapping it uses the existing scenario chip path.
+  (`Loro.dc.html:319–323`). Plan 97 implements this floor (P2-07); the query opens the tagging sheet
+  with editable target and meaning. A confirmed add always clears the query (`Loro.dc.html:2325`);
+  custom keeps the current association theme.
+- **Nearest scenario** — a non-LLM hint when the query clearly matches an authored scenario label or
+  alias. Tapping it uses the existing scenario chip path.
 - **Suggested for this** — optional garnish when library hits are thin. Bundled topic packs may
-  appear immediately; live `/v1/phrases/suggest` is Q-21. Candidates are marked, editable, and
-  added only through the tagging sheet as own-phrases (`source: generated`).
+  appear immediately; live `/v1/phrases/suggest` is Q-21. Candidates are marked, editable, and added
+  only through the tagging sheet as own-phrases (`source: generated`).
 - **`+ Add all N`** — shown whenever ≥2 suggestions are visible.
 
 **The association mechanic (P2-04).** After a phrase is added, `anchorTheme` is set to that phrase's
@@ -1089,17 +1089,17 @@ authored learner screen. See [account implementation](../architecture/google-app
 Optional `/listen-export` utility (plan 99); not one of the 23 authored learner screens. The learner
 selects the active-course batch and a repeat count of 2–5 (default 3). The primary path **generates
 licensed neural takes online** (ElevenLabs selected; transport is fail-closed until Q-15 pins
-licensed voices), **caches each phrase×voice clip on device**, then plays that cache with no network.
-Each phrase is spoken that many times, rotating through distinct licensed voices for the target
-locale. The primary action requires at least two approved listening voices; otherwise the control
-is unavailable. First-time generation needs network; a cache hit does not. Empty-cache airplane
-mode is unavailable, not a silent device-TTS export. Device TTS may play a labeled in-app fallback
-on a miss.
+licensed voices), **caches each phrase×voice clip on device**, then plays that cache with no
+network. Each phrase is spoken that many times, rotating through distinct licensed voices for the
+target locale. The primary action requires at least two approved listening voices; otherwise the
+control is unavailable. First-time generation needs network; a cache hit does not. Empty-cache
+airplane mode is unavailable, not a silent device-TTS export. Device TTS may play a labeled in-app
+fallback on a miss.
 
 Duration is measured or `null`, never estimated. This is a listening companion: it does not record
-practice, include learner recordings, or replace canonical one-voice reference audio. Learner-authored
-text is sent to cloud TTS only after explicit confirmation. Concatenating cached clips into one
-AAC/M4A for the OS share sheet waits on Q-22; the share control is disabled with honest copy. Browser
-shows the composer and marks generate, cache, listen, and export unavailable until native cache is
-present; fixtures in development do not present stub audio as licensed neural quality. See
-[plan 99](../../plans/99-batch-phrase-audio-export.md).
+practice, include learner recordings, or replace canonical one-voice reference audio.
+Learner-authored text is sent to cloud TTS only after explicit confirmation. Concatenating cached
+clips into one AAC/M4A for the OS share sheet waits on Q-22; the share control is disabled with
+honest copy. Browser shows the composer and marks generate, cache, listen, and export unavailable
+until native cache is present; fixtures in development do not present stub audio as licensed neural
+quality. See [plan 99](../../plans/99-batch-phrase-audio-export.md).

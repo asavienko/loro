@@ -45,9 +45,9 @@ without returning PCM to JavaScript.
        changes; screens subscribe to one session instead of creating competing players.
 2. [ ] Consume plan-61 locale/voice/version manifests for verified disk cache, atomic downloads,
        eviction/pinning, bundled assets and prefetch hooks. Plan 98 adds foreground file-URI
-       playback with installed-device TTS fallback; the LRU cache and prefetch remain.
-       Expose the same downloader to plan 99 for `assetClass: listening` clips (file URI only,
-       separate pin class). Do not treat listening clips as reference audio.
+       playback with installed-device TTS fallback; the LRU cache and prefetch remain. Expose the
+       same downloader to plan 99 for `assetClass: listening` clips (file URI only, separate pin
+       class). Do not treat listening clips as reference audio.
 3. [ ] Implement specified rates, previous/next/repeat, headphones/Bluetooth, audio focus,
        lock-screen transport and the documented background policy.
 4. [ ] Integrate real recorded position/repeat behavior in Phrase Detail/Stream, then hand off

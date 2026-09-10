@@ -251,25 +251,25 @@ describe('learner-authored phrases', () => {
   })
 
   it('records generated and chat keep-line sources on own-phrase rows', () => {
-    const generatedId = useApp
-      .getState()
-      .addOwnPhrase(
-        {
-          targetText: '¿Dónde está la farmacia de guardia?',
-          translation: 'Where is the all-night pharmacy?',
-        },
-        { source: 'generated' },
-      )
+    const generatedId = useApp.getState().addOwnPhrase(
+      {
+        targetText: '¿Dónde está la farmacia de guardia?',
+        translation: 'Where is the all-night pharmacy?',
+      },
+      { source: 'generated' },
+    )
     const chatId = useApp
       .getState()
       .addOwnPhrase(
         { targetText: 'La cuenta, por favor.', translation: 'The bill, please.' },
         { source: 'chat' },
       )
-    const importId = useApp.getState().addOwnPhrase(
-      { targetText: 'Buenos días.', translation: 'Good morning.' },
-      { source: 'import' },
-    )
+    const importId = useApp
+      .getState()
+      .addOwnPhrase(
+        { targetText: 'Buenos días.', translation: 'Good morning.' },
+        { source: 'import' },
+      )
     expect(useApp.getState().phrases.find((row) => row.id === generatedId)?.source).toBe(
       'generated',
     )

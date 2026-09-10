@@ -68,12 +68,12 @@ pnpm --filter @loro/api dev
 curl localhost:3000/v1/health/ready
 ```
 
-The API stores accounts, sessions and tenant-scoped sync in PostgreSQL and merges through the
-shared Rust/WASM engine. Configure the encrypted environment and `DATABASE_URL` before starting it
-— follow [`local-development.md`](local-development.md). `/v1/health/ready` checks actual
-database/WASM availability; there is no production in-memory fallback. `InMemorySyncRepository` is
-a test adapter under `apps/api/src/sync/testing/`. AI scenes are bundled stubs; live providers are
-not registered. See [`apps/api/README.md`](../../apps/api/README.md).
+The API stores accounts, sessions and tenant-scoped sync in PostgreSQL and merges through the shared
+Rust/WASM engine. Configure the encrypted environment and `DATABASE_URL` before starting it — follow
+[`local-development.md`](local-development.md). `/v1/health/ready` checks actual database/WASM
+availability; there is no production in-memory fallback. `InMemorySyncRepository` is a test adapter
+under `apps/api/src/sync/testing/`. AI scenes are bundled stubs; live providers are not registered.
+See [`apps/api/README.md`](../../apps/api/README.md).
 
 ### Mobile app in a browser
 
@@ -88,9 +88,9 @@ For a compile proof without opening a browser:
 pnpm --filter @loro/mobile bundle
 ```
 
-Custom core/audio/SQLite modules require a native build; Expo Go is unsupported. Native Android
-and iOS projects are generated and gitignored. `pnpm apk:local` is the local Android preview;
-iOS still needs full Xcode. See [`apps/mobile/README.md`](../../apps/mobile/README.md).
+Custom core/audio/SQLite modules require a native build; Expo Go is unsupported. Native Android and
+iOS projects are generated and gitignored. `pnpm apk:local` is the local Android preview; iOS still
+needs full Xcode. See [`apps/mobile/README.md`](../../apps/mobile/README.md).
 
 ## 5 · Verify a learner-visible change
 

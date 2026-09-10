@@ -57,11 +57,11 @@ baseline and historical estimates remain in
 Q-15 blocks production voice/assets, Q-07 trip semantics, Q-05 experiment activation/Run, Q-14 peak
 accessibility sign-off, Q-08/Q-12 monetization and Q-17 final rail priority. Q-16 gates chat
 release, Q-18 budget, Q-19 local retention, Q-20 provider retention and Q-22 neural listening-file
-redistribution. Plan 99 generates licensed listening clips online and caches them for offline
-in-app play; production voices wait on Q-15. Share-out-of-app of those clips waits on Q-22. Device
-TTS is a labeled fallback, not a Q-15 bypass. The DSP production
-pipeline waits for its recorded quality decision. Bilingual sign-off remains separate from
-schema/key validation. Unrelated foundation, offline content and harness work can proceed. The
+redistribution. Plan 99 generates licensed listening clips online and caches them for offline in-app
+play; production voices wait on Q-15. Share-out-of-app of those clips waits on Q-22. Device TTS is a
+labeled fallback, not a Q-15 bypass. The DSP production pipeline waits for its recorded quality
+decision. Bilingual sign-off remains separate from schema/key validation. Unrelated foundation,
+offline content and harness work can proceed. The
 [decision register](../decisions/open-questions.md) retains its owners; this roadmap review resolves
 none of those decisions.
 
@@ -96,18 +96,18 @@ ships a trivial PR to `dev` in under a day.
 The one-sentence test: _a learner can complete onboarding, add a phrase from Discover, tag it as
 Difficult/Pronunciation, hear that change the stream's repeat count, and see it in Progress._
 
-| Scope                                                                | Requirements                                                        |
-| -------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| Onboarding, all six steps                                            | `P1-01`…`P1-12`                                                     |
-| Design system in code — all tokens, ~20 core components              | [`design/component-inventory.md`](../design/component-inventory.md) |
-| Add phrases: Discover + Browse (Import deferred to M2)               | `P2-01`…`P2-08`, `P2-11`…`P2-14`                                    |
-| The tagging sheet                                                    | `P2-20`…`P2-26`                                                     |
-| Phrase detail                                                        | `P2-30`…`P2-40`                                                     |
-| Audio: TTS cache, rates, exclusive playback                          | `AS-01`, `AS-02`                                                    |
+| Scope                                                                             | Requirements                                                        |
+| --------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Onboarding, all six steps                                                         | `P1-01`…`P1-12`                                                     |
+| Design system in code — all tokens, ~20 core components                           | [`design/component-inventory.md`](../design/component-inventory.md) |
+| Add phrases: Discover + Browse (Import deferred to M2)                            | `P2-01`…`P2-08`, `P2-11`…`P2-14`                                    |
+| The tagging sheet                                                                 | `P2-20`…`P2-26`                                                     |
+| Phrase detail                                                                     | `P2-30`…`P2-40`                                                     |
+| Audio: TTS cache, rates, exclusive playback                                       | `AS-01`, `AS-02`                                                    |
 | Listening companion: online multi-voice generate, on-device cache, optional share | `AS-07`                                                             |
-| Adaptive stream, foreground only                                     | `P3-01`…`P3-10`, `P3-12`                                            |
-| Progress screen                                                      | `P4-01`…`P4-08`                                                     |
-| Content: 150 phrases, 8 themes, 5 scenarios, 6 packs, all with audio | [content-model.md](content-model.md)                                |
+| Adaptive stream, foreground only                                                  | `P3-01`…`P3-10`, `P3-12`                                            |
+| Progress screen                                                                   | `P4-01`…`P4-08`                                                     |
+| Content: 150 phrases, 8 themes, 5 scenarios, 6 packs, all with audio              | [content-model.md](content-model.md)                                |
 
 **Exit criteria:** the thread demonstrably works — changing a rating visibly changes the stream and
 the Progress rollup. Internal dogfooding starts here and never stops.

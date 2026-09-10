@@ -196,9 +196,9 @@ Idempotent and content-addressed, so a rerun is cheap and safe
 
 **One voice per variant, forever.** Changing the voice would change every learner's pronunciation
 reference mid-learning, and would invalidate every `f0_native` contour. A voice change is a
-catalog-wide re-render and a deliberate decision, not a config tweak. Plan 99 listening-class
-voices are additional licensed takes for a listening companion; they must never replace this
-reference or be written into `audio.sha256` / `f0_native`.
+catalog-wide re-render and a deliberate decision, not a config tweak. Plan 99 listening-class voices
+are additional licensed takes for a listening companion; they must never replace this reference or
+be written into `audio.sha256` / `f0_native`.
 
 ---
 

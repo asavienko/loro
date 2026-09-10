@@ -25,7 +25,11 @@ import { DeviceRegistrationSchema, UserSchema } from './account.js'
 import { ChatTopicResourceSchema } from './chat-topic.js'
 import { PhraseSuggestRequestSchema, PhraseSuggestResponseSchema } from './phrase-suggest.js'
 import { TARGET_LOCALES } from '../domain/languages.js'
-import { LISTENING_ASSET_CLASS, LISTENING_CODEC, REFERENCE_ASSET_CLASS } from '../listening/constants.js'
+import {
+  LISTENING_ASSET_CLASS,
+  LISTENING_CODEC,
+  REFERENCE_ASSET_CLASS,
+} from '../listening/constants.js'
 
 export const draftGates = {
   trip: ['Q-07'],

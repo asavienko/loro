@@ -72,9 +72,7 @@ export function queryHasKeyword(query: string, keyword: string): boolean {
   if (needles.length === 0) return false
   const haystack = foldedPhraseTokens(query)
   return needles.every((needle) =>
-    haystack.some(
-      (token) => token === needle || (needle.length >= 4 && token.startsWith(needle)),
-    ),
+    haystack.some((token) => token === needle || (needle.length >= 4 && token.startsWith(needle))),
   )
 }
 
@@ -130,8 +128,7 @@ function queryMatchesScenarioLabel(query: string, label: string): boolean {
   const haystack = foldedPhraseTokens(query)
   return foldedPhraseTokens(label).some(
     (needle) =>
-      needle.length >= 4 &&
-      haystack.some((token) => token === needle || token.startsWith(needle)),
+      needle.length >= 4 && haystack.some((token) => token === needle || token.startsWith(needle)),
   )
 }
 
@@ -220,7 +217,10 @@ export function candidateIsAddable(candidate: {
   readonly targetText: string
   readonly translation: string
 }): boolean {
-  return ownPhraseIsAddable(candidate) && phraseWordCount(candidate.targetText) <= PHRASE_SUGGEST_MAX_WORDS
+  return (
+    ownPhraseIsAddable(candidate) &&
+    phraseWordCount(candidate.targetText) <= PHRASE_SUGGEST_MAX_WORDS
+  )
 }
 
 export function suggestCacheKey(input: {
