@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http'
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { spawnSync } from 'node:child_process'
@@ -293,6 +293,25 @@ describe('listening generate → file cache → listen', () => {
     expect(requests).toBe(0)
     expect(ready.clips).toHaveLength(2)
     for (const clip of ready.clips) assertMetadataOnly(clip)
+  })
+
+  it('installs the debug fixture through loopback HTTP download, not a store bypass', async () => {
+    const native = createFileAudioCache(root, { fixtureBytes: fixture })
+    const original = native.download.bind(native)
+    const urls: string[] = []
+    native.download = async (request) => {
+      urls.push(request.url)
+      return original(request)
+    }
+    const cache = new AudioCacheController(native)
+    const clip = await cache.installDevFixture('listening|http-fixture')
+    expect(urls).toEqual([
+      expect.stringMatching(/^http:\/\/127\.0\.0\.1:\d+\/listen-fixture\.m4a$/),
+    ])
+    expect(clip.sha256).toBe(digest)
+    expect(clip.fileUri.startsWith('file:')).toBe(true)
+    expect(existsSync(join(root, 'sha256', `${digest}.m4a`))).toBe(true)
+    expect(requests).toBe(0)
   })
 
   it('evicts unpinned clips under the named budget and keeps pinned listening clips', async () => {

@@ -167,6 +167,7 @@ private final class LoroAudioSpeechController: NSObject, AVSpeechSynthesizerDele
       emit?("playback", ["id": options.id, "state": "error", "error": "file-unavailable"])
       throw failure("A cached listening file is unavailable.")
     }
+    NSLog("LoroAudioSpeech playFile uri=%@", options.fileUri)
     // Foreground slice: Android refuses playFile off-foreground. Airplane listen is in-app only.
     guard UIApplication.shared.applicationState == .active else {
       emit?("playback", ["id": options.id, "state": "error", "error": "file-unavailable"])

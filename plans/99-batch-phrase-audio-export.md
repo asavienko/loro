@@ -6,13 +6,15 @@
 - **Milestone:** M2
 - **Status:** 🟡 Composer, listening-class TTS contract, fail-closed ElevenLabs transport, native
   file-URI cache/`playFile` with checksum-on-lookup, batch restore, `/listen-export` copy/E2E, a
-  labeled development fixture seed (native debug, not Hermes `__DEV__`), file-URI
-  generate/cache/listen tests, iOS/Android `playFile`/download parity, the unsigned Q-15
-  listening-voice packet, and Q-22 mux/share fail-closed are implemented. Production licensed voices
-  remain ⛔ [Q-15](../docs/decisions/open-questions.md#q-15). Share-out-of-app remains ⛔
-  [Q-22](../docs/decisions/open-questions.md#q-22). An Android emulator in airplane mode played and
-  restored a **labeled development fixture** cache after force-stop; that is not physical-device
-  58/72 and not licensed Q-15 audio. Device TTS is a labeled fallback, not the primary path.
+  labeled development fixture that **downloads over loopback HTTP** into that cache (native debug,
+  not Hermes `__DEV__`; not a `store()` bypass), file-URI generate/cache/listen tests, iOS/Android
+  `playFile`/download parity, the unsigned Q-15 listening-voice packet, and Q-22 mux/share
+  fail-closed are implemented. Production licensed voices remain ⛔
+  [Q-15](../docs/decisions/open-questions.md#q-15). Share-out-of-app remains ⛔
+  [Q-22](../docs/decisions/open-questions.md#q-22). An Android emulator in airplane mode previously
+  played a labeled fixture after a `store()` seed; native HTTP download+hash+`playFile` evidence
+  is the follow-up on the same AVD. That is not physical-device 58/72 and not licensed Q-15 audio.
+  Device TTS is a labeled fallback, not the primary path.
   `CI_BASE_REF=origin/main pnpm ci:local` passed at `bcd35dc` (learner E2E 197, workbench,
   production-e2e, mobile-bundle, API image). Item 7 remains open.
 - **Depends on:** 56 route declaration; 81 More destination; 59 active-course phrase inventory; 87
@@ -84,8 +86,9 @@ iOS and Android. JavaScript still never receives PCM. `LISTENING_VOICE_DECISION`
 only licensed-generate switch; see the
 [listening-voice packet](../docs/decisions/listening-voice-packet.md). Product docs do not pin
 listening voices; a decrypted API key would not be a licence. Native debug builds (`FLAG_DEBUGGABLE`
-/ iOS `DEBUG`, not Hermes `__DEV__`) can seed a labeled silent AAC fixture into that same cache;
-copy must not present it as licensed neural audio. The render client attaches an optional bearer
+/ iOS `DEBUG`, not Hermes `__DEV__`) seed a labeled silent AAC by serving it on loopback HTTP and
+calling the same `download()` path (sha256 verify + listening pin). Copy must not present it as
+licensed neural audio. The render client attaches an optional bearer
 session and maps 429 to quota; native download sends that Authorization header and refuses redirects
 so the token cannot hop hosts. Node tests prove prepare → HTTP download → checksummed
 `sha256/{hex}.m4a` → airplane replay from file URIs → restore, with share still gated. Learner

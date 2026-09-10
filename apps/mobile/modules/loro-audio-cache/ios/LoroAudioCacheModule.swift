@@ -2,6 +2,7 @@ import CryptoKit
 import AVFoundation
 import ExpoModulesCore
 import UIKit
+import Darwin
 
 struct LoroCacheDownloadOptions: Record {
   @Field var url: String = ""
@@ -130,6 +131,7 @@ private final class LoroAudioCacheController {
     let digest = SHA256.hash(data: bytes).map { String(format: "%02x", $0) }.joined()
     guard digest == options.expectedSha256.lowercased() else { throw failure("checksum-mismatch") }
     let file = try store(bytes: bytes, sha256: digest, key: options.logicalKey, pin: options.pinClass)
+    NSLog("LoroAudioCache download ok sha256=%@ pin=%@", digest, options.pinClass)
     return file
   }
 
@@ -166,7 +168,15 @@ private final class LoroAudioCacheController {
         throw failure("failed")
       }
       let digest = SHA256.hash(data: bytes).map { String(format: "%02x", $0) }.joined()
-      return try store(bytes: bytes, sha256: digest, key: logicalKey, pin: "listening")
+      let server = try LoopbackFixtureServer(body: bytes)
+      defer { server.close() }
+      var options = LoroCacheDownloadOptions()
+      options.url = "http://127.0.0.1:\(server.port)/listen-fixture.m4a"
+      options.expectedSha256 = digest
+      options.logicalKey = logicalKey
+      options.pinClass = "listening"
+      NSLog("LoroAudioCache fixture-http-download sha256=%@ key=%@", digest, logicalKey)
+      return try download(options)
     #else
       throw failure("failed")
     #endif
@@ -405,3 +415,84 @@ private final class RedirectDeny: NSObject, URLSessionTaskDelegate {
     completionHandler(nil)
   }
 }
+
+#if DEBUG
+private final class LoopbackFixtureServer {
+  private let fd: Int32
+  let port: UInt16
+
+  init(body: Data) throws {
+    let sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)
+    guard sock >= 0 else { throw LoopbackFixtureServer.failed }
+    var reuse: Int32 = 1
+    setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &reuse, socklen_t(MemoryLayout<Int32>.size))
+    var timeout = timeval(tv_sec: 15, tv_usec: 0)
+    setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &timeout, socklen_t(MemoryLayout<timeval>.size))
+    var addr = sockaddr_in()
+    addr.sin_len = UInt8(MemoryLayout<sockaddr_in>.size)
+    addr.sin_family = sa_family_t(AF_INET)
+    addr.sin_addr.s_addr = inet_addr("127.0.0.1")
+    addr.sin_port = 0
+    let bound = withUnsafePointer(to: &addr) { pointer in
+      pointer.withMemoryRebound(to: sockaddr.self, capacity: 1) {
+        bind(sock, $0, socklen_t(MemoryLayout<sockaddr_in>.size)) == 0
+      }
+    }
+    guard bound, listen(sock, 1) == 0 else {
+      Darwin.close(sock)
+      throw LoopbackFixtureServer.failed
+    }
+    var name = sockaddr_in()
+    var nameLen = socklen_t(MemoryLayout<sockaddr_in>.size)
+    let named = withUnsafeMutablePointer(to: &name) { pointer in
+      pointer.withMemoryRebound(to: sockaddr.self, capacity: 1) {
+        getsockname(sock, $0, &nameLen) == 0
+      }
+    }
+    guard named else {
+      Darwin.close(sock)
+      throw LoopbackFixtureServer.failed
+    }
+    fd = sock
+    port = UInt16(bigEndian: name.sin_port)
+    let payload = body
+    DispatchQueue.global(qos: .userInitiated).async {
+      var clientAddr = sockaddr_in()
+      var clientLen = socklen_t(MemoryLayout<sockaddr_in>.size)
+      let client = withUnsafeMutablePointer(to: &clientAddr) { pointer in
+        pointer.withMemoryRebound(to: sockaddr.self, capacity: 1) {
+          accept(sock, $0, &clientLen)
+        }
+      }
+      guard client >= 0 else { return }
+      defer { Darwin.close(client) }
+      var buffer = [UInt8](repeating: 0, count: 4096)
+      _ = recv(client, &buffer, buffer.count, 0)
+      let header =
+        "HTTP/1.1 200 OK\r\nContent-Type: audio/mp4\r\nContent-Length: \(payload.count)\r\nConnection: close\r\n\r\n"
+      header.withCString { cString in
+        _ = send(client, cString, strlen(cString), 0)
+      }
+      payload.withUnsafeBytes { raw in
+        guard let base = raw.baseAddress else { return }
+        var sent = 0
+        while sent < payload.count {
+          let n = send(client, base.advanced(by: sent), payload.count - sent, 0)
+          if n <= 0 { break }
+          sent += n
+        }
+      }
+    }
+  }
+
+  func close() {
+    Darwin.close(fd)
+  }
+
+  private static let failed = NSError(
+    domain: "LoroAudioCache",
+    code: 1,
+    userInfo: [NSLocalizedDescriptionKey: "failed"]
+  )
+}
+#endif

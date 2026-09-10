@@ -15,6 +15,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.speech.RecognitionListener
 import android.speech.RecognitionSupport
 import android.speech.RecognitionSupportCallback
@@ -556,6 +557,7 @@ class LoroAudioSpeechModule : Module() {
         main.post { finishFilePlayback(generation, "error", "file_playback_failed") }
         true
       }
+      Log.i("LoroAudioSpeech", "playFile uri=${options.fileUri}")
       player.setDataSource(path)
       player.prepare()
       if (generation != playbackGeneration || destroyed || !foreground) {

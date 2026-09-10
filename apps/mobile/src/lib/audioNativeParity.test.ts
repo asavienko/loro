@@ -44,6 +44,11 @@ describe('iOS/Android listening cache and playFile parity', () => {
     expect(androidCache).toContain('instanceFollowRedirects = false')
     expect(androidCache).toContain('useCaches = false')
     expect(androidCache).toContain('setRequestProperty("Cookie", "")')
+    expect(androidCache).toContain('fixture-http-download')
+    expect(iosCache).toContain('fixture-http-download')
+    expect(androidCache).toContain('listen-fixture.m4a')
+    expect(iosCache).toContain('listen-fixture.m4a')
+    expect(androidCache).toContain('ServerSocket')
   })
 
   it('stops cached playFile off-foreground and refuses missing files on both platforms', () => {
@@ -56,5 +61,7 @@ describe('iOS/Android listening cache and playFile parity', () => {
     expect(iosSpeech).toContain('applicationState == .active')
     expect(iosSpeech).toContain('fileExists(atPath: url.path)')
     expect(iosSpeech.match(/func audioPlayerDidFinishPlaying/g)).toHaveLength(1)
+    expect(androidSpeech).toContain('playFile uri=')
+    expect(iosSpeech).toContain('playFile uri=')
   })
 })
