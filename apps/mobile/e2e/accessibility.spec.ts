@@ -249,12 +249,15 @@ async function tooSmall(page: Page, state: string): Promise<string[]> {
       const selector = '[role="button"],[role="radio"],[role="checkbox"],[role="link"],input'
       return Array.from(document.querySelectorAll(selector))
         .map((node) => {
-          const box = node.getBoundingClientRect()
+          // Layout box, not getBoundingClientRect: Arrival popIn scales the toast
+          // visually for 400 ms, and the transformed rect is not the hit target.
+          const width = node.offsetWidth
+          const height = node.offsetHeight
           return {
             name: node.getAttribute('aria-label') ?? node.textContent.slice(0, 40),
-            w: Math.round(box.width) + slop * 2,
-            h: Math.round(box.height) + slop * 2,
-            visible: box.width > 0 && box.height > 0,
+            w: Math.round(width) + slop * 2,
+            h: Math.round(height) + slop * 2,
+            visible: width > 0 && height > 0,
           }
         })
         .filter((b) => b.visible && (b.w < min || b.h < min))
