@@ -23,6 +23,9 @@ export async function prepareScreenCapture(): Promise<void> {
 
 /** Freeze the reached DOM as a portable, script-free HTML document with inlined styles. */
 export async function serializeScreenHtml(): Promise<string> {
+  const rewriteNonPortableCssUrls = (css: string): string =>
+    css.replace(/url\(\s*(['"]?)(?!data:|#)([^'")]+)\1\s*\)/gi, 'none')
+
   const clone = document.documentElement.cloneNode(true) as HTMLElement
 
   for (const node of Array.from(
@@ -39,7 +42,7 @@ export async function serializeScreenHtml(): Promise<string> {
       const text = Array.from(sheet.cssRules)
         .map((rule) => rule.cssText)
         .join('\n')
-      css.push(text.replace(/url\(\s*(['"]?)(?!data:|#)([^'")]+)\1\s*\)/gi, 'none'))
+      css.push(rewriteNonPortableCssUrls(text))
     } catch {
       // Cross-origin sheets stay out of the snapshot rather than throwing.
     }
@@ -109,6 +112,12 @@ export async function serializeScreenHtml(): Promise<string> {
       }
     }),
   )
+
+  for (const el of Array.from(clone.querySelectorAll('[style]'))) {
+    const style = el.getAttribute('style')
+    if (style === null || style === '') continue
+    el.setAttribute('style', rewriteNonPortableCssUrls(style))
+  }
 
   for (const el of Array.from(clone.querySelectorAll('[src], [href], [srcset], [poster]'))) {
     for (const attr of ['src', 'href', 'srcset', 'poster']) {

@@ -1,6 +1,9 @@
 import { execFileSync } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { basename, join } from 'node:path'
+import { filenameFor } from './screenshots-filename.mjs'
+
+export { filenameFor }
 
 const VIEWPORT = { width: 390, height: 844 }
 
@@ -118,7 +121,8 @@ export function htmlProblem(path) {
     return 'The HTML snapshot is missing a relative base href.'
   if (/https?:\/\/(?:127\.0\.0\.1|localhost|\[::1\])/i.test(html))
     return 'The HTML snapshot still points at the capture server.'
-  if (/(?:src|href)=["']\//i.test(html)) return 'The HTML snapshot still uses root-absolute paths.'
+  if (/(?:src|href)=["']\//i.test(html) || /url\(\s*(['"]?)\//i.test(html))
+    return 'The HTML snapshot still uses root-absolute paths.'
   return undefined
 }
 
@@ -139,19 +143,6 @@ export function validatePassedStates(runDir, manifest) {
       state.error = problem
     }
   }
-}
-
-export function filenameFor(name, extension = 'png') {
-  const slug = name
-    .normalize('NFKD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')
-    .slice(0, 72)
-  let hash = 2166136261
-  for (const char of name) hash = Math.imul(hash ^ (char.codePointAt(0) ?? 0), 16777619)
-  return `${slug || 'state'}-${(hash >>> 0).toString(16).padStart(8, '0')}.${extension}`
 }
 
 export function writeArtifacts(runDir, manifest) {
@@ -260,17 +251,11 @@ function writeImageGallery(runDir, manifest) {
 
 function writeHtmlGallery(runDir, manifest) {
   const groups = groupedStates(manifest)
-  const snapshots = new Map()
-  for (const state of manifest.states) {
-    if (state.status !== 'passed' || state.html === undefined) continue
-    const path = join(runDir, state.html)
-    if (existsSync(path)) snapshots.set(state.html, readFileSync(path, 'utf8'))
-  }
   const sections = groups
     .map(
       ([route, states]) =>
         `<section id="${escapeHtml(routeId(route))}"><h2>${escapeHtml(route)}</h2><div class="grid">${states
-          .map((state) => htmlCard(state, snapshots.get(state.html)))
+          .map((state) => htmlCard(runDir, state))
           .join('')}</div></section>`,
     )
     .join('')
@@ -279,7 +264,7 @@ function writeHtmlGallery(runDir, manifest) {
     document({
       title: 'Loro screen HTML',
       heading: 'Loro screen HTML',
-      intro: `${statusLine(manifest)}${routeNav(groups)}<p class="lead">The reached DOM of every declared learner state, frozen as a portable HTML document. Copy this folder and open index.html; previews stay in the page and each phone still opens its sibling file.</p>`,
+      intro: `${statusLine(manifest)}${routeNav(groups)}<p class="lead">The reached DOM of every declared learner state, frozen as a portable HTML document. Copy this folder and open a phone to open its sibling file.</p>`,
       body: sections,
     }),
   )
@@ -298,11 +283,11 @@ function imageCard(state) {
   return card(state, preview)
 }
 
-function htmlCard(state, snapshot) {
+function htmlCard(runDir, state) {
   const href = siblingHref(state.html)
   const preview =
-    state.status === 'passed' && snapshot !== undefined
-      ? `<a class="phone" href="${href}"><span class="phone-screen"><iframe srcdoc="${escapeHtml(snapshot)}" title="${escapeHtml(state.name)}" tabindex="-1"></iframe></span></a>`
+    state.status === 'passed' && state.html !== undefined && existsSync(join(runDir, state.html))
+      ? `<a class="phone" href="${href}"><span class="phone-screen missing">Open HTML</span></a>`
       : `<div class="phone"><div class="phone-screen missing">No HTML</div></div>`
   return card(state, preview)
 }
@@ -315,7 +300,7 @@ function card(state, preview) {
 function document({ title, heading, intro, body = '', extra = '' }) {
   return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><base href="./"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${escapeHtml(title)}</title><style>
-body{margin:24px;background:#f7f4ef;color:#211f1c;font:15px/1.45 system-ui,sans-serif}h1{margin-bottom:8px}h2{margin:0 0 16px}.lead{max-width:44rem}section{margin:36px 0;scroll-margin-top:16px}.toc{display:flex;flex-wrap:wrap;gap:8px 16px;margin:16px 0 8px}.toc a{color:#5c3d14}.grid{display:flex;flex-wrap:wrap;gap:24px}.card{width:206px}.phone{display:block;box-sizing:border-box;width:206px;height:438px;padding:8px;border-radius:28px;background:#211f1c;text-decoration:none}.phone-screen{display:block;position:relative;width:190px;height:422px;overflow:hidden;border-radius:20px;background:#fff}.phone-screen img,.phone-screen iframe{position:absolute;top:0;left:0;width:390px;height:844px;border:0;transform:scale(0.487);transform-origin:top left;pointer-events:none}.missing{display:grid;place-items:center;padding:16px;color:#211f1c}.meta{margin:10px 0 0}.status{font-weight:700}.passed{color:#176b3a}.failed,.not-run{color:#a63329}pre{white-space:pre-wrap;font-size:12px}${extra}
+body{margin:24px;background:#f7f4ef;color:#211f1c;font:15px/1.45 system-ui,sans-serif}h1{margin-bottom:8px}h2{margin:0 0 16px}.lead{max-width:44rem}section{margin:36px 0;scroll-margin-top:16px}.toc{display:flex;flex-wrap:wrap;gap:8px 16px;margin:16px 0 8px}.toc a{color:#5c3d14}.grid{display:flex;flex-wrap:wrap;gap:24px}.card{width:206px}.phone{display:block;box-sizing:border-box;width:206px;height:438px;padding:8px;border-radius:28px;background:#211f1c;text-decoration:none}.phone-screen{display:block;position:relative;width:190px;height:422px;overflow:hidden;border-radius:20px;background:#fff}.phone-screen img{position:absolute;top:0;left:0;width:390px;height:844px;border:0;transform:scale(0.487);transform-origin:top left;pointer-events:none}.missing{display:grid;place-items:center;padding:16px;color:#211f1c}.meta{margin:10px 0 0}.status{font-weight:700}.passed{color:#176b3a}.failed,.not-run{color:#a63329}pre{white-space:pre-wrap;font-size:12px}${extra}
 </style></head>
 <body><h1>${escapeHtml(heading)}</h1>${intro}${body}</body></html>
 `

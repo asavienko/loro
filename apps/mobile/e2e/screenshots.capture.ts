@@ -10,6 +10,12 @@ if (runDir === undefined) throw new Error('LORO_SCREENSHOT_RUN_DIR was not confi
 
 const FIXED_TIME = '2026-09-09T08:00:00.000Z'
 
+interface CaptureManifestState {
+  name: string
+  image: string
+  html: string
+}
+
 interface CaptureManifest {
   run: {
     browser: {
@@ -17,7 +23,10 @@ interface CaptureManifest {
       version: string | null
     }
   }
+  states: CaptureManifestState[]
 }
+
+const artifactPaths = new Map<string, { image: string; html: string }>()
 
 test.beforeAll(({ browser }) => {
   const manifestPath = join(runDir, 'manifest.json')
@@ -25,6 +34,9 @@ test.beforeAll(({ browser }) => {
   manifest.run.browser = {
     name: browser.browserType().name(),
     version: browser.version(),
+  }
+  for (const state of manifest.states) {
+    artifactPaths.set(state.name, { image: state.image, html: state.html })
   }
   writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`)
 })
@@ -42,8 +54,10 @@ for (const state of STATES) {
     if (preservesUndo) await expect(undo).toBeVisible()
     else await expect(toast).toBeHidden()
 
-    const image = join(runDir, 'images', filenameFor(state.name, 'png'))
-    const html = join(runDir, 'html', filenameFor(state.name, 'html'))
+    const paths = artifactPaths.get(state.name)
+    if (paths === undefined) throw new Error(`No capture manifest entry for ${state.name}.`)
+    const image = join(runDir, paths.image)
+    const html = join(runDir, paths.html)
     mkdirSync(join(runDir, 'images'), { recursive: true })
     mkdirSync(join(runDir, 'html'), { recursive: true })
     await page.screenshot({ path: image, animations: 'disabled', caret: 'hide' })
@@ -52,17 +66,4 @@ for (const state of STATES) {
     // This state exists to capture the window while Undo is available, not its later settled UI.
     if (preservesUndo) await expect(undo).toBeVisible()
   })
-}
-
-function filenameFor(name: string, extension: 'png' | 'html'): string {
-  const slug = name
-    .normalize('NFKD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')
-    .slice(0, 72)
-  let hash = 2166136261
-  for (const char of name) hash = Math.imul(hash ^ (char.codePointAt(0) ?? 0), 16777619)
-  return `${slug || 'state'}-${(hash >>> 0).toString(16).padStart(8, '0')}.${extension}`
 }

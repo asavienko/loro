@@ -13,8 +13,10 @@ import {
   validatePassedStates,
   writeArtifacts,
 } from './screenshots-artifacts.mjs'
+import { filenameFor as sharedFilenameFor } from './screenshots-filename.mjs'
 
 test('filenameFor keeps a stable slug and accepts an extension', () => {
+  assert.equal(filenameFor, sharedFilenameFor)
   assert.equal(filenameFor('today · seeded'), 'today-seeded-b843112d.png')
   assert.equal(filenameFor('today · seeded', 'html'), 'today-seeded-b843112d.html')
 })
@@ -62,6 +64,12 @@ test('pngProblem and htmlProblem reject missing or malformed artifacts', () => {
     validHtml().replace('<h1>Today</h1>', '<img src="/assets/icon.png"><h1>Today</h1>'),
   )
   assert.match(htmlProblem(join(dir, 'rooted.html')), /root-absolute/)
+
+  writeFileSync(
+    join(dir, 'style.html'),
+    validHtml().replace('<h1>Today</h1>', '<div style="background:url(/assets/icon.png)"></div>'),
+  )
+  assert.match(htmlProblem(join(dir, 'style.html')), /root-absolute/)
 })
 
 test('writeArtifacts emits portable image and HTML folders', () => {
@@ -100,10 +108,11 @@ test('writeArtifacts emits portable image and HTML folders', () => {
   assert.match(images, /\.\/today-seeded-b843112d\.png/)
   assert.doesNotMatch(images, /<iframe /)
   assert.match(screens, /\.\/today-seeded-b843112d\.html/)
-  assert.match(screens, /srcdoc=/)
-  assert.match(screens, /Me pone un cortado/)
+  assert.match(screens, /Open HTML/)
+  assert.doesNotMatch(screens, /srcdoc=/)
+  assert.doesNotMatch(screens, /<iframe/)
+  assert.doesNotMatch(screens, /Me pone un cortado/)
   assert.doesNotMatch(screens, /screens\//)
-  assert.doesNotMatch(screens, / src="/)
 
   const exported = mkdtempSync(join(tmpdir(), 'loro-screenshots-export-'))
   cpSync(join(runDir, 'html'), join(exported, 'html'), { recursive: true })
@@ -113,7 +122,7 @@ test('writeArtifacts emits portable image and HTML folders', () => {
   assert.equal(existsSync(join(exported, 'images', filenameFor('today · seeded', 'png'))), true)
   const exportedGallery = readFileSync(join(exported, 'html', 'index.html'), 'utf8')
   assert.match(exportedGallery, /\.\/today-seeded-b843112d\.html/)
-  assert.match(exportedGallery, /srcdoc=/)
+  assert.doesNotMatch(exportedGallery, /srcdoc=/)
 
   const summary = formatSummary(runDir, manifest)
   assert.match(summary, /Screen artifacts: 1 passed/)
