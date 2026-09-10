@@ -77,10 +77,10 @@ schemas describe well-formed caller intent; they do not promise compatibility wi
 input those routes may accidentally accept. `sync/status` is an authenticated account diagnostic,
 not a learner progress total. The current registry includes the three `/content/v2/*`
 learning-catalog routes (28 operations total); see the multilingual section below. Errors and
-liveness use the shared `ProblemSchema` / `HealthSchema`. Legacy `/content/manifest`, `/content/pack`
-and `/ai/*` envelopes stay the implemented payloads: target Manifest/Pack/Scene require
-`resource_base`, checksums, `catalog_version`, provenance and ResourceId `scene_id` the stubs do not
-return.
+liveness use the shared `ProblemSchema` / `HealthSchema`. Legacy `/content/manifest`,
+`/content/pack` and `/ai/*` envelopes stay the implemented payloads: target Manifest/Pack/Scene
+require `resource_base`, checksums, `catalog_version`, provenance and ResourceId `scene_id` the
+stubs do not return.
 
 Stable learner row/log keys are UUIDv7. New `user_phrase` rows require `targetLocale`, `phraseId`,
 `source` and `addedAt` so another device can materialize them; updates may be partial. Settings uses
@@ -164,15 +164,15 @@ return the exact original correction even when their response `server_time` adva
 
 ## Drafts and unavailable contracts
 
-| Draft                                              | Gate / remaining decision                                                                                                                        |
-| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Trip ops and drop resources                        | Q-07: relocation/return/end behavior; parent keys, identity and cascading deletion                                                               |
-| Live chat + bundled topic resource shape           | Q-16/Q-18–Q-20: release, budget, local retention and provider text retention                                                                     |
-| TTS rendering                                      | Q-15: licensed voice/provenance/versioned cache identity and budget                                                                              |
-| Billing verify/read/restore + entitlement snapshot | Q-08/Q-12: products, provider, proof formats, signing protocol, grace/revocation                                                                 |
-| Billing webhook                                    | Q-12: actual provider wire format, signature headers and acknowledgement. Request schema is `never`; no fabricated signature scheme is published |
-| Extended account read/devices/revoke/logout        | Plan 67 richer transport/UX review; current `/me` and 204 logout are implemented                                                                 |
-| Remote configuration                               | Q-05 and plan 71: registered flags, stable assignment/exposure and experiment authorization                                                      |
+| Draft                                              | Gate / remaining decision                                                                                                                                            |
+| -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Trip ops and drop resources                        | Q-07: relocation/return/end behavior; parent keys, identity and cascading deletion                                                                                   |
+| Live chat + bundled topic resource shape           | Q-16/Q-18–Q-20: release, budget, local retention and provider text retention                                                                                         |
+| TTS rendering                                      | Q-15: licensed voice/provenance/versioned cache identity and budget                                                                                                  |
+| Billing verify/read/restore + entitlement snapshot | Q-08/Q-12: products, provider, proof formats, signing protocol, grace/revocation                                                                                     |
+| Billing webhook                                    | Q-12: actual provider wire format, signature headers and acknowledgement. Request schema is `never`; no fabricated signature scheme is published                     |
+| Extended account read/devices/revoke/logout        | Plan 67 richer transport/UX review; current `/me` and 204 logout are implemented                                                                                     |
+| Remote configuration                               | Q-05 and plan 71: registered flags, stable assignment/exposure and experiment authorization                                                                          |
 | Discover `POST /v1/phrases/suggest`                | Q-21: live garnish, spend caps, provider retention. Draft schema already backs the stub; live dispatch stays off. Auth/rate/body caps stay with the Q-21 enablement. |
 
 Draft operations carry `x-loro-gates`, `x-loro-unresolved`, and `x-loro-auth-boundary`. An empty

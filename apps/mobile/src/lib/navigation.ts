@@ -35,6 +35,7 @@ export const SURFACES = [
   { id: 'account', path: '/account', kind: 'utility', availability: 'built' },
   { id: 'settings', path: '/settings', kind: 'utility', availability: 'built' },
   { id: 'more', path: '/more', kind: 'utility', availability: 'built' },
+  { id: 'listen-export', path: '/listen-export', kind: 'utility', availability: 'built' },
   { id: 'phrase-music', path: '/music', kind: 'learner', availability: 'built' },
 ] as const
 
@@ -85,6 +86,7 @@ export const SURFACE_LAWS: Record<SurfaceId, SurfaceLaw> = {
   account: { surfaceClass: 'push', expectedUse: 'occasional', resumable: false },
   settings: { surfaceClass: 'push', expectedUse: 'occasional', resumable: false },
   more: { surfaceClass: 'push', expectedUse: 'often', resumable: false },
+  'listen-export': { surfaceClass: 'push', expectedUse: 'occasional', resumable: false },
   'phrase-music': { surfaceClass: 'push', expectedUse: 'occasional', resumable: false },
 }
 
@@ -311,6 +313,20 @@ export const DESTINATIONS = [
     parent: 'today',
     home: 'today',
     group: 'you',
+    exit: 'stack-or-home',
+    resume: 'none',
+  },
+  {
+    href: '/listen-export',
+    get label() {
+      return copy.nav.listenExport
+    },
+    rail: false,
+    counted: false,
+    routeClass: 'utility',
+    parent: 'today',
+    home: 'today',
+    group: 'phrases',
     exit: 'stack-or-home',
     resume: 'none',
   },

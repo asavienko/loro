@@ -11,7 +11,14 @@
 import process from 'node:process'
 
 export const isCI = process.env.CI !== undefined
+/**
+ * Expo's web bundler inlines `process.env.EXPO_PUBLIC_*` from `apps/mobile/.env`
+ * (`http://localhost:3000/v1` in this checkout). Playwright still sets the fake
+ * HTTPS host so a serializer/export that reads process.env stays off the LAN API.
+ * `accountFlow` mocks both origins.
+ */
 export const accountEnvironment = {
+  ...process.env,
   EXPO_NO_TELEMETRY: '1',
   EXPO_PUBLIC_API_URL: 'https://auth.loro.test/v1',
 }
@@ -54,7 +61,8 @@ export const sharedTiming = {
    * a ~12 s sweep at ~38 s. Playwright waiting for a control to stop being obscured is correct
    * behaviour and worth keeping visible rather than forcing the click past it.
    *
-   * Whole-manifest text-scale and touch-target sweeps set a three-minute budget as states grow.
+   * Whole-manifest text-scale and touch-target sweeps set a five-minute budget as listen
+   * companion states join the account and practice inventory.
    * Ordinary tests retain this timeout; `globalTimeout` bounds the complete run.
    */
   timeout: 90_000,
@@ -66,8 +74,8 @@ export const sharedTiming = {
    * names suite runtime as the thing that erodes the fast feedback loop. A budget nobody
    * measures is a budget that is already gone. The integrated 155-test / 71-state suite
    * reached the old eight-minute cap after 149 passing tests, before its final text-scale
-   * sweep. Twenty-four minutes keeps the plan-96 music states plus two 3.5-minute
-   * text-scale walks while still bounding the workload.
+   * sweep. Thirty-six minutes covers listen-export fixture states (AS-07), plan-96 music
+   * garnish, account discovery, and the whole-manifest geometry sweeps.
    */
-  globalTimeout: 24 * 60_000,
+  globalTimeout: 36 * 60_000,
 }

@@ -427,3 +427,16 @@ credentials remain in the account runtime; the route never renders fabricated pr
 Its intended-design extension and state inventory are recorded in
 [functional-spec.md](../product/functional-spec.md#f-01-account) and
 [the account screen plan](../../plans/archive/2026-09-09/96-account-sign-in-screens.md).
+
+## Listening companion utility (AS-07)
+
+`/listen-export` is a built More/Phrases utility owned by
+[plan 99](../../plans/99-batch-phrase-audio-export.md). It is not learner screen 24. It generates
+licensed multi-voice takes online, caches each phrase×voice clip on device, and plays that cache
+offline. Q-15 leaning pins enable licensed generate; pronunciation review remains. Concatenating
+the cache into a shareable AAC/M4A waits on Q-22. An Android emulator has played a labeled
+development fixture from cache in airplane mode;
+that is not licensed generate and not physical-device 58/72. It does not replace Stream, catalog
+reference audio, or account JSON export. States are
+recorded in
+[functional-spec.md](../product/functional-spec.md#as-07-batch-phrase-listening-export).

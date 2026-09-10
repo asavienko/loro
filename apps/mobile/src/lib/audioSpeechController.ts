@@ -20,9 +20,14 @@ export interface PlaybackRequest {
   /** Native-playable file URI. Never PCM, never a recording handle. */
   uri?: string
 }
+export interface FilePlaybackRequest {
+  id: string
+  fileUri: string
+}
 export interface NativeAudioSpeech {
   availability(locale: string): Promise<AudioAvailability>
   play(request: PlaybackRequest): Promise<void>
+  playFile?(request: FilePlaybackRequest): Promise<void>
   stopPlayback(): Promise<void>
   startListening(request: { id: string; locale: string }): Promise<void>
   stopListening(): Promise<void>
@@ -124,6 +129,29 @@ export class AudioSpeechController {
       await this.runNative(() => {
         if (this.playId !== id) return Promise.resolve()
         return native.play({ id, text, locale, rate, ...(uri === undefined ? {} : { uri }) })
+      })
+    } catch {
+      if (this.playId !== id) return
+      this.playId = null
+      this.didPlay = null
+      this.update({ playback: 'error' })
+    }
+  }
+  async playFile(phraseId: string, fileUri: string, onEnded?: () => void): Promise<void> {
+    const id = `play-${++this.serial}`
+    this.playId = id
+    this.didPlay = onEnded ?? null
+    this.update({ phraseId, playback: 'loading' })
+    await this.stopListening()
+    if (this.playId !== id) return
+    try {
+      const native = this.native
+      if (native?.playFile === undefined) throw new Error('native-file-unavailable')
+      if (!fileUri.startsWith('file:')) throw new Error('native-file-unavailable')
+      const playCached = native.playFile.bind(native)
+      await this.runNative(() => {
+        if (this.playId !== id) return Promise.resolve()
+        return playCached({ id, fileUri })
       })
     } catch {
       if (this.playId !== id) return

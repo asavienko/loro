@@ -72,6 +72,7 @@ describe('surface registry and deep-link guard', () => {
       'account',
       'settings',
       'more',
+      'listen-export',
       'phrase-music',
     ])
   })

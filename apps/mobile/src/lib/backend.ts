@@ -15,6 +15,12 @@ export function configuredApiUrl(value: unknown): string | undefined {
 }
 export const apiUrl = configuredApiUrl(process.env.EXPO_PUBLIC_API_URL)
 
+/** Re-read at call time. Expo inlines `process.env.EXPO_PUBLIC_*` only as a dotted access. */
+export function publicApiUrl(): string | undefined {
+  const endpoint: unknown = process.env.EXPO_PUBLIC_API_URL
+  return configuredApiUrl(typeof endpoint === 'string' ? endpoint : undefined)
+}
+
 /** RN 0.81's AbortSignal polyfill has no static timeout method. */
 export async function requestWithTimeout(
   url: string,

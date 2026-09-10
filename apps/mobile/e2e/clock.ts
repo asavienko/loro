@@ -36,9 +36,18 @@ import { expect, type Page } from '@playwright/test'
  */
 export type LocalInstant = string
 
-/** Mid-morning so Today has an open wave when the runner is after local midnight. */
-export const MANIFEST_CLOCK: LocalInstant = '2026-04-06T10:00'
+/** Open morning wave in Europe/Madrid. After 19:00 the Start-the-wave control is locked. */
+export const OPEN_WAVE_INSTANT: LocalInstant = '2026-04-06T10:00'
+
+/** Same open-wave instant; name used by the phrase-songs frozen-clock helper. */
+export const MANIFEST_CLOCK: LocalInstant = OPEN_WAVE_INSTANT
+
+const preparedPages = new WeakSet<Page>()
 const installedClocks = new WeakSet<Page>()
+
+function markClockPrepared(page: Page): void {
+  preparedPages.add(page)
+}
 
 /**
  * Install a frozen clock reading `local` in the browser's pinned timezone.
@@ -48,6 +57,7 @@ const installedClocks = new WeakSet<Page>()
  */
 export async function atInstant(page: Page, local: LocalInstant): Promise<void> {
   await page.clock.install({ time: await epochFor(page, local) })
+  markClockPrepared(page)
   installedClocks.add(page)
   await expectPageReads(page, local)
 }
@@ -56,6 +66,28 @@ export async function atInstant(page: Page, local: LocalInstant): Promise<void> 
 export async function ensureManifestClock(page: Page): Promise<void> {
   if (installedClocks.has(page)) return
   await atInstant(page, MANIFEST_CLOCK)
+}
+
+/**
+ * Freeze `Date` at a learner-local instant without pausing timers.
+ *
+ * STATES-driven `enter()` needs an open-wave wall clock so Today is not next-wave locked,
+ * but account provider discovery uses fetch + `setTimeout` abort. `clock.install()` pauses
+ * those timers and leaves Google disabled.
+ */
+export async function fixWallClock(page: Page, local: LocalInstant): Promise<void> {
+  await page.clock.setFixedTime(await epochFor(page, local))
+  markClockPrepared(page)
+  await expectPageReads(page, local)
+}
+
+/**
+ * Specs that do not pick an instant still need an open wave. Day-boundary suites call
+ * `atInstant` first, so this is a no-op on those pages.
+ */
+export async function ensureOpenWaveClock(page: Page): Promise<void> {
+  if (preparedPages.has(page)) return
+  await fixWallClock(page, OPEN_WAVE_INSTANT)
 }
 
 /**
