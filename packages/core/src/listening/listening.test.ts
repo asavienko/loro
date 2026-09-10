@@ -6,8 +6,10 @@ import {
   LISTENING_ASSET_CLASS,
   LISTENING_CODEC,
   LISTENING_MIN_VOICES,
+  LISTENING_MODEL_ID,
   LISTENING_REPEATS_DEFAULT,
   LISTENING_SHARE_ENABLED,
+  LISTENING_VOICE_DECISION,
   REFERENCE_ASSET_CLASS,
   activeListeningPhrases,
   canGenerateListening,
@@ -16,7 +18,9 @@ import {
   clampListeningRepeats,
   contentAddressFilename,
   contentAddressUri,
+  isApprovedListeningVoice,
   isLearnerAuthoredListeningText,
+  listeningAllowlistReady,
   listeningBlockers,
   listeningClipKey,
   listeningRepeatChoices,
@@ -24,6 +28,7 @@ import {
   listeningVoiceSequence,
   normalizeListeningText,
   planListeningBatch,
+  selectLicensedListeningVoices,
 } from './index.js'
 
 const digestA = 'a'.repeat(64)
@@ -166,7 +171,14 @@ describe('AS-07 listening batch', () => {
   })
 
   it('fails closed without approved voices, native cache, or Q-22 share', () => {
-    expect(APPROVED_LISTENING_VOICES['es-ES']).toHaveLength(0)
+    expect(LISTENING_VOICE_DECISION.modelId).toBeNull()
+    expect(LISTENING_VOICE_DECISION.voices['es-ES']).toHaveLength(0)
+    expect(APPROVED_LISTENING_VOICES).toBe(LISTENING_VOICE_DECISION.voices)
+    expect(LISTENING_MODEL_ID).toBe(LISTENING_VOICE_DECISION.modelId)
+    expect(listeningAllowlistReady('es-ES')).toBe(false)
+    expect(listeningAllowlistReady('bg-BG')).toBe(false)
+    expect(listeningAllowlistReady('ru-RU')).toBe(false)
+    expect(isApprovedListeningVoice('es-ES', '21m00Tcm4TlvDq8ikWAM')).toBe(false)
     expect(LISTENING_MIN_VOICES).toBe(2)
     expect(canShareListening()).toBe(false)
     expect(LISTENING_SHARE_ENABLED).toBe(false)
@@ -203,5 +215,24 @@ describe('AS-07 listening batch', () => {
       false,
     )
     expect(listeningShareFilename('es-ES', '2026-09-09')).toBe('loro-es-ES-2026-09-09-listen.m4a')
+  })
+
+  it('counts only licensed, locale-matching, unique ids toward the allowlist', () => {
+    const mixed = [
+      { id: 'voice-a', locale: 'es-ES' as const, name: 'A', licensed: true },
+      { id: 'voice-a', locale: 'es-ES' as const, name: 'A dup', licensed: true },
+      { id: 'voice-b', locale: 'es-ES' as const, name: 'B', licensed: false },
+      { id: 'voice-c', locale: 'bg-BG' as const, name: 'C', licensed: true },
+      { id: '', locale: 'es-ES' as const, name: 'empty', licensed: true },
+      { id: 'voice-d', locale: 'es-ES' as const, name: 'D', licensed: true },
+    ]
+    expect(selectLicensedListeningVoices(mixed, 'es-ES').map((voice) => voice.id)).toEqual([
+      'voice-a',
+      'voice-d',
+    ])
+    expect(selectLicensedListeningVoices(mixed, 'bg-BG').map((voice) => voice.id)).toEqual([
+      'voice-c',
+    ])
+    expect(selectLicensedListeningVoices(mixed, 'ru-RU')).toEqual([])
   })
 })

@@ -153,6 +153,8 @@ export async function prepareListeningBatch(deps: PrepareListeningDeps): Promise
   progress: ListenProgress
   clips: readonly AudioCacheObject[]
 }> {
+  // Licensed generate reads LISTENING_VOICE_DECISION (empty = fail-closed).
+  // Tests and native-debug fixture seed may override voices/modelId/seedClip.
   const voices = deps.voices ?? approvedListeningVoices(deps.locale)
   const modelId = deps.modelId === undefined ? LISTENING_MODEL_ID : deps.modelId
   const takes = planListeningBatch(deps.phrases, voices, deps.repeats)

@@ -23,9 +23,9 @@ implementation and validation.
 Licensed production seed audio, the 150 MB LRU cache, background queues/lock-screen transport,
 native DSP buffers, production listening voices (Q-15), shareable neural listening export (Q-22),
 native airplane-mode listen evidence, and physical-device linguistic acceptance remain open. Android
-stops foreground playback when backgrounded. Cloud ASR is forbidden. See
-[runtime evidence](../process/persistent-practice.md); a successful build does not prove microphone
-accuracy or device-floor performance.
+and iOS stop foreground playback, including cached `playFile`, when backgrounded. Cloud ASR is
+forbidden. See [runtime evidence](../process/persistent-practice.md); a successful build does not
+prove microphone accuracy or device-floor performance.
 
 ## Requirements this has to satisfy
 
@@ -311,11 +311,16 @@ on device, then play from disk with no network. This is not the pronunciation re
 and not account JSON export. Native cache download lives in `loro-audio-cache`, not the speech
 module. Playback of cached files uses `playFile` on `loro-audio-speech` with `file://` URIs only;
 JavaScript still must not receive PCM. Lookup and batch restore re-hash the file; a mismatch is a
-miss. In-app listen from a filled cache waits on Q-15 for production voices, not on Q-22. Debug
-builds may seed a labeled fixture AAC into the same cache; that is not licensed neural audio.
-Share-out-of-app of concatenated neural clips waits on Q-22 (`LISTENING_SHARE_ENABLED` stays false).
-Device TTS is a labeled in-app fallback on a cache miss, not the primary generator. Native
-airplane-mode listen of a previously cached batch remains an evidence gate.
+miss. Native download sends Authorization / `X-Loro-Device`, refuses redirects, disables HTTP
+caches, and does not wait for connectivity; iOS uses an ephemeral no-cookie session with a 15s
+resource timeout. In-app listen from a filled cache waits on Q-15 for production voices, not on
+Q-22. Debug builds may seed a labeled fixture AAC into the same cache; that is not licensed neural
+audio. Filling [`LISTENING_VOICE_DECISION`](../../packages/core/src/listening/constants.ts) is the
+only licensed-generate switch; see the
+[listening-voice packet](../decisions/listening-voice-packet.md). Share-out-of-app of concatenated
+neural clips waits on Q-22 (`LISTENING_SHARE_ENABLED` stays false). Device TTS is a labeled in-app
+fallback on a cache miss, not the primary generator. Native airplane-mode listen of a previously
+cached batch remains an evidence gate.
 
 ---
 

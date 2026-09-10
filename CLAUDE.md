@@ -161,14 +161,16 @@ prototype-only and **must not** be carried into the app — see the divergence t
   applies. Plan 97 owns generative Discover reach. Plan 98 owns the ElevenLabs adapter,
   `content:render`, gated `/tts/render` and catalog-file playback. Plan 99 owns the online-first
   listening companion (generate, cache, in-app listen; share after Q-22). Licensed generate stays
-  fail-closed until Q-15; file-URI generate/cache/listen is tested, including a labeled development
-  fixture seed. The next new plan number is 100; recheck concurrent worktrees and untracked `plans/`
-  files before allocating an ID — the README/CLAUDE "next is N" sentence can lag. A new plan takes
-  the next free number and gets a row in [`plans/README.md`](plans/README.md). **Numbers are never
-  reused** — a gap is left rather than backfilled, so a link written against a number can't come to
-  mean a different plan. Not in `docs/`: that holds the durable spec. Not in a temp directory either
-  — a plan you can't find again is a plan you rewrite. Name the requirement ID inside the plan so it
-  ties back to the branch and the PR.
+  fail-closed until Q-15; filling `LISTENING_VOICE_DECISION` is the only switch (packet unsigned).
+  File-URI generate/cache/listen is tested, including a labeled development fixture seed. iOS
+  `playFile` stops on background with Android. The next new plan number is 100; recheck concurrent
+  worktrees and untracked `plans/` files before allocating an ID — the README/CLAUDE "next is N"
+  sentence can lag. A new plan takes the next free number and gets a row in
+  [`plans/README.md`](plans/README.md). **Numbers are never reused** — a gap is left rather than
+  backfilled, so a link written against a number can't come to mean a different plan. Not in
+  `docs/`: that holds the durable spec. Not in a temp directory either — a plan you can't find again
+  is a plan you rewrite. Name the requirement ID inside the plan so it ties back to the branch and
+  the PR.
 - Implemented-slice plans 56–68, 70–73, 75–77, 80–82, 86–88, 90 and 93–96 were archived at user
   request on 2026-09-09 with their partial status and remaining scope preserved in
   `plans/archive/2026-09-09/`; direct links in the roadmap index retain their ownership. This

@@ -26,9 +26,6 @@ export type AudioAssetClass = typeof LISTENING_ASSET_CLASS | typeof REFERENCE_AS
  */
 export const LISTENING_SHARE_ENABLED = false
 
-/** Q-15: no licensed listening voice IDs are pinned yet. */
-export const LISTENING_MODEL_ID: string | null = null
-
 export interface ListeningVoice {
   readonly id: string
   readonly locale: TargetLocale
@@ -36,9 +33,26 @@ export interface ListeningVoice {
   readonly licensed: boolean
 }
 
-/** Production roster stays empty until Q-15 pins ≥2 licensed IDs per target. */
-export const APPROVED_LISTENING_VOICES: Record<TargetLocale, readonly ListeningVoice[]> = {
-  'es-ES': [],
-  'bg-BG': [],
-  'ru-RU': [],
+/**
+ * Q-15 listening pin. Filling this object is the only runtime switch for licensed listening
+ * generate: set `modelId` and ≥2 `licensed: true` voices per enabled target. Keep empty until the
+ * decision packet is signed. Do not copy unapproved candidates here.
+ * @see docs/decisions/listening-voice-packet.md
+ */
+export interface ListeningVoiceDecision {
+  readonly modelId: string | null
+  readonly voices: Record<TargetLocale, readonly ListeningVoice[]>
 }
+
+export const LISTENING_VOICE_DECISION: ListeningVoiceDecision = {
+  modelId: null,
+  voices: {
+    'es-ES': [],
+    'bg-BG': [],
+    'ru-RU': [],
+  },
+}
+
+export const LISTENING_MODEL_ID: string | null = LISTENING_VOICE_DECISION.modelId
+export const APPROVED_LISTENING_VOICES: Record<TargetLocale, readonly ListeningVoice[]> =
+  LISTENING_VOICE_DECISION.voices

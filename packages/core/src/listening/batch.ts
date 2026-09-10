@@ -29,8 +29,31 @@ export function listeningRepeatChoices(): readonly ListeningRepeats[] {
   )
 }
 
+export function selectLicensedListeningVoices(
+  roster: readonly ListeningVoice[],
+  locale: TargetLocale,
+): readonly ListeningVoice[] {
+  const seen = new Set<string>()
+  const voices: ListeningVoice[] = []
+  for (const voice of roster) {
+    if (!voice.licensed || voice.locale !== locale || voice.id.length === 0) continue
+    if (seen.has(voice.id)) continue
+    seen.add(voice.id)
+    voices.push(voice)
+  }
+  return voices
+}
+
 export function approvedListeningVoices(locale: TargetLocale): readonly ListeningVoice[] {
-  return APPROVED_LISTENING_VOICES[locale]
+  return selectLicensedListeningVoices(APPROVED_LISTENING_VOICES[locale], locale)
+}
+
+export function isApprovedListeningVoice(locale: TargetLocale, voiceId: string): boolean {
+  return approvedListeningVoices(locale).some((voice) => voice.id === voiceId)
+}
+
+export function listeningAllowlistReady(locale: TargetLocale): boolean {
+  return listeningModelIsPinned() && approvedListeningVoices(locale).length >= LISTENING_MIN_VOICES
 }
 
 /**
