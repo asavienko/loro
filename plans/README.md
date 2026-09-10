@@ -137,6 +137,7 @@ Dependencies refer to the named deliverable slice, not automatically the whole p
 72 supplies shared harnesses to features and consumes their release evidence; it must not create a
 feature↔release-completion cycle. See each plan's checkboxes for executable tasks and acceptance.
 
+<!-- prettier-ignore -->
 | Plan                                                                       | Remaining outcome                                                           | Milestone   | Status / blocker                                                                                             | Prerequisites                                                   |
 | -------------------------------------------------------------------------- | --------------------------------------------------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------- |
 | [56](archive/2026-09-09/56-navigation-failure-and-input-shell.md)          | Route laws, recovery, keyboard and scalable lists                           | M1          | 🟡 Registry, escapes and route/state drift gate done; shell remains                                          | 53/55/79/84 ✅; 58 for device proof                             |
@@ -177,7 +178,7 @@ feature↔release-completion cycle. See each plan's checkboxes for executable ta
 | [96](96-phrase-music-generation.md)                                       | Lyrics from selected phrases, then multi-style ElevenLabs Music             | later       | 🟡 Stub/fixture `/music` stack landed; live LLM/Music spend gated by proposed Q-21 and 86/61/62; **ID collides with archived account 96** | 86/76/82 patterns; 61/62 storage/playback; 56/81 route; Q-21    |
 | [97](97-generative-discover-and-phrase-reach.md)                           | Guarded generative Discover reach and shared add-handoff                    | M3          | 🟡 Own-phrase floor, bundled suggestions and stub suggest exist; Q-21 gates live traffic                     | 59/61; 76/86 live path; 82/83 consume handoff; Q-21             |
 | [98](98-voice-and-tts-integration.md)                                      | ElevenLabs TTS, catalog render and device-TTS fallback                      | M1/M2       | 🟡 Adapter/render/gated API/file playback in progress; Q-15 production seed remains                          | 86/61/62 slices; Q-15 live seed                                 |
-| [99](99-hygiene-reuse-and-tooling.md)                                      | Field/ListRow, barrel consistency, snippets and UniFFI `--check`            | M1          | — Reviews remain inventory; A–G landed; extracts/tools not started                                           | 2026-09-09 reviews; do not steal 56/57/67/81                    |
+| [99](99-hygiene-reuse-and-tooling.md)                                      | Field/ListRow, barrel consistency, snippets and UniFFI `--check`            | M1          | — Reviewed 2026-09-10; slices 1–2 landed; Field/ListRow/tools remain                                         | 2026-09-09 reviews; do not steal 56/57/67/81                    |
 
 Plan 88 owns the selected AWS testing profile and
 [operations runbook](../docs/runbooks/backend-testing.md); plan 73 retains production operations.
