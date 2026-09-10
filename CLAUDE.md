@@ -16,11 +16,10 @@ rendering. Rust owns FSRS, ranking, selection, matching, clocks and merge throug
 WASM/UniFFI bridges. Native modules provide foreground device TTS, catalog-file playback when a
 checksummed clip is on disk, strictly on-device ASR with an offline Speak reveal fallback, and a
 listening-class file cache that returns file URIs only. The API stores accounts, sessions and
-tenant-scoped sync in PostgreSQL and exposes `POST /tts/render` with a
-listening-class fail-closed path (default stub 503; authenticated ElevenLabs or labeled
-`TTS_STUB_RENDER=1`, which may omit a bearer for local listening-class cache wiring).
-Optional Google/Apple and email sign-in connect durable local
-progress to cross-device sync.
+tenant-scoped sync in PostgreSQL and exposes `POST /tts/render` with a listening-class fail-closed
+path (default stub 503; authenticated ElevenLabs or labeled `TTS_STUB_RENDER=1`, which may omit a
+bearer for local listening-class cache wiring). Optional Google/Apple and email sign-in connect
+durable local progress to cross-device sync.
 
 The three 31-phrase Spanish/Bulgarian/Russian starters still await bilingual review. The other 15
 learner screens, pronunciation-reviewed production seed audio (Q-15 leaning pins are in core; the
@@ -38,9 +37,11 @@ review findings as fixed: browser file import uses the picker-provided file, pic
 request-scoped and pair-safe, corrupt release pointers fail closed, chat choice IDs are unique, and
 active-session E2E navigation uses a deterministic open-wave clock. Refrain completion remains
 visible before a future-wave lock, and its persistent resume action meets the touch-target floor.
-The fast and full local checks are green; device/provider acceptance remains open. No whole plan is
-newly complete; the [implemented-slice archive](plans/archive/2026-09-09/IMPLEMENTED-SLICES.md)
-retains delivered work.
+The fast and full local checks are green; device/provider acceptance remains open.
+[Plan 100](plans/archive/2026-09-10/100-hygiene-reuse-and-tooling.md) (Field, ListRow, reuse gates,
+UniFFI `--check`) is archived. The
+[implemented-slice archive](plans/archive/2026-09-09/IMPLEMENTED-SLICES.md) retains other delivered
+work.
 
 The spine supports pull-down to open its menu; sheets dismiss by pulling their dedicated handle.
 Practice routes disable native back-swipe. Native touch validation remains a release gate. Today
@@ -162,18 +163,20 @@ prototype-only and **must not** be carried into the app — see the divergence t
   redirect files; update references to the actual archive path and rebase the moved plan's relative
   links. Keep completed records out of the active index. Archive a finished plan in the same change.
   Plan 53 was archived at user request on 2026-09-09; its former original-path exception no longer
-  applies. Plan 97 owns generative Discover reach. Plan 98 owns the ElevenLabs adapter,
-  `content:render`, gated `/tts/render` and catalog-file playback. Plan 99 owns the online-first
-  listening companion (generate, cache, in-app listen; share after Q-22). Licensed generate uses the
-  2026-09-10 `LISTENING_VOICE_DECISION` pins when native cache exists and the TTS route is ElevenLabs
-  or labeled `TTS_STUB_RENDER=1`. Default stub/missing key still fail closed. Browser generate stays
-  `native-unavailable` (no JS PCM download). Pronunciation review remains on Q-15. Q-22 share stays
-  off. File-URI generate/cache/listen is tested, including a labeled development fixture seed. iOS `playFile` stops on background with Android. Active
-  [`plans/96-phrase-music-generation.md`](plans/96-phrase-music-generation.md) collides with
-  archived account-sign-in 96 (unresolved; do not reuse or drop either). The next new plan number is
-  100; recheck concurrent worktrees and untracked `plans/` files before allocating an ID — the
-  README/CLAUDE "next is N" sentence can lag. A new plan takes the next free number and gets a row
-  in [`plans/README.md`](plans/README.md). **Numbers are never reused** — a gap is left rather than
+  applies. Main archived account-sign-in as plan 96; this branch still has phrase-music at
+  [`plans/96-phrase-music-generation.md`](plans/96-phrase-music-generation.md) under the same number
+  (unresolved ID collision). Plan 97 owns generative Discover reach. Plan 98 owns the ElevenLabs
+  adapter, `content:render`, gated `/tts/render` and catalog-file playback. Plan 99 owns the
+  online-first listening companion (generate, cache, in-app listen; share after Q-22). Licensed
+  generate uses the 2026-09-10 `LISTENING_VOICE_DECISION` pins when native cache exists and the TTS
+  route is ElevenLabs or labeled `TTS_STUB_RENDER=1`. Default stub/missing key still fail closed.
+  Browser generate stays `native-unavailable` (no JS PCM download). Pronunciation review remains on
+  Q-15. Q-22 share stays off. File-URI generate/cache/listen is tested, including a labeled
+  development fixture seed. iOS `playFile` stops on background with Android. Plan 100 (hygiene,
+  Field/ListRow, snippets, UniFFI `--check`) is archived. The next new plan number is 101; recheck
+  concurrent worktrees and untracked `plans/` files before allocating an ID — the README/CLAUDE
+  "next is N" sentence can lag. A new plan takes the next free number and gets a row in
+  [`plans/README.md`](plans/README.md). **Numbers are never reused** — a gap is left rather than
   backfilled, so a link written against a number can't come to mean a different plan. Not in
   `docs/`: that holds the durable spec. Not in a temp directory either — a plan you can't find again
   is a plan you rewrite. Name the requirement ID inside the plan so it ties back to the branch and
@@ -311,7 +314,9 @@ npx expo start --web                # from apps/mobile — fastest way to see th
   physical-device quality gate remains separate from these deterministic checks.
 - **`cargo` is off the PATH that `pnpm`/`turbo` see.** `pnpm check` looks green while the four
   `@loro/core-rs` tasks are cache hits, then fails with `cargo: command not found` the moment a Rust
-  file changes. Run `export PATH="$HOME/.cargo/bin:$PATH"` first.
+  file changes. Run `export PATH="$HOME/.cargo/bin:$PATH"` first. If rustup lives outside `~/.cargo`
+  / `~/.rustup`, Turbo also needs `CARGO_HOME` and `RUSTUP_HOME` (`turbo.json`
+  `globalPassThroughEnv`). Do not export a `RUSTUP_TOOLCHAIN` older than the crate floor.
 - **Onboarding still runs ahead of the code.** `onboarding.md` §3 names undefined `db:migrate` /
   `db:seed` commands and its tree includes target-only feature, domain, platform, module, and target
   directories. [`apps/api/README.md`](apps/api/README.md) and

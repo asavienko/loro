@@ -27,6 +27,7 @@ screen behaviour; the app and this document must say honestly which parts are im
 | Rust      | stable             | `packages/core-rs` tests and host/WASM builds       |
 | wasm-pack | current            | Building the API's WASM merge engine                |
 | Chromium  | Playwright-managed | Browser E2E; installed with `pnpm test:e2e:install` |
+| Gitleaks  | current            | Pre-commit secret scan; `brew install gitleaks`     |
 
 Start every shell with Node 22 and make Cargo visible:
 
@@ -50,9 +51,11 @@ pnpm test:e2e
 ```
 
 `pnpm bootstrap` installs dependencies, regenerates tokens, builds the Rust host library/WASM and
-bindings, validates content, and creates app `.env` files. Its final printed API database commands
-are legacy roadmap text: `db:migrate` and `db:seed` do not exist. Native `ios/` and `android/`
-projects are generated and gitignored; custom modules live under `apps/mobile/modules/`.
+bindings, validates content, and creates app `.env` files. It warns when Gitleaks is missing — the
+same class as the watchman warning — because `.husky/pre-commit` hard-fails without it, then runs
+lint-staged. Its final printed API database commands are legacy roadmap text: `db:migrate` and
+`db:seed` do not exist. Native `ios/` and `android/` projects are generated and gitignored; custom
+modules live under `apps/mobile/modules/`.
 
 `pnpm check` is the fast local gate: workspace lint, type checking, 799 JS/TS tests, 169 Rust tests,
 content validation, source accessibility checks, copy ownership and token contrast. It is not the

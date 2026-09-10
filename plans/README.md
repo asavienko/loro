@@ -4,8 +4,8 @@ This index lists only the **39 plans with remaining work**. Completed records an
 snapshots are kept in [the archive](archive/README.md), without compatibility symlinks or redirect
 files in this directory. Links point directly to each plan's actual location.
 
-The highest assigned ID is **99** and the next new plan is **100**. Recheck concurrent worktrees and
-untracked `plans/` files before allocating; the "next is N" sentence can lag. Numbers are never
+The highest assigned ID is **100** and the next new plan is **101**. Recheck concurrent worktrees
+and untracked `plans/` files before allocating; the "next is N" sentence can lag. Numbers are never
 reused; 49 remains an existing gap. When a plan finishes, archive it in the same change and list it
 only in the archive index.
 
@@ -17,15 +17,17 @@ Implemented-slice owners from 56–68, 70–73, 75–77, 80–82, 86–88, 90 an
 [the 2026-09-09 archive](archive/2026-09-09/README.md) at user request. Their partial statuses and
 outstanding scope remain indexed below; archiving does not imply completion. Only the still-unbuilt
 or decision-gated files 69, 74, 78, 83, 96 (phrase-music), 97, 98 and 99 remain in this directory.
+Plan 100 is archived.
 
 The [post-main review](../docs/reviews/2026-09-09-post-main-plan-review.md) records the six runtime
 and validation findings as fixed, including the follow-up Refrain completion and touch-target
-repairs. No additional whole plan meets its acceptance criteria. Delivered implementation slices are
-recorded in the [dated archive](archive/2026-09-09/IMPLEMENTED-SLICES.md); all 39 remaining-work
-owners are retained, including [99](99-batch-phrase-audio-export.md) for online-first listening
-generation and on-device cache (share-out-of-app still ⛔ Q-22) and
-[phrase-music](96-phrase-music-generation.md). Continue with device/provider acceptance, then
-integrate the remaining daily-loop, Review, content and lifecycle slices.
+repairs. [Plan 100](archive/2026-09-10/100-hygiene-reuse-and-tooling.md) met its hygiene acceptance
+and is archived. Delivered implementation slices are recorded in the
+[dated archive](archive/2026-09-09/IMPLEMENTED-SLICES.md); the other remaining-work owners are
+retained, including [99](99-batch-phrase-audio-export.md) for online-first listening generation and
+on-device cache (share-out-of-app still ⛔ Q-22) and [phrase-music](96-phrase-music-generation.md).
+Continue with device/provider acceptance, then integrate the remaining daily-loop, Review, content
+and lifecycle slices.
 
 The [2026-09-09 implementation review](../docs/reviews/2026-09-09-twenty-plan-implementation.md)
 records changes requested after the next twenty bounded slices. Each selected plan remains partial;
@@ -39,7 +41,8 @@ platform/device acceptance remains separate.
 The
 [whole-project improvement assessment](../docs/reviews/2026-09-09-project-improvement-assessment.md)
 covers remaining refactors, the keep/adopt/avoid tool matrix for every package, and practices that
-are enforced versus stale. It does not open a new plan. The
+are enforced versus stale. Executable hygiene from those reviews is
+[archived plan 100](archive/2026-09-10/100-hygiene-reuse-and-tooling.md). The
 [refactoring-strategies review](../docs/reviews/2026-09-09-refactoring-strategies.md) inventories
 structural debt in existing code and separates it from unfinished plan work. The
 [native-libraries companion](../docs/reviews/2026-09-09-native-libraries-and-approaches.md) maps
@@ -141,6 +144,7 @@ Dependencies refer to the named deliverable slice, not automatically the whole p
 72 supplies shared harnesses to features and consumes their release evidence; it must not create a
 feature↔release-completion cycle. See each plan's checkboxes for executable tasks and acceptance.
 
+<!-- prettier-ignore -->
 | Plan                                                                       | Remaining outcome                                                           | Milestone   | Status / blocker                                                                                                                          | Prerequisites                                                            |
 | -------------------------------------------------------------------------- | --------------------------------------------------------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
 | [56](archive/2026-09-09/56-navigation-failure-and-input-shell.md)          | Route laws, recovery, keyboard and scalable lists                           | M1          | 🟡 Registry, escapes and route/state drift gate done; shell remains                                                                       | 53/55/79/84 ✅; 58 for device proof                                      |
@@ -194,10 +198,10 @@ Render testing recommendation in 86 is superseded by 88.
   tests.
 - Keep one owner per behavior: 56 route policy, 81 chrome; 59 durable checkpoints, 64 wave
   transitions; 66 server cursors, 68 client convergence; 86 vendor controls, 76/82/97 product AI; 99
-  listening-class cache and companion UX, 62 in-app playback/download cache, 67 JSON account export.
-  Archived plan 96 remains the account sign-in screens. Active
-  [`96-phrase-music-generation.md`](96-phrase-music-generation.md) is the phrase-song garnish under
-  the same number (unresolved collision; do not reuse or drop either).
+  listening-class cache and companion UX, archived 100 for Field/ListRow/tooling, 62 in-app
+  playback/download cache, 67 JSON account export. Archived plan 96 remains the account sign-in
+  screens. Active [`96-phrase-music-generation.md`](96-phrase-music-generation.md) is the
+  phrase-song garnish under the same number (unresolved collision; do not reuse or drop either).
 - Future surfaces consume the selected language pair and real capability states. Preserve personal
   meaning language, course isolation and global streak semantics; never silently substitute Spanish.
 - Every new learner state lands with its manifest row and E2E checks. Native behavior requires

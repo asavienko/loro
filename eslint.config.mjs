@@ -239,6 +239,30 @@ export default tseslint.config(
               message:
                 'Never store tokens or credentials here. Use expo-secure-store (Keychain / Keystore).',
             },
+            {
+              name: 'react-native',
+              importNames: ['TextInput'],
+              message:
+                'Use Field from src/ui/primitives. Raw TextInput is banned after plan 100.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+
+  {
+    files: ['apps/mobile/src/ui/primitives/Field.tsx', 'apps/mobile/**/*.test.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: '@react-native-async-storage/async-storage',
+              message:
+                'Never store tokens or credentials here. Use expo-secure-store (Keychain / Keystore).',
+            },
           ],
         },
       ],

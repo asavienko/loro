@@ -24,8 +24,10 @@
  *
  * When adding an accessibility prop anywhere in this directory, check it against
  * `react-native-web/src/modules/createDOMProps/index.js` — silence is the failure mode.
- * The two components that carry state today are `./Pressable.tsx` (`selected` →
- * `accessibilityState.checked` + `aria-checked`) and `./bars.tsx` (`ProgressBar`'s value).
+ * The components that carry state today are `./Pressable.tsx` (`selected` →
+ * `accessibilityState.checked` + `aria-checked`), `./bars.tsx` (`ProgressBar`'s value),
+ * and `./Field.tsx` (`invalid` / `editable` → `accessibilityState` + `aria-invalid` /
+ * `aria-disabled`).
  */
 
 export { Text, SectionLabel, ChartSummary, type TypeVariant } from './Text'
@@ -41,3 +43,5 @@ export { Segmented, type SegmentedOption } from './Segmented'
 export { Sheet } from './Sheet'
 export { ProgressBar, Dots } from './bars'
 export { EmojiTile, Dot, StatTile } from './tiles'
+export { Field } from './Field'
+export { ListRow } from './ListRow'
