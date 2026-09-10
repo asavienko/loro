@@ -245,10 +245,12 @@ describe('gated POST /tts/render', () => {
     ).rejects.toMatchObject({ code: 'PROVIDER_UNAVAILABLE' })
     vi.stubEnv('TTS_STUB_RENDER', '0')
     const closed = new TtsService(new StubTts(), { now: () => 1 })
-    await expect(closed.render({ userId: 'learner', ip: '127.0.0.1', body })).rejects.toMatchObject({
-      code: 'PROVIDER_UNAVAILABLE',
-      status: 503,
-    })
+    await expect(closed.render({ userId: 'learner', ip: '127.0.0.1', body })).rejects.toMatchObject(
+      {
+        code: 'PROVIDER_UNAVAILABLE',
+        status: 503,
+      },
+    )
   })
 
   it('does not serve a checksum-mismatched cache file and will not treat it as cached', async () => {

@@ -234,9 +234,9 @@ describe('listening generate → file cache → listen', () => {
       network: () => Promise.resolve(true),
       credentials: () => Promise.resolve({ token: 'access', deviceId: 'device-1' }),
       render: (request) => {
-        expect(approvedListeningVoices('es-ES').some((voice) => voice.id === request.voice_id)).toBe(
-          true,
-        )
+        expect(
+          approvedListeningVoices('es-ES').some((voice) => voice.id === request.voice_id),
+        ).toBe(true)
         expect(request.model_id).toBe(LISTENING_MODEL_ID)
         expect(request.asset_class).toBe(LISTENING_ASSET_CLASS)
         return Promise.resolve({
