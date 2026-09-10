@@ -1,5 +1,5 @@
 /**
- * The style algebra behind `Chip`, `Segmented` and `Field` — resolved from (variant, tone,
+ * The style algebra behind `Chip`, `Segmented`, `Field` and `ListRow` — resolved from (variant, tone,
  * selected) to the exact style object each shape had when it was hand-rolled in a screen.
  *
  * ── Why this is a separate, pure module ──
@@ -20,6 +20,7 @@ import {
   field,
   ink,
   line,
+  listRow,
   onDark,
   radius,
   segmented,
@@ -139,6 +140,24 @@ export function segmentLook(
     },
     textColor: selected ? onDark.primary : ink.ink3,
     textVariant: 'labelSm',
+  }
+}
+
+/**
+ * Settings / More / Music list chrome (`settings.tsx` 206–212, `more.tsx` 59–67,
+ * `music.tsx` 447–455). Gap stays a call-site prop.
+ */
+export function listRowLook(gap: number): { container: ViewStyle } {
+  return {
+    container: {
+      minHeight: listRow.minHeight,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap,
+      paddingVertical: listRow.paddingVertical,
+      borderBottomWidth: border.hairline,
+      borderBottomColor: line.subtle,
+    },
   }
 }
 

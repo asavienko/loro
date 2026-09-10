@@ -3,8 +3,8 @@ import { ScrollView, StyleSheet } from 'react-native'
 import { copy } from '../src/lib/copy'
 import { useLocale } from '../src/lib/i18n'
 import { destinationsForGroup, NAVIGATION_GROUPS } from '../src/lib/navigation'
-import { Pressable, Screen, SectionLabel, Stack, Text } from '../src/ui/primitives'
-import { border, ink, line, space } from '../src/ui/theme'
+import { ListRow, Screen, SectionLabel, Stack, Text } from '../src/ui/primitives'
+import { ink, space } from '../src/ui/theme'
 
 /** NAV-01/NAV-08; Navigation.dc.html:494–496. Only declared, built destinations. */
 export default function More() {
@@ -34,13 +34,12 @@ function DestinationRow({
   destination: ReturnType<typeof destinationsForGroup>[number]
 }) {
   return (
-    <Pressable
-      feedback="row"
+    <ListRow
       accessibilityLabel={destination.label}
       onPress={() => {
         router.push(destination.href)
       }}
-      style={s.row}
+      gap={space['2.5']}
     >
       <Text variant="body" color={ink.ink} style={s.label}>
         {destination.label}
@@ -48,22 +47,11 @@ function DestinationRow({
       <Text variant="captionSm" color={ink.muted}>
         {copy.common.chevron.right}
       </Text>
-    </Pressable>
+    </ListRow>
   )
 }
 
-const ROW_PADDING = 13
-const MIN_ROW_HEIGHT = 48
 const s = StyleSheet.create({
   content: { padding: space['5'] },
-  row: {
-    minHeight: MIN_ROW_HEIGHT,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space['2.5'],
-    paddingVertical: ROW_PADDING,
-    borderBottomWidth: border.hairline,
-    borderBottomColor: line.subtle,
-  },
   label: { flex: 1 },
 })

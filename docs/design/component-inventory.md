@@ -11,7 +11,7 @@ frames, 10 navigation, 4 practice, and 3 progress. Four additional JSX files und
 `ui_kits/loro-app/` compose reference screens and do not belong to the component count. Likewise,
 the adjacent CSS token files contain 246 unique custom-property names, not the headline's 245.
 
-All reusable app UI lives under `apps/mobile/src/ui/`. Learner screens and the shell use 25
+All reusable app UI lives under `apps/mobile/src/ui/`. Learner screens and the shell use 26
 exported primitives and 9 exported composites (including direct module exports). There is no `src/ui/charts/` directory yet.
 
 ## Current primitives · `src/ui/primitives/`
@@ -45,10 +45,11 @@ Primitives are domain-free. Their public exports come from `primitives/index.ts`
 | `Dot`           | Decorative sized colour dot                                                                                          |
 | `StatTile`      | String value/label grouped into one accessible node                                                                  |
 | `Field`         | Labelled text input; optional container border, invalid tone, multiline, and clear. Copy is always a prop            |
+| `ListRow`       | Selectable or navigable 48 / 13 / hairline row; `gap` is a prop. Settings marker and Music bilingual lines stay children |
 
-`controlStyle.ts` is private style algebra for `Chip` and `Segmented`; its unit test pins variant
-geometry. Files such as `bars.tsx`, `tiles.tsx`, and `surfaces.tsx` are source grouping, not extra
-public components.
+`controlStyle.ts` is private style algebra for `Chip`, `Segmented`, `Field` and `ListRow`; its unit
+test pins variant geometry. Files such as `bars.tsx`, `tiles.tsx`, and `surfaces.tsx` are source
+grouping, not extra public components.
 
 ## Current composites · `src/ui/components/`
 
@@ -89,7 +90,7 @@ The direct-module composites also include:
 
 ## Workbench coverage (plan 80)
 
-The registry covers all 34 production component exports, including direct-module `AudioControls`,
+The registry covers all 35 production component exports, including direct-module `AudioControls`,
 `LanguageChoices` and `NavigationMenu`. A source-based drift test checks component definitions as
 well as the type-checked barrel contract, so bypassing a barrel cannot hide a new component.
 `Sheet`, `ActionBar`, `DifficultySelector` and `TagChips` are explicitly interaction-owned; all

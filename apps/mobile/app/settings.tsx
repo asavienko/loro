@@ -5,7 +5,7 @@ import { ScrollView, StyleSheet, View } from 'react-native'
 import { copy } from '../src/lib/copy'
 import { useLocale } from '../src/lib/i18n'
 import { useApp } from '../src/store'
-import { Pressable, Screen, SectionLabel, Stack, Text } from '../src/ui/primitives'
+import { ListRow, Screen, SectionLabel, Stack, Text } from '../src/ui/primitives'
 import { border, ink, line, space, surface } from '../src/ui/theme'
 
 const ACCENTS = Object.keys(accents) as AccentName[]
@@ -140,7 +140,7 @@ function SettingRow({
   onPress: () => void
 }) {
   return (
-    <Pressable feedback="row" accessibilityLabel={label} onPress={onPress} style={styles.row}>
+    <ListRow accessibilityLabel={label} onPress={onPress} gap={space['3']}>
       <View style={styles.copy}>
         <Text variant="body">{label}</Text>
         <Text variant="caption" color={ink.muted}>
@@ -148,7 +148,7 @@ function SettingRow({
         </Text>
       </View>
       <Text color={ink.muted}>{copy.common.chevron.right}</Text>
-    </Pressable>
+    </ListRow>
   )
 }
 
@@ -168,13 +168,12 @@ function ChoiceRow({
   role?: 'radio' | 'checkbox'
 }) {
   return (
-    <Pressable
-      feedback="row"
+    <ListRow
       accessibilityRole={role}
       accessibilityLabel={label}
       selected={selected}
       onPress={onPress}
-      style={styles.row}
+      gap={space['3']}
     >
       <View style={styles.copy}>
         <Text variant="body">{label}</Text>
@@ -196,21 +195,12 @@ function ChoiceRow({
           </Text>
         )}
       </View>
-    </Pressable>
+    </ListRow>
   )
 }
 
 const styles = StyleSheet.create({
   content: { padding: space['5'] },
-  row: {
-    minHeight: 48,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space['3'],
-    paddingVertical: 13,
-    borderBottomWidth: border.hairline,
-    borderBottomColor: line.subtle,
-  },
   copy: { flex: 1, gap: space['0.5'] },
   marker: {
     width: 24,

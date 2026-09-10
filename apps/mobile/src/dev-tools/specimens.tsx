@@ -245,6 +245,18 @@ const PRIMITIVE_METADATA = {
       />
     ),
   },
+  ListRow: {
+    states: ['default', 'selected', 'disabled', 'long-copy', 'text-200', 'text-310'],
+    render: () => (
+      <primitiveExports.ListRow
+        accessibilityLabel="Production list row"
+        gap={space['2.5']}
+        onPress={noop}
+      >
+        <primitiveExports.Text>Production list row</primitiveExports.Text>
+      </primitiveExports.ListRow>
+    ),
+  },
 } as const satisfies Record<keyof typeof primitiveExports, SpecimenMetadata>
 
 function LanguageChoicesSpecimen() {

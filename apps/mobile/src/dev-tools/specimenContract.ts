@@ -24,6 +24,7 @@ export const PRODUCTION_COMPONENT_NAMES = [
   'Dot',
   'StatTile',
   'Field',
+  'ListRow',
   'ActionBar',
   'DifficultySelector',
   'EmptyState',
