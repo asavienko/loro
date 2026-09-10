@@ -35,6 +35,7 @@ export {
   canShareListening,
   clampListeningRepeats,
   isApprovedListeningVoice,
+  isPinnedListeningModel,
   listeningAllowlistReady,
   listeningRepeatChoices,
   listeningBlockers,
