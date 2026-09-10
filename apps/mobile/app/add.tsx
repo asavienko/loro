@@ -12,7 +12,7 @@ import { useLocale } from '../src/lib/i18n'
  * ABOUT TO ADD. Splitting the state that way is what let the render collapse: the sheet no
  * longer reads the search box's state, and the list no longer reads the draft's.
  */
-import { ScrollView, StyleSheet, TextInput, View } from 'react-native'
+import { ScrollView, StyleSheet, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import {
   BROWSABLE_THEMES,
@@ -43,6 +43,7 @@ import {
   Card,
   Chip,
   EmojiTile,
+  Field,
   Grid,
   Pressable,
   Row,
@@ -302,7 +303,7 @@ function AddHeader({
             borderWidth={border.selected}
             style={s.searchField}
           >
-            <TextInput
+            <Field
               value={query}
               onChangeText={onQueryChange}
               placeholder={copy.add.searchPlaceholder}
@@ -608,7 +609,7 @@ function TaggingSheet({
                 <Row gap={metrics.sheetPhrase}>
                   <EmojiTile emoji={own.emoji ?? OWN_PHRASE_FALLBACK.emoji} />
                   <View style={s.sheetPhraseLines}>
-                    <TextInput
+                    <Field
                       value={own.targetText}
                       onChangeText={(value) => {
                         onOwnFieldChange('targetText', value)
@@ -620,7 +621,7 @@ function TaggingSheet({
                       maxLength={MAX_OWN_PHRASE_TEXT_CODE_UNITS}
                       style={s.sheetInput}
                     />
-                    <TextInput
+                    <Field
                       value={own.translation}
                       onChangeText={(value) => {
                         onOwnFieldChange('translation', value)

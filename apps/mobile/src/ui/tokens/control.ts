@@ -12,7 +12,7 @@
  */
 
 import { radius, size, space } from '@loro/design-tokens'
-import { barRadius, border } from './sizing'
+import { MIN_TAP, barRadius, border } from './sizing'
 
 /**
  * `Pill` — five shapes, keyed by size. The first three are the flat label; the two capsules are
@@ -192,3 +192,27 @@ export const cardHeader = { marginBottom: space['3'] } as const
 
 /** `EmptyState`'s defaults. Both are overridable — two screens run tighter. */
 export const emptyState = { padding: space['5'], gap: space['3'] } as const
+
+/**
+ * `Field` — the labelled text input Account, Discover, Import and Workbench were hand-rolling.
+ *
+ * `minHeight` is the tap floor. Discover's 46, the tagging sheet's 38 and Import's 132 sit on
+ * the call site as `style` overrides so those pixels do not get averaged into this token.
+ * Border colour is an accessibility decision and lives on `fieldLook`, not here.
+ */
+export const field = {
+  minHeight: MIN_TAP,
+  padding: space['3'],
+  borderWidth: 1,
+  borderRadius: radius.lg,
+} as const
+
+/**
+ * `ListRow` — Settings, More and Music share 48 / 13 / hairline. Gap is a prop
+ * (Settings `space['3']`, More/Music `space['2.5']`) so this token does not average them.
+ * Hairline width lives on `border`; the colour is an accessibility decision on `listRowLook`.
+ */
+export const listRow = {
+  minHeight: 48,
+  paddingVertical: 13,
+} as const

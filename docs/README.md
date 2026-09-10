@@ -2,14 +2,15 @@
 
 [Whole-project improvement assessment — 2026-09-09](reviews/2026-09-09-project-improvement-assessment.md)
 answers what to refactor, which tools and libraries to keep or avoid, and which practices are
-enforced versus stale, across mobile, core, Rust, API, content, tokens and CI. It is not a numbered
-plan and does not claim product acceptance. The two companions below remain authoritative in their
-narrower scopes.
+enforced versus stale, across mobile, core, Rust, API, content, tokens and CI. A–G and the ADR
+amendments it records have landed. Executable hygiene, reuse and tooling from that review is
+[archived plan 100](../plans/archive/2026-09-10/100-hygiene-reuse-and-tooling.md). The review itself
+is not product acceptance. The two companions below remain authoritative in their narrower scopes.
 
 [Refactoring strategies — 2026-09-09](reviews/2026-09-09-refactoring-strategies.md) inventories
 structural cleanup of **shipped** code: dual TS/Rust numbers, contract schema forks, practice-route
-store holes, and docs that lag `AppModule`. It is not an implementation plan and does not claim
-whole-plan acceptance.
+store holes, and docs that lag `AppModule`. A–G landed; leftover extracts and tools are plan 100. It
+does not claim whole-plan product acceptance.
 
 [Native libraries and approaches — 2026-09-09](reviews/2026-09-09-native-libraries-and-approaches.md)
 is a companion to that sequence: Expo/RN keep-vs-adopt-vs-avoid for touches, switches, haptics,

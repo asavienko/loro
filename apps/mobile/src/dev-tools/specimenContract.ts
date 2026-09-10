@@ -23,6 +23,8 @@ export const PRODUCTION_COMPONENT_NAMES = [
   'EmojiTile',
   'Dot',
   'StatTile',
+  'Field',
+  'ListRow',
   'ActionBar',
   'DifficultySelector',
   'EmptyState',
