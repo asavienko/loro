@@ -60,23 +60,24 @@ for (const scale of SCALES) {
 }
 
 test.describe('whole-manifest text scale', () => {
-  test.describe.configure({ retries: 0 })
+  test.describe.configure({ retries: 0, timeout: 600_000 })
 
   for (const scale of SCALES) {
-    test(`text at ${scale * 100}% never clips or overflows`, async ({ page }) => {
-      // Account, listen, music, and Reanimated kit surfaces. Five minutes is no
-      // longer enough for 100+ enter() calls; ten is. Do not retry a timeout.
-      test.setTimeout(600_000)
-      const problems: string[] = []
+    test(
+      `text at ${scale * 100}% never clips or overflows`,
+      { timeout: 600_000 },
+      async ({ page }) => {
+        const problems: string[] = []
 
-      for (const state of STATES) {
-        await enter(page, state, onboard)
-        await scaleText(page, scale)
-        problems.push(...(await layoutProblems(page, state.name)))
-      }
+        for (const state of STATES) {
+          await enter(page, state, onboard)
+          await scaleText(page, scale)
+          problems.push(...(await layoutProblems(page, state.name)))
+        }
 
-      expect(problems, `layout failures at ${scale * 100}% text`).toEqual([])
-    })
+        expect(problems, `layout failures at ${scale * 100}% text`).toEqual([])
+      },
+    )
   }
 })
 
