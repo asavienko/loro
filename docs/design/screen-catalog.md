@@ -203,7 +203,10 @@ paired live phones rather than six additional screens.
   owns the root header band, text rail, and day-as-hairline-rows treatment. Every shared-menu
   surface has a switcher state in the browser manifest; onboarding retains its step-based
   navigation. `/more` now lists built destinations from the shared registry and has a browser
-  state; it is a utility, not one of the 23 authored learner screens. Grouping/search, the spine's
+  state; it is a utility, not one of the 23 authored learner screens. `/music` (Phrase songs) is a
+  later garnish from More → Practice — not a 24th authored v1.1 screen and not in `Loro.dc.html`.
+  Default CI uses the lyrics-only floor and fixture playback; live generation stays behind plan 96
+  / proposed Q-21. Grouping/search, the spine's
   ongoing chip, travelling transport, exit sheet, resume and full named-back policy remain plan
   81's, on plan 56's route metadata.
 - The existing stack headers now provide a labelled Today escape when a cold entry has no stack

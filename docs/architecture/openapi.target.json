@@ -6291,6 +6291,695 @@
           "Registered flags, assignment policy, exposure taxonomy and Q-05 experiment design"
         ]
       }
+    },
+    "/music/lyrics": {
+      "post": {
+        "operationId": "musicLyrics",
+        "summary": "Build a validated lyric document from catalog phrase ids",
+        "description": "Authenticated principals only. Server reloads catalog text; client ids are not the sung-text source. Repair-once then bundled lyrics-only floor. No recordings, notes, or progress fields.",
+        "tags": [
+          "music"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "X-Loro-App",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/authApple_header_X_Loro_App"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/authClaim_header_Idempotency_Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Build a validated lyric document from catalog phrase ids",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/musicLyrics_200"
+                },
+                "examples": {
+                  "illustrative": {
+                    "value": {
+                      "lyric_document_id": "lyric_example",
+                      "document": {
+                        "schema_version": 1,
+                        "target_locale": "es-ES",
+                        "meaning_language": "en",
+                        "catalog_version": 1,
+                        "phrase_ids": [
+                          "cafe1",
+                          "cafe2",
+                          "cafe3"
+                        ],
+                        "title": {
+                          "target": "Me pone un cortado, por favor",
+                          "translation": "A cortado, please"
+                        },
+                        "sections": [
+                          {
+                            "name": "Verse 1",
+                            "lines": [
+                              "Me pone un cortado, por favor",
+                              "¿Tienen leche de avena?"
+                            ]
+                          },
+                          {
+                            "name": "Chorus",
+                            "lines": [
+                              "Me pone un cortado, por favor"
+                            ]
+                          },
+                          {
+                            "name": "Verse 2",
+                            "lines": [
+                              "Para llevar, por favor"
+                            ]
+                          }
+                        ],
+                        "used_phrases": [
+                          {
+                            "catalog_phrase_id": "cafe1",
+                            "target_text": "Me pone un cortado, por favor",
+                            "section_name": "Verse 1",
+                            "line_index": 0,
+                            "match": "exact_line"
+                          },
+                          {
+                            "catalog_phrase_id": "cafe2",
+                            "target_text": "¿Tienen leche de avena?",
+                            "section_name": "Verse 1",
+                            "line_index": 1,
+                            "match": "exact_line"
+                          },
+                          {
+                            "catalog_phrase_id": "cafe3",
+                            "target_text": "Para llevar, por favor",
+                            "section_name": "Verse 2",
+                            "line_index": 0,
+                            "match": "exact_line"
+                          }
+                        ],
+                        "gloss_lines": [
+                          {
+                            "target": "Me pone un cortado, por favor",
+                            "translation": "A cortado, please"
+                          },
+                          {
+                            "target": "¿Tienen leche de avena?",
+                            "translation": "Do you have oat milk?"
+                          },
+                          {
+                            "target": "Para llevar, por favor",
+                            "translation": "To go, please"
+                          }
+                        ]
+                      },
+                      "provenance": "bundled",
+                      "fallback": true,
+                      "cached": false
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Code selects client recovery; never render internal detail verbatim.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Code selects client recovery; never render internal detail verbatim.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Code selects client recovery; never render internal detail verbatim.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Code selects client recovery; never render internal detail verbatim.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Code selects client recovery; never render internal detail verbatim.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Code selects client recovery; never render internal detail verbatim.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Code selects client recovery; never render internal detail verbatim.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_429_Retry_After"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_429_Retry_After"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_429_Retry_After"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_429_X_RateLimit_Reset"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Code selects client recovery; never render internal detail verbatim.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Code selects client recovery; never render internal detail verbatim.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            }
+          }
+        },
+        "x-loro-auth-boundary": "bearer",
+        "x-loro-status": "draft",
+        "x-loro-owner-plan": 96,
+        "x-loro-requirements": [
+          "F-04"
+        ],
+        "x-loro-gates": [
+          "Q-21"
+        ],
+        "x-loro-unresolved": [
+          "Q-21 enablement, commercial rights, attribution, provider retention and live lyric quality"
+        ],
+        "x-loro-max-body-bytes": 32768,
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/musicLyrics_request"
+              },
+              "examples": {
+                "illustrative": {
+                  "value": {
+                    "target_locale": "es-ES",
+                    "meaning_language": "en",
+                    "catalog_phrase_ids": [
+                      "cafe1",
+                      "cafe2",
+                      "cafe3"
+                    ],
+                    "tag_profile": {
+                      "pron": 1,
+                      "remember": 0,
+                      "useful": 2,
+                      "words": 0
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/music/renders": {
+      "post": {
+        "operationId": "musicRenders",
+        "summary": "Render one lyric document in 2–4 Loro style packs",
+        "description": "Same lyric hash for every style. music_v2 chunks only; no title on the vendor wire; no conditioning_ref. Serialize within Music concurrency 2. Partial style success is first-class. No audio bytes on the JSON response.",
+        "tags": [
+          "music"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "X-Loro-App",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/authApple_header_X_Loro_App"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/authClaim_header_Idempotency_Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Render one lyric document in 2–4 Loro style packs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/musicRenders_200"
+                },
+                "examples": {
+                  "illustrative": {
+                    "value": {
+                      "lyric_document_id": "lyric_example",
+                      "jobs": [
+                        {
+                          "job_id": "job_folk",
+                          "style_id": "acoustic_folk",
+                          "status": "ready",
+                          "error_code": null,
+                          "track_id": "track_folk",
+                          "duration_ms": 400
+                        },
+                        {
+                          "job_id": "job_pop",
+                          "style_id": "modern_pop",
+                          "status": "ready",
+                          "error_code": null,
+                          "track_id": "track_pop",
+                          "duration_ms": 400
+                        },
+                        {
+                          "job_id": "job_ballad",
+                          "style_id": "gentle_ballad",
+                          "status": "failed",
+                          "error_code": "invalid_audio",
+                          "track_id": null,
+                          "duration_ms": null
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Code selects client recovery; never render internal detail verbatim.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Code selects client recovery; never render internal detail verbatim.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Code selects client recovery; never render internal detail verbatim.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Code selects client recovery; never render internal detail verbatim.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Code selects client recovery; never render internal detail verbatim.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Code selects client recovery; never render internal detail verbatim.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Code selects client recovery; never render internal detail verbatim.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_429_Retry_After"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_429_Retry_After"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_429_Retry_After"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_429_X_RateLimit_Reset"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Code selects client recovery; never render internal detail verbatim.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Code selects client recovery; never render internal detail verbatim.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            }
+          }
+        },
+        "x-loro-auth-boundary": "bearer",
+        "x-loro-status": "draft",
+        "x-loro-owner-plan": 96,
+        "x-loro-requirements": [
+          "F-04"
+        ],
+        "x-loro-gates": [
+          "Q-21"
+        ],
+        "x-loro-unresolved": [
+          "Q-21 paid Music access, commercial rights, C2PA/attribution and vocal quality (Q-21g)"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/musicRenders_request"
+              },
+              "examples": {
+                "illustrative": {
+                  "value": {
+                    "lyric_document_id": "lyric_example",
+                    "style_ids": [
+                      "acoustic_folk",
+                      "modern_pop",
+                      "gentle_ballad"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/music/tracks/{track_id}": {
+      "get": {
+        "operationId": "musicTrack",
+        "summary": "Authorized generated-track metadata",
+        "description": "Principal-scoped. Other accounts see NOT_FOUND. Duration is file or provider metadata, never an estimate. Bytes are fetched from download_path, not this JSON body.",
+        "tags": [
+          "music"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "track_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/authClaim_header_X_Loro_Device"
+            }
+          },
+          {
+            "name": "X-Loro-App",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/authApple_header_X_Loro_App"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authorized generated-track metadata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/musicTrack_200"
+                },
+                "examples": {
+                  "illustrative": {
+                    "value": {
+                      "track_id": "track_folk",
+                      "style_id": "acoustic_folk",
+                      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                      "byte_length": 128,
+                      "duration_ms": 400,
+                      "content_type": "audio/wav",
+                      "generated": true,
+                      "download_path": "/music/tracks/track_folk/content"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Code selects client recovery; never render internal detail verbatim.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Code selects client recovery; never render internal detail verbatim.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Code selects client recovery; never render internal detail verbatim.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Code selects client recovery; never render internal detail verbatim.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Code selects client recovery; never render internal detail verbatim.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Code selects client recovery; never render internal detail verbatim.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Code selects client recovery; never render internal detail verbatim.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_429_Retry_After"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_429_Retry_After"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_429_Retry_After"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_429_X_RateLimit_Reset"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Code selects client recovery; never render internal detail verbatim.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Code selects client recovery; never render internal detail verbatim.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            }
+          }
+        },
+        "x-loro-auth-boundary": "bearer",
+        "x-loro-status": "draft",
+        "x-loro-owner-plan": 96,
+        "x-loro-requirements": [
+          "F-04"
+        ],
+        "x-loro-gates": [
+          "Q-21"
+        ],
+        "x-loro-unresolved": [
+          "Q-21 download/cache rights and short-lived object URLs"
+        ]
+      }
     }
   },
   "components": {
@@ -23356,6 +24045,492 @@
           "expires_at",
           "flags",
           "assignments"
+        ],
+        "additionalProperties": false
+      },
+      "musicLyrics_200": {
+        "type": "object",
+        "properties": {
+          "lyric_document_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[a-zA-Z0-9_-]+$"
+          },
+          "document": {
+            "type": "object",
+            "properties": {
+              "schema_version": {
+                "type": "number",
+                "const": 1
+              },
+              "target_locale": {
+                "type": "string",
+                "enum": [
+                  "es-ES",
+                  "bg-BG",
+                  "ru-RU"
+                ]
+              },
+              "meaning_language": {
+                "type": "string",
+                "enum": [
+                  "en",
+                  "bg",
+                  "ru"
+                ]
+              },
+              "catalog_version": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "phrase_ids": {
+                "minItems": 3,
+                "maxItems": 8,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 2,
+                  "maxLength": 32,
+                  "pattern": "^(?:(?:es-ES|bg-BG|ru-RU):)?[a-z0-9]{2,12}$"
+                }
+              },
+              "title": {
+                "type": "object",
+                "properties": {
+                  "target": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80
+                  },
+                  "translation": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80
+                  }
+                },
+                "required": [
+                  "target",
+                  "translation"
+                ],
+                "additionalProperties": false
+              },
+              "sections": {
+                "minItems": 1,
+                "maxItems": 8,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "enum": [
+                        "Verse 1",
+                        "Verse 2",
+                        "Verse 3",
+                        "Chorus",
+                        "Bridge",
+                        "Outro"
+                      ]
+                    },
+                    "lines": {
+                      "minItems": 1,
+                      "maxItems": 30,
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      }
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "lines"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "used_phrases": {
+                "minItems": 3,
+                "maxItems": 8,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "catalog_phrase_id": {
+                      "type": "string",
+                      "minLength": 2,
+                      "maxLength": 32,
+                      "pattern": "^(?:(?:es-ES|bg-BG|ru-RU):)?[a-z0-9]{2,12}$"
+                    },
+                    "target_text": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 2000
+                    },
+                    "section_name": {
+                      "type": "string",
+                      "enum": [
+                        "Verse 1",
+                        "Verse 2",
+                        "Verse 3",
+                        "Chorus",
+                        "Bridge",
+                        "Outro"
+                      ]
+                    },
+                    "line_index": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 29
+                    },
+                    "match": {
+                      "type": "string",
+                      "enum": [
+                        "exact_line",
+                        "contiguous_span"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "catalog_phrase_id",
+                    "target_text",
+                    "section_name",
+                    "line_index",
+                    "match"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "gloss_lines": {
+                "maxItems": 8,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "target": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 2000
+                    },
+                    "translation": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 2000
+                    }
+                  },
+                  "required": [
+                    "target",
+                    "translation"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "schema_version",
+              "target_locale",
+              "meaning_language",
+              "catalog_version",
+              "phrase_ids",
+              "title",
+              "sections",
+              "used_phrases",
+              "gloss_lines"
+            ],
+            "additionalProperties": false
+          },
+          "provenance": {
+            "type": "string",
+            "enum": [
+              "live",
+              "bundled",
+              "cache"
+            ]
+          },
+          "fallback": {
+            "type": "boolean"
+          },
+          "cached": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "lyric_document_id",
+          "document",
+          "provenance",
+          "fallback",
+          "cached"
+        ],
+        "additionalProperties": false
+      },
+      "musicLyrics_request": {
+        "type": "object",
+        "properties": {
+          "target_locale": {
+            "type": "string",
+            "enum": [
+              "es-ES",
+              "bg-BG",
+              "ru-RU"
+            ]
+          },
+          "meaning_language": {
+            "type": "string",
+            "enum": [
+              "en",
+              "bg",
+              "ru"
+            ]
+          },
+          "catalog_phrase_ids": {
+            "minItems": 3,
+            "maxItems": 8,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 32,
+              "pattern": "^(?:(?:es-ES|bg-BG|ru-RU):)?[a-z0-9]{2,12}$"
+            }
+          },
+          "tag_profile": {
+            "type": "object",
+            "properties": {
+              "pron": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "remember": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "useful": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "words": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "pron",
+              "remember",
+              "useful",
+              "words"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "target_locale",
+          "meaning_language",
+          "catalog_phrase_ids"
+        ],
+        "additionalProperties": false
+      },
+      "musicRenders_200": {
+        "type": "object",
+        "properties": {
+          "lyric_document_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[a-zA-Z0-9_-]+$"
+          },
+          "jobs": {
+            "minItems": 2,
+            "maxItems": 4,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "job_id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^[a-zA-Z0-9_-]+$"
+                },
+                "style_id": {
+                  "type": "string",
+                  "enum": [
+                    "acoustic_folk",
+                    "modern_pop",
+                    "gentle_ballad",
+                    "upbeat_kids"
+                  ]
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "queued",
+                    "ready",
+                    "failed",
+                    "unknown_spend"
+                  ]
+                },
+                "error_code": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "enum": [
+                        "provider",
+                        "copyright",
+                        "budget",
+                        "invalid_audio",
+                        "unavailable"
+                      ]
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "track_id": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 128,
+                      "pattern": "^[a-zA-Z0-9_-]+$"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "duration_ms": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "exclusiveMinimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "job_id",
+                "style_id",
+                "status",
+                "error_code",
+                "track_id",
+                "duration_ms"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "lyric_document_id",
+          "jobs"
+        ],
+        "additionalProperties": false
+      },
+      "musicRenders_request": {
+        "type": "object",
+        "properties": {
+          "lyric_document_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[a-zA-Z0-9_-]+$"
+          },
+          "style_ids": {
+            "minItems": 2,
+            "maxItems": 4,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "acoustic_folk",
+                "modern_pop",
+                "gentle_ballad",
+                "upbeat_kids"
+              ]
+            }
+          }
+        },
+        "required": [
+          "lyric_document_id",
+          "style_ids"
+        ],
+        "additionalProperties": false
+      },
+      "musicTrack_200": {
+        "type": "object",
+        "properties": {
+          "track_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[a-zA-Z0-9_-]+$"
+          },
+          "style_id": {
+            "type": "string",
+            "enum": [
+              "acoustic_folk",
+              "modern_pop",
+              "gentle_ballad",
+              "upbeat_kids"
+            ]
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "byte_length": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "duration_ms": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "content_type": {
+            "type": "string",
+            "enum": [
+              "audio/mpeg",
+              "audio/wav"
+            ]
+          },
+          "generated": {
+            "type": "boolean",
+            "const": true
+          },
+          "download_path": {
+            "type": "string",
+            "pattern": "^\\/music\\/tracks\\/[A-Za-z0-9_-]+\\/content$"
+          }
+        },
+        "required": [
+          "track_id",
+          "style_id",
+          "sha256",
+          "byte_length",
+          "duration_ms",
+          "content_type",
+          "generated",
+          "download_path"
         ],
         "additionalProperties": false
       },

@@ -345,6 +345,117 @@ export const draftExamples: Readonly<Record<string, WireExample>> = {
       },
     },
   },
+  musicLyrics: {
+    request: {
+      target_locale: 'es-ES',
+      meaning_language: 'en',
+      catalog_phrase_ids: ['cafe1', 'cafe2', 'cafe3'],
+      tag_profile: { pron: 1, remember: 0, useful: 2, words: 0 },
+    },
+    responses: {
+      200: {
+        lyric_document_id: 'lyric_example',
+        document: {
+          schema_version: 1,
+          target_locale: 'es-ES',
+          meaning_language: 'en',
+          catalog_version: 1,
+          phrase_ids: ['cafe1', 'cafe2', 'cafe3'],
+          title: { target: 'Me pone un cortado, por favor', translation: 'A cortado, please' },
+          sections: [
+            {
+              name: 'Verse 1',
+              lines: ['Me pone un cortado, por favor', '¿Tienen leche de avena?'],
+            },
+            { name: 'Chorus', lines: ['Me pone un cortado, por favor'] },
+            { name: 'Verse 2', lines: ['Para llevar, por favor'] },
+          ],
+          used_phrases: [
+            {
+              catalog_phrase_id: 'cafe1',
+              target_text: 'Me pone un cortado, por favor',
+              section_name: 'Verse 1',
+              line_index: 0,
+              match: 'exact_line',
+            },
+            {
+              catalog_phrase_id: 'cafe2',
+              target_text: '¿Tienen leche de avena?',
+              section_name: 'Verse 1',
+              line_index: 1,
+              match: 'exact_line',
+            },
+            {
+              catalog_phrase_id: 'cafe3',
+              target_text: 'Para llevar, por favor',
+              section_name: 'Verse 2',
+              line_index: 0,
+              match: 'exact_line',
+            },
+          ],
+          gloss_lines: [
+            { target: 'Me pone un cortado, por favor', translation: 'A cortado, please' },
+            { target: '¿Tienen leche de avena?', translation: 'Do you have oat milk?' },
+            { target: 'Para llevar, por favor', translation: 'To go, please' },
+          ],
+        },
+        provenance: 'bundled',
+        fallback: true,
+        cached: false,
+      },
+    },
+  },
+  musicRenders: {
+    request: {
+      lyric_document_id: 'lyric_example',
+      style_ids: ['acoustic_folk', 'modern_pop', 'gentle_ballad'],
+    },
+    responses: {
+      200: {
+        lyric_document_id: 'lyric_example',
+        jobs: [
+          {
+            job_id: 'job_folk',
+            style_id: 'acoustic_folk',
+            status: 'ready',
+            error_code: null,
+            track_id: 'track_folk',
+            duration_ms: 400,
+          },
+          {
+            job_id: 'job_pop',
+            style_id: 'modern_pop',
+            status: 'ready',
+            error_code: null,
+            track_id: 'track_pop',
+            duration_ms: 400,
+          },
+          {
+            job_id: 'job_ballad',
+            style_id: 'gentle_ballad',
+            status: 'failed',
+            error_code: 'invalid_audio',
+            track_id: null,
+            duration_ms: null,
+          },
+        ],
+      },
+    },
+  },
+  musicTrack: {
+    responses: {
+      200: {
+        track_id: 'track_folk',
+        style_id: 'acoustic_folk',
+        sha256: hash,
+        byte_length: 128,
+        duration_ms: 400,
+        content_type: 'audio/wav',
+        generated: true,
+        download_path: '/music/tracks/track_folk/content',
+      },
+    },
+  },
 }
 /** Adds examples to the registry itself so docs and tests consume identical metadata. */
 export function withExamples(

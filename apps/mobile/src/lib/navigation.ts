@@ -35,6 +35,7 @@ export const SURFACES = [
   { id: 'account', path: '/account', kind: 'utility', availability: 'built' },
   { id: 'settings', path: '/settings', kind: 'utility', availability: 'built' },
   { id: 'more', path: '/more', kind: 'utility', availability: 'built' },
+  { id: 'phrase-music', path: '/music', kind: 'learner', availability: 'built' },
 ] as const
 
 export type Surface = (typeof SURFACES)[number]
@@ -84,6 +85,7 @@ export const SURFACE_LAWS: Record<SurfaceId, SurfaceLaw> = {
   account: { surfaceClass: 'push', expectedUse: 'occasional', resumable: false },
   settings: { surfaceClass: 'push', expectedUse: 'occasional', resumable: false },
   more: { surfaceClass: 'push', expectedUse: 'often', resumable: false },
+  'phrase-music': { surfaceClass: 'push', expectedUse: 'occasional', resumable: false },
 }
 
 export function surfaceLawForPath(path: string): SurfaceLaw | undefined {
@@ -255,6 +257,20 @@ export const DESTINATIONS = [
     group: 'practice',
     exit: 'stack-or-home',
     resume: 'practice-session',
+  },
+  {
+    href: '/music',
+    get label() {
+      return copy.nav.music
+    },
+    rail: false,
+    counted: false,
+    routeClass: 'learner',
+    parent: 'today',
+    home: 'today',
+    group: 'practice',
+    exit: 'stack-or-home',
+    resume: 'none',
   },
   {
     href: '/add',

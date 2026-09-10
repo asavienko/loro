@@ -8,6 +8,8 @@ Guidance for Claude Code working in this repository.
 
 Early implementation. **What exists:** eight of the v1.1 design package's 23 learner screens,
 Languages, Account, More and Settings utilities, the shared shell and a developer workbench.
+`/music` (Phrase songs) is a later garnish via More — picker, lyric review, style confirm, and
+fixture playback. Default CI uses `MUSIC_PROVIDER=stub` and never calls ElevenLabs or Anthropic.
 Discover offers Add your own and bundled topic suggestions; live `/v1/phrases/suggest` stays behind
 Q-21. Local progress and course/session state commit to native OP-SQLite or browser SQLite before
 rendering. Rust owns FSRS, ranking, selection, matching, clocks and merge through generated
@@ -155,9 +157,11 @@ prototype-only and **must not** be carried into the app — see the divergence t
   redirect files; update references to the actual archive path and rebase the moved plan's relative
   links. Keep completed records out of the active index. Archive a finished plan in the same change.
   Plan 53 was archived at user request on 2026-09-09; its former original-path exception no longer
-  applies. Plan 97 owns generative Discover reach. Plan 98 owns the ElevenLabs adapter,
-  `content:render`, gated `/tts/render` and catalog-file playback. The next new plan number is 99;
-  recheck concurrent worktrees and untracked `plans/` files before allocating an ID — the
+  applies. Main archived account-sign-in as plan 96; this branch still has phrase-music at
+  [`plans/96-phrase-music-generation.md`](plans/96-phrase-music-generation.md) under the same number
+  (unresolved ID collision). Plan 97 owns generative Discover reach. Plan 98 owns the ElevenLabs
+  adapter, `content:render`, gated `/tts/render` and catalog-file playback. The next new plan number
+  is 99; recheck concurrent worktrees and untracked `plans/` files before allocating an ID — the
   README/CLAUDE "next is N" sentence can lag. A new plan takes the next free number and gets a row
   in [`plans/README.md`](plans/README.md). **Numbers are never reused** — a gap is left rather than
   backfilled, so a link written against a number can't come to mean a different plan. Not in

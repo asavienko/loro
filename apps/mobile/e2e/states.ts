@@ -1,5 +1,6 @@
 import { reachAccount } from './accountFlow'
 import { localeText, onboardPair } from './languageFlow'
+import { openMusic, openMusicFixture, selectThreePhrases } from './musicFlow'
 import { openStorageFailure, openStorageLoading } from './persistenceFlow'
 /**
  * Every learner-visible STATE the app can be in, and how to reach it by clicking.
@@ -77,6 +78,7 @@ export const STATES: AppState[] = [
       await expect(page.getByText('Practice', { exact: true })).toBeVisible()
       await expect(page.getByText('You', { exact: true })).toBeVisible()
       await expect(page.getByRole('button', { name: 'Languages', exact: true })).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Phrase songs', exact: true })).toBeVisible()
     },
   },
   {
@@ -626,6 +628,105 @@ export const STATES: AppState[] = [
       await click(page, 'Continue')
       await expect(page.getByText('A trip coming up', { exact: true })).toBeVisible()
       await expect(page.getByText("You're all set")).toBeVisible()
+    },
+  },
+  {
+    name: 'music · empty selection',
+    route: '/music',
+    spec: 'plan 96 P3F-01 / AI-05 phrase-song garnish',
+    reach: async (page) => {
+      await openMusic(page)
+      await expect(page.getByText('Select at least three catalog phrases.')).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Write lyrics', exact: true })).toBeDisabled()
+    },
+  },
+  {
+    name: 'music · phrases selected',
+    route: '/music',
+    spec: 'plan 96 P3F-01 / AI-05 phrase-song garnish',
+    reach: async (page) => {
+      await openMusic(page)
+      await selectThreePhrases(page)
+      await expect(page.getByText('3 phrases selected')).toBeVisible()
+    },
+  },
+  {
+    name: 'music · lyrics ready',
+    route: '/music',
+    spec: 'plan 96 P3F-05 / AI-05 phrase-song garnish',
+    reach: async (page) => {
+      await openMusicFixture(page, 'lyrics')
+      await expect(page.getByText('Review the lyrics')).toBeVisible()
+    },
+  },
+  {
+    name: 'music · lyrics fallback',
+    route: '/music',
+    spec: 'plan 96 P3F-06 / AI-05 phrase-song garnish',
+    reach: async (page) => {
+      await openMusic(page)
+      await selectThreePhrases(page)
+      await page.getByRole('button', { name: 'Write lyrics', exact: true }).click()
+      await expect(
+        page.getByText('Sing-along card — a bundled lyric floor, not a generated AI song.'),
+      ).toBeVisible()
+    },
+  },
+  {
+    name: 'music · generating',
+    route: '/music',
+    spec: 'plan 96 P3F-09 / AI-05 phrase-song garnish',
+    reach: async (page) => {
+      await openMusicFixture(page, 'generating')
+      await expect(
+        page.getByRole('button', { name: 'Making your songs', exact: true }),
+      ).toBeVisible()
+    },
+  },
+  {
+    name: 'music · partial styles',
+    route: '/music',
+    spec: 'plan 96 P3F-09 / AI-05 phrase-song garnish',
+    reach: async (page) => {
+      await openMusicFixture(page, 'partial')
+      await expect(page.getByText('Some styles are ready. Others could not be made.')).toBeVisible()
+    },
+  },
+  {
+    name: 'music · playing',
+    route: '/music',
+    spec: 'plan 96 P3F-03 / AI-05 phrase-song garnish',
+    reach: async (page) => {
+      await openMusicFixture(page, 'playing')
+      await expect(page.getByText('Generated song — not a pronunciation model')).toBeVisible()
+      await expect(
+        page.getByRole('button', { name: 'Pause generated song', exact: true }),
+      ).toBeVisible()
+    },
+  },
+  {
+    name: 'music · unavailable',
+    route: '/music',
+    spec: 'plan 96 P3F-06 / AI-05 phrase-song garnish',
+    reach: async (page) => {
+      await openMusicFixture(page, 'unavailable')
+      await expect(
+        page.getByText(
+          'Song generation needs a connection. You can still pick phrases and keep these lyrics.',
+        ),
+      ).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Make the songs', exact: true })).toBeDisabled()
+    },
+  },
+  {
+    name: 'music · provider error',
+    route: '/music',
+    spec: 'plan 96 P3F-09 / AI-05 phrase-song garnish',
+    reach: async (page) => {
+      await openMusicFixture(page, 'error')
+      await expect(
+        page.getByText('Those styles could not be made. Your lyrics are still here.'),
+      ).toBeVisible()
     },
   },
 ]
