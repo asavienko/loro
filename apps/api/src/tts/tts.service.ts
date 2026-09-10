@@ -1,6 +1,7 @@
 /**
- * Gated learner TTS. Text only. Draft until Q-15. Never accepts recordings or clones voices.
- * Listening-class renders fail closed until Q-15 pins ≥2 licensed voices (AS-07).
+ * Gated learner TTS. Text only. Never accepts recordings or clones voices.
+ * Listening-class renders use LISTENING_VOICE_DECISION and still fail closed for a
+ * wrong voice, unpinned model, missing key, or stub provider. CI must not spend credits.
  */
 
 import { createHash } from 'node:crypto'

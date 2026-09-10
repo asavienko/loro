@@ -96,8 +96,8 @@ export const config = {
   },
 
   /**
-   * TTS env for `parseTtsConfig`. Live ElevenLabs still needs Q-15; stub is the local default.
-   * Voice IDs are never hardcoded here.
+   * TTS env for `parseTtsConfig`. Stub is the local default so CI never spends.
+   * Catalog pins live in `CATALOG_REFERENCE_VOICES`; this reader still takes env.
    */
   ttsEnv: (): NodeJS.Dict<string> => ({
     TTS_PROVIDER: process.env['TTS_PROVIDER'],

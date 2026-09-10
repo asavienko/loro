@@ -90,8 +90,10 @@ export const STATES: AppState[] = [
     reach: async (page) => {
       await openListenExport(page)
       await expect(
-        page.getByText('Licensed listening voices are not approved yet.', { exact: true }),
+        page.getByText('On-device listening cache is not available here.', { exact: true }),
       ).toBeVisible()
+      await expect(page.getByText('Sara Martin 1')).toBeVisible()
+      await expect(page.getByText('Dante', { exact: true })).toBeVisible()
     },
   },
   ...LISTEN_SCENARIOS.map((scenario) => ({

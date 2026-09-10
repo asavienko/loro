@@ -1,4 +1,10 @@
-import type { TargetLocale } from '../domain/languages.js'
+import { TARGET_LOCALES, type TargetLocale } from '../domain/languages.js'
+
+/**
+ * Current documented listening-quality model. SPA / BUL / RUS are among the 29 languages.
+ * @see https://elevenlabs.io/docs/overview/models
+ */
+export const ELEVENLABS_MULTILINGUAL_V2 = 'eleven_multilingual_v2'
 
 /** AS-07. Independent of Stream `REPEAT_TARGET` until product unifies them. */
 export const LISTENING_REPEATS_MIN = 2
@@ -33,10 +39,33 @@ export interface ListeningVoice {
   readonly licensed: boolean
 }
 
+export interface CatalogReferenceVoice {
+  readonly id: string
+  readonly locale: TargetLocale
+  readonly name: string
+}
+
+/**
+ * AS-01 catalog/reference pin. One voice per target, forever. Distinct from listening IDs.
+ * Runtime catalog render still reads `TTS_VOICE_*`; these IDs are the documented production pin.
+ * @see docs/decisions/listening-voice-packet.md
+ */
+export const CATALOG_TTS_MODEL_ID = ELEVENLABS_MULTILINGUAL_V2
+export const CATALOG_REFERENCE_VOICES: Record<TargetLocale, CatalogReferenceVoice> = {
+  'es-ES': { id: 't9LRTh3y1ioN00e9wsNh', locale: 'es-ES', name: 'Aaron Abad' },
+  'bg-BG': { id: '406EiNlYvqFqcz3vsnOm', locale: 'bg-BG', name: 'Peter K' },
+  'ru-RU': { id: '1qd9R09Ljlx9V1Ok0t5S', locale: 'ru-RU', name: 'Ivan' },
+}
+
+export function isCatalogReferenceVoice(voiceId: string): boolean {
+  return TARGET_LOCALES.some((locale) => CATALOG_REFERENCE_VOICES[locale].id === voiceId)
+}
+
 /**
  * Q-15 listening pin. Filling this object is the only runtime switch for licensed listening
- * generate: set `modelId` and ≥2 `licensed: true` voices per enabled target. Keep empty until the
- * decision packet is signed. Do not copy unapproved candidates here.
+ * generate: `modelId` plus ≥2 `licensed: true` voices per enabled target. IDs must stay distinct
+ * from `CATALOG_REFERENCE_VOICES`. `licensed: true` is in-app cache/playback only; Q-22 share
+ * stays off. Pronunciation review remains before calling these production-quality.
  * @see docs/decisions/listening-voice-packet.md
  */
 export interface ListeningVoiceDecision {
@@ -45,11 +74,20 @@ export interface ListeningVoiceDecision {
 }
 
 export const LISTENING_VOICE_DECISION: ListeningVoiceDecision = {
-  modelId: null,
+  modelId: ELEVENLABS_MULTILINGUAL_V2,
   voices: {
-    'es-ES': [],
-    'bg-BG': [],
-    'ru-RU': [],
+    'es-ES': [
+      { id: 'KHCvMklQZZo0O30ERnVn', locale: 'es-ES', name: 'Sara Martin 1', licensed: true },
+      { id: 'usTmJvQOCyW3nRcZ8OEo', locale: 'es-ES', name: 'Dante', licensed: true },
+    ],
+    'bg-BG': [
+      { id: 'M1ydWt7KnBCiuv4CnEDC', locale: 'bg-BG', name: 'Milena', licensed: true },
+      { id: 'gdk0ZsvfAOobfbTtnx6p', locale: 'bg-BG', name: 'Kosta', licensed: true },
+    ],
+    'ru-RU': [
+      { id: 'EDpEYNf6XIeKYRzYcx4I', locale: 'ru-RU', name: 'MARIIA_R', licensed: true },
+      { id: 'ogi2DyUAKJb7CEdqqvlU', locale: 'ru-RU', name: 'Stanislav', licensed: true },
+    ],
   },
 }
 
