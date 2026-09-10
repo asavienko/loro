@@ -1,6 +1,6 @@
 # Active plans
 
-This index lists only the **38 plans with remaining work**. Completed records and historical
+This index lists only the **39 plans with remaining work**. Completed records and historical
 snapshots are kept in [the archive](archive/README.md), without compatibility symlinks or redirect
 files in this directory. Links point directly to each plan's actual location.
 
@@ -9,18 +9,24 @@ untracked `plans/` files before allocating; the "next is N" sentence can lag. Nu
 reused; 49 remains an existing gap. When a plan finishes, archive it in the same change and list it
 only in the archive index.
 
+**Number collision (unresolved):** main archived account-sign-in as plan 96. Phrase-music lives at
+[`96-phrase-music-generation.md`](96-phrase-music-generation.md) under the same ID. Both rows stay
+until Product assigns a new number; do not silently reuse or drop either.
+
 Implemented-slice owners from 56–68, 70–73, 75–77, 80–82, 86–88, 90 and 93–96 are stored in
 [the 2026-09-09 archive](archive/2026-09-09/README.md) at user request. Their partial statuses and
-outstanding scope remain indexed below; archiving does not imply completion. Only the still-unbuilt
-or decision-gated files 69, 74, 78, 83, 97, 98 and 99 remain in this directory.
+outstanding scope remain indexed below; archiving does not imply completion. Only the
+still-unbuilt or decision-gated files 69, 74, 78, 83, 96 (phrase-music), 97, 98 and 99 remain in this
+directory.
 
 The [post-main review](../docs/reviews/2026-09-09-post-main-plan-review.md) records the six runtime
 and validation findings as fixed, including the follow-up Refrain completion and touch-target
 repairs. No additional whole plan meets its acceptance criteria. Delivered implementation slices are
-recorded in the [dated archive](archive/2026-09-09/IMPLEMENTED-SLICES.md); all 38 remaining-work
+recorded in the [dated archive](archive/2026-09-09/IMPLEMENTED-SLICES.md); all 39 remaining-work
 owners are retained, including [99](99-batch-phrase-audio-export.md) for online-first listening
-generation and on-device cache (share-out-of-app still ⛔ Q-22). Continue with device/provider
-acceptance, then integrate the remaining daily-loop, Review, content and lifecycle slices.
+generation and on-device cache (share-out-of-app still ⛔ Q-22) and
+[phrase-music](96-phrase-music-generation.md). Continue with device/provider acceptance, then
+integrate the remaining daily-loop, Review, content and lifecycle slices.
 
 The [2026-09-09 implementation review](../docs/reviews/2026-09-09-twenty-plan-implementation.md)
 records changes requested after the next twenty bounded slices. Each selected plan remains partial;
@@ -104,6 +110,8 @@ Expo/RN packages onto that sequence versus device-owned work.
 5. **Later surfaces:** 59/60→75; bundled/guarded provider foundations→76 and 82→83. Voice, Review
    handoff and live release gates apply to their specific slices. Labs follow the recorded DSP
    decision; Run/ladder Phrasebook follows Q-05 and comparative evidence.
+   [96](96-phrase-music-generation.md) plans optional phrase-selected lyrics and multi-style
+   ElevenLabs Music; it is garnish, not daily-loop work, and live spend waits on proposed Q-21.
 
 ## Next implementation priorities — reviewed 2026-09-09
 
@@ -171,6 +179,7 @@ feature↔release-completion cycle. See each plan's checkboxes for executable ta
 | [94](archive/2026-09-09/94-persistent-practice-and-account-integration.md) | Integrated persistence, canonical core, speech and account sync             | M1/M2       | 🟡 Runtime/fast/format gates pass; full/device CI remains                                                    | 54/85 ✅; coordinated 58–60/62–63/66–68 slices                           |
 | [95](archive/2026-09-09/95-parallel-local-ci.md)                           | Dependency-aware parallel full local CI                                     | M2          | 🟡 Scheduler, cancellation, Git inventory and source identity fixes implemented; runtime comparison remains  | 72; no external blocker for measurements                                 |
 | [96](archive/2026-09-09/96-account-sign-in-screens.md)                     | Account method chooser, email/code flow and provider sign-in states         | M2          | 🟡 UI/browser/client slices implemented; visual, native and live-provider evidence remains                   | 67/68/86; provider configuration and device evidence                     |
+| [96](96-phrase-music-generation.md)                                       | Lyrics from selected phrases, then multi-style ElevenLabs Music             | later       | 🟡 Stub/fixture `/music` stack landed; live LLM/Music spend gated by proposed Q-21 and 86/61/62; **ID collides with archived account 96** | 86/76/82 patterns; 61/62 storage/playback; 56/81 route; Q-21    |
 | [97](97-generative-discover-and-phrase-reach.md)                           | Guarded generative Discover reach and shared add-handoff                    | M3          | 🟡 Own-phrase floor, bundled suggestions and stub suggest exist; Q-21 gates live traffic                     | 59/61; 76/86 live path; 82/83 consume handoff; Q-21                      |
 | [98](98-voice-and-tts-integration.md)                                      | ElevenLabs TTS, catalog render and device-TTS fallback                      | M1/M2       | 🟡 Adapter/render/gated API/file playback in progress; Q-15 production seed remains                          | 86/61/62 slices; Q-15 live seed                                          |
 | [99](99-batch-phrase-audio-export.md)                                      | Online multi-voice listen cache; optional share of concatenated clips       | M2          | 🟡 Composer/cache/E2E/emulator fixture; `ci:local` green; ⛔ Q-15; ⛔ Q-22; physical 58/72 remaining         | 56/81 route; 59 phrases; 62 cache/session; 86/61/66/98 render; Q-15/Q-22 |
@@ -186,8 +195,10 @@ Render testing recommendation in 86 is superseded by 88.
   tests.
 - Keep one owner per behavior: 56 route policy, 81 chrome; 59 durable checkpoints, 64 wave
   transitions; 66 server cursors, 68 client convergence; 86 vendor controls, 76/82/97 product AI; 99
-  listening-class cache and companion UX, 62 in-app playback/download cache, 67 JSON account export.
-  Plan 96 remains the archived account sign-in screens.
+  listening-class cache and companion UX, 62 in-app playback/download cache, 67 JSON account
+  export. Archived plan 96 remains the account sign-in screens. Active
+  [`96-phrase-music-generation.md`](96-phrase-music-generation.md) is the phrase-song garnish under
+  the same number (unresolved collision; do not reuse or drop either).
 - Future surfaces consume the selected language pair and real capability states. Preserve personal
   meaning language, course isolation and global streak semantics; never silently substitute Spanish.
 - Every new learner state lands with its manifest row and E2E checks. Native behavior requires
@@ -196,7 +207,8 @@ Render testing recommendation in 86 is superseded by 88.
 - Release decisions remain in `docs/decisions/open-questions.md`: Q-15 audio; Q-07 trips; Q-05
   experiment/Run; Q-14 peak; Q-08/Q-12 billing; Q-17 rail priority; Q-16 chat launch, Q-18 budget,
   Q-19 local retention, Q-20 provider retention, Q-21 Discover suggest and Q-22 listening-file
-  redistribution. No decision is silently resolved by this reset.
+  redistribution. Phrase-music live spend still cites proposed Q-21 (same ID as Discover;
+  unresolved). No decision is silently resolved by this reset.
 - Keep each plan/status row current and commit coherent requirement-tagged chunks with `pnpm check`
   green. Archive a finished plan in the same change; never delete historical records or reuse
   numbers.

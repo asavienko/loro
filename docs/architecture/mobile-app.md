@@ -36,11 +36,13 @@ apps/mobile/
 ├── src/
 │   ├── store/            Zustand state, actions, selectors, engine adapters
 │   ├── data/             native/browser SQLite drivers, hydration, repositories and sync
+│   ├── auth/             OAuth ports (PKCE / provider handoff)
+│   ├── services/         account-sync coordinator
 │   ├── ui/
 │   │   ├── primitives/   domain-free reusable controls and layout
 │   │   ├── components/   reusable composites that may accept domain types
 │   │   └── tokens/       component geometry not covered by generated tokens
-│   └── lib/              copy, clock, IDs, and formatting
+│   └── lib/              copy, clock, IDs, account session and formatting
 ├── scripts/              source-level accessibility and copy checks
 ├── e2e/                  Playwright web tests and the state manifest
 ├── assets/
@@ -170,9 +172,11 @@ on-device speech; browser `speechSynthesis` is blueprint fixture behavior only
 ### Current
 
 `src/store/state.ts` declares one `AppData` object containing onboarding answers, settings, phrase
-rows, toast and selection state, practice-day history, and the frozen Refrain set. `store.ts`
-creates a plain Zustand store with no persistence middleware. Reloading or killing the process loses
-all of it.
+rows, toast and selection state, practice-day history, and the frozen Refrain set. `store.ts` wraps
+slice `set` and `api.setState` so SQLite + outbox commit **before** the projection publishes
+([ADR-0012](adr/0012-state-management.md)). Reloading hydrates from the device or browser database;
+a process kill does not wipe committed progress. Physical-device upgrade and force-quit acceptance
+remain a separate gate.
 
 Actions are split by concern under `src/store/slices/`. Derived reads live in selectors and view
 helpers. Two boundaries are already important:
@@ -182,10 +186,9 @@ helpers. Two boundaries are already important:
 - Calendar reads use the injected `Clock`. `new Date()` is restricted to `src/lib/clock.ts`, and
   `localDay()` and `streakDay()` are deliberately different keys.
 
-The mobile engine context currently wraps the Zustand phrase array in an asynchronous
-`PhraseRepository`. This is the persistence seam, not durable persistence itself. The current
-adapter also has a recorded behavior difference from the finished repository's `active()` filter;
-wire the repository with explicit behavior tests rather than treating it as a mechanical swap.
+The mobile engine context wraps the committed phrase projection in an asynchronous
+`PhraseRepository`. `active()` / `due()` use the domain helpers (`isActive` / `isDue`); eligibility
+parity is asserted in `eligibility.test.ts`.
 
 ### Target
 
@@ -195,20 +198,17 @@ wire the repository with explicit behavior tests rather than treating it as a me
 | Session   | active plan, current item, revealed words, engine phase                  | Zustand, checkpointed at transitions                    |
 | Ephemeral | focus, open sheet, toast, scroll, animation values                       | React state or Reanimated shared values                 |
 
-Every durable mutation must update SQLite and append its outbox operation in one transaction. The UI
-then observes repository-backed data; it must not maintain a second phrase array, require a manual
-refresh, or await the network before accepting a write. Hydration needs an explicit loading state so
-first paint never mistakes “not loaded” for an empty learner library.
+Every durable mutation must update SQLite and append its outbox operation in one transaction before
+the store publishes. The UI reads that committed projection; it must not require a manual refresh or
+await the network before accepting a write. Hydration needs an explicit loading state so first paint
+never mistakes “not loaded” for an empty learner library.
 
-Migration order matters:
+Remaining work is acceptance, not a second store:
 
-1. Add and test the device `SqlDriver` behind the existing `@loro/core` interfaces.
-2. Open and migrate the database during app bootstrap, with honest fatal/recovery states.
-3. Hydrate durable rows and settings before routing past startup.
-4. Move writes slice by slice to repository transactions and remove each mirrored Zustand field as
-   its readers migrate.
-5. Checkpoint only session state in Zustand/SQLite; do not reintroduce durable phrase truth there.
-6. Add force-quit resume, migration, offline, and outbox tests on a real native build.
+1. Force-quit resume, migration, offline, and outbox evidence on a real native build.
+2. Live native queries only if OP-SQLite reactivity is needed at ~2 000 phrases **and** a web
+   equivalent exists ([ADR-0012](adr/0012-state-management.md)).
+3. Do not delete the Zustand phrase projection as cleanup.
 
 ## Engines and authoritative numbers
 
@@ -216,11 +216,10 @@ Migration order matters:
 headless contract and conformance suite. Mobile injects rows, clock, settings, flags, seed, and a
 `LoroCoreFacade`.
 
-`src/store/coreFacade.ts` is temporary. It duplicates ranking, cloze, FSRS, and token-matching
-behavior while UniFFI is unavailable, and its own comments record known fabricated or divergent
-values. Do not extend it. New cross-platform maths belongs in `packages/core-rs`; learner-visible
-scores, latency, intervals, and contours must remain absent or `null` until the real implementation
-and binding exist.
+`src/store/coreFacade.ts` is the production `rustCoreFacade` over the generated WASM/UniFFI bridge.
+`jsCoreFacade` is an alias of that facade, not a JavaScript stand-in. New cross-platform maths
+belongs in `packages/core-rs`. Learner-visible scores, latency, intervals, and contours stay absent
+or `null` until a real measurement or binding exists — never estimated.
 
 A practice screen follows this write path:
 

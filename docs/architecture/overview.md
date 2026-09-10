@@ -256,7 +256,7 @@ Versions are the pins chosen at authoring time — **re-verify at kickoff**
 | Navigation      | Expo Router                                                | Typed, file-based, deep-link native                                          |
 | Animation       | Reanimated 4 + Gesture Handler                             | The warming card, sheets, and press feedback run at 60 fps off the JS thread |
 | Custom graphics | React Native Skia                                          | Pitch contours, waveforms, forgetting curve, ladder histogram                |
-| State           | Zustand + live SQLite queries                              | Small, no boilerplate, no cache-invalidation layer                           |
+| State           | Zustand write-through projection over SQLite               | SQLite commits first; the store publishes the committed rows                 |
 | Local DB        | SQLite (`op-sqlite`) + reviewed SQL migrations             | Synchronous JSI access behind the existing `SqlDriver` contract              |
 | Native audio    | Custom Expo Module — AVAudioEngine (iOS) / Oboe (Android)  | Rate control, capture, interruption handling, lock screen                    |
 | Speech          | Custom Expo Module — SFSpeechRecognizer / SpeechRecognizer | On-device Spanish ASR                                                        |
@@ -270,7 +270,7 @@ Versions are the pins chosen at authoring time — **re-verify at kickoff**
 | -------------- | --------------------------------------------------- | -------------------------------------------------------------------------------- |
 | Runtime        | Node 22 LTS                                         |                                                                                  |
 | Framework      | NestJS 11                                           | Module boundaries that survive growth; team familiarity                          |
-| DB             | Postgres 16 + Drizzle                               | Durable tenant-scoped server storage                                             |
+| DB             | Postgres 16 + `pg` + handwritten SQL                | Durable tenant-scoped server storage                                             |
 | Cache / queues | Redis 7 + BullMQ, deferred                          | Add only with an implemented consumer and budget                                 |
 | Storage / CDN  | Private S3; CDN deferred                            | Authorized content downloads through plans 61/86                                 |
 | AI             | Anthropic Claude                                    | Roleplay, coach notes, content enrichment                                        |
@@ -319,6 +319,6 @@ Versions are the pins chosen at authoring time — **re-verify at kickoff**
 | [0009](adr/0009-content-pipeline-and-packs.md)       | Content ships independently of the app | Accepted |
 | [0010](adr/0010-llm-roleplay-and-guardrails.md)      | LLM roleplay with hard guardrails      | Accepted |
 | [0011](adr/0011-analytics-and-privacy.md)            | Privacy posture and the audio promise  | Accepted |
-| [0012](adr/0012-state-management.md)                 | Zustand + live SQLite queries          | Accepted |
+| [0012](adr/0012-state-management.md)                 | Zustand write-through projection       | Accepted |
 | [0013](adr/0013-design-tokens-pipeline.md)           | Design tokens as generated code        | Accepted |
 | [0014](adr/0014-monorepo-tooling.md)                 | pnpm workspaces + Turborepo            | Accepted |

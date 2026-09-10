@@ -39,7 +39,11 @@ export type LocalInstant = string
 /** Open morning wave in Europe/Madrid. After 19:00 the Start-the-wave control is locked. */
 export const OPEN_WAVE_INSTANT: LocalInstant = '2026-04-06T10:00'
 
+/** Same open-wave instant; name used by the phrase-songs frozen-clock helper. */
+export const MANIFEST_CLOCK: LocalInstant = OPEN_WAVE_INSTANT
+
 const preparedPages = new WeakSet<Page>()
+const installedClocks = new WeakSet<Page>()
 
 function markClockPrepared(page: Page): void {
   preparedPages.add(page)
@@ -54,7 +58,14 @@ function markClockPrepared(page: Page): void {
 export async function atInstant(page: Page, local: LocalInstant): Promise<void> {
   await page.clock.install({ time: await epochFor(page, local) })
   markClockPrepared(page)
+  installedClocks.add(page)
   await expectPageReads(page, local)
+}
+
+/** Pin an open-wave instant unless the spec already installed a clock. */
+export async function ensureManifestClock(page: Page): Promise<void> {
+  if (installedClocks.has(page)) return
+  await atInstant(page, MANIFEST_CLOCK)
 }
 
 /**

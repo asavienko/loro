@@ -4,7 +4,7 @@ import {
   PullResponseSchema,
   PushRequestSchema,
   PushResponseSchema,
-} from '@loro/core/api/target'
+} from '@loro/core/api/sync'
 import { SyncError, type SyncSession, type SyncTransport } from './types'
 import { utf8ByteLength } from './codec'
 

@@ -18,7 +18,7 @@ actually considered, what we chose, and the consequences we accepted.
 | [0009](0009-content-pipeline-and-packs.md)       | Content ships independently of the app | Accepted | 2026-07-28 |
 | [0010](0010-llm-roleplay-and-guardrails.md)      | LLM roleplay with hard guardrails      | Accepted | 2026-07-28 |
 | [0011](0011-analytics-and-privacy.md)            | Privacy posture and the audio promise  | Accepted | 2026-07-28 |
-| [0012](0012-state-management.md)                 | Zustand + live SQLite queries          | Accepted | 2026-07-28 |
+| [0012](0012-state-management.md)                 | Zustand write-through projection       | Accepted | 2026-07-28 |
 | [0013](0013-design-tokens-pipeline.md)           | Design tokens as generated code        | Accepted | 2026-07-28 |
 | [0014](0014-monorepo-tooling.md)                 | pnpm workspaces + Turborepo            | Accepted | 2026-07-28 |
 

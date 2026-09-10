@@ -1,32 +1,30 @@
 # Sync protocol
 
-Sync has implemented primitives and an implemented development API, but no end-to-end device sync
-path. Rationale: [ADR-0003](adr/0003-offline-first-sqlite-sync.md).
+Sync primitives, a tenant-scoped PostgreSQL API and a mobile outbox client are implemented.
+Physical-device convergence and OS background sync remain plan 68 acceptance. Rationale:
+[ADR-0003](adr/0003-offline-first-sqlite-sync.md).
 
 ## Implementation status
 
-| Layer                       | Current state                                                                                                                 |
-| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| HLC and row merge           | Implemented and tested in `packages/core-rs/src/sync/`.                                                                       |
-| Field policy                | Implemented in `packages/core/src/sync/fieldPolicy.ts`; unknown fields are rejected by the API.                               |
-| Local outbox                | Implemented for SQLite and memory persistence; SQLite supports ack, failure counts and merge-class-aware compaction.          |
-| API push/pull               | Implemented at `POST /v1/sync/push` and `POST /v1/sync/pull`; a status diagnostic exists at `POST /v1/sync/status`.           |
-| API merge runtime           | Uses the Rust merge compiled to WASM. Production refuses to start without it; development sync calls fail if it is absent.    |
-| Server storage              | An unscoped in-memory `Map`; rows disappear on restart. No auth or Postgres.                                                  |
-| Pull cursor                 | Not implemented. `since` and `limit` are accepted but ignored; pull returns every stored row and `has_more: false`.           |
-| Mobile client               | Not implemented. Nothing drains the outbox, calls the endpoints, advances a device HLC from responses or applies pulled rows. |
-| Store/outbox write coupling | Not wired. Current mobile mutations remain in Zustand memory.                                                                 |
+| Layer                       | Current state                                                                                                              |
+| --------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| HLC and row merge           | Implemented and tested in `packages/core-rs/src/sync/`.                                                                    |
+| Field policy                | Implemented in `packages/core/src/sync/fieldPolicy.ts`; unknown fields are rejected by the API.                            |
+| Local outbox                | Implemented for SQLite and memory persistence; SQLite supports ack, failure counts and merge-class-aware compaction.       |
+| API push/pull               | Implemented at `POST /v1/sync/push` and `POST /v1/sync/pull`; a status diagnostic exists at `POST /v1/sync/status`.        |
+| API merge runtime           | Uses the Rust merge compiled to WASM. Production refuses to start without it; development sync calls fail if it is absent. |
+| Server storage              | Tenant-scoped PostgreSQL. The in-memory repository is a test adapter under `sync/testing/`.                                |
+| Pull cursor                 | Implemented (`since` / `limit` / `has_more`).                                                                              |
+| Mobile client               | Implemented: outbox drain, HTTP transport, apply pulled rows. OS background sync is not.                                   |
+| Store/outbox write coupling | Wired. Durable writes commit SQLite + outbox before the store publishes.                                                   |
 
-These endpoints are useful for exercising arbitration, not safe multi-user sync. Do not deploy them
-as a learner-data service until authentication, tenant scoping, durable storage and real cursors
-land.
+Authentication, tenant scoping and durable storage have landed. Do not treat browser suites as
+physical-device or multi-device partition evidence.
 
 ## Position
 
-The intended system treats the device's durable SQLite as the learner-facing source of truth. The
-server is a convergence peer. A write completes locally and queues an operation; background sync
-pushes and pulls later. The current app has not yet reached this position because its live store is
-not persistent and it has no sync client.
+The device's durable SQLite is the learner-facing source of truth. The server is a convergence peer.
+A write completes locally and queues an operation; signed-in foreground sync pushes and pulls later.
 
 ## Time
 
@@ -233,7 +231,8 @@ Implemented tests cover HLC ordering/skew, Rust merge behaviour, field-policy co
 push/rejection/conflict behaviour and SQLite outbox semantics — including, on the client side, that
 a local upsert preserves `field_hlc` and `deleted_at`, that retry accumulates attempts without
 reordering or dropping ops, and that neither `append` nor `compact` folds an edit across a delete
-for the same row. The API E2E suite runs against the in-memory repository.
+for the same row. The API unit suite uses the memory repository; Postgres suites run when
+`LORO_TEST_DATABASE_URL` is set.
 
 Plan 85 adds shared wire-schema compatibility tests, field-policy coverage and per-item validation
 tests. Still required are a mobile sync-client suite, installed transport validation, tenant

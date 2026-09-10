@@ -9,7 +9,9 @@
   Import/OCR remains separate; 76/86 transport/spend for a future live path; 82/83 consume the
   keep-line handoff
 - **Number allocation:** 97 follows inspection of active, archived and concurrent plan files. 95 and
-  96 are archived. Plan 98 owns voice/TTS. The next new plan is 99.
+  archived 96 (account sign-in) are archived. Active phrase-music reuses 96 (unresolved collision).
+  Plan 98 owns voice/TTS. Plan 99 owns the online-first listening companion. The next new plan is
+  100.
 
 ## Outcome
 

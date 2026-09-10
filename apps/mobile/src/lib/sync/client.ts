@@ -1,4 +1,4 @@
-import { MAX_SYNC_BYTES, type PushOp } from '@loro/core/api/target'
+import { MAX_SYNC_BYTES, type PushOp } from '@loro/core/api/sync'
 import type { OutboxOp } from '@loro/core'
 import { outboxToWire, utf8ByteLength } from './codec'
 import {

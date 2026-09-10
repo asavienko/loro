@@ -190,6 +190,7 @@ function ReadyLayout() {
                   options={{ title: copy.audioSpeech.speakTitle, gestureEnabled: false }}
                 />
                 <Stack.Screen name="more" options={{ title: copy.nav.more }} />
+                <Stack.Screen name="music" options={{ title: copy.nav.music }} />
                 <Stack.Screen name="languages" options={{ title: copy.languages.title }} />
                 <Stack.Screen name="progress" options={{ title: copy.nav.progress }} />
                 <Stack.Screen name="listen-export" options={{ title: copy.nav.listenExport }} />

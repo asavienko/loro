@@ -1,6 +1,7 @@
 # Whole-project improvement assessment — 2026-09-09
 
 **Reviewed:** 2026-09-09. **Branch:** `main`. **HEAD:** `706858ceadd59fb317ed687d7160136b53bdebd9`.
+**Status note:** Items 1–3 (ADR-0012, ADR-0008, leftover item C docs) landed after this snapshot.
 **Requirements:** identify what to refactor, which tools and libraries to use, and which practices
 to follow (F-02/F-03/F-04, ADR-0001–0014), without completing product plans or claiming
 device/release acceptance.
@@ -503,15 +504,15 @@ These are lint or CI, not reviewer memory:
 
 ### Documented but stale — fix the doc, not the code
 
-| Claim still in docs                                                | HEAD                                                                      |
-| ------------------------------------------------------------------ | ------------------------------------------------------------------------- |
-| ADR-0012 live Drizzle queries; no phrase array in Zustand          | Write-through projection; `phrases` in `AppData`                          |
-| ADR-0008 Drizzle + Redis as current                                | `pg` + SQL; Redis unused                                                  |
-| `mobile-app.md` process-kill loses store; JS `coreFacade`          | SQLite hydrate; Rust facade                                               |
-| `onboarding.md` opening: no native modules / SQLite; seven screens | Eight screens + utilities; modules exist; browser still cannot prove them |
-| Native-libraries "Keep server Drizzle"                             | Corrected to `pg` + handwritten SQL                                       |
-| `overview.md` "Postgres 16 + Drizzle"                              | Server is `pg` + SQL                                                      |
-| ADR-0001 "EAS gives us builds"                                     | Local APK / disabled Actions. EAS is not the pipeline.                    |
+| Claim still in docs                                                | HEAD                                                                               |
+| ------------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
+| ADR-0012 live Drizzle queries; no phrase array in Zustand          | Amended: write-through projection; `phrases` in `AppData`                          |
+| ADR-0008 Drizzle + Redis as current                                | Amended: `pg` + SQL; Redis unused                                                  |
+| `mobile-app.md` process-kill loses store; JS `coreFacade`          | Patched: SQLite hydrate; Rust facade                                               |
+| `onboarding.md` opening: no native modules / SQLite; seven screens | Patched: eight screens + utilities; modules exist; browser still cannot prove them |
+| Native-libraries "Keep server Drizzle"                             | Corrected to `pg` + handwritten SQL                                                |
+| `overview.md` "Postgres 16 + Drizzle"                              | Patched: server is `pg` + SQL                                                      |
+| ADR-0001 "EAS gives us builds"                                     | Amended: local APK / disabled Actions. EAS is not the pipeline.                    |
 
 ### Approaches for the next screens and services
 
@@ -566,21 +567,23 @@ These extend the companions. They are how screens 9–23 and the remaining API s
 do not redo:
   A–G and the 2026-09-10 extracts (refactoring-strategies)
 
-next, docs/decision only (this review's P0):
+landed (docs/decision P0, this review):
   1. Amend ADR-0012 to write-through projection
   2. Amend ADR-0008 to pg + handwritten SQL; Drizzle/Redis as revisit
   3. Patch onboarding.md opening + mobile-app.md State/Engines
      (same class as leftover item C)
 
-next, small code (P1, anytime a matching file is open):
+landed (P1 code, this review):
   4. Production account/sync import account + sync, not api/target
   5. Fixture-seal fakeCore.streamRank / repeatTarget
-  6. Speak session checkpoint or an explicit ephemeral comment
+  6. Speak session documented as ephemeral until interruption resume
   7. Parse legacy /content egress with current Manifest/Pack Zod
-  8. LegacyLocaleSchema rename when common.ts is already in the diff
-  9. UniFFI --check when the generator is already in the diff
+
+landed with common.ts:
+  8. `LegacyLocaleSchema` alias; `LocaleSchema` remains the legacy `es-ES` literal
 
 as you touch:
+  9. UniFFI --check when the generator is already in the diff
   account.tsx / persistence.test.ts / sync tests / Today / onboarding / Progress
   (extract only at a second call site)
 
@@ -589,8 +592,8 @@ must not: section below
 ```
 
 Do **not** open plan 97 for this list. A review is not a numbered plan
-([plan management](../../.agents/skills/loro-development/references/plans.md)). Items 1–3 are a docs
-PR. Items 4–7 ride along with the next owner of those files.
+([plan management](../../.agents/skills/loro-development/references/plans.md)). Items 1–8 are in
+the working tree. UniFFI `--check` still waits for the next generator edit.
 
 Native-device library work (haptics, Maestro, keyboard-controller, notifications, Skia) proceeds
 **in parallel** under its plan owners and must not share a PR with items 1–4.

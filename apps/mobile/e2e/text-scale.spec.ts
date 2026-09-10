@@ -58,7 +58,7 @@ for (const scale of SCALES) {
     }
   })
   test(`text at ${scale * 100}% never clips or overflows`, async ({ page }) => {
-    // This one test visits every learner state, including the F-01 account scenarios.
+    // Whole-manifest walk: F-01 account, AS-07 listen, and plan-96 music states.
     test.setTimeout(300_000)
     const problems: string[] = []
 

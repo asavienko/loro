@@ -66,4 +66,7 @@ export const navCopy = {
   get listenExport() {
     return message('nav.listenExport')
   },
+  get music() {
+    return message('nav.music')
+  },
 }

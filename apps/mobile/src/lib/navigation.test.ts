@@ -50,8 +50,11 @@ describe('built navigation destinations', () => {
 
 describe('surface registry and deep-link guard', () => {
   it('declares each authored learner screen once and never marks a missing screen built', () => {
-    const learnerSurfaces = SURFACES.filter((surface) => surface.kind === 'learner')
-    expect(learnerSurfaces).toHaveLength(23)
+    const authoredLearnerSurfaces = SURFACES.filter(
+      (surface) => surface.kind === 'learner' && surface.id !== 'phrase-music',
+    )
+    expect(authoredLearnerSurfaces).toHaveLength(23)
+    expect(SURFACES.some((surface) => surface.id === 'phrase-music')).toBe(true)
     expect(new Set(SURFACES.map((surface) => surface.id)).size).toBe(SURFACES.length)
     expect(new Set(SURFACES.map((surface) => surface.path)).size).toBe(SURFACES.length)
     expect(
@@ -70,6 +73,7 @@ describe('surface registry and deep-link guard', () => {
       'settings',
       'more',
       'listen-export',
+      'phrase-music',
     ])
   })
 
