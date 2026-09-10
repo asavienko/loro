@@ -5,7 +5,7 @@
  * and coverage. Account mocks stay in `accountFlow.ts`.
  */
 import { expect, type Locator, type Page } from '@playwright/test'
-import { fixWallClock } from '../clock'
+import { ensureOpenWaveClock } from '../clock'
 
 export const REFRAIN_REPS = [
   'Say it',
@@ -15,9 +15,6 @@ export const REFRAIN_REPS = [
   'Respond',
   'Say it cold',
 ] as const
-
-const OPEN_WAVE_INSTANT = '2026-04-06T10:00'
-const frozenClockPages = new WeakSet<Page>()
 
 /**
  * Put the app into `state`, onboarding first unless the state is part of first run.
@@ -30,13 +27,9 @@ export async function enter(
   state: { firstRun?: true; reach: (page: Page) => Promise<void> },
   onboard: (page: Page) => Promise<void>,
 ): Promise<void> {
-  // STATES-driven suites (axe, text-scale, coverage) do not set a clock themselves.
   // After 19:00 Madrid wall time, Today shows the next-wave lock instead of Start the * wave.
-  // Install once, before the first app navigation; later entries on the same page keep it.
-  if (!frozenClockPages.has(page)) {
-    await fixWallClock(page, OPEN_WAVE_INSTANT)
-    frozenClockPages.add(page)
-  }
+  // Specs that need a different instant call `atInstant` first.
+  await ensureOpenWaveClock(page)
   // The exhaustive geometry suites reuse one browser page. Each manifest entry is
   // an independent learner, while production reloads now correctly retain progress.
   if (page.url().startsWith('http')) {

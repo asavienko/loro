@@ -36,6 +36,15 @@ import { expect, type Page } from '@playwright/test'
  */
 export type LocalInstant = string
 
+/** Open morning wave in Europe/Madrid. After 19:00 the Start-the-wave control is locked. */
+export const OPEN_WAVE_INSTANT: LocalInstant = '2026-04-06T10:00'
+
+const preparedPages = new WeakSet<Page>()
+
+function markClockPrepared(page: Page): void {
+  preparedPages.add(page)
+}
+
 /**
  * Install a frozen clock reading `local` in the browser's pinned timezone.
  *
@@ -44,6 +53,7 @@ export type LocalInstant = string
  */
 export async function atInstant(page: Page, local: LocalInstant): Promise<void> {
   await page.clock.install({ time: await epochFor(page, local) })
+  markClockPrepared(page)
   await expectPageReads(page, local)
 }
 
@@ -56,7 +66,17 @@ export async function atInstant(page: Page, local: LocalInstant): Promise<void> 
  */
 export async function fixWallClock(page: Page, local: LocalInstant): Promise<void> {
   await page.clock.setFixedTime(await epochFor(page, local))
+  markClockPrepared(page)
   await expectPageReads(page, local)
+}
+
+/**
+ * Specs that do not pick an instant still need an open wave. Day-boundary suites call
+ * `atInstant` first, so this is a no-op on those pages.
+ */
+export async function ensureOpenWaveClock(page: Page): Promise<void> {
+  if (preparedPages.has(page)) return
+  await fixWallClock(page, OPEN_WAVE_INSTANT)
 }
 
 /**
