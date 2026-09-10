@@ -62,6 +62,10 @@ public final class LoroAudioCacheModule: Module {
     AsyncFunction("loadListeningBatch") { () -> [[String: Any?]]? in
       self.controller.loadBatch()
     }
+
+    AsyncFunction("installDevFixture") { (logicalKey: String) -> [String: Any?] in
+      try self.controller.installDevFixture(logicalKey)
+    }
   }
 }
 
@@ -121,13 +125,34 @@ private let session: URLSession = {
   }
 
   func lookup(_ logicalKey: String) -> [String: Any?]? {
-    guard let row = index()[logicalKey], let path = row["path"] as? String else { return nil }
+    guard let row = index()[logicalKey],
+      let path = row["path"] as? String,
+      let sha256 = row["sha256"] as? String
+    else { return nil }
     let url = URL(fileURLWithPath: path)
-    guard FileManager.default.fileExists(atPath: url.path) else { return nil }
+    guard FileManager.default.fileExists(atPath: url.path),
+      let digest = sha256Hex(url),
+      digest == sha256.lowercased()
+    else {
+      forget(logicalKey)
+      return nil
+    }
     mutateIndex { table in
       table[logicalKey]?["accessed"] = Date().timeIntervalSince1970
     }
-    return payload(url: url, sha256: row["sha256"] as? String, ms: row["ms"] as? Int)
+    return payload(url: url, sha256: digest, ms: row["ms"] as? Int)
+  }
+
+  func installDevFixture(_ logicalKey: String) throws -> [String: Any?] {
+    #if DEBUG
+      guard let bytes = Data(base64Encoded: LoroAudioCacheController.fixtureBase64) else {
+        throw failure("failed")
+      }
+      let digest = SHA256.hash(data: bytes).map { String(format: "%02x", $0) }.joined()
+      return try store(bytes: bytes, sha256: digest, key: logicalKey, pin: "listening")
+    #else
+      throw failure("failed")
+    #endif
   }
 
   func saveBatch(_ clips: [[String: Any]]) throws {
@@ -147,7 +172,9 @@ private let session: URLSession = {
         let sha256 = clip["sha256"] as? String,
         let file = URL(string: fileUri),
         file.isFileURL,
-        FileManager.default.fileExists(atPath: file.path)
+        FileManager.default.fileExists(atPath: file.path),
+        let digest = sha256Hex(file),
+        digest == sha256.lowercased()
       else { return nil }
       verified.append(["fileUri": fileUri, "ms": clip["ms"], "sha256": sha256])
     }
@@ -273,6 +300,20 @@ private let session: URLSession = {
     ["fileUri": url.absoluteString, "ms": ms, "sha256": sha256]
   }
 
+  private func sha256Hex(_ url: URL) -> String? {
+    guard let data = try? Data(contentsOf: url) else { return nil }
+    return SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
+  }
+
+  private func forget(_ logicalKey: String) {
+    mutateIndex { table in
+      if let path = table[logicalKey]?["path"] as? String {
+        try? FileManager.default.removeItem(atPath: path)
+      }
+      table.removeValue(forKey: logicalKey)
+    }
+  }
+
   private func cacheDirectory() throws -> URL {
     guard let root = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first else {
       throw failure("failed")
@@ -326,6 +367,10 @@ private let session: URLSession = {
   private func failure(_ code: String) -> NSError {
     NSError(domain: "LoroAudioCache", code: 1, userInfo: [NSLocalizedDescriptionKey: code])
   }
+
+  /// Silent AAC 24 kHz mono. Development fixture only — not licensed neural audio.
+  private static let fixtureBase64 =
+    "AAAAHGZ0eXBNNEEgAAACAE00QSBpc29taXNvMgAAAAhmcmVlAAAAMW1kYXTeAgBMYXZjNjAuMzEuMTAyAAIwQA4BGCAHARggBwEYIAcBGCAHARggBwAAAxNtb292AAAAbG12aGQAAAAAAAAAAAAAAAAAAAPoAAAAyAABAAABAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAACPXRyYWsAAABcdGtoZAAAAAMAAAAAAAAAAAAAAAEAAAAAAAAAyAAAAAAAAAAAAAAAAQEAAAAAAQAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAACRlZHRzAAAAHGVsc3QAAAAAAAAAAQAAAMgAAAQAAAEAAAAAAbVtZGlhAAAAIG1kaGQAAAAAAAAAAAAAAAAAAF3AAAAWwFXEAAAAAAAtaGRscgAAAAAAAAAAc291bgAAAAAAAAAAAAAAAFNvdW5kSGFuZGxlcgAAAAFgbWluZgAAABBzbWhkAAAAAAAAAAAAAAAkZGluZgAAABxkcmVmAAAAAAAAAAEAAAAMdXJsIAAAAAEAAAEkc3RibAAAAGpzdHNkAAAAAAAAAAEAAABabXA0YQAAAAAAAAABAAAAAAAAAAAAAQAQAAAAAF3AAAAAAAA2ZXNkcwAAAAADgICAJQABAASAgIAXQBUAAAAAAPoAAAAFRwWAgIAFEwhW5QAGgICAAQIAAAAgc3R0cwAAAAAAAAACAAAABQAABAAAAAABAAACwAAAABxzdHNjAAAAAAAAAAEAAAABAAAABgAAAAEAAAAsc3RzegAAAAAAAAAAAAAABgAAABUAAAAEAAAABAAAAAQAAAAEAAAABAAAABRzdGNvAAAAAAAAAAEAAAAsAAAAGnNncGQBAAAAcm9sbAAAAAIAAAAB//8AAAAcc2JncAAAAAByb2xsAAAAAQAAAAYAAAABAAAAYnVkdGEAAABabWV0YQAAAAAAAAAhaGRscgAAAAAAAAAAbWRpcmFwcGwAAAAAAAAAAAAAAAAtaWxzdAAAACWpdG9vAAAAHWRhdGEAAAABAAAAAExhdmY2MC4xNi4xMDA="
 }
 
 private final class RedirectDeny: NSObject, URLSessionTaskDelegate {
