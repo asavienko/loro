@@ -11,7 +11,14 @@
 import process from 'node:process'
 
 export const isCI = process.env.CI !== undefined
+/**
+ * Expo's web bundler inlines `process.env.EXPO_PUBLIC_*` from `apps/mobile/.env`
+ * (`http://localhost:3000/v1` in this checkout). Playwright still sets the fake
+ * HTTPS host so a serializer/export that reads process.env stays off the LAN API.
+ * `accountFlow` mocks both origins.
+ */
 export const accountEnvironment = {
+  ...process.env,
   EXPO_NO_TELEMETRY: '1',
   EXPO_PUBLIC_API_URL: 'https://auth.loro.test/v1',
 }

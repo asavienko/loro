@@ -8,11 +8,18 @@ export const test = base.extend<{ consoleHealth: undefined; accountApi: undefine
     async ({ page }, use) => {
       const errors: string[] = []
       page.on('console', (message) => {
-        if (message.type() === 'error' && !consumeExpectedResourceError(page, message))
-          errors.push(`console: ${message.text()}`)
+        if (message.type() !== 'error' || consumeExpectedResourceError(page, message)) return
+        // Resource failures are recorded on requestfailed with the URL.
+        if (message.text().includes('ERR_CONNECTION_REFUSED')) return
+        errors.push(`console: ${message.text()}`)
       })
       page.on('pageerror', (error) => {
         errors.push(`page: ${error.message}`)
+      })
+      page.on('requestfailed', (request) => {
+        const failure = request.failure()?.errorText ?? 'failed'
+        if (!/CONNECTION_REFUSED|NAME_NOT_RESOLVED|ERR_CONNECTION/.test(failure)) return
+        errors.push(`request: ${failure} ${request.method()} ${request.url()}`)
       })
 
       await use(undefined)
