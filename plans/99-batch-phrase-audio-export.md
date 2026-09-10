@@ -12,10 +12,8 @@
   [Q-22](../docs/decisions/open-questions.md#q-22). An Android emulator in airplane mode played and
   restored a **labeled development fixture** cache after force-stop; that is not physical-device
   58/72 and not licensed Q-15 audio. Device TTS is a labeled fallback, not the primary path.
-  `pnpm check` and learner E2E (197 passed, including listen-export) are green on this slice. Full
-  `CI_BASE_REF=origin/main pnpm ci:local` ran with Docker; it failed later on an unrelated workbench
-  310% screenshot size (310×425 expected, 310×442 received). Production-e2e, mobile-bundle, and API
-  image verification were skipped after that isolated-verification failure.
+  `CI_BASE_REF=origin/main pnpm ci:local` passed at `bcd35dc` (learner E2E 197, workbench,
+  production-e2e, mobile-bundle, API image). Item 7 remains open.
 - **Depends on:** 56 route declaration; 81 More destination; 59 active-course phrase inventory; 87
   target locale; 62 disk cache, atomic download, and exclusive playback session; 86 ElevenLabs
   transport; 61 asset identity and checksum policy for model audio; 58/72 for native evidence. The
@@ -24,8 +22,8 @@
 - **Reviewed:** 2026-09-09 specification against `d153d82`; implementation pass 2026-09-09 for
   contract, cache, composer, restore, and fail-closed transports; 2026-09-10 checksum-on-lookup,
   development fixture seed, file-URI generate/cache/listen tests, emulator airplane-mode fixture
-  listen, and a Docker `pnpm ci:local` run. Live licensed voices, share-out-of-app, physical-device
-  58/72, and a green full `ci:local` remain gated.
+  listen, and `CI_BASE_REF=origin/main pnpm ci:local` green at `bcd35dc`. Live licensed voices,
+  share-out-of-app, and physical-device 58/72 remain gated.
 
 ## Outcome
 
@@ -88,12 +86,12 @@ render client attaches an optional bearer session and maps 429 to quota; native 
 Authorization header and refuses redirects so the token cannot hop hosts. Node tests prove prepare →
 HTTP download → checksummed `sha256/{hex}.m4a` → airplane replay from file URIs → restore, with
 share still gated. Learner listen-export E2E passed inside `pnpm ci:local` (197 passed, 2026-09-10).
-`pnpm check` passed. Full `CI_BASE_REF=origin/main pnpm ci:local` ran after installing Docker; it
-failed on workbench screenshot size (Linux baseline 310×425, this host 310×442) and skipped
-production-e2e, mobile-bundle, and API image verification. An Android emulator (`loro_listen`, API
-36, airplane mode via `cmd connectivity airplane-mode enable`) generated the labeled fixture, played
-it from cache (`playFile` / MediaPlayer), and still showed ready-to-listen after `am force-stop`.
-That is not physical-device 58/72 and not Q-15 licensed audio.
+`CI_BASE_REF=origin/main pnpm ci:local` passed at `bcd35dc` after Docker install, a Linux workbench
+310% snapshot refresh (310×442), and bundling workspace TypeScript into the API image. An Android
+emulator (`loro_listen`, API 36, airplane mode via `cmd connectivity airplane-mode enable`)
+generated the labeled fixture, played it from cache (`playFile` / MediaPlayer), and still showed
+ready-to-listen after `am force-stop`. That is not physical-device 58/72 and not Q-15 licensed
+audio.
 
 ## Product shape (working assumptions)
 
