@@ -79,6 +79,15 @@ export function availabilityFromDevice(input: {
   }
 }
 
+/** Debug fixture seed is only for APKs that cannot take the licensed generate path. */
+export function listeningFixtureSeedEnabled(input: {
+  licensedGenerate: boolean
+  nativeDebug: boolean
+  nativeCache: boolean
+}): boolean {
+  return input.nativeDebug && input.nativeCache && !input.licensedGenerate
+}
+
 export function listenViewModel(input: {
   phase: ListenPhase
   locale: TargetLocale

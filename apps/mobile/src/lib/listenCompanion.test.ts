@@ -9,6 +9,7 @@ import { AudioCacheController, AudioCacheError } from './audioCacheController'
 import {
   listenStatusKind,
   listenViewModel,
+  listeningFixtureSeedEnabled,
   playListeningSequence,
   prepareListeningBatch,
   restoreListeningBatch,
@@ -284,5 +285,29 @@ describe('listening companion', () => {
     expect(ready.phase).toBe('ready')
     expect(ready.clips).toHaveLength(2)
     expect(ready.clips.every((clip) => clip.fileUri.startsWith('file:'))).toBe(true)
+  })
+
+  it('does not seed the debug fixture when licensed generate is available', () => {
+    expect(
+      listeningFixtureSeedEnabled({
+        licensedGenerate: true,
+        nativeDebug: true,
+        nativeCache: true,
+      }),
+    ).toBe(false)
+    expect(
+      listeningFixtureSeedEnabled({
+        licensedGenerate: false,
+        nativeDebug: true,
+        nativeCache: true,
+      }),
+    ).toBe(true)
+    expect(
+      listeningFixtureSeedEnabled({
+        licensedGenerate: false,
+        nativeDebug: false,
+        nativeCache: true,
+      }),
+    ).toBe(false)
   })
 })
