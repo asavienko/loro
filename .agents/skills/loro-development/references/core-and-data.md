@@ -50,8 +50,8 @@ and run `pnpm contracts:check`; generated JSON should be deterministic.
 Contract and provider work previously ran independently. Use one agreed handoff before runtime
 wiring; do not introduce substitute app-facing types or competing session stores. The isolated
 Anthropic transport was deliberately unregistered. Inspect its current module registration and
-guardrails before claiming `AI_PROVIDER` or a key enables it. A separate `MUSIC_PROVIDER` is
-not `TTS_PROVIDER`; generated tracks still cannot become pronunciation references.
+guardrails before claiming `AI_PROVIDER` or a key enables it. A separate `MUSIC_PROVIDER` is not
+`TTS_PROVIDER`; generated tracks still cannot become pronunciation references.
 
 Inspect current source before repeating a dual-ownership cleanup: Stream must not bypass
 `StreamEngine`, and Refrain numbers belong in Rust. The

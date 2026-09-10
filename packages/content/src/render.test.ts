@@ -2,7 +2,7 @@ import { mkdtemp, readFile, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
-import { audioDurationMs, silenceWav } from './audioDuration.js'
+import { audioDurationMs, silenceAac, silenceWav } from './audioDuration.js'
 import { assertPublishable, renderCatalog, sha256Hex } from './render.js'
 import { loadCatalog } from './index.js'
 
@@ -43,6 +43,10 @@ describe('audio duration', () => {
   it('walks MPEG-1 Layer III frames instead of inventing duration from text', () => {
     expect(audioDurationMs(mpeg1Layer3(2, 128))).toBe(52)
     expect(audioDurationMs(mpeg1Layer3(2, 256))).toBe(52)
+  })
+
+  it('reads ISO BMFF duration from the labeled silent AAC fixture', () => {
+    expect(audioDurationMs(silenceAac())).toBe(200)
   })
 })
 

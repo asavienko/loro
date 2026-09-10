@@ -5,7 +5,7 @@
  * and coverage. Account mocks stay in `accountFlow.ts`.
  */
 import { expect, type Locator, type Page } from '@playwright/test'
-import { ensureManifestClock } from '../clock'
+import { ensureOpenWaveClock } from '../clock'
 
 export const REFRAIN_REPS = [
   'Say it',
@@ -27,6 +27,9 @@ export async function enter(
   state: { firstRun?: true; reach: (page: Page) => Promise<void> },
   onboard: (page: Page) => Promise<void>,
 ): Promise<void> {
+  // After 19:00 Madrid wall time, Today shows the next-wave lock instead of Start the * wave.
+  // Specs that need a different instant call `atInstant` first.
+  await ensureOpenWaveClock(page)
   // The exhaustive geometry suites reuse one browser page. Each manifest entry is
   // an independent learner, while production reloads now correctly retain progress.
   if (page.url().startsWith('http')) {
@@ -36,7 +39,6 @@ export async function enter(
     })
     await page.goto('about:blank')
   }
-  await ensureManifestClock(page)
   if (state.firstRun !== true) await onboard(page)
   await state.reach(page)
 }

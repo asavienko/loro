@@ -8,7 +8,7 @@
     "dev": "tsx watch src/main.ts",
     "dev:up": "docker compose up -d",
     "dev:down": "docker compose down",
-    "build": "esbuild src/main.ts --bundle --platform=node --target=node22 --format=esm --packages=external --outfile=dist/main.js --sourcemap",
+    "build": "node scripts/build.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "lint": "eslint src",

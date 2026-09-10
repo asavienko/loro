@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { checkBackend, configuredApiUrl, requestWithTimeout } from './backend'
+import { checkBackend, configuredApiUrl, publicApiUrl, requestWithTimeout } from './backend'
 
 describe('backend connection', () => {
   it('works without AbortSignal.timeout on the native runtime', async () => {
@@ -49,6 +49,7 @@ describe('backend connection', () => {
   })
   it('normalizes the versioned HTTPS endpoint', () => {
     expect(configuredApiUrl('https://api.test/v1/')).toBe('https://api.test/v1')
+    expect(publicApiUrl()).toBe(configuredApiUrl(process.env.EXPO_PUBLIC_API_URL))
   })
   it('does not send a request without configuration', async () => {
     const request = vi.fn<typeof fetch>()

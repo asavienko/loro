@@ -52,14 +52,14 @@ is where `node:sqlite` lives; the tests in here are the parts that need no datab
 
 ## Current implementation boundary
 
-This package currently implements Stream, Refrain, Speak and Review. The other `EngineId` values
-are contract reservations. Mobile constructs the implemented engines in its store layer and talks
-to Rust through the generated WASM/UniFFI facade (`rustCoreFacade`). TypeScript Refrain helpers
-remain for fixtures only; production numbers come from the crate. Do not add a second FSRS or
-ranker in TypeScript ([ADR-0002](../../docs/architecture/adr/0002-shared-rust-core.md)).
+This package currently implements Stream, Refrain, Speak and Review. The other `EngineId` values are
+contract reservations. Mobile constructs the implemented engines in its store layer and talks to
+Rust through the generated WASM/UniFFI facade (`rustCoreFacade`). TypeScript Refrain helpers remain
+for fixtures only; production numbers come from the crate. Do not add a second FSRS or ranker in
+TypeScript ([ADR-0002](../../docs/architecture/adr/0002-shared-rust-core.md)).
 
-Persistence contracts and repositories live here. The running app writes native OP-SQLite or
-browser SQLite through `apps/mobile/src/data/` before rendering. `openMemoryPersistence()` is the
+Persistence contracts and repositories live here. The running app writes native OP-SQLite or browser
+SQLite through `apps/mobile/src/data/` before rendering. `openMemoryPersistence()` is the
 web-capable implementation of these contracts, not a stand-in for device storage.
 
 ## The two things that matter most here

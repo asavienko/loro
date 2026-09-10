@@ -180,9 +180,11 @@ every learner.
 | Fallback          | On-device TTS when the file is missing, with a quality caveat                   |
 | Reference contour | `f0_native` extracted from the rendered audio at build time and shipped as data |
 
-Learner-authored phrases (typed, imported, captured) have no pre-rendered audio and use on-device
-TTS. This is a visible quality difference and is acceptable — but it means the prosody lab is
-**catalog-only**, since it needs a trustworthy native reference.
+Learner-authored phrases (typed, imported, captured) have no pre-rendered **reference** audio.
+Practice playback may use on-device TTS on a cache miss. Plan 99 listening-class clips are a
+separate on-demand neural render (multiple licensed voices, cached on device) and must never be
+stored as this `audio` object or used for `f0_native`. That quality difference is visible and
+acceptable — the prosody lab stays **catalog-only**, since it needs a trustworthy native reference.
 
 ---
 

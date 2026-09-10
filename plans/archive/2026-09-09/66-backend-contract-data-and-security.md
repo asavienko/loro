@@ -58,7 +58,10 @@ practice dependency.
 4. [ ] Expand malformed-input, concurrency, injection and 10× load/security testing. Authentication
        and tenant tests do not establish the performance or full production-security budget.
 5. [ ] Complete principal-scoped live-provider budgets/timeouts with plan 86 before activating live
-       AI; shared tester access remains gated on the deployment/operational evidence in 88/91.
+       AI; shared tester access remains gated on the deployment/operational evidence in 88/91. When
+       86's ElevenLabs adapter exists, host draft `POST /tts/render` (metadata + authorized download
+       URL, never learner PCM) using plan 61 identity rules. Listening-class voice ids are a plan 99
+       consumer; Q-15 still gates live rendering.
 
 ## Acceptance criteria
 

@@ -23,29 +23,29 @@ and, by `45a2305`, plan 96 account screens. #27 (`35b61a8`) later archived imple
 including 95/96; do not look for `plans/96-*.md` at repo root on current main. `git cherry` beats
 `--no-merged` after squash. Leftover F-04 slice worktrees are historical, not a merge queue.
 
-| Task / topic                         | Session ID                             | Reusable lesson                                                                                                                          |
-| ------------------------------------ | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| Worktrees and unmerged review        | `e37cc962-b79c-4338-9143-e032fe453811` | Stay in the named checkout. Use `git cherry`. Fast-forward a behind local `main` before treating it as unique work.                      |
-| F-01 account screens                 | same thread                            | Named-back must match hardware back; busy back cancels; `signIn` no-ops must not stick connecting state. GitHub conflict flags can be stale. |
-| Refactoring strategies               | `29014e75-d0db-4895-87a1-313f51e853fa` | Document shipped-code debt; do not confuse it with unimplemented plans or add a library rewrite.                                           |
-| Native libraries companion           | `950f0924-3526-46bb-b6cd-606305873a95` | Keep Expo SDK 54, OP-SQLite, sql.js, expo-secure-store; local Maestro is not a cloud farm.                                                |
-| Archive implemented plans             | `997e871f-9703-4750-9e90-d7cdf9cbb3cb` | Archive `✅` in the same change; `--unfinished` only when asked. Do not mix archive PRs with unrelated feature files.                      |
-| Batch phrase export plan             | `8c783eb3-ef96-481d-b4fa-bdac5c7bf6a5` | Licensed neural voices and AAC export are not plan 61 canonical audio or device TTS.                                                   |
-| Music and lyrics generation           | `bc-34b61e55-2555-4664-8a62-db94cacf4115` | Separate `MUSIC_PROVIDER` from TTS. Generated tracks never write `ProgressDelta` or become pronunciation references.                          |
-| Generative phrase discovery           | `0678bcab-fc92-48c0-9d26-93e4f7904e47` | Authored catalog stays the floor; Discover is garnish on the existing add path.                                                        |
-| Full-stack voice integration           | `a72bc14c-c061-44b8-8b23-34c080607fae` | Do not duplicate 61/62/63/86. On-device ASR and recorded PCM stay forbidden as uploads.                                                   |
-| Cloud environment setup              | `bc-da6b3fcf-99a0-4b05-a8e3-64d1cdad655c` | Default cloud images may lack Docker/`wasm-pack`; that is not local `pnpm ci:local`.                                                   |
+| Task / topic                  | Session ID                                | Reusable lesson                                                                                                                              |
+| ----------------------------- | ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Worktrees and unmerged review | `e37cc962-b79c-4338-9143-e032fe453811`    | Stay in the named checkout. Use `git cherry`. Fast-forward a behind local `main` before treating it as unique work.                          |
+| F-01 account screens          | same thread                               | Named-back must match hardware back; busy back cancels; `signIn` no-ops must not stick connecting state. GitHub conflict flags can be stale. |
+| Refactoring strategies        | `29014e75-d0db-4895-87a1-313f51e853fa`    | Document shipped-code debt; do not confuse it with unimplemented plans or add a library rewrite.                                             |
+| Native libraries companion    | `950f0924-3526-46bb-b6cd-606305873a95`    | Keep Expo SDK 54, OP-SQLite, sql.js, expo-secure-store; local Maestro is not a cloud farm.                                                   |
+| Archive implemented plans     | `997e871f-9703-4750-9e90-d7cdf9cbb3cb`    | Archive `✅` in the same change; `--unfinished` only when asked. Do not mix archive PRs with unrelated feature files.                        |
+| Batch phrase export plan      | `8c783eb3-ef96-481d-b4fa-bdac5c7bf6a5`    | Licensed neural voices and AAC export are not plan 61 canonical audio or device TTS.                                                         |
+| Music and lyrics generation   | `bc-34b61e55-2555-4664-8a62-db94cacf4115` | Separate `MUSIC_PROVIDER` from TTS. Generated tracks never write `ProgressDelta` or become pronunciation references.                         |
+| Generative phrase discovery   | `0678bcab-fc92-48c0-9d26-93e4f7904e47`    | Authored catalog stays the floor; Discover is garnish on the existing add path.                                                              |
+| Full-stack voice integration  | `a72bc14c-c061-44b8-8b23-34c080607fae`    | Do not duplicate 61/62/63/86. On-device ASR and recorded PCM stay forbidden as uploads.                                                      |
+| Cloud environment setup       | `bc-da6b3fcf-99a0-4b05-a8e3-64d1cdad655c` | Default cloud images may lack Docker/`wasm-pack`; that is not local `pnpm ci:local`.                                                         |
 
-Concurrent untracked `plans/97-*.md` files existed in Cursor worktrees `afa6` and `74hn` during
-this review. Allocate above every worktree, not only this checkout's README sentence.
+Concurrent untracked `plans/97-*.md` files existed in Cursor worktrees `afa6` and `74hn` during this
+review. Allocate above every worktree, not only this checkout's README sentence.
 
 ## September 9 workflow update
 
 Reviewed recent Codex task requests, outcomes and selected commands; verified the skill at
-`50d0eb1`. Plan 95's runner later landed in-tree: detect `scripts/ci-local.mjs` from current
-source. Remaining matched serial/cold/warm comparison is still plan 95's open slice. These
-observations refine the existing references; they do not require replaying all earlier chats or
-copying their commands wholesale.
+`50d0eb1`. Plan 95's runner later landed in-tree: detect `scripts/ci-local.mjs` from current source.
+Remaining matched serial/cold/warm comparison is still plan 95's open slice. These observations
+refine the existing references; they do not require replaying all earlier chats or copying their
+commands wholesale.
 
 | Task                                | Session ID                             | Reusable lesson                                                                                                                                      |
 | ----------------------------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -53,7 +53,7 @@ copying their commands wholesale.
 | Review app readiness and plans      | `01a082b2-5d19-7703-9fd5-43846271fbb1` | Cross-agent content integration passed unit checks but broke mobile bundling; test that boundary early and integrate before aggregate CI.            |
 | Update from main                    | `01a08588-c1bc-7610-9438-9c60c36d4494` | Repeated import fixes missed parent unmounts and lossy round trips; reproduce through callers and retain revision-specific evidence between reviews. |
 | Android emulator bug                | `01a085e4-87c0-7122-a861-199c0acc7ccc` | Wrapper-only tests missed later dotenv and Metro restart behavior; preserve separate build, launch and reconnect evidence.                           |
-| parallel CI checks                  | `01a08636-c730-7ca0-876f-06fb1a3afc78` | Bounded `LORO_CI_JOBS` and isolated outputs; detect the current runner rather than copying another worktree.                                          |
+| parallel CI checks                  | `01a08636-c730-7ca0-876f-06fb1a3afc78` | Bounded `LORO_CI_JOBS` and isolated outputs; detect the current runner rather than copying another worktree.                                         |
 
 ## Original September 8 coverage and limitations
 

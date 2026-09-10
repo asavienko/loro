@@ -52,8 +52,8 @@ All paths have the `/v1` prefix. Content and health remain public.
 | POST     | `/sync/push`, `/sync/pull`, `/sync/status`                     | Bearer and matching `X-Loro-Device` required                    |
 | POST     | `/ai/scene`                                                    | Bundled, validated roleplay scene                               |
 | GET      | `/ai/themes`                                                   | Available bundled themes                                        |
-| POST     | `/tts/render`                                                  | Authenticated; stub/Q-15 incomplete → 503; identity JSON only   |
-| GET      | `/tts/assets/:sha256`                                          | Authenticated checksum bytes from the process disk cache        |
+| POST     | `/tts/render`                                                  | Authenticated ElevenLabs; identity JSON only. Default stub 503; `TTS_STUB_RENDER=1` listening-class may omit a bearer locally |
+| GET      | `/tts/assets/:sha256`                                          | Authenticated checksum bytes, or unauthenticated when stub-render listening is on |
 
 OAuth uses `@loro/core/api/oauth`; other auth and sync use `@loro/core/api/account` and
 `@loro/core/api/sync` schemas at the transport boundary. Push validates the shared envelope, its
@@ -122,8 +122,10 @@ Unit/HTTP tests cover target validation, bearer/device enforcement, tenant isola
 rejections, Rust merge, cursor paging, alias reconciliation and tombstones. The optional real
 PostgreSQL suites create isolated schemas and exercise restart persistence, rollback, concurrent
 writes/refresh, one-use email codes, committed guess limits and refresh reuse revocation. They skip
-explicitly if `LORO_TEST_DATABASE_URL` is absent. Build with esbuild; workspace TypeScript packages
-are consumed as source.
+explicitly if `LORO_TEST_DATABASE_URL` is absent. Build with esbuild. Host/dev consume workspace
+TypeScript as source. The production image bundles `@loro/core` and `@loro/content` into
+`dist/main.js` because distroless Node 22.22 will not strip types under `node_modules` after
+`pnpm deploy`.
 
 Passing local tests does not configure a deployed database, identity provider, email sender, TLS,
 key rotation, backup/restore operations or account deletion/export jobs. Those release tasks remain

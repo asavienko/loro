@@ -18,7 +18,7 @@ export default defineConfig({
   ],
   use: { baseURL: `http://127.0.0.1:${port}`, ...sharedUse },
   webServer: {
-    command: `pnpm exec expo start --web --port ${port}`,
+    command: `pnpm exec expo start --web --port ${port}${isCI ? ' --clear' : ''}`,
     cwd: '..',
     url: `http://127.0.0.1:${port}/onboarding`,
     timeout: 120_000,

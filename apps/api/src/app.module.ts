@@ -37,6 +37,7 @@ import { MusicService } from './music/music.service.js'
 import { MUSIC_REPOSITORY } from './music/repository.js'
 import { PostgresMusicRepository } from './music/repository.postgres.js'
 import { TtsController } from './tts/tts.controller.js'
+import { TtsGuard } from './tts/tts.guard.js'
 import { TtsService } from './tts/tts.service.js'
 import { TTS_TRANSPORT, createTtsTransport } from './tts/transport.js'
 
@@ -68,6 +69,7 @@ import { TTS_TRANSPORT, createTtsTransport } from './tts/transport.js'
       inject: [StubSceneProvider],
     },
     TtsService,
+    TtsGuard,
     { provide: TTS_TRANSPORT, useFactory: createTtsTransport },
     SyncService,
     AuthService,

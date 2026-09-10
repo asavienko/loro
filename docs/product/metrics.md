@@ -126,16 +126,16 @@ can count them without reading them.
 
 ### Content
 
-| Event               | Key properties                                                                                                                                               |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Event               | Key properties                                                                                                                                                            |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `phrase_added`      | `phrase_id`, `source` (starter \| discover \| scenario \| browse \| custom \| import \| capture \| related \| drop \| chat \| generated), `difficulty`, `tags[]`, `theme` |
-| `phrase_removed`    | `phrase_id`, `owned_days`, `reps_at_removal`                                                                                                                 |
-| `phrase_rated`      | `phrase_id`, `field` (difficulty \| tags \| loved \| learned), `from`, `to`, `surface`                                                                       |
-| `phrase_note_set`   | `phrase_id`, `source` (typed \| suggestion)                                                                                                                  |
-| `import_parsed`     | `line_count`, `parsed_count`, `separator_hits{}`                                                                                                             |
-| `import_committed`  | `added_count`, `deselected_count`                                                                                                                            |
-| `capture_completed` | `line_count`, `added_count`, `ocr_confidence_bucket`                                                                                                         |
-| `undo_used`         | `action`                                                                                                                                                     |
+| `phrase_removed`    | `phrase_id`, `owned_days`, `reps_at_removal`                                                                                                                              |
+| `phrase_rated`      | `phrase_id`, `field` (difficulty \| tags \| loved \| learned), `from`, `to`, `surface`                                                                                    |
+| `phrase_note_set`   | `phrase_id`, `source` (typed \| suggestion)                                                                                                                               |
+| `import_parsed`     | `line_count`, `parsed_count`, `separator_hits{}`                                                                                                                          |
+| `import_committed`  | `added_count`, `deselected_count`                                                                                                                                         |
+| `capture_completed` | `line_count`, `added_count`, `ocr_confidence_bucket`                                                                                                                      |
+| `undo_used`         | `action`                                                                                                                                                                  |
 
 ### Practice — shared
 

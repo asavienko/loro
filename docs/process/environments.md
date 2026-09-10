@@ -50,8 +50,9 @@ There are no `db:migrate` or `db:seed` package scripts yet; starting containers 
 durable. The bundled catalogs contain 31 phrases per target language. They are loaded from the
 package, not seeded by a server database job. Bilingual review and audio capabilities have their own
 gates. Setting a public API URL does not create the missing mobile HTTP/sync client. AI returns
-bundled fixtures. The TTS adapter is stubbed (`TTS_PROVIDER=stub`); live ElevenLabs seed audio
-remains Q-15. Cloud ASR is not a runtime.
+bundled fixtures. The TTS adapter is stubbed (`TTS_PROVIDER=stub`); Q-15 pins enable generate when
+native cache and ElevenLabs (or `TTS_STUB_RENDER=1` listening-class) are present. Live seed still
+needs a key plus pronunciation review. Cloud ASR is not a runtime.
 
 ## Testing
 
@@ -98,26 +99,27 @@ replicas, CDN and uninterrupted deployment are not prerequisites for this testin
 [`apps/api/src/common/config.ts`](../../apps/api/src/common/config.ts) is the runtime source of
 truth. Entries in `.env.example` without a reader are reserved for future adapters.
 
-| Variable                            | Current behavior                                                                  |
-| ----------------------------------- | --------------------------------------------------------------------------------- |
-| `NODE_ENV`                          | `production` makes missing WASM fatal at startup; use it for the deployed image   |
-| `PORT`                              | HTTP listener; defaults to 3000                                                   |
-| `AI_PROVIDER`                       | Defaults to `stub`; only the stub is registered in the runtime                    |
-| `TTS_PROVIDER`                      | Defaults to `stub`; ElevenLabs requires key, model and `TTS_VOICE_ES_ES`          |
-| `TTS_API_KEY`                       | Required only in `elevenlabs` mode; never logged                                  |
-| `TTS_MODEL`                         | Pinned model id; empty in stub mode                                               |
-| `TTS_OUTPUT_FORMAT`                 | Defaults to `mp3_44100_128`; conversion to AAC is the authoring CLI's job         |
-| `TTS_VOICE_ES_ES`                   | Required in ElevenLabs mode; never invent a production id in code                 |
-| `TTS_VOICE_BG_BG`                   | Optional until that locale is rendered; never substituted for another locale      |
-| `TTS_VOICE_RU_RU`                   | Optional until that locale is rendered                                            |
-| `TTS_CACHE_DIR`                     | Process-local identity cache for `/tts/render`; defaults to os tmpdir             |
-| `MUSIC_PROVIDER`                    | Defaults to `stub`; fixture music only. Never `TTS_PROVIDER`. Live spend is Q-21  |
-| `MUSIC_API_KEY`                     | Server-only Music credential; unused while `MUSIC_PROVIDER=stub`                  |
-| `MUSIC_BASE_URL`                    | Defaults to `https://api.elevenlabs.io`; residency host is an ops/Q-21 choice     |
-| `MUSIC_MONTHLY_BUDGET_USD_PER_USER` | Separate from `AI_MONTHLY_BUDGET_USD_PER_USER`; `0` means unlimited in stub       |
-| `MUSIC_DAILY_BUDGET_USD_GLOBAL`     | Separate global music cap; `0` means unlimited in stub                            |
-| `CDN_BASE_URL`                      | Legacy content manifest `audio_base`; no CDN or working audio download is implied |
-| `npm_package_version`               | Version reported by health; defaults to `0.0.0` outside the package runner        |
+| Variable                            | Current behavior                                                                      |
+| ----------------------------------- | ------------------------------------------------------------------------------------- |
+| `NODE_ENV`                          | `production` makes missing WASM fatal at startup; use it for the deployed image       |
+| `PORT`                              | HTTP listener; defaults to 3000                                                       |
+| `AI_PROVIDER`                       | Defaults to `stub`; only the stub is registered in the runtime                        |
+| `TTS_PROVIDER`                      | Defaults to `stub`; ElevenLabs requires key, model and `TTS_VOICE_ES_ES`              |
+| `TTS_API_KEY`                       | Required only in `elevenlabs` mode; never logged                                      |
+| `TTS_MODEL`                         | Documented pin `eleven_multilingual_v2`; empty is valid in stub mode                  |
+| `TTS_OUTPUT_FORMAT`                 | Defaults to `mp3_44100_128`; conversion to AAC is the authoring CLI's job             |
+| `TTS_VOICE_ES_ES`                   | Documented pin `t9LRTh3y1ioN00e9wsNh` (Aaron Abad); runtime catalog render reads env  |
+| `TTS_VOICE_BG_BG`                   | Documented pin `406EiNlYvqFqcz3vsnOm` (Peter K); never substituted for another locale |
+| `TTS_VOICE_RU_RU`                   | Documented pin `1qd9R09Ljlx9V1Ok0t5S` (Ivan)                                          |
+| `TTS_CACHE_DIR`                     | Process-local identity cache for `/tts/render`; defaults to os tmpdir                 |
+| `TTS_STUB_RENDER`                   | `1` labeled listening-class silence only; CI and catalog publish stay `0`; listening render/asset may omit a bearer |
+| `MUSIC_PROVIDER`                    | Defaults to `stub`; fixture music only. Never `TTS_PROVIDER`. Live spend is Q-21      |
+| `MUSIC_API_KEY`                     | Server-only Music credential; unused while `MUSIC_PROVIDER=stub`                      |
+| `MUSIC_BASE_URL`                    | Defaults to `https://api.elevenlabs.io`; residency host is an ops/Q-21 choice         |
+| `MUSIC_MONTHLY_BUDGET_USD_PER_USER` | Separate from `AI_MONTHLY_BUDGET_USD_PER_USER`; `0` means unlimited in stub           |
+| `MUSIC_DAILY_BUDGET_USD_GLOBAL`     | Separate global music cap; `0` means unlimited in stub                                |
+| `CDN_BASE_URL`                      | Legacy content manifest `audio_base`; no CDN or working audio download is implied     |
+| `npm_package_version`               | Version reported by health; defaults to `0.0.0` outside the package runner            |
 
 ### Testing configuration to implement
 

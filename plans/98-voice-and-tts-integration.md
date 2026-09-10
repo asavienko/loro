@@ -3,9 +3,10 @@
 - **Requirement IDs:** `AS-01`, `AS-02` (existing rate contract), `AS-03` (already implemented)
 - **Milestone:** M1/M2
 - **Status:** 🟡 Adapter, authoring render, gated `/tts/render` and catalog-file playback with
-  device-TTS fallback are in this slice. Q-15 still gates licensed production seed audio. Cloud ASR,
-  voice cloning, S3 publication, DSP references, background/lock-screen transport and
-  physical-device speech acceptance remain with their owners.
+  device-TTS fallback are in this slice. Q-15 leaning pins catalog `TTS_VOICE_*` IDs; live seed
+  still needs a key and pronunciation review. Cloud ASR, voice cloning, S3 publication, DSP
+  references, background/lock-screen transport and physical-device speech acceptance remain with
+  their owners.
 - **Depends on:** 86 vendor-transport pattern; 61 render/`POST /tts/render` draft; 62 playback
   session; 63 on-device ASR (unchanged).
 - **Priority:** sequences the ElevenLabs slice of 86/61/62 rather than replacing those plans.
@@ -29,12 +30,14 @@ network.
 
 ## Remaining after this slice
 
-1. [ ] Q-15 voice/model IDs, rights, listen review and budget before a live seed render.
-2. [ ] S3/signed pack publication and client downloader (61/86).
-3. [ ] Background, lock-screen, gapless queue and LRU cache (62 remainder).
-4. [ ] Physical-device TTS/ASR/interruption evidence (58/63/72).
-5. [ ] F0/syllable/MFCC extraction (77).
+1. [x] Q-15 Voice Library catalog pins (`CATALOG_REFERENCE_VOICES` / `.env.example`).
+2. [ ] Content-lead listen, live `TTS_API_KEY`, and seed render of 150 then 600 phrases.
+3. [ ] S3/signed pack publication and client downloader (61/86).
+4. [ ] Background, lock-screen, gapless queue and LRU cache (62 remainder).
+5. [ ] Physical-device TTS/ASR/interruption evidence (58/63/72).
+6. [ ] F0/syllable/MFCC extraction (77).
 
 ## Out of scope
 
-Cloud ASR, voice cloning, learner PCM upload, UI sound effects, closing Q-15 in code.
+Cloud ASR, voice cloning, learner PCM upload, UI sound effects, closing Q-15 pronunciation review in
+code.

@@ -89,6 +89,11 @@ emulator evidence does not establish physical microphone or speaker acceptance.
   resumed at the next Refrain step. Speak reveal/Next worked without claiming speech or adding reps.
   Missing installed ASR/voice data produced the expected unavailable states; microphone permission
   remained unrequested. Local screenshots/logs are in `test-results/native-smoke/`.
+- Android listen companion (plan 99 / AS-07): debug APK on AVD `loro_listen` (API 36) with airplane
+  mode (`cmd connectivity airplane-mode enable`; Wi-Fi off; ping unreachable). Generate seeded a
+  labeled development fixture (copy: not licensed neural audio). Listen from cache played via native
+  `playFile`. Force-stop and cold start still showed ready-to-listen. This is emulator fixture
+  evidence, not physical-device 58/72 and not Q-15 licensed voices.
 - Hermes plural formatting is covered by bundled native EN/BG/RU
   [PluralRules](https://formatjs.github.io/docs/polyfills/intl-pluralrules/) and a regression that
   removes the platform API before loading the native entry point.

@@ -128,6 +128,7 @@ Expo Router typed routes are enabled in `app.config.ts`. The route files on disk
 | `/settings`         | Durable visual and analytics preferences                                     |
 | `/progress`         | Mastery, ladder, streak, and tag rollups derived from store rows             |
 | `/music`            | Phrase-songs garnish via More; picker, lyric review, style confirm, fixtures |
+| `/listen-export`    | Listening companion; generate, cache and in-app listen (share after Q-22)    |
 | `/dev/tokens`       | Developer workbench / token inspection (dev-only)                            |
 
 `_layout.tsx` owns the native stack, headers, safe-area provider, app-wide day rollover, and toast
