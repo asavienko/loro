@@ -136,7 +136,8 @@ export function createFileAudioCache(
     return new Promise((resolve, reject) => {
       const lib = url.protocol === 'https:' ? https : http
       const req = lib.request(url, { method: 'GET', headers, timeout: 15_000 }, (res) => {
-        if (res.statusCode !== 200) {
+        const status = res.statusCode ?? 0
+        if (status !== 200) {
           res.resume()
           reject(new Error('failed'))
           return

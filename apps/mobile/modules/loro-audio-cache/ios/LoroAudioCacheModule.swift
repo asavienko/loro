@@ -40,11 +40,11 @@ public final class LoroAudioCacheModule: Module {
     }
 
     AsyncFunction("pin") { (keys: [String]) in
-      self.controller.pin(keys)
+      try self.controller.pin(keys)
     }
 
     AsyncFunction("unpin") { (keys: [String]) in
-      self.controller.unpin(keys)
+      try self.controller.unpin(keys)
     }
 
     AsyncFunction("concatenate") { (options: LoroCacheConcatenateOptions) -> [String: Any?] in
@@ -77,10 +77,15 @@ private final class LoroAudioCacheController {
   private let budget: Int64 = 64 * 1024 * 1024
   private let shareEnabled = false // Q-22: neural listening audio must not leave the app
   private var task: URLSessionDataTask?
-private let session: URLSession = {
+  private let session: URLSession = {
     let config = URLSessionConfiguration.ephemeral
     config.httpShouldSetCookies = false
     config.httpCookieAcceptPolicy = .never
+    config.urlCache = nil
+    config.requestCachePolicy = .reloadIgnoringLocalCacheData
+    config.timeoutIntervalForRequest = 15
+    config.timeoutIntervalForResource = 15
+    config.waitsForConnectivity = false
     return URLSession(configuration: config, delegate: RedirectDeny(), delegateQueue: nil)
   }()
   private let io = DispatchQueue(label: "app.loro.audio-cache")
@@ -141,7 +146,7 @@ private let session: URLSession = {
       forget(logicalKey)
       return nil
     }
-    mutateIndex { table in
+    try? mutateIndex { table in
       table[logicalKey]?["accessed"] = Date().timeIntervalSince1970
     }
     return payload(url: url, sha256: digest, ms: row["ms"] as? Int)
@@ -200,17 +205,17 @@ private let session: URLSession = {
     }
   }
 
-  func pin(_ keys: [String]) {
-    mutateIndex { table in
+  func pin(_ keys: [String]) throws {
+    try mutateIndex { table in
       for key in keys { table[key]?["pinned"] = true }
     }
   }
 
-  func unpin(_ keys: [String]) {
-    mutateIndex { table in
+  func unpin(_ keys: [String]) throws {
+    try mutateIndex { table in
       for key in keys { table[key]?["pinned"] = false }
     }
-    evictIfNeeded()
+    try evictIfNeeded()
   }
 
   func concatenate(_ options: LoroCacheConcatenateOptions) throws -> [String: Any?] {
@@ -288,7 +293,7 @@ private let session: URLSession = {
     }
     let ms = measuredMs(file)
     let accessed = Date().timeIntervalSince1970
-    mutateIndex { table in
+    try mutateIndex { table in
       table[key] = [
         "path": file.path,
         "sha256": sha256,
@@ -298,7 +303,7 @@ private let session: URLSession = {
         "accessed": accessed,
       ]
     }
-    evictIfNeeded()
+    try evictIfNeeded()
     return payload(url: file, sha256: sha256, ms: ms)
   }
 
@@ -318,7 +323,7 @@ private let session: URLSession = {
   }
 
   private func forget(_ logicalKey: String) {
-    mutateIndex { table in
+    try? mutateIndex { table in
       if let path = table[logicalKey]?["path"] as? String {
         try? FileManager.default.removeItem(atPath: path)
       }
@@ -347,16 +352,19 @@ private let session: URLSession = {
     return object
   }
 
-  private func mutateIndex(_ body: (inout [String: [String: Any]]) -> Void) {
+  private func mutateIndex(_ body: (inout [String: [String: Any]]) -> Void) throws {
     var table = index()
     body(&table)
-    guard let url = try? indexURL(),
-      let data = try? JSONSerialization.data(withJSONObject: table)
-    else { return }
-    try? data.write(to: url, options: .atomic)
+    guard let url = try? indexURL() else { throw failure("disk-full") }
+    do {
+      let data = try JSONSerialization.data(withJSONObject: table)
+      try data.write(to: url, options: .atomic)
+    } catch {
+      throw failure("disk-full")
+    }
   }
 
-  private func evictIfNeeded() {
+  private func evictIfNeeded() throws {
     var table = index()
     let unpinned = table.filter { ($0.value["pinned"] as? Bool) != true }
     let used = unpinned.values.reduce(Int64(0)) { $0 + Int64(($1["bytes"] as? Int) ?? 0) }
@@ -373,7 +381,7 @@ private let session: URLSession = {
       }
       table.removeValue(forKey: key)
     }
-    mutateIndex { $0 = table }
+    try mutateIndex { $0 = table }
   }
 
   private func failure(_ code: String) -> NSError {

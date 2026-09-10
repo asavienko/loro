@@ -161,10 +161,16 @@ private final class LoroAudioSpeechController: NSObject, AVSpeechSynthesizerDele
     guard !options.id.isEmpty,
       let url = URL(string: options.fileUri),
       url.isFileURL,
-      url.scheme == "file"
+      url.scheme == "file",
+      FileManager.default.fileExists(atPath: url.path)
     else {
       emit?("playback", ["id": options.id, "state": "error", "error": "file-unavailable"])
       throw failure("A cached listening file is unavailable.")
+    }
+    // Foreground slice: Android refuses playFile off-foreground. Airplane listen is in-app only.
+    guard UIApplication.shared.applicationState == .active else {
+      emit?("playback", ["id": options.id, "state": "error", "error": "file-unavailable"])
+      throw failure("Cached listening playback requires the app to be in the foreground.")
     }
     cancelListening()
     stopPlayback()
@@ -176,6 +182,13 @@ private final class LoroAudioSpeechController: NSObject, AVSpeechSynthesizerDele
       filePlayer = player
       activePlaybackID = options.id
       player.prepareToPlay()
+      guard UIApplication.shared.applicationState == .active else {
+        filePlayer = nil
+        activePlaybackID = nil
+        player.stop()
+        deactivateIfIdle()
+        throw failure("Cached listening playback was cancelled.")
+      }
       guard player.play() else {
         throw failure("Cached listening playback could not start.")
       }
@@ -193,12 +206,10 @@ private final class LoroAudioSpeechController: NSObject, AVSpeechSynthesizerDele
     let id = activePlaybackID
     activePlaybackID = nil
     utteranceIDs.removeAll()
-    filePlayer?.stop()
-    filePlayer = nil
-    synthesizer.stopSpeaking(at: .immediate)
     filePlayer?.delegate = nil
     filePlayer?.stop()
     filePlayer = nil
+    synthesizer.stopSpeaking(at: .immediate)
     if let id { emit?("playback", ["id": id, "state": "stopped"]) }
     deactivateIfIdle()
   }
@@ -423,7 +434,9 @@ private final class LoroAudioSpeechController: NSObject, AVSpeechSynthesizerDele
     let center = NotificationCenter.default
     observers.append(center.addObserver(forName: UIApplication.didEnterBackgroundNotification,
                                         object: nil, queue: .main) { [weak self] _ in
+      // Match Android OnActivityEntersBackground: stop cached playFile and TTS.
       self?.cancelListening()
+      self?.stopPlayback()
     })
     observers.append(center.addObserver(forName: AVAudioSession.interruptionNotification,
                                         object: audioSession, queue: .main) { [weak self] notification in
@@ -453,16 +466,6 @@ private final class LoroAudioSpeechController: NSObject, AVSpeechSynthesizerDele
 
   private func failure(_ message: String) -> NSError {
     NSError(domain: "LoroAudioSpeech", code: 1, userInfo: [NSLocalizedDescriptionKey: message])
-  }
-
-  func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
-    DispatchQueue.main.async { [weak self] in
-      guard let self, self.filePlayer === player, let id = self.activePlaybackID else { return }
-      self.filePlayer = nil
-      self.activePlaybackID = nil
-      self.emit?("playback", ["id": id, "state": flag ? "ended" : "error"])
-      self.deactivateIfIdle()
-    }
   }
 
   func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didStart utterance: AVSpeechUtterance) {
