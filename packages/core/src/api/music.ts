@@ -160,6 +160,11 @@ export const MusicRendersResponseSchema = z.strictObject({
   jobs: z.array(MusicRenderJobSchema).min(MUSIC_MIN_STYLES).max(MUSIC_MAX_STYLES),
 })
 
+export const MusicStatusSchema = z.strictObject({
+  ready: z.boolean(),
+  provider: z.string().min(1).max(64),
+})
+
 export const MusicTrackResponseSchema = z.strictObject({
   track_id: ResourceIdSchema,
   style_id: MusicStyleIdSchema,
@@ -186,6 +191,7 @@ export const MusicV2CompositionPlanSchema = z.strictObject({
 export type LyricDocument = z.infer<typeof LyricDocumentSchema>
 export type LyricSection = z.infer<typeof LyricSectionSchema>
 export type LyricUsedPhrase = z.infer<typeof LyricUsedPhraseSchema>
+export type MusicStatus = z.infer<typeof MusicStatusSchema>
 export type MusicLyricsRequest = z.infer<typeof MusicLyricsRequestSchema>
 export type MusicLyricsResponse = z.infer<typeof MusicLyricsResponseSchema>
 export type MusicRendersRequest = z.infer<typeof MusicRendersRequestSchema>

@@ -1,7 +1,9 @@
 /**
- * Guarded Discover phrase suggest — stub/bundled only until Q-21.
+ * Guarded Discover phrase suggest. Bundled topics are the default.
+ * A configured Anthropic key may propose live rows; failures fall back to bundled.
  */
 import * as content from '@loro/content'
+import { containsPromptInjection } from '@loro/core'
 import {
   PhraseSuggestRequestSchema,
   assertAddableCandidates,
@@ -9,17 +11,29 @@ import {
   validatePhraseSuggestExchange,
   type PhraseSuggestResponse,
 } from '@loro/core/api/draft'
+import { config } from '../common/config.js'
+import { proposeLiveSuggestions } from './phrase-suggest-live.js'
 
 export function livePhraseSuggestEnabled(): boolean {
-  return false
+  return Boolean(config.aiApiKey()?.trim())
 }
 
-export function suggestPhrases(body: unknown): PhraseSuggestResponse {
+export async function suggestPhrases(body: unknown): Promise<PhraseSuggestResponse> {
   const parsed = PhraseSuggestRequestSchema.safeParse(body)
   if (!parsed.success) throw parsed.error
-  // Fail closed until Q-21 wires a provider: flipping this flag must not call a model.
-  // Live enablement keeps this bundled path as the fallback, then adds the provider branch.
-  if (livePhraseSuggestEnabled()) return unavailableSuggestResponse()
+  if (containsPromptInjection(parsed.data.query)) return unavailableSuggestResponse()
+  if (livePhraseSuggestEnabled()) {
+    const live = await proposeLiveSuggestions(parsed.data)
+    if (live !== null) {
+      try {
+        const validated = validatePhraseSuggestExchange(parsed.data, live)
+        assertAddableCandidates(validated)
+        return validated
+      } catch {
+        // Bundled floor stays the honest fallback.
+      }
+    }
+  }
   try {
     const rows = content.bundledTopicSuggestions(
       parsed.data.query,

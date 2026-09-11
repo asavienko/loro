@@ -24,7 +24,7 @@ function createWebAudioSpeech(): NativeAudioSpeech {
       if (uri.length === 0 || typeof globalThis.Audio !== 'function') {
         return Promise.reject(new Error('native-audio-unavailable'))
       }
-      if (!/^(https:|blob:|data:|file:)/i.test(uri)) {
+      if (!/^(https?:|blob:|data:|file:)/i.test(uri)) {
         return Promise.reject(new Error('native-audio-unavailable'))
       }
       stop(null, 'stopped')

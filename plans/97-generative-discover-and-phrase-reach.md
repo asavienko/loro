@@ -56,7 +56,9 @@ Offline Discover remains complete: catalog, scenarios, nearest-scenario hint and
 4. [x] Authoring-time draft schema, stub drafter and validators; drafts cannot enter the bundled
        catalog.
 5. [x] Guarded `/v1/phrases/suggest` stub, schema/safety, silent empty fallback and stub/safety
-       eval. Live Anthropic dispatch stays off until Q-21.
+       eval. Mobile Discover calls the endpoint when an API URL is configured and falls back to
+       bundled topics if it is missing or unavailable. Anthropic dispatch runs when
+       `ANTHROPIC_API_KEY` is set; Q-21 eval, spend caps and pair sign-off remain.
 6. [x] Discover Suggested-for-this section, editable tagging, provenance, stale-request cancel.
 7. [ ] Q-21 live enablement: eval thresholds, spend caps shared with other AI paths, provider
        retention, and pair-by-pair quality sign-off.

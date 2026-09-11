@@ -84,6 +84,9 @@ export const musicCopy = {
     get unavailable() {
       return message('music.state.unavailable')
     },
+    get quota() {
+      return message('music.state.quota')
+    },
     get error() {
       return message('music.state.error')
     },

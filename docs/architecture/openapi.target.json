@@ -4861,6 +4861,171 @@
         }
       }
     },
+    "/tts/status": {
+      "get": {
+        "operationId": "ttsStatus",
+        "summary": "Whether catalog reference TTS is ready to play",
+        "description": "Public. ready is true only when TTS_PROVIDER=elevenlabs. Never returns audio, keys or estimated quality.",
+        "tags": [
+          "tts"
+        ],
+        "security": [],
+        "parameters": [
+          {
+            "name": "X-Loro-App",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/authApple_header_X_Loro_App"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Whether catalog reference TTS is ready to play",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ttsStatus_200"
+                },
+                "examples": {
+                  "illustrative": {
+                    "value": {
+                      "ready": false,
+                      "provider": "stub"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Code selects client recovery; never render internal detail verbatim.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Code selects client recovery; never render internal detail verbatim.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Code selects client recovery; never render internal detail verbatim.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Code selects client recovery; never render internal detail verbatim.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Code selects client recovery; never render internal detail verbatim.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Code selects client recovery; never render internal detail verbatim.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Code selects client recovery; never render internal detail verbatim.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_429_Retry_After"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_429_Retry_After"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_429_Retry_After"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_429_X_RateLimit_Reset"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Code selects client recovery; never render internal detail verbatim.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Code selects client recovery; never render internal detail verbatim.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            }
+          }
+        },
+        "x-loro-auth-boundary": "none",
+        "x-loro-status": "draft",
+        "x-loro-owner-plan": 98,
+        "x-loro-requirements": [
+          "F-04"
+        ],
+        "x-loro-gates": [
+          "Q-15"
+        ],
+        "x-loro-unresolved": [
+          "Live key, pronunciation review and public-gateway exposure of catalog reference TTS"
+        ]
+      }
+    },
     "/billing/verify": {
       "post": {
         "operationId": "billingVerify",
@@ -6300,6 +6465,171 @@
         ],
         "x-loro-unresolved": [
           "Registered flags, assignment policy, exposure taxonomy and Q-05 experiment design"
+        ]
+      }
+    },
+    "/music/status": {
+      "get": {
+        "operationId": "musicStatus",
+        "summary": "Whether phrase-song lyrics and renders can run",
+        "description": "Public. ready is true for the stub fixture path or when MUSIC_PROVIDER=elevenlabs and a key is set. Never returns audio or keys.",
+        "tags": [
+          "music"
+        ],
+        "security": [],
+        "parameters": [
+          {
+            "name": "X-Loro-App",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/authApple_header_X_Loro_App"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Whether phrase-song lyrics and renders can run",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/musicStatus_200"
+                },
+                "examples": {
+                  "illustrative": {
+                    "value": {
+                      "ready": true,
+                      "provider": "stub"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Code selects client recovery; never render internal detail verbatim.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Code selects client recovery; never render internal detail verbatim.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Code selects client recovery; never render internal detail verbatim.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Code selects client recovery; never render internal detail verbatim.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Code selects client recovery; never render internal detail verbatim.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Code selects client recovery; never render internal detail verbatim.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Code selects client recovery; never render internal detail verbatim.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_429_Retry_After"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_429_Retry_After"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_429_Retry_After"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_429_X_RateLimit_Reset"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Code selects client recovery; never render internal detail verbatim.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Code selects client recovery; never render internal detail verbatim.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/authApple_401"
+                }
+              }
+            }
+          }
+        },
+        "x-loro-auth-boundary": "none",
+        "x-loro-status": "draft",
+        "x-loro-owner-plan": 96,
+        "x-loro-requirements": [
+          "F-04"
+        ],
+        "x-loro-gates": [
+          "Q-21"
+        ],
+        "x-loro-unresolved": [
+          "Q-21 paid Music access and public-gateway exposure"
         ]
       }
     },
@@ -23764,6 +24094,25 @@
         ],
         "additionalProperties": false
       },
+      "ttsStatus_200": {
+        "type": "object",
+        "properties": {
+          "ready": {
+            "type": "boolean"
+          },
+          "provider": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[a-zA-Z0-9_-]+$"
+          }
+        },
+        "required": [
+          "ready",
+          "provider"
+        ],
+        "additionalProperties": false
+      },
       "billingVerify_200": {
         "type": "object",
         "properties": {
@@ -24127,6 +24476,24 @@
           "expires_at",
           "flags",
           "assignments"
+        ],
+        "additionalProperties": false
+      },
+      "musicStatus_200": {
+        "type": "object",
+        "properties": {
+          "ready": {
+            "type": "boolean"
+          },
+          "provider": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          }
+        },
+        "required": [
+          "ready",
+          "provider"
         ],
         "additionalProperties": false
       },

@@ -323,6 +323,11 @@ export const draftExamples: Readonly<Record<string, WireExample>> = {
       },
     },
   },
+  ttsStatus: {
+    responses: {
+      200: { ready: false, provider: 'stub' },
+    },
+  },
   ttsRender: {
     request: {
       text: line.es,
@@ -363,6 +368,11 @@ export const draftExamples: Readonly<Record<string, WireExample>> = {
         flags: { live_chat: false, loop_experiment: false, run: false },
         assignments: [],
       },
+    },
+  },
+  musicStatus: {
+    responses: {
+      200: { ready: true, provider: 'stub' },
     },
   },
   musicLyrics: {

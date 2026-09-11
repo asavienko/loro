@@ -41,6 +41,14 @@ export class MusicService {
     this.budget = new MusicBudget()
   }
 
+  status(): { ready: boolean; provider: string } {
+    const provider = config.musicProvider()
+    if (provider === 'elevenlabs') {
+      return { ready: Boolean(config.musicApiKey()?.trim()), provider }
+    }
+    return { ready: provider === 'stub', provider: provider || 'stub' }
+  }
+
   async createLyrics(principal: AuthPrincipal, body: unknown): Promise<MusicLyricsResponse> {
     const request = parse(MusicLyricsRequestSchema, body)
     const response = await this.lyrics.lyrics(request, principal.userId)

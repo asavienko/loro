@@ -2,6 +2,7 @@
 import { expect, type Page, type Route } from '@playwright/test'
 import { expectResourceError } from './expectedResourceErrors'
 import { fillField } from './helpers'
+import { fulfillLearnerPreview } from './learnerApiFlow'
 
 export const ACCOUNT_LABEL = 'Sign in & sync'
 export const ACCOUNT_API = 'https://auth.loro.test/v1'
@@ -194,6 +195,7 @@ export async function mockAccountService(
       })
       return
     }
+    if (await fulfillLearnerPreview(route, page, path, request.method(), body)) return
     throw new Error(`Unexpected account request: ${request.method()} ${path}`)
   }
   await page.context().route(isE2eAccountApi, fulfillAccount)

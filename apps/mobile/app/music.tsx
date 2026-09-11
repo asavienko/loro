@@ -9,15 +9,25 @@ import {
   MUSIC_STYLE_IDS,
 } from '@loro/core'
 import type { MusicStyleId } from '@loro/core'
+import { accountClient } from '../src/lib/account/runtime'
+import { bundledApiUrl } from '../src/lib/account/config'
+import { audioCache } from '../src/lib/audioCache'
+import { audioSpeech } from '../src/lib/audioSpeech'
 import { isNetworkAvailable } from '../src/lib/connectivity'
 import { copy } from '../src/lib/copy'
 import { useLocale } from '../src/lib/i18n'
 import {
   defaultStyleIds,
+  fetchMusicStatus,
   isMusicUiState,
   musicGenerationBlocked,
   renderLocalStyles,
+  MusicClientError,
   requestLocalLyrics,
+  requestMusicLyrics,
+  requestMusicRenders,
+  requestMusicTrackMeta,
+  musicTrackIdFromContentUrl,
   type MusicLyricsView,
   type MusicTrackView,
 } from '../src/lib/music/client'
@@ -64,11 +74,12 @@ export default function Music() {
   const [step, setStep] = useState<'pick' | 'lyrics' | 'styles' | 'play'>('pick')
   const [busy, setBusy] = useState(false)
   const [offlineBlocked, setOfflineBlocked] = useState(false)
+  const [quotaBlocked, setQuotaBlocked] = useState(false)
   const [online, setOnline] = useState(true)
   const [playStyle, setPlayStyle] = useState<MusicStyleId | null>(null)
   const [playing, setPlaying] = useState(false)
   const [knownDurationMs, setKnownDurationMs] = useState<number | null>(null)
-  const [player, setPlayer] = useState<{ pause: () => void } | null>(null)
+  const [musicReady, setMusicReady] = useState(false)
   const fixtureHydrated = useRef<string | undefined>(undefined)
 
   useEffect(() => {
@@ -111,9 +122,19 @@ export default function Music() {
 
   useEffect(() => {
     return () => {
-      player?.pause()
+      void audioSpeech.stopPlayback()
     }
-  }, [player])
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    void fetchMusicStatus().then((status) => {
+      if (!cancelled) setMusicReady(status.ready)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -132,7 +153,10 @@ export default function Music() {
   const canRequest = selectionInBounds(selectedIds)
   const canConfirmStyles =
     styleIds.length >= MUSIC_MIN_STYLES && styleIds.length <= MUSIC_MAX_STYLES
-  const unavailable = offlineBlocked || musicGenerationBlocked(online, fixture)
+  const unavailable =
+    offlineBlocked ||
+    musicGenerationBlocked(online, fixture) ||
+    (fixture === undefined && !musicReady)
   const readyTracks = tracks.filter((track) => track.status === 'ready')
   const failedTracks = tracks.filter((track) => track.status === 'failed')
 
@@ -155,12 +179,57 @@ export default function Music() {
     })
   }
 
+  const musicCredentials = async (): Promise<{ token: string; deviceId: string } | null> => {
+    const client = accountClient()
+    if (client?.getSnapshot().status !== 'signed-in') return null
+    const token = await client.getAccessToken()
+    const deviceId = client.getSnapshot().session?.deviceId
+    if (!token || deviceId === undefined || deviceId.length === 0) return null
+    return { token, deviceId }
+  }
+
   const requestLyrics = (): void => {
     if (!canRequest) return
-    const next = requestLocalLyrics(selectedIds, targetLocale, meaningLanguage)
-    setLyrics(next)
-    setStep('lyrics')
-    setTracks([])
+    if (fixture !== undefined) {
+      const next = requestLocalLyrics(selectedIds, targetLocale, meaningLanguage)
+      setLyrics(next)
+      setStep('lyrics')
+      setTracks([])
+      return
+    }
+    const api = bundledApiUrl()
+    if (api === null || !musicReady) {
+      setOfflineBlocked(true)
+      setQuotaBlocked(false)
+      return
+    }
+    setBusy(true)
+    void musicCredentials()
+      .then((credentials) =>
+        requestMusicLyrics(
+          {
+            catalogPhraseIds: selectedIds,
+            targetLocale,
+            meaningLanguage,
+          },
+          api,
+          credentials,
+        ),
+      )
+      .then((next) => {
+        setLyrics(next)
+        setStep('lyrics')
+        setTracks([])
+        setOfflineBlocked(false)
+        setQuotaBlocked(false)
+      })
+      .catch((error: unknown) => {
+        setQuotaBlocked(error instanceof MusicClientError && error.code === 'quota')
+        setOfflineBlocked(!(error instanceof MusicClientError && error.code === 'quota'))
+      })
+      .finally(() => {
+        setBusy(false)
+      })
   }
 
   const confirmStyles = (): void => {
@@ -183,42 +252,90 @@ export default function Music() {
         setStep('lyrics')
         return
       }
+      if (fixture !== undefined) {
+        setBusy(true)
+        const next = renderLocalStyles(styleIds, mode)
+        setTracks(next)
+        setBusy(false)
+        setStep('play')
+        setPlayStyle(next.find((track) => track.status === 'ready')?.styleId ?? null)
+        return
+      }
+      const api = bundledApiUrl()
+      const lyricDocumentId = lyrics.lyricDocumentId
+      if (api === null || lyricDocumentId === undefined || !musicReady) {
+        setOfflineBlocked(true)
+        setQuotaBlocked(false)
+        return
+      }
       setBusy(true)
-      const next = renderLocalStyles(styleIds, mode)
-      setTracks(next)
-      setBusy(false)
-      setStep('play')
-      setPlayStyle(next.find((track) => track.status === 'ready')?.styleId ?? null)
+      void musicCredentials()
+        .then((credentials) => requestMusicRenders({ lyricDocumentId, styleIds }, api, credentials))
+        .then((next) => {
+          setTracks(next)
+          setBusy(false)
+          setStep('play')
+          setPlayStyle(next.find((track) => track.status === 'ready')?.styleId ?? null)
+          setOfflineBlocked(false)
+          setQuotaBlocked(false)
+        })
+        .catch((error: unknown) => {
+          setBusy(false)
+          setQuotaBlocked(error instanceof MusicClientError && error.code === 'quota')
+          setOfflineBlocked(!(error instanceof MusicClientError && error.code === 'quota'))
+        })
     })
   }
 
   const playTrack = (track: MusicTrackView): void => {
-    if (track.uri === null || typeof globalThis.Audio !== 'function') {
+    const sourceUri = track.uri
+    if (sourceUri === null) {
       if (track.durationMs !== null) setKnownDurationMs(track.durationMs)
       setPlayStyle(track.styleId)
       setPlaying(true)
       return
     }
-    player?.pause()
-    const audio = new globalThis.Audio(track.uri)
-    audio.addEventListener('loadedmetadata', () => {
-      if (Number.isFinite(audio.duration) && audio.duration > 0) {
-        setKnownDurationMs(Math.round(audio.duration * 1_000))
-      } else if (track.durationMs !== null) {
-        setKnownDurationMs(track.durationMs)
-      }
-    })
-    void audio.play()
-    setPlayer(audio)
+    if (track.durationMs !== null) setKnownDurationMs(track.durationMs)
     setPlayStyle(track.styleId)
     setPlaying(true)
-    audio.addEventListener('ended', () => {
+    void (async () => {
+      let uri = sourceUri
+      let digest = track.sha256
+      if (digest === undefined && audioCache.available) {
+        const trackId = musicTrackIdFromContentUrl(uri)
+        const api = bundledApiUrl()
+        if (trackId !== null && api !== null) {
+          const meta = await requestMusicTrackMeta(trackId, api, await musicCredentials())
+          digest = meta?.sha256
+          if (meta?.durationMs !== null && meta?.durationMs !== undefined) {
+            setKnownDurationMs(meta.durationMs)
+          }
+        }
+      }
+      if (
+        audioCache.available &&
+        digest !== undefined &&
+        !uri.startsWith('file:') &&
+        !uri.startsWith('data:')
+      ) {
+        const file = await audioCache.download({
+          url: uri,
+          expectedSha256: digest,
+          logicalKey: `music:${digest}`,
+          pinClass: 'practice',
+        })
+        uri = file.fileUri
+      }
+      await audioSpeech.playFile(`music:${track.styleId}`, uri, () => {
+        setPlaying(false)
+      })
+    })().catch(() => {
       setPlaying(false)
     })
   }
 
   const pauseTrack = (): void => {
-    player?.pause()
+    void audioSpeech.stopPlayback()
     setPlaying(false)
   }
 
@@ -275,6 +392,11 @@ export default function Music() {
                   </ListRow>
                 )
               })}
+              {quotaBlocked || offlineBlocked ? (
+                <Text variant="caption" color={ink.ink2}>
+                  {quotaBlocked ? copy.music.state.quota : copy.music.state.unavailable}
+                </Text>
+              ) : null}
               {!canRequest ? (
                 <Text variant="caption" color={ink.muted}>
                   {selectedCount > MUSIC_MAX_PHRASES
@@ -285,7 +407,7 @@ export default function Music() {
               <Button
                 label={copy.music.lyrics.request}
                 onPress={requestLyrics}
-                disabled={!canRequest}
+                disabled={!canRequest || busy}
               />
             </Stack>
           ) : null}
@@ -371,9 +493,9 @@ export default function Music() {
               <Text variant="caption" color={ink.ink2}>
                 {copy.music.styles.allowance}
               </Text>
-              {unavailable ? (
+              {unavailable || quotaBlocked ? (
                 <Text variant="body" color={ink.ink2}>
-                  {copy.music.state.unavailable}
+                  {quotaBlocked ? copy.music.state.quota : copy.music.state.unavailable}
                 </Text>
               ) : null}
               <Button

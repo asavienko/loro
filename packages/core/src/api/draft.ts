@@ -28,6 +28,7 @@ import {
   MusicLyricsResponseSchema,
   MusicRendersRequestSchema,
   MusicRendersResponseSchema,
+  MusicStatusSchema,
   MusicTrackResponseSchema,
 } from './music.js'
 import { PhraseSuggestRequestSchema, PhraseSuggestResponseSchema } from './phrase-suggest.js'
@@ -239,6 +240,10 @@ export const TtsResponseSchema = z.strictObject({
   model_id: Key,
   asset_class: TtsAssetClassSchema,
 })
+export const TtsStatusSchema = z.strictObject({
+  ready: z.boolean(),
+  provider: Key,
+})
 export const BillingVerifyRequestSchema = z.strictObject({
   platform: z.enum(['ios', 'android']),
   receipt: z.string().min(1).max(65536),
@@ -354,6 +359,22 @@ export const draftOperations = withExamples(
       responses: { 200: { schema: TtsResponseSchema }, ...targetErrors },
       behavior:
         'Text only. JSON is metadata: download_url plus sha256/uri/ms/voice_id/asset_class. Native cache downloads bytes. Listening and reference never share identity. Server recomputes phrase_hash. Never accepts recordings or audio bytes in JSON.',
+    },
+    {
+      ...base,
+      id: 'ttsStatus',
+      method: 'get',
+      path: '/tts/status',
+      owner: 98,
+      auth: 'none',
+      gates: draftGates.tts,
+      unresolved: [
+        'Live key, pronunciation review and public-gateway exposure of catalog reference TTS',
+      ],
+      summary: 'Whether catalog reference TTS is ready to play',
+      responses: { 200: { schema: TtsStatusSchema }, ...targetErrors },
+      behavior:
+        'Public. ready is true only when TTS_PROVIDER=elevenlabs. Never returns audio, keys or estimated quality.',
     },
     {
       ...base,
@@ -485,6 +506,20 @@ export const draftOperations = withExamples(
     },
     {
       ...base,
+      id: 'musicStatus',
+      method: 'get',
+      path: '/music/status',
+      owner: 96,
+      auth: 'none',
+      gates: draftGates.music,
+      unresolved: ['Q-21 paid Music access and public-gateway exposure'],
+      summary: 'Whether phrase-song lyrics and renders can run',
+      responses: { 200: { schema: MusicStatusSchema }, ...targetErrors },
+      behavior:
+        'Public. ready is true for the stub fixture path or when MUSIC_PROVIDER=elevenlabs and a key is set. Never returns audio or keys.',
+    },
+    {
+      ...base,
       id: 'musicLyrics',
       method: 'post',
       path: '/music/lyrics',
@@ -561,6 +596,7 @@ export type ChatFeedback = z.infer<typeof ChatFeedbackSchema>
 export type TripSyncOp = z.infer<typeof TripSyncOpSchema>
 export type TtsRequest = z.infer<typeof TtsRequestSchema>
 export type TtsResponse = z.infer<typeof TtsResponseSchema>
+export type TtsStatus = z.infer<typeof TtsStatusSchema>
 export type Entitlement = z.infer<typeof EntitlementSchema>
 export type Configuration = z.infer<typeof ConfigSchema>
 
@@ -579,6 +615,7 @@ export type ChatPace = z.infer<typeof ChatPaceSchema>
 export type ChatTopicResource = z.infer<typeof ChatTopicResourceSchema>
 export type { PhraseSuggestRequest, PhraseSuggestResponse } from './phrase-suggest.js'
 export {
+  PhraseSuggestCandidateSchema,
   PhraseSuggestRequestSchema,
   PhraseSuggestResponseSchema,
   validatePhraseSuggestExchange,
@@ -603,13 +640,16 @@ export {
   MusicLyricsResponseSchema,
   MusicRendersRequestSchema,
   MusicRendersResponseSchema,
+  MusicStatusSchema,
   MusicTrackResponseSchema,
 } from './music.js'
 export type {
   LyricDocument,
   MusicLyricsRequest,
   MusicLyricsResponse,
+  MusicRenderJob,
   MusicRendersRequest,
   MusicRendersResponse,
+  MusicStatus,
   MusicTrackResponse,
 } from './music.js'
