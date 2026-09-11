@@ -17,8 +17,11 @@
  */
 
 export { ActionBar } from './ActionBar'
+export { AudioControls } from './AudioControls'
 export { DifficultySelector } from './DifficultySelector'
 export { EmptyState } from './EmptyState'
+export { LanguageChoices } from './LanguageChoices'
+export { NavigationMenu } from './NavigationMenu'
 export { PhraseRow } from './PhraseRow'
 export { StatRow, type Stat } from './StatRow'
 export { TagChips } from './TagChips'

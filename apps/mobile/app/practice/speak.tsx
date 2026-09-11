@@ -10,8 +10,17 @@ import { audioSpeech, audioPlaybackNote, useAudioSpeech } from '../../src/lib/au
 import { deviceClock } from '../../src/lib/clock'
 import { newId } from '../../src/lib/ids'
 import { engineContext, speakEngine, toView, useApp, type PhraseView } from '../../src/store'
-import { AudioControls } from '../../src/ui/components/AudioControls'
-import { Button, Card, Row, Screen, Stack, Text } from '../../src/ui/primitives'
+import { AudioControls } from '../../src/ui/components'
+import {
+  Button,
+  Card,
+  PulseRing,
+  Row,
+  Screen,
+  Stack,
+  Text,
+  UnblurText,
+} from '../../src/ui/primitives'
 import { ink, space } from '../../src/ui/theme'
 
 /** Speak session is ephemeral React state until a named plan owns interruption resume. */
@@ -198,8 +207,7 @@ function SpeakingPhrase({
     revealedRef.current = next
     setRevealed(next)
     const word = tokens[next - 1]
-    if (word !== undefined && audio.canPlay)
-      void audioSpeech.play(phrase.id, word, locale, 0.85)
+    if (word !== undefined && audio.canPlay) void audioSpeech.play(phrase.id, word, locale, 0.85)
     if (next === tokens.length) {
       completeRef.current = true
       setDone(true)
@@ -233,14 +241,13 @@ function SpeakingPhrase({
           </Text>
           <Row wrap justify="center" gap={space['2']}>
             {tokens.map((token, index) => (
-              <Text
+              <UnblurText
                 key={index}
+                text={token}
+                revealed={index < revealed}
+                hiddenLabel={copy.audioSpeech.hiddenWord}
                 variant="title3"
-                lang={index < revealed ? 'target' : undefined}
-                color={index < revealed ? ink.ink : ink.muted}
-              >
-                {index < revealed ? token : copy.audioSpeech.hiddenWord}
-              </Text>
+              />
             ))}
           </Row>
           <Text variant="caption" align="center">
@@ -261,25 +268,27 @@ function SpeakingPhrase({
               <Text>{copy.audioSpeech.saveError}</Text>
             </View>
           )}
-          <Button
-            disabled={done}
-            label={
-              !canRecognize
-                ? copy.audioSpeech.reveal
-                : listening
-                  ? copy.audioSpeech.stopListening
-                  : copy.audioSpeech.listen
-            }
-            onPress={() => {
-              setSaveError(false)
-              if (!canRecognize) revealWord()
-              else if (listening) void audioSpeech.stopListening()
-              else {
-                attemptBaseReveal.current = revealedRef.current
-                void audioSpeech.listen(locale)
+          <PulseRing active={listening}>
+            <Button
+              disabled={done}
+              label={
+                !canRecognize
+                  ? copy.audioSpeech.reveal
+                  : listening
+                    ? copy.audioSpeech.stopListening
+                    : copy.audioSpeech.listen
               }
-            }}
-          />
+              onPress={() => {
+                setSaveError(false)
+                if (!canRecognize) revealWord()
+                else if (listening) void audioSpeech.stopListening()
+                else {
+                  attemptBaseReveal.current = revealedRef.current
+                  void audioSpeech.listen(locale)
+                }
+              }}
+            />
+          </PulseRing>
           {canRecognize && !done && (
             <Button label={copy.audioSpeech.reveal} variant="secondary" onPress={revealWord} />
           )}

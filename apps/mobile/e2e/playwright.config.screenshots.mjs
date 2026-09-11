@@ -18,7 +18,7 @@ export default defineConfig({
   workers: 1,
   retries: 0,
   timeout: 90_000,
-  globalTimeout: 12 * 60_000,
+  globalTimeout: 16 * 60_000,
   forbidOnly: true,
   globalSetup: resolve(directory, 'screenshots.setup.mjs'),
   reporter: [[resolve(directory, 'screenshots.reporter.mjs'), { runDir }]],

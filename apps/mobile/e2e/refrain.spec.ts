@@ -23,6 +23,8 @@ test(
 
     for (let phrase = 1; phrase <= 5; phrase += 1) {
       await expect(page.getByText(`Phrase ${phrase} / 5`)).toBeVisible()
+      await expect(page.getByTestId('warming-surface')).toBeVisible()
+      await expect(page.getByTestId('beat-bars')).toBeVisible()
 
       for (const rep of reps) {
         await expect(page.getByText(rep.cue, { exact: true })).toBeVisible()

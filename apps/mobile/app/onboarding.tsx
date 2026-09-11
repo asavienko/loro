@@ -38,7 +38,7 @@ import {
 } from '../src/ui/theme'
 import { useApp } from '../src/store'
 import { useLearningCatalog } from '../src/store/learningCatalog'
-import { LanguageChoices } from '../src/ui/components/LanguageChoices'
+import { LanguageChoices } from '../src/ui/components'
 import {
   NATIVE_LANGUAGES,
   TARGET_LOCALES,

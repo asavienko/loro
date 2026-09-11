@@ -38,11 +38,8 @@ import {
 import { FIXTURE_WAV_DURATION_MS } from '../src/lib/music/wav'
 import { useApp } from '../src/store'
 import { useViews } from '../src/store/selectors'
-import { Button, Pressable, Screen, SectionLabel, Stack, Text } from '../src/ui/primitives'
-import { border, ink, line, space } from '../src/ui/theme'
-
-const ROW_PADDING = 13
-const MIN_ROW_HEIGHT = 48
+import { Button, ListRow, Screen, SectionLabel, Stack, Text } from '../src/ui/primitives'
+import { ink, space } from '../src/ui/theme'
 
 export default function Music() {
   useLocale()
@@ -180,7 +177,7 @@ export default function Music() {
 
   const musicCredentials = async (): Promise<{ token: string; deviceId: string } | null> => {
     const client = accountClient()
-    if (client === null || client.getSnapshot().status !== 'signed-in') return null
+    if (client?.getSnapshot().status !== 'signed-in') return null
     const token = await client.getAccessToken()
     const deviceId = client.getSnapshot().session?.deviceId
     if (!token || deviceId === undefined || deviceId.length === 0) return null
@@ -265,9 +262,7 @@ export default function Music() {
       }
       setBusy(true)
       void musicCredentials()
-        .then((credentials) =>
-          requestMusicRenders({ lyricDocumentId, styleIds }, api, credentials),
-        )
+        .then((credentials) => requestMusicRenders({ lyricDocumentId, styleIds }, api, credentials))
         .then((next) => {
           setTracks(next)
           setBusy(false)
@@ -356,7 +351,7 @@ export default function Music() {
                 if (catalogId === null) return null
                 const selected = selectedIds.includes(catalogId)
                 return (
-                  <Pressable
+                  <ListRow
                     key={view.id}
                     accessibilityRole="checkbox"
                     selected={selected}
@@ -364,7 +359,7 @@ export default function Music() {
                     onPress={() => {
                       togglePhrase(catalogId)
                     }}
-                    style={styles.row}
+                    gap={space['2.5']}
                   >
                     <Text variant="body" color={ink.ink} lang="target" style={styles.grow}>
                       {view.targetText}
@@ -372,7 +367,7 @@ export default function Music() {
                     <Text variant="captionSm" color={ink.muted}>
                       {view.translation}
                     </Text>
-                  </Pressable>
+                  </ListRow>
                 )
               })}
               {!canRequest ? (
@@ -452,7 +447,7 @@ export default function Music() {
               {MUSIC_STYLE_IDS.map((styleId) => {
                 const selected = styleIds.includes(styleId)
                 return (
-                  <Pressable
+                  <ListRow
                     key={styleId}
                     accessibilityRole="checkbox"
                     selected={selected}
@@ -460,12 +455,12 @@ export default function Music() {
                     onPress={() => {
                       toggleStyle(styleId)
                     }}
-                    style={styles.row}
+                    gap={space['2.5']}
                   >
                     <Text variant="body" color={ink.ink} style={styles.grow}>
                       {copy.music.styles[styleId]}
                     </Text>
-                  </Pressable>
+                  </ListRow>
                 )
               })}
               <Text variant="caption" color={ink.ink2}>
@@ -495,7 +490,7 @@ export default function Music() {
                 </Text>
               ) : null}
               {tracks.map((track) => (
-                <Pressable
+                <ListRow
                   key={track.styleId}
                   accessibilityRole="radio"
                   selected={playStyle === track.styleId}
@@ -504,7 +499,7 @@ export default function Music() {
                   onPress={() => {
                     if (track.status === 'ready') playTrack(track)
                   }}
-                  style={styles.row}
+                  gap={space['2.5']}
                 >
                   <Text variant="body" color={ink.ink} style={styles.grow}>
                     {copy.music.styles[track.styleId]}
@@ -512,7 +507,7 @@ export default function Music() {
                   <Text variant="captionSm" color={ink.muted}>
                     {track.status === 'ready' ? copy.music.play : copy.music.state.error}
                   </Text>
-                </Pressable>
+                </ListRow>
               ))}
               {readyTracks.length > 0 ? (
                 <Button
@@ -541,14 +536,5 @@ export default function Music() {
 
 const styles = StyleSheet.create({
   content: { padding: space['5'] },
-  row: {
-    minHeight: MIN_ROW_HEIGHT,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space['2.5'],
-    paddingVertical: ROW_PADDING,
-    borderBottomWidth: border.hairline,
-    borderBottomColor: line.subtle,
-  },
   grow: { flex: 1 },
 })

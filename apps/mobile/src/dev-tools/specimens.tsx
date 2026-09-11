@@ -1,12 +1,8 @@
 import { useState, type ReactNode } from 'react'
 import { View } from 'react-native'
-import * as barrelComponents from '../ui/components'
-import { AudioControls } from '../ui/components/AudioControls'
-import { LanguageChoices } from '../ui/components/LanguageChoices'
-import { NavigationMenu } from '../ui/components/NavigationMenu'
-
-const componentExports = { ...barrelComponents, AudioControls, LanguageChoices, NavigationMenu }
+import * as componentExports from '../ui/components'
 import * as primitiveExports from '../ui/primitives'
+import { BEAT_TEMPO_MS } from '../ui/motion'
 import { onDark, semantic, space } from '../ui/theme'
 import {
   PENDING_NAVIGATION_SPECIMENS,
@@ -234,12 +230,74 @@ const PRIMITIVE_METADATA = {
     states: ['default', 'empty', 'long-copy', 'text-200', 'text-310'],
     render: () => <primitiveExports.StatTile value="12" label="phrases" />,
   },
+  Field: {
+    states: ['default', 'disabled', 'error', 'long-copy', 'text-200', 'text-310'],
+    render: () => (
+      <primitiveExports.Field
+        bordered
+        accessibilityLabel="Production field"
+        value="Search tokens"
+        onChangeText={noop}
+      />
+    ),
+  },
+  ListRow: {
+    states: ['default', 'selected', 'disabled', 'long-copy', 'text-200', 'text-310'],
+    render: () => (
+      <primitiveExports.ListRow
+        accessibilityLabel="Production list row"
+        gap={space['2.5']}
+        onPress={noop}
+      >
+        <primitiveExports.Text>Production list row</primitiveExports.Text>
+      </primitiveExports.ListRow>
+    ),
+  },
+  Arrival: {
+    states: ['default', 'reduced-motion'],
+    render: () => (
+      <primitiveExports.Arrival kind="popIn">
+        <primitiveExports.Text>Reward arrival</primitiveExports.Text>
+      </primitiveExports.Arrival>
+    ),
+  },
+  WarmingSurface: {
+    states: ['default', 'reduced-motion', 'accent'],
+    render: () => (
+      <primitiveExports.WarmingSurface automaticity={50} style={{ padding: space['3'] }}>
+        <primitiveExports.Text>Warming specimen</primitiveExports.Text>
+      </primitiveExports.WarmingSurface>
+    ),
+  },
+  BeatBars: {
+    states: ['default', 'reduced-motion', 'accent'],
+    render: () => <primitiveExports.BeatBars tempoMs={BEAT_TEMPO_MS.default} />,
+  },
+  Equalizer: {
+    states: ['default', 'reduced-motion'],
+    render: () => <primitiveExports.Equalizer active />,
+  },
+  PulseRing: {
+    states: ['default', 'reduced-motion', 'accent'],
+    render: () => (
+      <primitiveExports.PulseRing active>
+        <primitiveExports.Button label="Listening specimen" onPress={noop} />
+      </primitiveExports.PulseRing>
+    ),
+  },
+  UnblurText: {
+    states: ['default', 'reduced-motion', 'spanish', 'text-200', 'text-310'],
+    render: () => (
+      // a11y-lang: UnblurText sets lang on the revealed target token.
+      <primitiveExports.UnblurText text={SAMPLE_SPANISH} revealed hiddenLabel="Hidden word" />
+    ),
+  },
 } as const satisfies Record<keyof typeof primitiveExports, SpecimenMetadata>
 
 function LanguageChoicesSpecimen() {
   const [selected, setSelected] = useState<'en' | 'bg' | 'ru'>('bg')
   return (
-    <LanguageChoices
+    <componentExports.LanguageChoices
       title="Workbench language choices"
       values={['en', 'bg', 'ru']}
       selected={selected}
@@ -300,7 +358,7 @@ const COMPONENT_METADATA = {
   AudioControls: {
     states: ['disabled'],
     render: () => (
-      <AudioControls
+      <componentExports.AudioControls
         label="Unavailable specimen audio"
         note="No device audio in this specimen."
         enabled={false}
@@ -315,7 +373,7 @@ const COMPONENT_METADATA = {
   NavigationMenu: {
     states: ['default', 'selected', 'text-200', 'text-310'],
     render: () => (
-      <NavigationMenu
+      <componentExports.NavigationMenu
         place="Workbench"
         openLabel="Open specimen navigation"
         title="Specimen navigation"
