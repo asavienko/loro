@@ -7,8 +7,10 @@ import {
   fetchMusicStatus,
   musicGenerationBlocked,
   musicTrackContentUrl,
+  musicTrackIdFromContentUrl,
   renderLocalStyles,
   requestLocalLyrics,
+  requestMusicLyrics,
 } from './client'
 import { FIXTURE_WAV_DURATION_MS } from './wav'
 
@@ -68,9 +70,28 @@ describe('music API client', () => {
       ready: true,
       provider: 'stub',
     })
+    expect(musicTrackContentUrl('http://10.0.2.2:3001/v1', 'track_folk')).toBe(
+      'http://10.0.2.2:3001/v1/music/tracks/track_folk/content',
+    )
     expect(
-      musicTrackContentUrl('http://10.0.2.2:3001/v1', 'track_folk'),
-    ).toBe('http://10.0.2.2:3001/v1/music/tracks/track_folk/content')
+      musicTrackIdFromContentUrl('http://10.0.2.2:3001/v1/music/tracks/track_folk/content'),
+    ).toBe('track_folk')
+  })
+
+  it('maps a 429 lyrics response to quota instead of a generic unavailable error', async () => {
+    const send = vi.fn<typeof fetch>().mockResolvedValue(new Response(null, { status: 429 }))
+    await expect(
+      requestMusicLyrics(
+        {
+          catalogPhraseIds: ['cafe1', 'cafe2', 'cafe3'],
+          targetLocale: 'es-ES',
+          meaningLanguage: 'en',
+        },
+        'http://127.0.0.1:3001/v1',
+        null,
+        send,
+      ),
+    ).rejects.toMatchObject({ name: 'MusicClientError', code: 'quota' })
   })
 })
 

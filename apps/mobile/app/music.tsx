@@ -22,9 +22,12 @@ import {
   isMusicUiState,
   musicGenerationBlocked,
   renderLocalStyles,
+  MusicClientError,
   requestLocalLyrics,
   requestMusicLyrics,
   requestMusicRenders,
+  requestMusicTrackMeta,
+  musicTrackIdFromContentUrl,
   type MusicLyricsView,
   type MusicTrackView,
 } from '../src/lib/music/client'
@@ -71,6 +74,7 @@ export default function Music() {
   const [step, setStep] = useState<'pick' | 'lyrics' | 'styles' | 'play'>('pick')
   const [busy, setBusy] = useState(false)
   const [offlineBlocked, setOfflineBlocked] = useState(false)
+  const [quotaBlocked, setQuotaBlocked] = useState(false)
   const [online, setOnline] = useState(true)
   const [playStyle, setPlayStyle] = useState<MusicStyleId | null>(null)
   const [playing, setPlaying] = useState(false)
@@ -196,6 +200,7 @@ export default function Music() {
     const api = bundledApiUrl()
     if (api === null || !musicReady) {
       setOfflineBlocked(true)
+      setQuotaBlocked(false)
       return
     }
     setBusy(true)
@@ -216,9 +221,11 @@ export default function Music() {
         setStep('lyrics')
         setTracks([])
         setOfflineBlocked(false)
+        setQuotaBlocked(false)
       })
-      .catch(() => {
-        setOfflineBlocked(true)
+      .catch((error: unknown) => {
+        setQuotaBlocked(error instanceof MusicClientError && error.code === 'quota')
+        setOfflineBlocked(!(error instanceof MusicClientError && error.code === 'quota'))
       })
       .finally(() => {
         setBusy(false)
@@ -258,6 +265,7 @@ export default function Music() {
       const lyricDocumentId = lyrics.lyricDocumentId
       if (api === null || lyricDocumentId === undefined || !musicReady) {
         setOfflineBlocked(true)
+        setQuotaBlocked(false)
         return
       }
       setBusy(true)
@@ -269,10 +277,12 @@ export default function Music() {
           setStep('play')
           setPlayStyle(next.find((track) => track.status === 'ready')?.styleId ?? null)
           setOfflineBlocked(false)
+          setQuotaBlocked(false)
         })
-        .catch(() => {
+        .catch((error: unknown) => {
           setBusy(false)
-          setOfflineBlocked(true)
+          setQuotaBlocked(error instanceof MusicClientError && error.code === 'quota')
+          setOfflineBlocked(!(error instanceof MusicClientError && error.code === 'quota'))
         })
     })
   }
@@ -290,16 +300,28 @@ export default function Music() {
     setPlaying(true)
     void (async () => {
       let uri = sourceUri
+      let digest = track.sha256
+      if (digest === undefined && audioCache.available) {
+        const trackId = musicTrackIdFromContentUrl(uri)
+        const api = bundledApiUrl()
+        if (trackId !== null && api !== null) {
+          const meta = await requestMusicTrackMeta(trackId, api, await musicCredentials())
+          digest = meta?.sha256
+          if (meta?.durationMs !== null && meta?.durationMs !== undefined) {
+            setKnownDurationMs(meta.durationMs)
+          }
+        }
+      }
       if (
         audioCache.available &&
-        track.sha256 !== undefined &&
+        digest !== undefined &&
         !uri.startsWith('file:') &&
         !uri.startsWith('data:')
       ) {
         const file = await audioCache.download({
           url: uri,
-          expectedSha256: track.sha256,
-          logicalKey: `music:${track.sha256}`,
+          expectedSha256: digest,
+          logicalKey: `music:${digest}`,
           pinClass: 'practice',
         })
         uri = file.fileUri
@@ -370,6 +392,11 @@ export default function Music() {
                   </ListRow>
                 )
               })}
+              {quotaBlocked || offlineBlocked ? (
+                <Text variant="caption" color={ink.ink2}>
+                  {quotaBlocked ? copy.music.state.quota : copy.music.state.unavailable}
+                </Text>
+              ) : null}
               {!canRequest ? (
                 <Text variant="caption" color={ink.muted}>
                   {selectedCount > MUSIC_MAX_PHRASES
@@ -466,9 +493,9 @@ export default function Music() {
               <Text variant="caption" color={ink.ink2}>
                 {copy.music.styles.allowance}
               </Text>
-              {unavailable ? (
+              {unavailable || quotaBlocked ? (
                 <Text variant="body" color={ink.ink2}>
-                  {copy.music.state.unavailable}
+                  {quotaBlocked ? copy.music.state.quota : copy.music.state.unavailable}
                 </Text>
               ) : null}
               <Button

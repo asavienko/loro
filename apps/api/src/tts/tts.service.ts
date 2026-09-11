@@ -4,7 +4,9 @@
  * wrong voice, unpinned model, missing key, or default stub. `TTS_STUB_RENDER=1`
  * is a labeled listening-class path (checksum metadata + download URL). CI stays
  * on the default stub and must not spend credits. Stub-render listening may be
- * unauthenticated for local cache wiring; ElevenLabs still requires a bearer.
+ * unauthenticated for local cache wiring. ElevenLabs reference and listening
+ * render may omit a bearer so web and APK can play; keep `/tts` off the public
+ * gateway unless that spend is intended.
  */
 
 import { createHash } from 'node:crypto'
@@ -59,7 +61,8 @@ function headerString(
 ): string | undefined {
   const value = headers?.[name] ?? headers?.[name.toLowerCase()]
   if (typeof value === 'string' && value.trim()) return value.trim()
-  if (Array.isArray(value) && typeof value[0] === 'string' && value[0].trim()) return value[0].trim()
+  if (Array.isArray(value) && typeof value[0] === 'string' && value[0].trim())
+    return value[0].trim()
   return undefined
 }
 

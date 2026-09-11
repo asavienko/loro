@@ -431,6 +431,7 @@
   "music.styles.upbeat_kids": "[!! ÜÜpbëëáát áánd clëëáár !!]",
   "music.state.generating": "[!! Máákïïng yööüür sööngs !!]",
   "music.state.unavailable": "[!! Sööng gëënëëráátïïöön nëëëëds áá cöönnëëctïïöön. Yööüü cáán stïïll pïïck phráásëës áánd këëëëp thëësëë lyrïïcs. !!]",
+  "music.state.quota": "[!! Sööng gëënëëráátïïöön ïs ööüüütof crëëdïïts. ÁÁdd áán ËëllëëvëënLáábs báálááncëë, thëën try áágááïn. !!]",
   "music.state.error": "[!! Thöösëë stylëës cööüüld nööt bëë máádëë. Yööüür lyrïïcs áárëë stïïll hëërëë. !!]",
   "music.state.partial": "[!! Söömëë stylëës áárëë rëëáády. ÖÖthëërs cööüüld nööt bëë máádëë. !!]",
   "music.fallback.lyricsOnly": "[!! Sïïng-áálööng cáárd — áá büündlëëd lyrïïc flöööör, nööt áá gëënëëráátëëd ÁÁÏÏ sööng. !!]",
