@@ -38,6 +38,8 @@ test('P3-03: the stream claims no playback it cannot do', async ({ page }) => {
   // The unnamed form of the bar is `aria-hidden`, so it is invisible to a role locator —
   // `render.spec.ts` catches that one by its geometry.
   await expect(page.getByRole('progressbar')).toHaveCount(0)
+  // Equalizer means sound is happening. Web stream has no playable audio, so it stays off.
+  await expect(page.getByTestId('equalizer')).toHaveCount(0)
 
   // Nothing wears a play glyph. The centre control is the queue's forward move and says so.
   await expect(page.getByText('►', { exact: true })).toHaveCount(0)

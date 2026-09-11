@@ -1,4 +1,5 @@
 import { expect, test } from '../fixtures'
+import { fillField } from '../helpers'
 
 const TOKEN_ROW = '[data-testid="token-row"]'
 
@@ -12,8 +13,8 @@ test('F-05: enumerates and searches generated tokens', async ({ page }) => {
   const initialCount = await rows.count()
   expect(initialCount, 'the workbench must enumerate generated token rows').toBeGreaterThan(0)
 
-  const search = page.getByRole('textbox', { name: 'Search tokens' })
-  await search.fill('accent')
+  await expect(page.getByRole('textbox', { name: 'Search tokens' })).toBeVisible()
+  await fillField(page, 'Search tokens', 'accent')
 
   await expect(rows.first()).toBeVisible()
   expect(await rows.count()).toBeLessThan(initialCount)
@@ -113,4 +114,35 @@ test('F-05: direct production exports support local language and navigation insp
   await expect(page.getByText('Specimen navigation', { exact: true })).not.toBeVisible()
   await expect(page).toHaveURL(/\/dev\/tokens/)
   await expect(page.getByRole('button', { name: 'Unavailable specimen audio' })).toBeDisabled()
+})
+
+test('F-05: registers plan-100 motion primitives as production specimens', async ({ page }) => {
+  for (const name of [
+    'Arrival',
+    'WarmingSurface',
+    'BeatBars',
+    'Equalizer',
+    'PulseRing',
+    'UnblurText',
+  ]) {
+    await expect(page.getByText(name, { exact: true }).first()).toBeVisible()
+  }
+  await expect(page.getByTestId('arrival')).toBeVisible()
+  await expect(page.getByTestId('warming-surface')).toBeVisible()
+  await expect(page.getByTestId('beat-bars')).toBeVisible()
+  await expect(page.getByTestId('equalizer')).toBeVisible()
+  await expect(page.getByTestId('pulse-ring')).toBeVisible()
+  await expect(page.getByTestId('unblur-word')).toBeVisible()
+
+  // Reduce Motion keeps the indicators; only the loop/glow goes. Browser E2E cannot
+  // prove 60 fps, but it can prove the specimens do not disappear behind the switch.
+  const reducedMotion = page.getByRole('switch', { name: 'Reduced motion' })
+  await reducedMotion.click()
+  await expect(reducedMotion).toBeChecked()
+  await expect(page.getByTestId('arrival')).toBeVisible()
+  await expect(page.getByTestId('warming-surface')).toBeVisible()
+  await expect(page.getByTestId('beat-bars')).toBeVisible()
+  await expect(page.getByTestId('equalizer')).toBeVisible()
+  await expect(page.getByTestId('pulse-ring')).toBeVisible()
+  await expect(page.getByTestId('unblur-word')).toBeVisible()
 })

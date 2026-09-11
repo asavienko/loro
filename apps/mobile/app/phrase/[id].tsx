@@ -47,7 +47,7 @@ import {
 import { copy, themeLabel } from '../../src/lib/copy'
 import { toView, useApp } from '../../src/store'
 import { audioSpeech, audioPlaybackNote, useAudioSpeech } from '../../src/lib/audioSpeech'
-import { AudioControls } from '../../src/ui/components/AudioControls'
+import { AudioControls } from '../../src/ui/components'
 /**
  * The gap between a section's label and its body, on all five labelled sections. Not a `space`
  * step — it sits between 8 and 12, and moving it to either would shift every section on the

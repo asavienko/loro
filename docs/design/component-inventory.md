@@ -11,7 +11,7 @@ frames, 10 navigation, 4 practice, and 3 progress. Four additional JSX files und
 `ui_kits/loro-app/` compose reference screens and do not belong to the component count. Likewise,
 the adjacent CSS token files contain 246 unique custom-property names, not the headline's 245.
 
-All reusable app UI lives under `apps/mobile/src/ui/`. Learner screens and the shell use 24
+All reusable app UI lives under `apps/mobile/src/ui/`. Learner screens and the shell use 32
 exported primitives and 9 exported composites (including direct module exports). There is no `src/ui/charts/` directory yet.
 
 ## Current primitives · `src/ui/primitives/`
@@ -44,10 +44,18 @@ Primitives are domain-free. Their public exports come from `primitives/index.ts`
 | `EmojiTile`     | Decorative emoji square with size/radius/background/font-size overrides                                              |
 | `Dot`           | Decorative sized colour dot                                                                                          |
 | `StatTile`      | String value/label grouped into one accessible node                                                                  |
+| `Field`         | Labelled text input; optional container border, invalid tone, multiline, and clear. Copy is always a prop            |
+| `ListRow`       | Selectable or navigable 48 / 13 / hairline row; `gap` is a prop. Settings marker and Music bilingual lines stay children |
+| `Arrival`       | `popIn` / `stepIn` / `fadeIn` wrapper; `popIn` is rewards only                                                       |
+| `WarmingSurface`| Real `automaticity` 0–100; 500 ms colour; glow drops under Reduce Motion                                             |
+| `BeatBars`      | `tempoMs` (720 / 340); static under Reduce Motion                                                                    |
+| `Equalizer`     | Listening-only; stagger from `eqB`; static when inactive or Reduce Motion                                            |
+| `PulseRing`     | Listening-only ring around a control; static ring under Reduce Motion                                                |
+| `UnblurText`    | Word stays in layout; `hiddenLabel` until revealed; instant swap under Reduce Motion                                 |
 
-`controlStyle.ts` is private style algebra for `Chip` and `Segmented`; its unit test pins variant
-geometry. Files such as `bars.tsx`, `tiles.tsx`, and `surfaces.tsx` are source grouping, not extra
-public components.
+`controlStyle.ts` is private style algebra for `Chip`, `Segmented`, `Field` and `ListRow`; its unit
+test pins variant geometry. Files such as `bars.tsx`, `tiles.tsx`, and `surfaces.tsx` are source
+grouping, not extra public components.
 
 ## Current composites · `src/ui/components/`
 
@@ -61,6 +69,9 @@ Composites may accept domain types, but do not import the store or learner-facin
 | `PhraseRow`          | Passed `es`, `en`, `emoji`, `queue\|suggestion`, labels/hint, and non-focusable trailing content                                 |
 | `StatRow`            | A row of passed `Stat` values; current call sites supply three                                                                   |
 | `TagChips`           | Passed tag order/labels/selected suffix and toggle callback; checkbox semantics and a visible selected mark                      |
+| `AudioControls`      | Passed label/note/enabled/callback; metadata-only native audio action                                                            |
+| `LanguageChoices`    | Controlled values/selected/onSelect with localized language names and radio semantics                                            |
+| `NavigationMenu`     | Passed labels/destinations; shared spine handle and dismissible destination sheet                                                |
 
 `ToastHost.tsx` is a deliberate app host, not a reusable composite: it subscribes to the store and
 reads toast copy. Keep store-aware hosts at the UI root rather than weakening the component-layer
@@ -78,17 +89,9 @@ The authored package has ten (`components/navigation/`): `Spine`, `ScreenHeader`
 spine handle and destination sheet; other named headers, exits, resume and transport remain under
 plan 81. The workbench renders that real menu and preserves future named APIs as pending.
 
-The direct-module composites also include:
-
-| Component | Current contract and use |
-| --- | --- |
-| `AudioControls` | Passed label/note/enabled/callback; metadata-only native audio action |
-| `LanguageChoices` | Controlled values/selected/onSelect with localized language names and radio semantics |
-| `NavigationMenu` | Passed labels/destinations; shared spine handle and dismissible destination sheet |
-
 ## Workbench coverage (plan 80)
 
-The registry covers all 33 production component exports, including direct-module `AudioControls`,
+The registry covers all 41 production component exports, including barrel `AudioControls`,
 `LanguageChoices` and `NavigationMenu`. A source-based drift test checks component definitions as
 well as the type-checked barrel contract, so bypassing a barrel cannot hide a new component.
 `Sheet`, `ActionBar`, `DifficultySelector` and `TagChips` are explicitly interaction-owned; all
@@ -101,7 +104,7 @@ and future named navigation APIs remain plan-80 work.
 ## What is not implemented
 
 The authored package still calls for reusable audio transport, microphone/listening states,
-phrase-detail rich content, practice/reveal/grade surfaces, warming/automaticity feedback, trip/drop
+phrase-detail rich content, practice/reveal/grade surfaces, trip/drop
 surfaces, roleplay/chat, navigation sheets, and progress/lab visualizations. None should be claimed
 as an app component until production code uses it. The plan 80 workbench may report an authored
 reference as pending, but a specimen does not make that reference a shipped app component.
@@ -136,7 +139,7 @@ surrounding row already announces the value. Never create an unnamed progressbar
 
 ### `Sheet` and `ActionBar`
 
-The sheet backdrop is a labelled button; its touch-sized grabber area supports swipe-down dismissal. `ActionBar` reads the
+The sheet presents with token `sheetUp` on the UI thread. The backdrop is a labelled button; its touch-sized grabber area supports swipe-down dismissal. `ActionBar` reads the
 safe-area inset but does not measure its own height, so each route uses a named clearance token.
 Replacing those values with measurement is a behaviour/layout change and needs text-scale E2E
 verification.
@@ -165,3 +168,7 @@ For every reusable addition:
 
 Build components when a screen proves the abstraction. This keeps the system extendable without
 turning the blueprint's prototype catalog into a speculative second UI framework.
+
+The remaining-screen extraction map, Reanimated motion adapter and gesture catalog live in
+[plan 100](../../plans/100-ui-design-system.md). Do not pre-create `GradeRow` / `RevealCard` /
+chat bubbles as a gallery; land them in the same change as the first or second caller.

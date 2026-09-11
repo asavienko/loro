@@ -18,6 +18,7 @@ import { DifficultySelector, PhraseRow } from '../../src/ui/components'
 import {
   Chip,
   DarkCard,
+  Equalizer,
   IconButton,
   Pill,
   Pressable,
@@ -172,6 +173,7 @@ function NowPlayingCard({
           ? copy.stream.audioNote
           : audioPlaybackNote(audio.source, audio.playback, audio.playbackError)}
       </Text>
+      {audio.canPlay && <Equalizer active={playing} color={onDark.primary} />}
       {audio.canPlay && (
         <Pressable
           feedback="button"

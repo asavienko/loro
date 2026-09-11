@@ -107,17 +107,19 @@ for (const state of STATES) {
   })
 }
 
-test('every interactive element meets the 44 px touch target', async ({ page }) => {
-  // Account, listen-companion, and plan-96 music states outgrow the 90 s default.
-  test.setTimeout(300_000)
-  const offenders: string[] = []
+test.describe('whole-manifest touch targets', () => {
+  test.describe.configure({ retries: 0, timeout: 600_000 })
 
-  for (const state of STATES) {
-    await enter(page, state, onboard)
-    offenders.push(...(await tooSmall(page, state.name)))
-  }
+  test('every interactive element meets the 44 px touch target', async ({ page }) => {
+    const offenders: string[] = []
 
-  expect(offenders, 'interactive elements below the 44 px floor').toEqual([])
+    for (const state of STATES) {
+      await enter(page, state, onboard)
+      offenders.push(...(await tooSmall(page, state.name)))
+    }
+
+    expect(offenders, 'interactive elements below the 44 px floor').toEqual([])
+  })
 })
 
 test('a radio and a checkbox report which one is chosen', async ({ page }) => {
@@ -182,6 +184,7 @@ test('a toast is announced, not just drawn', async ({ page }) => {
   await page.getByRole('radio', { name: 'Difficult' }).click()
 
   const toast = page.getByRole('alert')
+  await expect(page.getByTestId('arrival')).toBeVisible()
   await expect(toast).toHaveAttribute('aria-live', 'polite')
   await expect(toast).toContainText('repeats more, comes back sooner')
 })
@@ -236,14 +239,17 @@ async function tooSmall(page: Page, state: string): Promise<string[]> {
   const found = await page.evaluate(
     ({ slop, min }) => {
       const selector = '[role="button"],[role="radio"],[role="checkbox"],[role="link"],input'
-      return Array.from(document.querySelectorAll(selector))
+      return Array.from(document.querySelectorAll<HTMLElement>(selector))
         .map((node) => {
-          const box = node.getBoundingClientRect()
+          // Layout box, not getBoundingClientRect: Arrival popIn scales the toast
+          // visually for 400 ms, and the transformed rect is not the hit target.
+          const width = node.offsetWidth
+          const height = node.offsetHeight
           return {
             name: node.getAttribute('aria-label') ?? node.textContent.slice(0, 40),
-            w: Math.round(box.width) + slop * 2,
-            h: Math.round(box.height) + slop * 2,
-            visible: box.width > 0 && box.height > 0,
+            w: Math.round(width) + slop * 2,
+            h: Math.round(height) + slop * 2,
+            visible: width > 0 && height > 0,
           }
         })
         .filter((b) => b.visible && (b.w < min || b.h < min))

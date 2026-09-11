@@ -10,8 +10,9 @@
   keep-line handoff
 - **Number allocation:** 97 follows inspection of active, archived and concurrent plan files. 95 and
   archived 96 (account sign-in) are archived. Active phrase-music reuses 96 (unresolved collision).
-  Plan 98 owns voice/TTS. Plan 99 owns the online-first listening companion. The next new plan is
-  100.
+  Plan 98 owns voice/TTS. Plan 99 owns the online-first listening companion. Archived plan 100 owns
+  hygiene/reuse/tooling; active `100-ui-design-system.md` is the motion kit under the same number
+  (unresolved collision). The next new plan is 101.
 
 ## Outcome
 
