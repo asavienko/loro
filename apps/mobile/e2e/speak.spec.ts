@@ -1,4 +1,5 @@
 import { expect, onboard, openFirstPhrase, test } from './fixtures'
+import { mockTtsStatus } from './learnerApiFlow'
 
 test('Speak reveals offline without claiming a spoken completion', async ({ page }) => {
   await onboard(page)
@@ -28,6 +29,14 @@ test('phrase detail does not claim catalog audio when none is bundled', async ({
   await expect(page.getByText('Catalog recording · pronunciation reference')).toHaveCount(0)
   await expect(page.getByText('Audio is unavailable on this device.')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Play phrase', exact: true })).toBeDisabled()
+})
+
+test('phrase detail enables server-voice play when TTS status is ready', async ({ page }) => {
+  await onboard(page)
+  mockTtsStatus(page, true)
+  await openFirstPhrase(page)
+  await expect(page.getByText('Server voice · generated for this phrase')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Play phrase', exact: true })).toBeEnabled()
 })
 
 test('Speak skip advances without unlocking or claiming progress', async ({ page }) => {

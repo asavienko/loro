@@ -32,10 +32,22 @@ export class MusicGuard implements CanActivate {
   }
 }
 
-export function musicStatusAllowed(request: { method?: string; path?: string; url?: string }): boolean {
+export function musicStatusAllowed(request: {
+  method?: string
+  path?: string
+  url?: string
+}): boolean {
+  return isGetLeafPath(request, 'music/status')
+}
+
+function isGetLeafPath(
+  request: { method?: string; path?: string; url?: string },
+  leaf: string,
+): boolean {
   if (request.method?.toUpperCase() !== 'GET') return false
-  const path = `${request.path ?? ''} ${request.url ?? ''}`
-  return path.includes('/music/status') || /(^|\/)status(\?|$)/.test(path)
+  const raw = `${request.path ?? ''} ${request.url ?? ''}`
+  const path = raw.split(/[?#\s]/).find((part) => part.length > 0) ?? ''
+  return path === `/${leaf}` || path.endsWith(`/${leaf}`)
 }
 
 export function musicAnonymousAllowed(): boolean {

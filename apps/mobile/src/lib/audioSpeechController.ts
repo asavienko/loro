@@ -154,7 +154,7 @@ export class AudioSpeechController {
         ) {
           return native.playFile({ id, fileUri: playable.uri })
         }
-        return native.play({ id, text, locale, rate, uri: playable.uri })
+        return native.play({ id, text: '', locale, rate, uri: playable.uri })
       })
     } catch (error) {
       if (this.playId !== id) return
@@ -162,7 +162,8 @@ export class AudioSpeechController {
       this.didPlay = null
       this.update({
         playback: 'error',
-        playbackError: error instanceof TtsRenderError && error.code === 'quota' ? 'quota' : 'unavailable',
+        playbackError:
+          error instanceof TtsRenderError && error.code === 'quota' ? 'quota' : 'unavailable',
       })
     }
   }

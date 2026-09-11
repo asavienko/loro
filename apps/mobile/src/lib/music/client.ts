@@ -63,6 +63,15 @@ export interface MusicCredentials {
   readonly deviceId: string
 }
 
+export type MusicClientErrorCode = 'unavailable' | 'quota'
+
+export class MusicClientError extends Error {
+  constructor(readonly code: MusicClientErrorCode) {
+    super(code)
+    this.name = 'MusicClientError'
+  }
+}
+
 const audioBytes = silentWavBytes()
 const audioUri = wavDataUri(audioBytes)
 
@@ -193,7 +202,7 @@ export async function requestMusicLyrics(
   credentials: MusicCredentials | null = null,
   send: typeof fetch = fetch,
 ): Promise<MusicLyricsView> {
-  if (!baseUrl) throw new Error('unavailable')
+  if (!baseUrl) throw new MusicClientError('unavailable')
   const body = MusicLyricsRequestSchema.parse({
     target_locale: input.targetLocale,
     meaning_language: input.meaningLanguage,
@@ -211,9 +220,9 @@ export async function requestMusicLyrics(
     },
     send,
   )
-  if (!response.ok) throw new Error('unavailable')
+  if (!response.ok) throw musicHttpError(response)
   const parsed = MusicLyricsResponseSchema.safeParse(await response.json())
-  if (!parsed.success) throw new Error('unavailable')
+  if (!parsed.success) throw new MusicClientError('unavailable')
   return {
     document: parsed.data.document,
     fallback: parsed.data.fallback,
@@ -231,7 +240,7 @@ export async function requestMusicRenders(
   credentials: MusicCredentials | null = null,
   send: typeof fetch = fetch,
 ): Promise<MusicTrackView[]> {
-  if (!baseUrl) throw new Error('unavailable')
+  if (!baseUrl) throw new MusicClientError('unavailable')
   const body = MusicRendersRequestSchema.parse({
     lyric_document_id: input.lyricDocumentId,
     style_ids: [...input.styleIds],
@@ -248,9 +257,9 @@ export async function requestMusicRenders(
     },
     send,
   )
-  if (!response.ok) throw new Error('unavailable')
+  if (!response.ok) throw musicHttpError(response)
   const parsed = MusicRendersResponseSchema.safeParse(await response.json())
-  if (!parsed.success) throw new Error('unavailable')
+  if (!parsed.success) throw new MusicClientError('unavailable')
   return Promise.all(
     parsed.data.jobs.map(async (job) => {
       const track = trackFromJob(job, baseUrl)
@@ -278,6 +287,49 @@ export async function requestMusicRenders(
         return track
       }
     }),
+  )
+}
+
+export async function requestMusicTrackMeta(
+  trackId: string,
+  baseUrl: string | null = bundledApiUrl(),
+  credentials: MusicCredentials | null = null,
+  send: typeof fetch = fetch,
+): Promise<{ sha256: string; durationMs: number | null } | null> {
+  if (!baseUrl) return null
+  try {
+    const meta = await requestWithTimeout(
+      `${baseUrl}/music/tracks/${trackId}`,
+      {
+        credentials: 'omit',
+        cache: 'no-store',
+        redirect: 'error',
+        headers: musicHeaders(credentials),
+      },
+      send,
+    )
+    if (!meta.ok) return null
+    const parsed = MusicTrackResponseSchema.safeParse(await meta.json())
+    if (!parsed.success) return null
+    return { sha256: parsed.data.sha256, durationMs: parsed.data.duration_ms }
+  } catch {
+    return null
+  }
+}
+
+export function musicTrackIdFromContentUrl(uri: string): string | null {
+  try {
+    const path = new URL(uri, 'https://loro.test').pathname
+    const match = /\/music\/tracks\/([A-Za-z0-9_-]+)\/content$/.exec(path)
+    return match?.[1] ?? null
+  } catch {
+    return null
+  }
+}
+
+function musicHttpError(response: Response): MusicClientError {
+  return new MusicClientError(
+    response.status === 429 || response.status === 402 ? 'quota' : 'unavailable',
   )
 }
 

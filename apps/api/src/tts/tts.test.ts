@@ -22,7 +22,7 @@ import { SERVER_CLOCK } from '../common/clock.js'
 import { LoroError } from '../common/errors.js'
 import { TtsFailure, StubTts } from '../integrations/elevenlabs/tts.js'
 import { TtsController } from './tts.controller.js'
-import { TtsGuard } from './tts.guard.js'
+import { TtsGuard, ttsStatusAllowed } from './tts.guard.js'
 import { TtsService } from './tts.service.js'
 import { TTS_TRANSPORT, type TtsTransport } from './transport.js'
 
@@ -457,7 +457,9 @@ describe('anonymous catalog reference HTTP surface', () => {
         body: JSON.stringify(pinnedListeningBody()),
       })
       expect(listening.status).toBe(200)
-      expect(TtsResponseSchema.parse(await listening.json()).asset_class).toBe(LISTENING_ASSET_CLASS)
+      expect(TtsResponseSchema.parse(await listening.json()).asset_class).toBe(
+        LISTENING_ASSET_CLASS,
+      )
       const created = await fetch(`${base}/v1/tts/render`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
@@ -539,5 +541,14 @@ describe('stub-render listening HTTP surface', () => {
     } finally {
       await app.close()
     }
+  })
+})
+
+describe('tts status path', () => {
+  it('allows only GET /tts/status, not a bare /status leaf', () => {
+    expect(ttsStatusAllowed({ method: 'GET', path: '/tts/status' })).toBe(true)
+    expect(ttsStatusAllowed({ method: 'GET', path: '/v1/tts/status' })).toBe(true)
+    expect(ttsStatusAllowed({ method: 'GET', path: '/status' })).toBe(false)
+    expect(ttsStatusAllowed({ method: 'POST', path: '/tts/status' })).toBe(false)
   })
 })

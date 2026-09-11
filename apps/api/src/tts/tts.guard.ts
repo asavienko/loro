@@ -42,10 +42,22 @@ export class TtsGuard implements CanActivate {
   }
 }
 
-export function ttsStatusAllowed(request: { method?: string; path?: string; url?: string }): boolean {
+export function ttsStatusAllowed(request: {
+  method?: string
+  path?: string
+  url?: string
+}): boolean {
+  return isGetLeafPath(request, 'tts/status')
+}
+
+function isGetLeafPath(
+  request: { method?: string; path?: string; url?: string },
+  leaf: string,
+): boolean {
   if (request.method?.toUpperCase() !== 'GET') return false
-  const path = `${request.path ?? ''} ${request.url ?? ''}`
-  return path.includes('/tts/status') || /(^|\/)status(\?|$)/.test(path)
+  const raw = `${request.path ?? ''} ${request.url ?? ''}`
+  const path = raw.split(/[?#\s]/).find((part) => part.length > 0) ?? ''
+  return path === `/${leaf}` || path.endsWith(`/${leaf}`)
 }
 
 export function stubListeningAnonymousAllowed(request: {

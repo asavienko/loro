@@ -431,6 +431,7 @@
   "music.styles.upbeat_kids": "Upbeat and clear",
   "music.state.generating": "Making your songs",
   "music.state.unavailable": "Song generation needs a connection. You can still pick phrases and keep these lyrics.",
+  "music.state.quota": "Song generation is out of credits. Add an ElevenLabs balance, then try again.",
   "music.state.error": "Those styles could not be made. Your lyrics are still here.",
   "music.state.partial": "Some styles are ready. Others could not be made.",
   "music.fallback.lyricsOnly": "Sing-along card — a bundled lyric floor, not a generated AI song.",

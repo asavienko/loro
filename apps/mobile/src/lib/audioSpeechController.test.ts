@@ -6,7 +6,11 @@ import {
   type PlaybackRequest,
   type SpeechEvent,
 } from './audioSpeechController'
-import { clearCatalogAudioFiles, registerCatalogAudioFile, resolveCatalogAudioUri } from './catalogAudio'
+import {
+  clearCatalogAudioFiles,
+  registerCatalogAudioFile,
+  resolveCatalogAudioUri,
+} from './catalogAudio'
 import { resolvePracticePlayable } from './practiceTts'
 
 vi.mock('./practiceTts', () => ({
@@ -46,14 +50,14 @@ function fixture() {
 
 describe('native audio metadata boundary', () => {
   beforeEach(() => {
-    vi.mocked(resolvePracticePlayable).mockImplementation(async ({ catalog }) => {
+    vi.mocked(resolvePracticePlayable).mockImplementation(({ catalog }) => {
       const uri = resolveCatalogAudioUri(catalog)
-      if (uri !== undefined) return { uri, source: 'catalog' }
-      return {
+      if (uri !== undefined) return Promise.resolve({ uri, source: 'catalog' })
+      return Promise.resolve({
         uri: 'https://cdn.loro.test/practice.m4a',
         sha256: 'a'.repeat(64),
         source: 'api-tts',
-      }
+      })
     })
   })
   it('counts a play once only after its actual completion, never a stop or stale event', async () => {
@@ -177,7 +181,7 @@ describe('native audio metadata boundary', () => {
       sha256,
     })
     expect(f.native.play).toHaveBeenCalledWith(
-      expect.objectContaining({ uri: 'file:///tmp/clip.m4a', text: 'Hola' }),
+      expect.objectContaining({ uri: 'file:///tmp/clip.m4a', text: '' }),
     )
     clearCatalogAudioFiles()
     await f.controller.play('p', 'Hola', 'es-ES', 0.92, undefined, {
@@ -185,7 +189,7 @@ describe('native audio metadata boundary', () => {
       sha256,
     })
     expect(f.native.play.mock.calls[1]?.[0]).toEqual(
-      expect.objectContaining({ uri: 'https://cdn.loro.test/practice.m4a', text: 'Hola' }),
+      expect.objectContaining({ uri: 'https://cdn.loro.test/practice.m4a', text: '' }),
     )
   })
   it('does not fall back to device TTS when catalog and API audio are both missing', async () => {

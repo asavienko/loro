@@ -1,4 +1,5 @@
 import { expect, onboard, test } from './fixtures'
+import { mockTtsStatus } from './learnerApiFlow'
 
 test('adaptive stream rerates, reorders, transports, loves, and learns phrases', async ({
   page,
@@ -27,6 +28,14 @@ test('adaptive stream rerates, reorders, transports, loves, and learns phrases',
 
   await page.getByRole('button', { name: 'Mark learned' }).click()
   await expect(page.getByText('Learned 1')).toBeVisible()
+})
+
+test('stream play uses server voice when the TTS status is ready', async ({ page }) => {
+  await onboard(page)
+  mockTtsStatus(page, true)
+  await page.getByRole('button', { name: 'Stream' }).click()
+  await expect(page.getByText('Server voice · generated for this phrase')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Play phrase', exact: true })).toBeEnabled()
 })
 
 test('P3-03: the stream claims no playback it cannot do', async ({ page }) => {

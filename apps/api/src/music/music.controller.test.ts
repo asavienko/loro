@@ -7,7 +7,7 @@ import { SERVER_CLOCK } from '../common/clock.js'
 import { AuthGuard } from '../auth/auth.guard.js'
 import { AuthService } from '../auth/auth.service.js'
 import { MusicController } from './music.controller.js'
-import { MusicGuard } from './music.guard.js'
+import { MusicGuard, musicStatusAllowed } from './music.guard.js'
 import { MusicService } from './music.service.js'
 import { MUSIC_REPOSITORY, MemoryMusicRepository } from './repository.js'
 
@@ -131,5 +131,14 @@ describe('music HTTP authz and stub journey (p3f-11)', () => {
       style_ids: ['acoustic_folk', 'modern_pop'],
     })
     expect(otherRenders.status).toBe(200)
+  })
+})
+
+describe('music status path', () => {
+  it('allows only GET /music/status, not a bare /status leaf', () => {
+    expect(musicStatusAllowed({ method: 'GET', path: '/music/status' })).toBe(true)
+    expect(musicStatusAllowed({ method: 'GET', path: '/v1/music/status' })).toBe(true)
+    expect(musicStatusAllowed({ method: 'GET', path: '/status' })).toBe(false)
+    expect(musicStatusAllowed({ method: 'POST', path: '/music/status' })).toBe(false)
   })
 })

@@ -1,4 +1,5 @@
 import { reachAccount } from './accountFlow'
+import { mockTtsStatus } from './learnerApiFlow'
 import { localeText, onboardPair } from './languageFlow'
 import { openListenExport, openListenScenario, LISTEN_SCENARIOS, LISTEN_STATUS } from './listenFlow'
 import { openMusic, openMusicFixture, selectThreePhrases } from './musicFlow'
@@ -519,6 +520,17 @@ export const STATES: AppState[] = [
     route: '/practice/stream',
     spec: '§4 Adaptive stream; plan 84 manual browsing while audio is unavailable',
     reach: (page) => open(page, 'Stream'),
+  },
+  {
+    name: 'stream · server voice',
+    route: '/practice/stream',
+    spec: '§4 Adaptive stream; AS-01 API reference TTS when GET /tts/status is ready',
+    reach: async (page) => {
+      mockTtsStatus(page, true)
+      await open(page, 'Stream')
+      await expect(page.getByRole('button', { name: 'Play phrase', exact: true })).toBeVisible()
+      await expect(page.getByText('Server voice · generated for this phrase')).toBeVisible()
+    },
   },
   {
     name: 'stream · all learned',

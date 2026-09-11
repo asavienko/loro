@@ -39,8 +39,8 @@ export function playableDownloadUrl(downloadUrl: string, apiBase: string): strin
   try {
     const download = new URL(downloadUrl)
     const api = new URL(apiBase)
-    const loopback = new Set(['localhost', '127.0.0.1', '[::1]'])
-    if (loopback.has(download.hostname) && !loopback.has(api.hostname)) {
+    const rewriteHosts = new Set(['localhost', '127.0.0.1', '[::1]', '10.0.2.2'])
+    if (rewriteHosts.has(download.hostname) && download.host !== api.host) {
       download.protocol = api.protocol
       download.host = api.host
     }
@@ -107,9 +107,36 @@ export async function resolvePracticePlayable(input: {
 }): Promise<PracticePlayable | null> {
   const catalogUri = resolveCatalogAudioUri(input.catalog)
   if (catalogUri !== undefined) {
+    const runtime = input.runtime ?? (typeof document === 'undefined' ? 'native' : 'web')
+    const cache = input.cache ?? audioCache
+    const digest = input.catalog?.sha256
+    if (
+      runtime === 'native' &&
+      /^https?:/i.test(catalogUri) &&
+      cache.available &&
+      digest !== undefined
+    ) {
+      const logicalKey = `catalog:${digest}`
+      const existing = await cache.lookup(logicalKey)
+      const file =
+        existing ??
+        (await cache.download({
+          url: catalogUri,
+          expectedSha256: digest,
+          logicalKey,
+          pinClass: 'practice',
+          ...(input.credentials === null || input.credentials === undefined
+            ? {}
+            : {
+                authorization: input.credentials.token,
+                deviceId: input.credentials.deviceId,
+              }),
+        }))
+      return { uri: file.fileUri, sha256: digest, source: 'catalog' }
+    }
     return {
       uri: catalogUri,
-      ...(input.catalog?.sha256 === undefined ? {} : { sha256: input.catalog.sha256 }),
+      ...(digest === undefined ? {} : { sha256: digest }),
       source: 'catalog',
     }
   }
@@ -120,8 +147,7 @@ export async function resolvePracticePlayable(input: {
   const phraseHash = await digestListeningText(input.text)
   const cacheKey = `${locale}:${phraseHash}`
   const hit =
-    rendered.get(cacheKey) ??
-    (await renderReference({ ...input, locale }, phraseHash, baseUrl))
+    rendered.get(cacheKey) ?? (await renderReference({ ...input, locale }, phraseHash, baseUrl))
   if (hit === null) return null
   rendered.set(cacheKey, hit)
   const url = playableDownloadUrl(hit.downloadUrl, baseUrl)

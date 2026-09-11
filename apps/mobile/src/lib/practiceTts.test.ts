@@ -40,6 +40,12 @@ describe('practice API TTS', () => {
         'http://10.0.2.2:3000/v1',
       ),
     ).toBe(`http://10.0.2.2:3000/v1/tts/assets/${sha256}`)
+    expect(
+      playableDownloadUrl(
+        `http://10.0.2.2:3001/v1/tts/assets/${sha256}`,
+        'http://localhost:3001/v1',
+      ),
+    ).toBe(`http://localhost:3001/v1/tts/assets/${sha256}`)
   })
 
   it('pins the catalog reference voice and never asks for listening-class audio', () => {
@@ -91,15 +97,15 @@ describe('practice API TTS', () => {
 
   it('downloads to a native file URI so JavaScript never receives PCM', async () => {
     const native = {
-      download: vi.fn(async () => ({
+      download: vi.fn().mockResolvedValue({
         fileUri: 'file:///cache/practice.m4a',
         ms: 800,
         sha256,
-      })),
-      lookup: vi.fn(async () => null),
-      cancel: vi.fn(async () => undefined),
-      pin: vi.fn(async () => undefined),
-      unpin: vi.fn(async () => undefined),
+      }),
+      lookup: vi.fn().mockResolvedValue(null),
+      cancel: vi.fn().mockResolvedValue(undefined),
+      pin: vi.fn().mockResolvedValue(undefined),
+      unpin: vi.fn().mockResolvedValue(undefined),
       concatenate: vi.fn(),
       share: vi.fn(),
     } satisfies NativeAudioCache
@@ -123,6 +129,42 @@ describe('practice API TTS', () => {
         url: `http://10.0.2.2:3000/v1/tts/assets/${sha256}`,
         expectedSha256: sha256,
         pinClass: 'practice',
+      }),
+    )
+  })
+
+  it('downloads a remote catalog URL on native instead of asking the device to speak', async () => {
+    const native = {
+      download: vi.fn().mockResolvedValue({
+        fileUri: 'file:///cache/catalog.m4a',
+        ms: 800,
+        sha256,
+      }),
+      lookup: vi.fn().mockResolvedValue(null),
+      cancel: vi.fn().mockResolvedValue(undefined),
+      pin: vi.fn().mockResolvedValue(undefined),
+      unpin: vi.fn().mockResolvedValue(undefined),
+      concatenate: vi.fn(),
+      share: vi.fn(),
+    } satisfies NativeAudioCache
+    await expect(
+      resolvePracticePlayable({
+        text: 'Hola',
+        locale: 'es-ES',
+        catalog: { uri: `https://cdn.loro.test/${sha256}.m4a`, sha256 },
+        runtime: 'native',
+        cache: new AudioCacheController(native),
+        render: vi.fn(),
+      }),
+    ).resolves.toEqual({
+      uri: 'file:///cache/catalog.m4a',
+      sha256,
+      source: 'catalog',
+    })
+    expect(native.download).toHaveBeenCalledWith(
+      expect.objectContaining({
+        url: `https://cdn.loro.test/${sha256}.m4a`,
+        expectedSha256: sha256,
       }),
     )
   })
