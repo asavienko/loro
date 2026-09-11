@@ -1,3 +1,4 @@
+import 'react-native-reanimated'
 import type { Preview } from '@storybook/react-native-web-vite'
 import { View } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
