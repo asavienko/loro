@@ -1,5 +1,7 @@
 import { toSpeechEvent, type NativeSpeechEvent, type SpeechEvent } from './speechEvent'
-import { resolveCatalogAudioUri, type CatalogAudio } from './catalogAudio'
+import { type CatalogAudio } from './catalogAudio'
+import { resolvePracticePlayable } from './practiceTts'
+import { TtsRenderError } from './ttsRenderClient'
 
 /** AS-01/AS-03. Only native metadata crosses this boundary; never audio bytes. */
 export interface AudioAvailability {
@@ -34,9 +36,12 @@ export interface NativeAudioSpeech {
   addListener(event: 'playback', callback: (event: PlaybackEvent) => void): { remove(): void }
   addListener(event: 'speech', callback: (event: NativeSpeechEvent) => void): { remove(): void }
 }
+export type PlaybackErrorKind = 'quota' | 'unavailable'
+
 export interface AudioSnapshot {
   phraseId: string | null
   playback: 'idle' | 'playing' | 'loading' | 'error'
+  playbackError: PlaybackErrorKind | null
   speech: SpeechEvent | null
 }
 
@@ -54,7 +59,12 @@ export class AudioSpeechController {
   private listenId: string | null = null
   private didPlay: (() => void) | null = null
   private listeners = new Set<() => void>()
-  private snapshot: AudioSnapshot = { phraseId: null, playback: 'idle', speech: null }
+  private snapshot: AudioSnapshot = {
+    phraseId: null,
+    playback: 'idle',
+    playbackError: null,
+    speech: null,
+  }
 
   constructor(private readonly native: NativeAudioSpeech | null) {
     native?.addListener('playback', (event) => {
@@ -66,7 +76,10 @@ export class AudioSpeechController {
       this.playId = null
       const complete = this.didPlay
       this.didPlay = null
-      this.update({ playback: event.state === 'error' ? 'error' : 'idle' })
+      this.update({
+        playback: event.state === 'error' ? 'error' : 'idle',
+        playbackError: event.state === 'error' ? 'unavailable' : null,
+      })
       if (event.state === 'ended') complete?.()
     })
     native?.addListener('speech', (payload) => {
@@ -119,51 +132,72 @@ export class AudioSpeechController {
     const id = `play-${++this.serial}`
     this.playId = id
     this.didPlay = onEnded ?? null
-    this.update({ phraseId, playback: 'loading' })
+    this.update({ phraseId, playback: 'loading', playbackError: null })
     await this.stopListening()
     if (this.playId !== id) return
-    const uri = resolveCatalogAudioUri(audio)
     try {
       const native = this.native
       if (native === null) throw new Error('native-audio-unavailable')
+      const playable = await resolvePracticePlayable({
+        text,
+        locale,
+        ...(audio === undefined ? {} : { catalog: audio }),
+      })
+      if (this.playId !== id) return
+      if (playable === null) throw new Error('practice-tts-unavailable')
       await this.runNative(() => {
         if (this.playId !== id) return Promise.resolve()
-        return native.play({ id, text, locale, rate, ...(uri === undefined ? {} : { uri }) })
+        if (
+          playable.source === 'api-tts' &&
+          playable.uri.startsWith('file:') &&
+          native.playFile !== undefined
+        ) {
+          return native.playFile({ id, fileUri: playable.uri })
+        }
+        return native.play({ id, text: '', locale, rate, uri: playable.uri })
       })
-    } catch {
+    } catch (error) {
       if (this.playId !== id) return
       this.playId = null
       this.didPlay = null
-      this.update({ playback: 'error' })
+      this.update({
+        playback: 'error',
+        playbackError:
+          error instanceof TtsRenderError && error.code === 'quota' ? 'quota' : 'unavailable',
+      })
     }
   }
   async playFile(phraseId: string, fileUri: string, onEnded?: () => void): Promise<void> {
     const id = `play-${++this.serial}`
     this.playId = id
     this.didPlay = onEnded ?? null
-    this.update({ phraseId, playback: 'loading' })
+    this.update({ phraseId, playback: 'loading', playbackError: null })
     await this.stopListening()
     if (this.playId !== id) return
     try {
       const native = this.native
-      if (native?.playFile === undefined) throw new Error('native-file-unavailable')
-      if (!fileUri.startsWith('file:')) throw new Error('native-file-unavailable')
-      const playCached = native.playFile.bind(native)
+      if (native === null) throw new Error('native-file-unavailable')
       await this.runNative(() => {
         if (this.playId !== id) return Promise.resolve()
-        return playCached({ id, fileUri })
+        if (fileUri.startsWith('file:') && native.playFile !== undefined) {
+          return native.playFile({ id, fileUri })
+        }
+        if (native.playFile === undefined && /^(https?:|blob:|data:)/i.test(fileUri)) {
+          return native.play({ id, text: '', locale: 'und', rate: 1, uri: fileUri })
+        }
+        throw new Error('native-file-unavailable')
       })
     } catch {
       if (this.playId !== id) return
       this.playId = null
       this.didPlay = null
-      this.update({ playback: 'error' })
+      this.update({ playback: 'error', playbackError: 'unavailable' })
     }
   }
   stopPlayback(): Promise<void> {
     this.playId = null
     this.didPlay = null
-    this.update({ playback: 'idle' })
+    this.update({ playback: 'idle', playbackError: null })
     // Cancellation is visible immediately. Its native command remains ordered
     // behind any pending command, but a route must never wait for a permission
     // dialog or stalled recognizer before it can leave playback state.

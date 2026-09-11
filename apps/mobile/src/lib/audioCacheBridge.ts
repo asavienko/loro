@@ -1,4 +1,4 @@
 import type { NativeAudioCache } from './audioCacheController'
 
-/** Browser has no native file cache or encoder; generate/listen stay unavailable. */
+/** Browser has no native file cache; listen streams API download URLs instead. */
 export const nativeAudioCache: NativeAudioCache | null = null

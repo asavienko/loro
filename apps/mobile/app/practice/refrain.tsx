@@ -65,6 +65,7 @@ import {
 } from '../../src/store'
 import { useRefrainSession, type WarmingStyle } from './_useRefrainSession'
 import { copy } from '../../src/lib/copy'
+import { audioPlaybackNote, audioSpeech, useAudioSpeech } from '../../src/lib/audioSpeech'
 import { deviceClock } from '../../src/lib/clock'
 import { waveEntryWithResume, waveSchedule } from '../../src/lib/waves'
 import { useLocalMinute } from '../../src/lib/useLocalMinute'
@@ -99,6 +100,8 @@ export default function Refrain() {
         : (scheduledWave ?? PRODUCTION_WAVES[0])
   const session = useRefrainSession(selectedWave, entry.kind === 'ready' || entry.kind === 'resume')
   const { set, phrase, mode, auto, dayReps, locked, phraseNumber, wave } = session
+  const targetLocale = useApp((state) => state.targetLocale)
+  const audio = useAudioSpeech(targetLocale, phrase?.catalog?.audio)
   const [exitVisible, setExitVisible] = useState(false)
   const navigation = useNavigation()
   const leaveLabel = copy.nav.exit.leave
@@ -261,8 +264,45 @@ export default function Refrain() {
         <RepCounter reps={dayReps} />
 
         <Text variant="captionSm" color={ink.muted} align="center">
-          {copy.refrain.audioNote}
+          {!audio.canPlay
+            ? copy.refrain.audioNote
+            : audioPlaybackNote(audio.source, audio.playback, audio.playbackError)}
         </Text>
+        {audio.canPlay ? (
+          <Pressable
+            feedback="button"
+            accessibilityLabel={
+              audio.phraseId === phrase.id &&
+              (audio.playback === 'playing' || audio.playback === 'loading')
+                ? copy.audioSpeech.stop
+                : copy.audioSpeech.play
+            }
+            onPress={() => {
+              if (
+                audio.phraseId === phrase.id &&
+                (audio.playback === 'playing' || audio.playback === 'loading')
+              ) {
+                void audioSpeech.stopPlayback()
+                return
+              }
+              void audioSpeech.play(
+                phrase.id,
+                phrase.targetText,
+                targetLocale,
+                0.92,
+                undefined,
+                phrase.catalog?.audio,
+              )
+            }}
+          >
+            <Text variant="body" color={accent.accentInk} align="center">
+              {audio.phraseId === phrase.id &&
+              (audio.playback === 'playing' || audio.playback === 'loading')
+                ? copy.audioSpeech.stop
+                : copy.audioSpeech.play}
+            </Text>
+          </Pressable>
+        ) : null}
       </ScrollView>
 
       <ActionBar gap={space['2.5']}>

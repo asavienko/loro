@@ -129,7 +129,11 @@ export default function PhraseDetail() {
               ? copy.audioSpeech.stop
               : copy.audioSpeech.play
           }
-          note={audioPlaybackNote(audio.source, audio.phraseId === p.id ? audio.playback : 'idle')}
+          note={audioPlaybackNote(
+            audio.source,
+            audio.phraseId === p.id ? audio.playback : 'idle',
+            audio.phraseId === p.id ? audio.playbackError : null,
+          )}
           enabled={audio.canPlay}
           onPress={() => {
             if (audio.phraseId === p.id && audio.playback === 'playing') {

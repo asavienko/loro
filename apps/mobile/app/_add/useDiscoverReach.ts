@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   canonicalPhraseText,
   containsPromptInjection,
-  filterNewCandidates,
   isExactLibraryMatch,
   matchNearestScenario,
   shouldOfferOwnPhrase,
@@ -12,10 +11,8 @@ import {
   type PhraseState,
   type TargetLocale,
 } from '@loro/core'
-import {
-  bundledTopicSuggestions,
-  type DisplayPhrase as CatalogPhrase,
-} from '../../src/store/learningCatalog'
+import { type DisplayPhrase as CatalogPhrase } from '../../src/store/learningCatalog'
+import { requestPhraseSuggestions } from '../../src/lib/phraseSuggestClient'
 import { ownedPhraseLines, ownedTargetTexts } from './ownedPhrases'
 import type { AddMode } from './mode'
 
@@ -67,15 +64,21 @@ export function useDiscoverReach(
     setGenerating(true)
     const handle = setTimeout(() => {
       if (id !== seq.current) return
-      const rows = containsPromptInjection(query)
-        ? []
-        : filterNewCandidates(
-            bundledTopicSuggestions(query, nativeLanguage, targetLocale),
-            existingTexts,
-          )
-      if (id !== seq.current) return
-      setSuggested({ key: requestKey, rows })
-      setGenerating(false)
+      if (containsPromptInjection(query)) {
+        setSuggested({ key: requestKey, rows: [] })
+        setGenerating(false)
+        return
+      }
+      void requestPhraseSuggestions({
+        query,
+        nativeLanguage,
+        targetLocale,
+        existingTexts,
+      }).then((rows) => {
+        if (id !== seq.current) return
+        setSuggested({ key: requestKey, rows: [...rows] })
+        setGenerating(false)
+      })
     }, SUGGEST_DEBOUNCE_MS)
     return () => {
       clearTimeout(handle)

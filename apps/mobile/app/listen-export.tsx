@@ -20,6 +20,7 @@ import { isNetworkAvailable, onNetworkAvailable } from '../src/lib/connectivity'
 import { copy } from '../src/lib/copy'
 import { deviceClock } from '../src/lib/clock'
 import { useLocale } from '../src/lib/i18n'
+import { fetchTtsStatus } from '../src/lib/practiceTts'
 import {
   isListenPlaybackId,
   listenStatusKind,
@@ -66,6 +67,7 @@ export default function ListenExport() {
   const [cacheComplete, setCacheComplete] = useState(false)
   const [diskFull, setDiskFull] = useState(false)
   const [quotaExceeded, setQuotaExceeded] = useState(false)
+  const [ttsReady, setTtsReady] = useState(false)
   const clips = useRef<readonly AudioCacheObject[]>([])
   const abort = useRef<AbortController | null>(null)
 
@@ -88,6 +90,12 @@ export default function ListenExport() {
 
   useEffect(() => {
     void audioCache.isDebuggable().then(setNativeDebug)
+  }, [])
+
+  useEffect(() => {
+    void fetchTtsStatus().then((status) => {
+      setTtsReady(status.ready)
+    })
   }, [])
 
   useEffect(() => {
@@ -120,8 +128,9 @@ export default function ListenExport() {
     phrases: lines,
     repeats,
     network,
-    configured: bundledApiUrl() !== null,
+    configured: bundledApiUrl() !== null && ttsReady,
     nativeCache: audioCache.available,
+    remotePlayback: !audioCache.available,
     sessionBusy,
     diskFull,
     quotaExceeded,
@@ -161,12 +170,13 @@ export default function ListenExport() {
       repeats,
       credentials: async () => {
         const client = accountClient()
-        if (client === null) return null
+        if (client === null || client.getSnapshot().status !== 'signed-in') return null
         const token = await client.getAccessToken()
         const deviceId = client.getSnapshot().session?.deviceId
         if (!token || deviceId === undefined || deviceId.length === 0) return null
         return { token, deviceId }
       },
+      remotePlayback: !audioCache.available,
       ...(fixtureMode
         ? {
             voices: devListeningFixtureVoices(locale),
@@ -231,12 +241,6 @@ export default function ListenExport() {
       })
   }
 
-  const playDeviceLine = (): void => {
-    const line = lines[0]
-    if (line === undefined || !audio.canPlay) return
-    void audioSpeech.play(line.id, line.targetText, locale, 1)
-  }
-
   const share = (): void => {
     if (!view.shareEnabled) return
     void shareListeningBatch(audioCache, {
@@ -288,11 +292,7 @@ export default function ListenExport() {
             {view.voices.length === 0 ? (
               <Text>{copy.listenExport.voicesEmpty}</Text>
             ) : (
-              view.voices.map((voice) => (
-                <Text key={voice.id}>
-                  {voice.licensed ? voice.name : copy.listenExport.deviceFallback}
-                </Text>
-              ))
+              view.voices.map((voice) => <Text key={voice.id}>{voice.name}</Text>)
             )}
             {view.sequence.length > 0 ? (
               <Text variant="caption" color={ink.muted}>
@@ -361,13 +361,6 @@ export default function ListenExport() {
             disabled={!view.shareEnabled}
             variant="secondary"
           />
-          {audio.canPlay && lines.length > 0 && scenario === null && !view.listenEnabled ? (
-            <Button
-              label={copy.listenExport.deviceFallback}
-              onPress={playDeviceLine}
-              variant="secondary"
-            />
-          ) : null}
         </Stack>
       </ScrollView>
     </Screen>

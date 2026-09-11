@@ -25,7 +25,7 @@ export function createTtsTransport(): TtsTransport {
       apiKey: parsed.apiKey,
       model: parsed.model,
       outputFormat: parsed.outputFormat,
-      timeoutMs: 20_000,
+      timeoutMs: 8_000,
       maxRequestBytes: 16_384,
       maxResponseBytes: 2_000_000,
       maxConcurrentRequests: 2,

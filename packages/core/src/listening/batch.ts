@@ -140,6 +140,8 @@ export interface ListeningAvailabilityInput {
   readonly network: boolean
   readonly configured: boolean
   readonly nativeCache: boolean
+  /** Web may stream API download URLs; native still requires the file cache. */
+  readonly remotePlayback?: boolean
   readonly sessionBusy: boolean
   readonly diskFull: boolean
   readonly quotaExceeded: boolean
@@ -152,7 +154,7 @@ export function listeningBlockers(input: ListeningAvailabilityInput): readonly L
   else if (input.voiceCount < LISTENING_MIN_VOICES) blockers.push('voices-single')
   if (!input.modelPinned) blockers.push('model-unpinned')
   if (!input.configured) blockers.push('not-configured')
-  if (!input.nativeCache) blockers.push('native-unavailable')
+  if (!input.nativeCache && input.remotePlayback !== true) blockers.push('native-unavailable')
   if (!input.network) blockers.push('needs-network')
   if (input.sessionBusy) blockers.push('session-busy')
   if (input.diskFull) blockers.push('disk-full')
@@ -165,13 +167,15 @@ export function canGenerateListening(input: ListeningAvailabilityInput): boolean
   return listeningBlockers(input).length === 0
 }
 
-/** A complete pinned batch plays from file URIs with no network. */
+/** A complete batch plays from native file URIs or web download URLs. */
 export function canListenFromCache(input: {
   cacheComplete: boolean
   nativeCache: boolean
   sessionBusy: boolean
+  remotePlayback?: boolean
 }): boolean {
-  return input.cacheComplete && input.nativeCache && !input.sessionBusy
+  const stored = input.nativeCache || input.remotePlayback === true
+  return input.cacheComplete && stored && !input.sessionBusy
 }
 
 export function canShareListening(): boolean {

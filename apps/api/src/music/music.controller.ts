@@ -12,13 +12,21 @@ import {
   UseGuards,
 } from '@nestjs/common'
 import type { Response } from 'express'
-import { AuthGuard, type AuthenticatedRequest } from '../auth/auth.guard.js'
+import type { AuthenticatedRequest } from '../auth/auth.guard.js'
+import { MusicGuard } from './music.guard.js'
 import { MusicService } from './music.service.js'
 
 @Controller('music')
-@UseGuards(AuthGuard)
+@UseGuards(MusicGuard)
 export class MusicController {
   constructor(@Inject(MusicService) private readonly music: MusicService) {}
+
+  @Get('status')
+  @HttpCode(200)
+  @Header('Cache-Control', 'no-store')
+  status() {
+    return this.music.status()
+  }
 
   @Post('lyrics')
   @HttpCode(200)
