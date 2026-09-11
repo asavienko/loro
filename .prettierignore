@@ -20,6 +20,7 @@ pnpm-lock.yaml
 **/coverage/
 **/.turbo/
 **/expo-env.d.ts
+**/storybook-static/
 
 # Rust is formatted by rustfmt
 **/*.rs

@@ -44,6 +44,7 @@ export default tseslint.config(
             'apps/mobile/vitest.config.ts',
             'apps/mobile/app.config.ts',
             'apps/mobile/index.js',
+            'apps/mobile/.storybook/main.ts',
             'scripts/list-e2e-states.mjs',
           ],
         },
@@ -242,8 +243,7 @@ export default tseslint.config(
             {
               name: 'react-native',
               importNames: ['TextInput'],
-              message:
-                'Use Field from src/ui/primitives. Raw TextInput is banned after plan 100.',
+              message: 'Use Field from src/ui/primitives. Raw TextInput is banned after plan 100.',
             },
           ],
         },
@@ -297,7 +297,7 @@ export default tseslint.config(
   // They're linted against the default project, which has no strictNullChecks, so
   // the type-aware rules can't run. Syntax rules still apply.
   {
-    files: ['**/*.config.{ts,mjs,js}', 'apps/mobile/index.js'],
+    files: ['**/*.config.{ts,mjs,js}', 'apps/mobile/index.js', 'apps/mobile/.storybook/main.ts'],
     ...tseslint.configs.disableTypeChecked,
   },
 

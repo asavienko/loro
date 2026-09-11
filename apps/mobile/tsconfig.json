@@ -20,6 +20,7 @@
     "modules/**/*.ts",
     "scripts/**/*",
     "e2e/**/*",
+    ".storybook/**/*",
     ".expo/types/**/*",
     ".expo/types/**/*.ts",
     "expo-env.d.ts"
