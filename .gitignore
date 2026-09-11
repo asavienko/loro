@@ -68,6 +68,10 @@ diagnostics-*.json
 **/recordings/*.m4a
 !packages/core-rs/tests/golden/recordings/    # consented test fixtures only
 
+# ── storybook ──
+apps/mobile/storybook-static/
+apps/mobile/.storybook/storybook-static/
+
 # ── test and coverage ──
 coverage/
 .nyc_output/
