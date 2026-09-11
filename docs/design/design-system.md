@@ -67,6 +67,8 @@ layout adaptations preserve the authored colors and metrics; the authored artifa
 - The contrast gate currently passes 122 pairings across four accent themes.
 - `/dev/tokens` enumerates all 404 generated primitive leaves, computes that same contrast report,
   and renders current production specimens without entering the learner route/state manifest.
+Browser Storybook (`pnpm storybook`) catalogs the same production primitives and composites
+outside the Expo Router tree; it does not replace the workbench.
 
 The following are specified but not yet implemented: custom font loading/family assignment,
 learner-selectable accents, CSS-shadow/gradient-to-native rendering, Skia

@@ -82,6 +82,15 @@ disabled, loading, empty, error, long-copy, Spanish, large-text, reduced-motion,
 Then run the workbench suite; update its narrow screenshot baseline with
 `pnpm test:e2e:workbench:update` only after visually reviewing the change.
 
+Browser Storybook catalogs the same production primitives and composites, with Controls for variants
+and a toolbar for accent, text scale, and Reduce Motion. It does not replace the in-app workbench
+and is not part of the Expo Router tree or production export:
+
+```bash
+pnpm storybook                 # http://localhost:6006
+pnpm build-storybook           # static catalog in apps/mobile/storybook-static
+```
+
 Native `ios`/`android` projects are generated with Expo prebuild and ignored in Git. Local modules
 autolink from `modules/`. The core/audio/SQLite modules require a native development build. See
 [persistent practice setup and validation](../../docs/process/persistent-practice.md).
