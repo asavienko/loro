@@ -297,7 +297,12 @@ export default tseslint.config(
   // They're linted against the default project, which has no strictNullChecks, so
   // the type-aware rules can't run. Syntax rules still apply.
   {
-    files: ['**/*.config.{ts,mjs,js}', 'apps/mobile/index.js', 'apps/mobile/.storybook/main.ts'],
+    files: [
+      '**/*.config.{ts,mjs,js}',
+      'apps/mobile/index.js',
+      'apps/mobile/.storybook/main.ts',
+      'apps/mobile/.storybook/mocks/**',
+    ],
     ...tseslint.configs.disableTypeChecked,
   },
 
