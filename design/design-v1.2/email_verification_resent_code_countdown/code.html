@@ -1,0 +1,154 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Email Code Entry - Resend Feedback &amp; Countdown</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;0,6..72,700;1,6..72,400&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              DEFAULT: '#c85a32',
+              hover: '#b24c26',
+              light: '#fbf0eb',
+              border: '#f2cfc1',
+            },
+            parchment: {
+              50: '#fcfbf8',
+              100: '#f7f3eb',
+              200: '#efe8dc',
+              300: '#e2d7c5',
+              400: '#cfc0a8',
+            },
+            ink: {
+              DEFAULT: '#221f1d',
+              muted: '#68625b',
+              subtle: '#9e968c',
+            },
+            success: {
+              bg: '#edf7ed',
+              border: '#c8e6c9',
+              text: '#2e7d32',
+            }
+          },
+          fontFamily: {
+            serif: ['Newsreader', 'Georgia', 'serif'],
+            sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-[#ece7de] text-ink font-sans min-h-screen flex items-center justify-center p-4 sm:p-8 antialiased selection:bg-brand-light selection:text-brand">
+
+  <!-- Mobile Sheet Container -->
+  <main class="w-full max-w-[400px] bg-parchment-50 rounded-[32px] shadow-2xl shadow-ink/10 border border-parchment-200 overflow-hidden flex flex-col min-h-[760px] relative transition-all duration-300">
+    
+    <!-- Top Sheet Pull Handle & Bar -->
+    <header class="pt-3 px-6 pb-2 border-b border-parchment-200/75 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <button type="button" aria-label="Go back to sign in options" class="inline-flex items-center justify-center w-8 h-8 rounded-full text-ink-muted hover:text-ink hover:bg-parchment-100 transition-colors -ml-1">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+          </svg>
+        </button>
+        <span class="text-[12px] font-semibold tracking-wider text-ink-muted uppercase">Sign in &amp; sync</span>
+      </div>
+      <div class="flex items-center gap-1.5 text-ink-subtle">
+        <span class="w-2 h-2 rounded-full bg-emerald-600"></span>
+        <span class="text-[11px] font-medium">Offline safe</span>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <section class="flex-1 px-6 pt-7 pb-8 flex flex-col justify-between">
+      <div>
+        <!-- Brand Icon / Resent Status Badge -->
+        <div class="flex justify-center mb-6">
+          <div class="relative w-20 h-20 rounded-full bg-success-bg border border-success-border flex items-center justify-center">
+            <div class="w-14 h-14 rounded-2xl bg-white shadow-sm border border-success-border flex items-center justify-center">
+              <svg class="w-7 h-7 text-success-text" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+              </svg>
+            </div>
+            <!-- Checkmark confirmation badge -->
+            <div class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-success-text text-white flex items-center justify-center text-[11px] font-bold shadow-md shadow-success-text/20">
+              ✓
+            </div>
+          </div>
+        </div>
+
+        <!-- Title & Explainer Copy -->
+        <div class="text-center space-y-2 mb-6">
+          <h1 class="font-serif text-[26px] font-bold tracking-tight text-ink leading-snug">
+            New code sent
+          </h1>
+          <p class="text-[14px] text-ink-muted leading-relaxed max-w-[280px] mx-auto">
+            We delivered a fresh 6-digit code to <br>
+            <span class="font-semibold text-ink">learner@example.com</span>
+          </p>
+        </div>
+
+        <!-- Success Feedback Banner -->
+        <div class="mb-6 p-3.5 bg-success-bg border border-success-border rounded-2xl flex items-center gap-3 text-success-text">
+          <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <div class="text-[13px] font-medium leading-snug">
+            Check your inbox. Previous codes have been invalidated.
+          </div>
+        </div>
+
+        <!-- 6-digit Code OTP Input Group (Fresh Focus) -->
+        <div class="space-y-4">
+          <div class="flex justify-between gap-2 px-1">
+            <input type="text" maxlength="1" inputmode="numeric" placeholder="•" autofocus="" class="w-12 h-14 text-center font-serif text-2xl font-bold bg-white border border-brand ring-2 ring-brand/15 text-ink rounded-xl focus:outline-none shadow-sm">
+            <input type="text" maxlength="1" inputmode="numeric" placeholder="•" class="w-12 h-14 text-center font-serif text-2xl font-bold bg-white border border-parchment-300 text-ink rounded-xl focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/15 transition-all shadow-sm">
+            <input type="text" maxlength="1" inputmode="numeric" placeholder="•" class="w-12 h-14 text-center font-serif text-2xl font-bold bg-white border border-parchment-300 text-ink rounded-xl focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/15 transition-all shadow-sm">
+            <input type="text" maxlength="1" inputmode="numeric" placeholder="•" class="w-12 h-14 text-center font-serif text-2xl font-bold bg-white border border-parchment-300 text-ink rounded-xl focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/15 transition-all shadow-sm">
+            <input type="text" maxlength="1" inputmode="numeric" placeholder="•" class="w-12 h-14 text-center font-serif text-2xl font-bold bg-white border border-parchment-300 text-ink rounded-xl focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/15 transition-all shadow-sm">
+            <input type="text" maxlength="1" inputmode="numeric" placeholder="•" class="w-12 h-14 text-center font-serif text-2xl font-bold bg-white border border-parchment-300 text-ink rounded-xl focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/15 transition-all shadow-sm">
+          </div>
+
+          <!-- Primary Submit Action -->
+          <button type="button" disabled="" class="w-full mt-4 py-3.5 px-4 bg-parchment-200 text-ink-subtle font-semibold text-[14px] rounded-2xl cursor-not-allowed transition-colors text-center shadow-none flex items-center justify-center gap-2">
+            <span>Verify &amp; continue</span>
+          </button>
+        </div>
+
+        <!-- Cooldown Timer Link -->
+        <div class="mt-6 flex flex-col items-center gap-3">
+          <p class="text-[13px] font-medium text-ink-muted flex items-center gap-1.5">
+            <svg class="w-4 h-4 text-ink-subtle animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <circle cx="12" cy="12" r="10" stroke-width="2" stroke="currentColor" opacity="0.25"></circle>
+              <path d="M12 2a10 10 0 0 1 10 10" stroke-width="2" stroke="currentColor"></path>
+            </svg>
+            Resend available in <span class="font-mono font-semibold text-ink">0:45</span>
+          </p>
+          <button type="button" class="text-[13px] font-medium text-ink-muted hover:text-ink hover:underline transition-colors">
+            Use a different email
+          </button>
+        </div>
+      </div>
+
+      <!-- Guest / Offline Safeguard Footer -->
+      <footer class="pt-6 border-t border-parchment-200/80 text-center space-y-1">
+        <button type="button" class="text-[13px] font-semibold text-brand hover:underline">
+          Keep practising without an account
+        </button>
+        <p class="text-[12px] text-ink-muted">
+          Your phrases and progress stay safely saved on this device.
+        </p>
+      </footer>
+    </section>
+
+  </main>
+
+
+
+</body></html>
