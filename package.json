@@ -19,6 +19,8 @@
     "test:watch": "turbo run test:watch",
     "test:e2e": "pnpm --filter @loro/mobile test:e2e",
     "test:e2e:pseudo-locale": "pnpm --filter @loro/mobile test:e2e:pseudo-locale",
+    "storybook": "pnpm --filter @loro/mobile storybook",
+    "build-storybook": "pnpm --filter @loro/mobile build-storybook",
     "test:e2e:workbench": "pnpm --filter @loro/mobile test:e2e:workbench",
     "test:e2e:workbench:update": "pnpm --filter @loro/mobile test:e2e:workbench:update",
     "test:e2e:bundle": "pnpm --filter @loro/mobile test:e2e:bundle",

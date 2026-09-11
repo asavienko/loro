@@ -299,6 +299,7 @@ pnpm test:e2e:bundle                # the @smoke subset against the production w
 pnpm --filter @loro/api dev         # :3000; requires PostgreSQL/auth configuration
 pnpm --filter @loro/mobile bundle   # proves the app compiles; needs no simulator
 npx expo start --web                # from apps/mobile — fastest way to see the screens
+pnpm storybook                      # isolated production-component catalog at :6006
 ```
 
 - **The API uses PostgreSQL for accounts and sync.** Configure the encrypted environment and
