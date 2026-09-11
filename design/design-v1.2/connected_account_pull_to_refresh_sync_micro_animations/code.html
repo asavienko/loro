@@ -1,0 +1,522 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport">
+<title>Sign in &amp; sync - Loro</title>
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;0,6..72,700;1,6..72,400&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          terracotta: {
+            50: '#FDF7F4',
+            100: '#F9EBE5',
+            500: '#C85A32',
+            600: '#B04B26',
+            700: '#8E3A1A',
+          },
+          parchment: {
+            50: '#FCFBF8',
+            100: '#F7F4EC',
+            200: '#EFE9DE',
+            300: '#E3DCce',
+          },
+          espresso: {
+            900: '#231E18',
+            800: '#3A3229',
+            700: '#52483C',
+            500: '#7F7261',
+            400: '#A49683',
+          }
+        },
+        fontFamily: {
+          serif: ['Newsreader', 'Georgia', 'serif'],
+          sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+          mono: ['"JetBrains Mono"', 'monospace'],
+        }
+      }
+    }
+  }
+</script>
+<style>
+  body {
+    background-color: #ECE7DE;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    color: #231E18;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    user-select: none;
+  }
+  .app-frame {
+    width: 390px;
+    height: 844px;
+    background: #FCFBF8;
+    box-shadow: 0 25px 50px -12px rgba(35, 30, 24, 0.15), 0 0 0 1px rgba(35, 30, 24, 0.05);
+    border-radius: 44px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Micro-animation styles */
+  @keyframes breathe {
+    0%, 100% { transform: scale(1); opacity: 0.85; }
+    50% { transform: scale(1.35); opacity: 1; box-shadow: 0 0 8px rgba(70, 134, 65, 0.4); }
+  }
+  .animate-breathe {
+    animation: breathe 2.8s ease-in-out infinite;
+  }
+
+  @keyframes pulseGlow {
+    0%, 100% { box-shadow: 0 4px 14px -2px rgba(200, 90, 50, 0.25); }
+    50% { box-shadow: 0 4px 22px 2px rgba(200, 90, 50, 0.48); }
+  }
+  .syncing-glow {
+    animation: pulseGlow 1.6s ease-in-out infinite;
+  }
+
+  @keyframes continuousSpin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  .spinning-fast {
+    animation: continuousSpin 0.85s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  }
+
+  @keyframes shimmerSlide {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(200%); }
+  }
+  .animate-shimmer {
+    animation: shimmerSlide 1.5s infinite linear;
+  }
+
+  @keyframes popScale {
+    0% { transform: scale(0.6); opacity: 0; }
+    70% { transform: scale(1.15); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .pop-in {
+    animation: popScale 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  }
+
+  @keyframes rippleEffect {
+    0% { transform: scale(0.85); opacity: 0.8; }
+    100% { transform: scale(1.4); opacity: 0; }
+  }
+  .animate-ripple {
+    animation: rippleEffect 1.8s ease-out infinite;
+  }
+
+  /* Smooth spring physics transitions for pull gesture */
+  .spring-transition {
+    transition: transform 0.4s cubic-bezier(0.2, 0.9, 0.2, 1.15), opacity 0.25s ease-out;
+  }
+  .touch-none-select {
+    touch-action: pan-y;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, ::before, ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+</style>
+</head>
+<body class="relative">
+<!-- Demo floating action bar for desktop / testing ease -->
+<div class="fixed top-5 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-espresso-900/90 backdrop-blur-md px-3.5 py-1.5 rounded-full shadow-lg border border-espresso-700/40 text-xs text-parchment-100">
+<span class="flex h-2 w-2 relative">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-terracotta-500 opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-terracotta-500"></span>
+</span>
+<span class="font-medium tracking-tight text-[11px]">Pull down screen or test:</span>
+<button class="px-2.5 py-0.5 rounded-full bg-terracotta-500 hover:bg-terracotta-600 active:scale-95 text-white font-semibold text-[11px] transition-all duration-150 shadow-sm" onclick="simulatePullRefresh()">
+    Demo Pull
+  </button>
+</div>
+<div class="app-frame">
+<!-- Top Dynamic Island & Status Bar Safe Area -->
+<div class="pt-3 px-7 flex justify-between items-center text-xs font-semibold tracking-tight text-espresso-800 z-20">
+<span>9:41</span>
+<div class="w-28 h-4 bg-espresso-900 rounded-full mx-auto"></div>
+<div class="flex items-center gap-1.5">
+<svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L4.35 19.4c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l1.9-1.9C9.22 19.58 10.56 20 12 20c4.97 0 9-4.03 9-9s-4.03-9-9-9z"></path></svg>
+<div class="w-5 h-2.5 border border-espresso-800 rounded-sm p-0.5 flex items-center">
+<div class="h-full w-3 bg-espresso-800 rounded-2xs"></div>
+</div>
+</div>
+</div>
+<!-- App Header / Sheet Nav -->
+<div class="px-6 pt-4 pb-3 border-b border-parchment-200 flex items-center justify-between z-20 bg-[#FCFBF8]">
+<button class="text-espresso-800 hover:text-espresso-900 text-sm font-semibold tracking-tight flex items-center gap-1 transition-all active:scale-95 duration-150">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+<span>Today</span>
+</button>
+<div class="flex items-center gap-1">
+<span class="font-serif text-lg font-semibold tracking-tight text-espresso-900">Connected account</span>
+</div>
+<div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#EFF5ED] border border-[#D5E4D2] text-[#3D693A] text-xs font-medium shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
+<span class="w-1.5 h-1.5 rounded-full bg-[#468641] animate-breathe inline-block"></span>
+<span>Offline safe</span>
+</div></div>
+<!-- Main Scroll Container with Pull-to-Refresh Gesture Listener -->
+<div class="flex-1 relative overflow-hidden flex flex-col justify-between cursor-grab active:cursor-grabbing touch-none-select" id="pullContainer">
+<!-- Pull-to-Refresh Visual Indicator (Positioned under header) -->
+<div class="absolute top-0 left-0 right-0 flex flex-col items-center justify-center pointer-events-none z-10 opacity-0 -translate-y-6" id="ptrIndicator">
+<div class="mt-2.5 px-3 py-1.5 rounded-full bg-parchment-100/95 border border-parchment-300 shadow-sm flex items-center gap-2 backdrop-blur-sm">
+<div class="w-5 h-5 rounded-full bg-parchment-200 flex items-center justify-center text-terracotta-600 flex-shrink-0 transition-transform duration-75" id="ptrSpinnerWrap">
+<!-- Pull down arrow icon that rotates into spinner -->
+<svg class="w-3 h-3 transition-transform duration-75" fill="none" id="ptrArrowIcon" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+<path d="M19 14l-7 7m0 0l-7-7m7 7V3" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</div>
+<span class="text-[11px] font-medium text-espresso-700 tracking-tight" id="ptrLabel">Pull to refresh sync</span>
+</div>
+</div>
+<!-- Content Body with elastic pull transform -->
+<div class="flex-1 px-6 pt-5 pb-8 flex flex-col justify-between" id="elasticContentWrap">
+<div class="flex flex-col items-center text-center">
+<!-- Brand Connected Emblem -->
+<div class="relative w-24 h-24 my-2 flex items-center justify-center">
+<!-- Dynamic Pulse Ring on sync -->
+<div class="absolute inset-0 rounded-2xl border-2 border-terracotta-500/30 opacity-0 pointer-events-none transition-opacity duration-300" id="emblemPulseRing"></div>
+<div class="w-20 h-20 rounded-2xl bg-parchment-100 border border-parchment-200 shadow-sm flex items-center justify-center transform transition-all duration-300" id="emblemBox">
+<svg fill="none" height="36" viewBox="0 0 32 32" width="36" xmlns="http://www.w3.org/2000/svg">
+<path d="M6 18C6 11.3726 11.3726 6 18 6H26V14C26 20.6274 20.6274 26 14 26H6V18Z" fill="#C85A32"></path>
+<circle cx="18" cy="14" fill="#FCFBF8" r="3"></circle>
+<path d="M6 26C6 22.6863 8.68629 20 12 20H14V26H6Z" fill="#8E3A1A"></path>
+</svg>
+</div>
+<div class="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-[#468641] text-white flex items-center justify-center shadow-md border-2 border-[#FCFBF8] transition-transform duration-300" id="emblemBadge">
+<svg class="w-3.5 h-3.5 transition-transform duration-300" fill="none" id="emblemBadgeIcon" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+</div>
+</div>
+<!-- Heading & Editorial Copy -->
+<h1 class="font-serif text-[26px] leading-tight font-bold text-espresso-900 mt-2 tracking-tight">
+        Account connected
+      </h1>
+<div class="inline-flex items-center gap-1.5 mt-1.5 px-3 py-0.5 rounded-full bg-parchment-100 border border-parchment-200 text-xs font-medium text-espresso-700">
+<span class="w-1.5 h-1.5 rounded-full bg-terracotta-500"></span>
+<span>learner@example.com</span>
+</div>
+<p class="text-xs text-espresso-500 mt-2 max-w-xs leading-relaxed font-normal">
+        All your progress, streak data, and curated vocabulary are backed up and in sync across devices.
+      </p>
+<!-- Status Card -->
+<div class="w-full mt-5 p-3.5 rounded-xl bg-[#F4F7F4] border border-[#D7E3D8] relative overflow-hidden flex flex-col gap-2.5 text-left shadow-[0_2px_4px_rgba(35,30,24,0.02)] transition-all duration-300" id="syncStatusCard">
+<!-- Shimmer Overlay for Syncing State -->
+<div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent -translate-x-full opacity-0 pointer-events-none transition-opacity duration-300" id="syncShimmer"></div>
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-[#E2ECE2] text-[#3D693A] flex items-center justify-center flex-shrink-0 transition-all duration-300" id="statusIconWrap">
+<svg class="w-4 h-4 transition-all duration-300" fill="none" id="statusIconCheck" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+<path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<svg class="w-4 h-4 hidden text-terracotta-600 spinning-fast" fill="none" id="statusIconSpin" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+<path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</div>
+<div class="flex-1 min-w-0">
+<p class="text-xs font-semibold text-[#294B26] transition-colors duration-200" id="statusTitle">Everything is up to date</p>
+<p class="text-[11px] text-[#557852] mt-0.5 transition-colors duration-200" id="statusSub">Last synced just now</p>
+</div>
+</div>
+<!-- Indeterminate Progress bar (reveals during sync) -->
+<div class="h-1 w-full bg-parchment-200/80 rounded-full overflow-hidden hidden" id="syncProgressBar">
+<div class="h-full w-1/3 bg-terracotta-500 rounded-full animate-shimmer"></div>
+</div>
+</div>
+<!-- Subtle Tactile Pull Hint -->
+<div class="flex items-center justify-center gap-1.5 mt-3 text-[11px] text-espresso-400 font-medium">
+<svg class="w-3.5 h-3.5 animate-bounce text-terracotta-500/80" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path d="M19 14l-7 7m0 0l-7-7m7 7V3" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span>Pull down anywhere to sync</span>
+</div>
+<!-- Action Buttons Stack -->
+<div class="w-full mt-3.5 space-y-2.5">
+<!-- Primary Sync Button -->
+<button class="w-full h-12 px-4 rounded-xl bg-terracotta-500 hover:bg-terracotta-600 text-white font-semibold text-sm hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all duration-150 flex items-center justify-center gap-2 shadow-sm cursor-pointer select-none" id="syncNowBtn" onclick="triggerSync()">
+<svg class="w-4 h-4 transition-transform duration-300" fill="none" id="syncBtnIcon" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+<span class="transition-all duration-200" id="syncBtnText">Sync now</span>
+</button>
+<!-- Manage Account Button -->
+<button class="w-full h-12 px-4 rounded-xl bg-white border border-parchment-300 hover:border-terracotta-500 hover:bg-parchment-50 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all duration-150 flex items-center justify-center gap-2 text-espresso-800 text-sm font-semibold shadow-[0_2px_4px_rgba(35,30,24,0.03)] cursor-pointer select-none">
+<svg class="w-4 h-4 text-espresso-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="12" cy="12" r="3"></circle></svg>
+<span>Manage account</span>
+</button>
+</div>
+</div>
+<!-- Bottom Destructive / Sign out Section -->
+<div class="text-center pt-3 border-t border-parchment-200">
+<button class="text-sm font-semibold text-terracotta-600 hover:text-terracotta-700 transition-all duration-150 active:scale-95 flex items-center justify-center gap-1.5 mx-auto">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+<span>Sign out</span>
+</button>
+<p class="text-xs text-espresso-400 mt-1">
+        Signing out keeps your progress safely on this device.
+      </p>
+</div>
+</div>
+</div>
+</div>
+<script>
+  let isSyncing = false;
+  const THRESHOLD = 72; // Pull distance needed to trigger refresh
+
+  // Pull to refresh gesture state
+  let isDragging = false;
+  let startY = 0;
+  let currentY = 0;
+  let pullDistance = 0;
+
+  const pullContainer = document.getElementById('pullContainer');
+  const elasticContentWrap = document.getElementById('elasticContentWrap');
+  const ptrIndicator = document.getElementById('ptrIndicator');
+  const ptrSpinnerWrap = document.getElementById('ptrSpinnerWrap');
+  const ptrArrowIcon = document.getElementById('ptrArrowIcon');
+  const ptrLabel = document.getElementById('ptrLabel');
+
+  function updatePullUI(dist) {
+    // Apply logarithmic/damping elastic rubber-band curve
+    const dampedDistance = Math.min(dist * 0.42, 90);
+    elasticContentWrap.style.transform = `translateY(${dampedDistance}px)`;
+    elasticContentWrap.classList.remove('spring-transition');
+
+    // Reveal and place PTR pill
+    const progress = Math.min(dist / THRESHOLD, 1);
+    ptrIndicator.style.opacity = Math.min(progress * 1.2, 1);
+    ptrIndicator.style.transform = `translateY(${Math.min(dampedDistance * 0.7, 42)}px)`;
+
+    // Rotate arrow progressively
+    const rotation = Math.min(progress * 180, 180);
+    ptrArrowIcon.style.transform = `rotate(${rotation}deg)`;
+
+    if (dist >= THRESHOLD) {
+      ptrLabel.textContent = 'Release to sync';
+      ptrLabel.className = 'text-[11px] font-semibold text-terracotta-600 tracking-tight';
+      ptrSpinnerWrap.classList.add('bg-terracotta-100');
+    } else {
+      ptrLabel.textContent = 'Pull to refresh sync';
+      ptrLabel.className = 'text-[11px] font-medium text-espresso-700 tracking-tight';
+      ptrSpinnerWrap.classList.remove('bg-terracotta-100');
+    }
+  }
+
+  function resetPullUI(trigger = false) {
+    elasticContentWrap.classList.add('spring-transition');
+    ptrIndicator.classList.add('spring-transition');
+
+    if (trigger) {
+      // Hold at resting refresh position while active
+      elasticContentWrap.style.transform = 'translateY(46px)';
+      ptrIndicator.style.transform = 'translateY(16px)';
+      ptrIndicator.style.opacity = '1';
+      
+      // Set spinner state
+      ptrArrowIcon.classList.add('hidden');
+      ptrSpinnerWrap.innerHTML = `
+        <svg class="w-3.5 h-3.5 text-terracotta-600 spinning-fast" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+      `;
+      ptrLabel.textContent = 'Syncing with cloud...';
+      ptrLabel.className = 'text-[11px] font-medium text-terracotta-600 tracking-tight';
+    } else {
+      elasticContentWrap.style.transform = 'translateY(0px)';
+      ptrIndicator.style.transform = 'translateY(-24px)';
+      ptrIndicator.style.opacity = '0';
+      
+      setTimeout(() => {
+        ptrSpinnerWrap.innerHTML = `
+          <svg class="w-3 h-3 transition-transform duration-75" fill="none" id="ptrArrowIcon" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path d="M19 14l-7 7m0 0l-7-7m7 7V3" stroke-linecap="round" stroke-linejoin="round"></path>
+          </svg>
+        `;
+        ptrLabel.textContent = 'Pull to refresh sync';
+        ptrLabel.className = 'text-[11px] font-medium text-espresso-700 tracking-tight';
+      }, 350);
+    }
+  }
+
+  // Pointer & Touch Handlers
+  function onStart(clientY) {
+    if (isSyncing) return;
+    isDragging = true;
+    startY = clientY;
+  }
+
+  function onMove(clientY) {
+    if (!isDragging || isSyncing) return;
+    currentY = clientY;
+    const diff = currentY - startY;
+    if (diff > 0) {
+      pullDistance = diff;
+      updatePullUI(pullDistance);
+    } else {
+      pullDistance = 0;
+      updatePullUI(0);
+    }
+  }
+
+  function onEnd() {
+    if (!isDragging || isSyncing) return;
+    isDragging = false;
+    if (pullDistance >= THRESHOLD) {
+      resetPullUI(true);
+      triggerSync(true);
+    } else {
+      resetPullUI(false);
+    }
+    pullDistance = 0;
+  }
+
+  // Mouse drag support
+  pullContainer.addEventListener('mousedown', (e) => {
+    // Only drag when clicking background or cards, not standard buttons
+    if (e.target.closest('button')) return;
+    onStart(e.clientY);
+  });
+  window.addEventListener('mousemove', (e) => onMove(e.clientY));
+  window.addEventListener('mouseup', () => onEnd());
+
+  // Touch gesture support
+  pullContainer.addEventListener('touchstart', (e) => {
+    if (e.target.closest('button')) return;
+    onStart(e.touches[0].clientY);
+  }, { passive: true });
+
+  pullContainer.addEventListener('touchmove', (e) => {
+    onMove(e.touches[0].clientY);
+  }, { passive: true });
+
+  pullContainer.addEventListener('touchend', () => onEnd());
+
+  // Demo pull trigger function for button test
+  function simulatePullRefresh() {
+    if (isSyncing) return;
+    elasticContentWrap.classList.add('spring-transition');
+    ptrIndicator.classList.add('spring-transition');
+    
+    // Animate synthetic pull down
+    updatePullUI(THRESHOLD + 20);
+    
+    setTimeout(() => {
+      resetPullUI(true);
+      triggerSync(true);
+    }, 450);
+  }
+
+  function triggerSync(fromPull = false) {
+    if (isSyncing) return;
+    isSyncing = true;
+
+    const btn = document.getElementById('syncNowBtn');
+    const btnText = document.getElementById('syncBtnText');
+    const btnIcon = document.getElementById('syncBtnIcon');
+    const statusCard = document.getElementById('syncStatusCard');
+    const statusTitle = document.getElementById('statusTitle');
+    const statusSub = document.getElementById('statusSub');
+    const statusIconWrap = document.getElementById('statusIconWrap');
+    const statusIconCheck = document.getElementById('statusIconCheck');
+    const statusIconSpin = document.getElementById('statusIconSpin');
+    const shimmer = document.getElementById('syncShimmer');
+    const progressBar = document.getElementById('syncProgressBar');
+    const pulseRing = document.getElementById('emblemPulseRing');
+    const emblemBox = document.getElementById('emblemBox');
+
+    // 1. Enter Syncing State
+    btn.classList.add('syncing-glow');
+    btnIcon.classList.add('spinning-fast');
+    btnText.textContent = 'Syncing progress...';
+    
+    // Avatar pulse & ring
+    pulseRing.classList.remove('opacity-0');
+    pulseRing.classList.add('animate-ripple');
+    emblemBox.classList.add('scale-105');
+
+    // Update Status Card
+    statusCard.classList.remove('bg-[#F4F7F4]', 'border-[#D7E3D8]');
+    statusCard.classList.add('bg-parchment-100', 'border-terracotta-100');
+    
+    shimmer.classList.remove('opacity-0');
+    shimmer.classList.add('animate-shimmer');
+    progressBar.classList.remove('hidden');
+
+    statusTitle.textContent = 'Syncing with cloud...';
+    statusTitle.className = 'text-xs font-semibold text-espresso-900 transition-colors duration-200';
+    
+    statusSub.textContent = 'Uploading lessons & streak data';
+    statusSub.className = 'text-[11px] text-terracotta-600 mt-0.5 transition-colors duration-200';
+
+    statusIconWrap.classList.remove('bg-[#E2ECE2]', 'text-[#3D693A]');
+    statusIconWrap.classList.add('bg-terracotta-100', 'text-terracotta-600');
+    statusIconCheck.classList.add('hidden');
+    statusIconSpin.classList.remove('hidden');
+
+    // 2. Complete Sync after ~1.6s
+    setTimeout(() => {
+      // Revert Status Card to Success
+      statusCard.classList.remove('bg-parchment-100', 'border-terracotta-100');
+      statusCard.classList.add('bg-[#F4F7F4]', 'border-[#D7E3D8]');
+      
+      shimmer.classList.add('opacity-0');
+      shimmer.classList.remove('animate-shimmer');
+      progressBar.classList.add('hidden');
+
+      statusTitle.textContent = 'Everything is up to date';
+      statusTitle.className = 'text-xs font-semibold text-[#294B26] transition-colors duration-200';
+      
+      statusSub.textContent = 'Last synced just now';
+      statusSub.className = 'text-[11px] text-[#557852] mt-0.5 transition-colors duration-200';
+
+      statusIconWrap.classList.remove('bg-terracotta-100', 'text-terracotta-600');
+      statusIconWrap.classList.add('bg-[#E2ECE2]', 'text-[#3D693A]');
+      statusIconSpin.classList.add('hidden');
+      statusIconCheck.classList.remove('hidden');
+      statusIconCheck.classList.add('pop-in');
+
+      // Stop Avatar Pulse
+      pulseRing.classList.add('opacity-0');
+      pulseRing.classList.remove('animate-ripple');
+      emblemBox.classList.remove('scale-105');
+
+      // PTR Indicator Success badge snapback
+      ptrLabel.textContent = 'Synced just now';
+      ptrLabel.className = 'text-[11px] font-semibold text-[#294B26] tracking-tight';
+      ptrSpinnerWrap.innerHTML = `
+        <svg class="w-3.5 h-3.5 text-[#3D693A] pop-in" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+          <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+      `;
+
+      // Button Success Transition
+      btn.classList.remove('syncing-glow');
+      btnIcon.classList.remove('spinning-fast');
+      btnIcon.innerHTML = '<path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/>';
+      btnText.textContent = 'Synced!';
+      
+      // Smoothly snap back content position
+      setTimeout(() => {
+        resetPullUI(false);
+        statusIconCheck.classList.remove('pop-in');
+        // Reset button to original "Sync now"
+        btnIcon.innerHTML = '<path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" stroke-linecap="round" stroke-linejoin="round"></path>';
+        btnText.textContent = 'Sync now';
+        isSyncing = false;
+      }, 700);
+
+    }, 1600);
+  }
+</script>
+</body></html>
