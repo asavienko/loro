@@ -30,7 +30,9 @@ More, filtered to active `difficulty === 'hard'` phrases only.
    `/practice/refrain` URL is the same hard-only drill. Untargeted `?wave=morning` keeps the timed
    lock.
 5. Completing a phrase or hard-only session does not mark the day wave done unless the session
-   covers the full frozen set. Targeted entry skips the wave lock.
+   covers the full frozen set. Targeted entry skips the wave lock. The finish screen names the
+   drill, not the day. Resume opens `?phrase=` or `?filter=hard` from the paused plan. While a drill
+   is paused, Today's day-list start is inert so it cannot replace the resume action.
 
 ## Remaining
 

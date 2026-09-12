@@ -344,8 +344,9 @@ tick (80 ms) = progress += 0.02 × speed
 - Backgrounding continues playback and keeps lock screen controls in sync.
 
 **Production (plan 101).** Stream lists today's frozen wave, not every active phrase. The heading is
-`This wave`. `Practice this phrase` opens a one-phrase Refrain. A live-empty wave falls back to
-remaining active phrases so the screen is not blank beside live rows.
+`This wave`, and the loved / difficult / learned pills count that set (including learned members).
+`Practice this phrase` opens a one-phrase Refrain. A live-empty wave falls back to remaining active
+phrases so the screen is not blank beside live rows.
 
 ---
 
@@ -686,7 +687,9 @@ day refrain), and a graduation card: _"'¿Qué tal?' graduated / Out of rotation
 **Production (plan 101).** Refrain is a remediation drill. Stream and phrase detail pass `?phrase=`.
 The menu, switcher and More open `?filter=hard` (active Difficult phrases only). A bare Refrain URL
 is that hard-only drill. Untargeted `?wave=` keeps the timed lock. Completing a targeted session
-does not mark the day wave done unless the session covers the full frozen set.
+does not mark the day wave done unless the session covers the full frozen set, and the finish screen
+says the drill is done rather than that today is done. Resume reconstructs `?phrase=` or
+`?filter=hard` from the paused plan.
 
 ---
 
