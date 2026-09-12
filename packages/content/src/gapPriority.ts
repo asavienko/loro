@@ -4,9 +4,26 @@
  * Reports only. Phrase gaps become plan-97 drafts. Audio gaps enqueue plans 98/99.
  * Never merges into the bundled catalog and never opens a TTS client.
  */
-import { audioCheck, packCountCheck, scenarioShapeCheck, type Issue } from './checks.js'
+import {
+  audioCheck,
+  packCountCheck,
+  scenarioShapeCheck,
+  UNRENDERED_AUDIO,
+  type Issue,
+} from './checks.js'
+import { isTargetLocale } from '@loro/core'
 import { stubPhraseDraft, type PhraseAuthoringDraft } from './phraseDrafts.js'
 import type { Catalog } from './types.js'
+
+function draftLocales(catalog: Catalog): {
+  target_locale: 'es-ES' | 'bg-BG' | 'ru-RU'
+  native_language: 'en'
+} {
+  return {
+    target_locale: isTargetLocale(catalog.lang) ? catalog.lang : 'es-ES',
+    native_language: 'en',
+  }
+}
 
 function issueId(issue: Issue): string | undefined {
   return issue.id
@@ -77,7 +94,7 @@ export function gapPriority(
     .sort((a, b) => a.id.localeCompare(b.id))
 
   const missingAudio = audioCheck(catalog)
-    .filter((issue) => issue.level === 'warn')
+    .filter((issue) => issue.level === 'warn' && issue.message === UNRENDERED_AUDIO)
     .flatMap((issue) => {
       const id = issueId(issue)
       if (id === undefined) return []
@@ -96,8 +113,7 @@ export function gapPriority(
       drafts.push(
         stubPhraseDraft({
           topic: `orphan:${id}`,
-          target_locale: 'es-ES',
-          native_language: 'en',
+          ...draftLocales(catalog),
         }),
       )
     }
@@ -105,8 +121,7 @@ export function gapPriority(
       drafts.push(
         stubPhraseDraft({
           topic: `scenario:${scenario.id}`,
-          target_locale: 'es-ES',
-          native_language: 'en',
+          ...draftLocales(catalog),
         }),
       )
     }
@@ -114,8 +129,7 @@ export function gapPriority(
       drafts.push(
         stubPhraseDraft({
           topic: `pack:${pack.id}`,
-          target_locale: 'es-ES',
-          native_language: 'en',
+          ...draftLocales(catalog),
         }),
       )
     }

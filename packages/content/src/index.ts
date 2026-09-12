@@ -13,7 +13,7 @@ export * from './roleplay.js'
 export * from './delivery.js'
 export { bundledCatalog } from './catalog.js'
 export { bundledTopicSuggestions } from './topicSuggestions.js'
-export { cloudCatalogAudio, isCloudAudioUri } from './catalogAudio.js'
+export { cloudCatalogAudio, isCloudAudioUri, isContentAddressedAudioUri } from './catalogAudio.js'
 
 import { bundledCatalog } from './catalog.js'
 import type { Catalog } from './types.js'

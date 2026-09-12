@@ -22,7 +22,7 @@ type Ajv2020Ctor = new (opts: { allErrors: boolean; strict: boolean }) => Ajv202
 // Checks read from DISK, not the bundled snapshot — they must validate what the
 // author just edited.
 import { contentRoot, loadCatalogFromDisk } from './fs.js'
-import { isCloudAudioUri } from './catalogAudio.js'
+import { isCloudAudioUri, isContentAddressedAudioUri } from './catalogAudio.js'
 import { GRAPH_RELATIONS, stressedSyllables, THEMES, wordCount, type Catalog } from './types.js'
 
 export interface Issue {
@@ -115,8 +115,8 @@ function prerequisiteCycle(edges: Catalog['graph']['edges']): string[] | undefin
 
   for (const node of adj.keys()) {
     if (walk(node)) {
-      const start = stack.lastIndexOf(stack[stack.length - 1] ?? '')
-      return stack.slice(start)
+      const repeated = stack[stack.length - 1] ?? ''
+      return stack.slice(stack.indexOf(repeated))
     }
   }
   return undefined
@@ -297,23 +297,26 @@ export const referenceCheck: Check = (c) => {
   return issues
 }
 
+/** Missing clip — enqueue plans 98/99. Distinct from an unpublished `sha256/` identity. */
+export const UNRENDERED_AUDIO = 'no rendered audio yet — run content:render'
+/** Rendered locally; not yet a published cloud object. */
+export const UNPUBLISHED_AUDIO = 'audio is content-addressed — publish the cloud https object'
+
 export const audioCheck: Check = (c) =>
   c.phrases.flatMap((p) => {
-    if (p.audio === undefined)
-      return [warn('audio', 'no rendered audio yet — run content:render', p.id)]
+    if (p.audio === undefined) return [warn('audio', UNRENDERED_AUDIO, p.id)]
     const issues: Issue[] = []
     if (!/^[a-f0-9]{64}$/.test(p.audio.sha256)) {
       issues.push(err('audio', 'audio sha256 is malformed', p.id))
     }
-    if (!isCloudAudioUri(p.audio.uri)) {
-      issues.push(
-        err(
-          'audio',
-          'audio uri must be a cloud https object (http only for local authoring)',
-          p.id,
-        ),
-      )
+    if (isCloudAudioUri(p.audio.uri)) return issues
+    if (isContentAddressedAudioUri(p.audio.uri, p.audio.sha256)) {
+      issues.push(warn('audio', UNPUBLISHED_AUDIO, p.id))
+      return issues
     }
+    issues.push(
+      err('audio', 'audio uri must be a cloud https object (http only for local authoring)', p.id),
+    )
     return issues
   })
 

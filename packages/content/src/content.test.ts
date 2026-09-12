@@ -265,7 +265,8 @@ describe('check helpers', () => {
       { from: 'din1', to: 'din2', relation: 'prerequisite', weight: 40 },
       { from: 'din2', to: 'din1', relation: 'prerequisite', weight: 40 },
     )
-    expect(errors(ALL_CHECKS.graph!(cyclic)).some((i) => i.message.includes('cycle'))).toBe(true)
+    const cycle = errors(ALL_CHECKS.graph!(cyclic)).find((i) => i.message.includes('cycle'))
+    expect(cycle?.message).toBe('prerequisite cycle: din1 → din2 → din1')
   })
 })
 
@@ -305,6 +306,17 @@ describe('catalog audio', () => {
       ms: 800,
     }
     expect(errors(ALL_CHECKS.audio!(bad)).some((i) => i.message.includes('cloud https'))).toBe(true)
+  })
+
+  it('warns on a rendered sha256 identity instead of failing validation', () => {
+    const rendered = structuredClone(catalog)
+    const digest = 'ab'.repeat(32)
+    rendered.phrases[0]!.audio = { uri: `sha256/${digest}`, sha256: digest, ms: 800 }
+    const issues = ALL_CHECKS.audio!(rendered).filter((i) => i.id === rendered.phrases[0]!.id)
+    expect(errors(issues)).toEqual([])
+    expect(issues.some((i) => i.level === 'warn' && i.message.includes('content-addressed'))).toBe(
+      true,
+    )
   })
 })
 
