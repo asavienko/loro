@@ -118,7 +118,7 @@ export default function Refrain() {
     selectedWave,
     canPlan && (skipLock || entry.kind === 'ready' || entry.kind === 'resume'),
     {
-      setIds: focus.kind === 'wave' ? undefined : focusIds,
+      ...(focus.kind === 'wave' ? {} : { setIds: focusIds }),
       completeWave: focus.kind === 'wave',
       replaceSession: focus.kind !== 'wave',
     },
