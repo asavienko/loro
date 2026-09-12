@@ -24,7 +24,9 @@ custom modules. Generated bindings and embedded browser WASM have drift checks.
 
 `pnpm apk:local` resolves JDK 17 and an installed Android SDK on Linux (`~/Android/Sdk`, Debian
 `openjdk-17`) as well as the existing macOS defaults. `pnpm native:evidence` uses that SDK's `adb`
-when it is not already on `PATH`. This does not replace device, emulator or signing evidence.
+when it is not already on `PATH`. A full emulator `logcat -d` can throw `ENOBUFS`; the collector
+keeps recent lines and continues so plan 101 wave rows can still run. This does not replace device,
+emulator or signing evidence.
 
 `pnpm native:evidence` now captures a read-only, timestamped Android device evidence bundle under
 the ignored local-build directory. `--platform ios` now collects Xcode version, booted simulator
