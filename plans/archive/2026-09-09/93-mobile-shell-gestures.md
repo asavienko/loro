@@ -17,9 +17,10 @@ persistence or practice-outcome changes.
 Validation: browser gesture regression, full `pnpm check` and `pnpm test:e2e`. Real iOS/Android
 touch and assistive-technology verification must precede native release. Plan 101 adds browser
 mouse/touch coverage for Stream → phrase Refrain and menu hard-filter;
-`native:evidence --execute-scenarios` can edge-swipe the practice stack on Android after driving
-Today → Stream. Those rows still need the same physical-device gate as the spine/sheet pulls. Plan
-101's Stream-primary / hard-filter Refrain model is not reverted.
+`native:evidence --execute-scenarios` edge-swiped the practice stack on Linux emulator
+`emulator-5554` after Today → Stream (APK `1269b1640798`; session stayed). That is not
+physical-device or AT proof. Spine pull-down and sheet dismiss still need that gate. Plan 101's
+Stream-primary / hard-filter Refrain model is not reverted.
 
 Verified: `pnpm check` passed all 23 tasks; `pnpm test:e2e` passed all 119 tests in 4.4 minutes,
 including mouse/touch gestures, cancelled touch, accessibility and 310% text. The initial cold
