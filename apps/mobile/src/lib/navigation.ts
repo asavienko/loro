@@ -119,27 +119,45 @@ export function builtSurfaceForPath(input: string): BuiltSurface | undefined {
   )
 }
 
-/** Onboarding remains the only first-run entry; every other deep link returns through it. */
-export function conditionalHome(onboarded: boolean): '/onboarding' | '/' {
-  return onboarded ? '/' : '/onboarding'
+export interface SessionAccess {
+  signedIn: boolean
+  onboarded: boolean
+}
+
+/** Sign-in is the first gate; onboarding is the second. Developer routes stay unsigned. */
+export function isSessionlessPath(input: string): boolean {
+  const path = appPath(input) ?? input.split(/[?#]/, 1)[0] ?? input
+  return path === '/account' || path.startsWith('/dev/')
+}
+
+/** Sign-in, then onboarding, then Today. */
+export function conditionalHome(access: SessionAccess): '/account' | '/onboarding' | '/' {
+  if (!access.signedIn) return '/account'
+  return access.onboarded ? '/' : '/onboarding'
 }
 
 export type DeepLinkResolution =
   | { kind: 'built'; path: string; surface: BuiltSurface }
-  | { kind: 'fallback'; path: '/onboarding' | '/'; reason: 'unknown' | 'planned' | 'malformed' }
+  | {
+      kind: 'fallback'
+      path: '/account' | '/onboarding' | '/'
+      reason: 'unknown' | 'planned' | 'malformed'
+    }
 
 /**
- * Resolve a user-controlled deep link without making planned screens reachable or bypassing first
- * run. The caller can use the returned `path` directly with Expo Router.
+ * Resolve a user-controlled deep link without making planned screens reachable or bypassing
+ * sign-in or first run. The caller can use the returned `path` directly with Expo Router.
  */
-export function resolveDeepLink(input: string, onboarded: boolean): DeepLinkResolution {
+export function resolveDeepLink(input: string, access: SessionAccess): DeepLinkResolution {
   const path = appPath(input)
   if (path === undefined)
-    return { kind: 'fallback', path: conditionalHome(onboarded), reason: 'malformed' }
+    return { kind: 'fallback', path: conditionalHome(access), reason: 'malformed' }
 
   const built = builtSurfaceForPath(path)
   if (built !== undefined) {
-    if (!onboarded && built.id !== 'onboarding')
+    if (!access.signedIn && built.id !== 'account')
+      return { kind: 'fallback', path: '/account', reason: 'unknown' }
+    if (access.signedIn && !access.onboarded && built.id !== 'onboarding' && built.id !== 'account')
       return { kind: 'fallback', path: '/onboarding', reason: 'unknown' }
     return { kind: 'built', path, surface: built }
   }
@@ -149,7 +167,7 @@ export function resolveDeepLink(input: string, onboarded: boolean): DeepLinkReso
   )
   return {
     kind: 'fallback',
-    path: conditionalHome(onboarded),
+    path: conditionalHome(access),
     reason: planned ? 'planned' : 'unknown',
   }
 }

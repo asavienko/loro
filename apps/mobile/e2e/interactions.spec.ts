@@ -180,17 +180,7 @@ test('pressing a rep twice counts twice, and never lands between modes', async (
 })
 
 test('a cold deep link to a practice route does not strand the learner', async ({ page }) => {
-  // A notification or a widget will open these directly, and plan 46 owns the route map.
-  // This records what happens today so a change to it is deliberate: the store is in memory,
-  // so a fresh load has no learner and no phrases.
   await page.goto('/practice/refrain')
-
-  // Whatever it shows, it must not be a blank screen and must offer a way forward.
-  await expect(page.locator('body')).not.toHaveText('')
-  const escape = page.getByRole('button', { name: /Add phrases|Back to today/ })
-  const redirected = page.url().includes('/onboarding')
-  expect(
-    redirected || (await escape.count()) > 0,
-    'a cold deep link left the learner with no route out',
-  ).toBe(true)
+  await expect(page).toHaveURL(/\/account/)
+  await expect(page.getByRole('button', { name: 'Continue with email', exact: true })).toBeVisible()
 })

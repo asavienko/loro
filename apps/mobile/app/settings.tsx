@@ -5,7 +5,7 @@ import { ScrollView, StyleSheet, View } from 'react-native'
 import { copy } from '../src/lib/copy'
 import { useLocale } from '../src/lib/i18n'
 import { useApp } from '../src/store'
-import { ListRow, Screen, SectionLabel, Stack, Text } from '../src/ui/primitives'
+import { Card, ListRow, Screen, SectionLabel, Stack, Text } from '../src/ui/primitives'
 import { border, ink, line, space, surface } from '../src/ui/theme'
 
 const ACCENTS = Object.keys(accents) as AccentName[]
@@ -31,68 +31,80 @@ export default function Settings() {
     <Screen>
       <ScrollView contentContainerStyle={styles.content}>
         <Stack gap={space['5']}>
-          <Stack gap={space['1']}>
+          <Stack gap={space['2']}>
             <SectionLabel>{copy.settings.language}</SectionLabel>
-            <SettingRow
-              label={copy.languages.title}
-              detail={copy.settings.languageDetail}
-              onPress={() => {
-                router.push('/languages')
-              }}
-            />
+            <Card padding={0} style={styles.group}>
+              <SettingRow
+                last
+                label={copy.languages.title}
+                detail={copy.settings.languageDetail}
+                onPress={() => {
+                  router.push('/languages')
+                }}
+              />
+            </Card>
           </Stack>
-          <Stack gap={space['1']}>
+          <Stack gap={space['2']}>
             <SectionLabel>{copy.settings.appearance}</SectionLabel>
             <Text variant="label">{copy.settings.accent}</Text>
             <View accessibilityRole="radiogroup" accessibilityLabel={copy.settings.accent}>
-              {ACCENTS.map((accent) => (
-                <AccentRow
-                  key={accent}
-                  accent={accent}
-                  selected={preferences.accent === accent}
-                  onPress={() => {
-                    save(() => {
-                      setVisualPreferences(accent, preferences.motion)
-                    })
-                  }}
-                />
-              ))}
+              <Card padding={0} style={styles.group}>
+                {ACCENTS.map((accent, index) => (
+                  <AccentRow
+                    key={accent}
+                    accent={accent}
+                    last={index === ACCENTS.length - 1}
+                    selected={preferences.accent === accent}
+                    onPress={() => {
+                      save(() => {
+                        setVisualPreferences(accent, preferences.motion)
+                      })
+                    }}
+                  />
+                ))}
+              </Card>
             </View>
             <Text variant="label">{copy.settings.motion}</Text>
             <View accessibilityRole="radiogroup" accessibilityLabel={copy.settings.motion}>
-              <ChoiceRow
-                label={copy.settings.motionSystem}
-                selected={preferences.motion === 'system'}
-                onPress={() => {
-                  save(() => {
-                    setVisualPreferences(preferences.accent, 'system')
-                  })
-                }}
-              />
-              <ChoiceRow
-                label={copy.settings.motionReduced}
-                selected={preferences.motion === 'reduced'}
-                onPress={() => {
-                  save(() => {
-                    setVisualPreferences(preferences.accent, 'reduced')
-                  })
-                }}
-              />
+              <Card padding={0} style={styles.group}>
+                <ChoiceRow
+                  label={copy.settings.motionSystem}
+                  selected={preferences.motion === 'system'}
+                  onPress={() => {
+                    save(() => {
+                      setVisualPreferences(preferences.accent, 'system')
+                    })
+                  }}
+                />
+                <ChoiceRow
+                  last
+                  label={copy.settings.motionReduced}
+                  selected={preferences.motion === 'reduced'}
+                  onPress={() => {
+                    save(() => {
+                      setVisualPreferences(preferences.accent, 'reduced')
+                    })
+                  }}
+                />
+              </Card>
             </View>
           </Stack>
-          <Stack gap={space['1']}>
+          <Stack gap={space['2']}>
             <SectionLabel>{copy.settings.privacy}</SectionLabel>
-            <ChoiceRow
-              role="checkbox"
-              label={copy.settings.analytics}
-              detail={copy.settings.analyticsDetail}
-              selected={preferences.analyticsConsent}
-              onPress={() => {
-                save(() => {
-                  setAnalyticsConsent(!preferences.analyticsConsent)
-                })
-              }}
-            />
+            <Card padding={0} style={styles.group}>
+              <ChoiceRow
+                last
+                role="checkbox"
+                label={copy.settings.analytics}
+                detail={copy.settings.analyticsDetail}
+                selected={preferences.analyticsConsent}
+                onPress={() => {
+                  save(() => {
+                    setAnalyticsConsent(!preferences.analyticsConsent)
+                  })
+                }}
+              />
+            </Card>
           </Stack>
           {saveError && (
             <View accessibilityLiveRegion="polite">
@@ -109,10 +121,12 @@ function AccentRow({
   accent,
   selected,
   onPress,
+  last,
 }: {
   accent: AccentName
   selected: boolean
   onPress: () => void
+  last?: boolean | undefined
 }) {
   const labels: Record<AccentName, string> = {
     coral: copy.settings.accentCoral,
@@ -125,6 +139,7 @@ function AccentRow({
       label={labels[accent]}
       selected={selected}
       onPress={onPress}
+      last={last}
       markerColor={accents[accent].accent}
     />
   )
@@ -134,20 +149,24 @@ function SettingRow({
   label,
   detail,
   onPress,
+  last,
 }: {
   label: string
   detail: string
   onPress: () => void
+  last?: boolean | undefined
 }) {
   return (
-    <ListRow accessibilityLabel={label} onPress={onPress} gap={space['3']}>
+    <ListRow accessibilityLabel={label} onPress={onPress} gap={space['3']} last={last}>
       <View style={styles.copy}>
         <Text variant="body">{label}</Text>
         <Text variant="caption" color={ink.muted}>
           {detail}
         </Text>
       </View>
-      <Text color={ink.muted}>{copy.common.chevron.right}</Text>
+      <Text variant="caption" color={ink.muted}>
+        {copy.common.chevron.right}
+      </Text>
     </ListRow>
   )
 }
@@ -159,6 +178,7 @@ function ChoiceRow({
   onPress,
   markerColor,
   role = 'radio',
+  last,
 }: {
   label: string
   detail?: string
@@ -166,6 +186,7 @@ function ChoiceRow({
   onPress: () => void
   markerColor?: string
   role?: 'radio' | 'checkbox'
+  last?: boolean | undefined
 }) {
   return (
     <ListRow
@@ -174,6 +195,7 @@ function ChoiceRow({
       selected={selected}
       onPress={onPress}
       gap={space['3']}
+      last={last}
     >
       <View style={styles.copy}>
         <Text variant="body">{label}</Text>
@@ -201,6 +223,7 @@ function ChoiceRow({
 
 const styles = StyleSheet.create({
   content: { padding: space['5'] },
+  group: { overflow: 'hidden' },
   copy: { flex: 1, gap: space['0.5'] },
   marker: {
     width: 24,

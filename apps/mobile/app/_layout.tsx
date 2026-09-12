@@ -1,18 +1,19 @@
 import 'react-native-reanimated'
-import { Stack, router, usePathname } from 'expo-router'
+import { Redirect, Stack, router, usePathname } from 'expo-router'
 import { useEffect, type ReactNode } from 'react'
 import { getLocales } from 'expo-localization'
 import { detectNativeLanguage } from '@loro/core'
 import { useApp } from '../src/store'
 import { useLocale } from '../src/lib/i18n'
-import { Platform, StyleSheet, View } from 'react-native'
+import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native'
 import { StatusBar } from 'expo-status-bar'
 import {
   SafeAreaProvider,
   SafeAreaInsetsContext,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context'
-import { surface, ink, accent, space, MIN_TAP, webLayout } from '../src/ui/theme'
+import { surface, ink, accent, type as typeScale, MIN_TAP, webLayout } from '../src/ui/theme'
+import { CHROME_GUTTER, chromeHairlineShadow, parchmentGlassStyle } from '../src/ui/parchmentGlass'
 import { ToastHost } from '../src/ui/ToastHost'
 import { useDayRollover } from '../src/store/dayRollover'
 import { copy } from '../src/lib/copy'
@@ -21,13 +22,33 @@ import { ThemeProvider } from '../src/ui/ThemeProvider'
 import { BottomBarProvider } from '../src/ui/BottomBarContext'
 import { Pressable, Text } from '../src/ui/primitives'
 import { NavigationMenu } from '../src/ui/components'
-import { DESTINATIONS, placeForPath, surfaceLawForPath } from '../src/lib/navigation'
+import {
+  DESTINATIONS,
+  isSessionlessPath,
+  placeForPath,
+  surfaceLawForPath,
+} from '../src/lib/navigation'
 import { startAccountSync } from '../src/services/accountSync'
+import { useAccount, useAccountReady } from '../src/lib/account/runtime'
 import { PersistenceGate } from '../src/store/PersistenceGate'
 import { completeBrowserSignIn } from '../src/auth/runtime'
 import { localTimeLabel } from '../src/lib/clock'
 import { PRODUCTION_WAVES, PRODUCTION_WAVE_TIMES, type ProductionWave } from '../src/store'
 import { waveEntryWithResume } from '../src/lib/waves'
+
+const editorialStationeryFonts =
+  'https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400..700;1,9..40,400..700&family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&display=swap'
+
+if (Platform.OS === 'web' && typeof document !== 'undefined') {
+  const loaded = document.getElementById('loro-editorial-fonts')
+  if (loaded === null) {
+    const link = document.createElement('link')
+    link.id = 'loro-editorial-fonts'
+    link.rel = 'stylesheet'
+    link.href = editorialStationeryFonts
+    document.head.appendChild(link)
+  }
+}
 
 // The OAuth popup must notify its opener before hydration asks for the database's writer lease.
 completeBrowserSignIn()
@@ -43,6 +64,8 @@ export default function RootLayout() {
 function ReadyLayout() {
   useLocale()
   const preferences = useApp((state) => state.devicePreferences)
+  const accountReady = useAccountReady()
+  const signedIn = useAccount().session !== null
   useEffect(() => {
     void startAccountSync()
   }, [])
@@ -87,6 +110,30 @@ function ReadyLayout() {
         }
   const constrainWidth = Platform.OS === 'web' && !pathname.startsWith('/dev/')
   const place = placeForPath(pathname)
+  if (!accountReady) {
+    return (
+      <ThemeProvider
+        accent={preferences.accent}
+        reducedMotion={preferences.motion === 'reduced' ? true : undefined}
+      >
+        <SafeAreaProvider style={styles.canvas}>
+          <StatusBar style="dark" />
+          <View
+            testID="account-restoring"
+            style={[styles.viewport, styles.restoring, constrainWidth && styles.learnerColumn]}
+          >
+            <ActivityIndicator
+              color={accent.accentInk}
+              accessibilityLabel={copy.persistence.loading}
+            />
+          </View>
+        </SafeAreaProvider>
+      </ThemeProvider>
+    )
+  }
+  if (!signedIn && !isSessionlessPath(pathname)) {
+    return <Redirect href="/account" />
+  }
 
   return (
     <ThemeProvider
@@ -100,7 +147,7 @@ function ReadyLayout() {
           style={[styles.viewport, constrainWidth && styles.learnerColumn]}
         >
           <BottomBarProvider>
-            {place !== undefined && (
+            {place !== undefined && signedIn && (
               <NavigationMenu
                 key={pathname}
                 place={place}
@@ -122,12 +169,21 @@ function ReadyLayout() {
                 }))}
               />
             )}
-            <BelowSpine hasSpine={place !== undefined}>
+            <BelowSpine hasSpine={place !== undefined && signedIn}>
               <Stack
                 screenOptions={({ navigation }) => ({
-                  headerStyle: { backgroundColor: surface.app },
+                  headerBackground: HeaderGlass,
+                  headerStyle: { backgroundColor: 'transparent' },
                   headerTintColor: ink.ink,
-                  headerTitleStyle: { fontWeight: '700' },
+                  headerTitleStyle: {
+                    fontFamily: typeScale.title3.fontFamily,
+                    fontSize: typeScale.title3.fontSize,
+                    fontWeight: typeScale.title3.fontWeight,
+                    letterSpacing: typeScale.title3.letterSpacing,
+                    color: ink.ink,
+                  },
+                  headerLeftContainerStyle: { paddingStart: CHROME_GUTTER },
+                  headerRightContainerStyle: { paddingEnd: CHROME_GUTTER },
                   headerShadowVisible: false,
                   contentStyle: { backgroundColor: surface.app },
                   // A cold URL has no stack to pop. Never strand it with an absent Back button.
@@ -143,32 +199,33 @@ function ReadyLayout() {
                               router.back()
                             }}
                           >
-                            <Text variant="title2" color={ink.ink}>
+                            <Text variant="body" color={accent.accentInk}>
                               {copy.common.chevron.left}
                             </Text>
                           </Pressable>
                         ),
                       }
-                    : {
-                        headerLeft: () => (
-                          <Pressable
-                            feedback="smallButton"
-                            style={{
-                              paddingHorizontal: space['3'],
-                              minHeight: MIN_TAP,
-                              justifyContent: 'center',
-                            }}
-                            accessibilityLabel={copy.nav.home}
-                            onPress={() => {
-                              router.replace('/')
-                            }}
-                          >
-                            <Text variant="bodySm" color={accent.accentInk}>
-                              {copy.nav.home}
-                            </Text>
-                          </Pressable>
-                        ),
-                      }),
+                    : signedIn
+                      ? {
+                          headerLeft: () => (
+                            <Pressable
+                              feedback="smallButton"
+                              style={{
+                                minHeight: MIN_TAP,
+                                justifyContent: 'center',
+                              }}
+                              accessibilityLabel={copy.nav.home}
+                              onPress={() => {
+                                router.replace('/')
+                              }}
+                            >
+                              <Text variant="bodySm" color={accent.accentInk}>
+                                {copy.nav.home}
+                              </Text>
+                            </Pressable>
+                          ),
+                        }
+                      : { headerLeft: () => null }),
                 })}
               >
                 <Stack.Screen name="index" options={{ headerShown: false }} />
@@ -208,6 +265,16 @@ function ReadyLayout() {
   )
 }
 
+/** Parchment glass under the existing stack header — not a 64-px Study Desk band. */
+function HeaderGlass() {
+  return (
+    <View
+      pointerEvents="none"
+      style={[StyleSheet.absoluteFill, parchmentGlassStyle(), chromeHairlineShadow()]}
+    />
+  )
+}
+
 /** The shared spine already consumes the top inset; route headers must not consume it twice. */
 function BelowSpine({ hasSpine, children }: { hasSpine: boolean; children: ReactNode }) {
   const insets = useSafeAreaInsets()
@@ -221,5 +288,6 @@ function BelowSpine({ hasSpine, children }: { hasSpine: boolean; children: React
 const styles = StyleSheet.create({
   canvas: { backgroundColor: surface.canvas },
   viewport: { flex: 1, width: '100%', alignSelf: 'center', backgroundColor: surface.app },
+  restoring: { justifyContent: 'center', alignItems: 'center' },
   learnerColumn: { maxWidth: webLayout.learnerMaxWidth },
 })

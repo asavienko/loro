@@ -140,9 +140,9 @@ export function streakValue(page: Page): Locator {
 /**
  * Today's streak capsule — `—` before the first rep, "N days" after it.
  *
- * The v1.1 root header words the streak rather than pairing a bare number with a flame
- * (`Navigation.dc.html:118`), so this matches the wording. Nothing else on Today reads as a day
- * count: the day list's own numbers are times, "N reps today", and "day N/4".
+ * The wording stays "N days" (`Navigation.dc.html:118`). v1.2 adds a decorative flame sibling
+ * when the count is real; this locator matches the day-count text only. Nothing else on Today
+ * reads as a day count: the day list's own numbers are times, "N reps today", and "day N/4".
  */
 export function streakChip(page: Page): Locator {
   return page.getByText(/^(\d+ days?|—)$/)
@@ -164,11 +164,11 @@ export function bankedRow(page: Page, graduated: number): Locator {
 /**
  * The day list's reps-so-far row, which replaced Today's "reps today" stat tile.
  *
- * Filtered to the visible node: returning to Today from the Refrain leaves the popped screen's
- * copy of it in the DOM, and `refrain.spec.ts` already filters the same way for that reason.
+ * Scoped to the visible day list: the v1.2 header also prints the same count, and returning
+ * from Refrain can leave a popped copy in the DOM.
  */
 export function repsTodayRow(page: Page, reps: number): Locator {
-  return page.getByText(`${reps} reps today`, { exact: true }).filter({ visible: true })
+  return todayMarker(page).getByText(`${reps} reps today`, { exact: true })
 }
 
 /** A rail destination that carries a count — "Stream, 10 phrases". */

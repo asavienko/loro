@@ -25,6 +25,8 @@ export const progressCopy = {
       return message('progress.mastery.title')
     },
     total: (count: number): string => message('progress.mastery.total', { count }),
+    share: (count: number, percent: number): string =>
+      message('progress.mastery.share', { count, percent }),
     chartSummary: (buckets: readonly { count: number; label: string }[]): string =>
       formatBuckets(buckets),
   },

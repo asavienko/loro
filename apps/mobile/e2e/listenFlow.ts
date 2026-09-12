@@ -25,6 +25,7 @@ export const LISTEN_TITLE = 'Listen to your phrases'
 export const LISTEN_NAV = 'Listen'
 export const LISTEN_GENERATE = 'Generate listening audio'
 export const LISTEN_LISTEN = 'Listen from cache'
+export const LISTEN_STOP = 'Stop listening'
 export const LISTEN_SHARE = 'Share listening file'
 export const LISTEN_FIXTURE_NOTE = 'Development snapshot. This is not licensed neural audio.'
 

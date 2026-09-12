@@ -61,4 +61,5 @@ export const phraseCopy = {
       return message('phrase.actions.practiceNow')
     },
   },
+  quotedTranslation: (text: string): string => message('phrase.quotedTranslation', { text }),
 }

@@ -229,7 +229,7 @@ function SpeakingPhrase({
 
   return (
     <ScrollView
-      contentContainerStyle={{ padding: space['4'], gap: space['4'], paddingBottom: space['6'] }}
+      contentContainerStyle={{ padding: space['5'], gap: space['4'], paddingBottom: space['6'] }}
     >
       <Text variant="caption" color={ink.muted}>
         {copy.audioSpeech.speakIntro}

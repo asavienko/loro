@@ -30,7 +30,7 @@
  */
 
 import type { Page } from '@playwright/test'
-import { expect, onboard, test } from './fixtures'
+import { expect, onboard, signIn, test } from './fixtures'
 import { atInstant } from './clock'
 import { enter, START_WAVE, todayMarker } from './helpers'
 import { STATES } from './states'
@@ -95,7 +95,7 @@ test('the primary action stays reachable at 310% text', async ({ page }) => {
 })
 
 test('onboarding can still be completed at 310% text', async ({ page }) => {
-  await page.goto('/onboarding')
+  await signIn(page)
   await scaleText(page, 3.1)
   await page.getByRole('button', { name: "Let's go →" }).click()
 

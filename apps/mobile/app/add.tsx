@@ -35,6 +35,7 @@ import { OWN_PHRASE_FALLBACK } from '../src/store/phraseFactory'
 import { ImportPhrases } from './_add/ImportPhrases'
 import type { AddMode } from './_add/mode'
 import { targetLanguageInputProps } from './_add/targetLanguage'
+import { themePackProgress } from './_add/themePack'
 import { useAddDraft, type SheetPhrase } from './_add/useAddDraft'
 import { useDiscoverReach } from './_add/useDiscoverReach'
 import { useSuggestions } from './_add/useSuggestions'
@@ -46,6 +47,7 @@ import {
   Field,
   Grid,
   Pressable,
+  ProgressBar,
   Row,
   Screen,
   SectionHeader,
@@ -57,7 +59,8 @@ import {
   type SegmentedOption,
 } from '../src/ui/primitives'
 import { DifficultySelector, PhraseRow, TagChips } from '../src/ui/components'
-import { accent, border, ink, line, radius, space, surface } from '../src/ui/theme'
+import { stationeryElevation } from '../src/ui/elevation'
+import { accent, border, ink, radius, semantic, space, surface, type } from '../src/ui/theme'
 import { copy } from '../src/lib/copy'
 import { useApp } from '../src/store'
 import { importDraftKey } from '../src/lib/importDraft'
@@ -84,10 +87,12 @@ const MODES: readonly SegmentedOption<AddMode>[] = [
  * `src/ui/tokens/sizing.ts`: a token used once is not a token.
  */
 const metrics = {
-  /** The browse grid: two tiles to a row, at a gap one wider than `grid.gap`. */
-  themeGrid: 9,
-  /** The browse tile's emoji square. */
-  themeEmoji: 40,
+  /** The browse grid: two pack cards to a row (`gap-2.5` in the v1.2 specimen). */
+  themeGrid: 10,
+  /** The pack card's emoji plate — 32 px, matching the v1.2 8×8 well. */
+  themeEmoji: 32,
+  /** The plate's glyph, 18 px on that 32 px well. */
+  themeEmojiGlyph: 18,
   /** The sheet's question → its control. */
   sheetGroup: 9,
   /** The sheet's phrase card: emoji tile → the two lines. */
@@ -192,7 +197,7 @@ export default function Add() {
             clearImportDraft={clearImportDraft}
           />
         ) : list.mode === 'browse' && list.browseTheme === null ? (
-          <ThemeGrid countFor={list.countFor} onSelect={list.browse} />
+          <ThemeGrid countFor={list.countFor} totalFor={list.totalFor} onSelect={list.browse} />
         ) : (
           <>
             <Row justify="space-between" align="center" gap={metrics.drilledTitle}>
@@ -300,97 +305,157 @@ function AddHeader({
           `e2e/text-scale.spec.ts` is watching.
         */}
       <Row justify="space-between">
-        <Text variant="labelSm" color={ink.muted}>
-          {copy.add.inStream(ownedCount)}
-        </Text>
+        <View style={s.streamBadge}>
+          <Text variant="caption" color={accent.accentInk}>
+            {copy.add.inStream(ownedCount)}
+          </Text>
+        </View>
       </Row>
 
       <Segmented value={mode} options={MODES} onChange={onModeChange} />
 
       {mode === 'discover' && (
         <>
-          {/* A typed query is a selected state, hence the accent border at `border.selected`. */}
           <Card
             padding={0}
-            border={query.length > 0 ? accent.accent : line.default}
+            radius={radius.xl}
+            background={surface.card}
+            border={query.length > 0 ? accent.accent : false}
             borderWidth={border.selected}
-            style={s.searchField}
+            style={[s.searchField, stationeryElevation('fieldInset')]}
           >
-            <Field
-              value={query}
-              onChangeText={onQueryChange}
-              placeholder={copy.add.searchPlaceholder}
-              placeholderTextColor={ink.muted2}
-              accessibilityLabel={copy.a11y.add.searchInput}
-              style={s.searchInput}
-            />
+            <Row align="center" gap={space['2']}>
+              <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+                <Text variant="bodySm" color={ink.muted}>
+                  {copy.add.searchGlyph}
+                </Text>
+              </View>
+              <Field
+                value={query}
+                onChangeText={onQueryChange}
+                placeholder={copy.add.searchPlaceholder}
+                placeholderTextColor={ink.muted2}
+                accessibilityLabel={copy.a11y.add.searchInput}
+                style={[s.searchInput, s.searchInputGrow]}
+              />
+            </Row>
           </Card>
 
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={s.scenarioStrip}
-          >
-            <Text variant="labelSm" color={ink.muted} style={s.scenarioLabel}>
-              {copy.add.scenarioLabel}
-            </Text>
-            {scenarios.map((sc) => (
-              <Chip
-                key={sc.id}
-                variant="scenario"
-                tone="solid"
-                emoji={sc.emoji}
-                label={sc.label}
-                selected={scenario === sc.id}
-                onPress={() => {
-                  onScenarioToggle(sc.id)
-                }}
-              />
-            ))}
-          </ScrollView>
+          <View>
+            <SectionLabel>{copy.add.scenarioLabel}</SectionLabel>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={s.scenarioStrip}
+            >
+              {scenarios.map((sc) => (
+                <Chip
+                  key={sc.id}
+                  variant="scenario"
+                  tone="solid"
+                  emoji={sc.emoji}
+                  label={sc.label}
+                  selected={scenario === sc.id}
+                  onPress={() => {
+                    onScenarioToggle(sc.id)
+                  }}
+                />
+              ))}
+            </ScrollView>
+          </View>
         </>
       )}
     </View>
   )
 }
-/** Browse's landing: one tile per theme, with how much of it is left to add. */
+/** Browse's landing: one editorial pack card per theme, with real leftover / catalog counts. */
 function ThemeGrid({
   countFor,
+  totalFor,
   onSelect,
 }: {
   countFor: (theme: string) => number
+  totalFor: (theme: string) => number
   onSelect: (theme: BrowsableTheme) => void
 }) {
   useLocale()
   return (
-    <Grid gap={metrics.themeGrid}>
-      {THEMES.map((t) => {
-        const theme = copy.add.themes[t]
-        const count = countFor(t)
-        // One line, read AND shown. It used to be derived twice, and the two disagreed: a
-        // finished theme was announced as "0 to add" while it displayed "all added ✓".
-        const remaining = count > 0 ? copy.add.toAdd(count) : copy.add.allAdded
-        return (
-          <Pressable
-            key={t}
-            feedback="row"
-            accessibilityLabel={copy.a11y.add.themeTile(theme.label, remaining)}
-            onPress={() => {
-              onSelect(t)
-            }}
-            style={s.themeTile}
-          >
-            <EmojiTile emoji={theme.emoji} size={metrics.themeEmoji} />
-            <Text variant="bodySm" color={ink.ink} style={s.themeName}>
-              {theme.label}
-            </Text>
-            <Text variant="labelSm" color={ink.muted}>
-              {remaining}
-            </Text>
-          </Pressable>
-        )
-      })}
-    </Grid>
+    <Stack gap={space['3']}>
+      <Stack gap={space['1']}>
+        <Text variant="title2" color={ink.ink}>
+          {copy.add.browseHeading}
+        </Text>
+        <Text variant="bodySm" color={ink.muted}>
+          {copy.add.browseHelper}
+        </Text>
+      </Stack>
+      <Grid gap={metrics.themeGrid}>
+        {THEMES.map((t) => {
+          const theme = copy.add.themes[t]
+          const pack = themePackProgress(countFor(t), totalFor(t))
+          // One line, read AND shown. It used to be derived twice, and the two disagreed: a
+          // finished theme was announced as "0 to add" while it displayed "all added ✓".
+          const remaining = pack.complete ? copy.add.allAdded : copy.add.toAdd(pack.remaining)
+          const supporting = pack.complete
+            ? copy.add.packPhrases(pack.total)
+            : copy.add.packPhrasesLeft(pack.total, pack.remaining)
+          return (
+            <Pressable
+              key={t}
+              feedback="row"
+              pressMotion="deboss"
+              elevation="card"
+              accessibilityLabel={copy.a11y.add.themeTile(theme.label, remaining)}
+              onPress={() => {
+                onSelect(t)
+              }}
+              style={s.themeTile}
+            >
+              <View>
+                <EmojiTile
+                  emoji={theme.emoji}
+                  size={metrics.themeEmoji}
+                  radius={radius.lg}
+                  background={surface.sunken2}
+                  fontSize={metrics.themeEmojiGlyph}
+                />
+                <Text variant="title3" color={ink.ink} style={s.themeName}>
+                  {theme.label}
+                </Text>
+                <Text variant="bodySm" color={ink.muted} style={s.themeMeta}>
+                  {supporting}
+                </Text>
+              </View>
+              {pack.complete ? (
+                <Text
+                  variant="captionSm"
+                  color={semantic.successAlt.text}
+                  style={s.themeCompleteBadge}
+                >
+                  {copy.add.allAdded}
+                </Text>
+              ) : (
+                <View style={s.themeProgress}>
+                  <ProgressBar
+                    value={pack.percent / 100}
+                    track={surface.sunken}
+                    radius={radius.pill}
+                  />
+                  <Row justify="space-between" align="center">
+                    <Text variant="labelSm" color={ink.muted}>
+                      {copy.add.packOwnedOf(pack.owned, pack.total)}
+                    </Text>
+                    <Text variant="labelSm" color={accent.accentInk}>
+                      {copy.add.packPercent(pack.percent)}
+                    </Text>
+                  </Row>
+                </View>
+              )}
+            </Pressable>
+          )
+        })}
+      </Grid>
+    </Stack>
   )
 }
 /** Back out of a drilled theme, to the grid. */
@@ -445,12 +510,13 @@ function SuggestionList({
           targetText={p.targetText}
           translation={p.translation}
           emoji={p.emoji}
+          eyebrow={discoverEyebrow(p.theme)}
           accessibilityLabel={copy.a11y.add.suggestionRow(p.targetText, p.translation)}
           accessibilityHint={copy.a11y.add.opensSheet}
           onPress={() => {
             onSelect(p)
           }}
-          trailing={<AddGlyph />}
+          trailing={<QueueGlyph />}
         />
       ))}
     </>
@@ -526,6 +592,7 @@ function SuggestedList({
           targetText={candidate.targetText}
           translation={candidate.translation}
           emoji={candidate.emoji ?? OWN_PHRASE_FALLBACK.emoji}
+          eyebrow={discoverEyebrow(candidate.theme)}
           accessibilityLabel={copy.a11y.add.suggestedRow(
             candidate.targetText,
             candidate.translation,
@@ -534,7 +601,7 @@ function SuggestedList({
           onPress={() => {
             onSelect(candidate)
           }}
-          trailing={<SuggestedGlyph />}
+          trailing={<QueueGlyph />}
         />
       ))}
     </>
@@ -545,18 +612,23 @@ function canonicalSuggestedKey(candidate: PhraseCandidate): string {
   return `${candidate.targetText}\u0000${candidate.translation}`
 }
 
-function SuggestedGlyph() {
+function discoverEyebrow(theme: string | undefined): string | undefined {
+  if (theme === undefined) return undefined
+  return theme in copy.add.themes ? copy.add.themes[theme as BrowsableTheme].label : theme
+}
+
+function QueueGlyph() {
   useLocale()
   return (
-    <View style={s.suggestedGlyph}>
-      <Text variant="headline" color={accent.accentInk}>
-        {copy.add.addGlyph}
+    <View style={s.queueGlyph}>
+      <Text variant="labelSm" color={surface.app}>
+        {copy.add.queue}
       </Text>
     </View>
   )
 }
 
-/** The `+` circle on a suggestion row. Decorative — the row's own name is the affordance. */
+/** The `+` circle on an own-phrase row. Decorative — the row's own name is the affordance. */
 function AddGlyph() {
   useLocale()
   return (
@@ -606,10 +678,10 @@ function TaggingSheet({
               <Row gap={metrics.sheetPhrase}>
                 <EmojiTile emoji={catalog.emoji} />
                 <View style={s.sheetPhraseLines}>
-                  <Text variant="headline" color={ink.ink} lang="target">
+                  <Text variant="prose" color={ink.ink} lang="target">
                     {catalog.targetText}
                   </Text>
-                  <Text variant="captionSm" color={ink.muted}>
+                  <Text variant="caption" color={ink.ink2} style={s.italic}>
                     {catalog.translation}
                   </Text>
                 </View>
@@ -623,6 +695,7 @@ function TaggingSheet({
                   <EmojiTile emoji={own.emoji ?? OWN_PHRASE_FALLBACK.emoji} />
                   <View style={s.sheetPhraseLines}>
                     <Field
+                      literary
                       value={own.targetText}
                       onChangeText={(value) => {
                         onOwnFieldChange('targetText', value)
@@ -703,31 +776,53 @@ const s = StyleSheet.create({
   grow: { flex: 1 },
 
   // ── AddHeader ──
-  header: { paddingHorizontal: space['4'], paddingTop: space['2'], gap: space['2.5'] },
+  header: { paddingHorizontal: space['5'], paddingTop: space['2'], gap: space['3'] },
+  streamBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: radius.pill,
+    backgroundColor: accent.wash,
+  },
   /** 13 is the field's own inset, so a 46-px input is not edge-to-edge. Not a `space` step. */
-  searchField: { paddingHorizontal: 13 },
-  /** 14 at weight 600 sits between `caption` and `bodySm`, so it is not a type variant. */
+  searchField: { paddingHorizontal: 13, paddingVertical: space['1'] },
+  /** Discover search uses DESIGN.md body-sm; Field's empty body-md is the fallback. */
   searchInput: {
     minHeight: 46,
-    paddingHorizontal: space['3'],
-    fontSize: 14,
-    fontWeight: '600',
+    paddingHorizontal: 0,
+    fontSize: type.bodySm.fontSize,
+    fontWeight: type.bodySm.fontWeight,
+    fontFamily: type.bodySm.fontFamily,
+    lineHeight: type.bodySm.lineHeight,
     color: ink.ink,
+    outlineWidth: 0,
   },
-  scenarioStrip: { gap: 7 },
-  scenarioLabel: { alignSelf: 'center' },
+  searchInputGrow: { flex: 1 },
+  scenarioStrip: { gap: 7, paddingTop: space['2'] },
   // ── The scroll body ──
-  body: { padding: space['4'], gap: space['2'] },
+  body: { padding: space['5'], gap: space['2.5'] },
+  italic: { fontStyle: 'italic' },
   // ── ThemeGrid ──
   themeTile: {
     width: '48%',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
     backgroundColor: surface.card,
-    borderWidth: border.hairline,
-    borderColor: line.default,
-    borderRadius: radius.lg,
+    borderRadius: radius.xl,
     padding: 14,
+    ...stationeryElevation('card'),
+  },
+  themeCompleteBadge: {
+    alignSelf: 'flex-start',
+    marginTop: space['4'],
+    paddingHorizontal: space['2'],
+    paddingVertical: 2,
+    borderRadius: radius.pill,
+    backgroundColor: semantic.success.bg,
+    overflow: 'hidden',
   },
   themeName: { marginTop: 10 },
+  themeMeta: { marginTop: 2 },
+  themeProgress: { marginTop: space['4'], gap: 6 },
   // ── ThemesBackLink ──
   // `paddingVertical` is a TAP-TARGET measurement, not a spacing step that happens to equal
   // one: the bare label is 17 px tall — 33 even with `hitSlop` — under the 44 floor. Padding
@@ -735,11 +830,20 @@ const s = StyleSheet.create({
   // the section label.
   backToThemes: { paddingVertical: 8, paddingRight: space['2'] },
   // ── SuggestionList ──
+  queueGlyph: {
+    paddingHorizontal: space['3'],
+    paddingVertical: space['1.5'],
+    borderRadius: radius.pill,
+    backgroundColor: accent.accent,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   addGlyph: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: accent.wash,
+    minWidth: 32,
+    minHeight: 32,
+    paddingHorizontal: space['2'],
+    borderRadius: radius.pill,
+    backgroundColor: accent.accent,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -756,17 +860,7 @@ const s = StyleSheet.create({
     alignItems: 'center',
     gap: 11,
     backgroundColor: surface.card,
-    borderWidth: border.selected,
-    borderColor: accent.accent,
-    borderRadius: radius.lg,
-    padding: 12,
-  },
-  suggestedGlyph: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: accent.wash,
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderRadius: radius.xl,
+    padding: space['4'],
   },
 })

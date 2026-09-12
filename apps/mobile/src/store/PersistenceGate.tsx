@@ -49,7 +49,7 @@ function PersistenceRecovery() {
                   color={accent.accentInk}
                   accessibilityLabel={copy.persistence.loading}
                 />
-                <Text variant="body" color={ink.ink}>
+                <Text variant="bodyMd" color={ink.ink}>
                   {copy.persistence.loading}
                 </Text>
               </>
@@ -58,7 +58,7 @@ function PersistenceRecovery() {
                 <Text variant="title2" color={ink.ink}>
                   {copy.persistence.title}
                 </Text>
-                <Text variant="body" color={ink.muted}>
+                <Text variant="bodyMd" color={ink.muted}>
                   {copy.persistence.body}
                 </Text>
                 <Pressable
