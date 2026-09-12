@@ -117,8 +117,9 @@ event's properties are allowlisted ([metrics.md](../product/metrics.md#instrumen
 
 ## Authentication
 
-**Anonymous-first.** The whole app works with no account. An anonymous learner gets a locally
-generated `anon_id` and a local user row; signing in later binds or merges without data loss
+**Signed-in practice.** The app is usable only after sign-in. A locally generated `anon_id` still
+identifies the installation for the first claim; signing in binds that device without inventing a
+guest practice mode
 ([sync-protocol.md](sync-protocol.md#first-sign-in-on-a-device-with-local-data)).
 
 | Aspect             | Choice                                                                                                                           |
@@ -129,7 +130,7 @@ generated `anon_id` and a local user row; signing in later binds or merges witho
 | Refresh reuse      | Detected → the whole token family is revoked and the event is logged                                                             |
 | Client storage     | iOS Keychain (`kSecAttrAccessibleAfterFirstUnlock`) / Android Keystore-backed EncryptedSharedPreferences. **Never** AsyncStorage |
 | Transport          | TLS 1.3 minimum; certificate pinning on `api.loro.app` with a documented rotation runbook                                        |
-| Sign-out           | Revokes the refresh family, keeps local data, stops syncing                                                                      |
+| Sign-out           | Revokes the refresh family, keeps local data, stops syncing, and returns the learner to sign-in                                  |
 | Sign-out and erase | Separate, explicitly confirmed action                                                                                            |
 
 **Why no passwords.** Every password is a support burden, a reset flow, a hashing decision, and a

@@ -15,10 +15,15 @@ export interface AuthSettings {
   applePrivateKey: string
 }
 const nativeRedirects = new Set(['loro://account', 'loro-dev://account'])
+const loopbackHosts = new Set(['localhost', '127.0.0.1', '[::1]'])
+
+export function isLoopbackHttpUrl(url: URL): boolean {
+  return url.protocol === 'http:' && loopbackHosts.has(url.hostname)
+}
 
 export function isAllowedAuthRedirect(redirect: string, url = new URL(redirect)): boolean {
   return (
-    (url.protocol === 'https:' || nativeRedirects.has(redirect)) &&
+    (url.protocol === 'https:' || nativeRedirects.has(redirect) || isLoopbackHttpUrl(url)) &&
     !url.search &&
     !url.hash &&
     !url.username &&
@@ -35,8 +40,11 @@ export function authSettings(): AuthSettings | undefined {
   }
   const publicUrl = required('AUTH_PUBLIC_URL', raw.publicUrl).replace(/\/$/, '')
   const origin = new URL(publicUrl)
-  if (origin.protocol !== 'https:' || origin.origin !== publicUrl)
-    throw new Error('AUTH_PUBLIC_URL requires an exact HTTPS origin')
+  const loopbackHttp = !config.isProduction() && isLoopbackHttpUrl(origin)
+  if (origin.origin !== publicUrl || (origin.protocol !== 'https:' && !loopbackHttp))
+    throw new Error(
+      'AUTH_PUBLIC_URL requires an exact HTTPS origin, or loopback HTTP in development',
+    )
   const signingKey = raw.signingKey ?? ''
   if (!config.authSettings().privateKeyPem && Buffer.byteLength(signingKey) < 32)
     throw new Error('AUTH_SIGNING_KEY requires at least 32 bytes')
@@ -48,7 +56,7 @@ export function authSettings(): AuthSettings | undefined {
     const url = new URL(redirect)
     if (!isAllowedAuthRedirect(redirect, url))
       throw new Error(
-        'Auth redirects must be exact HTTPS URLs, loro://account, or loro-dev://account, without query/fragment',
+        'Auth redirects must be exact HTTPS URLs, loopback HTTP URLs, loro://account, or loro-dev://account, without query/fragment',
       )
   }
   return {

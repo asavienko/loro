@@ -130,7 +130,7 @@ the Progress rollup. Internal dogfooding starts here and never stops.
 | Import mode                                                                 | `P2-09`, `P2-10`                                             |
 | **Trip arc, all six screens**                                               | `P5-01`…`P5-12`                                              |
 | Lock screen widget / Live Activity + Glance                                 | `P5-06`, [widgets](../architecture/widgets-notifications.md) |
-| Sync + accounts (anonymous-first)                                           | `F-01`…`F-04`, `F-07`                                        |
+| Sync + accounts (sign-in required)                                          | `F-01`…`F-04`, `F-07`                                        |
 | Offline: prefetch, survival-mode acceptance test                            | `F-03`, [offline.md](../architecture/offline.md)             |
 | Notifications — daily, waves, drops                                         | `N-01`…`N-04`                                                |
 | Monetization: paywall, StoreKit/Play Billing, Trip Pass                     | [monetization.md](monetization.md) ⚠️ pending Q-08           |
