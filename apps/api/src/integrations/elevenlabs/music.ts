@@ -10,6 +10,7 @@ import {
   type MusicStylePack,
   type MusicV2CompositionPlan,
 } from '@loro/core'
+import { config } from '../../common/config.js'
 import { ProviderConcurrency } from '../provider-concurrency.js'
 import { MUSIC_FIXTURE_WAV, MUSIC_HTTP_FIXTURES, type MusicFixtureName } from './music.fixtures.js'
 import { FIXTURE_WAV_DURATION_MS } from './wav.js'
@@ -66,7 +67,7 @@ export class ElevenLabsMusicAdapter implements MusicAdapter {
     const cached = this.cache.get(cacheKey)
     if (cached) return Promise.resolve({ ok: true, result: { ...cached, cached: true } })
 
-    const provider = this.options.provider ?? process.env['MUSIC_PROVIDER'] ?? 'stub'
+    const provider = this.options.provider ?? config.musicProvider()
     if (provider !== 'elevenlabs') {
       const result = fixtureResult(plan, planHash, this.options.fixture ?? 'compose')
       if (result.ok) this.cache.set(cacheKey, result.result)
@@ -80,7 +81,7 @@ export class ElevenLabsMusicAdapter implements MusicAdapter {
       return Promise.resolve(result)
     }
 
-    const apiKey = this.options.apiKey ?? process.env['MUSIC_API_KEY']
+    const apiKey = this.options.apiKey ?? config.musicApiKey()
     if (!apiKey) {
       return Promise.resolve({ ok: false, failure: { kind: 'unavailable' } })
     }

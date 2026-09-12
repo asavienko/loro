@@ -9,6 +9,7 @@
 import { Inject, Injectable, type CanActivate, type ExecutionContext } from '@nestjs/common'
 import { LISTENING_ASSET_CLASS, REFERENCE_ASSET_CLASS } from '@loro/core'
 import { AuthGuard, type AuthenticatedRequest } from '../auth/auth.guard.js'
+import { anonymousPrincipal, isGetLeafPath } from '../common/http.js'
 import { config } from '../common/config.js'
 import { parseTtsConfig } from '../integrations/elevenlabs/tts.js'
 
@@ -30,12 +31,7 @@ export class TtsGuard implements CanActivate {
       return true
     }
     if (catalogReferenceAnonymousAllowed(request)) {
-      const ip = request.ip ?? '0.0.0.0'
-      request.principal = {
-        userId: `anon:${ip}`,
-        deviceId: 'anonymous',
-        sessionId: 'anonymous',
-      }
+      request.principal = anonymousPrincipal(request.ip ?? '0.0.0.0')
       return true
     }
     return this.auth.canActivate(context)
@@ -50,14 +46,26 @@ export function ttsStatusAllowed(request: {
   return isGetLeafPath(request, 'tts/status')
 }
 
-function isGetLeafPath(
-  request: { method?: string; path?: string; url?: string },
-  leaf: string,
+function parsedTtsConfig() {
+  try {
+    return parseTtsConfig(config.ttsEnv())
+  } catch {
+    return null
+  }
+}
+
+function ttsAssetRequest(
+  request: { method?: string; params?: { sha256?: string }; body?: unknown },
+  allowed: (assetClass: unknown) => boolean,
 ): boolean {
-  if (request.method?.toUpperCase() !== 'GET') return false
-  const raw = `${request.path ?? ''} ${request.url ?? ''}`
-  const path = raw.split(/[?#\s]/).find((part) => part.length > 0) ?? ''
-  return path === `/${leaf}` || path.endsWith(`/${leaf}`)
+  const method = request.method?.toUpperCase()
+  if (method === 'GET') {
+    return typeof request.params?.sha256 === 'string' && request.params.sha256.length > 0
+  }
+  if (method !== 'POST') return false
+  const body = request.body
+  if (body === null || typeof body !== 'object' || Array.isArray(body)) return false
+  return allowed((body as { asset_class?: unknown }).asset_class)
 }
 
 export function stubListeningAnonymousAllowed(request: {
@@ -65,21 +73,9 @@ export function stubListeningAnonymousAllowed(request: {
   params?: { sha256?: string }
   body?: unknown
 }): boolean {
-  let parsed
-  try {
-    parsed = parseTtsConfig(config.ttsEnv())
-  } catch {
-    return false
-  }
-  if (parsed.provider !== 'stub' || !parsed.stubRender) return false
-  const method = request.method?.toUpperCase()
-  if (method === 'GET') {
-    return typeof request.params?.sha256 === 'string' && request.params.sha256.length > 0
-  }
-  if (method !== 'POST') return false
-  const body = request.body
-  if (body === null || typeof body !== 'object' || Array.isArray(body)) return false
-  return (body as { asset_class?: unknown }).asset_class === LISTENING_ASSET_CLASS
+  const parsed = parsedTtsConfig()
+  if (parsed?.provider !== 'stub' || !parsed.stubRender) return false
+  return ttsAssetRequest(request, (assetClass) => assetClass === LISTENING_ASSET_CLASS)
 }
 
 export function catalogReferenceAnonymousAllowed(request: {
@@ -87,20 +83,10 @@ export function catalogReferenceAnonymousAllowed(request: {
   params?: { sha256?: string }
   body?: unknown
 }): boolean {
-  let parsed
-  try {
-    parsed = parseTtsConfig(config.ttsEnv())
-  } catch {
-    return false
-  }
-  if (parsed.provider !== 'elevenlabs') return false
-  const method = request.method?.toUpperCase()
-  if (method === 'GET') {
-    return typeof request.params?.sha256 === 'string' && request.params.sha256.length > 0
-  }
-  if (method !== 'POST') return false
-  const body = request.body
-  if (body === null || typeof body !== 'object' || Array.isArray(body)) return false
-  const assetClass = (body as { asset_class?: unknown }).asset_class
-  return assetClass === REFERENCE_ASSET_CLASS || assetClass === LISTENING_ASSET_CLASS
+  const parsed = parsedTtsConfig()
+  if (parsed?.provider !== 'elevenlabs') return false
+  return ttsAssetRequest(
+    request,
+    (assetClass) => assetClass === REFERENCE_ASSET_CLASS || assetClass === LISTENING_ASSET_CLASS,
+  )
 }

@@ -14,6 +14,7 @@ import type { AuthPrincipal } from '../auth/auth.tokens.js'
 import { config } from '../common/config.js'
 import { SERVER_CLOCK, type ServerClock } from '../common/clock.js'
 import { LoroError } from '../common/errors.js'
+import { parseContract } from '../common/parse.js'
 import { ElevenLabsMusicAdapter, composeStyles } from '../integrations/elevenlabs/music.js'
 import { MusicBudget } from './budget.js'
 import { LyricsCoordinator } from './lyrics.coordinator.js'
@@ -50,7 +51,7 @@ export class MusicService {
   }
 
   async createLyrics(principal: AuthPrincipal, body: unknown): Promise<MusicLyricsResponse> {
-    const request = parse(MusicLyricsRequestSchema, body)
+    const request = parseContract(MusicLyricsRequestSchema, body)
     const response = await this.lyrics.lyrics(request, principal.userId)
     await this.repository.saveLyric({
       id: response.lyric_document_id,
@@ -64,7 +65,7 @@ export class MusicService {
   }
 
   async renderStyles(principal: AuthPrincipal, body: unknown): Promise<MusicRendersResponse> {
-    const request = parse(MusicRendersRequestSchema, body)
+    const request = parseContract(MusicRendersRequestSchema, body)
     const stored = await this.repository.getLyric(request.lyric_document_id, principal.userId)
     if (stored === null) throw new LoroError('NOT_FOUND')
     const packs = resolveMusicStylePacks(request.style_ids)
@@ -188,15 +189,6 @@ export class MusicService {
   private async jobForTrack(trackId: string, userId: string): Promise<StoredMusicJob | null> {
     return this.repository.getJobByTrack(trackId, userId)
   }
-}
-
-function parse<T>(
-  schema: { safeParse(value: unknown): { success: true; data: T } | { success: false } },
-  value: unknown,
-): T {
-  const result = schema.safeParse(value)
-  if (!result.success) throw new LoroError('VALIDATION_FAILED')
-  return result.data
 }
 
 function scopedMusicId(

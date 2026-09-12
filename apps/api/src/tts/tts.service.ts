@@ -10,8 +10,6 @@
  */
 
 import { createHash } from 'node:crypto'
-import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
-import { join } from 'node:path'
 import { Inject, Injectable } from '@nestjs/common'
 import { audioDurationMs } from '@loro/content/audio-duration'
 import {
@@ -37,9 +35,9 @@ import {
   voiceForLocale,
   type TtsFailureCode,
 } from '../integrations/elevenlabs/tts.js'
+import { SHA256, readTtsAsset, readTtsIdentity, writeTtsRender } from './cache.js'
 import { TTS_TRANSPORT, type TtsTransport } from './transport.js'
 
-const SHA = /^[a-f0-9]{64}$/
 const limits = RATE_LIMITS.ttsRender
 
 function digestUtf8(value: string): string {
@@ -71,7 +69,7 @@ export function ttsDownloadOrigin(request?: {
   protocol?: string
   headers?: Record<string, unknown>
 }): string {
-  const configured = process.env['AUTH_PUBLIC_URL']?.trim()
+  const configured = config.publicUrl()
   if (configured) return configured.replace(/\/$/, '')
   const host = headerString(request?.headers, 'host')
   if (host) {
@@ -79,10 +77,10 @@ export function ttsDownloadOrigin(request?: {
     const proto = forwarded ?? request?.protocol ?? 'http'
     return `${proto}://${host}`
   }
-  if (process.env['NODE_ENV'] !== 'production') {
-    return `http://127.0.0.1:${process.env['PORT'] ?? '3000'}`
+  if (!config.isProduction()) {
+    return `http://127.0.0.1:${config.listenPort()}`
   }
-  return (process.env['AUTH_ISSUER'] ?? 'https://api.loro.app').replace(/\/$/, '')
+  return config.authIssuer().replace(/\/$/, '')
 }
 
 function downloadUrl(sha256: string, publicOrigin?: string): string {
@@ -159,7 +157,7 @@ export class TtsService {
     const renderModel = listening ? request.data.model_id : parsedConfig.model
     const voiceVersion = `${request.data.asset_class}:${renderModel}:${voiceId}`
     const identity = digestUtf8(`${input.userId}:${textHash}:${request.data.lang}:${voiceVersion}`)
-    const cached = await this.readIdentity(identity, request.data, input.publicOrigin)
+    const cached = await this.cachedResponse(identity, request.data, input.publicOrigin)
     if (cached !== null) return cached
     const pending = this.inflight.get(identity)
     if (pending !== undefined) return pending
@@ -182,8 +180,8 @@ export class TtsService {
   }
 
   async asset(sha256: string): Promise<{ bytes: Buffer; contentType: string }> {
-    if (!SHA.test(sha256)) throw new LoroError('VALIDATION_FAILED')
-    const file = await this.readAsset(sha256)
+    if (!SHA256.test(sha256)) throw new LoroError('VALIDATION_FAILED')
+    const file = await readTtsAsset(sha256)
     if (file === null) throw new LoroError('NOT_FOUND')
     return file
   }
@@ -243,50 +241,22 @@ export class TtsService {
     return true
   }
 
-  private async readIdentity(
+  private async cachedResponse(
     identity: string,
     request: TtsRequest,
     publicOrigin?: string,
   ): Promise<TtsResponse | null> {
-    try {
-      const mapped = JSON.parse(
-        await readFile(join(config.ttsCacheDir(), 'id', `${identity}.json`), 'utf8'),
-      ) as { sha256?: unknown; ms?: unknown }
-      if (typeof mapped.sha256 !== 'string' || !SHA.test(mapped.sha256)) return null
-      if (typeof mapped.ms !== 'number' || !Number.isSafeInteger(mapped.ms) || mapped.ms <= 0) {
-        return null
-      }
-      if ((await this.readAsset(mapped.sha256)) === null) return null
-      return metadata({
-        sha256: mapped.sha256,
-        ms: mapped.ms,
-        cached: true,
-        voiceId: request.voice_id,
-        modelId: request.model_id,
-        assetClass: request.asset_class,
-        ...(publicOrigin === undefined ? {} : { publicOrigin }),
-      })
-    } catch {
-      return null
-    }
-  }
-
-  private async readAsset(sha256: string): Promise<{ bytes: Buffer; contentType: string } | null> {
-    try {
-      const dir = config.ttsCacheDir()
-      const bytes = await readFile(join(dir, `${sha256}.bin`))
-      if (createHash('sha256').update(bytes).digest('hex') !== sha256) return null
-      const sidecar = JSON.parse(await readFile(join(dir, `${sha256}.json`), 'utf8')) as {
-        contentType?: unknown
-      }
-      const contentType =
-        typeof sidecar.contentType === 'string' && sidecar.contentType.length > 0
-          ? sidecar.contentType
-          : 'application/octet-stream'
-      return { bytes, contentType }
-    } catch {
-      return null
-    }
+    const mapped = await readTtsIdentity(identity)
+    if (mapped === null) return null
+    return metadata({
+      sha256: mapped.sha256,
+      ms: mapped.ms,
+      cached: true,
+      voiceId: request.voice_id,
+      modelId: request.model_id,
+      assetClass: request.asset_class,
+      ...(publicOrigin === undefined ? {} : { publicOrigin }),
+    })
   }
 
   private async synthesize(input: {
@@ -320,20 +290,13 @@ export class TtsService {
     }
     const ms = audioDurationMs(result.bytes)
     if (ms === null) throw new LoroError('PROVIDER_UNAVAILABLE')
-    const sha256 = createHash('sha256').update(result.bytes).digest('hex')
-    const dir = config.ttsCacheDir()
-    await mkdir(join(dir, 'id'), { recursive: true })
-    const tmp = join(dir, `${sha256}.tmp`)
-    await writeFile(tmp, result.bytes)
-    await rename(tmp, join(dir, `${sha256}.bin`))
-    await writeFile(
-      join(dir, `${sha256}.json`),
-      `${JSON.stringify({ ...result.provenance, contentType: result.contentType, ms }, null, 2)}\n`,
-    )
-    await writeFile(
-      join(dir, 'id', `${input.identity}.json`),
-      `${JSON.stringify({ sha256, ms })}\n`,
-    )
+    const { sha256 } = await writeTtsRender({
+      identity: input.identity,
+      bytes: result.bytes,
+      contentType: result.contentType,
+      provenance: result.provenance,
+      ms,
+    })
     return metadata({
       sha256,
       ms,

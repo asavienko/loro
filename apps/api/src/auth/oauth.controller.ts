@@ -19,6 +19,8 @@ import { AuthService } from './auth.service.js'
 import { AuthGuard, type AuthenticatedRequest } from './auth.guard.js'
 import { AUTH_RUNTIME } from './runtime.js'
 import { providerEnabled } from './settings.js'
+import { requestAddress } from '../common/http.js'
+import { parseContract } from '../common/parse.js'
 import { LoroError } from '../common/errors.js'
 
 @Controller('auth')
@@ -50,11 +52,10 @@ export class OAuthController {
   @HttpCode(200)
   @Header('Cache-Control', 'no-store')
   async start(@Param('provider') provider: string, @Body() body: unknown, @Req() request: Request) {
-    const parsed = OAuthStartSchema.safeParse(body)
-    if (!parsed.success) throw new LoroError('VALIDATION_FAILED', 'Invalid sign-in request.')
+    const parsed = parseContract(OAuthStartSchema, body, 'Invalid sign-in request.')
     const auth = this.auth()
-    await auth.rate(request.socket.remoteAddress ?? 'unknown')
-    return auth.start(this.provider(provider), parsed.data.redirect_uri, parsed.data.code_challenge)
+    await auth.rate(requestAddress(request))
+    return auth.start(this.provider(provider), parsed.redirect_uri, parsed.code_challenge)
   }
   @Get(':provider/callback')
   async callbackGet(
@@ -91,16 +92,10 @@ export class OAuthController {
   @HttpCode(200)
   @Header('Cache-Control', 'no-store')
   async exchange(@Body() body: unknown, @Req() request: Request) {
-    const parsed = OAuthExchangeSchema.safeParse(body)
-    if (!parsed.success) throw new LoroError('VALIDATION_FAILED', 'Invalid exchange request.')
+    const parsed = parseContract(OAuthExchangeSchema, body, 'Invalid exchange request.')
     const auth = this.auth()
-    await auth.rate(request.socket.remoteAddress ?? 'unknown')
-    return auth.exchange(
-      parsed.data.ticket,
-      parsed.data.code_verifier,
-      parsed.data.device,
-      parsed.data.anon_id,
-    )
+    await auth.rate(requestAddress(request))
+    return auth.exchange(parsed.ticket, parsed.code_verifier, parsed.device, parsed.anon_id)
   }
   @Get('me')
   @Header('Cache-Control', 'no-store')

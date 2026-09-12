@@ -27,6 +27,7 @@ import {
   type RefreshRegistration,
   type UserRow,
 } from './auth.session.js'
+import { AUTH_IP_LIMIT, EMAIL_LIMIT, consumeAuthLimit } from './auth.rate-limit.js'
 import {
   ACCESS_SECONDS,
   AccessTokens,
@@ -58,10 +59,6 @@ interface CodeRow {
   expires_at: string | number
   attempts: number
 }
-
-const RATE_WINDOW = 15 * 60 * 1_000
-const AUTH_IP_LIMIT = 30
-const EMAIL_LIMIT = 5
 
 @Injectable()
 export class AuthService {
@@ -338,24 +335,8 @@ export class AuthService {
     await this.limit(`ip:${address}`, AUTH_IP_LIMIT)
   }
 
-  private async limit(key: string, limit: number): Promise<void> {
-    const now = this.clock.now()
-    const window = Math.floor(now / RATE_WINDOW)
-    // Hash addresses; raw IPs and emails never enter rate-limit storage.
-    const bucket = tokenHash(`${key}:${window}`)
-    const result = await this.database.query<{ count: number }>(
-      `INSERT INTO auth_rate_limits(bucket,count,expires_at) VALUES($1,1,$2)
-       ON CONFLICT(bucket) DO UPDATE SET count=auth_rate_limits.count+1 RETURNING count`,
-      [bucket, (window + 1) * RATE_WINDOW],
-    )
-    if (!result.rows[0] || result.rows[0].count > limit) {
-      throw new LoroError('RATE_LIMITED', undefined, {
-        retry_after: Math.ceil(((window + 1) * RATE_WINDOW - now) / 1_000),
-      })
-    }
-    await this.database.query('DELETE FROM auth_rate_limits WHERE expires_at<$1', [
-      now - RATE_WINDOW,
-    ])
+  private limit(key: string, limit: number): Promise<void> {
+    return consumeAuthLimit(this.database, this.clock, key, limit)
   }
 
   private emailSecret(): string {
