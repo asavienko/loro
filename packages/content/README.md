@@ -5,8 +5,8 @@
 
 # @loro/content
 
-The bundled Spanish catalog: phrases, scenarios, packs, and countdown drop schedules. The package is
-usable by Metro, Node, and the browser and is validated in CI.
+The bundled Spanish catalog: phrases, scenarios, authored graph edges, packs, and countdown drop
+schedules. The package is usable by Metro, Node, and the browser and is validated in CI.
 
 The long-term delivery model is independent content releases
 ([ADR-0009](../../docs/architecture/adr/0009-content-pipeline-and-packs.md)). **That publisher does
@@ -20,7 +20,8 @@ Process: [content-authoring.md](../../docs/process/content-authoring.md) · Mode
 
 Catalog version 1 currently contains:
 
-- 31 `es-ES` phrases, 5 ordered scenarios, 12 packs, and 4 drop schedules (3, 7, 12, and 20 days);
+- 31 `es-ES` phrases, 5 ordered scenarios, 15 `scenario_next` graph edges, 12 packs, and 4 drop
+  schedules (3, 7, 12, and 20 days);
 - 10 phrases with respellings, 1 with word glosses, and 2 with examples;
 - no rendered audio, syllable timing, or native F0 references yet;
 - 3 empty draft packs (`local`, `pharmacy`, and `nightlife`).
@@ -35,10 +36,12 @@ warnings into a failure.
 es-ES/
 ├── phrases.json       # catalogVersion + the 31 phrase records
 ├── scenarios.json     # ordered phrase arcs; order is meaningful
+├── graph.json         # authored edges; seed is scenario_next only
 ├── packs.json         # visible promisedCount vs non-visible targetCount
 └── drops.json         # schedules and the shared drop rules
 schema/
-└── phrase.schema.json # JSON Schema for an individual phrase
+├── phrase.schema.json # JSON Schema for an individual phrase
+└── graph.schema.json  # JSON Schema for the authored edge list
 src/
 ├── catalog.ts         # JSON imports; the cross-platform bundled snapshot
 ├── fs.ts              # Node-only disk loader for authoring tools
@@ -77,19 +80,20 @@ with pending review records. Exporting is preparation, not linguistic approval.
 
 ## What validation actually enforces
 
-| Check                     | Current behaviour                                                                                              |
-| ------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `schema`                  | Validates every phrase against `schema/phrase.schema.json`                                                     |
-| `packs`                   | Errors when `promisedCount` or visible `sub` differs from membership; warns below `targetCount` and for drafts |
-| `refs`                    | Resolves phrase references from packs/scenarios, pack references from drops, and `deprecated_by`               |
-| `audio`                   | Warns when audio is absent; errors on malformed SHA-256 values                                                 |
-| `prosody`                 | Requires 14 F0 points when present and valid stress/duration values for syllables                              |
-| `duplicates`              | Rejects duplicate ids and duplicate case-insensitive Spanish text                                              |
-| `stress`                  | Requires a respelling, when present, to mark at least one stressed syllable in capitals                        |
-| `length`                  | Caps A1/A2 phrases at eight whitespace-delimited words                                                         |
-| `theme`, `emoji`, `words` | Enforces the shared theme set, one grapheme emoji, and spoken forms for punctuated word fragments              |
-| `scenarios`               | Warns outside the 4–6 phrase guideline                                                                         |
-| `drops`, `draftDrops`     | Requires a review-only final day and unique days; warns when a schedule deals a draft pack                     |
+| Check                     | Current behaviour                                                                                                            |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `schema`                  | Validates every phrase against `schema/phrase.schema.json`                                                                   |
+| `packs`                   | Errors when `promisedCount` or visible `sub` differs from membership; warns below `targetCount` and for drafts               |
+| `refs`                    | Resolves phrase references from packs/scenarios, pack references from drops, and `deprecated_by`                             |
+| `audio`                   | Warns when audio is absent; errors on malformed SHA-256 values                                                               |
+| `prosody`                 | Requires 14 F0 points when present and valid stress/duration values for syllables                                            |
+| `duplicates`              | Rejects duplicate ids and duplicate case-insensitive Spanish text                                                            |
+| `stress`                  | Requires a respelling, when present, to mark at least one stressed syllable in capitals                                      |
+| `length`                  | Caps A1/A2 phrases at eight whitespace-delimited words                                                                       |
+| `theme`, `emoji`, `words` | Enforces the shared theme set, one grapheme emoji, and spoken forms for punctuated word fragments                            |
+| `scenarios`               | Warns outside the 4–6 phrase guideline                                                                                       |
+| `drops`, `draftDrops`     | Requires a review-only final day and unique days; warns when a schedule deals a draft pack                                   |
+| `graph`                   | Resolves edge ends, uniqueness of `(from,to,relation)`, no stored `same_theme`, no cross-locale pair, acyclic `prerequisite` |
 
 Audio absence and incomplete authoring targets are warnings during early catalog construction, not
 errors. Run with `--strict` when assessing release readiness.

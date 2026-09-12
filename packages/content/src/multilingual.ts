@@ -9,7 +9,7 @@ import {
 import starter from '../translations/starter.json' with { type: 'json' }
 import labels from '../translations/labels.json' with { type: 'json' }
 import { bundledCatalog } from './catalog.js'
-import type { CatalogPhrase, Pack, Scenario } from './types.js'
+import type { CatalogPhrase, Pack, PhraseGraph, Scenario } from './types.js'
 export interface LearningPhrase extends Omit<CoreCatalogPhrase, 'id' | 'theme' | 'catalogVersion'> {
   id: string
   theme: CatalogPhrase['theme']
@@ -22,6 +22,7 @@ export interface LearningCatalog {
   phrases: LearningPhrase[]
   packs: Pack[]
   scenarios: Scenario[]
+  graph: PhraseGraph
 }
 const translated = new Map(starter.phrases.map((p) => [p.id, p]))
 const labelMap: Record<string, Record<NativeLanguage, string>> = labels
@@ -97,6 +98,7 @@ export function loadLearningCatalog(
     label: labelMap[item.label]?.[nativeLanguage] ?? item.label,
     phrases: item.phrases.map((id) => (targetLocale === 'es-ES' ? id : `${targetLocale}:${id}`)),
   })
+  const remapId = (id: string): string => (targetLocale === 'es-ES' ? id : `${targetLocale}:${id}`)
   const catalog: LearningCatalog = {
     targetLocale,
     nativeLanguage,
@@ -106,6 +108,14 @@ export function loadLearningCatalog(
     phrases: phrasesFor(targetLocale),
     packs: bundledCatalog.packs.map(localize),
     scenarios: bundledCatalog.scenarios.map(localize),
+    graph: {
+      lang: targetLocale,
+      edges: bundledCatalog.graph.edges.map((edge) => ({
+        ...edge,
+        from: remapId(edge.from),
+        to: remapId(edge.to),
+      })),
+    },
   }
   catalogs.set(key, catalog)
   return catalog
