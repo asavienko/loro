@@ -47,7 +47,7 @@ export function Sheet({
   children: ReactNode
 }) {
   const insets = useSafeAreaInsets()
-  const pullHandlers = usePullDown(onDismiss)
+  const pullHandlers = usePullDown(onDismiss, { captureOnStart: true })
   const { reducedMotion } = useTheme()
   const [presented, setPresented] = useState(visible)
   const presentedRef = useRef(visible)

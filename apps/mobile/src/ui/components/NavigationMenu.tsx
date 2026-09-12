@@ -42,26 +42,24 @@ export function NavigationMenu({
   const insets = useSafeAreaInsets()
   return (
     <>
-      <View
-        testID="navigation-pull-handle"
-        style={[s.spine, { paddingTop: insets.top }]}
-        {...pullHandlers}
-      >
-        <Pressable
-          feedback="row"
-          accessibilityLabel={openLabel}
-          onPress={() => {
-            setVisible(true)
-          }}
-          style={s.handle}
-        >
-          <Text variant="bodySm" color={ink.ink} style={s.place}>
-            {place}
-          </Text>
-          <Text variant="labelSm" color={ink.muted} style={s.caret}>
-            {reveal}
-          </Text>
-        </Pressable>
+      <View style={[s.chrome, { paddingTop: insets.top }]}>
+        <View testID="navigation-pull-handle" style={s.spine} {...pullHandlers}>
+          <Pressable
+            feedback="row"
+            accessibilityLabel={openLabel}
+            onPress={() => {
+              setVisible(true)
+            }}
+            style={s.handle}
+          >
+            <Text variant="bodySm" color={ink.ink} style={s.place}>
+              {place}
+            </Text>
+            <Text variant="labelSm" color={ink.muted} style={s.caret}>
+              {reveal}
+            </Text>
+          </Pressable>
+        </View>
         {ongoing !== undefined && (
           <Pressable
             feedback="row"
@@ -139,14 +137,16 @@ const CARET_SIZE = 10
 const HANDLE_GAP = 5
 const ROW_PADDING = 13
 const s = StyleSheet.create({
+  chrome: {
+    paddingHorizontal: space['5'],
+    borderBottomWidth: border.hairline,
+    borderBottomColor: line.subtle,
+  },
   spine: {
     touchAction: 'none',
     userSelect: 'none',
     minHeight: SPINE_HEIGHT,
-    paddingHorizontal: space['5'],
     justifyContent: 'center',
-    borderBottomWidth: border.hairline,
-    borderBottomColor: line.subtle,
   },
   handle: {
     flexDirection: 'row',

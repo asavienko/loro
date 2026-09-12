@@ -6,12 +6,14 @@ const COMMIT_DISTANCE = 48
 const VERTICAL_DOMINANCE = 2
 
 /** Attach only to a dedicated handle so content scrolling keeps its normal responder. */
-export function usePullDown(onPull: () => void) {
+export function usePullDown(onPull: () => void, options?: { readonly captureOnStart?: boolean }) {
   const callback = useRef(onPull)
   callback.current = onPull
+  const captureOnStart = options?.captureOnStart === true
   return useMemo(
     () =>
       PanResponder.create({
+        onStartShouldSetPanResponder: () => captureOnStart,
         onMoveShouldSetPanResponder: (_, gesture) =>
           gesture.numberActiveTouches === 1 &&
           gesture.dy > ACTIVATION_DISTANCE &&
@@ -24,8 +26,8 @@ export function usePullDown(onPull: () => void) {
             callback.current()
           }
         },
-        onPanResponderTerminationRequest: () => true,
+        onPanResponderTerminationRequest: () => false,
       }).panHandlers,
-    [],
+    [captureOnStart],
   )
 }
