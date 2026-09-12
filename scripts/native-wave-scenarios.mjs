@@ -255,6 +255,34 @@ export function phraseIdFromUrl(url) {
   return parseAppUrl(url)?.searchParams.get('phrase') ?? ''
 }
 
+/** Phrase id from `/phrase/<id>` after a Stream wave-row tap. */
+export function phraseIdFromDetailUrl(url) {
+  const parsed = parseAppUrl(url)
+  if (!parsed) return ''
+  const match = parsed.pathname.match(/(?:^|\/)phrase\/([^/]+)$/)
+  return match?.[1] ?? ''
+}
+
+const STREAM_QUEUE_ROW = /^.+\. .+\. .+\.$/
+const STREAM_QUEUE_DIFFICULTY =
+  /(Easy|Learning|Difficult|Лесна|Уча я|Трудна|Лёгкая|Изучаю|Трудная)\.$/
+const STREAM_QUEUE_CHROME = /Practice this phrase|Love this phrase|open the menu|Leave practice/
+
+export function isStreamQueueRowLabel(label) {
+  const text = String(label ?? '').trim()
+  if (!text || STREAM_QUEUE_CHROME.test(text)) return false
+  return STREAM_QUEUE_ROW.test(text) && STREAM_QUEUE_DIFFICULTY.test(text)
+}
+
+/** Clickable Stream “This wave” row: `{target}. {translation}. {difficulty}.` */
+export function findStreamQueueRow(dump) {
+  const parsed = typeof dump === 'string' ? parseUiDump(dump) : dump
+  return parsed.nodes.find((node) => {
+    if (!node.clickable) return false
+    return isStreamQueueRowLabel(nodePrimaryLabel(node)) || isStreamQueueRowLabel(nodeLabel(node))
+  })
+}
+
 export function isHardRefrainUrl(url) {
   const parsed = parseAppUrl(url)
   return Boolean(
@@ -731,6 +759,18 @@ function tapWaveStart(ctx, dump) {
   )
 }
 
+function tapStreamQueueRow(ctx, dump) {
+  const node = findStreamQueueRow(dump)
+  if (!node?.bounds) return 'Missing tap target: Stream wave row'
+  const { left, top, right, bottom } = node.bounds
+  return activatePoint(
+    ctx,
+    Math.floor((left + right) / 2),
+    Math.floor((top + bottom) / 2),
+    'Stream wave row',
+  )
+}
+
 function openStreamFromToday(ctx, dump) {
   if (findWaveStart(dump)) return tapWaveStart(ctx, dump)
   const rail = findClickableLabel(dump, STREAM_RAIL) ?? findLabel(dump, STREAM_RAIL)
@@ -928,22 +968,17 @@ function runStreamPhrase(ctx) {
     currentUrl,
   })
   if (streamEval.status !== 'passed') return scenarioResult(scenario, streamEval, { currentUrl })
-  const phraseId = phraseIdFromUrl(currentUrl)
-  if (!phraseId) {
-    return scenarioResult(
-      scenario,
-      {
-        status: 'failed',
-        notes: 'Stream phrase URL does not expose a phrase id for Practice now.',
-      },
-      { currentUrl },
-    )
-  }
-  const openedDetail = openDeepLink(ctx, `/phrase/${phraseId}`)
-  if (openedDetail) return scenarioResult(scenario, { status: 'unavailable', notes: openedDetail })
+  const openedList = openDeepLink(ctx, '/practice/stream')
+  if (openedList) return scenarioResult(scenario, { status: 'unavailable', notes: openedList })
+  waitForUi(ctx.run, ctx.waitMs)
+  const list = dumpUi(ctx, 'stream-list')
+  if (list.error) return scenarioResult(scenario, { status: 'unavailable', notes: list.error })
+  const rowTapped = tapStreamQueueRow(ctx, list.xml)
+  if (rowTapped) return scenarioResult(scenario, { status: 'failed', notes: rowTapped })
   waitForUi(ctx.run, ctx.waitMs)
   const detail = dumpUi(ctx, 'phrase-detail-before')
   if (detail.error) return scenarioResult(scenario, { status: 'unavailable', notes: detail.error })
+  const rowPhraseId = phraseIdFromDetailUrl(currentActivityUrl(ctx, detail.xml))
   const tappedNow = tapLabel(ctx, detail.xml, 'Practice now')
   if (tappedNow) return scenarioResult(scenario, { status: 'failed', notes: tappedNow })
   waitForUi(ctx.run, ctx.waitMs)
@@ -958,7 +993,7 @@ function runStreamPhrase(ctx) {
     detailDump: detail.xml,
     refrainDump: fromDetail.xml,
     currentUrl: detailUrl,
-    phraseId,
+    phraseId: rowPhraseId || undefined,
   })
   if (detailEval.status !== 'passed')
     return scenarioResult(scenario, detailEval, { currentUrl: detailUrl })
@@ -966,7 +1001,7 @@ function runStreamPhrase(ctx) {
     scenario,
     {
       status: 'passed',
-      notes: 'Stream Practice this phrase and phrase-detail Practice now opened phrase focus.',
+      notes: 'Stream Practice this phrase and Stream wave-row Practice now opened phrase focus.',
     },
     { currentUrl: detailUrl },
   )

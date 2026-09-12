@@ -45,6 +45,11 @@ const STREAM = JSON.stringify([
         type: 'Button',
         frame: { x: 24, y: 400, width: 336, height: 56 },
       },
+      {
+        label: 'Para llevar, por favor. To go, please. Learning.',
+        type: 'Button',
+        frame: { x: 24, y: 500, width: 336, height: 56 },
+      },
       { label: 'loro-route:/practice/stream' },
     ],
   },
@@ -203,11 +208,22 @@ function atRows(rows) {
   return rows.filter((row) => row.id.endsWith('-at'))
 }
 
+function streamDumpFor(omitQueueRow) {
+  if (!omitQueueRow) return STREAM
+  const parsed = JSON.parse(STREAM)
+  parsed[0].children = parsed[0].children.filter(
+    (child) => child.label !== 'Para llevar, por favor. To go, please. Learning.',
+  )
+  return JSON.stringify(parsed)
+}
+
 function scriptedIosDevice({
   moreOpensHard = true,
   leaveOnFullScreenSwipe = false,
   phraseMenuKeepsPhrase = false,
   practiceNowStaysOnDetail = false,
+  omitQueueRow = false,
+  queueRowStaysOnStream = false,
 } = {}) {
   let stage = 'idle'
   let menuSource = 'today'
@@ -220,14 +236,17 @@ function scriptedIosDevice({
     if (stage === 'hard') return HARD
     if (stage === 'stream-exit') return STREAM_EXIT_SHEET_ONLY
     if (stage === 'exit') return PHRASE_EXIT
-    return STREAM
+    return streamDumpFor(omitQueueRow)
   }
   const applyTap = (tapY) => {
     if (stage === 'today') {
       stage = tapY < 200 ? 'menu' : 'stream'
       if (stage === 'menu') menuSource = 'today'
-    } else if (stage === 'stream') stage = tapY < 80 ? 'stream-exit' : 'phrase'
-    else if (stage === 'detail') stage = practiceNowStaysOnDetail ? 'detail' : 'phrase'
+    } else if (stage === 'stream') {
+      if (tapY < 80) stage = 'stream-exit'
+      else if (tapY >= 480) stage = queueRowStaysOnStream ? 'stream' : 'detail'
+      else stage = 'phrase'
+    } else if (stage === 'detail') stage = practiceNowStaysOnDetail ? 'detail' : 'phrase'
     else if (stage === 'stream-exit') stage = 'stream'
     else if (stage === 'phrase') {
       stage = tapY < 90 ? 'menu' : 'exit'
@@ -442,6 +461,28 @@ test('menu-hard-refrain fails when More does not open the difficult-only drill',
   assert.equal(rows[0].status, 'passed')
   assert.equal(rows[1].status, 'failed')
   assert.match(rows[1].notes, /The Refrain/)
+})
+
+test('stream-to-phrase-refrain fails when Stream has no wave row', () => {
+  const rows = executeIosWaveScenarios({
+    udid: 'A123',
+    run: scriptedIosDevice({ omitQueueRow: true }),
+    waitMs: 0,
+  })
+  const row = rows.find((entry) => entry.id === 'stream-to-phrase-refrain')
+  assert.equal(row.status, 'failed')
+  assert.match(row.notes, /Stream wave row/)
+})
+
+test('stream-to-phrase-refrain fails when the wave-row tap stays on Stream', () => {
+  const rows = executeIosWaveScenarios({
+    udid: 'A123',
+    run: scriptedIosDevice({ queueRowStaysOnStream: true }),
+    waitMs: 0,
+  })
+  const row = rows.find((entry) => entry.id === 'stream-to-phrase-refrain')
+  assert.equal(row.status, 'failed')
+  assert.match(row.notes, /Practice now/)
 })
 
 test('stream-to-phrase-refrain fails when Practice now stays on phrase detail', () => {
