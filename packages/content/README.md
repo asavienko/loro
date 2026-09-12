@@ -64,6 +64,7 @@ Use Node 22.
 
 ```bash
 pnpm content:validate
+pnpm content:gap-priority
 pnpm --filter @loro/content validate --strict
 pnpm --filter @loro/content validate --only packs,refs,drops
 pnpm --filter @loro/content test

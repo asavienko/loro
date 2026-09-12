@@ -10,7 +10,8 @@ Early implementation. **What exists:** eight of the v1.1 design package's 23 lea
 Languages, Account, More, Settings and Listen utilities, the shared shell and a developer workbench.
 `/music` (Phrase songs) is a later garnish via More — picker, lyric review, style confirm, and
 fixture playback. Default CI uses `MUSIC_PROVIDER=stub` and never calls ElevenLabs or Anthropic.
-Discover offers Add your own and bundled topic suggestions; `/v1/phrases/suggest` uses bundled
+Discover offers Add your own and bundled topic suggestions; after a catalog add it ranks unowned
+neighbors inside same-theme-first bands via Rust `assoc_order`. `/v1/phrases/suggest` uses bundled
 topics unless `ANTHROPIC_API_KEY` is set (Q-21 eval remains). Local progress and course/session
 state commit to native OP-SQLite or browser SQLite before rendering. Rust owns FSRS, ranking,
 selection, matching, clocks and merge through generated WASM/UniFFI bridges. Native modules provide

@@ -2,10 +2,9 @@
 
 - **Requirement IDs:** `P2-04`, `P2-06`, `P2-24`, `AI-02`, `AS-01`, `AS-07`
 - **Milestone:** M2/M3 content and Discover association
-- **Status:** 🟡 Authored `scenario_next` edges and Rust `assoc_score` / `assoc_order` land.
-  Remaining: regenerate bindings if they drift, Discover wiring and artifact copy, `gap_priority`
-  CLI. Nothing external blocks those slices. Q-15 still gates production pronunciation audio; Q-21
-  still gates live Discover suggest; Q-22 still gates share-out-of-app.
+- **Status:** 🟡 Implementation of the six remaining-work items is on the branch. Q-15 still gates
+  production pronunciation audio; Q-21 still gates live Discover suggest; Q-22 still gates
+  share-out-of-app. Device 60 fps and bilingual review stay their existing owners.
 - **Depends on:** 60 for the Rust maths boundary (not the policy); 61 for catalog publication; 97
   for authoring-time drafts; 98 for reference render; 99 for listening-class render; 87 for new
   linguistic edges
@@ -91,7 +90,7 @@ is missing.
        branch calls `coreCall` inside the existing `useMemo` (never on the per-keystroke search
        path). Query, browse and scenario branches stay as they are. Copy becomes
        `More like “{phrase}”` with ICU in `en.json`, `bg.json` and `ru.json`. Update E2E.
-6. [ ] Content CLI `gap_priority`: report arc orphans, thin scenarios, short packs and missing
+6. [x] Content CLI `gap_priority`: report arc orphans, thin scenarios, short packs and missing
        audio. Phrase gaps emit plan-97 drafts; audio gaps enqueue 98 (`AS-01`) or 99 (`AS-07`). No
        second TTS client, no JS PCM, no catalog mutation.
 
