@@ -22,6 +22,10 @@ Generated iOS/Android projects remain ignored. Local Expo modules autolink the g
 and native foreground audio/speech; OP-SQLite supplies the device driver. Expo Go cannot load these
 custom modules. Generated bindings and embedded browser WASM have drift checks.
 
+`pnpm apk:local` resolves JDK 17 and an installed Android SDK on Linux (`~/Android/Sdk`, Debian
+`openjdk-17`) as well as the existing macOS defaults. `pnpm native:evidence` uses that SDK's `adb`
+when it is not already on `PATH`. This does not replace device, emulator or signing evidence.
+
 `pnpm native:evidence` now captures a read-only, timestamped Android device evidence bundle under
 the ignored local-build directory. `--platform ios` now collects Xcode version, booted simulator
 metadata, installed-bundle presence and a verified PNG artifact, with explicit missing prerequisite

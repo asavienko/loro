@@ -68,24 +68,19 @@ if (run('git', ['status', '--porcelain'], root, true))
   throw new Error('Commit or stash changes before building a traceable APK.')
 const sha = run('git', ['rev-parse', 'HEAD'], root, true)
 const short = sha.slice(0, 12)
-if (!env.JAVA_HOME) {
-  const candidates = [
-    '/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home',
-    '/usr/local/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home',
-    '/Applications/Android Studio.app/Contents/jbr/Contents/Home',
-  ]
-  env.JAVA_HOME = candidates.find((candidate) => existsSync(join(candidate, 'bin/java')))
-}
-if (env.JAVA_HOME) env.PATH = `${env.JAVA_HOME}/bin:${env.PATH}`
 run('java', ['-version'])
-env.ANDROID_HOME ||= env.ANDROID_SDK_ROOT || join(homedir(), 'Library/Android/sdk')
-if (!existsSync(join(env.ANDROID_HOME, 'platform-tools')))
+if (!env.ANDROID_HOME || !existsSync(join(env.ANDROID_HOME, 'platform-tools')))
   throw new Error('Set ANDROID_HOME to an installed Android SDK.')
 run('cargo', ['ndk', '--version'])
-const rustTargets = run('rustup', ['target', 'list', '--installed'], root, true).split('\n')
+const rustupTargetArgs = env.RUSTUP_TOOLCHAIN
+  ? [`+${env.RUSTUP_TOOLCHAIN}`, 'target', 'list', '--installed']
+  : ['target', 'list', '--installed']
+const rustTargets = run('rustup', rustupTargetArgs, root, true).split('\n')
 for (const target of ['aarch64-linux-android', 'x86_64-linux-android']) {
   if (!rustTargets.includes(target))
-    throw new Error(`Install the Rust target: rustup target add ${target}`)
+    throw new Error(
+      `Install the Rust target: rustup ${env.RUSTUP_TOOLCHAIN ? `+${env.RUSTUP_TOOLCHAIN} ` : ''}target add ${target}`,
+    )
 }
 let repo
 if (upload) {

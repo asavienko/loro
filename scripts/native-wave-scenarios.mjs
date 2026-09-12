@@ -7,6 +7,7 @@
 import { spawnSync } from 'node:child_process'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { resolveAdb } from './apk-environment.mjs'
 import { unevaluatedWaveScenarios, WAVE_TOUCH_SCENARIOS } from './wave-touch-scenarios.mjs'
 
 export const WAVE_SCENARIO_IDS = WAVE_TOUCH_SCENARIOS.map((row) => row.id)
@@ -319,7 +320,7 @@ function failedCommand(result, label) {
   return null
 }
 
-export function probeAndroidDevice({ adb = 'adb', serial, run = spawnSync } = {}) {
+export function probeAndroidDevice({ adb = resolveAdb(), serial, run = spawnSync } = {}) {
   const version = run(adb, ['version'], { encoding: 'utf8' })
   const missing = failedCommand(version, 'adb')
   if (missing) {
@@ -604,7 +605,7 @@ export function ensureLearnerHome(ctx) {
 }
 
 export function executeWaveScenarios({
-  adb = 'adb',
+  adb = resolveAdb(),
   serial,
   packageName = 'app.loro.android.preview',
   scheme = 'loro',
