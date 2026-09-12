@@ -87,7 +87,7 @@ is missing.
        expose identical edges.
 4. [x] Implement Rust `assoc_score` (module such as `packages/core-rs/src/graph.rs`) with exact
        integer fixtures. Add one typed `bridge.rs` op. Regenerated bindings are their own commit.
-5. [ ] Discover: `anchorOn` stores catalog phrase id, `anchorEs`, difficulty and tags. Association
+5. [x] Discover: `anchorOn` stores catalog phrase id, `anchorEs`, difficulty and tags. Association
        branch calls `coreCall` inside the existing `useMemo` (never on the per-keystroke search
        path). Query, browse and scenario branches stay as they are. Copy becomes
        `More like “{phrase}”` with ICU in `en.json`, `bg.json` and `ru.json`. Update E2E.
