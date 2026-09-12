@@ -29,6 +29,8 @@ import {
 import { config } from '../common/config.js'
 import { SERVER_CLOCK, type ServerClock } from '../common/clock.js'
 import { LoroError, RATE_LIMITS } from '../common/errors.js'
+import { windowMs } from '../common/rate-limit.js'
+import { MemoryRateLimitStore } from '../common/rate-limit.memory.js'
 import {
   isTtsFailure,
   parseTtsConfig,
@@ -110,7 +112,7 @@ function metadata(input: {
 
 @Injectable()
 export class TtsService {
-  private readonly hits = new Map<string, number[]>()
+  private readonly hits = new MemoryRateLimitStore()
   private readonly inflight = new Map<string, Promise<TtsResponse>>()
 
   constructor(
@@ -153,7 +155,7 @@ export class TtsService {
       throw new LoroError('PROVIDER_UNAVAILABLE', 'TTS model is not pinned')
     }
     const voiceId = this.approvedVoice(request.data, parsedConfig.voices)
-    this.take(input.userId, input.ip)
+    await this.take(input.userId, input.ip)
     const renderModel = listening ? request.data.model_id : parsedConfig.model
     const voiceVersion = `${request.data.asset_class}:${renderModel}:${voiceId}`
     const identity = digestUtf8(`${input.userId}:${textHash}:${request.data.lang}:${voiceVersion}`)
@@ -218,27 +220,24 @@ export class TtsService {
     return catalogVoice
   }
 
-  private take(userId: string, ip: string): void {
+  private async take(userId: string, ip: string): Promise<void> {
     const now = this.clock.now()
-    const windowMs = limits.windowMinutes * 60_000
-    if (!this.admit(`user:${userId}`, limits.perUser, now, windowMs)) {
-      throw new LoroError('RATE_LIMITED', undefined, { retry_after: 60 })
+    const window = windowMs(limits.windowMinutes)
+    for (const [key, limit] of [
+      [`user:${userId}`, limits.perUser],
+      [`ip:${ip}`, limits.perIp],
+    ] as const) {
+      const decision = await this.hits.consume({
+        key,
+        limit,
+        windowMs: window,
+        now,
+        algorithm: 'sliding',
+      })
+      if (!decision.allowed) {
+        throw new LoroError('RATE_LIMITED', undefined, { retry_after: 60 })
+      }
     }
-    if (!this.admit(`ip:${ip}`, limits.perIp, now, windowMs)) {
-      throw new LoroError('RATE_LIMITED', undefined, { retry_after: 60 })
-    }
-  }
-
-  private admit(key: string, limit: number, now: number, windowMs: number): boolean {
-    const start = now - windowMs
-    const times = (this.hits.get(key) ?? []).filter((time) => time > start)
-    if (times.length >= limit) {
-      this.hits.set(key, times)
-      return false
-    }
-    times.push(now)
-    this.hits.set(key, times)
-    return true
   }
 
   private async cachedResponse(

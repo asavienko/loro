@@ -117,10 +117,10 @@ enabled for listening-class when the roster is pinned and the provider is Eleven
 `TTS_STUB_RENDER=1` (labeled listening-class only). Stub-render listening may omit a bearer for
 local cache wiring; ElevenLabs still requires a session. Live spend still needs a key, and
 pronunciation review remains before calling clips production-quality. Default stub and CI stay
-closed. Listening-class multi-voice requests (plan 99) need an additive voice id and `assetClass`
-so they cannot collide with catalog reference audio; the JS client must not receive audio bytes.
-Device TTS is the in-app fallback on a miss. No recorded-audio, ASR-upload or voice-clone
-endpoint exists or is authorized. Share-out-of-app of neural audio is Q-22, not this route.
+closed. Listening-class multi-voice requests (plan 99) need an additive voice id and `assetClass` so
+they cannot collide with catalog reference audio; the JS client must not receive audio bytes. Device
+TTS is the in-app fallback on a miss. No recorded-audio, ASR-upload or voice-clone endpoint exists
+or is authorized. Share-out-of-app of neural audio is Q-22, not this route.
 
 ## Billing
 
@@ -150,18 +150,19 @@ transcript or audio is allowed. Consent, salt handling, retention and queue deli
 
 ## Rate limits
 
-The existing backend constants remain planned defaults, not deployed guards:
+`RATE_LIMITS` in `apps/api/src/common/errors.ts` is the named catalog. Only a subset is enforced
+today, through `RateLimitStore`:
 
-| Group              | Per user               | Per IP                 |
-| ------------------ | ---------------------- | ---------------------- |
-| Auth               | 10 / 15 min            | 30 / 15 min            |
-| Sync               | 120 / min              | 600 / min              |
-| Content            | 60 / min               | 600 / min              |
-| AI scene           | 20 / hour, 60 / day    | 200 / hour             |
-| AI coach/translate | 60 / hour              | 400 / hour             |
-| TTS                | 100 / day              | 500 / day              |
-| Analytics          | 60 / min               | 600 / min              |
-| Chat               | Q-18 decision required | Q-18 decision required |
+| Group              | Catalog                                        | Deployed today                                                                                  |
+| ------------------ | ---------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Auth               | 10 / 15 min per user, 30 / 15 min per IP       | Per-IP 30 / 15 min (hashed tumbling). Email identity is 5 / 15 min, not the catalog per-user 10 |
+| Sync               | 120 / min per user, 600 / min per IP           | Per-user 120 / min only. Per-IP is **not** deployed                                             |
+| Content            | 60 / min per user, 600 / min per IP            | Not deployed                                                                                    |
+| AI scene           | 20 / hour and 60 / day per user, 200 / hour IP | Not deployed                                                                                    |
+| AI coach/translate | 60 / hour per user, 400 / hour per IP          | Not deployed                                                                                    |
+| TTS                | 100 / day per user, 500 / day per IP           | Process-local sliding window on render, including cache hits                                    |
+| Analytics          | 60 / min per user, 600 / min per IP            | Not deployed                                                                                    |
+| Chat               | Q-18 decision required                         | Not deployed                                                                                    |
 
 Target 429 responses declare Retry-After and rate headers. Body/array limits are contract metadata
 and schemas; middleware still needs to enforce byte limits. The unused legacy voice-clone limit is

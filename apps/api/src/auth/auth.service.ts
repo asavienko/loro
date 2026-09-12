@@ -1,5 +1,5 @@
 import { randomBytes, randomInt } from 'node:crypto'
-import { Inject, Injectable } from '@nestjs/common'
+import { Inject, Injectable, Optional } from '@nestjs/common'
 import type {
   ClaimRequest,
   ClaimResult,
@@ -27,6 +27,8 @@ import {
   type RefreshRegistration,
   type UserRow,
 } from './auth.session.js'
+import { RATE_LIMIT_STORE, type RateLimitStore } from '../common/rate-limit.js'
+import { PostgresRateLimitStore } from '../common/rate-limit.postgres.js'
 import { AUTH_IP_LIMIT, EMAIL_LIMIT, consumeAuthLimit } from './auth.rate-limit.js'
 import {
   ACCESS_SECONDS,
@@ -62,10 +64,15 @@ interface CodeRow {
 
 @Injectable()
 export class AuthService {
+  private readonly limits: RateLimitStore
+
   constructor(
     @Inject(DATABASE) private readonly database: SqlDatabase,
     @Inject(SERVER_CLOCK) private readonly clock: ServerClock,
-  ) {}
+    @Optional() @Inject(RATE_LIMIT_STORE) limits?: RateLimitStore,
+  ) {
+    this.limits = limits ?? new PostgresRateLimitStore(database)
+  }
 
   capabilities(): { apple: boolean; google: boolean; email: boolean } {
     const settings = config.authSettings()
@@ -336,7 +343,7 @@ export class AuthService {
   }
 
   private limit(key: string, limit: number): Promise<void> {
-    return consumeAuthLimit(this.database, this.clock, key, limit)
+    return consumeAuthLimit(this.limits, this.clock, key, limit)
   }
 
   private emailSecret(): string {

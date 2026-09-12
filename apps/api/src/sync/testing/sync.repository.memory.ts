@@ -1,5 +1,8 @@
 /** Test adapter only. The application composition root always chooses Postgres. */
 import { randomBytes } from 'node:crypto'
+import { RATE_LIMITS } from '../../common/errors.js'
+import { windowMs } from '../../common/rate-limit.js'
+import { MemoryRateLimitStore } from '../../common/rate-limit.memory.js'
 import type { StoredRow } from '../merge.js'
 import type {
   Alias,
@@ -35,16 +38,17 @@ const fresh = (): MemoryState => ({
 
 export class InMemorySyncRepository implements SyncRepository {
   private readonly users = new Map<string, MemoryState>()
-  private readonly limits = new Map<string, { until: number; count: number }>()
+  private readonly limits = new MemoryRateLimitStore()
   private queue: Promise<void> = Promise.resolve()
-  consume(userId: string, now: number): Promise<boolean> {
-    const current = this.limits.get(userId)
-    const next =
-      current && current.until > now
-        ? { ...current, count: current.count + 1 }
-        : { until: now + 60_000, count: 1 }
-    this.limits.set(userId, next)
-    return Promise.resolve(next.count <= 120)
+  async consume(userId: string, now: number): Promise<boolean> {
+    const decision = await this.limits.consume({
+      key: `sync:${userId}`,
+      limit: RATE_LIMITS.sync.perUser,
+      windowMs: windowMs(RATE_LIMITS.sync.windowMinutes),
+      now,
+      algorithm: 'expire-reset',
+    })
+    return decision.allowed
   }
   transaction<T>(userId: string, work: (tx: SyncTransaction) => Promise<T>): Promise<T> {
     const pending = this.queue.then(async () => {

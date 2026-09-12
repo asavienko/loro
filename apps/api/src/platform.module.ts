@@ -11,6 +11,8 @@ import { StubSceneProvider } from './ai/scene-provider.stub.js'
 import { SCENE_PROVIDERS, type SceneProvider } from './ai/scene-provider.js'
 import { SERVER_CLOCK, systemClock } from './common/clock.js'
 import { config } from './common/config.js'
+import { RATE_LIMIT_STORE } from './common/rate-limit.js'
+import { PostgresRateLimitStore } from './common/rate-limit.postgres.js'
 import { DATABASE, PostgresDatabase, type SqlDatabase } from './database/database.js'
 import { MUSIC_REPOSITORY, MemoryMusicRepository } from './music/repository.js'
 import { PostgresMusicRepository } from './music/repository.postgres.js'
@@ -23,6 +25,7 @@ import { TTS_TRANSPORT, createTtsTransport } from './tts/transport.js'
   providers: [
     { provide: DATABASE, useClass: PostgresDatabase },
     { provide: SERVER_CLOCK, useValue: systemClock },
+    { provide: RATE_LIMIT_STORE, useClass: PostgresRateLimitStore },
     { provide: SYNC_REPOSITORY, useClass: PostgresSyncRepository },
     {
       provide: MUSIC_REPOSITORY,
@@ -43,6 +46,7 @@ import { TTS_TRANSPORT, createTtsTransport } from './tts/transport.js'
   exports: [
     DATABASE,
     SERVER_CLOCK,
+    RATE_LIMIT_STORE,
     SYNC_REPOSITORY,
     MUSIC_REPOSITORY,
     TTS_TRANSPORT,

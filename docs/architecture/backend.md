@@ -46,6 +46,7 @@ apps/api/src/
 | `SCENE_PROVIDERS`  | `StubSceneProvider`                                                            | Register provider adapters; keep validation and fallback in `AiService` |
 | `TTS_TRANSPORT`    | `StubTts` unless `TTS_PROVIDER=elevenlabs` with key/model/voices               | Keep one process instance; stub returns 503, never fake audio           |
 | `SERVER_CLOCK`     | system wall clock                                                              | Override in tests; per-account HLC state is already durable in Postgres |
+| `RATE_LIMIT_STORE` | `PostgresRateLimitStore` on `auth_rate_limits`; TTS keeps a process-local map  | Do not enable catalog rows that are not already deployed                |
 | `config`           | one reader/default per environment variable                                    | Add accessors in `common/config.ts`, not scattered `process.env` reads  |
 
 Plan [85](../../plans/archive/2026-09-07/85-backend-integration-contracts.md) supplies shared
