@@ -1,6 +1,6 @@
 import { atInstant, jumpTo, returnToForeground, runFor } from './clock'
 import { expect, onboard, test } from './fixtures'
-import { repsTodayRow, startHardRefrain, startRefrain } from './helpers'
+import { lockIn, repsTodayRow, START_WAVE, startHardRefrain, startRefrain } from './helpers'
 
 const reps = [
   { label: 'Say it', cue: 'Read it, then say it back', automaticity: 0 },
@@ -51,8 +51,9 @@ test(
       await page.getByRole('button', { name: nextLabel }).click()
     }
 
-    await expect(page.getByText('¡Hecho! Today is done')).toBeVisible()
-    await expect(page.getByText("Today's set is warmed up")).toBeVisible()
+    await expect(page.getByText('¡Hecho! These phrases are done')).toBeVisible()
+    await expect(page.getByText('Difficult phrases are warmed up')).toBeVisible()
+    await expect(page.getByText('¡Hecho! Today is done')).toHaveCount(0)
     await expect(page.getByText('30', { exact: true }).filter({ visible: true })).toBeVisible()
 
     await page.getByRole('button', { name: 'Back to today' }).click()
@@ -65,6 +66,23 @@ test(
     await expect(page.getByLabel(/Last seven days: practised on 1 of them/)).toBeVisible()
   },
 )
+
+test('a one-phrase refrain does not finish the day wave', async ({ page }) => {
+  await atInstant(page, '2026-05-04T10:00')
+  await onboard(page)
+  await startRefrain(page)
+  await expect(page.getByText('This phrase', { exact: true })).toBeVisible()
+  await lockIn(page)
+  await page.getByRole('button', { name: 'Finish the set →' }).click()
+  await expect(page.getByText('¡Hecho! This phrase is done')).toBeVisible()
+  await expect(page.getByText('This phrase is warmed up')).toBeVisible()
+  await expect(page.getByText('¡Hecho! Today is done')).toHaveCount(0)
+  await expect(page.getByText("Today's set is warmed up")).toHaveCount(0)
+
+  await page.getByRole('button', { name: 'Back to today' }).click()
+  await expect(page.getByRole('button', { name: START_WAVE })).toBeEnabled()
+  await expect(page.getByText('1 of 5 locked in').filter({ visible: true })).toBeVisible()
+})
 
 test('opens a scheduled wave when its local time arrives on an already-open route', async ({
   page,

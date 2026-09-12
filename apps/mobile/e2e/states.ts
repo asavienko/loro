@@ -67,7 +67,7 @@ export const STATES: AppState[] = [
       await expect(page.getByRole('button', { name: 'Say it', exact: true })).toBeVisible()
       await page.getByRole('button', { name: 'Leave practice', exact: true }).click()
       await page.getByRole('button', { name: 'Pause the wave', exact: true }).click()
-      await expect(page.getByRole('button', { name: 'Resume the wave', exact: true })).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Resume practice', exact: true })).toBeVisible()
     },
   },
   {
@@ -572,7 +572,20 @@ export const STATES: AppState[] = [
         for (const rep of REFRAIN_REPS) await click(page, rep)
         await page.getByRole('button', { name: /Next phrase →|Finish the set →/ }).click()
       }
-      await expect(page.getByText('¡Hecho! Today is done')).toBeVisible()
+      await expect(page.getByText('¡Hecho! These phrases are done')).toBeVisible()
+      await expect(page.getByText('Difficult phrases are warmed up')).toBeVisible()
+    },
+  },
+  {
+    name: 'refrain · phrase complete',
+    route: '/practice/refrain',
+    spec: '§12 The refrain, targeted completion',
+    reach: async (page) => {
+      await startRefrain(page)
+      await lockIn(page)
+      await page.getByRole('button', { name: 'Finish the set →' }).click()
+      await expect(page.getByText('This phrase is warmed up')).toBeVisible()
+      await expect(page.getByText('¡Hecho! Today is done')).toHaveCount(0)
     },
   },
   {
