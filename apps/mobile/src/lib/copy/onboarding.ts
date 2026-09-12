@@ -13,6 +13,41 @@ export const onboardingCopy = {
       return message('onboarding.welcome.body')
     },
   },
+  method: {
+    get title() {
+      return message('onboarding.method.title')
+    },
+    get body() {
+      return message('onboarding.method.body')
+    },
+  },
+  language: {
+    get recommended() {
+      return message('onboarding.language.recommended')
+    },
+    native: {
+      get en() {
+        return message('onboarding.language.native.en')
+      },
+      get bg() {
+        return message('onboarding.language.native.bg')
+      },
+      get ru() {
+        return message('onboarding.language.native.ru')
+      },
+    },
+    target: {
+      get 'es-ES'() {
+        return message('onboarding.language.target.es-ES')
+      },
+      get 'bg-BG'() {
+        return message('onboarding.language.target.bg-BG')
+      },
+      get 'ru-RU'() {
+        return message('onboarding.language.target.ru-RU')
+      },
+    },
+  },
   steps: {
     goal: {
       get question() {
@@ -144,6 +179,7 @@ export const onboardingCopy = {
     },
   },
   packSub: (phrases: number): string => message('onboarding.packSub', { phrases }),
+  packPrime: (count: number): string => message('onboarding.packPrime', { count }),
   ready: {
     emoji: '✅',
     get title() {

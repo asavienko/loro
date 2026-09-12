@@ -16,6 +16,9 @@ export const addCopy = {
   get searchPlaceholder() {
     return message('add.searchPlaceholder')
   },
+  get searchGlyph() {
+    return message('add.searchGlyph')
+  },
   get scenarioLabel() {
     return message('add.scenarioLabel')
   },
@@ -84,6 +87,18 @@ export const addCopy = {
   get allAdded() {
     return message('add.allAdded')
   },
+  get browseHeading() {
+    return message('add.browseHeading')
+  },
+  get browseHelper() {
+    return message('add.browseHelper')
+  },
+  packPhrases: (count: number): string => message('add.packPhrases', { count }),
+  packPhrasesLeft: (total: number, left: number): string =>
+    message('add.packPhrasesLeft', { total, left }),
+  packOwnedOf: (owned: number, total: number): string =>
+    message('add.packOwnedOf', { owned, total }),
+  packPercent: (percent: number): string => message('add.packPercent', { percent }),
   get backToThemes() {
     return message('add.backToThemes')
   },
@@ -96,6 +111,9 @@ export const addCopy = {
     },
   },
   addGlyph: '+',
+  get queue() {
+    return message('add.queue')
+  },
   get tagsQuestion() {
     return message('add.tagsQuestion')
   },
@@ -172,6 +190,12 @@ export const addCopy = {
     },
     get meaningPlaceholder() {
       return message('add.import.meaningPlaceholder')
+    },
+    get targetLabel() {
+      return message('add.import.targetLabel')
+    },
+    get meaningLabel() {
+      return message('add.import.meaningLabel')
     },
     get duplicate() {
       return message('add.import.duplicate')

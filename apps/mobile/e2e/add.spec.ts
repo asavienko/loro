@@ -66,7 +66,9 @@ test('P2-02..P2-24: discovers, tags, adds, associates, and undoes a phrase', asy
 test('P2-08: browses all themes, drills into one, and returns to the grid', async ({ page }) => {
   await onboard(page)
   await page.getByRole('button', { name: 'Add' }).click()
-  await page.getByRole('button', { name: 'browse' }).click()
+  await page.getByRole('button', { name: 'Browse' }).click()
+  await expect(page.getByText('Curated packs')).toBeVisible()
+  await expect(page.getByText('Themes from this course.')).toBeVisible()
 
   for (const theme of [
     'Café',
@@ -81,7 +83,10 @@ test('P2-08: browses all themes, drills into one, and returns to the grid', asyn
     await expect(page.getByRole('button', { name: new RegExp(`^${theme},`) })).toBeVisible()
   }
 
-  await page.getByRole('button', { name: /^Dining,/ }).click()
+  const dining = page.getByRole('button', { name: 'Dining, 4 to add' })
+  await expect(dining.getByText('4 phrases · 4 left')).toBeVisible()
+  await expect(dining.getByText('0 of 4')).toBeVisible()
+  await dining.click()
   await expect(page.getByRole('button', { name: 'Back to themes' })).toBeVisible()
   // The drilled list names itself and says how much is left, as the authored header does
   // (`Loro.dc.html:306`). Without it the list was anonymous while the tile it opened had just
@@ -99,7 +104,7 @@ test('P2-08: a finished theme says it is finished, not that the library is empty
   // reads "all added ✓" and drilling in is the empty case.
   await onboard(page)
   await page.getByRole('button', { name: 'Add' }).click()
-  await page.getByRole('button', { name: 'browse' }).click()
+  await page.getByRole('button', { name: 'Browse' }).click()
   await expect(page.getByRole('button', { name: 'Café, all added ✓' })).toBeVisible()
 
   await page.getByRole('button', { name: /^Café,/ }).click()
@@ -117,7 +122,7 @@ test('P2-09/P2-10: reviews an offline import before persisting each accepted own
 }) => {
   await onboard(page)
   await page.getByRole('button', { name: 'Add' }).click()
-  await page.getByRole('button', { name: 'import' }).click()
+  await page.getByRole('button', { name: 'Import' }).click()
   const input = page.getByRole('textbox', { name: 'Phrases to import' })
   await input.fill('¿Dónde está la estación? | Where is the station?\nIncomplete')
   await page.getByRole('button', { name: 'Review phrases' }).click()
@@ -129,7 +134,7 @@ test('P2-09/P2-10: reviews an offline import before persisting each accepted own
   await expect(page.getByText('11 in stream')).toBeVisible()
   // The row is now an own phrase in the same stream projection, while the incomplete line
   // was never saved. A reload in persistence coverage proves the durable half.
-  await page.getByRole('button', { name: 'import' }).click()
+  await page.getByRole('button', { name: 'Import' }).click()
   await input.fill('¿Donde esta la estacion? | Duplicate')
   await page.getByRole('button', { name: 'Review phrases' }).click()
   await expect(
@@ -140,7 +145,7 @@ test('P2-09/P2-10: reviews an offline import before persisting each accepted own
 test('P2-09: imports a browser text file through the bounded reader', async ({ page }) => {
   await onboard(page)
   await page.getByRole('button', { name: 'Add' }).click()
-  await page.getByRole('button', { name: 'import' }).click()
+  await page.getByRole('button', { name: 'Import' }).click()
   const chooserPromise = page.waitForEvent('filechooser')
   await page.getByRole('button', { name: 'Choose a text file' }).click()
   const chooser = await chooserPromise
@@ -157,7 +162,7 @@ test('P2-09/P2-10: oversized import preserves the draft and recovers with a smal
 }) => {
   await onboard(page)
   await page.getByRole('button', { name: 'Add' }).click()
-  await page.getByRole('button', { name: 'import' }).click()
+  await page.getByRole('button', { name: 'Import' }).click()
   const input = page.getByRole('textbox', { name: 'Phrases to import' })
   const oversized = Array.from({ length: 51 }, (_, index) => `Hola ${index} | Hi`).join('\n')
   await input.fill(oversized)
@@ -177,7 +182,7 @@ test('P2-09/P2-10: edited import fields keep their draft and cannot bypass sync-
 }) => {
   await onboard(page)
   await page.getByRole('button', { name: 'Add' }).click()
-  await page.getByRole('button', { name: 'import' }).click()
+  await page.getByRole('button', { name: 'Import' }).click()
   await page.getByRole('textbox', { name: 'Phrases to import' }).fill('Hola | Hello')
   await page.getByRole('button', { name: 'Review phrases' }).click()
   const target = page.getByRole('textbox', { name: 'Imported phrase on line 1', exact: true })
@@ -197,7 +202,7 @@ test('P2-09/P2-10: a partial import save retains rejected edited rows for correc
 }) => {
   await onboard(page)
   await page.getByRole('button', { name: 'Add' }).click()
-  await page.getByRole('button', { name: 'import' }).click()
+  await page.getByRole('button', { name: 'Import' }).click()
   const overLimit = 'a'.repeat(2_001)
   await page
     .getByRole('textbox', { name: 'Phrases to import' })

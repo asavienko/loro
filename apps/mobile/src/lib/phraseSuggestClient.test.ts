@@ -70,5 +70,21 @@ describe('Discover phrase suggest client', () => {
       failed,
     )
     expect(fallback.length).toBeGreaterThan(0)
+    const emptyBundled = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(JSON.stringify({ fallback: true, provenance: 'bundled', candidates: [] }), {
+        headers: { 'content-type': 'application/json' },
+      }),
+    )
+    const fromEmpty = await requestPhraseSuggestions(
+      {
+        query: 'pharmacy',
+        nativeLanguage: 'en',
+        targetLocale: 'es-ES',
+        existingTexts: [],
+      },
+      'https://auth.loro.test/v1',
+      emptyBundled,
+    )
+    expect(fromEmpty.length).toBeGreaterThan(0)
   })
 })

@@ -21,7 +21,6 @@ import {
   Pressable,
   Row,
   Screen,
-  SectionLabel,
   Stack,
   Text,
 } from '../src/ui/primitives'
@@ -33,11 +32,13 @@ import {
   line,
   onDark,
   radius,
+  semantic,
   space,
   surface,
 } from '../src/ui/theme'
 import { useApp } from '../src/store'
 import { useLearningCatalog } from '../src/store/learningCatalog'
+import { stationeryElevation } from '../src/ui/elevation'
 import { LanguageChoices } from '../src/ui/components'
 import {
   NATIVE_LANGUAGES,
@@ -164,6 +165,11 @@ const answerLabel = (key: StepKey, val: string | string[] | undefined): string |
 
 /** The gap between answer rows: 9, which is not a `space` step. One call site, so no token. */
 const OPTION_GAP = 9
+/** Pack emoji plate — design `w-11` / 44, not a `space` or `emojiTile` step. */
+const PACK_EMOJI = 44
+/** Ready mark: 64 outer plate, 48 inner sage fill. */
+const READY_MARK = 64
+const READY_MARK_INNER = 48
 /** The unchosen indicator's ring — heavier than `border.selected`, and only ever here. */
 const INDICATOR_BORDER = 2
 /**
@@ -239,6 +245,7 @@ export default function Onboarding() {
           <>
             <WelcomeStep />
             <OnboardingLanguages />
+            <MethodNote />
           </>
         )}
 
@@ -253,6 +260,11 @@ export default function Onboarding() {
 
       <OnboardingFooter
         label={ctaLabel(current.kind)}
+        note={
+          current.kind === 'choice' && current.key === 'packs' && flow.seedCount > 0
+            ? copy.onboarding.packPrime(flow.seedCount)
+            : undefined
+        }
         onPress={flow.next}
         disabled={!flow.canContinue}
       />
@@ -280,10 +292,12 @@ const ctaLabel = (kind: Step['kind']): string =>
  */
 function OnboardingFooter({
   label,
+  note,
   onPress,
   disabled,
 }: {
   label: string
+  note?: string | undefined
   onPress: () => void
   disabled: boolean
 }) {
@@ -291,7 +305,12 @@ function OnboardingFooter({
   const insets = useSafeAreaInsets()
   return (
     <View style={[s.footer, { paddingBottom: insets.bottom + space['4'] }]}>
-      <Button label={label} onPress={onPress} disabled={disabled} />
+      {note !== undefined && note.length > 0 ? (
+        <Text variant="labelSm" color={ink.muted} align="center" style={s.footerNote}>
+          {note}
+        </Text>
+      ) : null}
+      <Button size="cta" label={label} onPress={onPress} disabled={disabled} />
     </View>
   )
 }
@@ -330,7 +349,7 @@ function WelcomeStep() {
   useLocale()
   const welcome = copy.onboarding.welcome
   return (
-    <View style={s.centred}>
+    <View style={s.welcome}>
       <View style={s.welcomeTile}>
         {/* Off the type scale on purpose — a 62 px `display` glyph overflows the 96 px plate. */}
         <Text variant="display" style={s.welcomeEmoji}>
@@ -343,7 +362,7 @@ function WelcomeStep() {
       <Text variant="title1" color={ink.ink} align="center">
         {welcome.title}
       </Text>
-      <Text variant="caption" color={ink.ink3} align="center">
+      <Text variant="bodyMd" color={ink.ink3} align="center">
         {welcome.body}
       </Text>
     </View>
@@ -369,13 +388,13 @@ function ChoiceStep({
   const text = copy.onboarding.steps[step.key]
   return (
     <Stack gap={space['3']}>
-      <Text variant="title2" color={ink.ink}>
+      <Text variant={multi ? 'title1' : 'title2'} color={ink.ink}>
         {text.question}
       </Text>
-      <Text variant="caption" color={ink.muted}>
+      <Text variant="bodyMd" color={ink.muted}>
         {text.helper}
       </Text>
-      <Stack gap={OPTION_GAP}>
+      <Stack gap={multi ? space['3'] : OPTION_GAP}>
         {step.options.map((o) => (
           <OptionRow
             key={o.val}
@@ -394,9 +413,9 @@ function ChoiceStep({
 /**
  * One answer.
  *
- * The chosen look is the accent tint plus the heavier `border.selected` — never colour alone.
- * `selected` is separate from that: it is what puts the state in the accessibility tree, and
- * without it a `radio` or `checkbox` announces its name and then nothing about being chosen.
+ * Radios keep tint plus the heavier `border.selected` — never colour alone.
+ * Packs match the v1.2 phone: primary-fixed wash, contact shadow, and the check mark.
+ * `selected` is what puts the state in the accessibility tree.
  */
 function OptionRow({
   option,
@@ -420,18 +439,25 @@ function OptionRow({
       style={[
         s.option,
         {
-          backgroundColor: selected ? accent.tint : surface.card,
-          borderWidth: selected ? border.selected : border.hairline,
-          borderColor: selected ? accent.accent : line.strong,
+          backgroundColor: selected ? (multi ? accent.wash : accent.tint) : surface.card,
+          ...(selected && !multi
+            ? { borderWidth: border.selected, borderColor: accent.accent }
+            : null),
+          ...(selected && multi ? stationeryElevation('card') : null),
         },
       ]}
     >
-      <EmojiTile emoji={option.emoji} />
+      <EmojiTile
+        emoji={option.emoji}
+        size={multi ? PACK_EMOJI : undefined}
+        radius={multi ? radius.pill : undefined}
+        background={multi ? surface.app : undefined}
+      />
       <View style={s.optionText}>
-        <Text variant="body" color={ink.ink}>
+        <Text variant={multi ? 'title3' : 'body'} color={ink.ink}>
           {option.label}
         </Text>
-        <Text variant="captionSm" color={ink.muted}>
+        <Text variant="bodySm" color={ink.muted}>
           {option.sub}
         </Text>
       </View>
@@ -460,23 +486,27 @@ function ReadyStep({ seedCount, answers }: { seedCount: number; answers: Answers
   const mins = String(answers['mins'] ?? 10)
   return (
     <View style={s.centred}>
-      {/* Off the type scale, like the welcome parrot. */}
-      <Text variant="display" style={s.readyEmoji}>
-        {ready.emoji}
-      </Text>
-      <Text variant="title2" color={accent.accentInk}>
+      <View style={s.readyMark}>
+        <View style={s.readyMarkInner}>
+          <Text variant="title3" color={onDark.primary}>
+            {copy.common.marks.check}
+          </Text>
+        </View>
+      </View>
+      <Text variant="label" color={accent.accentInk} align="center">
         {ready.title}
       </Text>
-      <Text variant="title2" color={ink.ink} align="center">
+      <Text variant="title1" color={ink.ink} align="center">
         {ready.seeded(seedCount)}
       </Text>
-      <Text variant="caption" color={ink.ink3} align="center">
+      <Text variant="bodyMd" color={ink.muted} align="center">
         {ready.sessionReady(mins)}
       </Text>
       {/* All FOUR answers, as FS §1 and `P1-08` require. Level was missing because the field
           behind it was dropped at commit; goal and level show the label the learner chose
-          rather than the `val` the store keeps. */}
-      <Card style={s.summary}>
+          rather than the `val` the store keeps. Packs stay a real selected count — no invented
+          pack names, Recommended extras, or STEP N OF 3 cadence. */}
+      <Card background={surface.sunken} elevate={false} border={false} style={s.summary}>
         <Stack gap={space['2']}>
           <SummaryRow
             label={ready.summary.goal}
@@ -496,16 +526,20 @@ function ReadyStep({ seedCount, answers }: { seedCount: number; answers: Answers
     </View>
   )
 }
-/** A label and its value, opposite ends of one line. Three of them make the summary card. */
+/** A label and its value, opposite ends of one line. Four of them make the summary card. */
 function SummaryRow({ label, value }: { label: string; value: string }) {
   useLocale()
   return (
-    <Row justify="space-between" wrap>
-      <SectionLabel size="sm">{label}</SectionLabel>
-      <Text variant="captionSm" color={ink.ink} align="right" style={{ flexShrink: 1 }}>
-        {value}
-      </Text>
-    </Row>
+    <Card background={surface.app} elevate={false} border={false} padding={space['2.5']}>
+      <Row justify="space-between" wrap>
+        <Text variant="bodySm" color={ink.muted}>
+          {label}
+        </Text>
+        <Text variant="body" color={ink.ink} align="right" style={{ flexShrink: 1 }}>
+          {value}
+        </Text>
+      </Row>
+    </Card>
   )
 }
 const s = StyleSheet.create({
@@ -513,25 +547,42 @@ const s = StyleSheet.create({
   back: { paddingRight: space['2'] },
   /** 5 px tall, and `barRadius` because `radius.sm` is 8 — far too round for this. */
   railSegment: { flex: 1, height: 5, borderRadius: barRadius },
-  content: { padding: space['5'], gap: space['4'], flexGrow: 1 },
-  /** Welcome and ready both centre a short column in whatever height is left. */
+  content: { padding: space['4'], gap: space['2'], flexGrow: 1 },
+  /** Welcome packs to the top so the method note stays on the first screen. Ready still centres. */
   centred: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: space['3'] },
+  welcome: { alignItems: 'center', gap: space['1.5'] },
   welcomeTile: {
-    width: 96,
-    height: 96,
-    borderRadius: radius['3xl'],
+    width: 64,
+    height: 64,
+    borderRadius: radius.pill,
     backgroundColor: accent.wash,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  welcomeEmoji: { fontSize: 50, lineHeight: 58 },
-  readyEmoji: { fontSize: 44, lineHeight: 52 },
+  welcomeEmoji: { fontSize: 32, lineHeight: 38 },
+  readyMark: {
+    width: READY_MARK,
+    height: READY_MARK,
+    borderRadius: READY_MARK / 2,
+    backgroundColor: surface.card,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  readyMarkInner: {
+    width: READY_MARK_INNER,
+    height: READY_MARK_INNER,
+    borderRadius: READY_MARK_INNER / 2,
+    backgroundColor: semantic.success.text,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   option: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 13,
-    borderRadius: radius.lg,
+    borderRadius: radius.xl,
     padding: 14,
+    backgroundColor: surface.card,
   },
   optionText: { flex: 1 },
   indicator: {
@@ -543,8 +594,41 @@ const s = StyleSheet.create({
     justifyContent: 'center',
   },
   summary: { width: '100%', marginTop: space['3'] },
-  footer: { padding: space['5'] },
+  footer: { padding: space['4'], gap: space['2'] },
+  footerNote: { marginBottom: space['3'] },
+  grow: { flex: 1 },
+  methodPlate: {
+    width: 28,
+    height: 28,
+    borderRadius: radius.pill,
+    backgroundColor: accent.wash,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 2,
+  },
 })
+function MethodNote() {
+  useLocale()
+  return (
+    <Card background={surface.sunken} elevate={false} border={false} padding={space['2.5']}>
+      <Row align="flex-start" gap={space['2']}>
+        <View style={s.methodPlate}>
+          <Text variant="label" color={accent.accentInk}>
+            {copy.common.marks.dot}
+          </Text>
+        </View>
+        <Stack gap={space['0.5']} style={s.grow}>
+          <Text variant="body" color={ink.ink}>
+            {copy.onboarding.method.title}
+          </Text>
+          <Text variant="captionSm" color={ink.ink2}>
+            {copy.onboarding.method.body}
+          </Text>
+        </Stack>
+      </Row>
+    </Card>
+  )
+}
 function OnboardingLanguages() {
   useLocale()
   const native = useApp((state) => state.nativeLanguage)
@@ -554,12 +638,13 @@ function OnboardingLanguages() {
     setLanguages(next, supportsPair(next, target) ? target : 'es-ES')
   }
   return (
-    <Stack gap={space['3']}>
+    <Stack gap={space['1.5']}>
       <LanguageChoices
         title={copy.languages.native}
         values={NATIVE_LANGUAGES}
         selected={native}
         onSelect={chooseNative}
+        detail={(value) => copy.onboarding.language.native[value]}
       />
       <LanguageChoices
         title={copy.languages.target}
@@ -568,6 +653,8 @@ function OnboardingLanguages() {
         onSelect={(next: TargetLocale) => {
           setLanguages(native, next)
         }}
+        detail={(value) => copy.onboarding.language.target[value]}
+        badge={(value) => (value === 'es-ES' ? copy.onboarding.language.recommended : undefined)}
       />
     </Stack>
   )

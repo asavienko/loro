@@ -28,7 +28,7 @@
 
 import AxeBuilder from '@axe-core/playwright'
 import type { Page } from '@playwright/test'
-import { expect, onboard, test } from './fixtures'
+import { expect, onboard, signIn, test } from './fixtures'
 import { enter, openFirstPhrase, startWave, todayMarker } from './helpers'
 import { STATES } from './states'
 
@@ -147,7 +147,7 @@ test('a radio and a checkbox report which one is chosen', async ({ page }) => {
 })
 
 test('onboarding reports its chosen answer at every step', async ({ page }) => {
-  await page.goto('/onboarding')
+  await signIn(page)
   await page.getByRole('button', { name: "Let's go →" }).click()
 
   const trip = page.getByRole('radio', { name: /A trip coming up/ })
@@ -190,7 +190,7 @@ test('a toast is announced, not just drawn', async ({ page }) => {
 })
 
 test('onboarding is completable with the keyboard alone', async ({ page }) => {
-  await page.goto('/onboarding')
+  await signIn(page)
   await pressUntil(page, "Let's go →")
   await page.keyboard.press('Enter')
 

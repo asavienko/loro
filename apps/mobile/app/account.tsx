@@ -9,6 +9,8 @@ import {
   View,
 } from 'react-native'
 import { router, Stack as RouteStack } from 'expo-router'
+import { useApp } from '../src/store'
+import { conditionalHome } from '../src/lib/navigation'
 import type { OAuthProvider } from '@loro/core/api/oauth'
 import {
   accountClient,
@@ -25,8 +27,9 @@ import {
 } from '../src/auth/runtime'
 import { copy } from '../src/lib/copy'
 import { useLocale } from '../src/lib/i18n'
-import { Button, Field, Pressable, Row, Screen, Stack, Text } from '../src/ui/primitives'
-import { ink, line, MIN_TAP, radius, semantic, space, surface, type } from '../src/ui/theme'
+import { Button, Card, Field, Pressable, Row, Screen, Stack, Text } from '../src/ui/primitives'
+import { stationeryElevation } from '../src/ui/elevation'
+import { ink, line, MIN_TAP, onDark, radius, semantic, space, surface, type } from '../src/ui/theme'
 import { useTheme } from '../src/ui/ThemeProvider'
 import { scaleTextStyle } from '../src/ui/runtimeStyles'
 
@@ -35,21 +38,18 @@ type ProviderState = 'loading' | 'ready' | 'error'
 type FeedbackTone = 'info' | 'warning' | 'danger'
 type AccountErrorCode = NonNullable<ReturnType<typeof useAccount>['error']>
 
-const HERO_CARD_HEIGHT = 56
-const HERO_CARD_WIDTH = 86
-const HERO_BAR_WIDTH = 7
-const HERO_BAR_GAP = 4
 const EMAIL_MAX_LENGTH = 254
 const CODE_MAX_LENGTH = 6
 
-/** F-01/F-02: optional account utility in the shared navigation shell. */
+/** F-01/F-02: required sign-in gate, then account management in the shared shell. */
 export default function Account() {
   useLocale()
+  const onboarded = useApp((current) => current.onboarded)
   const state = useAccount()
   const sync = useSyncStatus()
   const repair = useSyncRepair()
   const client = accountClient()
-  const { textScale, accent } = useTheme()
+  const { textScale } = useTheme()
   const [view, setView] = useState<ViewState>(state.session ? 'account' : 'methods')
   const [freshConfirmation, setFreshConfirmation] = useState(false)
   const [email, setEmail] = useState('')
@@ -194,7 +194,7 @@ export default function Account() {
     cancelAttemptIfBusy()
     resetAttempt()
     setFreshConfirmation(false)
-    router.replace('/')
+    router.replace(conditionalHome({ signedIn: true, onboarded }))
   }
 
   const startEmail = (): void => {
@@ -272,16 +272,6 @@ export default function Account() {
 
   const footer = (
     <Stack gap={space['2']} style={styles.footer}>
-      <Pressable
-        accessibilityRole="link"
-        accessibilityLabel={copy.account.keepPractising}
-        onPress={leaveToPractice}
-        style={styles.linkTarget}
-      >
-        <Text color={accent.accentInk} align="center">
-          {copy.account.keepPractising}
-        </Text>
-      </Pressable>
       <Text align="center" color={ink.muted}>
         {copy.account.deviceProgress}
       </Text>
@@ -321,15 +311,15 @@ export default function Account() {
           {view === 'methods' && (
             <>
               <AccountHero />
-              <Stack gap={space['3']}>
-                <Text variant="title2" align="center">
+              <Stack gap={space['2.5']}>
+                <Text variant="title1" align="center">
                   {copy.account.heroTitle}
                 </Text>
-                <Text variant="body" align="center">
+                <Text variant="bodyMd" align="center" color={ink.ink2}>
                   {copy.account.heroBody}
                 </Text>
               </Stack>
-              <Stack gap={space['2.5']} style={styles.methods}>
+              <Stack gap={space['2']} style={styles.methods}>
                 <ProviderMethod
                   provider="google"
                   label={copy.account.google}
@@ -442,37 +432,13 @@ function AccountHero({ success = false }: { success?: boolean | undefined }) {
   const { accent } = useTheme()
   return (
     <View accessible={false} accessibilityElementsHidden style={styles.hero}>
-      <View style={[styles.heroLoop, { borderColor: accent.accent }]} />
-      <View
-        style={[
-          styles.heroCard,
-          styles.heroLeft,
-          { borderColor: line.strong, backgroundColor: surface.card },
-        ]}
-      >
-        <View style={[styles.phraseStroke, { backgroundColor: ink.ink }]} />
-        <View
-          style={[styles.phraseStroke, styles.phraseStrokeShort, { backgroundColor: ink.ink }]}
-        />
-        <View
-          style={[styles.phraseStroke, styles.phraseStrokeTiny, { backgroundColor: ink.ink }]}
-        />
-      </View>
-      <View
-        style={[
-          styles.heroCard,
-          styles.heroRight,
-          { borderColor: accent.accent, backgroundColor: surface.card },
-        ]}
-      >
-        <Row gap={HERO_BAR_GAP} align="flex-end" style={styles.bars}>
-          {[20, 29, 39, 50].map((height) => (
-            <View
-              key={height}
-              style={[styles.heroBar, { height, backgroundColor: accent.accent }]}
-            />
-          ))}
-        </Row>
+      <View style={[styles.heroDisc, { backgroundColor: accent.wash }]}>
+        <View style={[styles.heroMark, { borderColor: accent.accent }]}>
+          <View style={[styles.phraseStroke, { backgroundColor: ink.ink }]} />
+          <View
+            style={[styles.phraseStroke, styles.phraseStrokeShort, { backgroundColor: ink.ink }]}
+          />
+        </View>
       </View>
       {success && (
         <View style={[styles.successMark, { backgroundColor: accent.accent }]}>
@@ -487,26 +453,35 @@ function MethodButton({
   icon,
   label,
   disabled,
+  filled = false,
   onPress,
 }: {
   icon: string
   label: string
   disabled: boolean
+  filled?: boolean | undefined
   onPress: () => void
 }) {
+  const inkColor = disabled ? ink.muted : filled ? onDark.primary : ink.ink
   return (
     <Pressable
+      pressMotion="deboss"
+      elevation="card"
       accessibilityLabel={label}
       accessibilityHint={disabled ? copy.account.methodUnavailable : undefined}
       disabled={disabled}
       onPress={onPress}
-      style={[styles.methodButton, disabled && styles.methodDisabled]}
+      style={[
+        styles.methodButton,
+        filled && !disabled ? styles.methodFilled : null,
+        disabled && styles.methodDisabled,
+      ]}
     >
-      <Row gap={space['3']} justify="center">
-        <Text variant="title3" color={disabled ? ink.muted : ink.ink}>
+      <Row gap={space['2.5']} justify="center">
+        <Text variant="title3" color={inkColor}>
           {icon}
         </Text>
-        <Text color={disabled ? ink.muted : ink.ink}>{label}</Text>
+        <Text color={inkColor}>{label}</Text>
       </Row>
     </Pressable>
   )
@@ -532,6 +507,7 @@ function ProviderMethod({
       icon={active && busy ? '◌' : provider === 'google' ? 'G' : ''}
       label={active && busy ? copy.account.connecting(provider) : label}
       disabled={busy || !available}
+      filled={provider === 'apple' && available}
       onPress={onPress}
     />
   )
@@ -572,10 +548,10 @@ function EmailEntry({
     <>
       <AccountHero />
       <Stack gap={space['3']}>
-        <Text variant="title2" align="center">
+        <Text variant="title1" align="center">
           {copy.account.emailTitle}
         </Text>
-        <Text variant="body" align="center">
+        <Text variant="bodyMd" align="center">
           {copy.account.emailBody}
         </Text>
       </Stack>
@@ -596,7 +572,7 @@ function EmailEntry({
           maxLength={EMAIL_MAX_LENGTH}
           returnKeyType="send"
           onSubmitEditing={onSend}
-          style={scaleTextStyle(type.body, textScale)}
+          style={scaleTextStyle(type.bodyMd, textScale)}
         />
         {feedback && <SignInFeedback tone={feedback.tone} text={feedback.text} />}
         <Button
@@ -635,15 +611,14 @@ function CodeEntry({
   feedback: { tone: FeedbackTone; text: string } | null
   footer: ReactNode
 }) {
-  const { accent } = useTheme()
   return (
     <>
       <AccountHero />
       <Stack gap={space['3']}>
-        <Text variant="title2" align="center">
+        <Text variant="title1" align="center">
           {copy.account.codeTitle}
         </Text>
-        <Text variant="body" align="center">
+        <Text variant="bodyMd" align="center">
           {copy.account.codeSentTo(email)}
         </Text>
       </Stack>
@@ -664,7 +639,7 @@ function CodeEntry({
           placeholder={copy.account.codePlaceholder}
           returnKeyType="done"
           onSubmitEditing={onVerify}
-          style={scaleTextStyle(type.body, textScale)}
+          style={[scaleTextStyle(type.bodyMd, textScale), styles.codeField]}
         />
         {feedback && <SignInFeedback tone={feedback.tone} text={feedback.text} />}
         <Button
@@ -674,27 +649,8 @@ function CodeEntry({
           loading={busy}
           onPress={onVerify}
         />
-        <Pressable
-          accessibilityRole="link"
-          accessibilityLabel={copy.account.resend}
-          onPress={onResend}
-          disabled={busy}
-          style={styles.linkTarget}
-        >
-          <Text align="center" color={accent.accentInk}>
-            {copy.account.resend}
-          </Text>
-        </Pressable>
-        <Pressable
-          accessibilityRole="link"
-          accessibilityLabel={copy.account.differentEmail}
-          onPress={onChangeEmail}
-          style={styles.linkTarget}
-        >
-          <Text align="center" color={accent.accentInk}>
-            {copy.account.differentEmail}
-          </Text>
-        </Pressable>
+        <Button variant="ghost" label={copy.account.resend} disabled={busy} onPress={onResend} />
+        <Button variant="ghost" label={copy.account.differentEmail} onPress={onChangeEmail} />
       </Stack>
       {footer}
     </>
@@ -718,11 +674,11 @@ function Confirmation({
           {copy.account.confirmationTitle}
         </Text>
         {email ? (
-          <Text variant="body" align="center">
+          <Text variant="bodyMd" align="center">
             {email}
           </Text>
         ) : null}
-        <Text variant="body" align="center">
+        <Text variant="bodyMd" align="center">
           {copy.account.confirmationBody}
         </Text>
       </Stack>
@@ -746,21 +702,23 @@ function AccountManagement({
   return (
     <Stack gap={space['4']}>
       <AccountHero success />
-      <Text variant="title2" align="center">
+      <Text variant="title1" align="center" color={ink.ink}>
         {copy.account.signedIn}
       </Text>
-      <View accessibilityLiveRegion="polite">
-        <Text align="center">
-          {sync === 'synced'
-            ? copy.account.synced
-            : sync === 'syncing'
-              ? copy.account.syncing
-              : sync === 'error'
-                ? copy.account.syncError
-                : copy.account.syncPending}
-        </Text>
-        {quarantined > 0 && <Text>{copy.account.syncQuarantined(quarantined)}</Text>}
-      </View>
+      <Card padding={space['4']}>
+        <View accessibilityLiveRegion="polite">
+          <Text align="center" color={ink.ink2}>
+            {sync === 'synced'
+              ? copy.account.synced
+              : sync === 'syncing'
+                ? copy.account.syncing
+                : sync === 'error'
+                  ? copy.account.syncError
+                  : copy.account.syncPending}
+          </Text>
+          {quarantined > 0 && <Text>{copy.account.syncQuarantined(quarantined)}</Text>}
+        </View>
+      </Card>
       <Button
         size="cta"
         label={copy.account.syncNow}
@@ -768,7 +726,7 @@ function AccountManagement({
         loading={sync === 'syncing'}
         onPress={onSync}
       />
-      <Text align="center" color={ink.muted}>
+      <Text align="center" color={ink.muted} variant="bodyMd">
         {copy.account.signOutNote}
       </Text>
       <Button variant="secondary" label={copy.account.signOut} onPress={onSignOut} />
@@ -778,17 +736,9 @@ function AccountManagement({
 
 function SignInFeedback({ tone, text }: { tone: FeedbackTone; text: string }) {
   const background =
-    tone === 'danger'
-      ? semantic.danger.bg
-      : tone === 'warning'
-        ? semantic.warn.bg
-        : semantic.info.bg
+    tone === 'danger' ? semantic.danger.bg : tone === 'warning' ? semantic.warn.bg : surface.card
   const color =
-    tone === 'danger'
-      ? semantic.danger.text
-      : tone === 'warning'
-        ? semantic.warn.text
-        : semantic.info.text
+    tone === 'danger' ? semantic.danger.text : tone === 'warning' ? semantic.warn.text : ink.ink2
   return (
     <View
       accessibilityLiveRegion="polite"
@@ -816,51 +766,58 @@ function errorCopy(code: AccountErrorCode): string {
 
 const styles = StyleSheet.create({
   fill: { flex: 1 },
-  content: { padding: space['4'], paddingBottom: space['6'], gap: space['5'] },
-  hero: { height: 118, alignItems: 'center', justifyContent: 'center', position: 'relative' },
-  heroLoop: { position: 'absolute', width: 74, height: 74, borderRadius: 74, borderWidth: 3 },
-  heroCard: {
-    position: 'absolute',
-    width: HERO_CARD_WIDTH,
-    height: HERO_CARD_HEIGHT,
-    borderWidth: 2,
-    borderRadius: radius.xl,
-    padding: space['3'],
-    justifyContent: 'center',
-  },
-  heroLeft: { transform: [{ rotate: '-9deg' }, { translateX: -38 }] },
-  heroRight: { transform: [{ rotate: '8deg' }, { translateX: 38 }] },
-  phraseStroke: { height: 5, borderRadius: 5, width: 52, marginBottom: 7 },
-  phraseStrokeShort: { width: 46 },
-  phraseStrokeTiny: { width: 27, marginBottom: 0 },
-  bars: { height: 42, alignItems: 'flex-end', justifyContent: 'center' },
-  heroBar: { width: HERO_BAR_WIDTH, borderRadius: 3 },
-  successMark: {
-    position: 'absolute',
-    right: '18%',
-    bottom: 10,
-    width: 26,
-    height: 26,
-    borderRadius: 26,
+  content: { padding: space['5'], paddingBottom: space['6'], gap: space['5'] },
+  hero: { height: 88, alignItems: 'center', justifyContent: 'center', position: 'relative' },
+  heroDisc: {
+    width: 72,
+    height: 72,
+    borderRadius: 72,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  methods: { marginTop: space['2'] },
-  methodButton: {
-    minHeight: MIN_TAP,
-    paddingVertical: 13,
-    paddingHorizontal: space['4'],
-    borderWidth: 1,
-    borderColor: line.strong,
-    borderRadius: radius.lg,
+  heroMark: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.md,
+    borderWidth: 1.5,
+    paddingHorizontal: space['1.5'],
+    paddingVertical: space['2'],
+    justifyContent: 'center',
     backgroundColor: surface.card,
   },
-  methodDisabled: { backgroundColor: line.subtle, borderColor: line.default },
+  phraseStroke: { height: 3, borderRadius: 3, width: 22, marginBottom: 4 },
+  phraseStrokeShort: { width: 16, marginBottom: 0 },
+  successMark: {
+    position: 'absolute',
+    right: '32%',
+    bottom: 8,
+    width: 22,
+    height: 22,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  methods: { marginTop: space['1'] },
+  methodButton: {
+    minHeight: MIN_TAP,
+    paddingVertical: 11,
+    paddingHorizontal: space['4'],
+    borderRadius: radius.lg,
+    backgroundColor: surface.app,
+    borderWidth: 1,
+    borderColor: line.default,
+    ...stationeryElevation('card'),
+  },
+  methodFilled: {
+    backgroundColor: ink.ink,
+    borderColor: ink.ink,
+  },
+  methodDisabled: { backgroundColor: surface.card, borderColor: line.default },
   progress: { paddingTop: space['2'] },
   form: { marginTop: space['2'] },
+  codeField: { textAlign: 'center', letterSpacing: space['1'] },
   feedback: { borderWidth: 1, borderRadius: radius.lg, padding: space['3'] },
   footer: { marginTop: space['5'] },
-  linkTarget: { minHeight: MIN_TAP, justifyContent: 'center' },
   headerTarget: {
     minWidth: MIN_TAP,
     minHeight: MIN_TAP,
