@@ -110,6 +110,21 @@ test('stream leave Keep going stays; Pause goes to Today without a resume row', 
   await expect(page.getByRole('button', { name: 'Resume practice', exact: true })).toHaveCount(0)
 })
 
+test('stream wave row opens phrase detail Practice now into phrase focus', async ({ page }) => {
+  await onboard(page)
+  await startWave(page)
+  await expect(page).toHaveURL(/\/practice\/stream/)
+  await page
+    .getByRole('button', { name: /\. (Easy|Learning|Difficult)\.$/ })
+    .first()
+    .click()
+  await expect(page).toHaveURL(/\/phrase\//)
+  await expect(page.getByRole('button', { name: 'Practice now →' })).toBeVisible()
+  await page.getByRole('button', { name: 'Practice now →' }).click()
+  await expect(page).toHaveURL(isPhraseRefrain)
+  await expect(page.getByText('This phrase', { exact: true })).toBeVisible()
+})
+
 test('mouse and touch open a phrase refrain from the stream wave', async ({ page }) => {
   await onboard(page)
   for (const input of ['mouse', 'touch'] as const) {
