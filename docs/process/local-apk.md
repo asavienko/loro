@@ -13,11 +13,14 @@ native project so a fresh Metro session can resolve it. Preview retains its own 
 ## Prerequisites
 
 - Node 22 and pnpm 9.12.0 (`nvm use 22`).
-- JDK 17; set `JAVA_HOME`. On macOS the runner also detects Homebrew's JDK 17 or Android Studio's
-  bundled Java runtime. Java must be compatible with the installed Expo/Gradle toolchain.
+- JDK 17; set `JAVA_HOME`. The runner also detects Homebrew's JDK 17, Android Studio's bundled Java
+  runtime, and the Debian/Ubuntu `openjdk-17` path. Java must be compatible with the installed
+  Expo/Gradle toolchain.
 - Android SDK with platform 36, build-tools 36.0.0, platform-tools, accepted SDK licenses and the
   NDK/CMake versions requested by the generated project. Set `ANDROID_HOME` or `ANDROID_SDK_ROOT`;
-  macOS defaults to `~/Library/Android/sdk`.
+  otherwise the runner uses the first installed tree among `~/Library/Android/sdk` (macOS),
+  `~/Android/Sdk` (Linux), `/opt/android-sdk`, and `/usr/lib/android-sdk`. `pnpm native:evidence`
+  resolves `adb` from that same SDK when it is not already on `PATH`.
 - `git`, `tar`, `unzip`, and authenticated `gh` for uploads (`gh auth login`).
 - Rust and `cargo-ndk` on PATH, with `aarch64-linux-android` and `x86_64-linux-android` installed
   through `rustup target add`. Gradle builds the Rust library with its own NDK and selected ABIs

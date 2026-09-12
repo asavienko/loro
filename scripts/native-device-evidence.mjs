@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto'
 import { mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { resolve, relative, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { resolveAdb } from './apk-environment.mjs'
 import { collectIosEvidence } from './ios-simulator-evidence.mjs'
 import { executeWaveScenarios } from './native-wave-scenarios.mjs'
 import { unevaluatedWaveScenarios, WAVE_TOUCH_SCENARIOS } from './wave-touch-scenarios.mjs'
@@ -124,7 +125,7 @@ function command(adb, serial, argv, capture = true) {
 }
 
 export function collectEvidence({
-  adb = 'adb',
+  adb = resolveAdb(),
   serial,
   packageName,
   output,
