@@ -23,4 +23,25 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof LanguageChoices>
 
+function WelcomeCadence() {
+  const [selected, setSelected] = useState<'es-ES' | 'bg-BG' | 'ru-RU'>('es-ES')
+  return (
+    <LanguageChoices
+      title="I want to learn"
+      values={['es-ES', 'bg-BG', 'ru-RU']}
+      selected={selected}
+      onSelect={setSelected}
+      detail={(value) =>
+        value === 'es-ES'
+          ? 'Castilian & Latin'
+          : value === 'bg-BG'
+            ? 'Authentic phrases'
+            : 'Conversational course'
+      }
+      badge={(value) => (value === 'es-ES' ? 'Recommended' : undefined)}
+    />
+  )
+}
+
 export const Default: Story = {}
+export const Welcome: Story = { render: () => <WelcomeCadence /> }

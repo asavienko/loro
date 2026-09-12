@@ -14,7 +14,7 @@ import { useTheme } from '../ThemeProvider'
 export type { TypeVariant }
 
 export function Text({
-  variant = 'caption',
+  variant = 'bodyMd',
   color = ink.ink2,
   align,
   lang,

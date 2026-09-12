@@ -13,6 +13,8 @@ type Story = StoryObj<typeof meta>
 
 export const Default: Story = {}
 export const Secondary: Story = { args: { variant: 'secondary' } }
+export const Ghost: Story = { args: { variant: 'ghost' } }
+export const GhostHover: Story = { args: { variant: 'ghost', forcedHover: true } }
 export const Destructive: Story = { args: { variant: 'destructive' } }
 export const Large: Story = { args: { size: 'lg' } }
 export const Cta: Story = { args: { size: 'cta' } }

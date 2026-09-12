@@ -112,19 +112,25 @@ export const chip = {
 /**
  * `Segmented` — one choice out of two or three, laid side by side.
  *
- * Two genuinely different looks, and neither is a skin of the other: `pill` is a pair of cards on
- * the page, `track` is a thumb inside a sunken groove.
+ * Both variants sit in the v1.2 enclosed pill track (`DESIGN.md` Rounded Pill Tabs). `pill` is
+ * the mode switch (Add discover / browse / import); `track` is the same groove with a
+ * per-option selected colour for difficulty.
  */
 export const segmented = {
-  /** Add's discover / browse pair: two cards, no track. */
-  pill: { gap: 6, paddingVertical: 9, borderRadius: radius.lg },
-  /** The stream's difficulty control: an inset thumb on a sunken groove. */
+  /** Add discover / browse / import — enclosed track, selected thumb lifts. */
+  pill: {
+    gap: 0,
+    paddingVertical: 8,
+    borderRadius: radius.pill,
+    trackPadding: 4,
+  },
+  /** Enclosed stationery groove — difficulty and other short choices. */
   track: {
-    gap: 3,
-    paddingVertical: 10,
-    borderRadius: radius.md,
-    trackPadding: 3,
-    trackRadius: radius.lg,
+    gap: 0,
+    paddingVertical: 8,
+    borderRadius: radius.pill,
+    trackPadding: 4,
+    trackRadius: radius.pill,
   },
 } as const
 
@@ -154,16 +160,16 @@ export const sheet = {
 } as const
 
 /**
- * `PhraseRow` — the bilingual row every list in the app is made of.
+ * `PhraseRow` — the bilingual stationery card every list in the app is made of.
  *
- * The two variants differ by a pixel of padding and a step of type size, which is the difference
- * between a queue you scan and a suggestion you tap.
+ * Stream "up next" and Add suggestions share the 16 px card pad. Suggestion keeps the
+ * trailing affordance on its own row; queue keeps the difficulty pill beside the phrase.
  */
 export const phraseRow = {
-  /** The stream's "up next". */
-  queue: { padding: 11, gap: 10, emojiSize: 16 },
-  /** Add's suggestion list. */
-  suggestion: { padding: 12, gap: 10, emojiSize: 17 },
+  /** Stream "up next" — padded stationery card, Newsreader target. */
+  queue: { padding: space['4'], gap: space['2'], emojiSize: 16 },
+  /** Add's suggestion list — same card, trailing action below. */
+  suggestion: { padding: space['4'], gap: space['2'], emojiSize: 16 },
 } as const
 
 /**
@@ -177,7 +183,8 @@ export const phraseRow = {
  */
 export const actionBar = {
   padding: space['4'],
-  paddingBottom: space['3'],
+  paddingBottom: space['4'],
+  inset: space['5'],
   clearance: { today: 96, phraseDetail: 110, refrain: 120 },
 } as const
 
@@ -204,6 +211,7 @@ export const field = {
   minHeight: MIN_TAP,
   padding: space['3'],
   borderWidth: 1,
+  baselineWidth: border.selected,
   borderRadius: radius.lg,
 } as const
 
@@ -211,6 +219,7 @@ export const field = {
  * `ListRow` — Settings, More and Music share 48 / 13 / hairline. Gap is a prop
  * (Settings `space['3']`, More/Music `space['2.5']`) so this token does not average them.
  * Hairline width lives on `border`; the colour is an accessibility decision on `listRowLook`.
+ * Card groups pass `last` so the floor row drops that hairline.
  */
 export const listRow = {
   minHeight: 48,

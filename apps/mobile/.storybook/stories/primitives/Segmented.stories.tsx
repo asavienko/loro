@@ -7,6 +7,12 @@ const OPTIONS = [
   { value: 'two', label: 'Two' },
 ] as const
 
+const ADD_MODES = [
+  { value: 'discover', label: 'Discover' },
+  { value: 'browse', label: 'Browse' },
+  { value: 'import', label: 'Import' },
+] as const
+
 function Playground({ variant }: { variant: 'pill' | 'track' }) {
   const [value, setValue] = useState<(typeof OPTIONS)[number]['value']>('one')
   return <Segmented options={OPTIONS} value={value} onChange={setValue} variant={variant} />
@@ -22,4 +28,10 @@ export default meta
 type Story = StoryObj<typeof Segmented>
 
 export const Default: Story = {}
+export const ThreeModes: Story = {
+  render: () => {
+    const [value, setValue] = useState<(typeof ADD_MODES)[number]['value']>('browse')
+    return <Segmented options={ADD_MODES} value={value} onChange={setValue} />
+  },
+}
 export const Track: Story = { render: () => <Playground variant="track" /> }

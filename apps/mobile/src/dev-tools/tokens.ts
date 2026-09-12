@@ -24,7 +24,10 @@ interface GroupMetadata {
  * every primitive leaf is represented by a searchable row.
  */
 export const TOKEN_GROUPS = {
-  surface: { intendedUse: 'Screen, card, well, scrim, device, and dark-stage surfaces.' },
+  surface: {
+    intendedUse:
+      'Screen, card, well, pill track, scrim, device, shadow pigment, and dark-stage surfaces.',
+  },
   ink: { intendedUse: 'Text and glyph hierarchy on light surfaces.' },
   line: { intendedUse: 'Hairlines, borders, dividers, and selection weight.' },
   semantic: { intendedUse: 'Success, warning, danger, information, and teaching states.' },
@@ -36,7 +39,7 @@ export const TOKEN_GROUPS = {
   space: { intendedUse: 'Shared spacing scale.' },
   gutter: { intendedUse: 'Dense, default, and roomy screen gutters.' },
   radius: { intendedUse: 'Shared corners, pills, sheets, screens, and device chrome.' },
-  shadow: { intendedUse: 'Authored depth values awaiting or using a reviewed native mapping.' },
+  shadow: { intendedUse: 'Authored depth recipes; mobile maps them onto native RN shadows.' },
   size: { intendedUse: 'Cross-platform reusable control and visualization geometry.' },
   typography: { intendedUse: 'Font families, type metrics, and typography rules.' },
   motion: {
