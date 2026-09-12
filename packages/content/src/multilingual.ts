@@ -9,10 +9,13 @@ import {
 import starter from '../translations/starter.json' with { type: 'json' }
 import labels from '../translations/labels.json' with { type: 'json' }
 import { bundledCatalog } from './catalog.js'
+import { cloudCatalogAudio } from './catalogAudio.js'
 import type { CatalogPhrase, Pack, PhraseGraph, Scenario } from './types.js'
 export interface LearningPhrase extends Omit<CoreCatalogPhrase, 'id' | 'theme' | 'catalogVersion'> {
   id: string
   theme: CatalogPhrase['theme']
+  /** Source-language remember hook; lives on the phrase so bg/ru UI still scores it. */
+  hint?: string
 }
 export interface LearningCatalog {
   targetLocale: TargetLocale
@@ -27,60 +30,68 @@ export interface LearningCatalog {
 const translated = new Map(starter.phrases.map((p) => [p.id, p]))
 const labelMap: Record<string, Record<NativeLanguage, string>> = labels
 const phraseCache = new Map<TargetLocale, LearningPhrase[]>()
+
+/** Project a catalog row onto the course-scoped learning phrase the app scores. */
+export function projectLearningPhrase(
+  p: CatalogPhrase,
+  targetLocale: TargetLocale,
+): LearningPhrase {
+  const translation = translated.get(p.id)
+  if (!translation) throw new Error(`Missing translations for ${p.id}`)
+  const translations = { en: p.en, bg: translation.bg, ru: translation.ru }
+  if (p.id === 'cafe1' && targetLocale === 'es-ES') {
+    translations.bg = 'Едно кортадо, моля'
+    translations.ru = 'Кортадо, пожалуйста'
+  }
+  // A cortado is Spanish-specific; the new courses teach the local generic request.
+  if (p.id === 'cafe1' && targetLocale !== 'es-ES')
+    translations.en = 'A coffee with a little milk, please'
+  const audio = targetLocale === 'es-ES' ? cloudCatalogAudio(p.audio) : undefined
+  return {
+    id: targetLocale === 'es-ES' ? p.id : `${targetLocale}:${p.id}`,
+    targetLocale,
+    targetText:
+      targetLocale === 'es-ES' ? p.es : targetLocale === 'bg-BG' ? translation.bg : translation.ru,
+    translations,
+    theme: p.theme,
+    emoji: p.emoji,
+    ...(p.register ? { register: p.register } : {}),
+    ...(p.cefr ? { cefr: p.cefr } : {}),
+    ...(p.hint ? { hint: p.hint } : {}),
+    ...(p.resp_ipa ? { respIpa: p.resp_ipa } : {}),
+    ...(p.syl ? { syl: p.syl } : {}),
+    ...(p.f0_native ? { f0Native: p.f0_native } : {}),
+    ...(audio === undefined ? {} : { audio }),
+    ...(targetLocale === 'es-ES'
+      ? {
+          teaching: {
+            en: {
+              ...(p.resp ? { resp: p.resp } : {}),
+              ...(p.hint ? { hint: p.hint } : {}),
+              ...(p.note ? { note: p.note } : {}),
+              ...(p.words
+                ? {
+                    words: p.words.map(({ es, gloss, say }) => ({
+                      targetText: es,
+                      gloss,
+                      ...(say === undefined ? {} : { say }),
+                    })),
+                  }
+                : {}),
+              ...(p.example
+                ? { example: { targetText: p.example.es, translation: p.example.en } }
+                : {}),
+            },
+          },
+        }
+      : {}),
+  }
+}
+
 function phrasesFor(targetLocale: TargetLocale): LearningPhrase[] {
   const cached = phraseCache.get(targetLocale)
   if (cached) return cached
-  const phrases = bundledCatalog.phrases.map((p): LearningPhrase => {
-    const translation = translated.get(p.id)
-    if (!translation) throw new Error(`Missing translations for ${p.id}`)
-    const translations = { en: p.en, bg: translation.bg, ru: translation.ru }
-    if (p.id === 'cafe1' && targetLocale === 'es-ES') {
-      translations.bg = 'Едно кортадо, моля'
-      translations.ru = 'Кортадо, пожалуйста'
-    }
-    // A cortado is Spanish-specific; the new courses teach the local generic request.
-    if (p.id === 'cafe1' && targetLocale !== 'es-ES')
-      translations.en = 'A coffee with a little milk, please'
-    return {
-      id: targetLocale === 'es-ES' ? p.id : `${targetLocale}:${p.id}`,
-      targetLocale,
-      targetText:
-        targetLocale === 'es-ES'
-          ? p.es
-          : targetLocale === 'bg-BG'
-            ? translation.bg
-            : translation.ru,
-      translations,
-      theme: p.theme,
-      emoji: p.emoji,
-      ...(p.register ? { register: p.register } : {}),
-      ...(p.cefr ? { cefr: p.cefr } : {}),
-      ...(targetLocale === 'es-ES' && p.audio ? { audio: p.audio } : {}),
-      ...(targetLocale === 'es-ES'
-        ? {
-            teaching: {
-              en: {
-                ...(p.resp ? { resp: p.resp } : {}),
-                ...(p.hint ? { hint: p.hint } : {}),
-                ...(p.note ? { note: p.note } : {}),
-                ...(p.words
-                  ? {
-                      words: p.words.map(({ es, gloss, say }) => ({
-                        targetText: es,
-                        gloss,
-                        ...(say === undefined ? {} : { say }),
-                      })),
-                    }
-                  : {}),
-                ...(p.example
-                  ? { example: { targetText: p.example.es, translation: p.example.en } }
-                  : {}),
-              },
-            },
-          }
-        : {}),
-    }
-  })
+  const phrases = bundledCatalog.phrases.map((p) => projectLearningPhrase(p, targetLocale))
   phraseCache.set(targetLocale, phrases)
   return phrases
 }

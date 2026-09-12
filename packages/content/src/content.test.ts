@@ -253,6 +253,12 @@ describe('check helpers', () => {
     )
   })
 
+  it('flags a self-edge', () => {
+    const loop = structuredClone(catalog)
+    loop.graph.edges.push({ from: 'din1', to: 'din1', relation: 'reply', weight: 40 })
+    expect(errors(ALL_CHECKS.graph!(loop)).some((i) => i.message.includes('self-edge'))).toBe(true)
+  })
+
   it('flags a prerequisite cycle', () => {
     const cyclic = structuredClone(catalog)
     cyclic.graph.edges.push(
@@ -287,6 +293,18 @@ describe('phrase relation graph', () => {
   it('exposes identical edges from the bundled snapshot and the disk loader', () => {
     expect(loadCatalogFromDisk().graph).toEqual(catalog.graph)
     expect(loadCatalog().graph).toEqual(catalog.graph)
+  })
+})
+
+describe('catalog audio', () => {
+  it('rejects a clip that is not a cloud object', () => {
+    const bad = structuredClone(catalog)
+    bad.phrases[0]!.audio = {
+      uri: 'file:///tmp/din2.m4a',
+      sha256: 'ab'.repeat(32),
+      ms: 800,
+    }
+    expect(errors(ALL_CHECKS.audio!(bad)).some((i) => i.message.includes('cloud https'))).toBe(true)
   })
 })
 

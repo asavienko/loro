@@ -22,6 +22,7 @@ type Ajv2020Ctor = new (opts: { allErrors: boolean; strict: boolean }) => Ajv202
 // Checks read from DISK, not the bundled snapshot — they must validate what the
 // author just edited.
 import { contentRoot, loadCatalogFromDisk } from './fs.js'
+import { isCloudAudioUri } from './catalogAudio.js'
 import { GRAPH_RELATIONS, stressedSyllables, THEMES, wordCount, type Catalog } from './types.js'
 
 export interface Issue {
@@ -158,6 +159,9 @@ export const graphCheck: Check = (c) => {
       )
     }
 
+    if (edge.from === edge.to) {
+      issues.push(err('graph', `self-edge ${edge.from}`, edge.from))
+    }
     if (!ids.has(edge.from)) {
       issues.push(err('graph', `from references unknown phrase '${edge.from}'`, edge.from))
     }
@@ -294,13 +298,24 @@ export const referenceCheck: Check = (c) => {
 }
 
 export const audioCheck: Check = (c) =>
-  c.phrases.flatMap((p) =>
-    p.audio === undefined
-      ? [warn('audio', 'no rendered audio yet — run content:render', p.id)]
-      : /^[a-f0-9]{64}$/.test(p.audio.sha256)
-        ? []
-        : [err('audio', 'audio sha256 is malformed', p.id)],
-  )
+  c.phrases.flatMap((p) => {
+    if (p.audio === undefined)
+      return [warn('audio', 'no rendered audio yet — run content:render', p.id)]
+    const issues: Issue[] = []
+    if (!/^[a-f0-9]{64}$/.test(p.audio.sha256)) {
+      issues.push(err('audio', 'audio sha256 is malformed', p.id))
+    }
+    if (!isCloudAudioUri(p.audio.uri)) {
+      issues.push(
+        err(
+          'audio',
+          'audio uri must be a cloud https object (http only for local authoring)',
+          p.id,
+        ),
+      )
+    }
+    return issues
+  })
 
 export const prosodyCheck: Check = (c) => {
   const issues: Issue[] = []

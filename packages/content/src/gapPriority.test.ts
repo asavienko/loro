@@ -33,6 +33,8 @@ describe('gap_priority generate queue', () => {
     expect(report.thinScenarios.map((row) => row.id)).toContain('dinner')
     expect(report.drafts.length).toBeGreaterThan(0)
     expect(report.drafts.map((draft) => draft.topic)).toContain('scenario:dinner')
+    expect(report.drafts.map((draft) => draft.topic)).toContain('orphan:cafe1')
+    expect(report.drafts.some((draft) => draft.topic === 'orphan:din1')).toBe(false)
     expect(loadCatalog().scenarios.find((row) => row.id === 'dinner')?.phrases).toHaveLength(4)
   })
 })
