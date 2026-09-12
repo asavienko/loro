@@ -72,6 +72,8 @@ export function useRefrainSession(
   const shouldCompleteWave = options?.completeWave !== false
   const replaceSession = options?.replaceSession === true
   const setKey = setIds?.join('\0') ?? ''
+  const setIdsRef = useRef(setIds)
+  setIdsRef.current = setIds
   const busy = useRef(false)
   // Entering the Refrain is one of the moments the day must be re-checked: a learner who
   // opened the app before midnight and starts practising after it needs today's set.
@@ -81,7 +83,7 @@ export function useRefrainSession(
   }, [enabled, ensureRefrainSet])
   useEffect(() => {
     if (!enabled) return
-    const scoped = setIds?.map(userPhraseId)
+    const scoped = setIdsRef.current?.map(userPhraseId)
     let cancelled = false
     void refrainEngine
       .plan(engineContext(scoped !== undefined ? { refrainSet: scoped } : undefined))
@@ -93,7 +95,9 @@ export function useRefrainSession(
           const sessionIds = new Set(existing.plan.items.map((item) => item.phraseId))
           const sameScope =
             plannedIds.size === sessionIds.size && [...plannedIds].every((id) => sessionIds.has(id))
-          if (sameScope || !replaceSession) return
+          // An empty re-plan means today's remaining work is done, not that the live
+          // lock-in card should be thrown away and replaced with the day-finish screen.
+          if (sameScope || !replaceSession || plan.items.length === 0) return
         }
         beginRefrainSession(plan, wave)
       })
@@ -103,8 +107,18 @@ export function useRefrainSession(
     return () => {
       cancelled = true
     }
-    // Re-planned when the day's set or a targeted scope changes, not on every rep.
-  }, [enabled, refrainSet, setKey, setIds, targetLocale, beginRefrainSession, showToast, wave])
+    // `setKey` stands in for `setIds`: a new array identity on every render must not
+    // re-plan, or the last targeted rep looks like an empty set and finishes the day.
+  }, [
+    enabled,
+    refrainSet,
+    setKey,
+    targetLocale,
+    beginRefrainSession,
+    showToast,
+    wave,
+    replaceSession,
+  ])
   const item = session?.plan.items[cursor]
   const storePhrase = useMemo(
     () => (item === undefined ? undefined : phrases.find((p) => p.id === item.phraseId)),
