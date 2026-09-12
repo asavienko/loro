@@ -128,7 +128,13 @@ export default function Add() {
         tags: draft.tags,
         source: 'discover',
       })
-      list.anchorOn(sheet.phrase.theme)
+      list.anchorOn({
+        catalogId: sheet.phrase.id,
+        phrase: sheet.phrase.targetText,
+        theme: sheet.phrase.theme,
+        difficulty: draft.difficulty,
+        tags: draft.tags,
+      })
       draft.reset()
       return
     }
@@ -142,7 +148,14 @@ export default function Add() {
       },
       { difficulty: draft.difficulty, tags: draft.tags, source: sheet.source },
     )
-    if (sheet.source !== 'custom' && sheet.theme !== undefined) list.anchorOn(sheet.theme)
+    if (sheet.source !== 'custom' && sheet.theme !== undefined)
+      list.anchorOn({
+        catalogId: '',
+        phrase: sheet.targetText,
+        theme: sheet.theme,
+        difficulty: draft.difficulty,
+        tags: draft.tags,
+      })
     else list.clearDiscoverQuery()
     draft.reset()
   }

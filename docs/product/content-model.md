@@ -133,8 +133,7 @@ Two scores consume the graph, with different inputs. Implementation owner:
 
 Discover association keeps the authored **theme bands** (`Loro.dc.html:2306–2310`): same-theme
 first, then the rest, cap 6. The score orders **inside** a band. The artifact context label is
-`More like “{anchorEs}”` (`2369`); the current app shows `More like {theme}` — that copy is a
-recorded divergence plan 101 fixes. This score is **not** Stream rank and **not** FSRS; see
+`More like “{anchorEs}”` (`2369`). This score is **not** Stream rank and **not** FSRS; see
 [scheduling.md](../architecture/scheduling.md#association-is-not-a-sixth-scheduler).
 
 The graph ships in the bundled snapshot (`graph.json` beside `scenarios.json`) and in the disk
