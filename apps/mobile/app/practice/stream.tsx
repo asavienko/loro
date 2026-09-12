@@ -45,7 +45,7 @@ import { toView, useApp, type PhraseView } from '../../src/store'
 import { audioPlaybackNote, audioSpeech, useAudioSpeech } from '../../src/lib/audioSpeech'
 import { rustCoreFacade } from '../../src/store/coreFacade'
 import { deviceClock } from '../../src/lib/clock'
-import { streamWaveQueue } from '../../src/lib/practiceFocus'
+import { streamWaveMembers, streamWaveQueue } from '../../src/lib/practiceFocus'
 /** The two gaps in this screen that no `space` step names. */
 const RERATE_GAP = 7
 const PILL_GAP = 5
@@ -70,7 +70,10 @@ export default function Stream() {
       rustCoreFacade.streamRank(phrase, now),
     ).map(toView)
   }, [phrases, refrainSet, nativeLanguage])
-  const stats = streamStats(phrases)
+  const stats = useMemo(
+    () => streamStats(streamWaveMembers(phrases, refrainSet)),
+    [phrases, refrainSet],
+  )
   const position = cursor % Math.max(1, queue.length)
   const current = queue[position]
   if (queue.length === 0 || current === undefined) {

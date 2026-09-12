@@ -68,6 +68,7 @@ import {
   parseRefrainFocus,
   refrainFocusIds,
   refrainSkipsWaveLock,
+  sessionCoversDaySet,
 } from '../../src/lib/practiceFocus'
 import { copy } from '../../src/lib/copy'
 import { audioPlaybackNote, audioSpeech, useAudioSpeech } from '../../src/lib/audioSpeech'
@@ -235,9 +236,12 @@ export default function Refrain() {
   // it with the next-wave gate would hide the reward and make a successful session look blocked.
   if (session.finished) {
     const day = deviceClock.localDay()
+    const sessionIds = refrainResume.session?.plan.items.map((item) => item.phraseId) ?? []
+    const waveComplete = focus.kind === 'wave' && sessionCoversDaySet(sessionIds, refrainSet)
     return (
       <Screen>
         <DoneState
+          variant={waveComplete ? 'wave' : focus.kind === 'hard' ? 'hard' : 'phrase'}
           worked={set.length}
           totalReps={set.reduce((n, p) => n + repsTodayOf(p, day), 0)}
         />
@@ -294,7 +298,11 @@ export default function Refrain() {
         <Row justify="space-between">
           <View>
             <Text variant="captionSm" color={ink.muted}>
-              {copy.today.waves[wave].title}
+              {focus.kind === 'wave'
+                ? copy.today.waves[wave].title
+                : focus.kind === 'hard'
+                  ? copy.refrain.focus.hard
+                  : copy.refrain.focus.phrase}
             </Text>
             <Text variant="caption" color={ink.ink}>
               {copy.refrain.phraseCounter(phraseNumber, set.length)}
@@ -642,8 +650,28 @@ function LockedInBanner() {
  * Spanish), an 88-px tile whose 42-px emoji is off `EmojiTile`'s 0.48 ratio, two counters, and
  * a full-width button. Routing it through `EmptyState` would silently restyle all four.
  */
-function DoneState({ worked, totalReps }: { worked: number; totalReps: number }) {
+function DoneState({
+  variant,
+  worked,
+  totalReps,
+}: {
+  variant: 'wave' | 'hard' | 'phrase'
+  worked: number
+  totalReps: number
+}) {
   useLocale()
+  const headline =
+    variant === 'wave'
+      ? copy.refrain.done.headline
+      : variant === 'hard'
+        ? copy.refrain.done.hard.headline
+        : copy.refrain.done.phrase.headline
+  const title =
+    variant === 'wave'
+      ? copy.refrain.done.title
+      : variant === 'hard'
+        ? copy.refrain.done.hard.title
+        : copy.refrain.done.phrase.title
   return (
     <ScrollView contentContainerStyle={s.centred}>
       <Arrival kind="popIn">
@@ -652,10 +680,10 @@ function DoneState({ worked, totalReps }: { worked: number; totalReps: number })
         </View>
       </Arrival>
       <Text variant="title2" color={accent.accentInk} lang="target">
-        {copy.refrain.done.headline}
+        {headline}
       </Text>
       <Text variant="title2" color={ink.ink} align="center">
-        {copy.refrain.done.title}
+        {title}
       </Text>
       <Row gap={space['2.5']} wrap align="stretch" style={s.doneStats}>
         <DoneStat value={worked} label={copy.refrain.done.workedLabel} />

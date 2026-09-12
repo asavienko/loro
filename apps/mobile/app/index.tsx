@@ -70,6 +70,7 @@ import {
   type ProductionWave,
 } from '../src/store'
 import { copy } from '../src/lib/copy'
+import { inferRefrainFocus, refrainResumeTarget } from '../src/lib/practiceFocus'
 import { deviceClock, localDateLabel, localTimeLabel } from '../src/lib/clock'
 import { useLocalMinute } from '../src/lib/useLocalMinute'
 import {
@@ -167,11 +168,19 @@ export default function Today() {
       : Math.min(refrainResume.cursor + 1, refrainResume.session.plan.items.length)
   const hasResume = entry.kind === 'resume' && resumeRep !== null && resumeRep > 0
   const canStartWave = set.length > 0 && (entry.kind === 'ready' || entry.kind === 'resume')
+  const resumeFocus =
+    refrainResume.session === null
+      ? { kind: 'wave' as const }
+      : inferRefrainFocus(
+          refrainResume.session.plan.items.map((item) => item.phraseId),
+          phrases,
+          refrainSet,
+        )
   const startWave = (_wave = nextWaveKey): void => {
     router.push('/practice/stream')
   }
   const resumeRefrain = (): void => {
-    router.push({ pathname: '/practice/refrain', params: { wave: resumeWave } })
+    router.push(refrainResumeTarget(resumeFocus, resumeWave))
   }
   return (
     <Screen>
@@ -205,7 +214,7 @@ export default function Today() {
           totalReps={totalReps}
           // With nothing in rotation the wave is not a way in, and the row must not say it is
           // while the CTA below says the opposite.
-          onStartWave={canStartWave ? startWave : undefined}
+          onStartWave={hasResume || !canStartWave ? undefined : startWave}
         />
         <TodaySet set={set} lockedIn={lockedIn} />
         <BankedTail graduated={graduated} />
@@ -218,9 +227,13 @@ export default function Today() {
             set.length === 0
               ? copy.today.cta.empty
               : hasResume
-                ? copy.today.cta.resumeRefrain
-                : entry.kind === 'resume'
+                ? resumeFocus.kind === 'wave'
                   ? copy.today.cta.resumeRefrain
+                  : copy.today.cta.resumePractice
+                : entry.kind === 'resume'
+                  ? resumeFocus.kind === 'wave'
+                    ? copy.today.cta.resumeRefrain
+                    : copy.today.cta.resumePractice
                   : entry.kind === 'ready'
                     ? copy.today.cta.startWave[entry.wave.key]
                     : entry.kind === 'locked'

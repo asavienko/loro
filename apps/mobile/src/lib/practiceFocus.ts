@@ -1,4 +1,5 @@
 import { isActive, userPhraseId, type PhraseState } from '@loro/core'
+import type { Href } from 'expo-router'
 
 /**
  * Stream is the daily wave: membership is today's frozen set, listed in full.
@@ -73,14 +74,80 @@ export function refrainSessionMatchesFocus(
   return ids.length === wanted.size && ids.every((id) => wanted.has(id))
 }
 
+/** True when the session's unique phrase ids are exactly today's frozen set. */
+export function sessionCoversDaySet(
+  sessionPhraseIds: readonly string[],
+  refrainSet: readonly string[],
+): boolean {
+  const ids = [...new Set(sessionPhraseIds)]
+  return ids.length === refrainSet.length && ids.every((id) => refrainSet.includes(id))
+}
+
+/**
+ * Recover a paused drill's focus from its members. A stored 1-phrase plan is a phrase drill.
+ * A Difficult-only plan that is not the whole frozen set is the menu drill. A plan that
+ * covers the day set is a timed wave, even when every member happens to be Difficult.
+ */
+export function inferRefrainFocus(
+  sessionPhraseIds: readonly string[],
+  phrases: readonly PhraseState[],
+  refrainSet: readonly string[],
+): RefrainFocus {
+  const ids = [...new Set(sessionPhraseIds)]
+  if (ids.length === 1 && ids[0] !== undefined) {
+    return { kind: 'phrase', phraseId: ids[0] }
+  }
+  const hardIds = refrainFocusIds({ kind: 'hard' }, phrases, refrainSet)
+  if (
+    ids.length > 0 &&
+    refrainSessionMatchesFocus(ids, hardIds) &&
+    !sessionCoversDaySet(ids, refrainSet)
+  ) {
+    return { kind: 'hard' }
+  }
+  return { kind: 'wave' }
+}
+
+/** Today, the spine, and the resume row open Refrain with the focus the checkpoint still is. */
+export function refrainResumeTarget(
+  focus: RefrainFocus,
+  wave: string,
+): {
+  readonly pathname: '/practice/refrain'
+  readonly params:
+    { readonly phrase: string } | { readonly filter: 'hard' } | { readonly wave: string }
+} {
+  if (focus.kind === 'phrase') {
+    return { pathname: '/practice/refrain', params: { phrase: focus.phraseId } }
+  }
+  if (focus.kind === 'hard') {
+    return { pathname: '/practice/refrain', params: { filter: 'hard' } }
+  }
+  return { pathname: '/practice/refrain', params: { wave } }
+}
+
+/**
+ * Members of today's frozen set, including learned rows, so "This wave" pills count the wave.
+ * An empty or missing set falls back to every phrase, matching the live-empty stream queue.
+ */
+export function streamWaveMembers<T extends PhraseState>(
+  phrases: readonly T[],
+  refrainSet: readonly string[],
+): T[] {
+  const byId = new Map(phrases.map((phrase) => [phrase.id, phrase]))
+  const members = refrainSet.flatMap((id) => {
+    const phrase = byId.get(userPhraseId(id))
+    return phrase !== undefined ? [phrase] : []
+  })
+  return members.length > 0 ? members : [...phrases]
+}
+
 /** Menu and switcher open Refrain as a hard-phrase drill, not a timed wave. */
-export function destinationTarget(
-  href: string,
-): string | { pathname: string; params: { filter: 'hard' } } {
+export function destinationTarget(href: string): Href {
   if (href === '/practice/refrain') {
     return { pathname: '/practice/refrain', params: { filter: 'hard' } }
   }
-  return href
+  return href as Href
 }
 
 function firstParam(value: string | string[] | undefined): string | undefined {

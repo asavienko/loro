@@ -22,7 +22,7 @@ import { BottomBarProvider } from '../src/ui/BottomBarContext'
 import { Pressable, Text } from '../src/ui/primitives'
 import { NavigationMenu } from '../src/ui/components'
 import { DESTINATIONS, placeForPath, surfaceLawForPath } from '../src/lib/navigation'
-import { destinationTarget } from '../src/lib/practiceFocus'
+import { destinationTarget, inferRefrainFocus, refrainResumeTarget } from '../src/lib/practiceFocus'
 import { startAccountSync } from '../src/services/accountSync'
 import { PersistenceGate } from '../src/store/PersistenceGate'
 import { completeBrowserSignIn } from '../src/auth/runtime'
@@ -60,6 +60,8 @@ function ReadyLayout() {
   const surfaceLaw = surfaceLawForPath(pathname)
   const refrainResume = useApp((state) => state.refrainResume)
   const refrainWaves = useApp((state) => state.refrainWaves)
+  const phrases = useApp((state) => state.phrases)
+  const refrainSet = useApp((state) => state.refrainSet)
   const ongoingEntry = waveEntryWithResume(
     PRODUCTION_WAVES,
     PRODUCTION_WAVE_TIMES,
@@ -80,10 +82,13 @@ function ReadyLayout() {
           heading: copy.nav.ongoing.heading,
           label: copy.nav.ongoing.refrain(refrainRep),
           onPress: () => {
-            router.dismissTo({
-              pathname: '/practice/refrain',
-              params: { wave: ongoingEntry.wave },
-            })
+            const sessionIds = refrainResume.session?.plan.items.map((item) => item.phraseId) ?? []
+            router.dismissTo(
+              refrainResumeTarget(
+                inferRefrainFocus(sessionIds, phrases, refrainSet),
+                ongoingEntry.wave,
+              ),
+            )
           },
         }
   const constrainWidth = Platform.OS === 'web' && !pathname.startsWith('/dev/')
