@@ -12,38 +12,40 @@ import androidx.compose.ui.unit.sp
 
 object LoroTokens {
     object Surface {
-        val canvas = Color(0xFFEAE6DE)
-        val app = Color(0xFFF6F2EA)
-        val card = Color(0xFFFFFFFF)
-        val sunken = Color(0xFFECE7DB)
-        val sunken2 = Color(0xFFE9E3D6)
-        val device = Color(0xFF1A1815)
-        val dark = Color(0xFF23201B)
+        val canvas = Color(0xFFDCDAD4)
+        val app = Color(0xFFFCF9F4)
+        val card = Color(0xFFF6F3EE)
+        val sunken = Color(0xFFF0EDE8)
+        val sunken2 = Color(0xFFEBE8E2)
+        val track = Color(0xFFEFECE1)
+        val shadowInk = Color(0xFF231E18)
+        val device = Color(0xFF31302D)
+        val dark = Color(0xFF31302D)
     }
 
     object Ink {
-        val ink = Color(0xFF23201B)
-        val ink2 = Color(0xFF514E44)
-        val ink3 = Color(0xFF5C584C)
-        val ink4 = Color(0xFF57534A)
-        val muted = Color(0xFF6A6558)
-        val muted2 = Color(0xFF7A7466)
-        val muted3 = Color(0xFF878174)
+        val ink = Color(0xFF1C1C19)
+        val ink2 = Color(0xFF57423B)
+        val ink3 = Color(0xFF5C4A44)
+        val ink4 = Color(0xFF66544A)
+        val muted = Color(0xFF7A645B)
+        val muted2 = Color(0xFF8A726A)
+        val muted3 = Color(0xFF8F766E)
     }
 
     object Line {
-        val subtle = Color(0xFFECE7DB)
-        val default = Color(0xFFE5DFD2)
-        val strong = Color(0xFFDDD6C7)
-        val stronger = Color(0xFFD9D3C5)
-        val strongest = Color(0xFFCBC4B5)
+        val subtle = Color(0xFFE5E2DD)
+        val default = Color(0xFFE9E4D6)
+        val strong = Color(0xFFDEC0B7)
+        val stronger = Color(0xFFD4C4BC)
+        val strongest = Color(0xFFC4B0A8)
     }
 
     object Accent {
         object Coral {
-            val accent = Color(0xFFBF5722)
-            val accentInk = Color(0xFFA2461A)
-            val accentOnDark = Color(0xFFE8A06A)
+            val accent = Color(0xFF9F3C16)
+            val accentInk = Color(0xFF7F2500)
+            val accentOnDark = Color(0xFFFFB59C)
         }
         object Sunset {
             val accent = Color(0xFF95560F)
@@ -75,9 +77,9 @@ object LoroTokens {
     }
 
     object Gutter {
-        val dense: Dp = 14.dp
-        val default: Dp = 18.dp
-        val roomy: Dp = 22.dp
+        val dense: Dp = 16.dp
+        val default: Dp = 20.dp
+        val roomy: Dp = 24.dp
     }
 
     object Size {
@@ -116,92 +118,109 @@ object LoroTokens {
     object Typography {
         object Family {
             object Sans {
-                const val name = "Plus Jakarta Sans"
-                val weights = listOf(400, 500, 600, 700, 800)
+                const val name = "DM Sans"
+                val weights = listOf(400, 500, 600, 700)
             }
             object Serif {
-                const val name = "Instrument Serif"
-                val weights = listOf(400)
-                const val style = "italic"
+                const val name = "Newsreader"
+                val weights = listOf(400, 500, 600, 700)
             }
         }
         object Scale {
         object Display {
-            val size: TextUnit = 62.sp
-            val sizeMax: TextUnit = 74.sp
-            const val weight = 700
-            const val tracking = "-0.035em"
-            const val lineHeight = 0.9
+            val size: TextUnit = 48.sp
+            val sizeMax: TextUnit = 56.sp
+            const val weight = 400
+            const val tracking = "-0.02em"
+            const val lineHeight = 1.167
+            const val family = "serif"
         }
         object Hero {
-            val size: TextUnit = 46.sp
-            val sizeMax: TextUnit = 56.sp
-            const val weight = 700
-            const val tracking = "-0.03em"
-            const val lineHeight = 1
+            val size: TextUnit = 36.sp
+            val sizeMax: TextUnit = 44.sp
+            const val weight = 400
+            const val tracking = "-0.015em"
+            const val lineHeight = 1.222
+            const val family = "serif"
         }
         object Title1 {
-            val size: TextUnit = 26.sp
-            val sizeMax: TextUnit = 28.sp
-            const val weight = 700
+            val size: TextUnit = 32.sp
+            val sizeMax: TextUnit = 40.sp
+            const val weight = 500
             const val tracking = "-0.01em"
-            const val lineHeight = 1.18
+            const val lineHeight = 1.25
+            const val family = "serif"
         }
         object Title2 {
-            val size: TextUnit = 22.sp
-            val sizeMax: TextUnit = 24.sp
-            const val weight = 700
-            const val tracking = "-0.01em"
-            const val lineHeight = 1.22
+            val size: TextUnit = 26.sp
+            val sizeMax: TextUnit = 34.sp
+            const val weight = 500
+            const val lineHeight = 1.308
+            const val family = "serif"
         }
         object Title3 {
             val size: TextUnit = 20.sp
-            const val weight = 700
-            const val tracking = "-0.01em"
-            const val lineHeight = 1.2
+            const val weight = 600
+            const val lineHeight = 1.4
+            const val family = "serif"
         }
         object Headline {
-            val size: TextUnit = 18.sp
-            const val weight = 700
-            const val tracking = "-0.01em"
-            const val lineHeight = 1.25
+            val size: TextUnit = 20.sp
+            const val weight = 600
+            const val lineHeight = 1.4
+            const val family = "serif"
         }
         object Body {
-            val size: TextUnit = 15.sp
-            const val weight = 700
-            const val lineHeight = 1.4
+            val size: TextUnit = 14.sp
+            const val weight = 600
+            const val tracking = "0.02em"
+            const val lineHeight = 1.429
+            const val family = "sans"
+        }
+        object BodyMd {
+            val size: TextUnit = 16.sp
+            const val weight = 400
+            const val lineHeight = 1.5
+            const val family = "sans"
         }
         object BodySm {
             val size: TextUnit = 14.sp
-            const val weight = 700
-            const val lineHeight = 1.4
+            const val weight = 400
+            const val lineHeight = 1.429
+            const val family = "sans"
         }
         object Caption {
-            val size: TextUnit = 13.sp
-            const val weight = 600
-            const val lineHeight = 1.45
+            val size: TextUnit = 14.sp
+            const val weight = 400
+            const val lineHeight = 1.429
+            const val family = "sans"
         }
         object CaptionSm {
             val size: TextUnit = 12.sp
             const val weight = 600
-            const val lineHeight = 1.45
+            const val tracking = "0.04em"
+            const val lineHeight = 1.333
+            const val family = "sans"
         }
         object Label {
             val size: TextUnit = 11.sp
-            const val weight = 700
-            const val tracking = "0.04em"
+            const val weight = 500
+            const val tracking = "0.05em"
+            const val family = "sans"
             const val transform = "uppercase"
         }
         object LabelSm {
-            val size: TextUnit = 10.sp
-            const val weight = 700
+            val size: TextUnit = 11.sp
+            const val weight = 500
             const val tracking = "0.05em"
+            const val family = "sans"
             const val transform = "uppercase"
         }
         object Prose {
-            val size: TextUnit = 14.sp
+            val size: TextUnit = 19.sp
             const val weight = 400
-            const val lineHeight = 1.58
+            const val lineHeight = 1.579
+            const val family = "serif"
         }
         object SerifDisplay {
             val size: TextUnit = 26.sp

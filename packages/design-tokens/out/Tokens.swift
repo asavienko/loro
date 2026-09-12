@@ -6,38 +6,40 @@ import SwiftUI
 
 public enum LoroTokens {
     public enum Surface {
-        public static let canvas = Color(red: 0.9176, green: 0.9020, blue: 0.8706)
-        public static let app = Color(red: 0.9647, green: 0.9490, blue: 0.9176)
-        public static let card = Color(red: 1.0000, green: 1.0000, blue: 1.0000)
-        public static let sunken = Color(red: 0.9255, green: 0.9059, blue: 0.8588)
-        public static let sunken2 = Color(red: 0.9137, green: 0.8902, blue: 0.8392)
-        public static let device = Color(red: 0.1020, green: 0.0941, blue: 0.0824)
-        public static let dark = Color(red: 0.1373, green: 0.1255, blue: 0.1059)
+        public static let canvas = Color(red: 0.8627, green: 0.8549, blue: 0.8314)
+        public static let app = Color(red: 0.9882, green: 0.9765, blue: 0.9569)
+        public static let card = Color(red: 0.9647, green: 0.9529, blue: 0.9333)
+        public static let sunken = Color(red: 0.9412, green: 0.9294, blue: 0.9098)
+        public static let sunken2 = Color(red: 0.9216, green: 0.9098, blue: 0.8863)
+        public static let track = Color(red: 0.9373, green: 0.9255, blue: 0.8824)
+        public static let shadowInk = Color(red: 0.1373, green: 0.1176, blue: 0.0941)
+        public static let device = Color(red: 0.1922, green: 0.1882, blue: 0.1765)
+        public static let dark = Color(red: 0.1922, green: 0.1882, blue: 0.1765)
     }
 
     public enum Ink {
-        public static let ink = Color(red: 0.1373, green: 0.1255, blue: 0.1059)
-        public static let ink2 = Color(red: 0.3176, green: 0.3059, blue: 0.2667)
-        public static let ink3 = Color(red: 0.3608, green: 0.3451, blue: 0.2980)
-        public static let ink4 = Color(red: 0.3412, green: 0.3255, blue: 0.2902)
-        public static let muted = Color(red: 0.4157, green: 0.3961, blue: 0.3451)
-        public static let muted2 = Color(red: 0.4784, green: 0.4549, blue: 0.4000)
-        public static let muted3 = Color(red: 0.5294, green: 0.5059, blue: 0.4549)
+        public static let ink = Color(red: 0.1098, green: 0.1098, blue: 0.0980)
+        public static let ink2 = Color(red: 0.3412, green: 0.2588, blue: 0.2314)
+        public static let ink3 = Color(red: 0.3608, green: 0.2902, blue: 0.2667)
+        public static let ink4 = Color(red: 0.4000, green: 0.3294, blue: 0.2902)
+        public static let muted = Color(red: 0.4784, green: 0.3922, blue: 0.3569)
+        public static let muted2 = Color(red: 0.5412, green: 0.4471, blue: 0.4157)
+        public static let muted3 = Color(red: 0.5608, green: 0.4627, blue: 0.4314)
     }
 
     public enum Line {
-        public static let subtle = Color(red: 0.9255, green: 0.9059, blue: 0.8588)
-        public static let `default` = Color(red: 0.8980, green: 0.8745, blue: 0.8235)
-        public static let strong = Color(red: 0.8667, green: 0.8392, blue: 0.7804)
-        public static let stronger = Color(red: 0.8510, green: 0.8275, blue: 0.7725)
-        public static let strongest = Color(red: 0.7961, green: 0.7686, blue: 0.7098)
+        public static let subtle = Color(red: 0.8980, green: 0.8863, blue: 0.8667)
+        public static let `default` = Color(red: 0.9137, green: 0.8941, blue: 0.8392)
+        public static let strong = Color(red: 0.8706, green: 0.7529, blue: 0.7176)
+        public static let stronger = Color(red: 0.8314, green: 0.7686, blue: 0.7373)
+        public static let strongest = Color(red: 0.7686, green: 0.6902, blue: 0.6588)
     }
 
     public enum Accent {
         public enum Coral {
-            public static let accent = Color(red: 0.7490, green: 0.3412, blue: 0.1333)
-            public static let accentInk = Color(red: 0.6353, green: 0.2745, blue: 0.1020)
-            public static let accentOnDark = Color(red: 0.9098, green: 0.6275, blue: 0.4157)
+            public static let accent = Color(red: 0.6235, green: 0.2353, blue: 0.0863)
+            public static let accentInk = Color(red: 0.4980, green: 0.1451, blue: 0.0000)
+            public static let accentOnDark = Color(red: 1.0000, green: 0.7098, blue: 0.6118)
         }
         public enum Sunset {
             public static let accent = Color(red: 0.5843, green: 0.3373, blue: 0.0588)
@@ -84,9 +86,9 @@ public enum LoroTokens {
     }
 
     public enum Gutter {
-        public static let dense: CGFloat = 14
-        public static let `default`: CGFloat = 18
-        public static let roomy: CGFloat = 22
+        public static let dense: CGFloat = 16
+        public static let `default`: CGFloat = 20
+        public static let roomy: CGFloat = 24
     }
 
     public enum Size {
@@ -125,92 +127,109 @@ public enum LoroTokens {
     public enum Typography {
         public enum Family {
             public enum Sans {
-                public static let name = "Plus Jakarta Sans"
-                public static let weights = [400,500,600,700,800]
+                public static let name = "DM Sans"
+                public static let weights = [400,500,600,700]
             }
             public enum Serif {
-                public static let name = "Instrument Serif"
-                public static let weights = [400]
-                public static let style = "italic"
+                public static let name = "Newsreader"
+                public static let weights = [400,500,600,700]
             }
         }
         public enum Scale {
         public enum Display {
-            public static let size: CGFloat = 62
-            public static let sizeMax: CGFloat = 74
-            public static let weight = 700
-            public static let tracking = "-0.035em"
-            public static let lineHeight: CGFloat = 0.9
+            public static let size: CGFloat = 48
+            public static let sizeMax: CGFloat = 56
+            public static let weight = 400
+            public static let tracking = "-0.02em"
+            public static let lineHeight: CGFloat = 1.167
+            public static let family = "serif"
         }
         public enum Hero {
-            public static let size: CGFloat = 46
-            public static let sizeMax: CGFloat = 56
-            public static let weight = 700
-            public static let tracking = "-0.03em"
-            public static let lineHeight: CGFloat = 1
+            public static let size: CGFloat = 36
+            public static let sizeMax: CGFloat = 44
+            public static let weight = 400
+            public static let tracking = "-0.015em"
+            public static let lineHeight: CGFloat = 1.222
+            public static let family = "serif"
         }
         public enum Title1 {
-            public static let size: CGFloat = 26
-            public static let sizeMax: CGFloat = 28
-            public static let weight = 700
+            public static let size: CGFloat = 32
+            public static let sizeMax: CGFloat = 40
+            public static let weight = 500
             public static let tracking = "-0.01em"
-            public static let lineHeight: CGFloat = 1.18
+            public static let lineHeight: CGFloat = 1.25
+            public static let family = "serif"
         }
         public enum Title2 {
-            public static let size: CGFloat = 22
-            public static let sizeMax: CGFloat = 24
-            public static let weight = 700
-            public static let tracking = "-0.01em"
-            public static let lineHeight: CGFloat = 1.22
+            public static let size: CGFloat = 26
+            public static let sizeMax: CGFloat = 34
+            public static let weight = 500
+            public static let lineHeight: CGFloat = 1.308
+            public static let family = "serif"
         }
         public enum Title3 {
             public static let size: CGFloat = 20
-            public static let weight = 700
-            public static let tracking = "-0.01em"
-            public static let lineHeight: CGFloat = 1.2
+            public static let weight = 600
+            public static let lineHeight: CGFloat = 1.4
+            public static let family = "serif"
         }
         public enum Headline {
-            public static let size: CGFloat = 18
-            public static let weight = 700
-            public static let tracking = "-0.01em"
-            public static let lineHeight: CGFloat = 1.25
+            public static let size: CGFloat = 20
+            public static let weight = 600
+            public static let lineHeight: CGFloat = 1.4
+            public static let family = "serif"
         }
         public enum Body {
-            public static let size: CGFloat = 15
-            public static let weight = 700
-            public static let lineHeight: CGFloat = 1.4
+            public static let size: CGFloat = 14
+            public static let weight = 600
+            public static let tracking = "0.02em"
+            public static let lineHeight: CGFloat = 1.429
+            public static let family = "sans"
+        }
+        public enum BodyMd {
+            public static let size: CGFloat = 16
+            public static let weight = 400
+            public static let lineHeight: CGFloat = 1.5
+            public static let family = "sans"
         }
         public enum BodySm {
             public static let size: CGFloat = 14
-            public static let weight = 700
-            public static let lineHeight: CGFloat = 1.4
+            public static let weight = 400
+            public static let lineHeight: CGFloat = 1.429
+            public static let family = "sans"
         }
         public enum Caption {
-            public static let size: CGFloat = 13
-            public static let weight = 600
-            public static let lineHeight: CGFloat = 1.45
+            public static let size: CGFloat = 14
+            public static let weight = 400
+            public static let lineHeight: CGFloat = 1.429
+            public static let family = "sans"
         }
         public enum CaptionSm {
             public static let size: CGFloat = 12
             public static let weight = 600
-            public static let lineHeight: CGFloat = 1.45
+            public static let tracking = "0.04em"
+            public static let lineHeight: CGFloat = 1.333
+            public static let family = "sans"
         }
         public enum Label {
             public static let size: CGFloat = 11
-            public static let weight = 700
-            public static let tracking = "0.04em"
+            public static let weight = 500
+            public static let tracking = "0.05em"
+            public static let family = "sans"
             public static let transform = "uppercase"
         }
         public enum LabelSm {
-            public static let size: CGFloat = 10
-            public static let weight = 700
+            public static let size: CGFloat = 11
+            public static let weight = 500
             public static let tracking = "0.05em"
+            public static let family = "sans"
             public static let transform = "uppercase"
         }
         public enum Prose {
-            public static let size: CGFloat = 14
+            public static let size: CGFloat = 19
             public static let weight = 400
-            public static let lineHeight: CGFloat = 1.58
+            public static let lineHeight: CGFloat = 1.579
+            public static let family = "serif"
         }
         public enum SerifDisplay {
             public static let size: CGFloat = 26

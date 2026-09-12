@@ -19,7 +19,7 @@ describe('contrast maths', () => {
   })
 
   it('is symmetric', () => {
-    expect(ratio('#bf5722', '#f6f2ea')).toBe(ratio('#f6f2ea', '#bf5722'))
+    expect(ratio('#9f3c16', '#fcf9f4')).toBe(ratio('#fcf9f4', '#9f3c16'))
   })
 
   it('parses shorthand hex', () => {
@@ -32,7 +32,7 @@ describe('contrast maths', () => {
   })
 
   it('applies the right threshold per text size', () => {
-    // Coral accent on the app surface: 4.0:1 — large text only.
+    // A known mid-contrast pair: 3:1 large passes, 4.5:1 body does not.
     expect(passes('#bf5722', '#f6f2ea', 'large')).toBe(true)
     expect(passes('#bf5722', '#f6f2ea', 'body')).toBe(false)
   })
@@ -49,12 +49,12 @@ describe('token source', () => {
   it('produces one structured contrast report for the CLI and browser consumers', () => {
     const report = createContrastReport(t)
 
-    expect(report).toMatchObject({ checked: 122, passed: true, violations: [] })
+    expect(report).toMatchObject({ checked: 137, passed: true, violations: [] })
     expect(report.accentThemes).toEqual([
-      { name: 'coral', checked: 12, failed: 0, passes: true },
-      { name: 'sunset', checked: 12, failed: 0, passes: true },
-      { name: 'teal', checked: 12, failed: 0, passes: true },
-      { name: 'berry', checked: 12, failed: 0, passes: true },
+      { name: 'coral', checked: 14, failed: 0, passes: true },
+      { name: 'sunset', checked: 14, failed: 0, passes: true },
+      { name: 'teal', checked: 14, failed: 0, passes: true },
+      { name: 'berry', checked: 14, failed: 0, passes: true },
     ])
     expect(report.constraints).toEqual(['warming.peak: text must be >=17px semibold'])
   })
@@ -67,7 +67,7 @@ describe('token source', () => {
     const coral = report.accentThemes.find(({ name }) => name === 'coral')
 
     expect(report.passed).toBe(false)
-    expect(coral).toMatchObject({ failed: 5, passes: false })
+    expect(coral).toMatchObject({ failed: 6, passes: false })
     expect(report.violations[0]).toMatchObject({
       pair: 'accent.coral.accentInk on surface.app',
       need: AA_BODY,
@@ -133,7 +133,7 @@ describe('token source', () => {
 
   it('tints the primary CTA shadow with the accent, not grey', () => {
     // It is what makes the button feel warm rather than pasted on.
-    expect(t.shadow.raised).toContain('191,87,34')
+    expect(t.shadow.raised).toContain('159,60,22')
   })
 
   it('keeps radius.lg at 12 — the workhorse', () => {
@@ -142,13 +142,19 @@ describe('token source', () => {
 
   it('loads the complete authored typography, motion, and layout token families', () => {
     expect(Object.keys(t.typography.family)).toEqual(['sans', 'serif'])
-    expect(Object.keys(t.typography.scale)).toHaveLength(15)
+    expect(Object.keys(t.typography.scale)).toHaveLength(16)
     expect(t.typography.scale.display).toMatchObject({
-      size: 62,
-      sizeMax: 74,
-      weight: 700,
-      tracking: '-0.035em',
-      lineHeight: 0.9,
+      size: 48,
+      sizeMax: 56,
+      weight: 400,
+      tracking: '-0.02em',
+      lineHeight: 1.167,
+    })
+    expect(t.typography.scale.bodyMd).toMatchObject({
+      size: 16,
+      weight: 400,
+      lineHeight: 1.5,
+      family: 'sans',
     })
     expect(Object.keys(t.motion.animation)).toHaveLength(11)
     expect(Object.keys(t.motion.transition)).toHaveLength(9)
@@ -158,9 +164,14 @@ describe('token source', () => {
       opacity: 0.6,
     })
     expect(t.motion.touch).toMatchObject({ minTapTarget: 44, iconHitArea: 44 })
-    expect(t.gutter).toEqual({ dense: 14, default: 18, roomy: 22 })
+    expect(t.gutter).toEqual({ dense: 16, default: 20, roomy: 24 })
     expect(t.size.progressBar).toEqual({ thin: 4, default: 6, thick: 9, mastery: 12 })
     expect(t.size.sheetHandle).toEqual({ width: 42, height: 5 })
+    expect(t.surface.track).toBe('#efece1')
+    expect(t.surface.shadowInk).toBe('#231e18')
+    expect(t.shadow.card).toContain('35,30,24')
+    expect(t.shadow.interactive).toContain('4px 16px')
+    expect(t.shadow.interactive).toContain('1px 3px')
   })
 })
 
@@ -201,8 +212,8 @@ describe('generated targets', () => {
     expect(ts).toContain('minTapTarget: 44')
     expect(ts).toContain('mastery: 12')
 
-    expect(swift).toContain('public static let size: CGFloat = 62')
-    expect(kotlin).toContain('val size: TextUnit = 62.sp')
+    expect(swift).toContain('public static let size: CGFloat = 48')
+    expect(kotlin).toContain('val size: TextUnit = 48.sp')
     expect(swift).toContain('public static let durationMs = 400')
     expect(kotlin).toContain('const val durationMs = 400')
     expect(swift).toContain('public static let scale: CGFloat = 0.82')
