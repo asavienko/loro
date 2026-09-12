@@ -29,12 +29,14 @@ import {
   radius,
   semantic,
   space,
+  type,
   statRow,
   surface,
 } from '../theme'
 import {
   chipLook,
   fieldA11y,
+  fieldFace,
   fieldLook,
   listRowLook,
   segmentLook,
@@ -46,7 +48,7 @@ describe('chipLook · the tag toggle (app/add.tsx:473-483, app/phrase/[id].tsx:2
   // three; phrase detail set none of them, and with a single Text child they are no-ops —
   // the container hugs the label either way.
   const shape = { flexDirection: 'row', alignItems: 'center', gap: 6 } as const
-  const metrics = { paddingHorizontal: 12, paddingVertical: 10, borderRadius: radius.lg } as const
+  const metrics = { paddingHorizontal: 12, paddingVertical: 10, borderRadius: radius.pill } as const
 
   it('uses the runtime accent supplied by the theme provider seam', () => {
     const themed = chipLook('tag', 'tint', true, accents.berry)
@@ -88,14 +90,14 @@ describe('chipLook · the tag toggle (app/add.tsx:473-483, app/phrase/[id].tsx:2
 
 describe('chipLook · the scenario strip (app/add.tsx:209-219)', () => {
   const shape = { flexDirection: 'row', alignItems: 'center', gap: 5 } as const
-  const metrics = { paddingHorizontal: 12, paddingVertical: 8, borderRadius: radius.lg } as const
+  const metrics = { paddingHorizontal: 12, paddingVertical: 8, borderRadius: radius.pill } as const
 
   it('idle — note line.default, one step lighter than the tag chip', () => {
     expect(chipLook('scenario', 'solid', false)).toEqual({
       container: {
         ...shape,
         ...metrics,
-        backgroundColor: surface.card,
+        backgroundColor: surface.sunken,
         borderWidth: 1,
         borderColor: line.default,
       },
@@ -104,12 +106,12 @@ describe('chipLook · the scenario strip (app/add.tsx:209-219)', () => {
     })
   })
 
-  it('selected — the accent FILL, no border, white text', () => {
+  it('selected — inverse fill, no border, white text', () => {
     expect(chipLook('scenario', 'solid', true)).toEqual({
       container: {
         ...shape,
         ...metrics,
-        backgroundColor: accent.accent,
+        backgroundColor: surface.dark,
         borderWidth: 0,
         borderColor: line.default,
       },
@@ -119,9 +121,32 @@ describe('chipLook · the scenario strip (app/add.tsx:209-219)', () => {
   })
 })
 
+describe('chipLook · sage verified / recommended (semantic.success)', () => {
+  const shape = { flexDirection: 'row', alignItems: 'center', gap: 6 } as const
+  const metrics = { paddingHorizontal: 12, paddingVertical: 10, borderRadius: radius.pill } as const
+
+  it('selected uses the success wash and successAlt ink — no new hex', () => {
+    expect(chipLook('tag', 'sage', true)).toEqual({
+      container: {
+        ...shape,
+        ...metrics,
+        backgroundColor: semantic.success.bg,
+        borderWidth: 0,
+        borderColor: line.strong,
+      },
+      textColor: semantic.successAlt.text,
+      textVariant: 'captionSm',
+    })
+  })
+
+  it('idle sage keeps the same card rest as tint', () => {
+    expect(chipLook('tag', 'sage', false)).toEqual(chipLook('tag', 'tint', false))
+  })
+})
+
 describe('chipLook · the love toggle (app/practice/stream.tsx:209-216)', () => {
   const shape = { flexDirection: 'row', alignItems: 'center', gap: 6 } as const
-  const metrics = { paddingHorizontal: 11, paddingVertical: 8, borderRadius: radius.lg } as const
+  const metrics = { paddingHorizontal: 11, paddingVertical: 8, borderRadius: radius.pill } as const
 
   it('carries the heavier border in BOTH states, so toggling cannot reflow the row', () => {
     expect(chipLook('toggle', 'tint', false).container).toEqual({
@@ -147,76 +172,77 @@ describe('chipLook · the love toggle (app/practice/stream.tsx:209-216)', () => 
   })
 })
 
-describe('segmented · the pill pair (app/add.tsx:151-159)', () => {
-  it('lays out on a bare row with a 6 px gap — no track', () => {
+describe('segmented · Add mode pills (v1.2 discover / browse / import)', () => {
+  it('is an enclosed stationery groove with a 4 px inset', () => {
     expect(segmentedTrackStyle('pill')).toEqual({
       flexDirection: 'row',
       flexWrap: 'wrap',
       alignItems: 'stretch',
-      gap: 6,
+      gap: 0,
+      backgroundColor: surface.track,
+      borderRadius: radius.pill,
+      padding: 4,
     })
   })
 
-  it('idle is a bordered card; selected goes dark and drops the border', () => {
+  it('selected lifts to the desk with terracotta type; idle is espresso at rest', () => {
     expect(segmentLook('pill', false)).toEqual({
       container: {
         flex: 1,
         alignItems: 'center',
-        paddingVertical: 9,
-        borderRadius: radius.lg,
-        backgroundColor: surface.card,
-        borderWidth: 1,
-        borderColor: line.default,
+        paddingVertical: 8,
+        borderRadius: radius.pill,
+        backgroundColor: 'transparent',
       },
-      textColor: ink.ink3,
-      textVariant: 'labelSm',
+      textColor: ink.ink2,
+      textVariant: 'captionSm',
     })
     expect(segmentLook('pill', true).container).toEqual({
       flex: 1,
       alignItems: 'center',
-      paddingVertical: 9,
-      borderRadius: radius.lg,
-      backgroundColor: surface.dark,
-      borderWidth: 0,
-      borderColor: line.default,
+      paddingVertical: 8,
+      borderRadius: radius.pill,
+      backgroundColor: surface.app,
+      boxShadow: expect.stringContaining('0 2px 8px'),
     })
-    expect(segmentLook('pill', true).textColor).toBe(onDark.primary)
+    expect(segmentLook('pill', true).textColor).toBe(accent.accentInk)
   })
 })
 
-describe('segmented · the sunken track (app/practice/stream.tsx:243-265)', () => {
-  it('is a groove with a 3 px inset', () => {
+describe('segmented · the sunken track (v1.2 stationery groove)', () => {
+  it('is a full-pill groove with a 4 px inset', () => {
     expect(segmentedTrackStyle('track')).toEqual({
       flexDirection: 'row',
       flexWrap: 'wrap',
       alignItems: 'stretch',
-      gap: 3,
-      backgroundColor: surface.sunken2,
-      borderRadius: radius.lg,
-      padding: 3,
+      gap: 0,
+      backgroundColor: surface.track,
+      borderRadius: radius.pill,
+      padding: 4,
     })
   })
 
-  it('the thumb is white on transparent, and takes the chosen option own colour', () => {
+  it('the thumb lifts to the desk surface and takes the chosen option own colour', () => {
     expect(segmentLook('track', false)).toEqual({
       container: {
         flex: 1,
         alignItems: 'center',
-        paddingVertical: 10,
-        borderRadius: radius.md,
+        paddingVertical: 8,
+        borderRadius: radius.pill,
         backgroundColor: 'transparent',
       },
-      // ink3, not muted: muted on sunken2 is 4.41:1, under AA for 12 px text.
-      textColor: ink.ink3,
+      textColor: ink.ink2,
       textVariant: 'captionSm',
     })
+    expect(segmentLook('track', true).textColor).toBe(accent.accentInk)
     expect(segmentLook('track', true, ink.ink4)).toEqual({
       container: {
         flex: 1,
         alignItems: 'center',
-        paddingVertical: 10,
-        borderRadius: radius.md,
-        backgroundColor: surface.card,
+        paddingVertical: 8,
+        borderRadius: radius.pill,
+        backgroundColor: surface.app,
+        boxShadow: expect.stringContaining('0 2px 8px'),
       },
       textColor: ink.ink4,
       textVariant: 'captionSm',
@@ -238,10 +264,9 @@ describe('control tokens keep the value the screen had', () => {
     expect(difficultyCard.tight).toEqual({ gap: 8, paddingVertical: 11 })
   })
 
-  it('the phrase row: the queue is a pixel tighter and a type step smaller', () => {
-    // app/practice/stream.tsx:309-318 and app/add.tsx:312-321.
-    expect(phraseRow.queue).toEqual({ padding: 11, gap: 10, emojiSize: 16 })
-    expect(phraseRow.suggestion).toEqual({ padding: 12, gap: 10, emojiSize: 17 })
+  it('the phrase row: queue and suggestions share the 16 px stationery card pad', () => {
+    expect(phraseRow.queue).toEqual({ padding: space['4'], gap: space['2'], emojiSize: 16 })
+    expect(phraseRow.suggestion).toEqual({ padding: space['4'], gap: space['2'], emojiSize: 16 })
   })
 
   it('the pill sizes, and the alignSelf that made stream keep its own copy', () => {
@@ -296,10 +321,38 @@ describe('listRowLook · Settings / More / Music chrome (settings.tsx:206-212)',
       container: { ...chrome, gap: space['2.5'] },
     })
   })
+
+  it('drops the hairline when the row sits on a card floor', () => {
+    expect(listRowLook(space['3'], true)).toEqual({
+      container: {
+        minHeight: 48,
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 13,
+        gap: space['3'],
+      },
+    })
+  })
 })
 
-describe('fieldLook · Account / Workbench chrome (account.tsx:862-871)', () => {
-  it('bordered idle matches the hand-rolled Account input', () => {
+describe('fieldFace · DESIGN.md target vs utility type', () => {
+  it('keeps DM Sans until a literary field has composed text', () => {
+    expect(fieldFace(false, true)).toMatchObject({
+      fontFamily: type.bodyMd.fontFamily,
+      fontSize: type.bodyMd.fontSize,
+    })
+    expect(fieldFace(true, false)).toMatchObject({
+      fontFamily: type.bodyMd.fontFamily,
+    })
+    expect(fieldFace(true, true)).toMatchObject({
+      fontFamily: type.prose.fontFamily,
+      fontSize: type.prose.fontSize,
+    })
+  })
+})
+
+describe('fieldLook · Account / Workbench chrome (v1.2 parchment well)', () => {
+  it('bordered idle is an inset parchment field with an espresso baseline', () => {
     expect(field.minHeight).toBe(44)
     expect(field.padding).toBe(space['3'])
     expect(fieldLook(true)).toEqual({
@@ -308,16 +361,19 @@ describe('fieldLook · Account / Workbench chrome (account.tsx:862-871)', () => 
         padding: space['3'],
         color: ink.ink,
         alignSelf: 'stretch',
-        borderWidth: 1,
-        borderColor: line.strong,
+        backgroundColor: surface.app,
         borderRadius: radius.lg,
-        backgroundColor: surface.card,
+        borderWidth: 0,
+        borderBottomWidth: field.baselineWidth,
+        borderBottomColor: ink.ink,
+        boxShadow: expect.stringContaining('inset'),
       },
     })
   })
 
-  it('invalid uses the danger text token, not a literal', () => {
-    expect(fieldLook(true, true).input.borderColor).toBe(semantic.danger.text)
+  it('focus turns the baseline terracotta; invalid uses the danger text token', () => {
+    expect(fieldLook(true, false, true).input.borderBottomColor).toBe(accent.accent)
+    expect(fieldLook(true, true).input.borderBottomColor).toBe(semantic.danger.text)
   })
 
   it('unbordered leaves Discover / sheet / Import wrappers to supply chrome', () => {

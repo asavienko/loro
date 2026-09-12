@@ -1,4 +1,5 @@
 import type { TextStyle } from 'react-native'
+import { DEBOSS_TRANSLATE_Y } from './stationeryShadow'
 import type { TextScale } from './themeContext'
 
 /** Text-only inspection scaling: geometry outside the glyph's own metrics stays unchanged. */
@@ -27,6 +28,51 @@ export function resolvePressScale({
   scale: number
 }): number | null {
   return pressed && !disabled && !reducedMotion ? scale : null
+}
+
+/** DESIGN.md stationery / primary press: 1px settle, no movement under Reduce Motion. */
+export function resolveDeboss({
+  pressed,
+  disabled,
+  reducedMotion,
+}: {
+  pressed: boolean
+  disabled: boolean
+  reducedMotion: boolean
+}): { translateY: number; shadowT: number } {
+  if (!pressed || disabled || reducedMotion) return { translateY: 0, shadowT: 0 }
+  return { translateY: DEBOSS_TRANSLATE_Y, shadowT: 1 }
+}
+
+/** Ghost/tertiary: native is a static underline; web expands a 1px rule from the centre. */
+export function ghostUnderlineStyle({
+  color,
+  expanded,
+  reducedMotion,
+  web,
+  durationMs,
+  easing,
+}: {
+  color: string
+  expanded: boolean
+  reducedMotion: boolean
+  web: boolean
+  durationMs: number
+  easing: string
+}): TextStyle {
+  if (!web) return { textDecorationLine: 'underline' }
+  return {
+    textDecorationLine: 'none',
+    ...({
+      backgroundImage: `linear-gradient(${color}, ${color})`,
+      backgroundPosition: 'center bottom',
+      backgroundRepeat: 'no-repeat',
+      backgroundSize: expanded ? '100% 1px' : '0% 1px',
+      transitionProperty: 'background-size',
+      transitionDuration: reducedMotion ? '0ms' : `${durationMs}ms`,
+      transitionTimingFunction: easing,
+    } as TextStyle),
+  }
 }
 
 /**

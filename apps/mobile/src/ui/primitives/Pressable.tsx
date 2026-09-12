@@ -3,7 +3,9 @@
  *
  * Press scale/opacity run on the UI thread via Reanimated. Spatial scale is still
  * suppressed under Reduce Motion (`resolvePressScale`) so existing inspection tests
- * stay true; icon opacity remains the 130 ms affordance.
+ * stay true; icon opacity remains the 130 ms affordance. Stationery cards and primary
+ * buttons opt into `pressMotion="deboss"` (translate-y 1px + reduced shadow) using the
+ * same press duration/easing.
  *
  * ── Accessibility props are set in BOTH forms, on purpose ──
  * The full explanation is at the top of `./index.ts`. The short version: react-native-web
@@ -15,15 +17,18 @@
  */
 
 import { useEffect, useState, type ReactNode } from 'react'
-import { Pressable as RNPressable, type StyleProp, type ViewStyle } from 'react-native'
+import { Platform, Pressable as RNPressable, type StyleProp, type ViewStyle } from 'react-native'
+import { shadow } from '@loro/design-tokens'
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
 import { pressScale } from '../motion'
 import { reanimatedEasing } from '../motionRuntime'
 import {
   isPressableUnavailable,
+  resolveDeboss,
   resolveForcedInteractionState,
   resolvePressScale,
 } from '../runtimeStyles'
+import { parseStationeryShadowLayers, reduceStationeryShadow } from '../stationeryShadow'
 import { HIT_SLOP, MIN_TAP } from '../theme'
 import { useTheme } from '../ThemeProvider'
 
@@ -32,6 +37,8 @@ const AnimatedPressable = Animated.createAnimatedComponent(RNPressable)
 export function Pressable({
   onPress,
   feedback = 'button',
+  pressMotion = 'scale',
+  elevation,
   disabled,
   loading,
   forcedState,
@@ -39,6 +46,8 @@ export function Pressable({
   accessibilityLabel,
   accessibilityHint,
   accessibilityRole = 'button',
+  onHoverIn,
+  onHoverOut,
   style,
   children,
 }: {
@@ -49,6 +58,13 @@ export function Pressable({
   // setting everywhere else, where it catches real bugs.
   onPress?: (() => void) | undefined
   feedback?: 'row' | 'button' | 'smallButton' | 'icon' | undefined
+  /**
+   * `deboss` is the v1.2 stationery press (translate-y 1px + reduced shadow).
+   * Duration and easing still come from the existing `press` tokens.
+   */
+  pressMotion?: 'scale' | 'deboss' | undefined
+  /** Resting stationery recipe to settle when `pressMotion` is `deboss`. */
+  elevation?: keyof typeof shadow | undefined
   disabled?: boolean | undefined
   /**
    * A pending action cannot be activated twice. The control remains named, announces busy, and
@@ -75,6 +91,8 @@ export function Pressable({
   accessibilityLabel?: string | undefined
   accessibilityHint?: string | undefined
   accessibilityRole?: 'button' | 'link' | 'radio' | 'checkbox' | undefined
+  onHoverIn?: (() => void) | undefined
+  onHoverOut?: (() => void) | undefined
   style?: StyleProp<ViewStyle> | undefined
   children: ReactNode
 }) {
@@ -84,6 +102,7 @@ export function Pressable({
   const forced = resolveForcedInteractionState(forcedState)
   const [focused, setFocused] = useState(false)
   const token = pressScale(feedback)
+  const deboss = pressMotion === 'deboss' && feedback !== 'icon'
   const spatialScale =
     resolvePressScale({
       pressed: true,
@@ -91,6 +110,28 @@ export function Pressable({
       reducedMotion,
       scale: token.scale,
     }) ?? 1
+  const settle = resolveDeboss({
+    pressed: true,
+    disabled: unavailable,
+    reducedMotion,
+  })
+  const restingLayers =
+    elevation === undefined || shadow[elevation].startsWith('inset')
+      ? []
+      : parseStationeryShadowLayers(shadow[elevation]).filter((layer) => !layer.inset)
+  const pressedLayers = restingLayers.map(reduceStationeryShadow)
+  const layerCount = restingLayers.length
+  const restX = restingLayers.map((layer) => layer.offsetX)
+  const restY = restingLayers.map((layer) => layer.offsetY)
+  const restBlur = restingLayers.map((layer) => layer.blur)
+  const restOpacity = restingLayers.map((layer) => layer.opacity)
+  const pressY = pressedLayers.map((layer) => layer.offsetY)
+  const pressBlur = pressedLayers.map((layer) => layer.blur)
+  const pressOpacity = pressedLayers.map((layer) => layer.opacity)
+  const shadowR = restingLayers.map((layer) => layer.r)
+  const shadowG = restingLayers.map((layer) => layer.g)
+  const shadowB = restingLayers.map((layer) => layer.b)
+  const hasShadow = layerCount > 0
   const iconOpacity = token.opacity ?? 1
   const isIcon = feedback === 'icon'
   const progress = useSharedValue(forced.pressed ? 1 : 0)
@@ -100,7 +141,43 @@ export function Pressable({
   }, [forced.pressed, progress])
 
   const animatedStyle = useAnimatedStyle(() => {
-    const scale = 1 + (spatialScale - 1) * progress.value
+    const amount = progress.value
+    if (deboss) {
+      const t = settle.shadowT * amount
+      let boxShadow = ''
+      let firstX = 0
+      let firstY = 0
+      let firstBlur = 0
+      let firstOpacity = 0
+      for (let index = 0; index < layerCount; index += 1) {
+        const offsetY = (restY[index] ?? 0) + ((pressY[index] ?? 0) - (restY[index] ?? 0)) * t
+        const blur = (restBlur[index] ?? 0) + ((pressBlur[index] ?? 0) - (restBlur[index] ?? 0)) * t
+        const opacity =
+          (restOpacity[index] ?? 0) + ((pressOpacity[index] ?? 0) - (restOpacity[index] ?? 0)) * t
+        if (index === 0) {
+          firstX = restX[index] ?? 0
+          firstY = offsetY
+          firstBlur = blur
+          firstOpacity = opacity
+        } else {
+          boxShadow += ', '
+        }
+        boxShadow += `${restX[index] ?? 0}px ${offsetY}px ${blur}px rgba(${shadowR[index] ?? 0},${shadowG[index] ?? 0},${shadowB[index] ?? 0},${opacity})`
+      }
+      return {
+        transform: [{ translateY: settle.translateY * amount }],
+        ...(hasShadow && Platform.OS === 'web' ? { boxShadow } : {}),
+        ...(hasShadow && Platform.OS !== 'web'
+          ? {
+              shadowOffset: { width: firstX, height: firstY },
+              shadowOpacity: firstOpacity,
+              shadowRadius: firstBlur,
+              elevation: Math.max(0, Math.round(Math.abs(firstY))),
+            }
+          : {}),
+      }
+    }
+    const scale = 1 + (spatialScale - 1) * amount
     return {
       transform: [{ scale }],
       ...(isIcon && !unavailable ? { opacity: 1 - (1 - iconOpacity) * progress.value } : {}),
@@ -118,6 +195,8 @@ export function Pressable({
     <AnimatedPressable
       onPress={onPress}
       disabled={unavailable}
+      onHoverIn={onHoverIn}
+      onHoverOut={onHoverOut}
       onPressIn={() => {
         if (!unavailable && !forced.pressed) timePress(1)
       }}

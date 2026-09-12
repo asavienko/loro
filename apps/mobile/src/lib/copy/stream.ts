@@ -43,4 +43,5 @@ export const streamCopy = {
   get audioNote() {
     return message('stream.audioNote')
   },
+  quotedTranslation: (text: string): string => message('stream.quotedTranslation', { text }),
 }

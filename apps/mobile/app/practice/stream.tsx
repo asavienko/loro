@@ -16,6 +16,7 @@ import { copy, themeLabel } from '../../src/lib/copy'
 import { PracticeEmptyState } from './_emptyPractice'
 import { DifficultySelector, PhraseRow } from '../../src/ui/components'
 import {
+  Card,
   Chip,
   DarkCard,
   Equalizer,
@@ -27,13 +28,13 @@ import {
   Stack,
   Text,
 } from '../../src/ui/primitives'
+import { stationeryElevation } from '../../src/ui/elevation'
 import {
   accent,
-  border,
   chip,
   difficultyMeta,
   ink,
-  line,
+  MIN_TAP,
   onDark,
   radius,
   semantic,
@@ -118,6 +119,7 @@ export default function Stream() {
 
         <UpNextList
           upcoming={queue.slice(position + 1, position + 1 + UP_NEXT_ROWS)}
+          remaining={Math.max(0, queue.length - position - 1)}
           stats={stats}
         />
       </ScrollView>
@@ -160,19 +162,21 @@ function NowPlayingCard({
       </Row>
 
       <Stack gap={space['2']} style={s.phraseBlock}>
-        <Text variant="title2" color={onDark.primary} align="center" lang="target">
+        <Text variant="hero" color={onDark.primary} lang="target">
           {phrase.targetText}
         </Text>
-        <Text variant="caption" color={onDark.tertiary} align="center">
-          {phrase.translation}
+        <Text variant="prose" color={onDark.tertiary} style={s.italic}>
+          {copy.stream.quotedTranslation(phrase.translation)}
         </Text>
       </Stack>
 
-      <Text variant="captionSm" color={onDark.tertiary} align="center" style={s.repeatRow}>
-        {!audio.canPlay
-          ? copy.stream.audioNote
-          : audioPlaybackNote(audio.source, audio.playback, audio.playbackError)}
-      </Text>
+      <View style={s.audioNote}>
+        <Text variant="captionSm" color={onDark.tertiary}>
+          {!audio.canPlay
+            ? copy.stream.audioNote
+            : audioPlaybackNote(audio.source, audio.playback, audio.playbackError)}
+        </Text>
+      </View>
       {audio.canPlay && <Equalizer active={playing} color={onDark.primary} />}
       {audio.canPlay && (
         <Pressable
@@ -245,50 +249,50 @@ function RerateRow({
 }) {
   useLocale()
   return (
-    <Stack gap={space['2']}>
-      {/* `wrap` is load-bearing, not cosmetic: the row grows DOWNWARD at large text sizes
+    <Card padding={space['4']}>
+      <Stack gap={space['3']}>
+        {/* `wrap` is load-bearing, not cosmetic: the row grows DOWNWARD at large text sizes
             rather than pushing "✓ Learned" off the right edge, where it is neither readable nor
             tappable. accessibility.md#text-and-layout: rows grow vertically. */}
-      <Row gap={RERATE_GAP} wrap>
         <Text variant="labelSm" color={ink.muted}>
           {copy.stream.rateQuestion}
         </Text>
-        <View style={s.spacer} />
-        <Chip
-          variant="toggle"
-          label={phrase.loved ? copy.stream.lovedBadge : copy.stream.loveLabel}
-          accessibilityLabel={
-            phrase.loved ? copy.a11y.common.removeFromLoved : copy.a11y.stream.loveThisPhrase
-          }
-          selected={phrase.loved}
-          onPress={onToggleLoved}
-        />
-        {/* NOT a `Chip`, on purpose. Its ink is `semantic.success` and its border a hairline,
-            while `Chip`'s `toggle` variant is accent-toned and carries the 1.5-px border in
-            both states — forcing it through would change two rendered values. `ui-api.md` §4
-            reaches the same conclusion; the shape is shared, the tone is not. */}
-        <Pressable
-          feedback="smallButton"
-          accessibilityLabel={copy.common.markLearned}
-          onPress={onMarkLearned}
-          style={s.learnedButton}
-        >
-          <Text variant="labelSm" color={semantic.success.text}>
-            {copy.common.learnedBadge}
-          </Text>
-        </Pressable>
-      </Row>
+        <Row gap={RERATE_GAP} wrap>
+          <Chip
+            variant="toggle"
+            label={phrase.loved ? copy.stream.lovedBadge : copy.stream.loveLabel}
+            accessibilityLabel={
+              phrase.loved ? copy.a11y.common.removeFromLoved : copy.a11y.stream.loveThisPhrase
+            }
+            selected={phrase.loved}
+            onPress={onToggleLoved}
+            style={s.journalAction}
+          />
+          {/* NOT a `Chip`, on purpose. Its ink is `semantic.success` and Chip's selected fill
+            is accent-toned — forcing Learned through would change two rendered values. */}
+          <Pressable
+            feedback="smallButton"
+            accessibilityLabel={copy.common.markLearned}
+            onPress={onMarkLearned}
+            style={s.journalAction}
+          >
+            <Text variant="labelSm" color={semantic.success.text}>
+              {copy.common.learnedBadge}
+            </Text>
+          </Pressable>
+        </Row>
 
-      {/* `segmented` is the stream's inset track. Its inactive label is `ink.ink3` rather than
+        {/* `segmented` is the stream's inset track. Its inactive label is `ink.ink3` rather than
             `ink.muted` — on `surface.sunken2` muted is 4.41:1, under AA for 12 px text — and that
             decision now lives in `primitives/controlStyle.ts` beside the reasoning. */}
-      <DifficultySelector
-        layout="segmented"
-        value={phrase.difficulty}
-        labels={copy.difficulty}
-        onChange={onRate}
-      />
-    </Stack>
+        <DifficultySelector
+          layout="segmented"
+          value={phrase.difficulty}
+          labels={copy.difficulty}
+          onChange={onRate}
+        />
+      </Stack>
+    </Card>
   )
 }
 /**
@@ -299,18 +303,28 @@ function RerateRow({
  */
 function UpNextList({
   upcoming,
+  remaining,
   stats,
 }: {
   upcoming: readonly PhraseView[]
+  /** Phrases after the current card — the queue length, not the visible row cap. */
+  remaining: number
   stats: ReturnType<typeof streamStats>
 }) {
   useLocale()
   return (
     <>
-      <Row justify="space-between">
-        <Text variant="caption" color={ink.ink}>
-          {copy.stream.upNext}
-        </Text>
+      <Row justify="space-between" align="baseline" wrap>
+        <Row align="center" gap={space['2']} wrap>
+          <Text variant="title3" color={ink.ink}>
+            {copy.stream.upNext}
+          </Text>
+          <View style={s.remainingCount}>
+            <Text variant="labelSm" color={ink.muted}>
+              {remaining}
+            </Text>
+          </View>
+        </Row>
         <Row gap={PILL_GAP}>
           <Pill size="sm" tone="accent" label={copy.stream.pills.loved(stats.loved)} />
           <Pill
@@ -335,6 +349,7 @@ function UpNextList({
             targetText={p.targetText}
             translation={p.translation}
             emoji={p.emoji}
+            eyebrow={themeLabel(p.theme)}
             accessibilityLabel={copy.a11y.stream.queueRow(
               p.targetText,
               p.translation,
@@ -359,30 +374,48 @@ function UpNextList({
   )
 }
 const s = StyleSheet.create({
-  content: { padding: space['4'], gap: space['3.5'] },
+  content: { padding: space['5'], gap: space['5'] },
+  italic: { fontStyle: 'italic' },
   // NowPlayingCard
-  phraseBlock: { marginTop: space['4'], alignItems: 'center' },
-  repeatRow: { marginTop: space['3.5'] },
+  phraseBlock: { marginTop: space['4'] },
+  audioNote: {
+    marginTop: space['3.5'],
+    padding: space['3'],
+    borderRadius: radius.lg,
+    backgroundColor: onDark.surface,
+  },
   transport: { marginTop: space['4'] },
   playButton: {
     maxWidth: '100%',
     minHeight: 48,
     paddingHorizontal: space['5'],
     paddingVertical: space['3'],
-    borderRadius: radius.xl,
+    borderRadius: radius.pill,
     backgroundColor: accent.accent,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  // RerateRow
-  spacer: { flex: 1 },
-  /** The `Chip` metrics, because it is the same shape beside it — only the tone differs. */
-  learnedButton: {
+  // RerateRow — editorial stamps are rounded-xl white cards, not pills.
+  journalAction: {
+    flexGrow: 1,
+    flexBasis: '40%',
+    minHeight: MIN_TAP,
+    justifyContent: 'center',
+    alignItems: 'center',
     paddingHorizontal: chip.toggle.paddingHorizontal,
     paddingVertical: chip.toggle.paddingVertical,
     borderRadius: radius.lg,
-    borderWidth: border.hairline,
-    borderColor: line.strong,
-    backgroundColor: surface.card,
+    borderWidth: 0,
+    backgroundColor: surface.app,
+    ...stationeryElevation('card'),
+  },
+  remainingCount: {
+    minWidth: 20,
+    minHeight: 20,
+    paddingHorizontal: space['1.5'],
+    borderRadius: radius.pill,
+    backgroundColor: surface.sunken,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 })

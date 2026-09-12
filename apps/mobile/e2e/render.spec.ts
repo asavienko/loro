@@ -139,6 +139,20 @@ test('P3-03: nothing bar-shaped is drawn over silence on the stream', async ({ p
   ).toEqual([])
 })
 
+test('P2-08: a browse pack bar is the owned share of that catalog theme', async ({ page }) => {
+  await onboard(page)
+  await open(page, 'Add')
+  await page.getByRole('button', { name: 'Browse' }).click()
+  await expect(page.getByRole('button', { name: /^Directions,/ })).toBeVisible()
+  await expect(page.getByText('2 of 4')).toBeVisible()
+  await expect(page.getByText('50%')).toBeVisible()
+
+  const [bar] = await bars(page, 'Directions', /2 of 4/)
+  expect(bar, 'the Directions pack bar was not found').toBeDefined()
+  expect(bar?.fills[0]?.height, 'the pack fill has to have height').toBeGreaterThan(0)
+  expect((bar?.fills[0]?.width ?? 0) / (bar?.track.width ?? 1)).toBeCloseTo(0.5, 1)
+})
+
 test("LB-04: a Today set row's bar is the automaticity its own label states", async ({ page }) => {
   await onboard(page)
   await startWave(page)

@@ -1,17 +1,17 @@
 {
   "$comment": [
-    "Four accent themes, three variants each. The three-variant split is the most",
-    "important structural idea in the palette (Loro.dc.html:49, 3617-3625).",
+    "Four accent themes, three variants each. Coral is the v1.2 terracotta default",
+    "(editorial stationery primary / primary-container). The three-variant split is",
+    "the structural rule (Loro.dc.html:49, 3617-3625).",
     "",
     "THE RULE THE NAMES ENCODE:",
     "  accent       → fills, borders, and >=17px semibold text ON the accent",
     "  accentInk    → accent-coloured TEXT on light surfaces",
     "  accentOnDark → text and marks on dark cards",
     "",
-    "accent Coral is 4.0:1 on surface.app — fine for large text and UI, FAILS AA for",
-    "body text. accentInk is 5.6:1 and passes. The blueprint is consistent about this;",
-    "the token names make the correct choice the obvious one, and the contrast gate",
-    "makes the wrong one unmergeable. See ADR-0013."
+    "v1.2 Coral accent #9f3c16 is 6.4:1 on surface.app — above body AA — but accentInk",
+    "#7f2500 is still the text token (9.2:1). The names keep the fill/text split, and",
+    "the contrast gate makes the wrong one unmergeable. See ADR-0013."
   ],
 
   "default": "coral",
@@ -19,9 +19,9 @@
   "themes": {
     "coral": {
       "label": "Coral",
-      "accent": { "value": "#bf5722", "contrast": 4.0, "use": "fills, borders, >=17px semibold on accent" },
-      "accentInk": { "value": "#a2461a", "contrast": 5.6, "use": "TEXT on light surfaces" },
-      "accentOnDark": { "value": "#e8a06a", "use": "text and marks on dark cards" }
+      "accent": { "value": "#9f3c16", "contrast": 6.4, "use": "fills, borders — v1.2 primary-container" },
+      "accentInk": { "value": "#7f2500", "contrast": 9.2, "use": "TEXT on light surfaces — v1.2 primary" },
+      "accentOnDark": { "value": "#ffb59c", "use": "text and marks on dark cards — v1.2 inverse-primary" }
     },
     "sunset": {
       "label": "Sunset",
@@ -48,6 +48,6 @@
     "tint": { "alpha": 0.07, "use": "selected option background" },
     "tint2": { "alpha": 0.1, "use": "pressed / emphasised" },
     "border": { "alpha": 0.38, "use": "soft accent borders" },
-    "wash": { "coral": "#f8ece1", "sunset": "#f6ecdc", "teal": "#e4f2ef", "berry": "#f6e9ef" }
+    "wash": { "coral": "#ffdbd0", "sunset": "#f6ecdc", "teal": "#e4f2ef", "berry": "#f6e9ef" }
   }
 }

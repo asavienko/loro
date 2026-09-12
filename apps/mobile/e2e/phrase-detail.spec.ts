@@ -1,4 +1,4 @@
-import { expect, onboard, openFirstPhrase, test } from './fixtures'
+import { expect, onboard, openFirstPhrase, signIn, test } from './fixtures'
 import { railCount, trickyRow } from './helpers'
 
 test('P2-30..P2-40: edits every phrase control and propagates tags to Progress', async ({
@@ -71,6 +71,7 @@ test('P2-13: removing is acknowledged, and undoable across the navigation', asyn
 })
 
 test('an unknown phrase offers a way back into the app', async ({ page }) => {
+  await signIn(page)
   await page.goto('/phrase/not-a-row-id')
   await expect(page.getByText('No phrase selected')).toBeVisible()
   await expect(page.getByText('Add or tap a phrase to view it')).toBeVisible()

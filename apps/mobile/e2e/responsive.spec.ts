@@ -86,7 +86,7 @@ test('narrow Progress tiles align and Add phrases remain fully readable', async 
   expect(textMetrics.scrollWidth).toBeLessThanOrEqual(textMetrics.width + 1)
   expect(textMetrics.fits).toBe(true)
   // Enlarged labels move their controls to separate rows instead of splitting a word.
-  for (const name of ['discover', 'browse']) {
+  for (const name of ['Discover', 'Browse']) {
     const label = page.getByRole('button', { name, exact: true }).getByText(name, { exact: true })
     await label.evaluate((node) => {
       const style = getComputedStyle(node)
@@ -94,7 +94,7 @@ test('narrow Progress tiles align and Add phrases remain fully readable', async 
       node.style.fontSize = `${Number.parseFloat(style.fontSize) * 3.1}px`
     })
   }
-  for (const name of ['discover', 'browse']) {
+  for (const name of ['Discover', 'Browse']) {
     const label = page.getByRole('button', { name, exact: true }).getByText(name, { exact: true })
     expect(
       await label.evaluate((node) => {

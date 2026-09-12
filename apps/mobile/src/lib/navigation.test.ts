@@ -6,6 +6,7 @@ import {
   SURFACES,
   builtSurfaceForPath,
   conditionalHome,
+  isSessionlessPath,
   placeForPath,
   resolveDeepLink,
 } from './navigation'
@@ -85,30 +86,46 @@ describe('surface registry and deep-link guard', () => {
     expect(builtSurfaceForPath('//loro.test/add')).toBeUndefined()
   })
 
-  it('keeps unknown, planned and malformed links behind first-run', () => {
-    expect(conditionalHome(false)).toBe('/onboarding')
-    expect(conditionalHome(true)).toBe('/')
-    expect(resolveDeepLink('/practice/stream', true)).toMatchObject({
+  it('keeps unknown, planned and malformed links behind sign-in, then first-run', () => {
+    expect(isSessionlessPath('/account')).toBe(true)
+    expect(isSessionlessPath('/dev/tokens')).toBe(true)
+    expect(isSessionlessPath('/')).toBe(false)
+    expect(conditionalHome({ signedIn: false, onboarded: false })).toBe('/account')
+    expect(conditionalHome({ signedIn: true, onboarded: false })).toBe('/onboarding')
+    expect(conditionalHome({ signedIn: true, onboarded: true })).toBe('/')
+    expect(resolveDeepLink('/practice/stream', { signedIn: true, onboarded: true })).toMatchObject({
       kind: 'built',
       path: '/practice/stream',
       surface: { id: 'stream' },
     })
-    expect(resolveDeepLink('/practice/stream', false)).toEqual({
+    expect(resolveDeepLink('/account', { signedIn: false, onboarded: false })).toMatchObject({
+      kind: 'built',
+      path: '/account',
+      surface: { id: 'account' },
+    })
+    expect(resolveDeepLink('/practice/stream', { signedIn: false, onboarded: false })).toEqual({
+      kind: 'fallback',
+      path: '/account',
+      reason: 'unknown',
+    })
+    expect(resolveDeepLink('/practice/stream', { signedIn: true, onboarded: false })).toEqual({
       kind: 'fallback',
       path: '/onboarding',
       reason: 'unknown',
     })
-    expect(resolveDeepLink('/practice/review', true)).toEqual({
+    expect(resolveDeepLink('/practice/review', { signedIn: true, onboarded: true })).toEqual({
       kind: 'fallback',
       path: '/',
       reason: 'planned',
     })
-    expect(resolveDeepLink('/does-not-exist', false)).toEqual({
+    expect(resolveDeepLink('/does-not-exist', { signedIn: true, onboarded: false })).toEqual({
       kind: 'fallback',
       path: '/onboarding',
       reason: 'unknown',
     })
-    expect(resolveDeepLink('https://untrusted.example/add', true)).toEqual({
+    expect(
+      resolveDeepLink('https://untrusted.example/add', { signedIn: true, onboarded: true }),
+    ).toEqual({
       kind: 'fallback',
       path: '/',
       reason: 'malformed',

@@ -179,21 +179,21 @@ Two of these are worth calling out:
   that floor is removed, and the 13 px English subtitle the blueprint renders there is an open
   design question — **Q-14**.
 
-Baseline values on the `#f6f2ea` surface:
+Baseline values on the `#fcf9f4` surface:
 
-| Token                    | Value     | On surface | Verdict                                                   |
-| ------------------------ | --------- | ---------- | --------------------------------------------------------- |
-| `ink`                    | `#23201b` | 13.9:1     | ✅                                                        |
-| `ink-2`                  | `#514e44` | 7.4:1      | ✅                                                        |
-| `ink-3`                  | `#5c584c` | 6.3:1      | ✅                                                        |
-| `muted`                  | `#6c6759` | 4.8:1      | ✅ body                                                   |
-| `muted-2`                | `#7a7466` | 3.9:1      | ⚠️ **large text / non-text only**                         |
-| `accent` Coral `#bf5722` |           | 4.0:1      | ⚠️ large text and UI only — **never body text**           |
-| `accent-ink` `#a2461a`   |           | 5.6:1      | ✅ — this is why the blueprint has a separate ink variant |
-| `success` `#356b4f`      |           | 5.4:1      | ✅                                                        |
-| `warn` `#8a6414`         |           | 4.7:1      | ✅                                                        |
-| `danger` `#8c3f18`       |           | 6.4:1      | ✅                                                        |
-| White on `accent` Coral  |           | 4.0:1      | ⚠️ large text only                                        |
+| Token                    | Value     | On surface | Verdict                                                 |
+| ------------------------ | --------- | ---------- | ------------------------------------------------------- |
+| `ink`                    | `#1c1c19` | 16.3:1     | ✅                                                      |
+| `ink-2`                  | `#57423b` | 8.9:1      | ✅                                                      |
+| `ink-3`                  | `#5c4a44` | 7.9:1      | ✅                                                      |
+| `muted`                  | `#7a645b` | 4.9:1      | ✅ body                                                 |
+| `muted-2`                | `#8a726a` | 4.3:1      | ⚠️ **large text / non-text only**                       |
+| `accent` Coral `#9f3c16` |           | 6.4:1      | ✅ fill — still never used for body text                |
+| `accent-ink` `#7f2500`   |           | 9.2:1      | ✅ — this is why the palette has a separate ink variant |
+| `success` `#3c4b2e`      |           | 8.9:1      | ✅                                                      |
+| `warn` `#8a6414`         |           | 5.1:1      | ✅                                                      |
+| `danger` `#7f2500`       |           | 9.2:1      | ✅                                                      |
+| White on `accent` Coral  |           | 6.7:1      | ✅ button labels                                        |
 
 **Consequences, enforced in the design system:**
 

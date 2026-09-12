@@ -1,7 +1,7 @@
 import { test as base, expect, type Page } from '@playwright/test'
 import { todayMarker } from './helpers'
 import { consumeExpectedResourceError } from './expectedResourceErrors'
-import { mockAccountService } from './accountFlow'
+import { mockAccountService, signIn } from './accountFlow'
 import { ensureOpenWaveClock } from './clock'
 
 export const test = base.extend<{ consoleHealth: undefined; accountApi: undefined }>({
@@ -32,6 +32,9 @@ export const test = base.extend<{ consoleHealth: undefined; accountApi: undefine
   // hydration does not hit a real host (ERR_CONNECTION_REFUSED) and fail consoleHealth.
   accountApi: [
     async ({ page }, use) => {
+      await page.addInitScript(() => {
+        ;(window as Window & { __LORO_E2E__?: boolean }).__LORO_E2E__ = true
+      })
       await mockAccountService(page)
       await use(undefined)
     },
@@ -40,6 +43,7 @@ export const test = base.extend<{ consoleHealth: undefined; accountApi: undefine
 })
 
 export { expect }
+export { signIn } from './accountFlow'
 
 interface OnboardingChoices {
   goal?: 'A trip coming up' | 'Real conversations' | 'Moving abroad' | 'Just curious'
@@ -55,11 +59,12 @@ interface OnboardingChoices {
   )[]
 }
 
-/**
- * Establish durable state through the learner-visible first-run flow, including its
- * real repository writes and canonical selection.
- */
-export async function onboard(page: Page, choices: OnboardingChoices = {}): Promise<void> {
+/** Complete the six onboarding steps from a signed-in first-run session. */
+export async function completeOnboarding(
+  page: Page,
+  choices: OnboardingChoices = {},
+): Promise<void> {
+  await ensureOpenWaveClock(page)
   const {
     goal = 'Just curious',
     level = 'Starting out',
@@ -67,8 +72,6 @@ export async function onboard(page: Page, choices: OnboardingChoices = {}): Prom
     packs = ['Café & ordering', 'Getting around'],
   } = choices
 
-  await ensureOpenWaveClock(page)
-  await page.goto('/')
   await expect(page).toHaveURL(/\/onboarding$/)
   await page.getByRole('button', { name: "Let's go →" }).click()
 
@@ -88,6 +91,16 @@ export async function onboard(page: Page, choices: OnboardingChoices = {}): Prom
   await page.getByRole('button', { name: 'Start learning 🎧' }).click()
   await expect(page).toHaveURL(/\/$/)
   await expect(todayMarker(page)).toBeVisible()
+}
+
+/**
+ * Establish durable state through the learner-visible first-run flow, including its
+ * real repository writes and canonical selection.
+ */
+export async function onboard(page: Page, choices: OnboardingChoices = {}): Promise<void> {
+  await ensureOpenWaveClock(page)
+  await signIn(page)
+  await completeOnboarding(page, choices)
 }
 
 export async function openFirstPhrase(page: Page): Promise<void> {

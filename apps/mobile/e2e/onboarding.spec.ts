@@ -1,4 +1,4 @@
-import { expect, test } from './fixtures'
+import { expect, signIn, test } from './fixtures'
 import { railCount, todayMarker } from './helpers'
 
 test(
@@ -7,11 +7,25 @@ test(
     tag: '@smoke',
   },
   async ({ page }) => {
-    await page.goto('/')
+    await signIn(page)
 
     await expect(page).toHaveURL(/\/onboarding$/)
     await expect(page.getByText("¡Hola! I'm Loro")).toBeVisible()
     await expect(page.getByText('Learn Spanish by the phrase')).toBeVisible()
+    await expect(page.getByText('Listen and repeat')).toBeVisible()
+    const course = page.getByText('Conversational course')
+    const method = page.getByText('Listen and repeat')
+    await expect(
+      page
+        .getByRole('radiogroup', { name: 'I want to learn' })
+        .getByRole('radio', { name: 'Русский' }),
+    ).toBeVisible()
+    await expect(course).toBeVisible()
+    const courseBox = await course.boundingBox()
+    const methodBox = await method.boundingBox()
+    expect(courseBox, 'Conversational course is on the first screen').toBeTruthy()
+    expect(methodBox, 'method note is on the first screen').toBeTruthy()
+    expect(courseBox!.y + courseBox!.height).toBeLessThanOrEqual(methodBox!.y + 1)
     await page.getByRole('button', { name: "Let's go →" }).click()
 
     const continueButton = page.getByRole('button', { name: 'Continue' })
@@ -35,6 +49,7 @@ test(
     await expect(continueButton).toBeDisabled()
     await page.getByRole('checkbox', { name: /Café & ordering/ }).click()
     await page.getByRole('checkbox', { name: /Getting around/ }).click()
+    await expect(page.getByText('10 phrases will seed your stream')).toBeVisible()
     await continueButton.click()
 
     await expect(page.getByText("You're all set")).toBeVisible()

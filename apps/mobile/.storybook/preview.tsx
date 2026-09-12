@@ -1,5 +1,16 @@
 import 'react-native-reanimated'
 import type { Preview } from '@storybook/react-native-web-vite'
+
+const editorialStationeryFonts =
+  'https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400..700;1,9..40,400..700&family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&display=swap'
+
+if (typeof document !== 'undefined' && document.getElementById('loro-editorial-fonts') === null) {
+  const link = document.createElement('link')
+  link.id = 'loro-editorial-fonts'
+  link.rel = 'stylesheet'
+  link.href = editorialStationeryFonts
+  document.head.appendChild(link)
+}
 import { View } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
