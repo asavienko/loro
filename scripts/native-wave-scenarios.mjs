@@ -196,7 +196,7 @@ const ROUTE_EVIDENCE_PREFIX = 'loro-route:'
 export function routeUrlFromDump(dump) {
   const parsed = typeof dump === 'string' ? parseUiDump(dump) : dump
   for (const node of parsed.nodes) {
-    for (const label of [node.text, node.contentDesc]) {
+    for (const label of [node.text, node.contentDesc, node.resourceId]) {
       if (label.startsWith(ROUTE_EVIDENCE_PREFIX)) {
         return label.slice(ROUTE_EVIDENCE_PREFIX.length)
       }

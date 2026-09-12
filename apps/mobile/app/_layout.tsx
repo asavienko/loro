@@ -231,7 +231,7 @@ function ReadyLayout() {
   )
 }
 
-/** Hidden from AT; uiautomator and logcat still carry the exact Expo path after in-app pushes. */
+/** Hidden from AT; uiautomator, idb identifiers, and os_log still carry the Expo path. */
 function RouteEvidence() {
   const pathname = usePathname()
   const params = useGlobalSearchParams()
