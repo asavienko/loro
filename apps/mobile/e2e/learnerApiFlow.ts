@@ -37,8 +37,10 @@ export async function fulfillLearnerPreview(
     return true
   }
   if (method === 'POST' && path.endsWith('/phrases/suggest')) {
+    // Preview stub: no live rows. `unavailable` keeps the client's bundled topics
+    // (empty `bundled` would hide "Suggested for this" in Discover).
     await route.fulfill({
-      json: { fallback: true, provenance: 'bundled', candidates: [] },
+      json: { fallback: true, provenance: 'unavailable', candidates: [] },
     })
     return true
   }
