@@ -524,6 +524,18 @@ export const STATES: AppState[] = [
     reach: (page) => open(page, 'Stream'),
   },
   {
+    name: 'stream · leave sheet',
+    route: '/practice/stream',
+    spec: 'NAV-04 session exit; plan 101 Stream is the daily wave',
+    reach: async (page) => {
+      await open(page, 'Stream')
+      await page.getByRole('button', { name: 'Leave practice', exact: true }).click()
+      await expect(page.getByRole('dialog')).toBeVisible()
+      await expect(page.getByText('Leave this wave?')).toBeVisible()
+      await expect(page.getByText('You can start the wave again from Today.')).toBeVisible()
+    },
+  },
+  {
     name: 'stream · server voice',
     route: '/practice/stream',
     spec: '§4 Adaptive stream; AS-01 API reference TTS when GET /tts/status is ready',

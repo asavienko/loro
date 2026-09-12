@@ -12,6 +12,7 @@
   "today.day.banked": "graduated & banked",
   "audioSpeech.speakTitle": "Speak",
   "nav.exit.note": "Pausing leaves a resume row on Today. Ending clears it.",
+  "nav.exit.noteStream": "You can start the wave again from Today.",
   "languages.native": "My native language",
   "common.markLearned": "Mark learned",
   "onboarding.ready.seeded": "{count, number} phrases are\nin your stream",

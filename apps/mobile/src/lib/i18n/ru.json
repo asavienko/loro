@@ -12,6 +12,7 @@
   "today.day.banked": "завершены и сохранены",
   "audioSpeech.speakTitle": "Говорение",
   "nav.exit.note": "Пауза оставит строку продолжения на экране «Сегодня». Завершение её уберёт.",
+  "nav.exit.noteStream": "Волну можно снова начать с экрана «Сегодня».",
   "languages.native": "Мой родной язык",
   "common.markLearned": "Отметить как изученную",
   "onboarding.ready.seeded": "{count, plural, one {# фраза} few {# фразы} many {# фраз} other {# фразы}}\nв твоём потоке",

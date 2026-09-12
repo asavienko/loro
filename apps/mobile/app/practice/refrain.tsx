@@ -40,7 +40,6 @@ import {
   ProgressBar,
   Row,
   Screen,
-  Sheet,
   Text,
   WarmingSurface,
 } from '../../src/ui/primitives'
@@ -65,6 +64,7 @@ import {
   type ProductionWave,
 } from '../../src/store'
 import { useRefrainSession, type WarmingStyle } from './_useRefrainSession'
+import { SessionExitSheet } from './_SessionExitSheet'
 import { useSessionExitGuard } from './_useSessionExit'
 import {
   parseRefrainFocus,
@@ -360,9 +360,14 @@ export default function Refrain() {
           <MicButton mode={mode} onPress={session.doRep} />
         )}
       </ActionBar>
-      <ExitSheet
+      <SessionExitSheet
         visible={exitVisible}
-        wave={focus.kind === 'wave'}
+        title={focus.kind === 'wave' ? copy.nav.exit.title : copy.nav.exit.titlePractice}
+        pauseLabel={focus.kind === 'wave' ? copy.nav.exit.pause : copy.nav.exit.pausePractice}
+        endLabel={copy.nav.exit.end}
+        keepGoingLabel={copy.nav.exit.keepGoing}
+        note={copy.nav.exit.note}
+        dismissLabel={copy.a11y.common.dismiss}
         onKeepGoing={() => {
           setExitVisible(false)
         }}
@@ -388,34 +393,6 @@ export default function Refrain() {
   )
 }
 
-function ExitSheet({
-  visible,
-  wave,
-  onPause,
-  onEnd,
-  onKeepGoing,
-}: {
-  visible: boolean
-  wave: boolean
-  onPause: () => void
-  onEnd: () => void
-  onKeepGoing: () => void
-}) {
-  useLocale()
-  return (
-    <Sheet visible={visible} onDismiss={onKeepGoing} dismissLabel={copy.a11y.common.dismiss}>
-      <Text variant="title3" color={ink.ink}>
-        {wave ? copy.nav.exit.title : copy.nav.exit.titlePractice}
-      </Text>
-      <Button label={wave ? copy.nav.exit.pause : copy.nav.exit.pausePractice} onPress={onPause} />
-      <Button label={copy.nav.exit.end} variant="secondary" onPress={onEnd} />
-      <Button label={copy.nav.exit.keepGoing} variant="secondary" onPress={onKeepGoing} />
-      <Text variant="captionSm" color={ink.muted}>
-        {copy.nav.exit.note}
-      </Text>
-    </Sheet>
-  )
-}
 function ModeStrip({ mode }: { mode: RefrainMode }) {
   useLocale()
   const currentIndex = REFRAIN_MODES.indexOf(mode)

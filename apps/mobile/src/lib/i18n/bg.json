@@ -12,6 +12,7 @@
   "today.day.banked": "завършени и запазени",
   "audioSpeech.speakTitle": "Говорене",
   "nav.exit.note": "Паузата оставя ред за продължаване в Днес. Приключването го премахва.",
+  "nav.exit.noteStream": "Можеш да започнеш вълната отново от Днес.",
   "languages.native": "Моят роден език",
   "common.markLearned": "Отбележи като научена",
   "onboarding.ready.seeded": "{count, plural, one {# фраза е} other {# фрази са}}\nв твоя поток",

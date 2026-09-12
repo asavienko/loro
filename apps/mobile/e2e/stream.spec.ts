@@ -81,8 +81,30 @@ test('manual phrase browsing wraps the queue without recording practice', async 
     await page.getByRole('button', { name: 'Next phrase' }).click()
   }
   await expect(page.getByText('1 / 5')).toBeVisible()
-  await page.getByRole('link', { name: /back/i }).click()
+  await page.getByRole('button', { name: 'Leave practice', exact: true }).click()
+  await expect(page.getByRole('dialog')).toBeVisible()
+  await expect(page.getByText('Leave this wave?')).toBeVisible()
+  await expect(page.getByText('You can start the wave again from Today.')).toBeVisible()
+  await page.getByRole('button', { name: 'Pause the wave', exact: true }).click()
   await expect(page.getByText('0 reps today', { exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Resume practice', exact: true })).toHaveCount(0)
+})
+
+test('stream leave Keep going stays; Pause goes to Today without a resume row', async ({
+  page,
+}) => {
+  await onboard(page)
+  await page.getByRole('button', { name: 'Stream' }).click()
+  await expect(page.getByText('This wave')).toBeVisible()
+  await page.getByRole('button', { name: 'Leave practice', exact: true }).click()
+  await expect(page.getByRole('dialog')).toBeVisible()
+  await page.getByRole('button', { name: 'Keep going', exact: true }).click()
+  await expect(page).toHaveURL(/\/practice\/stream/)
+  await expect(page.getByText('This wave')).toBeVisible()
+  await page.getByRole('button', { name: 'Leave practice', exact: true }).click()
+  await page.getByRole('button', { name: 'Pause the wave', exact: true }).click()
+  await expect(page).toHaveURL(/\/$/)
+  await expect(page.getByRole('button', { name: 'Resume practice', exact: true })).toHaveCount(0)
 })
 
 test('mouse and touch open a phrase refrain from the stream wave', async ({ page }) => {
