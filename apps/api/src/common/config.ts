@@ -84,8 +84,11 @@ export const config = {
     applePrivateKey: process.env['APPLE_PRIVATE_KEY'],
   }),
 
-  /** Shared session engine for native identity proof, email and browser OAuth. */
-  authSettings: () => {
+  /**
+   * Session/token engine: signing keys, issuer, and native/email audiences.
+   * Browser OAuth deployment (redirects, client secrets) is `oauthDeploymentSettings()`.
+   */
+  sessionAuthSettings: (): SessionAuthSettings => {
     const oauth = config.oauthSettings()
     return {
       enabled: oauth.enabled === 'false' ? false : undefined,
@@ -130,3 +133,18 @@ export const config = {
 
   ttsCacheDir: (): string => process.env['TTS_CACHE_DIR'] ?? join(tmpdir(), 'loro-tts-cache'),
 } as const
+
+/** Session/token settings. Distinct from browser OAuth deployment settings. */
+export interface SessionAuthSettings {
+  enabled?: boolean | undefined
+  privateKeyPem: string | undefined
+  signingKey?: string | undefined
+  issuer: string
+  audience: string
+  keyId: string
+  emailHashKey: string | undefined
+  magicDeliveryUrl: string | undefined
+  magicDeliveryToken: string | undefined
+  googleClientIds: string[]
+  appleClientIds: string[]
+}

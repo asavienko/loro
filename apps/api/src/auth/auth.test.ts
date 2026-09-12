@@ -8,7 +8,7 @@ import { PostgresDatabase } from '../database/database.js'
 import { AuthService } from './auth.service.js'
 import { tokenHash } from './auth.tokens.js'
 import { OAuthFlowService, hash, secret } from './oauth-flow.service.js'
-import type { AuthSettings } from './settings.js'
+import type { OAuthDeploymentSettings } from './settings.js'
 import type { OAuthIdentity } from './provider.js'
 
 import {
@@ -31,7 +31,7 @@ const device: DeviceRegistration = {
   platform: 'web',
   app_version: '1.0.0+1',
 }
-const settings: AuthSettings = {
+const settings: OAuthDeploymentSettings = {
   databaseUrl: '',
   publicUrl: 'https://api.example.test',
   redirects: ['loro://account'],

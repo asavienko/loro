@@ -15,7 +15,7 @@ import { config } from './common/config.js'
 import { configureHttpApp } from './http-app.js'
 import { mergeAvailable } from './sync/merge.js'
 import { DATABASE, type SqlDatabase } from './database/database.js'
-import { authSettings, isLoopbackHttpUrl } from './auth/settings.js'
+import { oauthDeploymentSettings, isLoopbackHttpUrl } from './auth/settings.js'
 
 async function bootstrap(): Promise<void> {
   try {
@@ -39,7 +39,7 @@ async function bootstrap(): Promise<void> {
     bodyParser: false,
   })
   app.enableShutdownHooks()
-  const oauth = authSettings()
+  const oauth = oauthDeploymentSettings()
   const redirectOrigins = (oauth?.redirects ?? [])
     .filter((uri) => {
       try {

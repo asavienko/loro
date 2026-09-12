@@ -20,7 +20,7 @@ import { listenTestApp } from '../testing/create-test-app.js'
 import { AuthService } from './auth.service.js'
 import { AUTH_RUNTIME } from './runtime.js'
 import { OAuthFlowService, hash, secret } from './oauth-flow.service.js'
-import type { AuthSettings } from './settings.js'
+import type { OAuthDeploymentSettings } from './settings.js'
 
 import {
   LORO_TEST_DATABASE_URL,
@@ -64,7 +64,7 @@ describePostgres('browser OAuth HTTP flow with shared durable sync', () => {
     vi.stubEnv('AUTH_ENABLED', 'true')
     vi.stubEnv('AUTH_PRIVATE_KEY_PEM', key)
     vi.stubEnv('AUTH_ISSUER', 'https://api.example.test')
-    const settings: AuthSettings = {
+    const settings: OAuthDeploymentSettings = {
       databaseUrl,
       publicUrl: 'https://api.example.test',
       redirects: ['loro://account'],

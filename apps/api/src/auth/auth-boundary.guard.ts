@@ -24,7 +24,7 @@ export class AuthBoundaryGuard implements CanActivate {
 
 /** Session engine is on when a signing key is present and auth is not explicitly disabled. */
 export function accountIsolationEnabled(): boolean {
-  const settings = config.authSettings()
+  const settings = config.sessionAuthSettings()
   return (
     settings.enabled !== false && (Boolean(settings.privateKeyPem) || Boolean(settings.signingKey))
   )
