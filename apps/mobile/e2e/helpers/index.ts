@@ -47,6 +47,44 @@ export async function click(page: Page, name: string): Promise<void> {
   await page.getByRole('button', { name }).click()
 }
 
+/**
+ * Plan 93: mouse and touch are separate. A role click is not a finger.
+ * The CDP path matches the pull-handle suite so Stream → Refrain and menu
+ * hard-filter can fail the same way a cancelled drag does.
+ */
+export async function tapControl(
+  page: Page,
+  locator: Locator,
+  input: 'mouse' | 'touch',
+): Promise<void> {
+  const bounds = await locator.boundingBox()
+  if (!bounds) throw new Error('Missing tap target')
+  const x = bounds.x + bounds.width / 2
+  const y = bounds.y + bounds.height / 2
+  if (input === 'mouse') {
+    await page.mouse.click(x, y)
+    return
+  }
+  const session = await page.context().newCDPSession(page)
+  await session.send('Input.dispatchTouchEvent', {
+    type: 'touchStart',
+    touchPoints: [{ x, y }],
+  })
+  await session.send('Input.dispatchTouchEvent', {
+    type: 'touchEnd',
+    touchPoints: [],
+  })
+  await session.detach()
+}
+
+export function isPhraseRefrain(url: URL): boolean {
+  return url.pathname === '/practice/refrain' && Boolean(url.searchParams.get('phrase'))
+}
+
+export function isHardRefrain(url: URL): boolean {
+  return url.pathname === '/practice/refrain' && url.searchParams.get('filter') === 'hard'
+}
+
 /** The Field contract: the textbox accessible name is the label. */
 export async function fillField(page: Page, name: string, value: string): Promise<void> {
   await page.getByRole('textbox', { name }).fill(value)

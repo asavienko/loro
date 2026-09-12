@@ -1,7 +1,7 @@
 import { mockAccountService } from './accountFlow'
 import { atInstant } from './clock'
 import { expect, onboard, test } from './fixtures'
-import { back, open, todayMarker } from './helpers'
+import { back, isHardRefrain, open, tapControl, todayMarker } from './helpers'
 
 test('cold learner links provide a home escape without browser history', async ({ page }) => {
   for (const route of [
@@ -61,7 +61,9 @@ test('the shared menu connects every built hub and returns from phrase detail', 
     const sheet = page.getByRole('dialog')
     await expect(sheet.getByRole('button', { name: /Chat|Trips/ })).toHaveCount(0)
     await sheet.getByRole('button', { name: label, exact: true }).click()
-    await expect(page).toHaveURL((url) => url.pathname === path)
+    await expect(page).toHaveURL((url) =>
+      label === 'The Refrain' ? isHardRefrain(url) : url.pathname === path,
+    )
     await expect(sheet).toBeHidden()
   }
   await page
@@ -161,7 +163,7 @@ test('More retains ordinary parent returns and uses the Refrain exit policy for 
     await back(page)
   }
   await page.getByRole('button', { name: 'The Refrain', exact: true }).click()
-  await expect(page).toHaveURL((url) => url.pathname === '/practice/refrain')
+  await expect(page).toHaveURL(isHardRefrain)
   await expect(page.getByText('No difficult phrases yet')).toBeVisible()
   await back(page)
   await expect(page).toHaveURL(/\/more$/)
@@ -197,4 +199,18 @@ test('a Refrain exit pauses durably for Today to resume, or ends without losing 
   await expect(page.getByRole('button', { name: 'Resume practice', exact: true })).toHaveCount(0)
   await page.reload()
   await expect(page.getByRole('button', { name: 'Resume practice', exact: true })).toHaveCount(0)
+})
+
+test('mouse and touch open menu Refrain as the difficult-only drill', async ({ page }) => {
+  await onboard(page)
+  for (const input of ['mouse', 'touch'] as const) {
+    await tapControl(page, page.getByRole('button', { name: /, open the menu$/ }), input)
+    const sheet = page.getByRole('dialog')
+    await expect(sheet).toBeVisible()
+    await tapControl(page, sheet.getByRole('button', { name: 'The Refrain', exact: true }), input)
+    await expect(page).toHaveURL(isHardRefrain)
+    await expect(page.getByText('No difficult phrases yet')).toBeVisible()
+    await page.getByRole('link', { name: /back/i }).click()
+    await expect(todayMarker(page)).toBeVisible()
+  }
 })

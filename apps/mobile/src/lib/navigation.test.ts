@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import {
   DESTINATIONS,
@@ -113,5 +115,15 @@ describe('surface registry and deep-link guard', () => {
       path: '/',
       reason: 'malformed',
     })
+  })
+})
+
+describe('practice session gestures', () => {
+  it('disables native back-swipe on Stream and Refrain', () => {
+    const layout = readFileSync(fileURLToPath(new URL('../../app/_layout.tsx', import.meta.url)), {
+      encoding: 'utf8',
+    })
+    expect(layout).toMatch(/name="practice\/refrain"[\s\S]*gestureEnabled: false/)
+    expect(layout).toMatch(/name="practice\/stream"[\s\S]*gestureEnabled: false/)
   })
 })
