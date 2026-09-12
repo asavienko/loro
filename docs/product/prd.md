@@ -297,6 +297,11 @@ All practice surfaces implement one `PracticeEngine` contract:
 > _A small fixed set each day, repeated in waves until it's automatic. No hidden scheduler — you
 > always see today._ `Loro.dc.html:1302–1539`
 
+**Production (plan 101).** Authored Loop B keeps Refrain as the wave hero. The running app starts
+the daily wave in Stream (`LB-03`); menu / switcher / More open Difficult phrases only (`LB-08`).
+Stream and phrase detail pass `?phrase=`. Completing a targeted drill does not mark the day wave
+done unless the session covers the frozen set. The `design/**/*.dc.html` artifacts are not edited.
+
 ### Today — the ritual surface (`LB-01…LB-10`)
 
 | ID    | Requirement                                                                                                                                                      | Rel | Source                                         |
