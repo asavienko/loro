@@ -21,6 +21,20 @@ const STREAM_TITLE = 'The Stream'
 const MENU_OPEN = 'open the menu'
 const WAVE_START = /^Start the (morning|midday|evening) wave$/
 const KEEP_LISTENING = 'Keep listening'
+const ONBOARD_WELCOME = "Let's go →"
+const ONBOARD_CONTINUE = 'Continue'
+const ONBOARD_READY = 'Start learning'
+const ONBOARD_HELLO = "I'm Loro"
+const ONBOARD_STEPS = [
+  ONBOARD_WELCOME,
+  'Just curious',
+  'Starting out',
+  '10 minutes',
+  'Café & ordering',
+  'Getting around',
+  ONBOARD_CONTINUE,
+  ONBOARD_READY,
+]
 
 export function parseBounds(value) {
   const match = /^\[(\d+),(\d+)\]\[(\d+),(\d+)\]$/.exec(value ?? '')
@@ -33,6 +47,15 @@ export function parseBounds(value) {
   }
 }
 
+function decodeXml(value) {
+  return (value ?? '')
+    .replaceAll('&amp;', '&')
+    .replaceAll('&lt;', '<')
+    .replaceAll('&gt;', '>')
+    .replaceAll('&quot;', '"')
+    .replaceAll('&apos;', "'")
+}
+
 export function parseUiDump(xml) {
   const nodes = []
   for (const tag of xml.matchAll(/<node\b[^>]*>/g)) {
@@ -40,9 +63,10 @@ export function parseUiDump(xml) {
       [...tag[0].matchAll(/([A-Za-z0-9:-]+)="([^"]*)"/g)].map((entry) => [entry[1], entry[2]]),
     )
     nodes.push({
-      text: attrs.text ?? '',
-      contentDesc: attrs['content-desc'] ?? '',
+      text: decodeXml(attrs.text),
+      contentDesc: decodeXml(attrs['content-desc']),
       clickable: attrs.clickable === 'true',
+      enabled: attrs.enabled !== 'false',
       bounds: parseBounds(attrs.bounds),
     })
   }
@@ -75,6 +99,39 @@ export function findWaveStart(dump) {
 
 export function dumpHas(dump, label) {
   return findLabel(dump, label) !== undefined
+}
+
+export function isOnboardingDump(dump) {
+  return (
+    dumpHas(dump, ONBOARD_WELCOME) ||
+    dumpHas(dump, ONBOARD_HELLO) ||
+    dumpHas(dump, ONBOARD_READY) ||
+    (dumpHas(dump, ONBOARD_CONTINUE) && !findWaveStart(dump))
+  )
+}
+
+export function evaluateOnboardedHome(dump) {
+  if (findWaveStart(dump)) {
+    return { status: 'passed', notes: 'Today is ready for the wave probe.' }
+  }
+  if (isOnboardingDump(dump)) {
+    return { status: 'failed', notes: 'Still on onboarding after the first-run taps.' }
+  }
+  return {
+    status: 'unavailable',
+    notes: 'Neither Today nor onboarding chrome is visible.',
+  }
+}
+
+function findOnboardControl(dump, already) {
+  for (const name of ONBOARD_STEPS) {
+    if (already.has(name)) continue
+    const node = findLabel(dump, name)
+    if (!node) continue
+    if (name === ONBOARD_CONTINUE && node.enabled === false) continue
+    return name
+  }
+  return null
 }
 
 export function tapBounds(dump, label) {
@@ -513,6 +570,39 @@ function runBackSwipe(ctx) {
   )
 }
 
+function completeOnboarding(ctx) {
+  const already = new Set()
+  for (let step = 0; step < 16; step += 1) {
+    const dump = dumpUi(ctx, `onboard-${step}`)
+    if (dump.error) return { status: 'unavailable', notes: dump.error }
+    const home = evaluateOnboardedHome(dump.xml)
+    if (home.status === 'passed') return home
+    if (!isOnboardingDump(dump.xml)) {
+      return { status: 'unavailable', notes: 'Left onboarding without reaching Today.' }
+    }
+    const label = findOnboardControl(dump.xml, already)
+    if (!label) {
+      return { status: 'failed', notes: 'Onboarding dump has no next first-run control.' }
+    }
+    if (label !== ONBOARD_CONTINUE) already.add(label)
+    const tapped = tapLabel(ctx, dump.xml, label)
+    if (tapped) return { status: 'failed', notes: tapped }
+    waitForUi(ctx.run, ctx.waitMs)
+  }
+  return { status: 'failed', notes: 'Onboarding did not reach Today within the step budget.' }
+}
+
+export function ensureLearnerHome(ctx) {
+  const opened = openDeepLink(ctx, '/')
+  if (opened) return { status: 'unavailable', notes: opened }
+  waitForUi(ctx.run, ctx.waitMs)
+  const dump = dumpUi(ctx, 'home-entry')
+  if (dump.error) return { status: 'unavailable', notes: dump.error }
+  if (findWaveStart(dump.xml)) return evaluateOnboardedHome(dump.xml)
+  if (isOnboardingDump(dump.xml)) return completeOnboarding(ctx)
+  return evaluateOnboardedHome(dump.xml)
+}
+
 export function executeWaveScenarios({
   adb = 'adb',
   serial,
@@ -534,5 +624,7 @@ export function executeWaveScenarios({
     run,
   }
   if (outputDir) mkdirSync(outputDir, { recursive: true })
+  const home = ensureLearnerHome(ctx)
+  if (home.status !== 'passed') return unevaluatedWaveScenarios(home.notes)
   return [runStreamPhrase(ctx), runMenuHard(ctx), runBackSwipe(ctx)]
 }

@@ -53,9 +53,10 @@ modules, generated native projects, UniFFI bindings, device SQLite, permissions,
        (`stream-to-phrase-refrain`, `menu-hard-refrain`, `practice-back-swipe-disabled`) are
        declared on the evidence manifest. `pnpm native:evidence --execute-scenarios` drives Today →
        Stream → phrase Refrain, switcher and More hard-filter, and the practice edge-swipe through
-       adb + uiautomator. Missing device or matching URL stays `unavailable` or `failed`. iOS
-       `--execute-scenarios` records the same rows unavailable and does not abort collection. A
-       screenshot collector must not mark those rows passed.
+       adb + uiautomator after first-run onboarding when Today is missing. Missing device or
+       matching URL stays `unavailable` or `failed`. iOS `--execute-scenarios` records the same rows
+       unavailable and does not abort collection. A screenshot collector must not mark those rows
+       passed.
 3. [ ] Validate minimum OS floors and clean regeneration on supported hosts. Add platform modules
        for widgets/OCR/purchases only with their owning feature.
 4. [ ] Complete production signing/provisioning and environment-safe release profiles when store
