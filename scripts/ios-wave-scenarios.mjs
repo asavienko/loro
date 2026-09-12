@@ -10,6 +10,7 @@ import { spawnSync } from 'node:child_process'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import {
+  dumpHas,
   dumpHasSwitcher,
   evaluateHardRefrainDump,
   evaluateOnboardedHome,
@@ -42,6 +43,8 @@ import {
 const STREAM_PRACTICE = 'Practice this phrase'
 const LEAVE_PRACTICE = 'Leave practice'
 const KEEP_GOING = 'Keep going'
+const PAUSE_WAVE = 'Pause the wave'
+const LEAVE_THIS_WAVE = 'Leave this wave?'
 const REFRAIN_TITLE = 'The Refrain'
 const MENU_OPEN = 'open the menu'
 const SPINE_HANDLE = 'navigation-pull-handle'
@@ -469,12 +472,15 @@ function runBackSwipe(ctx) {
     })
     if (result.status !== 'passed') return scenarioResult(scenario, result)
   }
-  const openedWave = tapLabel(ctx, after.dump, LEAVE_PRACTICE)
-  if (openedWave) return scenarioResult(scenario, { status: 'failed', notes: openedWave })
-  waitForUi(ctx.run, ctx.waitMs)
-  const waveSheet = dumpUi(ctx, 'stream-after-leave')
-  if (waveSheet.error)
-    return scenarioResult(scenario, { status: 'unavailable', notes: waveSheet.error })
+  let waveSheet = after
+  if (!dumpHas(after.dump, PAUSE_WAVE) && !dumpHas(after.dump, LEAVE_THIS_WAVE)) {
+    const openedWave = tapLabel(ctx, after.dump, LEAVE_PRACTICE)
+    if (openedWave) return scenarioResult(scenario, { status: 'failed', notes: openedWave })
+    waitForUi(ctx.run, ctx.waitMs)
+    waveSheet = dumpUi(ctx, 'stream-after-leave')
+    if (waveSheet.error)
+      return scenarioResult(scenario, { status: 'unavailable', notes: waveSheet.error })
+  }
   const waveExit = evaluateStreamExitBack({
     beforeDump: before.dump,
     afterDump: waveSheet.dump,
@@ -504,7 +510,7 @@ function runBackSwipe(ctx) {
   return scenarioResult(scenario, {
     status: 'passed',
     notes:
-      'Edge and full-screen swipes left the session; Leave practice opened the wave sheet, then the phrase-drill sheet.',
+      'Edge and full-screen swipes stayed on the session; the wave sheet then the phrase-drill sheet opened on session exit.',
   })
 }
 

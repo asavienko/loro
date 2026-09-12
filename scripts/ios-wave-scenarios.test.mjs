@@ -50,12 +50,15 @@ const STREAM = JSON.stringify([
   },
 ])
 
-const STREAM_EXIT = JSON.stringify([
+const STREAM_EXIT_SHEET_ONLY = JSON.stringify([
   {
-    label: 'This wave',
+    label: 'Leave this wave?',
     children: [
-      { label: 'The Stream', frame: { x: 24, y: 140, width: 200, height: 48 } },
-      { label: 'Leave this wave?', frame: { x: 24, y: 400, width: 200, height: 48 } },
+      {
+        label: 'Dismiss',
+        type: 'Button',
+        frame: { x: 0, y: 0, width: 360, height: 420 },
+      },
       {
         label: 'Pause the wave',
         type: 'Button',
@@ -185,7 +188,7 @@ function scriptedIosDevice({ moreOpensHard = true, leaveOnFullScreenSwipe = fals
     if (stage === 'menu') return MENU
     if (stage === 'more') return MORE
     if (stage === 'hard') return HARD
-    if (stage === 'stream-exit') return STREAM_EXIT
+    if (stage === 'stream-exit') return STREAM_EXIT_SHEET_ONLY
     if (stage === 'exit') return PHRASE_EXIT
     return STREAM
   }
@@ -217,9 +220,15 @@ function scriptedIosDevice({ moreOpensHard = true, leaveOnFullScreenSwipe = fals
           leaveOnFullScreenSwipe &&
           x1 === PRACTICE_BACK_SWIPES[1].x1 &&
           x2 === PRACTICE_BACK_SWIPES[1].x2 &&
-          stage === 'stream'
+          (stage === 'stream' || stage === 'stream-exit')
         ) {
           stage = 'today'
+        } else if (
+          x1 === PRACTICE_BACK_SWIPES[0].x1 &&
+          x2 === PRACTICE_BACK_SWIPES[0].x2 &&
+          stage === 'stream'
+        ) {
+          stage = 'stream-exit'
         } else if (x1 > 20 && committed && stage === 'today') stage = 'menu'
         else if (x1 > 20 && committed && stage === 'menu') stage = 'today'
         return { status: 0, stdout: '' }
@@ -334,7 +343,9 @@ test('practice back-swipe probe issues edge then full-screen swipes', () => {
     return device(tool, args)
   }
   const rows = executeIosWaveScenarios({ udid: 'A123', run, waitMs: 0 })
-  assert.equal(rows.find((row) => row.id === 'practice-back-swipe-disabled').status, 'passed')
+  const row = rows.find((entry) => entry.id === 'practice-back-swipe-disabled')
+  assert.equal(row.status, 'passed')
+  assert.match(row.notes, /stayed on the session/)
   assert.deepEqual(backSwipes, [
     [4, 800, 360, 800],
     [180, 800, 360, 800],
