@@ -9,8 +9,26 @@
 import { applyDeltaToPhrase } from '../delta'
 import { structuralEqual } from '../../lib/structuralEqual'
 import { addPracticeDay } from '../state'
+import { PRODUCTION_WAVES } from '../engines'
+import { recordWaveListen } from '../../lib/waves'
 import type { Slice } from '../types'
 import type { UserPhraseId } from '@loro/core'
+
+function withWaveListens<T extends { waveListens: Record<string, number>; refrainWaves: string[] }>(
+  course: T,
+  phraseId: string,
+  plays: number,
+): T {
+  if (plays <= 0) return course
+  const listened = recordWaveListen(
+    PRODUCTION_WAVES,
+    course.refrainWaves,
+    course.waveListens,
+    phraseId,
+    plays,
+  )
+  return { ...course, waveListens: listened.counts, refrainWaves: listened.completed }
+}
 
 export const createPracticeSlice: Slice<'recordPlay' | 'applyDelta' | 'setStreamCursor'> = ({
   set,
@@ -23,7 +41,9 @@ export const createPracticeSlice: Slice<'recordPlay' | 'applyDelta' | 'setStream
 
   recordPlay: (id) => {
     // A play is an observation, not a computed score, so it goes through the same
-    // single write path as everything else.
+    // single write path as everything else. Roll the frozen day first so a listen
+    // just after midnight counts toward today's wave, not yesterday's.
+    get().ensureRefrainSet()
     get().applyDelta({
       phraseId: id as UserPhraseId,
       plays: 1,
@@ -79,18 +99,31 @@ export const createPracticeSlice: Slice<'recordPlay' | 'applyDelta' | 'setStream
             })
       const update = (phrases: typeof st.phrases): typeof st.phrases =>
         phrases.map((p) => (p.id === delta.phraseId ? applyDeltaToPhrase(p, delta, day) : p))
+      const plays = delta.plays ?? 0
+      const listened = active
+        ? withWaveListens(
+            { waveListens: st.waveListens, refrainWaves: st.refrainWaves },
+            delta.phraseId,
+            plays,
+          )
+        : null
       return {
         ...(checkpoint && active ? { refrainResume: checkpoint } : {}),
+        ...(listened ?? {}),
         phrases: active ? update(st.phrases) : st.phrases,
         courses:
           !active && saved
             ? {
                 ...st.courses,
-                [saved[0]]: {
-                  ...saved[1],
-                  phrases: update(saved[1].phrases),
-                  ...(checkpoint ? { refrainResume: checkpoint } : {}),
-                },
+                [saved[0]]: withWaveListens(
+                  {
+                    ...saved[1],
+                    phrases: update(saved[1].phrases),
+                    ...(checkpoint ? { refrainResume: checkpoint } : {}),
+                  },
+                  delta.phraseId,
+                  plays,
+                ),
               }
             : st.courses,
         practiceDays:

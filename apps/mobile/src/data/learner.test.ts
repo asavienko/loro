@@ -326,6 +326,27 @@ describe('repository-backed learner state', () => {
     expect(reopened.store.getState().refrainResume.cursor).toBe(1)
   })
 
+  it('persists a listen-quota wave and keeps further listens available', () => {
+    const path = diskPath()
+    const first = open(path)
+    const phrases = Array.from({ length: 10 }, (_, i) => makePhrase(`listen-${i}`))
+    first.store.setState({ onboarded: true, phrases })
+    first.store.getState().ensureRefrainSet()
+    for (const phrase of phrases) {
+      first.store.getState().recordPlay(phrase.id)
+      first.store.getState().recordPlay(phrase.id)
+      first.store.getState().recordPlay(phrase.id)
+    }
+    expect(first.store.getState().refrainWaves).toEqual(['morning'])
+    first.store.getState().recordPlay(phrases[0]?.id ?? 'listen-0')
+    expect(first.store.getState().refrainWaves).toEqual(['morning'])
+    first.driver.close()
+
+    const reopened = open(path)
+    expect(reopened.store.getState().refrainWaves).toEqual(['morning'])
+    expect(reopened.persistence.refrainDay.load(DAY)?.listenCounts?.[phrases[0]?.id ?? '']).toBe(4)
+  })
+
   it('persists a completed Refrain wave with its frozen day', () => {
     const path = diskPath()
     const first = open(path)
