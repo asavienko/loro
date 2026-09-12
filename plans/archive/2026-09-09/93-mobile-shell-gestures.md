@@ -21,13 +21,16 @@ mouse/touch coverage for Stream → phrase Refrain and menu hard-filter;
 all twelve catalog rows at `.local-builds/native-evidence/wave-101-emulator-v9/`: edge and
 mid-screen swipes stayed on the session, spine pull opened the switcher, and sheet pull, Android
 Back, and labelled Dismiss backdrop each closed it on Today, including TalkBack variants.
-`closesPhysicalGate` stays false. Practice sessions set `fullScreenGestureEnabled: false` with
-`gestureEnabled: false`. That remains emulator proof, not physical-device or iOS. iOS
-`--execute-scenarios` uses simctl + idb for pointer, spine/sheet, and backdrop rows and fail-closes
-without chrome/URL/gesture proof. Android Back stays unavailable on iOS. That iOS path may boot a
-Shutdown simulator and install a verified `loro-simulator-*.zip` via `pnpm ios:evidence`. VoiceOver
-`-at` evidence remains a device gate even if VoiceOver looks enabled; ordinary idb taps are not AT
-proof. Plan 101's Stream-primary / hard-filter Refrain model is not reverted.
+`closesPhysicalGate` stays false. That v9 APK does not include the later JS session-pop intercept
+(`useSessionExitGuard` + Stream `BackHandler`); the runner now also sends `KEYCODE_BACK` on Stream
+(stay) and on phrase Refrain (must open the exit sheet). Practice sessions set
+`fullScreenGestureEnabled: false` with `gestureEnabled: false`. That remains emulator proof, not
+physical-device or iOS. iOS `--execute-scenarios` uses simctl + idb for pointer, spine/sheet, and
+backdrop rows and fail-closes without chrome/URL/gesture proof. Android Back stays unavailable on
+iOS. That iOS path may boot a Shutdown simulator and install a verified `loro-simulator-*.zip` via
+`pnpm ios:evidence`. VoiceOver `-at` evidence remains a device gate even if VoiceOver looks enabled;
+ordinary idb taps are not AT proof. Plan 101's Stream-primary / hard-filter Refrain model is not
+reverted.
 
 Verified: `pnpm check` passed all 23 tasks; `pnpm test:e2e` passed all 119 tests in 4.4 minutes,
 including mouse/touch gestures, cancelled touch, accessibility and 310% text. The initial cold

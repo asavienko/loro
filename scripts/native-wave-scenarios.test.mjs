@@ -4,7 +4,9 @@ import {
   WAVE_SCENARIO_IDS,
   evaluateHardRefrainDump,
   evaluatePracticeBackSwipe,
+  evaluatePracticeHardwareBack,
   evaluatePracticeGestureDisabledDump,
+  evaluateRefrainExitBack,
   evaluateStreamPhraseDump,
   evaluateOnboardedHome,
   evaluateSheetBackDismiss,
@@ -40,8 +42,19 @@ const STREAM_DUMP = `<?xml version="1.0"?>
 const PHRASE_REFRAIN_DUMP = `<?xml version="1.0"?>
 <hierarchy>
   <node class="android.widget.FrameLayout">
+    <node class="android.widget.Button" content-desc="Leave practice" clickable="true" bounds="[24,40][200,80]"/>
     <node class="android.widget.TextView" text="This phrase" bounds="[24,80][360,128]"/>
     <node class="android.widget.TextView" text="The Refrain" bounds="[24,140][360,188]"/>
+  </node>
+</hierarchy>`
+
+const REFRAIN_EXIT_DUMP = `<?xml version="1.0"?>
+<hierarchy>
+  <node class="android.widget.FrameLayout">
+    <node class="android.widget.TextView" text="This phrase" bounds="[24,80][360,128]"/>
+    <node class="android.widget.TextView" text="The Refrain" bounds="[24,140][360,188]"/>
+    <node class="android.widget.TextView" text="Leave this practice?" bounds="[24,400][360,448]"/>
+    <node class="android.widget.Button" text="Pause practice" clickable="true" bounds="[24,460][360,516]"/>
   </node>
 </hierarchy>`
 
@@ -462,6 +475,32 @@ test('Android Back and backdrop dismiss close the switcher on Today', () => {
   )
 })
 
+test('hardware Back stays on Stream and opens the Refrain exit sheet', () => {
+  assert.equal(
+    evaluatePracticeHardwareBack({ beforeDump: PRACTICE_DUMP, afterDump: PRACTICE_DUMP }).status,
+    'passed',
+  )
+  assert.equal(
+    evaluatePracticeHardwareBack({ beforeDump: PRACTICE_DUMP, afterDump: TODAY_DUMP }).status,
+    'failed',
+  )
+  assert.equal(
+    evaluateRefrainExitBack({
+      beforeDump: PHRASE_REFRAIN_DUMP,
+      afterDump: REFRAIN_EXIT_DUMP,
+    }).status,
+    'passed',
+  )
+  assert.equal(
+    evaluateRefrainExitBack({
+      beforeDump: PHRASE_REFRAIN_DUMP,
+      afterDump: PHRASE_REFRAIN_DUMP,
+    }).status,
+    'failed',
+    'the Leave practice header alone is not the exit sheet',
+  )
+})
+
 test('edge-swipe evaluation stays on the session or fails closed', () => {
   assert.equal(
     evaluatePracticeBackSwipe({ beforeDump: PRACTICE_DUMP, afterDump: PRACTICE_DUMP }).status,
@@ -529,6 +568,7 @@ function scriptedDevice({
     if (stage === 'menu') return MENU_DUMP
     if (stage === 'more') return MORE_DUMP
     if (stage === 'hard') return hardDump
+    if (stage === 'exit') return REFRAIN_EXIT_DUMP
     return streamDump
   }
   const applyTap = (tapY) => {
@@ -570,6 +610,7 @@ function scriptedDevice({
     }
     if (joined.includes('KEYCODE_BACK')) {
       if (stage === 'menu') stage = 'today'
+      else if (stage === 'phrase') stage = 'exit'
       return { status: 0, stdout: '' }
     }
     if (joined.includes('keyevent')) {
