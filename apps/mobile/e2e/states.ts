@@ -63,7 +63,7 @@ export const STATES: AppState[] = [
     route: '/',
     spec: 'NAV-13/NAV-14 pause and course-preserving resume',
     reach: async (page) => {
-      await page.getByRole('button', { name: /Start the .* wave/ }).click()
+      await startRefrain(page)
       await expect(page.getByRole('button', { name: 'Say it', exact: true })).toBeVisible()
       await page.getByRole('button', { name: 'Leave practice', exact: true }).click()
       await page.getByRole('button', { name: 'Pause the wave', exact: true }).click()
