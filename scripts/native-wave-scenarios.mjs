@@ -19,6 +19,7 @@ import {
 export const WAVE_SCENARIO_IDS = WAVE_TOUCH_SCENARIOS.map((row) => row.id)
 
 const STREAM_PRACTICE = 'Practice this phrase'
+const LEAVE_PRACTICE = 'Leave practice'
 const STREAM_WAVE = 'This wave'
 const PHRASE_FOCUS = 'This phrase'
 const HARD_FOCUS = 'Difficult phrases'
@@ -968,6 +969,15 @@ function runStreamPhrase(ctx) {
     currentUrl,
   })
   if (streamEval.status !== 'passed') return scenarioResult(scenario, streamEval, { currentUrl })
+  const left = tapLabel(ctx, refrain.xml, LEAVE_PRACTICE)
+  if (left) return scenarioResult(scenario, { status: 'failed', notes: left })
+  waitForUi(ctx.run, ctx.waitMs)
+  const leaveSheet = dumpUi(ctx, 'stream-phrase-leave')
+  if (leaveSheet.error)
+    return scenarioResult(scenario, { status: 'unavailable', notes: leaveSheet.error })
+  const ended = tapLabel(ctx, leaveSheet.xml, END_IT_HERE)
+  if (ended) return scenarioResult(scenario, { status: 'failed', notes: ended })
+  waitForUi(ctx.run, ctx.waitMs)
   const openedList = openDeepLink(ctx, '/practice/stream')
   if (openedList) return scenarioResult(scenario, { status: 'unavailable', notes: openedList })
   waitForUi(ctx.run, ctx.waitMs)

@@ -127,6 +127,11 @@ const PHRASE_EXIT = JSON.stringify([
         type: 'Button',
         frame: { x: 24, y: 460, width: 336, height: 56 },
       },
+      {
+        label: 'End it here',
+        type: 'Button',
+        frame: { x: 24, y: 520, width: 336, height: 56 },
+      },
     ],
   },
 ])
@@ -248,6 +253,7 @@ function scriptedIosDevice({
       else stage = 'phrase'
     } else if (stage === 'detail') stage = practiceNowStaysOnDetail ? 'detail' : 'phrase'
     else if (stage === 'stream-exit') stage = 'stream'
+    else if (stage === 'exit') stage = 'today'
     else if (stage === 'phrase') {
       stage = tapY < 90 ? 'menu' : 'exit'
       if (stage === 'menu') menuSource = 'phrase'
