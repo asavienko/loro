@@ -87,13 +87,14 @@ test('manual phrase browsing wraps the queue without recording practice', async 
 
 test('mouse and touch open a phrase refrain from the stream wave', async ({ page }) => {
   await onboard(page)
-  await startWave(page)
-  await expect(page).toHaveURL(/\/practice\/stream/)
   for (const input of ['mouse', 'touch'] as const) {
+    await startWave(page)
+    await expect(page).toHaveURL(/\/practice\/stream/)
     await tapControl(page, page.getByRole('button', { name: 'Practice this phrase' }), input)
     await expect(page).toHaveURL(isPhraseRefrain)
     await expect(page.getByText('This phrase', { exact: true })).toBeVisible()
-    await page.getByRole('link', { name: /back/i }).click()
-    await expect(page).toHaveURL(/\/practice\/stream/)
+    await page.getByRole('button', { name: 'Leave practice' }).click()
+    await page.getByRole('button', { name: 'End it here' }).click()
+    await expect(page).toHaveURL(/\/$/)
   }
 })
