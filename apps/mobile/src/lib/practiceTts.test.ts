@@ -6,7 +6,6 @@ import {
   REFERENCE_ASSET_CLASS,
 } from '@loro/core'
 import { AudioCacheController, type NativeAudioCache } from './audioCacheController'
-import { clearCatalogAudioFiles, registerCatalogAudioFile } from './catalogAudio'
 import {
   clearPracticeTtsCache,
   fetchTtsStatus,
@@ -29,7 +28,6 @@ const response = {
 
 afterEach(() => {
   clearPracticeTtsCache()
-  clearCatalogAudioFiles()
 })
 
 describe('practice API TTS', () => {
@@ -56,18 +54,18 @@ describe('practice API TTS', () => {
     expect(request.codec).toBe(LISTENING_CODEC)
   })
 
-  it('prefers a catalog file and does not call render', async () => {
-    registerCatalogAudioFile(sha256, 'file:///tmp/clip.m4a')
+  it('prefers a catalog cloud object and does not call render', async () => {
     const render = vi.fn()
     await expect(
       resolvePracticePlayable({
         text: 'Hola',
         locale: 'es-ES',
-        catalog: { uri: `sha256/${sha256}`, sha256 },
+        catalog: { uri: `https://cdn.loro.test/${sha256}.m4a`, sha256 },
+        runtime: 'web',
         render,
       }),
     ).resolves.toEqual({
-      uri: 'file:///tmp/clip.m4a',
+      uri: `https://cdn.loro.test/${sha256}.m4a`,
       sha256,
       source: 'catalog',
     })

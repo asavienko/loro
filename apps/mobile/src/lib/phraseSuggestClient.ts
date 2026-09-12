@@ -57,6 +57,8 @@ export async function requestPhraseSuggestions(
     )
     if (!response.ok) return local
     const body = PhraseSuggestResponseSchema.safeParse(await response.json())
+    // Current API returns `unavailable` when bundled topics are empty. Keep the
+    // empty-bundled branch so a stale payload cannot hide "Suggested for this".
     if (
       !body.success ||
       body.data.provenance === 'unavailable' ||
