@@ -61,6 +61,17 @@ export function refrainSkipsWaveLock(focus: RefrainFocus): boolean {
   return focus.kind !== 'wave'
 }
 
+/** Keep a live plan when its members are exactly the requested focus, even if remaining work shrank. */
+export function refrainSessionMatchesFocus(
+  sessionPhraseIds: readonly string[],
+  requestedIds: readonly string[] | undefined,
+): boolean {
+  if (requestedIds === undefined) return false
+  const wanted = new Set(requestedIds)
+  const ids = [...new Set(sessionPhraseIds)]
+  return ids.length === wanted.size && ids.every((id) => wanted.has(id))
+}
+
 /** Menu and switcher open Refrain as a hard-phrase drill, not a timed wave. */
 export function destinationTarget(
   href: string,
