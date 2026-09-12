@@ -688,8 +688,9 @@ day refrain), and a graduation card: _"'¿Qué tal?' graduated / Out of rotation
 The menu, switcher and More open `?filter=hard` (active Difficult phrases only). A bare Refrain URL
 is that hard-only drill. Untargeted `?wave=` keeps the timed lock. Completing a targeted session
 does not mark the day wave done unless the session covers the full frozen set, and the finish screen
-says the drill is done rather than that today is done. Resume reconstructs `?phrase=` or
-`?filter=hard` from the paused plan.
+says the drill is done rather than that today is done. Pause/resume names the drill, not the wave,
+and reconstructs `?phrase=` or `?filter=hard` from the paused plan. A one-phrase plan that is the
+whole frozen set still resumes as `?wave=`.
 
 ---
 

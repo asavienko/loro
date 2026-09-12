@@ -21,7 +21,7 @@ More, filtered to active `difficulty === 'hard'` phrases only.
 ## Behaviour
 
 1. **Today CTA** “Start the * wave” and the next-wave day row open `/practice/stream`. An
-   in-progress Refrain still resumes on `/practice/refrain?wave=…`.
+   in-progress Refrain resumes on the inferred `?phrase=` / `?filter=hard` / `?wave=` URL.
 2. **Stream queue** is today's frozen `refrainSet`, ranked inside the set, listed in full under
    “This wave”. If the wave has no live members, Stream falls back to every remaining active phrase.
 3. **Stream → Refrain** for the current phrase: `/practice/refrain?phrase=<id>`. Phrase detail
