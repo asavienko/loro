@@ -10,7 +10,6 @@ import { spawnSync } from 'node:child_process'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import {
-  dumpHas,
   dumpHasSwitcher,
   evaluateHardRefrainDump,
   evaluateOnboardedHome,
