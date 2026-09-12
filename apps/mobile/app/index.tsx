@@ -170,6 +170,9 @@ export default function Today() {
   const startWave = (_wave = nextWaveKey): void => {
     router.push('/practice/stream')
   }
+  const resumeRefrain = (): void => {
+    router.push({ pathname: '/practice/refrain', params: { wave: resumeWave } })
+  }
   return (
     <Screen>
       {/*
@@ -194,12 +197,7 @@ export default function Today() {
         ]}
       >
         {hasResume && (
-          <ResumeRow
-            label={copy.nav.ongoing.refrain(resumeRep)}
-            onPress={() => {
-              router.push({ pathname: '/practice/refrain', params: { wave: resumeWave } })
-            }}
-          />
+          <ResumeRow label={copy.nav.ongoing.refrain(resumeRep)} onPress={resumeRefrain} />
         )}
         <DayList
           waves={waves}
@@ -234,8 +232,8 @@ export default function Today() {
             canStartWave ? copy.a11y.today.startHint(set.length, DEFAULT_REP_TARGET) : undefined
           }
           onPress={() => {
-            if (entry.kind === 'resume' || entry.kind === 'ready')
-              startWave(entry.kind === 'resume' ? entry.wave : entry.wave.key)
+            if (entry.kind === 'resume') resumeRefrain()
+            else if (entry.kind === 'ready') startWave(entry.wave.key)
           }}
         />
       </ActionBar>

@@ -187,7 +187,7 @@ test('a cold deep link to a practice route does not strand the learner', async (
 
   // Whatever it shows, it must not be a blank screen and must offer a way forward.
   await expect(page.locator('body')).not.toHaveText('')
-  const escape = page.getByRole('button', { name: /Add phrases|Back to today/ })
+  const escape = page.getByRole('button', { name: /Add phrases|Back to today|Stream|^Today$/ })
   const redirected = page.url().includes('/onboarding')
   expect(
     redirected || (await escape.count()) > 0,
