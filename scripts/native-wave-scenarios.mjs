@@ -196,15 +196,16 @@ export function tapBounds(dump, label) {
   return { x: Math.floor((left + right) / 2), y: Math.floor((top + bottom) / 2) }
 }
 
-/** Tap the labelled scrim above the sheet, not the panel centre. */
+/** Tap the labelled scrim above the sheet, below the status bar. */
 export function tapDismissBounds(dump) {
   const node = findClickableLabel(dump, DISMISS) ?? findLabel(dump, DISMISS)
   if (!node?.bounds) return null
   const { left, top, right, bottom } = node.bounds
   const height = Math.max(0, bottom - top)
+  const mid = Math.floor((top + bottom) / 2)
   return {
     x: Math.floor((left + right) / 2),
-    y: Math.floor(top + Math.min(40, Math.max(8, height * 0.25))),
+    y: height >= 192 ? Math.max(mid, top + 96) : mid,
   }
 }
 
