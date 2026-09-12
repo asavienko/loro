@@ -84,7 +84,8 @@ ownership, layer lint and E2E locators already _are_ the design system
   navigation, 4 practice, 3 progress). These are **not** imported by the app.
 - Spine/sheet pull-down via RN `PanResponder` in
   [`usePullDown.ts`](../apps/mobile/src/ui/primitives/usePullDown.ts): 4 px activate, 48 px commit,
-  2× vertical dominance, dedicated handle only. Practice routes set `gestureEnabled: false`.
+  2× vertical dominance, dedicated handle only. Practice routes set `PRACTICE_SESSION_STACK_OPTIONS`
+  (`gestureEnabled` and `fullScreenGestureEnabled` false).
 - `Sheet` uses RN `Modal` `animationType="slide"`, not the authored `sheetUp` (340 ms, `ease.pop`)
   on a UI-thread `translateY`.
 - `Pressable` scales on the JS thread through RN `Pressable` style
@@ -123,13 +124,13 @@ From
 and
 [`Loro Chat.dc.html`](../design/Language%20Learning%20by%20Phrases%20-%20V1.1/Loro%20Chat.dc.html):
 
-| Gesture                          | Citation                                    | Current                    | Owner                                          |
-| -------------------------------- | ------------------------------------------- | -------------------------- | ---------------------------------------------- |
-| Spine pull-down opens switcher   | `Navigation.dc.html:474`                    | `usePullDown` + plan 93    | **93** laws; **100** RNGH body if devices fail |
-| Sheet swipe-down dismiss         | `Navigation.dc.html:681–685`                | Handle + backdrop + Escape | **93** laws; **100** `sheetUp` physics         |
-| Session back-swipe disabled      | `Navigation.dc.html:685`                    | `gestureEnabled: false`    | **56** / **93** — do not reopen                |
-| Hold-to-talk, lock, cancel, Done | `Loro Chat.dc.html:208–229`                 | Unbuilt                    | **100** primitive; **83** screen               |
-| Reduce-motion contour scrubber   | `motion.md` trace; `Loro.dc.html:1202–1206` | Unbuilt                    | **100** gesture; **77** plot                   |
+| Gesture                          | Citation                                    | Current                          | Owner                                          |
+| -------------------------------- | ------------------------------------------- | -------------------------------- | ---------------------------------------------- |
+| Spine pull-down opens switcher   | `Navigation.dc.html:474`                    | `usePullDown` + plan 93          | **93** laws; **100** RNGH body if devices fail |
+| Sheet swipe-down dismiss         | `Navigation.dc.html:681–685`                | Handle + backdrop + Escape       | **93** laws; **100** `sheetUp` physics         |
+| Session back-swipe disabled      | `Navigation.dc.html:685`                    | `PRACTICE_SESSION_STACK_OPTIONS` | **56** / **93** / **101** — do not reopen      |
+| Hold-to-talk, lock, cancel, Done | `Loro Chat.dc.html:208–229`                 | Unbuilt                          | **100** primitive; **83** screen               |
+| Reduce-motion contour scrubber   | `motion.md` trace; `Loro.dc.html:1202–1206` | Unbuilt                          | **100** gesture; **77** plot                   |
 
 ## Library and approach matrix (executable)
 
@@ -209,8 +210,8 @@ missing simultaneous scroll, mouse-leave-handle, or predictive back. Same primit
 `sheet-pull-handle` testID, same laws. That follow-up is this plan plus 93/58 evidence, not a second
 helper.
 
-Practice `gestureEnabled: false` stays in `_layout.tsx`. Gestures that mutate session state call
-named store actions (`beginRefrainSession`, `setStreamCursor`), never `useApp.setState`.
+Practice `PRACTICE_SESSION_STACK_OPTIONS` stays in `_layout.tsx`. Gestures that mutate session state
+call named store actions (`beginRefrainSession`, `setStreamCursor`), never `useApp.setState`.
 
 ## Reusable component map
 

@@ -23,6 +23,7 @@ import { Pressable, Text } from '../src/ui/primitives'
 import { NavigationMenu } from '../src/ui/components'
 import {
   DESTINATIONS,
+  PRACTICE_SESSION_STACK_OPTIONS,
   placeForPath,
   routeEvidenceLabel,
   surfaceLawForPath,
@@ -201,17 +202,20 @@ function ReadyLayout() {
                 <Stack.Screen name="phrase/[id]" options={{ title: copy.nav.phrase }} />
                 <Stack.Screen
                   name="practice/refrain"
-                  options={{ title: copy.nav.refrain, gestureEnabled: false }}
+                  options={{ title: copy.nav.refrain, ...PRACTICE_SESSION_STACK_OPTIONS }}
                 />
                 <Stack.Screen
                   name="practice/stream"
-                  options={{ title: copy.nav.stream, gestureEnabled: false }}
+                  options={{ title: copy.nav.stream, ...PRACTICE_SESSION_STACK_OPTIONS }}
                 />
                 <Stack.Screen name="account" options={{ title: copy.account.title }} />
                 <Stack.Screen name="settings" options={{ title: copy.settings.title }} />
                 <Stack.Screen
                   name="practice/speak"
-                  options={{ title: copy.audioSpeech.speakTitle, gestureEnabled: false }}
+                  options={{
+                    title: copy.audioSpeech.speakTitle,
+                    ...PRACTICE_SESSION_STACK_OPTIONS,
+                  }}
                 />
                 <Stack.Screen name="more" options={{ title: copy.nav.more }} />
                 <Stack.Screen name="music" options={{ title: copy.nav.music }} />

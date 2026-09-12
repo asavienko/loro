@@ -5,6 +5,7 @@ import {
   DESTINATIONS,
   destinationsForGroup,
   NAVIGATION_GROUPS,
+  PRACTICE_SESSION_STACK_OPTIONS,
   ROUTE_EVIDENCE_PREFIX,
   SURFACES,
   builtSurfaceForPath,
@@ -146,11 +147,16 @@ describe('native route evidence', () => {
 })
 
 describe('practice session gestures', () => {
-  it('disables native back-swipe on Stream and Refrain', () => {
+  it('disables edge and iOS full-screen back-swipe on Stream, Refrain, and Speak', () => {
+    expect(PRACTICE_SESSION_STACK_OPTIONS).toEqual({
+      gestureEnabled: false,
+      fullScreenGestureEnabled: false,
+    })
     const layout = readFileSync(fileURLToPath(new URL('../../app/_layout.tsx', import.meta.url)), {
       encoding: 'utf8',
     })
-    expect(layout).toMatch(/name="practice\/refrain"[\s\S]*gestureEnabled: false/)
-    expect(layout).toMatch(/name="practice\/stream"[\s\S]*gestureEnabled: false/)
+    expect(layout).toMatch(/name="practice\/refrain"[\s\S]*\.\.\.PRACTICE_SESSION_STACK_OPTIONS/)
+    expect(layout).toMatch(/name="practice\/stream"[\s\S]*\.\.\.PRACTICE_SESSION_STACK_OPTIONS/)
+    expect(layout).toMatch(/name="practice\/speak"[\s\S]*\.\.\.PRACTICE_SESSION_STACK_OPTIONS/)
   })
 })
