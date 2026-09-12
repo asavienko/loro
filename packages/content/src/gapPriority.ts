@@ -92,6 +92,15 @@ export function gapPriority(
 
   const drafts: PhraseAuthoringDraft[] = []
   if (options.emitDrafts === true) {
+    for (const id of orphans) {
+      drafts.push(
+        stubPhraseDraft({
+          topic: `orphan:${id}`,
+          target_locale: 'es-ES',
+          native_language: 'en',
+        }),
+      )
+    }
     for (const scenario of thinScenarios) {
       drafts.push(
         stubPhraseDraft({

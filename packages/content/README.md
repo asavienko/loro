@@ -23,7 +23,9 @@ Catalog version 1 currently contains:
 - 31 `es-ES` phrases, 5 ordered scenarios, 15 `scenario_next` graph edges, 12 packs, and 4 drop
   schedules (3, 7, 12, and 20 days);
 - 10 phrases with respellings, 1 with word glosses, and 2 with examples;
-- no rendered audio, syllable timing, or native F0 references yet;
+- no rendered audio, syllable timing, or native F0 references yet. When a clip exists it is a cloud
+  `{uri, sha256, ms}` object (https, or local-authoring http). The device caches that URL; Listen
+  export is the share option (Q-22);
 - 3 empty draft packs (`local`, `pharmacy`, and `nightlife`).
 
 The regular validator passes with 48 authoring warnings: 31 missing-audio warnings, 12 pack backlog
@@ -49,6 +51,7 @@ src/
 ├── checks.ts          # pure validation checks
 ├── render.ts          # Node-only catalog TTS pipeline; Metro must not import this
 ├── renderCli.ts       # pnpm content:render
+├── catalogAudio.ts    # cloud https (or local-authoring http) identity only
 ├── audioDuration.ts   # container duration; never estimates from text
 ├── validate.ts        # validation CLI
 └── index.ts           # public loadCatalog() and bundledCatalog exports
