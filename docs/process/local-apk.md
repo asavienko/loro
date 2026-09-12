@@ -175,25 +175,27 @@ Plan 101/93 wave-path rows (`stream-to-phrase-refrain`, `menu-hard-refrain`,
 variants) are listed on the manifest as `unavailable` until a device run drives those entries and
 records the exact URLs or gesture proof. `pnpm native:evidence --matrix PATH/TO/manifest.json`
 classifies an existing bundle: emulator and simulator passed rows have `closesPhysicalGate: false`.
-The Linux emulator-5554 v13 bundle at `.local-builds/native-evidence/wave-101-emulator-v13/` passed
-all twelve catalog rows on APK `d0a802591f75` with `physicalGateCount=0`, including phrase-focus
-switcher → `?filter=hard` and Leave this wave? / Pause the wave after an edge swipe or Android Back.
-Physical-candidate devices can set that flag only for passed rows.
-`pnpm native:evidence --list-scenarios` prints the catalog without collecting. On a connected
-Android device, `pnpm native:evidence --execute-scenarios --artifact-revision … --artifact …` dumps
-the hierarchy, completes first-run onboarding when Today is missing, then taps Today’s wave control
-→ Stream → phrase Refrain, switcher and More hard-filter, edge- and mid-screen-swipes the practice
-stack, then sends Android Back on Stream (wave sheet, Keep going) and phrase Refrain (practice
-sheet), pulls the spine handle to open the switcher, then dismisses the switcher by sheet pull,
-Android Back, and the labelled Dismiss backdrop, and repeats the pointer and dismiss rows with
-TalkBack when TalkBack is installed. Missing adb, missing device, missing TalkBack, or a dump
-without matching chrome/URL/gesture evidence stays `unavailable` or `failed` — a screenshot
-collector must not mark those rows passed. Browser mouse/touch coverage for the navigation and pull
-entries is in the learner E2E suite; it is not native proof. iOS `--execute-scenarios` may boot a
-Shutdown simulator and install a verified `loro-simulator-*.zip`, then drive the pointer,
-spine/sheet, Leave-practice exit, and backdrop rows through `simctl openurl` plus `idb` taps/swipes.
-Android Back stays unavailable on iOS. It fail-closes without chrome plus the exact URL or gesture
-proof. TalkBack `-at` rows stay `unavailable` on iOS even if VoiceOver looks enabled; ordinary idb
-taps are not AT proof. VoiceOver physical-device remains plan 58/93. Missing Xcode or idb does not
-abort collection. Clean iOS compilation, minimum OS floors, physical-device permissions/speech,
-persistence, lifecycle and interruption scenarios remain plan 58 acceptance gates.
+The Linux emulator-5554 v14 bundle at `.local-builds/native-evidence/wave-101-emulator-v14/` passed
+all twelve catalog rows on APK `d0a802591f75` with `physicalGateCount=0`, including phrase-detail
+Practice now → `?phrase=`, phrase-focus switcher → `?filter=hard`, and Leave this wave? / Pause the
+wave after an edge swipe or Android Back. Physical-candidate devices can set that flag only for
+passed rows. `pnpm native:evidence --list-scenarios` prints the catalog without collecting. On a
+connected Android device,
+`pnpm native:evidence --execute-scenarios --artifact-revision … --artifact …` dumps the hierarchy,
+completes first-run onboarding when Today is missing, then taps Today’s wave control → Stream →
+phrase Refrain, that phrase’s detail Practice now, switcher and More hard-filter, edge- and
+mid-screen-swipes the practice stack, then sends Android Back on Stream (wave sheet, Keep going) and
+phrase Refrain (practice sheet), pulls the spine handle to open the switcher, then dismisses the
+switcher by sheet pull, Android Back, and the labelled Dismiss backdrop, and repeats the pointer and
+dismiss rows with TalkBack when TalkBack is installed. Missing adb, missing device, missing
+TalkBack, or a dump without matching chrome/URL/gesture evidence stays `unavailable` or `failed` — a
+screenshot collector must not mark those rows passed. Browser mouse/touch coverage for the
+navigation and pull entries is in the learner E2E suite; it is not native proof. iOS
+`--execute-scenarios` may boot a Shutdown simulator and install a verified `loro-simulator-*.zip`,
+then drive the pointer, spine/sheet, Leave-practice exit, and backdrop rows through `simctl openurl`
+plus `idb` taps/swipes. Android Back stays unavailable on iOS. It fail-closes without chrome plus
+the exact URL or gesture proof. TalkBack `-at` rows stay `unavailable` on iOS even if VoiceOver
+looks enabled; ordinary idb taps are not AT proof. VoiceOver physical-device remains plan 58/93.
+Missing Xcode or idb does not abort collection. Clean iOS compilation, minimum OS floors,
+physical-device permissions/speech, persistence, lifecycle and interruption scenarios remain plan 58
+acceptance gates.

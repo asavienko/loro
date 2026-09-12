@@ -6,15 +6,16 @@
   difficult-only menu entry. Main's listen-complete waves keep practice open before the first hour;
   `?wave=` is still wave focus, not a clock lock. Browser mouse/touch covers Stream → phrase Refrain
   and menu hard-filter, including a phrase-focus switcher hop. Linux emulator `emulator-5554` (AVD
-  `loro-wave`, API 36) passed all twelve catalog rows on APK `d0a802591f75` (v13) including
-  phrase-focus switcher → `?filter=hard` and Leave this wave? / Pause the wave. `closesPhysicalGate`
-  stays false. Practice sessions set `fullScreenGestureEnabled: false` so iOS 26's default
-  full-screen dismiss cannot pop the session. Switcher replace still applies `?filter=hard`.
-  Physical-device and iOS execution remain the plan 58/93 gates. `pnpm ios:evidence` is the Mac
-  one-shot that retains the simulator zip and drives pointer, spine/sheet, Leave-practice exit, and
-  backdrop rows through simctl + idb, fail-closing without chrome/URL/gesture proof. Android Back
-  and TalkBack `-at` rows stay unavailable on iOS. Authored v1.1 still treats Refrain as the wave
-  hero and is not edited. ID collides with phrase-graph 101.
+  `loro-wave`, API 36) passed all twelve catalog rows on APK `d0a802591f75` (v14) including Stream
+  and phrase-detail Practice now → `?phrase=`, phrase-focus switcher → `?filter=hard`, and Leave
+  this wave? / Pause the wave. `closesPhysicalGate` stays false. Practice sessions set
+  `fullScreenGestureEnabled: false` so iOS 26's default full-screen dismiss cannot pop the session.
+  Switcher replace still applies `?filter=hard`. Physical-device and iOS execution remain the plan
+  58/93 gates. `pnpm ios:evidence` is the Mac one-shot that retains the simulator zip and drives
+  pointer, spine/sheet, Leave-practice exit, and backdrop rows through simctl + idb, fail-closing
+  without chrome/URL/gesture proof. Android Back and TalkBack `-at` rows stay unavailable on iOS.
+  Authored v1.1 still treats Refrain as the wave hero and is not edited. ID collides with
+  phrase-graph 101.
 - **Depends on:** 64 wave/resume runtime; 81 menu/More destinations; 56 route declaration
 - **Number allocation:** 101 follows inspection of active and archived plans. 96, 100 and this
   file's collision with [`101-phrase-sound-graph.md`](101-phrase-sound-graph.md) remain unresolved.
@@ -51,21 +52,21 @@ More, filtered to active `difficulty === 'hard'` phrases only.
 - Physical-device and iOS execution of the wave-path rows (plans 58/93). Source opens Stream Leave /
   Android Back into Leave this wave? / Pause the wave with a Stream-only note and no Today resume
   row. Closest-available Android evidence is the Linux emulator run at
-  `.local-builds/native-evidence/wave-101-emulator-v13/` against preview APK `d0a802591f75`
+  `.local-builds/native-evidence/wave-101-emulator-v14/` against preview APK `d0a802591f75`
   (`app.loro.android.preview` on `emulator-5554`, SHA-256
-  `4a3bf42f1053650d303b61820cca69e6959355eac668e29b23ca5880fb751620`): Stream →
-  `?phrase=01a09640-97b3-7000-9669-f12bcf0fc9d1`, switcher, More, and phrase-focus switcher all
-  `?filter=hard`. An edge swipe opened the wave sheet, a full-screen swipe returned to Stream,
-  Android Back opened Leave this wave? / Pause the wave, Keep going restored Stream, then phrase
-  Back opened Leave this practice? / Pause practice, spine pull opened the switcher, and sheet pull,
-  Android Back, and labelled Dismiss backdrop each dismissed it on Today. The TalkBack `-at`
-  variants passed the same chrome/URL/gesture gates. `matrix.json` records `passedCount=12` and
-  `physicalGateCount=0`. A prior v11 run against the same APK failed NAV-04 because a sheet-only
-  dump looked like Today; `897debe` treats that sheet as still on the session and skips a second
-  Back that would dismiss it. Source locks iOS full-screen dismiss
-  (`PRACTICE_SESSION_STACK_OPTIONS`). Mac simulator and iPhone execution remain unevaluated. That is
-  not physical-device or iOS proof. iOS `--execute-scenarios` is a simctl + idb runner with the same
-  chrome/URL/gesture gates; it may boot a Shutdown simulator and install a verified
+  `4a3bf42f1053650d303b61820cca69e6959355eac668e29b23ca5880fb751620`): Stream Practice this phrase
+  and phrase-detail Practice now both landed `?phrase=01a09640-97b3-7000-9669-f12bcf0fc9d1`;
+  switcher, More, and phrase-focus switcher all `?filter=hard`. An edge swipe opened the wave sheet,
+  a full-screen swipe returned to Stream, Android Back opened Leave this wave? / Pause the wave,
+  Keep going restored Stream, then phrase Back opened Leave this practice? / Pause practice, spine
+  pull opened the switcher, and sheet pull, Android Back, and labelled Dismiss backdrop each
+  dismissed it on Today. The TalkBack `-at` variants passed the same chrome/URL/gesture gates.
+  `matrix.json` records `passedCount=12` and `physicalGateCount=0`. A prior v11 run against the same
+  APK failed NAV-04 because a sheet-only dump looked like Today; `897debe` treats that sheet as
+  still on the session and skips a second Back that would dismiss it. Source locks iOS full-screen
+  dismiss (`PRACTICE_SESSION_STACK_OPTIONS`). Mac simulator and iPhone execution remain unevaluated.
+  That is not physical-device or iOS proof. iOS `--execute-scenarios` is a simctl + idb runner with
+  the same chrome/URL/gesture gates; it may boot a Shutdown simulator and install a verified
   `loro-simulator-*.zip` from `pnpm ios:local` or the one-shot `pnpm ios:evidence`. The iOS runner
   now skips Leave practice when Leave this wave? is already visible, matching the Android
   sheet-as-session rule. Android Back stays unavailable on iOS. TalkBack `-at` rows stay unavailable
