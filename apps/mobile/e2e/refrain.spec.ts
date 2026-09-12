@@ -62,7 +62,9 @@ test(
     await page.getByRole('link', { name: /back/i }).click()
     await expect(page.getByText('5 of 5 locked in').filter({ visible: true })).toBeVisible()
     await expect(repsTodayRow(page, 30)).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Start the midday wave' })).toBeEnabled()
+    // Hard-only finish does not complete the day wave. At 10:00 the open slot
+    // is still morning — midday has not arrived, and listens have not paid it.
+    await expect(page.getByRole('button', { name: 'Start the morning wave' })).toBeEnabled()
 
     await page.getByRole('button', { name: 'Progress' }).click()
     await expect(page.getByText('30', { exact: true }).filter({ visible: true })).toBeVisible()
