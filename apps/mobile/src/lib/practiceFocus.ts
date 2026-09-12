@@ -136,6 +136,16 @@ export function streamWaveMembers<T extends PhraseState>(
   return members.length > 0 ? members : [...phrases]
 }
 
+/** A live checkpoint may keep the card only when it is still that same drill. */
+export function refrainResumeMatchesFocus(
+  sessionPhraseIds: readonly string[],
+  focus: RefrainFocus,
+  phrases: readonly PhraseState[],
+  refrainSet: readonly string[],
+): boolean {
+  return inferRefrainFocus(sessionPhraseIds, phrases, refrainSet).kind === focus.kind
+}
+
 /** Menu and switcher open Refrain as a hard-phrase drill, not a timed wave. */
 export function destinationTarget(href: string): Href {
   if (href === '/practice/refrain') {
