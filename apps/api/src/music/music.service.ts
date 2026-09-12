@@ -39,7 +39,7 @@ export class MusicService {
     this.adapter = new ElevenLabsMusicAdapter({
       provider: config.musicProvider(),
     })
-    this.budget = new MusicBudget()
+    this.budget = new MusicBudget(this.clock)
   }
 
   status(): { ready: boolean; provider: string } {

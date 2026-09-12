@@ -1,4 +1,5 @@
 import { config } from '../common/config.js'
+import type { ServerClock } from '../common/clock.js'
 
 export interface MusicBudgetState {
   readonly monthlyMicrosUsed: number
@@ -8,17 +9,23 @@ export interface MusicBudgetState {
 }
 
 export class MusicBudget {
-  private readonly monthly = new Map<string, number>()
-  private daily = 0
+  private readonly monthly = new Map<string, { month: string; micros: number }>()
+  private daily = { day: '', micros: 0 }
+
+  constructor(private readonly clock: ServerClock) {}
 
   remaining(principalId: string): MusicBudgetState {
-    const monthlyLimit = usdToMicros(config.musicMonthlyBudgetUsdPerUser())
-    const dailyLimit = usdToMicros(config.musicDailyBudgetUsdGlobal())
+    const now = this.clock.now()
+    const month = utcMonth(now)
+    const day = utcDay(now)
+    const monthly = this.monthly.get(principalId)
+    const monthlyMicrosUsed = monthly?.month === month ? monthly.micros : 0
+    const dailyMicrosUsed = this.daily.day === day ? this.daily.micros : 0
     return {
-      monthlyMicrosUsed: this.monthly.get(principalId) ?? 0,
-      dailyMicrosUsed: this.daily,
-      monthlyLimitMicros: monthlyLimit,
-      dailyLimitMicros: dailyLimit,
+      monthlyMicrosUsed,
+      dailyMicrosUsed,
+      monthlyLimitMicros: usdToMicros(config.musicMonthlyBudgetUsdPerUser()),
+      dailyLimitMicros: usdToMicros(config.musicDailyBudgetUsdGlobal()),
     }
   }
 
@@ -37,9 +44,27 @@ export class MusicBudget {
   }
 
   record(principalId: string, micros: number): void {
-    this.monthly.set(principalId, (this.monthly.get(principalId) ?? 0) + micros)
-    this.daily += micros
+    const now = this.clock.now()
+    const month = utcMonth(now)
+    const day = utcDay(now)
+    const current = this.monthly.get(principalId)
+    this.monthly.set(principalId, {
+      month,
+      micros: (current?.month === month ? current.micros : 0) + micros,
+    })
+    this.daily = {
+      day,
+      micros: (this.daily.day === day ? this.daily.micros : 0) + micros,
+    }
   }
+}
+
+function utcDay(ms: number): string {
+  return new Date(ms).toISOString().slice(0, 10)
+}
+
+function utcMonth(ms: number): string {
+  return new Date(ms).toISOString().slice(0, 7)
 }
 
 function usdToMicros(usd: number): number {
