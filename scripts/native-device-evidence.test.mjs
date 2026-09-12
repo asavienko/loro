@@ -10,6 +10,7 @@ import {
   parseArguments,
 } from './native-device-evidence.mjs'
 import { collectIosEvidence, selectSimulator } from './ios-simulator-evidence.mjs'
+import { unevaluatedWaveScenarios, WAVE_TOUCH_SCENARIOS } from './wave-touch-scenarios.mjs'
 
 test('uses the preview package and accepts bounded device options', () => {
   assert.deepEqual(parseArguments([]), {
@@ -83,6 +84,16 @@ test('captures a bounded retained artifact revision', () => {
   assert.equal(parseArguments(['--artifact-revision', '26bdd146']).artifactRevision, '26bdd146')
 })
 
+test('lists plan 101 wave-path rows without treating a screenshot as a pass', () => {
+  assert.equal(parseArguments(['--list-scenarios']).listScenarios, true)
+  assert.deepEqual(
+    WAVE_TOUCH_SCENARIOS.map((row) => row.id),
+    ['stream-to-phrase-refrain', 'menu-hard-refrain', 'practice-back-swipe-disabled'],
+  )
+  const rows = unevaluatedWaveScenarios('no device')
+  assert.ok(rows.every((row) => row.status === 'unavailable' && row.reason === 'no device'))
+})
+
 test('iOS collection requires an unambiguous available booted simulator', () => {
   assert.equal(selectSimulator(inventory).udid, 'A123')
   assert.throws(() => selectSimulator({ devices: {} }), /Boot one/)
@@ -136,6 +147,8 @@ test('iOS collection retains actual artifacts without copying app containers or 
     assert.equal(manifest.deviceKind, 'simulator')
     assert.equal(manifest.artifactRevision, '26bdd146')
     assert.deepEqual(manifest.artifact, artifact)
+    assert.ok(manifest.scenarios.every((row) => row.status === 'unavailable'))
+    assert.ok(manifest.scenarios.some((row) => row.id === 'stream-to-phrase-refrain'))
     assert.deepEqual(JSON.parse(readFileSync(join(output, 'manifest.json'))), manifest)
     assert.deepEqual(calls[2], [
       'xcrun',
