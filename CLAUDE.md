@@ -40,9 +40,10 @@ evidence.
 The [post-main 33-plan review](docs/reviews/2026-09-09-post-main-plan-review.md) records the six
 review findings as fixed: browser file import uses the picker-provided file, picker results are
 request-scoped and pair-safe, corrupt release pointers fail closed, chat choice IDs are unique, and
-active-session E2E navigation uses a deterministic open-wave clock. Refrain completion remains
-visible before a future-wave lock, and its persistent resume action meets the touch-target floor.
-The fast and full local checks are green; device/provider acceptance remains open.
+active-session E2E navigation uses a deterministic morning-wave clock. A wave completes when ten
+phrases are heard three times each (or a Refrain set finishes) and never locks further practice.
+Refrain completion stays visible, and its persistent resume action meets the touch-target floor. The
+fast and full local checks are green; device/provider acceptance remains open.
 [Archived plan 100](plans/archive/2026-09-10/100-hygiene-reuse-and-tooling.md) (Field, ListRow,
 reuse gates, UniFFI `--check`) is complete. Active
 [`plans/100-ui-design-system.md`](plans/100-ui-design-system.md) is the shared motion/gesture kit

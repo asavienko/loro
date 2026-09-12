@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest'
-import { waveEntry, waveEntryWithResume, waveSchedule } from './waves'
+import {
+  WAVE_LISTEN_PHRASE_COUNT,
+  WAVE_LISTEN_REPEATS,
+  incrementWaveListen,
+  qualifiedWaveListenCount,
+  waveEntry,
+  waveEntryWithResume,
+  waveListenProgress,
+  waveSchedule,
+  wavesCompletedByListens,
+} from './waves'
 
 const KEYS = ['morning', 'midday', 'evening'] as const
 const TIMES = ['08:00', '13:00', '19:00'] as const
@@ -63,11 +73,42 @@ describe('waveSchedule', () => {
   })
 })
 
+describe('wave listen completion', () => {
+  it('counts a phrase only after three listens', () => {
+    let counts = incrementWaveListen({}, 'a')
+    counts = incrementWaveListen(counts, 'a')
+    expect(qualifiedWaveListenCount(counts)).toBe(0)
+    counts = incrementWaveListen(counts, 'a')
+    expect(qualifiedWaveListenCount(counts)).toBe(1)
+    expect(WAVE_LISTEN_REPEATS).toBe(3)
+  })
+
+  it('completes one wave at ten qualified phrases and leaves later slots open', () => {
+    const counts: Record<string, number> = {}
+    for (let i = 0; i < WAVE_LISTEN_PHRASE_COUNT; i += 1) {
+      counts[`p${i}`] = WAVE_LISTEN_REPEATS
+    }
+    expect(wavesCompletedByListens(KEYS, counts)).toEqual(['morning'])
+    expect(waveListenProgress(counts)).toBe(0)
+    expect(wavesCompletedByListens(KEYS, { ...counts, extra: WAVE_LISTEN_REPEATS })).toEqual([
+      'morning',
+    ])
+  })
+
+  it('earns later waves from further qualified phrases without inventing a fourth', () => {
+    const counts: Record<string, number> = {}
+    for (let i = 0; i < WAVE_LISTEN_PHRASE_COUNT * 4; i += 1) {
+      counts[`p${i}`] = WAVE_LISTEN_REPEATS
+    }
+    expect(wavesCompletedByListens(KEYS, counts)).toEqual([...KEYS])
+  })
+})
+
 describe('waveEntry', () => {
-  it('locks entry before the first scheduled wave while retaining the next wave', () => {
+  it('keeps the first wave ready before its scheduled time', () => {
     expect(waveEntry(KEYS, TIMES, '07:59')).toMatchObject({
-      kind: 'locked',
-      next: { key: 'morning', time: '08:00' },
+      kind: 'ready',
+      wave: { key: 'morning', time: '08:00' },
     })
   })
 
@@ -82,10 +123,10 @@ describe('waveEntry', () => {
     })
   })
 
-  it('does not re-open a persisted completion and waits for the next scheduled wave', () => {
+  it('offers the next wave immediately after a completion instead of waiting on the clock', () => {
     expect(waveEntry(KEYS, TIMES, '08:30', ['morning'])).toMatchObject({
-      kind: 'locked',
-      next: { key: 'midday', time: '13:00' },
+      kind: 'ready',
+      wave: { key: 'midday', time: '13:00' },
     })
   })
 
@@ -115,10 +156,10 @@ describe('waveEntryWithResume', () => {
     })
   })
 
-  it('never reopens a completed wave and preserves safe legacy fallback', () => {
-    expect(waveEntryWithResume(KEYS, TIMES, '13:00', ['morning'], paused)).toMatchObject({
-      kind: 'ready',
-      wave: { key: 'midday' },
+  it('keeps a paused wave after listen-quota completion and preserves safe legacy fallback', () => {
+    expect(waveEntryWithResume(KEYS, TIMES, '13:00', ['morning'], paused)).toEqual({
+      kind: 'resume',
+      wave: 'morning',
     })
     expect(
       waveEntryWithResume(KEYS, TIMES, '13:00', [], { session: { id: 'legacy' }, done: false }),

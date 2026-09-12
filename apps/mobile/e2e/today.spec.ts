@@ -115,15 +115,14 @@ test('LB-01: Today rolls an open day at midnight without a foreground event', as
   await runFor(page, 10_000)
   await expect(page.getByText('Tuesday, April 7')).toBeVisible()
   await expect(repsTodayRow(page, 0)).toBeVisible()
-  // A fresh daily set exists at midnight, but morning has not opened yet. The old CTA let a
-  // visible route parameter bypass the schedule; the displayed action now agrees with entry.
-  await expect(page.getByRole('button', { name: 'Next wave starts at 08:00' })).toBeDisabled()
+  // A fresh daily set exists at midnight. Waves record that the learner showed up;
+  // they never lock the first slot until 08:00.
+  await expect(page.getByRole('button', { name: 'Start the morning wave' })).toBeEnabled()
 })
 
-test('LB-03: direct Refrain entry cannot bypass a wave that has not opened', async ({ page }) => {
+test('LB-03: direct Refrain entry stays open before the first scheduled hour', async ({ page }) => {
   await atInstant(page, '2026-04-06T07:59')
   await onboard(page)
   await page.goto('/practice/refrain?wave=morning')
-  await expect(page.getByText('Next wave starts at 08:00')).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Back to today' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Say it', exact: true })).toBeVisible()
 })

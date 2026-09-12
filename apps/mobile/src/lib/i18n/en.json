@@ -161,6 +161,8 @@
   "account.retry": "Try again",
   "refrain.effort.ready": "tap to begin",
   "today.cta.complete": "Today's waves are complete",
+  "today.cta.keepListening": "Keep listening",
+  "today.day.waveListenProgress": "{heard} of {total} phrases heard three times",
   "stream.empty.body": "Add phrases to build your stream",
   "progress.stats.repsDone": "reps done",
   "toast.difficulty.hard": "Difficult — repeats more, comes back sooner",

@@ -161,6 +161,8 @@
   "account.retry": "Попробовать снова",
   "refrain.effort.ready": "нажми, чтобы начать",
   "today.cta.complete": "Волны на сегодня завершены",
+  "today.cta.keepListening": "Продолжить слушать",
+  "today.day.waveListenProgress": "{heard} из {total} фраз прослушаны по три раза",
   "stream.empty.body": "Добавь фразы в свой поток",
   "progress.stats.repsDone": "повторений",
   "toast.difficulty.hard": "Трудная — больше повторений, вернётся раньше",

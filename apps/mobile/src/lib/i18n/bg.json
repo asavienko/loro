@@ -161,6 +161,8 @@
   "account.retry": "Опитай отново",
   "refrain.effort.ready": "докосни, за да започнеш",
   "today.cta.complete": "Днешните вълни са завършени",
+  "today.cta.keepListening": "Продължи да слушаш",
+  "today.day.waveListenProgress": "{heard} от {total} фрази, чути по три пъти",
   "stream.empty.body": "Добави фрази в потока си",
   "progress.stats.repsDone": "повторения",
   "toast.difficulty.hard": "Трудна — повтаря се повече и се връща по-скоро",

@@ -166,9 +166,12 @@ export default function Today() {
       ? null
       : Math.min(refrainResume.cursor + 1, refrainResume.session.plan.items.length)
   const hasResume = entry.kind === 'resume' && resumeRep !== null && resumeRep > 0
-  const canStartWave = set.length > 0 && (entry.kind === 'ready' || entry.kind === 'resume')
+  const canPractice = set.length > 0
   const startWave = (wave = nextWaveKey): void => {
     router.push({ pathname: '/practice/refrain', params: { wave } })
+  }
+  const continueListening = (): void => {
+    router.push('/practice/stream')
   }
   return (
     <Screen>
@@ -207,7 +210,7 @@ export default function Today() {
           totalReps={totalReps}
           // With nothing in rotation the wave is not a way in, and the row must not say it is
           // while the CTA below says the opposite.
-          onStartWave={canStartWave ? startWave : undefined}
+          onStartWave={canPractice && entry.kind !== 'complete' ? startWave : undefined}
         />
         <TodaySet set={set} lockedIn={lockedIn} />
         <BankedTail graduated={graduated} />
@@ -225,17 +228,16 @@ export default function Today() {
                   ? copy.today.cta.resumeRefrain
                   : entry.kind === 'ready'
                     ? copy.today.cta.startWave[entry.wave.key]
-                    : entry.kind === 'locked'
-                      ? copy.today.cta.waitForWave(entry.next.time)
-                      : copy.today.cta.complete
+                    : copy.today.cta.keepListening
           }
-          disabled={!canStartWave}
+          disabled={!canPractice}
           accessibilityHint={
-            canStartWave ? copy.a11y.today.startHint(set.length, DEFAULT_REP_TARGET) : undefined
+            canPractice ? copy.a11y.today.startHint(set.length, DEFAULT_REP_TARGET) : undefined
           }
           onPress={() => {
             if (entry.kind === 'resume' || entry.kind === 'ready')
               startWave(entry.kind === 'resume' ? entry.wave : entry.wave.key)
+            else continueListening()
           }}
         />
       </ActionBar>
