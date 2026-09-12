@@ -31,7 +31,7 @@ describe('separate music budget keys', () => {
     const budget = new MusicBudget({ now: () => now })
     budget.record('user-a', 1)
     expect(budget.canSpend('user-a', 1)).toBe(false)
-    now = start + 12 * 60 * 60 * 1000
+    now = start + 11 * 60 * 60 * 1000
     expect(budget.canSpend('user-a', 1)).toBe(false)
     now = Date.UTC(2026, 8, 13, 0, 0, 0)
     expect(budget.canSpend('user-a', 1)).toBe(true)

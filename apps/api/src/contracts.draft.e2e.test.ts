@@ -94,8 +94,10 @@ describe('implemented draft HTTP contracts', () => {
       headers,
       body: JSON.stringify(ttsBody),
     })
-    expect(render.status).toBe(503)
-    expect(ProblemSchema.parse(await render.json()).code).toBe('PROVIDER_UNAVAILABLE')
+    // Stub reference render is not anonymous; TtsGuard asks AuthGuard (not the
+    // @UseGuards override) and fail-closes before the stub 503.
+    expect(render.status).toBe(401)
+    expect(ProblemSchema.parse(await render.json()).code).toBe('UNAUTHENTICATED')
   })
 
   it('publishes music status and serves stub lyrics', async () => {
