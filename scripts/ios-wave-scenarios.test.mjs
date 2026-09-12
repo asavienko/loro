@@ -78,11 +78,20 @@ const PHRASE = JSON.stringify([
     label: 'This phrase',
     children: [
       {
+        identifier: 'navigation-pull-handle',
+        frame: { x: 0, y: 0, width: 360, height: 88 },
+      },
+      {
+        label: 'Spanish, open the menu',
+        type: 'Button',
+        frame: { x: 24, y: 40, width: 336, height: 48 },
+      },
+      {
         label: 'Leave practice',
         type: 'Button',
-        frame: { x: 24, y: 40, width: 176, height: 40 },
+        frame: { x: 24, y: 100, width: 176, height: 40 },
       },
-      { label: 'The Refrain', frame: { x: 24, y: 140, width: 200, height: 48 } },
+      { label: 'The Refrain', frame: { x: 24, y: 200, width: 200, height: 48 } },
       { identifier: 'loro-route:/practice/refrain?phrase=es-001' },
     ],
   },
@@ -180,8 +189,13 @@ function atRows(rows) {
   return rows.filter((row) => row.id.endsWith('-at'))
 }
 
-function scriptedIosDevice({ moreOpensHard = true, leaveOnFullScreenSwipe = false } = {}) {
+function scriptedIosDevice({
+  moreOpensHard = true,
+  leaveOnFullScreenSwipe = false,
+  phraseMenuKeepsPhrase = false,
+} = {}) {
   let stage = 'idle'
+  let menuSource = 'today'
   const dumpFor = () => {
     if (stage === 'phrase') return PHRASE
     if (stage === 'today') return TODAY
@@ -193,12 +207,19 @@ function scriptedIosDevice({ moreOpensHard = true, leaveOnFullScreenSwipe = fals
     return STREAM
   }
   const applyTap = (tapY) => {
-    if (stage === 'today') stage = tapY < 200 ? 'menu' : 'stream'
-    else if (stage === 'stream') stage = tapY < 80 ? 'stream-exit' : 'phrase'
+    if (stage === 'today') {
+      stage = tapY < 200 ? 'menu' : 'stream'
+      if (stage === 'menu') menuSource = 'today'
+    } else if (stage === 'stream') stage = tapY < 80 ? 'stream-exit' : 'phrase'
     else if (stage === 'stream-exit') stage = 'stream'
-    else if (stage === 'phrase') stage = 'exit'
-    else if (stage === 'menu') stage = tapY < 80 ? 'today' : 'hard'
-    else if (stage === 'more') stage = 'hard'
+    else if (stage === 'phrase') {
+      stage = tapY < 90 ? 'menu' : 'exit'
+      if (stage === 'menu') menuSource = 'phrase'
+    } else if (stage === 'menu') {
+      if (tapY < 80) stage = menuSource === 'phrase' ? 'phrase' : 'today'
+      else if (phraseMenuKeepsPhrase && menuSource === 'phrase') stage = 'phrase'
+      else stage = 'hard'
+    } else if (stage === 'more') stage = 'hard'
   }
   return (tool, args) => {
     if (tool === 'idb') {
@@ -229,8 +250,12 @@ function scriptedIosDevice({ moreOpensHard = true, leaveOnFullScreenSwipe = fals
           stage === 'stream'
         ) {
           stage = 'stream-exit'
-        } else if (x1 > 20 && committed && stage === 'today') stage = 'menu'
-        else if (x1 > 20 && committed && stage === 'menu') stage = 'today'
+        } else if (x1 > 20 && committed && stage === 'today') {
+          stage = 'menu'
+          menuSource = 'today'
+        } else if (x1 > 20 && committed && stage === 'menu') {
+          stage = menuSource === 'phrase' ? 'phrase' : 'today'
+        }
         return { status: 0, stdout: '' }
       }
       assert.fail(`unexpected idb ${args.join(' ')}`)
@@ -394,6 +419,17 @@ test('menu-hard-refrain fails when More does not open the difficult-only drill',
   assert.equal(rows[0].status, 'passed')
   assert.equal(rows[1].status, 'failed')
   assert.match(rows[1].notes, /The Refrain/)
+})
+
+test('menu-hard-refrain fails when phrase-focus switcher stays on the phrase', () => {
+  const rows = executeIosWaveScenarios({
+    udid: 'A123',
+    run: scriptedIosDevice({ phraseMenuKeepsPhrase: true }),
+    waitMs: 0,
+  })
+  const row = rows.find((entry) => entry.id === 'menu-hard-refrain')
+  assert.equal(row.status, 'failed')
+  assert.match(row.notes, /hard-filter Refrain/)
 })
 
 test('dump without a route URL cannot pass Stream → phrase Refrain', () => {

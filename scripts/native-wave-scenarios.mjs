@@ -929,19 +929,63 @@ function runHardEntry(ctx, { startPath, openMenu, prefix }) {
   }
 }
 
+function runHardFromPhraseFocus(ctx) {
+  const opened = openDeepLink(ctx, '/practice/stream')
+  if (opened) return { status: 'unavailable', notes: opened }
+  waitForUi(ctx.run, ctx.waitMs)
+  const stream = dumpUi(ctx, 'phrase-focus-stream')
+  if (stream.error) return { status: 'unavailable', notes: stream.error }
+  const openedPhrase = tapLabel(ctx, stream.xml, STREAM_PRACTICE)
+  if (openedPhrase) return { status: 'failed', notes: openedPhrase }
+  waitForUi(ctx.run, ctx.waitMs)
+  const phrase = dumpUi(ctx, 'phrase-focus-session')
+  if (phrase.error) return { status: 'unavailable', notes: phrase.error }
+  if (!isPhraseChrome(phrase.xml)) {
+    return { status: 'failed', notes: 'Stream Practice this phrase did not open phrase focus.' }
+  }
+  const openedMenu = tapLabel(ctx, phrase.xml, MENU_OPEN)
+  if (openedMenu) return { status: 'failed', notes: openedMenu }
+  waitForUi(ctx.run, ctx.waitMs)
+  const menu = dumpUi(ctx, 'phrase-focus-menu')
+  if (menu.error) return { status: 'unavailable', notes: menu.error }
+  if (!dumpHasSwitcher(menu.xml)) {
+    return { status: 'failed', notes: 'Phrase-focus menu control did not open the switcher.' }
+  }
+  const tapped = tapLabel(ctx, menu.xml, REFRAIN_TITLE)
+  if (tapped) return { status: 'failed', notes: tapped }
+  waitForUi(ctx.run, ctx.waitMs)
+  const refrain = dumpUi(ctx, 'phrase-focus-hard')
+  if (refrain.error) return { status: 'unavailable', notes: refrain.error }
+  const currentUrl = currentActivityUrl(ctx, refrain.xml)
+  if (ctx.outputDir) {
+    writeFileSync(resolve(ctx.outputDir, 'phrase-focus-hard-url.txt'), `${currentUrl}\n`)
+  }
+  return {
+    ...evaluateHardRefrainDump({
+      menuDump: menu.xml,
+      refrainDump: refrain.xml,
+      currentUrl,
+    }),
+    currentUrl,
+  }
+}
+
 function runMenuHard(ctx) {
   const scenario = waveScenario('menu-hard-refrain')
   const switcher = runHardEntry(ctx, { startPath: '/', openMenu: true, prefix: 'switcher' })
   if (switcher.status !== 'passed') return scenarioResult(scenario, switcher, switcher)
   const more = runHardEntry(ctx, { startPath: '/more', openMenu: false, prefix: 'more' })
   if (more.status !== 'passed') return scenarioResult(scenario, more, more)
+  const fromPhrase = runHardFromPhraseFocus(ctx)
+  if (fromPhrase.status !== 'passed') return scenarioResult(scenario, fromPhrase, fromPhrase)
   return scenarioResult(
     scenario,
     {
       status: 'passed',
-      notes: 'Switcher and More The Refrain opened the difficult-only drill.',
+      notes:
+        'Switcher, More, and phrase-focus switcher The Refrain opened the difficult-only drill.',
     },
-    { currentUrl: more.currentUrl },
+    { currentUrl: fromPhrase.currentUrl },
   )
 }
 

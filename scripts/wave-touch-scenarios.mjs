@@ -17,7 +17,7 @@ export const WAVE_TOUCH_SCENARIOS = [
     id: 'menu-hard-refrain',
     owner: '101',
     requirement: 'LB-08',
-    entry: 'Switcher or More The Refrain',
+    entry: 'Switcher or More The Refrain; switcher from a phrase-focus session',
     expect: '/practice/refrain?filter=hard',
   },
   {
@@ -67,7 +67,8 @@ export const WAVE_TOUCH_SCENARIOS = [
     id: 'menu-hard-refrain-at',
     owner: '101',
     requirement: 'LB-08',
-    entry: 'TalkBack double-activate switcher The Refrain',
+    entry:
+      'TalkBack double-activate switcher The Refrain, including from a phrase-focus session',
     expect: '/practice/refrain?filter=hard',
   },
   {

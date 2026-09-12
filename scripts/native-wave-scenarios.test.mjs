@@ -43,9 +43,11 @@ const STREAM_DUMP = `<?xml version="1.0"?>
 const PHRASE_REFRAIN_DUMP = `<?xml version="1.0"?>
 <hierarchy>
   <node class="android.widget.FrameLayout">
-    <node class="android.widget.Button" content-desc="Leave practice" clickable="true" bounds="[24,40][200,80]"/>
-    <node class="android.widget.TextView" text="This phrase" bounds="[24,80][360,128]"/>
-    <node class="android.widget.TextView" text="The Refrain" bounds="[24,140][360,188]"/>
+    <node resource-id="navigation-pull-handle" bounds="[0,0][360,88]"/>
+    <node class="android.widget.Button" content-desc="Spanish, open the menu" clickable="true" bounds="[24,40][360,88]"/>
+    <node class="android.widget.Button" content-desc="Leave practice" clickable="true" bounds="[24,100][200,140]"/>
+    <node class="android.widget.TextView" text="This phrase" bounds="[24,148][360,196]"/>
+    <node class="android.widget.TextView" text="The Refrain" bounds="[24,200][360,248]"/>
   </node>
 </hierarchy>`
 
@@ -161,8 +163,11 @@ const EXPO_PHRASE_DUMP = `<?xml version="1.0"?>
 <hierarchy>
   <node class="android.widget.FrameLayout">
     <node class="android.widget.TextView" text="loro-route:/practice/refrain?phrase=es-001" bounds="[0,0][1,1]"/>
-    <node class="android.widget.TextView" text="This phrase" bounds="[24,80][360,128]"/>
-    <node class="android.widget.TextView" text="The Refrain" bounds="[24,140][360,188]"/>
+    <node resource-id="navigation-pull-handle" bounds="[0,0][360,88]"/>
+    <node class="android.widget.Button" content-desc="Spanish, open the menu" clickable="true" bounds="[24,40][360,88]"/>
+    <node class="android.widget.Button" content-desc="Leave practice" clickable="true" bounds="[24,100][200,140]"/>
+    <node class="android.widget.TextView" text="This phrase" bounds="[24,148][360,196]"/>
+    <node class="android.widget.TextView" text="The Refrain" bounds="[24,200][360,248]"/>
   </node>
 </hierarchy>`
 
@@ -616,10 +621,12 @@ function scriptedDevice({
   moreOpensHard = true,
   talkbackInstalled = false,
   leaveOnFullScreenSwipe = false,
+  phraseMenuKeepsPhrase = false,
 } = {}) {
   let stage = 'idle'
   let talkbackEnabled = false
   let pendingFocus = null
+  let menuSource = 'today'
   const streamDump = expoRoutes ? EXPO_STREAM_DUMP : STREAM_DUMP
   const phraseDump = expoRoutes ? EXPO_PHRASE_DUMP : PHRASE_REFRAIN_DUMP
   const hardDump = expoRoutes ? EXPO_HARD_DUMP : HARD_REFRAIN_DUMP
@@ -634,11 +641,19 @@ function scriptedDevice({
     return streamDump
   }
   const applyTap = (tapY) => {
-    if (stage === 'today') stage = tapY < 200 ? 'menu' : 'stream'
-    else if (stage === 'stream') stage = 'phrase'
+    if (stage === 'today') {
+      stage = tapY < 200 ? 'menu' : 'stream'
+      if (stage === 'menu') menuSource = 'today'
+    } else if (stage === 'stream') stage = 'phrase'
     else if (stage === 'stream-exit') stage = 'stream'
-    else if (stage === 'menu') stage = tapY < 80 ? 'today' : 'hard'
-    else if (stage === 'more') stage = 'hard'
+    else if (stage === 'phrase') {
+      stage = tapY < 90 ? 'menu' : 'exit'
+      if (stage === 'menu') menuSource = 'phrase'
+    } else if (stage === 'menu') {
+      if (tapY < 80) stage = menuSource === 'phrase' ? 'phrase' : 'today'
+      else if (phraseMenuKeepsPhrase && menuSource === 'phrase') stage = 'phrase'
+      else stage = 'hard'
+    } else if (stage === 'more') stage = 'hard'
   }
   return (_tool, args) => {
     const joined = args.join(' ')
@@ -672,7 +687,7 @@ function scriptedDevice({
       return { status: 0, stdout: '' }
     }
     if (joined.includes('KEYCODE_BACK')) {
-      if (stage === 'menu') stage = 'today'
+      if (stage === 'menu') stage = menuSource === 'phrase' ? 'phrase' : 'today'
       else if (stage === 'stream') stage = 'stream-exit'
       else if (stage === 'stream-exit') stage = 'stream'
       else if (stage === 'phrase') stage = 'exit'
@@ -733,8 +748,12 @@ function scriptedDevice({
         stage === 'stream'
       ) {
         stage = 'stream-exit'
-      } else if (x1 > 20 && committed && stage === 'today') stage = 'menu'
-      else if (x1 > 20 && committed && stage === 'menu') stage = 'today'
+      } else if (x1 > 20 && committed && stage === 'today') {
+        stage = 'menu'
+        menuSource = 'today'
+      } else if (x1 > 20 && committed && stage === 'menu') {
+        stage = menuSource === 'phrase' ? 'phrase' : 'today'
+      }
       return { status: 0, stdout: '' }
     }
     assert.fail(`unexpected adb ${joined}`)
@@ -849,6 +868,16 @@ test('menu-hard-refrain fails when More does not open the difficult-only drill',
   assert.equal(rows[4].status, 'passed')
   assert.equal(rows[5].status, 'passed')
   assert.equal(rows[6].status, 'passed')
+})
+
+test('menu-hard-refrain fails when phrase-focus switcher stays on the phrase', () => {
+  const rows = executeWaveScenarios({
+    run: scriptedDevice({ phraseMenuKeepsPhrase: true }),
+    waitMs: 0,
+  })
+  const row = rows.find((entry) => entry.id === 'menu-hard-refrain')
+  assert.equal(row.status, 'failed')
+  assert.match(row.notes, /hard-filter Refrain/)
 })
 
 test('TalkBack rows reuse the same chrome and URL gates after a focused activate', () => {

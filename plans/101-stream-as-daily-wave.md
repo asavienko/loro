@@ -54,26 +54,28 @@ More, filtered to active `difficulty === 'hard'` phrases only.
   `.local-builds/native-evidence/wave-101-emulator-v12/` against preview APK `d0a802591f75`
   (`app.loro.android.preview` on `emulator-5554`, SHA-256
   `4a3bf42f1053650d303b61820cca69e6959355eac668e29b23ca5880fb751620`): Stream →
-  `?phrase=01a09640-97b3-7000-9669-f12bcf0fc9d1`, switcher and More both `?filter=hard`, an edge
-  swipe opened the wave sheet, a full-screen swipe returned to Stream, Android Back opened Leave
-  this wave? / Pause the wave, Keep going restored Stream, then phrase Back opened Leave this
-  practice? / Pause practice, spine pull opened the switcher, and sheet pull, Android Back, and
-  labelled Dismiss backdrop each dismissed it on Today. The TalkBack `-at` variants passed the same
-  chrome/URL/gesture gates. `matrix.json` records `passedCount=12` and `physicalGateCount=0`. A
-  prior v11 run against the same APK failed NAV-04 because a sheet-only dump looked like Today;
-  `897debe` treats that sheet as still on the session and skips a second Back that would dismiss it.
-  Source locks iOS full-screen dismiss (`PRACTICE_SESSION_STACK_OPTIONS`). Mac simulator and iPhone
-  execution remain unevaluated. That is not physical-device or iOS proof. iOS `--execute-scenarios`
-  is a simctl + idb runner with the same chrome/URL/gesture gates; it may boot a Shutdown simulator
-  and install a verified `loro-simulator-*.zip` from `pnpm ios:local` or the one-shot
-  `pnpm ios:evidence`. The iOS runner now skips Leave practice when Leave this wave? is already
-  visible, matching the Android sheet-as-session rule. Android Back stays unavailable on iOS.
-  TalkBack `-at` rows stay unavailable on iOS even if VoiceOver looks enabled; ordinary idb taps are
-  not AT proof. This Linux host has no Xcode/idb, so those rows stay unevaluated until a Mac
-  simulator or iPhone run drives them. Phrase-focus Refrain is not the menu destination; the
-  switcher replaces into `?filter=hard` and only a matching hard checkpoint owns that empty screen.
-  A screenshot collector must not mark those rows passed. `matrix.json` classifies that emulator
-  bundle as `closest-available-not-physical`; its passed rows have `closesPhysicalGate: false`.
+  `?phrase=01a09640-97b3-7000-9669-f12bcf0fc9d1`, switcher and More both `?filter=hard`. Source now
+  also drives phrase-focus switcher → `?filter=hard` on the same `menu-hard-refrain` row; v12 did
+  not. An edge swipe opened the wave sheet, a full-screen swipe returned to Stream, Android Back
+  opened Leave this wave? / Pause the wave, Keep going restored Stream, then phrase Back opened
+  Leave this practice? / Pause practice, spine pull opened the switcher, and sheet pull, Android
+  Back, and labelled Dismiss backdrop each dismissed it on Today. The TalkBack `-at` variants passed
+  the same chrome/URL/gesture gates. `matrix.json` records `passedCount=12` and
+  `physicalGateCount=0`. A prior v11 run against the same APK failed NAV-04 because a sheet-only
+  dump looked like Today; `897debe` treats that sheet as still on the session and skips a second
+  Back that would dismiss it. Source locks iOS full-screen dismiss
+  (`PRACTICE_SESSION_STACK_OPTIONS`). Mac simulator and iPhone execution remain unevaluated. That is
+  not physical-device or iOS proof. iOS `--execute-scenarios` is a simctl + idb runner with the same
+  chrome/URL/gesture gates; it may boot a Shutdown simulator and install a verified
+  `loro-simulator-*.zip` from `pnpm ios:local` or the one-shot `pnpm ios:evidence`. The iOS runner
+  now skips Leave practice when Leave this wave? is already visible, matching the Android
+  sheet-as-session rule. Android Back stays unavailable on iOS. TalkBack `-at` rows stay unavailable
+  on iOS even if VoiceOver looks enabled; ordinary idb taps are not AT proof. This Linux host has no
+  Xcode/idb, so those rows stay unevaluated until a Mac simulator or iPhone run drives them.
+  Phrase-focus Refrain is not the menu destination; the switcher replaces into `?filter=hard` and
+  only a matching hard checkpoint owns that empty screen. A screenshot collector must not mark those
+  rows passed. `matrix.json` classifies that emulator bundle as `closest-available-not-physical`;
+  its passed rows have `closesPhysicalGate: false`.
 - `deep_link_for` now opens Stream for the daily reminder and the midday wave nudge. The plan 70
   scheduler that delivers those links is still unbuilt. A bare `/practice` path also resolves to
   Stream.
