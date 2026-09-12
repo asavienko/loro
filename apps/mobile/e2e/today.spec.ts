@@ -116,7 +116,7 @@ test('LB-01: Today rolls an open day at midnight without a foreground event', as
   await expect(page.getByText('Tuesday, April 7')).toBeVisible()
   await expect(repsTodayRow(page, 0)).toBeVisible()
   // A fresh daily set exists at midnight. Waves record that the learner showed up;
-  // they never lock the first slot until 08:00.
+  // they never lock the first slot, including before 08:00.
   await expect(page.getByRole('button', { name: 'Start the morning wave' })).toBeEnabled()
 })
 

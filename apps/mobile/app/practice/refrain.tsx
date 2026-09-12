@@ -169,9 +169,9 @@ export default function Refrain() {
       </Screen>
     )
   }
-  // A finished session owns the immediate post-practice screen even when the next scheduled
-  // wave is still locked. The completion checkpoint is the learner's current result; replacing
-  // it with the next-wave gate would hide the reward and make a successful session look blocked.
+  // A finished session owns the immediate post-practice screen. The completion
+  // checkpoint is the learner's current result; replacing it with the next-wave
+  // action would hide the reward. Practice stays open after this screen.
   if (session.finished) {
     const day = deviceClock.localDay()
     return (
