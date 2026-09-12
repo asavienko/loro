@@ -176,23 +176,24 @@ variants) are listed on the manifest as `unavailable` until a device run drives 
 records the exact URLs or gesture proof. `pnpm native:evidence --matrix PATH/TO/manifest.json`
 classifies an existing bundle: emulator and simulator passed rows have `closesPhysicalGate: false`.
 The Linux emulator-5554 v10 bundle at `.local-builds/native-evidence/wave-101-emulator-v10/` passed
-all twelve catalog rows on APK `3a96003b7c27` with `physicalGateCount=0`. Physical-candidate devices
-can set that flag only for passed rows. `pnpm native:evidence --list-scenarios` prints the catalog
-without collecting. On a connected Android device,
-`pnpm native:evidence --execute-scenarios --artifact-revision … --artifact …` dumps the hierarchy,
-completes first-run onboarding when Today is missing, then taps Today’s wave control → Stream →
-phrase Refrain, switcher and More hard-filter, edge- and mid-screen-swipes the practice stack, then
-sends Android Back on Stream (stay) and phrase Refrain (exit sheet), pulls the spine handle to open
-the switcher, then dismisses the switcher by sheet pull, Android Back, and the labelled Dismiss
-backdrop, and repeats the pointer and dismiss rows with TalkBack when TalkBack is installed. Missing
-adb, missing device, missing TalkBack, or a dump without matching chrome/URL/gesture evidence stays
-`unavailable` or `failed` — a screenshot collector must not mark those rows passed. Browser
-mouse/touch coverage for the navigation and pull entries is in the learner E2E suite; it is not
-native proof. iOS `--execute-scenarios` may boot a Shutdown simulator and install a verified
-`loro-simulator-*.zip`, then drive the pointer, spine/sheet, and backdrop rows through
-`simctl openurl` plus `idb` taps/swipes. Android Back stays unavailable on iOS. It fail-closes
-without chrome plus the exact URL or gesture proof. TalkBack `-at` rows stay `unavailable` on iOS
-even if VoiceOver looks enabled; ordinary idb taps are not AT proof. VoiceOver physical-device
-remains plan 58/93. Missing Xcode or idb does not abort collection. Clean iOS compilation, minimum
-OS floors, physical-device permissions/speech, persistence, lifecycle and interruption scenarios
-remain plan 58 acceptance gates.
+all twelve catalog rows on consume-Back APK `3a96003b7c27` with `physicalGateCount=0`. Source now
+opens Stream Leave / Android Back into Pause the wave; that v10 APK cannot prove the wave sheet.
+Physical-candidate devices can set that flag only for passed rows.
+`pnpm native:evidence --list-scenarios` prints the catalog without collecting. On a connected
+Android device, `pnpm native:evidence --execute-scenarios --artifact-revision … --artifact …` dumps
+the hierarchy, completes first-run onboarding when Today is missing, then taps Today’s wave control
+→ Stream → phrase Refrain, switcher and More hard-filter, edge- and mid-screen-swipes the practice
+stack, then sends Android Back on Stream (wave sheet, Keep going) and phrase Refrain (practice
+sheet), pulls the spine handle to open the switcher, then dismisses the switcher by sheet pull,
+Android Back, and the labelled Dismiss backdrop, and repeats the pointer and dismiss rows with
+TalkBack when TalkBack is installed. Missing adb, missing device, missing TalkBack, or a dump
+without matching chrome/URL/gesture evidence stays `unavailable` or `failed` — a screenshot
+collector must not mark those rows passed. Browser mouse/touch coverage for the navigation and pull
+entries is in the learner E2E suite; it is not native proof. iOS `--execute-scenarios` may boot a
+Shutdown simulator and install a verified `loro-simulator-*.zip`, then drive the pointer,
+spine/sheet, Leave-practice exit, and backdrop rows through `simctl openurl` plus `idb` taps/swipes.
+Android Back stays unavailable on iOS. It fail-closes without chrome plus the exact URL or gesture
+proof. TalkBack `-at` rows stay `unavailable` on iOS even if VoiceOver looks enabled; ordinary idb
+taps are not AT proof. VoiceOver physical-device remains plan 58/93. Missing Xcode or idb does not
+abort collection. Clean iOS compilation, minimum OS floors, physical-device permissions/speech,
+persistence, lifecycle and interruption scenarios remain plan 58 acceptance gates.
