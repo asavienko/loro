@@ -208,7 +208,8 @@ export class AccountClient {
     }
   }
   async signIn(provider: OAuthProvider, windowName?: string): Promise<boolean> {
-    if (this.restoreFlight || this.refreshFlight || this.state.status === 'working') return false
+    if (this.restoreFlight) await this.restoreFlight
+    if (this.refreshFlight || this.state.status === 'working') return false
     const generation = ++this.generation
     this.publish({ status: 'working', error: null })
     try {

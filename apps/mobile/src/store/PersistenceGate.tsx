@@ -32,6 +32,7 @@ export function PersistenceGate({ children }: { children: ReactNode }) {
 
 function PersistenceRecovery() {
   const status = usePersistence((state) => state.status)
+  const error = usePersistence((state) => state.error)
   return (
     <ThemeProvider>
       <View style={styles.canvas}>
@@ -61,6 +62,11 @@ function PersistenceRecovery() {
                 <Text variant="bodyMd" color={ink.muted}>
                   {copy.persistence.body}
                 </Text>
+                {__DEV__ && error ? (
+                  <Text variant="captionSm" color={ink.muted} testID="storage-error-detail">
+                    {error}
+                  </Text>
+                ) : null}
                 <Pressable
                   feedback="smallButton"
                   accessibilityRole="button"

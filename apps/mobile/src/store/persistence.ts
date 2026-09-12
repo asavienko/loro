@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { deviceClock } from '../lib/clock'
 import { createLearnerStorage } from '../data/learner'
+import { globalSlot } from '../data/globalSlot'
 import { getRuntimeDatabase } from '../data/runtime'
 import {
   attachStorePersistence,
@@ -24,12 +25,15 @@ function fail(error: unknown): void {
 }
 setPersistenceFailureHandler(fail)
 
-let opening: Promise<void> | null = null
+const APP_PERSISTENCE_OPENING = Symbol.for('loro.appPersistenceOpening')
+
 export function initializeAppPersistence(): Promise<void> {
   if (usePersistence.getState().status === 'ready') return Promise.resolve()
-  if (opening !== null) return opening
+  const openings = globalSlot<Promise<void>>(APP_PERSISTENCE_OPENING)
+  const inFlight = openings.get()
+  if (inFlight) return inFlight
   usePersistence.setState({ status: 'opening', error: null })
-  opening = getRuntimeDatabase()
+  const opening = getRuntimeDatabase()
     .then((database) => {
       attachStorePersistence(useApp, createLearnerStorage(database, deviceClock))
       useApp.getState().ensureRefrainSet()
@@ -37,8 +41,9 @@ export function initializeAppPersistence(): Promise<void> {
     })
     .catch(fail)
     .finally(() => {
-      opening = null
+      if (openings.get() === opening) openings.set(undefined)
     })
+  openings.set(opening)
   return opening
 }
 
