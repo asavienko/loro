@@ -20,6 +20,14 @@ const HARD_EMPTY = 'No difficult phrases yet'
 const REFRAIN_TITLE = 'The Refrain'
 const STREAM_TITLE = 'The Stream'
 const MENU_OPEN = 'open the menu'
+const SWITCHER_TITLE = 'Where to?'
+const SPINE_HANDLE = 'navigation-pull-handle'
+const SHEET_HANDLE = 'sheet-pull-handle'
+const PULL_COMMIT_DY = 80
+const PULL_SHORT_DY = 20
+const PULL_HORIZONTAL_DX = 80
+const TALKBACK_SERVICE = 'com.google.android.marvin.talkback/.TalkBackService'
+const TALKBACK_PACKAGE = 'com.google.android.marvin.talkback'
 const WAVE_START = /^Start the (morning|midday|evening) wave$/
 const KEEP_LISTENING = 'Keep listening'
 const ONBOARD_WELCOME = "Let's go →"
@@ -66,6 +74,7 @@ export function parseUiDump(xml) {
     nodes.push({
       text: decodeXml(attrs.text),
       contentDesc: decodeXml(attrs['content-desc']),
+      resourceId: decodeXml(attrs['resource-id']),
       clickable: attrs.clickable === 'true',
       enabled: attrs.enabled !== 'false',
       bounds: parseBounds(attrs.bounds),
@@ -101,6 +110,17 @@ export function findClickableLabel(dump, label) {
       (node) => node.clickable && (node.text === label || node.contentDesc === label),
     ) ?? parsed.nodes.find((node) => node.clickable && nodeLabel(node).includes(label))
   )
+}
+
+export function findResourceId(dump, id) {
+  const parsed = typeof dump === 'string' ? parseUiDump(dump) : dump
+  return parsed.nodes.find(
+    (node) => node.resourceId === id || node.resourceId.endsWith(`/${id}`),
+  )
+}
+
+export function dumpHasSwitcher(dump) {
+  return Boolean(findResourceId(dump, SHEET_HANDLE) && dumpHas(dump, SWITCHER_TITLE))
 }
 
 function nodePrimaryLabel(node) {
@@ -319,6 +339,68 @@ export function evaluatePracticeGestureDisabledDump({ dump, currentUrl }) {
   }
 }
 
+export function evaluateSpinePull({ beforeDump, afterDump, inertDump }) {
+  if (!findResourceId(beforeDump, SPINE_HANDLE)) {
+    return {
+      status: 'unavailable',
+      notes: 'Today dump does not expose the spine pull handle.',
+    }
+  }
+  if (dumpHasSwitcher(beforeDump)) {
+    return {
+      status: 'unavailable',
+      notes: 'Switcher was already open before the spine pull.',
+    }
+  }
+  if (inertDump && dumpHasSwitcher(inertDump)) {
+    return {
+      status: 'failed',
+      notes: 'A short or horizontal spine drag opened the switcher.',
+    }
+  }
+  if (!dumpHasSwitcher(afterDump) || !dumpHas(afterDump, REFRAIN_TITLE)) {
+    return {
+      status: 'failed',
+      notes: 'Spine pull-down did not open the switcher.',
+    }
+  }
+  return {
+    status: 'passed',
+    notes: 'Spine pull-down opened the switcher.',
+  }
+}
+
+export function evaluateSheetDismiss({ menuDump, afterDump, inertDump }) {
+  if (!findResourceId(menuDump, SHEET_HANDLE) || !dumpHasSwitcher(menuDump)) {
+    return {
+      status: 'unavailable',
+      notes: 'Switcher dump does not expose the sheet pull handle.',
+    }
+  }
+  if (inertDump && !dumpHasSwitcher(inertDump)) {
+    return {
+      status: 'failed',
+      notes: 'A short or horizontal sheet drag dismissed the switcher.',
+    }
+  }
+  if (dumpHasSwitcher(afterDump)) {
+    return {
+      status: 'failed',
+      notes: 'Sheet pull-down did not dismiss the switcher.',
+    }
+  }
+  if (!findWaveStart(afterDump)) {
+    return {
+      status: 'failed',
+      notes: 'Sheet dismiss left Today.',
+    }
+  }
+  return {
+    status: 'passed',
+    notes: 'Sheet pull-down dismissed the switcher on Today.',
+  }
+}
+
 export function evaluatePracticeBackSwipe({ beforeDump, afterDump }) {
   if (!isPracticeChrome(beforeDump)) {
     return {
@@ -405,31 +487,118 @@ function dumpUi(ctx, name) {
   return { xml }
 }
 
-function tapLabel(ctx, dump, label) {
-  const point = tapBounds(dump, label)
-  if (!point) return `Missing tap target: ${label}`
+function tapPoint(ctx, x, y, label) {
   const tap = runCommand(ctx.run, ctx.adb, ctx.serial, [
     'shell',
     'input',
     'tap',
-    String(point.x),
-    String(point.y),
+    String(x),
+    String(y),
   ])
   return failedCommand(tap, `input tap ${label}`)
+}
+
+function activatePoint(ctx, x, y, label) {
+  const first = tapPoint(ctx, x, y, label)
+  if (first || !ctx.talkback) return first
+  if (ctx.waitMs > 0) waitForUi(ctx.run, 120)
+  return tapPoint(ctx, x, y, `${label} activate`)
+}
+
+function tapLabel(ctx, dump, label) {
+  const point = tapBounds(dump, label)
+  if (!point) return `Missing tap target: ${label}`
+  return activatePoint(ctx, point.x, point.y, label)
 }
 
 function tapWaveStart(ctx, dump) {
   const node = findWaveStart(dump)
   if (!node?.bounds) return 'Missing tap target: Start the * wave'
   const { left, top, right, bottom } = node.bounds
-  const tap = runCommand(ctx.run, ctx.adb, ctx.serial, [
+  return activatePoint(
+    ctx,
+    Math.floor((left + right) / 2),
+    Math.floor((top + bottom) / 2),
+    'wave start',
+  )
+}
+
+function swipeNode(ctx, node, { dx = 0, dy = 0, ms = 250 } = {}) {
+  if (!node?.bounds) return 'Missing swipe target'
+  const { left, top, right, bottom } = node.bounds
+  const x = Math.floor((left + right) / 2)
+  const y = Math.floor(top + (bottom - top) * 0.75)
+  const swipe = runCommand(ctx.run, ctx.adb, ctx.serial, [
     'shell',
     'input',
-    'tap',
-    String(Math.floor((left + right) / 2)),
-    String(Math.floor((top + bottom) / 2)),
+    'swipe',
+    String(x),
+    String(y),
+    String(x + dx),
+    String(y + dy),
+    String(ms),
   ])
-  return failedCommand(tap, 'input tap wave start')
+  return failedCommand(swipe, 'input swipe')
+}
+
+function enableTalkback(ctx) {
+  const packages = runCommand(ctx.run, ctx.adb, ctx.serial, ['shell', 'pm', 'list', 'packages'])
+  if (failedCommand(packages, 'pm list packages')) return failedCommand(packages, 'pm list packages')
+  if (!(packages.stdout || '').includes(TALKBACK_PACKAGE)) {
+    return 'TalkBack is not installed on this device.'
+  }
+  const grant = runCommand(ctx.run, ctx.adb, ctx.serial, [
+    'shell',
+    'pm',
+    'grant',
+    TALKBACK_PACKAGE,
+    'android.permission.POST_NOTIFICATIONS',
+  ])
+  if (failedCommand(grant, 'pm grant TalkBack notifications')) {
+    return failedCommand(grant, 'pm grant TalkBack notifications')
+  }
+  const service = runCommand(ctx.run, ctx.adb, ctx.serial, [
+    'shell',
+    'settings',
+    'put',
+    'secure',
+    'enabled_accessibility_services',
+    TALKBACK_SERVICE,
+  ])
+  if (failedCommand(service, 'enable TalkBack service')) {
+    return failedCommand(service, 'enable TalkBack service')
+  }
+  const enabled = runCommand(ctx.run, ctx.adb, ctx.serial, [
+    'shell',
+    'settings',
+    'put',
+    'secure',
+    'accessibility_enabled',
+    '1',
+  ])
+  if (failedCommand(enabled, 'enable accessibility')) {
+    return failedCommand(enabled, 'enable accessibility')
+  }
+  if (ctx.waitMs > 0) waitForUi(ctx.run, Math.max(ctx.waitMs, 1500))
+  return null
+}
+
+function disableTalkback(ctx) {
+  runCommand(ctx.run, ctx.adb, ctx.serial, [
+    'shell',
+    'settings',
+    'delete',
+    'secure',
+    'enabled_accessibility_services',
+  ])
+  runCommand(ctx.run, ctx.adb, ctx.serial, [
+    'shell',
+    'settings',
+    'put',
+    'secure',
+    'accessibility_enabled',
+    '0',
+  ])
 }
 
 function launcherComponent(packageName) {
@@ -663,6 +832,132 @@ export function ensureLearnerHome(ctx) {
   return evaluateOnboardedHome(dump.xml)
 }
 
+function runSpinePull(ctx) {
+  const scenario = WAVE_TOUCH_SCENARIOS[3]
+  const opened = openDeepLink(ctx, '/')
+  if (opened) return scenarioResult(scenario, { status: 'unavailable', notes: opened })
+  waitForUi(ctx.run, ctx.waitMs)
+  const before = dumpUi(ctx, 'spine-before')
+  if (before.error) return scenarioResult(scenario, { status: 'unavailable', notes: before.error })
+  const handle = findResourceId(before.xml, SPINE_HANDLE)
+  if (!handle) {
+    return scenarioResult(scenario, {
+      status: 'unavailable',
+      notes: 'Today dump does not expose the spine pull handle.',
+    })
+  }
+  const short = swipeNode(ctx, handle, { dy: PULL_SHORT_DY })
+  if (short) return scenarioResult(scenario, { status: 'unavailable', notes: short })
+  waitForUi(ctx.run, ctx.waitMs)
+  const afterShort = dumpUi(ctx, 'spine-short')
+  if (afterShort.error)
+    return scenarioResult(scenario, { status: 'unavailable', notes: afterShort.error })
+  const sideways = swipeNode(ctx, handle, { dx: PULL_HORIZONTAL_DX })
+  if (sideways) return scenarioResult(scenario, { status: 'unavailable', notes: sideways })
+  waitForUi(ctx.run, ctx.waitMs)
+  const afterSide = dumpUi(ctx, 'spine-horizontal')
+  if (afterSide.error)
+    return scenarioResult(scenario, { status: 'unavailable', notes: afterSide.error })
+  const inertDump = dumpHasSwitcher(afterShort.xml) ? afterShort.xml : afterSide.xml
+  const commit = swipeNode(ctx, handle, { dy: PULL_COMMIT_DY })
+  if (commit) return scenarioResult(scenario, { status: 'unavailable', notes: commit })
+  waitForUi(ctx.run, ctx.waitMs)
+  const after = dumpUi(ctx, 'spine-after')
+  if (after.error) return scenarioResult(scenario, { status: 'unavailable', notes: after.error })
+  return scenarioResult(
+    scenario,
+    evaluateSpinePull({
+      beforeDump: before.xml,
+      afterDump: after.xml,
+      inertDump,
+    }),
+  )
+}
+
+function runSheetDismiss(ctx) {
+  const scenario = WAVE_TOUCH_SCENARIOS[4]
+  const opened = openDeepLink(ctx, '/')
+  if (opened) return scenarioResult(scenario, { status: 'unavailable', notes: opened })
+  waitForUi(ctx.run, ctx.waitMs)
+  let entry = dumpUi(ctx, 'sheet-start')
+  if (entry.error) return scenarioResult(scenario, { status: 'unavailable', notes: entry.error })
+  if (!dumpHasSwitcher(entry.xml)) {
+    const handle = findResourceId(entry.xml, SPINE_HANDLE)
+    const pulled = handle
+      ? swipeNode(ctx, handle, { dy: PULL_COMMIT_DY })
+      : tapLabel(ctx, entry.xml, MENU_OPEN)
+    if (pulled) return scenarioResult(scenario, { status: 'failed', notes: pulled })
+    waitForUi(ctx.run, ctx.waitMs)
+    entry = dumpUi(ctx, 'sheet-menu')
+    if (entry.error) return scenarioResult(scenario, { status: 'unavailable', notes: entry.error })
+  }
+  const sheet = findResourceId(entry.xml, SHEET_HANDLE)
+  if (!sheet) {
+    return scenarioResult(scenario, {
+      status: 'unavailable',
+      notes: 'Switcher dump does not expose the sheet pull handle.',
+    })
+  }
+  const short = swipeNode(ctx, sheet, { dy: PULL_SHORT_DY })
+  if (short) return scenarioResult(scenario, { status: 'unavailable', notes: short })
+  waitForUi(ctx.run, ctx.waitMs)
+  const afterShort = dumpUi(ctx, 'sheet-short')
+  if (afterShort.error)
+    return scenarioResult(scenario, { status: 'unavailable', notes: afterShort.error })
+  const sideways = swipeNode(ctx, sheet, { dx: PULL_HORIZONTAL_DX })
+  if (sideways) return scenarioResult(scenario, { status: 'unavailable', notes: sideways })
+  waitForUi(ctx.run, ctx.waitMs)
+  const afterSide = dumpUi(ctx, 'sheet-horizontal')
+  if (afterSide.error)
+    return scenarioResult(scenario, { status: 'unavailable', notes: afterSide.error })
+  const inertDump = !dumpHasSwitcher(afterShort.xml)
+    ? afterShort.xml
+    : afterSide.xml
+  const commit = swipeNode(ctx, sheet, { dy: PULL_COMMIT_DY })
+  if (commit) return scenarioResult(scenario, { status: 'unavailable', notes: commit })
+  waitForUi(ctx.run, ctx.waitMs)
+  const after = dumpUi(ctx, 'sheet-after')
+  if (after.error) return scenarioResult(scenario, { status: 'unavailable', notes: after.error })
+  return scenarioResult(
+    scenario,
+    evaluateSheetDismiss({
+      menuDump: entry.xml,
+      afterDump: after.xml,
+      inertDump,
+    }),
+  )
+}
+
+function asScenario(scenario, result) {
+  return {
+    ...result,
+    ...scenario,
+    status: result.status,
+    reason: result.reason ?? result.notes,
+    notes: result.notes ?? result.reason,
+  }
+}
+
+function runTalkbackRows(ctx) {
+  const ids = [
+    'stream-to-phrase-refrain-at',
+    'menu-hard-refrain-at',
+    'practice-back-swipe-disabled-at',
+  ]
+  const enabled = enableTalkback(ctx)
+  if (enabled) return unevaluatedWaveScenarios(enabled).filter((row) => ids.includes(row.id))
+  const talkbackCtx = { ...ctx, talkback: true }
+  try {
+    return [
+      asScenario(WAVE_TOUCH_SCENARIOS[5], runStreamPhrase(talkbackCtx)),
+      asScenario(WAVE_TOUCH_SCENARIOS[6], runMenuHard(talkbackCtx)),
+      asScenario(WAVE_TOUCH_SCENARIOS[7], runBackSwipe(talkbackCtx)),
+    ]
+  } finally {
+    disableTalkback(ctx)
+  }
+}
+
 export function executeWaveScenarios({
   adb = resolveAdb(),
   serial,
@@ -686,5 +981,12 @@ export function executeWaveScenarios({
   if (outputDir) mkdirSync(outputDir, { recursive: true })
   const home = ensureLearnerHome(ctx)
   if (home.status !== 'passed') return unevaluatedWaveScenarios(home.notes)
-  return [runStreamPhrase(ctx), runMenuHard(ctx), runBackSwipe(ctx)]
+  return [
+    runStreamPhrase(ctx),
+    runMenuHard(ctx),
+    runBackSwipe(ctx),
+    runSpinePull(ctx),
+    runSheetDismiss(ctx),
+    ...runTalkbackRows(ctx),
+  ]
 }

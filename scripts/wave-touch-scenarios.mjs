@@ -26,6 +26,41 @@ export const WAVE_TOUCH_SCENARIOS = [
     entry: 'Native back-swipe on Stream or Refrain',
     expect: 'session remains; practice stack gestureEnabled false',
   },
+  {
+    id: 'spine-pull-opens-switcher',
+    owner: '93',
+    requirement: 'NAV-08',
+    entry: 'Pull down the spine handle on Today',
+    expect: 'switcher sheet opens',
+  },
+  {
+    id: 'sheet-pull-dismisses-switcher',
+    owner: '93',
+    requirement: 'NAV-06',
+    entry: 'Pull down the sheet handle on the open switcher',
+    expect: 'switcher sheet dismisses; Today remains',
+  },
+  {
+    id: 'stream-to-phrase-refrain-at',
+    owner: '101',
+    requirement: 'LB-03',
+    entry: 'TalkBack double-activate Today wave then Stream Practice this phrase',
+    expect: '/practice/refrain?phrase=<id>',
+  },
+  {
+    id: 'menu-hard-refrain-at',
+    owner: '101',
+    requirement: 'LB-08',
+    entry: 'TalkBack double-activate switcher The Refrain',
+    expect: '/practice/refrain?filter=hard',
+  },
+  {
+    id: 'practice-back-swipe-disabled-at',
+    owner: '93',
+    requirement: 'NAV-04',
+    entry: 'TalkBack-enabled edge swipe on Stream or Refrain',
+    expect: 'session remains; practice stack gestureEnabled false',
+  },
 ]
 
 export function unevaluatedWaveScenarios(reason) {
