@@ -141,6 +141,12 @@ do not constitute a device run.
 
 The installed artifact remains explicitly unverified: the retained file hash identifies reviewed
 bytes, but does not prove those bytes are installed. Retain and correlate the app's build metadata
-separately. A screenshot does not establish that the app is foregrounded or a scenario passed. Clean
-iOS compilation, minimum OS floors, physical-device permissions/speech, persistence, lifecycle and
-interruption scenarios remain plan 58 acceptance gates.
+separately. A screenshot does not establish that the app is foregrounded or a scenario passed.
+
+Plan 101 wave-path rows (`stream-to-phrase-refrain`, `menu-hard-refrain`,
+`practice-back-swipe-disabled`) are listed on the manifest as `unavailable` until a device run
+drives those entries and records the exact URLs. `pnpm native:evidence --list-scenarios` prints the
+catalog without collecting. Browser mouse/touch coverage for those two entries is in the learner E2E
+suite; it is not native proof. Clean iOS compilation, minimum OS floors, physical-device
+permissions/speech, persistence, lifecycle and interruption scenarios remain plan 58 acceptance
+gates.
