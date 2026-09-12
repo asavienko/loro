@@ -60,8 +60,10 @@ Preview. Use `pnpm apk:local` for a standalone release build.
 
 `pnpm --filter @loro/mobile ios` is the Metro-dependent debug workflow. For a standalone simulator
 artifact that `native:evidence --platform ios` can bind, use
-[`pnpm ios:local`](../../docs/process/local-apk.md#local-ios-simulator-builds-plan-58) on a Mac with
-full Xcode. Linux APK builds are not iOS proof. Production signing remains a separate gate.
+[`pnpm ios:local`](../../docs/process/local-apk.md#local-ios-simulator-builds-plan-58) or the
+one-shot [`pnpm ios:evidence`](../../docs/process/local-apk.md#local-ios-simulator-builds-plan-58)
+on a Mac with full Xcode. Linux APK builds are not iOS proof. Production signing remains a separate
+gate.
 
 The wrapper accepts device (`--device`/`-d`), port (`--port`/`-p`), debug variant, cache,
 dependency-install and bundler options. Positional project paths and unknown options are rejected
