@@ -8,23 +8,25 @@ Guidance for Claude Code working in this repository.
 
 Early implementation. **What exists:** eight of the v1.1 design package's 23 learner screens,
 Languages, Account, More, Settings and Listen utilities, the shared shell and a developer workbench.
-`/music` (Phrase songs) is a later garnish via More — picker, lyric review, style confirm, and
-fixture playback. Default CI uses `MUSIC_PROVIDER=stub` and never calls ElevenLabs or Anthropic.
-Discover offers Add your own and bundled topic suggestions; `/v1/phrases/suggest` uses bundled
-topics unless `ANTHROPIC_API_KEY` is set (Q-21 eval remains). Local progress and course/session
-state commit to native OP-SQLite or browser SQLite before rendering. Rust owns FSRS, ranking,
-selection, matching, clocks and merge through generated WASM/UniFFI bridges. Native modules provide
-catalog-file playback when a checksummed clip is on disk, strictly on-device ASR with an offline
-Speak reveal fallback, and a listening-class file cache that returns file URIs only. Stream, Phrase
-Detail and Refrain play catalog files or API reference TTS (`GET /tts/status`, anonymous
-`POST /tts/render` when `TTS_PROVIDER=elevenlabs`); they do not fall back to device TTS. Listen on
-web streams API download URLs; native still caches `file://`. Phrase songs call `/music/status` and
-the lyrics/render routes (stub fixtures need no music key). The API stores accounts, sessions and
-tenant-scoped sync in PostgreSQL. Default TTS stays stub 503; ElevenLabs reference and
-listening-class render may omit a bearer so web and APK can play. Labeled `TTS_STUB_RENDER=1` is
-local listening silence only. Anonymous ElevenLabs/music/suggest spend is for a configured preview
-API only — the public EC2 gateway still omits `/tts` and `/ai`. Optional Google/Apple and email
-sign-in connect durable local progress to cross-device sync.
+Today starts a wave in Stream, which lists today's frozen phrase set; Refrain is a six-rep drill for
+a Stream phrase or, from the menu, active Difficult phrases only. `/music` (Phrase songs) is a later
+garnish via More — picker, lyric review, style confirm, and fixture playback. Default CI uses
+`MUSIC_PROVIDER=stub` and never calls ElevenLabs or Anthropic. Discover offers Add your own and
+bundled topic suggestions; `/v1/phrases/suggest` uses bundled topics unless `ANTHROPIC_API_KEY` is
+set (Q-21 eval remains). Local progress and course/session state commit to native OP-SQLite or
+browser SQLite before rendering. Rust owns FSRS, ranking, selection, matching, clocks and merge
+through generated WASM/UniFFI bridges. Native modules provide catalog-file playback when a
+checksummed clip is on disk, strictly on-device ASR with an offline Speak reveal fallback, and a
+listening-class file cache that returns file URIs only. Stream, Phrase Detail and Refrain play
+catalog files or API reference TTS (`GET /tts/status`, anonymous `POST /tts/render` when
+`TTS_PROVIDER=elevenlabs`); they do not fall back to device TTS. Listen on web streams API download
+URLs; native still caches `file://`. Phrase songs call `/music/status` and the lyrics/render routes
+(stub fixtures need no music key). The API stores accounts, sessions and tenant-scoped sync in
+PostgreSQL. Default TTS stays stub 503; ElevenLabs reference and listening-class render may omit a
+bearer so web and APK can play. Labeled `TTS_STUB_RENDER=1` is local listening silence only.
+Anonymous ElevenLabs/music/suggest spend is for a configured preview API only — the public EC2
+gateway still omits `/tts` and `/ai`. Optional Google/Apple and email sign-in connect durable local
+progress to cross-device sync.
 
 The three 31-phrase Spanish/Bulgarian/Russian starters still await bilingual review. The other 15
 learner screens, pronunciation-reviewed production seed audio (Q-15 leaning pins are in core; the
@@ -185,7 +187,7 @@ prototype-only and **must not** be carried into the app — see the divergence t
   (Reanimated adapter, UI-thread press/`sheetUp`, Arrival/warming/beat/equaliser/pulse/un-blur on
   real routes; practice/form/chat composites wait for a second caller; device 60 fps remains 58/72)
   under the same number (unresolved collision; do not reuse or drop either); 57 keeps
-  fonts/haptics/dark and 93 keeps spine/sheet pull laws. The next new plan number is 101; recheck
+  fonts/haptics/dark and 93 keeps spine/sheet pull laws. The next new plan number is 102; recheck
   concurrent worktrees and untracked `plans/` files before allocating an ID — the README/CLAUDE
   "next is N" sentence can lag. A new plan takes the next free number and gets a row in
   [`plans/README.md`](plans/README.md). **Numbers are never reused** — a gap is left rather than

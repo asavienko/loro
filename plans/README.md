@@ -4,7 +4,7 @@ This index lists only the **40 plans with remaining work**. Completed records an
 snapshots are kept in [the archive](archive/README.md), without compatibility symlinks or redirect
 files in this directory. Links point directly to each plan's actual location.
 
-The highest assigned ID is **100** and the next new plan is **101**. Recheck concurrent worktrees
+The highest assigned ID is **101** and the next new plan is **102**. Recheck concurrent worktrees
 and untracked `plans/` files before allocating; the "next is N" sentence can lag. Numbers are never
 reused; 49 remains an existing gap. When a plan finishes, archive it in the same change and list it
 only in the archive index.
@@ -20,7 +20,7 @@ either.
 Implemented-slice owners from 56–68, 70–73, 75–77, 80–82, 86–88, 90 and 93–96 are stored in
 [the 2026-09-09 archive](archive/2026-09-09/README.md) at user request. Their partial statuses and
 outstanding scope remain indexed below; archiving does not imply completion. Only the still-unbuilt
-or decision-gated files 69, 74, 78, 83, 96 (phrase-music), 97, 98, 99 and 100 remain in this
+or decision-gated files 69, 74, 78, 83, 96 (phrase-music), 97, 98, 99, 100 and 101 remain in this
 directory. Hygiene plan 100 is archived under the same number.
 
 The [post-main review](../docs/reviews/2026-09-09-post-main-plan-review.md) records the six runtime
@@ -195,6 +195,7 @@ feature↔release-completion cycle. See each plan's checkboxes for executable ta
 | [98](98-voice-and-tts-integration.md)                                      | ElevenLabs TTS, catalog render and device-TTS fallback                           | M1/M2       | 🟡 Adapter/render/gated API/file playback in progress; Q-15 catalog pins filled; live seed/listen remain                                   | 86/61/62 slices; Q-15 live seed                                                        |
 | [99](99-batch-phrase-audio-export.md)                                      | Online multi-voice listen cache; optional share of concatenated clips            | M2          | 🟡 Composer/cache/E2E/emulator fixture; Q-15 pins filled; ⛔ pronunciation review; ⛔ Q-22; physical 58/72                                 | 56/81 route; 59 phrases; 62 cache/session; 86/61/66/98 render; Q-15/Q-22               |
 | [100](100-ui-design-system.md)                                             | Shared UI interaction kit: motion adapter, gestures, remaining-screen primitives | M1/M2       | 🟡 Adapter/Pressable/Sheet/`sheetUp`/signature primitives on real routes; composites wait for a second caller; device 60 fps remains 58/72; **ID collides with archived hygiene 100** | ADR-0013 tokens; 57 fonts/haptics/dark; 80 specimens; 93 pull laws; 56/81 lists/chrome |
+| [101](101-stream-as-daily-wave.md)                                         | Stream lists the daily wave; Refrain is a targeted / difficult-only drill        | M2          | 🟡 Stream-primary wave listing and hard-filter menu entry implemented; device touch and authored-hero alignment remain                                                                  | 64 wave/resume; 81 destinations; 56 routes                                           |
 
 Plan 88 owns the selected AWS testing profile and
 [operations runbook](../docs/runbooks/backend-testing.md); plan 73 retains production operations.
