@@ -91,6 +91,9 @@ export const a11yCopy = {
     get loveThisPhrase() {
       return message('a11y.stream.loveThisPhrase')
     },
+    get practiceThis() {
+      return message('a11y.stream.practiceThis')
+    },
     queueRow: (es: string, en: string, difficulty: string): string =>
       message('a11y.stream.queueRow', { es, en, difficulty }),
   },

@@ -7,6 +7,22 @@ export const refrainCopy = {
     get body() {
       return message('refrain.empty.body')
     },
+    hard: {
+      get title() {
+        return message('refrain.empty.hard.title')
+      },
+      get body() {
+        return message('refrain.empty.hard.body')
+      },
+    },
+    phrase: {
+      get title() {
+        return message('refrain.empty.phrase.title')
+      },
+      get body() {
+        return message('refrain.empty.phrase.body')
+      },
+    },
   },
   unavailable: {
     title: (time: string): string => message('refrain.unavailable.title', { time }),

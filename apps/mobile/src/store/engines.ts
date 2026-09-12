@@ -22,6 +22,7 @@ import {
   type LoroCoreFacade,
   type PhraseRepository,
   type TripContext,
+  type UserPhraseId,
 } from '@loro/core'
 import type { StoreApi } from 'zustand'
 import { deviceClock } from '../lib/clock'
@@ -43,6 +44,7 @@ export function createEngineContext(
   store: Pick<StoreApi<AppState>, 'getState'>,
   deps: EngineContextDeps,
   core: LoroCoreFacade,
+  overrides?: { readonly refrainSet?: readonly UserPhraseId[] },
 ): EngineContext {
   const state = store.getState()
   // A context belongs to the attempt/course that created it. A later language or
@@ -80,9 +82,11 @@ export function createEngineContext(
     trip: deps.trip,
     flags: deps.flags,
     seed: deps.seed,
-    ...(state.refrainDay === deps.clock.localDay()
-      ? { refrainSet: state.refrainSet.map(userPhraseId) }
-      : {}),
+    ...(overrides?.refrainSet !== undefined
+      ? { refrainSet: overrides.refrainSet }
+      : state.refrainDay === deps.clock.localDay()
+        ? { refrainSet: state.refrainSet.map(userPhraseId) }
+        : {}),
   }
 }
 
@@ -108,9 +112,11 @@ const productionEngineDeps: EngineContextDeps = {
   seed: 42,
 }
 
-/** Zero-argument production wrapper retained for existing route call sites. */
-export function engineContext(): EngineContext {
-  return createEngineContext(useApp, productionEngineDeps, rustCoreFacade)
+/** Production wrapper retained for existing route call sites. */
+export function engineContext(overrides?: {
+  readonly refrainSet?: readonly UserPhraseId[]
+}): EngineContext {
+  return createEngineContext(useApp, productionEngineDeps, rustCoreFacade, overrides)
 }
 
 export const streamEngine = new StreamEngine()
