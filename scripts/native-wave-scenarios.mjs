@@ -23,7 +23,8 @@ const MENU_OPEN = 'open the menu'
 const SWITCHER_TITLE = 'Where to?'
 const SPINE_HANDLE = 'navigation-pull-handle'
 const SHEET_HANDLE = 'sheet-pull-handle'
-const PULL_COMMIT_DY = 80
+const PULL_COMMIT_DY = 200
+const PULL_COMMIT_MS = 800
 const PULL_SHORT_DY = 20
 const PULL_HORIZONTAL_DX = 80
 const TALKBACK_SERVICE = 'com.google.android.marvin.talkback/.TalkBackService'
@@ -512,7 +513,13 @@ function activatePoint(ctx, x, y, label) {
   const first = tapPoint(ctx, x, y, label)
   if (first || !ctx.talkback) return first
   if (ctx.waitMs > 0) waitForUi(ctx.run, 120)
-  return tapPoint(ctx, x, y, `${label} activate`)
+  const activate = runCommand(ctx.run, ctx.adb, ctx.serial, [
+    'shell',
+    'input',
+    'keyevent',
+    '23',
+  ])
+  return failedCommand(activate, `activate ${label}`)
 }
 
 function tapLabel(ctx, dump, label) {
@@ -552,7 +559,7 @@ function swipeNode(ctx, node, { dx = 0, dy = 0, ms = 250 } = {}) {
   if (!node?.bounds) return 'Missing swipe target'
   const { left, top, right, bottom } = node.bounds
   const x = Math.floor((left + right) / 2)
-  const y = Math.floor(top + (bottom - top) * 0.75)
+  const y = Math.floor(top + (bottom - top) * 0.4)
   const swipe = runCommand(ctx.run, ctx.adb, ctx.serial, [
     'shell',
     'input',
@@ -746,6 +753,9 @@ function runHardEntry(ctx, { startPath, openMenu, prefix }) {
     waitForUi(ctx.run, ctx.waitMs)
     entry = dumpUi(ctx, `${prefix}-menu`)
     if (entry.error) return { status: 'unavailable', notes: entry.error }
+    if (!dumpHasSwitcher(entry.xml)) {
+      return { status: 'failed', notes: 'Menu control did not open the switcher.' }
+    }
   }
   const tapped = tapLabel(ctx, entry.xml, REFRAIN_TITLE)
   if (tapped) return { status: 'failed', notes: tapped }
@@ -870,11 +880,16 @@ function runSpinePull(ctx) {
   if (afterSide.error)
     return scenarioResult(scenario, { status: 'unavailable', notes: afterSide.error })
   const inertDump = dumpHasSwitcher(afterShort.xml) ? afterShort.xml : afterSide.xml
-  const commit = swipeNode(ctx, handle, { dy: PULL_COMMIT_DY })
-  if (commit) return scenarioResult(scenario, { status: 'unavailable', notes: commit })
-  waitForUi(ctx.run, ctx.waitMs)
-  const after = dumpUi(ctx, 'spine-after')
-  if (after.error) return scenarioResult(scenario, { status: 'unavailable', notes: after.error })
+  let after = { xml: before.xml }
+  let commitError = null
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    commitError = swipeNode(ctx, handle, { dy: PULL_COMMIT_DY, ms: PULL_COMMIT_MS })
+    if (commitError) return scenarioResult(scenario, { status: 'unavailable', notes: commitError })
+    waitForUi(ctx.run, ctx.waitMs)
+    after = dumpUi(ctx, attempt === 2 ? 'spine-after' : `spine-commit-${attempt}`)
+    if (after.error) return scenarioResult(scenario, { status: 'unavailable', notes: after.error })
+    if (dumpHasSwitcher(after.xml)) break
+  }
   return scenarioResult(
     scenario,
     evaluateSpinePull({
@@ -895,12 +910,19 @@ function runSheetDismiss(ctx) {
   if (!dumpHasSwitcher(entry.xml)) {
     const handle = findResourceId(entry.xml, SPINE_HANDLE)
     const pulled = handle
-      ? swipeNode(ctx, handle, { dy: PULL_COMMIT_DY })
+      ? swipeNode(ctx, handle, { dy: PULL_COMMIT_DY, ms: PULL_COMMIT_MS })
       : tapLabel(ctx, entry.xml, MENU_OPEN)
     if (pulled) return scenarioResult(scenario, { status: 'failed', notes: pulled })
     waitForUi(ctx.run, ctx.waitMs)
     entry = dumpUi(ctx, 'sheet-menu')
     if (entry.error) return scenarioResult(scenario, { status: 'unavailable', notes: entry.error })
+    if (!dumpHasSwitcher(entry.xml)) {
+      const opened = tapLabel(ctx, entry.xml, MENU_OPEN)
+      if (opened) return scenarioResult(scenario, { status: 'failed', notes: opened })
+      waitForUi(ctx.run, ctx.waitMs)
+      entry = dumpUi(ctx, 'sheet-menu')
+      if (entry.error) return scenarioResult(scenario, { status: 'unavailable', notes: entry.error })
+    }
   }
   const sheet = findResourceId(entry.xml, SHEET_HANDLE)
   if (!sheet) {
@@ -924,7 +946,7 @@ function runSheetDismiss(ctx) {
   const inertDump = !dumpHasSwitcher(afterShort.xml)
     ? afterShort.xml
     : afterSide.xml
-  const commit = swipeNode(ctx, sheet, { dy: PULL_COMMIT_DY })
+  const commit = swipeNode(ctx, sheet, { dy: PULL_COMMIT_DY, ms: PULL_COMMIT_MS })
   if (commit) return scenarioResult(scenario, { status: 'unavailable', notes: commit })
   waitForUi(ctx.run, ctx.waitMs)
   const after = dumpUi(ctx, 'sheet-after')

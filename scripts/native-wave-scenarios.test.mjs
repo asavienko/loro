@@ -477,13 +477,17 @@ function scriptedDevice({
       const tapY = Number(args.at(-1))
       const point = `${args.at(-2)},${tapY}`
       if (talkbackEnabled) {
-        if (pendingFocus !== point) {
-          pendingFocus = point
-          return { status: 0, stdout: '' }
-        }
-        pendingFocus = null
+        pendingFocus = point
+        return { status: 0, stdout: '' }
       }
       applyTap(tapY)
+      return { status: 0, stdout: '' }
+    }
+    if (joined.includes('keyevent')) {
+      if (talkbackEnabled && pendingFocus) {
+        applyTap(Number(pendingFocus.split(',')[1]))
+        pendingFocus = null
+      }
       return { status: 0, stdout: '' }
     }
     if (joined.includes('uiautomator dump')) return { status: 0, stdout: '' }
@@ -601,7 +605,7 @@ test('menu-hard-refrain fails when More does not open the difficult-only drill',
   assert.equal(rows[4].status, 'passed')
 })
 
-test('TalkBack rows reuse the same chrome and URL gates after a double-activate', () => {
+test('TalkBack rows reuse the same chrome and URL gates after a focused activate', () => {
   const rows = executeWaveScenarios({ run: scriptedDevice({ talkbackInstalled: true }), waitMs: 0 })
   assert.deepEqual(
     rows.map((row) => [row.id, row.status]),
