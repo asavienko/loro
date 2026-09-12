@@ -414,7 +414,12 @@ function tapWaveStart(ctx, dump) {
   return failedCommand(tap, 'input tap wave start')
 }
 
+function launcherComponent(packageName) {
+  return `${packageName}/.MainActivity`
+}
+
 function openDeepLink(ctx, path) {
+  const component = launcherComponent(ctx.packageName)
   if (path === '/') {
     const started = runCommand(ctx.run, ctx.adb, ctx.serial, [
       'shell',
@@ -424,7 +429,8 @@ function openDeepLink(ctx, path) {
       'android.intent.action.MAIN',
       '-c',
       'android.intent.category.LAUNCHER',
-      ctx.packageName,
+      '-n',
+      component,
     ])
     return failedCommand(started, `am start ${ctx.packageName}`)
   }
@@ -437,9 +443,15 @@ function openDeepLink(ctx, path) {
     'android.intent.action.VIEW',
     '-d',
     uri,
-    ctx.packageName,
+    '-n',
+    component,
   ])
   return failedCommand(started, `am start ${uri}`)
+}
+
+export function routeUrlFromLogcat(text) {
+  const matches = [...(text ?? '').matchAll(/loro-route:(\/[^\s]*)/g)]
+  return matches.at(-1)?.[1] ?? ''
 }
 
 function currentActivityUrl(ctx, dumpXml) {
@@ -451,13 +463,26 @@ function currentActivityUrl(ctx, dumpXml) {
     'activity',
     'activities',
   ])
-  if (failedCommand(dump, 'dumpsys activity')) return ''
-  const text = dump.stdout || ''
-  const match =
-    text.match(/dat=(loro(?:-dev)?:\/\/[^\s]+)/) ||
-    text.match(/(loro(?:-dev)?:\/\/[^\s]+)/) ||
-    text.match(/(\/practice\/(?:stream|refrain)[^\s]*)/)
-  return match?.[1] ?? ''
+  if (!failedCommand(dump, 'dumpsys activity')) {
+    const text = dump.stdout || ''
+    const match =
+      text.match(/dat=(loro(?:-dev)?:\/\/[^\s]+)/) ||
+      text.match(/(loro(?:-dev)?:\/\/[^\s]+)/) ||
+      text.match(/(\/practice\/(?:stream|refrain)[^\s]*)/)
+    if (match?.[1]) return match[1]
+  }
+  const logcat = runCommand(ctx.run, ctx.adb, ctx.serial, [
+    'logcat',
+    '-d',
+    '-v',
+    'brief',
+    '-t',
+    '80',
+    '-s',
+    'ReactNativeJS:V',
+  ])
+  if (failedCommand(logcat, 'logcat route')) return ''
+  return routeUrlFromLogcat(logcat.stdout)
 }
 
 function scenarioResult(scenario, evaluation, extra = {}) {
