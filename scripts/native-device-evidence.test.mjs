@@ -116,9 +116,13 @@ test('lists plan 101 wave-path rows without treating a screenshot as a pass', ()
       'practice-back-swipe-disabled',
       'spine-pull-opens-switcher',
       'sheet-pull-dismisses-switcher',
+      'sheet-back-dismisses-switcher',
+      'sheet-backdrop-dismisses-switcher',
       'stream-to-phrase-refrain-at',
       'menu-hard-refrain-at',
       'practice-back-swipe-disabled-at',
+      'sheet-back-dismisses-switcher-at',
+      'sheet-backdrop-dismisses-switcher-at',
     ],
   )
   const rows = unevaluatedWaveScenarios('no device')

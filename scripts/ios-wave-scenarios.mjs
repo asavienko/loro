@@ -14,6 +14,7 @@ import {
   evaluateHardRefrainDump,
   evaluateOnboardedHome,
   evaluatePracticeBackSwipe,
+  evaluateSheetBackdropDismiss,
   evaluateSheetDismiss,
   evaluateSpinePull,
   evaluateStreamPhraseDump,
@@ -27,8 +28,9 @@ import {
   routeUrlFromDump,
   routeUrlFromLogcat,
   tapBounds,
+  tapDismissBounds,
 } from './native-wave-scenarios.mjs'
-import { unevaluatedWaveScenarios, WAVE_TOUCH_SCENARIOS } from './wave-touch-scenarios.mjs'
+import { unevaluatedWaveScenarios, waveScenario } from './wave-touch-scenarios.mjs'
 
 const STREAM_PRACTICE = 'Practice this phrase'
 const REFRAIN_TITLE = 'The Refrain'
@@ -55,6 +57,8 @@ const ONBOARD_STEPS = [
 ]
 const AT_REASON =
   'TalkBack `-at` rows are Android-only. VoiceOver physical-device remains plan 58/93.'
+const ANDROID_BACK_REASON =
+  'Android Back / Modal onRequestClose is not an iOS control. Backdrop and pull-down remain the iOS dismiss rows.'
 
 export function voiceOverAtReason({ enabled = false } = {}) {
   if (enabled) {
@@ -205,6 +209,12 @@ function tapLabel(ctx, dump, label) {
   return tapPoint(ctx, point.x, point.y, label)
 }
 
+function tapDismissBackdrop(ctx, dump) {
+  const point = tapDismissBounds(dump)
+  if (!point) return 'Missing tap target: Dismiss'
+  return tapPoint(ctx, point.x, point.y, 'Dismiss')
+}
+
 function tapWaveStart(ctx, dump) {
   const node = findWaveStart(dump)
   if (!node?.bounds) return 'Missing tap target: Start the * wave'
@@ -337,7 +347,7 @@ export function ensureIosLearnerHome(ctx) {
 }
 
 function runStreamPhrase(ctx) {
-  const scenario = WAVE_TOUCH_SCENARIOS[0]
+  const scenario = waveScenario('stream-to-phrase-refrain')
   const opened = openDeepLink(ctx, '/')
   if (opened) return scenarioResult(scenario, { status: 'unavailable', notes: opened })
   waitForUi(ctx.run, ctx.waitMs)
@@ -413,7 +423,7 @@ function runHardEntry(ctx, { startPath, openMenu, prefix }) {
 }
 
 function runMenuHard(ctx) {
-  const scenario = WAVE_TOUCH_SCENARIOS[1]
+  const scenario = waveScenario('menu-hard-refrain')
   const switcher = runHardEntry(ctx, { startPath: '/', openMenu: true, prefix: 'switcher' })
   if (switcher.status !== 'passed') return scenarioResult(scenario, switcher, switcher)
   const more = runHardEntry(ctx, { startPath: '/more', openMenu: false, prefix: 'more' })
@@ -429,7 +439,7 @@ function runMenuHard(ctx) {
 }
 
 function runBackSwipe(ctx) {
-  const scenario = WAVE_TOUCH_SCENARIOS[2]
+  const scenario = waveScenario('practice-back-swipe-disabled')
   const opened = openDeepLink(ctx, '/practice/stream')
   if (opened) return scenarioResult(scenario, { status: 'unavailable', notes: opened })
   waitForUi(ctx.run, ctx.waitMs)
@@ -448,7 +458,7 @@ function runBackSwipe(ctx) {
 }
 
 function runSpinePull(ctx) {
-  const scenario = WAVE_TOUCH_SCENARIOS[3]
+  const scenario = waveScenario('spine-pull-opens-switcher')
   const opened = openDeepLink(ctx, '/')
   if (opened) return scenarioResult(scenario, { status: 'unavailable', notes: opened })
   waitForUi(ctx.run, ctx.waitMs)
@@ -493,32 +503,40 @@ function runSpinePull(ctx) {
   )
 }
 
-function runSheetDismiss(ctx) {
-  const scenario = WAVE_TOUCH_SCENARIOS[4]
+function openSwitcher(ctx, prefix) {
   const opened = openDeepLink(ctx, '/')
-  if (opened) return scenarioResult(scenario, { status: 'unavailable', notes: opened })
+  if (opened) return { status: 'unavailable', notes: opened }
   waitForUi(ctx.run, ctx.waitMs)
-  let entry = dumpUi(ctx, 'sheet-start')
-  if (entry.error) return scenarioResult(scenario, { status: 'unavailable', notes: entry.error })
+  let entry = dumpUi(ctx, `${prefix}-start`)
+  if (entry.error) return { status: 'unavailable', notes: entry.error }
   if (!dumpHasSwitcher(entry.dump)) {
     const handle = findResourceId(entry.dump, SPINE_HANDLE)
     const pulled = handle
       ? swipeNode(ctx, handle, { dy: PULL_COMMIT_DY, ms: PULL_COMMIT_MS })
       : tapLabel(ctx, entry.dump, MENU_OPEN)
-    if (pulled) return scenarioResult(scenario, { status: 'failed', notes: pulled })
+    if (pulled) return { status: 'failed', notes: pulled }
     waitForUi(ctx.run, ctx.waitMs)
-    entry = dumpUi(ctx, 'sheet-menu')
-    if (entry.error) return scenarioResult(scenario, { status: 'unavailable', notes: entry.error })
+    entry = dumpUi(ctx, `${prefix}-menu`)
+    if (entry.error) return { status: 'unavailable', notes: entry.error }
     if (!dumpHasSwitcher(entry.dump)) {
       const openedMenu = tapLabel(ctx, entry.dump, MENU_OPEN)
-      if (openedMenu) return scenarioResult(scenario, { status: 'failed', notes: openedMenu })
+      if (openedMenu) return { status: 'failed', notes: openedMenu }
       waitForUi(ctx.run, ctx.waitMs)
-      entry = dumpUi(ctx, 'sheet-menu')
-      if (entry.error)
-        return scenarioResult(scenario, { status: 'unavailable', notes: entry.error })
+      entry = dumpUi(ctx, `${prefix}-menu`)
+      if (entry.error) return { status: 'unavailable', notes: entry.error }
     }
   }
-  const sheet = findResourceId(entry.dump, SHEET_HANDLE)
+  if (!dumpHasSwitcher(entry.dump)) {
+    return { status: 'failed', notes: 'Menu control did not open the switcher.' }
+  }
+  return { dump: entry.dump }
+}
+
+function runSheetDismiss(ctx) {
+  const scenario = waveScenario('sheet-pull-dismisses-switcher')
+  const opened = openSwitcher(ctx, 'sheet')
+  if (opened.status) return scenarioResult(scenario, opened)
+  const sheet = findResourceId(opened.dump, SHEET_HANDLE)
   if (!sheet) {
     return scenarioResult(scenario, {
       status: 'unavailable',
@@ -546,10 +564,32 @@ function runSheetDismiss(ctx) {
   return scenarioResult(
     scenario,
     evaluateSheetDismiss({
-      menuDump: entry.dump,
+      menuDump: opened.dump,
       afterDump: after.dump,
       inertDump,
     }),
+  )
+}
+
+function runSheetBackDismiss() {
+  return scenarioResult(waveScenario('sheet-back-dismisses-switcher'), {
+    status: 'unavailable',
+    notes: ANDROID_BACK_REASON,
+  })
+}
+
+function runSheetBackdropDismiss(ctx) {
+  const scenario = waveScenario('sheet-backdrop-dismisses-switcher')
+  const opened = openSwitcher(ctx, 'backdrop')
+  if (opened.status) return scenarioResult(scenario, opened)
+  const tapped = tapDismissBackdrop(ctx, opened.dump)
+  if (tapped) return scenarioResult(scenario, { status: 'failed', notes: tapped })
+  waitForUi(ctx.run, ctx.waitMs)
+  const after = dumpUi(ctx, 'backdrop-after')
+  if (after.error) return scenarioResult(scenario, { status: 'unavailable', notes: after.error })
+  return scenarioResult(
+    scenario,
+    evaluateSheetBackdropDismiss({ menuDump: opened.dump, afterDump: after.dump }),
   )
 }
 
@@ -587,6 +627,8 @@ export function executeIosWaveScenarios({
     runBackSwipe(ctx),
     runSpinePull(ctx),
     runSheetDismiss(ctx),
+    runSheetBackDismiss(),
+    runSheetBackdropDismiss(ctx),
     ...voiceOverAtRows({ enabled: voiceOverEnabled }),
   ]
 }

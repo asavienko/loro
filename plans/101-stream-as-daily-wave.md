@@ -51,15 +51,18 @@ More, filtered to active `difficulty === 'hard'` phrases only.
   `?phrase=01a09640-97b3-7000-9669-f12bcf0fc9d1`, switcher and More both `?filter=hard`, practice
   edge-swipe stayed on the session, spine pull opened the switcher, sheet pull dismissed it on
   Today, and the TalkBack `-at` variants of the three pointer rows passed the same chrome/URL gates.
-  That is not physical-device or iOS proof. iOS `--execute-scenarios` is a simctl + idb runner with
-  the same chrome/URL/gesture gates; it may boot a Shutdown simulator and install a verified
-  `loro-simulator-*.zip` from `pnpm ios:local` or the one-shot `pnpm ios:evidence`. TalkBack `-at`
-  rows stay unavailable on iOS even if VoiceOver looks enabled; ordinary idb taps are not AT proof.
-  This Linux host has no Xcode/idb, so those rows stay unevaluated until a Mac simulator or iPhone
-  run drives them. Phrase-focus Refrain is not the menu destination; the switcher replaces into
-  `?filter=hard` and only a matching hard checkpoint owns that empty screen. A screenshot collector
-  must not mark those rows passed. `matrix.json` classifies that emulator bundle as
-  `closest-available-not-physical`; its passed rows have `closesPhysicalGate: false`.
+  That is not physical-device or iOS proof. The catalog now also requires Android Back and labelled
+  Dismiss backdrop dismiss of the switcher (plan 93 / NAV-06), including TalkBack variants; v6 did
+  not drive those rows. iOS `--execute-scenarios` is a simctl + idb runner with the same
+  chrome/URL/gesture gates; it may boot a Shutdown simulator and install a verified
+  `loro-simulator-*.zip` from `pnpm ios:local` or the one-shot `pnpm ios:evidence`. Android Back
+  stays unavailable on iOS. TalkBack `-at` rows stay unavailable on iOS even if VoiceOver looks
+  enabled; ordinary idb taps are not AT proof. This Linux host has no Xcode/idb, so those rows stay
+  unevaluated until a Mac simulator or iPhone run drives them. Phrase-focus Refrain is not the menu
+  destination; the switcher replaces into `?filter=hard` and only a matching hard checkpoint owns
+  that empty screen. A screenshot collector must not mark those rows passed. `matrix.json`
+  classifies that emulator bundle as `closest-available-not-physical`; its passed rows have
+  `closesPhysicalGate: false`.
 - `deep_link_for` now opens Stream for the daily reminder and the midday wave nudge. The plan 70
   scheduler that delivers those links is still unbuilt. A bare `/practice` path also resolves to
   Stream.

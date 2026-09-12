@@ -170,23 +170,24 @@ bytes, but does not prove those bytes are installed. Retain and correlate the ap
 separately. A screenshot does not establish that the app is foregrounded or a scenario passed.
 
 Plan 101/93 wave-path rows (`stream-to-phrase-refrain`, `menu-hard-refrain`,
-`practice-back-swipe-disabled`, `spine-pull-opens-switcher`, `sheet-pull-dismisses-switcher`, and
-the TalkBack `-at` variants) are listed on the manifest as `unavailable` until a device run drives
-those entries and records the exact URLs or gesture proof.
-`pnpm native:evidence --matrix PATH/TO/manifest.json` classifies an existing bundle: emulator and
-simulator passed rows have `closesPhysicalGate: false`. Physical-candidate devices can set that flag
-only for passed rows. `pnpm native:evidence --list-scenarios` prints the catalog without collecting.
-On a connected Android device,
-`pnpm native:evidence --execute-scenarios --artifact-revision … --artifact …` dumps the hierarchy,
-completes first-run onboarding when Today is missing, then taps Today’s wave control → Stream →
-phrase Refrain, switcher and More hard-filter, edge-swipes the practice stack, pulls the spine
-handle to open the switcher, pulls the sheet handle to dismiss it, and repeats the three pointer
-rows with TalkBack double-activate when TalkBack is installed. Missing adb, missing device, missing
-TalkBack, or a dump without matching chrome/URL/gesture evidence stays `unavailable` or `failed` — a
-screenshot collector must not mark those rows passed. Browser mouse/touch coverage for the
-navigation and pull entries is in the learner E2E suite; it is not native proof. iOS
-`--execute-scenarios` may boot a Shutdown simulator and install a verified `loro-simulator-*.zip`,
-then drive the pointer and spine/sheet rows through `simctl openurl` plus `idb` taps/swipes. It
+`practice-back-swipe-disabled`, `spine-pull-opens-switcher`, `sheet-pull-dismisses-switcher`,
+`sheet-back-dismisses-switcher`, `sheet-backdrop-dismisses-switcher`, and the TalkBack `-at`
+variants) are listed on the manifest as `unavailable` until a device run drives those entries and
+records the exact URLs or gesture proof. `pnpm native:evidence --matrix PATH/TO/manifest.json`
+classifies an existing bundle: emulator and simulator passed rows have `closesPhysicalGate: false`.
+Physical-candidate devices can set that flag only for passed rows.
+`pnpm native:evidence --list-scenarios` prints the catalog without collecting. On a connected
+Android device, `pnpm native:evidence --execute-scenarios --artifact-revision … --artifact …` dumps
+the hierarchy, completes first-run onboarding when Today is missing, then taps Today’s wave control
+→ Stream → phrase Refrain, switcher and More hard-filter, edge-swipes the practice stack, pulls the
+spine handle to open the switcher, then dismisses the switcher by sheet pull, Android Back, and the
+labelled Dismiss backdrop, and repeats the pointer and dismiss rows with TalkBack when TalkBack is
+installed. Missing adb, missing device, missing TalkBack, or a dump without matching
+chrome/URL/gesture evidence stays `unavailable` or `failed` — a screenshot collector must not mark
+those rows passed. Browser mouse/touch coverage for the navigation and pull entries is in the
+learner E2E suite; it is not native proof. iOS `--execute-scenarios` may boot a Shutdown simulator
+and install a verified `loro-simulator-*.zip`, then drive the pointer, spine/sheet, and backdrop
+rows through `simctl openurl` plus `idb` taps/swipes. Android Back stays unavailable on iOS. It
 fail-closes without chrome plus the exact URL or gesture proof. TalkBack `-at` rows stay
 `unavailable` on iOS even if VoiceOver looks enabled; ordinary idb taps are not AT proof. VoiceOver
 physical-device remains plan 58/93. Missing Xcode or idb does not abort collection. Clean iOS
