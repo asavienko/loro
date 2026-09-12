@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet } from 'react-native'
 import { copy } from '../src/lib/copy'
 import { useLocale } from '../src/lib/i18n'
 import { destinationsForGroup, NAVIGATION_GROUPS } from '../src/lib/navigation'
+import { destinationTarget } from '../src/lib/practiceFocus'
 import { ListRow, Screen, SectionLabel, Stack, Text } from '../src/ui/primitives'
 import { ink, space } from '../src/ui/theme'
 
@@ -33,11 +34,12 @@ function DestinationRow({
 }: {
   destination: ReturnType<typeof destinationsForGroup>[number]
 }) {
+  useLocale()
   return (
     <ListRow
       accessibilityLabel={destination.label}
       onPress={() => {
-        router.push(destination.href)
+        router.push(destinationTarget(destination.href))
       }}
       gap={space['2.5']}
     >

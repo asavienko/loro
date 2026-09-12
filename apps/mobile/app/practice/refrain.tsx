@@ -20,7 +20,7 @@ import { useLocale } from '../../src/lib/i18n'
 
 import { useEffect, useState } from 'react'
 import { Platform, ScrollView, StyleSheet, View } from 'react-native'
-import { router, useNavigation } from 'expo-router'
+import { router, useLocalSearchParams, useNavigation } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useBottomBar } from '../../src/ui/BottomBarContext'
 import {
@@ -64,6 +64,11 @@ import {
   type ProductionWave,
 } from '../../src/store'
 import { useRefrainSession, type WarmingStyle } from './_useRefrainSession'
+import {
+  parseRefrainFocus,
+  refrainFocusIds,
+  refrainSkipsWaveLock,
+} from '../../src/lib/practiceFocus'
 import { copy } from '../../src/lib/copy'
 import { audioPlaybackNote, audioSpeech, useAudioSpeech } from '../../src/lib/audioSpeech'
 import { deviceClock } from '../../src/lib/clock'
@@ -79,6 +84,16 @@ export default function Refrain() {
   const scheduledWave = waveSchedule(PRODUCTION_WAVES, PRODUCTION_WAVE_TIMES, now).find(
     (item) => item.position === 'next',
   )?.key
+  const params = useLocalSearchParams<{
+    phrase?: string | string[]
+    filter?: string | string[]
+    wave?: string | string[]
+  }>()
+  const phrases = useApp((state) => state.phrases)
+  const refrainSet = useApp((state) => state.refrainSet)
+  const focus = parseRefrainFocus(params)
+  const focusIds = refrainFocusIds(focus, phrases, refrainSet)
+  const skipLock = refrainSkipsWaveLock(focus)
   const completedWaves = useApp((state) => state.refrainWaves)
   const refrainResume = useApp((state) => state.refrainResume)
   const endRefrainSession = useApp((state) => state.endRefrainSession)
@@ -98,7 +113,16 @@ export default function Refrain() {
       : entry.kind === 'ready'
         ? entry.wave.key
         : (scheduledWave ?? PRODUCTION_WAVES[0])
-  const session = useRefrainSession(selectedWave, entry.kind === 'ready' || entry.kind === 'resume')
+  const canPlan = focus.kind === 'wave' || focusIds.length > 0
+  const session = useRefrainSession(
+    selectedWave,
+    canPlan && (skipLock || entry.kind === 'ready' || entry.kind === 'resume'),
+    {
+      setIds: focus.kind === 'wave' ? undefined : focusIds,
+      completeWave: focus.kind === 'wave',
+      replaceSession: focus.kind !== 'wave',
+    },
+  )
   const { set, phrase, mode, auto, dayReps, locked, phraseNumber, wave } = session
   const targetLocale = useApp((state) => state.targetLocale)
   const audio = useAudioSpeech(targetLocale, phrase?.catalog?.audio)
@@ -107,7 +131,7 @@ export default function Refrain() {
   const leaveLabel = copy.nav.exit.leave
   const hasActiveSession =
     set.length > 0 &&
-    (entry.kind === 'ready' || entry.kind === 'resume') &&
+    (skipLock || entry.kind === 'ready' || entry.kind === 'resume') &&
     !session.finished &&
     phrase !== undefined
   useEffect(() => {
@@ -157,6 +181,38 @@ export default function Refrain() {
         ),
     })
   }, [hasActiveSession, leaveLabel, navigation])
+  if (focus.kind === 'hard' && focusIds.length === 0) {
+    return (
+      <Screen>
+        <EmptyState
+          title={copy.refrain.empty.hard.title}
+          body={copy.refrain.empty.hard.body}
+          action={{
+            label: copy.nav.stream,
+            onPress: () => {
+              router.replace('/practice/stream')
+            },
+          }}
+        />
+      </Screen>
+    )
+  }
+  if (focus.kind === 'phrase' && focusIds.length === 0) {
+    return (
+      <Screen>
+        <EmptyState
+          title={copy.refrain.empty.phrase.title}
+          body={copy.refrain.empty.phrase.body}
+          action={{
+            label: copy.nav.stream,
+            onPress: () => {
+              router.replace('/practice/stream')
+            },
+          }}
+        />
+      </Screen>
+    )
+  }
   if (set.length === 0) {
     return (
       <Screen>
@@ -187,7 +243,7 @@ export default function Refrain() {
       </Screen>
     )
   }
-  if (entry.kind === 'locked') {
+  if (!skipLock && entry.kind === 'locked') {
     return (
       <Screen>
         <EmptyState
@@ -203,7 +259,7 @@ export default function Refrain() {
       </Screen>
     )
   }
-  if (entry.kind === 'complete') {
+  if (!skipLock && entry.kind === 'complete') {
     return (
       <Screen>
         <EmptyState

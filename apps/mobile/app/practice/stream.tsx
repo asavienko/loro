@@ -7,15 +7,16 @@ import { useLocale } from '../../src/lib/i18n'
  *
  * The phrase card exposes manual navigation until native audio playback is available.
  */
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { ScrollView, StyleSheet, View } from 'react-native'
 import { router } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { streamStats, isActive, type Difficulty } from '@loro/core'
+import { streamStats, type Difficulty } from '@loro/core'
 import { copy, themeLabel } from '../../src/lib/copy'
 import { PracticeEmptyState } from './_emptyPractice'
 import { DifficultySelector, PhraseRow } from '../../src/ui/components'
 import {
+  Button,
   Chip,
   DarkCard,
   Equalizer,
@@ -44,8 +45,7 @@ import { toView, useApp, type PhraseView } from '../../src/store'
 import { audioPlaybackNote, audioSpeech, useAudioSpeech } from '../../src/lib/audioSpeech'
 import { rustCoreFacade } from '../../src/store/coreFacade'
 import { deviceClock } from '../../src/lib/clock'
-/** How many phrases "Up next" shows. */
-const UP_NEXT_ROWS = 7
+import { streamWaveQueue } from '../../src/lib/practiceFocus'
 /** The two gaps in this screen that no `space` step names. */
 const RERATE_GAP = 7
 const PILL_GAP = 5
@@ -54,23 +54,22 @@ export default function Stream() {
   const insets = useSafeAreaInsets()
   const nativeLanguage = useApp((s) => s.nativeLanguage)
   const phrases = useApp((s) => s.phrases)
+  const refrainSet = useApp((s) => s.refrainSet)
+  const ensureRefrainSet = useApp((s) => s.ensureRefrainSet)
   const setDifficulty = useApp((s) => s.setDifficulty)
   const toggleLoved = useApp((s) => s.toggleLoved)
   const markLearned = useApp((s) => s.markLearned)
   const cursor = useApp((state) => state.streamCursor)
   const setCursor = useApp((state) => state.setStreamCursor)
+  useEffect(() => {
+    ensureRefrainSet()
+  }, [ensureRefrainSet, phrases.length])
   const queue = useMemo(() => {
     const now = deviceClock.now()
-    return phrases
-      .filter(isActive)
-      .slice()
-      .sort(
-        (a, b) =>
-          rustCoreFacade.streamRank(a, now) - rustCoreFacade.streamRank(b, now) ||
-          a.id.localeCompare(b.id),
-      )
-      .map(toView)
-  }, [phrases, nativeLanguage])
+    return streamWaveQueue(phrases, refrainSet, (phrase) =>
+      rustCoreFacade.streamRank(phrase, now),
+    ).map(toView)
+  }, [phrases, refrainSet, nativeLanguage])
   const stats = streamStats(phrases)
   const position = cursor % Math.max(1, queue.length)
   const current = queue[position]
@@ -116,10 +115,15 @@ export default function Stream() {
           }}
         />
 
-        <UpNextList
-          upcoming={queue.slice(position + 1, position + 1 + UP_NEXT_ROWS)}
-          stats={stats}
+        <Button
+          label={copy.stream.practiceRefrain}
+          accessibilityHint={copy.a11y.stream.practiceThis}
+          onPress={() => {
+            router.push({ pathname: '/practice/refrain', params: { phrase: current.id } })
+          }}
         />
+
+        <UpNextList upcoming={queue.slice(position + 1)} stats={stats} />
       </ScrollView>
     </Screen>
   )
@@ -309,7 +313,7 @@ function UpNextList({
     <>
       <Row justify="space-between">
         <Text variant="caption" color={ink.ink}>
-          {copy.stream.upNext}
+          {copy.stream.thisWave}
         </Text>
         <Row gap={PILL_GAP}>
           <Pill size="sm" tone="accent" label={copy.stream.pills.loved(stats.loved)} />
