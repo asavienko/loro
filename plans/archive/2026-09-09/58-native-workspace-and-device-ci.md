@@ -65,8 +65,8 @@ modules, generated native projects, UniFFI bindings, device SQLite, permissions,
        uiautomator after first-run onboarding when Today is missing. Linux emulator `emulator-5554`
        (AVD `loro-wave`, API 36) passed all twelve catalog rows on preview APK `b0b4e3b77746` with
        chrome plus the exact URL or gesture proof
-       (`.local-builds/native-evidence/wave-101-emulator-v8/`, `physicalGateCount=0`). The NAV-04
-       row now also probes a mid-screen swipe after the edge swipe; iOS practice routes set
+       (`.local-builds/native-evidence/wave-101-emulator-v9/`, `physicalGateCount=0`). The NAV-04
+       row probes a mid-screen swipe after the edge swipe; iOS practice routes set
        `fullScreenGestureEnabled: false`. That is not physical-device, interruption, speech, or iOS
        proof. Missing device or matching evidence stays `unavailable` or `failed`. iOS
        `--execute-scenarios` drives pointer, spine/sheet, and backdrop rows through simctl + idb
