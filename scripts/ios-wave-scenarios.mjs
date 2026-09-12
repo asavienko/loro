@@ -56,6 +56,19 @@ const ONBOARD_STEPS = [
 const AT_REASON =
   'TalkBack `-at` rows are Android-only. VoiceOver physical-device remains plan 58/93.'
 
+export function voiceOverAtReason({ enabled = false } = {}) {
+  if (enabled) {
+    return 'VoiceOver appears enabled, but this runner has no VoiceOver driver. Ordinary idb taps are not AT proof. VoiceOver physical-device remains plan 58/93.'
+  }
+  return AT_REASON
+}
+
+export function voiceOverAtRows(options) {
+  return unevaluatedWaveScenarios(voiceOverAtReason(options)).filter((row) =>
+    row.id.endsWith('-at'),
+  )
+}
+
 export function parseIosFrame(frame) {
   if (!frame) return null
   if (typeof frame === 'string') {
@@ -86,9 +99,7 @@ function asNodeList(value) {
 }
 
 function nodeText(node) {
-  return String(
-    node.AXLabel ?? node.label ?? node.name ?? node.text ?? node.title ?? '',
-  )
+  return String(node.AXLabel ?? node.label ?? node.name ?? node.text ?? node.title ?? '')
 }
 
 function nodeValue(node) {
@@ -106,9 +117,7 @@ function flattenIosNode(node, acc) {
   const text = nodeText(node)
   const contentDesc = nodeValue(node)
   const resourceId = nodeIdentifier(node)
-  const route = [text, contentDesc, resourceId].find((label) =>
-    label.startsWith('loro-route:'),
-  )
+  const route = [text, contentDesc, resourceId].find((label) => label.startsWith('loro-route:'))
   acc.push({
     text: route ?? text,
     contentDesc,
@@ -200,12 +209,7 @@ function tapWaveStart(ctx, dump) {
   const node = findWaveStart(dump)
   if (!node?.bounds) return 'Missing tap target: Start the * wave'
   const { left, top, right, bottom } = node.bounds
-  return tapPoint(
-    ctx,
-    Math.floor((left + right) / 2),
-    Math.floor((top + bottom) / 2),
-    'wave start',
-  )
+  return tapPoint(ctx, Math.floor((left + right) / 2), Math.floor((top + bottom) / 2), 'wave start')
 }
 
 function openDeepLink(ctx, path) {
@@ -510,7 +514,8 @@ function runSheetDismiss(ctx) {
       if (openedMenu) return scenarioResult(scenario, { status: 'failed', notes: openedMenu })
       waitForUi(ctx.run, ctx.waitMs)
       entry = dumpUi(ctx, 'sheet-menu')
-      if (entry.error) return scenarioResult(scenario, { status: 'unavailable', notes: entry.error })
+      if (entry.error)
+        return scenarioResult(scenario, { status: 'unavailable', notes: entry.error })
     }
   }
   const sheet = findResourceId(entry.dump, SHEET_HANDLE)
@@ -559,6 +564,7 @@ export function executeIosWaveScenarios({
   scheme = 'loro',
   outputDir,
   waitMs = 1500,
+  voiceOverEnabled = false,
   run = spawnSync,
 } = {}) {
   const probe = probeIosAutomation({ run })
@@ -581,6 +587,6 @@ export function executeIosWaveScenarios({
     runBackSwipe(ctx),
     runSpinePull(ctx),
     runSheetDismiss(ctx),
-    ...unevaluatedWaveScenarios(AT_REASON).filter((row) => row.id.endsWith('-at')),
+    ...voiceOverAtRows({ enabled: voiceOverEnabled }),
   ]
 }

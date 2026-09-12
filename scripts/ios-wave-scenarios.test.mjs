@@ -5,6 +5,7 @@ import {
   parseIosFrame,
   parseIosUiDump,
   probeIosAutomation,
+  voiceOverAtRows,
 } from './ios-wave-scenarios.mjs'
 import { routeUrlFromDump } from './native-wave-scenarios.mjs'
 import { WAVE_TOUCH_SCENARIOS } from './wave-touch-scenarios.mjs'
@@ -242,6 +243,26 @@ test('scripted simulator dumps pass only with matching chrome and route URL', ()
   assert.equal(rows[0].currentUrl, '/practice/refrain?phrase=es-001')
   assert.equal(rows[1].currentUrl, '/practice/refrain?filter=hard')
   assert.ok(rows.slice(5).every((row) => row.reason.includes('VoiceOver')))
+})
+
+test('VoiceOver looking enabled never marks AT rows passed via ordinary idb taps', () => {
+  const enabled = voiceOverAtRows({ enabled: true })
+  assert.equal(enabled.length, 3)
+  assert.ok(enabled.every((row) => row.status === 'unavailable'))
+  assert.ok(enabled.every((row) => row.id.endsWith('-at')))
+  assert.ok(enabled.every((row) => row.reason.includes('no VoiceOver driver')))
+  assert.ok(enabled.every((row) => !row.reason.includes('TalkBack `-at` rows are Android-only')))
+
+  const rows = executeIosWaveScenarios({
+    udid: 'A123',
+    run: scriptedIosDevice(),
+    waitMs: 0,
+    voiceOverEnabled: true,
+  })
+  assert.ok(rows.slice(0, 5).every((row) => row.status === 'passed'))
+  assert.ok(rows.slice(5).every((row) => row.status === 'unavailable'))
+  assert.ok(rows.slice(5).every((row) => row.reason.includes('no VoiceOver driver')))
+  assert.ok(rows.every((row) => row.status !== 'passed' || !row.id.endsWith('-at')))
 })
 
 test('menu-hard-refrain fails when More does not open the difficult-only drill', () => {
