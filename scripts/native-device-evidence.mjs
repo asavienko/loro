@@ -4,6 +4,7 @@ import { mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { resolve, relative, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { collectIosEvidence } from './ios-simulator-evidence.mjs'
+import { unevaluatedWaveScenarios, WAVE_TOUCH_SCENARIOS } from './wave-touch-scenarios.mjs'
 
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)))
 export const defaultPackage = 'app.loro.android.preview'
@@ -35,7 +36,8 @@ export function parseArguments(args) {
       if (arg === '--output') result.output = value
       if (arg === '--artifact-revision') result.artifactRevision = value
       if (arg === '--artifact') result.artifact = value
-    } else if (arg === '--help') result.help = true
+    } else     if (arg === '--help') result.help = true
+    else if (arg === '--list-scenarios') result.listScenarios = true
     else throw new Error(`Unknown option: ${arg}`)
   }
   if (!['android', 'ios'].includes(result.platform))
@@ -150,9 +152,13 @@ export function collectEvidence({
       logs: 'captured',
       screenshot: 'captured',
     },
+    scenarios: unevaluatedWaveScenarios(
+      'Collector records the current screen only; it does not launch or drive Stream → Refrain or menu hard-filter.',
+    ),
     limits: [
       'This collector records evidence only; it does not verify the installed bytes or claim speech, lifecycle, interruption, or iOS acceptance.',
       'Review the artifacts on a supported physical device before closing the native acceptance gates.',
+      'Plan 101 wave-path rows stay unavailable until a device run drives those entries and records their exact URLs.',
     ],
   }
   writeFileSync(resolve(output, 'device.txt'), shell('getprop'))
@@ -181,6 +187,11 @@ function main() {
     console.log(
       'Captures read-only Android device or booted iOS simulator evidence under .local-builds/native-evidence/.',
     )
+    console.log('List plan 101/93 wave-path rows without collecting: --list-scenarios')
+    return
+  }
+  if (options.listScenarios) {
+    console.log(JSON.stringify(WAVE_TOUCH_SCENARIOS, null, 2))
     return
   }
   if (!options.artifactRevision)

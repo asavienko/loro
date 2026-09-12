@@ -1,6 +1,7 @@
 import { spawnSync } from 'node:child_process'
 import { mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { unevaluatedWaveScenarios } from './wave-touch-scenarios.mjs'
 
 export function selectSimulator(inventory, serial) {
   const devices = Object.entries(inventory.devices ?? {}).flatMap(([runtime, entries]) =>
@@ -64,10 +65,14 @@ export function collectIosEvidence({
     artifactRevision: artifactRevision ?? null,
     artifact: artifact ?? null,
     checks: { device: 'captured', installedPackage: 'present', screenshot: 'captured' },
+    scenarios: unevaluatedWaveScenarios(
+      'Simulator screenshot is not a Stream → Refrain or menu hard-filter run.',
+    ),
     limits: [
       'The declared artifact revision identifies the intended build; retain independent build metadata before accepting it.',
       'The screenshot captures the current simulator screen; app launch and scenario outcomes are not asserted.',
       'This read-only collection does not prove clean iOS compilation, minimum OS support, physical-device speech, permissions, persistence, lifecycle or interruption acceptance.',
+      'Plan 101 wave-path rows stay unavailable until a device run drives those entries and records their exact URLs.',
     ],
   }
   writeFileSync(resolve(output, 'xcode.txt'), xcode)
