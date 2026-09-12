@@ -7,6 +7,8 @@ import {
   evaluatePracticeGestureDisabledDump,
   evaluateStreamPhraseDump,
   evaluateOnboardedHome,
+  evaluateSheetBackDismiss,
+  evaluateSheetBackdropDismiss,
   evaluateSheetDismiss,
   evaluateSpinePull,
   evaluateTodayStreamDump,
@@ -23,6 +25,7 @@ import {
   routeUrlFromDump,
   routeUrlFromLogcat,
   tapBounds,
+  tapDismissBounds,
 } from './native-wave-scenarios.mjs'
 
 const STREAM_DUMP = `<?xml version="1.0"?>
@@ -44,6 +47,7 @@ const PHRASE_REFRAIN_DUMP = `<?xml version="1.0"?>
 const MENU_DUMP = `<?xml version="1.0"?>
 <hierarchy>
   <node class="android.widget.FrameLayout">
+    <node class="android.widget.Button" content-desc="Dismiss" clickable="true" bounds="[0,0][360,70]"/>
     <node resource-id="sheet-pull-handle" bounds="[24,80][360,140]"/>
     <node class="android.widget.TextView" text="Where to?" bounds="[24,160][360,200]"/>
     <node class="android.widget.Button" content-desc="The Refrain" clickable="true" bounds="[24,300][360,356]"/>
@@ -206,9 +210,13 @@ test('lists the 101/93 pointer, shell, and TalkBack rows', () => {
     'practice-back-swipe-disabled',
     'spine-pull-opens-switcher',
     'sheet-pull-dismisses-switcher',
+    'sheet-back-dismisses-switcher',
+    'sheet-backdrop-dismisses-switcher',
     'stream-to-phrase-refrain-at',
     'menu-hard-refrain-at',
     'practice-back-swipe-disabled-at',
+    'sheet-back-dismisses-switcher-at',
+    'sheet-backdrop-dismisses-switcher-at',
   ])
 })
 
@@ -375,6 +383,11 @@ test('spine pull opens the switcher only on a committed vertical drag', () => {
   assert.equal(findResourceId(HOME_DUMP, 'navigation-pull-handle')?.resourceId, 'navigation-pull-handle')
 })
 
+test('taps the Dismiss backdrop in the upper scrim, not the sheet centre', () => {
+  assert.deepEqual(tapDismissBounds(MENU_DUMP), { x: 180, y: 17 })
+  assert.equal(tapDismissBounds(HOME_DUMP), null)
+})
+
 test('sheet pull dismisses the switcher only on a committed vertical drag', () => {
   assert.equal(
     evaluateSheetDismiss({ menuDump: MENU_DUMP, afterDump: HOME_DUMP, inertDump: MENU_DUMP })
@@ -403,6 +416,40 @@ test('sheet pull dismisses the switcher only on a committed vertical drag', () =
   assert.equal(dumpHasSwitcher(HOME_DUMP), false)
 })
 
+test('Android Back and backdrop dismiss close the switcher on Today', () => {
+  assert.equal(
+    evaluateSheetBackDismiss({ menuDump: MENU_DUMP, afterDump: HOME_DUMP }).status,
+    'passed',
+  )
+  assert.equal(
+    evaluateSheetBackDismiss({ menuDump: MENU_DUMP, afterDump: MENU_DUMP }).status,
+    'failed',
+  )
+  assert.equal(
+    evaluateSheetBackDismiss({ menuDump: HOME_DUMP, afterDump: HOME_DUMP }).status,
+    'unavailable',
+  )
+  assert.equal(
+    evaluateSheetBackdropDismiss({ menuDump: MENU_DUMP, afterDump: HOME_DUMP }).status,
+    'passed',
+  )
+  assert.equal(
+    evaluateSheetBackdropDismiss({ menuDump: MENU_DUMP, afterDump: TODAY_RESUME_DUMP }).status,
+    'passed',
+  )
+  const noDismiss = `<?xml version="1.0"?>
+<hierarchy>
+  <node class="android.widget.FrameLayout">
+    <node resource-id="sheet-pull-handle" bounds="[24,80][360,140]"/>
+    <node class="android.widget.TextView" text="Where to?" bounds="[24,160][360,200]"/>
+  </node>
+</hierarchy>`
+  assert.equal(
+    evaluateSheetBackdropDismiss({ menuDump: noDismiss, afterDump: HOME_DUMP }).status,
+    'unavailable',
+  )
+})
+
 test('edge-swipe evaluation stays on the session or fails closed', () => {
   assert.equal(
     evaluatePracticeBackSwipe({ beforeDump: PRACTICE_DUMP, afterDump: PRACTICE_DUMP }).status,
@@ -425,7 +472,23 @@ function expectedPointerAndShell(status = 'passed') {
     ['practice-back-swipe-disabled', status],
     ['spine-pull-opens-switcher', status],
     ['sheet-pull-dismisses-switcher', status],
+    ['sheet-back-dismisses-switcher', status],
+    ['sheet-backdrop-dismisses-switcher', status],
   ]
+}
+
+function expectedTalkbackRows(status = 'passed') {
+  return [
+    ['stream-to-phrase-refrain-at', status],
+    ['menu-hard-refrain-at', status],
+    ['practice-back-swipe-disabled-at', status],
+    ['sheet-back-dismisses-switcher-at', status],
+    ['sheet-backdrop-dismisses-switcher-at', status],
+  ]
+}
+
+function atRows(rows) {
+  return rows.filter((row) => row.id.endsWith('-at'))
 }
 
 function scriptedDevice({
@@ -450,7 +513,8 @@ function scriptedDevice({
   const applyTap = (tapY) => {
     if (stage === 'today') stage = tapY < 200 ? 'menu' : 'stream'
     else if (stage === 'stream') stage = 'phrase'
-    else if (stage === 'menu' || stage === 'more') stage = 'hard'
+    else if (stage === 'menu') stage = tapY < 80 ? 'today' : 'hard'
+    else if (stage === 'more') stage = 'hard'
   }
   return (_tool, args) => {
     const joined = args.join(' ')
@@ -481,6 +545,10 @@ function scriptedDevice({
         return { status: 0, stdout: '' }
       }
       applyTap(tapY)
+      return { status: 0, stdout: '' }
+    }
+    if (joined.includes('KEYCODE_BACK')) {
+      if (stage === 'menu') stage = 'today'
       return { status: 0, stdout: '' }
     }
     if (joined.includes('keyevent')) {
@@ -579,27 +647,29 @@ test('scripted device dumps pass only with matching chrome and activity URL', ()
     rows.map((row) => [row.id, row.status]),
     [
       ...expectedPointerAndShell('passed'),
-      ['stream-to-phrase-refrain-at', 'unavailable'],
-      ['menu-hard-refrain-at', 'unavailable'],
-      ['practice-back-swipe-disabled-at', 'unavailable'],
+      ...expectedTalkbackRows('unavailable'),
     ],
   )
-  assert.ok(rows.slice(5).every((row) => row.reason.includes('TalkBack is not installed')))
+  assert.ok(atRows(rows).every((row) => row.reason.includes('TalkBack is not installed')))
 })
 
 test('in-app Expo pushes pass from loro-route dump when dumpsys has no dat=', () => {
   const rows = executeWaveScenarios({ run: scriptedDevice({ expoRoutes: true }), waitMs: 0 })
   assert.deepEqual(
-    rows.slice(0, 5).map((row) => [row.id, row.status, row.currentUrl]),
+    rows
+      .filter((row) => !row.id.endsWith('-at'))
+      .map((row) => [row.id, row.status, row.currentUrl]),
     [
       ['stream-to-phrase-refrain', 'passed', '/practice/refrain?phrase=es-001'],
       ['menu-hard-refrain', 'passed', '/practice/refrain?filter=hard'],
       ['practice-back-swipe-disabled', 'passed', undefined],
       ['spine-pull-opens-switcher', 'passed', undefined],
       ['sheet-pull-dismisses-switcher', 'passed', undefined],
+      ['sheet-back-dismisses-switcher', 'passed', undefined],
+      ['sheet-backdrop-dismisses-switcher', 'passed', undefined],
     ],
   )
-  assert.ok(rows.slice(5).every((row) => row.status === 'unavailable'))
+  assert.ok(atRows(rows).every((row) => row.status === 'unavailable'))
 })
 
 test('menu-hard-refrain fails when More does not open the difficult-only drill', () => {
@@ -609,6 +679,8 @@ test('menu-hard-refrain fails when More does not open the difficult-only drill',
   assert.match(rows[1].notes, /The Refrain/)
   assert.equal(rows[3].status, 'passed')
   assert.equal(rows[4].status, 'passed')
+  assert.equal(rows[5].status, 'passed')
+  assert.equal(rows[6].status, 'passed')
 })
 
 test('TalkBack rows reuse the same chrome and URL gates after a focused activate', () => {
@@ -617,9 +689,7 @@ test('TalkBack rows reuse the same chrome and URL gates after a focused activate
     rows.map((row) => [row.id, row.status]),
     [
       ...expectedPointerAndShell('passed'),
-      ['stream-to-phrase-refrain-at', 'passed'],
-      ['menu-hard-refrain-at', 'passed'],
-      ['practice-back-swipe-disabled-at', 'passed'],
+      ...expectedTalkbackRows('passed'),
     ],
   )
 })
@@ -658,10 +728,10 @@ test('completes first-run onboarding before driving the wave rows', () => {
   const rows = executeWaveScenarios({ run, waitMs: 0 })
   assert.equal(onboardIndex, last)
   assert.deepEqual(
-    rows.slice(0, 5).map((row) => [row.id, row.status]),
+    rows.filter((row) => !row.id.endsWith('-at')).map((row) => [row.id, row.status]),
     expectedPointerAndShell('passed'),
   )
-  assert.ok(rows.slice(5).every((row) => row.status === 'unavailable'))
+  assert.ok(atRows(rows).every((row) => row.status === 'unavailable'))
 })
 
 test('wave rows stay unavailable when first-run onboarding cannot finish', () => {

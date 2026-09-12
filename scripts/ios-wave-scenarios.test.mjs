@@ -60,6 +60,11 @@ const MENU = JSON.stringify([
     identifier: 'sheet-pull-handle',
     frame: { x: 24, y: 80, width: 336, height: 60 },
     children: [
+      {
+        label: 'Dismiss',
+        type: 'Button',
+        frame: { x: 0, y: 0, width: 360, height: 70 },
+      },
       { label: 'Where to?', frame: { x: 24, y: 160, width: 200, height: 40 } },
       {
         label: 'The Refrain',
@@ -101,14 +106,30 @@ const WELCOME = JSON.stringify([
   },
 ])
 
-function expectedPointerAndShell(status = 'passed') {
+function expectedPointerAndShell() {
   return [
-    ['stream-to-phrase-refrain', status],
-    ['menu-hard-refrain', status],
-    ['practice-back-swipe-disabled', status],
-    ['spine-pull-opens-switcher', status],
-    ['sheet-pull-dismisses-switcher', status],
+    ['stream-to-phrase-refrain', 'passed'],
+    ['menu-hard-refrain', 'passed'],
+    ['practice-back-swipe-disabled', 'passed'],
+    ['spine-pull-opens-switcher', 'passed'],
+    ['sheet-pull-dismisses-switcher', 'passed'],
+    ['sheet-back-dismisses-switcher', 'unavailable'],
+    ['sheet-backdrop-dismisses-switcher', 'passed'],
   ]
+}
+
+function expectedTalkbackRows(status = 'unavailable') {
+  return [
+    ['stream-to-phrase-refrain-at', status],
+    ['menu-hard-refrain-at', status],
+    ['practice-back-swipe-disabled-at', status],
+    ['sheet-back-dismisses-switcher-at', status],
+    ['sheet-backdrop-dismisses-switcher-at', status],
+  ]
+}
+
+function atRows(rows) {
+  return rows.filter((row) => row.id.endsWith('-at'))
 }
 
 function scriptedIosDevice({ moreOpensHard = true } = {}) {
@@ -124,7 +145,8 @@ function scriptedIosDevice({ moreOpensHard = true } = {}) {
   const applyTap = (tapY) => {
     if (stage === 'today') stage = tapY < 200 ? 'menu' : 'stream'
     else if (stage === 'stream') stage = 'phrase'
-    else if (stage === 'menu' || stage === 'more') stage = 'hard'
+    else if (stage === 'menu') stage = tapY < 80 ? 'today' : 'hard'
+    else if (stage === 'more') stage = 'hard'
   }
   return (tool, args) => {
     if (tool === 'idb') {
@@ -234,20 +256,22 @@ test('scripted simulator dumps pass only with matching chrome and route URL', ()
   assert.deepEqual(
     rows.map((row) => [row.id, row.status]),
     [
-      ...expectedPointerAndShell('passed'),
-      ['stream-to-phrase-refrain-at', 'unavailable'],
-      ['menu-hard-refrain-at', 'unavailable'],
-      ['practice-back-swipe-disabled-at', 'unavailable'],
+      ...expectedPointerAndShell(),
+      ...expectedTalkbackRows('unavailable'),
     ],
   )
   assert.equal(rows[0].currentUrl, '/practice/refrain?phrase=es-001')
   assert.equal(rows[1].currentUrl, '/practice/refrain?filter=hard')
-  assert.ok(rows.slice(5).every((row) => row.reason.includes('VoiceOver')))
+  assert.match(
+    rows.find((row) => row.id === 'sheet-back-dismisses-switcher').reason,
+    /not an iOS control/,
+  )
+  assert.ok(atRows(rows).every((row) => row.reason.includes('VoiceOver')))
 })
 
 test('VoiceOver looking enabled never marks AT rows passed via ordinary idb taps', () => {
   const enabled = voiceOverAtRows({ enabled: true })
-  assert.equal(enabled.length, 3)
+  assert.equal(enabled.length, 5)
   assert.ok(enabled.every((row) => row.status === 'unavailable'))
   assert.ok(enabled.every((row) => row.id.endsWith('-at')))
   assert.ok(enabled.every((row) => row.reason.includes('no VoiceOver driver')))
@@ -259,9 +283,11 @@ test('VoiceOver looking enabled never marks AT rows passed via ordinary idb taps
     waitMs: 0,
     voiceOverEnabled: true,
   })
-  assert.ok(rows.slice(0, 5).every((row) => row.status === 'passed'))
-  assert.ok(rows.slice(5).every((row) => row.status === 'unavailable'))
-  assert.ok(rows.slice(5).every((row) => row.reason.includes('no VoiceOver driver')))
+  assert.deepEqual(
+    rows.map((row) => [row.id, row.status]),
+    [...expectedPointerAndShell(), ...expectedTalkbackRows('unavailable')],
+  )
+  assert.ok(atRows(rows).every((row) => row.reason.includes('no VoiceOver driver')))
   assert.ok(rows.every((row) => row.status !== 'passed' || !row.id.endsWith('-at')))
 })
 

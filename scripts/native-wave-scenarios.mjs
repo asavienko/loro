@@ -8,7 +8,11 @@ import { spawnSync } from 'node:child_process'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { resolveAdb } from './apk-environment.mjs'
-import { unevaluatedWaveScenarios, WAVE_TOUCH_SCENARIOS } from './wave-touch-scenarios.mjs'
+import {
+  unevaluatedWaveScenarios,
+  WAVE_TOUCH_SCENARIOS,
+  waveScenario,
+} from './wave-touch-scenarios.mjs'
 
 export const WAVE_SCENARIO_IDS = WAVE_TOUCH_SCENARIOS.map((row) => row.id)
 
@@ -21,6 +25,7 @@ const REFRAIN_TITLE = 'The Refrain'
 const STREAM_TITLE = 'The Stream'
 const MENU_OPEN = 'open the menu'
 const SWITCHER_TITLE = 'Where to?'
+const DISMISS = 'Dismiss'
 const SPINE_HANDLE = 'navigation-pull-handle'
 const SHEET_HANDLE = 'sheet-pull-handle'
 const PULL_COMMIT_DY = 200
@@ -189,6 +194,18 @@ export function tapBounds(dump, label) {
   if (!node?.bounds) return null
   const { left, top, right, bottom } = node.bounds
   return { x: Math.floor((left + right) / 2), y: Math.floor((top + bottom) / 2) }
+}
+
+/** Tap the labelled scrim above the sheet, not the panel centre. */
+export function tapDismissBounds(dump) {
+  const node = findClickableLabel(dump, DISMISS) ?? findLabel(dump, DISMISS)
+  if (!node?.bounds) return null
+  const { left, top, right, bottom } = node.bounds
+  const height = Math.max(0, bottom - top)
+  return {
+    x: Math.floor((left + right) / 2),
+    y: Math.floor(top + Math.min(40, Math.max(8, height * 0.25))),
+  }
 }
 
 const ROUTE_EVIDENCE_PREFIX = 'loro-route:'
@@ -381,6 +398,31 @@ export function evaluateSpinePull({ beforeDump, afterDump, inertDump }) {
   }
 }
 
+export function evaluateSwitcherClosed({ menuDump, afterDump, passedNotes }) {
+  if (!dumpHasSwitcher(menuDump)) {
+    return {
+      status: 'unavailable',
+      notes: 'Switcher was not open before dismiss.',
+    }
+  }
+  if (dumpHasSwitcher(afterDump)) {
+    return {
+      status: 'failed',
+      notes: 'Dismiss left the switcher open.',
+    }
+  }
+  if (!isTodayHomeDump(afterDump)) {
+    return {
+      status: 'failed',
+      notes: 'Dismiss left Today.',
+    }
+  }
+  return {
+    status: 'passed',
+    notes: passedNotes,
+  }
+}
+
 export function evaluateSheetDismiss({ menuDump, afterDump, inertDump }) {
   if (!findResourceId(menuDump, SHEET_HANDLE) || !dumpHasSwitcher(menuDump)) {
     return {
@@ -394,22 +436,33 @@ export function evaluateSheetDismiss({ menuDump, afterDump, inertDump }) {
       notes: 'A short or horizontal sheet drag dismissed the switcher.',
     }
   }
-  if (dumpHasSwitcher(afterDump)) {
+  return evaluateSwitcherClosed({
+    menuDump,
+    afterDump,
+    passedNotes: 'Sheet pull-down dismissed the switcher on Today.',
+  })
+}
+
+export function evaluateSheetBackDismiss({ menuDump, afterDump }) {
+  return evaluateSwitcherClosed({
+    menuDump,
+    afterDump,
+    passedNotes: 'Android Back dismissed the switcher on Today.',
+  })
+}
+
+export function evaluateSheetBackdropDismiss({ menuDump, afterDump }) {
+  if (!findClickableLabel(menuDump, DISMISS)) {
     return {
-      status: 'failed',
-      notes: 'Sheet pull-down did not dismiss the switcher.',
+      status: 'unavailable',
+      notes: 'Switcher dump does not expose a tappable Dismiss backdrop.',
     }
   }
-  if (!isTodayHomeDump(afterDump)) {
-    return {
-      status: 'failed',
-      notes: 'Sheet dismiss left Today.',
-    }
-  }
-  return {
-    status: 'passed',
-    notes: 'Sheet pull-down dismissed the switcher on Today.',
-  }
+  return evaluateSwitcherClosed({
+    menuDump,
+    afterDump,
+    passedNotes: 'Backdrop Dismiss closed the switcher on Today.',
+  })
 }
 
 export function evaluatePracticeBackSwipe({ beforeDump, afterDump }) {
@@ -526,6 +579,22 @@ function tapLabel(ctx, dump, label) {
   const point = tapBounds(dump, label)
   if (!point) return `Missing tap target: ${label}`
   return activatePoint(ctx, point.x, point.y, label)
+}
+
+function tapDismissBackdrop(ctx, dump) {
+  const point = tapDismissBounds(dump)
+  if (!point) return `Missing tap target: ${DISMISS}`
+  return activatePoint(ctx, point.x, point.y, DISMISS)
+}
+
+function pressAndroidBack(ctx) {
+  const back = runCommand(ctx.run, ctx.adb, ctx.serial, [
+    'shell',
+    'input',
+    'keyevent',
+    'KEYCODE_BACK',
+  ])
+  return failedCommand(back, 'input keyevent KEYCODE_BACK')
 }
 
 function tapWaveStart(ctx, dump) {
@@ -701,7 +770,7 @@ function scenarioResult(scenario, evaluation, extra = {}) {
 }
 
 function runStreamPhrase(ctx) {
-  const scenario = WAVE_TOUCH_SCENARIOS[0]
+  const scenario = waveScenario('stream-to-phrase-refrain')
   const opened = openDeepLink(ctx, '/')
   if (opened) return scenarioResult(scenario, { status: 'unavailable', notes: opened })
   waitForUi(ctx.run, ctx.waitMs)
@@ -777,7 +846,7 @@ function runHardEntry(ctx, { startPath, openMenu, prefix }) {
 }
 
 function runMenuHard(ctx) {
-  const scenario = WAVE_TOUCH_SCENARIOS[1]
+  const scenario = waveScenario('menu-hard-refrain')
   const switcher = runHardEntry(ctx, { startPath: '/', openMenu: true, prefix: 'switcher' })
   if (switcher.status !== 'passed') return scenarioResult(scenario, switcher, switcher)
   const more = runHardEntry(ctx, { startPath: '/more', openMenu: false, prefix: 'more' })
@@ -793,7 +862,7 @@ function runMenuHard(ctx) {
 }
 
 function runBackSwipe(ctx) {
-  const scenario = WAVE_TOUCH_SCENARIOS[2]
+  const scenario = waveScenario('practice-back-swipe-disabled')
   const opened = openDeepLink(ctx, '/practice/stream')
   if (opened) return scenarioResult(scenario, { status: 'unavailable', notes: opened })
   waitForUi(ctx.run, ctx.waitMs)
@@ -854,7 +923,7 @@ export function ensureLearnerHome(ctx) {
 }
 
 function runSpinePull(ctx) {
-  const scenario = WAVE_TOUCH_SCENARIOS[3]
+  const scenario = waveScenario('spine-pull-opens-switcher')
   const opened = openDeepLink(ctx, '/')
   if (opened) return scenarioResult(scenario, { status: 'unavailable', notes: opened })
   waitForUi(ctx.run, ctx.waitMs)
@@ -900,31 +969,40 @@ function runSpinePull(ctx) {
   )
 }
 
-function runSheetDismiss(ctx) {
-  const scenario = WAVE_TOUCH_SCENARIOS[4]
+function openSwitcher(ctx, prefix) {
   const opened = openDeepLink(ctx, '/')
-  if (opened) return scenarioResult(scenario, { status: 'unavailable', notes: opened })
+  if (opened) return { status: 'unavailable', notes: opened }
   waitForUi(ctx.run, ctx.waitMs)
-  let entry = dumpUi(ctx, 'sheet-start')
-  if (entry.error) return scenarioResult(scenario, { status: 'unavailable', notes: entry.error })
+  let entry = dumpUi(ctx, `${prefix}-start`)
+  if (entry.error) return { status: 'unavailable', notes: entry.error }
   if (!dumpHasSwitcher(entry.xml)) {
     const handle = findResourceId(entry.xml, SPINE_HANDLE)
     const pulled = handle
       ? swipeNode(ctx, handle, { dy: PULL_COMMIT_DY, ms: PULL_COMMIT_MS })
       : tapLabel(ctx, entry.xml, MENU_OPEN)
-    if (pulled) return scenarioResult(scenario, { status: 'failed', notes: pulled })
+    if (pulled) return { status: 'failed', notes: pulled }
     waitForUi(ctx.run, ctx.waitMs)
-    entry = dumpUi(ctx, 'sheet-menu')
-    if (entry.error) return scenarioResult(scenario, { status: 'unavailable', notes: entry.error })
+    entry = dumpUi(ctx, `${prefix}-menu`)
+    if (entry.error) return { status: 'unavailable', notes: entry.error }
     if (!dumpHasSwitcher(entry.xml)) {
-      const opened = tapLabel(ctx, entry.xml, MENU_OPEN)
-      if (opened) return scenarioResult(scenario, { status: 'failed', notes: opened })
+      const openedMenu = tapLabel(ctx, entry.xml, MENU_OPEN)
+      if (openedMenu) return { status: 'failed', notes: openedMenu }
       waitForUi(ctx.run, ctx.waitMs)
-      entry = dumpUi(ctx, 'sheet-menu')
-      if (entry.error) return scenarioResult(scenario, { status: 'unavailable', notes: entry.error })
+      entry = dumpUi(ctx, `${prefix}-menu`)
+      if (entry.error) return { status: 'unavailable', notes: entry.error }
     }
   }
-  const sheet = findResourceId(entry.xml, SHEET_HANDLE)
+  if (!dumpHasSwitcher(entry.xml)) {
+    return { status: 'failed', notes: 'Menu control did not open the switcher.' }
+  }
+  return { xml: entry.xml }
+}
+
+function runSheetDismiss(ctx) {
+  const scenario = waveScenario('sheet-pull-dismisses-switcher')
+  const opened = openSwitcher(ctx, 'sheet')
+  if (opened.status) return scenarioResult(scenario, opened)
+  const sheet = findResourceId(opened.xml, SHEET_HANDLE)
   if (!sheet) {
     return scenarioResult(scenario, {
       status: 'unavailable',
@@ -943,9 +1021,7 @@ function runSheetDismiss(ctx) {
   const afterSide = dumpUi(ctx, 'sheet-horizontal')
   if (afterSide.error)
     return scenarioResult(scenario, { status: 'unavailable', notes: afterSide.error })
-  const inertDump = !dumpHasSwitcher(afterShort.xml)
-    ? afterShort.xml
-    : afterSide.xml
+  const inertDump = !dumpHasSwitcher(afterShort.xml) ? afterShort.xml : afterSide.xml
   const commit = swipeNode(ctx, sheet, { dy: PULL_COMMIT_DY, ms: PULL_COMMIT_MS })
   if (commit) return scenarioResult(scenario, { status: 'unavailable', notes: commit })
   waitForUi(ctx.run, ctx.waitMs)
@@ -954,10 +1030,40 @@ function runSheetDismiss(ctx) {
   return scenarioResult(
     scenario,
     evaluateSheetDismiss({
-      menuDump: entry.xml,
+      menuDump: opened.xml,
       afterDump: after.xml,
       inertDump,
     }),
+  )
+}
+
+function runSheetBackDismiss(ctx) {
+  const scenario = waveScenario('sheet-back-dismisses-switcher')
+  const opened = openSwitcher(ctx, 'back')
+  if (opened.status) return scenarioResult(scenario, opened)
+  const back = pressAndroidBack(ctx)
+  if (back) return scenarioResult(scenario, { status: 'unavailable', notes: back })
+  waitForUi(ctx.run, ctx.waitMs)
+  const after = dumpUi(ctx, 'back-after')
+  if (after.error) return scenarioResult(scenario, { status: 'unavailable', notes: after.error })
+  return scenarioResult(
+    scenario,
+    evaluateSheetBackDismiss({ menuDump: opened.xml, afterDump: after.xml }),
+  )
+}
+
+function runSheetBackdropDismiss(ctx) {
+  const scenario = waveScenario('sheet-backdrop-dismisses-switcher')
+  const opened = openSwitcher(ctx, 'backdrop')
+  if (opened.status) return scenarioResult(scenario, opened)
+  const tapped = tapDismissBackdrop(ctx, opened.xml)
+  if (tapped) return scenarioResult(scenario, { status: 'failed', notes: tapped })
+  waitForUi(ctx.run, ctx.waitMs)
+  const after = dumpUi(ctx, 'backdrop-after')
+  if (after.error) return scenarioResult(scenario, { status: 'unavailable', notes: after.error })
+  return scenarioResult(
+    scenario,
+    evaluateSheetBackdropDismiss({ menuDump: opened.xml, afterDump: after.xml }),
   )
 }
 
@@ -971,20 +1077,31 @@ function asScenario(scenario, result) {
   }
 }
 
+const TALKBACK_IDS = [
+  'stream-to-phrase-refrain-at',
+  'menu-hard-refrain-at',
+  'practice-back-swipe-disabled-at',
+  'sheet-back-dismisses-switcher-at',
+  'sheet-backdrop-dismisses-switcher-at',
+]
+
 function runTalkbackRows(ctx) {
-  const ids = [
-    'stream-to-phrase-refrain-at',
-    'menu-hard-refrain-at',
-    'practice-back-swipe-disabled-at',
-  ]
   const enabled = enableTalkback(ctx)
-  if (enabled) return unevaluatedWaveScenarios(enabled).filter((row) => ids.includes(row.id))
+  if (enabled) return unevaluatedWaveScenarios(enabled).filter((row) => TALKBACK_IDS.includes(row.id))
   const talkbackCtx = { ...ctx, talkback: true }
   try {
     return [
-      asScenario(WAVE_TOUCH_SCENARIOS[5], runStreamPhrase(talkbackCtx)),
-      asScenario(WAVE_TOUCH_SCENARIOS[6], runMenuHard(talkbackCtx)),
-      asScenario(WAVE_TOUCH_SCENARIOS[7], runBackSwipe(talkbackCtx)),
+      asScenario(waveScenario('stream-to-phrase-refrain-at'), runStreamPhrase(talkbackCtx)),
+      asScenario(waveScenario('menu-hard-refrain-at'), runMenuHard(talkbackCtx)),
+      asScenario(waveScenario('practice-back-swipe-disabled-at'), runBackSwipe(talkbackCtx)),
+      asScenario(
+        waveScenario('sheet-back-dismisses-switcher-at'),
+        runSheetBackDismiss(talkbackCtx),
+      ),
+      asScenario(
+        waveScenario('sheet-backdrop-dismisses-switcher-at'),
+        runSheetBackdropDismiss(talkbackCtx),
+      ),
     ]
   } finally {
     disableTalkback(ctx)
@@ -1020,6 +1137,8 @@ export function executeWaveScenarios({
     runBackSwipe(ctx),
     runSpinePull(ctx),
     runSheetDismiss(ctx),
+    runSheetBackDismiss(ctx),
+    runSheetBackdropDismiss(ctx),
     ...runTalkbackRows(ctx),
   ]
 }
