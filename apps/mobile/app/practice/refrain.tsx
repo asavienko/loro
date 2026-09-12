@@ -65,6 +65,7 @@ import {
   type ProductionWave,
 } from '../../src/store'
 import { useRefrainSession, type WarmingStyle } from './_useRefrainSession'
+import { useSessionExitGuard } from './_useSessionExit'
 import {
   parseRefrainFocus,
   refrainFocusIds,
@@ -131,6 +132,13 @@ export default function Refrain() {
   const navigation = useNavigation()
   const leaveLabel = copy.nav.exit.leave
   const hasActiveSession = set.length > 0 && !session.finished && phrase !== undefined
+  const { allowLeave } = useSessionExitGuard({
+    enabled: hasActiveSession,
+    exitVisible,
+    onBlockedLeave: () => {
+      setExitVisible(true)
+    },
+  })
   useEffect(() => {
     // The session-only exit is present only while the sheet it opens is mounted. Cold, empty
     // and terminal Refrain entries retain the shared Today/Back stack exit.
@@ -361,12 +369,14 @@ export default function Refrain() {
         onPause={() => {
           // The checkpoint was committed when its plan/last rep was committed. Only leave after
           // that transaction has acknowledged; this handler never publishes a speculative pause.
+          allowLeave()
           setExitVisible(false)
           router.replace('/')
         }}
         onEnd={() => {
           try {
             endRefrainSession()
+            allowLeave()
             setExitVisible(false)
             router.replace('/')
           } catch {
