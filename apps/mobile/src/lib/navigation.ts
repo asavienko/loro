@@ -112,6 +112,29 @@ function matches(surface: Surface, path: string): boolean {
   return new RegExp(expression).test(path)
 }
 
+/** Hidden Android evidence marker. Not learner-facing; uiautomator reads the exact app path. */
+export const ROUTE_EVIDENCE_PREFIX = 'loro-route:'
+const ROUTE_EVIDENCE_PARAMS = ['phrase', 'filter', 'wave'] as const
+
+export function routeEvidenceLabel(
+  pathname: string,
+  params: Record<string, string | string[] | undefined> = {},
+): string {
+  const query = new URLSearchParams()
+  for (const key of ROUTE_EVIDENCE_PARAMS) {
+    const value = params[key]
+    const text = Array.isArray(value) ? value[0] : value
+    if (text) query.set(key, text)
+  }
+  const search = query.toString()
+  return `${ROUTE_EVIDENCE_PREFIX}${pathname}${search ? `?${search}` : ''}`
+}
+
+export function pathFromRouteEvidence(label: string): string | undefined {
+  if (!label.startsWith(ROUTE_EVIDENCE_PREFIX)) return undefined
+  return label.slice(ROUTE_EVIDENCE_PREFIX.length)
+}
+
 export function builtSurfaceForPath(input: string): BuiltSurface | undefined {
   const path = appPath(input)
   if (path === undefined) return undefined

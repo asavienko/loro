@@ -1,11 +1,11 @@
 import 'react-native-reanimated'
-import { Stack, router, usePathname } from 'expo-router'
+import { Stack, router, useGlobalSearchParams, usePathname } from 'expo-router'
 import { useEffect, type ReactNode } from 'react'
 import { getLocales } from 'expo-localization'
 import { detectNativeLanguage } from '@loro/core'
 import { useApp } from '../src/store'
 import { useLocale } from '../src/lib/i18n'
-import { Platform, StyleSheet, View } from 'react-native'
+import { Platform, StyleSheet, Text as NativeText, View } from 'react-native'
 import { StatusBar } from 'expo-status-bar'
 import {
   SafeAreaProvider,
@@ -21,7 +21,12 @@ import { ThemeProvider } from '../src/ui/ThemeProvider'
 import { BottomBarProvider } from '../src/ui/BottomBarContext'
 import { Pressable, Text } from '../src/ui/primitives'
 import { NavigationMenu } from '../src/ui/components'
-import { DESTINATIONS, placeForPath, surfaceLawForPath } from '../src/lib/navigation'
+import {
+  DESTINATIONS,
+  placeForPath,
+  routeEvidenceLabel,
+  surfaceLawForPath,
+} from '../src/lib/navigation'
 import { destinationTarget, inferRefrainFocus, refrainResumeTarget } from '../src/lib/practiceFocus'
 import { startAccountSync } from '../src/services/accountSync'
 import { PersistenceGate } from '../src/store/PersistenceGate'
@@ -128,6 +133,7 @@ function ReadyLayout() {
                 }))}
               />
             )}
+            <RouteEvidence />
             <BelowSpine hasSpine={place !== undefined}>
               <Stack
                 screenOptions={({ navigation }) => ({
@@ -214,6 +220,23 @@ function ReadyLayout() {
   )
 }
 
+/** Hidden from AT; uiautomator still dumps the exact Expo path after in-app pushes. */
+function RouteEvidence() {
+  const pathname = usePathname()
+  const params = useGlobalSearchParams()
+  return (
+    <View
+      pointerEvents="none"
+      importantForAccessibility="no-hide-descendants"
+      accessibilityElementsHidden
+      collapsable={false}
+      style={styles.routeEvidence}
+    >
+      <NativeText collapsable={false}>{routeEvidenceLabel(pathname, params)}</NativeText>
+    </View>
+  )
+}
+
 /** The shared spine already consumes the top inset; route headers must not consume it twice. */
 function BelowSpine({ hasSpine, children }: { hasSpine: boolean; children: ReactNode }) {
   const insets = useSafeAreaInsets()
@@ -228,4 +251,11 @@ const styles = StyleSheet.create({
   canvas: { backgroundColor: surface.canvas },
   viewport: { flex: 1, width: '100%', alignSelf: 'center', backgroundColor: surface.app },
   learnerColumn: { maxWidth: webLayout.learnerMaxWidth },
+  routeEvidence: {
+    position: 'absolute',
+    width: 1,
+    height: 1,
+    overflow: 'hidden',
+    opacity: 0,
+  },
 })

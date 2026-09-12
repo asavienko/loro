@@ -13,6 +13,7 @@ import {
   isOnboardingDump,
   parseUiDump,
   probeAndroidDevice,
+  routeUrlFromDump,
   tapBounds,
 } from './native-wave-scenarios.mjs'
 
@@ -82,6 +83,33 @@ const MORE_DUMP = `<?xml version="1.0"?>
 <hierarchy>
   <node class="android.widget.FrameLayout">
     <node class="android.widget.Button" content-desc="The Refrain" clickable="true" bounds="[24,300][360,356]"/>
+  </node>
+</hierarchy>`
+
+const EXPO_STREAM_DUMP = `<?xml version="1.0"?>
+<hierarchy>
+  <node class="android.widget.FrameLayout">
+    <node class="android.widget.TextView" text="loro-route:/practice/stream" bounds="[0,0][1,1]"/>
+    <node class="android.widget.TextView" text="This wave" bounds="[24,200][360,248]"/>
+    <node class="android.widget.Button" content-desc="Practice this phrase" clickable="true" bounds="[24,400][360,456]"/>
+  </node>
+</hierarchy>`
+
+const EXPO_PHRASE_DUMP = `<?xml version="1.0"?>
+<hierarchy>
+  <node class="android.widget.FrameLayout">
+    <node class="android.widget.TextView" text="loro-route:/practice/refrain?phrase=es-001" bounds="[0,0][1,1]"/>
+    <node class="android.widget.TextView" text="This phrase" bounds="[24,80][360,128]"/>
+    <node class="android.widget.TextView" text="The Refrain" bounds="[24,140][360,188]"/>
+  </node>
+</hierarchy>`
+
+const EXPO_HARD_DUMP = `<?xml version="1.0"?>
+<hierarchy>
+  <node class="android.widget.FrameLayout">
+    <node class="android.widget.TextView" text="loro-route:/practice/refrain?filter=hard" bounds="[0,0][1,1]"/>
+    <node class="android.widget.TextView" text="Difficult phrases" bounds="[24,80][360,128]"/>
+    <node class="android.widget.TextView" text="The Refrain" bounds="[24,140][360,188]"/>
   </node>
 </hierarchy>`
 
@@ -301,6 +329,12 @@ test('missing adb or device never marks a wave row passed', () => {
   assert.match(probe.reason, /adb is not installed/)
 })
 
+test('reads the Expo path from a hidden loro-route dump node', () => {
+  assert.equal(routeUrlFromDump(EXPO_STREAM_DUMP), '/practice/stream')
+  assert.equal(routeUrlFromDump(EXPO_PHRASE_DUMP), '/practice/refrain?phrase=es-001')
+  assert.equal(routeUrlFromDump(STREAM_DUMP), '')
+})
+
 test('scripted device dumps pass only with matching chrome and activity URL', () => {
   let stage = 'idle'
   const run = (_tool, args) => {
@@ -366,6 +400,69 @@ test('scripted device dumps pass only with matching chrome and activity URL', ()
       ['stream-to-phrase-refrain', 'passed'],
       ['menu-hard-refrain', 'passed'],
       ['practice-back-swipe-disabled', 'passed'],
+    ],
+  )
+})
+
+test('in-app Expo pushes pass from loro-route dump when dumpsys has no dat=', () => {
+  let stage = 'idle'
+  const run = (_tool, args) => {
+    const joined = args.join(' ')
+    if (joined.includes('version')) return { status: 0, stdout: 'Android Debug Bridge' }
+    if (joined.includes('devices')) {
+      return { status: 0, stdout: 'List of devices attached\nemulator-5554\tdevice\n' }
+    }
+    if (joined.includes('am start') && joined.includes('practice/stream')) {
+      stage = 'stream'
+      return { status: 0, stdout: '' }
+    }
+    if (joined.includes('am start') && joined.includes('://more')) {
+      stage = 'more'
+      return { status: 0, stdout: '' }
+    }
+    if (joined.includes('am start') && joined.includes('MAIN')) {
+      stage = 'today'
+      return { status: 0, stdout: '' }
+    }
+    if (joined.includes('input tap')) {
+      const tapY = Number(args.at(-1))
+      if (stage === 'today') stage = tapY < 200 ? 'menu' : 'stream'
+      else if (stage === 'stream') stage = 'phrase'
+      else if (stage === 'menu' || stage === 'more') stage = 'hard'
+      return { status: 0, stdout: '' }
+    }
+    if (joined.includes('uiautomator dump')) return { status: 0, stdout: '' }
+    if (joined.includes('cat')) {
+      const xml =
+        stage === 'phrase'
+          ? EXPO_PHRASE_DUMP
+          : stage === 'today'
+            ? HOME_DUMP
+            : stage === 'menu'
+              ? MENU_DUMP
+              : stage === 'more'
+                ? MORE_DUMP
+                : stage === 'hard'
+                  ? EXPO_HARD_DUMP
+                  : EXPO_STREAM_DUMP
+      return { status: 0, stdout: xml }
+    }
+    if (joined.includes('dumpsys')) {
+      return { status: 0, stdout: 'ACTIVITY MANAGER ACTIVITIES (dumpsys activity activities)' }
+    }
+    if (joined.includes('input swipe')) {
+      stage = 'stream'
+      return { status: 0, stdout: '' }
+    }
+    assert.fail(`unexpected adb ${joined}`)
+  }
+  const rows = executeWaveScenarios({ run, waitMs: 0 })
+  assert.deepEqual(
+    rows.map((row) => [row.id, row.status, row.currentUrl]),
+    [
+      ['stream-to-phrase-refrain', 'passed', '/practice/refrain?phrase=es-001'],
+      ['menu-hard-refrain', 'passed', '/practice/refrain?filter=hard'],
+      ['practice-back-swipe-disabled', 'passed', undefined],
     ],
   )
 })

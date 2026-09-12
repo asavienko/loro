@@ -46,8 +46,9 @@ More, filtered to active `difficulty === 'hard'` phrases only.
   completes first-run onboarding when Today is missing, then starts from Today’s wave control,
   Stream → `?phrase=`, and both switcher and More for `?filter=hard`. Browser pointer coverage and
   the fail-closed catalog exist; a screenshot collector must not mark those rows passed. This host
-  can now resolve `adb` from a Linux `~/Android/Sdk`; those rows stay `unavailable` until a
-  supported Android run records chrome plus the exact URL.
+  can now resolve `adb` from a Linux `~/Android/Sdk` and reads a hidden `loro-route:` dump marker
+  after in-app Expo pushes (dumpsys often keeps the launcher intent). Those rows stay `unavailable`
+  until a supported Android run records chrome plus the exact URL.
 - `deep_link_for` now opens Stream for the daily reminder and the midday wave nudge. The plan 70
   scheduler that delivers those links is still unbuilt. A bare `/practice` path also resolves to
   Stream.

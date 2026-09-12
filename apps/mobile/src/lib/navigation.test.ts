@@ -5,11 +5,14 @@ import {
   DESTINATIONS,
   destinationsForGroup,
   NAVIGATION_GROUPS,
+  ROUTE_EVIDENCE_PREFIX,
   SURFACES,
   builtSurfaceForPath,
   conditionalHome,
+  pathFromRouteEvidence,
   placeForPath,
   resolveDeepLink,
+  routeEvidenceLabel,
 } from './navigation'
 
 describe('built navigation destinations', () => {
@@ -121,6 +124,24 @@ describe('surface registry and deep-link guard', () => {
       path: '/',
       reason: 'malformed',
     })
+  })
+})
+
+describe('native route evidence', () => {
+  it('names Stream and targeted Refrain paths without extra router params', () => {
+    expect(routeEvidenceLabel('/practice/stream', { screen: 'index' })).toBe(
+      `${ROUTE_EVIDENCE_PREFIX}/practice/stream`,
+    )
+    expect(routeEvidenceLabel('/practice/refrain', { phrase: 'es-001', wave: ['morning'] })).toBe(
+      `${ROUTE_EVIDENCE_PREFIX}/practice/refrain?phrase=es-001&wave=morning`,
+    )
+    expect(routeEvidenceLabel('/practice/refrain', { filter: 'hard' })).toBe(
+      `${ROUTE_EVIDENCE_PREFIX}/practice/refrain?filter=hard`,
+    )
+    expect(pathFromRouteEvidence(`${ROUTE_EVIDENCE_PREFIX}/practice/stream`)).toBe(
+      '/practice/stream',
+    )
+    expect(pathFromRouteEvidence('The Stream')).toBeUndefined()
   })
 })
 
