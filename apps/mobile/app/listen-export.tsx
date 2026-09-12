@@ -44,8 +44,18 @@ import { TtsRenderError } from '../src/lib/ttsRenderClient'
 import { DEV_LISTENING_FIXTURE_MODEL_ID, devListeningFixtureVoices } from '../src/lib/devListening'
 import { useApp } from '../src/store'
 import { toView } from '../src/store/view'
-import { Pressable, Screen, SectionLabel, Stack, Text, Button } from '../src/ui/primitives'
-import { MIN_TAP, border, ink, line, space } from '../src/ui/theme'
+import {
+  Button,
+  Card,
+  Equalizer,
+  Pressable,
+  Screen,
+  SectionLabel,
+  Stack,
+  Text,
+} from '../src/ui/primitives'
+import { MIN_TAP, accent, border, ink, line, radius, space, surface } from '../src/ui/theme'
+import { useTheme } from '../src/ui/ThemeProvider'
 
 const emptyProgress: ListenProgress = { done: 0, total: 0, failed: 0 }
 
@@ -170,7 +180,7 @@ export default function ListenExport() {
       repeats,
       credentials: async () => {
         const client = accountClient()
-        if (client === null || client.getSnapshot().status !== 'signed-in') return null
+        if (client?.getSnapshot().status !== 'signed-in') return null
         const token = await client.getAccessToken()
         const deviceId = client.getSnapshot().session?.deviceId
         if (!token || deviceId === undefined || deviceId.length === 0) return null
@@ -257,54 +267,92 @@ export default function ListenExport() {
       <ScrollView contentContainerStyle={styles.content}>
         <Stack gap={space['5']}>
           <Stack gap={space['2']}>
-            <Text variant="title2">{copy.listenExport.title}</Text>
-            <Text variant="body">{copy.listenExport.intro}</Text>
+            <Text variant="hero" color={ink.ink}>
+              {copy.nav.listenExport}
+            </Text>
+            <Text variant="title3" color={accent.accentInk}>
+              {copy.listenExport.title}
+            </Text>
+            <Text variant="prose" color={ink.ink2}>
+              {copy.listenExport.intro}
+            </Text>
           </Stack>
-          <View accessibilityLiveRegion="polite" accessibilityLabel={copy.a11y.listenExport.status}>
-            <Text variant="body">{status}</Text>
-            {view.phase === 'generating' ? (
-              <Text variant="caption" color={ink.muted}>
-                {copy.listenExport.progress(view.progress.done, view.progress.total)}
+          <Card padding={space['5']}>
+            <Stack gap={space['2']}>
+              <Text variant="title3" color={ink.ink}>
+                {copy.listenExport.phraseCount(view.phraseCount)}
               </Text>
-            ) : null}
-            {view.phase === 'partial' ? (
+              <View
+                accessibilityLiveRegion="polite"
+                accessibilityLabel={copy.a11y.listenExport.status}
+              >
+                <Text variant="body" color={ink.ink}>
+                  {status}
+                </Text>
+                {view.phase === 'generating' ? (
+                  <Text variant="caption" color={ink.muted}>
+                    {copy.listenExport.progress(view.progress.done, view.progress.total)}
+                  </Text>
+                ) : null}
+                {view.phase === 'partial' ? (
+                  <Text variant="caption" color={ink.muted}>
+                    {copy.listenExport.progress(view.progress.done, view.progress.total)}
+                  </Text>
+                ) : null}
+                {scenario !== null || fixtureMode ? (
+                  <Text variant="caption" color={ink.muted}>
+                    {copy.listenExport.fixtureNote}
+                  </Text>
+                ) : null}
+              </View>
               <Text variant="caption" color={ink.muted}>
-                {copy.listenExport.progress(view.progress.done, view.progress.total)}
+                {view.durationMs === null
+                  ? copy.listenExport.durationUnknown
+                  : copy.listenExport.durationMeasured(view.durationMs)}
               </Text>
-            ) : null}
-            {scenario !== null || fixtureMode ? (
-              <Text variant="caption" color={ink.muted}>
-                {copy.listenExport.fixtureNote}
-              </Text>
-            ) : null}
-          </View>
-          <Stack gap={space['1']}>
-            <SectionLabel>{copy.listenExport.repeats}</SectionLabel>
-            <Text>{copy.listenExport.phraseCount(view.phraseCount)}</Text>
-            <RepeatStepper
-              value={view.repeats}
-              onChange={setRepeats}
-              disabled={view.phase === 'generating'}
-            />
-          </Stack>
-          <Stack gap={space['1']}>
-            <SectionLabel>{copy.listenExport.voices}</SectionLabel>
-            {view.voices.length === 0 ? (
-              <Text>{copy.listenExport.voicesEmpty}</Text>
-            ) : (
-              view.voices.map((voice) => <Text key={voice.id}>{voice.name}</Text>)
-            )}
-            {view.sequence.length > 0 ? (
-              <Text variant="caption" color={ink.muted}>
-                {copy.listenExport.sequence(view.sequence.join(', '))}
-              </Text>
-            ) : null}
-          </Stack>
-          <Text variant="caption" color={ink.muted}>
-            {view.durationMs === null
-              ? copy.listenExport.durationUnknown
-              : copy.listenExport.durationMeasured(view.durationMs)}
-          </Text>
+              <ListenTransport
+                playing={view.phase === 'playing'}
+                listenEnabled={view.listenEnabled}
+                onListen={listenFromCache}
+                onStop={() => {
+                  abort.current?.abort()
+                  void audioSpeech.stopPlayback()
+                  setPhase('ready')
+                }}
+              />
+            </Stack>
+          </Card>
+          <Card padding={space['5']}>
+            <Stack gap={space['3']}>
+              <SectionLabel>{copy.listenExport.repeats}</SectionLabel>
+              <RepeatStepper
+                value={view.repeats}
+                onChange={setRepeats}
+                disabled={view.phase === 'generating'}
+              />
+            </Stack>
+          </Card>
+          <Card padding={space['5']}>
+            <Stack gap={space['2']}>
+              <SectionLabel>{copy.listenExport.voices}</SectionLabel>
+              {view.voices.length === 0 ? (
+                <Text variant="body" color={ink.ink}>
+                  {copy.listenExport.voicesEmpty}
+                </Text>
+              ) : (
+                view.voices.map((voice) => (
+                  <Text key={voice.id} variant="body" color={ink.ink}>
+                    {voice.name}
+                  </Text>
+                ))
+              )}
+              {view.sequence.length > 0 ? (
+                <Text variant="caption" color={ink.muted}>
+                  {copy.listenExport.sequence(view.sequence.join(', '))}
+                </Text>
+              ) : null}
+            </Stack>
+          </Card>
           {needsConsent && scenario === null ? (
             <Pressable
               feedback="row"
@@ -329,6 +377,7 @@ export default function ListenExport() {
           ) : (
             <Button
               label={copy.listenExport.generate}
+              size="cta"
               onPress={generate}
               disabled={!generateEnabled}
             />
@@ -342,24 +391,10 @@ export default function ListenExport() {
             />
           )}
           <Button
-            label={view.phase === 'playing' ? copy.listenExport.stop : copy.listenExport.listen}
-            onPress={
-              view.phase === 'playing'
-                ? () => {
-                    abort.current?.abort()
-                    void audioSpeech.stopPlayback()
-                    setPhase('ready')
-                  }
-                : listenFromCache
-            }
-            disabled={!view.listenEnabled && view.phase !== 'playing'}
-            variant="secondary"
-          />
-          <Button
             label={copy.listenExport.share}
             onPress={share}
             disabled={!view.shareEnabled}
-            variant="secondary"
+            variant="ghost"
           />
         </Stack>
       </ScrollView>
@@ -393,6 +428,32 @@ function statusCopy(
   return copy.listenExport.status[listenStatusKind(view)]
 }
 
+function ListenTransport({
+  playing,
+  listenEnabled,
+  onListen,
+  onStop,
+}: {
+  playing: boolean
+  listenEnabled: boolean
+  onListen: () => void
+  onStop: () => void
+}) {
+  useLocale()
+  const { accent } = useTheme()
+  return (
+    <View style={styles.transport}>
+      {playing ? <Equalizer active color={accent.accent} /> : null}
+      <Button
+        label={playing ? copy.listenExport.stop : copy.listenExport.listen}
+        onPress={playing ? onStop : onListen}
+        disabled={!listenEnabled && !playing}
+        size="cta"
+      />
+    </View>
+  )
+}
+
 function RepeatStepper({
   value,
   onChange,
@@ -404,7 +465,10 @@ function RepeatStepper({
 }) {
   const choices = listeningRepeatChoices()
   return (
-    <View accessibilityLabel={copy.a11y.listenExport.repeats} style={styles.stepper}>
+    <View
+      accessibilityLabel={copy.a11y.listenExport.repeats}
+      style={[styles.stepper, styles.stepperWell]}
+    >
       <Pressable
         accessibilityLabel={copy.listenExport.decreaseRepeats}
         disabled={disabled || value <= LISTENING_REPEATS_MIN}
@@ -414,7 +478,7 @@ function RepeatStepper({
         }}
         style={styles.step}
       >
-        <Text>{copy.common.chevron.left}</Text>
+        <Text variant="caption">{copy.common.chevron.left}</Text>
       </Pressable>
       <Text variant="body">{copy.listenExport.repeatValue(value)}</Text>
       <Pressable
@@ -426,7 +490,7 @@ function RepeatStepper({
         }}
         style={styles.step}
       >
-        <Text>{copy.common.chevron.right}</Text>
+        <Text variant="caption">{copy.common.chevron.right}</Text>
       </Pressable>
     </View>
   )
@@ -451,6 +515,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: space['3'],
+  },
+  transport: {
+    marginTop: space['2'],
+    backgroundColor: surface.sunken,
+    borderRadius: radius.xl,
+    padding: space['3.5'],
+    gap: space['3'],
+    alignItems: 'center',
+  },
+  stepperWell: {
+    backgroundColor: surface.track,
+    borderRadius: radius.pill,
+    paddingHorizontal: space['3'],
+    paddingVertical: 4,
   },
   step: {
     minWidth: MIN_TAP,

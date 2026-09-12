@@ -172,9 +172,6 @@ export const accountCopy = {
   get backToOptions() {
     return message('account.backToOptions')
   },
-  get keepPractising() {
-    return message('account.keepPractising')
-  },
   get backToPractice() {
     return message('account.backToPractice')
   },

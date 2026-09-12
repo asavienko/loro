@@ -31,7 +31,6 @@ import {
 } from '@loro/core'
 import {
   Card,
-  CardHeader,
   ChartSummary,
   DarkCard,
   Dot,
@@ -39,14 +38,13 @@ import {
   ProgressBar,
   Row,
   Screen,
-  SectionLabel,
   Stack,
   Text,
 } from '../src/ui/primitives'
 import { StatRow } from '../src/ui/components'
+import { stationeryElevation } from '../src/ui/elevation'
 import {
   accent,
-  border,
   ink,
   line,
   masteryMeta,
@@ -72,7 +70,12 @@ export default function Progress() {
       <ScrollView
         contentContainerStyle={[screenStyles.scroll, { paddingBottom: insets.bottom + space['5'] }]}
       >
-        <StreakCard streak={summary.streak} week={summary.week} weekSummary={summary.weekSummary} />
+        <StreakCard
+          streak={summary.streak}
+          week={summary.week}
+          weekSummary={summary.weekSummary}
+          totalReps={summary.totalReps}
+        />
 
         <StatRow
           stats={[
@@ -160,20 +163,27 @@ function StreakCard({
   streak,
   week,
   weekSummary,
+  totalReps,
 }: {
   streak: number
   week: Summary['week']
   weekSummary: string
+  totalReps: number
 }) {
   useLocale()
   return (
-    <DarkCard>
-      <Row justify="space-between" align="flex-end">
-        <View style={{ flex: 1 }}>
+    <DarkCard style={streakStyles.card}>
+      <Row justify="space-between" align="flex-start" wrap>
+        <View style={{ flex: 1, minWidth: 140 }}>
           <Text variant="labelSm" color={onDark.muted}>
             {copy.progress.streak.label}
           </Text>
           <Row gap={space['2']} align="baseline" wrap style={streakStyles.value}>
+            {streak > 0 ? (
+              <Text variant="hero" color={onDark.primary}>
+                {copy.common.flame}
+              </Text>
+            ) : null}
             <Text variant="hero" color={onDark.primary}>
               {/* No streak yet reads as an absence, not a zero. Nothing here
             apologises for a day that has not happened. */}
@@ -184,6 +194,14 @@ function StreakCard({
             </Text>
           </Row>
         </View>
+        <View style={streakStyles.reps}>
+          <Text variant="labelSm" color={onDark.muted}>
+            {copy.progress.stats.repsDone}
+          </Text>
+          <Text variant="title2" color={onDark.primary} style={streakStyles.value}>
+            {totalReps}
+          </Text>
+        </View>
       </Row>
       {/* The last seven REAL days, filled from the practice history. This used to be
             `i < streak`: a bar chart pretending to be a calendar, which drew a
@@ -191,6 +209,18 @@ function StreakCard({
       {/* One accessible group: seven separate cells would be read as seven
             meaningless letters. */}
       <View accessible accessibilityLabel={weekSummary} style={streakStyles.week}>
+        <Row gap={space['1.5']} style={streakStyles.weekLetters}>
+          {week.map((d) => (
+            <Text
+              key={`label-${d.day}`}
+              variant="labelSm"
+              color={onDark.muted}
+              style={streakStyles.dayLetter}
+            >
+              {d.initial}
+            </Text>
+          ))}
+        </Row>
         <Row gap={space['1.5']}>
           {week.map((d) => (
             <View key={d.day} style={streakStyles.day}>
@@ -201,11 +231,10 @@ function StreakCard({
                   { backgroundColor: d.practised ? accent.accent : onDark.surface },
                 ]}
               >
-                <Text variant="captionSm">{d.practised ? copy.common.flame : ''}</Text>
+                <Text variant="captionSm" color={onDark.primary}>
+                  {d.practised ? copy.common.marks.check : ''}
+                </Text>
               </View>
-              <Text variant="labelSm" color={onDark.muted}>
-                {d.initial}
-              </Text>
             </View>
           ))}
         </Row>
@@ -226,11 +255,14 @@ function MasteryBar({
   useLocale()
   return (
     <Card>
-      <CardHeader
-        title={copy.progress.mastery.title}
-        meta={copy.progress.mastery.total(collected)}
-        metaVariant="captionSm"
-      />
+      <Row justify="space-between" align="baseline" wrap style={masteryStyles.heading}>
+        <Text variant="title2" color={ink.ink}>
+          {copy.progress.mastery.title}
+        </Text>
+        <Text variant="captionSm" color={ink.muted}>
+          {copy.progress.mastery.total(collected)}
+        </Text>
+      </Row>
 
       <View style={masteryStyles.bar}>
         {mastery.map((m) =>
@@ -240,16 +272,21 @@ function MasteryBar({
         )}
       </View>
 
-      <Grid gap={space['3.5']} style={masteryStyles.legend}>
+      <Grid gap={space['2.5']} style={masteryStyles.legend}>
         {mastery.map((m) => (
-          <Row key={m.key} gap={metrics.legendItem}>
+          <Row key={m.key} gap={metrics.legendItem} style={masteryStyles.legendCell}>
             <Dot size={metrics.legendDot} color={m.color} />
-            <Text variant="captionSm" color={ink.ink4}>
-              {m.label}
-            </Text>
-            <Text variant="captionSm" color={ink.ink}>
-              {m.count}
-            </Text>
+            <View style={masteryStyles.legendCopy}>
+              <Text variant="labelSm" color={ink.ink}>
+                {m.label}
+              </Text>
+              <Text variant="captionSm" color={ink.ink2}>
+                {copy.progress.mastery.share(
+                  m.count,
+                  collected === 0 ? 0 : Math.round((m.count / collected) * 100),
+                )}
+              </Text>
+            </View>
           </Row>
         ))}
       </Grid>
@@ -269,35 +306,37 @@ function MasteryBar({
  * that is what a rollup owes a screen reader whether or not it is tappable.
  */
 function TrickyRollup({ rows }: { rows: Summary['tricky'] }) {
+  useLocale()
   return (
-    <Stack gap={space['2.5']}>
-      <SectionLabel>{copy.progress.tricky.title}</SectionLabel>
-
-      {rows.length === 0 ? (
-        <Card>
-          <Text variant="caption" color={ink.muted}>
+    <Card>
+      <Stack gap={space['3']}>
+        <Text variant="headline" color={ink.ink}>
+          {copy.progress.tricky.title}
+        </Text>
+        {rows.length === 0 ? (
+          <Text variant="bodyMd" color={ink.muted}>
             {copy.progress.tricky.empty}
           </Text>
-        </Card>
-      ) : (
-        rows.map((r) => (
-          <View
-            key={r.tag}
-            accessible
-            accessibilityLabel={copy.a11y.progress.trickyRow(r.label, r.count)}
-            aria-label={copy.a11y.progress.trickyRow(r.label, r.count)}
-            style={trickyStyles.row}
-          >
-            <Row gap={metrics.trickyRow} style={trickyStyles.head}>
-              <Dot size={metrics.trickyDot} color={r.color} />
-              <Text variant="caption" color={ink.ink} style={trickyStyles.label}>
-                {r.label}
-              </Text>
-              <Text variant="caption" color={r.color}>
-                {r.count}
-              </Text>
-            </Row>
-            {/*
+        ) : (
+          <Stack gap={space['2.5']}>
+            {rows.map((r) => (
+              <View
+                key={r.tag}
+                accessible
+                accessibilityLabel={copy.a11y.progress.trickyRow(r.label, r.count)}
+                aria-label={copy.a11y.progress.trickyRow(r.label, r.count)}
+                style={trickyStyles.row}
+              >
+                <Row gap={metrics.trickyRow} style={trickyStyles.head}>
+                  <Dot size={metrics.trickyDot} color={r.color} />
+                  <Text variant="caption" color={ink.ink} style={trickyStyles.label}>
+                    {r.label}
+                  </Text>
+                  <Text variant="caption" color={r.color}>
+                    {r.count}
+                  </Text>
+                </Row>
+                {/*
               This tag's count as a share of the biggest tag's. No `label`, so `ProgressBar`
               hides itself from the accessibility tree — right here, because the row's own
               name already carries the count and a second unnamed bar would read the number
@@ -309,17 +348,19 @@ function TrickyRollup({ rows }: { rows: Summary['tricky'] }) {
               instead. The only other difference is the CLAMP, and it is unreachable today —
               `pct` is `count / max` over these same rows — so it is a latent-overflow guard.
             */}
-            <ProgressBar
-              value={r.pct}
-              color={r.color}
-              height={metrics.trickyBar}
-              radius={radius.sm}
-              track={surface.sunken}
-            />
-          </View>
-        ))
-      )}
-    </Stack>
+                <ProgressBar
+                  value={r.pct}
+                  color={r.color}
+                  height={metrics.trickyBar}
+                  radius={radius.sm}
+                  track={surface.sunken}
+                />
+              </View>
+            ))}
+          </Stack>
+        )}
+      </Stack>
+    </Card>
   )
 }
 /** Milestones. Every one is earned by a signal that cannot go backwards. */
@@ -334,7 +375,9 @@ function MilestoneList({
   const milestone = copy.progress.milestones
   return (
     <Stack gap={space['2.5']}>
-      <SectionLabel>{milestone.title}</SectionLabel>
+      <Text variant="headline" color={ink.ink}>
+        {milestone.title}
+      </Text>
 
       <MilestoneRow
         emoji={milestone.first10.emoji}
@@ -435,17 +478,21 @@ const metrics = {
   trickyBar: 7,
 } as const
 const screenStyles = StyleSheet.create({
-  scroll: { padding: space['4'], gap: space['4'] },
+  scroll: { padding: space['5'], gap: space['6'] },
 })
 const streakStyles = StyleSheet.create({
+  card: { padding: space['5'], borderRadius: radius.xl },
   value: { marginTop: space['1'] },
+  reps: { alignItems: 'flex-end' },
   week: { marginTop: space['4'] },
-  /** A day: its bar, then its letter. 5 is the blueprint's, and not a `space` step. */
-  day: { flex: 1, alignItems: 'center', gap: 5 },
+  weekLetters: { marginBottom: space['2'] },
+  dayLetter: { flex: 1, textAlign: 'center' },
+  /** A day: its bar. 5 is the blueprint's, and not a `space` step. */
+  day: { flex: 1, alignItems: 'center' },
   dayBar: {
     width: '100%',
-    height: 30,
-    borderRadius: radius.sm,
+    height: 32,
+    borderRadius: radius.lg,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -473,15 +520,22 @@ const masteryStyles = StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: surface.sunken,
   },
+  heading: { marginBottom: space['3'] },
   legend: { marginTop: space['3.5'] },
+  legendCell: {
+    width: '46%',
+    backgroundColor: surface.sunken,
+    borderRadius: radius.lg,
+    paddingVertical: space['2.5'],
+    paddingHorizontal: space['2.5'],
+  },
+  legendCopy: { flex: 1, minWidth: 0 },
 })
 const trickyStyles = StyleSheet.create({
   row: {
-    backgroundColor: surface.card,
-    borderWidth: border.hairline,
-    borderColor: line.default,
+    backgroundColor: surface.sunken,
     borderRadius: radius.lg,
-    padding: 13,
+    padding: space['3'],
   },
   head: { marginBottom: space['2'] },
   /** The label takes the slack, so the count and chevron stay on the right edge. */
@@ -489,15 +543,15 @@ const trickyStyles = StyleSheet.create({
 })
 const milestoneStyles = StyleSheet.create({
   row: {
-    borderWidth: border.hairline,
-    borderColor: line.default,
+    backgroundColor: surface.card,
     borderRadius: radius.xl,
-    padding: space['3'],
+    padding: space['4'],
+    ...stationeryElevation('card'),
   },
   tile: {
     width: 38,
     height: 38,
-    borderRadius: radius.lg,
+    borderRadius: radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
   },

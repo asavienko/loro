@@ -12,7 +12,12 @@ import { AccountClient } from '../lib/account/client'
 import { authorizationPorts } from '../auth/runtime'
 import { bundledApiUrl } from '../lib/account/config'
 import { credentialVault } from '../lib/account/vault'
-import { configureAccount, configureAccountSync, publishSyncStatus } from '../lib/account/runtime'
+import {
+  configureAccount,
+  configureAccountSync,
+  markAccountReady,
+  publishSyncStatus,
+} from '../lib/account/runtime'
 import { createSyncClient, createHttpSyncTransport } from '../lib/sync'
 
 const RETRY_POLL_MS = 30_000
@@ -20,9 +25,13 @@ const WRITE_DEBOUNCE_MS = 1500
 let opening: Promise<void> | null = null
 /** F-04: networking starts after hydration; no local write awaits it. */
 export function startAccountSync(): Promise<void> {
-  opening ??= start().catch(() => {
-    publishSyncStatus('error')
-  })
+  opening ??= start()
+    .catch(() => {
+      publishSyncStatus('error')
+    })
+    .finally(() => {
+      markAccountReady()
+    })
   return opening
 }
 async function start(): Promise<void> {

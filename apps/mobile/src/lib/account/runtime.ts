@@ -2,6 +2,7 @@ import { useSyncExternalStore } from 'react'
 import type { AccountClient, AccountState } from './client'
 
 let client: AccountClient | null = null
+let ready = false
 const listeners = new Set<() => void>()
 const initial: AccountState = { status: 'signed-out', session: null, error: null }
 const subscribe = (listener: () => void): (() => void) => {
@@ -10,13 +11,26 @@ const subscribe = (listener: () => void): (() => void) => {
     listeners.delete(listener)
   }
 }
+function notify(): void {
+  for (const listener of listeners) listener()
+}
 export function configureAccount(value: AccountClient): void {
   if (client) return
   client = value
-  value.subscribe(() => {
-    for (const listener of listeners) listener()
-  })
-  for (const listener of listeners) listener()
+  value.subscribe(notify)
+  notify()
+}
+export function markAccountReady(): void {
+  if (ready) return
+  ready = true
+  notify()
+}
+export function useAccountReady(): boolean {
+  return useSyncExternalStore(
+    subscribe,
+    () => ready,
+    () => false,
+  )
 }
 export function accountClient(): AccountClient | null {
   return client

@@ -61,8 +61,7 @@ test(
     await expect(repsTodayRow(page, 30)).toBeVisible()
 
     await page.getByRole('button', { name: 'Progress' }).click()
-    await expect(page.getByText('30', { exact: true }).filter({ visible: true })).toBeVisible()
-    await expect(page.getByText('1', { exact: true }).filter({ visible: true })).toBeVisible()
+    await expect(page.getByLabel('reps done: 30')).toBeVisible()
     await expect(page.getByLabel(/Last seven days: practised on 1 of them/)).toBeVisible()
   },
 )

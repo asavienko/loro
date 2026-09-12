@@ -44,7 +44,7 @@ import {
   WarmingSurface,
 } from '../../src/ui/primitives'
 import { BEAT_TEMPO_MS } from '../../src/ui/motion'
-import { ActionBar, EmptyState } from '../../src/ui/components'
+import { ActionBar } from '../../src/ui/components'
 import {
   accent,
   actionBar,
@@ -67,7 +67,7 @@ import { useRefrainSession, type WarmingStyle } from './_useRefrainSession'
 import { copy } from '../../src/lib/copy'
 import { audioPlaybackNote, audioSpeech, useAudioSpeech } from '../../src/lib/audioSpeech'
 import { deviceClock } from '../../src/lib/clock'
-import { waveEntryWithResume, waveSchedule } from '../../src/lib/waves'
+import { waveEntry, waveEntryWithResume, waveSchedule } from '../../src/lib/waves'
 import { useLocalMinute } from '../../src/lib/useLocalMinute'
 type WaveKey = ProductionWave
 export default function Refrain() {
@@ -160,14 +160,12 @@ export default function Refrain() {
   if (set.length === 0) {
     return (
       <Screen>
-        <EmptyState
+        <RefrainGate
           title={copy.refrain.empty.title}
           body={copy.refrain.empty.body}
-          action={{
-            label: copy.common.addPhrases,
-            onPress: () => {
-              router.replace('/add')
-            },
+          actionLabel={copy.common.addPhrases}
+          onAction={() => {
+            router.replace('/add')
           }}
         />
       </Screen>
@@ -178,11 +176,19 @@ export default function Refrain() {
   // it with the next-wave gate would hide the reward and make a successful session look blocked.
   if (session.finished) {
     const day = deviceClock.localDay()
+    const finishedWaves = [
+      ...completedWaves.filter((item): item is WaveKey =>
+        PRODUCTION_WAVES.includes(item as WaveKey),
+      ),
+      wave,
+    ]
+    const after = waveEntry(PRODUCTION_WAVES, PRODUCTION_WAVE_TIMES, now, finishedWaves)
     return (
       <Screen>
         <DoneState
           worked={set.length}
           totalReps={set.reduce((n, p) => n + repsTodayOf(p, day), 0)}
+          next={after.kind === 'locked' ? after.next : undefined}
         />
       </Screen>
     )
@@ -190,14 +196,12 @@ export default function Refrain() {
   if (entry.kind === 'locked') {
     return (
       <Screen>
-        <EmptyState
+        <RefrainGate
           title={copy.refrain.unavailable.title(entry.next.time)}
           body={copy.refrain.unavailable.body}
-          action={{
-            label: copy.refrain.done.cta,
-            onPress: () => {
-              router.replace('/')
-            },
+          actionLabel={copy.refrain.done.cta}
+          onAction={() => {
+            router.replace('/')
           }}
         />
       </Screen>
@@ -206,14 +210,12 @@ export default function Refrain() {
   if (entry.kind === 'complete') {
     return (
       <Screen>
-        <EmptyState
+        <RefrainGate
           title={copy.refrain.unavailable.complete}
           body={copy.refrain.unavailable.body}
-          action={{
-            label: copy.refrain.done.cta,
-            onPress: () => {
-              router.replace('/')
-            },
+          actionLabel={copy.refrain.done.cta}
+          onAction={() => {
+            router.replace('/')
           }}
         />
       </Screen>
@@ -224,8 +226,8 @@ export default function Refrain() {
     <Screen>
       <ScrollView
         contentContainerStyle={{
-          padding: space['4'],
-          gap: space['3.5'],
+          padding: space['5'],
+          gap: space['4'],
           // The action bar is absolutely positioned and reserves nothing, so the scroll view
           // clears its measured height, retaining the authored minimum before layout.
           paddingBottom: Math.max(
@@ -236,10 +238,10 @@ export default function Refrain() {
       >
         <Row justify="space-between">
           <View>
-            <Text variant="captionSm" color={ink.muted}>
+            <Text variant="label" color={ink.ink2}>
               {copy.today.waves[wave].title}
             </Text>
-            <Text variant="caption" color={ink.ink}>
+            <Text variant="body" color={ink.ink}>
               {copy.refrain.phraseCounter(phraseNumber, set.length)}
             </Text>
           </View>
@@ -257,26 +259,28 @@ export default function Refrain() {
           clozeMask={session.clozeMask}
         />
 
-        <Card>
+        <Card padding={space['5']}>
           <AutomaticityMeter auto={auto} />
         </Card>
 
         <RepCounter reps={dayReps} />
 
-        <Text variant="captionSm" color={ink.muted} align="center">
-          {!audio.canPlay
-            ? copy.refrain.audioNote
-            : audioPlaybackNote(audio.source, audio.playback, audio.playbackError)}
-        </Text>
+        <Card background={surface.sunken} border={false} elevate={false} padding={13}>
+          <Text variant="caption" color={ink.ink2}>
+            {!audio.canPlay
+              ? copy.refrain.audioNote
+              : audioPlaybackNote(audio.source, audio.playback, audio.playbackError)}
+          </Text>
+        </Card>
         {audio.canPlay ? (
-          <Pressable
-            feedback="button"
-            accessibilityLabel={
+          <Button
+            label={
               audio.phraseId === phrase.id &&
               (audio.playback === 'playing' || audio.playback === 'loading')
                 ? copy.audioSpeech.stop
                 : copy.audioSpeech.play
             }
+            variant="secondary"
             onPress={() => {
               if (
                 audio.phraseId === phrase.id &&
@@ -294,14 +298,7 @@ export default function Refrain() {
                 phrase.catalog?.audio,
               )
             }}
-          >
-            <Text variant="body" color={accent.accentInk} align="center">
-              {audio.phraseId === phrase.id &&
-              (audio.playback === 'playing' || audio.playback === 'loading')
-                ? copy.audioSpeech.stop
-                : copy.audioSpeech.play}
-            </Text>
-          </Pressable>
+          />
         ) : null}
       </ScrollView>
 
@@ -313,6 +310,7 @@ export default function Refrain() {
               label={
                 phraseNumber >= set.length ? copy.refrain.locked.finish : copy.refrain.locked.next
               }
+              size="cta"
               onPress={session.nextPhrase}
             />
           </>
@@ -375,31 +373,35 @@ function ModeStrip({ mode }: { mode: RefrainMode }) {
   useLocale()
   const currentIndex = REFRAIN_MODES.indexOf(mode)
   return (
-    <Row gap={space['1']} wrap align="stretch">
-      {REFRAIN_MODES.map((m, i) => {
-        const isCurrent = m === mode
-        const isDone = i < currentIndex
-        return (
-          <View
-            key={m}
-            style={[
-              s.modeCell,
-              Platform.OS === 'web' && { minWidth: 'auto' },
-              {
-                backgroundColor: isCurrent ? accent.accent : isDone ? accent.wash : surface.sunken,
-              },
-            ]}
-          >
-            <Text
-              variant="labelSm"
-              color={isCurrent ? onDark.primary : isDone ? accent.accentInk : ink.ink3}
+    <View style={s.modeTrack}>
+      <Row gap={space['1']} wrap align="stretch">
+        {REFRAIN_MODES.map((m, i) => {
+          const isCurrent = m === mode
+          const isDone = i < currentIndex
+          return (
+            <View
+              key={m}
+              style={[
+                s.modeCell,
+                Platform.OS === 'web' && { minWidth: 'auto' },
+                {
+                  backgroundColor: isCurrent ? accent.accent : isDone ? accent.wash : 'transparent',
+                },
+              ]}
             >
-              {copy.refrain.modes[m].label}
-            </Text>
-          </View>
-        )
-      })}
-    </Row>
+              <Text
+                variant="labelSm"
+                color={isCurrent ? onDark.primary : isDone ? accent.accentInk : ink.ink2}
+              >
+                {isDone
+                  ? `${copy.common.marks.check} ${copy.refrain.modes[m].label}`
+                  : copy.refrain.modes[m].label}
+              </Text>
+            </View>
+          )
+        })}
+      </Row>
+    </View>
   )
 }
 /** THE WARMING CARD — the product's core feedback signal. */
@@ -457,10 +459,10 @@ function WarmingPrompt({
     case 'speed':
       return (
         <>
-          <Text variant="title1" color={color} align="center" lang="target">
+          <Text variant="hero" color={color} align="center" lang="target">
             {phrase.targetText}
           </Text>
-          <Text variant="caption" color={color} align="center">
+          <Text variant="prose" color={color} align="center" style={s.italic}>
             {phrase.translation}
           </Text>
         </>
@@ -468,7 +470,7 @@ function WarmingPrompt({
     case 'cloze':
       return (
         <>
-          <Text variant="title1" color={color} align="center" lang="target">
+          <Text variant="hero" color={color} align="center" lang="target">
             {phrase.targetText
               .split(/\s+/)
               .map((word, index) =>
@@ -476,7 +478,7 @@ function WarmingPrompt({
               )
               .join(' ')}
           </Text>
-          <Text variant="caption" color={color} align="center">
+          <Text variant="prose" color={color} align="center" style={s.italic}>
             {phrase.translation}
           </Text>
         </>
@@ -487,7 +489,7 @@ function WarmingPrompt({
           <Text variant="labelSm" color={color}>
             {copy.refrain.prompt.callLabel}
           </Text>
-          <Text variant="title2" color={color} align="center">
+          <Text variant="hero" color={color} align="center">
             {phrase.translation}
           </Text>
         </>
@@ -544,19 +546,13 @@ function RepCounter({ reps }: { reps: number }) {
 /** The one tap of the whole screen: a rep is done. Its mode is core-owned; its label is copy. */
 function MicButton({ mode, onPress }: { mode: RefrainMode; onPress: () => void }) {
   useLocale()
-  const label = copy.refrain.mic[mode]
   return (
-    <Pressable
-      feedback="button"
+    <Button
+      label={copy.refrain.mic[mode]}
+      size="cta"
       onPress={onPress}
-      accessibilityLabel={label}
       accessibilityHint={copy.refrain.modes[mode].cue}
-      style={s.mic}
-    >
-      <Text variant="title3" color={onDark.primary}>
-        {label}
-      </Text>
-    </Pressable>
+    />
   )
 }
 /** The reward moment: this phrase is automatic today. */
@@ -585,7 +581,15 @@ function LockedInBanner() {
  * Spanish), an 88-px tile whose 42-px emoji is off `EmojiTile`'s 0.48 ratio, two counters, and
  * a full-width button. Routing it through `EmptyState` would silently restyle all four.
  */
-function DoneState({ worked, totalReps }: { worked: number; totalReps: number }) {
+function DoneState({
+  worked,
+  totalReps,
+  next,
+}: {
+  worked: number
+  totalReps: number
+  next?: { readonly key: WaveKey; readonly time: string } | undefined
+}) {
   useLocale()
   return (
     <ScrollView contentContainerStyle={s.centred}>
@@ -594,19 +598,34 @@ function DoneState({ worked, totalReps }: { worked: number; totalReps: number })
           <Text style={s.doneEmoji}>{copy.common.flame}</Text>
         </View>
       </Arrival>
-      <Text variant="title2" color={accent.accentInk} lang="target">
+      <Text variant="title1" color={accent.accentInk} lang="target">
         {copy.refrain.done.headline}
       </Text>
       <Text variant="title2" color={ink.ink} align="center">
         {copy.refrain.done.title}
       </Text>
       <Row gap={space['2.5']} wrap align="stretch" style={s.doneStats}>
-        <DoneStat value={worked} label={copy.refrain.done.workedLabel} />
-        <DoneStat value={totalReps} label={copy.common.repsToday} />
+        <DoneStat
+          value={worked}
+          label={copy.refrain.done.workedLabel}
+          rule={semantic.success.text}
+        />
+        <DoneStat value={totalReps} label={copy.common.repsToday} rule={accent.accent} />
       </Row>
+      {next ? (
+        <Card style={s.doneNext}>
+          <Text variant="title3" color={ink.ink}>
+            {copy.today.waves[next.key].title}
+          </Text>
+          <Text variant="caption" color={ink.ink2}>
+            {copy.today.cta.waitForWave(next.time)}
+          </Text>
+        </Card>
+      ) : null}
       <View style={s.doneCta}>
         <Button
           label={copy.refrain.done.cta}
+          size="cta"
           onPress={() => {
             router.replace('/')
           }}
@@ -623,7 +642,7 @@ function DoneState({ worked, totalReps }: { worked: number; totalReps: number })
  * arguably improvements, and both change what a learner sees and hears — so they stay as they
  * are. Unifying them is a design decision, not a refactor (plans/34).
  */
-function DoneStat({ value, label }: { value: number; label: string }) {
+function DoneStat({ value, label, rule }: { value: number; label: string; rule: string }) {
   useLocale()
   return (
     <Card style={s.doneStat}>
@@ -633,7 +652,39 @@ function DoneStat({ value, label }: { value: number; label: string }) {
       <Text variant="labelSm" color={ink.muted}>
         {label}
       </Text>
+      <View style={[s.doneStatRule, { backgroundColor: rule }]} />
     </Card>
+  )
+}
+
+/**
+ * Cold, locked-wave and day-complete entries. Same type as the v1.2 empty phone — title1
+ * Newsreader, caption body, pill CTA — without inventing how-it-works copy or suggestion chips.
+ */
+function RefrainGate({
+  title,
+  body,
+  actionLabel,
+  onAction,
+}: {
+  title: string
+  body: string
+  actionLabel: string
+  onAction: () => void
+}) {
+  useLocale()
+  return (
+    <ScrollView contentContainerStyle={s.centred}>
+      <Text variant="title1" color={ink.ink} align="center">
+        {title}
+      </Text>
+      <Text variant="caption" color={ink.ink2} align="center">
+        {body}
+      </Text>
+      <View style={s.doneCta}>
+        <Button size="cta" label={actionLabel} onPress={onAction} />
+      </View>
+    </ScrollView>
   )
 }
 
@@ -645,29 +696,28 @@ const s = StyleSheet.create({
     padding: space['5'],
     gap: space['3'],
   },
+  italic: { fontStyle: 'italic' },
+  modeTrack: {
+    backgroundColor: surface.track,
+    borderRadius: radius.pill,
+    padding: space['1'],
+  },
   modeCell: {
     flex: 1,
     alignItems: 'center',
     paddingVertical: space['2'],
-    borderRadius: radius.md,
+    borderRadius: radius.pill,
   },
   warmingCard: {
     borderRadius: radius['2xl'],
     padding: 26,
-    minHeight: 200,
+    minHeight: 220,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: space['2'],
+    gap: space['3'],
   },
   coldGlyph: { fontSize: 32 },
   meterHeader: { marginBottom: space['2'] },
-  mic: {
-    minHeight: 56,
-    borderRadius: radius.lg,
-    backgroundColor: accent.accent,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   lockedBanner: {
     backgroundColor: semantic.success.bg,
     borderRadius: radius.xl,
@@ -678,17 +728,24 @@ const s = StyleSheet.create({
   doneTile: {
     width: 88,
     height: 88,
-    borderRadius: radius['3xl'],
+    borderRadius: radius.pill,
     backgroundColor: accent.accent,
     alignItems: 'center',
     justifyContent: 'center',
   },
   doneEmoji: { fontSize: 42 },
   doneStats: { width: '100%', marginTop: space['3'] },
+  doneNext: { width: '100%', alignItems: 'center', gap: space['1'] },
   doneStat: {
     flex: 1,
     alignItems: 'center',
     ...(Platform.OS === 'web' ? { minWidth: 'auto' as const } : {}),
+  },
+  doneStatRule: {
+    width: 26,
+    height: 3,
+    borderRadius: radius.pill,
+    marginTop: space['2'],
   },
   doneCta: { width: '100%', marginTop: space['3'] },
 })

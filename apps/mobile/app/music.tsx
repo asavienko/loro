@@ -41,11 +41,13 @@ import {
 import { FIXTURE_WAV_DURATION_MS } from '../src/lib/music/wav'
 import { useApp } from '../src/store'
 import { useViews } from '../src/store/selectors'
-import { Button, ListRow, Screen, SectionLabel, Stack, Text } from '../src/ui/primitives'
-import { ink, space } from '../src/ui/theme'
+import { Button, Card, ListRow, Screen, SectionLabel, Stack, Text } from '../src/ui/primitives'
+import { ink, space, surface } from '../src/ui/theme'
+import { useTheme } from '../src/ui/ThemeProvider'
 
 export default function Music() {
   useLocale()
+  const { accent } = useTheme()
   const params = useLocalSearchParams<{ musicState?: string }>()
   const fixture = isMusicUiState(params.musicState) ? params.musicState : undefined
   const views = useViews()
@@ -343,12 +345,16 @@ export default function Music() {
     <Screen>
       <ScrollView contentContainerStyle={styles.content}>
         <Stack gap={space['5']}>
-          <Text variant="title2" color={ink.ink}>
-            {copy.music.title}
-          </Text>
-          <Text variant="body" color={ink.ink2}>
-            {copy.music.intro}
-          </Text>
+          {step === 'pick' ? (
+            <Stack gap={space['2']}>
+              <Text variant="hero" color={ink.ink}>
+                {copy.music.title}
+              </Text>
+              <Text variant="bodyMd" color={ink.ink2}>
+                {copy.music.intro}
+              </Text>
+            </Stack>
+          ) : null}
 
           {step === 'pick' ? (
             <Stack gap={space['4']}>
@@ -368,30 +374,38 @@ export default function Music() {
                   }}
                 />
               ) : null}
-              {[...rows, ...extras].map((view) => {
-                const catalogId = view.phraseId
-                if (catalogId === null) return null
-                const selected = selectedIds.includes(catalogId)
-                return (
-                  <ListRow
-                    key={view.id}
-                    accessibilityRole="checkbox"
-                    selected={selected}
-                    accessibilityLabel={copy.music.picker.phrase(view.targetText, view.translation)}
-                    onPress={() => {
-                      togglePhrase(catalogId)
-                    }}
-                    gap={space['2.5']}
-                  >
-                    <Text variant="body" color={ink.ink} lang="target" style={styles.grow}>
-                      {view.targetText}
-                    </Text>
-                    <Text variant="captionSm" color={ink.muted}>
-                      {view.translation}
-                    </Text>
-                  </ListRow>
-                )
-              })}
+              <Card padding={0} style={styles.group}>
+                {[...rows, ...extras]
+                  .filter((view) => view.phraseId !== null)
+                  .map((view, index, list) => {
+                    const catalogId = view.phraseId
+                    if (catalogId === null) return null
+                    const selected = selectedIds.includes(catalogId)
+                    return (
+                      <ListRow
+                        key={view.id}
+                        accessibilityRole="checkbox"
+                        selected={selected}
+                        accessibilityLabel={copy.music.picker.phrase(
+                          view.targetText,
+                          view.translation,
+                        )}
+                        onPress={() => {
+                          togglePhrase(catalogId)
+                        }}
+                        gap={space['2.5']}
+                        last={index === list.length - 1}
+                      >
+                        <Text variant="body" color={ink.ink} lang="target" style={styles.grow}>
+                          {view.targetText}
+                        </Text>
+                        <Text variant="captionSm" color={ink.muted}>
+                          {view.translation}
+                        </Text>
+                      </ListRow>
+                    )
+                  })}
+              </Card>
               {quotaBlocked || offlineBlocked ? (
                 <Text variant="caption" color={ink.ink2}>
                   {quotaBlocked ? copy.music.state.quota : copy.music.state.unavailable}
@@ -406,6 +420,7 @@ export default function Music() {
               ) : null}
               <Button
                 label={copy.music.lyrics.request}
+                size="cta"
                 onPress={requestLyrics}
                 disabled={!canRequest || busy}
               />
@@ -414,28 +429,47 @@ export default function Music() {
 
           {step === 'lyrics' && lyrics !== null ? (
             <Stack gap={space['4']}>
-              <SectionLabel>{copy.music.lyrics.review}</SectionLabel>
+              <Text variant="title1" color={ink.ink}>
+                {copy.music.lyrics.review}
+              </Text>
               {lyrics.fallback ? (
-                <Text variant="caption" color={ink.ink2}>
+                <Text variant="bodyMd" color={ink.ink2}>
                   {copy.music.fallback.lyricsOnly}
                 </Text>
               ) : null}
-              <Text variant="title3" color={ink.ink} lang="target">
-                {lyrics.document.title.target}
-              </Text>
-              <Text variant="caption" color={ink.muted}>
-                {lyrics.document.title.translation}
-              </Text>
-              {lyrics.document.sections.map((section) => (
-                <Stack key={section.name} gap={space['2']}>
-                  <SectionLabel>{copy.music.lyrics.section(section.name)}</SectionLabel>
-                  {section.lines.map((line) => (
-                    <Text key={line} variant="body" color={ink.ink} lang="target">
-                      {line}
-                    </Text>
-                  ))}
+              <Card padding={space['5']}>
+                <Stack gap={space['2']}>
+                  <Text variant="title2" color={ink.ink} lang="target">
+                    {lyrics.document.title.target}
+                  </Text>
+                  <Text variant="caption" color={ink.muted} style={styles.italic}>
+                    {lyrics.document.title.translation}
+                  </Text>
                 </Stack>
-              ))}
+              </Card>
+              {lyrics.document.sections.map((section) => {
+                const chorus = section.name === 'Chorus'
+                const onAccent = chorus ? surface.app : ink.ink
+                return (
+                  <Card
+                    key={section.name}
+                    padding={space['5']}
+                    background={chorus ? accent.accent : undefined}
+                    border={chorus ? false : undefined}
+                  >
+                    <Stack gap={space['2']}>
+                      <SectionLabel color={chorus ? surface.app : undefined}>
+                        {copy.music.lyrics.section(section.name)}
+                      </SectionLabel>
+                      {section.lines.map((line) => (
+                        <Text key={line} variant="title2" color={onAccent} lang="target">
+                          {line}
+                        </Text>
+                      ))}
+                    </Stack>
+                  </Card>
+                )
+              })}
               {lyrics.document.gloss_lines.map((line) => (
                 <Stack key={line.target} gap={space['1']}>
                   <Text variant="captionSm" color={ink.ink2} lang="target">
@@ -458,6 +492,7 @@ export default function Music() {
               />
               <Button
                 label={copy.music.lyrics.confirm}
+                size="cta"
                 onPress={() => {
                   setStep('styles')
                 }}
@@ -467,29 +502,34 @@ export default function Music() {
 
           {step === 'styles' ? (
             <Stack gap={space['4']}>
-              <SectionLabel>{copy.music.styles.heading}</SectionLabel>
-              <Text variant="caption" color={ink.muted}>
+              <Text variant="title1" color={ink.ink}>
+                {copy.music.styles.heading}
+              </Text>
+              <Text variant="bodyMd" color={ink.ink2}>
                 {copy.music.styles.hint}
               </Text>
-              {MUSIC_STYLE_IDS.map((styleId) => {
-                const selected = styleIds.includes(styleId)
-                return (
-                  <ListRow
-                    key={styleId}
-                    accessibilityRole="checkbox"
-                    selected={selected}
-                    accessibilityLabel={copy.music.styles[styleId]}
-                    onPress={() => {
-                      toggleStyle(styleId)
-                    }}
-                    gap={space['2.5']}
-                  >
-                    <Text variant="body" color={ink.ink} style={styles.grow}>
-                      {copy.music.styles[styleId]}
-                    </Text>
-                  </ListRow>
-                )
-              })}
+              <Card padding={0} style={styles.group}>
+                {MUSIC_STYLE_IDS.map((styleId, index) => {
+                  const selected = styleIds.includes(styleId)
+                  return (
+                    <ListRow
+                      key={styleId}
+                      accessibilityRole="checkbox"
+                      selected={selected}
+                      accessibilityLabel={copy.music.styles[styleId]}
+                      onPress={() => {
+                        toggleStyle(styleId)
+                      }}
+                      gap={space['2.5']}
+                      last={index === MUSIC_STYLE_IDS.length - 1}
+                    >
+                      <Text variant="body" color={ink.ink} style={styles.grow}>
+                        {copy.music.styles[styleId]}
+                      </Text>
+                    </ListRow>
+                  )
+                })}
+              </Card>
               <Text variant="caption" color={ink.ink2}>
                 {copy.music.styles.allowance}
               </Text>
@@ -500,6 +540,7 @@ export default function Music() {
               ) : null}
               <Button
                 label={busy ? copy.music.state.generating : copy.music.styles.confirm}
+                size="cta"
                 onPress={confirmStyles}
                 disabled={!canConfirmStyles || unavailable || busy}
               />
@@ -508,7 +549,10 @@ export default function Music() {
 
           {step === 'play' ? (
             <Stack gap={space['4']}>
-              <Text variant="caption" color={ink.ink2}>
+              <Text variant="title1" color={ink.ink}>
+                {copy.music.title}
+              </Text>
+              <Text variant="bodyMd" color={ink.ink2}>
                 {copy.music.generated}
               </Text>
               {failedTracks.length > 0 && readyTracks.length > 0 ? (
@@ -516,29 +560,33 @@ export default function Music() {
                   {copy.music.state.partial}
                 </Text>
               ) : null}
-              {tracks.map((track) => (
-                <ListRow
-                  key={track.styleId}
-                  accessibilityRole="radio"
-                  selected={playStyle === track.styleId}
-                  disabled={track.status !== 'ready'}
-                  accessibilityLabel={copy.music.styles[track.styleId]}
-                  onPress={() => {
-                    if (track.status === 'ready') playTrack(track)
-                  }}
-                  gap={space['2.5']}
-                >
-                  <Text variant="body" color={ink.ink} style={styles.grow}>
-                    {copy.music.styles[track.styleId]}
-                  </Text>
-                  <Text variant="captionSm" color={ink.muted}>
-                    {track.status === 'ready' ? copy.music.play : copy.music.state.error}
-                  </Text>
-                </ListRow>
-              ))}
+              <Card padding={0} style={styles.group}>
+                {tracks.map((track, index) => (
+                  <ListRow
+                    key={track.styleId}
+                    accessibilityRole="radio"
+                    selected={playStyle === track.styleId}
+                    disabled={track.status !== 'ready'}
+                    accessibilityLabel={copy.music.styles[track.styleId]}
+                    onPress={() => {
+                      if (track.status === 'ready') playTrack(track)
+                    }}
+                    gap={space['2.5']}
+                    last={index === tracks.length - 1}
+                  >
+                    <Text variant="body" color={ink.ink} style={styles.grow}>
+                      {copy.music.styles[track.styleId]}
+                    </Text>
+                    <Text variant="captionSm" color={ink.muted}>
+                      {track.status === 'ready' ? copy.music.play : copy.music.state.error}
+                    </Text>
+                  </ListRow>
+                ))}
+              </Card>
               {readyTracks.length > 0 ? (
                 <Button
                   label={playing ? copy.music.pause : copy.music.play}
+                  size="cta"
                   onPress={() => {
                     const track = tracks.find(
                       (entry) => entry.styleId === playStyle && entry.status === 'ready',
@@ -563,5 +611,7 @@ export default function Music() {
 
 const styles = StyleSheet.create({
   content: { padding: space['5'] },
+  group: { overflow: 'hidden' },
   grow: { flex: 1 },
+  italic: { fontStyle: 'italic' },
 })

@@ -57,7 +57,12 @@ export async function requestPhraseSuggestions(
     )
     if (!response.ok) return local
     const body = PhraseSuggestResponseSchema.safeParse(await response.json())
-    if (!body.success || body.data.provenance === 'unavailable') return local
+    if (
+      !body.success ||
+      body.data.provenance === 'unavailable' ||
+      body.data.candidates.length === 0
+    )
+      return local
     return filterNewCandidates(
       body.data.candidates.map((row) => ({
         targetText: row.target_text,

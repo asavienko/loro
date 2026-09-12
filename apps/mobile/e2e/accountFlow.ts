@@ -137,13 +137,27 @@ export async function mockAccountService(
       await route.fulfill({ status: 202, json: { status: 'accepted' } })
       return
     }
-    if (path.endsWith('/auth/magic-link/verify') || path.endsWith('/auth/exchange')) {
+    if (path.endsWith('/auth/refresh')) {
+      const token =
+        typeof body === 'object' && body !== null && 'refresh_token' in body
+          ? String(body.refresh_token)
+          : ''
+      const provider = token.includes('provider')
       await route.fulfill({
         json: {
-          access_token: path.endsWith('/auth/exchange')
-            ? 'e2e-provider-access'
-            : 'e2e-email-access',
-          refresh_token: 'e2e-refresh',
+          access_token: provider ? 'e2e-provider-access' : 'e2e-email-access',
+          refresh_token: token || 'e2e-email-refresh',
+          expires_in: 900,
+        },
+      })
+      return
+    }
+    if (path.endsWith('/auth/magic-link/verify') || path.endsWith('/auth/exchange')) {
+      const provider = path.endsWith('/auth/exchange')
+      await route.fulfill({
+        json: {
+          access_token: provider ? 'e2e-provider-access' : 'e2e-email-access',
+          refresh_token: provider ? 'e2e-provider-refresh' : 'e2e-email-refresh',
           expires_in: 900,
           device_id: 'test-device',
           user: { id: 'test-account', created_at: 100 },
@@ -216,6 +230,47 @@ export async function openAccount(page: Page): Promise<void> {
   await page.getByRole('dialog').getByRole('button', { name: ACCOUNT_LABEL, exact: true }).click()
   await expect(page).toHaveURL(/\/account$/)
 }
+
+export interface SignInCopy {
+  emailMethod: string
+  email: string
+  send: string
+  code: string
+  verify: string
+  signedIn: string
+  continue: string
+}
+
+const ENGLISH_SIGN_IN: SignInCopy = {
+  emailMethod: 'Continue with email',
+  email: 'Email address',
+  send: 'Send sign-in code',
+  code: 'Sign-in code',
+  verify: 'Verify and sign in',
+  signedIn: 'You’re signed in',
+  continue: 'Back to practice',
+}
+
+/** First-run email sign-in. Lands on onboarding when the device is not yet set up. */
+export async function signIn(page: Page, labels: SignInCopy = ENGLISH_SIGN_IN): Promise<void> {
+  if (!/\/account(?:\?|$)/.test(new URL(page.url(), 'http://localhost').pathname)) {
+    await page.goto('/')
+  }
+  await expect(page).toHaveURL(/\/account/)
+  await page.getByRole('button', { name: labels.emailMethod, exact: true }).click()
+  await fillField(page, labels.email, 'learner@example.com')
+  await page.getByRole('button', { name: labels.send, exact: true }).click()
+  await expect(page.getByRole('textbox', { name: labels.code })).toBeVisible()
+  await fillField(page, labels.code, '123456')
+  await page.getByRole('button', { name: labels.verify, exact: true }).click()
+  await expect(page.getByText(labels.signedIn, { exact: true })).toBeVisible()
+  await page.getByRole('button', { name: labels.continue, exact: true }).click()
+}
+
+export async function signInThenGoto(page: Page, path: string): Promise<void> {
+  await signIn(page)
+  await page.goto(path)
+}
 export async function requestCode(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Continue with email', exact: true }).click()
   await fillField(page, 'Email address', 'learner@example.com')
@@ -258,8 +313,10 @@ export async function signInWithProvider(
   else {
     await expect(page.getByText('You’re signed in', { exact: true })).toBeVisible()
     await page.getByRole('button', { name: 'Back to practice', exact: true }).click()
-    await openAccount(page)
-    await expect(page.getByText('Your progress is up to date.')).toBeVisible()
+    if ((await page.getByRole('button', { name: /, open the menu$/ }).count()) > 0) {
+      await openAccount(page)
+      await expect(page.getByText('Your progress is up to date.')).toBeVisible()
+    }
   }
 }
 
@@ -269,15 +326,56 @@ export async function reachAccount(
   provider: 'Google' | 'Apple' = 'Google',
 ): Promise<AccountService> {
   const service = await mockAccountService(page, scenario)
-  if (scenario === 'sync-rejected') {
-    await page
-      .getByRole('button', { name: /0 percent automatic/ })
-      .first()
-      .click()
-    await page.getByRole('radio', { name: 'Difficult', exact: true }).click()
+  const onLearnerHome = await page.getByRole('button', { name: /, open the menu$/ }).count()
+  if (onLearnerHome === 0) {
     await page.goto('/')
+    await expect(page).toHaveURL(/\/account/)
+  } else {
+    if (scenario === 'sync-rejected') {
+      await page
+        .getByRole('button', { name: /0 percent automatic/ })
+        .first()
+        .click()
+      await page.getByRole('radio', { name: 'Difficult', exact: true }).click()
+      await page.goto('/')
+    }
+    await openAccount(page)
+    if (
+      scenario === 'signedIn' ||
+      scenario === 'connected' ||
+      scenario === 'sync-unavailable' ||
+      scenario === 'sync-rejected' ||
+      scenario === 'localSignOut' ||
+      scenario === 'signed-out'
+    ) {
+      if (scenario === 'sync-unavailable' || scenario === 'sync-rejected') {
+        await page.getByRole('button', { name: 'Sync now', exact: true }).click()
+      }
+      if (scenario === 'sync-unavailable') {
+        await expect(
+          page.getByText('Your progress is saved here. Sync will retry when you are connected.'),
+        ).toBeVisible()
+      } else if (scenario === 'sync-rejected') {
+        await expect(
+          page.getByText(
+            /^\d+ saved changes? need(?:s)? review and remain(?:s)? safely on this device\.$/,
+          ),
+        ).toBeVisible()
+      } else if (scenario === 'signed-out' || scenario === 'localSignOut') {
+        await page.getByRole('button', { name: 'Sign out', exact: true }).click()
+        if (scenario === 'localSignOut') {
+          await expect(page.getByText(/You are signed out on this device/)).toBeVisible()
+        } else {
+          await expect(
+            page.getByRole('button', { name: 'Continue with email', exact: true }),
+          ).toBeVisible()
+        }
+      } else {
+        await expect(page.getByText('Your progress is up to date.')).toBeVisible()
+      }
+      return service
+    }
   }
-  await openAccount(page)
   if (scenario === 'discoveryError') {
     await expect(page.getByRole('button', { name: 'Try again', exact: true })).toBeVisible()
     return service
