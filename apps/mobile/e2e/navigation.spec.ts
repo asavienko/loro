@@ -210,7 +210,7 @@ test('mouse and touch open menu Refrain as the difficult-only drill', async ({ p
     await tapControl(page, sheet.getByRole('button', { name: 'The Refrain', exact: true }), input)
     await expect(page).toHaveURL(isHardRefrain)
     await expect(page.getByText('No difficult phrases yet')).toBeVisible()
-    await page.getByRole('link', { name: /back/i }).click()
+    await page.getByRole('button', { name: 'Today', exact: true }).click()
     await expect(todayMarker(page)).toBeVisible()
   }
 })
