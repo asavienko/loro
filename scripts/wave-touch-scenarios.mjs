@@ -25,7 +25,7 @@ export const WAVE_TOUCH_SCENARIOS = [
     owner: '93',
     requirement: 'NAV-04',
     entry: 'Native back-swipe on Stream or Refrain',
-    expect: 'session remains; practice stack gestureEnabled false',
+    expect: 'session remains; practice stack disables edge and full-screen back swipe',
   },
   {
     id: 'spine-pull-opens-switcher',
@@ -73,8 +73,8 @@ export const WAVE_TOUCH_SCENARIOS = [
     id: 'practice-back-swipe-disabled-at',
     owner: '93',
     requirement: 'NAV-04',
-    entry: 'TalkBack-enabled edge swipe on Stream or Refrain',
-    expect: 'session remains; practice stack gestureEnabled false',
+    entry: 'TalkBack-enabled edge and full-screen swipe on Stream or Refrain',
+    expect: 'session remains; practice stack disables edge and full-screen back swipe',
   },
   {
     id: 'sheet-back-dismisses-switcher-at',
@@ -91,6 +91,42 @@ export const WAVE_TOUCH_SCENARIOS = [
     expect: 'switcher sheet dismisses; Today remains',
   },
 ]
+
+/**
+ * NAV-04 probes. The first swipe is the classic left-edge pop. The second starts
+ * away from the edge so iOS 26's default full-screen dismiss cannot hide behind
+ * an edge-only pass.
+ */
+export const PRACTICE_BACK_SWIPES = [
+  { id: 'edge', x1: 4, y1: 800, x2: 360, y2: 800, durationMs: 250 },
+  { id: 'full-screen', x1: 180, y1: 800, x2: 360, y2: 800, durationMs: 250 },
+]
+
+export function adbPracticeBackSwipeArgs(swipe) {
+  return [
+    'shell',
+    'input',
+    'swipe',
+    String(swipe.x1),
+    String(swipe.y1),
+    String(swipe.x2),
+    String(swipe.y2),
+    String(swipe.durationMs),
+  ]
+}
+
+export function idbPracticeBackSwipeArgs(swipe) {
+  return [
+    'ui',
+    'swipe',
+    String(swipe.x1),
+    String(swipe.y1),
+    String(swipe.x2),
+    String(swipe.y2),
+    '--duration',
+    String(swipe.durationMs / 1000),
+  ]
+}
 
 export function waveScenario(id) {
   const row = WAVE_TOUCH_SCENARIOS.find((scenario) => scenario.id === id)

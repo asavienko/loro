@@ -27,6 +27,7 @@ import {
   tapBounds,
   tapDismissBounds,
 } from './native-wave-scenarios.mjs'
+import { PRACTICE_BACK_SWIPES } from './wave-touch-scenarios.mjs'
 
 const STREAM_DUMP = `<?xml version="1.0"?>
 <hierarchy>
@@ -362,7 +363,7 @@ test('records practice-back-swipe-disabled only from dump evidence as unavailabl
     currentUrl: 'loro://practice/stream',
   })
   assert.equal(result.status, 'unavailable')
-  assert.match(result.notes, /gestureEnabled: false/)
+  assert.match(result.notes, /fullScreenGestureEnabled false/)
 })
 
 test('spine pull opens the switcher only on a committed vertical drag', () => {
@@ -380,7 +381,10 @@ test('spine pull opens the switcher only on a committed vertical drag', () => {
     evaluateSpinePull({ beforeDump: closed, afterDump: closed, inertDump: closed }).status,
     'failed',
   )
-  assert.equal(findResourceId(HOME_DUMP, 'navigation-pull-handle')?.resourceId, 'navigation-pull-handle')
+  assert.equal(
+    findResourceId(HOME_DUMP, 'navigation-pull-handle')?.resourceId,
+    'navigation-pull-handle',
+  )
 })
 
 test('taps the Dismiss backdrop in the upper scrim, not the sheet centre', () => {
@@ -467,6 +471,14 @@ test('edge-swipe evaluation stays on the session or fails closed', () => {
     evaluatePracticeBackSwipe({ beforeDump: PRACTICE_DUMP, afterDump: TODAY_DUMP }).status,
     'failed',
   )
+  assert.match(
+    evaluatePracticeBackSwipe({
+      beforeDump: PRACTICE_DUMP,
+      afterDump: TODAY_DUMP,
+      swipeId: 'full-screen',
+    }).notes,
+    /Full-screen swipe left the practice session/,
+  )
   assert.equal(
     evaluatePracticeBackSwipe({ beforeDump: TODAY_DUMP, afterDump: TODAY_DUMP }).status,
     'unavailable',
@@ -503,6 +515,7 @@ function scriptedDevice({
   expoRoutes = false,
   moreOpensHard = true,
   talkbackInstalled = false,
+  leaveOnFullScreenSwipe = false,
 } = {}) {
   let stage = 'idle'
   let talkbackEnabled = false
@@ -601,7 +614,14 @@ function scriptedDevice({
       const y1 = Number(args[swipeAt + 2])
       const y2 = Number(args[swipeAt + 4])
       const committed = Math.abs(y2 - y1) >= 48 && Math.abs(x2 - x1) < 40
-      if (x1 > 20 && committed && stage === 'today') stage = 'menu'
+      if (
+        leaveOnFullScreenSwipe &&
+        x1 === PRACTICE_BACK_SWIPES[1].x1 &&
+        x2 === PRACTICE_BACK_SWIPES[1].x2 &&
+        stage === 'stream'
+      ) {
+        stage = 'today'
+      } else if (x1 > 20 && committed && stage === 'today') stage = 'menu'
       else if (x1 > 20 && committed && stage === 'menu') stage = 'today'
       return { status: 0, stdout: '' }
     }
@@ -649,14 +669,40 @@ test('reads the Expo path from a hidden loro-route dump node', () => {
   )
 })
 
+test('practice back-swipe probe issues edge then full-screen swipes', () => {
+  const backSwipes = []
+  const device = scriptedDevice()
+  const run = (tool, args) => {
+    if (args.includes('swipe')) {
+      const swipeAt = args.indexOf('swipe')
+      const coords = args.slice(swipeAt + 1, swipeAt + 5).map(Number)
+      if (coords[1] === 800 && coords[3] === 800) backSwipes.push(coords)
+    }
+    return device(tool, args)
+  }
+  const rows = executeWaveScenarios({ run, waitMs: 0 })
+  assert.equal(rows.find((row) => row.id === 'practice-back-swipe-disabled').status, 'passed')
+  assert.deepEqual(backSwipes, [
+    [4, 800, 360, 800],
+    [180, 800, 360, 800],
+  ])
+})
+
+test('practice back-swipe fails when a full-screen swipe leaves the session', () => {
+  const rows = executeWaveScenarios({
+    run: scriptedDevice({ leaveOnFullScreenSwipe: true }),
+    waitMs: 0,
+  })
+  const row = rows.find((entry) => entry.id === 'practice-back-swipe-disabled')
+  assert.equal(row.status, 'failed')
+  assert.match(row.notes, /Full-screen swipe left the practice session/)
+})
+
 test('scripted device dumps pass only with matching chrome and activity URL', () => {
   const rows = executeWaveScenarios({ run: scriptedDevice(), waitMs: 0 })
   assert.deepEqual(
     rows.map((row) => [row.id, row.status]),
-    [
-      ...expectedPointerAndShell('passed'),
-      ...expectedTalkbackRows('unavailable'),
-    ],
+    [...expectedPointerAndShell('passed'), ...expectedTalkbackRows('unavailable')],
   )
   assert.ok(atRows(rows).every((row) => row.reason.includes('TalkBack is not installed')))
 })
@@ -695,10 +741,7 @@ test('TalkBack rows reuse the same chrome and URL gates after a focused activate
   const rows = executeWaveScenarios({ run: scriptedDevice({ talkbackInstalled: true }), waitMs: 0 })
   assert.deepEqual(
     rows.map((row) => [row.id, row.status]),
-    [
-      ...expectedPointerAndShell('passed'),
-      ...expectedTalkbackRows('passed'),
-    ],
+    [...expectedPointerAndShell('passed'), ...expectedTalkbackRows('passed')],
   )
 })
 
