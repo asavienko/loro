@@ -91,9 +91,7 @@ export const STATES: AppState[] = [
     spec: 'AS-07 Batch phrase listening export',
     reach: async (page) => {
       await openListenExport(page)
-      await expect(
-        page.getByText('On-device listening cache is not available here.', { exact: true }),
-      ).toBeVisible()
+      await expect(page.getByText(LISTEN_STATUS['not-configured'], { exact: true })).toBeVisible()
       await expect(page.getByText('Sara Martin 1')).toBeVisible()
       await expect(page.getByText('Dante', { exact: true })).toBeVisible()
     },
