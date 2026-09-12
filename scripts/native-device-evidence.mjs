@@ -112,16 +112,32 @@ function resolveRevision(revision) {
   return result.stdout.trim()
 }
 
+const ADB_MAX_BUFFER = 16 * 1024 * 1024
+
 function command(adb, serial, argv, capture = true) {
   const result = spawnSync(adb, serial ? ['-s', serial, ...argv] : argv, {
     encoding: 'utf8',
     stdio: capture ? 'pipe' : 'inherit',
+    maxBuffer: ADB_MAX_BUFFER,
   })
   if (result.error || result.status !== 0) {
     const detail = result.stderr?.trim() || result.error?.message || `exit ${result.status}`
     throw new Error(`adb ${argv.join(' ')} failed: ${detail}`)
   }
   return result.stdout
+}
+
+/** Recent lines only. A full emulator buffer can throw ENOBUFS and must not abort the wave rows. */
+export function collectLogcat(adb, serial, run = spawnSync) {
+  const argv = serial
+    ? ['-s', serial, 'logcat', '-d', '-v', 'threadtime', '-t', '400']
+    : ['logcat', '-d', '-v', 'threadtime', '-t', '400']
+  const result = run(adb, argv, { encoding: 'utf8', maxBuffer: ADB_MAX_BUFFER })
+  if (result.error || result.status !== 0) {
+    const detail = result.stderr?.trim() || result.error?.message || `exit ${result.status}`
+    return { status: 'unavailable', text: `logcat unavailable: ${detail}\n` }
+  }
+  return { status: 'captured', text: result.stdout || '' }
 }
 
 export function collectEvidence({
@@ -147,12 +163,11 @@ export function collectEvidence({
   writeFileSync(resolve(output, 'device.txt'), shell('getprop'))
   writeFileSync(resolve(output, 'package.txt'), shell('dumpsys', 'package', packageName))
   writeFileSync(resolve(output, 'permissions.txt'), shell('pm', 'list', 'permissions', '-g', '-d'))
-  writeFileSync(
-    resolve(output, 'logcat.txt'),
-    command(adb, selected, ['logcat', '-d', '-v', 'threadtime']),
-  )
+  const logcat = collectLogcat(adb, selected)
+  writeFileSync(resolve(output, 'logcat.txt'), logcat.text)
   const screenshot = spawnSync(adb, ['-s', selected, 'exec-out', 'screencap', '-p'], {
     encoding: null,
+    maxBuffer: ADB_MAX_BUFFER,
   })
   if (screenshot.error || screenshot.status !== 0 || !screenshot.stdout?.length)
     throw new Error('adb exec-out screencap failed.')
@@ -163,6 +178,7 @@ export function collectEvidence({
         serial: selected,
         packageName,
         outputDir: resolve(output, 'wave-scenarios'),
+        waitMs: 3000,
       })
     : unevaluatedWaveScenarios(
         'Collector records the current screen only; it does not launch or drive Stream → Refrain or menu hard-filter. Pass --execute-scenarios on a connected device.',
@@ -177,7 +193,7 @@ export function collectEvidence({
       device: 'captured',
       installedPackage: 'captured',
       permissions: 'captured',
-      logs: 'captured',
+      logs: logcat.status,
       screenshot: 'captured',
     },
     scenarios,

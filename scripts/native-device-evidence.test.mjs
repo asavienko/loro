@@ -5,12 +5,21 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import {
   artifactIdentity,
+  collectLogcat,
   defaultPackage,
   evidenceOutput,
   parseArguments,
 } from './native-device-evidence.mjs'
 import { collectIosEvidence, selectSimulator } from './ios-simulator-evidence.mjs'
 import { unevaluatedWaveScenarios, WAVE_TOUCH_SCENARIOS } from './wave-touch-scenarios.mjs'
+
+test('logcat ENOBUFS stays unavailable and does not abort the wave rows', () => {
+  const result = collectLogcat('adb', 'emulator-5554', () => ({
+    error: Object.assign(new Error('ENOBUFS'), { code: 'ENOBUFS' }),
+  }))
+  assert.equal(result.status, 'unavailable')
+  assert.match(result.text, /ENOBUFS/)
+})
 
 test('uses the preview package and accepts bounded device options', () => {
   assert.deepEqual(parseArguments([]), {
