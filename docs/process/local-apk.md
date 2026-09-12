@@ -172,8 +172,11 @@ separately. A screenshot does not establish that the app is foregrounded or a sc
 Plan 101/93 wave-path rows (`stream-to-phrase-refrain`, `menu-hard-refrain`,
 `practice-back-swipe-disabled`, `spine-pull-opens-switcher`, `sheet-pull-dismisses-switcher`, and
 the TalkBack `-at` variants) are listed on the manifest as `unavailable` until a device run drives
-those entries and records the exact URLs or gesture proof. `pnpm native:evidence --list-scenarios`
-prints the catalog without collecting. On a connected Android device,
+those entries and records the exact URLs or gesture proof.
+`pnpm native:evidence --matrix PATH/TO/manifest.json` classifies an existing bundle: emulator and
+simulator passed rows have `closesPhysicalGate: false`. Physical-candidate devices can set that flag
+only for passed rows. `pnpm native:evidence --list-scenarios` prints the catalog without collecting.
+On a connected Android device,
 `pnpm native:evidence --execute-scenarios --artifact-revision … --artifact …` dumps the hierarchy,
 completes first-run onboarding when Today is missing, then taps Today’s wave control → Stream →
 phrase Refrain, switcher and More hard-filter, edge-swipes the practice stack, pulls the spine
