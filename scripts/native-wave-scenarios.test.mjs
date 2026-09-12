@@ -8,7 +8,9 @@ import {
   evaluatePracticeGestureDisabledDump,
   evaluateRefrainExitBack,
   evaluateStreamExitBack,
+  evaluatePhraseDetailPracticeDump,
   evaluateStreamPhraseDump,
+  phraseIdFromUrl,
   evaluateOnboardedHome,
   evaluateSheetBackDismiss,
   evaluateSheetBackdropDismiss,
@@ -168,6 +170,22 @@ const EXPO_PHRASE_DUMP = `<?xml version="1.0"?>
     <node class="android.widget.Button" content-desc="Leave practice" clickable="true" bounds="[24,100][200,140]"/>
     <node class="android.widget.TextView" text="This phrase" bounds="[24,148][360,196]"/>
     <node class="android.widget.TextView" text="The Refrain" bounds="[24,200][360,248]"/>
+  </node>
+</hierarchy>`
+
+const PHRASE_DETAIL_DUMP = `<?xml version="1.0"?>
+<hierarchy>
+  <node class="android.widget.FrameLayout">
+    <node class="android.widget.TextView" text="Phrase" bounds="[24,80][360,128]"/>
+    <node class="android.widget.Button" content-desc="Practice now →" clickable="true" bounds="[24,400][360,456]"/>
+  </node>
+</hierarchy>`
+
+const EXPO_DETAIL_DUMP = `<?xml version="1.0"?>
+<hierarchy>
+  <node class="android.widget.FrameLayout">
+    <node class="android.widget.TextView" text="loro-route:/phrase/es-001" bounds="[0,0][1,1]"/>
+    <node class="android.widget.Button" content-desc="Practice now →" clickable="true" bounds="[24,400][360,456]"/>
   </node>
 </hierarchy>`
 
@@ -351,6 +369,32 @@ test('never treats a dump-only path as a device pass', () => {
     currentUrl: '',
   })
   assert.equal(result.status, 'unavailable')
+})
+
+test('reads the phrase id from a refrain URL', () => {
+  assert.equal(phraseIdFromUrl('/practice/refrain?phrase=es-001'), 'es-001')
+  assert.equal(phraseIdFromUrl('loro://practice/refrain?filter=hard'), '')
+})
+
+test('passes phrase-detail Practice now when chrome and URL match', () => {
+  const result = evaluatePhraseDetailPracticeDump({
+    detailDump: PHRASE_DETAIL_DUMP,
+    refrainDump: PHRASE_REFRAIN_DUMP,
+    currentUrl: 'loro://practice/refrain?phrase=es-001',
+    phraseId: 'es-001',
+  })
+  assert.equal(result.status, 'passed')
+  assert.match(result.notes, /Practice now/)
+})
+
+test('fails phrase-detail Practice now when the URL stays on phrase detail', () => {
+  const result = evaluatePhraseDetailPracticeDump({
+    detailDump: PHRASE_DETAIL_DUMP,
+    refrainDump: PHRASE_DETAIL_DUMP,
+    currentUrl: 'loro://phrase/es-001',
+    phraseId: 'es-001',
+  })
+  assert.equal(result.status, 'failed')
 })
 
 test('passes menu hard-filter when chrome and URL match', () => {
@@ -622,6 +666,7 @@ function scriptedDevice({
   talkbackInstalled = false,
   leaveOnFullScreenSwipe = false,
   phraseMenuKeepsPhrase = false,
+  practiceNowStaysOnDetail = false,
 } = {}) {
   let stage = 'idle'
   let talkbackEnabled = false
@@ -630,7 +675,9 @@ function scriptedDevice({
   const streamDump = expoRoutes ? EXPO_STREAM_DUMP : STREAM_DUMP
   const phraseDump = expoRoutes ? EXPO_PHRASE_DUMP : PHRASE_REFRAIN_DUMP
   const hardDump = expoRoutes ? EXPO_HARD_DUMP : HARD_REFRAIN_DUMP
+  const detailDump = expoRoutes ? EXPO_DETAIL_DUMP : PHRASE_DETAIL_DUMP
   const dumpFor = () => {
+    if (stage === 'detail') return detailDump
     if (stage === 'phrase') return phraseDump
     if (stage === 'today') return HOME_DUMP
     if (stage === 'menu') return MENU_DUMP
@@ -645,6 +692,7 @@ function scriptedDevice({
       stage = tapY < 200 ? 'menu' : 'stream'
       if (stage === 'menu') menuSource = 'today'
     } else if (stage === 'stream') stage = 'phrase'
+    else if (stage === 'detail') stage = practiceNowStaysOnDetail ? 'detail' : 'phrase'
     else if (stage === 'stream-exit') stage = 'stream'
     else if (stage === 'phrase') {
       stage = tapY < 90 ? 'menu' : 'exit'
@@ -663,6 +711,10 @@ function scriptedDevice({
     }
     if (joined.includes('am start') && joined.includes('practice/stream')) {
       stage = 'stream'
+      return { status: 0, stdout: '' }
+    }
+    if (joined.includes('am start') && joined.includes('://phrase/')) {
+      stage = 'detail'
       return { status: 0, stdout: '' }
     }
     if (joined.includes('am start') && joined.includes('://more')) {
@@ -711,7 +763,9 @@ function scriptedDevice({
           ? 'dat=loro://practice/refrain?phrase=es-001'
           : stage === 'hard'
             ? 'dat=loro://practice/refrain?filter=hard'
-            : 'dat=loro://practice/stream'
+            : stage === 'detail'
+              ? 'dat=loro://phrase/es-001'
+              : 'dat=loro://practice/stream'
       return { status: 0, stdout: url }
     }
     if (joined.includes('logcat')) return { status: 0, stdout: '' }
@@ -868,6 +922,16 @@ test('menu-hard-refrain fails when More does not open the difficult-only drill',
   assert.equal(rows[4].status, 'passed')
   assert.equal(rows[5].status, 'passed')
   assert.equal(rows[6].status, 'passed')
+})
+
+test('stream-to-phrase-refrain fails when Practice now stays on phrase detail', () => {
+  const rows = executeWaveScenarios({
+    run: scriptedDevice({ practiceNowStaysOnDetail: true }),
+    waitMs: 0,
+  })
+  const row = rows.find((entry) => entry.id === 'stream-to-phrase-refrain')
+  assert.equal(row.status, 'failed')
+  assert.match(row.notes, /Practice now/)
 })
 
 test('menu-hard-refrain fails when phrase-focus switcher stays on the phrase', () => {

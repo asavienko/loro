@@ -251,6 +251,10 @@ export function isPhraseRefrainUrl(url) {
   )
 }
 
+export function phraseIdFromUrl(url) {
+  return parseAppUrl(url)?.searchParams.get('phrase') ?? ''
+}
+
 export function isHardRefrainUrl(url) {
   const parsed = parseAppUrl(url)
   return Boolean(
@@ -321,6 +325,41 @@ export function evaluateTodayStreamDump({ todayDump, streamDump, currentUrl }) {
   return {
     status: 'passed',
     notes: 'Today wave control opened Stream.',
+  }
+}
+
+export function evaluatePhraseDetailPracticeDump({
+  detailDump,
+  refrainDump,
+  currentUrl,
+  phraseId,
+}) {
+  if (!findClickableLabel(detailDump, 'Practice now')) {
+    return {
+      status: 'failed',
+      notes: 'Phrase detail dump does not expose Practice now.',
+    }
+  }
+  if (!currentUrl) {
+    return {
+      status: 'unavailable',
+      notes: 'Dump-only path cannot prove /practice/refrain?phrase=<id> from Practice now.',
+    }
+  }
+  const landedId = phraseIdFromUrl(currentUrl)
+  if (
+    !isPhraseRefrainUrl(currentUrl) ||
+    !isPhraseChrome(refrainDump) ||
+    (phraseId && landedId !== phraseId)
+  ) {
+    return {
+      status: 'failed',
+      notes: `Expected phrase focus after Practice now; landed ${currentUrl || 'unknown'}.`,
+    }
+  }
+  return {
+    status: 'passed',
+    notes: 'Phrase detail Practice now opened phrase focus.',
   }
 }
 
@@ -883,14 +922,53 @@ function runStreamPhrase(ctx) {
   if (ctx.outputDir) {
     writeFileSync(resolve(ctx.outputDir, 'stream-url.txt'), `${currentUrl}\n`)
   }
+  const streamEval = evaluateStreamPhraseDump({
+    streamDump: stream.xml,
+    refrainDump: refrain.xml,
+    currentUrl,
+  })
+  if (streamEval.status !== 'passed') return scenarioResult(scenario, streamEval, { currentUrl })
+  const phraseId = phraseIdFromUrl(currentUrl)
+  if (!phraseId) {
+    return scenarioResult(
+      scenario,
+      {
+        status: 'failed',
+        notes: 'Stream phrase URL does not expose a phrase id for Practice now.',
+      },
+      { currentUrl },
+    )
+  }
+  const openedDetail = openDeepLink(ctx, `/phrase/${phraseId}`)
+  if (openedDetail) return scenarioResult(scenario, { status: 'unavailable', notes: openedDetail })
+  waitForUi(ctx.run, ctx.waitMs)
+  const detail = dumpUi(ctx, 'phrase-detail-before')
+  if (detail.error) return scenarioResult(scenario, { status: 'unavailable', notes: detail.error })
+  const tappedNow = tapLabel(ctx, detail.xml, 'Practice now')
+  if (tappedNow) return scenarioResult(scenario, { status: 'failed', notes: tappedNow })
+  waitForUi(ctx.run, ctx.waitMs)
+  const fromDetail = dumpUi(ctx, 'phrase-detail-after')
+  if (fromDetail.error)
+    return scenarioResult(scenario, { status: 'unavailable', notes: fromDetail.error })
+  const detailUrl = currentActivityUrl(ctx, fromDetail.xml)
+  if (ctx.outputDir) {
+    writeFileSync(resolve(ctx.outputDir, 'phrase-detail-url.txt'), `${detailUrl}\n`)
+  }
+  const detailEval = evaluatePhraseDetailPracticeDump({
+    detailDump: detail.xml,
+    refrainDump: fromDetail.xml,
+    currentUrl: detailUrl,
+    phraseId,
+  })
+  if (detailEval.status !== 'passed')
+    return scenarioResult(scenario, detailEval, { currentUrl: detailUrl })
   return scenarioResult(
     scenario,
-    evaluateStreamPhraseDump({
-      streamDump: stream.xml,
-      refrainDump: refrain.xml,
-      currentUrl,
-    }),
-    { currentUrl },
+    {
+      status: 'passed',
+      notes: 'Stream Practice this phrase and phrase-detail Practice now opened phrase focus.',
+    },
+    { currentUrl: detailUrl },
   )
 }
 

@@ -73,6 +73,20 @@ const STREAM_EXIT_SHEET_ONLY = JSON.stringify([
   },
 ])
 
+const DETAIL = JSON.stringify([
+  {
+    label: 'Phrase',
+    children: [
+      {
+        label: 'Practice now →',
+        type: 'Button',
+        frame: { x: 24, y: 400, width: 336, height: 56 },
+      },
+      { identifier: 'loro-route:/phrase/es-001' },
+    ],
+  },
+])
+
 const PHRASE = JSON.stringify([
   {
     label: 'This phrase',
@@ -193,10 +207,12 @@ function scriptedIosDevice({
   moreOpensHard = true,
   leaveOnFullScreenSwipe = false,
   phraseMenuKeepsPhrase = false,
+  practiceNowStaysOnDetail = false,
 } = {}) {
   let stage = 'idle'
   let menuSource = 'today'
   const dumpFor = () => {
+    if (stage === 'detail') return DETAIL
     if (stage === 'phrase') return PHRASE
     if (stage === 'today') return TODAY
     if (stage === 'menu') return MENU
@@ -211,6 +227,7 @@ function scriptedIosDevice({
       stage = tapY < 200 ? 'menu' : 'stream'
       if (stage === 'menu') menuSource = 'today'
     } else if (stage === 'stream') stage = tapY < 80 ? 'stream-exit' : 'phrase'
+    else if (stage === 'detail') stage = practiceNowStaysOnDetail ? 'detail' : 'phrase'
     else if (stage === 'stream-exit') stage = 'stream'
     else if (stage === 'phrase') {
       stage = tapY < 90 ? 'menu' : 'exit'
@@ -266,6 +283,10 @@ function scriptedIosDevice({
         stage = 'stream'
         return { status: 0, stdout: '' }
       }
+      if (joined.includes('openurl') && joined.includes('://phrase/')) {
+        stage = 'detail'
+        return { status: 0, stdout: '' }
+      }
       if (joined.includes('openurl') && joined.includes('://more')) {
         stage = moreOpensHard ? 'more' : 'today'
         return { status: 0, stdout: '' }
@@ -280,7 +301,9 @@ function scriptedIosDevice({
             ? 'loro-route:/practice/refrain?phrase=es-001'
             : stage === 'hard'
               ? 'loro-route:/practice/refrain?filter=hard'
-              : 'loro-route:/practice/stream'
+              : stage === 'detail'
+                ? 'loro-route:/phrase/es-001'
+                : 'loro-route:/practice/stream'
         return { status: 0, stdout: url }
       }
       if (joined.includes('launch')) return { status: 0, stdout: '' }
@@ -419,6 +442,17 @@ test('menu-hard-refrain fails when More does not open the difficult-only drill',
   assert.equal(rows[0].status, 'passed')
   assert.equal(rows[1].status, 'failed')
   assert.match(rows[1].notes, /The Refrain/)
+})
+
+test('stream-to-phrase-refrain fails when Practice now stays on phrase detail', () => {
+  const rows = executeIosWaveScenarios({
+    udid: 'A123',
+    run: scriptedIosDevice({ practiceNowStaysOnDetail: true }),
+    waitMs: 0,
+  })
+  const row = rows.find((entry) => entry.id === 'stream-to-phrase-refrain')
+  assert.equal(row.status, 'failed')
+  assert.match(row.notes, /Practice now/)
 })
 
 test('menu-hard-refrain fails when phrase-focus switcher stays on the phrase', () => {

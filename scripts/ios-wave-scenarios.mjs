@@ -20,8 +20,10 @@ import {
   evaluateSheetBackdropDismiss,
   evaluateSheetDismiss,
   evaluateSpinePull,
+  evaluatePhraseDetailPracticeDump,
   evaluateStreamPhraseDump,
   evaluateTodayStreamDump,
+  phraseIdFromUrl,
   findClickableLabel,
   findLabel,
   findResourceId,
@@ -388,14 +390,53 @@ function runStreamPhrase(ctx) {
   if (ctx.outputDir) {
     writeFileSync(resolve(ctx.outputDir, 'stream-url.txt'), `${currentUrl}\n`)
   }
+  const streamEval = evaluateStreamPhraseDump({
+    streamDump: stream.dump,
+    refrainDump: refrain.dump,
+    currentUrl,
+  })
+  if (streamEval.status !== 'passed') return scenarioResult(scenario, streamEval, { currentUrl })
+  const phraseId = phraseIdFromUrl(currentUrl)
+  if (!phraseId) {
+    return scenarioResult(
+      scenario,
+      {
+        status: 'failed',
+        notes: 'Stream phrase URL does not expose a phrase id for Practice now.',
+      },
+      { currentUrl },
+    )
+  }
+  const openedDetail = openDeepLink(ctx, `/phrase/${phraseId}`)
+  if (openedDetail) return scenarioResult(scenario, { status: 'unavailable', notes: openedDetail })
+  waitForUi(ctx.run, ctx.waitMs)
+  const detail = dumpUi(ctx, 'phrase-detail-before')
+  if (detail.error) return scenarioResult(scenario, { status: 'unavailable', notes: detail.error })
+  const tappedNow = tapLabel(ctx, detail.dump, 'Practice now')
+  if (tappedNow) return scenarioResult(scenario, { status: 'failed', notes: tappedNow })
+  waitForUi(ctx.run, ctx.waitMs)
+  const fromDetail = dumpUi(ctx, 'phrase-detail-after')
+  if (fromDetail.error)
+    return scenarioResult(scenario, { status: 'unavailable', notes: fromDetail.error })
+  const detailUrl = currentActivityUrl(ctx, fromDetail.dump)
+  if (ctx.outputDir) {
+    writeFileSync(resolve(ctx.outputDir, 'phrase-detail-url.txt'), `${detailUrl}\n`)
+  }
+  const detailEval = evaluatePhraseDetailPracticeDump({
+    detailDump: detail.dump,
+    refrainDump: fromDetail.dump,
+    currentUrl: detailUrl,
+    phraseId,
+  })
+  if (detailEval.status !== 'passed')
+    return scenarioResult(scenario, detailEval, { currentUrl: detailUrl })
   return scenarioResult(
     scenario,
-    evaluateStreamPhraseDump({
-      streamDump: stream.dump,
-      refrainDump: refrain.dump,
-      currentUrl,
-    }),
-    { currentUrl },
+    {
+      status: 'passed',
+      notes: 'Stream Practice this phrase and phrase-detail Practice now opened phrase focus.',
+    },
+    { currentUrl: detailUrl },
   )
 }
 
