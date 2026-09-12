@@ -32,9 +32,9 @@ test('enlarged difficulty labels, queue phrases and detail actions remain readab
         expect(fits).toBe(true)
       }
     } else if (name === 'stream · first phrase') {
-      expect(
-        (await page.getByText('¿Cómo llego al museo?', { exact: true }).boundingBox())?.width,
-      ).toBeGreaterThan(200)
+      const waveRow = page.getByRole('button', { name: /Learning\.$/ }).first()
+      await expect(waveRow).toBeVisible()
+      expect((await waveRow.boundingBox())?.width).toBeGreaterThan(200)
     } else {
       const learned = page.getByRole('button', { name: 'Mark learned', exact: true })
       await learned.scrollIntoViewIfNeeded()
