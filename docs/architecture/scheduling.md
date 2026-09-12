@@ -32,6 +32,15 @@ Five independent mechanisms, one per progress signal:
 | [The ladder](#4-the-ladder--loop-c)     | How deeply is this owned?                | RunEngine (maintained by all) |
 | [Drops](#5-trip-drops)                  | What unlocks today?                      | TripService                   |
 
+<a id="association-is-not-a-sixth-scheduler"></a>
+
+Discover association after add (P2-04) is **not** a sixth scheduler. It ranks unowned catalog
+neighbors inside authored theme bands. Rust still owns the integer, but the inputs are the
+**anchor** phrase's declared difficulty and tags plus catalog fields — not FSRS due, mastery or
+automaticity of the candidates (they are not yet owned). Owner:
+[plan 101](../../plans/101-phrase-sound-graph.md). Durable model:
+[content-model.md](../product/content-model.md#phrase-relation-graph).
+
 ---
 
 <a id="1-stream-rank"></a>

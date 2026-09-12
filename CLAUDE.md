@@ -185,10 +185,12 @@ prototype-only and **must not** be carried into the app — see the divergence t
   (Reanimated adapter, UI-thread press/`sheetUp`, Arrival/warming/beat/equaliser/pulse/un-blur on
   real routes; practice/form/chat composites wait for a second caller; device 60 fps remains 58/72)
   under the same number (unresolved collision; do not reuse or drop either); 57 keeps
-  fonts/haptics/dark and 93 keeps spine/sheet pull laws. The next new plan number is 101; recheck
-  concurrent worktrees and untracked `plans/` files before allocating an ID — the README/CLAUDE
-  "next is N" sentence can lag. A new plan takes the next free number and gets a row in
-  [`plans/README.md`](plans/README.md). **Numbers are never reused** — a gap is left rather than
+  fonts/haptics/dark and 93 keeps spine/sheet pull laws. Active
+  [`plans/101-phrase-sound-graph.md`](plans/101-phrase-sound-graph.md) owns authored phrase edges,
+  Discover association scoring and the authoring generate queue. The next new plan number is 102;
+  recheck concurrent worktrees and untracked `plans/` files before allocating an ID — the
+  README/CLAUDE "next is N" sentence can lag. A new plan takes the next free number and gets a row
+  in [`plans/README.md`](plans/README.md). **Numbers are never reused** — a gap is left rather than
   backfilled, so a link written against a number can't come to mean a different plan. Not in
   `docs/`: that holds the durable spec. Not in a temp directory either — a plan you can't find again
   is a plan you rewrite. Name the requirement ID inside the plan so it ties back to the branch and
