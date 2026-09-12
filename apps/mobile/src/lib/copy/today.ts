@@ -100,10 +100,6 @@ export const todayCopy = {
     get resumeRefrain() {
       return message('today.cta.resumeRefrain')
     },
-    waitForWave: (time: string): string => message('today.cta.waitForWave', { time }),
-    get complete() {
-      return message('today.cta.complete')
-    },
     get keepListening() {
       return message('today.cta.keepListening')
     },
