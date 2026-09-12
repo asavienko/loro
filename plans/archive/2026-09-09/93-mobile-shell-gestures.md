@@ -18,12 +18,11 @@ Validation: browser gesture regression, full `pnpm check` and `pnpm test:e2e`. R
 touch and assistive-technology verification must precede native release. Plan 101 adds browser
 mouse/touch coverage for Stream → phrase Refrain and menu hard-filter;
 `native:evidence --execute-scenarios` on Linux emulator `emulator-5554` (APK `b0b4e3b77746`) passed
-all twelve catalog rows at `.local-builds/native-evidence/wave-101-emulator-v8/`: edge-swipe stayed
-on the session, spine pull opened the switcher, and sheet pull, Android Back, and labelled Dismiss
-backdrop each closed it on Today, including TalkBack variants. `closesPhysicalGate` stays false.
-Practice sessions now set `fullScreenGestureEnabled: false` with `gestureEnabled: false`, and the
-wave runner probes a mid-screen swipe after the edge swipe so iOS 26's default full-screen dismiss
-cannot hide behind an edge-only pass. That remains emulator proof, not physical-device or iOS. iOS
+all twelve catalog rows at `.local-builds/native-evidence/wave-101-emulator-v9/`: edge and
+mid-screen swipes stayed on the session, spine pull opened the switcher, and sheet pull, Android
+Back, and labelled Dismiss backdrop each closed it on Today, including TalkBack variants.
+`closesPhysicalGate` stays false. Practice sessions set `fullScreenGestureEnabled: false` with
+`gestureEnabled: false`. That remains emulator proof, not physical-device or iOS. iOS
 `--execute-scenarios` uses simctl + idb for pointer, spine/sheet, and backdrop rows and fail-closes
 without chrome/URL/gesture proof. Android Back stays unavailable on iOS. That iOS path may boot a
 Shutdown simulator and install a verified `loro-simulator-*.zip` via `pnpm ios:evidence`. VoiceOver

@@ -6,15 +6,14 @@
   difficult-only menu entry. Main's listen-complete waves keep practice open before the first hour;
   `?wave=` is still wave focus, not a clock lock. Browser mouse/touch covers Stream → phrase Refrain
   and menu hard-filter, including a phrase-focus switcher hop. Linux emulator `emulator-5554` (AVD
-  `loro-wave`, API 36) passed all twelve catalog rows on APK `b0b4e3b77746` (v8), including Android
-  Back and labelled Dismiss backdrop plus TalkBack variants; `closesPhysicalGate` stays false.
-  Practice sessions now also set `fullScreenGestureEnabled: false` so iOS 26's default full-screen
-  dismiss cannot pop the session; the wave runner probes edge then mid-screen swipe. Physical-device
-  and iOS execution remain the plan 58/93 gates. `pnpm ios:evidence` is the Mac one-shot that
-  retains the simulator zip and drives pointer, spine/sheet, and backdrop rows through simctl + idb,
-  fail-closing without chrome/URL/gesture proof. Android Back and TalkBack `-at` rows stay
-  unavailable on iOS. Authored v1.1 still treats Refrain as the wave hero and is not edited. ID
-  collides with phrase-graph 101.
+  `loro-wave`, API 36) passed all twelve catalog rows on APK `b0b4e3b77746` (v9), including Android
+  Back, labelled Dismiss, edge and mid-screen back-swipe, plus TalkBack variants;
+  `closesPhysicalGate` stays false. Practice sessions set `fullScreenGestureEnabled: false` so iOS
+  26's default full-screen dismiss cannot pop the session. Physical-device and iOS execution remain
+  the plan 58/93 gates. `pnpm ios:evidence` is the Mac one-shot that retains the simulator zip and
+  drives pointer, spine/sheet, and backdrop rows through simctl + idb, fail-closing without
+  chrome/URL/gesture proof. Android Back and TalkBack `-at` rows stay unavailable on iOS. Authored
+  v1.1 still treats Refrain as the wave hero and is not edited. ID collides with phrase-graph 101.
 - **Depends on:** 64 wave/resume runtime; 81 menu/More destinations; 56 route declaration
 - **Number allocation:** 101 follows inspection of active and archived plans. 96, 100 and this
   file's collision with [`101-phrase-sound-graph.md`](101-phrase-sound-graph.md) remain unresolved.
@@ -49,24 +48,24 @@ More, filtered to active `difficulty === 'hard'` phrases only.
 ## Remaining
 
 - Physical-device and iOS execution of the wave-path rows (plans 58/93). Closest-available Android
-  evidence is the Linux emulator run at `.local-builds/native-evidence/wave-101-emulator-v8/`
+  evidence is the Linux emulator run at `.local-builds/native-evidence/wave-101-emulator-v9/`
   against preview APK `b0b4e3b77746` (`app.loro.android.preview` on `emulator-5554`): Stream →
   `?phrase=01a09640-97b3-7000-9669-f12bcf0fc9d1`, switcher and More both `?filter=hard`, practice
-  edge-swipe stayed on the session, spine pull opened the switcher, and sheet pull, Android Back,
-  and labelled Dismiss backdrop each dismissed it on Today. The TalkBack `-at` variants of those
-  pointer and dismiss rows passed the same chrome/URL/gesture gates. `matrix.json` records
-  `passedCount=12` and `physicalGateCount=0`. Source now also locks iOS full-screen dismiss
-  (`PRACTICE_SESSION_STACK_OPTIONS`) and the runner probes a mid-screen swipe after the edge swipe;
-  that pair is still unevaluated on a Mac simulator or iPhone. That is not physical-device or iOS
-  proof. iOS `--execute-scenarios` is a simctl + idb runner with the same chrome/URL/gesture gates;
-  it may boot a Shutdown simulator and install a verified `loro-simulator-*.zip` from
-  `pnpm ios:local` or the one-shot `pnpm ios:evidence`. Android Back stays unavailable on iOS.
-  TalkBack `-at` rows stay unavailable on iOS even if VoiceOver looks enabled; ordinary idb taps are
-  not AT proof. This Linux host has no Xcode/idb, so those rows stay unevaluated until a Mac
-  simulator or iPhone run drives them. Phrase-focus Refrain is not the menu destination; the
-  switcher replaces into `?filter=hard` and only a matching hard checkpoint owns that empty screen.
-  A screenshot collector must not mark those rows passed. `matrix.json` classifies that emulator
-  bundle as `closest-available-not-physical`; its passed rows have `closesPhysicalGate: false`.
+  edge and mid-screen swipes stayed on the session, spine pull opened the switcher, and sheet pull,
+  Android Back, and labelled Dismiss backdrop each dismissed it on Today. The TalkBack `-at`
+  variants of those pointer and dismiss rows passed the same chrome/URL/gesture gates. `matrix.json`
+  records `passedCount=12` and `physicalGateCount=0`. Source locks iOS full-screen dismiss
+  (`PRACTICE_SESSION_STACK_OPTIONS`). Mac simulator and iPhone execution remain unevaluated. That is
+  not physical-device or iOS proof. iOS `--execute-scenarios` is a simctl + idb runner with the same
+  chrome/URL/gesture gates; it may boot a Shutdown simulator and install a verified
+  `loro-simulator-*.zip` from `pnpm ios:local` or the one-shot `pnpm ios:evidence`. Android Back
+  stays unavailable on iOS. TalkBack `-at` rows stay unavailable on iOS even if VoiceOver looks
+  enabled; ordinary idb taps are not AT proof. This Linux host has no Xcode/idb, so those rows stay
+  unevaluated until a Mac simulator or iPhone run drives them. Phrase-focus Refrain is not the menu
+  destination; the switcher replaces into `?filter=hard` and only a matching hard checkpoint owns
+  that empty screen. A screenshot collector must not mark those rows passed. `matrix.json`
+  classifies that emulator bundle as `closest-available-not-physical`; its passed rows have
+  `closesPhysicalGate: false`.
 - `deep_link_for` now opens Stream for the daily reminder and the midday wave nudge. The plan 70
   scheduler that delivers those links is still unbuilt. A bare `/practice` path also resolves to
   Stream.
