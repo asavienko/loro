@@ -18,7 +18,10 @@ test('the listen companion is a Phrases utility with honest unavailable generate
   await expect(page.getByRole('button', { name: LISTEN_LISTEN })).toBeDisabled()
   await expect(page.getByRole('button', { name: LISTEN_SHARE })).toBeDisabled()
   await expect(page.getByText(LISTEN_STATUS['voices-unapproved'], { exact: true })).toHaveCount(0)
+  // Web streams cloud download URLs (`remotePlayback`), so a missing native cache
+  // is not the blocker. The preview API URL is set; stub TTS is not ready.
   await expect(page.getByText(LISTEN_STATUS['not-configured'], { exact: true })).toBeVisible()
+  await expect(page.getByText('On-device listening cache is not available here.')).toHaveCount(0)
   await expect(
     page.getByText('Ready to generate licensed listening takes into the on-device cache.'),
   ).toHaveCount(0)

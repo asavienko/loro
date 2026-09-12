@@ -111,6 +111,45 @@ scenario can get through the real situation.
 
 ---
 
+<a id="phrase-relation-graph"></a>
+
+## Phrase relation graph
+
+Authored **edges** between catalog phrases, not a second kind of atom. A node is a catalog phrase
+id. A sound is still the phrase's `audio` attribute — never a graph node and never PCM.
+
+The seed relation is `scenario_next`: the existing scenario `phrases[]` order, stored so a
+deterministic score can read it. Same-theme adjacency is **derived** from `theme`; it is not stored
+(a stored clique does not scale to the ~600-phrase launch target). Later authored relations
+(`reply`, `lexical`, `contrast`, `prerequisite`, `register_shift`) wait on data most starters lack.
+
+Two scores consume the graph, with different inputs. Implementation owner:
+[plan 101](../../plans/101-phrase-sound-graph.md).
+
+| Score          | When                       | Reads                                                                              | Does not read                                   |
+| -------------- | -------------------------- | ---------------------------------------------------------------------------------- | ----------------------------------------------- |
+| `assoc_score`  | Discover after add (P2-04) | Anchor difficulty/tags, authored edges, candidate catalog fields, owned aggregates | Candidate FSRS/mastery (candidates are unowned) |
+| `gap_priority` | Authoring CLI              | Scenario/pack/audio coverage and arc orphans                                       | Any learner state                               |
+
+Discover association keeps the authored **theme bands** (`Loro.dc.html:2306–2310`): same-theme
+first, then the rest, cap 6. The score orders **inside** a band. The artifact context label is
+`More like “{anchorEs}”` (`2369`). This score is **not** Stream rank and **not** FSRS; see
+[scheduling.md](../architecture/scheduling.md#association-is-not-a-sixth-scheduler).
+
+The graph ships in the bundled snapshot (`graph.json` beside `scenarios.json`) and in the disk
+loader the authoring CLIs use. Course ids stay course-scoped (`cafe1` on `es-ES`, `bg-BG:cafe1`
+otherwise). Own-phrases have no catalog node.
+
+Catalog **audio** is a cloud object `{uri, sha256, ms}` — an `https` (or local-authoring `http`)
+URL, never a `file:` / `data:` path and never PCM. `content:render` first writes a content-addressed
+`sha256/<digest>` identity next to the local bytes; that form is a validation **warning** until
+publish replaces it with the cloud URL. The device caches that URL to a file URI through the
+listening/practice cache (`AS-01` / `AS-07`). In-app listen uses the cache. Share-out-of-app is the
+Listen export option and stays off until [Q-22](../decisions/open-questions.md#q-22). Learner
+recordings never take this path.
+
+---
+
 <a id="packs--onboarding-and-drops"></a>
 
 ## Packs — onboarding and drops
@@ -170,21 +209,24 @@ Every catalog phrase ships with pre-rendered native audio. This is not optional:
 quality varies wildly by platform and locale, and the pronunciation reference must be identical for
 every learner.
 
-| Property          | Value                                                                           |
-| ----------------- | ------------------------------------------------------------------------------- |
-| Voice             | Managed neural TTS, `es-ES`, one consistent voice per variant                   |
-| Format            | AAC 64 kbps mono, 24 kHz                                                        |
-| Rates             | Rendered at 1.0×; other rates are time-stretched on device (pitch preserved)    |
-| Size              | ~12 KB per phrase → ~7 MB for a 600-phrase catalog                              |
-| Delivery          | CDN, content-addressed by `sha256`, prefetched per pack                         |
-| Fallback          | On-device TTS when the file is missing, with a quality caveat                   |
-| Reference contour | `f0_native` extracted from the rendered audio at build time and shipped as data |
+| Property          | Value                                                                                                                                                                          |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Voice             | Managed neural TTS, `es-ES`, one consistent voice per variant                                                                                                                  |
+| Format            | AAC 64 kbps mono, 24 kHz                                                                                                                                                       |
+| Rates             | Rendered at 1.0×; other rates are time-stretched on device (pitch preserved)                                                                                                   |
+| Size              | ~12 KB per phrase → ~7 MB for a 600-phrase catalog                                                                                                                             |
+| Delivery          | Cloud `https` object `{uri, sha256, ms}` (local-authoring `http` only); device file cache. `content:render` writes `sha256/<digest>` first (validation warning until publish). |
+| Fallback          | API reference TTS (`AS-01`); never device TTS                                                                                                                                  |
+| Export            | `/listen-export` composer (`AS-07`); share-out-of-app stays off until Q-22                                                                                                     |
+| Reference contour | `f0_native` extracted from the rendered audio at build time and shipped as data                                                                                                |
 
 Learner-authored phrases (typed, imported, captured) have no pre-rendered **reference** audio.
-Practice playback may use on-device TTS on a cache miss. Plan 99 listening-class clips are a
-separate on-demand neural render (multiple licensed voices, cached on device) and must never be
-stored as this `audio` object or used for `f0_native`. That quality difference is visible and
-acceptable — the prosody lab stays **catalog-only**, since it needs a trustworthy native reference.
+Practice playback uses the catalog cloud object (native cache on device, stream URL on web) or API
+reference TTS. Device TTS is not a practice fallback. Plan 99 listening-class clips are a separate
+on-demand neural render (multiple licensed voices, stored by the API and cached on device) and must
+never be stored as this `audio` object or used for `f0_native`. That quality difference is visible
+and acceptable — the prosody lab stays **catalog-only**, since it needs a trustworthy native
+reference. The Listen export option is how a learner prepares and, after Q-22, shares those clips.
 
 ---
 
@@ -198,6 +240,7 @@ content/
 ├── es-ES/
 │   ├── phrases.json       # the catalog
 │   ├── scenarios.json
+│   ├── graph.json         # authored edges (plan 101)
 │   ├── packs.json
 │   └── drops.json         # drop schedules by trip length
 └── audio/<sha256>.m4a     # on the CDN, not in the repo

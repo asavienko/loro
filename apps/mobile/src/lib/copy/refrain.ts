@@ -24,15 +24,6 @@ export const refrainCopy = {
       },
     },
   },
-  unavailable: {
-    title: (time: string): string => message('refrain.unavailable.title', { time }),
-    get complete() {
-      return message('refrain.unavailable.complete')
-    },
-    get body() {
-      return message('refrain.unavailable.body')
-    },
-  },
   modes: {
     echo: {
       get label() {

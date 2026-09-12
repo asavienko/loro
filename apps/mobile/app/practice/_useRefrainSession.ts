@@ -79,9 +79,8 @@ export function useRefrainSession(
   // Entering the Refrain is one of the moments the day must be re-checked: a learner who
   // opened the app before midnight and starts practising after it needs today's set.
   useEffect(() => {
-    if (!enabled) return
     ensureRefrainSet()
-  }, [enabled, ensureRefrainSet])
+  }, [ensureRefrainSet])
   useEffect(() => {
     if (!enabled) return
     const scoped = setIdsRef.current?.map(userPhraseId)

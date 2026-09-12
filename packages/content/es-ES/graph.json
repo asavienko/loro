@@ -1,0 +1,27 @@
+{
+  "$comment": [
+    "Authored phrase-relation edges. Plan 101.",
+    "",
+    "Seed relation is scenario_next only — the existing scenario phrases[] order.",
+    "Same-theme adjacency is derived from phrase.theme and must not be stored.",
+    "Weight is authored confidence, 1..=100. Scenario arcs are 100."
+  ],
+  "lang": "es-ES",
+  "edges": [
+    { "from": "din1", "to": "din2", "relation": "scenario_next", "weight": 100 },
+    { "from": "din2", "to": "tlk1", "relation": "scenario_next", "weight": 100 },
+    { "from": "tlk1", "to": "din4", "relation": "scenario_next", "weight": 100 },
+    { "from": "trv2", "to": "trv1", "relation": "scenario_next", "weight": 100 },
+    { "from": "trv1", "to": "dir3", "relation": "scenario_next", "weight": 100 },
+    { "from": "dir3", "to": "srv1", "relation": "scenario_next", "weight": 100 },
+    { "from": "htl1", "to": "htl2", "relation": "scenario_next", "weight": 100 },
+    { "from": "htl2", "to": "htl3", "relation": "scenario_next", "weight": 100 },
+    { "from": "htl3", "to": "srv3", "relation": "scenario_next", "weight": 100 },
+    { "from": "shp1", "to": "shp2", "relation": "scenario_next", "weight": 100 },
+    { "from": "shp2", "to": "shp4", "relation": "scenario_next", "weight": 100 },
+    { "from": "shp4", "to": "shp3", "relation": "scenario_next", "weight": 100 },
+    { "from": "dir1", "to": "dir3", "relation": "scenario_next", "weight": 100 },
+    { "from": "dir3", "to": "dir4", "relation": "scenario_next", "weight": 100 },
+    { "from": "dir4", "to": "srv4", "relation": "scenario_next", "weight": 100 }
+  ]
+}

@@ -12,8 +12,9 @@ Today starts a wave in Stream, which lists today's frozen phrase set; Refrain is
 a Stream phrase or, from the menu, active Difficult phrases only. `/music` (Phrase songs) is a later
 garnish via More — picker, lyric review, style confirm, and fixture playback. Default CI uses
 `MUSIC_PROVIDER=stub` and never calls ElevenLabs or Anthropic. Discover offers Add your own and
-bundled topic suggestions; `/v1/phrases/suggest` uses bundled topics unless `ANTHROPIC_API_KEY` is
-set (Q-21 eval remains). Local progress and course/session state commit to native OP-SQLite or
+bundled topic suggestions; after a catalog add it ranks unowned neighbors inside same-theme-first
+bands via Rust `assoc_order`. `/v1/phrases/suggest` uses bundled topics unless `ANTHROPIC_API_KEY`
+is set (Q-21 eval remains). Local progress and course/session state commit to native OP-SQLite or
 browser SQLite before rendering. Rust owns FSRS, ranking, selection, matching, clocks and merge
 through generated WASM/UniFFI bridges. Native modules provide catalog-file playback when a
 checksummed clip is on disk, strictly on-device ASR with an offline Speak reveal fallback, and a
@@ -42,9 +43,10 @@ evidence.
 The [post-main 33-plan review](docs/reviews/2026-09-09-post-main-plan-review.md) records the six
 review findings as fixed: browser file import uses the picker-provided file, picker results are
 request-scoped and pair-safe, corrupt release pointers fail closed, chat choice IDs are unique, and
-active-session E2E navigation uses a deterministic open-wave clock. Refrain completion remains
-visible before a future-wave lock, and its persistent resume action meets the touch-target floor.
-The fast and full local checks are green; device/provider acceptance remains open.
+active-session E2E navigation uses a deterministic morning-wave clock. A wave completes when ten
+phrases are heard three times each (or a Refrain set finishes) and never locks further practice.
+Refrain completion stays visible, and its persistent resume action meets the touch-target floor. The
+fast and full local checks are green; device/provider acceptance remains open.
 [Archived plan 100](plans/archive/2026-09-10/100-hygiene-reuse-and-tooling.md) (Field, ListRow,
 reuse gates, UniFFI `--check`) is complete. Active
 [`plans/100-ui-design-system.md`](plans/100-ui-design-system.md) is the shared motion/gesture kit
@@ -187,7 +189,11 @@ prototype-only and **must not** be carried into the app — see the divergence t
   (Reanimated adapter, UI-thread press/`sheetUp`, Arrival/warming/beat/equaliser/pulse/un-blur on
   real routes; practice/form/chat composites wait for a second caller; device 60 fps remains 58/72)
   under the same number (unresolved collision; do not reuse or drop either); 57 keeps
-  fonts/haptics/dark and 93 keeps spine/sheet pull laws. The next new plan number is 102; recheck
+  fonts/haptics/dark and 93 keeps spine/sheet pull laws. Active
+  [`plans/101-stream-as-daily-wave.md`](plans/101-stream-as-daily-wave.md) makes Stream the daily
+  wave. Active [`plans/101-phrase-sound-graph.md`](plans/101-phrase-sound-graph.md) owns authored
+  phrase edges, Discover association scoring and the authoring generate queue. Those two 101s
+  collide (unresolved; do not reuse or drop either). The next new plan number is 102; recheck
   concurrent worktrees and untracked `plans/` files before allocating an ID — the README/CLAUDE
   "next is N" sentence can lag. A new plan takes the next free number and gets a row in
   [`plans/README.md`](plans/README.md). **Numbers are never reused** — a gap is left rather than

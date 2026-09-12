@@ -67,7 +67,6 @@ import { useRefrainSession, type WarmingStyle } from './_useRefrainSession'
 import {
   parseRefrainFocus,
   refrainFocusIds,
-  refrainSkipsWaveLock,
   sessionCoversDaySet,
 } from '../../src/lib/practiceFocus'
 import { copy } from '../../src/lib/copy'
@@ -94,7 +93,6 @@ export default function Refrain() {
   const refrainSet = useApp((state) => state.refrainSet)
   const focus = parseRefrainFocus(params)
   const focusIds = refrainFocusIds(focus, phrases, refrainSet)
-  const skipLock = refrainSkipsWaveLock(focus)
   const completedWaves = useApp((state) => state.refrainWaves)
   const refrainResume = useApp((state) => state.refrainResume)
   const endRefrainSession = useApp((state) => state.endRefrainSession)
@@ -116,28 +114,20 @@ export default function Refrain() {
         : (scheduledWave ?? PRODUCTION_WAVES[0])
   const liveResume = refrainResume.session !== null && !refrainResume.done
   const canPlan = focus.kind === 'wave' || focusIds.length > 0 || liveResume
-  const session = useRefrainSession(
-    selectedWave,
-    canPlan && (skipLock || entry.kind === 'ready' || entry.kind === 'resume'),
-    {
-      ...(focus.kind === 'wave' ? {} : { setIds: focusIds }),
-      completeWave: focus.kind === 'wave',
-      replaceSession: focus.kind !== 'wave',
-    },
-  )
+  const session = useRefrainSession(selectedWave, canPlan, {
+    ...(focus.kind === 'wave' ? {} : { setIds: focusIds }),
+    completeWave: focus.kind === 'wave',
+    replaceSession: focus.kind !== 'wave',
+  })
   const { set, phrase, mode, auto, dayReps, locked, phraseNumber, wave } = session
   const targetLocale = useApp((state) => state.targetLocale)
   const audio = useAudioSpeech(targetLocale, phrase?.catalog?.audio)
   const [exitVisible, setExitVisible] = useState(false)
   const navigation = useNavigation()
   const leaveLabel = copy.nav.exit.leave
-  const hasActiveSession =
-    set.length > 0 &&
-    (skipLock || entry.kind === 'ready' || entry.kind === 'resume') &&
-    !session.finished &&
-    phrase !== undefined
+  const hasActiveSession = set.length > 0 && !session.finished && phrase !== undefined
   useEffect(() => {
-    // The session-only exit is present only while the sheet it opens is mounted. Cold, locked
+    // The session-only exit is present only while the sheet it opens is mounted. Cold, empty
     // and terminal Refrain entries retain the shared Today/Back stack exit.
     navigation.setOptions({
       headerLeft: () =>
@@ -231,9 +221,9 @@ export default function Refrain() {
       </Screen>
     )
   }
-  // A finished session owns the immediate post-practice screen even when the next scheduled
-  // wave is still locked. The completion checkpoint is the learner's current result; replacing
-  // it with the next-wave gate would hide the reward and make a successful session look blocked.
+  // A finished session owns the immediate post-practice screen. The completion
+  // checkpoint is the learner's current result; replacing it with the next-wave
+  // action would hide the reward. Practice stays open after this screen.
   if (session.finished) {
     const day = deviceClock.localDay()
     const sessionIds = refrainResume.session?.plan.items.map((item) => item.phraseId) ?? []
@@ -244,38 +234,6 @@ export default function Refrain() {
           variant={waveComplete ? 'wave' : focus.kind === 'hard' ? 'hard' : 'phrase'}
           worked={set.length}
           totalReps={set.reduce((n, p) => n + repsTodayOf(p, day), 0)}
-        />
-      </Screen>
-    )
-  }
-  if (!skipLock && entry.kind === 'locked') {
-    return (
-      <Screen>
-        <EmptyState
-          title={copy.refrain.unavailable.title(entry.next.time)}
-          body={copy.refrain.unavailable.body}
-          action={{
-            label: copy.refrain.done.cta,
-            onPress: () => {
-              router.replace('/')
-            },
-          }}
-        />
-      </Screen>
-    )
-  }
-  if (!skipLock && entry.kind === 'complete') {
-    return (
-      <Screen>
-        <EmptyState
-          title={copy.refrain.unavailable.complete}
-          body={copy.refrain.unavailable.body}
-          action={{
-            label: copy.refrain.done.cta,
-            onPress: () => {
-              router.replace('/')
-            },
-          }}
         />
       </Screen>
     )
@@ -694,7 +652,14 @@ function DoneState({
       </Row>
       <View style={s.doneCta}>
         <Button
+          label={copy.today.cta.keepListening}
+          onPress={() => {
+            router.replace('/practice/stream')
+          }}
+        />
+        <Button
           label={copy.refrain.done.cta}
+          variant="secondary"
           onPress={() => {
             if (variant !== 'wave') {
               try {
@@ -785,5 +750,5 @@ const s = StyleSheet.create({
     alignItems: 'center',
     ...(Platform.OS === 'web' ? { minWidth: 'auto' as const } : {}),
   },
-  doneCta: { width: '100%', marginTop: space['3'] },
+  doneCta: { width: '100%', marginTop: space['3'], gap: space['2'] },
 })
