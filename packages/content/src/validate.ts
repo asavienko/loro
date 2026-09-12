@@ -39,7 +39,8 @@ function main(): void {
 
   console.log(
     `content: ${catalog.phrases.length} phrases · ${catalog.scenarios.length} scenarios · ` +
-      `${catalog.packs.length} packs · ${Object.keys(catalog.drops).length} drop schedules ` +
+      `${catalog.packs.length} packs · ${Object.keys(catalog.drops).length} drop schedules · ` +
+      `${catalog.graph.edges.length} graph edges ` +
       `(catalog v${catalog.catalogVersion}, ${only.length} checks)`,
   )
 

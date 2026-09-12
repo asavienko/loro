@@ -170,7 +170,7 @@
   "today.waves.midday.manner": "Re-rep, from memory",
   "onboarding.goalValue": "{goal, select, curious {curious} trip {trip} convo {convo} move {move} other {—}}",
   "phrase.status.reps": "{reps, number} reps · {bucket}",
-  "add.context.moreLike": "More like {theme}",
+  "add.context.moreLike": "More like “{phrase}”",
   "refrain.modes.call.label": "call",
   "languages.personalMeaning": "Personal meaning ({language})",
   "phrase.hooks.sayAloud": "Say it out loud 3× now — your mouth remembers what your eyes forget.",

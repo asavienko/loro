@@ -170,7 +170,7 @@
   "today.waves.midday.manner": "Повторение по памяти",
   "onboarding.goalValue": "{goal, select, curious {Любопытство} trip {Поездка} convo {Разговоры} move {Переезд} other {—}}",
   "phrase.status.reps": "Повторений: {reps, number} · {bucket}",
-  "add.context.moreLike": "Ещё по теме «{theme}»",
+  "add.context.moreLike": "Ещё как «{phrase}»",
   "refrain.modes.call.label": "ответ",
   "languages.personalMeaning": "Свой перевод ({language})",
   "phrase.hooks.sayAloud": "Произнеси вслух 3 раза — рот запоминает то, что забывают глаза.",

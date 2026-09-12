@@ -170,7 +170,7 @@ export default function ListenExport() {
       repeats,
       credentials: async () => {
         const client = accountClient()
-        if (client === null || client.getSnapshot().status !== 'signed-in') return null
+        if (client?.getSnapshot().status !== 'signed-in') return null
         const token = await client.getAccessToken()
         const deviceId = client.getSnapshot().session?.deviceId
         if (!token || deviceId === undefined || deviceId.length === 0) return null

@@ -170,7 +170,7 @@
   "today.waves.midday.manner": "[!! Rëë-rëëp, frööm mëëmööry !!]",
   "onboarding.goalValue": "[!! {goal, select, curious {cüürïïööüüs} trip {trïïp} convo {cöönvöö} move {möövëë} other {—}} !!]",
   "phrase.status.reps": "[!! {reps, number} rëëps · {bucket} !!]",
-  "add.context.moreLike": "[!! Möörëë lïïkëë {theme} !!]",
+  "add.context.moreLike": "[!! Möörëë lïïkëë “{phrase}” !!]",
   "refrain.modes.call.label": "[!! cááll !!]",
   "languages.personalMeaning": "[!! Pëërsöönáál mëëáánïïng ({language}) !!]",
   "phrase.hooks.sayAloud": "[!! Sááy ïït ööüüt lööüüd 3× nööw — yööüür mööüüth rëëmëëmbëërs wháát yööüür ëëyëës föörgëët. !!]",
