@@ -174,7 +174,7 @@ test('pressing a rep twice counts twice, and never lands between modes', async (
 
   await page.getByRole('button', { name: 'Leave practice', exact: true }).click()
   await expect(page.getByRole('dialog')).toBeVisible()
-  await page.getByRole('button', { name: 'Pause the wave', exact: true }).click()
+  await page.getByRole('button', { name: 'Pause practice', exact: true }).click()
   await expect(todayMarker(page)).toBeVisible()
   await expect(repsTodayRow(page, 2)).toBeVisible()
 })

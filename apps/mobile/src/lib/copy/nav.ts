@@ -23,8 +23,14 @@ export const navCopy = {
     get title() {
       return message('nav.exit.title')
     },
+    get titlePractice() {
+      return message('nav.exit.titlePractice')
+    },
     get pause() {
       return message('nav.exit.pause')
+    },
+    get pausePractice() {
+      return message('nav.exit.pausePractice')
     },
     get end() {
       return message('nav.exit.end')

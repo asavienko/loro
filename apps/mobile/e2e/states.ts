@@ -66,7 +66,7 @@ export const STATES: AppState[] = [
       await startRefrain(page)
       await expect(page.getByRole('button', { name: 'Say it', exact: true })).toBeVisible()
       await page.getByRole('button', { name: 'Leave practice', exact: true }).click()
-      await page.getByRole('button', { name: 'Pause the wave', exact: true }).click()
+      await page.getByRole('button', { name: 'Pause practice', exact: true }).click()
       await expect(page.getByRole('button', { name: 'Resume practice', exact: true })).toBeVisible()
     },
   },
