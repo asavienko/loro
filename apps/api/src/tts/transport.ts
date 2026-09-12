@@ -10,14 +10,27 @@ import {
 import { config } from '../common/config.js'
 
 export const TTS_TRANSPORT = Symbol('TTS_TRANSPORT')
+export const TTS_RUNTIME_CONFIG = Symbol('TtsRuntimeConfig')
+
+export type TtsRuntimeConfig = ReturnType<typeof parseTtsConfig> | null
+
+export function readTtsRuntimeConfig(): TtsRuntimeConfig {
+  try {
+    return parseTtsConfig(config.ttsEnv())
+  } catch {
+    return null
+  }
+}
 
 export interface TtsTransport {
   synthesize(input: TtsRequest): Promise<TtsResult>
 }
 
-export function createTtsTransport(): TtsTransport {
+export function createTtsTransport(
+  parsed: TtsRuntimeConfig = readTtsRuntimeConfig(),
+): TtsTransport {
   try {
-    const parsed = parseTtsConfig(config.ttsEnv())
+    if (parsed === null) return new StubTts()
     if (parsed.provider !== 'elevenlabs') {
       return new StubTts({ stubRender: parsed.stubRender })
     }

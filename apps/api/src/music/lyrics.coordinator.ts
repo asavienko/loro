@@ -8,6 +8,7 @@ import {
   type TargetLocale,
 } from '@loro/core'
 import type { MusicLyricsRequest, MusicLyricsResponse } from '@loro/core/api/draft'
+import { BoundedMap } from '../common/bounded-map.js'
 import { LoroError } from '../common/errors.js'
 import { resolveMusicCatalogPhrases } from './catalog.js'
 
@@ -25,7 +26,7 @@ export interface LyricsModel {
 }
 
 export class LyricsCoordinator {
-  private readonly cache = new Map<string, MusicLyricsResponse>()
+  private readonly cache = new BoundedMap<MusicLyricsResponse>(256)
 
   constructor(private readonly model?: LyricsModel) {}
 

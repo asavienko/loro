@@ -6,12 +6,17 @@
  * catalog still 503 in stub mode.
  */
 
-import { Inject, Injectable, type CanActivate, type ExecutionContext } from '@nestjs/common'
+import {
+  Inject,
+  Injectable,
+  Optional,
+  type CanActivate,
+  type ExecutionContext,
+} from '@nestjs/common'
 import { LISTENING_ASSET_CLASS, REFERENCE_ASSET_CLASS } from '@loro/core'
 import { AuthGuard, type AuthenticatedRequest } from '../auth/auth.guard.js'
 import { anonymousPrincipal, isGetLeafPath } from '../common/http.js'
-import { config } from '../common/config.js'
-import { parseTtsConfig } from '../integrations/elevenlabs/tts.js'
+import { readTtsRuntimeConfig, TTS_RUNTIME_CONFIG, type TtsRuntimeConfig } from './transport.js'
 
 const STUB_LOCAL_PRINCIPAL = {
   userId: 'stub-local',
@@ -21,16 +26,20 @@ const STUB_LOCAL_PRINCIPAL = {
 
 @Injectable()
 export class TtsGuard implements CanActivate {
-  constructor(@Inject(AuthGuard) private readonly auth: AuthGuard) {}
+  constructor(
+    @Inject(AuthGuard) private readonly auth: AuthGuard,
+    @Optional() @Inject(TTS_RUNTIME_CONFIG) private readonly ttsConfig?: TtsRuntimeConfig,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>()
+    const parsed = this.ttsConfig !== undefined ? this.ttsConfig : readTtsRuntimeConfig()
     if (ttsStatusAllowed(request)) return true
-    if (stubListeningAnonymousAllowed(request)) {
+    if (stubListeningAnonymousAllowed(request, parsed)) {
       request.principal = { ...STUB_LOCAL_PRINCIPAL }
       return true
     }
-    if (catalogReferenceAnonymousAllowed(request)) {
+    if (catalogReferenceAnonymousAllowed(request, parsed)) {
       request.principal = anonymousPrincipal(request.ip ?? '0.0.0.0')
       return true
     }
@@ -44,14 +53,6 @@ export function ttsStatusAllowed(request: {
   url?: string
 }): boolean {
   return isGetLeafPath(request, 'tts/status')
-}
-
-function parsedTtsConfig() {
-  try {
-    return parseTtsConfig(config.ttsEnv())
-  } catch {
-    return null
-  }
 }
 
 function ttsAssetRequest(
@@ -68,22 +69,26 @@ function ttsAssetRequest(
   return allowed((body as { asset_class?: unknown }).asset_class)
 }
 
-export function stubListeningAnonymousAllowed(request: {
-  method?: string
-  params?: { sha256?: string }
-  body?: unknown
-}): boolean {
-  const parsed = parsedTtsConfig()
+export function stubListeningAnonymousAllowed(
+  request: {
+    method?: string
+    params?: { sha256?: string }
+    body?: unknown
+  },
+  parsed: TtsRuntimeConfig = readTtsRuntimeConfig(),
+): boolean {
   if (parsed?.provider !== 'stub' || !parsed.stubRender) return false
   return ttsAssetRequest(request, (assetClass) => assetClass === LISTENING_ASSET_CLASS)
 }
 
-export function catalogReferenceAnonymousAllowed(request: {
-  method?: string
-  params?: { sha256?: string }
-  body?: unknown
-}): boolean {
-  const parsed = parsedTtsConfig()
+export function catalogReferenceAnonymousAllowed(
+  request: {
+    method?: string
+    params?: { sha256?: string }
+    body?: unknown
+  },
+  parsed: TtsRuntimeConfig = readTtsRuntimeConfig(),
+): boolean {
   if (parsed?.provider !== 'elevenlabs') return false
   return ttsAssetRequest(
     request,

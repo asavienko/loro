@@ -10,7 +10,7 @@
  */
 
 import { createHash } from 'node:crypto'
-import { Inject, Injectable } from '@nestjs/common'
+import { Inject, Injectable, Optional } from '@nestjs/common'
 import { audioDurationMs } from '@loro/content/audio-duration'
 import {
   LISTENING_ASSET_CLASS,
@@ -26,19 +26,26 @@ import {
   type TtsRequest,
   type TtsResponse,
 } from '@loro/core/api/draft'
-import { config } from '../common/config.js'
 import { SERVER_CLOCK, type ServerClock } from '../common/clock.js'
 import { LoroError, RATE_LIMITS } from '../common/errors.js'
 import { windowMs } from '../common/rate-limit.js'
 import { MemoryRateLimitStore } from '../common/rate-limit.memory.js'
 import {
   isTtsFailure,
-  parseTtsConfig,
   voiceForLocale,
   type TtsFailureCode,
 } from '../integrations/elevenlabs/tts.js'
 import { SHA256, readTtsAsset, readTtsIdentity, writeTtsRender } from './cache.js'
-import { TTS_TRANSPORT, type TtsTransport } from './transport.js'
+import { ttsAssetUrl, ttsDownloadOrigin } from './download-url.js'
+
+export { ttsDownloadOrigin }
+import {
+  TTS_RUNTIME_CONFIG,
+  TTS_TRANSPORT,
+  readTtsRuntimeConfig,
+  type TtsRuntimeConfig,
+  type TtsTransport,
+} from './transport.js'
 
 const limits = RATE_LIMITS.ttsRender
 
@@ -55,38 +62,8 @@ function failureToHttp(code: TtsFailureCode): never {
   throw new LoroError('PROVIDER_UNAVAILABLE')
 }
 
-function headerString(
-  headers: Record<string, unknown> | undefined,
-  name: string,
-): string | undefined {
-  const value = headers?.[name] ?? headers?.[name.toLowerCase()]
-  if (typeof value === 'string' && value.trim()) return value.trim()
-  if (Array.isArray(value) && typeof value[0] === 'string' && value[0].trim())
-    return value[0].trim()
-  return undefined
-}
-
-/** Prefer AUTH_PUBLIC_URL; otherwise echo the caller Host so emulator/LAN URLs stay reachable. */
-export function ttsDownloadOrigin(request?: {
-  protocol?: string
-  headers?: Record<string, unknown>
-}): string {
-  const configured = config.publicUrl()
-  if (configured) return configured.replace(/\/$/, '')
-  const host = headerString(request?.headers, 'host')
-  if (host) {
-    const forwarded = headerString(request?.headers, 'x-forwarded-proto')?.split(',')[0]?.trim()
-    const proto = forwarded ?? request?.protocol ?? 'http'
-    return `${proto}://${host}`
-  }
-  if (!config.isProduction()) {
-    return `http://127.0.0.1:${config.listenPort()}`
-  }
-  return config.authIssuer().replace(/\/$/, '')
-}
-
 function downloadUrl(sha256: string, publicOrigin?: string): string {
-  return `${(publicOrigin ?? ttsDownloadOrigin()).replace(/\/$/, '')}/v1/tts/assets/${sha256}`
+  return ttsAssetUrl(sha256, publicOrigin)
 }
 
 function metadata(input: {
@@ -118,15 +95,13 @@ export class TtsService {
   constructor(
     @Inject(TTS_TRANSPORT) private readonly transport: TtsTransport,
     @Inject(SERVER_CLOCK) private readonly clock: ServerClock,
+    @Optional() @Inject(TTS_RUNTIME_CONFIG) private readonly runtime?: TtsRuntimeConfig,
   ) {}
 
   status(): { ready: boolean; provider: string } {
-    try {
-      const parsed = parseTtsConfig(config.ttsEnv())
-      return { ready: parsed.provider === 'elevenlabs', provider: parsed.provider }
-    } catch {
-      return { ready: false, provider: 'unavailable' }
-    }
+    const parsed = this.parsedConfig()
+    if (parsed === null) return { ready: false, provider: 'unavailable' }
+    return { ready: parsed.provider === 'elevenlabs', provider: parsed.provider }
   }
 
   async render(input: {
@@ -135,12 +110,8 @@ export class TtsService {
     body: unknown
     publicOrigin?: string
   }): Promise<TtsResponse> {
-    let parsedConfig
-    try {
-      parsedConfig = parseTtsConfig(config.ttsEnv())
-    } catch {
-      throw new LoroError('PROVIDER_UNAVAILABLE')
-    }
+    const parsedConfig = this.parsedConfig()
+    if (parsedConfig === null) throw new LoroError('PROVIDER_UNAVAILABLE')
     const request = TtsRequestSchema.safeParse(input.body)
     if (!request.success) throw new LoroError('VALIDATION_FAILED')
     const listening = request.data.asset_class === LISTENING_ASSET_CLASS
@@ -186,6 +157,10 @@ export class TtsService {
     const file = await readTtsAsset(sha256)
     if (file === null) throw new LoroError('NOT_FOUND')
     return file
+  }
+
+  private parsedConfig(): TtsRuntimeConfig {
+    return this.runtime !== undefined ? this.runtime : readTtsRuntimeConfig()
   }
 
   private approvedVoice(

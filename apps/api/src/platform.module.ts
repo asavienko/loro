@@ -9,16 +9,25 @@
 import { Global, Module } from '@nestjs/common'
 import { StubSceneProvider } from './ai/scene-provider.stub.js'
 import { SCENE_PROVIDERS, type SceneProvider } from './ai/scene-provider.js'
-import { SERVER_CLOCK, systemClock } from './common/clock.js'
+import { SERVER_CLOCK, systemClock, type ServerClock } from './common/clock.js'
 import { config } from './common/config.js'
 import { RATE_LIMIT_STORE } from './common/rate-limit.js'
 import { PostgresRateLimitStore } from './common/rate-limit.postgres.js'
 import { DATABASE, PostgresDatabase, type SqlDatabase } from './database/database.js'
+import { MusicBudget } from './music/budget.js'
+import { LyricsCoordinator } from './music/lyrics.coordinator.js'
 import { MUSIC_REPOSITORY, MemoryMusicRepository } from './music/repository.js'
 import { PostgresMusicRepository } from './music/repository.postgres.js'
 import { SYNC_REPOSITORY } from './sync/sync.repository.js'
 import { PostgresSyncRepository } from './sync/sync.repository.postgres.js'
-import { TTS_TRANSPORT, createTtsTransport } from './tts/transport.js'
+import { ElevenLabsMusicAdapter } from './integrations/elevenlabs/music.js'
+import { MUSIC_ADAPTER } from './music/adapter.js'
+import {
+  TTS_RUNTIME_CONFIG,
+  TTS_TRANSPORT,
+  createTtsTransport,
+  readTtsRuntimeConfig,
+} from './tts/transport.js'
 
 @Global()
 @Module({
@@ -35,7 +44,22 @@ import { TTS_TRANSPORT, createTtsTransport } from './tts/transport.js'
           : new MemoryMusicRepository(),
       inject: [DATABASE],
     },
-    { provide: TTS_TRANSPORT, useFactory: createTtsTransport },
+    {
+      provide: MUSIC_ADAPTER,
+      useFactory: () => new ElevenLabsMusicAdapter({ provider: config.musicProvider() }),
+    },
+    { provide: LyricsCoordinator, useFactory: () => new LyricsCoordinator() },
+    {
+      provide: MusicBudget,
+      useFactory: (clock: ServerClock) => new MusicBudget(clock),
+      inject: [SERVER_CLOCK],
+    },
+    { provide: TTS_RUNTIME_CONFIG, useFactory: readTtsRuntimeConfig },
+    {
+      provide: TTS_TRANSPORT,
+      useFactory: createTtsTransport,
+      inject: [TTS_RUNTIME_CONFIG],
+    },
     StubSceneProvider,
     {
       provide: SCENE_PROVIDERS,
@@ -49,6 +73,10 @@ import { TTS_TRANSPORT, createTtsTransport } from './tts/transport.js'
     RATE_LIMIT_STORE,
     SYNC_REPOSITORY,
     MUSIC_REPOSITORY,
+    MUSIC_ADAPTER,
+    LyricsCoordinator,
+    MusicBudget,
+    TTS_RUNTIME_CONFIG,
     TTS_TRANSPORT,
     SCENE_PROVIDERS,
   ],

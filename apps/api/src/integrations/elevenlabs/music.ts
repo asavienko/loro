@@ -10,8 +10,8 @@ import {
   type MusicStylePack,
   type MusicV2CompositionPlan,
 } from '@loro/core'
+import { BoundedMap } from '../../common/bounded-map.js'
 import { config } from '../../common/config.js'
-import { ProviderConcurrency } from '../provider-concurrency.js'
 import { MUSIC_FIXTURE_WAV, MUSIC_HTTP_FIXTURES, type MusicFixtureName } from './music.fixtures.js'
 import { FIXTURE_WAV_DURATION_MS } from './wav.js'
 
@@ -41,7 +41,7 @@ export interface MusicAdapter {
 }
 
 export class ElevenLabsMusicAdapter implements MusicAdapter {
-  private readonly cache = new Map<string, MusicComposeResult>()
+  private readonly cache = new BoundedMap<MusicComposeResult>(256)
 
   constructor(
     private readonly options: {
@@ -111,10 +111,6 @@ export async function composeStyles(
   })
   await Promise.all(workers)
   return outcomes
-}
-
-export function musicConcurrencyPool(): ProviderConcurrency {
-  return new ProviderConcurrency(MUSIC_CONCURRENCY)
 }
 
 function fixtureResult(

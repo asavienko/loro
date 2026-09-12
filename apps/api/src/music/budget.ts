@@ -1,3 +1,4 @@
+import { Injectable } from '@nestjs/common'
 import { config } from '../common/config.js'
 import type { ServerClock } from '../common/clock.js'
 
@@ -8,6 +9,7 @@ export interface MusicBudgetState {
   readonly dailyLimitMicros: number
 }
 
+@Injectable()
 export class MusicBudget {
   private readonly monthly = new Map<string, { month: string; micros: number }>()
   private daily = { day: '', micros: 0 }
