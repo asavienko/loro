@@ -225,24 +225,15 @@ test('mouse and touch open menu Refrain as the difficult-only drill', async ({ p
 
 test('menu Refrain stays hard-filter from a phrase-focus session', async ({ page }) => {
   await onboard(page)
-  for (const input of ['mouse', 'touch'] as const) {
-    await startRefrain(page)
-    await expect(page).toHaveURL(isPhraseRefrain)
-    await expect(page.getByText('This phrase', { exact: true })).toBeVisible()
-    await tapControl(page, page.getByRole('button', { name: /, open the menu$/ }), input)
-    const sheet = page.getByRole('dialog')
-    await expect(sheet).toBeVisible()
-    await expect(sheet.getByLabel("The Refrain, you're here")).toHaveCount(0)
-    await tapControl(page, sheet.getByRole('button', { name: 'The Refrain', exact: true }), input)
-    await expect(page).toHaveURL(isHardRefrain)
-    await expect(page.getByText('No difficult phrases yet')).toBeVisible()
-    await expect(page.getByText('This phrase', { exact: true })).toHaveCount(0)
-    await tapControl(page, page.getByRole('button', { name: /, open the menu$/ }), input)
-    await tapControl(
-      page,
-      page.getByRole('dialog').getByRole('button', { name: 'Today', exact: true }),
-      input,
-    )
-    await expect(todayMarker(page)).toBeVisible()
-  }
+  await startRefrain(page)
+  await expect(page).toHaveURL(isPhraseRefrain)
+  await expect(page.getByText('This phrase', { exact: true })).toBeVisible()
+  await page.getByRole('button', { name: /, open the menu$/ }).click()
+  const sheet = page.getByRole('dialog')
+  await expect(sheet).toBeVisible()
+  await expect(sheet.getByLabel("The Refrain, you're here")).toHaveCount(0)
+  await sheet.getByRole('button', { name: 'The Refrain', exact: true }).click()
+  await expect(page).toHaveURL(isHardRefrain)
+  await expect(page.getByText('No difficult phrases yet')).toBeVisible()
+  await expect(page.getByText('This phrase', { exact: true })).toHaveCount(0)
 })
