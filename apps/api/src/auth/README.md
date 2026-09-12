@@ -46,8 +46,9 @@ Configuration is read only by `common/config.ts`:
 | `AUTH_KEY_ID` | JWT key ID, default `primary` | | `GOOGLE_CLIENT_IDS` | Comma-separated allowed
 Google client IDs; defaults to `GOOGLE_CLIENT_ID` | | `APPLE_CLIENT_IDS` | Comma-separated allowed
 Apple client IDs; defaults to `APPLE_CLIENT_ID` | | `AUTH_EMAIL_HASH_KEY` | Stable secret, at least
-32 characters, for email identity/code HMAC | | `AUTH_MAGIC_DELIVERY_URL` | HTTPS delivery webhook |
-| `AUTH_MAGIC_DELIVERY_TOKEN` | Bearer credential for the delivery webhook |
+32 characters, for email identity/code HMAC | | `AUTH_MAGIC_DELIVERY_URL` | HTTPS delivery webhook,
+loopback HTTP in development, or `inbox:local` | | `AUTH_MAGIC_DELIVERY_TOKEN` | Bearer credential
+for the delivery webhook |
 
 The delivery webhook accepts JSON `{ "email": "...", "code": "123456", "expires_in": 600 }` and must
 return a successful HTTP status after accepting delivery. Configure an actual email sender; the API

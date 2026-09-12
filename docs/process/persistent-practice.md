@@ -26,11 +26,14 @@ server. Sync identities and pending deletions are reconciled together.
 3. Configure `AUTH_PRIVATE_KEY_PEM` with an ES256 PKCS8 private key and a stable
    `AUTH_EMAIL_HASH_KEY` of at least 32 characters. Store credentials in the encrypted environment,
    following [local development](local-development.md).
-4. For the email screen, configure the HTTPS delivery webhook with `AUTH_MAGIC_DELIVERY_URL` and
+4. For the email screen, configure the delivery webhook with `AUTH_MAGIC_DELIVERY_URL` and
    `AUTH_MAGIC_DELIVERY_TOKEN`. The webhook accepts `{email, code, expires_in: 600}`. There is no
-   console-code fallback. Google/Apple browser sign-in also requires the provider credentials,
-   callback URL and exact redirect allowlist described in [API setup](../../apps/api/README.md). Its
-   one-use exchange registers the installation in the same account/session system as email.
+   console-code fallback. Production mail senders require HTTPS. Local development may use loopback
+   HTTP with `node scripts/local-magic-delivery.mjs`. The development EC2 host may use
+   `inbox:local`, which writes `/tmp/loro-magic-delivery.json` inside the API container.
+   Google/Apple browser sign-in also requires the provider credentials, callback URL and exact
+   redirect allowlist described in [API setup](../../apps/api/README.md). Its one-use exchange
+   registers the installation in the same account/session system as email.
 5. Set `EXPO_PUBLIC_API_URL` to the API base including `/v1`. HTTPS is required except for loopback
    development. Allow the browser's exact origin in `CORS_ALLOWED_ORIGINS`.
 6. The app opens on **Sign in & sync**. Email/code verification or a configured provider connects

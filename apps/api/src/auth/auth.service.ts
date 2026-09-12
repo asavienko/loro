@@ -13,6 +13,8 @@ import type {
 import { SERVER_CLOCK, type ServerClock } from '../common/clock.js'
 import { config } from '../common/config.js'
 import { LoroError } from '../common/errors.js'
+import { deliverMagicCode } from './delivery.js'
+import { isAllowedMagicDeliveryUrl } from './settings.js'
 import { DATABASE, type SqlConnection, type SqlDatabase } from '../database/database.js'
 import { recordClaim } from './auth.claim.js'
 import { verifyIdentityToken, type IdentityProvider } from './auth.providers.js'
@@ -130,19 +132,11 @@ export class AuthService {
       [emailHash, codeHash, nonce, now + CODE_MILLISECONDS, now],
     )
     try {
-      const response = await fetch(settings.magicDeliveryUrl, {
-        method: 'POST',
-        redirect: 'error',
-        signal: AbortSignal.timeout(5_000),
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${settings.magicDeliveryToken}`,
-        },
-        body: JSON.stringify({ email: normalized, code, expires_in: CODE_MILLISECONDS / 1_000 }),
+      await deliverMagicCode(settings.magicDeliveryUrl, settings.magicDeliveryToken, {
+        email: normalized,
+        code,
+        expires_in: CODE_MILLISECONDS / 1_000,
       })
-      // Delivery response content is not a trusted error message and is never logged.
-      await response.body?.cancel()
-      if (!response.ok) throw new Error('Delivery unavailable')
     } catch {
       await this.database.query(
         'DELETE FROM auth_magic_codes WHERE email_hash=$1 AND code_hash=$2',
@@ -375,12 +369,6 @@ export class AuthService {
   }
 
   private validDeliveryUrl(value: string | undefined): boolean {
-    if (!value) return false
-    try {
-      const url = new URL(value)
-      return url.protocol === 'https:' && !url.username && !url.password && !url.hash
-    } catch {
-      return false
-    }
+    return value !== undefined && isAllowedMagicDeliveryUrl(value, config.isProduction())
   }
 }

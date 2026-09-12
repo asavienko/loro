@@ -131,12 +131,18 @@ describe('anonymous-first account lifecycle', () => {
           }),
       },
     })
+    restore.fetch.mockResolvedValueOnce(
+      ok({ authorization_url: 'https://accounts.example/authorize', state: 's'.repeat(43) }),
+    )
     const pendingRestore = restoring.restore()
-    expect(await restoring.signIn('google')).toBe(false)
+    const pendingSignIn = restoring.signIn('google')
     expect(restore.fetch).not.toHaveBeenCalled()
     expect(restoring.getSnapshot().status).toBe('signed-out')
     finishRestore(null)
     await pendingRestore
+    expect(await pendingSignIn).toBe(true)
+    expect(restore.fetch).toHaveBeenCalledTimes(1)
+    expect(restoring.getSnapshot().status).toBe('cancelled')
 
     const { client, fetch } = setup()
     let finishRequest!: (response: Response) => void
