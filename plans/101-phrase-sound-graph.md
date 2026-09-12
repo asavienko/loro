@@ -85,7 +85,7 @@ is missing.
        `LearningCatalog`. Add one `ALL_CHECKS` entry: ends resolve, unique `(from,to,relation)`,
        `prerequisite` acyclic when present, no cross-locale edge. Bundled and disk catalogs must
        expose identical edges.
-4. [ ] Implement Rust `assoc_score` (module such as `packages/core-rs/src/graph.rs`) with exact
+4. [x] Implement Rust `assoc_score` (module such as `packages/core-rs/src/graph.rs`) with exact
        integer fixtures. Add one typed `bridge.rs` op. Regenerated bindings are their own commit.
 5. [ ] Discover: `anchorOn` stores catalog phrase id, `anchorEs`, difficulty and tags. Association
        branch calls `coreCall` inside the existing `useMemo` (never on the per-keystroke search
