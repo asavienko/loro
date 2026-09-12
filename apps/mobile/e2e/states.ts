@@ -91,7 +91,7 @@ export const STATES: AppState[] = [
     reach: async (page) => {
       await openListenExport(page)
       await expect(
-        page.getByText('On-device listening cache is not available here.', { exact: true }),
+        page.getByText('Listening generation is not configured on this device.', { exact: true }),
       ).toBeVisible()
       await expect(page.getByText('Sara Martin 1')).toBeVisible()
       await expect(page.getByText('Dante', { exact: true })).toBeVisible()
