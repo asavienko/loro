@@ -2,8 +2,8 @@
 
 - **Requirement IDs:** `P2-04`, `P2-06`, `P2-24`, `AI-02`, `AS-01`, `AS-07`
 - **Milestone:** M2/M3 content and Discover association
-- **Status:** 🟡 Authored `scenario_next` edges, schema and `graph` check ship in the catalog.
-  Remaining: Rust `assoc_score` and bridge op, Discover wiring and artifact copy, `gap_priority`
+- **Status:** 🟡 Authored `scenario_next` edges and Rust `assoc_score` / `assoc_order` land.
+  Remaining: regenerate bindings if they drift, Discover wiring and artifact copy, `gap_priority`
   CLI. Nothing external blocks those slices. Q-15 still gates production pronunciation audio; Q-21
   still gates live Discover suggest; Q-22 still gates share-out-of-app.
 - **Depends on:** 60 for the Rust maths boundary (not the policy); 61 for catalog publication; 97

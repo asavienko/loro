@@ -65,6 +65,7 @@ reset on load.
 | Module        | State                                                                                      |
 | ------------- | ------------------------------------------------------------------------------------------ |
 | `rank`        | **Implemented** + tests — stream rank and repeat targets are blueprint contracts           |
+| `graph`       | **Implemented** + tests — Discover `assoc_score` / `assoc_order` (plan 101)                |
 | `asr`         | **Implemented** + tests — normalisation and forward-walk matching                          |
 | `calendar`    | **Implemented** + tests — day boundaries, streak grace, timezone travel                    |
 | `ladder`      | **Implemented** + tests — rungs, need score, the deterministic draw                        |
