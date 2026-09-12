@@ -1,12 +1,13 @@
 import { spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
-import { resolve, relative, sep } from 'node:path'
+import { dirname, resolve, relative, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { resolveAdb } from './apk-environment.mjs'
 import { collectIosEvidence } from './ios-simulator-evidence.mjs'
 import { executeWaveScenarios } from './native-wave-scenarios.mjs'
 import { unevaluatedWaveScenarios, WAVE_TOUCH_SCENARIOS } from './wave-touch-scenarios.mjs'
+import { matrixFromEvidence } from './wave-evidence-matrix.mjs'
 
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)))
 export const defaultPackage = 'app.loro.android.preview'
@@ -20,6 +21,7 @@ export function parseArguments(args) {
     artifactRevision: undefined,
     artifact: undefined,
     executeScenarios: false,
+    matrix: undefined,
   }
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index]
@@ -29,7 +31,8 @@ export function parseArguments(args) {
       arg === '--output' ||
       arg === '--platform' ||
       arg === '--artifact-revision' ||
-      arg === '--artifact'
+      arg === '--artifact' ||
+      arg === '--matrix'
     ) {
       const value = args[++index]
       if (!value || value.startsWith('--')) throw new Error(`${arg} requires a value.`)
@@ -39,6 +42,7 @@ export function parseArguments(args) {
       if (arg === '--output') result.output = value
       if (arg === '--artifact-revision') result.artifactRevision = value
       if (arg === '--artifact') result.artifact = value
+      if (arg === '--matrix') result.matrix = value
     } else if (arg === '--help') result.help = true
     else if (arg === '--list-scenarios') result.listScenarios = true
     else if (arg === '--execute-scenarios') result.executeScenarios = true
@@ -160,7 +164,8 @@ export function collectEvidence({
       .find((parts) => parts[0] && parts[1] === 'device')?.[0]
   if (!selected) throw new Error('Connect one authorized Android device or pass --serial.')
   const shell = (...argv) => command(adb, selected, ['shell', ...argv])
-  writeFileSync(resolve(output, 'device.txt'), shell('getprop'))
+  const getpropText = shell('getprop')
+  writeFileSync(resolve(output, 'device.txt'), getpropText)
   writeFileSync(resolve(output, 'package.txt'), shell('dumpsys', 'package', packageName))
   writeFileSync(resolve(output, 'permissions.txt'), shell('pm', 'list', 'permissions', '-g', '-d'))
   const logcat = collectLogcat(adb, selected)
@@ -183,8 +188,14 @@ export function collectEvidence({
     : unevaluatedWaveScenarios(
         'Collector records the current screen only; it does not launch or drive Stream → Refrain or menu hard-filter. Pass --execute-scenarios on a connected device.',
       )
+  const host = matrixFromEvidence({
+    manifest: { platform: 'android', packageName },
+    getpropText,
+  })
   const manifest = {
     collectedAt: new Date().toISOString(),
+    platform: 'android',
+    deviceKind: host.deviceKind,
     serial: selected,
     packageName,
     artifactRevision: artifactRevision ?? null,
@@ -201,9 +212,12 @@ export function collectEvidence({
       'This collector records evidence only; it does not verify the installed bytes or claim speech, lifecycle, interruption, or iOS acceptance.',
       'Review the artifacts on a supported physical device before closing the native acceptance gates.',
       'Plan 101 wave-path rows stay unavailable until --execute-scenarios drives those entries and records their exact URLs. A screenshot is not a pass.',
+      'matrix.json records closesPhysicalGate. Emulator passed rows are closest-available and do not close the physical-device gate.',
     ],
   }
+  const matrix = matrixFromEvidence({ manifest, getpropText })
   writeFileSync(resolve(output, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`)
+  writeFileSync(resolve(output, 'matrix.json'), `${JSON.stringify(matrix, null, 2)}\n`)
   return manifest
 }
 
@@ -218,6 +232,9 @@ function main() {
     )
     console.log('List plan 101/93 wave-path rows without collecting: --list-scenarios')
     console.log(
+      'Classify an existing evidence manifest without collecting: --matrix PATH/TO/manifest.json',
+    )
+    console.log(
       'Drive pointer, spine/sheet, and TalkBack rows through adb + uiautomator (fail-closed; never pass without URL/chrome/gesture evidence): --execute-scenarios',
     )
     console.log(
@@ -227,6 +244,18 @@ function main() {
   }
   if (options.listScenarios) {
     console.log(JSON.stringify(WAVE_TOUCH_SCENARIOS, null, 2))
+    return
+  }
+  if (options.matrix) {
+    const manifestPath = resolve(root, options.matrix)
+    const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'))
+    let getpropText = ''
+    try {
+      getpropText = readFileSync(resolve(dirname(manifestPath), 'device.txt'), 'utf8')
+    } catch {
+      getpropText = ''
+    }
+    console.log(JSON.stringify(matrixFromEvidence({ manifest, getpropText }), null, 2))
     return
   }
   if (!options.artifactRevision)
