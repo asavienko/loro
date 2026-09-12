@@ -37,4 +37,17 @@ describe('gap_priority generate queue', () => {
     expect(report.drafts.some((draft) => draft.topic === 'orphan:din1')).toBe(false)
     expect(loadCatalog().scenarios.find((row) => row.id === 'dinner')?.phrases).toHaveLength(4)
   })
+
+  it('does not enqueue generate for a rendered sha256 identity', () => {
+    const catalog = structuredClone(loadCatalog())
+    const digest = 'ab'.repeat(32)
+    catalog.phrases = catalog.phrases.map((phrase) =>
+      phrase.id === 'cafe1'
+        ? { ...phrase, audio: { uri: `sha256/${digest}`, sha256: digest, ms: 800 } }
+        : phrase,
+    )
+    const report = gapPriority(catalog)
+    expect(report.missingAudio.map((row) => row.id)).not.toContain('cafe1')
+    expect(report.missingAudio).toHaveLength(catalog.phrases.length - 1)
+  })
 })
