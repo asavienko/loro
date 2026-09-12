@@ -6,8 +6,18 @@
 import initSqlJs, { type Database, type SqlJsStatic } from 'sql.js/dist/sql-asm.js'
 import type { SqlDriver, SqlRow, SqlValue } from '@loro/core'
 import { synchronousResult } from '@loro/core'
+import { globalSlot, retainGlobal } from './globalSlot'
 
 export const WEB_DATABASE_KEY = 'loro.sqlite.v1'
+/**
+ * Distinct from the storage key. A stale exclusive holder of `WEB_DATABASE_KEY`
+ * (hot reload, a discarded preview document) must not block a new tab from the
+ * same saved file. Two live writers still serialize on this lock.
+ */
+export const WEB_DATABASE_LOCK = 'loro.sqlite.lock.v1'
+/** Survives Metro remounts so this tab does not try to take a lock it already holds. */
+const WEB_SQLITE_SLOT = Symbol.for('loro.webSqlite')
+const WEB_SQLITE_OPENING = Symbol.for('loro.webSqliteOpening')
 export interface BrowserStorage {
   getItem(key: string): string | null
   setItem(key: string, value: string): void
@@ -120,6 +130,10 @@ export function createBrowserSqlite(SQL: SqlJsStatic, storage: BrowserStorage): 
 }
 
 export async function openDeviceSqlite(): Promise<SqlDriver> {
+  return retainGlobal({ value: WEB_SQLITE_SLOT, opening: WEB_SQLITE_OPENING }, openLockedWebSqlite)
+}
+
+async function openLockedWebSqlite(): Promise<SqlDriver> {
   const SQL = await initSqlJs()
   // Synchronous SQL transactions cannot await a per-write browser lock. Hold the
   // origin's database lock for this tab's lifetime so two processes cannot overwrite
@@ -128,17 +142,26 @@ export async function openDeviceSqlite(): Promise<SqlDriver> {
     throw new Error('This browser cannot safely lock local progress storage')
   return new Promise((resolve, reject) => {
     void navigator.locks
-      .request(WEB_DATABASE_KEY, { mode: 'exclusive', ifAvailable: true }, async (lock) => {
+      .request(WEB_DATABASE_LOCK, { mode: 'exclusive', ifAvailable: true }, async (lock) => {
+        const live = globalSlot<SqlDriver>(WEB_SQLITE_SLOT).get()
+        if (live) {
+          resolve(live)
+          return
+        }
         if (lock === null) throw new Error('Loro is already open in another browser tab')
         const driver = createBrowserSqlite(SQL, window.localStorage)
         await new Promise<void>((release) => {
-          resolve({
+          const opened: SqlDriver = {
             ...driver,
             close() {
+              if (globalSlot<SqlDriver>(WEB_SQLITE_SLOT).get() === opened) {
+                globalSlot<SqlDriver>(WEB_SQLITE_SLOT).set(undefined)
+              }
               driver.close()
               release()
             },
-          })
+          }
+          resolve(opened)
         })
       })
       .catch(reject)

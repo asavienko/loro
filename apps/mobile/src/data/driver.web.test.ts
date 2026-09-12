@@ -1,7 +1,13 @@
 import initSqlJs from 'sql.js/dist/sql-asm.js'
 import { beforeAll, describe, expect, it } from 'vitest'
 import type { SqlJsStatic } from 'sql.js'
-import { createBrowserSqlite, WEB_DATABASE_KEY, type BrowserStorage } from './driver.web'
+import {
+  createBrowserSqlite,
+  openDeviceSqlite,
+  WEB_DATABASE_KEY,
+  WEB_DATABASE_LOCK,
+  type BrowserStorage,
+} from './driver.web'
 
 let SQL: SqlJsStatic
 beforeAll(async () => {
@@ -90,6 +96,19 @@ describe('durable browser SQLite', () => {
     disk.setItem(WEB_DATABASE_KEY, 'not a base64 SQLite file')
     expect(() => createBrowserSqlite(SQL, disk)).toThrow()
     expect(disk.getItem(WEB_DATABASE_KEY)).toBe('not a base64 SQLite file')
+  })
+
+  it('keeps the browser lock name off the durable SQLite key', () => {
+    expect(WEB_DATABASE_LOCK).not.toBe(WEB_DATABASE_KEY)
+  })
+
+  it('reuses the live tab driver after a remount without requesting another lock', async () => {
+    const slot = Symbol.for('loro.webSqlite')
+    const live = createBrowserSqlite(SQL, storage())
+    ;(globalThis as Record<symbol, unknown>)[slot] = live
+    await expect(openDeviceSqlite()).resolves.toBe(live)
+    ;(globalThis as Record<symbol, unknown>)[slot] = undefined
+    live.close()
   })
 
   it('rejects a stale browser snapshot instead of overwriting another writer', () => {

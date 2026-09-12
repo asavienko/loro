@@ -132,12 +132,14 @@ open.
 Google development setup uses project `loro-508020`, a Web application OAuth client and the exact
 public `/v1/auth/google/callback` URL. The app callback allowlist currently contains
 `loro://account`. Web preview origins require an explicit HTTPS callback entry before use. Google
-remains in testing mode. Apple and email delivery are unconfigured.
+remains in testing mode. Local Expo web also needs the loopback Account redirects. Apple remains
+unconfigured. Email uses `inbox:local` on this development host.
 
 ## Verified account release — 2026-09-08
 
 - API image: `loro-api:0efdb14f2a20-20260908201218`.
-- Google project: `loro-508020`; owner test account registered. Apple/email remain unavailable.
+- Google project: `loro-508020`; owner test account registered. Apple remains unavailable. Email
+  uses the host-local inbox until a public mail sender is configured.
 - Local `pnpm check` and all 171 API tests against isolated PostgreSQL passed. The exact amd64 image
   passed durable readiness, guarded sync, multilingual content and degraded content-only checks.
 - Candidate and active API readiness passed with real PostgreSQL and WASM. An isolated restore of a

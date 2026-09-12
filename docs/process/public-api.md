@@ -24,10 +24,11 @@ responses are not cached.
 ## Account profile (F-01/F-04)
 
 **Enabled on the development gateway on 2026-09-08.** Google is configured in testing mode for the
-owner account. Apple and email are unavailable. Durable readiness, Google authorization start,
-cancellation callback redirect and rejection of anonymous account/sync access passed through HTTPS.
-The in-app browser blocked navigation to the AWS hostname (`ERR_BLOCKED_BY_CLIENT`), so a complete
-live Google consent-to-device session is still unverified.
+owner account. Apple remains unavailable. Email uses the host-local `inbox:local` delivery file on
+the development API; a public mail sender is still unconfigured. Durable readiness, Google
+authorization start, cancellation callback redirect and rejection of anonymous account/sync access
+passed through HTTPS. The in-app browser blocked navigation to the AWS hostname
+(`ERR_BLOCKED_BY_CLIENT`), so a complete live Google consent-to-device session is still unverified.
 
 `AccountAccess=enabled` opts into exact auth, `/me` and POST sync routes. The Lambda forwards
 bounded request bodies, bearer/device/idempotency headers and API CORS decisions. OAuth callback

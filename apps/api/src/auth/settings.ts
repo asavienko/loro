@@ -21,6 +21,22 @@ export function isLoopbackHttpUrl(url: URL): boolean {
   return url.protocol === 'http:' && loopbackHosts.has(url.hostname)
 }
 
+/** Host-local inbox for development APIs. Never a public email sender. */
+export const LOCAL_INBOX_DELIVERY = 'inbox:local'
+export const LOCAL_INBOX_PATH = '/tmp/loro-magic-delivery.json'
+
+export function isAllowedMagicDeliveryUrl(value: string, production = false): boolean {
+  if (value === LOCAL_INBOX_DELIVERY) return true
+  try {
+    const url = new URL(value)
+    if (url.username || url.password || url.hash) return false
+    if (url.protocol === 'https:') return true
+    return !production && isLoopbackHttpUrl(url)
+  } catch {
+    return false
+  }
+}
+
 export function isAllowedAuthRedirect(redirect: string, url = new URL(redirect)): boolean {
   return (
     (url.protocol === 'https:' || nativeRedirects.has(redirect) || isLoopbackHttpUrl(url)) &&
