@@ -230,7 +230,7 @@ content/
 ├── es-ES/
 │   ├── phrases.json       # the catalog
 │   ├── scenarios.json
-│   ├── graph.json         # authored edges (plan 101); not yet shipped
+│   ├── graph.json         # authored edges (plan 101)
 │   ├── packs.json
 │   └── drops.json         # drop schedules by trip length
 └── audio/<sha256>.m4a     # on the CDN, not in the repo

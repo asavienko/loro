@@ -16,6 +16,7 @@
     "validate:duplicates": "tsx src/validate.ts --only duplicates",
     "validate:stress": "tsx src/validate.ts --only stress",
     "validate:length": "tsx src/validate.ts --only length",
+    "validate:graph": "tsx src/validate.ts --only graph",
     "enrich": "tsx src/enrich.ts",
     "render": "tsx src/renderCli.ts",
     "publish": "tsx src/publish.ts",

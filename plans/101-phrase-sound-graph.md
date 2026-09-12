@@ -2,11 +2,10 @@
 
 - **Requirement IDs:** `P2-04`, `P2-06`, `P2-24`, `AI-02`, `AS-01`, `AS-07`
 - **Milestone:** M2/M3 content and Discover association
-- **Status:** — Plan and durable spec pointers landed. Implementation remains: authored
-  `scenario_next` edges, Rust `assoc_score`, content `gap_priority` CLI, Discover wiring and
-  artifact copy. Nothing external blocks the first content and core-rs slices. Q-15 still gates
-  production pronunciation audio; Q-21 still gates live Discover suggest; Q-22 still gates
-  share-out-of-app.
+- **Status:** 🟡 Authored `scenario_next` edges, schema and `graph` check ship in the catalog.
+  Remaining: Rust `assoc_score` and bridge op, Discover wiring and artifact copy, `gap_priority`
+  CLI. Nothing external blocks those slices. Q-15 still gates production pronunciation audio; Q-21
+  still gates live Discover suggest; Q-22 still gates share-out-of-app.
 - **Depends on:** 60 for the Rust maths boundary (not the policy); 61 for catalog publication; 97
   for authoring-time drafts; 98 for reference render; 99 for listening-class render; 87 for new
   linguistic edges
@@ -80,9 +79,9 @@ is missing.
 ## Remaining work
 
 1. [x] Land this plan, index row, next-ID bump and durable spec pointers.
-2. [ ] Author `packages/content/es-ES/graph.json` (and schema). Seed **only** `scenario_next` from
+2. [x] Author `packages/content/es-ES/graph.json` (and schema). Seed **only** `scenario_next` from
        existing scenario `phrases[]`. Derive same-theme adjacency; do not store a theme clique.
-3. [ ] Wire the artifact through `Catalog` / `bundledCatalog` / `loadCatalogFromDisk` /
+3. [x] Wire the artifact through `Catalog` / `bundledCatalog` / `loadCatalogFromDisk` /
        `LearningCatalog`. Add one `ALL_CHECKS` entry: ends resolve, unique `(from,to,relation)`,
        `prerequisite` acyclic when present, no cross-locale edge. Bundled and disk catalogs must
        expose identical edges.

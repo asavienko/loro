@@ -13,7 +13,8 @@ import phrasesJson from '../es-ES/phrases.json' with { type: 'json' }
 import scenariosJson from '../es-ES/scenarios.json' with { type: 'json' }
 import packsJson from '../es-ES/packs.json' with { type: 'json' }
 import dropsJson from '../es-ES/drops.json' with { type: 'json' }
-import type { Catalog, CatalogPhrase } from './types.js'
+import graphJson from '../es-ES/graph.json' with { type: 'json' }
+import type { Catalog, CatalogPhrase, GraphEdge } from './types.js'
 
 /**
  * Only `phrases` is cast, and only because TypeScript widens JSON string literals to
@@ -33,4 +34,8 @@ export const bundledCatalog: Catalog = {
   packs: packsJson.packs,
   drops: dropsJson.schedules,
   dropRules: dropsJson.rules,
+  graph: {
+    lang: graphJson.lang,
+    edges: graphJson.edges as GraphEdge[],
+  },
 }

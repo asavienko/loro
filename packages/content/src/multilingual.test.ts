@@ -29,6 +29,10 @@ describe('F-08 starter courses', () => {
         }
         for (const scenario of catalog.scenarios)
           expect(scenario.phrases.every((id) => ids.has(id))).toBe(true)
+        expect(catalog.graph.edges).toHaveLength(15)
+        expect(catalog.graph.edges.every((edge) => ids.has(edge.from) && ids.has(edge.to))).toBe(
+          true,
+        )
       }
     expect(pairs).toBe(7)
   })
@@ -36,5 +40,23 @@ describe('F-08 starter courses', () => {
     expect(loadLearningCatalog('es-ES', 'bg').phrases[0]?.id).toBe('cafe1')
     expect(loadLearningCatalog('bg-BG', 'ru').phrases[0]?.id).toBe('bg-BG:cafe1')
     expect(loadLearningCatalog('ru-RU', 'bg').reviewStatus).toBe('pending-bilingual-review')
+  })
+
+  it('remaps graph ends to the course catalog ids', () => {
+    const spanish = loadLearningCatalog('es-ES', 'en')
+    expect(spanish.graph.edges[0]).toEqual({
+      from: 'din1',
+      to: 'din2',
+      relation: 'scenario_next',
+      weight: 100,
+    })
+    const bulgarian = loadLearningCatalog('bg-BG', 'en')
+    expect(bulgarian.graph.lang).toBe('bg-BG')
+    expect(bulgarian.graph.edges[0]).toEqual({
+      from: 'bg-BG:din1',
+      to: 'bg-BG:din2',
+      relation: 'scenario_next',
+      weight: 100,
+    })
   })
 })

@@ -39,6 +39,31 @@ export interface DropStep {
   note?: string
 }
 
+/** Authored relations. `same_theme` is derived from phrase.theme and must not be stored. */
+export const GRAPH_RELATIONS = [
+  'scenario_next',
+  'reply',
+  'lexical',
+  'contrast',
+  'prerequisite',
+  'register_shift',
+] as const
+
+export type GraphRelation = (typeof GRAPH_RELATIONS)[number]
+
+export interface GraphEdge {
+  from: string
+  to: string
+  relation: GraphRelation
+  /** Authored confidence, 1..=100. */
+  weight: number
+}
+
+export interface PhraseGraph {
+  lang: string
+  edges: GraphEdge[]
+}
+
 export interface Catalog {
   lang: string
   catalogVersion: number
@@ -53,6 +78,8 @@ export interface Catalog {
     futureDropsCanBePulledForward: boolean
     dormantAboveDays: number
   }
+  /** Authored edges. Same-theme adjacency is derived, never stored. */
+  graph: PhraseGraph
 }
 
 /** The eight taxonomic themes. Core owns the closed set consumed by Browse. */
