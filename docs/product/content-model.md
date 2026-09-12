@@ -140,6 +140,12 @@ The graph ships in the bundled snapshot (`graph.json` beside `scenarios.json`) a
 loader the authoring CLIs use. Course ids stay course-scoped (`cafe1` on `es-ES`, `bg-BG:cafe1`
 otherwise). Own-phrases have no catalog node.
 
+Catalog **audio** is a cloud object `{uri, sha256, ms}` — an `https` (or local-authoring `http`)
+URL, never a `file:` / `data:` path and never PCM. The device caches that URL to a file URI through
+the listening/practice cache (`AS-01` / `AS-07`). In-app listen uses the cache. Share-out-of-app is
+the Listen export option and stays off until [Q-22](../decisions/open-questions.md#q-22). Learner
+recordings never take this path.
+
 ---
 
 <a id="packs--onboarding-and-drops"></a>
@@ -201,21 +207,24 @@ Every catalog phrase ships with pre-rendered native audio. This is not optional:
 quality varies wildly by platform and locale, and the pronunciation reference must be identical for
 every learner.
 
-| Property          | Value                                                                           |
-| ----------------- | ------------------------------------------------------------------------------- |
-| Voice             | Managed neural TTS, `es-ES`, one consistent voice per variant                   |
-| Format            | AAC 64 kbps mono, 24 kHz                                                        |
-| Rates             | Rendered at 1.0×; other rates are time-stretched on device (pitch preserved)    |
-| Size              | ~12 KB per phrase → ~7 MB for a 600-phrase catalog                              |
-| Delivery          | CDN, content-addressed by `sha256`, prefetched per pack                         |
-| Fallback          | On-device TTS when the file is missing, with a quality caveat                   |
-| Reference contour | `f0_native` extracted from the rendered audio at build time and shipped as data |
+| Property          | Value                                                                                     |
+| ----------------- | ----------------------------------------------------------------------------------------- |
+| Voice             | Managed neural TTS, `es-ES`, one consistent voice per variant                             |
+| Format            | AAC 64 kbps mono, 24 kHz                                                                  |
+| Rates             | Rendered at 1.0×; other rates are time-stretched on device (pitch preserved)              |
+| Size              | ~12 KB per phrase → ~7 MB for a 600-phrase catalog                                        |
+| Delivery          | Cloud `https` object `{uri, sha256, ms}` (local-authoring `http` only); device file cache |
+| Fallback          | API reference TTS (`AS-01`); never device TTS                                             |
+| Export            | `/listen-export` composer (`AS-07`); share-out-of-app stays off until Q-22                |
+| Reference contour | `f0_native` extracted from the rendered audio at build time and shipped as data           |
 
 Learner-authored phrases (typed, imported, captured) have no pre-rendered **reference** audio.
-Practice playback may use on-device TTS on a cache miss. Plan 99 listening-class clips are a
-separate on-demand neural render (multiple licensed voices, cached on device) and must never be
-stored as this `audio` object or used for `f0_native`. That quality difference is visible and
-acceptable — the prosody lab stays **catalog-only**, since it needs a trustworthy native reference.
+Practice playback uses the catalog cloud object (native cache on device, stream URL on web) or API
+reference TTS. Device TTS is not a practice fallback. Plan 99 listening-class clips are a separate
+on-demand neural render (multiple licensed voices, stored by the API and cached on device) and must
+never be stored as this `audio` object or used for `f0_native`. That quality difference is visible
+and acceptable — the prosody lab stays **catalog-only**, since it needs a trustworthy native
+reference. The Listen export option is how a learner prepares and, after Q-22, shares those clips.
 
 ---
 
