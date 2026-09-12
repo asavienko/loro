@@ -6,13 +6,13 @@
   difficult-only menu entry. Main's listen-complete waves keep practice open before the first hour;
   `?wave=` is still wave focus, not a clock lock. Browser mouse/touch covers Stream → phrase Refrain
   and menu hard-filter, including a phrase-focus switcher hop. Linux emulator `emulator-5554` (AVD
-  `loro-wave`, API 36) passed all twelve catalog rows on APK `b0b4e3b77746` (v9), including Android
-  Back, labelled Dismiss, edge and mid-screen back-swipe, plus TalkBack variants;
-  `closesPhysicalGate` stays false. Practice sessions set `fullScreenGestureEnabled: false` so iOS
-  26's default full-screen dismiss cannot pop the session. An active Refrain intercepts stack
-  `GO_BACK` and Android Back into Pause · End it here · Keep going; Stream consumes Android Back so
-  it cannot abandon the wave. Switcher replace still applies `?filter=hard`. That JS is not in APK
-  `b0b4e3b77746`. Physical-device and iOS execution remain the plan 58/93 gates. `pnpm ios:evidence`
+  `loro-wave`, API 36) passed all twelve catalog rows on APK `3a96003b7c27` (v10), including Android
+  Back on Stream (stay) and phrase Refrain (exit sheet), labelled Dismiss, edge and mid-screen
+  back-swipe, plus TalkBack variants; `closesPhysicalGate` stays false. Practice sessions set
+  `fullScreenGestureEnabled: false` so iOS 26's default full-screen dismiss cannot pop the session.
+  An active Refrain intercepts stack `GO_BACK` and Android Back into Pause · End it here · Keep
+  going; Stream consumes Android Back so it cannot abandon the wave. Switcher replace still applies
+  `?filter=hard`. Physical-device and iOS execution remain the plan 58/93 gates. `pnpm ios:evidence`
   is the Mac one-shot that retains the simulator zip and drives pointer, spine/sheet, and backdrop
   rows through simctl + idb, fail-closing without chrome/URL/gesture proof. Android Back and
   TalkBack `-at` rows stay unavailable on iOS. Authored v1.1 still treats Refrain as the wave hero
@@ -51,10 +51,12 @@ More, filtered to active `difficulty === 'hard'` phrases only.
 ## Remaining
 
 - Physical-device and iOS execution of the wave-path rows (plans 58/93). Closest-available Android
-  evidence is the Linux emulator run at `.local-builds/native-evidence/wave-101-emulator-v9/`
-  against preview APK `b0b4e3b77746` (`app.loro.android.preview` on `emulator-5554`): Stream →
+  evidence is the Linux emulator run at `.local-builds/native-evidence/wave-101-emulator-v10/`
+  against preview APK `3a96003b7c27` (`app.loro.android.preview` on `emulator-5554`, SHA-256
+  `b10e870ab30c0a4d8bb86f844ac12f11363a1cafcb2f2cffdd76822db3b9d021`): Stream →
   `?phrase=01a09640-97b3-7000-9669-f12bcf0fc9d1`, switcher and More both `?filter=hard`, practice
-  edge and mid-screen swipes stayed on the session, spine pull opened the switcher, and sheet pull,
+  edge and mid-screen swipes stayed on the session, Android Back stayed on Stream and opened Pause ·
+  End it here · Keep going on the phrase drill, spine pull opened the switcher, and sheet pull,
   Android Back, and labelled Dismiss backdrop each dismissed it on Today. The TalkBack `-at`
   variants of those pointer and dismiss rows passed the same chrome/URL/gesture gates. `matrix.json`
   records `passedCount=12` and `physicalGateCount=0`. Source locks iOS full-screen dismiss

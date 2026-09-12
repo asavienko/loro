@@ -17,20 +17,18 @@ persistence or practice-outcome changes.
 Validation: browser gesture regression, full `pnpm check` and `pnpm test:e2e`. Real iOS/Android
 touch and assistive-technology verification must precede native release. Plan 101 adds browser
 mouse/touch coverage for Stream → phrase Refrain and menu hard-filter;
-`native:evidence --execute-scenarios` on Linux emulator `emulator-5554` (APK `b0b4e3b77746`) passed
-all twelve catalog rows at `.local-builds/native-evidence/wave-101-emulator-v9/`: edge and
-mid-screen swipes stayed on the session, spine pull opened the switcher, and sheet pull, Android
-Back, and labelled Dismiss backdrop each closed it on Today, including TalkBack variants.
-`closesPhysicalGate` stays false. That v9 APK does not include the later JS session-pop intercept
-(`useSessionExitGuard` + Stream `BackHandler`); the runner now also sends `KEYCODE_BACK` on Stream
-(stay) and on phrase Refrain (must open the exit sheet). Practice sessions set
-`fullScreenGestureEnabled: false` with `gestureEnabled: false`. That remains emulator proof, not
-physical-device or iOS. iOS `--execute-scenarios` uses simctl + idb for pointer, spine/sheet, and
-backdrop rows and fail-closes without chrome/URL/gesture proof. Android Back stays unavailable on
-iOS. That iOS path may boot a Shutdown simulator and install a verified `loro-simulator-*.zip` via
-`pnpm ios:evidence`. VoiceOver `-at` evidence remains a device gate even if VoiceOver looks enabled;
-ordinary idb taps are not AT proof. Plan 101's Stream-primary / hard-filter Refrain model is not
-reverted.
+`native:evidence --execute-scenarios` on Linux emulator `emulator-5554` (APK `3a96003b7c27`) passed
+all twelve catalog rows at `.local-builds/native-evidence/wave-101-emulator-v10/`: edge and
+mid-screen swipes stayed on the session, Android Back stayed on Stream and opened the Refrain exit
+sheet, spine pull opened the switcher, and sheet pull, Android Back, and labelled Dismiss backdrop
+each closed it on Today, including TalkBack variants. `closesPhysicalGate` stays false. Practice
+sessions set `fullScreenGestureEnabled: false` with `gestureEnabled: false`. That remains emulator
+proof, not physical-device or iOS. iOS `--execute-scenarios` uses simctl + idb for pointer,
+spine/sheet, and backdrop rows and fail-closes without chrome/URL/gesture proof. Android Back stays
+unavailable on iOS. That iOS path may boot a Shutdown simulator and install a verified
+`loro-simulator-*.zip` via `pnpm ios:evidence`. VoiceOver `-at` evidence remains a device gate even
+if VoiceOver looks enabled; ordinary idb taps are not AT proof. Plan 101's Stream-primary /
+hard-filter Refrain model is not reverted.
 
 Verified: `pnpm check` passed all 23 tasks; `pnpm test:e2e` passed all 119 tests in 4.4 minutes,
 including mouse/touch gestures, cancelled touch, accessibility and 310% text. The initial cold
