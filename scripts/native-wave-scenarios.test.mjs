@@ -64,6 +64,7 @@ const REFRAIN_EXIT_DUMP = `<?xml version="1.0"?>
     <node class="android.widget.TextView" text="The Refrain" bounds="[24,140][360,188]"/>
     <node class="android.widget.TextView" text="Leave this practice?" bounds="[24,400][360,448]"/>
     <node class="android.widget.Button" text="Pause practice" clickable="true" bounds="[24,460][360,516]"/>
+    <node class="android.widget.Button" text="End it here" clickable="true" bounds="[24,520][360,576]"/>
   </node>
 </hierarchy>`
 
@@ -745,6 +746,7 @@ function scriptedDevice({
       else stage = 'phrase'
     } else if (stage === 'detail') stage = practiceNowStaysOnDetail ? 'detail' : 'phrase'
     else if (stage === 'stream-exit') stage = 'stream'
+    else if (stage === 'exit') stage = 'today'
     else if (stage === 'phrase') {
       stage = tapY < 90 ? 'menu' : 'exit'
       if (stage === 'menu') menuSource = 'phrase'
