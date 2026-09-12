@@ -14,7 +14,8 @@
 - **Depends on:** the 2026-09-09 reviews as inventory (do not redo A–G); does **not** wait on
   Q-gates or device acceptance
 - **Number allocation:** 100. Main landed the listening companion as 99 (AS-07) while this plan was
-  still on a branch under the same number. Hygiene takes the next free ID. The next new plan is 101.
+  still on a branch under the same number. Hygiene takes the next free ID. Plan 101 is the
+  phrase-relation graph; the next new plan is 102.
 
 ## Outcome
 

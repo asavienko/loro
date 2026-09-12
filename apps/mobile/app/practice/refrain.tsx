@@ -67,7 +67,7 @@ import { useRefrainSession, type WarmingStyle } from './_useRefrainSession'
 import { copy } from '../../src/lib/copy'
 import { audioPlaybackNote, audioSpeech, useAudioSpeech } from '../../src/lib/audioSpeech'
 import { deviceClock } from '../../src/lib/clock'
-import { waveEntry, waveEntryWithResume, waveSchedule } from '../../src/lib/waves'
+import { waveEntryWithResume, waveSchedule } from '../../src/lib/waves'
 import { useLocalMinute } from '../../src/lib/useLocalMinute'
 type WaveKey = ProductionWave
 export default function Refrain() {
@@ -98,20 +98,16 @@ export default function Refrain() {
       : entry.kind === 'ready'
         ? entry.wave.key
         : (scheduledWave ?? PRODUCTION_WAVES[0])
-  const session = useRefrainSession(selectedWave, entry.kind === 'ready' || entry.kind === 'resume')
+  const session = useRefrainSession(selectedWave)
   const { set, phrase, mode, auto, dayReps, locked, phraseNumber, wave } = session
   const targetLocale = useApp((state) => state.targetLocale)
   const audio = useAudioSpeech(targetLocale, phrase?.catalog?.audio)
   const [exitVisible, setExitVisible] = useState(false)
   const navigation = useNavigation()
   const leaveLabel = copy.nav.exit.leave
-  const hasActiveSession =
-    set.length > 0 &&
-    (entry.kind === 'ready' || entry.kind === 'resume') &&
-    !session.finished &&
-    phrase !== undefined
+  const hasActiveSession = set.length > 0 && !session.finished && phrase !== undefined
   useEffect(() => {
-    // The session-only exit is present only while the sheet it opens is mounted. Cold, locked
+    // The session-only exit is present only while the sheet it opens is mounted. Cold, empty
     // and terminal Refrain entries retain the shared Today/Back stack exit.
     navigation.setOptions({
       headerLeft: () =>
@@ -171,52 +167,16 @@ export default function Refrain() {
       </Screen>
     )
   }
-  // A finished session owns the immediate post-practice screen even when the next scheduled
-  // wave is still locked. The completion checkpoint is the learner's current result; replacing
-  // it with the next-wave gate would hide the reward and make a successful session look blocked.
+  // A finished session owns the immediate post-practice screen. The completion
+  // checkpoint is the learner's current result; replacing it with the next-wave
+  // action would hide the reward. Practice stays open after this screen.
   if (session.finished) {
     const day = deviceClock.localDay()
-    const finishedWaves = [
-      ...completedWaves.filter((item): item is WaveKey =>
-        PRODUCTION_WAVES.includes(item as WaveKey),
-      ),
-      wave,
-    ]
-    const after = waveEntry(PRODUCTION_WAVES, PRODUCTION_WAVE_TIMES, now, finishedWaves)
     return (
       <Screen>
         <DoneState
           worked={set.length}
           totalReps={set.reduce((n, p) => n + repsTodayOf(p, day), 0)}
-          next={after.kind === 'locked' ? after.next : undefined}
-        />
-      </Screen>
-    )
-  }
-  if (entry.kind === 'locked') {
-    return (
-      <Screen>
-        <RefrainGate
-          title={copy.refrain.unavailable.title(entry.next.time)}
-          body={copy.refrain.unavailable.body}
-          actionLabel={copy.refrain.done.cta}
-          onAction={() => {
-            router.replace('/')
-          }}
-        />
-      </Screen>
-    )
-  }
-  if (entry.kind === 'complete') {
-    return (
-      <Screen>
-        <RefrainGate
-          title={copy.refrain.unavailable.complete}
-          body={copy.refrain.unavailable.body}
-          actionLabel={copy.refrain.done.cta}
-          onAction={() => {
-            router.replace('/')
-          }}
         />
       </Screen>
     )
@@ -581,15 +541,7 @@ function LockedInBanner() {
  * Spanish), an 88-px tile whose 42-px emoji is off `EmojiTile`'s 0.48 ratio, two counters, and
  * a full-width button. Routing it through `EmptyState` would silently restyle all four.
  */
-function DoneState({
-  worked,
-  totalReps,
-  next,
-}: {
-  worked: number
-  totalReps: number
-  next?: { readonly key: WaveKey; readonly time: string } | undefined
-}) {
+function DoneState({ worked, totalReps }: { worked: number; totalReps: number }) {
   useLocale()
   return (
     <ScrollView contentContainerStyle={s.centred}>
@@ -612,19 +564,16 @@ function DoneState({
         />
         <DoneStat value={totalReps} label={copy.common.repsToday} rule={accent.accent} />
       </Row>
-      {next ? (
-        <Card style={s.doneNext}>
-          <Text variant="title3" color={ink.ink}>
-            {copy.today.waves[next.key].title}
-          </Text>
-          <Text variant="caption" color={ink.ink2}>
-            {copy.today.cta.waitForWave(next.time)}
-          </Text>
-        </Card>
-      ) : null}
       <View style={s.doneCta}>
         <Button
+          label={copy.today.cta.keepListening}
+          onPress={() => {
+            router.replace('/practice/stream')
+          }}
+        />
+        <Button
           label={copy.refrain.done.cta}
+          variant="secondary"
           size="cta"
           onPress={() => {
             router.replace('/')
@@ -735,7 +684,6 @@ const s = StyleSheet.create({
   },
   doneEmoji: { fontSize: 42 },
   doneStats: { width: '100%', marginTop: space['3'] },
-  doneNext: { width: '100%', alignItems: 'center', gap: space['1'] },
   doneStat: {
     flex: 1,
     alignItems: 'center',
@@ -747,5 +695,5 @@ const s = StyleSheet.create({
     borderRadius: radius.pill,
     marginTop: space['2'],
   },
-  doneCta: { width: '100%', marginTop: space['3'] },
+  doneCta: { width: '100%', marginTop: space['3'], gap: space['2'] },
 })

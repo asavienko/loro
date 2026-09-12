@@ -75,7 +75,7 @@ describe('Discover phrase suggest client', () => {
         headers: { 'content-type': 'application/json' },
       }),
     )
-    const fromEmpty = await requestPhraseSuggestions(
+    const recovered = await requestPhraseSuggestions(
       {
         query: 'pharmacy',
         nativeLanguage: 'en',
@@ -85,6 +85,22 @@ describe('Discover phrase suggest client', () => {
       'https://auth.loro.test/v1',
       emptyBundled,
     )
-    expect(fromEmpty.length).toBeGreaterThan(0)
+    expect(recovered.length).toBeGreaterThan(0)
+    const emptyLive = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(JSON.stringify({ fallback: true, provenance: 'live', candidates: [] }), {
+        headers: { 'content-type': 'application/json' },
+      }),
+    )
+    const liveMiss = await requestPhraseSuggestions(
+      {
+        query: 'pharmacy',
+        nativeLanguage: 'en',
+        targetLocale: 'es-ES',
+        existingTexts: [],
+      },
+      'https://auth.loro.test/v1',
+      emptyLive,
+    )
+    expect(liveMiss).toEqual([])
   })
 })

@@ -11,7 +11,7 @@
 import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import type { Catalog, CatalogPhrase, DropStep, Pack, Scenario } from './types.js'
+import type { Catalog, CatalogPhrase, DropStep, Pack, PhraseGraph, Scenario } from './types.js'
 
 const here = dirname(fileURLToPath(import.meta.url))
 export const contentRoot = join(here, '..')
@@ -37,6 +37,7 @@ export function loadCatalogFromDisk(lang = 'es-ES'): Catalog {
     schedules: Record<string, DropStep[]>
     rules: Catalog['dropRules']
   }
+  const graph = read(lang, 'graph.json') as PhraseGraph
 
   return {
     lang: phrases.lang,
@@ -46,5 +47,6 @@ export function loadCatalogFromDisk(lang = 'es-ES'): Catalog {
     packs: packs.packs,
     drops: drops.schedules,
     dropRules: drops.rules,
+    graph: { lang: graph.lang, edges: graph.edges },
   }
 }

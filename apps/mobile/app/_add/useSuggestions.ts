@@ -1,11 +1,34 @@
 import { useMemo, useState } from 'react'
-import { foldSearchText, type BrowsableTheme, type PhraseState } from '@loro/core'
+import {
+  foldSearchText,
+  type BrowsableTheme,
+  type Difficulty,
+  type PhraseState,
+  type Tag,
+} from '@loro/core'
 import {
   useLearningCatalog,
   type DisplayPhrase as CatalogPhrase,
 } from '../../src/store/learningCatalog'
 import { copy, themeLabel } from '../../src/lib/copy'
+import {
+  catalogAssociationFlags,
+  highestOwnedCefr,
+  orderAssociatedIds,
+  ownedCountsByTheme,
+} from '../../src/lib/association'
+import { useLocale } from '../../src/lib/i18n'
 import type { AddMode } from './mode'
+
+export interface AssociationAnchor {
+  /** Catalog id, or empty when the added row has no graph node. */
+  catalogId: string
+  /** Learner-visible phrase text for the artifact context line. */
+  phrase: string
+  theme: string
+  difficulty: Difficulty
+  tags: readonly Tag[]
+}
 
 export interface Suggestions {
   mode: AddMode
@@ -32,30 +55,69 @@ export interface Suggestions {
   countFor: (theme: string) => number
   /** How many catalog phrases the theme has — the pack's denominator. */
   totalFor: (theme: string) => number
-  /** After a confirmed add: anchor on that theme, so the next list is "more like it". */
-  anchorOn: (theme: string) => void
+  /** After a confirmed add: rank “more like that” inside the authored theme bands. */
+  anchorOn: (anchor: AssociationAnchor) => void
   /** Confirmed custom add: clear the query without moving the association theme. */
   clearDiscoverQuery: () => void
 }
 
+function associate(
+  pool: readonly CatalogPhrase[],
+  catalog: readonly CatalogPhrase[],
+  owned: readonly PhraseState[],
+  edges: readonly { from: string; to: string; relation: string; weight: number }[],
+  anchor: AssociationAnchor,
+): CatalogPhrase[] {
+  const byId = new Map(catalog.map((phrase, index) => [phrase.id, { phrase, index }]))
+  const catalogAnchor = byId.get(anchor.catalogId)?.phrase
+  const peakCefr = highestOwnedCefr(owned, catalog)
+  const ownedInTheme = ownedCountsByTheme(owned, catalog)
+  const ids = orderAssociatedIds({
+    anchor: {
+      id: anchor.catalogId,
+      difficulty: anchor.difficulty,
+      tags: [...anchor.tags],
+      theme: anchor.theme,
+      ...(catalogAnchor?.cefr === undefined ? {} : { cefr: catalogAnchor.cefr }),
+      ...(catalogAnchor?.register === undefined ? {} : { register: catalogAnchor.register }),
+    },
+    candidates: pool.map((phrase) => {
+      const index = byId.get(phrase.id)?.index ?? catalog.length
+      const flags = catalogAssociationFlags(phrase)
+      return {
+        id: phrase.id,
+        theme: phrase.theme,
+        ...(phrase.cefr === undefined ? {} : { cefr: phrase.cefr }),
+        ...(phrase.register === undefined ? {} : { register: phrase.register }),
+        ...flags,
+        catalogIndex: index,
+        ownedInTheme: ownedInTheme.get(phrase.theme) ?? 0,
+      }
+    }),
+    edges,
+    ...(peakCefr === undefined ? {} : { highestOwnedCefr: peakCefr }),
+  })
+  const poolById = new Map(pool.map((phrase) => [phrase.id, phrase]))
+  return ids.flatMap((id) => {
+    const phrase = poolById.get(id)
+    return phrase === undefined ? [] : [phrase]
+  })
+}
+
 /**
- * The suggestion algorithm, unchanged.
+ * Discover / Browse suggestion branches.
  *
- * Every branch, every order and both limits are the ones the screen shipped with: a drilled
- * theme wins, then a search over es/en/theme capped at 8, then a scenario's own arc, then
- * the association anchor's theme first and everything else after, capped at 6. It arguably
- * belongs in `@loro/core` (plans/60 wants to rank these) — moving it now would risk changing
- * the ORDER or the COUNT of what a learner sees, which is the one thing this refactor
- * promises not to do.
+ * Query, browse and scenario keep their existing order. Association ranks inside the
+ * authored same-theme-first bands through Rust `assoc_order`.
  */
 export function useSuggestions(owned: readonly PhraseState[]): Suggestions {
-  const { phrases: catalogPhrases, scenarios } = useLearningCatalog()
+  useLocale()
+  const { phrases: catalogPhrases, scenarios, graph } = useLearningCatalog()
   const [mode, setModeState] = useState<AddMode>('discover')
   const [query, setQuery] = useState('')
   const [scenario, setScenario] = useState<string | null>(null)
   const [browseTheme, setBrowseTheme] = useState<BrowsableTheme | null>(null)
-  // The association anchor: after adding, suggestions become "more like that".
-  const [anchorTheme, setAnchorTheme] = useState<string | null>(null)
+  const [anchor, setAnchor] = useState<AssociationAnchor | null>(null)
   // Joined on the CATALOG id, not the row id. They happen to be equal today, but
   // they are different id spaces — a learner-authored phrase has a row id and no
   // catalog id — and `UserPhraseId`/`CatalogPhraseId` are branded so the join can't
@@ -89,14 +151,11 @@ export function useSuggestions(owned: readonly PhraseState[]): Suggestions {
         .map((id) => pool.find((p) => p.id === id))
         .filter((p): p is CatalogPhrase => p !== undefined)
     }
-    if (anchorTheme !== null) {
-      // Association: same-theme first, then everything else.
-      const same = pool.filter((p) => p.theme === anchorTheme)
-      const rest = pool.filter((p) => p.theme !== anchorTheme)
-      return [...same, ...rest].slice(0, 6)
+    if (anchor !== null) {
+      return associate(pool, catalogPhrases, owned, graph.edges, anchor)
     }
     return pool.slice(0, 6)
-  }, [mode, browseTheme, query, scenario, anchorTheme, pool, scenarios])
+  }, [mode, browseTheme, query, scenario, anchor, pool, scenarios, catalogPhrases, owned, graph])
   const contextLabel =
     query.trim().length > 0
       ? phrases.length > 0
@@ -104,8 +163,8 @@ export function useSuggestions(owned: readonly PhraseState[]): Suggestions {
         : copy.add.context.noMatches
       : scenario !== null
         ? copy.add.context.forScenario(scenarios.find((s) => s.id === scenario)?.label ?? '')
-        : anchorTheme !== null
-          ? copy.add.context.moreLike(themeLabel(anchorTheme))
+        : anchor !== null
+          ? copy.add.context.moreLike(anchor.phrase)
           : copy.add.context.popular
   return {
     mode,
@@ -123,7 +182,7 @@ export function useSuggestions(owned: readonly PhraseState[]): Suggestions {
     toggleScenario: (id) => {
       setScenario((cur) => (cur === id ? null : id))
       setQuery('')
-      setAnchorTheme(null)
+      setAnchor(null)
     },
     browse: setBrowseTheme,
     backToThemes: () => {
@@ -131,8 +190,8 @@ export function useSuggestions(owned: readonly PhraseState[]): Suggestions {
     },
     countFor: (theme) => pool.filter((p) => p.theme === theme).length,
     totalFor: (theme) => catalogPhrases.filter((p) => p.theme === theme).length,
-    anchorOn: (theme) => {
-      setAnchorTheme(theme)
+    anchorOn: (next) => {
+      setAnchor(next)
       setQuery('')
       setScenario(null)
     },

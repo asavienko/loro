@@ -28,7 +28,7 @@ export const addCopy = {
       return message('add.context.noMatches')
     },
     forScenario: (scenario: string): string => message('add.context.forScenario', { scenario }),
-    moreLike: (theme: string): string => message('add.context.moreLike', { theme }),
+    moreLike: (phrase: string): string => message('add.context.moreLike', { phrase }),
     get popular() {
       return message('add.context.popular')
     },

@@ -36,7 +36,7 @@ import { expect, type Page } from '@playwright/test'
  */
 export type LocalInstant = string
 
-/** Open morning wave in Europe/Madrid. After 19:00 the Start-the-wave control is locked. */
+/** Open morning wave in Europe/Madrid so Today names the morning slot. */
 export const OPEN_WAVE_INSTANT: LocalInstant = '2026-04-06T10:00'
 
 /** Same open-wave instant; name used by the phrase-songs frozen-clock helper. */
@@ -71,7 +71,7 @@ export async function ensureManifestClock(page: Page): Promise<void> {
 /**
  * Freeze `Date` at a learner-local instant without pausing timers.
  *
- * STATES-driven `enter()` needs an open-wave wall clock so Today is not next-wave locked,
+ * STATES-driven `enter()` pins a morning-wave wall clock so Today names the morning slot,
  * but account provider discovery uses fetch + `setTimeout` abort. `clock.install()` pauses
  * those timers and leaves Google disabled.
  */

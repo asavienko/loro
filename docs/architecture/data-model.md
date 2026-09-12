@@ -28,7 +28,7 @@ migration and creates:
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | `user_phrase`    | Full current `PhraseState`, learner ownership, per-field sync metadata and soft deletion.                                      |
 | `settings`       | The full planned settings row; the current repository reads/writes only onboarding, goal, level, daily minutes and wave times. |
-| `refrain_day`    | Frozen set ids, the wave keys the learner finished, and substitutions. All three round-trip through both repositories.         |
+| `refrain_day`    | Frozen set ids, finished wave keys, substitutions, and today's listen counts toward the ten-phrases-heard-three-times rule.    |
 | `streak_day`     | One row per streak-day key, with accumulated minutes.                                                                          |
 | `outbox`         | Ordered sync operations with payload, HLC, attempts and last error.                                                            |
 | `kv`             | Reserved key/value storage; no repository uses it yet.                                                                         |

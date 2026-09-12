@@ -43,6 +43,7 @@ export const createSessionSlice: Slice<
       refrainSet: current.refrainSet,
       refrainDay: current.refrainDay,
       refrainWaves: current.refrainWaves,
+      waveListens: current.waveListens,
       refrainSubstituted: current.refrainSubstituted,
     }
     const destination = current.courses[targetLocale] ?? {
@@ -54,6 +55,7 @@ export const createSessionSlice: Slice<
       refrainSet: [],
       refrainDay: null,
       refrainWaves: [],
+      waveListens: {},
       refrainSubstituted: [],
     }
     set({
@@ -94,6 +96,7 @@ export const createSessionSlice: Slice<
       refrainSet: [],
       refrainDay: null,
       refrainWaves: [],
+      waveListens: {},
       refrainSubstituted: [],
     })
     get().ensureRefrainSet()

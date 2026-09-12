@@ -3,6 +3,7 @@ import { BROWSABLE_THEMES } from '@loro/core'
 import phraseSchema from '../schema/phrase.schema.json' with { type: 'json' }
 import { loadCatalog, stressedSyllables, THEMES, wordCount } from './index.js'
 import { ALL_CHECKS, runChecks, runChecksForCatalog, type Issue } from './checks.js'
+import { loadCatalogFromDisk } from './fs.js'
 
 const catalog = loadCatalog()
 const errors = (issues: Issue[]): Issue[] => issues.filter((i) => i.level === 'error')
@@ -219,6 +220,103 @@ describe('check helpers', () => {
     const bad = structuredClone(catalog)
     bad.drops['12']!.find((s) => s.day === 1)!.pack = 'cafe'
     expect(errors(ALL_CHECKS.drops!(bad)).length).toBeGreaterThan(0)
+  })
+
+  it('flags a graph edge that does not resolve', () => {
+    const broken = structuredClone(catalog)
+    broken.graph.edges.push({
+      from: 'din1',
+      to: 'doesNotExist',
+      relation: 'reply',
+      weight: 50,
+    })
+    expect(errors(ALL_CHECKS.graph!(broken)).some((i) => i.message.includes('unknown'))).toBe(true)
+  })
+
+  it('flags a duplicate (from, to, relation)', () => {
+    const dup = structuredClone(catalog)
+    dup.graph.edges.push({ ...dup.graph.edges[0]! })
+    expect(errors(ALL_CHECKS.graph!(dup)).some((i) => i.message.includes('duplicate'))).toBe(true)
+  })
+
+  it('flags a cross-locale or locale-prefixed edge in es-ES', () => {
+    const bad = structuredClone(catalog)
+    bad.graph.edges.push({
+      from: 'bg-BG:din1',
+      to: 'din2',
+      relation: 'reply',
+      weight: 50,
+    })
+    const messages = errors(ALL_CHECKS.graph!(bad)).map((i) => i.message)
+    expect(messages.some((m) => m.includes('cross-locale') || m.includes('locale-prefixed'))).toBe(
+      true,
+    )
+  })
+
+  it('flags a self-edge', () => {
+    const loop = structuredClone(catalog)
+    loop.graph.edges.push({ from: 'din1', to: 'din1', relation: 'reply', weight: 40 })
+    expect(errors(ALL_CHECKS.graph!(loop)).some((i) => i.message.includes('self-edge'))).toBe(true)
+  })
+
+  it('flags a prerequisite cycle', () => {
+    const cyclic = structuredClone(catalog)
+    cyclic.graph.edges.push(
+      { from: 'din1', to: 'din2', relation: 'prerequisite', weight: 40 },
+      { from: 'din2', to: 'din1', relation: 'prerequisite', weight: 40 },
+    )
+    const cycle = errors(ALL_CHECKS.graph!(cyclic)).find((i) => i.message.includes('cycle'))
+    expect(cycle?.message).toBe('prerequisite cycle: din1 → din2 → din1')
+  })
+})
+
+describe('phrase relation graph', () => {
+  it('seeds only scenario_next from the authored scenario arcs', () => {
+    expect(catalog.graph.lang).toBe('es-ES')
+    expect(catalog.graph.edges).toHaveLength(15)
+    expect(new Set(catalog.graph.edges.map((e) => e.relation))).toEqual(new Set(['scenario_next']))
+    const ids = new Set(catalog.phrases.map((p) => p.id))
+    for (const edge of catalog.graph.edges) {
+      expect(ids).toContain(edge.from)
+      expect(ids).toContain(edge.to)
+      expect(edge.weight).toBe(100)
+    }
+    const keys = new Set(catalog.graph.edges.map((e) => `${e.from}\0${e.to}\0${e.relation}`))
+    for (const scenario of catalog.scenarios) {
+      for (let i = 0; i < scenario.phrases.length - 1; i++) {
+        const from = scenario.phrases[i]!
+        const to = scenario.phrases[i + 1]!
+        expect(keys, `${scenario.id}: ${from} → ${to}`).toContain(`${from}\0${to}\0scenario_next`)
+      }
+    }
+  })
+
+  it('exposes identical edges from the bundled snapshot and the disk loader', () => {
+    expect(loadCatalogFromDisk().graph).toEqual(catalog.graph)
+    expect(loadCatalog().graph).toEqual(catalog.graph)
+  })
+})
+
+describe('catalog audio', () => {
+  it('rejects a clip that is not a cloud object', () => {
+    const bad = structuredClone(catalog)
+    bad.phrases[0]!.audio = {
+      uri: 'file:///tmp/din2.m4a',
+      sha256: 'ab'.repeat(32),
+      ms: 800,
+    }
+    expect(errors(ALL_CHECKS.audio!(bad)).some((i) => i.message.includes('cloud https'))).toBe(true)
+  })
+
+  it('warns on a rendered sha256 identity instead of failing validation', () => {
+    const rendered = structuredClone(catalog)
+    const digest = 'ab'.repeat(32)
+    rendered.phrases[0]!.audio = { uri: `sha256/${digest}`, sha256: digest, ms: 800 }
+    const issues = ALL_CHECKS.audio!(rendered).filter((i) => i.id === rendered.phrases[0]!.id)
+    expect(errors(issues)).toEqual([])
+    expect(issues.some((i) => i.level === 'warn' && i.message.includes('content-addressed'))).toBe(
+      true,
+    )
   })
 })
 

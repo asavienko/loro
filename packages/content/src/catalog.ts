@@ -13,15 +13,16 @@ import phrasesJson from '../es-ES/phrases.json' with { type: 'json' }
 import scenariosJson from '../es-ES/scenarios.json' with { type: 'json' }
 import packsJson from '../es-ES/packs.json' with { type: 'json' }
 import dropsJson from '../es-ES/drops.json' with { type: 'json' }
-import type { Catalog, CatalogPhrase } from './types.js'
+import graphJson from '../es-ES/graph.json' with { type: 'json' }
+import type { Catalog, CatalogPhrase, GraphEdge } from './types.js'
 
 /**
- * Only `phrases` is cast, and only because TypeScript widens JSON string literals to
- * `string` — which `register` ("neutral" | "formal" | "casual") and `cefr` cannot
- * accept. Everything else is checked structurally by the `Catalog` annotation, so a
+ * `phrases` and `graph.edges` are cast because TypeScript widens JSON string
+ * literals to `string` — which `register`/`cefr` and `GraphRelation` cannot accept.
+ * Everything else is checked structurally by the `Catalog` annotation, so a
  * hand-edit that drops a field or mistypes a number fails the build here.
  *
- * The cast gives up exactly the string-union checks on phrases, and no more.
+ * The casts give up the string-union checks on those two arrays, and no more.
  * `checks.ts` re-asserts those unions against the same source, so `pnpm
  * content:validate` closes the gap rather than leaving it open.
  */
@@ -33,4 +34,8 @@ export const bundledCatalog: Catalog = {
   packs: packsJson.packs,
   drops: dropsJson.schedules,
   dropRules: dropsJson.rules,
+  graph: {
+    lang: graphJson.lang,
+    edges: graphJson.edges as GraphEdge[],
+  },
 }

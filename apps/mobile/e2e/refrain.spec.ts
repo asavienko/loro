@@ -1,4 +1,4 @@
-import { atInstant, jumpTo, returnToForeground, runFor } from './clock'
+import { atInstant, runFor } from './clock'
 import { expect, onboard, test } from './fixtures'
 import { repsTodayRow, startWave } from './helpers'
 
@@ -55,10 +55,14 @@ test(
     await expect(page.getByText("Today's set is warmed up")).toBeVisible()
     await expect(page.getByText('30', { exact: true }).filter({ visible: true })).toBeVisible()
 
-    await page.getByRole('button', { name: 'Back to today' }).click()
+    await page.getByRole('button', { name: 'Keep listening' }).click()
+    await expect(page).toHaveURL(/\/practice\/stream$/)
+    await expect(page.getByRole('button', { name: 'Next phrase' })).toBeVisible()
+    await page.getByRole('link', { name: /back/i }).click()
     await expect(page.getByText('done', { exact: true }).filter({ visible: true })).toBeVisible()
     await expect(page.getByText('5 of 5 locked in').filter({ visible: true })).toBeVisible()
     await expect(repsTodayRow(page, 30)).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Start the midday wave' })).toBeEnabled()
 
     await page.getByRole('button', { name: 'Progress' }).click()
     await expect(page.getByLabel('reps done: 30')).toBeVisible()
@@ -66,16 +70,10 @@ test(
   },
 )
 
-test('opens a scheduled wave when its local time arrives on an already-open route', async ({
-  page,
-}) => {
+test('keeps Refrain enterable before the first scheduled hour', async ({ page }) => {
   await atInstant(page, '2026-05-04T07:59')
   await onboard(page)
   await page.goto('/practice/refrain')
-  await expect(page.getByText(/Next wave starts at/)).toBeVisible()
-
-  await jumpTo(page, '2026-05-04T08:00')
-  await returnToForeground(page)
   await expect(page.getByRole('button', { name: 'Say it', exact: true })).toBeVisible()
 })
 
