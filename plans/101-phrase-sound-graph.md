@@ -2,9 +2,10 @@
 
 - **Requirement IDs:** `P2-04`, `P2-06`, `P2-24`, `AI-02`, `AS-01`, `AS-07`
 - **Milestone:** M2/M3 content and Discover association
-- **Status:** 🟡 Implementation of the six remaining-work items is on the branch. Q-15 still gates
-  production pronunciation audio; Q-21 still gates live Discover suggest; Q-22 still gates
-  share-out-of-app. Device 60 fps and bilingual review stay their existing owners.
+- **Status:** 🟡 The six remaining-work items are landed and verified (graph, `assoc_score`,
+  Discover E2E, `gap_priority`). Q-15 still gates production pronunciation audio; Q-21 still gates
+  live Discover suggest; Q-22 still gates share-out-of-app. Device 60 fps and bilingual review stay
+  their existing owners.
 - **Depends on:** 60 for the Rust maths boundary (not the policy); 61 for catalog publication; 97
   for authoring-time drafts; 98 for reference render; 99 for listening-class render; 87 for new
   linguistic edges
