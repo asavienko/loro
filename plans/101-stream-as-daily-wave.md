@@ -5,9 +5,10 @@
 - **Status:** 🟡 Stream lists today's frozen wave; Refrain is a targeted drill from Stream or a
   difficult-only menu entry. Main's listen-complete waves keep practice open before the first hour;
   `?wave=` is still wave focus, not a clock lock. Browser mouse/touch covers Stream → phrase Refrain
-  and menu hard-filter. The Android runner starts from Today and requires switcher plus More;
-  physical-device execution of those rows remains the plan 58/93 gate. Authored v1.1 still treats
-  Refrain as the wave hero and is not edited. ID collides with phrase-graph 101.
+  and menu hard-filter, including a phrase-focus switcher hop. Linux emulator `emulator-5554` (AVD
+  `loro-wave`, API 36) passed all three 101/93 rows on APK `1269b1640798` with chrome plus the exact
+  URL; physical-device / AT and iOS remain the plan 58/93 gates. Authored v1.1 still treats Refrain
+  as the wave hero and is not edited. ID collides with phrase-graph 101.
 - **Depends on:** 64 wave/resume runtime; 81 menu/More destinations; 56 route declaration
 - **Number allocation:** 101 follows inspection of active and archived plans. 96, 100 and this
   file's collision with [`101-phrase-sound-graph.md`](101-phrase-sound-graph.md) remain unresolved.
@@ -42,13 +43,14 @@ More, filtered to active `difficulty === 'hard'` phrases only.
 ## Remaining
 
 - Physical-device / assistive-technology execution of `stream-to-phrase-refrain`,
-  `menu-hard-refrain`, and `practice-back-swipe-disabled` (plans 58/93). The Android runner now
-  completes first-run onboarding when Today is missing, then starts from Today’s wave control,
-  Stream → `?phrase=`, and both switcher and More for `?filter=hard`. Browser pointer coverage and
-  the fail-closed catalog exist; a screenshot collector must not mark those rows passed. This host
-  can now resolve `adb` from a Linux `~/Android/Sdk` and reads a hidden `loro-route:` dump marker
-  after in-app Expo pushes (dumpsys often keeps the launcher intent). Those rows stay `unavailable`
-  until a supported Android run records chrome plus the exact URL.
+  `menu-hard-refrain`, and `practice-back-swipe-disabled` (plans 58/93). Closest-available Android
+  evidence is the Linux emulator run at `.local-builds/native-evidence/wave-101-emulator-v3/`
+  against preview APK `1269b1640798` (`app.loro.android.preview` on `emulator-5554`): Stream →
+  `?phrase=01a0961e-2856-7000-9314-2d3585a0261b`, switcher and More both `?filter=hard` with
+  difficult-only empty chrome, and practice edge-swipe stayed on the session. That is not
+  physical-device, AT, or iOS proof. Phrase-focus Refrain is not the menu destination; the switcher
+  replaces into `?filter=hard` and only a matching hard checkpoint owns that empty screen. A
+  screenshot collector must not mark those rows passed.
 - `deep_link_for` now opens Stream for the daily reminder and the midday wave nudge. The plan 70
   scheduler that delivers those links is still unbuilt. A bare `/practice` path also resolves to
   Stream.
