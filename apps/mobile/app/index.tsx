@@ -73,7 +73,9 @@ import { copy } from '../src/lib/copy'
 import { deviceClock, localDateLabel, localTimeLabel } from '../src/lib/clock'
 import { useLocalMinute } from '../src/lib/useLocalMinute'
 import {
+  WAVE_LISTEN_PHRASE_COUNT,
   waveEntryWithResume,
+  waveListenProgress,
   waveSchedule,
   type ScheduledWave,
   type WavePosition,
@@ -96,6 +98,7 @@ export default function Today() {
   const phrases = useApp((s) => s.phrases)
   const refrainSet = useApp((s) => s.refrainSet)
   const refrainWaves = useApp((s) => s.refrainWaves)
+  const waveListens = useApp((s) => s.waveListens)
   const refrainResume = useApp((s) => s.refrainResume)
   const ensure = useApp((s) => s.ensureRefrainSet)
   const practiceDays = useApp((s) => s.practiceDays)
@@ -159,6 +162,7 @@ export default function Today() {
     completedWaves,
     refrainResume,
   )
+  const listenProgress = waveListenProgress(waveListens)
   const nextWaveKey = waves.find((wave) => wave.position === 'next')?.key ?? PRODUCTION_WAVES[0]
   const resumeWave = refrainResume.wave ?? nextWaveKey
   const resumeRep =
@@ -208,6 +212,9 @@ export default function Today() {
           waves={waves}
           setSize={set.length}
           totalReps={totalReps}
+          // What finishing a wave by listening takes, while one is still open. The rule is
+          // otherwise invisible: nothing else on the screen says a wave can be earned at all.
+          listenProgress={entry.kind === 'complete' ? undefined : listenProgress}
           // With nothing in rotation the wave is not a way in, and the row must not say it is
           // while the CTA below says the opposite.
           onStartWave={canPractice && entry.kind !== 'complete' ? startWave : undefined}
@@ -330,11 +337,14 @@ function DayList({
   waves,
   setSize,
   totalReps,
+  listenProgress,
   onStartWave,
 }: {
   waves: readonly ScheduledWave<WaveKey>[]
   setSize: number
   totalReps: number
+  /** Phrases heard three times toward the open wave. Absent once the day's slots are done. */
+  listenProgress: number | undefined
   onStartWave: ((wave: WaveKey) => void) | undefined
 }) {
   useLocale()
@@ -367,6 +377,11 @@ function DayList({
       <DayRow
         time={copy.today.day.now}
         title={copy.today.day.reps(totalReps)}
+        meta={
+          listenProgress === undefined
+            ? undefined
+            : copy.today.day.waveListenProgress(listenProgress, WAVE_LISTEN_PHRASE_COUNT)
+        }
         position="passed"
         last
       />

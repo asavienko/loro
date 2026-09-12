@@ -29,6 +29,9 @@ test(
     }
     await expect(page.getByRole('button', { name: /wave\./ })).toHaveCount(1)
     await expect(repsTodayRow(page, 0)).toBeVisible()
+    // A wave is finished by listening, so the day states what that takes. Without this the
+    // rule is invisible: nothing else on the screen says a wave can be earned at all.
+    await expect(page.getByText('0 of 10 phrases heard three times')).toBeVisible()
 
     // Today's set: five rows, each openable, with the lock-in window on it.
     await expect(page.getByRole('button', { name: /0 percent automatic/ })).toHaveCount(5)
