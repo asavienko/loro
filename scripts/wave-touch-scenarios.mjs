@@ -10,7 +10,7 @@ export const WAVE_TOUCH_SCENARIOS = [
     id: 'stream-to-phrase-refrain',
     owner: '101',
     requirement: 'LB-03',
-    entry: 'Today Start the * wave, then Stream Practice this phrase',
+    entry: 'Today Start the * wave, then Stream Practice this phrase; phrase detail Practice now',
     expect: '/practice/refrain?phrase=<id>',
   },
   {
@@ -60,15 +60,15 @@ export const WAVE_TOUCH_SCENARIOS = [
     id: 'stream-to-phrase-refrain-at',
     owner: '101',
     requirement: 'LB-03',
-    entry: 'TalkBack double-activate Today wave then Stream Practice this phrase',
+    entry:
+      'TalkBack double-activate Today wave then Stream Practice this phrase, then phrase detail Practice now',
     expect: '/practice/refrain?phrase=<id>',
   },
   {
     id: 'menu-hard-refrain-at',
     owner: '101',
     requirement: 'LB-08',
-    entry:
-      'TalkBack double-activate switcher The Refrain, including from a phrase-focus session',
+    entry: 'TalkBack double-activate switcher The Refrain, including from a phrase-focus session',
     expect: '/practice/refrain?filter=hard',
   },
   {
