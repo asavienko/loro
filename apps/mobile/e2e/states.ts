@@ -222,6 +222,9 @@ export const STATES: AppState[] = [
             text['today.cta.startWave.evening'],
           ]
           await page.getByRole('button', { name: new RegExp(names.join('|')) }).click()
+          await page
+            .getByRole('button', { name: text['stream.practiceRefrain'], exact: true })
+            .click()
           await expect(page.getByText(text['refrain.audioNote'])).toBeVisible()
         }
       },
