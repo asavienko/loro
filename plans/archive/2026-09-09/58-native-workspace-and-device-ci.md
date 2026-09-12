@@ -65,19 +65,19 @@ modules, generated native projects, UniFFI bindings, device SQLite, permissions,
        uiautomator after first-run onboarding when Today is missing. Linux emulator `emulator-5554`
        (AVD `loro-wave`, API 36) passed all twelve catalog rows on preview APK `d0a802591f75` with
        chrome plus the exact URL or gesture proof
-       (`.local-builds/native-evidence/wave-101-emulator-v13/`, `physicalGateCount=0`), including
-       phrase-focus switcher → `?filter=hard`. An edge swipe opened Leave this wave? / Pause the
-       wave; Android Back after Keep going opened the phrase-drill sheet. The NAV-04 row probes edge
-       and mid-screen swipes, then Android Back on Stream (wave sheet) and phrase Refrain (practice
-       sheet); iOS practice routes set `fullScreenGestureEnabled: false`. That is not
-       physical-device, interruption, speech, or iOS proof. Missing device or matching evidence
-       stays `unavailable` or `failed`. iOS `--execute-scenarios` drives pointer, spine/sheet,
-       Leave-practice exit, and backdrop rows through simctl + idb with the same fail-closed
-       chrome/URL/gesture gates. Android Back stays unavailable on iOS. That path may boot a
-       Shutdown simulator and install a verified `loro-simulator-*.zip`. TalkBack `-at` rows stay
-       unavailable even if VoiceOver looks enabled; ordinary idb taps are not AT proof. VoiceOver
-       remains a physical-device gate. Missing Xcode/idb does not abort collection. A screenshot
-       collector must not mark those rows passed.
+       (`.local-builds/native-evidence/wave-101-emulator-v14/`, `physicalGateCount=0`), including
+       phrase-detail Practice now → `?phrase=` and phrase-focus switcher → `?filter=hard`. An edge
+       swipe opened Leave this wave? / Pause the wave; Android Back after Keep going opened the
+       phrase-drill sheet. The NAV-04 row probes edge and mid-screen swipes, then Android Back on
+       Stream (wave sheet) and phrase Refrain (practice sheet); iOS practice routes set
+       `fullScreenGestureEnabled: false`. That is not physical-device, interruption, speech, or iOS
+       proof. Missing device or matching evidence stays `unavailable` or `failed`. iOS
+       `--execute-scenarios` drives pointer, spine/sheet, Leave-practice exit, and backdrop rows
+       through simctl + idb with the same fail-closed chrome/URL/gesture gates. Android Back stays
+       unavailable on iOS. That path may boot a Shutdown simulator and install a verified
+       `loro-simulator-*.zip`. TalkBack `-at` rows stay unavailable even if VoiceOver looks enabled;
+       ordinary idb taps are not AT proof. VoiceOver remains a physical-device gate. Missing
+       Xcode/idb does not abort collection. A screenshot collector must not mark those rows passed.
 3. [ ] Validate minimum OS floors and clean regeneration on supported hosts. Add platform modules
        for widgets/OCR/purchases only with their owning feature.
 4. [ ] Complete production signing/provisioning and environment-safe release profiles when store
