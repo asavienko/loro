@@ -30,6 +30,9 @@ const TALKBACK_SERVICE = 'com.google.android.marvin.talkback/.TalkBackService'
 const TALKBACK_PACKAGE = 'com.google.android.marvin.talkback'
 const WAVE_START = /^Start the (morning|midday|evening) wave$/
 const KEEP_LISTENING = 'Keep listening'
+const TODAY_TITLE = 'Today'
+const RESUME_PRACTICE = 'Resume practice'
+const STREAM_RAIL = 'Stream'
 const ONBOARD_WELCOME = "Let's go →"
 const ONBOARD_CONTINUE = 'Continue'
 const ONBOARD_READY = 'Start learning'
@@ -136,6 +139,13 @@ export function findWaveStart(dump) {
   })
 }
 
+/** Today remains the home while a paused drill replaces the wave CTA with Resume. */
+export function isTodayHomeDump(dump) {
+  return Boolean(
+    findWaveStart(dump) || dumpHas(dump, RESUME_PRACTICE) || dumpHas(dump, TODAY_TITLE),
+  )
+}
+
 export function dumpHas(dump, label) {
   return findLabel(dump, label) !== undefined
 }
@@ -150,7 +160,7 @@ export function isOnboardingDump(dump) {
 }
 
 export function evaluateOnboardedHome(dump) {
-  if (findWaveStart(dump)) {
+  if (isTodayHomeDump(dump)) {
     return { status: 'passed', notes: 'Today is ready for the wave probe.' }
   }
   if (isOnboardingDump(dump)) {
@@ -255,10 +265,10 @@ function isPracticeChrome(dump) {
 }
 
 export function evaluateTodayStreamDump({ todayDump, streamDump, currentUrl }) {
-  if (!findWaveStart(todayDump)) {
+  if (!isTodayHomeDump(todayDump)) {
     return {
       status: 'failed',
-      notes: 'Today dump does not expose Start the * wave or Keep listening.',
+      notes: 'Today dump does not expose Start the * wave, Keep listening, or Resume.',
     }
   }
   if (!currentUrl) {
@@ -389,7 +399,7 @@ export function evaluateSheetDismiss({ menuDump, afterDump, inertDump }) {
       notes: 'Sheet pull-down did not dismiss the switcher.',
     }
   }
-  if (!findWaveStart(afterDump)) {
+  if (!isTodayHomeDump(afterDump)) {
     return {
       status: 'failed',
       notes: 'Sheet dismiss left Today.',
@@ -523,6 +533,21 @@ function tapWaveStart(ctx, dump) {
   )
 }
 
+function openStreamFromToday(ctx, dump) {
+  if (findWaveStart(dump)) return tapWaveStart(ctx, dump)
+  const rail = findClickableLabel(dump, STREAM_RAIL) ?? findLabel(dump, STREAM_RAIL)
+  if (rail?.bounds) {
+    const { left, top, right, bottom } = rail.bounds
+    return activatePoint(
+      ctx,
+      Math.floor((left + right) / 2),
+      Math.floor((top + bottom) / 2),
+      'Stream rail',
+    )
+  }
+  return openDeepLink(ctx, '/practice/stream')
+}
+
 function swipeNode(ctx, node, { dx = 0, dy = 0, ms = 250 } = {}) {
   if (!node?.bounds) return 'Missing swipe target'
   const { left, top, right, bottom } = node.bounds
@@ -607,21 +632,7 @@ function launcherComponent(packageName) {
 
 function openDeepLink(ctx, path) {
   const component = launcherComponent(ctx.packageName)
-  if (path === '/') {
-    const started = runCommand(ctx.run, ctx.adb, ctx.serial, [
-      'shell',
-      'am',
-      'start',
-      '-a',
-      'android.intent.action.MAIN',
-      '-c',
-      'android.intent.category.LAUNCHER',
-      '-n',
-      component,
-    ])
-    return failedCommand(started, `am start ${ctx.packageName}`)
-  }
-  const uri = `${ctx.scheme}://${path.replace(/^\//, '')}`
+  const uri = path === '/' ? `${ctx.scheme}://` : `${ctx.scheme}://${path.replace(/^\//, '')}`
   const started = runCommand(ctx.run, ctx.adb, ctx.serial, [
     'shell',
     'am',
@@ -689,7 +700,7 @@ function runStreamPhrase(ctx) {
   waitForUi(ctx.run, ctx.waitMs)
   const today = dumpUi(ctx, 'today-before')
   if (today.error) return scenarioResult(scenario, { status: 'unavailable', notes: today.error })
-  const started = tapWaveStart(ctx, today.xml)
+  const started = openStreamFromToday(ctx, today.xml)
   if (started) return scenarioResult(scenario, { status: 'failed', notes: started })
   waitForUi(ctx.run, ctx.waitMs)
   const stream = dumpUi(ctx, 'stream-before')

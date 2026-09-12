@@ -12,6 +12,7 @@ import {
   evaluateTodayStreamDump,
   executeWaveScenarios,
   dumpHasSwitcher,
+  isTodayHomeDump,
   findClickableLabel,
   findLabel,
   findResourceId,
@@ -86,6 +87,17 @@ const HOME_DUMP = `<?xml version="1.0"?>
     <node resource-id="navigation-pull-handle" bounds="[0,0][360,88]"/>
     <node class="android.widget.Button" content-desc="Spanish, open the menu" clickable="true" bounds="[24,40][360,88]"/>
     <node class="android.widget.Button" text="Start the morning wave" bounds="[24,400][360,456]"/>
+  </node>
+</hierarchy>`
+
+const TODAY_RESUME_DUMP = `<?xml version="1.0"?>
+<hierarchy>
+  <node class="android.widget.FrameLayout">
+    <node resource-id="navigation-pull-handle" bounds="[0,0][360,88]"/>
+    <node class="android.widget.TextView" text="Today" bounds="[24,40][200,88]"/>
+    <node class="android.widget.Button" content-desc="Today, open the menu" clickable="true" bounds="[24,40][360,88]"/>
+    <node class="android.widget.Button" text="Resume practice" clickable="true" bounds="[24,200][360,256]"/>
+    <node class="android.widget.Button" content-desc="Stream, 10 phrases" clickable="true" bounds="[24,1600][180,1680]"/>
   </node>
 </hierarchy>`
 
@@ -225,6 +237,8 @@ test('finds Today Start the * wave and Keep listening', () => {
   const keep = `<?xml version="1.0"?><hierarchy><node text="Keep listening" bounds="[24,400][360,456]"/></hierarchy>`
   assert.equal(findWaveStart(keep)?.text, 'Keep listening')
   assert.equal(findWaveStart(STREAM_DUMP), undefined)
+  assert.equal(isTodayHomeDump(TODAY_RESUME_DUMP), true)
+  assert.equal(findWaveStart(TODAY_RESUME_DUMP), undefined)
 })
 
 test('passes Today → Stream when chrome and URL match', () => {
@@ -234,6 +248,14 @@ test('passes Today → Stream when chrome and URL match', () => {
     currentUrl: 'loro://practice/stream',
   })
   assert.equal(result.status, 'passed')
+  assert.equal(
+    evaluateTodayStreamDump({
+      todayDump: TODAY_RESUME_DUMP,
+      streamDump: STREAM_DUMP,
+      currentUrl: 'loro://practice/stream',
+    }).status,
+    'passed',
+  )
 })
 
 test('never treats a dump-only Today hop as a device pass', () => {
@@ -369,6 +391,14 @@ test('sheet pull dismisses the switcher only on a committed vertical drag', () =
       .status,
     'failed',
   )
+  assert.equal(
+    evaluateSheetDismiss({
+      menuDump: MENU_DUMP,
+      afterDump: TODAY_RESUME_DUMP,
+      inertDump: MENU_DUMP,
+    }).status,
+    'passed',
+  )
   assert.equal(dumpHasSwitcher(MENU_DUMP), true)
   assert.equal(dumpHasSwitcher(HOME_DUMP), false)
 })
@@ -436,7 +466,10 @@ function scriptedDevice({
       stage = moreOpensHard ? 'more' : 'today'
       return { status: 0, stdout: '' }
     }
-    if (joined.includes('am start') && joined.includes('MAIN')) {
+    if (
+      joined.includes('am start') &&
+      (joined.includes('MAIN') || args.includes('loro://') || joined.includes('loro:// '))
+    ) {
       stage = 'today'
       return { status: 0, stdout: '' }
     }
@@ -586,8 +619,10 @@ test('detects onboarding chrome and treats Today as the ready home', () => {
   assert.equal(isOnboardingDump(READY_DUMP), true)
   assert.equal(isOnboardingDump(HOME_DUMP), false)
   assert.equal(evaluateOnboardedHome(HOME_DUMP).status, 'passed')
+  assert.equal(evaluateOnboardedHome(TODAY_RESUME_DUMP).status, 'passed')
   assert.equal(evaluateOnboardedHome(WELCOME_DUMP).status, 'failed')
   assert.equal(evaluateOnboardedHome(STREAM_DUMP).status, 'unavailable')
+  assert.equal(evaluateOnboardedHome(HARD_REFRAIN_DUMP).status, 'unavailable')
 })
 
 test('decodes pack labels so Café & ordering is tappable from a uiautomator dump', () => {
