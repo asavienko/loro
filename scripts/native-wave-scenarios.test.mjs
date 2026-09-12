@@ -562,6 +562,12 @@ test('reads the Expo path from a hidden loro-route dump node', () => {
   assert.equal(routeUrlFromDump(EXPO_PHRASE_DUMP), '/practice/refrain?phrase=es-001')
   assert.equal(routeUrlFromDump(STREAM_DUMP), '')
   assert.equal(
+    routeUrlFromDump(
+      `<?xml version="1.0"?><hierarchy><node resource-id="loro-route:/practice/stream"/></hierarchy>`,
+    ),
+    '/practice/stream',
+  )
+  assert.equal(
     routeUrlFromLogcat('ReactNativeJS: loro-route:/practice/refrain?filter=hard'),
     '/practice/refrain?filter=hard',
   )

@@ -221,7 +221,7 @@ function main() {
       'Drive pointer, spine/sheet, and TalkBack rows through adb + uiautomator (fail-closed; never pass without URL/chrome/gesture evidence): --execute-scenarios',
     )
     console.log(
-      'iOS --execute-scenarios stays unavailable (uiautomator is Android-only); it does not abort collection.',
+      'iOS --execute-scenarios drives pointer and spine/sheet rows through simctl + idb (fail-closed). TalkBack `-at` rows stay unavailable; VoiceOver physical-device remains plan 58/93.',
     )
     return
   }

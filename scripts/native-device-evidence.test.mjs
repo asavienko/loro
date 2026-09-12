@@ -143,6 +143,8 @@ test('iOS collection retains actual artifacts without copying app containers or 
   const run = (tool, args) => {
     calls.push([tool, ...args])
     let stdout = ''
+    if (tool === 'idb')
+      return { status: 1, error: Object.assign(new Error('not found'), { code: 'ENOENT' }) }
     if (tool === 'xcodebuild') stdout = 'Xcode fixture'
     else if (args.includes('list')) stdout = JSON.stringify(inventory)
     else if (args.includes('get_app_container')) stdout = '/private/test.app'
@@ -179,7 +181,7 @@ test('iOS collection retains actual artifacts without copying app containers or 
       run,
     })
     assert.ok(driven.scenarios.every((row) => row.status === 'unavailable'))
-    assert.ok(driven.scenarios.every((row) => row.reason.includes('iOS --execute-scenarios')))
+    assert.ok(driven.scenarios.every((row) => row.reason.includes('idb')))
     assert.deepEqual(JSON.parse(readFileSync(join(output, 'manifest.json'))), manifest)
     assert.deepEqual(calls[2], [
       'xcrun',
@@ -189,7 +191,7 @@ test('iOS collection retains actual artifacts without copying app containers or 
       'app.loro.ios',
       'app',
     ])
-    assert.equal(calls.length, 8)
+    assert.equal(calls.length, 9)
     assert.equal(readFileSync(join(output, 'device.json'), 'utf8').includes('/private'), false)
   } finally {
     rmSync(output, { recursive: true, force: true })

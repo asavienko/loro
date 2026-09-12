@@ -1,6 +1,7 @@
 import { spawnSync } from 'node:child_process'
 import { mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { executeIosWaveScenarios } from './ios-wave-scenarios.mjs'
 import { unevaluatedWaveScenarios } from './wave-touch-scenarios.mjs'
 
 export function selectSimulator(inventory, serial) {
@@ -55,6 +56,17 @@ export function collectIosEvidence({
   const signature = readFileSync(screenshot).subarray(0, 8)
   if (!signature.equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])))
     throw new Error('Simulator screenshot did not produce a PNG artifact.')
+  const scenarios = executeScenarios
+    ? executeIosWaveScenarios({
+        udid: device.udid,
+        packageName,
+        outputDir: resolve(output, 'wave-scenarios'),
+        waitMs: 3000,
+        run,
+      })
+    : unevaluatedWaveScenarios(
+        'Simulator screenshot is not a Stream → Refrain or menu hard-filter run.',
+      )
   const manifest = {
     collectedAt: new Date().toISOString(),
     platform: 'ios',
@@ -66,16 +78,12 @@ export function collectIosEvidence({
     artifactRevision: artifactRevision ?? null,
     artifact: artifact ?? null,
     checks: { device: 'captured', installedPackage: 'present', screenshot: 'captured' },
-    scenarios: unevaluatedWaveScenarios(
-      executeScenarios
-        ? 'iOS --execute-scenarios cannot drive adb/uiautomator. Wave-path rows stay unavailable; physical-device/AT remains plan 58/93.'
-        : 'Simulator screenshot is not a Stream → Refrain or menu hard-filter run.',
-    ),
+    scenarios,
     limits: [
       'The declared artifact revision identifies the intended build; retain independent build metadata before accepting it.',
-      'The screenshot captures the current simulator screen; app launch and scenario outcomes are not asserted.',
-      'This read-only collection does not prove clean iOS compilation, minimum OS support, physical-device speech, permissions, persistence, lifecycle or interruption acceptance.',
-      'Plan 101 wave-path rows stay unavailable until a physical iPhone run drives those entries. The adb/uiautomator runner is Android-only. iOS --execute-scenarios records unavailable, never passed.',
+      'The screenshot captures the current simulator screen; app launch and scenario outcomes are not asserted unless --execute-scenarios records chrome plus the exact URL or gesture proof.',
+      'This collection does not prove clean iOS compilation, minimum OS support, physical-device speech, permissions, persistence, lifecycle or interruption acceptance.',
+      'iOS --execute-scenarios drives pointer and spine/sheet rows through simctl + idb and fail-closes without chrome/URL/gesture evidence. TalkBack `-at` rows stay unavailable; VoiceOver physical-device remains plan 58/93. A screenshot is not a pass.',
     ],
   }
   writeFileSync(resolve(output, 'xcode.txt'), xcode)
