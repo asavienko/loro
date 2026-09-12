@@ -1,8 +1,10 @@
 import { Body, Controller, HttpCode, Post } from '@nestjs/common'
 import { ZodError } from 'zod'
+import { PendingAccountIsolation } from '../common/account-isolation.js'
 import { LoroError } from '../common/errors.js'
 import { suggestPhrases } from './phrase-suggest.js'
 
+@PendingAccountIsolation()
 @Controller('phrases')
 export class PhrasesController {
   @Post('suggest')

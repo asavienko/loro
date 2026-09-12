@@ -24,7 +24,7 @@ weeks with the API unreachable ([overview.md](overview.md#the-ten-rules), rule 2
 ```
 apps/api/src/
 ├── main.ts                    # /v1 prefix, problem filter, production WASM startup gate
-├── app.module.ts              # imports feature modules
+├── app.module.ts              # imports feature modules; registers AuthBoundaryGuard
 ├── platform.module.ts         # repository/provider/clock choices (global)
 ├── ai/                        # bundled scenes, provider seam, validation, 2 routes
 ├── auth/                      # Google/Apple/email identity, sessions, /me

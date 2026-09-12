@@ -7,10 +7,8 @@
  */
 
 import { Global, Module } from '@nestjs/common'
-import { APP_GUARD } from '@nestjs/core'
 import { StubSceneProvider } from './ai/scene-provider.stub.js'
 import { SCENE_PROVIDERS, type SceneProvider } from './ai/scene-provider.js'
-import { AuthBoundaryGuard } from './auth/auth-boundary.guard.js'
 import { SERVER_CLOCK, systemClock } from './common/clock.js'
 import { config } from './common/config.js'
 import { DATABASE, PostgresDatabase, type SqlDatabase } from './database/database.js'
@@ -41,7 +39,6 @@ import { TTS_TRANSPORT, createTtsTransport } from './tts/transport.js'
       useFactory: (...providers: SceneProvider[]): SceneProvider[] => providers,
       inject: [StubSceneProvider],
     },
-    { provide: APP_GUARD, useClass: AuthBoundaryGuard },
   ],
   exports: [
     DATABASE,

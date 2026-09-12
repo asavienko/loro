@@ -2,13 +2,16 @@
  * The composition root.
  *
  * Adapter choices live in `platform.module.ts`. Feature modules own routes and
- * collaborators. A test that needs a different store or provider overrides the
- * token on this module rather than reaching past the seam
- * (docs/architecture/backend.md).
+ * collaborators. HTTP policy such as `AuthBoundaryGuard` is registered here so
+ * the adapter module does not own request gating. A test that needs a different
+ * store or provider overrides the token on this module rather than reaching
+ * past the seam (docs/architecture/backend.md).
  */
 
 import { Module } from '@nestjs/common'
+import { APP_GUARD } from '@nestjs/core'
 import { AiModule } from './ai/ai.module.js'
+import { AuthBoundaryGuard } from './auth/auth-boundary.guard.js'
 import { AuthModule } from './auth/auth.module.js'
 import { ContentModule } from './content/content.module.js'
 import { HealthModule } from './health/health.module.js'
@@ -28,6 +31,7 @@ import { TtsModule } from './tts/tts.module.js'
     ContentModule,
     HealthModule,
   ],
+  providers: [{ provide: APP_GUARD, useClass: AuthBoundaryGuard }],
 })
 // A Nest module is a decorated marker class; an empty body is the framework's shape,
 // not a missed abstraction.
