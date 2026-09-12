@@ -23,7 +23,7 @@ test('the working tree index matches top-level plans and next is highest assigne
   const assigned = discoverAssignedIds(join(root, 'plans'))
   assert.ok(topLevel.includes(99), 'plan 99 listen companion must stay top-level')
   assert.ok(assigned.includes(100), 'plan 100 hygiene still occupies ID 100 after archive')
-  assert.equal(Math.max(...assigned) + 1, 101)
+  assert.equal(Math.max(...assigned) + 1, 102)
 })
 
 test('two 96 rows still pass when the collision is documented', () => {
@@ -49,15 +49,15 @@ test('removing a remaining top-level row from a copy of README fails', () => {
   )
 })
 
-test('“next is 101” is required while 100 is the highest assigned ID', () => {
-  const lagged = readme.replace('next new plan is **101**', 'next new plan is **100**')
+test('“next is 102” is required while 101 is the highest assigned ID', () => {
+  const lagged = readme.replace('next new plan is **102**', 'next new plan is **101**')
   const errors = planIndexErrors({
     plans: discoverTopLevelPlans(join(root, 'plans')),
     assignedIds: discoverAssignedIds(join(root, 'plans')),
     readme: lagged,
   })
   assert.ok(
-    errors.some((error) => error.includes('next is 100')),
+    errors.some((error) => error.includes('next is 101')),
     errors.join('\n'),
   )
 })

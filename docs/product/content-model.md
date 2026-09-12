@@ -111,6 +111,38 @@ scenario can get through the real situation.
 
 ---
 
+<a id="phrase-relation-graph"></a>
+
+## Phrase relation graph
+
+Authored **edges** between catalog phrases, not a second kind of atom. A node is a catalog phrase
+id. A sound is still the phrase's `audio` attribute — never a graph node and never PCM.
+
+The seed relation is `scenario_next`: the existing scenario `phrases[]` order, stored so a
+deterministic score can read it. Same-theme adjacency is **derived** from `theme`; it is not stored
+(a stored clique does not scale to the ~600-phrase launch target). Later authored relations
+(`reply`, `lexical`, `contrast`, `prerequisite`, `register_shift`) wait on data most starters lack.
+
+Two scores consume the graph, with different inputs. Implementation owner:
+[plan 101](../../plans/101-phrase-sound-graph.md).
+
+| Score          | When                       | Reads                                                                              | Does not read                                   |
+| -------------- | -------------------------- | ---------------------------------------------------------------------------------- | ----------------------------------------------- |
+| `assoc_score`  | Discover after add (P2-04) | Anchor difficulty/tags, authored edges, candidate catalog fields, owned aggregates | Candidate FSRS/mastery (candidates are unowned) |
+| `gap_priority` | Authoring CLI              | Scenario/pack/audio coverage and arc orphans                                       | Any learner state                               |
+
+Discover association keeps the authored **theme bands** (`Loro.dc.html:2306–2310`): same-theme
+first, then the rest, cap 6. The score orders **inside** a band. The artifact context label is
+`More like “{anchorEs}”` (`2369`); the current app shows `More like {theme}` — that copy is a
+recorded divergence plan 101 fixes. This score is **not** Stream rank and **not** FSRS; see
+[scheduling.md](../architecture/scheduling.md#association-is-not-a-sixth-scheduler).
+
+The graph ships in the bundled snapshot (`graph.json` beside `scenarios.json`) and in the disk
+loader the authoring CLIs use. Course ids stay course-scoped (`cafe1` on `es-ES`, `bg-BG:cafe1`
+otherwise). Own-phrases have no catalog node.
+
+---
+
 <a id="packs--onboarding-and-drops"></a>
 
 ## Packs — onboarding and drops
@@ -198,6 +230,7 @@ content/
 ├── es-ES/
 │   ├── phrases.json       # the catalog
 │   ├── scenarios.json
+│   ├── graph.json         # authored edges (plan 101); not yet shipped
 │   ├── packs.json
 │   └── drops.json         # drop schedules by trip length
 └── audio/<sha256>.m4a     # on the CDN, not in the repo
