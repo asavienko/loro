@@ -37,8 +37,8 @@ export function anonymousPrincipal(ip: string): AnonymousPrincipal {
 
 /** Transport peer only. Forwarded headers cannot bypass auth limits. */
 export function requestAddress(request: {
-  ip?: string
-  socket?: { remoteAddress?: string }
+  ip?: string | undefined
+  socket?: { remoteAddress?: string | undefined } | undefined
 }): string {
   return request.socket?.remoteAddress ?? request.ip ?? 'unknown'
 }
