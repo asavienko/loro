@@ -162,8 +162,8 @@ pub fn may_fire(category: Category, ctx: &NotifyContext) -> bool {
 #[uniffi::export]
 pub fn deep_link_for(category: Category) -> String {
     match category {
-        Category::DailyReminder => "loro://practice",
-        Category::WaveNudge => "loro://practice/refrain",
+        Category::DailyReminder => "loro://practice/stream",
+        Category::WaveNudge => "loro://practice/stream?wave=midday",
         Category::TripDrop => "loro://trip/drop",
         Category::TripMilestone => "loro://trip",
         Category::Arrival => "loro://trip/survival",
@@ -413,6 +413,18 @@ mod tests {
     }
 
     #[test]
+    fn daily_reminder_and_wave_nudge_open_stream() {
+        assert_eq!(
+            deep_link_for(Category::DailyReminder),
+            "loro://practice/stream"
+        );
+        assert_eq!(
+            deep_link_for(Category::WaveNudge),
+            "loro://practice/stream?wave=midday"
+        );
+    }
+
+    #[test]
     fn every_category_lands_on_a_specific_surface() {
         let mut seen: Vec<String> = Vec::new();
         for cat in ALL {
@@ -445,7 +457,7 @@ mod tests {
         );
         assert_eq!(plan[0].delivery_at_ms, 900);
         assert_eq!(plan[0].copy_key, "notifications.dailyReminder");
-        assert_eq!(plan[0].deep_link, "loro://practice");
+        assert_eq!(plan[0].deep_link, "loro://practice/stream");
         assert!(plan.iter().all(|item| item.suppress_when_foreground));
     }
 

@@ -43,9 +43,8 @@ More, filtered to active `difficulty === 'hard'` phrases only.
   the native-evidence catalog, and `pnpm native:evidence --execute-scenarios` exist; a screenshot
   collector must not mark those rows passed. This host has no adb/device, so those rows stay
   `unavailable` until a supported Android run records chrome plus the exact URL.
-- Wave-nudge `deep_link_for` still emits `loro://practice/refrain` (now hard-filter). Intended
-  Stream targets are recorded in
-  [widgets-notifications](../docs/architecture/widgets-notifications.md). The Rust strings wait on
-  rustc ≥ 1.88 and the plan 70 adapter. A bare `/practice` path now resolves to Stream.
+- `deep_link_for` now opens Stream for the daily reminder and the midday wave nudge. The plan 70
+  scheduler that delivers those links is still unbuilt. A bare `/practice` path also resolves to
+  Stream.
 - Authored v1.1 still treats Refrain as the wave hero; docs record the divergence and the
   `design/**/*.dc.html` artifacts are not edited.

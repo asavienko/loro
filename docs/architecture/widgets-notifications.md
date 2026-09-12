@@ -190,22 +190,20 @@ still required. This boundary is the mechanism that makes rule `N-04` enforceabl
 Every notification opens directly onto the right surface, never the home screen. Plan 101 makes
 Stream the daily wave, so the reminder and nudge must not open hard-filter Refrain:
 
-| Notification   | Intended deep link (plan 101)        | Current `deep_link_for`   |
-| -------------- | ------------------------------------ | ------------------------- |
-| Daily reminder | `loro://practice/stream`             | `loro://practice`         |
-| Wave nudge     | `loro://practice/stream?wave=midday` | `loro://practice/refrain` |
-| Trip drop      | `loro://trip/drop/<day>`             | `loro://trip/drop`        |
-| Trip milestone | `loro://trip`                        | `loro://trip`             |
-| Arrival        | `loro://trip/survival`               | `loro://trip/survival`    |
-| Return         | `loro://trip/souvenir`               | `loro://trip/souvenir`    |
-| Language pack  | `loro://settings/speech`             | `loro://settings/speech`  |
+| Notification   | Deep link                            |
+| -------------- | ------------------------------------ |
+| Daily reminder | `loro://practice/stream`             |
+| Wave nudge     | `loro://practice/stream?wave=midday` |
+| Trip drop      | `loro://trip/drop/<day>`             |
+| Trip milestone | `loro://trip`                        |
+| Arrival        | `loro://trip/survival`               |
+| Return         | `loro://trip/souvenir`               |
+| Language pack  | `loro://settings/speech`             |
 
-`loro://practice` is not a built route. The app now resolves a bare `/practice` path to Stream so
-that current daily-reminder string cannot waste attention on Today. Wave nudge still emits bare
-Refrain, which production treats as the difficult-only drill — wrong for a wave. Updating
-`notify.rs` waits on rustc ≥ 1.88 (crate floor) and the plan 70 scheduler that first calls
-`deep_link_for`. Authored `Loro.dc.html` still treats Refrain as the wave hero; that artifact is not
-edited.
+`deep_link_for` now emits those Stream URLs. A bare `/practice` path also resolves to Stream so an
+older `loro://practice` reminder cannot fall back to Today. The plan 70 scheduler that first calls
+`deep_link_for` is still unbuilt. Authored `Loro.dc.html` still treats Refrain as the wave hero;
+that artifact is not edited.
 
 A notification that opens the home screen and makes the learner navigate has wasted their attention.
 

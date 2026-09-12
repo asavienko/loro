@@ -41,10 +41,9 @@ state and never shame a missed day.
        candidate instants, permission states, quiet hours, foreground suppression and non-shaming
        translated copy. Server push is optional enhancement.
 5. [ ] Wire deep links through plan-56 route laws and audio through native playback. Plan 101
-       requires daily reminder / wave nudge to open Stream (`loro://practice/stream` and
-       `loro://practice/stream?wave=midday`). `deep_link_for` still emits `loro://practice` and
-       `loro://practice/refrain`; changing those strings needs rustc ≥ 1.88. A bare `/practice` path
-       now resolves to Stream.
+       requires daily reminder / wave nudge to open Stream; `deep_link_for` now emits
+       `loro://practice/stream` and `loro://practice/stream?wave=midday`. A bare `/practice` path
+       also resolves to Stream. The OS scheduler that first calls `deep_link_for` remains.
 6. [ ] Add native test matrices for airplane force-quit, partial/corrupt cache, low storage,
        permission denial/revocation, clock/timezone shifts, stale widget, notification tap, and app
        upgrade.
