@@ -17,6 +17,7 @@ import { atInstant, runFor } from './clock'
 import { expect, onboard, test } from './fixtures'
 import {
   click,
+  isPhraseRefrain,
   open,
   openFirstPhrase,
   repsTodayRow,
@@ -36,7 +37,7 @@ test('phrase feedback stays above the primary action and follows navigation', as
   const actionBounds = await page.getByRole('button', { name: 'Practice now →' }).boundingBox()
   expect((toastBounds?.y ?? 0) + (toastBounds?.height ?? 0)).toBeLessThan(actionBounds?.y ?? 0)
   await page.getByRole('button', { name: 'Practice now →' }).click()
-  await expect(page).toHaveURL(/\/practice\/refrain/)
+  await expect(page).toHaveURL(isPhraseRefrain)
 })
 
 test('a memory hook can be chosen and changed back', async ({ page }) => {
