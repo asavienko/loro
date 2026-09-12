@@ -15,8 +15,8 @@ import {
 import type { OAuthProvider } from '@loro/core/api/oauth'
 import { AppModule } from '../app.module.js'
 import { SERVER_CLOCK } from '../common/clock.js'
-import { ProblemDetailsFilter } from '../common/problem-filter.js'
 import { DATABASE, PostgresDatabase } from '../database/database.js'
+import { listenTestApp } from '../testing/create-test-app.js'
 import { AuthService } from './auth.service.js'
 import { AUTH_RUNTIME } from './runtime.js'
 import { OAuthFlowService, hash, secret } from './oauth-flow.service.js'
@@ -99,11 +99,9 @@ describePostgres('browser OAuth HTTP flow with shared durable sync', () => {
       .overrideProvider(AUTH_RUNTIME)
       .useValue(flow)
       .compile()
-    app = module.createNestApplication()
-    app.setGlobalPrefix('v1')
-    app.useGlobalFilters(new ProblemDetailsFilter())
-    await app.listen(0, '127.0.0.1')
-    base = await app.getUrl()
+    const started = await listenTestApp(module)
+    app = started.app
+    base = started.base
   })
   afterAll(async () => {
     await app.close()

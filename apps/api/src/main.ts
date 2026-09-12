@@ -12,7 +12,7 @@ import { Logger } from '@nestjs/common'
 import type { NestExpressApplication } from '@nestjs/platform-express'
 import { AppModule } from './app.module.js'
 import { config } from './common/config.js'
-import { ProblemDetailsFilter } from './common/problem-filter.js'
+import { configureHttpApp } from './http-app.js'
 import { mergeAvailable } from './sync/merge.js'
 import { DATABASE, type SqlDatabase } from './database/database.js'
 import { authSettings, isLoopbackHttpUrl } from './auth/settings.js'
@@ -38,10 +38,6 @@ async function bootstrap(): Promise<void> {
     bufferLogs: false,
     bodyParser: false,
   })
-  // Bound parser allocation; the sync service enforces its smaller shared 512 KiB cap.
-  app.useBodyParser('json', { limit: '1mb' })
-  // Apple sends its authorization code through a browser form POST.
-  app.useBodyParser('urlencoded', { extended: false, limit: '32kb' })
   app.enableShutdownHooks()
   const oauth = authSettings()
   const redirectOrigins = (oauth?.redirects ?? [])
@@ -68,10 +64,7 @@ async function bootstrap(): Promise<void> {
     exposedHeaders: ['Retry-After'],
   })
 
-  app.setGlobalPrefix('v1')
-  // Auth and sync install the shared target Zod contracts at their boundary.
-  // RFC 9457 for every error. Never a stack trace, never SQL text.
-  app.useGlobalFilters(new ProblemDetailsFilter())
+  configureHttpApp(app)
   if ((config.isProduction() && Boolean(config.databaseUrl())) || oauth) {
     if (!(await app.get<SqlDatabase>(DATABASE).ready())) {
       await app.close()

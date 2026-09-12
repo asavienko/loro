@@ -14,7 +14,7 @@ function context(): ExecutionContext {
     getClass: () => unmarkedHandler,
     getHandler: () => unmarkedHandler,
     switchToHttp: () => ({ getRequest: () => ({}) }),
-  } as ExecutionContext
+  } as unknown as ExecutionContext
 }
 
 describe('AuthBoundaryGuard', () => {

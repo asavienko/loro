@@ -1,15 +1,10 @@
 /** F-03: account isolation closes every AI spend route, not just /ai/scene. */
 import { generateKeyPairSync } from 'node:crypto'
-import { Test } from '@nestjs/testing'
 import type { INestApplication } from '@nestjs/common'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { ProblemSchema } from '@loro/core/api/current'
-import { AppModule } from '../app.module.js'
-import { DATABASE } from '../database/database.js'
-import { ProblemDetailsFilter } from '../common/problem-filter.js'
 import { PROBLEM_MEDIA_TYPE } from '../common/errors.js'
-import { SYNC_REPOSITORY } from '../sync/sync.repository.js'
-import { InMemorySyncRepository } from '../sync/testing/sync.repository.memory.js'
+import { createTestApp } from '../testing/create-test-app.js'
 
 const key = generateKeyPairSync('ec', { namedCurve: 'prime256v1' })
   .privateKey.export({ type: 'pkcs8', format: 'pem' })
@@ -35,17 +30,9 @@ describe('AI spend routes when the session engine is on', () => {
 
   beforeAll(async () => {
     vi.stubEnv('AUTH_PRIVATE_KEY_PEM', key)
-    const module = await Test.createTestingModule({ imports: [AppModule] })
-      .overrideProvider(SYNC_REPOSITORY)
-      .useValue(new InMemorySyncRepository())
-      .overrideProvider(DATABASE)
-      .useValue({ ready: () => Promise.resolve(true) })
-      .compile()
-    app = module.createNestApplication()
-    app.setGlobalPrefix('v1')
-    app.useGlobalFilters(new ProblemDetailsFilter())
-    await app.listen(0, '127.0.0.1')
-    base = await app.getUrl()
+    const started = await createTestApp()
+    app = started.app
+    base = started.base
   })
 
   afterAll(async () => {
