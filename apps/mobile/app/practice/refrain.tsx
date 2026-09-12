@@ -67,6 +67,7 @@ import { useRefrainSession, type WarmingStyle } from './_useRefrainSession'
 import {
   parseRefrainFocus,
   refrainFocusIds,
+  refrainResumeMatchesFocus,
   sessionCoversDaySet,
 } from '../../src/lib/practiceFocus'
 import { copy } from '../../src/lib/copy'
@@ -113,7 +114,10 @@ export default function Refrain() {
         ? entry.wave.key
         : (scheduledWave ?? PRODUCTION_WAVES[0])
   const liveResume = refrainResume.session !== null && !refrainResume.done
-  const canPlan = focus.kind === 'wave' || focusIds.length > 0 || liveResume
+  const sessionIds = refrainResume.session?.plan.items.map((item) => item.phraseId) ?? []
+  const resumeMatchesFocus =
+    liveResume && refrainResumeMatchesFocus(sessionIds, focus, phrases, refrainSet)
+  const canPlan = focus.kind === 'wave' || focusIds.length > 0 || resumeMatchesFocus
   const session = useRefrainSession(selectedWave, canPlan, {
     ...(focus.kind === 'wave' ? {} : { setIds: focusIds }),
     completeWave: focus.kind === 'wave',
@@ -173,7 +177,7 @@ export default function Refrain() {
         ),
     })
   }, [hasActiveSession, leaveLabel, navigation])
-  if (focus.kind === 'hard' && focusIds.length === 0 && !liveResume && !session.finished) {
+  if (focus.kind === 'hard' && focusIds.length === 0 && !resumeMatchesFocus && !session.finished) {
     return (
       <Screen>
         <EmptyState
@@ -189,7 +193,12 @@ export default function Refrain() {
       </Screen>
     )
   }
-  if (focus.kind === 'phrase' && focusIds.length === 0 && !liveResume && !session.finished) {
+  if (
+    focus.kind === 'phrase' &&
+    focusIds.length === 0 &&
+    !resumeMatchesFocus &&
+    !session.finished
+  ) {
     return (
       <Screen>
         <EmptyState
@@ -226,7 +235,6 @@ export default function Refrain() {
   // action would hide the reward. Practice stays open after this screen.
   if (session.finished) {
     const day = deviceClock.localDay()
-    const sessionIds = refrainResume.session?.plan.items.map((item) => item.phraseId) ?? []
     const waveComplete = focus.kind === 'wave' && sessionCoversDaySet(sessionIds, refrainSet)
     return (
       <Screen>

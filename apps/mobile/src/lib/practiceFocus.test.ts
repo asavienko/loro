@@ -5,6 +5,7 @@ import {
   destinationNavigation,
   destinationTarget,
   inferRefrainFocus,
+  refrainResumeMatchesFocus,
   parseRefrainFocus,
   refrainFocusIds,
   refrainResumeTarget,
@@ -91,6 +92,31 @@ describe('refrain focus', () => {
       action: 'dismissTo',
       target: '/practice/stream',
     })
+  })
+
+  it('does not let a phrase checkpoint own the hard-filter empty state', () => {
+    const phrases = [
+      makePhrase('cafe'),
+      makePhrase('other', { difficulty: 'hard' }),
+      makePhrase('also', { difficulty: 'hard' }),
+    ]
+    expect(
+      refrainResumeMatchesFocus(['cafe'], { kind: 'hard' }, phrases, ['cafe', 'other', 'also']),
+    ).toBe(false)
+    expect(
+      refrainResumeMatchesFocus(['cafe'], { kind: 'phrase', phraseId: 'cafe' }, phrases, [
+        'cafe',
+        'other',
+        'also',
+      ]),
+    ).toBe(true)
+    expect(
+      refrainResumeMatchesFocus(['other', 'also'], { kind: 'hard' }, phrases, [
+        'cafe',
+        'other',
+        'also',
+      ]),
+    ).toBe(true)
   })
 
   it('does not treat phrase or wave Refrain as the menu destination', () => {
