@@ -159,6 +159,9 @@ rows with TalkBack double-activate when TalkBack is installed. Missing adb, miss
 TalkBack, or a dump without matching chrome/URL/gesture evidence stays `unavailable` or `failed` — a
 screenshot collector must not mark those rows passed. Browser mouse/touch coverage for the
 navigation and pull entries is in the learner E2E suite; it is not native proof. iOS
-`--execute-scenarios` records those rows as `unavailable` (the runner is adb/uiautomator) and does
-not abort collection. Clean iOS compilation, minimum OS floors, physical-device permissions/speech,
-persistence, lifecycle and interruption scenarios remain plan 58 acceptance gates.
+`--execute-scenarios` drives the pointer and spine/sheet rows through `simctl openurl` plus `idb`
+taps/swipes and fail-closes without chrome plus the exact URL or gesture proof. TalkBack `-at` rows
+stay `unavailable` on iOS; VoiceOver physical-device remains plan 58/93. Missing Xcode, idb, or a
+booted simulator does not abort collection. Clean iOS compilation, minimum OS floors,
+physical-device permissions/speech, persistence, lifecycle and interruption scenarios remain plan 58
+acceptance gates.
