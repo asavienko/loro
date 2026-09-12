@@ -220,19 +220,27 @@ function ReadyLayout() {
   )
 }
 
-/** Hidden from AT; uiautomator still dumps the exact Expo path after in-app pushes. */
+/** Hidden from AT; uiautomator and logcat still carry the exact Expo path after in-app pushes. */
 function RouteEvidence() {
   const pathname = usePathname()
   const params = useGlobalSearchParams()
+  const label = routeEvidenceLabel(pathname, params)
+  useEffect(() => {
+    console.warn(label)
+  }, [label])
   return (
     <View
       pointerEvents="none"
       importantForAccessibility="no-hide-descendants"
       accessibilityElementsHidden
+      accessible={false}
       collapsable={false}
+      testID="loro-route-evidence"
       style={styles.routeEvidence}
     >
-      <NativeText collapsable={false}>{routeEvidenceLabel(pathname, params)}</NativeText>
+      <NativeText testID="loro-route-evidence-label" collapsable={false} allowFontScaling={false}>
+        {label}
+      </NativeText>
     </View>
   )
 }
@@ -253,9 +261,10 @@ const styles = StyleSheet.create({
   learnerColumn: { maxWidth: webLayout.learnerMaxWidth },
   routeEvidence: {
     position: 'absolute',
-    width: 1,
-    height: 1,
+    left: 0,
+    top: 0,
+    width: 8,
+    height: 8,
     overflow: 'hidden',
-    opacity: 0,
   },
 })
