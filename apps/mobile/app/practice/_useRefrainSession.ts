@@ -90,15 +90,19 @@ export function useRefrainSession(
       .plan(engineContext(scoped !== undefined ? { refrainSet: scoped } : undefined))
       .then((plan) => {
         if (cancelled) return
-        const existing = useApp.getState().refrainResume.session
-        if (existing !== null && !useApp.getState().refrainResume.done) {
-          const sameFocus = refrainSessionMatchesFocus(
-            existing.plan.items.map((item) => item.phraseId),
-            setIdsRef.current,
-          )
+        const resume = useApp.getState().refrainResume
+        const existing = resume.session
+        const sameFocus = refrainSessionMatchesFocus(
+          existing?.plan.items.map((item) => item.phraseId) ?? [],
+          setIdsRef.current,
+        )
+        if (existing !== null && !resume.done) {
           // Remaining-work re-plans drop finished phrases. That is not a new focus.
           if (sameFocus || !replaceSession || plan.items.length === 0) return
         }
+        // A just-finished drill must not be replaced by the in-flight remaining-work plan.
+        // That empty begin looked like a live wave resume on Today.
+        if (resume.done && (sameFocus || plan.items.length === 0)) return
         beginRefrainSession(plan, wave)
       })
       .catch(() => {

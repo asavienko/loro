@@ -693,6 +693,13 @@ function DoneState({
         <Button
           label={copy.refrain.done.cta}
           onPress={() => {
+            if (variant !== 'wave') {
+              try {
+                useApp.getState().endRefrainSession()
+              } catch {
+                /* Today still opens; a leftover checkpoint is a resume, not lost work. */
+              }
+            }
             router.replace('/')
           }}
         />
