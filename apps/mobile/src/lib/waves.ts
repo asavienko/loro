@@ -67,20 +67,37 @@ export function qualifiedWaveListenCount(counts: Readonly<Record<string, number>
   return Object.values(counts).filter((n) => n >= WAVE_LISTEN_REPEATS).length
 }
 
+/** Whole waves today's listens have paid for, ignoring who else finished a slot. */
+function waveListenCredits(counts: Readonly<Record<string, number>>): number {
+  return Math.floor(qualifiedWaveListenCount(counts) / WAVE_LISTEN_PHRASE_COUNT)
+}
+
 /**
- * Wave keys earned by today's listens: each ten qualified phrases finishes the
- * next scheduled slot, in order. Extra listens past the last slot are kept but
- * do not invent a fourth wave.
+ * One listen, and the waves it finishes.
+ *
+ * Credit is what the listen ADDS, not what the totals would justify on their own. A
+ * finished Refrain set already owns a slot, so re-deriving "ten qualified phrases means
+ * the first wave" would hand the listener a key they already had and silently spend the
+ * same ten phrases twice. Each newly crossed multiple of ten takes the earliest slot
+ * still unfinished; listens past the last slot are kept but invent no fourth wave.
  */
-export function wavesCompletedByListens<Key extends string>(
-  keys: readonly Key[],
+export function recordWaveListen(
+  keys: readonly string[],
+  completed: readonly string[],
   counts: Readonly<Record<string, number>>,
-): Key[] {
-  const earned = Math.min(
-    keys.length,
-    Math.floor(qualifiedWaveListenCount(counts) / WAVE_LISTEN_PHRASE_COUNT),
-  )
-  return keys.slice(0, earned)
+  phraseId: string,
+  plays = 1,
+): { counts: Record<string, number>; completed: string[] } {
+  if (plays <= 0) return { counts: { ...counts }, completed: [...completed] }
+  const next = incrementWaveListen(counts, phraseId, plays)
+  const earned = waveListenCredits(next) - waveListenCredits(counts)
+  const finished = [...completed]
+  for (let i = 0; i < earned; i += 1) {
+    const slot = keys.find((key) => !finished.includes(key))
+    if (slot === undefined) break
+    finished.push(slot)
+  }
+  return { counts: next, completed: finished }
 }
 
 /** Listens already counted toward the next unfinished wave. */

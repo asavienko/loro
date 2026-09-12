@@ -10,7 +10,7 @@ import { applyDeltaToPhrase } from '../delta'
 import { structuralEqual } from '../../lib/structuralEqual'
 import { addPracticeDay } from '../state'
 import { PRODUCTION_WAVES } from '../engines'
-import { incrementWaveListen, wavesCompletedByListens } from '../../lib/waves'
+import { recordWaveListen } from '../../lib/waves'
 import type { Slice } from '../types'
 import type { UserPhraseId } from '@loro/core'
 
@@ -20,12 +20,14 @@ function withWaveListens<T extends { waveListens: Record<string, number>; refrai
   plays: number,
 ): T {
   if (plays <= 0) return course
-  const waveListens = incrementWaveListen(course.waveListens, phraseId, plays)
-  const refrainWaves = [...course.refrainWaves]
-  for (const wave of wavesCompletedByListens(PRODUCTION_WAVES, waveListens)) {
-    if (!refrainWaves.includes(wave)) refrainWaves.push(wave)
-  }
-  return { ...course, waveListens, refrainWaves }
+  const listened = recordWaveListen(
+    PRODUCTION_WAVES,
+    course.refrainWaves,
+    course.waveListens,
+    phraseId,
+    plays,
+  )
+  return { ...course, waveListens: listened.counts, refrainWaves: listened.completed }
 }
 
 export const createPracticeSlice: Slice<'recordPlay' | 'applyDelta' | 'setStreamCursor'> = ({

@@ -4,11 +4,11 @@ import {
   WAVE_LISTEN_REPEATS,
   incrementWaveListen,
   qualifiedWaveListenCount,
+  recordWaveListen,
   waveEntry,
   waveEntryWithResume,
   waveListenProgress,
   waveSchedule,
-  wavesCompletedByListens,
 } from './waves'
 
 const KEYS = ['morning', 'midday', 'evening'] as const
@@ -83,24 +83,53 @@ describe('wave listen completion', () => {
     expect(WAVE_LISTEN_REPEATS).toBe(3)
   })
 
-  it('completes one wave at ten qualified phrases and leaves later slots open', () => {
-    const counts: Record<string, number> = {}
-    for (let i = 0; i < WAVE_LISTEN_PHRASE_COUNT; i += 1) {
-      counts[`p${i}`] = WAVE_LISTEN_REPEATS
+  /** Listen to `phrases` phrases `WAVE_LISTEN_REPEATS` times each, from `state`. */
+  const hear = (
+    state: { counts: Record<string, number>; completed: string[] },
+    phrases: number,
+    offset = 0,
+  ): { counts: Record<string, number>; completed: string[] } => {
+    let current = state
+    for (let i = offset; i < offset + phrases; i += 1) {
+      for (let rep = 0; rep < WAVE_LISTEN_REPEATS; rep += 1) {
+        current = recordWaveListen(KEYS, current.completed, current.counts, `p${i}`)
+      }
     }
-    expect(wavesCompletedByListens(KEYS, counts)).toEqual(['morning'])
-    expect(waveListenProgress(counts)).toBe(0)
-    expect(wavesCompletedByListens(KEYS, { ...counts, extra: WAVE_LISTEN_REPEATS })).toEqual([
-      'morning',
-    ])
+    return current
+  }
+
+  const fresh = { counts: {} as Record<string, number>, completed: [] as string[] }
+
+  it('completes one wave at ten qualified phrases and leaves later slots open', () => {
+    const ten = hear(fresh, WAVE_LISTEN_PHRASE_COUNT)
+    expect(ten.completed).toEqual(['morning'])
+    expect(waveListenProgress(ten.counts)).toBe(0)
+
+    // An eleventh listen on a phrase already counted changes nothing it has not earned.
+    const again = recordWaveListen(KEYS, ten.completed, ten.counts, 'p0')
+    expect(again.completed).toEqual(['morning'])
+    expect(again.counts['p0']).toBe(WAVE_LISTEN_REPEATS + 1)
   })
 
   it('earns later waves from further qualified phrases without inventing a fourth', () => {
-    const counts: Record<string, number> = {}
-    for (let i = 0; i < WAVE_LISTEN_PHRASE_COUNT * 4; i += 1) {
-      counts[`p${i}`] = WAVE_LISTEN_REPEATS
-    }
-    expect(wavesCompletedByListens(KEYS, counts)).toEqual([...KEYS])
+    const all = hear(fresh, WAVE_LISTEN_PHRASE_COUNT * 4)
+    expect(all.completed).toEqual([...KEYS])
+  })
+
+  it('credits a quota earned after another source finished a wave', () => {
+    // A finished Refrain set already recorded the morning slot. Ten phrases heard three
+    // times each is a second showing-up, so it takes the next slot rather than the one
+    // that was already done.
+    const after = hear({ counts: {}, completed: ['morning'] }, WAVE_LISTEN_PHRASE_COUNT)
+    expect(after.completed).toEqual(['morning', 'midday'])
+  })
+
+  it('reports progress toward the next wave, not the whole day', () => {
+    const partial = hear(fresh, 4)
+    expect(waveListenProgress(partial.counts)).toBe(4)
+    const over = hear(partial, 8, 4)
+    expect(over.completed).toEqual(['morning'])
+    expect(waveListenProgress(over.counts)).toBe(2)
   })
 })
 
