@@ -34,6 +34,11 @@ const STREAM = JSON.stringify([
   {
     label: 'This wave',
     children: [
+      {
+        label: 'Leave practice',
+        type: 'Button',
+        frame: { x: 24, y: 40, width: 176, height: 40 },
+      },
       { label: 'The Stream', frame: { x: 24, y: 140, width: 200, height: 48 } },
       {
         label: 'Practice this phrase',
@@ -45,12 +50,52 @@ const STREAM = JSON.stringify([
   },
 ])
 
+const STREAM_EXIT = JSON.stringify([
+  {
+    label: 'This wave',
+    children: [
+      { label: 'The Stream', frame: { x: 24, y: 140, width: 200, height: 48 } },
+      { label: 'Leave this wave?', frame: { x: 24, y: 400, width: 200, height: 48 } },
+      {
+        label: 'Pause the wave',
+        type: 'Button',
+        frame: { x: 24, y: 460, width: 336, height: 56 },
+      },
+      {
+        label: 'Keep going',
+        type: 'Button',
+        frame: { x: 24, y: 520, width: 336, height: 56 },
+      },
+    ],
+  },
+])
+
 const PHRASE = JSON.stringify([
   {
     label: 'This phrase',
     children: [
+      {
+        label: 'Leave practice',
+        type: 'Button',
+        frame: { x: 24, y: 40, width: 176, height: 40 },
+      },
       { label: 'The Refrain', frame: { x: 24, y: 140, width: 200, height: 48 } },
       { identifier: 'loro-route:/practice/refrain?phrase=es-001' },
+    ],
+  },
+])
+
+const PHRASE_EXIT = JSON.stringify([
+  {
+    label: 'This phrase',
+    children: [
+      { label: 'The Refrain', frame: { x: 24, y: 140, width: 200, height: 48 } },
+      { label: 'Leave this practice?', frame: { x: 24, y: 400, width: 200, height: 48 } },
+      {
+        label: 'Pause practice',
+        type: 'Button',
+        frame: { x: 24, y: 460, width: 336, height: 56 },
+      },
     ],
   },
 ])
@@ -140,11 +185,15 @@ function scriptedIosDevice({ moreOpensHard = true, leaveOnFullScreenSwipe = fals
     if (stage === 'menu') return MENU
     if (stage === 'more') return MORE
     if (stage === 'hard') return HARD
+    if (stage === 'stream-exit') return STREAM_EXIT
+    if (stage === 'exit') return PHRASE_EXIT
     return STREAM
   }
   const applyTap = (tapY) => {
     if (stage === 'today') stage = tapY < 200 ? 'menu' : 'stream'
-    else if (stage === 'stream') stage = 'phrase'
+    else if (stage === 'stream') stage = tapY < 80 ? 'stream-exit' : 'phrase'
+    else if (stage === 'stream-exit') stage = 'stream'
+    else if (stage === 'phrase') stage = 'exit'
     else if (stage === 'menu') stage = tapY < 80 ? 'today' : 'hard'
     else if (stage === 'more') stage = 'hard'
   }

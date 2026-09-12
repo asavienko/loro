@@ -46,14 +46,8 @@ const END_IT_HERE = 'End it here'
 const KEEP_GOING = 'Keep going'
 const LEAVE_THIS_PRACTICE = 'Leave this practice?'
 const LEAVE_THIS_WAVE = 'Leave this wave?'
-const EXIT_SHEET_MARKERS = [
-  PAUSE_PRACTICE,
-  PAUSE_WAVE,
-  END_IT_HERE,
-  KEEP_GOING,
-  LEAVE_THIS_PRACTICE,
-  LEAVE_THIS_WAVE,
-]
+const STREAM_EXIT_MARKERS = [PAUSE_WAVE, LEAVE_THIS_WAVE]
+const PRACTICE_EXIT_MARKERS = [PAUSE_PRACTICE, LEAVE_THIS_PRACTICE]
 const STREAM_RAIL = 'Stream'
 const ONBOARD_WELCOME = "Let's go →"
 const ONBOARD_CONTINUE = 'Continue'
@@ -519,6 +513,31 @@ export function evaluatePracticeHardwareBack({ beforeDump, afterDump }) {
   }
 }
 
+export function evaluateStreamExitBack({ beforeDump, afterDump }) {
+  if (!isStreamChrome(beforeDump) && !dumpHas(beforeDump, STREAM_TITLE)) {
+    return {
+      status: 'unavailable',
+      notes: 'Stream exit probe never reached the daily wave.',
+    }
+  }
+  if (STREAM_EXIT_MARKERS.some((marker) => dumpHas(afterDump, marker))) {
+    return {
+      status: 'passed',
+      notes: 'Session exit opened the Stream wave sheet.',
+    }
+  }
+  if (!isPracticeChrome(afterDump)) {
+    return {
+      status: 'failed',
+      notes: 'Android Back left the wave without the exit sheet.',
+    }
+  }
+  return {
+    status: 'failed',
+    notes: 'Android Back did not open Pause the wave · End it here · Keep going.',
+  }
+}
+
 export function evaluateRefrainExitBack({ beforeDump, afterDump }) {
   if (!isPhraseChrome(beforeDump) && !dumpHas(beforeDump, REFRAIN_TITLE)) {
     return {
@@ -526,10 +545,10 @@ export function evaluateRefrainExitBack({ beforeDump, afterDump }) {
       notes: 'Refrain exit probe never reached a phrase drill.',
     }
   }
-  if (EXIT_SHEET_MARKERS.some((marker) => dumpHas(afterDump, marker))) {
+  if (PRACTICE_EXIT_MARKERS.some((marker) => dumpHas(afterDump, marker))) {
     return {
       status: 'passed',
-      notes: 'Android Back opened the Refrain exit sheet.',
+      notes: 'Session exit opened the Refrain practice sheet.',
     }
   }
   if (!isPracticeChrome(afterDump)) {
@@ -540,7 +559,7 @@ export function evaluateRefrainExitBack({ beforeDump, afterDump }) {
   }
   return {
     status: 'failed',
-    notes: 'Android Back did not open Pause · End it here · Keep going.',
+    notes: 'Android Back did not open Pause practice · End it here · Keep going.',
   }
 }
 
@@ -946,12 +965,18 @@ function runBackSwipe(ctx) {
   const afterBack = dumpUi(ctx, 'swipe-after-hardware-back')
   if (afterBack.error)
     return scenarioResult(scenario, { status: 'unavailable', notes: afterBack.error })
-  const stayed = evaluatePracticeHardwareBack({
+  const openedWave = evaluateStreamExitBack({
     beforeDump: before.xml,
     afterDump: afterBack.xml,
   })
-  if (stayed.status !== 'passed') return scenarioResult(scenario, stayed)
-  const openedPhrase = tapLabel(ctx, afterBack.xml, STREAM_PRACTICE)
+  if (openedWave.status !== 'passed') return scenarioResult(scenario, openedWave)
+  const dismissedWave = tapLabel(ctx, afterBack.xml, KEEP_GOING)
+  if (dismissedWave) return scenarioResult(scenario, { status: 'failed', notes: dismissedWave })
+  waitForUi(ctx.run, ctx.waitMs)
+  const afterKeepGoing = dumpUi(ctx, 'stream-after-keep-going')
+  if (afterKeepGoing.error)
+    return scenarioResult(scenario, { status: 'unavailable', notes: afterKeepGoing.error })
+  const openedPhrase = tapLabel(ctx, afterKeepGoing.xml, STREAM_PRACTICE)
   if (openedPhrase) return scenarioResult(scenario, { status: 'failed', notes: openedPhrase })
   waitForUi(ctx.run, ctx.waitMs)
   const phrase = dumpUi(ctx, 'refrain-before-hardware-back')
@@ -969,7 +994,7 @@ function runBackSwipe(ctx) {
   return scenarioResult(scenario, {
     status: 'passed',
     notes:
-      'Edge, full-screen, and Android Back left the session; Back on the phrase drill opened the exit sheet.',
+      'Edge and full-screen swipes left the session; Android Back opened the wave sheet, then the phrase-drill sheet.',
   })
 }
 

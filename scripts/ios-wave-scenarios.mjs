@@ -14,6 +14,8 @@ import {
   evaluateHardRefrainDump,
   evaluateOnboardedHome,
   evaluatePracticeBackSwipe,
+  evaluateRefrainExitBack,
+  evaluateStreamExitBack,
   evaluateSheetBackdropDismiss,
   evaluateSheetDismiss,
   evaluateSpinePull,
@@ -38,6 +40,8 @@ import {
 } from './wave-touch-scenarios.mjs'
 
 const STREAM_PRACTICE = 'Practice this phrase'
+const LEAVE_PRACTICE = 'Leave practice'
+const KEEP_GOING = 'Keep going'
 const REFRAIN_TITLE = 'The Refrain'
 const MENU_OPEN = 'open the menu'
 const SPINE_HANDLE = 'navigation-pull-handle'
@@ -465,9 +469,42 @@ function runBackSwipe(ctx) {
     })
     if (result.status !== 'passed') return scenarioResult(scenario, result)
   }
+  const openedWave = tapLabel(ctx, after.dump, LEAVE_PRACTICE)
+  if (openedWave) return scenarioResult(scenario, { status: 'failed', notes: openedWave })
+  waitForUi(ctx.run, ctx.waitMs)
+  const waveSheet = dumpUi(ctx, 'stream-after-leave')
+  if (waveSheet.error)
+    return scenarioResult(scenario, { status: 'unavailable', notes: waveSheet.error })
+  const waveExit = evaluateStreamExitBack({
+    beforeDump: before.dump,
+    afterDump: waveSheet.dump,
+  })
+  if (waveExit.status !== 'passed') return scenarioResult(scenario, waveExit)
+  const dismissedWave = tapLabel(ctx, waveSheet.dump, KEEP_GOING)
+  if (dismissedWave) return scenarioResult(scenario, { status: 'failed', notes: dismissedWave })
+  waitForUi(ctx.run, ctx.waitMs)
+  const afterKeepGoing = dumpUi(ctx, 'stream-after-keep-going')
+  if (afterKeepGoing.error)
+    return scenarioResult(scenario, { status: 'unavailable', notes: afterKeepGoing.error })
+  const openedPhrase = tapLabel(ctx, afterKeepGoing.dump, STREAM_PRACTICE)
+  if (openedPhrase) return scenarioResult(scenario, { status: 'failed', notes: openedPhrase })
+  waitForUi(ctx.run, ctx.waitMs)
+  const phrase = dumpUi(ctx, 'refrain-before-leave')
+  if (phrase.error) return scenarioResult(scenario, { status: 'unavailable', notes: phrase.error })
+  const openedPractice = tapLabel(ctx, phrase.dump, LEAVE_PRACTICE)
+  if (openedPractice) return scenarioResult(scenario, { status: 'failed', notes: openedPractice })
+  waitForUi(ctx.run, ctx.waitMs)
+  const exit = dumpUi(ctx, 'refrain-after-leave')
+  if (exit.error) return scenarioResult(scenario, { status: 'unavailable', notes: exit.error })
+  const openedExit = evaluateRefrainExitBack({
+    beforeDump: phrase.dump,
+    afterDump: exit.dump,
+  })
+  if (openedExit.status !== 'passed') return scenarioResult(scenario, openedExit)
   return scenarioResult(scenario, {
     status: 'passed',
-    notes: 'Edge and full-screen swipes left Stream/Refrain on the session.',
+    notes:
+      'Edge and full-screen swipes left the session; Leave practice opened the wave sheet, then the phrase-drill sheet.',
   })
 }
 
