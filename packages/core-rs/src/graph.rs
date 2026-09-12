@@ -182,7 +182,16 @@ pub fn assoc_score(
     band: AssocBand,
 ) -> Result<i32, String> {
     validate_assoc_inputs(&candidate.id, edges)?;
+    Ok(assoc_score_trusted(anchor, candidate, edges, profile, band))
+}
 
+fn assoc_score_trusted(
+    anchor: &AssocAnchor,
+    candidate: &AssocCandidate,
+    edges: &[AssocEdge],
+    profile: &AssocProfile,
+    band: AssocBand,
+) -> i32 {
     let relations = outgoing_relations(anchor, candidate, edges);
     let mut score = 0;
 
@@ -210,7 +219,7 @@ pub fn assoc_score(
             score += CEFR_JUMP;
         }
     }
-    Ok(score)
+    score
 }
 
 /// Order unowned candidates: same-theme first, then the rest, cap 6.
@@ -245,8 +254,8 @@ pub fn order_association(
         .iter()
         .filter(|c| c.theme != anchor.theme)
         .collect();
-    sort_band(&mut same, anchor, edges, profile, AssocBand::SameTheme)?;
-    sort_band(&mut rest, anchor, edges, profile, AssocBand::Rest)?;
+    sort_band(&mut same, anchor, edges, profile, AssocBand::SameTheme);
+    sort_band(&mut rest, anchor, edges, profile, AssocBand::Rest);
     Ok(same
         .into_iter()
         .chain(rest)
@@ -261,11 +270,11 @@ fn sort_band(
     edges: &[AssocEdge],
     profile: &AssocProfile,
     which: AssocBand,
-) -> Result<(), String> {
+) {
     let mut scored = Vec::with_capacity(band.len());
     for candidate in band.iter() {
         scored.push((
-            assoc_score(anchor, candidate, edges, profile, which)?,
+            assoc_score_trusted(anchor, candidate, edges, profile, which),
             *candidate,
         ));
     }
@@ -276,7 +285,6 @@ fn sort_band(
     for (slot, (_, candidate)) in band.iter_mut().zip(scored) {
         *slot = candidate;
     }
-    Ok(())
 }
 
 fn outgoing_relations(
