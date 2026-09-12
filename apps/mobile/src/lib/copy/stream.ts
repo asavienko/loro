@@ -35,6 +35,12 @@ export const streamCopy = {
   get upNext() {
     return message('stream.upNext')
   },
+  get thisWave() {
+    return message('stream.thisWave')
+  },
+  get practiceRefrain() {
+    return message('stream.practiceRefrain')
+  },
   pills: {
     loved: (count: number): string => message('stream.pills.loved', { count }),
     hard: (count: number): string => message('stream.pills.hard', { count }),

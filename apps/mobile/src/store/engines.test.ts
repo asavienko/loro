@@ -58,4 +58,26 @@ describe('createEngineContext', () => {
     expect(context.seed).toBe(123)
     expect(await context.phrases.all()).toBe(store.getState().phrases)
   })
+
+  it('lets a targeted Refrain plan override the frozen day set', () => {
+    const store = createAppStore({ clock: fixedClock, newId: () => userPhraseId('test-row') })
+    store.setState({
+      refrainDay: '2023-11-14',
+      refrainSet: ['wave-a', 'wave-b'],
+    })
+    const context = createEngineContext(
+      store,
+      {
+        clock: fixedClock,
+        waveTimes: [],
+        repTarget: 6,
+        trip: null,
+        flags: { bool: (_key, fallback) => fallback, number: (_key, fallback) => fallback },
+        seed: 1,
+      },
+      jsCoreFacade,
+      { refrainSet: [userPhraseId('hard-only')] },
+    )
+    expect(context.refrainSet).toEqual([userPhraseId('hard-only')])
+  })
 })
