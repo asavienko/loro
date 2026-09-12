@@ -41,6 +41,9 @@ export const navCopy = {
     get note() {
       return message('nav.exit.note')
     },
+    get noteStream() {
+      return message('nav.exit.noteStream')
+    },
   },
   moreGroups: {
     get lately() {

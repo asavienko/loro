@@ -7,13 +7,15 @@ import { useLocale } from '../../src/lib/i18n'
  *
  * The phrase card exposes manual navigation until native audio playback is available.
  */
-import { useEffect, useMemo } from 'react'
-import { BackHandler, Platform, ScrollView, StyleSheet, View } from 'react-native'
-import { router } from 'expo-router'
+import { useEffect, useMemo, useState } from 'react'
+import { ScrollView, StyleSheet, View } from 'react-native'
+import { router, useNavigation } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { streamStats, type Difficulty } from '@loro/core'
 import { copy, themeLabel } from '../../src/lib/copy'
 import { PracticeEmptyState } from './_emptyPractice'
+import { SessionExitSheet } from './_SessionExitSheet'
+import { useSessionExitGuard } from './_useSessionExit'
 import { DifficultySelector, PhraseRow } from '../../src/ui/components'
 import {
   Button,
@@ -35,6 +37,7 @@ import {
   difficultyMeta,
   ink,
   line,
+  MIN_TAP,
   onDark,
   radius,
   semantic,
@@ -61,16 +64,12 @@ export default function Stream() {
   const markLearned = useApp((s) => s.markLearned)
   const cursor = useApp((state) => state.streamCursor)
   const setCursor = useApp((state) => state.setStreamCursor)
+  const [exitVisible, setExitVisible] = useState(false)
+  const navigation = useNavigation()
+  const leaveLabel = copy.nav.exit.leave
   useEffect(() => {
     ensureRefrainSet()
   }, [ensureRefrainSet, phrases.length])
-  useEffect(() => {
-    if (Platform.OS !== 'android') return
-    const subscription = BackHandler.addEventListener('hardwareBackPress', () => true)
-    return () => {
-      subscription.remove()
-    }
-  }, [])
   const queue = useMemo(() => {
     const now = deviceClock.now()
     return streamWaveQueue(phrases, refrainSet, (phrase) =>
@@ -83,7 +82,65 @@ export default function Stream() {
   )
   const position = cursor % Math.max(1, queue.length)
   const current = queue[position]
-  if (queue.length === 0 || current === undefined) {
+  const hasWave = queue.length > 0 && current !== undefined
+  const { allowLeave } = useSessionExitGuard({
+    enabled: hasWave,
+    exitVisible,
+    onBlockedLeave: () => {
+      setExitVisible(true)
+    },
+  })
+  useEffect(() => {
+    navigation.setOptions({
+      headerLeft: () =>
+        hasWave ? (
+          <Pressable
+            feedback="smallButton"
+            accessibilityLabel={leaveLabel}
+            onPress={() => {
+              setExitVisible(true)
+            }}
+            style={{ minHeight: MIN_TAP, justifyContent: 'center', paddingHorizontal: space['3'] }}
+          >
+            <Text variant="bodySm" color={accent.accentInk}>
+              {copy.common.chevron.left}
+            </Text>
+          </Pressable>
+        ) : navigation.canGoBack() ? (
+          <Pressable
+            feedback="icon"
+            accessibilityRole="link"
+            accessibilityLabel={copy.a11y.common.back}
+            onPress={() => {
+              router.back()
+            }}
+          >
+            <Text variant="title2" color={ink.ink}>
+              {copy.common.chevron.left}
+            </Text>
+          </Pressable>
+        ) : (
+          <Pressable
+            feedback="smallButton"
+            style={{ minHeight: MIN_TAP, justifyContent: 'center', paddingHorizontal: space['3'] }}
+            accessibilityLabel={copy.nav.home}
+            onPress={() => {
+              router.replace('/')
+            }}
+          >
+            <Text variant="bodySm" color={accent.accentInk}>
+              {copy.nav.home}
+            </Text>
+          </Pressable>
+        ),
+    })
+  }, [hasWave, leaveLabel, navigation])
+  const leaveWave = (): void => {
+    allowLeave()
+    setExitVisible(false)
+    router.replace('/')
+  }
+  if (!hasWave) {
     return (
       <Screen>
         <PracticeEmptyState
@@ -135,6 +192,20 @@ export default function Stream() {
 
         <UpNextList upcoming={queue.slice(position + 1)} stats={stats} />
       </ScrollView>
+      <SessionExitSheet
+        visible={exitVisible}
+        title={copy.nav.exit.title}
+        pauseLabel={copy.nav.exit.pause}
+        endLabel={copy.nav.exit.end}
+        keepGoingLabel={copy.nav.exit.keepGoing}
+        note={copy.nav.exit.noteStream}
+        dismissLabel={copy.a11y.common.dismiss}
+        onKeepGoing={() => {
+          setExitVisible(false)
+        }}
+        onPause={leaveWave}
+        onEnd={leaveWave}
+      />
     </Screen>
   )
 }
