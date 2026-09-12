@@ -44,7 +44,8 @@ export function refrainFocusIds(
 ): readonly string[] {
   if (focus.kind === 'phrase') {
     const phrase = phrases.find((row) => row.id === focus.phraseId)
-    return phrase !== undefined && isActive(phrase) ? [phrase.id] : []
+    // A phrase that graduates on this last lock-in must keep the card. Missing ids stay empty.
+    return phrase !== undefined ? [phrase.id] : []
   }
   if (focus.kind === 'hard') {
     return phrases
