@@ -5,7 +5,7 @@ import { firstRow, readJson, readText, type SqlRow } from '../driver.js'
 import type { RefrainDayRow, RefrainDayTable } from '../tables.js'
 import type { TableDeps } from './deps.js'
 
-const REFRAIN_DAY_SELECT = `SELECT target_locale, local_day, set_ids, waves, substituted FROM refrain_day`
+const REFRAIN_DAY_SELECT = `SELECT target_locale, local_day, set_ids, waves, substituted, listen_counts FROM refrain_day`
 
 function rowToRefrainDay(row: SqlRow): RefrainDayRow {
   const target = readText(row, 'target_locale') as TargetLocale
@@ -15,6 +15,7 @@ function rowToRefrainDay(row: SqlRow): RefrainDayRow {
     setIds: readJson<string[]>(row, 'set_ids', []),
     waves: readJson<string[]>(row, 'waves', []),
     substituted: readJson<string[]>(row, 'substituted', []),
+    listenCounts: readJson<Record<string, number>>(row, 'listen_counts', {}),
   }
 }
 
@@ -55,18 +56,20 @@ export class SqlRefrainDayTable implements RefrainDayTable {
    */
   save(row: RefrainDayRow): void {
     this.deps.driver.run(
-      `INSERT INTO refrain_day (user_id, local_day, set_ids, waves, substituted, target_locale)
-       VALUES (?, ?, ?, ?, ?, ?)
+      `INSERT INTO refrain_day (user_id, local_day, set_ids, waves, substituted, listen_counts, target_locale)
+       VALUES (?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(user_id, target_locale, local_day) DO UPDATE SET
-         set_ids     = excluded.set_ids,
-         waves       = excluded.waves,
-         substituted = excluded.substituted`,
+         set_ids       = excluded.set_ids,
+         waves         = excluded.waves,
+         substituted   = excluded.substituted,
+         listen_counts = excluded.listen_counts`,
       [
         this.deps.userId,
         row.localDay,
         JSON.stringify(row.setIds),
         JSON.stringify(row.waves),
         JSON.stringify(row.substituted),
+        JSON.stringify(row.listenCounts ?? {}),
         row.targetLocale ?? 'es-ES',
       ],
     )

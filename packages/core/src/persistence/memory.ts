@@ -119,6 +119,7 @@ class MemoryRefrainDayTable implements RefrainDayTable {
       setIds: [...row.setIds],
       waves: [...row.waves],
       substituted: [...row.substituted],
+      listenCounts: { ...(row.listenCounts ?? {}) },
     })
   }
 

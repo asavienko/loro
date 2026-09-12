@@ -22,7 +22,8 @@ type Ajv2020Ctor = new (opts: { allErrors: boolean; strict: boolean }) => Ajv202
 // Checks read from DISK, not the bundled snapshot — they must validate what the
 // author just edited.
 import { contentRoot, loadCatalogFromDisk } from './fs.js'
-import { stressedSyllables, THEMES, wordCount, type Catalog } from './types.js'
+import { isCloudAudioUri, isContentAddressedAudioUri } from './catalogAudio.js'
+import { GRAPH_RELATIONS, stressedSyllables, THEMES, wordCount, type Catalog } from './types.js'
 
 export interface Issue {
   check: string
@@ -61,6 +62,133 @@ function phraseValidator(): ValidateFunction {
     cachedValidator = ajv.compile(schema)
   }
   return cachedValidator
+}
+
+let cachedGraphValidator: ValidateFunction | undefined
+
+function graphValidator(): ValidateFunction {
+  if (cachedGraphValidator === undefined) {
+    const schema: object = JSON.parse(
+      readFileSync(join(contentRoot, 'schema', 'graph.schema.json'), 'utf8'),
+    ) as object
+    const ajv = new (Ajv2020 as Ajv2020Ctor)({ allErrors: true, strict: false })
+    cachedGraphValidator = ajv.compile(schema)
+  }
+  return cachedGraphValidator
+}
+
+function localePrefix(id: string, catalogLang: string): string {
+  const colon = id.indexOf(':')
+  return colon === -1 ? catalogLang : id.slice(0, colon)
+}
+
+function prerequisiteCycle(edges: Catalog['graph']['edges']): string[] | undefined {
+  const adj = new Map<string, string[]>()
+  for (const edge of edges) {
+    if (edge.relation !== 'prerequisite') continue
+    const next = adj.get(edge.from) ?? []
+    next.push(edge.to)
+    adj.set(edge.from, next)
+  }
+  if (adj.size === 0) return undefined
+
+  const visiting = new Set<string>()
+  const visited = new Set<string>()
+  const stack: string[] = []
+
+  const walk = (node: string): boolean => {
+    if (visited.has(node)) return false
+    if (visiting.has(node)) {
+      stack.push(node)
+      return true
+    }
+    visiting.add(node)
+    stack.push(node)
+    for (const next of adj.get(node) ?? []) {
+      if (walk(next)) return true
+    }
+    stack.pop()
+    visiting.delete(node)
+    visited.add(node)
+    return false
+  }
+
+  for (const node of adj.keys()) {
+    if (walk(node)) {
+      const repeated = stack[stack.length - 1] ?? ''
+      return stack.slice(stack.indexOf(repeated))
+    }
+  }
+  return undefined
+}
+
+/**
+ * Authored edges: ends resolve, unique (from,to,relation), no same_theme storage,
+ * no cross-locale pair, prerequisite subgraph acyclic.
+ */
+export const graphCheck: Check = (c) => {
+  const issues: Issue[] = []
+  const graphDoc = { lang: c.graph.lang, edges: c.graph.edges }
+  const validate = graphValidator()
+  const schemaOk: boolean = validate(graphDoc)
+  if (!schemaOk) {
+    for (const e of validate.errors ?? []) {
+      issues.push(err('graph', `${e.instancePath || '/'} ${e.message ?? 'invalid'}`))
+    }
+  }
+
+  const ids = new Set(c.phrases.map((p) => p.id))
+  const seen = new Set<string>()
+  const allowed = new Set<string>(GRAPH_RELATIONS)
+
+  for (const edge of c.graph.edges) {
+    const key = `${edge.from}\0${edge.to}\0${edge.relation}`
+    if (seen.has(key)) {
+      issues.push(
+        err('graph', `duplicate edge (${edge.from} → ${edge.to}, ${edge.relation})`, edge.from),
+      )
+    }
+    seen.add(key)
+
+    if (!allowed.has(edge.relation)) {
+      issues.push(err('graph', `unknown relation '${edge.relation}'`, edge.from))
+    }
+    if ((edge.relation as string) === 'same_theme') {
+      issues.push(
+        err('graph', 'same_theme is derived from phrase.theme and must not be stored', edge.from),
+      )
+    }
+
+    if (edge.from === edge.to) {
+      issues.push(err('graph', `self-edge ${edge.from}`, edge.from))
+    }
+    if (!ids.has(edge.from)) {
+      issues.push(err('graph', `from references unknown phrase '${edge.from}'`, edge.from))
+    }
+    if (!ids.has(edge.to)) {
+      issues.push(err('graph', `to references unknown phrase '${edge.to}'`, edge.to))
+    }
+
+    if (!Number.isInteger(edge.weight) || edge.weight < 1 || edge.weight > 100) {
+      issues.push(err('graph', `weight must be an integer 1..=100, got ${edge.weight}`, edge.from))
+    }
+
+    const fromLocale = localePrefix(edge.from, c.lang)
+    const toLocale = localePrefix(edge.to, c.lang)
+    if (fromLocale !== toLocale) {
+      issues.push(err('graph', `cross-locale edge ${edge.from} → ${edge.to}`, edge.from))
+    }
+    if (!c.lang.includes(':') && (edge.from.includes(':') || edge.to.includes(':'))) {
+      issues.push(err('graph', `locale-prefixed id is not valid in ${c.lang} catalog`, edge.from))
+    }
+  }
+
+  const cycle = prerequisiteCycle(c.graph.edges)
+  if (cycle !== undefined) {
+    issues.push(err('graph', `prerequisite cycle: ${cycle.join(' → ')}`, cycle[0]))
+  }
+
+  return issues
 }
 
 export const schemaCheck: Check = (c) => {
@@ -169,14 +297,28 @@ export const referenceCheck: Check = (c) => {
   return issues
 }
 
+/** Missing clip — enqueue plans 98/99. Distinct from an unpublished `sha256/` identity. */
+export const UNRENDERED_AUDIO = 'no rendered audio yet — run content:render'
+/** Rendered locally; not yet a published cloud object. */
+export const UNPUBLISHED_AUDIO = 'audio is content-addressed — publish the cloud https object'
+
 export const audioCheck: Check = (c) =>
-  c.phrases.flatMap((p) =>
-    p.audio === undefined
-      ? [warn('audio', 'no rendered audio yet — run content:render', p.id)]
-      : /^[a-f0-9]{64}$/.test(p.audio.sha256)
-        ? []
-        : [err('audio', 'audio sha256 is malformed', p.id)],
-  )
+  c.phrases.flatMap((p) => {
+    if (p.audio === undefined) return [warn('audio', UNRENDERED_AUDIO, p.id)]
+    const issues: Issue[] = []
+    if (!/^[a-f0-9]{64}$/.test(p.audio.sha256)) {
+      issues.push(err('audio', 'audio sha256 is malformed', p.id))
+    }
+    if (isCloudAudioUri(p.audio.uri)) return issues
+    if (isContentAddressedAudioUri(p.audio.uri, p.audio.sha256)) {
+      issues.push(warn('audio', UNPUBLISHED_AUDIO, p.id))
+      return issues
+    }
+    issues.push(
+      err('audio', 'audio uri must be a cloud https object (http only for local authoring)', p.id),
+    )
+    return issues
+  })
 
 export const prosodyCheck: Check = (c) => {
   const issues: Issue[] = []
@@ -303,6 +445,7 @@ export const ALL_CHECKS: Record<string, Check> = {
   scenarios: scenarioShapeCheck,
   drops: dropRuleCheck,
   draftDrops: draftDropCheck,
+  graph: graphCheck,
 }
 
 /** Run selected validation strategies against an already-loaded catalog. */

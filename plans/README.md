@@ -1,6 +1,6 @@
 # Active plans
 
-This index lists only the **41 plans with remaining work**. Completed records and historical
+This index lists only the **42 plans with remaining work**. Completed records and historical
 snapshots are kept in [the archive](archive/README.md), without compatibility symlinks or redirect
 files in this directory. Links point directly to each plan's actual location.
 
@@ -14,14 +14,16 @@ only in the archive index.
 archived hygiene as plan 100
 ([`100-hygiene-reuse-and-tooling.md`](archive/2026-09-10/100-hygiene-reuse-and-tooling.md)); the
 shared interaction kit lives at [`100-ui-design-system.md`](100-ui-design-system.md) under the same
-ID. All colliding rows stay until Product assigns a new number; do not silently reuse or drop
-either.
+ID. Two active 101s also collide: [`101-stream-as-daily-wave.md`](101-stream-as-daily-wave.md)
+(Stream as the daily wave) and [`101-phrase-sound-graph.md`](101-phrase-sound-graph.md)
+(phrase/sound graph). All colliding rows stay until Product assigns a new number; do not silently
+reuse or drop either.
 
 Implemented-slice owners from 56–68, 70–73, 75–77, 80–82, 86–88, 90 and 93–96 are stored in
 [the 2026-09-09 archive](archive/2026-09-09/README.md) at user request. Their partial statuses and
 outstanding scope remain indexed below; archiving does not imply completion. Only the still-unbuilt
-or decision-gated files 69, 74, 78, 83, 96 (phrase-music), 97, 98, 99, 100 and 101 remain in this
-directory. Hygiene plan 100 is archived under the same number.
+or decision-gated files 69, 74, 78, 83, 96 (phrase-music), 97, 98, 99, 100 and both 101s remain in
+this directory. Hygiene plan 100 is archived under the same number.
 
 The [post-main review](../docs/reviews/2026-09-09-post-main-plan-review.md) records the six runtime
 and validation findings as fixed, including the follow-up Refrain completion and touch-target
@@ -195,7 +197,8 @@ feature↔release-completion cycle. See each plan's checkboxes for executable ta
 | [98](98-voice-and-tts-integration.md)                                      | ElevenLabs TTS, catalog render and device-TTS fallback                           | M1/M2       | 🟡 Adapter/render/gated API/file playback in progress; Q-15 catalog pins filled; live seed/listen remain                                   | 86/61/62 slices; Q-15 live seed                                                        |
 | [99](99-batch-phrase-audio-export.md)                                      | Online multi-voice listen cache; optional share of concatenated clips            | M2          | 🟡 Composer/cache/E2E/emulator fixture; Q-15 pins filled; ⛔ pronunciation review; ⛔ Q-22; physical 58/72                                 | 56/81 route; 59 phrases; 62 cache/session; 86/61/66/98 render; Q-15/Q-22               |
 | [100](100-ui-design-system.md)                                             | Shared UI interaction kit: motion adapter, gestures, remaining-screen primitives | M1/M2       | 🟡 Adapter/Pressable/Sheet/`sheetUp`/signature primitives on real routes; composites wait for a second caller; device 60 fps remains 58/72; **ID collides with archived hygiene 100** | ADR-0013 tokens; 57 fonts/haptics/dark; 80 specimens; 93 pull laws; 56/81 lists/chrome |
-| [101](101-stream-as-daily-wave.md)                                         | Stream lists the daily wave; Refrain is a targeted / difficult-only drill        | M2          | 🟡 Stream-primary wave and hard-filter drill implemented; browser pointer coverage and fail-closed adb runner landed; physical-device 58/93 rows remain                                  | 64 wave/resume; 81 destinations; 56 routes                                           |
+| [101](101-stream-as-daily-wave.md)                                         | Stream lists the daily wave; Refrain is a targeted / difficult-only drill        | M2          | 🟡 Stream-primary wave and hard-filter drill implemented; browser pointer coverage and fail-closed adb runner landed; physical-device 58/93 rows remain; **ID collides with phrase-graph 101** | 64 wave/resume; 81 destinations; 56 routes                                           |
+| [101](101-phrase-sound-graph.md)                                           | Authored phrase edges; Discover association score; authoring generate queue      | M2/M3       | 🟡 Remaining-work landed; review follow-up wires catalog sound fields, orphan drafts, cloud audio URIs; Q-15/Q-21/Q-22 unchanged; **ID collides with stream-wave 101**                    | 60 maths boundary; 61/97/98/99; 87 for new linguistic edges                            |
 
 Plan 88 owns the selected AWS testing profile and
 [operations runbook](../docs/runbooks/backend-testing.md); plan 73 retains production operations.
@@ -209,11 +212,11 @@ Render testing recommendation in 86 is superseded by 88.
 - Keep one owner per behavior: 56 route policy, 81 chrome; 59 durable checkpoints, 64 wave
   transitions; 66 server cursors, 68 client convergence; 86 vendor controls, 76/82/97 product AI; 99
   listening-class cache and companion UX, archived 100 for Field/ListRow/tooling, active 100 for the
-  shared motion/gesture/primitive kit, 62 in-app playback/download cache, 67 JSON account export, 57
-  fonts/haptics/dark, 80 workbench specimens, 93 spine/sheet pull laws. Archived plan 96 remains the
-  account sign-in screens. Active [`96-phrase-music-generation.md`](96-phrase-music-generation.md)
-  is the phrase-song garnish under the same number (unresolved collisions on 96 and 100; do not
-  reuse or drop either).
+  shared motion/gesture/primitive kit, 101 for phrase-relation edges and Discover association, 62
+  in-app playback/download cache, 67 JSON account export, 57 fonts/haptics/dark, 80 workbench
+  specimens, 93 spine/sheet pull laws. Archived plan 96 remains the account sign-in screens. Active
+  [`96-phrase-music-generation.md`](96-phrase-music-generation.md) is the phrase-song garnish under
+  the same number (unresolved collisions on 96 and 100; do not reuse or drop either).
 - Future surfaces consume the selected language pair and real capability states. Preserve personal
   meaning language, course isolation and global streak semantics; never silently substitute Spanish.
 - Every new learner state lands with its manifest row and E2E checks. Native behavior requires

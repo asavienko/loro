@@ -16,6 +16,7 @@ pub mod bridge;
 pub mod calendar;
 pub mod dsp;
 pub mod fsrs;
+pub mod graph;
 pub mod ladder;
 pub mod notify;
 pub mod rank;

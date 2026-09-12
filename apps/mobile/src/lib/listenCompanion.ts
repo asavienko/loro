@@ -265,11 +265,9 @@ export async function prepareListeningBatch(deps: PrepareListeningDeps): Promise
       const meta = await render(request, deps.baseUrl ?? bundledApiUrl() ?? undefined)
       const apiBase = deps.baseUrl ?? bundledApiUrl()
       const downloadUrl =
-        apiBase === null || apiBase === undefined
-          ? meta.download_url
-          : playableDownloadUrl(meta.download_url, apiBase)
+        apiBase === null ? meta.download_url : playableDownloadUrl(meta.download_url, apiBase)
       if (!deps.cache.available) {
-        if (remotePlayback !== true) throw new AudioCacheError('native-unavailable')
+        if (!remotePlayback) throw new AudioCacheError('native-unavailable')
         clips.push({
           fileUri: downloadUrl,
           sha256: meta.sha256,
@@ -300,11 +298,7 @@ export async function prepareListeningBatch(deps: PrepareListeningDeps): Promise
       }
       if (error instanceof AudioCacheError && error.code === 'disk-full') throw error
       if (error instanceof TtsRenderError && error.code === 'quota') throw error
-      if (
-        error instanceof TtsRenderError &&
-        error.code === 'unavailable' &&
-        clips.length === 0
-      ) {
+      if (error instanceof TtsRenderError && error.code === 'unavailable' && clips.length === 0) {
         throw error
       }
       if (error instanceof TtsRenderError || error instanceof AudioCacheError) failed += 1

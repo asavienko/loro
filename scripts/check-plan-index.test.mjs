@@ -32,6 +32,9 @@ test('two 96 rows still pass when the collision is documented', () => {
   assert.equal(documentedCollision(readme, 96), true)
   assert.equal(hasRowForPlan(readme, '100-ui-design-system.md'), true)
   assert.equal(documentedCollision(readme, 100), true)
+  assert.equal(hasRowForPlan(readme, '101-stream-as-daily-wave.md'), true)
+  assert.equal(hasRowForPlan(readme, '101-phrase-sound-graph.md'), true)
+  assert.equal(documentedCollision(readme, 101), true)
 })
 
 test('removing a remaining top-level row from a copy of README fails', () => {

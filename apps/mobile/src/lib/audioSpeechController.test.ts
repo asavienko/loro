@@ -6,11 +6,7 @@ import {
   type PlaybackRequest,
   type SpeechEvent,
 } from './audioSpeechController'
-import {
-  clearCatalogAudioFiles,
-  registerCatalogAudioFile,
-  resolveCatalogAudioUri,
-} from './catalogAudio'
+import { resolveCatalogAudioUri } from './catalogAudio'
 import { resolvePracticePlayable } from './practiceTts'
 
 vi.mock('./practiceTts', () => ({
@@ -172,18 +168,16 @@ describe('native audio metadata boundary', () => {
     await controller.play('p', 'Hola', 'es-ES')
     expect(controller.getSnapshot().playback).toBe('error')
   })
-  it('plays a registered catalog file and omits uri when the file is missing', async () => {
+  it('plays a catalog cloud object and falls back to API TTS when it is unpublished', async () => {
     const f = fixture()
     const sha256 = 'd'.repeat(64)
-    registerCatalogAudioFile(sha256, 'file:///tmp/clip.m4a')
     await f.controller.play('p', 'Hola', 'es-ES', 0.92, undefined, {
-      uri: `sha256/${sha256}`,
+      uri: 'https://cdn.loro.test/clips/din2.m4a',
       sha256,
     })
     expect(f.native.play).toHaveBeenCalledWith(
-      expect.objectContaining({ uri: 'file:///tmp/clip.m4a', text: '' }),
+      expect.objectContaining({ uri: 'https://cdn.loro.test/clips/din2.m4a', text: '' }),
     )
-    clearCatalogAudioFiles()
     await f.controller.play('p', 'Hola', 'es-ES', 0.92, undefined, {
       uri: `sha256/${sha256}`,
       sha256,

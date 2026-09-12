@@ -98,12 +98,11 @@ test('the streak grace window keeps the prior evening practice before the next w
 
   // 01:30 is inside the four-hour grace, so this rep belongs to the 10th — the same streak
   // day as the one before it. A second distinct day here would mean the grace window was
-  // not applied, and the learner would be shown a two-day streak they did not earn. The next
-  // wave remains closed until 08:00; the timed-entry guard must not be bypassed to manufacture
-  // another rep during the grace period.
+  // not applied, and the learner would be shown a two-day streak they did not earn. Practice
+  // stays open; the wave is not a lock.
   await jumpTo(page, '2026-03-11T01:30')
   await returnToForeground(page)
-  await expect(page.getByText('Next wave starts at 08:00')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Start the morning wave' })).toBeEnabled()
 
   await openProgress(page)
   await expect(page.getByLabel('Last seven days: practised on 1 of them.')).toBeVisible()

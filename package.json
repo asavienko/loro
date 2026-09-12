@@ -32,6 +32,7 @@
     "core-rs:build": "pnpm --filter @loro/core-rs build",
     "core-rs:test": "pnpm --filter @loro/core-rs test",
     "content:validate": "pnpm --filter @loro/content validate",
+    "content:gap-priority": "pnpm --filter @loro/content gap-priority",
     "content:enrich": "pnpm --filter @loro/content enrich",
     "content:render": "pnpm --filter @loro/content render",
     "content:publish": "pnpm --filter @loro/content publish",
