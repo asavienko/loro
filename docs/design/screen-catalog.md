@@ -120,6 +120,10 @@ section numbers; new coverage must link to the actual heading rather than copy a
 
 ## Loop B · The Daily Refrain (v1 hero)
 
+Authored Loop B treats Refrain as the daily hero. Production [plan 101](../../plans/101-stream-as-daily-wave.md)
+starts the wave in Stream; Refrain is a targeted or difficult-only drill. The
+`design/**/*.dc.html` artifacts are not edited.
+
 | #   | Screen                         | Blueprint   | Logic                  | Screenshots                     | Spec                                                         | Rel |
 | --- | ------------------------------ | ----------- | ---------------------- | ------------------------------- | ------------------------------------------------------------ | --- |
 | 11  | **Today** — the ritual surface | `1316–1391` | `DayLogic` `3295–3341` | `01-rest.png`, `c-refrain.png`  | [FS §11](../product/functional-spec.md#11-today--the-ritual) | v1  |
@@ -397,7 +401,7 @@ installed-language coverage and audible model playback still require the accepta
 | Fading tail (`tail`, `1370–1375`)                            | Absent                                | `LB-06` | Nothing tracks a phrase leaving rotation. Plan 64.                                                                                                  |
 | Tapping a set row speaks the phrase (`setList[].onTap`)      | Opens phrase detail                   | `AS-01` | Plan 62. The row's hint says what it does.                                                                                                          |
 | `dateLabel` `Tuesday · the daily refrain`, `streak` `12`     | The real local date; a derived streak | `LB-02` | Both are fabricated in the prototype. `streak()` is the same function the widget calls.                                                             |
-| `Start the * wave` opens the Refrain (`3334`)                | Opens Stream; a paused phrase or hard drill resumes that drill | `LB-03` | [Plan 101](../../plans/101-stream-as-daily-wave.md). The wave is listed in Stream. Day-list start is hidden while a drill is paused. Browser mouse/touch opens Stream → `?phrase=`. Linux emulator `native:evidence --execute-scenarios` passed pointer and TalkBack rows. iOS `--execute-scenarios` is simctl + idb and still unevaluated; physical-device / VoiceOver remain 58/93. Authored `design/**/*.dc.html` is not edited. |
+| `Start the * wave` opens the Refrain (`3334`)                | Opens Stream; a paused phrase or hard drill resumes that drill | `LB-03` | [Plan 101](../../plans/101-stream-as-daily-wave.md). The wave is listed in Stream. Day-list start is hidden while a drill is paused. Browser mouse/touch opens Stream → `?phrase=`. Linux emulator `native:evidence --execute-scenarios` passed pointer and TalkBack rows. `pnpm ios:evidence` is the Mac one-shot (boot/install + simctl/idb) and is still unevaluated here; physical-device / VoiceOver remain 58/93. Authored `design/**/*.dc.html` is not edited. |
 
 ### 12 · The Refrain
 
@@ -409,7 +413,7 @@ installed-language coverage and audible model playback still require the accepta
 | Completion card: `5 locked in` literal, `🔥 13 day refrain`, `"¿Qué tal?" graduated` (`1522–1527`) | Phrases worked and reps today, both counted | `LB-31` | Three fabricated numbers. Graduation is real in the store but not a completion-card fact yet — plan 64.    |
 | `Run the wave again ↺` (`restart`)                                                                 | `Back to today`                             | `LB-32` | Re-running a finished wave would record reps a second time; plan 64 owns wave state.                       |
 | Set dots are `done` / `current` / `todo` (`setDots`)                                               | Filled-to-cursor `Dots`                     | `LB-21` | Presentational; the count and the position are the information.                                            |
-| Menu / switcher opens the timed daily set                          | Menu / More open Difficult phrases only; Stream and phrase detail pass `?phrase=` | `LB-08` | [Plan 101](../../plans/101-stream-as-daily-wave.md). Untargeted `?wave=` is still wave focus; the clock no longer locks it. A bare Refrain URL is the hard-only drill. Browser mouse/touch opens `?filter=hard`. Linux emulator `native:evidence --execute-scenarios` passed switcher/More `?filter=hard` with TalkBack. iOS `--execute-scenarios` is simctl + idb and still unevaluated; physical-device / VoiceOver remain 58/93. Authored `design/**/*.dc.html` is not edited. |
+| Menu / switcher opens the timed daily set                          | Menu / More open Difficult phrases only; Stream and phrase detail pass `?phrase=` | `LB-08` | [Plan 101](../../plans/101-stream-as-daily-wave.md). Untargeted `?wave=` is still wave focus; the clock no longer locks it. A bare Refrain URL is the hard-only drill. Browser mouse/touch opens `?filter=hard`. Linux emulator `native:evidence --execute-scenarios` passed switcher/More `?filter=hard` with TalkBack. `pnpm ios:evidence` is the Mac one-shot and is still unevaluated here; physical-device / VoiceOver remain 58/93. Authored `design/**/*.dc.html` is not edited. |
 
 ### 15 · Progress
 

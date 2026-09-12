@@ -134,16 +134,17 @@ closed. This is not App Store signing, a physical iPhone build, or a wave-path p
 nvm use 22
 pnpm ios:local                 # retain .local-builds/ios/<commit>/loro-simulator-<commit>.zip
 pnpm ios:local --install       # also install the .app onto the booted simulator
+pnpm ios:evidence              # build the zip if missing, then drive the wave rows
 ```
 
 Requires macOS, full Xcode with an iOS simulator runtime, CocoaPods, Node 22, and
-`rustup target add aarch64-apple-ios-sim` (or `x86_64-apple-ios` on Intel). The tree must be clean.
-Pass that zip to `pnpm native:evidence --platform ios --execute-scenarios --artifact …`.
-`--execute-scenarios` may boot one available Shutdown iPhone (or `--serial`) and `simctl install`
-the verified zip before driving rows. Dump-only collection still requires an already-booted
-simulator and an already-installed app. Missing Xcode, idb, or chrome/URL/gesture proof stays
-`unavailable`. TalkBack `-at` rows stay unavailable on iOS even if VoiceOver looks enabled; ordinary
-idb taps are not AT proof.
+`rustup target add aarch64-apple-ios-sim` (or `x86_64-apple-ios` on Intel). The tree must be clean
+to compile. `pnpm ios:evidence` reuses a zip already retained for this commit, then boots a Shutdown
+simulator if needed, installs the zip, and drives pointer and spine/sheet rows. `--skip-build`
+fail-closes when that zip is missing. Dump-only `native:evidence --platform ios` still requires an
+already-booted simulator and an already-installed app. Missing Xcode, idb, or chrome/URL/gesture
+proof stays `unavailable`. TalkBack `-at` rows stay unavailable on iOS even if VoiceOver looks
+enabled; ordinary idb taps are not AT proof. Linux hosts fail closed.
 
 ## Native evidence collection (plan 58)
 
