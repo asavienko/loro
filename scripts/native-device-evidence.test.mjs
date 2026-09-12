@@ -30,6 +30,7 @@ test('uses the preview package and accepts bounded device options', () => {
     artifactRevision: undefined,
     artifact: undefined,
     executeScenarios: false,
+    matrix: undefined,
   })
   assert.deepEqual(parseArguments(['--serial', 'R5CT1234', '--package', 'app.loro.android']), {
     platform: 'android',
@@ -39,6 +40,7 @@ test('uses the preview package and accepts bounded device options', () => {
     artifactRevision: undefined,
     artifact: undefined,
     executeScenarios: false,
+    matrix: undefined,
   })
   assert.equal(parseArguments(['--execute-scenarios']).executeScenarios, true)
 })
@@ -94,6 +96,14 @@ test('iOS CLI selects its bundle default regardless of option order', () => {
 
 test('captures a bounded retained artifact revision', () => {
   assert.equal(parseArguments(['--artifact-revision', '26bdd146']).artifactRevision, '26bdd146')
+})
+
+test('accepts --matrix without treating it as a collection run', () => {
+  assert.equal(
+    parseArguments(['--matrix', '.local-builds/native-evidence/wave-101-emulator-v6/manifest.json'])
+      .matrix,
+    '.local-builds/native-evidence/wave-101-emulator-v6/manifest.json',
+  )
 })
 
 test('lists plan 101 wave-path rows without treating a screenshot as a pass', () => {
@@ -203,6 +213,10 @@ test('iOS collection retains actual artifacts without copying app containers or 
     assert.deepEqual(calls[7], ['xcrun', 'simctl', 'launch', 'A123', 'app.loro.ios'])
     assert.ok(calls.every((call) => !call.includes('data')))
     assert.equal(readFileSync(join(output, 'device.json'), 'utf8').includes('/private'), false)
+    const matrix = JSON.parse(readFileSync(join(output, 'matrix.json'), 'utf8'))
+    assert.equal(matrix.deviceKind, 'simulator')
+    assert.equal(matrix.physicalGateCount, 0)
+    assert.ok(matrix.scenarios.every((row) => row.closesPhysicalGate === false))
   } finally {
     rmSync(output, { recursive: true, force: true })
   }

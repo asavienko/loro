@@ -8,6 +8,7 @@ import {
 } from './ios-evidence-runtime.mjs'
 import { executeIosWaveScenarios } from './ios-wave-scenarios.mjs'
 import { unevaluatedWaveScenarios } from './wave-touch-scenarios.mjs'
+import { matrixFromEvidence } from './wave-evidence-matrix.mjs'
 
 export function selectSimulator(inventory, serial) {
   const devices = Object.entries(inventory.devices ?? {}).flatMap(([runtime, entries]) =>
@@ -132,8 +133,10 @@ export function collectIosEvidence({
       'iOS --execute-scenarios drives pointer and spine/sheet rows through simctl + idb and fail-closes without chrome/URL/gesture evidence. TalkBack `-at` rows stay unavailable even when VoiceOver looks enabled; ordinary idb taps are not AT proof. VoiceOver physical-device remains plan 58/93. A screenshot is not a pass.',
     ],
   }
+  const matrix = matrixFromEvidence({ manifest })
   writeFileSync(resolve(output, 'xcode.txt'), xcode)
   writeFileSync(resolve(output, 'device.json'), `${JSON.stringify(device, null, 2)}\n`)
   writeFileSync(resolve(output, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`)
+  writeFileSync(resolve(output, 'matrix.json'), `${JSON.stringify(matrix, null, 2)}\n`)
   return manifest
 }
