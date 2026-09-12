@@ -240,6 +240,11 @@ export const MIGRATIONS: readonly Migration[] = [
     `,
     reconcile: reconcilePreviewSchemas,
   },
+  {
+    version: 6,
+    name: 'wave_listen_counts',
+    up: `ALTER TABLE refrain_day ADD COLUMN listen_counts TEXT NOT NULL DEFAULT '{}';`,
+  },
 ]
 
 /** The newest schema this build understands. */
