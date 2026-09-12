@@ -19,6 +19,8 @@ const HARD_EMPTY = 'No difficult phrases yet'
 const REFRAIN_TITLE = 'The Refrain'
 const STREAM_TITLE = 'The Stream'
 const MENU_OPEN = 'open the menu'
+const WAVE_START = /^Start the (morning|midday|evening) wave$/
+const KEEP_LISTENING = 'Keep listening'
 
 export function parseBounds(value) {
   const match = /^\[(\d+),(\d+)\]\[(\d+),(\d+)\]$/.exec(value ?? '')
@@ -56,6 +58,19 @@ export function findLabel(dump, label) {
   const exact = parsed.nodes.find((node) => node.text === label || node.contentDesc === label)
   if (exact) return exact
   return parsed.nodes.find((node) => nodeLabel(node).includes(label))
+}
+
+function nodePrimaryLabel(node) {
+  return node.text || node.contentDesc || ''
+}
+
+/** Today's filled wave control — Start the * wave, or Keep listening once slots are done. */
+export function findWaveStart(dump) {
+  const parsed = typeof dump === 'string' ? parseUiDump(dump) : dump
+  return parsed.nodes.find((node) => {
+    const label = nodePrimaryLabel(node)
+    return WAVE_START.test(label) || label === KEEP_LISTENING
+  })
 }
 
 export function dumpHas(dump, label) {
@@ -127,6 +142,31 @@ function isPracticeChrome(dump) {
     isHardChrome(dump) ||
     dumpHas(dump, REFRAIN_TITLE)
   )
+}
+
+export function evaluateTodayStreamDump({ todayDump, streamDump, currentUrl }) {
+  if (!findWaveStart(todayDump)) {
+    return {
+      status: 'failed',
+      notes: 'Today dump does not expose Start the * wave or Keep listening.',
+    }
+  }
+  if (!currentUrl) {
+    return {
+      status: 'unavailable',
+      notes: 'Dump-only path cannot prove /practice/stream from Today.',
+    }
+  }
+  if (!isStreamUrl(currentUrl) || !isStreamChrome(streamDump)) {
+    return {
+      status: 'failed',
+      notes: `Expected Stream after the Today wave control; landed ${currentUrl || 'unknown'}.`,
+    }
+  }
+  return {
+    status: 'passed',
+    notes: 'Today wave control opened Stream.',
+  }
 }
 
 export function evaluateStreamPhraseDump({ streamDump, refrainDump, currentUrl }) {
@@ -288,6 +328,20 @@ function tapLabel(ctx, dump, label) {
   return failedCommand(tap, `input tap ${label}`)
 }
 
+function tapWaveStart(ctx, dump) {
+  const node = findWaveStart(dump)
+  if (!node?.bounds) return 'Missing tap target: Start the * wave'
+  const { left, top, right, bottom } = node.bounds
+  const tap = runCommand(ctx.run, ctx.adb, ctx.serial, [
+    'shell',
+    'input',
+    'tap',
+    String(Math.floor((left + right) / 2)),
+    String(Math.floor((top + bottom) / 2)),
+  ])
+  return failedCommand(tap, 'input tap wave start')
+}
+
 function openDeepLink(ctx, path) {
   if (path === '/') {
     const started = runCommand(ctx.run, ctx.adb, ctx.serial, [
@@ -344,11 +398,24 @@ function scenarioResult(scenario, evaluation, extra = {}) {
 
 function runStreamPhrase(ctx) {
   const scenario = WAVE_TOUCH_SCENARIOS[0]
-  const opened = openDeepLink(ctx, '/practice/stream')
+  const opened = openDeepLink(ctx, '/')
   if (opened) return scenarioResult(scenario, { status: 'unavailable', notes: opened })
+  waitForUi(ctx.run, ctx.waitMs)
+  const today = dumpUi(ctx, 'today-before')
+  if (today.error) return scenarioResult(scenario, { status: 'unavailable', notes: today.error })
+  const started = tapWaveStart(ctx, today.xml)
+  if (started) return scenarioResult(scenario, { status: 'failed', notes: started })
   waitForUi(ctx.run, ctx.waitMs)
   const stream = dumpUi(ctx, 'stream-before')
   if (stream.error) return scenarioResult(scenario, { status: 'unavailable', notes: stream.error })
+  const streamUrl = currentActivityUrl(ctx)
+  const todayEval = evaluateTodayStreamDump({
+    todayDump: today.xml,
+    streamDump: stream.xml,
+    currentUrl: streamUrl,
+  })
+  if (todayEval.status !== 'passed')
+    return scenarioResult(scenario, todayEval, { currentUrl: streamUrl })
   const tapped = tapLabel(ctx, stream.xml, STREAM_PRACTICE)
   if (tapped) return scenarioResult(scenario, { status: 'failed', notes: tapped })
   waitForUi(ctx.run, ctx.waitMs)
@@ -370,36 +437,51 @@ function runStreamPhrase(ctx) {
   )
 }
 
-function runMenuHard(ctx) {
-  const scenario = WAVE_TOUCH_SCENARIOS[1]
-  const opened = openDeepLink(ctx, '/')
-  if (opened) return scenarioResult(scenario, { status: 'unavailable', notes: opened })
+function runHardEntry(ctx, { startPath, openMenu, prefix }) {
+  const opened = openDeepLink(ctx, startPath)
+  if (opened) return { status: 'unavailable', notes: opened }
   waitForUi(ctx.run, ctx.waitMs)
-  const home = dumpUi(ctx, 'menu-home')
-  if (home.error) return scenarioResult(scenario, { status: 'unavailable', notes: home.error })
-  const openedMenu = tapLabel(ctx, home.xml, MENU_OPEN)
-  if (openedMenu) return scenarioResult(scenario, { status: 'failed', notes: openedMenu })
+  let entry = dumpUi(ctx, `${prefix}-start`)
+  if (entry.error) return { status: 'unavailable', notes: entry.error }
+  if (openMenu) {
+    const openedMenu = tapLabel(ctx, entry.xml, MENU_OPEN)
+    if (openedMenu) return { status: 'failed', notes: openedMenu }
+    waitForUi(ctx.run, ctx.waitMs)
+    entry = dumpUi(ctx, `${prefix}-menu`)
+    if (entry.error) return { status: 'unavailable', notes: entry.error }
+  }
+  const tapped = tapLabel(ctx, entry.xml, REFRAIN_TITLE)
+  if (tapped) return { status: 'failed', notes: tapped }
   waitForUi(ctx.run, ctx.waitMs)
-  const menu = dumpUi(ctx, 'menu-open')
-  if (menu.error) return scenarioResult(scenario, { status: 'unavailable', notes: menu.error })
-  const tapped = tapLabel(ctx, menu.xml, REFRAIN_TITLE)
-  if (tapped) return scenarioResult(scenario, { status: 'failed', notes: tapped })
-  waitForUi(ctx.run, ctx.waitMs)
-  const refrain = dumpUi(ctx, 'menu-after')
-  if (refrain.error)
-    return scenarioResult(scenario, { status: 'unavailable', notes: refrain.error })
+  const refrain = dumpUi(ctx, `${prefix}-after`)
+  if (refrain.error) return { status: 'unavailable', notes: refrain.error }
   const currentUrl = currentActivityUrl(ctx)
   if (ctx.outputDir) {
-    writeFileSync(resolve(ctx.outputDir, 'menu-url.txt'), `${currentUrl}\n`)
+    writeFileSync(resolve(ctx.outputDir, `${prefix}-url.txt`), `${currentUrl}\n`)
   }
-  return scenarioResult(
-    scenario,
-    evaluateHardRefrainDump({
-      menuDump: menu.xml,
+  return {
+    ...evaluateHardRefrainDump({
+      menuDump: entry.xml,
       refrainDump: refrain.xml,
       currentUrl,
     }),
-    { currentUrl },
+    currentUrl,
+  }
+}
+
+function runMenuHard(ctx) {
+  const scenario = WAVE_TOUCH_SCENARIOS[1]
+  const switcher = runHardEntry(ctx, { startPath: '/', openMenu: true, prefix: 'switcher' })
+  if (switcher.status !== 'passed') return scenarioResult(scenario, switcher, switcher)
+  const more = runHardEntry(ctx, { startPath: '/more', openMenu: false, prefix: 'more' })
+  if (more.status !== 'passed') return scenarioResult(scenario, more, more)
+  return scenarioResult(
+    scenario,
+    {
+      status: 'passed',
+      notes: 'Switcher and More The Refrain opened the difficult-only drill.',
+    },
+    { currentUrl: more.currentUrl },
   )
 }
 

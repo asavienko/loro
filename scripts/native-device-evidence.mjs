@@ -203,14 +203,15 @@ function main() {
     console.log(
       'Drive those rows through adb + uiautomator (fail-closed; never pass without URL/chrome evidence): --execute-scenarios',
     )
+    console.log(
+      'iOS --execute-scenarios stays unavailable (uiautomator is Android-only); it does not abort collection.',
+    )
     return
   }
   if (options.listScenarios) {
     console.log(JSON.stringify(WAVE_TOUCH_SCENARIOS, null, 2))
     return
   }
-  if (options.platform === 'ios' && options.executeScenarios)
-    throw new Error('Wave-path execution is Android adb/uiautomator only.')
   if (!options.artifactRevision)
     throw new Error(
       'Pass --artifact-revision with the retained Git revision of the installed build.',

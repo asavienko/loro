@@ -152,6 +152,16 @@ test('iOS collection retains actual artifacts without copying app containers or 
     assert.deepEqual(manifest.artifact, artifact)
     assert.ok(manifest.scenarios.every((row) => row.status === 'unavailable'))
     assert.ok(manifest.scenarios.some((row) => row.id === 'stream-to-phrase-refrain'))
+    const driven = collectIosEvidence({
+      packageName: 'app.loro.ios',
+      output: join(output, 'driven'),
+      artifactRevision: '26bdd146',
+      artifact,
+      executeScenarios: true,
+      run,
+    })
+    assert.ok(driven.scenarios.every((row) => row.status === 'unavailable'))
+    assert.ok(driven.scenarios.every((row) => row.reason.includes('iOS --execute-scenarios')))
     assert.deepEqual(JSON.parse(readFileSync(join(output, 'manifest.json'))), manifest)
     assert.deepEqual(calls[2], [
       'xcrun',
@@ -161,7 +171,7 @@ test('iOS collection retains actual artifacts without copying app containers or 
       'app.loro.ios',
       'app',
     ])
-    assert.equal(calls.length, 4)
+    assert.equal(calls.length, 8)
     assert.equal(readFileSync(join(output, 'device.json'), 'utf8').includes('/private'), false)
   } finally {
     rmSync(output, { recursive: true, force: true })
