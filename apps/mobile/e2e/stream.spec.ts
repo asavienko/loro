@@ -1,5 +1,5 @@
 import { expect, onboard, test } from './fixtures'
-import { isPhraseRefrain, startWave, tapControl } from './helpers'
+import { isPhraseRefrain, startWave, tapControl, todayMarker } from './helpers'
 import { mockTtsStatus } from './learnerApiFlow'
 
 test('adaptive stream rerates, reorders, transports, loves, and learns phrases', async ({
@@ -86,7 +86,7 @@ test('manual phrase browsing wraps the queue without recording practice', async 
   await expect(page.getByText('Leave this wave?')).toBeVisible()
   await expect(page.getByText('You can start the wave again from Today.')).toBeVisible()
   await page.getByRole('button', { name: 'Pause the wave', exact: true }).click()
-  await expect(page.getByText('0 reps today', { exact: true })).toBeVisible()
+  await expect(todayMarker(page)).toBeVisible()
   await expect(page.getByRole('button', { name: 'Resume practice', exact: true })).toHaveCount(0)
 })
 
@@ -95,15 +95,18 @@ test('stream leave Keep going stays; Pause goes to Today without a resume row', 
 }) => {
   await onboard(page)
   await page.getByRole('button', { name: 'Stream' }).click()
-  await expect(page.getByText('This wave')).toBeVisible()
+  await expect(page.getByText('This wave', { exact: true })).toBeVisible()
   await page.getByRole('button', { name: 'Leave practice', exact: true }).click()
-  await expect(page.getByRole('dialog')).toBeVisible()
+  const sheet = page.getByRole('dialog')
+  await expect(sheet).toBeVisible()
+  await expect(sheet.getByText('Leave this wave?')).toBeVisible()
   await page.getByRole('button', { name: 'Keep going', exact: true }).click()
+  await expect(sheet).toBeHidden()
   await expect(page).toHaveURL(/\/practice\/stream/)
-  await expect(page.getByText('This wave')).toBeVisible()
+  await expect(page.getByText('This wave', { exact: true })).toBeVisible()
   await page.getByRole('button', { name: 'Leave practice', exact: true }).click()
   await page.getByRole('button', { name: 'Pause the wave', exact: true }).click()
-  await expect(page).toHaveURL(/\/$/)
+  await expect(todayMarker(page)).toBeVisible()
   await expect(page.getByRole('button', { name: 'Resume practice', exact: true })).toHaveCount(0)
 })
 

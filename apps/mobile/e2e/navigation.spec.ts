@@ -157,7 +157,6 @@ test('More retains ordinary parent returns and uses the Refrain exit policy for 
   for (const [label, path] of [
     ['Sign in & sync', '/account'],
     ['Speak', '/practice/speak'],
-    ['Stream', '/practice/stream'],
     ['Add', '/add'],
     ['Progress', '/progress'],
     ['Listen', '/listen-export'],
@@ -175,6 +174,14 @@ test('More retains ordinary parent returns and uses the Refrain exit policy for 
   await expect(page.getByText('No difficult phrases yet')).toBeVisible()
   await back(page)
   await expect(page).toHaveURL(/\/more$/)
+  await page.getByRole('button', { name: 'Stream', exact: true }).click()
+  await expect(page).toHaveURL(/\/practice\/stream$/)
+  await page.getByRole('button', { name: 'Leave practice', exact: true }).click()
+  await expect(page.getByRole('dialog')).toBeVisible()
+  await expect(page.getByText('Leave this wave?')).toBeVisible()
+  await page.getByRole('button', { name: 'Pause the wave', exact: true }).click()
+  await expect(todayMarker(page)).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Resume practice', exact: true })).toHaveCount(0)
 })
 
 test('a Refrain exit pauses durably for Today to resume, or ends without losing earned work', async ({
