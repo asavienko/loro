@@ -4,7 +4,8 @@
 account/session engine. Account is accessible from the shared switcher. Provider subjects identify
 accounts; matching email addresses never automatically link Google, Apple or email identities.
 Sign-in registers the installation and starts authenticated local-progress upload. Offline practice
-continues without an account or a reachable backend.
+continues after a restored session without a reachable backend; it does not continue while signed
+out.
 
 ## Authorization and credentials
 
@@ -67,18 +68,18 @@ automatically.
 
 Store server values in the encrypted environment or deployment secret manager:
 
-| Variable                                             | Value                                                                                                                                                                                                          |
-| ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `AUTH_ENABLED`                                       | `true` enables browser OAuth; `false` disables all sign-in. Omitted keeps browser OAuth disabled but permits explicitly configured direct-ID/email methods.                                                    |
-| `DATABASE_URL`                                       | PostgreSQL URL, with transport security configured by the deployment.                                                                                                                                          |
-| `AUTH_PUBLIC_URL`                                    | Exact HTTPS API origin without `/v1`.                                                                                                                                                                          |
-| `AUTH_PRIVATE_KEY_PEM`                               | Preferred PKCS8 P-256 private key for ES256 Loro access tokens.                                                                                                                                                |
-| `AUTH_SIGNING_KEY`                                   | Compatibility HS256 fallback when the PEM is absent; random secret of at least 32 bytes.                                                                                                                       |
-| `AUTH_ISSUER`, `AUTH_KEY_ID`                         | Optional issuer override (otherwise `AUTH_PUBLIC_URL`, then `https://api.loro.app`) and key ID (`primary`).                                                                                                    |
-| `AUTH_REDIRECT_URIS`                                 | Exact comma-separated return URLs, e.g. `loro://account,https://your-web-host/account`; add `loro-dev://account` only when enabling sign-in in the Android development client. No wildcard, query or fragment. |
-| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`           | Google Web application client, including native browser flows.                                                                                                                                                 |
-| `APPLE_CLIENT_ID`                                    | Apple Services ID for browser OAuth.                                                                                                                                                                           |
-| `APPLE_TEAM_ID`, `APPLE_KEY_ID`, `APPLE_PRIVATE_KEY` | Apple team, key ID and PEM `.p8`; escaped newlines supported.                                                                                                                                                  |
+| Variable                                             | Value                                                                                                                                                                                                                                                                                                   |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `AUTH_ENABLED`                                       | `true` enables browser OAuth; `false` disables all sign-in. Omitted keeps browser OAuth disabled but permits explicitly configured direct-ID/email methods.                                                                                                                                             |
+| `DATABASE_URL`                                       | PostgreSQL URL, with transport security configured by the deployment.                                                                                                                                                                                                                                   |
+| `AUTH_PUBLIC_URL`                                    | Exact HTTPS API origin without `/v1`. Development may use loopback HTTP, e.g. `http://localhost:3000`.                                                                                                                                                                                                  |
+| `AUTH_PRIVATE_KEY_PEM`                               | Preferred PKCS8 P-256 private key for ES256 Loro access tokens.                                                                                                                                                                                                                                         |
+| `AUTH_SIGNING_KEY`                                   | Compatibility HS256 fallback when the PEM is absent; random secret of at least 32 bytes.                                                                                                                                                                                                                |
+| `AUTH_ISSUER`, `AUTH_KEY_ID`                         | Optional issuer override (otherwise `AUTH_PUBLIC_URL`, then `https://api.loro.app`) and key ID (`primary`).                                                                                                                                                                                             |
+| `AUTH_REDIRECT_URIS`                                 | Exact comma-separated return URLs, e.g. `loro://account,https://your-web-host/account`. Local Expo web also needs `http://localhost:8081/account,http://127.0.0.1:8081/account`. Add `loro-dev://account` only when enabling sign-in in the Android development client. No wildcard, query or fragment. |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`           | Google Web application client, including native browser flows.                                                                                                                                                                                                                                          |
+| `APPLE_CLIENT_ID`                                    | Apple Services ID for browser OAuth.                                                                                                                                                                                                                                                                    |
+| `APPLE_TEAM_ID`, `APPLE_KEY_ID`, `APPLE_PRIVATE_KEY` | Apple team, key ID and PEM `.p8`; escaped newlines supported.                                                                                                                                                                                                                                           |
 
 Incomplete provider credentials leave that provider unavailable. Invalid required OAuth settings or
 unreachable configured PostgreSQL fail startup. An explicitly disabled content-only deployment can
@@ -89,10 +90,11 @@ reports configured direct-ID/email methods. See
 [API authentication](../../apps/api/src/auth/README.md) for the email delivery adapter and direct
 ID-token audiences.
 
-The app embeds only `EXPO_PUBLIC_API_URL=https://your-api-host/v1`; restart/rebuild after changing
-it. CORS accepts the HTTPS origins derived from the redirect allowlist plus exact
-`CORS_ALLOWED_ORIGINS`. The API uses no authentication cookies. Register
-`https://your-api-host/v1/auth/google/callback` in Google's console and
+The app embeds only `EXPO_PUBLIC_API_URL=https://your-api-host/v1` (or `http://localhost:3000/v1`
+for local Expo web); restart/rebuild after changing it. CORS accepts the HTTPS and loopback HTTP
+origins derived from the redirect allowlist plus exact `CORS_ALLOWED_ORIGINS`. The API uses no
+authentication cookies. Register `https://your-api-host/v1/auth/google/callback` in Google's console
+(plus `http://localhost:3000/v1/auth/google/callback` for local API sign-in) and
 `https://your-api-host/v1/auth/apple/callback` as the Apple Services ID return URL. Configure
 consent, Apple domain verification and the associated primary App ID. Native builds include
 `expo-web-browser` and `expo-secure-store`; this is browser OAuth on native platforms.

@@ -13,4 +13,12 @@ describe('isAllowedAuthRedirect', () => {
     expect(isAllowedAuthRedirect('https://app.example.test/account')).toBe(true)
     expect(isAllowedAuthRedirect('https://app.example.test/account#fragment')).toBe(false)
   })
+
+  it('allows loopback HTTP for local web sign-in', () => {
+    expect(isAllowedAuthRedirect('http://localhost:8081/account')).toBe(true)
+    expect(isAllowedAuthRedirect('http://127.0.0.1:8081/account')).toBe(true)
+    expect(isAllowedAuthRedirect('http://[::1]:8081/account')).toBe(true)
+    expect(isAllowedAuthRedirect('http://localhost:8081/account?ticket=one')).toBe(false)
+    expect(isAllowedAuthRedirect('http://evil.example/account')).toBe(false)
+  })
 })
