@@ -38,6 +38,9 @@ describe('refrain focus', () => {
     expect(refrainFocusIds(focus, [makePhrase('cafe'), makePhrase('other')], ['other'])).toEqual([
       'cafe',
     ])
+    expect(refrainFocusIds(focus, [makePhrase('cafe', { learned: true })], ['other'])).toEqual([
+      'cafe',
+    ])
   })
 
   it('filters the menu entry to active difficult phrases only', () => {
