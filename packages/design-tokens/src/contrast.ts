@@ -139,6 +139,7 @@ export function createContrastReport(t: ContrastTokens): ContrastReport {
     ['surface.card', requiredSurface('card')],
     ['surface.sunken', requiredSurface('sunken')],
     ['surface.sunken2', requiredSurface('sunken2')],
+    ['surface.track', requiredSurface('track')],
   ]
 
   const check = (

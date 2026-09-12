@@ -8,15 +8,13 @@ Rationale: [ADR-0013](../../docs/architecture/adr/0013-design-tokens-pipeline.md
 
 ## Sources and boundaries
 
-The authored design artifacts live under `design/Language Learning by Phrases - V1.1/`: the
-21-screen `Loro.dc.html` blueprint, `Design System.dc.html`, `Navigation.dc.html`,
-`Loro Chat.dc.html`, CSS token files, 39 prototype components, screenshots, and a small web UI kit.
-They are references and executable prototypes, not runtime dependencies; do not edit them when
-implementing the app.
+The authored design artifacts live under `design/`: v1.1 `Loro.dc.html` / `Navigation.dc.html` for
+interaction, and `design/design-v1.2/editorial_stationery` for the reviewed runtime colour and type
+families. They are references, not runtime dependencies; do not edit them when implementing the app.
 
-The reviewed runtime source is `tokens/*.json`. If it disagrees with the blueprint, correct the JSON
-(and document an intentional accessibility deviation); do not patch generated output or the authored
-blueprint.
+The reviewed runtime source is `tokens/*.json`. If it disagrees with the authored visual, correct
+the JSON (and document an intentional accessibility deviation); do not patch generated output or the
+authored artifacts.
 
 ```text
 tokens/
@@ -50,7 +48,7 @@ pnpm --filter @loro/design-tokens check:contrast
 ```
 
 CI regenerates `out/` and fails if it differs from the commit. Never hand-edit generated files. The
-current contrast gate checks 122 real pairings across all four accent themes; all pass WCAG 2.2 AA.
+current contrast gate checks 137 real pairings across all four accent themes; all pass WCAG 2.2 AA.
 It also reports the one live size constraint: text on `warming.peak` must be at least 17 px
 semibold.
 
@@ -79,9 +77,10 @@ motion, and reusable sizes. Exact component geometry that has no shared design-s
 `apps/mobile/src/ui/tokens/` (for example a 1.5 px selected border or an 11 px row padding). This
 keeps exact blueprint measurements without pretending every number is a global token.
 
-Shadows and gradients are emitted as CSS strings. React Native has no mapping for them yet, so the
-current mobile `DarkCard` is a flat `surface.dark` card and `Card` has no elevation prop. Add a
-reviewed token-to-native mapping before claiming those effects are implemented.
+Shadows and gradients are emitted as CSS strings. Mobile maps each shadow recipe onto RN
+`shadowColor` / `shadowOffset` / `shadowOpacity` / `shadowRadius` / `elevation` in
+`apps/mobile/src/ui/stationeryShadow.ts`, deriving the pigment from the recipe (stationery ambient
+shadows use `surface.shadowInk`). Inset field wells stay CSS-only; native has no inset shadow.
 
 ## Extending safely
 

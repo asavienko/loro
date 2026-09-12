@@ -19,9 +19,9 @@
 
   "gutter": {
     "$comment": "The blueprint varies the screen gutter by density: roomy on reading screens, tight on list-dense ones so rows get more width.",
-    "dense": 14,
-    "default": 18,
-    "roomy": 22
+    "dense": 16,
+    "default": 20,
+    "roomy": 24
   },
 
   "radius": {
@@ -38,15 +38,23 @@
   },
 
   "shadow": {
-    "$comment": "Four recipes, all low and WARM-TINTED. There are no hard grey drop shadows in this system.",
-    "card": { "value": "0 1px 2px rgba(40,34,25,.16)", "use": "segmented thumb, subtle lift" },
-    "raised": {
-      "value": "0 8px 20px rgba(191,87,34,.32)",
-      "use": "primary CTA — accent-tinted, which is what makes it feel warm rather than pasted on"
+    "$comment": "Low, WARM-TINTED recipes. Stationery ambient shadows use surface.shadowInk (#231e18). There are no hard grey drop shadows. Mobile maps these CSS strings to RN shadow props in apps/mobile/src/ui/elevation.ts.",
+    "card": { "value": "0 2px 8px rgba(35,30,24,.04)", "use": "resting stationery — v1.2 contact shadow" },
+    "interactive": {
+      "value": "0 4px 16px rgba(35,30,24,.08), 0 1px 3px rgba(35,30,24,.04)",
+      "use": "raised interactive cards — v1.2 dual shadow"
     },
-    "sheet": { "value": "0 -12px 40px rgba(0,0,0,.22)", "use": "bottom sheets" },
-    "toast": { "value": "0 10px 24px rgba(0,0,0,.28)", "use": "toasts" },
-    "float": { "value": "0 16px 40px rgba(0,0,0,.16)", "use": "the dealt card (Loop C)" }
+    "raised": {
+      "value": "0 8px 20px rgba(159,60,22,.32)",
+      "use": "primary CTA — terracotta-tinted, which is what makes it feel warm rather than pasted on"
+    },
+    "sheet": { "value": "0 -12px 40px rgba(35,30,24,.12)", "use": "bottom sheets" },
+    "toast": { "value": "0 10px 24px rgba(35,30,24,.16)", "use": "toasts" },
+    "float": { "value": "0 8px 32px rgba(35,30,24,.12)", "use": "floating island chrome — v1.2" },
+    "fieldInset": {
+      "value": "inset 0 1px 2px rgba(28,28,25,.05)",
+      "use": "v1.2 parchment field well"
+    }
   },
 
   "size": {
