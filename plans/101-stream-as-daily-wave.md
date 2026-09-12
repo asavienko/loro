@@ -58,7 +58,8 @@ More, filtered to active `difficulty === 'hard'` phrases only.
   This Linux host has no Xcode/idb, so those rows stay unevaluated until a Mac simulator or iPhone
   run drives them. Phrase-focus Refrain is not the menu destination; the switcher replaces into
   `?filter=hard` and only a matching hard checkpoint owns that empty screen. A screenshot collector
-  must not mark those rows passed.
+  must not mark those rows passed. `matrix.json` classifies that emulator bundle as
+  `closest-available-not-physical`; its passed rows have `closesPhysicalGate: false`.
 - `deep_link_for` now opens Stream for the daily reminder and the midday wave nudge. The plan 70
   scheduler that delivers those links is still unbuilt. A bare `/practice` path also resolves to
   Stream.

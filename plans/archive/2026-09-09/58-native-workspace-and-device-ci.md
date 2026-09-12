@@ -91,10 +91,12 @@ modules, generated native projects, UniFFI bindings, device SQLite, permissions,
    Detect missing Xcode/SDK/device inputs explicitly; Android evidence is not iOS proof.
 2. Use one evidence matrix with plans 59/60/63/68/87/93 and shared enforcement in 72. Each row
    records artifact revision and package digest/build correlation, device/OS, target language,
-   scenario, result and retained evidence. Missing SDK/model/device inputs must be marked blocked or
-   unavailable, never passed. Link exact scenario results rather than treating a screenshot of the
-   currently open app as execution evidence. Collect once and reference it from the feature owner;
-   do not duplicate persistence or gesture implementations.
+   scenario, result and retained evidence. `matrix.json` (`loro-wave-evidence-matrix/v1`) now
+   records those fields plus `closesPhysicalGate`, which stays false on emulator/simulator passes.
+   Missing SDK/model/device inputs must be marked blocked or unavailable, never passed. Link exact
+   scenario results rather than treating a screenshot of the currently open app as execution
+   evidence. Collect once and reference it from the feature owner; do not duplicate persistence or
+   gesture implementations.
 3. Keep development harness delivery separate from production signing/store work in 73. No cloud
    builds or GitHub Actions are required by this plan.
 
