@@ -138,8 +138,12 @@ pnpm ios:local --install       # also install the .app onto the booted simulator
 
 Requires macOS, full Xcode with an iOS simulator runtime, CocoaPods, Node 22, and
 `rustup target add aarch64-apple-ios-sim` (or `x86_64-apple-ios` on Intel). The tree must be clean.
-Pass that zip to `pnpm native:evidence --platform ios --execute-scenarios --artifact …`. Missing
-Xcode, idb, or a booted simulator stays `unavailable`.
+Pass that zip to `pnpm native:evidence --platform ios --execute-scenarios --artifact …`.
+`--execute-scenarios` may boot one available Shutdown iPhone (or `--serial`) and `simctl install`
+the verified zip before driving rows. Dump-only collection still requires an already-booted
+simulator and an already-installed app. Missing Xcode, idb, or chrome/URL/gesture proof stays
+`unavailable`. TalkBack `-at` rows stay unavailable on iOS even if VoiceOver looks enabled; ordinary
+idb taps are not AT proof.
 
 ## Native evidence collection (plan 58)
 
@@ -152,13 +156,13 @@ the evidence manifest. For an already installed iOS simulator app, use:
 pnpm native:evidence --platform ios --package app.loro.ios --serial SIMULATOR-UDID --artifact-revision GIT_REVISION --artifact .local-builds/RETAINED_BUILD
 ```
 
-Full Xcode must be selected with an installed simulator runtime and a booted simulator. Omitting
-`--serial` requires exactly one available booted simulator. The collector checks that the requested
-bundle is installed, then retains Xcode version, selected device/runtime metadata, the current
-screen PNG and a manifest under `.local-builds/native-evidence/`. It does not launch or install an
-app, read app data, grant permissions or collect simulator-wide logs. Use a test simulator and
-review screenshots before sharing them. Fixtures exercise collection and prerequisite failures; they
-do not constitute a device run.
+Full Xcode must be selected with an installed simulator runtime. Dump-only collection requires an
+already-booted simulator (exactly one if `--serial` is omitted) and an already-installed app. It
+does not boot, launch, or install. `--execute-scenarios` may boot a Shutdown simulator, install a
+verified `loro-simulator-*.zip`, and launch the app, then drive pointer and spine/sheet rows. The
+collector never reads the app data container, grants permissions, or collects simulator-wide logs.
+Use a test simulator and review screenshots before sharing them. Fixtures exercise collection and
+prerequisite failures; they do not constitute a device run.
 
 The installed artifact remains explicitly unverified: the retained file hash identifies reviewed
 bytes, but does not prove those bytes are installed. Retain and correlate the app's build metadata
@@ -177,9 +181,10 @@ rows with TalkBack double-activate when TalkBack is installed. Missing adb, miss
 TalkBack, or a dump without matching chrome/URL/gesture evidence stays `unavailable` or `failed` — a
 screenshot collector must not mark those rows passed. Browser mouse/touch coverage for the
 navigation and pull entries is in the learner E2E suite; it is not native proof. iOS
-`--execute-scenarios` drives the pointer and spine/sheet rows through `simctl openurl` plus `idb`
-taps/swipes and fail-closes without chrome plus the exact URL or gesture proof. TalkBack `-at` rows
-stay `unavailable` on iOS; VoiceOver physical-device remains plan 58/93. Missing Xcode, idb, or a
-booted simulator does not abort collection. Clean iOS compilation, minimum OS floors,
-physical-device permissions/speech, persistence, lifecycle and interruption scenarios remain plan 58
-acceptance gates.
+`--execute-scenarios` may boot a Shutdown simulator and install a verified `loro-simulator-*.zip`,
+then drive the pointer and spine/sheet rows through `simctl openurl` plus `idb` taps/swipes. It
+fail-closes without chrome plus the exact URL or gesture proof. TalkBack `-at` rows stay
+`unavailable` on iOS even if VoiceOver looks enabled; ordinary idb taps are not AT proof. VoiceOver
+physical-device remains plan 58/93. Missing Xcode or idb does not abort collection. Clean iOS
+compilation, minimum OS floors, physical-device permissions/speech, persistence, lifecycle and
+interruption scenarios remain plan 58 acceptance gates.

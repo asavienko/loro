@@ -21,8 +21,10 @@ mouse/touch coverage for Stream → phrase Refrain and menu hard-filter;
 edge-swiped the practice stack, pulled the spine handle open, and pulled the sheet handle closed,
 then repeated the three pointer rows with TalkBack. That is emulator proof, not physical-device or
 iOS. iOS `--execute-scenarios` now uses simctl + idb for the same pointer and spine/sheet rows and
-fail-closes without chrome/URL/gesture proof; VoiceOver `-at` evidence remains a device gate. Plan
-101's Stream-primary / hard-filter Refrain model is not reverted.
+fail-closes without chrome/URL/gesture proof. That iOS path may boot a Shutdown simulator and
+install a verified `loro-simulator-*.zip`. VoiceOver `-at` evidence remains a device gate even if
+VoiceOver looks enabled; ordinary idb taps are not AT proof. Plan 101's Stream-primary / hard-filter
+Refrain model is not reverted.
 
 Verified: `pnpm check` passed all 23 tasks; `pnpm test:e2e` passed all 119 tests in 4.4 minutes,
 including mouse/touch gestures, cancelled touch, accessibility and 310% text. The initial cold
