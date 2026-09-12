@@ -1,4 +1,4 @@
-import { isActive, type PhraseState } from '@loro/core'
+import { isActive, userPhraseId, type PhraseState } from '@loro/core'
 
 /**
  * Stream is the daily wave: membership is today's frozen set, listed in full.
@@ -12,7 +12,7 @@ export function streamWaveQueue<T extends PhraseState>(
 ): T[] {
   const byId = new Map(phrases.map((phrase) => [phrase.id, phrase]))
   const wave = refrainSet.flatMap((id) => {
-    const phrase = byId.get(id)
+    const phrase = byId.get(userPhraseId(id))
     return phrase !== undefined && isActive(phrase) ? [phrase] : []
   })
   const source = wave.length > 0 ? wave : phrases.filter(isActive)
