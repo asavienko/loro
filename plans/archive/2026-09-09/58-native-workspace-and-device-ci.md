@@ -66,9 +66,11 @@ modules, generated native projects, UniFFI bindings, device SQLite, permissions,
        gesture proof (`.local-builds/native-evidence/wave-101-emulator-v6/`). That is not
        physical-device, interruption, speech, or iOS proof. Missing device or matching evidence
        stays `unavailable` or `failed`. iOS `--execute-scenarios` drives pointer and spine/sheet
-       rows through simctl + idb with the same fail-closed chrome/URL/gesture gates; TalkBack `-at`
-       rows stay unavailable (VoiceOver remains a physical-device gate). Missing Xcode/idb does not
-       abort collection. A screenshot collector must not mark those rows passed.
+       rows through simctl + idb with the same fail-closed chrome/URL/gesture gates. That path may
+       boot a Shutdown simulator and install a verified `loro-simulator-*.zip`. TalkBack `-at` rows
+       stay unavailable even if VoiceOver looks enabled; ordinary idb taps are not AT proof.
+       VoiceOver remains a physical-device gate. Missing Xcode/idb does not abort collection. A
+       screenshot collector must not mark those rows passed.
 3. [ ] Validate minimum OS floors and clean regeneration on supported hosts. Add platform modules
        for widgets/OCR/purchases only with their owning feature.
 4. [ ] Complete production signing/provisioning and environment-safe release profiles when store
