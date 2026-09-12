@@ -40,6 +40,20 @@ const WAVE_START = /^Start the (morning|midday|evening) wave$/
 const KEEP_LISTENING = 'Keep listening'
 const TODAY_TITLE = 'Today'
 const RESUME_PRACTICE = 'Resume practice'
+const PAUSE_PRACTICE = 'Pause practice'
+const PAUSE_WAVE = 'Pause the wave'
+const END_IT_HERE = 'End it here'
+const KEEP_GOING = 'Keep going'
+const LEAVE_THIS_PRACTICE = 'Leave this practice?'
+const LEAVE_THIS_WAVE = 'Leave this wave?'
+const EXIT_SHEET_MARKERS = [
+  PAUSE_PRACTICE,
+  PAUSE_WAVE,
+  END_IT_HERE,
+  KEEP_GOING,
+  LEAVE_THIS_PRACTICE,
+  LEAVE_THIS_WAVE,
+]
 const STREAM_RAIL = 'Stream'
 const ONBOARD_WELCOME = "Let's go →"
 const ONBOARD_CONTINUE = 'Continue'
@@ -486,6 +500,50 @@ export function evaluatePracticeBackSwipe({ beforeDump, afterDump, swipeId = 'ed
   }
 }
 
+export function evaluatePracticeHardwareBack({ beforeDump, afterDump }) {
+  if (!isPracticeChrome(beforeDump)) {
+    return {
+      status: 'unavailable',
+      notes: 'Hardware-back probe never reached Stream or Refrain.',
+    }
+  }
+  if (!isPracticeChrome(afterDump)) {
+    return {
+      status: 'failed',
+      notes: 'Android Back left the practice session.',
+    }
+  }
+  return {
+    status: 'passed',
+    notes: 'Android Back left Stream/Refrain on the session.',
+  }
+}
+
+export function evaluateRefrainExitBack({ beforeDump, afterDump }) {
+  if (!isPhraseChrome(beforeDump) && !dumpHas(beforeDump, REFRAIN_TITLE)) {
+    return {
+      status: 'unavailable',
+      notes: 'Refrain exit probe never reached a phrase drill.',
+    }
+  }
+  if (EXIT_SHEET_MARKERS.some((marker) => dumpHas(afterDump, marker))) {
+    return {
+      status: 'passed',
+      notes: 'Android Back opened the Refrain exit sheet.',
+    }
+  }
+  if (!isPracticeChrome(afterDump)) {
+    return {
+      status: 'failed',
+      notes: 'Android Back left the phrase drill without the exit sheet.',
+    }
+  }
+  return {
+    status: 'failed',
+    notes: 'Android Back did not open Pause · End it here · Keep going.',
+  }
+}
+
 function runCommand(run, adb, serial, args) {
   const argv = serial ? ['-s', serial, ...args] : args
   return run(adb, argv, { encoding: 'utf8' })
@@ -548,7 +606,8 @@ function dumpUi(ctx, name) {
   const xml = cat.stdout || ''
   if (ctx.outputDir) {
     mkdirSync(ctx.outputDir, { recursive: true })
-    writeFileSync(resolve(ctx.outputDir, `${name}.xml`), xml)
+    const file = ctx.talkback ? `at-${name}` : name
+    writeFileSync(resolve(ctx.outputDir, `${file}.xml`), xml)
   }
   return { xml }
 }
@@ -881,9 +940,36 @@ function runBackSwipe(ctx) {
     })
     if (result.status !== 'passed') return scenarioResult(scenario, result)
   }
+  const hardware = pressAndroidBack(ctx)
+  if (hardware) return scenarioResult(scenario, { status: 'unavailable', notes: hardware })
+  waitForUi(ctx.run, ctx.waitMs)
+  const afterBack = dumpUi(ctx, 'swipe-after-hardware-back')
+  if (afterBack.error)
+    return scenarioResult(scenario, { status: 'unavailable', notes: afterBack.error })
+  const stayed = evaluatePracticeHardwareBack({
+    beforeDump: before.xml,
+    afterDump: afterBack.xml,
+  })
+  if (stayed.status !== 'passed') return scenarioResult(scenario, stayed)
+  const openedPhrase = tapLabel(ctx, afterBack.xml, STREAM_PRACTICE)
+  if (openedPhrase) return scenarioResult(scenario, { status: 'failed', notes: openedPhrase })
+  waitForUi(ctx.run, ctx.waitMs)
+  const phrase = dumpUi(ctx, 'refrain-before-hardware-back')
+  if (phrase.error) return scenarioResult(scenario, { status: 'unavailable', notes: phrase.error })
+  const exitBack = pressAndroidBack(ctx)
+  if (exitBack) return scenarioResult(scenario, { status: 'unavailable', notes: exitBack })
+  waitForUi(ctx.run, ctx.waitMs)
+  const exit = dumpUi(ctx, 'refrain-after-hardware-back')
+  if (exit.error) return scenarioResult(scenario, { status: 'unavailable', notes: exit.error })
+  const openedExit = evaluateRefrainExitBack({
+    beforeDump: phrase.xml,
+    afterDump: exit.xml,
+  })
+  if (openedExit.status !== 'passed') return scenarioResult(scenario, openedExit)
   return scenarioResult(scenario, {
     status: 'passed',
-    notes: 'Edge and full-screen swipes left Stream/Refrain on the session.',
+    notes:
+      'Edge, full-screen, and Android Back left the session; Back on the phrase drill opened the exit sheet.',
   })
 }
 

@@ -25,7 +25,8 @@ export const WAVE_TOUCH_SCENARIOS = [
     owner: '93',
     requirement: 'NAV-04',
     entry: 'Native back-swipe on Stream or Refrain',
-    expect: 'session remains; practice stack disables edge and full-screen back swipe',
+    expect:
+      'session remains; practice stack disables edge, full-screen, and Android Back; Back on a phrase drill opens the exit sheet',
   },
   {
     id: 'spine-pull-opens-switcher',
@@ -74,7 +75,8 @@ export const WAVE_TOUCH_SCENARIOS = [
     owner: '93',
     requirement: 'NAV-04',
     entry: 'TalkBack-enabled edge and full-screen swipe on Stream or Refrain',
-    expect: 'session remains; practice stack disables edge and full-screen back swipe',
+    expect:
+      'session remains; practice stack disables edge, full-screen, and Android Back; Back on a phrase drill opens the exit sheet',
   },
   {
     id: 'sheet-back-dismisses-switcher-at',
