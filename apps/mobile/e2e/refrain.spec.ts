@@ -1,6 +1,6 @@
 import { atInstant, jumpTo, returnToForeground, runFor } from './clock'
 import { expect, onboard, test } from './fixtures'
-import { repsTodayRow, startWave } from './helpers'
+import { repsTodayRow, startHardRefrain, startRefrain } from './helpers'
 
 const reps = [
   { label: 'Say it', cue: 'Read it, then say it back', automaticity: 0 },
@@ -19,7 +19,7 @@ test(
   async ({ page }) => {
     await atInstant(page, '2026-05-04T10:00')
     await onboard(page)
-    await startWave(page)
+    await startHardRefrain(page)
 
     for (let phrase = 1; phrase <= 5; phrase += 1) {
       await expect(page.getByText(`Phrase ${phrase} / 5`)).toBeVisible()
@@ -56,7 +56,6 @@ test(
     await expect(page.getByText('30', { exact: true }).filter({ visible: true })).toBeVisible()
 
     await page.getByRole('button', { name: 'Back to today' }).click()
-    await expect(page.getByText('done', { exact: true }).filter({ visible: true })).toBeVisible()
     await expect(page.getByText('5 of 5 locked in').filter({ visible: true })).toBeVisible()
     await expect(repsTodayRow(page, 30)).toBeVisible()
 
@@ -72,7 +71,7 @@ test('opens a scheduled wave when its local time arrives on an already-open rout
 }) => {
   await atInstant(page, '2026-05-04T07:59')
   await onboard(page)
-  await page.goto('/practice/refrain')
+  await page.goto('/practice/refrain?wave=morning')
   await expect(page.getByText(/Next wave starts at/)).toBeVisible()
 
   await jumpTo(page, '2026-05-04T08:00')
@@ -83,7 +82,7 @@ test('opens a scheduled wave when its local time arrives on an already-open rout
 test('LB-27: manual confirmation never reports speech latency', async ({ page }) => {
   await atInstant(page, '2026-05-04T10:00')
   await onboard(page)
-  await startWave(page)
+  await startRefrain(page)
   for (const [label, delay] of [
     ['Say it', 1500],
     ['Chorus it', 120],

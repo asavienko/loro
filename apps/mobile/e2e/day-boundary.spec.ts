@@ -25,7 +25,7 @@ import {
   lockIn,
   openProgress,
   repsTodayRow,
-  startWave,
+  startRefrain,
   streakValue,
 } from './helpers'
 
@@ -42,8 +42,9 @@ test('a new day clears yesterday’s reps and lock-ins from Today', async ({ pag
   await atInstant(page, '2026-03-10T22:00')
   await onboard(page)
 
-  await startWave(page)
+  await startRefrain(page)
   await lockIn(page)
+  await page.goBack()
   await page.goBack()
   await expect(page.getByText('1 of 5 locked in')).toBeVisible()
   await expect(repsTodayRow(page, 6)).toBeVisible()
@@ -65,16 +66,17 @@ test('entering the Refrain on a new day rolls the set without a foreground event
 }) => {
   await atInstant(page, '2026-03-10T22:00')
   await onboard(page)
-  await startWave(page)
+  await startRefrain(page)
   await lockIn(page)
+  await page.goBack()
   await page.goBack()
 
   // Deliberately no `returnToForeground` — this covers the second of the three call sites
   // in `src/store/dayRollover.ts`, the one on entry to the Refrain.
   await jumpTo(page, '2026-03-11T09:00')
-  await startWave(page)
+  await startRefrain(page)
 
-  await expect(page.getByText('Phrase 1 / 5')).toBeVisible()
+  await expect(page.getByText('Phrase 1 / 1')).toBeVisible()
   await expect(page.getByText('Locked in for today')).toBeHidden()
   await expect(page.getByRole('progressbar', { name: 'Automaticity' })).toHaveAttribute(
     'aria-valuenow',
@@ -128,8 +130,9 @@ test('a session past the grace window starts a second streak day', async ({ page
 test('an earned milestone survives the next morning’s first rep', async ({ page }) => {
   await atInstant(page, '2026-03-10T22:00')
   await onboard(page)
-  await startWave(page)
+  await startRefrain(page)
   await lockIn(page)
+  await page.goBack()
   await page.goBack()
 
   await openProgress(page)
