@@ -94,6 +94,16 @@ describe('refrain focus', () => {
     expect(sessionCoversDaySet(['a', 'b'], ['a'])).toBe(false)
   })
 
+  it('resumes a one-phrase day set as a timed wave', () => {
+    const phrases = [makePhrase('solo')]
+    const focus = inferRefrainFocus(['solo'], phrases, ['solo'])
+    expect(focus).toEqual({ kind: 'wave' })
+    expect(refrainResumeTarget(focus, 'morning')).toEqual({
+      pathname: '/practice/refrain',
+      params: { wave: 'morning' },
+    })
+  })
+
   it('resumes a one-phrase drill with the phrase param', () => {
     const phrases = [makePhrase('cafe'), makePhrase('other', { difficulty: 'hard' })]
     const focus = inferRefrainFocus(['cafe'], phrases, ['cafe', 'other'])

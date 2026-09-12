@@ -387,6 +387,7 @@ export default function Refrain() {
       </ActionBar>
       <ExitSheet
         visible={exitVisible}
+        wave={focus.kind === 'wave'}
         onKeepGoing={() => {
           setExitVisible(false)
         }}
@@ -412,11 +413,13 @@ export default function Refrain() {
 
 function ExitSheet({
   visible,
+  wave,
   onPause,
   onEnd,
   onKeepGoing,
 }: {
   visible: boolean
+  wave: boolean
   onPause: () => void
   onEnd: () => void
   onKeepGoing: () => void
@@ -425,9 +428,9 @@ function ExitSheet({
   return (
     <Sheet visible={visible} onDismiss={onKeepGoing} dismissLabel={copy.a11y.common.dismiss}>
       <Text variant="title3" color={ink.ink}>
-        {copy.nav.exit.title}
+        {wave ? copy.nav.exit.title : copy.nav.exit.titlePractice}
       </Text>
-      <Button label={copy.nav.exit.pause} onPress={onPause} />
+      <Button label={wave ? copy.nav.exit.pause : copy.nav.exit.pausePractice} onPress={onPause} />
       <Button label={copy.nav.exit.end} variant="secondary" onPress={onEnd} />
       <Button label={copy.nav.exit.keepGoing} variant="secondary" onPress={onKeepGoing} />
       <Text variant="captionSm" color={ink.muted}>

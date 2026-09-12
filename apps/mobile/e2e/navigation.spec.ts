@@ -180,7 +180,7 @@ test('a Refrain exit pauses durably for Today to resume, or ends without losing 
 
   await page.getByRole('button', { name: 'Leave practice', exact: true }).click()
   await expect(page.getByRole('dialog')).toBeVisible()
-  await page.getByRole('button', { name: 'Pause the wave', exact: true }).click()
+  await page.getByRole('button', { name: 'Pause practice', exact: true }).click()
   await expect(todayMarker(page)).toBeVisible()
   await expect(page.getByRole('button', { name: 'Resume practice', exact: true })).toBeVisible()
   await page.reload()

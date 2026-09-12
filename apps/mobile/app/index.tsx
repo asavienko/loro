@@ -214,7 +214,7 @@ export default function Today() {
           totalReps={totalReps}
           // With nothing in rotation the wave is not a way in, and the row must not say it is
           // while the CTA below says the opposite.
-          onStartWave={hasResume || !canStartWave ? undefined : startWave}
+          onStartWave={entry.kind === 'resume' || !canStartWave ? undefined : startWave}
         />
         <TodaySet set={set} lockedIn={lockedIn} />
         <BankedTail graduated={graduated} />

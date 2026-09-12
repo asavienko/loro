@@ -94,15 +94,13 @@ export function inferRefrainFocus(
   refrainSet: readonly string[],
 ): RefrainFocus {
   const ids = [...new Set(sessionPhraseIds)]
+  // A one-phrase plan that is the whole frozen set is still today's wave.
+  if (sessionCoversDaySet(ids, refrainSet)) return { kind: 'wave' }
   if (ids.length === 1 && ids[0] !== undefined) {
     return { kind: 'phrase', phraseId: ids[0] }
   }
   const hardIds = refrainFocusIds({ kind: 'hard' }, phrases, refrainSet)
-  if (
-    ids.length > 0 &&
-    refrainSessionMatchesFocus(ids, hardIds) &&
-    !sessionCoversDaySet(ids, refrainSet)
-  ) {
+  if (ids.length > 0 && refrainSessionMatchesFocus(ids, hardIds)) {
     return { kind: 'hard' }
   }
   return { kind: 'wave' }
