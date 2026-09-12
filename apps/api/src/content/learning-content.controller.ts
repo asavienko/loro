@@ -8,6 +8,7 @@ import {
 } from '@loro/core/api/current'
 import { loadLearningCatalog } from '@loro/content'
 import { LoroError } from '../common/errors.js'
+import { parseContract } from '../common/parse.js'
 
 @Controller('content/v2')
 export class LearningContentController {
@@ -42,8 +43,7 @@ export class LearningContentController {
     @Query('target') target = 'es-ES',
     @Query('native') native = 'en',
   ) {
-    const query = LearningDiffQuerySchema.safeParse({ from, target, native })
-    if (!query.success) throw new LoroError('VALIDATION_FAILED')
+    parseContract(LearningDiffQuerySchema, { from, target, native })
     const catalog = this.catalog(target, native)
     return {
       from: Number(from),
@@ -57,8 +57,7 @@ export class LearningContentController {
   }
   @Get('pack')
   pack(@Query('id') id: string, @Query('target') target = 'es-ES', @Query('native') native = 'en') {
-    const query = LearningPackQuerySchema.safeParse({ id, target, native })
-    if (!query.success) throw new LoroError('VALIDATION_FAILED')
+    parseContract(LearningPackQuerySchema, { id, target, native })
     const catalog = this.catalog(target, native)
     const pack = catalog.packs.find((p) => p.id === id)
     if (!pack) throw new LoroError('VALIDATION_FAILED', 'Unknown pack')
@@ -71,8 +70,11 @@ export class LearningContentController {
     }
   }
   private catalog(target: string, native: string) {
-    const query = LearningCatalogQuerySchema.safeParse({ target, native })
-    if (!query.success) throw new LoroError('VALIDATION_FAILED', 'Unsupported language pair')
-    return loadLearningCatalog(query.data.target, query.data.native)
+    const query = parseContract(
+      LearningCatalogQuerySchema,
+      { target, native },
+      'Unsupported language pair',
+    )
+    return loadLearningCatalog(query.target, query.native)
   }
 }

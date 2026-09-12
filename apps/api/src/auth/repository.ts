@@ -1,6 +1,6 @@
 /** OAuth handoffs share the same migrated PostgreSQL connection as sessions and sync. */
 import type { OAuthProvider } from '@loro/core/api/oauth'
-import type { SqlDatabase } from '../database/database.js'
+import type { SqlConnection, SqlDatabase } from '../database/database.js'
 export interface Attempt {
   hash: string
   provider: OAuthProvider
@@ -42,6 +42,20 @@ export class OAuthRepository {
       [hash, provider, subject, challenge, expires],
     )
   }
+  async consumeGrant(
+    connection: SqlConnection,
+    hash: string,
+    challenge: string,
+    now: number,
+  ): Promise<{ provider: OAuthProvider; subject: string } | undefined> {
+    return (
+      await connection.query<{ provider: OAuthProvider; subject: string }>(
+        'DELETE FROM oauth_grants WHERE hash=$1 AND challenge=$2 AND expires>$3 RETURNING provider,subject',
+        [hash, challenge, now],
+      )
+    ).rows[0]
+  }
+
   async cleanup(now: number): Promise<void> {
     await this.database.transaction(async (connection) => {
       await connection.query('DELETE FROM oauth_attempts WHERE expires<=$1', [now])

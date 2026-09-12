@@ -1,6 +1,7 @@
 import { Inject, Injectable, type CanActivate, type ExecutionContext } from '@nestjs/common'
 import type { Request } from 'express'
 import { LoroError } from '../common/errors.js'
+import { assertDeviceHeader } from './device-header.js'
 import { AuthService } from './auth.service.js'
 import type { AuthPrincipal } from './auth.tokens.js'
 
@@ -19,9 +20,7 @@ export class AuthGuard implements CanActivate {
       throw new LoroError('UNAUTHENTICATED')
     }
     const principal = await this.auth.authenticate(authorization.slice(7))
-    const deviceHeader = request.headers['x-loro-device']
-    if (deviceHeader !== undefined && deviceHeader !== principal.deviceId)
-      throw new LoroError('FORBIDDEN')
+    assertDeviceHeader(principal, request.headers['x-loro-device'])
     request.principal = principal
     return true
   }

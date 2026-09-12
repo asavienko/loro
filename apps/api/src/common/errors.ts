@@ -205,7 +205,11 @@ function kebab(code: string): string {
   return code.toLowerCase().replace(/_/g, '-')
 }
 
-/** Rate limits, per docs/architecture/api.md#rate-limits. */
+/**
+ * Rate-limit catalog. Auth IP (30/15m), email identity (5/15m), sync per-user
+ * (120/min) and process-local TTS (100/500 per day) are deployed. Other rows,
+ * including sync per-IP, stay documented defaults until a contract decision.
+ */
 export const RATE_LIMITS = {
   auth: { perUser: 10, perIp: 30, windowMinutes: 15 },
   sync: { perUser: 120, perIp: 600, windowMinutes: 1 },

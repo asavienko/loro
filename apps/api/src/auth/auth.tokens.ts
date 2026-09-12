@@ -2,6 +2,8 @@ import { createHash, createHmac, createPublicKey, randomBytes, timingSafeEqual }
 import { importPKCS8, importSPKI, jwtVerify, SignJWT } from 'jose'
 import { LoroError } from '../common/errors.js'
 
+export const ACCESS_TOKENS = Symbol('AccessTokens')
+
 export const ACCESS_SECONDS = 900
 export const REFRESH_MILLISECONDS = 90 * 24 * 60 * 60 * 1_000
 export const CODE_MILLISECONDS = 10 * 60 * 1_000

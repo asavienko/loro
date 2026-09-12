@@ -8,7 +8,7 @@ import {
   type JWTPayload,
 } from 'jose'
 import { OAuthIdentityProvider } from './provider.js'
-import type { AuthSettings } from './settings.js'
+import type { OAuthDeploymentSettings } from './settings.js'
 let rsa: Awaited<ReturnType<typeof generateKeyPair>>
 let provider: OAuthIdentityProvider
 const now = 1_788_000_000_000
@@ -19,7 +19,7 @@ beforeAll(async () => {
   const keys = createLocalJWKSet({
     keys: [{ ...(await exportJWK(rsa.publicKey)), alg: 'RS256', kid: 'test' }],
   })
-  const settings: AuthSettings = {
+  const settings: OAuthDeploymentSettings = {
     databaseUrl: '',
     publicUrl: 'https://api.example.com',
     redirects: [],

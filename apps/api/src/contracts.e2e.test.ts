@@ -1,44 +1,18 @@
 /** F-04: unchanged content/AI contracts plus the implemented authenticated target sync. */
-import { Test } from '@nestjs/testing'
-import type { ExecutionContext, INestApplication } from '@nestjs/common'
+import type { INestApplication } from '@nestjs/common'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { currentOperations, ProblemSchema, ReadinessSchema } from '@loro/core/api/current'
 import { targetOperations } from '@loro/core/api/target'
-import { AppModule } from './app.module.js'
-import { AuthGuard, type AuthenticatedRequest } from './auth/auth.guard.js'
-import { ProblemDetailsFilter } from './common/problem-filter.js'
-import { DATABASE } from './database/database.js'
-import { InMemorySyncRepository } from './sync/testing/sync.repository.memory.js'
-import { SYNC_REPOSITORY } from './sync/sync.repository.js'
 import { mergeAvailable } from './sync/merge.js'
 import * as mergeModule from './sync/merge.js'
+import { createTestApp, withTestPrincipal } from './testing/create-test-app.js'
 
 let app: INestApplication
 let base: string
 beforeAll(async () => {
-  const module = await Test.createTestingModule({ imports: [AppModule] })
-    .overrideProvider(SYNC_REPOSITORY)
-    .useValue(new InMemorySyncRepository())
-    .overrideProvider(DATABASE)
-    .useValue({ ready: () => Promise.resolve(true) })
-    .overrideGuard(AuthGuard)
-    .useValue({
-      canActivate(context: ExecutionContext) {
-        const request = context.switchToHttp().getRequest<AuthenticatedRequest>()
-        request.principal = {
-          userId: 'contract-learner',
-          deviceId: 'contract-device',
-          sessionId: 'contract-session',
-        }
-        return true
-      },
-    })
-    .compile()
-  app = module.createNestApplication()
-  app.setGlobalPrefix('v1')
-  app.useGlobalFilters(new ProblemDetailsFilter())
-  await app.listen(0, '127.0.0.1')
-  base = await app.getUrl()
+  const started = await createTestApp(withTestPrincipal)
+  app = started.app
+  base = started.base
 })
 afterAll(async () => {
   await app.close()

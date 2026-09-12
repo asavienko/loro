@@ -1,15 +1,9 @@
 /** F-04: exercise authenticated sync through the real HTTP routing and Rust merge. */
-import { Test } from '@nestjs/testing'
-import type { ExecutionContext, INestApplication } from '@nestjs/common'
+import type { INestApplication } from '@nestjs/common'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { PullResponseSchema, PushResponseSchema } from '@loro/core/api/target'
-import { AppModule } from '../app.module.js'
-import { AuthGuard, type AuthenticatedRequest } from '../auth/auth.guard.js'
-import { ProblemDetailsFilter } from '../common/problem-filter.js'
-import { DATABASE } from '../database/database.js'
+import { createTestApp, withTestPrincipal } from '../testing/create-test-app.js'
 import { mergeAvailable } from './merge.js'
-import { InMemorySyncRepository } from './testing/sync.repository.memory.js'
-import { SYNC_REPOSITORY } from './sync.repository.js'
 
 const id = (n: number) => `0197f2a0-0000-7000-8000-${String(n).padStart(12, '0')}`
 const value = <T>(v: T, at = 1000) => ({ v, hlc: `${at}:0000:device-a` })
@@ -23,36 +17,18 @@ describe('the API over HTTP', () => {
   let unauthBase: string
 
   beforeAll(async () => {
-    const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
-      .overrideProvider(SYNC_REPOSITORY)
-      .useValue(new InMemorySyncRepository())
-      .overrideProvider(DATABASE)
-      .useValue({ ready: () => Promise.resolve(true) })
-      .overrideGuard(AuthGuard)
-      .useValue({
-        canActivate(context: ExecutionContext) {
-          const request = context.switchToHttp().getRequest<AuthenticatedRequest>()
-          request.principal = {
-            userId: 'http-learner',
-            deviceId: 'http-device',
-            sessionId: 'http-session',
-          }
-          return true
-        },
-      })
-      .compile()
-    app = moduleRef.createNestApplication()
-    app.setGlobalPrefix('v1')
-    app.useGlobalFilters(new ProblemDetailsFilter())
-    await app.listen(0, '127.0.0.1')
-    base = await app.getUrl()
-
-    const actual = await Test.createTestingModule({ imports: [AppModule] }).compile()
-    unauthed = actual.createNestApplication()
-    unauthed.setGlobalPrefix('v1')
-    unauthed.useGlobalFilters(new ProblemDetailsFilter())
-    await unauthed.listen(0, '127.0.0.1')
-    unauthBase = await unauthed.getUrl()
+    const started = await createTestApp((builder) =>
+      withTestPrincipal(builder, {
+        userId: 'http-learner',
+        deviceId: 'http-device',
+        sessionId: 'http-session',
+      }),
+    )
+    app = started.app
+    base = started.base
+    const open = await createTestApp()
+    unauthed = open.app
+    unauthBase = open.base
   })
 
   afterAll(async () => {

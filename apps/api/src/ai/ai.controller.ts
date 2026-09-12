@@ -1,4 +1,5 @@
 import type { LanguagePair } from '@loro/core'
+import { PendingAccountIsolation } from '../common/account-isolation.js'
 import { LoroError } from '../common/errors.js'
 import { Body, Controller, Get, Inject, Post } from '@nestjs/common'
 import { AiService } from './ai.service.js'
@@ -21,6 +22,7 @@ interface ThemesResponse {
   provider: string
 }
 
+@PendingAccountIsolation()
 @Controller('ai')
 export class AiController {
   // Explicit @Inject: the dev runner is esbuild-based and does not emit

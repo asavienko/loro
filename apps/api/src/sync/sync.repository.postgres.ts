@@ -1,5 +1,8 @@
 import { randomBytes } from 'node:crypto'
-import { Inject, Injectable } from '@nestjs/common'
+import { Inject, Injectable, Optional } from '@nestjs/common'
+import { RATE_LIMITS } from '../common/errors.js'
+import { windowMs, RATE_LIMIT_STORE, type RateLimitStore } from '../common/rate-limit.js'
+import { PostgresRateLimitStore } from '../common/rate-limit.postgres.js'
 import { DATABASE, type SqlConnection, type SqlDatabase } from '../database/database.js'
 import type { StoredRow } from './merge.js'
 import type {
@@ -13,17 +16,24 @@ import type {
 
 @Injectable()
 export class PostgresSyncRepository implements SyncRepository {
-  constructor(@Inject(DATABASE) private readonly database: SqlDatabase) {}
+  private readonly limits: RateLimitStore
+
+  constructor(
+    @Inject(DATABASE) private readonly database: SqlDatabase,
+    @Optional() @Inject(RATE_LIMIT_STORE) limits?: RateLimitStore,
+  ) {
+    this.limits = limits ?? new PostgresRateLimitStore(database)
+  }
+
   async consume(userId: string, now: number): Promise<boolean> {
-    const result = await this.database.query<{ count: number }>(
-      `INSERT INTO auth_rate_limits(bucket,count,expires_at) VALUES($1,1,$2)
-       ON CONFLICT(bucket) DO UPDATE SET
-       count=CASE WHEN auth_rate_limits.expires_at<=$3 THEN 1 ELSE auth_rate_limits.count+1 END,
-       expires_at=CASE WHEN auth_rate_limits.expires_at<=$3 THEN $2 ELSE auth_rate_limits.expires_at END
-       RETURNING count`,
-      [`sync:${userId}`, now + 60_000, now],
-    )
-    return (result.rows[0]?.count ?? 121) <= 120
+    const decision = await this.limits.consume({
+      key: `sync:${userId}`,
+      limit: RATE_LIMITS.sync.perUser,
+      windowMs: windowMs(RATE_LIMITS.sync.windowMinutes),
+      now,
+      algorithm: 'expire-reset',
+    })
+    return decision.allowed
   }
   transaction<T>(userId: string, work: (tx: SyncTransaction) => Promise<T>): Promise<T> {
     return this.database.transaction(async (db) => {

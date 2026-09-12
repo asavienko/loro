@@ -26,8 +26,7 @@ export const config = {
    */
   aiProvider: (): string => process.env['AI_PROVIDER'] ?? 'stub',
   aiApiKey: (): string | undefined => process.env['ANTHROPIC_API_KEY'],
-  aiSuggestModel: (): string =>
-    process.env['AI_MODEL_TRANSLATE'] ?? 'claude-haiku-4-5-20251001',
+  aiSuggestModel: (): string => process.env['AI_MODEL_TRANSLATE'] ?? 'claude-haiku-4-5-20251001',
 
   /** Lyrics model selector only. Never used to pick ElevenLabs Music. */
   musicProvider: (): string => process.env['MUSIC_PROVIDER'] ?? 'stub',
@@ -44,7 +43,19 @@ export const config = {
   /** Reported by `/health`. `npm_package_version` is set by the package manager. */
   appVersion: (): string => process.env['npm_package_version'] ?? '0.0.0',
 
-  port: (): number => Number(process.env['PORT'] ?? 3000),
+  /** Raw listen port. TTS download fallbacks keep the string form. */
+  listenPort: (): string => process.env['PORT'] ?? '3000',
+  port: (): number => Number(config.listenPort()),
+
+  /** Trimmed public origin; whitespace-only is unset so Host echoing still works. */
+  publicUrl: (): string | undefined => {
+    const value = process.env['AUTH_PUBLIC_URL']?.trim()
+    if (!value) return undefined
+    return value
+  },
+
+  /** Production TTS download fallback when no public URL or Host is available. */
+  authIssuer: (): string => process.env['AUTH_ISSUER'] ?? 'https://api.loro.app',
 
   databaseUrl: (): string | undefined => process.env['DATABASE_URL'],
   allowedOrigins: (): string[] =>
@@ -73,8 +84,11 @@ export const config = {
     applePrivateKey: process.env['APPLE_PRIVATE_KEY'],
   }),
 
-  /** Shared session engine for native identity proof, email and browser OAuth. */
-  authSettings: () => {
+  /**
+   * Session/token engine: signing keys, issuer, and native/email audiences.
+   * Browser OAuth deployment (redirects, client secrets) is `oauthDeploymentSettings()`.
+   */
+  sessionAuthSettings: (): SessionAuthSettings => {
     const oauth = config.oauthSettings()
     return {
       enabled: oauth.enabled === 'false' ? false : undefined,
@@ -119,3 +133,18 @@ export const config = {
 
   ttsCacheDir: (): string => process.env['TTS_CACHE_DIR'] ?? join(tmpdir(), 'loro-tts-cache'),
 } as const
+
+/** Session/token settings. Distinct from browser OAuth deployment settings. */
+export interface SessionAuthSettings {
+  enabled?: boolean | undefined
+  privateKeyPem: string | undefined
+  signingKey?: string | undefined
+  issuer: string
+  audience: string
+  keyId: string
+  emailHashKey: string | undefined
+  magicDeliveryUrl: string | undefined
+  magicDeliveryToken: string | undefined
+  googleClientIds: string[]
+  appleClientIds: string[]
+}

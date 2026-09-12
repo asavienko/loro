@@ -2,7 +2,8 @@
 import type { OAuthProvider } from '@loro/core/api/oauth'
 import { config } from '../common/config.js'
 import { AccessTokens } from './auth.tokens.js'
-export interface AuthSettings {
+/** Browser OAuth deployment: public URL, redirects, and provider client secrets. */
+export interface OAuthDeploymentSettings {
   databaseUrl: string
   publicUrl: string
   redirects: string[]
@@ -47,7 +48,7 @@ export function isAllowedAuthRedirect(redirect: string, url = new URL(redirect))
   )
 }
 
-export function authSettings(): AuthSettings | undefined {
+export function oauthDeploymentSettings(): OAuthDeploymentSettings | undefined {
   const raw = config.oauthSettings()
   if (raw.enabled !== 'true') return undefined
   const required = (name: string, value: string | undefined): string => {
@@ -62,9 +63,10 @@ export function authSettings(): AuthSettings | undefined {
       'AUTH_PUBLIC_URL requires an exact HTTPS origin, or loopback HTTP in development',
     )
   const signingKey = raw.signingKey ?? ''
-  if (!config.authSettings().privateKeyPem && Buffer.byteLength(signingKey) < 32)
+  const session = config.sessionAuthSettings()
+  if (!session.privateKeyPem && Buffer.byteLength(signingKey) < 32)
     throw new Error('AUTH_SIGNING_KEY requires at least 32 bytes')
-  new AccessTokens(config.authSettings())
+  new AccessTokens(session)
   const redirects = required('AUTH_REDIRECT_URIS', raw.redirectsRaw)
     .split(',')
     .map((v) => v.trim())
@@ -88,7 +90,10 @@ export function authSettings(): AuthSettings | undefined {
     applePrivateKey: (raw.applePrivateKey ?? '').replace(/\\n/g, '\n'),
   }
 }
-export function providerEnabled(settings: AuthSettings, provider: OAuthProvider): boolean {
+export function providerEnabled(
+  settings: OAuthDeploymentSettings,
+  provider: OAuthProvider,
+): boolean {
   return provider === 'google'
     ? Boolean(settings.googleClientId && settings.googleClientSecret)
     : Boolean(

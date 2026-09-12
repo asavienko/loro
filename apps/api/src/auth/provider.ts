@@ -1,6 +1,6 @@
 import { importPKCS8, jwtVerify, SignJWT, type JWTVerifyGetKey } from 'jose'
 import type { OAuthProvider } from '@loro/core/api/oauth'
-import type { AuthSettings } from './settings.js'
+import type { OAuthDeploymentSettings } from './settings.js'
 import { APPLE_ISSUER, GOOGLE_ISSUER, IDENTITY_ISSUERS, identityJwks } from './jwks.js'
 
 const GOOGLE_AUTH = `${GOOGLE_ISSUER}/o/oauth2/v2/auth`
@@ -25,7 +25,7 @@ export interface OAuthIdentity {
 }
 export class OAuthIdentityProvider implements OAuthIdentity {
   constructor(
-    private readonly settings: AuthSettings,
+    private readonly settings: OAuthDeploymentSettings,
     private readonly keys: { google: JWTVerifyGetKey; apple: JWTVerifyGetKey } = {
       google: identityJwks('google'),
       apple: identityJwks('apple'),
