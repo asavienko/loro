@@ -98,7 +98,7 @@ export default function Refrain() {
       : entry.kind === 'ready'
         ? entry.wave.key
         : (scheduledWave ?? PRODUCTION_WAVES[0])
-  const session = useRefrainSession(selectedWave, true)
+  const session = useRefrainSession(selectedWave)
   const { set, phrase, mode, auto, dayReps, locked, phraseNumber, wave } = session
   const targetLocale = useApp((state) => state.targetLocale)
   const audio = useAudioSpeech(targetLocale, phrase?.catalog?.audio)
@@ -107,7 +107,7 @@ export default function Refrain() {
   const leaveLabel = copy.nav.exit.leave
   const hasActiveSession = set.length > 0 && !session.finished && phrase !== undefined
   useEffect(() => {
-    // The session-only exit is present only while the sheet it opens is mounted. Cold, locked
+    // The session-only exit is present only while the sheet it opens is mounted. Cold, empty
     // and terminal Refrain entries retain the shared Today/Back stack exit.
     navigation.setOptions({
       headerLeft: () =>
