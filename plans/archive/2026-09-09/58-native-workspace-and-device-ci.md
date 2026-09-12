@@ -55,17 +55,15 @@ modules, generated native projects, UniFFI bindings, device SQLite, permissions,
 1. [ ] Extend the local harness to clean iOS app compilation and supported device floors; retain
        reproducible prebuild, generated-binding and artifact checks.
 2. [ ] Automate physical-device permissions, bridge, persistence, lifecycle and interruption checks
-       with logs/screenshots; document required voice/model installation. Plan 101 wave-path rows
-       (`stream-to-phrase-refrain`, `menu-hard-refrain`, `practice-back-swipe-disabled`) are
-       declared on the evidence manifest. `pnpm native:evidence --execute-scenarios` drives Today →
-       Stream → phrase Refrain, switcher and More hard-filter, and the practice edge-swipe through
-       adb + uiautomator after first-run onboarding when Today is missing. Linux emulator
-       `emulator-5554` (AVD `loro-wave`, API 36) passed those three rows on preview APK
-       `1269b1640798` with chrome plus the exact URL
-       (`.local-builds/native-evidence/wave-101-emulator-v3/`). That is not physical-device,
-       interruption, speech, or iOS proof. Missing device or matching URL stays `unavailable` or
-       `failed`. iOS `--execute-scenarios` records the same rows unavailable and does not abort
-       collection. A screenshot collector must not mark those rows passed.
+       with logs/screenshots; document required voice/model installation. Plan 101/93 wave-path rows
+       (pointer, spine/sheet, and TalkBack `-at` variants) are declared on the evidence manifest.
+       `pnpm native:evidence --execute-scenarios` drives them through adb + uiautomator after
+       first-run onboarding when Today is missing. Linux emulator `emulator-5554` (AVD `loro-wave`,
+       API 36) passed all eight rows on preview APK `b0b4e3b77746` with chrome plus the exact URL or
+       gesture proof (`.local-builds/native-evidence/wave-101-emulator-v6/`). That is not
+       physical-device, interruption, speech, or iOS proof. Missing device or matching evidence
+       stays `unavailable` or `failed`. iOS `--execute-scenarios` records the same rows unavailable
+       and does not abort collection. A screenshot collector must not mark those rows passed.
 3. [ ] Validate minimum OS floors and clean regeneration on supported hosts. Add platform modules
        for widgets/OCR/purchases only with their owning feature.
 4. [ ] Complete production signing/provisioning and environment-safe release profiles when store
