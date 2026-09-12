@@ -282,12 +282,20 @@ function isStreamChrome(dump) {
   return dumpHas(dump, STREAM_PRACTICE) || dumpHas(dump, STREAM_WAVE) || dumpHas(dump, STREAM_TITLE)
 }
 
+function isSessionExitChrome(dump) {
+  return (
+    STREAM_EXIT_MARKERS.some((marker) => dumpHas(dump, marker)) ||
+    PRACTICE_EXIT_MARKERS.some((marker) => dumpHas(dump, marker))
+  )
+}
+
 function isPracticeChrome(dump) {
   return (
     isStreamChrome(dump) ||
     isPhraseChrome(dump) ||
     isHardChrome(dump) ||
-    dumpHas(dump, REFRAIN_TITLE)
+    dumpHas(dump, REFRAIN_TITLE) ||
+    isSessionExitChrome(dump)
   )
 }
 
@@ -959,18 +967,21 @@ function runBackSwipe(ctx) {
     })
     if (result.status !== 'passed') return scenarioResult(scenario, result)
   }
-  const hardware = pressAndroidBack(ctx)
-  if (hardware) return scenarioResult(scenario, { status: 'unavailable', notes: hardware })
-  waitForUi(ctx.run, ctx.waitMs)
-  const afterBack = dumpUi(ctx, 'swipe-after-hardware-back')
-  if (afterBack.error)
-    return scenarioResult(scenario, { status: 'unavailable', notes: afterBack.error })
+  let waveSheet = after
+  if (!STREAM_EXIT_MARKERS.some((marker) => dumpHas(after.xml, marker))) {
+    const hardware = pressAndroidBack(ctx)
+    if (hardware) return scenarioResult(scenario, { status: 'unavailable', notes: hardware })
+    waitForUi(ctx.run, ctx.waitMs)
+    waveSheet = dumpUi(ctx, 'swipe-after-hardware-back')
+    if (waveSheet.error)
+      return scenarioResult(scenario, { status: 'unavailable', notes: waveSheet.error })
+  }
   const openedWave = evaluateStreamExitBack({
     beforeDump: before.xml,
-    afterDump: afterBack.xml,
+    afterDump: waveSheet.xml,
   })
   if (openedWave.status !== 'passed') return scenarioResult(scenario, openedWave)
-  const dismissedWave = tapLabel(ctx, afterBack.xml, KEEP_GOING)
+  const dismissedWave = tapLabel(ctx, waveSheet.xml, KEEP_GOING)
   if (dismissedWave) return scenarioResult(scenario, { status: 'failed', notes: dismissedWave })
   waitForUi(ctx.run, ctx.waitMs)
   const afterKeepGoing = dumpUi(ctx, 'stream-after-keep-going')
@@ -994,7 +1005,7 @@ function runBackSwipe(ctx) {
   return scenarioResult(scenario, {
     status: 'passed',
     notes:
-      'Edge and full-screen swipes left the session; Android Back opened the wave sheet, then the phrase-drill sheet.',
+      'Edge and full-screen swipes stayed on the session; the wave sheet then the phrase-drill sheet opened on session exit.',
   })
 }
 
