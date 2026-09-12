@@ -122,6 +122,11 @@ melody).
 **Screens:** [Today](functional-spec.md#11-today--the-ritual) ·
 [The Refrain](functional-spec.md#12-the-refrain)
 
+**Production (plan 101).** Authored Loop B keeps Refrain as the v1 hero. The running app starts the
+daily wave in Stream; Refrain is a targeted phrase drill or the menu’s difficult-only list. See
+[functional-spec §11–12](functional-spec.md#11-today--the-ritual) and
+[screen-catalog](../design/screen-catalog.md). The `design/**/*.dc.html` artifacts are not edited.
+
 **Shape.** Five phrases. Three waves across the day. Each phrase gets 6 reps, and the _manner_
 rotates every rep: Echo → Chorus → Speed → Cloze → Call → Cold. The screen shows automaticity
 climbing and effort dropping until the phrase **locks in**. Four days of lock-in and it graduates,
