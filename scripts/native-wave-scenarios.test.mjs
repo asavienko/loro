@@ -7,6 +7,7 @@ import {
   evaluatePracticeHardwareBack,
   evaluatePracticeGestureDisabledDump,
   evaluateRefrainExitBack,
+  evaluateStreamExitBack,
   evaluateStreamPhraseDump,
   evaluateOnboardedHome,
   evaluateSheetBackDismiss,
@@ -89,6 +90,17 @@ const PRACTICE_DUMP = `<?xml version="1.0"?>
   <node class="android.widget.FrameLayout">
     <node class="android.widget.TextView" text="This wave" bounds="[24,80][360,128]"/>
     <node class="android.widget.TextView" text="The Stream" bounds="[24,140][360,188]"/>
+  </node>
+</hierarchy>`
+
+const STREAM_EXIT_DUMP = `<?xml version="1.0"?>
+<hierarchy>
+  <node class="android.widget.FrameLayout">
+    <node class="android.widget.TextView" text="This wave" bounds="[24,80][360,128]"/>
+    <node class="android.widget.TextView" text="The Stream" bounds="[24,140][360,188]"/>
+    <node class="android.widget.TextView" text="Leave this wave?" bounds="[24,400][360,448]"/>
+    <node class="android.widget.Button" text="Pause the wave" clickable="true" bounds="[24,460][360,516]"/>
+    <node class="android.widget.Button" text="Keep going" clickable="true" bounds="[24,520][360,576]"/>
   </node>
 </hierarchy>`
 
@@ -475,7 +487,7 @@ test('Android Back and backdrop dismiss close the switcher on Today', () => {
   )
 })
 
-test('hardware Back stays on Stream and opens the Refrain exit sheet', () => {
+test('hardware Back opens the Stream wave sheet and the Refrain practice sheet', () => {
   assert.equal(
     evaluatePracticeHardwareBack({ beforeDump: PRACTICE_DUMP, afterDump: PRACTICE_DUMP }).status,
     'passed',
@@ -483,6 +495,29 @@ test('hardware Back stays on Stream and opens the Refrain exit sheet', () => {
   assert.equal(
     evaluatePracticeHardwareBack({ beforeDump: PRACTICE_DUMP, afterDump: TODAY_DUMP }).status,
     'failed',
+  )
+  assert.equal(
+    evaluateStreamExitBack({
+      beforeDump: PRACTICE_DUMP,
+      afterDump: STREAM_EXIT_DUMP,
+    }).status,
+    'passed',
+  )
+  assert.equal(
+    evaluateStreamExitBack({
+      beforeDump: PRACTICE_DUMP,
+      afterDump: PRACTICE_DUMP,
+    }).status,
+    'failed',
+    'staying on Stream without Pause the wave is not the wave sheet',
+  )
+  assert.equal(
+    evaluateStreamExitBack({
+      beforeDump: PRACTICE_DUMP,
+      afterDump: REFRAIN_EXIT_DUMP,
+    }).status,
+    'failed',
+    'the Refrain practice sheet is not the Stream wave sheet',
   )
   assert.equal(
     evaluateRefrainExitBack({
@@ -568,12 +603,14 @@ function scriptedDevice({
     if (stage === 'menu') return MENU_DUMP
     if (stage === 'more') return MORE_DUMP
     if (stage === 'hard') return hardDump
+    if (stage === 'stream-exit') return STREAM_EXIT_DUMP
     if (stage === 'exit') return REFRAIN_EXIT_DUMP
     return streamDump
   }
   const applyTap = (tapY) => {
     if (stage === 'today') stage = tapY < 200 ? 'menu' : 'stream'
     else if (stage === 'stream') stage = 'phrase'
+    else if (stage === 'stream-exit') stage = 'stream'
     else if (stage === 'menu') stage = tapY < 80 ? 'today' : 'hard'
     else if (stage === 'more') stage = 'hard'
   }
@@ -610,6 +647,7 @@ function scriptedDevice({
     }
     if (joined.includes('KEYCODE_BACK')) {
       if (stage === 'menu') stage = 'today'
+      else if (stage === 'stream') stage = 'stream-exit'
       else if (stage === 'phrase') stage = 'exit'
       return { status: 0, stdout: '' }
     }
