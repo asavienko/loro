@@ -47,7 +47,7 @@ export interface RefrainSession {
  * RefrainEngine's decisions — the screen used to re-derive them, which is how the
  * card's warmth and the stored value came to disagree.
  */
-export function useRefrainSession(wave: ProductionWave, enabled: boolean): RefrainSession {
+export function useRefrainSession(wave: ProductionWave): RefrainSession {
   const phrases = useApp((s) => s.phrases)
   const refrainSet = useApp((s) => s.refrainSet)
   const applyDelta = useApp((s) => s.applyDelta)
@@ -63,11 +63,9 @@ export function useRefrainSession(wave: ProductionWave, enabled: boolean): Refra
   // Entering the Refrain is one of the moments the day must be re-checked: a learner who
   // opened the app before midnight and starts practising after it needs today's set.
   useEffect(() => {
-    if (!enabled) return
     ensureRefrainSet()
-  }, [enabled, ensureRefrainSet])
+  }, [ensureRefrainSet])
   useEffect(() => {
-    if (!enabled) return
     if (useApp.getState().refrainResume.session !== null) return
     let cancelled = false
     void refrainEngine
@@ -84,7 +82,7 @@ export function useRefrainSession(wave: ProductionWave, enabled: boolean): Refra
     }
     // Re-planned when the day's set changes, not on every rep: the plan is the day's
     // work, and re-planning mid-phrase would restart the mode sequence.
-  }, [enabled, refrainSet, targetLocale, beginRefrainSession, showToast])
+  }, [refrainSet, targetLocale, beginRefrainSession, showToast])
   const item = session?.plan.items[cursor]
   const storePhrase = useMemo(
     () => (item === undefined ? undefined : phrases.find((p) => p.id === item.phraseId)),

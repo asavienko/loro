@@ -92,7 +92,7 @@ describe('forward migration of both native preview histories', () => {
     )
     const before = driver.all('SELECT * FROM user_phrase')
     const queued = driver.all('SELECT * FROM outbox')
-    expect(migrate(driver, AT + 1).applied).toEqual([4, 5])
+    expect(migrate(driver, AT + 1).applied).toEqual([4, 5, 6])
     expect(driver.all('SELECT * FROM user_phrase')).toEqual(before)
     expect(driver.all('SELECT * FROM outbox')).toEqual(
       queued.map((row) => ({ ...row, replaces: null })),
@@ -112,7 +112,7 @@ describe('forward migration of both native preview histories', () => {
     const driver = preview(4)
     seedPhrase(driver)
     const before = driver.all('SELECT * FROM user_phrase')[0]
-    expect(migrate(driver, AT + 1).applied).toEqual([5])
+    expect(migrate(driver, AT + 1).applied).toEqual([5, 6])
     expect(driver.all('SELECT * FROM user_phrase')[0]).toEqual({
       ...before,
       srs_algorithm: 'fsrs-6/py-fsrs-6.3.2/default-90-no-steps',

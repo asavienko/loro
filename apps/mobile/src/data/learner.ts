@@ -223,6 +223,7 @@ export function createLearnerStorage(database: RuntimeDatabase, clock: Clock): L
               setIds: course.refrainSet,
               waves: course.refrainWaves,
               substituted: course.refrainSubstituted,
+              listenCounts: course.waveListens,
             })
             const nextDay: LearnerFieldValues = {
               targetLocale,

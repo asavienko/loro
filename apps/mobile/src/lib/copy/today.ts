@@ -28,6 +28,8 @@ export const todayCopy = {
     },
     nextWave: (manner: string, phrases: number): string =>
       message('today.day.nextWave', { manner, phrases }),
+    waveListenProgress: (heard: number, total: number): string =>
+      message('today.day.waveListenProgress', { heard, total }),
     get completed() {
       return message('today.day.completed')
     },
@@ -98,9 +100,8 @@ export const todayCopy = {
     get resumeRefrain() {
       return message('today.cta.resumeRefrain')
     },
-    waitForWave: (time: string): string => message('today.cta.waitForWave', { time }),
-    get complete() {
-      return message('today.cta.complete')
+    get keepListening() {
+      return message('today.cta.keepListening')
     },
   },
 }
