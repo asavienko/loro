@@ -1,7 +1,7 @@
 //! One checked JSON boundary shared by WASM and Expo's synchronous native module.
 //! Algorithms remain in their owning Rust modules; this module only decodes inputs.
 
-use crate::{asr, fsrs, rank, select, sync, Difficulty, Tag};
+use crate::{asr, fsrs, graph, rank, select, sync, Difficulty, Tag};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 /// A rejected call never substitutes a schedule or a successful production gate.
@@ -128,6 +128,15 @@ struct AutomaticityInput {
     reps: u32,
     target: u32,
 }
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct AssocOrderInput {
+    anchor: graph::AssocAnchor,
+    candidates: Vec<graph::AssocCandidate>,
+    edges: Vec<graph::AssocEdge>,
+    #[serde(default)]
+    highest_owned_cefr: Option<graph::Cefr>,
+}
 
 /// Invoke a canonical operation with JSON arguments and a JSON result.
 ///
@@ -142,6 +151,7 @@ pub fn core_call(method: String, input: String) -> Result<String, CoreError> {
             let p: OrderStreamInput = parse(&input)?;
             output(&rank::order_stream_candidates(&p.candidates, p.now))
         }
+        "assoc_order" => assoc_order(&input),
         "stream_rank" => {
             let p: RankInput = parse(&input)?;
             output(&rank::stream_rank_values(
@@ -225,6 +235,21 @@ pub fn core_call(method: String, input: String) -> Result<String, CoreError> {
     }
 }
 
+fn assoc_order(input: &str) -> Result<String, CoreError> {
+    let p: AssocOrderInput = parse(input)?;
+    output(
+        &graph::order_association(
+            &p.anchor,
+            &p.candidates,
+            &p.edges,
+            &graph::AssocProfile {
+                highest_owned_cefr: p.highest_owned_cefr,
+            },
+        )
+        .map_err(invalid)?,
+    )
+}
+
 fn advance_clock(method: &str, input: &str) -> Result<String, CoreError> {
     let p: ClockInput = parse(input)?;
     if p.node_id.is_empty() || p.node_id.contains(':') || p.wall_ms < 0 {
@@ -273,6 +298,14 @@ mod tests {
         )
         .unwrap();
         assert!(result.contains("\"complete\":false"));
+    }
+    #[test]
+    fn association_order_fails_closed_on_empty_ids() {
+        let err = core_call(
+            "assoc_order".into(),
+            r#"{"anchor":{"id":"din1","difficulty":"med","tags":[],"theme":"Dining"},"candidates":[{"id":"","theme":"Dining","hasAudio":false,"hasRespIpa":false,"hasSyl":false,"hasHint":false,"catalogIndex":0,"ownedInTheme":0}],"edges":[]}"#.into(),
+        );
+        assert!(err.is_err());
     }
     #[test]
     fn boundary_uses_canonical_hlc_wire_and_monotonicity() {
