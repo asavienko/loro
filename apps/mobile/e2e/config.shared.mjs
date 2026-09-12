@@ -21,6 +21,9 @@ export const accountEnvironment = {
   ...process.env,
   EXPO_NO_TELEMETRY: '1',
   EXPO_PUBLIC_API_URL: 'https://auth.loro.test/v1',
+  // The ordinary locator suite is English. Pseudo-locale has its own config;
+  // do not inherit EXPO_PUBLIC_PSEUDO_LOCALE from the runner environment.
+  EXPO_PUBLIC_PSEUDO_LOCALE: '0',
 }
 
 /**

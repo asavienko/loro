@@ -88,7 +88,7 @@ describe('F-08 language persistence', () => {
     )
     const beforeOutbox = driver.all('SELECT * FROM outbox')
     const beforeTables = driver.all('SELECT * FROM settings')
-    expect(migrate(driver, AT).applied).toEqual([2, 3, 4, 5])
+    expect(migrate(driver, AT).applied).toEqual([2, 3, 4, 5, 6])
     const db = openSqlPersistence(driver, () => 'new', AT)
     expect(db.settings.load()?.onboarded).toBe(true)
     expect(db.refrainDay.latest()?.setIds).toEqual(['old-id'])

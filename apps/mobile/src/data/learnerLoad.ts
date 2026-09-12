@@ -21,6 +21,7 @@ export function snapshotCourse(state: AppData): CourseState {
     refrainResume: state.refrainResume,
     refrainDay: state.refrainDay,
     refrainWaves: state.refrainWaves,
+    waveListens: state.waveListens,
     refrainSet: state.refrainSet,
     refrainSubstituted: state.refrainSubstituted,
   }
@@ -115,6 +116,7 @@ export function loadLearnerData(database: RuntimeDatabase, clock: Clock): AppDat
       refrainSet: day?.setIds.filter((id) => ids.has(id)) ?? [],
       refrainDay: day?.localDay ?? null,
       refrainWaves: day?.waves ?? [],
+      waveListens: { ...(day?.listenCounts ?? {}) },
       refrainSubstituted: day?.substituted.filter((id) => ids.has(id)) ?? [],
     }
     const course = courses[targetLocale]

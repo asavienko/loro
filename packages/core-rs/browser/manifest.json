@@ -1,7 +1,7 @@
 {
-  "sourceDigest": "ff4fbc0d6d4f9e18ff700e93333ec714a71ea2b5b62f2eda68669ea09e1df0a6",
+  "sourceDigest": "a55ffdd8b10876cb9f285cce7d09f99deec81cd73d0b95bb2e1a3919fbb63911",
   "outputs": {
-    "loro_core.js": "1a4e01b8d61d04e094b59a4031abc9c6ff3eff0073dae9cf7aefcb47954b4882",
+    "loro_core.js": "fbd4877e1565cfd9ffb1cac08a795619c8dec2933c83cf7efe504c5c0507b3a8",
     "loro_core.d.ts": "df139d013ddf98c94675f0ba63a52c16ae0799f570832e9eb12c63513db80abc"
   }
 }

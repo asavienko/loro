@@ -504,6 +504,45 @@ describe("the day's Refrain set", () => {
     expect(store.getState().refrainSet).toHaveLength(3)
   })
 
+  it('completes a wave after ten phrases are heard three times and keeps listening open', () => {
+    const { store } = withDay('2026-07-28')
+    for (let i = 0; i < 10; i += 1) {
+      store.getState().addOwnPhrase({ targetText: `Hola ${i}`, translation: `Hi ${i}` })
+    }
+    const ids = store.getState().phrases.map((phrase) => phrase.id)
+    expect(ids).toHaveLength(10)
+    for (const id of ids) {
+      store.getState().recordPlay(id)
+      store.getState().recordPlay(id)
+    }
+    expect(store.getState().refrainWaves).toEqual([])
+    for (const id of ids) store.getState().recordPlay(id)
+    expect(store.getState().refrainWaves).toEqual(['morning'])
+    const extra = store.getState().phrases[0]?.id
+    if (extra !== undefined) store.getState().recordPlay(extra)
+    expect(store.getState().refrainWaves).toEqual(['morning'])
+    expect(store.getState().waveListens[extra ?? '']).toBe(4)
+  })
+
+  it('credits a listen quota earned after a finished Refrain set', () => {
+    const { store } = withDay('2026-07-28')
+    for (let i = 0; i < 10; i += 1) {
+      store.getState().addOwnPhrase({ targetText: `Hola ${i}`, translation: `Hi ${i}` })
+    }
+    store.getState().ensureRefrainSet()
+    store.getState().completeRefrainWave('morning', store.getState().refrainResume)
+    expect(store.getState().refrainWaves).toEqual(['morning'])
+
+    // Ten more phrases heard three times each is a second showing-up, so it finishes the
+    // next slot. Crediting it against the Refrain's own wave would spend the quota twice.
+    for (const id of store.getState().phrases.map((phrase) => phrase.id)) {
+      store.getState().recordPlay(id)
+      store.getState().recordPlay(id)
+      store.getState().recordPlay(id)
+    }
+    expect(store.getState().refrainWaves).toEqual(['morning', 'midday'])
+  })
+
   it('records a completed wave once and clears it with the next frozen day', () => {
     const { store, setDay } = withDay('2026-07-28')
     seedThree(store)

@@ -32,6 +32,15 @@ Five independent mechanisms, one per progress signal:
 | [The ladder](#4-the-ladder--loop-c)     | How deeply is this owned?                | RunEngine (maintained by all) |
 | [Drops](#5-trip-drops)                  | What unlocks today?                      | TripService                   |
 
+<a id="association-is-not-a-sixth-scheduler"></a>
+
+Discover association after add (P2-04) is **not** a sixth scheduler. It ranks unowned catalog
+neighbors inside authored theme bands. Rust still owns the integer, but the inputs are the
+**anchor** phrase's declared difficulty and tags plus catalog fields — not FSRS due, mastery or
+automaticity of the candidates (they are not yet owned). Owner:
+[plan 101](../../plans/101-phrase-sound-graph.md). Durable model:
+[content-model.md](../product/content-model.md#phrase-relation-graph).
+
 ---
 
 <a id="1-stream-rank"></a>
@@ -242,20 +251,22 @@ Set size comes from the learner's daily-minutes answer: **5 min → 3 · 10 min 
 
 ### Wave times
 
-Three waves (`Loro.dc.html:3306–3310`), spaced for real spacing effects. Defaults 08:00 / 13:00 /
-19:00, learner-adjustable. A wave becomes `ready` at its time and `locked` before it; the day's last
-wave stays available until midnight local. Missing a wave is not a failure — the reps simply move to
-the next one.
+Three waves (`Loro.dc.html:3306–3310`), named for morning / midday / evening. Defaults 08:00 / 13:00
+/ 19:00, learner-adjustable. The clock still marks which slot is current, but a wave is a record
+that the learner showed up — it never locks practice. A wave completes when ten distinct phrases
+have been listened to three times each today; finishing a Refrain set also records the current slot.
+After a wave is done the learner can keep listening to other phrases. Missing a wave is not a
+failure.
 
-The defaults/settings shape and durable completed-wave writes exist today. `refrain_day.waves`
-records finished wave keys per course/day; a clock-passed wave alone never counts as completed.
-Today refreshes at each minute boundary while focused and on foreground return, so its wave labels
-and frozen day follow the real clock without requiring navigation. A midnight refresh uses the
-existing transactional `ensureRefrainSet` path and preserves prior practice history.
+`refrain_day.waves` records finished wave keys per course/day; `listen_counts` holds today's
+per-phrase listens. A clock-passed hour alone never counts as completed. Today refreshes at each
+minute boundary while focused and on foreground return, so its wave labels and frozen day follow the
+real clock without requiring navigation. A midnight refresh uses the existing transactional
+`ensureRefrainSet` path and preserves prior practice history.
 
 `apps/mobile/src/lib/waves.ts` marks the last wave whose time has arrived as next (the first before
-any arrives). This remains presentation: Refrain is reachable at any hour. Timed enforcement,
-notification scheduling, audible orchestration and device acceptance remain plan 64 work.
+any arrives) and always offers an unfinished slot. Notification scheduling, audible orchestration
+and device acceptance remain plan 64 work.
 
 ### Latency
 

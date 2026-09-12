@@ -300,6 +300,7 @@ describe.each(implementations)('%s repositories', (_name, open) => {
       setIds: ['a', 'b', 'c'],
       waves: ['morning', 'midday'],
       substituted: ['c'],
+      listenCounts: { a: 3, b: 1 },
     }
     db.refrainDay.save(row)
     expect(db.refrainDay.load(DAY)).toEqual(row)
@@ -1103,6 +1104,7 @@ describe('across a close and reopen', () => {
       setIds: ['a', 'b', 'c'],
       waves: ['morning', 'midday'],
       substituted: ['c'],
+      listenCounts: { a: 3 },
     }
     const [first, db] = reopen()
     db.refrainDay.save(row)

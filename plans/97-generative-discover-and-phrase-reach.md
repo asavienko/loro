@@ -12,7 +12,8 @@
   archived 96 (account sign-in) are archived. Active phrase-music reuses 96 (unresolved collision).
   Plan 98 owns voice/TTS. Plan 99 owns the online-first listening companion. Archived plan 100 owns
   hygiene/reuse/tooling; active `100-ui-design-system.md` is the motion kit under the same number
-  (unresolved collision). The next new plan is 101.
+  (unresolved collision). Plan 101 owns the phrase-relation graph and Discover association score.
+  The next new plan is 102.
 
 ## Outcome
 
