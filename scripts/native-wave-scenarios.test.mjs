@@ -104,6 +104,16 @@ const STREAM_EXIT_DUMP = `<?xml version="1.0"?>
   </node>
 </hierarchy>`
 
+const STREAM_EXIT_SHEET_ONLY_DUMP = `<?xml version="1.0"?>
+<hierarchy>
+  <node class="android.widget.FrameLayout">
+    <node class="android.widget.Button" content-desc="Dismiss" clickable="true" bounds="[0,0][360,420]"/>
+    <node class="android.widget.TextView" text="Leave this wave?" bounds="[24,400][360,448]"/>
+    <node class="android.widget.Button" text="Pause the wave" clickable="true" bounds="[24,460][360,516]"/>
+    <node class="android.widget.Button" text="Keep going" clickable="true" bounds="[24,520][360,576]"/>
+  </node>
+</hierarchy>`
+
 const TODAY_DUMP = `<?xml version="1.0"?>
 <hierarchy>
   <node class="android.widget.FrameLayout">
@@ -506,6 +516,14 @@ test('hardware Back opens the Stream wave sheet and the Refrain practice sheet',
   assert.equal(
     evaluateStreamExitBack({
       beforeDump: PRACTICE_DUMP,
+      afterDump: STREAM_EXIT_SHEET_ONLY_DUMP,
+    }).status,
+    'passed',
+    'the wave sheet still counts when Stream chrome is covered',
+  )
+  assert.equal(
+    evaluateStreamExitBack({
+      beforeDump: PRACTICE_DUMP,
       afterDump: PRACTICE_DUMP,
     }).status,
     'failed',
@@ -544,6 +562,14 @@ test('edge-swipe evaluation stays on the session or fails closed', () => {
   assert.equal(
     evaluatePracticeBackSwipe({ beforeDump: PRACTICE_DUMP, afterDump: TODAY_DUMP }).status,
     'failed',
+  )
+  assert.equal(
+    evaluatePracticeBackSwipe({
+      beforeDump: PRACTICE_DUMP,
+      afterDump: STREAM_EXIT_SHEET_ONLY_DUMP,
+    }).status,
+    'passed',
+    'a back-swipe that opens the wave sheet is still on the session',
   )
   assert.match(
     evaluatePracticeBackSwipe({
@@ -603,7 +629,7 @@ function scriptedDevice({
     if (stage === 'menu') return MENU_DUMP
     if (stage === 'more') return MORE_DUMP
     if (stage === 'hard') return hardDump
-    if (stage === 'stream-exit') return STREAM_EXIT_DUMP
+    if (stage === 'stream-exit') return STREAM_EXIT_SHEET_ONLY_DUMP
     if (stage === 'exit') return REFRAIN_EXIT_DUMP
     return streamDump
   }
@@ -648,6 +674,7 @@ function scriptedDevice({
     if (joined.includes('KEYCODE_BACK')) {
       if (stage === 'menu') stage = 'today'
       else if (stage === 'stream') stage = 'stream-exit'
+      else if (stage === 'stream-exit') stage = 'stream'
       else if (stage === 'phrase') stage = 'exit'
       return { status: 0, stdout: '' }
     }
@@ -697,9 +724,15 @@ function scriptedDevice({
         leaveOnFullScreenSwipe &&
         x1 === PRACTICE_BACK_SWIPES[1].x1 &&
         x2 === PRACTICE_BACK_SWIPES[1].x2 &&
-        stage === 'stream'
+        (stage === 'stream' || stage === 'stream-exit')
       ) {
         stage = 'today'
+      } else if (
+        x1 === PRACTICE_BACK_SWIPES[0].x1 &&
+        x2 === PRACTICE_BACK_SWIPES[0].x2 &&
+        stage === 'stream'
+      ) {
+        stage = 'stream-exit'
       } else if (x1 > 20 && committed && stage === 'today') stage = 'menu'
       else if (x1 > 20 && committed && stage === 'menu') stage = 'today'
       return { status: 0, stdout: '' }
@@ -760,7 +793,9 @@ test('practice back-swipe probe issues edge then full-screen swipes', () => {
     return device(tool, args)
   }
   const rows = executeWaveScenarios({ run, waitMs: 0 })
-  assert.equal(rows.find((row) => row.id === 'practice-back-swipe-disabled').status, 'passed')
+  const row = rows.find((entry) => entry.id === 'practice-back-swipe-disabled')
+  assert.equal(row.status, 'passed')
+  assert.match(row.notes, /stayed on the session/)
   assert.deepEqual(backSwipes, [
     [4, 800, 360, 800],
     [180, 800, 360, 800],
