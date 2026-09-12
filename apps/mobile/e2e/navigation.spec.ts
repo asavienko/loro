@@ -1,7 +1,15 @@
 import { mockAccountService } from './accountFlow'
 import { atInstant } from './clock'
 import { expect, onboard, test } from './fixtures'
-import { back, isHardRefrain, open, tapControl, todayMarker } from './helpers'
+import {
+  back,
+  isHardRefrain,
+  isPhraseRefrain,
+  open,
+  startRefrain,
+  tapControl,
+  todayMarker,
+} from './helpers'
 
 test('cold learner links provide a home escape without browser history', async ({ page }) => {
   for (const route of [
@@ -212,5 +220,22 @@ test('mouse and touch open menu Refrain as the difficult-only drill', async ({ p
     await expect(page.getByText('No difficult phrases yet')).toBeVisible()
     await page.getByRole('button', { name: 'Today', exact: true }).click()
     await expect(todayMarker(page)).toBeVisible()
+  }
+})
+
+test('menu Refrain stays hard-filter from a phrase-focus session', async ({ page }) => {
+  await onboard(page)
+  await startRefrain(page)
+  await expect(page).toHaveURL(isPhraseRefrain)
+  await expect(page.getByText('This phrase')).toBeVisible()
+  for (const input of ['mouse', 'touch'] as const) {
+    await tapControl(page, page.getByRole('button', { name: /, open the menu$/ }), input)
+    const sheet = page.getByRole('dialog')
+    await expect(sheet).toBeVisible()
+    await expect(sheet.getByLabel("The Refrain, you're here")).toHaveCount(0)
+    await tapControl(page, sheet.getByRole('button', { name: 'The Refrain', exact: true }), input)
+    await expect(page).toHaveURL(isHardRefrain)
+    await expect(page.getByText('No difficult phrases yet')).toBeVisible()
+    await expect(page.getByText('This phrase')).toHaveCount(0)
   }
 })

@@ -144,6 +144,39 @@ export function destinationTarget(href: string): Href {
   return href as Href
 }
 
+export interface DestinationSearchParams {
+  readonly phrase?: string | string[]
+  readonly filter?: string | string[]
+  readonly wave?: string | string[]
+}
+
+/**
+ * Phrase and timed-wave Refrain are not the menu destination. Only the difficult-only
+ * drill counts as “here”, so the switcher can still open `?filter=hard`.
+ */
+export function destinationIsCurrent(
+  href: string,
+  pathname: string,
+  params: DestinationSearchParams = {},
+): boolean {
+  if (pathname !== href) return false
+  if (href === '/practice/refrain') return parseRefrainFocus(params).kind === 'hard'
+  return true
+}
+
+/**
+ * `dismissTo` matches pathname and would return a live phrase-focus Refrain.
+ * Replace applies `?filter=hard` even when that screen is already on the stack.
+ */
+export function destinationNavigation(href: string): {
+  readonly action: 'replace' | 'dismissTo'
+  readonly target: Href
+} {
+  const target = destinationTarget(href)
+  if (href === '/practice/refrain') return { action: 'replace', target }
+  return { action: 'dismissTo', target }
+}
+
 function firstParam(value: string | string[] | undefined): string | undefined {
   if (value === undefined) return undefined
   return Array.isArray(value) ? value[0] : value

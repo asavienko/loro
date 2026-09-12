@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { makePhrase } from '@loro/core/testing'
 import {
+  destinationIsCurrent,
+  destinationNavigation,
   destinationTarget,
   inferRefrainFocus,
   parseRefrainFocus,
@@ -81,6 +83,31 @@ describe('refrain focus', () => {
       params: { filter: 'hard' },
     })
     expect(destinationTarget('/practice/stream')).toBe('/practice/stream')
+    expect(destinationNavigation('/practice/refrain')).toEqual({
+      action: 'replace',
+      target: { pathname: '/practice/refrain', params: { filter: 'hard' } },
+    })
+    expect(destinationNavigation('/practice/stream')).toEqual({
+      action: 'dismissTo',
+      target: '/practice/stream',
+    })
+  })
+
+  it('does not treat phrase or wave Refrain as the menu destination', () => {
+    expect(destinationIsCurrent('/practice/refrain', '/practice/refrain', { filter: 'hard' })).toBe(
+      true,
+    )
+    expect(destinationIsCurrent('/practice/refrain', '/practice/refrain', {})).toBe(true)
+    expect(destinationIsCurrent('/practice/refrain', '/practice/refrain', { phrase: 'cafe' })).toBe(
+      false,
+    )
+    expect(
+      destinationIsCurrent('/practice/refrain', '/practice/refrain', { wave: 'morning' }),
+    ).toBe(false)
+    expect(destinationIsCurrent('/practice/stream', '/practice/stream', {})).toBe(true)
+    expect(destinationIsCurrent('/practice/refrain', '/practice/stream', { filter: 'hard' })).toBe(
+      false,
+    )
   })
 
   it('treats a session as covering the day only when its members are the frozen set', () => {

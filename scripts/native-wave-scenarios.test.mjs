@@ -9,6 +9,8 @@ import {
   evaluateOnboardedHome,
   evaluateTodayStreamDump,
   executeWaveScenarios,
+  findClickableLabel,
+  findLabel,
   findWaveStart,
   isOnboardingDump,
   parseUiDump,
@@ -192,6 +194,19 @@ test('parses bounds and taps the control centre', () => {
   assert.deepEqual(tap, { x: 192, y: 428 })
 })
 
+test('prefers a tappable The Refrain over the current-row title', () => {
+  const dump = `<?xml version="1.0"?>
+<hierarchy>
+  <node class="android.widget.FrameLayout">
+    <node class="android.widget.TextView" text="The Refrain" bounds="[24,140][360,188]"/>
+    <node class="android.widget.Button" content-desc="The Refrain" clickable="true" bounds="[24,300][360,356]"/>
+  </node>
+</hierarchy>`
+  assert.equal(findLabel(dump, 'The Refrain')?.clickable, true)
+  assert.equal(findClickableLabel(dump, 'The Refrain')?.clickable, true)
+  assert.deepEqual(tapBounds(dump, 'The Refrain'), { x: 192, y: 328 })
+})
+
 test('finds Today Start the * wave and Keep listening', () => {
   assert.equal(findWaveStart(HOME_DUMP)?.text, 'Start the morning wave')
   assert.equal(findWaveStart(TODAY_DUMP)?.text, 'Start the morning wave')
@@ -280,6 +295,23 @@ test('fails menu hard-filter when chrome is the daily wave', () => {
     currentUrl: 'loro://practice/refrain?filter=hard',
   })
   assert.equal(result.status, 'failed')
+})
+
+test('fails menu hard-filter when The Refrain is only the here row', () => {
+  const hereMenu = `<?xml version="1.0"?>
+<hierarchy>
+  <node class="android.widget.FrameLayout">
+    <node class="android.widget.TextView" text="The Refrain" bounds="[24,300][360,356]"/>
+    <node class="android.widget.TextView" text="You're here" bounds="[280,300][360,356]"/>
+  </node>
+</hierarchy>`
+  const result = evaluateHardRefrainDump({
+    menuDump: hereMenu,
+    refrainDump: HARD_REFRAIN_DUMP,
+    currentUrl: '/practice/refrain?filter=hard',
+  })
+  assert.equal(result.status, 'failed')
+  assert.match(result.notes, /tappable The Refrain/)
 })
 
 test('records practice-back-swipe-disabled only from dump evidence as unavailable', () => {
