@@ -27,4 +27,23 @@ describe('catalog audio identity', () => {
     expect(playbackSource(undefined, false)).toBe('unavailable')
     clearCatalogAudioFiles()
   })
+
+  it('treats catalog identity as a cloud object, never a device path', () => {
+    const sha256 = 'd'.repeat(64)
+    expect(
+      resolveCatalogAudioUri({
+        uri: 'https://cdn.loro.test/clips/din2.m4a',
+        sha256,
+      }),
+    ).toBe('https://cdn.loro.test/clips/din2.m4a')
+    expect(
+      resolveCatalogAudioUri({
+        uri: 'file:///tmp/clip.m4a',
+        sha256,
+      }),
+    ).toBeUndefined()
+    expect(playbackSource({ uri: 'file:///tmp/clip.m4a', sha256 }, true)).toBe('api-tts')
+    registerCatalogAudioFile(sha256, 'data:audio/m4a;base64,AA==')
+    expect(resolveCatalogAudioUri({ uri: `sha256/${sha256}`, sha256 })).toBeUndefined()
+  })
 })

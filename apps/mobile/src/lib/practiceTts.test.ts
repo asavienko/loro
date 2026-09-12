@@ -133,6 +133,25 @@ describe('practice API TTS', () => {
     )
   })
 
+  it('ignores a device-path catalog URI and uses the cloud render instead', async () => {
+    const render = vi.fn().mockResolvedValue(response)
+    await expect(
+      resolvePracticePlayable({
+        text: 'Hola',
+        locale: 'es-ES',
+        catalog: { uri: 'file:///tmp/clip.m4a', sha256 },
+        baseUrl: 'http://127.0.0.1:3000/v1',
+        runtime: 'web',
+        render,
+      }),
+    ).resolves.toEqual({
+      uri: response.download_url,
+      sha256,
+      source: 'api-tts',
+    })
+    expect(render).toHaveBeenCalled()
+  })
+
   it('downloads a remote catalog URL on native instead of asking the device to speak', async () => {
     const native = {
       download: vi.fn().mockResolvedValue({
