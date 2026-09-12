@@ -8,7 +8,7 @@ import {
   voiceOverAtRows,
 } from './ios-wave-scenarios.mjs'
 import { routeUrlFromDump } from './native-wave-scenarios.mjs'
-import { WAVE_TOUCH_SCENARIOS } from './wave-touch-scenarios.mjs'
+import { PRACTICE_BACK_SWIPES, WAVE_TOUCH_SCENARIOS } from './wave-touch-scenarios.mjs'
 
 const TODAY = JSON.stringify([
   {
@@ -132,7 +132,7 @@ function atRows(rows) {
   return rows.filter((row) => row.id.endsWith('-at'))
 }
 
-function scriptedIosDevice({ moreOpensHard = true } = {}) {
+function scriptedIosDevice({ moreOpensHard = true, leaveOnFullScreenSwipe = false } = {}) {
   let stage = 'idle'
   const dumpFor = () => {
     if (stage === 'phrase') return PHRASE
@@ -164,7 +164,14 @@ function scriptedIosDevice({ moreOpensHard = true } = {}) {
         const x2 = Number(args[swipeAt + 3])
         const y2 = Number(args[swipeAt + 4])
         const committed = Math.abs(y2 - y1) >= 48 && Math.abs(x2 - x1) < 40
-        if (x1 > 20 && committed && stage === 'today') stage = 'menu'
+        if (
+          leaveOnFullScreenSwipe &&
+          x1 === PRACTICE_BACK_SWIPES[1].x1 &&
+          x2 === PRACTICE_BACK_SWIPES[1].x2 &&
+          stage === 'stream'
+        ) {
+          stage = 'today'
+        } else if (x1 > 20 && committed && stage === 'today') stage = 'menu'
         else if (x1 > 20 && committed && stage === 'menu') stage = 'today'
         return { status: 0, stdout: '' }
       }
@@ -255,10 +262,7 @@ test('scripted simulator dumps pass only with matching chrome and route URL', ()
   })
   assert.deepEqual(
     rows.map((row) => [row.id, row.status]),
-    [
-      ...expectedPointerAndShell(),
-      ...expectedTalkbackRows('unavailable'),
-    ],
+    [...expectedPointerAndShell(), ...expectedTalkbackRows('unavailable')],
   )
   assert.equal(rows[0].currentUrl, '/practice/refrain?phrase=es-001')
   assert.equal(rows[1].currentUrl, '/practice/refrain?filter=hard')
@@ -267,6 +271,36 @@ test('scripted simulator dumps pass only with matching chrome and route URL', ()
     /not an iOS control/,
   )
   assert.ok(atRows(rows).every((row) => row.reason.includes('VoiceOver')))
+})
+
+test('practice back-swipe probe issues edge then full-screen swipes', () => {
+  const backSwipes = []
+  const device = scriptedIosDevice()
+  const run = (tool, args) => {
+    if (tool === 'idb' && args.includes('swipe')) {
+      const swipeAt = args.indexOf('swipe')
+      const coords = args.slice(swipeAt + 1, swipeAt + 5).map(Number)
+      if (coords[1] === 800 && coords[3] === 800) backSwipes.push(coords)
+    }
+    return device(tool, args)
+  }
+  const rows = executeIosWaveScenarios({ udid: 'A123', run, waitMs: 0 })
+  assert.equal(rows.find((row) => row.id === 'practice-back-swipe-disabled').status, 'passed')
+  assert.deepEqual(backSwipes, [
+    [4, 800, 360, 800],
+    [180, 800, 360, 800],
+  ])
+})
+
+test('practice back-swipe fails when a full-screen swipe leaves the session', () => {
+  const rows = executeIosWaveScenarios({
+    udid: 'A123',
+    run: scriptedIosDevice({ leaveOnFullScreenSwipe: true }),
+    waitMs: 0,
+  })
+  const row = rows.find((entry) => entry.id === 'practice-back-swipe-disabled')
+  assert.equal(row.status, 'failed')
+  assert.match(row.notes, /Full-screen swipe left the practice session/)
 })
 
 test('VoiceOver looking enabled never marks AT rows passed via ordinary idb taps', () => {

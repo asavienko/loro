@@ -30,7 +30,12 @@ import {
   tapBounds,
   tapDismissBounds,
 } from './native-wave-scenarios.mjs'
-import { unevaluatedWaveScenarios, waveScenario } from './wave-touch-scenarios.mjs'
+import {
+  idbPracticeBackSwipeArgs,
+  PRACTICE_BACK_SWIPES,
+  unevaluatedWaveScenarios,
+  waveScenario,
+} from './wave-touch-scenarios.mjs'
 
 const STREAM_PRACTICE = 'Practice this phrase'
 const REFRAIN_TITLE = 'The Refrain'
@@ -445,16 +450,25 @@ function runBackSwipe(ctx) {
   waitForUi(ctx.run, ctx.waitMs)
   const before = dumpUi(ctx, 'swipe-before')
   if (before.error) return scenarioResult(scenario, { status: 'unavailable', notes: before.error })
-  const swipe = idb(ctx, ['ui', 'swipe', '4', '800', '360', '800', '--duration', '0.25'])
-  const swipeError = failedCommand(swipe, 'idb ui swipe')
-  if (swipeError) return scenarioResult(scenario, { status: 'unavailable', notes: swipeError })
-  waitForUi(ctx.run, ctx.waitMs)
-  const after = dumpUi(ctx, 'swipe-after')
-  if (after.error) return scenarioResult(scenario, { status: 'unavailable', notes: after.error })
-  return scenarioResult(
-    scenario,
-    evaluatePracticeBackSwipe({ beforeDump: before.dump, afterDump: after.dump }),
-  )
+  let after = before
+  for (const swipe of PRACTICE_BACK_SWIPES) {
+    const command = idb(ctx, idbPracticeBackSwipeArgs(swipe))
+    const swipeError = failedCommand(command, 'idb ui swipe')
+    if (swipeError) return scenarioResult(scenario, { status: 'unavailable', notes: swipeError })
+    waitForUi(ctx.run, ctx.waitMs)
+    after = dumpUi(ctx, `swipe-after-${swipe.id}`)
+    if (after.error) return scenarioResult(scenario, { status: 'unavailable', notes: after.error })
+    const result = evaluatePracticeBackSwipe({
+      beforeDump: before.dump,
+      afterDump: after.dump,
+      swipeId: swipe.id,
+    })
+    if (result.status !== 'passed') return scenarioResult(scenario, result)
+  }
+  return scenarioResult(scenario, {
+    status: 'passed',
+    notes: 'Edge and full-screen swipes left Stream/Refrain on the session.',
+  })
 }
 
 function runSpinePull(ctx) {

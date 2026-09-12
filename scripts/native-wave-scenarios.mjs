@@ -9,6 +9,8 @@ import { mkdirSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { resolveAdb } from './apk-environment.mjs'
 import {
+  adbPracticeBackSwipeArgs,
+  PRACTICE_BACK_SWIPES,
   unevaluatedWaveScenarios,
   WAVE_TOUCH_SCENARIOS,
   waveScenario,
@@ -123,9 +125,7 @@ export function findClickableLabel(dump, label) {
 
 export function findResourceId(dump, id) {
   const parsed = typeof dump === 'string' ? parseUiDump(dump) : dump
-  return parsed.nodes.find(
-    (node) => node.resourceId === id || node.resourceId.endsWith(`/${id}`),
-  )
+  return parsed.nodes.find((node) => node.resourceId === id || node.resourceId.endsWith(`/${id}`))
 }
 
 export function dumpHasSwitcher(dump) {
@@ -363,8 +363,8 @@ export function evaluatePracticeGestureDisabledDump({ dump, currentUrl }) {
   return {
     status: 'unavailable',
     notes: onPractice
-      ? 'Dump shows a practice session; a screenshot cannot prove gestureEnabled: false. Execute the edge-swipe row on a device.'
-      : 'Dump is not a practice session; gestureEnabled: false is not evidenced.',
+      ? 'Dump shows a practice session; a screenshot cannot prove gestureEnabled / fullScreenGestureEnabled false. Execute the back-swipe row on a device.'
+      : 'Dump is not a practice session; gestureEnabled / fullScreenGestureEnabled false is not evidenced.',
   }
 }
 
@@ -466,7 +466,8 @@ export function evaluateSheetBackdropDismiss({ menuDump, afterDump }) {
   })
 }
 
-export function evaluatePracticeBackSwipe({ beforeDump, afterDump }) {
+export function evaluatePracticeBackSwipe({ beforeDump, afterDump, swipeId = 'edge' }) {
+  const label = swipeId === 'full-screen' ? 'Full-screen swipe' : 'Edge swipe'
   if (!isPracticeChrome(beforeDump)) {
     return {
       status: 'unavailable',
@@ -476,12 +477,12 @@ export function evaluatePracticeBackSwipe({ beforeDump, afterDump }) {
   if (!isPracticeChrome(afterDump)) {
     return {
       status: 'failed',
-      notes: 'Edge swipe left the practice session.',
+      notes: `${label} left the practice session.`,
     }
   }
   return {
     status: 'passed',
-    notes: 'Edge swipe left Stream/Refrain on the session.',
+    notes: `${label} left Stream/Refrain on the session.`,
   }
 }
 
@@ -567,12 +568,7 @@ function activatePoint(ctx, x, y, label) {
   const first = tapPoint(ctx, x, y, label)
   if (first || !ctx.talkback) return first
   if (ctx.waitMs > 0) waitForUi(ctx.run, 120)
-  const activate = runCommand(ctx.run, ctx.adb, ctx.serial, [
-    'shell',
-    'input',
-    'keyevent',
-    '23',
-  ])
+  const activate = runCommand(ctx.run, ctx.adb, ctx.serial, ['shell', 'input', 'keyevent', '23'])
   return failedCommand(activate, `activate ${label}`)
 }
 
@@ -645,7 +641,8 @@ function swipeNode(ctx, node, { dx = 0, dy = 0, ms = 250 } = {}) {
 
 function enableTalkback(ctx) {
   const packages = runCommand(ctx.run, ctx.adb, ctx.serial, ['shell', 'pm', 'list', 'packages'])
-  if (failedCommand(packages, 'pm list packages')) return failedCommand(packages, 'pm list packages')
+  if (failedCommand(packages, 'pm list packages'))
+    return failedCommand(packages, 'pm list packages')
   if (!(packages.stdout || '').includes(TALKBACK_PACKAGE)) {
     return 'TalkBack is not installed on this device.'
   }
@@ -869,25 +866,25 @@ function runBackSwipe(ctx) {
   waitForUi(ctx.run, ctx.waitMs)
   const before = dumpUi(ctx, 'swipe-before')
   if (before.error) return scenarioResult(scenario, { status: 'unavailable', notes: before.error })
-  const swipe = runCommand(ctx.run, ctx.adb, ctx.serial, [
-    'shell',
-    'input',
-    'swipe',
-    '4',
-    '800',
-    '360',
-    '800',
-    '250',
-  ])
-  const swipeError = failedCommand(swipe, 'input swipe')
-  if (swipeError) return scenarioResult(scenario, { status: 'unavailable', notes: swipeError })
-  waitForUi(ctx.run, ctx.waitMs)
-  const after = dumpUi(ctx, 'swipe-after')
-  if (after.error) return scenarioResult(scenario, { status: 'unavailable', notes: after.error })
-  return scenarioResult(
-    scenario,
-    evaluatePracticeBackSwipe({ beforeDump: before.xml, afterDump: after.xml }),
-  )
+  let after = before
+  for (const swipe of PRACTICE_BACK_SWIPES) {
+    const command = runCommand(ctx.run, ctx.adb, ctx.serial, adbPracticeBackSwipeArgs(swipe))
+    const swipeError = failedCommand(command, 'input swipe')
+    if (swipeError) return scenarioResult(scenario, { status: 'unavailable', notes: swipeError })
+    waitForUi(ctx.run, ctx.waitMs)
+    after = dumpUi(ctx, `swipe-after-${swipe.id}`)
+    if (after.error) return scenarioResult(scenario, { status: 'unavailable', notes: after.error })
+    const result = evaluatePracticeBackSwipe({
+      beforeDump: before.xml,
+      afterDump: after.xml,
+      swipeId: swipe.id,
+    })
+    if (result.status !== 'passed') return scenarioResult(scenario, result)
+  }
+  return scenarioResult(scenario, {
+    status: 'passed',
+    notes: 'Edge and full-screen swipes left Stream/Refrain on the session.',
+  })
 }
 
 function completeOnboarding(ctx) {
@@ -1088,7 +1085,8 @@ const TALKBACK_IDS = [
 
 function runTalkbackRows(ctx) {
   const enabled = enableTalkback(ctx)
-  if (enabled) return unevaluatedWaveScenarios(enabled).filter((row) => TALKBACK_IDS.includes(row.id))
+  if (enabled)
+    return unevaluatedWaveScenarios(enabled).filter((row) => TALKBACK_IDS.includes(row.id))
   const talkbackCtx = { ...ctx, talkback: true }
   try {
     return [
