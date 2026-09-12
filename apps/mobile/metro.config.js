@@ -1,3 +1,5 @@
+/* global require, module, __dirname */
+/* eslint-disable @typescript-eslint/no-require-imports */
 // Metro config for the monorepo.
 //
 // Two things Metro needs that the defaults don't give us:
@@ -28,6 +30,8 @@ config.resolver.blockList = [
   new RegExp(`^${escapePath(path.join(workspaceRoot, 'packages/core-rs/target'))}[/\\\\]`),
   new RegExp(`^${escapePath(projectRoot)}[/\\\\](?:android|ios)[/\\\\]`),
   new RegExp(`^${escapePath(projectRoot)}[/\\\\]modules[/\\\\][^/\\\\]+[/\\\\]build[/\\\\]`),
+  /[\\/](?:\.storybook)[\\/]/,
+  /\.(?:test|spec|stories)\.[cm]?[jt]sx?$/,
 ]
 config.resolver.nodeModulesPaths = [
   path.resolve(projectRoot, 'node_modules'),
@@ -40,6 +44,16 @@ const defaultResolveRequest = config.resolver.resolveRequest
 
 config.resolver.resolveRequest = (context, moduleName, platform) => {
   const resolve = defaultResolveRequest ?? context.resolveRequest
+
+  // Learner Metro must not follow Storybook/Vitest into Vite's Node runner.
+  if (
+    moduleName === 'vite' ||
+    moduleName === 'vitest' ||
+    moduleName.startsWith('vite/') ||
+    moduleName.startsWith('vitest/') ||
+    moduleName.startsWith('@storybook/')
+  )
+    return { type: 'empty' }
 
   // sql.js embeds an offline asm.js SQLite build. Its Node-only branches are never
   // evaluated in the browser; do not ask Metro to bundle native Node builtins there.
