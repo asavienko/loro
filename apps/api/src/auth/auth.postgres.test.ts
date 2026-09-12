@@ -103,7 +103,7 @@ suite('durable authentication with PostgreSQL', () => {
     now = 1_800_000_000_000
     address = randomUUID()
     deliveries.clear()
-    vi.spyOn(config, 'authSettings').mockReturnValue(settings)
+    vi.spyOn(config, 'sessionAuthSettings').mockReturnValue(settings)
     vi.stubGlobal(
       'fetch',
       vi.fn((_url: string, request: RequestInit) => {
@@ -368,7 +368,7 @@ suite('upgrade of existing browser authentication data', () => {
   })
 
   beforeEach(() => {
-    vi.spyOn(config, 'authSettings').mockReturnValue(browserSettings)
+    vi.spyOn(config, 'sessionAuthSettings').mockReturnValue(browserSettings)
     auth = new AuthService(database, { now: () => legacyNow })
   })
   afterEach(() => {
@@ -480,7 +480,7 @@ suite('upgrade of existing browser authentication data', () => {
   })
 
   it('honors explicit authentication disablement with configured keys and existing data', async () => {
-    vi.mocked(config.authSettings).mockReturnValue({ ...browserSettings, enabled: false })
+    vi.mocked(config.sessionAuthSettings).mockReturnValue({ ...browserSettings, enabled: false })
     expect(auth.capabilities()).toEqual({ google: false, apple: false, email: false })
     await expect(auth.refresh(oldTokens[0]!, 'disabled', registration)).rejects.toMatchObject({
       code: 'PROVIDER_UNAVAILABLE',

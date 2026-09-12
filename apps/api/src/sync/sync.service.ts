@@ -2,8 +2,10 @@
 import { createHash } from 'node:crypto'
 import { Inject, Injectable } from '@nestjs/common'
 import { mergeClassFor, type MergeClass } from '@loro/core'
+import { canonicalJson } from './canonical-json.js'
+import { phraseIdentityInvalid, phraseReplacementValid } from './phrase-identity.js'
+import { canonicalReferences, wireRow } from './wire.js'
 import {
-  ChangeSchema,
   MAX_SYNC_BYTES,
   PushEnvelopeSchema,
   PullRequestSchema,
@@ -18,11 +20,9 @@ import {
   advanceHlc,
   clampHlc,
   decodeHlc,
-  encodeHlc,
   mergeAvailable,
   mergeRow,
   type FieldValue,
-  type StoredRow,
 } from './merge.js'
 import {
   SYNC_REPOSITORY,
@@ -99,18 +99,7 @@ export class SyncService {
         }
         if (op.entity === 'user_phrase' && op.op === 'upsert') {
           const existing = await tx.get(op.entity, await tx.canonical(op.entity_id))
-          const missingIdentity =
-            !existing &&
-            (op.fields.phraseId === undefined ||
-              op.fields.targetLocale === undefined ||
-              op.fields.source === undefined ||
-              op.fields.addedAt === undefined)
-          const identityChanged = ['phraseId', 'targetLocale'].some((field) => {
-            const value = (op.fields as Record<string, { v: unknown }>)[field]
-            const previous = existing?.fields[field]
-            return previous !== undefined && value !== undefined && previous.v !== value.v
-          })
-          if (missingIdentity || identityChanged) {
+          if (phraseIdentityInvalid(op, existing)) {
             response.rejected.push({
               seq: op.seq,
               index: indices.get(op.seq) ?? 0,
@@ -121,14 +110,7 @@ export class SyncService {
           if (op.replaces) {
             const previousId = await tx.canonical(op.replaces.id)
             const previous = await tx.get('user_phrase', previousId)
-            const validReplacement =
-              existing?.deleted_at == null &&
-              previous?.deleted_at === op.replaces.deleted_at &&
-              typeof op.fields.phraseId?.v === 'string' &&
-              previous.fields['phraseId']?.v === op.fields.phraseId.v &&
-              previous.fields['targetLocale']?.v === op.fields.targetLocale?.v &&
-              previousId !== op.entity_id
-            if (!validReplacement) {
+            if (!phraseReplacementValid(op, existing, previous, previousId)) {
               response.rejected.push({
                 seq: op.seq,
                 index: indices.get(op.seq) ?? 0,
@@ -268,56 +250,4 @@ async function rowOp(
     classes,
     deleted_at: op.op === 'delete' ? op.deleted_at : null,
   }
-}
-
-function wireRow(row: StoredRow): PullResponse['changes'][number] {
-  return ChangeSchema.parse({
-    entity: row.entity,
-    entity_id: row.id,
-    deleted_at: row.deleted_at,
-    ...(row.entity === 'user_phrase' &&
-    row.deleted_at !== null &&
-    typeof row.fields['phraseId']?.v === 'string'
-      ? {
-          catalog_identity: {
-            phraseId: row.fields['phraseId'].v,
-            targetLocale: row.fields['targetLocale']?.v,
-          },
-        }
-      : {}),
-    fields:
-      row.deleted_at === null
-        ? Object.fromEntries(
-            Object.entries(row.fields).map(([key, field]) => [
-              key,
-              { v: field.v, hlc: encodeHlc(field.hlc) },
-            ]),
-          )
-        : {},
-  })
-}
-
-/** Historic append-only entries keep their content while references follow durable aliases. */
-async function canonicalReferences(tx: SyncTransaction, stored: StoredRow): Promise<StoredRow> {
-  const row = structuredClone(stored)
-  if (row.entity === 'user_phrase') row.id = await tx.canonical(row.id)
-  else {
-    const phrase = row.fields['phraseId']
-    if (typeof phrase?.v === 'string') phrase.v = await tx.canonical(phrase.v)
-    const set = row.fields['setIds']
-    if (Array.isArray(set?.v))
-      set.v = [...new Set(await Promise.all((set.v as string[]).map((id) => tx.canonical(id))))]
-  }
-  return row
-}
-
-/** Stable idempotency digest independent of a JSON object's insertion order. */
-function canonicalJson(value: unknown): string {
-  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(',')}]`
-  if (value !== null && typeof value === 'object')
-    return `{${Object.entries(value)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([key, entry]) => `${JSON.stringify(key)}:${canonicalJson(entry)}`)
-      .join(',')}}`
-  return JSON.stringify(value)
 }

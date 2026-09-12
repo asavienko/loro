@@ -6,6 +6,7 @@
 
 import { Inject, Injectable, type CanActivate, type ExecutionContext } from '@nestjs/common'
 import { AuthGuard, type AuthenticatedRequest } from '../auth/auth.guard.js'
+import { anonymousPrincipal, isGetLeafPath } from '../common/http.js'
 import { config } from '../common/config.js'
 
 @Injectable()
@@ -20,12 +21,7 @@ export class MusicGuard implements CanActivate {
       return this.auth.canActivate(context)
     }
     if (musicAnonymousAllowed()) {
-      const ip = request.ip ?? '0.0.0.0'
-      request.principal = {
-        userId: `anon:${ip}`,
-        deviceId: 'anonymous',
-        sessionId: 'anonymous',
-      }
+      request.principal = anonymousPrincipal(request.ip ?? '0.0.0.0')
       return true
     }
     return this.auth.canActivate(context)
@@ -38,16 +34,6 @@ export function musicStatusAllowed(request: {
   url?: string
 }): boolean {
   return isGetLeafPath(request, 'music/status')
-}
-
-function isGetLeafPath(
-  request: { method?: string; path?: string; url?: string },
-  leaf: string,
-): boolean {
-  if (request.method?.toUpperCase() !== 'GET') return false
-  const raw = `${request.path ?? ''} ${request.url ?? ''}`
-  const path = raw.split(/[?#\s]/).find((part) => part.length > 0) ?? ''
-  return path === `/${leaf}` || path.endsWith(`/${leaf}`)
 }
 
 export function musicAnonymousAllowed(): boolean {

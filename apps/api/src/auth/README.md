@@ -1,12 +1,12 @@
 # Authentication runtime
 
-F-01/F-02/F-07: optional sign-in, real identity proof and durable session revocation. The
-composition root supplies `DATABASE`, `SERVER_CLOCK`, `AuthService` and `AuthGuard`. Sign-in and
-claim SQL live in `auth.session.ts` / `auth.claim.ts` behind that same Nest provider — not a Nest
-`AuthModule`. Browser OAuth lives in `oauth-flow.service.ts` / `oauth.controller.ts`; the AI account
-boundary is `auth-boundary.guard.ts`. Native ID-token and code-exchange JWKS share `jwks.ts`.
-`GET /me` and `GET /auth/me` keep distinct response shapes. `AUTH_MIGRATION_SQL` is installed with
-the database migration.
+F-01/F-02/F-07: optional sign-in, real identity proof and durable session revocation. `AuthModule`
+owns controllers, `AuthService`, `AUTH_STORE`, and `ACCESS_TOKENS`. Sign-in and claim SQL live in
+`auth.session.ts` / `auth.claim.ts` behind `PostgresAuthStore`. Browser OAuth lives in
+`oauth-flow.service.ts` / `oauth.controller.ts`; grant consumption is on `repository.ts`. The AI
+account boundary is `auth-boundary.guard.ts` on the composition root. Native ID-token and
+code-exchange JWKS share `jwks.ts`. `GET /me` and `GET /auth/me` keep distinct response shapes.
+`AUTH_MIGRATION_SQL` is version `001_auth` in the shared migration runner.
 
 - Apple/Google use fixed HTTPS JWKS endpoints, RS256 signatures, required subject/expiry/issued-at,
   issuer/audience checks and a 30-second clock tolerance. An `azp` claim must name a configured
@@ -33,6 +33,10 @@ the database migration.
 - An anonymous ID only correlates the device's pending local upload. Claim requests are idempotent,
   scoped to the verified account/device and report `upload_required: true`; they never transfer
   server rows from another account or claim that local progress has already uploaded.
+
+Session/token settings are `config.sessionAuthSettings()`. Browser OAuth deployment (public URL,
+redirects, provider secrets) is `oauthDeploymentSettings()` in `settings.ts`. Do not treat those two
+objects as interchangeable.
 
 Configuration is read only by `common/config.ts`:
 

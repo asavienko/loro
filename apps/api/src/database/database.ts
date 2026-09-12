@@ -3,7 +3,7 @@ import { Injectable, type OnModuleDestroy } from '@nestjs/common'
 import { Pool, type PoolClient } from 'pg'
 import { config } from '../common/config.js'
 import { LoroError } from '../common/errors.js'
-import { DATABASE_MIGRATION_SQL } from './schema.js'
+import { NAMED_MIGRATIONS, applyNamedMigrations } from './migrations.js'
 
 export interface SqlResult<T> {
   rows: T[]
@@ -45,7 +45,7 @@ export class PostgresDatabase implements SqlDatabase, OnModuleDestroy {
       try {
         await client.query('BEGIN')
         await client.query("SELECT pg_advisory_xact_lock(hashtext('loro-schema-v1'))")
-        await client.query(DATABASE_MIGRATION_SQL)
+        await applyNamedMigrations(connection(client), NAMED_MIGRATIONS, Date.now())
         await client.query('COMMIT')
       } catch (error) {
         await client.query('ROLLBACK')

@@ -5,7 +5,7 @@ import type { ServerClock } from '../common/clock.js'
 import type { OAuthProvider } from '@loro/core/api/oauth'
 import type { DeviceRegistration, SignInResponse } from '@loro/core/api/account'
 import type { SqlDatabase } from '../database/database.js'
-import type { AuthSettings } from './settings.js'
+import type { OAuthDeploymentSettings } from './settings.js'
 import { providerEnabled } from './settings.js'
 import type { OAuthIdentity } from './provider.js'
 import type { AuthService } from './auth.service.js'
@@ -20,7 +20,7 @@ const deny = (): never => {
 export class OAuthFlowService {
   readonly repository: OAuthRepository
   constructor(
-    readonly settings: AuthSettings,
+    readonly settings: OAuthDeploymentSettings,
     private readonly database: SqlDatabase,
     private readonly provider: OAuthIdentity,
     private readonly sessions: AuthService,
@@ -90,12 +90,12 @@ export class OAuthFlowService {
     anonId: string,
   ): Promise<SignInResponse> {
     return this.database.transaction(async (connection) => {
-      const grant = (
-        await connection.query<{ provider: OAuthProvider; subject: string }>(
-          'DELETE FROM oauth_grants WHERE hash=$1 AND challenge=$2 AND expires>$3 RETURNING provider,subject',
-          [hash(ticket), hash(verifier), this.clock.now()],
-        )
-      ).rows[0]
+      const grant = await this.repository.consumeGrant(
+        connection,
+        hash(ticket),
+        hash(verifier),
+        this.clock.now(),
+      )
       if (!grant) return deny()
       // Redemption, identity lookup, installation registration and token creation commit together.
       return this.sessions.signInVerified(connection, grant.provider, grant.subject, device, anonId)

@@ -17,12 +17,13 @@ pnpm --filter @loro/api dev
 curl localhost:3000/v1/health/ready
 ```
 
-`DATABASE_URL` is required for auth and sync. On first use, the API installs its additive schema in
-one PostgreSQL transaction protected by an advisory lock. Existing OAuth account UUIDs and refresh
-families migrate without deleting their tables. Production startup fails when a configured database
-is unavailable or the shared Rust build is absent. A content-only deployment with auth disabled can
-start without a database; readiness correctly returns 503. No runtime falls back to memory storage.
-The memory repository is only a test adapter.
+`DATABASE_URL` is required for auth and sync. On first use, the API applies named schema versions
+(`001_auth`, `002_sync`, `003_music`) in one PostgreSQL transaction protected by an advisory lock. A
+failed version rolls back the whole batch. Existing OAuth account UUIDs and refresh families migrate
+without deleting their tables. Production startup fails when a configured database is unavailable or
+the shared Rust build is absent. A content-only deployment with auth disabled can start without a
+database; readiness correctly returns 503. No runtime falls back to memory storage. The memory
+repository is only a test adapter.
 
 Configure permitted browser origins through `CORS_ALLOWED_ORIGINS` (comma-separated exact origins)
 and the HTTPS origins derived from `AUTH_REDIRECT_URIS`. Bearer authorization does not use cookies.
@@ -36,24 +37,24 @@ test sends email or contacts Google/Apple.
 
 All paths have the `/v1` prefix. Content and health remain public.
 
-| Method   | Path                                                           | Behavior                                                        |
-| -------- | -------------------------------------------------------------- | --------------------------------------------------------------- |
-| GET      | `/health`, `/health/ready`                                     | Liveness and actual WASM/database readiness                     |
-| GET      | `/content/manifest`, `/content/diff`, `/content/pack`          | Bundled Spanish/English content                                 |
-| GET      | `/content/v2/manifest`, `/content/v2/diff`, `/content/v2/pack` | Bundled supported language pairs                                |
-| GET      | `/auth/providers`                                              | Configured Google/Apple browser OAuth providers                 |
-| POST     | `/auth/{provider}/start`, `/auth/exchange`                     | PKCE-bound handoff into the shared registered-device session    |
-| GET/POST | `/auth/{provider}/callback`                                    | Google query / Apple form callback; one-use app ticket redirect |
-| GET      | `/auth/capabilities`                                           | Configured Apple, Google and email choices                      |
-| POST     | `/auth/apple`, `/auth/google`                                  | Verified provider ID token and registered installation          |
-| POST     | `/auth/magic-link`, `/auth/magic-link/verify`                  | Deliver and verify a ten-minute email code                      |
-| POST     | `/auth/refresh`, `/auth/logout`, `/auth/claim`                 | Rotating refresh, session revocation, local-upload correlation  |
-| GET      | `/me`, `/auth/me`                                              | Authenticated account and registered device                     |
-| POST     | `/sync/push`, `/sync/pull`, `/sync/status`                     | Bearer and matching `X-Loro-Device` required                    |
-| POST     | `/ai/scene`                                                    | Bundled, validated roleplay scene                               |
-| GET      | `/ai/themes`                                                   | Available bundled themes                                        |
+| Method   | Path                                                           | Behavior                                                                                                                      |
+| -------- | -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| GET      | `/health`, `/health/ready`                                     | Liveness and actual WASM/database readiness                                                                                   |
+| GET      | `/content/manifest`, `/content/diff`, `/content/pack`          | Bundled Spanish/English content                                                                                               |
+| GET      | `/content/v2/manifest`, `/content/v2/diff`, `/content/v2/pack` | Bundled supported language pairs                                                                                              |
+| GET      | `/auth/providers`                                              | Configured Google/Apple browser OAuth providers                                                                               |
+| POST     | `/auth/{provider}/start`, `/auth/exchange`                     | PKCE-bound handoff into the shared registered-device session                                                                  |
+| GET/POST | `/auth/{provider}/callback`                                    | Google query / Apple form callback; one-use app ticket redirect                                                               |
+| GET      | `/auth/capabilities`                                           | Configured Apple, Google and email choices                                                                                    |
+| POST     | `/auth/apple`, `/auth/google`                                  | Verified provider ID token and registered installation                                                                        |
+| POST     | `/auth/magic-link`, `/auth/magic-link/verify`                  | Deliver and verify a ten-minute email code                                                                                    |
+| POST     | `/auth/refresh`, `/auth/logout`, `/auth/claim`                 | Rotating refresh, session revocation, local-upload correlation                                                                |
+| GET      | `/me`, `/auth/me`                                              | Authenticated account and registered device                                                                                   |
+| POST     | `/sync/push`, `/sync/pull`, `/sync/status`                     | Bearer and matching `X-Loro-Device` required                                                                                  |
+| POST     | `/ai/scene`                                                    | Bundled, validated roleplay scene                                                                                             |
+| GET      | `/ai/themes`                                                   | Available bundled themes                                                                                                      |
 | POST     | `/tts/render`                                                  | Authenticated ElevenLabs; identity JSON only. Default stub 503; `TTS_STUB_RENDER=1` listening-class may omit a bearer locally |
-| GET      | `/tts/assets/:sha256`                                          | Authenticated checksum bytes, or unauthenticated when stub-render listening is on |
+| GET      | `/tts/assets/:sha256`                                          | Authenticated checksum bytes, or unauthenticated when stub-render listening is on                                             |
 
 OAuth uses `@loro/core/api/oauth`; other auth and sync use `@loro/core/api/account` and
 `@loro/core/api/sync` schemas at the transport boundary. Push validates the shared envelope, its
@@ -64,12 +65,13 @@ within a row. New own phrases also require their text under the shared schema.
 
 ## Convergence and durability
 
-`src/app.module.ts` selects `PostgresDatabase`, `PostgresSyncRepository` and the bundled AI
-provider. Every sync transaction serializes its account with a PostgreSQL advisory lock. Rows,
-immutable change revisions, accepted operation receipts and the canonical Rust HLC commit together.
-`(user_id,device_id,seq)` is the durable replay key: an exact retry returns its original acceptance
-and aliases, while changed content at the same sequence is rejected. A failed transaction commits
-none of those records.
+`src/platform.module.ts` selects `PostgresDatabase`, `PostgresSyncRepository`, `RATE_LIMIT_STORE`
+and the bundled AI provider. `src/app.module.ts` is the composition root and registers
+`AuthBoundaryGuard`. Every sync transaction serializes its account with a PostgreSQL advisory lock.
+Rows, immutable change revisions, accepted operation receipts and the canonical Rust HLC commit
+together. `(user_id,device_id,seq)` is the durable replay key: an exact retry returns its original
+acceptance and aliases, while changed content at the same sequence is rejected. A failed transaction
+commits none of those records.
 
 Latest-review FSRS state carries its scheduling algorithm as one atomic group. The Rust merge
 normalizes complete legacy groups with missing provenance to the recorded old preview policy after

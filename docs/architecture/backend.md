@@ -24,26 +24,33 @@ weeks with the API unreachable ([overview.md](overview.md#the-ten-rules), rule 2
 ```
 apps/api/src/
 ├── main.ts                    # /v1 prefix, problem filter, production WASM startup gate
-├── app.module.ts              # repository/provider/clock choices
+├── app.module.ts              # imports feature modules; registers AuthBoundaryGuard
+├── platform.module.ts         # repository/provider/clock choices (global)
 ├── ai/                        # bundled scenes, provider seam, validation, 2 routes
 ├── auth/                      # Google/Apple/email identity, sessions, /me
-├── common/                    # clock, config, problem-details catalog/filter
+├── common/                    # clock, config, problem-details, HTTP/contract helpers
 ├── content/                   # legacy and multilingual manifest/diff/pack, 6 routes
-├── database/                  # Postgres client; additive schema on first use
+├── database/                  # Postgres client; named versions 001_auth / 002_sync / 003_music
 ├── health/                    # liveness and WASM/database-aware readiness, 2 routes
 ├── integrations/              # tested Anthropic and ElevenLabs transports; TTS stub is default
+├── music/                     # gated lyrics/render/track; stub fixtures by default
 ├── tts/                       # gated POST /tts/render + checksum asset; stub 503s
 └── sync/                      # push/pull/status, WASM adapter, Postgres repository, 3 routes
 ```
 
-| Implemented seam  | Current adapter                                                                | Extension path                                                          |
-| ----------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------- |
-| `DATABASE`        | `PostgresDatabase`                                                             | Override in tests; Redis and MinIO remain unimplemented                 |
-| `SYNC_REPOSITORY` | `PostgresSyncRepository`, tenant-scoped. `InMemorySyncRepository` is test-only | Keep selecting the production adapter only in `app.module.ts`           |
-| `SCENE_PROVIDERS` | `StubSceneProvider`                                                            | Register provider adapters; keep validation and fallback in `AiService` |
-| `TTS_TRANSPORT`   | `StubTts` unless `TTS_PROVIDER=elevenlabs` with key/model/voices               | Keep one process instance; stub returns 503, never fake audio           |
-| `SERVER_CLOCK`    | system wall clock                                                              | Override in tests; per-account HLC state is already durable in Postgres |
-| `config`          | one reader/default per environment variable                                    | Add accessors in `common/config.ts`, not scattered `process.env` reads  |
+| Implemented seam     | Current adapter                                                                | Extension path                                                          |
+| -------------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------- |
+| `DATABASE`           | `PostgresDatabase`                                                             | Override in tests; Redis and MinIO remain unimplemented                 |
+| `SYNC_REPOSITORY`    | `PostgresSyncRepository`, tenant-scoped. `InMemorySyncRepository` is test-only | Keep selecting the production adapter only in `platform.module.ts`      |
+| `MUSIC_REPOSITORY`   | `MemoryMusicRepository` unless `MUSIC_PROVIDER=elevenlabs`                     | Postgres adapter is selected with the provider, not in the service      |
+| `SCENE_PROVIDERS`    | `StubSceneProvider`                                                            | Register provider adapters; keep validation and fallback in `AiService` |
+| `TTS_TRANSPORT`      | `StubTts` unless `TTS_PROVIDER=elevenlabs` with key/model/voices               | Keep one process instance; stub returns 503, never fake audio           |
+| `TTS_RUNTIME_CONFIG` | Cached `parseTtsConfig` result shared by guard, service, and transport         | Do not re-read `process.env` on every TTS request                       |
+| `MUSIC_ADAPTER`      | `ElevenLabsMusicAdapter` selected in `platform.module.ts`                      | Lyrics and budget are injected beside it                                |
+| `AUTH_STORE`         | `PostgresAuthStore` for sessions, refresh, magic codes, claims                 | `AuthService` keeps policy and token orchestration                      |
+| `SERVER_CLOCK`       | system wall clock                                                              | Override in tests; per-account HLC state is already durable in Postgres |
+| `RATE_LIMIT_STORE`   | `PostgresRateLimitStore` on `auth_rate_limits`; TTS keeps a process-local map  | Do not enable catalog rows that are not already deployed                |
+| `config`             | one reader/default per environment variable                                    | Add accessors in `common/config.ts`, not scattered `process.env` reads  |
 
 Plan [85](../../plans/archive/2026-09-07/85-backend-integration-contracts.md) supplies shared
 current/target/draft wire schemas, OpenAPI and HTTP conformance tests. Plan
@@ -152,7 +159,7 @@ transactional: either the anon identity is bound and the merge is queued, or not
 
 Thin. All the merge logic is in the shared function.
 
-Today `AppModule` selects `PostgresSyncRepository`. `SyncService` requires an authenticated
+Today `PlatformModule` selects `PostgresSyncRepository`. `SyncService` requires an authenticated
 principal, runs each push/pull in a user-scoped transaction, keys rows by `(user_id, entity, id)`,
 honours `since`/`limit` on pull, and advances a durable per-account HLC. The same WASM merge used by
 the client rejects undeclared fields. `InMemorySyncRepository` exists only for tests. Redis, object

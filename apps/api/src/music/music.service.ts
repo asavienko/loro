@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto'
-import { Inject, Injectable } from '@nestjs/common'
+import { Inject, Injectable, Optional } from '@nestjs/common'
 import { MUSIC_MODEL_ID, type LyricDocument } from '@loro/core'
 import {
   MusicLyricsRequestSchema,
@@ -14,7 +14,13 @@ import type { AuthPrincipal } from '../auth/auth.tokens.js'
 import { config } from '../common/config.js'
 import { SERVER_CLOCK, type ServerClock } from '../common/clock.js'
 import { LoroError } from '../common/errors.js'
-import { ElevenLabsMusicAdapter, composeStyles } from '../integrations/elevenlabs/music.js'
+import { parseContract } from '../common/parse.js'
+import {
+  ElevenLabsMusicAdapter,
+  composeStyles,
+  type MusicAdapter,
+} from '../integrations/elevenlabs/music.js'
+import { MUSIC_ADAPTER } from './adapter.js'
 import { MusicBudget } from './budget.js'
 import { LyricsCoordinator } from './lyrics.coordinator.js'
 import {
@@ -27,18 +33,19 @@ import {
 @Injectable()
 export class MusicService {
   private readonly lyrics: LyricsCoordinator
-  private readonly adapter: ElevenLabsMusicAdapter
+  private readonly adapter: MusicAdapter
   private readonly budget: MusicBudget
 
   constructor(
     @Inject(MUSIC_REPOSITORY) private readonly repository: MusicRepository,
     @Inject(SERVER_CLOCK) private readonly clock: ServerClock,
+    @Optional() @Inject(MUSIC_ADAPTER) adapter?: MusicAdapter,
+    @Optional() @Inject(LyricsCoordinator) lyrics?: LyricsCoordinator,
+    @Optional() @Inject(MusicBudget) budget?: MusicBudget,
   ) {
-    this.lyrics = new LyricsCoordinator()
-    this.adapter = new ElevenLabsMusicAdapter({
-      provider: config.musicProvider(),
-    })
-    this.budget = new MusicBudget()
+    this.lyrics = lyrics ?? new LyricsCoordinator()
+    this.adapter = adapter ?? new ElevenLabsMusicAdapter({ provider: config.musicProvider() })
+    this.budget = budget ?? new MusicBudget(this.clock)
   }
 
   status(): { ready: boolean; provider: string } {
@@ -50,7 +57,7 @@ export class MusicService {
   }
 
   async createLyrics(principal: AuthPrincipal, body: unknown): Promise<MusicLyricsResponse> {
-    const request = parse(MusicLyricsRequestSchema, body)
+    const request = parseContract(MusicLyricsRequestSchema, body)
     const response = await this.lyrics.lyrics(request, principal.userId)
     await this.repository.saveLyric({
       id: response.lyric_document_id,
@@ -64,7 +71,35 @@ export class MusicService {
   }
 
   async renderStyles(principal: AuthPrincipal, body: unknown): Promise<MusicRendersResponse> {
-    const request = parse(MusicRendersRequestSchema, body)
+    const plan = await this.planStyleRenders(principal, body)
+    if (plan.kind === 'budget') return plan.response
+    const generated = await this.persistStyleRenders(principal, plan)
+    return {
+      lyric_document_id: plan.stored.id,
+      jobs: plan.packs.map((pack) => {
+        const cached = plan.readyByStyle.get(pack.style_id)
+        if (cached !== undefined) return toWireJob(cached, cached.trackId)
+        const created = generated.get(pack.style_id)
+        if (created === undefined) throw new LoroError('INTERNAL')
+        return created
+      }),
+    }
+  }
+
+  private async planStyleRenders(
+    principal: AuthPrincipal,
+    body: unknown,
+  ): Promise<
+    | { kind: 'budget'; response: MusicRendersResponse }
+    | {
+        kind: 'render'
+        stored: { id: string; document: LyricDocument }
+        packs: ReturnType<typeof resolveMusicStylePacks>
+        readyByStyle: Map<string, StoredMusicJob>
+        missing: ReturnType<typeof resolveMusicStylePacks>
+      }
+  > {
+    const request = parseContract(MusicRendersRequestSchema, body)
     const stored = await this.repository.getLyric(request.lyric_document_id, principal.userId)
     if (stored === null) throw new LoroError('NOT_FOUND')
     const packs = resolveMusicStylePacks(request.style_ids)
@@ -78,83 +113,86 @@ export class MusicService {
     if (missing.length > 0 && !this.budget.canSpend(principal.userId, missing.length)) {
       if (readyByStyle.size === 0) throw new LoroError('BUDGET_EXCEEDED')
       return {
-        lyric_document_id: stored.id,
-        jobs: packs.map((pack) => {
-          const cached = readyByStyle.get(pack.style_id)
-          if (cached !== undefined) return toWireJob(cached, cached.trackId)
-          return {
-            job_id: scopedMusicId('job', principal.userId, stored.id, pack.style_id),
-            style_id: pack.style_id,
-            status: 'failed',
-            error_code: 'budget',
-            track_id: null,
-            duration_ms: null,
-          }
-        }),
+        kind: 'budget',
+        response: {
+          lyric_document_id: stored.id,
+          jobs: packs.map((pack) => {
+            const cached = readyByStyle.get(pack.style_id)
+            if (cached !== undefined) return toWireJob(cached, cached.trackId)
+            return {
+              job_id: scopedMusicId('job', principal.userId, stored.id, pack.style_id),
+              style_id: pack.style_id,
+              status: 'failed',
+              error_code: 'budget',
+              track_id: null,
+              duration_ms: null,
+            }
+          }),
+        },
       }
     }
+    return { kind: 'render', stored, packs, readyByStyle, missing }
+  }
+
+  private async persistStyleRenders(
+    principal: AuthPrincipal,
+    plan: {
+      stored: { id: string; document: LyricDocument }
+      missing: ReturnType<typeof resolveMusicStylePacks>
+    },
+  ): Promise<Map<string, MusicRendersResponse['jobs'][number]>> {
     const generated = new Map<string, MusicRendersResponse['jobs'][number]>()
-    if (missing.length > 0) {
-      const outcomes = await composeStyles(this.adapter, stored.document, missing, 2)
-      this.budget.record(principal.userId, missing.length)
-      for (const [index, pack] of missing.entries()) {
-        const outcome = outcomes[index]
-        const jobId = scopedMusicId('job', principal.userId, stored.id, pack.style_id)
-        const trackId = scopedMusicId('track', principal.userId, stored.id, pack.style_id)
-        if (outcome?.ok === true) {
-          await this.repository.putObject({
-            sha256: outcome.result.sha256,
-            contentType: outcome.result.contentType,
-            bytes: outcome.result.bytes,
-          })
-          const job = storedJob({
-            jobId,
-            userId: principal.userId,
-            lyricDocumentId: stored.id,
-            trackId,
-            styleId: pack.style_id,
-            planHash: outcome.result.planHash,
-            sha256: outcome.result.sha256,
-            byteLength: outcome.result.bytes.byteLength,
-            durationMs: outcome.result.durationMs,
-            status: 'ready',
-            errorCode: null,
-            spendMicros: 1,
-            createdAt: this.clock.now(),
-          })
-          await this.repository.saveJob(job)
-          generated.set(pack.style_id, toWireJob(job, trackId))
-        } else {
-          const errorCode = errorFor(outcome?.failure.kind)
-          const job = storedJob({
-            jobId,
-            userId: principal.userId,
-            lyricDocumentId: stored.id,
-            trackId: null,
-            styleId: pack.style_id,
-            planHash: '0'.repeat(64),
-            sha256: null,
-            byteLength: null,
-            durationMs: null,
-            status: outcome?.failure.kind === 'unavailable' ? 'unknown_spend' : 'failed',
-            errorCode,
-            createdAt: this.clock.now(),
-          })
-          await this.repository.saveJob(job)
-          generated.set(pack.style_id, toWireJob(job, null))
-        }
+    if (plan.missing.length === 0) return generated
+    const outcomes = await composeStyles(this.adapter, plan.stored.document, plan.missing, 2)
+    this.budget.record(principal.userId, plan.missing.length)
+    for (const [index, pack] of plan.missing.entries()) {
+      const outcome = outcomes[index]
+      const jobId = scopedMusicId('job', principal.userId, plan.stored.id, pack.style_id)
+      const trackId = scopedMusicId('track', principal.userId, plan.stored.id, pack.style_id)
+      if (outcome?.ok === true) {
+        await this.repository.putObject({
+          sha256: outcome.result.sha256,
+          contentType: outcome.result.contentType,
+          bytes: outcome.result.bytes,
+        })
+        const job = storedJob({
+          jobId,
+          userId: principal.userId,
+          lyricDocumentId: plan.stored.id,
+          trackId,
+          styleId: pack.style_id,
+          planHash: outcome.result.planHash,
+          sha256: outcome.result.sha256,
+          byteLength: outcome.result.bytes.byteLength,
+          durationMs: outcome.result.durationMs,
+          status: 'ready',
+          errorCode: null,
+          spendMicros: 1,
+          createdAt: this.clock.now(),
+        })
+        await this.repository.saveJob(job)
+        generated.set(pack.style_id, toWireJob(job, trackId))
+      } else {
+        const errorCode = errorFor(outcome?.failure.kind)
+        const job = storedJob({
+          jobId,
+          userId: principal.userId,
+          lyricDocumentId: plan.stored.id,
+          trackId: null,
+          styleId: pack.style_id,
+          planHash: '0'.repeat(64),
+          sha256: null,
+          byteLength: null,
+          durationMs: null,
+          status: outcome?.failure.kind === 'unavailable' ? 'unknown_spend' : 'failed',
+          errorCode,
+          createdAt: this.clock.now(),
+        })
+        await this.repository.saveJob(job)
+        generated.set(pack.style_id, toWireJob(job, null))
       }
     }
-    return {
-      lyric_document_id: stored.id,
-      jobs: packs.map((pack) => {
-        const cached = readyByStyle.get(pack.style_id)
-        if (cached !== undefined) return toWireJob(cached, cached.trackId)
-        const created = generated.get(pack.style_id)
-        if (created === undefined) throw new LoroError('INTERNAL')
-        return created
-      }),
-    }
+    return generated
   }
 
   async trackMetadata(principal: AuthPrincipal, trackId: string): Promise<MusicTrackResponse> {
@@ -188,15 +226,6 @@ export class MusicService {
   private async jobForTrack(trackId: string, userId: string): Promise<StoredMusicJob | null> {
     return this.repository.getJobByTrack(trackId, userId)
   }
-}
-
-function parse<T>(
-  schema: { safeParse(value: unknown): { success: true; data: T } | { success: false } },
-  value: unknown,
-): T {
-  const result = schema.safeParse(value)
-  if (!result.success) throw new LoroError('VALIDATION_FAILED')
-  return result.data
 }
 
 function scopedMusicId(

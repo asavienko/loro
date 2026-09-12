@@ -1,6 +1,6 @@
 /** Composition helpers; there is only one database pool and one session engine. */
 import { Inject, Injectable, type OnModuleDestroy, type OnModuleInit } from '@nestjs/common'
-import type { AuthSettings } from './settings.js'
+import type { OAuthDeploymentSettings } from './settings.js'
 import { OAuthFlowService } from './oauth-flow.service.js'
 import { OAuthIdentityProvider } from './provider.js'
 import { systemClock } from '../common/clock.js'
@@ -25,7 +25,7 @@ export class AuthLifecycle implements OnModuleInit, OnModuleDestroy {
   }
 }
 export function buildAuth(
-  settings: AuthSettings | undefined,
+  settings: OAuthDeploymentSettings | undefined,
   database: SqlDatabase,
   sessions: AuthService,
 ): OAuthFlowService | null {
