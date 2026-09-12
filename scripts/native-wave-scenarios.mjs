@@ -142,6 +142,20 @@ export function tapBounds(dump, label) {
   return { x: Math.floor((left + right) / 2), y: Math.floor((top + bottom) / 2) }
 }
 
+const ROUTE_EVIDENCE_PREFIX = 'loro-route:'
+
+export function routeUrlFromDump(dump) {
+  const parsed = typeof dump === 'string' ? parseUiDump(dump) : dump
+  for (const node of parsed.nodes) {
+    for (const label of [node.text, node.contentDesc]) {
+      if (label.startsWith(ROUTE_EVIDENCE_PREFIX)) {
+        return label.slice(ROUTE_EVIDENCE_PREFIX.length)
+      }
+    }
+  }
+  return ''
+}
+
 function parseAppUrl(url) {
   if (!url) return null
   try {
@@ -428,7 +442,9 @@ function openDeepLink(ctx, path) {
   return failedCommand(started, `am start ${uri}`)
 }
 
-function currentActivityUrl(ctx) {
+function currentActivityUrl(ctx, dumpXml) {
+  const fromDump = dumpXml ? routeUrlFromDump(dumpXml) : ''
+  if (fromDump) return fromDump
   const dump = runCommand(ctx.run, ctx.adb, ctx.serial, [
     'shell',
     'dumpsys',
@@ -466,7 +482,7 @@ function runStreamPhrase(ctx) {
   waitForUi(ctx.run, ctx.waitMs)
   const stream = dumpUi(ctx, 'stream-before')
   if (stream.error) return scenarioResult(scenario, { status: 'unavailable', notes: stream.error })
-  const streamUrl = currentActivityUrl(ctx)
+  const streamUrl = currentActivityUrl(ctx, stream.xml)
   const todayEval = evaluateTodayStreamDump({
     todayDump: today.xml,
     streamDump: stream.xml,
@@ -480,7 +496,7 @@ function runStreamPhrase(ctx) {
   const refrain = dumpUi(ctx, 'stream-after')
   if (refrain.error)
     return scenarioResult(scenario, { status: 'unavailable', notes: refrain.error })
-  const currentUrl = currentActivityUrl(ctx)
+  const currentUrl = currentActivityUrl(ctx, refrain.xml)
   if (ctx.outputDir) {
     writeFileSync(resolve(ctx.outputDir, 'stream-url.txt'), `${currentUrl}\n`)
   }
@@ -513,7 +529,7 @@ function runHardEntry(ctx, { startPath, openMenu, prefix }) {
   waitForUi(ctx.run, ctx.waitMs)
   const refrain = dumpUi(ctx, `${prefix}-after`)
   if (refrain.error) return { status: 'unavailable', notes: refrain.error }
-  const currentUrl = currentActivityUrl(ctx)
+  const currentUrl = currentActivityUrl(ctx, refrain.xml)
   if (ctx.outputDir) {
     writeFileSync(resolve(ctx.outputDir, `${prefix}-url.txt`), `${currentUrl}\n`)
   }
