@@ -12,8 +12,10 @@ Implemented components: [component-inventory.md](component-inventory.md) · Moti
 
 Precedence is scoped, not one global file order:
 
-1. `design/Language Learning by Phrases - V1.1/Loro.dc.html` owns the visual and interaction intent
-   of learner screens 1–21; `Loro Chat.dc.html` owns screens 22–23.
+1. `design/Language Learning by Phrases - V1.1/Loro.dc.html` owns the interaction intent
+   of learner screens 1–21; `Loro Chat.dc.html` owns screens 22–23. Reviewed runtime colour,
+   type families and stationery elevation come from
+   [`design/design-v1.2/editorial_stationery/DESIGN.md`](../../design/design-v1.2/editorial_stationery/DESIGN.md).
 2. `Navigation.dc.html` owns the shared shell, five surface classes, spine, switcher, and
    exit/resume/transport laws across all 23 learner screens. Its spine rule supersedes Chat's
    earlier “no chrome” phrase: that phrase excludes drill/card chrome inside the conversation, not
@@ -42,7 +44,13 @@ the stale authored headline itself.
 ## What is implemented now
 
 The web learner shell uses a centered column with a 640px maximum width, including its stack headers
-and action bars. Bottom sheets use the same maximum width over a full-window scrim. Phones and
+and action bars. Stack titles use Newsreader `title3` on parchment glass (`surface.app` at 85% with
+a 12 px blur and the 20-px chrome gutter); the back chevron is terracotta
+utility type. The authored 28-px spine keeps v1.1 Navigation laws and the same 85% glass — not a
+64-px Study Desk bar or a 4-tab dock. DESIGN.md's Floating Island Navigation is the suspended
+`ActionBar` (`surface.app` at 92% with the same 12 px blur and `shadow.float`); spine opacity and
+height stay at the authored 85% / 28 px. `Segmented` pills sit in the enclosed stationery track with terracotta selected
+type. Settings, More and Music wrap `ListRow` groups in resting cards. Bottom sheets use the same maximum width over a full-window scrim. Phones and
 native layouts remain fluid; the developer workbench retains the full browser width. This web
 adaptation is named by `webLayout.learnerMaxWidth` and tested in `e2e/responsive.spec.ts`.
 
@@ -64,28 +72,31 @@ layout adaptations preserve the authored colors and metrics; the authored artifa
   the one screen on the v1.1 shell, transcribes the handful it needs — spine, rail, day-row and CTA
   geometry — next to its own blocks, with the authored custom-property name beside each value. They
   become generated tokens when plan 81 gives them a second call site.
-- The contrast gate currently passes 122 pairings across four accent themes.
-- `/dev/tokens` enumerates all 404 generated primitive leaves, computes that same contrast report,
+- The contrast gate currently passes 137 pairings across four accent themes.
+- `/dev/tokens` enumerates all 416 generated primitive leaves, computes that same contrast report,
   and renders current production specimens without entering the learner route/state manifest.
 Browser Storybook (`pnpm storybook`) catalogs the same production primitives and composites
 outside the Expo Router tree; it does not replace the workbench.
 
-The following are specified but not yet implemented: custom font loading/family assignment,
-learner-selectable accents, CSS-shadow/gradient-to-native rendering, Skia
-charts, and the component families required by the other 16 learner screens. The current `DarkCard`
-therefore uses flat `surface.dark`, and `Card` intentionally has no elevation prop. Plan 57 owns
-fonts, dark theme and the haptic port. [Plan 100](../../plans/100-ui-design-system.md) owns the
-shared motion adapter (now wired), gesture catalog and remaining-screen primitives that consume
-these tokens. Device 60 fps proof remains 58/72. Do not adopt a third-party UI kit to skip that kit.
+Web loads **DM Sans** and **Newsreader** from Google Fonts in `app/_layout.tsx` and Storybook.
+Native font bundling, learner-selectable accents, CSS-gradient-to-native rendering, Skia
+charts, and the component families required by the other 16 learner screens remain specified but
+not yet shipped. `Card` applies the v1.2 stationery keyline (`line.default`) and
+`stationeryElevation`: the generated CSS recipe on web, a token-derived RN shadow on iOS/Android.
+`DarkCard` uses `surface.dark` plus the float recipe. Plan 57 owns native fonts, dark theme and the
+haptic port.
+[Plan 100](../../plans/100-ui-design-system.md) owns the shared motion adapter (now wired),
+gesture catalog and remaining-screen primitives that consume these tokens. Device 60 fps proof
+remains 58/72. Do not adopt a third-party UI kit to skip that kit.
 
 ## Visual character
 
-Warm paper rather than pure white; near-black ink with a warm cast; burnt-orange Coral used
-sparingly for action; charcoal-brown stage surfaces for focused moments; generous 12–24 px corners;
-and low, warm shadows. Plus Jakarta Sans is the authored everyday face. Instrument Serif italic is
-reserved for emotional punctuation such as completion and arrival moments, never labels or body
-copy. Those families are tokenized, but the current app still relies on the platform font until font
-loading is implemented.
+Warm parchment rather than pure white; espresso ink (`#1c1c19`); terracotta used sparingly for
+action (`#9f3c16` fill, `#7f2500` text); sage for verified/mastered states; and low, warm
+stationery shadows. **Newsreader** is the literary face for headlines and phrase text. **DM Sans**
+is the utility face for labels, controls and captions. Storybook loads both from Google Fonts;
+native font bundling remains plan 57, so device builds still fall back to the platform face until
+that gate lands.
 
 ## Iconography
 
@@ -102,21 +113,21 @@ cross-platform rendering check.
 
 | Group    | Current tokens                                                                      | Rule                                                                                                            |
 | -------- | ----------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| Surfaces | `canvas`, `app`, `card`, `sunken`, `sunken2`, `device`, `scrim`, `dark`             | `app` is the screen; `card` is a raised light surface; `scrim` is only an overlay; `device` is blueprint chrome |
+| Surfaces | `canvas`, `app`, `card`, `sunken`, `sunken2`, `track`, `shadowInk`, `device`, `scrim`, `dark` | `app` is the screen; `card` is a raised light surface; `track` is the enclosed pill well; `shadowInk` colours native shadows only; `scrim` is only an overlay; `device` is blueprint chrome |
 | Ink      | `ink`, `ink2`, `ink3`, `ink4`, `muted`, `muted2`, `muted3`                          | `muted2` is large semibold/non-text only; `muted3` is decorative only                                           |
 | Lines    | `subtle`, `default`, `strong`, `stronger`, `strongest`                              | Use stronger borders for interaction/selection, not arbitrary darker literals                                   |
 | Dark ink | `primary`, `secondary`, `tertiary`, `muted`, `faint`, `surface`, `surface2`, `line` | Use only on dark surfaces                                                                                       |
 
-The app background is `surface.app` (`#f6f2ea`); primary ink is `ink.ink` (`#23201b`). The current
-`ink.muted` is `#6a6558`, darkened from the authored value so it also clears AA on
-`surface.sunken2`. `surface.scrim` is the single modal backdrop token; no text is laid directly on
-it.
+The app background is `surface.app` (`#fcf9f4`); primary ink is `ink.ink` (`#1c1c19`). The current
+`ink.muted` is `#7a645b`, darkened from v1.2 outline `#8a726a` so it also clears AA on
+`surface.sunken2` and `surface.track`. `surface.scrim` is the single modal backdrop token; no text
+is laid directly on it. `surface.shadowInk` is the stationery shadow pigment, not a text surface.
 
 ### Accent themes
 
 | Theme           | `accent`  | `accentInk` | `accentOnDark` | `wash`    |
 | --------------- | --------- | ----------- | -------------- | --------- |
-| Coral (default) | `#bf5722` | `#a2461a`   | `#e8a06a`      | `#f8ece1` |
+| Coral (default) | `#9f3c16` | `#7f2500`   | `#ffb59c`      | `#ffdbd0` |
 | Sunset          | `#95560f` | `#7d470b`   | `#ddab5e`      | `#f6ecdc` |
 | Teal            | `#1f7d6c` | `#186356`   | `#68c0ae`      | `#e4f2ef` |
 | Berry           | `#9c4470` | `#7f345a`   | `#d98fb4`      | `#f6e9ef` |
@@ -148,19 +159,25 @@ The generated scale is:
 
 | Token                          |         Size | Weight | Intended use                           |
 | ------------------------------ | -----------: | -----: | -------------------------------------- |
-| `display`                      |  62 (max 74) |    700 | countdown/clock                        |
-| `hero`                         |  46 (max 56) |    700 | streak and recap values                |
-| `title1` / `title2` / `title3` | 26 / 22 / 20 |    700 | phrase hero, screen/card headings      |
-| `headline`                     |           18 |    700 | lab headings                           |
-| `body` / `bodySm`              |      15 / 14 |    700 | primary row and button text            |
-| `caption` / `captionSm`        |      13 / 12 |    600 | supporting text and translations       |
-| `label` / `labelSm`            |      11 / 10 |    700 | tracked uppercase labels               |
-| `prose`                        |           14 |    400 | longer copy                            |
+| `display`                      |  48 (max 56) |    400 | Newsreader display-lg                  |
+| `hero`                         |  36 (max 44) |    400 | Newsreader display-lg-mobile           |
+| `title1` / `title2` / `title3` | 32 / 26 / 20 |    500 | Newsreader headlines                   |
+| `headline`                     |           20 |    600 | Newsreader section titles              |
+| `body`                         |           14 |    600 | DM Sans label-lg CTA / row-primary     |
+| `bodyMd`                       |           16 |    400 | DM Sans body-md supporting UI copy     |
+| `bodySm` / `caption`           |      14 / 14 |    400 | DM Sans body-sm dense helper           |
+| `captionSm`                    |           12 |    600 | DM Sans label-md meta                  |
+| `label` / `labelSm`            |      11 / 11 |    500 | tracked uppercase labels               |
+| `prose`                        |           19 |    400 | Newsreader phrase text                 |
 | `serifDisplay` / `serifNum`    |      26 / 32 |    400 | emotional punctuation / phase numerals |
 
+DESIGN.md's 16 px / 400 / 24 lh DM Sans `body-md` is the `bodyMd` step. `body` stays 14 px
+`label-lg` for CTAs and row-primary labels; `caption`/`bodySm` stay the 14 px regular companions.
+
 The generated rules require tabular numerals for changing numbers and tracking on uppercase labels.
-The current React Native mapping implements the 12 sans metric variants from `display` through
-`prose`/`labelSm`, but it does not yet load the families or expose the two serif variants. Shared
+The current React Native mapping implements the metric variants from `display` through
+`prose`/`labelSm`, including `bodyMd`, and assigns Newsreader or DM Sans from each step's
+`family` field. Shared
 `Text` applies the generated `tabular-nums` variant to every style, including counters embedded in
 translated copy. The typography E2E checks equal digit advances in the current browser fallback
 font on Today, Progress and practice; native font rendering still requires device proof.
@@ -171,7 +188,7 @@ forward that property.
 ## Space, radius, and exact geometry
 
 The global spacing scale is 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, and 24 px (`space.0.5` through
-`space.6`). Screen gutters are named `dense: 14`, `default: 18`, and `roomy: 22`.
+`space.6`). Screen gutters are named `dense: 16`, `default: 20`, and `roomy: 24`.
 
 Radii are `sm: 8`, `md: 10`, `lg: 12`, `xl: 16`, `2xl: 20`, `3xl: 24`, `pill: 999`, plus the
 authored sheet and blueprint-chrome radii. `radius.lg` is the interactive workhorse.
@@ -184,8 +201,11 @@ Text-scale E2E checks at 200% and 310% make these pixel decisions behavioural, n
 ## Interaction and motion
 
 The touch contract sets a 44×44 minimum target. The implemented `Pressable` uses four generated
-press scales: row `0.988`, button `0.98`, small button `0.9`, and icon `0.82`. Icon feedback also
-enforces the 44×44 visual floor; every interactive element uses this primitive.
+press scales: row `0.988`, button `0.98`, small button `0.9`, and icon `0.82`. Stationery cards and
+primary buttons use the v1.2 deboss instead: translate-y 1px with a reduced contact shadow, still
+timed by the existing `press` tokens and suppressed under Reduce Motion. Icon feedback also
+enforces the 44×44 visual floor; every interactive element uses this primitive. Ghost/tertiary
+buttons keep a static underline on native and expand a 1px centre-origin underline on web hover.
 
 The token set declares 11 animations, 9 transitions, 5 easing functions, and a reduced-motion
 outcome for information-bearing motion. Most are not wired yet. When implementing one, preserve the

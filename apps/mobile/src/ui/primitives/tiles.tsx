@@ -89,16 +89,19 @@ export function StatTile({ value, label }: { value: string; label: string }) {
       padding={space['3.5']}
       style={{
         flex: 1,
-        alignItems: 'center',
         ...(Platform.OS === 'web' ? { minWidth: 'auto' as const } : {}),
       }}
       accessible
       accessibilityLabel={`${label}: ${value}`}
     >
-      <Text variant="title2" color={ink.ink}>
+      <Text variant="title1" color={ink.ink}>
         {value}
       </Text>
-      <Text variant="labelSm" color={ink.muted} align="center" style={{ marginTop: 3 }}>
+      <Text
+        variant="labelSm"
+        color={ink.muted}
+        style={{ textTransform: 'uppercase', marginTop: space['1'] }}
+      >
         {label}
       </Text>
     </Card>

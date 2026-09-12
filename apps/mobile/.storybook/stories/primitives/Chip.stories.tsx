@@ -13,3 +13,4 @@ type Story = StoryObj<typeof meta>
 
 export const Default: Story = {}
 export const Unselected: Story = { args: { selected: false } }
+export const Sage: Story = { args: { label: 'Recommended', tone: 'sage', selected: true } }

@@ -4,9 +4,16 @@ import type { StorybookConfig } from '@storybook/react-native-web-vite'
 
 const mobileRoot = path.dirname(path.dirname(fileURLToPath(import.meta.url)))
 
+const editorialStationeryFonts =
+  'https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400..700;1,9..40,400..700&family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&display=swap'
+
 const config: StorybookConfig = {
   stories: ['./stories/**/*.stories.tsx'],
   addons: ['@storybook/addon-docs', '@storybook/addon-a11y'],
+  previewHead: (head) => `${head}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="${editorialStationeryFonts}" rel="stylesheet">`,
   framework: {
     name: '@storybook/react-native-web-vite',
     options: {

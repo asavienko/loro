@@ -17,6 +17,7 @@
  * them against the values the screens used to hold.
  */
 
+import type { StyleProp, ViewStyle } from 'react-native'
 import { chipLook, type ChipTone, type ChipVariant } from './controlStyle'
 import { useTheme } from '../ThemeProvider'
 import { Pressable } from './Pressable'
@@ -31,6 +32,7 @@ export function Chip({
   tone = 'tint',
   accessibilityLabel,
   accessibilityRole = 'button',
+  style,
 }: {
   /** The visible text. */
   label: string
@@ -40,11 +42,13 @@ export function Chip({
   onPress: () => void
   /** The chip's metrics — `src/ui/tokens/control.ts` names each one and where it came from. */
   variant?: ChipVariant | undefined
-  /** How the selected state looks. See `ChipTone`. */
+  /** How the selected state looks. `sage` is verified / recommended. See `ChipTone`. */
   tone?: ChipTone | undefined
   /** Defaults to `label`. Set it whenever the two differ. */
   accessibilityLabel?: string | undefined
   accessibilityRole?: 'button' | 'radio' | 'checkbox' | undefined
+  /** Layout only — Stream's journal actions stretch to a shared row. */
+  style?: StyleProp<ViewStyle> | undefined
 }) {
   const { accent } = useTheme()
   const look = chipLook(variant, tone, selected, accent)
@@ -56,7 +60,7 @@ export function Chip({
       accessibilityLabel={accessibilityLabel ?? label}
       selected={selected}
       onPress={onPress}
-      style={[look.container, variant === 'tag' ? { maxWidth: '100%' } : null]}
+      style={[look.container, variant === 'tag' ? { maxWidth: '100%' } : null, style]}
     >
       {emoji !== undefined && <Text variant={look.textVariant}>{emoji}</Text>}
       <Text

@@ -8,17 +8,24 @@
  * optional clear keeps Discover's accent `Card` as a wrapper instead of baking accent into
  * the input. Every string is a prop; this file does not import `copy`.
  *
- * The resolved chrome lives in `./controlStyle.ts` so a unit test can pin Account's 44 / 12 /
- * `line.strong` box. `invalid` and `editable` use both `accessibilityState` and `aria-*`
- * because RNW drops the nested form. Call-site `style` overrides (Discover 46, sheet 38,
- * Import 132) stay local — those numbers have one home each.
+ * The resolved chrome lives in `./controlStyle.ts` so a unit test can pin Account's parchment
+ * well and the Newsreader/DM Sans split. `invalid` and `editable` use both
+ * `accessibilityState` and `aria-*` because RNW drops the nested form. Call-site `style`
+ * overrides (Discover 46, sheet 38, Import 132) stay local — those numbers have one home each.
  */
 
-import { TextInput, type StyleProp, type TextInputProps, type TextStyle } from 'react-native'
+import { useState } from 'react'
+import {
+  Platform,
+  TextInput,
+  type StyleProp,
+  type TextInputProps,
+  type TextStyle,
+} from 'react-native'
 import { ink } from '../theme'
 import { IconButton } from './IconButton'
 import { Row } from './layout'
-import { fieldA11y, fieldLook } from './controlStyle'
+import { fieldA11y, fieldFace, fieldLook } from './controlStyle'
 
 export function Field({
   accessibilityLabel,
@@ -28,6 +35,7 @@ export function Field({
   placeholder,
   placeholderTextColor = ink.muted2,
   bordered = false,
+  literary = false,
   invalid = false,
   multiline = false,
   editable = true,
@@ -47,6 +55,8 @@ export function Field({
   placeholderTextColor?: string | undefined
   /** Account / Workbench chrome. Discover and the tagging sheet leave this off and wrap. */
   bordered?: boolean | undefined
+  /** Newsreader once the learner is composing target-language text. */
+  literary?: boolean | undefined
   invalid?: boolean | undefined
   multiline?: boolean | undefined
   editable?: boolean | undefined
@@ -78,7 +88,8 @@ export function Field({
       throw new Error('Field clear control requires clearLabel and clearGlyph')
     }
   }
-  const look = fieldLook(bordered, invalid)
+  const [focused, setFocused] = useState(false)
+  const look = fieldLook(bordered, invalid, focused)
   const a11y = fieldA11y(invalid, editable)
   const input = (
     <TextInput
@@ -95,7 +106,23 @@ export function Field({
       accessibilityState={a11y.accessibilityState}
       aria-disabled={a11y['aria-disabled']}
       aria-invalid={a11y['aria-invalid']}
-      style={[look.input, multiline ? { textAlignVertical: 'top' } : null, style]}
+      onFocus={(event) => {
+        setFocused(true)
+        inputProps.onFocus?.(event)
+      }}
+      onBlur={(event) => {
+        setFocused(false)
+        inputProps.onBlur?.(event)
+      }}
+      style={[
+        look.input,
+        fieldFace(literary, value.length > 0),
+        multiline ? { textAlignVertical: 'top' } : null,
+        Platform.OS === 'web'
+          ? ({ outlineWidth: 0, outlineColor: 'transparent' } satisfies TextStyle)
+          : null,
+        style,
+      ]}
       {...(lang !== undefined ? { lang } : {})}
     />
   )

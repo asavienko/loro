@@ -24,7 +24,7 @@ const splashPlugins: NonNullable<ExpoConfig['plugins']> = localApk
         {
           android: {
             drawable: { icon: './assets/preview/splash.xml' },
-            backgroundColor: '#f6f2ea',
+            backgroundColor: '#fcf9f4',
           },
         },
       ],
@@ -43,7 +43,7 @@ export default (): ExpoConfig => ({
   newArchEnabled: true,
 
   splash: {
-    backgroundColor: '#f6f2ea', // surface.app
+    backgroundColor: '#fcf9f4', // surface.app
     resizeMode: 'contain',
   },
 
@@ -91,7 +91,7 @@ export default (): ExpoConfig => ({
     adaptiveIcon: localApk
       ? undefined
       : {
-          backgroundColor: '#f6f2ea',
+          backgroundColor: '#fcf9f4',
         },
     permissions: [
       'android.permission.RECORD_AUDIO',
