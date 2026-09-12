@@ -1,0 +1,326 @@
+<!DOCTYPE html><html class="h-full" lang="en" style="width: 390px; height: 750px; overflow: hidden; position: relative;"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"><link href="https://fonts.googleapis.com" rel="preconnect"><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"><link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&amp;family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "surface-container": "#f0ede8", "secondary-container": "#eae1db", "secondary-fixed-dim": "#cdc5c0", "on-error": "#ffffff", "on-tertiary-fixed": "#121f07", "primary": "#7f2500", "inverse-surface": "#31302d", "surface-container-lowest": "#ffffff", "primary-fixed-dim": "#ffb59c", "on-primary": "#ffffff", "error-container": "#ffdad6", "on-surface": "#1c1c19", "error": "#ba1a1a", "tertiary-container": "#516142", "on-primary-fixed": "#390c00", "tertiary-fixed": "#d6e9c1", "primary-container": "#bf542c", "on-secondary": "#ffffff", "on-primary-container": "#ffc9b7", "tertiary-fixed-dim": "#bacda6", "surface": "#fcf9f4", "surface-container-highest": "#e5e2dd", "primary-fixed": "#ffdbd0", "on-tertiary-fixed-variant": "#3c4b2e", "secondary": "#635d59", "surface-bright": "#fcf9f4", "on-surface-variant": "#57423b", "outline-variant": "#dec0b7", "tertiary": "#3a492c", "on-primary-fixed-variant": "#822701", "on-secondary-fixed-variant": "#4b4642", "surface-container-low": "#f6f3ee", "surface-container-high": "#ebe8e2", "on-background": "#1c1c19", "inverse-primary": "#ffb59c", "outline": "#8a726a", "surface-dim": "#dcdad4", "on-secondary-container": "#69635f", "on-tertiary": "#ffffff", "on-error-container": "#93000a", "secondary-fixed": "#eae1db", "inverse-on-surface": "#f3f0eb", "surface-variant": "#e5e2dd", "surface-tint": "#a23e18", "background": "#fcf9f4", "on-tertiary-container": "#c9dbb4", "on-secondary-fixed": "#1f1b18" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-sm": "0.5rem", "gutter": "1.5rem", "space-lg": "1.5rem", "space-md": "1rem", "margin-sm": "1rem", "space-xs": "0.25rem", "gutter-sm": "1rem", "space-xl": "2rem", "margin": "1.5rem" }, "fontFamily": { "headline-sm": ["Newsreader"], "headline-lg": ["Newsreader"], "headline-lg-mobile": ["Newsreader"], "display-lg": ["Newsreader"], "label-lg": ["DM Sans"], "body-md": ["DM Sans"], "body-lg": ["DM Sans"], "label-md": ["DM Sans"], "label-sm": ["DM Sans"], "body-sm": ["DM Sans"], "headline-md": ["Newsreader"] }, "fontSize": { "headline-sm": ["1.25rem", { "lineHeight": "1.75rem", "fontWeight": "600" }], "headline-lg": ["2.25rem", { "lineHeight": "2.75rem", "letterSpacing": "-0.02em", "fontWeight": "600" }], "headline-lg-mobile": ["1.875rem", { "lineHeight": "2.25rem", "letterSpacing": "-0.015em", "fontWeight": "600" }], "display-lg": ["3rem", { "lineHeight": "3.5rem", "letterSpacing": "-0.025em", "fontWeight": "500" }], "label-lg": ["0.875rem", { "lineHeight": "1.25rem", "fontWeight": "600" }], "body-md": ["0.875rem", { "lineHeight": "1.375rem", "fontWeight": "400" }], "body-lg": ["1rem", { "lineHeight": "1.625rem", "fontWeight": "400" }], "label-md": ["0.75rem", { "lineHeight": "1rem", "letterSpacing": "0.025em", "fontWeight": "600" }], "label-sm": ["0.6875rem", { "lineHeight": "0.875rem", "letterSpacing": "0.05em", "fontWeight": "700" }], "body-sm": ["0.75rem", { "lineHeight": "1.125rem", "fontWeight": "400" }], "headline-md": ["1.5rem", { "lineHeight": "2rem", "fontWeight": "600" }] } } } };</script><style>@layer base{html,body{width:100%;margin:0;padding:0;min-height:100%;}body{overscroll-behavior-y:none;background-color:#fcf9f4;color:#1c1c19;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}}::-webkit-scrollbar{display:none;}</style><style>
+    body {
+      min-height: 100dvh;
+    }
+  </style>
+</head><body class="bg-surface font-body-md text-body-md text-on-surface flex flex-col antialiased selection:bg-primary-fixed selection:text-on-primary-fixed h-full relative overflow-hidden justify-between"><main class="flex flex-col flex-1 w-full max-w-md mx-auto px-5 pt-safe pb-2 justify-between select-none h-full overflow-hidden">
+<!-- 1. Top Bar: Spotify Minimal Now Playing Header -->
+<header class="flex items-center justify-between pt-1 pb-1 w-full text-on-surface shrink-0">
+<button aria-label="Dismiss player" class="w-9 h-9 -ml-2 rounded-full flex items-center justify-center active:scale-95 transition-transform text-on-surface hover:bg-surface-container-low" type="button">
+<span class="material-symbols-outlined text-2xl">keyboard_arrow_down</span>
+</button>
+<div class="flex flex-col items-center text-center min-w-0 px-2 flex-1">
+<span class="font-label-sm text-[10px] tracking-[0.16em] uppercase text-on-surface-variant font-bold">Playing from Playlist</span>
+<span class="font-label-md text-xs text-on-surface truncate font-bold mt-0.5 tracking-tight">Café &amp; Mañanas (Vol. 03)</span>
+</div>
+<button aria-label="Track options" class="w-9 h-9 -mr-2 rounded-full flex items-center justify-center active:scale-95 transition-transform text-on-surface hover:bg-surface-container-low" type="button">
+<span class="material-symbols-outlined text-xl">more_vert</span>
+</button>
+</header>
+<!-- 2. Prominent Square Cover Art Card with Independent Accordion Triggers -->
+<div class="w-full flex flex-col items-center shrink min-h-0 py-0.5">
+<div class="relative w-full aspect-square max-w-[280px] max-h-[280px] rounded-3xl overflow-hidden shadow-lg border border-outline-variant/30 group">
+<img alt="Madrid Cafe Cortado" class="absolute inset-0 w-full h-full object-cover select-none pointer-events-none" src="https://lh3.googleusercontent.com/aida/AEtjO1Wfd-3m0BNr4e5wApFcw-xVaIUe6TUMSZp92en1wOtCXQy-lHsG7-NckM3qWKeigGvrFgMc6TlqvCsLqgbmN9R-0_XBli9Fj3hMRqeXKg_ONazvzeGCJhkQjlAQwOOMwbYUVwRNS4FXzIR4xhr3ss0yjC1Y_Pn_Of8GAe0K3mTiOmGuYfmEOkPyUc9lpuaV_ZYbNy53C6fMcucHUk6WxeXiqxNoEniI_InmRvgETT3Vyyh-TK7MD78ZczU">
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/50 pointer-events-none"></div>
+<!-- Top Trigger Bar: 3 Standalone Floating Pill Buttons -->
+<div class="absolute top-2.5 inset-x-0 flex justify-center z-30 px-2.5">
+<div class="flex items-center gap-1.5 max-w-full">
+<!-- Mnemonic Pill Trigger -->
+<button class="deck-trigger-pill px-2.5 py-1 rounded-full bg-primary-container text-white border border-white/30 font-label-sm text-[11px] font-bold flex items-center gap-1 shadow-lg ring-2 ring-primary-fixed/40 active:scale-95 transition-all" id="pill-mnemonic" onclick="toggleDeckAccordion('mnemonic')" type="button">
+<span class="">💡</span>
+<span class="material-symbols-outlined text-[13px] leading-none transition-transform duration-200" id="pill-arrow-mnemonic">expand_less</span>
+</button>
+<!-- Grammar Pill Trigger -->
+<button class="deck-trigger-pill px-2.5 py-1 rounded-full backdrop-blur-md bg-stone-950/70 border border-white/20 text-white/80 hover:text-white font-label-sm text-[11px] font-semibold flex items-center gap-1 shadow-md active:scale-95 transition-all" id="pill-grammar" onclick="toggleDeckAccordion('grammar')" type="button">
+<span class="">📖</span>
+<span class="material-symbols-outlined text-[13px] leading-none transition-transform duration-200" id="pill-arrow-grammar">expand_more</span>
+</button>
+<!-- Phonetics Pill Trigger -->
+<button class="deck-trigger-pill px-2.5 py-1 rounded-full backdrop-blur-md bg-stone-950/70 border border-white/20 text-white/80 hover:text-white font-label-sm text-[11px] font-semibold flex items-center gap-1 shadow-md active:scale-95 transition-all" id="pill-phonetics" onclick="toggleDeckAccordion('phonetics')" type="button">
+<span class="">🗣️</span>
+<span class="material-symbols-outlined text-[13px] leading-none transition-transform duration-200" id="pill-arrow-phonetics">expand_more</span>
+</button>
+</div>
+</div>
+<!-- Expandable Frosted Glass Flyout / Modal Card directly below pills -->
+<div class="absolute top-12 inset-x-3 z-20 transition-all duration-300 transform opacity-100 scale-100" id="deck-flyout-container">
+<div class="backdrop-blur-xl bg-stone-950/90 border border-white/20 rounded-2xl p-2.5 shadow-2xl flex flex-col gap-1.5 relative ring-1 ring-black/40">
+<!-- Flyout Content: Mnemonic Lab -->
+<div class="deck-panel flex-col gap-1.5 flex" id="deck-panel-mnemonic">
+<div class="flex items-center justify-between pb-1 border-b border-white/10">
+<div class="flex items-center gap-1.5 min-w-0">
+<span class="text-xs">💡</span>
+<span class="text-[11px] text-white font-bold tracking-tight">Cortado Porcelain Tap</span>
+</div>
+<span class="px-1.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-[9px] font-bold text-emerald-300 shrink-0">96% Recall</span>
+</div>
+<p class="text-[10.5px] text-white/90 leading-snug pt-0.5">
+<span class="text-primary-fixed font-semibold">Sensory Trigger:</span> Hear spoon tap the saucer right as you drop the stress on <span class="text-white font-bold italic">"PO-ne"</span>.
+</p>
+</div>
+<!-- Flyout Content: Grammar Pragmatics -->
+<div class="deck-panel flex-col gap-1.5 hidden" id="deck-panel-grammar">
+<div class="flex items-center justify-between pb-1 border-b border-white/10">
+<span class="text-[11px] font-bold text-primary-fixed flex items-center gap-1">
+<span class="">🇪🇸</span> Castilian Pragmatics
+</span>
+<span class="text-[9px] uppercase tracking-wider text-white/60 font-semibold">Native Norm</span>
+</div>
+<div class="text-[10px] leading-relaxed text-white/90 pt-0.5">
+<span class="font-bold text-white">Why Spaniards don't say "¿Puedo tener?":</span> Direct collaboration imperative <span class="text-primary-fixed font-bold italic">«Me pone»</span> ("Place for me") is warmest.
+</div>
+</div>
+<!-- Flyout Content: Phonetics & Syllabic Stress -->
+<div class="deck-panel flex-col gap-1.5 hidden" id="deck-panel-phonetics">
+<div class="flex items-center justify-between pb-1 border-b border-white/10">
+<span class="text-[11px] font-bold text-tertiary-fixed flex items-center gap-1">
+<span class="">〰️</span> Syllabic Stress Contour Map
+</span>
+<span class="text-[9px] text-white/60 font-mono tracking-tight">Liaison ⁀ Active</span>
+</div>
+<div class="bg-white/5 rounded-lg p-1.5 border border-white/10 flex flex-col gap-1">
+<div class="flex items-center justify-between text-[11px] font-mono text-primary-fixed tracking-wide">
+<span class="">[me ˈpo.ne]</span>
+<span class="text-white/40 text-[10px]">⁀</span>
+<span class="">[uŋ koɾˈta.ðo]</span>
+</div>
+<div class="flex items-center justify-between text-[9px] text-white/70">
+<span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span> Trochaic downbeat</span>
+<span class="text-white/50">Elision: «ne» + «un» → /njun/</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- 3. Phrase Title & Artist Area -->
+<div class="w-full flex items-center justify-between pt-1 pb-1 shrink-0">
+<div class="flex flex-col min-w-0 pr-2 flex-1">
+<h1 class="font-headline-lg-mobile text-[1.45rem] font-bold text-on-surface leading-tight tracking-tight italic">
+        «Me pone un cortado, por favor»
+      </h1>
+<div class="flex items-center gap-1.5 mt-0.5 text-on-surface-variant">
+<span class="font-label-md text-xs font-semibold text-on-surface">Sara Martín · Clara</span>
+<span class="material-symbols-outlined text-primary-container text-[15px]" style="font-variation-settings: &quot;FILL&quot; 1;">verified</span>
+<span class="text-[11px] text-secondary">• Madrid Chamberí</span>
+</div>
+</div>
+<div class="flex items-center gap-0.5 shrink-0">
+<button aria-label="Favorite phrase" class="w-9 h-9 rounded-full flex items-center justify-center text-primary-container active:scale-90 transition-transform" id="like-btn" type="button">
+<span class="material-symbols-outlined text-xl" style="font-variation-settings: &quot;FILL&quot; 1;">favorite</span>
+</button>
+<button aria-label="Save to Codex" class="w-9 h-9 rounded-full flex items-center justify-center text-secondary active:scale-90 transition-transform hover:text-on-surface" type="button">
+<span class="material-symbols-outlined text-xl">bookmark_add</span>
+</button>
+</div>
+</div>
+<!-- 4. Live Syllable Scrubber & Progress Bar -->
+<div class="w-full flex flex-col gap-1 shrink-0">
+<div class="relative w-full h-4 flex items-center cursor-pointer group select-none">
+<!-- Background Track -->
+<div class="w-full h-1.5 bg-surface-container-highest rounded-full overflow-hidden relative">
+<!-- Progress Fill -->
+<div class="w-[37%] bg-primary-container h-full rounded-full"></div>
+</div>
+<!-- Syllable Downbeat Cadence Markers -->
+<div class="absolute left-[12%] w-1.5 h-1.5 bg-primary rounded-full pointer-events-none -translate-x-1/2 ring-2 ring-surface"></div>
+<div class="absolute left-[24%] w-1.5 h-1.5 bg-primary rounded-full pointer-events-none -translate-x-1/2 ring-2 ring-surface"></div>
+<div class="absolute left-[37%] w-2 h-2 bg-white rounded-full pointer-events-none -translate-x-1/2 ring-2 ring-primary-container shadow-sm"></div>
+<div class="absolute left-[58%] w-1.5 h-1.5 bg-outline/50 rounded-full pointer-events-none -translate-x-1/2 ring-2 ring-surface"></div>
+<div class="absolute left-[78%] w-1.5 h-1.5 bg-outline/50 rounded-full pointer-events-none -translate-x-1/2 ring-2 ring-surface"></div>
+<div class="absolute left-[92%] w-1.5 h-1.5 bg-outline/50 rounded-full pointer-events-none -translate-x-1/2 ring-2 ring-surface"></div>
+<!-- Scrubber Scrub Thumb -->
+<div class="absolute left-[37%] -translate-x-1/2 w-3.5 h-3.5 bg-primary-container rounded-full shadow-md scale-100 group-hover:scale-125 transition-transform ring-4 ring-primary-fixed/40"></div>
+</div>
+<div class="flex justify-between items-center text-on-surface-variant font-label-sm text-[11px] font-semibold px-0.5">
+<span class="">0:14</span>
+<span class="text-[9.5px] uppercase font-bold tracking-widest text-primary-container flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container animate-pulse"></span>
+        Beat 2 of 4 · [kor-TAH-doh]
+      </span>
+<span class="">0:38</span>
+</div>
+</div>
+<!-- 5. Primary Playback Deck (Spotify Transport Style) -->
+<div class="w-full flex items-center justify-between px-3 pt-0.5 pb-0.5 shrink-0">
+<!-- Shuffle Reps -->
+<button aria-label="Shuffle drills" class="w-10 h-10 rounded-full flex items-center justify-center text-secondary hover:text-on-surface active:scale-95 transition-transform" type="button">
+<span class="material-symbols-outlined text-[22px]">shuffle</span>
+</button>
+<!-- Previous Phrase -->
+<button aria-label="Previous phrase" class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface active:scale-90 transition-transform hover:bg-surface-container-low" type="button">
+<span class="material-symbols-outlined text-[30px]" style="font-variation-settings: &quot;FILL&quot; 1;">skip_previous</span>
+</button>
+<!-- Primary Big Play/Pause Button -->
+<button aria-label="Pause drill playback" class="w-[58px] h-[58px] rounded-full bg-primary-container text-on-primary flex items-center justify-center shadow-[0_6px_18px_rgba(191,84,44,0.35)] active:scale-95 hover:brightness-105 transition-all" id="master-play" type="button">
+<span class="material-symbols-outlined text-3xl" style="font-variation-settings: &quot;FILL&quot; 1;">pause</span>
+</button>
+<!-- Next Phrase -->
+<button aria-label="Next phrase" class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface active:scale-90 transition-transform hover:bg-surface-container-low" type="button">
+<span class="material-symbols-outlined text-[30px]" style="font-variation-settings: &quot;FILL&quot; 1;">skip_next</span>
+</button>
+<!-- Continuous Loop Toggle -->
+<button aria-label="Continuous cadence loop active 3 times" class="w-10 h-10 rounded-full flex items-center justify-center relative text-primary-container active:scale-95 transition-transform" type="button">
+<span class="material-symbols-outlined text-[22px]">repeat</span>
+<span class="absolute top-1 right-0.5 text-[8.5px] font-black bg-primary-fixed text-on-primary-fixed-variant rounded-full px-1 leading-tight ring-1 ring-white">3×</span>
+</button>
+</div>
+<!-- NEW CENTERED SPACED REPETITION SEGMENTED RATING CAPSULE -->
+<div class="w-full flex flex-col items-center justify-center shrink-0 pt-1 pb-0.5">
+<div class="inline-flex items-center p-1 bg-surface-container-low border border-outline-variant/40 rounded-full shadow-sm">
+<!-- Hard Option -->
+<button class="px-3.5 py-1.5 rounded-full text-on-surface-variant hover:text-on-surface active:scale-95 transition-all flex items-center gap-1.5 group" id="rate-hard" onclick="selectRating('hard')" type="button">
+<span class="material-symbols-outlined text-[15px] text-error group-hover:scale-110 transition-transform">close</span>
+<span class="font-label-sm text-xs font-semibold">Hard</span>
+
+</button>
+<!-- Good Option -->
+
+<!-- Easy Option (Active Default) -->
+<button class="px-3.5 py-1.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed font-bold shadow-xs active:scale-95 transition-all flex items-center gap-1.5 ring-1 ring-tertiary/25" id="rate-easy" onclick="selectRating('easy')" type="button">
+<span class="material-symbols-outlined text-[16px] text-tertiary">check</span>
+<span class="font-label-sm text-xs">Easy</span>
+
+</button>
+</div>
+</div>
+<!-- 6. Tactile Speed & Cadence Multipliers -->
+<div class="w-full flex items-center justify-center gap-1.5 py-0.5 shrink-0">
+<button class="px-2.5 py-1 rounded-full bg-surface-container-low border border-outline-variant/30 text-on-surface-variant font-label-sm text-[11px] hover:bg-surface-container transition-colors active:scale-95" type="button">
+      0.8x Slow
+    </button>
+<button class="px-2.5 py-1 rounded-full bg-surface-container-low border border-outline-variant/30 text-on-surface-variant font-label-sm text-[11px] hover:bg-surface-container transition-colors active:scale-95" type="button">
+      1.0x Normal
+    </button>
+<button class="px-3 py-1 rounded-full bg-primary-container text-on-primary font-label-sm text-[11px] font-bold shadow-xs active:scale-95 ring-2 ring-primary-fixed" type="button">
+      1.25x Street Speed
+    </button>
+</div>
+<!-- 7. Extendable "Lyrics & Syllabic Drill" Bottom Drawer Peek -->
+<div class="w-full shrink-0 pt-1 pb-safe">
+
+</div>
+</main>
+<script>
+  // Rating pill segmented selection
+  function selectRating(level) {
+    const levels = ['hard', 'good', 'easy'];
+    levels.forEach(lvl => {
+      const btn = document.getElementById('rate-' + lvl);
+      if (!btn) return;
+      if (lvl === level) {
+        if (lvl === 'easy') {
+          btn.className = 'px-3.5 py-1.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed font-bold shadow-xs active:scale-95 transition-all flex items-center gap-1.5 ring-1 ring-tertiary/25';
+        } else if (lvl === 'good') {
+          btn.className = 'px-3.5 py-1.5 rounded-full bg-secondary-container text-on-secondary-container font-bold shadow-xs active:scale-95 transition-all flex items-center gap-1.5 ring-1 ring-outline/20';
+        } else {
+          btn.className = 'px-3.5 py-1.5 rounded-full bg-error-container text-on-error-container font-bold shadow-xs active:scale-95 transition-all flex items-center gap-1.5 ring-1 ring-error/25';
+        }
+      } else {
+        btn.className = 'px-3.5 py-1.5 rounded-full text-on-surface-variant hover:text-on-surface active:scale-95 transition-all flex items-center gap-1.5 group';
+      }
+    });
+  }
+
+  // Independent Accordion Triggers with Pure Artwork Zero-State
+  let currentOpenDeck = 'mnemonic'; // Default to first mnemonic pill
+
+  function toggleDeckAccordion(tabName) {
+    if (currentOpenDeck === tabName) {
+      collapseDeckAccordion();
+    } else {
+      openDeckAccordion(tabName);
+    }
+  }
+
+  function openDeckAccordion(tabName) {
+    currentOpenDeck = tabName;
+    const container = document.getElementById('deck-flyout-container');
+    if (container) {
+      container.classList.remove('hidden', 'opacity-0', 'scale-95', 'pointer-events-none');
+      container.classList.add('opacity-100', 'scale-100');
+    }
+
+    const tabs = ['mnemonic', 'grammar', 'phonetics'];
+    tabs.forEach(tab => {
+      const panel = document.getElementById('deck-panel-' + tab);
+      const pill = document.getElementById('pill-' + tab);
+      const arrow = document.getElementById('pill-arrow-' + tab);
+
+      if (panel && pill && arrow) {
+        if (tab === tabName) {
+          panel.classList.remove('hidden');
+          panel.classList.add('flex');
+          pill.className = 'deck-trigger-pill px-2.5 py-1 rounded-full bg-primary-container text-white border border-white/30 font-label-sm text-[11px] font-bold flex items-center gap-1 shadow-lg ring-2 ring-primary-fixed/40 active:scale-95 transition-all';
+          arrow.textContent = 'expand_less';
+        } else {
+          panel.classList.add('hidden');
+          panel.classList.remove('flex');
+          pill.className = 'deck-trigger-pill px-2.5 py-1 rounded-full backdrop-blur-md bg-stone-950/70 border border-white/20 text-white/80 hover:text-white font-label-sm text-[11px] font-semibold flex items-center gap-1 shadow-md active:scale-95 transition-all';
+          arrow.textContent = 'expand_more';
+        }
+      }
+    });
+  }
+
+  function collapseDeckAccordion() {
+    currentOpenDeck = null;
+    const container = document.getElementById('deck-flyout-container');
+    if (container) {
+      container.classList.add('hidden', 'opacity-0', 'scale-95', 'pointer-events-none');
+      container.classList.remove('opacity-100', 'scale-100');
+    }
+
+    const tabs = ['mnemonic', 'grammar', 'phonetics'];
+    tabs.forEach(tab => {
+      const panel = document.getElementById('deck-panel-' + tab);
+      const pill = document.getElementById('pill-' + tab);
+      const arrow = document.getElementById('pill-arrow-' + tab);
+
+      if (panel) {
+        panel.classList.add('hidden');
+        panel.classList.remove('flex');
+      }
+      if (pill) {
+        pill.className = 'deck-trigger-pill px-2.5 py-1 rounded-full backdrop-blur-md bg-stone-950/70 border border-white/20 text-white/80 hover:text-white font-label-sm text-[11px] font-semibold flex items-center gap-1 shadow-md active:scale-95 transition-all';
+      }
+      if (arrow) {
+        arrow.textContent = 'expand_more';
+      }
+    });
+  }
+
+  // Micro-interactions
+  const likeBtn = document.getElementById('like-btn');
+  if (likeBtn) {
+    likeBtn.addEventListener('click', () => {
+      const icon = likeBtn.querySelector('.material-symbols-outlined');
+      if (icon.textContent === 'favorite') {
+        icon.textContent = 'favorite_border';
+        likeBtn.classList.remove('text-primary-container');
+        likeBtn.classList.add('text-secondary');
+      } else {
+        icon.textContent = 'favorite';
+        likeBtn.classList.remove('text-secondary');
+        likeBtn.classList.add('text-primary-container');
+      }
+    });
+  }
+
+  const masterPlay = document.getElementById('master-play');
+  if (masterPlay) {
+    masterPlay.addEventListener('click', () => {
+      const icon = masterPlay.querySelector('.material-symbols-outlined');
+      if (icon.textContent === 'pause') {
+        icon.textContent = 'play_arrow';
+      } else {
+        icon.textContent = 'pause';
+      }
+    });
+  }
+</script>
+
+
+</body></html>
