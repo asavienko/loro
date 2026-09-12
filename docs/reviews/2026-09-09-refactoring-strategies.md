@@ -35,7 +35,7 @@ not rewritten. Device, bilingual and provider gates stay with their plans.
 | **D** | landed | `PRODUCTION_WAVES` next to times; `setStreamCursor`; `beginRefrainSession`                                                                                                                            | Wave lock / resume identity unchanged                                                                                                                                                                                                         |
 | **E** | landed | `speakEngine` export; Speak `plan()` once per course/queue; cursor from the session handle                                                                                                            | Reveal/skip still non-production; `StreamEngine.plan()` unwired                                                                                                                                                                               |
 | **F** | landed | `syncableColumns.ts` next to `fieldPolicy`; SQL drift-checked; mobile `PHRASE_WIRE_TO_SQL` / `phraseFields` consume it; both `SyncEntity` types documented                                            | No generic upsert; trip entities stay off the wire                                                                                                                                                                                            |
-| **G** | landed | `oauth-flow.service.ts` / `oauth.controller.ts` / `auth-boundary.guard.ts`; shared `jwks.ts`; OAuth port renamed `OAuthIdentity`                                                                      | Both `/me` shapes kept; no Nest `AuthModule`                                                                                                                                                                                                  |
+| **G** | landed | `oauth-flow.service.ts` / `oauth.controller.ts` / `auth-boundary.guard.ts`; shared `jwks.ts`; OAuth port renamed `OAuthIdentity`                                                                      | Both `/me` shapes kept; Nest `AuthModule` later landed in the 2026-09-12 backend refactor                                                                                                                                                     |
 
 **As-you-touch leftovers from this table later landed** (see
 [2026-09-10 continued](#implementation-status--2026-09-10-continued)): auth collaborators, E2E
@@ -43,7 +43,9 @@ helpers, driver `withSavepoints`. UniFFI regenerate-and-diff `--check` still wai
 generator edit.
 
 **Must wait:** unchanged (`StreamEngine.plan()`, `features/` rewrite, delete TS calendar, trip on
-the wire, WarmingCard, Q-14, Nest `AuthModule`, unify `/me`).
+the wire, WarmingCard, Q-14, unify `/me`). Nest `AuthModule` later landed; `GET /me` and
+`GET /auth/me` stay distinct. PostgreSQL auth/sync suites still skip in `pnpm check` and run through
+`bash scripts/ci-auth-postgres.sh` / `pnpm ci:local`.
 
 ---
 

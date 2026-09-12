@@ -8,14 +8,15 @@ web or in-memory evidence.
 
 ## Current automated layers
 
-| Layer                      | Command                                         | Current evidence                                                     |
-| -------------------------- | ----------------------------------------------- | -------------------------------------------------------------------- |
-| Workspace unit/integration | `pnpm test`; `bash scripts/ci-auth-postgres.sh` | 799 JS/TS tests; 35 API cases require the disposable PostgreSQL gate |
-| Rust unit/parity           | `pnpm core-rs:test`                             | 169 unit/integration cases, including scheduler reference parity     |
-| Fast repository gate       | `pnpm check`                                    | lint, typecheck, both test sets, content, a11y/copy and contrast     |
-| Browser E2E                | `pnpm test:e2e`                                 | 155 Playwright tests over 71 implemented states                      |
-| Production export smoke    | `pnpm test:e2e:bundle`                          | `@smoke` flows against a fresh Expo web export                       |
-| Build proof                | `pnpm ci:local`; `pnpm apk:local`               | Local bundles, API image/readiness and a separate Android APK gate   |
+| Layer                      | Command                            | Current evidence                                                                              |
+| -------------------------- | ---------------------------------- | --------------------------------------------------------------------------------------------- |
+| Workspace unit/integration | `pnpm test`                        | JS/TS tests; API Postgres suites skip unless `LORO_TEST_DATABASE_URL` is set                  |
+| API PostgreSQL gate        | `bash scripts/ci-auth-postgres.sh` | Isolated schema for auth/sync/rate-limit/repository/migration cases; not part of `pnpm check` |
+| Rust unit/parity           | `pnpm core-rs:test`                | 169 unit/integration cases, including scheduler reference parity                              |
+| Fast repository gate       | `pnpm check`                       | lint, typecheck, both test sets, content, a11y/copy and contrast; no PostgreSQL               |
+| Browser E2E                | `pnpm test:e2e`                    | 155 Playwright tests over 71 implemented states                                               |
+| Production export smoke    | `pnpm test:e2e:bundle`             | `@smoke` flows against a fresh Expo web export                                                |
+| Build proof                | `pnpm ci:local`; `pnpm apk:local`  | Local bundles, API image/readiness and a separate Android APK gate                            |
 
 There is no React Native Testing Library suite, Maestro suite, device-farm execution, DSP recording
 golden corpus or global coverage threshold today. Native acceptance remains a separate evidence
@@ -51,7 +52,9 @@ Node/browser coverage does not replace physical-device upgrade and process-death
 The current contract registry has 25 operations. API tests cover Google/Apple/email identity, legacy
 account/session upgrades, refresh rotation/replay, device/tenant isolation, durable sync
 receipts/cursors, WASM merge, content, problem details and stub AI. Disposable PostgreSQL tests run
-the actual HTTP controllers and transactions. Physical two-device partition/reconvergence, long
+the actual HTTP controllers and transactions when `LORO_TEST_DATABASE_URL` is set; they skip in
+`pnpm check` and `pnpm --filter @loro/api test` otherwise. `bash scripts/ci-auth-postgres.sh` and
+`pnpm ci:local` create that isolated database. Physical two-device partition/reconvergence, long
 offline histories and production provider/load acceptance remain separate release gates.
 
 ### Playwright web E2E

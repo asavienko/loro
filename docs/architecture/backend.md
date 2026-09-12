@@ -30,7 +30,7 @@ apps/api/src/
 ├── auth/                      # Google/Apple/email identity, sessions, /me
 ├── common/                    # clock, config, problem-details, HTTP/contract helpers
 ├── content/                   # legacy and multilingual manifest/diff/pack, 6 routes
-├── database/                  # Postgres client; concatenates feature schema
+├── database/                  # Postgres client; named versions 001_auth / 002_sync / 003_music
 ├── health/                    # liveness and WASM/database-aware readiness, 2 routes
 ├── integrations/              # tested Anthropic and ElevenLabs transports; TTS stub is default
 ├── music/                     # gated lyrics/render/track; stub fixtures by default
@@ -38,16 +38,19 @@ apps/api/src/
 └── sync/                      # push/pull/status, WASM adapter, Postgres repository, 3 routes
 ```
 
-| Implemented seam   | Current adapter                                                                | Extension path                                                          |
-| ------------------ | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------- |
-| `DATABASE`         | `PostgresDatabase`                                                             | Override in tests; Redis and MinIO remain unimplemented                 |
-| `SYNC_REPOSITORY`  | `PostgresSyncRepository`, tenant-scoped. `InMemorySyncRepository` is test-only | Keep selecting the production adapter only in `platform.module.ts`      |
-| `MUSIC_REPOSITORY` | `MemoryMusicRepository` unless `MUSIC_PROVIDER=elevenlabs`                     | Postgres adapter is selected with the provider, not in the service      |
-| `SCENE_PROVIDERS`  | `StubSceneProvider`                                                            | Register provider adapters; keep validation and fallback in `AiService` |
-| `TTS_TRANSPORT`    | `StubTts` unless `TTS_PROVIDER=elevenlabs` with key/model/voices               | Keep one process instance; stub returns 503, never fake audio           |
-| `SERVER_CLOCK`     | system wall clock                                                              | Override in tests; per-account HLC state is already durable in Postgres |
-| `RATE_LIMIT_STORE` | `PostgresRateLimitStore` on `auth_rate_limits`; TTS keeps a process-local map  | Do not enable catalog rows that are not already deployed                |
-| `config`           | one reader/default per environment variable                                    | Add accessors in `common/config.ts`, not scattered `process.env` reads  |
+| Implemented seam     | Current adapter                                                                | Extension path                                                          |
+| -------------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------- |
+| `DATABASE`           | `PostgresDatabase`                                                             | Override in tests; Redis and MinIO remain unimplemented                 |
+| `SYNC_REPOSITORY`    | `PostgresSyncRepository`, tenant-scoped. `InMemorySyncRepository` is test-only | Keep selecting the production adapter only in `platform.module.ts`      |
+| `MUSIC_REPOSITORY`   | `MemoryMusicRepository` unless `MUSIC_PROVIDER=elevenlabs`                     | Postgres adapter is selected with the provider, not in the service      |
+| `SCENE_PROVIDERS`    | `StubSceneProvider`                                                            | Register provider adapters; keep validation and fallback in `AiService` |
+| `TTS_TRANSPORT`      | `StubTts` unless `TTS_PROVIDER=elevenlabs` with key/model/voices               | Keep one process instance; stub returns 503, never fake audio           |
+| `TTS_RUNTIME_CONFIG` | Cached `parseTtsConfig` result shared by guard, service, and transport         | Do not re-read `process.env` on every TTS request                       |
+| `MUSIC_ADAPTER`      | `ElevenLabsMusicAdapter` selected in `platform.module.ts`                      | Lyrics and budget are injected beside it                                |
+| `AUTH_STORE`         | `PostgresAuthStore` for sessions, refresh, magic codes, claims                 | `AuthService` keeps policy and token orchestration                      |
+| `SERVER_CLOCK`       | system wall clock                                                              | Override in tests; per-account HLC state is already durable in Postgres |
+| `RATE_LIMIT_STORE`   | `PostgresRateLimitStore` on `auth_rate_limits`; TTS keeps a process-local map  | Do not enable catalog rows that are not already deployed                |
+| `config`             | one reader/default per environment variable                                    | Add accessors in `common/config.ts`, not scattered `process.env` reads  |
 
 Plan [85](../../plans/archive/2026-09-07/85-backend-integration-contracts.md) supplies shared
 current/target/draft wire schemas, OpenAPI and HTTP conformance tests. Plan
