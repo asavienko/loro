@@ -119,7 +119,9 @@ the Progress rollup. Internal dogfooding starts here and never stops.
 
 ## M2 · v1 · ~7 weeks
 
-**Goal: ship. The Refrain as hero, plus the trip arc.**
+**Goal: ship. The authored v1.1 Refrain-as-hero wave, plus the trip arc.** Production (plan 101)
+keeps Today on `/` and starts the daily wave in Stream; Refrain is the targeted / difficult-only
+drill. The `design/**/*.dc.html` artifacts are not edited.
 
 | Scope                                                                       | Requirements                                                 |
 | --------------------------------------------------------------------------- | ------------------------------------------------------------ |

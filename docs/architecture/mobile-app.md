@@ -113,23 +113,23 @@ route can no longer remain a readable composition. Do not perform a folder-only 
 
 Expo Router typed routes are enabled in `app.config.ts`. The route files on disk are:
 
-| Route               | Current behavior                                                             |
-| ------------------- | ---------------------------------------------------------------------------- |
-| `/`                 | Today; redirects to `/onboarding` until the durable `onboarded` flag is true |
-| `/onboarding`       | Six in-route steps; seeds selected catalog packs into the store              |
-| `/add`              | Discover and Browse states plus an in-route tagging sheet                    |
-| `/phrase/[id]`      | Phrase signals and edits; includes an honest unknown-ID state                |
-| `/practice/stream`  | Stream practice over active repository-backed phrases                        |
-| `/practice/refrain` | Frozen daily set and six-rep Refrain flow                                    |
-| `/practice/speak`   | On-device recognition or offline reveal; truthful engine progress            |
-| `/account`          | Optional email sign-in, sync status and sign-out                             |
-| `/languages`        | Native/target selection with durable independent course state                |
-| `/more`             | Grouped destination list for built surfaces                                  |
-| `/settings`         | Durable visual and analytics preferences                                     |
-| `/progress`         | Mastery, ladder, streak, and tag rollups derived from store rows             |
-| `/music`            | Phrase-songs garnish via More; picker, lyric review, style confirm, fixtures |
-| `/listen-export`    | Listening companion; generate, cache and in-app listen (share after Q-22)    |
-| `/dev/tokens`       | Developer workbench / token inspection (dev-only)                            |
+| Route               | Current behavior                                                                |
+| ------------------- | ------------------------------------------------------------------------------- |
+| `/`                 | Today; redirects to `/onboarding` until the durable `onboarded` flag is true    |
+| `/onboarding`       | Six in-route steps; seeds selected catalog packs into the store                 |
+| `/add`              | Discover and Browse states plus an in-route tagging sheet                       |
+| `/phrase/[id]`      | Phrase signals and edits; includes an honest unknown-ID state                   |
+| `/practice/stream`  | Daily wave: today's frozen `refrainSet`, listed under “This wave”               |
+| `/practice/refrain` | Targeted six-rep drill (`?phrase=` / menu `?filter=hard` / untargeted `?wave=`) |
+| `/practice/speak`   | On-device recognition or offline reveal; truthful engine progress               |
+| `/account`          | Optional email sign-in, sync status and sign-out                                |
+| `/languages`        | Native/target selection with durable independent course state                   |
+| `/more`             | Grouped destination list for built surfaces                                     |
+| `/settings`         | Durable visual and analytics preferences                                        |
+| `/progress`         | Mastery, ladder, streak, and tag rollups derived from store rows                |
+| `/music`            | Phrase-songs garnish via More; picker, lyric review, style confirm, fixtures    |
+| `/listen-export`    | Listening companion; generate, cache and in-app listen (share after Q-22)       |
+| `/dev/tokens`       | Developer workbench / token inspection (dev-only)                               |
 
 `_layout.tsx` owns the native stack, headers, safe-area provider, app-wide day rollover, and toast
 host. The Add tagging sheet is currently component state inside `/add`, not a route-level modal.
