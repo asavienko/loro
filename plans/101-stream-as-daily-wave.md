@@ -4,8 +4,9 @@
 - **Milestone:** M2
 - **Status:** 🟡 Stream lists today's frozen wave; Refrain is a targeted drill from Stream or a
   difficult-only menu entry. Wave time-lock remains for untargeted `?wave=` entry. Browser
-  mouse/touch covers Stream → phrase Refrain and menu hard-filter. Physical-device execution of
-  those rows remains the plan 58/93 gate.
+  mouse/touch covers Stream → phrase Refrain and menu hard-filter. The native-evidence catalog and
+  fail-closed adb/uiautomator runner exist; physical-device execution of those rows remains the plan
+  58/93 gate. Authored v1.1 still treats Refrain as the wave hero and is not edited.
 - **Depends on:** 64 wave/resume runtime; 81 menu/More destinations; 56 route declaration
 - **Number allocation:** 101 follows inspection of active and archived plans. 96 and 100 remain
   unresolved collisions. The next new plan is 102.
@@ -38,7 +39,13 @@ More, filtered to active `difficulty === 'hard'` phrases only.
 ## Remaining
 
 - Physical-device / assistive-technology execution of `stream-to-phrase-refrain`,
-  `menu-hard-refrain`, and `practice-back-swipe-disabled` (plans 58/93). Browser pointer coverage
-  and the native-evidence catalog exist; a screenshot collector must not mark those rows passed.
-- Authored v1.1 still treats Refrain as the wave hero; docs already record the divergence and are
-  not edited.
+  `menu-hard-refrain`, and `practice-back-swipe-disabled` (plans 58/93). Browser pointer coverage,
+  the native-evidence catalog, and `pnpm native:evidence --execute-scenarios` exist; a screenshot
+  collector must not mark those rows passed. This host has no adb/device, so those rows stay
+  `unavailable` until a supported Android run records chrome plus the exact URL.
+- Wave-nudge `deep_link_for` still emits `loro://practice/refrain` (now hard-filter). Intended
+  Stream targets are recorded in
+  [widgets-notifications](../docs/architecture/widgets-notifications.md). The Rust strings wait on
+  rustc ≥ 1.88 and the plan 70 adapter. A bare `/practice` path now resolves to Stream.
+- Authored v1.1 still treats Refrain as the wave hero; docs record the divergence and the
+  `design/**/*.dc.html` artifacts are not edited.
