@@ -1,4 +1,5 @@
 import { expect, onboard, test } from './fixtures'
+import { isPhraseRefrain, startWave, tapControl } from './helpers'
 import { mockTtsStatus } from './learnerApiFlow'
 
 test('adaptive stream rerates, reorders, transports, loves, and learns phrases', async ({
@@ -82,4 +83,17 @@ test('manual phrase browsing wraps the queue without recording practice', async 
   await expect(page.getByText('1 / 5')).toBeVisible()
   await page.getByRole('link', { name: /back/i }).click()
   await expect(page.getByText('0 reps today', { exact: true })).toBeVisible()
+})
+
+test('mouse and touch open a phrase refrain from the stream wave', async ({ page }) => {
+  await onboard(page)
+  await startWave(page)
+  await expect(page).toHaveURL(/\/practice\/stream/)
+  for (const input of ['mouse', 'touch'] as const) {
+    await tapControl(page, page.getByRole('button', { name: 'Practice this phrase' }), input)
+    await expect(page).toHaveURL(isPhraseRefrain)
+    await expect(page.getByText('This phrase', { exact: true })).toBeVisible()
+    await page.getByRole('link', { name: /back/i }).click()
+    await expect(page).toHaveURL(/\/practice\/stream/)
+  }
 })
