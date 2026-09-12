@@ -71,7 +71,7 @@ Expo/RN packages onto that sequence versus device-owned work.
   Q-22; native airplane-mode listen evidence remains. Recorded pack cache, background transport,
   measured onset/DSP, widgets and physical-device speech acceptance remain. Q-22 gates sharing
   neural audio out of the app. In-app listen from a filled cache does not wait on Q-22.
-- PostgreSQL accounts and tenant-scoped sync connect optional Google/Apple/email sign-in to durable
+- PostgreSQL accounts and tenant-scoped sync connect required Google/Apple/email sign-in to durable
   progress. Account linking/export/erasure, OS background sync and production provider/service
   configuration remain. EC2 now exposes Google development sign-in and guarded sync backed by
   private PostgreSQL. Public-boundary and restore checks passed; live consent-to-device verification

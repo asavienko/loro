@@ -6,6 +6,7 @@
  * weeks with this unreachable — see docs/architecture/overview.md rule 2.
  */
 
+import { loadEnvFile } from 'node:process'
 import { NestFactory } from '@nestjs/core'
 import { Logger } from '@nestjs/common'
 import type { NestExpressApplication } from '@nestjs/platform-express'
@@ -14,9 +15,14 @@ import { config } from './common/config.js'
 import { ProblemDetailsFilter } from './common/problem-filter.js'
 import { mergeAvailable } from './sync/merge.js'
 import { DATABASE, type SqlDatabase } from './database/database.js'
-import { authSettings } from './auth/settings.js'
+import { authSettings, isLoopbackHttpUrl } from './auth/settings.js'
 
 async function bootstrap(): Promise<void> {
+  try {
+    loadEnvFile(new URL('../.env', import.meta.url))
+  } catch {
+    /* Compose already injects the environment; the host file is optional. */
+  }
   // Refuse to start in production without the shared merge. Serving sync with a
   // half-built image is worse than not serving it: pushes would fail one by one while
   // the process looked healthy. In development this is a warning, because most work
@@ -39,7 +45,14 @@ async function bootstrap(): Promise<void> {
   app.enableShutdownHooks()
   const oauth = authSettings()
   const redirectOrigins = (oauth?.redirects ?? [])
-    .filter((uri) => uri.startsWith('https:'))
+    .filter((uri) => {
+      try {
+        const url = new URL(uri)
+        return url.protocol === 'https:' || isLoopbackHttpUrl(url)
+      } catch {
+        return false
+      }
+    })
     .map((uri) => new URL(uri).origin)
   app.enableCors({
     origin: [...new Set([...config.allowedOrigins(), ...redirectOrigins])],
