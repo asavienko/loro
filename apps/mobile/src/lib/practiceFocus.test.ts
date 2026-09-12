@@ -7,7 +7,6 @@ import {
   refrainFocusIds,
   refrainResumeTarget,
   refrainSessionMatchesFocus,
-  refrainSkipsWaveLock,
   sessionCoversDaySet,
   streamWaveMembers,
   streamWaveQueue,
@@ -35,10 +34,9 @@ describe('streamWaveQueue', () => {
 })
 
 describe('refrain focus', () => {
-  it('treats a phrase param as a single-phrase drill and skips the wave lock', () => {
+  it('treats a phrase param as a single-phrase drill', () => {
     const focus = parseRefrainFocus({ phrase: 'cafe' })
     expect(focus).toEqual({ kind: 'phrase', phraseId: 'cafe' })
-    expect(refrainSkipsWaveLock(focus)).toBe(true)
     expect(refrainFocusIds(focus, [makePhrase('cafe'), makePhrase('other')], ['other'])).toEqual([
       'cafe',
     ])
@@ -55,13 +53,11 @@ describe('refrain focus', () => {
       makePhrase('retired', { difficulty: 'hard', learned: true }),
     ]
     expect(refrainFocusIds(focus, phrases, ['easy'])).toEqual(['hard'])
-    expect(refrainSkipsWaveLock(focus)).toBe(true)
   })
 
   it('keeps timed-wave entry on the frozen set', () => {
     const focus = parseRefrainFocus({ wave: 'morning' })
     expect(focus).toEqual({ kind: 'wave' })
-    expect(refrainSkipsWaveLock(focus)).toBe(false)
     expect(refrainFocusIds(focus, [makePhrase('a'), makePhrase('b')], ['b', 'missing'])).toEqual([
       'b',
     ])
@@ -70,7 +66,6 @@ describe('refrain focus', () => {
   it('treats a bare Refrain URL as the difficult-phrase drill', () => {
     const focus = parseRefrainFocus({})
     expect(focus).toEqual({ kind: 'hard' })
-    expect(refrainSkipsWaveLock(focus)).toBe(true)
   })
 
   it('keeps a live session whose members still match the requested focus', () => {

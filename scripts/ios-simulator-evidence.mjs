@@ -29,6 +29,7 @@ export function collectIosEvidence({
   output,
   artifactRevision,
   artifact,
+  executeScenarios = false,
   run = spawnSync,
 }) {
   const command = (tool, args) => {
@@ -66,13 +67,15 @@ export function collectIosEvidence({
     artifact: artifact ?? null,
     checks: { device: 'captured', installedPackage: 'present', screenshot: 'captured' },
     scenarios: unevaluatedWaveScenarios(
-      'Simulator screenshot is not a Stream → Refrain or menu hard-filter run.',
+      executeScenarios
+        ? 'iOS --execute-scenarios cannot drive adb/uiautomator. Wave-path rows stay unavailable; physical-device/AT remains plan 58/93.'
+        : 'Simulator screenshot is not a Stream → Refrain or menu hard-filter run.',
     ),
     limits: [
       'The declared artifact revision identifies the intended build; retain independent build metadata before accepting it.',
       'The screenshot captures the current simulator screen; app launch and scenario outcomes are not asserted.',
       'This read-only collection does not prove clean iOS compilation, minimum OS support, physical-device speech, permissions, persistence, lifecycle or interruption acceptance.',
-      'Plan 101 wave-path rows stay unavailable until a physical iPhone run drives those entries. The adb/uiautomator runner is Android-only.',
+      'Plan 101 wave-path rows stay unavailable until a physical iPhone run drives those entries. The adb/uiautomator runner is Android-only. iOS --execute-scenarios records unavailable, never passed.',
     ],
   }
   writeFileSync(resolve(output, 'xcode.txt'), xcode)

@@ -6,7 +6,9 @@ import {
   evaluatePracticeBackSwipe,
   evaluatePracticeGestureDisabledDump,
   evaluateStreamPhraseDump,
+  evaluateTodayStreamDump,
   executeWaveScenarios,
+  findWaveStart,
   parseUiDump,
   probeAndroidDevice,
   tapBounds,
@@ -74,6 +76,13 @@ const HOME_DUMP = `<?xml version="1.0"?>
   </node>
 </hierarchy>`
 
+const MORE_DUMP = `<?xml version="1.0"?>
+<hierarchy>
+  <node class="android.widget.FrameLayout">
+    <node class="android.widget.Button" content-desc="The Refrain" clickable="true" bounds="[24,300][360,356]"/>
+  </node>
+</hierarchy>`
+
 test('lists the three 101/93 rows', () => {
   assert.deepEqual(WAVE_SCENARIO_IDS, [
     'stream-to-phrase-refrain',
@@ -86,6 +95,41 @@ test('parses bounds and taps the control centre', () => {
   const dump = parseUiDump(STREAM_DUMP)
   const tap = tapBounds(dump, 'Practice this phrase')
   assert.deepEqual(tap, { x: 192, y: 428 })
+})
+
+test('finds Today Start the * wave and Keep listening', () => {
+  assert.equal(findWaveStart(HOME_DUMP)?.text, 'Start the morning wave')
+  assert.equal(findWaveStart(TODAY_DUMP)?.text, 'Start the morning wave')
+  const keep = `<?xml version="1.0"?><hierarchy><node text="Keep listening" bounds="[24,400][360,456]"/></hierarchy>`
+  assert.equal(findWaveStart(keep)?.text, 'Keep listening')
+  assert.equal(findWaveStart(STREAM_DUMP), undefined)
+})
+
+test('passes Today → Stream when chrome and URL match', () => {
+  const result = evaluateTodayStreamDump({
+    todayDump: HOME_DUMP,
+    streamDump: STREAM_DUMP,
+    currentUrl: 'loro://practice/stream',
+  })
+  assert.equal(result.status, 'passed')
+})
+
+test('never treats a dump-only Today hop as a device pass', () => {
+  const result = evaluateTodayStreamDump({
+    todayDump: HOME_DUMP,
+    streamDump: STREAM_DUMP,
+    currentUrl: '',
+  })
+  assert.equal(result.status, 'unavailable')
+})
+
+test('fails Today → Stream when the URL stays on Today', () => {
+  const result = evaluateTodayStreamDump({
+    todayDump: HOME_DUMP,
+    streamDump: HOME_DUMP,
+    currentUrl: 'loro://',
+  })
+  assert.equal(result.status, 'failed')
 })
 
 test('passes Stream → phrase Refrain when chrome and URL match', () => {
@@ -203,14 +247,19 @@ test('scripted device dumps pass only with matching chrome and activity URL', ()
       stage = 'stream'
       return { status: 0, stdout: '' }
     }
+    if (joined.includes('am start') && joined.includes('://more')) {
+      stage = 'more'
+      return { status: 0, stdout: '' }
+    }
     if (joined.includes('am start') && joined.includes('MAIN')) {
-      stage = 'home'
+      stage = 'today'
       return { status: 0, stdout: '' }
     }
     if (joined.includes('input tap')) {
-      if (stage === 'stream') stage = 'phrase'
-      else if (stage === 'home') stage = 'menu'
-      else if (stage === 'menu') stage = 'hard'
+      const tapY = Number(args.at(-1))
+      if (stage === 'today') stage = tapY < 200 ? 'menu' : 'stream'
+      else if (stage === 'stream') stage = 'phrase'
+      else if (stage === 'menu' || stage === 'more') stage = 'hard'
       return { status: 0, stdout: '' }
     }
     if (joined.includes('uiautomator dump')) return { status: 0, stdout: '' }
@@ -218,13 +267,15 @@ test('scripted device dumps pass only with matching chrome and activity URL', ()
       const xml =
         stage === 'phrase'
           ? PHRASE_REFRAIN_DUMP
-          : stage === 'home'
+          : stage === 'today'
             ? HOME_DUMP
             : stage === 'menu'
               ? MENU_DUMP
-              : stage === 'hard'
-                ? HARD_REFRAIN_DUMP
-                : STREAM_DUMP
+              : stage === 'more'
+                ? MORE_DUMP
+                : stage === 'hard'
+                  ? HARD_REFRAIN_DUMP
+                  : STREAM_DUMP
       return { status: 0, stdout: xml }
     }
     if (joined.includes('dumpsys')) {
@@ -251,4 +302,66 @@ test('scripted device dumps pass only with matching chrome and activity URL', ()
       ['practice-back-swipe-disabled', 'passed'],
     ],
   )
+})
+
+test('menu-hard-refrain fails when More does not open the difficult-only drill', () => {
+  let stage = 'idle'
+  const run = (_tool, args) => {
+    const joined = args.join(' ')
+    if (joined.includes('version')) return { status: 0, stdout: 'Android Debug Bridge' }
+    if (joined.includes('devices')) {
+      return { status: 0, stdout: 'List of devices attached\nemulator-5554\tdevice\n' }
+    }
+    if (joined.includes('am start') && joined.includes('practice/stream')) {
+      stage = 'stream'
+      return { status: 0, stdout: '' }
+    }
+    if (joined.includes('am start') && joined.includes('://more')) {
+      stage = 'today'
+      return { status: 0, stdout: '' }
+    }
+    if (joined.includes('am start') && joined.includes('MAIN')) {
+      stage = 'today'
+      return { status: 0, stdout: '' }
+    }
+    if (joined.includes('input tap')) {
+      const tapY = Number(args.at(-1))
+      if (stage === 'today') stage = tapY < 200 ? 'menu' : 'stream'
+      else if (stage === 'stream') stage = 'phrase'
+      else if (stage === 'menu') stage = 'hard'
+      return { status: 0, stdout: '' }
+    }
+    if (joined.includes('uiautomator dump')) return { status: 0, stdout: '' }
+    if (joined.includes('cat')) {
+      const xml =
+        stage === 'phrase'
+          ? PHRASE_REFRAIN_DUMP
+          : stage === 'today'
+            ? HOME_DUMP
+            : stage === 'menu'
+              ? MENU_DUMP
+              : stage === 'hard'
+                ? HARD_REFRAIN_DUMP
+                : STREAM_DUMP
+      return { status: 0, stdout: xml }
+    }
+    if (joined.includes('dumpsys')) {
+      const url =
+        stage === 'phrase'
+          ? 'dat=loro://practice/refrain?phrase=es-001'
+          : stage === 'hard'
+            ? 'dat=loro://practice/refrain?filter=hard'
+            : 'dat=loro://practice/stream'
+      return { status: 0, stdout: url }
+    }
+    if (joined.includes('input swipe')) {
+      stage = 'stream'
+      return { status: 0, stdout: '' }
+    }
+    assert.fail(`unexpected adb ${joined}`)
+  }
+  const rows = executeWaveScenarios({ run, waitMs: 0 })
+  assert.equal(rows[0].status, 'passed')
+  assert.equal(rows[1].status, 'failed')
+  assert.match(rows[1].notes, /The Refrain/)
 })

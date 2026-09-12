@@ -59,10 +59,6 @@ export function refrainFocusIds(
   })
 }
 
-export function refrainSkipsWaveLock(focus: RefrainFocus): boolean {
-  return focus.kind !== 'wave'
-}
-
 /** Keep a live plan when its members are exactly the requested focus, even if remaining work shrank. */
 export function refrainSessionMatchesFocus(
   sessionPhraseIds: readonly string[],

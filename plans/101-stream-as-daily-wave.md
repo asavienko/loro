@@ -5,7 +5,7 @@
 - **Status:** 🟡 Stream lists today's frozen wave; Refrain is a targeted drill from Stream or a
   difficult-only menu entry. Main's listen-complete waves keep practice open before the first hour;
   `?wave=` is still wave focus, not a clock lock. Browser mouse/touch covers Stream → phrase Refrain
-  and menu hard-filter. The native-evidence catalog and fail-closed adb/uiautomator runner exist;
+  and menu hard-filter. The Android runner starts from Today and requires switcher plus More;
   physical-device execution of those rows remains the plan 58/93 gate. Authored v1.1 still treats
   Refrain as the wave hero and is not edited. ID collides with phrase-graph 101.
 - **Depends on:** 64 wave/resume runtime; 81 menu/More destinations; 56 route declaration
@@ -42,8 +42,9 @@ More, filtered to active `difficulty === 'hard'` phrases only.
 ## Remaining
 
 - Physical-device / assistive-technology execution of `stream-to-phrase-refrain`,
-  `menu-hard-refrain`, and `practice-back-swipe-disabled` (plans 58/93). Browser pointer coverage,
-  the native-evidence catalog, and `pnpm native:evidence --execute-scenarios` exist; a screenshot
+  `menu-hard-refrain`, and `practice-back-swipe-disabled` (plans 58/93). The Android runner now
+  starts from Today’s wave control, then Stream → `?phrase=`, and requires both switcher and More
+  for `?filter=hard`. Browser pointer coverage and the fail-closed catalog exist; a screenshot
   collector must not mark those rows passed. This host has no adb/device, so those rows stay
   `unavailable` until a supported Android run records chrome plus the exact URL.
 - `deep_link_for` now opens Stream for the daily reminder and the midday wave nudge. The plan 70
