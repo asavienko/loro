@@ -15,7 +15,9 @@ state: the existing switcher and difficulty sheet manifest entries apply. No aud
 persistence or practice-outcome changes.
 
 Validation: browser gesture regression, full `pnpm check` and `pnpm test:e2e`. Real iOS/Android
-touch and assistive-technology verification must precede native release.
+touch and assistive-technology verification must precede native release. Plan 101 adds browser
+mouse/touch coverage for Stream → phrase Refrain and menu hard-filter; those rows still need the
+same physical-device gate as the spine/sheet pulls.
 
 Verified: `pnpm check` passed all 23 tasks; `pnpm test:e2e` passed all 119 tests in 4.4 minutes,
 including mouse/touch gestures, cancelled touch, accessibility and 310% text. The initial cold
