@@ -388,6 +388,14 @@ test('taps the Dismiss backdrop in the upper scrim, not the sheet centre', () =>
   assert.equal(tapDismissBounds(HOME_DUMP), null)
 })
 
+test('taps a tall Dismiss backdrop below the status bar', () => {
+  const tall = `<?xml version="1.0"?>
+<hierarchy>
+  <node class="android.widget.Button" content-desc="Dismiss" clickable="true" bounds="[0,0][1080,420]"/>
+</hierarchy>`
+  assert.deepEqual(tapDismissBounds(tall), { x: 540, y: 210 })
+})
+
 test('sheet pull dismisses the switcher only on a committed vertical drag', () => {
   assert.equal(
     evaluateSheetDismiss({ menuDump: MENU_DUMP, afterDump: HOME_DUMP, inertDump: MENU_DUMP })
