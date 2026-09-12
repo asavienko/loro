@@ -225,7 +225,7 @@ export default function PhraseDetail() {
           <Button
             label={copy.phrase.actions.practiceNow}
             onPress={() => {
-              router.push('/practice/refrain')
+              router.push({ pathname: '/practice/refrain', params: { phrase: p.id } })
             }}
           />
         </View>

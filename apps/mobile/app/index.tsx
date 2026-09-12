@@ -167,8 +167,8 @@ export default function Today() {
       : Math.min(refrainResume.cursor + 1, refrainResume.session.plan.items.length)
   const hasResume = entry.kind === 'resume' && resumeRep !== null && resumeRep > 0
   const canStartWave = set.length > 0 && (entry.kind === 'ready' || entry.kind === 'resume')
-  const startWave = (wave = nextWaveKey): void => {
-    router.push({ pathname: '/practice/refrain', params: { wave } })
+  const startWave = (_wave = nextWaveKey): void => {
+    router.push('/practice/stream')
   }
   return (
     <Screen>

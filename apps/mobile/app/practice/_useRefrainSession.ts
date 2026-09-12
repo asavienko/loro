@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef } from 'react'
 import {
   DEFAULT_REP_TARGET,
   repsToday as repsTodayOf,
+  userPhraseId,
   warmBand,
   type RefrainMode,
 } from '@loro/core'
@@ -47,7 +48,15 @@ export interface RefrainSession {
  * RefrainEngine's decisions — the screen used to re-derive them, which is how the
  * card's warmth and the stored value came to disagree.
  */
-export function useRefrainSession(wave: ProductionWave, enabled: boolean): RefrainSession {
+export function useRefrainSession(
+  wave: ProductionWave,
+  enabled: boolean,
+  options?: {
+    readonly setIds?: readonly string[]
+    readonly completeWave?: boolean
+    readonly replaceSession?: boolean
+  },
+): RefrainSession {
   const phrases = useApp((s) => s.phrases)
   const refrainSet = useApp((s) => s.refrainSet)
   const applyDelta = useApp((s) => s.applyDelta)
@@ -59,6 +68,10 @@ export function useRefrainSession(wave: ProductionWave, enabled: boolean): Refra
   const { session, cursor, done, wave: resumedWave } = useApp((state) => state.refrainResume)
   const activeWave = resumedWave ?? wave
   const targetLocale = useApp((state) => state.targetLocale)
+  const setIds = options?.setIds
+  const shouldCompleteWave = options?.completeWave !== false
+  const replaceSession = options?.replaceSession === true
+  const setKey = setIds?.join('\0') ?? ''
   const busy = useRef(false)
   // Entering the Refrain is one of the moments the day must be re-checked: a learner who
   // opened the app before midnight and starts practising after it needs today's set.
@@ -68,12 +81,20 @@ export function useRefrainSession(wave: ProductionWave, enabled: boolean): Refra
   }, [enabled, ensureRefrainSet])
   useEffect(() => {
     if (!enabled) return
-    if (useApp.getState().refrainResume.session !== null) return
+    const scoped = setIds?.map(userPhraseId)
     let cancelled = false
     void refrainEngine
-      .plan(engineContext())
+      .plan(engineContext(scoped !== undefined ? { refrainSet: scoped } : undefined))
       .then((plan) => {
         if (cancelled) return
+        const existing = useApp.getState().refrainResume.session
+        if (existing !== null && !useApp.getState().refrainResume.done) {
+          const plannedIds = new Set(plan.items.map((item) => item.phraseId))
+          const sessionIds = new Set(existing.plan.items.map((item) => item.phraseId))
+          const sameScope =
+            plannedIds.size === sessionIds.size && [...plannedIds].every((id) => sessionIds.has(id))
+          if (sameScope || !replaceSession) return
+        }
         beginRefrainSession(plan, wave)
       })
       .catch(() => {
@@ -82,9 +103,8 @@ export function useRefrainSession(wave: ProductionWave, enabled: boolean): Refra
     return () => {
       cancelled = true
     }
-    // Re-planned when the day's set changes, not on every rep: the plan is the day's
-    // work, and re-planning mid-phrase would restart the mode sequence.
-  }, [enabled, refrainSet, targetLocale, beginRefrainSession, showToast])
+    // Re-planned when the day's set or a targeted scope changes, not on every rep.
+  }, [enabled, refrainSet, setKey, setIds, targetLocale, beginRefrainSession, showToast, wave])
   const item = session?.plan.items[cursor]
   const storePhrase = useMemo(
     () => (item === undefined ? undefined : phrases.find((p) => p.id === item.phraseId)),
@@ -185,8 +205,11 @@ export function useRefrainSession(wave: ProductionWave, enabled: boolean): Refra
         cursor: nextCursor,
         done: nextIndex < 0,
       }
-      if (nextIndex < 0) completeRefrainWave(activeWave, checkpoint)
-      else saveRefrainCheckpoint(checkpoint)
+      if (nextIndex < 0 && shouldCompleteWave && sessionCoversDaySet(session, refrainSet)) {
+        completeRefrainWave(activeWave, checkpoint)
+      } else {
+        saveRefrainCheckpoint(checkpoint)
+      }
     } catch {
       showToast(`${copy.persistence.error} ${copy.persistence.retry}`)
     }
@@ -198,14 +221,16 @@ export function useRefrainSession(wave: ProductionWave, enabled: boolean): Refra
     saveRefrainCheckpoint,
     activeWave,
     showToast,
+    shouldCompleteWave,
+    refrainSet,
   ])
   const set = useMemo(
     () =>
-      refrainSet
+      (setIds ?? refrainSet)
         .map((id) => phrases.find((p) => p.id === id))
         .filter((p): p is NonNullable<typeof p> => p !== undefined)
         .map(toView),
-    [refrainSet, phrases],
+    [setIds, refrainSet, phrases],
   )
   // Which phrase of the day's set is on screen. Read from the frozen set rather than
   // counted locally, so it stays right when a session resumes part-way through.
@@ -230,4 +255,12 @@ export function useRefrainSession(wave: ProductionWave, enabled: boolean): Refra
     doRep,
     nextPhrase,
   }
+}
+
+function sessionCoversDaySet(
+  session: { readonly plan: { readonly items: readonly { readonly phraseId: string }[] } },
+  refrainSet: readonly string[],
+): boolean {
+  const ids = [...new Set(session.plan.items.map((item) => item.phraseId))]
+  return ids.length === refrainSet.length && ids.every((id) => refrainSet.includes(id))
 }

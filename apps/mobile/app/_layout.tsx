@@ -22,6 +22,7 @@ import { BottomBarProvider } from '../src/ui/BottomBarContext'
 import { Pressable, Text } from '../src/ui/primitives'
 import { NavigationMenu } from '../src/ui/components'
 import { DESTINATIONS, placeForPath, surfaceLawForPath } from '../src/lib/navigation'
+import { destinationTarget } from '../src/lib/practiceFocus'
 import { startAccountSync } from '../src/services/accountSync'
 import { PersistenceGate } from '../src/store/PersistenceGate'
 import { completeBrowserSignIn } from '../src/auth/runtime'
@@ -117,7 +118,7 @@ function ReadyLayout() {
                   current: pathname === destination.href,
                   currentLabel: copy.a11y.today.hereNow(destination.label),
                   onPress: () => {
-                    router.dismissTo(destination.href)
+                    router.dismissTo(destinationTarget(destination.href))
                   },
                 }))}
               />
