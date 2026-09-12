@@ -147,7 +147,10 @@ test('iOS collection retains actual artifacts without copying app containers or 
       return { status: 1, error: Object.assign(new Error('not found'), { code: 'ENOENT' }) }
     if (tool === 'xcodebuild') stdout = 'Xcode fixture'
     else if (args.includes('list')) stdout = JSON.stringify(inventory)
-    else if (args.includes('get_app_container')) stdout = '/private/test.app'
+    else if (args.includes('get_app_container')) {
+      assert.equal(args.at(-1), 'app')
+      stdout = '/private/test.app'
+    } else if (args.includes('launch')) stdout = ''
     else if (args.includes('screenshot'))
       writeFileSync(args.at(-1), Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))
     else assert.fail('Unexpected command')
@@ -172,6 +175,11 @@ test('iOS collection retains actual artifacts without copying app containers or 
     assert.deepEqual(manifest.artifact, artifact)
     assert.ok(manifest.scenarios.every((row) => row.status === 'unavailable'))
     assert.ok(manifest.scenarios.some((row) => row.id === 'stream-to-phrase-refrain'))
+    assert.ok(
+      calls.every(
+        (call) => !call.includes('launch') && !call.includes('boot') && !call.includes('install'),
+      ),
+    )
     const driven = collectIosEvidence({
       packageName: 'app.loro.ios',
       output: join(output, 'driven'),
@@ -191,7 +199,9 @@ test('iOS collection retains actual artifacts without copying app containers or 
       'app.loro.ios',
       'app',
     ])
-    assert.equal(calls.length, 9)
+    assert.equal(calls.length, 10)
+    assert.deepEqual(calls[7], ['xcrun', 'simctl', 'launch', 'A123', 'app.loro.ios'])
+    assert.ok(calls.every((call) => !call.includes('data')))
     assert.equal(readFileSync(join(output, 'device.json'), 'utf8').includes('/private'), false)
   } finally {
     rmSync(output, { recursive: true, force: true })
@@ -219,6 +229,48 @@ test('unavailable and non-iOS runtimes cannot supply iOS evidence', () => {
         },
       }),
     /Boot one/,
+  )
+})
+
+test('dump-only iOS collection still refuses a Shutdown-only inventory', () => {
+  assert.throws(
+    () =>
+      collectIosEvidence({
+        packageName: 'app.loro.ios',
+        run: (tool) => ({
+          status: 0,
+          stdout:
+            tool === 'xcodebuild'
+              ? 'Xcode fixture'
+              : JSON.stringify({
+                  devices: {
+                    'com.apple.CoreSimulator.SimRuntime.iOS-18-0': [
+                      { ...simulator, state: 'Shutdown' },
+                    ],
+                  },
+                }),
+        }),
+      }),
+    /Boot one/,
+  )
+})
+
+test('execute-scenarios without a zip asks for an installed app or simulator zip', () => {
+  assert.throws(
+    () =>
+      collectIosEvidence({
+        packageName: 'app.loro.ios',
+        artifact: { file: '.local-builds/preview.ipa' },
+        executeScenarios: true,
+        run: (tool, args) => {
+          if (args?.includes('get_app_container')) return { status: 1 }
+          return {
+            status: 0,
+            stdout: tool === 'xcodebuild' ? 'Xcode fixture' : JSON.stringify(inventory),
+          }
+        },
+      }),
+    /loro-simulator-\*\.zip/,
   )
 })
 

@@ -214,14 +214,14 @@ function main() {
       'Usage: pnpm native:evidence --artifact-revision GIT_REVISION --artifact .local-builds/RETAINED_BUILD [--platform android|ios] [--serial DEVICE] [--package PACKAGE] [--output PATH] [--execute-scenarios]',
     )
     console.log(
-      'Captures read-only Android device or booted iOS simulator evidence under .local-builds/native-evidence/.',
+      'Captures Android device or iOS simulator evidence under .local-builds/native-evidence/.',
     )
     console.log('List plan 101/93 wave-path rows without collecting: --list-scenarios')
     console.log(
       'Drive pointer, spine/sheet, and TalkBack rows through adb + uiautomator (fail-closed; never pass without URL/chrome/gesture evidence): --execute-scenarios',
     )
     console.log(
-      'iOS --execute-scenarios drives pointer and spine/sheet rows through simctl + idb (fail-closed). TalkBack `-at` rows stay unavailable; VoiceOver physical-device remains plan 58/93.',
+      'iOS dump-only needs an already-booted simulator and an already-installed app. --execute-scenarios may boot a Shutdown simulator, install a verified loro-simulator-*.zip, and drive pointer and spine/sheet rows through simctl + idb (fail-closed). TalkBack `-at` rows stay unavailable even if VoiceOver looks enabled; ordinary idb taps are not AT proof. VoiceOver physical-device remains plan 58/93.',
     )
     return
   }

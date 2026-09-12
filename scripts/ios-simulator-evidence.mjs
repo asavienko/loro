@@ -1,6 +1,11 @@
 import { spawnSync } from 'node:child_process'
 import { mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
+import {
+  defaultIosEvidenceRoot,
+  launchLearnerApp,
+  prepareIosEvidenceRuntime,
+} from './ios-evidence-runtime.mjs'
 import { executeIosWaveScenarios } from './ios-wave-scenarios.mjs'
 import { unevaluatedWaveScenarios } from './wave-touch-scenarios.mjs'
 
@@ -31,6 +36,7 @@ export function collectIosEvidence({
   artifactRevision,
   artifact,
   executeScenarios = false,
+  rootPath = defaultIosEvidenceRoot,
   run = spawnSync,
 }) {
   const command = (tool, args) => {
@@ -43,11 +49,41 @@ export function collectIosEvidence({
   }
   const xcode = command('xcodebuild', ['-version'])
   const inventory = JSON.parse(command('xcrun', ['simctl', 'list', 'devices', '--json']))
-  const device = selectSimulator(inventory, serial)
+  let device
+  let installedFromArtifact = false
+  if (executeScenarios) {
+    const prepared = prepareIosEvidenceRuntime({
+      run,
+      inventory,
+      serial,
+      artifact,
+      rootPath,
+    })
+    device = prepared.device
+    installedFromArtifact = prepared.installedFromArtifact
+  } else {
+    device = selectSimulator(inventory, serial)
+  }
   // Resolve the installed app only. Never read its data container or account credentials.
-  const appPath = command('xcrun', ['simctl', 'get_app_container', device.udid, packageName, 'app'])
+  let appPath
+  try {
+    appPath = command('xcrun', ['simctl', 'get_app_container', device.udid, packageName, 'app'])
+  } catch (error) {
+    if (executeScenarios && installedFromArtifact) {
+      throw new Error(
+        'Installed the iOS simulator zip, but get_app_container could not see the app.',
+      )
+    }
+    if (executeScenarios) {
+      throw new Error(
+        'iOS wave-path scenarios need the app installed, or --artifact pointing at a loro-simulator-*.zip.',
+      )
+    }
+    throw error
+  }
   if (!appPath.trim())
     throw new Error('The requested app is not installed on the selected simulator.')
+  if (executeScenarios) launchLearnerApp(run, { udid: device.udid, packageName })
   mkdirSync(output, { recursive: true })
   if (readdirSync(output).length !== 0)
     throw new Error('Use an empty output directory for a fresh evidence bundle.')
@@ -77,13 +113,23 @@ export function collectIosEvidence({
     deviceName: device.name,
     artifactRevision: artifactRevision ?? null,
     artifact: artifact ?? null,
-    checks: { device: 'captured', installedPackage: 'present', screenshot: 'captured' },
+    checks: {
+      device: 'captured',
+      installedPackage: 'present',
+      screenshot: 'captured',
+      ...(executeScenarios
+        ? {
+            launched: 'attempted',
+            installedFromArtifact: installedFromArtifact ? 'yes' : 'no',
+          }
+        : {}),
+    },
     scenarios,
     limits: [
       'The declared artifact revision identifies the intended build; retain independent build metadata before accepting it.',
-      'The screenshot captures the current simulator screen; app launch and scenario outcomes are not asserted unless --execute-scenarios records chrome plus the exact URL or gesture proof.',
+      'Dump-only collection captures the current simulator screen and does not boot, install, or launch. --execute-scenarios may boot a Shutdown simulator, install a verified loro-simulator-*.zip, and launch the app; scenario outcomes still require chrome plus the exact URL or gesture proof.',
       'This collection does not prove clean iOS compilation, minimum OS support, physical-device speech, permissions, persistence, lifecycle or interruption acceptance.',
-      'iOS --execute-scenarios drives pointer and spine/sheet rows through simctl + idb and fail-closes without chrome/URL/gesture evidence. TalkBack `-at` rows stay unavailable; VoiceOver physical-device remains plan 58/93. A screenshot is not a pass.',
+      'iOS --execute-scenarios drives pointer and spine/sheet rows through simctl + idb and fail-closes without chrome/URL/gesture evidence. TalkBack `-at` rows stay unavailable even when VoiceOver looks enabled; ordinary idb taps are not AT proof. VoiceOver physical-device remains plan 58/93. A screenshot is not a pass.',
     ],
   }
   writeFileSync(resolve(output, 'xcode.txt'), xcode)
