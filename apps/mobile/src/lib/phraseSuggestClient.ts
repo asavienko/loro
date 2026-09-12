@@ -60,7 +60,9 @@ export async function requestPhraseSuggestions(
     if (
       !body.success ||
       body.data.provenance === 'unavailable' ||
-      (body.data.fallback && body.data.candidates.length === 0)
+      (body.data.provenance === 'bundled' &&
+        body.data.fallback &&
+        body.data.candidates.length === 0)
     )
       return local
     return filterNewCandidates(

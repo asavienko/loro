@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react'
 import {
   foldSearchText,
   type BrowsableTheme,
-  type Cefr,
   type Difficulty,
   type PhraseState,
   type Tag,
@@ -12,7 +11,12 @@ import {
   type DisplayPhrase as CatalogPhrase,
 } from '../../src/store/learningCatalog'
 import { copy, themeLabel } from '../../src/lib/copy'
-import { coreCall } from '../../src/lib/core'
+import {
+  catalogAssociationFlags,
+  highestOwnedCefr,
+  orderAssociatedIds,
+  ownedCountsByTheme,
+} from '../../src/lib/association'
 import { useLocale } from '../../src/lib/i18n'
 import type { AddMode } from './mode'
 
@@ -55,35 +59,6 @@ export interface Suggestions {
   clearDiscoverQuery: () => void
 }
 
-const CEFR_RANK: Record<Cefr, number> = { A1: 0, A2: 1, B1: 2, B2: 3 }
-
-function highestOwnedCefr(
-  owned: readonly PhraseState[],
-  catalog: readonly CatalogPhrase[],
-): Cefr | undefined {
-  const byId = new Map(catalog.map((phrase) => [phrase.id, phrase]))
-  let best: Cefr | undefined
-  for (const row of owned) {
-    if (row.phraseId === null) continue
-    const cefr = byId.get(row.phraseId)?.cefr
-    if (cefr === undefined) continue
-    if (best === undefined || CEFR_RANK[cefr] > CEFR_RANK[best]) best = cefr
-  }
-  return best
-}
-
-function ownedCountInTheme(
-  owned: readonly PhraseState[],
-  catalog: readonly CatalogPhrase[],
-  theme: string,
-): number {
-  const byId = new Map(catalog.map((phrase) => [phrase.id, phrase]))
-  return owned.filter((row) => {
-    if (row.phraseId !== null) return byId.get(row.phraseId)?.theme === theme
-    return row.ownTheme === theme
-  }).length
-}
-
 function associate(
   pool: readonly CatalogPhrase[],
   catalog: readonly CatalogPhrase[],
@@ -94,7 +69,8 @@ function associate(
   const byId = new Map(catalog.map((phrase, index) => [phrase.id, { phrase, index }]))
   const catalogAnchor = byId.get(anchor.catalogId)?.phrase
   const peakCefr = highestOwnedCefr(owned, catalog)
-  const ids = coreCall<string[]>('assoc_order', {
+  const ownedInTheme = ownedCountsByTheme(owned, catalog)
+  const ids = orderAssociatedIds({
     anchor: {
       id: anchor.catalogId,
       difficulty: anchor.difficulty,
@@ -105,17 +81,15 @@ function associate(
     },
     candidates: pool.map((phrase) => {
       const index = byId.get(phrase.id)?.index ?? catalog.length
+      const flags = catalogAssociationFlags(phrase)
       return {
         id: phrase.id,
         theme: phrase.theme,
         ...(phrase.cefr === undefined ? {} : { cefr: phrase.cefr }),
         ...(phrase.register === undefined ? {} : { register: phrase.register }),
-        hasAudio: phrase.audio !== undefined,
-        hasRespIpa: phrase.respIpa !== undefined,
-        hasSyl: (phrase.syl?.length ?? 0) > 0,
-        hasHint: phrase.hint !== undefined,
+        ...flags,
         catalogIndex: index,
-        ownedInTheme: ownedCountInTheme(owned, catalog, phrase.theme),
+        ownedInTheme: ownedInTheme.get(phrase.theme) ?? 0,
       }
     }),
     edges,
