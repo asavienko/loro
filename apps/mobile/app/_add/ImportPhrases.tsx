@@ -12,8 +12,8 @@ import {
 import type { DisplayPhrase as CatalogPhrase } from '../../src/store/learningCatalog'
 import { ownedTargetTexts } from './ownedPhrases'
 import { targetLanguageInputProps } from './targetLanguage'
-import { Button, Card, Field, SectionHeader, Stack, Text } from '../../src/ui/primitives'
-import { border, ink, line, semantic, space } from '../../src/ui/theme'
+import { Button, Card, Field, Stack, Text } from '../../src/ui/primitives'
+import { border, ink, radius, semantic, space, surface, type } from '../../src/ui/theme'
 import { copy } from '../../src/lib/copy'
 import { useLocale } from '../../src/lib/i18n'
 import {
@@ -216,15 +216,16 @@ export function ImportPhrases({
   return (
     <Stack gap={space['3']}>
       <Stack gap={space['1']}>
-        <Text variant="title3" color={ink.ink}>
+        <Text variant="title2" color={ink.ink}>
           {copy.add.import.title}
         </Text>
-        <Text variant="caption" color={ink.muted}>
+        <Text variant="bodyMd" color={ink.muted}>
           {copy.add.import.help}
         </Text>
       </Stack>
       <Card padding={0} style={s.importInputCard}>
         <Field
+          literary
           multiline
           value={input}
           onChangeText={updateInput}
@@ -269,11 +270,14 @@ export function ImportPhrases({
       )}
       {review !== null && (
         <Stack gap={space['2']}>
-          <SectionHeader
-            variant="caption"
-            label={copy.add.import.review(accepted.length)}
-            hint={copy.add.import.reviewHint}
-          />
+          <Stack gap={space['1']}>
+            <Text variant="title3" color={ink.ink}>
+              {copy.add.import.review(accepted.length)}
+            </Text>
+            <Text variant="bodySm" color={ink.muted}>
+              {copy.add.import.reviewHint}
+            </Text>
+          </Stack>
           {reviewedBatchTooLarge && (
             <View accessibilityRole="alert">
               <Text variant="caption" color={semantic.warn.text}>
@@ -293,28 +297,39 @@ export function ImportPhrases({
                 key={candidate.line}
                 style={candidate.issue === null ? undefined : s.importIssue}
               >
-                <Stack gap={space['2']}>
-                  <Field
-                    value={candidate.targetText}
-                    onChangeText={(value) => {
-                      update(index, 'targetText', value)
-                    }}
-                    placeholder={copy.add.import.targetPlaceholder}
-                    placeholderTextColor={ink.muted2}
-                    accessibilityLabel={copy.a11y.add.importTarget(candidate.line)}
-                    {...targetLanguageInputProps()}
-                    style={s.reviewInput}
-                  />
-                  <Field
-                    value={candidate.translation}
-                    onChangeText={(value) => {
-                      update(index, 'translation', value)
-                    }}
-                    placeholder={copy.add.import.meaningPlaceholder}
-                    placeholderTextColor={ink.muted2}
-                    accessibilityLabel={copy.a11y.add.importMeaning(candidate.line)}
-                    style={s.reviewInput}
-                  />
+                <Stack gap={space['2.5']}>
+                  <Stack gap={space['1']}>
+                    <Text variant="labelSm" color={ink.ink2}>
+                      {copy.add.import.targetLabel}
+                    </Text>
+                    <Field
+                      literary
+                      value={candidate.targetText}
+                      onChangeText={(value) => {
+                        update(index, 'targetText', value)
+                      }}
+                      placeholder={copy.add.import.targetPlaceholder}
+                      placeholderTextColor={ink.muted2}
+                      accessibilityLabel={copy.a11y.add.importTarget(candidate.line)}
+                      {...targetLanguageInputProps()}
+                      style={s.reviewTarget}
+                    />
+                  </Stack>
+                  <Stack gap={space['1']}>
+                    <Text variant="labelSm" color={ink.muted}>
+                      {copy.add.import.meaningLabel}
+                    </Text>
+                    <Field
+                      value={candidate.translation}
+                      onChangeText={(value) => {
+                        update(index, 'translation', value)
+                      }}
+                      placeholder={copy.add.import.meaningPlaceholder}
+                      placeholderTextColor={ink.muted2}
+                      accessibilityLabel={copy.a11y.add.importMeaning(candidate.line)}
+                      style={s.reviewMeaning}
+                    />
+                  </Stack>
                   {candidate.issue !== null && (
                     <Text variant="captionSm" color={semantic.warn.text}>
                       {candidate.issue === 'duplicate'
@@ -345,17 +360,26 @@ const s = StyleSheet.create({
     minHeight: 132,
     paddingHorizontal: space['3'],
     paddingVertical: space['3'],
-    fontSize: 14,
-    fontWeight: '600',
     color: ink.ink,
     textAlignVertical: 'top',
   },
-  reviewInput: {
+  reviewTarget: {
     minHeight: 44,
-    paddingHorizontal: space['2'],
-    color: ink.ink,
-    borderBottomWidth: border.hairline,
-    borderBottomColor: line.default,
+    paddingHorizontal: space['2.5'],
+    paddingVertical: space['2'],
+    backgroundColor: surface.sunken,
+    borderRadius: radius.lg,
+  },
+  reviewMeaning: {
+    minHeight: 44,
+    paddingHorizontal: space['2.5'],
+    paddingVertical: space['2'],
+    backgroundColor: surface.sunken,
+    borderRadius: radius.lg,
+    fontFamily: type.bodyMd.fontFamily,
+    fontSize: type.bodyMd.fontSize,
+    fontWeight: type.bodyMd.fontWeight,
+    lineHeight: type.bodyMd.lineHeight,
   },
   importIssue: { borderColor: semantic.warn.text, borderWidth: border.hairline },
 })

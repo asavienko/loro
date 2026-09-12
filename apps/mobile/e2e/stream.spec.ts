@@ -7,7 +7,7 @@ test('adaptive stream rerates, reorders, transports, loves, and learns phrases',
   await onboard(page)
   await page.getByRole('button', { name: 'Stream' }).click()
 
-  await expect(page.getByText("How's this one?")).toBeVisible()
+  await expect(page.getByText("How's this phrase?")).toBeVisible()
   await expect(page.getByRole('button', { name: 'Previous' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Next phrase' })).toBeVisible()
   await expect(page.getByText(/Audio is not available yet/)).toBeVisible()
@@ -79,5 +79,5 @@ test('manual phrase browsing wraps the queue without recording practice', async 
   }
   await expect(page.getByText('1 / 10')).toBeVisible()
   await page.getByRole('link', { name: /back/i }).click()
-  await expect(page.getByText('0 reps today', { exact: true })).toBeVisible()
+  await expect(page.getByTestId('today-day-list').getByText('0 reps today')).toBeVisible()
 })

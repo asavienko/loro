@@ -1,4 +1,5 @@
 import { expect, type Page } from '@playwright/test'
+import { signIn } from './accountFlow'
 import { LANGUAGE_NAMES, type NativeLanguage, type TargetLocale } from '@loro/core'
 import en from '../src/lib/i18n/en.json'
 import bg from '../src/lib/i18n/bg.json'
@@ -12,6 +13,7 @@ export async function onboardPair(
   target: TargetLocale,
 ): Promise<void> {
   const text = localeText[native]
+  await signIn(page)
   await page.goto('/onboarding')
   await page
     .getByRole('radiogroup', { name: en['languages.native'] })

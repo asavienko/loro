@@ -1,4 +1,4 @@
-import { reachAccount } from './accountFlow'
+import { reachAccount, signIn, signInThenGoto } from './accountFlow'
 import { mockTtsStatus } from './learnerApiFlow'
 import { localeText, onboardPair } from './languageFlow'
 import { openListenExport, openListenScenario, LISTEN_SCENARIOS, LISTEN_STATUS } from './listenFlow'
@@ -90,9 +90,7 @@ export const STATES: AppState[] = [
     spec: 'AS-07 Batch phrase listening export',
     reach: async (page) => {
       await openListenExport(page)
-      await expect(
-        page.getByText('Listening generation is not configured on this device.', { exact: true }),
-      ).toBeVisible()
+      await expect(page.getByText(LISTEN_STATUS['not-configured'], { exact: true })).toBeVisible()
       await expect(page.getByText('Sara Martin 1')).toBeVisible()
       await expect(page.getByText('Dante', { exact: true })).toBeVisible()
     },
@@ -139,12 +137,24 @@ export const STATES: AppState[] = [
       'busy',
       'error',
       'cancelled',
-      'signedIn',
-      'localSignOut',
       'email',
       'code',
-      'connected',
       'invalid-code',
+    ] as const
+  ).map((scenario): AppState => ({
+    name: `account · ${scenario}`,
+    route: '/account',
+    spec: 'F-01/F-04 required sign-in and sync',
+    firstRun: true,
+    reach: async (page) => {
+      await reachAccount(page, scenario)
+    },
+  })),
+  ...(
+    [
+      'signedIn',
+      'localSignOut',
+      'connected',
       'sync-unavailable',
       'sync-rejected',
       'signed-out',
@@ -152,7 +162,7 @@ export const STATES: AppState[] = [
   ).map((scenario): AppState => ({
     name: `account · ${scenario}`,
     route: '/account',
-    spec: 'F-01/F-04 optional sign-in and sync',
+    spec: 'F-01/F-04 required sign-in and sync',
     reach: async (page) => {
       await reachAccount(page, scenario)
     },
@@ -179,7 +189,7 @@ export const STATES: AppState[] = [
     firstRun: true,
     spec: 'P3-25 empty practice',
     reach: async (page) => {
-      await page.goto('/practice/speak')
+      await signInThenGoto(page, '/practice/speak')
       await expect(page.getByRole('button', { name: 'Add phrases', exact: true })).toBeVisible()
     },
   },
@@ -260,7 +270,7 @@ export const STATES: AppState[] = [
     firstRun: true,
     spec: '§ F-08 Languages',
     reach: async (page) => {
-      await page.goto('/onboarding')
+      await signInThenGoto(page, '/onboarding')
       await page
         .getByRole('radiogroup', { name: 'My native language' })
         .getByRole('radio', { name: locale === 'bg' ? 'Български' : 'Русский' })
@@ -323,8 +333,11 @@ export const STATES: AppState[] = [
     spec: '§1 Onboarding',
     firstRun: true,
     reach: async (page) => {
-      await page.goto('/onboarding')
+      await signIn(page)
+      await expect(page).toHaveURL(/\/onboarding$/)
       await expect(page.getByText("¡Hola! I'm Loro")).toBeVisible()
+      await expect(page.getByText('Listen and repeat')).toBeVisible()
+      await expect(page.getByText('Conversational course')).toBeVisible()
     },
   },
   {
@@ -333,7 +346,7 @@ export const STATES: AppState[] = [
     spec: '§1 Onboarding',
     firstRun: true,
     reach: async (page) => {
-      await page.goto('/onboarding')
+      await signInThenGoto(page, '/onboarding')
       await click(page, "Let's go →")
       for (const answer of [/A trip coming up/, /Starting out/, /10 minutes/]) {
         await page.getByRole('radio', { name: answer }).click()
@@ -369,7 +382,7 @@ export const STATES: AppState[] = [
     spec: '§2 Add, bounded Import recovery',
     reach: async (page) => {
       await open(page, 'Add')
-      await click(page, 'import')
+      await click(page, 'Import')
       await page
         .getByRole('textbox', { name: 'Phrases to import' })
         .fill(Array.from({ length: 51 }, (_, index) => `Hola ${index} | Hi`).join('\n'))
@@ -383,7 +396,7 @@ export const STATES: AppState[] = [
     spec: '§2 Add, reviewed Import',
     reach: async (page) => {
       await open(page, 'Add')
-      await click(page, 'import')
+      await click(page, 'Import')
       await page
         .getByRole('textbox', { name: 'Phrases to import' })
         .fill('¿Dónde está la estación? | Where is the station?')
@@ -397,7 +410,7 @@ export const STATES: AppState[] = [
     spec: '§2 Add, browse',
     reach: async (page) => {
       await open(page, 'Add')
-      await click(page, 'browse')
+      await click(page, 'Browse')
     },
   },
   {
@@ -406,7 +419,7 @@ export const STATES: AppState[] = [
     spec: '§2 Add, browse',
     reach: async (page) => {
       await open(page, 'Add')
-      await click(page, 'browse')
+      await click(page, 'Browse')
       await page.getByRole('button', { name: /^Dining,/ }).click()
       await expect(page.getByRole('button', { name: 'Back to themes' })).toBeVisible()
       await expect(page.getByText('Dining · 4 left')).toBeVisible()
@@ -420,7 +433,7 @@ export const STATES: AppState[] = [
     spec: '§2 Add, browse',
     reach: async (page) => {
       await open(page, 'Add')
-      await click(page, 'browse')
+      await click(page, 'Browse')
       await page.getByRole('button', { name: /^Café,/ }).click()
       await expect(page.getByText(/You have every phrase in this theme/)).toBeVisible()
     },
@@ -510,7 +523,7 @@ export const STATES: AppState[] = [
     // the navigation anyway.
     firstRun: true,
     reach: async (page) => {
-      await page.goto('/phrase/not-a-row-id')
+      await signInThenGoto(page, '/phrase/not-a-row-id')
       await expect(page.getByText('No phrase selected')).toBeVisible()
       await expect(page.getByRole('button', { name: 'Go to Today' })).toBeVisible()
     },
@@ -606,7 +619,7 @@ export const STATES: AppState[] = [
     spec,
     firstRun: true,
     reach: async (page) => {
-      await page.goto(url)
+      await signInThenGoto(page, url)
       await expect(page.getByRole('button', { name: 'Today', exact: true })).toBeVisible()
     },
   })),
@@ -643,7 +656,7 @@ export const STATES: AppState[] = [
     spec,
     firstRun: true,
     reach: async (page) => {
-      await page.goto(url)
+      await signInThenGoto(page, url)
       await page.getByRole('button', { name: /, open the menu$/ }).click()
       await expect(page.getByRole('dialog')).toBeVisible()
     },
@@ -654,7 +667,7 @@ export const STATES: AppState[] = [
     spec: '§1 Onboarding, ready',
     firstRun: true,
     reach: async (page) => {
-      await page.goto('/onboarding')
+      await signInThenGoto(page, '/onboarding')
       await click(page, "Let's go →")
       for (const answer of [/A trip coming up/, /Starting out/, /10 minutes/]) {
         await page.getByRole('radio', { name: answer }).click()

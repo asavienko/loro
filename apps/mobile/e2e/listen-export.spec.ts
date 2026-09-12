@@ -4,6 +4,7 @@ import {
   LISTEN_GENERATE,
   LISTEN_LISTEN,
   LISTEN_SHARE,
+  LISTEN_STOP,
   LISTEN_STATUS,
   openListenExport,
   openListenScenario,
@@ -51,4 +52,13 @@ test('ready-to-listen enables cache playback without enabling share', async ({ p
   await expect(page.getByRole('button', { name: LISTEN_LISTEN })).toBeEnabled()
   await expect(page.getByRole('button', { name: LISTEN_SHARE })).toBeDisabled()
   await expect(page.getByRole('button', { name: LISTEN_GENERATE })).toBeDisabled()
+})
+
+test('playing restyles honest transport as play/stop with the equalizer', async ({ page }) => {
+  await onboard(page)
+  await openListenScenario(page, 'playing')
+  await expect(page.getByRole('button', { name: LISTEN_STOP })).toBeEnabled()
+  await expect(page.getByTestId('equalizer')).toBeVisible()
+  await expect(page.getByText('Madrid Morning Session')).toHaveCount(0)
+  await expect(page.getByText(/kbps/i)).toHaveCount(0)
 })

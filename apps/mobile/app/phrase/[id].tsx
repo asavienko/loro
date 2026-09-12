@@ -270,11 +270,11 @@ function PhraseHero({
   useLocale()
   return (
     <Stack gap={space['2']} style={s.hero}>
-      <Text variant="title1" color={ink.ink} align="center" lang="target">
+      <Text variant="hero" color={ink.ink} align="center" lang="target">
         {targetText}
       </Text>
-      <Text variant="body" color={ink.ink3} align="center">
-        {translation}
+      <Text variant="prose" color={ink.ink2} align="center" style={s.resp}>
+        {copy.phrase.quotedTranslation(translation)}
       </Text>
       {resp !== undefined && (
         <Text variant="caption" color={ink.muted} align="center" style={s.resp}>
@@ -304,14 +304,14 @@ function WordChips({
       <SectionLabel>{copy.phrase.sections.wordByWord}</SectionLabel>
       <Grid>
         {words.map((w, i) => (
-          <View key={i} style={s.wordCard}>
-            <Text variant="body" color={ink.ink} lang="target">
+          <Card key={i} padding={8} style={s.wordCard}>
+            <Text variant="prose" color={ink.ink} lang="target">
               {w.targetText}
             </Text>
             <Text variant="labelSm" color={ink.muted}>
               {w.gloss}
             </Text>
-          </View>
+          </Card>
         ))}
       </Grid>
     </Stack>
@@ -324,7 +324,7 @@ function ExampleCard({ targetText, translation }: { targetText: string; translat
     <Stack gap={SECTION_GAP}>
       <SectionLabel>{copy.phrase.sections.inContext}</SectionLabel>
       <Card>
-        <Text variant="bodySm" color={ink.ink} lang="target">
+        <Text variant="prose" color={ink.ink} lang="target">
           {targetText}
         </Text>
         <Text variant="captionSm" color={ink.muted} style={s.exampleEn}>
@@ -448,12 +448,6 @@ const s = StyleSheet.create({
   /** Someone else speaking. See `PhraseHero`. */
   resp: { fontStyle: 'italic' },
   wordCard: {
-    backgroundColor: surface.card,
-    borderWidth: border.hairline,
-    borderColor: line.default,
-    borderRadius: radius.lg,
-    paddingHorizontal: 11,
-    paddingVertical: 8,
     alignItems: 'center',
   },
   exampleEn: { marginTop: 5 },

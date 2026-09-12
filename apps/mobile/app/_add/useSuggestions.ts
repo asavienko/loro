@@ -51,8 +51,10 @@ export interface Suggestions {
   toggleScenario: (id: string) => void
   browse: (theme: BrowsableTheme) => void
   backToThemes: () => void
-  /** How many of a theme's phrases the learner does not own yet — the tile's count. */
+  /** How many of a theme's phrases the learner does not own yet — the pack's leftover. */
   countFor: (theme: string) => number
+  /** How many catalog phrases the theme has — the pack's denominator. */
+  totalFor: (theme: string) => number
   /** After a confirmed add: rank “more like that” inside the authored theme bands. */
   anchorOn: (anchor: AssociationAnchor) => void
   /** Confirmed custom add: clear the query without moving the association theme. */
@@ -187,6 +189,7 @@ export function useSuggestions(owned: readonly PhraseState[]): Suggestions {
       setBrowseTheme(null)
     },
     countFor: (theme) => pool.filter((p) => p.theme === theme).length,
+    totalFor: (theme) => catalogPhrases.filter((p) => p.theme === theme).length,
     anchorOn: (next) => {
       setAnchor(next)
       setQuery('')

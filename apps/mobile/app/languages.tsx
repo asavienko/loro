@@ -5,7 +5,7 @@ import { router } from 'expo-router'
 import { NATIVE_LANGUAGES, TARGET_LOCALES, supportsPair } from '@loro/core'
 import { useApp } from '../src/store'
 import { LanguageChoices } from '../src/ui/components'
-import { Button, Screen, Stack, Text } from '../src/ui/primitives'
+import { Button, Card, Screen, Stack, Text } from '../src/ui/primitives'
 import { space } from '../src/ui/theme'
 import { copy } from '../src/lib/copy'
 export default function Languages() {
@@ -23,8 +23,8 @@ export default function Languages() {
   }
   return (
     <Screen>
-      <ScrollView contentContainerStyle={{ padding: space['4'] }}>
-        <Stack gap={space['4']}>
+      <ScrollView contentContainerStyle={{ padding: space['5'] }}>
+        <Stack gap={space['5']}>
           <LanguageChoices
             title={copy.languages.native}
             values={NATIVE_LANGUAGES}
@@ -37,9 +37,13 @@ export default function Languages() {
             selected={target}
             onSelect={setTarget}
           />
-          {!valid && <Text>{copy.languages.invalid}</Text>}
-          <Text>{copy.languages.review}</Text>
-          <Button label={copy.languages.save} disabled={!valid} onPress={save} />
+          <Card>
+            <Stack gap={space['3']}>
+              {!valid && <Text>{copy.languages.invalid}</Text>}
+              <Text>{copy.languages.review}</Text>
+              <Button label={copy.languages.save} disabled={!valid} onPress={save} />
+            </Stack>
+          </Card>
         </Stack>
       </ScrollView>
     </Screen>
