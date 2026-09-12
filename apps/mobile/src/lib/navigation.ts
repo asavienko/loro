@@ -100,6 +100,8 @@ function appPath(input: string): string | undefined {
   if (!input.startsWith('/') || input.startsWith('//')) return undefined
   const [path] = input.split(/[?#]/, 1)
   if (!path || path.includes('\\')) return undefined
+  // Plan 101: a bare practice link is the daily wave, not Today and not hard-filter Refrain.
+  if (path === '/practice') return '/practice/stream'
   return path
 }
 

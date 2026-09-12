@@ -95,6 +95,12 @@ describe('surface registry and deep-link guard', () => {
       path: '/practice/stream',
       surface: { id: 'stream' },
     })
+    expect(resolveDeepLink('/practice', true)).toMatchObject({
+      kind: 'built',
+      path: '/practice/stream',
+      surface: { id: 'stream' },
+    })
+    expect(builtSurfaceForPath('/practice')?.id).toBe('stream')
     expect(resolveDeepLink('/practice/stream', false)).toEqual({
       kind: 'fallback',
       path: '/onboarding',
