@@ -20,7 +20,7 @@ import {
   open,
   openFirstPhrase,
   repsTodayRow,
-  startWave,
+  startRefrain,
   todayMarker,
   trickyRow,
 } from './helpers'
@@ -160,7 +160,7 @@ test('browser Back and Forward keep the learner’s state', async ({ page }) => 
 test('pressing a rep twice counts twice, and never lands between modes', async ({ page }) => {
   await atInstant(page, '2026-04-06T10:00')
   await onboard(page)
-  await startWave(page)
+  await startRefrain(page)
 
   // Double-pressing a rep button is the most likely accidental input in the hero loop: the
   // cue changes under the finger. Two presses must be two reps and land on mode 3, not on a

@@ -85,6 +85,23 @@ export async function startWave(page: Page): Promise<void> {
   await page.getByRole('button', { name: START_WAVE }).click()
 }
 
+/** Today's wave now opens Stream; this continues into a phrase Refrain drill. */
+export async function startRefrain(page: Page): Promise<void> {
+  await startWave(page)
+  await page.getByRole('button', { name: 'Practice this phrase' }).click()
+}
+
+/** Rate today's wave Difficult, then open menu Refrain (hard-only drill). */
+export async function startHardRefrain(page: Page): Promise<void> {
+  await startWave(page)
+  for (let phrase = 0; phrase < 5; phrase += 1) {
+    await page.getByRole('radio', { name: 'Difficult' }).click()
+    if (phrase < 4) await page.getByRole('button', { name: 'Next phrase' }).click()
+  }
+  await page.getByRole('button', { name: /, open the menu$/ }).click()
+  await page.getByRole('dialog').getByRole('button', { name: 'The Refrain' }).click()
+}
+
 /**
  * Proof that Today is on screen.
  *
@@ -101,8 +118,9 @@ export function todayMarker(page: Page): Locator {
 
 /** One rep, from Today and back to Today. */
 export async function doOneRep(page: Page): Promise<void> {
-  await startWave(page)
+  await startRefrain(page)
   await click(page, 'Say it')
+  await page.goBack()
   await page.goBack()
   await expect(todayMarker(page)).toBeVisible()
 }

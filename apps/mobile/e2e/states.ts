@@ -34,7 +34,8 @@ import {
   lockIn,
   open,
   openFirstPhrase,
-  startWave,
+  startHardRefrain,
+  startRefrain,
   todayMarker,
   trickyRow,
 } from './helpers'
@@ -547,14 +548,14 @@ export const STATES: AppState[] = [
     name: 'refrain · first rep',
     route: '/practice/refrain',
     spec: '§12 The refrain',
-    reach: (page) => startWave(page),
+    reach: (page) => startRefrain(page),
   },
   {
     name: 'refrain · locked in',
     route: '/practice/refrain',
     spec: '§12 The refrain, lock-in',
     reach: async (page) => {
-      await startWave(page)
+      await startRefrain(page)
       await lockIn(page)
       await expect(page.getByText("Today's practice rounds are complete.")).toBeVisible()
       await expect(page.getByText('effort ↓', { exact: true })).toHaveCount(0)
@@ -565,12 +566,32 @@ export const STATES: AppState[] = [
     route: '/practice/refrain',
     spec: '§12 The refrain, completion',
     reach: async (page) => {
-      await startWave(page)
+      await startHardRefrain(page)
       for (let phrase = 0; phrase < 5; phrase += 1) {
         for (const rep of REFRAIN_REPS) await click(page, rep)
         await page.getByRole('button', { name: /Next phrase →|Finish the set →/ }).click()
       }
       await expect(page.getByText('¡Hecho! Today is done')).toBeVisible()
+    },
+  },
+  {
+    name: 'refrain · no difficult phrases',
+    route: '/practice/refrain',
+    spec: '§12 The refrain, difficult-only menu entry',
+    reach: async (page) => {
+      await page.getByRole('button', { name: /, open the menu$/ }).click()
+      await page.getByRole('dialog').getByRole('button', { name: 'The Refrain' }).click()
+      await expect(page.getByText('No difficult phrases yet')).toBeVisible()
+    },
+  },
+  {
+    name: 'refrain · difficult only',
+    route: '/practice/refrain',
+    spec: '§12 The refrain, difficult-only menu entry',
+    reach: async (page) => {
+      await startHardRefrain(page)
+      await expect(page.getByText('Phrase 1 / 5')).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Say it' })).toBeVisible()
     },
   },
   ...[

@@ -29,7 +29,7 @@
 import AxeBuilder from '@axe-core/playwright'
 import type { Page } from '@playwright/test'
 import { expect, onboard, test } from './fixtures'
-import { enter, openFirstPhrase, startWave, todayMarker } from './helpers'
+import { enter, openFirstPhrase, startRefrain, todayMarker } from './helpers'
 import { STATES } from './states'
 
 const WCAG = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']
@@ -164,7 +164,7 @@ test('onboarding reports its chosen answer at every step', async ({ page }) => {
 
 test('the automaticity bar is a named progress bar with a value', async ({ page }) => {
   await onboard(page)
-  await startWave(page)
+  await startRefrain(page)
 
   const bar = page.getByRole('progressbar', { name: 'Automaticity' })
   await expect(bar).toHaveAttribute('aria-valuenow', '0')

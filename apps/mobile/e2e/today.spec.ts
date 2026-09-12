@@ -55,8 +55,8 @@ test(
     await page.getByRole('link', { name: /back/i }).click()
 
     await page.getByRole('button', { name: START_WAVE }).click()
-    await expect(page).toHaveURL((url) => url.pathname === '/practice/refrain')
-    await expect(page.getByRole('button', { name: 'Say it' })).toBeVisible()
+    await expect(page).toHaveURL((url) => url.pathname === '/practice/stream')
+    await expect(page.getByRole('button', { name: 'Practice this phrase' })).toBeVisible()
   },
 )
 

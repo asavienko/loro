@@ -61,7 +61,7 @@ test('the shared menu connects every built hub and returns from phrase detail', 
     const sheet = page.getByRole('dialog')
     await expect(sheet.getByRole('button', { name: /Chat|Trips/ })).toHaveCount(0)
     await sheet.getByRole('button', { name: label, exact: true }).click()
-    await expect(page).toHaveURL(new RegExp(`${path}$`))
+    await expect(page).toHaveURL((url) => url.pathname === path)
     await expect(sheet).toBeHidden()
   }
   await page
@@ -161,11 +161,10 @@ test('More retains ordinary parent returns and uses the Refrain exit policy for 
     await back(page)
   }
   await page.getByRole('button', { name: 'The Refrain', exact: true }).click()
-  await expect(page).toHaveURL(/\/practice\/refrain$/)
-  await expect(page.getByRole('button', { name: 'Leave practice', exact: true })).toBeVisible()
-  await page.getByRole('button', { name: 'Leave practice', exact: true }).click()
-  await page.getByRole('button', { name: 'End it here', exact: true }).click()
-  await expect(todayMarker(page)).toBeVisible()
+  await expect(page).toHaveURL((url) => url.pathname === '/practice/refrain')
+  await expect(page.getByText('No difficult phrases yet')).toBeVisible()
+  await back(page)
+  await expect(page).toHaveURL(/\/more$/)
 })
 
 test('a Refrain exit pauses durably for Today to resume, or ends without losing earned work', async ({
@@ -174,6 +173,7 @@ test('a Refrain exit pauses durably for Today to resume, or ends without losing 
   await atInstant(page, '2026-04-06T10:00')
   await onboard(page)
   await page.getByRole('button', { name: /Start the .* wave/ }).click()
+  await page.getByRole('button', { name: 'Practice this phrase' }).click()
   await expect(page.getByRole('button', { name: 'Say it', exact: true })).toBeVisible()
   await page.getByRole('button', { name: 'Say it', exact: true }).click()
   await expect(page.getByRole('button', { name: 'Chorus it', exact: true })).toBeVisible()

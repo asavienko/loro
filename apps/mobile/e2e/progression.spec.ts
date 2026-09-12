@@ -35,7 +35,7 @@ import {
   lockIn,
   openProgress,
   railCount,
-  startWave,
+  startRefrain,
   streakChip,
   streakText,
   streakValue,
@@ -112,8 +112,9 @@ test('four lock-in days graduate a phrase out of rotation', async ({ page }) => 
     // A phrase mid-graduation is priority 1 in the next day's set, so the same phrase is
     // always Phrase 1 — deterministic without the spec knowing the selection rules.
     await expect(page.getByText(retiring, { exact: true })).toBeVisible()
-    await startWave(page)
+    await startRefrain(page)
     await lockIn(page)
+    await page.goBack()
     await page.goBack()
   }
 
@@ -144,8 +145,9 @@ test('a phrase practised for four non-consecutive days still graduates', async (
   for (const day of ['06', '08', '11', '12']) {
     if (day !== '06') await nextMorning(page, `2026-04-${day}T09:00`)
     await expect(page.getByText(retiring, { exact: true })).toBeVisible()
-    await startWave(page)
+    await startRefrain(page)
     await lockIn(page)
+    await page.goBack()
     await page.goBack()
   }
 

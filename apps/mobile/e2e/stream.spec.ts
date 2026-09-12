@@ -18,13 +18,15 @@ test('adaptive stream rerates, reorders, transports, loves, and learns phrases',
   await page.getByRole('button', { name: 'Love this phrase' }).click()
   await expect(page.getByRole('button', { name: 'Remove from loved' })).toBeVisible()
 
-  await expect(page.getByText('1 / 10')).toBeVisible()
+  await expect(page.getByText('This wave')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Practice this phrase' })).toBeVisible()
+  await expect(page.getByText('1 / 5')).toBeVisible()
   await page.getByRole('button', { name: 'Next phrase' }).click()
-  await expect(page.getByText('2 / 10')).toBeVisible()
+  await expect(page.getByText('2 / 5')).toBeVisible()
   await page.getByRole('button', { name: 'Previous' }).click()
-  await expect(page.getByText('1 / 10')).toBeVisible()
+  await expect(page.getByText('1 / 5')).toBeVisible()
   await page.getByRole('button', { name: 'Next phrase' }).click()
-  await expect(page.getByText('2 / 10')).toBeVisible()
+  await expect(page.getByText('2 / 5')).toBeVisible()
 
   await page.getByRole('button', { name: 'Mark learned' }).click()
   await expect(page.getByText('Learned 1')).toBeVisible()
@@ -74,10 +76,10 @@ test('adaptive stream reaches its all-learned empty state', async ({ page }) => 
 test('manual phrase browsing wraps the queue without recording practice', async ({ page }) => {
   await onboard(page)
   await page.getByRole('button', { name: 'Stream' }).click()
-  for (let phrase = 0; phrase < 10; phrase += 1) {
+  for (let phrase = 0; phrase < 5; phrase += 1) {
     await page.getByRole('button', { name: 'Next phrase' }).click()
   }
-  await expect(page.getByText('1 / 10')).toBeVisible()
+  await expect(page.getByText('1 / 5')).toBeVisible()
   await page.getByRole('link', { name: /back/i }).click()
   await expect(page.getByText('0 reps today', { exact: true })).toBeVisible()
 })

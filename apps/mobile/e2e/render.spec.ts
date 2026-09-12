@@ -29,7 +29,7 @@
 
 import type { Page } from '@playwright/test'
 import { expect, onboard, test } from './fixtures'
-import { open, startWave } from './helpers'
+import { open, startRefrain } from './helpers'
 
 interface Box {
   readonly width: number
@@ -97,8 +97,9 @@ test('P4-04: the mastery bar draws its buckets at their real share of the total'
 
   // One rep moves one phrase out of `new` and into `learning`, so the bar has two segments with
   // a share each — a single full-width segment cannot tell a working chart from a broken one.
-  await startWave(page)
+  await startRefrain(page)
   await page.getByRole('button', { name: 'Say it' }).click()
+  await page.goBack()
   await page.goBack()
   await open(page, 'Progress')
 
@@ -141,8 +142,9 @@ test('P3-03: nothing bar-shaped is drawn over silence on the stream', async ({ p
 
 test("LB-04: a Today set row's bar is the automaticity its own label states", async ({ page }) => {
   await onboard(page)
-  await startWave(page)
+  await startRefrain(page)
   await page.getByRole('button', { name: 'Say it' }).click()
+  await page.goBack()
   await page.goBack()
 
   // One rep of six. The row says so in words; the bar has to say the same thing in pixels, and it
