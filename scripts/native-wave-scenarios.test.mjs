@@ -10,6 +10,9 @@ import {
   evaluateStreamExitBack,
   evaluatePhraseDetailPracticeDump,
   evaluateStreamPhraseDump,
+  findStreamQueueRow,
+  isStreamQueueRowLabel,
+  phraseIdFromDetailUrl,
   phraseIdFromUrl,
   evaluateOnboardedHome,
   evaluateSheetBackDismiss,
@@ -39,6 +42,7 @@ const STREAM_DUMP = `<?xml version="1.0"?>
   <node class="android.widget.FrameLayout">
     <node class="android.widget.TextView" text="This wave" bounds="[24,200][360,248]"/>
     <node class="android.widget.Button" content-desc="Practice this phrase" clickable="true" bounds="[24,400][360,456]"/>
+    <node class="android.widget.Button" content-desc="Para llevar, por favor. To go, please. Learning." clickable="true" bounds="[24,500][360,556]"/>
   </node>
 </hierarchy>`
 
@@ -158,6 +162,7 @@ const EXPO_STREAM_DUMP = `<?xml version="1.0"?>
     <node class="android.widget.TextView" text="loro-route:/practice/stream" bounds="[0,0][1,1]"/>
     <node class="android.widget.TextView" text="This wave" bounds="[24,200][360,248]"/>
     <node class="android.widget.Button" content-desc="Practice this phrase" clickable="true" bounds="[24,400][360,456]"/>
+    <node class="android.widget.Button" content-desc="Para llevar, por favor. To go, please. Learning." clickable="true" bounds="[24,500][360,556]"/>
   </node>
 </hierarchy>`
 
@@ -374,6 +379,37 @@ test('never treats a dump-only path as a device pass', () => {
 test('reads the phrase id from a refrain URL', () => {
   assert.equal(phraseIdFromUrl('/practice/refrain?phrase=es-001'), 'es-001')
   assert.equal(phraseIdFromUrl('loro://practice/refrain?filter=hard'), '')
+})
+
+test('reads the phrase id from a phrase-detail URL', () => {
+  assert.equal(phraseIdFromDetailUrl('/phrase/es-002'), 'es-002')
+  assert.equal(phraseIdFromDetailUrl('loro://phrase/es-002'), 'es-002')
+  assert.equal(phraseIdFromDetailUrl('/practice/refrain?phrase=es-001'), '')
+})
+
+test('finds a Stream wave row and ignores chrome', () => {
+  const row = findStreamQueueRow(STREAM_DUMP)
+  assert.equal(row?.contentDesc, 'Para llevar, por favor. To go, please. Learning.')
+  assert.deepEqual(tapBounds(STREAM_DUMP, row.contentDesc), { x: 192, y: 528 })
+  assert.equal(
+    isStreamQueueRowLabel('¿Tienen leche de avena?. Do you have oat milk?. Learning.'),
+    true,
+  )
+  assert.equal(isStreamQueueRowLabel('Кафе, моля. Coffee, please. Уча я.'), true)
+  assert.equal(isStreamQueueRowLabel('Кофе, пожалуйста. Coffee, please. Изучаю.'), true)
+  assert.equal(isStreamQueueRowLabel('Practice this phrase'), false)
+  assert.equal(isStreamQueueRowLabel('Love this phrase'), false)
+  assert.equal(isStreamQueueRowLabel('Spanish, open the menu'), false)
+  assert.equal(findStreamQueueRow(PHRASE_REFRAIN_DUMP), undefined)
+})
+
+test('passes phrase-detail Practice now without requiring the Stream-hop phrase id', () => {
+  const result = evaluatePhraseDetailPracticeDump({
+    detailDump: PHRASE_DETAIL_DUMP,
+    refrainDump: PHRASE_REFRAIN_DUMP,
+    currentUrl: 'loro://practice/refrain?phrase=es-002',
+  })
+  assert.equal(result.status, 'passed')
 })
 
 test('passes phrase-detail Practice now when chrome and URL match', () => {
@@ -660,6 +696,13 @@ function atRows(rows) {
   return rows.filter((row) => row.id.endsWith('-at'))
 }
 
+function stripStreamQueueRow(dump) {
+  return dump.replace(
+    '    <node class="android.widget.Button" content-desc="Para llevar, por favor. To go, please. Learning." clickable="true" bounds="[24,500][360,556]"/>\n',
+    '',
+  )
+}
+
 function scriptedDevice({
   expoRoutes = false,
   moreOpensHard = true,
@@ -667,12 +710,18 @@ function scriptedDevice({
   leaveOnFullScreenSwipe = false,
   phraseMenuKeepsPhrase = false,
   practiceNowStaysOnDetail = false,
+  omitQueueRow = false,
+  queueRowStaysOnStream = false,
 } = {}) {
   let stage = 'idle'
   let talkbackEnabled = false
   let pendingFocus = null
   let menuSource = 'today'
-  const streamDump = expoRoutes ? EXPO_STREAM_DUMP : STREAM_DUMP
+  const streamDump = omitQueueRow
+    ? stripStreamQueueRow(expoRoutes ? EXPO_STREAM_DUMP : STREAM_DUMP)
+    : expoRoutes
+      ? EXPO_STREAM_DUMP
+      : STREAM_DUMP
   const phraseDump = expoRoutes ? EXPO_PHRASE_DUMP : PHRASE_REFRAIN_DUMP
   const hardDump = expoRoutes ? EXPO_HARD_DUMP : HARD_REFRAIN_DUMP
   const detailDump = expoRoutes ? EXPO_DETAIL_DUMP : PHRASE_DETAIL_DUMP
@@ -691,8 +740,10 @@ function scriptedDevice({
     if (stage === 'today') {
       stage = tapY < 200 ? 'menu' : 'stream'
       if (stage === 'menu') menuSource = 'today'
-    } else if (stage === 'stream') stage = 'phrase'
-    else if (stage === 'detail') stage = practiceNowStaysOnDetail ? 'detail' : 'phrase'
+    } else if (stage === 'stream') {
+      if (tapY >= 480) stage = queueRowStaysOnStream ? 'stream' : 'detail'
+      else stage = 'phrase'
+    } else if (stage === 'detail') stage = practiceNowStaysOnDetail ? 'detail' : 'phrase'
     else if (stage === 'stream-exit') stage = 'stream'
     else if (stage === 'phrase') {
       stage = tapY < 90 ? 'menu' : 'exit'
@@ -922,6 +973,26 @@ test('menu-hard-refrain fails when More does not open the difficult-only drill',
   assert.equal(rows[4].status, 'passed')
   assert.equal(rows[5].status, 'passed')
   assert.equal(rows[6].status, 'passed')
+})
+
+test('stream-to-phrase-refrain fails when Stream has no wave row', () => {
+  const rows = executeWaveScenarios({
+    run: scriptedDevice({ omitQueueRow: true }),
+    waitMs: 0,
+  })
+  const row = rows.find((entry) => entry.id === 'stream-to-phrase-refrain')
+  assert.equal(row.status, 'failed')
+  assert.match(row.notes, /Stream wave row/)
+})
+
+test('stream-to-phrase-refrain fails when the wave-row tap stays on Stream', () => {
+  const rows = executeWaveScenarios({
+    run: scriptedDevice({ queueRowStaysOnStream: true }),
+    waitMs: 0,
+  })
+  const row = rows.find((entry) => entry.id === 'stream-to-phrase-refrain')
+  assert.equal(row.status, 'failed')
+  assert.match(row.notes, /Practice now/)
 })
 
 test('stream-to-phrase-refrain fails when Practice now stays on phrase detail', () => {

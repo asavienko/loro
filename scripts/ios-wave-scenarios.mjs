@@ -23,8 +23,9 @@ import {
   evaluatePhraseDetailPracticeDump,
   evaluateStreamPhraseDump,
   evaluateTodayStreamDump,
-  phraseIdFromUrl,
+  phraseIdFromDetailUrl,
   findClickableLabel,
+  findStreamQueueRow,
   findLabel,
   findResourceId,
   findWaveStart,
@@ -236,6 +237,18 @@ function tapWaveStart(ctx, dump) {
   return tapPoint(ctx, Math.floor((left + right) / 2), Math.floor((top + bottom) / 2), 'wave start')
 }
 
+function tapStreamQueueRow(ctx, dump) {
+  const node = findStreamQueueRow(dump)
+  if (!node?.bounds) return 'Missing tap target: Stream wave row'
+  const { left, top, right, bottom } = node.bounds
+  return tapPoint(
+    ctx,
+    Math.floor((left + right) / 2),
+    Math.floor((top + bottom) / 2),
+    'Stream wave row',
+  )
+}
+
 function openDeepLink(ctx, path) {
   const uri = path === '/' ? `${ctx.scheme}://` : `${ctx.scheme}://${path.replace(/^\//, '')}`
   const opened = runTool(ctx, 'xcrun', ['simctl', 'openurl', ctx.udid, uri])
@@ -396,22 +409,17 @@ function runStreamPhrase(ctx) {
     currentUrl,
   })
   if (streamEval.status !== 'passed') return scenarioResult(scenario, streamEval, { currentUrl })
-  const phraseId = phraseIdFromUrl(currentUrl)
-  if (!phraseId) {
-    return scenarioResult(
-      scenario,
-      {
-        status: 'failed',
-        notes: 'Stream phrase URL does not expose a phrase id for Practice now.',
-      },
-      { currentUrl },
-    )
-  }
-  const openedDetail = openDeepLink(ctx, `/phrase/${phraseId}`)
-  if (openedDetail) return scenarioResult(scenario, { status: 'unavailable', notes: openedDetail })
+  const openedList = openDeepLink(ctx, '/practice/stream')
+  if (openedList) return scenarioResult(scenario, { status: 'unavailable', notes: openedList })
+  waitForUi(ctx.run, ctx.waitMs)
+  const list = dumpUi(ctx, 'stream-list')
+  if (list.error) return scenarioResult(scenario, { status: 'unavailable', notes: list.error })
+  const rowTapped = tapStreamQueueRow(ctx, list.dump)
+  if (rowTapped) return scenarioResult(scenario, { status: 'failed', notes: rowTapped })
   waitForUi(ctx.run, ctx.waitMs)
   const detail = dumpUi(ctx, 'phrase-detail-before')
   if (detail.error) return scenarioResult(scenario, { status: 'unavailable', notes: detail.error })
+  const rowPhraseId = phraseIdFromDetailUrl(currentActivityUrl(ctx, detail.dump))
   const tappedNow = tapLabel(ctx, detail.dump, 'Practice now')
   if (tappedNow) return scenarioResult(scenario, { status: 'failed', notes: tappedNow })
   waitForUi(ctx.run, ctx.waitMs)
@@ -426,7 +434,7 @@ function runStreamPhrase(ctx) {
     detailDump: detail.dump,
     refrainDump: fromDetail.dump,
     currentUrl: detailUrl,
-    phraseId,
+    phraseId: rowPhraseId || undefined,
   })
   if (detailEval.status !== 'passed')
     return scenarioResult(scenario, detailEval, { currentUrl: detailUrl })
@@ -434,7 +442,7 @@ function runStreamPhrase(ctx) {
     scenario,
     {
       status: 'passed',
-      notes: 'Stream Practice this phrase and phrase-detail Practice now opened phrase focus.',
+      notes: 'Stream Practice this phrase and Stream wave-row Practice now opened phrase focus.',
     },
     { currentUrl: detailUrl },
   )
