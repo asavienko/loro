@@ -132,7 +132,9 @@ Expo Router typed routes are enabled in `app.config.ts`. The route files on disk
 | `/dev/tokens`       | Developer workbench / token inspection (dev-only)                               |
 
 `_layout.tsx` owns the native stack, headers, safe-area provider, app-wide day rollover, and toast
-host. The Add tagging sheet is currently component state inside `/add`, not a route-level modal.
+host. Practice session routes spread `PRACTICE_SESSION_STACK_OPTIONS` (`gestureEnabled` and
+`fullScreenGestureEnabled` false) so NAV-04 cannot be defeated by iOS 26's default full-screen
+dismiss. The Add tagging sheet is currently component state inside `/add`, not a route-level modal.
 Only the onboarding redirect and the links made by these screens are implemented. Trip-conditional
 home routing, universal-link mapping, notification links, and persistent audio across navigation are
 targets for the capabilities that require them.

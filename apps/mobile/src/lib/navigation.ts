@@ -368,3 +368,14 @@ export function placeForPath(path: string): string | undefined {
   if (builtSurfaceForPath(path)?.id === 'phrase-detail') return copy.nav.phrasePlace
   return DESTINATIONS.find((destination) => destination.href === path)?.label
 }
+
+/**
+ * NAV-04: a Session exits through Pause / End it here / Keep going, not a stack
+ * pop. `gestureEnabled: false` blocks the iOS edge interactive-pop. iOS 26
+ * defaults `fullScreenGestureEnabled` to true, so that must be off as well or a
+ * mid-screen swipe can still dismiss Stream, Refrain, or Speak.
+ */
+export const PRACTICE_SESSION_STACK_OPTIONS = {
+  gestureEnabled: false,
+  fullScreenGestureEnabled: false,
+} as const
