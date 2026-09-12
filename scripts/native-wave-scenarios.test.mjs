@@ -7,10 +7,14 @@ import {
   evaluatePracticeGestureDisabledDump,
   evaluateStreamPhraseDump,
   evaluateOnboardedHome,
+  evaluateSheetDismiss,
+  evaluateSpinePull,
   evaluateTodayStreamDump,
   executeWaveScenarios,
+  dumpHasSwitcher,
   findClickableLabel,
   findLabel,
+  findResourceId,
   findWaveStart,
   isOnboardingDump,
   parseUiDump,
@@ -39,6 +43,8 @@ const PHRASE_REFRAIN_DUMP = `<?xml version="1.0"?>
 const MENU_DUMP = `<?xml version="1.0"?>
 <hierarchy>
   <node class="android.widget.FrameLayout">
+    <node resource-id="sheet-pull-handle" bounds="[24,80][360,140]"/>
+    <node class="android.widget.TextView" text="Where to?" bounds="[24,160][360,200]"/>
     <node class="android.widget.Button" content-desc="The Refrain" clickable="true" bounds="[24,300][360,356]"/>
   </node>
 </hierarchy>`
@@ -77,6 +83,7 @@ const TODAY_DUMP = `<?xml version="1.0"?>
 const HOME_DUMP = `<?xml version="1.0"?>
 <hierarchy>
   <node class="android.widget.FrameLayout">
+    <node resource-id="navigation-pull-handle" bounds="[0,0][360,88]"/>
     <node class="android.widget.Button" content-desc="Spanish, open the menu" clickable="true" bounds="[24,40][360,88]"/>
     <node class="android.widget.Button" text="Start the morning wave" bounds="[24,400][360,456]"/>
   </node>
@@ -180,11 +187,16 @@ const ONBOARD_SEQUENCE = [
   HOME_DUMP,
 ]
 
-test('lists the three 101/93 rows', () => {
+test('lists the 101/93 pointer, shell, and TalkBack rows', () => {
   assert.deepEqual(WAVE_SCENARIO_IDS, [
     'stream-to-phrase-refrain',
     'menu-hard-refrain',
     'practice-back-swipe-disabled',
+    'spine-pull-opens-switcher',
+    'sheet-pull-dismisses-switcher',
+    'stream-to-phrase-refrain-at',
+    'menu-hard-refrain-at',
+    'practice-back-swipe-disabled-at',
   ])
 })
 
@@ -323,6 +335,44 @@ test('records practice-back-swipe-disabled only from dump evidence as unavailabl
   assert.match(result.notes, /gestureEnabled: false/)
 })
 
+test('spine pull opens the switcher only on a committed vertical drag', () => {
+  const closed = HOME_DUMP
+  const opened = MENU_DUMP
+  assert.equal(
+    evaluateSpinePull({ beforeDump: closed, afterDump: opened, inertDump: closed }).status,
+    'passed',
+  )
+  assert.equal(
+    evaluateSpinePull({ beforeDump: closed, afterDump: opened, inertDump: opened }).status,
+    'failed',
+  )
+  assert.equal(
+    evaluateSpinePull({ beforeDump: closed, afterDump: closed, inertDump: closed }).status,
+    'failed',
+  )
+  assert.equal(findResourceId(HOME_DUMP, 'navigation-pull-handle')?.resourceId, 'navigation-pull-handle')
+})
+
+test('sheet pull dismisses the switcher only on a committed vertical drag', () => {
+  assert.equal(
+    evaluateSheetDismiss({ menuDump: MENU_DUMP, afterDump: HOME_DUMP, inertDump: MENU_DUMP })
+      .status,
+    'passed',
+  )
+  assert.equal(
+    evaluateSheetDismiss({ menuDump: MENU_DUMP, afterDump: HOME_DUMP, inertDump: HOME_DUMP })
+      .status,
+    'failed',
+  )
+  assert.equal(
+    evaluateSheetDismiss({ menuDump: MENU_DUMP, afterDump: MENU_DUMP, inertDump: MENU_DUMP })
+      .status,
+    'failed',
+  )
+  assert.equal(dumpHasSwitcher(MENU_DUMP), true)
+  assert.equal(dumpHasSwitcher(HOME_DUMP), false)
+})
+
 test('edge-swipe evaluation stays on the session or fails closed', () => {
   assert.equal(
     evaluatePracticeBackSwipe({ beforeDump: PRACTICE_DUMP, afterDump: PRACTICE_DUMP }).status,
@@ -338,11 +388,119 @@ test('edge-swipe evaluation stays on the session or fails closed', () => {
   )
 })
 
+function expectedPointerAndShell(status = 'passed') {
+  return [
+    ['stream-to-phrase-refrain', status],
+    ['menu-hard-refrain', status],
+    ['practice-back-swipe-disabled', status],
+    ['spine-pull-opens-switcher', status],
+    ['sheet-pull-dismisses-switcher', status],
+  ]
+}
+
+function scriptedDevice({
+  expoRoutes = false,
+  moreOpensHard = true,
+  talkbackInstalled = false,
+} = {}) {
+  let stage = 'idle'
+  let talkbackEnabled = false
+  let pendingFocus = null
+  const streamDump = expoRoutes ? EXPO_STREAM_DUMP : STREAM_DUMP
+  const phraseDump = expoRoutes ? EXPO_PHRASE_DUMP : PHRASE_REFRAIN_DUMP
+  const hardDump = expoRoutes ? EXPO_HARD_DUMP : HARD_REFRAIN_DUMP
+  const dumpFor = () => {
+    if (stage === 'phrase') return phraseDump
+    if (stage === 'today') return HOME_DUMP
+    if (stage === 'menu') return MENU_DUMP
+    if (stage === 'more') return MORE_DUMP
+    if (stage === 'hard') return hardDump
+    return streamDump
+  }
+  const applyTap = (tapY) => {
+    if (stage === 'today') stage = tapY < 200 ? 'menu' : 'stream'
+    else if (stage === 'stream') stage = 'phrase'
+    else if (stage === 'menu' || stage === 'more') stage = 'hard'
+  }
+  return (_tool, args) => {
+    const joined = args.join(' ')
+    if (joined.includes('version')) return { status: 0, stdout: 'Android Debug Bridge' }
+    if (joined.includes('devices')) {
+      return { status: 0, stdout: 'List of devices attached\nemulator-5554\tdevice\n' }
+    }
+    if (joined.includes('am start') && joined.includes('practice/stream')) {
+      stage = 'stream'
+      return { status: 0, stdout: '' }
+    }
+    if (joined.includes('am start') && joined.includes('://more')) {
+      stage = moreOpensHard ? 'more' : 'today'
+      return { status: 0, stdout: '' }
+    }
+    if (joined.includes('am start') && joined.includes('MAIN')) {
+      stage = 'today'
+      return { status: 0, stdout: '' }
+    }
+    if (joined.includes('input tap')) {
+      const tapY = Number(args.at(-1))
+      const point = `${args.at(-2)},${tapY}`
+      if (talkbackEnabled) {
+        if (pendingFocus !== point) {
+          pendingFocus = point
+          return { status: 0, stdout: '' }
+        }
+        pendingFocus = null
+      }
+      applyTap(tapY)
+      return { status: 0, stdout: '' }
+    }
+    if (joined.includes('uiautomator dump')) return { status: 0, stdout: '' }
+    if (args.includes('cat')) return { status: 0, stdout: dumpFor() }
+    if (joined.includes('dumpsys')) {
+      if (expoRoutes) {
+        return { status: 0, stdout: 'ACTIVITY MANAGER ACTIVITIES (dumpsys activity activities)' }
+      }
+      const url =
+        stage === 'phrase'
+          ? 'dat=loro://practice/refrain?phrase=es-001'
+          : stage === 'hard'
+            ? 'dat=loro://practice/refrain?filter=hard'
+            : 'dat=loro://practice/stream'
+      return { status: 0, stdout: url }
+    }
+    if (joined.includes('logcat')) return { status: 0, stdout: '' }
+    if (joined.includes('pm list')) {
+      return {
+        status: 0,
+        stdout: talkbackInstalled ? 'package:com.google.android.marvin.talkback\n' : '',
+      }
+    }
+    if (joined.includes('pm grant')) return { status: 0, stdout: '' }
+    if (joined.includes('settings')) {
+      if (joined.includes('accessibility_enabled') && joined.endsWith('1')) talkbackEnabled = true
+      if (joined.includes('accessibility_enabled') && joined.endsWith('0')) talkbackEnabled = false
+      if (joined.includes('delete')) talkbackEnabled = false
+      return { status: 0, stdout: '' }
+    }
+    if (joined.includes('input swipe')) {
+      const swipeAt = args.indexOf('swipe')
+      const x1 = Number(args[swipeAt + 1])
+      const x2 = Number(args[swipeAt + 3])
+      const y1 = Number(args[swipeAt + 2])
+      const y2 = Number(args[swipeAt + 4])
+      const committed = Math.abs(y2 - y1) >= 48 && Math.abs(x2 - x1) < 40
+      if (x1 > 20 && committed && stage === 'today') stage = 'menu'
+      else if (x1 > 20 && committed && stage === 'menu') stage = 'today'
+      return { status: 0, stdout: '' }
+    }
+    assert.fail(`unexpected adb ${joined}`)
+  }
+}
+
 test('missing adb or device never marks a wave row passed', () => {
   const missingAdb = executeWaveScenarios({
     run: () => ({ error: Object.assign(new Error('not found'), { code: 'ENOENT' }) }),
   })
-  assert.equal(missingAdb.length, 3)
+  assert.equal(missingAdb.length, WAVE_SCENARIO_IDS.length)
   assert.ok(missingAdb.every((row) => row.status === 'unavailable'))
   assert.ok(missingAdb.every((row) => row.reason.includes('adb')))
 
@@ -373,197 +531,54 @@ test('reads the Expo path from a hidden loro-route dump node', () => {
 })
 
 test('scripted device dumps pass only with matching chrome and activity URL', () => {
-  let stage = 'idle'
-  const run = (_tool, args) => {
-    const joined = args.join(' ')
-    if (joined.includes('version')) return { status: 0, stdout: 'Android Debug Bridge' }
-    if (joined.includes('devices')) {
-      return { status: 0, stdout: 'List of devices attached\nemulator-5554\tdevice\n' }
-    }
-    if (joined.includes('am start') && joined.includes('practice/stream')) {
-      stage = 'stream'
-      return { status: 0, stdout: '' }
-    }
-    if (joined.includes('am start') && joined.includes('://more')) {
-      stage = 'more'
-      return { status: 0, stdout: '' }
-    }
-    if (joined.includes('am start') && joined.includes('MAIN')) {
-      stage = 'today'
-      return { status: 0, stdout: '' }
-    }
-    if (joined.includes('input tap')) {
-      const tapY = Number(args.at(-1))
-      if (stage === 'today') stage = tapY < 200 ? 'menu' : 'stream'
-      else if (stage === 'stream') stage = 'phrase'
-      else if (stage === 'menu' || stage === 'more') stage = 'hard'
-      return { status: 0, stdout: '' }
-    }
-    if (joined.includes('uiautomator dump')) return { status: 0, stdout: '' }
-    if (joined.includes('cat')) {
-      const xml =
-        stage === 'phrase'
-          ? PHRASE_REFRAIN_DUMP
-          : stage === 'today'
-            ? HOME_DUMP
-            : stage === 'menu'
-              ? MENU_DUMP
-              : stage === 'more'
-                ? MORE_DUMP
-                : stage === 'hard'
-                  ? HARD_REFRAIN_DUMP
-                  : STREAM_DUMP
-      return { status: 0, stdout: xml }
-    }
-    if (joined.includes('dumpsys')) {
-      const url =
-        stage === 'phrase'
-          ? 'dat=loro://practice/refrain?phrase=es-001'
-          : stage === 'hard'
-            ? 'dat=loro://practice/refrain?filter=hard'
-            : 'dat=loro://practice/stream'
-      return { status: 0, stdout: url }
-    }
-    if (joined.includes('input swipe')) {
-      stage = 'stream'
-      return { status: 0, stdout: '' }
-    }
-    assert.fail(`unexpected adb ${joined}`)
-  }
-  const rows = executeWaveScenarios({ run, waitMs: 0 })
+  const rows = executeWaveScenarios({ run: scriptedDevice(), waitMs: 0 })
   assert.deepEqual(
     rows.map((row) => [row.id, row.status]),
     [
-      ['stream-to-phrase-refrain', 'passed'],
-      ['menu-hard-refrain', 'passed'],
-      ['practice-back-swipe-disabled', 'passed'],
+      ...expectedPointerAndShell('passed'),
+      ['stream-to-phrase-refrain-at', 'unavailable'],
+      ['menu-hard-refrain-at', 'unavailable'],
+      ['practice-back-swipe-disabled-at', 'unavailable'],
     ],
   )
+  assert.ok(rows.slice(5).every((row) => row.reason.includes('TalkBack is not installed')))
 })
 
 test('in-app Expo pushes pass from loro-route dump when dumpsys has no dat=', () => {
-  let stage = 'idle'
-  const run = (_tool, args) => {
-    const joined = args.join(' ')
-    if (joined.includes('version')) return { status: 0, stdout: 'Android Debug Bridge' }
-    if (joined.includes('devices')) {
-      return { status: 0, stdout: 'List of devices attached\nemulator-5554\tdevice\n' }
-    }
-    if (joined.includes('am start') && joined.includes('practice/stream')) {
-      stage = 'stream'
-      return { status: 0, stdout: '' }
-    }
-    if (joined.includes('am start') && joined.includes('://more')) {
-      stage = 'more'
-      return { status: 0, stdout: '' }
-    }
-    if (joined.includes('am start') && joined.includes('MAIN')) {
-      stage = 'today'
-      return { status: 0, stdout: '' }
-    }
-    if (joined.includes('input tap')) {
-      const tapY = Number(args.at(-1))
-      if (stage === 'today') stage = tapY < 200 ? 'menu' : 'stream'
-      else if (stage === 'stream') stage = 'phrase'
-      else if (stage === 'menu' || stage === 'more') stage = 'hard'
-      return { status: 0, stdout: '' }
-    }
-    if (joined.includes('uiautomator dump')) return { status: 0, stdout: '' }
-    if (joined.includes('cat')) {
-      const xml =
-        stage === 'phrase'
-          ? EXPO_PHRASE_DUMP
-          : stage === 'today'
-            ? HOME_DUMP
-            : stage === 'menu'
-              ? MENU_DUMP
-              : stage === 'more'
-                ? MORE_DUMP
-                : stage === 'hard'
-                  ? EXPO_HARD_DUMP
-                  : EXPO_STREAM_DUMP
-      return { status: 0, stdout: xml }
-    }
-    if (joined.includes('dumpsys')) {
-      return { status: 0, stdout: 'ACTIVITY MANAGER ACTIVITIES (dumpsys activity activities)' }
-    }
-    if (joined.includes('input swipe')) {
-      stage = 'stream'
-      return { status: 0, stdout: '' }
-    }
-    assert.fail(`unexpected adb ${joined}`)
-  }
-  const rows = executeWaveScenarios({ run, waitMs: 0 })
+  const rows = executeWaveScenarios({ run: scriptedDevice({ expoRoutes: true }), waitMs: 0 })
   assert.deepEqual(
-    rows.map((row) => [row.id, row.status, row.currentUrl]),
+    rows.slice(0, 5).map((row) => [row.id, row.status, row.currentUrl]),
     [
       ['stream-to-phrase-refrain', 'passed', '/practice/refrain?phrase=es-001'],
       ['menu-hard-refrain', 'passed', '/practice/refrain?filter=hard'],
       ['practice-back-swipe-disabled', 'passed', undefined],
+      ['spine-pull-opens-switcher', 'passed', undefined],
+      ['sheet-pull-dismisses-switcher', 'passed', undefined],
     ],
   )
+  assert.ok(rows.slice(5).every((row) => row.status === 'unavailable'))
 })
 
 test('menu-hard-refrain fails when More does not open the difficult-only drill', () => {
-  let stage = 'idle'
-  const run = (_tool, args) => {
-    const joined = args.join(' ')
-    if (joined.includes('version')) return { status: 0, stdout: 'Android Debug Bridge' }
-    if (joined.includes('devices')) {
-      return { status: 0, stdout: 'List of devices attached\nemulator-5554\tdevice\n' }
-    }
-    if (joined.includes('am start') && joined.includes('practice/stream')) {
-      stage = 'stream'
-      return { status: 0, stdout: '' }
-    }
-    if (joined.includes('am start') && joined.includes('://more')) {
-      stage = 'today'
-      return { status: 0, stdout: '' }
-    }
-    if (joined.includes('am start') && joined.includes('MAIN')) {
-      stage = 'today'
-      return { status: 0, stdout: '' }
-    }
-    if (joined.includes('input tap')) {
-      const tapY = Number(args.at(-1))
-      if (stage === 'today') stage = tapY < 200 ? 'menu' : 'stream'
-      else if (stage === 'stream') stage = 'phrase'
-      else if (stage === 'menu') stage = 'hard'
-      return { status: 0, stdout: '' }
-    }
-    if (joined.includes('uiautomator dump')) return { status: 0, stdout: '' }
-    if (joined.includes('cat')) {
-      const xml =
-        stage === 'phrase'
-          ? PHRASE_REFRAIN_DUMP
-          : stage === 'today'
-            ? HOME_DUMP
-            : stage === 'menu'
-              ? MENU_DUMP
-              : stage === 'hard'
-                ? HARD_REFRAIN_DUMP
-                : STREAM_DUMP
-      return { status: 0, stdout: xml }
-    }
-    if (joined.includes('dumpsys')) {
-      const url =
-        stage === 'phrase'
-          ? 'dat=loro://practice/refrain?phrase=es-001'
-          : stage === 'hard'
-            ? 'dat=loro://practice/refrain?filter=hard'
-            : 'dat=loro://practice/stream'
-      return { status: 0, stdout: url }
-    }
-    if (joined.includes('input swipe')) {
-      stage = 'stream'
-      return { status: 0, stdout: '' }
-    }
-    assert.fail(`unexpected adb ${joined}`)
-  }
-  const rows = executeWaveScenarios({ run, waitMs: 0 })
+  const rows = executeWaveScenarios({ run: scriptedDevice({ moreOpensHard: false }), waitMs: 0 })
   assert.equal(rows[0].status, 'passed')
   assert.equal(rows[1].status, 'failed')
   assert.match(rows[1].notes, /The Refrain/)
+  assert.equal(rows[3].status, 'passed')
+  assert.equal(rows[4].status, 'passed')
+})
+
+test('TalkBack rows reuse the same chrome and URL gates after a double-activate', () => {
+  const rows = executeWaveScenarios({ run: scriptedDevice({ talkbackInstalled: true }), waitMs: 0 })
+  assert.deepEqual(
+    rows.map((row) => [row.id, row.status]),
+    [
+      ...expectedPointerAndShell('passed'),
+      ['stream-to-phrase-refrain-at', 'passed'],
+      ['menu-hard-refrain-at', 'passed'],
+      ['practice-back-swipe-disabled-at', 'passed'],
+    ],
+  )
 })
 
 test('detects onboarding chrome and treats Today as the ready home', () => {
@@ -580,81 +595,28 @@ test('decodes pack labels so Café & ordering is tappable from a uiautomator dum
   assert.match(node.text, /Café & ordering/)
 })
 
-test('completes first-run onboarding before driving the three wave rows', () => {
+test('completes first-run onboarding before driving the wave rows', () => {
   let onboardIndex = 0
-  let stage = 'today'
   const last = ONBOARD_SEQUENCE.length - 1
-  const run = (_tool, args) => {
+  const device = scriptedDevice()
+  const run = (tool, args) => {
     const joined = args.join(' ')
-    if (joined.includes('version')) return { status: 0, stdout: 'Android Debug Bridge' }
-    if (joined.includes('devices')) {
-      return { status: 0, stdout: 'List of devices attached\nemulator-5554\tdevice\n' }
-    }
-    if (joined.includes('am start') && joined.includes('practice/stream')) {
-      stage = 'stream'
+    if (joined.includes('input tap') && onboardIndex < last) {
+      onboardIndex += 1
       return { status: 0, stdout: '' }
     }
-    if (joined.includes('am start') && joined.includes('://more')) {
-      stage = 'more'
-      return { status: 0, stdout: '' }
+    if (args.includes('cat') && onboardIndex < last) {
+      return { status: 0, stdout: ONBOARD_SEQUENCE[onboardIndex] }
     }
-    if (joined.includes('am start') && joined.includes('MAIN')) {
-      if (onboardIndex >= last) stage = 'today'
-      return { status: 0, stdout: '' }
-    }
-    if (joined.includes('input tap')) {
-      if (onboardIndex < last) {
-        onboardIndex += 1
-        return { status: 0, stdout: '' }
-      }
-      const tapY = Number(args.at(-1))
-      if (stage === 'today') stage = tapY < 200 ? 'menu' : 'stream'
-      else if (stage === 'stream') stage = 'phrase'
-      else if (stage === 'menu' || stage === 'more') stage = 'hard'
-      return { status: 0, stdout: '' }
-    }
-    if (joined.includes('uiautomator dump')) return { status: 0, stdout: '' }
-    if (joined.includes('cat')) {
-      if (onboardIndex < last) return { status: 0, stdout: ONBOARD_SEQUENCE[onboardIndex] }
-      const xml =
-        stage === 'phrase'
-          ? PHRASE_REFRAIN_DUMP
-          : stage === 'today'
-            ? HOME_DUMP
-            : stage === 'menu'
-              ? MENU_DUMP
-              : stage === 'more'
-                ? MORE_DUMP
-                : stage === 'hard'
-                  ? HARD_REFRAIN_DUMP
-                  : STREAM_DUMP
-      return { status: 0, stdout: xml }
-    }
-    if (joined.includes('dumpsys')) {
-      const url =
-        stage === 'phrase'
-          ? 'dat=loro://practice/refrain?phrase=es-001'
-          : stage === 'hard'
-            ? 'dat=loro://practice/refrain?filter=hard'
-            : 'dat=loro://practice/stream'
-      return { status: 0, stdout: url }
-    }
-    if (joined.includes('input swipe')) {
-      stage = 'stream'
-      return { status: 0, stdout: '' }
-    }
-    assert.fail(`unexpected adb ${joined}`)
+    return device(tool, args)
   }
   const rows = executeWaveScenarios({ run, waitMs: 0 })
   assert.equal(onboardIndex, last)
   assert.deepEqual(
-    rows.map((row) => [row.id, row.status]),
-    [
-      ['stream-to-phrase-refrain', 'passed'],
-      ['menu-hard-refrain', 'passed'],
-      ['practice-back-swipe-disabled', 'passed'],
-    ],
+    rows.slice(0, 5).map((row) => [row.id, row.status]),
+    expectedPointerAndShell('passed'),
   )
+  assert.ok(rows.slice(5).every((row) => row.status === 'unavailable'))
 })
 
 test('wave rows stay unavailable when first-run onboarding cannot finish', () => {
@@ -666,12 +628,12 @@ test('wave rows stay unavailable when first-run onboarding cannot finish', () =>
     }
     if (joined.includes('am start')) return { status: 0, stdout: '' }
     if (joined.includes('uiautomator dump')) return { status: 0, stdout: '' }
-    if (joined.includes('cat')) return { status: 0, stdout: WELCOME_DUMP }
+    if (args.includes('cat')) return { status: 0, stdout: WELCOME_DUMP }
     if (joined.includes('input tap')) return { status: 0, stdout: '' }
     assert.fail(`unexpected adb ${joined}`)
   }
   const rows = executeWaveScenarios({ run, waitMs: 0 })
-  assert.equal(rows.length, 3)
+  assert.equal(rows.length, WAVE_SCENARIO_IDS.length)
   assert.ok(rows.every((row) => row.status === 'unavailable'))
   assert.ok(rows.every((row) => row.reason.includes('Onboarding')))
 })

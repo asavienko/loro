@@ -146,16 +146,19 @@ The installed artifact remains explicitly unverified: the retained file hash ide
 bytes, but does not prove those bytes are installed. Retain and correlate the app's build metadata
 separately. A screenshot does not establish that the app is foregrounded or a scenario passed.
 
-Plan 101 wave-path rows (`stream-to-phrase-refrain`, `menu-hard-refrain`,
-`practice-back-swipe-disabled`) are listed on the manifest as `unavailable` until a device run
-drives those entries and records the exact URLs. `pnpm native:evidence --list-scenarios` prints the
-catalog without collecting. On a connected Android device,
+Plan 101/93 wave-path rows (`stream-to-phrase-refrain`, `menu-hard-refrain`,
+`practice-back-swipe-disabled`, `spine-pull-opens-switcher`, `sheet-pull-dismisses-switcher`, and
+the TalkBack `-at` variants) are listed on the manifest as `unavailable` until a device run drives
+those entries and records the exact URLs or gesture proof. `pnpm native:evidence --list-scenarios`
+prints the catalog without collecting. On a connected Android device,
 `pnpm native:evidence --execute-scenarios --artifact-revision … --artifact …` dumps the hierarchy,
 completes first-run onboarding when Today is missing, then taps Today’s wave control → Stream →
-phrase Refrain, switcher and More hard-filter, and edge-swipes the practice stack. Missing adb,
-missing device, or a dump without a matching URL stays `unavailable` or `failed` — a screenshot
-collector must not mark those rows passed. Browser mouse/touch coverage for the two navigation
-entries is in the learner E2E suite; it is not native proof. iOS `--execute-scenarios` records those
-rows as `unavailable` (the runner is adb/uiautomator) and does not abort collection. Clean iOS
-compilation, minimum OS floors, physical-device permissions/speech, persistence, lifecycle and
-interruption scenarios remain plan 58 acceptance gates.
+phrase Refrain, switcher and More hard-filter, edge-swipes the practice stack, pulls the spine
+handle to open the switcher, pulls the sheet handle to dismiss it, and repeats the three pointer
+rows with TalkBack double-activate when TalkBack is installed. Missing adb, missing device, missing
+TalkBack, or a dump without matching chrome/URL/gesture evidence stays `unavailable` or `failed` — a
+screenshot collector must not mark those rows passed. Browser mouse/touch coverage for the
+navigation and pull entries is in the learner E2E suite; it is not native proof. iOS
+`--execute-scenarios` records those rows as `unavailable` (the runner is adb/uiautomator) and does
+not abort collection. Clean iOS compilation, minimum OS floors, physical-device permissions/speech,
+persistence, lifecycle and interruption scenarios remain plan 58 acceptance gates.

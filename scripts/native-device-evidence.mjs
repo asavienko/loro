@@ -218,7 +218,7 @@ function main() {
     )
     console.log('List plan 101/93 wave-path rows without collecting: --list-scenarios')
     console.log(
-      'Drive those rows through adb + uiautomator (fail-closed; never pass without URL/chrome evidence): --execute-scenarios',
+      'Drive pointer, spine/sheet, and TalkBack rows through adb + uiautomator (fail-closed; never pass without URL/chrome/gesture evidence): --execute-scenarios',
     )
     console.log(
       'iOS --execute-scenarios stays unavailable (uiautomator is Android-only); it does not abort collection.',

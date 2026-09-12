@@ -100,7 +100,16 @@ test('lists plan 101 wave-path rows without treating a screenshot as a pass', ()
   assert.equal(parseArguments(['--list-scenarios']).listScenarios, true)
   assert.deepEqual(
     WAVE_TOUCH_SCENARIOS.map((row) => row.id),
-    ['stream-to-phrase-refrain', 'menu-hard-refrain', 'practice-back-swipe-disabled'],
+    [
+      'stream-to-phrase-refrain',
+      'menu-hard-refrain',
+      'practice-back-swipe-disabled',
+      'spine-pull-opens-switcher',
+      'sheet-pull-dismisses-switcher',
+      'stream-to-phrase-refrain-at',
+      'menu-hard-refrain-at',
+      'practice-back-swipe-disabled-at',
+    ],
   )
   const rows = unevaluatedWaveScenarios('no device')
   assert.ok(rows.every((row) => row.status === 'unavailable' && row.reason === 'no device'))
