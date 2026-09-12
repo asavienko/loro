@@ -1,87 +1,140 @@
 {
-  "$comment": "Extracted from Loro.dc.html. See docs/design/design-system.md#typography",
+  "$comment": "Families and metrics from design-v1.2 editorial stationery, mapped onto the existing runtime scale names. See docs/design/design-system.md#typography",
 
   "family": {
     "sans": {
-      "value": "Plus Jakarta Sans",
-      "weights": [400, 500, 600, 700, 800],
-      "use": "everything"
+      "value": "DM Sans",
+      "weights": [400, 500, 600, 700],
+      "use": "navigation, meta labels, UI controls, captions"
     },
     "serif": {
-      "value": "Instrument Serif",
-      "weights": [400],
-      "style": "italic",
+      "value": "Newsreader",
+      "weights": [400, 500, 600, 700],
       "use": [
-        "EMOTIONAL PUNCTUATION ONLY.",
-        "'¡Hola! I'm Loro' · 'You're all set' · '¡Hecho!' · '¡Escena completada!' ·",
-        "'today's run' · 'shuffling the deck…' · 'it climbed' · the phase numerals.",
-        "Never for UI labels. Never for body copy.",
-        "If you're reaching for the serif and it isn't a moment of feeling, use the sans."
+        "Literary headlines, phrase text, display titles, and grammatical focus words.",
+        "Optical sizing and italic for contextual vocabulary annotations.",
+        "Never for UI labels, chips, or navigation."
       ]
     }
   },
 
   "scale": {
     "display": {
-      "size": 62,
-      "sizeMax": 74,
-      "weight": 700,
-      "tracking": "-0.035em",
-      "lineHeight": 0.9,
-      "use": "countdown days, lock screen clock"
+      "size": 48,
+      "sizeMax": 56,
+      "weight": 400,
+      "tracking": "-0.02em",
+      "lineHeight": 1.167,
+      "family": "serif",
+      "use": "display-lg — countdown, lock screen clock"
     },
     "hero": {
-      "size": 46,
-      "sizeMax": 56,
-      "weight": 700,
-      "tracking": "-0.03em",
-      "lineHeight": 1.0,
-      "use": "streak count, recap number"
+      "size": 36,
+      "sizeMax": 44,
+      "weight": 400,
+      "tracking": "-0.015em",
+      "lineHeight": 1.222,
+      "family": "serif",
+      "use": "display-lg-mobile — streak count, recap number, stream phrase hero"
     },
     "title1": {
-      "size": 26,
-      "sizeMax": 28,
-      "weight": 700,
+      "size": 32,
+      "sizeMax": 40,
+      "weight": 500,
       "tracking": "-0.01em",
-      "lineHeight": 1.18,
-      "use": "phrase hero, welcome headline"
+      "lineHeight": 1.25,
+      "family": "serif",
+      "use": "headline-lg — welcome and screen heroes"
     },
     "title2": {
-      "size": 22,
-      "sizeMax": 24,
-      "weight": 700,
-      "tracking": "-0.01em",
-      "lineHeight": 1.22,
-      "use": "screen headings, card phrases"
+      "size": 26,
+      "sizeMax": 34,
+      "weight": 500,
+      "lineHeight": 1.308,
+      "family": "serif",
+      "use": "headline-md — screen headings"
     },
-    "title3": { "size": 20, "weight": 700, "tracking": "-0.01em", "lineHeight": 1.2, "use": "screen titles" },
-    "headline": { "size": 18, "weight": 700, "tracking": "-0.01em", "lineHeight": 1.25, "use": "lab titles" },
-    "body": { "size": 15, "weight": 700, "lineHeight": 1.4, "use": "row primary, CTA labels" },
-    "bodySm": { "size": 14, "weight": 700, "lineHeight": 1.4, "use": "row primary (dense), buttons" },
-    "caption": { "size": 13, "weight": 600, "lineHeight": 1.45, "use": "row secondary, helper text" },
-    "captionSm": { "size": 12, "weight": 600, "lineHeight": 1.45, "use": "translations, tips" },
+    "title3": {
+      "size": 20,
+      "weight": 600,
+      "lineHeight": 1.4,
+      "family": "serif",
+      "use": "headline-sm — section titles, refrain labels"
+    },
+    "headline": {
+      "size": 20,
+      "weight": 600,
+      "lineHeight": 1.4,
+      "family": "serif",
+      "use": "headline-sm — lab titles"
+    },
+    "body": {
+      "size": 14,
+      "weight": 600,
+      "tracking": "0.02em",
+      "lineHeight": 1.429,
+      "family": "sans",
+      "use": "label-lg — CTA and row-primary labels"
+    },
+    "bodyMd": {
+      "size": 16,
+      "weight": 400,
+      "lineHeight": 1.5,
+      "family": "sans",
+      "use": "body-md — supporting UI copy"
+    },
+    "bodySm": {
+      "size": 14,
+      "weight": 400,
+      "lineHeight": 1.429,
+      "family": "sans",
+      "use": "body-sm — dense row primary, helper"
+    },
+    "caption": {
+      "size": 14,
+      "weight": 400,
+      "lineHeight": 1.429,
+      "family": "sans",
+      "use": "body-sm — supporting copy"
+    },
+    "captionSm": {
+      "size": 12,
+      "weight": 600,
+      "tracking": "0.04em",
+      "lineHeight": 1.333,
+      "family": "sans",
+      "use": "label-md — translations, tips, meta"
+    },
     "label": {
       "size": 11,
-      "weight": 700,
-      "tracking": "0.04em",
-      "transform": "uppercase",
-      "use": "section labels, pills"
-    },
-    "labelSm": {
-      "size": 10,
-      "weight": 700,
+      "weight": 500,
       "tracking": "0.05em",
       "transform": "uppercase",
-      "use": "tile labels, micro-labels"
+      "family": "sans",
+      "use": "label-sm — section labels, pills"
     },
-    "prose": { "size": 14, "weight": 400, "lineHeight": 1.58, "use": "long paragraphs" },
+    "labelSm": {
+      "size": 11,
+      "weight": 500,
+      "tracking": "0.05em",
+      "transform": "uppercase",
+      "family": "sans",
+      "use": "label-sm — micro-labels"
+    },
+    "prose": {
+      "size": 19,
+      "weight": 400,
+      "lineHeight": 1.579,
+      "family": "serif",
+      "use": "body-lg — phrase text and literary paragraphs"
+    },
     "serifDisplay": { "size": 26, "weight": 400, "family": "serif", "style": "italic", "use": "the emotional moments" },
     "serifNum": { "size": 32, "weight": 400, "family": "serif", "variant": "tabular-nums", "use": "phase numerals" }
   },
 
   "rules": [
     "tabular-nums on EVERY changing number (streaks, counters, scores) so digits don't jitter.",
-    "Uppercase labels ALWAYS carry letter-spacing: 0.04em at 11px, 0.05em+ at 10px.",
+    "Uppercase labels ALWAYS carry letter-spacing: 0.04em at 12px, 0.05em+ at 11px.",
     "  Uppercase without tracking is the most common way this palette looks cheap.",
     "Spanish text nodes must carry lang='es-ES' — checked in CI."
   ]
