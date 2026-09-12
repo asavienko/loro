@@ -87,85 +87,106 @@ export const accent = accents[defaultAccent as AccentName]
 const weight = (value: number): TextStyle['fontWeight'] => String(value) as TextStyle['fontWeight']
 const emToPixels = (value: string, fontSize: number, precision = 1): number =>
   Number((Number.parseFloat(value) * fontSize).toFixed(precision))
-/**
- * Established React Native line boxes for the two oversized styles. Applying the authored web
- * ratios here would change display from 62 to 56 and hero from 48 to 46 pixels, so they remain
- * explicit platform tokens until a visual-change plan can migrate them with screenshot evidence.
- */
-const rnOversizedLineHeight = {
-  display: typography.scale.display.size,
-  hero: 48,
-} as const
+const trackingOf = (
+  spec: { readonly tracking?: string; readonly size: number },
+  precision = 1,
+): number | undefined =>
+  spec.tracking === undefined ? undefined : emToPixels(spec.tracking, spec.size, precision)
+const fontFor = (family?: string): string =>
+  family === 'serif' ? typography.family.serif.value : typography.family.sans.value
+
+const lineBox = (size: number, ratio: number): number => Math.round(size * ratio)
 
 export const type = {
   display: {
+    fontFamily: fontFor(typography.scale.display.family),
     fontSize: typography.scale.display.size,
     fontWeight: weight(typography.scale.display.weight),
-    letterSpacing: emToPixels(typography.scale.display.tracking, typography.scale.display.size, 0),
-    lineHeight: rnOversizedLineHeight.display,
+    letterSpacing: trackingOf(typography.scale.display, 0),
+    lineHeight: lineBox(typography.scale.display.size, typography.scale.display.lineHeight),
   },
   hero: {
+    fontFamily: fontFor(typography.scale.hero.family),
     fontSize: typography.scale.hero.size,
     fontWeight: weight(typography.scale.hero.weight),
-    letterSpacing: emToPixels(typography.scale.hero.tracking, typography.scale.hero.size),
-    lineHeight: rnOversizedLineHeight.hero,
+    letterSpacing: trackingOf(typography.scale.hero),
+    lineHeight: lineBox(typography.scale.hero.size, typography.scale.hero.lineHeight),
   },
   title1: {
+    fontFamily: fontFor(typography.scale.title1.family),
     fontSize: typography.scale.title1.size,
     fontWeight: weight(typography.scale.title1.weight),
-    letterSpacing: emToPixels(typography.scale.title1.tracking, typography.scale.title1.size),
+    letterSpacing: trackingOf(typography.scale.title1),
     lineHeight: Math.round(typography.scale.title1.size * typography.scale.title1.lineHeight),
   },
   title2: {
+    fontFamily: fontFor(typography.scale.title2.family),
     fontSize: typography.scale.title2.size,
     fontWeight: weight(typography.scale.title2.weight),
-    letterSpacing: emToPixels(typography.scale.title2.tracking, typography.scale.title2.size),
+    letterSpacing: trackingOf(typography.scale.title2),
     lineHeight: Math.round(typography.scale.title2.size * typography.scale.title2.lineHeight),
   },
   title3: {
+    fontFamily: fontFor(typography.scale.title3.family),
     fontSize: typography.scale.title3.size,
     fontWeight: weight(typography.scale.title3.weight),
-    letterSpacing: emToPixels(typography.scale.title3.tracking, typography.scale.title3.size),
+    letterSpacing: trackingOf(typography.scale.title3),
     lineHeight: Math.round(typography.scale.title3.size * typography.scale.title3.lineHeight),
   },
   headline: {
+    fontFamily: fontFor(typography.scale.headline.family),
     fontSize: typography.scale.headline.size,
     fontWeight: weight(typography.scale.headline.weight),
-    letterSpacing: emToPixels(typography.scale.headline.tracking, typography.scale.headline.size),
+    letterSpacing: trackingOf(typography.scale.headline),
     lineHeight: Math.round(typography.scale.headline.size * typography.scale.headline.lineHeight),
   },
   body: {
+    fontFamily: fontFor(typography.scale.body.family),
     fontSize: typography.scale.body.size,
     fontWeight: weight(typography.scale.body.weight),
+    letterSpacing: trackingOf(typography.scale.body),
     lineHeight: Math.round(typography.scale.body.size * typography.scale.body.lineHeight),
   },
+  bodyMd: {
+    fontFamily: fontFor(typography.scale.bodyMd.family),
+    fontSize: typography.scale.bodyMd.size,
+    fontWeight: weight(typography.scale.bodyMd.weight),
+    lineHeight: Math.round(typography.scale.bodyMd.size * typography.scale.bodyMd.lineHeight),
+  },
   bodySm: {
+    fontFamily: fontFor(typography.scale.bodySm.family),
     fontSize: typography.scale.bodySm.size,
     fontWeight: weight(typography.scale.bodySm.weight),
     lineHeight: Math.round(typography.scale.bodySm.size * typography.scale.bodySm.lineHeight),
   },
   caption: {
+    fontFamily: fontFor(typography.scale.caption.family),
     fontSize: typography.scale.caption.size,
     fontWeight: weight(typography.scale.caption.weight),
     lineHeight: Math.round(typography.scale.caption.size * typography.scale.caption.lineHeight),
   },
   captionSm: {
+    fontFamily: fontFor(typography.scale.captionSm.family),
     fontSize: typography.scale.captionSm.size,
     fontWeight: weight(typography.scale.captionSm.weight),
+    letterSpacing: trackingOf(typography.scale.captionSm),
     lineHeight: Math.round(typography.scale.captionSm.size * typography.scale.captionSm.lineHeight),
   },
   prose: {
+    fontFamily: fontFor(typography.scale.prose.family),
     fontSize: typography.scale.prose.size,
     fontWeight: weight(typography.scale.prose.weight),
     lineHeight: Math.round(typography.scale.prose.size * typography.scale.prose.lineHeight),
   },
   label: {
+    fontFamily: fontFor(typography.scale.label.family),
     fontSize: typography.scale.label.size,
     fontWeight: weight(typography.scale.label.weight),
     letterSpacing: emToPixels(typography.scale.label.tracking, typography.scale.label.size, 2),
     textTransform: typography.scale.label.transform,
   },
   labelSm: {
+    fontFamily: fontFor(typography.scale.labelSm.family),
     fontSize: typography.scale.labelSm.size,
     fontWeight: weight(typography.scale.labelSm.weight),
     letterSpacing: emToPixels(typography.scale.labelSm.tracking, typography.scale.labelSm.size, 2),

@@ -27,6 +27,7 @@ export function ListRow({
   disabled,
   onPress,
   gap,
+  last = false,
   children,
 }: {
   accessibilityLabel: string
@@ -37,9 +38,11 @@ export function ListRow({
   onPress: () => void
   /** Settings `space['3']`; More and Music `space['2.5']`. */
   gap: number
+  /** Hide the hairline when this row sits on a card floor. */
+  last?: boolean | undefined
   children: ReactNode
 }) {
-  const look = listRowLook(gap)
+  const look = listRowLook(gap, last)
   return (
     <Pressable
       feedback="row"

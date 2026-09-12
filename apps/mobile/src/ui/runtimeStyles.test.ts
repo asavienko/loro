@@ -1,10 +1,14 @@
 import { describe, expect, it } from 'vitest'
+import { accent } from './theme'
 import {
+  ghostUnderlineStyle,
   isPressableUnavailable,
+  resolveDeboss,
   resolveForcedInteractionState,
   resolvePressScale,
   scaleTextStyle,
 } from './runtimeStyles'
+import { DEBOSS_TRANSLATE_Y } from './stationeryShadow'
 
 describe('runtime inspection styles', () => {
   it('scales glyph metrics while leaving unrelated layout values unchanged', () => {
@@ -39,5 +43,57 @@ describe('runtime inspection styles', () => {
     expect(isPressableUnavailable(false, false)).toBe(false)
     expect(isPressableUnavailable(true, false)).toBe(true)
     expect(isPressableUnavailable(false, true)).toBe(true)
+  })
+
+  it('debosses a press by 1px and drops spatial movement under Reduce Motion', () => {
+    expect(resolveDeboss({ pressed: true, disabled: false, reducedMotion: false })).toEqual({
+      translateY: DEBOSS_TRANSLATE_Y,
+      shadowT: 1,
+    })
+    expect(resolveDeboss({ pressed: true, disabled: false, reducedMotion: true })).toEqual({
+      translateY: 0,
+      shadowT: 0,
+    })
+    expect(resolveDeboss({ pressed: false, disabled: false, reducedMotion: false })).toEqual({
+      translateY: 0,
+      shadowT: 0,
+    })
+  })
+
+  it('keeps a static ghost underline on native and expands from the centre on web', () => {
+    expect(
+      ghostUnderlineStyle({
+        color: accent.accentInk,
+        expanded: false,
+        reducedMotion: false,
+        web: false,
+        durationMs: 150,
+        easing: 'linear',
+      }),
+    ).toEqual({ textDecorationLine: 'underline' })
+    const hovered = ghostUnderlineStyle({
+      color: accent.accentInk,
+      expanded: true,
+      reducedMotion: false,
+      web: true,
+      durationMs: 150,
+      easing: 'cubic-bezier(.3,.7,.3,1)',
+    })
+    expect(hovered).toMatchObject({
+      textDecorationLine: 'none',
+      backgroundSize: '100% 1px',
+      backgroundPosition: 'center bottom',
+      transitionDuration: '150ms',
+    })
+    expect(
+      ghostUnderlineStyle({
+        color: accent.accentInk,
+        expanded: false,
+        reducedMotion: true,
+        web: true,
+        durationMs: 150,
+        easing: 'linear',
+      }),
+    ).toMatchObject({ backgroundSize: '0% 1px', transitionDuration: '0ms' })
   })
 })

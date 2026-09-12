@@ -36,6 +36,31 @@ export default meta
 type Story = StoryObj<typeof Field>
 
 export const Default: Story = {}
+export const Empty: Story = {
+  render: () => (
+    <Field
+      accessibilityLabel="Empty story field"
+      value=""
+      onChangeText={() => undefined}
+      placeholder="DM Sans placeholder"
+      bordered
+    />
+  ),
+}
+export const Filled: Story = {
+  render: () => <Playground initial="DM Sans account line" bordered invalid={false} editable />,
+}
+export const Literary: Story = {
+  render: () => (
+    <Field
+      accessibilityLabel="Literary story field"
+      literary
+      value="¿Tienen una mesa para dos?"
+      onChangeText={() => undefined}
+      bordered
+    />
+  ),
+}
 export const Invalid: Story = {
   render: () => <Playground initial="oops" bordered invalid editable />,
 }

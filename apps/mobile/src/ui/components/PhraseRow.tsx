@@ -18,7 +18,8 @@
 import type { ReactNode } from 'react'
 import { View } from 'react-native'
 import { Pressable, Text } from '../primitives'
-import { border, ink, line, phraseRow, radius, surface } from '../theme'
+import { stationeryElevation } from '../elevation'
+import { ink, line, phraseRow, radius, space, surface, type as typeScale } from '../theme'
 
 // Reserve most of the row for language; an enlarged badge must wrap before squeezing it.
 const PHRASE_TEXT_BASIS = '60%'
@@ -27,6 +28,7 @@ export function PhraseRow({
   targetText,
   translation,
   emoji,
+  eyebrow,
   variant = 'queue',
   onPress,
   accessibilityLabel,
@@ -36,7 +38,9 @@ export function PhraseRow({
   targetText: string
   translation: string
   emoji: string
-  /** `queue` is the stream's "up next"; `suggestion` is Add's list — a step larger. */
+  /** Optional real catalog meta above the phrase — Discover's theme, never invented rank. */
+  eyebrow?: string | undefined
+  /** `queue` is Stream "up next"; `suggestion` is Add's list. Both are stationery cards. */
   variant?: keyof typeof phraseRow | undefined
   onPress: () => void
   accessibilityLabel: string
@@ -45,38 +49,75 @@ export function PhraseRow({
   trailing?: ReactNode
 }) {
   const m = phraseRow[variant]
+  const suggestion = variant === 'suggestion'
+  const hasEyebrow = eyebrow !== undefined && eyebrow.length > 0
   return (
     <Pressable
       feedback="row"
+      pressMotion="deboss"
+      elevation="card"
       accessibilityLabel={accessibilityLabel}
       accessibilityHint={accessibilityHint}
       onPress={onPress}
       style={{
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        alignItems: 'center',
         gap: m.gap,
         backgroundColor: surface.card,
-        borderWidth: border.hairline,
-        borderColor: line.default,
-        borderRadius: radius.lg,
+        borderRadius: radius.xl,
         padding: m.padding,
+        borderWidth: 1,
+        borderColor: line.default,
+        ...stationeryElevation('card'),
       }}
     >
-      <Text style={{ fontSize: m.emojiSize }}>{emoji}</Text>
-      <View style={{ flexGrow: 1, flexShrink: 0, flexBasis: PHRASE_TEXT_BASIS }}>
-        <Text
-          variant={variant === 'suggestion' ? 'bodySm' : 'caption'}
-          color={ink.ink}
-          lang="target"
-        >
-          {targetText}
-        </Text>
-        <Text variant="captionSm" color={ink.muted}>
-          {translation}
-        </Text>
+      {hasEyebrow ? (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: space['1.5'] }}>
+          {emoji.length > 0 ? <Text style={{ fontSize: m.emojiSize }}>{emoji}</Text> : null}
+          {/* Theme names stay authored case — v1.2 queue cards are "Café", not "CAFÉ". */}
+          <Text variant="labelSm" color={ink.muted} style={{ textTransform: 'none' }}>
+            {eyebrow}
+          </Text>
+        </View>
+      ) : null}
+      <View
+        style={{
+          flexDirection: 'row',
+          flexWrap: 'wrap',
+          alignItems: 'flex-start',
+          gap: m.gap,
+        }}
+      >
+        <View style={{ flexGrow: 1, flexShrink: 1, flexBasis: PHRASE_TEXT_BASIS }}>
+          <Text variant="title3" color={ink.ink} lang="target">
+            {targetText}
+          </Text>
+          <Text
+            variant="caption"
+            color={ink.ink2}
+            style={{
+              fontFamily: typeScale.prose.fontFamily,
+              fontStyle: 'italic',
+              marginTop: space['1'],
+            }}
+          >
+            {translation}
+          </Text>
+        </View>
+        {hasEyebrow ? null : emoji.length > 0 ? (
+          <Text style={{ fontSize: m.emojiSize }}>{emoji}</Text>
+        ) : null}
+        {suggestion ? null : trailing}
       </View>
-      {trailing}
+      {suggestion && trailing !== undefined ? (
+        <View
+          style={{
+            marginTop: space['1'],
+            flexDirection: 'row',
+            justifyContent: 'flex-end',
+          }}
+        >
+          {trailing}
+        </View>
+      ) : null}
     </Pressable>
   )
 }

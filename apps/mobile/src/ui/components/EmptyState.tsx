@@ -35,10 +35,10 @@ export function EmptyState({
 }) {
   return (
     <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding, gap }}>
-      <Text variant="title3" color={ink.ink} align={align}>
+      <Text variant="title2" color={ink.ink} align={align}>
         {title}
       </Text>
-      <Text variant="caption" color={ink.muted} align={align}>
+      <Text variant="bodyMd" color={ink.ink2} align={align}>
         {body}
       </Text>
       {action !== undefined && (

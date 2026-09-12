@@ -25,15 +25,15 @@ Primitives are domain-free. Their public exports come from `primitives/index.ts`
 | `ChartSummary`  | Visible `captionSm` summary to accompany a future chart                                                              |
 | `SectionHeader` | `label`, optional `hint`, `variant: label\|caption`; baseline aligned                                                |
 | `CardHeader`    | `title`, `meta`, `metaVariant`; owns the body gap                                                                    |
-| `Pressable`     | `feedback`, `disabled`, `selected`, accessibility props; checked state in native and flat web forms                  |
+| `Pressable`     | `feedback`, `pressMotion` (`scale` \| `deboss`), optional `elevation`, `disabled`, `selected`; checked state in native and flat web forms |
 | `Screen`        | Full-screen `surface.app` container                                                                                  |
-| `Card`          | `padding`, numeric `radius`, `background`, border colour/width, optional grouped accessibility; no elevation yet     |
+| `Card`          | `padding`, numeric `radius`, `background`, border colour/width, `stationeryElevation` contact shadow, optional grouped accessibility |
 | `DarkCard`      | Flat `surface.dark`, 24 px radius; gradients/shadows are not mapped yet                                              |
 | `Divider`       | One-pixel subtle line                                                                                                |
 | `Row`           | `gap`, `align`, `justify`, `wrap`, `style`; wraps vertically for large text when requested                           |
 | `Stack`         | Vertical `gap` and `style`                                                                                           |
 | `Grid`          | Wrapping row with stretch alignment, for same-shaped controls/tiles                                                  |
-| `Button`        | `label`, `variant: primary\|secondary\|destructive`, `size: md\|lg\|cta`, `disabled`, hint                           |
+| `Button`        | `label`, `variant: primary\|secondary\|destructive\|ghost`, `size: md\|lg\|cta`, `disabled`, hint; primary debosses, ghost expands a 1px underline on web hover |
 | `IconButton`    | Required glyph and accessible label; uses the icon target floor                                                      |
 | `Pill`          | Static `label`, optional emoji, `tone: neutral\|accent\|onDark`, five sizes, colour overrides                        |
 | `Chip`          | Selectable label; `variant: tag\|scenario\|toggle`, `tone: tint\|solid`, explicit role/state                         |

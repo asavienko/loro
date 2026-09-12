@@ -73,9 +73,9 @@ export function DifficultySelector({
               ...(Platform.OS === 'web' ? { minWidth: 'auto' as const } : {}),
               alignItems: 'center',
               paddingVertical: m.paddingVertical,
-              borderRadius: radius.lg,
+              borderRadius: radius.xl,
               backgroundColor: active ? meta.bg : surface.card,
-              borderWidth: active ? border.selected : border.hairline,
+              borderWidth: active ? border.selected : 0,
               borderColor: active ? meta.border : line.strong,
             }}
           >
