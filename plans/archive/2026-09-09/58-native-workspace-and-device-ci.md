@@ -62,8 +62,10 @@ modules, generated native projects, UniFFI bindings, device SQLite, permissions,
        API 36) passed all eight rows on preview APK `b0b4e3b77746` with chrome plus the exact URL or
        gesture proof (`.local-builds/native-evidence/wave-101-emulator-v6/`). That is not
        physical-device, interruption, speech, or iOS proof. Missing device or matching evidence
-       stays `unavailable` or `failed`. iOS `--execute-scenarios` records the same rows unavailable
-       and does not abort collection. A screenshot collector must not mark those rows passed.
+       stays `unavailable` or `failed`. iOS `--execute-scenarios` drives pointer and spine/sheet
+       rows through simctl + idb with the same fail-closed chrome/URL/gesture gates; TalkBack `-at`
+       rows stay unavailable (VoiceOver remains a physical-device gate). Missing Xcode/idb does not
+       abort collection. A screenshot collector must not mark those rows passed.
 3. [ ] Validate minimum OS floors and clean regeneration on supported hosts. Add platform modules
        for widgets/OCR/purchases only with their owning feature.
 4. [ ] Complete production signing/provisioning and environment-safe release profiles when store

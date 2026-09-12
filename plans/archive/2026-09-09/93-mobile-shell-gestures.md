@@ -20,7 +20,9 @@ mouse/touch coverage for Stream → phrase Refrain and menu hard-filter;
 `native:evidence --execute-scenarios` on Linux emulator `emulator-5554` (APK `b0b4e3b77746`)
 edge-swiped the practice stack, pulled the spine handle open, and pulled the sheet handle closed,
 then repeated the three pointer rows with TalkBack. That is emulator proof, not physical-device or
-iOS. Plan 101's Stream-primary / hard-filter Refrain model is not reverted.
+iOS. iOS `--execute-scenarios` now uses simctl + idb for the same pointer and spine/sheet rows and
+fail-closes without chrome/URL/gesture proof; VoiceOver `-at` evidence remains a device gate. Plan
+101's Stream-primary / hard-filter Refrain model is not reverted.
 
 Verified: `pnpm check` passed all 23 tasks; `pnpm test:e2e` passed all 119 tests in 4.4 minutes,
 including mouse/touch gestures, cancelled touch, accessibility and 310% text. The initial cold
