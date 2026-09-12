@@ -166,12 +166,36 @@ export const refrainCopy = {
       return message('refrain.locked.finish')
     },
   },
+  focus: {
+    get phrase() {
+      return message('refrain.focus.phrase')
+    },
+    get hard() {
+      return message('refrain.focus.hard')
+    },
+  },
   done: {
     get headline() {
       return message('refrain.done.headline')
     },
     get title() {
       return message('refrain.done.title')
+    },
+    phrase: {
+      get headline() {
+        return message('refrain.done.phrase.headline')
+      },
+      get title() {
+        return message('refrain.done.phrase.title')
+      },
+    },
+    hard: {
+      get headline() {
+        return message('refrain.done.hard.headline')
+      },
+      get title() {
+        return message('refrain.done.hard.title')
+      },
     },
     get workedLabel() {
       return message('refrain.done.workedLabel')

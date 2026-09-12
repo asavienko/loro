@@ -2,10 +2,14 @@ import { describe, expect, it } from 'vitest'
 import { makePhrase } from '@loro/core/testing'
 import {
   destinationTarget,
+  inferRefrainFocus,
   parseRefrainFocus,
   refrainFocusIds,
+  refrainResumeTarget,
   refrainSessionMatchesFocus,
   refrainSkipsWaveLock,
+  sessionCoversDaySet,
+  streamWaveMembers,
   streamWaveQueue,
 } from './practiceFocus'
 
@@ -82,5 +86,70 @@ describe('refrain focus', () => {
       params: { filter: 'hard' },
     })
     expect(destinationTarget('/practice/stream')).toBe('/practice/stream')
+  })
+
+  it('treats a session as covering the day only when its members are the frozen set', () => {
+    expect(sessionCoversDaySet(['a', 'b', 'a'], ['b', 'a'])).toBe(true)
+    expect(sessionCoversDaySet(['a'], ['a', 'b'])).toBe(false)
+    expect(sessionCoversDaySet(['a', 'b'], ['a'])).toBe(false)
+  })
+
+  it('resumes a one-phrase drill with the phrase param', () => {
+    const phrases = [makePhrase('cafe'), makePhrase('other', { difficulty: 'hard' })]
+    const focus = inferRefrainFocus(['cafe'], phrases, ['cafe', 'other'])
+    expect(focus).toEqual({ kind: 'phrase', phraseId: 'cafe' })
+    expect(refrainResumeTarget(focus, 'morning')).toEqual({
+      pathname: '/practice/refrain',
+      params: { phrase: 'cafe' },
+    })
+  })
+
+  it('resumes a difficult-only drill with the hard filter', () => {
+    const phrases = [
+      makePhrase('hard', { difficulty: 'hard' }),
+      makePhrase('also', { difficulty: 'hard' }),
+      makePhrase('easy', { difficulty: 'easy' }),
+    ]
+    const focus = inferRefrainFocus(['also', 'hard'], phrases, ['easy', 'hard', 'also'])
+    expect(focus).toEqual({ kind: 'hard' })
+    expect(refrainResumeTarget(focus, 'midday')).toEqual({
+      pathname: '/practice/refrain',
+      params: { filter: 'hard' },
+    })
+  })
+
+  it('resumes a full-set session as a timed wave', () => {
+    const phrases = [makePhrase('a'), makePhrase('b')]
+    const focus = inferRefrainFocus(['a', 'b'], phrases, ['a', 'b'])
+    expect(focus).toEqual({ kind: 'wave' })
+    expect(refrainResumeTarget(focus, 'evening')).toEqual({
+      pathname: '/practice/refrain',
+      params: { wave: 'evening' },
+    })
+  })
+
+  it('resumes an all-difficult day set as a timed wave', () => {
+    const phrases = [
+      makePhrase('a', { difficulty: 'hard' }),
+      makePhrase('b', { difficulty: 'hard' }),
+    ]
+    expect(inferRefrainFocus(['a', 'b'], phrases, ['a', 'b'])).toEqual({ kind: 'wave' })
+  })
+})
+
+describe('streamWaveMembers', () => {
+  it('keeps learned wave members so the heading pills can count them', () => {
+    const easy = makePhrase('easy')
+    const learned = makePhrase('done', { learned: true })
+    const extra = makePhrase('extra')
+    expect(streamWaveMembers([easy, learned, extra], ['done', 'easy']).map((p) => p.id)).toEqual([
+      'done',
+      'easy',
+    ])
+  })
+
+  it('falls back to every phrase when the frozen set has no members', () => {
+    const extra = makePhrase('extra')
+    expect(streamWaveMembers([extra], ['missing']).map((p) => p.id)).toEqual(['extra'])
   })
 })

@@ -98,6 +98,9 @@ export const todayCopy = {
     get resumeRefrain() {
       return message('today.cta.resumeRefrain')
     },
+    get resumePractice() {
+      return message('today.cta.resumePractice')
+    },
     waitForWave: (time: string): string => message('today.cta.waitForWave', { time }),
     get complete() {
       return message('today.cta.complete')

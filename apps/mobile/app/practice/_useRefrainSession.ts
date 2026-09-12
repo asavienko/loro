@@ -18,7 +18,7 @@ import {
 import { rustCoreFacade } from '../../src/store/coreFacade'
 import { copy } from '../../src/lib/copy'
 import { deviceClock } from '../../src/lib/clock'
-import { refrainSessionMatchesFocus } from '../../src/lib/practiceFocus'
+import { refrainSessionMatchesFocus, sessionCoversDaySet } from '../../src/lib/practiceFocus'
 
 export type WarmingStyle = (typeof warming)[ReturnType<typeof warmBand>]
 
@@ -153,7 +153,8 @@ export function useRefrainSession(
     if (busy.current || !ensureCurrentDay()) return
     if (session === null || item === undefined || storePhrase === undefined || locked) return
     busy.current = true
-    const ctx = engineContext()
+    const scoped = setIdsRef.current?.map(userPhraseId)
+    const ctx = engineContext(scoped !== undefined ? { refrainSet: scoped } : undefined)
     const at = deviceClock.now()
     const localDay = deviceClock.localDay()
     const streakDay = deviceClock.streakDay()
@@ -219,7 +220,14 @@ export function useRefrainSession(
         cursor: nextCursor,
         done: nextIndex < 0,
       }
-      if (nextIndex < 0 && shouldCompleteWave && sessionCoversDaySet(session, refrainSet)) {
+      if (
+        nextIndex < 0 &&
+        shouldCompleteWave &&
+        sessionCoversDaySet(
+          session.plan.items.map((item) => item.phraseId),
+          refrainSet,
+        )
+      ) {
         completeRefrainWave(activeWave, checkpoint)
       } else {
         saveRefrainCheckpoint(checkpoint)
@@ -269,12 +277,4 @@ export function useRefrainSession(
     doRep,
     nextPhrase,
   }
-}
-
-function sessionCoversDaySet(
-  session: { readonly plan: { readonly items: readonly { readonly phraseId: string }[] } },
-  refrainSet: readonly string[],
-): boolean {
-  const ids = [...new Set(session.plan.items.map((item) => item.phraseId))]
-  return ids.length === refrainSet.length && ids.every((id) => refrainSet.includes(id))
 }
