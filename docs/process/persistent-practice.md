@@ -1,7 +1,7 @@
 # Persistent practice and account sync
 
 The runtime implements SQLite-backed learner progress, canonical Rust scheduling, native foreground
-speech, optional email/Google/Apple sign-in and tenant-scoped Postgres sync. These capabilities are
+speech, required email/Google/Apple sign-in and tenant-scoped Postgres sync. These capabilities are
 implemented in plan 94 alongside feature plans 59/60/62/63/66/67/68/89. Native/device acceptance and
 production service setup remain separate from passing source and browser tests.
 
@@ -33,10 +33,10 @@ server. Sync identities and pending deletions are reconciled together.
    one-use exchange registers the installation in the same account/session system as email.
 5. Set `EXPO_PUBLIC_API_URL` to the API base including `/v1`. HTTPS is required except for loopback
    development. Allow the browser's exact origin in `CORS_ALLOWED_ORIGINS`.
-6. Open **Sign in & sync** from the app menu. Email/code verification or a configured provider
-   connects the account, then the durable outbox uploads and server changes merge locally.
-   Foreground events, connectivity recovery, local writes and bounded retries trigger sync. Practice
-   never waits for it.
+6. The app opens on **Sign in & sync**. Email/code verification or a configured provider connects
+   the account before onboarding or practice. The durable outbox then uploads and server changes
+   merge locally. Foreground events, connectivity recovery, local writes and bounded retries trigger
+   sync. Practice never waits for it. Sign-out returns the learner to this screen.
 
 Native refresh credentials use
 [Expo SecureStore](https://docs.expo.dev/versions/v54.0.0/sdk/securestore/). Web credentials have

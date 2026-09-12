@@ -9,19 +9,19 @@ new work is extending toward.
 
 The Expo Router app implements eight learner screens plus Languages, Account, More, Settings and the
 shell. SQLite backs progress and course resume; generated Rust handles scheduling and merge. Local
-Expo modules provide foreground device TTS/on-device ASR. Postgres auth/sync is optional for
-practice. Native projects are generated from app configuration; see
-[runtime evidence](../process/persistent-practice.md).
+Expo modules provide foreground device TTS/on-device ASR. Postgres auth/sync is required before
+practice; a restored native session still works offline. Native projects are generated from app
+configuration; see [runtime evidence](../process/persistent-practice.md).
 
-| Area                  | Implemented now                                                                                             | Target                                                                          |
-| --------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| Routes                | Today, onboarding, Add, phrase detail, Stream, Speak, Refrain, Progress, Languages, Account, More, Settings | The remaining blueprint routes, trips, labs, and Run                            |
-| Domain and engines    | Domain contracts plus Stream/Refrain/Speak engines in `@loro/core`                                          | All engines behind the same `PracticeEngine` contract                           |
-| App state             | Repository projections in Zustand; durable writes commit to SQLite first                                    | SQLite as durable truth; Zustand only for resumable sessions                    |
-| Persistence           | OP-SQLite on device, durable SQL.js on web; transactional repositories and outbox                           | Physical-device upgrade/process-death acceptance                                |
-| Rust core             | Generated WASM/UniFFI runtime bridge with reference parity                                                  | Full iOS and device-floor acceptance                                            |
-| Native capabilities   | Local Expo modules provide foreground TTS and strictly on-device ASR                                        | Audio, speech, ASR, DSP, notifications, purchases, and widgets through wrappers |
-| Automated UI coverage | Playwright on Expo Web, driven through learner-visible interactions                                         | Keep web coverage and add native/device suites for native behavior              |
+| Area                  | Implemented now                                                                                                          | Target                                                                          |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------- |
+| Routes                | Today, onboarding, Add, phrase detail, Stream, Speak, Refrain, Progress, Languages, Account, More, Settings              | The remaining blueprint routes, trips, labs, and Run                            |
+| Domain and engines    | Domain contracts plus Stream/Refrain/Speak engines in `@loro/core`                                                       | All engines behind the same `PracticeEngine` contract                           |
+| App state             | Repository projections in Zustand; durable writes commit to SQLite first                                                 | SQLite as durable truth; Zustand only for resumable sessions                    |
+| Persistence           | OP-SQLite on device, durable SQL.js on web; transactional repositories and outbox; practice requires a signed-in session | Physical-device upgrade/process-death acceptance                                |
+| Rust core             | Generated WASM/UniFFI runtime bridge with reference parity                                                               | Full iOS and device-floor acceptance                                            |
+| Native capabilities   | Local Expo modules provide foreground TTS and strictly on-device ASR                                                     | Audio, speech, ASR, DSP, notifications, purchases, and widgets through wrappers |
+| Automated UI coverage | Playwright on Expo Web, driven through learner-visible interactions                                                      | Keep web coverage and add native/device suites for native behavior              |
 
 “Target” in this document is a constraint for extension work, not evidence that a folder, package,
 or capability already exists.

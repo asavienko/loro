@@ -7,7 +7,7 @@ The system end to end. Read this before any other architecture document.
 > WASM/UniFFI boundaries own canonical scheduling, selection, matching, clocks and merge. Native
 > foreground TTS and strictly on-device ASR are implemented; Speak falls back to offline reveal.
 > PostgreSQL stores accounts, refresh families and tenant-scoped sync, connected by the durable
-> mobile outbox. Google/Apple/email identity is optional. See
+> mobile outbox. Google/Apple/email identity is required before practice. See
 > [persistent practice](../process/persistent-practice.md) and [the plans](../../plans/README.md).
 >
 > The diagrams include future surfaces: recorded-asset cache/background audio, production listening
@@ -275,7 +275,7 @@ Versions are the pins chosen at authoring time — **re-verify at kickoff**
 | Storage / CDN  | Private S3; CDN deferred                            | Authorized content downloads through plans 61/86                                 |
 | AI             | Anthropic Claude                                    | Roleplay, coach notes, content enrichment                                        |
 | TTS            | Managed neural TTS                                  | Catalog/reference audio at build time; on-demand listening-class clips (plan 99) |
-| Auth           | Apple / Google / email magic link; own JWT issuance | Anonymous-first upgrade path                                                     |
+| Auth           | Apple / Google / email magic link; own JWT issuance | Sign-in required before practice; installation claim on first sign-in            |
 | Deploy         | One EC2, Compose, Terraform; maintenance deploys    | [backend.md](backend.md#deployment)                                              |
 
 ### Shared
