@@ -51,7 +51,9 @@ modules, generated native projects, UniFFI bindings, device SQLite, permissions,
 2. [ ] Automate physical-device permissions, bridge, persistence, lifecycle and interruption checks
        with logs/screenshots; document required voice/model installation. Plan 101 wave-path rows
        (`stream-to-phrase-refrain`, `menu-hard-refrain`, `practice-back-swipe-disabled`) are
-       declared on the evidence manifest and stay `unavailable` until a device run drives them.
+       declared on the evidence manifest. `pnpm native:evidence --execute-scenarios` drives them
+       through adb + uiautomator and stays `unavailable` or `failed` without a device or matching
+       URL. A screenshot collector must not mark those rows passed.
 3. [ ] Validate minimum OS floors and clean regeneration on supported hosts. Add platform modules
        for widgets/OCR/purchases only with their owning feature.
 4. [ ] Complete production signing/provisioning and environment-safe release profiles when store

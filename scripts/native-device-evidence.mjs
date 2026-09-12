@@ -4,6 +4,7 @@ import { mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { resolve, relative, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { collectIosEvidence } from './ios-simulator-evidence.mjs'
+import { executeWaveScenarios } from './native-wave-scenarios.mjs'
 import { unevaluatedWaveScenarios, WAVE_TOUCH_SCENARIOS } from './wave-touch-scenarios.mjs'
 
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)))
@@ -17,6 +18,7 @@ export function parseArguments(args) {
     output: undefined,
     artifactRevision: undefined,
     artifact: undefined,
+    executeScenarios: false,
   }
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index]
@@ -36,8 +38,9 @@ export function parseArguments(args) {
       if (arg === '--output') result.output = value
       if (arg === '--artifact-revision') result.artifactRevision = value
       if (arg === '--artifact') result.artifact = value
-    } else     if (arg === '--help') result.help = true
+    } else if (arg === '--help') result.help = true
     else if (arg === '--list-scenarios') result.listScenarios = true
+    else if (arg === '--execute-scenarios') result.executeScenarios = true
     else throw new Error(`Unknown option: ${arg}`)
   }
   if (!['android', 'ios'].includes(result.platform))
@@ -127,6 +130,7 @@ export function collectEvidence({
   output,
   artifactRevision,
   artifact,
+  executeScenarios = false,
 }) {
   mkdirSync(output, { recursive: true })
   const devices = command(adb, undefined, ['devices', '-l'])
@@ -139,28 +143,6 @@ export function collectEvidence({
       .find((parts) => parts[0] && parts[1] === 'device')?.[0]
   if (!selected) throw new Error('Connect one authorized Android device or pass --serial.')
   const shell = (...argv) => command(adb, selected, ['shell', ...argv])
-  const manifest = {
-    collectedAt: new Date().toISOString(),
-    serial: selected,
-    packageName,
-    artifactRevision: artifactRevision ?? null,
-    artifact: artifact ?? null,
-    checks: {
-      device: 'captured',
-      installedPackage: 'captured',
-      permissions: 'captured',
-      logs: 'captured',
-      screenshot: 'captured',
-    },
-    scenarios: unevaluatedWaveScenarios(
-      'Collector records the current screen only; it does not launch or drive Stream → Refrain or menu hard-filter.',
-    ),
-    limits: [
-      'This collector records evidence only; it does not verify the installed bytes or claim speech, lifecycle, interruption, or iOS acceptance.',
-      'Review the artifacts on a supported physical device before closing the native acceptance gates.',
-      'Plan 101 wave-path rows stay unavailable until a device run drives those entries and records their exact URLs.',
-    ],
-  }
   writeFileSync(resolve(output, 'device.txt'), shell('getprop'))
   writeFileSync(resolve(output, 'package.txt'), shell('dumpsys', 'package', packageName))
   writeFileSync(resolve(output, 'permissions.txt'), shell('pm', 'list', 'permissions', '-g', '-d'))
@@ -174,6 +156,36 @@ export function collectEvidence({
   if (screenshot.error || screenshot.status !== 0 || !screenshot.stdout?.length)
     throw new Error('adb exec-out screencap failed.')
   writeFileSync(resolve(output, 'screen.png'), screenshot.stdout)
+  const scenarios = executeScenarios
+    ? executeWaveScenarios({
+        adb,
+        serial: selected,
+        packageName,
+        outputDir: resolve(output, 'wave-scenarios'),
+      })
+    : unevaluatedWaveScenarios(
+        'Collector records the current screen only; it does not launch or drive Stream → Refrain or menu hard-filter. Pass --execute-scenarios on a connected device.',
+      )
+  const manifest = {
+    collectedAt: new Date().toISOString(),
+    serial: selected,
+    packageName,
+    artifactRevision: artifactRevision ?? null,
+    artifact: artifact ?? null,
+    checks: {
+      device: 'captured',
+      installedPackage: 'captured',
+      permissions: 'captured',
+      logs: 'captured',
+      screenshot: 'captured',
+    },
+    scenarios,
+    limits: [
+      'This collector records evidence only; it does not verify the installed bytes or claim speech, lifecycle, interruption, or iOS acceptance.',
+      'Review the artifacts on a supported physical device before closing the native acceptance gates.',
+      'Plan 101 wave-path rows stay unavailable until --execute-scenarios drives those entries and records their exact URLs. A screenshot is not a pass.',
+    ],
+  }
   writeFileSync(resolve(output, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`)
   return manifest
 }
@@ -182,18 +194,23 @@ function main() {
   const options = parseArguments(process.argv.slice(2))
   if (options.help) {
     console.log(
-      'Usage: pnpm native:evidence --artifact-revision GIT_REVISION --artifact .local-builds/RETAINED_BUILD [--platform android|ios] [--serial DEVICE] [--package PACKAGE] [--output PATH]',
+      'Usage: pnpm native:evidence --artifact-revision GIT_REVISION --artifact .local-builds/RETAINED_BUILD [--platform android|ios] [--serial DEVICE] [--package PACKAGE] [--output PATH] [--execute-scenarios]',
     )
     console.log(
       'Captures read-only Android device or booted iOS simulator evidence under .local-builds/native-evidence/.',
     )
     console.log('List plan 101/93 wave-path rows without collecting: --list-scenarios')
+    console.log(
+      'Drive those rows through adb + uiautomator (fail-closed; never pass without URL/chrome evidence): --execute-scenarios',
+    )
     return
   }
   if (options.listScenarios) {
     console.log(JSON.stringify(WAVE_TOUCH_SCENARIOS, null, 2))
     return
   }
+  if (options.platform === 'ios' && options.executeScenarios)
+    throw new Error('Wave-path execution is Android adb/uiautomator only.')
   if (!options.artifactRevision)
     throw new Error(
       'Pass --artifact-revision with the retained Git revision of the installed build.',

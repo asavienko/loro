@@ -397,7 +397,7 @@ installed-language coverage and audible model playback still require the accepta
 | Fading tail (`tail`, `1370–1375`)                            | Absent                                | `LB-06` | Nothing tracks a phrase leaving rotation. Plan 64.                                                                                                  |
 | Tapping a set row speaks the phrase (`setList[].onTap`)      | Opens phrase detail                   | `AS-01` | Plan 62. The row's hint says what it does.                                                                                                          |
 | `dateLabel` `Tuesday · the daily refrain`, `streak` `12`     | The real local date; a derived streak | `LB-02` | Both are fabricated in the prototype. `streak()` is the same function the widget calls.                                                             |
-| `Start the * wave` opens the Refrain (`3334`)                | Opens Stream; a paused phrase or hard drill resumes that drill | `LB-03` | [Plan 101](../../plans/101-stream-as-daily-wave.md). The wave is listed in Stream. Day-list start is hidden while a drill is paused. Browser mouse/touch opens Stream → `?phrase=`. Native device execution remains 58/93. |
+| `Start the * wave` opens the Refrain (`3334`)                | Opens Stream; a paused phrase or hard drill resumes that drill | `LB-03` | [Plan 101](../../plans/101-stream-as-daily-wave.md). The wave is listed in Stream. Day-list start is hidden while a drill is paused. Browser mouse/touch opens Stream → `?phrase=`. `native:evidence --execute-scenarios` is the Android probe; physical-device execution remains 58/93. |
 
 ### 12 · The Refrain
 
@@ -409,7 +409,7 @@ installed-language coverage and audible model playback still require the accepta
 | Completion card: `5 locked in` literal, `🔥 13 day refrain`, `"¿Qué tal?" graduated` (`1522–1527`) | Phrases worked and reps today, both counted | `LB-31` | Three fabricated numbers. Graduation is real in the store but not a completion-card fact yet — plan 64.    |
 | `Run the wave again ↺` (`restart`)                                                                 | `Back to today`                             | `LB-32` | Re-running a finished wave would record reps a second time; plan 64 owns wave state.                       |
 | Set dots are `done` / `current` / `todo` (`setDots`)                                               | Filled-to-cursor `Dots`                     | `LB-21` | Presentational; the count and the position are the information.                                            |
-| Menu / switcher opens the timed daily set                          | Menu / More open Difficult phrases only; Stream and phrase detail pass `?phrase=` | `LB-08` | [Plan 101](../../plans/101-stream-as-daily-wave.md). Untargeted `?wave=` keeps the schedule lock. A bare Refrain URL is the hard-only drill. Browser mouse/touch opens `?filter=hard`. Native device execution remains 58/93. |
+| Menu / switcher opens the timed daily set                          | Menu / More open Difficult phrases only; Stream and phrase detail pass `?phrase=` | `LB-08` | [Plan 101](../../plans/101-stream-as-daily-wave.md). Untargeted `?wave=` keeps the schedule lock. A bare Refrain URL is the hard-only drill. Browser mouse/touch opens `?filter=hard`. `native:evidence --execute-scenarios` is the Android probe; physical-device execution remains 58/93. |
 
 ### 15 · Progress
 

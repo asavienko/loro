@@ -20,6 +20,7 @@ test('uses the preview package and accepts bounded device options', () => {
     output: undefined,
     artifactRevision: undefined,
     artifact: undefined,
+    executeScenarios: false,
   })
   assert.deepEqual(parseArguments(['--serial', 'R5CT1234', '--package', 'app.loro.android']), {
     platform: 'android',
@@ -28,7 +29,9 @@ test('uses the preview package and accepts bounded device options', () => {
     output: undefined,
     artifactRevision: undefined,
     artifact: undefined,
+    executeScenarios: false,
   })
+  assert.equal(parseArguments(['--execute-scenarios']).executeScenarios, true)
 })
 
 test('rejects unsafe adb values and output outside local artifacts', () => {
