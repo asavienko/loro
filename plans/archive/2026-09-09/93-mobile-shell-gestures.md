@@ -17,14 +17,14 @@ persistence or practice-outcome changes.
 Validation: browser gesture regression, full `pnpm check` and `pnpm test:e2e`. Real iOS/Android
 touch and assistive-technology verification must precede native release. Plan 101 adds browser
 mouse/touch coverage for Stream → phrase Refrain and menu hard-filter;
-`native:evidence --execute-scenarios` on Linux emulator `emulator-5554` (APK `3a96003b7c27`) passed
-all twelve catalog rows at `.local-builds/native-evidence/wave-101-emulator-v10/`: edge and
-mid-screen swipes stayed on the session, Android Back stayed on Stream (consume-Back APK) and opened
-the Refrain exit sheet, spine pull opened the switcher, and sheet pull, Android Back, and labelled
-Dismiss backdrop each closed it on Today, including TalkBack variants. `closesPhysicalGate` stays
-false. Source now opens Stream Leave / Android Back into Pause the wave with a Stream-only note; the
-v10 APK cannot prove that sheet. Practice sessions set `fullScreenGestureEnabled: false` with
-`gestureEnabled: false`. That remains emulator proof, not physical-device or iOS. iOS
+`native:evidence --execute-scenarios` on Linux emulator `emulator-5554` (APK `d0a802591f75`) passed
+all twelve catalog rows at `.local-builds/native-evidence/wave-101-emulator-v12/`: an edge swipe
+opened Leave this wave? / Pause the wave, a full-screen swipe returned to Stream, Android Back
+opened the wave sheet then the phrase-drill sheet, spine pull opened the switcher, and sheet pull,
+Android Back, and labelled Dismiss backdrop each closed it on Today, including TalkBack variants.
+`closesPhysicalGate` stays false. Stream Leave / Android Back opens Pause the wave with a
+Stream-only note and no Today resume row. Practice sessions set `fullScreenGestureEnabled: false`
+with `gestureEnabled: false`. That remains emulator proof, not physical-device or iOS. iOS
 `--execute-scenarios` uses simctl + idb for pointer, spine/sheet, Leave-practice exit, and backdrop
 rows and fail-closes without chrome/URL/gesture proof. Android Back stays unavailable on iOS. That
 iOS path may boot a Shutdown simulator and install a verified `loro-simulator-*.zip` via

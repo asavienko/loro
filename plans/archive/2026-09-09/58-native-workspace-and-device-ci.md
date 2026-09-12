@@ -63,12 +63,12 @@ modules, generated native projects, UniFFI bindings, device SQLite, permissions,
        (pointer, spine/sheet, Android Back, backdrop, and TalkBack `-at` variants) are declared on
        the evidence manifest. `pnpm native:evidence --execute-scenarios` drives them through adb +
        uiautomator after first-run onboarding when Today is missing. Linux emulator `emulator-5554`
-       (AVD `loro-wave`, API 36) passed all twelve catalog rows on preview APK `3a96003b7c27` with
+       (AVD `loro-wave`, API 36) passed all twelve catalog rows on preview APK `d0a802591f75` with
        chrome plus the exact URL or gesture proof
-       (`.local-builds/native-evidence/wave-101-emulator-v10/`, `physicalGateCount=0`). That
-       consume- Back APK stayed on Stream; source now opens Stream Leave / Android Back into Pause
-       the wave. The NAV-04 row probes edge and mid-screen swipes, then Android Back on Stream (wave
-       sheet) and phrase Refrain (practice sheet); iOS practice routes set
+       (`.local-builds/native-evidence/wave-101-emulator-v12/`, `physicalGateCount=0`). An edge
+       swipe opened Leave this wave? / Pause the wave; Android Back after Keep going opened the
+       phrase-drill sheet. The NAV-04 row probes edge and mid-screen swipes, then Android Back on
+       Stream (wave sheet) and phrase Refrain (practice sheet); iOS practice routes set
        `fullScreenGestureEnabled: false`. That is not physical-device, interruption, speech, or iOS
        proof. Missing device or matching evidence stays `unavailable` or `failed`. iOS
        `--execute-scenarios` drives pointer, spine/sheet, Leave-practice exit, and backdrop rows
