@@ -47,6 +47,8 @@ export interface CourseState {
   refrainDay: string | null
   /** Wave keys completed on `refrainDay`, in completion order. */
   refrainWaves: string[]
+  /** Today's listen counts toward the ten-phrases-heard-three-times wave rule. */
+  waveListens: Record<string, number>
   refrainSubstituted: string[]
 }
 export interface AppData {
@@ -101,6 +103,8 @@ export interface AppData {
   refrainDay: string | null
   /** Wave keys completed on `refrainDay`, in completion order. */
   refrainWaves: string[]
+  /** Today's listen counts toward the ten-phrases-heard-three-times wave rule. */
+  waveListens: Record<string, number>
   /**
    * Ids substituted into today's set after it was frozen, because their original was
    * deleted. Kept so the frozen-set promise stays legible: the set was not re-rolled,
@@ -135,6 +139,7 @@ export const INITIAL_STATE: AppData = {
   refrainSet: [],
   refrainDay: null,
   refrainWaves: [],
+  waveListens: {},
   refrainSubstituted: [],
 }
 
@@ -161,6 +166,7 @@ export function dataOf(state: AppData): AppData {
     refrainSet: state.refrainSet,
     refrainDay: state.refrainDay,
     refrainWaves: state.refrainWaves,
+    waveListens: state.waveListens,
     refrainSubstituted: state.refrainSubstituted,
   }
 }

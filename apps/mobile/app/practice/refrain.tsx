@@ -98,20 +98,16 @@ export default function Refrain() {
       : entry.kind === 'ready'
         ? entry.wave.key
         : (scheduledWave ?? PRODUCTION_WAVES[0])
-  const session = useRefrainSession(selectedWave, entry.kind === 'ready' || entry.kind === 'resume')
+  const session = useRefrainSession(selectedWave)
   const { set, phrase, mode, auto, dayReps, locked, phraseNumber, wave } = session
   const targetLocale = useApp((state) => state.targetLocale)
   const audio = useAudioSpeech(targetLocale, phrase?.catalog?.audio)
   const [exitVisible, setExitVisible] = useState(false)
   const navigation = useNavigation()
   const leaveLabel = copy.nav.exit.leave
-  const hasActiveSession =
-    set.length > 0 &&
-    (entry.kind === 'ready' || entry.kind === 'resume') &&
-    !session.finished &&
-    phrase !== undefined
+  const hasActiveSession = set.length > 0 && !session.finished && phrase !== undefined
   useEffect(() => {
-    // The session-only exit is present only while the sheet it opens is mounted. Cold, locked
+    // The session-only exit is present only while the sheet it opens is mounted. Cold, empty
     // and terminal Refrain entries retain the shared Today/Back stack exit.
     navigation.setOptions({
       headerLeft: () =>
@@ -173,9 +169,9 @@ export default function Refrain() {
       </Screen>
     )
   }
-  // A finished session owns the immediate post-practice screen even when the next scheduled
-  // wave is still locked. The completion checkpoint is the learner's current result; replacing
-  // it with the next-wave gate would hide the reward and make a successful session look blocked.
+  // A finished session owns the immediate post-practice screen. The completion
+  // checkpoint is the learner's current result; replacing it with the next-wave
+  // action would hide the reward. Practice stays open after this screen.
   if (session.finished) {
     const day = deviceClock.localDay()
     return (
@@ -183,38 +179,6 @@ export default function Refrain() {
         <DoneState
           worked={set.length}
           totalReps={set.reduce((n, p) => n + repsTodayOf(p, day), 0)}
-        />
-      </Screen>
-    )
-  }
-  if (entry.kind === 'locked') {
-    return (
-      <Screen>
-        <EmptyState
-          title={copy.refrain.unavailable.title(entry.next.time)}
-          body={copy.refrain.unavailable.body}
-          action={{
-            label: copy.refrain.done.cta,
-            onPress: () => {
-              router.replace('/')
-            },
-          }}
-        />
-      </Screen>
-    )
-  }
-  if (entry.kind === 'complete') {
-    return (
-      <Screen>
-        <EmptyState
-          title={copy.refrain.unavailable.complete}
-          body={copy.refrain.unavailable.body}
-          action={{
-            label: copy.refrain.done.cta,
-            onPress: () => {
-              router.replace('/')
-            },
-          }}
         />
       </Screen>
     )
@@ -606,7 +570,14 @@ function DoneState({ worked, totalReps }: { worked: number; totalReps: number })
       </Row>
       <View style={s.doneCta}>
         <Button
+          label={copy.today.cta.keepListening}
+          onPress={() => {
+            router.replace('/practice/stream')
+          }}
+        />
+        <Button
           label={copy.refrain.done.cta}
+          variant="secondary"
           onPress={() => {
             router.replace('/')
           }}
@@ -690,5 +661,5 @@ const s = StyleSheet.create({
     alignItems: 'center',
     ...(Platform.OS === 'web' ? { minWidth: 'auto' as const } : {}),
   },
-  doneCta: { width: '100%', marginTop: space['3'] },
+  doneCta: { width: '100%', marginTop: space['3'], gap: space['2'] },
 })

@@ -30,6 +30,7 @@ export const createRefrainSlice: Slice<
         refrainSet: saved?.setIds ?? [...selectRefrainSet(rustCoreFacade, st.phrases, size)],
         refrainDay: day,
         refrainWaves: saved?.waves ?? [],
+        waveListens: { ...(saved?.listenCounts ?? {}) },
         refrainSubstituted: saved?.substituted ?? [],
       })
       // A timezone change can revisit a frozen day. Restore its membership, then

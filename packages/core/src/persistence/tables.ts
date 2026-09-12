@@ -83,6 +83,11 @@ export interface RefrainDayRow {
    */
   waves: string[]
   substituted: string[]
+  /**
+   * Today's listen counts keyed by phrase id. Local day progress toward the
+   * ten-phrases-heard-three-times wave rule. Absent on older rows.
+   */
+  listenCounts?: Readonly<Record<string, number>>
 }
 
 export interface RefrainDayTable {
