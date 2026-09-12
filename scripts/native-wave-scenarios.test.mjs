@@ -384,7 +384,7 @@ test('spine pull opens the switcher only on a committed vertical drag', () => {
 })
 
 test('taps the Dismiss backdrop in the upper scrim, not the sheet centre', () => {
-  assert.deepEqual(tapDismissBounds(MENU_DUMP), { x: 180, y: 17 })
+  assert.deepEqual(tapDismissBounds(MENU_DUMP), { x: 180, y: 35 })
   assert.equal(tapDismissBounds(HOME_DUMP), null)
 })
 
