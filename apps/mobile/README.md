@@ -15,8 +15,8 @@ loop:
 | `onboarding`       | 6 steps; seeds a real stream from the catalog                               |
 | `index`            | Today                                                                       |
 | `add`              | Discover + Browse, and the tagging sheet where the connective thread starts |
-| `practice/refrain` | Daily Refrain — the v1 hero loop, six reps with a warming card              |
-| `practice/stream`  | The SRS stream                                                              |
+| `practice/refrain` | Targeted six-rep drill from Stream (`?phrase=`) or menu hard-filter         |
+| `practice/stream`  | Daily wave: today's frozen set under “This wave”                            |
 | `phrase/[id]`      | One phrase: its signals, its history, its hooks                             |
 | `progress`         | Mastery, ladder, and the rollup from those tags                             |
 | `practice/speak`   | On-device speech or offline word reveal                                     |
@@ -55,6 +55,13 @@ The command accepts Expo's debug launch options, including `--device`, but rejec
 `--variant` values, custom `--binary` APKs and caller-supplied `--app-id` values before it changes
 the generated project. It forces `LORO_LOCAL_APK=0`, including when a local dotenv file selects
 Preview. Use `pnpm apk:local` for a standalone release build.
+
+### iOS simulator
+
+`pnpm --filter @loro/mobile ios` is the Metro-dependent debug workflow. For a standalone simulator
+artifact that `native:evidence --platform ios` can bind, use
+[`pnpm ios:local`](../../docs/process/local-apk.md#local-ios-simulator-builds-plan-58) on a Mac with
+full Xcode. Linux APK builds are not iOS proof. Production signing remains a separate gate.
 
 The wrapper accepts device (`--device`/`-d`), port (`--port`/`-p`), debug variant, cache,
 dependency-install and bundler options. Positional project paths and unknown options are rejected

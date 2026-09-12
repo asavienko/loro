@@ -123,6 +123,24 @@ Workspace checks and 128 learner browser tests passed after the dependency fix. 
 reported 16 high and 8 moderate advisories before and after that fix, with no new advisory IDs;
 those existing advisories are not resolved by this workflow.
 
+## Local iOS simulator builds (plan 58)
+
+`pnpm ios:local` is the Mac-only counterpart to `apk:local`. It builds a clean committed snapshot
+with Expo prebuild, CocoaPods, and `xcodebuild` for `iphonesimulator`, then retains an unsigned
+`.app` zip plus SHA-256 and `build.json` under `.local-builds/ios/<commit>/`. Linux hosts fail
+closed. This is not App Store signing, a physical iPhone build, or a wave-path pass.
+
+```bash
+nvm use 22
+pnpm ios:local                 # retain .local-builds/ios/<commit>/loro-simulator-<commit>.zip
+pnpm ios:local --install       # also install the .app onto the booted simulator
+```
+
+Requires macOS, full Xcode with an iOS simulator runtime, CocoaPods, Node 22, and
+`rustup target add aarch64-apple-ios-sim` (or `x86_64-apple-ios` on Intel). The tree must be clean.
+Pass that zip to `pnpm native:evidence --platform ios --execute-scenarios --artifact …`. Missing
+Xcode, idb, or a booted simulator stays `unavailable`.
+
 ## Native evidence collection (plan 58)
 
 `pnpm native:evidence --artifact-revision GIT_REVISION --artifact .local-builds/RETAINED_BUILD`

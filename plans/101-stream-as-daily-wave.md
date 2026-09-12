@@ -52,10 +52,11 @@ More, filtered to active `difficulty === 'hard'` phrases only.
   edge-swipe stayed on the session, spine pull opened the switcher, sheet pull dismissed it on
   Today, and the TalkBack `-at` variants of the three pointer rows passed the same chrome/URL gates.
   That is not physical-device or iOS proof. iOS `--execute-scenarios` is a simctl + idb runner with
-  the same chrome/URL/gesture gates; this Linux host has no Xcode/idb, so those rows stay
-  unevaluated until a Mac simulator or iPhone run drives them. Phrase-focus Refrain is not the menu
-  destination; the switcher replaces into `?filter=hard` and only a matching hard checkpoint owns
-  that empty screen. A screenshot collector must not mark those rows passed.
+  the same chrome/URL/gesture gates; `pnpm ios:local` is the Mac-only retained-zip path those rows
+  bind. This Linux host has no Xcode/idb, so those rows stay unevaluated until a Mac simulator or
+  iPhone run drives them. Phrase-focus Refrain is not the menu destination; the switcher replaces
+  into `?filter=hard` and only a matching hard checkpoint owns that empty screen. A screenshot
+  collector must not mark those rows passed.
 - `deep_link_for` now opens Stream for the daily reminder and the midday wave nudge. The plan 70
   scheduler that delivers those links is still unbuilt. A bare `/practice` path also resolves to
   Stream.

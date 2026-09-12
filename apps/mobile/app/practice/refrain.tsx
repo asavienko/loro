@@ -1,6 +1,7 @@
 import { useLocale } from '../../src/lib/i18n'
 /**
- * The Refrain — THE v1 hero. Loro.dc.html:1405–1532, logic 3343–3424.
+ * The Refrain — authored as the v1 hero (Loro.dc.html:1405–1532, logic 3343–3424).
+ * Production (plan 101) reaches it as a targeted or hard-only drill, not the daily wave.
  *
  * One phrase, six reps, a different MANNER each rep:
  *   Echo → Chorus → Speed → Cloze → Call → Cold

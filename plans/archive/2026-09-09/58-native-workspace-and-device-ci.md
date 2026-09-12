@@ -53,7 +53,10 @@ modules, generated native projects, UniFFI bindings, device SQLite, permissions,
 ## Remaining work
 
 1. [ ] Extend the local harness to clean iOS app compilation and supported device floors; retain
-       reproducible prebuild, generated-binding and artifact checks.
+       reproducible prebuild, generated-binding and artifact checks. `pnpm ios:local` now
+       fail-closes on Linux and missing Xcode/CocoaPods/Rust simulator targets, and on a Mac retains
+       an unsigned `iphonesimulator` `.app` zip under `.local-builds/ios/<commit>/`. This host has
+       not compiled that artifact. Production signing and physical iPhone floors remain.
 2. [ ] Automate physical-device permissions, bridge, persistence, lifecycle and interruption checks
        with logs/screenshots; document required voice/model installation. Plan 101/93 wave-path rows
        (pointer, spine/sheet, and TalkBack `-at` variants) are declared on the evidence manifest.
