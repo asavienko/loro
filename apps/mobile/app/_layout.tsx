@@ -27,7 +27,12 @@ import {
   routeEvidenceLabel,
   surfaceLawForPath,
 } from '../src/lib/navigation'
-import { destinationTarget, inferRefrainFocus, refrainResumeTarget } from '../src/lib/practiceFocus'
+import {
+  destinationIsCurrent,
+  destinationNavigation,
+  inferRefrainFocus,
+  refrainResumeTarget,
+} from '../src/lib/practiceFocus'
 import { startAccountSync } from '../src/services/accountSync'
 import { PersistenceGate } from '../src/store/PersistenceGate'
 import { completeBrowserSignIn } from '../src/auth/runtime'
@@ -62,6 +67,7 @@ function ReadyLayout() {
   // happened to remember to ask.
   useDayRollover()
   const pathname = usePathname()
+  const searchParams = useGlobalSearchParams()
   const surfaceLaw = surfaceLawForPath(pathname)
   const refrainResume = useApp((state) => state.refrainResume)
   const refrainWaves = useApp((state) => state.refrainWaves)
@@ -125,10 +131,15 @@ function ReadyLayout() {
                 ongoing={ongoing}
                 destinations={DESTINATIONS.map((destination) => ({
                   label: destination.label,
-                  current: pathname === destination.href,
+                  current: destinationIsCurrent(destination.href, pathname, searchParams),
                   currentLabel: copy.a11y.today.hereNow(destination.label),
                   onPress: () => {
-                    router.dismissTo(destinationTarget(destination.href))
+                    const { action, target } = destinationNavigation(destination.href)
+                    if (action === 'replace') {
+                      router.replace(target)
+                      return
+                    }
+                    router.dismissTo(target)
                   },
                 }))}
               />

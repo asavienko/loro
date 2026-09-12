@@ -78,11 +78,29 @@ function nodeLabel(node) {
   return `${node.text} ${node.contentDesc}`
 }
 
+function pickLabeledNode(nodes, label) {
+  const exact = nodes.filter((node) => node.text === label || node.contentDesc === label)
+  const partial = nodes.filter((node) => nodeLabel(node).includes(label))
+  return (
+    exact.find((node) => node.clickable) ??
+    exact[0] ??
+    partial.find((node) => node.clickable) ??
+    partial[0]
+  )
+}
+
 export function findLabel(dump, label) {
   const parsed = typeof dump === 'string' ? parseUiDump(dump) : dump
-  const exact = parsed.nodes.find((node) => node.text === label || node.contentDesc === label)
-  if (exact) return exact
-  return parsed.nodes.find((node) => nodeLabel(node).includes(label))
+  return pickLabeledNode(parsed.nodes, label)
+}
+
+export function findClickableLabel(dump, label) {
+  const parsed = typeof dump === 'string' ? parseUiDump(dump) : dump
+  return (
+    parsed.nodes.find(
+      (node) => node.clickable && (node.text === label || node.contentDesc === label),
+    ) ?? parsed.nodes.find((node) => node.clickable && nodeLabel(node).includes(label))
+  )
 }
 
 function nodePrimaryLabel(node) {
@@ -136,7 +154,7 @@ function findOnboardControl(dump, already) {
 }
 
 export function tapBounds(dump, label) {
-  const node = findLabel(dump, label)
+  const node = findClickableLabel(dump, label) ?? findLabel(dump, label)
   if (!node?.bounds) return null
   const { left, top, right, bottom } = node.bounds
   return { x: Math.floor((left + right) / 2), y: Math.floor((top + bottom) / 2) }
@@ -267,10 +285,10 @@ export function evaluateStreamPhraseDump({ streamDump, refrainDump, currentUrl }
 }
 
 export function evaluateHardRefrainDump({ menuDump, refrainDump, currentUrl }) {
-  if (!dumpHas(menuDump, REFRAIN_TITLE)) {
+  if (!findClickableLabel(menuDump, REFRAIN_TITLE)) {
     return {
       status: 'failed',
-      notes: 'Menu dump does not expose The Refrain.',
+      notes: 'Menu dump does not expose a tappable The Refrain.',
     }
   }
   if (!currentUrl) {
