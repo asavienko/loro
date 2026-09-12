@@ -113,7 +113,8 @@ export default function Refrain() {
       : entry.kind === 'ready'
         ? entry.wave.key
         : (scheduledWave ?? PRODUCTION_WAVES[0])
-  const canPlan = focus.kind === 'wave' || focusIds.length > 0
+  const liveResume = refrainResume.session !== null && !refrainResume.done
+  const canPlan = focus.kind === 'wave' || focusIds.length > 0 || liveResume
   const session = useRefrainSession(
     selectedWave,
     canPlan && (skipLock || entry.kind === 'ready' || entry.kind === 'resume'),
@@ -181,7 +182,7 @@ export default function Refrain() {
         ),
     })
   }, [hasActiveSession, leaveLabel, navigation])
-  if (focus.kind === 'hard' && focusIds.length === 0) {
+  if (focus.kind === 'hard' && focusIds.length === 0 && !liveResume && !session.finished) {
     return (
       <Screen>
         <EmptyState
@@ -197,7 +198,7 @@ export default function Refrain() {
       </Screen>
     )
   }
-  if (focus.kind === 'phrase' && focusIds.length === 0) {
+  if (focus.kind === 'phrase' && focusIds.length === 0 && !liveResume && !session.finished) {
     return (
       <Screen>
         <EmptyState

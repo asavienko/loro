@@ -4,6 +4,7 @@ import {
   destinationTarget,
   parseRefrainFocus,
   refrainFocusIds,
+  refrainSessionMatchesFocus,
   refrainSkipsWaveLock,
   streamWaveQueue,
 } from './practiceFocus'
@@ -63,6 +64,13 @@ describe('refrain focus', () => {
     const focus = parseRefrainFocus({})
     expect(focus).toEqual({ kind: 'hard' })
     expect(refrainSkipsWaveLock(focus)).toBe(true)
+  })
+
+  it('keeps a live session whose members still match the requested focus', () => {
+    expect(refrainSessionMatchesFocus(['a', 'b', 'a'], ['b', 'a'])).toBe(true)
+    expect(refrainSessionMatchesFocus(['a'], ['a', 'b'])).toBe(false)
+    expect(refrainSessionMatchesFocus(['a', 'b'], ['a'])).toBe(false)
+    expect(refrainSessionMatchesFocus(['a'], undefined)).toBe(false)
   })
 
   it('sends the menu destination to the hard-phrase drill', () => {

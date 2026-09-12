@@ -18,6 +18,7 @@ import {
 import { rustCoreFacade } from '../../src/store/coreFacade'
 import { copy } from '../../src/lib/copy'
 import { deviceClock } from '../../src/lib/clock'
+import { refrainSessionMatchesFocus } from '../../src/lib/practiceFocus'
 
 export type WarmingStyle = (typeof warming)[ReturnType<typeof warmBand>]
 
@@ -91,13 +92,12 @@ export function useRefrainSession(
         if (cancelled) return
         const existing = useApp.getState().refrainResume.session
         if (existing !== null && !useApp.getState().refrainResume.done) {
-          const plannedIds = new Set(plan.items.map((item) => item.phraseId))
-          const sessionIds = new Set(existing.plan.items.map((item) => item.phraseId))
-          const sameScope =
-            plannedIds.size === sessionIds.size && [...plannedIds].every((id) => sessionIds.has(id))
-          // An empty re-plan means today's remaining work is done, not that the live
-          // lock-in card should be thrown away and replaced with the day-finish screen.
-          if (sameScope || !replaceSession || plan.items.length === 0) return
+          const sameFocus = refrainSessionMatchesFocus(
+            existing.plan.items.map((item) => item.phraseId),
+            setIdsRef.current,
+          )
+          // Remaining-work re-plans drop finished phrases. That is not a new focus.
+          if (sameFocus || !replaceSession || plan.items.length === 0) return
         }
         beginRefrainSession(plan, wave)
       })
