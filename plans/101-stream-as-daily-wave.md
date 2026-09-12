@@ -9,11 +9,14 @@
   `loro-wave`, API 36) passed all twelve catalog rows on APK `b0b4e3b77746` (v9), including Android
   Back, labelled Dismiss, edge and mid-screen back-swipe, plus TalkBack variants;
   `closesPhysicalGate` stays false. Practice sessions set `fullScreenGestureEnabled: false` so iOS
-  26's default full-screen dismiss cannot pop the session. Physical-device and iOS execution remain
-  the plan 58/93 gates. `pnpm ios:evidence` is the Mac one-shot that retains the simulator zip and
-  drives pointer, spine/sheet, and backdrop rows through simctl + idb, fail-closing without
-  chrome/URL/gesture proof. Android Back and TalkBack `-at` rows stay unavailable on iOS. Authored
-  v1.1 still treats Refrain as the wave hero and is not edited. ID collides with phrase-graph 101.
+  26's default full-screen dismiss cannot pop the session. An active Refrain intercepts stack
+  `GO_BACK` and Android Back into Pause · End it here · Keep going; Stream consumes Android Back so
+  it cannot abandon the wave. Switcher replace still applies `?filter=hard`. That JS is not in APK
+  `b0b4e3b77746`. Physical-device and iOS execution remain the plan 58/93 gates. `pnpm ios:evidence`
+  is the Mac one-shot that retains the simulator zip and drives pointer, spine/sheet, and backdrop
+  rows through simctl + idb, fail-closing without chrome/URL/gesture proof. Android Back and
+  TalkBack `-at` rows stay unavailable on iOS. Authored v1.1 still treats Refrain as the wave hero
+  and is not edited. ID collides with phrase-graph 101.
 - **Depends on:** 64 wave/resume runtime; 81 menu/More destinations; 56 route declaration
 - **Number allocation:** 101 follows inspection of active and archived plans. 96, 100 and this
   file's collision with [`101-phrase-sound-graph.md`](101-phrase-sound-graph.md) remain unresolved.

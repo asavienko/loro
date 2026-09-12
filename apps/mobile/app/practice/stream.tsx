@@ -8,7 +8,7 @@ import { useLocale } from '../../src/lib/i18n'
  * The phrase card exposes manual navigation until native audio playback is available.
  */
 import { useEffect, useMemo } from 'react'
-import { ScrollView, StyleSheet, View } from 'react-native'
+import { BackHandler, Platform, ScrollView, StyleSheet, View } from 'react-native'
 import { router } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { streamStats, type Difficulty } from '@loro/core'
@@ -64,6 +64,13 @@ export default function Stream() {
   useEffect(() => {
     ensureRefrainSet()
   }, [ensureRefrainSet, phrases.length])
+  useEffect(() => {
+    if (Platform.OS !== 'android') return
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => true)
+    return () => {
+      subscription.remove()
+    }
+  }, [])
   const queue = useMemo(() => {
     const now = deviceClock.now()
     return streamWaveQueue(phrases, refrainSet, (phrase) =>

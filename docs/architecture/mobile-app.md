@@ -134,10 +134,13 @@ Expo Router typed routes are enabled in `app.config.ts`. The route files on disk
 `_layout.tsx` owns the native stack, headers, safe-area provider, app-wide day rollover, and toast
 host. Practice session routes spread `PRACTICE_SESSION_STACK_OPTIONS` (`gestureEnabled` and
 `fullScreenGestureEnabled` false) so NAV-04 cannot be defeated by iOS 26's default full-screen
-dismiss. The Add tagging sheet is currently component state inside `/add`, not a route-level modal.
-Only the onboarding redirect and the links made by these screens are implemented. Trip-conditional
-home routing, universal-link mapping, notification links, and persistent audio across navigation are
-targets for the capabilities that require them.
+dismiss. An active Refrain intercepts stack `GO_BACK` and Android Back into Pause · End it here ·
+Keep going. Switcher replace / dismissTo still leave so menu hard-filter stays live. Stream consumes
+Android Back so the wave cannot be abandoned; it does not reuse the Refrain exit copy because Stream
+has no Today resume row. The Add tagging sheet is currently component state inside `/add`, not a
+route-level modal. Only the onboarding redirect and the links made by these screens are implemented.
+Trip-conditional home routing, universal-link mapping, notification links, and persistent audio
+across navigation are targets for the capabilities that require them.
 
 The target navigation shell is the route-rendered system in `Navigation.dc.html:40–499` and its six
 required states at `Navigation.dc.html:512–873`. Its Root, Push, Session, Flow, and Sheet classes,
