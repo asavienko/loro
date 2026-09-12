@@ -343,6 +343,10 @@ tick (80 ms) = progress += 0.02 × speed
   ([audio-speech.md](../architecture/audio-speech.md)).
 - Backgrounding continues playback and keeps lock screen controls in sync.
 
+**Production (plan 101).** Stream lists today's frozen wave, not every active phrase. The heading is
+`This wave`. `Practice this phrase` opens a one-phrase Refrain. A live-empty wave falls back to
+remaining active phrases so the screen is not blank beside live rows.
+
 ---
 
 ## 5. Speak to progress
@@ -617,6 +621,9 @@ Loop B's home. **No queue, no algorithm surfaced: you always see today.**
 - Set composition is chosen once per day and **must be stable across app restarts** — it is written
   to the day's `refrain_day` row, not recomputed.
 
+**Production (plan 101).** `Start the * wave` opens Stream. An in-progress Refrain still resumes on
+the Refrain route.
+
 ---
 
 ## 12. The Refrain
@@ -675,6 +682,11 @@ day refrain), and a graduation card: _"'¿Qué tal?' graduated / Out of rotation
 - Cloze gap selection: blank the phrase's most informative content word, not a function word.
 - Cold mode with no memory hook falls back to the English.
 - Overlearning is intentional — the target does **not** shorten when a learner nails rep 1.
+
+**Production (plan 101).** Refrain is a remediation drill. Stream and phrase detail pass `?phrase=`.
+The menu, switcher and More open `?filter=hard` (active Difficult phrases only). A bare Refrain URL
+is that hard-only drill. Untargeted `?wave=` keeps the timed lock. Completing a targeted session
+does not mark the day wave done unless the session covers the full frozen set.
 
 ---
 
@@ -1089,13 +1101,13 @@ authored learner screen. See [account implementation](../architecture/google-app
 Optional `/listen-export` utility (plan 99); not one of the 23 authored learner screens. The learner
 selects the active-course batch and a repeat count of 2–5 (default 3). The primary path **generates
 licensed neural takes online** (ElevenLabs `eleven_multilingual_v2` pins in
-`LISTENING_VOICE_DECISION`; default stub/missing key still fail closed;
-`TTS_STUB_RENDER=1` is labeled listening-class only), **caches each phrase×voice clip on
-device**, then plays that cache with no network. Each phrase is spoken that many times, rotating
-through distinct licensed voices for the target locale. The primary action requires at least two
-approved listening voices; otherwise the control is unavailable. First-time generation needs
-network; a cache hit does not. Empty-cache airplane mode is unavailable, not a silent device-TTS
-export. Device TTS may play a labeled in-app fallback on a miss.
+`LISTENING_VOICE_DECISION`; default stub/missing key still fail closed; `TTS_STUB_RENDER=1` is
+labeled listening-class only), **caches each phrase×voice clip on device**, then plays that cache
+with no network. Each phrase is spoken that many times, rotating through distinct licensed voices
+for the target locale. The primary action requires at least two approved listening voices; otherwise
+the control is unavailable. First-time generation needs network; a cache hit does not. Empty-cache
+airplane mode is unavailable, not a silent device-TTS export. Device TTS may play a labeled in-app
+fallback on a miss.
 
 Duration is measured or `null`, never estimated. This is a listening companion: it does not record
 practice, include learner recordings, or replace canonical one-voice reference audio.

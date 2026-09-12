@@ -73,7 +73,7 @@ need their own manifest entries.
 | 5 | Speak to progress | `/practice/speak` | `speak · initial reveal`; `speak · partial reveal`; `speak · revealed reveal`; `speak · empty` |
 | 6–10 | Remaining Loop A practice | — not implemented | — |
 | 11    | Today                | `/`                        | `today · seeded`; `today · switcher`; `today · nothing in rotation`; `today · remove undo offered`                                    |
-| 12    | The Refrain          | `/practice/refrain`        | `refrain · first rep`; `refrain · locked in`; `refrain · set complete`                                                                |
+| 12    | The Refrain          | `/practice/refrain`        | `refrain · first rep`; `refrain · locked in`; `refrain · set complete`; `refrain · no difficult phrases`; `refrain · difficult only` |
 | 13–14 | Run and Phrasebook   | — not implemented          | —                                                                                                                                     |
 | 15    | Progress             | `/progress`                | `progress · zero state`; `progress · with a tagged phrase`                                                                            |
 | 16–18 | Trip app screens     | — not implemented          | —                                                                                                                                     |
@@ -375,6 +375,8 @@ an inert control shaped like a working one is not.
 | Speed chip 1× · 1.25× · 1.5× · 0.75× (`cycleSpeed`, `2559`)     | Absent                                       | `P3-06` | Plan 62. Nothing to set a rate on.                                                        |
 | Animated equaliser (`606–611`)                                  | Absent                                       | `P3-03` | Plan 62. It animates unconditionally in the blueprint, which reads as "audio is playing". |
 | Up-next rows carry `♥` and a difficulty pill that cycles on tap | The pill is decorative; the row opens detail | `P3-09` | One action per row (`accessibility.md`); the row states the action it has.                |
+| Queue is every active phrase; heading `Up next` (`2568–2584`)   | Today's frozen wave, heading `This wave`     | `LB-08` | [Plan 101](../../plans/101-stream-as-daily-wave.md). The wave is the Stream list. A live-empty wave falls back to remaining active phrases. |
+| No path from Stream into the Refrain                            | `Practice this phrase` opens a one-phrase drill | `LB-08` | Refrain is remediation for a phrase the learner is looking at, not the daily wave itself. |
 
 ### 5 · Speak
 
@@ -395,6 +397,7 @@ installed-language coverage and audible model playback still require the accepta
 | Fading tail (`tail`, `1370–1375`)                            | Absent                                | `LB-06` | Nothing tracks a phrase leaving rotation. Plan 64.                                                                                                  |
 | Tapping a set row speaks the phrase (`setList[].onTap`)      | Opens phrase detail                   | `AS-01` | Plan 62. The row's hint says what it does.                                                                                                          |
 | `dateLabel` `Tuesday · the daily refrain`, `streak` `12`     | The real local date; a derived streak | `LB-02` | Both are fabricated in the prototype. `streak()` is the same function the widget calls.                                                             |
+| `Start the * wave` opens the Refrain (`3334`)                | Opens Stream; resume still returns to an in-progress Refrain | `LB-03` | [Plan 101](../../plans/101-stream-as-daily-wave.md). The wave is listed in Stream.                                                                  |
 
 ### 12 · The Refrain
 
@@ -406,6 +409,7 @@ installed-language coverage and audible model playback still require the accepta
 | Completion card: `5 locked in` literal, `🔥 13 day refrain`, `"¿Qué tal?" graduated` (`1522–1527`) | Phrases worked and reps today, both counted | `LB-31` | Three fabricated numbers. Graduation is real in the store but not a completion-card fact yet — plan 64.    |
 | `Run the wave again ↺` (`restart`)                                                                 | `Back to today`                             | `LB-32` | Re-running a finished wave would record reps a second time; plan 64 owns wave state.                       |
 | Set dots are `done` / `current` / `todo` (`setDots`)                                               | Filled-to-cursor `Dots`                     | `LB-21` | Presentational; the count and the position are the information.                                            |
+| Menu / switcher opens the timed daily set                          | Menu / More open Difficult phrases only; Stream and phrase detail pass `?phrase=` | `LB-08` | [Plan 101](../../plans/101-stream-as-daily-wave.md). Untargeted `?wave=` keeps the schedule lock. A bare Refrain URL is the hard-only drill. |
 
 ### 15 · Progress
 
