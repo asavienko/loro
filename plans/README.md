@@ -1,6 +1,6 @@
 # Active plans
 
-This index lists only the **40 plans with remaining work**. Completed records and historical
+This index lists only the **41 plans with remaining work**. Completed records and historical
 snapshots are kept in [the archive](archive/README.md), without compatibility symlinks or redirect
 files in this directory. Links point directly to each plan's actual location.
 
