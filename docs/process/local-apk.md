@@ -175,12 +175,14 @@ Plan 101/93 wave-path rows (`stream-to-phrase-refrain`, `menu-hard-refrain`,
 variants) are listed on the manifest as `unavailable` until a device run drives those entries and
 records the exact URLs or gesture proof. `pnpm native:evidence --matrix PATH/TO/manifest.json`
 classifies an existing bundle: emulator and simulator passed rows have `closesPhysicalGate: false`.
-Physical-candidate devices can set that flag only for passed rows.
-`pnpm native:evidence --list-scenarios` prints the catalog without collecting. On a connected
-Android device, `pnpm native:evidence --execute-scenarios --artifact-revision … --artifact …` dumps
-the hierarchy, completes first-run onboarding when Today is missing, then taps Today’s wave control
-→ Stream → phrase Refrain, switcher and More hard-filter, edge-swipes the practice stack, pulls the
-spine handle to open the switcher, then dismisses the switcher by sheet pull, Android Back, and the
+The Linux emulator-5554 v8 bundle at `.local-builds/native-evidence/wave-101-emulator-v8/` passed
+all twelve catalog rows on APK `b0b4e3b77746` with `physicalGateCount=0`. Physical-candidate devices
+can set that flag only for passed rows. `pnpm native:evidence --list-scenarios` prints the catalog
+without collecting. On a connected Android device,
+`pnpm native:evidence --execute-scenarios --artifact-revision … --artifact …` dumps the hierarchy,
+completes first-run onboarding when Today is missing, then taps Today’s wave control → Stream →
+phrase Refrain, switcher and More hard-filter, edge-swipes the practice stack, pulls the spine
+handle to open the switcher, then dismisses the switcher by sheet pull, Android Back, and the
 labelled Dismiss backdrop, and repeats the pointer and dismiss rows with TalkBack when TalkBack is
 installed. Missing adb, missing device, missing TalkBack, or a dump without matching
 chrome/URL/gesture evidence stays `unavailable` or `failed` — a screenshot collector must not mark

@@ -17,17 +17,16 @@ persistence or practice-outcome changes.
 Validation: browser gesture regression, full `pnpm check` and `pnpm test:e2e`. Real iOS/Android
 touch and assistive-technology verification must precede native release. Plan 101 adds browser
 mouse/touch coverage for Stream → phrase Refrain and menu hard-filter;
-`native:evidence --execute-scenarios` on Linux emulator `emulator-5554` (APK `b0b4e3b77746`)
-edge-swiped the practice stack, pulled the spine handle open, and pulled the sheet handle closed,
-then repeated the three pointer rows with TalkBack (v6). The catalog now also drives Android Back
-and the labelled Dismiss backdrop, plus TalkBack variants of those dismiss paths. Closest-available
-execution of the new rows is recorded after a device run; v6 did not include them. That remains
-emulator proof, not physical-device or iOS. iOS `--execute-scenarios` uses simctl + idb for pointer,
-spine/sheet, and backdrop rows and fail-closes without chrome/URL/gesture proof. Android Back stays
-unavailable on iOS. That iOS path may boot a Shutdown simulator and install a verified
-`loro-simulator-*.zip` via `pnpm ios:evidence`. VoiceOver `-at` evidence remains a device gate even
-if VoiceOver looks enabled; ordinary idb taps are not AT proof. Plan 101's Stream-primary /
-hard-filter Refrain model is not reverted.
+`native:evidence --execute-scenarios` on Linux emulator `emulator-5554` (APK `b0b4e3b77746`) passed
+all twelve catalog rows at `.local-builds/native-evidence/wave-101-emulator-v8/`: edge-swipe stayed
+on the session, spine pull opened the switcher, and sheet pull, Android Back, and labelled Dismiss
+backdrop each closed it on Today, including TalkBack variants. `closesPhysicalGate` stays false.
+That remains emulator proof, not physical-device or iOS. iOS `--execute-scenarios` uses simctl + idb
+for pointer, spine/sheet, and backdrop rows and fail-closes without chrome/URL/gesture proof.
+Android Back stays unavailable on iOS. That iOS path may boot a Shutdown simulator and install a
+verified `loro-simulator-*.zip` via `pnpm ios:evidence`. VoiceOver `-at` evidence remains a device
+gate even if VoiceOver looks enabled; ordinary idb taps are not AT proof. Plan 101's Stream-primary
+/ hard-filter Refrain model is not reverted.
 
 Verified: `pnpm check` passed all 23 tasks; `pnpm test:e2e` passed all 119 tests in 4.4 minutes,
 including mouse/touch gestures, cancelled touch, accessibility and 310% text. The initial cold
