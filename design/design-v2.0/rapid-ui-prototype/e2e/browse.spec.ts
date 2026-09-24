@@ -1,4 +1,4 @@
-import { expect, test } from './fixtures';
+import { expect, sampleHistory, test } from './fixtures';
 
 test.describe('explore', () => {
   test('search highlights matches and survives opening a set', async ({ page }) => {
@@ -274,4 +274,13 @@ test('an empty set of your own points to phrases', async ({ page }) => {
   await page.getByRole('button', { name: 'Create' }).click();
   await page.getByRole('button', { name: 'Find phrases' }).click();
   await expect(page).toHaveURL(/#\/explore/);
+});
+
+test.describe('history', () => {
+  test.use({ seed: { log: sampleHistory(Date.now()) } });
+  test('each run says what it earned, in points', async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: 'History' }).click();
+    await expect(page.getByText(/^1 phrase · \+1 pts · /)).toBeVisible();
+  });
 });

@@ -79,7 +79,7 @@ export function makeBg(n: Plural): Copy {
       title: 'История',
       empty: 'Все още нищо не е пускано.',
       mixed: 'Смесена опашка',
-      run: (p, points) => `${phrases(p)} · +${points}`,
+      run: (p, points) => `${phrases(p)} · +${points} т.`,
     },
     explore: {
       search: 'Търсене във фрази, бележки и теми',
