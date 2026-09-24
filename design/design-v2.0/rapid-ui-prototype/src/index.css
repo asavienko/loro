@@ -21,6 +21,8 @@
 @custom-variant phone-landscape (@media (orientation: landscape) and (max-height: 32rem));
 /* Short portrait phones (e.g. 320×568): the player trims its cover so the controls fit. */
 @custom-variant short (@media (orientation: portrait) and (max-height: 44rem));
+/* A mouse or trackpad: keyboard hints are worth showing. */
+@custom-variant fine-pointer (@media (hover: hover) and (pointer: fine));
 
 @theme {
   --font-serif: "Newsreader Variable", "Literata Variable", Georgia, serif;

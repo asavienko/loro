@@ -269,6 +269,8 @@ export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps
                 </button>
               ))}
             </div>
+            {/* Only with a mouse or trackpad, where a keyboard is likely. */}
+            <p className="hidden fine-pointer:block text-label text-secondary text-center phone-landscape:col-start-2">{c.player.keys}</p>
           </div>
         </div>
       </div>
