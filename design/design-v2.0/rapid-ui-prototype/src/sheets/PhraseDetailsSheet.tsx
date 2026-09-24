@@ -47,10 +47,20 @@ function PhraseDetails({ phraseId, ownSetId, onClose }: { phraseId: string; ownS
         <p lang={prompt.lang} className="text-body text-secondary mt-1">{prompt.text}</p>
         <p className="text-label text-on-surface-variant mt-2 flex flex-wrap items-center gap-1.5">
           <span role="img" aria-label={languageLabel(phrase.targetLang, c.locale)}>{getLanguage(phrase.targetLang).flag}</span>
-          <span>{progressLabel(c, progress, now)}</span>
-          {progress.memory.heardCount > 0 && <span>· {c.phrase.heard(progress.memory.heardCount)}</span>}
-          {phrase.register && <span>· {c.common.register[phrase.register]}</span>}
-          {phrase.own && <span>· {c.phrase.yours}</span>}
+          {/* The separator ends each item, so a wrapped line never starts with "·". */}
+          {[
+            progressLabel(c, progress, now),
+            progress.memory.heardCount > 0 && c.phrase.heard(progress.memory.heardCount),
+            phrase.register && c.common.register[phrase.register],
+            phrase.own && c.phrase.yours,
+          ]
+            .filter((item): item is string => Boolean(item))
+            .map((item, i, items) => (
+              <span key={i}>
+                {item}
+                {i < items.length - 1 && ' ·'}
+              </span>
+            ))}
         </p>
         {phrase.tags.length > 0 && (
           <ul className="flex flex-wrap gap-1.5 mt-2">
