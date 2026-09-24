@@ -168,8 +168,15 @@ function VoiceCheck() {
                   {voice ? c.onboarding.voiceOk(languageLabel(lang, c.locale), voice) : c.onboarding.voiceMissing(languageLabel(lang, c.locale))}
                 </span>
                 {voice && text && (
-                  <button type="button" onClick={() => void speak(text, lang, 1).done} className="min-h-11 px-3 rounded-full bg-surface-container text-body font-semibold">
-                    {c.onboarding.test(languageName(lang, c.locale))}
+                  // The row already names the language; the button says only what it does.
+                  <button
+                    type="button"
+                    aria-label={c.onboarding.test(languageName(lang, c.locale))}
+                    onClick={() => void speak(text, lang, 1).done}
+                    className="shrink-0 min-h-11 px-3 rounded-full bg-surface-container text-body font-semibold flex items-center gap-1.5"
+                  >
+                    <Icon name="volume_up" className="text-icon-sm" />
+                    {c.onboarding.testShort}
                   </button>
                 )}
               </li>
