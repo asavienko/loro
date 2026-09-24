@@ -656,6 +656,7 @@ found no crash.
 | Tab left the phrase-details sheet from its Grammar tab: the trap wrapped at the unselected Sounds tab, which Tab never reaches | The trap counts only what Tab reaches; every dialog holds focus both ways |
 | In high-contrast (forced colours) mode the hidden phrase vanished, buttons became bare text and the chosen step, grade and speed looked like the rest | Buttons keep an edge, chosen/current controls get the system Highlight outline, the hidden phrase is dashed boxes |
 | Reordering or removing a queued phrase needed a drag, a swipe or a keyboard (WCAG 2.5.7) | A tap on the handle opens Move up, Move down and Remove from queue; every other gesture already had a button |
+| Half an hour of hands-free playback added ~130 elements and ~80 listeners: each replaced toast stayed until its exit animation ran | The toast is one element whose text is replaced; a perf test plays 30 minutes and checks the page stays the same size |
 
 **Open question:** the prototype has no dark theme, so an evening learner with a dark system theme
 gets a light screen. A dark palette is a design decision (plan 57 owns dark mode in the app); say if
