@@ -108,3 +108,17 @@ test('play next from details goes straight after the current phrase', async ({ p
   const first = page.getByRole('dialog', { name: 'Queue' }).getByRole('button', { name: /^Play .* now$/ }).first();
   await expect(first).toHaveAccessibleName('Play Sin gluten, por favor now');
 });
+
+test('two tabs never overwrite each other', async ({ page, context }) => {
+  await page.goto('/#/set/set-taxi?from=explore');
+  const other = await context.newPage();
+  await other.goto('/#/set/set-market?from=explore');
+  // Tab 1 likes a set; tab 2 then saves something else.
+  await page.getByRole('button', { name: 'Like set' }).click();
+  await page.waitForTimeout(600);
+  await other.getByRole('button', { name: 'Like set' }).click();
+  await other.waitForTimeout(600);
+  await page.goto('/#/library?view=likedSets');
+  await expect(page.getByRole('button', { name: /Taxi at Night/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Mercado/ })).toBeVisible();
+});

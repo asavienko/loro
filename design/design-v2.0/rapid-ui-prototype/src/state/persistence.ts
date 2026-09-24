@@ -326,24 +326,22 @@ export function loadState(initial: (device: Device) => AppState): AppState {
   }
 }
 
-export function readSavedLearner(device: Device): LearnerState | null {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? (parseState(saved, device)?.learner ?? null) : null;
-  } catch {
-    return null;
-  }
-}
-
 /**
  * Saves the state, first merging in whatever another tab saved since, so two
  * open tabs never overwrite each other's progress.
  */
+/** What this tab last wrote; if storage still holds it, no other tab has saved since. */
+let lastWritten: string | null = null;
+
 export function saveState(state: AppState): void {
   try {
-    const stored = readSavedLearner(state.device);
+    const current = localStorage.getItem(STORAGE_KEY);
+    // Parsing and merging the stored copy is only needed when another tab changed it.
+    const stored = current !== null && current !== lastWritten ? parseState(current, state.device)?.learner : null;
     const learner = stored ? mergeLearner(state.learner, stored) : state.learner;
-    localStorage.setItem(STORAGE_KEY, serializeState(learner === state.learner ? state : { ...state, learner }));
+    const json = serializeState(learner === state.learner ? state : { ...state, learner });
+    localStorage.setItem(STORAGE_KEY, json);
+    lastWritten = json;
   } catch {
     // Storage can be unavailable (private mode); the session still works.
   }

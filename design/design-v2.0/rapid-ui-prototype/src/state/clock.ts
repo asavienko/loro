@@ -72,7 +72,8 @@ export function formatAgo(at: number, now: number, locale: string): string {
   const diff = now - at;
   if (diff < MINUTE) return rtf.format(0, 'second');
   if (diff < HOUR) return rtf.format(-Math.round(diff / MINUTE), 'minute');
-  if (diff < DAY) return rtf.format(-Math.round(diff / HOUR), 'hour');
+  // Hours only while it's still the same day and not long ago; then "yesterday", "3 days ago".
+  if (diff < 12 * HOUR && localDay(at) === localDay(now)) return rtf.format(-Math.round(diff / HOUR), 'hour');
   return rtf.format(-Math.round((startOfLocalDay(now) - startOfLocalDay(at)) / DAY), 'day');
 }
 
