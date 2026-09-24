@@ -284,3 +284,17 @@ test.describe('history', () => {
     await expect(page.getByText(/^1 phrase · \+1 pts · /)).toBeVisible();
   });
 });
+
+test('near the limit, a phrase field says how many characters are left', async ({ page }) => {
+  await page.goto('/#/library?view=mine');
+  await page.getByRole('button', { name: 'Add your phrase' }).click();
+  const field = page.getByLabel('In Spanish');
+  await field.fill('x'.repeat(90));
+  await expect(page.getByText('characters left')).toHaveCount(0);
+  await field.fill('x'.repeat(112));
+  await expect(page.getByText('8 characters left')).toBeVisible();
+  await field.pressSequentially('abcdefghijk');
+  await expect(field).toHaveValue('x'.repeat(112) + 'abcdefgh');
+  await expect(field).toHaveAccessibleName('In Spanish');
+  await expect(field).toHaveAccessibleDescription('0 characters left');
+});

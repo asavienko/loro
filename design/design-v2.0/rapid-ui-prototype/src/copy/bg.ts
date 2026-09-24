@@ -10,6 +10,7 @@ export function makeBg(n: Plural): Copy {
       close: 'Затвори',
       back: 'Назад',
       cancel: 'Отказ',
+      charsLeft: (c) => n(c, { one: `Остава ${c} знак`, other: `Остават ${c} знака` }),
       save: 'Запази',
       undo: 'Отмени',
       play: 'Пусни',
