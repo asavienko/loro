@@ -675,6 +675,13 @@ queue each repeat pass); Add to set with the same phrase twice kept both; two de
 copy of a same-instant edit forever; clear-queue Undo could restore phrases behind the current one.
 Known and left: undoing a phrase delete doesn't put it back into the queue.
 
+A second review, of the UI layer, found six more, all fixed with tests that fail without the fix:
+the player's keys acted inside sheets opened over it (Space paused, arrows skipped); a queue row's
+options sheet drifted to another phrase as playback moved on; a removed phrase's Undo could land in
+the played part of the queue; and when one sheet handed over to another (Details → Add to set → New
+set), Back left the app, focus returned to the page behind the new sheet, and creating a set left
+focus on `<body>` with a dead Back entry.
+
 **For the Bulgarian reviewer:** on a 320 px phone the Missed rating, "Не се сетих", wraps onto two
 lines in its third of the row; a shorter word (e.g. "Забравих") would fit. Dropping the icons didn't
 make it fit, so the fix is wording, not layout.
