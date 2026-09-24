@@ -304,12 +304,16 @@ function HeaderButton({ label, icon, onClick }: { label: string; icon: IconName;
   );
 }
 
-/** Repetition, elapsed listening time, and the full play at 1× once measured. Re-renders on its own clock. */
+/**
+ * Repetition, elapsed listening time, and the full play at 1× once measured. The
+ * elapsed time runs at the current speed, so the 1× total sits beside it only at 1×.
+ * Re-renders on its own clock.
+ */
 function PlayTime({ phrase }: { phrase: Phrase }) {
   const c = useCopy();
   const { state } = useStore();
   const now = useNow(250);
-  const full = phraseFullPlayMs(state, phrase, state.player.repeats);
+  const full = state.prefs.speed === 1 ? phraseFullPlayMs(state, phrase, state.player.repeats) : null;
   return (
     <span className="tabular-nums text-right">
       {c.player.repetition(state.player.repetition, state.player.repeats)} · {formatElapsed(listenedMs(state.player, now))}
