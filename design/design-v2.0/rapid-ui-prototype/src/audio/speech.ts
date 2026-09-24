@@ -124,16 +124,28 @@ export function preloadClip(url: string): void {
   clips.set(url, audio);
 }
 
+/** A clip that never ends (a stalled network) gives way after this, or twice its length. */
+const CLIP_STALL_MS = 15_000;
+
 function playClip(url: string, rate: number): Playback {
   const [done, finish] = deferred();
-  const audio = clips.get(url) ?? new Audio(url);
+  // An element that failed to load keeps failing: load it afresh.
+  const cached = clips.get(url);
+  const audio = cached && !cached.error ? cached : new Audio(url);
   clips.set(url, audio);
   audio.currentTime = 0;
   audio.playbackRate = rate;
   let settled = false;
+  const expected = Number.isFinite(audio.duration) && audio.duration > 0 ? (audio.duration * 2000) / rate + 3000 : CLIP_STALL_MS;
+  const watchdog = setTimeout(() => {
+    audio.pause();
+    settle({ status: 'timeout' });
+  }, expected);
   const settle = (r: PlaybackResult) => {
     if (settled) return;
     settled = true;
+    clearTimeout(watchdog);
+    if (r.status === 'failed') clips.delete(url);
     finish(r);
   };
   audio.onended = () => settle({ status: 'ended', ms: (audio.duration * 1000) / rate });
@@ -143,7 +155,29 @@ function playClip(url: string, rate: number): Playback {
     done,
     cancel: () => {
       settled = true;
+      clearTimeout(watchdog);
       audio.pause();
+    },
+  };
+}
+
+/** A recorded clip, and if it can't play, the device voice says the phrase instead. */
+function clipOrSpeech(url: string, text: string, lang: LanguageCode, rate: number): Playback {
+  const [done, finish] = deferred();
+  let current = playClip(url, rate);
+  let cancelled = false;
+  void current.done.then((result) => {
+    if (cancelled) return;
+    if (result.status !== 'failed') return finish(result);
+    current = speak(text, lang, rate);
+    // The driver treats a clip's length as measured; speech at another speed isn't.
+    void current.done.then((r) => !cancelled && finish(r.status === 'ended' && rate !== 1 ? { status: 'ended', ms: null } : r));
+  });
+  return {
+    done,
+    cancel: () => {
+      cancelled = true;
+      current.cancel();
     },
   };
 }
@@ -157,7 +191,7 @@ const SILENT_END_SHARE = 0.4;
 const RETRY_DELAY_MS = 150;
 
 export function speak(text: string, lang: LanguageCode, rate: number, clipUrl?: string | null): Playback {
-  if (clipUrl) return playClip(clipUrl, rate);
+  if (clipUrl) return clipOrSpeech(clipUrl, text, lang, rate);
   const [done, finish] = deferred();
   const synth = typeof window === 'undefined' ? undefined : window.speechSynthesis;
   // Voices load asynchronously; an empty list means "not known yet", not "none".
