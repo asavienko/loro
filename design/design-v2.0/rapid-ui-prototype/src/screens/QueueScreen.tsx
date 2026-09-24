@@ -156,7 +156,8 @@ export function QueueScreen({ onClose }: { onClose: () => void }) {
                     toast(c.toast.cleared, {
                       action: {
                         label: c.common.undo,
-                        run: () => before.slice(index + 1).forEach((pid, k) => actions.insertInQueue(1 + k, pid)),
+                        // After whatever plays by then: in continue mode the player may have moved on.
+                        run: () => actions.restoreUpNext(before.slice(index + 1)),
                       },
                     });
                   }}

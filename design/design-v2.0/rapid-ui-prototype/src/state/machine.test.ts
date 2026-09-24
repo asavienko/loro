@@ -359,3 +359,15 @@ describe('merging another device', () => {
     assert.equal(after.player, s.player);
   });
 });
+
+describe('clearing the queue', () => {
+  it('undo puts the cleared phrases after the phrase playing by then', () => {
+    let s = load(fresh());
+    const cleared = upNextIds(s.player);
+    s = run(s, { type: 'CLEAR_QUEUE' }, { type: 'ENQUEUE', phraseIds: ['taxi-01'], setId: null, at: 'end', now: T0 + 1 }, { type: 'NEXT', now: T0 + 2 });
+    assert.equal(currentPhraseId(s.player), 'taxi-01');
+    s = run(s, { type: 'RESTORE_UP_NEXT', phraseIds: cleared });
+    assert.equal(currentPhraseId(s.player), 'taxi-01');
+    assert.deepEqual(upNextIds(s.player), cleared);
+  });
+});

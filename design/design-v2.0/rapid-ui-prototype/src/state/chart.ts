@@ -19,7 +19,8 @@ export type PlayerEventType =
   | 'REMOVE_FROM_QUEUE'
   | 'INSERT_IN_QUEUE'
   | 'ENQUEUE'
-  | 'CLEAR_QUEUE';
+  | 'CLEAR_QUEUE'
+  | 'RESTORE_UP_NEXT';
 
 /** Events that change only learner data, settings or the device: allowed in every status. */
 export const ALWAYS_ALLOWED = [
@@ -43,7 +44,7 @@ export const ALWAYS_ALLOWED = [
   'RESET',
 ] as const;
 
-const QUEUE_EDITS: PlayerEventType[] = ['TOGGLE_SHUFFLE', 'REORDER_UP_NEXT', 'REMOVE_FROM_QUEUE', 'INSERT_IN_QUEUE', 'ENQUEUE', 'CLEAR_QUEUE'];
+const QUEUE_EDITS: PlayerEventType[] = ['TOGGLE_SHUFFLE', 'REORDER_UP_NEXT', 'REMOVE_FROM_QUEUE', 'INSERT_IN_QUEUE', 'ENQUEUE', 'CLEAR_QUEUE', 'RESTORE_UP_NEXT'];
 
 /** Which player events each status accepts. */
 export const PLAYER_CHART: Record<PlayerStatus, readonly PlayerEventType[]> = {

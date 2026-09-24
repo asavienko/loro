@@ -38,6 +38,7 @@ function makeActions(dispatch: (event: AppEvent) => void, latest: RefObject<AppS
     reorderUpNext: (phraseIds: string[]) => dispatch({ type: 'REORDER_UP_NEXT', phraseIds }),
     removeFromQueue: (position: number) => dispatch({ type: 'REMOVE_FROM_QUEUE', position }),
     insertInQueue: (position: number, phraseId: string) => dispatch({ type: 'INSERT_IN_QUEUE', position, phraseId }),
+    restoreUpNext: (phraseIds: string[]) => dispatch({ type: 'RESTORE_UP_NEXT', phraseIds }),
     enqueue: (phraseIds: string[], setId: string | null, at: 'next' | 'end') =>
       dispatch({ type: 'ENQUEUE', phraseIds, setId, at, now: now() }),
     clearQueue: () => dispatch({ type: 'CLEAR_QUEUE' }),
