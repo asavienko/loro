@@ -171,8 +171,13 @@ export function speak(text: string, lang: LanguageCode, rate: number, clipUrl?: 
   let current: SpeechSynthesisUtterance | null = null;
   let retry: ReturnType<typeof setTimeout> | undefined;
   const expectedMs = estimateSpeechMs(text, rate);
-  // Some engines never fire `end`; don't let the lesson stall.
-  const watchdog = setTimeout(() => settle({ status: 'timeout' }), expectedMs * 3 + 2000);
+  // Some engines never fire `end`; don't let the lesson stall. The engine may still be
+  // talking, so silence it first, or the phrase would run on over the learner's turn.
+  const watchdog = setTimeout(() => {
+    current = null;
+    synth.cancel();
+    settle({ status: 'timeout' });
+  }, expectedMs * 3 + 2000);
   function settle(result: PlaybackResult) {
     if (settled) return;
     settled = true;
