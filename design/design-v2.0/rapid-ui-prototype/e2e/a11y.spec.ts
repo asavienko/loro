@@ -30,6 +30,41 @@ const screens: { name: string; open: (page: Page) => Promise<void> }[] = [
     },
   },
   {
+    name: 'phrase details',
+    open: async (page) => {
+      await page.goto('/#/set/set-cafe?from=explore');
+      await page.getByRole('button', { name: 'Details for La cuenta, por favor' }).click();
+      await page.waitForTimeout(500);
+    },
+  },
+  {
+    name: 'add phrase',
+    open: async (page) => {
+      await page.goto('/#/library?view=mine');
+      await page.getByRole('button', { name: 'Add your phrase' }).click();
+      await page.waitForTimeout(500);
+    },
+  },
+  {
+    name: 'session summary',
+    open: async (page) => {
+      await page.goto('/');
+      await page.getByRole('button', { name: /^Play \d+ phrases/ }).first().click();
+      await page.getByRole('button', { name: 'Pause', exact: true }).click();
+      await page.getByRole('button', { name: /^Now playing:/ }).click();
+      await page.getByRole('button', { name: 'Session summary' }).click();
+      await page.waitForTimeout(500);
+    },
+  },
+  {
+    name: 'history',
+    open: async (page) => {
+      await page.goto('/');
+      await page.getByRole('button', { name: 'History' }).first().click();
+      await page.waitForTimeout(500);
+    },
+  },
+  {
     name: 'settings',
     open: async (page) => {
       await page.goto('/');
@@ -77,5 +112,18 @@ test('chart bars are as long as their numbers say', async ({ page }) => {
   for (const bar of bars) {
     if (bar.horizontal) expect(bar.ratio).toBeCloseTo(bar.count / bar.max, 1);
     else if (bar.count === 0) expect(bar.ratio).toBeLessThanOrEqual(1);
+  }
+});
+
+test.describe('onboarding', () => {
+  test.use({ seed: null });
+  for (const step of [0, 1, 2, 3, 4]) {
+    test(`step ${step + 1}`, async ({ page }) => {
+      await page.goto('/');
+      for (let i = 0; i < step; i++) await page.getByRole('button', { name: 'Continue' }).click();
+      await page.waitForTimeout(400);
+      await expectAccessible(page);
+      await expectMobileBasics(page);
+    });
   }
 });
