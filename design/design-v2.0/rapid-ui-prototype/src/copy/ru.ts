@@ -177,7 +177,7 @@ export function makeRu(n: Plural): Copy {
         native: (language) => `Слушайте: ${language}`,
         pause: (language) => `Ваша очередь — скажите это (${language})`,
         target: (language) => `Слушайте: ${language}`,
-        rate: 'Как получилось сказать?',
+        rate: 'Оцените или подождите',
       },
       paused: 'Пауза',
       repetition: (r, total) => `Повтор ${r} из ${total}`,

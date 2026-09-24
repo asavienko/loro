@@ -187,7 +187,7 @@ export function makeEn(n: Plural) {
         native: (language: string) => `Listen in ${language}`,
         pause: (language: string) => `Your turn — say it in ${language}`,
         target: (language: string) => `Hear it in ${language}`,
-        rate: 'How did saying it go?',
+        rate: 'Rate it, or wait to go on',
       },
       paused: 'Paused',
       repetition: (r: number, total: number) => `Repetition ${r} of ${total}`,

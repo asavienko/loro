@@ -60,6 +60,8 @@ function fakeSpeech() {
 }
 
 export interface Seed {
+  /** Review-log entries (see sampleHistory). */
+  log?: unknown[];
   name?: string;
   nativeLang?: string;
   targetLang?: string;
@@ -78,7 +80,7 @@ export function seededState(seed: Seed = {}) {
         onboarded: seed.onboarded ?? true,
         updatedAt: 1,
       },
-      log: [],
+      log: seed.log ?? [],
       likes: {},
       ownPhrases: {},
       ownSets: {},
@@ -143,4 +145,30 @@ export async function expectMobileBasics(page: Page) {
     return [...new Set(out)];
   });
   expect(problems).toEqual([]);
+}
+
+const DAY = 86_400_000;
+
+/**
+ * A few weeks of real-looking history for the Spanish course, relative to
+ * `now`: phrases heard and rated at different times, some missed.
+ */
+export function sampleHistory(now: number) {
+  const log: Record<string, unknown>[] = [];
+  let n = 0;
+  const add = (phraseId: string, setId: string, daysAgo: number, grade?: string) => {
+    const at = now - daysAgo * DAY;
+    const key = `en-GB>es-ES:${phraseId}`;
+    for (let r = 0; r < 3; r++) log.push({ id: `seed.x-${(n++).toString(36)}`, at: at + r * 9000, device: "seed", kind: "heard", key, phraseId, setId, targetMs: 1500 + r * 20, nativeMs: 1100 });
+    if (grade) log.push({ id: `seed.x-${(n++).toString(36)}`, at: at + 30000, device: "seed", kind: "rated", key, phraseId, setId, grade });
+  };
+  const cafe = ["cafe-01", "cafe-02", "cafe-03", "cafe-04", "cafe-05"];
+  cafe.forEach((id) => add(id, "set-cafe", 30, "easy"));
+  cafe.forEach((id) => add(id, "set-cafe", 26, "easy"));
+  cafe.slice(0, 3).forEach((id) => add(id, "set-cafe", 18, "easy"));
+  add("cafe-04", "set-cafe", 18, "missed");
+  ["tapas-01", "tapas-02", "tapas-03"].forEach((id) => add(id, "set-tapas", 3, "hard"));
+  ["transit-01", "transit-02"].forEach((id) => add(id, "set-transit", 1, "missed"));
+  add("taxi-01", "set-taxi", 0.02);
+  return log.sort((a, b) => (a.at as number) - (b.at as number));
 }

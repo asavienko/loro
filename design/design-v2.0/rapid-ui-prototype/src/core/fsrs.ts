@@ -60,7 +60,9 @@ export function retrievability(state: FsrsState | null, now: number): number | n
 }
 
 /**
- * Loro's authored review threshold: a phrase is due when predicted recall
- * falls to 50% (core-rs `DESIRED_RETENTION`). Stability is still defined at 90%.
+ * Loro's authored review threshold in core-rs: a phrase is due when predicted
+ * recall falls to 50% (`DESIRED_RETENTION`), about 90× its stability. The
+ * prototype reviews earlier, at 90% (see memory.ts); the core's date stays the
+ * upper bound.
  */
-export const DESIRED_RETENTION = 0.5;
+export const CORE_DESIRED_RETENTION = 0.5;

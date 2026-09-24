@@ -129,7 +129,7 @@ export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps
             dragElastic={0.3}
             onDragStart={clicks.block}
             onDragEnd={onSwipe}
-            className="relative mx-auto w-full max-w-[min(100%,26dvh)] md:max-w-[min(100%,52dvh)] phone-landscape:max-w-[min(100%,60dvh)] aspect-square touch-pan-y"
+            className="relative mx-auto w-full max-w-[min(100%,26dvh)] md:max-w-[min(100%,52dvh)] phone-landscape:max-w-[min(100%,42dvh)] aspect-square touch-pan-y"
           >
             <SetCover set={coverSet ?? { topicId: null, coverIcon: 'edit_note' }} size="lg" className="w-full h-full rounded-3xl shadow-xl" />
             <span role="img" aria-label={languageLabel(phrase.targetLang, c.locale)} className="absolute bottom-3 left-3 w-9 h-9 rounded-full bg-surface/70 flex items-center justify-center text-lg">
