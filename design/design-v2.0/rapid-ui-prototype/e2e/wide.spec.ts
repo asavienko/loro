@@ -1,5 +1,5 @@
 // A desktop window (1440×900): the top bars line up with the content they sit over.
-import { expect, sampleHistory, test } from './fixtures';
+import { expect, expectAccessible, sampleHistory, test } from './fixtures';
 
 // A desktop with a mouse, not the suite's default iPhone emulation.
 test.use({ viewport: { width: 1440, height: 900 }, hasTouch: false, isMobile: false, seed: { log: sampleHistory(Date.now()) } });
@@ -63,4 +63,18 @@ test('with a mouse, buttons show the hand cursor and answer hover', async ({ pag
   expect(await explore.evaluate((e) => getComputedStyle(e).backgroundImage)).toBe('none');
   await explore.hover();
   expect(await explore.evaluate((e) => getComputedStyle(e).backgroundImage)).toContain('gradient');
+});
+
+for (const hash of ['/', '/#/explore', '/#/library', '/#/set/set-cafe?from=explore']) {
+  test(`desktop accessibility: ${hash}`, async ({ page }) => {
+    await page.goto(hash);
+    await page.waitForTimeout(300);
+    await expectAccessible(page);
+  });
+}
+
+test('desktop accessibility: the player, with a control hovered', async ({ page }) => {
+  const player = await openPlayer(page);
+  await player.getByRole('button', { name: /^Easy/ }).hover();
+  await expectAccessible(page);
 });
