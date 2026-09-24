@@ -650,3 +650,11 @@ found no crash.
 Checks after these: 71 unit tests and 96 Playwright tests on the dev server (12 skipped). Keyboard
 focus returns to the opener when a sheet, Settings or the player closes, and falls back to the
 section's main button when a delete removed it.
+
+**Load:** the app no longer ships zod: content is validated at build time (a bad file stops the build)
+and in the unit tests. The main chunk fell from 208 to 180 kB gzipped; the Rust core is 373 kB
+gzipped in its own long-cached chunk. On the production build with the CPU throttled 4×, Home is
+visible about 750 ms after navigation, with or without a year of history; the longest start-up task
+is ~180 ms (the core's synchronous WASM start). New tests also cover a finished course and a device
+with no Spanish voice (player and onboarding). Playwright: 100 on the dev server, 101 against the
+production build.
