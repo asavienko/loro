@@ -9,6 +9,7 @@ export function makeRu(n: Plural): Copy {
       close: 'Закрыть',
       back: 'Назад',
       cancel: 'Отмена',
+      charsLeft: (c) => n(c, { one: `Остался ${c} символ`, few: `Осталось ${c} символа`, many: `Осталось ${c} символов`, other: `Осталось ${c} символа` }),
       save: 'Сохранить',
       undo: 'Отменить',
       play: 'Играть',

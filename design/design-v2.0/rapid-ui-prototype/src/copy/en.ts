@@ -17,6 +17,7 @@ export function makeEn(n: Plural) {
       close: 'Close',
       back: 'Back',
       cancel: 'Cancel',
+      charsLeft: (count: number) => n(count, { one: `${count} character left`, other: `${count} characters left` }),
       save: 'Save',
       undo: 'Undo',
       play: 'Play',

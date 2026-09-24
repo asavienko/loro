@@ -1,7 +1,8 @@
-import { FormEvent, useState } from 'react';
+import { FormEvent, useId, useState } from 'react';
 import { useNav } from '../nav/NavContext';
 import { findSetView, ownSets, phraseKey } from '../state/catalog';
 import { useCopy, useStore } from '../state/store';
+import { CharCount } from '../ui/CharCount';
 import { Sheet } from '../ui/Sheet';
 import { useToast } from '../ui/Toast';
 
@@ -47,6 +48,7 @@ function SetNameForm({ initial, taken, submitLabel, onSubmit }: { initial: strin
   const [title, setTitle] = useState(initial);
   const key = phraseKey(title);
   const isTaken = key !== '' && taken.includes(key);
+  const countId = useId();
   return (
       <form
         onSubmit={(event: FormEvent) => {
@@ -61,9 +63,11 @@ function SetNameForm({ initial, taken, submitLabel, onSubmit }: { initial: strin
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             maxLength={60}
+            aria-describedby={countId}
             required
             className="min-h-12 px-4 rounded-2xl bg-surface-container-low border border-outline-variant/60 text-base"
           />
+          <CharCount id={countId} value={title} max={60} />
         </label>
         {isTaken && (
           <p role="status" className="text-body rounded-xl bg-surface-container-low p-3">

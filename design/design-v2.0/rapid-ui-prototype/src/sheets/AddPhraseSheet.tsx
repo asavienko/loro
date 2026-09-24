@@ -1,8 +1,9 @@
-import { FormEvent, useState } from 'react';
+import { FormEvent, useId, useState } from 'react';
 import { languageName } from '../copy';
 import type { LanguageCode } from '../content';
 import { findSamePhrase, promptOf } from '../state/catalog';
 import { useCopy, useStore } from '../state/store';
+import { CharCount } from '../ui/CharCount';
 import { Sheet } from '../ui/Sheet';
 import { useToast } from '../ui/Toast';
 
@@ -48,6 +49,8 @@ function PhraseForm({ editId, initialTarget, initialNative, targetLang, nativeLa
   const [native, setNative] = useState(initialNative);
   // Saying the same thing twice is allowed, but the learner should know.
   const same = findSamePhrase(state.learner, target, editId);
+  const targetCount = useId();
+  const nativeCount = useId();
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
@@ -71,9 +74,11 @@ function PhraseForm({ editId, initialTarget, initialNative, targetLang, nativeLa
           value={target}
           onChange={(e) => setTarget(e.target.value)}
           maxLength={120}
+          aria-describedby={targetCount}
           required
           className="min-h-12 px-4 rounded-2xl bg-surface-container-low border border-outline-variant/60 text-base font-serif italic"
         />
+        <CharCount id={targetCount} value={target} max={120} />
       </label>
       <label className="flex flex-col gap-1">
         <span className="text-body font-semibold">{c.addPhrase.native(languageName(nativeLang, c.locale))}</span>
@@ -82,9 +87,11 @@ function PhraseForm({ editId, initialTarget, initialNative, targetLang, nativeLa
           value={native}
           onChange={(e) => setNative(e.target.value)}
           maxLength={120}
+          aria-describedby={nativeCount}
           required
           className="min-h-12 px-4 rounded-2xl bg-surface-container-low border border-outline-variant/60 text-base"
         />
+        <CharCount id={nativeCount} value={native} max={120} />
       </label>
       {same && (
         <p role="status" className="text-body rounded-xl bg-surface-container-low p-3">
