@@ -463,3 +463,100 @@ stay at 24 px.
 2. The drawn covers replace the photos. Do you want photos back, and if so, which photos? They
    should be stored locally and must not contain invented text.
 3. Icon sizes: keep everything at 24 px, or apply the sizes the classes intended?
+
+---
+
+# Round 3 — 2026-09-24
+
+**Scope:** the 150-point list in [`improvements-150.md`](improvements-150.md), implemented as you
+commented each item. Items marked Skip or "backend" were left alone. Item 65 became a plan instead
+of code: [plan 102](../../../plans/102-prototype-stress-fixture.md). The decisions that might reach
+the app are recorded in
+[`docs/design/v2-prototype-decisions.md`](../../../docs/design/v2-prototype-decisions.md).
+
+The round-2 open questions are settled: the queue now hides the Spanish during recall (105), covers
+stay drawn (141), and icons render at the sizes their classes ask for (135).
+
+![Player](r3-player.png) ![Home](r3-home.png) ![Queue](r3-queue.png)
+
+## What changed, by your comments
+
+| Items | Your comment | What it does now |
+| --- | --- | --- |
+| 2 | 3 buttons | **Missed / Hard / Easy**, sent to Loro's real FSRS in `packages/core-rs` (WASM) as Again / Hard / Good. The prototype has no scheduling maths of its own any more. |
+| 3 | Points per phrase listened, once per 5 minutes | +1 per phrase listened, at most once per phrase per 5 minutes. |
+| 4, 21, 72 | Rating window of 5 minutes; change or undo | A rating waits 5 minutes, and you can change or undo it during that time ("Change or undo for 4:32 · Undo"). When the window closes it counts at its original time and pays its points. |
+| 6 | Implement | Missed or Hard brings the phrase back 4 phrases later in the same queue. |
+| 7, 8 | Implement | Per-phrase difficulty comes from FSRS. **Learned** = FSRS review state, stability of 21+ days, and 3+ successful recalls. |
+| 9, 29 | A pause to rate; repeat the set or continue | After the last repetition of an unrated phrase, the player holds 4 s for a rating (rating ends the hold). At the end of the queue, the mode button chooses **play it again** or **continue** with the next set that has phrases to play. |
+| 10, 11 | Implement | The review queue plays at most 10 phrases, most overdue first, and shows a duration only once it has been measured. Repetitions are **A**uto (3 while new or shaky, 1 under review), 1× or 3×. |
+| 13, 43 | Median; fix timeouts | Speech is timed from its `start` to its `end` event, so engine start-up isn't counted, and the pause uses the median of recent measurements with outliers dropped. An unconfirmed utterance advances but records nothing and pays nothing. |
+| 16, 19, 20 | Implement | "Recall now" states how many rated phrases it averages. The first Easy comes back within 1 day (phrase heard once) or 4 days (heard more). A session summary sits behind the ✦ button, and a toast offers it after each pass. |
+| 22–36 | Implement | A sanitised `RESTORE`; an explicit statechart (below); an append-only review log with device-scoped ids from which memory and points are derived; memory keyed by language pair; shuffle reset on each load; one navigation rule; the timer in its own component; debounced saves; hash routing where Back closes overlays and sheets; zod-validated content; one source for a phrase's set; a navigation context; the content version stored in state. |
+| 42, 44, 46–48, 50 | Implement | Media Session (lock screen, headset buttons); a clean pause when the page is hidden; 300 ms gaps; a soft two-note "your turn" cue; a neutral note for Hard and Missed; preload of the next phrase's clips. |
+| 45 | Apply to both | Speed applies to both languages, unchanged. |
+| 53–58, 63, 64, 69, 70 | Implement | Every phrase has short, plain notes. The caña moved to Tapas; ids are now `cafe-01`… (saved progress migrates); register, region, tags, word glosses and optional `audio`/`durationMs` fields; a small Bulgarian course; levels A1/A2; three topics with two sets each. |
+| 59 | Implement | Tap an underlined word in the revealed phrase to see its meaning. |
+| 60–62 | Implement | Your own phrases (Library → Mine → Add your phrase) and your own sets. The profile lives in state and can be edited in Settings. |
+| 67, 68 | Implement | The UI follows your native language: English, Bulgarian or Russian. |
+| 71–86 | As commented | The player fits 390×844 without scrolling. Shuffle moved to the set page and queue; notes open in a sheet; a paused step looks paused; the title appears once, with "1 of 5"; the heart likes the phrase and ≡+ adds it to a set; swiping the cover changes phrase; the time reads "0:04 / 0:18 at 1×" once measured; the redaction bar is as wide as the phrase really is. |
+| 80, 102 | Like for phrases; album like or add to album | The heart likes phrases (Library → Liked) and sets (Liked sets). "Add to set…" puts a phrase into one of your sets. |
+| 87–96 | As commented | Greeting in the language you're learning; Learned and Started; a "Today" line that never mentions a missed day; Review first, then Continue; "in 4 days"; no duplicate set; "Not started yet"; history lists the sets you played; a first-run demo. |
+| 93 | History of played albums | History groups by set: "Café & Mañanas · 5 phrases · +12 · 2 hours ago". |
+| 97–103 | Implement | "Plays in: Due first"; "Play due and new"; per-phrase Play next / Add to queue; sort remembered per set; share a link to the set; a real set duration. |
+| 105–111 | Implement | Target hidden in the queue while you recall it; previously played → Play next; undo after remove and after clear; "4 left"; Save as set; described drag handles that announce their moves; Play next vs Add to queue. |
+| 112–117 | Implement | Filters live in the URL (so Back keeps them); removable chips; topic tiles give way to results; level and tag filters; search covers notes and topics and highlights what matched; set cards show status and a play button. |
+| 118–124 | Implement (123: no export) | Filters: Liked, Mine, Due, Learning, Missed recently, Learned, My sets, Liked sets. Play all; charts of predicted recall and learned per week; tapping a stat opens its list. No file export: sync will carry progress. |
+| 125, 127–134 | Implement | Onboarding (language, name, course, voice check, the loop); Developer section; in-app reset confirmation; the error screen offers "Copy progress JSON" first; scroll kept per page; the set title appears in the header when you scroll; installable PWA; local fonts (Literata/Manrope carry Cyrillic) and a 9.5 KB icon subset; React toasts. |
+| 135–142 | Implement (136: skip) | Icon sizes fixed; tokens only; a rem type scale (so 200% text works); a neutral Hard; instant tab switches and a sliding set page; two-column player on tablets and in landscape. |
+| 143–146 | Implement | Quiet announcements by default ("Your turn" and the reveal), with a setting for every step; visible focus rings; `lang` on every prompt; axe checks at 100% and 200% text. |
+| 147–150 | Implement | A merge (log union, last write per item) that `syncWithServer` and a second tab both use; commit, docs and core-rs as described. |
+
+## The player as a statechart
+
+`src/state/chart.ts` lists which events each status accepts. `transition` ignores any other event.
+
+```mermaid
+stateDiagram-v2
+  [*] --> idle
+  idle --> playing: LOAD
+  idle --> paused: ENQUEUE
+  playing --> paused: PAUSE
+  playing --> paused: PHASE_DONE (end of queue, or audio failed)
+  paused --> playing: PLAY
+  paused --> playing: LOAD
+  paused --> playing: JUMP (play now)
+  state playing {
+    [*] --> native
+    native --> pause: spoken
+    pause --> target: silence over
+    target --> native: spoken, more repetitions
+    target --> rate: spoken, last repetition, unrated
+    target --> native: spoken, last repetition, rated
+    rate --> native: rated, or hold over
+  }
+```
+
+![Explore](r3-explore.png) ![Library](r3-library.png) ![Set](r3-set.png) ![Onboarding in Bulgarian](r3-onboarding-bg.png)
+
+## Findings to decide
+
+1. **Intervals get long fast.** The real core schedules at Loro's authored 50% retention, so a
+   review falls due at about 90× stability. The first Easy is capped at 1 or 4 days, but the second
+   on-time Easy lands months or years out. This is the authored policy; for a short, listening-led
+   loop it may need a product decision (`docs/architecture/fsrs-model.md`).
+2. **All new language needs a native reviewer:** revised Spanish phrases, notes, the Bulgarian
+   course, bg/ru prompts and glosses, and the Bulgarian and Russian UI copy.
+3. **Hidden pages pause.** You asked for a clean pause when the page is hidden (44), so lock-screen
+   Play resumes only once the page is visible again. Continuous background playback would need
+   recorded clips in an audio element.
+
+## Checks
+
+- `npm run check`: ESLint (react-hooks, jsx-a11y), `tsc --strict`, 57 node tests (including
+  fast-check invariants over random event sequences) and the production build with its service
+  worker.
+- `npm run test:e2e`: 27 Playwright tests at 390×844 with fake speech — onboarding in English and
+  Bulgarian, the recall rule, rating change/undo/commit with a fast-forwarded clock, Back closing
+  overlays, the queue, Explore, Library, reload, axe at 100% and 200% text, and 44 px / 11 px audits.
+  They also check that chart bars measure what their numbers say.
