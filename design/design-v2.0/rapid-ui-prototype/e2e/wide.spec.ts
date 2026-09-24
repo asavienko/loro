@@ -19,3 +19,17 @@ test("the player's header lines up with its body", async ({ page }) => {
   const speed = (await player.getByRole('radiogroup', { name: 'Speed' }).boundingBox())!;
   expect(Math.abs(queue.x + queue.width - (speed.x + speed.width))).toBeLessThan(24);
 });
+
+test.describe('a portrait tablet (768×1024)', () => {
+  test.use({ viewport: { width: 768, height: 1024 } });
+  test('the player keeps one column, the cover centred above the controls', async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: /^Play \d+ phrases/ }).first().click();
+    await page.getByRole('button', { name: /^Now playing:/ }).click();
+    const player = page.getByRole('dialog', { name: 'Now playing' });
+    const flag = (await player.getByRole('img', { name: 'Spanish' }).boundingBox())!;
+    const pause = (await player.getByRole('button', { name: 'Pause', exact: true }).boundingBox())!;
+    expect(flag.y).toBeLessThan(pause.y - 200);
+    expect(Math.abs(pause.x + pause.width / 2 - 384)).toBeLessThan(24);
+  });
+});
