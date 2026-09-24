@@ -573,7 +573,7 @@ production build offline. Each fix below is covered by a test.
 | --- | --- |
 | "Easy · 2 yrs", "next in 3 years": the core's 50% retention made intervals unusable | Review at 90% recall (after the stability in days); the core's date stays the upper bound |
 | iPhones block speech that doesn't start inside a tap; the loop speaks from an effect | The first tap unlocks speech and Web Audio |
-| An utterance that ended without a start event paid nothing | It counts as heard, without a measurement |
+| In real Chrome, a stalled speech service ends every utterance at once, unspoken — which would have paid points for silence | An instant end with no start is retried once, then playback stops with "Speech stopped — press Play" and pays nothing; a plausible start-less end counts, unmeasured |
 | Toasts covered the player's transport | Over the player they sit at the top |
 | At 200% text, lists widened the page to 509 px, pushing the tab bar and mini-player off screen | Single-column grids use `minmax(0,1fr)`; the suite checks this with real history |
 | `<html lang>` stayed "en" in the Bulgarian and Russian UIs | It follows the UI language: correct speech and Bulgarian letterforms |
@@ -588,5 +588,7 @@ production build offline. Each fix below is covered by a test.
 Also new: player keyboard shortcuts (Space, ← →, 1 2 3), and `npm run test:e2e:preview`, which
 runs the whole suite against the production build with its service worker, including offline use.
 
-**Checks:** `npm run check` (lint, strict types, 58 unit tests, build); 40 Playwright tests on the dev
-server, and the same suite plus an offline test against the production build.
+**Checks:** `npm run check` (lint, strict types, 58 unit tests, build); 41 Playwright tests on the dev
+server, and the same suite plus an offline test against the production build (42). The loop was
+also run in a real Chrome with system voices: phrases advanced, measurements were recorded, and
+when that Chrome's speech service stalled, the app stopped and said so.
