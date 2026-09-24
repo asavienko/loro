@@ -211,7 +211,7 @@ export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps
               {audioError ? (
                 <p role="alert" className="mt-2 rounded-xl bg-error-container/60 text-on-error-container text-body p-3 flex gap-2">
                   <Icon name="volume_off" className="text-icon-md" />
-                  <span>{c.player.audioError(languageName(audioError, c.locale))}</span>
+                  <span>{audioError.reason === 'no-voice' ? c.player.audioError(languageName(audioError.lang, c.locale)) : c.player.audioSilent}</span>
                 </p>
               ) : (
                 <div className="flex items-center justify-between gap-2 mt-2 text-label text-secondary">

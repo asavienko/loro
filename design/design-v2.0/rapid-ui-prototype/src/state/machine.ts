@@ -7,7 +7,6 @@
 // then a short hold for a rating if there is none, then the next phrase. At the
 // end of the queue the play mode decides: play it again, or continue with the
 // next phrases of the course. The allowed events per status are in chart.ts.
-import type { LanguageCode } from '../content';
 import { findPhrase, keyOf, OWN_PHRASE_PREFIX, OWN_SET_PREFIX } from './catalog';
 import { canHandle } from './chart';
 import { initialPlayer, initialState } from './initial';
@@ -17,6 +16,7 @@ import { sanitizeState } from './persistence';
 import { continuation, currentPhraseId, repeatsFor } from './selectors';
 import type {
   AppState,
+  AudioFailure,
   Grade,
   LearnerState,
   LogEntry,
@@ -46,8 +46,8 @@ export type AppEvent =
       now: number;
       /** Measured length at 1.0× of what was just spoken, excluding engine start-up. */
       measuredMs?: number;
-      /** Language whose audio could not be played. */
-      failedLang?: LanguageCode;
+      /** Speech that could not be played, and why. */
+      failure?: AudioFailure;
       /** The engine never confirmed the end: move on, but record nothing and pay nothing. */
       unconfirmed?: boolean;
     }
@@ -256,12 +256,12 @@ export function transition(state: AppState, event: AppEvent): AppState {
 
     case 'PHASE_DONE': {
       if (event.cycle !== player.cycle || currentId === null) return state;
-      if (event.failedLang) {
+      if (event.failure) {
         // No silent loop and no points without audio: stop and say why.
         return withPlayer(state, {
           ...stopClock(player, event.now),
           status: 'paused',
-          audioError: event.failedLang,
+          audioError: event.failure,
           cycle: player.cycle + 1,
         });
       }

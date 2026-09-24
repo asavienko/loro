@@ -100,6 +100,23 @@ test.describe('the loop', () => {
     await expect(player.getByRole('button', { name: /^Easy/ })).toHaveAttribute('aria-pressed', 'true');
   });
 
+  test('a silent speech engine stops playback honestly and pays nothing', async ({ page }) => {
+    await page.goto('/');
+    await page.evaluate(() => (window.__speechSilent = true));
+    await page.getByRole('button', { name: 'Play 5 phrases' }).click();
+    await page.getByRole('button', { name: /^Now playing:/ }).click();
+    const player = page.getByRole('dialog', { name: 'Now playing' });
+    await expect(player.getByRole('alert')).toContainText('Speech stopped before the phrase played. Press Play to try again.');
+    await expect(player.getByRole('button', { name: 'Play', exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'Close player' }).click();
+    await expect(player).toHaveCount(0);
+    await expect(page.getByTestId('points')).toContainText('0 points');
+    // Once speech works again, Play carries on.
+    await page.evaluate(() => (window.__speechSilent = false));
+    await page.getByRole('button', { name: 'Play', exact: true }).click();
+    await expect(page.getByRole('button', { name: /^Now playing:/ })).toContainText('Your turn', { timeout: 5000 });
+  });
+
   test('notes open in a sheet', async ({ page }) => {
     await page.goto('/');
     await page.getByRole('button', { name: 'Play 5 phrases' }).click();

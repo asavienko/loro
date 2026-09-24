@@ -131,6 +131,12 @@ export interface Prefs {
 
 // ---------- player ----------
 
+export interface AudioFailure {
+  lang: LanguageCode;
+  /** No voice for the language, or the speech engine stayed silent. */
+  reason: 'no-voice' | 'silent';
+}
+
 export type Phase = 'native' | 'pause' | 'target' | 'rate';
 export type PlayerStatus = 'idle' | 'playing' | 'paused';
 
@@ -164,8 +170,8 @@ export interface PlayerState {
   nativeMsThisRep: number | null;
   /** The queue finished; Play starts the last phrase again. */
   ended: boolean;
-  /** Language whose speech failed; playback stops until the learner presses Play. */
-  audioError: LanguageCode | null;
+  /** Speech that failed, and why; playback stops until the learner presses Play. */
+  audioError: AudioFailure | null;
   session: Session | null;
 }
 

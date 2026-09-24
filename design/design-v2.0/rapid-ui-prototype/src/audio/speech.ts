@@ -11,8 +11,10 @@ export type PlaybackResult =
   | { status: 'ended'; ms: number | null }
   /** Probably played, but the engine never confirmed the end: nothing is recorded or paid. */
   | { status: 'timeout' }
-  /** Could not be played (no voice for the language, synthesis error, blocked). */
-  | { status: 'failed' };
+  /** Could not be played: no voice for the language, or the engine stayed silent. */
+  | { status: 'failed'; reason: FailureReason };
+
+export type FailureReason = 'no-voice' | 'silent';
 
 export interface Playback {
   done: Promise<PlaybackResult>;
@@ -76,8 +78,8 @@ function playClip(url: string, rate: number): Playback {
     finish(r);
   };
   audio.onended = () => settle({ status: 'ended', ms: (audio.duration * 1000) / rate });
-  audio.onerror = () => settle({ status: 'failed' });
-  audio.play().catch(() => settle({ status: 'failed' }));
+  audio.onerror = () => settle({ status: 'failed', reason: 'silent' });
+  audio.play().catch(() => settle({ status: 'failed', reason: 'silent' }));
   return {
     done,
     cancel: () => {
@@ -87,6 +89,14 @@ function playClip(url: string, rate: number): Playback {
   };
 }
 
+/**
+ * An `end` without a `start` that arrives this fast (relative to the text's
+ * likely length) means the engine said nothing — a stalled or backgrounded
+ * speech service ends utterances instantly.
+ */
+const SILENT_END_SHARE = 0.4;
+const RETRY_DELAY_MS = 150;
+
 export function speak(text: string, lang: LanguageCode, rate: number, clipUrl?: string | null): Playback {
   if (clipUrl) return playClip(clipUrl, rate);
   const [done, finish] = deferred();
@@ -94,40 +104,56 @@ export function speak(text: string, lang: LanguageCode, rate: number, clipUrl?: 
   // Voices load asynchronously; an empty list means "not known yet", not "none".
   const voices = synth?.getVoices() ?? [];
   if (!synth || (voices.length > 0 && !pickVoice(lang))) {
-    finish({ status: 'failed' });
+    finish({ status: 'failed', reason: 'no-voice' });
     return { done, cancel: () => {} };
   }
 
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = lang;
-  utterance.rate = rate;
-  utterance.voice = pickVoice(lang);
-
   let settled = false;
-  let startedAt: number | null = null;
+  let current: SpeechSynthesisUtterance | null = null;
+  let retry: ReturnType<typeof setTimeout> | undefined;
+  const expectedMs = estimateSpeechMs(text, rate);
   // Some engines never fire `end`; don't let the lesson stall.
-  const watchdog = setTimeout(() => settle({ status: 'timeout' }), estimateSpeechMs(text, rate) * 3 + 2000);
+  const watchdog = setTimeout(() => settle({ status: 'timeout' }), expectedMs * 3 + 2000);
   function settle(result: PlaybackResult) {
     if (settled) return;
     settled = true;
     clearTimeout(watchdog);
+    clearTimeout(retry);
     finish(result);
   }
-  utterance.onstart = () => {
-    startedAt = clock.now();
-  };
-  utterance.onend = () =>
-    // Some engines skip the start event: the phrase still played, but there is no clean measurement.
-    settle({ status: 'ended', ms: startedAt === null ? null : clock.now() - startedAt });
-  utterance.onerror = (event) => {
-    // Our own cancel() interrupts; that is not a failure of the audio.
-    if (event.error === 'interrupted' || event.error === 'canceled') return;
-    settle({ status: 'failed' });
-  };
 
-  // Cancelling an idle engine right before speaking can drop the new utterance in Chrome.
-  if (synth.speaking || synth.pending) synth.cancel();
-  synth.speak(utterance);
+  const attempt = (tries: number) => {
+    const utterance = new SpeechSynthesisUtterance(text);
+    current = utterance;
+    utterance.lang = lang;
+    utterance.rate = rate;
+    utterance.voice = pickVoice(lang);
+    const calledAt = clock.now();
+    let startedAt: number | null = null;
+    utterance.onstart = () => {
+      startedAt = clock.now();
+    };
+    utterance.onend = () => {
+      if (current !== utterance) return;
+      if (startedAt !== null) return settle({ status: 'ended', ms: clock.now() - startedAt });
+      // No start event. Long enough to have been spoken: it played, unmeasured.
+      if (clock.now() - calledAt >= expectedMs * SILENT_END_SHARE) return settle({ status: 'ended', ms: null });
+      // Instant: nothing was said. Nudge the engine and try once more, then give up honestly.
+      if (tries > 0) return settle({ status: 'failed', reason: 'silent' });
+      synth.cancel();
+      synth.resume();
+      retry = setTimeout(() => attempt(tries + 1), RETRY_DELAY_MS);
+    };
+    utterance.onerror = (event) => {
+      // Our own cancel() interrupts; that is not a failure of the audio.
+      if (event.error === 'interrupted' || event.error === 'canceled') return;
+      settle({ status: 'failed', reason: event.error === 'language-unavailable' || event.error === 'voice-unavailable' ? 'no-voice' : 'silent' });
+    };
+    // Cancelling an idle engine right before speaking can drop the new utterance in Chrome.
+    if (synth.speaking || synth.pending) synth.cancel();
+    synth.speak(utterance);
+  };
+  attempt(0);
 
   return {
     done,
@@ -135,6 +161,7 @@ export function speak(text: string, lang: LanguageCode, rate: number, clipUrl?: 
       if (settled) return;
       settled = true;
       clearTimeout(watchdog);
+      clearTimeout(retry);
       synth.cancel();
     },
   };
