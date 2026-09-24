@@ -593,12 +593,13 @@ production build offline. Each fix below is covered by a test.
 | At 200% text, the session summary scrolled but a keyboard couldn't scroll it | Sheet bodies are focusable, labelled regions |
 | A first-run Home had two equally prominent play buttons | The one-phrase demo is the single primary action |
 | localStorage caps progress at ~5 MB and blocks the page on every save | Progress lives in IndexedDB (localStorage is the fallback), read before the first render and migrated automatically; a closing page leaves a synchronous copy that the next start merges in. With a year of history, playback now shows no long main-thread tasks at all |
+| Bulgarian and Russian learners read every note in English | All 42 notes have Bulgarian and Russian versions (validated for completeness, awaiting native review); pronunciation notes compare with sounds those speakers know |
 | A curved divider on Home stats, "24 hours ago", the queue count truncating at large text, the landscape player | Fixed |
 
 Also new: player keyboard shortcuts (Space, ← →, 1 2 3), and `npm run test:e2e:preview`, which
 runs the whole suite against the production build with its service worker, including offline use.
 
-**Checks:** `npm run check` (lint, strict types, 61 unit tests including server sync, build) and 71
+**Checks:** `npm run check` (lint, strict types, 62 unit tests including server sync, build) and 71
 Playwright tests, on the dev server and against the production build (offline included). They cover
 gestures, reduced motion, a full-storage warning, two open tabs, a silent speech engine, and a load
 test that fails on any main-thread task over 200 ms with a year of history. Accessibility runs (axe,
@@ -606,4 +607,6 @@ test that fails on any main-thread task over 200 ms with a year of history. Acce
 100% and 200% text, and the Bulgarian and Russian UIs. Every test fails on any page error.
 `npm run test:monkey` taps at random through every screen; 14 seeded walks (2,100 steps) found one
 crash, now fixed. The loop was also run in a real Chrome with system voices: phrases advanced and
-were measured, and when that Chrome's speech service stalled, the app stopped and said so.
+were measured, and when that Chrome's speech service stalled, the app stopped and said so. One E2E run
+had a single failure that did not recur in six further full runs (about 430 test runs); its cause is
+unknown.
