@@ -662,6 +662,8 @@ found no crash.
 | On iOS the keyboard covered a sheet's lower field and button | Sheets lift by the keyboard's height (visual viewport); Android resizes the page (`interactive-widget`) |
 | A grey system flash doubled every pressed state; a long press selected button labels | Tap highlight off; buttons aren't selectable (phrases still are) |
 | With a dark system theme, native controls could turn dark on the light page; no home-screen tags for older iOS | `color-scheme: light`; app-capable, title and status-bar tags; a noscript message |
+| The page title was always "Loro" (WCAG 2.4.2) | "Explore · Loro", the set's name, "Now playing · Loro", "Queue · Loro" |
+| Opening a set or pressing Back dropped focus to `<body>`, so a screen reader restarted from the top | Focus moves to the new screen's heading; tab switches keep it on the tab |
 
 **Open question:** the prototype has no dark theme, so an evening learner with a dark system theme
 gets a light screen. A dark palette is a design decision (plan 57 owns dark mode in the app); say if
