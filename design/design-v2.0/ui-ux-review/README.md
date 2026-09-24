@@ -589,16 +589,20 @@ production build offline. Each fix below is covered by a test.
 | The review log was stored as plain objects: a heavy learner would fill the ~5 MB storage within months | Stored as compact rows: a year of daily practice takes 536 KB instead of 1,945 KB; plain saves still load |
 | A new app version reloaded the page as soon as it arrived, cutting a lesson off | It waits and takes over on the next launch |
 | Russian "Не вспомнил" and "Сколько я вам должен?", and Bulgarian "Свободен ли сте?", assumed men | "Не помню", "Сколько с меня?", "Свободно ли е?" |
+| Any render error, even in one sheet, took the whole app to the error screen | Screens and overlays have their own boundaries: a failing sheet closes, a failing screen shows a small card with Reload, and the player keeps playing |
+| At 200% text, the session summary scrolled but a keyboard couldn't scroll it | Sheet bodies are focusable, labelled regions |
+| A first-run Home had two equally prominent play buttons | The one-phrase demo is the single primary action |
 | A curved divider on Home stats, "24 hours ago", the queue count truncating at large text, the landscape player | Fixed |
 
 Also new: player keyboard shortcuts (Space, ← →, 1 2 3), and `npm run test:e2e:preview`, which
 runs the whole suite against the production build with its service worker, including offline use.
 
-**Checks:** `npm run check` (lint, strict types, 59 unit tests, build) and 48 Playwright tests on the
-dev server, the same suite plus an offline test against the production build, gesture tests (queue
-swipes and drag reorder, mini-player and cover swipes, drag to close), and a load test that fails on
-any main-thread task over 200 ms with a year of history. Every test also fails on any page error.
-`npm run test:monkey` taps at random through every screen; eight seeded walks (1,200 steps, dev and
-production builds) found one crash, now fixed. The loop was also run in a real Chrome with system
-voices: phrases advanced and were measured, and when that Chrome's speech service stalled, the app
-stopped and said so.
+**Checks:** `npm run check` (lint, strict types, 60 unit tests including server sync, build) and 70
+Playwright tests, on the dev server and against the production build (offline included). They cover
+gestures, reduced motion, a full-storage warning, two open tabs, a silent speech engine, and a load
+test that fails on any main-thread task over 200 ms with a year of history. Accessibility runs (axe,
+44 px targets, 11 px text, no sideways scroll) cover every screen, sheet and onboarding step at
+100% and 200% text, and the Bulgarian and Russian UIs. Every test fails on any page error.
+`npm run test:monkey` taps at random through every screen; 12 seeded walks (1,800 steps) found one
+crash, now fixed. The loop was also run in a real Chrome with system voices: phrases advanced and
+were measured, and when that Chrome's speech service stalled, the app stopped and said so.
