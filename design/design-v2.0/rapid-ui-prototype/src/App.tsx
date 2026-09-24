@@ -238,7 +238,7 @@ function Shell() {
           scrolledTitle={route.name === 'set' ? setView?.title : undefined}
         />
 
-        <main inert={behind} className="flex-1 pt-[calc(3.5rem+env(safe-area-inset-top))] pb-[calc(9rem+env(safe-area-inset-bottom))]">
+        <main inert={behind} className="flex-1 pt-[calc(3.5rem+env(safe-area-inset-top))] pb-[calc(9rem+env(safe-area-inset-bottom))] phone-landscape:pb-[calc(7rem+env(safe-area-inset-bottom))]">
           <LocalBoundary resetKey={screenKey} locale={locale}>
           {route.name === 'set' ? (
             // The set page slides in; switching tabs is instant.
@@ -257,7 +257,7 @@ function Shell() {
 
         {currentId && (
           // Stays mounted under the player so focus can return to it on close.
-          <div inert={behind} className={`fixed inset-x-2 bottom-[calc(3.75rem+env(safe-area-inset-bottom))] z-30 max-w-lg mx-auto ${behind ? 'invisible' : ''}`}>
+          <div inert={behind} className={`fixed inset-x-2 bottom-[calc(3.75rem+env(safe-area-inset-bottom))] phone-landscape:bottom-[calc(3rem+env(safe-area-inset-bottom))] z-30 max-w-lg mx-auto ${behind ? 'invisible' : ''}`}>
             <MiniPlayer onOpenPlayer={nav.openPlayer} />
           </div>
         )}

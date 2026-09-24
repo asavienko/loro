@@ -24,7 +24,7 @@ export function BottomNavBar({ current, onNavigate, inert = false }: BottomNavBa
       aria-label={c.nav.main}
       className="fixed bottom-0 inset-x-0 z-40 bg-surface/95 backdrop-blur-md border-t border-surface-container-high pb-[env(safe-area-inset-bottom)]"
     >
-      <div className="h-14 grid grid-cols-3 max-w-5xl mx-auto">
+      <div className="h-14 phone-landscape:h-11 grid grid-cols-3 max-w-5xl mx-auto">
         {TABS.map((tab) => {
           const active = tab.id === current;
           return (
@@ -33,7 +33,7 @@ export function BottomNavBar({ current, onNavigate, inert = false }: BottomNavBa
               type="button"
               onClick={() => onNavigate(tab.id)}
               aria-current={active ? 'page' : undefined}
-              className={`flex flex-col items-center justify-center gap-0.5 active:bg-surface-container ${
+              className={`flex flex-col phone-landscape:flex-row items-center justify-center gap-0.5 phone-landscape:gap-2 active:bg-surface-container ${
                 active ? 'text-primary-container font-bold' : 'text-secondary font-medium'
               }`}
             >

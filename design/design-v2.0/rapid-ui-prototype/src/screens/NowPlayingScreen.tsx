@@ -124,14 +124,14 @@ export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps
       </header>
 
       <div className="flex-1 min-h-0 overflow-y-auto">
-        <div className="max-w-lg md:max-w-4xl phone-landscape:max-w-4xl mx-auto px-5 pb-3 h-full grid grid-cols-1 gap-3 md:grid-cols-2 md:items-center md:gap-8 phone-landscape:grid-cols-2 phone-landscape:items-start phone-landscape:gap-6">
+        <div className="max-w-lg md:max-w-4xl phone-landscape:max-w-4xl mx-auto px-5 pb-3 h-full grid grid-cols-1 gap-3 md:grid-cols-2 md:items-center md:gap-8">
           <motion.div
             drag="x"
             dragSnapToOrigin
             dragElastic={0.3}
             onDragStart={clicks.block}
             onDragEnd={onSwipe}
-            className="relative mx-auto w-full max-w-[min(100%,26dvh)] short:hidden md:max-w-[min(100%,52dvh)] phone-landscape:max-w-[min(100%,42dvh)] aspect-square touch-pan-y"
+            className="relative mx-auto w-full max-w-[min(100%,26dvh)] short:hidden phone-landscape:hidden md:max-w-[min(100%,52dvh)] aspect-square touch-pan-y"
           >
             <SetCover set={coverSet ?? { topicId: null, coverIcon: 'edit_note' }} size="lg" className="w-full h-full rounded-3xl shadow-xl" />
             <span role="img" aria-label={languageLabel(phrase.targetLang, c.locale)} className="absolute bottom-3 left-3 w-9 h-9 rounded-full bg-surface/70 flex items-center justify-center text-lg">
@@ -139,9 +139,10 @@ export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps
             </span>
           </motion.div>
 
-          <div className="flex flex-col gap-3 min-w-0">
+          {/* Phone landscape has no room for the cover: the phrase and its steps on the left, controls on the right. */}
+          <div className="flex flex-col gap-3 min-w-0 phone-landscape:grid phone-landscape:grid-cols-2 phone-landscape:gap-x-6 phone-landscape:content-start">
             {/* The target stays hidden until it is heard, so the learner recalls it first. */}
-            <div className="flex items-start gap-1 short:flex-col short:gap-0">
+            <div className="flex items-start gap-1 short:flex-col short:gap-0 phone-landscape:col-start-1 phone-landscape:row-start-1">
               <div className="flex-1 min-w-0">
                 {revealed ? (
                   <GlossedPhrase phrase={phrase} className="font-serif italic text-display-sm font-bold text-on-surface leading-snug" />
@@ -183,7 +184,7 @@ export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps
             </div>
 
             {/* The loop: prompt → your turn → target, with real repetition and time */}
-            <div>
+            <div className="phone-landscape:col-start-1 phone-landscape:row-start-2">
               <ol className="grid grid-cols-3 gap-1.5" aria-label={c.player.steps}>
                 {STEPS.map((p) => {
                   const current = p === phase;
@@ -222,10 +223,12 @@ export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps
               <p aria-live="polite" className="sr-only">{announcement}</p>
             </div>
 
-            <Rating phrase={phrase} />
+            <div className="phone-landscape:col-start-2 phone-landscape:row-start-2">
+              <Rating phrase={phrase} />
+            </div>
 
             {/* Transport */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between phone-landscape:col-start-2 phone-landscape:row-start-1">
               <PlayModeButton />
               <button type="button" aria-label={c.player.previous} aria-keyshortcuts="ArrowLeft" onClick={actions.prev} className="w-12 h-12 flex items-center justify-center rounded-full active:bg-surface-container">
                 <Icon name="skip_previous" fill className="text-icon-2xl" />
@@ -246,7 +249,7 @@ export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps
             </div>
 
             {/* Speed: the only speed control in the app */}
-            <div role="radiogroup" aria-label={c.player.speed} className="grid grid-cols-3 gap-1 p-1 bg-surface-container-low rounded-full">
+            <div role="radiogroup" aria-label={c.player.speed} className="grid grid-cols-3 gap-1 p-1 bg-surface-container-low rounded-full phone-landscape:col-start-2 phone-landscape:row-start-3">
               {SPEEDS.map((s) => (
                 <button
                   key={s}
