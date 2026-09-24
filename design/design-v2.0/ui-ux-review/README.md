@@ -659,6 +659,9 @@ found no crash.
 | Half an hour of hands-free playback added ~130 elements and ~80 listeners: each replaced toast stayed until its exit animation ran | The toast is one element whose text is replaced; a perf test plays 30 minutes and checks the page stays the same size |
 | Phrase and set-name fields stopped at their limit with no sign why | From 80% of the limit they say how many characters are left |
 | The keyboard's Search, Next and Done keys did nothing useful; the Spanish field autocorrected into the device language | Search commits the query and closes the keyboard; Enter moves from phrase to translation to Add, and on through onboarding's name; fields set autocorrect, capitals and autofill |
+| On iOS the keyboard covered a sheet's lower field and button | Sheets lift by the keyboard's height (visual viewport); Android resizes the page (`interactive-widget`) |
+| A grey system flash doubled every pressed state; a long press selected button labels | Tap highlight off; buttons aren't selectable (phrases still are) |
+| With a dark system theme, native controls could turn dark on the light page; no home-screen tags for older iOS | `color-scheme: light`; app-capable, title and status-bar tags; a noscript message |
 
 **Open question:** the prototype has no dark theme, so an evening learner with a dark system theme
 gets a light screen. A dark palette is a design decision (plan 57 owns dark mode in the app); say if
