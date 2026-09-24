@@ -1,9 +1,11 @@
-export type Tab = 'home' | 'explore' | 'library';
+import type { Tab } from '../nav/routes';
+import { useCopy } from '../state/store';
+import { Icon, IconName } from './Icon';
 
-const TABS: { id: Tab; label: string; icon: string }[] = [
-  { id: 'home', label: 'Home', icon: 'home' },
-  { id: 'explore', label: 'Explore', icon: 'search' },
-  { id: 'library', label: 'Library', icon: 'library_music' },
+const TABS: { id: Tab; icon: IconName }[] = [
+  { id: 'home', icon: 'home' },
+  { id: 'explore', icon: 'search' },
+  { id: 'library', icon: 'library_music' },
 ];
 
 interface BottomNavBarProps {
@@ -15,13 +17,14 @@ interface BottomNavBarProps {
 
 /** Full-width native-style tab bar above the home indicator. */
 export function BottomNavBar({ current, onNavigate, inert = false }: BottomNavBarProps) {
+  const c = useCopy();
   return (
     <nav
       inert={inert}
-      aria-label="Main"
+      aria-label={c.nav.main}
       className="fixed bottom-0 inset-x-0 z-40 bg-surface/95 backdrop-blur-md border-t border-surface-container-high pb-[env(safe-area-inset-bottom)]"
     >
-      <div className="h-14 grid grid-cols-3 max-w-3xl mx-auto">
+      <div className="h-14 grid grid-cols-3 max-w-5xl mx-auto">
         {TABS.map((tab) => {
           const active = tab.id === current;
           return (
@@ -34,10 +37,8 @@ export function BottomNavBar({ current, onNavigate, inert = false }: BottomNavBa
                 active ? 'text-primary-container font-bold' : 'text-secondary font-medium'
               }`}
             >
-              <span aria-hidden="true" className={`material-symbols-outlined text-[24px] ${active ? 'material-symbols-fill' : ''}`}>
-                {tab.icon}
-              </span>
-              <span className="text-[11px] leading-none">{tab.label}</span>
+              <Icon name={tab.icon} fill={active} className="text-icon-lg" />
+              <span className="text-caption leading-none">{c.nav[tab.id]}</span>
             </button>
           );
         })}

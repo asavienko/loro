@@ -1,0 +1,74 @@
+// Every screen: axe (WCAG 2.1 AA), 44 px targets and 11 px text — at the
+// default text size and at 200%. Charts are measured against their numbers.
+import { Page } from '@playwright/test';
+import { expect, expectAccessible, expectMobileBasics, test } from './fixtures';
+
+const screens: { name: string; open: (page: Page) => Promise<void> }[] = [
+  { name: 'home', open: (page) => page.goto('/').then(() => undefined) },
+  { name: 'explore', open: (page) => page.goto('/#/explore').then(() => undefined) },
+  { name: 'library', open: (page) => page.goto('/#/library').then(() => undefined) },
+  { name: 'set', open: (page) => page.goto('/#/set/set-cafe?from=explore').then(() => undefined) },
+  {
+    name: 'player',
+    open: async (page) => {
+      await page.goto('/');
+      await page.getByRole('button', { name: 'Play 5 phrases' }).click();
+      await page.getByRole('button', { name: 'Pause', exact: true }).click();
+      await page.getByRole('button', { name: /^Now playing:/ }).click();
+      await page.waitForTimeout(600);
+    },
+  },
+  {
+    name: 'queue',
+    open: async (page) => {
+      await page.goto('/');
+      await page.getByRole('button', { name: 'Play 5 phrases' }).click();
+      await page.getByRole('button', { name: 'Pause', exact: true }).click();
+      await page.getByRole('button', { name: /^Now playing:/ }).click();
+      await page.getByRole('button', { name: 'Open queue' }).click();
+      await page.waitForTimeout(600);
+    },
+  },
+  {
+    name: 'settings',
+    open: async (page) => {
+      await page.goto('/');
+      await page.getByRole('button', { name: 'Ana: settings' }).click();
+      await page.waitForTimeout(500);
+    },
+  },
+];
+
+for (const scale of [1, 2]) {
+  test.describe(`text at ${scale * 100}%`, () => {
+    for (const screen of screens) {
+      test(screen.name, async ({ page }) => {
+        await screen.open(page);
+        if (scale !== 1) await page.addStyleTag({ content: `html { font-size: ${scale * 100}% }` });
+        await page.waitForTimeout(200);
+        await expectAccessible(page);
+        if (scale === 1) await expectMobileBasics(page);
+        // Nothing scrolls sideways.
+        expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+      });
+    }
+  });
+}
+
+test('chart bars are as long as their numbers say', async ({ page }) => {
+  await page.goto('/#/library');
+  const bars = await page.locator('[data-bar]').evaluateAll((els) =>
+    els.map((el) => {
+      const count = Number(el.getAttribute('data-count'));
+      const max = Number(el.getAttribute('data-max'));
+      const self = el.getBoundingClientRect();
+      const track = el.parentElement!.getBoundingClientRect();
+      const horizontal = el.closest('[data-chart="recall"]') !== null;
+      return { count, max, ratio: horizontal ? self.width / track.width : self.height, horizontal };
+    }),
+  );
+  for (const bar of bars) {
+    if (bar.horizontal) expect(bar.ratio).toBeCloseTo(bar.count / bar.max, 1);
+    else if (bar.count === 0) expect(bar.ratio).toBeLessThanOrEqual(1);
+  }
+});

@@ -24,6 +24,7 @@ import {
 } from './schema';
 
 export type { LanguageCode, UiLocale, Topic, Language, Localized, Tag, Level, Register, PhraseNotes } from './schema';
+export type TopicTone = Topic['tone'];
 
 function parse<T>(schema: z.ZodType<T>, value: unknown, file: string): T {
   const result = schema.safeParse(value);

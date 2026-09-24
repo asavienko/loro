@@ -1,0 +1,56 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import { describe, it } from 'node:test';
+import { CONTENT_PHRASES, SETS, TOPICS } from '../content';
+import { formatRoute, parseRoute, Route } from '../nav/routes';
+import { ICON_NAMES } from './icons';
+
+// PhraseText and ExploreScreen import React components; their pure helpers are
+// loaded lazily so this file stays a plain node test.
+const { tokenize } = await import('./PhraseText');
+const { fold } = await import('../screens/ExploreScreen');
+
+describe('icons', () => {
+  it('the local font holds exactly the registry', () => {
+    const font = JSON.parse(fs.readFileSync(new URL('../../public/fonts/material-symbols.json', import.meta.url), 'utf8')) as { icons: string[] };
+    assert.deepEqual(font.icons, [...ICON_NAMES].sort(), 'run `npm run icons` after editing src/ui/icons.ts');
+  });
+
+  it('every icon named in content is in the registry', () => {
+    const names: readonly string[] = ICON_NAMES;
+    for (const s of SETS) assert.ok(names.includes(s.coverIcon), s.coverIcon);
+    for (const t of TOPICS) assert.ok(names.includes(t.icon), t.icon);
+  });
+});
+
+describe('routes', () => {
+  it('round-trip through the hash', () => {
+    const routes: Route[] = [
+      { name: 'home' },
+      { name: 'explore', q: 'café & más', topic: 'eating-out', level: 'A1', tag: 'food' },
+      { name: 'library', view: 'missed' },
+      { name: 'set', id: 'set-cafe', from: 'explore' },
+    ];
+    for (const r of routes) assert.deepEqual(parseRoute(formatRoute(r)), r);
+    assert.deepEqual(parseRoute('#/nowhere'), { name: 'home' });
+    assert.deepEqual(parseRoute('#/explore?level=Z9'), { name: 'explore' });
+  });
+});
+
+describe('word glosses', () => {
+  it('matches multi-word units first and only whole words', () => {
+    const phrase = CONTENT_PHRASES.find((p) => p.id === 'cafe-01')!;
+    const tokens = tokenize(phrase, 'en-GB').filter((t) => t.gloss);
+    assert.deepEqual(tokens.map((t) => t.text), ['Me', 'pone', 'un', 'cortado', 'por favor']);
+    const transit = CONTENT_PHRASES.find((p) => p.id === 'transit-03')!;
+    // "a" is glossed, but not the "a" inside "va".
+    assert.deepEqual(tokenize(transit, 'en-GB').filter((t) => t.gloss).map((t) => t.text), ['Este', 'tren', 'va', 'a']);
+  });
+});
+
+describe('search', () => {
+  it('folds case and accents without changing length', () => {
+    assert.equal(fold('¿Dónde ESTÁ?'), '¿donde esta?');
+    assert.equal(fold('Сметката').length, 'Сметката'.length);
+  });
+});

@@ -1,181 +1,216 @@
 import { useState } from 'react';
-import { getSet, getTopic, phrasesOfSet } from '../content';
-import type { Navigation } from '../App';
-import { PhraseRow } from '../components/PhraseRow';
-import { SetCover } from '../components/SetCover';
-import { Sheet, SheetOption } from '../components/Sheet';
-import { floatingChip } from '../lib/feedback';
-import { progressLabel } from '../lib/progressLabel';
-import { phraseProgress, PhraseProgress, setProgress } from '../state/selectors';
-import { useCurrentPhraseId, useNow, useStore } from '../state/store';
+import { getTopic, Phrase } from '../content';
+import { routeUrl } from '../nav/history';
+import { useNav } from '../nav/NavContext';
+import { findPhrase, findSetView } from '../state/catalog';
+import { formatElapsed } from '../state/clock';
+import {
+  currentPhraseId,
+  isLiked,
+  phraseProgress,
+  PhraseProgress,
+  playableIds,
+  setDurationMs,
+  setProgress,
+  sortFor,
+} from '../state/selectors';
+import { useCopy, useNow, useStore } from '../state/store';
+import type { SortKey } from '../state/types';
+import { Icon, IconName } from '../ui/Icon';
+import { PhraseRow } from '../ui/PhraseRow';
+import { progressLabel } from '../ui/progressLabel';
+import { SetCover } from '../ui/SetCover';
+import { Sheet, SheetOption } from '../ui/Sheet';
+import { useToast } from '../ui/Toast';
 
-type SortKey = 'set' | 'az' | 'due' | 'weakest';
-
-const SORTS: { id: SortKey; label: string; icon: string }[] = [
-  { id: 'set', label: 'Set order', icon: 'format_list_numbered' },
-  { id: 'az', label: 'A–Z', icon: 'sort_by_alpha' },
-  { id: 'due', label: 'Due first', icon: 'schedule' },
-  { id: 'weakest', label: 'Lowest recall first', icon: 'trending_down' },
+const SORTS: { id: SortKey; icon: IconName }[] = [
+  { id: 'set', icon: 'format_list_numbered' },
+  { id: 'az', icon: 'sort_by_alpha' },
+  { id: 'due', icon: 'schedule' },
+  { id: 'weakest', icon: 'trending_down' },
 ];
 
 const STATUS_RANK: Record<PhraseProgress['status'], number> = { due: 0, learning: 1, new: 2, learned: 3 };
 
-export function SetScreen({ setId, nav }: { setId: string; nav: Navigation }) {
+export function SetScreen({ setId }: { setId: string }) {
+  const c = useCopy();
+  const nav = useNav();
+  const { toast } = useToast();
   const { state, actions } = useStore();
   const now = useNow(30_000);
-  const currentId = useCurrentPhraseId();
-  const [sort, setSort] = useState<SortKey>('set');
   const [sortOpen, setSortOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+  const view = findSetView(state.learner, setId);
+  if (!view) return <p className="max-w-3xl mx-auto px-4 pt-8 text-body text-secondary">{c.set.notFound}</p>;
 
-  const set = getSet(setId);
-  const topic = getTopic(set.topicId);
-  const progress = setProgress(state.learner, setId, now);
-  const liked = state.learner.likedSetIds.includes(setId);
+  const sort = sortFor(state.prefs, setId);
+  const topic = view.topicId ? getTopic(view.topicId) : undefined;
+  const progress = setProgress(state.learner, view.phraseIds, now);
+  const liked = isLiked(state.learner, 'set', setId);
+  const currentId = currentPhraseId(state.player);
   const isThisSet = state.player.setId === setId;
   const playing = isThisSet && state.player.status === 'playing';
+  const duration = setDurationMs(state, view);
+  const locale = c.locale.slice(0, 2) as 'en' | 'bg' | 'ru';
 
-  const rows = phrasesOfSet(setId).map((phrase, i) => ({
-    phrase,
-    position: i + 1,
-    progress: phraseProgress(state.learner, phrase.id, now),
-  }));
+  const rows = view.phraseIds
+    .map((id, i) => ({ phrase: findPhrase(state.learner, id), position: i + 1 }))
+    .filter((r): r is { phrase: Phrase; position: number } => Boolean(r.phrase))
+    .map((r) => ({ ...r, progress: phraseProgress(state.learner, r.phrase.id, now) }));
   const sorted = [...rows].sort((a, b) => {
     switch (sort) {
       case 'az':
-        return a.phrase.target.text.localeCompare(b.phrase.target.text, a.phrase.target.lang);
+        return a.phrase.target.localeCompare(b.phrase.target, a.phrase.targetLang);
       case 'due':
         return STATUS_RANK[a.progress.status] - STATUS_RANK[b.progress.status] || a.position - b.position;
       case 'weakest':
-        return (a.progress.retention ?? -1) - (b.progress.retention ?? -1) || a.position - b.position;
+        return (a.progress.recall ?? -1) - (b.progress.recall ?? -1) || a.position - b.position;
       default:
         return a.position - b.position;
     }
   });
   const sortedIds = sorted.map((r) => r.phrase.id);
+  const dueAndNew = playableIds(state.learner, sortedIds, now);
 
   const onPlay = () => {
     if (isThisSet && playing) actions.pause();
     else if (isThisSet && currentId) actions.play();
-    else actions.load(sortedIds, setId, 0);
+    else nav.playSet(setId, { phraseIds: sortedIds });
   };
 
-  const share = async (anchor: HTMLElement) => {
-    const text = `${set.title} — ${set.subtitle}`;
+  const share = async () => {
+    const url = routeUrl({ name: 'set', id: setId, from: 'explore' });
     try {
-      if (navigator.share) await navigator.share({ title: set.title, text });
+      if (navigator.share) await navigator.share({ title: view.title, url });
       else {
-        await navigator.clipboard.writeText(text);
-        floatingChip(anchor, 'Copied', 'info');
+        await navigator.clipboard.writeText(url);
+        toast(c.set.linkCopied);
       }
-    } catch {
-      // The learner cancelled the share sheet.
+    } catch (error) {
+      // The learner cancelled the share sheet; anything else means copying failed.
+      if (!(error instanceof DOMException && error.name === 'AbortError')) toast(c.set.copyUnavailable);
     }
   };
 
   return (
     <div className="max-w-3xl mx-auto">
       <section className="px-4 pt-4 pb-5 bg-surface-container-low border-b border-surface-container-high">
-        <div className="flex gap-4 items-center">
-          <SetCover set={set} size="md" className="w-32 h-32 rounded-2xl shadow-md shrink-0" />
+        <div className="flex flex-wrap gap-4 items-center">
+          <SetCover set={view} size="md" className="w-32 h-32 rounded-2xl shadow-md shrink-0" />
           <div className="min-w-0">
-            {topic && (
-              <p className="text-xs font-semibold text-secondary flex items-center gap-1">
-                <span aria-hidden="true" className="material-symbols-outlined text-[16px]">{topic.icon}</span>
-                {topic.title}
-              </p>
-            )}
-            <h1 className="font-serif text-[28px] font-bold leading-tight">{set.title}</h1>
-            <p className="text-sm text-secondary">{set.subtitle}</p>
+            <p className="text-label font-semibold text-secondary flex flex-wrap items-center gap-1">
+              {view.kind === 'own' ? (
+                <>
+                  <Icon name="edit_note" className="text-icon-xs" />
+                  {c.set.own}
+                </>
+              ) : (
+                topic && (
+                  <>
+                    <Icon name={topic.icon as IconName} className="text-icon-xs" />
+                    {topic.title[locale]}
+                    {view.level && <span className="ml-1 px-1.5 rounded-md bg-surface-container-high">{view.level}</span>}
+                  </>
+                )
+              )}
+            </p>
+            <h1 className="font-serif text-display font-bold leading-tight [overflow-wrap:anywhere]">{view.title}</h1>
+            {view.content && <p className="text-body text-secondary">{view.content.subtitle[locale]}</p>}
           </div>
         </div>
-        <p className="text-sm text-secondary mt-4">
-          {progress.total} phrases · {progress.learned} learned
-          {progress.due > 0 ? ` · ${progress.due} due` : ''}
+        <p className="text-body text-secondary mt-4">
+          {c.set.summary(progress.total, progress.learned, progress.due)}
+          {duration !== null && ` · ${c.set.duration(formatElapsed(duration))}`}
         </p>
-        <div className="flex items-center gap-1 mt-2">
+        <div className="flex flex-wrap items-center gap-1 mt-2">
           <button
             type="button"
-            aria-label={liked ? 'Remove set from your library' : 'Add set to your library'}
+            aria-label={liked ? c.set.unlike : c.set.like}
             aria-pressed={liked}
-            onClick={() => actions.toggleLikeSet(setId)}
+            onClick={() => actions.toggleLike('set', setId)}
             className="w-11 h-11 -ml-2 flex items-center justify-center rounded-full text-primary-container active:bg-surface-container"
           >
-            <span aria-hidden="true" className={`material-symbols-outlined text-[26px] ${liked ? 'material-symbols-fill' : ''}`}>favorite</span>
+            <Icon name="favorite" fill={liked} className="text-icon-lg" />
           </button>
-          <button
-            type="button"
-            aria-label="More options"
-            onClick={() => setMoreOpen(true)}
-            className="w-11 h-11 flex items-center justify-center rounded-full text-secondary active:bg-surface-container"
-          >
-            <span aria-hidden="true" className="material-symbols-outlined text-[26px]">more_horiz</span>
+          <button type="button" aria-label={c.common.moreOptions} onClick={() => setMoreOpen(true)} className="w-11 h-11 flex items-center justify-center rounded-full text-secondary active:bg-surface-container">
+            <Icon name="more_horiz" className="text-icon-lg" />
           </button>
           <span className="flex-1" />
           <button
             type="button"
-            aria-label="Shuffle"
-            aria-pressed={state.player.shuffle}
-            onClick={actions.toggleShuffle}
-            className={`w-11 h-11 flex items-center justify-center rounded-full active:bg-surface-container ${
-              state.player.shuffle ? 'text-primary-container' : 'text-secondary'
-            }`}
+            aria-label={c.set.shufflePlay}
+            onClick={() => nav.playSet(setId, { phraseIds: sortedIds, shuffle: true })}
+            className="w-11 h-11 flex items-center justify-center rounded-full text-secondary active:bg-surface-container"
           >
-            <span aria-hidden="true" className="material-symbols-outlined text-[26px]">shuffle</span>
+            <Icon name="shuffle" className="text-icon-lg" />
           </button>
           <button
             type="button"
-            aria-label={playing ? `Pause ${set.title}` : `Play ${set.title}`}
+            aria-label={playing ? c.set.pauseAll(view.title) : c.set.playAll(view.title)}
             onClick={onPlay}
-            className="w-14 h-14 rounded-full bg-primary-container text-on-primary flex items-center justify-center shadow-md active:scale-95 transition-transform"
+            disabled={sortedIds.length === 0}
+            className="w-14 h-14 rounded-full bg-primary-container text-on-primary flex items-center justify-center shadow-md active:scale-95 transition-transform disabled:opacity-40"
           >
-            <span aria-hidden="true" className="material-symbols-outlined material-symbols-fill text-[34px]">{playing ? 'pause' : 'play_arrow'}</span>
+            <Icon name={playing ? 'pause' : 'play_arrow'} fill className="text-icon-2xl" />
           </button>
+        </div>
+        <div className="flex flex-wrap items-center justify-between gap-2 mt-2">
+          <p className="text-label text-secondary">{c.set.playsIn(c.set.sort[sort])}</p>
+          {dueAndNew.length > 0 && dueAndNew.length < sortedIds.length && (
+            <button
+              type="button"
+              onClick={() => nav.playSet(setId, { phraseIds: dueAndNew })}
+              className="min-h-11 px-4 rounded-full bg-surface-container-high text-on-surface text-body font-semibold flex items-center gap-1.5"
+            >
+              <Icon name="play_arrow" fill className="text-icon-md" />
+              {c.set.playDueNew(dueAndNew.length)}
+            </button>
+          )}
         </div>
       </section>
 
       <section className="px-2 pt-3" aria-labelledby="phrases-heading">
         <div className="flex items-center justify-between px-2 mb-1">
-          <h2 id="phrases-heading" className="font-serif text-xl font-bold">Phrases</h2>
-          <button
-            type="button"
-            onClick={() => setSortOpen(true)}
-            className="min-h-11 px-3 -mr-2 rounded-full text-sm font-semibold text-primary-container flex items-center gap-1 active:bg-surface-container"
-          >
-            <span aria-hidden="true" className="material-symbols-outlined text-[18px]">sort</span>
-            {SORTS.find((s) => s.id === sort)!.label}
+          <h2 id="phrases-heading" className="font-serif text-heading font-bold">{c.set.phrasesHeading}</h2>
+          <button type="button" onClick={() => setSortOpen(true)} className="min-h-11 px-3 -mr-2 rounded-full text-body font-semibold text-primary-container flex items-center gap-1 active:bg-surface-container">
+            <Icon name="sort" className="text-icon-sm" />
+            {c.set.sort[sort]}
           </button>
         </div>
-        <ul>
-          {sorted.map(({ phrase, position, progress: p }, i) => {
-            const isCurrent = isThisSet && currentId === phrase.id;
-            return (
-              <li key={phrase.id}>
-                <PhraseRow
-                  phrase={phrase}
-                  leading={String(position)}
-                  detail={progressLabel(p, now)}
-                  isCurrent={isCurrent}
-                  isPlaying={isCurrent && playing}
-                  onPlay={() => actions.load(sortedIds, setId, i)}
-                  onMore={() => nav.showDetails(phrase.id)}
-                />
-              </li>
-            );
-          })}
-        </ul>
+        {sorted.length === 0 ? (
+          <p className="px-2 py-3 text-body text-secondary">{c.set.ownEmpty}</p>
+        ) : (
+          <ul>
+            {sorted.map(({ phrase, position, progress: p }, i) => {
+              const isCurrent = isThisSet && currentId === phrase.id;
+              return (
+                <li key={phrase.id}>
+                  <PhraseRow
+                    phrase={phrase}
+                    leading={String(position)}
+                    detail={progressLabel(c, p, now)}
+                    isCurrent={isCurrent}
+                    isPlaying={isCurrent && playing}
+                    onPlay={() => nav.playSet(setId, { phraseIds: sortedIds, startIndex: i })}
+                    onMore={() => nav.showDetails(phrase.id, view.kind === 'own' ? { ownSetId: setId } : {})}
+                  />
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </section>
 
-      <Sheet open={sortOpen} title="Sort phrases" onClose={() => setSortOpen(false)}>
-        <div role="radiogroup" aria-label="Sort phrases">
+      <Sheet open={sortOpen} title={c.set.sortTitle} onClose={() => setSortOpen(false)}>
+        <div role="radiogroup" aria-label={c.set.sortTitle}>
           {SORTS.map((s) => (
             <SheetOption
               key={s.id}
               icon={s.icon}
-              label={s.label}
+              label={c.set.sort[s.id]}
               selected={sort === s.id}
               onClick={() => {
-                setSort(s.id);
+                actions.setPrefs({ sortBySet: { ...state.prefs.sortBySet, [setId]: s.id } });
                 setSortOpen(false);
               }}
             />
@@ -183,19 +218,50 @@ export function SetScreen({ setId, nav }: { setId: string; nav: Navigation }) {
         </div>
       </Sheet>
 
-      <Sheet open={moreOpen} title={set.title} onClose={() => setMoreOpen(false)}>
+      <Sheet open={moreOpen} title={view.title} onClose={() => setMoreOpen(false)}>
         <SheetOption
-          icon="queue_music"
-          label="Add to queue"
-          onClick={(e) => {
-            actions.enqueue(sortedIds, setId);
-            floatingChip(e.currentTarget, 'Added to queue', 'info');
+          icon="queue_play_next"
+          label={c.set.playNext}
+          onClick={() => {
+            actions.enqueue(sortedIds, setId, 'next');
+            toast(c.set.addedNext);
             setMoreOpen(false);
           }}
         />
-        <SheetOption icon="share" label="Share" onClick={(e) => share(e.currentTarget)} />
+        <SheetOption
+          icon="queue_music"
+          label={c.set.addToQueue}
+          onClick={() => {
+            actions.enqueue(sortedIds, setId, 'end');
+            toast(c.set.addedEnd);
+            setMoreOpen(false);
+          }}
+        />
+        <SheetOption icon="share" label={c.set.share} onClick={() => void share()} />
+        {view.kind === 'own' && (
+          <>
+            <SheetOption
+              icon="edit"
+              label={c.set.rename}
+              onClick={() => {
+                setMoreOpen(false);
+                nav.createSet([], setId);
+              }}
+            />
+            <SheetOption
+              icon="delete"
+              label={c.set.delete}
+              tone="danger"
+              onClick={() => {
+                actions.deleteSet(setId);
+                setMoreOpen(false);
+                toast(c.set.deleted);
+                nav.go({ name: 'library', view: 'ownSets' });
+              }}
+            />
+          </>
+        )}
       </Sheet>
     </div>
   );
 }
-
