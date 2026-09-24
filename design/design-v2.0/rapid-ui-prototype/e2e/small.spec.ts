@@ -165,3 +165,12 @@ test.describe('with the on-screen keyboard up (iOS overlays it)', () => {
     expect(english.y + english.height).toBeLessThanOrEqual(844 - 300);
   });
 });
+
+test('a long press selects no button label, while phrases stay selectable', async ({ page }) => {
+  await page.goto('/#/set/set-cafe?from=explore');
+  const button = page.getByRole('button', { name: /^Play due and new/ });
+  expect(await button.evaluate((e) => getComputedStyle(e).userSelect)).toBe('none');
+  await page.getByRole('button', { name: /^Details for/ }).first().click();
+  const phrase = page.getByRole('dialog').getByText('Me pone un cortado, por favor', { exact: true });
+  expect(await phrase.evaluate((e) => getComputedStyle(e).userSelect)).not.toBe('none');
+});

@@ -117,6 +117,17 @@
     background-color: var(--color-surface);
     color: var(--color-on-surface);
     overscroll-behavior-y: none;
+    /* Controls have their own pressed states; the system's grey tap flash doubles them. */
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* A long press on a button (holding a drag handle, a swipe that starts slowly)
+     shouldn't select its label. Phrases and notes stay selectable to copy. */
+  button,
+  [role='button'] {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
   }
 
   /* Keyboard focus and scroll-into-view stop clear of the fixed top bar and of the
