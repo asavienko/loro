@@ -157,7 +157,7 @@ function Shell() {
   const [details, setDetails] = useState<{ phraseId: string; ownSetId?: string } | null>(null);
   const [addTo, setAddTo] = useState<string[] | null>(null);
   const [create, setCreate] = useState<{ phraseIds: string[]; rename?: string } | null>(null);
-  const [phraseForm, setPhraseForm] = useState<{ editId?: string } | null>(null);
+  const [phraseForm, setPhraseForm] = useState<{ editId?: string; target?: string } | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [summaryOpen, setSummaryOpen] = useState(false);
 
@@ -205,7 +205,7 @@ function Shell() {
       openSummary: () => setSummaryOpen(true),
       showDetails: (phraseId, context = {}) => setDetails({ phraseId, ...context }),
       addToSet: (phraseIds) => setAddTo(phraseIds),
-      addPhrase: (editId) => setPhraseForm({ editId }),
+      addPhrase: (options = {}) => setPhraseForm(options),
       createSet: (phraseIds = [], rename) => setCreate({ phraseIds, rename }),
       openSettings: () => setSettingsOpen(true),
     }),

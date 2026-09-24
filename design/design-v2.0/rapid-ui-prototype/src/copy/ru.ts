@@ -91,6 +91,7 @@ export function makeRu(n: Plural): Copy {
       phrases,
       noPhrases: (q) => `Нет фраз по запросу «${q}».`,
       noSets: 'Нет подходящих наборов.',
+      addAsOwn: (q) => `Добавить «${q}» как свою фразу`,
       removeFilter: (label) => `Убрать фильтр: ${label}`,
       clearFilters: 'Сбросить фильтры',
       quickPlay: (title) => `Играть «${title}»`,

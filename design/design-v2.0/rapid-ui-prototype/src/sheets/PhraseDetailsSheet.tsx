@@ -123,7 +123,7 @@ function PhraseDetails({ phraseId, ownSetId, onClose }: { phraseId: string; ownS
             label={c.phrase.edit}
             onClick={() => {
               onClose();
-              nav.addPhrase(phrase.id);
+              nav.addPhrase({ editId: phrase.id });
             }}
           />
         )}

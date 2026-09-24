@@ -202,3 +202,13 @@ test('reorder phrases in your own set', async ({ page }) => {
   // Fourth of five now, one place up from last.
   await expect(page.getByRole('main').getByRole('listitem').nth(3)).toContainText('Sin gluten, por favor');
 });
+
+test('a search with no phrase offers to add it as your own', async ({ page }) => {
+  await page.goto('/#/explore');
+  await page.getByRole('searchbox').fill('¿Hay wifi?');
+  await page.getByRole('button', { name: 'Add “¿Hay wifi?” as your phrase' }).click();
+  await expect(page.getByLabel('In Spanish')).toHaveValue('¿Hay wifi?');
+  await page.getByLabel('In English').fill('Is there wifi?');
+  await page.getByRole('button', { name: 'Add phrase' }).click();
+  await expect(page.getByRole('button', { name: 'Play ¿Hay wifi?' })).toBeVisible();
+});
