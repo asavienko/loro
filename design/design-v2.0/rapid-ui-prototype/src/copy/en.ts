@@ -230,6 +230,7 @@ export function makeEn(n: Plural) {
       audioSilent: 'Speech stopped before the phrase played. Press Play to try again.',
       silent: 'Speech stopped — press Play',
       voice: (name: string) => `Voice: ${name}`,
+      changeVoice: (name: string) => `Voice: ${name}. Change voice`,
       hide: 'Tap to reveal',
     },
     toast: {

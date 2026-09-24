@@ -377,3 +377,11 @@ test('the learner can choose the voice for a language', async ({ page }) => {
   await page.getByRole('button', { name: 'Ana: settings' }).click();
   await expect(page.getByRole('combobox', { name: 'English', exact: true })).toHaveCount(0);
 });
+
+test("the player's voice line leads to the voice picker", async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: /^Play \d+ phrases/ }).first().click();
+  await page.getByRole('button', { name: /^Now playing:/ }).click();
+  await page.getByRole('button', { name: 'Voice: Test Español. Change voice' }).click();
+  await expect(page.getByRole('combobox', { name: 'Spanish', exact: true })).toBeVisible();
+});

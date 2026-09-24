@@ -1,6 +1,6 @@
 import { motion, PanInfo, useDragControls } from 'motion/react';
 import { PointerEvent, useRef, useState } from 'react';
-import { voiceName } from '../audio/speech';
+import { voiceName, voicesFor } from '../audio/speech';
 import { easyCue, gentleCue } from '../audio/cues';
 import { languageLabel, languageName } from '../copy';
 import { getLanguage, Phrase } from '../content';
@@ -153,7 +153,20 @@ export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps
                   <HiddenPhrase text={phrase.target} label={c.player.hidden(targetName)} className="font-serif italic text-display-sm font-bold leading-snug" />
                 )}
                 <p lang={prompt.lang} className="text-body text-secondary">{prompt.text}</p>
-                {voice && !phrase.audio && <p className="text-label text-on-surface-variant mt-0.5">{c.player.voice(voice)}</p>}
+                {voice && !phrase.audio && voicesFor(phrase.targetLang).length > 1 ? (
+                  // Where there's a choice, the voice line leads to Settings' voice picker.
+                  <button
+                    type="button"
+                    onClick={nav.openSettings}
+                    aria-label={c.player.changeVoice(voice)}
+                    className="min-h-11 -my-2 inline-flex items-center gap-0.5 text-label text-on-surface-variant underline decoration-dotted underline-offset-2"
+                  >
+                    {c.player.voice(voice)}
+                    <Icon name="chevron_right" className="text-icon-xs" />
+                  </button>
+                ) : (
+                  voice && !phrase.audio && <p className="text-label text-on-surface-variant mt-0.5">{c.player.voice(voice)}</p>
+                )}
               </div>
               <div className="flex flex-col shrink-0 short:flex-row short:-ml-2 short:order-first">
                 <button
