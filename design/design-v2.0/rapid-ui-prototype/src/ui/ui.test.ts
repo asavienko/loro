@@ -8,7 +8,7 @@ import { ICON_NAMES } from './icons';
 // PhraseText and ExploreScreen import React components; their pure helpers are
 // loaded lazily so this file stays a plain node test.
 const { tokenize } = await import('./PhraseText');
-const { fold } = await import('../screens/ExploreScreen');
+const { fold, matchesWords, queryWords } = await import('../screens/ExploreScreen');
 
 describe('icons', () => {
   it('the local font holds exactly the registry', () => {
@@ -52,6 +52,14 @@ describe('search', () => {
   it('folds case and accents without changing length', () => {
     assert.equal(fold('¿Dónde ESTÁ?'), '¿donde esta?');
     assert.equal(fold('Сметката').length, 'Сметката'.length);
+  });
+
+  it('matches every word in any order, ignoring punctuation', () => {
+    assert.deepEqual(queryWords('  ¿Dónde, ESTÁ? '), ['donde', 'esta']);
+    assert.ok(matchesWords('¿Dónde está el metro?', queryWords('metro donde')));
+    assert.ok(matchesWords('La cuenta, por favor', queryWords('la cuenta por favor')));
+    assert.ok(!matchesWords('La cuenta, por favor', queryWords('cuenta tapas')));
+    assert.ok(matchesWords('Ещё одну', queryWords('еще')));
   });
 });
 
