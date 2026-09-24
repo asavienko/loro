@@ -31,3 +31,21 @@ test('the player fits, and Pause is reachable', async ({ page }) => {
   await pause.click();
   await expect(player.getByRole('button', { name: 'Play', exact: true })).toBeVisible();
 });
+
+test.describe('phone landscape (568×320)', () => {
+  test.use({ viewport: { width: 568, height: 320 } });
+
+  test('Pause and the ratings are reachable without scrolling', async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: /^Play \d+ phrases/ }).first().click();
+    await page.getByRole('button', { name: /^Now playing:/ }).click();
+    await page.waitForTimeout(700);
+    const player = page.getByRole('dialog', { name: 'Now playing' });
+    for (const name of ['Pause', 'Next phrase']) {
+      const box = (await player.getByRole('button', { name, exact: true }).boundingBox())!;
+      expect(box.y + box.height, `${name} is visible`).toBeLessThanOrEqual(320);
+    }
+    const easy = (await player.getByRole('button', { name: /^Easy/ }).boundingBox())!;
+    expect(easy.y + easy.height, 'Easy is visible').toBeLessThanOrEqual(320);
+  });
+});
