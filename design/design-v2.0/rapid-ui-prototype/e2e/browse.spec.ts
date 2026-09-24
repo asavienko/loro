@@ -111,3 +111,14 @@ test.describe('sets you make', () => {
     await expect(page.getByText('This set isn’t available.')).toBeVisible();
   });
 });
+
+test('a save that fails is announced, not silently dropped', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => {
+    Storage.prototype.setItem = () => {
+      throw new DOMException('full', 'QuotaExceededError');
+    };
+  });
+  await page.getByRole('button', { name: 'Play 5 phrases' }).click();
+  await expect(page.getByRole('status')).toHaveText('This device’s storage for Loro is full, so new progress isn’t being saved.');
+});

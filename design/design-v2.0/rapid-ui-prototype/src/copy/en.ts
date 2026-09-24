@@ -222,6 +222,8 @@ export function makeEn(n: Plural) {
       removed: 'Removed from queue',
       cleared: 'Queue cleared',
       saved: (title: string) => `Saved as ${title}`,
+      storageFull: 'This device’s storage for Loro is full, so new progress isn’t being saved.',
+      storageUnavailable: 'This browser isn’t letting Loro save progress on this device.',
     },
     queue: {
       title: 'Queue',

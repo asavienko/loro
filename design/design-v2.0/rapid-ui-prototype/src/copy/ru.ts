@@ -212,6 +212,8 @@ export function makeRu(n: Plural): Copy {
       removed: 'Убрано из очереди',
       cleared: 'Очередь очищена',
       saved: (title) => `Сохранено как «${title}»`,
+      storageFull: 'Хранилище Loro на этом устройстве заполнено, новый прогресс не сохраняется.',
+      storageUnavailable: 'Этот браузер не даёт Loro сохранять прогресс на устройстве.',
     },
     queue: {
       title: 'Очередь',

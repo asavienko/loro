@@ -212,6 +212,8 @@ export function makeBg(n: Plural): Copy {
       removed: 'Махнато от опашката',
       cleared: 'Опашката е изчистена',
       saved: (title) => `Запазено като „${title}“`,
+      storageFull: 'Паметта на устройството за Loro е пълна, затова новият напредък не се запазва.',
+      storageUnavailable: 'Този браузър не позволява на Loro да запазва напредъка на устройството.',
     },
     queue: {
       title: 'Опашка',
