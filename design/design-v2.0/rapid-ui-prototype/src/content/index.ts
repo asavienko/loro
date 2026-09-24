@@ -62,6 +62,8 @@ export interface Phrase {
   words: PhraseJson['words'];
   notes: PhraseJson['notes'] | null;
   audio: PhraseJson['audio'] | null;
+  /** Clip lengths from content; the device's own measurements take over once it has them. */
+  durationMs: PhraseJson['durationMs'] | null;
   /** Written by the learner rather than bundled. */
   own: boolean;
 }
@@ -95,6 +97,7 @@ export const CONTENT_PHRASES: Phrase[] = phraseJson.map((p) => {
     words: p.words,
     notes: p.notes,
     audio: p.audio ?? null,
+    durationMs: p.durationMs ?? null,
     own: false,
   };
 });

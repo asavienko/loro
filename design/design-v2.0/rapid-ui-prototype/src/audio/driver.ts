@@ -8,8 +8,7 @@
 import { useEffect } from 'react';
 import { useLatest } from '../lib/useLatest';
 import { findPhrase, promptOf } from '../state/catalog';
-import { typicalMs } from '../state/memory';
-import { currentPhraseId, memoryOf } from '../state/selectors';
+import { currentPhraseId, measuredTargetMs } from '../state/selectors';
 import { useStore } from '../state/store';
 import { GAP_MS, pauseMs, RATE_HOLD_MS } from '../state/timing';
 import { turnCue } from './cues';
@@ -59,8 +58,7 @@ export function usePlaybackDriver(): void {
         break;
       case 'pause': {
         turnCue();
-        const measured = typicalMs(memoryOf(s.learner, phraseId).targetSamples);
-        playback = silence(pauseMs(measured, phrase.target, speed));
+        playback = silence(pauseMs(measuredTargetMs(s.learner, phraseId), phrase.target, speed));
         break;
       }
       case 'target':

@@ -30,6 +30,8 @@ export const phraseSchema = z.object({
     .refine((n) => Boolean(n.mnemonic || n.grammar || n.pronunciation), 'every phrase has at least one note'),
   /** Recorded clips, once the backend provides them. Absent means device speech. */
   audio: z.partialRecord(LANGUAGE_CODE, z.string().url()).optional(),
+  /** Length of each recorded clip at 1.0×, in ms, as the backend measured it. */
+  durationMs: z.partialRecord(LANGUAGE_CODE, z.number().int().positive()).optional(),
 });
 
 export const setSchema = z.object({
