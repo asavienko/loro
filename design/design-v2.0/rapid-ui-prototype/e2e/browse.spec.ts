@@ -122,3 +122,15 @@ test('a save that fails is announced, not silently dropped', async ({ page }) =>
   await page.getByRole('button', { name: 'Play 5 phrases' }).click();
   await expect(page.getByRole('status')).toHaveText('This device’s storage for Loro is full, so new progress isn’t being saved.');
 });
+
+test('reduced motion: no looping animation, sheets still open and close', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/#/set/set-cafe?from=explore');
+  await page.getByRole('button', { name: 'Play Café & Mañanas' }).click();
+  const iterations = await page.locator('.eq-bar-1').first().evaluate((el) => getComputedStyle(el).animationIterationCount);
+  expect(iterations).toBe('1');
+  await page.getByRole('button', { name: 'Details for La cuenta, por favor' }).click();
+  await expect(page.getByRole('dialog', { name: 'Café & Mañanas' })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog', { name: 'Café & Mañanas' })).toHaveCount(0);
+});
