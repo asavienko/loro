@@ -141,9 +141,11 @@ export function useBackToClose(open: boolean, onClose: () => void): void {
       if (at === -1) return; // Closed by Back: its entry is already gone.
       layers.splice(at, 1);
       if ((window.history.state as { layer?: number } | null)?.layer === layer.id) {
-        // Popped a tick later, so an overlay opening now can take the entry over instead.
+        // Popped once this render's effects have run (a microtask), so an overlay opening in
+        // the same commit can take the entry over instead. Any later and a reload or link
+        // right after closing would be undone by this back().
         pendingBack = layer.id;
-        setTimeout(() => {
+        queueMicrotask(() => {
           if (pendingBack !== layer.id) return settled();
           pendingBack = null;
           // Something navigated meanwhile (a link, a typed URL): its entry is on top now, so
@@ -151,7 +153,7 @@ export function useBackToClose(open: boolean, onClose: () => void): void {
           if ((window.history.state as { layer?: number } | null)?.layer !== layer.id) return settled();
           ownPops++;
           window.history.back();
-        }, 0);
+        });
       }
     };
   }, [open, close]);
