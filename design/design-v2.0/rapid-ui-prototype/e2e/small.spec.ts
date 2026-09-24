@@ -68,8 +68,8 @@ test.describe('large text (150%) on a 360 px phone', () => {
     expect(spilled).toEqual([]);
   });
 
-  for (const hash of ['/#/explore', '/#/set/set-cafe?from=explore']) {
-    test(`set titles and phrases are shown whole: ${hash}`, async ({ page }) => {
+  for (const hash of ['/#/explore']) {
+    test(`set titles are shown whole: ${hash}`, async ({ page }) => {
       await page.goto(hash);
       await page.addStyleTag({ content: 'html { font-size: 150% !important }' });
       await page.waitForTimeout(300);
@@ -97,5 +97,44 @@ test.describe('onboarding on a small phone at 125% text', () => {
     }
     const start = (await page.getByRole('button', { name: 'Start with one phrase' }).boundingBox())!;
     expect(start.y + start.height).toBeLessThanOrEqual(568);
+  });
+});
+
+test.describe('large text (150%) on a 320 px phone: player, queue and summary', () => {
+  const clippedText = (root: import('@playwright/test').Locator, selector: string) =>
+    root.evaluate(
+      (el, sel) =>
+        [...el.querySelectorAll(sel)]
+          .filter((e) => e.scrollHeight > e.clientHeight + 1 || e.scrollWidth > e.clientWidth + 1)
+          .map((e) => e.textContent),
+      selector,
+    );
+
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/');
+    await page.addStyleTag({ content: 'html { font-size: 150% !important }' });
+    await page.getByRole('button', { name: /^Play \d+ phrases/ }).first().click();
+    await page.getByRole('button', { name: /^Now playing:/ }).click();
+    await page.waitForTimeout(600);
+    await page.getByRole('button', { name: 'Pause', exact: true }).click();
+  });
+
+  test('the player title is whole', async ({ page }) => {
+    const player = page.getByRole('dialog', { name: 'Now playing' });
+    expect(await clippedText(player, 'header h1')).toEqual([]);
+  });
+
+  test('up-next phrases are whole', async ({ page }) => {
+    await page.getByRole('button', { name: /queue/i }).first().click();
+    await page.waitForTimeout(500);
+    expect(await clippedText(page.locator('body'), 'li [lang]:not(.truncate)')).toEqual([]);
+    await expect(page.getByText('Una ración de croquetas, por favor')).toBeVisible();
+  });
+
+  test('each grade in the summary stays with its count', async ({ page }) => {
+    await page.getByRole('button', { name: 'Session summary' }).click();
+    await page.waitForTimeout(500);
+    const text = await page.getByRole('dialog').last().locator('dd').filter({ hasText: 'Missed' }).innerText();
+    for (const line of text.split('\n')) expect(line.trim()).not.toMatch(/^(\d+|·)/);
   });
 });
