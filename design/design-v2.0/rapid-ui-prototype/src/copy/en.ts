@@ -88,7 +88,7 @@ export function makeEn(n: Plural) {
       empty: 'Nothing played yet.',
       mixed: 'Mixed queue',
       run: (phrases: number, points: number) =>
-        `${n(phrases, { one: `${phrases} phrase`, other: `${phrases} phrases` })} · +${points}`,
+        `${n(phrases, { one: `${phrases} phrase`, other: `${phrases} phrases` })} · +${points} pts`,
     },
     explore: {
       search: 'Search phrases, notes and topics',

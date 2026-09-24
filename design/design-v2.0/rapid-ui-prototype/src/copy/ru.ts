@@ -79,7 +79,7 @@ export function makeRu(n: Plural): Copy {
       title: 'История',
       empty: 'Пока ничего не прослушано.',
       mixed: 'Смешанная очередь',
-      run: (p, points) => `${phrases(p)} · +${points}`,
+      run: (p, points) => `${phrases(p)} · +${points} очк.`,
     },
     explore: {
       search: 'Поиск по фразам, заметкам и темам',
