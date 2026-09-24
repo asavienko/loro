@@ -3,7 +3,7 @@ import { describe, it } from 'node:test';
 import { transition } from './machine';
 import { RATING_WINDOW_MS } from './memory';
 import { mergeLearner } from './merge';
-import { parseState, sanitizeState, serializeState } from './persistence';
+import { parseState, sanitizeState, serializeState, syncWithServer } from './persistence';
 import { memoryOf, points } from './selectors';
 import { done, fresh, load, MINUTE, run, T0 } from './testing';
 import type { Device } from './types';
@@ -101,5 +101,33 @@ describe('merge', () => {
     const renamed = run(a, { type: 'SET_PROFILE', profile: { name: 'Bea' }, now: T0 + 3 * MINUTE });
     assert.equal(mergeLearner(a.learner, renamed.learner).profile.name, 'Bea');
     assert.equal(mergeLearner(renamed.learner, a.learner).profile.name, 'Bea');
+  });
+});
+
+describe('server sync', () => {
+  it('fetches, merges and sends back the merge; a 404 means a first sync', async () => {
+    const local = run(fresh(), { type: 'TOGGLE_LIKE', kind: 'set', id: 'set-cafe', now: T0 });
+    const remote = run(fresh(), { type: 'TOGGLE_LIKE', kind: 'set', id: 'set-taxi', now: T0 + 1 });
+    const sent: unknown[] = [];
+    const original = globalThis.fetch;
+    let serverHas: unknown = remote.learner;
+    globalThis.fetch = (async (_url: string, init?: RequestInit) => {
+      if (init?.method === 'PUT') {
+        sent.push(JSON.parse(String(init.body)));
+        return new Response(null, { status: 204 });
+      }
+      return serverHas === null ? new Response(null, { status: 404 }) : Response.json(serverHas);
+    }) as typeof fetch;
+    try {
+      const merged = await syncWithServer(local.learner, 'https://example.test/sync');
+      assert.equal(merged.likes['set:set-cafe'].liked, true);
+      assert.equal(merged.likes['set:set-taxi'].liked, true);
+      assert.deepEqual(sent[0], merged);
+      serverHas = null;
+      const first = await syncWithServer(local.learner, 'https://example.test/sync');
+      assert.equal(first, local.learner);
+    } finally {
+      globalThis.fetch = original;
+    }
   });
 });
