@@ -62,8 +62,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       <div className="toast-layer fixed inset-x-3 bottom-[calc(8.5rem+env(safe-area-inset-bottom))] z-[70] flex justify-center pointer-events-none">
         <AnimatePresence>
           {item && (
+            // One element whatever the message: a new toast replaces the text in place. Keyed per
+            // toast, each replaced one lingered until its exit animation ran, and with animation
+            // frames stalled (a background tab) they piled up.
             <motion.div
-              key={item.id}
+              key="toast"
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 12 }}
