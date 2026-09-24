@@ -437,7 +437,8 @@ export function recallBuckets(learner: LearnerState, now: number): RecallBucket[
   for (const p of coursePhrases(learner)) {
     const r = recallNow(memoryOf(learner, p.id), now);
     if (r === null) continue;
-    const pct = r * 100;
+    // Rounded as each phrase's row shows it, so "90%" isn't counted under 80–90.
+    const pct = Math.round(r * 100);
     const bucket = buckets.find((b) => pct >= b.from) ?? buckets[buckets.length - 1];
     bucket.count++;
   }

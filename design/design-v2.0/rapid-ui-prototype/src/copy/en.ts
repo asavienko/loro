@@ -354,7 +354,7 @@ export function makeEn(n: Plural) {
       phrases: 'Phrases',
       repetitions: 'Repetitions',
       ratings: 'Ratings',
-      pending: (count: number) => `${count} still changeable`,
+      pending: (count: number) => `${count} still changeable: their points and next review count once the five minutes are up`,
       points: 'Points earned',
       passes: 'Times through the queue',
       nextDue: 'Next review',
