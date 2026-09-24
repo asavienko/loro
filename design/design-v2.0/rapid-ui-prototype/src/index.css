@@ -119,6 +119,8 @@
     overscroll-behavior-y: none;
     /* Controls have their own pressed states; the system's grey tap flash doubles them. */
     -webkit-tap-highlight-color: transparent;
+    /* Light only for now (see index.html): native controls follow the page, not the system. */
+    color-scheme: light;
   }
 
   /* A long press on a button (holding a drag handle, a swipe that starts slowly)

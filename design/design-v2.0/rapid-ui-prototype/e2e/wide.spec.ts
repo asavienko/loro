@@ -92,3 +92,13 @@ test.describe('high contrast (forced colours)', () => {
     await expectAccessible(page);
   });
 });
+
+test.describe('with a dark system theme', () => {
+  test.use({ colorScheme: 'dark' });
+  test('native controls stay light, like the page', async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Ana: settings' }).click();
+    const select = page.getByLabel('I’m learning');
+    expect(await select.evaluate((e) => getComputedStyle(e).colorScheme)).toBe('light');
+  });
+});

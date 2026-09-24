@@ -7,6 +7,13 @@
     <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <meta name="theme-color" content="#fcf9f4" />
+    <!-- Light only for now: native controls (selects, scrollbars) must not turn dark on a light page. -->
+    <meta name="color-scheme" content="light" />
+    <!-- Home-screen app on iOS before 16.4 and older Android: full screen, named Loro. -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Loro" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="description" content="Learn a language by the phrase: listen, say it, hear it." />
     <meta property="og:title" content="Loro" />
     <meta property="og:description" content="Learn a language by the phrase: listen, say it, hear it." />
@@ -15,6 +22,7 @@
   </head>
   <body>
     <div id="root"></div>
+    <noscript>Loro needs JavaScript to play phrases. Turn it on in your browser settings and reload.</noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
