@@ -155,6 +155,12 @@
   }
 }
 
+/* Over the full-screen player or queue, toasts sit at the top, clear of the transport. */
+body:has([role="dialog"][aria-modal="true"]) .toast-layer {
+  top: calc(4rem + env(safe-area-inset-top));
+  bottom: auto;
+}
+
 /* Horizontal shelves scroll by touch; their scrollbar is only noise. */
 .scroll-row {
   scrollbar-width: none;

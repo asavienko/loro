@@ -59,7 +59,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       <div role="status" aria-live="polite" className="sr-only">
         {message}
       </div>
-      <div className="fixed inset-x-3 bottom-[calc(8.5rem+env(safe-area-inset-bottom))] z-[70] flex justify-center pointer-events-none">
+      <div className="toast-layer fixed inset-x-3 bottom-[calc(8.5rem+env(safe-area-inset-bottom))] z-[70] flex justify-center pointer-events-none">
         <AnimatePresence>
           {item && (
             <motion.div

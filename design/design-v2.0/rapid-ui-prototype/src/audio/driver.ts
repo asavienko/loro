@@ -77,7 +77,7 @@ export function usePlaybackDriver(): void {
         actions.phaseDone(cycle, { unconfirmed: true });
       } else {
         const spoken = phase === 'native' || phase === 'target';
-        actions.phaseDone(cycle, spoken ? { measuredMs: Math.round(result.ms * speed) } : {});
+        actions.phaseDone(cycle, spoken && result.ms !== null ? { measuredMs: Math.round(result.ms * speed) } : {});
       }
     });
     return () => {

@@ -15,6 +15,11 @@ function context(): AudioContext | null {
   }
 }
 
+/** Called from the first user gesture (unlock.ts), so later cues can sound. */
+export function resumeAudio(): void {
+  context();
+}
+
 function vibrate(pattern: number | number[]) {
   try {
     navigator.vibrate?.(pattern);
