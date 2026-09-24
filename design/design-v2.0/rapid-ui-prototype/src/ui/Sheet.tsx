@@ -76,10 +76,12 @@ interface SheetOptionProps {
   selected?: boolean;
   tone?: 'default' | 'danger';
   disabled?: boolean;
+  /** A quieter second line. */
+  detail?: string;
 }
 
 /** A 48px tappable row inside a sheet. */
-export function SheetOption({ icon, label, onClick, selected, tone = 'default', disabled }: SheetOptionProps) {
+export function SheetOption({ icon, label, onClick, selected, tone = 'default', disabled, detail }: SheetOptionProps) {
   const isChoice = selected !== undefined;
   return (
     <button
@@ -93,7 +95,10 @@ export function SheetOption({ icon, label, onClick, selected, tone = 'default', 
       }`}
     >
       <Icon name={icon} className={`text-icon ${tone === 'danger' ? '' : 'text-secondary'}`} />
-      <span className={`flex-1 text-row ${selected ? 'font-bold' : 'font-medium'}`}>{label}</span>
+      <span className={`flex-1 min-w-0 text-row ${selected ? 'font-bold' : 'font-medium'}`}>
+        {label}
+        {detail && <span className="block text-label font-normal text-secondary">{detail}</span>}
+      </span>
       {selected && <Icon name="check" className="text-icon-md text-primary-container" />}
     </button>
   );

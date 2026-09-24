@@ -155,6 +155,7 @@ export function makeBg(n: Plural): Copy {
       newSet: 'Нов набор…',
       added: (title) => `Добавено в „${title}“`,
       already: (title) => `Вече е в „${title}“`,
+      alreadyHere: 'Вече е в този набор',
       none: 'Все още нямате свои набори.',
     },
     createSet: {
