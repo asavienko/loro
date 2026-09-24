@@ -370,4 +370,13 @@ describe('clearing the queue', () => {
     assert.equal(currentPhraseId(s.player), 'taxi-01');
     assert.deepEqual(upNextIds(s.player), cleared);
   });
+
+  it("a removed phrase's undo keeps its distance ahead even after playback moved on", () => {
+    let s = load(fresh());
+    // cafe-04 was two places ahead of cafe-01 (up next: 02, 03, 04, 05).
+    s = run(s, { type: 'REMOVE_FROM_QUEUE', position: 3 }, { type: 'NEXT', now: T0 + 1 });
+    assert.equal(currentPhraseId(s.player), 'cafe-02');
+    s = run(s, { type: 'RESTORE_UP_NEXT', phraseIds: ['cafe-04'], offset: 2 });
+    assert.deepEqual(upNextIds(s.player), ['cafe-03', 'cafe-05', 'cafe-04']);
+  });
 });
