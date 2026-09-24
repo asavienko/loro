@@ -202,4 +202,13 @@ describe('loading', () => {
     assert.equal(state.prefs.speed, 0.8, 'device settings come from the closing page');
     assert.deepEqual(loadState({ saved: null, pending: null }, () => fresh()).learner, fresh().learner);
   });
+
+  it('merges progress left in localStorage beside an IndexedDB copy', () => {
+    const indexedDb = run(fresh(), { type: 'TOGGLE_LIKE', kind: 'set', id: 'set-taxi', now: T0 + 5 });
+    // Saved in a session where IndexedDB didn't open.
+    const localOnly = run(fresh(), { type: 'TOGGLE_LIKE', kind: 'set', id: 'set-cafe', now: T0 + 9 });
+    const state = loadState({ saved: serializeState(indexedDb), pending: null, stray: serializeState(localOnly) }, () => fresh());
+    assert.equal(state.learner.likes['set:set-taxi'].liked, true);
+    assert.equal(state.learner.likes['set:set-cafe'].liked, true, 'the fallback session’s progress is not lost');
+  });
 });

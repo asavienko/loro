@@ -5,6 +5,7 @@ import { OWN_SET_PREFIX } from './catalog';
 import { clock } from './clock';
 import { initialState } from './initial';
 import { AppEvent, transition } from './machine';
+import { mergeLearner } from './merge';
 import { flushState, loadState, parseState, saveState } from './persistence';
 import { onOtherTabSave, readRaw, Stored } from './storage';
 import { currentPhraseId } from './selectors';
@@ -112,7 +113,12 @@ export function StoreProvider({ children, stored }: { children: ReactNode; store
       onOtherTabSave(() => {
         void readRaw().then((json) => {
           const remote = json ? parseState(json, latest.current.device) : null;
-          if (remote) actions.mergeRemote(remote.learner);
+          if (!remote) return;
+          actions.mergeRemote(remote.learner);
+          // Two tabs saving at once: the other's write may have been based on a copy from
+          // before ours, and dropped our progress. If storage lacks anything we have, save
+          // again (a save merges what's stored), or it would be lost when this tab closes.
+          if (mergeLearner(remote.learner, latest.current.learner) !== remote.learner) void saveState(latest.current);
         });
       }),
     [actions, latest],
