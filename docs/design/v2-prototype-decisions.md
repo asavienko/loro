@@ -29,8 +29,9 @@ Requirement IDs touched: `P3-01` (continuous playback), `P2-24` (difficulty driv
 ## Engineering the app can reuse
 
 - **Scheduling through core-rs.** The prototype calls `fsrs_initialize`/`fsrs_review` through the
-  synchronous browser WASM (`packages/core-rs/browser`). It keeps no scheduling maths of its own
-  beyond display retrievability, mirrored from `scheduler.rs::retrievability`.
+  synchronous browser WASM (`packages/core-rs/browser`). Memory, difficulty and learning steps are
+  the core's; display retrievability mirrors `scheduler.rs::retrievability`. The one local policy
+  is the review date (see Findings).
 - **Event-sourced learner state.** An append-only review log with device-scoped ids; memory and
   points are derived. Merge is a union of logs plus last-writer-wins per like, own item and profile.
   This matches the field-class approach of [sync-protocol.md](../architecture/sync-protocol.md).
@@ -38,11 +39,12 @@ Requirement IDs touched: `P3-01` (continuous playback), `P2-24` (difficulty driv
 
 ## Findings for Product
 
-- **The canonical 50% desired retention makes intervals about 90× stability.** In the prototype,
-  a second on-time Easy schedules the next review years away (see
-  [fsrs-model.md](../architecture/fsrs-model.md)). The introductory cap covers only the first review.
-  This is the authored policy, working as designed, but on a listening loop it may feel wrong; it
-  needs a decision before a phrase list this short ships.
+- **The canonical 50% desired retention makes intervals about 90× stability.** With it, a second
+  on-time Easy scheduled the next review years away (see
+  [fsrs-model.md](../architecture/fsrs-model.md)), which made the prototype unusable as a daily
+  loop. The prototype therefore reviews when predicted recall falls to **90%**, after the stability
+  in days, keeping the core's 50% date as the upper bound. The app keeps the authored 50% policy
+  until Product decides; this is the evidence for that decision.
 - New Spanish, Bulgarian and Russian text in the prototype (phrases, notes, glosses, UI copy)
   awaits native review, as recorded in the prototype's `content/meta.json`.
 
