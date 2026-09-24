@@ -111,7 +111,8 @@ export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps
       <div onPointerDown={startDrag} className="shrink-0 h-4 touch-none cursor-grab active:cursor-grabbing" aria-hidden="true">
         <div className="w-10 h-1 rounded-full bg-outline-variant mx-auto mt-2" />
       </div>
-      <header className="shrink-0 flex items-center gap-1 px-2 min-h-12 py-0.5 max-w-5xl w-full mx-auto">
+      {/* Same column as the body below, so the close button lines up with the content. */}
+      <header className="shrink-0 flex items-center gap-1 px-2 min-h-12 py-0.5 max-w-lg md:max-w-4xl phone-landscape:max-w-4xl w-full mx-auto">
         <HeaderButton label={c.player.close} icon="keyboard_arrow_down" onClick={onClose} />
         <div onPointerDown={startDrag} className="flex-1 min-w-0 self-stretch flex flex-col items-center justify-center touch-none">
           <h1 className="font-serif text-row font-bold text-on-surface line-clamp-2 break-words text-center max-w-full leading-tight">
