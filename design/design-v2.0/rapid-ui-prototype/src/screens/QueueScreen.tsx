@@ -245,7 +245,7 @@ function QueueItem({ item, phraseId, hintId, onPlayNow, onRemove, onMove }: Queu
       </div>
       <motion.div drag="x" dragSnapToOrigin dragElastic={0.5} onDragStart={clicks.block} onDragEnd={onSwipeEnd} className="relative flex-1 min-w-0 flex items-center bg-surface-container-low touch-pan-y">
         <button type="button" onClick={onPlayNow} aria-label={c.queue.playNow(phrase.target)} className="flex-1 min-w-0 min-h-14 px-3 py-2 text-left">
-          <span lang={phrase.targetLang} className="block font-serif italic text-row font-medium truncate">
+          <span lang={phrase.targetLang} className="font-serif italic text-row font-medium line-clamp-2 break-words">
             {phrase.target}
           </span>
           <span lang={prompt.lang} className="block text-label text-secondary truncate">{prompt.text}</span>
