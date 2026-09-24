@@ -4,6 +4,7 @@ import { describe, it } from 'node:test';
 import fc from 'fast-check';
 import { CONTENT_PHRASES } from '../content';
 import { AppEvent, transition } from './machine';
+import { sanitizeState } from './persistence';
 import { compareEntries, derive } from './memory';
 import { fresh, T0 } from './testing';
 
@@ -58,6 +59,32 @@ describe('machine invariants', () => {
         assert.ok(again.points >= 0);
       }),
       { numRuns: 150 },
+    );
+  });
+});
+
+describe('loading anything', () => {
+  it('any saved state, however broken, loads without throwing', () => {
+    const entry = fc.record({
+      id: fc.oneof(fc.string(), fc.constant('dup')),
+      at: fc.oneof(fc.integer({ min: -1e3, max: 2e12 }), fc.double(), fc.constant(Number.NaN)),
+      device: fc.string(),
+      kind: fc.constantFrom('heard', 'rated', 'carryover', 'nonsense'),
+      key: fc.constantFrom('en-GB>es-ES:cafe-01', 'en-GB>es-ES:gone-01', 'bad'),
+      phraseId: fc.constantFrom('cafe-01', 'tapas-02', 'gone-01', 'phrase-1'),
+      setId: fc.oneof(fc.constant(null), fc.string()),
+      grade: fc.constantFrom('missed', 'hard', 'easy', 'great'),
+      targetMs: fc.oneof(fc.integer(), fc.constant(null)),
+      points: fc.integer(),
+    });
+    fc.assert(
+      fc.property(fc.array(entry, { maxLength: 40 }), fc.anything(), (log, junk) => {
+        const raw = { version: 3, learner: { profile: junk, log, likes: junk, ownPhrases: junk, ownSets: junk }, pending: junk, prefs: junk, player: junk };
+        const s = sanitizeState(raw, { id: 'd', instance: 'i', seq: 0 });
+        assert.ok(s);
+        assert.ok(Number.isFinite(derive(s.learner.log).points));
+      }),
+      { numRuns: 300 },
     );
   });
 });
