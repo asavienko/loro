@@ -327,6 +327,8 @@ export interface SessionSummary {
   pendingRatings: number;
   points: number;
   passes: number;
+  /** Phrases due right now. */
+  dueNow: number;
   nextDue: { at: number; count: number } | null;
 }
 
@@ -351,6 +353,7 @@ export function sessionSummary(state: AppState, now: number): SessionSummary | n
     pendingRatings: pending.length,
     points: earned,
     passes: session.passes,
+    dueNow: duePhraseIds(state.learner, now).length,
     nextDue: nextDue(state.learner, now),
   };
 }

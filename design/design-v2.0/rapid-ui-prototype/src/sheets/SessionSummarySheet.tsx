@@ -27,7 +27,11 @@ export function SessionSummarySheet({ open, onClose }: { open: boolean; onClose:
           <div className="col-span-2 rounded-2xl bg-surface-container-low p-3">
             <dt className="text-label font-semibold text-secondary">{c.summary.nextDue}</dt>
             <dd className="text-body mt-0.5">
-              {summary.nextDue ? c.home.next(summary.nextDue.count, formatWhen(summary.nextDue.at, now, c.locale)) : c.summary.nothingDue}
+              {summary.dueNow > 0
+                ? c.home.reviewBody(summary.dueNow)
+                : summary.nextDue
+                  ? `${c.common.phrases(summary.nextDue.count)} · ${formatWhen(summary.nextDue.at, now, c.locale)}`
+                  : c.summary.nothingDue}
             </dd>
           </div>
         </dl>
