@@ -316,10 +316,17 @@ function deviceId(): string {
   }
 }
 
+/**
+ * What this tab last wrote (or loaded); if storage still holds it, no other
+ * tab has saved since and the next save needs no merge.
+ */
+let lastWritten: string | null = null;
+
 export function loadState(initial: (device: Device) => AppState): AppState {
   const device: Device = { id: deviceId(), instance: randomId(), seq: 0 };
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
+    lastWritten = saved;
     return (saved && parseState(saved, device)) || initial(device);
   } catch {
     return initial(device);
@@ -330,9 +337,6 @@ export function loadState(initial: (device: Device) => AppState): AppState {
  * Saves the state, first merging in whatever another tab saved since, so two
  * open tabs never overwrite each other's progress.
  */
-/** What this tab last wrote; if storage still holds it, no other tab has saved since. */
-let lastWritten: string | null = null;
-
 export function saveState(state: AppState): void {
   try {
     const current = localStorage.getItem(STORAGE_KEY);
