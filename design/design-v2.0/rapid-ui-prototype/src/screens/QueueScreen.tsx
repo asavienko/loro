@@ -55,7 +55,8 @@ export function QueueScreen({ onClose }: { onClose: () => void }) {
     const position = positionOf(i);
     const phraseId = upNext[i];
     actions.removeFromQueue(position);
-    toast(c.toast.removed, { action: { label: c.common.undo, run: () => actions.insertInQueue(position, phraseId) } });
+    // Undo puts it back as far ahead of the playing phrase as it was, even if playback moved on.
+    toast(c.toast.removed, { action: { label: c.common.undo, run: () => actions.restoreUpNext([phraseId], i) } });
   };
 
   const saveAsSet = () => {
