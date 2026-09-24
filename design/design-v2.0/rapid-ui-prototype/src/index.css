@@ -119,6 +119,21 @@
     overscroll-behavior-y: none;
   }
 
+  /* With a mouse or trackpad, controls answer the pointer before the click: the
+     hand cursor, and a light layer of the control's own text colour (so it works
+     on every surface without new colour values). Touch keeps its active states. */
+  @media (hover: hover) and (pointer: fine) {
+    button:not(:disabled),
+    [role='button']:not([aria-disabled='true']),
+    label:has(> input[type='radio'], > input[type='checkbox']) {
+      cursor: pointer;
+    }
+    button:not(:disabled):hover,
+    [role='button']:not([aria-disabled='true']):hover {
+      background-image: linear-gradient(color-mix(in srgb, currentColor 8%, transparent), color-mix(in srgb, currentColor 8%, transparent));
+    }
+  }
+
   ::selection {
     background-color: var(--color-primary-fixed);
     color: var(--color-on-primary-fixed);
