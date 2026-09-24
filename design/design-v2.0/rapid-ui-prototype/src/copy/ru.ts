@@ -219,6 +219,7 @@ export function makeRu(n: Plural): Copy {
       hide: 'Нажмите, чтобы показать',
     },
     toast: {
+      dismiss: 'Закрыть сообщение',
       learned: (points) => `Выучена · +${points}`,
       passComplete: 'Очередь пройдена',
       removed: 'Убрано из очереди',
@@ -293,6 +294,7 @@ export function makeRu(n: Plural): Copy {
     },
     settings: {
       title: 'Настройки',
+      switched: (language, queueCleared) => `Курс: ${language}${queueCleared ? '. Очередь очищена' : ''}`,
       profile: 'Профиль',
       name: 'Имя',
       native: 'Мой язык',

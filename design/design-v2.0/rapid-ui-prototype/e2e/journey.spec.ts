@@ -72,6 +72,7 @@ test('switching course to Bulgarian keeps the English UI and shows Bulgarian set
   await start(page);
   await page.getByRole('button', { name: 'Ana: settings' }).click();
   await page.getByLabel('I’m learning').selectOption('bg-BG');
+  await expect(page.getByRole('status').filter({ hasText: 'Now learning Bulgarian' })).toBeVisible();
   await page.getByRole('button', { name: 'Close' }).click();
   await expect(page.getByRole('heading', { name: 'Здравей, Ana!' })).toBeVisible();
   await expect(page.getByText('Кафене · 0 of 4 learned')).toBeVisible();
@@ -150,4 +151,12 @@ test.describe('a learner who has learned the whole course', () => {
     await page.getByRole('button', { name: 'Try another course' }).click();
     await expect(page.getByRole('dialog', { name: 'Settings' })).toBeVisible();
   });
+});
+
+test('switching course mid-session says the queue was cleared', async ({ page }) => {
+  await start(page);
+  await page.getByRole('button', { name: /^Play \d+ phrases/ }).first().click();
+  await page.getByRole('button', { name: 'Ana: settings' }).click();
+  await page.getByLabel('I’m learning').selectOption('bg-BG');
+  await expect(page.getByRole('status').filter({ hasText: 'Now learning Bulgarian. The queue was cleared' })).toBeVisible();
 });

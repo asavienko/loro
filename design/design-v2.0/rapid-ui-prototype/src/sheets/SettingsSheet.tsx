@@ -1,7 +1,8 @@
 import { useId, useState } from 'react';
-import { languageLabel } from '../copy';
+import { copyForNative, languageLabel, languageName } from '../copy';
 import { coursesFor, LanguageCode, NATIVE_LANGUAGES } from '../content';
 import { useCopy, useStore } from '../state/store';
+import { useToast } from '../ui/Toast';
 import { Sheet, SheetSection } from '../ui/Sheet';
 
 /** Opened from the avatar: profile and course, and one screen-reader preference. */
@@ -10,6 +11,16 @@ export function SettingsSheet({ open, onClose }: { open: boolean; onClose: () =>
   const { state, actions } = useStore();
   const { profile } = state.learner;
   const announceId = useId();
+  const { toast } = useToast();
+
+  // A new course empties the queue (it belongs to the old one); say so, in the new UI language.
+  const switchTo = (nativeLang: LanguageCode, targetLang: LanguageCode) => {
+    if (nativeLang === profile.nativeLang && targetLang === profile.targetLang) return;
+    const queueCleared = state.player.order.length > 0;
+    actions.setProfile({ nativeLang, targetLang });
+    const next = copyForNative(nativeLang);
+    toast(next.settings.switched(languageName(targetLang, next.locale), queueCleared));
+  };
 
   return (
     <Sheet open={open} title={c.settings.title} onClose={onClose}>
@@ -22,7 +33,7 @@ export function SettingsSheet({ open, onClose }: { open: boolean; onClose: () =>
           name={(code) => languageLabel(code, code)}
           onChange={(code) => {
             const course = coursesFor(code).includes(profile.targetLang) ? profile.targetLang : coursesFor(code)[0];
-            actions.setProfile({ nativeLang: code, targetLang: course });
+            switchTo(code, course);
           }}
         />
         <LanguageSelect
@@ -30,7 +41,7 @@ export function SettingsSheet({ open, onClose }: { open: boolean; onClose: () =>
           value={profile.targetLang}
           options={coursesFor(profile.nativeLang)}
           name={(code) => languageLabel(code, c.locale)}
-          onChange={(code) => actions.setProfile({ targetLang: code })}
+          onChange={(code) => switchTo(profile.nativeLang, code)}
         />
         <p className="px-2 text-label text-secondary">{c.settings.courseNote}</p>
       </SheetSection>

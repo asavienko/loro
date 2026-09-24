@@ -229,6 +229,7 @@ export function makeEn(n: Plural) {
       hide: 'Tap to reveal',
     },
     toast: {
+      dismiss: 'Dismiss message',
       learned: (points: number) => `Learned · +${points}`,
       passComplete: 'Queue played through',
       removed: 'Removed from queue',
@@ -303,6 +304,7 @@ export function makeEn(n: Plural) {
     },
     settings: {
       title: 'Settings',
+      switched: (language: string, queueCleared: boolean) => `Now learning ${language}${queueCleared ? '. The queue was cleared' : ''}`,
       profile: 'Profile',
       name: 'Name',
       native: 'I speak',

@@ -219,6 +219,7 @@ export function makeBg(n: Plural): Copy {
       hide: 'Докоснете, за да видите',
     },
     toast: {
+      dismiss: 'Затвори съобщението',
       learned: (points) => `Научена · +${points}`,
       passComplete: 'Опашката е изсвирена докрай',
       removed: 'Махнато от опашката',
@@ -293,6 +294,7 @@ export function makeBg(n: Plural): Copy {
     },
     settings: {
       title: 'Настройки',
+      switched: (language, queueCleared) => `Курс: ${language}${queueCleared ? '. Опашката е изчистена' : ''}`,
       profile: 'Профил',
       name: 'Име',
       native: 'Говоря',
