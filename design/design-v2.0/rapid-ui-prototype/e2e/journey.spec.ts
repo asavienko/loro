@@ -2,7 +2,7 @@ import fs from 'node:fs';
 // Longer learner journeys on a controlled clock: whole queues, both end
 // modes, the learner's own phrases, other courses and UI languages.
 import { Page } from '@playwright/test';
-import { expect, test } from './fixtures';
+import { expect, expectAccessible, masteredCourse, test } from './fixtures';
 
 async function start(page: Page, hash = '/') {
   await page.clock.install();
@@ -172,5 +172,17 @@ test.describe('skipping the demo', () => {
     await page.reload();
     await expect(page.getByRole('heading', { name: 'Start here' })).toBeVisible();
     await expect(page.getByRole('button', { name: /Play one phrase/ })).toHaveCount(0);
+  });
+});
+
+test.describe('a finished course', () => {
+  test.use({ seed: { log: masteredCourse(Date.now()) } });
+  test('Home says every phrase is learned and offers what next', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.getByRole('heading', { name: 'Every phrase in this course is learned' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Add your phrase' })).toBeVisible();
+    await page.getByRole('button', { name: 'Try another course' }).click();
+    await expect(page.getByLabel('I’m learning')).toBeVisible();
+    await expectAccessible(page);
   });
 });
