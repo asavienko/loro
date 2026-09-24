@@ -1,7 +1,7 @@
 // Every screen: axe (WCAG 2.1 AA), 44 px targets and 11 px text — at the
 // default text size and at 200%. Charts are measured against their numbers.
 import { Page } from '@playwright/test';
-import { expect, expectAccessible, expectMobileBasics, test } from './fixtures';
+import { expect, expectAccessible, expectMobileBasics, sampleHistory, test } from './fixtures';
 
 const screens: { name: string; open: (page: Page) => Promise<void> }[] = [
   { name: 'home', open: (page) => page.goto('/').then(() => undefined) },
@@ -12,7 +12,7 @@ const screens: { name: string; open: (page: Page) => Promise<void> }[] = [
     name: 'player',
     open: async (page) => {
       await page.goto('/');
-      await page.getByRole('button', { name: 'Play 5 phrases' }).click();
+      await page.getByRole('button', { name: /^Play \d+ phrases/ }).first().click();
       await page.getByRole('button', { name: 'Pause', exact: true }).click();
       await page.getByRole('button', { name: /^Now playing:/ }).click();
       await page.waitForTimeout(600);
@@ -22,7 +22,7 @@ const screens: { name: string; open: (page: Page) => Promise<void> }[] = [
     name: 'queue',
     open: async (page) => {
       await page.goto('/');
-      await page.getByRole('button', { name: 'Play 5 phrases' }).click();
+      await page.getByRole('button', { name: /^Play \d+ phrases/ }).first().click();
       await page.getByRole('button', { name: 'Pause', exact: true }).click();
       await page.getByRole('button', { name: /^Now playing:/ }).click();
       await page.getByRole('button', { name: 'Open queue' }).click();
@@ -39,6 +39,9 @@ const screens: { name: string; open: (page: Page) => Promise<void> }[] = [
   },
 ];
 
+// A learner with history, so lists, cards and charts have content to overflow with.
+test.use({ seed: { log: sampleHistory(Date.now()) } });
+
 for (const scale of [1, 2]) {
   test.describe(`text at ${scale * 100}%`, () => {
     for (const screen of screens) {
@@ -48,8 +51,12 @@ for (const scale of [1, 2]) {
         await page.waitForTimeout(200);
         await expectAccessible(page);
         if (scale === 1) await expectMobileBasics(page);
-        // Nothing scrolls sideways.
+        // Nothing scrolls sideways (which would also push fixed bars off a phone screen).
         expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+        for (const name of ['Home', 'Library']) {
+          const box = await page.getByRole('button', { name, exact: true }).boundingBox();
+          if (box) expect(box.y + box.height).toBeLessThanOrEqual(844);
+        }
       });
     }
   });

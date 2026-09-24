@@ -94,7 +94,7 @@ test.describe('a Russian speaker', () => {
 
 test('a shared set link opens that set', async ({ page }) => {
   await start(page, '/#/set/set-taxi?from=explore');
-  await expect(page.getByRole('heading', { name: 'Taxi at Night' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Taxi de Noche' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Explore' })).toHaveAttribute('aria-current', 'page');
 });
 
@@ -119,6 +119,6 @@ test('two tabs never overwrite each other', async ({ page, context }) => {
   await other.getByRole('button', { name: 'Like set' }).click();
   await other.waitForTimeout(600);
   await page.goto('/#/library?view=likedSets');
-  await expect(page.getByRole('button', { name: /Taxi at Night/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Taxi de Noche/ })).toBeVisible();
   await expect(page.getByRole('button', { name: /Mercado/ })).toBeVisible();
 });
