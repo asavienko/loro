@@ -7,8 +7,8 @@ import { clock } from '../state/clock';
 import { estimateSpeechMs } from '../state/timing';
 
 export type PlaybackResult =
-  /** Played to the end; `ms` is the real duration of the sound itself. */
-  | { status: 'ended'; ms: number }
+  /** Played to the end; `ms` is the real duration of the sound, or null if the engine gave no start time. */
+  | { status: 'ended'; ms: number | null }
   /** Probably played, but the engine never confirmed the end: nothing is recorded or paid. */
   | { status: 'timeout' }
   /** Could not be played (no voice for the language, synthesis error, blocked). */
@@ -117,15 +117,16 @@ export function speak(text: string, lang: LanguageCode, rate: number, clipUrl?: 
     startedAt = clock.now();
   };
   utterance.onend = () =>
-    // Without a start event there is no clean measurement: treat it as unconfirmed.
-    settle(startedAt === null ? { status: 'timeout' } : { status: 'ended', ms: clock.now() - startedAt });
+    // Some engines skip the start event: the phrase still played, but there is no clean measurement.
+    settle({ status: 'ended', ms: startedAt === null ? null : clock.now() - startedAt });
   utterance.onerror = (event) => {
     // Our own cancel() interrupts; that is not a failure of the audio.
     if (event.error === 'interrupted' || event.error === 'canceled') return;
     settle({ status: 'failed' });
   };
 
-  synth.cancel();
+  // Cancelling an idle engine right before speaking can drop the new utterance in Chrome.
+  if (synth.speaking || synth.pending) synth.cancel();
   synth.speak(utterance);
 
   return {
