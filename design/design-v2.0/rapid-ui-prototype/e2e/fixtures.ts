@@ -105,9 +105,13 @@ export const test = base.extend<{ seed: Seed | null }>({
     if (seed) {
       await page.addInitScript(
         ([key, state]) => {
-          if (!sessionStorage.getItem('seeded')) {
-            localStorage.setItem(key as string, JSON.stringify(state));
-            sessionStorage.setItem('seeded', '1');
+          try {
+            if (!sessionStorage.getItem('seeded')) {
+              localStorage.setItem(key as string, JSON.stringify(state));
+              sessionStorage.setItem('seeded', '1');
+            }
+          } catch {
+            // about:blank (Back past the app) has no storage.
           }
         },
         [STORAGE_KEY, seededState(seed)] as const,
