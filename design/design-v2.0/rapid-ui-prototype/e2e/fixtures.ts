@@ -12,6 +12,8 @@ declare global {
     __spoken: { text: string; lang: string }[];
     /** Simulates a stalled speech service: every utterance ends at once, unspoken. */
     __speechSilent?: boolean;
+    /** Languages this device has no voice for (set with addInitScript, before load). */
+    __noVoices?: string[];
   }
 }
 
@@ -27,7 +29,7 @@ function fakeSpeech() {
   let current: SpeechSynthesisUtterance | null = null;
   let timers: number[] = [];
   const synth = {
-    getVoices: () => voices,
+    getVoices: () => voices.filter((v) => !(window.__noVoices ?? []).includes(v.lang)),
     addEventListener: () => {},
     removeEventListener: () => {},
     speak(u: SpeechSynthesisUtterance) {

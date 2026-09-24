@@ -1,4 +1,4 @@
-import { expect, test } from './fixtures';
+import { expect, expectAccessible, test } from './fixtures';
 
 test.describe('onboarding', () => {
   test.use({ seed: null });
@@ -98,6 +98,20 @@ test.describe('the loop', () => {
     await expect(player.getByText('2 of 5')).toBeVisible();
     await page.keyboard.press('3');
     await expect(player.getByRole('button', { name: /^Easy/ })).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  test('a device with no Spanish voice says so and pays nothing', async ({ page }) => {
+    await page.addInitScript(() => (window.__noVoices = ['es-ES']));
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Play 5 phrases' }).click();
+    await expect(page.getByRole('button', { name: /^Now playing:/ })).toContainText('No voice for this language');
+    await page.getByRole('button', { name: /^Now playing:/ }).click();
+    const player = page.getByRole('dialog', { name: 'Now playing' });
+    await expect(player.getByRole('alert')).toContainText('This device has no Spanish voice');
+    await expect(player.getByRole('button', { name: 'Play', exact: true })).toBeVisible();
+    await expectAccessible(page);
+    await page.getByRole('button', { name: 'Close player' }).click();
+    await expect(page.getByTestId('points')).toContainText('0 points');
   });
 
   test('a silent speech engine stops playback honestly and pays nothing', async ({ page }) => {
