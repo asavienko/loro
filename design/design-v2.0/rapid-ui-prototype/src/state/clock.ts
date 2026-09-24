@@ -84,7 +84,8 @@ export function formatInterval(ms: number, locale: string): string {
   if (ms < HOUR) return unit(Math.max(1, Math.round(ms / MINUTE)), 'minute');
   if (ms < DAY) return unit(Math.round(ms / HOUR), 'hour');
   const days = Math.round(ms / DAY);
-  if (days < 45) return unit(days, 'day');
+  // Days up to 100, so neighbouring rating previews (Hard 52 days, Easy 71 days) stay distinct.
+  if (days <= 100) return unit(days, 'day');
   if (days < 365 * 2) return unit(Math.round(days / 30), 'month');
   return unit(Math.round(days / 365), 'year');
 }
