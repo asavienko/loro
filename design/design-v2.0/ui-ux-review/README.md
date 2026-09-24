@@ -687,8 +687,8 @@ A third review, of storage and tabs, found five: a rating pending in two tabs wa
 two tabs saving at once could each drop the other's progress for good; a failed first-run move from
 localStorage stranded the old progress behind a fresh start; and progress saved while IndexedDB was
 unavailable was ignored once it worked again. All fixed; the first and the merges are unit-tested.
-Known and left: tabs share one page-close slot, so a new tab can start with another tab's queue and
-speed (its ratings no longer double-count).
+Each tab now also keeps its own page-close copy: a reload restores the tab's own, and other tabs'
+copies add only their learning progress and pending ratings.
 
 **For the Bulgarian reviewer:** on a 320 px phone the Missed rating, "Не се сетих", wraps onto two
 lines in its third of the row; a shorter word (e.g. "Забравих") would fit. Dropping the icons didn't
