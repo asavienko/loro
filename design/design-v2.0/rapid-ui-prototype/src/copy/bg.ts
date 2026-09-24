@@ -220,6 +220,7 @@ export function makeBg(n: Plural): Copy {
       audioSilent: 'Речта спря, преди фразата да прозвучи. Натиснете „Пусни“, за да опитате отново.',
       silent: 'Речта спря — натиснете „Пусни“',
       voice: (name) => `Глас: ${name}`,
+      changeVoice: (name) => `Глас: ${name}. Смени гласа`,
       hide: 'Докоснете, за да видите',
     },
     toast: {
