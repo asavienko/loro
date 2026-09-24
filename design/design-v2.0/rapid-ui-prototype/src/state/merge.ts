@@ -5,7 +5,8 @@
 // - log: grow-only set. The union of entries by id; memory and points are
 //   re-derived from it, so a review made on either device counts once.
 // - likes, own phrases, own sets: last writer wins per item, by its own
-//   timestamp. Deletion is a tombstone (`deleted: true`), so it merges too.
+//   timestamp (a tie goes the same way on every device). Deletion is a
+//   tombstone (`deleted: true`), so it merges too.
 // - profile: last writer wins as a whole, by `updatedAt`.
 // Pending ratings, prefs and the player are per device and never merged.
 import { compareEntries } from './memory';
@@ -18,11 +19,20 @@ function mergeLog(a: LogEntry[], b: LogEntry[]): LogEntry[] {
   return [...a, ...added].sort(compareEntries);
 }
 
+/**
+ * Whether `theirs` beats `ours`: the later write, and on a tie the same winner on
+ * every device (by content), so two copies can't each keep their own forever.
+ */
+function wins<T>(theirs: T, ours: T, time: (x: T) => number): boolean {
+  const [t, o] = [time(theirs), time(ours)];
+  return t > o || (t === o && JSON.stringify(theirs) > JSON.stringify(ours));
+}
+
 function mergeByTime<T>(a: Record<string, T>, b: Record<string, T>, time: (x: T) => number): Record<string, T> {
   let out = a;
   for (const [id, theirs] of Object.entries(b)) {
     const ours = a[id];
-    if (ours === undefined || time(theirs) > time(ours)) {
+    if (ours === undefined || wins(theirs, ours, time)) {
       if (out === a) out = { ...a };
       out[id] = theirs;
     }
@@ -36,7 +46,7 @@ export function mergeLearner(local: LearnerState, remote: LearnerState): Learner
   const likes = mergeByTime<Like>(local.likes, remote.likes, (l) => l.at);
   const ownPhrases = mergeByTime(local.ownPhrases, remote.ownPhrases, (p) => p.updatedAt);
   const ownSets = mergeByTime(local.ownSets, remote.ownSets, (s) => s.updatedAt);
-  const profile = remote.profile.updatedAt > local.profile.updatedAt ? remote.profile : local.profile;
+  const profile = wins(remote.profile, local.profile, (p) => p.updatedAt) ? remote.profile : local.profile;
   if (
     log === local.log &&
     likes === local.likes &&

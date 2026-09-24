@@ -114,6 +114,17 @@ describe('persistence', () => {
 });
 
 describe('merge', () => {
+  it('settles a tie the same way on both devices', () => {
+    const base = fresh().learner;
+    const set = (title: string) => ({ id: 'mine-s-1', title, phraseIds: [], targetLang: 'es-ES' as const, createdAt: T0, updatedAt: T0 + 5, deleted: false });
+    const a = { ...base, ownSets: { 'mine-s-1': set('A') }, profile: { ...base.profile, name: 'Ana', updatedAt: T0 + 5 } };
+    const b = { ...base, ownSets: { 'mine-s-1': set('B') }, profile: { ...base.profile, name: 'Bea', updatedAt: T0 + 5 } };
+    const ab = mergeLearner(a, b);
+    const ba = mergeLearner(b, a);
+    assert.equal(ab.ownSets['mine-s-1'].title, ba.ownSets['mine-s-1'].title);
+    assert.equal(ab.profile.name, ba.profile.name);
+  });
+
   it('takes the union of both logs and counts a review once', () => {
     const base = load(fresh());
     const a = run(base, { type: 'RATE', grade: 'easy', now: T0 }, { type: 'COMMIT', now: T0 + RATING_WINDOW_MS });
