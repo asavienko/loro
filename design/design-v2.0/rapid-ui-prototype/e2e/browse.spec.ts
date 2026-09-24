@@ -155,3 +155,17 @@ test('progress moves from localStorage into IndexedDB', async ({ page }) => {
   });
   expect(where).toEqual({ idb: true, local: null });
 });
+
+test('explore by level and by tag', async ({ page }) => {
+  await page.goto('/#/explore');
+  await page.getByRole('button', { name: 'A2', exact: true }).click();
+  await expect(page).toHaveURL(/level=A2/);
+  await expect(page.getByRole('heading', { name: 'Filtered sets · 2' })).toBeVisible();
+  await expect(page.getByRole('button', { name: /^Taxi de Noche/ })).toBeVisible();
+  await page.getByRole('button', { name: 'Numbers', exact: true }).click();
+  // Only A2 sets with a numbers phrase, and the numbers phrases themselves.
+  await expect(page.getByRole('heading', { name: 'Filtered sets · 1' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '1 phrase', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Clear filters' }).click();
+  await expect(page.getByRole('heading', { name: 'All sets' })).toBeVisible();
+});
