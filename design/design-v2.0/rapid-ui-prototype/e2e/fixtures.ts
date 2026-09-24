@@ -78,6 +78,8 @@ export interface Seed {
   nativeLang?: string;
   targetLang?: string;
   onboarded?: boolean;
+  /** Playback speed (default 1.25). */
+  speed?: number;
 }
 
 /** A v3 state the app sanitises on load: a learner past onboarding, nothing played. */
@@ -98,7 +100,7 @@ export function seededState(seed: Seed = {}) {
       ownSets: {},
     },
     pending: [],
-    prefs: { playMode: 'repeat', repeats: 'auto', speed: 1.25, announceEveryStep: false, sortBySet: {} },
+    prefs: { playMode: 'repeat', repeats: 'auto', speed: seed.speed ?? 1.25, announceEveryStep: false, sortBySet: {} },
     player: {},
   };
 }
