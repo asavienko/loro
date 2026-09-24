@@ -43,7 +43,7 @@ export function HiddenPhrase({ text, className, label }: { text: string; classNa
       <span className='sr-only'>{label}</span>
       <span aria-hidden='true' className='flex flex-col gap-1.5 py-1'>
         {lines.map((width, i) => (
-          <span key={i} className='block h-6 rounded-md bg-surface-container-highest' style={{ width }} />
+          <span key={i} className='block h-6 rounded-md bg-surface-container-highest forced-colors:border-2 forced-colors:border-dashed' style={{ width }} />
         ))}
       </span>
     </h2>
