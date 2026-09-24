@@ -64,6 +64,8 @@ export type AppEvent =
   | { type: 'INSERT_IN_QUEUE'; position: number; phraseId: string }
   | { type: 'ENQUEUE'; phraseIds: string[]; setId: string | null; at: 'next' | 'end'; now: number }
   | { type: 'CLEAR_QUEUE' }
+  /** Undo of Clear queue: the cleared phrases, right after whatever is playing by then. */
+  | { type: 'RESTORE_UP_NEXT'; phraseIds: string[] }
   | { type: 'TOGGLE_LIKE'; kind: 'phrase' | 'set'; id: string; now: number }
   | { type: 'ADD_OWN_PHRASE'; target: string; native: string; now: number }
   | { type: 'EDIT_OWN_PHRASE'; id: string; target: string; native: string; now: number }
@@ -402,6 +404,13 @@ export function transition(state: AppState, event: AppEvent): AppState {
         order: [...player.order.slice(0, at), event.phraseId, ...player.order.slice(at)],
         index: at <= player.index ? player.index + 1 : player.index,
       });
+    }
+
+    case 'RESTORE_UP_NEXT': {
+      const ids = event.phraseIds.filter((id) => findPhrase(learner, id));
+      if (ids.length === 0 || player.order.length === 0) return state;
+      const at = player.index + 1;
+      return withPlayer(state, { ...player, order: [...player.order.slice(0, at), ...ids, ...player.order.slice(at)] });
     }
 
     case 'ENQUEUE': {
