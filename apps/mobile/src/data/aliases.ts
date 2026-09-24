@@ -47,6 +47,18 @@ export function resolveLearnerAliases(database: RuntimeDatabase, state: AppData)
                 },
               },
       },
+      reviewCheckpoint:
+        value.reviewCheckpoint === null
+          ? null
+          : {
+              ...value.reviewCheckpoint,
+              phraseId: resolve(value.reviewCheckpoint.phraseId),
+              queue: value.reviewCheckpoint.queue.map((entry) => ({
+                ...entry,
+                phraseId: resolve(entry.phraseId),
+              })),
+            },
+      listenQueue: value.listenQueue === null ? null : value.listenQueue.map(resolve),
     }
   }
   return {

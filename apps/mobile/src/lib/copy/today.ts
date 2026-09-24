@@ -82,6 +82,77 @@ export const todayCopy = {
       return message('today.switcher.here')
     },
   },
+  wordmark: {
+    get label() {
+      return message('today.wordmark')
+    },
+  },
+  rhythm: {
+    cycle: (band: string): string => message('today.rhythm.cycle', { band }),
+    band: {
+      get morning() {
+        return message('today.rhythm.band.morning')
+      },
+      get midday() {
+        return message('today.rhythm.band.midday')
+      },
+      get evening() {
+        return message('today.rhythm.band.evening')
+      },
+    },
+    hello: {
+      get morning() {
+        return message('today.rhythm.hello.morning')
+      },
+      get midday() {
+        return message('today.rhythm.hello.midday')
+      },
+      get evening() {
+        return message('today.rhythm.hello.evening')
+      },
+    },
+    get dueLead() {
+      return message('today.rhythm.dueLead')
+    },
+    dueCount: (count: number): string => message('today.rhythm.dueCount', { count }),
+    get statCadence() {
+      return message('today.rhythm.statCadence')
+    },
+    get statLocked() {
+      return message('today.rhythm.statLocked')
+    },
+    lockedValue: (locked: number, total: number): string =>
+      message('today.rhythm.lockedValue', { locked, total }),
+    get statNext() {
+      return message('today.rhythm.statNext')
+    },
+    mixes: (count: number): string => message('today.rhythm.mixes', { count }),
+    get dueNow() {
+      return message('today.rhythm.dueNow')
+    },
+    waveIndex: (index: number): string => message('today.rhythm.waveIndex', { index }),
+    get startWave() {
+      return message('today.rhythm.startWave')
+    },
+    wavePhrases: (phrases: number): string => message('today.rhythm.wavePhrases', { phrases }),
+    waveClock: (hour: number, minute: string, period: 'am' | 'pm'): string =>
+      message('today.rhythm.waveClock', { hour, minute, period }),
+    get jumpBack() {
+      return message('today.rhythm.jumpBack')
+    },
+    get browse() {
+      return message('today.rhythm.browse')
+    },
+    get insightTitle() {
+      return message('today.rhythm.insightTitle')
+    },
+    get profile() {
+      return message('today.rhythm.profile')
+    },
+    get target() {
+      return message('today.rhythm.target')
+    },
+  },
   cta: {
     get empty() {
       return message('today.cta.empty')

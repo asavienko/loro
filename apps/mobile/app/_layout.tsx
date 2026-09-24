@@ -35,6 +35,8 @@ import { completeBrowserSignIn } from '../src/auth/runtime'
 import { localTimeLabel } from '../src/lib/clock'
 import { PRODUCTION_WAVES, PRODUCTION_WAVE_TIMES, type ProductionWave } from '../src/store'
 import { waveEntryWithResume } from '../src/lib/waves'
+import { PackBack, PackTitle } from './practice/_review/PackBack'
+import { HEADER_H } from './practice/_review/geometry'
 
 const editorialStationeryFonts =
   'https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400..700;1,9..40,400..700&family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&display=swap'
@@ -239,13 +241,23 @@ function ReadyLayout() {
                 />
                 <Stack.Screen
                   name="practice/stream"
-                  options={{ title: copy.nav.stream, gestureEnabled: false }}
+                  options={{ title: copy.stream.queue.title, gestureEnabled: false }}
                 />
                 <Stack.Screen name="account" options={{ title: copy.account.title }} />
                 <Stack.Screen name="settings" options={{ title: copy.settings.title }} />
                 <Stack.Screen
                   name="practice/speak"
                   options={{ title: copy.audioSpeech.speakTitle, gestureEnabled: false }}
+                />
+                <Stack.Screen
+                  name="practice/review"
+                  options={({ navigation }) => ({
+                    title: copy.review.title,
+                    headerTitle: () => <PackTitle />,
+                    gestureEnabled: false,
+                    headerStyle: { height: HEADER_H, backgroundColor: 'transparent' },
+                    headerLeft: () => <PackBack canGoBack={navigation.canGoBack()} />,
+                  })}
                 />
                 <Stack.Screen name="more" options={{ title: copy.nav.more }} />
                 <Stack.Screen name="music" options={{ title: copy.nav.music }} />
@@ -269,6 +281,7 @@ function ReadyLayout() {
 function HeaderGlass() {
   return (
     <View
+      testID="stack-header-glass"
       pointerEvents="none"
       style={[StyleSheet.absoluteFill, parchmentGlassStyle(), chromeHairlineShadow()]}
     />

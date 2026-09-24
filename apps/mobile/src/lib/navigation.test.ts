@@ -66,6 +66,7 @@ describe('surface registry and deep-link guard', () => {
       'phrase-detail',
       'stream',
       'speak',
+      'review',
       'today',
       'refrain',
       'progress',
@@ -81,7 +82,7 @@ describe('surface registry and deep-link guard', () => {
   it('only resolves declared, built app-relative routes', () => {
     expect(builtSurfaceForPath('/phrase/cafe-please')?.id).toBe('phrase-detail')
     expect(builtSurfaceForPath('/phrase/cafe-please?from=notification')?.id).toBe('phrase-detail')
-    expect(builtSurfaceForPath('/practice/review')).toBeUndefined()
+    expect(builtSurfaceForPath('/practice/review')?.id).toBe('review')
     expect(builtSurfaceForPath('https://loro.test/add')).toBeUndefined()
     expect(builtSurfaceForPath('//loro.test/add')).toBeUndefined()
   })
@@ -113,7 +114,12 @@ describe('surface registry and deep-link guard', () => {
       path: '/onboarding',
       reason: 'unknown',
     })
-    expect(resolveDeepLink('/practice/review', { signedIn: true, onboarded: true })).toEqual({
+    expect(resolveDeepLink('/practice/review', { signedIn: true, onboarded: true })).toMatchObject({
+      kind: 'built',
+      path: '/practice/review',
+      surface: { id: 'review' },
+    })
+    expect(resolveDeepLink('/practice/roleplay', { signedIn: true, onboarded: true })).toEqual({
       kind: 'fallback',
       path: '/',
       reason: 'planned',

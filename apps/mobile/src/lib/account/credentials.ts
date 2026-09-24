@@ -24,10 +24,15 @@ export function readCredential(raw: string): SavedCredential | null {
     typeof value.refreshToken !== 'string'
   )
     return null
+  const email =
+    'email' in value && typeof value.email === 'string' && value.email.includes('@')
+      ? value.email
+      : null
   return {
     accountId: value.accountId,
     deviceId: value.deviceId,
     installationId: value.installationId,
     refreshToken: value.refreshToken,
+    ...(email ? { email } : {}),
   }
 }

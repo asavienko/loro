@@ -138,11 +138,89 @@ export const accountCopy = {
   get deviceProgress() {
     return message('account.deviceProgress')
   },
+  get keepPractising() {
+    return message('account.keepPractising')
+  },
+  get connectingTitle() {
+    return message('account.connectingTitle')
+  },
+  get connectingBody() {
+    return message('account.connectingBody')
+  },
+  get cancelledTitle() {
+    return message('account.cancelledTitle')
+  },
+  get cancelledBody() {
+    return message('account.cancelledBody')
+  },
+  get cancelledHint() {
+    return message('account.cancelledHint')
+  },
+  get errorTitle() {
+    return message('account.errorTitle')
+  },
+  get errorBody() {
+    return message('account.errorBody')
+  },
+  get errorSafe() {
+    return message('account.errorSafe')
+  },
+  get retryGoogle() {
+    return message('account.retryGoogle')
+  },
+  get tryGoogleAgain() {
+    return message('account.tryGoogleAgain')
+  },
+  get retryApple() {
+    return message('account.retryApple')
+  },
+  get socialDownTitle() {
+    return message('account.socialDownTitle')
+  },
+  get unavailableBadge() {
+    return message('account.unavailableBadge')
+  },
+  get signOutConfirmTitle() {
+    return message('account.signOutConfirmTitle')
+  },
+  get signOutConfirmBody() {
+    return message('account.signOutConfirmBody')
+  },
+  signOutConfirmBodyEmail: (email: string): string =>
+    message('account.signOutConfirmBodyEmail', { email }),
+  get signOutSafeTitle() {
+    return message('account.signOutSafeTitle')
+  },
+  get signOutSafeVocab() {
+    return message('account.signOutSafeVocab')
+  },
+  signOutSafeStreak: (count: number): string => message('account.signOutSafeStreak', { count }),
+  get signOutSafeStreakKept() {
+    return message('account.signOutSafeStreakKept')
+  },
+  get signOutSafeReconnect() {
+    return message('account.signOutSafeReconnect')
+  },
+  get staySignedIn() {
+    return message('account.staySignedIn')
+  },
+  get signOutDevice() {
+    return message('account.signOutDevice')
+  },
+  get offlineFirstNote() {
+    return message('account.offlineFirstNote')
+  },
+  get signOutConfirmNav() {
+    return message('account.signOutConfirmNav')
+  },
   get heroTitle() {
     return message('account.heroTitle')
   },
   get heroBody() {
     return message('account.heroBody')
+  },
+  get unavailableBody() {
+    return message('account.unavailableBody')
   },
   get emailMethod() {
     return message('account.emailMethod')

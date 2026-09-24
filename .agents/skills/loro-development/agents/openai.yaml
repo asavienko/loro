@@ -1,4 +1,0 @@
-interface:
-  display_name: 'Loro Development'
-  short_description: 'Loro code, tests, plans, and proven development paths'
-  default_prompt: 'Use $loro-development to work on this Loro change with the relevant project context and validation.'

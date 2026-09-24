@@ -13,7 +13,13 @@
 
 import { DEFAULT_DEVICE_PREFERENCES, type DevicePreferences } from '../lib/devicePreferences'
 import type { ImportDraft, ImportDrafts } from '../lib/importDraft'
-import type { NativeLanguage, TargetLocale, PhraseState, SessionHandle } from '@loro/core'
+import type {
+  NativeLanguage,
+  TargetLocale,
+  PhraseState,
+  ReviewCheckpoint,
+  SessionHandle,
+} from '@loro/core'
 
 export interface Toast {
   message: string
@@ -50,6 +56,13 @@ export interface CourseState {
   /** Today's listen counts toward the ten-phrases-heard-three-times wave rule. */
   waveListens: Record<string, number>
   refrainSubstituted: string[]
+  /** Validated Review resume, or `null` when hydrate refuses the stored payload. */
+  reviewCheckpoint: ReviewCheckpoint | null
+  /**
+   * Device-local simple-queue listen order. Null means Rust `order_stream` rank.
+   * Not catalog rank and not an FSRS field.
+   */
+  listenQueue: readonly string[] | null
 }
 export interface AppData {
   devicePreferences: DevicePreferences
@@ -111,6 +124,12 @@ export interface AppData {
    * a member was replaced.
    */
   refrainSubstituted: string[]
+  reviewCheckpoint: ReviewCheckpoint | null
+  /**
+   * Device-local simple-queue listen order. Null means Rust `order_stream` rank.
+   * Not catalog rank and not an FSRS field.
+   */
+  listenQueue: readonly string[] | null
 }
 
 /**
@@ -141,6 +160,8 @@ export const INITIAL_STATE: AppData = {
   refrainWaves: [],
   waveListens: {},
   refrainSubstituted: [],
+  reviewCheckpoint: null,
+  listenQueue: null,
 }
 
 /** The data half of the repository projection, for assertions and local transactions. */
@@ -168,6 +189,8 @@ export function dataOf(state: AppData): AppData {
     refrainWaves: state.refrainWaves,
     waveListens: state.waveListens,
     refrainSubstituted: state.refrainSubstituted,
+    reviewCheckpoint: state.reviewCheckpoint,
+    listenQueue: state.listenQueue,
   }
 }
 

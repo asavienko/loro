@@ -56,6 +56,34 @@ export async function open(page: Page, name: string): Promise<void> {
   await click(page, name)
 }
 
+/** Stream's focused 280 now-playing presentation. Landing is the editorial list. */
+export async function openNowPlaying(page: Page): Promise<void> {
+  const openPlayer = page.getByRole('button', { name: 'Open now playing', exact: true })
+  if ((await openPlayer.count()) > 0) await openPlayer.click()
+  await expect(page.getByRole('button', { name: 'Dismiss player', exact: true })).toBeVisible()
+}
+
+/** Simple-queue dressing. Does not replace `/practice/stream` editorial landing. */
+export async function openSimpleQueue(page: Page): Promise<void> {
+  await page.goto('/practice/stream?queue=simple')
+  await expect(page.getByTestId('stream-simple-hero')).toBeVisible()
+  await expect(page.getByTestId('stream-editorial-hero')).toHaveCount(0)
+}
+
+/** Vertical mouse drag between simple-queue reorder handles. Short/horizontal stays inert. */
+export async function dragListenReorder(page: Page, from: number, to: number): Promise<void> {
+  const handles = page.getByTestId('stream-queue-reorder')
+  const start = await handles.nth(from).boundingBox()
+  const end = await handles.nth(to).boundingBox()
+  if (start === null || end === null) throw new Error('Missing listen-queue reorder handle')
+  const fromX = start.x + start.width / 2
+  const fromY = start.y + start.height / 2
+  await page.mouse.move(fromX, fromY)
+  await page.mouse.down()
+  await page.mouse.move(end.x + end.width / 2, end.y + end.height / 2, { steps: 16 })
+  await page.mouse.up()
+}
+
 /** The stack header's back control. Never `page.goto` — the store is in memory. */
 export async function back(page: Page): Promise<void> {
   await page.getByRole('link', { name: /back/i }).click()
@@ -73,6 +101,16 @@ export async function openFirstPhrase(page: Page): Promise<void> {
 export async function lockIn(page: Page): Promise<void> {
   for (const rep of REFRAIN_REPS) await click(page, rep)
   await expect(page.getByText('Locked in for today')).toBeVisible()
+}
+
+/**
+ * Two real FSRS schedules via Refrain. The caller jumps the clock so Review
+ * sees both as due — this does not invent a first schedule.
+ */
+export async function scheduleTwoReviewPhrases(page: Page): Promise<void> {
+  await lockIn(page)
+  await click(page, 'Next phrase →')
+  await click(page, 'Say it')
 }
 
 /**

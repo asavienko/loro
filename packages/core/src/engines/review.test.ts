@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { makePhrase, T0 } from '../testing/index.js'
 import type { FsrsState, PhraseState } from '../domain/phrase.js'
-import { ReviewEngine, reviewCandidates, reviewFocus, reviewLimit } from './review.js'
+import {
+  ReviewEngine,
+  firstReviewPolicy,
+  reviewCandidates,
+  reviewFocus,
+  reviewLimit,
+} from './review.js'
 import { makeContext } from '../testing/index.js'
 import type { Attempt } from './types.js'
 
@@ -132,6 +138,37 @@ describe('ReviewEngine (P3-30)', () => {
       review: { grade: 4, at: T0, algorithm: 'test-fsrs' },
     })
     expect(delta.srs?.due).toBe(T0 + 5 * 86_400_000)
+  })
+
+  it('refuses to invent a first FSRS state for an unscheduled phrase', async () => {
+    const fresh = phrase('fresh', { srs: null })
+    expect(firstReviewPolicy(fresh)).toBe('blocked-unscheduled')
+    expect(firstReviewPolicy(reviewed)).toBe('scheduled')
+    const ctx = makeContext([fresh])
+    const engine = new ReviewEngine('es-ES')
+    const session = {
+      sessionId: 'review-session',
+      cursor: 0,
+      plan: {
+        engineId: 'srs' as const,
+        closed: true,
+        estimatedMs: 0,
+        items: [
+          {
+            itemId: 'fresh#review',
+            phraseId: fresh.id,
+            mode: 'review',
+            prompt: { show: 'meaning' as const },
+            gate: { kind: 'self-report' as const },
+            audio: null,
+            meta: {},
+          },
+        ],
+      },
+    }
+    await expect(engine.record(session, attempt('fresh#review'), ctx)).rejects.toThrow(
+      'will not invent a first FSRS state',
+    )
   })
 
   it('rejects a stale grade instead of scheduling a phrase that is no longer due', async () => {

@@ -5,10 +5,11 @@ import type { StorybookConfig } from '@storybook/react-native-web-vite'
 const mobileRoot = path.dirname(path.dirname(fileURLToPath(import.meta.url)))
 
 const editorialStationeryFonts =
-  'https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400..700;1,9..40,400..700&family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&display=swap'
+  'https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap'
 
 const config: StorybookConfig = {
   stories: ['./stories/**/*.stories.tsx'],
+  staticDirs: [{ from: './v13/assets', to: '/v13-assets' }],
   addons: ['@storybook/addon-docs', '@storybook/addon-a11y'],
   previewHead: (head) => `${head}
     <link rel="preconnect" href="https://fonts.googleapis.com">

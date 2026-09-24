@@ -1,7 +1,7 @@
 import { router } from 'expo-router'
 import { EmptyState } from '../../src/ui/components'
 
-/** Shared empty rotation for Stream and Speak. Labels come from the caller so copy keys stay put. */
+/** Shared empty rotation for Stream, Speak and Review. Labels come from the caller so copy keys stay put. */
 export function PracticeEmptyState({
   title,
   body,

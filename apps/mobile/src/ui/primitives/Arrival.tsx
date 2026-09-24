@@ -38,14 +38,18 @@ export function Arrival({
     const plan = reducedMotionPlan(token.reducedMotion)
     const keepMotion = !reducedMotion || token.reducedMotion === 'keep'
     progress.value = 0
-    progress.value = withTiming(1, {
-      duration: keepMotion ? token.durationMs : plan.durationMs,
-      easing: keepMotion
-        ? kind === 'popIn'
-          ? reanimatedEasing.pop
-          : reanimatedEasing.out
-        : reanimatedEasing.linear,
+    // Same-tick 0 → withTiming can no-op on a remount (sign-out hub swap). Kick next frame.
+    const frame = requestAnimationFrame(() => {
+      progress.value = withTiming(1, {
+        duration: keepMotion ? token.durationMs : plan.durationMs,
+        easing: keepMotion
+          ? kind === 'popIn'
+            ? reanimatedEasing.pop
+            : reanimatedEasing.out
+          : reanimatedEasing.linear,
+      })
     })
+    return () => cancelAnimationFrame(frame)
   }, [kind, progress, reducedMotion])
 
   const animatedStyle = useAnimatedStyle(() => {

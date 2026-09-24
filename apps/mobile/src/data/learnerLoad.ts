@@ -1,4 +1,14 @@
-import { decodeCheckpoint, TARGET_LOCALES, type Clock, type TargetLocale } from '@loro/core'
+import {
+  decodeCheckpoint,
+  loadListenQueue,
+  loadReviewCheckpoint,
+  LOCAL_USER_ID,
+  TARGET_LOCALES,
+  validateReviewResume,
+  type Clock,
+  type ReviewCheckpoint,
+  type TargetLocale,
+} from '@loro/core'
 import {
   EMPTY_REFRAIN_RESUME,
   INITIAL_STATE,
@@ -19,6 +29,8 @@ export function snapshotCourse(state: AppData): CourseState {
     selectedId: state.selectedId,
     streamCursor: state.streamCursor,
     refrainResume: state.refrainResume,
+    reviewCheckpoint: state.reviewCheckpoint,
+    listenQueue: state.listenQueue,
     refrainDay: state.refrainDay,
     refrainWaves: state.refrainWaves,
     waveListens: state.waveListens,
@@ -118,6 +130,14 @@ export function loadLearnerData(database: RuntimeDatabase, clock: Clock): AppDat
       refrainWaves: day?.waves ?? [],
       waveListens: { ...(day?.listenCounts ?? {}) },
       refrainSubstituted: day?.substituted.filter((id) => ids.has(id)) ?? [],
+      reviewCheckpoint: hydrateReviewCheckpoint(
+        driver,
+        targetLocale,
+        clock.localDay(),
+        clock.now(),
+        owned,
+      ),
+      listenQueue: hydrateListenQueue(driver, targetLocale, owned),
     }
     const course = courses[targetLocale]
     course.refrainResume = parseResume(
@@ -156,4 +176,32 @@ export function loadLearnerData(database: RuntimeDatabase, clock: Clock): AppDat
     dailyMinutes: settings?.dailyMinutes ?? INITIAL_STATE.dailyMinutes,
     practiceDays: persistence.practiceDays.all(),
   }
+}
+
+function hydrateListenQueue(
+  driver: RuntimeDatabase['driver'],
+  targetLocale: TargetLocale,
+  phrases: CourseState['phrases'],
+): readonly string[] | null {
+  const stored = loadListenQueue(driver, LOCAL_USER_ID, targetLocale)
+  if (stored === null) return null
+  const owned = new Set<string>(phrases.map((phrase) => phrase.id))
+  const kept = stored.phraseIds.filter((id) => owned.has(id))
+  return kept.length === 0 ? null : kept
+}
+
+function hydrateReviewCheckpoint(
+  driver: RuntimeDatabase['driver'],
+  targetLocale: TargetLocale,
+  localDay: string,
+  at: number,
+  phrases: CourseState['phrases'],
+): ReviewCheckpoint | null {
+  const decision = validateReviewResume(loadReviewCheckpoint(driver, LOCAL_USER_ID, targetLocale), {
+    targetLocale,
+    localDay,
+    at,
+    phrases,
+  })
+  return decision.ok ? decision.checkpoint : null
 }

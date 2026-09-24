@@ -24,8 +24,15 @@ export type { EffortState, RefrainMode, WarmBand } from './refrain/index.js'
 export {
   ReviewEngine,
   REVIEW_GRADES,
+  firstReviewPolicy,
   reviewCandidates,
   reviewFocus,
   reviewLimit,
 } from './review.js'
-export type { ReviewAttemptContract, ReviewCandidates, ReviewFocus, ReviewGrade } from './review.js'
+export type {
+  FirstReviewPolicy,
+  ReviewAttemptContract,
+  ReviewCandidates,
+  ReviewFocus,
+  ReviewGrade,
+} from './review.js'

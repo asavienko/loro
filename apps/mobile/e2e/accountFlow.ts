@@ -39,6 +39,7 @@ export type AccountScenario =
   | 'sync-unavailable'
   | 'sync-rejected'
   | 'signed-out'
+  | 'signOutConfirm'
 
 type ServiceMode = AccountScenario | 'success'
 export interface AccountRequest {
@@ -102,7 +103,7 @@ export async function mockAccountService(
     }
     if (path.endsWith('/auth/capabilities')) {
       await route.fulfill({
-        json: { apple: true, google: true, email: mode !== 'unavailable' },
+        json: { apple: true, google: true, email: true },
       })
       return
     }
@@ -307,7 +308,7 @@ export async function signInWithProvider(
   }
   if (scenario === 'cancelled') await popup.close()
   else await popup.getByRole('link', { name: 'Finish provider sign-in' }).click()
-  if (scenario === 'error') await expect(page.getByText(/We couldn’t sign you in/)).toBeVisible()
+  if (scenario === 'error') await expect(page.getByText(/Couldn’t sign you in|Couldn't sign you in/)).toBeVisible()
   else if (scenario === 'cancelled')
     await expect(page.getByText(/Sign-in was cancelled/)).toBeVisible()
   else {
@@ -346,7 +347,8 @@ export async function reachAccount(
       scenario === 'sync-unavailable' ||
       scenario === 'sync-rejected' ||
       scenario === 'localSignOut' ||
-      scenario === 'signed-out'
+      scenario === 'signed-out' ||
+      scenario === 'signOutConfirm'
     ) {
       if (scenario === 'sync-unavailable' || scenario === 'sync-rejected') {
         await page.getByRole('button', { name: 'Sync now', exact: true }).click()
@@ -361,8 +363,15 @@ export async function reachAccount(
             /^\d+ saved changes? need(?:s)? review and remain(?:s)? safely on this device\.$/,
           ),
         ).toBeVisible()
-      } else if (scenario === 'signed-out' || scenario === 'localSignOut') {
+      } else if (
+        scenario === 'signed-out' ||
+        scenario === 'localSignOut' ||
+        scenario === 'signOutConfirm'
+      ) {
         await page.getByRole('button', { name: 'Sign out', exact: true }).click()
+        await expect(page.getByText('Sign out of Loro?', { exact: true })).toBeVisible()
+        if (scenario === 'signOutConfirm') return service
+        await page.getByRole('button', { name: 'Sign out on this device', exact: true }).click()
         if (scenario === 'localSignOut') {
           await expect(page.getByText(/You are signed out on this device/)).toBeVisible()
         } else {
@@ -385,7 +394,7 @@ export async function reachAccount(
     await expect(google).toBeDisabled()
     await expect(
       page.getByText(
-        'Google and Apple sign-in are unavailable right now. You can sign in by email.',
+        'Google and Apple login services are unavailable right now. You can continue seamlessly with your email address.',
       ),
     ).toBeVisible()
     return service
@@ -429,6 +438,7 @@ export async function reachAccount(
     } else {
       if (scenario === 'signed-out') {
         await page.getByRole('button', { name: 'Sign out', exact: true }).click()
+        await page.getByRole('button', { name: 'Sign out on this device', exact: true }).click()
         await expect(
           page.getByRole('button', { name: 'Continue with email', exact: true }),
         ).toBeVisible()
@@ -436,11 +446,18 @@ export async function reachAccount(
     }
     return service
   }
+  if (scenario === 'signOutConfirm') {
+    await signInWithProvider(page, provider, 'signedIn')
+    await page.getByRole('button', { name: 'Sign out', exact: true }).click()
+    await expect(page.getByText('Sign out of Loro?', { exact: true })).toBeVisible()
+    return service
+  }
   await signInWithProvider(page, provider, scenario === 'localSignOut' ? 'signedIn' : scenario)
   if (scenario === 'signedIn')
     await expect(page.getByText('Your progress is up to date.')).toBeVisible()
   if (scenario === 'localSignOut') {
     await page.getByRole('button', { name: 'Sign out', exact: true }).click()
+    await page.getByRole('button', { name: 'Sign out on this device', exact: true }).click()
     await expect(page.getByText(/You are signed out on this device/)).toBeVisible()
   }
   return service

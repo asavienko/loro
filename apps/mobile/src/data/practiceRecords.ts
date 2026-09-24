@@ -1,5 +1,7 @@
 import {
   LOCAL_USER_ID,
+  clearReviewCheckpoint,
+  saveReviewCheckpoint,
   supportsPair,
   type Clock,
   type NativeLanguage,
@@ -151,4 +153,24 @@ export function writePracticeReview(
     hlc: stamp,
     createdAt: clock.now(),
   })
+}
+
+/**
+ * Review resume lives in the same SQL transaction as the attempt and review_event.
+ * Stream/Refrain/Speak omit `reviewCheckpoint` so they cannot overwrite Review.
+ */
+export function writeReviewCheckpoint(
+  database: RuntimeDatabase,
+  context: PracticeCommitContext | undefined,
+): void {
+  if (context?.attemptId === undefined || !('reviewCheckpoint' in context)) return
+  if (context.reviewCheckpoint === null) {
+    const target = context.targetLocale
+    if (target === undefined) throw new Error('Review checkpoint clear requires a target course')
+    clearReviewCheckpoint(database.driver, LOCAL_USER_ID, target)
+    return
+  }
+  if (context.reviewCheckpoint.eventId === context.attemptId)
+    throw new Error('Review checkpoint cannot reuse the attempt just committed')
+  saveReviewCheckpoint(database.driver, LOCAL_USER_ID, context.reviewCheckpoint)
 }

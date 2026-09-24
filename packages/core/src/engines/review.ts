@@ -44,6 +44,17 @@ export interface ReviewCandidates {
 }
 
 /**
+ * First-review policy (P3-30). An `unscheduled` row has no canonical FSRS state.
+ * Review must not invent one — Stream/Speak/Refrain create schedules through their
+ * own record paths. This route may only grade phrases that already have a due schedule.
+ */
+export type FirstReviewPolicy = 'scheduled' | 'blocked-unscheduled'
+
+export function firstReviewPolicy(phrase: Pick<PhraseState, 'srs'>): FirstReviewPolicy {
+  return phrase.srs === null ? 'blocked-unscheduled' : 'scheduled'
+}
+
+/**
  * Call with live repository rows (tombstones excluded). Review eligibility deliberately
  * includes graduated phrases, unlike daily rotation. Native UI language does not reset
  * a target course. Legacy rows belong to Spanish, as in PhraseState's persistence contract.
@@ -156,6 +167,8 @@ export class ReviewEngine implements PracticeEngine {
     if (phrase === null) throw new Error('Review phrase no longer exists')
     if ((phrase.targetLocale ?? 'es-ES') !== this.targetLocale)
       throw new Error('Review phrase belongs to another target course')
+    if (firstReviewPolicy(phrase) === 'blocked-unscheduled')
+      throw new Error('Review will not invent a first FSRS state')
     if (!isDue(phrase, attempt.at)) throw new Error('Review phrase is no longer due')
 
     return canonicalReviewDelta(

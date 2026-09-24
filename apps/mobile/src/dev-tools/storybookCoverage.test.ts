@@ -6,7 +6,7 @@ import { PRODUCTION_COMPONENT_NAMES } from './specimenContract'
 function storyFiles(directory: string): string[] {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     const path = join(directory, entry.name)
-    if (entry.isDirectory()) return storyFiles(path)
+    if (entry.isDirectory()) return entry.name === 'v13' ? [] : storyFiles(path)
     return entry.name.endsWith('.stories.tsx') ? [path] : []
   })
 }

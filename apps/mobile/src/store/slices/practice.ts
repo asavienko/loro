@@ -12,7 +12,7 @@ import { addPracticeDay } from '../state'
 import { PRODUCTION_WAVES } from '../engines'
 import { recordWaveListen } from '../../lib/waves'
 import type { Slice } from '../types'
-import type { UserPhraseId } from '@loro/core'
+import { buildListenQueue, type UserPhraseId } from '@loro/core'
 
 function withWaveListens<T extends { waveListens: Record<string, number>; refrainWaves: string[] }>(
   course: T,
@@ -30,13 +30,19 @@ function withWaveListens<T extends { waveListens: Record<string, number>; refrai
   return { ...course, waveListens: listened.counts, refrainWaves: listened.completed }
 }
 
-export const createPracticeSlice: Slice<'recordPlay' | 'applyDelta' | 'setStreamCursor'> = ({
-  set,
-  get,
-  deps,
-}) => ({
+export const createPracticeSlice: Slice<
+  'recordPlay' | 'applyDelta' | 'setStreamCursor' | 'setListenQueue'
+> = ({ set, get, deps }) => ({
   setStreamCursor: (streamCursor) => {
     set({ streamCursor })
+  },
+
+  setListenQueue: (phraseIds) => {
+    const built = buildListenQueue({
+      targetLocale: get().targetLocale,
+      phraseIds,
+    })
+    set({ listenQueue: built?.phraseIds ?? null })
   },
 
   recordPlay: (id) => {
@@ -120,6 +126,9 @@ export const createPracticeSlice: Slice<'recordPlay' | 'applyDelta' | 'setStream
                     ...saved[1],
                     phrases: update(saved[1].phrases),
                     ...(checkpoint ? { refrainResume: checkpoint } : {}),
+                    ...(context && 'reviewCheckpoint' in context
+                      ? { reviewCheckpoint: context.reviewCheckpoint ?? null }
+                      : {}),
                   },
                   delta.phraseId,
                   plays,
@@ -128,6 +137,9 @@ export const createPracticeSlice: Slice<'recordPlay' | 'applyDelta' | 'setStream
             : st.courses,
         practiceDays:
           practised === null ? st.practiceDays : addPracticeDay(st.practiceDays, practised),
+        ...(context && 'reviewCheckpoint' in context
+          ? { reviewCheckpoint: context.reviewCheckpoint ?? null }
+          : {}),
       }
     })
   },

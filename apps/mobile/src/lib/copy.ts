@@ -21,6 +21,7 @@ import { toastCopy } from './copy/toast'
 import { a11yCopy } from './copy/a11y'
 import { listenExportCopy } from './copy/listenExport'
 import { musicCopy } from './copy/music'
+import { reviewCopy } from './copy/review'
 
 export const copy = {
   persistence: persistenceCopy,
@@ -44,6 +45,7 @@ export const copy = {
   toast: toastCopy,
   a11y: a11yCopy,
   listenExport: listenExportCopy,
+  review: reviewCopy,
 }
 
 export function themeLabel(theme: string): string {

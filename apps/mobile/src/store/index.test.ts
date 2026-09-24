@@ -349,6 +349,13 @@ describe('typed practice writes', () => {
     expect(useApp.getState().streamCursor).toBe(4)
   })
 
+  it('stores a listen-queue playlist and fails closed on an empty list', () => {
+    useApp.getState().setListenQueue(['later', 'sooner'])
+    expect(useApp.getState().listenQueue).toEqual(['later', 'sooner'])
+    useApp.getState().setListenQueue([])
+    expect(useApp.getState().listenQueue).toBeNull()
+  })
+
   it('opens a Refrain session with the same resume identity the route used to write', () => {
     const isolated = createAppStore({
       clock: {

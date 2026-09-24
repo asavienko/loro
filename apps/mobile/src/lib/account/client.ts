@@ -167,7 +167,11 @@ export class AccountClient {
       this.credential = saved
       // The verified binding is retained offline; sync asks for a fresh access token when online.
       this.publish({
-        session: { accountId: saved.accountId, deviceId: saved.deviceId },
+        session: {
+          accountId: saved.accountId,
+          deviceId: saved.deviceId,
+          email: saved.email ?? null,
+        },
         status: 'signed-in',
       })
     } catch {
@@ -298,17 +302,22 @@ export class AccountClient {
         ),
       )
       if (generation !== this.generation) return
-      await this.accept(response, generation)
+      await this.accept(response, generation, email.trim())
     } catch (error) {
       if (generation === this.generation) this.fail(error)
     }
   }
-  private async accept(response: SignInResponse, generation: number): Promise<void> {
+  private async accept(
+    response: SignInResponse,
+    generation: number,
+    email?: string,
+  ): Promise<void> {
     const saved: SavedCredential = {
       accountId: response.user.id,
       deviceId: response.device_id,
       installationId: this.deps.device.installation_id,
       refreshToken: response.refresh_token,
+      ...(email ? { email } : {}),
     }
     const serialized = JSON.stringify(saved)
     if (generation !== this.generation) {
@@ -347,7 +356,11 @@ export class AccountClient {
     this.publish({
       status: 'signed-in',
       error: null,
-      session: { accountId: saved.accountId, deviceId: saved.deviceId },
+      session: {
+        accountId: saved.accountId,
+        deviceId: saved.deviceId,
+        email: saved.email ?? null,
+      },
     })
   }
   private async clearSaved(serialized: string): Promise<void> {

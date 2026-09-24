@@ -69,4 +69,7 @@ export const navCopy = {
   get music() {
     return message('nav.music')
   },
+  get review() {
+    return message('nav.review')
+  },
 }

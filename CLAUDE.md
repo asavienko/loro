@@ -6,7 +6,9 @@ Guidance for Claude Code working in this repository.
 
 **Loro** — a mobile app (iOS + Android) that teaches Spanish, Bulgarian, and Russian by the phrase.
 
-Early implementation. **What exists:** eight of the v1.1 design package's 23 learner screens,
+Early implementation. **What exists:** nine of the v1.1 design package's 23 learner screens
+(Review grades real FSRS due rows and persists a local checkpoint; Stream simple-queue
+can persist a device-local listen order in `local_metadata`; Memory remains),
 Languages, Account, More, Settings and Listen utilities, the shared shell and a developer workbench.
 `/music` (Phrase songs) is a later garnish via More — picker, lyric review, style confirm, and
 fixture playback. Default CI uses `MUSIC_PROVIDER=stub` and never calls ElevenLabs or Anthropic.
@@ -27,7 +29,7 @@ local listening silence only. Anonymous ElevenLabs/music/suggest spend is for a 
 API only — the public EC2 gateway still omits `/tts` and `/ai`. Optional Google/Apple and email
 sign-in connect durable local progress to cross-device sync.
 
-The three 31-phrase Spanish/Bulgarian/Russian starters still await bilingual review. The other 15
+The three 31-phrase Spanish/Bulgarian/Russian starters still await bilingual review. The other 14
 learner screens, pronunciation-reviewed production seed audio (Q-15 leaning pins are in core; the
 listen remains), the 150 MB LRU cache, background audio, measured onset latency, DSP, widgets,
 shareable neural listening export (Q-22) and account export/erasure remain. Cloud ASR is forbidden.

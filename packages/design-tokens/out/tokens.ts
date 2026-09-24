@@ -245,6 +245,23 @@ export const shadow = {
   toast: "0 10px 24px rgba(35,30,24,.16)",
   float: "0 8px 32px rgba(35,30,24,.12)",
   fieldInset: "inset 0 1px 2px rgba(28,28,25,.05)",
+  methodContact: "0 2px 4px rgba(35,30,24,.03)",
+  methodFilled: "0 2px 4px rgba(35,30,24,.08)",
+  methodSoft: "0 1px 2px rgba(35,30,24,.05)",
+  methodInset: "inset 0 2px 4px rgba(28,28,25,.05)",
+  accentGlow: "0 2px 8px rgba(200,90,50,.15)",
+  accentGlowStrong: "0 2px 8px rgba(200,90,50,.25)",
+  accentGlowStay: "0 2px 6px rgba(200,90,50,.25)",
+  emblemSoft: "0 1px 2px rgba(35,30,24,.05)",
+  emblemRaised: "0 4px 6px rgba(35,30,24,.10), 0 2px 4px rgba(35,30,24,.10)",
+  headerHairline: "0 1px 8px rgba(28,28,25,.04)",
+  playRaised: "0 10px 15px rgba(35,30,24,.10), 0 4px 6px rgba(35,30,24,.10)",
+  dockFloat: "0 8px 24px rgba(35,30,24,.30)",
+  queueSoft: "0 1px 1px rgba(35,30,24,.05)",
+  playerFloat: "0 25px 50px rgba(35,30,24,.25)",
+  playGlow: "0 6px 18px rgba(191,84,44,.35)",
+  pillRing: "0 0 0 2px rgba(255,219,208,.40)",
+  rateRing: "0 0 0 2px rgba(255,219,208,1)",
 } as const
 
 export const size = {
