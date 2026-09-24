@@ -46,14 +46,15 @@ test('Tab and Shift+Tab stay inside an open sheet, past its tabs', async ({ page
   }
 });
 
-test('opening a set, and going back, puts focus on the new screen’s heading', async ({ page }) => {
+test('opening a set focuses its heading; Back returns focus to the card', async ({ page }) => {
   await page.goto('/#/explore');
   await page.getByRole('button', { name: 'Café & Mañanas' }).first().focus();
   await page.keyboard.press('Enter');
   await expect(page.getByRole('heading', { name: 'Café & Mañanas', level: 1 })).toBeFocused();
   await page.getByRole('button', { name: /^Back/ }).first().focus();
   await page.keyboard.press('Enter');
-  await expect(page.getByRole('heading', { name: 'Explore', level: 1 })).toBeFocused();
+  // Back returns focus to the card that opened the set.
+  await expect(page.getByRole('button', { name: 'Café & Mañanas' }).first()).toBeFocused();
   // A tab switch leaves focus on the tab.
   await page.getByRole('button', { name: 'Library' }).focus();
   await page.keyboard.press('Enter');

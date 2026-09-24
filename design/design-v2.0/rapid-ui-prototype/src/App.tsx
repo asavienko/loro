@@ -180,10 +180,30 @@ function Shell() {
   // A new screen replaces the control that opened it (a set card, Back), which drops
   // keyboard and screen-reader focus to <body>. Then focus goes to the new screen's
   // heading. A tab switch keeps focus on its tab, so nothing moves.
+  // Coming back to a screen, focus returns to the control that left it (the set card
+  // that was opened), found again by its accessible name; otherwise the heading.
   const screenId = route.name === 'set' ? `set-${route.id}` : route.name;
+  const lastFocused = useRef(new Map<string, string>());
+  useEffect(() => {
+    const remember = (event: FocusEvent) => {
+      const el = event.target as HTMLElement;
+      const name = el.getAttribute?.('aria-label') ?? el.textContent?.trim();
+      if (name && el.closest('main')) lastFocused.current.set(screenId, name);
+    };
+    document.addEventListener('focusin', remember);
+    return () => document.removeEventListener('focusin', remember);
+  }, [screenId]);
   useEffect(() => {
     const id = requestAnimationFrame(() => {
       if (document.activeElement && document.activeElement !== document.body) return;
+      const name = lastFocused.current.get(screenId);
+      const again = name
+        ? [...document.querySelectorAll<HTMLElement>('main button, main a[href]')].find((el) => (el.getAttribute('aria-label') ?? el.textContent?.trim()) === name)
+        : undefined;
+      if (again) {
+        again.focus({ preventScroll: true });
+        return;
+      }
       const heading = document.querySelector<HTMLElement>('main h1, header h1');
       if (!heading) return;
       heading.tabIndex = -1;
