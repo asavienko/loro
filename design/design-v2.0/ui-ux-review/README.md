@@ -541,10 +541,10 @@ stateDiagram-v2
 
 ## Findings to decide
 
-1. **Intervals get long fast.** The real core schedules at Loro's authored 50% retention, so a
-   review falls due at about 90× stability. The first Easy is capped at 1 or 4 days, but the second
-   on-time Easy lands months or years out. This is the authored policy; for a short, listening-led
-   loop it may need a product decision (`docs/architecture/fsrs-model.md`).
+1. **Intervals got long fast — changed in the usability pass below.** At Loro's authored 50%
+   retention a review falls due at about 90× stability, so the second on-time Easy landed years
+   out. The prototype now reviews at 90% recall (after the stability in days); the app's own policy
+   still needs a product decision (`docs/architecture/fsrs-model.md`).
 2. **All new language needs a native reviewer:** revised Spanish phrases, notes, the Bulgarian
    course, bg/ru prompts and glosses, and the Bulgarian and Russian UI copy.
 3. **Hidden pages pause.** You asked for a clean pause when the page is hidden (44), so lock-screen
@@ -560,3 +560,33 @@ stateDiagram-v2
   Bulgarian, the recall rule, rating change/undo/commit with a fast-forwarded clock, Back closing
   overlays, the queue, Explore, Library, reload, axe at 100% and 200% text, and 44 px / 11 px audits.
   They also check that chart bars measure what their numbers say.
+
+---
+
+# Usability pass — 2026-09-24
+
+Goal: make the prototype usable and smooth. I used it as a learner at 390×844, with a seeded
+history, in all three UI languages, at 200% text, on a tablet and in landscape, and against the
+production build offline. Each fix below is covered by a test.
+
+| Found | Fix |
+| --- | --- |
+| "Easy · 2 yrs", "next in 3 years": the core's 50% retention made intervals unusable | Review at 90% recall (after the stability in days); the core's date stays the upper bound |
+| iPhones block speech that doesn't start inside a tap; the loop speaks from an effect | The first tap unlocks speech and Web Audio |
+| An utterance that ended without a start event paid nothing | It counts as heard, without a measurement |
+| Toasts covered the player's transport | Over the player they sit at the top |
+| At 200% text, lists widened the page to 509 px, pushing the tab bar and mini-player off screen | Single-column grids use `minmax(0,1fr)`; the suite checks this with real history |
+| `<html lang>` stayed "en" in the Bulgarian and Russian UIs | It follows the UI language: correct speech and Bulgarian letterforms |
+| Each save re-parsed ~2 MB of stored state after a year of history | Merges only when another tab actually wrote |
+| The rating hold repeated "How did saying it go?" | "Rate it, or wait to go on" |
+| "pasado" and "!" wrapped onto separate lines in glossed phrases | Punctuation stays with its word; the heading is named by the phrase |
+| Hard and Easy both previewed "2 mths" | Days up to 100 |
+| The session summary pointed 13 days ahead while 7 phrases were due | It says what is due now first |
+| "Metro & Streets", "Taxi at Night" were English titles in the Spanish course | "Metro y Calles", "Taxi de Noche" |
+| A curved divider on Home stats, "24 hours ago", the queue count truncating at large text, the landscape player | Fixed |
+
+Also new: player keyboard shortcuts (Space, ← →, 1 2 3), and `npm run test:e2e:preview`, which
+runs the whole suite against the production build with its service worker, including offline use.
+
+**Checks:** `npm run check` (lint, strict types, 58 unit tests, build); 40 Playwright tests on the dev
+server, and the same suite plus an offline test against the production build.
