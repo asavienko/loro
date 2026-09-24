@@ -77,7 +77,13 @@ export function usePlaybackDriver(): void {
         actions.phaseDone(cycle, { unconfirmed: true });
       } else {
         const spoken = phase === 'native' || phase === 'target';
-        actions.phaseDone(cycle, spoken && result.ms !== null ? { measuredMs: Math.round(result.ms * speed) } : {});
+        // A duration is kept as the phrase's length at 1×, and must be measured. A clip's
+        // is (the file plays at the rate we set). Synthesised speech doesn't scale
+        // linearly with its rate (iOS maps it, voices clamp it, pauses don't stretch), so
+        // speech measured at another speed would be an estimate: it isn't recorded.
+        const clip = Boolean(phrase.audio?.[lang]);
+        const measured = spoken && result.ms !== null && (clip || speed === 1);
+        actions.phaseDone(cycle, measured ? { measuredMs: Math.round(result.ms! * speed) } : {});
       }
     });
     return () => {

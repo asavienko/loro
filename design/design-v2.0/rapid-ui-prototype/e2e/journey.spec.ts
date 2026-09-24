@@ -188,3 +188,22 @@ test.describe('onboarding by keyboard', () => {
     await expect(page.getByText('Step 3 of 5')).toBeVisible();
   });
 });
+
+// A phrase's length is kept at 1× and must be measured: speech at another speed
+// doesn't scale linearly, so it isn't recorded (clips are).
+for (const [speed, measured] of [[1.25, false], [1, true]] as const) {
+  test.describe(`speech heard at ${speed}×`, () => {
+    test.use({ seed: { speed } });
+    test(measured ? 'is measured' : 'is not taken as a 1× length', async ({ page }) => {
+      await start(page);
+      await page.getByRole('button', { name: 'Play 5 phrases' }).click();
+      await page.getByRole('button', { name: /^Now playing:/ }).click();
+      const player = page.getByRole('dialog', { name: 'Now playing' });
+      await run(page, 30_000);
+      await player.getByRole('button', { name: 'Previous phrase' }).click();
+      await player.getByRole('button', { name: 'Pause', exact: true }).click();
+      if (measured) await expect(player.getByText(/ at 1×$/)).toBeVisible();
+      else await expect(player.getByText(/ at 1×$/)).toHaveCount(0);
+    });
+  });
+}
