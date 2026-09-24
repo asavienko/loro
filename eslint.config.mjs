@@ -21,6 +21,8 @@ export default tseslint.config(
       '**/.expo/**',
       '**/bindings/**',
       '**/browser/loro_core.js',
+      // Design prototypes are standalone npm projects with their own lint config.
+      'design/**',
     ],
   },
 
