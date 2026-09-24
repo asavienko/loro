@@ -105,3 +105,16 @@ test('media keys: seek back replays the phrase, seek forward moves on', async ({
   await page.evaluate(() => (window as unknown as { __media: Record<string, () => void> }).__media.previoustrack());
   await expect(mini).toContainText('A cortado, please');
 });
+
+test("a queue row's options stay with that phrase while playback moves on", async ({ page }) => {
+  const queue = await openQueue(page);
+  await queue.getByRole('button', { name: 'Move Sin gluten, por favor' }).tap();
+  const options = page.getByRole('dialog', { name: 'Sin gluten, por favor' });
+  await expect(options).toBeVisible();
+  // Playback moves on underneath the open sheet.
+  await page.evaluate(() => document.querySelector<HTMLElement>('[data-player]')?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true })));
+  await page.waitForTimeout(300);
+  await expect(options).toBeVisible();
+  await options.getByRole('button', { name: 'Remove from queue' }).tap();
+  await expect(queue.getByRole('button', { name: 'Play Sin gluten, por favor now' })).toHaveCount(0);
+});

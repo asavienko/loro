@@ -30,14 +30,17 @@ export function QueueScreen({ onClose }: { onClose: () => void }) {
   const dialogRef = useRef<HTMLDivElement>(null);
   useDialog(dialogRef, onClose);
   const hintId = useId();
-  // The up-next row whose options are open: the single-tap route to what drag and swipe do (WCAG 2.5.7).
-  const [menu, setMenu] = useState<number | null>(null);
-  const menuPhrase = menu === null ? undefined : findPhrase(state.learner, upNext[menu]);
   // Up next starts right after the current phrase in the queue order.
   const positionOf = (i: number) => state.player.index + 1 + i;
   // A phrase can be queued twice (a missed phrase comes back), so each row's identity includes its copy number.
   const items = upNext.map((id, i) => `${id}#${upNext.slice(0, i).filter((x) => x === id).length}`);
   const idOf = (item: string) => item.slice(0, item.lastIndexOf('#'));
+  // The up-next row whose options are open: the single-tap route to what drag and swipe do
+  // (WCAG 2.5.7). Kept by the row's key, not its position: playback shifts the list.
+  const [menuKey, setMenuKey] = useState<string | null>(null);
+  const menu = menuKey === null || !items.includes(menuKey) ? null : items.indexOf(menuKey);
+  const menuPhrase = menu === null ? undefined : findPhrase(state.learner, upNext[menu]);
+  const setMenu = (i: number | null) => setMenuKey(i === null ? null : items[i]);
 
   const move = (from: number, to: number) => {
     if (to < 0 || to >= upNext.length) return;
