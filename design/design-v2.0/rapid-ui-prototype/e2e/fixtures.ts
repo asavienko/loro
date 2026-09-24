@@ -113,7 +113,14 @@ export const test = base.extend<{ seed: Seed | null }>({
         [STORAGE_KEY, seededState(seed)] as const,
       );
     }
+    // Any uncaught error or React error in the console fails the test.
+    const errors: string[] = [];
+    page.on('pageerror', (error) => errors.push(`pageerror: ${error.message}`));
+    page.on('console', (message) => {
+      if (message.type() === 'error' && !/Failed to load resource|WebSocket/.test(message.text())) errors.push(`console: ${message.text().slice(0, 300)}`);
+    });
     await use(page);
+    expect(errors, 'errors in the page').toEqual([]);
   },
 });
 

@@ -58,7 +58,7 @@ function fallbackCopy() {
   }
 }
 
-/** Last resort if saved progress no longer fits the app: say so, offer a copy, then a clean start. */
+/** Last resort: reload first (progress is kept); if saved progress no longer fits, copy it, then reset. */
 class ErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean; copied: boolean }> {
   state = { failed: false, copied: false };
 
@@ -74,6 +74,13 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean
       <main className="min-h-dvh bg-surface text-on-surface flex flex-col justify-center gap-3 px-6 max-w-md mx-auto">
         <h1 className="font-serif text-display-sm font-bold">{c.error.title}</h1>
         <p className="text-body text-secondary">{c.error.body}</p>
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          className="self-start min-h-12 px-5 rounded-full bg-primary-container text-on-primary font-bold"
+        >
+          {c.error.reload}
+        </button>
         {raw && (
           <button
             type="button"
@@ -91,7 +98,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean
             clearSavedState();
             window.location.reload();
           }}
-          className="self-start min-h-12 px-5 rounded-full bg-primary-container text-on-primary font-bold"
+          className="self-start min-h-12 px-5 rounded-full text-error font-bold"
         >
           {c.error.reset}
         </button>
