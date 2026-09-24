@@ -60,6 +60,13 @@ export function Onboarding() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               autoComplete="given-name"
+              enterKeyHint="next"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  next();
+                }
+              }}
               maxLength={40}
               placeholder={c.onboarding.namePlaceholder}
               className="min-h-12 px-4 rounded-2xl bg-surface-container-low border border-outline-variant/60 text-base"

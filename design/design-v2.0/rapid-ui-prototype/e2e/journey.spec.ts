@@ -200,3 +200,14 @@ test.describe('onboarding on a device with no Spanish voice', () => {
     await expectAccessible(page);
   });
 });
+
+test.describe('onboarding by keyboard', () => {
+  test.use({ seed: null });
+  test('Enter in the name field goes on to the next step', async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await page.getByPlaceholder(/name/i).fill('Ana');
+    await page.getByPlaceholder(/name/i).press('Enter');
+    await expect(page.getByText('Step 3 of 5')).toBeVisible();
+  });
+});
