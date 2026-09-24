@@ -342,7 +342,8 @@
       "este": { "en-GB": "this", "bg-BG": "този", "ru-RU": "этот" },
       "tren": { "en-GB": "train", "bg-BG": "влак", "ru-RU": "поезд" },
       "va": { "en-GB": "goes", "bg-BG": "отива", "ru-RU": "идёт" },
-      "a": { "en-GB": "to", "bg-BG": "до", "ru-RU": "до, в" }
+      "a": { "en-GB": "to", "bg-BG": "до", "ru-RU": "до, в" },
+      "sol": { "en-GB": "Sol (Madrid’s central station)", "bg-BG": "Сол (централната станция на Мадрид)", "ru-RU": "Соль (центральная станция Мадрида)" }
     },
     "notes": {
       "grammar": {

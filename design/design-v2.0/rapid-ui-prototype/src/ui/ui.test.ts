@@ -44,7 +44,7 @@ describe('word glosses', () => {
     assert.deepEqual(tokens.map((t) => t.text), ['Me', 'pone', 'un', 'cortado', 'por favor']);
     const transit = CONTENT_PHRASES.find((p) => p.id === 'transit-03')!;
     // "a" is glossed, but not the "a" inside "va".
-    assert.deepEqual(tokenize(transit, 'en-GB').filter((t) => t.gloss).map((t) => t.text), ['Este', 'tren', 'va', 'a']);
+    assert.deepEqual(tokenize(transit, 'en-GB').filter((t) => t.gloss).map((t) => t.text), ['Este', 'tren', 'va', 'a', 'Sol']);
   });
 });
 
@@ -52,5 +52,21 @@ describe('search', () => {
   it('folds case and accents without changing length', () => {
     assert.equal(fold('¿Dónde ESTÁ?'), '¿donde esta?');
     assert.equal(fold('Сметката').length, 'Сметката'.length);
+  });
+});
+
+describe('word gloss coverage', () => {
+  it('every word of every phrase can be tapped for its meaning, in every prompt language', () => {
+    for (const p of CONTENT_PHRASES) {
+      for (const native of Object.keys(p.translations) as (keyof typeof p.translations)[]) {
+        const gaps = tokenize(p, native)
+          .filter((t) => !t.gloss)
+          .map((t) => t.text)
+          .join(' ')
+          .split(/[^\p{L}]+/u)
+          .filter(Boolean);
+        assert.deepEqual(gaps, [], `${p.id} (${native})`);
+      }
+    }
   });
 });
