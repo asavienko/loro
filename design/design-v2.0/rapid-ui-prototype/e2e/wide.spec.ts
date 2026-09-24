@@ -55,3 +55,12 @@ test.describe('on a touch phone', () => {
     await expect(player.getByText(/^Keys:/)).toBeHidden();
   });
 });
+
+test('with a mouse, buttons show the hand cursor and answer hover', async ({ page }) => {
+  await page.goto('/');
+  const explore = page.getByRole('button', { name: 'Explore' });
+  expect(await explore.evaluate((e) => getComputedStyle(e).cursor)).toBe('pointer');
+  expect(await explore.evaluate((e) => getComputedStyle(e).backgroundImage)).toBe('none');
+  await explore.hover();
+  expect(await explore.evaluate((e) => getComputedStyle(e).backgroundImage)).toContain('gradient');
+});
