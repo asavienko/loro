@@ -40,10 +40,10 @@ export function HiddenPhrase({ text, className, label }: { text: string; classNa
   }, [text]);
   return (
     <h2 ref={probe} className={className}>
-      <span className="sr-only">{label}</span>
-      <span aria-hidden="true" className="flex flex-col gap-1.5 py-1">
+      <span className='sr-only'>{label}</span>
+      <span aria-hidden='true' className='flex flex-col gap-1.5 py-1'>
         {lines.map((width, i) => (
-          <span key={i} className="block h-6 rounded-md bg-surface-container-highest" style={{ width }} />
+          <span key={i} className='block h-6 rounded-md bg-surface-container-highest' style={{ width }} />
         ))}
       </span>
     </h2>
@@ -52,7 +52,7 @@ export function HiddenPhrase({ text, className, label }: { text: string; classNa
 
 type Token = { text: string; gloss: string | null };
 
-/** Splits the target into glossed units, longest match first ("por favor" before "por"). */
+/** Splits the target into glossed units, longest match first ('por favor' before 'por'). */
 export function tokenize(phrase: Phrase, native: LanguageCode): Token[] {
   const lang = phrase.targetLang;
   const units = Object.keys(phrase.words).sort((a, b) => b.length - a.length);
@@ -79,6 +79,10 @@ export function tokenize(phrase: Phrase, native: LanguageCode): Token[] {
   return tokens;
 }
 
+const LEADING_PUNCT = /^[^\s\p{L}]+/u;
+const TRAILING_PUNCT = /[^\s\p{L}]+$/u;
+const NOTHING = /(?!)/;
+
 /** The revealed target, with each glossed word tappable to show its meaning. */
 export function GlossedPhrase({ phrase, className }: { phrase: Phrase; className: string }) {
   const c = useCopy();
@@ -88,24 +92,37 @@ export function GlossedPhrase({ phrase, className }: { phrase: Phrase; className
   const openToken = open === null ? null : tokens[open];
   return (
     <div>
-      <h2 lang={phrase.targetLang} className={className}>
-        {tokens.map((t, i) =>
-          t.gloss ? (
-            <button
-              key={i}
-              type="button"
-              aria-expanded={open === i}
-              onClick={() => setOpen(open === i ? null : i)}
-              className={`inline rounded-md underline decoration-dotted decoration-outline underline-offset-4 ${open === i ? 'bg-primary-fixed/60' : ''}`}
-            >
-              {t.text}
-            </button>
-          ) : (
-            <span key={i}>{t.text}</span>
-          ),
-        )}
+      <h2 lang={phrase.targetLang} aria-label={phrase.target} className={className}>
+        {tokens.map((t, i) => {
+          // Punctuation touching a word ('¡Qué', 'pasado!') must not wrap onto a line of its own,
+          // so it moves into the word's unbreakable span.
+          if (!t.gloss) {
+            const text = t.text
+              .replace(i > 0 && tokens[i - 1].gloss ? LEADING_PUNCT : NOTHING, '')
+              .replace(tokens[i + 1]?.gloss ? TRAILING_PUNCT : NOTHING, '');
+            return <span key={i}>{text}</span>;
+          }
+          // A plain token between two words gives its leading punctuation to the word before it only.
+          const previous = tokens[i - 1]?.gloss === null ? tokens[i - 1].text.replace(i > 1 && tokens[i - 2].gloss ? LEADING_PUNCT : NOTHING, '') : '';
+          const before = TRAILING_PUNCT.exec(previous)?.[0] ?? '';
+          const after = tokens[i + 1]?.gloss === null ? (LEADING_PUNCT.exec(tokens[i + 1].text)?.[0] ?? '') : '';
+          return (
+            <span key={i} className='whitespace-nowrap'>
+              {before}
+              <button
+                type='button'
+                aria-expanded={open === i}
+                onClick={() => setOpen(open === i ? null : i)}
+                className={`inline rounded-md underline decoration-dotted decoration-outline underline-offset-4 ${open === i ? 'bg-primary-fixed/60' : ''}`}
+              >
+                {t.text}
+              </button>
+              {after}
+            </span>
+          );
+        })}
       </h2>
-      <p aria-live="polite" className="min-h-5 text-body text-on-surface-variant mt-1">
+      <p aria-live='polite' className='min-h-5 text-body text-on-surface-variant mt-1'>
         {openToken?.gloss ? c.phrase.wordMeaning(openToken.text, openToken.gloss) : ''}
       </p>
     </div>

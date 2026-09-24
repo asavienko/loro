@@ -43,6 +43,9 @@ test.describe('the loop', () => {
     // Prompt, then the learner's turn, then the target.
     await expect(player.getByText('Your turn — say it in Spanish', { exact: true }).first()).toBeVisible();
     await expect(player.getByText('Hear it in Spanish', { exact: true }).first()).toBeVisible({ timeout: 10_000 });
+    await player.getByRole('button', { name: 'Pause', exact: true }).click();
+    // The glossed heading reads exactly as the phrase: no punctuation lost or doubled.
+    await expect(player.getByRole('heading', { name: 'Me pone un cortado, por favor', exact: true })).toHaveText('Me pone un cortado, por favor');
     await player.getByRole('button', { name: 'cortado' }).click();
     await expect(player.getByText('cortado: espresso with a dash of milk')).toBeVisible();
   });

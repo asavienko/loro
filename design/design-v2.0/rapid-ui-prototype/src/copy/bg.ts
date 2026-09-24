@@ -177,7 +177,7 @@ export function makeBg(n: Plural): Copy {
         native: (language) => `Слушайте на ${language}`,
         pause: (language) => `Ваш ред — кажете го на ${language}`,
         target: (language) => `Чуйте го на ${language}`,
-        rate: 'Как се получи?',
+        rate: 'Оценете или изчакайте',
       },
       paused: 'Пауза',
       repetition: (r, total) => `Повторение ${r} от ${total}`,

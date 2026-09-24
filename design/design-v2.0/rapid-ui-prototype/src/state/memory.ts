@@ -84,6 +84,12 @@ export function reviewed(memory: PhraseMemory, grade: Grade, at: number) {
   const before = memory.fsrs ?? initialize(at);
   const first = before.last_review === null;
   const next = review(before, grade, at);
+  if (next.state === 'review') {
+    // Prototype policy: due when predicted recall falls to 90%, i.e. after the
+    // stability in whole days. The core's 50% date is years out after a few
+    // good reviews, which a short listening loop can't use.
+    next.due = Math.min(next.due, at + Math.max(1, Math.round(next.stability)) * DAY);
+  }
   if (first && grade !== 'missed') {
     const capDays = memory.heardCount >= 2 ? FIRST_REVIEW_CAP_DAYS.heardTwice : FIRST_REVIEW_CAP_DAYS.heardOnce;
     next.due = Math.min(next.due, at + capDays * DAY);

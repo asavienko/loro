@@ -199,6 +199,18 @@ describe('memory through the Rust core', () => {
     assert.ok(twiceDue - (T0 + 10) <= 4 * DAY && twiceDue - (T0 + 10) > DAY);
   });
 
+  it('a reviewed phrase is due when recall falls to 90%, never years out', () => {
+    let s = load(fresh());
+    let at = T0;
+    for (let i = 0; i < 4; i++) {
+      s = rateAt(s, 'easy', at);
+      const fsrs = memoryOf(s.learner, 'cafe-01').fsrs!;
+      assert.ok(fsrs.due - at <= Math.max(1, Math.round(fsrs.stability)) * DAY);
+      at = fsrs.due;
+    }
+    assert.ok(at - T0 < 365 * DAY, 'four on-time reviews stay within a year');
+  });
+
   it('missed goes to relearning ten minutes out and raises difficulty', () => {
     let s = rateAt(load(fresh()), 'easy', T0);
     const before = memoryOf(s.learner, 'cafe-01').fsrs!;
