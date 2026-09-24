@@ -19,6 +19,9 @@ export function usePlayerKeys(): void {
       if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return;
       const target = event.target as HTMLElement | null;
       if (target?.closest('input, textarea, select, [role="tab"], [role="radio"], [contenteditable="true"]')) return;
+      // A sheet or the queue over the player owns its keys: Space scrolls it, arrows move in it.
+      const dialog = target?.closest('[role="dialog"]');
+      if (dialog && !dialog.hasAttribute('data-player')) return;
       const { playing, actions: a } = latest.current;
       const grade = GRADE_KEYS[event.key];
       if (event.key === ' ' && !target?.closest('button')) {

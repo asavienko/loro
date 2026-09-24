@@ -60,3 +60,18 @@ test('opening a set focuses its heading; Back returns focus to the card', async 
   await page.keyboard.press('Enter');
   await expect(page.getByRole('button', { name: 'Library' })).toBeFocused();
 });
+
+test("the player's keys stay out of a sheet opened over it", async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: /^Play/ }).first().click();
+  await page.getByRole('button', { name: /^Now playing:/ }).click();
+  const player = page.getByRole('dialog', { name: 'Now playing' });
+  const position = await player.getByText(/^1 of \d+$/).textContent();
+  await page.getByRole('button', { name: 'Session summary' }).click();
+  await page.getByRole('region', { name: 'This session' }).focus();
+  await page.keyboard.press('ArrowRight');
+  await page.keyboard.press('Space');
+  await page.keyboard.press('Escape');
+  await expect(player.getByText(position!)).toBeVisible();
+  await expect(player.getByRole('button', { name: 'Pause', exact: true })).toBeVisible();
+});
