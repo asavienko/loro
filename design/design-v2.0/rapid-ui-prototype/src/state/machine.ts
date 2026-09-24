@@ -79,7 +79,7 @@ export type AppEvent =
   | { type: 'RESTORE_SET'; setId: string; now: number }
   | { type: 'SET_PROFILE'; profile: Partial<Omit<Profile, 'updatedAt'>>; now: number }
   | { type: 'RESTORE'; state: unknown }
-  | { type: 'MERGE_REMOTE'; learner: LearnerState }
+  | { type: 'MERGE_REMOTE'; learner: LearnerState; now: number }
   | { type: 'RESET' };
 
 export type AppEventType = AppEvent['type'];
@@ -569,7 +569,23 @@ export function transition(state: AppState, event: AppEvent): AppState {
 
     case 'MERGE_REMOTE': {
       const merged = mergeLearner(learner, event.learner);
-      return merged === learner ? state : { ...state, learner: merged };
+      if (merged === learner) return state;
+      // Another device may have deleted one of your queued phrases, even the current one
+      // (a local delete refuses that). Drop what's gone; if the current phrase went, pause
+      // on the one after it rather than "play" a phrase that no longer exists.
+      const known = (id: string) => Boolean(findPhrase(merged, id));
+      if (player.order.every(known)) return { ...state, learner: merged };
+      const order = player.order.filter(known);
+      const currentGone = !known(player.order[player.index]);
+      const index = Math.min(player.order.slice(0, player.index).filter(known).length, Math.max(0, order.length - 1));
+      const cleaned: PlayerState = {
+        ...(currentGone ? { ...stopClock(player, event.now), phase: 'native' as const, repetition: 1, cycle: player.cycle + 1 } : player),
+        status: order.length === 0 ? 'idle' : currentGone ? 'paused' : player.status,
+        order,
+        baseOrder: player.baseOrder.filter(known),
+        index,
+      };
+      return { ...state, learner: merged, player: order.length === 0 ? initialPlayer() : cleaned };
     }
 
     case 'RESET':
