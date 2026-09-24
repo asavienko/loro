@@ -651,6 +651,8 @@ found no crash.
 | Add to set gave no sign of membership until a tap | Each set shows its count, or a tick and "Already in this set"; a same-named new set is noted |
 | On a portrait tablet the player split into two ~350 px columns that wrapped | One column up to 1024 px, with a larger cover |
 | On desktop the player header and the set page's Back sat outside their content column | Both share their page's column (`e2e/wide.spec.ts`) |
+| With a mouse, nothing answered hover and buttons kept the arrow cursor; the shortcuts were invisible | Hand cursor and a light hover layer (fine pointers only); the player names Space, ← → and 1 2 3 |
+| Tabbing on Home and Explore hid the focused control under the top bar or behind the tab bar and mini-player (WCAG 2.4.11) | Scroll padding matches the fixed bars (`e2e/focus.spec.ts`); axe also runs on a real desktop now |
 
 Checks after these: 71 unit tests and 96 Playwright tests on the dev server (12 skipped). Keyboard
 focus returns to the opener when a sheet, Settings or the player closes, and falls back to the
