@@ -61,6 +61,17 @@ describe('persistence', () => {
     assert.equal(s.prefs.speed, 1.25);
   });
 
+  it('stores the log compactly, about a third of the plain size, and reads it back exactly', () => {
+    let s = load(fresh());
+    for (let i = 0; i < 40; i++) s = done(s, T0 + i * 1000, 900 + i);
+    s = run(s, { type: 'RATE', grade: 'hard', now: T0 + 60_000 }, { type: 'COMMIT', now: T0 + 60_000 + RATING_WINDOW_MS });
+    const compact = serializeState(s);
+    const plain = JSON.stringify(s);
+    assert.ok(compact.length < plain.length * 0.6, `${compact.length} vs ${plain.length}`);
+    assert.deepEqual(parseState(compact, device)!.learner, s.learner);
+    assert.deepEqual(parseState(plain, device)!.learner, s.learner, 'plain saves still load');
+  });
+
   it('RESTORE goes through the same sanitising', () => {
     const s = fresh();
     assert.equal(transition(s, { type: 'RESTORE', state: { junk: true } }), s);
