@@ -62,3 +62,31 @@ test('interactions respond quickly on a slow phone', async ({ page }) => {
   const slow = await page.evaluate(() => (window as unknown as { __slow: string[] }).__slow);
   expect(slow, 'interactions over 200 ms').toEqual([]);
 });
+
+// Half an hour of hands-free playback (repeat mode, so toasts keep coming): the
+// page doesn't grow. Before the toast was one element, replaced toasts piled up.
+test.describe('a long session', () => {
+  test.use({ seed: {} });
+  test('keeps the page the same size', async ({ page }) => {
+    test.setTimeout(120_000);
+    await page.clock.install();
+    await page.goto('/');
+    await page.getByRole('button', { name: /^Play \d+ phrases/ }).first().click();
+    await page.getByRole('button', { name: /^Now playing:/ }).click();
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send('Performance.enable');
+    const size = async () => {
+      // Listeners on detached nodes count until collected.
+      await cdp.send('HeapProfiler.collectGarbage');
+      const elements = await page.evaluate(() => document.querySelectorAll('*').length);
+      const { metrics } = await cdp.send('Performance.getMetrics');
+      return { elements, listeners: metrics.find((m) => m.name === 'JSEventListeners')!.value };
+    };
+    for (let t = 0; t < 60_000; t += 1000) await page.clock.runFor(1000);
+    const early = await size();
+    for (let t = 0; t < 29 * 60_000; t += 1000) await page.clock.runFor(1000);
+    const late = await size();
+    expect(late.elements - early.elements, 'elements added in 29 minutes').toBeLessThan(20);
+    expect(late.listeners - early.listeners, 'listeners added in 29 minutes').toBeLessThan(10);
+  });
+});
