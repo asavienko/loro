@@ -23,6 +23,17 @@ test.describe('explore', () => {
     await expect(page.getByRole('button', { name: /La cuenta, por favor/ })).toHaveCount(0);
   });
 
+  test('a space typed between words survives the pause', async ({ page }) => {
+    await page.goto('/#/explore');
+    const field = page.getByRole('searchbox');
+    await field.pressSequentially('la ');
+    await page.waitForTimeout(500);
+    await field.pressSequentially('cuenta');
+    await page.waitForTimeout(500);
+    await expect(field).toHaveValue('la cuenta');
+    await expect(page.getByRole('button', { name: /La cuenta, por favor/ }).first()).toBeVisible();
+  });
+
   test('a topic becomes a removable filter chip', async ({ page }) => {
     await page.goto('/#/explore');
     await page.getByRole('button', { name: /Getting around/ }).click();

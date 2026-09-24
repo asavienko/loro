@@ -34,6 +34,7 @@ describe('routes', () => {
     for (const r of routes) assert.deepEqual(parseRoute(formatRoute(r)), r);
     assert.deepEqual(parseRoute('#/nowhere'), { name: 'home' });
     assert.deepEqual(parseRoute('#/explore?level=Z9'), { name: 'explore' });
+    assert.deepEqual(parseRoute('#/explore?topic=nope'), { name: 'explore' }, 'an unknown topic is dropped');
   });
 });
 

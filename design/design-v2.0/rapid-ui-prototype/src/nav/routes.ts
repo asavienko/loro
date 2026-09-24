@@ -1,6 +1,6 @@
 // Routes live in the URL hash, so a refresh keeps the learner's place and a
 // set can be shared as a link. Pure: parse and format round-trip.
-import type { Level, Tag } from '../content';
+import { TOPICS, type Level, type Tag } from '../content';
 
 export type Tab = 'home' | 'explore' | 'library';
 
@@ -38,7 +38,8 @@ export function parseRoute(hash: string): Route {
       const level = params.get('level');
       const tag = params.get('tag');
       if (q) route.q = q;
-      if (topic) route.topic = topic;
+      // An unknown topic would filter everything out behind a heading that says "All sets".
+      if (topic && TOPICS.some((t) => t.id === topic)) route.topic = topic;
       if (level && LEVELS.includes(level)) route.level = level as Level;
       if (tag && TAGS.includes(tag)) route.tag = tag as Tag;
       return route;
