@@ -77,9 +77,12 @@ export function ExploreScreen({ filters }: { filters: ExploreFilters }) {
 
   const update = (patch: Partial<ExploreFilters>, replace = false) => navigate({ name: 'explore', ...filters, ...patch }, { replace });
   // Typing replaces the history entry, so Back leaves Explore instead of undoing letters.
+  // The query keeps what was typed, spaces and all: trimming it here would write the
+  // trimmed text back into the field and swallow the space between two words.
   useEffect(() => {
     const id = setTimeout(() => {
-      if ((filters.q ?? '') !== text.trim()) update({ q: text.trim() || undefined }, true);
+      const typed = text.trim() ? text : undefined;
+      if (filters.q !== typed) update({ q: typed }, true);
     }, 250);
     return () => clearTimeout(id);
   });
@@ -87,6 +90,8 @@ export function ExploreScreen({ filters }: { filters: ExploreFilters }) {
   const words = queryWords(filters.q ?? '');
   const q = words.join(' ');
   const topic = TOPICS.find((t) => t.id === filters.topic);
+  // Topics of this course only: another course's topic would show as an empty tile.
+  const courseTopics = TOPICS.map((t) => ({ topic: t, count: courseSets(learner).filter((s) => s.topicId === t.id).length })).filter((t) => t.count > 0);
   const phraseMatches = (p: Phrase) => {
     const set = findSetView(learner, p.setId);
     if (filters.topic && set?.topicId !== filters.topic) return false;
@@ -174,10 +179,9 @@ export function ExploreScreen({ filters }: { filters: ExploreFilters }) {
         <section aria-labelledby="topics-heading">
           <h2 id="topics-heading" className="font-serif text-heading font-semibold mb-2">{c.explore.topics}</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {TOPICS.map((t, i) => {
-              const count = courseSets(learner).filter((s) => s.topicId === t.id).length;
+            {courseTopics.map(({ topic: t, count }, i) => {
               // An odd last tile spans the row instead of leaving a gap beside it.
-              const spansRow = i === TOPICS.length - 1 && TOPICS.length % 2 === 1;
+              const spansRow = i === courseTopics.length - 1 && courseTopics.length % 2 === 1;
               return (
                 <button
                   key={t.id}
