@@ -610,3 +610,28 @@ crash, now fixed. The loop was also run in a real Chrome with system voices: phr
 were measured, and when that Chrome's speech service stalled, the app stopped and said so. One E2E run
 had a single failure that did not recur in six further full runs (about 430 test runs); its cause is
 unknown.
+
+## Small phones, landscape and large text
+
+I then used it on a 320×568 phone, a 360 px phone at 125–150% text, a phone in landscape
+(568×320), and in the Russian and Bulgarian UIs on the small phone. `e2e/small.spec.ts` covers each
+fix.
+
+| Found | Fix |
+| --- | --- |
+| On a 320×568 phone, the player's Pause was below the fold | Short portrait screens hide the cover and put like/add/hint in a row |
+| In phone landscape, the cover filled half the player and pushed Pause and the ratings off screen | Landscape drops the cover: phrase and steps on the left; transport, ratings and speed on the right. The tab bar puts labels beside icons |
+| Library's Learned card cut its definition to "after 3+…" | Stat notes wrap, hyphenated in Bulgarian and Russian |
+| At 150% text, "English"/"Spanish" spilled out of the step pills and the Missed icon out of its button | Container queries stack step icons above labels and drop rating icons when the row is under 15rem |
+| Explore tiles read "Café & Ma…", "5 ph…"; lists and the queue cut the phrase being learned | Set titles wrap to two lines; the phrase being learned is never cut (phrases are capped at 120 characters); translations still truncate |
+| Onboarding's Continue sat below the fold, and step 5's Start well below it | The action is pinned to the bottom with a fade; the welcome line shows on step 1 only |
+| "· Neutral", "· 1:50 при 1×" and a lone "0" began wrapped lines | Separators end the line; each grade stays with its count |
+| The player title read "Queu…" | An unnamed queue is titled "Queue" (the position line gives the count); set titles may wrap |
+
+**Smoothness:** with a year of history and the CPU throttled 4×, the browser's event timing shows no
+tap or keystroke of 100 ms or more across play, rate, skip, queue, search and Library filters. A test
+now fails on any over 200 ms, in dev and production builds. 12 more monkey seeds (about 5 minutes)
+found no crash.
+
+**Checks:** 68 unit tests, the build, and 91 Playwright tests on the dev server (12 skipped); the
+production-build run was 90 passed before the last four tests were added.
