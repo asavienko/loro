@@ -1,4 +1,3 @@
-import fs from 'node:fs';
 // Longer learner journeys on a controlled clock: whole queues, both end
 // modes, the learner's own phrases, other courses and UI languages.
 import { Page } from '@playwright/test';
@@ -132,22 +131,12 @@ test('two tabs never overwrite each other', async ({ page, context }) => {
 });
 
 test.describe('a learner who has learned the whole course', () => {
-  const DAY = 86_400_000;
-  const now = Date.now();
-  const sets = JSON.parse(fs.readFileSync('src/content/sets.json', 'utf8')) as { id: string; targetLang: string; phraseIds: string[] }[];
-  const log: Record<string, unknown>[] = [];
-  let n = 0;
-  for (const set of sets.filter((s) => s.targetLang === 'es-ES')) for (const id of set.phraseIds) {
-    const key = `en-GB>es-ES:${id}`;
-    for (const d of [200, 190, 170, 120, 40]) {
-      log.push({ id: `z.z-${(n++).toString(36)}`, at: now - d * DAY, device: 'z', kind: 'heard', key, phraseId: id, setId: set.id, targetMs: 1500, nativeMs: 1100 });
-      log.push({ id: `z.z-${(n++).toString(36)}`, at: now - d * DAY + 30000, device: 'z', kind: 'rated', key, phraseId: id, setId: set.id, grade: 'easy' });
-    }
-  }
-  test.use({ seed: { log } });
+  test.use({ seed: { log: masteredCourse(Date.now()) } });
   test('is told so and offered what to do next', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByRole('heading', { name: 'Every phrase in this course is learned' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Add your phrase' })).toBeVisible();
+    await expectAccessible(page);
     await page.getByRole('button', { name: 'Try another course' }).click();
     await expect(page.getByRole('dialog', { name: 'Settings' })).toBeVisible();
   });
@@ -172,18 +161,6 @@ test.describe('skipping the demo', () => {
     await page.reload();
     await expect(page.getByRole('heading', { name: 'Start here' })).toBeVisible();
     await expect(page.getByRole('button', { name: /Play one phrase/ })).toHaveCount(0);
-  });
-});
-
-test.describe('a finished course', () => {
-  test.use({ seed: { log: masteredCourse(Date.now()) } });
-  test('Home says every phrase is learned and offers what next', async ({ page }) => {
-    await page.goto('/');
-    await expect(page.getByRole('heading', { name: 'Every phrase in this course is learned' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Add your phrase' })).toBeVisible();
-    await page.getByRole('button', { name: 'Try another course' }).click();
-    await expect(page.getByLabel('I’m learning')).toBeVisible();
-    await expectAccessible(page);
   });
 });
 
