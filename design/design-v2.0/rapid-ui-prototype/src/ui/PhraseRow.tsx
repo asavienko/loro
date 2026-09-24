@@ -49,7 +49,7 @@ export function PhraseRow({ phrase, detail, leading, isCurrent = false, isPlayin
         <span className="min-w-0 flex-1">
           <span
             lang={hideTarget ? prompt.lang : phrase.targetLang}
-            className={`leading-snug line-clamp-2 break-words text-row ${hideTarget ? 'font-medium' : 'font-serif italic'} ${
+            className={`block leading-snug break-words text-row ${hideTarget ? 'font-medium' : 'font-serif italic'} ${
               isCurrent ? 'text-primary-container font-semibold' : 'text-on-surface font-medium'
             }`}
           >
