@@ -128,7 +128,7 @@ export function ExploreScreen({ filters }: { filters: ExploreFilters }) {
         </div>
       )}
 
-      {!topic && (
+      {!topic && !q && (
         <section aria-labelledby="topics-heading">
           <h2 id="topics-heading" className="font-serif text-heading font-semibold mb-2">{c.explore.topics}</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
