@@ -1,410 +1,843 @@
 [
   {
-    "id": "phrase-1",
-    "setId": "set-cafe",
-    "target": {
-      "lang": "es-ES",
-      "text": "Me pone un cortado, por favor"
+    "id": "cafe-01",
+    "target": "Me pone un cortado, por favor",
+    "translations": {
+      "en-GB": "A cortado, please",
+      "bg-BG": "Едно кортадо, моля",
+      "ru-RU": "Мне кортадо, пожалуйста"
     },
-    "native": {
-      "lang": "en-GB",
-      "text": "A cortado for me, please"
+    "register": "neutral",
+    "region": "ES",
+    "tags": ["request", "food", "politeness"],
+    "words": {
+      "me": { "en-GB": "(for) me", "bg-BG": "на мен", "ru-RU": "мне" },
+      "pone": { "en-GB": "(you) put, serve", "bg-BG": "слагате, давате", "ru-RU": "(вы) ставите, подаёте" },
+      "un": { "en-GB": "a", "bg-BG": "едно", "ru-RU": "один" },
+      "cortado": { "en-GB": "espresso with a dash of milk", "bg-BG": "еспресо с малко мляко", "ru-RU": "эспрессо с каплей молока" },
+      "por favor": { "en-GB": "please", "bg-BG": "моля", "ru-RU": "пожалуйста" }
     },
     "notes": {
-      "mnemonic": {
-        "title": "Cortado Porcelain Tap",
-        "text": "Tap a teaspoon on the cup on each stressed syllable: me PO-ne un cor-TA-do, por fa-VOR."
-      },
       "grammar": {
-        "title": "«Me pone...» Courtesy Formula",
-        "text": "Unlike the stiff imperative «Póngame» or English \"Give me\", native Spanish speakers in cafes employ the 3rd person singular present indicative: \"¿Usted me pone...?\" with the subject omitted. It translates literally as \"Does your honor put/serve me...\", radiating warm colloquial politeness."
+        "title": "«Me pone…»",
+        "text": "«Me pone…» (literally “will you put me…”) is the everyday way to order in Spain. It is the usted form of poner, but it doesn't sound stiff."
       },
       "pronunciation": {
-        "title": "Alveolar Tap /ɾ/ & Syllable Blending",
+        "title": "Soft d, ng before c",
         "ipa": "[me ˈpo.ne uŋ koɾˈta.ðo poɾ faˈβoɾ]",
-        "respelling": "[meh POH-neh oon kor-TAH-doh, por fah-VOR]",
-        "text": "Notice the liaison in «pone un»: the vowel [e] links seamlessly into [u] without glottal hesitation: /po-newn/. Soft dental fricative on -do [ðo]."
+        "respelling": "meh POH-neh oong kor-TAH-doh, por fah-VOR",
+        "text": "The d in cortado is soft, close to the th in “this”. The n of un sounds like ng before the c."
       }
     }
   },
   {
-    "id": "phrase-2",
-    "setId": "set-cafe",
-    "target": {
-      "lang": "es-ES",
-      "text": "¿Tienen leche de avena?"
+    "id": "cafe-02",
+    "target": "¿Tienen leche de avena?",
+    "translations": {
+      "en-GB": "Do you have oat milk?",
+      "bg-BG": "Имате ли овесено мляко?",
+      "ru-RU": "У вас есть овсяное молоко?"
     },
-    "native": {
-      "lang": "en-GB",
-      "text": "Do you have oat milk?"
+    "register": "neutral",
+    "region": "ES",
+    "tags": ["question", "food"],
+    "words": {
+      "tienen": { "en-GB": "(you all) have", "bg-BG": "имате", "ru-RU": "у вас есть" },
+      "leche": { "en-GB": "milk", "bg-BG": "мляко", "ru-RU": "молоко" },
+      "de": { "en-GB": "of", "bg-BG": "от", "ru-RU": "из" },
+      "avena": { "en-GB": "oats", "bg-BG": "овес", "ru-RU": "овёс" }
     },
     "notes": {
-      "mnemonic": {
-        "title": "Stress on «a-VE-na»",
-        "text": "Put the weight on the middle syllable, «a-VE-na», and let the last one fall away."
-      },
       "grammar": {
-        "title": "Plural «Tienen» vs «Hay»",
-        "text": "Addressing the establishment as a plural entity (ustedes) is the most natural, welcoming way to ask stock availability in Spain and Latin America without sounding overly direct."
+        "title": "Asking the whole café",
+        "text": "«Tienen» speaks to the whole place (ustedes). It's the natural way to ask what a café has."
       },
       "pronunciation": {
-        "title": "Bilabial Approximant [β̞] in «avena»",
+        "title": "A soft v",
         "ipa": "[ˈtje.nen ˈle.tʃe ðe aˈβe.na]",
-        "respelling": "[TYEH-nehn LEH-cheh deh ah-VEH-nah]",
-        "text": "Spanish «v» in avena sounds identical to a soft «b» between vowels: lips do not touch completely, producing smooth airflow without English teeth friction."
+        "respelling": "TYEH-nen LEH-cheh deh ah-VEH-nah",
+        "text": "The v in avena is a soft b: the lips come close but don't touch."
       }
     }
   },
   {
-    "id": "phrase-3",
-    "setId": "set-cafe",
-    "target": {
-      "lang": "es-ES",
-      "text": "La cuenta, por favor"
+    "id": "cafe-03",
+    "target": "La cuenta, por favor",
+    "translations": {
+      "en-GB": "The bill, please",
+      "bg-BG": "Сметката, моля",
+      "ru-RU": "Счёт, пожалуйста"
     },
-    "native": {
-      "lang": "en-GB",
-      "text": "The check, please"
+    "register": "neutral",
+    "region": "ES",
+    "tags": ["request", "politeness"],
+    "words": {
+      "la": { "en-GB": "the", "bg-BG": "-та (членуване)", "ru-RU": "(артикль)" },
+      "cuenta": { "en-GB": "bill", "bg-BG": "сметка", "ru-RU": "счёт" },
+      "por favor": { "en-GB": "please", "bg-BG": "моля", "ru-RU": "пожалуйста" }
     },
     "notes": {
-      "mnemonic": {
-        "title": "Air Pen Scribble Gesture",
-        "text": "Catch the waiter's eye across the terrace, subtly trace an invisible signature in the air while uttering: «La CUEN-ta»."
-      },
       "grammar": {
-        "title": "Definite Article in Request",
-        "text": "Always use the definite article «la» (never indefinite «una cuenta») because the bill for this table is specific and unique."
+        "title": "Always «la cuenta»",
+        "text": "Say «la cuenta», with “the”: it's the bill for this table, so never «una cuenta»."
       },
       "pronunciation": {
-        "title": "Diphthong /we/ in «cuenta»",
-        "ipa": "[la ˈkwen̪.ta poɾ faˈβoɾ]",
-        "respelling": "[lah KWEHN-tah, por fah-VOR]",
-        "text": "The «cue-» produces an explosive glide /kw/. Stress falls punchily on [KWEHN], releasing softly onto [tah]."
+        "title": "The “kw” in cuenta",
+        "ipa": "[la ˈkwen.ta poɾ faˈβoɾ]",
+        "respelling": "lah KWEN-tah, por fah-VOR",
+        "text": "Cue sounds like “kweh”, and the stress falls on it."
       }
     }
   },
   {
-    "id": "phrase-4",
-    "setId": "set-cafe",
-    "target": {
-      "lang": "es-ES",
-      "text": "¿Se puede en la terraza?"
+    "id": "cafe-04",
+    "target": "¿Nos podemos sentar en la terraza?",
+    "translations": {
+      "en-GB": "Can we sit on the terrace?",
+      "bg-BG": "Може ли да седнем на терасата?",
+      "ru-RU": "Можно нам сесть на террасе?"
     },
-    "native": {
-      "lang": "en-GB",
-      "text": "Can we sit outside on the terrace?"
+    "register": "neutral",
+    "region": "ES",
+    "tags": ["question", "politeness"],
+    "words": {
+      "nos": { "en-GB": "ourselves", "bg-BG": "(ние) се", "ru-RU": "(мы) себя" },
+      "podemos": { "en-GB": "we can", "bg-BG": "можем", "ru-RU": "мы можем" },
+      "sentar": { "en-GB": "sit", "bg-BG": "седна", "ru-RU": "сесть" },
+      "en": { "en-GB": "on, in", "bg-BG": "на, в", "ru-RU": "на, в" },
+      "la": { "en-GB": "the", "bg-BG": "-та (членуване)", "ru-RU": "(артикль)" },
+      "terraza": { "en-GB": "terrace", "bg-BG": "тераса", "ru-RU": "терраса" }
     },
     "notes": {
-      "mnemonic": {
-        "title": "Sunlit Terrace Pivot",
-        "text": "Glance toward the sunny sidewalk umbrellas. The prompt starts with a featherweight whisper: «se puede» (\"is it permitted\")."
-      },
       "grammar": {
-        "title": "Impersonal «Se» of Permission",
-        "text": "«¿Se puede...?» replaces \"Can I / Can we\", making inquiries sound polite and unpresumptuous. The main verb sentarse (to sit) is colloquially elided."
+        "title": "Where «nos» goes",
+        "text": "«Nos» can go before the verb or on the end: «¿Podemos sentarnos…?» means the same."
       },
       "pronunciation": {
-        "title": "Castilian «z» [θ] and trilled «rr»",
-        "ipa": "[se ˈpwe.ðe en la teˈra.θa]",
-        "respelling": "[seh PWEH-deh ehn lah teh-RRAH-thah]",
-        "text": "In Castilian Spanish, the «z» in terraza is articulated with the tongue between teeth as [θ] (like \"thin\"), preceded by a vivid double-r roll."
+        "title": "Castilian z and rr",
+        "ipa": "[nos poˈðe.mos senˈtaɾ en la teˈra.θa]",
+        "respelling": "nos poh-DEH-mos sen-TAR en lah teh-RRAH-thah",
+        "text": "In Spain the z in terraza sounds like the th in “think”. The rr is rolled."
       }
     }
   },
   {
-    "id": "phrase-5",
-    "setId": "set-cafe",
-    "target": {
-      "lang": "es-ES",
-      "text": "Sin gluten, por favor"
+    "id": "cafe-05",
+    "target": "Sin gluten, por favor",
+    "translations": {
+      "en-GB": "Gluten-free, please",
+      "bg-BG": "Без глутен, моля",
+      "ru-RU": "Без глютена, пожалуйста"
     },
-    "native": {
-      "lang": "en-GB",
-      "text": "Gluten-free, please"
+    "register": "neutral",
+    "region": "ES",
+    "tags": ["request", "food"],
+    "words": {
+      "sin": { "en-GB": "without", "bg-BG": "без", "ru-RU": "без" },
+      "gluten": { "en-GB": "gluten", "bg-BG": "глутен", "ru-RU": "глютен" },
+      "por favor": { "en-GB": "please", "bg-BG": "моля", "ru-RU": "пожалуйста" }
     },
     "notes": {
-      "mnemonic": {
-        "title": "Clear Stop Cue",
-        "text": "Emphasize the crisp, sharp «Sin» to clearly signal dietary necessity to the barista before the milk is poured."
-      },
       "grammar": {
-        "title": "Prepositional Modifier «Sin»",
-        "text": "In Spanish gastronomy, «sin» modifies beverages and dishes without requiring the article (e.g. «sin azúcar», «sin lactosa», «sin gluten»)."
+        "title": "«Sin» without an article",
+        "text": "«Sin» takes no article: sin azúcar, sin lactosa, sin gluten."
       },
       "pronunciation": {
-        "title": "Penultimate Stress on «GLU-ten»",
+        "title": "GLU-ten",
         "ipa": "[sin ˈɡlu.ten poɾ faˈβoɾ]",
-        "respelling": "[seen GLOO-tehn, por fah-VOR]",
-        "text": "Spanish stresses the first syllable «GLU-ten» with a pure Spanish /u/ vowel, contrasting with English elongation /ɡluːtən/."
+        "respelling": "seen GLOO-ten, por fah-VOR",
+        "text": "Stress the first syllable, with a short, pure u."
       }
     }
   },
   {
-    "id": "phrase-6",
-    "setId": "set-cafe",
-    "target": {
-      "lang": "es-ES",
-      "text": "Una caña bien tirada, jefe"
+    "id": "tapas-01",
+    "target": "¿Qué nos recomienda?",
+    "translations": {
+      "en-GB": "What do you recommend?",
+      "bg-BG": "Какво ще ни препоръчате?",
+      "ru-RU": "Что вы нам посоветуете?"
     },
-    "native": {
-      "lang": "en-GB",
-      "text": "A properly poured draft beer, boss"
+    "register": "formal",
+    "region": "ES",
+    "tags": ["question", "food"],
+    "words": {
+      "qué": { "en-GB": "what", "bg-BG": "какво", "ru-RU": "что" },
+      "nos": { "en-GB": "(to) us", "bg-BG": "на нас", "ru-RU": "нам" },
+      "recomienda": { "en-GB": "(you) recommend", "bg-BG": "препоръчвате", "ru-RU": "(вы) советуете" }
+    },
+    "notes": {
+      "grammar": {
+        "title": "Polite «recomienda»",
+        "text": "«Recomienda» is the usted form, polite with a waiter. With friends: «¿Qué nos recomiendas?»."
+      },
+      "mnemonic": {
+        "title": "e becomes ie",
+        "text": "When the stress lands on it, the e of recomendar becomes ie: recomienda."
+      }
+    }
+  },
+  {
+    "id": "tapas-02",
+    "target": "Una ración de croquetas, por favor",
+    "translations": {
+      "en-GB": "A portion of croquettes, please",
+      "bg-BG": "Една порция крокети, моля",
+      "ru-RU": "Порцию крокетов, пожалуйста"
+    },
+    "register": "neutral",
+    "region": "ES",
+    "tags": ["request", "food"],
+    "words": {
+      "una": { "en-GB": "a", "bg-BG": "една", "ru-RU": "одну" },
+      "ración": { "en-GB": "portion (a plate to share)", "bg-BG": "порция", "ru-RU": "порция" },
+      "de": { "en-GB": "of", "bg-BG": "от", "ru-RU": "из" },
+      "croquetas": { "en-GB": "croquettes", "bg-BG": "крокети", "ru-RU": "крокеты" },
+      "por favor": { "en-GB": "please", "bg-BG": "моля", "ru-RU": "пожалуйста" }
     },
     "notes": {
       "mnemonic": {
-        "title": "Foam Crown Visualizer",
-        "text": "Notice the rhythm on «bien ti-RA-da». A caña in Madrid must have a creamy two-finger foam crown (giste)."
-      },
-      "grammar": {
-        "title": "Vocative «Jefe» in Bar Madrid",
-        "text": "Addressing the bartender as «jefe» (boss) or «compañero» signals seasoned local fluency and immediate warmth without being impudent."
-      },
-      "pronunciation": {
-        "title": "Palatal Nasal /ɲ/ in «caña»",
-        "ipa": "[ˈu.na ˈka.ɲa ˈbjen tiˈɾa.ða ˈxe.fe]",
-        "respelling": "[OO-nah KAH-nyah byehn tee-RAH-dah, HEH-feh]",
-        "text": "Arch of the tongue presses smoothly against hard palate for the ñ sound, followed by crisp non-aspirated /k/."
+        "title": "Tapa, ración, media ración",
+        "text": "A ración is a full plate to share; a tapa is a small one; media ración is half a plate."
       }
     }
   },
   {
-    "id": "tapas-1",
-    "setId": "set-tapas",
-    "target": {
-      "lang": "es-ES",
-      "text": "¿Qué nos recomienda?"
+    "id": "tapas-03",
+    "target": "¿Nos trae otra ronda?",
+    "translations": {
+      "en-GB": "Could you bring us another round?",
+      "bg-BG": "Ще ни донесете ли още по едно?",
+      "ru-RU": "Принесите нам ещё по одной?"
     },
-    "native": {
-      "lang": "en-GB",
-      "text": "What do you recommend?"
+    "register": "formal",
+    "region": "ES",
+    "tags": ["question", "request", "food"],
+    "words": {
+      "nos": { "en-GB": "(to) us", "bg-BG": "на нас", "ru-RU": "нам" },
+      "trae": { "en-GB": "(you) bring", "bg-BG": "донасяте", "ru-RU": "(вы) приносите" },
+      "otra": { "en-GB": "another", "bg-BG": "още една", "ru-RU": "ещё одну" },
+      "ronda": { "en-GB": "round (of drinks)", "bg-BG": "поръчка за всички", "ru-RU": "круг (напитков)" }
+    },
+    "notes": {
+      "grammar": {
+        "title": "«Otra», never «una otra»",
+        "text": "«Otra» already means “another”, so it never takes «una»."
+      }
     }
   },
   {
-    "id": "tapas-2",
-    "setId": "set-tapas",
-    "target": {
-      "lang": "es-ES",
-      "text": "Una ración de croquetas, por favor"
+    "id": "tapas-04",
+    "target": "Está buenísimo",
+    "translations": {
+      "en-GB": "It's delicious",
+      "bg-BG": "Много е вкусно",
+      "ru-RU": "Очень вкусно"
     },
-    "native": {
-      "lang": "en-GB",
-      "text": "A portion of croquettes, please"
+    "register": "neutral",
+    "region": "ES",
+    "tags": ["food", "social"],
+    "words": {
+      "está": { "en-GB": "(it) is", "bg-BG": "е", "ru-RU": "(это)" },
+      "buenísimo": { "en-GB": "really good", "bg-BG": "много хубаво", "ru-RU": "очень хорошо" }
+    },
+    "notes": {
+      "grammar": {
+        "title": "«Está» for taste",
+        "text": "Use «está» for how food tastes right now. «-ísimo» turns an adjective up: bueno → buenísimo."
+      }
     }
   },
   {
-    "id": "tapas-3",
-    "setId": "set-tapas",
-    "target": {
-      "lang": "es-ES",
-      "text": "¿Nos trae otra ronda?"
+    "id": "tapas-05",
+    "target": "Una caña, por favor",
+    "translations": {
+      "en-GB": "A small draught beer, please",
+      "bg-BG": "Една малка наливна бира, моля",
+      "ru-RU": "Маленькое разливное пиво, пожалуйста"
     },
-    "native": {
-      "lang": "en-GB",
-      "text": "Could you bring us another round?"
+    "register": "neutral",
+    "region": "ES",
+    "tags": ["request", "food"],
+    "words": {
+      "una": { "en-GB": "a", "bg-BG": "една", "ru-RU": "одну" },
+      "caña": { "en-GB": "small glass of draught beer", "bg-BG": "малка наливна бира", "ru-RU": "маленький бокал разливного пива" },
+      "por favor": { "en-GB": "please", "bg-BG": "моля", "ru-RU": "пожалуйста" }
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "What a caña is",
+        "text": "A caña is a small glass of draught beer. Calling the bartender «jefe» is common but very casual, so this phrase leaves it out."
+      },
+      "pronunciation": {
+        "title": "The ñ",
+        "ipa": "[ˈu.na ˈka.ɲa poɾ faˈβoɾ]",
+        "respelling": "OO-nah KAH-nyah, por fah-VOR",
+        "text": "ñ sounds like the ny in “canyon”."
+      }
     }
   },
   {
-    "id": "tapas-4",
-    "setId": "set-tapas",
-    "target": {
-      "lang": "es-ES",
-      "text": "Está buenísimo"
+    "id": "transit-01",
+    "target": "¿Dónde está la estación de metro?",
+    "translations": {
+      "en-GB": "Where is the metro station?",
+      "bg-BG": "Къде е метростанцията?",
+      "ru-RU": "Где станция метро?"
     },
-    "native": {
-      "lang": "en-GB",
-      "text": "It's delicious"
+    "register": "neutral",
+    "region": "ES",
+    "tags": ["question", "directions"],
+    "words": {
+      "dónde": { "en-GB": "where", "bg-BG": "къде", "ru-RU": "где" },
+      "está": { "en-GB": "is", "bg-BG": "е", "ru-RU": "находится" },
+      "la": { "en-GB": "the", "bg-BG": "-та (членуване)", "ru-RU": "(артикль)" },
+      "estación": { "en-GB": "station", "bg-BG": "станция", "ru-RU": "станция" },
+      "de": { "en-GB": "of", "bg-BG": "на", "ru-RU": "(род. падеж)" },
+      "metro": { "en-GB": "metro", "bg-BG": "метро", "ru-RU": "метро" }
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "Parada or estación",
+        "text": "Buses stop at a «parada»; the metro has «estaciones»."
+      }
     }
   },
   {
-    "id": "transit-1",
-    "setId": "set-transit",
-    "target": {
-      "lang": "es-ES",
-      "text": "¿Dónde está la parada de metro?"
+    "id": "transit-02",
+    "target": "Un billete sencillo, por favor",
+    "translations": {
+      "en-GB": "A single ticket, please",
+      "bg-BG": "Един билет в едната посока, моля",
+      "ru-RU": "Один билет в одну сторону, пожалуйста"
     },
-    "native": {
-      "lang": "en-GB",
-      "text": "Where is the metro stop?"
+    "register": "neutral",
+    "region": "ES",
+    "tags": ["request", "numbers"],
+    "words": {
+      "un": { "en-GB": "a", "bg-BG": "един", "ru-RU": "один" },
+      "billete": { "en-GB": "ticket", "bg-BG": "билет", "ru-RU": "билет" },
+      "sencillo": { "en-GB": "single (one-way)", "bg-BG": "в едната посока", "ru-RU": "в одну сторону" },
+      "por favor": { "en-GB": "please", "bg-BG": "моля", "ru-RU": "пожалуйста" }
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "Billete, not boleto",
+        "text": "In Spain a ticket is a «billete»; «boleto» is Latin American."
+      }
     }
   },
   {
-    "id": "transit-2",
-    "setId": "set-transit",
-    "target": {
-      "lang": "es-ES",
-      "text": "Un billete sencillo, por favor"
+    "id": "transit-03",
+    "target": "¿Este tren va a Sol?",
+    "translations": {
+      "en-GB": "Does this train go to Sol?",
+      "bg-BG": "Този влак ходи ли до Сол?",
+      "ru-RU": "Этот поезд идёт до Соль?"
     },
-    "native": {
-      "lang": "en-GB",
-      "text": "A single ticket, please"
+    "register": "neutral",
+    "region": "ES",
+    "tags": ["question", "directions"],
+    "words": {
+      "este": { "en-GB": "this", "bg-BG": "този", "ru-RU": "этот" },
+      "tren": { "en-GB": "train", "bg-BG": "влак", "ru-RU": "поезд" },
+      "va": { "en-GB": "goes", "bg-BG": "отива", "ru-RU": "идёт" },
+      "a": { "en-GB": "to", "bg-BG": "до", "ru-RU": "до, в" }
+    },
+    "notes": {
+      "grammar": {
+        "title": "«Ir a» + place",
+        "text": "Going somewhere is «ir a»: va a Sol. Sol (Puerta del Sol) is Madrid's central station."
+      }
     }
   },
   {
-    "id": "transit-3",
-    "setId": "set-transit",
-    "target": {
-      "lang": "es-ES",
-      "text": "¿Este tren va a Sol?"
+    "id": "transit-04",
+    "target": "¿En qué estación me bajo?",
+    "translations": {
+      "en-GB": "Which station do I get off at?",
+      "bg-BG": "На коя станция да сляза?",
+      "ru-RU": "На какой станции мне выходить?"
     },
-    "native": {
-      "lang": "en-GB",
-      "text": "Does this train go to Sol?"
+    "register": "neutral",
+    "region": "ES",
+    "tags": ["question", "directions"],
+    "words": {
+      "en": { "en-GB": "at, in", "bg-BG": "на", "ru-RU": "на" },
+      "qué": { "en-GB": "which", "bg-BG": "коя", "ru-RU": "какой" },
+      "estación": { "en-GB": "station", "bg-BG": "станция", "ru-RU": "станция" },
+      "me bajo": { "en-GB": "I get off", "bg-BG": "слизам", "ru-RU": "я выхожу" }
+    },
+    "notes": {
+      "grammar": {
+        "title": "Bajarse and subirse",
+        "text": "«Bajarse» is to get off; «subirse» is to get on."
+      }
     }
   },
   {
-    "id": "transit-4",
-    "setId": "set-transit",
-    "target": {
-      "lang": "es-ES",
-      "text": "¿En qué estación me bajo?"
+    "id": "market-01",
+    "target": "¿A cuánto está el kilo?",
+    "translations": {
+      "en-GB": "How much is it per kilo?",
+      "bg-BG": "Колко струва килограмът?",
+      "ru-RU": "Почём килограмм?"
     },
-    "native": {
-      "lang": "en-GB",
-      "text": "Which station do I get off at?"
+    "register": "neutral",
+    "region": "ES",
+    "tags": ["question", "numbers", "food"],
+    "words": {
+      "a cuánto": { "en-GB": "at how much", "bg-BG": "по колко", "ru-RU": "почём" },
+      "está": { "en-GB": "is (today)", "bg-BG": "е (днес)", "ru-RU": "(сегодня)" },
+      "el": { "en-GB": "the", "bg-BG": "-ът (членуване)", "ru-RU": "(артикль)" },
+      "kilo": { "en-GB": "kilo", "bg-BG": "килограм", "ru-RU": "килограмм" }
+    },
+    "notes": {
+      "grammar": {
+        "title": "Today's price",
+        "text": "«¿A cuánto está…?» asks for today's price of things whose price changes, like fruit."
+      }
     }
   },
   {
-    "id": "market-1",
-    "setId": "set-market",
-    "target": {
-      "lang": "es-ES",
-      "text": "¿A cuánto está el kilo?"
+    "id": "market-02",
+    "target": "Póngame medio kilo de tomates",
+    "translations": {
+      "en-GB": "Half a kilo of tomatoes, please",
+      "bg-BG": "Дайте ми половин килограм домати",
+      "ru-RU": "Дайте мне полкило помидоров"
     },
-    "native": {
-      "lang": "en-GB",
-      "text": "How much is it per kilo?"
+    "register": "formal",
+    "region": "ES",
+    "tags": ["request", "numbers", "food"],
+    "words": {
+      "póngame": { "en-GB": "give me (lit. put me)", "bg-BG": "дайте ми", "ru-RU": "дайте мне" },
+      "medio": { "en-GB": "half", "bg-BG": "половин", "ru-RU": "пол-" },
+      "kilo": { "en-GB": "kilo", "bg-BG": "килограм", "ru-RU": "килограмм" },
+      "de": { "en-GB": "of", "bg-BG": "от", "ru-RU": "(род. падеж)" },
+      "tomates": { "en-GB": "tomatoes", "bg-BG": "домати", "ru-RU": "помидоры" }
+    },
+    "notes": {
+      "grammar": {
+        "title": "No «un» before medio",
+        "text": "«Póngame» is the usted command of poner, normal at a stall. «Medio kilo» takes no «un»."
+      }
     }
   },
   {
-    "id": "market-2",
-    "setId": "set-market",
-    "target": {
-      "lang": "es-ES",
-      "text": "Póngame medio kilo de tomates"
+    "id": "market-03",
+    "target": "¿Me lo puede envolver?",
+    "translations": {
+      "en-GB": "Could you wrap it for me?",
+      "bg-BG": "Може ли да ми го опаковате?",
+      "ru-RU": "Можете мне это завернуть?"
     },
-    "native": {
-      "lang": "en-GB",
-      "text": "Half a kilo of tomatoes, please"
+    "register": "formal",
+    "region": "ES",
+    "tags": ["question", "request"],
+    "words": {
+      "me": { "en-GB": "for me", "bg-BG": "ми", "ru-RU": "мне" },
+      "lo": { "en-GB": "it", "bg-BG": "го", "ru-RU": "это" },
+      "puede": { "en-GB": "(you) can", "bg-BG": "можете", "ru-RU": "(вы) можете" },
+      "envolver": { "en-GB": "wrap", "bg-BG": "опаковате", "ru-RU": "завернуть" }
+    },
+    "notes": {
+      "grammar": {
+        "title": "Me before lo",
+        "text": "Two pronouns go before the verb in this order: me (for me), then lo (it)."
+      }
     }
   },
   {
-    "id": "market-3",
-    "setId": "set-market",
-    "target": {
-      "lang": "es-ES",
-      "text": "¿Me lo puede envolver?"
+    "id": "market-04",
+    "target": "Nada más, gracias",
+    "translations": {
+      "en-GB": "That's all, thanks",
+      "bg-BG": "Това е всичко, благодаря",
+      "ru-RU": "Больше ничего, спасибо"
     },
-    "native": {
-      "lang": "en-GB",
-      "text": "Can you wrap it for me?"
+    "register": "neutral",
+    "region": "ES",
+    "tags": ["politeness"],
+    "words": {
+      "nada": { "en-GB": "nothing", "bg-BG": "нищо", "ru-RU": "ничего" },
+      "más": { "en-GB": "more", "bg-BG": "повече", "ru-RU": "больше" },
+      "gracias": { "en-GB": "thanks", "bg-BG": "благодаря", "ru-RU": "спасибо" }
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "When to say it",
+        "text": "Say it when the seller asks «¿Algo más?» (anything else?)."
+      }
     }
   },
   {
-    "id": "market-4",
-    "setId": "set-market",
-    "target": {
-      "lang": "es-ES",
-      "text": "Nada más, gracias"
+    "id": "sobremesa-01",
+    "target": "¿A qué te dedicas?",
+    "translations": {
+      "en-GB": "What do you do for a living?",
+      "bg-BG": "С какво се занимаваш?",
+      "ru-RU": "Чем ты занимаешься?"
     },
-    "native": {
-      "lang": "en-GB",
-      "text": "That's all, thanks"
+    "register": "informal",
+    "region": "ES",
+    "tags": ["question", "social"],
+    "words": {
+      "a qué": { "en-GB": "to what", "bg-BG": "с какво", "ru-RU": "чем" },
+      "te dedicas": { "en-GB": "you devote yourself", "bg-BG": "се занимаваш", "ru-RU": "ты занимаешься" }
+    },
+    "notes": {
+      "grammar": {
+        "title": "Tú or usted",
+        "text": "«Te» makes this informal (tú). To a stranger, say «¿A qué se dedica?»."
+      }
     }
   },
   {
-    "id": "sobremesa-1",
-    "setId": "set-sobremesa",
-    "target": {
-      "lang": "es-ES",
-      "text": "¿A qué te dedicas?"
+    "id": "sobremesa-02",
+    "target": "¡Qué bien lo hemos pasado!",
+    "translations": {
+      "en-GB": "We had such a good time!",
+      "bg-BG": "Колко хубаво си прекарахме!",
+      "ru-RU": "Как хорошо мы провели время!"
     },
-    "native": {
-      "lang": "en-GB",
-      "text": "What do you do for a living?"
+    "register": "neutral",
+    "region": "ES",
+    "tags": ["social"],
+    "words": {
+      "qué bien": { "en-GB": "how well", "bg-BG": "колко хубаво", "ru-RU": "как хорошо" },
+      "lo hemos pasado": { "en-GB": "we have had (a time)", "bg-BG": "прекарахме", "ru-RU": "мы провели (время)" }
+    },
+    "notes": {
+      "grammar": {
+        "title": "Pasarlo bien",
+        "text": "«Pasarlo bien» means to have a good time. Spain often uses «hemos pasado» for something that happened today."
+      }
     }
   },
   {
-    "id": "sobremesa-2",
-    "setId": "set-sobremesa",
-    "target": {
-      "lang": "es-ES",
-      "text": "¡Qué bien lo hemos pasado!"
+    "id": "sobremesa-03",
+    "target": "Tengo que irme ya",
+    "translations": {
+      "en-GB": "I have to go now",
+      "bg-BG": "Трябва вече да тръгвам",
+      "ru-RU": "Мне уже пора идти"
     },
-    "native": {
-      "lang": "en-GB",
-      "text": "We had such a good time!"
+    "register": "neutral",
+    "region": "ES",
+    "tags": ["social"],
+    "words": {
+      "tengo que": { "en-GB": "I have to", "bg-BG": "трябва", "ru-RU": "мне нужно" },
+      "irme": { "en-GB": "go (away)", "bg-BG": "да тръгна", "ru-RU": "уйти" },
+      "ya": { "en-GB": "now, already", "bg-BG": "вече", "ru-RU": "уже" }
+    },
+    "notes": {
+      "grammar": {
+        "title": "Tener que",
+        "text": "«Tener que» + infinitive means “have to”. «Ya» here means “now, already”."
+      }
     }
   },
   {
-    "id": "sobremesa-3",
-    "setId": "set-sobremesa",
-    "target": {
-      "lang": "es-ES",
-      "text": "Tengo que irme ya"
+    "id": "sobremesa-04",
+    "target": "¿Quedamos la semana que viene?",
+    "translations": {
+      "en-GB": "Shall we meet up next week?",
+      "bg-BG": "Да се видим ли следващата седмица?",
+      "ru-RU": "Встретимся на следующей неделе?"
     },
-    "native": {
-      "lang": "en-GB",
-      "text": "I have to go now"
+    "register": "informal",
+    "region": "ES",
+    "tags": ["question", "social"],
+    "words": {
+      "quedamos": { "en-GB": "shall we meet", "bg-BG": "ще се видим", "ru-RU": "встретимся" },
+      "la semana que viene": { "en-GB": "next week", "bg-BG": "следващата седмица", "ru-RU": "на следующей неделе" }
+    },
+    "notes": {
+      "grammar": {
+        "title": "Quedar",
+        "text": "«Quedar» means to arrange to meet. «La semana que viene» is next week."
+      }
     }
   },
   {
-    "id": "sobremesa-4",
-    "setId": "set-sobremesa",
-    "target": {
-      "lang": "es-ES",
-      "text": "¿Quedamos la semana que viene?"
+    "id": "taxi-01",
+    "target": "¿Está libre?",
+    "translations": {
+      "en-GB": "Is your taxi free?",
+      "bg-BG": "Свободен ли сте?",
+      "ru-RU": "Вы свободны?"
     },
-    "native": {
-      "lang": "en-GB",
-      "text": "Shall we meet up next week?"
+    "register": "formal",
+    "region": "ES",
+    "tags": ["question"],
+    "words": {
+      "está": { "en-GB": "(you) are", "bg-BG": "сте", "ru-RU": "(вы)" },
+      "libre": { "en-GB": "free", "bg-BG": "свободен", "ru-RU": "свободны" }
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "The green light",
+        "text": "A free taxi in Spain shows a green light and the word «libre»."
+      }
     }
   },
   {
-    "id": "taxi-1",
-    "setId": "set-taxi",
-    "target": {
-      "lang": "es-ES",
-      "text": "¿Está libre?"
+    "id": "taxi-02",
+    "target": "A esta dirección, por favor",
+    "translations": {
+      "en-GB": "To this address, please",
+      "bg-BG": "До този адрес, моля",
+      "ru-RU": "По этому адресу, пожалуйста"
     },
-    "native": {
-      "lang": "en-GB",
-      "text": "Are you free? (to a taxi)"
+    "register": "neutral",
+    "region": "ES",
+    "tags": ["request", "directions"],
+    "words": {
+      "a": { "en-GB": "to", "bg-BG": "до", "ru-RU": "по, к" },
+      "esta": { "en-GB": "this", "bg-BG": "този", "ru-RU": "этому" },
+      "dirección": { "en-GB": "address", "bg-BG": "адрес", "ru-RU": "адрес" },
+      "por favor": { "en-GB": "please", "bg-BG": "моля", "ru-RU": "пожалуйста" }
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "Show it too",
+        "text": "Show the address on your phone as you say it."
+      }
     }
   },
   {
-    "id": "taxi-2",
-    "setId": "set-taxi",
-    "target": {
-      "lang": "es-ES",
-      "text": "A esta dirección, por favor"
+    "id": "taxi-03",
+    "target": "¿Cuánto le debo?",
+    "translations": {
+      "en-GB": "How much do I owe you?",
+      "bg-BG": "Колко ви дължа?",
+      "ru-RU": "Сколько я вам должен?"
     },
-    "native": {
-      "lang": "en-GB",
-      "text": "To this address, please"
+    "register": "formal",
+    "region": "ES",
+    "tags": ["question", "numbers"],
+    "words": {
+      "cuánto": { "en-GB": "how much", "bg-BG": "колко", "ru-RU": "сколько" },
+      "le": { "en-GB": "(to) you", "bg-BG": "ви", "ru-RU": "вам" },
+      "debo": { "en-GB": "I owe", "bg-BG": "дължа", "ru-RU": "я должен" }
+    },
+    "notes": {
+      "grammar": {
+        "title": "Polite «le»",
+        "text": "«Le» is the polite “you”. To a friend: «¿Cuánto te debo?»."
+      }
     }
   },
   {
-    "id": "taxi-3",
-    "setId": "set-taxi",
-    "target": {
-      "lang": "es-ES",
-      "text": "¿Cuánto le debo?"
+    "id": "taxi-04",
+    "target": "Pare aquí, por favor",
+    "translations": {
+      "en-GB": "Stop here, please",
+      "bg-BG": "Спрете тук, моля",
+      "ru-RU": "Остановите здесь, пожалуйста"
     },
-    "native": {
-      "lang": "en-GB",
-      "text": "How much do I owe you?"
+    "register": "formal",
+    "region": "ES",
+    "tags": ["request", "directions"],
+    "words": {
+      "pare": { "en-GB": "stop (polite)", "bg-BG": "спрете", "ru-RU": "остановите" },
+      "aquí": { "en-GB": "here", "bg-BG": "тук", "ru-RU": "здесь" },
+      "por favor": { "en-GB": "please", "bg-BG": "моля", "ru-RU": "пожалуйста" }
+    },
+    "notes": {
+      "grammar": {
+        "title": "Pare, aquí mismo",
+        "text": "«Pare» is the usted command of parar. «Aquí mismo» means right here."
+      }
     }
   },
   {
-    "id": "taxi-4",
-    "setId": "set-taxi",
-    "target": {
-      "lang": "es-ES",
-      "text": "Pare aquí, por favor"
+    "id": "bg-kafene-01",
+    "target": "Едно кафе, моля",
+    "translations": {
+      "en-GB": "A coffee, please",
+      "ru-RU": "Один кофе, пожалуйста"
     },
-    "native": {
-      "lang": "en-GB",
-      "text": "Stop here, please"
+    "register": "neutral",
+    "region": "BG",
+    "tags": ["request", "food"],
+    "words": {
+      "едно": { "en-GB": "one, a", "ru-RU": "один" },
+      "кафе": { "en-GB": "coffee", "ru-RU": "кофе" },
+      "моля": { "en-GB": "please", "ru-RU": "пожалуйста" }
+    },
+    "notes": {
+      "grammar": {
+        "title": "Neuter «едно»",
+        "text": "«Кафе» is neuter, so “one” is «едно»."
+      },
+      "pronunciation": {
+        "title": "ka-FE",
+        "ipa": "[ɛˈdnɔ kɐˈfɛ ˈmɔʎɐ]",
+        "respelling": "ed-NO ka-FEH, MO-lya",
+        "text": "Stress the last syllable of кафе."
+      }
+    }
+  },
+  {
+    "id": "bg-kafene-02",
+    "target": "Сметката, моля",
+    "translations": {
+      "en-GB": "The bill, please",
+      "ru-RU": "Счёт, пожалуйста"
+    },
+    "register": "neutral",
+    "region": "BG",
+    "tags": ["request", "politeness"],
+    "words": {
+      "сметката": { "en-GB": "the bill", "ru-RU": "счёт" },
+      "моля": { "en-GB": "please", "ru-RU": "пожалуйста" }
+    },
+    "notes": {
+      "grammar": {
+        "title": "“The” is a suffix",
+        "text": "Bulgarian adds “the” to the end of the word: сметка (a bill) → сметката (the bill)."
+      }
+    }
+  },
+  {
+    "id": "bg-kafene-03",
+    "target": "Имате ли мляко без лактоза?",
+    "translations": {
+      "en-GB": "Do you have lactose-free milk?",
+      "ru-RU": "У вас есть безлактозное молоко?"
+    },
+    "register": "neutral",
+    "region": "BG",
+    "tags": ["question", "food"],
+    "words": {
+      "имате": { "en-GB": "(you) have", "ru-RU": "у вас есть" },
+      "ли": { "en-GB": "(question word)", "ru-RU": "ли" },
+      "мляко": { "en-GB": "milk", "ru-RU": "молоко" },
+      "без": { "en-GB": "without", "ru-RU": "без" },
+      "лактоза": { "en-GB": "lactose", "ru-RU": "лактоза" }
+    },
+    "notes": {
+      "grammar": {
+        "title": "Questions with «ли»",
+        "text": "«Ли» turns a sentence into a yes/no question. It comes right after the word you ask about."
+      }
+    }
+  },
+  {
+    "id": "bg-kafene-04",
+    "target": "Много е вкусно",
+    "translations": {
+      "en-GB": "It's very tasty",
+      "ru-RU": "Очень вкусно"
+    },
+    "register": "neutral",
+    "region": "BG",
+    "tags": ["food", "social"],
+    "words": {
+      "много": { "en-GB": "very", "ru-RU": "очень" },
+      "е": { "en-GB": "is", "ru-RU": "(есть)" },
+      "вкусно": { "en-GB": "tasty", "ru-RU": "вкусно" }
+    },
+    "notes": {
+      "grammar": {
+        "title": "«Е» comes second",
+        "text": "The short «е» (is) usually comes second in the sentence: много е вкусно."
+      }
+    }
+  },
+  {
+    "id": "bg-grad-01",
+    "target": "Къде е спирката?",
+    "translations": {
+      "en-GB": "Where is the stop?",
+      "ru-RU": "Где остановка?"
+    },
+    "register": "neutral",
+    "region": "BG",
+    "tags": ["question", "directions"],
+    "words": {
+      "къде": { "en-GB": "where", "ru-RU": "где" },
+      "е": { "en-GB": "is", "ru-RU": "(есть)" },
+      "спирката": { "en-GB": "the stop", "ru-RU": "остановка" }
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "Спирка",
+        "text": "A «спирка» is a bus or tram stop; with “the” it becomes «спирката»."
+      }
+    }
+  },
+  {
+    "id": "bg-grad-02",
+    "target": "Един билет, моля",
+    "translations": {
+      "en-GB": "One ticket, please",
+      "ru-RU": "Один билет, пожалуйста"
+    },
+    "register": "neutral",
+    "region": "BG",
+    "tags": ["request", "numbers"],
+    "words": {
+      "един": { "en-GB": "one", "ru-RU": "один" },
+      "билет": { "en-GB": "ticket", "ru-RU": "билет" },
+      "моля": { "en-GB": "please", "ru-RU": "пожалуйста" }
+    },
+    "notes": {
+      "grammar": {
+        "title": "Един, една, едно",
+        "text": "“One” follows the gender of the noun: един билет, една бира, едно кафе."
+      }
+    }
+  },
+  {
+    "id": "bg-grad-03",
+    "target": "Този автобус ходи ли до центъра?",
+    "translations": {
+      "en-GB": "Does this bus go to the centre?",
+      "ru-RU": "Этот автобус идёт до центра?"
+    },
+    "register": "neutral",
+    "region": "BG",
+    "tags": ["question", "directions"],
+    "words": {
+      "този": { "en-GB": "this", "ru-RU": "этот" },
+      "автобус": { "en-GB": "bus", "ru-RU": "автобус" },
+      "ходи": { "en-GB": "goes", "ru-RU": "ходит" },
+      "ли": { "en-GB": "(question word)", "ru-RU": "ли" },
+      "до": { "en-GB": "to", "ru-RU": "до" },
+      "центъра": { "en-GB": "the centre", "ru-RU": "центр" }
+    },
+    "notes": {
+      "pronunciation": {
+        "title": "The ъ vowel",
+        "ipa": "[ˈtɔzi aftoˈbus ˈxɔdi li do ˈt͡sɛntɐrɐ]",
+        "respelling": "TO-zee af-to-BOOS HO-dee lee do TSEN-tuh-ruh",
+        "text": "«Ъ» is a short, neutral vowel, like the a in “about”."
+      }
+    }
+  },
+  {
+    "id": "bg-grad-04",
+    "target": "Спрете тук, моля",
+    "translations": {
+      "en-GB": "Stop here, please",
+      "ru-RU": "Остановите здесь, пожалуйста"
+    },
+    "register": "formal",
+    "region": "BG",
+    "tags": ["request", "directions"],
+    "words": {
+      "спрете": { "en-GB": "stop (polite)", "ru-RU": "остановите" },
+      "тук": { "en-GB": "here", "ru-RU": "здесь" },
+      "моля": { "en-GB": "please", "ru-RU": "пожалуйста" }
+    },
+    "notes": {
+      "grammar": {
+        "title": "Polite commands",
+        "text": "«Спрете» is the polite command; to a friend you'd say «спри»."
+      }
     }
   }
 ]

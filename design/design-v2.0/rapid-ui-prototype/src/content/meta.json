@@ -1,0 +1,36 @@
+{
+  "version": "2026-09-24.3",
+  "review": {
+    "es-ES": "Phrases and notes revised in round 3; awaiting native Spanish review.",
+    "bg-BG": "New in round 3; awaiting native Bulgarian review.",
+    "translations": "bg-BG and ru-RU prompts and word glosses await native review."
+  },
+  "renamedPhraseIds": {
+    "phrase-1": "cafe-01",
+    "phrase-2": "cafe-02",
+    "phrase-3": "cafe-03",
+    "phrase-4": "cafe-04",
+    "phrase-5": "cafe-05",
+    "phrase-6": "tapas-05",
+    "tapas-1": "tapas-01",
+    "tapas-2": "tapas-02",
+    "tapas-3": "tapas-03",
+    "tapas-4": "tapas-04",
+    "transit-1": "transit-01",
+    "transit-2": "transit-02",
+    "transit-3": "transit-03",
+    "transit-4": "transit-04",
+    "market-1": "market-01",
+    "market-2": "market-02",
+    "market-3": "market-03",
+    "market-4": "market-04",
+    "sobremesa-1": "sobremesa-01",
+    "sobremesa-2": "sobremesa-02",
+    "sobremesa-3": "sobremesa-03",
+    "sobremesa-4": "sobremesa-04",
+    "taxi-1": "taxi-01",
+    "taxi-2": "taxi-02",
+    "taxi-3": "taxi-03",
+    "taxi-4": "taxi-04"
+  }
+}

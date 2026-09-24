@@ -1,83 +1,112 @@
-// Vocabulary lives in the JSON files next to this module. Nothing here is
-// learner progress: every learner number is derived from the state machine
-// in src/state/.
+// Vocabulary lives in the JSON files next to this module and is validated here
+// at start-up. Nothing here is learner progress: every learner number is derived
+// from the state machine in src/state/. Phrases the learner writes themselves
+// live in learner state and join this content in src/state/catalog.ts.
+import { z } from 'zod';
 import phrasesJson from './phrases.json';
 import setsJson from './sets.json';
 import topicsJson from './topics.json';
 import languagesJson from './languages.json';
-import profileJson from './profile.json';
+import metaJson from './meta.json';
+import {
+  contentProblems,
+  Language,
+  LanguageCode,
+  languageSchema,
+  metaSchema,
+  PhraseJson,
+  phraseSchema,
+  SetJson,
+  setSchema,
+  Topic,
+  topicSchema,
+  UiLocale,
+} from './schema';
 
-/** BCP 47 code of a language listed in languages.json, e.g. "es-ES". */
-export type LanguageCode = string;
+export type { LanguageCode, UiLocale, Topic, Language, Localized, Tag, Level, Register, PhraseNotes } from './schema';
 
-export interface Language {
-  code: LanguageCode;
-  name: string;
-  flag: string;
+function parse<T>(schema: z.ZodType<T>, value: unknown, file: string): T {
+  const result = schema.safeParse(value);
+  if (!result.success) throw new Error(`Invalid ${file}: ${z.prettifyError(result.error)}`);
+  return result.data;
 }
 
-export interface Utterance {
-  lang: LanguageCode;
-  text: string;
-}
+const phraseJson = parse(z.array(phraseSchema), phrasesJson, 'phrases.json');
+const setJson = parse(z.array(setSchema), setsJson, 'sets.json');
+export const TOPICS: Topic[] = parse(z.array(topicSchema), topicsJson, 'topics.json');
+export const LANGUAGES: Language[] = parse(z.array(languageSchema), languagesJson, 'languages.json');
+export const META = parse(metaSchema, metaJson, 'meta.json');
+export const CONTENT_VERSION = META.version;
 
-export interface PhraseNotes {
-  mnemonic?: { title: string; text: string };
-  grammar?: { title: string; text: string };
-  pronunciation?: { title: string; ipa: string; respelling: string; text: string };
-}
+const problems = contentProblems({
+  phrases: phraseJson,
+  sets: setJson,
+  topics: TOPICS,
+  languages: LANGUAGES,
+  renamed: META.renamedPhraseIds,
+});
+if (problems.length > 0) throw new Error(`Invalid content:\n${problems.join('\n')}`);
 
+/** A phrase ready to play: content or the learner's own. */
 export interface Phrase {
   id: string;
-  setId: string;
-  target: Utterance;
-  native: Utterance;
-  notes?: PhraseNotes;
+  /** The set it belongs to, derived from sets.json; null for the learner's own phrases. */
+  setId: string | null;
+  targetLang: LanguageCode;
+  target: string;
+  /** Prompt text per native language. */
+  translations: Partial<Record<LanguageCode, string>>;
+  register: PhraseJson['register'] | null;
+  tags: PhraseJson['tags'];
+  words: PhraseJson['words'];
+  notes: PhraseJson['notes'] | null;
+  audio: PhraseJson['audio'] | null;
+  /** Written by the learner rather than bundled. */
+  own: boolean;
 }
 
 export interface PhraseSet {
   id: string;
   title: string;
-  subtitle: string;
+  subtitle: SetJson['subtitle'];
   topicId: string;
-  /** Material Symbols icon drawn on the set's cover. */
+  level: SetJson['level'];
   coverIcon: string;
   targetLang: LanguageCode;
   phraseIds: string[];
 }
 
-export type TopicTone = 'primary' | 'secondary' | 'tertiary';
+export const SETS: PhraseSet[] = setJson;
 
-export interface Topic {
-  id: string;
-  title: string;
-  icon: string;
-  tone: TopicTone;
-}
+const setOf = new Map<string, PhraseSet>();
+for (const set of SETS) for (const id of set.phraseIds) setOf.set(id, set);
 
-export interface Profile {
-  name: string;
-  nativeLang: LanguageCode;
-  targetLang: LanguageCode;
-}
+export const CONTENT_PHRASES: Phrase[] = phraseJson.map((p) => {
+  const set = setOf.get(p.id)!;
+  return {
+    id: p.id,
+    setId: set.id,
+    targetLang: set.targetLang,
+    target: p.target,
+    translations: p.translations,
+    register: p.register,
+    tags: p.tags,
+    words: p.words,
+    notes: p.notes,
+    audio: p.audio ?? null,
+    own: false,
+  };
+});
 
-export const PHRASES = phrasesJson as Phrase[];
-export const SETS = setsJson as PhraseSet[];
-export const TOPICS = topicsJson as Topic[];
-export const LANGUAGES = languagesJson as Language[];
-export const PROFILE = profileJson as Profile;
-
-const phraseById = new Map(PHRASES.map((p) => [p.id, p]));
+const phraseById = new Map(CONTENT_PHRASES.map((p) => [p.id, p]));
 const setById = new Map(SETS.map((s) => [s.id, s]));
 
-export function getPhrase(id: string): Phrase {
-  const phrase = phraseById.get(id);
-  if (!phrase) throw new Error(`Unknown phrase: ${id}`);
-  return phrase;
+export function findContentPhrase(id: string | null | undefined): Phrase | undefined {
+  return id ? phraseById.get(id) : undefined;
 }
 
-export function findPhrase(id: string | null | undefined): Phrase | undefined {
-  return id ? phraseById.get(id) : undefined;
+export function findSet(id: string | null | undefined): PhraseSet | undefined {
+  return id ? setById.get(id) : undefined;
 }
 
 export function getSet(id: string): PhraseSet {
@@ -86,8 +115,13 @@ export function getSet(id: string): PhraseSet {
   return set;
 }
 
-export function findSet(id: string | null | undefined): PhraseSet | undefined {
-  return id ? setById.get(id) : undefined;
+export function getTopic(id: string): Topic | undefined {
+  return TOPICS.find((t) => t.id === id);
+}
+
+/** Sets of one course, in content order. */
+export function setsForCourse(targetLang: LanguageCode): PhraseSet[] {
+  return SETS.filter((s) => s.targetLang === targetLang);
 }
 
 export function getLanguage(code: LanguageCode): Language {
@@ -96,10 +130,16 @@ export function getLanguage(code: LanguageCode): Language {
   return language;
 }
 
-export function getTopic(id: string): Topic | undefined {
-  return TOPICS.find((t) => t.id === id);
+export const NATIVE_LANGUAGES = LANGUAGES.filter((l) => l.uiLocale !== null).map((l) => l.code);
+export const TARGET_LANGUAGES = LANGUAGES.filter((l) => l.canTarget).map((l) => l.code);
+
+export function uiLocaleOf(native: LanguageCode): UiLocale {
+  return getLanguage(native).uiLocale ?? 'en';
 }
 
-export function phrasesOfSet(setId: string): Phrase[] {
-  return getSet(setId).phraseIds.map(getPhrase);
+/** Courses a learner with this native language can take. */
+export function coursesFor(native: LanguageCode): LanguageCode[] {
+  return TARGET_LANGUAGES.filter((code) => code !== native);
 }
+
+export const RENAMED_PHRASE_IDS: Record<string, string> = META.renamedPhraseIds;
