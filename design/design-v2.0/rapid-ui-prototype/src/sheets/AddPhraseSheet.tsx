@@ -9,7 +9,7 @@ import { useToast } from '../ui/Toast';
  * The learner's own phrase: both languages, played with the device voice like
  * any other. With `editId` it corrects an existing phrase and keeps its history.
  */
-export function AddPhraseSheet({ request, onClose }: { request: { editId?: string } | null; onClose: () => void }) {
+export function AddPhraseSheet({ request, onClose }: { request: { editId?: string; target?: string } | null; onClose: () => void }) {
   const c = useCopy();
   const { state } = useStore();
   const editing = request?.editId ? state.learner.ownPhrases[request.editId] : undefined;
@@ -19,7 +19,7 @@ export function AddPhraseSheet({ request, onClose }: { request: { editId?: strin
         <PhraseForm
           key={request.editId ?? 'new'}
           editId={editing?.id}
-          initialTarget={editing?.target ?? ''}
+          initialTarget={editing?.target ?? request.target ?? ''}
           initialNative={editing?.native ?? ''}
           targetLang={editing?.targetLang ?? state.learner.profile.targetLang}
           nativeLang={editing?.nativeLang ?? state.learner.profile.nativeLang}

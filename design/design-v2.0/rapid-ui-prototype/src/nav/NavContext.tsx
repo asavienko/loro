@@ -18,8 +18,8 @@ export interface Navigation {
   /** Phrase details; `ownSetId` offers "Remove from this set". */
   showDetails: (phraseId: string, context?: { ownSetId?: string }) => void;
   addToSet: (phraseIds: string[]) => void;
-  /** Add a phrase of your own, or with `editId` correct one. */
-  addPhrase: (editId?: string) => void;
+  /** Add a phrase of your own (optionally pre-filled), or with `editId` correct one. */
+  addPhrase: (options?: { editId?: string; target?: string }) => void;
   /** New set, optionally holding these phrases; `rename` edits an own set instead. */
   createSet: (phraseIds?: string[], rename?: string) => void;
   openSettings: () => void;

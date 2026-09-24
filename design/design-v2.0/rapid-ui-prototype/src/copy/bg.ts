@@ -91,6 +91,7 @@ export function makeBg(n: Plural): Copy {
       phrases,
       noPhrases: (q) => `Няма фрази за „${q}“.`,
       noSets: 'Няма подходящи набори.',
+      addAsOwn: (q) => `Добавете „${q}“ като своя фраза`,
       removeFilter: (label) => `Махни филтъра: ${label}`,
       clearFilters: 'Изчисти филтрите',
       quickPlay: (title) => `Пусни „${title}“`,

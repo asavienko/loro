@@ -177,7 +177,19 @@ export function ExploreScreen({ filters }: { filters: ExploreFilters }) {
         <section aria-labelledby="phrase-results">
           <h2 id="phrase-results" className="font-serif text-heading font-semibold mb-1">{c.explore.phrases(phrases.length)}</h2>
           {phrases.length === 0 ? (
-            <p className="text-body text-secondary py-2">{c.explore.noPhrases(filters.q ?? '')}</p>
+            <div className="py-2 flex flex-col items-start gap-2">
+              <p className="text-body text-secondary">{c.explore.noPhrases(filters.q ?? '')}</p>
+              {filters.q && (
+                <button
+                  type="button"
+                  onClick={() => nav.addPhrase({ target: filters.q })}
+                  className="min-h-11 px-4 rounded-full bg-surface-container text-on-surface text-body font-semibold flex items-center gap-1.5"
+                >
+                  <Icon name="add" className="text-icon-md" />
+                  {c.explore.addAsOwn(filters.q)}
+                </button>
+              )}
+            </div>
           ) : (
             <ul className="-mx-2">
               {phrases.map((p) => (
