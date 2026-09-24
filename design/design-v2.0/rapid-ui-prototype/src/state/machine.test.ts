@@ -324,3 +324,26 @@ describe('the learner’s own phrases and sets', () => {
     assert.equal(s.player.order.length, 0);
   });
 });
+
+describe('merging another device', () => {
+  it("that deleted the phrase playing here pauses on the next one instead of freezing", () => {
+    let s = run(fresh(), { type: 'ADD_OWN_PHRASE', target: 'Hola', native: 'Hi', now: T0 });
+    const id = Object.keys(s.learner.ownPhrases)[0];
+    s = run(s, { type: 'LOAD', phraseIds: [id, 'cafe-01'], setId: null, startIndex: 0, shuffle: false, now: T0 + 1, seed: 1 });
+    assert.equal(s.player.status, 'playing');
+    const remote = { ...s.learner, ownPhrases: { [id]: { ...s.learner.ownPhrases[id], deleted: true, updatedAt: T0 + 5 } } };
+    s = run(s, { type: 'MERGE_REMOTE', learner: remote, now: T0 + 6 });
+    assert.equal(s.learner.ownPhrases[id].deleted, true);
+    assert.deepEqual(s.player.order, ['cafe-01']);
+    assert.equal(s.player.index, 0);
+    assert.equal(s.player.status, 'paused');
+  });
+
+  it('that changed nothing in the queue leaves playback alone', () => {
+    const s = load(fresh());
+    const remote = { ...s.learner, profile: { ...s.learner.profile, name: 'Bea', updatedAt: T0 + 5 } };
+    const after = run(s, { type: 'MERGE_REMOTE', learner: remote, now: T0 + 6 });
+    assert.equal(after.learner.profile.name, 'Bea');
+    assert.equal(after.player, s.player);
+  });
+});

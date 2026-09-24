@@ -62,7 +62,7 @@ function makeActions(dispatch: (event: AppEvent) => void, latest: RefObject<AppS
     deleteSet: (setId: string) => dispatch({ type: 'DELETE_SET', setId, now: now() }),
     restoreSet: (setId: string) => dispatch({ type: 'RESTORE_SET', setId, now: now() }),
     setProfile: (profile: Partial<Omit<Profile, 'updatedAt'>>) => dispatch({ type: 'SET_PROFILE', profile, now: now() }),
-    mergeRemote: (learner: LearnerState) => dispatch({ type: 'MERGE_REMOTE', learner }),
+    mergeRemote: (learner: LearnerState) => dispatch({ type: 'MERGE_REMOTE', learner, now: now() }),
     reset: () => dispatch({ type: 'RESET' }),
   };
 }
