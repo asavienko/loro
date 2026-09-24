@@ -21,7 +21,9 @@
     <link rel="preload" href="/fonts/material-symbols.woff2" as="font" type="font/woff2" crossorigin />
   </head>
   <body>
-    <div id="root"></div>
+    <!-- Shown until the app has read progress from device storage and renders over it.
+         Colours repeat --color-surface and --color-on-surface from src/index.css. -->
+    <div id="root"><div style="min-height:100dvh;display:flex;align-items:center;justify-content:center;background:#fcf9f4;color:#1c1c19;font:700 2.5rem Georgia,serif" aria-busy="true">Loro</div></div>
     <noscript>Loro needs JavaScript to play phrases. Turn it on in your browser settings and reload.</noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
