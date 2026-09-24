@@ -239,6 +239,7 @@ function sanitizePrefs(value: unknown): Prefs {
     speed: value.speed === 0.8 || value.speed === 1.25 ? value.speed : 1,
     announceEveryStep: value.announceEveryStep === true,
     sortBySet,
+    skippedDemo: value.skippedDemo === true,
   };
 }
 

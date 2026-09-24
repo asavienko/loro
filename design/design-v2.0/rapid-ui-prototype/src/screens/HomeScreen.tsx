@@ -44,6 +44,8 @@ export function HomeScreen() {
   const fresh = notStartedSets(learner, now).filter((s) => s.id !== suggestedId);
   const firstRun = stats.started === 0;
   const firstPhrase = courseSets(learner)[0]?.phraseIds[0];
+  // The demo is offered until the first phrase is heard, unless onboarding declined it.
+  const offerDemo = firstRun && Boolean(firstPhrase) && !state.prefs.skippedDemo;
   const courseTotal = coursePhrases(learner).length;
   // Nothing due and nothing left to learn: say so, and offer what to do next.
   const courseDone = courseTotal > 0 && due.length === 0 && suggestedIds.length === 0 && stats.learned === courseTotal;
@@ -62,7 +64,7 @@ export function HomeScreen() {
         {today.heard + today.rated > 0 && <p className="text-body text-secondary mt-2 px-1">{c.home.today(today.heard, today.rated)}</p>}
       </section>
 
-      {firstRun && firstPhrase && (
+      {offerDemo && firstPhrase && (
         <section aria-labelledby="demo-heading" className="rounded-3xl bg-primary-fixed/50 p-4">
           <h2 id="demo-heading" className="font-serif text-lg font-bold">{c.home.demoTitle}</h2>
           <p className="text-body text-on-surface-variant mt-0.5">{c.home.demoBody}</p>
@@ -96,13 +98,13 @@ export function HomeScreen() {
           </div>
         )}
         {suggested && suggestedProgress && suggestedIds.length > 0 && (
-          <div className={`rounded-3xl border border-outline-variant p-4 ${due.length > 0 || firstRun ? 'bg-surface-container-low' : 'bg-surface-container-lowest shadow-sm'}`}>
+          <div className={`rounded-3xl border border-outline-variant p-4 ${due.length > 0 || offerDemo ? 'bg-surface-container-low' : 'bg-surface-container-lowest shadow-sm'}`}>
             <h2 className="font-serif text-lg font-bold">{stats.started === 0 ? c.home.startTitle : c.home.continueTitle}</h2>
             <p className="text-body text-secondary mt-0.5">
               {c.home.continueBody(suggested.title, suggestedProgress.learned, suggestedProgress.total)}
             </p>
             <PlayButton
-              secondary={due.length > 0 || (firstRun && Boolean(firstPhrase))}
+              secondary={due.length > 0 || offerDemo}
               label={c.home.playPhrases(suggestedIds.length)}
               detail={null}
               onClick={() => nav.playSet(suggested.id, { phraseIds: suggestedIds })}
