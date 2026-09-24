@@ -682,6 +682,14 @@ the played part of the queue; and when one sheet handed over to another (Details
 set), Back left the app, focus returned to the page behind the new sheet, and creating a set left
 focus on `<body>` with a dead Back entry.
 
+A third review, of storage and tabs, found five: a rating pending in two tabs was committed twice
+(graded twice, points doubled); an older save could clear a newer page-close copy before it landed;
+two tabs saving at once could each drop the other's progress for good; a failed first-run move from
+localStorage stranded the old progress behind a fresh start; and progress saved while IndexedDB was
+unavailable was ignored once it worked again. All fixed; the first and the merges are unit-tested.
+Known and left: tabs share one page-close slot, so a new tab can start with another tab's queue and
+speed (its ratings no longer double-count).
+
 **For the Bulgarian reviewer:** on a 320 px phone the Missed rating, "Не се сетих", wraps onto two
 lines in its third of the row; a shorter word (e.g. "Забравих") would fit. Dropping the icons didn't
 make it fit, so the fix is wording, not layout.
