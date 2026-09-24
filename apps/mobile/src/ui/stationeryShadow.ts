@@ -5,6 +5,8 @@ export interface StationeryShadow {
   offsetX: number
   offsetY: number
   blur: number
+  /** Tailwind ring / CSS spread. Contact recipes stay 0. */
+  spread: number
   r: number
   g: number
   b: number
@@ -13,7 +15,7 @@ export interface StationeryShadow {
 
 const LENGTH = '(-?\\d+(?:\\.\\d+)?)(?:px)?'
 const LAYER = new RegExp(
-  `(inset\\s+)?${LENGTH}\\s+${LENGTH}\\s+${LENGTH}\\s+rgba\\(\\s*(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(\\d*\\.?\\d+)\\s*\\)`,
+  `(inset\\s+)?${LENGTH}\\s+${LENGTH}\\s+${LENGTH}(?:\\s+${LENGTH})?\\s+rgba\\(\\s*(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(\\d*\\.?\\d+)\\s*\\)`,
   'g',
 )
 
@@ -34,10 +36,11 @@ export function parseStationeryShadowLayers(recipe: string): StationeryShadow[] 
       offsetX: Number(match[2]),
       offsetY: Number(match[3]),
       blur: Number(match[4]),
-      r: Number(match[5]),
-      g: Number(match[6]),
-      b: Number(match[7]),
-      opacity: Number(match[8]),
+      spread: match[5] === undefined ? 0 : Number(match[5]),
+      r: Number(match[6]),
+      g: Number(match[7]),
+      b: Number(match[8]),
+      opacity: Number(match[9]),
     })
     cursor = match.index + match[0].length
   }
@@ -65,6 +68,7 @@ export const DEBOSS_TRANSLATE_Y = 1
 /** Halve the ambient recipe so a press reads as paper pushed into the desk. */
 export function reduceStationeryShadow(parsed: StationeryShadow): StationeryShadow {
   if (parsed.inset) return parsed
+  if (parsed.spread > 0) return parsed
   return {
     ...parsed,
     offsetY: parsed.offsetY > 1 ? 1 : parsed.offsetY,
@@ -85,6 +89,7 @@ export function mixStationeryShadow(
     offsetX: lerp(from.offsetX, to.offsetX),
     offsetY: lerp(from.offsetY, to.offsetY),
     blur: lerp(from.blur, to.blur),
+    spread: lerp(from.spread, to.spread),
     r: from.r,
     g: from.g,
     b: from.b,
@@ -94,7 +99,8 @@ export function mixStationeryShadow(
 
 export function formatWebStationeryShadow(parsed: StationeryShadow): string {
   const inset = parsed.inset ? 'inset ' : ''
-  return `${inset}${parsed.offsetX}px ${parsed.offsetY}px ${parsed.blur}px rgba(${parsed.r},${parsed.g},${parsed.b},${parsed.opacity})`
+  const spread = parsed.spread === 0 ? '' : ` ${parsed.spread}px`
+  return `${inset}${parsed.offsetX}px ${parsed.offsetY}px ${parsed.blur}px${spread} rgba(${parsed.r},${parsed.g},${parsed.b},${parsed.opacity})`
 }
 
 export function formatWebStationeryShadows(layers: readonly StationeryShadow[]): string {
@@ -103,6 +109,13 @@ export function formatWebStationeryShadows(layers: readonly StationeryShadow[]):
 
 export function nativeShadowStyle(parsed: StationeryShadow): ViewStyle {
   if (parsed.inset) return {}
+  if (parsed.spread > 0) {
+    return {
+      outlineWidth: parsed.spread,
+      outlineColor: `rgba(${parsed.r},${parsed.g},${parsed.b},${parsed.opacity})`,
+      outlineStyle: 'solid',
+    }
+  }
   return {
     shadowColor: hexFromRgb(parsed.r, parsed.g, parsed.b),
     shadowOffset: { width: parsed.offsetX, height: parsed.offsetY },
@@ -114,6 +127,11 @@ export function nativeShadowStyle(parsed: StationeryShadow): ViewStyle {
 
 /** iOS contact shadow + Android elevation, derived from the generated recipe. */
 export function nativeStationeryShadow(recipe: string): ViewStyle {
-  const layer = parseStationeryShadowLayers(recipe).find((item) => !item.inset)
-  return layer === undefined ? {} : nativeShadowStyle(layer)
+  const layers = parseStationeryShadowLayers(recipe)
+  const contact = layers.find((item) => !item.inset && item.spread === 0)
+  const ring = layers.find((item) => !item.inset && item.spread > 0)
+  return {
+    ...(contact === undefined ? {} : nativeShadowStyle(contact)),
+    ...(ring === undefined ? {} : nativeShadowStyle(ring)),
+  }
 }

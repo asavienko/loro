@@ -7,7 +7,7 @@ Architecture: [mobile-app.md](../../docs/architecture/mobile-app.md) · Stack ra
 
 ## What's here
 
-Eight of the v1.1 design package's 23 learner screens, plus the app shell — the demonstrable core
+Nine of the v1.1 design package's 23 learner screens, plus the app shell — the demonstrable core
 loop:
 
 | Route              | Screen                                                                      |
@@ -20,12 +20,13 @@ loop:
 | `phrase/[id]`      | One phrase: its signals, its history, its hooks                             |
 | `progress`         | Mastery, ladder, and the rollup from those tags                             |
 | `practice/speak`   | On-device speech or offline word reveal                                     |
+| `practice/review`  | Review dock — flip card, real FSRS grades, local resume checkpoint          |
 | `languages`        | Native and learning language selection                                      |
 | `account`          | Optional Google/Apple/email sign-in and sync status                         |
 | `listen-export`    | Listening companion: generate, cache, listen; share gated on Q-22           |
 | `_layout`          | Router shell + toast host                                                   |
 
-The other 15 learner screens — chat, the prosody and pronunciation labs, the Run, trips, settings —
+The other 14 learner screens — chat, the prosody and pronunciation labs, the Run, trips, settings —
 are authored. The original 21 are in [screen-catalog.md](../../docs/design/screen-catalog.md); plan
 79 owns registration of the two v1.1 chat screens.
 

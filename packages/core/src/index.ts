@@ -72,8 +72,23 @@ export {
   effortState,
   warmBand,
   selectRefrainSet,
+  ReviewEngine,
+  REVIEW_GRADES,
+  firstReviewPolicy,
+  reviewCandidates,
+  reviewFocus,
+  reviewLimit,
 } from './engines/index.js'
-export type { EffortState, RefrainMode, WarmBand } from './engines/index.js'
+export type {
+  EffortState,
+  FirstReviewPolicy,
+  RefrainMode,
+  ReviewAttemptContract,
+  ReviewCandidates,
+  ReviewFocus,
+  ReviewGrade,
+  WarmBand,
+} from './engines/index.js'
 
 export * from './domain/languages.js'
 export * from './domain/lyrics.js'

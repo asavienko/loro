@@ -122,6 +122,7 @@ Expo Router typed routes are enabled in `app.config.ts`. The route files on disk
 | `/practice/stream`  | Stream practice over active repository-backed phrases                        |
 | `/practice/refrain` | Frozen daily set and six-rep Refrain flow                                    |
 | `/practice/speak`   | On-device recognition or offline reveal; truthful engine progress            |
+| `/practice/review`  | Review dock; real FSRS grades and a validated local resume checkpoint          |
 | `/account`          | Optional email sign-in, sync status and sign-out                             |
 | `/languages`        | Native/target selection with durable independent course state                |
 | `/more`             | Grouped destination list for built surfaces                                  |

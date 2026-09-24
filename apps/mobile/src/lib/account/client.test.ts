@@ -233,7 +233,11 @@ describe('anonymous-first account lifecycle', () => {
         }),
       )
       expect(bindAccount).toHaveBeenCalledWith('user-1')
-      expect(client.getSnapshot().session).toEqual({ accountId: 'user-1', deviceId: 'device-1' })
+      expect(client.getSnapshot().session).toEqual({
+        accountId: 'user-1',
+        deviceId: 'device-1',
+        email: null,
+      })
       expect(await client.getAccessToken()).toBe('access')
       expect(saved()).toContain('refresh')
     },
@@ -347,8 +351,10 @@ describe('anonymous-first account lifecycle', () => {
     fetch.mockResolvedValue(ok(signedIn))
     await client.verifyCode('learner@example.com', '123456')
     expect(client.getSnapshot().session?.accountId).toBe('user-1')
+    expect(client.getSnapshot().session?.email).toBe('learner@example.com')
     expect(bindAccount).toHaveBeenCalledWith('user-1')
     expect(saved()).toContain('refresh')
+    expect(saved()).toContain('learner@example.com')
     expect(saved()).not.toContain('access_token')
     expect(await client.getAccessToken()).toBe('access')
   })
@@ -359,6 +365,7 @@ describe('anonymous-first account lifecycle', () => {
     const relaunched = new AccountClient(deps)
     await relaunched.restore()
     expect(relaunched.getSnapshot().session?.accountId).toBe('user-1')
+    expect(relaunched.getSnapshot().session?.email).toBe('learner@example.com')
     expect(fetch).toHaveBeenCalledTimes(1)
   })
   it('rejects an account switch before exposing credentials or uploading data', async () => {

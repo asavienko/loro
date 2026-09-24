@@ -33,6 +33,7 @@ export function useAudioSpeech(
   canRecognize: boolean
   devicePlayback: boolean
   source: PracticeAudioSource
+  apiReady: boolean
 } {
   const snapshot = useSyncExternalStore(
     audioSpeech.subscribe,
@@ -72,5 +73,6 @@ export function useAudioSpeech(
     canRecognize: availability.recognition,
     devicePlayback: false,
     source,
+    apiReady,
   }
 }

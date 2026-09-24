@@ -43,4 +43,39 @@ export {
 } from './sqlite/index.js'
 export { openMemoryPersistence } from './memory.js'
 export { decodeCheckpoint, encodeCheckpoint, type CourseCheckpoint } from './checkpoint.js'
+export {
+  buildReviewCheckpoint,
+  decodeReviewCheckpoint,
+  encodeReviewCheckpoint,
+  reviewCheckpointKey,
+  reviewContentHash,
+  validateReviewResume,
+  type ReviewCheckpoint,
+  type ReviewDisplayedContent,
+  type ReviewQueueEntry,
+  type ReviewResumeContext,
+  type ReviewResumeDecision,
+  type ReviewResumeRefusal,
+} from './reviewCheckpoint.js'
+export {
+  clearReviewCheckpoint,
+  loadReviewCheckpoint,
+  saveReviewCheckpoint,
+} from './sqlite/reviewCheckpoint.js'
+export {
+  applyListenOrder,
+  buildListenQueue,
+  decodeListenQueue,
+  encodeListenQueue,
+  listenQueueKey,
+  moveListenItem,
+  LISTEN_QUEUE_KEY_PREFIX,
+  LISTEN_QUEUE_VERSION,
+  type ListenQueue,
+} from './listenQueue.js'
+export {
+  clearListenQueue,
+  loadListenQueue,
+  saveListenQueue,
+} from './sqlite/listenQueue.js'
 export { synchronousResult } from './transaction.js'

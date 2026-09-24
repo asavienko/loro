@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { surface } from '@loro/design-tokens'
+import { shadow, surface } from '@loro/design-tokens'
 import {
   CHROME_GUTTER,
   GLASS_ALPHA,
@@ -30,7 +30,8 @@ describe('parchment glass tokens', () => {
     expect(GLASS_BLUR_PX).toBe(12)
   })
 
-  it('colours the header hairline from shadowInk, not a grey drop', () => {
+  it('colours the header hairline from the generated v1.3 recipe, not a grey drop', () => {
+    expect(shadow.headerHairline).toBe('0 1px 8px rgba(28,28,25,.04)')
     expect(chromeHairlineFill).toBe(hexAlpha(surface.shadowInk, 0.04))
   })
 })

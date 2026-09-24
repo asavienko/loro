@@ -9,6 +9,8 @@ export interface CredentialVault {
 export interface AccountSession {
   accountId: string
   deviceId: string
+  /** Verified magic-link address only. The API never returns raw email. */
+  email?: string | null
 }
 
 export type AccountStatus =

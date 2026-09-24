@@ -2,11 +2,11 @@
 
 - **Requirement IDs:** `P3-30`…`P3-40`, `P3B-01`…`P3B-08`
 - **Milestone:** M3
-- **Status:** 🟡 The course-scoped Review engine now creates a finite due queue and records explicit
-  grades through canonical FSRS deltas; a reachable route, durable Review checkpoint/resume
-  contract, and Memory remain. Canonical due order, cross-session daily budget and conformance also
-  remain. Undo is blocked on reviewed plan-68 compensation/retry semantics; it must not be exposed
-  by the initial Review route.
+- **Status:** 🟡 `/practice/review` grades real FSRS due rows, flips the meaning card, and persists
+  a Review checkpoint in the same transaction as `applyDelta` / `committed_attempt` /
+  `review_event`. The v1.3 dock was screenshot-audited at 390×844 (invented VOL. 03 / scholar /
+  MB chips omitted). Memory, mixed/custom fixtures, canonical due order, daily budget and
+  conformance remain. Undo is blocked on plan-68 compensation. Device 60 fps remains 58/72.
 - **Depends on:** 59 history/resume; 60 FSRS/selection; 56/81 route laws; 57 chart primitives; 72
   applicable harness only.
 - **Reviewed:** 2026-09-09 against `aafa61f`; current source, tests and retained review records
@@ -33,17 +33,17 @@ retrievability/lapses without manufacturing a curve, history, or confidence valu
 
 ## Remaining work
 
-1. [ ] Define the durable Review checkpoint/resume contract and a first-review policy for
-       unscheduled phrases. The pure engine's explicit-grade attempt contract and local
-       `committed_attempt` idempotency boundary exist; the route must persist and validate a stable
-       event identity, target course, local day, phrase identity and content before resuming. Keep
-       Undo a separate 68-owned compensation contract; it is not a prerequisite for the initial
-       route.
-2. [ ] Wire the conforming Review engine into a reachable route. It plans target-course due rows in
-       repository order, caps daily work at `dailyMinutes × 4`, requires a learner-declared grade,
-       and calls only the canonical FSRS facade. Persist grades through `applyDelta`,
-       attempt/history and checkpoint writes in one transaction before publishing state. Add
-       due/empty/no-history/mixed/custom route states with deterministic fixtures.
+1. [x] Checkpoint types, encode/decode, fail-closed resume validation (event id, target course,
+       `clock.localDay()`, phrase identity, content hash, due/unscheduled) and `local_metadata`
+       upsert helpers. First-review policy: `unscheduled` never invents FSRS state. `/practice/review`
+       is a built surface with honest empty/no-schedule/nothing-due and a due dock that shows only
+       real due counts — no grade UI yet. Resume still needs a grade commit that writes the
+       checkpoint in the same transaction as `applyDelta` / `committed_attempt` / `review_event`.
+2. [x] Grade commit writes `saveReviewCheckpoint` in the same SQL transaction as `applyDelta`,
+       `committed_attempt` and `review_event`. Hydrate calls `loadReviewCheckpoint` +
+       `validateReviewResume` before showing a resumable card. Real SQLite persist tests cover
+       upsert, rollback and reopen. `/practice/review` grades real FSRS intervals. Mixed/custom
+       fixtures and Memory remain. Undo stays on plan 68.
 3. [ ] Render Memory axes/curve/points/labels from actual histories and model outputs; state
        honestly when insufficient data exists.
 4. [ ] Implement accessible chart summaries, focus order, Dynamic Type, reduced motion, and color-

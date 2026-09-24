@@ -1,14 +1,16 @@
 import { mockAccountService } from './accountFlow'
 import { atInstant } from './clock'
-import { expect, onboard, test } from './fixtures'
+import { expect, onboard, signIn, test } from './fixtures'
 import { back, open, todayMarker } from './helpers'
 
 test('cold learner links provide a home escape without browser history', async ({ page }) => {
+  await signIn(page)
   for (const route of [
     '/add',
     '/progress',
     '/practice/stream',
     '/practice/refrain',
+    '/practice/review',
     '/phrase/missing',
   ] as const) {
     await page.goto(route)
@@ -23,14 +25,14 @@ test('cold learner links provide a home escape without browser history', async (
 })
 
 test('unknown and planned deep links return through the safe home gate', async ({ page }) => {
-  for (const route of ['/not-a-route', '/practice/review'] as const) {
+  for (const route of ['/not-a-route', '/practice/roleplay'] as const) {
     await page.goto(route)
-    await expect(page).toHaveURL(/\/onboarding$/)
-    await expect(page.getByRole('button', { name: "Let's go →" })).toBeVisible()
+    await expect(page).toHaveURL(/\/account$/)
+    await expect(page.getByRole('heading', { name: 'Sign in & sync' })).toBeVisible()
   }
 
   await onboard(page)
-  for (const route of ['/not-a-route', '/practice/review'] as const) {
+  for (const route of ['/not-a-route', '/practice/roleplay'] as const) {
     await page.goto(route)
     await expect(page).toHaveURL(/\/$/)
     await expect(todayMarker(page)).toBeVisible()
@@ -55,6 +57,7 @@ test('the shared menu connects every built hub and returns from phrase detail', 
     ['Listen', '/listen-export'],
     ['Stream', '/practice/stream'],
     ['The Refrain', '/practice/refrain'],
+    ['Review', '/practice/review'],
     ['Today', '/'],
   ] as const) {
     await page.getByRole('button', { name: /, open the menu$/ }).click()

@@ -136,6 +136,26 @@ describe('token source', () => {
     expect(t.shadow.raised).toContain('159,60,22')
   })
 
+  it('extracts the v1.3 Account method elevation recipes from the HTML', () => {
+    expect(t.shadow.methodContact).toBe('0 2px 4px rgba(35,30,24,.03)')
+    expect(t.shadow.methodFilled).toBe('0 2px 4px rgba(35,30,24,.08)')
+    expect(t.shadow.methodSoft).toBe('0 1px 2px rgba(35,30,24,.05)')
+    expect(t.shadow.methodInset).toBe('inset 0 2px 4px rgba(28,28,25,.05)')
+    expect(t.shadow.accentGlow).toBe('0 2px 8px rgba(200,90,50,.15)')
+    expect(t.shadow.accentGlowStrong).toBe('0 2px 8px rgba(200,90,50,.25)')
+    expect(t.shadow.accentGlowStay).toBe('0 2px 6px rgba(200,90,50,.25)')
+    expect(t.shadow.emblemSoft).toBe('0 1px 2px rgba(35,30,24,.05)')
+    expect(t.shadow.emblemRaised).toBe('0 4px 6px rgba(35,30,24,.10), 0 2px 4px rgba(35,30,24,.10)')
+    expect(t.shadow.headerHairline).toBe('0 1px 8px rgba(28,28,25,.04)')
+    expect(t.shadow.playRaised).toBe('0 10px 15px rgba(35,30,24,.10), 0 4px 6px rgba(35,30,24,.10)')
+    expect(t.shadow.dockFloat).toBe('0 8px 24px rgba(35,30,24,.30)')
+    expect(t.shadow.queueSoft).toBe('0 1px 1px rgba(35,30,24,.05)')
+    expect(t.shadow.playerFloat).toBe('0 25px 50px rgba(35,30,24,.25)')
+    expect(t.shadow.playGlow).toBe('0 6px 18px rgba(191,84,44,.35)')
+    expect(t.shadow.pillRing).toBe('0 0 0 2px rgba(255,219,208,.40)')
+    expect(t.shadow.rateRing).toBe('0 0 0 2px rgba(255,219,208,1)')
+  })
+
   it('keeps radius.lg at 12 — the workhorse', () => {
     expect(t.radius.lg).toBe(12)
   })

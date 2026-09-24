@@ -45,6 +45,8 @@ export const createSessionSlice: Slice<
       refrainWaves: current.refrainWaves,
       waveListens: current.waveListens,
       refrainSubstituted: current.refrainSubstituted,
+      reviewCheckpoint: current.reviewCheckpoint,
+      listenQueue: current.listenQueue,
     }
     const destination = current.courses[targetLocale] ?? {
       streamCursor: 0,
@@ -57,6 +59,8 @@ export const createSessionSlice: Slice<
       refrainWaves: [],
       waveListens: {},
       refrainSubstituted: [],
+      reviewCheckpoint: null,
+      listenQueue: null,
     }
     set({
       ...destination,

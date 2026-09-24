@@ -236,6 +236,13 @@ Card _type_ comes from tags ([functional-spec.md](../product/functional-spec.md#
 that mapping lives in the engine, not the screen. The Memory-model surface is the same engine with a
 five-level confidence input instead of four grades — both map onto FSRS grades in `loro-core`.
 
+**First-review policy.** An `unscheduled` row (`srs === null`) has no canonical FSRS state. Review
+must not invent one — `firstReviewPolicy` returns `blocked-unscheduled`, `ReviewEngine.record`
+throws, and resume validation refuses the checkpoint. Stream, Speak and Refrain create schedules
+through their own record paths. `/practice/review` grades only already-scheduled due rows. A
+checkpoint (event id, course, `clock.localDay()`, phrase identity, content hash) is written in the
+same transaction as `applyDelta`. Hydrate validates before showing a resumable card.
+
 ### ProsodyEngine · v1.1
 
 `Loro.dc.html:1124–1291`

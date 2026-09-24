@@ -16,6 +16,7 @@ import type {
   PhraseState,
   ProgressDelta,
   RefrainDayRow,
+  ReviewCheckpoint,
   SessionPlan,
   Tag,
   UserPhraseId,
@@ -75,6 +76,11 @@ export interface AppActions {
   applyDelta: (delta: ProgressDelta, context?: PracticeCommitContext) => void
   /** Stream browse position. The route rates/navigates; it does not write this field itself. */
   setStreamCursor: (streamCursor: number) => void
+  /**
+   * Device-local simple-queue listen order. Not a practice outcome and not Rust rank.
+   * Empty or malformed lists fail closed to `null` (Rust rank).
+   */
+  setListenQueue: (phraseIds: readonly string[]) => void
   select: (id: string | null) => void
   showToast: (message: string, undo?: () => void) => void
   clearToast: () => void
@@ -120,6 +126,12 @@ export interface PracticeCommitContext {
     readonly grade: 1 | 2 | 3 | 4
     readonly algorithm: string
   }
+  /**
+   * Review resume payload written in the same transaction as `committed_attempt`
+   * and `review_event`. `null` clears a finished session. Omit the key on
+   * Stream/Refrain/Speak commits so those writes do not touch Review resume.
+   */
+  readonly reviewCheckpoint?: ReviewCheckpoint | null
 }
 
 /**

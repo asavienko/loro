@@ -1,6 +1,5 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import {
-  ActivityIndicator,
   BackHandler,
   KeyboardAvoidingView,
   Platform,
@@ -9,9 +8,23 @@ import {
   View,
 } from 'react-native'
 import { router, Stack as RouteStack } from 'expo-router'
+import { streak as streakOf } from '@loro/core'
 import { useApp } from '../src/store'
+import { deviceClock } from '../src/lib/clock'
 import { conditionalHome } from '../src/lib/navigation'
 import type { OAuthProvider } from '@loro/core/api/oauth'
+import { SignInHub } from './_account/SignInHub'
+import { SignOutConfirm } from './_account/SignOutConfirm'
+import { resolveHubTone } from './_account/hubState'
+import {
+  HUB_NAV_TITLE,
+  HUB_NAV_TITLE_LINE,
+  HUB_NAV_TITLE_TRACK,
+  HUB_NAV_TITLE_WEIGHT,
+  HUB_NAV_TODAY,
+  HUB_NAV_TODAY_TRACK,
+  HUB_NAV_TODAY_WEIGHT,
+} from './_account/geometry'
 import {
   accountClient,
   syncNow,
@@ -27,13 +40,13 @@ import {
 } from '../src/auth/runtime'
 import { copy } from '../src/lib/copy'
 import { useLocale } from '../src/lib/i18n'
-import { Button, Card, Field, Pressable, Row, Screen, Stack, Text } from '../src/ui/primitives'
-import { stationeryElevation } from '../src/ui/elevation'
-import { ink, line, MIN_TAP, onDark, radius, semantic, space, surface, type } from '../src/ui/theme'
+import { Button, Card, Field, Pressable, Screen, Stack, Text } from '../src/ui/primitives'
+import { ink, MIN_TAP, radius, semantic, space, surface, type } from '../src/ui/theme'
 import { useTheme } from '../src/ui/ThemeProvider'
 import { scaleTextStyle } from '../src/ui/runtimeStyles'
 
-type ViewState = 'methods' | 'email' | 'code' | 'confirmation' | 'account'
+type ViewState = 'methods' | 'email' | 'code' | 'confirmation' | 'account' | 'signOutConfirm'
+type HubOutcome = 'idle' | 'cancelled' | 'error'
 type ProviderState = 'loading' | 'ready' | 'error'
 type FeedbackTone = 'info' | 'warning' | 'danger'
 type AccountErrorCode = NonNullable<ReturnType<typeof useAccount>['error']>
@@ -49,7 +62,7 @@ export default function Account() {
   const sync = useSyncStatus()
   const repair = useSyncRepair()
   const client = accountClient()
-  const { textScale } = useTheme()
+  const { textScale, accent } = useTheme()
   const [view, setView] = useState<ViewState>(state.session ? 'account' : 'methods')
   const [freshConfirmation, setFreshConfirmation] = useState(false)
   const [email, setEmail] = useState('')
@@ -63,22 +76,27 @@ export default function Account() {
   const [capabilityStatus, setCapabilityStatus] = useState<ProviderState>('loading')
   const [activeProvider, setActiveProvider] = useState<OAuthProvider | null>(null)
   const [capabilityAttempt, setCapabilityAttempt] = useState(0)
+  const [outcome, setOutcome] = useState<HubOutcome>('idle')
+  const practiceDays = useApp((current) => current.practiceDays)
+  const streakDays = streakOf(practiceDays, deviceClock.streakDay())
+  const scrollRef = useRef<ScrollView>(null)
 
   const busy = state.status === 'working'
   const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
   const submitted = submittedEmail || email.trim()
-  const allMethodsUnavailable =
-    providerStatus === 'ready' &&
-    capabilityStatus === 'ready' &&
-    providers.length === 0 &&
-    !emailAvailable
+  const socialUnavailable =
+    providerStatus === 'ready' && capabilityStatus === 'ready' && providers.length === 0
 
   useEffect(() => {
     completeBrowserSignIn()
   }, [])
 
   useEffect(() => {
-    if (!state.session && view === 'account') {
+    scrollRef.current?.scrollTo({ y: 0, animated: false })
+  }, [view])
+
+  useEffect(() => {
+    if (!state.session && (view === 'account' || view === 'signOutConfirm')) {
       setView('methods')
       setFreshConfirmation(false)
     } else if (state.session && activeProvider && !freshConfirmation && view === 'methods') {
@@ -92,9 +110,11 @@ export default function Account() {
   useEffect(() => {
     if (!state.session && activeProvider && state.status === 'cancelled') {
       setActiveProvider(null)
+      setOutcome('cancelled')
       setFeedback({ tone: 'info', text: copy.account.cancelled })
     } else if (!state.session && activeProvider && state.status === 'error' && state.error) {
       setActiveProvider(null)
+      setOutcome('error')
       setFeedback({ tone: 'danger', text: errorCopy(state.error) })
     }
   }, [activeProvider, state.error, state.session, state.status])
@@ -143,6 +163,7 @@ export default function Account() {
     setSubmittedEmail('')
     setConfirmedEmail(null)
     setActiveProvider(null)
+    setOutcome('idle')
   }
 
   const cancelAttemptIfBusy = (): void => {
@@ -173,6 +194,10 @@ export default function Account() {
         backToMethods()
         return true
       }
+      if (view === 'signOutConfirm') {
+        setView('account')
+        return true
+      }
       cancelAttemptIfBusy()
       return false
     })
@@ -186,9 +211,26 @@ export default function Account() {
       ? copy.account.signInOptions
       : view === 'code'
         ? copy.account.emailBack
-        : copy.account.title
+        : view === 'signOutConfirm'
+          ? copy.account.signOutConfirmNav
+          : copy.account.title
+  const hubNavTitle = view === 'methods' || view === 'signOutConfirm'
   const headerBackLabel =
-    view === 'email' ? copy.account.signInOptions : view === 'code' ? copy.account.emailBack : null
+    view === 'email'
+      ? copy.account.signInOptions
+      : view === 'code'
+        ? copy.account.emailBack
+        : view === 'signOutConfirm'
+          ? copy.a11y.common.back
+          : view === 'methods'
+            ? copy.nav.home
+            : null
+  const hubTone = resolveHubTone({
+    busy,
+    activeProvider,
+    socialUnavailable,
+    outcome,
+  })
 
   const leaveToPractice = (): void => {
     cancelAttemptIfBusy()
@@ -199,6 +241,7 @@ export default function Account() {
 
   const startEmail = (): void => {
     setFeedback(null)
+    setOutcome('idle')
     setCode('')
     setSubmittedEmail('')
     setView('email')
@@ -249,6 +292,7 @@ export default function Account() {
   const providerSignIn = (provider: OAuthProvider): void => {
     if (!client || busy) return
     setFeedback(null)
+    setOutcome('idle')
     setActiveProvider(provider)
     void beginSignIn(provider)
       .then((started) => {
@@ -267,6 +311,7 @@ export default function Account() {
   const cancelProvider = (): void => {
     client?.cancelSignIn()
     setActiveProvider(null)
+    setOutcome('cancelled')
     setFeedback({ tone: 'info', text: copy.account.cancelled })
   }
 
@@ -283,6 +328,9 @@ export default function Account() {
       <RouteStack.Screen
         options={{
           title: headerTitle,
+          ...(hubNavTitle
+            ? { headerTitle: () => <AccountNavTitle label={headerTitle} /> }
+            : {}),
           gestureEnabled: view === 'methods' || view === 'account',
           ...(headerBackLabel
             ? {
@@ -291,12 +339,30 @@ export default function Account() {
                     feedback="smallButton"
                     accessibilityRole="link"
                     accessibilityLabel={headerBackLabel}
-                    onPress={view === 'code' ? backToEmail : backToMethods}
+                    disabled={view === 'methods' && busy}
+                    onPress={() => {
+                      if (view === 'code') backToEmail()
+                      else if (view === 'email') backToMethods()
+                      else if (view === 'signOutConfirm') setView('account')
+                      else router.replace('/')
+                    }}
                     style={styles.headerTarget}
                   >
-                    <Text variant="title2" color={ink.ink}>
-                      {copy.common.chevron.left}
-                    </Text>
+                    {view === 'methods' ? (
+                      <View testID="account-nav-today">
+                        <Text
+                          variant="bodySm"
+                          color={busy ? ink.muted : accent.accentInk}
+                          style={styles.navToday}
+                        >
+                          {copy.nav.home}
+                        </Text>
+                      </View>
+                    ) : (
+                      <Text variant="title2" color={ink.ink}>
+                        {copy.common.chevron.left}
+                      </Text>
+                    )}
                   </Pressable>
                 ),
               }
@@ -307,67 +373,39 @@ export default function Account() {
         style={styles.fill}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
+        <ScrollView
+          ref={scrollRef}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={
+            view === 'methods' || view === 'signOutConfirm' ? styles.hubContent : styles.content
+          }
+        >
           {view === 'methods' && (
-            <>
-              <AccountHero />
-              <Stack gap={space['2.5']}>
-                <Text variant="title1" align="center">
-                  {copy.account.heroTitle}
-                </Text>
-                <Text variant="bodyMd" align="center" color={ink.ink2}>
-                  {copy.account.heroBody}
-                </Text>
-              </Stack>
-              <Stack gap={space['2']} style={styles.methods}>
-                <ProviderMethod
-                  provider="google"
-                  label={copy.account.google}
-                  available={providerStatus === 'ready' && providers.includes('google')}
-                  active={activeProvider === 'google'}
-                  busy={busy}
-                  onPress={() => {
-                    providerSignIn('google')
-                  }}
-                />
-                <ProviderMethod
-                  provider="apple"
-                  label={copy.account.apple}
-                  available={providerStatus === 'ready' && providers.includes('apple')}
-                  active={activeProvider === 'apple'}
-                  busy={busy}
-                  onPress={() => {
-                    providerSignIn('apple')
-                  }}
-                />
-                <MethodButton
-                  icon="✉"
-                  label={copy.account.emailMethod}
-                  disabled={busy || capabilityStatus !== 'ready' || !emailAvailable}
-                  onPress={startEmail}
-                />
-              </Stack>
-              {busy && activeProvider ? <ProviderProgress onCancel={cancelProvider} /> : null}
-              {providerStatus === 'error' || capabilityStatus === 'error' ? (
-                <SignInFeedback tone="warning" text={copy.account.discoveryError} />
-              ) : allMethodsUnavailable ? (
-                <SignInFeedback tone="info" text={copy.account.providersUnavailable} />
-              ) : null}
-              {feedback && <SignInFeedback tone={feedback.tone} text={feedback.text} />}
-              {!client?.configured && (
-                <SignInFeedback tone="info" text={copy.account.unconfigured} />
-              )}
-              {(providerStatus === 'error' || capabilityStatus === 'error') && (
-                <Button
-                  variant="secondary"
-                  label={copy.account.retry}
-                  onPress={() => {
-                    setCapabilityAttempt((value) => value + 1)
-                  }}
-                />
-              )}
-              {footer}
-            </>
+            <SignInHub
+              tone={hubTone}
+              busy={busy}
+              activeProvider={activeProvider}
+              googleAvailable={providerStatus === 'ready' && providers.includes('google')}
+              appleAvailable={providerStatus === 'ready' && providers.includes('apple')}
+              emailAvailable={capabilityStatus === 'ready' && emailAvailable}
+              feedback={feedback}
+              discoveryError={providerStatus === 'error' || capabilityStatus === 'error'}
+              unconfigured={!client?.configured}
+              onGoogle={() => {
+                providerSignIn('google')
+              }}
+              onApple={() => {
+                providerSignIn('apple')
+              }}
+              onEmail={startEmail}
+              onCancel={cancelProvider}
+              onKeepPractising={() => {
+                cancelAttemptIfBusy()
+              }}
+              onRetryDiscovery={() => {
+                setCapabilityAttempt((value) => value + 1)
+              }}
+            />
           )}
           {view === 'email' && (
             <EmailEntry
@@ -410,6 +448,18 @@ export default function Account() {
               quarantined={repair.quarantined}
               onSync={() => void syncNow()}
               onSignOut={() => {
+                setView('signOutConfirm')
+              }}
+            />
+          )}
+          {view === 'signOutConfirm' && state.session && (
+            <SignOutConfirm
+              email={state.session?.email ?? confirmedEmail}
+              streakDays={streakDays}
+              onStay={() => {
+                setView('account')
+              }}
+              onSignOut={() => {
                 if (!client) return
                 resetAttempt()
                 setFreshConfirmation(false)
@@ -429,6 +479,7 @@ export default function Account() {
 }
 
 function AccountHero({ success = false }: { success?: boolean | undefined }) {
+  useLocale()
   const { accent } = useTheme()
   return (
     <View accessible={false} accessibilityElementsHidden style={styles.hero}>
@@ -446,82 +497,6 @@ function AccountHero({ success = false }: { success?: boolean | undefined }) {
         </View>
       )}
     </View>
-  )
-}
-
-function MethodButton({
-  icon,
-  label,
-  disabled,
-  filled = false,
-  onPress,
-}: {
-  icon: string
-  label: string
-  disabled: boolean
-  filled?: boolean | undefined
-  onPress: () => void
-}) {
-  const inkColor = disabled ? ink.muted : filled ? onDark.primary : ink.ink
-  return (
-    <Pressable
-      pressMotion="deboss"
-      elevation="card"
-      accessibilityLabel={label}
-      accessibilityHint={disabled ? copy.account.methodUnavailable : undefined}
-      disabled={disabled}
-      onPress={onPress}
-      style={[
-        styles.methodButton,
-        filled && !disabled ? styles.methodFilled : null,
-        disabled && styles.methodDisabled,
-      ]}
-    >
-      <Row gap={space['2.5']} justify="center">
-        <Text variant="title3" color={inkColor}>
-          {icon}
-        </Text>
-        <Text color={inkColor}>{label}</Text>
-      </Row>
-    </Pressable>
-  )
-}
-
-function ProviderMethod({
-  provider,
-  label,
-  available,
-  active,
-  busy,
-  onPress,
-}: {
-  provider: OAuthProvider
-  label: string
-  available: boolean
-  active: boolean
-  busy: boolean
-  onPress: () => void
-}) {
-  return (
-    <MethodButton
-      icon={active && busy ? '◌' : provider === 'google' ? 'G' : ''}
-      label={active && busy ? copy.account.connecting(provider) : label}
-      disabled={busy || !available}
-      filled={provider === 'apple' && available}
-      onPress={onPress}
-    />
-  )
-}
-
-function ProviderProgress({ onCancel }: { onCancel: () => void }) {
-  return (
-    <Stack gap={space['2']} style={styles.progress}>
-      <Row gap={space['2']} justify="center">
-        <ActivityIndicator accessibilityLabel={copy.account.secureWindow} />
-        <Text>{copy.account.secureWindow}</Text>
-      </Row>
-      <Button variant="secondary" label={copy.account.cancelSignIn} onPress={onCancel} />
-    </Stack>
   )
 }
 
@@ -544,6 +519,7 @@ function EmailEntry({
   feedback: { tone: FeedbackTone; text: string } | null
   footer: ReactNode
 }) {
+  useLocale()
   return (
     <>
       <AccountHero />
@@ -611,6 +587,7 @@ function CodeEntry({
   feedback: { tone: FeedbackTone; text: string } | null
   footer: ReactNode
 }) {
+  useLocale()
   return (
     <>
       <AccountHero />
@@ -666,6 +643,7 @@ function Confirmation({
   onContinue: () => void
   footer: ReactNode
 }) {
+  useLocale()
   return (
     <>
       <AccountHero success />
@@ -699,6 +677,7 @@ function AccountManagement({
   onSync: () => void
   onSignOut: () => void
 }) {
+  useLocale()
   return (
     <Stack gap={space['4']}>
       <AccountHero success />
@@ -735,6 +714,7 @@ function AccountManagement({
 }
 
 function SignInFeedback({ tone, text }: { tone: FeedbackTone; text: string }) {
+  useLocale()
   const background =
     tone === 'danger' ? semantic.danger.bg : tone === 'warning' ? semantic.warn.bg : surface.card
   const color =
@@ -746,6 +726,16 @@ function SignInFeedback({ tone, text }: { tone: FeedbackTone; text: string }) {
     >
       <Text color={color} align="center">
         {text}
+      </Text>
+    </View>
+  )
+}
+
+function AccountNavTitle({ label }: { label: string }) {
+  return (
+    <View testID="account-nav-title">
+      <Text variant="title3" color={ink.ink} numberOfLines={1} style={styles.navTitle}>
+        {label}
       </Text>
     </View>
   )
@@ -767,6 +757,9 @@ function errorCopy(code: AccountErrorCode): string {
 const styles = StyleSheet.create({
   fill: { flex: 1 },
   content: { padding: space['5'], paddingBottom: space['6'], gap: space['5'] },
+  hubContent: {
+    flexGrow: 1,
+  },
   hero: { height: 88, alignItems: 'center', justifyContent: 'center', position: 'relative' },
   heroDisc: {
     width: 72,
@@ -797,23 +790,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  methods: { marginTop: space['1'] },
-  methodButton: {
-    minHeight: MIN_TAP,
-    paddingVertical: 11,
-    paddingHorizontal: space['4'],
-    borderRadius: radius.lg,
-    backgroundColor: surface.app,
-    borderWidth: 1,
-    borderColor: line.default,
-    ...stationeryElevation('card'),
-  },
-  methodFilled: {
-    backgroundColor: ink.ink,
-    borderColor: ink.ink,
-  },
-  methodDisabled: { backgroundColor: surface.card, borderColor: line.default },
-  progress: { paddingTop: space['2'] },
   form: { marginTop: space['2'] },
   codeField: { textAlign: 'center', letterSpacing: space['1'] },
   feedback: { borderWidth: 1, borderRadius: radius.lg, padding: space['3'] },
@@ -823,5 +799,17 @@ const styles = StyleSheet.create({
     minHeight: MIN_TAP,
     paddingHorizontal: space['2'],
     justifyContent: 'center',
+  },
+  navTitle: {
+    fontFamily: type.title3.fontFamily,
+    fontSize: HUB_NAV_TITLE,
+    lineHeight: HUB_NAV_TITLE_LINE,
+    fontWeight: HUB_NAV_TITLE_WEIGHT,
+    letterSpacing: HUB_NAV_TITLE_TRACK,
+  },
+  navToday: {
+    fontSize: HUB_NAV_TODAY,
+    fontWeight: HUB_NAV_TODAY_WEIGHT,
+    letterSpacing: HUB_NAV_TODAY_TRACK,
   },
 })

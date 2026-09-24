@@ -20,7 +20,7 @@ complete. `Planned` means the section specifies future behaviour and has no curr
 | [3](#3-phrase-detail)                    | Phrase detail      | —    | v1   | Built · `/phrase/[id]`      |
 | [4](#4-adaptive-stream)                  | Adaptive stream    | all  | v1   | Built · `/practice/stream`  |
 | [5](#5-speak-to-progress)                | Speak to progress  | A    | v1   | Planned                     |
-| [6](#6-review-session)                   | Review session     | A    | v1.1 | Planned                     |
+| [6](#6-review-session)                   | Review session     | A    | v1.1 | Built · `/practice/review` dock |
 | [7](#7-roleplay)                         | Roleplay           | A+   | v1.1 | Planned                     |
 | [8](#8-memory-model)                     | Memory model       | A+   | v1.1 | Planned                     |
 | [9](#9-pronunciation-lab)                | Pronunciation lab  | A+   | v1.1 | Planned                     |
@@ -394,6 +394,12 @@ _"Revealed — now say the next word"_ · done _"¡Perfecto! You said the whole 
 `Loro.dc.html:750–821` · logic `2742–2813` · screenshots `03-dev.png`, `04-dev.png`
 
 Classic SRS, made tag-aware.
+
+Current runtime (plan 75): `/practice/review` is a built dock. It does not bounce home. Empty
+course, no-schedule, and nothing-due are honest. A due set shows real theme/difficulty banners,
+flips meaning → target, and grades through ReviewEngine + `applyDelta` with real FSRS intervals.
+Resume hydrates a validated checkpoint. Hear-it and the HTML Hard+Easy toy stay omitted — no
+device TTS fallback, no 14,890 / 18.4 MB / VOL. 03.
 
 **Card front** — a focus banner, then the theme pill, difficulty pill, prompt label, and the
 English. **Card back** (after reveal, `flip` 300 ms) — a rule, the Spanish in accent ink, the

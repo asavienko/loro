@@ -4,9 +4,14 @@ import { join } from 'node:path'
 import { spawnSync } from 'node:child_process'
 import { afterEach, describe, expect, it } from 'vitest'
 import {
+  buildReviewCheckpoint,
+  loadReviewCheckpoint,
+  LOCAL_USER_ID,
   openSqlPersistence,
+  reviewContentHash,
   userPhraseId,
   type Clock,
+  type FsrsState,
   type SqlDriver,
   type SessionHandle,
 } from '@loro/core'
@@ -588,6 +593,29 @@ describe('P2-07 durable import drafts', () => {
   })
 })
 
+describe('device-local listen queue', () => {
+  it('survives reopen without claiming Rust rank or writing a sync field', () => {
+    const path = diskPath()
+    const db = open(path)
+    db.store.setState({ phrases: [makePhrase('listen-a'), makePhrase('listen-b')], onboarded: true })
+    const ids = db.store.getState().phrases.map((phrase) => phrase.id)
+    const outboxBefore = db.driver.all('SELECT entity FROM outbox')
+    db.store.getState().setListenQueue([ids[1]!, ids[0]!])
+    expect(db.store.getState().listenQueue).toEqual([ids[1], ids[0]])
+    expect(db.driver.all('SELECT entity FROM outbox')).toEqual(outboxBefore)
+    expect(db.driver.all("SELECT key FROM local_metadata WHERE key LIKE 'listen_queue:%'")).toEqual([
+      { key: 'listen_queue:es-ES' },
+    ])
+    db.driver.close()
+    const reopened = open(path)
+    expect(reopened.store.getState().listenQueue).toEqual([ids[1], ids[0]])
+    reopened.store.getState().setListenQueue([])
+    expect(reopened.store.getState().listenQueue).toBeNull()
+    reopened.driver.close()
+    expect(open(path).store.getState().listenQueue).toBeNull()
+  })
+})
+
 describe('F-05/F-06 device-local analytics consent', () => {
   it('defaults off on an existing installation without changing synced settings', () => {
     const db = open()
@@ -687,4 +715,105 @@ describe('F-05/F-06 device-local analytics consent', () => {
     expect(db.store.getState().devicePreferences.analyticsConsent).toBe(false)
     expect(db.storage.load().devicePreferences.analyticsConsent).toBe(false)
   })
+
+  it('commits a Review checkpoint in the same transaction as the attempt and review_event', () => {
+    const path = diskPath()
+    const first = preparedReview(path)
+    first.store.getState().applyDelta(first.delta, first.context)
+    expect(first.store.getState().reviewCheckpoint).toEqual(first.nextCheckpoint)
+    expect(loadReviewCheckpoint(first.driver, LOCAL_USER_ID, 'es-ES')).toEqual(first.nextCheckpoint)
+    expect(first.driver.all('SELECT * FROM review_event')).toHaveLength(1)
+    expect(first.driver.all('SELECT * FROM committed_attempt')).toHaveLength(1)
+    first.driver.close()
+    const next = open(path)
+    expect(next.store.getState().reviewCheckpoint).toEqual(first.nextCheckpoint)
+    next.store.getState().applyDelta(first.delta, first.context)
+    expect(next.store.getState().reviewCheckpoint).toEqual(first.nextCheckpoint)
+    expect(next.driver.all('SELECT * FROM review_event')).toHaveLength(1)
+  })
+
+  it('rolls back progress, attempt, review and checkpoint together', () => {
+    const db = preparedReview()
+    const previous = db.store.getState()
+    db.driver.exec(
+      "CREATE TRIGGER fail_checkpoint BEFORE INSERT ON local_metadata BEGIN SELECT RAISE(ABORT,'disk full'); END",
+    )
+    expect(() => {
+      db.store.getState().applyDelta(db.delta, db.context)
+    }).toThrow('disk full')
+    expect(db.store.getState()).toBe(previous)
+    expect(db.persistence.phrases.byId(db.delta.phraseId)?.reps).toBe(0)
+    expect(db.driver.all('SELECT * FROM committed_attempt')).toEqual([])
+    expect(db.driver.all('SELECT * FROM review_event')).toEqual([])
+    expect(loadReviewCheckpoint(db.driver, LOCAL_USER_ID, 'es-ES')).toBeNull()
+    db.driver.exec('DROP TRIGGER fail_checkpoint')
+    db.store.getState().applyDelta(db.delta, db.context)
+    expect(db.persistence.phrases.byId(db.delta.phraseId)?.reps).toBe(1)
+    expect(loadReviewCheckpoint(db.driver, LOCAL_USER_ID, 'es-ES')).toEqual(db.nextCheckpoint)
+  })
+
+  it('refuses a checkpoint that reuses the attempt just committed', () => {
+    const db = preparedReview()
+    expect(() => {
+      db.store.getState().applyDelta(db.delta, {
+        ...db.context,
+        reviewCheckpoint: { ...db.nextCheckpoint, eventId: db.context.attemptId! },
+      })
+    }).toThrow('cannot reuse the attempt just committed')
+    expect(loadReviewCheckpoint(db.driver, LOCAL_USER_ID, 'es-ES')).toBeNull()
+    expect(db.driver.all('SELECT * FROM committed_attempt')).toEqual([])
+  })
 })
+
+const reviewSchedule: FsrsState = {
+  stability: 4,
+  difficulty: 5,
+  due: AT,
+  lastReview: AT - 86_400_000,
+  lapses: 0,
+  state: 'review',
+  algorithm: 'fsrs-6-default-c8ca282-loro-v1',
+}
+
+function preparedReview(path = ':memory:') {
+  const db = open(path)
+  const current = { ...makePhrase('review-now'), srs: reviewSchedule }
+  const upcoming = { ...makePhrase('review-next'), srs: reviewSchedule }
+  db.store.setState({ phrases: [current, upcoming], onboarded: true })
+  const stored = db.store.getState().phrases[0]
+  const next = db.store.getState().phrases[1]
+  if (stored === undefined || next === undefined) throw new Error('expected review fixtures')
+  const algorithm = 'fsrs-6-default-c8ca282-loro-v1'
+  const queue = [
+    { phraseId: stored.id, contentHash: reviewContentHash(stored) },
+    { phraseId: next.id, contentHash: reviewContentHash(next) },
+  ]
+  const nextCheckpoint = buildReviewCheckpoint({
+    eventId: 'attempt-2',
+    targetLocale: 'es-ES',
+    localDay: DAY,
+    cursor: 1,
+    queue,
+  })
+  if (nextCheckpoint === null) throw new Error('expected a resume checkpoint')
+  const delta = {
+    phraseId: stored.id,
+    reps: 1,
+    lastPracticedAt: at,
+    srs: {
+      ...reviewSchedule,
+      due: at + 86_400_000,
+      lastReview: at,
+      algorithm,
+    },
+    review: { at, grade: 3 as const, algorithm },
+  }
+  const context: PracticeCommitContext = {
+    attemptId: 'attempt-1',
+    targetLocale: 'es-ES',
+    localDay: DAY,
+    streakDay: DAY,
+    reviewCheckpoint: nextCheckpoint,
+  }
+  return { ...db, delta, context, nextCheckpoint }
+}

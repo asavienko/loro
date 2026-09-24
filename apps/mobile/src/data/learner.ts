@@ -2,6 +2,9 @@
 import {
   LOCAL_USER_ID,
   encodeCheckpoint,
+  buildListenQueue,
+  clearListenQueue,
+  saveListenQueue,
   type Clock,
   type FieldWrite,
   type RefrainDayRow,
@@ -10,7 +13,12 @@ import {
 import type { AppData } from '../store/state'
 import type { RuntimeDatabase } from './database'
 import type { PracticeCommitContext } from '../store/types'
-import { contentSignature, validatePractice, writePracticeReview } from './practiceRecords'
+import {
+  contentSignature,
+  validatePractice,
+  writePracticeReview,
+  writeReviewCheckpoint,
+} from './practiceRecords'
 import { decodeDevicePreferences } from '../lib/devicePreferences'
 import { deleteLocalValue, writeLocalValue } from './database'
 import { deferPhraseDelete, flushPendingDeletes, undoPendingPhraseDelete } from './pendingDeletes'
@@ -245,6 +253,8 @@ export function createLearnerStorage(database: RuntimeDatabase, clock: Clock): L
           }
         }
         writePracticeReview(database, attempt, next, clock)
+        writeReviewCheckpoint(database, attempt)
+        writeListenQueues(driver, previous, next)
         const settings = persistence.settings.load()
         const changedSettings = changedFields(settingsFields(previous), settingsFields(next))
         // A local import checkpoint must not manufacture a settings sync operation. Settings are
@@ -286,5 +296,33 @@ export function createLearnerStorage(database: RuntimeDatabase, clock: Clock): L
       })
       return load()
     },
+  }
+}
+
+function sameListenQueue(
+  left: readonly string[] | null | undefined,
+  right: readonly string[] | null | undefined,
+): boolean {
+  if (left === right) return true
+  if (left == null || right == null) return left == null && right == null
+  return left.length === right.length && left.every((id, index) => id === right[index])
+}
+
+function writeListenQueues(driver: RuntimeDatabase['driver'], previous: AppData, next: AppData): void {
+  const before = allCourses(previous)
+  for (const [locale, course] of Object.entries(allCourses(next))) {
+    const targetLocale = locale as TargetLocale
+    const ids = course.listenQueue
+    if (sameListenQueue(before[targetLocale]?.listenQueue, ids)) continue
+    if (ids === null || ids.length === 0) {
+      clearListenQueue(driver, LOCAL_USER_ID, targetLocale)
+      continue
+    }
+    const built = buildListenQueue({ targetLocale, phraseIds: ids })
+    if (built === null) {
+      clearListenQueue(driver, LOCAL_USER_ID, targetLocale)
+      continue
+    }
+    saveListenQueue(driver, LOCAL_USER_ID, built)
   }
 }

@@ -8,7 +8,7 @@
  */
 
 import { Platform, type ViewStyle } from 'react-native'
-import { surface } from '@loro/design-tokens'
+import { stationeryElevation } from './elevation'
 import { GLASS_BLUR_PX, chromeHairlineFill, glassFill, islandGlassFill } from './parchmentInk'
 
 export {
@@ -45,14 +45,7 @@ export function parchmentIslandGlassStyle(): ViewStyle {
   return glassStyle(islandGlassFill)
 }
 
-/** Today phone `0 1px 8px` warm hairline — softer than the resting card recipe. */
+/** Today / Review header `0 1px 8px` — generated `shadow.headerHairline`. */
 export function chromeHairlineShadow(): ViewStyle {
-  if (Platform.OS === 'web') return { boxShadow: `0 1px 8px ${chromeHairlineFill}` }
-  return {
-    shadowColor: surface.shadowInk,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 1,
-  }
+  return stationeryElevation('headerHairline')
 }

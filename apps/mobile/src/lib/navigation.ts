@@ -13,7 +13,7 @@ export const SURFACES = [
   { id: 'phrase-detail', path: '/phrase/[id]', kind: 'learner', availability: 'built' },
   { id: 'stream', path: '/practice/stream', kind: 'learner', availability: 'built' },
   { id: 'speak', path: '/practice/speak', kind: 'learner', availability: 'built' },
-  { id: 'review', path: '/practice/review', kind: 'learner', availability: 'planned' },
+  { id: 'review', path: '/practice/review', kind: 'learner', availability: 'built' },
   { id: 'roleplay', path: '/practice/roleplay', kind: 'learner', availability: 'planned' },
   { id: 'memory', path: '/memory', kind: 'learner', availability: 'planned' },
   { id: 'pronunciation', path: '/lab/pronunciation', kind: 'learner', availability: 'planned' },
@@ -268,6 +268,20 @@ export const DESTINATIONS = [
     href: '/practice/refrain',
     get label() {
       return copy.nav.refrain
+    },
+    rail: false,
+    counted: false,
+    routeClass: 'learner',
+    parent: 'today',
+    home: 'today',
+    group: 'practice',
+    exit: 'stack-or-home',
+    resume: 'practice-session',
+  },
+  {
+    href: '/practice/review',
+    get label() {
+      return copy.nav.review
     },
     rail: false,
     counted: false,

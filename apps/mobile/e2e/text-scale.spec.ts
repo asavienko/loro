@@ -42,7 +42,7 @@ for (const scale of SCALES) {
   test(`wave times remain complete at ${scale * 100}% text`, async ({ page }) => {
     await onboard(page)
     await scaleText(page, scale)
-    for (const time of ['08:00', '13:00', '19:00']) {
+    for (const time of ['8:00 AM ·', '1:00 PM ·', '7:00 PM ·']) {
       const label = page.getByText(time, { exact: true })
       await expect(label).toBeVisible()
       expect(

@@ -29,6 +29,12 @@ export const a11yCopy = {
       message('a11y.today.nextWaveRow', { title, detail }),
     banked: (count: number): string => message('a11y.today.banked', { count }),
     hereNow: (place: string): string => message('a11y.today.hereNow', { place }),
+    get profile() {
+      return message('a11y.today.profile')
+    },
+    get browse() {
+      return message('a11y.today.browse')
+    },
   },
   add: {
     get searchInput() {
@@ -93,6 +99,41 @@ export const a11yCopy = {
     },
     queueRow: (es: string, en: string, difficulty: string): string =>
       message('a11y.stream.queueRow', { es, en, difficulty }),
+    replay: (es: string): string => message('a11y.stream.replay', { es }),
+    jumpTo: (es: string): string => message('a11y.stream.jumpTo', { es }),
+    reorder: (es: string): string => message('a11y.stream.reorder', { es }),
+    get reorderHint() {
+      return message('a11y.stream.reorderHint')
+    },
+    loop: (count: number): string => message('a11y.stream.loop', { count }),
+    rate: (rate: number): string => message('a11y.stream.rate', { rate }),
+    get mnemonic() {
+      return message('a11y.stream.mnemonic')
+    },
+    get phonetics() {
+      return message('a11y.stream.phonetics')
+    },
+    get grammar() {
+      return message('a11y.stream.grammar')
+    },
+    get options() {
+      return message('a11y.stream.options')
+    },
+    get trackOptions() {
+      return message('a11y.stream.trackOptions')
+    },
+    get dismissOptions() {
+      return message('a11y.stream.dismissOptions')
+    },
+    get openNowPlaying() {
+      return message('a11y.stream.openNowPlaying')
+    },
+    get dismissPlayer() {
+      return message('a11y.stream.dismissPlayer')
+    },
+    get doneQueue() {
+      return message('a11y.stream.doneQueue')
+    },
   },
   progress: {
     weekSummary: (practisedDays: number): string =>
@@ -101,6 +142,25 @@ export const a11yCopy = {
       message('a11y.progress.trickyRow', { label, count }),
     get trickyHint() {
       return message('a11y.progress.trickyHint')
+    },
+  },
+  review: {
+    get dock() {
+      return message('a11y.review.dock')
+    },
+    grade: (grade: string, interval: string): string =>
+      message('a11y.review.grade', { grade, interval }),
+    get cardHidden() {
+      return message('a11y.review.cardHidden')
+    },
+    get cardShown() {
+      return message('a11y.review.cardShown')
+    },
+    get showNotes() {
+      return message('a11y.review.showNotes')
+    },
+    get notesShown() {
+      return message('a11y.review.notesShown')
     },
   },
   listenExport: {

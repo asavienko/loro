@@ -26,14 +26,19 @@ import { openStorageFailure, openStorageLoading } from './persistenceFlow'
  * See plans/51-extended-e2e-strategy.md §2, §4, §6.
  */
 
+import { jumpTo, returnToForeground, runFor } from './clock'
 import { expect, type Page } from '@playwright/test'
 import {
   REFRAIN_REPS,
   back,
   click,
   lockIn,
+  scheduleTwoReviewPhrases,
+  dragListenReorder,
   open,
   openFirstPhrase,
+  openNowPlaying,
+  openSimpleQueue,
   startWave,
   todayMarker,
   trickyRow,
@@ -158,6 +163,7 @@ export const STATES: AppState[] = [
       'sync-unavailable',
       'sync-rejected',
       'signed-out',
+      'signOutConfirm',
     ] as const
   ).map((scenario): AppState => ({
     name: `account · ${scenario}`,
@@ -191,6 +197,109 @@ export const STATES: AppState[] = [
     reach: async (page) => {
       await signInThenGoto(page, '/practice/speak')
       await expect(page.getByRole('button', { name: 'Add phrases', exact: true })).toBeVisible()
+    },
+  },
+  {
+    name: 'review · empty course',
+    route: '/practice/review',
+    firstRun: true,
+    spec: '§6 Review session',
+    reach: async (page) => {
+      await signInThenGoto(page, '/practice/review')
+      await expect(page.getByText('No phrases in this course')).toBeVisible()
+    },
+  },
+  {
+    name: 'review · no schedule',
+    route: '/practice/review',
+    spec: '§6 Review session',
+    reach: async (page) => {
+      await page.getByRole('button', { name: /, open the menu$/ }).click()
+      await page.getByRole('dialog').getByRole('button', { name: 'Review', exact: true }).click()
+      await expect(page.getByText('Nothing scheduled yet')).toBeVisible()
+    },
+  },
+  {
+    name: 'review · due',
+    route: '/practice/review',
+    spec: '§6 Review session',
+    reach: async (page) => {
+      await page.getByRole('button', { name: /, open the menu$/ }).click()
+      await page.getByRole('dialog').getByRole('button', { name: 'The Refrain', exact: true }).click()
+      await scheduleTwoReviewPhrases(page)
+      await jumpTo(page, '2027-05-04T10:00')
+      await page.getByRole('button', { name: /, open the menu$/ }).click()
+      await page.getByRole('dialog').getByRole('button', { name: 'Review', exact: true }).click()
+      await expect(page.getByRole('button', { name: /^Again/ })).toBeVisible()
+      await expect(page.getByTestId('review-receded-card')).toBeVisible()
+    },
+  },
+  {
+    name: 'review · due revealed',
+    route: '/practice/review',
+    spec: '§6 Review session, v1.3 accordion notes open',
+    reach: async (page) => {
+      await page.getByRole('button', { name: /, open the menu$/ }).click()
+      await page.getByRole('dialog').getByRole('button', { name: 'The Refrain', exact: true }).click()
+      await scheduleTwoReviewPhrases(page)
+      await jumpTo(page, '2027-05-04T10:00')
+      await page.getByRole('button', { name: /, open the menu$/ }).click()
+      await page.getByRole('dialog').getByRole('button', { name: 'Review', exact: true }).click()
+      await page.getByRole('button', { name: 'Show answer', exact: true }).click()
+      await expect(page.getByRole('button', { name: /Answer shown/ })).toBeVisible()
+    },
+  },
+  {
+    name: 'review · due grammar',
+    route: '/practice/review',
+    spec: '§6 Review session, v1.3 Grammar tab on a real note field',
+    reach: async (page) => {
+      await page.getByRole('button', { name: /, open the menu$/ }).click()
+      await page.getByRole('dialog').getByRole('button', { name: 'The Refrain', exact: true }).click()
+      await scheduleTwoReviewPhrases(page)
+      await jumpTo(page, '2027-05-04T10:00')
+      await page.getByRole('button', { name: /, open the menu$/ }).click()
+      await page.getByRole('dialog').getByRole('button', { name: 'Review', exact: true }).click()
+      await page.getByRole('button', { name: 'Show answer', exact: true }).click()
+      await page.getByRole('button', { name: 'Grammar', exact: true }).click()
+      await expect(page.getByTestId('review-notes-pane')).toBeVisible()
+      await expect(page.getByText('Castilian Pragmatics')).toHaveCount(0)
+    },
+  },
+  {
+    name: 'review · due tab marks',
+    route: '/practice/review',
+    spec: '§6 Review session, v1.3 notes drawer 💡📖🗣️ tab marks',
+    reach: async (page) => {
+      await page.getByRole('button', { name: /, open the menu$/ }).click()
+      await page.getByRole('dialog').getByRole('button', { name: 'The Refrain', exact: true }).click()
+      await scheduleTwoReviewPhrases(page)
+      await jumpTo(page, '2027-05-04T10:00')
+      await page.getByRole('button', { name: /, open the menu$/ }).click()
+      await page.getByRole('dialog').getByRole('button', { name: 'Review', exact: true }).click()
+      await page.getByRole('button', { name: 'Show answer', exact: true }).click()
+      await expect(page.getByTestId('review-tab-mark-mnemonic')).toHaveText('💡')
+      await expect(page.getByTestId('review-tab-mark-grammar')).toHaveText('📖')
+      await expect(page.getByTestId('review-tab-mark-phonetics')).toHaveText('🗣️')
+      await expect(page.getByRole('button', { name: 'Mnemonic', exact: true })).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Grammar', exact: true })).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Phonetics', exact: true })).toBeVisible()
+    },
+  },
+  {
+    name: 'review · due playable',
+    route: '/practice/review',
+    spec: '§6 Review session, v1.3 pack play when catalog or API audio exists',
+    reach: async (page) => {
+      mockTtsStatus(page, true)
+      await page.getByRole('button', { name: /, open the menu$/ }).click()
+      await page.getByRole('dialog').getByRole('button', { name: 'The Refrain', exact: true }).click()
+      await scheduleTwoReviewPhrases(page)
+      await jumpTo(page, '2027-05-04T10:00')
+      await page.getByRole('button', { name: /, open the menu$/ }).click()
+      await page.getByRole('dialog').getByRole('button', { name: 'Review', exact: true }).click()
+      await expect(page.getByRole('button', { name: 'Play cadence deck', exact: true })).toBeVisible()
+      await expect(page.getByTestId('review-receded-hear')).toBeVisible()
     },
   },
   ...(['bg', 'ru'] as const).flatMap((native) =>
@@ -325,6 +434,17 @@ export const STATES: AppState[] = [
       await click(page, 'Remove')
       await expect(page).toHaveURL(/\/$/)
       await expect(page.getByRole('button', { name: 'Undo' })).toBeVisible()
+    },
+  },
+  {
+    name: 'today · circadian evening',
+    route: '/',
+    spec: '§11 Today, v1.3 daily rhythm evening band',
+    reach: async (page) => {
+      await jumpTo(page, '2026-04-06T20:30')
+      await returnToForeground(page)
+      await expect(todayMarker(page)).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Start the evening wave' })).toBeEnabled()
     },
   },
   {
@@ -535,12 +655,220 @@ export const STATES: AppState[] = [
     reach: (page) => open(page, 'Stream'),
   },
   {
+    name: 'stream · editorial queue',
+    route: '/practice/stream',
+    spec: '§4 Adaptive stream, v1.3 editorial list-only cadence',
+    reach: async (page) => {
+      await open(page, 'Stream')
+      await expect(page.getByRole('button', { name: 'Open now playing', exact: true })).toBeVisible()
+      await expect(page.getByTestId('stream-editorial-cover')).toBeVisible()
+      await expect(page.getByTestId('stream-queue-chrome')).toBeVisible()
+      await expect(page.getByTestId('stream-landing').getByTestId('stream-queue-chrome')).toHaveCount(0)
+      await expect(page.getByTestId('stream-stage')).toHaveCount(0)
+    },
+  },
+  {
+    name: 'stream · simple queue',
+    route: '/practice/stream',
+    spec: '§4 Adaptive stream, v1.3 simple-queue dressing off the editorial landing',
+    reach: async (page) => {
+      await open(page, 'Stream')
+      await expect(page.getByTestId('stream-editorial-hero')).toBeVisible()
+      await openSimpleQueue(page)
+      await expect(page.getByTestId('stream-simple-play')).toBeVisible()
+      await expect(page.getByTestId('stream-simple-footer')).toBeVisible()
+    },
+  },
+  {
+    name: 'stream · simple queue · playlist',
+    route: '/practice/stream',
+    spec: '§4 Adaptive stream, v1.3 simple-queue local listen order',
+    reach: async (page) => {
+      await open(page, 'Stream')
+      await openSimpleQueue(page)
+      await runFor(page, 400)
+      await expect(page.getByTestId('stream-queue-reorder').first()).toBeVisible()
+      const first = page.getByTestId('stream-queue-phrase').first()
+      const second = (await page.getByTestId('stream-queue-phrase').nth(1).innerText()).trim()
+      await dragListenReorder(page, 1, 0)
+      await expect(first).toHaveText(second)
+    },
+  },
+  {
+    name: 'stream · earlier in queue',
+    route: '/practice/stream',
+    spec: '§4 Adaptive stream, v1.3 listening queue earlier pass',
+    reach: async (page) => {
+      await open(page, 'Stream')
+      await click(page, 'Next phrase')
+      await expect(page.getByText(/Previously Played/)).toBeVisible()
+      await openNowPlaying(page)
+      await expect(page.getByText('2 / 10')).toBeVisible()
+    },
+  },
+  {
+    name: 'stream · earlier hidden',
+    route: '/practice/stream',
+    spec: '§4 Adaptive stream, v1.3 listening queue earlier hidden',
+    reach: async (page) => {
+      await open(page, 'Stream')
+      await click(page, 'Next phrase')
+      await page.getByRole('button', { name: 'Hide', exact: true }).click()
+      await expect(page.getByRole('button', { name: 'Show', exact: true })).toBeVisible()
+    },
+  },
+  {
+    name: 'stream · cadence loop 3',
+    route: '/practice/stream',
+    spec: '§4 Adaptive stream, v1.3 editorial cadence loop count',
+    reach: async (page) => {
+      await open(page, 'Stream')
+      await click(page, 'Loop this phrase 1 time')
+      await click(page, 'Loop this phrase 2 times')
+      await expect(page.getByRole('button', { name: 'Loop this phrase 3 times' })).toBeVisible()
+      await expect(page.getByText('3×', { exact: true })).toBeVisible()
+    },
+  },
+  {
+    name: 'stream · cadence rate',
+    route: '/practice/stream',
+    spec: '§4 Adaptive stream, v1.3 editorial cadence playback rate',
+    reach: async (page) => {
+      await open(page, 'Stream')
+      await click(page, 'Playback speed 1')
+      await expect(page.getByText('1.0×', { exact: true })).toBeVisible()
+    },
+  },
+  {
+    name: 'stream · now-playing rate ring',
+    route: '/practice/stream',
+    spec: '§4 Adaptive stream, v1.3 focused selected rate ring-2',
+    reach: async (page) => {
+      await open(page, 'Stream')
+      await openNowPlaying(page)
+      await expect(page.getByTestId('stream-rate-pill-selected')).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Playback speed 0.8' })).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Playback speed 0.92' })).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Playback speed 1' })).toBeVisible()
+      await expect(page.getByText('1.25×')).toHaveCount(0)
+    },
+  },
+  {
+    name: 'stream · now playing',
+    route: '/practice/stream',
+    spec: '§4 Adaptive stream, v1.3 focused now-playing chrome',
+    reach: async (page) => {
+      await open(page, 'Stream')
+      await openNowPlaying(page)
+      await expect(page.getByText('Playing from Playlist', { exact: true })).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Love this phrase' })).toBeVisible()
+      await expect(page.getByText('Phrase actions')).toBeVisible()
+    },
+  },
+  {
+    name: 'stream · editorial · options',
+    route: '/practice/stream',
+    spec: '§4 Adaptive stream, v1.3 editorial Options sheet of real actions',
+    reach: async (page) => {
+      await open(page, 'Stream')
+      await expect(page.getByRole('button', { name: 'Options', exact: true }).first()).toBeVisible()
+      await page.getByRole('button', { name: 'Options', exact: true }).first().click()
+      await expect(page.getByTestId('stream-options-sheet')).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Love this phrase' })).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Mark learned' })).toBeVisible()
+    },
+  },
+  {
+    name: 'stream · simple queue · options',
+    route: '/practice/stream',
+    spec: '§4 Adaptive stream, v1.3 simple-queue Options sheet of real actions',
+    reach: async (page) => {
+      await open(page, 'Stream')
+      await openSimpleQueue(page)
+      await page.getByRole('button', { name: 'Options', exact: true }).first().click()
+      await expect(page.getByTestId('stream-options-sheet')).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Mark learned' })).toBeVisible()
+    },
+  },
+  {
+    name: 'stream · now-playing pills',
+    route: '/practice/stream',
+    spec: '§4 Adaptive stream, v1.3 now-playing 💡📖🗣️ pill marks',
+    reach: async (page) => {
+      await open(page, 'Stream')
+      await openNowPlaying(page)
+      await expect(page.getByTestId('stream-stage-mark-mnemonic')).toHaveText('💡')
+      await expect(page.getByTestId('stream-stage-mark-grammar')).toHaveText('📖')
+      await expect(page.getByTestId('stream-stage-mark-phonetics')).toHaveText('🗣️')
+      await expect(page.getByRole('button', { name: 'Show mnemonic note' })).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Show grammar note' })).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Show phonetics' })).toBeVisible()
+    },
+  },
+  {
+    name: 'stream · now-playing grammar',
+    route: '/practice/stream',
+    spec: '§4 Adaptive stream, v1.3 now-playing Grammar pane on a real note field',
+    reach: async (page) => {
+      await open(page, 'Stream')
+      await openNowPlaying(page)
+      await click(page, 'Show grammar note')
+      await expect(page.getByTestId('stream-stage-panel')).toBeVisible()
+      await expect(page.getByText('Castilian Pragmatics')).toHaveCount(0)
+    },
+  },
+  {
+    name: 'stream · now-playing options',
+    route: '/practice/stream',
+    spec: '§4 Adaptive stream, v1.3 focused Track options sheet of real actions',
+    reach: async (page) => {
+      await open(page, 'Stream')
+      await openNowPlaying(page)
+      await click(page, 'Track options')
+      await expect(page.getByTestId('stream-options-sheet')).toBeVisible()
+      await expect(
+        page.getByTestId('stream-options-sheet').getByRole('button', { name: 'Love this phrase' }),
+      ).toBeVisible()
+    },
+  },
+  {
+    name: 'stream · now-playing phonetics',
+    route: '/practice/stream',
+    spec: '§4 Adaptive stream, v1.3 now-playing phonetics pane',
+    reach: async (page) => {
+      await open(page, 'Stream')
+      await openNowPlaying(page)
+      for (let step = 0; step < 10; step += 1) {
+        const phonetics = page.getByRole('button', { name: 'Show phonetics' })
+        if ((await phonetics.count()) > 0) {
+          await phonetics.click()
+          await expect(phonetics).toBeVisible()
+          return
+        }
+        await click(page, 'Next phrase')
+      }
+      throw new Error('expected a queue phrase with authored phonetics')
+    },
+  },
+  {
+    name: 'stream · drill drawer closed',
+    route: '/practice/stream',
+    spec: '§4 Adaptive stream, v1.3 now-playing drill drawer collapsed',
+    reach: async (page) => {
+      await open(page, 'Stream')
+      await openNowPlaying(page)
+      await click(page, 'Hide actions')
+      await expect(page.getByRole('button', { name: 'Show actions' })).toBeVisible()
+    },
+  },
+  {
     name: 'stream · server voice',
     route: '/practice/stream',
     spec: '§4 Adaptive stream; AS-01 API reference TTS when GET /tts/status is ready',
     reach: async (page) => {
       mockTtsStatus(page, true)
       await open(page, 'Stream')
+      await openNowPlaying(page)
       await expect(page.getByRole('button', { name: 'Play phrase', exact: true })).toBeVisible()
       await expect(page.getByText('Server voice · generated for this phrase')).toBeVisible()
     },
@@ -551,6 +879,7 @@ export const STATES: AppState[] = [
     spec: '§4 Adaptive stream, empty',
     reach: async (page) => {
       await open(page, 'Stream')
+      await openNowPlaying(page)
       for (let i = 0; i < 10; i += 1) await click(page, 'Mark learned')
       await expect(page.getByText('Your stream is empty')).toBeVisible()
       await expect(page.getByRole('button', { name: 'Add phrases', exact: true })).toBeVisible()

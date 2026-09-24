@@ -55,7 +55,7 @@ artifacts' own working names), so this table is the reliable mapping.
 ## Current implementation and browser coverage
 
 This is the repository inventory, not a claim that a built route already satisfies every behaviour
-below. As of 2026-09-08, **8 of the 23 learner screens have Expo routes**. The other 15 remain
+below. As of 2026-09-12, **9 of the 23 learner screens have Expo routes**. The other 14 remain
 target behaviour in the blueprint and functional spec; they must not be treated as runnable app
 surfaces. `apps/mobile/app/_layout.tsx` is the shell and is not counted as a learner screen.
 
@@ -71,7 +71,8 @@ need their own manifest entries.
 | 3     | Phrase detail        | `/phrase/[id]`             | `phrase detail`; `phrase detail · edited`; `phrase detail · unknown id` (the remove confirmation lands on Today)                      |
 | 4     | Adaptive stream      | `/practice/stream`         | `stream · first phrase`; `stream · all learned`                                                                                       |
 | 5 | Speak to progress | `/practice/speak` | `speak · initial reveal`; `speak · partial reveal`; `speak · revealed reveal`; `speak · empty` |
-| 6–10 | Remaining Loop A practice | — not implemented | — |
+| 6     | Review session       | `/practice/review`         | `review · empty course`; `review · no schedule`; `review · due` — grades persist with a Review checkpoint |
+| 7–10 | Remaining Loop A practice | — not implemented | — |
 | 11    | Today                | `/`                        | `today · seeded`; `today · switcher`; `today · nothing in rotation`; `today · remove undo offered`                                    |
 | 12    | The Refrain          | `/practice/refrain`        | `refrain · first rep`; `refrain · locked in`; `refrain · set complete`                                                                |
 | 13–14 | Run and Phrasebook   | — not implemented          | —                                                                                                                                     |
