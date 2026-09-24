@@ -20,7 +20,8 @@ export function SessionSummarySheet({ open, onClose }: { open: boolean; onClose:
           <div className="col-span-2 rounded-2xl bg-surface-container-low p-3">
             <dt className="text-label font-semibold text-secondary">{c.summary.ratings}</dt>
             <dd className="text-body mt-0.5">
-              {(['missed', 'hard', 'easy'] as const).map((g) => `${c.common.grade[g]} ${summary.ratings[g]}`).join(' · ')}
+              {/* No-break spaces keep each grade with its count and the dot at the end of a line. */}
+              {(['missed', 'hard', 'easy'] as const).map((g) => `${c.common.grade[g]}\u00a0${summary.ratings[g]}`).join('\u00a0· ')}
               {summary.pendingRatings > 0 && <span className="block text-label text-secondary">{c.summary.pending(summary.pendingRatings)}</span>}
             </dd>
           </div>
