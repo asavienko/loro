@@ -293,7 +293,7 @@ export function makeEn(n: Plural) {
       name: 'Name',
       native: 'I speak',
       course: 'I’m learning',
-      courseNote: 'Each course keeps its own progress.',
+      courseNote: 'Progress is kept for each pair of languages. Switching back brings it back.',
       accessibility: 'Screen reader',
       announceEveryStep: 'Announce every step',
       announceHint: 'Off: only “Your turn” and the reveal are announced.',

@@ -283,7 +283,7 @@ export function makeRu(n: Plural): Copy {
       name: 'Имя',
       native: 'Мой язык',
       course: 'Я изучаю',
-      courseNote: 'У каждого курса свой прогресс.',
+      courseNote: 'Прогресс хранится для каждой пары языков. Переключитесь обратно — и он вернётся.',
       accessibility: 'Экранный диктор',
       announceEveryStep: 'Объявлять каждый шаг',
       announceHint: 'Выключено: объявляются только «Ваша очередь» и ответ.',
