@@ -667,6 +667,14 @@ found no crash.
 | Opening a set or pressing Back dropped focus to `<body>`, so a screen reader restarted from the top | Focus moves to the new screen's heading; tab switches keep it on the tab |
 | The first exact-tag voice spoke, and Android's "es_ES" tags never matched, so any Spanish voice could read a Spain course | Voices are ranked (region, then Premium/Enhanced/Natural/Neural, offline, default); Settings lets the learner choose one per language and test it with the course's first phrase (the player's "Voice: …" line opens the picker); offline, a network voice gives way to an on-device one |
 
+**Logic review.** A read-only review of the state machine, persistence, merge and driver found six
+real bugs, each now fixed with a unit test that fails without the fix:
+reloading jumped to the first copy of a phrase queued twice; a phrase deleted on another device
+while playing here froze playback; a missed last phrase was re-queued to replay at once (and grew the
+queue each repeat pass); Add to set with the same phrase twice kept both; two devices kept their own
+copy of a same-instant edit forever; clear-queue Undo could restore phrases behind the current one.
+Known and left: undoing a phrase delete doesn't put it back into the queue.
+
 **For the Bulgarian reviewer:** on a 320 px phone the Missed rating, "Не се сетих", wraps onto two
 lines in its third of the row; a shorter word (e.g. "Забравих") would fit. Dropping the icons didn't
 make it fit, so the fix is wording, not layout.
