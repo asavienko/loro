@@ -75,3 +75,49 @@ test("the player's keys stay out of a sheet opened over it", async ({ page }) =>
   await expect(player.getByText(position!)).toBeVisible();
   await expect(player.getByRole('button', { name: 'Pause', exact: true })).toBeVisible();
 });
+
+test.describe('one sheet handing over to another', () => {
+  test('Back closes the new sheet and stays on the page', async ({ page }) => {
+    await page.goto('/#/explore');
+    await page.goto('/#/set/set-cafe?from=explore');
+    await page.getByRole('button', { name: /^Details for/ }).first().click();
+    await page.getByRole('button', { name: 'Add to set…' }).click();
+    await expect(page.getByRole('dialog', { name: 'Add to set' })).toBeVisible();
+    await page.waitForTimeout(300);
+    await page.goBack();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await expect(page).toHaveURL(/#\/set\/set-cafe/);
+    await page.goBack();
+    await expect(page).toHaveURL(/#\/explore/);
+  });
+
+  test('focus stays in the new sheet, and returns to the page when it closes', async ({ page }) => {
+    await page.goto('/#/set/set-cafe?from=explore');
+    await page.getByRole('button', { name: /^Details for/ }).first().focus();
+    await page.keyboard.press('Enter');
+    await page.getByRole('button', { name: 'Add to set…' }).focus();
+    await page.keyboard.press('Enter');
+    await page.waitForTimeout(1000);
+    const inDialog = () => page.evaluate(() => Boolean(document.activeElement?.closest('[role="dialog"]')));
+    expect(await inDialog()).toBe(true);
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(800);
+    await expect(page.getByRole('button', { name: /^Details for/ }).first()).toBeFocused();
+  });
+
+  test('creating a set from a sheet opens it with focus on its heading and a clean Back', async ({ page }) => {
+    await page.goto('/#/explore');
+    await page.goto('/#/set/set-cafe?from=explore');
+    await page.getByRole('button', { name: /^Details for/ }).first().click();
+    await page.getByRole('button', { name: 'Add to set…' }).click();
+    await page.getByRole('button', { name: 'New set…' }).click();
+    await page.getByLabel('Name').fill('Probe');
+    await page.getByLabel('Name').press('Enter');
+    await expect(page.getByRole('heading', { name: 'Probe', level: 1 })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Probe', level: 1 })).toBeFocused({ timeout: 3000 });
+    await page.goBack();
+    await expect(page).toHaveURL(/#\/set\/set-cafe/);
+    await page.goBack();
+    await expect(page).toHaveURL(/#\/explore/);
+  });
+});

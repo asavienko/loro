@@ -9,6 +9,16 @@ const FOCUSABLE =
   'button:not([disabled]), [href], input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])';
 
 const stack: symbol[] = [];
+/** Each open dialog's element and the control that opened it, to find a fallback opener. */
+const dialogs = new Map<symbol, { node: HTMLElement | null; opener: HTMLElement | null }>();
+
+/** Where focus goes when there is nowhere better: the page's heading. */
+function focusHeading() {
+  const heading = document.querySelector<HTMLElement>('main h1, header h1');
+  if (!heading) return;
+  heading.tabIndex = -1;
+  heading.focus({ preventScroll: true });
+}
 
 /** Call from a component that is mounted exactly while its dialog is open. */
 export function useDialog(ref: RefObject<HTMLElement | null>, onClose: () => void): void {
@@ -22,6 +32,11 @@ export function useDialog(ref: RefObject<HTMLElement | null>, onClose: () => voi
     stack.push(id);
     const returnTo = opener;
     const node = ref.current;
+    // Opened from inside another dialog (Details → Add to set): if that one closes, this
+    // dialog's opener goes with it, so fall back to what opened that one.
+    const parent = [...dialogs.values()].find((d) => d.node && opener && d.node.contains(opener));
+    const fallback = parent?.opener ?? null;
+    dialogs.set(id, { node, opener: returnTo?.isConnected ? returnTo : fallback });
     // Only what Tab actually reaches: a hidden, inert or tabindex="-1" element (an unselected tab)
     // counted as "last" would let Tab slip out of the dialog.
     const focusables = () =>
@@ -54,8 +69,14 @@ export function useDialog(ref: RefObject<HTMLElement | null>, onClose: () => voi
     window.addEventListener('keydown', onKey);
     return () => {
       window.removeEventListener('keydown', onKey);
+      const newerOpen = stack.indexOf(id) < stack.length - 1;
       stack.splice(stack.indexOf(id), 1);
-      if (returnTo?.isConnected) returnTo.focus({ preventScroll: true });
+      dialogs.delete(id);
+      // A dialog opened meanwhile (this one handed over to it) keeps focus.
+      if (newerOpen) return;
+      const target = [returnTo, fallback].find((el) => el?.isConnected);
+      if (target) target.focus({ preventScroll: true });
+      else if (!document.activeElement || document.activeElement === document.body || !document.activeElement.isConnected) focusHeading();
     };
   }, [ref, opener, onCloseRef]);
 }
