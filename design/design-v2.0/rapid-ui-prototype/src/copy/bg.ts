@@ -224,6 +224,8 @@ export function makeBg(n: Plural): Copy {
       hide: 'Докоснете, за да видите',
     },
     toast: {
+      updateReady: 'Има нова версия на Loro',
+      reload: 'Презареди',
       dismiss: 'Затвори съобщението',
       learned: (points) => `Научена · +${points}`,
       passComplete: 'Опашката е изсвирена докрай',

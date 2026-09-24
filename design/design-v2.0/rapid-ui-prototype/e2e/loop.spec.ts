@@ -264,3 +264,14 @@ test('Play from the lock screen while hidden starts when the page is visible aga
   await expect(page.getByRole('button', { name: 'Pause', exact: true })).toBeVisible();
   await expect(mini).not.toContainText('Speech stopped');
 });
+
+test('a new version is offered only while nothing plays', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Play 5 phrases' }).click();
+  await page.evaluate(() => window.dispatchEvent(new Event('loro:update-ready')));
+  await page.waitForTimeout(300);
+  await expect(page.getByText('A new version of Loro is ready')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Pause', exact: true }).first().click();
+  await expect(page.locator('.toast-layer').getByText('A new version of Loro is ready')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Reload' })).toBeVisible();
+});

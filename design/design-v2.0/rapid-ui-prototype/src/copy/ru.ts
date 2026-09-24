@@ -224,6 +224,8 @@ export function makeRu(n: Plural): Copy {
       hide: 'Нажмите, чтобы показать',
     },
     toast: {
+      updateReady: 'Готова новая версия Loro',
+      reload: 'Обновить',
       dismiss: 'Закрыть сообщение',
       learned: (points) => `Выучена · +${points}`,
       passComplete: 'Очередь пройдена',

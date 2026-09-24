@@ -2,10 +2,12 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import { installAudioUnlock } from './audio/unlock';
+import { startServiceWorker } from './pwa';
 import { openStorage, Stored } from './state/storage';
 import './index.css';
 
 installAudioUnlock();
+startServiceWorker();
 
 // Progress is read before the first render, so the app never flashes an empty state.
 const start = (stored: Stored) =>

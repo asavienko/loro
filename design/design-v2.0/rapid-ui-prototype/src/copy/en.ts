@@ -234,6 +234,8 @@ export function makeEn(n: Plural) {
       hide: 'Tap to reveal',
     },
     toast: {
+      updateReady: 'A new version of Loro is ready',
+      reload: 'Reload',
       dismiss: 'Dismiss message',
       learned: (points: number) => `Learned · +${points}`,
       passComplete: 'Queue played through',
