@@ -92,6 +92,7 @@ export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps
     <motion.div
       ref={dialogRef}
       role="dialog"
+      data-player
       aria-modal="true"
       aria-label={c.player.dialog}
       tabIndex={-1}
