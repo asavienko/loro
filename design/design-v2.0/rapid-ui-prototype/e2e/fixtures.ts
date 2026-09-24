@@ -190,3 +190,18 @@ export function sampleHistory(now: number) {
   add("taxi-01", "set-taxi", 0.02);
   return log.sort((a, b) => (a.at as number) - (b.at as number));
 }
+
+/** A year of daily listening and ratings over ten phrases (~12k log entries), for load tests. */
+export function yearOfHistory(now: number) {
+  const ids = ["cafe-01","cafe-02","cafe-03","cafe-04","cafe-05","tapas-01","tapas-02","tapas-03","tapas-04","tapas-05"];
+  const log: Record<string, unknown>[] = [];
+  let n = 0;
+  for (let d = 365; d > 0; d--) ids.forEach((phraseId, k) => {
+    const at = now - d * DAY + k * 60000;
+    const key = `en-GB>es-ES:${phraseId}`;
+    const setId = phraseId.startsWith("cafe") ? "set-cafe" : "set-tapas";
+    for (let r = 0; r < 3; r++) log.push({ id: `y.x-${(n++).toString(36)}`, at: at + r * 9000, device: "y", kind: "heard", key, phraseId, setId, targetMs: 1500, nativeMs: 1100 });
+    if (d % 3 === 0) log.push({ id: `y.x-${(n++).toString(36)}`, at: at + 40000, device: "y", kind: "rated", key, phraseId, setId, grade: d % 9 ? "easy" : "hard" });
+  });
+  return log;
+}

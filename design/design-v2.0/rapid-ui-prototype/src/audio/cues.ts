@@ -2,20 +2,33 @@
 // like an error or a punishment.
 let audioCtx: AudioContext | null = null;
 
-function context(): AudioContext | null {
+function create(): AudioContext | null {
   try {
     if (!audioCtx) {
       const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       audioCtx = new Ctx();
     }
-    if (audioCtx.state === 'suspended') void audioCtx.resume();
     return audioCtx;
   } catch {
     return null;
   }
 }
 
-/** Called from the first user gesture (unlock.ts), so later cues can sound. */
+function context(): AudioContext | null {
+  const ctx = create();
+  if (ctx?.state === 'suspended') void ctx.resume().catch(() => undefined);
+  return ctx;
+}
+
+/**
+ * Starting the audio device takes ~100 ms, so the (suspended) context is
+ * created while the app is idle after load; no gesture is needed for that.
+ */
+export function prepareAudio(): void {
+  create();
+}
+
+/** Called from the first user gesture (unlock.ts): resuming is cheap, and allowed there. */
 export function resumeAudio(): void {
   context();
 }
