@@ -86,6 +86,20 @@ test.describe('the loop', () => {
     await expect(page.getByTestId('points')).toContainText(/[1-9]\d* points/);
   });
 
+  test('keyboard: space plays and pauses, arrows change phrase, 1–3 rate', async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Play 5 phrases' }).click();
+    await page.getByRole('button', { name: /^Now playing:/ }).click();
+    const player = page.getByRole('dialog', { name: 'Now playing' });
+    await player.focus();
+    await page.keyboard.press('Space');
+    await expect(player.getByRole('button', { name: 'Play', exact: true })).toBeVisible();
+    await page.keyboard.press('ArrowRight');
+    await expect(player.getByText('2 of 5')).toBeVisible();
+    await page.keyboard.press('3');
+    await expect(player.getByRole('button', { name: /^Easy/ })).toHaveAttribute('aria-pressed', 'true');
+  });
+
   test('notes open in a sheet', async ({ page }) => {
     await page.goto('/');
     await page.getByRole('button', { name: 'Play 5 phrases' }).click();
