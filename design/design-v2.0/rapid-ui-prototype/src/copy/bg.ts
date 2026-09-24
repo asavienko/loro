@@ -307,6 +307,8 @@ export function makeBg(n: Plural): Copy {
       native: 'Говоря',
       course: 'Уча',
       courseNote: 'Напредъкът се пази за всяка двойка езици. Щом превключите обратно, той се връща.',
+      voices: 'Гласове',
+      voiceAuto: (name) => `Автоматично (${name})`,
       accessibility: 'Екранен четец',
       announceEveryStep: 'Обявявай всяка стъпка',
       announceHint: 'Изключено: обявяват се само „Ваш ред“ и отговорът.',

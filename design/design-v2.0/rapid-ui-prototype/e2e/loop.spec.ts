@@ -101,7 +101,7 @@ test.describe('the loop', () => {
   });
 
   test('a device with no Spanish voice says so and pays nothing', async ({ page }) => {
-    await page.addInitScript(() => (window.__noVoices = ['es-ES']));
+    await page.addInitScript(() => (window.__noVoices = ['es-ES', 'es-MX']));
     await page.goto('/');
     await page.getByRole('button', { name: 'Play 5 phrases' }).click();
     await expect(page.getByRole('button', { name: /^Now playing:/ })).toContainText('No voice for this language');

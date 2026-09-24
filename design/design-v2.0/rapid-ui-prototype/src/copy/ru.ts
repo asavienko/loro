@@ -307,6 +307,8 @@ export function makeRu(n: Plural): Copy {
       native: 'Мой язык',
       course: 'Я изучаю',
       courseNote: 'Прогресс хранится для каждой пары языков. Переключитесь обратно — и он вернётся.',
+      voices: 'Голоса',
+      voiceAuto: (name) => `Автоматически (${name})`,
       accessibility: 'Экранный диктор',
       announceEveryStep: 'Объявлять каждый шаг',
       announceHint: 'Выключено: объявляются только «Ваша очередь» и ответ.',

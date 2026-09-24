@@ -129,6 +129,8 @@ export interface Prefs {
   sortBySet: Record<string, SortKey>;
   /** Onboarding's "Start without the demo": Home stops offering it. */
   skippedDemo: boolean;
+  /** The learner's own choice of device voice per language, by name; otherwise the best is picked. */
+  voiceByLang: Partial<Record<LanguageCode, string>>;
 }
 
 // ---------- player ----------

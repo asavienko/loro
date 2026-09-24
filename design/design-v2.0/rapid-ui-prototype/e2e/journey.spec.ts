@@ -190,7 +190,7 @@ test.describe('a finished course', () => {
 test.describe('onboarding on a device with no Spanish voice', () => {
   test.use({ seed: null });
   test('the voice check names the missing voice and how to add it', async ({ page }) => {
-    await page.addInitScript(() => (window.__noVoices = ['es-ES']));
+    await page.addInitScript(() => (window.__noVoices = ['es-ES', 'es-MX']));
     await page.goto('/');
     for (let i = 0; i < 3; i++) await page.getByRole('button', { name: 'Continue' }).click();
     await expect(page.getByText('Add the missing voice in your system’s speech settings.', { exact: false })).toBeVisible();

@@ -10,7 +10,7 @@ export function initialLearner(): LearnerState {
 }
 
 export function initialPrefs(): Prefs {
-  return { playMode: 'repeat', repeats: 'auto', speed: 1, announceEveryStep: false, sortBySet: {}, skippedDemo: false };
+  return { playMode: 'repeat', repeats: 'auto', speed: 1, announceEveryStep: false, sortBySet: {}, skippedDemo: false, voiceByLang: {} };
 }
 
 export function initialPlayer(): PlayerState {

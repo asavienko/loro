@@ -1,7 +1,7 @@
 import { AnimatePresence, motion, MotionConfig } from 'motion/react';
 import { Component, ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { useLatest } from './lib/useLatest';
-import { stopSpeech } from './audio/speech';
+import { setVoiceChoices, stopSpeech } from './audio/speech';
 import { usePlaybackDriver } from './audio/driver';
 import { useMediaSession } from './audio/mediaSession';
 import { learnedCue } from './audio/cues';
@@ -150,6 +150,7 @@ function Shell() {
   const c = useCopy();
   const { state, actions } = useStore();
   const route = useRoute();
+  useEffect(() => setVoiceChoices(state.prefs.voiceByLang), [state.prefs.voiceByLang]);
   useScrollRestoration(route);
   const currentId = currentPhraseId(state.player);
 

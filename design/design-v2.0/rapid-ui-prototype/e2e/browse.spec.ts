@@ -357,3 +357,20 @@ test('the page title says where the learner is', async ({ page }) => {
   await page.getByRole('button', { name: 'Open queue' }).click();
   await expect(page).toHaveTitle('Queue · Loro');
 });
+
+test('the learner can choose the voice for a language', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Ana: settings' }).click();
+  const spanish = page.getByRole('combobox', { name: 'Spanish', exact: true });
+  await expect(spanish).toHaveValue('');
+  await expect(spanish.locator('option').first()).toHaveText('Automatic (Test Español)');
+  await spanish.selectOption('Test Mexicano');
+  await page.getByRole('button', { name: 'Close' }).click();
+  await page.getByRole('button', { name: /^Play \d+ phrases/ }).first().click();
+  await page.getByRole('button', { name: /^Now playing:/ }).click();
+  await expect(page.getByText('Voice: Test Mexicano')).toBeVisible();
+  // English has one voice on this device: nothing to choose, no picker.
+  await page.getByRole('button', { name: 'Close player' }).click();
+  await page.getByRole('button', { name: 'Ana: settings' }).click();
+  await expect(page.getByRole('combobox', { name: 'English', exact: true })).toHaveCount(0);
+});
