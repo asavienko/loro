@@ -1,5 +1,5 @@
 import { motion, PanInfo, Reorder, useDragControls } from 'motion/react';
-import { KeyboardEvent, useId, useRef } from 'react';
+import { KeyboardEvent, useId, useRef, useState } from 'react';
 import { useClickBlockerDuringDrag } from '../lib/suppressClick';
 import { useDialog } from '../lib/useDialog';
 import { useNav } from '../nav/NavContext';
@@ -10,6 +10,7 @@ import { useCopy, useNow, useStore } from '../state/store';
 import { Icon } from '../ui/Icon';
 import { isTargetRevealed } from '../ui/phase';
 import { PhraseRow } from '../ui/PhraseRow';
+import { Sheet, SheetOption } from '../ui/Sheet';
 import { useToast } from '../ui/Toast';
 
 const SWIPE = 80;
@@ -29,6 +30,9 @@ export function QueueScreen({ onClose }: { onClose: () => void }) {
   const dialogRef = useRef<HTMLDivElement>(null);
   useDialog(dialogRef, onClose);
   const hintId = useId();
+  // The up-next row whose options are open: the single-tap route to what drag and swipe do (WCAG 2.5.7).
+  const [menu, setMenu] = useState<number | null>(null);
+  const menuPhrase = menu === null ? undefined : findPhrase(state.learner, upNext[menu]);
   // Up next starts right after the current phrase in the queue order.
   const positionOf = (i: number) => state.player.index + 1 + i;
   // A phrase can be queued twice (a missed phrase comes back), so each row's identity includes its copy number.
@@ -131,6 +135,7 @@ export function QueueScreen({ onClose }: { onClose: () => void }) {
                       onPlayNow={() => actions.jump(positionOf(i), true)}
                       onRemove={() => remove(i)}
                       onMove={(delta) => move(i, i + delta)}
+                      onMenu={() => setMenu(i)}
                     />
                   ))}
                 </Reorder.Group>
@@ -188,6 +193,16 @@ export function QueueScreen({ onClose }: { onClose: () => void }) {
           )}
         </div>
       </div>
+
+      <Sheet open={menu !== null && Boolean(menuPhrase)} title={menuPhrase?.target ?? ''} onClose={() => setMenu(null)}>
+        {menu !== null && (
+          <div className="flex flex-col">
+            <SheetOption icon="arrow_upward" label={c.queue.moveUp} disabled={menu === 0} onClick={() => { move(menu, menu - 1); setMenu(null); }} />
+            <SheetOption icon="arrow_downward" label={c.queue.moveDown} disabled={menu === upNext.length - 1} onClick={() => { move(menu, menu + 1); setMenu(null); }} />
+            <SheetOption icon="delete" tone="danger" label={c.queue.removeFromQueue} onClick={() => { remove(menu); setMenu(null); }} />
+          </div>
+        )}
+      </Sheet>
     </motion.div>
   );
 }
@@ -199,13 +214,16 @@ interface QueueItemProps {
   onPlayNow: () => void;
   onRemove: () => void;
   onMove: (delta: -1 | 1) => void;
+  /** A tap on the handle (not a drag) opens the row's options. */
+  onMenu: () => void;
 }
 
-function QueueItem({ item, phraseId, hintId, onPlayNow, onRemove, onMove }: QueueItemProps) {
+function QueueItem({ item, phraseId, hintId, onPlayNow, onRemove, onMove, onMenu }: QueueItemProps) {
   const c = useCopy();
   const { state } = useStore();
   const controls = useDragControls();
   const clicks = useClickBlockerDuringDrag();
+  const dragged = useRef(false);
   const phrase = findPhrase(state.learner, phraseId);
   if (!phrase) return null;
   const prompt = promptOf(phrase, state.learner.profile.nativeLang);
@@ -231,7 +249,7 @@ function QueueItem({ item, phraseId, hintId, onPlayNow, onRemove, onMove }: Queu
   };
 
   return (
-    <Reorder.Item value={item} dragListener={false} dragControls={controls} className="relative flex items-stretch rounded-2xl bg-surface-container-high overflow-hidden">
+    <Reorder.Item value={item} dragListener={false} dragControls={controls} onDragStart={() => (dragged.current = true)} className="relative flex items-stretch rounded-2xl bg-surface-container-high overflow-hidden">
       {/* Revealed under the row while swiping */}
       <div className="absolute inset-0 flex items-center justify-between px-4 text-body font-bold pointer-events-none" aria-hidden="true">
         <span className="flex items-center gap-1 text-tertiary">
@@ -255,7 +273,14 @@ function QueueItem({ item, phraseId, hintId, onPlayNow, onRemove, onMove }: Queu
         type="button"
         aria-label={c.queue.move(phrase.target)}
         aria-describedby={hintId}
-        onPointerDown={(e) => controls.start(e)}
+        aria-haspopup="dialog"
+        onPointerDown={(e) => {
+          dragged.current = false;
+          controls.start(e);
+        }}
+        onClick={() => {
+          if (!dragged.current) onMenu();
+        }}
         onKeyDown={onHandleKey}
         className="relative w-12 shrink-0 flex items-center justify-center bg-surface-container-low text-secondary touch-none cursor-grab active:cursor-grabbing"
       >
