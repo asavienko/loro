@@ -372,10 +372,13 @@ export function sessionSummary(state: AppState, now: number): SessionSummary | n
 export function todayCounts(state: AppState, now: number): { heard: number; rated: number } {
   const start = startOfLocalDay(now);
   const heard = new Set<string>();
-  let rated = state.pending.filter((p) => p.at >= start).length;
+  // This course only, like the Learned and Started beside it.
+  const course = keyOf(state.learner, '');
+  let rated = state.pending.filter((p) => p.at >= start && p.key.startsWith(course)).length;
   for (let i = state.learner.log.length - 1; i >= 0; i--) {
     const e = state.learner.log[i];
     if (e.at < start) break;
+    if (e.kind === 'carryover' || !e.key.startsWith(course)) continue;
     if (e.kind === 'heard') heard.add(e.phraseId);
     if (e.kind === 'rated') rated++;
   }
@@ -396,8 +399,10 @@ const HISTORY_GAP_MS = 30 * 60_000;
 export function playedSets(learner: LearnerState, limit = 30): PlayedSet[] {
   const derived = derive(learner.log);
   const runs: (PlayedSet & { ids: Set<string>; keys: Set<string> })[] = [];
+  const course = keyOf(learner, '');
   for (const e of learner.log) {
     if (e.kind === 'carryover') continue; // points brought over, not a session
+    if (!e.key.startsWith(course)) continue; // another course's sessions belong there
     const last = runs[runs.length - 1];
     const award = derived.awards.get(e.id) ?? 0;
     // A rating can come before the phrase's first "heard" (rated during repetition 1):

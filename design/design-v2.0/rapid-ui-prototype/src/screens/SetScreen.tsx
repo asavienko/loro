@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { getTopic, Phrase } from '../content';
+import { coursesFor, getTopic, Phrase } from '../content';
+import { languageName } from '../copy';
 import { routeUrl } from '../nav/history';
 import { useNav } from '../nav/NavContext';
 import { findPhrase, findSetView } from '../state/catalog';
@@ -42,6 +43,26 @@ export function SetScreen({ setId }: { setId: string }) {
   const [moreOpen, setMoreOpen] = useState(false);
   const view = findSetView(state.learner, setId);
   if (!view) return <p className="max-w-3xl mx-auto px-4 pt-8 text-body text-secondary">{c.set.notFound}</p>;
+  // A link or a history entry can lead to another course's set: say so rather than play it
+  // into this course's progress, and offer the switch when that course is open to the learner.
+  const { profile } = state.learner;
+  if (view.targetLang !== profile.targetLang) {
+    const language = languageName(view.targetLang, c.locale);
+    return (
+      <div className="max-w-3xl mx-auto px-4 pt-8 flex flex-col items-start gap-3">
+        <p className="text-body text-secondary">{c.set.otherCourse(language)}</p>
+        {coursesFor(profile.nativeLang).includes(view.targetLang) && (
+          <button
+            type="button"
+            onClick={() => actions.setProfile({ targetLang: view.targetLang })}
+            className="min-h-11 px-4 rounded-full bg-primary-container text-on-primary text-body font-bold"
+          >
+            {c.set.switchCourse(language)}
+          </button>
+        )}
+      </div>
+    );
+  }
 
   const sort = sortFor(state.prefs, setId);
   const topic = view.topicId ? getTopic(view.topicId) : undefined;

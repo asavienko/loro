@@ -125,6 +125,8 @@ export function makeBg(n: Plural): Copy {
       addedNext: 'Ще е следваща',
       addedEnd: 'Добавено в опашката',
       notFound: 'Този набор не е достъпен.',
+      otherCourse: (language) => `Този набор е от курса по ${language}.`,
+      switchCourse: (language) => `Учи ${language}`,
     },
     phrase: {
       details: (text) => `Подробности: ${text}`,

@@ -135,6 +135,8 @@ export function makeEn(n: Plural) {
       addedNext: 'Plays next',
       addedEnd: 'Added to queue',
       notFound: 'This set isn’t available.',
+      otherCourse: (language: string) => `This set is in the ${language} course.`,
+      switchCourse: (language: string) => `Learn ${language}`,
     },
     phrase: {
       details: (text: string) => `Details for ${text}`,

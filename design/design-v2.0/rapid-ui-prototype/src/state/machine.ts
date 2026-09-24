@@ -516,7 +516,10 @@ export function transition(state: AppState, event: AppEvent): AppState {
       if (!title) return state;
       const [seqId, next] = takeId(state);
       const id = `${OWN_SET_PREFIX}${seqId}`;
-      const phraseIds = [...new Set(event.phraseIds.filter((pid) => findPhrase(learner, pid)))];
+      // A set holds one course's phrases: another course's phrase (from a page left open
+      // across a switch, or a link) would play in the wrong language pair.
+      const inCourse = (pid: string) => findPhrase(learner, pid)?.targetLang === learner.profile.targetLang;
+      const phraseIds = [...new Set(event.phraseIds.filter(inCourse))];
       const set = {
         id,
         title,
@@ -538,7 +541,7 @@ export function transition(state: AppState, event: AppEvent): AppState {
       if (!set || set.deleted) return state;
       let updated = set;
       if (event.type === 'ADD_TO_SET') {
-        const adding = [...new Set(event.phraseIds)].filter((id) => findPhrase(learner, id) && !set.phraseIds.includes(id));
+        const adding = [...new Set(event.phraseIds)].filter((id) => findPhrase(learner, id)?.targetLang === set.targetLang && !set.phraseIds.includes(id));
         if (adding.length === 0) return state;
         const at = event.at === undefined ? set.phraseIds.length : Math.max(0, Math.min(event.at, set.phraseIds.length));
         updated = { ...set, phraseIds: [...set.phraseIds.slice(0, at), ...adding, ...set.phraseIds.slice(at)] };

@@ -176,3 +176,18 @@ describe('history runs', () => {
     assert.equal(runs.reduce((sum, r) => sum + r.points, 0), points(s.learner));
   });
 });
+
+describe('the current course only', () => {
+  it("a set takes only its course's phrases, and Today counts only this course", () => {
+    let s = run(fresh(), { type: 'CREATE_SET', title: 'Mixed', phraseIds: ['cafe-01', 'bg-kafene-01'], now: T0 });
+    const [set] = Object.values(s.learner.ownSets);
+    assert.deepEqual(set.phraseIds, ['cafe-01']);
+    s = run(s, { type: 'ADD_TO_SET', setId: set.id, phraseIds: ['bg-kafene-02'], now: T0 + 1 });
+    assert.deepEqual(s.learner.ownSets[set.id].phraseIds, ['cafe-01']);
+    // A Bulgarian listen in the log while learning Spanish.
+    const bg = { id: 'x.y-1', at: T0 + 5, device: 'x', kind: 'heard' as const, key: 'en-GB>bg-BG:bg-kafene-01', phraseId: 'bg-kafene-01', setId: 'set-bg-kafene', targetMs: 1000, nativeMs: 1000 };
+    s = { ...s, learner: { ...s.learner, log: [...s.learner.log, bg] } };
+    assert.equal(todayCounts(s, T0 + 10).heard, 0);
+    assert.deepEqual(playedSets(s.learner), []);
+  });
+});

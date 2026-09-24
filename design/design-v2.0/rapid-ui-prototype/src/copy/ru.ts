@@ -125,6 +125,8 @@ export function makeRu(n: Plural): Copy {
       addedNext: 'Будет следующей',
       addedEnd: 'Добавлено в очередь',
       notFound: 'Этот набор недоступен.',
+      otherCourse: (language) => `Этот набор из курса: ${language}.`,
+      switchCourse: (language) => `Учить: ${language}`,
     },
     phrase: {
       details: (text) => `Подробнее: ${text}`,
