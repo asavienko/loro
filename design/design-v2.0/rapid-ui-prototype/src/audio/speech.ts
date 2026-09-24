@@ -75,12 +75,21 @@ export function voicesFor(lang: LanguageCode): SpeechSynthesisVoice[] {
   return out;
 }
 
-function pickVoice(lang: LanguageCode): SpeechSynthesisVoice | null {
-  const voices = window.speechSynthesis.getVoices();
+/**
+ * The voice to speak `lang` with: the learner's choice while it is installed and
+ * still speaks the language, otherwise the best one. Offline, a network voice
+ * can't speak, so an on-device voice stands in when there is one.
+ */
+export function chooseVoice<V extends VoiceInfo>(voices: readonly V[], lang: string, chosenName: string | undefined, online: boolean): V | null {
+  const usable = online ? voices : voices.filter((v) => v.localService);
+  const pool = usable.length > 0 && bestVoice(usable, lang) ? usable : voices;
   const base = lang.split('-')[0];
-  // A chosen voice counts only while it is installed and still speaks the language.
-  const mine = chosen[lang] ? voices.find((v) => v.name === chosen[lang] && v.lang.replace('_', '-').split('-')[0] === base) : undefined;
-  return mine ?? bestVoice(voices, lang);
+  const mine = chosenName ? pool.find((v) => v.name === chosenName && v.lang.replace('_', '-').split('-')[0] === base) : undefined;
+  return mine ?? bestVoice(pool, lang);
+}
+
+function pickVoice(lang: LanguageCode): SpeechSynthesisVoice | null {
+  return chooseVoice(window.speechSynthesis.getVoices(), lang, chosen[lang], navigator.onLine !== false);
 }
 
 /** The device voice used for `lang`, if any. */
