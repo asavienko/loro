@@ -177,6 +177,21 @@ function Shell() {
     document.title = pageTitle ? `${pageTitle} · Loro` : 'Loro';
   }, [pageTitle]);
 
+  // A new screen replaces the control that opened it (a set card, Back), which drops
+  // keyboard and screen-reader focus to <body>. Then focus goes to the new screen's
+  // heading. A tab switch keeps focus on its tab, so nothing moves.
+  const screenId = route.name === 'set' ? `set-${route.id}` : route.name;
+  useEffect(() => {
+    const id = requestAnimationFrame(() => {
+      if (document.activeElement && document.activeElement !== document.body) return;
+      const heading = document.querySelector<HTMLElement>('main h1, header h1');
+      if (!heading) return;
+      heading.tabIndex = -1;
+      heading.focus({ preventScroll: true });
+    });
+    return () => cancelAnimationFrame(id);
+  }, [screenId]);
+
   useEffect(() => stopSpeech, []);
   // The page's language is the UI's, so screen readers pronounce it right and
   // Cyrillic uses the local letterforms.
