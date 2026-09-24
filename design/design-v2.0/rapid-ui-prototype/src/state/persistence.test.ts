@@ -203,6 +203,18 @@ describe('loading', () => {
     assert.deepEqual(loadState({ saved: null, pending: null }, () => fresh()).learner, fresh().learner);
   });
 
+  it("takes another tab's progress and pending ratings, but not its queue or settings", () => {
+    const saved = load(fresh());
+    const otherTab = run(load(fresh(), T0, ['taxi-01']), { type: 'RATE', grade: 'hard', now: T0 + 1 }, { type: 'SET_PREFS', prefs: { speed: 1.25 } }, {
+      type: 'TOGGLE_LIKE', kind: 'set', id: 'set-taxi', now: T0 + 2,
+    });
+    const state = loadState({ saved: serializeState(saved), pending: null, others: [serializeState(otherTab)] }, () => fresh());
+    assert.equal(state.learner.likes['set:set-taxi'].liked, true);
+    assert.deepEqual(state.pending.map((p) => p.phraseId), ['taxi-01'], 'its rating still commits');
+    assert.deepEqual(state.player.order, saved.player.order, 'not its queue');
+    assert.equal(state.prefs.speed, saved.prefs.speed, 'not its speed');
+  });
+
   it('merges progress left in localStorage beside an IndexedDB copy', () => {
     const indexedDb = run(fresh(), { type: 'TOGGLE_LIKE', kind: 'set', id: 'set-taxi', now: T0 + 5 });
     // Saved in a session where IndexedDB didn't open.
