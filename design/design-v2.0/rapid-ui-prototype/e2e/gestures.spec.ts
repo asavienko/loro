@@ -41,6 +41,22 @@ test('drag a queued phrase by its handle to reorder', async ({ page }) => {
   await drag(page, last, 0, to.y - from.y - 10);
   await page.waitForTimeout(300);
   await expect(queue.getByRole('button', { name: /^Play .* now$/ }).first()).toHaveAccessibleName('Play Sin gluten, por favor now');
+  // A drag is not a tap: it doesn't also open the row's options.
+  await expect(page.getByRole('dialog', { name: 'Sin gluten, por favor' })).toHaveCount(0);
+});
+
+test('a tap on the handle offers the same moves without dragging (WCAG 2.5.7)', async ({ page }) => {
+  const queue = await openQueue(page);
+  await queue.getByRole('button', { name: 'Move La cuenta, por favor' }).tap();
+  const options = page.getByRole('dialog', { name: 'La cuenta, por favor' });
+  await options.getByRole('button', { name: 'Move up' }).tap();
+  await expect(page.getByRole('status')).toHaveText('Moved to position 1 of 4');
+  await expect(options).toHaveCount(0);
+  await queue.getByRole('button', { name: 'Move La cuenta, por favor' }).tap();
+  await expect(options.getByRole('button', { name: 'Move up' })).toBeDisabled();
+  await options.getByRole('button', { name: 'Remove from queue' }).tap();
+  await expect(queue.getByText('3 left')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Undo' })).toBeVisible();
 });
 
 test('swipe the mini-player to change phrase', async ({ page }) => {
