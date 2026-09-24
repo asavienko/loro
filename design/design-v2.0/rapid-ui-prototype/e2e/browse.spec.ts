@@ -68,6 +68,8 @@ test.describe('library', () => {
     await page.getByRole('button', { name: 'Details for Hola' }).click();
     await page.getByRole('button', { name: 'Delete phrase' }).click();
     await expect(page.getByText('Add a phrase of your own and it plays like any other.')).toBeVisible();
+    await page.getByRole('button', { name: 'Undo' }).click();
+    await expect(page.getByRole('button', { name: 'Play Hola' })).toBeVisible();
   });
 
   test('a like shows under Liked, and Play all plays it', async ({ page }) => {
@@ -113,6 +115,8 @@ test.describe('sets you make', () => {
     await page.getByRole('button', { name: 'Delete set' }).click();
     await expect(page).toHaveURL(/view=ownSets/);
     await expect(page.getByText('Make a set to group phrases your way.')).toBeVisible();
+    await page.getByRole('button', { name: 'Undo' }).click();
+    await expect(page.getByRole('button', { name: /Market run/ })).toBeVisible();
   });
 
   test('the sort is remembered per set', async ({ page }) => {

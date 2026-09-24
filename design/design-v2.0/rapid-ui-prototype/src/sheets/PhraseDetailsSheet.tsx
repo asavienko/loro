@@ -144,7 +144,7 @@ function PhraseDetails({ phraseId, ownSetId, onClose }: { phraseId: string; ownS
             label={c.phrase.delete}
             onClick={() => {
               actions.deleteOwnPhrase(phrase.id);
-              toast(c.phrase.deleted);
+              toast(c.phrase.deleted, { action: { label: c.common.undo, run: () => actions.restoreOwnPhrase(phrase.id) } });
               onClose();
             }}
           />

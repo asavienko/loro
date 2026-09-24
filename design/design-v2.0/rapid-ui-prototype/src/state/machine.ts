@@ -68,12 +68,14 @@ export type AppEvent =
   | { type: 'ADD_OWN_PHRASE'; target: string; native: string; now: number }
   | { type: 'EDIT_OWN_PHRASE'; id: string; target: string; native: string; now: number }
   | { type: 'DELETE_OWN_PHRASE'; id: string; now: number }
+  | { type: 'RESTORE_OWN_PHRASE'; id: string; now: number }
   | { type: 'CREATE_SET'; title: string; phraseIds: string[]; now: number }
   | { type: 'ADD_TO_SET'; setId: string; phraseIds: string[]; now: number }
   | { type: 'REMOVE_FROM_SET'; setId: string; phraseId: string; now: number }
   | { type: 'MOVE_IN_SET'; setId: string; phraseId: string; delta: -1 | 1; now: number }
   | { type: 'RENAME_SET'; setId: string; title: string; now: number }
   | { type: 'DELETE_SET'; setId: string; now: number }
+  | { type: 'RESTORE_SET'; setId: string; now: number }
   | { type: 'SET_PROFILE'; profile: Partial<Omit<Profile, 'updatedAt'>>; now: number }
   | { type: 'RESTORE'; state: unknown }
   | { type: 'MERGE_REMOTE'; learner: LearnerState }
@@ -480,6 +482,19 @@ export function transition(state: AppState, event: AppEvent): AppState {
           ownPhrases: { ...learner.ownPhrases, [event.id]: { ...own, deleted: true, updatedAt: event.now } },
         },
       };
+    }
+
+    // Undo of a delete: the later timestamp wins the merge, so the restore syncs too.
+    case 'RESTORE_OWN_PHRASE': {
+      const own = learner.ownPhrases[event.id];
+      if (!own || !own.deleted) return state;
+      return { ...state, learner: { ...learner, ownPhrases: { ...learner.ownPhrases, [event.id]: { ...own, deleted: false, updatedAt: event.now } } } };
+    }
+
+    case 'RESTORE_SET': {
+      const set = learner.ownSets[event.setId];
+      if (!set || !set.deleted) return state;
+      return { ...state, learner: { ...learner, ownSets: { ...learner.ownSets, [event.setId]: { ...set, deleted: false, updatedAt: event.now } } } };
     }
 
     case 'CREATE_SET': {

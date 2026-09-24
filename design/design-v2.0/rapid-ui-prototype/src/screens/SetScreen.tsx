@@ -265,7 +265,7 @@ export function SetScreen({ setId }: { setId: string }) {
               onClick={() => {
                 actions.deleteSet(setId);
                 setMoreOpen(false);
-                toast(c.set.deleted);
+                toast(c.set.deleted, { action: { label: c.common.undo, run: () => actions.restoreSet(setId) } });
                 nav.go({ name: 'library', view: 'ownSets' });
               }}
             />

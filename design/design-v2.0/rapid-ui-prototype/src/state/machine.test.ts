@@ -290,6 +290,13 @@ describe('the learner’s own phrases and sets', () => {
     assert.equal(s.learner.likes[`phrase:${own.id}`].liked, true);
     s = run(s, { type: 'DELETE_OWN_PHRASE', id: own.id, now: T0 + 3 });
     assert.equal(s.learner.ownPhrases[own.id].deleted, true);
+    // Undo brings it back, set membership and like intact.
+    s = run(s, { type: 'RESTORE_OWN_PHRASE', id: own.id, now: T0 + 4 }, { type: 'DELETE_SET', setId: set.id, now: T0 + 5 }, { type: 'RESTORE_SET', setId: set.id, now: T0 + 6 });
+    assert.equal(s.learner.ownPhrases[own.id].deleted, false);
+    assert.equal(s.learner.ownPhrases[own.id].updatedAt, T0 + 4);
+    assert.equal(s.learner.ownSets[set.id].deleted, false);
+    assert.deepEqual(s.learner.ownSets[set.id].phraseIds, [own.id, 'taxi-01']);
+    assert.equal(run(s, { type: 'RESTORE_SET', setId: set.id, now: T0 + 7 }), s, 'restoring a live set does nothing');
   });
 
   it('editing your phrase keeps its id and history', () => {
