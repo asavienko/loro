@@ -10,6 +10,7 @@ import {
   nextDue,
   playableIds,
   playedSets,
+  previewDue,
   recallBuckets,
   reviewQueue,
   sessionSummary,
@@ -20,6 +21,7 @@ import {
 import { findSamePhrase, findSetView, phraseKey } from './catalog';
 import { fullPlayMs, pauseMs } from './timing';
 import { cafe, DAY, done, fresh, load, MINUTE, playPhrase, run, T0 } from './testing';
+import { memoryOf } from './selectors';
 
 const rated = (grade: 'missed' | 'hard' | 'easy', now: number) => [
   { type: 'RATE' as const, grade, now },
@@ -142,5 +144,22 @@ describe('the same phrase', () => {
     assert.ok(own.own);
     assert.equal(findSamePhrase(s.learner, 'Hasta luego', own.id), undefined);
     assert.equal(findSamePhrase(s.learner, '   '), undefined);
+  });
+});
+
+describe('the rating preview', () => {
+  it('promises the return the rating actually schedules, whatever plays after it', () => {
+    // Rate a new phrase Easy during its first repetition, then let the rest play.
+    let s = load(fresh());
+    s = done(s, T0 + 2000); // native
+    s = done(s, T0 + 4000); // pause
+    s = done(s, T0 + 6000); // target: heard once
+    s = run(s, { type: 'RATE', grade: 'easy', now: T0 + 6500 });
+    const shown = () => previewDue(s.learner, 'cafe-01', 'easy', T0 + 6500);
+    const before = shown();
+    for (let t = 8000; t < 40_000; t += 2000) s = done(s, T0 + t); // two more repetitions heard
+    assert.equal(shown(), before, 'later repetitions do not move the promise');
+    s = run(s, { type: 'COMMIT', now: T0 + 6500 + RATING_WINDOW_MS + 1 });
+    assert.equal(memoryOf(s.learner, 'cafe-01').fsrs?.due, before, 'and it is what commits');
   });
 });
