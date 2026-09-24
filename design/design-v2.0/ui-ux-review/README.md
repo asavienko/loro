@@ -667,6 +667,10 @@ found no crash.
 | Opening a set or pressing Back dropped focus to `<body>`, so a screen reader restarted from the top | Focus moves to the new screen's heading; tab switches keep it on the tab |
 | The first exact-tag voice spoke, and Android's "es_ES" tags never matched, so any Spanish voice could read a Spain course | Voices are ranked (region, then Premium/Enhanced/Natural/Neural, offline, default); Settings lets the learner choose one per language and test it with the course's first phrase; offline, a network voice gives way to an on-device one |
 
+**For the Bulgarian reviewer:** on a 320 px phone the Missed rating, "Не се сетих", wraps onto two
+lines in its third of the row; a shorter word (e.g. "Забравих") would fit. Dropping the icons didn't
+make it fit, so the fix is wording, not layout.
+
 **Open question:** the prototype has no dark theme, so an evening learner with a dark system theme
 gets a light screen. A dark palette is a design decision (plan 57 owns dark mode in the app); say if
 the prototype should have one.
