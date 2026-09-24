@@ -26,6 +26,14 @@ describe('persistence', () => {
     assert.deepEqual(back.player.order, s.player.order);
   });
 
+  it('reopens on the same copy of a phrase queued twice, and floors a fractional index', () => {
+    const s = load(fresh());
+    const order = ['cafe-01', 'cafe-02', 'cafe-01'];
+    const at = (index: number) => parseState(serializeState({ ...s, player: { ...s.player, order, baseOrder: order, index } }), device)!.player.index;
+    assert.equal(at(2), 2, 'the second copy, not the first');
+    assert.equal(at(1.5), 1);
+  });
+
   it('drops ids the content no longer has, keeping the current phrase', () => {
     const s = load(fresh());
     const raw = JSON.parse(serializeState(s));

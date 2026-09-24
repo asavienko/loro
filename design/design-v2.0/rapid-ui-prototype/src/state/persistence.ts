@@ -254,10 +254,13 @@ function sanitizePlayer(value: unknown, learner: LearnerState): PlayerState {
   if (!isObject(value)) return fresh;
   const known = (id: string) => knownPhrase(id, learner.ownPhrases) && !learner.ownPhrases[id]?.deleted;
   const rawOrder = strings(value.order).map(renamed);
-  const current = rawOrder[num(value.index) ? value.index : 0];
+  const rawIndex = num(value.index) ? Math.max(0, Math.trunc(value.index)) : 0;
   const order = rawOrder.filter(known);
-  const found = current ? order.indexOf(current) : -1;
-  const index = found >= 0 ? found : Math.min(Math.max(0, num(value.index) ? value.index : 0), Math.max(0, order.length - 1));
+  // The same occurrence after filtering: a phrase can be queued twice (a missed one
+  // comes back), so searching for its id would jump to the first copy. If the current
+  // phrase itself was dropped, the next one takes its place.
+  const keptBefore = rawOrder.slice(0, rawIndex).filter(known).length;
+  const index = Math.min(keptBefore, Math.max(0, order.length - 1));
   const setId = str(value.setId) && (findSet(value.setId) || learner.ownSets[value.setId]) ? value.setId : null;
   const session = isObject(value.session) && str(value.session.id) && num(value.session.startedAt)
     ? { id: value.session.id, startedAt: value.session.startedAt, passes: num(value.session.passes) ? value.session.passes : 0 }
