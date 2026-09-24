@@ -114,6 +114,26 @@ test.describe('the loop', () => {
     await expect(page.getByTestId('points')).toContainText('0 points');
   });
 
+  test('a stuck speech engine is silenced before the learner’s turn', async ({ page }) => {
+    await page.clock.install();
+    await page.goto('/');
+    await page.evaluate(() => (window.__speechStuck = true));
+    await page.getByRole('button', { name: 'Play 5 phrases' }).click();
+    await page.getByRole('button', { name: /^Now playing:/ }).click();
+    const player = page.getByRole('dialog', { name: 'Now playing' });
+    // Each utterance times out (it never ends); whenever the learner's turn comes, the
+    // engine that was still "talking" must have been silenced.
+    let turns = 0;
+    for (let t = 0; t < 20_000; t += 250) {
+      await page.clock.runFor(250);
+      if (await player.getByText('Your turn — say it in Spanish', { exact: true }).count()) {
+        turns++;
+        expect(await page.evaluate(() => window.__talking)).toBe(false);
+      }
+    }
+    expect(turns).toBeGreaterThan(0);
+  });
+
   test('a silent speech engine stops playback honestly and pays nothing', async ({ page }) => {
     await page.goto('/');
     await page.evaluate(() => (window.__speechSilent = true));

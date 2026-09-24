@@ -12,6 +12,10 @@ declare global {
     __spoken: { text: string; lang: string }[];
     /** Simulates a stalled speech service: every utterance ends at once, unspoken. */
     __speechSilent?: boolean;
+    /** Simulates a stuck engine: utterances start and never end, until cancelled. */
+    __speechStuck?: boolean;
+    /** Whether the engine is talking right now (a stuck utterance until cancel). */
+    __talking?: boolean;
     /** Languages this device has no voice for (set with addInitScript, before load). */
     __noVoices?: string[];
   }
@@ -37,6 +41,11 @@ function fakeSpeech() {
     speak(u: SpeechSynthesisUtterance) {
       current = u;
       window.__spoken.push({ text: u.text, lang: u.lang });
+      if (window.__speechStuck) {
+        timers.push(window.setTimeout(() => u.onstart?.(new Event('start') as SpeechSynthesisEvent), 10));
+        window.__talking = true;
+        return;
+      }
       if (window.__speechSilent) {
         timers.push(window.setTimeout(() => current === u && u.onend?.(new Event('end') as SpeechSynthesisEvent), 1));
         return;
@@ -50,6 +59,7 @@ function fakeSpeech() {
       timers.forEach(clearTimeout);
       timers = [];
       current = null;
+      window.__talking = false;
     },
     speaking: false,
     pending: false,
