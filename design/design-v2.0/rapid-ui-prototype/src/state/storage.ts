@@ -7,9 +7,13 @@ export const STORAGE_KEY = 'loro.prototype.state';
 /**
  * A page that is going away can't wait for IndexedDB, so its last state goes
  * to localStorage synchronously; the next start merges it in and clears it
- * after the next successful save.
+ * after the next successful save. Each tab has its own copy (keyed by a tab id
+ * kept in sessionStorage, which a reload keeps and a new tab doesn't), so a new
+ * tab doesn't take over another tab's queue and speed. The unkeyed name is an
+ * older version's copy.
  */
 const PENDING_KEY = 'loro.prototype.pending';
+const TAB_KEY = 'loro.prototype.tab';
 const DB_NAME = 'loro-prototype';
 const STORE = 'kv';
 const RECORD = 'state';
@@ -54,6 +58,8 @@ export interface Stored {
   saved: string | null;
   /** What a page that closed wrote on its way out, if any. */
   pending: string | null;
+  /** Close copies other tabs left: only their learning progress is merged. */
+  others?: string[];
   /**
    * Progress in localStorage beside an IndexedDB copy: saved in a session where
    * IndexedDB didn't open, or left by a migration that couldn't finish. Merged in
@@ -62,22 +68,68 @@ export interface Stored {
   stray?: string | null;
 }
 
-function pendingGet(): string | null {
+let tab: string | null = null;
+
+/** This tab's id: kept across reloads of the tab, new for a new tab. */
+function tabId(): string {
+  if (tab) return tab;
   try {
-    return localStorage.getItem(PENDING_KEY);
+    tab = sessionStorage.getItem(TAB_KEY);
+    if (!tab) {
+      tab = Math.random().toString(36).slice(2, 10);
+      sessionStorage.setItem(TAB_KEY, tab);
+    }
   } catch {
-    return null;
+    tab = 'tab';
   }
+  return tab;
+}
+
+const ownPendingKey = () => `${PENDING_KEY}.${tabId()}`;
+
+/** Other tabs' close copies (and an older version's unkeyed one), by key. */
+let othersLoaded: string[] = [];
+
+function pendingGet(): { own: string | null; others: string[] } {
+  try {
+    const own = localStorage.getItem(ownPendingKey());
+    othersLoaded = [];
+    const others: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key || key === ownPendingKey() || (key !== PENDING_KEY && !key.startsWith(`${PENDING_KEY}.`))) continue;
+      const value = localStorage.getItem(key);
+      if (value !== null) {
+        others.push(value);
+        othersLoaded.push(key);
+      }
+    }
+    return { own, others };
+  } catch {
+    return { own: null, others: [] };
+  }
+}
+
+/** Removes the other tabs' close copies read at start, once a save holds their progress. */
+export function clearOtherPendings(): void {
+  for (const key of othersLoaded) {
+    try {
+      localStorage.removeItem(key);
+    } catch {
+      // Harmless: merged again next time.
+    }
+  }
+  othersLoaded = [];
 }
 
 /** Opens storage and returns what it holds, moving an older localStorage save into IndexedDB. */
 export async function openStorage(): Promise<Stored> {
-  const pending = pendingGet();
+  const { own: pending, others } = pendingGet();
   try {
     db = await openDb();
   } catch {
     db = null;
-    return { saved: localGet(), pending };
+    return { saved: localGet(), pending, others };
   }
   let saved: string | null;
   try {
@@ -85,20 +137,20 @@ export async function openStorage(): Promise<Stored> {
   } catch {
     // IndexedDB opened but can't be read: work from localStorage as if it hadn't opened.
     db = null;
-    return { saved: localGet(), pending };
+    return { saved: localGet(), pending, others };
   }
   const local = localGet();
-  if (saved !== null) return { saved, pending, stray: local };
+  if (saved !== null) return { saved, pending, others, stray: local };
   if (local !== null) {
     try {
       await writeRaw(local);
     } catch {
       // The move failed: keep the old copy and load it; the first save retries the move.
-      return { saved: local, pending, stray: local };
+      return { saved: local, pending, others, stray: local };
     }
     clearStray();
   }
-  return { saved: local, pending };
+  return { saved: local, pending, others };
 }
 
 /** Removes the localStorage copy once IndexedDB holds its progress (never while localStorage is the store). */
@@ -114,7 +166,7 @@ export function clearStray(): void {
 /** Synchronous last-chance copy for a page that is being hidden or closed. */
 export function writePending(json: string): void {
   try {
-    localStorage.setItem(PENDING_KEY, json);
+    localStorage.setItem(ownPendingKey(), json);
   } catch {
     // Storage full or blocked: the regular save is the only copy.
   }
@@ -122,7 +174,7 @@ export function writePending(json: string): void {
 
 export function clearPending(): void {
   try {
-    localStorage.removeItem(PENDING_KEY);
+    localStorage.removeItem(ownPendingKey());
   } catch {
     // Nothing there.
   }

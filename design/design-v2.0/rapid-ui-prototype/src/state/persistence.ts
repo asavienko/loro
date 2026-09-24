@@ -19,7 +19,7 @@ import { decodeLog, encodeLog } from './compactLog';
 import { initialLearner, initialPlayer, initialPrefs, initialProfile } from './initial';
 import { derive, memoryKey } from './memory';
 import { mergeLearner } from './merge';
-import { announceSave, clearPending, clearRaw, clearStray, readRaw, Stored, writePending, writeRaw } from './storage';
+import { announceSave, clearOtherPendings, clearPending, clearRaw, clearStray, readRaw, Stored, writePending, writeRaw } from './storage';
 import {
   AppState,
   Device,
@@ -357,11 +357,23 @@ let pendingFor: AppState | 'loaded' | null = null;
 /** A localStorage copy merged at load (see Stored.stray) that a successful save may now remove. */
 let strayOutstanding = false;
 
-export function loadState({ saved, pending, stray = null }: Stored, initial: (device: Device) => AppState): AppState {
+export function loadState({ saved, pending, others = [], stray = null }: Stored, initial: (device: Device) => AppState): AppState {
   const state = loadWithoutStray({ saved, pending }, initial);
-  const fromStray = stray && stray !== saved ? parseState(stray, state.device) : null;
-  strayOutstanding = stray !== null;
-  return fromStray ? { ...state, learner: mergeLearner(state.learner, fromStray.learner) } : state;
+  // Learning progress comes from these, and so do another tab's pending ratings (that
+  // tab may have closed inside the window; a rating commits once whichever tab does
+  // it). Its queue and prefs stay with it.
+  const extra = [...(stray && stray !== saved ? [stray] : []), ...others].flatMap((json) => {
+    const parsed = parseState(json, state.device);
+    return parsed ? [parsed] : [];
+  });
+  strayOutstanding = stray !== null || others.length > 0;
+  const pendingRatings = [...state.pending];
+  for (const more of extra) for (const p of more.pending) if (!pendingRatings.some((q) => q.key === p.key)) pendingRatings.push(p);
+  return {
+    ...state,
+    pending: pendingRatings,
+    learner: extra.reduce((learner, more) => mergeLearner(learner, more.learner), state.learner),
+  };
 }
 
 function loadWithoutStray({ saved, pending }: Stored, initial: (device: Device) => AppState): AppState {
@@ -411,6 +423,7 @@ async function writeState(state: AppState): Promise<SaveResult> {
     }
     if (strayOutstanding) {
       clearStray();
+      clearOtherPendings();
       strayOutstanding = false;
     }
     announceSave();
