@@ -7,6 +7,7 @@ import languagesJson from './languages.json';
 import noteTranslationsJson from './note-translations.json';
 import { CONTENT_PHRASES, coursesFor, LANGUAGES, SETS, TOPICS } from './index';
 import { contentProblems, PhraseJson, SetJson } from './schema';
+import { validateContent } from './validate';
 
 const base = () => ({
   phrases: structuredClone(phrasesJson) as unknown as PhraseJson[],
@@ -17,7 +18,8 @@ const base = () => ({
 });
 
 describe('content', () => {
-  it('loads and passes every cross-file rule', () => {
+  it('passes every schema and cross-file rule (the build runs the same check)', () => {
+    assert.deepEqual(validateContent(), []);
     assert.deepEqual(contentProblems({ ...base(), topics: topicsJson as typeof TOPICS, languages: languagesJson as typeof LANGUAGES }), []);
     assert.ok(CONTENT_PHRASES.length > 0);
   });

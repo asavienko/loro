@@ -1,57 +1,27 @@
-// Vocabulary lives in the JSON files next to this module and is validated here
-// at start-up. Nothing here is learner progress: every learner number is derived
-// from the state machine in src/state/. Phrases the learner writes themselves
-// live in learner state and join this content in src/state/catalog.ts.
-import { z } from 'zod';
+// Vocabulary lives in the JSON files next to this module. It is validated at build
+// time and in the unit tests (validate.ts), so the app loads it without zod. Nothing
+// here is learner progress: every learner number is derived from the state machine
+// in src/state/. Phrases the learner writes themselves live in learner state and
+// join this content in src/state/catalog.ts.
 import phrasesJson from './phrases.json';
 import setsJson from './sets.json';
 import topicsJson from './topics.json';
 import languagesJson from './languages.json';
 import metaJson from './meta.json';
 import noteTranslationsJson from './note-translations.json';
-import {
-  contentProblems,
-  Language,
-  LanguageCode,
-  languageSchema,
-  metaSchema,
-  NoteTranslations,
-  noteTranslationsSchema,
-  PhraseJson,
-  phraseSchema,
-  SetJson,
-  setSchema,
-  Topic,
-  topicSchema,
-  UiLocale,
-} from './schema';
+import type { Language, LanguageCode, Meta, NoteTranslations, PhraseJson, SetJson, Topic, UiLocale } from './schema';
 
 export type { LanguageCode, UiLocale, Topic, Language, Localized, Tag, Level, Register, PhraseNotes } from './schema';
 export type TopicTone = Topic['tone'];
 
-function parse<T>(schema: z.ZodType<T>, value: unknown, file: string): T {
-  const result = schema.safeParse(value);
-  if (!result.success) throw new Error(`Invalid ${file}: ${z.prettifyError(result.error)}`);
-  return result.data;
-}
-
-const phraseJson = parse(z.array(phraseSchema), phrasesJson, 'phrases.json');
-const setJson = parse(z.array(setSchema), setsJson, 'sets.json');
-export const TOPICS: Topic[] = parse(z.array(topicSchema), topicsJson, 'topics.json');
-export const LANGUAGES: Language[] = parse(z.array(languageSchema), languagesJson, 'languages.json');
-export const META = parse(metaSchema, metaJson, 'meta.json');
+// The JSON's inferred types are wider (plain strings); validation has proved the narrow ones.
+const phraseJson = phrasesJson as unknown as PhraseJson[];
+const setJson = setsJson as unknown as SetJson[];
+export const TOPICS = topicsJson as unknown as Topic[];
+export const LANGUAGES = languagesJson as unknown as Language[];
+export const META = metaJson as unknown as Meta;
 export const CONTENT_VERSION = META.version;
-const noteTranslations: NoteTranslations = parse(noteTranslationsSchema, noteTranslationsJson, 'note-translations.json');
-
-const problems = contentProblems({
-  phrases: phraseJson,
-  sets: setJson,
-  topics: TOPICS,
-  languages: LANGUAGES,
-  renamed: META.renamedPhraseIds,
-  noteTranslations,
-});
-if (problems.length > 0) throw new Error(`Invalid content:\n${problems.join('\n')}`);
+const noteTranslations = noteTranslationsJson as unknown as NoteTranslations;
 
 /** A phrase ready to play: content or the learner's own. */
 export interface Phrase {
