@@ -587,7 +587,7 @@ production build offline. Each fix below is covered by a test.
 | Deleting your own phrase from its details crashed the app | Fixed; the error screen now leads with Reload, which keeps progress |
 | A full or blocked browser storage made saves fail silently | The learner is told once per session that progress isn't being saved |
 | The review log was stored as plain objects: a heavy learner would fill the ~5 MB storage within months | Stored as compact rows: a year of daily practice takes 536 KB instead of 1,945 KB; plain saves still load |
-| A new app version reloaded the page as soon as it arrived, cutting a lesson off | It waits and takes over on the next launch |
+| A new app version reloaded the page as soon as it arrived, cutting a lesson off | It waits; while nothing is playing the app offers "A new version of Loro is ready · Reload", and otherwise it takes over on the next launch |
 | Russian "Не вспомнил" and "Сколько я вам должен?", and Bulgarian "Свободен ли сте?", assumed men | "Не помню", "Сколько с меня?", "Свободно ли е?" |
 | Any render error, even in one sheet, took the whole app to the error screen | Screens and overlays have their own boundaries: a failing sheet closes, a failing screen shows a small card with Reload, and the player keeps playing |
 | At 200% text, the session summary scrolled but a keyboard couldn't scroll it | Sheet bodies are focusable, labelled regions |
