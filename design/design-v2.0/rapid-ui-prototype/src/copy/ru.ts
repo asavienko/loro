@@ -319,6 +319,7 @@ export function makeRu(n: Plural): Copy {
       voiceMissing: (language) => `${language}: на устройстве нет голоса`,
       voiceHint: 'Добавьте недостающий голос в настройках речи системы. Можно продолжить, но эти фразы не зазвучат, пока голоса нет.',
       test: (language) => `Проверить: ${language}`,
+      testShort: 'Проверить',
       loop: 'Как это работает',
       loopSteps: (native, target) => [
         `Услышьте фразу: ${native}.`,

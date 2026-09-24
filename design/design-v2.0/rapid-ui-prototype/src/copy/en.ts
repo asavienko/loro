@@ -329,6 +329,7 @@ export function makeEn(n: Plural) {
       voiceMissing: (language: string) => `${language}: no voice on this device`,
       voiceHint: 'Add the missing voice in your system’s speech settings. You can go on, but those phrases won’t play until then.',
       test: (language: string) => `Test ${language}`,
+      testShort: 'Test',
       loop: 'How it works',
       loopSteps: (native: string, target: string) => [
         `Hear the phrase in ${native}.`,

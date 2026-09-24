@@ -319,6 +319,7 @@ export function makeBg(n: Plural): Copy {
       voiceMissing: (language) => `${language}: няма глас на това устройство`,
       voiceHint: 'Добавете липсващия глас в настройките за реч на системата. Може да продължите, но тези фрази няма да звучат дотогава.',
       test: (language) => `Изпробвай: ${language}`,
+      testShort: 'Изпробвай',
       loop: 'Как работи',
       loopSteps: (native, target) => [
         `Чуйте фразата на ${native}.`,
