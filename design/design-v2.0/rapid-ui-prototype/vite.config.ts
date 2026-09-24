@@ -34,7 +34,10 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // A new version waits and takes over on the next launch: auto-updating reloads the
+      // page, which would cut a lesson off mid-phrase.
+      registerType: 'prompt',
+      injectRegister: 'script',
       includeAssets: ['icons/*.png', 'icons/icon.svg', 'fonts/*.woff2'],
       manifest: {
         name: 'Loro',
