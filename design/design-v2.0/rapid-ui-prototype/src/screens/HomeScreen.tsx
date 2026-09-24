@@ -93,13 +93,13 @@ export function HomeScreen() {
           </div>
         )}
         {suggested && suggestedProgress && suggestedIds.length > 0 && (
-          <div className={`rounded-3xl border border-outline-variant p-4 ${due.length > 0 ? 'bg-surface-container-low' : 'bg-surface-container-lowest shadow-sm'}`}>
+          <div className={`rounded-3xl border border-outline-variant p-4 ${due.length > 0 || firstRun ? 'bg-surface-container-low' : 'bg-surface-container-lowest shadow-sm'}`}>
             <h2 className="font-serif text-lg font-bold">{stats.started === 0 ? c.home.startTitle : c.home.continueTitle}</h2>
             <p className="text-body text-secondary mt-0.5">
               {c.home.continueBody(suggested.title, suggestedProgress.learned, suggestedProgress.total)}
             </p>
             <PlayButton
-              secondary={due.length > 0}
+              secondary={due.length > 0 || (firstRun && Boolean(firstPhrase))}
               label={c.home.playPhrases(suggestedIds.length)}
               detail={null}
               onClick={() => nav.playSet(suggested.id, { phraseIds: suggestedIds })}
