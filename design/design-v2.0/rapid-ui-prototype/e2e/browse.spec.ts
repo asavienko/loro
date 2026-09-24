@@ -169,3 +169,18 @@ test('explore by level and by tag', async ({ page }) => {
   await page.getByRole('button', { name: 'Clear filters' }).click();
   await expect(page.getByRole('heading', { name: 'All sets' })).toBeVisible();
 });
+
+test('correct a typo in your own phrase', async ({ page }) => {
+  await page.goto('/#/library?view=mine');
+  await page.getByRole('button', { name: 'Add your phrase' }).click();
+  await page.getByLabel('In Spanish').fill('Holaa');
+  await page.getByLabel('In English').fill('Hi');
+  await page.getByRole('button', { name: 'Add phrase' }).click();
+  await page.getByRole('button', { name: 'Details for Holaa' }).click();
+  await page.getByRole('button', { name: 'Edit phrase' }).click();
+  await expect(page.getByLabel('In Spanish')).toHaveValue('Holaa');
+  await page.getByLabel('In Spanish').fill('Hola');
+  await page.getByRole('button', { name: 'Save' }).click();
+  await expect(page.getByRole('button', { name: 'Play Hola' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Play Holaa' })).toHaveCount(0);
+});

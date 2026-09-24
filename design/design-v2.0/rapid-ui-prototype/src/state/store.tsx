@@ -41,6 +41,8 @@ function makeActions(dispatch: (event: AppEvent) => void, latest: RefObject<AppS
     clearQueue: () => dispatch({ type: 'CLEAR_QUEUE' }),
     toggleLike: (kind: 'phrase' | 'set', id: string) => dispatch({ type: 'TOGGLE_LIKE', kind, id, now: now() }),
     addOwnPhrase: (target: string, native: string) => dispatch({ type: 'ADD_OWN_PHRASE', target, native, now: now() }),
+    editOwnPhrase: (id: string, target: string, native: string) =>
+      dispatch({ type: 'EDIT_OWN_PHRASE', id, target, native, now: now() }),
     deleteOwnPhrase: (id: string) => dispatch({ type: 'DELETE_OWN_PHRASE', id, now: now() }),
     /** Creates a set and returns its id (the machine takes ids from the device counter). */
     createSet: (title: string, phraseIds: string[]): string => {

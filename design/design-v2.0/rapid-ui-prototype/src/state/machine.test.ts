@@ -292,6 +292,14 @@ describe('the learner’s own phrases and sets', () => {
     assert.equal(s.learner.ownPhrases[own.id].deleted, true);
   });
 
+  it('editing your phrase keeps its id and history', () => {
+    let s = run(fresh(), { type: 'ADD_OWN_PHRASE', target: 'Hola', native: 'Hi', now: T0 });
+    const id = Object.keys(s.learner.ownPhrases)[0];
+    s = run(s, { type: 'EDIT_OWN_PHRASE', id, target: ' ¡Hola! ', native: 'Hello', now: T0 + 1 });
+    assert.deepEqual([s.learner.ownPhrases[id].target, s.learner.ownPhrases[id].native], ['¡Hola!', 'Hello']);
+    assert.equal(run(s, { type: 'EDIT_OWN_PHRASE', id, target: '', native: 'x', now: T0 + 2 }), s, 'an empty text is refused');
+  });
+
   it('changing course empties the queue', () => {
     const s = run(load(fresh()), { type: 'SET_PROFILE', profile: { targetLang: 'bg-BG' }, now: T0 });
     assert.equal(s.player.status, 'idle');

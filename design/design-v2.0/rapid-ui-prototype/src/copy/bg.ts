@@ -139,6 +139,7 @@ export function makeBg(n: Plural): Copy {
       notesInEnglish: 'Засега бележките са на английски.',
       words: 'Докоснете дума, за да видите значението ѝ.',
       wordMeaning: (word, gloss) => `${word}: ${gloss}`,
+      edit: 'Редактирай фразата',
       delete: 'Изтрий фразата',
       deleted: 'Фразата е изтрита',
       removeFromSet: 'Махни от набора',
@@ -165,6 +166,8 @@ export function makeBg(n: Plural): Copy {
       hint: 'Звучи с гласа на устройството.',
       add: 'Добави фразата',
       added: 'Фразата е добавена',
+      editTitle: 'Редактиране на фразата',
+      edited: 'Фразата е обновена',
     },
     player: {
       dialog: 'Сега звучи',

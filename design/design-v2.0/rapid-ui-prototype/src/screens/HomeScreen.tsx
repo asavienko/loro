@@ -117,7 +117,7 @@ export function HomeScreen() {
             </h2>
             <p className="text-body text-on-surface-variant mt-1">{c.home.courseDoneBody}</p>
             <div className="flex flex-wrap gap-2 mt-3">
-              <button type="button" onClick={nav.addPhrase} className="min-h-11 px-4 rounded-full bg-primary-container text-on-primary font-bold flex items-center gap-1.5">
+              <button type="button" onClick={() => nav.addPhrase()} className="min-h-11 px-4 rounded-full bg-primary-container text-on-primary font-bold flex items-center gap-1.5">
                 <Icon name="add" className="text-icon-md" />
                 {c.home.addOwn}
               </button>
