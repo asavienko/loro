@@ -635,3 +635,15 @@ found no crash.
 
 **Checks:** 68 unit tests, the build, and Playwright: 91 passed on the dev server (12 skipped) and
 93 against the production build (11 skipped).
+
+## Behaviour fixes found while using it
+
+| Found | Fix |
+| --- | --- |
+| Adding "la cuenta por favor" as your own phrase silently duplicated "La cuenta, por favor" | The form shows the existing phrase and its translation (case, accents and punctuation ignored); saving stays allowed |
+| Search needed the query verbatim: "la cuenta por favor" (no comma) and "favor cuenta" found nothing | Every word must appear, in any order; each is highlighted |
+| Deleting your own phrase or set was instant and final; "Remove from this set" gave no feedback | Each says what happened and offers Undo; a removal returns to its old position, and a restore wins a sync merge |
+| Switching course emptied the queue silently, so the player vanished | "Now learning Bulgarian. The queue was cleared", in the new UI language |
+| The snackbar's dismiss button was a second "Close" beside the sheet's | It is "Dismiss message" |
+
+Checks after these: 71 unit tests and 95 Playwright tests on the dev server (12 skipped).
