@@ -633,5 +633,5 @@ tap or keystroke of 100 ms or more across play, rate, skip, queue, search and Li
 now fails on any over 200 ms, in dev and production builds. 12 more monkey seeds (about 5 minutes)
 found no crash.
 
-**Checks:** 68 unit tests, the build, and 91 Playwright tests on the dev server (12 skipped); the
-production-build run was 90 passed before the last four tests were added.
+**Checks:** 68 unit tests, the build, and Playwright: 91 passed on the dev server (12 skipped) and
+93 against the production build (11 skipped).
