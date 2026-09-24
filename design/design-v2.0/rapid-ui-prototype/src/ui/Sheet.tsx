@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'motion/react';
 import { MouseEvent, ReactNode, useRef } from 'react';
 import { useDialog } from '../lib/useDialog';
+import { useKeyboardInset } from '../lib/useKeyboardInset';
 import { useBackToClose } from '../nav/history';
 import { useCopy } from '../state/store';
 import { Icon, IconName } from './Icon';
@@ -30,6 +31,8 @@ function SheetPanel({ title, onClose, children }: Omit<SheetProps, 'open'>) {
   const c = useCopy();
   const ref = useRef<HTMLDivElement>(null);
   useDialog(ref, onClose);
+  // With the keyboard up (iOS), the sheet sits on top of it and shrinks to what's left.
+  const keyboard = useKeyboardInset();
   return (
     <div ref={ref} className="fixed inset-0 z-[60] flex flex-col justify-end" role="dialog" aria-modal="true" aria-label={title}>
       {/* Pointer-only backdrop: keyboard users have the Close button and Escape. */}
@@ -43,6 +46,7 @@ function SheetPanel({ title, onClose, children }: Omit<SheetProps, 'open'>) {
       />
       <motion.div
         className="relative w-full max-w-lg mx-auto bg-surface rounded-t-3xl shadow-2xl max-h-[85dvh] flex flex-col pb-[env(safe-area-inset-bottom)]"
+        style={keyboard > 0 ? { marginBottom: keyboard, maxHeight: `calc(85dvh - ${keyboard}px)` } : undefined}
         initial={{ y: '100%' }}
         animate={{ y: 0 }}
         exit={{ y: '100%' }}

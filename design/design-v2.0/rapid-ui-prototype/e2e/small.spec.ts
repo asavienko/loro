@@ -138,3 +138,30 @@ test.describe('large text (150%) on a 320 px phone: player, queue and summary', 
     for (const line of text.split('\n')) expect(line.trim()).not.toMatch(/^(\d+|·)/);
   });
 });
+
+test.describe('with the on-screen keyboard up (iOS overlays it)', () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+  test("a sheet's fields and button stay above the keyboard", async ({ page }) => {
+    // A stand-in visual viewport the test can shrink, as iOS does when the keyboard opens.
+    await page.addInitScript(() => {
+      const vv = new EventTarget() as EventTarget & { height: number; offsetTop: number; width: number };
+      vv.height = window.innerHeight;
+      vv.offsetTop = 0;
+      vv.width = window.innerWidth;
+      Object.defineProperty(window, 'visualViewport', { value: vv });
+      (window as unknown as { __keyboard: (px: number) => void }).__keyboard = (px) => {
+        vv.height = window.innerHeight - px;
+        vv.dispatchEvent(new Event('resize'));
+      };
+    });
+    await page.goto('/#/library?view=mine');
+    await page.getByRole('button', { name: 'Add your phrase' }).click();
+    await page.getByLabel('In Spanish').focus();
+    await page.evaluate(() => (window as unknown as { __keyboard: (px: number) => void }).__keyboard(300));
+    await page.waitForTimeout(300);
+    const add = (await page.getByRole('button', { name: 'Add phrase' }).boundingBox())!;
+    expect(add.y + add.height, 'Add is above the keyboard').toBeLessThanOrEqual(844 - 300);
+    const english = (await page.getByLabel('In English').boundingBox())!;
+    expect(english.y + english.height).toBeLessThanOrEqual(844 - 300);
+  });
+});
