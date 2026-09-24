@@ -177,3 +177,57 @@ test.describe('queue', () => {
     await expect(page.getByRole('status')).toHaveText('Moved to position 1 of 4');
   });
 });
+
+// No content ships clips yet, so the clip path is exercised through the module
+// itself (dev server only: the production build has no /src).
+test.describe('recorded clips', () => {
+  test.skip(Boolean(process.env.PREVIEW), 'imports /src from the dev server');
+
+  test('a clip that fails falls back to the device voice', async ({ page }) => {
+    await page.goto('/');
+    const result = await page.evaluate(async () => {
+      class BrokenAudio {
+        error = { code: 4 };
+        duration = NaN;
+        currentTime = 0;
+        playbackRate = 1;
+        onended: (() => void) | null = null;
+        onerror: (() => void) | null = null;
+        play() { return Promise.reject(new Error('not supported')); }
+        pause() {}
+      }
+      (window as unknown as { Audio: unknown }).Audio = BrokenAudio;
+      // Served by the dev server; typed from the source.
+      const path = '/src/audio/speech.ts';
+      const speech = (await import(/* @vite-ignore */ path)) as typeof import('../src/audio/speech');
+      const r = await speech.speak('Me pone un cortado', 'es-ES', 1, 'https://example.invalid/clip.mp3').done;
+      return { r, spoken: window.__spoken.map((u) => u.text) };
+    });
+    expect(result.spoken).toContain('Me pone un cortado');
+    expect(result.r.status).toBe('ended');
+  });
+
+  test('a clip that stalls gives way instead of hanging the loop', async ({ page }) => {
+    await page.clock.install();
+    await page.goto('/');
+    const pending = page.evaluate(async () => {
+      class StalledAudio {
+        error = null;
+        duration = NaN;
+        currentTime = 0;
+        playbackRate = 1;
+        onended: (() => void) | null = null;
+        onerror: (() => void) | null = null;
+        play() { return new Promise<void>(() => {}); }
+        pause() {}
+      }
+      (window as unknown as { Audio: unknown }).Audio = StalledAudio;
+      // Served by the dev server; typed from the source.
+      const path = '/src/audio/speech.ts';
+      const speech = (await import(/* @vite-ignore */ path)) as typeof import('../src/audio/speech');
+      return (await speech.speak('Hola', 'es-ES', 1, 'https://example.invalid/stall.mp3').done).status;
+    });
+    for (let t = 0; t < 20_000; t += 1000) await page.clock.runFor(1000);
+    expect(await pending).toBe('timeout');
+  });
+});
