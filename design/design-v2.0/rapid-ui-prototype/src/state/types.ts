@@ -127,6 +127,8 @@ export interface Prefs {
   /** Screen reader: announce every step, or only "your turn" and the reveal. */
   announceEveryStep: boolean;
   sortBySet: Record<string, SortKey>;
+  /** Onboarding's "Start without the demo": Home stops offering it. */
+  skippedDemo: boolean;
 }
 
 // ---------- player ----------

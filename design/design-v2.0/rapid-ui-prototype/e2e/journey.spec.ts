@@ -160,3 +160,17 @@ test('switching course mid-session says the queue was cleared', async ({ page })
   await page.getByLabel('I’m learning').selectOption('bg-BG');
   await expect(page.getByRole('status').filter({ hasText: 'Now learning Bulgarian. The queue was cleared' })).toBeVisible();
 });
+
+test.describe('skipping the demo', () => {
+  test.use({ seed: null });
+  test('Home stops offering it and leads with the first set', async ({ page }) => {
+    await page.goto('/');
+    for (let i = 0; i < 4; i++) await page.getByRole('button', { name: 'Continue' }).click();
+    await page.getByRole('button', { name: 'Start without the demo' }).click();
+    await expect(page.getByRole('heading', { name: 'Start here' })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Play one phrase/ })).toHaveCount(0);
+    await page.reload();
+    await expect(page.getByRole('heading', { name: 'Start here' })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Play one phrase/ })).toHaveCount(0);
+  });
+});

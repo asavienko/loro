@@ -25,6 +25,7 @@ export function Onboarding() {
 
   const finish = (demo: boolean) => {
     actions.setProfile({ onboarded: true, name: name.trim() });
+    if (!demo) actions.setPrefs({ skippedDemo: true });
     const first = courseSets(state.learner)[0]?.phraseIds[0];
     if (demo && first) {
       nav.playList([first]);
