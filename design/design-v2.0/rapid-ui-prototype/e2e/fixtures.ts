@@ -2,6 +2,7 @@
 // per character), a seeded learner past onboarding, and audits for touch
 // targets and text size.
 import AxeBuilder from '@axe-core/playwright';
+import fs from 'node:fs';
 import { expect, Page, test as base } from '@playwright/test';
 
 export const STORAGE_KEY = 'loro.prototype.state';
@@ -188,6 +189,25 @@ export function sampleHistory(now: number) {
   ["tapas-01", "tapas-02", "tapas-03"].forEach((id) => add(id, "set-tapas", 3, "hard"));
   ["transit-01", "transit-02"].forEach((id) => add(id, "set-transit", 1, "missed"));
   add("taxi-01", "set-taxi", 0.02);
+  return log.sort((a, b) => (a.at as number) - (b.at as number));
+}
+
+/** Every Spanish phrase rated Easy five times over 200 days: all learned, none due yet. */
+// Read directly: Playwright's loader can't import the app's JSON modules.
+const readJson = <T,>(name: string): T => JSON.parse(fs.readFileSync(new URL(`../src/content/${name}`, import.meta.url), 'utf8')) as T;
+const SETS = readJson<{ id: string; targetLang: string; phraseIds: string[] }[]>('sets.json');
+
+export function masteredCourse(now: number) {
+  const log: Record<string, unknown>[] = [];
+  let n = 0;
+  for (const { id: setId, phraseIds } of SETS.filter((s) => s.targetLang === "es-ES")) for (const phraseId of phraseIds) {
+    const key = `en-GB>es-ES:${phraseId}`;
+    for (const days of [200, 190, 170, 130, 60]) {
+      const at = now - days * DAY;
+      log.push({ id: `m.x-${(n++).toString(36)}`, at, device: "m", kind: "heard", key, phraseId, setId, targetMs: 1500, nativeMs: 1100 });
+      log.push({ id: `m.x-${(n++).toString(36)}`, at: at + 30000, device: "m", kind: "rated", key, phraseId, setId, grade: "easy" });
+    }
+  }
   return log.sort((a, b) => (a.at as number) - (b.at as number));
 }
 
