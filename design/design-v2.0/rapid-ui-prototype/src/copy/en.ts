@@ -173,6 +173,7 @@ export function makeEn(n: Plural) {
       name: 'Name',
       create: 'Create',
       created: (title: string) => `Created ${title}`,
+      taken: 'A set with this name already exists.',
     },
     addPhrase: {
       title: 'Add your phrase',

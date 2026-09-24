@@ -163,6 +163,7 @@ export function makeBg(n: Plural): Copy {
       name: 'Име',
       create: 'Създай',
       created: (title) => `Създаден е „${title}“`,
+      taken: 'Набор с това име вече съществува.',
     },
     addPhrase: {
       title: 'Ваша фраза',
