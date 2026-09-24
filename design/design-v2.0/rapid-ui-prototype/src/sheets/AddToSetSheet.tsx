@@ -1,5 +1,5 @@
 import { useNav } from '../nav/NavContext';
-import { ownSets } from '../state/catalog';
+import { findPhrase, ownSets } from '../state/catalog';
 import { useCopy, useStore } from '../state/store';
 import { Sheet, SheetOption } from '../ui/Sheet';
 import { useToast } from '../ui/Toast';
@@ -31,8 +31,9 @@ export function AddToSetSheet({ phraseIds, onClose }: { phraseIds: string[] | nu
               return (
                 <SheetOption
                   key={set.id}
-                  icon="queue_music"
+                  icon={already ? 'task_alt' : 'queue_music'}
                   label={set.title}
+                  detail={already ? c.addToSet.alreadyHere : c.common.phrases(set.phraseIds.filter((id) => findPhrase(state.learner, id)).length)}
                   onClick={() => {
                     if (!already) actions.addToSet(set.id, phraseIds);
                     toast(already ? c.addToSet.already(set.title) : c.addToSet.added(set.title));

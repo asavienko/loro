@@ -56,16 +56,24 @@ test.describe('library', () => {
     await expect(page.getByRole('button', { name: 'Play ¿Hay wifi?' })).toBeVisible();
   });
 
-  test('naming a set like an existing one says so', async ({ page }) => {
+  test('naming a set like an existing one says so, and Add to set shows membership', async ({ page }) => {
     await page.goto('/#/set/set-taxi?from=explore');
     await page.getByRole('button', { name: 'Details for ¿Está libre?' }).click();
     await page.getByRole('button', { name: 'Add to set…' }).click();
     await page.getByRole('button', { name: 'New set…' }).click();
     await page.getByLabel('Name').fill('Taxi');
     await page.getByRole('button', { name: 'Create' }).click();
+    await expect(page.getByRole('heading', { name: 'Taxi', exact: true })).toBeVisible();
+
+    await page.goto('/#/set/set-taxi?from=explore');
+    await page.getByRole('button', { name: 'Details for ¿Está libre?' }).click();
+    await page.getByRole('button', { name: 'Add to set…' }).click();
+    await expect(page.getByRole('button', { name: /^Taxi Already in this set$/ })).toBeVisible();
+
     await page.goto('/#/set/set-cafe?from=explore');
     await page.getByRole('button', { name: /^Details for/ }).first().click();
     await page.getByRole('button', { name: 'Add to set…' }).click();
+    await expect(page.getByRole('button', { name: /^Taxi 1 phrase$/ })).toBeVisible();
     await page.getByRole('button', { name: 'New set…' }).click();
     await page.getByLabel('Name').fill(' taxi! ');
     await expect(page.getByRole('status').filter({ hasText: 'A set with this name already exists.' })).toBeVisible();

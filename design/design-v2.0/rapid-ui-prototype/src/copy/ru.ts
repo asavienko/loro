@@ -155,6 +155,7 @@ export function makeRu(n: Plural): Copy {
       newSet: 'Новый набор…',
       added: (title) => `Добавлено в «${title}»`,
       already: (title) => `Уже в «${title}»`,
+      alreadyHere: 'Уже в этом наборе',
       none: 'У вас пока нет своих наборов.',
     },
     createSet: {

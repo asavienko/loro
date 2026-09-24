@@ -165,6 +165,7 @@ export function makeEn(n: Plural) {
       newSet: 'New set…',
       added: (title: string) => `Added to ${title}`,
       already: (title: string) => `Already in ${title}`,
+      alreadyHere: 'Already in this set',
       none: 'You haven’t made a set yet.',
     },
     createSet: {
