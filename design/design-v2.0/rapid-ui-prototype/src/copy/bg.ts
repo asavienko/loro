@@ -179,7 +179,6 @@ export function makeBg(n: Plural): Copy {
       openQueue: 'Отвори опашката',
       summary: 'Обобщение на заниманието',
       position: (i, total) => `${i} от ${total}`,
-      queueTitle: (c) => `Опашка · ${phrases(c)}`,
       hidden: (language) => `Текстът на ${language} е скрит, докато не го чуете`,
       steps: 'Стъпки',
       yourTurn: 'Ваш ред',
