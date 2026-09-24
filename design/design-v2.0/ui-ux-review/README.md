@@ -671,6 +671,10 @@ found no crash.
 lines in its third of the row; a shorter word (e.g. "Забравих") would fit. Dropping the icons didn't
 make it fit, so the fix is wording, not layout.
 
+**Open question:** the "your turn" silence is 1.3× the phrase plus 0.6 s (1.5–8 s); 0.8× speed
+stretches it. A beginner still recalling may want more. Should there be a "Longer pause" setting
+(say 2× the phrase), or should the pause grow for phrases rated Missed?
+
 **Open question:** the prototype has no dark theme, so an evening learner with a dark system theme
 gets a light screen. A dark palette is a design decision (plan 57 owns dark mode in the app); say if
 the prototype should have one.
