@@ -88,7 +88,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               )}
               <button
                 type="button"
-                aria-label={c.common.close}
+                aria-label={c.toast.dismiss}
                 onClick={() => setItem(null)}
                 className="w-11 h-11 rounded-xl flex items-center justify-center opacity-80"
               >
