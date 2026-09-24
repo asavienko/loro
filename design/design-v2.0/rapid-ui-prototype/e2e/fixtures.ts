@@ -139,7 +139,7 @@ export async function expectAccessible(page: Page) {
   expect(results.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).slice(0, 3).join(', ')}`)).toEqual([]);
 }
 
-/** Every visible control is at least 44×44 px (inline text links excepted) and all text is at least 11 px. */
+/** Every visible control is at least 44×44 px (inline text links excepted), all text is at least 11 px and fields are at least 16 px. */
 export async function expectMobileBasics(page: Page) {
   const problems = await page.evaluate(() => {
     const out: string[] = [];
@@ -155,6 +155,12 @@ export async function expectMobileBasics(page: Page) {
       if (el instanceof HTMLInputElement && (el.type === 'radio' || el.type === 'checkbox')) continue;
       const r = el.getBoundingClientRect();
       if (r.width < 43.5 || r.height < 43.5) out.push(`small target ${Math.round(r.width)}×${Math.round(r.height)}: ${(el.getAttribute('aria-label') ?? el.textContent ?? '').trim().slice(0, 40)}`);
+    }
+    // iOS zooms the page when a field under 16 px takes focus.
+    for (const el of document.querySelectorAll('input:not([type="radio"]):not([type="checkbox"]), select, textarea')) {
+      if (!visible(el)) continue;
+      const size = parseFloat(getComputedStyle(el).fontSize);
+      if (size < 16) out.push(`field under 16px (${size}px) zooms iOS: ${el.getAttribute('aria-label') ?? el.id}`);
     }
     const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
     for (let n = walker.nextNode(); n; n = walker.nextNode()) {
