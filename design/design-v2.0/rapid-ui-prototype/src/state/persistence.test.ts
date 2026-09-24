@@ -85,6 +85,20 @@ describe('persistence', () => {
     assert.equal(derive(bad as typeof s.learner.log).memories.size, 1);
   });
 
+  it('caps what the forms would have capped, and keeps carried-over points sane', () => {
+    const raw = JSON.parse(serializeState(fresh()));
+    raw.learner.ownPhrases = { 'mine-p-x': { target: 'a'.repeat(500), native: 'b', targetLang: 'es-ES', nativeLang: 'en-GB', createdAt: 1, updatedAt: 1, deleted: false } };
+    raw.learner.ownSets = { 'mine-s-x': { title: 't'.repeat(500), targetLang: 'es-ES', phraseIds: [], createdAt: 1, updatedAt: 1, deleted: false } };
+    raw.learner.log = [
+      { id: 'c-1', at: 1, device: 'x', kind: 'carryover', points: -50 },
+      { id: 'c-2', at: 2, device: 'x', kind: 'carryover', points: 12.6 },
+    ];
+    const s = sanitizeState(raw, device)!;
+    assert.equal(s.learner.ownPhrases['mine-p-x'].target.length, 120);
+    assert.equal(s.learner.ownSets['mine-s-x'].title.length, 60);
+    assert.deepEqual(s.learner.log.map((e) => (e.kind === 'carryover' ? e.points : null)), [13]);
+  });
+
   it('RESTORE goes through the same sanitising', () => {
     const s = fresh();
     assert.equal(transition(s, { type: 'RESTORE', state: { junk: true } }), s);
