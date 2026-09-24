@@ -1,0 +1,88 @@
+[
+  {
+    "id": "set-cafe",
+    "title": "Café & Mañanas",
+    "subtitle": "Morning orders at the counter",
+    "topicId": "cafe",
+    "coverIcon": "coffee",
+    "targetLang": "es-ES",
+    "phraseIds": [
+      "phrase-1",
+      "phrase-2",
+      "phrase-3",
+      "phrase-4",
+      "phrase-5",
+      "phrase-6"
+    ]
+  },
+  {
+    "id": "set-tapas",
+    "title": "Tapas & Tabernas",
+    "subtitle": "Ordering and sharing at the bar",
+    "topicId": "food",
+    "coverIcon": "tapas",
+    "targetLang": "es-ES",
+    "phraseIds": [
+      "tapas-1",
+      "tapas-2",
+      "tapas-3",
+      "tapas-4"
+    ]
+  },
+  {
+    "id": "set-transit",
+    "title": "Metro & Streets",
+    "subtitle": "Getting around the city",
+    "topicId": "travel",
+    "coverIcon": "subway",
+    "targetLang": "es-ES",
+    "phraseIds": [
+      "transit-1",
+      "transit-2",
+      "transit-3",
+      "transit-4"
+    ]
+  },
+  {
+    "id": "set-market",
+    "title": "Mercado",
+    "subtitle": "Buying at the market stall",
+    "topicId": "shopping",
+    "coverIcon": "shopping_basket",
+    "targetLang": "es-ES",
+    "phraseIds": [
+      "market-1",
+      "market-2",
+      "market-3",
+      "market-4"
+    ]
+  },
+  {
+    "id": "set-sobremesa",
+    "title": "Sobremesa",
+    "subtitle": "Talking after the meal",
+    "topicId": "small-talk",
+    "coverIcon": "forum",
+    "targetLang": "es-ES",
+    "phraseIds": [
+      "sobremesa-1",
+      "sobremesa-2",
+      "sobremesa-3",
+      "sobremesa-4"
+    ]
+  },
+  {
+    "id": "set-taxi",
+    "title": "Taxi at Night",
+    "subtitle": "Getting home safely",
+    "topicId": "travel",
+    "coverIcon": "local_taxi",
+    "targetLang": "es-ES",
+    "phraseIds": [
+      "taxi-1",
+      "taxi-2",
+      "taxi-3",
+      "taxi-4"
+    ]
+  }
+]

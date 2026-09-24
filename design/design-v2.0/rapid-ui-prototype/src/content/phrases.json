@@ -1,0 +1,410 @@
+[
+  {
+    "id": "phrase-1",
+    "setId": "set-cafe",
+    "target": {
+      "lang": "es-ES",
+      "text": "Me pone un cortado, por favor"
+    },
+    "native": {
+      "lang": "en-GB",
+      "text": "A cortado for me, please"
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "Cortado Porcelain Tap",
+        "text": "Tap a teaspoon on the cup on each stressed syllable: me PO-ne un cor-TA-do, por fa-VOR."
+      },
+      "grammar": {
+        "title": "«Me pone...» Courtesy Formula",
+        "text": "Unlike the stiff imperative «Póngame» or English \"Give me\", native Spanish speakers in cafes employ the 3rd person singular present indicative: \"¿Usted me pone...?\" with the subject omitted. It translates literally as \"Does your honor put/serve me...\", radiating warm colloquial politeness."
+      },
+      "pronunciation": {
+        "title": "Alveolar Tap /ɾ/ & Syllable Blending",
+        "ipa": "[me ˈpo.ne uŋ koɾˈta.ðo poɾ faˈβoɾ]",
+        "respelling": "[meh POH-neh oon kor-TAH-doh, por fah-VOR]",
+        "text": "Notice the liaison in «pone un»: the vowel [e] links seamlessly into [u] without glottal hesitation: /po-newn/. Soft dental fricative on -do [ðo]."
+      }
+    }
+  },
+  {
+    "id": "phrase-2",
+    "setId": "set-cafe",
+    "target": {
+      "lang": "es-ES",
+      "text": "¿Tienen leche de avena?"
+    },
+    "native": {
+      "lang": "en-GB",
+      "text": "Do you have oat milk?"
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "Stress on «a-VE-na»",
+        "text": "Put the weight on the middle syllable, «a-VE-na», and let the last one fall away."
+      },
+      "grammar": {
+        "title": "Plural «Tienen» vs «Hay»",
+        "text": "Addressing the establishment as a plural entity (ustedes) is the most natural, welcoming way to ask stock availability in Spain and Latin America without sounding overly direct."
+      },
+      "pronunciation": {
+        "title": "Bilabial Approximant [β̞] in «avena»",
+        "ipa": "[ˈtje.nen ˈle.tʃe ðe aˈβe.na]",
+        "respelling": "[TYEH-nehn LEH-cheh deh ah-VEH-nah]",
+        "text": "Spanish «v» in avena sounds identical to a soft «b» between vowels: lips do not touch completely, producing smooth airflow without English teeth friction."
+      }
+    }
+  },
+  {
+    "id": "phrase-3",
+    "setId": "set-cafe",
+    "target": {
+      "lang": "es-ES",
+      "text": "La cuenta, por favor"
+    },
+    "native": {
+      "lang": "en-GB",
+      "text": "The check, please"
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "Air Pen Scribble Gesture",
+        "text": "Catch the waiter's eye across the terrace, subtly trace an invisible signature in the air while uttering: «La CUEN-ta»."
+      },
+      "grammar": {
+        "title": "Definite Article in Request",
+        "text": "Always use the definite article «la» (never indefinite «una cuenta») because the bill for this table is specific and unique."
+      },
+      "pronunciation": {
+        "title": "Diphthong /we/ in «cuenta»",
+        "ipa": "[la ˈkwen̪.ta poɾ faˈβoɾ]",
+        "respelling": "[lah KWEHN-tah, por fah-VOR]",
+        "text": "The «cue-» produces an explosive glide /kw/. Stress falls punchily on [KWEHN], releasing softly onto [tah]."
+      }
+    }
+  },
+  {
+    "id": "phrase-4",
+    "setId": "set-cafe",
+    "target": {
+      "lang": "es-ES",
+      "text": "¿Se puede en la terraza?"
+    },
+    "native": {
+      "lang": "en-GB",
+      "text": "Can we sit outside on the terrace?"
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "Sunlit Terrace Pivot",
+        "text": "Glance toward the sunny sidewalk umbrellas. The prompt starts with a featherweight whisper: «se puede» (\"is it permitted\")."
+      },
+      "grammar": {
+        "title": "Impersonal «Se» of Permission",
+        "text": "«¿Se puede...?» replaces \"Can I / Can we\", making inquiries sound polite and unpresumptuous. The main verb sentarse (to sit) is colloquially elided."
+      },
+      "pronunciation": {
+        "title": "Castilian «z» [θ] and trilled «rr»",
+        "ipa": "[se ˈpwe.ðe en la teˈra.θa]",
+        "respelling": "[seh PWEH-deh ehn lah teh-RRAH-thah]",
+        "text": "In Castilian Spanish, the «z» in terraza is articulated with the tongue between teeth as [θ] (like \"thin\"), preceded by a vivid double-r roll."
+      }
+    }
+  },
+  {
+    "id": "phrase-5",
+    "setId": "set-cafe",
+    "target": {
+      "lang": "es-ES",
+      "text": "Sin gluten, por favor"
+    },
+    "native": {
+      "lang": "en-GB",
+      "text": "Gluten-free, please"
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "Clear Stop Cue",
+        "text": "Emphasize the crisp, sharp «Sin» to clearly signal dietary necessity to the barista before the milk is poured."
+      },
+      "grammar": {
+        "title": "Prepositional Modifier «Sin»",
+        "text": "In Spanish gastronomy, «sin» modifies beverages and dishes without requiring the article (e.g. «sin azúcar», «sin lactosa», «sin gluten»)."
+      },
+      "pronunciation": {
+        "title": "Penultimate Stress on «GLU-ten»",
+        "ipa": "[sin ˈɡlu.ten poɾ faˈβoɾ]",
+        "respelling": "[seen GLOO-tehn, por fah-VOR]",
+        "text": "Spanish stresses the first syllable «GLU-ten» with a pure Spanish /u/ vowel, contrasting with English elongation /ɡluːtən/."
+      }
+    }
+  },
+  {
+    "id": "phrase-6",
+    "setId": "set-cafe",
+    "target": {
+      "lang": "es-ES",
+      "text": "Una caña bien tirada, jefe"
+    },
+    "native": {
+      "lang": "en-GB",
+      "text": "A properly poured draft beer, boss"
+    },
+    "notes": {
+      "mnemonic": {
+        "title": "Foam Crown Visualizer",
+        "text": "Notice the rhythm on «bien ti-RA-da». A caña in Madrid must have a creamy two-finger foam crown (giste)."
+      },
+      "grammar": {
+        "title": "Vocative «Jefe» in Bar Madrid",
+        "text": "Addressing the bartender as «jefe» (boss) or «compañero» signals seasoned local fluency and immediate warmth without being impudent."
+      },
+      "pronunciation": {
+        "title": "Palatal Nasal /ɲ/ in «caña»",
+        "ipa": "[ˈu.na ˈka.ɲa ˈbjen tiˈɾa.ða ˈxe.fe]",
+        "respelling": "[OO-nah KAH-nyah byehn tee-RAH-dah, HEH-feh]",
+        "text": "Arch of the tongue presses smoothly against hard palate for the ñ sound, followed by crisp non-aspirated /k/."
+      }
+    }
+  },
+  {
+    "id": "tapas-1",
+    "setId": "set-tapas",
+    "target": {
+      "lang": "es-ES",
+      "text": "¿Qué nos recomienda?"
+    },
+    "native": {
+      "lang": "en-GB",
+      "text": "What do you recommend?"
+    }
+  },
+  {
+    "id": "tapas-2",
+    "setId": "set-tapas",
+    "target": {
+      "lang": "es-ES",
+      "text": "Una ración de croquetas, por favor"
+    },
+    "native": {
+      "lang": "en-GB",
+      "text": "A portion of croquettes, please"
+    }
+  },
+  {
+    "id": "tapas-3",
+    "setId": "set-tapas",
+    "target": {
+      "lang": "es-ES",
+      "text": "¿Nos trae otra ronda?"
+    },
+    "native": {
+      "lang": "en-GB",
+      "text": "Could you bring us another round?"
+    }
+  },
+  {
+    "id": "tapas-4",
+    "setId": "set-tapas",
+    "target": {
+      "lang": "es-ES",
+      "text": "Está buenísimo"
+    },
+    "native": {
+      "lang": "en-GB",
+      "text": "It's delicious"
+    }
+  },
+  {
+    "id": "transit-1",
+    "setId": "set-transit",
+    "target": {
+      "lang": "es-ES",
+      "text": "¿Dónde está la parada de metro?"
+    },
+    "native": {
+      "lang": "en-GB",
+      "text": "Where is the metro stop?"
+    }
+  },
+  {
+    "id": "transit-2",
+    "setId": "set-transit",
+    "target": {
+      "lang": "es-ES",
+      "text": "Un billete sencillo, por favor"
+    },
+    "native": {
+      "lang": "en-GB",
+      "text": "A single ticket, please"
+    }
+  },
+  {
+    "id": "transit-3",
+    "setId": "set-transit",
+    "target": {
+      "lang": "es-ES",
+      "text": "¿Este tren va a Sol?"
+    },
+    "native": {
+      "lang": "en-GB",
+      "text": "Does this train go to Sol?"
+    }
+  },
+  {
+    "id": "transit-4",
+    "setId": "set-transit",
+    "target": {
+      "lang": "es-ES",
+      "text": "¿En qué estación me bajo?"
+    },
+    "native": {
+      "lang": "en-GB",
+      "text": "Which station do I get off at?"
+    }
+  },
+  {
+    "id": "market-1",
+    "setId": "set-market",
+    "target": {
+      "lang": "es-ES",
+      "text": "¿A cuánto está el kilo?"
+    },
+    "native": {
+      "lang": "en-GB",
+      "text": "How much is it per kilo?"
+    }
+  },
+  {
+    "id": "market-2",
+    "setId": "set-market",
+    "target": {
+      "lang": "es-ES",
+      "text": "Póngame medio kilo de tomates"
+    },
+    "native": {
+      "lang": "en-GB",
+      "text": "Half a kilo of tomatoes, please"
+    }
+  },
+  {
+    "id": "market-3",
+    "setId": "set-market",
+    "target": {
+      "lang": "es-ES",
+      "text": "¿Me lo puede envolver?"
+    },
+    "native": {
+      "lang": "en-GB",
+      "text": "Can you wrap it for me?"
+    }
+  },
+  {
+    "id": "market-4",
+    "setId": "set-market",
+    "target": {
+      "lang": "es-ES",
+      "text": "Nada más, gracias"
+    },
+    "native": {
+      "lang": "en-GB",
+      "text": "That's all, thanks"
+    }
+  },
+  {
+    "id": "sobremesa-1",
+    "setId": "set-sobremesa",
+    "target": {
+      "lang": "es-ES",
+      "text": "¿A qué te dedicas?"
+    },
+    "native": {
+      "lang": "en-GB",
+      "text": "What do you do for a living?"
+    }
+  },
+  {
+    "id": "sobremesa-2",
+    "setId": "set-sobremesa",
+    "target": {
+      "lang": "es-ES",
+      "text": "¡Qué bien lo hemos pasado!"
+    },
+    "native": {
+      "lang": "en-GB",
+      "text": "We had such a good time!"
+    }
+  },
+  {
+    "id": "sobremesa-3",
+    "setId": "set-sobremesa",
+    "target": {
+      "lang": "es-ES",
+      "text": "Tengo que irme ya"
+    },
+    "native": {
+      "lang": "en-GB",
+      "text": "I have to go now"
+    }
+  },
+  {
+    "id": "sobremesa-4",
+    "setId": "set-sobremesa",
+    "target": {
+      "lang": "es-ES",
+      "text": "¿Quedamos la semana que viene?"
+    },
+    "native": {
+      "lang": "en-GB",
+      "text": "Shall we meet up next week?"
+    }
+  },
+  {
+    "id": "taxi-1",
+    "setId": "set-taxi",
+    "target": {
+      "lang": "es-ES",
+      "text": "¿Está libre?"
+    },
+    "native": {
+      "lang": "en-GB",
+      "text": "Are you free? (to a taxi)"
+    }
+  },
+  {
+    "id": "taxi-2",
+    "setId": "set-taxi",
+    "target": {
+      "lang": "es-ES",
+      "text": "A esta dirección, por favor"
+    },
+    "native": {
+      "lang": "en-GB",
+      "text": "To this address, please"
+    }
+  },
+  {
+    "id": "taxi-3",
+    "setId": "set-taxi",
+    "target": {
+      "lang": "es-ES",
+      "text": "¿Cuánto le debo?"
+    },
+    "native": {
+      "lang": "en-GB",
+      "text": "How much do I owe you?"
+    }
+  },
+  {
+    "id": "taxi-4",
+    "setId": "set-taxi",
+    "target": {
+      "lang": "es-ES",
+      "text": "Pare aquí, por favor"
+    },
+    "native": {
+      "lang": "en-GB",
+      "text": "Stop here, please"
+    }
+  }
+]

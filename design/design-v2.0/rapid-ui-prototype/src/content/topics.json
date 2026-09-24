@@ -1,0 +1,32 @@
+[
+  {
+    "id": "cafe",
+    "title": "Café",
+    "icon": "local_cafe",
+    "tone": "primary"
+  },
+  {
+    "id": "food",
+    "title": "Food & drink",
+    "icon": "restaurant",
+    "tone": "tertiary"
+  },
+  {
+    "id": "travel",
+    "title": "Travel",
+    "icon": "train",
+    "tone": "secondary"
+  },
+  {
+    "id": "shopping",
+    "title": "Shopping",
+    "icon": "storefront",
+    "tone": "tertiary"
+  },
+  {
+    "id": "small-talk",
+    "title": "Small talk",
+    "icon": "forum",
+    "tone": "primary"
+  }
+]
