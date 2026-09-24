@@ -114,6 +114,20 @@ describe('persistence', () => {
 });
 
 describe('merge', () => {
+  it('a rating pending in two tabs of the same browser is counted once', () => {
+    const rated = transition(load(fresh()), { type: 'RATE', grade: 'easy', now: T0 });
+    // A second tab of this browser: same device id, its own instance, the same pending rating.
+    const tabB = { ...rated, device: { ...rated.device, instance: 'tab-b' } };
+    const later = T0 + RATING_WINDOW_MS + 1;
+    const a = transition(rated, { type: 'COMMIT', now: later });
+    const b = transition(tabB, { type: 'COMMIT', now: later });
+    const merged = mergeLearner(a.learner, b.learner);
+    assert.equal(merged.log.filter((e) => e.kind === 'rated').length, 1);
+    // And a tab that merges first, then commits, doesn't add it again.
+    const bAfterMerge = transition({ ...tabB, learner: mergeLearner(tabB.learner, a.learner) }, { type: 'COMMIT', now: later });
+    assert.equal(bAfterMerge.learner.log.filter((e) => e.kind === 'rated').length, 1);
+  });
+
   it('settles a tie the same way on both devices', () => {
     const base = fresh().learner;
     const set = (title: string) => ({ id: 'mine-s-1', title, phraseIds: [], targetLang: 'es-ES' as const, createdAt: T0, updatedAt: T0 + 5, deleted: false });
