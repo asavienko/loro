@@ -527,7 +527,7 @@ export function transition(state: AppState, event: AppEvent): AppState {
       if (!set || set.deleted) return state;
       let updated = set;
       if (event.type === 'ADD_TO_SET') {
-        const adding = event.phraseIds.filter((id) => findPhrase(learner, id) && !set.phraseIds.includes(id));
+        const adding = [...new Set(event.phraseIds)].filter((id) => findPhrase(learner, id) && !set.phraseIds.includes(id));
         if (adding.length === 0) return state;
         const at = event.at === undefined ? set.phraseIds.length : Math.max(0, Math.min(event.at, set.phraseIds.length));
         updated = { ...set, phraseIds: [...set.phraseIds.slice(0, at), ...adding, ...set.phraseIds.slice(at)] };
