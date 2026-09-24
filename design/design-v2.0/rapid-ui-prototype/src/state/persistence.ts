@@ -43,6 +43,8 @@ const num = (value: unknown): value is number => typeof value === 'number' && Nu
 const str = (value: unknown): value is string => typeof value === 'string';
 const strings = (value: unknown): string[] => (Array.isArray(value) ? value.filter(str) : []);
 const GRADES: readonly string[] = ['missed', 'hard', 'easy'];
+/** Epoch ms the core accepts: not negative, within JavaScript's safe range. */
+const validTime = (value: unknown): value is number => num(value) && value >= 0 && value <= Number.MAX_SAFE_INTEGER;
 
 /** Content ids that were renamed are followed to their new name. */
 function renamed(id: string): string {
@@ -156,7 +158,7 @@ function sanitizeLog(value: unknown, own: Record<string, OwnPhrase>): LogEntry[]
   const seen = new Set<string>();
   const out: LogEntry[] = [];
   for (const e of value) {
-    if (!isObject(e) || !str(e.id) || !num(e.at) || !str(e.device) || seen.has(e.id)) continue;
+    if (!isObject(e) || !str(e.id) || !validTime(e.at) || !str(e.device) || seen.has(e.id)) continue;
     seen.add(e.id);
     if (e.kind === 'carryover') {
       if (num(e.points)) out.push({ id: e.id, at: e.at, device: e.device, kind: 'carryover', points: e.points });

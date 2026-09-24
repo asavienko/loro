@@ -131,9 +131,17 @@ export function applyEntry(memory: PhraseMemory, entry: LogEntry): PhraseMemory 
     };
   }
   if (entry.kind === 'rated') {
+    let fsrs;
+    try {
+      fsrs = reviewed(memory, entry.grade, entry.at);
+    } catch {
+      // The core refuses impossible input (a time before the last review, out of
+      // range). One bad entry is skipped rather than breaking every screen.
+      return memory;
+    }
     const next: PhraseMemory = {
       ...memory,
-      fsrs: reviewed(memory, entry.grade, entry.at),
+      fsrs,
       successes: memory.successes + (entry.grade === 'missed' ? 0 : 1),
       lastGrade: entry.grade,
       lastGradeAt: entry.at,
