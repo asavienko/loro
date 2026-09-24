@@ -70,7 +70,8 @@ export type AppEvent =
   | { type: 'DELETE_OWN_PHRASE'; id: string; now: number }
   | { type: 'RESTORE_OWN_PHRASE'; id: string; now: number }
   | { type: 'CREATE_SET'; title: string; phraseIds: string[]; now: number }
-  | { type: 'ADD_TO_SET'; setId: string; phraseIds: string[]; now: number }
+  /** `at` inserts at that position (undoing a removal); otherwise at the end. */
+  | { type: 'ADD_TO_SET'; setId: string; phraseIds: string[]; at?: number; now: number }
   | { type: 'REMOVE_FROM_SET'; setId: string; phraseId: string; now: number }
   | { type: 'MOVE_IN_SET'; setId: string; phraseId: string; delta: -1 | 1; now: number }
   | { type: 'RENAME_SET'; setId: string; title: string; now: number }
@@ -526,7 +527,8 @@ export function transition(state: AppState, event: AppEvent): AppState {
       if (event.type === 'ADD_TO_SET') {
         const adding = event.phraseIds.filter((id) => findPhrase(learner, id) && !set.phraseIds.includes(id));
         if (adding.length === 0) return state;
-        updated = { ...set, phraseIds: [...set.phraseIds, ...adding] };
+        const at = event.at === undefined ? set.phraseIds.length : Math.max(0, Math.min(event.at, set.phraseIds.length));
+        updated = { ...set, phraseIds: [...set.phraseIds.slice(0, at), ...adding, ...set.phraseIds.slice(at)] };
       } else if (event.type === 'MOVE_IN_SET') {
         const from = set.phraseIds.indexOf(event.phraseId);
         const to = from + event.delta;

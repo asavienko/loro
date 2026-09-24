@@ -155,6 +155,7 @@ export function makeEn(n: Plural) {
       delete: 'Delete phrase',
       deleted: 'Phrase deleted',
       removeFromSet: 'Remove from this set',
+      removedFromSet: 'Removed from the set',
       moveUp: 'Move up in this set',
       moveDown: 'Move down in this set',
       yours: 'Your phrase',

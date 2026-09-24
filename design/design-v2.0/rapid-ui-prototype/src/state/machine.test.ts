@@ -297,6 +297,9 @@ describe('the learner’s own phrases and sets', () => {
     assert.equal(s.learner.ownSets[set.id].deleted, false);
     assert.deepEqual(s.learner.ownSets[set.id].phraseIds, [own.id, 'taxi-01']);
     assert.equal(run(s, { type: 'RESTORE_SET', setId: set.id, now: T0 + 7 }), s, 'restoring a live set does nothing');
+    // Undoing a removal puts the phrase back where it was.
+    s = run(s, { type: 'REMOVE_FROM_SET', setId: set.id, phraseId: own.id, now: T0 + 8 }, { type: 'ADD_TO_SET', setId: set.id, phraseIds: [own.id], at: 0, now: T0 + 9 });
+    assert.deepEqual(s.learner.ownSets[set.id].phraseIds, [own.id, 'taxi-01']);
   });
 
   it('editing your phrase keeps its id and history', () => {

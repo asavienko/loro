@@ -54,7 +54,7 @@ function makeActions(dispatch: (event: AppEvent) => void, latest: RefObject<AppS
       dispatch({ type: 'CREATE_SET', title, phraseIds, now: now() });
       return id;
     },
-    addToSet: (setId: string, phraseIds: string[]) => dispatch({ type: 'ADD_TO_SET', setId, phraseIds, now: now() }),
+    addToSet: (setId: string, phraseIds: string[], at?: number) => dispatch({ type: 'ADD_TO_SET', setId, phraseIds, at, now: now() }),
     removeFromSet: (setId: string, phraseId: string) => dispatch({ type: 'REMOVE_FROM_SET', setId, phraseId, now: now() }),
     moveInSet: (setId: string, phraseId: string, delta: -1 | 1) =>
       dispatch({ type: 'MOVE_IN_SET', setId, phraseId, delta, now: now() }),

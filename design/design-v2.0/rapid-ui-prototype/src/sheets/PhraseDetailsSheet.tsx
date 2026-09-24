@@ -122,7 +122,9 @@ function PhraseDetails({ phraseId, ownSetId, onClose }: { phraseId: string; ownS
             icon="playlist_remove"
             label={c.phrase.removeFromSet}
             onClick={() => {
+              const at = state.learner.ownSets[ownSet.id]?.phraseIds.indexOf(phrase.id);
               actions.removeFromSet(ownSet.id, phrase.id);
+              toast(c.phrase.removedFromSet, { action: { label: c.common.undo, run: () => actions.addToSet(ownSet.id, [phrase.id], at) } });
               onClose();
             }}
           />
