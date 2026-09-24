@@ -59,3 +59,44 @@ test.describe('persistence', () => {
     await expect(page.getByRole('button', { name: /^Now playing:/ })).toBeVisible();
   });
 });
+
+test.describe('sets you make', () => {
+  test('save the queue as a set, rename it, delete it', async ({ page }) => {
+    await page.goto('/#/set/set-market?from=explore');
+    await page.getByRole('button', { name: 'Play Mercado' }).click();
+    await page.getByRole('button', { name: /^Now playing:/ }).click();
+    await page.getByRole('button', { name: 'Open queue' }).click();
+    await page.getByRole('button', { name: 'Save as set' }).click();
+    await expect(page.getByRole('status')).toHaveText('Saved as Mercado · My queue');
+    await page.goBack();
+    await page.goBack();
+    await page.goto('/#/library?view=ownSets');
+    await page.getByRole('button', { name: /Mercado · My queue/ }).click();
+    await expect(page.getByText('Your set')).toBeVisible();
+    await page.getByRole('button', { name: 'More options' }).click();
+    await page.getByRole('button', { name: 'Rename set' }).click();
+    await page.getByLabel('Name', { exact: true }).fill('Market run');
+    await page.getByRole('button', { name: 'Save' }).click();
+    await expect(page.getByRole('heading', { name: 'Market run' })).toBeVisible();
+    await page.getByRole('button', { name: 'More options' }).click();
+    await page.getByRole('button', { name: 'Delete set' }).click();
+    await expect(page).toHaveURL(/view=ownSets/);
+    await expect(page.getByText('Make a set to group phrases your way.')).toBeVisible();
+  });
+
+  test('the sort is remembered per set', async ({ page }) => {
+    await page.goto('/#/set/set-cafe?from=explore');
+    await page.getByRole('button', { name: 'Set order' }).click();
+    await page.getByRole('radio', { name: 'A–Z' }).click();
+    await expect(page.getByText('Plays in: A–Z')).toBeVisible();
+    await page.reload();
+    await expect(page.getByText('Plays in: A–Z')).toBeVisible();
+    await page.goto('/#/set/set-tapas?from=explore');
+    await expect(page.getByText('Plays in: Set order')).toBeVisible();
+  });
+
+  test('an unknown set link says so', async ({ page }) => {
+    await page.goto('/#/set/set-nowhere?from=explore');
+    await expect(page.getByText('This set isn’t available.')).toBeVisible();
+  });
+});
