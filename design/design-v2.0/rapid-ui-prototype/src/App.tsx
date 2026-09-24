@@ -12,7 +12,7 @@ import { Navigation, NavContext } from './nav/NavContext';
 import { Route, tabOf } from './nav/routes';
 import { findPhrase, findSetView } from './state/catalog';
 import { derive, POINTS } from './state/memory';
-import { clearSavedState, rawSavedState } from './state/persistence';
+import { clearSavedState, rawSavedState, SAVE_FAILED_EVENT, SaveResult } from './state/persistence';
 import { currentPhraseId } from './state/selectors';
 import { StoreProvider, useCopy, useStore } from './state/store';
 import { BottomNavBar } from './ui/BottomNavBar';
@@ -107,6 +107,22 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean
   }
 }
 
+/** A save that fails is said once per session, never silently dropped. */
+function useSaveWarnings() {
+  const c = useCopy();
+  const { toast } = useToast();
+  const warned = useRef(false);
+  useEffect(() => {
+    const onFail = (event: Event) => {
+      if (warned.current) return;
+      warned.current = true;
+      toast((event as CustomEvent<SaveResult>).detail === 'full' ? c.toast.storageFull : c.toast.storageUnavailable);
+    };
+    window.addEventListener(SAVE_FAILED_EVENT, onFail);
+    return () => window.removeEventListener(SAVE_FAILED_EVENT, onFail);
+  }, [c, toast]);
+}
+
 /** Learned bonuses and completed passes get a moment of their own. */
 function useCelebrations(openSummary: () => void) {
   const c = useCopy();
@@ -186,6 +202,7 @@ function Shell() {
     [actions, routeRef, learnerRef],
   );
   useCelebrations(nav.openSummary);
+  useSaveWarnings();
 
   if (!state.learner.profile.onboarded) {
     return (

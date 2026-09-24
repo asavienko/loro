@@ -337,7 +337,20 @@ export function loadState(initial: (device: Device) => AppState): AppState {
  * Saves the state, first merging in whatever another tab saved since, so two
  * open tabs never overwrite each other's progress.
  */
-export function saveState(state: AppState): void {
+export type SaveResult = 'saved' | 'full' | 'unavailable';
+
+/** Event the shell listens for, so a failed save is never silent. */
+export const SAVE_FAILED_EVENT = 'loro:save-failed';
+
+export function saveState(state: AppState): SaveResult {
+  const result = writeState(state);
+  if (result !== 'saved' && typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent<SaveResult>(SAVE_FAILED_EVENT, { detail: result }));
+  }
+  return result;
+}
+
+function writeState(state: AppState): SaveResult {
   try {
     const current = localStorage.getItem(STORAGE_KEY);
     // Parsing and merging the stored copy is only needed when another tab changed it.
@@ -346,8 +359,11 @@ export function saveState(state: AppState): void {
     const json = serializeState(learner === state.learner ? state : { ...state, learner });
     localStorage.setItem(STORAGE_KEY, json);
     lastWritten = json;
-  } catch {
-    // Storage can be unavailable (private mode); the session still works.
+    return 'saved';
+  } catch (error) {
+    // The session still works; the shell tells the learner that progress isn't being kept.
+    const full = error instanceof DOMException && (error.name === 'QuotaExceededError' || error.code === 22);
+    return full ? 'full' : 'unavailable';
   }
 }
 
