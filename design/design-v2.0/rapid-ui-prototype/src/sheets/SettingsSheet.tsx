@@ -135,8 +135,9 @@ function VoicePickers({ langs }: { langs: LanguageCode[] }) {
         const chosen = state.prefs.voiceByLang[lang];
         return (
           // The Test button sits beside the label, not in it, so the select's name stays the language.
-          <div key={lang} className="flex items-end gap-2 px-2 py-1">
-            <label className="flex-1 min-w-0 flex flex-col gap-1">
+          <div key={lang} className="flex flex-wrap items-end gap-2 px-2 py-1">
+            {/* At least 12rem for the voice name; on a narrow phone Test wraps below. */}
+            <label className="flex-1 min-w-[12rem] flex flex-col gap-1">
               <span className="text-label text-secondary">{languageLabel(lang, c.locale)}</span>
               <select
                 value={chosen && list.some((v) => v.name === chosen) ? chosen : ''}
