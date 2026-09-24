@@ -78,6 +78,10 @@ export function makeEn(n: Plural) {
       demoTitle: 'Try the loop',
       demoBody: 'One phrase, about 20 seconds: hear it, say it, hear it.',
       demoButton: 'Play one phrase',
+      courseDoneTitle: 'Every phrase in this course is learned',
+      courseDoneBody: 'Reviews come back as they fall due. Meanwhile, add phrases of your own or try another course.',
+      addOwn: 'Add your phrase',
+      otherCourse: 'Try another course',
     },
     history: {
       title: 'History',
