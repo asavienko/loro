@@ -72,7 +72,7 @@ export function usePlaybackDriver(): void {
     void playback.done.then((result) => {
       if (!active) return;
       if (result.status === 'failed') {
-        actions.phaseDone(cycle, { failedLang: lang });
+        actions.phaseDone(cycle, { failure: { lang, reason: result.reason } });
       } else if (result.status === 'timeout') {
         actions.phaseDone(cycle, { unconfirmed: true });
       } else {

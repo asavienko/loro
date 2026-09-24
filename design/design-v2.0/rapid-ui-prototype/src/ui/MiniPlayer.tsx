@@ -60,7 +60,9 @@ export function MiniPlayer({ onOpenPlayer }: { onOpenPlayer: () => void }) {
             </span>
             <span className="block text-label text-secondary-fixed-dim truncate">
               {audioError
-                ? c.player.noVoice
+                ? audioError.reason === 'no-voice'
+                  ? c.player.noVoice
+                  : c.player.silent
                 : playing
                   ? phaseInstruction(c, phase, prompt.lang, phrase.targetLang)
                   : c.player.paused}

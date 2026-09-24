@@ -9,6 +9,8 @@ export const STORAGE_KEY = 'loro.prototype.state';
 declare global {
   interface Window {
     __spoken: { text: string; lang: string }[];
+    /** Simulates a stalled speech service: every utterance ends at once, unspoken. */
+    __speechSilent?: boolean;
   }
 }
 
@@ -30,10 +32,15 @@ function fakeSpeech() {
     speak(u: SpeechSynthesisUtterance) {
       current = u;
       window.__spoken.push({ text: u.text, lang: u.lang });
+      if (window.__speechSilent) {
+        timers.push(window.setTimeout(() => current === u && u.onend?.(new Event('end') as SpeechSynthesisEvent), 1));
+        return;
+      }
       const ms = Math.max(150, u.text.length * 20) / (u.rate || 1);
       timers.push(window.setTimeout(() => u.onstart?.(new Event('start') as SpeechSynthesisEvent), 10));
       timers.push(window.setTimeout(() => current === u && u.onend?.(new Event('end') as SpeechSynthesisEvent), 10 + ms));
     },
+    resume() {},
     cancel() {
       timers.forEach(clearTimeout);
       timers = [];

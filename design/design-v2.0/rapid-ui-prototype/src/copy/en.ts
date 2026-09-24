@@ -211,6 +211,8 @@ export function makeEn(n: Plural) {
       audioError: (language: string) =>
         `This device has no ${language} voice, so the phrase can’t play. Add one in your system’s speech settings, then press Play.`,
       noVoice: 'No voice for this language',
+      audioSilent: 'Speech stopped before the phrase played. Press Play to try again.',
+      silent: 'Speech stopped — press Play',
       voice: (name: string) => `Voice: ${name}`,
       hide: 'Tap to reveal',
     },

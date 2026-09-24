@@ -46,9 +46,9 @@ describe('player loop', () => {
 
   it('failed audio pauses with the language and records nothing', () => {
     let s = load(fresh());
-    s = transition(s, { type: 'PHASE_DONE', cycle: s.player.cycle, now: T0 + 5, failedLang: 'en-GB' });
+    s = transition(s, { type: 'PHASE_DONE', cycle: s.player.cycle, now: T0 + 5, failure: { lang: 'en-GB', reason: 'no-voice' } });
     assert.equal(s.player.status, 'paused');
-    assert.equal(s.player.audioError, 'en-GB');
+    assert.deepEqual(s.player.audioError, { lang: 'en-GB', reason: 'no-voice' });
     assert.equal(s.learner.log.length, 0);
   });
 

@@ -1,14 +1,13 @@
 import { createContext, ReactNode, RefObject, useContext, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { useLatest } from '../lib/useLatest';
 import { copyForNative, Copy } from '../copy';
-import type { LanguageCode } from '../content';
 import { OWN_SET_PREFIX } from './catalog';
 import { clock } from './clock';
 import { initialState } from './initial';
 import { AppEvent, transition } from './machine';
 import { loadState, parseState, saveState, STORAGE_KEY } from './persistence';
 import { currentPhraseId } from './selectors';
-import type { AppState, Grade, LearnerState, Prefs, Profile } from './types';
+import type { AppState, AudioFailure, Grade, LearnerState, Prefs, Profile } from './types';
 
 const newSeed = () => Math.floor(Math.random() * 2 ** 32);
 /** Saves wait this long for more changes; a hidden page saves at once. */
@@ -23,7 +22,7 @@ function makeActions(dispatch: (event: AppEvent) => void, latest: RefObject<AppS
       dispatch({ type: 'LOAD', phraseIds, setId, startIndex, shuffle, now: now(), seed: newSeed() }),
     play: () => dispatch({ type: 'PLAY', now: now() }),
     pause: () => dispatch({ type: 'PAUSE', now: now() }),
-    phaseDone: (cycle: number, result: { measuredMs?: number; failedLang?: LanguageCode; unconfirmed?: boolean } = {}) =>
+    phaseDone: (cycle: number, result: { measuredMs?: number; failure?: AudioFailure; unconfirmed?: boolean } = {}) =>
       dispatch({ type: 'PHASE_DONE', cycle, ...result, now: now() }),
     next: () => dispatch({ type: 'NEXT', now: now() }),
     prev: () => dispatch({ type: 'PREV', now: now() }),
