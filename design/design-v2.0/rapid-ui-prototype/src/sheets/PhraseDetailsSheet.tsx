@@ -111,6 +111,16 @@ function PhraseDetails({ phraseId, ownSetId, onClose }: { phraseId: string; ownS
             }}
           />
         )}
+        {phrase.own && (
+          <SheetOption
+            icon="edit"
+            label={c.phrase.edit}
+            onClick={() => {
+              onClose();
+              nav.addPhrase(phrase.id);
+            }}
+          />
+        )}
         {phrase.own && !isCurrent && (
           <SheetOption
             icon="delete"

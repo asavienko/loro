@@ -139,6 +139,7 @@ export function makeRu(n: Plural): Copy {
       notesInEnglish: 'Заметки пока на английском.',
       words: 'Нажмите на слово, чтобы увидеть значение.',
       wordMeaning: (word, gloss) => `${word}: ${gloss}`,
+      edit: 'Изменить фразу',
       delete: 'Удалить фразу',
       deleted: 'Фраза удалена',
       removeFromSet: 'Убрать из набора',
@@ -165,6 +166,8 @@ export function makeRu(n: Plural): Copy {
       hint: 'Звучит голосом устройства.',
       add: 'Добавить фразу',
       added: 'Фраза добавлена',
+      editTitle: 'Изменить фразу',
+      edited: 'Фраза обновлена',
     },
     player: {
       dialog: 'Сейчас играет',

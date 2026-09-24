@@ -149,6 +149,7 @@ export function makeEn(n: Plural) {
       notesInEnglish: 'Notes are in English for now.',
       words: 'Tap a word for its meaning.',
       wordMeaning: (word: string, gloss: string) => `${word}: ${gloss}`,
+      edit: 'Edit phrase',
       delete: 'Delete phrase',
       deleted: 'Phrase deleted',
       removeFromSet: 'Remove from this set',
@@ -175,6 +176,8 @@ export function makeEn(n: Plural) {
       hint: 'It plays with the device voice.',
       add: 'Add phrase',
       added: 'Phrase added',
+      editTitle: 'Edit your phrase',
+      edited: 'Phrase updated',
     },
     player: {
       dialog: 'Now playing',

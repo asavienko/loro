@@ -66,6 +66,7 @@ export type AppEvent =
   | { type: 'CLEAR_QUEUE' }
   | { type: 'TOGGLE_LIKE'; kind: 'phrase' | 'set'; id: string; now: number }
   | { type: 'ADD_OWN_PHRASE'; target: string; native: string; now: number }
+  | { type: 'EDIT_OWN_PHRASE'; id: string; target: string; native: string; now: number }
   | { type: 'DELETE_OWN_PHRASE'; id: string; now: number }
   | { type: 'CREATE_SET'; title: string; phraseIds: string[]; now: number }
   | { type: 'ADD_TO_SET'; setId: string; phraseIds: string[]; now: number }
@@ -451,6 +452,17 @@ export function transition(state: AppState, event: AppEvent): AppState {
       const { nativeLang, targetLang } = learner.profile;
       const phrase = { id, target, native, nativeLang, targetLang, createdAt: event.now, updatedAt: event.now, deleted: false };
       return { ...next, learner: { ...next.learner, ownPhrases: { ...next.learner.ownPhrases, [id]: phrase } } };
+    }
+
+    case 'EDIT_OWN_PHRASE': {
+      // A correction keeps the phrase's id, so its history and memory stay with it.
+      const own = learner.ownPhrases[event.id];
+      const target = trimmed(event.target);
+      const native = trimmed(event.native);
+      if (!own || own.deleted || !target || !native) return state;
+      if (target === own.target && native === own.native) return state;
+      const updated = { ...own, target, native, updatedAt: event.now };
+      return { ...state, learner: { ...learner, ownPhrases: { ...learner.ownPhrases, [own.id]: updated } } };
     }
 
     case 'DELETE_OWN_PHRASE': {

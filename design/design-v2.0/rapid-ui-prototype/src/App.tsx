@@ -157,7 +157,7 @@ function Shell() {
   const [details, setDetails] = useState<{ phraseId: string; ownSetId?: string } | null>(null);
   const [addTo, setAddTo] = useState<string[] | null>(null);
   const [create, setCreate] = useState<{ phraseIds: string[]; rename?: string } | null>(null);
-  const [addPhraseOpen, setAddPhraseOpen] = useState(false);
+  const [phraseForm, setPhraseForm] = useState<{ editId?: string } | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [summaryOpen, setSummaryOpen] = useState(false);
 
@@ -174,7 +174,7 @@ function Shell() {
     setDetails(null);
     setAddTo(null);
     setCreate(null);
-    setAddPhraseOpen(false);
+    setPhraseForm(null);
   };
   const locale = c.locale.slice(0, 2) as 'en' | 'bg' | 'ru';
   const closeQueue = () => setOverlay((o) => ({ ...o, queue: false }));
@@ -205,7 +205,7 @@ function Shell() {
       openSummary: () => setSummaryOpen(true),
       showDetails: (phraseId, context = {}) => setDetails({ phraseId, ...context }),
       addToSet: (phraseIds) => setAddTo(phraseIds),
-      addPhrase: () => setAddPhraseOpen(true),
+      addPhrase: (editId) => setPhraseForm({ editId }),
       createSet: (phraseIds = [], rename) => setCreate({ phraseIds, rename }),
       openSettings: () => setSettingsOpen(true),
     }),
@@ -279,13 +279,13 @@ function Shell() {
           </AnimatePresence>
         </LocalBoundary>
 
-        <LocalBoundary resetKey={`${settingsOpen}${summaryOpen}${details?.phraseId}${addTo}${create?.rename}${addPhraseOpen}`} quiet onError={closeSheets}>
+        <LocalBoundary resetKey={`${settingsOpen}${summaryOpen}${details?.phraseId}${addTo}${create?.rename}${phraseForm?.editId ?? phraseForm !== null}`} quiet onError={closeSheets}>
           <SettingsSheet open={settingsOpen} onClose={() => setSettingsOpen(false)} />
           <SessionSummarySheet open={summaryOpen} onClose={() => setSummaryOpen(false)} />
           <PhraseDetailsSheet details={details} onClose={() => setDetails(null)} />
           <AddToSetSheet phraseIds={addTo} onClose={() => setAddTo(null)} />
           <CreateSetSheet request={create} onClose={() => setCreate(null)} />
-          <AddPhraseSheet open={addPhraseOpen} onClose={() => setAddPhraseOpen(false)} />
+          <AddPhraseSheet request={phraseForm} onClose={() => setPhraseForm(null)} />
         </LocalBoundary>
       </div>
     </NavContext.Provider>

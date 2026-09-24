@@ -108,7 +108,7 @@ export function LibraryScreen({ view = 'liked' }: { view?: LibraryView }) {
           <SetList ids={view === 'ownSets' ? ownSets(learner).map((s) => s.id) : likedSetIds(learner)} view={view} now={now} />
         )}
         {view === 'mine' && (
-          <button type="button" onClick={nav.addPhrase} className="mt-3 min-h-11 px-4 rounded-full bg-surface-container text-on-surface text-body font-semibold flex items-center gap-1.5">
+          <button type="button" onClick={() => nav.addPhrase()} className="mt-3 min-h-11 px-4 rounded-full bg-surface-container text-on-surface text-body font-semibold flex items-center gap-1.5">
             <Icon name="add" className="text-icon-md" />
             {c.library.addPhrase}
           </button>
