@@ -646,6 +646,11 @@ found no crash.
 | Switching course emptied the queue silently, so the player vanished | "Now learning Bulgarian. The queue was cleared", in the new UI language |
 | The snackbar's dismiss button was a second "Close" beside the sheet's | It is "Dismiss message" |
 | After "Start without the demo", Home still led with the demo | A device preference records the skip; Home leads with Start here |
+| Onboarding's voice test read "Проверить: испанский", squeezing voice names onto three lines at 320 px | A speaker icon and "Test"; the accessible name keeps the language |
+| History rows said "+4" with no unit | "+4 pts" (т., очк.) |
+| Add to set gave no sign of membership until a tap | Each set shows its count, or a tick and "Already in this set"; a same-named new set is noted |
+| On a portrait tablet the player split into two ~350 px columns that wrapped | One column up to 1024 px, with a larger cover |
+| On desktop the player header and the set page's Back sat outside their content column | Both share their page's column (`e2e/wide.spec.ts`) |
 
 Checks after these: 71 unit tests and 96 Playwright tests on the dev server (12 skipped). Keyboard
 focus returns to the opener when a sheet, Settings or the player closes, and falls back to the
