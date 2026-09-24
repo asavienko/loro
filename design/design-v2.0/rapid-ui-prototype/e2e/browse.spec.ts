@@ -309,3 +309,14 @@ test('the Search key commits the query and puts the keyboard away', async ({ pag
   await expect(field).not.toBeFocused();
   await expect(page.getByRole('button', { name: /¿Dónde está la estación de metro\?/ }).first()).toBeVisible();
 });
+
+test('Enter in the phrase field goes on to the translation, then adds', async ({ page }) => {
+  await page.goto('/#/library?view=mine');
+  await page.getByRole('button', { name: 'Add your phrase' }).click();
+  await page.getByLabel('In Spanish').fill('¿Hay wifi?');
+  await page.getByLabel('In Spanish').press('Enter');
+  await expect(page.getByLabel('In English')).toBeFocused();
+  await page.getByLabel('In English').fill('Is there wifi?');
+  await page.getByLabel('In English').press('Enter');
+  await expect(page.getByRole('button', { name: 'Play ¿Hay wifi?' })).toBeVisible();
+});

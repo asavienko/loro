@@ -1,4 +1,4 @@
-import { FormEvent, useId, useState } from 'react';
+import { FormEvent, useId, useRef, useState } from 'react';
 import { languageName } from '../copy';
 import type { LanguageCode } from '../content';
 import { findSamePhrase, promptOf } from '../state/catalog';
@@ -50,6 +50,7 @@ function PhraseForm({ editId, initialTarget, initialNative, targetLang, nativeLa
   // Saying the same thing twice is allowed, but the learner should know.
   const same = findSamePhrase(state.learner, target, editId);
   const targetCount = useId();
+  const nativeRef = useRef<HTMLInputElement>(null);
   const nativeCount = useId();
 
   const submit = (event: FormEvent) => {
@@ -75,6 +76,14 @@ function PhraseForm({ editId, initialTarget, initialNative, targetLang, nativeLa
           onChange={(e) => setTarget(e.target.value)}
           maxLength={120}
           aria-describedby={targetCount}
+          enterKeyHint="next"
+          // Enter in the first field goes on to the translation while it is still empty.
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !native.trim()) {
+              e.preventDefault();
+              nativeRef.current?.focus();
+            }
+          }}
           required
           className="min-h-12 px-4 rounded-2xl bg-surface-container-low border border-outline-variant/60 text-base font-serif italic"
         />
@@ -83,11 +92,13 @@ function PhraseForm({ editId, initialTarget, initialNative, targetLang, nativeLa
       <label className="flex flex-col gap-1">
         <span className="text-body font-semibold">{c.addPhrase.native(languageName(nativeLang, c.locale))}</span>
         <input
+          ref={nativeRef}
           lang={nativeLang}
           value={native}
           onChange={(e) => setNative(e.target.value)}
           maxLength={120}
           aria-describedby={nativeCount}
+          enterKeyHint="done"
           required
           className="min-h-12 px-4 rounded-2xl bg-surface-container-low border border-outline-variant/60 text-base"
         />
