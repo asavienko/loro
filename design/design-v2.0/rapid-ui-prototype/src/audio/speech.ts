@@ -27,10 +27,37 @@ function deferred(): [Promise<PlaybackResult>, (r: PlaybackResult) => void] {
   return [promise, resolve];
 }
 
+type VoiceInfo = Pick<SpeechSynthesisVoice, 'name' | 'lang' | 'localService' | 'default'>;
+
+/**
+ * The best device voice for `lang`, or null when none speaks the language.
+ * Android reports "es_ES", so tags are normalised. The region matters most (Spain's
+ * Spanish over Mexico's), then a higher-quality voice (Premium, Enhanced, Natural,
+ * Neural), then one that works offline, then the system's default.
+ */
+export function bestVoice<V extends VoiceInfo>(voices: readonly V[], lang: string): V | null {
+  const want = lang.toLowerCase();
+  const base = want.split('-')[0];
+  let best: V | null = null;
+  let bestScore = -1;
+  for (const v of voices) {
+    const tag = v.lang.replace('_', '-').toLowerCase();
+    if (tag !== want && tag.split('-')[0] !== base) continue;
+    const score =
+      (tag === want ? 8 : 0) +
+      (/premium|enhanced|natural|neural/i.test(v.name) ? 4 : 0) +
+      (v.localService ? 2 : 0) +
+      (v.default ? 1 : 0);
+    if (score > bestScore) {
+      best = v;
+      bestScore = score;
+    }
+  }
+  return best;
+}
+
 function pickVoice(lang: LanguageCode): SpeechSynthesisVoice | null {
-  const voices = window.speechSynthesis.getVoices();
-  const base = lang.split('-')[0];
-  return voices.find((v) => v.lang === lang) ?? voices.find((v) => v.lang.replace('_', '-').startsWith(base)) ?? null;
+  return bestVoice(window.speechSynthesis.getVoices(), lang);
 }
 
 /** The device voice used for `lang`, if any. */
