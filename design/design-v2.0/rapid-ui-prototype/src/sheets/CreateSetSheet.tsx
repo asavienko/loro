@@ -64,6 +64,8 @@ function SetNameForm({ initial, taken, submitLabel, onSubmit }: { initial: strin
             onChange={(e) => setTitle(e.target.value)}
             maxLength={60}
             aria-describedby={countId}
+            autoComplete="off"
+            enterKeyHint="done"
             required
             className="min-h-12 px-4 rounded-2xl bg-surface-container-low border border-outline-variant/60 text-base"
           />
