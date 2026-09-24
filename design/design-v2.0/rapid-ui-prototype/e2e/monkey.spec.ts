@@ -45,7 +45,7 @@ async function walk(page: Page, seed: number, steps: number) {
   }
 }
 
-for (const seed of [1, 2, 3, 4]) {
+for (const seed of (process.env.MONKEY_SEEDS ?? "1,2,3,4").split(",").map(Number)) {
   test(`random walk, seed ${seed}`, async ({ page }) => {
     test.setTimeout(300_000);
     await walk(page, seed, 150);
