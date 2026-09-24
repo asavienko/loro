@@ -132,6 +132,11 @@
     -webkit-touch-callout: none;
   }
 
+  /* A heading that takes focus after navigation (App.tsx) is a reading position, not a control. */
+  h1[tabindex='-1']:focus {
+    outline: none;
+  }
+
   /* Keyboard focus and scroll-into-view stop clear of the fixed top bar and of the
      tab bar and mini-player at the bottom (the same room <main> leaves them). */
   html {
