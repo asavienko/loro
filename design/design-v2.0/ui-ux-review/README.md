@@ -657,6 +657,8 @@ found no crash.
 | In high-contrast (forced colours) mode the hidden phrase vanished, buttons became bare text and the chosen step, grade and speed looked like the rest | Buttons keep an edge, chosen/current controls get the system Highlight outline, the hidden phrase is dashed boxes |
 | Reordering or removing a queued phrase needed a drag, a swipe or a keyboard (WCAG 2.5.7) | A tap on the handle opens Move up, Move down and Remove from queue; every other gesture already had a button |
 | Half an hour of hands-free playback added ~130 elements and ~80 listeners: each replaced toast stayed until its exit animation ran | The toast is one element whose text is replaced; a perf test plays 30 minutes and checks the page stays the same size |
+| Phrase and set-name fields stopped at their limit with no sign why | From 80% of the limit they say how many characters are left |
+| The keyboard's Search, Next and Done keys did nothing useful; the Spanish field autocorrected into the device language | Search commits the query and closes the keyboard; Enter moves from phrase to translation to Add, and on through onboarding's name; fields set autocorrect, capitals and autofill |
 
 **Open question:** the prototype has no dark theme, so an evening learner with a dark system theme
 gets a light screen. A dark palette is a design decision (plan 57 owns dark mode in the app); say if
