@@ -53,7 +53,14 @@ export function windowLeft(pending: PendingRating, now: number): number {
 
 /** When the phrase will be due after `grade` given now: the preview on the rating buttons. */
 export function previewDue(learner: LearnerState, phraseId: string, grade: Grade, at: number): number {
-  return reviewed(memoryOf(learner, phraseId), grade, at).due;
+  const memory = memoryOf(learner, phraseId);
+  // A review merged in from another device can be newer than `at`; preview from then instead.
+  const from = Math.max(at, memory.fsrs?.last_review ?? 0);
+  try {
+    return reviewed(memory, grade, from).due;
+  } catch {
+    return from;
+  }
 }
 
 // ---------- phrase status ----------

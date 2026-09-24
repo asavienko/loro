@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { transition } from './machine';
-import { RATING_WINDOW_MS } from './memory';
+import { derive, RATING_WINDOW_MS } from './memory';
 import { mergeLearner } from './merge';
 import { loadState, parseState, sanitizeState, serializeState, syncWithServer } from './persistence';
 import { memoryOf, points } from './selectors';
@@ -70,6 +70,19 @@ describe('persistence', () => {
     assert.ok(compact.length < plain.length * 0.6, `${compact.length} vs ${plain.length}`);
     assert.deepEqual(parseState(compact, device)!.learner, s.learner);
     assert.deepEqual(parseState(plain, device)!.learner, s.learner, 'plain saves still load');
+  });
+
+  it('drops entries with impossible times, and memory survives a review the core rejects', () => {
+    const raw = JSON.parse(serializeState(fresh()));
+    raw.learner.log = [
+      { id: 'x-1', at: -5, device: 'x', kind: 'rated', key: 'en-GB>es-ES:cafe-01', phraseId: 'cafe-01', setId: null, grade: 'easy' },
+      { id: 'x-2', at: T0, device: 'x', kind: 'rated', key: 'en-GB>es-ES:cafe-01', phraseId: 'cafe-01', setId: null, grade: 'easy' },
+    ];
+    const s = sanitizeState(raw, device)!;
+    assert.deepEqual(s.learner.log.map((e) => e.id), ['x-2']);
+    // Past sanitising (e.g. a merge), a rejected review is skipped, not thrown.
+    const bad = [{ ...s.learner.log[0], id: 'x-0', at: -5 }, ...s.learner.log];
+    assert.equal(derive(bad as typeof s.learner.log).memories.size, 1);
   });
 
   it('RESTORE goes through the same sanitising', () => {
