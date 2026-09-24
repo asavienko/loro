@@ -101,6 +101,12 @@ function PhraseDetails({ phraseId, ownSetId, onClose }: { phraseId: string; ownS
             nav.addToSet([phrase.id]);
           }}
         />
+        {ownSet && ownSet.phraseIds.indexOf(phrase.id) > 0 && (
+          <SheetOption icon="arrow_upward" label={c.phrase.moveUp} onClick={() => actions.moveInSet(ownSet.id, phrase.id, -1)} />
+        )}
+        {ownSet && ownSet.phraseIds.indexOf(phrase.id) < ownSet.phraseIds.length - 1 && (
+          <SheetOption icon="arrow_downward" label={c.phrase.moveDown} onClick={() => actions.moveInSet(ownSet.id, phrase.id, 1)} />
+        )}
         {ownSet && (
           <SheetOption
             icon="playlist_remove"

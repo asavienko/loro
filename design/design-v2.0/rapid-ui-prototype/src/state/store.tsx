@@ -53,6 +53,8 @@ function makeActions(dispatch: (event: AppEvent) => void, latest: RefObject<AppS
     },
     addToSet: (setId: string, phraseIds: string[]) => dispatch({ type: 'ADD_TO_SET', setId, phraseIds, now: now() }),
     removeFromSet: (setId: string, phraseId: string) => dispatch({ type: 'REMOVE_FROM_SET', setId, phraseId, now: now() }),
+    moveInSet: (setId: string, phraseId: string, delta: -1 | 1) =>
+      dispatch({ type: 'MOVE_IN_SET', setId, phraseId, delta, now: now() }),
     renameSet: (setId: string, title: string) => dispatch({ type: 'RENAME_SET', setId, title, now: now() }),
     deleteSet: (setId: string) => dispatch({ type: 'DELETE_SET', setId, now: now() }),
     setProfile: (profile: Partial<Omit<Profile, 'updatedAt'>>) => dispatch({ type: 'SET_PROFILE', profile, now: now() }),

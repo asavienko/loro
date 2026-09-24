@@ -143,6 +143,8 @@ export function makeRu(n: Plural): Copy {
       delete: 'Удалить фразу',
       deleted: 'Фраза удалена',
       removeFromSet: 'Убрать из набора',
+      moveUp: 'Выше в наборе',
+      moveDown: 'Ниже в наборе',
       yours: 'Ваша фраза',
     },
     addToSet: {

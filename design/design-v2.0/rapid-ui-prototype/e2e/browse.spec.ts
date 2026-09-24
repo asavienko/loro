@@ -184,3 +184,21 @@ test('correct a typo in your own phrase', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Play Hola' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Play Holaa' })).toHaveCount(0);
 });
+
+test('reorder phrases in your own set', async ({ page }) => {
+  await page.goto('/#/set/set-cafe?from=explore');
+  await page.getByRole('button', { name: 'Play Café & Mañanas' }).click();
+  await page.getByRole('button', { name: /^Now playing:/ }).click();
+  await page.getByRole('button', { name: 'Open queue' }).click();
+  await page.getByRole('button', { name: 'Save as set' }).click();
+  await expect(page.getByRole('status')).toHaveText(/Saved as/);
+  await page.goBack();
+  await page.goBack();
+  await page.goto('/#/library?view=ownSets');
+  await page.getByRole('button', { name: /My queue/ }).click();
+  await page.getByRole('button', { name: 'Details for Sin gluten, por favor' }).click();
+  await page.getByRole('button', { name: 'Move up in this set' }).click();
+  await page.keyboard.press('Escape');
+  // Fourth of five now, one place up from last.
+  await expect(page.getByRole('main').getByRole('listitem').nth(3)).toContainText('Sin gluten, por favor');
+});

@@ -143,6 +143,8 @@ export function makeBg(n: Plural): Copy {
       delete: 'Изтрий фразата',
       deleted: 'Фразата е изтрита',
       removeFromSet: 'Махни от набора',
+      moveUp: 'Премести нагоре в набора',
+      moveDown: 'Премести надолу в набора',
       yours: 'Ваша фраза',
     },
     addToSet: {
