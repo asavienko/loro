@@ -69,3 +69,23 @@ test('drag the player down by its title to close it; swipe the cover to change p
   await drag(page, player.getByRole('heading', { name: 'Café & Mañanas' }), 0, 300);
   await expect(player).toHaveCount(0);
 });
+
+test('media keys: seek back replays the phrase, seek forward moves on', async ({ page }) => {
+  await page.addInitScript(() => {
+    const handlers: Record<string, () => void> = {};
+    Object.defineProperty(navigator, 'mediaSession', {
+      value: { metadata: null, playbackState: 'none', setActionHandler: (a: string, h: () => void) => (handlers[a] = h) },
+    });
+    (window as unknown as { __media: typeof handlers }).__media = handlers;
+  });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Play 5 phrases' }).click();
+  await page.getByRole('button', { name: 'Pause', exact: true }).click();
+  const mini = page.getByRole('button', { name: /^Now playing:/ });
+  await page.evaluate(() => (window as unknown as { __media: Record<string, () => void> }).__media.seekforward());
+  await expect(mini).toContainText('Do you have oat milk?');
+  await page.evaluate(() => (window as unknown as { __media: Record<string, () => void> }).__media.seekbackward());
+  await expect(mini).toContainText('Do you have oat milk?');
+  await page.evaluate(() => (window as unknown as { __media: Record<string, () => void> }).__media.previoustrack());
+  await expect(mini).toContainText('A cortado, please');
+});

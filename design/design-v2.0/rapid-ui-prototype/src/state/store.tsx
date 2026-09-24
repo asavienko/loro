@@ -28,6 +28,8 @@ function makeActions(dispatch: (event: AppEvent) => void, latest: RefObject<AppS
     next: () => dispatch({ type: 'NEXT', now: now() }),
     prev: () => dispatch({ type: 'PREV', now: now() }),
     jump: (index: number, play = false) => dispatch({ type: 'JUMP', index, play, now: now() }),
+    /** Start the current phrase again from its prompt. */
+    restart: () => dispatch({ type: 'JUMP', index: latest.current.player.index, now: now() }),
     rate: (grade: Grade) => dispatch({ type: 'RATE', grade, now: now() }),
     unrate: () => dispatch({ type: 'UNRATE', now: now() }),
     commit: () => dispatch({ type: 'COMMIT', now: now() }),

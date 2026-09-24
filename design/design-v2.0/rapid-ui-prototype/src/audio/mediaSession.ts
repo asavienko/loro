@@ -33,8 +33,11 @@ export function useMediaSession(): void {
     set('pause', () => handlers.current.pause());
     set('nexttrack', () => handlers.current.next());
     set('previoustrack', () => handlers.current.prev());
+    // Many headsets and cars send seek instead of track: back replays this phrase, forward moves on.
+    set('seekbackward', () => handlers.current.restart());
+    set('seekforward', () => handlers.current.next());
     return () => {
-      for (const action of ['play', 'pause', 'nexttrack', 'previoustrack'] as const) set(action, null);
+      for (const action of ['play', 'pause', 'nexttrack', 'previoustrack', 'seekbackward', 'seekforward'] as const) set(action, null);
     };
   }, [handlers]);
 
