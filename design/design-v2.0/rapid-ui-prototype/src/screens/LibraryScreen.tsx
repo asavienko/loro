@@ -132,9 +132,9 @@ export function LibraryScreen({ view = 'liked' }: { view?: LibraryView }) {
 function StatCard({ label, value, note, onClick }: { label: string; value: string; note: string; onClick: () => void }) {
   return (
     <button type="button" onClick={onClick} className="p-3 rounded-2xl bg-surface-container-lowest border border-outline-variant/50 flex flex-col text-left active:bg-surface-container-low">
-      <span className="text-label font-semibold text-secondary">{label}</span>
+      <span className="text-label font-semibold text-secondary break-words hyphens-auto">{label}</span>
       <span className="font-serif text-display-sm font-bold mt-0.5 tabular-nums">{value}</span>
-      <span className="text-caption leading-snug text-on-surface-variant mt-0.5 line-clamp-3">{note}</span>
+      <span className="text-caption leading-snug text-on-surface-variant mt-0.5 break-words hyphens-auto">{note}</span>
     </button>
   );
 }
