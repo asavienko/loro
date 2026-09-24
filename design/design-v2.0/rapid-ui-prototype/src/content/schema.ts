@@ -82,6 +82,7 @@ export type Level = SetJson['level'];
 export type Register = PhraseJson['register'];
 export type PhraseNotes = PhraseJson['notes'];
 export type NoteTranslations = z.infer<typeof noteTranslationsSchema>;
+export type Meta = z.infer<typeof metaSchema>;
 
 /** Cross-file rules zod can't express on one file. Returns every problem found. */
 export function contentProblems(input: {

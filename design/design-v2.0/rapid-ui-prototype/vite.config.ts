@@ -3,6 +3,7 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { defineConfig, Plugin } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
+import { validateContent } from './src/content/validate';
 
 const repoRoot = path.resolve(__dirname, '../../..');
 const coreBrowser = path.join(repoRoot, 'packages/core-rs/browser/loro_core.js');
@@ -28,8 +29,20 @@ function loroCoreEsm(): Plugin {
   };
 }
 
+/** The app ships without zod: the content is validated here instead, and a bad file stops the build. */
+function contentCheck(): Plugin {
+  return {
+    name: 'loro-content-check',
+    buildStart() {
+      const problems = validateContent();
+      if (problems.length > 0) this.error(`Invalid content:\n${problems.join('\n')}`);
+    },
+  };
+}
+
 export default defineConfig({
   plugins: [
+    contentCheck(),
     loroCoreEsm(),
     react(),
     tailwindcss(),
