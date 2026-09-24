@@ -583,12 +583,18 @@ production build offline. Each fix below is covered by a test.
 | Hard and Easy both previewed "2 mths" | Days up to 100 |
 | The session summary pointed 13 days ahead while 7 phrases were due | It says what is due now first |
 | "Metro & Streets", "Taxi at Night" were English titles in the Spanish course | "Metro y Calles", "Taxi de Noche" |
+| The first tap spent ~140 ms starting the audio device (profiled with a year of history) | The audio context is created while idle after load; the tap only resumes it. At 4× CPU throttling, tap-to-mini-player fell from 259 to 141 ms and the longest task from 197 to 50 ms |
+| Deleting your own phrase from its details crashed the app | Fixed; the error screen now leads with Reload, which keeps progress |
 | A curved divider on Home stats, "24 hours ago", the queue count truncating at large text, the landscape player | Fixed |
 
 Also new: player keyboard shortcuts (Space, ← →, 1 2 3), and `npm run test:e2e:preview`, which
 runs the whole suite against the production build with its service worker, including offline use.
 
-**Checks:** `npm run check` (lint, strict types, 58 unit tests, build); 41 Playwright tests on the dev
-server, and the same suite plus an offline test against the production build (42). The loop was
-also run in a real Chrome with system voices: phrases advanced, measurements were recorded, and
-when that Chrome's speech service stalled, the app stopped and said so.
+**Checks:** `npm run check` (lint, strict types, 58 unit tests, build) and 47 Playwright tests on the
+dev server, the same suite plus an offline test against the production build, gesture tests (queue
+swipes and drag reorder, mini-player and cover swipes, drag to close), and a load test that fails on
+any main-thread task over 200 ms with a year of history. Every test also fails on any page error.
+`npm run test:monkey` taps at random through every screen; eight seeded walks (1,200 steps, dev and
+production builds) found one crash, now fixed. The loop was also run in a real Chrome with system
+voices: phrases advanced and were measured, and when that Chrome's speech service stalled, the app
+stopped and said so.
