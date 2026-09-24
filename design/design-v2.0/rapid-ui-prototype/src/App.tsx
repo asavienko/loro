@@ -19,6 +19,7 @@ import { BottomNavBar } from './ui/BottomNavBar';
 import { MiniPlayer } from './ui/MiniPlayer';
 import { NavigationHeader } from './ui/NavigationHeader';
 import { ToastProvider, useToast } from './ui/Toast';
+import { LocalBoundary } from './ui/LocalBoundary';
 import { AddPhraseSheet } from './sheets/AddPhraseSheet';
 import { AddToSetSheet } from './sheets/AddToSetSheet';
 import { CreateSetSheet } from './sheets/CreateSetSheet';
@@ -167,6 +168,15 @@ function Shell() {
     document.documentElement.lang = c.locale;
   }, [c.locale]);
   const closePlayer = () => setOverlay({ player: false, queue: false });
+  const closeSheets = () => {
+    setSettingsOpen(false);
+    setSummaryOpen(false);
+    setDetails(null);
+    setAddTo(null);
+    setCreate(null);
+    setAddPhraseOpen(false);
+  };
+  const locale = c.locale.slice(0, 2) as 'en' | 'bg' | 'ru';
   const closeQueue = () => setOverlay((o) => ({ ...o, queue: false }));
   useBackToClose(overlay.player, closePlayer);
   useBackToClose(overlay.queue, closeQueue);
@@ -229,6 +239,7 @@ function Shell() {
         />
 
         <main inert={behind} className="flex-1 pt-[calc(3.5rem+env(safe-area-inset-top))] pb-[calc(9rem+env(safe-area-inset-bottom))]">
+          <LocalBoundary resetKey={screenKey} locale={locale}>
           {route.name === 'set' ? (
             // The set page slides in; switching tabs is instant.
             <motion.div key={screenKey} initial={{ x: 24, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ duration: 0.18 }}>
@@ -241,6 +252,7 @@ function Shell() {
           ) : (
             <LibraryScreen view={route.view} />
           )}
+          </LocalBoundary>
         </main>
 
         {currentId && (
@@ -259,17 +271,22 @@ function Shell() {
           }}
         />
 
-        <AnimatePresence>
-          {overlay.player && currentId && <NowPlayingScreen key="player" onClose={closePlayer} onOpenQueue={nav.openQueue} />}
-          {overlay.queue && <QueueScreen key="queue" onClose={closeQueue} />}
-        </AnimatePresence>
+        {/* A failing overlay closes on its own; the rest of the app keeps working. */}
+        <LocalBoundary resetKey={`${overlay.player}${overlay.queue}${currentId}`} quiet onError={closePlayer}>
+          <AnimatePresence>
+            {overlay.player && currentId && <NowPlayingScreen key="player" onClose={closePlayer} onOpenQueue={nav.openQueue} />}
+            {overlay.queue && <QueueScreen key="queue" onClose={closeQueue} />}
+          </AnimatePresence>
+        </LocalBoundary>
 
-        <SettingsSheet open={settingsOpen} onClose={() => setSettingsOpen(false)} />
-        <SessionSummarySheet open={summaryOpen} onClose={() => setSummaryOpen(false)} />
-        <PhraseDetailsSheet details={details} onClose={() => setDetails(null)} />
-        <AddToSetSheet phraseIds={addTo} onClose={() => setAddTo(null)} />
-        <CreateSetSheet request={create} onClose={() => setCreate(null)} />
-        <AddPhraseSheet open={addPhraseOpen} onClose={() => setAddPhraseOpen(false)} />
+        <LocalBoundary resetKey={`${settingsOpen}${summaryOpen}${details?.phraseId}${addTo}${create?.rename}${addPhraseOpen}`} quiet onError={closeSheets}>
+          <SettingsSheet open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+          <SessionSummarySheet open={summaryOpen} onClose={() => setSummaryOpen(false)} />
+          <PhraseDetailsSheet details={details} onClose={() => setDetails(null)} />
+          <AddToSetSheet phraseIds={addTo} onClose={() => setAddTo(null)} />
+          <CreateSetSheet request={create} onClose={() => setCreate(null)} />
+          <AddPhraseSheet open={addPhraseOpen} onClose={() => setAddPhraseOpen(false)} />
+        </LocalBoundary>
       </div>
     </NavContext.Provider>
   );

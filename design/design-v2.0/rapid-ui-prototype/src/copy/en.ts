@@ -339,6 +339,7 @@ export function makeEn(n: Plural) {
       title: 'Something went wrong',
       body: 'Reloading usually fixes it, and your progress is kept. If it keeps happening, the progress saved on this device may not fit this version: copy it first if you want to keep it, then reset to start from zero on this device.',
       reload: 'Reload',
+      part: 'This part of the screen couldn’t be shown. Your progress is safe.',
       copy: 'Copy progress JSON',
       copied: 'Copied',
       reset: 'Reset progress',
