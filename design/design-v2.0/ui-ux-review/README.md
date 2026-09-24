@@ -664,6 +664,7 @@ found no crash.
 | With a dark system theme, native controls could turn dark on the light page; no home-screen tags for older iOS | `color-scheme: light`; app-capable, title and status-bar tags; a noscript message |
 | The page title was always "Loro" (WCAG 2.4.2) | "Explore · Loro", the set's name, "Now playing · Loro", "Queue · Loro" |
 | Opening a set or pressing Back dropped focus to `<body>`, so a screen reader restarted from the top | Focus moves to the new screen's heading; tab switches keep it on the tab |
+| The first exact-tag voice spoke, and Android's "es_ES" tags never matched, so any Spanish voice could read a Spain course | Voices are ranked (region, then Premium/Enhanced/Natural/Neural, offline, default); Settings lets the learner choose one per language |
 
 **Open question:** the prototype has no dark theme, so an evening learner with a dark system theme
 gets a light screen. A dark palette is a design decision (plan 57 owns dark mode in the app); say if
