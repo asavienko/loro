@@ -78,3 +78,17 @@ test('desktop accessibility: the player, with a control hovered', async ({ page 
   await player.getByRole('button', { name: /^Easy/ }).hover();
   await expectAccessible(page);
 });
+
+test.describe('high contrast (forced colours)', () => {
+  test('the hidden phrase and the chosen grade and speed stay visible', async ({ page }) => {
+    await page.emulateMedia({ forcedColors: 'active' });
+    const player = await openPlayer(page);
+    const bar = player.locator('h2 [aria-hidden="true"] > span').first();
+    expect(await bar.evaluate((e) => getComputedStyle(e).borderTopStyle)).toBe('dashed');
+    await player.getByRole('button', { name: /^Easy/ }).click();
+    for (const chosen of [player.getByRole('button', { name: /^Easy/ }), player.getByRole('radio', { checked: true })]) {
+      expect(await chosen.evaluate((e) => getComputedStyle(e).outlineStyle)).toBe('solid');
+    }
+    await expectAccessible(page);
+  });
+});
