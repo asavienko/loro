@@ -67,4 +67,19 @@ test.describe('large text (150%) on a 360 px phone', () => {
     );
     expect(spilled).toEqual([]);
   });
+
+  for (const hash of ['/#/explore', '/#/set/set-cafe?from=explore']) {
+    test(`set titles and phrases are shown whole: ${hash}`, async ({ page }) => {
+      await page.goto(hash);
+      await page.addStyleTag({ content: 'html { font-size: 150% !important }' });
+      await page.waitForTimeout(300);
+      const clipped = await page.evaluate(() =>
+        [...document.querySelectorAll('main .line-clamp-2')]
+          .filter((e) => e.scrollHeight > e.clientHeight + 1 || e.scrollWidth > e.clientWidth + 1)
+          .map((e) => e.textContent),
+      );
+      expect(clipped).toEqual([]);
+      expect(await page.locator('main .line-clamp-2').count()).toBeGreaterThan(3);
+    });
+  }
 });

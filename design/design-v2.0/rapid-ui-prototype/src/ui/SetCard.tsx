@@ -17,13 +17,13 @@ export function SetCard({ view, progress, onOpen, onPlay, wide = false }: { view
     <div className={`relative ${wide ? '' : 'w-40'}`}>
       <button type="button" onClick={onOpen} className="w-full text-left">
         <SetCover set={view} size="md" className={`${wide ? 'w-full aspect-square' : 'w-40 h-40'} rounded-2xl shadow-sm`} />
-        <span className="flex items-center gap-1.5 mt-2">
-          <span className="text-body font-bold truncate">{view.title}</span>
-          {view.level && <span className="shrink-0 text-caption font-bold text-secondary">{view.level}</span>}
+        <span className="flex items-start gap-1.5 mt-2">
+          <span className="text-body font-bold line-clamp-2 break-words">{view.title}</span>
+          {view.level && <span className="shrink-0 text-caption font-bold text-secondary mt-0.5">{view.level}</span>}
         </span>
-        <span className="flex items-center gap-1.5 mt-0.5">
+        <span className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 mt-0.5">
           <span className={`text-caption font-bold px-1.5 py-0.5 rounded-md ${BADGE[progress.status]}`}>{c.status.set[progress.status]}</span>
-          <span className="text-label text-secondary truncate">{c.common.phrases(progress.total)}</span>
+          <span className="text-label text-secondary">{c.common.phrases(progress.total)}</span>
         </span>
       </button>
       <button
