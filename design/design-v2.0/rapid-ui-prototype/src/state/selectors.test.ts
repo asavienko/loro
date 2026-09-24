@@ -21,7 +21,7 @@ import {
 import { findSamePhrase, findSetView, phraseKey } from './catalog';
 import { fullPlayMs, pauseMs } from './timing';
 import { cafe, DAY, done, fresh, load, MINUTE, playPhrase, run, T0 } from './testing';
-import { memoryOf } from './selectors';
+import { memoryOf, points } from './selectors';
 
 const rated = (grade: 'missed' | 'hard' | 'easy', now: number) => [
   { type: 'RATE' as const, grade, now },
@@ -161,5 +161,18 @@ describe('the rating preview', () => {
     assert.equal(shown(), before, 'later repetitions do not move the promise');
     s = run(s, { type: 'COMMIT', now: T0 + 6500 + RATING_WINDOW_MS + 1 });
     assert.equal(memoryOf(s.learner, 'cafe-01').fsrs?.due, before, 'and it is what commits');
+  });
+});
+
+describe('history runs', () => {
+  it('add up to the points badge, with early ratings and learned bonuses in their run', () => {
+    let s = load(fresh());
+    // Rate during the first repetition, before the phrase is first logged as heard.
+    s = run(s, { type: 'RATE', grade: 'easy', now: T0 + 100 });
+    for (let t = 2000; t < 60_000; t += 2000) s = done(s, T0 + t);
+    s = run(s, { type: 'COMMIT', now: T0 + 100 + RATING_WINDOW_MS + 1 });
+    const runs = playedSets(s.learner);
+    assert.ok(runs.length > 0);
+    assert.equal(runs.reduce((sum, r) => sum + r.points, 0), points(s.learner));
   });
 });

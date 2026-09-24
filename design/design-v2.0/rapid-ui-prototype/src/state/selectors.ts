@@ -395,27 +395,32 @@ const HISTORY_GAP_MS = 30 * 60_000;
 /** History as the sets that were played: runs of listening to one set, newest first. */
 export function playedSets(learner: LearnerState, limit = 30): PlayedSet[] {
   const derived = derive(learner.log);
-  const runs: (PlayedSet & { ids: Set<string> })[] = [];
+  const runs: (PlayedSet & { ids: Set<string>; keys: Set<string> })[] = [];
   for (const e of learner.log) {
-    if (e.kind === 'carryover') continue;
+    if (e.kind === 'carryover') continue; // points brought over, not a session
     const last = runs[runs.length - 1];
     const award = derived.awards.get(e.id) ?? 0;
-    if (last && last.setId === e.setId && e.at - last.to < HISTORY_GAP_MS) {
-      last.to = e.at;
-      last.points += award;
-      if (e.kind === 'heard') last.ids.add(e.phraseId);
-      continue;
+    // A rating can come before the phrase's first "heard" (rated during repetition 1):
+    // it opens the run rather than landing in the previous one.
+    if (!last || last.setId !== e.setId || e.at - last.to >= HISTORY_GAP_MS) {
+      runs.push({ setId: e.setId, from: e.at, to: e.at, phrases: 0, points: 0, ids: new Set(), keys: new Set() });
     }
-    if (e.kind !== 'heard') {
-      if (last) last.points += award;
-      continue;
-    }
-    runs.push({ setId: e.setId, from: e.at, to: e.at, phrases: 0, points: award, ids: new Set([e.phraseId]) });
+    const run = runs[runs.length - 1];
+    run.to = e.at;
+    run.points += award;
+    run.keys.add(e.key);
+    if (e.kind === 'heard') run.ids.add(e.phraseId);
+  }
+  // A phrase's one-off learned bonus belongs to the run in which it became learned.
+  for (const [key, at] of derived.learnedBonuses) {
+    const run = runs.find((r) => r.keys.has(key) && r.from <= at && at <= r.to);
+    if (run) run.points += POINTS.learned;
   }
   return runs
+    .filter((run) => run.ids.size > 0)
     .reverse()
     .slice(0, limit)
-    .map(({ ids, ...run }) => ({ ...run, phrases: ids.size }));
+    .map(({ ids, keys: _keys, ...run }) => ({ ...run, phrases: ids.size }));
 }
 
 export interface RecallBucket {
