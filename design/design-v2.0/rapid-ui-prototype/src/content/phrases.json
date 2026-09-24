@@ -565,15 +565,15 @@
     "target": "¿Está libre?",
     "translations": {
       "en-GB": "Is your taxi free?",
-      "bg-BG": "Свободен ли сте?",
+      "bg-BG": "Свободно ли е?",
       "ru-RU": "Вы свободны?"
     },
     "register": "formal",
     "region": "ES",
     "tags": ["question"],
     "words": {
-      "está": { "en-GB": "(you) are", "bg-BG": "сте", "ru-RU": "(вы)" },
-      "libre": { "en-GB": "free", "bg-BG": "свободен", "ru-RU": "свободны" }
+      "está": { "en-GB": "(it / you) is, are", "bg-BG": "е, сте", "ru-RU": "(вы)" },
+      "libre": { "en-GB": "free", "bg-BG": "свободно, свободен", "ru-RU": "свободны" }
     },
     "notes": {
       "mnemonic": {
@@ -612,7 +612,7 @@
     "translations": {
       "en-GB": "How much do I owe you?",
       "bg-BG": "Колко ви дължа?",
-      "ru-RU": "Сколько я вам должен?"
+      "ru-RU": "Сколько с меня?"
     },
     "register": "formal",
     "region": "ES",
@@ -620,7 +620,7 @@
     "words": {
       "cuánto": { "en-GB": "how much", "bg-BG": "колко", "ru-RU": "сколько" },
       "le": { "en-GB": "(to) you", "bg-BG": "ви", "ru-RU": "вам" },
-      "debo": { "en-GB": "I owe", "bg-BG": "дължа", "ru-RU": "я должен" }
+      "debo": { "en-GB": "I owe", "bg-BG": "дължа", "ru-RU": "(я) должен / должна" }
     },
     "notes": {
       "grammar": {
