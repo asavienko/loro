@@ -1,0 +1,129 @@
+import { languageName } from '../copy';
+import { getLanguage } from '../content';
+import { useNav } from '../nav/NavContext';
+import { findPhrase, findSetView, promptOf } from '../state/catalog';
+import { currentPhraseId, isLiked, phraseProgress } from '../state/selectors';
+import { useCopy, useNow, useStore } from '../state/store';
+import { PhraseNotesView } from '../ui/Notes';
+import { progressLabel } from '../ui/progressLabel';
+import { Sheet, SheetOption } from '../ui/Sheet';
+import { useToast } from '../ui/Toast';
+
+interface Props {
+  details: { phraseId: string; ownSetId?: string } | null;
+  onClose: () => void;
+}
+
+export function PhraseDetailsSheet({ details, onClose }: Props) {
+  const { state } = useStore();
+  const phrase = findPhrase(state.learner, details?.phraseId);
+  const title = phrase ? (findSetView(state.learner, phrase.setId)?.title ?? '') : '';
+  return (
+    <Sheet open={Boolean(phrase)} title={title} onClose={onClose}>
+      {phrase && details && <PhraseDetails phraseId={phrase.id} ownSetId={details.ownSetId} onClose={onClose} />}
+    </Sheet>
+  );
+}
+
+function PhraseDetails({ phraseId, ownSetId, onClose }: { phraseId: string; ownSetId?: string; onClose: () => void }) {
+  const c = useCopy();
+  const nav = useNav();
+  const { toast } = useToast();
+  const { state, actions } = useStore();
+  const now = useNow(30_000);
+  const phrase = findPhrase(state.learner, phraseId)!;
+  const liked = isLiked(state.learner, 'phrase', phrase.id);
+  const progress = phraseProgress(state.learner, phrase.id, now);
+  const prompt = promptOf(phrase, state.learner.profile.nativeLang);
+  const isCurrent = currentPhraseId(state.player) === phrase.id;
+  const ownSet = ownSetId ? findSetView(state.learner, ownSetId) : undefined;
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div>
+        <p lang={phrase.targetLang} className="font-serif italic text-display-sm font-semibold text-on-surface leading-snug">{phrase.target}</p>
+        <p lang={prompt.lang} className="text-body text-secondary mt-1">{prompt.text}</p>
+        <p className="text-label text-on-surface-variant mt-2 flex flex-wrap items-center gap-1.5">
+          <span role="img" aria-label={languageName(phrase.targetLang, c.locale)}>{getLanguage(phrase.targetLang).flag}</span>
+          <span>{progressLabel(c, progress, now)}</span>
+          {progress.memory.heardCount > 0 && <span>· {c.phrase.heard(progress.memory.heardCount)}</span>}
+          {phrase.register && <span>· {c.common.register[phrase.register]}</span>}
+          {phrase.own && <span>· {c.phrase.yours}</span>}
+        </p>
+        {phrase.tags.length > 0 && (
+          <ul className="flex flex-wrap gap-1.5 mt-2">
+            {phrase.tags.map((t) => (
+              <li key={t} className="text-caption font-semibold px-2 py-0.5 rounded-md bg-surface-container-high text-on-surface-variant">
+                {c.common.tag[t]}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <div>
+        <SheetOption
+          icon="play_arrow"
+          label={c.common.play}
+          onClick={() => {
+            onClose();
+            nav.playPhraseInSet(phrase.id);
+          }}
+        />
+        <SheetOption
+          icon="queue_play_next"
+          label={c.phrase.playNext}
+          disabled={isCurrent}
+          onClick={() => {
+            actions.enqueue([phrase.id], phrase.setId, 'next');
+            toast(c.set.addedNext);
+            onClose();
+          }}
+        />
+        <SheetOption
+          icon="queue_music"
+          label={c.phrase.addToQueue}
+          disabled={isCurrent}
+          onClick={() => {
+            actions.enqueue([phrase.id], phrase.setId, 'end');
+            toast(c.set.addedEnd);
+            onClose();
+          }}
+        />
+        <SheetOption icon="favorite" label={liked ? c.phrase.liked : c.phrase.like} onClick={() => actions.toggleLike('phrase', phrase.id)} />
+        <SheetOption
+          icon="playlist_add"
+          label={c.phrase.addToSet}
+          onClick={() => {
+            onClose();
+            nav.addToSet([phrase.id]);
+          }}
+        />
+        {ownSet && (
+          <SheetOption
+            icon="playlist_remove"
+            label={c.phrase.removeFromSet}
+            onClick={() => {
+              actions.removeFromSet(ownSet.id, phrase.id);
+              onClose();
+            }}
+          />
+        )}
+        {phrase.own && !isCurrent && (
+          <SheetOption
+            icon="delete"
+            tone="danger"
+            label={c.phrase.delete}
+            onClick={() => {
+              actions.deleteOwnPhrase(phrase.id);
+              toast(c.phrase.deleted);
+              onClose();
+            }}
+          />
+        )}
+      </div>
+
+      <PhraseNotesView phrase={phrase} prefix="details-notes" />
+    </div>
+  );
+}

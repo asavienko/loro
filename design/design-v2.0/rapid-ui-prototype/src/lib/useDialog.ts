@@ -2,7 +2,8 @@
 // moves in when it opens and back when it closes, Tab stays inside, and
 // Escape closes it. Dialogs stack (a sheet over the queue), and only the
 // topmost one handles keys.
-import { RefObject, useEffect, useRef, useState } from 'react';
+import { RefObject, useEffect, useState } from 'react';
+import { useLatest } from './useLatest';
 
 const FOCUSABLE =
   'button:not([disabled]), [href], input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])';
@@ -11,8 +12,7 @@ const stack: symbol[] = [];
 
 /** Call from a component that is mounted exactly while its dialog is open. */
 export function useDialog(ref: RefObject<HTMLElement | null>, onClose: () => void): void {
-  const onCloseRef = useRef(onClose);
-  onCloseRef.current = onClose;
+  const onCloseRef = useLatest(onClose);
   // Read while rendering: by the time effects run, opening the dialog may have
   // made the opener inert, which already moved focus to <body>.
   const [opener] = useState(() => document.activeElement as HTMLElement | null);
@@ -52,5 +52,5 @@ export function useDialog(ref: RefObject<HTMLElement | null>, onClose: () => voi
       stack.splice(stack.indexOf(id), 1);
       if (returnTo?.isConnected) returnTo.focus({ preventScroll: true });
     };
-  }, [ref, opener]);
+  }, [ref, opener, onCloseRef]);
 }

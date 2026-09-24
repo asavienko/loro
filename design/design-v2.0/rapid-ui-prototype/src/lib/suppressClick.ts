@@ -12,15 +12,15 @@ const GHOST_CLICK_WINDOW_MS = 350;
  */
 export function useClickBlockerDuringDrag(): { block: () => void; release: () => void } {
   const cleanup = useRef<(() => void) | null>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const controls = useMemo(() => {
     const swallow = (event: MouseEvent) => {
       event.preventDefault();
       event.stopPropagation();
     };
-    let timer: ReturnType<typeof setTimeout> | undefined;
     const remove = () => {
-      clearTimeout(timer);
+      clearTimeout(timer.current);
       window.removeEventListener('click', swallow, true);
       cleanup.current = null;
     };
@@ -32,7 +32,7 @@ export function useClickBlockerDuringDrag(): { block: () => void; release: () =>
       },
       release: () => {
         if (!cleanup.current) return;
-        timer = setTimeout(remove, GHOST_CLICK_WINDOW_MS);
+        timer.current = setTimeout(remove, GHOST_CLICK_WINDOW_MS);
       },
     };
   }, []);

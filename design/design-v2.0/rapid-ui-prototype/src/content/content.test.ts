@@ -8,8 +8,8 @@ import { CONTENT_PHRASES, coursesFor, LANGUAGES, SETS, TOPICS } from './index';
 import { contentProblems, PhraseJson, SetJson } from './schema';
 
 const base = () => ({
-  phrases: structuredClone(phrasesJson) as PhraseJson[],
-  sets: structuredClone(setsJson) as SetJson[],
+  phrases: structuredClone(phrasesJson) as unknown as PhraseJson[],
+  sets: structuredClone(setsJson) as unknown as SetJson[],
   topics: TOPICS,
   languages: LANGUAGES,
   renamed: {},

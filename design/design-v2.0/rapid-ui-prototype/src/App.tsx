@@ -1,50 +1,66 @@
-import { Component, ReactNode, useCallback, useEffect, useState } from 'react';
 import { AnimatePresence, motion, MotionConfig } from 'motion/react';
-import { getPhrase, getSet } from './content';
-import { usePlaybackDriver } from './audio/usePlaybackDriver';
+import { Component, ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import { useLatest } from './lib/useLatest';
 import { stopSpeech } from './audio/speech';
-import { clearSavedState } from './state/persistence';
-import { StoreProvider, useCurrentPhraseId, useStore } from './state/store';
-import { NavigationHeader } from './components/NavigationHeader';
-import { BottomNavBar, Tab } from './components/BottomNavBar';
-import { MiniPlayer } from './components/MiniPlayer';
-import { PhraseDetailsSheet } from './components/PhraseDetailsSheet';
-import { SettingsSheet } from './components/SettingsSheet';
-import { HomeScreen } from './screens/HomeScreen';
-import { SetScreen } from './screens/SetScreen';
-import { NowPlayingScreen } from './screens/NowPlayingScreen';
-import { QueueScreen } from './screens/QueueScreen';
+import { usePlaybackDriver } from './audio/driver';
+import { useMediaSession } from './audio/mediaSession';
+import { learnedCue } from './audio/cues';
+import { copyFor, copyForNative } from './copy';
+import { NATIVE_LANGUAGES } from './content';
+import { navigate, useBackToClose, useRoute, useScrollRestoration } from './nav/history';
+import { Navigation, NavContext } from './nav/NavContext';
+import { Route, tabOf } from './nav/routes';
+import { findPhrase, findSetView } from './state/catalog';
+import { derive, POINTS } from './state/memory';
+import { clearSavedState, rawSavedState } from './state/persistence';
+import { currentPhraseId } from './state/selectors';
+import { StoreProvider, useCopy, useStore } from './state/store';
+import { BottomNavBar } from './ui/BottomNavBar';
+import { MiniPlayer } from './ui/MiniPlayer';
+import { NavigationHeader } from './ui/NavigationHeader';
+import { ToastProvider, useToast } from './ui/Toast';
+import { AddPhraseSheet } from './sheets/AddPhraseSheet';
+import { AddToSetSheet } from './sheets/AddToSetSheet';
+import { CreateSetSheet } from './sheets/CreateSetSheet';
+import { PhraseDetailsSheet } from './sheets/PhraseDetailsSheet';
+import { SessionSummarySheet } from './sheets/SessionSummarySheet';
+import { SettingsSheet } from './sheets/SettingsSheet';
 import { ExploreScreen } from './screens/ExploreScreen';
+import { HomeScreen } from './screens/HomeScreen';
 import { LibraryScreen } from './screens/LibraryScreen';
-
-type Overlay = 'player' | 'queue' | null;
-
-export interface Navigation {
-  openSet: (setId: string) => void;
-  /** Play a whole set from its first phrase. */
-  playSet: (setId: string) => void;
-  /** Play a phrase within its own set, from that phrase onwards. */
-  playPhraseInSet: (phraseId: string) => void;
-  /** Play an explicit list (reviews, saved phrases). */
-  playList: (phraseIds: string[], startIndex?: number) => void;
-  showDetails: (phraseId: string) => void;
-}
+import { NowPlayingScreen } from './screens/NowPlayingScreen';
+import { Onboarding } from './screens/Onboarding';
+import { QueueScreen } from './screens/QueueScreen';
+import { SetScreen } from './screens/SetScreen';
 
 export default function App() {
   return (
     <ErrorBoundary>
       <MotionConfig reducedMotion="user">
         <StoreProvider>
-          <Shell />
+          <ToastProvider>
+            <Shell />
+          </ToastProvider>
         </StoreProvider>
       </MotionConfig>
     </ErrorBoundary>
   );
 }
 
-/** Last resort if saved progress no longer fits the app: say so and offer a clean start. */
-class ErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
-  state = { failed: false };
+/** Copy for the error screen, read straight from the saved profile (the store may be what failed). */
+function fallbackCopy() {
+  try {
+    const native = (JSON.parse(rawSavedState() ?? '{}') as { learner?: { profile?: { nativeLang?: string } } }).learner?.profile?.nativeLang;
+    const known = NATIVE_LANGUAGES.find((l) => l === native);
+    return known ? copyForNative(known) : copyFor('en');
+  } catch {
+    return copyFor('en');
+  }
+}
+
+/** Last resort if saved progress no longer fits the app: say so, offer a copy, then a clean start. */
+class ErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean; copied: boolean }> {
+  state = { failed: false, copied: false };
 
   static getDerivedStateFromError() {
     return { failed: true };
@@ -52,13 +68,23 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean
 
   render() {
     if (!this.state.failed) return this.props.children;
+    const c = fallbackCopy();
+    const raw = rawSavedState();
     return (
       <main className="min-h-dvh bg-surface text-on-surface flex flex-col justify-center gap-3 px-6 max-w-md mx-auto">
-        <h1 className="font-serif text-2xl font-bold">Loro couldn’t open your progress</h1>
-        <p className="text-sm text-secondary">
-          The progress saved on this device doesn’t match this version of the app. Resetting it starts you from
-          zero on this device.
-        </p>
+        <h1 className="font-serif text-display-sm font-bold">{c.error.title}</h1>
+        <p className="text-body text-secondary">{c.error.body}</p>
+        {raw && (
+          <button
+            type="button"
+            onClick={() => {
+              void navigator.clipboard?.writeText(raw).then(() => this.setState({ copied: true }));
+            }}
+            className="self-start min-h-12 px-5 rounded-full bg-surface-container text-on-surface font-bold"
+          >
+            {this.state.copied ? c.error.copied : c.error.copy}
+          </button>
+        )}
         <button
           type="button"
           onClick={() => {
@@ -67,123 +93,155 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean
           }}
           className="self-start min-h-12 px-5 rounded-full bg-primary-container text-on-primary font-bold"
         >
-          Reset progress
+          {c.error.reset}
         </button>
       </main>
     );
   }
 }
 
-const TAB_TITLES: Record<Tab, string | undefined> = {
-  home: undefined,
-  explore: 'Explore',
-  library: 'Library',
-};
+/** Learned bonuses and completed passes get a moment of their own. */
+function useCelebrations(openSummary: () => void) {
+  const c = useCopy();
+  const { state } = useStore();
+  const { toast } = useToast();
+  const learned = derive(state.learner.log).learnedBonuses.size;
+  const passes = state.player.session?.passes ?? 0;
+  const seen = useRef({ learned, passes });
+  useEffect(() => {
+    if (learned > seen.current.learned) {
+      learnedCue();
+      toast(c.toast.learned(POINTS.learned), { tone: 'success' });
+    }
+    if (passes > seen.current.passes) toast(c.toast.passComplete, { action: { label: c.player.summary, run: openSummary } });
+    seen.current = { learned, passes };
+  }, [learned, passes, c, toast, openSummary]);
+}
+
+type Overlay = { player: boolean; queue: boolean };
 
 function Shell() {
   usePlaybackDriver();
-  const { actions } = useStore();
-  const currentId = useCurrentPhraseId();
-  const [tab, setTab] = useState<Tab>('home');
-  const [openSetId, setOpenSetId] = useState<string | null>(null);
-  const [overlay, setOverlay] = useState<Overlay>(null);
-  const [detailsId, setDetailsId] = useState<string | null>(null);
+  useMediaSession();
+  const c = useCopy();
+  const { state, actions } = useStore();
+  const route = useRoute();
+  useScrollRestoration(route);
+  const currentId = currentPhraseId(state.player);
+
+  const [overlay, setOverlay] = useState<Overlay>({ player: false, queue: false });
+  const [details, setDetails] = useState<{ phraseId: string; ownSetId?: string } | null>(null);
+  const [addTo, setAddTo] = useState<string[] | null>(null);
+  const [create, setCreate] = useState<{ phraseIds: string[]; rename?: string } | null>(null);
+  const [addPhraseOpen, setAddPhraseOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [summaryOpen, setSummaryOpen] = useState(false);
 
   useEffect(() => stopSpeech, []);
+  const closePlayer = () => setOverlay({ player: false, queue: false });
+  const closeQueue = () => setOverlay((o) => ({ ...o, queue: false }));
+  useBackToClose(overlay.player, closePlayer);
+  useBackToClose(overlay.queue, closeQueue);
 
-  const openPlayer = useCallback(() => setOverlay('player'), []);
+  const routeRef = useLatest(route);
+  const learnerRef = useLatest(state.learner);
 
-  const nav: Navigation = {
-    openSet: (setId) => {
-      setOpenSetId(setId);
-      window.scrollTo(0, 0);
-    },
-    playSet: (setId) => actions.load(getSet(setId).phraseIds, setId, 0),
-    playPhraseInSet: (phraseId) => {
-      const set = getSet(getPhrase(phraseId).setId);
-      actions.load(set.phraseIds, set.id, set.phraseIds.indexOf(phraseId));
-    },
-    playList: (phraseIds, startIndex = 0) => actions.load(phraseIds, null, startIndex),
-    showDetails: setDetailsId,
-  };
+  const nav: Navigation = useMemo(
+    () => ({
+      go: (next: Route) => navigate(next),
+      openSet: (setId) => navigate({ name: 'set', id: setId, from: tabOf(routeRef.current) }),
+      playSet: (setId, options = {}) => {
+        const view = findSetView(learnerRef.current, setId);
+        if (!view) return;
+        actions.load(options.phraseIds ?? view.phraseIds, setId, options.startIndex ?? 0, options.shuffle ?? false);
+      },
+      playPhraseInSet: (phraseId) => {
+        const phrase = findPhrase(learnerRef.current, phraseId);
+        const view = findSetView(learnerRef.current, phrase?.setId);
+        if (view) actions.load(view.phraseIds, view.id, view.phraseIds.indexOf(phraseId));
+        else actions.load([phraseId], null, 0);
+      },
+      playList: (phraseIds, startIndex = 0) => actions.load(phraseIds, null, startIndex),
+      openPlayer: () => setOverlay({ player: true, queue: false }),
+      openQueue: () => setOverlay({ player: true, queue: true }),
+      openSummary: () => setSummaryOpen(true),
+      showDetails: (phraseId, context = {}) => setDetails({ phraseId, ...context }),
+      addToSet: (phraseIds) => setAddTo(phraseIds),
+      addPhrase: () => setAddPhraseOpen(true),
+      createSet: (phraseIds = [], rename) => setCreate({ phraseIds, rename }),
+      openSettings: () => setSettingsOpen(true),
+    }),
+    [actions, routeRef, learnerRef],
+  );
+  useCelebrations(nav.openSummary);
 
-  const goTab = (next: Tab) => {
-    setOpenSetId(null);
-    setTab(next);
-    window.scrollTo(0, 0);
-  };
+  if (!state.learner.profile.onboarded) {
+    return (
+      <NavContext.Provider value={nav}>
+        <Onboarding />
+      </NavContext.Provider>
+    );
+  }
 
-  const screenKey = openSetId ? `set-${openSetId}` : tab;
-  // Behind a full-screen overlay the app is neither focusable nor read out.
-  const behind = overlay !== null;
+  const tab = tabOf(route);
+  const setView = route.name === 'set' ? findSetView(state.learner, route.id) : undefined;
+  const behind = overlay.player;
+  const screenKey = route.name === 'set' ? `set-${route.id}` : route.name;
 
   return (
-    <div className="min-h-dvh bg-surface text-on-surface flex flex-col antialiased">
-      <NavigationHeader
-        title={openSetId ? undefined : TAB_TITLES[tab]}
-        onBack={openSetId ? () => setOpenSetId(null) : undefined}
-        onOpenSettings={() => setSettingsOpen(true)}
-        inert={behind}
-      />
-
-      <main inert={behind} className="flex-1 pt-[calc(56px+env(safe-area-inset-top))] pb-[calc(140px+env(safe-area-inset-bottom))]">
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.div
-            key={screenKey}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
-          >
-            {openSetId ? (
-              <SetScreen setId={openSetId} nav={nav} />
-            ) : tab === 'home' ? (
-              <HomeScreen nav={nav} />
-            ) : tab === 'explore' ? (
-              <ExploreScreen nav={nav} />
-            ) : (
-              <LibraryScreen nav={nav} />
-            )}
-          </motion.div>
-        </AnimatePresence>
-      </main>
-
-      {currentId && (
-        // Stays mounted under the player so focus can return to it on close.
-        <div
+    <NavContext.Provider value={nav}>
+      <div className="min-h-dvh bg-surface text-on-surface flex flex-col antialiased">
+        <NavigationHeader
+          title={route.name === 'set' ? undefined : route.name === 'home' ? undefined : c.nav[route.name]}
+          onBack={route.name === 'set' ? () => navigate({ name: route.from }) : undefined}
+          onOpenSettings={nav.openSettings}
           inert={behind}
-          className={`fixed inset-x-2 bottom-[calc(64px+env(safe-area-inset-bottom))] z-30 max-w-lg mx-auto ${behind ? 'invisible' : ''}`}
-        >
-          <MiniPlayer onOpenPlayer={openPlayer} />
-        </div>
-      )}
+          scrolledTitle={route.name === 'set' ? setView?.title : undefined}
+        />
 
-      <BottomNavBar current={tab} onNavigate={goTab} inert={behind} />
+        <main inert={behind} className="flex-1 pt-[calc(3.5rem+env(safe-area-inset-top))] pb-[calc(9rem+env(safe-area-inset-bottom))]">
+          {route.name === 'set' ? (
+            // The set page slides in; switching tabs is instant.
+            <motion.div key={screenKey} initial={{ x: 24, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ duration: 0.18 }}>
+              <SetScreen setId={route.id} />
+            </motion.div>
+          ) : route.name === 'home' ? (
+            <HomeScreen />
+          ) : route.name === 'explore' ? (
+            <ExploreScreen filters={route} />
+          ) : (
+            <LibraryScreen view={route.view} />
+          )}
+        </main>
 
-      <AnimatePresence>
-        {overlay === 'player' && currentId && (
-          <NowPlayingScreen
-            key="player"
-            onClose={() => setOverlay(null)}
-            onOpenQueue={() => setOverlay('queue')}
-          />
+        {currentId && (
+          // Stays mounted under the player so focus can return to it on close.
+          <div inert={behind} className={`fixed inset-x-2 bottom-[calc(3.75rem+env(safe-area-inset-bottom))] z-30 max-w-lg mx-auto ${behind ? 'invisible' : ''}`}>
+            <MiniPlayer onOpenPlayer={nav.openPlayer} />
+          </div>
         )}
-        {overlay === 'queue' && (
-          <QueueScreen key="queue" onClose={() => setOverlay('player')} nav={nav} />
-        )}
-      </AnimatePresence>
 
-      <SettingsSheet open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+        <BottomNavBar
+          current={tab}
+          inert={behind}
+          onNavigate={(next) => {
+            if (next === tab && route.name !== 'set') window.scrollTo({ top: 0, behavior: 'smooth' });
+            else navigate({ name: next });
+          }}
+        />
 
-      <PhraseDetailsSheet
-        phraseId={detailsId}
-        onClose={() => setDetailsId(null)}
-        onPlay={(id) => {
-          setDetailsId(null);
-          nav.playPhraseInSet(id);
-        }}
-      />
-    </div>
+        <AnimatePresence>
+          {overlay.player && currentId && <NowPlayingScreen key="player" onClose={closePlayer} onOpenQueue={nav.openQueue} />}
+          {overlay.queue && <QueueScreen key="queue" onClose={closeQueue} />}
+        </AnimatePresence>
+
+        <SettingsSheet open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+        <SessionSummarySheet open={summaryOpen} onClose={() => setSummaryOpen(false)} />
+        <PhraseDetailsSheet details={details} onClose={() => setDetails(null)} />
+        <AddToSetSheet phraseIds={addTo} onClose={() => setAddTo(null)} />
+        <CreateSetSheet request={create} onClose={() => setCreate(null)} />
+        <AddPhraseSheet open={addPhraseOpen} onClose={() => setAddPhraseOpen(false)} />
+      </div>
+    </NavContext.Provider>
   );
 }

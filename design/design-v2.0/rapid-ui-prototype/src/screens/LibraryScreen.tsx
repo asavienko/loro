@@ -1,143 +1,203 @@
-import { useState } from 'react';
-import { findPhrase, getSet, PHRASES } from '../content';
-import type { Navigation } from '../App';
-import { PhraseRow } from '../components/PhraseRow';
-import { SetCover } from '../components/SetCover';
-import { progressLabel } from '../lib/progressLabel';
+import { navigate } from '../nav/history';
+import { useNav } from '../nav/NavContext';
+import type { LibraryView } from '../nav/routes';
 import { panelId, tabId, tabListKeyDown } from '../lib/tabs';
-import { LEARNED_STABILITY_DAYS } from '../state/memory';
-import { learnedPhraseIds, learnerStats, phraseProgress, setProgress } from '../state/selectors';
-import { useNow, useStore } from '../state/store';
+import { findPhrase, findSetView, ownPhrases, ownSets, SetView } from '../state/catalog';
+import { LEARNED_MIN_SUCCESSES, LEARNED_STABILITY_DAYS } from '../state/memory';
+import {
+  duePhraseIds,
+  idsWithStatus,
+  learnedIds,
+  learnedPerWeek,
+  learnerStats,
+  likedPhraseIds,
+  likedSetIds,
+  phraseProgress,
+  recallBuckets,
+  recentlyMissedIds,
+  setProgress,
+} from '../state/selectors';
+import { coursePhrases } from '../state/catalog';
+import { useCopy, useNow, useStore } from '../state/store';
+import { RecallChart, WeeklyChart } from '../ui/Charts';
+import { Icon } from '../ui/Icon';
+import { PhraseRow } from '../ui/PhraseRow';
+import { progressLabel } from '../ui/progressLabel';
+import { SetCover } from '../ui/SetCover';
 
-type Filter = 'saved' | 'learned' | 'sets';
-
-const FILTERS: { id: Filter; label: string }[] = [
-  { id: 'saved', label: 'Saved phrases' },
-  { id: 'learned', label: 'Learned' },
-  { id: 'sets', label: 'My sets' },
-];
-const FILTER_IDS = FILTERS.map((f) => f.id);
+const PHRASE_VIEWS: LibraryView[] = ['liked', 'mine', 'due', 'learning', 'missed', 'learned'];
+const SET_VIEWS: LibraryView[] = ['ownSets', 'likedSets'];
 const TABS = 'library';
 
-export function LibraryScreen({ nav }: { nav: Navigation }) {
+export function LibraryScreen({ view = 'liked' }: { view?: LibraryView }) {
+  const c = useCopy();
+  const nav = useNav();
   const { state } = useStore();
   const now = useNow(30_000);
-  const [filter, setFilter] = useState<Filter>('saved');
-  const stats = learnerStats(state.learner, now);
   const { learner } = state;
+  const stats = learnerStats(learner, now);
+  const segment = SET_VIEWS.includes(view) ? 'sets' : 'phrases';
+  const views = segment === 'sets' ? SET_VIEWS : PHRASE_VIEWS;
+  const go = (next: LibraryView) => navigate({ name: 'library', view: next }, { replace: true });
 
-  const savedIds = learner.savedPhraseIds.filter((id) => findPhrase(id));
-  const learnedIds = learnedPhraseIds(learner, PHRASES.map((p) => p.id));
+  const phraseIds: Record<string, () => string[]> = {
+    liked: () => likedPhraseIds(learner),
+    mine: () => ownPhrases(learner).map((p) => p.id),
+    due: () => duePhraseIds(learner, now),
+    learning: () => idsWithStatus(learner, 'learning', now),
+    missed: () => recentlyMissedIds(learner, now),
+    learned: () => learnedIds(learner, coursePhrases(learner).map((p) => p.id)),
+  };
 
   return (
-    <div className="max-w-3xl mx-auto px-4 pt-4 flex flex-col gap-6">
-      <dl className="grid grid-cols-3 gap-2">
-        <StatCard label="Learned" value={`${stats.learned}/${PHRASES.length}`} note={`Recall lasts ${LEARNED_STABILITY_DAYS}+ days`} />
+    <div className="max-w-5xl mx-auto px-4 pt-4 flex flex-col gap-6">
+      <div className="grid grid-cols-3 gap-2">
+        <StatCard label={c.library.learned} value={String(stats.learned)} note={c.library.learnedNote(LEARNED_STABILITY_DAYS, LEARNED_MIN_SUCCESSES)} onClick={() => go('learned')} />
         <StatCard
-          label="Recall now"
-          value={stats.averageRetention === null ? '—' : `${stats.averageRetention}%`}
-          note={stats.averageRetention === null ? 'Rate a phrase first' : 'Average, rated phrases'}
+          label={c.library.recall}
+          value={stats.averageRecall === null ? '—' : `${stats.averageRecall}%`}
+          note={stats.averageRecall === null ? c.library.recallNone : c.library.recallNote(stats.rated)}
+          onClick={() => go('learning')}
         />
-        <StatCard label="Started" value={String(stats.started)} note="Phrases heard at least once" />
-      </dl>
+        <StatCard label={c.library.started} value={String(stats.started)} note={c.library.startedNote} onClick={() => go('learning')} />
+      </div>
 
-      <div
-        className="flex gap-2"
-        role="tablist"
-        aria-label="Library"
-        onKeyDown={tabListKeyDown(TABS, FILTER_IDS, filter, setFilter)}
-      >
-        {FILTERS.map((f) => (
+      <div className="grid grid-cols-2 gap-1 p-1 bg-surface-container-low rounded-full" role="group">
+        {(['phrases', 'sets'] as const).map((s) => (
           <button
-            key={f.id}
-            id={tabId(TABS, f.id)}
+            key={s}
             type="button"
-            role="tab"
-            aria-selected={filter === f.id}
-            aria-controls={panelId(TABS, f.id)}
-            tabIndex={filter === f.id ? 0 : -1}
-            onClick={() => setFilter(f.id)}
-            className={`min-h-11 px-4 rounded-full text-sm font-semibold whitespace-nowrap border ${
-              filter === f.id
-                ? 'bg-primary-container text-on-primary border-primary-container'
-                : 'bg-surface-container-low text-on-surface border-outline-variant/50'
-            }`}
+            aria-pressed={segment === s}
+            onClick={() => go(s === 'sets' ? 'ownSets' : 'liked')}
+            className={`min-h-11 rounded-full text-body ${segment === s ? 'bg-surface-container-lowest font-bold shadow-sm' : 'text-secondary font-medium'}`}
           >
-            {f.label}
+            {s === 'sets' ? c.library.setsSegment : c.library.phrasesSegment}
           </button>
         ))}
       </div>
 
-      <section role="tabpanel" id={panelId(TABS, filter)} aria-labelledby={tabId(TABS, filter)}>
-        {filter === 'saved' || filter === 'learned' ? (
-          <PhraseList
-            ids={filter === 'saved' ? savedIds : learnedIds}
-            empty={
-              filter === 'saved'
-                ? 'Tap the heart in the player to save a phrase here.'
-                : `A phrase is learned once your recall of it is expected to last ${LEARNED_STABILITY_DAYS} days or more.`
-            }
-            now={now}
-            nav={nav}
-          />
-        ) : learner.likedSetIds.length === 0 ? (
-          <p className="text-sm text-secondary py-2">Tap the heart on a set to add it here.</p>
+      <div
+        className="flex flex-wrap gap-2 -mt-2"
+        role="tablist"
+        aria-label={segment === 'sets' ? c.library.setsSegment : c.library.phrasesSegment}
+      >
+        {views.map((v) => (
+          <button
+            key={v}
+            id={tabId(TABS, v)}
+            type="button"
+            role="tab"
+            aria-selected={view === v}
+            aria-controls={panelId(TABS, v)}
+            tabIndex={view === v ? 0 : -1}
+            onKeyDown={tabListKeyDown(TABS, views, view, go)}
+            onClick={() => go(v)}
+            className={`min-h-11 px-4 rounded-full text-body font-semibold whitespace-nowrap border ${
+              view === v ? 'bg-primary-container text-on-primary border-primary-container' : 'bg-surface-container-low text-on-surface border-outline-variant/50'
+            }`}
+          >
+            {c.library.filters[v]}
+          </button>
+        ))}
+      </div>
+
+      <section role="tabpanel" id={panelId(TABS, view)} aria-labelledby={tabId(TABS, view)}>
+        {segment === 'phrases' ? (
+          <PhraseList ids={phraseIds[view]()} view={view} now={now} />
         ) : (
-          <ul className="flex flex-col gap-2">
-            {learner.likedSetIds.map((id) => {
-              const set = getSet(id);
-              const progress = setProgress(learner, id, now);
-              return (
-                <li key={id}>
-                  <button
-                    type="button"
-                    onClick={() => nav.openSet(id)}
-                    className="w-full min-h-16 flex items-center gap-3 p-2 rounded-2xl bg-surface-container-lowest border border-outline-variant/50 text-left active:bg-surface-container-low"
-                  >
-                    <SetCover set={set} size="sm" className="w-14 h-14 rounded-xl shrink-0" />
-                    <span className="flex-1 min-w-0">
-                      <span className="block font-serif text-base font-bold truncate">{set.title}</span>
-                      <span className="block text-xs text-secondary">
-                        {progress.total} phrases · {progress.learned} learned
-                      </span>
-                    </span>
-                    <span aria-hidden="true" className="material-symbols-outlined text-secondary">chevron_right</span>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
+          <SetList ids={view === 'ownSets' ? ownSets(learner).map((s) => s.id) : likedSetIds(learner)} view={view} now={now} />
         )}
+        {view === 'mine' && (
+          <button type="button" onClick={nav.addPhrase} className="mt-3 min-h-11 px-4 rounded-full bg-surface-container text-on-surface text-body font-semibold flex items-center gap-1.5">
+            <Icon name="add" className="text-icon-md" />
+            {c.library.addPhrase}
+          </button>
+        )}
+        {view === 'ownSets' && (
+          <button type="button" onClick={() => nav.createSet()} className="mt-3 min-h-11 px-4 rounded-full bg-surface-container text-on-surface text-body font-semibold flex items-center gap-1.5">
+            <Icon name="add" className="text-icon-md" />
+            {c.library.newSet}
+          </button>
+        )}
+      </section>
+
+      <section aria-label={c.library.progress} className="grid gap-3 md:grid-cols-2">
+        <RecallChart buckets={recallBuckets(learner, now)} />
+        <WeeklyChart weeks={learnedPerWeek(learner, now)} />
       </section>
     </div>
   );
 }
 
-function StatCard({ label, value, note }: { label: string; value: string; note: string }) {
+function StatCard({ label, value, note, onClick }: { label: string; value: string; note: string; onClick: () => void }) {
   return (
-    <div className="p-3 rounded-2xl bg-surface-container-lowest border border-outline-variant/50 flex flex-col">
-      <dt className="text-xs font-semibold text-secondary">{label}</dt>
-      <dd className="font-serif text-2xl font-bold mt-0.5 tabular-nums">{value}</dd>
-      <dd className="text-[11px] leading-snug text-on-surface-variant mt-0.5">{note}</dd>
-    </div>
+    <button type="button" onClick={onClick} className="p-3 rounded-2xl bg-surface-container-lowest border border-outline-variant/50 flex flex-col text-left active:bg-surface-container-low">
+      <span className="text-label font-semibold text-secondary">{label}</span>
+      <span className="font-serif text-display-sm font-bold mt-0.5 tabular-nums">{value}</span>
+      <span className="text-caption leading-snug text-on-surface-variant mt-0.5 line-clamp-3">{note}</span>
+    </button>
   );
 }
 
-function PhraseList({ ids, empty, now, nav }: { ids: string[]; empty: string; now: number; nav: Navigation }) {
+function PhraseList({ ids, view, now }: { ids: string[]; view: LibraryView; now: number }) {
+  const c = useCopy();
+  const nav = useNav();
   const { state } = useStore();
-  if (ids.length === 0) return <p className="text-sm text-secondary py-2">{empty}</p>;
+  const empty = view === 'learned' ? c.library.empty.learned(LEARNED_STABILITY_DAYS, LEARNED_MIN_SUCCESSES) : c.library.empty[view as Exclude<LibraryView, 'learned' | 'ownSets' | 'likedSets'>];
+  if (ids.length === 0) return <p className="text-body text-secondary py-2">{empty}</p>;
   return (
-    <ul className="-mx-2">
-      {ids.map((id, i) => (
-        <li key={id}>
-          <PhraseRow
-            phrase={findPhrase(id)!}
-            detail={progressLabel(phraseProgress(state.learner, id, now), now)}
-            onPlay={() => nav.playList(ids, i)}
-            onMore={() => nav.showDetails(id)}
-          />
-        </li>
-      ))}
+    <>
+      <button type="button" onClick={() => nav.playList(ids)} className="mb-2 min-h-11 px-4 rounded-full bg-primary-container text-on-primary text-body font-bold flex items-center gap-1.5">
+        <Icon name="play_arrow" fill className="text-icon-md" />
+        {c.library.playAll(ids.length)}
+      </button>
+      <ul className="-mx-2">
+        {ids.map((id, i) => {
+          const phrase = findPhrase(state.learner, id);
+          if (!phrase) return null;
+          return (
+            <li key={id}>
+              <PhraseRow
+                phrase={phrase}
+                detail={progressLabel(c, phraseProgress(state.learner, id, now), now)}
+                onPlay={() => nav.playList(ids, i)}
+                onMore={() => nav.showDetails(id)}
+              />
+            </li>
+          );
+        })}
+      </ul>
+    </>
+  );
+}
+
+function SetList({ ids, view, now }: { ids: string[]; view: LibraryView; now: number }) {
+  const c = useCopy();
+  const nav = useNav();
+  const { state } = useStore();
+  const views = ids.map((id) => findSetView(state.learner, id)).filter((v): v is SetView => Boolean(v));
+  if (views.length === 0) return <p className="text-body text-secondary py-2">{c.library.empty[view as 'ownSets' | 'likedSets']}</p>;
+  return (
+    <ul className="grid gap-2 md:grid-cols-2">
+      {views.map((v) => {
+        const progress = setProgress(state.learner, v.phraseIds, now);
+        return (
+          <li key={v.id}>
+            <button
+              type="button"
+              onClick={() => nav.openSet(v.id)}
+              className="w-full min-h-16 flex items-center gap-3 p-2 rounded-2xl bg-surface-container-lowest border border-outline-variant/50 text-left active:bg-surface-container-low"
+            >
+              <SetCover set={v} size="sm" className="w-14 h-14 rounded-xl shrink-0" />
+              <span className="flex-1 min-w-0">
+                <span className="block font-serif text-base font-bold truncate">{v.title}</span>
+                <span className="block text-label text-secondary">{c.set.summary(progress.total, progress.learned, progress.due)}</span>
+              </span>
+              <Icon name="chevron_right" className="text-icon text-secondary" />
+            </button>
+          </li>
+        );
+      })}
     </ul>
   );
 }

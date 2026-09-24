@@ -1,20 +1,41 @@
+import { motion, PanInfo, useDragControls } from 'motion/react';
 import { PointerEvent, useRef, useState } from 'react';
-import { AnimatePresence, motion, PanInfo, useDragControls } from 'motion/react';
-import { findSet, getLanguage, getPhrase, getSet, PhraseNotes } from '../content';
-import { NOTE_TABS, NoteBody } from '../components/PhraseDetailsSheet';
-import { SetCover } from '../components/SetCover';
-import { easyCue, hardCue, learnedCue } from '../audio/feedbackSounds';
 import { voiceName } from '../audio/speech';
-import { floatingChip } from '../lib/feedback';
-import { isTargetRevealed, PHASE_ICONS, phaseInstruction, phaseStepLabel } from '../lib/phase';
+import { easyCue, gentleCue } from '../audio/cues';
+import { languageName } from '../copy';
+import { getLanguage, Phrase } from '../content';
 import { useDialog } from '../lib/useDialog';
-import { DAY, formatElapsed, formatInterval } from '../state/clock';
-import { PHASES, SPEEDS } from '../state/machine';
-import { applyGrade, Grade, newMemory, previewInterval } from '../state/memory';
-import { listenedMs } from '../state/selectors';
-import { useCurrentPhraseId, useNow, useStore } from '../state/store';
+import { useClickBlockerDuringDrag } from '../lib/suppressClick';
+import { useNav } from '../nav/NavContext';
+import { findPhrase, findSetView, promptOf } from '../state/catalog';
+import { formatElapsed, formatInterval, formatWhen } from '../state/clock';
+import { REPEAT_SETTINGS, SPEEDS } from '../state/machine';
+import {
+  currentPhraseId,
+  isLiked,
+  listenedMs,
+  pendingFor,
+  phraseFullPlayMs,
+  previewDue,
+  windowLeft,
+} from '../state/selectors';
+import { useCopy, useNow, useStore } from '../state/store';
+import type { Grade, Phase } from '../state/types';
+import { Icon, IconName } from '../ui/Icon';
+import { PhraseNotesView } from '../ui/Notes';
+import { isTargetRevealed, PHASE_ICONS, phaseInstruction, phaseStepLabel } from '../ui/phase';
+import { GlossedPhrase, HiddenPhrase } from '../ui/PhraseText';
+import { SetCover } from '../ui/SetCover';
+import { Sheet } from '../ui/Sheet';
 
-type NoteTab = keyof PhraseNotes;
+const STEPS: Exclude<Phase, 'rate'>[] = ['native', 'pause', 'target'];
+const SWIPE = 70;
+
+const GRADES: { grade: Grade; icon: IconName; tone: string }[] = [
+  { grade: 'missed', icon: 'replay', tone: 'bg-surface-container-high text-on-surface' },
+  { grade: 'hard', icon: 'hourglass_empty', tone: 'bg-secondary-container text-on-secondary-fixed' },
+  { grade: 'easy', icon: 'check', tone: 'bg-tertiary-fixed text-on-tertiary-fixed' },
+];
 
 interface NowPlayingScreenProps {
   onClose: () => void;
@@ -22,57 +43,55 @@ interface NowPlayingScreenProps {
 }
 
 export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps) {
+  const c = useCopy();
+  const nav = useNav();
   const { state, actions } = useStore();
-  const phraseId = useCurrentPhraseId()!;
-  const now = useNow(250);
   const dragControls = useDragControls();
   const dialogRef = useRef<HTMLDivElement>(null);
   useDialog(dialogRef, onClose);
-  const [openNote, setOpenNote] = useState<NoteTab | null>(null);
-  const [noteFor, setNoteFor] = useState(phraseId);
-  // Notes start closed for every new phrase.
-  if (noteFor !== phraseId) {
-    setNoteFor(phraseId);
-    setOpenNote(null);
-  }
+  const [notesOpen, setNotesOpen] = useState(false);
+  const clicks = useClickBlockerDuringDrag();
 
-  const phrase = getPhrase(phraseId);
-  const queueSet = findSet(state.player.setId);
-  const { status, phase, repetition, repeats, speed, shuffle, ratedCurrent, index, order, audioError } = state.player;
+  const phrase = findPhrase(state.learner, currentPhraseId(state.player));
+  if (!phrase) return null;
+  const { status, phase, index, order, audioError } = state.player;
   const playing = status === 'playing';
   const revealed = isTargetRevealed(state.player);
-  const saved = state.learner.savedPhraseIds.includes(phrase.id);
-  const memory = state.learner.phrases[phrase.id];
-  const target = getLanguage(phrase.target.lang);
-  const voice = voiceName(phrase.target.lang);
-  const notes = phrase.notes ?? {};
-  const noteTabs = NOTE_TABS.filter((t) => notes[t.id]);
+  const liked = isLiked(state.learner, 'phrase', phrase.id);
+  const prompt = promptOf(phrase, state.learner.profile.nativeLang);
+  const targetName = languageName(phrase.targetLang, c.locale);
+  const queueSet = findSetView(state.learner, state.player.setId);
+  const coverSet = findSetView(state.learner, phrase.setId) ?? queueSet;
+  const voice = voiceName(phrase.targetLang);
+  const quiet = !state.prefs.announceEveryStep;
 
   const onDragEnd = (_: unknown, info: PanInfo) => {
     if (info.offset.y > 100 || info.velocity.y > 500) onClose();
   };
   const startDrag = (e: PointerEvent) => dragControls.start(e);
-
-  const rate = (grade: Grade, anchor: HTMLElement) => {
-    const result = applyGrade(memory ?? newMemory(now), grade, now);
-    actions.rate(grade);
-    if (result.becameLearned) learnedCue();
-    else if (grade === 'easy') easyCue();
-    else hardCue();
-    const next = formatInterval(result.memory.stabilityDays! * DAY);
-    floatingChip(
-      anchor,
-      result.becameLearned ? `Learned · +${result.points + result.bonus}` : `${grade === 'easy' ? 'Easy' : 'Hard'} · next in ${next}`,
-      grade === 'easy' ? 'success' : 'info',
-    );
+  const onSwipe = (_: unknown, info: PanInfo) => {
+    clicks.release();
+    if (info.offset.x < -SWIPE) actions.next();
+    else if (info.offset.x > SWIPE) actions.prev();
   };
+
+  // What a screen reader hears: every step, or only "your turn" and the reveal.
+  const announcement = !playing
+    ? ''
+    : !quiet
+      ? phaseInstruction(c, phase, prompt.lang, phrase.targetLang)
+      : phase === 'pause'
+        ? phaseInstruction(c, 'pause', prompt.lang, phrase.targetLang)
+        : phase === 'target' && state.player.repetition === 1
+          ? phrase.target
+          : '';
 
   return (
     <motion.div
       ref={dialogRef}
       role="dialog"
       aria-modal="true"
-      aria-label="Now playing"
+      aria-label={c.player.dialog}
       tabIndex={-1}
       drag="y"
       dragListener={false}
@@ -84,266 +103,288 @@ export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps
       animate={{ y: 0 }}
       exit={{ y: '100%' }}
       transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-      className="fixed inset-0 z-50 bg-surface flex flex-col pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] outline-none"
+      className="fixed inset-0 z-50 bg-surface flex flex-col pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]"
     >
       {/* The grab bar and the title drag the player closed; the buttons never start a drag. */}
       <div onPointerDown={startDrag} className="shrink-0 h-4 touch-none cursor-grab active:cursor-grabbing" aria-hidden="true">
         <div className="w-10 h-1 rounded-full bg-outline-variant mx-auto mt-2" />
       </div>
-      <header className="shrink-0 flex items-center gap-2 px-2 h-12 max-w-lg w-full mx-auto">
-        <button
-          type="button"
-          aria-label="Close player"
-          onClick={onClose}
-          className="w-11 h-11 flex items-center justify-center rounded-full active:bg-surface-container"
-        >
-          <span aria-hidden="true" className="material-symbols-outlined text-[28px]">keyboard_arrow_down</span>
-        </button>
-        <h1
-          onPointerDown={startDrag}
-          className="flex-1 min-w-0 self-stretch flex items-center justify-center font-serif text-base font-bold text-on-surface truncate touch-none"
-        >
-          {queueSet?.title ?? `Queue · ${order.length} phrases`}
-        </h1>
-        <button
-          type="button"
-          aria-label="Open queue"
-          onClick={onOpenQueue}
-          className="w-11 h-11 flex items-center justify-center rounded-full active:bg-surface-container"
-        >
-          <span aria-hidden="true" className="material-symbols-outlined text-[26px]">queue_music</span>
-        </button>
+      <header className="shrink-0 flex items-center gap-1 px-2 h-12 max-w-5xl w-full mx-auto">
+        <HeaderButton label={c.player.close} icon="keyboard_arrow_down" onClick={onClose} />
+        <div onPointerDown={startDrag} className="flex-1 min-w-0 self-stretch flex flex-col items-center justify-center touch-none">
+          <h1 className="font-serif text-row font-bold text-on-surface truncate max-w-full leading-tight">
+            {queueSet?.title ?? c.player.queueTitle(order.length)}
+          </h1>
+          <p className="text-label text-secondary tabular-nums">{c.player.position(index + 1, order.length)}</p>
+        </div>
+        <HeaderButton label={c.player.summary} icon="insights" onClick={nav.openSummary} />
+        <HeaderButton label={c.player.openQueue} icon="queue_music" onClick={onOpenQueue} />
       </header>
 
       <div className="flex-1 min-h-0 overflow-y-auto">
-        <div className="max-w-lg mx-auto px-5 pb-4 flex flex-col gap-4">
-          <div className="relative mx-auto w-full max-w-[min(100%,34dvh)] aspect-square">
-            <SetCover set={getSet(phrase.setId)} size="lg" className="w-full h-full rounded-3xl shadow-xl" />
-            <span
-              role="img"
-              aria-label={target.name}
-              className="absolute bottom-3 left-3 w-9 h-9 rounded-full bg-surface/70 flex items-center justify-center text-lg"
-            >
-              {target.flag}
+        <div className="max-w-lg md:max-w-4xl phone-landscape:max-w-4xl mx-auto px-5 pb-3 h-full grid gap-3 md:grid-cols-2 md:items-center md:gap-8 phone-landscape:grid-cols-2 phone-landscape:items-center phone-landscape:gap-6">
+          <motion.div
+            drag="x"
+            dragSnapToOrigin
+            dragElastic={0.3}
+            onDragStart={clicks.block}
+            onDragEnd={onSwipe}
+            className="relative mx-auto w-full max-w-[min(100%,26dvh)] md:max-w-[min(100%,52dvh)] phone-landscape:max-w-[min(100%,60dvh)] aspect-square touch-pan-y"
+          >
+            <SetCover set={coverSet ?? { topicId: null, coverIcon: 'edit_note' }} size="lg" className="w-full h-full rounded-3xl shadow-xl" />
+            <span role="img" aria-label={targetName} className="absolute bottom-3 left-3 w-9 h-9 rounded-full bg-surface/70 flex items-center justify-center text-lg">
+              {getLanguage(phrase.targetLang).flag}
             </span>
-          </div>
+          </motion.div>
 
-          {/* Phrase: the target stays hidden until it is heard, so the learner recalls it first. */}
-          <div className="flex items-start gap-2">
-            <div className="flex-1 min-w-0">
-              {revealed ? (
-                <h2 lang={phrase.target.lang} className="font-serif italic text-2xl font-bold text-on-surface leading-snug">
-                  {phrase.target.text}
-                </h2>
-              ) : (
-                // A redaction bar the length of the phrase: something is there, not yet shown.
-                <h2 className="h-8 flex items-center">
-                  <span
-                    aria-hidden="true"
-                    className="block h-6 rounded-md bg-surface-container-highest"
-                    style={{ width: `${Math.min(100, 12 + phrase.target.text.length * 2.4)}%` }}
-                  />
-                  <span className="sr-only">{target.name} hidden until you hear it</span>
-                </h2>
-              )}
-              <p className="text-sm text-secondary mt-0.5">{phrase.native.text}</p>
-              {voice && <p className="text-xs text-on-surface-variant mt-1">Device voice · {voice}</p>}
-            </div>
-            <button
-              type="button"
-              aria-label={saved ? 'Remove from saved phrases' : 'Save phrase'}
-              aria-pressed={saved}
-              onClick={() => actions.toggleSavePhrase(phrase.id)}
-              className="w-11 h-11 shrink-0 flex items-center justify-center rounded-full text-primary-container active:bg-primary-fixed/40"
-            >
-              <span aria-hidden="true" className={`material-symbols-outlined text-[26px] ${saved ? 'material-symbols-fill' : ''}`}>favorite</span>
-            </button>
-          </div>
-
-          {noteTabs.length > 0 && (
-            <div>
-              <div className="scroll-row flex gap-2 overflow-x-auto -mx-5 px-5">
-                {noteTabs.map((t) => (
-                  <button
-                    key={t.id}
-                    type="button"
-                    aria-expanded={openNote === t.id}
-                    onClick={() => setOpenNote(openNote === t.id ? null : t.id)}
-                    className={`shrink-0 min-h-11 px-3 rounded-full text-[13px] font-semibold flex items-center gap-1 border ${
-                      openNote === t.id
-                        ? 'bg-primary-container text-on-primary border-primary-container'
-                        : 'bg-surface-container-low text-on-surface border-outline-variant/50'
-                    }`}
-                  >
-                    <span aria-hidden="true" className="material-symbols-outlined text-[18px]">{t.icon}</span>
-                    {t.label}
-                  </button>
-                ))}
-              </div>
-              <AnimatePresence initial={false}>
-                {openNote && (
-                  <motion.div
-                    key={openNote}
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="mt-3 rounded-2xl bg-surface-container-low p-3">
-                      <NoteBody notes={notes} tab={openNote} />
-                    </div>
-                  </motion.div>
+          <div className="flex flex-col gap-3 min-w-0">
+            {/* The target stays hidden until it is heard, so the learner recalls it first. */}
+            <div className="flex items-start gap-1">
+              <div className="flex-1 min-w-0">
+                {revealed ? (
+                  <GlossedPhrase phrase={phrase} className="font-serif italic text-display-sm font-bold text-on-surface leading-snug" />
+                ) : (
+                  <HiddenPhrase text={phrase.target} label={c.player.hidden(targetName)} className="font-serif italic text-display-sm font-bold leading-snug" />
                 )}
-              </AnimatePresence>
+                <p lang={prompt.lang} className="text-body text-secondary">{prompt.text}</p>
+                {voice && !phrase.audio && <p className="text-label text-on-surface-variant mt-0.5">{c.player.voice(voice)}</p>}
+              </div>
+              <div className="flex flex-col shrink-0">
+                <button
+                  type="button"
+                  aria-label={liked ? c.phrase.unlikeLabel : c.phrase.likeLabel}
+                  aria-pressed={liked}
+                  onClick={() => actions.toggleLike('phrase', phrase.id)}
+                  className="w-11 h-11 flex items-center justify-center rounded-full text-primary-container active:bg-primary-fixed/40"
+                >
+                  <Icon name="favorite" fill={liked} className="text-icon-lg" />
+                </button>
+                <button
+                  type="button"
+                  aria-label={c.phrase.addToSet}
+                  onClick={() => nav.addToSet([phrase.id])}
+                  className="w-11 h-11 flex items-center justify-center rounded-full text-secondary active:bg-surface-container"
+                >
+                  <Icon name="playlist_add" className="text-icon-lg" />
+                </button>
+                {phrase.notes && (
+                  <button
+                    type="button"
+                    aria-label={c.phrase.notesTitle}
+                    onClick={() => setNotesOpen(true)}
+                    className="w-11 h-11 flex items-center justify-center rounded-full text-secondary active:bg-surface-container"
+                  >
+                    <Icon name="lightbulb" className="text-icon-lg" />
+                  </button>
+                )}
+              </div>
             </div>
-          )}
 
-          {/* The loop: native → your turn → target, with real repetition and time */}
-          <div>
-            <ol className="grid grid-cols-3 gap-1.5" aria-label="Steps">
-              {PHASES.map((p) => {
-                const active = playing && p === phase;
-                const done = PHASES.indexOf(p) < PHASES.indexOf(phase);
-                return (
-                  <li
-                    key={p}
-                    aria-current={active ? 'step' : undefined}
-                    className={`min-h-11 rounded-xl flex items-center justify-center gap-1.5 text-xs font-semibold border ${
-                      active
-                        ? 'bg-primary-container text-on-primary border-primary-container'
-                        : done && playing
-                        ? 'bg-primary-fixed/50 text-on-primary-fixed-variant border-transparent'
-                        : 'bg-surface-container-low text-secondary border-surface-container-high'
-                    }`}
-                  >
-                    <span aria-hidden="true" className="material-symbols-outlined text-[18px]">{PHASE_ICONS[p]}</span>
-                    {phaseStepLabel(p, phrase)}
-                  </li>
-                );
-              })}
-            </ol>
-            {audioError ? (
-              <p role="alert" className="mt-2 rounded-xl bg-error-container/60 text-on-error-container text-sm p-3 flex gap-2">
-                <span aria-hidden="true" className="material-symbols-outlined text-[20px]">volume_off</span>
-                <span>
-                  This device has no {getLanguage(audioError).name} voice, so the phrase can’t play. Add one in your
-                  system’s speech settings, then press Play.
-                </span>
-              </p>
-            ) : (
-              <div className="flex items-center justify-between mt-2 text-xs text-secondary">
-                <span aria-live="polite" className="font-semibold text-on-surface">
-                  {playing ? phaseInstruction(phase, phrase) : 'Paused'}
-                </span>
-                <span className="tabular-nums">
-                  Repetition {repetition} of {repeats} · {formatElapsed(listenedMs(state.player, now))}
-                </span>
-              </div>
-            )}
-          </div>
-
-          {/* Rating: offered once per play, never preselected, hidden once given */}
-          <div className="min-h-[76px]">
-            {ratedCurrent === null ? (
-              <div>
-                <p className="text-xs text-secondary text-center mb-1.5">How did saying it go?</p>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={(e) => rate('hard', e.currentTarget)}
-                    className="min-h-12 rounded-full border-2 border-error/40 bg-error-container/60 text-on-error-container font-bold flex items-center justify-center gap-1.5 active:opacity-80"
-                  >
-                    <span aria-hidden="true" className="material-symbols-outlined text-[20px]">replay</span>
-                    Hard · {formatInterval(previewInterval(memory, 'hard', now))}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => rate('easy', e.currentTarget)}
-                    className="min-h-12 rounded-full border-2 border-tertiary/40 bg-tertiary-fixed text-on-tertiary-fixed font-bold flex items-center justify-center gap-1.5 active:opacity-80"
-                  >
-                    <span aria-hidden="true" className="material-symbols-outlined text-[20px]">check</span>
-                    Easy · {formatInterval(previewInterval(memory, 'easy', now))}
-                  </button>
+            {/* The loop: prompt → your turn → target, with real repetition and time */}
+            <div>
+              <ol className="grid grid-cols-3 gap-1.5" aria-label={c.player.steps}>
+                {STEPS.map((p) => {
+                  const current = p === phase;
+                  const done = phase === 'rate' || STEPS.indexOf(p) < STEPS.indexOf(phase as Exclude<Phase, 'rate'>);
+                  return (
+                    <li
+                      key={p}
+                      aria-current={current ? 'step' : undefined}
+                      className={`min-h-11 rounded-xl flex items-center justify-center gap-1.5 text-label font-semibold border ${
+                        current && playing
+                          ? 'bg-primary-container text-on-primary border-primary-container'
+                          : current
+                            ? 'bg-primary-fixed text-on-primary-fixed border-primary-container border-dashed'
+                            : done
+                              ? 'bg-primary-fixed/50 text-on-primary-fixed-variant border-transparent'
+                              : 'bg-surface-container-low text-secondary border-surface-container-high'
+                      }`}
+                    >
+                      <Icon name={current && !playing ? 'pause' : PHASE_ICONS[p]} className="text-icon-sm" />
+                      {phaseStepLabel(c, p, prompt.lang, phrase.targetLang)}
+                    </li>
+                  );
+                })}
+              </ol>
+              {audioError ? (
+                <p role="alert" className="mt-2 rounded-xl bg-error-container/60 text-on-error-container text-body p-3 flex gap-2">
+                  <Icon name="volume_off" className="text-icon-md" />
+                  <span>{c.player.audioError(languageName(audioError, c.locale))}</span>
+                </p>
+              ) : (
+                <div className="flex items-center justify-between gap-2 mt-2 text-label text-secondary">
+                  <span className="font-semibold text-on-surface">{playing ? phaseInstruction(c, phase, prompt.lang, phrase.targetLang) : c.player.paused}</span>
+                  <PlayTime phrase={phrase} />
                 </div>
-              </div>
-            ) : (
-              <p className="min-h-12 mt-6 flex items-center justify-center gap-1.5 text-sm text-secondary">
-                <span aria-hidden="true" className="material-symbols-outlined text-[18px] text-tertiary">task_alt</span>
-                Rated {ratedCurrent === 'easy' ? 'Easy' : 'Hard'} — back in{' '}
-                {formatInterval((memory?.stabilityDays ?? 0) * DAY)}
-              </p>
-            )}
-          </div>
+              )}
+              <p aria-live="polite" className="sr-only">{announcement}</p>
+            </div>
 
-          {/* Transport */}
-          <div className="flex items-center justify-between">
-            <button
-              type="button"
-              aria-label="Shuffle"
-              aria-pressed={shuffle}
-              onClick={actions.toggleShuffle}
-              className={`w-11 h-11 flex items-center justify-center rounded-full ${shuffle ? 'text-primary-container' : 'text-secondary'}`}
-            >
-              <span aria-hidden="true" className="material-symbols-outlined text-[26px]">shuffle</span>
-            </button>
-            <button
-              type="button"
-              aria-label="Previous phrase"
-              onClick={actions.prev}
-              className="w-12 h-12 flex items-center justify-center rounded-full active:bg-surface-container"
-            >
-              <span aria-hidden="true" className="material-symbols-outlined material-symbols-fill text-[34px]">skip_previous</span>
-            </button>
-            <button
-              type="button"
-              aria-label={playing ? 'Pause' : 'Play'}
-              onClick={playing ? actions.pause : actions.play}
-              className="w-16 h-16 rounded-full bg-primary-container text-on-primary flex items-center justify-center shadow-lg active:scale-95 transition-transform"
-            >
-              <span aria-hidden="true" className="material-symbols-outlined material-symbols-fill text-[40px]">{playing ? 'pause' : 'play_arrow'}</span>
-            </button>
-            <button
-              type="button"
-              aria-label="Next phrase"
-              onClick={actions.next}
-              disabled={index >= order.length - 1}
-              className="w-12 h-12 flex items-center justify-center rounded-full active:bg-surface-container disabled:opacity-40"
-            >
-              <span aria-hidden="true" className="material-symbols-outlined material-symbols-fill text-[34px]">skip_next</span>
-            </button>
-            <button
-              type="button"
-              aria-label={`Repeat each phrase 3 times: ${repeats === 3 ? 'on' : 'off'}`}
-              aria-pressed={repeats === 3}
-              onClick={actions.toggleRepeat}
-              className={`relative w-11 h-11 flex items-center justify-center rounded-full ${
-                repeats === 3 ? 'text-primary-container' : 'text-secondary'
-              }`}
-            >
-              <span aria-hidden="true" className="material-symbols-outlined text-[26px]">{repeats === 3 ? 'repeat_on' : 'repeat'}</span>
-              <span aria-hidden="true" className="absolute top-0.5 right-0 text-[11px] font-black">{repeats}×</span>
-            </button>
-          </div>
+            <Rating phrase={phrase} />
 
-          {/* Speed: the only speed control in the app */}
-          <div role="radiogroup" aria-label="Speed" className="grid grid-cols-3 gap-1 p-1 bg-surface-container-low rounded-full">
-            {SPEEDS.map((s) => (
-              <button
-                key={s}
-                type="button"
-                role="radio"
-                aria-checked={speed === s}
-                onClick={() => actions.setSpeed(s)}
-                className={`min-h-11 rounded-full text-sm tabular-nums ${
-                  speed === s ? 'bg-surface-container-lowest text-on-surface font-bold shadow-sm' : 'text-secondary font-medium'
-                }`}
-              >
-                {s}×
+            {/* Transport */}
+            <div className="flex items-center justify-between">
+              <PlayModeButton />
+              <button type="button" aria-label={c.player.previous} onClick={actions.prev} className="w-12 h-12 flex items-center justify-center rounded-full active:bg-surface-container">
+                <Icon name="skip_previous" fill className="text-icon-2xl" />
               </button>
-            ))}
+              <button
+                type="button"
+                aria-label={playing ? c.common.pause : c.common.play}
+                onClick={playing ? actions.pause : actions.play}
+                className="w-16 h-16 rounded-full bg-primary-container text-on-primary flex items-center justify-center shadow-lg active:scale-95 transition-transform"
+              >
+                <Icon name={playing ? 'pause' : 'play_arrow'} fill className="text-icon-3xl" />
+              </button>
+              <button type="button" aria-label={c.player.next} onClick={actions.next} className="w-12 h-12 flex items-center justify-center rounded-full active:bg-surface-container">
+                <Icon name="skip_next" fill className="text-icon-2xl" />
+              </button>
+              <RepeatsButton />
+            </div>
+
+            {/* Speed: the only speed control in the app */}
+            <div role="radiogroup" aria-label={c.player.speed} className="grid grid-cols-3 gap-1 p-1 bg-surface-container-low rounded-full">
+              {SPEEDS.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  role="radio"
+                  aria-checked={state.prefs.speed === s}
+                  onClick={() => actions.setPrefs({ speed: s })}
+                  className={`min-h-11 rounded-full text-body tabular-nums ${
+                    state.prefs.speed === s ? 'bg-surface-container-lowest text-on-surface font-bold shadow-sm' : 'text-secondary font-medium'
+                  }`}
+                >
+                  {s}×
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>
+
+      <Sheet open={notesOpen} title={c.phrase.notesTitle} onClose={() => setNotesOpen(false)}>
+        <PhraseNotesView phrase={phrase} prefix="player-notes" />
+      </Sheet>
     </motion.div>
+  );
+}
+
+function HeaderButton({ label, icon, onClick }: { label: string; icon: IconName; onClick: () => void }) {
+  return (
+    <button type="button" aria-label={label} onClick={onClick} className="w-11 h-11 shrink-0 flex items-center justify-center rounded-full active:bg-surface-container">
+      <Icon name={icon} className="text-icon-lg" />
+    </button>
+  );
+}
+
+/** Repetition, elapsed listening time, and the full play at 1× once measured. Re-renders on its own clock. */
+function PlayTime({ phrase }: { phrase: Phrase }) {
+  const c = useCopy();
+  const { state } = useStore();
+  const now = useNow(250);
+  const full = phraseFullPlayMs(state, phrase, state.player.repeats);
+  return (
+    <span className="tabular-nums text-right">
+      {c.player.repetition(state.player.repetition, state.player.repeats)} · {formatElapsed(listenedMs(state.player, now))}
+      {full !== null && ` / ${c.common.fullPlay(formatElapsed(full))}`}
+    </span>
+  );
+}
+
+/** Three grades, never preselected. A rating can be changed or undone for five minutes, then it counts. */
+function Rating({ phrase }: { phrase: Phrase }) {
+  const c = useCopy();
+  const { state, actions } = useStore();
+  const now = useNow(1000);
+  const pending = pendingFor(state, phrase.id);
+  const left = pending ? windowLeft(pending, now) : 0;
+  const active = pending && left > 0 ? pending : undefined;
+
+  const rate = (grade: Grade) => {
+    actions.rate(grade);
+    if (grade === 'easy') easyCue();
+    else gentleCue();
+  };
+
+  return (
+    <div className="h-[7.5rem] flex flex-col justify-between">
+      <p className="text-label text-secondary text-center" aria-live="polite">
+        {active
+          ? c.player.rated(c.common.grade[active.grade], formatWhen(previewDue(state.learner, phrase.id, active.grade, active.at), now, c.locale))
+          : c.player.howDidItGo}
+      </p>
+      <div className="grid grid-cols-3 gap-2">
+        {GRADES.map(({ grade, icon, tone }) => {
+          const selected = active?.grade === grade;
+          const interval = formatInterval(previewDue(state.learner, phrase.id, grade, active?.at ?? now) - (active?.at ?? now), c.locale);
+          return (
+            <button
+              key={grade}
+              type="button"
+              aria-pressed={selected}
+              onClick={() => rate(grade)}
+              className={`min-h-12 px-1 rounded-2xl flex flex-col items-center justify-center leading-tight active:opacity-80 ${tone} ${
+                selected ? 'ring-2 ring-primary-container ring-offset-2 ring-offset-surface font-bold' : 'font-semibold'
+              }`}
+            >
+              <span className="flex items-center gap-1 text-body">
+                <Icon name={selected ? 'task_alt' : icon} className="text-icon-sm" />
+                {c.common.grade[grade]}
+              </span>
+              <span className="text-caption opacity-80 tabular-nums">{interval}</span>
+            </button>
+          );
+        })}
+      </div>
+      <div className="h-11 flex items-center justify-center gap-1 text-label text-secondary">
+        {active && (
+          <>
+            <span className="tabular-nums">{c.player.changeFor(formatElapsed(left))}</span>
+            <button type="button" onClick={actions.unrate} className="min-h-11 px-3 rounded-full font-bold text-primary-container underline underline-offset-2">
+              {c.common.undo}
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function PlayModeButton() {
+  const c = useCopy();
+  const { state, actions } = useStore();
+  const mode = state.prefs.playMode;
+  return (
+    <button
+      type="button"
+      aria-label={c.player.playMode[mode]}
+      title={c.player.playMode[mode]}
+      onClick={() => actions.setPrefs({ playMode: mode === 'repeat' ? 'continue' : 'repeat' })}
+      className="w-11 h-11 flex items-center justify-center rounded-full text-primary-container active:bg-surface-container"
+    >
+      <Icon name={mode === 'repeat' ? 'repeat' : 'playlist_play'} className="text-icon-lg" />
+    </button>
+  );
+}
+
+function RepeatsButton() {
+  const c = useCopy();
+  const { state, actions } = useStore();
+  const setting = state.prefs.repeats;
+  const label = setting === 'auto' ? c.player.repeats.auto : setting === 1 ? c.player.repeats.one : c.player.repeats.three;
+  const next = REPEAT_SETTINGS[(REPEAT_SETTINGS.indexOf(setting) + 1) % REPEAT_SETTINGS.length];
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      title={label}
+      onClick={() => actions.setPrefs({ repeats: next })}
+      className="w-11 h-11 flex items-center justify-center rounded-full active:bg-surface-container"
+    >
+      <span aria-hidden="true" className="min-w-9 h-7 px-1.5 rounded-lg border-2 border-primary-container text-primary-container text-label font-black flex items-center justify-center tabular-nums">
+        {setting === 'auto' ? 'A' : `${setting}×`}
+      </span>
+    </button>
   );
 }
