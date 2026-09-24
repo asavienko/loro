@@ -13,6 +13,7 @@ import { Route, tabOf } from './nav/routes';
 import { findPhrase, findSetView } from './state/catalog';
 import { derive, POINTS } from './state/memory';
 import { clearSavedState, rawSavedState, SAVE_FAILED_EVENT, SaveResult } from './state/persistence';
+import type { Stored } from './state/storage';
 import { currentPhraseId } from './state/selectors';
 import { StoreProvider, useCopy, useStore } from './state/store';
 import { BottomNavBar } from './ui/BottomNavBar';
@@ -34,11 +35,11 @@ import { Onboarding } from './screens/Onboarding';
 import { QueueScreen } from './screens/QueueScreen';
 import { SetScreen } from './screens/SetScreen';
 
-export default function App() {
+export default function App({ stored }: { stored: Stored }) {
   return (
     <ErrorBoundary>
       <MotionConfig reducedMotion="user">
-        <StoreProvider>
+        <StoreProvider stored={stored}>
           <ToastProvider>
             <Shell />
           </ToastProvider>
@@ -96,8 +97,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean
         <button
           type="button"
           onClick={() => {
-            clearSavedState();
-            window.location.reload();
+            void clearSavedState().then(() => window.location.reload());
           }}
           className="self-start min-h-12 px-5 rounded-full text-error font-bold"
         >

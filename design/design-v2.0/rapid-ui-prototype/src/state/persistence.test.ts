@@ -3,7 +3,7 @@ import { describe, it } from 'node:test';
 import { transition } from './machine';
 import { RATING_WINDOW_MS } from './memory';
 import { mergeLearner } from './merge';
-import { parseState, sanitizeState, serializeState, syncWithServer } from './persistence';
+import { loadState, parseState, sanitizeState, serializeState, syncWithServer } from './persistence';
 import { memoryOf, points } from './selectors';
 import { done, fresh, load, MINUTE, run, T0 } from './testing';
 import type { Device } from './types';
@@ -129,5 +129,17 @@ describe('server sync', () => {
     } finally {
       globalThis.fetch = original;
     }
+  });
+});
+
+describe('loading', () => {
+  it('merges the copy a closing page left with the saved progress', () => {
+    const saved = run(fresh(), { type: 'TOGGLE_LIKE', kind: 'set', id: 'set-taxi', now: T0 + 5 });
+    const pending = run(fresh(), { type: 'TOGGLE_LIKE', kind: 'set', id: 'set-cafe', now: T0 }, { type: 'SET_PREFS', prefs: { speed: 0.8 } });
+    const state = loadState({ saved: serializeState(saved), pending: serializeState(pending) }, () => fresh());
+    assert.equal(state.learner.likes['set:set-taxi'].liked, true, 'another tab’s later progress is kept');
+    assert.equal(state.learner.likes['set:set-cafe'].liked, true, 'the closing page’s progress is kept');
+    assert.equal(state.prefs.speed, 0.8, 'device settings come from the closing page');
+    assert.deepEqual(loadState({ saved: null, pending: null }, () => fresh()).learner, fresh().learner);
   });
 });

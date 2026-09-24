@@ -5,7 +5,8 @@ import { OWN_SET_PREFIX } from './catalog';
 import { clock } from './clock';
 import { initialState } from './initial';
 import { AppEvent, transition } from './machine';
-import { loadState, parseState, saveState, STORAGE_KEY } from './persistence';
+import { flushState, loadState, parseState, saveState } from './persistence';
+import { onOtherTabSave, readRaw, Stored } from './storage';
 import { currentPhraseId } from './selectors';
 import type { AppState, AudioFailure, Grade, LearnerState, Prefs, Profile } from './types';
 
@@ -67,9 +68,10 @@ interface StoreValue {
 
 const StoreContext = createContext<StoreValue | null>(null);
 
-export function StoreProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(transition, undefined, () =>
-    loadState((device) => initialState(device.id, device.instance)),
+/** `stored` is what storage held before the first render (main.tsx). */
+export function StoreProvider({ children, stored }: { children: ReactNode; stored: Stored }) {
+  const [state, dispatch] = useReducer(transition, stored, (s) =>
+    loadState(s, (device) => initialState(device.id, device.instance)),
   );
   const latest = useLatest(state);
   const actions = useMemo(() => makeActions(dispatch, latest), [latest]);
@@ -78,12 +80,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   useEffect(() => {
     clearTimeout(timer.current);
-    timer.current = setTimeout(() => saveState(state), SAVE_DEBOUNCE_MS);
+    timer.current = setTimeout(() => void saveState(state), SAVE_DEBOUNCE_MS);
   }, [state]);
   useEffect(() => {
     const flush = () => {
       clearTimeout(timer.current);
-      saveState(latest.current);
+      flushState(latest.current);
     };
     const onVisibility = () => {
       if (document.visibilityState === 'hidden') flush();
@@ -97,15 +99,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [latest]);
 
   // Another tab saved: merge its learner data into ours.
-  useEffect(() => {
-    const onStorage = (event: StorageEvent) => {
-      if (event.key !== STORAGE_KEY || !event.newValue) return;
-      const remote = parseState(event.newValue, latest.current.device);
-      if (remote) actions.mergeRemote(remote.learner);
-    };
-    window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
-  }, [actions, latest]);
+  useEffect(
+    () =>
+      onOtherTabSave(() => {
+        void readRaw().then((json) => {
+          const remote = json ? parseState(json, latest.current.device) : null;
+          if (remote) actions.mergeRemote(remote.learner);
+        });
+      }),
+    [actions, latest],
+  );
 
   // Ratings count once their five-minute window closes.
   useEffect(() => {

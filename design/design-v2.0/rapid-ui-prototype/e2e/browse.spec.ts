@@ -115,9 +115,11 @@ test.describe('sets you make', () => {
 test('a save that fails is announced, not silently dropped', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => {
-    Storage.prototype.setItem = () => {
+    const full = () => {
       throw new DOMException('full', 'QuotaExceededError');
     };
+    IDBObjectStore.prototype.put = full;
+    Storage.prototype.setItem = full;
   });
   await page.getByRole('button', { name: 'Play 5 phrases' }).click();
   await expect(page.getByRole('status')).toHaveText('This device’s storage for Loro is full, so new progress isn’t being saved.');
@@ -133,4 +135,23 @@ test('reduced motion: no looping animation, sheets still open and close', async 
   await expect(page.getByRole('dialog', { name: 'Café & Mañanas' })).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog', { name: 'Café & Mañanas' })).toHaveCount(0);
+});
+
+test('progress moves from localStorage into IndexedDB', async ({ page }) => {
+  await page.goto('/#/set/set-taxi?from=explore');
+  await page.getByRole('button', { name: 'Like set' }).click();
+  await page.waitForTimeout(800);
+  const where = await page.evaluate(async () => {
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      const r = indexedDB.open('loro-prototype');
+      r.onsuccess = () => resolve(r.result);
+      r.onerror = () => reject(r.error);
+    });
+    const value = await new Promise<unknown>((resolve) => {
+      const g = db.transaction('kv').objectStore('kv').get('state');
+      g.onsuccess = () => resolve(g.result);
+    });
+    return { idb: typeof value === 'string' && value.includes('set:set-taxi'), local: localStorage.getItem('loro.prototype.state') };
+  });
+  expect(where).toEqual({ idb: true, local: null });
 });
