@@ -199,11 +199,13 @@ function newSession(state: AppState, now: number): [PlayerState['session'], AppS
 function commitDue(state: AppState, now: number): AppState {
   const due = state.pending.filter((p) => now - p.at >= RATING_WINDOW_MS);
   if (due.length === 0) return state;
-  let next: AppState = { ...state, pending: state.pending.filter((p) => !due.includes(p)) };
+  const next: AppState = { ...state, pending: state.pending.filter((p) => !due.includes(p)) };
   let log = next.learner.log;
   for (const p of [...due].sort((a, b) => a.at - b.at)) {
-    const [id, withId] = takeId(next);
-    next = withId;
+    // The same id in every tab of this browser (they share the device id and the pending
+    // rating), so two tabs committing it, or one merging the other's commit, count it once.
+    const id = `${state.device.id}.r-${p.key}-${p.at.toString(36)}`;
+    if (log.some((e) => e.id === id)) continue;
     log = insertEntry(log, {
       id,
       at: p.at,
