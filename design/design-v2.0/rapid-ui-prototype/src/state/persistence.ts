@@ -18,6 +18,7 @@ import { decodeLog, encodeLog } from './compactLog';
 import { initialLearner, initialPlayer, initialPrefs, initialProfile } from './initial';
 import { derive, memoryKey } from './memory';
 import { mergeLearner } from './merge';
+import { announceSave, clearPending, clearRaw, readRaw, Stored, writePending, writeRaw } from './storage';
 import {
   AppState,
   Device,
@@ -34,7 +35,6 @@ import {
   STATE_VERSION,
 } from './types';
 
-export const STORAGE_KEY = 'loro.prototype.state';
 
 type Json = Record<string, unknown>;
 
@@ -324,43 +324,60 @@ function deviceId(): string {
  */
 let lastWritten: string | null = null;
 
-export function loadState(initial: (device: Device) => AppState): AppState {
-  const device: Device = { id: deviceId(), instance: randomId(), seq: 0 };
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    lastWritten = saved;
-    return (saved && parseState(saved, device)) || initial(device);
-  } catch {
-    return initial(device);
-  }
-}
+/** A closing page's copy still has to reach storage (see storage.ts). */
+let pendingOutstanding = false;
 
 /**
- * Saves the state, first merging in whatever another tab saved since, so two
- * open tabs never overwrite each other's progress.
+ * State from what storage holds, or a fresh one. A copy left by a page that
+ * closed is newer than the saved one for this device's own fields; learner data
+ * from both is merged, so another tab's later progress is kept too.
  */
+export function loadState({ saved, pending }: Stored, initial: (device: Device) => AppState): AppState {
+  const device: Device = { id: deviceId(), instance: randomId(), seq: 0 };
+  lastWritten = saved;
+  const fromSaved = saved ? parseState(saved, device) : null;
+  const fromPending = pending ? parseState(pending, device) : null;
+  pendingOutstanding = pending !== null;
+  if (!fromPending) return fromSaved ?? initial(device);
+  return fromSaved ? { ...fromPending, learner: mergeLearner(fromPending.learner, fromSaved.learner) } : fromPending;
+}
+
 export type SaveResult = 'saved' | 'full' | 'unavailable';
 
 /** Event the shell listens for, so a failed save is never silent. */
 export const SAVE_FAILED_EVENT = 'loro:save-failed';
 
-export function saveState(state: AppState): SaveResult {
-  const result = writeState(state);
-  if (result !== 'saved' && typeof window !== 'undefined') {
-    window.dispatchEvent(new CustomEvent<SaveResult>(SAVE_FAILED_EVENT, { detail: result }));
-  }
+let queue: Promise<unknown> = Promise.resolve();
+
+/**
+ * Saves the state, first merging in whatever another tab saved since, so two
+ * open tabs never overwrite each other's progress. Saves run one at a time.
+ */
+export function saveState(state: AppState): Promise<SaveResult> {
+  const result = queue.then(() => writeState(state));
+  queue = result;
+  void result.then((r) => {
+    if (r !== 'saved' && typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent<SaveResult>(SAVE_FAILED_EVENT, { detail: r }));
+    }
+  });
   return result;
 }
 
-function writeState(state: AppState): SaveResult {
+async function writeState(state: AppState): Promise<SaveResult> {
   try {
-    const current = localStorage.getItem(STORAGE_KEY);
+    const current = await readRaw();
     // Parsing and merging the stored copy is only needed when another tab changed it.
     const stored = current !== null && current !== lastWritten ? parseState(current, state.device)?.learner : null;
     const learner = stored ? mergeLearner(state.learner, stored) : state.learner;
     const json = serializeState(learner === state.learner ? state : { ...state, learner });
-    localStorage.setItem(STORAGE_KEY, json);
+    await writeRaw(json);
     lastWritten = json;
+    if (pendingOutstanding) {
+      clearPending();
+      pendingOutstanding = false;
+    }
+    announceSave();
     return 'saved';
   } catch (error) {
     // The session still works; the shell tells the learner that progress isn't being kept.
@@ -369,21 +386,29 @@ function writeState(state: AppState): SaveResult {
   }
 }
 
-export function clearSavedState(): void {
+/**
+ * The page is being hidden or closed: keep a synchronous copy, then try the
+ * regular write, which may not finish before the page is gone.
+ */
+export function flushState(state: AppState): void {
+  const json = serializeState(state);
+  if (json === lastWritten) return;
+  writePending(json);
+  pendingOutstanding = true;
+  void saveState(state);
+}
+
+export async function clearSavedState(): Promise<void> {
   try {
-    localStorage.removeItem(STORAGE_KEY);
+    await clearRaw();
   } catch {
     // Nothing saved to clear.
   }
 }
 
-/** The raw saved progress, for the error screen's "copy" before a reset. */
+/** The last saved progress, for the error screen's "copy" before a reset. */
 export function rawSavedState(): string | null {
-  try {
-    return localStorage.getItem(STORAGE_KEY);
-  } catch {
-    return null;
-  }
+  return lastWritten;
 }
 
 /**
