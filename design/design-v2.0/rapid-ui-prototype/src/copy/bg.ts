@@ -283,7 +283,7 @@ export function makeBg(n: Plural): Copy {
       name: 'Име',
       native: 'Говоря',
       course: 'Уча',
-      courseNote: 'Всеки курс пази свой напредък.',
+      courseNote: 'Напредъкът се пази за всяка двойка езици. Щом превключите обратно, той се връща.',
       accessibility: 'Екранен четец',
       announceEveryStep: 'Обявявай всяка стъпка',
       announceHint: 'Изключено: обявяват се само „Ваш ред“ и отговорът.',
