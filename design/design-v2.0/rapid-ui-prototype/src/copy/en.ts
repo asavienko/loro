@@ -189,7 +189,6 @@ export function makeEn(n: Plural) {
       openQueue: 'Open queue',
       summary: 'Session summary',
       position: (i: number, total: number) => `${i} of ${total}`,
-      queueTitle: (count: number) => `Queue · ${n(count, { one: `${count} phrase`, other: `${count} phrases` })}`,
       hidden: (language: string) => `${language} hidden until you hear it`,
       steps: 'Steps',
       yourTurn: 'Your turn',

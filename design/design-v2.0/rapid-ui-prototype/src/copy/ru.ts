@@ -179,7 +179,6 @@ export function makeRu(n: Plural): Copy {
       openQueue: 'Открыть очередь',
       summary: 'Итоги занятия',
       position: (i, total) => `${i} из ${total}`,
-      queueTitle: (c) => `Очередь · ${phrases(c)}`,
       hidden: (language) => `Текст (${language}) скрыт, пока вы его не услышите`,
       steps: 'Шаги',
       yourTurn: 'Ваша очередь',
