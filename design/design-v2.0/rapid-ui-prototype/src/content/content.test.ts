@@ -4,6 +4,7 @@ import phrasesJson from './phrases.json';
 import setsJson from './sets.json';
 import topicsJson from './topics.json';
 import languagesJson from './languages.json';
+import noteTranslationsJson from './note-translations.json';
 import { CONTENT_PHRASES, coursesFor, LANGUAGES, SETS, TOPICS } from './index';
 import { contentProblems, PhraseJson, SetJson } from './schema';
 
@@ -29,6 +30,14 @@ describe('content', () => {
 
   it('every phrase has at least one note', () => {
     for (const p of CONTENT_PHRASES) assert.ok(p.notes && Object.keys(p.notes).length > 0, p.id);
+  });
+
+  it('every note has Bulgarian and Russian versions where the learner could need them', () => {
+    const problems = contentProblems({ ...base(), noteTranslations: noteTranslationsJson });
+    assert.deepEqual(problems, []);
+    const missing = structuredClone(noteTranslationsJson) as Record<string, Record<string, unknown>>;
+    delete missing['cafe-01.grammar']['ru-RU'];
+    assert.match(contentProblems({ ...base(), noteTranslations: missing as typeof noteTranslationsJson }).join('\n'), /cafe-01.grammar: missing ru-RU note/);
   });
 
   it('each topic holds at least two sets', () => {

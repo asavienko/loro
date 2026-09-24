@@ -67,7 +67,10 @@ export function ExploreScreen({ filters }: { filters: ExploreFilters }) {
     if (filters.level && set?.level !== filters.level) return false;
     if (filters.tag && !p.tags.includes(filters.tag)) return false;
     if (!q) return true;
-    const notes = p.notes ? Object.values(p.notes).map((n) => `${n.title} ${n.text}`).join(' ') : '';
+    const notes = [
+      ...Object.values(p.notes ?? {}),
+      ...Object.values(p.noteTranslations).flatMap((byLang) => Object.values(byLang ?? {})),
+    ].map((n) => `${n.title} ${n.text}`).join(' ');
     const topicTitle = set?.topicId ? Object.values(TOPICS.find((t) => t.id === set.topicId)?.title ?? {}).join(' ') : '';
     const tags = p.tags.map((t) => c.common.tag[t]).join(' ');
     return fold(`${p.target} ${Object.values(p.translations).join(' ')} ${notes} ${topicTitle} ${tags}`).includes(q);

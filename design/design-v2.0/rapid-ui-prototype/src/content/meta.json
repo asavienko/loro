@@ -1,9 +1,10 @@
 {
-  "version": "2026-09-24.3",
+  "version": "2026-09-24.4",
   "review": {
     "es-ES": "Phrases and notes revised in round 3; awaiting native Spanish review.",
     "bg-BG": "New in round 3; awaiting native Bulgarian review.",
-    "translations": "bg-BG and ru-RU prompts and word glosses await native review."
+    "translations": "bg-BG and ru-RU prompts and word glosses await native review.",
+    "notes": "bg-BG and ru-RU versions of the notes (note-translations.json) await native review."
   },
   "renamedPhraseIds": {
     "phrase-1": "cafe-01",

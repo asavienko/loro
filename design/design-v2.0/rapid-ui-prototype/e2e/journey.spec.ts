@@ -87,6 +87,12 @@ test.describe('a Russian speaker', () => {
     await page.getByRole('button', { name: /^Играть: 5 фраз/ }).click();
     await run(page, 2_000);
     expect((await spoken(page))[0]).toBe('Мне кортадо, пожалуйста');
+    await page.goto('/#/set/set-cafe?from=home');
+    await page.getByRole('button', { name: 'Подробнее: Me pone un cortado, por favor' }).click();
+    await page.clock.runFor(1000);
+    await expect(page.getByText('«Me pone…» (буквально «поставьте мне…»)', { exact: false })).toBeVisible();
+    await expect(page.getByText('Заметки пока на английском.')).toHaveCount(0);
+    await page.keyboard.press('Escape');
     await page.getByRole('link', { name: 'Обзор' }).or(page.getByRole('button', { name: 'Обзор' })).click();
     await expect(page.getByRole('heading', { name: 'Темы' })).toBeVisible();
   });

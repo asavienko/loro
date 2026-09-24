@@ -8,12 +8,15 @@ import setsJson from './sets.json';
 import topicsJson from './topics.json';
 import languagesJson from './languages.json';
 import metaJson from './meta.json';
+import noteTranslationsJson from './note-translations.json';
 import {
   contentProblems,
   Language,
   LanguageCode,
   languageSchema,
   metaSchema,
+  NoteTranslations,
+  noteTranslationsSchema,
   PhraseJson,
   phraseSchema,
   SetJson,
@@ -38,6 +41,7 @@ export const TOPICS: Topic[] = parse(z.array(topicSchema), topicsJson, 'topics.j
 export const LANGUAGES: Language[] = parse(z.array(languageSchema), languagesJson, 'languages.json');
 export const META = parse(metaSchema, metaJson, 'meta.json');
 export const CONTENT_VERSION = META.version;
+const noteTranslations: NoteTranslations = parse(noteTranslationsSchema, noteTranslationsJson, 'note-translations.json');
 
 const problems = contentProblems({
   phrases: phraseJson,
@@ -45,6 +49,7 @@ const problems = contentProblems({
   topics: TOPICS,
   languages: LANGUAGES,
   renamed: META.renamedPhraseIds,
+  noteTranslations,
 });
 if (problems.length > 0) throw new Error(`Invalid content:\n${problems.join('\n')}`);
 
@@ -61,6 +66,8 @@ export interface Phrase {
   tags: PhraseJson['tags'];
   words: PhraseJson['words'];
   notes: PhraseJson['notes'] | null;
+  /** Note titles and texts in other native languages, by note kind. */
+  noteTranslations: Partial<Record<keyof PhraseJson['notes'], NoteTranslations[string]>>;
   audio: PhraseJson['audio'] | null;
   /** Clip lengths from content; the device's own measurements take over once it has them. */
   durationMs: PhraseJson['durationMs'] | null;
@@ -96,6 +103,7 @@ export const CONTENT_PHRASES: Phrase[] = phraseJson.map((p) => {
     tags: p.tags,
     words: p.words,
     notes: p.notes,
+    noteTranslations: Object.fromEntries(Object.keys(p.notes).map((kind) => [kind, noteTranslations[`${p.id}.${kind}`] ?? {}])),
     audio: p.audio ?? null,
     durationMs: p.durationMs ?? null,
     own: false,

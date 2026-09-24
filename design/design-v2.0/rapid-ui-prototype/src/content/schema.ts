@@ -60,6 +60,10 @@ export const languageSchema = z.object({
   canTarget: z.boolean(),
 });
 
+const noteText = z.object({ title: z.string().min(1), text: z.string().min(1) });
+/** "<phraseId>.<note kind>" → the note's title and text per native language. */
+export const noteTranslationsSchema = z.record(z.string(), z.partialRecord(LANGUAGE_CODE, noteText));
+
 export const metaSchema = z.object({
   version: z.string().min(1),
   review: z.record(z.string(), z.string()),
@@ -77,6 +81,7 @@ export type Tag = PhraseJson['tags'][number];
 export type Level = SetJson['level'];
 export type Register = PhraseJson['register'];
 export type PhraseNotes = PhraseJson['notes'];
+export type NoteTranslations = z.infer<typeof noteTranslationsSchema>;
 
 /** Cross-file rules zod can't express on one file. Returns every problem found. */
 export function contentProblems(input: {
@@ -85,6 +90,7 @@ export function contentProblems(input: {
   topics: Topic[];
   languages: Language[];
   renamed: Record<string, string>;
+  noteTranslations?: NoteTranslations;
 }): string[] {
   const problems: string[] = [];
   const { phrases, sets, topics, languages, renamed } = input;
@@ -125,6 +131,23 @@ export function contentProblems(input: {
     for (const word of Object.keys(phrase.words)) {
       if (!text.includes(word)) problems.push(`${phrase.id}: glossed word "${word}" is not in the phrase`);
     }
+  }
+
+  // Every note has a translation into every native language except English (the original) and the phrase's own.
+  if (input.noteTranslations) {
+    const kinds = new Set<string>();
+    for (const phrase of phrases) {
+      const target = sets.find((s) => s.phraseIds.includes(phrase.id))?.targetLang;
+      for (const kind of Object.keys(phrase.notes)) {
+        const key = `${phrase.id}.${kind}`;
+        kinds.add(key);
+        for (const native of natives) {
+          if (native === 'en-GB' || native === target) continue;
+          if (!input.noteTranslations[key]?.[native]) problems.push(`${key}: missing ${native} note`);
+        }
+      }
+    }
+    for (const key of Object.keys(input.noteTranslations)) if (!kinds.has(key)) problems.push(`note translation for unknown note ${key}`);
   }
 
   for (const [from, to] of Object.entries(renamed)) {

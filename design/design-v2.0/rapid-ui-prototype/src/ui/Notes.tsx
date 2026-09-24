@@ -1,7 +1,7 @@
 import { ReactNode, useState } from 'react';
 import type { Phrase, PhraseNotes } from '../content';
 import { panelId, tabId, tabListKeyDown } from '../lib/tabs';
-import { useCopy } from '../state/store';
+import { useCopy, useStore } from '../state/store';
 import { Icon, IconName } from './Icon';
 
 export type NoteTab = keyof PhraseNotes;
@@ -15,10 +15,13 @@ export const NOTE_TABS: { id: NoteTab; icon: IconName }[] = [
 /** The phrase's notes as tabs. Notes are in English for now, and say so in other UIs. */
 export function PhraseNotesView({ phrase, prefix }: { phrase: Phrase; prefix: string }) {
   const c = useCopy();
+  const { state } = useStore();
+  const native = state.learner.profile.nativeLang;
   const notes = phrase.notes;
   const available = notes ? NOTE_TABS.filter((t) => notes[t.id]) : [];
   const [tab, setTab] = useState<NoteTab | null>(available[0]?.id ?? null);
   if (!notes || !tab || available.length === 0) return null;
+  const translated = native === 'en-GB' ? undefined : phrase.noteTranslations[tab]?.[native];
   return (
     <div className="flex flex-col gap-3">
       <div
@@ -47,26 +50,28 @@ export function PhraseNotesView({ phrase, prefix }: { phrase: Phrase; prefix: st
           </button>
         ))}
       </div>
-      <div role="tabpanel" id={panelId(prefix, tab)} aria-labelledby={tabId(prefix, tab)} lang="en">
-        <NoteBody notes={notes} tab={tab} />
+      <div role="tabpanel" id={panelId(prefix, tab)} aria-labelledby={tabId(prefix, tab)} lang={translated ? native : 'en'}>
+        <NoteBody notes={notes} tab={tab} translation={translated} />
       </div>
-      {!c.locale.startsWith('en') && <p className="text-label text-secondary px-1">{c.phrase.notesInEnglish}</p>}
+      {!c.locale.startsWith('en') && !translated && <p className="text-label text-secondary px-1">{c.phrase.notesInEnglish}</p>}
     </div>
   );
 }
 
-function NoteBody({ notes, tab }: { notes: PhraseNotes; tab: NoteTab }) {
-  if (tab === 'mnemonic' && notes.mnemonic) return <Note title={notes.mnemonic.title} text={notes.mnemonic.text} />;
-  if (tab === 'grammar' && notes.grammar) return <Note title={notes.grammar.title} text={notes.grammar.text} />;
+function NoteBody({ notes, tab, translation }: { notes: PhraseNotes; tab: NoteTab; translation?: { title: string; text: string } }) {
+  const note = notes[tab];
+  if (!note) return null;
+  const { title, text } = translation ?? note;
   if (tab === 'pronunciation' && notes.pronunciation) {
     return (
-      <Note title={notes.pronunciation.title} text={notes.pronunciation.text}>
+      <Note title={title} text={text}>
         <p className="font-mono text-body text-primary-container">{notes.pronunciation.ipa}</p>
-        <p className="font-mono text-label text-secondary">{notes.pronunciation.respelling}</p>
+        {/* The respelling uses English spelling, so it only helps in the English UI. */}
+        {!translation && <p className="font-mono text-label text-secondary">{notes.pronunciation.respelling}</p>}
       </Note>
     );
   }
-  return null;
+  return <Note title={title} text={text} />;
 }
 
 function Note({ title, text, children }: { title: string; text: string; children?: ReactNode }) {
