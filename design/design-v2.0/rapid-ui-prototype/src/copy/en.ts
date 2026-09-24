@@ -77,7 +77,7 @@ export function makeEn(n: Plural) {
       history: 'History',
       notStarted: 'Not started yet',
       demoTitle: 'Try the loop',
-      demoBody: 'One phrase, about 20 seconds: hear it, say it, hear it.',
+      demoBody: 'One phrase: hear it, say it, hear it.',
       demoButton: 'Play one phrase',
       courseDoneTitle: 'Every phrase in this course is learned',
       courseDoneBody: 'Reviews come back as they fall due. Meanwhile, add phrases of your own or try another course.',
@@ -214,7 +214,7 @@ export function makeEn(n: Plural) {
       previous: 'Previous phrase',
       next: 'Next phrase',
       repeats: {
-        auto: 'Repetitions: automatic (3 while new, 1 once reviewed)',
+        auto: 'Repetitions: automatic (3 while new or shaky, 1 once it sticks)',
         one: 'Repetitions: 1',
         three: 'Repetitions: 3',
       },
