@@ -336,10 +336,12 @@ export function transition(state: AppState, event: AppEvent): AppState {
           pending: [...committed.pending, { key, phraseId: currentId, setId: player.setId, grade: event.grade, at: event.now }],
         };
       }
-      // Missed or hard: bring it back a few phrases later in this queue.
+      // Missed or hard: bring it back a few phrases later in this queue, with at least one
+      // other phrase first. On the last phrase there's none, so it isn't re-queued: it would
+      // replay at once (and in repeat mode the queue would grow each pass).
       let nextPlayer = player;
       const upNext = player.order.slice(player.index + 1);
-      if ((event.grade === 'missed' || event.grade === 'hard') && !upNext.includes(currentId)) {
+      if ((event.grade === 'missed' || event.grade === 'hard') && upNext.length > 0 && !upNext.includes(currentId)) {
         const at = Math.min(player.order.length, player.index + 1 + RELEARN_GAP);
         nextPlayer = { ...player, order: [...player.order.slice(0, at), currentId, ...player.order.slice(at)] };
       }

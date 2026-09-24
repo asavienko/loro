@@ -157,6 +157,15 @@ describe('rating window', () => {
     assert.equal(s.player.order.filter((id) => id === 'cafe-01').length, 2, 'not added twice');
   });
 
+  it('near the end, missed still leaves another phrase first; on the last phrase it is not re-queued', () => {
+    let s = load(fresh(), T0, ['cafe-01', 'cafe-02']);
+    s = transition(s, { type: 'RATE', grade: 'missed', now: T0 });
+    assert.deepEqual(s.player.order, ['cafe-01', 'cafe-02', 'cafe-01'], 'after the one phrase left');
+    s = transition(s, { type: 'JUMP', index: 2, now: T0 + 1, play: true });
+    s = transition(s, { type: 'RATE', grade: 'hard', now: T0 + 2 });
+    assert.deepEqual(s.player.order, ['cafe-01', 'cafe-02', 'cafe-01'], 'the last phrase is not appended to replay at once');
+  });
+
   it('rating during the hold moves on at once; a rated phrase skips the hold', () => {
     let s = transition(load(fresh()), { type: 'RATE', grade: 'easy', now: T0 });
     for (let i = 0; i < 9; i++) s = done(s, T0 + i);
