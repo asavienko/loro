@@ -118,3 +118,5 @@ secrets/.encrypt.*
 
 # Local capture/audit scratch — never commit.
 .tmp/
+
+/apps/mobile/.storybook/
