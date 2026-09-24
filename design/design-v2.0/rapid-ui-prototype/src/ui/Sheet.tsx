@@ -58,7 +58,11 @@ function SheetPanel({ title, onClose, children }: Omit<SheetProps, 'open'>) {
             {c.common.close}
           </button>
         </div>
-        <div className="overflow-y-auto px-4 py-3">{children}</div>
+        {/* Focusable so a keyboard can scroll a long sheet that holds only text. */}
+        {/* eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex */}
+        <div tabIndex={0} role="region" aria-label={title} className="overflow-y-auto px-4 py-3">
+          {children}
+        </div>
       </motion.div>
     </div>
   );
