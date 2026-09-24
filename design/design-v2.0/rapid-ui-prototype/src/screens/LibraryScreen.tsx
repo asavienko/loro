@@ -121,7 +121,7 @@ export function LibraryScreen({ view = 'liked' }: { view?: LibraryView }) {
         )}
       </section>
 
-      <section aria-label={c.library.progress} className="grid gap-3 md:grid-cols-2">
+      <section aria-label={c.library.progress} className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <RecallChart buckets={recallBuckets(learner, now)} />
         <WeeklyChart weeks={learnedPerWeek(learner, now)} />
       </section>
@@ -178,7 +178,7 @@ function SetList({ ids, view, now }: { ids: string[]; view: LibraryView; now: nu
   const views = ids.map((id) => findSetView(state.learner, id)).filter((v): v is SetView => Boolean(v));
   if (views.length === 0) return <p className="text-body text-secondary py-2">{c.library.empty[view as 'ownSets' | 'likedSets']}</p>;
   return (
-    <ul className="grid gap-2 md:grid-cols-2">
+    <ul className="grid grid-cols-1 gap-2 md:grid-cols-2">
       {views.map((v) => {
         const progress = setProgress(state.learner, v.phraseIds, now);
         return (

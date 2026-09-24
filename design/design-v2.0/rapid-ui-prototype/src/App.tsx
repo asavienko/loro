@@ -138,6 +138,11 @@ function Shell() {
   const [summaryOpen, setSummaryOpen] = useState(false);
 
   useEffect(() => stopSpeech, []);
+  // The page's language is the UI's, so screen readers pronounce it right and
+  // Cyrillic uses the local letterforms.
+  useEffect(() => {
+    document.documentElement.lang = c.locale;
+  }, [c.locale]);
   const closePlayer = () => setOverlay({ player: false, queue: false });
   const closeQueue = () => setOverlay((o) => ({ ...o, queue: false }));
   useBackToClose(overlay.player, closePlayer);

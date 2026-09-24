@@ -127,7 +127,7 @@ export function HomeScreen() {
               {c.home.history}
             </button>
           </div>
-          <ul className="grid gap-2 md:grid-cols-2">
+          <ul className="grid grid-cols-1 gap-2 md:grid-cols-2">
             {recent.map((id) => {
               const view = findSetView(learner, id);
               return view ? <li key={id}><SetRow view={view} now={now} /></li> : null;
@@ -169,7 +169,7 @@ function PlayButton({ label, detail, onClick, secondary = false }: { label: stri
     <button
       type="button"
       onClick={onClick}
-      className={`mt-3 min-h-12 px-5 rounded-full font-bold inline-flex items-center gap-2 active:opacity-90 ${
+      className={`mt-3 min-h-12 px-5 py-2 rounded-3xl font-bold inline-flex flex-wrap items-center gap-x-2 text-left active:opacity-90 ${
         secondary ? 'bg-surface-container-high text-on-surface' : 'bg-primary-container text-on-primary'
       }`}
     >

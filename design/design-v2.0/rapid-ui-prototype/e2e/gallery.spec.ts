@@ -54,3 +54,30 @@ test('tablet and landscape', async ({ page }) => {
   await page.waitForTimeout(400);
   await shot(page, 'landscape-player');
 });
+
+test.describe('other UI languages', () => {
+  test.use({ seed: { nativeLang: 'bg-BG', name: 'Мира', log: sampleHistory(Date.now()).map((e) => ({ ...e, key: String(e.key).replace('en-GB>', 'bg-BG>') })) } });
+  test('bulgarian', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForTimeout(500);
+    await shot(page, 'bg-home', true);
+    await page.goto('/#/library?view=due');
+    await page.waitForTimeout(400);
+    await shot(page, 'bg-library', true);
+    await page.getByRole('button', { name: /Пусни всички/ }).click();
+    await page.getByRole('button', { name: /^Сега звучи:/ }).click();
+    await page.waitForTimeout(800);
+    await shot(page, 'bg-player');
+  });
+});
+
+test('200% text screens', async ({ page }) => {
+  await page.goto('/');
+  await page.addStyleTag({ content: 'html { font-size: 200% }' });
+  await page.waitForTimeout(400);
+  await shot(page, 'home-200');
+  await page.getByRole('button', { name: /Play 7 phrases/ }).click();
+  await page.getByRole('button', { name: /^Now playing:/ }).click();
+  await page.waitForTimeout(700);
+  await shot(page, 'player-200b');
+});

@@ -29,7 +29,7 @@
   },
   {
     "id": "set-transit",
-    "title": "Metro & Streets",
+    "title": "Metro y Calles",
     "subtitle": {
       "en": "Getting around the city",
       "bg": "Придвижване из града",
@@ -57,7 +57,7 @@
   },
   {
     "id": "set-taxi",
-    "title": "Taxi at Night",
+    "title": "Taxi de Noche",
     "subtitle": {
       "en": "Getting home by taxi",
       "bg": "С такси до вкъщи",

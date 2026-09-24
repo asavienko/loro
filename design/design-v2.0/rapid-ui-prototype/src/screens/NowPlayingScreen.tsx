@@ -122,7 +122,7 @@ export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps
       </header>
 
       <div className="flex-1 min-h-0 overflow-y-auto">
-        <div className="max-w-lg md:max-w-4xl phone-landscape:max-w-4xl mx-auto px-5 pb-3 h-full grid gap-3 md:grid-cols-2 md:items-center md:gap-8 phone-landscape:grid-cols-2 phone-landscape:items-start phone-landscape:gap-6">
+        <div className="max-w-lg md:max-w-4xl phone-landscape:max-w-4xl mx-auto px-5 pb-3 h-full grid grid-cols-1 gap-3 md:grid-cols-2 md:items-center md:gap-8 phone-landscape:grid-cols-2 phone-landscape:items-start phone-landscape:gap-6">
           <motion.div
             drag="x"
             dragSnapToOrigin
