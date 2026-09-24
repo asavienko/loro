@@ -6,6 +6,9 @@ import { expect, sampleHistory, test } from './fixtures';
 
 test.skip(!process.env.MONKEY, 'slow (about 2 minutes): npm run test:monkey');
 test.use({ seed: { log: sampleHistory(Date.now()) } });
+// MONKEY_VIEWPORT=320x568 (or 568x320) walks a small phone or phone landscape instead.
+const [vw, vh] = (process.env.MONKEY_VIEWPORT ?? '').split('x').map(Number);
+if (vw && vh) test.use({ viewport: { width: vw, height: vh } });
 
 function prng(seed: number) {
   let a = seed >>> 0;
