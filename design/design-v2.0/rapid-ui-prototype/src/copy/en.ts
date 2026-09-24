@@ -334,8 +334,9 @@ export function makeEn(n: Plural) {
       nothingDue: 'Nothing scheduled yet',
     },
     error: {
-      title: 'Loro couldn’t open your progress',
-      body: 'The progress saved on this device doesn’t fit this version of the app. Copy it first if you want to keep it; resetting starts you from zero on this device.',
+      title: 'Something went wrong',
+      body: 'Reloading usually fixes it, and your progress is kept. If it keeps happening, the progress saved on this device may not fit this version: copy it first if you want to keep it, then reset to start from zero on this device.',
+      reload: 'Reload',
       copy: 'Copy progress JSON',
       copied: 'Copied',
       reset: 'Reset progress',

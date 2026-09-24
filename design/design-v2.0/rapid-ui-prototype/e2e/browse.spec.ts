@@ -39,6 +39,17 @@ test.describe('library', () => {
     await expect(page.getByRole('button', { name: 'Play ¿Hay wifi?' })).toBeVisible();
   });
 
+  test('deleting your own phrase from its details', async ({ page }) => {
+    await page.goto('/#/library?view=mine');
+    await page.getByRole('button', { name: 'Add your phrase' }).click();
+    await page.getByLabel('In Spanish').fill('Hola');
+    await page.getByLabel('In English').fill('Hi');
+    await page.getByRole('button', { name: 'Add phrase' }).click();
+    await page.getByRole('button', { name: 'Details for Hola' }).click();
+    await page.getByRole('button', { name: 'Delete phrase' }).click();
+    await expect(page.getByText('Add a phrase of your own and it plays like any other.')).toBeVisible();
+  });
+
   test('a like shows under Liked, and Play all plays it', async ({ page }) => {
     await page.goto('/#/set/set-taxi?from=explore');
     await page.getByRole('button', { name: 'Details for ¿Está libre?' }).click();

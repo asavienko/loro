@@ -31,7 +31,9 @@ function PhraseDetails({ phraseId, ownSetId, onClose }: { phraseId: string; ownS
   const { toast } = useToast();
   const { state, actions } = useStore();
   const now = useNow(30_000);
-  const phrase = findPhrase(state.learner, phraseId)!;
+  const phrase = findPhrase(state.learner, phraseId);
+  // Deleting your own phrase closes the sheet; while it slides away, the phrase is already gone.
+  if (!phrase) return null;
   const liked = isLiked(state.learner, 'phrase', phrase.id);
   const progress = phraseProgress(state.learner, phrase.id, now);
   const prompt = promptOf(phrase, state.learner.profile.nativeLang);
