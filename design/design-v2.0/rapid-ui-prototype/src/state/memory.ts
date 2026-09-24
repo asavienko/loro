@@ -1,131 +1,230 @@
-// Per-phrase memory model: a forgetting curve plus the points rules.
-//
-// Forgetting curve: the FSRS power form R(t) = (1 + F·t/S)^C with C = -0.5 and
-// F = 19/81, chosen so that R(S) = 0.9 — a phrase's stability S is the number
-// of days after which recall probability has fallen to 90%. That is also when
-// it becomes due again.
+// Per-phrase memory, derived by replaying the review log in time order. The
+// log is the source of truth; memory is a cache that any device can rebuild,
+// which is what makes merging two devices safe (see merge.ts).
+import type { LanguageCode } from '../content';
+import { Grade, initialize, retrievability, review } from '../core/fsrs';
 import { DAY, MINUTE } from './clock';
+import type { LogEntry, PhraseMemory } from './types';
 
-export type Grade = 'hard' | 'easy';
-
-export interface PhraseMemory {
-  firstHeardAt: number;
-  lastHeardAt: number;
-  /** Completed repetitions (native → pause → target). */
-  heardCount: number;
-  hardCount: number;
-  easyCount: number;
-  /** Days until recall falls to TARGET_RETENTION. null until first graded. */
-  stabilityDays: number | null;
-  lastReviewedAt: number | null;
-  /** First time the phrase reached learned; the learned bonus is paid once. */
-  learnedAt: number | null;
-  /** Measured duration of the target audio at 1.0x, used to size the pause. */
-  targetMsAt1x: number | null;
+/** Memory is kept per prompt language and phrase: "en-GB>es-ES:cafe-01". */
+export function memoryKey(nativeLang: LanguageCode, targetLang: LanguageCode, phraseId: string): string {
+  return `${nativeLang}>${targetLang}:${phraseId}`;
 }
 
-export const TARGET_RETENTION = 0.9;
-export const LEARNED_STABILITY_DAYS = 21;
+export function phraseIdOfKey(key: string): string {
+  return key.slice(key.indexOf(':') + 1);
+}
 
-const DECAY = -0.5;
-const FACTOR = 19 / 81;
-const FIRST_EASY_DAYS = 4;
-const HARD_MIN_DAYS = (10 * MINUTE) / DAY;
-/** Easy growth per unit of forgetting: ×2.3 when rated at 90% recall, ×1 when rated at 100%. */
-const EASY_GAIN = 13;
-const EASY_MAX_GROWTH = 5;
+/** A rating can be changed or undone for this long; then it counts. */
+export const RATING_WINDOW_MS = 5 * MINUTE;
+/** Listening to a phrase pays at most once per this interval. */
+export const LISTEN_POINTS_INTERVAL_MS = 5 * MINUTE;
 
-/** Points: 1 per repetition listened, more for an active rating, a bonus when learned. */
 export const POINTS = {
-  repetition: 1,
+  /** A phrase listened to (at most once per phrase per 5 minutes). */
+  listened: 1,
+  missed: 1,
   hard: 2,
   easy: 3,
+  /** Paid once per phrase, the first time it is learned. */
   learned: 10,
 } as const;
 
-export function newMemory(now: number): PhraseMemory {
+/** Learned: FSRS review state, recall at 90% lasts 21+ days, and 3+ successful recalls. */
+export const LEARNED_STABILITY_DAYS = 21;
+export const LEARNED_MIN_SUCCESSES = 3;
+
+/**
+ * Introductory cap on the very first successful rating: a phrase heard only
+ * once comes back within a day, one heard twice or more within four days, even
+ * when FSRS would wait longer.
+ */
+export const FIRST_REVIEW_CAP_DAYS = { heardOnce: 1, heardTwice: 4 } as const;
+
+const SAMPLE_LIMIT = 7;
+
+export function emptyMemory(): PhraseMemory {
   return {
-    firstHeardAt: now,
-    lastHeardAt: now,
+    fsrs: null,
     heardCount: 0,
-    hardCount: 0,
-    easyCount: 0,
-    stabilityDays: null,
-    lastReviewedAt: null,
+    firstHeardAt: null,
+    lastHeardAt: null,
+    targetSamples: [],
+    nativeSamples: [],
+    successes: 0,
+    lastGrade: null,
+    lastGradeAt: null,
     learnedAt: null,
-    targetMsAt1x: null,
   };
 }
 
-/** Probability of recall right now, 0..1; null if the phrase was never graded. */
-export function retrievability(memory: PhraseMemory, now: number): number | null {
-  if (memory.stabilityDays === null || memory.lastReviewedAt === null) return null;
-  const elapsedDays = Math.max(0, now - memory.lastReviewedAt) / DAY;
-  return Math.pow(1 + (FACTOR * elapsedDays) / memory.stabilityDays, DECAY);
-}
-
-export function dueAt(memory: PhraseMemory): number | null {
-  if (memory.stabilityDays === null || memory.lastReviewedAt === null) return null;
-  return memory.lastReviewedAt + memory.stabilityDays * DAY;
+export function isLearned(memory: PhraseMemory): boolean {
+  return (
+    memory.fsrs !== null &&
+    memory.fsrs.state === 'review' &&
+    memory.fsrs.stability >= LEARNED_STABILITY_DAYS &&
+    memory.successes >= LEARNED_MIN_SUCCESSES
+  );
 }
 
 export function isDue(memory: PhraseMemory, now: number): boolean {
-  const due = dueAt(memory);
-  return due !== null && due <= now;
+  return memory.fsrs !== null && memory.fsrs.last_review !== null && memory.fsrs.due <= now;
 }
 
-/** Learned while stability is at least LEARNED_STABILITY_DAYS; a lapse (Hard) un-learns it. */
-export function isLearned(memory: PhraseMemory): boolean {
-  return memory.stabilityDays !== null && memory.stabilityDays >= LEARNED_STABILITY_DAYS;
+export function dueAt(memory: PhraseMemory): number | null {
+  return memory.fsrs && memory.fsrs.last_review !== null ? memory.fsrs.due : null;
+}
+
+export function recallNow(memory: PhraseMemory, now: number): number | null {
+  return retrievability(memory.fsrs, now);
+}
+
+/** The FSRS state after `grade`, including the introductory cap. Pure: used for previews too. */
+export function reviewed(memory: PhraseMemory, grade: Grade, at: number) {
+  const before = memory.fsrs ?? initialize(at);
+  const first = before.last_review === null;
+  const next = review(before, grade, at);
+  if (first && grade !== 'missed') {
+    const capDays = memory.heardCount >= 2 ? FIRST_REVIEW_CAP_DAYS.heardTwice : FIRST_REVIEW_CAP_DAYS.heardOnce;
+    next.due = Math.min(next.due, at + capDays * DAY);
+  }
+  return next;
+}
+
+function pushSample(samples: number[], value: number | null): number[] {
+  if (value === null || !(value > 0)) return samples;
+  return [...samples, value].slice(-SAMPLE_LIMIT);
 }
 
 /**
- * Next stability after a grade. Easy grows the interval in proportion to how
- * much had been forgotten (spacing effect), as FSRS does: rated on time at 90%
- * recall it grows ×2.3, rated again seconds later it barely moves. Hard
- * shrinks it and brings the phrase back within minutes while it is still being
- * learned.
+ * Median of recent measurements. A sample more than twice or under half the
+ * median of the others is an outlier (a stalled engine, a cut-off utterance).
  */
-export function nextStabilityDays(memory: PhraseMemory, grade: Grade, now: number): number {
-  const r = retrievability(memory, now);
-  if (memory.stabilityDays === null || r === null) {
-    return grade === 'easy' ? FIRST_EASY_DAYS : HARD_MIN_DAYS;
-  }
-  if (grade === 'easy') {
-    const growth = Math.min(EASY_MAX_GROWTH, 1 + EASY_GAIN * (1 - r));
-    return Math.max(FIRST_EASY_DAYS, memory.stabilityDays * growth);
-  }
-  return Math.max(HARD_MIN_DAYS, memory.stabilityDays * 0.25);
-}
-
-/** Interval in ms the learner will get for `grade` — shown on the rating buttons. */
-export function previewInterval(memory: PhraseMemory | undefined, grade: Grade, now: number): number {
-  return nextStabilityDays(memory ?? newMemory(now), grade, now) * DAY;
-}
-
-export interface GradeResult {
-  memory: PhraseMemory;
-  /** Points for the rating itself. */
-  points: number;
-  /** POINTS.learned the first time the phrase is learned, otherwise 0. */
-  bonus: number;
-  becameLearned: boolean;
-}
-
-export function applyGrade(memory: PhraseMemory, grade: Grade, now: number): GradeResult {
-  const stabilityDays = nextStabilityDays(memory, grade, now);
-  const becameLearned = memory.learnedAt === null && stabilityDays >= LEARNED_STABILITY_DAYS;
-  return {
-    memory: {
-      ...memory,
-      stabilityDays,
-      lastReviewedAt: now,
-      hardCount: memory.hardCount + (grade === 'hard' ? 1 : 0),
-      easyCount: memory.easyCount + (grade === 'easy' ? 1 : 0),
-      learnedAt: becameLearned ? now : memory.learnedAt,
-    },
-    points: POINTS[grade],
-    bonus: becameLearned ? POINTS.learned : 0,
-    becameLearned,
+export function typicalMs(samples: number[]): number | null {
+  if (samples.length === 0) return null;
+  const median = (xs: number[]) => {
+    const s = [...xs].sort((a, b) => a - b);
+    const mid = Math.floor(s.length / 2);
+    return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
   };
+  if (samples.length < 3) return median(samples);
+  const m = median(samples);
+  const kept = samples.filter((x) => x <= 2 * m && x >= m / 2);
+  return median(kept.length > 0 ? kept : samples);
+}
+
+export function applyEntry(memory: PhraseMemory, entry: LogEntry): PhraseMemory {
+  if (entry.kind === 'heard') {
+    return {
+      ...memory,
+      heardCount: memory.heardCount + 1,
+      firstHeardAt: memory.firstHeardAt ?? entry.at,
+      lastHeardAt: entry.at,
+      targetSamples: pushSample(memory.targetSamples, entry.targetMs),
+      nativeSamples: pushSample(memory.nativeSamples, entry.nativeMs),
+    };
+  }
+  if (entry.kind === 'rated') {
+    const next: PhraseMemory = {
+      ...memory,
+      fsrs: reviewed(memory, entry.grade, entry.at),
+      successes: memory.successes + (entry.grade === 'missed' ? 0 : 1),
+      lastGrade: entry.grade,
+      lastGradeAt: entry.at,
+    };
+    return next.learnedAt === null && isLearned(next) ? { ...next, learnedAt: entry.at } : next;
+  }
+  return memory;
+}
+
+/** Log order: by time, then id, so every device replays the same sequence. */
+export function compareEntries(a: LogEntry, b: LogEntry): number {
+  return a.at - b.at || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+}
+
+export interface Derived {
+  memories: Map<string, PhraseMemory>;
+  /** Points each log entry paid, by entry id. */
+  awards: Map<string, number>;
+  /** Learned bonuses: key → time it was paid. */
+  learnedBonuses: Map<string, number>;
+  points: number;
+}
+
+// Replaying calls into the WASM core for every rating, so results are cached
+// per log array and per key: appending a "heard" entry only replays that key.
+const cache = new WeakMap<LogEntry[], Derived>();
+let lastByKey = new Map<string, { entries: LogEntry[]; memory: PhraseMemory }>();
+
+function sameEntries(a: LogEntry[], b: LogEntry[]): boolean {
+  return a.length === b.length && a.every((entry, i) => entry.id === b[i].id);
+}
+
+/** Memory, points and per-entry awards, derived from a log sorted by `compareEntries`. */
+export function derive(log: LogEntry[]): Derived {
+  const cached = cache.get(log);
+  if (cached) return cached;
+
+  const byKey = new Map<string, LogEntry[]>();
+  for (const entry of log) {
+    if (entry.kind === 'carryover') continue;
+    const list = byKey.get(entry.key);
+    if (list) list.push(entry);
+    else byKey.set(entry.key, [entry]);
+  }
+
+  const memories = new Map<string, PhraseMemory>();
+  const nextByKey = new Map<string, { entries: LogEntry[]; memory: PhraseMemory }>();
+  for (const [key, entries] of byKey) {
+    const previous = lastByKey.get(key);
+    let memory: PhraseMemory;
+    if (previous && sameEntries(previous.entries, entries)) {
+      memory = previous.memory;
+    } else if (previous && sameEntries(previous.entries, entries.slice(0, previous.entries.length))) {
+      memory = entries.slice(previous.entries.length).reduce(applyEntry, previous.memory);
+    } else {
+      memory = entries.reduce(applyEntry, emptyMemory());
+    }
+    memories.set(key, memory);
+    nextByKey.set(key, { entries, memory });
+  }
+  lastByKey = nextByKey;
+
+  const awards = new Map<string, number>();
+  const lastPaid = new Map<string, number>();
+  let points = 0;
+  for (const entry of log) {
+    let award = 0;
+    if (entry.kind === 'carryover') {
+      award = entry.points;
+    } else {
+      const slot = `${entry.kind}|${entry.key}`;
+      const paidAt = lastPaid.get(slot);
+      if (paidAt === undefined || entry.at - paidAt >= LISTEN_POINTS_INTERVAL_MS) {
+        award = entry.kind === 'heard' ? POINTS.listened : POINTS[entry.grade];
+        lastPaid.set(slot, entry.at);
+      }
+    }
+    if (award !== 0) awards.set(entry.id, award);
+    points += award;
+  }
+
+  const learnedBonuses = new Map<string, number>();
+  for (const [key, memory] of memories) {
+    if (memory.learnedAt !== null) {
+      learnedBonuses.set(key, memory.learnedAt);
+      points += POINTS.learned;
+    }
+  }
+
+  const result: Derived = { memories, awards, learnedBonuses, points };
+  cache.set(log, result);
+  return result;
+}
+
+/** Inserts an entry keeping the log sorted; the log is never rewritten otherwise. */
+export function insertEntry(log: LogEntry[], entry: LogEntry): LogEntry[] {
+  let i = log.length;
+  while (i > 0 && compareEntries(log[i - 1], entry) > 0) i--;
+  return [...log.slice(0, i), entry, ...log.slice(i)];
 }
