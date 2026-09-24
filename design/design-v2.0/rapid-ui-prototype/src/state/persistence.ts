@@ -14,6 +14,7 @@ import {
   RENAMED_PHRASE_IDS,
 } from '../content';
 import { OWN_PHRASE_PREFIX, OWN_SET_PREFIX } from './catalog';
+import { decodeLog, encodeLog } from './compactLog';
 import { initialLearner, initialPlayer, initialPrefs, initialProfile } from './initial';
 import { derive, memoryKey } from './memory';
 import { mergeLearner } from './merge';
@@ -198,7 +199,7 @@ export function sanitizeLearner(value: unknown): LearnerState {
   const ownSets = sanitizeOwnSets(value.ownSets, ownPhrases);
   return {
     profile: sanitizeProfile(value.profile),
-    log: sanitizeLog(value.log, ownPhrases),
+    log: sanitizeLog(decodeLog(value.log), ownPhrases),
     likes: sanitizeLikes(value.likes, ownPhrases, ownSets),
     ownPhrases,
     ownSets,
@@ -291,8 +292,9 @@ export function parseState(json: string, device: Device): AppState | null {
   }
 }
 
+/** State as stored: the log in its compact form (compactLog.ts). */
 export function serializeState(state: AppState): string {
-  return JSON.stringify(state);
+  return JSON.stringify({ ...state, learner: { ...state.learner, log: encodeLog(state.learner.log) } });
 }
 
 // ---------- device storage ----------
