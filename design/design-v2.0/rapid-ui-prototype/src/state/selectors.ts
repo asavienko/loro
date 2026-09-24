@@ -2,7 +2,7 @@
 // is estimated: a value that hasn't been measured is null and not shown.
 import { Phrase, PhraseSet } from '../content';
 import { DAY, startOfLocalDay, startOfLocalWeek } from './clock';
-import { coursePhrases, courseSets, findPhrase, findSetView, keyOf, SetView } from './catalog';
+import { coursePhrases, courseSets, findPhrase, findSetView, keyOf, promptOf, SetView } from './catalog';
 import {
   derive,
   dueAt,
@@ -276,14 +276,19 @@ export function listenedMs(player: PlayerState, now: number): number {
   return player.elapsedMs + (player.playingSince === null ? 0 : now - player.playingSince);
 }
 
+/** Target length at 1.0×: measured on this device, else the clip length from content. */
 export function measuredTargetMs(learner: LearnerState, phraseId: string): number | null {
-  return typicalMs(memoryOf(learner, phraseId).targetSamples);
+  const phrase = findPhrase(learner, phraseId);
+  return typicalMs(memoryOf(learner, phraseId).targetSamples) ?? phrase?.durationMs?.[phrase.targetLang] ?? null;
 }
 
 /** The full play of the phrase at 1.0× with its repetitions; null until measured. */
 export function phraseFullPlayMs(state: AppState, phrase: Phrase, repeats: number): number | null {
   const memory = memoryOf(state.learner, phrase.id);
-  return fullPlayMs(typicalMs(memory.nativeSamples), typicalMs(memory.targetSamples), phrase.target, repeats);
+  const prompt = promptOf(phrase, state.learner.profile.nativeLang);
+  const nativeMs = typicalMs(memory.nativeSamples) ?? phrase.durationMs?.[prompt.lang] ?? null;
+  const targetMs = typicalMs(memory.targetSamples) ?? phrase.durationMs?.[phrase.targetLang] ?? null;
+  return fullPlayMs(nativeMs, targetMs, phrase.target, repeats);
 }
 
 /** A set's full play at 1.0×, only once every phrase in it has been measured. */

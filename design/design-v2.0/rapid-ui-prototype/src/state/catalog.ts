@@ -27,6 +27,7 @@ export function ownPhraseToPhrase(own: OwnPhrase): Phrase {
     words: {},
     notes: null,
     audio: null,
+    durationMs: null,
     own: true,
   };
 }
