@@ -1,0 +1,161 @@
+{
+  "cafe-01.grammar": {
+    "bg-BG": { "title": "«Me pone…»", "text": "«Me pone…» (буквално „ще ми сложите ли…“) е обичайният начин да поръчате в Испания. Това е учтивата форма (usted) на poner, но не звучи сковано." },
+    "ru-RU": { "title": "«Me pone…»", "text": "«Me pone…» (буквально «поставьте мне…») — обычный способ заказать в Испании. Это вежливая форма (usted) глагола poner, но звучит она непринуждённо." }
+  },
+  "cafe-01.pronunciation": {
+    "bg-BG": { "title": "Меко d, „нг“ пред c", "text": "D в cortado е меко, почти като английското th в this. N в un звучи като „нг“ пред c." },
+    "ru-RU": { "title": "Мягкое d, «нг» перед c", "text": "D в cortado мягкое, почти как английское th в this. N в un перед c звучит как «нг»." }
+  },
+  "cafe-02.grammar": {
+    "bg-BG": { "title": "Питате цялото кафене", "text": "«Tienen» се обръща към цялото заведение (ustedes). Така най-естествено питате какво има едно кафене." },
+    "ru-RU": { "title": "Вопрос ко всему кафе", "text": "«Tienen» обращено ко всему заведению (ustedes). Так естественнее всего спросить, что есть в кафе." }
+  },
+  "cafe-02.pronunciation": {
+    "bg-BG": { "title": "Меко v", "text": "V в avena е меко b: устните се доближават, но не се допират." },
+    "ru-RU": { "title": "Мягкое v", "text": "V в avena — это мягкое b: губы сближаются, но не смыкаются." }
+  },
+  "cafe-03.grammar": {
+    "bg-BG": { "title": "Винаги «la cuenta»", "text": "Казвайте «la cuenta», с членуване: това е сметката за вашата маса, затова никога «una cuenta»." },
+    "ru-RU": { "title": "Всегда «la cuenta»", "text": "Говорите «la cuenta» с определённым артиклем: это счёт именно за ваш столик, поэтому никогда не «una cuenta»." }
+  },
+  "cafe-03.pronunciation": {
+    "bg-BG": { "title": "„Куе“ в cuenta", "text": "Cue звучи като „куе“ и ударението пада върху него." },
+    "ru-RU": { "title": "«Куэ» в cuenta", "text": "Cue звучит как «куэ», и ударение падает на этот слог." }
+  },
+  "cafe-04.grammar": {
+    "bg-BG": { "title": "Къде отива «nos»", "text": "«Nos» може да стои пред глагола или да се прикачи накрая: «¿Podemos sentarnos…?» означава същото." },
+    "ru-RU": { "title": "Где стоит «nos»", "text": "«Nos» может стоять перед глаголом или присоединяться к концу: «¿Podemos sentarnos…?» значит то же самое." }
+  },
+  "cafe-04.pronunciation": {
+    "bg-BG": { "title": "Кастилско z и rr", "text": "В Испания z в terraza звучи като английското th в think. Rr е силно, вибриращо „р“." },
+    "ru-RU": { "title": "Кастильские z и rr", "text": "В Испании z в terraza звучит как английское th в think. Rr — раскатистое «р»." }
+  },
+  "cafe-05.grammar": {
+    "bg-BG": { "title": "«Sin» без член", "text": "След «sin» няма член: sin azúcar, sin lactosa, sin gluten." },
+    "ru-RU": { "title": "«Sin» без артикля", "text": "После «sin» артикль не нужен: sin azúcar, sin lactosa, sin gluten." }
+  },
+  "cafe-05.pronunciation": {
+    "bg-BG": { "title": "GLU-ten", "text": "Ударението е на първата сричка, с кратко, чисто „у“." },
+    "ru-RU": { "title": "GLU-ten", "text": "Ударение на первый слог, с коротким чистым «у»." }
+  },
+  "tapas-01.grammar": {
+    "bg-BG": { "title": "Учтиво «recomienda»", "text": "«Recomienda» е учтивата форма (usted) — подходяща към сервитьор. С приятели: «¿Qué nos recomiendas?»." },
+    "ru-RU": { "title": "Вежливое «recomienda»", "text": "«Recomienda» — вежливая форма (usted), уместная с официантом. С друзьями: «¿Qué nos recomiendas?»." }
+  },
+  "tapas-01.mnemonic": {
+    "bg-BG": { "title": "e става ie", "text": "Под ударение e в recomendar става ie: recomienda." },
+    "ru-RU": { "title": "e становится ie", "text": "Под ударением e в recomendar превращается в ie: recomienda." }
+  },
+  "tapas-02.mnemonic": {
+    "bg-BG": { "title": "Tapa, ración, media ración", "text": "Ración е цяла чиния за споделяне; tapa е малка; media ración е половин чиния." },
+    "ru-RU": { "title": "Tapa, ración, media ración", "text": "Ración — полная тарелка на компанию; tapa — маленькая; media ración — половина тарелки." }
+  },
+  "tapas-03.grammar": {
+    "bg-BG": { "title": "«Otra», никога «una otra»", "text": "«Otra» вече означава „още една“, затова никога не се казва с «una»." },
+    "ru-RU": { "title": "«Otra», а не «una otra»", "text": "«Otra» уже значит «ещё одна», поэтому «una» перед ним не ставят." }
+  },
+  "tapas-04.grammar": {
+    "bg-BG": { "title": "«Está» за вкус", "text": "Използвайте «está» за това какъв е вкусът на храната в момента. «-ísimo» усилва прилагателното: bueno → buenísimo." },
+    "ru-RU": { "title": "«Está» о вкусе", "text": "Для того, какова еда на вкус прямо сейчас, говорят «está». «-ísimo» усиливает прилагательное: bueno → buenísimo." }
+  },
+  "tapas-05.mnemonic": {
+    "bg-BG": { "title": "Какво е caña", "text": "Caña е малка чаша наливна бира. Да наричате бармана «jefe» е често, но много фамилиарно, затова фразата го пропуска." },
+    "ru-RU": { "title": "Что такое caña", "text": "Caña — маленький бокал разливного пива. Обращение к бармену «jefe» встречается часто, но очень фамильярно, поэтому во фразе его нет." }
+  },
+  "tapas-05.pronunciation": {
+    "bg-BG": { "title": "Ñ", "text": "Ñ звучи като „ня“ в „няма“." },
+    "ru-RU": { "title": "Ñ", "text": "Ñ звучит как «нь» в слове «коньяк»." }
+  },
+  "transit-01.mnemonic": {
+    "bg-BG": { "title": "Parada или estación", "text": "Автобусите спират на «parada»; метрото има «estaciones»." },
+    "ru-RU": { "title": "Parada или estación", "text": "Автобусы останавливаются на «parada», а у метро — «estaciones»." }
+  },
+  "transit-02.mnemonic": {
+    "bg-BG": { "title": "Billete, не boleto", "text": "В Испания билетът е «billete»; «boleto» се казва в Латинска Америка." },
+    "ru-RU": { "title": "Billete, а не boleto", "text": "В Испании билет — «billete»; «boleto» говорят в Латинской Америке." }
+  },
+  "transit-03.grammar": {
+    "bg-BG": { "title": "«Ir a» + място", "text": "Отиване някъде е «ir a»: va a Sol. Sol (Puerta del Sol) е централната станция на Мадрид." },
+    "ru-RU": { "title": "«Ir a» + место", "text": "Движение куда-то — это «ir a»: va a Sol. Sol (Puerta del Sol) — центральная станция Мадрида." }
+  },
+  "transit-04.grammar": {
+    "bg-BG": { "title": "Bajarse и subirse", "text": "«Bajarse» е слизам; «subirse» е качвам се." },
+    "ru-RU": { "title": "Bajarse и subirse", "text": "«Bajarse» — выходить, «subirse» — садиться (в транспорт)." }
+  },
+  "market-01.grammar": {
+    "bg-BG": { "title": "Днешната цена", "text": "«¿A cuánto está…?» пита за днешната цена на неща, чиято цена се мени, например плодове." },
+    "ru-RU": { "title": "Цена на сегодня", "text": "«¿A cuánto está…?» спрашивает сегодняшнюю цену того, что меняется в цене, например фруктов." }
+  },
+  "market-02.grammar": {
+    "bg-BG": { "title": "Без «un» пред medio", "text": "«Póngame» е учтивата повелителна форма на poner, обичайна на пазара. «Medio kilo» е без «un»." },
+    "ru-RU": { "title": "Без «un» перед medio", "text": "«Póngame» — вежливая повелительная форма poner, обычная на рынке. «Medio kilo» говорят без «un»." }
+  },
+  "market-03.grammar": {
+    "bg-BG": { "title": "Me преди lo", "text": "Две местоимения стоят пред глагола в този ред: me (на мен), после lo (го)." },
+    "ru-RU": { "title": "Me перед lo", "text": "Два местоимения стоят перед глаголом в таком порядке: me (мне), затем lo (это)." }
+  },
+  "market-04.mnemonic": {
+    "bg-BG": { "title": "Кога се казва", "text": "Кажете го, когато продавачът попита «¿Algo más?» (нещо друго?)." },
+    "ru-RU": { "title": "Когда это говорят", "text": "Скажите это, когда продавец спросит «¿Algo más?» (что-нибудь ещё?)." }
+  },
+  "sobremesa-01.grammar": {
+    "bg-BG": { "title": "Tú или usted", "text": "«Te» прави въпроса неофициален (tú). Към непознат: «¿A qué se dedica?»." },
+    "ru-RU": { "title": "Tú или usted", "text": "«Te» делает вопрос неформальным (tú). Незнакомому человеку: «¿A qué se dedica?»." }
+  },
+  "sobremesa-02.grammar": {
+    "bg-BG": { "title": "Pasarlo bien", "text": "«Pasarlo bien» значи да си прекараш добре. В Испания често казват «hemos pasado» за нещо, случило се днес." },
+    "ru-RU": { "title": "Pasarlo bien", "text": "«Pasarlo bien» значит хорошо провести время. В Испании о сегодняшнем часто говорят «hemos pasado»." }
+  },
+  "sobremesa-03.grammar": {
+    "bg-BG": { "title": "Tener que", "text": "«Tener que» + инфинитив значи „трябва да“. «Ya» тук означава „вече, сега“." },
+    "ru-RU": { "title": "Tener que", "text": "«Tener que» + инфинитив значит «нужно, приходится». «Ya» здесь — «уже, сейчас»." }
+  },
+  "sobremesa-04.grammar": {
+    "bg-BG": { "title": "Quedar", "text": "«Quedar» значи да се уговориш да се видиш. «La semana que viene» е следващата седмица." },
+    "ru-RU": { "title": "Quedar", "text": "«Quedar» — договориться о встрече. «La semana que viene» — на следующей неделе." }
+  },
+  "taxi-01.mnemonic": {
+    "bg-BG": { "title": "Зелената лампа", "text": "Свободното такси в Испания свети в зелено и показва «libre»." },
+    "ru-RU": { "title": "Зелёный огонёк", "text": "Свободное такси в Испании горит зелёным и показывает «libre»." }
+  },
+  "taxi-02.mnemonic": {
+    "bg-BG": { "title": "Покажете го", "text": "Покажете адреса на телефона си, докато го казвате." },
+    "ru-RU": { "title": "Покажите тоже", "text": "Покажите адрес на телефоне, пока его произносите." }
+  },
+  "taxi-03.grammar": {
+    "bg-BG": { "title": "Учтиво «le»", "text": "«Le» е учтивото „вие“. На приятел: «¿Cuánto te debo?»." },
+    "ru-RU": { "title": "Вежливое «le»", "text": "«Le» — вежливое «вам». Другу: «¿Cuánto te debo?»." }
+  },
+  "taxi-04.grammar": {
+    "bg-BG": { "title": "Pare, aquí mismo", "text": "«Pare» е учтивата повелителна форма на parar. «Aquí mismo» значи точно тук." },
+    "ru-RU": { "title": "Pare, aquí mismo", "text": "«Pare» — вежливая повелительная форма parar. «Aquí mismo» значит прямо здесь." }
+  },
+  "bg-kafene-01.grammar": {
+    "ru-RU": { "title": "Средний род «едно»", "text": "«Кафе» среднего рода, поэтому «один» — «едно»." }
+  },
+  "bg-kafene-01.pronunciation": {
+    "ru-RU": { "title": "ка-ФЕ", "text": "Ударение на последний слог: кафе." }
+  },
+  "bg-kafene-02.grammar": {
+    "ru-RU": { "title": "Артикль в конце слова", "text": "В болгарском определённый артикль присоединяется к концу слова: сметка (счёт) → сметката (этот счёт)." }
+  },
+  "bg-kafene-03.grammar": {
+    "ru-RU": { "title": "Вопросы с «ли»", "text": "«Ли» делает предложение вопросом «да или нет». Оно стоит сразу после слова, о котором спрашивают." }
+  },
+  "bg-kafene-04.grammar": {
+    "ru-RU": { "title": "«Е» на втором месте", "text": "Краткое «е» (есть, является) обычно стоит вторым в предложении: много е вкусно." }
+  },
+  "bg-grad-01.mnemonic": {
+    "ru-RU": { "title": "Спирка", "text": "«Спирка» — остановка автобуса или трамвая; с артиклем — «спирката»." }
+  },
+  "bg-grad-02.grammar": {
+    "ru-RU": { "title": "Един, една, едно", "text": "«Один» согласуется с родом существительного: един билет, една бира, едно кафе." }
+  },
+  "bg-grad-03.pronunciation": {
+    "ru-RU": { "title": "Звук ъ", "text": "«Ъ» — краткий нейтральный гласный, похожий на безударный звук в слове «молоко» (мълако)." }
+  },
+  "bg-grad-04.grammar": {
+    "ru-RU": { "title": "Вежливая просьба", "text": "«Спрете» — вежливая повелительная форма; другу говорят «спри»." }
+  }
+}
