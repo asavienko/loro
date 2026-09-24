@@ -12,6 +12,17 @@ test.describe('explore', () => {
     await expect(page.getByRole('searchbox')).toHaveValue('cuenta');
   });
 
+  test('search matches every word, in any order, without punctuation', async ({ page }) => {
+    await page.goto('/#/explore?q=favor%20cuenta');
+    const result = page.getByRole('button', { name: /La cuenta, por favor/ }).first();
+    await expect(result).toBeVisible();
+    await expect(result.locator('mark')).toHaveText(['cuenta', 'favor']);
+    await page.goto('/#/explore?q=la%20cuenta%20por%20favor');
+    await expect(page.getByRole('button', { name: /La cuenta, por favor/ }).first()).toBeVisible();
+    await page.goto('/#/explore?q=cuenta%20tapas');
+    await expect(page.getByRole('button', { name: /La cuenta, por favor/ })).toHaveCount(0);
+  });
+
   test('a topic becomes a removable filter chip', async ({ page }) => {
     await page.goto('/#/explore');
     await page.getByRole('button', { name: /Getting around/ }).click();

@@ -3,7 +3,7 @@ import { Level, Phrase, Tag, TOPICS } from '../content';
 import { navigate } from '../nav/history';
 import { useNav } from '../nav/NavContext';
 import type { ExploreFilters } from '../nav/routes';
-import { courseSets, coursePhrases, findSetView, promptOf } from '../state/catalog';
+import { courseSets, coursePhrases, findSetView, phraseKey, promptOf } from '../state/catalog';
 import { phraseProgress, setProgress } from '../state/selectors';
 import { useCopy, useNow, useStore } from '../state/store';
 import { Icon, IconName } from '../ui/Icon';
@@ -19,17 +19,42 @@ const TAGS: Tag[] = ['question', 'request', 'politeness', 'food', 'directions', 
 const foldChar = (ch: string) => ch.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().charAt(0) || ch;
 export const fold = (text: string) => [...text].map(foldChar).join('');
 
-/** Text with the matched part marked. */
-function Highlight({ text, query }: { text: string; query: string }) {
-  if (!query) return <>{text}</>;
+/** The query as words: case, accents and punctuation don't count. */
+export const queryWords = (query: string) => phraseKey(query).split(' ').filter(Boolean);
+
+/** Every word of the query appears, in any order. */
+export const matchesWords = (text: string, words: string[]) => {
+  const haystack = phraseKey(text);
+  return words.every((w) => haystack.includes(w));
+};
+
+/** Text with every occurrence of each query word marked. */
+function Highlight({ text, words }: { text: string; words: string[] }) {
   const chars = [...text];
-  const at = fold(text).indexOf(query);
-  if (at === -1) return <>{text}</>;
+  const folded = fold(text);
+  const marked = chars.map(() => false);
+  for (const w of words) {
+    for (let at = folded.indexOf(w); at !== -1; at = folded.indexOf(w, at + 1)) {
+      for (let i = at; i < at + w.length; i++) marked[i] = true;
+    }
+  }
+  const runs: { text: string; mark: boolean }[] = [];
+  chars.forEach((ch, i) => {
+    const last = runs[runs.length - 1];
+    if (last && last.mark === marked[i]) last.text += ch;
+    else runs.push({ text: ch, mark: marked[i] });
+  });
   return (
     <>
-      {chars.slice(0, at).join('')}
-      <mark className="bg-primary-fixed text-on-primary-fixed rounded-sm">{chars.slice(at, at + query.length).join('')}</mark>
-      {chars.slice(at + query.length).join('')}
+      {runs.map((r, i) =>
+        r.mark ? (
+          <mark key={i} className="bg-primary-fixed text-on-primary-fixed rounded-sm">
+            {r.text}
+          </mark>
+        ) : (
+          r.text
+        ),
+      )}
     </>
   );
 }
@@ -59,7 +84,8 @@ export function ExploreScreen({ filters }: { filters: ExploreFilters }) {
     return () => clearTimeout(id);
   });
 
-  const q = fold(filters.q?.trim() ?? '');
+  const words = queryWords(filters.q ?? '');
+  const q = words.join(' ');
   const topic = TOPICS.find((t) => t.id === filters.topic);
   const phraseMatches = (p: Phrase) => {
     const set = findSetView(learner, p.setId);
@@ -73,7 +99,7 @@ export function ExploreScreen({ filters }: { filters: ExploreFilters }) {
     ].map((n) => `${n.title} ${n.text}`).join(' ');
     const topicTitle = set?.topicId ? Object.values(TOPICS.find((t) => t.id === set.topicId)?.title ?? {}).join(' ') : '';
     const tags = p.tags.map((t) => c.common.tag[t]).join(' ');
-    return fold(`${p.target} ${Object.values(p.translations).join(' ')} ${notes} ${topicTitle} ${tags}`).includes(q);
+    return matchesWords(`${p.target} ${Object.values(p.translations).join(' ')} ${notes} ${topicTitle} ${tags}`, words);
   };
   const phrases = q || filters.tag ? coursePhrases(learner).filter(phraseMatches) : [];
   const sets = courseSets(learner).filter((s) => {
@@ -82,7 +108,7 @@ export function ExploreScreen({ filters }: { filters: ExploreFilters }) {
     if (filters.tag && !s.phraseIds.some((id) => phrases.some((p) => p.id === id))) return false;
     if (!q) return true;
     const topicTitle = Object.values(TOPICS.find((t) => t.id === s.topicId)?.title ?? {}).join(' ');
-    return fold(`${s.title} ${Object.values(s.subtitle).join(' ')} ${topicTitle}`).includes(q) || s.phraseIds.some((id) => phrases.some((p) => p.id === id));
+    return matchesWords(`${s.title} ${Object.values(s.subtitle).join(' ')} ${topicTitle}`, words) || s.phraseIds.some((id) => phrases.some((p) => p.id === id));
   });
 
   const chips: { label: string; clear: Partial<ExploreFilters> }[] = [];
@@ -194,7 +220,7 @@ export function ExploreScreen({ filters }: { filters: ExploreFilters }) {
             <ul className="-mx-2">
               {phrases.map((p) => (
                 <li key={p.id}>
-                  <PhraseResult phrase={p} query={q} detail={progressLabel(c, phraseProgress(learner, p.id, now), now)} />
+                  <PhraseResult phrase={p} words={words} detail={progressLabel(c, phraseProgress(learner, p.id, now), now)} />
                 </li>
               ))}
             </ul>
@@ -225,12 +251,12 @@ export function ExploreScreen({ filters }: { filters: ExploreFilters }) {
   );
 }
 
-function PhraseResult({ phrase, query, detail }: { phrase: Phrase; query: string; detail: string }) {
+function PhraseResult({ phrase, words, detail }: { phrase: Phrase; words: string[]; detail: string }) {
   const c = useCopy();
   const nav = useNav();
   const { state } = useStore();
   const prompt = promptOf(phrase, state.learner.profile.nativeLang);
-  if (!query) return <PhraseRow phrase={phrase} detail={detail} onPlay={() => nav.playPhraseInSet(phrase.id)} onMore={() => nav.showDetails(phrase.id)} />;
+  if (!words.length) return <PhraseRow phrase={phrase} detail={detail} onPlay={() => nav.playPhraseInSet(phrase.id)} onMore={() => nav.showDetails(phrase.id)} />;
   return (
     <div className="flex items-center gap-1">
       <button
@@ -240,11 +266,11 @@ function PhraseResult({ phrase, query, detail }: { phrase: Phrase; query: string
         className="flex-1 min-w-0 min-h-14 pl-2 py-2 text-left rounded-2xl active:bg-surface-container"
       >
         <span lang={phrase.targetLang} className="block font-serif italic text-row truncate">
-          <Highlight text={phrase.target} query={query} />
+          <Highlight text={phrase.target} words={words} />
         </span>
         <span className="block text-label text-secondary truncate">
           <span lang={prompt.lang}>
-            <Highlight text={prompt.text} query={query} />
+            <Highlight text={prompt.text} words={words} />
           </span>
           <span> · {detail}</span>
         </span>
