@@ -1,7 +1,8 @@
 // A desktop window (1440×900): the top bars line up with the content they sit over.
 import { expect, sampleHistory, test } from './fixtures';
 
-test.use({ viewport: { width: 1440, height: 900 }, seed: { log: sampleHistory(Date.now()) } });
+// A desktop with a mouse, not the suite's default iPhone emulation.
+test.use({ viewport: { width: 1440, height: 900 }, hasTouch: false, isMobile: false, seed: { log: sampleHistory(Date.now()) } });
 
 test("the set page's Back lines up with its column", async ({ page }) => {
   await page.goto('/#/set/set-cafe?from=explore');
@@ -31,5 +32,26 @@ test.describe('a portrait tablet (768×1024)', () => {
     const pause = (await player.getByRole('button', { name: 'Pause', exact: true }).boundingBox())!;
     expect(flag.y).toBeLessThan(pause.y - 200);
     expect(Math.abs(pause.x + pause.width / 2 - 384)).toBeLessThan(24);
+  });
+});
+
+const openPlayer = async (page: import('@playwright/test').Page) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: /^Play \d+ phrases/ }).first().click();
+  await page.getByRole('button', { name: /^Now playing:/ }).click();
+  return page.getByRole('dialog', { name: 'Now playing' });
+};
+
+test('with a mouse, the player names its keyboard shortcuts', async ({ page }) => {
+  const player = await openPlayer(page);
+  await expect(player.getByText(/^Keys: Space play or pause/)).toBeVisible();
+});
+
+test.describe('on a touch phone', () => {
+  test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+  test('the keyboard hint stays hidden', async ({ page }) => {
+    const player = await openPlayer(page);
+    await expect(player.getByRole('button', { name: 'Pause', exact: true })).toBeVisible();
+    await expect(player.getByText(/^Keys:/)).toBeHidden();
   });
 });
