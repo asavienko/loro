@@ -128,13 +128,14 @@ specifications.
 
 ## Design
 
-| Doc                                                     | Contents                                                                                                                                                |
-| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [design-system.md](design/design-system.md)             | Authored visual reference, generated runtime tokens, and implementation status. Remaining interaction kit: [plan 100](../plans/100-ui-design-system.md) |
-| [component-inventory.md](design/component-inventory.md) | Authored 39-component reference and current React Native component inventory                                                                            |
-| [motion.md](design/motion.md)                           | All 11 keyframe animations, the easing set, and the touch-feedback layer                                                                                |
-| [screen-catalog.md](design/screen-catalog.md)           | All 23 learner screens ↔ artifact ranges ↔ screenshots ↔ specs; shell separately                                                                        |
-| [copy-and-tone.md](design/copy-and-tone.md)             | Voice, the Spanish/English rules, microcopy patterns, what we never say                                                                                 |
+| Doc                                                           | Contents                                                                                                                                                |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [design-system.md](design/design-system.md)                   | Authored visual reference, generated runtime tokens, and implementation status. Remaining interaction kit: [plan 100](../plans/100-ui-design-system.md) |
+| [component-inventory.md](design/component-inventory.md)       | Authored 39-component reference and current React Native component inventory                                                                            |
+| [motion.md](design/motion.md)                                 | All 11 keyframe animations, the easing set, and the touch-feedback layer                                                                                |
+| [screen-catalog.md](design/screen-catalog.md)                 | All 23 learner screens ↔ artifact ranges ↔ screenshots ↔ specs; shell separately                                                                        |
+| [v2-prototype-decisions.md](design/v2-prototype-decisions.md) | What the v2.0 rapid prototype decided, what the app can reuse, and findings for Product. A proposal, not an authored artifact                           |
+| [copy-and-tone.md](design/copy-and-tone.md)                   | Voice, the Spanish/English rules, microcopy patterns, what we never say                                                                                 |
 
 ## Process
 
