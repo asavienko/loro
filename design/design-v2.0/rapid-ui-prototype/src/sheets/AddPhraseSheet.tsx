@@ -77,6 +77,10 @@ function PhraseForm({ editId, initialTarget, initialNative, targetLang, nativeLa
           maxLength={120}
           aria-describedby={targetCount}
           enterKeyHint="next"
+          // The keyboard's autocorrect speaks the device language and would "fix" the phrase.
+          autoCorrect="off"
+          autoCapitalize="sentences"
+          autoComplete="off"
           // Enter in the first field goes on to the translation while it is still empty.
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !native.trim()) {
@@ -99,6 +103,7 @@ function PhraseForm({ editId, initialTarget, initialNative, targetLang, nativeLa
           maxLength={120}
           aria-describedby={nativeCount}
           enterKeyHint="done"
+          autoComplete="off"
           required
           className="min-h-12 px-4 rounded-2xl bg-surface-container-low border border-outline-variant/60 text-base"
         />

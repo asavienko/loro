@@ -320,3 +320,26 @@ test('Enter in the phrase field goes on to the translation, then adds', async ({
   await page.getByLabel('In English').press('Enter');
   await expect(page.getByRole('button', { name: 'Play ¿Hay wifi?' })).toBeVisible();
 });
+
+test('fields ask the keyboard for the right help', async ({ page }) => {
+  await page.goto('/#/library?view=mine');
+  await page.getByRole('button', { name: 'Add your phrase' }).click();
+  const target = page.getByLabel('In Spanish');
+  // Autocorrect in the device language would "fix" the Spanish.
+  await expect(target).toHaveAttribute('autocorrect', 'off');
+  await expect(target).toHaveAttribute('enterkeyhint', 'next');
+  await page.getByRole('button', { name: 'Close' }).click();
+  await page.goto('/#/explore');
+  const search = page.getByRole('searchbox');
+  await expect(search).toHaveAttribute('autocapitalize', 'none');
+  await expect(search).toHaveAttribute('spellcheck', 'false');
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Ana: settings' }).click();
+  const name = page.getByLabel('Name');
+  await expect(name).toHaveAttribute('autocomplete', 'given-name');
+  await name.fill('Ana María');
+  await name.press('Enter');
+  await expect(name).not.toBeFocused();
+  await page.getByRole('button', { name: 'Close' }).click();
+  await expect(page.getByRole('heading', { name: '¡Hola, Ana María!' })).toBeVisible();
+});

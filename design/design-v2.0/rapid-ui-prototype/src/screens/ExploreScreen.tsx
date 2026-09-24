@@ -137,6 +137,9 @@ export function ExploreScreen({ filters }: { filters: ExploreFilters }) {
         <input
           type="search"
           enterKeyHint="search"
+          autoCorrect="off"
+          autoCapitalize="none"
+          spellCheck={false}
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder={c.explore.search}

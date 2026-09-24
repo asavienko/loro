@@ -77,6 +77,10 @@ function NameField({ initial, label, onSave }: { initial: string; label: string;
         maxLength={40}
         onChange={(e) => setName(e.target.value)}
         onBlur={() => name.trim() !== initial && onSave(name)}
+        autoComplete="given-name"
+        enterKeyHint="done"
+        // Saved on blur; Enter blurs.
+        onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
         className="min-h-12 px-4 rounded-2xl bg-surface-container-low border border-outline-variant/60 text-base"
       />
     </label>
