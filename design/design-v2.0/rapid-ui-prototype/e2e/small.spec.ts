@@ -83,3 +83,19 @@ test.describe('large text (150%) on a 360 px phone', () => {
     });
   }
 });
+
+test.describe('onboarding on a small phone at 125% text', () => {
+  test.use({ seed: null });
+
+  test("every step's action is on screen", async ({ page }) => {
+    await page.goto('/');
+    await page.addStyleTag({ content: 'html { font-size: 125% !important }' });
+    for (let step = 0; step < 4; step++) {
+      const box = (await page.getByRole('button', { name: 'Continue' }).boundingBox())!;
+      expect(box.y + box.height, `step ${step + 1}`).toBeLessThanOrEqual(568);
+      await page.getByRole('button', { name: 'Continue' }).click();
+    }
+    const start = (await page.getByRole('button', { name: 'Start with one phrase' }).boundingBox())!;
+    expect(start.y + start.height).toBeLessThanOrEqual(568);
+  });
+});

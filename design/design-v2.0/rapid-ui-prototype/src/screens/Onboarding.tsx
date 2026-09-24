@@ -33,12 +33,12 @@ export function Onboarding() {
   };
 
   return (
-    <main className="min-h-dvh bg-surface text-on-surface flex flex-col px-6 pt-[calc(2rem+env(safe-area-inset-top))] pb-[calc(1.5rem+env(safe-area-inset-bottom))] max-w-md mx-auto">
+    <main className="min-h-dvh bg-surface text-on-surface flex flex-col px-6 pt-[calc(2rem+env(safe-area-inset-top))] max-w-md mx-auto">
       <p className="text-label font-semibold text-secondary">{c.onboarding.step(at + 1, STEPS.length)}</p>
       <h1 className="font-serif text-display font-bold mt-1">Loro</h1>
-      <p className="text-body text-secondary mt-1">{c.onboarding.welcome}</p>
+      {at === 0 && <p className="text-body text-secondary mt-1">{c.onboarding.welcome}</p>}
 
-      <div className="flex-1 flex flex-col gap-3 mt-8">
+      <div className={`flex-1 flex flex-col gap-3 ${at === 0 ? 'mt-8' : 'mt-4'}`}>
         {step === 'native' && (
           <Choice
             legend={c.onboarding.native}
@@ -92,7 +92,8 @@ export function Onboarding() {
         )}
       </div>
 
-      <div className="flex flex-col gap-2 mt-6">
+      {/* The step's action stays on screen however long the step or large the text. */}
+      <div className="sticky bottom-0 -mx-6 px-6 pt-3 mt-3 pb-[calc(1.5rem+env(safe-area-inset-bottom))] bg-surface flex flex-col gap-2 before:absolute before:inset-x-0 before:-top-6 before:h-6 before:bg-linear-to-t before:from-surface before:to-transparent before:pointer-events-none">
         {step === 'loop' ? (
           <>
             <button type="button" onClick={() => finish(true)} className="min-h-12 rounded-full bg-primary-container text-on-primary font-bold flex items-center justify-center gap-2">
