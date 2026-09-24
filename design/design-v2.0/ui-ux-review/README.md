@@ -653,6 +653,12 @@ found no crash.
 | On desktop the player header and the set page's Back sat outside their content column | Both share their page's column (`e2e/wide.spec.ts`) |
 | With a mouse, nothing answered hover and buttons kept the arrow cursor; the shortcuts were invisible | Hand cursor and a light hover layer (fine pointers only); the player names Space, ← → and 1 2 3 |
 | Tabbing on Home and Explore hid the focused control under the top bar or behind the tab bar and mini-player (WCAG 2.4.11) | Scroll padding matches the fixed bars (`e2e/focus.spec.ts`); axe also runs on a real desktop now |
+| Tab left the phrase-details sheet from its Grammar tab: the trap wrapped at the unselected Sounds tab, which Tab never reaches | The trap counts only what Tab reaches; every dialog holds focus both ways |
+| In high-contrast (forced colours) mode the hidden phrase vanished, buttons became bare text and the chosen step, grade and speed looked like the rest | Buttons keep an edge, chosen/current controls get the system Highlight outline, the hidden phrase is dashed boxes |
+
+**Open question:** the prototype has no dark theme, so an evening learner with a dark system theme
+gets a light screen. A dark palette is a design decision (plan 57 owns dark mode in the app); say if
+the prototype should have one.
 
 Checks after these: 71 unit tests and 96 Playwright tests on the dev server (12 skipped). Keyboard
 focus returns to the opener when a sheet, Settings or the player closes, and falls back to the
