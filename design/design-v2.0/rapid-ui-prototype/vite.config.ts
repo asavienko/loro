@@ -58,7 +58,16 @@ export default defineConfig({
       workbox: {
         // The core WASM is inlined in its chunk; let it be precached.
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
-        globPatterns: ['**/*.{js,css,html,woff2,png,svg}'],
+        globPatterns: ['**/*.{js,css,html,png,svg}', 'fonts/*.woff2'],
+        // Text fonts come in many script subsets and a page only needs one or two: they are
+        // cached as the browser actually loads them, not all up front.
+        runtimeCaching: [
+          {
+            urlPattern: ({ url }) => url.pathname.startsWith('/assets/') && url.pathname.endsWith('.woff2'),
+            handler: 'CacheFirst',
+            options: { cacheName: 'loro-fonts', expiration: { maxEntries: 40 } },
+          },
+        ],
       },
     }),
   ],
