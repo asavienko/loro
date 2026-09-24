@@ -163,6 +163,7 @@ export function makeRu(n: Plural): Copy {
       name: 'Название',
       create: 'Создать',
       created: (title) => `Создан «${title}»`,
+      taken: 'Набор с таким названием уже есть.',
     },
     addPhrase: {
       title: 'Своя фраза',
