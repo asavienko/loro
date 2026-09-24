@@ -172,6 +172,7 @@ export function makeBg(n: Plural): Copy {
       added: 'Фразата е добавена',
       editTitle: 'Редактиране на фразата',
       edited: 'Фразата е обновена',
+      duplicate: 'Вече е в курса:',
     },
     player: {
       dialog: 'Сега звучи',

@@ -172,6 +172,7 @@ export function makeRu(n: Plural): Copy {
       added: 'Фраза добавлена',
       editTitle: 'Изменить фразу',
       edited: 'Фраза обновлена',
+      duplicate: 'Уже есть в курсе:',
     },
     player: {
       dialog: 'Сейчас играет',

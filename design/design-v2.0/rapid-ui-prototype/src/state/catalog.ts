@@ -131,3 +131,20 @@ export function coursePhrases(learner: LearnerState): Phrase[] {
   const target = learner.profile.targetLang;
   return [...CONTENT_PHRASES.filter((p) => p.targetLang === target), ...ownPhrases(learner)];
 }
+
+/** Case, accents, punctuation and spacing don't make a phrase different. */
+export function phraseKey(text: string): string {
+  return text
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .trim();
+}
+
+/** A phrase of the current course that says the same as `text` (not `exceptId`), if any. */
+export function findSamePhrase(learner: LearnerState, text: string, exceptId?: string): Phrase | undefined {
+  const key = phraseKey(text);
+  if (!key) return undefined;
+  return coursePhrases(learner).find((p) => p.id !== exceptId && phraseKey(p.target) === key);
+}
