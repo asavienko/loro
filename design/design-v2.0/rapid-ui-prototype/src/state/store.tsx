@@ -46,6 +46,7 @@ function makeActions(dispatch: (event: AppEvent) => void, latest: RefObject<AppS
     editOwnPhrase: (id: string, target: string, native: string) =>
       dispatch({ type: 'EDIT_OWN_PHRASE', id, target, native, now: now() }),
     deleteOwnPhrase: (id: string) => dispatch({ type: 'DELETE_OWN_PHRASE', id, now: now() }),
+    restoreOwnPhrase: (id: string) => dispatch({ type: 'RESTORE_OWN_PHRASE', id, now: now() }),
     /** Creates a set and returns its id (the machine takes ids from the device counter). */
     createSet: (title: string, phraseIds: string[]): string => {
       const { device } = latest.current;
@@ -59,6 +60,7 @@ function makeActions(dispatch: (event: AppEvent) => void, latest: RefObject<AppS
       dispatch({ type: 'MOVE_IN_SET', setId, phraseId, delta, now: now() }),
     renameSet: (setId: string, title: string) => dispatch({ type: 'RENAME_SET', setId, title, now: now() }),
     deleteSet: (setId: string) => dispatch({ type: 'DELETE_SET', setId, now: now() }),
+    restoreSet: (setId: string) => dispatch({ type: 'RESTORE_SET', setId, now: now() }),
     setProfile: (profile: Partial<Omit<Profile, 'updatedAt'>>) => dispatch({ type: 'SET_PROFILE', profile, now: now() }),
     mergeRemote: (learner: LearnerState) => dispatch({ type: 'MERGE_REMOTE', learner }),
     reset: () => dispatch({ type: 'RESET' }),
