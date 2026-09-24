@@ -47,10 +47,11 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
-      // A new version waits and takes over on the next launch: auto-updating reloads the
-      // page, which would cut a lesson off mid-phrase.
+      // A new version waits: auto-updating reloads the page, which would cut a lesson off
+      // mid-phrase. src/pwa.ts registers the worker and the app offers Reload when nothing
+      // is playing; otherwise it takes over on the next launch.
       registerType: 'prompt',
-      injectRegister: 'script',
+      injectRegister: false,
       includeAssets: ['icons/*.png', 'icons/icon.svg', 'fonts/*.woff2'],
       manifest: {
         name: 'Loro',

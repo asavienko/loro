@@ -3,6 +3,7 @@ import { Component, ReactNode, useEffect, useMemo, useRef, useState } from 'reac
 import { useLatest } from './lib/useLatest';
 import { setVoiceChoices, stopSpeech } from './audio/speech';
 import { usePlaybackDriver } from './audio/driver';
+import { applyUpdate, UPDATE_READY_EVENT } from './pwa';
 import { useMediaSession } from './audio/mediaSession';
 import { learnedCue } from './audio/cues';
 import { copyFor, copyForNative } from './copy';
@@ -122,6 +123,29 @@ function useSaveWarnings() {
     window.addEventListener(SAVE_FAILED_EVENT, onFail);
     return () => window.removeEventListener(SAVE_FAILED_EVENT, onFail);
   }, [c, toast]);
+}
+
+/**
+ * A new version is waiting: offer Reload once, at a moment when nothing is playing,
+ * so it never cuts a phrase off. Declined, it takes over on the next launch.
+ */
+function useUpdatePrompt() {
+  const c = useCopy();
+  const { state } = useStore();
+  const { toast } = useToast();
+  const [ready, setReady] = useState(false);
+  const offered = useRef(false);
+  useEffect(() => {
+    const onReady = () => setReady(true);
+    window.addEventListener(UPDATE_READY_EVENT, onReady);
+    return () => window.removeEventListener(UPDATE_READY_EVENT, onReady);
+  }, []);
+  const playing = state.player.status === 'playing';
+  useEffect(() => {
+    if (!ready || playing || offered.current) return;
+    offered.current = true;
+    toast(c.toast.updateReady, { action: { label: c.toast.reload, run: applyUpdate } });
+  }, [ready, playing, c, toast]);
 }
 
 /** Learned bonuses and completed passes get a moment of their own. */
@@ -265,6 +289,7 @@ function Shell() {
   );
   useCelebrations(nav.openSummary);
   useSaveWarnings();
+  useUpdatePrompt();
 
   if (!state.learner.profile.onboarded) {
     return (
