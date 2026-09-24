@@ -26,6 +26,7 @@ import { PhraseNotesView } from '../ui/Notes';
 import { isTargetRevealed, PHASE_ICONS, phaseInstruction, phaseStepLabel } from '../ui/phase';
 import { GlossedPhrase, HiddenPhrase } from '../ui/PhraseText';
 import { SetCover } from '../ui/SetCover';
+import { usePlayerKeys } from './usePlayerKeys';
 import { Sheet } from '../ui/Sheet';
 
 const STEPS: Exclude<Phase, 'rate'>[] = ['native', 'pause', 'target'];
@@ -49,6 +50,7 @@ export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps
   const dragControls = useDragControls();
   const dialogRef = useRef<HTMLDivElement>(null);
   useDialog(dialogRef, onClose);
+  usePlayerKeys();
   const [notesOpen, setNotesOpen] = useState(false);
   const clicks = useClickBlockerDuringDrag();
 
@@ -225,18 +227,19 @@ export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps
             {/* Transport */}
             <div className="flex items-center justify-between">
               <PlayModeButton />
-              <button type="button" aria-label={c.player.previous} onClick={actions.prev} className="w-12 h-12 flex items-center justify-center rounded-full active:bg-surface-container">
+              <button type="button" aria-label={c.player.previous} aria-keyshortcuts="ArrowLeft" onClick={actions.prev} className="w-12 h-12 flex items-center justify-center rounded-full active:bg-surface-container">
                 <Icon name="skip_previous" fill className="text-icon-2xl" />
               </button>
               <button
                 type="button"
                 aria-label={playing ? c.common.pause : c.common.play}
+                aria-keyshortcuts="Space"
                 onClick={playing ? actions.pause : actions.play}
                 className="w-16 h-16 rounded-full bg-primary-container text-on-primary flex items-center justify-center shadow-lg active:scale-95 transition-transform"
               >
                 <Icon name={playing ? 'pause' : 'play_arrow'} fill className="text-icon-3xl" />
               </button>
-              <button type="button" aria-label={c.player.next} onClick={actions.next} className="w-12 h-12 flex items-center justify-center rounded-full active:bg-surface-container">
+              <button type="button" aria-label={c.player.next} aria-keyshortcuts="ArrowRight" onClick={actions.next} className="w-12 h-12 flex items-center justify-center rounded-full active:bg-surface-container">
                 <Icon name="skip_next" fill className="text-icon-2xl" />
               </button>
               <RepeatsButton />
@@ -315,7 +318,7 @@ function Rating({ phrase }: { phrase: Phrase }) {
           : c.player.howDidItGo}
       </p>
       <div className="grid grid-cols-3 gap-2">
-        {GRADES.map(({ grade, icon, tone }) => {
+        {GRADES.map(({ grade, icon, tone }, i) => {
           const selected = active?.grade === grade;
           const interval = formatInterval(previewDue(state.learner, phrase.id, grade, active?.at ?? now) - (active?.at ?? now), c.locale);
           return (
@@ -323,6 +326,7 @@ function Rating({ phrase }: { phrase: Phrase }) {
               key={grade}
               type="button"
               aria-pressed={selected}
+              aria-keyshortcuts={String(i + 1)}
               onClick={() => rate(grade)}
               className={`min-h-12 px-1 rounded-2xl flex flex-col items-center justify-center leading-tight active:opacity-80 ${tone} ${
                 selected ? 'ring-2 ring-primary-container ring-offset-2 ring-offset-surface font-bold' : 'font-semibold'
