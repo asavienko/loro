@@ -585,12 +585,16 @@ production build offline. Each fix below is covered by a test.
 | "Metro & Streets", "Taxi at Night" were English titles in the Spanish course | "Metro y Calles", "Taxi de Noche" |
 | The first tap spent ~140 ms starting the audio device (profiled with a year of history) | The audio context is created while idle after load; the tap only resumes it. At 4× CPU throttling, tap-to-mini-player fell from 259 to 141 ms and the longest task from 197 to 50 ms |
 | Deleting your own phrase from its details crashed the app | Fixed; the error screen now leads with Reload, which keeps progress |
+| A full or blocked browser storage made saves fail silently | The learner is told once per session that progress isn't being saved |
+| The review log was stored as plain objects: a heavy learner would fill the ~5 MB storage within months | Stored as compact rows: a year of daily practice takes 536 KB instead of 1,945 KB; plain saves still load |
+| A new app version reloaded the page as soon as it arrived, cutting a lesson off | It waits and takes over on the next launch |
+| Russian "Не вспомнил" and "Сколько я вам должен?", and Bulgarian "Свободен ли сте?", assumed men | "Не помню", "Сколько с меня?", "Свободно ли е?" |
 | A curved divider on Home stats, "24 hours ago", the queue count truncating at large text, the landscape player | Fixed |
 
 Also new: player keyboard shortcuts (Space, ← →, 1 2 3), and `npm run test:e2e:preview`, which
 runs the whole suite against the production build with its service worker, including offline use.
 
-**Checks:** `npm run check` (lint, strict types, 58 unit tests, build) and 47 Playwright tests on the
+**Checks:** `npm run check` (lint, strict types, 59 unit tests, build) and 48 Playwright tests on the
 dev server, the same suite plus an offline test against the production build, gesture tests (queue
 swipes and drag reorder, mini-player and cover swipes, drag to close), and a load test that fails on
 any main-thread task over 200 ms with a year of history. Every test also fails on any page error.
