@@ -1,32 +1,20 @@
 [
   {
-    "id": "cafe",
-    "title": "Café",
-    "icon": "local_cafe",
+    "id": "eating-out",
+    "title": { "en": "Eating out", "bg": "Навън за хапване", "ru": "Еда вне дома" },
+    "icon": "restaurant",
     "tone": "primary"
   },
   {
-    "id": "food",
-    "title": "Food & drink",
-    "icon": "restaurant",
-    "tone": "tertiary"
-  },
-  {
-    "id": "travel",
-    "title": "Travel",
+    "id": "getting-around",
+    "title": { "en": "Getting around", "bg": "Придвижване", "ru": "Транспорт" },
     "icon": "train",
     "tone": "secondary"
   },
   {
-    "id": "shopping",
-    "title": "Shopping",
+    "id": "everyday",
+    "title": { "en": "Everyday life", "bg": "Всекидневие", "ru": "Повседневная жизнь" },
     "icon": "storefront",
     "tone": "tertiary"
-  },
-  {
-    "id": "small-talk",
-    "title": "Small talk",
-    "icon": "forum",
-    "tone": "primary"
   }
 ]

@@ -2,87 +2,113 @@
   {
     "id": "set-cafe",
     "title": "Café & Mañanas",
-    "subtitle": "Morning orders at the counter",
-    "topicId": "cafe",
+    "subtitle": {
+      "en": "Ordering coffee at the counter",
+      "bg": "Поръчка на кафе на бара",
+      "ru": "Заказ кофе у стойки"
+    },
+    "topicId": "eating-out",
+    "level": "A1",
     "coverIcon": "coffee",
     "targetLang": "es-ES",
-    "phraseIds": [
-      "phrase-1",
-      "phrase-2",
-      "phrase-3",
-      "phrase-4",
-      "phrase-5",
-      "phrase-6"
-    ]
+    "phraseIds": ["cafe-01", "cafe-02", "cafe-03", "cafe-04", "cafe-05"]
   },
   {
     "id": "set-tapas",
     "title": "Tapas & Tabernas",
-    "subtitle": "Ordering and sharing at the bar",
-    "topicId": "food",
+    "subtitle": {
+      "en": "Ordering and sharing at the bar",
+      "bg": "Поръчка и споделяне в бара",
+      "ru": "Заказ и угощение в баре"
+    },
+    "topicId": "eating-out",
+    "level": "A1",
     "coverIcon": "tapas",
     "targetLang": "es-ES",
-    "phraseIds": [
-      "tapas-1",
-      "tapas-2",
-      "tapas-3",
-      "tapas-4"
-    ]
+    "phraseIds": ["tapas-01", "tapas-02", "tapas-03", "tapas-04", "tapas-05"]
   },
   {
     "id": "set-transit",
     "title": "Metro & Streets",
-    "subtitle": "Getting around the city",
-    "topicId": "travel",
+    "subtitle": {
+      "en": "Getting around the city",
+      "bg": "Придвижване из града",
+      "ru": "Передвижение по городу"
+    },
+    "topicId": "getting-around",
+    "level": "A1",
     "coverIcon": "subway",
     "targetLang": "es-ES",
-    "phraseIds": [
-      "transit-1",
-      "transit-2",
-      "transit-3",
-      "transit-4"
-    ]
+    "phraseIds": ["transit-01", "transit-02", "transit-03", "transit-04"]
   },
   {
     "id": "set-market",
     "title": "Mercado",
-    "subtitle": "Buying at the market stall",
-    "topicId": "shopping",
+    "subtitle": {
+      "en": "Buying at the market stall",
+      "bg": "Покупки на пазара",
+      "ru": "Покупки на рынке"
+    },
+    "topicId": "everyday",
+    "level": "A1",
     "coverIcon": "shopping_basket",
     "targetLang": "es-ES",
-    "phraseIds": [
-      "market-1",
-      "market-2",
-      "market-3",
-      "market-4"
-    ]
-  },
-  {
-    "id": "set-sobremesa",
-    "title": "Sobremesa",
-    "subtitle": "Talking after the meal",
-    "topicId": "small-talk",
-    "coverIcon": "forum",
-    "targetLang": "es-ES",
-    "phraseIds": [
-      "sobremesa-1",
-      "sobremesa-2",
-      "sobremesa-3",
-      "sobremesa-4"
-    ]
+    "phraseIds": ["market-01", "market-02", "market-03", "market-04"]
   },
   {
     "id": "set-taxi",
     "title": "Taxi at Night",
-    "subtitle": "Getting home safely",
-    "topicId": "travel",
+    "subtitle": {
+      "en": "Getting home by taxi",
+      "bg": "С такси до вкъщи",
+      "ru": "На такси домой"
+    },
+    "topicId": "getting-around",
+    "level": "A2",
     "coverIcon": "local_taxi",
     "targetLang": "es-ES",
-    "phraseIds": [
-      "taxi-1",
-      "taxi-2",
-      "taxi-3",
-      "taxi-4"
-    ]
+    "phraseIds": ["taxi-01", "taxi-02", "taxi-03", "taxi-04"]
+  },
+  {
+    "id": "set-sobremesa",
+    "title": "Sobremesa",
+    "subtitle": {
+      "en": "Talking after the meal",
+      "bg": "Разговор след ядене",
+      "ru": "Разговор после еды"
+    },
+    "topicId": "everyday",
+    "level": "A2",
+    "coverIcon": "forum",
+    "targetLang": "es-ES",
+    "phraseIds": ["sobremesa-01", "sobremesa-02", "sobremesa-03", "sobremesa-04"]
+  },
+  {
+    "id": "set-bg-kafene",
+    "title": "Кафене",
+    "subtitle": {
+      "en": "Coffee and a bite",
+      "bg": "Кафе и нещо сладко",
+      "ru": "Кофе и что-нибудь к нему"
+    },
+    "topicId": "eating-out",
+    "level": "A1",
+    "coverIcon": "coffee",
+    "targetLang": "bg-BG",
+    "phraseIds": ["bg-kafene-01", "bg-kafene-02", "bg-kafene-03", "bg-kafene-04"]
+  },
+  {
+    "id": "set-bg-grad",
+    "title": "Из града",
+    "subtitle": {
+      "en": "Around town",
+      "bg": "Из града",
+      "ru": "По городу"
+    },
+    "topicId": "getting-around",
+    "level": "A1",
+    "coverIcon": "directions_bus",
+    "targetLang": "bg-BG",
+    "phraseIds": ["bg-grad-01", "bg-grad-02", "bg-grad-03", "bg-grad-04"]
   }
 ]
