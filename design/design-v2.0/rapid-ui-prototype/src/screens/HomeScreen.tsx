@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { greeting } from '../copy';
 import { useNav } from '../nav/NavContext';
-import { courseSets, findSetView, SetView } from '../state/catalog';
+import { coursePhrases, courseSets, findSetView, SetView } from '../state/catalog';
 import { formatAgo, formatElapsed, formatWhen } from '../state/clock';
 import {
   duePhraseIds,
@@ -44,6 +44,9 @@ export function HomeScreen() {
   const fresh = notStartedSets(learner, now).filter((s) => s.id !== suggestedId);
   const firstRun = stats.started === 0;
   const firstPhrase = courseSets(learner)[0]?.phraseIds[0];
+  const courseTotal = coursePhrases(learner).length;
+  // Nothing due and nothing left to learn: say so, and offer what to do next.
+  const courseDone = courseTotal > 0 && due.length === 0 && suggestedIds.length === 0 && stats.learned === courseTotal;
 
   return (
     <div className="max-w-5xl mx-auto px-4 pt-4 flex flex-col gap-7">
@@ -104,6 +107,24 @@ export function HomeScreen() {
               detail={null}
               onClick={() => nav.playSet(suggested.id, { phraseIds: suggestedIds })}
             />
+          </div>
+        )}
+        {courseDone && (
+          <div className="rounded-3xl bg-tertiary-fixed/60 p-4">
+            <h2 className="font-serif text-lg font-bold flex items-center gap-2">
+              <Icon name="task_alt" className="text-icon text-tertiary" />
+              {c.home.courseDoneTitle}
+            </h2>
+            <p className="text-body text-on-surface-variant mt-1">{c.home.courseDoneBody}</p>
+            <div className="flex flex-wrap gap-2 mt-3">
+              <button type="button" onClick={nav.addPhrase} className="min-h-11 px-4 rounded-full bg-primary-container text-on-primary font-bold flex items-center gap-1.5">
+                <Icon name="add" className="text-icon-md" />
+                {c.home.addOwn}
+              </button>
+              <button type="button" onClick={nav.openSettings} className="min-h-11 px-4 rounded-full bg-surface-container-high text-on-surface font-semibold">
+                {c.home.otherCourse}
+              </button>
+            </div>
           </div>
         )}
         {upcoming && (
