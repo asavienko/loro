@@ -123,17 +123,27 @@ export function ExploreScreen({ filters }: { filters: ExploreFilters }) {
 
   return (
     <div className="max-w-5xl mx-auto px-4 pt-4 flex flex-col gap-6">
-      <div className="relative">
+      {/* The keyboard's Search key commits the query at once and puts the keyboard away. */}
+      <form
+        role="search"
+        className="relative"
+        onSubmit={(event) => {
+          event.preventDefault();
+          update({ q: text.trim() || undefined }, true);
+          (document.activeElement as HTMLElement | null)?.blur();
+        }}
+      >
         <Icon name="search" className="text-icon absolute left-3.5 top-1/2 -translate-y-1/2 text-secondary" />
         <input
           type="search"
+          enterKeyHint="search"
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder={c.explore.search}
           aria-label={c.explore.search}
           className="w-full min-h-12 pl-11 pr-4 rounded-2xl bg-surface-container-low border border-outline-variant/60 text-base text-on-surface placeholder:text-secondary focus-visible:outline-2"
         />
-      </div>
+      </form>
 
       {chips.length > 0 && (
         <div className="flex flex-wrap items-center gap-2 -mt-3">

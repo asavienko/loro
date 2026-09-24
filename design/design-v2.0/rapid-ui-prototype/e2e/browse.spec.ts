@@ -298,3 +298,14 @@ test('near the limit, a phrase field says how many characters are left', async (
   await expect(field).toHaveAccessibleName('In Spanish');
   await expect(field).toHaveAccessibleDescription('0 characters left');
 });
+
+test('the Search key commits the query and puts the keyboard away', async ({ page }) => {
+  await page.goto('/#/explore');
+  const field = page.getByRole('searchbox', { name: 'Search phrases, notes and topics' });
+  await expect(page.getByRole('search')).toBeVisible();
+  await field.fill('metro');
+  await field.press('Enter');
+  await expect(page).toHaveURL(/q=metro/);
+  await expect(field).not.toBeFocused();
+  await expect(page.getByRole('button', { name: /¿Dónde está la estación de metro\?/ }).first()).toBeVisible();
+});
