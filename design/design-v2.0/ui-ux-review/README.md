@@ -697,6 +697,17 @@ over the learner's turn after its timeout; a stalled clip could hang the loop an
 recovered (now a watchdog, a reload, and a fallback to the device voice); and lock-screen Play while
 the page was hidden played into silence and failed (now it starts when the page is visible).
 
+A fifth review traced every number a learner sees to its source. Fixed: the rating preview could
+promise a later return than it scheduled (it counted repetitions heard after the rating); History's
+points per run didn't add up to the badge (early ratings and learned bonuses were misplaced);
+onboarding's "about 20 seconds" was invented; the player showed a 1× total beside an elapsed time
+running at another speed; the automatic-repetitions label was wrong for shaky reviewed phrases; the
+summary didn't say pending ratings' points count later; the recall chart bucketed unrounded values.
+
+**Open question:** "Full play 0:41 at 1×" is speech plus pauses, measured; it leaves out the 4 s
+rating hold (only for unrated phrases) and the engine's start-up delay, so an unrated new set can
+take ~1:01. Should it include the hold for unrated phrases, or be relabelled "listening time"?
+
 **For the Bulgarian reviewer:** on a 320 px phone the Missed rating, "Не се сетих", wraps onto two
 lines in its third of the row; a shorter word (e.g. "Забравих") would fit. Dropping the icons didn't
 make it fit, so the fix is wording, not layout.
