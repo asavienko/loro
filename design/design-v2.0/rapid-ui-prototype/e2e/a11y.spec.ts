@@ -127,3 +127,19 @@ test.describe('onboarding', () => {
     });
   }
 });
+
+for (const nativeLang of ['bg-BG', 'ru-RU']) {
+  test.describe(`${nativeLang} UI`, () => {
+    test.use({ seed: { nativeLang, log: sampleHistory(Date.now()).map((e) => ({ ...e, key: String(e.key).replace('en-GB>', `${nativeLang}>`) })) } });
+    for (const hash of ['/', '/#/explore', '/#/library', '/#/set/set-cafe?from=explore']) {
+      test(hash, async ({ page }) => {
+        await page.goto(hash);
+        await page.waitForTimeout(400);
+        expect(await page.evaluate(() => document.documentElement.lang)).toBe(nativeLang);
+        await expectAccessible(page);
+        await expectMobileBasics(page);
+        expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+      });
+    }
+  });
+}
