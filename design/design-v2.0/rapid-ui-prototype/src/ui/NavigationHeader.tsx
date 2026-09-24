@@ -12,6 +12,8 @@ interface NavigationHeaderProps {
   inert?: boolean;
   /** Shown once the page has scrolled past its own title (the set page). */
   scrolledTitle?: string;
+  /** Match a page in the narrower reading column (the set page), so Back lines up with it. */
+  narrow?: boolean;
 }
 
 const TITLE_SCROLL_PX = 140;
@@ -28,7 +30,7 @@ function useScrolledPast(px: number, active: boolean): boolean {
   return active && past;
 }
 
-export function NavigationHeader({ title, onBack, onOpenSettings, inert = false, scrolledTitle }: NavigationHeaderProps) {
+export function NavigationHeader({ title, onBack, onOpenSettings, inert = false, scrolledTitle, narrow = false }: NavigationHeaderProps) {
   const past = useScrolledPast(TITLE_SCROLL_PX, Boolean(scrolledTitle));
   const c = useCopy();
   const { state } = useStore();
@@ -36,7 +38,7 @@ export function NavigationHeader({ title, onBack, onOpenSettings, inert = false,
   const name = state.learner.profile.name;
   return (
     <header inert={inert} className="fixed top-0 inset-x-0 z-40 bg-surface/95 backdrop-blur-md border-b border-surface-container-high pt-[env(safe-area-inset-top)]">
-      <div className="h-14 px-4 flex items-center gap-3 max-w-5xl mx-auto">
+      <div className={`h-14 px-4 flex items-center gap-3 mx-auto ${narrow ? 'max-w-3xl' : 'max-w-5xl'}`}>
         {onBack ? (
           <button
             type="button"

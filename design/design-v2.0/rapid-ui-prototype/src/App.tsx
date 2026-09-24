@@ -236,6 +236,7 @@ function Shell() {
           onOpenSettings={nav.openSettings}
           inert={behind}
           scrolledTitle={route.name === 'set' ? setView?.title : undefined}
+          narrow={route.name === 'set'}
         />
 
         <main inert={behind} className="flex-1 pt-[calc(3.5rem+env(safe-area-inset-top))] pb-[calc(9rem+env(safe-area-inset-bottom))] phone-landscape:pb-[calc(7rem+env(safe-area-inset-bottom))]">
