@@ -48,6 +48,11 @@ test.describe('library', () => {
     await expect(page.getByRole('heading', { name: 'Travel bits' })).toBeVisible();
     await expect(page.getByText('Your set')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Play ¿Hay wifi?' })).toBeVisible();
+    await page.getByRole('button', { name: 'Details for ¿Hay wifi?' }).click();
+    await page.getByRole('button', { name: 'Remove from this set' }).click();
+    await expect(page.getByRole('button', { name: 'Play ¿Hay wifi?' })).toHaveCount(0);
+    await page.getByRole('button', { name: 'Undo' }).click();
+    await expect(page.getByRole('button', { name: 'Play ¿Hay wifi?' })).toBeVisible();
   });
 
   test('adding a phrase the course already has says so', async ({ page }) => {
