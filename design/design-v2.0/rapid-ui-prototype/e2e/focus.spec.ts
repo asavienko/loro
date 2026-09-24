@@ -33,3 +33,15 @@ for (const [w, h] of [[390, 844], [1440, 900]] as const) {
     });
   }
 }
+
+test('Tab and Shift+Tab stay inside an open sheet, past its tabs', async ({ page }) => {
+  await page.goto('/#/set/set-cafe?from=explore');
+  await page.getByRole('button', { name: /^Details for/ }).first().click();
+  const inside = () => page.evaluate(() => Boolean(document.activeElement?.closest('[role="dialog"]')));
+  for (const key of ['Tab', 'Shift+Tab']) {
+    for (let i = 0; i < 20; i++) {
+      await page.keyboard.press(key);
+      expect(await inside(), `${key} ×${i + 1}`).toBe(true);
+    }
+  }
+});

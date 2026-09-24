@@ -22,7 +22,12 @@ export function useDialog(ref: RefObject<HTMLElement | null>, onClose: () => voi
     stack.push(id);
     const returnTo = opener;
     const node = ref.current;
-    const focusables = () => (node ? [...node.querySelectorAll<HTMLElement>(FOCUSABLE)] : []);
+    // Only what Tab actually reaches: a hidden, inert or tabindex="-1" element (an unselected tab)
+    // counted as "last" would let Tab slip out of the dialog.
+    const focusables = () =>
+      node
+        ? [...node.querySelectorAll<HTMLElement>(FOCUSABLE)].filter((el) => el.tabIndex >= 0 && el.getClientRects().length > 0 && !el.closest('[inert]'))
+        : [];
     (focusables()[0] ?? node)?.focus({ preventScroll: true });
 
     const onKey = (event: KeyboardEvent) => {
