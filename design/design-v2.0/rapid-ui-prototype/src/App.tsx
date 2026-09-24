@@ -161,6 +161,22 @@ function Shell() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [summaryOpen, setSummaryOpen] = useState(false);
 
+  // The tab, the app switcher and screen readers say where the learner is (WCAG 2.4.2).
+  const pageTitle = !state.learner.profile.onboarded
+    ? null
+    : overlay.queue
+      ? c.queue.title
+      : overlay.player
+        ? c.player.dialog
+        : route.name === 'home'
+          ? null
+          : route.name === 'set'
+            ? findSetView(state.learner, route.id)?.title
+            : c.nav[route.name];
+  useEffect(() => {
+    document.title = pageTitle ? `${pageTitle} · Loro` : 'Loro';
+  }, [pageTitle]);
+
   useEffect(() => stopSpeech, []);
   // The page's language is the UI's, so screen readers pronounce it right and
   // Cyrillic uses the local letterforms.

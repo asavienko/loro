@@ -343,3 +343,17 @@ test('fields ask the keyboard for the right help', async ({ page }) => {
   await page.getByRole('button', { name: 'Close' }).click();
   await expect(page.getByRole('heading', { name: '¡Hola, Ana María!' })).toBeVisible();
 });
+
+test('the page title says where the learner is', async ({ page }) => {
+  await page.goto('/');
+  await expect(page).toHaveTitle('Loro');
+  await page.goto('/#/explore');
+  await expect(page).toHaveTitle('Explore · Loro');
+  await page.goto('/#/set/set-cafe?from=explore');
+  await expect(page).toHaveTitle('Café & Mañanas · Loro');
+  await page.getByRole('button', { name: /^Play/ }).first().click();
+  await page.getByRole('button', { name: /^Now playing:/ }).click();
+  await expect(page).toHaveTitle('Now playing · Loro');
+  await page.getByRole('button', { name: 'Open queue' }).click();
+  await expect(page).toHaveTitle('Queue · Loro');
+});
