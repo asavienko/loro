@@ -1,0 +1,33 @@
+// A small phone (320×568): nothing scrolls sideways and the player's controls can be reached.
+import { expect, sampleHistory, test } from './fixtures';
+
+test.use({ viewport: { width: 320, height: 568 }, seed: { log: sampleHistory(Date.now()) } });
+
+for (const hash of ['/', '/#/explore', '/#/library', '/#/library?view=ownSets', '/#/set/set-cafe?from=explore']) {
+  test(`no sideways scroll: ${hash}`, async ({ page }) => {
+    await page.goto(hash);
+    await page.waitForTimeout(300);
+    const overflow = await page.evaluate(() =>
+      [...document.querySelectorAll('body *')]
+        .filter((e) => e.getBoundingClientRect().right > 321 && !e.closest('.truncate, .scroll-row'))
+        .map((e) => `${e.tagName}.${String(e.className).slice(0, 50)}`)
+        .slice(0, 5),
+    );
+    expect(overflow).toEqual([]);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
+  });
+}
+
+test('the player fits, and Pause is reachable', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: /^Play \d+ phrases/ }).first().click();
+  await page.getByRole('button', { name: /^Now playing:/ }).click();
+  await page.waitForTimeout(700);
+  const player = page.getByRole('dialog', { name: 'Now playing' });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
+  const pause = player.getByRole('button', { name: 'Pause', exact: true });
+  const box = (await pause.boundingBox())!;
+  expect(box.y + box.height, 'Pause is visible without scrolling').toBeLessThanOrEqual(568);
+  await pause.click();
+  await expect(player.getByRole('button', { name: 'Play', exact: true })).toBeVisible();
+});

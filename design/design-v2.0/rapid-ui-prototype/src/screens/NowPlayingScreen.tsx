@@ -131,7 +131,7 @@ export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps
             dragElastic={0.3}
             onDragStart={clicks.block}
             onDragEnd={onSwipe}
-            className="relative mx-auto w-full max-w-[min(100%,26dvh)] md:max-w-[min(100%,52dvh)] phone-landscape:max-w-[min(100%,42dvh)] aspect-square touch-pan-y"
+            className="relative mx-auto w-full max-w-[min(100%,26dvh)] short:hidden md:max-w-[min(100%,52dvh)] phone-landscape:max-w-[min(100%,42dvh)] aspect-square touch-pan-y"
           >
             <SetCover set={coverSet ?? { topicId: null, coverIcon: 'edit_note' }} size="lg" className="w-full h-full rounded-3xl shadow-xl" />
             <span role="img" aria-label={languageLabel(phrase.targetLang, c.locale)} className="absolute bottom-3 left-3 w-9 h-9 rounded-full bg-surface/70 flex items-center justify-center text-lg">
@@ -141,7 +141,7 @@ export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps
 
           <div className="flex flex-col gap-3 min-w-0">
             {/* The target stays hidden until it is heard, so the learner recalls it first. */}
-            <div className="flex items-start gap-1">
+            <div className="flex items-start gap-1 short:flex-col short:gap-0">
               <div className="flex-1 min-w-0">
                 {revealed ? (
                   <GlossedPhrase phrase={phrase} className="font-serif italic text-display-sm font-bold text-on-surface leading-snug" />
@@ -151,7 +151,7 @@ export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps
                 <p lang={prompt.lang} className="text-body text-secondary">{prompt.text}</p>
                 {voice && !phrase.audio && <p className="text-label text-on-surface-variant mt-0.5">{c.player.voice(voice)}</p>}
               </div>
-              <div className="flex flex-col shrink-0">
+              <div className="flex flex-col shrink-0 short:flex-row short:-ml-2 short:order-first">
                 <button
                   type="button"
                   aria-label={liked ? c.phrase.unlikeLabel : c.phrase.likeLabel}
