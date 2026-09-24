@@ -645,5 +645,8 @@ found no crash.
 | Deleting your own phrase or set was instant and final; "Remove from this set" gave no feedback | Each says what happened and offers Undo; a removal returns to its old position, and a restore wins a sync merge |
 | Switching course emptied the queue silently, so the player vanished | "Now learning Bulgarian. The queue was cleared", in the new UI language |
 | The snackbar's dismiss button was a second "Close" beside the sheet's | It is "Dismiss message" |
+| After "Start without the demo", Home still led with the demo | A device preference records the skip; Home leads with Start here |
 
-Checks after these: 71 unit tests and 95 Playwright tests on the dev server (12 skipped).
+Checks after these: 71 unit tests and 96 Playwright tests on the dev server (12 skipped). Keyboard
+focus returns to the opener when a sheet, Settings or the player closes, and falls back to the
+section's main button when a delete removed it.
