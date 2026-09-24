@@ -365,6 +365,9 @@ test('the learner can choose the voice for a language', async ({ page }) => {
   await expect(spanish).toHaveValue('');
   await expect(spanish.locator('option').first()).toHaveText('Automatic (Test Español)');
   await spanish.selectOption('Test Mexicano');
+  // Hear it before keeping it: the course's first phrase.
+  await page.getByRole('button', { name: 'Test Spanish' }).click();
+  await expect.poll(() => page.evaluate(() => window.__spoken.map((u) => u.text))).toContain('Me pone un cortado, por favor');
   await page.getByRole('button', { name: 'Close' }).click();
   await page.getByRole('button', { name: /^Play \d+ phrases/ }).first().click();
   await page.getByRole('button', { name: /^Now playing:/ }).click();
