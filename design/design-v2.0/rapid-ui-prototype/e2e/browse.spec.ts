@@ -396,3 +396,11 @@ test("the player's voice line leads to the voice picker", async ({ page }) => {
   await page.getByRole('button', { name: 'Voice: Test Español. Change voice' }).click();
   await expect(page.getByRole('combobox', { name: 'Spanish', exact: true })).toBeVisible();
 });
+
+test("another course's set says so and offers the switch instead of playing", async ({ page }) => {
+  await page.goto('/#/set/set-bg-kafene?from=explore');
+  await expect(page.getByText('This set is in the Bulgarian course.')).toBeVisible();
+  await expect(page.getByRole('button', { name: /^Play Кафене/ })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Learn Bulgarian' }).click();
+  await expect(page.getByRole('button', { name: /^Play Кафене/ })).toBeVisible();
+});
