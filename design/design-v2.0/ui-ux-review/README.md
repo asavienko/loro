@@ -690,6 +690,13 @@ unavailable was ignored once it worked again. All fixed; the first and the merge
 Each tab now also keeps its own page-close copy: a reload restores the tab's own, and other tabs'
 copies add only their learning progress and pending ratings.
 
+A fourth review, of the audio layer, found five, all fixed with tests that fail without the fix:
+speech heard at 0.8× or 1.25× was stored as a 1× length by multiplying (an estimate, since speech
+doesn't scale linearly; now only 1× speech and clips are measured); a stuck utterance kept talking
+over the learner's turn after its timeout; a stalled clip could hang the loop and a failed clip never
+recovered (now a watchdog, a reload, and a fallback to the device voice); and lock-screen Play while
+the page was hidden played into silence and failed (now it starts when the page is visible).
+
 **For the Bulgarian reviewer:** on a 320 px phone the Missed rating, "Не се сетих", wraps onto two
 lines in its third of the row; a shorter word (e.g. "Забравих") would fit. Dropping the icons didn't
 make it fit, so the fix is wording, not layout.
