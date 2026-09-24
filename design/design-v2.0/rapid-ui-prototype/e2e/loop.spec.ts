@@ -231,3 +231,36 @@ test.describe('recorded clips', () => {
     expect(await pending).toBe('timeout');
   });
 });
+
+test('Play from the lock screen while hidden starts when the page is visible again', async ({ page }) => {
+  // Capture the Media Session handlers, and let the test hide and show the page.
+  await page.addInitScript(() => {
+    const handlers: Record<string, (() => void) | null> = {};
+    Object.defineProperty(navigator, 'mediaSession', {
+      value: { setActionHandler: (a: string, h: (() => void) | null) => (handlers[a] = h), metadata: null, playbackState: 'none' },
+    });
+    let state: DocumentVisibilityState = 'visible';
+    Object.defineProperty(document, 'visibilityState', { get: () => state });
+    Object.assign(window, {
+      __media: handlers,
+      __setVisible: (visible: boolean) => {
+        state = visible ? 'visible' : 'hidden';
+        document.dispatchEvent(new Event('visibilitychange'));
+      },
+    });
+  });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Play 5 phrases' }).click();
+  const mini = page.getByRole('button', { name: /^Now playing:/ });
+  type Hooks = { __setVisible: (visible: boolean) => void; __media: Record<string, () => void> };
+  const setVisible = (visible: boolean) => page.evaluate((v) => (window as unknown as Hooks).__setVisible(v), visible);
+  await setVisible(false);
+  await expect(page.getByRole('button', { name: 'Play', exact: true })).toHaveCount(1);
+  await page.evaluate(() => (window as unknown as Hooks).__media.play());
+  await page.waitForTimeout(300);
+  // Still paused while hidden: nothing plays into silence.
+  await expect(page.getByRole('button', { name: 'Pause', exact: true })).toHaveCount(0);
+  await setVisible(true);
+  await expect(page.getByRole('button', { name: 'Pause', exact: true })).toBeVisible();
+  await expect(mini).not.toContainText('Speech stopped');
+});

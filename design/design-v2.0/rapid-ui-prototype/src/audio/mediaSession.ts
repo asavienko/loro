@@ -29,14 +29,32 @@ export function useMediaSession(): void {
         // Not every browser supports every action.
       }
     };
-    set('play', () => handlers.current.play());
-    set('pause', () => handlers.current.pause());
+    // A hidden page pauses (speech is silenced there), so Play from the lock screen or a
+    // headset is remembered and starts when the page is visible again, rather than
+    // "playing" into silence and stopping with an error.
+    let playWhenVisible = false;
+    const whenVisible = (run: () => void) => () => {
+      if (document.visibilityState === 'hidden') playWhenVisible = true;
+      else run();
+    };
+    const onVisible = () => {
+      if (document.visibilityState !== 'visible' || !playWhenVisible) return;
+      playWhenVisible = false;
+      handlers.current.play();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    set('play', whenVisible(() => handlers.current.play()));
+    set('pause', () => {
+      playWhenVisible = false;
+      handlers.current.pause();
+    });
     set('nexttrack', () => handlers.current.next());
     set('previoustrack', () => handlers.current.prev());
     // Many headsets and cars send seek instead of track: back replays this phrase, forward moves on.
-    set('seekbackward', () => handlers.current.restart());
+    set('seekbackward', whenVisible(() => handlers.current.restart()));
     set('seekforward', () => handlers.current.next());
     return () => {
+      document.removeEventListener('visibilitychange', onVisible);
       for (const action of ['play', 'pause', 'nexttrack', 'previoustrack', 'seekbackward', 'seekforward'] as const) set(action, null);
     };
   }, [handlers]);
