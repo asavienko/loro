@@ -300,6 +300,14 @@ describe('the learner’s own phrases and sets', () => {
     assert.equal(run(s, { type: 'EDIT_OWN_PHRASE', id, target: '', native: 'x', now: T0 + 2 }), s, 'an empty text is refused');
   });
 
+  it('moves a phrase within your set', () => {
+    let s = run(fresh(), { type: 'CREATE_SET', title: 'Mine', phraseIds: ['cafe-01', 'cafe-02', 'cafe-03'], now: T0 });
+    const setId = Object.keys(s.learner.ownSets)[0];
+    s = run(s, { type: 'MOVE_IN_SET', setId, phraseId: 'cafe-03', delta: -1, now: T0 + 1 });
+    assert.deepEqual(s.learner.ownSets[setId].phraseIds, ['cafe-01', 'cafe-03', 'cafe-02']);
+    assert.equal(run(s, { type: 'MOVE_IN_SET', setId, phraseId: 'cafe-01', delta: -1, now: T0 + 2 }), s, 'the first cannot move up');
+  });
+
   it('changing course empties the queue', () => {
     const s = run(load(fresh()), { type: 'SET_PROFILE', profile: { targetLang: 'bg-BG' }, now: T0 });
     assert.equal(s.player.status, 'idle');

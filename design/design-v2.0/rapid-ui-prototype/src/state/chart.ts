@@ -32,6 +32,7 @@ export const ALWAYS_ALLOWED = [
   'CREATE_SET',
   'ADD_TO_SET',
   'REMOVE_FROM_SET',
+  'MOVE_IN_SET',
   'RENAME_SET',
   'DELETE_SET',
   'SET_PROFILE',

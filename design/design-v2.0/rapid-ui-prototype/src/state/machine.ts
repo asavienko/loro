@@ -71,6 +71,7 @@ export type AppEvent =
   | { type: 'CREATE_SET'; title: string; phraseIds: string[]; now: number }
   | { type: 'ADD_TO_SET'; setId: string; phraseIds: string[]; now: number }
   | { type: 'REMOVE_FROM_SET'; setId: string; phraseId: string; now: number }
+  | { type: 'MOVE_IN_SET'; setId: string; phraseId: string; delta: -1 | 1; now: number }
   | { type: 'RENAME_SET'; setId: string; title: string; now: number }
   | { type: 'DELETE_SET'; setId: string; now: number }
   | { type: 'SET_PROFILE'; profile: Partial<Omit<Profile, 'updatedAt'>>; now: number }
@@ -501,6 +502,7 @@ export function transition(state: AppState, event: AppEvent): AppState {
 
     case 'ADD_TO_SET':
     case 'REMOVE_FROM_SET':
+    case 'MOVE_IN_SET':
     case 'RENAME_SET':
     case 'DELETE_SET': {
       const set = learner.ownSets[event.setId];
@@ -510,6 +512,13 @@ export function transition(state: AppState, event: AppEvent): AppState {
         const adding = event.phraseIds.filter((id) => findPhrase(learner, id) && !set.phraseIds.includes(id));
         if (adding.length === 0) return state;
         updated = { ...set, phraseIds: [...set.phraseIds, ...adding] };
+      } else if (event.type === 'MOVE_IN_SET') {
+        const from = set.phraseIds.indexOf(event.phraseId);
+        const to = from + event.delta;
+        if (from === -1 || to < 0 || to >= set.phraseIds.length) return state;
+        const phraseIds = [...set.phraseIds];
+        [phraseIds[from], phraseIds[to]] = [phraseIds[to], phraseIds[from]];
+        updated = { ...set, phraseIds };
       } else if (event.type === 'REMOVE_FROM_SET') {
         updated = { ...set, phraseIds: set.phraseIds.filter((id) => id !== event.phraseId) };
       } else if (event.type === 'RENAME_SET') {
