@@ -185,7 +185,8 @@ export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps
 
             {/* The loop: prompt → your turn → target, with real repetition and time */}
             <div className="phone-landscape:col-start-1 phone-landscape:row-start-2">
-              <ol className="grid grid-cols-3 gap-1.5" aria-label={c.player.steps}>
+              {/* At large text the three pills are too narrow for icon and label side by side. */}
+              <ol className="@container grid grid-cols-3 gap-1.5" aria-label={c.player.steps}>
                 {STEPS.map((p) => {
                   const current = p === phase;
                   const done = phase === 'rate' || STEPS.indexOf(p) < STEPS.indexOf(phase as Exclude<Phase, 'rate'>);
@@ -193,7 +194,7 @@ export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps
                     <li
                       key={p}
                       aria-current={current ? 'step' : undefined}
-                      className={`min-h-11 rounded-xl flex items-center justify-center gap-1.5 text-label font-semibold border ${
+                      className={`min-h-11 px-1 rounded-xl flex items-center justify-center gap-1.5 @max-[15rem]:flex-col @max-[15rem]:gap-0 @max-[15rem]:py-1 text-center leading-tight text-label font-semibold border ${
                         current && playing
                           ? 'bg-primary-container text-on-primary border-primary-container'
                           : current
@@ -320,7 +321,7 @@ function Rating({ phrase }: { phrase: Phrase }) {
           ? c.player.rated(c.common.grade[active.grade], formatWhen(previewDue(state.learner, phrase.id, active.grade, active.at), now, c.locale))
           : c.player.howDidItGo}
       </p>
-      <div className="grid grid-cols-3 gap-2">
+      <div className="@container grid grid-cols-3 gap-2">
         {GRADES.map(({ grade, icon, tone }, i) => {
           const selected = active?.grade === grade;
           const interval = formatInterval(previewDue(state.learner, phrase.id, grade, active?.at ?? now) - (active?.at ?? now), c.locale);
@@ -336,7 +337,7 @@ function Rating({ phrase }: { phrase: Phrase }) {
               }`}
             >
               <span className="flex items-center gap-1 text-body">
-                <Icon name={selected ? 'task_alt' : icon} className="text-icon-sm" />
+                <Icon name={selected ? 'task_alt' : icon} className="text-icon-sm @max-[15rem]:hidden" />
                 {c.common.grade[grade]}
               </span>
               <span className="text-caption opacity-80 tabular-nums">{interval}</span>

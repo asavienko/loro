@@ -49,3 +49,22 @@ test.describe('phone landscape (568×320)', () => {
     expect(easy.y + easy.height, 'Easy is visible').toBeLessThanOrEqual(320);
   });
 });
+
+test.describe('large text (150%) on a 360 px phone', () => {
+  test.use({ viewport: { width: 360, height: 640 } });
+
+  test('the step pills and rating buttons hold their labels', async ({ page }) => {
+    await page.goto('/');
+    await page.addStyleTag({ content: 'html { font-size: 150% !important }' });
+    await page.getByRole('button', { name: /^Play \d+ phrases/ }).first().click();
+    await page.getByRole('button', { name: /^Now playing:/ }).click();
+    await page.waitForTimeout(700);
+    const player = page.getByRole('dialog', { name: 'Now playing' });
+    const spilled = await player.evaluate((root) =>
+      [...root.querySelectorAll('ol[aria-label] > li, [aria-keyshortcuts="1"], [aria-keyshortcuts="2"], [aria-keyshortcuts="3"]')]
+        .filter((e) => e.scrollWidth > e.clientWidth + 1)
+        .map((e) => e.textContent),
+    );
+    expect(spilled).toEqual([]);
+  });
+});
