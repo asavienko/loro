@@ -10,6 +10,8 @@ test('a year of history stays smooth while playing', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { name: '¡Hola, Ana!' })).toBeVisible();
   const loadMs = Date.now() - t0;
+  // A year's points read as a grouped number.
+  await expect(page.getByTestId('points')).toContainText(/\d,\d{3}/);
   await page.evaluate(() => {
     (window as unknown as { __long: number[] }).__long = [];
     new PerformanceObserver((list) => {
