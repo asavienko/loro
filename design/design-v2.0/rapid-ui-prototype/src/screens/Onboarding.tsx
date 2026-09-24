@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { speak, voiceName, waitForVoices } from '../audio/speech';
-import { languageName } from '../copy';
+import { languageLabel, languageName } from '../copy';
 import { coursesFor, getLanguage, LanguageCode, NATIVE_LANGUAGES } from '../content';
 import { useNav } from '../nav/NavContext';
 import { courseSets, findPhrase, promptOf } from '../state/catalog';
@@ -44,7 +44,7 @@ export function Onboarding() {
             legend={c.onboarding.native}
             options={NATIVE_LANGUAGES}
             // Each language in its own name, so the learner can find theirs.
-            label={(code) => languageName(code, code)}
+            label={(code) => languageLabel(code, code)}
             value={profile.nativeLang}
             onChange={(code) => {
               const course = coursesFor(code).includes(profile.targetLang) ? profile.targetLang : coursesFor(code)[0];
@@ -69,7 +69,7 @@ export function Onboarding() {
           <Choice
             legend={c.onboarding.course}
             options={coursesFor(profile.nativeLang)}
-            label={(code) => languageName(code, c.locale)}
+            label={(code) => languageLabel(code, c.locale)}
             value={profile.targetLang}
             onChange={(code) => actions.setProfile({ targetLang: code })}
           />
@@ -163,7 +163,7 @@ function VoiceCheck() {
               <li key={lang} className="flex items-center gap-2 min-h-12">
                 <Icon name={voice ? 'check_circle' : 'error'} className={`text-icon ${voice ? 'text-tertiary' : 'text-error'}`} />
                 <span className="flex-1 text-body">
-                  {voice ? c.onboarding.voiceOk(languageName(lang, c.locale), voice) : c.onboarding.voiceMissing(languageName(lang, c.locale))}
+                  {voice ? c.onboarding.voiceOk(languageLabel(lang, c.locale), voice) : c.onboarding.voiceMissing(languageLabel(lang, c.locale))}
                 </span>
                 {voice && text && (
                   <button type="button" onClick={() => void speak(text, lang, 1).done} className="min-h-11 px-3 rounded-full bg-surface-container text-body font-semibold">

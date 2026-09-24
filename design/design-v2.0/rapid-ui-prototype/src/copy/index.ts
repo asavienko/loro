@@ -24,15 +24,22 @@ export function copyForNative(native: LanguageCode): Copy {
   return copyFor(uiLocaleOf(native));
 }
 
-/** "Spanish", "испанский", "испански" — in the UI language. */
+/**
+ * "Spanish", "испанский", "испански" — in the UI language, as it is written
+ * inside a sentence (Bulgarian and Russian don't capitalise language names).
+ */
 export function languageName(code: LanguageCode, uiLocale: string): string {
   try {
-    const base = code.split('-')[0];
-    const name = new Intl.DisplayNames([uiLocale], { type: 'language' }).of(base) ?? code;
-    return uiLocale.startsWith('en') ? name : name.charAt(0).toUpperCase() + name.slice(1);
+    return new Intl.DisplayNames([uiLocale], { type: 'language' }).of(code.split('-')[0]) ?? code;
   } catch {
     return code;
   }
+}
+
+/** A language name standing alone (a label, a list item, the start of a line): capitalised. */
+export function languageLabel(code: LanguageCode, uiLocale: string): string {
+  const name = languageName(code, uiLocale);
+  return name.charAt(0).toLocaleUpperCase(uiLocale) + name.slice(1);
 }
 
 /** The greeting on Home, in the language being learned. */

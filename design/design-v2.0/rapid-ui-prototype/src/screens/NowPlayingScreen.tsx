@@ -2,7 +2,7 @@ import { motion, PanInfo, useDragControls } from 'motion/react';
 import { PointerEvent, useRef, useState } from 'react';
 import { voiceName } from '../audio/speech';
 import { easyCue, gentleCue } from '../audio/cues';
-import { languageName } from '../copy';
+import { languageLabel, languageName } from '../copy';
 import { getLanguage, Phrase } from '../content';
 import { useDialog } from '../lib/useDialog';
 import { useClickBlockerDuringDrag } from '../lib/suppressClick';
@@ -132,7 +132,7 @@ export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps
             className="relative mx-auto w-full max-w-[min(100%,26dvh)] md:max-w-[min(100%,52dvh)] phone-landscape:max-w-[min(100%,60dvh)] aspect-square touch-pan-y"
           >
             <SetCover set={coverSet ?? { topicId: null, coverIcon: 'edit_note' }} size="lg" className="w-full h-full rounded-3xl shadow-xl" />
-            <span role="img" aria-label={targetName} className="absolute bottom-3 left-3 w-9 h-9 rounded-full bg-surface/70 flex items-center justify-center text-lg">
+            <span role="img" aria-label={languageLabel(phrase.targetLang, c.locale)} className="absolute bottom-3 left-3 w-9 h-9 rounded-full bg-surface/70 flex items-center justify-center text-lg">
               {getLanguage(phrase.targetLang).flag}
             </span>
           </motion.div>

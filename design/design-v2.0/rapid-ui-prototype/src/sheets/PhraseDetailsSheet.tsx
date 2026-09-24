@@ -1,4 +1,4 @@
-import { languageName } from '../copy';
+import { languageLabel } from '../copy';
 import { getLanguage } from '../content';
 import { useNav } from '../nav/NavContext';
 import { findPhrase, findSetView, promptOf } from '../state/catalog';
@@ -44,7 +44,7 @@ function PhraseDetails({ phraseId, ownSetId, onClose }: { phraseId: string; ownS
         <p lang={phrase.targetLang} className="font-serif italic text-display-sm font-semibold text-on-surface leading-snug">{phrase.target}</p>
         <p lang={prompt.lang} className="text-body text-secondary mt-1">{prompt.text}</p>
         <p className="text-label text-on-surface-variant mt-2 flex flex-wrap items-center gap-1.5">
-          <span role="img" aria-label={languageName(phrase.targetLang, c.locale)}>{getLanguage(phrase.targetLang).flag}</span>
+          <span role="img" aria-label={languageLabel(phrase.targetLang, c.locale)}>{getLanguage(phrase.targetLang).flag}</span>
           <span>{progressLabel(c, progress, now)}</span>
           {progress.memory.heardCount > 0 && <span>· {c.phrase.heard(progress.memory.heardCount)}</span>}
           {phrase.register && <span>· {c.common.register[phrase.register]}</span>}

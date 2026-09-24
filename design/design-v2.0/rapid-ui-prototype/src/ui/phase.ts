@@ -1,5 +1,5 @@
 import type { Copy } from '../copy';
-import { languageName } from '../copy';
+import { languageLabel, languageName } from '../copy';
 import type { LanguageCode } from '../content';
 import type { Phase, PlayerState } from '../state/types';
 import type { IconName } from './icons';
@@ -35,10 +35,10 @@ export function phaseInstruction(c: Copy, phase: Phase, promptLang: LanguageCode
 export function phaseStepLabel(c: Copy, phase: Exclude<Phase, 'rate'>, promptLang: LanguageCode, targetLang: LanguageCode): string {
   switch (phase) {
     case 'native':
-      return languageName(promptLang, c.locale);
+      return languageLabel(promptLang, c.locale);
     case 'pause':
       return c.player.yourTurn;
     case 'target':
-      return languageName(targetLang, c.locale);
+      return languageLabel(targetLang, c.locale);
   }
 }

@@ -1,5 +1,5 @@
 import { useId, useState } from 'react';
-import { languageName } from '../copy';
+import { languageLabel } from '../copy';
 import { coursesFor, LanguageCode, NATIVE_LANGUAGES } from '../content';
 import { serializeState } from '../state/persistence';
 import { useCopy, useStore } from '../state/store';
@@ -33,7 +33,7 @@ export function SettingsSheet({ open, onClose }: { open: boolean; onClose: () =>
             label={c.settings.native}
             value={profile.nativeLang}
             options={NATIVE_LANGUAGES}
-            name={(code) => languageName(code, code)}
+            name={(code) => languageLabel(code, code)}
             onChange={(code) => {
               const course = coursesFor(code).includes(profile.targetLang) ? profile.targetLang : coursesFor(code)[0];
               actions.setProfile({ nativeLang: code, targetLang: course });
@@ -43,7 +43,7 @@ export function SettingsSheet({ open, onClose }: { open: boolean; onClose: () =>
             label={c.settings.course}
             value={profile.targetLang}
             options={coursesFor(profile.nativeLang)}
-            name={(code) => languageName(code, c.locale)}
+            name={(code) => languageLabel(code, c.locale)}
             onChange={(code) => actions.setProfile({ targetLang: code })}
           />
           <p className="px-2 text-label text-secondary">{c.settings.courseNote}</p>

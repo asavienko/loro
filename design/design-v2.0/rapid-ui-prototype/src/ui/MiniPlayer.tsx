@@ -1,5 +1,5 @@
 import { motion, PanInfo } from 'motion/react';
-import { languageName } from '../copy';
+import { languageLabel } from '../copy';
 import { useClickBlockerDuringDrag } from '../lib/suppressClick';
 import { findPhrase, findSetView, promptOf } from '../state/catalog';
 import { currentPhraseId } from '../state/selectors';
@@ -87,7 +87,7 @@ export function MiniPlayer({ onOpenPlayer }: { onOpenPlayer: () => void }) {
       <div className="absolute bottom-0 inset-x-2 h-0.5 bg-inverse-on-surface/20 rounded-full" aria-hidden="true">
         <div className="h-full bg-primary-fixed rounded-full" style={{ width: `${progress * 100}%` }} />
       </div>
-      <span className="sr-only">{languageName(phrase.targetLang, c.locale)}</span>
+      <span className="sr-only">{languageLabel(phrase.targetLang, c.locale)}</span>
     </motion.div>
   );
 }
