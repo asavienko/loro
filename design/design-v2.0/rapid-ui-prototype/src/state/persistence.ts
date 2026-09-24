@@ -19,7 +19,7 @@ import { decodeLog, encodeLog } from './compactLog';
 import { initialLearner, initialPlayer, initialPrefs, initialProfile } from './initial';
 import { derive, memoryKey } from './memory';
 import { mergeLearner } from './merge';
-import { announceSave, clearPending, clearRaw, readRaw, Stored, writePending, writeRaw } from './storage';
+import { announceSave, clearPending, clearRaw, clearStray, readRaw, Stored, writePending, writeRaw } from './storage';
 import {
   AppState,
   Device,
@@ -341,20 +341,35 @@ function deviceId(): string {
  */
 let lastWritten: string | null = null;
 
-/** A closing page's copy still has to reach storage (see storage.ts). */
-let pendingOutstanding = false;
+/**
+ * A closing page's copy that still has to reach storage (see storage.ts): the state
+ * it holds, or 'loaded' for one found at start-up (merged into the loaded state).
+ * Only the save of that state clears it: an older save finishing later must not
+ * remove the newer copy before its own write lands.
+ */
+let pendingFor: AppState | 'loaded' | null = null;
 
 /**
  * State from what storage holds, or a fresh one. A copy left by a page that
  * closed is newer than the saved one for this device's own fields; learner data
  * from both is merged, so another tab's later progress is kept too.
  */
-export function loadState({ saved, pending }: Stored, initial: (device: Device) => AppState): AppState {
+/** A localStorage copy merged at load (see Stored.stray) that a successful save may now remove. */
+let strayOutstanding = false;
+
+export function loadState({ saved, pending, stray = null }: Stored, initial: (device: Device) => AppState): AppState {
+  const state = loadWithoutStray({ saved, pending }, initial);
+  const fromStray = stray && stray !== saved ? parseState(stray, state.device) : null;
+  strayOutstanding = stray !== null;
+  return fromStray ? { ...state, learner: mergeLearner(state.learner, fromStray.learner) } : state;
+}
+
+function loadWithoutStray({ saved, pending }: Stored, initial: (device: Device) => AppState): AppState {
   const device: Device = { id: deviceId(), instance: randomId(), seq: 0 };
   lastWritten = saved;
   const fromSaved = saved ? parseState(saved, device) : null;
   const fromPending = pending ? parseState(pending, device) : null;
-  pendingOutstanding = pending !== null;
+  pendingFor = pending !== null ? 'loaded' : null;
   if (!fromPending) return fromSaved ?? initial(device);
   return fromSaved ? { ...fromPending, learner: mergeLearner(fromPending.learner, fromSaved.learner) } : fromPending;
 }
@@ -390,9 +405,13 @@ async function writeState(state: AppState): Promise<SaveResult> {
     const json = serializeState(learner === state.learner ? state : { ...state, learner });
     await writeRaw(json);
     lastWritten = json;
-    if (pendingOutstanding) {
+    if (pendingFor === 'loaded' || pendingFor === state) {
       clearPending();
-      pendingOutstanding = false;
+      pendingFor = null;
+    }
+    if (strayOutstanding) {
+      clearStray();
+      strayOutstanding = false;
     }
     announceSave();
     return 'saved';
@@ -411,7 +430,7 @@ export function flushState(state: AppState): void {
   const json = serializeState(state);
   if (json === lastWritten) return;
   writePending(json);
-  pendingOutstanding = true;
+  pendingFor = state;
   void saveState(state);
 }
 

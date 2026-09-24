@@ -54,6 +54,12 @@ export interface Stored {
   saved: string | null;
   /** What a page that closed wrote on its way out, if any. */
   pending: string | null;
+  /**
+   * Progress in localStorage beside an IndexedDB copy: saved in a session where
+   * IndexedDB didn't open, or left by a migration that couldn't finish. Merged in
+   * at start, and removed once a save has put it into IndexedDB.
+   */
+  stray?: string | null;
 }
 
 function pendingGet(): string | null {
@@ -73,18 +79,36 @@ export async function openStorage(): Promise<Stored> {
     db = null;
     return { saved: localGet(), pending };
   }
-  const saved = await readRaw();
-  if (saved !== null) return { saved, pending };
-  const legacy = localGet();
-  if (legacy !== null) {
-    await writeRaw(legacy);
-    try {
-      localStorage.removeItem(STORAGE_KEY);
-    } catch {
-      // Keeping the old copy does no harm.
-    }
+  let saved: string | null;
+  try {
+    saved = await readRaw();
+  } catch {
+    // IndexedDB opened but can't be read: work from localStorage as if it hadn't opened.
+    db = null;
+    return { saved: localGet(), pending };
   }
-  return { saved: legacy, pending };
+  const local = localGet();
+  if (saved !== null) return { saved, pending, stray: local };
+  if (local !== null) {
+    try {
+      await writeRaw(local);
+    } catch {
+      // The move failed: keep the old copy and load it; the first save retries the move.
+      return { saved: local, pending, stray: local };
+    }
+    clearStray();
+  }
+  return { saved: local, pending };
+}
+
+/** Removes the localStorage copy once IndexedDB holds its progress (never while localStorage is the store). */
+export function clearStray(): void {
+  if (!db) return;
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // Keeping the old copy does no harm: it merges again next time.
+  }
 }
 
 /** Synchronous last-chance copy for a page that is being hidden or closed. */
