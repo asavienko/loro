@@ -1,4 +1,5 @@
-import { useId, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
+import { bestVoice, voicesFor, waitForVoices } from '../audio/speech';
 import { copyForNative, languageLabel, languageName } from '../copy';
 import { coursesFor, LanguageCode, NATIVE_LANGUAGES } from '../content';
 import { useCopy, useStore } from '../state/store';
@@ -45,6 +46,8 @@ export function SettingsSheet({ open, onClose }: { open: boolean; onClose: () =>
         />
         <p className="px-2 text-label text-secondary">{c.settings.courseNote}</p>
       </SheetSection>
+
+      <VoicePickers langs={[profile.targetLang, profile.nativeLang]} />
 
       <SheetSection title={c.settings.accessibility}>
         <div className="min-h-12 px-2 flex items-center gap-3">
@@ -103,5 +106,46 @@ function LanguageSelect({ label, value, options, name, onChange }: { label: stri
         ))}
       </select>
     </label>
+  );
+}
+
+/** A voice per language, shown only where the device has more than one to choose from. */
+function VoicePickers({ langs }: { langs: LanguageCode[] }) {
+  const c = useCopy();
+  const { state, actions } = useStore();
+  const [voices, setVoices] = useState<Partial<Record<LanguageCode, SpeechSynthesisVoice[]>>>({});
+  useEffect(() => {
+    let live = true;
+    void waitForVoices().then(() => live && setVoices(Object.fromEntries(langs.map((l) => [l, voicesFor(l)]))));
+    return () => {
+      live = false;
+    };
+  }, [langs[0], langs[1]]); // eslint-disable-line react-hooks/exhaustive-deps
+  const choosable = langs.filter((l) => (voices[l]?.length ?? 0) > 1);
+  if (choosable.length === 0) return null;
+  return (
+    <SheetSection title={c.settings.voices}>
+      {choosable.map((lang) => {
+        const list = voices[lang]!;
+        const chosen = state.prefs.voiceByLang[lang];
+        return (
+          <label key={lang} className="flex flex-col gap-1 px-2 py-1">
+            <span className="text-label text-secondary">{languageLabel(lang, c.locale)}</span>
+            <select
+              value={chosen && list.some((v) => v.name === chosen) ? chosen : ''}
+              onChange={(e) => actions.setPrefs({ voiceByLang: { ...state.prefs.voiceByLang, [lang]: e.target.value || undefined } })}
+              className="min-h-12 px-3 rounded-2xl bg-surface-container-low border border-outline-variant/60 text-base"
+            >
+              <option value="">{c.settings.voiceAuto(bestVoice(list, lang)?.name ?? '')}</option>
+              {list.map((v) => (
+                <option key={v.name} value={v.name}>
+                  {v.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        );
+      })}
+    </SheetSection>
   );
 }

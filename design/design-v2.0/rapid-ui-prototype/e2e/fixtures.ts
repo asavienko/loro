@@ -22,6 +22,8 @@ function fakeSpeech() {
   const voices = [
     { name: 'Test English', lang: 'en-GB' },
     { name: 'Test Español', lang: 'es-ES' },
+    // A second Spanish voice (another region): the automatic choice stays Test Español.
+    { name: 'Test Mexicano', lang: 'es-MX' },
     { name: 'Test Български', lang: 'bg-BG' },
     { name: 'Test Русский', lang: 'ru-RU' },
   ].map((v) => ({ ...v, voiceURI: v.name, localService: true, default: false }));

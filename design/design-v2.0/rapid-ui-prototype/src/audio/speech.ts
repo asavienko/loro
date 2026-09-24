@@ -56,8 +56,31 @@ export function bestVoice<V extends VoiceInfo>(voices: readonly V[], lang: strin
   return best;
 }
 
+/** The learner's choices from Settings (prefs.voiceByLang), kept in step by the shell. */
+let chosen: Partial<Record<string, string>> = {};
+export function setVoiceChoices(choices: Partial<Record<string, string>>): void {
+  chosen = choices;
+}
+
+/** Every device voice that speaks `lang` (any region), best first. */
+export function voicesFor(lang: LanguageCode): SpeechSynthesisVoice[] {
+  if (typeof window === 'undefined' || !('speechSynthesis' in window)) return [];
+  const all = window.speechSynthesis.getVoices();
+  const out: SpeechSynthesisVoice[] = [];
+  let rest = [...all];
+  for (let v = bestVoice(rest, lang); v; v = bestVoice(rest, lang)) {
+    out.push(v);
+    rest = rest.filter((x) => x !== v);
+  }
+  return out;
+}
+
 function pickVoice(lang: LanguageCode): SpeechSynthesisVoice | null {
-  return bestVoice(window.speechSynthesis.getVoices(), lang);
+  const voices = window.speechSynthesis.getVoices();
+  const base = lang.split('-')[0];
+  // A chosen voice counts only while it is installed and still speaks the language.
+  const mine = chosen[lang] ? voices.find((v) => v.name === chosen[lang] && v.lang.replace('_', '-').split('-')[0] === base) : undefined;
+  return mine ?? bestVoice(voices, lang);
 }
 
 /** The device voice used for `lang`, if any. */

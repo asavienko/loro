@@ -318,6 +318,8 @@ export function makeEn(n: Plural) {
       course: 'I’m learning',
       courseNote: 'Progress is kept for each pair of languages. Switching back brings it back.',
       accessibility: 'Screen reader',
+      voices: 'Voices',
+      voiceAuto: (name: string) => `Automatic (${name})`,
       announceEveryStep: 'Announce every step',
       announceHint: 'Off: only “Your turn” and the reveal are announced.',
     },
