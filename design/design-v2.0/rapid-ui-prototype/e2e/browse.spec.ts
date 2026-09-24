@@ -212,3 +212,12 @@ test('a search with no phrase offers to add it as your own', async ({ page }) =>
   await page.getByRole('button', { name: 'Add phrase' }).click();
   await expect(page.getByRole('button', { name: 'Play ¿Hay wifi?' })).toBeVisible();
 });
+
+test('an empty set of your own points to phrases', async ({ page }) => {
+  await page.goto('/#/library?view=ownSets');
+  await page.getByRole('button', { name: 'New set' }).click();
+  await page.getByLabel('Name', { exact: true }).fill('Trip');
+  await page.getByRole('button', { name: 'Create' }).click();
+  await page.getByRole('button', { name: 'Find phrases' }).click();
+  await expect(page).toHaveURL(/#\/explore/);
+});

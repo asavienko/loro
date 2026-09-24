@@ -178,7 +178,17 @@ export function SetScreen({ setId }: { setId: string }) {
           </button>
         </div>
         {sorted.length === 0 ? (
-          <p className="px-2 py-3 text-body text-secondary">{c.set.ownEmpty}</p>
+          <div className="px-2 py-3 flex flex-col items-start gap-2">
+            <p className="text-body text-secondary">{c.set.ownEmpty}</p>
+            <button
+              type="button"
+              onClick={() => nav.go({ name: 'explore' })}
+              className="min-h-11 px-4 rounded-full bg-primary-container text-on-primary text-body font-bold flex items-center gap-1.5"
+            >
+              <Icon name="search" className="text-icon-md" />
+              {c.set.findPhrases}
+            </button>
+          </div>
         ) : (
           <ul>
             {sorted.map(({ phrase, position, progress: p }, i) => {
