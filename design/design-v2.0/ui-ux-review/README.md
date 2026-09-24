@@ -655,6 +655,7 @@ found no crash.
 | Tabbing on Home and Explore hid the focused control under the top bar or behind the tab bar and mini-player (WCAG 2.4.11) | Scroll padding matches the fixed bars (`e2e/focus.spec.ts`); axe also runs on a real desktop now |
 | Tab left the phrase-details sheet from its Grammar tab: the trap wrapped at the unselected Sounds tab, which Tab never reaches | The trap counts only what Tab reaches; every dialog holds focus both ways |
 | In high-contrast (forced colours) mode the hidden phrase vanished, buttons became bare text and the chosen step, grade and speed looked like the rest | Buttons keep an edge, chosen/current controls get the system Highlight outline, the hidden phrase is dashed boxes |
+| Reordering or removing a queued phrase needed a drag, a swipe or a keyboard (WCAG 2.5.7) | A tap on the handle opens Move up, Move down and Remove from queue; every other gesture already had a button |
 
 **Open question:** the prototype has no dark theme, so an evening learner with a dark system theme
 gets a light screen. A dark palette is a design decision (plan 57 owns dark mode in the app); say if
