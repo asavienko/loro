@@ -53,13 +53,16 @@ export function windowLeft(pending: PendingRating, now: number): number {
 
 /** When the phrase will be due after `grade` given now: the preview on the rating buttons. */
 export function previewDue(learner: LearnerState, phraseId: string, grade: Grade, at: number): number {
-  const memory = memoryOf(learner, phraseId);
-  // A review merged in from another device can be newer than `at`; preview from then instead.
-  const from = Math.max(at, memory.fsrs?.last_review ?? 0);
+  // The rating commits at its own time, replayed over the memory as it was then: the
+  // repetitions heard after it (which raise the first-review cap) don't count, so the
+  // preview mustn't count them either, or it promises a later return than it schedules.
+  const key = keyOf(learner, phraseId);
+  const asOf = learner.log.filter((e) => e.kind !== 'carryover' && e.key === key && e.at <= at);
+  const memory = derive(asOf).memories.get(key) ?? emptyMemory();
   try {
-    return reviewed(memory, grade, from).due;
+    return reviewed(memory, grade, at).due;
   } catch {
-    return from;
+    return at;
   }
 }
 
