@@ -190,13 +190,21 @@ function PlayButton({ label, detail, onClick, secondary = false }: { label: stri
     <button
       type="button"
       onClick={onClick}
-      className={`mt-3 min-h-12 px-5 py-2 rounded-3xl font-bold inline-flex flex-wrap items-center gap-x-2 text-left active:opacity-90 ${
+      className={`mt-3 min-h-12 px-5 py-2 rounded-3xl font-bold inline-flex items-center gap-x-2 text-left active:opacity-90 ${
         secondary ? 'bg-surface-container-high text-on-surface' : 'bg-primary-container text-on-primary'
       }`}
     >
       <Icon name="play_arrow" fill className="text-icon" />
-      {label}
-      {detail && <span className="font-medium opacity-80">· {detail}</span>}
+      {/* A no-break space keeps "·" on the label's line when the detail wraps. */}
+      <span className="min-w-0">
+        {label}
+        {detail && (
+          <span className="font-medium opacity-80">
+            {'\u00a0· '}
+            <span className="whitespace-nowrap">{detail}</span>
+          </span>
+        )}
+      </span>
     </button>
   );
 }
