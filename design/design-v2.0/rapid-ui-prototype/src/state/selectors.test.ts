@@ -17,7 +17,7 @@ import {
   suggestedSetId,
   todayCounts,
 } from './selectors';
-import { findSetView } from './catalog';
+import { findSamePhrase, findSetView, phraseKey } from './catalog';
 import { fullPlayMs, pauseMs } from './timing';
 import { cafe, DAY, done, fresh, load, MINUTE, playPhrase, run, T0 } from './testing';
 
@@ -125,5 +125,22 @@ describe('statechart', () => {
     assert.ok(PLAYER_CHART.paused.includes('PLAY'));
     assert.ok(!PLAYER_CHART.playing.includes('PLAY'));
     assert.match(chartAsMermaid(), /stateDiagram-v2/);
+  });
+});
+
+describe('the same phrase', () => {
+  it('ignores case, accents, punctuation and spacing', () => {
+    assert.equal(phraseKey('¿Dónde  está el METRO?'), phraseKey('donde esta el metro'));
+    assert.notEqual(phraseKey('La cuenta'), phraseKey('La cuenta, por favor'));
+    assert.equal(phraseKey('?!'), '');
+  });
+
+  it('finds a course or own phrase, but not the one being edited', () => {
+    const s = run(fresh(), { type: 'ADD_OWN_PHRASE', target: 'Hasta luego', native: 'See you', now: T0 });
+    assert.equal(findSamePhrase(s.learner, 'la cuenta por favor')?.id, 'cafe-03');
+    const own = findSamePhrase(s.learner, 'hasta LUEGO!')!;
+    assert.ok(own.own);
+    assert.equal(findSamePhrase(s.learner, 'Hasta luego', own.id), undefined);
+    assert.equal(findSamePhrase(s.learner, '   '), undefined);
   });
 });

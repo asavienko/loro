@@ -182,6 +182,7 @@ export function makeEn(n: Plural) {
       added: 'Phrase added',
       editTitle: 'Edit your phrase',
       edited: 'Phrase updated',
+      duplicate: 'Already in your course:',
     },
     player: {
       dialog: 'Now playing',

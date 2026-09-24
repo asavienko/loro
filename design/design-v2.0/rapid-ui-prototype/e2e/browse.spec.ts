@@ -39,6 +39,15 @@ test.describe('library', () => {
     await expect(page.getByRole('button', { name: 'Play ¿Hay wifi?' })).toBeVisible();
   });
 
+  test('adding a phrase the course already has says so', async ({ page }) => {
+    await page.goto('/#/library?view=mine');
+    await page.getByRole('button', { name: 'Add your phrase' }).click();
+    await page.getByLabel('In Spanish').fill('la cuenta por favor');
+    await expect(page.getByRole('status').filter({ hasText: 'Already in your course:' })).toContainText('La cuenta, por favor');
+    await page.getByLabel('In Spanish').fill('la cuenta, porfa');
+    await expect(page.getByText('Already in your course:')).toHaveCount(0);
+  });
+
   test('deleting your own phrase from its details', async ({ page }) => {
     await page.goto('/#/library?view=mine');
     await page.getByRole('button', { name: 'Add your phrase' }).click();

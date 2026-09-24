@@ -1,6 +1,7 @@
 import { FormEvent, useState } from 'react';
 import { languageName } from '../copy';
 import type { LanguageCode } from '../content';
+import { findSamePhrase, promptOf } from '../state/catalog';
 import { useCopy, useStore } from '../state/store';
 import { Sheet } from '../ui/Sheet';
 import { useToast } from '../ui/Toast';
@@ -42,9 +43,11 @@ interface FormProps {
 function PhraseForm({ editId, initialTarget, initialNative, targetLang, nativeLang, onDone }: FormProps) {
   const c = useCopy();
   const { toast } = useToast();
-  const { actions } = useStore();
+  const { state, actions } = useStore();
   const [target, setTarget] = useState(initialTarget);
   const [native, setNative] = useState(initialNative);
+  // Saying the same thing twice is allowed, but the learner should know.
+  const same = findSamePhrase(state.learner, target, editId);
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
@@ -83,6 +86,17 @@ function PhraseForm({ editId, initialTarget, initialNative, targetLang, nativeLa
           className="min-h-12 px-4 rounded-2xl bg-surface-container-low border border-outline-variant/60 text-base"
         />
       </label>
+      {same && (
+        <p role="status" className="text-body rounded-xl bg-surface-container-low p-3">
+          {c.addPhrase.duplicate}{' '}
+          <span lang={same.targetLang} className="font-serif italic font-semibold">
+            {same.target}
+          </span>
+          <span lang={promptOf(same, nativeLang).lang} className="block text-label text-secondary">
+            {promptOf(same, nativeLang).text}
+          </span>
+        </p>
+      )}
       <p className="text-label text-secondary">{c.addPhrase.hint}</p>
       <button type="submit" disabled={!target.trim() || !native.trim()} className="min-h-12 rounded-full bg-primary-container text-on-primary font-bold disabled:opacity-40">
         {editId ? c.common.save : c.addPhrase.add}
