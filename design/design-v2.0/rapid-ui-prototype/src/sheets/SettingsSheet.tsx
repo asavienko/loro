@@ -1,5 +1,7 @@
 import { useEffect, useId, useState } from 'react';
-import { bestVoice, voicesFor, waitForVoices } from '../audio/speech';
+import { bestVoice, speak, voicesFor, waitForVoices } from '../audio/speech';
+import { courseSets, findPhrase, promptOf } from '../state/catalog';
+import { Icon } from '../ui/Icon';
 import { copyForNative, languageLabel, languageName } from '../copy';
 import { coursesFor, LanguageCode, NATIVE_LANGUAGES } from '../content';
 import { useCopy, useStore } from '../state/store';
@@ -123,27 +125,44 @@ function VoicePickers({ langs }: { langs: LanguageCode[] }) {
   }, [langs[0], langs[1]]); // eslint-disable-line react-hooks/exhaustive-deps
   const choosable = langs.filter((l) => (voices[l]?.length ?? 0) > 1);
   if (choosable.length === 0) return null;
+  // The course's first phrase, in each language, to hear a voice before keeping it.
+  const sample = findPhrase(state.learner, courseSets(state.learner)[0]?.phraseIds[0]);
+  const sampleText = (lang: LanguageCode) => (!sample ? '' : lang === sample.targetLang ? sample.target : promptOf(sample, lang).text);
   return (
     <SheetSection title={c.settings.voices}>
       {choosable.map((lang) => {
         const list = voices[lang]!;
         const chosen = state.prefs.voiceByLang[lang];
         return (
-          <label key={lang} className="flex flex-col gap-1 px-2 py-1">
-            <span className="text-label text-secondary">{languageLabel(lang, c.locale)}</span>
-            <select
-              value={chosen && list.some((v) => v.name === chosen) ? chosen : ''}
-              onChange={(e) => actions.setPrefs({ voiceByLang: { ...state.prefs.voiceByLang, [lang]: e.target.value || undefined } })}
-              className="min-h-12 px-3 rounded-2xl bg-surface-container-low border border-outline-variant/60 text-base"
-            >
-              <option value="">{c.settings.voiceAuto(bestVoice(list, lang)?.name ?? '')}</option>
-              {list.map((v) => (
-                <option key={v.name} value={v.name}>
-                  {v.name}
-                </option>
-              ))}
-            </select>
-          </label>
+          // The Test button sits beside the label, not in it, so the select's name stays the language.
+          <div key={lang} className="flex items-end gap-2 px-2 py-1">
+            <label className="flex-1 min-w-0 flex flex-col gap-1">
+              <span className="text-label text-secondary">{languageLabel(lang, c.locale)}</span>
+              <select
+                value={chosen && list.some((v) => v.name === chosen) ? chosen : ''}
+                onChange={(e) => actions.setPrefs({ voiceByLang: { ...state.prefs.voiceByLang, [lang]: e.target.value || undefined } })}
+                className="min-h-12 px-3 rounded-2xl bg-surface-container-low border border-outline-variant/60 text-base"
+              >
+                <option value="">{c.settings.voiceAuto(bestVoice(list, lang)?.name ?? '')}</option>
+                {list.map((v) => (
+                  <option key={v.name} value={v.name}>
+                    {v.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {sampleText(lang) && (
+              <button
+                type="button"
+                aria-label={c.onboarding.test(languageName(lang, c.locale))}
+                onClick={() => void speak(sampleText(lang), lang, state.prefs.speed).done}
+                className="shrink-0 min-h-12 px-3 rounded-full bg-surface-container text-body font-semibold flex items-center gap-1.5"
+              >
+                <Icon name="volume_up" className="text-icon-sm" />
+                {c.onboarding.testShort}
+              </button>
+            )}
+          </div>
         );
       })}
     </SheetSection>
