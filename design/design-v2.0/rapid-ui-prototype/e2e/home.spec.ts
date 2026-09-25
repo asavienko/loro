@@ -278,6 +278,20 @@ test('at 200% text a tab\'s one-word title is whole: the points give way to it, 
 });
 
 for (const nativeLang of ['bg-BG', 'ru-RU'] as const) {
+  test.describe(`${nativeLang} with history`, () => {
+    test.use({ seed: { nativeLang, log: sampleHistory(Date.now()).map((e) => ({ ...e, key: String(e.key).replace('en-GB>', `${nativeLang}>`) })) } });
+    test('Home at 200% text: "Jump back in" and History fit, nothing scrolls sideways', async ({ page }) => {
+      for (const width of [390, 320]) {
+        await page.setViewportSize({ width, height: 844 });
+        await page.goto('/');
+        await page.addStyleTag({ content: 'html { font-size: 200% }' });
+        await page.waitForTimeout(200);
+        await expect(page.getByRole('heading', { name: nativeLang === 'bg-BG' ? 'Върнете се' : 'Вернуться' })).toBeVisible();
+        expect(await page.evaluate(() => document.documentElement.scrollWidth), `${width} px`).toBeLessThanOrEqual(width);
+      }
+    });
+  });
+
   test.describe(`${nativeLang} on a 320 px phone`, () => {
     test.use({ viewport: { width: 320, height: 568 }, seed: { nativeLang } });
     test('"Библиотека" is whole beside the +: the points give way there, and only there (Q-06)', async ({ page }) => {

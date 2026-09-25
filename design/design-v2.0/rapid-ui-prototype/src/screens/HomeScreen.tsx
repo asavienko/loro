@@ -178,9 +178,11 @@ export function HomeScreen() {
         <div className="flex flex-col gap-7">
           {recent.length > 0 && (
             <section aria-labelledby="recent-heading">
-              <div className="flex items-center justify-between mb-1">
+              {/* History drops under the heading when both don't fit (Russian at large text), and its
+                  label then lines up with the heading, rather than pushing the page sideways. */}
+              <div className="flex flex-wrap items-center justify-between gap-x-2 mb-1">
                 <h2 id="recent-heading" className="font-serif text-heading font-semibold">{c.home.jumpBackIn}</h2>
-                <button type="button" onClick={() => setHistoryOpen(true)} className={`${btnText} -mr-2`}>
+                <button type="button" onClick={() => setHistoryOpen(true)} className={`${btnText} -ml-3 -mr-2`}>
                   <Icon name="history" className="text-icon-sm" />
                   {c.home.history}
                 </button>
