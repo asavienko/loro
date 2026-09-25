@@ -767,3 +767,13 @@ visible about 750 ms after navigation, with or without a year of history; the lo
 is ~180 ms (the core's synchronous WASM start). New tests also cover a finished course and a device
 with no Spanish voice (player and onboarding). Playwright: 100 on the dev server, 101 against the
 production build.
+
+**Third review (Explore, Library, set pages, links):** fixed with tests — a link with a stray "%"
+crashed the app (and Reload reopened it); after deleting your set, Back returned to it; "Play due and
+new" also counted phrases being learned and not yet due; search matched inside words ("uenta" found
+"cuenta") and listed matches only in notes as equals to phrase matches; filters alone with no
+result said No phrases match "". Playwright: Chromium 167, WebKit 160, Firefox 163.
+
+**Open question:** on a set that is already the paused queue, the big Play button resumes that queue,
+even when it holds only part of the set (Home's Continue) or the page's sort has since changed. Should
+it resume, or restart the whole set in the order shown (and say "Resume" when it resumes)?
