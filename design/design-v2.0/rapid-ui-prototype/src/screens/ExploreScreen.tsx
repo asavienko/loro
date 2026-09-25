@@ -144,11 +144,14 @@ export function ExploreScreen({ filters }: { filters: ExploreFilters }) {
       ? `${c.explore.searchedSets} · ${sets.length}`
       : c.explore.allSets;
 
-  // Levels and tags as one line of chips; with a level or tag on, the topics join them as chips.
+  // Nothing chosen yet: the topics are a row of tiles (not on a phone held sideways).
+  const tiles = !topic && !q && !filters.level && !filters.tag;
+  // Levels and tags as one line of chips. With a level or tag on, the topics join them as chips; on
+  // a phone held sideways they are chips from the start, so a row of sets shows on the first screen.
   const filterRow = (
     <div ref={chipRow} className="scroll-row flex items-stretch gap-x-2 overflow-x-auto -mx-4 px-4">
-      {!topic && !q && (filters.level || filters.tag) && (
-        <>
+      {!topic && !q && (
+        <div className={tiles ? 'hidden phone-landscape:contents' : 'contents'}>
           <ChipGroup label={c.explore.topics}>
             {courseTopics.map(({ topic: t }) => (
               <Chip key={t.id} selected={false} onClick={() => update({ topic: t.id })}>
@@ -157,7 +160,7 @@ export function ExploreScreen({ filters }: { filters: ExploreFilters }) {
             ))}
           </ChipGroup>
           <Divider />
-        </>
+        </div>
       )}
       <ChipGroup label={c.explore.levels}>
         {LEVELS.filter((l) => courseSets(learner).some((s) => s.level === l)).map((l) => (
@@ -216,8 +219,9 @@ export function ExploreScreen({ filters }: { filters: ExploreFilters }) {
           {sets.length === 0 ? (
             <p className="text-body text-secondary py-2">{c.explore.noSets}</p>
           ) : (
-            // Cards keep a readable size: two across a phone, as many as fit from 10rem up on wider screens.
-            <ul className="grid grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(10rem,1fr))] gap-x-3 gap-y-5">
+            // Cards keep a readable size: two across a phone, as many as fit from 10rem up on wider
+            // screens and on a phone held sideways (where two would be taller than the screen).
+            <ul className="grid grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(10rem,1fr))] phone-landscape:grid-cols-[repeat(auto-fill,minmax(10rem,1fr))] gap-x-3 gap-y-5">
               {sets.map((set) => {
                 const view = findSetView(learner, set.id)!;
                 return (
@@ -276,8 +280,8 @@ export function ExploreScreen({ filters }: { filters: ExploreFilters }) {
       )}
 
       {/* Nothing chosen yet: the topics, one row of tiles. Any filter or search puts them away. */}
-      {!topic && !q && !filters.level && !filters.tag && (
-        <section aria-labelledby="topics-heading">
+      {tiles && (
+        <section aria-labelledby="topics-heading" className="phone-landscape:hidden">
           <h2 id="topics-heading" className="sr-only">{c.explore.topics}</h2>
           {/* Tiles share the row from 5.5rem up (three across a 320 px phone in English); one never
               gets narrower than its longest word or its count, so a long title (Russian "Повседневная")

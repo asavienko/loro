@@ -92,6 +92,29 @@ test.describe('phone landscape (568×320)', () => {
   });
 });
 
+test.describe('Explore on a phone held sideways (844×390)', () => {
+  test.use({ viewport: { width: 844, height: 390 } });
+
+  test('the topics are chips in the one filter line, so a row of sets is on the first screen (Q-16)', async ({ page }) => {
+    await page.goto('/#/explore');
+    await page.waitForTimeout(300);
+    await expect(page.getByRole('region', { name: 'Topics' })).toHaveCount(0);
+    const topics = page.getByRole('group', { name: 'Topics' });
+    await expect(topics.getByRole('button', { name: 'Eating out' })).toBeVisible();
+    // The first row of covers shows at least 6rem of itself above the tab bar.
+    const tabBar = (await page.getByRole('navigation').last().boundingBox())!;
+    const card = (await page.getByRole('region', { name: 'All sets' }).getByRole('listitem').first().boundingBox())!;
+    expect(card.y + 96).toBeLessThanOrEqual(tabBar.y);
+    await topics.getByRole('button', { name: 'Getting around' }).click();
+    await expect(page.getByRole('heading', { name: 'Getting around · 2 sets' })).toBeVisible();
+    // Held upright again, the topics are tiles.
+    await page.goto('/#/explore');
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(page.getByRole('region', { name: 'Topics' }).getByRole('button', { name: /^Eating out/ })).toBeVisible();
+    await expect(page.getByRole('group', { name: 'Topics' })).toBeHidden();
+  });
+});
+
 test.describe('large text (150%) on a 360 px phone', () => {
   test.use({ viewport: { width: 360, height: 640 } });
 
