@@ -1,5 +1,5 @@
 // A small phone (320×568): nothing scrolls sideways and the player's controls can be reached.
-import { expect, sampleHistory, test } from './fixtures';
+import { expect, expectAccessible, sampleHistory, test } from './fixtures';
 
 test.use({ viewport: { width: 320, height: 568 }, seed: { log: sampleHistory(Date.now()) } });
 
@@ -197,6 +197,9 @@ for (const nativeLang of ['bg-BG', 'ru-RU'] as const) {
         await page.waitForTimeout(300);
         expect(await spills(page)).toEqual([]);
         expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
+        await expectAccessible(page);
+        // Screen readers pick their voice from it.
+        expect(await page.evaluate(() => document.documentElement.lang)).toBe(nativeLang);
       });
     }
 
@@ -208,6 +211,7 @@ for (const nativeLang of ['bg-BG', 'ru-RU'] as const) {
       await page.locator('[aria-keyshortcuts="1"]').click();
       await page.waitForTimeout(300);
       expect(await spills(page)).toEqual([]);
+      await expectAccessible(page);
     });
   });
 }
