@@ -207,6 +207,11 @@ export interface PlayerState {
   source: QueueSource | null;
   /** The queue finished; Play starts the last phrase again. */
   ended: boolean;
+  /**
+   * This play of the current phrase has reached its target, so the learner has heard it. A queue
+   * that ends shows the target only then: Next on its last phrase ends it before it is heard.
+   */
+  targetHeard: boolean;
   /** Speech that failed, and why; playback stops until the learner presses Play. */
   audioError: AudioFailure | null;
   session: Session | null;

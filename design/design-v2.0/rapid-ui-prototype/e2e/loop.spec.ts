@@ -37,6 +37,31 @@ test.describe('onboarding', () => {
     await expect(player.getByRole('button', { name: 'Pause', exact: true })).toBeVisible();
   });
 
+  test('Next at once ends the demo without showing the Spanish anywhere (R-01)', async ({ page }) => {
+    await page.addInitScript(() => {
+      Object.defineProperty(navigator, 'mediaSession', { value: { setActionHandler: () => {}, metadata: null, playbackState: 'none' } });
+    });
+    await page.goto('/');
+    for (let i = 0; i < 4; i++) await page.getByRole('button', { name: 'Continue' }).click();
+    await page.getByRole('button', { name: 'Start with one phrase' }).click();
+    const player = page.getByRole('dialog', { name: 'Now playing' });
+    await player.getByRole('button', { name: 'Next phrase' }).click();
+    await expect(player.getByRole('heading', { name: 'That’s the loop' })).toBeVisible();
+    // Never heard, so still hidden: in the player, the queue, the lock screen and the mini-player.
+    await expect(player.getByText('Spanish hidden until you hear it')).toBeAttached();
+    await expect(player).not.toContainText('Me pone');
+    expect(await page.evaluate(() => navigator.mediaSession.metadata?.title)).toBe('A cortado, please');
+    await player.getByRole('button', { name: 'Open queue' }).click();
+    const queue = page.getByRole('dialog', { name: 'Queue' });
+    await expect(queue.getByText('A cortado, please')).toBeVisible();
+    await expect(queue).not.toContainText('Me pone');
+    await page.goBack();
+    await expect(queue).toHaveCount(0);
+    await player.getByRole('button', { name: 'Not now' }).click();
+    await expect(page.getByRole('button', { name: /^Now playing:/ })).toHaveAccessibleName('Now playing: A cortado, please');
+    await expect(page.locator('body')).not.toContainText('Me pone');
+  });
+
   test('a Bulgarian speaker gets the UI in Bulgarian and only the Spanish course', async ({ page }) => {
     await page.goto('/');
     await page.getByRole('radio', { name: 'Български' }).check();

@@ -156,6 +156,7 @@ function enterPhrase(state: AppState, player: PlayerState, index: number, now: n
     playingSince: playing ? now : null,
     cycle: player.cycle + 1,
     ended: false,
+    targetHeard: false,
     // A failure belonged to the phrase it happened on; the next one hasn't been tried.
     audioError: null,
   };
@@ -344,7 +345,8 @@ function step(state: AppState, event: AppEvent): AppState {
             cycle: player.cycle + 1,
           });
         case 'pause':
-          return withPlayer(state, { ...player, phase: 'target', cycle: player.cycle + 1 });
+          // The target plays and shows from here: heard, even if Next cuts it short.
+          return withPlayer(state, { ...player, phase: 'target', targetHeard: true, cycle: player.cycle + 1 });
         case 'rate':
           return advance(state, player, event.now, true);
         case 'target': {
@@ -696,7 +698,7 @@ function step(state: AppState, event: AppEvent): AppState {
       const currentGone = !known(current.order[current.index]);
       const index = Math.min(current.order.slice(0, current.index).filter(known).length, Math.max(0, order.length - 1));
       const cleaned: PlayerState = {
-        ...(currentGone ? { ...stopClock(current, event.now), phase: 'native' as const, repetition: 1, cycle: current.cycle + 1 } : current),
+        ...(currentGone ? { ...stopClock(current, event.now), phase: 'native' as const, repetition: 1, targetHeard: false, cycle: current.cycle + 1 } : current),
         status: order.length === 0 ? 'idle' : currentGone ? 'paused' : current.status,
         order,
         baseOrder: current.baseOrder.filter(known),

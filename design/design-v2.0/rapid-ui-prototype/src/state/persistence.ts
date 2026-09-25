@@ -288,6 +288,8 @@ function sanitizePlayer(value: unknown, learner: LearnerState): PlayerState {
     baseOrder: strings(value.baseOrder).map(renamed).filter(known),
     index,
     ended: value.ended === true,
+    // Only an ended queue keeps it (for its end panel); a restored phrase starts from its prompt.
+    targetHeard: value.ended === true && value.targetHeard === true,
     session,
     source: sanitizeSource(value.source),
   };
