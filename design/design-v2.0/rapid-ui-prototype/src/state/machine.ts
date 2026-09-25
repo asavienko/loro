@@ -84,11 +84,15 @@ export type AppEvent =
   /** Undo of Clear queue or Remove: back in up next, `offset` places after whatever is playing by then. */
   | { type: 'RESTORE_UP_NEXT'; phraseIds: string[]; offset?: number }
   | { type: 'TOGGLE_LIKE'; kind: 'phrase' | 'set'; id: string; now: number }
-  | { type: 'ADD_OWN_PHRASE'; target: string; native: string; now: number }
+  /**
+   * `id`: the one the store promised its caller (so a toast can play the phrase, or a page open the
+   * set, before the next render). Taken unless it's in use; otherwise the counter's next id.
+   */
+  | { type: 'ADD_OWN_PHRASE'; target: string; native: string; now: number; id?: string }
   | { type: 'EDIT_OWN_PHRASE'; id: string; target: string; native: string; now: number }
   | { type: 'DELETE_OWN_PHRASE'; id: string; now: number }
   | { type: 'RESTORE_OWN_PHRASE'; id: string; now: number }
-  | { type: 'CREATE_SET'; title: string; phraseIds: string[]; now: number }
+  | { type: 'CREATE_SET'; title: string; phraseIds: string[]; now: number; id?: string }
   /** `at` inserts at that position (undoing a removal); otherwise at the end. */
   | { type: 'ADD_TO_SET'; setId: string; phraseIds: string[]; at?: number; now: number }
   | { type: 'REMOVE_FROM_SET'; setId: string; phraseId: string; now: number }
@@ -549,7 +553,7 @@ function step(state: AppState, event: AppEvent): AppState {
       const native = trimmed(event.native, LIMITS.phrase);
       if (!target || !native) return state;
       const [seqId, next] = takeId(state);
-      const id = `${OWN_PHRASE_PREFIX}${seqId}`;
+      const id = event.id?.startsWith(OWN_PHRASE_PREFIX) && !learner.ownPhrases[event.id] ? event.id : `${OWN_PHRASE_PREFIX}${seqId}`;
       const { nativeLang, targetLang } = learner.profile;
       const phrase = { id, target, native, nativeLang, targetLang, createdAt: event.now, updatedAt: event.now, deleted: false };
       return { ...next, learner: { ...next.learner, ownPhrases: { ...next.learner.ownPhrases, [id]: phrase } } };
@@ -599,7 +603,7 @@ function step(state: AppState, event: AppEvent): AppState {
       const title = trimmed(event.title, LIMITS.title);
       if (!title) return state;
       const [seqId, next] = takeId(state);
-      const id = `${OWN_SET_PREFIX}${seqId}`;
+      const id = event.id?.startsWith(OWN_SET_PREFIX) && !learner.ownSets[event.id] ? event.id : `${OWN_SET_PREFIX}${seqId}`;
       // A set holds one course's phrases: another course's phrase (from a page left open
       // across a switch, or a link) would play in the wrong language pair.
       const inCourse = (pid: string) => findPhrase(learner, pid)?.targetLang === learner.profile.targetLang;

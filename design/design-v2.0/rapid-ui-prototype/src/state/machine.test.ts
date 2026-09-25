@@ -7,7 +7,7 @@ import { derive, isLearned, RATING_WINDOW_MS } from './memory';
 import { currentPhraseId, memoryOf, phraseProgress, points, previouslyPlayed, sessionSummary, upNextIds } from './selectors';
 import { addLocalDays, HOUR, startOfLocalDay } from './clock';
 // Phase timing, one-pass queues and undo after moving on (the player's round-3 changes).
-import { findPhrase } from './catalog';
+import { findPhrase, OWN_PHRASE_PREFIX, OWN_SET_PREFIX } from './catalog';
 import { requeuesOn } from './machine';
 import { measuredTargetMs, pendingFor, phaseDurationMs } from './selectors';
 import { pauseMs, RATE_HOLD_MS } from './timing';
@@ -342,6 +342,25 @@ describe('the learner’s own phrases and sets', () => {
     s = run(s, { type: 'MOVE_IN_SET', setId, phraseId: 'cafe-03', delta: -1, now: T0 + 1 });
     assert.deepEqual(s.learner.ownSets[setId].phraseIds, ['cafe-01', 'cafe-03', 'cafe-02']);
     assert.equal(run(s, { type: 'MOVE_IN_SET', setId, phraseId: 'cafe-01', delta: -1, now: T0 + 2 }), s, 'the first cannot move up');
+  });
+
+  it('a new phrase or set gets the id promised to the caller, though the speech took the counter first', () => {
+    // The store promises the counter's next id as last rendered; a heard entry, not yet rendered,
+    // takes that number first. The new phrase and set keep the promised ids all the same.
+    let s = load(fresh());
+    const promised = (prefix: string, state: typeof s) => `${prefix}dev.tab-${(state.device.seq + 1).toString(36)}`;
+    const phraseId = promised(OWN_PHRASE_PREFIX, s);
+    s = done(done(done(s, T0 + 1), T0 + 2), T0 + 3); // the target is heard: an id from the counter
+    s = run(s, { type: 'ADD_OWN_PHRASE', target: '¿Hay wifi?', native: 'Is there wifi?', now: T0 + 4, id: phraseId });
+    assert.equal(s.learner.ownPhrases[phraseId]?.target, '¿Hay wifi?');
+    const setId = promised(OWN_SET_PREFIX, s);
+    s = done(done(done(s, T0 + 5), T0 + 6), T0 + 7);
+    s = run(s, { type: 'CREATE_SET', title: 'Travel bits', phraseIds: [phraseId], now: T0 + 8, id: setId });
+    assert.equal(s.learner.ownSets[setId]?.title, 'Travel bits');
+    // An id already in use is never reused: the counter's next one instead.
+    s = run(s, { type: 'ADD_OWN_PHRASE', target: 'Hola', native: 'Hi', now: T0 + 9, id: phraseId });
+    assert.equal(s.learner.ownPhrases[phraseId].target, '¿Hay wifi?');
+    assert.equal(Object.keys(s.learner.ownPhrases).length, 2);
   });
 
   it('changing course empties the queue', () => {

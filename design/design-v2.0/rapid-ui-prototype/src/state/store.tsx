@@ -43,22 +43,25 @@ function makeActions(dispatch: (event: AppEvent) => void, latest: RefObject<AppS
       dispatch({ type: 'ENQUEUE', phraseIds, setId, at, now: now() }),
     clearQueue: () => dispatch({ type: 'CLEAR_QUEUE' }),
     toggleLike: (kind: 'phrase' | 'set', id: string) => dispatch({ type: 'TOGGLE_LIKE', kind, id, now: now() }),
-    /** Adds your own phrase and returns its id (from the device counter, as createSet). */
+    /**
+     * Adds your own phrase and returns its id: one from the device counter as last rendered, sent
+     * with the event, since the speech may take the counter's next id first (as createSet).
+     */
     addOwnPhrase: (target: string, native: string): string => {
       const { device } = latest.current;
       const id = `${OWN_PHRASE_PREFIX}${device.id}.${device.instance}-${(device.seq + 1).toString(36)}`;
-      dispatch({ type: 'ADD_OWN_PHRASE', target, native, now: now() });
+      dispatch({ type: 'ADD_OWN_PHRASE', target, native, now: now(), id });
       return id;
     },
     editOwnPhrase: (id: string, target: string, native: string) =>
       dispatch({ type: 'EDIT_OWN_PHRASE', id, target, native, now: now() }),
     deleteOwnPhrase: (id: string) => dispatch({ type: 'DELETE_OWN_PHRASE', id, now: now() }),
     restoreOwnPhrase: (id: string) => dispatch({ type: 'RESTORE_OWN_PHRASE', id, now: now() }),
-    /** Creates a set and returns its id (the machine takes ids from the device counter). */
+    /** Creates a set and returns its id, sent with the event as addOwnPhrase's is. */
     createSet: (title: string, phraseIds: string[]): string => {
       const { device } = latest.current;
       const id = `${OWN_SET_PREFIX}${device.id}.${device.instance}-${(device.seq + 1).toString(36)}`;
-      dispatch({ type: 'CREATE_SET', title, phraseIds, now: now() });
+      dispatch({ type: 'CREATE_SET', title, phraseIds, now: now(), id });
       return id;
     },
     addToSet: (setId: string, phraseIds: string[], at?: number) => dispatch({ type: 'ADD_TO_SET', setId, phraseIds, at, now: now() }),
