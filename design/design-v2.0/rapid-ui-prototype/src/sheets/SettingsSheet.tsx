@@ -32,7 +32,7 @@ export function SettingsSheet({ open, onClose }: { open: boolean; onClose: () =>
   return (
     <Sheet open={open} title={c.settings.title} onClose={onClose}>
       <SheetSection title={c.settings.profile}>
-        <NameField key={profile.name} initial={profile.name} label={c.settings.name} onSave={(name) => actions.setProfile({ name })} />
+        <NameField initial={profile.name} label={c.settings.name} onSave={(name) => actions.setProfile({ name })} />
         <LanguageSelect
           label={c.settings.native}
           value={profile.nativeLang}
@@ -94,6 +94,13 @@ function NameField({ initial, label, onSave }: { initial: string; label: string;
     if (!store() && name !== initial && tidy(name) === initial) setName(initial);
   };
   useEffect(() => () => void store(), []); // eslint-disable-line react-hooks/exhaustive-deps
+  // A new stored name (saved here, or synced from another device) shows in the field unless
+  // the learner is part-way through typing something else; their text then wins on blur.
+  const shown = useRef(initial);
+  useEffect(() => {
+    if (name === shown.current || tidy(name) === initial) setName(initial);
+    shown.current = initial;
+  }, [initial]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <label className="flex flex-col gap-1 px-2 py-1">
       <span className="text-label text-secondary">{label}</span>
