@@ -387,6 +387,23 @@ test.describe('queues with a natural end', () => {
     await expect(page.getByRole('button', { name: /^Now playing:/ })).toContainText('Played through');
   });
 
+  test('a review with a rating is "Review done", said after the last rating and its Undo (Q-08)', async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: /^Play 7 phrases/ }).click();
+    const player = page.getByRole('dialog', { name: 'Now playing' });
+    await player.getByRole('button', { name: /^Repetitions/ }).click(); // one repetition: to the hold sooner
+    for (let i = 0; i < 6; i++) await player.getByRole('button', { name: 'Next phrase' }).click();
+    await expect(player.getByText('7 of 7')).toBeVisible();
+    await expect(player.getByText('Rate it, or wait to go on').first()).toBeVisible({ timeout: 30_000 });
+    await page.keyboard.press('3');
+    await expect(player.getByRole('heading', { name: 'Review done' })).toBeVisible();
+    await expect(player.getByText('1 rated · 6 phrases are due')).toBeVisible();
+    // One live region: the rating with its Undo is heard first, then the end, not one over the other.
+    await expect(page.locator('div[role="status"]')).toHaveText(/^Rated Easy — [^.]+\. Undo\. Review done\. 1 rated · 6 phrases are due\.$/);
+    await player.getByRole('button', { name: 'Close', exact: true }).click();
+    await expect(page.getByRole('button', { name: /^Now playing:/ })).toContainText('Review done');
+  });
+
   test('a longer "time to say it" lengthens every play time it shows', async ({ page }) => {
     await page.goto('/');
     const review = page.getByRole('button', { name: /^Play 7 phrases · / });
