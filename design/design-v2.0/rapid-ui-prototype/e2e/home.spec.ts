@@ -16,6 +16,23 @@ test("the greeting is the header's title, in the language being learned (V-10)",
   expect(await title.evaluate((e) => e.scrollHeight <= e.clientHeight + 1)).toBe(true);
 });
 
+test.describe('with three-digit points', () => {
+  test.use({ seed: { log: masteredCourse(Date.now()) } });
+  test('on a 320 px phone at 200% text the greeting keeps its room: the points give way there (V-10)', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 568 });
+    await page.goto('/');
+    await page.addStyleTag({ content: 'html { font-size: 200% }' });
+    await page.waitForTimeout(200);
+    const title = page.locator('header h1');
+    expect((await title.boundingBox())!.width).toBeGreaterThanOrEqual(120);
+    expect(await title.evaluate((e) => e.scrollHeight <= e.clientHeight + 1)).toBe(true);
+    await expect(page.getByTestId('points')).toBeHidden();
+    // At 390 px the chip stays.
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(page.getByTestId('points')).toBeVisible();
+  });
+});
+
 const TERRACOTTA = 'rgb(159, 60, 22)'; // primary-container
 const DAY = 86_400_000;
 
