@@ -674,6 +674,11 @@ while playing here froze playback; a missed last phrase was re-queued to replay 
 queue each repeat pass); Add to set with the same phrase twice kept both; two devices kept their own
 copy of a same-instant edit forever; clear-queue Undo could restore phrases behind the current one.
 Undoing a phrase delete now also puts it back in Up next, as far ahead of the playing phrase as it was (fixed later, with an E2E test).
+A later review of the recent commits found four more, all fixed with tests: a rating given while the
+grades wait was never announced, then spoken over the phrase when it came back; a message replacing
+one the learner was on timed out under them, and Undo or Dismiss dropped keyboard focus on the page;
+shuffle off after an Undo moved the restored phrases to the front; Undo of a delete restored only
+one of two queued copies.
 
 A second review, of the UI layer, found six more, all fixed with tests that fail without the fix:
 the player's keys acted inside sheets opened over it (Space paused, arrows skipped); a queue row's
