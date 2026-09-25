@@ -1,5 +1,5 @@
 import { AnimatePresence, motion, MotionConfig } from 'motion/react';
-import { Component, ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import { Component, ReactNode, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { useLatest } from './lib/useLatest';
 import { setVoiceChoices, stopSpeech } from './audio/speech';
 import { usePlaybackDriver } from './audio/driver';
@@ -184,6 +184,10 @@ function Shell() {
   const currentId = currentPhraseId(state.player);
 
   const [overlay, setOverlay] = useState<Overlay>({ player: false, queue: false });
+  // The player draws a beat after it is asked for: the tap that opens it (often the same tap that
+  // starts a queue) paints at once, the mini-player already hidden, and the player slides up in
+  // the next render. It closes at once.
+  const playerDrawn = useDeferredValue(overlay.player) && overlay.player;
   const [details, setDetails] = useState<{ phraseId: string; ownSetId?: string } | null>(null);
   const [addTo, setAddTo] = useState<string[] | null>(null);
   const [create, setCreate] = useState<{ phraseIds: string[]; rename?: string } | null>(null);
@@ -401,7 +405,7 @@ function Shell() {
         {/* A failing overlay closes on its own; the rest of the app keeps working. */}
         <LocalBoundary resetKey={`${overlay.player}${overlay.queue}${currentId}`} quiet onError={closePlayer}>
           <AnimatePresence>
-            {overlay.player && currentId && <NowPlayingScreen key="player" onClose={closePlayer} onOpenQueue={nav.openQueue} />}
+            {playerDrawn && currentId && <NowPlayingScreen key="player" onClose={closePlayer} onOpenQueue={nav.openQueue} />}
             {overlay.queue && <QueueScreen key="queue" onClose={closeQueue} />}
           </AnimatePresence>
         </LocalBoundary>
