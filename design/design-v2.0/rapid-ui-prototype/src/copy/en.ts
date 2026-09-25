@@ -347,7 +347,7 @@ export function makeEn(n: Plural) {
       loop: 'How it works',
       loopSteps: (native: string, target: string) => [
         `Hear the phrase in ${native}.`,
-        `Say it yourself in ${target} while it’s quiet.`,
+        `Say it out loud in ${target} while it’s quiet.`,
         `Hear it in ${target}.`,
         'Rate how it went: Missed, Hard or Easy. You can change it for five minutes.',
       ],

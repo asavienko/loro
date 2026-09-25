@@ -197,3 +197,28 @@ test.describe("Library's + adds a phrase or a set (U-09)", () => {
     await expect(page.getByTestId('points')).toBeHidden();
   });
 });
+
+test.describe('onboarding', () => {
+  test.use({ seed: null });
+  test('a drawn progress bar fills step by step; the loop says to speak out loud (V-21, U-04)', async ({ page }) => {
+    await page.goto('/');
+    const filledSegments = () =>
+      page.locator('main [aria-hidden="true"] > span').evaluateAll((els) => els.filter((e) => getComputedStyle(e).backgroundColor === 'rgb(159, 60, 22)').length);
+    await expect(page.getByText('Step 1 of 5')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Loro', level: 1 })).toBeVisible();
+    expect(await filledSegments()).toBe(1);
+    for (let i = 0; i < 4; i++) await page.getByRole('button', { name: 'Continue' }).click();
+    await expect(page.getByText('Step 5 of 5')).toBeVisible();
+    expect(await filledSegments()).toBe(5);
+    await expect(page.getByText('Say it out loud in Spanish while it’s quiet.')).toBeVisible();
+  });
+});
+
+test.describe('onboarding in Russian', () => {
+  test.use({ seed: { onboarded: false, nativeLang: 'ru-RU', name: '' } });
+  test('says to speak out loud, in Spanish, as Russian says it (U-04)', async ({ page }) => {
+    await page.goto('/');
+    for (let i = 0; i < 4; i++) await page.getByRole('button', { name: 'Дальше' }).click();
+    await expect(page.getByText('Скажите её вслух по-испански, пока тихо.')).toBeVisible();
+  });
+});

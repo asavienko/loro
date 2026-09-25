@@ -15,7 +15,7 @@ test.describe('onboarding', () => {
     await expect(page.getByText('Spanish: Test Español')).toBeVisible();
     await expect(page.getByText('English: Test English')).toBeVisible();
     await page.getByRole('button', { name: 'Continue' }).click();
-    await expect(page.getByText('Say it yourself in Spanish while it’s quiet.')).toBeVisible();
+    await expect(page.getByText('Say it out loud in Spanish while it’s quiet.')).toBeVisible();
     await page.getByRole('button', { name: 'Start with one phrase' }).click();
     await expect(page.getByRole('dialog', { name: 'Now playing' })).toBeVisible();
     await page.getByRole('button', { name: 'Close player' }).click();
