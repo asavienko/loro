@@ -18,6 +18,8 @@ declare global {
     __talking?: boolean;
     /** Languages this device has no voice for (set with addInitScript, before load). */
     __noVoices?: string[];
+    /** Tells the app the voice list changed (a device whose voices load late). */
+    __voicesChanged?: () => void;
   }
 }
 
@@ -34,10 +36,12 @@ function fakeSpeech() {
   window.__spoken = [];
   let current: SpeechSynthesisUtterance | null = null;
   let timers: number[] = [];
+  const listeners = new Set<() => void>();
+  window.__voicesChanged = () => listeners.forEach((fn) => fn());
   const synth = {
     getVoices: () => voices.filter((v) => !(window.__noVoices ?? []).includes(v.lang)),
-    addEventListener: () => {},
-    removeEventListener: () => {},
+    addEventListener: (type: string, fn: () => void) => type === 'voiceschanged' && listeners.add(fn),
+    removeEventListener: (type: string, fn: () => void) => type === 'voiceschanged' && listeners.delete(fn),
     speak(u: SpeechSynthesisUtterance) {
       current = u;
       window.__spoken.push({ text: u.text, lang: u.lang });

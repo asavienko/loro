@@ -1,5 +1,6 @@
-import { SelectHTMLAttributes, useEffect, useId, useState } from 'react';
-import { bestVoice, speak, voicesFor, waitForVoices } from '../audio/speech';
+import { SelectHTMLAttributes, useId, useState } from 'react';
+import { bestVoice, speak, voicesFor } from '../audio/speech';
+import { useVoiceList } from '../lib/useVoiceList';
 import { courseSets, findPhrase, promptOf } from '../state/catalog';
 import { Icon } from '../ui/Icon';
 import { copyForNative, languageLabel, languageName } from '../copy';
@@ -111,14 +112,9 @@ function LanguageSelect({ label, value, options, name, onChange }: { label: stri
 function VoicePickers({ langs }: { langs: LanguageCode[] }) {
   const c = useCopy();
   const { state, actions } = useStore();
-  const [voices, setVoices] = useState<Partial<Record<LanguageCode, SpeechSynthesisVoice[]>>>({});
-  useEffect(() => {
-    let live = true;
-    void waitForVoices().then(() => live && setVoices(Object.fromEntries(langs.map((l) => [l, voicesFor(l)]))));
-    return () => {
-      live = false;
-    };
-  }, [langs[0], langs[1]]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Read afresh whenever the device's voice list changes (some load late).
+  const { ready } = useVoiceList();
+  const voices: Partial<Record<LanguageCode, SpeechSynthesisVoice[]>> = ready ? Object.fromEntries(langs.map((l) => [l, voicesFor(l)])) : {};
   const choosable = langs.filter((l) => (voices[l]?.length ?? 0) > 1);
   if (choosable.length === 0) return null;
   // The course's first phrase, in each language, to hear a voice before keeping it.

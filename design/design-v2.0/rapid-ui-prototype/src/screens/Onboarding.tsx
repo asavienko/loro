@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
-import { speak, voiceName, waitForVoices } from '../audio/speech';
+import { useState } from 'react';
+import { speak, voiceName } from '../audio/speech';
+import { useVoiceList } from '../lib/useVoiceList';
 import { languageLabel, languageName } from '../copy';
 import { coursesFor, getLanguage, LanguageCode, NATIVE_LANGUAGES } from '../content';
 import { useNav } from '../nav/NavContext';
@@ -147,14 +148,8 @@ function VoiceCheck() {
   const c = useCopy();
   const { state } = useStore();
   const { profile } = state.learner;
-  const [ready, setReady] = useState(false);
-  useEffect(() => {
-    let alive = true;
-    void waitForVoices().then(() => alive && setReady(true));
-    return () => {
-      alive = false;
-    };
-  }, []);
+  // Re-renders when the voice list changes, so a late-loading voice stops showing as missing.
+  const { ready } = useVoiceList();
   const sample = findPhrase(state.learner, courseSets(state.learner)[0]?.phraseIds[0]);
   const langs: LanguageCode[] = [profile.nativeLang, profile.targetLang];
   const missing = ready && langs.some((l) => !voiceName(l));
