@@ -193,15 +193,17 @@ export function makeBg(n: Plural): Copy {
       yourTurn: 'Ваш ред',
       instruction: {
         native: (language) => `Слушайте на ${language}`,
-        pause: (language) => `Ваш ред — кажете го на ${language}`,
+        pause: (language) => `Ваш ред — кажете го на глас на ${language}`,
         target: (language) => `Чуйте го на ${language}`,
         rate: 'Оценете или изчакайте',
       },
       paused: 'Пауза',
+      coach: 'Кажете я сега, преди да я чуете. Нищо не се записва — после оценявате как мина.',
       repetition: (r, total) => `Повторение ${r} от ${total}`,
       howDidItGo: 'Как се получи?',
       rated: (grade, when) => `Оценка „${grade}“ — отново ${when}`,
-      changeFor: (time) => `Може да смените още ${time}`,
+      undoFor: (time) => `Отмени · ${time}`,
+      undoLabel: (time) => `Отмени оценката (остават ${time})`,
       previous: 'Предишна фраза',
       next: 'Следваща фраза',
       repeats: {
@@ -214,6 +216,7 @@ export function makeBg(n: Plural): Copy {
         continue: 'Накрая: продължи със следващите фрази',
       },
       speed: 'Скорост',
+      speedIs: (speed) => `Скорост: ${speed}×`,
       keys: 'Клавиши: интервал — пусни или пауза · ← → предишна, следваща · 1 2 3 — оценка',
       audioError: (language) =>
         `На устройството няма глас за ${language}, затова фразата не звучи. Добавете го в настройките за реч на системата и натиснете „Пусни“.`,
@@ -335,7 +338,7 @@ export function makeBg(n: Plural): Copy {
       loop: 'Как работи',
       loopSteps: (native, target) => [
         `Чуйте фразата на ${native}.`,
-        `Кажете я сами на ${target}, докато е тихо.`,
+        `Кажете я на глас на ${target}, докато е тихо.`,
         `Чуйте я на ${target}.`,
         'Оценете как мина: „Не се сетих“, „Трудно“ или „Лесно“. Може да смените оценката в рамките на пет минути.',
       ],

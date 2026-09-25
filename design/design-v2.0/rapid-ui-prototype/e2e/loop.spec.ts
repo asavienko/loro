@@ -15,7 +15,7 @@ test.describe('onboarding', () => {
     await expect(page.getByText('Spanish: Test Español')).toBeVisible();
     await expect(page.getByText('English: Test English')).toBeVisible();
     await page.getByRole('button', { name: 'Continue' }).click();
-    await expect(page.getByText('Say it yourself in Spanish while it’s quiet.')).toBeVisible();
+    await expect(page.getByText('Say it out loud in Spanish while it’s quiet.')).toBeVisible();
     await page.getByRole('button', { name: 'Start with one phrase' }).click();
     await expect(page.getByRole('dialog', { name: 'Now playing' })).toBeVisible();
     await page.getByRole('button', { name: 'Close player' }).click();
@@ -41,7 +41,7 @@ test.describe('the loop', () => {
     await expect(player.getByText('Spanish hidden until you hear it')).toBeAttached();
     await expect(player.getByRole('heading', { name: 'Me pone un cortado, por favor' })).toHaveCount(0);
     // Prompt, then the learner's turn, then the target.
-    await expect(player.getByText('Your turn — say it in Spanish', { exact: true }).first()).toBeVisible();
+    await expect(player.getByText('Your turn — say it out loud in Spanish', { exact: true }).first()).toBeVisible();
     await expect(player.getByText('Hear it in Spanish', { exact: true }).first()).toBeVisible({ timeout: 10_000 });
     await player.getByRole('button', { name: 'Pause', exact: true }).click();
     // The glossed heading reads exactly as the phrase: no punctuation lost or doubled.
@@ -58,6 +58,16 @@ test.describe('the loop', () => {
     const pause = page.getByRole('dialog', { name: 'Now playing' }).getByRole('button', { name: 'Pause', exact: true });
     const box = await pause.boundingBox();
     expect(box!.y + box!.height).toBeLessThanOrEqual(844);
+    // Every control, the speed row too: nothing needs a scroll.
+    const offscreen = await page.getByRole('dialog', { name: 'Now playing' }).evaluate((root) =>
+      [...root.querySelectorAll('button, [role="radio"]')]
+        .filter((e) => {
+          const r = e.getBoundingClientRect();
+          return r.width > 0 && r.height > 0 && (r.top < 0 || r.bottom > window.innerHeight);
+        })
+        .map((e) => e.getAttribute('aria-label') ?? e.textContent),
+    );
+    expect(offscreen).toEqual([]);
     await page.getByRole('button', { name: 'Open queue' }).click();
     await expect(page.getByRole('dialog', { name: 'Queue' })).toBeVisible();
     await page.goBack();
@@ -79,7 +89,7 @@ test.describe('the loop', () => {
     await expect(player.getByRole('button', { name: /^Hard/ })).toHaveAttribute('aria-pressed', 'true');
     await player.getByRole('button', { name: /^Easy/ }).click();
     await expect(player.getByRole('button', { name: /^Easy/ })).toHaveAttribute('aria-pressed', 'true');
-    await expect(player.getByText(/Change or undo for 4:5\d/)).toBeVisible();
+    await expect(player.getByRole('button', { name: /^Undo rating \(4:5\d left\)$/ })).toHaveText(/^Undo · 4:5\d$/);
     await player.getByRole('button', { name: 'Undo' }).click();
     await expect(player.getByRole('button', { name: /^Easy/ })).toHaveAttribute('aria-pressed', 'false');
     await player.getByRole('button', { name: /^Easy/ }).click();
@@ -155,7 +165,7 @@ test.describe('the loop', () => {
     let turns = 0;
     for (let t = 0; t < 20_000; t += 250) {
       await page.clock.runFor(250);
-      if (await player.getByText('Your turn — say it in Spanish', { exact: true }).count()) {
+      if (await player.getByText('Your turn — say it out loud in Spanish', { exact: true }).count()) {
         turns++;
         expect(await page.evaluate(() => window.__talking)).toBe(false);
       }
