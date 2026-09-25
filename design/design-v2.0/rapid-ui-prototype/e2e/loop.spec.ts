@@ -62,6 +62,26 @@ test.describe('onboarding', () => {
     await expect(page.locator('body')).not.toContainText('Me pone');
   });
 
+  test('grade keys do nothing on the end panel, which shows no grades (R-05)', async ({ page }) => {
+    await page.goto('/');
+    for (let i = 0; i < 4; i++) await page.getByRole('button', { name: 'Continue' }).click();
+    await page.getByRole('button', { name: 'Start with one phrase' }).click();
+    const player = page.getByRole('dialog', { name: 'Now playing' });
+    await player.getByRole('button', { name: 'Next phrase' }).click();
+    await expect(player.getByRole('heading', { name: 'That’s the loop' })).toBeVisible();
+    const status = page.locator('div[role="status"]');
+    await expect(status).toContainText('That’s the loop');
+    for (const key of ['3', '1', '2']) await page.keyboard.press(key);
+    await page.waitForTimeout(300);
+    await expect(status).not.toContainText('Rated');
+    await expect(player.getByText(/^Rated/)).toHaveCount(0);
+    // The phrase was never rated: the set that follows starts it with no grade chosen.
+    await player.getByRole('button', { name: 'Start Café & Mañanas' }).click();
+    await expect(player.getByRole('heading', { level: 1 })).toHaveText('Café & Mañanas');
+    await expect(player.getByRole('button', { name: /^(Missed|Hard|Easy)/, pressed: true })).toHaveCount(0);
+    await expect(player.getByText(/^Rated/)).toHaveCount(0);
+  });
+
   test('a Bulgarian speaker gets the UI in Bulgarian and only the Spanish course', async ({ page }) => {
     await page.goto('/');
     await page.getByRole('radio', { name: 'Български' }).check();
