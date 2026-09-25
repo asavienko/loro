@@ -1,4 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
+import { languageName } from '../copy';
+import { getLanguage } from '../content';
 import { points as pointsOf } from '../state/selectors';
 import { useCopy, useStore } from '../state/store';
 import { btnIcon } from './button';
@@ -39,7 +41,8 @@ export function NavigationHeader({ title, titleLang, onBack, onOpenSettings, ine
   const c = useCopy();
   const { state } = useStore();
   const points = pointsOf(state.learner);
-  const name = state.learner.profile.name;
+  const { name, targetLang } = state.learner.profile;
+  const courseId = useId();
   return (
     // A size container: at large text the points drop their "pts" (the star and the screen-reader
     // text keep the meaning) and the gaps close up before the title is cut.
@@ -52,11 +55,21 @@ export function NavigationHeader({ title, titleLang, onBack, onOpenSettings, ine
             <Icon name="arrow_back" className="text-icon-lg" />
           </button>
         ) : (
-          <button key="profile" type="button" aria-label={c.nav.settings(name)} onClick={onOpenSettings} className={`${btnIcon} -ml-1.5`}>
-            <span aria-hidden="true" className="w-8 h-8 rounded-full bg-primary-container text-on-primary font-serif font-bold flex items-center justify-center">
+          // The course's flag sits on the avatar, and the button says which course it is: its
+          // settings are where the course is switched (the name stays "Ana: settings").
+          <button key="profile" type="button" aria-label={c.nav.settings(name)} aria-describedby={courseId} onClick={onOpenSettings} className={`${btnIcon} -ml-1.5`}>
+            <span aria-hidden="true" className="relative w-8 h-8 rounded-full bg-primary-container text-on-primary font-serif font-bold flex items-center justify-center">
               {name ? name.charAt(0).toLocaleUpperCase() : <Icon name="person" className="text-icon-md" />}
+              <span className="absolute -right-1.5 -bottom-1 w-4 h-4 rounded-full bg-surface shadow-card text-[0.625rem] leading-none flex items-center justify-center">
+                {getLanguage(targetLang).flag}
+              </span>
             </span>
           </button>
+        )}
+        {!onBack && (
+          <span id={courseId} className="sr-only">
+            {c.nav.learning(languageName(targetLang, c.locale))}
+          </span>
         )}
         <div className="flex-1 min-w-0">
           {title && (
