@@ -219,7 +219,7 @@ function Shell() {
     return () => document.removeEventListener('focusin', remember);
   }, [screenId]);
   useEffect(() => {
-    const id = requestAnimationFrame(() => {
+    const restore = () => {
       if (document.activeElement && document.activeElement !== document.body) return;
       const name = lastFocused.current.get(screenId);
       const again = name
@@ -233,8 +233,15 @@ function Shell() {
       if (!heading) return;
       heading.tabIndex = -1;
       heading.focus({ preventScroll: true });
-    });
-    return () => cancelAnimationFrame(id);
+    };
+    // Now, and again once a closing sheet's exit animation has ended: its own focus
+    // return can land on the previous page's heading, which this screen then removed.
+    const frame = requestAnimationFrame(restore);
+    const later = setTimeout(restore, 700);
+    return () => {
+      cancelAnimationFrame(frame);
+      clearTimeout(later);
+    };
   }, [screenId]);
 
   useEffect(() => stopSpeech, []);
