@@ -105,8 +105,11 @@ export function formatInterval(ms: number, locale: string): string {
   const unitLocale = locale.startsWith('en') ? 'en-US' : locale;
   const unit = (value: number, u: Intl.NumberFormatOptions['unit']) =>
     new Intl.NumberFormat(unitLocale, { style: 'unit', unit: u, unitDisplay: display(u), maximumFractionDigits: 0 }).format(value);
-  if (ms < HOUR) return unit(Math.max(1, Math.round(ms / MINUTE)), 'minute');
-  if (ms < DAY) return unit(Math.round(ms / HOUR), 'hour');
+  // Rounded before the unit is chosen: 59.6 minutes is "1 hr", not "60 min", and 23.9 hours "1 day".
+  const minutes = Math.max(1, Math.round(ms / MINUTE));
+  if (minutes < 60) return unit(minutes, 'minute');
+  const hours = Math.round(ms / HOUR);
+  if (hours < 24) return unit(hours, 'hour');
   const days = Math.round(ms / DAY);
   // Days up to 100, so neighbouring rating previews (Hard 52 days, Easy 71 days) stay distinct.
   if (days <= 100) return unit(days, 'day');

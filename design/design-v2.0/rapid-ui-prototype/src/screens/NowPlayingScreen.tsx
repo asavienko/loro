@@ -7,7 +7,7 @@ import { useDialog } from '../lib/useDialog';
 import { useClickBlockerDuringDrag } from '../lib/suppressClick';
 import { useNav } from '../nav/NavContext';
 import { findPhrase, findSetView, promptOf } from '../state/catalog';
-import { formatElapsed, formatInterval, formatWhen } from '../state/clock';
+import { formatElapsed, formatWhen } from '../state/clock';
 import { playsOnce, REPEAT_SETTINGS, SPEEDS } from '../state/machine';
 import { RATING_WINDOW_MS } from '../state/memory';
 import {
@@ -30,7 +30,7 @@ import { useCopy, useNow, useStore } from '../state/store';
 import type { Grade, Phase } from '../state/types';
 import { Icon, IconName } from '../ui/Icon';
 import { PhraseNotesView } from '../ui/Notes';
-import { isTargetRevealed, PHASE_ICONS, phaseInstruction, phaseStepLabel, queueTitle } from '../ui/phase';
+import { backIn, endTitle, isTargetRevealed, PHASE_ICONS, phaseInstruction, phaseStepLabel, queueTitle } from '../ui/phase';
 import { GlossedPhrase, HiddenPhrase } from '../ui/PhraseText';
 import { SetCover } from '../ui/SetCover';
 import { PhaseFill } from '../ui/PhaseFill';
@@ -41,6 +41,8 @@ import { useToast } from '../ui/Toast';
 import { btnPrimary, btnText } from '../ui/button';
 
 const STEPS: Exclude<Phase, 'rate'>[] = ['native', 'pause', 'target'];
+/** The end panel's action: Home's hero radius, so a set title that wraps at large text stays inside it. */
+const PANEL_PRIMARY = `${btnPrimary.replace('rounded-full', 'rounded-3xl')} py-2`;
 const SWIPE = 70;
 
 const GRADES: { grade: Grade; icon: IconName; tone: string }[] = [
@@ -157,10 +159,21 @@ export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps
 
       {/* The stage scrolls when it doesn't fit (large text, a short phone); the dock never
           moves, so Pause and the grades are always on screen. Two columns in phone landscape
-          (stage | dock) and from 1024 px (cover | phrase over dock). */}
-      <div className="@container/player flex-1 min-h-0 w-full max-w-lg mx-auto flex flex-col phone-landscape:max-w-4xl phone-landscape:grid phone-landscape:grid-cols-2 phone-landscape:grid-rows-[minmax(0,1fr)] lg:max-w-4xl lg:grid lg:grid-cols-2 lg:grid-rows-[minmax(0,1fr)_auto] lg:gap-x-10 lg:px-5 lg:overflow-y-auto">
+          (stage | dock) and from 1024 px (cover | phrase over dock). Once a queue has ended,
+          the end panel sits right under the phrase and the two are centred together: a finish,
+          not a card at the foot of an empty stage. */}
+      <div
+        className={`@container/player flex-1 min-h-0 w-full max-w-lg mx-auto flex flex-col phone-landscape:max-w-4xl phone-landscape:grid phone-landscape:grid-cols-2 phone-landscape:grid-rows-[minmax(0,1fr)] lg:max-w-4xl lg:grid lg:grid-cols-2 lg:gap-x-10 lg:px-5 lg:overflow-y-auto ${
+          // Ended, it is one column that scrolls as a whole (large text), centred when it fits.
+          endedOnce ? 'justify-center-safe overflow-y-auto lg:grid-rows-2' : 'lg:grid-rows-[minmax(0,1fr)_auto]'
+        }`}
+      >
         {/* When it scrolls, its last lines fade under the dock's edge, which says there's more. */}
-        <div className="flex-1 min-h-0 overflow-y-auto scroll-pb-6 px-5 pt-1 pb-6 flex flex-col gap-3 short:gap-2 [mask-image:linear-gradient(to_bottom,black_calc(100%-1.25rem),transparent)] lg:contents">
+        <div
+          className={`${
+            endedOnce ? 'flex-initial' : 'flex-1 min-h-0 overflow-y-auto [mask-image:linear-gradient(to_bottom,black_calc(100%-1.25rem),transparent)]'
+          } scroll-pb-6 px-5 pt-1 pb-6 flex flex-col gap-3 short:gap-2 lg:contents`}
+        >
           <motion.div
             drag="x"
             dragSnapToOrigin
@@ -208,7 +221,7 @@ export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps
           </div>
         </div>
 
-        <div className="shrink-0 px-5 pt-2 pb-[max(env(safe-area-inset-bottom),0.75rem)] border-t border-hairline flex flex-col gap-2 max-h-[60dvh] overflow-y-auto phone-landscape:border-t-0 phone-landscape:self-center phone-landscape:max-h-full phone-landscape:py-2 lg:col-start-2 lg:row-start-2 lg:px-0 lg:border-t-0 lg:max-h-none lg:overflow-visible lg:pb-6">
+        <div className={`shrink-0 px-5 pt-2 pb-[max(env(safe-area-inset-bottom),0.75rem)] ${endedOnce ? '' : 'border-t border-hairline max-h-[60dvh] overflow-y-auto'} flex flex-col gap-2 phone-landscape:border-t-0 phone-landscape:self-center phone-landscape:max-h-full phone-landscape:py-2 lg:col-start-2 lg:row-start-2 lg:px-0 lg:border-t-0 lg:max-h-none lg:overflow-visible lg:pb-6`}>
           {endedOnce ? <EndPanel onClose={onClose} /> : <Rating phrase={phrase} />}
           {!endedOnce && <Transport />}
           {/* Speed: the only speed control in the app (a chip in the action row when compact). */}
@@ -266,7 +279,7 @@ function PhraseBlock({ phrase, revealed }: { phrase: Phrase; revealed: boolean }
         </>
       ) : (
         <>
-          <HiddenPhrase text={phrase.target} label={c.player.hidden(languageName(phrase.targetLang, c.locale))} className="font-serif italic text-display-sm font-semibold leading-snug" />
+          <HiddenPhrase phrase={phrase} label={c.player.hidden(languageName(phrase.targetLang, c.locale))} className="font-serif italic text-display-sm font-semibold leading-snug" />
           <p lang={prompt.lang} className="mt-1 text-display-sm short:text-heading @max-[22rem]/player:text-heading font-semibold text-on-surface">{prompt.text}</p>
         </>
       )}
@@ -441,6 +454,9 @@ function Rating({ phrase }: { phrase: Phrase }) {
   // `now` can trail the rating by up to a second: never show more than the five minutes.
   const left = pending ? Math.min(RATING_WINDOW_MS, windowLeft(pending, Math.max(now, pending.at))) : 0;
   const active = pending && left > 0 ? pending : undefined;
+  // Each grade's return: a change keeps the rating's own time, and all of them count from now.
+  const from = active ? Math.max(now, active.at) : now;
+  const dueOf = (grade: Grade) => previewDue(state.learner, phrase.id, grade, active?.at ?? now, active?.day);
   const hold = state.player.phase === 'rate' && state.player.status === 'playing';
   // Grades are always there, but asking whether you remembered it before your first turn at it
   // (in this play) makes no sense.
@@ -457,7 +473,7 @@ function Rating({ phrase }: { phrase: Phrase }) {
           // One row whatever the language: the words wrap beside Undo rather than push it below.
           <>
             <span className="flex-1 min-w-0 pl-1.5 text-left text-on-surface short:text-label @max-[22rem]/player:text-label">
-              {c.player.rated(c.common.grade[active.grade], formatWhen(previewDue(state.learner, phrase.id, active.grade, active.at, active.day), now, c.locale))}
+              {c.player.rated(c.common.grade[active.grade], backIn(c, dueOf(active.grade), from))}
               {upNextIds(state.player).includes(phrase.id) && ` ${c.player.requeued}`}
             </span>
             <button
@@ -470,13 +486,12 @@ function Rating({ phrase }: { phrase: Phrase }) {
             </button>
           </>
         ) : (
-          <span className={hold ? 'font-bold text-on-surface' : 'text-secondary'}>{beforeTurn ? c.player.rateAfterTurn : c.player.howDidItGo}</span>
+          <span className={`text-pretty ${hold ? 'font-bold text-on-surface' : 'text-secondary'}`}>{beforeTurn ? c.player.rateAfterTurn : c.player.howDidItGo}</span>
         )}
       </div>
       <div className="@container grid grid-cols-3 gap-2">
         {GRADES.map(({ grade, icon, tone }, i) => {
           const selected = active?.grade === grade;
-          const interval = formatInterval(previewDue(state.learner, phrase.id, grade, active?.at ?? now, active?.day) - (active?.at ?? now), c.locale);
           return (
             <button
               key={grade}
@@ -493,7 +508,7 @@ function Rating({ phrase }: { phrase: Phrase }) {
                 <Icon name={selected ? 'task_alt' : icon} className="text-icon-sm @max-[17.5rem]:hidden" />
                 {c.common.grade[grade]}
               </span>
-              <span className="text-caption opacity-80 tabular-nums">{c.player.nextIn(interval)}</span>
+              <span className="text-caption opacity-80 tabular-nums">{backIn(c, dueOf(grade), from)}</span>
             </button>
           );
         })}
@@ -529,7 +544,7 @@ function EndPanel({ onClose }: { onClose: () => void }) {
         ? c.player.end.nextReview(formatWhen(summary.nextDue.at, now, c.locale))
         : c.player.end.nothingDue;
   const demo = source?.kind === 'demo';
-  const title = demo ? c.player.end.demoTitle : source?.kind === 'review' ? c.player.end.reviewTitle : c.player.end.listTitle;
+  const title = endTitle(c, source, rated);
   const body = demo ? c.player.end.demoBody : `${c.player.end.rated(rated)} · ${next}`;
   const startSuggested = () => {
     if (!suggested) return;
@@ -553,17 +568,17 @@ function EndPanel({ onClose }: { onClose: () => void }) {
         <h2 id="end-panel-title" ref={heading} tabIndex={-1} className="font-serif text-heading font-semibold text-on-surface">
           {title}
         </h2>
-        <p className="text-body text-secondary mt-1">{body}</p>
+        <p className="text-body text-secondary mt-1 text-pretty">{body}</p>
       </div>
       <div className="w-full max-w-[20rem] flex flex-col gap-2">
         {source?.kind === 'library' ? (
-          <button type="button" onClick={() => actions.jump(0, true)} className={btnPrimary}>
+          <button type="button" onClick={() => actions.jump(0, true)} className={PANEL_PRIMARY}>
             <Icon name="replay" className="text-icon" />
             {c.player.end.playAgain}
           </button>
         ) : (
           suggested && (
-            <button type="button" onClick={startSuggested} className={btnPrimary}>
+            <button type="button" onClick={startSuggested} className={PANEL_PRIMARY}>
               <Icon name="play_arrow" fill className="text-icon" />
               {demo || setProgress(learner, suggested.phraseIds, now).started === 0 ? c.player.end.startSet(suggested.title) : c.player.end.continueSet(suggested.title)}
             </button>

@@ -252,6 +252,7 @@ export function makeRu(n: Plural): Copy {
       end: {
         reviewTitle: 'Повторение завершено',
         listTitle: 'Всё прослушано',
+        playedThrough: 'Прослушано до конца',
         rated: (count) => `Оценено: ${count}`,
         nextReview: (when) => `Следующее повторение ${when}`,
         nothingDue: 'Пока нечего повторять',

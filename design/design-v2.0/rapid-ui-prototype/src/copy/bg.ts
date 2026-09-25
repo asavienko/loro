@@ -251,6 +251,7 @@ export function makeBg(n: Plural): Copy {
       end: {
         reviewTitle: 'Преговорът е готов',
         listTitle: 'Всичко е изслушано',
+        playedThrough: 'Изслушано докрай',
         rated: (count) => `Оценени: ${count}`,
         nextReview: (when) => `Следващ преговор ${when}`,
         nothingDue: 'Още нищо не е за преговор',

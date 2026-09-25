@@ -164,6 +164,41 @@ test.describe('onboarding on a small phone at 125% text', () => {
   });
 });
 
+test.describe('onboarding at 200% text (Q-05)', () => {
+  test.use({ seed: null });
+
+  test('only the step\'s action is pinned: the explanation shows above it, the other choices follow it', async ({ page }) => {
+    await page.goto('/');
+    await page.addStyleTag({ content: 'html { font-size: 200% }' });
+    for (let i = 0; i < 4; i++) await page.getByRole('button', { name: 'Continue' }).click();
+    const start = page.getByRole('button', { name: 'Start with one phrase' });
+    const box = (await start.boundingBox())!;
+    expect(box.y + box.height).toBeLessThanOrEqual(844);
+    // Two of the four steps are readable over it (the pinned footer used to leave half of one).
+    const second = (await page.getByText('Say it out loud in Spanish while it’s quiet.').boundingBox())!;
+    expect(second.y + second.height).toBeLessThanOrEqual(box.y);
+    // Skipping the demo and Back come after it, in the page; not stacked into the pinned strip.
+    const skip = page.getByRole('button', { name: 'Start without the demo' });
+    expect((await skip.boundingBox())!.y).toBeGreaterThanOrEqual(box.y + box.height);
+    await skip.scrollIntoViewIfNeeded();
+    await expect(page.getByRole('button', { name: 'Back' })).toBeInViewport();
+    // A wrapped action is a rounded block (the hero's radius), not a three-line oval.
+    await expect(start).toHaveCSS('border-top-left-radius', '48px');
+  });
+
+  test('no step scrolls sideways at 320 px, even at 200% text', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 568 });
+    await page.goto('/');
+    await page.addStyleTag({ content: 'html { font-size: 200% }' });
+    for (let step = 1; step <= 5; step++) {
+      expect(await page.evaluate(() => document.documentElement.scrollWidth), `step ${step}`).toBeLessThanOrEqual(320);
+      if (step < 5) await page.getByRole('button', { name: 'Continue' }).click();
+    }
+    const start = (await page.getByRole('button', { name: 'Start with one phrase' }).boundingBox())!;
+    expect(start.y + start.height).toBeLessThanOrEqual(568);
+  });
+});
+
 test.describe('large text (150%) on a 320 px phone: player, queue and summary', () => {
   const clippedText = (root: import('@playwright/test').Locator, selector: string) =>
     root.evaluate(

@@ -15,7 +15,8 @@ import { findPhrase, findSetView } from './state/catalog';
 import { derive, POINTS } from './state/memory';
 import { clearSavedState, rawSavedState, SAVE_FAILED_EVENT, SaveResult } from './state/persistence';
 import type { Stored } from './state/storage';
-import { currentPhraseId } from './state/selectors';
+import { clock } from './state/clock';
+import { continuation, currentPhraseId, displayLearner } from './state/selectors';
 import { StoreProvider, useCopy, useStore } from './state/store';
 import { BottomNavBar } from './ui/BottomNavBar';
 import { MiniPlayer } from './ui/MiniPlayer';
@@ -153,8 +154,11 @@ function useUpdatePrompt() {
   }, [ready, playing, c, toast]);
 }
 
-/** Learned bonuses and completed passes get a moment of their own. */
-function useCelebrations(openSummary: () => void) {
+/**
+ * Learned bonuses and completed passes get a moment of their own. A pass in repeat mode also
+ * offers the set continue mode would move on to, when there is one with phrases to play.
+ */
+function useCelebrations(openSummary: () => void, playSet: Navigation['playSet']) {
   const c = useCopy();
   const { state } = useStore();
   const { toast } = useToast();
@@ -170,10 +174,19 @@ function useCelebrations(openSummary: () => void) {
       learnedCue();
       toast(c.toast.learned(POINTS.learned), { tone: 'success' });
     }
-    if (passes > seen.current.passes) toast(c.toast.passComplete, { action: { label: c.player.summary, run: openSummary } });
+    if (passes > seen.current.passes) {
+      const next = continuation(displayLearner(state), state.player, clock.now());
+      const view = next?.setId ? findSetView(state.learner, next.setId) : undefined;
+      toast(c.toast.passComplete, {
+        action: { label: c.player.summary, run: openSummary },
+        also: view && next ? { label: c.player.end.continueSet(view.title), run: () => playSet(view.id, { phraseIds: next.phraseIds }) } : undefined,
+      });
+    }
     if (nextSet && setId !== seen.current.setId && sessionId !== undefined && sessionId === seen.current.sessionId) toast(c.toast.nextSet(nextSet));
     seen.current = { learned, passes, setId, sessionId };
-  }, [learned, passes, setId, sessionId, nextSet, c, toast, openSummary]);
+    // Only when these change: the pass's offer is read from the state of that moment.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [learned, passes, setId, sessionId, nextSet, c, toast, openSummary, playSet]);
 }
 
 type Overlay = { player: boolean; queue: boolean };
@@ -349,7 +362,7 @@ function Shell() {
     }),
     [actions, routeRef, learnerRef, playerRef],
   );
-  useCelebrations(nav.openSummary);
+  useCelebrations(nav.openSummary, nav.playSet);
   useSaveWarnings();
   useUpdatePrompt();
 

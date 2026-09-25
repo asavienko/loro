@@ -1,10 +1,11 @@
 import { easyCue, gentleCue } from '../audio/cues';
 import { useLatest } from '../lib/useLatest';
-import { clock, formatWhen } from '../state/clock';
+import { clock } from '../state/clock';
 import { requeuesOn } from '../state/machine';
 import { currentPhraseId, pendingFor, previewDue, upNextIds, windowLeft } from '../state/selectors';
 import { useCopy, useStore } from '../state/store';
 import type { Grade } from '../state/types';
+import { backIn } from '../ui/phase';
 import { useToast } from '../ui/Toast';
 
 /**
@@ -32,7 +33,7 @@ export function useRate(): (grade: Grade) => void {
     a.rate(grade);
     if (grade === 'easy') easyCue();
     else gentleCue();
-    const rated = copy.player.rated(copy.common.grade[grade], formatWhen(previewDue(s.learner, id, grade, at, kept?.day), now, copy.locale));
+    const rated = copy.player.rated(copy.common.grade[grade], backIn(copy, previewDue(s.learner, id, grade, at, kept?.day), now));
     // Coming back later in this queue (Missed or Hard), as the status line says too.
     const again = upNextIds(s.player).includes(id) || requeuesOn(s.player, grade);
     const text = again ? `${rated} ${copy.player.requeued}` : rated;
