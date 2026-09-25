@@ -31,3 +31,17 @@ test('at 200% text the mini-player gives its title room: the cover gives way', a
   const title = (await mini.locator('[lang]').first().boundingBox())!;
   expect(title.width).toBeGreaterThanOrEqual(120);
 });
+
+test('with reduced motion the playing row keeps a still equaliser, not three dots', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/#/set/set-cafe?from=home');
+  await page.getByRole('button', { name: 'Play Café & Mañanas' }).click();
+  const bars = page.locator('[aria-current="true"] [class*="eq-bar-"]');
+  await expect(bars).toHaveCount(3);
+  await page.waitForTimeout(300);
+  const boxes = await bars.evaluateAll((els) => els.map((e) => e.getBoundingClientRect()).map((r) => ({ w: r.width, h: r.height })));
+  for (const box of boxes) expect(box.w).toBeGreaterThanOrEqual(3);
+  // Three different heights read as "playing"; three 3 px dots did not.
+  expect(Math.max(...boxes.map((b) => b.h))).toBeGreaterThanOrEqual(12);
+  expect(new Set(boxes.map((b) => Math.round(b.h))).size).toBe(3);
+});

@@ -37,10 +37,10 @@ export function PhraseRow({ phrase, detail, leading, isCurrent = false, isPlayin
         {leading !== undefined && (
           <span className="w-6 shrink-0 flex items-center justify-center text-label font-bold text-secondary tabular-nums">
             {isPlaying ? (
-              <span className="flex items-end gap-0.5 h-3.5" aria-hidden="true">
-                <span className="w-0.5 bg-primary-container rounded-full eq-bar-1" />
-                <span className="w-0.5 bg-primary-container rounded-full eq-bar-2" />
-                <span className="w-0.5 bg-primary-container rounded-full eq-bar-3" />
+              <span className="flex items-end gap-[2px] h-4" aria-hidden="true">
+                <span className="w-[3px] bg-primary-container rounded-full eq-bar-1" />
+                <span className="w-[3px] bg-primary-container rounded-full eq-bar-2" />
+                <span className="w-[3px] bg-primary-container rounded-full eq-bar-3" />
               </span>
             ) : (
               leading
