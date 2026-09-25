@@ -712,6 +712,16 @@ Today counted every course; an unknown topic hid behind "All sets" and empty top
 Started opened a Learning list that missed due and heard-but-unrated phrases. Share is no longer
 offered for own sets, whose ids exist only on the device.
 
+A seventh review listened as a screen-reader user (axe already passed). Fixed: the phrase was
+announced in the interface voice over its own audio (now read once after it's heard, in its language);
+"Your turn — say it in Spanish" filled the learner's turn (now "Your turn"); the rating line
+re-announced every minute of its undo window (now once); Undo was unreachable by keyboard from the
+player and queue and vanished while focused; the mini-player hid its error status; set titles had no
+`lang`; play mode and repetitions changed silently; chart values sat in labels some readers skip.
+Known and left: button names that embed a phrase ("Play Me pone un cortado…") are read in the UI
+language, since `aria-label` carries no `lang`; the word-gloss buttons give no hint that they reveal
+a meaning. Both want a real screen-reader pass (VoiceOver, TalkBack, NVDA).
+
 **Open question:** "Full play 0:41 at 1×" is speech plus pauses, measured; it leaves out the 4 s
 rating hold (only for unrated phrases) and the engine's start-up delay, so an unrated new set can
 take ~1:01. Should it include the hold for unrated phrases, or be relabelled "listening time"?
