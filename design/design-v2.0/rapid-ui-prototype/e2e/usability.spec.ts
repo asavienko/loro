@@ -129,7 +129,7 @@ test.describe('Play from Explore keeps the queue in order (regression)', () => {
 
 test('with a level filter on, a topic can still be added', async ({ page }) => {
   await page.goto('/#/explore?level=A1');
-  await page.getByRole('region', { name: 'Topics' }).getByRole('button').first().click();
+  await page.getByRole('group', { name: 'Topics' }).getByRole('button').first().click();
   await expect(page).toHaveURL(/topic=/);
   await expect(page).toHaveURL(/level=A1/);
 });
