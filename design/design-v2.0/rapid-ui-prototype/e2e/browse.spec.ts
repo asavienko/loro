@@ -113,6 +113,27 @@ test.describe('library', () => {
     await expect(page.getByRole('button', { name: 'Play Hola' })).toBeVisible();
   });
 
+  test('undoing a delete puts your phrase back in Up next', async ({ page }) => {
+    await page.goto('/#/library?view=mine');
+    await page.getByRole('button', { name: 'Add your phrase' }).click();
+    await page.getByLabel('In Spanish').fill('Hola');
+    await page.getByLabel('In English').fill('Hi');
+    await page.getByRole('button', { name: 'Add phrase' }).click();
+    await page.goto('/#/set/set-taxi?from=explore');
+    await page.getByRole('button', { name: 'Play ¿Está libre?' }).click();
+    await page.getByRole('button', { name: 'Pause', exact: true }).first().click();
+    await page.goto('/#/library?view=mine');
+    await page.getByRole('button', { name: 'Details for Hola' }).click();
+    await page.getByRole('button', { name: 'Play next' }).click();
+    await page.getByRole('button', { name: 'Details for Hola' }).click();
+    await page.getByRole('button', { name: 'Delete phrase' }).click();
+    await page.getByRole('button', { name: 'Undo' }).click();
+    await page.getByRole('button', { name: /^Now playing:/ }).click();
+    await page.getByRole('button', { name: 'Open queue' }).click();
+    const queue = page.getByRole('dialog', { name: 'Queue' });
+    await expect(queue.getByRole('button', { name: /^Play .* now$/ }).first()).toHaveAccessibleName(/Hola/);
+  });
+
   test('a like shows under Liked, and Play all plays it', async ({ page }) => {
     await page.goto('/#/set/set-taxi?from=explore');
     await page.getByRole('button', { name: 'Details for ¿Está libre?' }).click();

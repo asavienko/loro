@@ -145,8 +145,19 @@ function PhraseDetails({ phraseId, ownSetId, onClose }: { phraseId: string; ownS
             tone="danger"
             label={c.phrase.delete}
             onClick={() => {
+              // Undo also puts it back in Up next, as far ahead of the playing phrase as it was.
+              const { order, index } = state.player;
+              const upNextAt = order.indexOf(phrase.id, index + 1) - (index + 1);
               actions.deleteOwnPhrase(phrase.id);
-              toast(c.phrase.deleted, { action: { label: c.common.undo, run: () => actions.restoreOwnPhrase(phrase.id) } });
+              toast(c.phrase.deleted, {
+                action: {
+                  label: c.common.undo,
+                  run: () => {
+                    actions.restoreOwnPhrase(phrase.id);
+                    if (upNextAt >= 0) actions.restoreUpNext([phrase.id], upNextAt);
+                  },
+                },
+              });
               onClose();
             }}
           />
