@@ -25,11 +25,20 @@ const LEVELS: readonly string[] = ['A1', 'A2', 'B1'];
 const TAGS: readonly string[] = ['politeness', 'question', 'request', 'numbers', 'food', 'directions', 'social'];
 const TABS: readonly string[] = ['home', 'explore', 'library'];
 
+/** A malformed escape (a stray "%" in a pasted link) is kept as typed rather than throwing. */
+function safeDecode(part: string): string {
+  try {
+    return decodeURIComponent(part);
+  } catch {
+    return part;
+  }
+}
+
 export function parseRoute(hash: string): Route {
   const raw = hash.replace(/^#\/?/, '');
   const [path, query = ''] = raw.split('?');
   const params = new URLSearchParams(query);
-  const parts = path.split('/').filter(Boolean).map(decodeURIComponent);
+  const parts = path.split('/').filter(Boolean).map(safeDecode);
   switch (parts[0]) {
     case 'explore': {
       const route: Route = { name: 'explore' };

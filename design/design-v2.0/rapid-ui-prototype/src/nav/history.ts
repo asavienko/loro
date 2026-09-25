@@ -57,6 +57,11 @@ function navigateNow(route: Route, options: { replace?: boolean }): void {
  * fresh start) to `fallback`, replacing this entry so browser Back doesn't return here.
  */
 export function goBack(fallback: Route): void {
+  // Called as a sheet closes: act once its history entry is gone, as navigate does.
+  if ((window.history.state as { layer?: number } | null)?.layer) {
+    setTimeout(() => whenHistorySettles(() => goBack(fallback)), 0);
+    return;
+  }
   if ((window.history.state as { inApp?: boolean } | null)?.inApp) window.history.back();
   else navigate(fallback, { replace: true });
 }
