@@ -206,7 +206,7 @@ export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps
           </div>
         </div>
 
-        <div className="shrink-0 px-5 pt-2 pb-[max(env(safe-area-inset-bottom),0.75rem)] border-t border-surface-container-high flex flex-col gap-2 max-h-[60dvh] overflow-y-auto phone-landscape:border-t-0 phone-landscape:self-center phone-landscape:max-h-full phone-landscape:py-2 lg:col-start-2 lg:row-start-2 lg:px-0 lg:border-t-0 lg:max-h-none lg:overflow-visible lg:pb-6">
+        <div className="shrink-0 px-5 pt-2 pb-[max(env(safe-area-inset-bottom),0.75rem)] border-t border-hairline flex flex-col gap-2 max-h-[60dvh] overflow-y-auto phone-landscape:border-t-0 phone-landscape:self-center phone-landscape:max-h-full phone-landscape:py-2 lg:col-start-2 lg:row-start-2 lg:px-0 lg:border-t-0 lg:max-h-none lg:overflow-visible lg:pb-6">
           {endedOnce ? <EndPanel onClose={onClose} /> : <Rating phrase={phrase} />}
           {!endedOnce && <Transport />}
           {/* Speed: the only speed control in the app (a chip in the action row when compact). */}
@@ -286,7 +286,7 @@ function ActionRow({ phrase, onNotes }: { phrase: Phrase; onNotes: () => void })
           // Where there's a choice, the voice line leads to Settings' voice picker.
           <button
             type="button"
-            onClick={nav.openSettings}
+            onClick={nav.openVoiceSettings}
             aria-label={c.player.changeVoice(voice)}
             className="min-h-11 min-w-0 max-w-full inline-flex items-center gap-0.5 text-label text-on-surface-variant"
           >
@@ -382,7 +382,7 @@ function Steps({ phrase, promptLang }: { phrase: Phrase; promptLang: Phrase['tar
                   ? 'bg-primary-fixed text-on-primary-fixed border-primary-container border-dashed'
                   : done
                     ? 'bg-primary-fixed/50 text-on-primary-fixed-variant border-transparent'
-                    : 'bg-surface-container-low text-secondary border-surface-container-high'
+                    : 'bg-surface-container-low text-secondary border-hairline'
             }`}
           >
             {current && p === 'pause' && <PhaseFill className="-z-10 inset-0 bg-primary" />}

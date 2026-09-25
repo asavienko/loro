@@ -24,6 +24,8 @@ export interface Navigation {
   /** New set, optionally holding these phrases; `rename` edits an own set instead. */
   createSet: (phraseIds?: string[], rename?: string) => void;
   openSettings: () => void;
+  /** Settings, scrolled to its voice pickers with the first one focused (the player's voice line). */
+  openVoiceSettings: () => void;
 }
 
 export const NavContext = createContext<Navigation | null>(null);

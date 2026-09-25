@@ -234,6 +234,15 @@ test.describe('the loop', () => {
     await expect(page.getByRole('button', { name: /^Now playing:/ })).toContainText('Your turn', { timeout: 5000 });
   });
 
+  test('the voice line opens Settings at the voices', async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Play 5 phrases' }).click();
+    await page.getByRole('button', { name: 'Pause', exact: true }).click();
+    await page.getByRole('button', { name: /^Now playing:/ }).click();
+    await page.getByRole('button', { name: 'Voice: Test Español. Change voice' }).click();
+    await expect(page.getByRole('dialog', { name: 'Settings' }).getByRole('combobox', { name: 'Spanish' })).toBeFocused();
+  });
+
   test('notes open in a sheet', async ({ page }) => {
     await page.goto('/');
     await page.getByRole('button', { name: 'Play 5 phrases' }).click();
@@ -265,6 +274,25 @@ test.describe('queues with a natural end', () => {
     await player.getByRole('button', { name: 'Close', exact: true }).click();
     await expect(player).toHaveCount(0);
     await expect(page.getByRole('button', { name: /^Now playing:/ })).toContainText('Review done');
+  });
+
+  test('a longer "time to say it" lengthens every play time it shows', async ({ page }) => {
+    await page.goto('/');
+    const review = page.getByRole('button', { name: /^Play 7 phrases · / });
+    const before = await review.getAttribute('aria-label') ?? (await review.textContent())!;
+    await page.getByRole('button', { name: 'Ana: settings' }).click();
+    const settings = page.getByRole('dialog', { name: 'Settings' });
+    // The course comes first in the profile.
+    await expect(settings.getByRole('combobox').first()).toHaveAccessibleName('I’m learning');
+    await settings.getByRole('radio', { name: 'Longer' }).check();
+    await expect(settings.getByText('Longer gives you about twice the phrase’s length.')).toBeVisible();
+    await settings.getByRole('button', { name: 'Close' }).click();
+    const after = await review.getAttribute('aria-label') ?? (await review.textContent())!;
+    const seconds = (label: string) => {
+      const [m, s] = label.match(/(\d+):(\d{2}) at 1×/)!.slice(1).map(Number);
+      return m * 60 + s;
+    };
+    expect(seconds(after)).toBeGreaterThan(seconds(before));
   });
 
   test('a Library list is named by its view', async ({ page }) => {
