@@ -742,7 +742,8 @@ in the cover to drag.)
 
 **Open question:** "Full play 0:41 at 1×" is speech plus pauses, measured; it leaves out the 4 s
 rating hold (only for unrated phrases) and the engine's start-up delay, so an unrated new set can
-take ~1:01. Should it include the hold for unrated phrases, or be relabelled "listening time"?
+take ~1:01. Should it include the hold for unrated phrases, or be relabelled "listening time"? Home's review
+card shows the same figure for its queue (up to 10 × 4 s of holds left out).
 
 **For the Bulgarian reviewer:** on a 320 px phone the Missed rating, "Не се сетих", wraps onto two
 lines in its third of the row; a shorter word (e.g. "Забравих") would fit. Dropping the icons didn't
