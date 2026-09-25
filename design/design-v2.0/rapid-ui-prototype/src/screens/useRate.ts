@@ -32,11 +32,11 @@ export function useRate(): (grade: Grade) => void {
     if (grade === 'easy') easyCue();
     else gentleCue();
     const rated = copy.player.rated(copy.common.grade[grade], formatWhen(previewDue(s.learner, id, grade, at), now, copy.locale));
+    // Coming back later in this queue (Missed or Hard), as the status line says too.
+    const again = upNextIds(s.player).includes(id) || requeuesOn(s.player, grade);
+    const text = again ? `${rated} ${copy.player.requeued}` : rated;
     // The toast goes through the same live region, so it is still said exactly once.
-    if (movesOn) {
-      // Moving on, the learner can't see it come back later in the queue: say so.
-      const again = upNextIds(s.player).includes(id) || requeuesOn(s.player, grade);
-      show(again ? `${rated} ${copy.player.requeued}` : rated, { action: { label: copy.common.undo, run: () => a.unrate(id) } });
-    } else say(rated);
+    if (movesOn) show(text, { action: { label: copy.common.undo, run: () => a.unrate(id) } });
+    else say(text);
   };
 }
