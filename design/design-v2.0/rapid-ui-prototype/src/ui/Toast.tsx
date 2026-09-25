@@ -37,19 +37,29 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     requestAnimationFrame(() => setMessage(text));
   }, []);
 
+  // It stays while the learner is on it (hover or keyboard focus), then gives its time again.
+  // A new or closed message starts unheld: a removed element fires no leave or blur.
+  const [held, setHeld] = useState(false);
+  const close = useCallback(() => {
+    setItem(null);
+    setHeld(false);
+  }, []);
+
   const toast = useCallback(
     (text: string, options: ToastOptions = {}) => {
       setItem({ id: nextId.current++, text, ...options });
-      announce(text);
+      setHeld(false);
+      // Say there's an action, or a screen-reader user never learns Undo exists.
+      announce(options.action ? `${text}. ${options.action.label}` : text);
     },
     [announce],
   );
 
   useEffect(() => {
-    if (!item) return;
-    const timer = setTimeout(() => setItem(null), item.action ? TOAST_WITH_ACTION_MS : TOAST_MS);
+    if (!item || held) return;
+    const timer = setTimeout(close, item.action ? TOAST_WITH_ACTION_MS : TOAST_MS);
     return () => clearTimeout(timer);
-  }, [item]);
+  }, [item, held, close]);
 
   const api = useMemo(() => ({ toast, announce }), [toast, announce]);
 
@@ -67,6 +77,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             // frames stalled (a background tab) they piled up.
             <motion.div
               key="toast"
+              onPointerEnter={() => setHeld(true)}
+              onPointerLeave={() => setHeld(false)}
+              onFocus={() => setHeld(true)}
+              onBlur={() => setHeld(false)}
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 12 }}
@@ -82,7 +96,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                   type="button"
                   onClick={() => {
                     item.action?.run();
-                    setItem(null);
+                    close();
                   }}
                   className="min-h-11 px-3 rounded-xl font-bold text-primary-fixed-dim"
                 >
@@ -92,7 +106,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               <button
                 type="button"
                 aria-label={c.toast.dismiss}
-                onClick={() => setItem(null)}
+                onClick={close}
                 className="w-11 h-11 rounded-xl flex items-center justify-center opacity-80"
               >
                 <span aria-hidden="true" className="material-symbols-outlined text-icon-md">close</span>

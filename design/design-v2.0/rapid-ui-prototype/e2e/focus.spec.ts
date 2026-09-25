@@ -121,3 +121,22 @@ test.describe('one sheet handing over to another', () => {
     await expect(page).toHaveURL(/#\/explore/);
   });
 });
+
+test('Undo is reachable by keyboard from the queue, and stays while focused', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: /^Play/ }).first().click();
+  await page.getByRole('button', { name: 'Pause', exact: true }).first().click();
+  await page.getByRole('button', { name: /^Now playing:/ }).click();
+  await page.getByRole('button', { name: 'Open queue' }).click();
+  const queue = page.getByRole('dialog', { name: 'Queue' });
+  const count = await queue.getByRole('button', { name: /^Play .* now$/ }).count();
+  await queue.getByRole('button', { name: /^Move / }).first().press('Delete');
+  await expect(page.locator('div[role="status"]')).toHaveText(/Undo$/);
+  const undo = page.getByRole('button', { name: 'Undo' });
+  for (let i = 0; i < 40 && !(await undo.evaluate((el) => el === document.activeElement)); i++) await page.keyboard.press('Tab');
+  await expect(undo).toBeFocused();
+  await page.waitForTimeout(7000); // longer than the message's own time
+  await expect(undo).toBeVisible();
+  await page.keyboard.press('Enter');
+  await expect(queue.getByRole('button', { name: /^Play .* now$/ })).toHaveCount(count);
+});
