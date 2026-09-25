@@ -32,6 +32,52 @@ test('the player fits, and Pause is reachable', async ({ page }) => {
   await expect(player.getByRole('button', { name: 'Play', exact: true })).toBeVisible();
 });
 
+/** Every control in the player whose box ends outside the window (nothing may need a scroll to reach). */
+const offscreenControls = (player: import('@playwright/test').Locator) =>
+  player.evaluate((root) =>
+    [...root.querySelectorAll('button, [role="radio"]')]
+      .filter((e) => {
+        const r = e.getBoundingClientRect();
+        return r.width > 0 && r.height > 0 && (r.top < 0 || r.bottom > window.innerHeight || r.right > window.innerWidth);
+      })
+      .map((e) => e.getAttribute('aria-label') ?? e.textContent),
+  );
+
+test('every player control is on screen without scrolling, rated or not', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: /^Play \d+ phrases/ }).first().click();
+  await page.getByRole('button', { name: /^Now playing:/ }).click();
+  await page.waitForTimeout(700);
+  const player = page.getByRole('dialog', { name: 'Now playing' });
+  await player.getByRole('button', { name: 'Pause', exact: true }).click();
+  expect(await offscreenControls(player)).toEqual([]);
+  // One speed control, as a chip here.
+  await expect(player.getByRole('button', { name: 'Speed: 1.25×' })).toBeVisible();
+  await expect(player.getByRole('radiogroup', { name: 'Speed' })).toBeHidden();
+  await player.getByRole('button', { name: /^Hard/ }).click();
+  await expect(player.getByRole('button', { name: /^Undo rating/ })).toBeVisible();
+  expect(await offscreenControls(player)).toEqual([]);
+});
+
+test.describe('200% text on a 390 px phone', () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+  test('Pause and the grades stay on screen; the phrase scrolls above them', async ({ page }) => {
+    await page.goto('/');
+    await page.addStyleTag({ content: 'html { font-size: 200% !important }' });
+    await page.getByRole('button', { name: /^Play \d+ phrases/ }).first().click();
+    await page.getByRole('button', { name: /^Now playing:/ }).click();
+    await page.waitForTimeout(700);
+    const player = page.getByRole('dialog', { name: 'Now playing' });
+    for (const control of [player.getByRole('button', { name: 'Pause', exact: true }), ...['Missed', 'Hard', 'Easy'].map((g) => player.getByRole('button', { name: new RegExp(`^${g}`) }))]) {
+      const box = (await control.boundingBox())!;
+      expect(box.y >= 0 && box.y + box.height <= 844, `${await control.getAttribute('aria-label') ?? await control.textContent()} on screen`).toBe(true);
+    }
+    // The header's icons keep their size, so the title isn't squeezed into breaking a word.
+    const close = (await player.getByRole('button', { name: 'Close player' }).boundingBox())!;
+    expect(close.width).toBeLessThan(50);
+  });
+});
+
 test.describe('phone landscape (568×320)', () => {
   test.use({ viewport: { width: 568, height: 320 } });
 

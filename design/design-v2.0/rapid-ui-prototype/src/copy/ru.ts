@@ -2,6 +2,8 @@
 import type { Copy, Plural } from './en';
 
 export function makeRu(n: Plural): Copy {
+  // "испанский" → "по-испански": the adverb a sentence needs ("скажите вслух по-испански").
+  const adverb = (language: string) => (language.endsWith('ский') ? `по-${language.slice(0, -1)}` : `на языке: ${language}`);
   const phrases = (c: number) => n(c, { one: `${c} фраза`, few: `${c} фразы`, many: `${c} фраз`, other: `${c} фразы` });
   return {
     locale: 'ru-RU',
@@ -192,15 +194,17 @@ export function makeRu(n: Plural): Copy {
       yourTurn: 'Ваша очередь',
       instruction: {
         native: (language) => `Слушайте: ${language}`,
-        pause: (language) => `Ваша очередь — скажите это (${language})`,
+        pause: (language) => `Ваша очередь — скажите вслух ${adverb(language)}`,
         target: (language) => `Слушайте: ${language}`,
         rate: 'Оцените или подождите',
       },
       paused: 'Пауза',
+      coach: 'Скажите её сейчас, до того как услышите. Ничего не записывается — потом вы сами оцените, как получилось.',
       repetition: (r, total) => `Повтор ${r} из ${total}`,
       howDidItGo: 'Как получилось сказать?',
       rated: (grade, when) => `Оценка «${grade}» — снова ${when}`,
-      changeFor: (time) => `Изменить можно ещё ${time}`,
+      undoFor: (time) => `Отменить · ${time}`,
+      undoLabel: (time) => `Отменить оценку (осталось ${time})`,
       previous: 'Предыдущая фраза',
       next: 'Следующая фраза',
       repeats: {
@@ -213,6 +217,7 @@ export function makeRu(n: Plural): Copy {
         continue: 'В конце: продолжить следующими фразами',
       },
       speed: 'Скорость',
+      speedIs: (speed) => `Скорость: ${speed}×`,
       keys: 'Клавиши: пробел — пуск или пауза · ← → назад, вперёд · 1 2 3 — оценка',
       audioError: (language) =>
         `На устройстве нет голоса (${language}), поэтому фраза не звучит. Добавьте его в настройках речи системы и нажмите «Слушать».`,
@@ -334,7 +339,7 @@ export function makeRu(n: Plural): Copy {
       loop: 'Как это работает',
       loopSteps: (native, target) => [
         `Услышьте фразу: ${native}.`,
-        `Скажите её сами (${target}), пока тихо.`,
+        `Скажите её вслух ${adverb(target)}, пока тихо.`,
         `Услышьте её: ${target}.`,
         'Оцените: «Не помню», «Трудно» или «Легко». Оценку можно менять пять минут.',
       ],

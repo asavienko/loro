@@ -202,15 +202,17 @@ export function makeEn(n: Plural) {
       yourTurn: 'Your turn',
       instruction: {
         native: (language: string) => `Listen in ${language}`,
-        pause: (language: string) => `Your turn — say it in ${language}`,
+        pause: (language: string) => `Your turn — say it out loud in ${language}`,
         target: (language: string) => `Hear it in ${language}`,
         rate: 'Rate it, or wait to go on',
       },
       paused: 'Paused',
+      coach: 'Say it now, before you hear it. Nothing is recorded — you’ll rate how it went.',
       repetition: (r: number, total: number) => `Repetition ${r} of ${total}`,
       howDidItGo: 'How did saying it go?',
       rated: (grade: string, when: string) => `Rated ${grade} — back ${when}`,
-      changeFor: (time: string) => `Change or undo for ${time}`,
+      undoFor: (time: string) => `Undo · ${time}`,
+      undoLabel: (time: string) => `Undo rating (${time} left)`,
       previous: 'Previous phrase',
       next: 'Next phrase',
       repeats: {
@@ -223,6 +225,7 @@ export function makeEn(n: Plural) {
         continue: 'At the end: continue with the next phrases',
       } satisfies Record<PlayMode, string>,
       speed: 'Speed',
+      speedIs: (speed: number) => `Speed: ${speed}×`,
       keys: 'Keys: Space play or pause · ← → previous, next · 1 2 3 rate',
       audioError: (language: string) =>
         `This device has no ${language} voice, so the phrase can’t play. Add one in your system’s speech settings, then press Play.`,
@@ -344,7 +347,7 @@ export function makeEn(n: Plural) {
       loop: 'How it works',
       loopSteps: (native: string, target: string) => [
         `Hear the phrase in ${native}.`,
-        `Say it yourself in ${target} while it’s quiet.`,
+        `Say it out loud in ${target} while it’s quiet.`,
         `Hear it in ${target}.`,
         'Rate how it went: Missed, Hard or Easy. You can change it for five minutes.',
       ],
