@@ -132,7 +132,8 @@ export function HomeScreen() {
         {upcoming && (
           <p className="text-body text-secondary px-1 flex items-center gap-1.5">
             <Icon name="schedule" className="text-icon-sm" />
-            {c.home.next(upcoming.count, formatWhen(upcoming.at, now, c.locale))}
+            {/* With reviews due now, the next ones come after them, not "next". */}
+            {(review.length > 0 ? c.home.nextAfter : c.home.next)(upcoming.count, formatWhen(upcoming.at, now, c.locale))}
           </p>
         )}
       </section>
