@@ -22,10 +22,11 @@ import {
   suggestedSetId,
   todayCounts,
 } from './selectors';
-import { findSamePhrase, findSetView, phraseKey } from './catalog';
+import { courseSets, findSamePhrase, findSetView, keyOf, phraseKey } from './catalog';
 import { fullPlayMs, pauseMs, RATE_HOLD_MS } from './timing';
 import { cafe, DAY, done, fresh, load, MINUTE, playPhrase, run, T0 } from './testing';
 import { memoryOf, points, repeatsFor } from './selectors';
+import type { Grade, LogEntry } from './types';
 
 const rated = (grade: 'missed' | 'hard' | 'easy', now: number) => [
   { type: 'RATE' as const, grade, now },
@@ -38,6 +39,32 @@ describe('selectors', () => {
     assert.equal(suggestedSetId(s.learner, T0), 'set-cafe');
     const played = done(done(done(load(s, T0, ['taxi-01'], 'set-taxi'), T0 + 1), T0 + 2), T0 + 3);
     assert.equal(suggestedSetId(played.learner, T0 + 10), 'set-taxi');
+  });
+
+  it('moves on to the next set once every phrase of the last one is started and none is due (Q-02)', () => {
+    const s = fresh();
+    /** Each phrase heard and rated once, a second apart from `at`. */
+    const through = (ids: string[], setId: string, at: number, grade: Grade = 'easy'): LogEntry[] =>
+      ids.flatMap((id, i) => [
+        { id: `t.h-${setId}-${grade}-${i}`, at: at + 2 * i, device: 't', kind: 'heard' as const, key: keyOf(s.learner, id), phraseId: id, setId, targetMs: 1000, nativeMs: 1000 },
+        { id: `t.r-${setId}-${grade}-${i}`, at: at + 2 * i + 1, device: 't', kind: 'rated' as const, key: keyOf(s.learner, id), phraseId: id, setId, grade },
+      ]);
+    const withLog = (log: LogEntry[]) => ({ ...s.learner, log });
+
+    // Café through once, nothing due: the next set with new phrases, the least learned first.
+    const cafeDone = withLog(through(cafe(), 'set-cafe', T0));
+    assert.equal(suggestedSetId(cafeDone, T0 + MINUTE), 'set-tapas');
+    // A Missed comes back within minutes: once it is due, Café is the one to continue again.
+    const missedOne = withLog(through(cafe(), 'set-cafe', T0, 'missed'));
+    assert.equal(suggestedSetId(missedOne, T0 + 30 * MINUTE), 'set-cafe');
+    // A phrase of it never heard keeps it too.
+    assert.equal(suggestedSetId(withLog(through(cafe().slice(0, 4), 'set-cafe', T0)), T0 + MINUTE), 'set-cafe');
+    // Tapas started, then left: the most recent set with a phrase never heard.
+    const both = withLog([...through(cafe(), 'set-cafe', T0), ...through(['tapas-01'], 'set-tapas', T0 + MINUTE)]);
+    assert.equal(suggestedSetId(both, T0 + 2 * MINUTE), 'set-tapas');
+    // Every set of the course through once and nothing due: the most recent set left to learn.
+    const all = withLog(courseSets(s.learner).flatMap((set, i) => through(set.phraseIds, set.id, T0 + i * MINUTE)));
+    assert.equal(suggestedSetId(all, T0 + HOUR), courseSets(s.learner).at(-1)?.id);
   });
 
   it('caps the review queue at ten, most overdue first', () => {

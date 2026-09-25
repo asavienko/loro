@@ -76,6 +76,8 @@ export function makeEn(n: Plural) {
       duration: (time: string) => `${time} at 1×`,
       startTitle: 'Start here',
       continueTitle: 'Continue',
+      /** The next set, not started yet, after the one before it has been through once. */
+      nextTitle: 'Next set',
       next: (count: number, when: string) => n(count, { one: `Next: ${count} phrase ${when}`, other: `Next: ${count} phrases ${when}` }),
       nextAfter: (count: number, when: string) => n(count, { one: `After these: ${count} more phrase ${when}`, other: `After these: ${count} more phrases ${when}` }),
       jumpBackIn: 'Jump back in',

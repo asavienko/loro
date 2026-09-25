@@ -67,6 +67,7 @@ export function makeBg(n: Plural): Copy {
       duration: (time) => `${time} при 1×`,
       startTitle: 'Започнете оттук',
       continueTitle: 'Продължете',
+      nextTitle: 'Следващ набор',
       next: (c, when) => `Следва: ${phrases(c)} ${when}`,
       nextAfter: (c, when) => `След тях: още ${phrases(c)} ${when}`,
       jumpBackIn: 'Върнете се',
