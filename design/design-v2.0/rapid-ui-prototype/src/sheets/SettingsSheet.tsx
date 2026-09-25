@@ -113,7 +113,7 @@ function NameField({ initial, label, onSave }: { initial: string; label: string;
         enterKeyHint="done"
         // Saved on blur; Enter blurs.
         onKeyDown={(e) => e.key === 'Enter' && !e.nativeEvent.isComposing && e.currentTarget.blur()}
-        className="min-h-12 px-4 rounded-2xl bg-surface-container-low border border-outline-variant/60 text-base"
+        className="min-h-12 px-4 rounded-2xl bg-surface-container-low border border-outline-variant/60 text-field"
       />
     </label>
   );
@@ -201,7 +201,7 @@ function SelectBox(props: SelectHTMLAttributes<HTMLSelectElement>) {
     <span className="relative flex">
       <select
         {...props}
-        className="appearance-none w-full min-w-0 min-h-12 pl-3 pr-10 rounded-2xl bg-surface-container-low border border-outline-variant/60 text-base"
+        className="appearance-none w-full min-w-0 min-h-12 pl-3 pr-10 rounded-2xl bg-surface-container-low border border-outline-variant/60 text-field"
       />
       <Icon name="keyboard_arrow_down" className="text-icon absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-secondary" />
     </span>

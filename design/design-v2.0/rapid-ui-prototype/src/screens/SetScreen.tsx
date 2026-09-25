@@ -118,7 +118,7 @@ export function SetScreen({ setId }: { setId: string }) {
     <div className="max-w-3xl mx-auto">
       <section className="px-4 pt-4 pb-5 bg-surface-container-low border-b border-surface-container-high">
         <div className="flex flex-wrap gap-4 items-center">
-          <SetCover set={view} size="md" className="w-32 h-32 rounded-2xl shadow-md shrink-0" />
+          <SetCover set={view} size="md" className="w-32 h-32 rounded-2xl shadow-cover shrink-0" />
           <div className="min-w-0">
             <p className="text-label font-semibold text-secondary flex flex-wrap items-center gap-1">
               {view.kind === 'own' ? (
@@ -136,7 +136,7 @@ export function SetScreen({ setId }: { setId: string }) {
                 )
               )}
             </p>
-            <h1 lang={view.targetLang} className="font-serif text-display font-bold leading-tight [overflow-wrap:anywhere]">{view.title}</h1>
+            <h1 lang={view.targetLang} className="font-serif text-display font-semibold leading-tight [overflow-wrap:anywhere]">{view.title}</h1>
             {view.content && <p className="text-body text-secondary">{view.content.subtitle[locale]}</p>}
           </div>
         </div>
@@ -171,7 +171,7 @@ export function SetScreen({ setId }: { setId: string }) {
             aria-label={playing ? c.set.pauseAll(view.title) : c.set.playAll(view.title)}
             onClick={onPlay}
             disabled={sortedIds.length === 0}
-            className="w-14 h-14 rounded-full bg-primary-container text-on-primary flex items-center justify-center shadow-md active:scale-95 transition-transform disabled:opacity-40"
+            className="w-14 h-14 rounded-full bg-primary-container text-on-primary flex items-center justify-center shadow-cover active:scale-95 transition-transform disabled:opacity-40"
           >
             <Icon name={playing ? 'pause' : 'play_arrow'} fill className="text-icon-2xl" />
           </button>
@@ -193,7 +193,7 @@ export function SetScreen({ setId }: { setId: string }) {
 
       <section className="px-2 pt-3" aria-labelledby="phrases-heading">
         <div className="flex items-center justify-between px-2 mb-1">
-          <h2 id="phrases-heading" className="font-serif text-heading font-bold">{c.set.phrasesHeading}</h2>
+          <h2 id="phrases-heading" className="font-serif text-heading font-semibold">{c.set.phrasesHeading}</h2>
           <button type="button" onClick={() => setSortOpen(true)} className="min-h-11 px-3 -mr-2 rounded-full text-body font-semibold text-primary-container flex items-center gap-1 active:bg-surface-container">
             <Icon name="sort" className="text-icon-sm" />
             {c.set.sort[sort]}

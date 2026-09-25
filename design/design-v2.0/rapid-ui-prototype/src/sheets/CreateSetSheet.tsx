@@ -68,7 +68,7 @@ function SetNameForm({ initial, taken, submitLabel, onSubmit }: { initial: strin
             autoComplete="off"
             enterKeyHint="done"
             required
-            className="min-h-12 px-4 rounded-2xl bg-surface-container-low border border-outline-variant/60 text-base"
+            className="min-h-12 px-4 rounded-2xl bg-surface-container-low border border-outline-variant/60 text-field"
           />
           <CharCount id={countId} value={title} max={LIMITS.title} />
         </label>

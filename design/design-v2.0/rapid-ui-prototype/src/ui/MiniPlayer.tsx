@@ -46,7 +46,7 @@ export function MiniPlayer({ onOpenPlayer }: { onOpenPlayer: () => void }) {
       dragElastic={0.4}
       onDragStart={clicks.block}
       onDragEnd={onDragEnd}
-      className="on-dark relative rounded-2xl bg-inverse-surface text-inverse-on-surface shadow-xl overflow-hidden touch-pan-y forced-colors:border-2"
+      className="on-dark relative rounded-2xl bg-inverse-surface text-inverse-on-surface shadow-float overflow-hidden touch-pan-y forced-colors:border-2"
     >
       <div className="flex items-center gap-1 p-2 phone-landscape:py-1">
         <button
