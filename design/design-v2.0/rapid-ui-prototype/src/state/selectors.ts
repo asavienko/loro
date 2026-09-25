@@ -1,7 +1,7 @@
 // Every learner-facing number comes from here, derived from AppState. Nothing
 // is estimated: a value that hasn't been measured is null and not shown.
 import { Phrase, PhraseSet } from '../content';
-import { DAY, startOfLocalDay, startOfLocalWeek } from './clock';
+import { addLocalDays, DAY, startOfLocalDay, startOfLocalWeek } from './clock';
 import { coursePhrases, courseSets, findPhrase, findSetView, keyOf, promptOf, SetView } from './catalog';
 import {
   derive,
@@ -202,9 +202,12 @@ export function setProgress(learner: LearnerState, phraseIds: string[], now: num
 /** Sets most recently listened to, newest first. */
 export function recentSetIds(learner: LearnerState, limit = 4): string[] {
   const seen: string[] = [];
+  const course = keyOf(learner, '');
   for (let i = learner.log.length - 1; i >= 0 && seen.length < limit; i--) {
     const entry = learner.log[i];
     if (entry.kind !== 'heard' || !entry.setId || seen.includes(entry.setId)) continue;
+    // This course only: the same Spanish set heard with English prompts isn't started in the Bulgarian > Spanish course.
+    if (!entry.key.startsWith(course)) continue;
     const view = findSetView(learner, entry.setId);
     if (view && view.targetLang === learner.profile.targetLang) seen.push(entry.setId);
   }
@@ -290,7 +293,7 @@ export function listenedMs(player: PlayerState, now: number): number {
   return player.elapsedMs + (player.playingSince === null ? 0 : now - player.playingSince);
 }
 
-/** Target length at 1.0×: measured on this device, else the clip length from content. */
+/** Target length at 1.0×: measured when played (on any synced device), else the clip length from content. */
 export function measuredTargetMs(learner: LearnerState, phraseId: string): number | null {
   const phrase = findPhrase(learner, phraseId);
   return typicalMs(memoryOf(learner, phraseId).targetSamples) ?? phrase?.durationMs?.[phrase.targetLang] ?? null;
@@ -358,7 +361,9 @@ export function sessionSummary(state: AppState, now: number): SessionSummary | n
   const pending = state.pending.filter((p) => p.at >= session.startedAt);
   for (const p of pending) ratings[p.grade]++;
   let earned = mine.reduce((sum, e) => sum + (derived.awards.get(e.id) ?? 0), 0);
-  for (const at of derived.learnedBonuses.values()) if (at >= session.startedAt) earned += POINTS.learned;
+  // A learned bonus counts here when this device's rating in this session earned it, like the rest.
+  const ratedHere = new Set(mine.filter((e) => e.kind === 'rated').map((e) => `${e.key}@${e.at}`));
+  for (const [key, at] of derived.learnedBonuses) if (at >= session.startedAt && ratedHere.has(`${key}@${at}`)) earned += POINTS.learned;
   return {
     startedAt: session.startedAt,
     phrasesPlayed: new Set(heard.map((e) => e.phraseId)).size,
@@ -372,21 +377,22 @@ export function sessionSummary(state: AppState, now: number): SessionSummary | n
   };
 }
 
-/** Today, from the log: distinct phrases heard and ratings given. Never a streak. */
+/** Today, from the log: distinct phrases heard and distinct phrases rated. Never a streak. */
 export function todayCounts(state: AppState, now: number): { heard: number; rated: number } {
   const start = startOfLocalDay(now);
   const heard = new Set<string>();
   // This course only, like the Learned and Started beside it.
   const course = keyOf(state.learner, '');
-  let rated = state.pending.filter((p) => p.at >= start && p.key.startsWith(course)).length;
+  // Phrases, like "heard": one rated on three passes is one rated phrase.
+  const rated = new Set(state.pending.filter((p) => p.at >= start && p.key.startsWith(course)).map((p) => p.key));
   for (let i = state.learner.log.length - 1; i >= 0; i--) {
     const e = state.learner.log[i];
     if (e.at < start) break;
     if (e.kind === 'carryover' || !e.key.startsWith(course)) continue;
     if (e.kind === 'heard') heard.add(e.phraseId);
-    if (e.kind === 'rated') rated++;
+    if (e.kind === 'rated') rated.add(e.key);
   }
-  return { heard: heard.size, rated };
+  return { heard: heard.size, rated: rated.size };
 }
 
 export interface PlayedSet {
@@ -457,7 +463,8 @@ export function recallBuckets(learner: LearnerState, now: number): RecallBucket[
 /** Phrases that became learned in each of the last `weeks` weeks (Monday start), oldest first. */
 export function learnedPerWeek(learner: LearnerState, now: number, weeks = 8): { weekStart: number; count: number }[] {
   const thisWeek = startOfLocalWeek(now);
-  const out = Array.from({ length: weeks }, (_, i) => ({ weekStart: startOfLocalWeek(thisWeek - (weeks - 1 - i) * 7 * DAY), count: 0 }));
+  // Calendar weeks back, not 7 × 24 h: across a clock change that lands in the week before.
+  const out = Array.from({ length: weeks }, (_, i) => ({ weekStart: addLocalDays(thisWeek, -7 * (weeks - 1 - i)), count: 0 }));
   const course = new Set(coursePhrases(learner).map((p) => keyOf(learner, p.id)));
   for (const [key, at] of derive(learner.log).learnedBonuses) {
     if (!course.has(key)) continue;

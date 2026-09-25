@@ -22,6 +22,13 @@ export function startOfLocalDay(ms: number): number {
   return d.getTime();
 }
 
+/** The same local time `days` calendar days later (or earlier): a day across a clock change isn't 24 h. */
+export function addLocalDays(ms: number, days: number): number {
+  const d = new Date(ms);
+  d.setDate(d.getDate() + days);
+  return d.getTime();
+}
+
 /** Start of the local week (Monday) containing `ms`. */
 export function startOfLocalWeek(ms: number): number {
   const d = new Date(startOfLocalDay(ms));
