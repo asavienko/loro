@@ -17,7 +17,7 @@ Requirement IDs touched: `P3-01` (continuous playback), `P2-24` (difficulty driv
 | The loop | Prompt in the native language → silence sized to the measured target → target; repeated; then a short hold for a rating | Proposal; compare with Stream (`P3-01`) |
 | Recall rule | The target text stays hidden (player, mini-player, queue, lock screen) until it has been heard | Candidate for the app |
 | Grades | Missed / Hard / Easy → FSRS Again / Hard / Good. FSRS Easy is not offered | Proposal; the app's confidence ladder differs |
-| Rating window | A rating waits five minutes (change or undo), then counts at its original time | Proposal |
+| Rating window | A rating waits five minutes (change or undo), then counts at its original time. Statuses, due counts and review dates show it at once; points wait for the window | Proposal |
 | Points | +1 per phrase listened (once per 5 minutes), +1/+2/+3 per rating, +10 once when learned; derived from the log | Proposal; must stay real and never shame |
 | Learned | FSRS review state, stability ≥ 21 days, ≥ 3 successful recalls | Proposal |
 | First review | The first successful rating comes back within 1 day (heard once) or 4 days (heard twice or more) | Proposal on top of the core policy |

@@ -5,7 +5,7 @@ import { useNav } from '../nav/NavContext';
 import type { ExploreFilters } from '../nav/routes';
 import { courseSets, coursePhrases, findSetView, phraseKey, promptOf } from '../state/catalog';
 import { clip, LIMITS, tidy } from '../state/limits';
-import { phraseProgress, setProgress } from '../state/selectors';
+import { displayLearner, phraseProgress, setProgress } from '../state/selectors';
 import { useCopy, useNow, useStore } from '../state/store';
 import { Icon, IconName } from '../ui/Icon';
 import { PhraseRow } from '../ui/PhraseRow';
@@ -71,7 +71,7 @@ export function ExploreScreen({ filters }: { filters: ExploreFilters }) {
   const { state } = useStore();
   const now = useNow(30_000);
   const locale = c.locale.slice(0, 2) as 'en' | 'bg' | 'ru';
-  const { learner } = state;
+  const learner = displayLearner(state); // ratings in their undo window count in each status
   const [text, setText] = useState(filters.q ?? '');
   const results = useRef<HTMLHeadingElement>(null);
   // Back and links can change the query; the field follows (derived during render).
