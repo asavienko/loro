@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
-import { easyCue, gentleCue } from '../audio/cues';
 import { useLatest } from '../lib/useLatest';
 import { useStore } from '../state/store';
 import type { Grade } from '../state/types';
+import { useRate } from './useRate';
 
 const GRADE_KEYS: Record<string, Grade> = { '1': 'missed', '2': 'hard', '3': 'easy' };
 
@@ -13,7 +13,7 @@ const GRADE_KEYS: Record<string, Grade> = { '1': 'missed', '2': 'hard', '3': 'ea
  */
 export function usePlayerKeys(): void {
   const { state, actions } = useStore();
-  const latest = useLatest({ playing: state.player.status === 'playing', actions });
+  const latest = useLatest({ playing: state.player.status === 'playing', actions, rate: useRate() });
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return;
@@ -22,7 +22,7 @@ export function usePlayerKeys(): void {
       // A sheet or the queue over the player owns its keys: Space scrolls it, arrows move in it.
       const dialog = target?.closest('[role="dialog"]');
       if (dialog && !dialog.hasAttribute('data-player')) return;
-      const { playing, actions: a } = latest.current;
+      const { playing, actions: a, rate } = latest.current;
       const grade = GRADE_KEYS[event.key];
       if (event.key === ' ' && !target?.closest('button')) {
         event.preventDefault();
@@ -33,9 +33,7 @@ export function usePlayerKeys(): void {
       } else if (event.key === 'ArrowLeft') {
         a.prev();
       } else if (grade) {
-        a.rate(grade);
-        if (grade === 'easy') easyCue();
-        else gentleCue();
+        rate(grade);
       } else {
         return;
       }

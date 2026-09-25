@@ -1,7 +1,6 @@
 import { motion, PanInfo, useDragControls } from 'motion/react';
-import { PointerEvent, useEffect, useRef, useState } from 'react';
+import { PointerEvent, useRef, useState } from 'react';
 import { voiceName, voicesFor } from '../audio/speech';
-import { easyCue, gentleCue } from '../audio/cues';
 import { languageLabel, languageName } from '../copy';
 import { getLanguage, Phrase } from '../content';
 import { useDialog } from '../lib/useDialog';
@@ -27,6 +26,7 @@ import { isTargetRevealed, PHASE_ICONS, phaseInstruction, phaseStepLabel } from 
 import { GlossedPhrase, HiddenPhrase } from '../ui/PhraseText';
 import { SetCover } from '../ui/SetCover';
 import { usePlayerKeys } from './usePlayerKeys';
+import { useRate } from './useRate';
 import { Sheet } from '../ui/Sheet';
 import { useToast } from '../ui/Toast';
 
@@ -341,22 +341,9 @@ function Rating({ phrase }: { phrase: Phrase }) {
   const left = pending ? windowLeft(pending, now) : 0;
   const active = pending && left > 0 ? pending : undefined;
 
-  const rate = (grade: Grade) => {
-    actions.rate(grade);
-    if (grade === 'easy') easyCue();
-    else gentleCue();
-  };
-
-  // Announced once when a grade is given or changed (tap or key), not from a live region
-  // whose "back in N minutes" would re-announce every minute of the undo window.
-  const { announce } = useToast();
-  const said = useRef<string | null>(null);
-  const ratedAs = active ? `${active.key}|${active.grade}|${active.at}` : null;
-  useEffect(() => {
-    if (!active || ratedAs === said.current) return;
-    said.current = ratedAs;
-    announce(c.player.rated(c.common.grade[active.grade], formatWhen(previewDue(state.learner, phrase.id, active.grade, active.at), active.at, c.locale)));
-  });
+  // Said once by useRate, not from a live region whose "back in N minutes" would
+  // re-announce every minute of the undo window.
+  const rate = useRate();
 
   return (
     <div className="h-[7.5rem] flex flex-col justify-between">
