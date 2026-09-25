@@ -55,3 +55,23 @@ test('the play order is one control that also sorts, not a line and a second but
   await expect(page.getByRole('button', { name: /Set order/ })).toHaveCount(1);
   await expect(page.getByRole('button', { name: /Set order/ })).toHaveAccessibleName('Plays in: Set order');
 });
+
+test('the phrase playing from another queue keeps its Spanish hidden here too, and is marked (R-02)', async ({ page }) => {
+  await page.clock.install();
+  await page.goto('/#/set/set-tapas?from=explore');
+  await page.getByRole('button', { name: 'Play Tapas & Tabernas' }).click();
+  // A café phrase tapped in Explore plays next, keeping the Tapas queue.
+  await page.evaluate(() => (window.location.hash = '#/explore?q=cortado'));
+  await page.getByRole('button', { name: 'Play Me pone un cortado, por favor' }).click();
+  const mini = page.getByRole('button', { name: /^Now playing:/ });
+  await expect(mini).toHaveAccessibleName('Now playing: A cortado, please');
+  for (let t = 0; t < 20_000 && !/Your turn/.test((await page.locator('#root').textContent()) ?? ''); t += 100) await page.clock.runFor(100);
+  await expect(page.getByText('Your turn — say it out loud in Spanish').first()).toBeVisible();
+  await page.evaluate(() => (window.location.hash = '#/set/set-cafe?from=explore'));
+  await expect(page.getByRole('heading', { name: 'Café & Mañanas', level: 1 })).toBeVisible();
+  await expect(page.locator('main')).toContainText('Can we sit on the terrace?');
+  await expect(page.locator('main')).not.toContainText('Me pone');
+  await expect(current(page)).toHaveCount(1);
+  await expect(current(page)).toContainText('A cortado, please');
+  await expect(current(page)).toContainText('Spanish hidden until you hear it');
+});
