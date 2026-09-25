@@ -3,7 +3,7 @@ import { expect, sampleHistory, test } from './fixtures';
 test.describe('explore', () => {
   test('search highlights matches and survives opening a set', async ({ page }) => {
     await page.goto('/#/explore');
-    await page.getByRole('searchbox', { name: 'Search phrases, notes and topics' }).fill('cuenta');
+    await page.getByRole('searchbox', { name: 'Phrases, notes, topics' }).fill('cuenta');
     await expect(page).toHaveURL(/q=cuenta/);
     await expect(page.locator('mark', { hasText: 'cuenta' }).first()).toBeVisible();
     await page.getByRole('button', { name: 'Café & Mañanas' }).first().click();
@@ -333,7 +333,7 @@ test('near the limit, a phrase field says how many characters are left', async (
 
 test('the Search key commits the query and puts the keyboard away', async ({ page }) => {
   await page.goto('/#/explore');
-  const field = page.getByRole('searchbox', { name: 'Search phrases, notes and topics' });
+  const field = page.getByRole('searchbox', { name: 'Phrases, notes, topics' });
   await expect(page.getByRole('search')).toBeVisible();
   await field.fill('metro');
   await field.press('Enter');

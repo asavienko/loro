@@ -84,7 +84,7 @@ export function makeRu(n: Plural): Copy {
       run: (p, points) => `${phrases(p)} · +${points} очк.`,
     },
     explore: {
-      search: 'Поиск по фразам, заметкам и темам',
+      search: 'Фразы, заметки, темы',
       topics: 'Темы',
       levels: 'Уровни',
       tags: 'Метки',
