@@ -91,9 +91,10 @@ export function windowLeft(pending: PendingRating, now: number): number {
 /**
  * When the phrase will be due after `grade` given now: the preview on the rating buttons.
  * Takes the committed learner (`state.learner`), not `displayLearner`: the pending rating
- * being previewed would otherwise count twice.
+ * being previewed would otherwise count twice. `day` is a pending rating's own local day;
+ * otherwise this device's day for `at`, as a rating given now is stamped.
  */
-export function previewDue(learner: LearnerState, phraseId: string, grade: Grade, at: number): number {
+export function previewDue(learner: LearnerState, phraseId: string, grade: Grade, at: number, day?: string): number {
   // The rating commits at its own time, replayed over the memory as it was then, so the
   // preview is what it schedules, whatever plays after it.
   const key = keyOf(learner, phraseId);
@@ -102,7 +103,7 @@ export function previewDue(learner: LearnerState, phraseId: string, grade: Grade
   // per-phrase cache, and the next full derive would replay a year of ratings.
   const memory = asOf.reduce(applyEntry, emptyMemory());
   try {
-    return reviewed(memory, grade, at).due;
+    return reviewed(memory, grade, at, day).due;
   } catch {
     return at;
   }

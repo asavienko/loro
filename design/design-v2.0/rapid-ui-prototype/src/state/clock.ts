@@ -15,6 +15,19 @@ export function localDay(ms: number): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
+/**
+ * Whether `day` ("2026-09-24") is a real date that is the local day of `ms` in some time zone
+ * (UTC−12 to UTC+14): a stamp a device could have written for that moment.
+ */
+export function isLocalDayOf(day: unknown, ms: number): day is string {
+  if (typeof day !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(day)) return false;
+  const [y, m, d] = day.split('-').map(Number);
+  const start = Date.UTC(y, m - 1, d);
+  // Date.UTC rolls an impossible date ("2026-02-30") over into the next month.
+  if (new Date(start).toISOString().slice(0, 10) !== day) return false;
+  return ms >= start - 14 * HOUR && ms < start + DAY + 12 * HOUR;
+}
+
 /** Start of the local day containing `ms`. */
 export function startOfLocalDay(ms: number): number {
   const d = new Date(ms);

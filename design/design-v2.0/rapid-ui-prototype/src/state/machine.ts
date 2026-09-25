@@ -13,6 +13,7 @@ import { findPhrase, keyOf, OWN_PHRASE_PREFIX, OWN_SET_PREFIX } from './catalog'
 import { clip, LIMITS, tidy } from './limits';
 import { canHandle } from './chart';
 import { initialPlayer, initialState } from './initial';
+import { localDay } from './clock';
 import { insertEntry, RATING_WINDOW_MS } from './memory';
 import { committedIn, mergeLearner, mergePending, mergePrefs, ratingCommitId, ratingEntry } from './merge';
 import { sanitizeState } from './persistence';
@@ -227,6 +228,7 @@ function recordHeard(state: AppState, phraseId: string, now: number, targetMs: n
     setId: state.player.setId,
     targetMs,
     nativeMs: state.player.nativeMsThisRep,
+    day: localDay(now),
   };
   const session = next.player.session;
   const heard = session && !(session.heard ?? []).includes(entry.key) ? { ...session, heard: [...(session.heard ?? []), entry.key] } : session;
@@ -403,7 +405,7 @@ function step(state: AppState, event: AppEvent): AppState {
         next = { ...committed, pending: committed.pending.map((p) => (p === existing ? changed : p)) };
       } else {
         // New, or rated again after an undo: a fresh rating in place of the undo's tombstone.
-        const rating = { key, phraseId: currentId, setId: player.setId, grade: event.grade, at: event.now, changedAt: event.now };
+        const rating = { key, phraseId: currentId, setId: player.setId, grade: event.grade, at: event.now, changedAt: event.now, day: localDay(event.now) };
         next = { ...committed, pending: [...committed.pending.filter((p) => p !== existing), rating] };
       }
       // Missed or hard: bring it back a few phrases later in this queue.

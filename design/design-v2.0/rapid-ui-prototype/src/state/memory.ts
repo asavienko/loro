@@ -3,7 +3,7 @@
 // which is what makes merging two devices safe (see merge.ts).
 import type { LanguageCode } from '../content';
 import { Grade, initialize, retrievability, review } from '../core/fsrs';
-import { DAY, MINUTE, startOfLocalDay } from './clock';
+import { DAY, localDay, MINUTE } from './clock';
 import type { LogEntry, PhraseMemory } from './types';
 
 /** Memory is kept per prompt language and phrase: "en-GB>es-ES:cafe-01". */
@@ -45,6 +45,7 @@ export function emptyMemory(): PhraseMemory {
     fsrs: null,
     heardCount: 0,
     firstHeardAt: null,
+    firstHeardDay: null,
     lastHeardAt: null,
     targetSamples: [],
     nativeSamples: [],
@@ -76,8 +77,12 @@ export function recallNow(memory: PhraseMemory, now: number): number | null {
   return retrievability(memory.fsrs, now);
 }
 
-/** The FSRS state after `grade`, including the introductory cap. Pure: used for previews too. */
-export function reviewed(memory: PhraseMemory, grade: Grade, at: number) {
+/**
+ * The FSRS state after `grade` at `at`, including the introductory cap. `day` is the rating's
+ * local day as stamped (see `LocalDay`); by default this device's day for `at`. Pure: used for
+ * previews too.
+ */
+export function reviewed(memory: PhraseMemory, grade: Grade, at: number, day: string = localDay(at)) {
   const before = memory.fsrs ?? initialize(at);
   const first = before.last_review === null;
   const next = review(before, grade, at);
@@ -88,8 +93,9 @@ export function reviewed(memory: PhraseMemory, grade: Grade, at: number) {
     next.due = Math.min(next.due, at + Math.max(1, Math.round(next.stability)) * DAY);
   }
   if (first && grade !== 'missed') {
-    // The learner's calendar day, as Today counts it: a play last night is an earlier day.
-    const heardEarlier = memory.firstHeardAt !== null && startOfLocalDay(memory.firstHeardAt) < startOfLocalDay(at);
+    // The learner's calendar day, as Today counts it: a play last night is an earlier day. The
+    // days as stamped when they happened, so the log alone decides, on any device.
+    const heardEarlier = memory.firstHeardDay !== null && memory.firstHeardDay < day;
     const capDays = heardEarlier ? FIRST_REVIEW_CAP_DAYS.earlierDay : FIRST_REVIEW_CAP_DAYS.firstDay;
     next.due = Math.min(next.due, at + capDays * DAY);
   }
@@ -124,6 +130,8 @@ export function applyEntry(memory: PhraseMemory, entry: LogEntry): PhraseMemory 
       ...memory,
       heardCount: memory.heardCount + 1,
       firstHeardAt: memory.firstHeardAt ?? entry.at,
+      // An entry from before the stamp: its day here and now.
+      firstHeardDay: memory.firstHeardAt === null ? (entry.day ?? localDay(entry.at)) : memory.firstHeardDay,
       lastHeardAt: entry.at,
       targetSamples: pushSample(memory.targetSamples, entry.targetMs),
       nativeSamples: pushSample(memory.nativeSamples, entry.nativeMs),
@@ -132,7 +140,7 @@ export function applyEntry(memory: PhraseMemory, entry: LogEntry): PhraseMemory 
   if (entry.kind === 'rated') {
     let fsrs;
     try {
-      fsrs = reviewed(memory, entry.grade, entry.at);
+      fsrs = reviewed(memory, entry.grade, entry.at, entry.day);
     } catch {
       // The core refuses impossible input (a time before the last review, out of
       // range). One bad entry is skipped rather than breaking every screen.
