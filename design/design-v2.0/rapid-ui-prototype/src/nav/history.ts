@@ -44,8 +44,21 @@ function navigateNow(route: Route, options: { replace?: boolean }): void {
     window.history.replaceState(window.history.state, '', hash);
     window.dispatchEvent(new HashChangeEvent('hashchange'));
   } else {
-    window.location.hash = hash;
+    // Marked as the app's own entry, so the header's Back can go back to it (keeping its
+    // filters and view) instead of pushing a fresh copy of the page.
+    window.history.pushState({ inApp: true }, '', hash);
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
   }
+}
+
+/**
+ * The header's Back: back through history when this page was opened from the app (the
+ * page it came from keeps its filters, view and scroll), otherwise (a shared link, a
+ * fresh start) to `fallback`, replacing this entry so browser Back doesn't return here.
+ */
+export function goBack(fallback: Route): void {
+  if ((window.history.state as { inApp?: boolean } | null)?.inApp) window.history.back();
+  else navigate(fallback, { replace: true });
 }
 
 export function routeUrl(route: Route): string {

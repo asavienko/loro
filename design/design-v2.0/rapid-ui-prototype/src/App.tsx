@@ -8,7 +8,7 @@ import { useMediaSession } from './audio/mediaSession';
 import { learnedCue } from './audio/cues';
 import { copyFor, copyForNative } from './copy';
 import { NATIVE_LANGUAGES } from './content';
-import { navigate, useBackToClose, useRoute, useScrollRestoration } from './nav/history';
+import { goBack, navigate, useBackToClose, useRoute, useScrollRestoration } from './nav/history';
 import { Navigation, NavContext } from './nav/NavContext';
 import { Route, tabOf } from './nav/routes';
 import { findPhrase, findSetView } from './state/catalog';
@@ -309,7 +309,7 @@ function Shell() {
       <div className="min-h-dvh bg-surface text-on-surface flex flex-col antialiased">
         <NavigationHeader
           title={route.name === 'set' ? undefined : route.name === 'home' ? undefined : c.nav[route.name]}
-          onBack={route.name === 'set' ? () => navigate({ name: route.from }) : undefined}
+          onBack={route.name === 'set' ? () => goBack({ name: route.from }) : undefined}
           onOpenSettings={nav.openSettings}
           inert={behind}
           scrolledTitle={route.name === 'set' ? setView?.title : undefined}
