@@ -225,3 +225,18 @@ test('holding an arrow key moves one phrase, not through the queue', async ({ pa
   });
   await expect(player.getByText(/^2 of \d+$/)).toBeVisible();
 });
+
+test('a held key still works inside a sheet over the player', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: /^Play/ }).first().click();
+  await page.getByRole('button', { name: 'Pause', exact: true }).first().click();
+  await page.getByRole('button', { name: /^Now playing:/ }).click();
+  await page.getByRole('button', { name: 'Open queue' }).click();
+  const prevented = await page.getByRole('dialog', { name: 'Queue' }).evaluate((dialog) => {
+    const target = dialog.querySelector<HTMLElement>('button') ?? dialog;
+    const event = new KeyboardEvent('keydown', { key: 'ArrowDown', repeat: true, bubbles: true, cancelable: true });
+    target.dispatchEvent(event);
+    return event.defaultPrevented;
+  });
+  expect(prevented).toBe(false);
+});

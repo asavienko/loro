@@ -17,16 +17,17 @@ export function usePlayerKeys(): void {
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return;
+      // Keys sent to the window or document have no element to look up from.
+      const target = event.target instanceof Element ? event.target : null;
+      if (target?.closest('input, textarea, select, [role="tab"], [role="radio"], [contenteditable="true"]')) return;
+      // A sheet or the queue over the player owns its keys: Space scrolls it, arrows move in it.
+      const dialog = target?.closest('[role="dialog"]');
+      if (dialog && !dialog.hasAttribute('data-player')) return;
       // One step per press: a held key's auto-repeat would fly through the queue.
       if (event.repeat) {
         if (event.key === ' ' || event.key in GRADE_KEYS || event.key.startsWith('Arrow')) event.preventDefault();
         return;
       }
-      const target = event.target as HTMLElement | null;
-      if (target?.closest('input, textarea, select, [role="tab"], [role="radio"], [contenteditable="true"]')) return;
-      // A sheet or the queue over the player owns its keys: Space scrolls it, arrows move in it.
-      const dialog = target?.closest('[role="dialog"]');
-      if (dialog && !dialog.hasAttribute('data-player')) return;
       const { playing, actions: a, rate } = latest.current;
       const grade = GRADE_KEYS[event.key];
       if (event.key === ' ' && !target?.closest('button')) {
