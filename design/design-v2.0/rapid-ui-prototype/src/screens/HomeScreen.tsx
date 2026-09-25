@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { greeting } from '../copy';
 import { useNav } from '../nav/NavContext';
 import { coursePhrases, courseSets, findSetView } from '../state/catalog';
 import { formatAgo, formatElapsed, formatWhen } from '../state/clock';
@@ -57,11 +56,9 @@ export function HomeScreen() {
   return (
     <div className="max-w-5xl mx-auto px-4 pt-4 flex flex-col gap-7">
       <section>
-        <h1 lang={learner.profile.targetLang} className="font-serif text-display italic font-medium leading-tight">
-          {greeting(learner.profile.targetLang, learner.profile.name)}
-        </h1>
-        {firstRun && <p className="text-body text-secondary mt-1">{c.home.firstRun}</p>}
-        <div className="flex flex-wrap gap-2 mt-4">
+        {/* The greeting is the header's title (App). */}
+        {firstRun && <p className="text-body text-secondary mb-4">{c.home.firstRun}</p>}
+        <div className="flex flex-wrap gap-2">
           <StatChip label={c.home.learned} value={stats.learned} icon="verified" onClick={() => nav.go({ name: 'library', view: 'learned' })} />
           <StatChip label={c.home.started} value={stats.started} icon="headphones" onClick={() => nav.go({ name: 'library', view: 'learning' })} />
         </div>
