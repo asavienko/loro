@@ -200,7 +200,11 @@ export function ExploreScreen({ filters }: { filters: ExploreFilters }) {
             <ul className="-mx-2">
               {phrases.map((p) => (
                 <li key={p.id}>
-                  <PhraseResult phrase={p} words={words} detail={progressLabel(c, phraseProgress(learner, p.id, now), now)} />
+                  <PhraseResult
+                    phrase={p}
+                    words={words}
+                    detail={[progressLabel(c, phraseProgress(learner, p.id, now), now), p.own && c.phrase.yoursShort].filter(Boolean).join(' · ')}
+                  />
                 </li>
               ))}
             </ul>
