@@ -23,6 +23,7 @@ import { NavigationHeader } from './ui/NavigationHeader';
 import { ToastProvider, useToast } from './ui/Toast';
 import { LocalBoundary } from './ui/LocalBoundary';
 import { AddPhraseSheet } from './sheets/AddPhraseSheet';
+import { AddSheet } from './sheets/AddSheet';
 import { AddToSetSheet } from './sheets/AddToSetSheet';
 import { CreateSetSheet } from './sheets/CreateSetSheet';
 import { PhraseDetailsSheet } from './sheets/PhraseDetailsSheet';
@@ -35,7 +36,8 @@ import { NowPlayingScreen } from './screens/NowPlayingScreen';
 import { Onboarding } from './screens/Onboarding';
 import { QueueScreen } from './screens/QueueScreen';
 import { SetScreen } from './screens/SetScreen';
-import { btnPrimary, btnTonal } from './ui/button';
+import { btnIcon, btnPrimary, btnTonal } from './ui/button';
+import { Icon } from './ui/Icon';
 
 export default function App({ stored }: { stored: Stored }) {
   return (
@@ -188,6 +190,7 @@ function Shell() {
   const [phraseForm, setPhraseForm] = useState<{ editId?: string; target?: string } | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [summaryOpen, setSummaryOpen] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
 
   // The tab, the app switcher and screen readers say where the learner is (WCAG 2.4.2).
   const pageTitle = !state.learner.profile.onboarded
@@ -261,6 +264,7 @@ function Shell() {
     setAddTo(null);
     setCreate(null);
     setPhraseForm(null);
+    setAddOpen(false);
   };
   const locale = c.locale.slice(0, 2) as 'en' | 'bg' | 'ru';
   const closeQueue = () => setOverlay((o) => ({ ...o, queue: false }));
@@ -352,6 +356,13 @@ function Shell() {
           inert={behind}
           scrolledTitle={route.name === 'set' ? setView?.title : undefined}
           narrow={route.name === 'set'}
+          action={
+            route.name === 'library' ? (
+              <button type="button" aria-label={c.nav.add} onClick={() => setAddOpen(true)} className={`${btnIcon} text-on-surface`}>
+                <Icon name="add" className="text-icon-lg" />
+              </button>
+            ) : undefined
+          }
         />
 
         <main inert={behind} className="flex-1 pt-[calc(3.5rem+env(safe-area-inset-top))] pb-[calc(9rem+env(safe-area-inset-bottom))] phone-landscape:pb-[calc(7rem+env(safe-area-inset-bottom))]">
@@ -395,13 +406,14 @@ function Shell() {
           </AnimatePresence>
         </LocalBoundary>
 
-        <LocalBoundary resetKey={`${settingsOpen}${summaryOpen}${details?.phraseId}${addTo}${create?.rename}${phraseForm?.editId ?? phraseForm !== null}`} quiet onError={closeSheets}>
+        <LocalBoundary resetKey={`${settingsOpen}${summaryOpen}${details?.phraseId}${addTo}${create?.rename}${phraseForm?.editId ?? phraseForm !== null}${addOpen}`} quiet onError={closeSheets}>
           <SettingsSheet open={settingsOpen} onClose={() => setSettingsOpen(false)} />
           <SessionSummarySheet open={summaryOpen} onClose={() => setSummaryOpen(false)} />
           <PhraseDetailsSheet details={details} onClose={() => setDetails(null)} />
           <AddToSetSheet phraseIds={addTo} onClose={() => setAddTo(null)} />
           <CreateSetSheet request={create} onClose={() => setCreate(null)} />
           <AddPhraseSheet request={phraseForm} onClose={() => setPhraseForm(null)} />
+          <AddSheet open={addOpen} onClose={() => setAddOpen(false)} />
         </LocalBoundary>
       </div>
     </NavContext.Provider>

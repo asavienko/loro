@@ -1,5 +1,5 @@
 // Home and the app shell: the header's title, one hero, and what Home's buttons do.
-import { expect, masteredCourse, sampleHistory, test } from './fixtures';
+import { expect, expectAccessible, expectMobileBasics, masteredCourse, sampleHistory, test } from './fixtures';
 
 test("the greeting is the header's title, in the language being learned (V-10)", async ({ page }) => {
   await page.goto('/');
@@ -152,5 +152,48 @@ test.describe('in Bulgarian', () => {
   test('the avatar says the course in the UI language (U-06)', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByRole('button', { name: 'Мира: настройки' })).toHaveAccessibleDescription('Учите испански');
+  });
+});
+
+test.describe("Library's + adds a phrase or a set (U-09)", () => {
+  test('it opens a small Add sheet that hands over to each form', async ({ page }) => {
+    await page.goto('/#/library');
+    await page.getByRole('button', { name: 'Add a phrase or set' }).click();
+    const sheet = page.getByRole('dialog', { name: 'Add' });
+    await page.waitForTimeout(500); // the sheet slides up
+    await expectMobileBasics(page);
+    await expectAccessible(page);
+    await sheet.getByRole('button', { name: 'Add your phrase' }).click();
+    await expect(page.getByRole('dialog', { name: 'Add your phrase' })).toBeVisible();
+    await expect(page.getByRole('dialog')).toHaveCount(1);
+    await page.getByRole('button', { name: 'Close' }).click();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+
+    await page.getByRole('button', { name: 'Add a phrase or set' }).click();
+    await sheet.getByRole('button', { name: 'New set' }).click();
+    await page.getByLabel('Name').fill('Viaje');
+    await page.getByLabel('Name').press('Enter');
+    await expect(page.getByRole('heading', { name: 'Viaje', level: 1 })).toBeVisible();
+    // Back leaves the new set for Library, not for a sheet.
+    await page.goBack();
+    await expect(page).toHaveURL(/#\/library/);
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+  });
+
+  test('only Library has it', async ({ page }) => {
+    for (const hash of ['/', '/#/explore', '/#/set/set-cafe?from=explore']) {
+      await page.goto(hash);
+      await expect(page.locator('header')).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Add a phrase or set' })).toHaveCount(0);
+    }
+  });
+
+  test('at 200% text the title and the + keep their room; the points give way here', async ({ page }) => {
+    await page.goto('/#/library');
+    await page.addStyleTag({ content: 'html { font-size: 200% }' });
+    await page.waitForTimeout(200);
+    expect((await page.locator('header h1').boundingBox())!.width).toBeGreaterThanOrEqual(100);
+    await expect(page.getByRole('button', { name: 'Add a phrase or set' })).toBeVisible();
+    await expect(page.getByTestId('points')).toBeHidden();
   });
 });

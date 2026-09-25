@@ -40,6 +40,8 @@ export function makeRu(n: Plural): Copy {
       library: 'Библиотека',
       settings: (name) => (name ? `${name}: настройки` : 'Настройки'),
       learning: (language) => `Изучаете ${language}`,
+      add: 'Добавить фразу или набор',
+      addSheet: 'Добавление',
       points: (c) => n(c, { one: `${c} очко`, few: `${c} очка`, many: `${c} очков`, other: `${c} очка` }),
       pointsShort: () => 'очк.',
     },

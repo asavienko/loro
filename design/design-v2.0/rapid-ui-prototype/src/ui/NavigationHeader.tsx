@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from 'react';
+import { ReactNode, useEffect, useId, useState } from 'react';
 import { languageName } from '../copy';
 import { getLanguage } from '../content';
 import { points as pointsOf } from '../state/selectors';
@@ -20,6 +20,8 @@ interface NavigationHeaderProps {
   scrolledTitle?: string;
   /** Match a page in the narrower reading column (the set page), so Back lines up with it. */
   narrow?: boolean;
+  /** A page's own action (Library's "+"), a 44 px icon button before the points. */
+  action?: ReactNode;
 }
 
 const TITLE_SCROLL_PX = 140;
@@ -36,7 +38,7 @@ function useScrolledPast(px: number, active: boolean): boolean {
   return active && past;
 }
 
-export function NavigationHeader({ title, titleLang, onBack, onOpenSettings, inert = false, scrolledTitle, narrow = false }: NavigationHeaderProps) {
+export function NavigationHeader({ title, titleLang, onBack, onOpenSettings, inert = false, scrolledTitle, narrow = false, action }: NavigationHeaderProps) {
   const past = useScrolledPast(TITLE_SCROLL_PX, Boolean(scrolledTitle));
   const c = useCopy();
   const { state } = useStore();
@@ -73,9 +75,13 @@ export function NavigationHeader({ title, titleLang, onBack, onOpenSettings, ine
         )}
         <div className="flex-1 min-w-0">
           {title && (
-            // Two lines before it is cut, so a greeting at large text reads "¡Hola, / Ana!", not "¡Hol…";
-            // two lines of heading fit the bar's height at any text size (both are rem).
-            <h1 lang={titleLang} className={`font-serif text-heading leading-tight text-on-surface line-clamp-2 break-words ${titleLang ? 'italic font-medium' : 'font-semibold'}`}>
+            // The greeting takes two lines before it is cut, so at large text it reads "¡Hola, / Ana!",
+            // not "¡Hol…" (two lines of heading fit the bar's height at any text size: both are rem).
+            // A one-word page title ("Library") is cut with an ellipsis rather than broken mid-word.
+            <h1
+              lang={titleLang}
+              className={`font-serif text-heading leading-tight text-on-surface ${titleLang ? 'italic font-medium line-clamp-2 break-words' : 'font-semibold truncate'}`}
+            >
               {title}
             </h1>
           )}
@@ -85,8 +91,11 @@ export function NavigationHeader({ title, titleLang, onBack, onOpenSettings, ine
             </p>
           )}
         </div>
+        {action}
         {!onBack && (
-          <p data-testid="points" className="shrink-0 -mr-1 h-8 px-2.5 rounded-full bg-surface-container-low text-on-primary-fixed-variant flex items-center gap-1">
+          // Beside a page's action at large text (Library's "+" at 150% and up), the points give way to
+          // the title and the action: the chip is on every other tab.
+          <p data-testid="points" className={`${action ? '@max-[18rem]:hidden' : ''} shrink-0 -mr-1 h-8 px-2.5 rounded-full bg-surface-container-low text-on-primary-fixed-variant flex items-center gap-1`}>
             <span className="sr-only">{c.nav.points(points)}</span>
             <Icon name="stars" fill className="text-icon-xs text-primary-container" />
             <span aria-hidden="true" className="text-body font-bold tabular-nums">{new Intl.NumberFormat(c.locale).format(points)}</span>

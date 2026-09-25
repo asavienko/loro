@@ -41,6 +41,8 @@ export function makeBg(n: Plural): Copy {
       library: 'Библиотека',
       settings: (name) => (name ? `${name}: настройки` : 'Настройки'),
       learning: (language) => `Учите ${language}`,
+      add: 'Добавете фраза или набор',
+      addSheet: 'Добавяне',
       points: (c) => n(c, { one: `${c} точка`, other: `${c} точки` }),
       pointsShort: () => 'т.',
     },
