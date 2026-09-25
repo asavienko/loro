@@ -1,6 +1,7 @@
 // Two small charts drawn from state. Each bar's size is its count over the
 // largest count, and the same numbers are in the text beside it (e2e/render
-// checks the geometry against the words).
+// checks the geometry against the words). A screen reader gets each item as
+// sr-only text: some ignore aria-label on a list item and would read it empty.
 import { formatShortDate } from '../state/clock';
 import type { RecallBucket } from '../state/selectors';
 import { useCopy } from '../state/store';
@@ -19,7 +20,8 @@ export function RecallChart({ buckets }: { buckets: RecallBucket[] }) {
           {buckets.map((b) => {
             const label = b.from === 0 ? c.library.recallBelow(b.to) : c.library.recallBucket(b.from, b.to);
             return (
-              <li key={b.from} className="grid grid-cols-[4.5rem_1fr_2rem] items-center gap-2 text-label" aria-label={c.library.bucketCount(label, b.count)}>
+              <li key={b.from} className="grid grid-cols-[4.5rem_1fr_2rem] items-center gap-2 text-label">
+                <span className="sr-only">{c.library.bucketCount(label, b.count)}</span>
                 <span aria-hidden="true" className="text-secondary tabular-nums">{label}</span>
                 <span aria-hidden="true" className="h-3 rounded-full bg-surface-container-high overflow-hidden">
                   <span data-bar data-count={b.count} data-max={max} className="block h-full rounded-full bg-primary-container" style={{ width: `${(b.count / max) * 100}%` }} />
@@ -44,7 +46,8 @@ export function WeeklyChart({ weeks }: { weeks: { weekStart: number; count: numb
         {weeks.map((w) => {
           const date = formatShortDate(w.weekStart, c.locale);
           return (
-            <li key={w.weekStart} className="flex-1 h-full flex flex-col justify-end items-center gap-1" aria-label={c.library.weekOf(date, w.count)}>
+            <li key={w.weekStart} className="flex-1 h-full flex flex-col justify-end items-center gap-1">
+              <span className="sr-only">{c.library.weekOf(date, w.count)}</span>
               <span aria-hidden="true" className="text-caption font-bold tabular-nums">{w.count}</span>
               <span
                 aria-hidden="true"

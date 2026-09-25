@@ -135,7 +135,7 @@ export function SetScreen({ setId }: { setId: string }) {
                 )
               )}
             </p>
-            <h1 className="font-serif text-display font-bold leading-tight [overflow-wrap:anywhere]">{view.title}</h1>
+            <h1 lang={view.targetLang} className="font-serif text-display font-bold leading-tight [overflow-wrap:anywhere]">{view.title}</h1>
             {view.content && <p className="text-body text-secondary">{view.content.subtitle[locale]}</p>}
           </div>
         </div>
