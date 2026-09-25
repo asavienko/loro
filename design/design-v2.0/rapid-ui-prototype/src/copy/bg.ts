@@ -89,6 +89,7 @@ export function makeBg(n: Plural): Copy {
     },
     explore: {
       search: 'Фрази, бележки, теми',
+      searchShort: 'Търсене',
       topics: 'Теми',
       levels: 'Нива',
       tags: 'Етикети',

@@ -100,6 +100,8 @@ export function makeEn(n: Plural) {
     },
     explore: {
       search: 'Phrases, notes, topics',
+      /** The search field's placeholder when the whole one doesn't fit (large text). */
+      searchShort: 'Search',
       topics: 'Topics',
       levels: 'Levels',
       tags: 'Tags',

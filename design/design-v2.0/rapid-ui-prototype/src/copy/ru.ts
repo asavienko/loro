@@ -90,6 +90,7 @@ export function makeRu(n: Plural): Copy {
     },
     explore: {
       search: 'Фразы, заметки, темы',
+      searchShort: 'Поиск',
       topics: 'Темы',
       levels: 'Уровни',
       tags: 'Метки',
