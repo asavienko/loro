@@ -279,17 +279,17 @@ export function ExploreScreen({ filters }: { filters: ExploreFilters }) {
       {!topic && !q && !filters.level && !filters.tag && (
         <section aria-labelledby="topics-heading">
           <h2 id="topics-heading" className="sr-only">{c.explore.topics}</h2>
-          {/* Tiles share the row from 6.5rem up (two and one on a 320 px phone); one never gets
-              narrower than its longest word, so a long title (Russian "Повседневная") moves a tile
-              to the next row instead of hyphenating as "Повсе-дневная". A word is broken only if it
-              is wider than the whole row. The count stays with its noun ("2 набора"). */}
+          {/* Tiles share the row from 5.5rem up (three across a 320 px phone in English); one never
+              gets narrower than its longest word or its count, so a long title (Russian "Повседневная")
+              or "2 набора" moves a tile to the next row (two and one) instead of hyphenating as
+              "Повсе-дневная" or leaving "2" alone. A word breaks only if wider than the whole row. */}
           <div className="flex flex-wrap gap-2">
             {courseTopics.map(({ topic: t, count }) => (
               <button
                 key={t.id}
                 type="button"
                 onClick={() => update({ topic: t.id })}
-                className={`flex-[1_1_6.5rem] min-h-20 rounded-2xl p-3 text-left flex flex-col justify-between gap-1 ${TONE[t.tone]}`}
+                className={`flex-[1_1_5.5rem] min-h-20 rounded-2xl p-3 text-left flex flex-col justify-between gap-1 ${TONE[t.tone]}`}
               >
                 <span className="text-body font-bold leading-tight break-words">{t.title[locale]}</span>
                 <span className="flex items-end justify-between gap-1">
