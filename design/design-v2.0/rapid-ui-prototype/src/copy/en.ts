@@ -71,7 +71,6 @@ export function makeEn(n: Plural) {
       duration: (time: string) => `${time} at 1×`,
       startTitle: 'Start here',
       continueTitle: 'Continue',
-      continueBody: (title: string, learned: number, total: number) => `${title} · ${learned} of ${total} learned`,
       next: (count: number, when: string) => n(count, { one: `Next: ${count} phrase ${when}`, other: `Next: ${count} phrases ${when}` }),
       nextAfter: (count: number, when: string) => n(count, { one: `After these: ${count} more phrase ${when}`, other: `After these: ${count} more phrases ${when}` }),
       jumpBackIn: 'Jump back in',
