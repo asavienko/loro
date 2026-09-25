@@ -47,8 +47,8 @@ export function makeBg(n: Plural): Copy {
       new: 'Нова',
       listenedNotRated: 'Чута, без оценка',
       due: 'За преговор',
-      learned: (pct) => `Научена · ${pct}%`,
-      learning: (pct, when) => `${pct}% · отново ${when}`,
+      learned: (pct) => `Научена · памет ${pct}%`,
+      learning: (pct, when) => `Памет ${pct}% · отново ${when}`,
       set: { new: 'Нов', 'in-progress': 'Започнат', learned: 'Всичко научено' },
     },
     home: {

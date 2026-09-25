@@ -45,7 +45,7 @@ export function PhraseNotesView({ phrase, prefix }: { phrase: Phrase; prefix: st
             onKeyDown={tabListKeyDown(prefix, available.map((a) => a.id), tab, setTab)}
             onClick={() => setTab(t.id)}
             className={`min-h-11 rounded-xl flex items-center justify-center gap-1.5 text-label ${
-              tab === t.id ? 'bg-surface-container-lowest text-on-surface font-bold shadow-sm' : 'text-secondary font-medium'
+              tab === t.id ? 'bg-surface-container-lowest text-on-surface font-bold shadow-card' : 'text-secondary font-medium'
             }`}
           >
             <Icon name={t.icon} className="text-icon-sm" />

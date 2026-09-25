@@ -14,9 +14,9 @@ import { clip, LIMITS, tidy } from './limits';
 import { canHandle } from './chart';
 import { initialPlayer, initialState } from './initial';
 import { insertEntry, RATING_WINDOW_MS } from './memory';
-import { committedIn, mergeLearner, mergePending, mergePrefs, ratingCommitId } from './merge';
+import { committedIn, mergeLearner, mergePending, mergePrefs, ratingCommitId, ratingEntry } from './merge';
 import { sanitizeState } from './persistence';
-import { continuation, currentPhraseId, phaseDurationMs, repeatsFor } from './selectors';
+import { continuation, currentPhraseId, displayLearner, phaseDurationMs, repeatsFor } from './selectors';
 import type {
   AppState,
   AudioFailure,
@@ -192,7 +192,8 @@ function pastTheEnd(state: AppState, player: PlayerState, now: number, fromLastP
     const session = player.session ? { ...player.session, passes: player.session.passes + 1 } : null;
     return withPlayer(state, enterPhrase(state, { ...player, session }, 0, now));
   }
-  const next = continuation(state.learner, player, now);
+  // Ratings still in their window count: a phrase just rated isn't due again.
+  const next = continuation(displayLearner(state), player, now);
   if (next) {
     const order = [...player.order, ...next.phraseIds];
     const extended: PlayerState = {
@@ -252,16 +253,7 @@ function commitDue(state: AppState, now: number): AppState {
     // rating), so two tabs committing it, or one merging the other's commit, count it once.
     const id = ratingCommitId(state.device.id, p);
     if (log.some((e) => e.id === id)) continue;
-    log = insertEntry(log, {
-      id,
-      at: p.at,
-      device: state.device.id,
-      kind: 'rated',
-      key: p.key,
-      phraseId: p.phraseId,
-      setId: p.setId,
-      grade: p.grade,
-    });
+    log = insertEntry(log, ratingEntry(state.device.id, p));
   }
   return { ...next, learner: { ...next.learner, log } };
 }

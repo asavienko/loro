@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { chartAsMermaid, PLAYER_CHART } from './chart';
-import { addLocalDays, formatInterval, formatWhen, HOUR, startOfLocalWeek } from './clock';
+import { addLocalDays, formatInterval, formatWhen, HOUR, startOfLocalDay, startOfLocalWeek } from './clock';
 import { transition } from './machine';
 import { RATING_WINDOW_MS, typicalMs } from './memory';
 import {
@@ -25,7 +25,7 @@ import {
 import { findSamePhrase, findSetView, phraseKey } from './catalog';
 import { fullPlayMs, pauseMs, RATE_HOLD_MS } from './timing';
 import { cafe, DAY, done, fresh, load, MINUTE, playPhrase, run, T0 } from './testing';
-import { memoryOf, points } from './selectors';
+import { memoryOf, points, repeatsFor } from './selectors';
 
 const rated = (grade: 'missed' | 'hard' | 'easy', now: number) => [
   { type: 'RATE' as const, grade, now },
@@ -104,9 +104,10 @@ describe('selectors', () => {
     }
     // Unrated, each phrase also holds for its rating.
     assert.equal(setDurationMs(s, view), cafe().length * fullPlayMs(800, 1000, 'x', 3, 'standard', true)!);
-    // Rating one takes its hold off the total at once.
+    // Rating one takes its hold off the total at once (and, rated Easy, maybe repetitions too).
     s = transition(s, { type: 'RATE', grade: 'easy', now: T0 + 4 });
-    assert.equal(setDurationMs(s, view), cafe().length * fullPlayMs(800, 1000, 'x', 3, 'standard', true)! - RATE_HOLD_MS);
+    const rated = fullPlayMs(800, 1000, 'x', repeatsFor(s, cafe()[4]), 'standard', false)!;
+    assert.equal(setDurationMs(s, view), (cafe().length - 1) * fullPlayMs(800, 1000, 'x', 3, 'standard', true)! + rated);
   });
 });
 
@@ -177,6 +178,18 @@ describe('the rating preview', () => {
     assert.equal(shown(), before, 'later repetitions do not move the promise');
     s = run(s, { type: 'COMMIT', now: T0 + 6500 + RATING_WINDOW_MS + 1 });
     assert.equal(memoryOf(s.learner, 'cafe-01').fsrs?.due, before, 'and it is what commits');
+  });
+
+  it('stays the same for a whole play: the first-review cap counts earlier days, not repetitions', () => {
+    const morning = startOfLocalDay(T0) + 10 * HOUR;
+    let s = load(fresh(), morning);
+    const shown = new Set<number>();
+    for (let i = 1; i <= 9; i++) {
+      s = done(s, morning + i * 2000);
+      const at = morning + i * 2000 + 500;
+      shown.add(previewDue(s.learner, 'cafe-01', 'easy', at) - at);
+    }
+    assert.deepEqual([...shown], [DAY], 'Easy reads "1 day" through all three repetitions');
   });
 });
 

@@ -124,7 +124,7 @@ test.describe('the loop', () => {
     await player.getByRole('button', { name: /^Easy/ }).click();
     await expect(player.getByText('2 of 5')).toBeVisible();
     const toast = page.locator('.toast-layer');
-    await expect(toast).toContainText(/^Rated Easy — back in \d+ days?/);
+    await expect(toast).toContainText(/^Rated Easy — back (tomorrow|in \d+ days)/);
     await toast.getByRole('button', { name: 'Undo' }).click();
     // Back on the first phrase, nothing is rated.
     await player.getByRole('button', { name: 'Previous phrase' }).click();
