@@ -27,6 +27,6 @@ export function useRate(): (grade: Grade) => void {
     a.rate(grade);
     if (grade === 'easy') easyCue();
     else gentleCue();
-    say(copy.player.rated(copy.common.grade[grade], formatWhen(previewDue(s.learner, id, grade, at), at, copy.locale)));
+    say(copy.player.rated(copy.common.grade[grade], formatWhen(previewDue(s.learner, id, grade, at), now, copy.locale)));
   };
 }

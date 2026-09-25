@@ -312,6 +312,21 @@ test.describe('what a screen reader hears', () => {
     await expect(status).toHaveText('');
   });
 
+  test('a changed rating says the same "back …" as the screen', async ({ page }) => {
+    await page.clock.install();
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Play 5 phrases' }).click();
+    await page.getByRole('button', { name: 'Pause', exact: true }).first().click();
+    await page.getByRole('button', { name: /^Now playing:/ }).click();
+    await page.getByRole('button', { name: /^Missed/ }).click();
+    await page.clock.runFor(4 * 60_000);
+    await page.getByRole('button', { name: /^Hard/ }).click();
+    const status = page.locator('div[role="status"]');
+    await expect(status).toHaveText(/^Rated Hard/);
+    const player = page.getByRole('dialog', { name: 'Now playing' });
+    await expect(player.getByText(/^Rated Hard/)).toHaveText((await status.textContent())!);
+  });
+
   test('a rating given while the grades wait is announced then, not when the phrase returns', async ({ page }) => {
     await page.clock.install();
     await page.goto('/');
