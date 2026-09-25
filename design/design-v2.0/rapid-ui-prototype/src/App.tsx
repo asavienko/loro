@@ -310,7 +310,7 @@ function Shell() {
         if (view) actions.load(view.phraseIds, view.id, view.phraseIds.indexOf(phraseId));
         else actions.load([phraseId], null, 0);
       },
-      playList: (phraseIds, startIndex = 0) => actions.load(phraseIds, null, startIndex),
+      playList: (phraseIds, startIndex = 0, source) => actions.load(phraseIds, null, startIndex, false, source ?? null),
       openPlayer: () => setOverlay({ player: true, queue: false }),
       openQueue: () => setOverlay({ player: true, queue: true }),
       openSummary: () => setSummaryOpen(true),

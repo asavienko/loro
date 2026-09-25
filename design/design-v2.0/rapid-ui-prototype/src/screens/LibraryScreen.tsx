@@ -20,6 +20,7 @@ import {
 } from '../state/selectors';
 import { coursePhrases } from '../state/catalog';
 import { useCopy, useNow, useStore } from '../state/store';
+import type { LibraryListView } from '../state/types';
 import { RecallChart, WeeklyChart } from '../ui/Charts';
 import { Icon } from '../ui/Icon';
 import { PhraseRow } from '../ui/PhraseRow';
@@ -162,7 +163,7 @@ function PhraseList({ ids, view, now }: { ids: string[]; view: LibraryView; now:
   if (ids.length === 0) return <p className="text-body text-secondary py-2">{empty}</p>;
   return (
     <>
-      <button type="button" onClick={() => nav.playList(ids)} className="mb-2 min-h-11 px-4 rounded-full bg-primary-container text-on-primary text-body font-bold flex items-center gap-1.5">
+      <button type="button" onClick={() => nav.playList(ids, 0, { kind: 'library', view: view as LibraryListView })} className="mb-2 min-h-11 px-4 rounded-full bg-primary-container text-on-primary text-body font-bold flex items-center gap-1.5">
         <Icon name="play_arrow" fill className="text-icon-md" />
         {c.library.playAll(ids.length)}
       </button>
@@ -175,7 +176,7 @@ function PhraseList({ ids, view, now }: { ids: string[]; view: LibraryView; now:
               <PhraseRow
                 phrase={phrase}
                 detail={progressLabel(c, phraseProgress(state.learner, id, now), now)}
-                onPlay={() => nav.playList(ids, i)}
+                onPlay={() => nav.playList(ids, i, { kind: 'library', view: view as LibraryListView })}
                 onMore={() => nav.showDetails(id)}
               />
             </li>

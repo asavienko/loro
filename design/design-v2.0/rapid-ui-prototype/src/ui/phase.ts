@@ -1,6 +1,7 @@
 import type { Copy } from '../copy';
 import { languageLabel, languageName } from '../copy';
 import type { LanguageCode } from '../content';
+import type { SetView } from '../state/catalog';
 import type { Phase, PlayerState } from '../state/types';
 import type { IconName } from './icons';
 
@@ -20,7 +21,25 @@ export function isTargetRevealed(player: Pick<PlayerState, 'phase' | 'ended' | '
   return !player.audioError && (player.phase === 'target' || player.phase === 'rate' || player.ended);
 }
 
-/** What the learner should do right now, e.g. "Your turn — say it in Spanish". */
+/**
+ * The queue's name: its set's title, else where it came from ("Review", "Try the loop", a
+ * Library view such as "Due"), else "Queue" for one put together by hand.
+ */
+export function queueTitle(c: Copy, player: Pick<PlayerState, 'source'>, set: SetView | undefined): string {
+  if (set) return set.title;
+  switch (player.source?.kind) {
+    case 'review':
+      return c.home.reviewTitle;
+    case 'demo':
+      return c.home.demoTitle;
+    case 'library':
+      return c.library.filters[player.source.view];
+    default:
+      return c.queue.title;
+  }
+}
+
+/** What the learner should do right now, e.g. "Your turn — say it out loud in Spanish". */
 export function phaseInstruction(c: Copy, phase: Phase, promptLang: LanguageCode, targetLang: LanguageCode): string {
   switch (phase) {
     case 'native':
