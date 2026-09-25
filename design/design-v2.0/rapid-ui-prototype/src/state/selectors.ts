@@ -358,9 +358,10 @@ export function sessionSummary(state: AppState, now: number): SessionSummary | n
   if (!session) return null;
   const { log } = state.learner;
   const derived = derive(log);
-  // This session's: this device, since it started, and a phrase of this queue. Tabs share the
-  // device id, so another tab's listening would count here without the queue check.
-  const queued = new Set(state.player.order.map((id) => keyOf(state.learner, id)));
+  // This session's: this device, since it started, and a phrase this session heard or queued
+  // (it may have left the queue since: Clear queue, Remove). Tabs share the device id, so
+  // another tab's listening would count here without that check.
+  const queued = new Set([...state.player.order.map((id) => keyOf(state.learner, id)), ...(session.heard ?? [])]);
   const mine = log.filter((e) => e.at >= session.startedAt && e.device === state.device.id && e.kind !== 'carryover' && queued.has(e.key));
   const heard = mine.filter((e): e is Extract<LogEntry, { kind: 'heard' }> => e.kind === 'heard');
   const ratings: Record<Grade, number> = { missed: 0, hard: 0, easy: 0 };

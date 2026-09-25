@@ -136,8 +136,8 @@ export interface Prefs {
   skippedDemo: boolean;
   /** The learner's own choice of device voice per language, by name; otherwise the best is picked. */
   voiceByLang: Partial<Record<LanguageCode, string>>;
-  /** Last change, so tabs of this browser keep the newest settings, not the last tab's to save. */
-  updatedAt: number;
+  /** When each setting last changed, so tabs of this browser keep the newest value of each. */
+  changedAt: Partial<Record<Exclude<keyof Prefs, 'changedAt'>, number>>;
 }
 
 // ---------- player ----------
@@ -156,6 +156,8 @@ export interface Session {
   startedAt: number;
   /** Times the whole queue was played through in repeat mode. */
   passes: number;
+  /** Phrase keys heard in this session, so its summary keeps them after they leave the queue. */
+  heard?: string[];
 }
 
 export interface PlayerState {

@@ -11,7 +11,7 @@
 // - pending ratings (tabs of one browser): last change wins per phrase key, by
 //   `changedAt`; an undo is a tombstone (`undone: true`) until its window closes.
 //   A rating already committed to the log is dropped, so storage doesn't keep it.
-// - prefs (tabs of one browser): the later change wins, by `updatedAt`.
+// - prefs (tabs of one browser): per setting, the later change wins, by `changedAt`.
 // The player (queue) is per tab and never merged.
 import { compareEntries, RATING_WINDOW_MS } from './memory';
 import type { LearnerState, Like, LogEntry, PendingRating, Prefs } from './types';
@@ -21,9 +21,17 @@ export function ratingCommitId(deviceId: string, p: PendingRating): string {
   return `${deviceId}.r-${p.key}-${p.at.toString(36)}`;
 }
 
-/** Settings of two tabs of this browser: the later change wins, as a whole (a tie keeps ours). */
+/**
+ * Settings of two tabs of this browser: for each setting, the later change wins (a tie keeps
+ * ours), so a speed changed in one tab and repeats in another both stay. Returns `ours` itself
+ * when nothing changes.
+ */
 export function mergePrefs(ours: Prefs, theirs: Prefs): Prefs {
-  return theirs.updatedAt > ours.updatedAt ? theirs : ours;
+  let out = ours;
+  for (const [key, at] of Object.entries(theirs.changedAt) as [keyof Prefs['changedAt'], number][]) {
+    if (at > (ours.changedAt[key] ?? 0)) out = { ...out, [key]: theirs[key], changedAt: { ...out.changedAt, [key]: at } };
+  }
+  return out;
 }
 
 /** Whether a pending rating is already in `log`: its id built once, not per entry (a year's log is long). */

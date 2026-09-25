@@ -4,7 +4,7 @@ import { keyOf } from './catalog';
 import { canHandle } from './chart';
 import { transition } from './machine';
 import { derive, isLearned, RATING_WINDOW_MS } from './memory';
-import { currentPhraseId, memoryOf, phraseProgress, points, previouslyPlayed, upNextIds } from './selectors';
+import { currentPhraseId, memoryOf, phraseProgress, points, previouslyPlayed, sessionSummary, upNextIds } from './selectors';
 import { cafe, DAY, done, fresh, load, MINUTE, playPhrase, run, T0 } from './testing';
 
 describe('player loop', () => {
@@ -459,5 +459,28 @@ describe('undo inside the window (regression)', () => {
     for (let i = 0; i < 9 && s.player.phase !== 'rate'; i++) s = done(s, T0 + 10 + i);
     assert.equal(s.player.phase, 'rate');
     assert.equal(s.player.index, 0);
+  });
+});
+
+describe('session and settings (regression)', () => {
+  it('Clear queue keeps what the session heard in its summary', () => {
+    let s = load(fresh());
+    [s] = playPhrase(s, T0);
+    s = run(s, { type: 'NEXT', now: T0 + MINUTE });
+    [s] = playPhrase(s, T0 + MINUTE);
+    const before = sessionSummary(s, T0 + 2 * MINUTE)!;
+    s = run(s, { type: 'CLEAR_QUEUE' });
+    const after = sessionSummary(s, T0 + 2 * MINUTE)!;
+    assert.equal(after.repetitions, before.repetitions);
+    assert.equal(after.phrasesPlayed, before.phrasesPlayed);
+    assert.ok(after.repetitions > 0);
+  });
+
+  it('a repetitions change from another tab reaches the player', () => {
+    const s = run(load(fresh()), { type: 'PLAY', now: T0 });
+    const remotePrefs = { ...s.prefs, repeats: 1 as const, changedAt: { repeats: T0 + 5 } };
+    const after = run(s, { type: 'MERGE_REMOTE', learner: s.learner, prefs: remotePrefs, now: T0 + 6 });
+    assert.equal(after.prefs.repeats, 1);
+    assert.equal(after.player.repeats, 1);
   });
 });
