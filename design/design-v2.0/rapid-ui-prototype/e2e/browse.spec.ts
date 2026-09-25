@@ -304,8 +304,8 @@ test('an empty set of your own points to phrases', async ({ page }) => {
   await page.getByRole('button', { name: 'New set' }).click();
   await page.getByLabel('Name', { exact: true }).fill('Trip');
   await page.getByRole('button', { name: 'Create' }).click();
-  await page.getByRole('button', { name: 'Find phrases' }).click();
-  await expect(page).toHaveURL(/#\/explore/);
+  await page.getByRole('button', { name: 'Add phrases' }).click();
+  await expect(page.getByRole('dialog', { name: 'Add phrases' })).toBeVisible();
 });
 
 test.describe('history', () => {

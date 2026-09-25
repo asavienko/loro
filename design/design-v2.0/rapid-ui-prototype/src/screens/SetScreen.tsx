@@ -22,6 +22,7 @@ import { PhraseRow } from '../ui/PhraseRow';
 import { isTargetRevealed } from '../ui/phase';
 import { progressLabel } from '../ui/progressLabel';
 import { SetCover, TONE_WASH } from '../ui/SetCover';
+import { PickPhrasesSheet } from '../sheets/PickPhrasesSheet';
 import { Sheet, SheetOption } from '../ui/Sheet';
 import { useToast } from '../ui/Toast';
 import { btnIcon, btnPrimarySm, btnTonal } from '../ui/button';
@@ -52,6 +53,7 @@ export function SetScreen({ setId }: { setId: string }) {
   const now = useNow(30_000);
   const [sortOpen, setSortOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [picking, setPicking] = useState(false);
   const view = findSetView(state.learner, setId);
   if (!view) return <p className="max-w-3xl mx-auto px-4 pt-8 text-body text-secondary">{c.set.notFound}</p>;
   // A link or a history entry can lead to another course's set: say so rather than play it
@@ -180,7 +182,7 @@ export function SetScreen({ setId }: { setId: string }) {
           </div>
           <p className="text-body text-secondary mt-3">
             {c.set.summary(progress.total, progress.learned, progress.due)}
-            {duration !== null && ` · ${c.set.duration(formatElapsed(duration))}`}
+            {duration !== null && sortedIds.length > 0 && ` · ${c.set.duration(formatElapsed(duration))}`}
           </p>
           {/* Like and More on the left; Play (and shuffle) on the right, and on a line of their own
               when large text leaves no room for both. */}
@@ -200,14 +202,16 @@ export function SetScreen({ setId }: { setId: string }) {
             {/* Where Play picks up, said beside it. */}
             {resumes && <p className="flex-1 min-w-[4.5rem] text-right text-label font-semibold text-secondary">{c.set.pausedAt(player.index + 1, player.order.length)}</p>}
             <span className="ml-auto flex items-center gap-1">
-              <button
-                type="button"
-                aria-label={c.set.shufflePlay}
-                onClick={() => load('set', sortedIds, { shuffle: true })}
-                className={`${btnIcon} text-secondary`}
-              >
-                <Icon name="shuffle" className="text-icon-lg" />
-              </button>
+              {sortedIds.length > 1 && (
+                <button
+                  type="button"
+                  aria-label={c.set.shufflePlay}
+                  onClick={() => load('set', sortedIds, { shuffle: true })}
+                  className={`${btnIcon} text-secondary`}
+                >
+                  <Icon name="shuffle" className="text-icon-lg" />
+                </button>
+              )}
               <button
                 type="button"
                 aria-label={bigPauses ? c.set.pauseAll(view.title) : resumes ? c.set.resume(view.title) : c.set.playAll(view.title)}
@@ -219,41 +223,34 @@ export function SetScreen({ setId }: { setId: string }) {
               </button>
             </span>
           </div>
-          {/* The play order and the sort are one control: it says the order, and changes it. */}
-          <div className="flex flex-wrap items-center justify-between gap-x-2">
-            <button
-              type="button"
-              aria-haspopup="dialog"
-              onClick={() => setSortOpen(true)}
-              className="min-h-11 -ml-2 pl-2 pr-1.5 rounded-full inline-flex items-center gap-0.5 text-left text-label font-semibold text-secondary active:bg-surface-container"
-            >
-              <span>{c.set.playsIn(c.set.sort[sort])}</span>
-              <Icon name="keyboard_arrow_down" className="text-icon-sm shrink-0" />
-            </button>
-            {showDueNew && (
-              <button type="button" onClick={onDueNew} className={btnTonal}>
-                <Icon name={dueNewQueue && playing ? 'pause' : 'play_arrow'} fill className="text-icon-md" />
-                {dueNewQueue && playing ? c.set.pauseDueNew : c.set.playDueNew(dueAndNew.length)}
+          {/* The play order and the sort are one control: it says the order, and changes it. An
+              empty set of your own has nothing to order yet. */}
+          {sortedIds.length > 0 && (
+            <div className="flex flex-wrap items-center justify-between gap-x-2">
+              <button
+                type="button"
+                aria-haspopup="dialog"
+                onClick={() => setSortOpen(true)}
+                className="min-h-11 -ml-2 pl-2 pr-1.5 rounded-full inline-flex items-center gap-0.5 text-left text-label font-semibold text-secondary active:bg-surface-container"
+              >
+                <span>{c.set.playsIn(c.set.sort[sort])}</span>
+                <Icon name="keyboard_arrow_down" className="text-icon-sm shrink-0" />
               </button>
-            )}
-          </div>
+              {showDueNew && (
+                <button type="button" onClick={onDueNew} className={btnTonal}>
+                  <Icon name={dueNewQueue && playing ? 'pause' : 'play_arrow'} fill className="text-icon-md" />
+                  {dueNewQueue && playing ? c.set.pauseDueNew : c.set.playDueNew(dueAndNew.length)}
+                </button>
+              )}
+            </div>
+          )}
         </section>
       </div>
 
       <section className="max-w-3xl mx-auto px-2 pt-1" aria-labelledby="phrases-heading">
         <h2 id="phrases-heading" className="sr-only">{c.set.phrasesHeading}</h2>
         {sorted.length === 0 ? (
-          <div className="px-2 py-3 flex flex-col items-start gap-2">
-            <p className="text-body text-secondary">{c.set.ownEmpty}</p>
-            <button
-              type="button"
-              onClick={() => nav.go({ name: 'explore' })}
-              className={btnPrimarySm}
-            >
-              <Icon name="search" className="text-icon-md" />
-              {c.set.findPhrases}
-            </button>
-          </div>
+          <p className="px-2 py-3 text-body text-secondary">{c.set.ownEmpty}</p>
         ) : (
           <ul>
             {sorted.map(({ phrase, position, progress: p }, i) => {
@@ -276,7 +273,16 @@ export function SetScreen({ setId }: { setId: string }) {
             })}
           </ul>
         )}
+        {/* Your own set grows from here: pick phrases without leaving the page. */}
+        {view.kind === 'own' && (
+          <button type="button" onClick={() => setPicking(true)} className={`${btnTonal} mx-2 mt-2`}>
+            <Icon name="add" className="text-icon-md" />
+            {c.set.addPhrases}
+          </button>
+        )}
       </section>
+
+      {view.kind === 'own' && <PickPhrasesSheet setId={picking ? setId : null} onClose={() => setPicking(false)} />}
 
       <Sheet open={sortOpen} title={c.set.sortTitle} onClose={() => setSortOpen(false)}>
         <div role="radiogroup" aria-label={c.set.sortTitle}>
