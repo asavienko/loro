@@ -28,6 +28,8 @@ test.describe('a portrait tablet (768×1024)', () => {
     await page.getByRole('button', { name: /^Play \d+ phrases/ }).first().click();
     await page.getByRole('button', { name: /^Now playing:/ }).click();
     const player = page.getByRole('dialog', { name: 'Now playing' });
+    // Measure once the player has finished sliding up.
+    await expect(player).toHaveCSS('transform', 'none');
     const flag = (await player.getByRole('img', { name: 'Spanish' }).boundingBox())!;
     const pause = (await player.getByRole('button', { name: 'Pause', exact: true }).boundingBox())!;
     expect(flag.y).toBeLessThan(pause.y - 200);
