@@ -74,7 +74,7 @@ test('switching course to Bulgarian keeps the English UI and shows Bulgarian set
   await expect(page.getByRole('status').filter({ hasText: 'Now learning Bulgarian' })).toBeVisible();
   await page.getByRole('button', { name: 'Close' }).click();
   await expect(page.getByRole('heading', { name: 'Здравей, Ana!' })).toBeVisible();
-  await expect(page.getByText('Кафене · 0 of 4 learned')).toBeVisible();
+  await expect(page.getByRole('button', { name: /^Кафене 4 phrases · 0 learned/ })).toBeVisible();
   await page.getByRole('button', { name: 'Play 4 phrases' }).click();
   await run(page, 2_000);
   expect((await spoken(page))[0]).toBe('A coffee, please');
