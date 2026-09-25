@@ -46,7 +46,7 @@ export function MiniPlayer({ onOpenPlayer }: { onOpenPlayer: () => void }) {
       dragElastic={0.4}
       onDragStart={clicks.block}
       onDragEnd={onDragEnd}
-      className="on-dark relative rounded-2xl bg-inverse-surface text-inverse-on-surface shadow-float overflow-hidden touch-pan-y forced-colors:border-2"
+      className="on-dark @container relative rounded-2xl bg-inverse-surface text-inverse-on-surface shadow-float overflow-hidden touch-pan-y forced-colors:border-2"
     >
       <div className="flex items-center gap-1 p-2 phone-landscape:py-1">
         <button
@@ -58,9 +58,14 @@ export function MiniPlayer({ onOpenPlayer }: { onOpenPlayer: () => void }) {
           aria-describedby={statusId}
           className="flex-1 min-w-0 min-h-11 flex items-center gap-3 text-left rounded-xl"
         >
-          <SetCover set={set ?? { topicId: null, coverIcon: 'edit_note' }} size="sm" className="w-11 h-11 rounded-lg shrink-0" />
+          {/* Under 18rem (about 150% text on a phone) the cover gives way and the title may take two
+              lines, so it isn't crushed to one letter between the cover and the two buttons. */}
+          <SetCover set={set ?? { topicId: null, coverIcon: 'edit_note' }} size="sm" className="w-11 h-11 rounded-lg shrink-0 @max-[18rem]:hidden" />
           <span className="min-w-0">
-            <span lang={revealed ? phrase.targetLang : prompt.lang} className={`block text-row truncate ${revealed ? 'font-serif italic' : 'font-medium'}`}>
+            <span
+              lang={revealed ? phrase.targetLang : prompt.lang}
+              className={`block text-row truncate @max-[18rem]:whitespace-normal @max-[18rem]:line-clamp-2 @max-[18rem]:[overflow-wrap:anywhere] ${revealed ? 'font-serif italic' : 'font-medium'}`}
+            >
               {title}
             </span>
             <span id={statusId} className="block text-label text-secondary-fixed-dim truncate">
