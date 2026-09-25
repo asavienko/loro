@@ -158,7 +158,8 @@ export function GlossedPhrase({ phrase, className }: { phrase: Phrase; className
   return (
     <div>
       {/* Named by the phrase itself: from its content the word buttons would split the name's spacing. */}
-      <h2 lang={phrase.targetLang} aria-label={phrase.target} className={className}>
+      {/* data-glossed: its word buttons are words in a sentence (the audits' inline exception). */}
+      <h2 lang={phrase.targetLang} aria-label={phrase.target} data-glossed className={className}>
         {tokens.map((t, i) => {
           // Punctuation touching a word ('¡Qué', 'pasado!') must not wrap onto a line of its own,
           // so it moves into the word's unbreakable span.

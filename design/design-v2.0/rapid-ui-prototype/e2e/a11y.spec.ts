@@ -18,6 +18,30 @@ const screens: { name: string; open: (page: Page) => Promise<void> }[] = [
     },
   },
   {
+    // Once heard, the phrase leads, glossed word by word.
+    name: 'player, phrase revealed',
+    open: async (page) => {
+      await page.goto('/');
+      await page.getByRole('button', { name: /^Play \d+ phrases/ }).first().click();
+      const player = page.getByRole('dialog', { name: 'Now playing' });
+      await player.locator('h2[data-glossed]').waitFor({ timeout: 20_000 });
+      await player.getByRole('button', { name: 'Pause', exact: true }).click();
+      await page.waitForTimeout(600);
+    },
+  },
+  {
+    // A review with a natural end: the transport gives way to the end panel.
+    name: 'player, end panel',
+    open: async (page) => {
+      await page.goto('/');
+      await page.getByRole('button', { name: /^Play 7 phrases/ }).click();
+      const player = page.getByRole('dialog', { name: 'Now playing' });
+      for (let i = 0; i < 7; i++) await player.getByRole('button', { name: 'Next phrase' }).click();
+      await player.locator('#end-panel-title').waitFor();
+      await page.waitForTimeout(600);
+    },
+  },
+  {
     name: 'queue',
     open: async (page) => {
       await page.goto('/');
