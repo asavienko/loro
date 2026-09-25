@@ -238,7 +238,7 @@ test.describe('the loop', () => {
     await player.getByRole('button', { name: /^Easy/ }).click();
     await expect(player.getByText('2 of 5')).toBeVisible();
     const toast = page.locator('.toast-layer');
-    await expect(toast).toContainText(/^Rated Easy — back (tomorrow|in \d+ days)/);
+    await expect(toast).toContainText(/^Rated Easy — back in \d+ days?/);
     await toast.getByRole('button', { name: 'Undo' }).click();
     // Back on the first phrase, nothing is rated.
     await player.getByRole('button', { name: 'Previous phrase' }).click();
@@ -458,7 +458,7 @@ test.describe('queue', () => {
     await player.getByRole('button', { name: /^Missed/ }).click();
     await expect(player.getByText('1 of 6')).toBeVisible();
     // The count grew by one: the status line says why.
-    await expect(player.getByText(/^Rated Missed — back in \d+ minutes · again in this queue$/)).toBeVisible();
+    await expect(player.getByText(/^Rated Missed — back in \d+ min · again in this queue$/)).toBeVisible();
     await page.getByRole('button', { name: 'Open queue' }).click();
     const queue = page.getByRole('dialog', { name: 'Queue' });
     const next = queue.getByRole('button', { name: /^Play .* now$/ });
@@ -691,6 +691,24 @@ test.describe('what a screen reader hears', () => {
     await expect(status).toHaveText(/^Rated Hard/);
     const player = page.getByRole('dialog', { name: 'Now playing' });
     await expect(player.getByText(/^Rated Hard/)).toHaveText((await status.textContent())!);
+  });
+
+  test('the rated line and the chosen grade say one "when", in one unit (Q-10)', async ({ page }) => {
+    await page.clock.install();
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Play 5 phrases' }).click();
+    await page.getByRole('button', { name: 'Pause', exact: true }).first().click();
+    const player = page.getByRole('dialog', { name: 'Now playing' });
+    await player.getByRole('button', { name: /^Hard/ }).click();
+    // A minute and a half on: counted from the rating, the caption would still say 15.
+    await page.clock.runFor(90_000);
+    const caption = (await player.getByRole('button', { name: /^Hard/, pressed: true }).locator('span').last().textContent())!;
+    expect(caption).toBe('in 14 min');
+    await expect(player.getByText(/^Rated Hard/)).toHaveText(new RegExp(`^Rated Hard — back ${caption}( ·|$)`));
+    // The other grades count from now too, in the same unit.
+    await expect(player.getByRole('button', { name: /^Missed/ })).toContainText('in 9 min');
+    // Just under a day is a day, not "24 hr".
+    await expect(player.getByRole('button', { name: /^Easy/ })).toContainText('in 1 day');
   });
 
   test('a rating given while the grades wait is announced then, not when the phrase returns', async ({ page }) => {

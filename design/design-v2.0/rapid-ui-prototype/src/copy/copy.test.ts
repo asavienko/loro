@@ -22,6 +22,13 @@ describe('plurals', () => {
     assert.match(copyFor('ru').library.empty.learned(25, 3), /25 дней и больше/);
   });
 
+  it('a rating preview just under the next unit reads in that unit, not "60 min" or "24 hr"', () => {
+    assert.equal(formatInterval(59.6 * 60_000, 'en-GB'), '1 hr');
+    assert.equal(formatInterval(86_400_000 - 90_000, 'en-GB'), '1 day');
+    assert.equal(formatInterval(14 * 60_000, 'en-GB'), '14 min');
+    assert.equal(formatInterval(23 * 3_600_000, 'en-GB'), '23 hr');
+  });
+
   it('Bulgarian rating previews spell out days', () => {
     assert.equal(formatInterval(5 * 86_400_000, 'bg-BG'), '5 дни');
     assert.equal(formatInterval(86_400_000, 'bg-BG'), '1 ден');

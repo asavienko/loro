@@ -1,6 +1,7 @@
 import type { Copy } from '../copy';
 import { languageLabel, languageName } from '../copy';
 import type { LanguageCode } from '../content';
+import { formatInterval } from '../state/clock';
 import type { SetView } from '../state/catalog';
 import type { Phase, PlayerState } from '../state/types';
 import type { IconName } from './icons';
@@ -49,6 +50,15 @@ export function endTitle(c: Copy, source: PlayerState['source'], rated: number):
   if (source?.kind === 'demo') return c.player.end.demoTitle;
   if (rated === 0) return c.player.end.playedThrough;
   return source?.kind === 'review' ? c.player.end.reviewTitle : c.player.end.listTitle;
+}
+
+/**
+ * When a rating brings the phrase back, counted from now, in the grades' short units ("in 14 min").
+ * The rated line, its toast and every grade's caption say it this one way, so the chosen grade
+ * never reads "in 15 min" under "back in 14 minutes".
+ */
+export function backIn(c: Copy, due: number, now: number): string {
+  return c.player.nextIn(formatInterval(due - now, c.locale));
 }
 
 /** What the learner should do right now, e.g. "Your turn — say it out loud in Spanish". */

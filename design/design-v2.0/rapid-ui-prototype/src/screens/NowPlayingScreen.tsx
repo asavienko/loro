@@ -7,7 +7,7 @@ import { useDialog } from '../lib/useDialog';
 import { useClickBlockerDuringDrag } from '../lib/suppressClick';
 import { useNav } from '../nav/NavContext';
 import { findPhrase, findSetView, promptOf } from '../state/catalog';
-import { formatElapsed, formatInterval, formatWhen } from '../state/clock';
+import { formatElapsed, formatWhen } from '../state/clock';
 import { playsOnce, REPEAT_SETTINGS, SPEEDS } from '../state/machine';
 import { RATING_WINDOW_MS } from '../state/memory';
 import {
@@ -28,7 +28,7 @@ import { useCopy, useNow, useStore } from '../state/store';
 import type { Grade, Phase } from '../state/types';
 import { Icon, IconName } from '../ui/Icon';
 import { PhraseNotesView } from '../ui/Notes';
-import { endTitle, isTargetRevealed, PHASE_ICONS, phaseInstruction, phaseStepLabel, queueTitle } from '../ui/phase';
+import { backIn, endTitle, isTargetRevealed, PHASE_ICONS, phaseInstruction, phaseStepLabel, queueTitle } from '../ui/phase';
 import { GlossedPhrase, HiddenPhrase } from '../ui/PhraseText';
 import { SetCover } from '../ui/SetCover';
 import { PhaseFill } from '../ui/PhaseFill';
@@ -452,6 +452,9 @@ function Rating({ phrase }: { phrase: Phrase }) {
   // `now` can trail the rating by up to a second: never show more than the five minutes.
   const left = pending ? Math.min(RATING_WINDOW_MS, windowLeft(pending, Math.max(now, pending.at))) : 0;
   const active = pending && left > 0 ? pending : undefined;
+  // Each grade's return: a change keeps the rating's own time, and all of them count from now.
+  const from = active ? Math.max(now, active.at) : now;
+  const dueOf = (grade: Grade) => previewDue(state.learner, phrase.id, grade, active?.at ?? now, active?.day);
   const hold = state.player.phase === 'rate' && state.player.status === 'playing';
   // Grades are always there, but asking whether you remembered it before your first turn at it
   // (in this play) makes no sense.
@@ -468,7 +471,7 @@ function Rating({ phrase }: { phrase: Phrase }) {
           // One row whatever the language: the words wrap beside Undo rather than push it below.
           <>
             <span className="flex-1 min-w-0 pl-1.5 text-left text-on-surface short:text-label @max-[22rem]/player:text-label">
-              {c.player.rated(c.common.grade[active.grade], formatWhen(previewDue(state.learner, phrase.id, active.grade, active.at, active.day), now, c.locale))}
+              {c.player.rated(c.common.grade[active.grade], backIn(c, dueOf(active.grade), from))}
               {upNextIds(state.player).includes(phrase.id) && ` ${c.player.requeued}`}
             </span>
             <button
@@ -487,7 +490,6 @@ function Rating({ phrase }: { phrase: Phrase }) {
       <div className="@container grid grid-cols-3 gap-2">
         {GRADES.map(({ grade, icon, tone }, i) => {
           const selected = active?.grade === grade;
-          const interval = formatInterval(previewDue(state.learner, phrase.id, grade, active?.at ?? now, active?.day) - (active?.at ?? now), c.locale);
           return (
             <button
               key={grade}
@@ -504,7 +506,7 @@ function Rating({ phrase }: { phrase: Phrase }) {
                 <Icon name={selected ? 'task_alt' : icon} className="text-icon-sm @max-[17.5rem]:hidden" />
                 {c.common.grade[grade]}
               </span>
-              <span className="text-caption opacity-80 tabular-nums">{c.player.nextIn(interval)}</span>
+              <span className="text-caption opacity-80 tabular-nums">{backIn(c, dueOf(grade), from)}</span>
             </button>
           );
         })}
