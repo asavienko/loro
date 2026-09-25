@@ -248,7 +248,7 @@ function sanitizePrefs(value: unknown): Prefs {
         ([lang, name]) => LANGUAGES.some((l) => l.code === lang) && typeof name === 'string' && name.length > 0 && name.length <= 200,
       ),
     ) as Prefs['voiceByLang'],
-    updatedAt: num(value.updatedAt) ? value.updatedAt : 0,
+    changedAt: Object.fromEntries(Object.entries(isObject(value.changedAt) ? value.changedAt : {}).filter(([k, at]) => k in fresh && num(at))) as Prefs['changedAt'],
   };
 }
 
@@ -266,7 +266,12 @@ function sanitizePlayer(value: unknown, learner: LearnerState): PlayerState {
   const index = Math.min(keptBefore, Math.max(0, order.length - 1));
   const setId = str(value.setId) && (findSet(value.setId) || learner.ownSets[value.setId]) ? value.setId : null;
   const session = isObject(value.session) && str(value.session.id) && num(value.session.startedAt)
-    ? { id: value.session.id, startedAt: value.session.startedAt, passes: num(value.session.passes) ? value.session.passes : 0 }
+    ? {
+        id: value.session.id,
+        startedAt: value.session.startedAt,
+        passes: num(value.session.passes) ? value.session.passes : 0,
+        heard: strings(value.session.heard),
+      }
     : null;
   // A saved state never resumes mid-playback: audio needs a fresh user gesture.
   return {

@@ -50,14 +50,15 @@ describe('pending ratings across tabs', () => {
 });
 
 describe('settings across tabs', () => {
-  it('the later change wins; a tie keeps ours', async () => {
+  it('each setting keeps its later change; a tie keeps ours', async () => {
     const { mergePrefs } = await import('./merge');
     const { initialPrefs } = await import('./initial');
-    const older = { ...initialPrefs(), speed: 1 as const, updatedAt: T0 };
-    const newer = { ...initialPrefs(), speed: 0.8 as const, updatedAt: T0 + MINUTE };
-    assert.equal(mergePrefs(older, newer), newer);
-    assert.equal(mergePrefs(newer, older), newer);
-    const tie = { ...older, speed: 1.25 as const };
-    assert.equal(mergePrefs(older, tie), older);
+    const a = { ...initialPrefs(), speed: 0.8 as const, changedAt: { speed: T0 + MINUTE } };
+    const b = { ...initialPrefs(), repeats: 1 as const, changedAt: { repeats: T0 + 2 * MINUTE } };
+    const merged = mergePrefs(a, b);
+    assert.equal(merged.speed, 0.8, "a's speed stays");
+    assert.equal(merged.repeats, 1, "b's repeats arrive");
+    const tie = { ...initialPrefs(), speed: 1.25 as const, changedAt: { speed: T0 + MINUTE } };
+    assert.equal(mergePrefs(a, tie), a);
   });
 });

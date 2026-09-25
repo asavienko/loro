@@ -198,7 +198,13 @@ function recordHeard(state: AppState, phraseId: string, now: number, targetMs: n
     targetMs,
     nativeMs: state.player.nativeMsThisRep,
   };
-  return { ...next, learner: { ...next.learner, log: insertEntry(next.learner.log, entry) } };
+  const session = next.player.session;
+  const heard = session && !(session.heard ?? []).includes(entry.key) ? { ...session, heard: [...(session.heard ?? []), entry.key] } : session;
+  return {
+    ...next,
+    player: heard === session ? next.player : { ...next.player, session: heard },
+    learner: { ...next.learner, log: insertEntry(next.learner.log, entry) },
+  };
 }
 
 function newSession(state: AppState, now: number): [PlayerState['session'], AppState] {
@@ -302,9 +308,11 @@ export function transition(state: AppState, event: AppEvent): AppState {
         case 'target': {
           // One repetition completed — unless the engine never confirmed it played.
           const next = event.unconfirmed ? state : recordHeard(state, currentId, event.now, event.measuredMs ?? null);
+          // recordHeard notes the phrase in the session: carry its player on, not the one before.
+          const heard = next.player;
           if (player.repetition < player.repeats) {
             return withPlayer(next, {
-              ...player,
+              ...heard,
               phase: 'native',
               repetition: player.repetition + 1,
               nativeMsThisRep: null,
@@ -313,8 +321,8 @@ export function transition(state: AppState, event: AppEvent): AppState {
           }
           // An undone rating's tombstone isn't a rating: the phrase waits to be rated again.
           const rated = next.pending.some((p) => p.key === keyOf(learner, currentId) && !p.undone);
-          if (!rated) return withPlayer(next, { ...player, phase: 'rate', cycle: player.cycle + 1 });
-          return advance(next, player, event.now, true);
+          if (!rated) return withPlayer(next, { ...heard, phase: 'rate', cycle: player.cycle + 1 });
+          return advance(next, heard, event.now, true);
         }
       }
       return state;
@@ -382,7 +390,8 @@ export function transition(state: AppState, event: AppEvent): AppState {
       return commitDue(state, event.now);
 
     case 'SET_PREFS': {
-      const prefs = { ...state.prefs, ...event.prefs, updatedAt: event.now };
+      const changed = Object.fromEntries(Object.keys(event.prefs).map((k) => [k, event.now]));
+      const prefs = { ...state.prefs, ...event.prefs, changedAt: { ...state.prefs.changedAt, ...changed } };
       if (event.prefs.repeats === undefined || currentId === null) return { ...state, prefs };
       // A new repetitions setting applies now, finishing the repetition in progress.
       const repeats = repeatsFor({ ...state, prefs }, currentId);
@@ -622,7 +631,15 @@ export function transition(state: AppState, event: AppEvent): AppState {
         : state.pending;
       if (pending !== state.pending) state = { ...state, pending };
       const prefs = event.prefs ? mergePrefs(state.prefs, event.prefs) : state.prefs;
-      if (prefs !== state.prefs) state = { ...state, prefs };
+      if (prefs !== state.prefs) {
+        // A repetitions change from another tab applies here as it would locally (SET_PREFS).
+        const repeatsChanged = prefs.repeats !== state.prefs.repeats && currentId !== null;
+        state = { ...state, prefs };
+        if (repeatsChanged) {
+          const repeats = repeatsFor(state, currentId);
+          state = { ...state, player: { ...state.player, repeats, repetition: Math.min(state.player.repetition, repeats) } };
+        }
+      }
       if (merged === learner) return state;
       // The course switched on another tab or device: this queue belongs to the old one, as
       // with a switch here (SET_PROFILE).
@@ -632,16 +649,17 @@ export function transition(state: AppState, event: AppEvent): AppState {
       // Another device may have deleted one of your queued phrases, even the current one
       // (a local delete refuses that). Drop what's gone; if the current phrase went, pause
       // on the one after it rather than "play" a phrase that no longer exists.
+      const current = state.player; // with any settings change above applied
       const known = (id: string) => Boolean(findPhrase(merged, id));
-      if (player.order.every(known)) return { ...state, learner: merged };
-      const order = player.order.filter(known);
-      const currentGone = !known(player.order[player.index]);
-      const index = Math.min(player.order.slice(0, player.index).filter(known).length, Math.max(0, order.length - 1));
+      if (current.order.every(known)) return { ...state, learner: merged };
+      const order = current.order.filter(known);
+      const currentGone = !known(current.order[current.index]);
+      const index = Math.min(current.order.slice(0, current.index).filter(known).length, Math.max(0, order.length - 1));
       const cleaned: PlayerState = {
-        ...(currentGone ? { ...stopClock(player, event.now), phase: 'native' as const, repetition: 1, cycle: player.cycle + 1 } : player),
-        status: order.length === 0 ? 'idle' : currentGone ? 'paused' : player.status,
+        ...(currentGone ? { ...stopClock(current, event.now), phase: 'native' as const, repetition: 1, cycle: current.cycle + 1 } : current),
+        status: order.length === 0 ? 'idle' : currentGone ? 'paused' : current.status,
         order,
-        baseOrder: player.baseOrder.filter(known),
+        baseOrder: current.baseOrder.filter(known),
         index,
       };
       return { ...state, learner: merged, player: order.length === 0 ? initialPlayer() : cleaned };
