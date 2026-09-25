@@ -173,6 +173,9 @@ function useCelebrations(openSummary: () => void) {
 
 type Overlay = { player: boolean; queue: boolean };
 
+/** Home's column (HomeScreen, the same container query): one reading column, then two in the usual width. */
+const HOME_COLUMN = 'max-w-2xl @min-[56rem]:max-w-5xl';
+
 function Shell() {
   usePlaybackDriver();
   useMediaSession();
@@ -360,6 +363,7 @@ function Shell() {
           inert={behind}
           scrolledTitle={route.name === 'set' ? setView?.title : undefined}
           narrow={route.name === 'set'}
+          column={route.name === 'home' ? HOME_COLUMN : undefined}
           action={
             route.name === 'library' ? (
               <button type="button" aria-label={c.nav.add} onClick={() => setAddOpen(true)} className={`${btnIcon} text-on-surface`}>
@@ -369,7 +373,9 @@ function Shell() {
           }
         />
 
-        <main inert={behind} className="flex-1 pt-[calc(3.5rem+env(safe-area-inset-top))] pb-[calc(9rem+env(safe-area-inset-bottom))] phone-landscape:pb-[calc(7rem+env(safe-area-inset-bottom))]">
+        {/* Room for the fixed bars: the top bar, the tab bar and mini-player below, or on a wide
+            screen the rail on the left and the mini-player alone below (index.css scroll padding matches). */}
+        <main inert={behind} className="flex-1 pt-[calc(3.5rem+env(safe-area-inset-top))] phone-landscape:pt-[calc(2.75rem+env(safe-area-inset-top))] pb-[calc(9rem+env(safe-area-inset-bottom))] phone-landscape:pb-[calc(7rem+env(safe-area-inset-bottom))] lg:pl-20 lg:pb-[calc(6rem+env(safe-area-inset-bottom))]">
           <LocalBoundary resetKey={screenKey} locale={locale}>
           {route.name === 'set' ? (
             // The set page slides in; switching tabs is instant.
@@ -388,7 +394,8 @@ function Shell() {
 
         {currentId && (
           // Stays mounted under the player so focus can return to it on close.
-          <div inert={behind} className={`fixed inset-x-2 bottom-[calc(3.75rem+env(safe-area-inset-bottom))] phone-landscape:bottom-[calc(3rem+env(safe-area-inset-bottom))] z-30 max-w-lg mx-auto ${behind ? 'invisible' : ''}`}>
+          // Above the tab bar; on a wide screen, docked at the bottom of the content, right of the rail.
+          <div inert={behind} className={`fixed inset-x-2 bottom-[calc(3.75rem+env(safe-area-inset-bottom))] phone-landscape:bottom-[calc(3rem+env(safe-area-inset-bottom))] lg:left-24 lg:right-4 lg:bottom-[calc(1rem+env(safe-area-inset-bottom))] z-30 max-w-lg mx-auto ${behind ? 'invisible' : ''}`}>
             <MiniPlayer onOpenPlayer={nav.openPlayer} />
           </div>
         )}

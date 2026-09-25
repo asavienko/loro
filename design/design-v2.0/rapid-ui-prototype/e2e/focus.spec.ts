@@ -4,7 +4,7 @@ import { expect, sampleHistory, test } from './fixtures';
 
 test.use({ seed: { log: sampleHistory(Date.now()) } });
 
-for (const [w, h] of [[390, 844], [1440, 900]] as const) {
+for (const [w, h] of [[390, 844], [1024, 768], [1440, 900]] as const) {
   for (const hash of ['/', '/#/explore']) {
     test(`focus stays visible at ${w}×${h}: ${hash}`, async ({ page }) => {
       test.setTimeout(60_000);
@@ -44,6 +44,42 @@ for (const [w, h] of [[390, 844], [1440, 900]] as const) {
       expect([...new Set(hidden)]).toEqual([]);
     });
   }
+}
+
+// The page's scroll padding is the room its fixed bars take: the top bar; the tab bar and
+// mini-player below, or on a wide screen the rail on the left and the mini-player alone below.
+for (const [w, h] of [[390, 844], [844, 390], [1024, 768], [1440, 900]] as const) {
+  test(`scroll padding matches the fixed bars at ${w}×${h}`, async ({ page }) => {
+    await page.setViewportSize({ width: w, height: h });
+    await page.goto('/');
+    const px = (value: string) => parseFloat(value);
+    // Within 2 px: the bars' hairline borders.
+    const near = (a: number, b: number) => expect(Math.abs(a - b), `${a} vs ${b}`).toBeLessThanOrEqual(2);
+    const got = await page.evaluate(() => {
+      const style = getComputedStyle(document.documentElement);
+      const main = getComputedStyle(document.querySelector('main')!);
+      const header = document.querySelector('header')!.getBoundingClientRect();
+      const nav = document.querySelector('nav')!.getBoundingClientRect();
+      return {
+        top: style.scrollPaddingTop,
+        bottom: style.scrollPaddingBottom,
+        left: style.scrollPaddingLeft,
+        mainTop: main.paddingTop,
+        mainBottom: main.paddingBottom,
+        mainLeft: main.paddingLeft,
+        header: header.bottom,
+        rail: nav.x === 0 && nav.height >= innerHeight - 1 ? nav.right : 0,
+      };
+    });
+    // The top bar's height, plus a little air, and the page starts under the bar.
+    near(px(got.top), got.header + 8);
+    near(px(got.mainTop), got.header);
+    // Below: what the page leaves for the bars is what focus keeps clear of.
+    near(px(got.bottom), px(got.mainBottom));
+    // A rail on the left (lg): the page leaves its width, and so does scrolling into view.
+    near(px(got.mainLeft), got.rail);
+    if (got.rail > 0) near(px(got.left), got.rail);
+  });
 }
 
 // Safari's Tab reaches buttons only with full keyboard access turned on (macOS / iOS setting).

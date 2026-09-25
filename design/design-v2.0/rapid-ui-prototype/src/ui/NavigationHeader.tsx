@@ -20,6 +20,8 @@ interface NavigationHeaderProps {
   scrolledTitle?: string;
   /** Match a page in the narrower reading column (the set page), so Back lines up with it. */
   narrow?: boolean;
+  /** The page's own column when it isn't the usual max-w-5xl (Home at md), so the bar lines up with it. */
+  column?: string;
   /** A page's own action (Library's "+"), a 44 px icon button before the points. */
   action?: ReactNode;
 }
@@ -38,7 +40,7 @@ function useScrolledPast(px: number, active: boolean): boolean {
   return active && past;
 }
 
-export function NavigationHeader({ title, titleLang, onBack, onOpenSettings, inert = false, scrolledTitle, narrow = false, action }: NavigationHeaderProps) {
+export function NavigationHeader({ title, titleLang, onBack, onOpenSettings, inert = false, scrolledTitle, narrow = false, column, action }: NavigationHeaderProps) {
   const past = useScrolledPast(TITLE_SCROLL_PX, Boolean(scrolledTitle));
   const c = useCopy();
   const { state } = useStore();
@@ -48,8 +50,9 @@ export function NavigationHeader({ title, titleLang, onBack, onOpenSettings, ine
   return (
     // A size container: at large text the points drop their "pts" (the star and the screen-reader
     // text keep the meaning) and the gaps close up before the title is cut.
-    <header inert={inert} className="@container fixed top-0 inset-x-0 z-40 bg-surface/95 backdrop-blur-md border-b border-surface-container-high pt-[env(safe-area-inset-top)]">
-      <div className={`h-14 px-4 flex items-center gap-3 @max-[18rem]:gap-2 mx-auto ${narrow ? 'max-w-3xl' : 'max-w-5xl'}`}>
+    // On a wide screen it starts right of the navigation rail (BottomNavBar), as the page does.
+    <header inert={inert} className="@container fixed top-0 inset-x-0 lg:left-20 z-40 bg-surface/95 backdrop-blur-md border-b border-surface-container-high pt-[env(safe-area-inset-top)]">
+      <div className={`h-14 phone-landscape:h-11 px-4 flex items-center gap-3 @max-[18rem]:gap-2 mx-auto ${narrow ? 'max-w-3xl' : (column ?? 'max-w-5xl')}`}>
         {/* Keyed apart: reusing one button for both would keep focus on it after Back, and
             App's focus return (to the card that opened the page) only steps in from <body>. */}
         {onBack ? (
