@@ -14,7 +14,6 @@ const screens: { name: string; open: (page: Page) => Promise<void> }[] = [
       await page.goto('/');
       await page.getByRole('button', { name: /^Play \d+ phrases/ }).first().click();
       await page.getByRole('button', { name: 'Pause', exact: true }).click();
-      await page.getByRole('button', { name: /^Now playing:/ }).click();
       await page.waitForTimeout(600);
     },
   },
@@ -24,7 +23,6 @@ const screens: { name: string; open: (page: Page) => Promise<void> }[] = [
       await page.goto('/');
       await page.getByRole('button', { name: /^Play \d+ phrases/ }).first().click();
       await page.getByRole('button', { name: 'Pause', exact: true }).click();
-      await page.getByRole('button', { name: /^Now playing:/ }).click();
       await page.getByRole('button', { name: 'Open queue' }).click();
       await page.waitForTimeout(600);
     },
@@ -51,7 +49,6 @@ const screens: { name: string; open: (page: Page) => Promise<void> }[] = [
       await page.goto('/');
       await page.getByRole('button', { name: /^Play \d+ phrases/ }).first().click();
       await page.getByRole('button', { name: 'Pause', exact: true }).click();
-      await page.getByRole('button', { name: /^Now playing:/ }).click();
       await page.getByRole('button', { name: 'Session summary' }).click();
       await page.waitForTimeout(500);
     },

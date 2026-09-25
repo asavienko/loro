@@ -21,7 +21,6 @@ for (const hash of ['/', '/#/explore', '/#/library', '/#/library?view=ownSets', 
 test('the player fits, and Pause is reachable', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: /^Play \d+ phrases/ }).first().click();
-  await page.getByRole('button', { name: /^Now playing:/ }).click();
   await page.waitForTimeout(700);
   const player = page.getByRole('dialog', { name: 'Now playing' });
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
@@ -38,7 +37,6 @@ test.describe('phone landscape (568×320)', () => {
   test('Pause and the ratings are reachable without scrolling', async ({ page }) => {
     await page.goto('/');
     await page.getByRole('button', { name: /^Play \d+ phrases/ }).first().click();
-    await page.getByRole('button', { name: /^Now playing:/ }).click();
     await page.waitForTimeout(700);
     const player = page.getByRole('dialog', { name: 'Now playing' });
     for (const name of ['Pause', 'Next phrase']) {
@@ -57,7 +55,6 @@ test.describe('large text (150%) on a 360 px phone', () => {
     await page.goto('/');
     await page.addStyleTag({ content: 'html { font-size: 150% !important }' });
     await page.getByRole('button', { name: /^Play \d+ phrases/ }).first().click();
-    await page.getByRole('button', { name: /^Now playing:/ }).click();
     await page.waitForTimeout(700);
     const player = page.getByRole('dialog', { name: 'Now playing' });
     const spilled = await player.evaluate((root) =>
@@ -114,7 +111,6 @@ test.describe('large text (150%) on a 320 px phone: player, queue and summary', 
     await page.goto('/');
     await page.addStyleTag({ content: 'html { font-size: 150% !important }' });
     await page.getByRole('button', { name: /^Play \d+ phrases/ }).first().click();
-    await page.getByRole('button', { name: /^Now playing:/ }).click();
     await page.waitForTimeout(600);
     await page.getByRole('button', { name: 'Pause', exact: true }).click();
   });

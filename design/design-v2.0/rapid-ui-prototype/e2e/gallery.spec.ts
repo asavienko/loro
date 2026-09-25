@@ -77,7 +77,6 @@ test('200% text screens', async ({ page }) => {
   await page.waitForTimeout(400);
   await shot(page, 'home-200');
   await page.getByRole('button', { name: /Play 7 phrases/ }).click();
-  await page.getByRole('button', { name: /^Now playing:/ }).click();
   await page.waitForTimeout(700);
   await shot(page, 'player-200b');
 });

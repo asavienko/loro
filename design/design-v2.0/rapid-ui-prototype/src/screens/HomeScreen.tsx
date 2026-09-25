@@ -1,4 +1,4 @@
-import { ReactNode, useState } from 'react';
+import { ReactNode, startTransition, useState } from 'react';
 import { useNav } from '../nav/NavContext';
 import { coursePhrases, courseSets, findSetView } from '../state/catalog';
 import { formatAgo, formatElapsed, formatWhen } from '../state/clock';
@@ -60,7 +60,15 @@ export function HomeScreen() {
   const hero = offerDemo && firstPhrase ? 'demo' : due.length > 0 ? 'review' : suggested && suggestedIds.length > 0 ? 'continue' : courseDone ? 'done' : null;
   const continueTitle = stats.started === 0 ? c.home.startTitle : c.home.continueTitle;
   const continueMeta = suggestedProgress ? c.set.summary(suggestedProgress.total, suggestedProgress.learned, suggestedProgress.due) : '';
-  const playContinue = () => suggested && nav.playSet(suggested.id, { phraseIds: suggestedIds });
+  // Home's study plays open the player, as the demo does, so the learner sees the grades to rate
+  // (quick-play on cards elsewhere stays in the mini-player). The player opens as a transition,
+  // so the tap answers at once on a slow phone and the player slides up right after.
+  const openPlayer = () => startTransition(nav.openPlayer);
+  const playContinue = () => {
+    if (!suggested) return;
+    nav.playSet(suggested.id, { phraseIds: suggestedIds });
+    openPlayer();
+  };
   // With more due than the review plays, the next due date isn't what comes next: say nothing.
   // With reviews due now, the next ones come after them ("After these"), inside the review.
   const nextLine = upcoming && due.length <= review.length ? (review.length > 0 ? c.home.nextAfter : c.home.next)(upcoming.count, formatWhen(upcoming.at, now, c.locale)) : null;
@@ -79,7 +87,7 @@ export function HomeScreen() {
               detail={null}
               onClick={() => {
                 nav.playList([firstPhrase]);
-                nav.openPlayer();
+                openPlayer();
               }}
             />
           </Hero>
@@ -93,7 +101,10 @@ export function HomeScreen() {
             <PlayButton
               label={c.home.playPhrases(review.length)}
               detail={reviewMs === null ? null : c.home.duration(formatElapsed(reviewMs))}
-              onClick={() => nav.playList(review)}
+              onClick={() => {
+                nav.playList(review);
+                openPlayer();
+              }}
             />
             {nextLine && <NextLine text={nextLine} className="mt-3 text-on-surface-variant" />}
           </Hero>

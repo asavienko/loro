@@ -14,7 +14,6 @@ test("the set page's Back lines up with its column", async ({ page }) => {
 test("the player's header lines up with its body", async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: /^Play \d+ phrases/ }).first().click();
-  await page.getByRole('button', { name: /^Now playing:/ }).click();
   const player = page.getByRole('dialog', { name: 'Now playing' });
   const queue = (await player.getByRole('button', { name: 'Open queue' }).boundingBox())!;
   const speed = (await player.getByRole('radiogroup', { name: 'Speed' }).boundingBox())!;
@@ -26,7 +25,6 @@ test.describe('a portrait tablet (768×1024)', () => {
   test('the player keeps one column, the cover centred above the controls', async ({ page }) => {
     await page.goto('/');
     await page.getByRole('button', { name: /^Play \d+ phrases/ }).first().click();
-    await page.getByRole('button', { name: /^Now playing:/ }).click();
     const player = page.getByRole('dialog', { name: 'Now playing' });
     // Measure once the player has finished sliding up.
     await expect(player).toHaveCSS('transform', 'none');
@@ -40,7 +38,6 @@ test.describe('a portrait tablet (768×1024)', () => {
 const openPlayer = async (page: import('@playwright/test').Page) => {
   await page.goto('/');
   await page.getByRole('button', { name: /^Play \d+ phrases/ }).first().click();
-  await page.getByRole('button', { name: /^Now playing:/ }).click();
   return page.getByRole('dialog', { name: 'Now playing' });
 };
 

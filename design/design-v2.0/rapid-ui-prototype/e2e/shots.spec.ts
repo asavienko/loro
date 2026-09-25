@@ -10,7 +10,6 @@ test('screens', async ({ page }) => {
   await page.waitForTimeout(500);
   await page.screenshot({ path: `${dir}/r3-home.png` });
   await page.getByRole('button', { name: /Play 5 phrases/ }).click();
-  await page.getByRole('button', { name: /^Now playing:/ }).click();
   const player = page.getByRole('dialog', { name: 'Now playing' });
   await expect(player.getByText('Hear it in Spanish', { exact: true }).first()).toBeVisible({ timeout: 10_000 });
   await player.getByRole('button', { name: 'Pause', exact: true }).click();

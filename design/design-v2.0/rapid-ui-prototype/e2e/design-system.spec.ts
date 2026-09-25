@@ -25,6 +25,7 @@ test('at 200% text the header title keeps room: "pts" gives way first', async ({
 test('at 200% text the mini-player gives its title room: the cover gives way', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: /^Play \d+ phrases/ }).first().click();
+  await page.getByRole('button', { name: 'Close player' }).click(); // Home's Play opens the player
   await page.addStyleTag({ content: 'html { font-size: 200% }' });
   await page.waitForTimeout(300);
   const mini = page.getByRole('button', { name: /^Now playing:/ });
@@ -66,6 +67,7 @@ const covers = (page: import('@playwright/test').Page) =>
 test('covers show their whole icon, from the 44 px mini-player to the grid', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: /^Play \d+ phrases/ }).first().click();
+  await page.getByRole('button', { name: 'Close player' }).click(); // Home's Play opens the player
   await expect(page.getByRole('button', { name: /^Now playing:/ })).toBeVisible();
   const home = await covers(page);
   expect(home.count).toBeGreaterThanOrEqual(4);

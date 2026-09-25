@@ -22,7 +22,6 @@ const stored = (page: Page) =>
 
 async function rateHardInPlayer(page: Page) {
   await page.getByRole('button', { name: 'Play 5 phrases' }).click();
-  await page.getByRole('button', { name: /^Now playing:/ }).click();
   const player = page.getByRole('dialog', { name: 'Now playing' });
   await player.getByRole('button', { name: 'Pause', exact: true }).click();
   await player.getByRole('button', { name: /^Hard/ }).click();
