@@ -96,3 +96,36 @@ test("the set page's Back works after a reload with a sheet open", async ({ page
   await page.getByRole('button', { name: /^Back/ }).first().click();
   await expect(page).toHaveURL(/#\/explore/);
 });
+
+test('the notes sheet shows the next phrase its own first tab', async ({ page }) => {
+  await page.clock.install();
+  await page.goto('/#/set/set-tapas?from=explore');
+  await page.getByRole('button', { name: 'Play Tapas & Tabernas' }).click();
+  await page.getByRole('button', { name: /^Now playing:/ }).click();
+  const player = page.getByRole('dialog', { name: 'Now playing' });
+  await player.getByRole('button', { name: 'Notes' }).click();
+  // The first phrase has more kinds of note than the second: pick its last.
+  const first = await page.getByRole('tab').count();
+  await page.getByRole('tab').last().click();
+  // The player moves on while the notes stay open.
+  for (let t = 0; t < 90_000 && (await player.getByText(/^1 of \d+$/).count()) > 0; t += 500) await page.clock.runFor(500);
+  await expect(player.getByText(/^2 of \d+$/)).toBeVisible();
+  expect(await page.getByRole('tab').count()).toBeLessThan(first);
+  await expect(page.locator('[role="tab"][aria-selected="true"]')).toHaveCount(1);
+  await expect(page.getByRole('tabpanel')).not.toBeEmpty();
+});
+
+test.describe('onboarding', () => {
+  test.use({ seed: null });
+  test('a typed name survives a reload', async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await page.getByPlaceholder(/name/i).fill('Ivan');
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await page.waitForTimeout(600);
+    await page.reload();
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await expect(page.getByPlaceholder(/name/i)).toHaveValue('Ivan');
+  });
+});
+

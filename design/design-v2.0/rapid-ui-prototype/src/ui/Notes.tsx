@@ -19,7 +19,10 @@ export function PhraseNotesView({ phrase, prefix }: { phrase: Phrase; prefix: st
   const native = state.learner.profile.nativeLang;
   const notes = phrase.notes;
   const available = notes ? NOTE_TABS.filter((t) => notes[t.id]) : [];
-  const [tab, setTab] = useState<NoteTab | null>(available[0]?.id ?? null);
+  const [chosen, setTab] = useState<NoteTab | null>(available[0]?.id ?? null);
+  // The phrase can change under an open sheet (the player moves on): a tab it lacks falls
+  // back to its first, rather than an empty panel with no tab selected.
+  const tab = chosen && available.some((t) => t.id === chosen) ? chosen : (available[0]?.id ?? null);
   if (!notes || !tab || available.length === 0) return null;
   const translated = native === 'en-GB' ? undefined : phrase.noteTranslations[tab]?.[native];
   return (

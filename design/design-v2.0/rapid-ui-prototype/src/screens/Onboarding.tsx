@@ -21,7 +21,11 @@ export function Onboarding() {
   const [step, setStep] = useState<Step>('native');
   const [name, setName] = useState(profile.name);
   const at = STEPS.indexOf(step);
-  const next = () => setStep(STEPS[at + 1]);
+  // The name is kept as the learner goes on (like the languages), so a reload doesn't lose it.
+  const next = () => {
+    if (step === 'name' && name.trim() !== profile.name) actions.setProfile({ name: name.trim() });
+    setStep(STEPS[at + 1]);
+  };
   const native = languageName(profile.nativeLang, c.locale);
   const target = languageName(profile.targetLang, c.locale);
 
