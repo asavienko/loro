@@ -39,6 +39,8 @@ import { useToast } from '../ui/Toast';
 import { btnPrimary, btnText } from '../ui/button';
 
 const STEPS: Exclude<Phase, 'rate'>[] = ['native', 'pause', 'target'];
+/** The end panel's action: Home's hero radius, so a set title that wraps at large text stays inside it. */
+const PANEL_PRIMARY = `${btnPrimary.replace('rounded-full', 'rounded-3xl')} py-2`;
 const SWIPE = 70;
 
 const GRADES: { grade: Grade; icon: IconName; tone: string }[] = [
@@ -155,10 +157,21 @@ export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps
 
       {/* The stage scrolls when it doesn't fit (large text, a short phone); the dock never
           moves, so Pause and the grades are always on screen. Two columns in phone landscape
-          (stage | dock) and from 1024 px (cover | phrase over dock). */}
-      <div className="@container/player flex-1 min-h-0 w-full max-w-lg mx-auto flex flex-col phone-landscape:max-w-4xl phone-landscape:grid phone-landscape:grid-cols-2 phone-landscape:grid-rows-[minmax(0,1fr)] lg:max-w-4xl lg:grid lg:grid-cols-2 lg:grid-rows-[minmax(0,1fr)_auto] lg:gap-x-10 lg:px-5 lg:overflow-y-auto">
+          (stage | dock) and from 1024 px (cover | phrase over dock). Once a queue has ended,
+          the end panel sits right under the phrase and the two are centred together: a finish,
+          not a card at the foot of an empty stage. */}
+      <div
+        className={`@container/player flex-1 min-h-0 w-full max-w-lg mx-auto flex flex-col phone-landscape:max-w-4xl phone-landscape:grid phone-landscape:grid-cols-2 phone-landscape:grid-rows-[minmax(0,1fr)] lg:max-w-4xl lg:grid lg:grid-cols-2 lg:gap-x-10 lg:px-5 lg:overflow-y-auto ${
+          // Ended, it is one column that scrolls as a whole (large text), centred when it fits.
+          endedOnce ? 'justify-center-safe overflow-y-auto lg:grid-rows-2' : 'lg:grid-rows-[minmax(0,1fr)_auto]'
+        }`}
+      >
         {/* When it scrolls, its last lines fade under the dock's edge, which says there's more. */}
-        <div className="flex-1 min-h-0 overflow-y-auto scroll-pb-6 px-5 pt-1 pb-6 flex flex-col gap-3 short:gap-2 [mask-image:linear-gradient(to_bottom,black_calc(100%-1.25rem),transparent)] lg:contents">
+        <div
+          className={`${
+            endedOnce ? 'flex-initial' : 'flex-1 min-h-0 overflow-y-auto [mask-image:linear-gradient(to_bottom,black_calc(100%-1.25rem),transparent)]'
+          } scroll-pb-6 px-5 pt-1 pb-6 flex flex-col gap-3 short:gap-2 lg:contents`}
+        >
           <motion.div
             drag="x"
             dragSnapToOrigin
@@ -206,7 +219,7 @@ export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps
           </div>
         </div>
 
-        <div className="shrink-0 px-5 pt-2 pb-[max(env(safe-area-inset-bottom),0.75rem)] border-t border-hairline flex flex-col gap-2 max-h-[60dvh] overflow-y-auto phone-landscape:border-t-0 phone-landscape:self-center phone-landscape:max-h-full phone-landscape:py-2 lg:col-start-2 lg:row-start-2 lg:px-0 lg:border-t-0 lg:max-h-none lg:overflow-visible lg:pb-6">
+        <div className={`shrink-0 px-5 pt-2 pb-[max(env(safe-area-inset-bottom),0.75rem)] ${endedOnce ? '' : 'border-t border-hairline max-h-[60dvh] overflow-y-auto'} flex flex-col gap-2 phone-landscape:border-t-0 phone-landscape:self-center phone-landscape:max-h-full phone-landscape:py-2 lg:col-start-2 lg:row-start-2 lg:px-0 lg:border-t-0 lg:max-h-none lg:overflow-visible lg:pb-6`}>
           {endedOnce ? <EndPanel onClose={onClose} /> : <Rating phrase={phrase} />}
           {!endedOnce && <Transport />}
           {/* Speed: the only speed control in the app (a chip in the action row when compact). */}
@@ -553,13 +566,13 @@ function EndPanel({ onClose }: { onClose: () => void }) {
       </div>
       <div className="w-full max-w-[20rem] flex flex-col gap-2">
         {source?.kind === 'library' ? (
-          <button type="button" onClick={() => actions.jump(0, true)} className={btnPrimary}>
+          <button type="button" onClick={() => actions.jump(0, true)} className={PANEL_PRIMARY}>
             <Icon name="replay" className="text-icon" />
             {c.player.end.playAgain}
           </button>
         ) : (
           suggested && (
-            <button type="button" onClick={startSuggested} className={btnPrimary}>
+            <button type="button" onClick={startSuggested} className={PANEL_PRIMARY}>
               <Icon name="play_arrow" fill className="text-icon" />
               {demo ? c.player.end.startSet(suggested.title) : c.player.end.continueSet(suggested.title)}
             </button>
