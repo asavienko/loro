@@ -18,6 +18,7 @@ import { useCopy, useNow, useStore } from '../state/store';
 import type { SortKey } from '../state/types';
 import { Icon, IconName } from '../ui/Icon';
 import { PhraseRow } from '../ui/PhraseRow';
+import { isTargetRevealed } from '../ui/phase';
 import { progressLabel } from '../ui/progressLabel';
 import { SetCover } from '../ui/SetCover';
 import { Sheet, SheetOption } from '../ui/Sheet';
@@ -222,6 +223,8 @@ export function SetScreen({ setId }: { setId: string }) {
                     detail={progressLabel(c, p, now)}
                     isCurrent={isCurrent}
                     isPlaying={isCurrent && playing}
+                    // As in the queue: the playing phrase's Spanish stays hidden while you recall it.
+                    hideTarget={isCurrent && !isTargetRevealed(state.player)}
                     onPlay={() => nav.playSet(setId, { phraseIds: sortedIds, startIndex: i })}
                     onMore={() => nav.showDetails(phrase.id, view.kind === 'own' ? { ownSetId: setId } : {})}
                   />
