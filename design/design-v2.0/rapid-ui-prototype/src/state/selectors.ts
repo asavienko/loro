@@ -250,7 +250,8 @@ export function continuation(
   for (let step = 1; step <= sets.length; step++) {
     const set = sets[(Math.max(at, -1) + step + sets.length) % sets.length];
     if (set.id === player.setId) continue;
-    const ids = playableIds(learner, set.phraseIds, now);
+    // Not what this queue just played (a review or mixed queue has no set to skip).
+    const ids = playableIds(learner, set.phraseIds, now).filter((id) => !player.order.includes(id));
     if (ids.length > 0) return { phraseIds: ids, setId: set.id };
   }
   const due = reviewQueue(learner, now).filter((id) => id !== currentPhraseId(player));
@@ -276,11 +277,12 @@ export function upNextIds(player: PlayerState): string[] {
 /** Distinct phrases heard on this device before the current one, newest first. */
 export function previouslyPlayed(state: AppState, limit = 5): Extract<LogEntry, { kind: 'heard' }>[] {
   const current = currentPhraseId(state.player);
+  const course = keyOf(state.learner, ''); // this course only
   const seen = new Set<string>();
   const out: Extract<LogEntry, { kind: 'heard' }>[] = [];
   for (let i = state.learner.log.length - 1; i >= 0 && out.length < limit; i--) {
     const entry = state.learner.log[i];
-    if (entry.kind !== 'heard' || entry.device !== state.device.id) continue;
+    if (entry.kind !== 'heard' || entry.device !== state.device.id || !entry.key.startsWith(course)) continue;
     if (entry.phraseId === current || seen.has(entry.phraseId) || !findPhrase(state.learner, entry.phraseId)) continue;
     seen.add(entry.phraseId);
     out.push(entry);
