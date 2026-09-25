@@ -50,6 +50,16 @@ test('the due-and-new queue pauses from its own button; the big Play then starts
   expect(await page.locator('main li').first().locator('[aria-current="true"]').count()).toBe(1);
 });
 
+for (const [width, height] of [[390, 844], [320, 568], [1440, 900]] as const) {
+  test(`"Play due and new" keeps clear of the big Play above it at ${width} px (Q-11)`, async ({ page }) => {
+    await page.setViewportSize({ width, height });
+    await page.goto('/#/set/set-cafe?from=explore');
+    const play = (await page.getByRole('button', { name: 'Play Café & Mañanas' }).boundingBox())!;
+    const dueNew = (await page.getByRole('button', { name: /^Play due and new/ }).boundingBox())!;
+    expect(dueNew.y - (play.y + play.height)).toBeGreaterThanOrEqual(8);
+  });
+}
+
 test('the play order is one control that also sorts, not a line and a second button', async ({ page }) => {
   await page.goto(CAFE);
   await expect(page.getByRole('button', { name: /Set order/ })).toHaveCount(1);
