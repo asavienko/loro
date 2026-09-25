@@ -29,6 +29,7 @@ import { usePlayerKeys } from './usePlayerKeys';
 import { useRate } from './useRate';
 import { Sheet } from '../ui/Sheet';
 import { useToast } from '../ui/Toast';
+import { btnIcon } from '../ui/button';
 
 const STEPS: Exclude<Phase, 'rate'>[] = ['native', 'pause', 'target'];
 const SWIPE = 70;
@@ -122,7 +123,7 @@ export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps
         <div onPointerDown={startDrag} className="flex-1 min-w-0 self-stretch flex flex-col items-center justify-center touch-none">
           <h1
             lang={queueSet ? queueSet.targetLang : undefined}
-            className="font-serif text-row font-bold text-on-surface line-clamp-2 break-words text-center max-w-full leading-tight"
+            className="font-serif text-row font-semibold text-on-surface line-clamp-2 break-words text-center max-w-full leading-tight"
           >
             {/* The count is already in the position line below. */}
             {queueSet?.title ?? c.queue.title}
@@ -144,8 +145,8 @@ export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps
             onDragEnd={onSwipe}
             className="relative mx-auto w-full max-w-[min(100%,26dvh)] short:hidden phone-landscape:hidden md:max-w-[min(100%,34dvh)] lg:max-w-[min(100%,52dvh)] aspect-square touch-pan-y"
           >
-            <SetCover set={coverSet ?? { topicId: null, coverIcon: 'edit_note' }} size="lg" className="w-full h-full rounded-3xl shadow-xl" />
-            <span role="img" aria-label={languageLabel(phrase.targetLang, c.locale)} className="absolute bottom-3 left-3 w-9 h-9 rounded-full bg-surface/70 flex items-center justify-center text-lg">
+            <SetCover set={coverSet ?? { topicId: null, coverIcon: 'edit_note' }} size="lg" className="w-full h-full rounded-3xl shadow-cover" />
+            <span role="img" aria-label={languageLabel(phrase.targetLang, c.locale)} className="absolute bottom-3 left-3 w-9 h-9 rounded-full bg-surface/70 flex items-center justify-center text-icon-sm">
               {getLanguage(phrase.targetLang).flag}
             </span>
           </motion.div>
@@ -156,9 +157,9 @@ export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps
             <div className="flex items-start gap-1 short:flex-col short:gap-0 phone-landscape:col-start-1 phone-landscape:row-start-1">
               <div className="flex-1 min-w-0">
                 {revealed ? (
-                  <GlossedPhrase phrase={phrase} className="font-serif italic text-display-sm font-bold text-on-surface leading-snug" />
+                  <GlossedPhrase phrase={phrase} className="font-serif italic text-display-sm font-semibold text-on-surface leading-snug" />
                 ) : (
-                  <HiddenPhrase text={phrase.target} label={c.player.hidden(targetName)} className="font-serif italic text-display-sm font-bold leading-snug" />
+                  <HiddenPhrase text={phrase.target} label={c.player.hidden(targetName)} className="font-serif italic text-display-sm font-semibold leading-snug" />
                 )}
                 <p lang={prompt.lang} className="text-body text-secondary">{prompt.text}</p>
                 {voice && !phrase.audio && voicesFor(phrase.targetLang).length > 1 ? (
@@ -191,7 +192,7 @@ export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps
                   type="button"
                   aria-label={c.phrase.addToSet}
                   onClick={() => nav.addToSet([phrase.id])}
-                  className="w-11 h-11 flex items-center justify-center rounded-full text-secondary active:bg-surface-container"
+                  className={`${btnIcon} text-secondary`}
                 >
                   <Icon name="playlist_add" className="text-icon-lg" />
                 </button>
@@ -200,7 +201,7 @@ export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps
                     type="button"
                     aria-label={c.phrase.notesTitle}
                     onClick={() => setNotesOpen(true)}
-                    className="w-11 h-11 flex items-center justify-center rounded-full text-secondary active:bg-surface-container"
+                    className={`${btnIcon} text-secondary`}
                   >
                     <Icon name="lightbulb" className="text-icon-lg" />
                   </button>
@@ -267,7 +268,7 @@ export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps
                 aria-label={playing ? c.common.pause : c.common.play}
                 aria-keyshortcuts="Space"
                 onClick={playing ? actions.pause : actions.play}
-                className="w-16 h-16 rounded-full bg-primary-container text-on-primary flex items-center justify-center shadow-lg active:scale-95 transition-transform"
+                className="w-16 h-16 rounded-full bg-primary-container text-on-primary flex items-center justify-center shadow-float active:scale-95 transition-transform"
               >
                 <Icon name={playing ? 'pause' : 'play_arrow'} fill className="text-icon-3xl" />
               </button>
@@ -287,7 +288,7 @@ export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps
                   aria-checked={state.prefs.speed === s}
                   onClick={() => actions.setPrefs({ speed: s })}
                   className={`min-h-11 rounded-full text-body tabular-nums ${
-                    state.prefs.speed === s ? 'bg-surface-container-lowest text-on-surface font-bold shadow-sm' : 'text-secondary font-medium'
+                    state.prefs.speed === s ? 'bg-surface-container-lowest text-on-surface font-bold shadow-card' : 'text-secondary font-medium'
                   }`}
                 >
                   {s}×
@@ -309,7 +310,7 @@ export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps
 
 function HeaderButton({ label, icon, onClick }: { label: string; icon: IconName; onClick: () => void }) {
   return (
-    <button type="button" aria-label={label} onClick={onClick} className="w-11 h-11 shrink-0 flex items-center justify-center rounded-full active:bg-surface-container">
+    <button type="button" aria-label={label} onClick={onClick} className={btnIcon}>
       <Icon name={icon} className="text-icon-lg" />
     </button>
   );
@@ -430,7 +431,7 @@ function RepeatsButton() {
         actions.setPrefs({ repeats: next });
         announce(next === 'auto' ? c.player.repeats.auto : next === 1 ? c.player.repeats.one : c.player.repeats.three);
       }}
-      className="w-11 h-11 flex items-center justify-center rounded-full active:bg-surface-container"
+      className={btnIcon}
     >
       <span aria-hidden="true" className="min-w-9 h-7 px-1.5 rounded-lg border-2 border-primary-container text-primary-container text-label font-black flex items-center justify-center tabular-nums">
         {setting === 'auto' ? 'A' : `${setting}×`}

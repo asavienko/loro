@@ -8,6 +8,8 @@ import { courseSets, findPhrase, promptOf } from '../state/catalog';
 import { LIMITS } from '../state/limits';
 import { useCopy, useStore } from '../state/store';
 import { Icon, IconName } from '../ui/Icon';
+import { btnPrimary, btnTonal } from '../ui/button';
+import { fieldClass } from '../ui/field';
 
 type Step = 'native' | 'name' | 'course' | 'voices' | 'loop';
 const STEPS: Step[] = ['native', 'name', 'course', 'voices', 'loop'];
@@ -42,7 +44,7 @@ export function Onboarding() {
   return (
     <main className="min-h-dvh bg-surface text-on-surface flex flex-col px-6 pt-[calc(2rem+env(safe-area-inset-top))] max-w-md mx-auto">
       <p className="text-label font-semibold text-secondary">{c.onboarding.step(at + 1, STEPS.length)}</p>
-      <h1 className="font-serif text-display font-bold mt-1">Loro</h1>
+      <h1 className="font-serif text-display font-semibold mt-1">Loro</h1>
       {at === 0 && <p className="text-body text-secondary mt-1">{c.onboarding.welcome}</p>}
 
       <div className={`flex-1 flex flex-col gap-3 ${at === 0 ? 'mt-8' : 'mt-4'}`}>
@@ -61,7 +63,7 @@ export function Onboarding() {
         )}
         {step === 'name' && (
           <label className="flex flex-col gap-2">
-            <span className="font-serif text-lg font-bold">{c.onboarding.name}</span>
+            <span className="font-serif text-title font-semibold">{c.onboarding.name}</span>
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -75,7 +77,7 @@ export function Onboarding() {
               }}
               maxLength={LIMITS.name}
               placeholder={c.onboarding.namePlaceholder}
-              className="min-h-12 px-4 rounded-2xl bg-surface-container-low border border-outline-variant/60 text-base"
+              className={fieldClass}
             />
           </label>
         )}
@@ -91,7 +93,7 @@ export function Onboarding() {
         {step === 'voices' && <VoiceCheck />}
         {step === 'loop' && (
           <section>
-            <h2 className="font-serif text-lg font-bold mb-3">{c.onboarding.loop}</h2>
+            <h2 className="font-serif text-title font-semibold mb-3">{c.onboarding.loop}</h2>
             <ol className="flex flex-col gap-3">
               {c.onboarding.loopSteps(native, target).map((text, i) => (
                 <li key={text} className="flex gap-3 items-start">
@@ -110,7 +112,7 @@ export function Onboarding() {
       <div className="sticky bottom-0 -mx-6 px-6 pt-3 mt-3 pb-[calc(1.5rem+env(safe-area-inset-bottom))] bg-surface flex flex-col gap-2 before:absolute before:inset-x-0 before:-top-6 before:h-6 before:bg-linear-to-t before:from-surface before:to-transparent before:pointer-events-none">
         {step === 'loop' ? (
           <>
-            <button type="button" onClick={() => finish(true)} className="min-h-12 rounded-full bg-primary-container text-on-primary font-bold flex items-center justify-center gap-2">
+            <button type="button" onClick={() => finish(true)} className={btnPrimary}>
               <Icon name="play_arrow" fill className="text-icon" />
               {c.onboarding.start}
             </button>
@@ -119,7 +121,7 @@ export function Onboarding() {
             </button>
           </>
         ) : (
-          <button type="button" onClick={next} className="min-h-12 rounded-full bg-primary-container text-on-primary font-bold">
+          <button type="button" onClick={next} className={btnPrimary}>
             {c.onboarding.next}
           </button>
         )}
@@ -136,7 +138,7 @@ export function Onboarding() {
 function Choice({ legend, options, label, value, onChange }: { legend: string; options: LanguageCode[]; label: (code: LanguageCode) => string; value: LanguageCode; onChange: (code: LanguageCode) => void }) {
   return (
     <fieldset className="flex flex-col gap-2">
-      <legend className="font-serif text-lg font-bold mb-2">{legend}</legend>
+      <legend className="font-serif text-title font-semibold mb-2">{legend}</legend>
       {options.map((code) => (
         <label key={code} className={`min-h-12 px-4 rounded-2xl border flex items-center gap-3 cursor-pointer ${value === code ? 'border-primary-container bg-primary-fixed/40' : 'border-outline-variant/60'}`}>
           <input type="radio" name={legend} checked={value === code} onChange={() => onChange(code)} className="w-5 h-5 accent-primary-container" />
@@ -160,7 +162,7 @@ function VoiceCheck() {
   const missing = ready && langs.some((l) => !voiceName(l));
   return (
     <section aria-live="polite">
-      <h2 className="font-serif text-lg font-bold mb-3">{c.onboarding.voices}</h2>
+      <h2 className="font-serif text-title font-semibold mb-3">{c.onboarding.voices}</h2>
       {!ready ? (
         <p className="text-body text-secondary">{c.onboarding.voicesChecking}</p>
       ) : (
@@ -180,7 +182,7 @@ function VoiceCheck() {
                     type="button"
                     aria-label={c.onboarding.test(languageName(lang, c.locale))}
                     onClick={() => void speak(text, lang, 1).done}
-                    className="shrink-0 min-h-11 px-3 rounded-full bg-surface-container text-body font-semibold flex items-center gap-1.5"
+                    className={btnTonal}
                   >
                     <Icon name="volume_up" className="text-icon-sm" />
                     {c.onboarding.testShort}
