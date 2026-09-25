@@ -26,12 +26,13 @@ export function useRate(): (grade: Grade) => void {
     const now = clock.now();
     // A change inside the window keeps the rating's original time.
     const open = pendingFor(s, id);
-    const at = open && windowLeft(open, now) > 0 ? open.at : now;
+    const kept = open && windowLeft(open, now) > 0 ? open : undefined;
+    const at = kept ? kept.at : now;
     const movesOn = s.player.phase === 'rate';
     a.rate(grade);
     if (grade === 'easy') easyCue();
     else gentleCue();
-    const rated = copy.player.rated(copy.common.grade[grade], formatWhen(previewDue(s.learner, id, grade, at), now, copy.locale));
+    const rated = copy.player.rated(copy.common.grade[grade], formatWhen(previewDue(s.learner, id, grade, at, kept?.day), now, copy.locale));
     // Coming back later in this queue (Missed or Hard), as the status line says too.
     const again = upNextIds(s.player).includes(id) || requeuesOn(s.player, grade);
     const text = again ? `${rated} ${copy.player.requeued}` : rated;

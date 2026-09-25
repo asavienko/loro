@@ -37,6 +37,63 @@ test.describe('onboarding', () => {
     await expect(player.getByRole('button', { name: 'Pause', exact: true })).toBeVisible();
   });
 
+  test('Next at once ends the demo without showing the Spanish anywhere (R-01)', async ({ page }) => {
+    await page.addInitScript(() => {
+      Object.defineProperty(navigator, 'mediaSession', { value: { setActionHandler: () => {}, metadata: null, playbackState: 'none' } });
+    });
+    await page.goto('/');
+    for (let i = 0; i < 4; i++) await page.getByRole('button', { name: 'Continue' }).click();
+    await page.getByRole('button', { name: 'Start with one phrase' }).click();
+    const player = page.getByRole('dialog', { name: 'Now playing' });
+    await player.getByRole('button', { name: 'Next phrase' }).click();
+    await expect(player.getByRole('heading', { name: 'That’s the loop' })).toBeVisible();
+    // Never heard, so still hidden: in the player, the queue, the lock screen and the mini-player.
+    await expect(player.getByText('Spanish hidden until you hear it')).toBeAttached();
+    await expect(player).not.toContainText('Me pone');
+    expect(await page.evaluate(() => navigator.mediaSession.metadata?.title)).toBe('A cortado, please');
+    await player.getByRole('button', { name: 'Open queue' }).click();
+    const queue = page.getByRole('dialog', { name: 'Queue' });
+    await expect(queue.getByText('A cortado, please')).toBeVisible();
+    await expect(queue).not.toContainText('Me pone');
+    await page.goBack();
+    await expect(queue).toHaveCount(0);
+    await player.getByRole('button', { name: 'Not now' }).click();
+    await expect(page.getByRole('button', { name: /^Now playing:/ })).toHaveAccessibleName('Now playing: A cortado, please');
+    await expect(page.locator('body')).not.toContainText('Me pone');
+  });
+
+  test('grade keys do nothing on the end panel, which shows no grades (R-05)', async ({ page }) => {
+    await page.goto('/');
+    for (let i = 0; i < 4; i++) await page.getByRole('button', { name: 'Continue' }).click();
+    await page.getByRole('button', { name: 'Start with one phrase' }).click();
+    const player = page.getByRole('dialog', { name: 'Now playing' });
+    await player.getByRole('button', { name: 'Next phrase' }).click();
+    await expect(player.getByRole('heading', { name: 'That’s the loop' })).toBeVisible();
+    const status = page.locator('div[role="status"]');
+    await expect(status).toContainText('That’s the loop');
+    for (const key of ['3', '1', '2']) await page.keyboard.press(key);
+    await page.waitForTimeout(300);
+    await expect(status).not.toContainText('Rated');
+    await expect(player.getByText(/^Rated/)).toHaveCount(0);
+    // The phrase was never rated: the set that follows starts it with no grade chosen.
+    await player.getByRole('button', { name: 'Start Café & Mañanas' }).click();
+    await expect(player.getByRole('heading', { level: 1 })).toHaveText('Café & Mañanas');
+    await expect(player.getByRole('button', { name: /^(Missed|Hard|Easy)/, pressed: true })).toHaveCount(0);
+    await expect(player.getByText(/^Rated/)).toHaveCount(0);
+  });
+
+  test('a rating in the last hold is said with its Undo, then the end panel, not one over the other', async ({ page }) => {
+    await page.goto('/');
+    for (let i = 0; i < 4; i++) await page.getByRole('button', { name: 'Continue' }).click();
+    await page.getByRole('button', { name: 'Start with one phrase' }).click();
+    const player = page.getByRole('dialog', { name: 'Now playing' });
+    await player.getByRole('button', { name: /^Repetitions/ }).click(); // one repetition: to the hold sooner
+    await expect(player.getByText('Rate it, or wait to go on').first()).toBeVisible({ timeout: 30_000 });
+    await page.keyboard.press('3');
+    await expect(player.getByRole('heading', { name: 'That’s the loop' })).toBeVisible();
+    await expect(page.locator('div[role="status"]')).toHaveText(/^Rated Easy — [^.]+\. Undo\. That’s the loop\. /);
+  });
+
   test('a Bulgarian speaker gets the UI in Bulgarian and only the Spanish course', async ({ page }) => {
     await page.goto('/');
     await page.getByRole('radio', { name: 'Български' }).check();

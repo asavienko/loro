@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useLatest } from '../lib/useLatest';
+import { playsOnce } from '../state/machine';
 import { useStore } from '../state/store';
 import type { Grade } from '../state/types';
 import { useRate } from './useRate';
@@ -8,12 +9,14 @@ const GRADE_KEYS: Record<string, Grade> = { '1': 'missed', '2': 'hard', '3': 'ea
 
 /**
  * Keyboard shortcuts while the player is open: Space plays or pauses, ← and →
- * change phrase, 1 / 2 / 3 rate Missed / Hard / Easy. Ignored while typing or
- * when a control that uses the key itself has focus.
+ * change phrase, 1 / 2 / 3 rate Missed / Hard / Easy (not on the end panel, which shows
+ * no grades). Ignored while typing or when a control that uses the key itself has focus.
  */
 export function usePlayerKeys(): void {
   const { state, actions } = useStore();
-  const latest = useLatest({ playing: state.player.status === 'playing', actions, rate: useRate() });
+  // A queue that played once and ended shows its end panel in place of the grades.
+  const graded = !(state.player.ended && playsOnce(state.player));
+  const latest = useLatest({ playing: state.player.status === 'playing', graded, actions, rate: useRate() });
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return;
@@ -28,7 +31,7 @@ export function usePlayerKeys(): void {
         if (event.key === ' ' || event.key in GRADE_KEYS || event.key.startsWith('Arrow')) event.preventDefault();
         return;
       }
-      const { playing, actions: a, rate } = latest.current;
+      const { playing, graded, actions: a, rate } = latest.current;
       const grade = GRADE_KEYS[event.key];
       if (event.key === ' ' && !target?.closest('button')) {
         event.preventDefault();
@@ -38,7 +41,7 @@ export function usePlayerKeys(): void {
         a.next();
       } else if (event.key === 'ArrowLeft') {
         a.prev();
-      } else if (grade) {
+      } else if (grade && graded) {
         rate(grade);
       } else {
         return;

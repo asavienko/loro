@@ -455,7 +455,7 @@ function Rating({ phrase }: { phrase: Phrase }) {
           // One row whatever the language: the words wrap beside Undo rather than push it below.
           <>
             <span className="flex-1 min-w-0 pl-1.5 text-left text-on-surface short:text-label @max-[22rem]/player:text-label">
-              {c.player.rated(c.common.grade[active.grade], formatWhen(previewDue(state.learner, phrase.id, active.grade, active.at), now, c.locale))}
+              {c.player.rated(c.common.grade[active.grade], formatWhen(previewDue(state.learner, phrase.id, active.grade, active.at, active.day), now, c.locale))}
               {upNextIds(state.player).includes(phrase.id) && ` ${c.player.requeued}`}
             </span>
             <button
@@ -474,7 +474,7 @@ function Rating({ phrase }: { phrase: Phrase }) {
       <div className="@container grid grid-cols-3 gap-2">
         {GRADES.map(({ grade, icon, tone }, i) => {
           const selected = active?.grade === grade;
-          const interval = formatInterval(previewDue(state.learner, phrase.id, grade, active?.at ?? now) - (active?.at ?? now), c.locale);
+          const interval = formatInterval(previewDue(state.learner, phrase.id, grade, active?.at ?? now, active?.day) - (active?.at ?? now), c.locale);
           return (
             <button
               key={grade}
