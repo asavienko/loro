@@ -132,6 +132,11 @@ function settled() {
   queued.forEach((fn) => fn());
 }
 
+/** Set while Forward skips a stale overlay entry; cleared by the popstate that follows. */
+let skippingForward = false;
+/** How long a forward() gets to arrive before we take it that there was nothing above. */
+const FORWARD_WAIT_MS = 150;
+
 /** An overlay's entry whose overlay isn't open: left by a reload, or closed under another. */
 const isStale = (state: EntryState | null) => typeof state?.layer === 'number' && !layers.some((l) => l.id === state.layer);
 
@@ -169,11 +174,20 @@ if (typeof window !== 'undefined') {
       settled();
       return;
     }
+    skippingForward = false;
     if (forward) {
-      // Forward can't reopen a closed overlay; stepping onto its entry would leave a dead Back.
+      // Forward can't reopen a closed overlay: keep going forward past its entry. When nothing
+      // is above it (the entry is the newest), step back off it instead, or it would leave a
+      // Back that does nothing.
       if (isStale(state)) {
-        ownPops++;
-        window.history.back();
+        skippingForward = true;
+        window.history.forward();
+        setTimeout(() => {
+          if (!skippingForward) return;
+          skippingForward = false;
+          ownPops++;
+          window.history.back();
+        }, FORWARD_WAIT_MS);
       }
       return;
     }
