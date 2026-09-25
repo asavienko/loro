@@ -5,6 +5,7 @@ import { canHandle } from './chart';
 import { transition } from './machine';
 import { derive, isLearned, RATING_WINDOW_MS } from './memory';
 import { currentPhraseId, memoryOf, phraseProgress, points, previouslyPlayed, sessionSummary, upNextIds } from './selectors';
+import { addLocalDays, HOUR, startOfLocalDay } from './clock';
 import { cafe, DAY, done, fresh, load, MINUTE, playPhrase, run, T0 } from './testing';
 
 describe('player loop', () => {
@@ -199,18 +200,20 @@ describe('memory through the Rust core', () => {
     return transition(s, { type: 'COMMIT', now: at + RATING_WINDOW_MS });
   }
 
-  it('the first Easy on a phrase heard once comes back within a day; heard twice, within four', () => {
-    let once = load(fresh());
-    once = done(done(done(once, T0 + 1), T0 + 2), T0 + 3);
-    once = rateAt(once, 'easy', T0 + 10);
-    const onceDue = phraseProgress(once.learner, 'cafe-01', T0).dueAt!;
-    assert.ok(onceDue - (T0 + 10) <= DAY);
+  it('the first Easy comes back within a day on the day a phrase is first heard; within four once heard on an earlier day', () => {
+    // Local times, so the calendar days are the same in any time zone.
+    const morning = startOfLocalDay(T0) + 10 * HOUR;
+    let today = load(fresh(), morning);
+    for (let i = 0; i < 9; i++) today = done(today, morning + i * 1000); // all three repetitions
+    today = rateAt(today, 'easy', morning + 10_000);
+    assert.equal(phraseProgress(today.learner, 'cafe-01', morning).dueAt! - (morning + 10_000), DAY, 'three repetitions today are still one day');
 
-    let twice = load(fresh());
-    for (let i = 0; i < 6; i++) twice = done(twice, T0 + i);
-    twice = rateAt(twice, 'easy', T0 + 10);
-    const twiceDue = phraseProgress(twice.learner, 'cafe-01', T0).dueAt!;
-    assert.ok(twiceDue - (T0 + 10) <= 4 * DAY && twiceDue - (T0 + 10) > DAY);
+    const lastNight = addLocalDays(morning, -1) + 10 * HOUR;
+    let earlier = load(fresh(), lastNight);
+    earlier = done(done(done(earlier, lastNight + 1), lastNight + 2), lastNight + 3); // heard once, last night
+    earlier = rateAt(earlier, 'easy', morning);
+    const earlierDue = phraseProgress(earlier.learner, 'cafe-01', morning).dueAt!;
+    assert.ok(earlierDue - morning <= 4 * DAY && earlierDue - morning > DAY);
   });
 
   it('a reviewed phrase is due when recall falls to 90%, never years out', () => {

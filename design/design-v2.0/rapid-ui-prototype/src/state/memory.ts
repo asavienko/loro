@@ -3,7 +3,7 @@
 // which is what makes merging two devices safe (see merge.ts).
 import type { LanguageCode } from '../content';
 import { Grade, initialize, retrievability, review } from '../core/fsrs';
-import { DAY, MINUTE } from './clock';
+import { DAY, MINUTE, startOfLocalDay } from './clock';
 import type { LogEntry, PhraseMemory } from './types';
 
 /** Memory is kept per prompt language and phrase: "en-GB>es-ES:cafe-01". */
@@ -31,11 +31,12 @@ export const LEARNED_STABILITY_DAYS = 21;
 export const LEARNED_MIN_SUCCESSES = 3;
 
 /**
- * Introductory cap on the very first successful rating: a phrase heard only
- * once comes back within a day, one heard twice or more within four days, even
- * when FSRS would wait longer.
+ * Introductory cap on the very first successful rating: a phrase first heard on the day it is
+ * rated comes back within a day, one also heard on an earlier day within four days, even when
+ * FSRS would wait longer. Days, not repetitions: three repetitions in one sitting aren't spaced
+ * exposure, and a count that grew during a play moved the rating preview under the learner.
  */
-export const FIRST_REVIEW_CAP_DAYS = { heardOnce: 1, heardTwice: 4 } as const;
+export const FIRST_REVIEW_CAP_DAYS = { firstDay: 1, earlierDay: 4 } as const;
 
 const SAMPLE_LIMIT = 7;
 
@@ -87,7 +88,9 @@ export function reviewed(memory: PhraseMemory, grade: Grade, at: number) {
     next.due = Math.min(next.due, at + Math.max(1, Math.round(next.stability)) * DAY);
   }
   if (first && grade !== 'missed') {
-    const capDays = memory.heardCount >= 2 ? FIRST_REVIEW_CAP_DAYS.heardTwice : FIRST_REVIEW_CAP_DAYS.heardOnce;
+    // The learner's calendar day, as Today counts it: a play last night is an earlier day.
+    const heardEarlier = memory.firstHeardAt !== null && startOfLocalDay(memory.firstHeardAt) < startOfLocalDay(at);
+    const capDays = heardEarlier ? FIRST_REVIEW_CAP_DAYS.earlierDay : FIRST_REVIEW_CAP_DAYS.firstDay;
     next.due = Math.min(next.due, at + capDays * DAY);
   }
   return next;

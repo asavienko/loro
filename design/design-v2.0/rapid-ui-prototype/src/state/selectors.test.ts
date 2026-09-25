@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { chartAsMermaid, PLAYER_CHART } from './chart';
-import { addLocalDays, formatInterval, formatWhen, HOUR, startOfLocalWeek } from './clock';
+import { addLocalDays, formatInterval, formatWhen, HOUR, startOfLocalDay, startOfLocalWeek } from './clock';
 import { transition } from './machine';
 import { RATING_WINDOW_MS, typicalMs } from './memory';
 import {
@@ -165,6 +165,18 @@ describe('the rating preview', () => {
     assert.equal(shown(), before, 'later repetitions do not move the promise');
     s = run(s, { type: 'COMMIT', now: T0 + 6500 + RATING_WINDOW_MS + 1 });
     assert.equal(memoryOf(s.learner, 'cafe-01').fsrs?.due, before, 'and it is what commits');
+  });
+
+  it('stays the same for a whole play: the first-review cap counts earlier days, not repetitions', () => {
+    const morning = startOfLocalDay(T0) + 10 * HOUR;
+    let s = load(fresh(), morning);
+    const shown = new Set<number>();
+    for (let i = 1; i <= 9; i++) {
+      s = done(s, morning + i * 2000);
+      const at = morning + i * 2000 + 500;
+      shown.add(previewDue(s.learner, 'cafe-01', 'easy', at) - at);
+    }
+    assert.deepEqual([...shown], [DAY], 'Easy reads "1 day" through all three repetitions');
   });
 });
 
