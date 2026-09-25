@@ -55,7 +55,8 @@ export function makeBg(n: Plural): Copy {
       firstRun: 'Чуйте фраза и я кажете сами, преди да я чуете отново.',
       learned: 'Научени',
       started: 'Започнати',
-      today: (heard, rated) => `Днес: ${phrases(heard)} чути · ${rated} оценени`,
+      today: (heard, rated) =>
+        `Днес: ${n(heard, { one: `${heard} чута фраза`, other: `${heard} чути фрази` })} · ${n(rated, { one: `${rated} оценена`, other: `${rated} оценени` })}`,
       reviewTitle: 'Преговор',
       reviewBody: (due) => n(due, { one: `${due} фраза е за преговор`, other: `${due} фрази са за преговор` }),
       reviewCapped: (shown) => `В това занимание — ${shown}-те най-отдавна чакащи.`,
@@ -198,7 +199,7 @@ export function makeBg(n: Plural): Copy {
       repetition: (r, total) => `Повторение ${r} от ${total}`,
       howDidItGo: 'Как се получи?',
       rated: (grade, when) => `Оценка „${grade}“ — отново ${when}`,
-      changeFor: (time) => `Може да я смените или отмените още ${time}`,
+      changeFor: (time) => `Може да смените още ${time}`,
       previous: 'Предишна фраза',
       next: 'Следваща фраза',
       repeats: {
@@ -225,7 +226,7 @@ export function makeBg(n: Plural): Copy {
       reload: 'Презареди',
       dismiss: 'Затвори съобщението',
       learned: (points) => `Научена · +${points}`,
-      passComplete: 'Опашката е изсвирена докрай',
+      passComplete: 'Опашката е изслушана докрай',
       removed: 'Махнато от опашката',
       cleared: 'Опашката е изчистена',
       saved: (title) => `Запазено като „${title}“`,

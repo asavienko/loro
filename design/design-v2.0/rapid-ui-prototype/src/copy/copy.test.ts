@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
+import { formatInterval } from '../state/clock';
 import { copyFor } from './index';
 
 describe('plurals', () => {
@@ -12,6 +13,18 @@ describe('plurals', () => {
   it('Bulgarian and English take one and other', () => {
     assert.deepEqual([1, 2, 21].map(copyFor('bg').common.phrases), ['1 фраза', '2 фрази', '21 фрази']);
     assert.deepEqual([1, 2].map(copyFor('en').common.charsLeft), ['1 character left', '2 characters left']);
+  });
+
+  it('counts inside sentences agree with their number', () => {
+    assert.equal(copyFor('bg').home.today(1, 1), 'Днес: 1 чута фраза · 1 оценена');
+    assert.equal(copyFor('bg').home.today(3, 2), 'Днес: 3 чути фрази · 2 оценени');
+    assert.match(copyFor('ru').library.empty.learned(21, 3), /21 день и больше/);
+    assert.match(copyFor('ru').library.empty.learned(25, 3), /25 дней и больше/);
+  });
+
+  it('Bulgarian rating previews spell out days', () => {
+    assert.equal(formatInterval(5 * 86_400_000, 'bg-BG'), '5 дни');
+    assert.equal(formatInterval(86_400_000, 'bg-BG'), '1 ден');
   });
 
   it('every UI language has the same keys', () => {

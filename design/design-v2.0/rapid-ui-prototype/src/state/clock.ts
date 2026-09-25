@@ -79,8 +79,10 @@ export function formatAgo(at: number, now: number, locale: string): string {
 
 /** A duration: "10 min", "4 days", "3 months" — for rating previews. */
 export function formatInterval(ms: number, locale: string): string {
+  // Bulgarian's short day is a bare "д", which doesn't read as days: spell it out ("5 дни").
+  const display = (u: Intl.NumberFormatOptions['unit']) => (u === 'day' && locale.startsWith('bg') ? 'long' : 'short');
   const unit = (value: number, u: Intl.NumberFormatOptions['unit']) =>
-    new Intl.NumberFormat(locale, { style: 'unit', unit: u, unitDisplay: 'short', maximumFractionDigits: 0 }).format(value);
+    new Intl.NumberFormat(locale, { style: 'unit', unit: u, unitDisplay: display(u), maximumFractionDigits: 0 }).format(value);
   if (ms < HOUR) return unit(Math.max(1, Math.round(ms / MINUTE)), 'minute');
   if (ms < DAY) return unit(Math.round(ms / HOUR), 'hour');
   const days = Math.round(ms / DAY);
