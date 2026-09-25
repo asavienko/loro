@@ -107,7 +107,6 @@ export function makeEn(n: Plural) {
       removeFilter: (label: string) => `Remove filter: ${label}`,
       clearFilters: 'Clear filters',
       quickPlay: (title: string) => `Play ${title}`,
-      filtered: 'Filtered sets',
       searchedSets: 'Sets',
     },
     set: {

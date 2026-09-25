@@ -99,7 +99,6 @@ export function makeBg(n: Plural): Copy {
       removeFilter: (label) => `Махни филтъра: ${label}`,
       clearFilters: 'Изчисти филтрите',
       quickPlay: (title) => `Пусни „${title}“`,
-      filtered: 'Избрани набори',
       searchedSets: 'Набори',
     },
     set: {

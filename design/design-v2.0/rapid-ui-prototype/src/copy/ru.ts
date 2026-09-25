@@ -98,7 +98,6 @@ export function makeRu(n: Plural): Copy {
       removeFilter: (label) => `Убрать фильтр: ${label}`,
       clearFilters: 'Сбросить фильтры',
       quickPlay: (title) => `Слушать «${title}»`,
-      filtered: 'Отобранные наборы',
       searchedSets: 'Наборы',
     },
     set: {
