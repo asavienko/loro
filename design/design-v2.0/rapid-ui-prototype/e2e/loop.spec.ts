@@ -149,6 +149,18 @@ test.describe('the loop', () => {
     await expect(mode).toContainText('Continue');
   });
 
+  test('in the hold the mini-player asks for a tap: the grades are in the player', async ({ page }) => {
+    await page.clock.install();
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Play 5 phrases' }).click();
+    const mini = page.getByRole('button', { name: /^Now playing:/ });
+    for (let t = 0; t < 60_000 && !/Tap to rate/.test((await mini.textContent()) ?? ''); t += 250) await page.clock.runFor(250);
+    await expect(mini).toContainText('Tap to rate');
+    await expect(mini).toContainText('Me pone un cortado, por favor');
+    await mini.click();
+    await expect(page.getByRole('dialog', { name: 'Now playing' }).getByText('Rate it, or wait to go on')).toBeVisible();
+  });
+
   test('keyboard: space plays and pauses, arrows change phrase, 1–3 rate', async ({ page }) => {
     await page.goto('/');
     await page.getByRole('button', { name: 'Play 5 phrases' }).click();
@@ -252,6 +264,7 @@ test.describe('queues with a natural end', () => {
     await expect(player.getByRole('button', { name: /^Continue / })).toBeVisible();
     await player.getByRole('button', { name: 'Close', exact: true }).click();
     await expect(player).toHaveCount(0);
+    await expect(page.getByRole('button', { name: /^Now playing:/ })).toContainText('Review done');
   });
 
   test('a Library list is named by its view', async ({ page }) => {
