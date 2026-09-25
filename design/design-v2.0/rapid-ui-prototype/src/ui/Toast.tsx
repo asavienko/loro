@@ -38,7 +38,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // It stays while the learner is on it (hover or keyboard focus), then gives its time again.
-  const [held, setHeld] = useState(false);
+  // Pointer and keyboard hold it separately: leaving with one doesn't release the other.
+  const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const held = hovered || focused;
   const layer = useRef<HTMLDivElement>(null);
   const dismiss = useRef<HTMLButtonElement>(null);
   // Where keyboard focus came from, to go back to once the message is gone.
@@ -50,21 +53,26 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     // A removed element takes focus with it; hand it back instead of dropping it on the page.
     if (focusInside()) {
       const back = cameFrom.current;
-      if (back?.isConnected) back.focus();
-      else (document.querySelector<HTMLElement>('[role="dialog"][aria-modal="true"]') ?? document.querySelector<HTMLElement>('main h1'))?.focus();
+      // The topmost open dialog (the last one rendered), else the page's heading.
+      const dialogs = document.querySelectorAll<HTMLElement>('[role="dialog"][aria-modal="true"]');
+      const fallback = dialogs[dialogs.length - 1] ?? document.querySelector<HTMLElement>('main h1');
+      const usable = back?.isConnected && !back.closest('[inert]') && (dialogs.length === 0 || dialogs[dialogs.length - 1].contains(back));
+      (usable ? back : fallback)?.focus({ preventScroll: true });
     }
+    cameFrom.current = null;
     setItem(null);
     // A removed element fires no leave or blur.
-    setHeld(false);
+    setHovered(false);
+    setFocused(false);
   }, []);
 
   const toast = useCallback(
     (text: string, options: ToastOptions = {}) => {
       // A new message replaces the text in place: while the learner is on it, it stays held.
       hadFocus.current = focusInside();
-      const onIt = hadFocus.current || Boolean(layer.current?.querySelector(':hover'));
       setItem({ id: nextId.current++, text, ...options });
-      setHeld(onIt);
+      setFocused(hadFocus.current);
+      setHovered(Boolean(layer.current?.querySelector(':hover')));
       // Say there's an action, or a screen-reader user never learns Undo exists.
       announce(options.action ? `${text}. ${options.action.label}` : text);
     },
@@ -99,14 +107,17 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             // frames stalled (a background tab) they piled up.
             <motion.div
               key="toast"
-              onPointerEnter={() => setHeld(true)}
-              onPointerLeave={() => setHeld(false)}
+              onPointerEnter={() => setHovered(true)}
+              onPointerLeave={() => setHovered(false)}
               onFocus={(e) => {
                 const from = e.relatedTarget as HTMLElement | null;
                 if (from && !e.currentTarget.contains(from)) cameFrom.current = from;
-                setHeld(true);
+                setFocused(true);
               }}
-              onBlur={() => setHeld(false)}
+              onBlur={(e) => {
+                // Moving between its own buttons keeps it held.
+                if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setFocused(false);
+              }}
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 12 }}
