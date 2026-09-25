@@ -109,6 +109,40 @@ export function SheetOption({ icon, label, onClick, selected, tone = 'default', 
   );
 }
 
+interface SheetActionProps {
+  icon: IconName;
+  label: string;
+  onClick: (event: MouseEvent<HTMLButtonElement>) => void;
+  disabled?: boolean;
+  /** Set for a toggle (Like): it carries aria-pressed and its icon fills while on. */
+  pressed?: boolean;
+}
+
+/** A frequent action as a tonal tile, laid out by SheetActionGrid; rare ones stay SheetOption rows. */
+export function SheetAction({ icon, label, onClick, disabled, pressed }: SheetActionProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-pressed={pressed}
+      className="min-h-12 px-3 py-2 rounded-xl bg-surface-container-low flex items-center gap-2 text-left text-body font-semibold text-on-surface active:bg-surface-container disabled:opacity-50"
+    >
+      <Icon name={icon} fill={pressed} className={`text-icon shrink-0 ${pressed ? 'text-primary-container' : 'text-secondary'}`} />
+      <span className="min-w-0 [overflow-wrap:anywhere]">{label}</span>
+    </button>
+  );
+}
+
+/** SheetActions two to a row; one to a row once the sheet is under 16rem (large text). */
+export function SheetActionGrid({ children }: { children: ReactNode }) {
+  return (
+    <div className="@container">
+      <div className="grid grid-cols-2 @max-[16rem]:grid-cols-1 gap-2">{children}</div>
+    </div>
+  );
+}
+
 /** A sheet heading inside the scrolling body. */
 export function SheetSection({ title, children }: { title: string; children: ReactNode }) {
   return (
