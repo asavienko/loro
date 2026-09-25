@@ -21,6 +21,7 @@ import {
   previewDue,
   sessionSummary,
   suggestedSetId,
+  upNextIds,
   windowLeft,
 } from '../state/selectors';
 import { useCopy, useNow, useStore } from '../state/store';
@@ -144,7 +145,10 @@ export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps
             {/* The count is already in the position line below. */}
             {queueTitle(c, state.player, queueSet)}
           </h1>
-          <p className="text-label text-secondary tabular-nums">{c.player.position(index + 1, order.length)}</p>
+          <p className="text-label text-secondary tabular-nums">
+            {/* A set's own count, or the whole queue's once continue mode has added another set. */}
+            {queueSet && order.some((id) => !queueSet.phraseIds.includes(id)) ? c.player.positionInQueue(index + 1, order.length) : c.player.position(index + 1, order.length)}
+          </p>
         </div>
         <HeaderButton label={c.player.openQueue} icon="queue_music" onClick={onOpenQueue} />
       </header>
@@ -452,6 +456,7 @@ function Rating({ phrase }: { phrase: Phrase }) {
           <>
             <span className="flex-1 min-w-0 pl-1.5 text-left text-on-surface short:text-label @max-[22rem]/player:text-label">
               {c.player.rated(c.common.grade[active.grade], formatWhen(previewDue(state.learner, phrase.id, active.grade, active.at), now, c.locale))}
+              {upNextIds(state.player).includes(phrase.id) && ` ${c.player.requeued}`}
             </span>
             <button
               type="button"

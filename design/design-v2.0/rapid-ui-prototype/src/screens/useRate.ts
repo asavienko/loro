@@ -1,7 +1,8 @@
 import { easyCue, gentleCue } from '../audio/cues';
 import { useLatest } from '../lib/useLatest';
 import { clock, formatWhen } from '../state/clock';
-import { currentPhraseId, pendingFor, previewDue, windowLeft } from '../state/selectors';
+import { requeuesOn } from '../state/machine';
+import { currentPhraseId, pendingFor, previewDue, upNextIds, windowLeft } from '../state/selectors';
 import { useCopy, useStore } from '../state/store';
 import type { Grade } from '../state/types';
 import { useToast } from '../ui/Toast';
@@ -30,9 +31,12 @@ export function useRate(): (grade: Grade) => void {
     a.rate(grade);
     if (grade === 'easy') easyCue();
     else gentleCue();
-    const text = copy.player.rated(copy.common.grade[grade], formatWhen(previewDue(s.learner, id, grade, at), now, copy.locale));
+    const rated = copy.player.rated(copy.common.grade[grade], formatWhen(previewDue(s.learner, id, grade, at), now, copy.locale));
     // The toast goes through the same live region, so it is still said exactly once.
-    if (movesOn) show(text, { action: { label: copy.common.undo, run: () => a.unrate(id) } });
-    else say(text);
+    if (movesOn) {
+      // Moving on, the learner can't see it come back later in the queue: say so.
+      const again = upNextIds(s.player).includes(id) || requeuesOn(s.player, grade);
+      show(again ? `${rated} ${copy.player.requeued}` : rated, { action: { label: copy.common.undo, run: () => a.unrate(id) } });
+    } else say(rated);
   };
 }
