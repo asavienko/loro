@@ -4,9 +4,11 @@ import { Phrase, PhraseSet } from '../content';
 import { addLocalDays, DAY, startOfLocalDay, startOfLocalWeek } from './clock';
 import { coursePhrases, courseSets, findPhrase, findSetView, keyOf, promptOf, SetView } from './catalog';
 import {
+  applyEntry,
   derive,
   dueAt,
   emptyMemory,
+  insertEntry,
   isDue,
   isLearned,
   POINTS,
@@ -15,6 +17,7 @@ import {
   reviewed,
   typicalMs,
 } from './memory';
+import { committedIn, ratingEntry } from './merge';
 import { fullPlayMs, REVIEW_SESSION_SIZE } from './timing';
 import type {
   AppState,
@@ -39,6 +42,39 @@ export function points(learner: LearnerState): number {
   return derive(learner.log).points;
 }
 
+// ---------- the provisional view ----------
+
+// Per learner, the view last built from it: same learner and same pending ratings, same view,
+// so derive()'s per-log cache holds and a render doesn't rebuild the log.
+const displayCache = new WeakMap<LearnerState, { pending: PendingRating[]; device: string; view: LearnerState }>();
+
+/**
+ * The learner as every status, due, next-review and learned figure shows it: each rating still
+ * in its five-minute window counts at its own time, as the log entry it commits as. When the
+ * window closes nothing moves, and an undo takes the rating out of every figure at once.
+ * Points wait for the window: read them (and History) from `state.learner`.
+ */
+export function displayLearner(state: AppState): LearnerState {
+  const { learner, pending } = state;
+  const cached = displayCache.get(learner);
+  if (cached && cached.pending === pending && cached.device === state.device.id) return cached.view;
+  let log = learner.log;
+  const live = pending.filter((p) => !p.undone);
+  if (live.length > 0) {
+    // Another tab may have committed it already: that entry counts, once.
+    const committed = committedIn(learner.log, state.device.id);
+    for (const p of live) if (!committed(p)) log = insertEntry(log, ratingEntry(state.device.id, p));
+  }
+  const view = log === learner.log ? learner : { ...learner, log };
+  displayCache.set(learner, { pending, device: state.device.id, view });
+  return view;
+}
+
+/** A phrase's memory with its pending rating applied: `memoryOf` over `displayLearner`. */
+export function displayMemory(state: AppState, phraseId: string): PhraseMemory {
+  return memoryOf(displayLearner(state), phraseId);
+}
+
 // ---------- ratings ----------
 
 export function pendingFor(state: AppState, phraseId: string): PendingRating | undefined {
@@ -52,14 +88,19 @@ export function windowLeft(pending: PendingRating, now: number): number {
   return Math.max(0, pending.at + RATING_WINDOW_MS - now);
 }
 
-/** When the phrase will be due after `grade` given now: the preview on the rating buttons. */
+/**
+ * When the phrase will be due after `grade` given now: the preview on the rating buttons.
+ * Takes the committed learner (`state.learner`), not `displayLearner`: the pending rating
+ * being previewed would otherwise count twice.
+ */
 export function previewDue(learner: LearnerState, phraseId: string, grade: Grade, at: number): number {
-  // The rating commits at its own time, replayed over the memory as it was then: the
-  // repetitions heard after it (which raise the first-review cap) don't count, so the
-  // preview mustn't count them either, or it promises a later return than it schedules.
+  // The rating commits at its own time, replayed over the memory as it was then, so the
+  // preview is what it schedules, whatever plays after it.
   const key = keyOf(learner, phraseId);
   const asOf = learner.log.filter((e) => e.kind !== 'carryover' && e.key === key && e.at <= at);
-  const memory = derive(asOf).memories.get(key) ?? emptyMemory();
+  // Replayed here rather than through derive(): a one-phrase log would evict derive's
+  // per-phrase cache, and the next full derive would replay a year of ratings.
+  const memory = asOf.reduce(applyEntry, emptyMemory());
   try {
     return reviewed(memory, grade, at).due;
   } catch {
@@ -265,11 +306,10 @@ export function continuation(
 /** Auto repetitions: three while a phrase is new or shaky, one once it is under review. */
 export function repeatsFor(state: AppState, phraseId: string): 1 | 3 {
   if (state.prefs.repeats !== 'auto') return state.prefs.repeats;
-  const memory = memoryOf(state.learner, phraseId);
-  const pending = pendingFor(state, phraseId);
-  const lastGrade = pending?.grade ?? memory.lastGrade;
+  // With a pending rating applied, as every other figure: a play's length doesn't change when its window commits.
+  const memory = displayMemory(state, phraseId);
   if (!memory.fsrs || memory.fsrs.state !== 'review') return 3;
-  return lastGrade === 'missed' || lastGrade === 'hard' ? 3 : 1;
+  return memory.lastGrade === 'missed' || memory.lastGrade === 'hard' ? 3 : 1;
 }
 
 export function upNextIds(player: PlayerState): string[] {
@@ -380,8 +420,9 @@ export function sessionSummary(state: AppState, now: number): SessionSummary | n
     pendingRatings: pending.length,
     points: earned,
     passes: session.passes,
-    dueNow: duePhraseIds(state.learner, now).length,
-    nextDue: nextDue(state.learner, now),
+    // As Home shows them: this session's ratings are already in the schedule, their points not.
+    dueNow: duePhraseIds(displayLearner(state), now).length,
+    nextDue: nextDue(displayLearner(state), now),
   };
 }
 
