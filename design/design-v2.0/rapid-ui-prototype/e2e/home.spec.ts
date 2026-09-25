@@ -101,6 +101,29 @@ test.describe('Home has one hero, and one terracotta Play (V-05)', () => {
     });
   });
 
+  test.describe('nothing due, at large text', () => {
+    test.use({ seed: { log: caughtUp(Date.now()) } });
+    test("the hero's set title keeps its words whole: the cover goes above it", async ({ page }) => {
+      for (const width of [390, 320]) {
+        await page.setViewportSize({ width, height: 844 });
+        await page.goto('/');
+        await page.addStyleTag({ content: 'html { font-size: 200% }' });
+        await page.waitForTimeout(200);
+        const title = page.getByRole('region', { name: 'Next set' }).getByText('Tapas & Tabernas');
+        const split = await title.evaluate((e) => {
+          const text = e.firstChild!;
+          return [...(text.textContent ?? '').matchAll(/\S+/g)].filter((m) => {
+            const range = document.createRange();
+            range.setStart(text, m.index);
+            range.setEnd(text, m.index + m[0].length);
+            return new Set([...range.getClientRects()].map((r) => Math.round(r.top))).size > 1;
+          }).map((m) => m[0]);
+        });
+        expect(split, `${width} px`).toEqual([]);
+      }
+    });
+  });
+
   test.describe('nothing due, a phrase of the set never heard', () => {
     test.use({ seed: { log: caughtUp(Date.now(), ['cafe-01', 'cafe-02', 'cafe-03', 'cafe-04']) } });
     test('what to continue is the hero', async ({ page }) => {

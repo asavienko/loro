@@ -118,7 +118,9 @@ export function HomeScreen() {
           {hero === 'continue' && suggested && (
             <Hero labelledBy="continue-heading">
               <h2 id="continue-heading" className={EYEBROW}>{continueTitle}</h2>
-              <button type="button" onClick={() => nav.openSet(suggested.id)} className="mt-2 -mx-2 px-2 py-1 w-[calc(100%+1rem)] flex items-center gap-3 text-left rounded-2xl active:bg-primary-fixed/60">
+              {/* At large text the cover goes above the title, so "Mañanas" keeps the width of the
+                  hero rather than breaking as "Maña-nas" beside it. */}
+              <button type="button" onClick={() => nav.openSet(suggested.id)} className="mt-2 -mx-2 px-2 py-1 w-[calc(100%+1rem)] flex items-center gap-3 @max-[14rem]:flex-col @max-[14rem]:items-start @max-[14rem]:gap-2 text-left rounded-2xl active:bg-primary-fixed/60">
                 <SetCover set={suggested} size="sm" className="w-14 h-14 rounded-xl shrink-0 shadow-cover" />
                 <span className="min-w-0">
                   <span lang={suggested.targetLang} className="block font-serif text-display-sm font-semibold leading-tight [overflow-wrap:anywhere]">{suggested.title}</span>
