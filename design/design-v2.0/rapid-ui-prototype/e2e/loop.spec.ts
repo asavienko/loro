@@ -365,7 +365,7 @@ test.describe('the loop', () => {
 test.describe('queues with a natural end', () => {
   test.use({ seed: { log: sampleHistory(Date.now()) } });
 
-  test('a review is named, plays once in repeat mode and stops on "Review done"', async ({ page }) => {
+  test('a review is named and plays once in repeat mode; with nothing rated it was "Played through"', async ({ page }) => {
     await page.clock.install();
     await page.goto('/');
     await page.getByRole('button', { name: /^Play 7 phrases/ }).click();
@@ -375,14 +375,16 @@ test.describe('queues with a natural end', () => {
     await expect(player.getByText('7 of 7')).toBeVisible();
     // Let the last phrase play out, hold included: it doesn't start the review again.
     for (let t = 0; t < 40_000; t += 500) await page.clock.runFor(500);
-    await expect(player.getByRole('heading', { name: 'Review done' })).toBeVisible();
-    await expect(player.getByText(/^\d+ rated · /)).toBeVisible();
+    // Not "Review done · 0 rated · 7 phrases are due", which contradicts itself; the real counts stay.
+    await expect(player.getByRole('heading', { name: 'Played through' })).toBeVisible();
+    await expect(player.getByRole('heading', { name: 'Review done' })).toHaveCount(0);
+    await expect(player.getByText('0 rated · 7 phrases are due')).toBeVisible();
     await expect(player.getByText('7 of 7')).toBeVisible();
     await expect(page.getByText('Queue played through')).toHaveCount(0);
     await expect(player.getByRole('button', { name: /^Continue / })).toBeVisible();
     await player.getByRole('button', { name: 'Close', exact: true }).click();
     await expect(player).toHaveCount(0);
-    await expect(page.getByRole('button', { name: /^Now playing:/ })).toContainText('Review done');
+    await expect(page.getByRole('button', { name: /^Now playing:/ })).toContainText('Played through');
   });
 
   test('a longer "time to say it" lengthens every play time it shows', async ({ page }) => {
@@ -411,6 +413,24 @@ test.describe('queues with a natural end', () => {
     await expect(page.getByRole('dialog', { name: 'Now playing' }).getByRole('heading', { level: 1 })).toHaveText('Due');
   });
 });
+
+for (const [nativeLang, title, next] of [
+  ['bg-BG', 'Изслушано докрай', 'Следваща фраза'],
+  ['ru-RU', 'Прослушано до конца', 'Следующая фраза'],
+]) {
+  test.describe(`a review played through in ${nativeLang}`, () => {
+    test.use({ seed: { nativeLang, log: sampleHistory(Date.now()).map((e) => ({ ...e, key: String(e.key).replace('en-GB>', `${nativeLang}>`) })) } });
+
+    test('is titled so, over its real counts', async ({ page }) => {
+      await page.goto('/');
+      await page.locator('main button').filter({ hasText: /7/ }).first().click();
+      const player = page.getByRole('dialog');
+      for (let i = 0; i < 7; i++) await player.getByRole('button', { name: next }).click();
+      await expect(player.getByRole('heading', { name: title })).toBeVisible();
+      await expect(player.getByText(/^(Оценени|Оценено): 0 · /)).toBeVisible();
+    });
+  });
+}
 
 test.describe('queue', () => {
   test('up next goes by the prompt, keeps the Spanish hidden, and marks a phrase coming back', async ({ page }) => {

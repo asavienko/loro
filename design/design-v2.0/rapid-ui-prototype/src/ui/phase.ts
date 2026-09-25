@@ -40,6 +40,17 @@ export function queueTitle(c: Copy, player: Pick<PlayerState, 'source'>, set: Se
   }
 }
 
+/**
+ * What a queue with a natural end says once it is over: the demo hands over; a review or list
+ * with something rated is done. With nothing rated it was only played through: "Review done ·
+ * 0 rated · 7 phrases are due" contradicted itself.
+ */
+export function endTitle(c: Copy, source: PlayerState['source'], rated: number): string {
+  if (source?.kind === 'demo') return c.player.end.demoTitle;
+  if (rated === 0) return c.player.end.playedThrough;
+  return source?.kind === 'review' ? c.player.end.reviewTitle : c.player.end.listTitle;
+}
+
 /** What the learner should do right now, e.g. "Your turn — say it out loud in Spanish". */
 export function phaseInstruction(c: Copy, phase: Phase, promptLang: LanguageCode, targetLang: LanguageCode): string {
   switch (phase) {

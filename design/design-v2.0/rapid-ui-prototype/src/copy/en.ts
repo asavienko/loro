@@ -266,6 +266,8 @@ export function makeEn(n: Plural) {
       end: {
         reviewTitle: 'Review done',
         listTitle: 'All played',
+        /** A review or list ended with nothing rated: not "done", just heard to the end. */
+        playedThrough: 'Played through',
         rated: (count: number) => `${count} rated`,
         nextReview: (when: string) => `Next review ${when}`,
         nothingDue: 'Nothing due yet',

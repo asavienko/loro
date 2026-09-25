@@ -28,7 +28,7 @@ import { useCopy, useNow, useStore } from '../state/store';
 import type { Grade, Phase } from '../state/types';
 import { Icon, IconName } from '../ui/Icon';
 import { PhraseNotesView } from '../ui/Notes';
-import { isTargetRevealed, PHASE_ICONS, phaseInstruction, phaseStepLabel, queueTitle } from '../ui/phase';
+import { endTitle, isTargetRevealed, PHASE_ICONS, phaseInstruction, phaseStepLabel, queueTitle } from '../ui/phase';
 import { GlossedPhrase, HiddenPhrase } from '../ui/PhraseText';
 import { SetCover } from '../ui/SetCover';
 import { PhaseFill } from '../ui/PhaseFill';
@@ -538,7 +538,7 @@ function EndPanel({ onClose }: { onClose: () => void }) {
         ? c.player.end.nextReview(formatWhen(summary.nextDue.at, now, c.locale))
         : c.player.end.nothingDue;
   const demo = source?.kind === 'demo';
-  const title = demo ? c.player.end.demoTitle : source?.kind === 'review' ? c.player.end.reviewTitle : c.player.end.listTitle;
+  const title = endTitle(c, source, rated);
   const body = demo ? c.player.end.demoBody : `${c.player.end.rated(rated)} · ${next}`;
   const startSuggested = () => {
     if (!suggested) return;
