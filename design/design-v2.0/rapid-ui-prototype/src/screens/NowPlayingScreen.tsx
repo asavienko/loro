@@ -432,6 +432,9 @@ function Rating({ phrase }: { phrase: Phrase }) {
   const left = pending ? Math.min(RATING_WINDOW_MS, windowLeft(pending, Math.max(now, pending.at))) : 0;
   const active = pending && left > 0 ? pending : undefined;
   const hold = state.player.phase === 'rate' && state.player.status === 'playing';
+  // Grades are always there, but asking whether you remembered it before your first turn at it
+  // (in this play) makes no sense.
+  const beforeTurn = state.player.repetition === 1 && (state.player.phase === 'native' || state.player.phase === 'pause');
 
   // Said once by useRate, not from a live region whose "back in N minutes" would
   // re-announce every minute of the undo window.
@@ -456,7 +459,7 @@ function Rating({ phrase }: { phrase: Phrase }) {
             </button>
           </>
         ) : (
-          <span className={hold ? 'font-bold text-on-surface' : 'text-secondary'}>{c.player.howDidItGo}</span>
+          <span className={hold ? 'font-bold text-on-surface' : 'text-secondary'}>{beforeTurn ? c.player.rateAfterTurn : c.player.howDidItGo}</span>
         )}
       </div>
       <div className="@container grid grid-cols-3 gap-2">
@@ -479,7 +482,7 @@ function Rating({ phrase }: { phrase: Phrase }) {
                 <Icon name={selected ? 'task_alt' : icon} className="text-icon-sm @max-[17.5rem]:hidden" />
                 {c.common.grade[grade]}
               </span>
-              <span className="text-caption opacity-80 tabular-nums">{interval}</span>
+              <span className="text-caption opacity-80 tabular-nums">{c.player.nextIn(interval)}</span>
             </button>
           );
         })}

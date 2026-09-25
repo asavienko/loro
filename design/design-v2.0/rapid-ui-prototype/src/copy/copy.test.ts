@@ -27,6 +27,26 @@ describe('plurals', () => {
     assert.equal(formatInterval(86_400_000, 'bg-BG'), '1 ден');
   });
 
+  it('Russian plays phrases; it doesn’t play a game ("сыграть", "играть")', () => {
+    const strings = (o: unknown): string[] =>
+      typeof o === 'string' ? [o] : typeof o === 'function' ? [String((o as (...a: unknown[]) => unknown)('X', 'X'))].flat() : o && typeof o === 'object' ? Object.values(o).flatMap(strings) : [];
+    const banned = strings(copyFor('ru')).filter((s) => /[Сс]ыгра|[Ии]гра(ть|ет|ю)/.test(s));
+    assert.deepEqual(banned, []);
+  });
+
+  it('language names sit in Russian sentences as adverbs, not in brackets', () => {
+    const c = copyFor('ru');
+    assert.equal(c.player.instruction.pause('испанский'), 'Ваша очередь — скажите вслух по-испански');
+    assert.equal(c.onboarding.loopSteps('русский', 'болгарский')[1], 'Скажите её вслух по-болгарски, пока тихо.');
+  });
+
+  it('rating previews read as a time: "in 10 min", "след 2 дни", "через 15 мин"', () => {
+    assert.equal(copyFor('en').player.nextIn(formatInterval(10 * 60_000, 'en-GB')), 'in 10 min');
+    assert.equal(copyFor('en').player.nextIn(formatInterval(2 * 86_400_000, 'en-GB')), 'in 2 days');
+    assert.equal(copyFor('bg').player.nextIn(formatInterval(2 * 86_400_000, 'bg-BG')), 'след 2 дни');
+    assert.equal(copyFor('ru').player.nextIn(formatInterval(15 * 60_000, 'ru-RU')), 'через 15 мин');
+  });
+
   it('every UI language has the same keys', () => {
     const keys = (o: object, prefix = ''): string[] =>
       Object.entries(o).flatMap(([k, v]) => (v && typeof v === 'object' && !Array.isArray(v) ? keys(v, `${prefix}${k}.`) : [`${prefix}${k}`]));

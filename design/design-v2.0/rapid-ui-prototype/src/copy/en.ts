@@ -209,7 +209,11 @@ export function makeEn(n: Plural) {
       paused: 'Paused',
       coach: 'Say it now, before you hear it. Nothing is recorded — you’ll rate how it went.',
       repetition: (r: number, total: number) => `Repetition ${r} of ${total}`,
-      howDidItGo: 'How did saying it go?',
+      howDidItGo: 'Did you remember it?',
+      /** Before the learner's first turn at the phrase in this play. */
+      rateAfterTurn: 'Rate once you’ve said it',
+      /** Under each grade: when the phrase comes back if rated so. */
+      nextIn: (interval: string) => `in ${interval}`,
       rated: (grade: string, when: string) => `Rated ${grade} — back ${when}`,
       undoFor: (time: string) => `Undo · ${time}`,
       undoLabel: (time: string) => `Undo rating (${time} left)`,
