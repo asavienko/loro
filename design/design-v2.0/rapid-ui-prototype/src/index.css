@@ -286,14 +286,14 @@ body:has([role="dialog"][aria-modal="true"]) .toast-layer {
   display: none;
 }
 
-/* Equaliser on the phrase that is playing */
+/* Equaliser on the phrase that is playing: three 3 px bars in a 1rem box (PhraseRow). */
 @keyframes eqWave {
   0%,
   100% {
-    height: 3px;
+    height: 0.25rem;
   }
   50% {
-    height: 14px;
+    height: 1rem;
   }
 }
 .eq-bar-1 {
@@ -314,5 +314,24 @@ body:has([role="dialog"][aria-modal="true"]) .toast-layer {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* Under reduced motion the equaliser stands still as a "playing" glyph; run once to its end
+   it would leave three dots. After the rule above, so it wins. */
+@media (prefers-reduced-motion: reduce) {
+  .eq-bar-1,
+  .eq-bar-2,
+  .eq-bar-3 {
+    animation: none;
+  }
+  .eq-bar-1 {
+    height: 0.5625rem;
+  }
+  .eq-bar-2 {
+    height: 0.9375rem;
+  }
+  .eq-bar-3 {
+    height: 0.6875rem;
   }
 }
