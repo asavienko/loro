@@ -88,6 +88,12 @@ export type AppEventType = AppEvent['type'];
 
 // ---------- helpers ----------
 
+/** A phrase's place in the unshuffled order; one the order doesn't know goes last. */
+function baseRank(baseOrder: string[], id: string): number {
+  const i = baseOrder.indexOf(id);
+  return i === -1 ? Number.MAX_SAFE_INTEGER : i;
+}
+
 /** Deterministic Fisher–Yates (mulberry32), so shuffles replay identically. */
 export function shuffled<T>(items: T[], seed: number): T[] {
   const out = [...items];
@@ -375,7 +381,7 @@ export function transition(state: AppState, event: AppEvent): AppState {
       const played = player.order.slice(0, player.index + 1);
       const upNext = player.order.slice(player.index + 1);
       const reordered = player.shuffle
-        ? [...upNext].sort((a, b) => player.baseOrder.indexOf(a) - player.baseOrder.indexOf(b))
+        ? [...upNext].sort((a, b) => baseRank(player.baseOrder, a) - baseRank(player.baseOrder, b))
         : shuffled(upNext, event.seed);
       return withPlayer(state, { ...player, shuffle: !player.shuffle, order: [...played, ...reordered] });
     }
@@ -412,7 +418,13 @@ export function transition(state: AppState, event: AppEvent): AppState {
       const ids = event.phraseIds.filter((id) => findPhrase(learner, id));
       if (ids.length === 0 || player.order.length === 0) return state;
       const at = Math.min(player.order.length, player.index + 1 + Math.max(0, event.offset ?? 0));
-      return withPlayer(state, { ...player, order: [...player.order.slice(0, at), ...ids, ...player.order.slice(at)] });
+      // The unshuffled order learns them too, just before the phrase they now precede,
+      // so turning shuffle off keeps them where they came back.
+      const missing = ids.filter((id) => !player.baseOrder.includes(id));
+      const after = player.order.slice(at).find((id) => player.baseOrder.includes(id));
+      const baseAt = after === undefined ? player.baseOrder.length : player.baseOrder.indexOf(after);
+      const baseOrder = [...player.baseOrder.slice(0, baseAt), ...missing, ...player.baseOrder.slice(baseAt)];
+      return withPlayer(state, { ...player, order: [...player.order.slice(0, at), ...ids, ...player.order.slice(at)], baseOrder });
     }
 
     case 'ENQUEUE': {
