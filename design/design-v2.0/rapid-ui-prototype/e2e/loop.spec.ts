@@ -82,6 +82,18 @@ test.describe('onboarding', () => {
     await expect(player.getByText(/^Rated/)).toHaveCount(0);
   });
 
+  test('a rating in the last hold is said with its Undo, then the end panel, not one over the other', async ({ page }) => {
+    await page.goto('/');
+    for (let i = 0; i < 4; i++) await page.getByRole('button', { name: 'Continue' }).click();
+    await page.getByRole('button', { name: 'Start with one phrase' }).click();
+    const player = page.getByRole('dialog', { name: 'Now playing' });
+    await player.getByRole('button', { name: /^Repetitions/ }).click(); // one repetition: to the hold sooner
+    await expect(player.getByText('Rate it, or wait to go on').first()).toBeVisible({ timeout: 30_000 });
+    await page.keyboard.press('3');
+    await expect(player.getByRole('heading', { name: 'That’s the loop' })).toBeVisible();
+    await expect(page.locator('div[role="status"]')).toHaveText(/^Rated Easy — [^.]+\. Undo\. That’s the loop\. /);
+  });
+
   test('a Bulgarian speaker gets the UI in Bulgarian and only the Spanish course', async ({ page }) => {
     await page.goto('/');
     await page.getByRole('radio', { name: 'Български' }).check();
