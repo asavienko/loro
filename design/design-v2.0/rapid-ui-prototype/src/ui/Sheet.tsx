@@ -5,6 +5,7 @@ import { useKeyboardInset } from '../lib/useKeyboardInset';
 import { useBackToClose } from '../nav/history';
 import { useCopy } from '../state/store';
 import { Icon, IconName } from './Icon';
+import { btnText } from './button';
 
 interface SheetProps {
   open: boolean;
@@ -45,7 +46,7 @@ function SheetPanel({ title, onClose, children }: Omit<SheetProps, 'open'>) {
         onClick={onClose}
       />
       <motion.div
-        className="relative w-full max-w-lg mx-auto bg-surface rounded-t-3xl shadow-2xl max-h-[85dvh] flex flex-col pb-[env(safe-area-inset-bottom)]"
+        className="relative w-full max-w-lg mx-auto bg-surface rounded-t-3xl shadow-float max-h-[85dvh] flex flex-col pb-[env(safe-area-inset-bottom)]"
         style={keyboard > 0 ? { marginBottom: keyboard, maxHeight: `calc(85dvh - ${keyboard}px)` } : undefined}
         initial={{ y: '100%' }}
         animate={{ y: 0 }}
@@ -53,11 +54,11 @@ function SheetPanel({ title, onClose, children }: Omit<SheetProps, 'open'>) {
         transition={{ type: 'spring', damping: 30, stiffness: 320 }}
       >
         <div className="flex items-center justify-between gap-3 px-4 pt-3 pb-2 border-b border-surface-container-high">
-          <h2 className="font-serif text-lg font-semibold text-on-surface truncate">{title}</h2>
+          <h2 className="font-serif text-title font-semibold text-on-surface truncate">{title}</h2>
           <button
             type="button"
             onClick={onClose}
-            className="min-w-11 h-11 px-3 -mr-2 rounded-full text-body font-semibold text-primary-container active:bg-surface-container"
+            className={`${btnText} min-w-11 -mr-2`}
           >
             {c.common.close}
           </button>
@@ -105,6 +106,40 @@ export function SheetOption({ icon, label, onClick, selected, tone = 'default', 
       </span>
       {selected && <Icon name="check" className="text-icon-md text-primary-container" />}
     </button>
+  );
+}
+
+interface SheetActionProps {
+  icon: IconName;
+  label: string;
+  onClick: (event: MouseEvent<HTMLButtonElement>) => void;
+  disabled?: boolean;
+  /** Set for a toggle (Like): it carries aria-pressed and its icon fills while on. */
+  pressed?: boolean;
+}
+
+/** A frequent action as a tonal tile, laid out by SheetActionGrid; rare ones stay SheetOption rows. */
+export function SheetAction({ icon, label, onClick, disabled, pressed }: SheetActionProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-pressed={pressed}
+      className="min-h-12 px-3 py-2 rounded-xl bg-surface-container-low flex items-center gap-2 text-left text-body font-semibold text-on-surface active:bg-surface-container disabled:opacity-50"
+    >
+      <Icon name={icon} fill={pressed} className={`text-icon shrink-0 ${pressed ? 'text-primary-container' : 'text-secondary'}`} />
+      <span className="min-w-0 [overflow-wrap:anywhere]">{label}</span>
+    </button>
+  );
+}
+
+/** SheetActions two to a row; one to a row once the sheet is under 16rem (large text). */
+export function SheetActionGrid({ children }: { children: ReactNode }) {
+  return (
+    <div className="@container">
+      <div className="grid grid-cols-2 @max-[16rem]:grid-cols-1 gap-2">{children}</div>
+    </div>
   );
 }
 

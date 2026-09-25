@@ -7,11 +7,14 @@ import { courseSets, coursePhrases, findSetView, phraseKey, promptOf } from '../
 import { clip, LIMITS, tidy } from '../state/limits';
 import { displayLearner, phraseProgress, setProgress } from '../state/selectors';
 import { useCopy, useNow, useStore } from '../state/store';
+import { Chip } from '../ui/Chip';
 import { Icon, IconName } from '../ui/Icon';
 import { PhraseRow } from '../ui/PhraseRow';
 import { progressLabel } from '../ui/progressLabel';
 import { SetCard } from '../ui/SetCard';
 import { TONE } from '../ui/SetCover';
+import { btnIcon, btnText, btnTonal } from '../ui/button';
+import { fieldClass } from '../ui/field';
 
 const LEVELS: Level[] = ['A1', 'A2', 'B1'];
 const TAGS: Tag[] = ['question', 'request', 'politeness', 'food', 'directions', 'numbers', 'social'];
@@ -158,26 +161,19 @@ export function ExploreScreen({ filters }: { filters: ExploreFilters }) {
           onChange={(e) => setText(e.target.value)}
           placeholder={c.explore.search}
           aria-label={c.explore.search}
-          className="w-full min-h-12 pl-11 pr-4 rounded-2xl bg-surface-container-low border border-outline-variant/60 text-base text-on-surface placeholder:text-secondary focus-visible:outline-2"
+          className={`${fieldClass} w-full pl-11`}
         />
       </form>
 
       {chips.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2 -mt-3">
+        <div className="flex flex-wrap items-center gap-x-2 -mt-3">
           {chips.map((chip) => (
-            <button
-              key={chip.label}
-              type="button"
-              aria-label={c.explore.removeFilter(chip.label)}
-              onClick={() => update(chip.clear)}
-              className="min-h-11 pl-3 pr-2 rounded-full bg-primary-container text-on-primary text-body font-semibold flex items-center gap-1"
-            >
+            <Chip key={chip.label} removable aria-label={c.explore.removeFilter(chip.label)} onClick={() => update(chip.clear)}>
               {chip.label}
-              <Icon name="close" className="text-icon-sm" />
-            </button>
+            </Chip>
           ))}
           {chips.length > 1 && (
-            <button type="button" onClick={() => navigate({ name: 'explore', q: filters.q })} className="min-h-11 px-3 rounded-full text-body font-semibold text-primary-container">
+            <button type="button" onClick={() => navigate({ name: 'explore', q: filters.q })} className={btnText}>
               {c.explore.clearFilters}
             </button>
           )}
@@ -246,7 +242,7 @@ export function ExploreScreen({ filters }: { filters: ExploreFilters }) {
                 <button
                   type="button"
                   onClick={() => nav.addPhrase({ target: clip(tidy(filters.q ?? ''), LIMITS.phrase) })}
-                  className="min-h-11 px-4 rounded-full bg-surface-container text-on-surface text-body font-semibold flex items-center gap-1.5"
+                  className={btnTonal}
                 >
                   <Icon name="add" className="text-icon-md" />
                   {c.explore.addAsOwn(filters.q)}
@@ -316,7 +312,7 @@ function PhraseResult({ phrase, words, detail }: { phrase: Phrase; words: string
           <span className="min-w-0">{detail}</span>
         </span>
       </button>
-      <button type="button" onClick={() => nav.showDetails(phrase.id)} aria-label={c.phrase.details(phrase.target)} className="w-11 h-11 shrink-0 flex items-center justify-center rounded-full text-secondary">
+      <button type="button" onClick={() => nav.showDetails(phrase.id)} aria-label={c.phrase.details(phrase.target)} className={`${btnIcon} text-secondary`}>
         <Icon name="more_vert" className="text-icon" />
       </button>
     </div>
@@ -327,22 +323,7 @@ function FilterRow({ label, children }: { label: string; children: ReactNode }) 
   return (
     <section aria-label={label} className="-mt-2">
       <h2 className="text-label font-bold uppercase tracking-wider text-secondary mb-1.5">{label}</h2>
-      <div className="flex flex-wrap gap-2">{children}</div>
+      <div className="flex flex-wrap gap-x-2">{children}</div>
     </section>
-  );
-}
-
-function Chip({ selected, onClick, children }: { selected: boolean; onClick: () => void; children: ReactNode }) {
-  return (
-    <button
-      type="button"
-      aria-pressed={selected}
-      onClick={onClick}
-      className={`min-h-11 px-4 rounded-full text-body font-semibold border ${
-        selected ? 'bg-primary-container text-on-primary border-primary-container' : 'bg-surface-container-low text-on-surface border-outline-variant/50'
-      }`}
-    >
-      {children}
-    </button>
   );
 }

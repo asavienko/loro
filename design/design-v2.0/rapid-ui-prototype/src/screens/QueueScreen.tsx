@@ -12,6 +12,7 @@ import { isTargetRevealed } from '../ui/phase';
 import { PhraseRow } from '../ui/PhraseRow';
 import { Sheet, SheetOption } from '../ui/Sheet';
 import { useToast } from '../ui/Toast';
+import { btnIcon, btnTonal } from '../ui/button';
 
 const SWIPE = 80;
 
@@ -79,11 +80,11 @@ export function QueueScreen({ onClose }: { onClose: () => void }) {
       className="fixed inset-0 z-50 bg-surface flex flex-col pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]"
     >
       <header className="shrink-0 flex items-center gap-2 px-2 h-14 border-b border-surface-container-high max-w-lg w-full mx-auto">
-        <button type="button" aria-label={c.queue.back} onClick={onClose} className="w-11 h-11 flex items-center justify-center rounded-full active:bg-surface-container">
+        <button type="button" aria-label={c.queue.back} onClick={onClose} className={btnIcon}>
           <Icon name="keyboard_arrow_down" className="text-icon-xl" />
         </button>
         <div className="flex-1 min-w-0 text-center">
-          <h1 className="font-serif text-lg font-semibold leading-tight">{c.queue.title}</h1>
+          <h1 className="font-serif text-title font-semibold leading-tight">{c.queue.title}</h1>
           <p className="text-label text-secondary truncate">
             {c.queue.left(upNext.length)}
             {set ? ` · ${set.title}` : ''}
@@ -94,7 +95,7 @@ export function QueueScreen({ onClose }: { onClose: () => void }) {
           aria-label={c.queue.shuffle}
           aria-pressed={state.player.shuffle}
           onClick={actions.toggleShuffle}
-          className={`w-11 h-11 flex items-center justify-center rounded-full active:bg-surface-container ${state.player.shuffle ? 'text-primary-container' : 'text-secondary'}`}
+          className={`${btnIcon} ${state.player.shuffle ? 'text-primary-container' : 'text-secondary'}`}
         >
           <Icon name="shuffle" className="text-icon-lg" />
         </button>
@@ -146,7 +147,7 @@ export function QueueScreen({ onClose }: { onClose: () => void }) {
               </>
             )}
             <div className="flex gap-2 mt-3 px-1">
-              <button type="button" onClick={saveAsSet} className="min-h-11 px-4 rounded-full bg-surface-container text-on-surface text-body font-semibold flex items-center gap-1.5">
+              <button type="button" onClick={saveAsSet} className={btnTonal}>
                 <Icon name="playlist_add" className="text-icon-md" />
                 {c.queue.saveAsSet}
               </button>
@@ -165,7 +166,7 @@ export function QueueScreen({ onClose }: { onClose: () => void }) {
                       },
                     });
                   }}
-                  className="min-h-11 px-4 rounded-full bg-surface-container text-on-surface text-body font-semibold flex items-center gap-1.5"
+                  className={btnTonal}
                 >
                   <Icon name="clear_all" className="text-icon-md" />
                   {c.queue.clear}
