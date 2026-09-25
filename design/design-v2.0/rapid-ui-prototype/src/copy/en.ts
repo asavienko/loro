@@ -263,6 +263,8 @@ export function makeEn(n: Plural) {
         startSet: (title: string) => `Start ${title}`,
         notNow: 'Not now',
       },
+      /** The mini-player during the rating hold: the grades are in the full player. */
+      miniRate: 'Tap to rate',
       noVoice: 'No voice for this language',
       audioSilent: 'Speech stopped before the phrase played. Press Play to try again.',
       silent: 'Speech stopped — press Play',
