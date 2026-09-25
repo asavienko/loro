@@ -8,6 +8,7 @@ import { CharCount } from '../ui/CharCount';
 import { Sheet } from '../ui/Sheet';
 import { useToast } from '../ui/Toast';
 import { btnPrimary } from '../ui/button';
+import { fieldClass } from '../ui/field';
 
 /**
  * The learner's own phrase: both languages, played with the device voice like
@@ -95,7 +96,7 @@ function PhraseForm({ editId, initialTarget, initialNative, targetLang, nativeLa
             }
           }}
           required
-          className="min-h-12 px-4 rounded-2xl bg-surface-container-low border border-outline-variant/60 text-field font-serif italic"
+          className={`${fieldClass} font-serif italic`}
         />
         <CharCount id={targetCount} value={target} max={LIMITS.phrase} />
       </label>
@@ -111,7 +112,7 @@ function PhraseForm({ editId, initialTarget, initialNative, targetLang, nativeLa
           enterKeyHint="done"
           autoComplete="off"
           required
-          className="min-h-12 px-4 rounded-2xl bg-surface-container-low border border-outline-variant/60 text-field"
+          className={fieldClass}
         />
         <CharCount id={nativeCount} value={native} max={LIMITS.phrase} />
       </label>

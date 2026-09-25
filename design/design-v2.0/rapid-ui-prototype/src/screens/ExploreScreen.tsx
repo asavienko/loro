@@ -14,6 +14,7 @@ import { progressLabel } from '../ui/progressLabel';
 import { SetCard } from '../ui/SetCard';
 import { TONE } from '../ui/SetCover';
 import { btnIcon, btnText, btnTonal } from '../ui/button';
+import { fieldClass } from '../ui/field';
 
 const LEVELS: Level[] = ['A1', 'A2', 'B1'];
 const TAGS: Tag[] = ['question', 'request', 'politeness', 'food', 'directions', 'numbers', 'social'];
@@ -160,7 +161,7 @@ export function ExploreScreen({ filters }: { filters: ExploreFilters }) {
           onChange={(e) => setText(e.target.value)}
           placeholder={c.explore.search}
           aria-label={c.explore.search}
-          className="w-full min-h-12 pl-11 pr-4 rounded-2xl bg-surface-container-low border border-outline-variant/60 text-field text-on-surface placeholder:text-secondary focus-visible:outline-2"
+          className={`${fieldClass} w-full pl-11`}
         />
       </form>
 
