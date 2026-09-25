@@ -259,20 +259,38 @@ export function recentSetIds(learner: LearnerState, limit = 4): string[] {
 }
 
 /**
- * The set Home offers to continue: the most recent set with phrases left to
- * learn, otherwise the course set with the smallest share learned.
+ * The set Home offers next: the most recent set with a phrase due or never started. Once every
+ * phrase of it has been started and none is due, the reviews bring them back, and the next set
+ * is the course set with the smallest share learned that still has new phrases. With no new
+ * phrase anywhere, the most recent set with phrases left to learn, then the least learned.
  */
 export function suggestedSetId(learner: LearnerState, now: number): string | null {
-  const share = (id: string) => {
+  const progress = (id: string) => {
     const view = findSetView(learner, id);
-    if (!view || view.phraseIds.length === 0) return 1;
-    return setProgress(learner, view.phraseIds, now).learned / view.phraseIds.length;
+    return view && view.phraseIds.length > 0 ? setProgress(learner, view.phraseIds, now) : null;
   };
-  const recent = recentSetIds(learner).find((id) => share(id) < 1);
-  if (recent) return recent;
-  let best: string | null = null;
-  for (const set of courseSets(learner)) if (best === null || share(set.id) < share(best)) best = set.id;
-  return best;
+  const share = (id: string) => {
+    const p = progress(id);
+    return p ? p.learned / p.total : 1;
+  };
+  const leastLearned = (ids: string[]) => {
+    let best: string | null = null;
+    for (const id of ids) if (best === null || share(id) < share(best)) best = id;
+    return best;
+  };
+  const recent = recentSetIds(learner);
+  const going = recent.find((id) => {
+    const p = progress(id);
+    return p !== null && p.learned < p.total && (p.due > 0 || p.started < p.total);
+  });
+  if (going) return going;
+  const sets = courseSets(learner).map((s) => s.id);
+  const next = leastLearned(sets.filter((id) => {
+    const p = progress(id);
+    return p !== null && p.started < p.total;
+  }));
+  if (next) return next;
+  return recent.find((id) => share(id) < 1) ?? leastLearned(sets);
 }
 
 /** Course sets never listened to. */

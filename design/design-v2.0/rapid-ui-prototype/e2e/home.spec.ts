@@ -52,9 +52,9 @@ const filled = (page: import('@playwright/test').Page) =>
   );
 
 /** Café heard twice and rated Easy an hour ago: nothing due, and Café still to learn. */
-function caughtUp(now: number) {
+function caughtUp(now: number, ids = ['cafe-01', 'cafe-02', 'cafe-03', 'cafe-04', 'cafe-05']) {
   let n = 0;
-  return ['cafe-01', 'cafe-02', 'cafe-03', 'cafe-04', 'cafe-05'].flatMap((phraseId) =>
+  return ids.flatMap((phraseId) =>
     [9, 0.04].flatMap((days) => {
       const at = now - days * DAY;
       const base = { device: 'c', key: `en-GB>es-ES:${phraseId}`, phraseId, setId: 'set-cafe' };
@@ -92,11 +92,21 @@ test.describe('Home has one hero, and one terracotta Play (V-05)', () => {
 
   test.describe('nothing due', () => {
     test.use({ seed: { log: caughtUp(Date.now()) } });
+    test('once a set has been through, the next set is the hero; the last one waits under Jump back in (Q-02)', async ({ page }) => {
+      await page.goto('/');
+      expect(await filled(page)).toEqual(['Play 5 phrases']);
+      await expect(page.getByRole('region', { name: 'Next set' })).toContainText('Tapas & Tabernas');
+      await expect(page.getByRole('region', { name: 'Jump back in' })).toContainText('Café & Mañanas');
+      await expect(page.getByText(/Next: 5 phrases /)).toBeVisible();
+    });
+  });
+
+  test.describe('nothing due, a phrase of the set never heard', () => {
+    test.use({ seed: { log: caughtUp(Date.now(), ['cafe-01', 'cafe-02', 'cafe-03', 'cafe-04']) } });
     test('what to continue is the hero', async ({ page }) => {
       await page.goto('/');
       expect(await filled(page)).toEqual(['Play 5 phrases']);
       await expect(page.getByRole('region', { name: 'Continue' })).toContainText('Café & Mañanas');
-      await expect(page.getByText(/Next: 5 phrases /)).toBeVisible();
     });
   });
 
@@ -121,6 +131,45 @@ test.describe('a learner switching to a course they have not started (U-15)', ()
     await expect(page.getByText('Listen to a phrase, then say it before you hear it again.')).toHaveCount(0);
     // Its first set is the hero instead.
     expect(await filled(page)).toEqual(['Play 4 phrases']);
+  });
+});
+
+test('a set played through and rated: Home offers the next set (Q-02)', async ({ page }) => {
+  await page.clock.install();
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Play 5 phrases' }).click();
+  const player = page.getByRole('dialog', { name: 'Now playing' });
+  const waiting = player.getByText('Rate it, or wait to go on').first();
+  for (let i = 1; i <= 5; i++) {
+    await expect(player.getByText(`${i} of 5`)).toBeVisible();
+    for (let t = 0; t < 120_000 && !(await waiting.isVisible()); t += 250) await page.clock.runFor(250);
+    await player.getByRole('button', { name: /^Easy/ }).click();
+  }
+  await page.getByRole('button', { name: 'Close player' }).click();
+  await expect(page.getByRole('heading', { name: 'Next set' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Next set' })).toContainText('Tapas & Tabernas');
+  await expect(page.getByRole('region', { name: 'Jump back in' })).toContainText('Café & Mañanas');
+  expect(await filled(page)).toEqual(['Play 5 phrases']);
+});
+
+test.describe('a review of the only set started', () => {
+  // Café rated Easy a month ago: all five due now.
+  test.use({ seed: { log: caughtUp(Date.now() - 30 * DAY, ['cafe-01', 'cafe-02', 'cafe-03', 'cafe-04', 'cafe-05']) } });
+  test('its end panel starts the next set, as Home does (Q-02)', async ({ page }) => {
+    await page.clock.install();
+    await page.goto('/');
+    await page.getByRole('region', { name: 'Review' }).getByRole('button', { name: /^Play 5 phrases/ }).click();
+    const player = page.getByRole('dialog', { name: 'Now playing' });
+    const waiting = player.getByText('Rate it, or wait to go on').first();
+    for (let i = 1; i <= 5; i++) {
+      await expect(player.getByText(`${i} of 5`)).toBeVisible();
+      for (let t = 0; t < 120_000 && !(await waiting.isVisible()); t += 250) await page.clock.runFor(250);
+      await player.getByRole('button', { name: /^Easy/ }).click();
+    }
+    await expect(player.getByRole('heading', { name: 'Review done' })).toBeVisible();
+    await expect(player.getByRole('button', { name: 'Start Tapas & Tabernas' })).toBeVisible();
+    await player.getByRole('button', { name: 'Close', exact: true }).click();
+    await expect(page.getByRole('region', { name: 'Next set' })).toContainText('Tapas & Tabernas');
   });
 });
 

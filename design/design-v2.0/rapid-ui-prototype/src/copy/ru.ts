@@ -68,6 +68,7 @@ export function makeRu(n: Plural): Copy {
       duration: (time) => `${time} при 1×`,
       startTitle: 'С чего начать',
       continueTitle: 'Продолжить',
+      nextTitle: 'Следующий набор',
       next: (c, when) => `Дальше: ${phrases(c)} ${when}`,
       nextAfter: (c, when) => `Потом: ещё ${phrases(c)} ${when}`,
       jumpBackIn: 'Вернуться',

@@ -58,7 +58,8 @@ export function HomeScreen() {
 
   // Exactly one hero, the first that applies: the demo, the review, what to continue, the course done.
   const hero = offerDemo && firstPhrase ? 'demo' : due.length > 0 ? 'review' : suggested && suggestedIds.length > 0 ? 'continue' : courseDone ? 'done' : null;
-  const continueTitle = stats.started === 0 ? c.home.startTitle : c.home.continueTitle;
+  // A set not started yet, once the one before it has been through once, is the next set.
+  const continueTitle = stats.started === 0 ? c.home.startTitle : suggestedProgress?.started === 0 ? c.home.nextTitle : c.home.continueTitle;
   const continueMeta = suggestedProgress ? c.set.summary(suggestedProgress.total, suggestedProgress.learned, suggestedProgress.due) : '';
   // Home's study plays open the player, as the demo does, so the learner sees the grades to rate
   // (quick-play on cards elsewhere stays in the mini-player).

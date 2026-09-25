@@ -12,6 +12,7 @@ import { playsOnce, REPEAT_SETTINGS, SPEEDS } from '../state/machine';
 import { RATING_WINDOW_MS } from '../state/memory';
 import {
   currentPhraseId,
+  displayLearner,
   isLiked,
   learnerStats,
   listenedMs,
@@ -20,6 +21,7 @@ import {
   playableIds,
   previewDue,
   sessionSummary,
+  setProgress,
   suggestedSetId,
   upNextIds,
   windowLeft,
@@ -516,7 +518,9 @@ function EndPanel({ onClose }: { onClose: () => void }) {
   const source = state.player.source;
   const summary = sessionSummary(state, now);
   const rated = summary ? summary.ratings.missed + summary.ratings.hard + summary.ratings.easy : 0;
-  const suggested = findSetView(state.learner, suggestedSetId(state.learner, now));
+  // As Home offers it: this review's ratings, still in their undo window, already count.
+  const learner = displayLearner(state);
+  const suggested = findSetView(learner, suggestedSetId(learner, now));
   const next = !summary
     ? c.player.end.nothingDue
     : summary.dueNow > 0
@@ -530,7 +534,7 @@ function EndPanel({ onClose }: { onClose: () => void }) {
   const startSuggested = () => {
     if (!suggested) return;
     // Its phrases still worth playing (all of them for a new learner), with the player left open.
-    const ids = playableIds(state.learner, suggested.phraseIds, now);
+    const ids = playableIds(learner, suggested.phraseIds, now);
     nav.playSet(suggested.id, { phraseIds: ids.length > 0 ? ids : suggested.phraseIds });
   };
 
@@ -561,7 +565,7 @@ function EndPanel({ onClose }: { onClose: () => void }) {
           suggested && (
             <button type="button" onClick={startSuggested} className={btnPrimary}>
               <Icon name="play_arrow" fill className="text-icon" />
-              {demo ? c.player.end.startSet(suggested.title) : c.player.end.continueSet(suggested.title)}
+              {demo || setProgress(learner, suggested.phraseIds, now).started === 0 ? c.player.end.startSet(suggested.title) : c.player.end.continueSet(suggested.title)}
             </button>
           )
         )}
