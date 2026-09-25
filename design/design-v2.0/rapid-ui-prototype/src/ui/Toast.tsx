@@ -24,6 +24,9 @@ interface ToastApi {
 const ToastContext = createContext<ToastApi | null>(null);
 const TOAST_MS = 4000;
 const TOAST_WITH_ACTION_MS = 6000;
+/** Under 20rem of toast (text units, so large text too): the words on one line, the buttons under them. */
+const NARROW_WRAP = '@max-[20rem]/toast:flex-wrap';
+const NARROW_TEXT = '@max-[20rem]/toast:basis-full @max-[20rem]/toast:pr-3 @max-[20rem]/toast:pb-0';
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const c = useCopy();
@@ -131,34 +134,40 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 12 }}
-              className={`pointer-events-auto max-w-md w-full min-h-12 pl-4 pr-1 rounded-2xl shadow-float flex items-center gap-2 text-body ${
+              // A container: in a narrow toast (large text, a small phone) the words take a line of
+              // their own and the buttons sit under them, rather than the words go one per line.
+              className={`@container/toast pointer-events-auto max-w-md w-full rounded-2xl shadow-float text-body ${
                 item.tone === 'success' ? 'bg-tertiary text-on-tertiary' : 'bg-inverse-surface text-inverse-on-surface'
               }`}
             >
-              <span aria-hidden="true" className="flex-1 py-2">
-                {item.text}
-              </span>
-              {item.action && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    item.action?.run();
-                    close();
-                  }}
-                  className="min-h-11 px-3 rounded-xl font-bold text-primary-fixed-dim"
-                >
-                  {item.action.label}
-                </button>
-              )}
-              <button
-                type="button"
-                ref={dismiss}
-                aria-label={c.toast.dismiss}
-                onClick={close}
-                className="w-11 h-11 rounded-xl flex items-center justify-center opacity-80"
-              >
-                <span aria-hidden="true" className="material-symbols-outlined text-icon-md">close</span>
-              </button>
+              <div className={`min-h-12 pl-4 pr-1 flex items-center gap-x-2 ${item.action ? NARROW_WRAP : ''}`}>
+                <span aria-hidden="true" className={`flex-1 py-2 ${item.action ? NARROW_TEXT : ''}`}>
+                  {item.text}
+                </span>
+                <div className="ml-auto shrink-0 flex items-center">
+                  {item.action && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        item.action?.run();
+                        close();
+                      }}
+                      className="min-h-11 px-3 rounded-xl font-bold text-primary-fixed-dim"
+                    >
+                      {item.action.label}
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    ref={dismiss}
+                    aria-label={c.toast.dismiss}
+                    onClick={close}
+                    className="w-11 h-11 rounded-xl flex items-center justify-center opacity-80"
+                  >
+                    <span aria-hidden="true" className="material-symbols-outlined text-icon-md">close</span>
+                  </button>
+                </div>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>

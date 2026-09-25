@@ -446,6 +446,29 @@ test.describe('queue', () => {
     await queue.getByRole('button', { name: 'Move The bill, please' }).press('ArrowUp');
     await expect(page.getByRole('status')).toHaveText('Moved to position 1 of 4');
   });
+
+  test('a narrow toast (200% text) keeps its words on whole lines, and its buttons under them (Q-04)', async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Play 5 phrases' }).click();
+    await page.getByRole('button', { name: 'Open queue' }).click();
+    await page.getByRole('dialog', { name: 'Queue' }).getByRole('button', { name: 'Move The bill, please' }).press('Delete');
+    const toast = page.locator('.toast-layer');
+    const words = toast.locator('span[aria-hidden="true"]').first();
+    const undo = toast.getByRole('button', { name: 'Undo' });
+    await expect(undo).toBeVisible();
+    // Roomy: the words, Undo and × on one row.
+    let [w, u] = [(await words.boundingBox())!, (await undo.boundingBox())!];
+    expect(w.y).toBeLessThan(u.y + u.height);
+    expect(u.y).toBeLessThan(w.y + w.height);
+    await page.addStyleTag({ content: 'html { font-size: 200% }' });
+    await page.waitForTimeout(200);
+    [w, u] = [(await words.boundingBox())!, (await undo.boundingBox())!];
+    const box = (await toast.locator('> div').boundingBox())!;
+    // Narrow: the words take the toast's width, and the buttons sit under them, on the right.
+    expect(w.y + w.height).toBeLessThanOrEqual(u.y + 1);
+    expect(w.width).toBeGreaterThan(box.width * 0.75);
+    expect(u.x + u.width).toBeGreaterThan(box.x + box.width * 0.6);
+  });
 });
 
 // No content ships clips yet, so the clip path is exercised through the module
