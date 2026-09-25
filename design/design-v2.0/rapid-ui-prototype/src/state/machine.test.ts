@@ -284,7 +284,7 @@ describe('repetitions', () => {
     s = transition(s, { type: 'COMMIT', now: T0 + RATING_WINDOW_MS });
     s = load(s, T0 + RATING_WINDOW_MS + 1);
     assert.equal(s.player.repeats, 1);
-    const fixed = run(s, { type: 'SET_PREFS', prefs: { repeats: 3 } });
+    const fixed = run(s, { type: 'SET_PREFS', prefs: { repeats: 3 }, now: T0 + 50 });
     assert.equal(fixed.player.repeats, 3);
   });
 });

@@ -26,7 +26,7 @@ const event = (now: number): fc.Arbitrary<AppEvent> =>
     fc.record({ type: fc.constant('REMOVE_FROM_QUEUE' as const), position: fc.integer({ min: -1, max: 30 }) }),
     fc.record({ type: fc.constant('ENQUEUE' as const), phraseIds: fc.subarray(ids, { minLength: 1, maxLength: 4 }), setId: fc.constant(null), at: fc.constantFrom('next' as const, 'end' as const), now: fc.constant(now) }),
     fc.constant({ type: 'CLEAR_QUEUE' as const }),
-    fc.record({ type: fc.constant('SET_PREFS' as const), prefs: fc.record({ playMode: fc.constantFrom('repeat' as const, 'continue' as const) }) }),
+    fc.record({ type: fc.constant('SET_PREFS' as const), prefs: fc.record({ playMode: fc.constantFrom('repeat' as const, 'continue' as const) }), now: fc.constant(now) }),
   );
 
 /** Steps a minute or so apart; PHASE_DONE uses the current cycle (offset back by 0–3 to test stale ones). */

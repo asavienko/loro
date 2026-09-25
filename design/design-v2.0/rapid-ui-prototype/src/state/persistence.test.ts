@@ -195,7 +195,7 @@ describe('server sync', () => {
 describe('loading', () => {
   it('merges the copy a closing page left with the saved progress', () => {
     const saved = run(fresh(), { type: 'TOGGLE_LIKE', kind: 'set', id: 'set-taxi', now: T0 + 5 });
-    const pending = run(fresh(), { type: 'TOGGLE_LIKE', kind: 'set', id: 'set-cafe', now: T0 }, { type: 'SET_PREFS', prefs: { speed: 0.8 } });
+    const pending = run(fresh(), { type: 'TOGGLE_LIKE', kind: 'set', id: 'set-cafe', now: T0 }, { type: 'SET_PREFS', prefs: { speed: 0.8 }, now: T0 + 1 });
     const state = loadState({ saved: serializeState(saved), pending: serializeState(pending) }, () => fresh());
     assert.equal(state.learner.likes['set:set-taxi'].liked, true, 'another tab’s later progress is kept');
     assert.equal(state.learner.likes['set:set-cafe'].liked, true, 'the closing page’s progress is kept');
@@ -205,7 +205,7 @@ describe('loading', () => {
 
   it("takes another tab's progress and pending ratings, but not its queue or settings", () => {
     const saved = load(fresh());
-    const otherTab = run(load(fresh(), T0, ['taxi-01']), { type: 'RATE', grade: 'hard', now: T0 + 1 }, { type: 'SET_PREFS', prefs: { speed: 1.25 } }, {
+    const otherTab = run(load(fresh(), T0, ['taxi-01']), { type: 'RATE', grade: 'hard', now: T0 + 1 }, { type: 'SET_PREFS', prefs: { speed: 1.25 }, now: T0 + 2 }, {
       type: 'TOGGLE_LIKE', kind: 'set', id: 'set-taxi', now: T0 + 2,
     });
     const state = loadState({ saved: serializeState(saved), pending: null, others: [serializeState(otherTab)] }, () => fresh());
