@@ -729,7 +729,9 @@ error; with a year of history, playback shows no long main-thread task.
 **WebKit (iOS's engine):** the suite now also runs with `BROWSER=webkit` (150 passed; the Tab and
 DevTools-protocol tests skip). It found that Settings' selects were 26 px targets in WebKit, which
 ignores a native select's height (now drawn by the app, 48 px), and a focus race after creating a
-set from a sheet (fixed).
+set from a sheet (fixed). `BROWSER=firefox` runs it in Gecko too (150 passed). In Firefox a mouse
+drag on the mini-player and the player moves them but never completes, while the queue's drags work;
+**swipes on those two need checking with touch on Firefox for Android.**
 
 **Open question:** "Full play 0:41 at 1×" is speech plus pauses, measured; it leaves out the 4 s
 rating hold (only for unrated phrases) and the engine's start-up delay, so an unrated new set can
