@@ -3,7 +3,7 @@
 // go through `n()` so each language can use its own plural rules.
 import type { Grade } from '../core/fsrs';
 import type { Level, Register, Tag } from '../content';
-import type { PlayMode, SortKey } from '../state/types';
+import type { PauseLength, PlayMode, SortKey } from '../state/types';
 import type { PluralForms } from './plural';
 
 export interface Plural {
@@ -206,20 +206,30 @@ export function makeEn(n: Plural) {
       openQueue: 'Open queue',
       summary: 'Session summary',
       position: (i: number, total: number) => `${i} of ${total}`,
+      /** When the queue holds more than its set (continue mode added the next one). */
+      positionInQueue: (i: number, total: number) => `${i} of ${total} in the queue`,
       hidden: (language: string) => `${language} hidden until you hear it`,
       steps: 'Steps',
       yourTurn: 'Your turn',
       instruction: {
         native: (language: string) => `Listen in ${language}`,
-        pause: (language: string) => `Your turn — say it in ${language}`,
+        pause: (language: string) => `Your turn — say it out loud in ${language}`,
         target: (language: string) => `Hear it in ${language}`,
         rate: 'Rate it, or wait to go on',
       },
       paused: 'Paused',
+      coach: 'Say it now, before you hear it. Nothing is recorded — you’ll rate how it went.',
       repetition: (r: number, total: number) => `Repetition ${r} of ${total}`,
-      howDidItGo: 'How did saying it go?',
+      howDidItGo: 'Did you remember it?',
+      /** Before the learner's first turn at the phrase in this play. */
+      rateAfterTurn: 'Rate once you’ve said it',
+      /** Under each grade: when the phrase comes back if rated so. */
+      nextIn: (interval: string) => `in ${interval}`,
       rated: (grade: string, when: string) => `Rated ${grade} — back ${when}`,
-      changeFor: (time: string) => `Change or undo for ${time}`,
+      /** After “Rated …” when a Missed or Hard phrase also comes back later in this queue. */
+      requeued: '· again in this queue',
+      undoFor: (time: string) => `Undo · ${time}`,
+      undoLabel: (time: string) => `Undo rating (${time} left)`,
       previous: 'Previous phrase',
       next: 'Next phrase',
       repeats: {
@@ -231,10 +241,39 @@ export function makeEn(n: Plural) {
         repeat: 'At the end: play the queue again',
         continue: 'At the end: continue with the next phrases',
       } satisfies Record<PlayMode, string>,
+      /** Visible words under the transport's two setting buttons. */
+      captions: { reps: 'reps', again: 'Again', continue: 'Continue', auto: 'Auto' },
+      repeatsToast: {
+        auto: 'Each phrase plays 3× while new, 1× once it sticks',
+        one: 'Each phrase plays once',
+        three: 'Each phrase plays 3 times',
+      },
+      playModeToast: {
+        repeat: 'At the end, the queue starts again',
+        continue: 'At the end, new phrases follow',
+      } satisfies Record<PlayMode, string>,
       speed: 'Speed',
+      speedIs: (speed: number) => `Speed: ${speed}×`,
       keys: 'Keys: Space play or pause · ← → previous, next · 1 2 3 rate',
       audioError: (language: string) =>
         `This device has no ${language} voice, so the phrase can’t play. Add one in your system’s speech settings, then press Play.`,
+      showText: (language: string) => `Show the ${language} text`,
+      /** The panel a queue with a natural end stops on (a review, the demo, a Library list). */
+      end: {
+        reviewTitle: 'Review done',
+        listTitle: 'All played',
+        rated: (count: number) => `${count} rated`,
+        nextReview: (when: string) => `Next review ${when}`,
+        nothingDue: 'Nothing due yet',
+        continueSet: (title: string) => `Continue ${title}`,
+        playAgain: 'Play again',
+        demoTitle: 'That’s the loop',
+        demoBody: 'Hear it, say it out loud, hear it, rate it. Ready for a whole set?',
+        startSet: (title: string) => `Start ${title}`,
+        notNow: 'Not now',
+      },
+      /** The mini-player during the rating hold: the grades are in the full player. */
+      miniRate: 'Tap to rate',
       noVoice: 'No voice for this language',
       audioSilent: 'Speech stopped before the phrase played. Press Play to try again.',
       silent: 'Speech stopped — press Play',
@@ -247,6 +286,7 @@ export function makeEn(n: Plural) {
       dismiss: 'Dismiss message',
       learned: (points: number) => `Learned · +${points}`,
       passComplete: 'Queue played through',
+      nextSet: (title: string) => `Next: ${title}`,
       removed: 'Removed from queue',
       cleared: 'Queue cleared',
       saved: (title: string) => `Saved as ${title}`,
@@ -272,6 +312,9 @@ export function makeEn(n: Plural) {
       swipePlay: 'Play now',
       swipeRemove: 'Remove',
       previously: 'Previously played',
+      /** On an up-next phrase already played in this queue (a Missed or Hard one coming back). */
+      again: 'Again',
+      justNow: 'just now',
       playNext: (text: string) => `Play ${text} next`,
       clear: 'Clear queue',
       saveAsSet: 'Save as set',
@@ -334,6 +377,10 @@ export function makeEn(n: Plural) {
       voiceAuto: (name: string) => `Automatic (${name})`,
       announceEveryStep: 'Announce every step',
       announceHint: 'Off: only “Your turn” and the reveal are announced.',
+      listening: 'Listening',
+      pauseLength: 'Time to say it',
+      pause: { standard: 'Standard', longer: 'Longer' } satisfies Record<PauseLength, string>,
+      pauseHint: 'Longer gives you about twice the phrase’s length.',
     },
     onboarding: {
       step: (i: number, total: number) => `Step ${i} of ${total}`,
@@ -352,7 +399,7 @@ export function makeEn(n: Plural) {
       loop: 'How it works',
       loopSteps: (native: string, target: string) => [
         `Hear the phrase in ${native}.`,
-        `Say it yourself in ${target} while it’s quiet.`,
+        `Say it out loud in ${target} while it’s quiet.`,
         `Hear it in ${target}.`,
         'Rate how it went: Missed, Hard or Easy. You can change it for five minutes.',
       ],

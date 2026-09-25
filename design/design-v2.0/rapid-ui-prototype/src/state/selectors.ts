@@ -18,7 +18,7 @@ import {
   typicalMs,
 } from './memory';
 import { committedIn, ratingEntry } from './merge';
-import { fullPlayMs, REVIEW_SESSION_SIZE } from './timing';
+import { fullPlayMs, pauseMs, RATE_HOLD_MS, REVIEW_SESSION_SIZE } from './timing';
 import type {
   AppState,
   Grade,
@@ -343,13 +343,31 @@ export function measuredTargetMs(learner: LearnerState, phraseId: string): numbe
   return typicalMs(memoryOf(learner, phraseId).targetSamples) ?? phrase?.durationMs?.[phrase.targetLang] ?? null;
 }
 
-/** The full play of the phrase at 1.0× with its repetitions; null until measured. */
+/**
+ * How long the current phase lasts, when that is known before it starts: the learner's
+ * turn (sized to the measured phrase, at this speed and pause setting) and the rating
+ * hold. A spoken step lasts as long as its audio does, so it has none. The machine
+ * fixes this when a phase starts (`player.phaseMs`), and the audio driver plays that.
+ */
+export function phaseDurationMs(state: AppState): number | null {
+  const id = currentPhraseId(state.player);
+  const phrase = findPhrase(state.learner, id);
+  if (!id || !phrase) return null;
+  if (state.player.phase === 'pause') return pauseMs(measuredTargetMs(state.learner, id), phrase.target, state.prefs.speed, state.prefs.pauseLength);
+  if (state.player.phase === 'rate') return RATE_HOLD_MS;
+  return null;
+}
+
+/**
+ * The full play of the phrase at 1.0× with its repetitions, and the rating hold while it
+ * has no rating (the player then waits for one); null until measured.
+ */
 export function phraseFullPlayMs(state: AppState, phrase: Phrase, repeats: number): number | null {
   const memory = memoryOf(state.learner, phrase.id);
   const prompt = promptOf(phrase, state.learner.profile.nativeLang);
   const nativeMs = typicalMs(memory.nativeSamples) ?? phrase.durationMs?.[prompt.lang] ?? null;
   const targetMs = typicalMs(memory.targetSamples) ?? phrase.durationMs?.[phrase.targetLang] ?? null;
-  return fullPlayMs(nativeMs, targetMs, phrase.target, repeats);
+  return fullPlayMs(nativeMs, targetMs, phrase.target, repeats, state.prefs.pauseLength, !pendingFor(state, phrase.id));
 }
 
 /** A set's full play at 1.0×, only once every phrase in it has been measured. */

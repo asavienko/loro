@@ -6,6 +6,11 @@ import { transition } from './machine';
 import { derive, isLearned, RATING_WINDOW_MS } from './memory';
 import { currentPhraseId, memoryOf, phraseProgress, points, previouslyPlayed, sessionSummary, upNextIds } from './selectors';
 import { addLocalDays, HOUR, startOfLocalDay } from './clock';
+// Phase timing, one-pass queues and undo after moving on (the player's round-3 changes).
+import { findPhrase } from './catalog';
+import { requeuesOn } from './machine';
+import { measuredTargetMs, pendingFor, phaseDurationMs } from './selectors';
+import { pauseMs, RATE_HOLD_MS } from './timing';
 import { cafe, DAY, done, fresh, load, MINUTE, playPhrase, run, T0 } from './testing';
 
 describe('player loop', () => {
@@ -485,5 +490,102 @@ describe('session and settings (regression)', () => {
     const after = run(s, { type: 'MERGE_REMOTE', learner: s.learner, prefs: remotePrefs, now: T0 + 6 });
     assert.equal(after.prefs.repeats, 1);
     assert.equal(after.player.repeats, 1);
+  });
+});
+
+describe('phase timing (what the screen counts down)', () => {
+  it('fixes the learner’s turn at the driver’s pause when it starts, and the hold at RATE_HOLD_MS', () => {
+    let s = load(fresh({ speed: 1.25 }));
+    assert.equal(s.player.phaseStartedAt, T0);
+    assert.equal(s.player.phaseMs, null, 'a spoken step has no length ahead of time');
+    s = done(s, T0 + 900, 900);
+    const id = currentPhraseId(s.player)!;
+    const phrase = findPhrase(s.learner, id)!;
+    assert.equal(s.player.phase, 'pause');
+    assert.equal(s.player.phaseStartedAt, T0 + 900);
+    // Exactly the call the audio driver made before it read `phaseMs`.
+    assert.equal(s.player.phaseMs, pauseMs(measuredTargetMs(s.learner, id), phrase.target, 1.25));
+    assert.equal(s.player.phaseMs, phaseDurationMs(s));
+    for (let i = 0; i < 8 && s.player.phase !== 'rate'; i++) s = done(s, T0 + 1000 * (i + 2), 1500);
+    assert.equal(s.player.phase, 'rate');
+    assert.equal(s.player.phaseMs, RATE_HOLD_MS);
+  });
+
+  it('a measured target sizes the next turn, and the longer setting lengthens it', () => {
+    let s = load(fresh({ pauseLength: 'longer' }));
+    s = done(done(done(s, T0 + 1, 900), T0 + 2), T0 + 3, 1600); // one repetition, target measured
+    s = done(s, T0 + 4, 900); // the next prompt
+    assert.equal(s.player.phase, 'pause');
+    assert.equal(s.player.phaseMs, pauseMs(1600, 'x', 1, 'longer'));
+    assert.equal(s.player.phaseMs, 1600 * 2 + 1000);
+  });
+
+  it('nothing runs while paused; Play restarts the phase at the new speed; a change mid-turn does not stretch it', () => {
+    let s = done(load(fresh()), T0 + 900, 900);
+    const planned = s.player.phaseMs;
+    s = run(s, { type: 'SET_PREFS', prefs: { speed: 0.8 }, now: T0 + 1000 });
+    assert.equal(s.player.phaseMs, planned, 'the turn already running keeps its length, as the audio does');
+    s = run(s, { type: 'PAUSE', now: T0 + 1100 });
+    assert.deepEqual([s.player.phaseStartedAt, s.player.phaseMs], [null, null]);
+    s = run(s, { type: 'PLAY', now: T0 + 5000 });
+    assert.equal(s.player.phaseStartedAt, T0 + 5000);
+    assert.equal(s.player.phaseMs, phaseDurationMs(s));
+    assert.ok(s.player.phaseMs! > planned!, 'slower speed, longer turn');
+  });
+});
+
+describe('queues with a natural end', () => {
+  const review = (mode: 'repeat' | 'continue') =>
+    transition(fresh({ playMode: mode }), { type: 'LOAD', phraseIds: ['cafe-01', 'cafe-02'], setId: null, source: { kind: 'review' }, now: T0, seed: 1 });
+
+  for (const mode of ['repeat', 'continue'] as const) {
+    it(`a review plays once and stops on its last phrase (${mode} mode)`, () => {
+      let s = review(mode);
+      let t = T0;
+      [s, t] = playPhrase(s, t);
+      assert.equal(s.player.index, 1);
+      [s, t] = playPhrase(s, t);
+      assert.equal(s.player.status, 'paused');
+      assert.equal(s.player.ended, true);
+      assert.deepEqual(s.player.order, ['cafe-01', 'cafe-02'], 'nothing continues after it');
+      assert.equal(s.player.index, 1);
+      assert.equal(s.player.session?.passes, 0, 'not a pass of a repeating queue');
+    });
+  }
+
+  it('Next on the last phrase ends it; a set keeps its play mode', () => {
+    let s = run(review('repeat'), { type: 'NEXT', now: T0 + 1 }, { type: 'NEXT', now: T0 + 2 });
+    assert.deepEqual([s.player.ended, s.player.status], [true, 'paused']);
+    s = load(fresh({ playMode: 'repeat' }), T0, ['cafe-01'], 'set-cafe');
+    [s] = playPhrase(s, T0);
+    assert.deepEqual([s.player.ended, s.player.index, s.player.status], [false, 0, 'playing'], 'a set starts again');
+  });
+
+  it('keeps where it came from, for its title', () => {
+    const s = transition(fresh(), { type: 'LOAD', phraseIds: ['cafe-01'], setId: null, source: { kind: 'library', view: 'liked' }, now: T0, seed: 1 });
+    assert.deepEqual(s.player.source, { kind: 'library', view: 'liked' });
+    assert.equal(load(s).player.source, null, 'a set is named by its set');
+  });
+});
+
+describe('undo after moving on', () => {
+  it('a rating given in the hold can be undone by phrase once the next phrase plays', () => {
+    let s = load(fresh());
+    for (let i = 0; i < 9; i++) s = done(s, T0 + i * 1000);
+    assert.equal(s.player.phase, 'rate');
+    s = run(s, { type: 'RATE', grade: 'easy', now: T0 + 10_000 });
+    assert.equal(s.player.index, 1, 'the rating ends the hold');
+    s = run(s, { type: 'UNRATE', phraseId: 'cafe-01', now: T0 + 12_000 });
+    assert.equal(pendingFor(s, 'cafe-01'), undefined);
+    assert.equal(s.player.index, 1, 'the player stays where it is');
+  });
+
+  it('Missed or Hard bring the phrase back later, as requeuesOn says', () => {
+    const s = load(fresh());
+    assert.equal(requeuesOn(s.player, 'hard'), true);
+    assert.equal(requeuesOn(s.player, 'easy'), false);
+    const after = run(s, { type: 'RATE', grade: 'hard', now: T0 + 1 });
+    assert.equal(after.player.order.filter((id) => id === 'cafe-01').length, 2);
+    assert.equal(requeuesOn(after.player, 'hard'), false, 'already coming back');
   });
 });

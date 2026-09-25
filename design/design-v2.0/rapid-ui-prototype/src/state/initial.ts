@@ -10,7 +10,7 @@ export function initialLearner(): LearnerState {
 }
 
 export function initialPrefs(): Prefs {
-  return { playMode: 'repeat', repeats: 'auto', speed: 1, announceEveryStep: false, sortBySet: {}, skippedDemo: false, voiceByLang: {}, changedAt: {} };
+  return { playMode: 'repeat', repeats: 'auto', speed: 1, announceEveryStep: false, sortBySet: {}, skippedDemo: false, voiceByLang: {}, pauseLength: 'standard', queueHintDone: false, changedAt: {} };
 }
 
 export function initialPlayer(): PlayerState {
@@ -28,6 +28,9 @@ export function initialPlayer(): PlayerState {
     playingSince: null,
     elapsedMs: 0,
     nativeMsThisRep: null,
+    phaseStartedAt: null,
+    phaseMs: null,
+    source: null,
     ended: false,
     audioError: null,
     session: null,

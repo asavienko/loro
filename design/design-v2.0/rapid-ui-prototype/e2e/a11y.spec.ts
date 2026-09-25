@@ -52,7 +52,9 @@ const screens: { name: string; open: (page: Page) => Promise<void> }[] = [
       await page.getByRole('button', { name: /^Play \d+ phrases/ }).first().click();
       await page.getByRole('button', { name: 'Pause', exact: true }).click();
       await page.getByRole('button', { name: /^Now playing:/ }).click();
-      await page.getByRole('button', { name: 'Session summary' }).click();
+      // The summary opens from the top of the queue (and from the toast after a pass).
+      await page.getByRole('button', { name: 'Open queue' }).click();
+      await page.getByRole('button', { name: /^This session · / }).click();
       await page.waitForTimeout(500);
     },
   },

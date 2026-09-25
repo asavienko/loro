@@ -22,6 +22,7 @@ import {
 } from '../state/selectors';
 import { coursePhrases } from '../state/catalog';
 import { useCopy, useNow, useStore } from '../state/store';
+import type { LibraryListView } from '../state/types';
 import { RecallChart, WeeklyChart } from '../ui/Charts';
 import { Chip } from '../ui/Chip';
 import { Icon } from '../ui/Icon';
@@ -176,10 +177,10 @@ function PhraseList({ ids, view, now }: { ids: string[]; view: LibraryView; now:
       {/* The list's header: how many, and the one filled button on the page. */}
       <div className="flex flex-wrap items-start justify-between gap-x-3">
         <p className="min-h-11 flex items-center text-label font-semibold text-secondary">{c.common.phrases(ids.length)}</p>
-      <button type="button" onClick={() => nav.playList(ids)} className={`${btnPrimarySm} mb-2`}>
-        <Icon name="play_arrow" fill className="text-icon-md" />
-        {c.library.playAll(ids.length)}
-      </button>
+        <button type="button" onClick={() => nav.playList(ids, 0, { kind: 'library', view: view as LibraryListView })} className={`${btnPrimarySm} mb-2`}>
+          <Icon name="play_arrow" fill className="text-icon-md" />
+          {c.library.playAll(ids.length)}
+        </button>
       </div>
       <ul className="-mx-2">
         {ids.map((id, i) => {
@@ -190,7 +191,7 @@ function PhraseList({ ids, view, now }: { ids: string[]; view: LibraryView; now:
               <PhraseRow
                 phrase={phrase}
                 detail={progressLabel(c, phraseProgress(displayLearner(state), id, now), now)}
-                onPlay={() => nav.playList(ids, i)}
+                onPlay={() => nav.playList(ids, i, { kind: 'library', view: view as LibraryListView })}
                 onMore={() => nav.showDetails(id)}
               />
             </li>

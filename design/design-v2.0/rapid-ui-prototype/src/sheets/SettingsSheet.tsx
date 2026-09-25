@@ -13,12 +13,16 @@ import { useToast } from '../ui/Toast';
 import { Sheet, SheetSection } from '../ui/Sheet';
 import { fieldClass } from '../ui/field';
 
-/** Opened from the avatar: profile and course, and one screen-reader preference. */
-export function SettingsSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
+/**
+ * Opened from the avatar: course and profile, voices, listening and one screen-reader preference.
+ * `atVoices` (from the player's voice line) opens it on the voice pickers.
+ */
+export function SettingsSheet({ open, atVoices = false, onClose }: { open: boolean; atVoices?: boolean; onClose: () => void }) {
   const c = useCopy();
   const { state, actions } = useStore();
   const { profile } = state.learner;
   const announceId = useId();
+  const pauseId = useId();
   const { toast } = useToast();
 
   // A new course empties the queue (it belongs to the old one); say so, in the new UI language.
@@ -33,6 +37,14 @@ export function SettingsSheet({ open, onClose }: { open: boolean; onClose: () =>
   return (
     <Sheet open={open} title={c.settings.title} onClose={onClose}>
       <SheetSection title={c.settings.profile}>
+        {/* The setting people come here for comes first. */}
+        <LanguageSelect
+          label={c.settings.course}
+          value={profile.targetLang}
+          options={coursesFor(profile.nativeLang)}
+          name={(code) => languageLabel(code, c.locale)}
+          onChange={(code) => switchTo(profile.nativeLang, code)}
+        />
         <NameField initial={profile.name} label={c.settings.name} onSave={(name) => actions.setProfile({ name })} />
         <LanguageSelect
           label={c.settings.native}
@@ -44,17 +56,38 @@ export function SettingsSheet({ open, onClose }: { open: boolean; onClose: () =>
             switchTo(code, course);
           }}
         />
-        <LanguageSelect
-          label={c.settings.course}
-          value={profile.targetLang}
-          options={coursesFor(profile.nativeLang)}
-          name={(code) => languageLabel(code, c.locale)}
-          onChange={(code) => switchTo(profile.nativeLang, code)}
-        />
         <p className="px-2 text-label text-secondary">{c.settings.courseNote}</p>
       </SheetSection>
 
-      <VoicePickers langs={[profile.targetLang, profile.nativeLang]} />
+      <VoicePickers langs={[profile.targetLang, profile.nativeLang]} focusFirst={atVoices} />
+
+      {/* How long "your turn" lasts; every duration shown uses it, so they stay real. */}
+      <SheetSection title={c.settings.listening}>
+        <fieldset className="px-2 py-1" aria-describedby={pauseId}>
+          <legend className="text-label text-secondary mb-1">{c.settings.pauseLength}</legend>
+          {/* Side by side, or one above the other when large text makes them too narrow. */}
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(7.5rem,1fr))] gap-2">
+            {(['standard', 'longer'] as const).map((length) => (
+              <label
+                key={length}
+                className={`min-h-12 px-3 rounded-2xl border flex items-center gap-2 cursor-pointer text-body ${
+                  state.prefs.pauseLength === length ? 'border-inverse-surface bg-surface-container-low font-semibold' : 'border-hairline'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="pause-length"
+                  checked={state.prefs.pauseLength === length}
+                  onChange={() => actions.setPrefs({ pauseLength: length })}
+                  className="w-5 h-5 accent-inverse-surface"
+                />
+                {c.settings.pause[length]}
+              </label>
+            ))}
+          </div>
+          <p id={pauseId} className="mt-1 text-label text-secondary">{c.settings.pauseHint}</p>
+        </fieldset>
+      </SheetSection>
 
       <SheetSection title={c.settings.accessibility}>
         <div className="min-h-12 px-2 flex items-center gap-3">
@@ -136,18 +169,30 @@ function LanguageSelect({ label, value, options, name, onChange }: { label: stri
 }
 
 /** A voice per language, shown only where the device has more than one to choose from. */
-function VoicePickers({ langs }: { langs: LanguageCode[] }) {
+function VoicePickers({ langs, focusFirst }: { langs: LanguageCode[]; focusFirst: boolean }) {
   const c = useCopy();
   const { state, actions } = useStore();
+  const section = useRef<HTMLDivElement>(null);
   // Read afresh whenever the device's voice list changes (some load late).
   const { ready } = useVoiceList();
   const voices: Partial<Record<LanguageCode, SpeechSynthesisVoice[]>> = ready ? Object.fromEntries(langs.map((l) => [l, voicesFor(l)])) : {};
   const choosable = langs.filter((l) => (voices[l]?.length ?? 0) > 1);
-  if (choosable.length === 0) return null;
+  const hasChoice = choosable.length > 0;
+  // Opened from the player's voice line: straight to the pickers, once the sheet has taken focus.
+  useEffect(() => {
+    if (!focusFirst || !hasChoice) return;
+    const timer = setTimeout(() => {
+      section.current?.scrollIntoView({ block: 'start' });
+      section.current?.querySelector('select')?.focus({ preventScroll: true });
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [focusFirst, hasChoice]);
+  if (!hasChoice) return null;
   // The course's first phrase, in each language, to hear a voice before keeping it.
   const sample = findPhrase(state.learner, courseSets(state.learner)[0]?.phraseIds[0]);
   const sampleText = (lang: LanguageCode) => (!sample ? '' : lang === sample.targetLang ? sample.target : promptOf(sample, lang).text);
   return (
+    <div ref={section} className="mt-3 scroll-mt-2">
     <SheetSection title={c.settings.voices}>
       {choosable.map((lang) => {
         const list = voices[lang]!;
@@ -190,6 +235,7 @@ function VoicePickers({ langs }: { langs: LanguageCode[] }) {
         );
       })}
     </SheetSection>
+    </div>
   );
 }
 

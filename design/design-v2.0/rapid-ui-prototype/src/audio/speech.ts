@@ -98,6 +98,15 @@ export function voiceName(lang: LanguageCode): string | null {
   return pickVoice(lang)?.name ?? null;
 }
 
+/**
+ * Whether device speech can say `lang`. Voices load asynchronously: an empty list means
+ * "not known yet", so only a known list without a voice for it says no.
+ */
+export function canSpeak(lang: LanguageCode): boolean {
+  if (typeof window === 'undefined' || !('speechSynthesis' in window)) return false;
+  return window.speechSynthesis.getVoices().length === 0 || Boolean(pickVoice(lang));
+}
+
 /** Waits for the voice list (it loads asynchronously), up to `timeoutMs`. */
 export function waitForVoices(timeoutMs = 1500): Promise<void> {
   if (typeof window === 'undefined' || !('speechSynthesis' in window)) return Promise.resolve();
@@ -194,9 +203,7 @@ export function speak(text: string, lang: LanguageCode, rate: number, clipUrl?: 
   if (clipUrl) return clipOrSpeech(clipUrl, text, lang, rate);
   const [done, finish] = deferred();
   const synth = typeof window === 'undefined' ? undefined : window.speechSynthesis;
-  // Voices load asynchronously; an empty list means "not known yet", not "none".
-  const voices = synth?.getVoices() ?? [];
-  if (!synth || (voices.length > 0 && !pickVoice(lang))) {
+  if (!synth || !canSpeak(lang)) {
     finish({ status: 'failed', reason: 'no-voice' });
     return { done, cancel: () => {} };
   }

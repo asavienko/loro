@@ -14,8 +14,9 @@ function textWidth(text: string, font: string): number {
 }
 
 /**
- * The hidden target: a bar exactly as wide as the phrase will render, wrapped
- * to as many lines as the phrase takes, so it hints at the length honestly.
+ * The hidden target: a dashed slot exactly as wide as the phrase will render, wrapped
+ * to as many lines as the phrase takes, so it hints at the length honestly. It says
+ * "the phrase goes here" without outweighing the prompt the learner is recalling from.
  */
 export function HiddenPhrase({ text, className, label }: { text: string; className: string; label: string }) {
   const probe = useRef<HTMLHeadingElement>(null);
@@ -41,12 +42,33 @@ export function HiddenPhrase({ text, className, label }: { text: string; classNa
   return (
     <h2 ref={probe} className={className}>
       <span className='sr-only'>{label}</span>
-      <span aria-hidden='true' className='flex flex-col gap-1.5 py-1'>
+      <span aria-hidden='true' className='flex flex-col gap-1 py-0.5'>
         {lines.map((width, i) => (
-          <span key={i} className='block h-6 rounded-md bg-surface-container-highest forced-colors:border-2 forced-colors:border-dashed' style={{ width }} />
+          <span key={i} className='block h-3 rounded-md border-[1.5px] border-dashed border-outline forced-colors:border-2' style={{ width }} />
         ))}
       </span>
     </h2>
+  );
+}
+
+/**
+ * The hidden target in a list row: one dashed line as wide as the phrase would be in `className`'s
+ * font (up to the row's width), with `label` for screen readers. For rows about to be recalled.
+ */
+export function HiddenLine({ text, className, label }: { text: string; className: string; label: string }) {
+  const probe = useRef<HTMLSpanElement>(null);
+  const [width, setWidth] = useState<number | null>(null);
+  useLayoutEffect(() => {
+    const el = probe.current;
+    if (!el) return;
+    const style = getComputedStyle(el);
+    setWidth(textWidth(text, `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`));
+  }, [text]);
+  return (
+    <span ref={probe} className={`block ${className}`}>
+      <span className="sr-only">{label}</span>
+      <span aria-hidden="true" className="block max-w-full h-3 my-1 rounded-md border-[1.5px] border-dashed border-outline forced-colors:border-2" style={{ width: width ?? '60%' }} />
+    </span>
   );
 }
 
