@@ -24,6 +24,34 @@
 /* A mouse or trackpad: keyboard hints are worth showing. */
 @custom-variant fine-pointer (@media (hover: hover) and (pointer: fine));
 
+/*
+  The direction: paper, ink and one terracotta.
+
+  - Terracotta fill (primary-container) means play or the one primary action, nothing else.
+    A selected chip, tab or filter is ink (inverse-surface / inverse-on-surface). Links and
+    text buttons stay terracotta text.
+  - Three surfaces: content sits flat on paper (rows, lists); grouped figures sit on a tonal
+    card (surface-container-low, rounded-2xl, no border); one hero per screen takes a topic or
+    terracotta wash (e.g. primary-fixed/45, no border). No white bordered boxes. Where an edge
+    is needed, it is `hairline`, not the pink outline-variant.
+  - Radius: rounded-lg for covers up to 48 px and badges; rounded-xl for 56 px covers and step
+    pills; rounded-2xl for cards, tiles, fields and covers from 96 px; rounded-3xl for the sheet
+    top and the player cover only; rounded-full for every button and chip.
+  - Shadows are warm: shadow-card (small controls resting on a surface: quick-play, a selected
+    segment), shadow-cover (covers and the big Play beside one), shadow-float (what floats over
+    the page: mini-player, toast, sheet, the player's Play).
+  - Type roles (all rem, so the phone's text size scales them). Serif for content and headings,
+    sans for the interface; the language being learned is always serif italic.
+      display     1.75rem  serif 600      set page title, onboarding brand (greeting italic 500)
+      display-sm  1.5rem   serif 600      player and details phrase, hero title, stat values
+      heading     1.25rem  serif 600      section h2, header title
+      title       1.125rem serif 600      sheet, queue and card titles
+      row         .9375rem serif italic 500 (target) / serif 600 (set titles) / sans 500 (prompt)
+      body        .875rem  sans 400, 600 on buttons
+      label       .75rem   sans 500–600   meta, eyebrows (sentence case, never uppercase)
+      caption     .6875rem sans 600       badges, chart ticks
+      field       1rem     sans 400       inputs and selects (16 px keeps iOS from zooming)
+*/
 @theme {
   --font-serif: "Newsreader Variable", "Literata Variable", Georgia, serif;
   --font-sans: "DM Sans Variable", "Manrope Variable", -apple-system, BlinkMacSystemFont, sans-serif;
@@ -37,6 +65,10 @@
   --text-body--line-height: 1.45;
   --text-row: 0.9375rem;
   --text-row--line-height: 1.4;
+  --text-field: 1rem;
+  --text-field--line-height: 1.4;
+  --text-title: 1.125rem;
+  --text-title--line-height: 1.3;
   --text-heading: 1.25rem;
   --text-heading--line-height: 1.3;
   --text-display-sm: 1.5rem;
@@ -71,6 +103,8 @@
   --color-inverse-on-surface: #f3f0eb;
   --color-outline: #8a726a;
   --color-outline-variant: #dec0b7;
+  /* A neutral edge for dividers and the rare card edge; outline-variant is a warm pink accent. */
+  --color-hairline: #e6dfd7;
   --color-surface-tint: #a23e18;
 
   --color-primary: #7f2500;
@@ -104,6 +138,11 @@
   --color-on-error: #ffffff;
   --color-error-container: #ffdad6;
   --color-on-error-container: #93000a;
+
+  /* Warm shadows (ink and terracotta-brown, not the default cool black) for warm paper. */
+  --shadow-card: 0 1px 2px rgb(49 48 45 / 0.06), 0 1px 3px rgb(87 66 59 / 0.05);
+  --shadow-cover: 0 6px 16px -4px rgb(87 66 59 / 0.22);
+  --shadow-float: 0 10px 28px -6px rgb(49 48 45 / 0.28);
 }
 
 @layer base {

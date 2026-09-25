@@ -83,7 +83,7 @@ export function QueueScreen({ onClose }: { onClose: () => void }) {
           <Icon name="keyboard_arrow_down" className="text-icon-xl" />
         </button>
         <div className="flex-1 min-w-0 text-center">
-          <h1 className="font-serif text-lg font-semibold leading-tight">{c.queue.title}</h1>
+          <h1 className="font-serif text-title font-semibold leading-tight">{c.queue.title}</h1>
           <p className="text-label text-secondary truncate">
             {c.queue.left(upNext.length)}
             {set ? ` · ${set.title}` : ''}

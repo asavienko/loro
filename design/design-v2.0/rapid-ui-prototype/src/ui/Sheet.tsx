@@ -45,7 +45,7 @@ function SheetPanel({ title, onClose, children }: Omit<SheetProps, 'open'>) {
         onClick={onClose}
       />
       <motion.div
-        className="relative w-full max-w-lg mx-auto bg-surface rounded-t-3xl shadow-2xl max-h-[85dvh] flex flex-col pb-[env(safe-area-inset-bottom)]"
+        className="relative w-full max-w-lg mx-auto bg-surface rounded-t-3xl shadow-float max-h-[85dvh] flex flex-col pb-[env(safe-area-inset-bottom)]"
         style={keyboard > 0 ? { marginBottom: keyboard, maxHeight: `calc(85dvh - ${keyboard}px)` } : undefined}
         initial={{ y: '100%' }}
         animate={{ y: 0 }}
@@ -53,7 +53,7 @@ function SheetPanel({ title, onClose, children }: Omit<SheetProps, 'open'>) {
         transition={{ type: 'spring', damping: 30, stiffness: 320 }}
       >
         <div className="flex items-center justify-between gap-3 px-4 pt-3 pb-2 border-b border-surface-container-high">
-          <h2 className="font-serif text-lg font-semibold text-on-surface truncate">{title}</h2>
+          <h2 className="font-serif text-title font-semibold text-on-surface truncate">{title}</h2>
           <button
             type="button"
             onClick={onClose}

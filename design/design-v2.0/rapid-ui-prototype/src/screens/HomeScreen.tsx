@@ -66,7 +66,7 @@ export function HomeScreen() {
 
       {offerDemo && firstPhrase && (
         <section aria-labelledby="demo-heading" className="rounded-3xl bg-primary-fixed/50 p-4">
-          <h2 id="demo-heading" className="font-serif text-lg font-bold">{c.home.demoTitle}</h2>
+          <h2 id="demo-heading" className="font-serif text-title font-semibold">{c.home.demoTitle}</h2>
           <p className="text-body text-on-surface-variant mt-0.5">{c.home.demoBody}</p>
           <button
             type="button"
@@ -84,8 +84,8 @@ export function HomeScreen() {
 
       <section aria-label={c.home.reviewTitle} className="flex flex-col gap-3">
         {due.length > 0 && (
-          <div className="rounded-3xl border border-outline-variant bg-surface-container-lowest p-4 shadow-sm">
-            <h2 className="font-serif text-lg font-bold">{c.home.reviewTitle}</h2>
+          <div className="rounded-3xl border border-outline-variant bg-surface-container-lowest p-4 shadow-card">
+            <h2 className="font-serif text-title font-semibold">{c.home.reviewTitle}</h2>
             <p className="text-body text-secondary mt-0.5">
               {c.home.reviewBody(due.length)}
               {due.length > review.length && ` ${c.home.reviewCapped(review.length)}`}
@@ -98,8 +98,8 @@ export function HomeScreen() {
           </div>
         )}
         {suggested && suggestedProgress && suggestedIds.length > 0 && (
-          <div className={`rounded-3xl border border-outline-variant p-4 ${due.length > 0 || offerDemo ? 'bg-surface-container-low' : 'bg-surface-container-lowest shadow-sm'}`}>
-            <h2 className="font-serif text-lg font-bold">{stats.started === 0 ? c.home.startTitle : c.home.continueTitle}</h2>
+          <div className={`rounded-3xl border border-outline-variant p-4 ${due.length > 0 || offerDemo ? 'bg-surface-container-low' : 'bg-surface-container-lowest shadow-card'}`}>
+            <h2 className="font-serif text-title font-semibold">{stats.started === 0 ? c.home.startTitle : c.home.continueTitle}</h2>
             <p className="text-body text-secondary mt-0.5">
               {c.home.continueBody(suggested.title, suggestedProgress.learned, suggestedProgress.total)}
             </p>
@@ -113,7 +113,7 @@ export function HomeScreen() {
         )}
         {courseDone && (
           <div className="rounded-3xl bg-tertiary-fixed/60 p-4">
-            <h2 className="font-serif text-lg font-bold flex items-center gap-2">
+            <h2 className="font-serif text-title font-semibold flex items-center gap-2">
               <Icon name="task_alt" className="text-icon text-tertiary" />
               {c.home.courseDoneTitle}
             </h2>
@@ -220,7 +220,7 @@ function Stat({ label, value, icon, onClick }: { label: string; value: number; i
         <Icon name={icon} className="text-icon-sm text-primary-container" />
         {label}
       </span>
-      <span className="text-lg font-bold tabular-nums leading-tight">{value}</span>
+      <span className="text-title font-bold tabular-nums leading-tight">{value}</span>
     </button>
   );
 }

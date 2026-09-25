@@ -71,9 +71,9 @@ export function NavigationHeader({ title, onBack, onOpenSettings, inert = false,
             </p>
           </>
         )}
-        {title && <h1 className="font-serif font-semibold text-lg text-on-surface truncate">{title}</h1>}
+        {title && <h1 className="font-serif font-semibold text-title text-on-surface truncate">{title}</h1>}
         {scrolledTitle && (
-          <p aria-hidden={!past} className={`font-serif font-semibold text-lg text-on-surface truncate transition-opacity ${past ? 'opacity-100' : 'opacity-0'}`}>
+          <p aria-hidden={!past} className={`font-serif font-semibold text-title text-on-surface truncate transition-opacity ${past ? 'opacity-100' : 'opacity-0'}`}>
             {scrolledTitle}
           </p>
         )}

@@ -158,7 +158,7 @@ export function ExploreScreen({ filters }: { filters: ExploreFilters }) {
           onChange={(e) => setText(e.target.value)}
           placeholder={c.explore.search}
           aria-label={c.explore.search}
-          className="w-full min-h-12 pl-11 pr-4 rounded-2xl bg-surface-container-low border border-outline-variant/60 text-base text-on-surface placeholder:text-secondary focus-visible:outline-2"
+          className="w-full min-h-12 pl-11 pr-4 rounded-2xl bg-surface-container-low border border-outline-variant/60 text-field text-on-surface placeholder:text-secondary focus-visible:outline-2"
         />
       </form>
 

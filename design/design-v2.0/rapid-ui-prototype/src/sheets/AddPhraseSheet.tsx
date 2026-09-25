@@ -94,7 +94,7 @@ function PhraseForm({ editId, initialTarget, initialNative, targetLang, nativeLa
             }
           }}
           required
-          className="min-h-12 px-4 rounded-2xl bg-surface-container-low border border-outline-variant/60 text-base font-serif italic"
+          className="min-h-12 px-4 rounded-2xl bg-surface-container-low border border-outline-variant/60 text-field font-serif italic"
         />
         <CharCount id={targetCount} value={target} max={LIMITS.phrase} />
       </label>
@@ -110,7 +110,7 @@ function PhraseForm({ editId, initialTarget, initialNative, targetLang, nativeLa
           enterKeyHint="done"
           autoComplete="off"
           required
-          className="min-h-12 px-4 rounded-2xl bg-surface-container-low border border-outline-variant/60 text-base"
+          className="min-h-12 px-4 rounded-2xl bg-surface-container-low border border-outline-variant/60 text-field"
         />
         <CharCount id={nativeCount} value={native} max={LIMITS.phrase} />
       </label>

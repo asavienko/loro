@@ -84,7 +84,7 @@ export function LibraryScreen({ view: chosen }: { view?: LibraryView }) {
             aria-pressed={segment === s}
             // The segment already shown keeps its view (Missed stays Missed).
             onClick={() => segment !== s && go(s === 'sets' ? 'ownSets' : firstPhraseView)}
-            className={`min-h-11 rounded-full text-body ${segment === s ? 'bg-surface-container-lowest font-bold shadow-sm' : 'text-secondary font-medium'}`}
+            className={`min-h-11 rounded-full text-body ${segment === s ? 'bg-surface-container-lowest font-bold shadow-card' : 'text-secondary font-medium'}`}
           >
             {s === 'sets' ? c.library.setsSegment : c.library.phrasesSegment}
           </button>
@@ -205,7 +205,7 @@ function SetList({ ids, view, now }: { ids: string[]; view: LibraryView; now: nu
             >
               <SetCover set={v} size="sm" className="w-14 h-14 rounded-xl shrink-0" />
               <span className="flex-1 min-w-0">
-                <span lang={v.targetLang} className="block font-serif text-base font-bold truncate">{v.title}</span>
+                <span lang={v.targetLang} className="block font-serif text-row font-semibold truncate">{v.title}</span>
                 <span className="block text-label text-secondary">{c.set.summary(progress.total, progress.learned, progress.due)}</span>
               </span>
               <Icon name="chevron_right" className="text-icon text-secondary" />

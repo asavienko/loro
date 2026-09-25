@@ -121,7 +121,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 12 }}
-              className={`pointer-events-auto max-w-md w-full min-h-12 pl-4 pr-1 rounded-2xl shadow-lg flex items-center gap-2 text-body ${
+              className={`pointer-events-auto max-w-md w-full min-h-12 pl-4 pr-1 rounded-2xl shadow-float flex items-center gap-2 text-body ${
                 item.tone === 'success' ? 'bg-tertiary text-on-tertiary' : 'bg-inverse-surface text-inverse-on-surface'
               }`}
             >

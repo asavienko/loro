@@ -75,7 +75,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean
     const raw = rawSavedState();
     return (
       <main className="min-h-dvh bg-surface text-on-surface flex flex-col justify-center gap-3 px-6 max-w-md mx-auto">
-        <h1 className="font-serif text-display-sm font-bold">{c.error.title}</h1>
+        <h1 className="font-serif text-display-sm font-semibold">{c.error.title}</h1>
         <p className="text-body text-secondary">{c.error.body}</p>
         <button
           type="button"
