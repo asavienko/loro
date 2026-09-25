@@ -139,7 +139,8 @@ export function learningIds(learner: LearnerState, now: number): string[] {
   return coursePhrases(learner)
     .filter((p) => {
       const progress = phraseProgress(learner, p.id, now);
-      return progress.status !== 'learned' && (progress.memory.heardCount > 0 || progress.memory.fsrs !== null);
+      // A learned phrase that fell due is still learned (it's under Learned and Due), not learning.
+      return progress.status !== 'learned' && !isLearned(progress.memory) && (progress.memory.heardCount > 0 || progress.memory.fsrs !== null);
     })
     .map((p) => p.id);
 }
@@ -357,11 +358,14 @@ export function sessionSummary(state: AppState, now: number): SessionSummary | n
   if (!session) return null;
   const { log } = state.learner;
   const derived = derive(log);
-  const mine = log.filter((e) => e.at >= session.startedAt && e.device === state.device.id);
+  // This session's: this device, since it started, and a phrase of this queue. Tabs share the
+  // device id, so another tab's listening would count here without the queue check.
+  const queued = new Set(state.player.order.map((id) => keyOf(state.learner, id)));
+  const mine = log.filter((e) => e.at >= session.startedAt && e.device === state.device.id && e.kind !== 'carryover' && queued.has(e.key));
   const heard = mine.filter((e): e is Extract<LogEntry, { kind: 'heard' }> => e.kind === 'heard');
   const ratings: Record<Grade, number> = { missed: 0, hard: 0, easy: 0 };
   for (const e of mine) if (e.kind === 'rated') ratings[e.grade]++;
-  const pending = state.pending.filter((p) => p.at >= session.startedAt && !p.undone);
+  const pending = state.pending.filter((p) => p.at >= session.startedAt && !p.undone && queued.has(p.key));
   for (const p of pending) ratings[p.grade]++;
   let earned = mine.reduce((sum, e) => sum + (derived.awards.get(e.id) ?? 0), 0);
   // A learned bonus counts here when this device's rating in this session earned it, like the rest.

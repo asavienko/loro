@@ -251,3 +251,29 @@ describe('home and stats (fourth review)', () => {
     assert.equal(todayCounts(s, T0 + 20 * MINUTE).rated, 1);
   });
 });
+
+describe('library and summary (onboarding/library review)', () => {
+  const key = 'en-GB>es-ES:cafe-01';
+  const easyOver = (device: string) =>
+    [0, 3, 10, 30, 80].flatMap((d, i) => [
+      { id: `${device}.h-${i}`, at: T0 + d * DAY + 1, device, kind: 'heard' as const, key, phraseId: 'cafe-01', setId: 'set-cafe', targetMs: 1000, nativeMs: 1000 },
+      { id: `${device}.r-${i}`, at: T0 + d * DAY + 2, device, kind: 'rated' as const, key, phraseId: 'cafe-01', setId: 'set-cafe', grade: 'easy' as const },
+    ]);
+
+  it('a learned phrase that fell due is under Learned, not Learning', () => {
+    const s = fresh();
+    const learner = { ...s.learner, log: easyOver('x') };
+    const later = T0 + 3000 * DAY;
+    assert.deepEqual(learnedIds(learner, ['cafe-01']), ['cafe-01']);
+    assert.deepEqual(learningIds(learner, later), []);
+  });
+
+  it("the summary leaves out another tab's listening", () => {
+    const s = load(fresh(), T0, ['cafe-01'], 'set-cafe');
+    const other = { id: `${s.device.id}.other-1`, at: T0 + 5, device: s.device.id, kind: 'heard' as const, key: 'en-GB>es-ES:tapas-01', phraseId: 'tapas-01', setId: 'set-tapas', targetMs: 1000, nativeMs: 1000 };
+    const withOther = { ...s, learner: { ...s.learner, log: [...s.learner.log, other] } };
+    const summary = sessionSummary(withOther, T0 + 10)!;
+    assert.equal(summary.repetitions, 0);
+    assert.equal(summary.points, 0);
+  });
+});
