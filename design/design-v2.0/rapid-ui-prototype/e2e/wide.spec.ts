@@ -150,6 +150,22 @@ test.describe('a navigation rail on a wide screen (V-11)', () => {
     expect(shelves.y).toBeGreaterThan(hero.y + hero.height);
   });
 
+  for (const [w, h] of [[1440, 900], [1024, 768]] as const) {
+    test(`at ${w}×${h} the top bar lines up with each tab's page`, async ({ page }) => {
+      await page.setViewportSize({ width: w, height: h });
+      for (const [hash, first] of [
+        ['/', page.getByRole('region', { name: 'Review' })],
+        ['/#/explore', page.getByRole('searchbox')],
+        ['/#/library', page.getByRole('tablist').first()],
+      ] as const) {
+        await page.goto(hash);
+        const avatar = (await page.getByRole('button', { name: 'Ana: settings' }).boundingBox())!;
+        const content = (await first.boundingBox())!;
+        expect(Math.abs(avatar.x - content.x), hash).toBeLessThan(24);
+      }
+    });
+  }
+
   test.describe('a portrait tablet (768×1024)', () => {
     test.use({ viewport: { width: 768, height: 1024 } });
     test('keeps the tab bar at the bottom and Home in one reading column', async ({ page }) => {
