@@ -6,7 +6,8 @@ import type { IconName } from './icons';
 
 export const PHASE_ICONS: Record<Exclude<Phase, 'rate'>, IconName> = {
   native: 'hearing',
-  pause: 'mic',
+  // A person speaking: the learner says it. Not a microphone: nothing is recorded.
+  pause: 'record_voice_over',
   target: 'volume_up',
 };
 

@@ -1,5 +1,5 @@
 import { motion, PanInfo, useDragControls } from 'motion/react';
-import { PointerEvent, useRef, useState } from 'react';
+import { PointerEvent, ReactNode, useRef, useState } from 'react';
 import { voiceName, voicesFor } from '../audio/speech';
 import { languageLabel, languageName } from '../copy';
 import { getLanguage, Phrase } from '../content';
@@ -495,7 +495,7 @@ function Transport() {
   const { state, actions } = useStore();
   const playing = state.player.status === 'playing';
   return (
-    <div className="flex items-center justify-between">
+    <div className="@container/transport flex items-center justify-between">
       <PlayModeButton />
       <button type="button" aria-label={c.player.previous} aria-keyshortcuts="ArrowLeft" onClick={actions.prev} className="size-[48px] flex items-center justify-center rounded-full active:bg-surface-container">
         <Icon name="skip_previous" fill className="text-[34px]" />
@@ -517,50 +517,68 @@ function Transport() {
   );
 }
 
-function PlayModeButton() {
-  const c = useCopy();
-  const { state, actions } = useStore();
-  const { announce } = useToast();
-  const mode = state.prefs.playMode;
+/**
+ * A setting in the transport: its glyph, and a word under it saying what it is set to. The word
+ * goes (it stays in the name) where the row is too narrow for it, i.e. at large text.
+ */
+function SettingButton({ label, caption, onClick, children }: { label: string; caption: string; onClick: () => void; children: ReactNode }) {
   return (
     <button
       type="button"
-      aria-label={c.player.playMode[mode]}
-      title={c.player.playMode[mode]}
+      aria-label={label}
+      title={label}
+      onClick={onClick}
+      className="size-[56px] shrink-0 flex flex-col items-center justify-center gap-0.5 rounded-2xl text-primary-container active:bg-surface-container"
+    >
+      {children}
+      <span aria-hidden="true" className="text-caption font-semibold leading-none whitespace-nowrap @max-[15rem]/transport:sr-only">
+        {caption}
+      </span>
+    </button>
+  );
+}
+
+function PlayModeButton() {
+  const c = useCopy();
+  const { state, actions } = useStore();
+  const { toast } = useToast();
+  const mode = state.prefs.playMode;
+  return (
+    <SettingButton
+      label={c.player.playMode[mode]}
+      caption={mode === 'repeat' ? c.player.captions.again : c.player.captions.continue}
       onClick={() => {
         const next = mode === 'repeat' ? 'continue' : 'repeat';
         actions.setPrefs({ playMode: next });
-        // The name changes with the setting; say the new one, or the press seems to do nothing.
-        announce(c.player.playMode[next]);
+        // Shown and said: the glyph alone doesn't say what changed.
+        toast(c.player.playModeToast[next]);
       }}
-      className="size-[48px] flex items-center justify-center rounded-full text-primary-container active:bg-surface-container"
     >
       <Icon name={mode === 'repeat' ? 'repeat' : 'playlist_play'} className="text-[26px]" />
-    </button>
+    </SettingButton>
   );
 }
 
 function RepeatsButton() {
   const c = useCopy();
   const { state, actions } = useStore();
-  const { announce } = useToast();
+  const { toast } = useToast();
   const setting = state.prefs.repeats;
   const label = setting === 'auto' ? c.player.repeats.auto : setting === 1 ? c.player.repeats.one : c.player.repeats.three;
   const next = REPEAT_SETTINGS[(REPEAT_SETTINGS.indexOf(setting) + 1) % REPEAT_SETTINGS.length];
   return (
-    <button
-      type="button"
-      aria-label={label}
-      title={label}
+    <SettingButton
+      label={label}
+      caption={c.player.captions.reps}
       onClick={() => {
         actions.setPrefs({ repeats: next });
-        announce(next === 'auto' ? c.player.repeats.auto : next === 1 ? c.player.repeats.one : c.player.repeats.three);
+        toast(next === 'auto' ? c.player.repeatsToast.auto : next === 1 ? c.player.repeatsToast.one : c.player.repeatsToast.three);
       }}
-      className="size-[48px] flex items-center justify-center rounded-full active:bg-surface-container"
     >
-      <span aria-hidden="true" className="min-w-[36px] h-[28px] px-1.5 rounded-lg border-2 border-primary-container text-primary-container text-[12px] font-black flex items-center justify-center tabular-nums">
-        {setting === 'auto' ? 'A' : `${setting}×`}
+      {/* A count, not a speed: no "×" beside the speed control's "1×". */}
+      <span aria-hidden="true" className="min-w-[40px] h-[26px] px-1.5 rounded-lg border-2 border-primary-container text-[12px] font-black flex items-center justify-center tabular-nums">
+        {setting === 'auto' ? c.player.captions.auto : setting}
       </span>
-    </button>
+    </SettingButton>
   );
 }

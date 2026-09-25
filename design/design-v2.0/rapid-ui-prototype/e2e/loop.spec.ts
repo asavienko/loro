@@ -117,6 +117,23 @@ test.describe('the loop', () => {
     await expect(player.getByRole('button', { name: /^Easy/ })).toHaveAttribute('aria-pressed', 'false');
   });
 
+  test('the repetitions and play-mode buttons show their setting and say what a tap changed', async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Play 5 phrases' }).click();
+    await page.getByRole('button', { name: /^Now playing:/ }).click();
+    const player = page.getByRole('dialog', { name: 'Now playing' });
+    const reps = player.getByRole('button', { name: /^Repetitions:/ });
+    await expect(reps).toHaveText('Autoreps');
+    await reps.click();
+    await expect(page.locator('.toast-layer')).toContainText('Each phrase plays once');
+    await expect(reps).toHaveText('1reps');
+    const mode = player.getByRole('button', { name: /^At the end:/ });
+    await expect(mode).toContainText('Again');
+    await mode.click();
+    await expect(page.locator('.toast-layer')).toContainText('At the end, new phrases follow');
+    await expect(mode).toContainText('Continue');
+  });
+
   test('keyboard: space plays and pauses, arrows change phrase, 1–3 rate', async ({ page }) => {
     await page.goto('/');
     await page.getByRole('button', { name: 'Play 5 phrases' }).click();
