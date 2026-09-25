@@ -121,6 +121,43 @@ test.describe('the loop', () => {
     await expect(player.getByText('cortado: espresso with a dash of milk')).toBeVisible();
   });
 
+  // The dashed slot has the revealed phrase's lines: as many, as wide, and never a stray sliver.
+  for (const [name, width, height, textSize] of [['390', 390, 844, ''], ['320', 320, 568, ''], ['200% text', 390, 844, '200%']] as const) {
+    test(`the hidden phrase wraps where the revealed phrase wraps, at ${name} (Q-01)`, async ({ page }) => {
+      await page.setViewportSize({ width, height });
+      await page.goto('/');
+      if (textSize) await page.addStyleTag({ content: `html { font-size: ${textSize} }` });
+      await page.getByRole('button', { name: 'Play 5 phrases' }).click();
+      const player = page.getByRole('dialog', { name: 'Now playing' });
+      // "¿Nos podemos sentar en la terraza?": a little wider than the column at 390 px.
+      for (let i = 0; i < 3; i++) await player.getByRole('button', { name: 'Next phrase' }).click();
+      await player.getByRole('button', { name: 'Pause', exact: true }).click();
+      await expect(player.getByText('Can we sit on the terrace?')).toBeVisible();
+      const slot = await player.locator('[data-hidden-slot] > span').evaluateAll((rows) => rows.map((r) => r.getBoundingClientRect().width));
+      await player.getByRole('button', { name: 'Play', exact: true }).click();
+      const heading = player.getByRole('heading', { name: '¿Nos podemos sentar en la terraza?' });
+      await expect(heading).toBeVisible({ timeout: 20_000 });
+      // Each rendered line of the revealed heading, left edge to right edge.
+      const lines = await heading.evaluate((h) => {
+        const range = document.createRange();
+        range.selectNodeContents(h);
+        const byTop = new Map<number, { left: number; right: number }>();
+        for (const r of range.getClientRects()) {
+          if (r.width === 0) continue;
+          const top = [...byTop.keys()].find((t) => Math.abs(t - r.top) < r.height / 2) ?? r.top;
+          const line = byTop.get(top);
+          byTop.set(top, line ? { left: Math.min(line.left, r.left), right: Math.max(line.right, r.right) } : { left: r.left, right: r.right });
+        }
+        return [...byTop.values()].map((l) => l.right - l.left);
+      });
+      expect(slot.length, `slot ${slot.map(Math.round)} vs lines ${lines.map(Math.round)}`).toBe(lines.length);
+      if (width === 390 && !textSize) expect(lines.length).toBe(2);
+      slot.forEach((w, i) => expect(Math.abs(w - lines[i]), `row ${i + 1}`).toBeLessThan(6));
+      // No sliver: every row is at least a whole word wide ("la", the shortest, is wider than this).
+      for (const w of slot) expect(w).toBeGreaterThan(20);
+    });
+  }
+
   test('transport is visible without scrolling; Back closes the queue, then the player', async ({ page }) => {
     await page.goto('/');
     await page.getByRole('button', { name: 'Play 5 phrases' }).click();

@@ -7,7 +7,7 @@ import { ICON_NAMES } from './icons';
 
 // PhraseText and ExploreScreen import React components; their pure helpers are
 // loaded lazily so this file stays a plain node test.
-const { tokenize } = await import('./PhraseText');
+const { breakUnits, tokenize, wrapRows } = await import('./PhraseText');
 const { fold, matchesWords, queryWords } = await import('../screens/ExploreScreen');
 
 describe('icons', () => {
@@ -46,6 +46,46 @@ describe('word glosses', () => {
     const transit = CONTENT_PHRASES.find((p) => p.id === 'transit-03')!;
     // "a" is glossed, but not the "a" inside "va".
     assert.deepEqual(tokenize(transit, 'en-GB').filter((t) => t.gloss).map((t) => t.text), ['Este', 'tren', 'va', 'a', 'Sol']);
+  });
+});
+
+describe('the hidden phrase wraps by words (Q-01)', () => {
+  // 10 px a character, so a row's width is easy to read.
+  const measure = (text: string) => text.length * 10;
+  const words = '¿Nos podemos sentar en la terraza?'.split(' ');
+
+  it('rows add up to the text, and none is narrower than its first word', () => {
+    for (const max of [60, 120, 200, 250, 340, 1000]) {
+      const rows = wrapRows(words, max, measure);
+      assert.equal(rows.map((r) => r.text).join(' '), words.join(' '), `max ${max}`);
+      for (const row of rows) assert.ok(row.width >= Math.min(measure(row.text.split(' ')[0]), max), `max ${max}: "${row.text}" ${row.width}`);
+    }
+  });
+
+  it('breaks where the browser would: before the word that would pass the width', () => {
+    // 34 characters: one row of 340 px, or "…en la" / "terraza?" at 300 px, never a sliver.
+    assert.deepEqual(wrapRows(words, 340, measure).map((r) => r.width), [340]);
+    assert.deepEqual(wrapRows(words, 300, measure), [
+      { text: '¿Nos podemos sentar en la', width: 250 },
+      { text: 'terraza?', width: 80 },
+    ]);
+    // Each row as full as it can be: the next row's first word would not have fitted.
+    const rows = wrapRows(words, 150, measure);
+    for (let i = 0; i + 1 < rows.length; i++) assert.ok(measure(`${rows[i].text} ${rows[i + 1].text.split(' ')[0]}`) > 150);
+  });
+
+  it('a word wider than the column gets a row of its own, clamped to the column', () => {
+    assert.deepEqual(wrapRows(['Buenísimo', 'ya'], 50, measure), [
+      { text: 'Buenísimo', width: 50 },
+      { text: 'ya', width: 20 },
+    ]);
+    assert.deepEqual(wrapRows([], 100, measure), []);
+  });
+
+  it('keeps a glossed unit whole, as the revealed heading does', () => {
+    const phrase = CONTENT_PHRASES.find((p) => p.id === 'cafe-01')!;
+    assert.ok(breakUnits(phrase, 'en-GB').includes('por favor'));
+    assert.equal(breakUnits(phrase, 'en-GB').join(' '), phrase.target);
   });
 });
 
