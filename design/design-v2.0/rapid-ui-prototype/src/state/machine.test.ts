@@ -438,3 +438,12 @@ describe('previously played', () => {
     assert.deepEqual(previouslyPlayed(withLog).map((e) => e.phraseId), ['tapas-01']);
   });
 });
+
+describe('continue mode (regression)', () => {
+  it('keeps going round the course while phrases are left to learn', () => {
+    let s = load(fresh({ playMode: 'continue' }));
+    for (let i = 0; i < 60; i++) s = run(s, { type: 'NEXT', now: T0 + i });
+    assert.equal(s.player.ended, false);
+    assert.ok(s.player.order.length > 30, `went past one pass (${s.player.order.length})`);
+  });
+});
