@@ -75,7 +75,7 @@ test.describe('large text (150%) on a 360 px phone', () => {
       await page.waitForTimeout(300);
       const clipped = await page.evaluate(() =>
         [...document.querySelectorAll('main .line-clamp-2')]
-          .filter((e) => e.scrollHeight > e.clientHeight + 1 || e.scrollWidth > e.clientWidth + 1)
+          .filter((e) => e.clientHeight > 0 && (e.scrollHeight > e.clientHeight + 1 || e.scrollWidth > e.clientWidth + 1)) // inline text has no box
           .map((e) => e.textContent),
       );
       expect(clipped).toEqual([]);
@@ -105,7 +105,7 @@ test.describe('large text (150%) on a 320 px phone: player, queue and summary', 
     root.evaluate(
       (el, sel) =>
         [...el.querySelectorAll(sel)]
-          .filter((e) => e.scrollHeight > e.clientHeight + 1 || e.scrollWidth > e.clientWidth + 1)
+          .filter((e) => e.clientHeight > 0 && (e.scrollHeight > e.clientHeight + 1 || e.scrollWidth > e.clientWidth + 1)) // inline text has no box
           .map((e) => e.textContent),
       selector,
     );
