@@ -11,8 +11,8 @@ export function RecallChart({ buckets }: { buckets: RecallBucket[] }) {
   const max = Math.max(1, ...buckets.map((b) => b.count));
   const total = buckets.reduce((n, b) => n + b.count, 0);
   return (
-    <figure className="rounded-2xl bg-surface-container-lowest border border-outline-variant/50 p-3">
-      <figcaption className="text-body font-bold mb-2">{c.library.recallChart}</figcaption>
+    <figure className="rounded-2xl bg-surface-container-low p-3">
+      <figcaption className="text-label font-semibold text-secondary mb-2">{c.library.recallChart}</figcaption>
       {total === 0 ? (
         <p className="text-body text-secondary">{c.library.recallChartEmpty}</p>
       ) : (
@@ -40,8 +40,8 @@ export function WeeklyChart({ weeks }: { weeks: { weekStart: number; count: numb
   const c = useCopy();
   const max = Math.max(1, ...weeks.map((w) => w.count));
   return (
-    <figure className="rounded-2xl bg-surface-container-lowest border border-outline-variant/50 p-3">
-      <figcaption className="text-body font-bold mb-2">{c.library.weeklyChart}</figcaption>
+    <figure className="rounded-2xl bg-surface-container-low p-3">
+      <figcaption className="text-label font-semibold text-secondary mb-2">{c.library.weeklyChart}</figcaption>
       <ul className="h-24 flex items-end gap-1.5" data-chart="weekly">
         {weeks.map((w) => {
           const date = formatShortDate(w.weekStart, c.locale);

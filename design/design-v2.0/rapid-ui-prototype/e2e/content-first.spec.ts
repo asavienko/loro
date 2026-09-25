@@ -46,5 +46,34 @@ for (const viewport of [
       const levels = (await page.getByRole('group', { name: 'Levels' }).boundingBox())!;
       expect(levels.y).toBeGreaterThan(card.y);
     });
+
+    test('Library opens on its list: the first phrase above the mini-player (V-02)', async ({ page }) => {
+      await withMiniPlayer(page);
+      const miniTop = await open(page, '#/library');
+      const row = (await page.getByRole('tabpanel').getByRole('listitem').first().boundingBox())!;
+      expect(row.y + row.height).toBeLessThanOrEqual(miniTop);
+      // The figures are still there, under Progress.
+      await expect(page.getByRole('heading', { name: 'Progress' })).toBeAttached();
+      await expect(page.getByRole('button', { name: /^Learned 3/ })).toBeAttached();
+    });
+
+    test("Home's Learned lands on the Learned list, its chip and first phrase in view", async ({ page }) => {
+      await withMiniPlayer(page);
+      await page.goto('/');
+      await page.getByRole('button', { name: /^Learned/ }).first().click();
+      const tab = page.getByRole('tab', { name: 'Learned' });
+      await expect(tab).toHaveAttribute('aria-selected', 'true');
+      await expect(tab).toBeInViewport({ ratio: 1 });
+      const miniTop = (await page.getByRole('button', { name: /^Now playing:/ }).boundingBox())!.y;
+      const row = (await page.getByRole('tabpanel').getByRole('listitem').first().boundingBox())!;
+      expect(row.y + row.height).toBeLessThanOrEqual(miniTop);
+    });
   });
 }
+
+test('a figure in Progress opens its list and brings it into view', async ({ page }) => {
+  await page.goto('/#/library?view=due');
+  await page.getByRole('button', { name: /^Learned 3/ }).click();
+  await expect(page.getByRole('tab', { name: 'Learned' })).toHaveAttribute('aria-selected', 'true');
+  await expect(page.getByRole('tabpanel').getByRole('listitem').first()).toBeInViewport();
+});

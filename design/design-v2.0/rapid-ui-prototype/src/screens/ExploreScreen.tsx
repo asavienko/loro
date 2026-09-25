@@ -1,5 +1,6 @@
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode, useEffect, useRef, useState } from 'react';
 import { Level, Phrase, Tag, TOPICS } from '../content';
+import { useSelectedInView } from '../lib/useSelectedInView';
 import { navigate } from '../nav/history';
 import { useNav } from '../nav/NavContext';
 import type { ExploreFilters } from '../nav/routes';
@@ -83,6 +84,8 @@ export function ExploreScreen({ filters }: { filters: ExploreFilters }) {
     setText(filters.q ?? '');
   }
 
+  const chipRow = useRef<HTMLDivElement>(null);
+  useSelectedInView(chipRow, `${filters.level}${filters.tag}`);
   const update = (patch: Partial<ExploreFilters>, replace = false) => navigate({ name: 'explore', ...filters, ...patch }, { replace });
   // Typing replaces the history entry, so Back leaves Explore instead of undoing letters.
   // The query keeps what was typed, spaces and all: trimming it here would write the
@@ -143,7 +146,7 @@ export function ExploreScreen({ filters }: { filters: ExploreFilters }) {
 
   // Levels and tags as one line of chips; with a level or tag on, the topics join them as chips.
   const filterRow = (
-    <div className="scroll-row flex items-stretch gap-x-2 overflow-x-auto -mx-4 px-4">
+    <div ref={chipRow} className="scroll-row flex items-stretch gap-x-2 overflow-x-auto -mx-4 px-4">
       {!topic && !q && (filters.level || filters.tag) && (
         <>
           <ChipGroup label={c.explore.topics}>
