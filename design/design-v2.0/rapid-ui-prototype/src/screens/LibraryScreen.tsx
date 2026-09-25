@@ -187,7 +187,8 @@ function PhraseList({ ids, view, now }: { ids: string[]; view: LibraryView; now:
           const phrase = findPhrase(state.learner, id);
           if (!phrase) return null;
           return (
-            <li key={id}>
+            // Named for the phrase, so "Add your phrase" can bring a new one into view.
+            <li key={id} data-phrase-row={id}>
               <PhraseRow
                 phrase={phrase}
                 detail={progressLabel(c, phraseProgress(displayLearner(state), id, now), now)}

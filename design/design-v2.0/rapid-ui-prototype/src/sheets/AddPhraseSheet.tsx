@@ -1,5 +1,6 @@
 import { FormEvent, useId, useRef, useState } from 'react';
 import { languageName } from '../copy';
+import { useRoute } from '../nav/history';
 import { useNav } from '../nav/NavContext';
 import type { LanguageCode } from '../content';
 import { findSamePhrase, promptOf } from '../state/catalog';
@@ -48,6 +49,7 @@ interface FormProps {
 function PhraseForm({ editId, initialTarget, initialNative, targetLang, nativeLang, onDone }: FormProps) {
   const c = useCopy();
   const nav = useNav();
+  const route = useRoute();
   const { toast } = useToast();
   const { state, actions } = useStore();
   const [target, setTarget] = useState(initialTarget);
@@ -72,6 +74,13 @@ function PhraseForm({ editId, initialTarget, initialNative, targetLang, nativeLa
       const id = actions.addOwnPhrase(target, native);
       // The next step is hearing it.
       toast(c.addPhrase.added, { action: { label: c.common.play, run: () => nav.playPhraseInSet(id) } });
+      // Added from the Library: show it there, under Mine (once this sheet's history entry is gone).
+      if (route.name === 'library') {
+        onDone();
+        nav.go({ name: 'library', view: 'mine' });
+        revealRow(id);
+        return;
+      }
     }
     onDone();
   };
@@ -136,4 +145,25 @@ function PhraseForm({ editId, initialTarget, initialNative, targetLang, nativeLa
       </button>
     </form>
   );
+}
+
+/**
+ * Brings the new phrase's Library row into view once Mine shows it (at large text the list can
+ * start below the fold), after the page's own scroll restoration as the view changes. A row not
+ * wholly on screen goes to the top, under the header: the "Phrase added" toast is at the bottom.
+ */
+function revealRow(id: string) {
+  const until = performance.now() + 2000;
+  const step = () => {
+    const row = document.querySelector(`[data-phrase-row="${CSS.escape(id)}"]`);
+    if (!row || !window.location.hash.includes('view=mine')) {
+      if (performance.now() < until) requestAnimationFrame(step);
+      return;
+    }
+    const box = row.getBoundingClientRect();
+    const header = document.querySelector('header')?.getBoundingClientRect().bottom ?? 0;
+    const below = parseFloat(getComputedStyle(document.documentElement).scrollPaddingBottom) || 0;
+    if (box.top < header || box.bottom > window.innerHeight - below) row.scrollIntoView({ block: 'start' });
+  };
+  requestAnimationFrame(step);
 }
