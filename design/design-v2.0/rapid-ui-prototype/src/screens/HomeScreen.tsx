@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { greeting } from '../copy';
 import { useNav } from '../nav/NavContext';
-import { coursePhrases, courseSets, findSetView, SetView } from '../state/catalog';
+import { coursePhrases, courseSets, findSetView } from '../state/catalog';
 import { formatAgo, formatElapsed, formatWhen } from '../state/clock';
 import {
   duePhraseIds,
@@ -20,7 +20,7 @@ import {
 import { useCopy, useNow, useStore } from '../state/store';
 import { Icon } from '../ui/Icon';
 import { SetCard } from '../ui/SetCard';
-import { SetCover } from '../ui/SetCover';
+import { SetRow } from '../ui/SetRow';
 import { Sheet } from '../ui/Sheet';
 import { StatChip } from '../ui/StatTile';
 
@@ -153,10 +153,16 @@ export function HomeScreen() {
               {c.home.history}
             </button>
           </div>
-          <ul className="grid grid-cols-1 gap-2 md:grid-cols-2">
+          <ul className="grid grid-cols-1 gap-x-8 md:grid-cols-2">
             {recent.map((id) => {
               const view = findSetView(learner, id);
-              return view ? <li key={id}><SetRow view={view} now={now} /></li> : null;
+              if (!view) return null;
+              const progress = setProgress(learner, view.phraseIds, now);
+              return (
+                <li key={id}>
+                  <SetRow set={view} meta={c.set.summary(progress.total, progress.learned, progress.due)} onOpen={() => nav.openSet(view.id)} />
+                </li>
+              );
             })}
           </ul>
         </section>
@@ -214,27 +220,6 @@ function PlayButton({ label, detail, onClick, secondary = false }: { label: stri
   );
 }
 
-function SetRow({ view, now }: { view: SetView; now: number }) {
-  const c = useCopy();
-  const nav = useNav();
-  const { state } = useStore();
-  const progress = setProgress(state.learner, view.phraseIds, now);
-  return (
-    <button
-      type="button"
-      onClick={() => nav.openSet(view.id)}
-      className="w-full min-h-16 flex items-center gap-3 p-2 rounded-2xl bg-surface-container-lowest border border-outline-variant/50 text-left active:bg-surface-container-low"
-    >
-      <SetCover set={view} size="sm" className="w-12 h-12 rounded-xl shrink-0" />
-      <span className="flex-1 min-w-0">
-        <span lang={view.targetLang} className="block text-row font-semibold truncate">{view.title}</span>
-        <span className="block text-label text-secondary">{c.set.summary(progress.total, progress.learned, progress.due)}</span>
-      </span>
-      <Icon name="chevron_right" className="text-icon text-secondary" />
-    </button>
-  );
-}
-
 /** History as the sets that were played, newest first. */
 function HistorySheet({ open, onClose, now }: { open: boolean; onClose: () => void; now: number }) {
   const c = useCopy();
@@ -249,27 +234,18 @@ function HistorySheet({ open, onClose, now }: { open: boolean; onClose: () => vo
         <ul className="flex flex-col">
           {runs.map((run) => {
             const view = findSetView(state.learner, run.setId);
-            const label = view?.title ?? c.history.mixed;
             return (
               <li key={`${run.setId}-${run.from}`}>
-                <button
-                  type="button"
+                <SetRow
+                  set={view ?? { title: c.history.mixed, topicId: null, coverIcon: 'queue_music' }}
+                  meta={`${c.history.run(run.phrases, run.points)} · ${formatAgo(run.to, now, c.locale)}`}
                   disabled={!view}
-                  onClick={() => {
+                  onOpen={() => {
                     if (!view) return;
                     onClose();
                     nav.openSet(view.id);
                   }}
-                  className="w-full min-h-14 py-2 flex items-center gap-3 text-left rounded-xl active:bg-surface-container"
-                >
-                  <SetCover set={view ?? { topicId: null, coverIcon: 'queue_music' }} size="sm" className="w-10 h-10 rounded-lg shrink-0" />
-                  <span className="flex-1 min-w-0">
-                    <span className="block text-row font-semibold truncate">{label}</span>
-                    <span className="block text-label text-secondary">
-                      {c.history.run(run.phrases, run.points)} · {formatAgo(run.to, now, c.locale)}
-                    </span>
-                  </span>
-                </button>
+                />
               </li>
             );
           })}

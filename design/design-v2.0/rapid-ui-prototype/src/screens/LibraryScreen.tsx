@@ -25,7 +25,7 @@ import { Chip } from '../ui/Chip';
 import { Icon } from '../ui/Icon';
 import { PhraseRow } from '../ui/PhraseRow';
 import { progressLabel } from '../ui/progressLabel';
-import { SetCover } from '../ui/SetCover';
+import { SetRow } from '../ui/SetRow';
 import { StatTile } from '../ui/StatTile';
 
 const PHRASE_VIEWS: LibraryView[] = ['liked', 'mine', 'due', 'learning', 'missed', 'learned'];
@@ -181,23 +181,12 @@ function SetList({ ids, view, now }: { ids: string[]; view: LibraryView; now: nu
   const views = ids.map((id) => findSetView(state.learner, id)).filter((v): v is SetView => Boolean(v));
   if (views.length === 0) return <p className="text-body text-secondary py-2">{c.library.empty[view as 'ownSets' | 'likedSets']}</p>;
   return (
-    <ul className="grid grid-cols-1 gap-2 md:grid-cols-2">
+    <ul className="grid grid-cols-1 gap-x-8 md:grid-cols-2">
       {views.map((v) => {
         const progress = setProgress(state.learner, v.phraseIds, now);
         return (
           <li key={v.id}>
-            <button
-              type="button"
-              onClick={() => nav.openSet(v.id)}
-              className="w-full min-h-16 flex items-center gap-3 p-2 rounded-2xl bg-surface-container-lowest border border-outline-variant/50 text-left active:bg-surface-container-low"
-            >
-              <SetCover set={v} size="sm" className="w-14 h-14 rounded-xl shrink-0" />
-              <span className="flex-1 min-w-0">
-                <span lang={v.targetLang} className="block font-serif text-row font-semibold truncate">{v.title}</span>
-                <span className="block text-label text-secondary">{c.set.summary(progress.total, progress.learned, progress.due)}</span>
-              </span>
-              <Icon name="chevron_right" className="text-icon text-secondary" />
-            </button>
+            <SetRow set={v} meta={c.set.summary(progress.total, progress.learned, progress.due)} onOpen={() => nav.openSet(v.id)} />
           </li>
         );
       })}
