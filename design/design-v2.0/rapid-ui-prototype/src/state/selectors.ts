@@ -135,6 +135,20 @@ export function idsWithStatus(learner: LearnerState, status: PhraseStatus, now: 
     .map((p) => p.id);
 }
 
+/**
+ * Started (heard or rated, as Started counts) and not learned yet, due ones included:
+ * every started phrase is here or under Learned, and a phrase heard but never rated
+ * no longer falls between the views.
+ */
+export function learningIds(learner: LearnerState, now: number): string[] {
+  return coursePhrases(learner)
+    .filter((p) => {
+      const progress = phraseProgress(learner, p.id, now);
+      return progress.status !== 'learned' && (progress.memory.heardCount > 0 || progress.memory.fsrs !== null);
+    })
+    .map((p) => p.id);
+}
+
 /** Rated Missed in the last week, newest first. */
 export function recentlyMissedIds(learner: LearnerState, now: number): string[] {
   return coursePhrases(learner)

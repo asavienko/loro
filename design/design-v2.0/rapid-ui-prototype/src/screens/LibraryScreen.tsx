@@ -6,7 +6,7 @@ import { findPhrase, findSetView, ownPhrases, ownSets, SetView } from '../state/
 import { LEARNED_MIN_SUCCESSES, LEARNED_STABILITY_DAYS } from '../state/memory';
 import {
   duePhraseIds,
-  idsWithStatus,
+  learningIds,
   learnedIds,
   learnedPerWeek,
   learnerStats,
@@ -44,7 +44,7 @@ export function LibraryScreen({ view = 'liked' }: { view?: LibraryView }) {
     liked: () => likedPhraseIds(learner),
     mine: () => ownPhrases(learner).map((p) => p.id),
     due: () => duePhraseIds(learner, now),
-    learning: () => idsWithStatus(learner, 'learning', now),
+    learning: () => learningIds(learner, now),
     missed: () => recentlyMissedIds(learner, now),
     learned: () => learnedIds(learner, coursePhrases(learner).map((p) => p.id)),
   };
