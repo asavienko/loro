@@ -141,7 +141,7 @@ export function makeBg(n: Plural): Copy {
       notesTitle: 'Бележки',
       notesInEnglish: 'Засега бележките са на английски.',
       words: 'Докоснете дума, за да видите значението ѝ.',
-      wordMeaning: (word, gloss) => `${word}: ${gloss}`,
+      glossHint: 'Показва значението',
       edit: 'Редактирай фразата',
       delete: 'Изтрий фразата',
       deleted: 'Фразата е изтрита',

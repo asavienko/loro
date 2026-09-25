@@ -141,7 +141,7 @@ export function makeRu(n: Plural): Copy {
       notesTitle: 'Заметки',
       notesInEnglish: 'Заметки пока на английском.',
       words: 'Нажмите на слово, чтобы увидеть значение.',
-      wordMeaning: (word, gloss) => `${word}: ${gloss}`,
+      glossHint: 'Показывает значение',
       edit: 'Изменить фразу',
       delete: 'Удалить фразу',
       deleted: 'Фраза удалена',
