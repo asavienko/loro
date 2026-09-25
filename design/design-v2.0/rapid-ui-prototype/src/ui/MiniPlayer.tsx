@@ -3,11 +3,11 @@ import { useId } from 'react';
 import { languageLabel } from '../copy';
 import { useClickBlockerDuringDrag } from '../lib/suppressClick';
 import { findPhrase, findSetView, promptOf } from '../state/catalog';
-import { currentPhraseId } from '../state/selectors';
-import { useCopy, useStore } from '../state/store';
+import { currentPhraseId, sessionSummary } from '../state/selectors';
+import { useCopy, useNow, useStore } from '../state/store';
 import { Icon } from './Icon';
 import { playsOnce } from '../state/machine';
-import { isTargetRevealed, PHASE_ICONS, phaseInstruction } from './phase';
+import { endTitle, isTargetRevealed, PHASE_ICONS, phaseInstruction } from './phase';
 import { PhaseFill } from './PhaseFill';
 import { SetCover } from './SetCover';
 
@@ -21,6 +21,8 @@ export function MiniPlayer({ onOpenPlayer }: { onOpenPlayer: () => void }) {
   const { state, actions } = useStore();
   const clicks = useClickBlockerDuringDrag();
   const statusId = useId();
+  // Only for the end title's count, which doesn't depend on the time: a slow tick is enough.
+  const now = useNow(60_000);
   const phrase = findPhrase(state.learner, currentPhraseId(state.player));
   if (!phrase) return null;
 
@@ -36,17 +38,15 @@ export function MiniPlayer({ onOpenPlayer }: { onOpenPlayer: () => void }) {
   const set = findSetView(state.learner, phrase.setId) ?? findSetView(state.learner, state.player.setId);
   // The learner's turn and the hold show their own time on the line; other steps, how far through.
   const timed = playing && (phase === 'pause' || phase === 'rate') && state.player.phaseMs !== null;
-  const source = state.player.source?.kind;
+  const ended = state.player.ended && playsOnce(state.player);
+  const endSummary = ended ? sessionSummary(state, now) : null;
   const status = audioError
     ? audioError.reason === 'no-voice'
       ? c.player.noVoice
       : c.player.silent
-    : state.player.ended && playsOnce(state.player)
-      ? source === 'demo'
-        ? c.player.end.demoTitle
-        : source === 'review'
-          ? c.player.end.reviewTitle
-          : c.player.end.listTitle
+    : ended
+      ? // As the end panel says it (its session's ratings, pending ones too).
+        endTitle(c, state.player.source, endSummary ? endSummary.ratings.missed + endSummary.ratings.hard + endSummary.ratings.easy : 0)
       : !playing
         ? c.player.paused
         : phase === 'rate'
