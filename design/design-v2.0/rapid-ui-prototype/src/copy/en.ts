@@ -165,6 +165,7 @@ export function makeEn(n: Plural) {
       moveUp: 'Move up in this set',
       moveDown: 'Move down in this set',
       yours: 'Your phrase',
+      yoursShort: 'Yours',
     },
     addToSet: {
       title: 'Add to set',

@@ -155,6 +155,7 @@ export function makeRu(n: Plural): Copy {
       moveUp: 'Выше в наборе',
       moveDown: 'Ниже в наборе',
       yours: 'Ваша фраза',
+      yoursShort: 'Ваша',
     },
     addToSet: {
       title: 'Добавить в набор',
