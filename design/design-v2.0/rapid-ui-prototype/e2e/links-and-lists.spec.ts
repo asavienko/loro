@@ -53,3 +53,37 @@ test.describe('a set with phrases being learned', () => {
     await expect(page.getByRole('button', { name: 'Play due and new (1)' })).toBeVisible();
   });
 });
+
+test.describe('forms', () => {
+  test('a name typed in Settings is kept when the sheet closes with Escape', async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Ana: settings' }).click();
+    await page.getByLabel('Name').fill('Bea');
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('button', { name: 'Bea: settings' })).toBeVisible();
+  });
+
+  test('a long search offered as your own phrase starts within the limit', async ({ page }) => {
+    await page.goto(`/#/explore?q=${'palabra '.repeat(20)}`);
+    await page.getByRole('button', { name: /^Add/ }).last().click();
+    const field = page.getByLabel('In Spanish');
+    expect(((await field.inputValue()) ?? '').length).toBeLessThanOrEqual(120);
+    await expect(page.getByText(/-\d+ characters? left/)).toHaveCount(0);
+  });
+
+  test('saving an edit that changes nothing is not offered', async ({ page }) => {
+    await page.goto('/#/library?view=mine');
+    await page.getByRole('button', { name: 'Add your phrase' }).click();
+    await page.getByLabel('In Spanish').fill('Hola');
+    await page.getByLabel('In English').fill('Hi');
+    await page.getByRole('button', { name: 'Add phrase' }).click();
+    await page.getByRole('button', { name: 'Details for Hola' }).click();
+    await page.getByRole('button', { name: 'Edit phrase' }).click();
+    const save = page.getByRole('button', { name: 'Save' });
+    await expect(save).toBeDisabled();
+    await page.getByLabel('In English').fill('Hi ');
+    await expect(save).toBeDisabled();
+    await page.getByLabel('In English').fill('Hello');
+    await expect(save).toBeEnabled();
+  });
+});

@@ -4,6 +4,7 @@ import { navigate } from '../nav/history';
 import { useNav } from '../nav/NavContext';
 import type { ExploreFilters } from '../nav/routes';
 import { courseSets, coursePhrases, findSetView, phraseKey, promptOf } from '../state/catalog';
+import { clip, LIMITS, tidy } from '../state/limits';
 import { phraseProgress, setProgress } from '../state/selectors';
 import { useCopy, useNow, useStore } from '../state/store';
 import { Icon, IconName } from '../ui/Icon';
@@ -233,7 +234,7 @@ export function ExploreScreen({ filters }: { filters: ExploreFilters }) {
               {filters.q && (
                 <button
                   type="button"
-                  onClick={() => nav.addPhrase({ target: filters.q })}
+                  onClick={() => nav.addPhrase({ target: clip(tidy(filters.q ?? ''), LIMITS.phrase) })}
                   className="min-h-11 px-4 rounded-full bg-surface-container text-on-surface text-body font-semibold flex items-center gap-1.5"
                 >
                   <Icon name="add" className="text-icon-md" />
