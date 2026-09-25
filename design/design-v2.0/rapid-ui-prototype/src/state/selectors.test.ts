@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { chartAsMermaid, PLAYER_CHART } from './chart';
-import { formatInterval, formatWhen, HOUR } from './clock';
+import { addLocalDays, formatInterval, formatWhen, HOUR, startOfLocalWeek } from './clock';
 import { transition } from './machine';
 import { RATING_WINDOW_MS, typicalMs } from './memory';
 import {
@@ -15,6 +15,7 @@ import {
   playedSets,
   previewDue,
   recallBuckets,
+  recentSetIds,
   reviewQueue,
   sessionSummary,
   setDurationMs,
@@ -202,5 +203,51 @@ describe('the Learning view', () => {
     const learning = learningIds(s.learner, T0 + DAY);
     assert.ok(learning.includes('cafe-01'));
     assert.equal(learnerStats(s.learner, T0 + DAY).started, learning.length + learnedIds(s.learner, cafe()).length);
+  });
+});
+
+describe('home and stats (fourth review)', () => {
+  it('the weekly chart keeps every week across the spring clock change', () => {
+    const tz = process.env.TZ;
+    process.env.TZ = 'Europe/Sofia';
+    try {
+      const now = Date.UTC(2026, 3, 1, 9); // Wed 1 Apr 2026, 12:00 in Sofia, after the change on 29 Mar
+      const weeks = learnedPerWeek(fresh().learner, now).map((w) => w.weekStart);
+      weeks.forEach((w) => assert.equal(startOfLocalWeek(w), w, 'each column starts on a Monday'));
+      for (let i = 1; i < weeks.length; i++) assert.equal(weeks[i], addLocalDays(weeks[i - 1], 7), `week ${i} follows the one before`);
+      assert.ok(weeks.includes(Date.UTC(2026, 2, 22, 22)), 'the week of Monday 23 March is there');
+    } finally {
+      process.env.TZ = tz;
+    }
+  });
+
+  it('a set heard in another course with the same target is not recent here', () => {
+    const s = fresh();
+    const other = { id: 'x.y-1', at: T0, device: 'x', kind: 'heard' as const, key: 'bg-BG>es-ES:tapas-01', phraseId: 'tapas-01', setId: 'set-tapas', targetMs: 1000, nativeMs: 1000 };
+    const learner = { ...s.learner, log: [other] };
+    assert.deepEqual(recentSetIds(learner), []);
+    assert.deepEqual(recentSetIds({ ...learner, log: [{ ...other, key: 'en-GB>es-ES:tapas-01' }] }), ['set-tapas']);
+  });
+
+  it("the summary's points leave out a learned bonus another device earned", () => {
+    const base = load(fresh());
+    const key = 'en-GB>es-ES:cafe-01';
+    const logFrom = (device: string) =>
+      [0, 3, 10, 30, 80].flatMap((d, i) => [
+        { id: `${device}.h-${i}`, at: T0 + d * DAY + 1, device, kind: 'heard' as const, key, phraseId: 'cafe-01', setId: 'set-cafe', targetMs: 1000, nativeMs: 1000 },
+        { id: `${device}.r-${i}`, at: T0 + d * DAY + 2, device, kind: 'rated' as const, key, phraseId: 'cafe-01', setId: 'set-cafe', grade: 'easy' as const },
+      ]);
+    const withLog = (device: string) => ({ ...base, learner: { ...base.learner, log: logFrom(device) } });
+    const here = sessionSummary(withLog(base.device.id), T0 + 100 * DAY)!;
+    const there = sessionSummary(withLog('other'), T0 + 100 * DAY)!;
+    assert.ok(here.points >= 25, `this device's learned bonus counts (${here.points})`);
+    assert.equal(there.points, 0);
+  });
+
+  it('Today counts rated phrases, not ratings', () => {
+    let s = load(fresh());
+    [s] = playPhrase(s, T0);
+    s = run(s, ...rated('missed', T0 + MINUTE), ...rated('hard', T0 + 7 * MINUTE));
+    assert.equal(todayCounts(s, T0 + 20 * MINUTE).rated, 1);
   });
 });
