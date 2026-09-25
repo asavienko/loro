@@ -13,7 +13,8 @@ test('the header reads avatar, then the page title, then the points', async ({ p
 });
 
 test('at 200% text the header title keeps room: "pts" gives way first', async ({ page }) => {
-  await page.goto('/#/library');
+  // Explore: Library's header also holds its "+", and there the whole chip gives way (home.spec).
+  await page.goto('/#/explore');
   await page.addStyleTag({ content: 'html { font-size: 200% }' });
   await page.waitForTimeout(200);
   const title = (await page.locator('header h1').boundingBox())!;

@@ -49,6 +49,9 @@ export function makeEn(n: Plural) {
       settings: (name: string) => (name ? `${name}: settings` : 'Settings'),
       /** The avatar's description: the course its settings switch. */
       learning: (language: string) => `Learning ${language}`,
+      /** Library's header action, and the sheet it opens. */
+      add: 'Add a phrase or set',
+      addSheet: 'Add',
       points: (count: number) => n(count, { one: `${count} point`, other: `${count} points` }),
       pointsShort: (count: number) => n(count, { one: 'pt', other: 'pts' }),
     },
