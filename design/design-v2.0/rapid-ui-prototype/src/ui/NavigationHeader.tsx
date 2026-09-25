@@ -60,7 +60,9 @@ export function NavigationHeader({ title, titleLang, onBack, onOpenSettings, ine
         )}
         <div className="flex-1 min-w-0">
           {title && (
-            <h1 lang={titleLang} className={`font-serif text-heading text-on-surface truncate ${titleLang ? 'italic font-medium' : 'font-semibold'}`}>
+            // Two lines before it is cut, so a greeting at large text reads "¡Hola, / Ana!", not "¡Hol…";
+            // two lines of heading fit the bar's height at any text size (both are rem).
+            <h1 lang={titleLang} className={`font-serif text-heading leading-tight text-on-surface line-clamp-2 break-words ${titleLang ? 'italic font-medium' : 'font-semibold'}`}>
               {title}
             </h1>
           )}

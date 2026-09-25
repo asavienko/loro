@@ -6,7 +6,7 @@ import { usePlaybackDriver } from './audio/driver';
 import { applyUpdate, UPDATE_READY_EVENT } from './pwa';
 import { useMediaSession } from './audio/mediaSession';
 import { learnedCue } from './audio/cues';
-import { copyFor, copyForNative } from './copy';
+import { copyFor, copyForNative, greeting } from './copy';
 import { NATIVE_LANGUAGES } from './content';
 import { goBack, navigate, useBackToClose, useRoute, useScrollRestoration } from './nav/history';
 import { Navigation, NavContext } from './nav/NavContext';
@@ -344,7 +344,9 @@ function Shell() {
     <NavContext.Provider value={nav}>
       <div className="min-h-dvh bg-surface text-on-surface flex flex-col antialiased">
         <NavigationHeader
-          title={route.name === 'set' ? undefined : route.name === 'home' ? undefined : c.nav[route.name]}
+          // Home's title is the greeting, in the language being learned.
+          title={route.name === 'set' ? undefined : route.name === 'home' ? greeting(state.learner.profile.targetLang, state.learner.profile.name) : c.nav[route.name]}
+          titleLang={route.name === 'home' ? state.learner.profile.targetLang : undefined}
           onBack={route.name === 'set' ? () => goBack({ name: route.from }) : undefined}
           onOpenSettings={nav.openSettings}
           inert={behind}
