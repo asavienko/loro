@@ -1,7 +1,9 @@
-import { SelectHTMLAttributes, useId, useState } from 'react';
+import { SelectHTMLAttributes, useEffect, useId, useRef, useState } from 'react';
 import { bestVoice, speak, voicesFor } from '../audio/speech';
+import { useLatest } from '../lib/useLatest';
 import { useVoiceList } from '../lib/useVoiceList';
 import { courseSets, findPhrase, promptOf } from '../state/catalog';
+import { LIMITS, tidy } from '../state/limits';
 import { Icon } from '../ui/Icon';
 import { copyForNative, languageLabel, languageName } from '../copy';
 import { coursesFor, LanguageCode, NATIVE_LANGUAGES } from '../content';
@@ -75,18 +77,34 @@ export function SettingsSheet({ open, onClose }: { open: boolean; onClose: () =>
 
 function NameField({ initial, label, onSave }: { initial: string; label: string; onSave: (name: string) => void }) {
   const [name, setName] = useState(initial);
+  // Saved on blur, and when the sheet closes with the field still focused (Escape, Back):
+  // an element removed from the page fires no blur.
+  const latest = useLatest({ name, initial, onSave });
+  const savedAs = useRef<string | null>(null);
+  const store = () => {
+    const { name: typed, initial: stored, onSave: save } = latest.current;
+    if (tidy(typed) === stored || tidy(typed) === savedAs.current) return false;
+    savedAs.current = tidy(typed);
+    save(typed);
+    return true;
+  };
+  const onBlur = () => {
+    // Only spacing changed: show it as stored.
+    if (!store() && name !== initial && tidy(name) === initial) setName(initial);
+  };
+  useEffect(() => () => void store(), []); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <label className="flex flex-col gap-1 px-2 py-1">
       <span className="text-label text-secondary">{label}</span>
       <input
         value={name}
-        maxLength={40}
+        maxLength={LIMITS.name}
         onChange={(e) => setName(e.target.value)}
-        onBlur={() => name.trim() !== initial && onSave(name)}
+        onBlur={onBlur}
         autoComplete="given-name"
         enterKeyHint="done"
         // Saved on blur; Enter blurs.
-        onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
+        onKeyDown={(e) => e.key === 'Enter' && !e.nativeEvent.isComposing && e.currentTarget.blur()}
         className="min-h-12 px-4 rounded-2xl bg-surface-container-low border border-outline-variant/60 text-base"
       />
     </label>

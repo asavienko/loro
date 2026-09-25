@@ -1,6 +1,7 @@
 import { FormEvent, useId, useState } from 'react';
 import { useNav } from '../nav/NavContext';
-import { findSetView, ownSets, phraseKey } from '../state/catalog';
+import { findSetView, ownSets, sameKey } from '../state/catalog';
+import { LIMITS, tidy } from '../state/limits';
 import { useCopy, useStore } from '../state/store';
 import { CharCount } from '../ui/CharCount';
 import { Sheet } from '../ui/Sheet';
@@ -33,7 +34,7 @@ export function CreateSetSheet({ request, onClose }: { request: { phraseIds: str
         <SetNameForm
           key={request.rename ?? request.phraseIds.join()}
           initial={renaming?.title ?? ''}
-          taken={ownSets(state.learner).filter((s) => s.id !== renaming?.id).map((s) => phraseKey(s.title))}
+          taken={ownSets(state.learner).filter((s) => s.id !== renaming?.id).map((s) => sameKey(s.title))}
           submitLabel={renaming ? c.common.save : c.createSet.create}
           onSubmit={submit}
         />
@@ -46,7 +47,7 @@ export function CreateSetSheet({ request, onClose }: { request: { phraseIds: str
 function SetNameForm({ initial, taken, submitLabel, onSubmit }: { initial: string; taken: string[]; submitLabel: string; onSubmit: (title: string) => void }) {
   const c = useCopy();
   const [title, setTitle] = useState(initial);
-  const key = phraseKey(title);
+  const key = sameKey(title);
   const isTaken = key !== '' && taken.includes(key);
   const countId = useId();
   return (
@@ -62,21 +63,21 @@ function SetNameForm({ initial, taken, submitLabel, onSubmit }: { initial: strin
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            maxLength={60}
+            maxLength={LIMITS.title}
             aria-describedby={countId}
             autoComplete="off"
             enterKeyHint="done"
             required
             className="min-h-12 px-4 rounded-2xl bg-surface-container-low border border-outline-variant/60 text-base"
           />
-          <CharCount id={countId} value={title} max={60} />
+          <CharCount id={countId} value={title} max={LIMITS.title} />
         </label>
         {isTaken && (
           <p role="status" className="text-body rounded-xl bg-surface-container-low p-3">
             {c.createSet.taken}
           </p>
         )}
-        <button type="submit" disabled={!title.trim()} className="min-h-12 rounded-full bg-primary-container text-on-primary font-bold disabled:opacity-40">
+        <button type="submit" disabled={!title.trim() || (initial !== '' && tidy(title) === initial)} className="min-h-12 rounded-full bg-primary-container text-on-primary font-bold disabled:opacity-40">
           {submitLabel}
         </button>
       </form>

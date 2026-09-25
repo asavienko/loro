@@ -5,6 +5,7 @@ import { languageLabel, languageName } from '../copy';
 import { coursesFor, getLanguage, LanguageCode, NATIVE_LANGUAGES } from '../content';
 import { useNav } from '../nav/NavContext';
 import { courseSets, findPhrase, promptOf } from '../state/catalog';
+import { LIMITS } from '../state/limits';
 import { useCopy, useStore } from '../state/store';
 import { Icon, IconName } from '../ui/Icon';
 
@@ -63,12 +64,12 @@ export function Onboarding() {
               autoComplete="given-name"
               enterKeyHint="next"
               onKeyDown={(e) => {
-                if (e.key === 'Enter') {
+                if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
                   e.preventDefault();
                   next();
                 }
               }}
-              maxLength={40}
+              maxLength={LIMITS.name}
               placeholder={c.onboarding.namePlaceholder}
               className="min-h-12 px-4 rounded-2xl bg-surface-container-low border border-outline-variant/60 text-base"
             />

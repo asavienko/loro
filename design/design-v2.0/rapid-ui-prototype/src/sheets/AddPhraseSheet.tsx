@@ -2,6 +2,7 @@ import { FormEvent, useId, useRef, useState } from 'react';
 import { languageName } from '../copy';
 import type { LanguageCode } from '../content';
 import { findSamePhrase, promptOf } from '../state/catalog';
+import { LIMITS, tidy } from '../state/limits';
 import { useCopy, useStore } from '../state/store';
 import { CharCount } from '../ui/CharCount';
 import { Sheet } from '../ui/Sheet';
@@ -53,9 +54,13 @@ function PhraseForm({ editId, initialTarget, initialNative, targetLang, nativeLa
   const nativeRef = useRef<HTMLInputElement>(null);
   const nativeCount = useId();
 
+  // An edit that changes nothing (spacing aside) has nothing to save.
+  const unchanged = Boolean(editId) && tidy(target) === tidy(initialTarget) && tidy(native) === tidy(initialNative);
+  const ready = Boolean(target.trim() && native.trim()) && !unchanged;
+
   const submit = (event: FormEvent) => {
     event.preventDefault();
-    if (!target.trim() || !native.trim()) return;
+    if (!ready) return;
     if (editId) {
       actions.editOwnPhrase(editId, target, native);
       toast(c.addPhrase.edited);
@@ -74,7 +79,7 @@ function PhraseForm({ editId, initialTarget, initialNative, targetLang, nativeLa
           lang={targetLang}
           value={target}
           onChange={(e) => setTarget(e.target.value)}
-          maxLength={120}
+          maxLength={LIMITS.phrase}
           aria-describedby={targetCount}
           enterKeyHint="next"
           // The keyboard's autocorrect speaks the device language and would "fix" the phrase.
@@ -83,7 +88,7 @@ function PhraseForm({ editId, initialTarget, initialNative, targetLang, nativeLa
           autoComplete="off"
           // Enter in the first field goes on to the translation while it is still empty.
           onKeyDown={(e) => {
-            if (e.key === 'Enter' && !native.trim()) {
+            if (e.key === 'Enter' && !e.nativeEvent.isComposing && !native.trim()) {
               e.preventDefault();
               nativeRef.current?.focus();
             }
@@ -91,7 +96,7 @@ function PhraseForm({ editId, initialTarget, initialNative, targetLang, nativeLa
           required
           className="min-h-12 px-4 rounded-2xl bg-surface-container-low border border-outline-variant/60 text-base font-serif italic"
         />
-        <CharCount id={targetCount} value={target} max={120} />
+        <CharCount id={targetCount} value={target} max={LIMITS.phrase} />
       </label>
       <label className="flex flex-col gap-1">
         <span className="text-body font-semibold">{c.addPhrase.native(languageName(nativeLang, c.locale))}</span>
@@ -100,14 +105,14 @@ function PhraseForm({ editId, initialTarget, initialNative, targetLang, nativeLa
           lang={nativeLang}
           value={native}
           onChange={(e) => setNative(e.target.value)}
-          maxLength={120}
+          maxLength={LIMITS.phrase}
           aria-describedby={nativeCount}
           enterKeyHint="done"
           autoComplete="off"
           required
           className="min-h-12 px-4 rounded-2xl bg-surface-container-low border border-outline-variant/60 text-base"
         />
-        <CharCount id={nativeCount} value={native} max={120} />
+        <CharCount id={nativeCount} value={native} max={LIMITS.phrase} />
       </label>
       {same && (
         <p role="status" className="text-body rounded-xl bg-surface-container-low p-3">
@@ -121,7 +126,7 @@ function PhraseForm({ editId, initialTarget, initialNative, targetLang, nativeLa
         </p>
       )}
       <p className="text-label text-secondary">{c.addPhrase.hint}</p>
-      <button type="submit" disabled={!target.trim() || !native.trim()} className="min-h-12 rounded-full bg-primary-container text-on-primary font-bold disabled:opacity-40">
+      <button type="submit" disabled={!ready} className="min-h-12 rounded-full bg-primary-container text-on-primary font-bold disabled:opacity-40">
         {editId ? c.common.save : c.addPhrase.add}
       </button>
     </form>
