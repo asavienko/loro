@@ -158,8 +158,9 @@ function Choice({ legend, options, label, value, onChange }: { legend: string; o
     <fieldset className="min-w-0 flex flex-col gap-2">
       <legend className="font-serif text-title font-semibold mb-2 break-words hyphens-auto">{legend}</legend>
       {options.map((code) => (
-        <label key={code} className={`min-h-12 px-4 py-1 rounded-2xl border flex flex-wrap items-center gap-x-3 cursor-pointer ${value === code ? 'border-primary-container bg-primary-fixed/40' : 'border-outline-variant/60'}`}>
-          <input type="radio" name={legend} checked={value === code} onChange={() => onChange(code)} className="w-5 h-5 accent-primary-container" />
+        <label key={code} className={`min-h-12 px-4 py-1 rounded-2xl border flex flex-wrap items-center gap-x-3 cursor-pointer ${value === code ? 'border-inverse-surface bg-surface-container-low' : 'border-hairline'}`}>
+          {/* Chosen is ink, as in Settings: terracotta is for Play and the step's action. */}
+          <input type="radio" name={legend} checked={value === code} onChange={() => onChange(code)} className="w-5 h-5 accent-inverse-surface" />
           <span aria-hidden="true">{getLanguage(code).flag}</span>
           <span className="text-row font-semibold">{label(code)}</span>
         </label>

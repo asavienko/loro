@@ -102,3 +102,22 @@ test('a chosen filter is ink, and terracotta is left for Play', async ({ page })
   // A set card's quick play is quiet: paper with a terracotta icon, not a terracotta disc.
   await expect(page.getByRole('button', { name: /^Play Café/ }).first()).not.toHaveCSS('background-color', TERRACOTTA);
 });
+
+test.describe('first run', () => {
+  test.use({ seed: null });
+
+  test('a chosen language in onboarding is ink, as in Settings, not terracotta (Q-12)', async ({ page }) => {
+    await page.goto('/');
+    const chosen = page.locator('label').filter({ has: page.getByRole('radio', { checked: true }) });
+    const other = page.locator('label').filter({ has: page.getByRole('radio', { name: 'Русский' }) });
+    await expect(chosen).toHaveCSS('border-top-color', INK);
+    await expect(page.getByRole('radio', { checked: true })).toHaveCSS('accent-color', INK);
+    await expect(other).not.toHaveCSS('border-top-color', INK);
+    await expect(chosen).not.toHaveCSS('border-top-color', TERRACOTTA);
+    // The step's action keeps the terracotta.
+    await expect(page.getByRole('button', { name: 'Continue' })).toHaveCSS('background-color', TERRACOTTA);
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await expect(page.locator('label').filter({ has: page.getByRole('radio', { checked: true }) })).toHaveCSS('border-top-color', INK);
+  });
+});
