@@ -673,7 +673,7 @@ reloading jumped to the first copy of a phrase queued twice; a phrase deleted on
 while playing here froze playback; a missed last phrase was re-queued to replay at once (and grew the
 queue each repeat pass); Add to set with the same phrase twice kept both; two devices kept their own
 copy of a same-instant edit forever; clear-queue Undo could restore phrases behind the current one.
-Known and left: undoing a phrase delete doesn't put it back into the queue.
+Undoing a phrase delete now also puts it back in Up next, as far ahead of the playing phrase as it was (fixed later, with an E2E test).
 
 A second review, of the UI layer, found six more, all fixed with tests that fail without the fix:
 the player's keys acted inside sheets opened over it (Space paused, arrows skipped); a queue row's
