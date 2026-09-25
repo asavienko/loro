@@ -16,7 +16,6 @@ test('spacing player', async ({ page }) => {
   await page.goto('/');
   await page.addStyleTag({ content: css });
   await page.getByRole('button', { name: /^Play \d+ phrases/ }).first().click();
-  await page.getByRole('button', { name: /^Now playing:/ }).click();
   await page.waitForTimeout(700);
   expect(await clipped(page)).toEqual([]);
 });

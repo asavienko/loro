@@ -19,6 +19,7 @@ test('a year of history stays smooth while playing', async ({ page }) => {
     }).observe({ type: 'longtask', buffered: false });
   });
   await page.getByRole('button', { name: /^Play \d+ phrases/ }).first().click();
+  await page.getByRole('button', { name: 'Close player' }).click(); // Home's Play opens the player
   for (const hash of ['/#/library', '/#/explore', '/#/set/set-cafe?from=home', '/#/']) {
     await page.evaluate((h) => (location.hash = h.slice(2)), hash);
     await page.waitForTimeout(2500);
@@ -52,7 +53,6 @@ test('interactions respond quickly on a slow phone', async ({ page, browserName 
     await page.waitForTimeout(600);
   };
   await tap(() => page.getByRole('button', { name: /^Play \d+ phrases/ }).first().click());
-  await tap(() => page.getByRole('button', { name: /^Now playing:/ }).click());
   await tap(() => page.getByRole('button', { name: /^Easy/ }).click());
   await tap(() => page.getByRole('button', { name: 'Next phrase', exact: true }).click());
   await tap(() => page.getByRole('button', { name: /queue/i }).first().click());
@@ -76,7 +76,6 @@ test.describe('a long session', () => {
     await page.clock.install();
     await page.goto('/');
     await page.getByRole('button', { name: /^Play \d+ phrases/ }).first().click();
-    await page.getByRole('button', { name: /^Now playing:/ }).click();
     const cdp = await page.context().newCDPSession(page);
     await cdp.send('Performance.enable');
     const size = async () => {

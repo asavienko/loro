@@ -47,6 +47,7 @@ test('continue mode moves on to the next set', async ({ page }) => {
 test('the mini-player skips and pauses', async ({ page }) => {
   await start(page);
   await page.getByRole('button', { name: 'Play 5 phrases' }).click();
+  await page.getByRole('button', { name: 'Close player' }).click(); // Home's Play opens the player
   await run(page, 1_000);
   const mini = page.getByRole('button', { name: /^Now playing:/ });
   await expect(mini).toContainText('A cortado, please');
@@ -145,6 +146,7 @@ test.describe('a learner who has learned the whole course', () => {
 test('switching course mid-session says the queue was cleared', async ({ page }) => {
   await start(page);
   await page.getByRole('button', { name: /^Play \d+ phrases/ }).first().click();
+  await page.getByRole('button', { name: 'Close player' }).click(); // Home's Play opens the player
   await page.getByRole('button', { name: 'Ana: settings' }).click();
   await page.getByLabel('I’m learning').selectOption('bg-BG');
   await expect(page.getByRole('status').filter({ hasText: 'Now learning Bulgarian. The queue was cleared' })).toBeVisible();
@@ -210,7 +212,6 @@ for (const [speed, measured] of [[1.25, false], [1, true]] as const) {
     test(measured ? 'is measured' : 'is not taken as a 1× length', async ({ page }) => {
       await start(page);
       await page.getByRole('button', { name: 'Play 5 phrases' }).click();
-      await page.getByRole('button', { name: /^Now playing:/ }).click();
       const player = page.getByRole('dialog', { name: 'Now playing' });
       await run(page, 30_000);
       await player.getByRole('button', { name: 'Previous phrase' }).click();

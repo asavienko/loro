@@ -402,7 +402,6 @@ test('the learner can choose the voice for a language', async ({ page }) => {
   await expect.poll(() => page.evaluate(() => window.__spoken.map((u) => u.text))).toContain('Me pone un cortado, por favor');
   await page.getByRole('button', { name: 'Close' }).click();
   await page.getByRole('button', { name: /^Play \d+ phrases/ }).first().click();
-  await page.getByRole('button', { name: /^Now playing:/ }).click();
   await expect(page.getByText('Voice: Test Mexicano')).toBeVisible();
   // English has one voice on this device: nothing to choose, no picker.
   await page.getByRole('button', { name: 'Close player' }).click();
@@ -427,7 +426,6 @@ test('a second voice that loads late appears in Settings while it is open', asyn
 test("the player's voice line leads to the voice picker", async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: /^Play \d+ phrases/ }).first().click();
-  await page.getByRole('button', { name: /^Now playing:/ }).click();
   await page.getByRole('button', { name: 'Voice: Test Español. Change voice' }).click();
   await expect(page.getByRole('combobox', { name: 'Spanish', exact: true })).toBeVisible();
 });
@@ -453,7 +451,6 @@ test("a set page's Back returns to the filtered page it came from", async ({ pag
 test("testing a voice in Settings pauses the player, so neither cuts the other off", async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: /^Play \d+ phrases/ }).first().click();
-  await page.getByRole('button', { name: /^Now playing:/ }).click();
   await page.getByRole('button', { name: /^Voice: Test Español/ }).click();
   await page.evaluate(() => (window.__spoken = []));
   await page.getByRole('button', { name: 'Test Spanish' }).click();

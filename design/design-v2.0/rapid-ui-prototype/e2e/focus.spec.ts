@@ -13,6 +13,11 @@ for (const [w, h] of [[390, 844], [1440, 900]] as const) {
       // With the mini-player up, the bottom of the page is at its most crowded.
       await page.getByRole('button', { name: /^Play/ }).first().click();
       await page.getByRole('button', { name: 'Pause', exact: true }).first().click();
+      // Home's Play opens the player; the page under the mini-player is what's tested here.
+      if (hash === '/') {
+        await page.getByRole('button', { name: 'Close player' }).click();
+        await expect(page.getByRole('dialog')).toHaveCount(0);
+      }
       const hidden: string[] = [];
       for (let i = 0; i < 50; i++) {
         await page.keyboard.press('Tab');
@@ -75,7 +80,6 @@ test('opening a set focuses its heading; Back returns focus to the card', async 
 test("the player's keys stay out of a sheet opened over it", async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: /^Play/ }).first().click();
-  await page.getByRole('button', { name: /^Now playing:/ }).click();
   const player = page.getByRole('dialog', { name: 'Now playing' });
   const position = await player.getByText(/^1 of \d+$/).textContent();
   await page.getByRole('button', { name: 'Session summary' }).click();
@@ -142,7 +146,6 @@ test('Undo is reachable by keyboard from the queue, and stays while focused', as
   await page.goto('/');
   await page.getByRole('button', { name: /^Play/ }).first().click();
   await page.getByRole('button', { name: 'Pause', exact: true }).first().click();
-  await page.getByRole('button', { name: /^Now playing:/ }).click();
   await page.getByRole('button', { name: 'Open queue' }).click();
   const queue = page.getByRole('dialog', { name: 'Queue' });
   const count = await queue.getByRole('button', { name: /^Play .* now$/ }).count();
@@ -164,7 +167,6 @@ test('a new message in place of the one focused stays, and keeps focus', async (
   await page.goto('/');
   await page.getByRole('button', { name: /^Play/ }).first().click();
   await page.getByRole('button', { name: 'Pause', exact: true }).first().click();
-  await page.getByRole('button', { name: /^Now playing:/ }).click();
   await page.getByRole('button', { name: 'Open queue' }).click();
   await page.getByRole('dialog', { name: 'Queue' }).getByRole('button', { name: /^Move / }).first().press('Delete');
   const undo = page.getByRole('button', { name: 'Undo' });
@@ -183,7 +185,6 @@ test('a focused message stays when the pointer passes over it and leaves', async
   await page.goto('/');
   await page.getByRole('button', { name: /^Play/ }).first().click();
   await page.getByRole('button', { name: 'Pause', exact: true }).first().click();
-  await page.getByRole('button', { name: /^Now playing:/ }).click();
   await page.getByRole('button', { name: 'Open queue' }).click();
   await page.getByRole('dialog', { name: 'Queue' }).getByRole('button', { name: /^Move / }).first().press('Delete');
   const undo = page.getByRole('button', { name: 'Undo' });
@@ -200,7 +201,6 @@ test('closing a message focused with nothing before it keeps focus in the top sh
   await page.goto('/');
   await page.getByRole('button', { name: /^Play/ }).first().click();
   await page.getByRole('button', { name: 'Pause', exact: true }).first().click();
-  await page.getByRole('button', { name: /^Now playing:/ }).click();
   await page.getByRole('button', { name: 'Open queue' }).click();
   await page.getByRole('button', { name: /^Clear/ }).click();
   // Focus came from nowhere (the Clear button is gone), then moved into the message.
@@ -215,7 +215,6 @@ test('holding an arrow key moves one phrase, not through the queue', async ({ pa
   await page.goto('/');
   await page.getByRole('button', { name: /^Play/ }).first().click();
   await page.getByRole('button', { name: 'Pause', exact: true }).first().click();
-  await page.getByRole('button', { name: /^Now playing:/ }).click();
   const player = page.getByRole('dialog', { name: 'Now playing' });
   await expect(player.getByText(/^1 of \d+$/)).toBeVisible();
   await page.keyboard.press('ArrowRight');
@@ -230,7 +229,6 @@ test('a held key still works inside a sheet over the player', async ({ page }) =
   await page.goto('/');
   await page.getByRole('button', { name: /^Play/ }).first().click();
   await page.getByRole('button', { name: 'Pause', exact: true }).first().click();
-  await page.getByRole('button', { name: /^Now playing:/ }).click();
   await page.getByRole('button', { name: 'Open queue' }).click();
   const prevented = await page.getByRole('dialog', { name: 'Queue' }).evaluate((dialog) => {
     const target = dialog.querySelector<HTMLElement>('button') ?? dialog;

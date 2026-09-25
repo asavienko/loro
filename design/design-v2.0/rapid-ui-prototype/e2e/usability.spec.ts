@@ -19,7 +19,6 @@ test.describe('a returning learner with reviews due', () => {
     await page.goto('/');
     await page.getByRole('button', { name: /^Play \d+ phrases · / }).first().click();
     await page.getByRole('button', { name: 'Pause', exact: true }).first().click();
-    await page.getByRole('button', { name: /^Now playing:/ }).click();
     const player = page.getByRole('dialog', { name: 'Now playing' });
     const total = Number((await player.getByText(/^1 of (\d+)$/).textContent())!.match(/of (\d+)/)![1]);
     await page.getByRole('button', { name: 'Close player' }).click();
@@ -50,7 +49,6 @@ test.describe('a returning learner with reviews due', () => {
     const dueLine = page.getByText(/^\d+ phrases? (is|are) due/);
     const due = Number((await dueLine.textContent())!.match(/^(\d+)/)![1]);
     await page.getByRole('button', { name: /^Play \d+ phrases · / }).first().click();
-    await page.getByRole('button', { name: /^Now playing:/ }).click();
     const player = page.getByRole('dialog', { name: 'Now playing' });
     await player.getByRole('button', { name: 'Pause', exact: true }).click();
     // Rate every phrase of the review, paused, so the loop can't move on under the test.

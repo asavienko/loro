@@ -21,7 +21,6 @@ async function openQueue(page: Page) {
   await page.goto('/');
   await page.getByRole('button', { name: 'Play 5 phrases' }).click();
   await page.getByRole('button', { name: 'Pause', exact: true }).click();
-  await page.getByRole('button', { name: /^Now playing:/ }).click();
   await page.getByRole('button', { name: 'Open queue' }).click();
   await page.waitForTimeout(500);
   return page.getByRole('dialog', { name: 'Queue' });
@@ -73,6 +72,8 @@ test('swipe the mini-player to change phrase', async ({ page, browserName }) => 
   await page.goto('/');
   await page.getByRole('button', { name: 'Play 5 phrases' }).click();
   await page.getByRole('button', { name: 'Pause', exact: true }).click();
+  await page.getByRole('button', { name: 'Close player' }).click(); // Home's Play opens the player
+  await expect(page.getByRole('dialog')).toHaveCount(0);
   const mini = page.getByRole('button', { name: /^Now playing:/ });
   await drag(page, mini, -150, 0);
   await expect(mini).toContainText('Do you have oat milk?');
@@ -85,7 +86,6 @@ test('drag the player down by its title to close it; swipe the cover to change p
   await page.goto('/');
   await page.getByRole('button', { name: 'Play 5 phrases' }).click();
   await page.getByRole('button', { name: 'Pause', exact: true }).click();
-  await page.getByRole('button', { name: /^Now playing:/ }).click();
   const player = page.getByRole('dialog', { name: 'Now playing' });
   await page.waitForTimeout(600);
   await drag(page, player.getByText('1 of 5'), 0, 0); // a tap on the title does nothing
@@ -108,6 +108,7 @@ test('media keys: seek back replays the phrase, seek forward moves on', async ({
   await page.goto('/');
   await page.getByRole('button', { name: 'Play 5 phrases' }).click();
   await page.getByRole('button', { name: 'Pause', exact: true }).click();
+  await page.getByRole('button', { name: 'Close player' }).click(); // Home's Play opens the player
   const mini = page.getByRole('button', { name: /^Now playing:/ });
   await page.evaluate(() => (window as unknown as { __media: Record<string, () => void> }).__media.seekforward());
   await expect(mini).toContainText('Do you have oat milk?');

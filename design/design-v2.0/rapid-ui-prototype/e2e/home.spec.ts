@@ -106,3 +106,31 @@ test.describe('a learner switching to a course they have not started (U-15)', ()
     expect(await filled(page)).toEqual(['Play 4 phrases']);
   });
 });
+
+test.describe("Home's study plays open the player, where the grades are (U-01b)", () => {
+  test('Start here plays in the full player', async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Play 5 phrases' }).click();
+    const player = page.getByRole('dialog', { name: 'Now playing' });
+    await expect(player).toBeVisible();
+    await expect(player.getByRole('button', { name: /^Easy/ })).toBeVisible();
+  });
+
+  test.describe('with reviews due', () => {
+    test.use({ seed: { log: sampleHistory(Date.now()) } });
+    test('the review and Continue both open it; a card elsewhere stays in the mini-player', async ({ page }) => {
+      await page.goto('/');
+      await page.getByRole('button', { name: /^Play 7 phrases/ }).click();
+      const player = page.getByRole('dialog', { name: 'Now playing' });
+      await expect(player.getByText(/^1 of 7$/)).toBeVisible();
+      await page.getByRole('button', { name: 'Close player' }).click();
+      await page.getByRole('region', { name: 'Continue' }).getByRole('button', { name: /^Play \d+ phrases?$/ }).click();
+      await expect(player.getByText(/^1 of \d+$/)).toBeVisible();
+      await page.getByRole('button', { name: 'Close player' }).click();
+      // Quick play on a set card starts it where the learner is.
+      await page.getByRole('region', { name: 'Not started yet' }).getByRole('button', { name: /^Play / }).first().click();
+      await expect(page.getByRole('button', { name: /^Now playing:/ })).toBeVisible();
+      await expect(player).toHaveCount(0);
+    });
+  });
+});
