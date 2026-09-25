@@ -275,3 +275,38 @@ test('a new version is offered only while nothing plays', async ({ page }) => {
   await expect(page.locator('.toast-layer').getByText('A new version of Loro is ready')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Reload' })).toBeVisible();
 });
+
+test.describe('what a screen reader hears', () => {
+  test('by default: a short "Your turn", and the phrase in Spanish only after it is heard', async ({ page }) => {
+    await page.clock.install();
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Play 5 phrases' }).click();
+    await page.getByRole('button', { name: /^Now playing:/ }).click();
+    const region = page.getByRole('dialog', { name: 'Now playing' }).locator('p.sr-only[aria-live]');
+    const heard: { text: string; lang: string | null; phase: string }[] = [];
+    for (let t = 0; t < 45_000; t += 250) {
+      await page.clock.runFor(250);
+      const text = (await region.textContent())?.trim() ?? '';
+      if (text && heard.at(-1)?.text !== text) heard.push({ text, lang: await region.getAttribute('lang'), phase: await page.evaluate(() => document.querySelector('[aria-current="step"]')?.textContent ?? '') });
+    }
+    expect(heard.map((h) => h.text)).toContain('Your turn');
+    const reveal = heard.find((h) => h.text === 'Me pone un cortado, por favor');
+    expect(reveal?.lang).toBe('es-ES');
+    // Never announced while the Spanish audio plays.
+    expect(heard.some((h) => h.text === 'Me pone un cortado, por favor' && /Spanish/.test(h.phase))).toBe(false);
+  });
+
+  test('a rating is announced once, not every minute of its window', async ({ page }) => {
+    await page.clock.install();
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Play 5 phrases' }).click();
+    await page.getByRole('button', { name: 'Pause', exact: true }).first().click();
+    await page.getByRole('button', { name: /^Now playing:/ }).click();
+    await page.getByRole('button', { name: /^Missed/ }).click();
+    const status = page.locator('div[role="status"]');
+    await expect(status).toHaveText(/^Rated Missed/);
+    await page.evaluate(() => document.querySelector('div[role="status"]')!.replaceChildren());
+    await page.clock.runFor(3 * 60_000);
+    await expect(status).toHaveText('');
+  });
+});
