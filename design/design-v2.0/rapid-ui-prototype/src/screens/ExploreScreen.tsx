@@ -184,7 +184,8 @@ export function ExploreScreen({ filters }: { filters: ExploreFilters }) {
         </div>
       )}
 
-      {!topic && !q && (
+      {/* With any filter on, the results come first: the topic tiles would push them off screen. */}
+      {!topic && !q && !filters.level && !filters.tag && (
         <section aria-labelledby="topics-heading">
           <h2 id="topics-heading" className="font-serif text-heading font-semibold mb-2">{c.explore.topics}</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -256,7 +257,7 @@ export function ExploreScreen({ filters }: { filters: ExploreFilters }) {
 
       <section aria-labelledby="set-results">
         <h2 id="set-results" ref={results} className="font-serif text-heading font-semibold mb-2 scroll-mt-20">
-          {chips.length > 0 || q ? `${c.explore.filtered} · ${sets.length}` : c.explore.allSets}
+          {chips.length > 0 ? `${c.explore.filtered} · ${sets.length}` : q ? `${c.explore.searchedSets} · ${sets.length}` : c.explore.allSets}
         </h2>
         {sets.length === 0 ? (
           <p className="text-body text-secondary py-2">{c.explore.noSets}</p>

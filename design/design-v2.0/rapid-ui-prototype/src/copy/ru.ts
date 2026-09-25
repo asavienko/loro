@@ -40,7 +40,7 @@ export function makeRu(n: Plural): Copy {
       library: 'Библиотека',
       settings: (name) => (name ? `${name}: настройки` : 'Настройки'),
       points: (c) => n(c, { one: `${c} очко`, few: `${c} очка`, many: `${c} очков`, other: `${c} очка` }),
-      pointsShort: 'очк.',
+      pointsShort: () => 'очк.',
     },
     status: {
       new: 'Новая',
@@ -65,6 +65,7 @@ export function makeRu(n: Plural): Copy {
       continueTitle: 'Продолжить',
       continueBody: (title, learned, total) => `${title} · выучено ${learned} из ${total}`,
       next: (c, when) => `Дальше: ${phrases(c)} ${when}`,
+      nextAfter: (c, when) => `Потом: ещё ${phrases(c)} ${when}`,
       jumpBackIn: 'Вернуться',
       history: 'История',
       notStarted: 'Ещё не начатые',
@@ -98,6 +99,7 @@ export function makeRu(n: Plural): Copy {
       clearFilters: 'Сбросить фильтры',
       quickPlay: (title) => `Слушать «${title}»`,
       filtered: 'Отобранные наборы',
+      searchedSets: 'Наборы',
     },
     set: {
       phrasesHeading: 'Фразы',

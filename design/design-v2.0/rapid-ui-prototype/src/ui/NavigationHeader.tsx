@@ -67,7 +67,7 @@ export function NavigationHeader({ title, onBack, onOpenSettings, inert = false,
               <span className="sr-only">{c.nav.points(points)}</span>
               <Icon name="stars" fill className="text-icon-xs text-primary-container" />
               <span aria-hidden="true" className="text-body font-bold tabular-nums">{new Intl.NumberFormat(c.locale).format(points)}</span>
-              <span aria-hidden="true" className="text-label text-secondary font-medium">{c.nav.pointsShort}</span>
+              <span aria-hidden="true" className="text-label text-secondary font-medium">{c.nav.pointsShort(points)}</span>
             </p>
           </>
         )}

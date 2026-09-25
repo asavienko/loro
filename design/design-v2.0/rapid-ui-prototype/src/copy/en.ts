@@ -48,7 +48,7 @@ export function makeEn(n: Plural) {
       library: 'Library',
       settings: (name: string) => (name ? `${name}: settings` : 'Settings'),
       points: (count: number) => n(count, { one: `${count} point`, other: `${count} points` }),
-      pointsShort: 'pts',
+      pointsShort: (count: number) => n(count, { one: 'pt', other: 'pts' }),
     },
     status: {
       new: 'New',
@@ -73,6 +73,7 @@ export function makeEn(n: Plural) {
       continueTitle: 'Continue',
       continueBody: (title: string, learned: number, total: number) => `${title} · ${learned} of ${total} learned`,
       next: (count: number, when: string) => n(count, { one: `Next: ${count} phrase ${when}`, other: `Next: ${count} phrases ${when}` }),
+      nextAfter: (count: number, when: string) => n(count, { one: `After these: ${count} more phrase ${when}`, other: `After these: ${count} more phrases ${when}` }),
       jumpBackIn: 'Jump back in',
       history: 'History',
       notStarted: 'Not started yet',
@@ -89,7 +90,7 @@ export function makeEn(n: Plural) {
       empty: 'Nothing played yet.',
       mixed: 'Mixed queue',
       run: (phrases: number, points: number) =>
-        `${n(phrases, { one: `${phrases} phrase`, other: `${phrases} phrases` })} · +${points} pts`,
+        `${n(phrases, { one: `${phrases} phrase`, other: `${phrases} phrases` })} · +${n(points, { one: `${points} pt`, other: `${points} pts` })}`,
     },
     explore: {
       search: 'Search phrases, notes and topics',
@@ -107,6 +108,7 @@ export function makeEn(n: Plural) {
       clearFilters: 'Clear filters',
       quickPlay: (title: string) => `Play ${title}`,
       filtered: 'Filtered sets',
+      searchedSets: 'Sets',
     },
     set: {
       phrasesHeading: 'Phrases',

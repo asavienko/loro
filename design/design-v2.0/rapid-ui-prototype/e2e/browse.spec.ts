@@ -313,7 +313,7 @@ test.describe('history', () => {
   test('each run says what it earned, in points', async ({ page }) => {
     await page.goto('/');
     await page.getByRole('button', { name: 'History' }).click();
-    await expect(page.getByText(/^1 phrase · \+1 pts · /)).toBeVisible();
+    await expect(page.getByText(/^1 phrase · \+1 pt · /)).toBeVisible();
   });
 });
 

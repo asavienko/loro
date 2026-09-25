@@ -29,13 +29,24 @@ const PHRASE_VIEWS: LibraryView[] = ['liked', 'mine', 'due', 'learning', 'missed
 const SET_VIEWS: LibraryView[] = ['ownSets', 'likedSets'];
 const TABS = 'library';
 
-export function LibraryScreen({ view = 'liked' }: { view?: LibraryView }) {
+export function LibraryScreen({ view: chosen }: { view?: LibraryView }) {
   const c = useCopy();
   const nav = useNav();
   const { state } = useStore();
   const now = useNow(30_000);
   const { learner } = state;
   const stats = learnerStats(learner, now);
+  // Opened without a view: what's useful now (reviews due, then liked, then what you've
+  // started), not an empty Liked for someone who has liked nothing.
+  const firstPhraseView: LibraryView =
+    duePhraseIds(learner, now).length > 0
+      ? 'due'
+      : likedPhraseIds(learner).length > 0
+        ? 'liked'
+        : learningIds(learner, now).length > 0
+          ? 'learning'
+          : 'liked';
+  const view = chosen ?? firstPhraseView;
   const segment = SET_VIEWS.includes(view) ? 'sets' : 'phrases';
   const views = segment === 'sets' ? SET_VIEWS : PHRASE_VIEWS;
   const go = (next: LibraryView) => navigate({ name: 'library', view: next }, { replace: true });
@@ -68,7 +79,7 @@ export function LibraryScreen({ view = 'liked' }: { view?: LibraryView }) {
             key={s}
             type="button"
             aria-pressed={segment === s}
-            onClick={() => go(s === 'sets' ? 'ownSets' : 'liked')}
+            onClick={() => go(s === 'sets' ? 'ownSets' : firstPhraseView)}
             className={`min-h-11 rounded-full text-body ${segment === s ? 'bg-surface-container-lowest font-bold shadow-sm' : 'text-secondary font-medium'}`}
           >
             {s === 'sets' ? c.library.setsSegment : c.library.phrasesSegment}

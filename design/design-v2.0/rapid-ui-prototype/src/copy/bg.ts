@@ -41,7 +41,7 @@ export function makeBg(n: Plural): Copy {
       library: 'Библиотека',
       settings: (name) => (name ? `${name}: настройки` : 'Настройки'),
       points: (c) => n(c, { one: `${c} точка`, other: `${c} точки` }),
-      pointsShort: 'т.',
+      pointsShort: () => 'т.',
     },
     status: {
       new: 'Нова',
@@ -66,6 +66,7 @@ export function makeBg(n: Plural): Copy {
       continueTitle: 'Продължете',
       continueBody: (title, learned, total) => `${title} · научени ${learned} от ${total}`,
       next: (c, when) => `Следва: ${phrases(c)} ${when}`,
+      nextAfter: (c, when) => `След тях: още ${phrases(c)} ${when}`,
       jumpBackIn: 'Върнете се',
       history: 'История',
       notStarted: 'Още незапочнати',
@@ -99,6 +100,7 @@ export function makeBg(n: Plural): Copy {
       clearFilters: 'Изчисти филтрите',
       quickPlay: (title) => `Пусни „${title}“`,
       filtered: 'Избрани набори',
+      searchedSets: 'Набори',
     },
     set: {
       phrasesHeading: 'Фрази',
