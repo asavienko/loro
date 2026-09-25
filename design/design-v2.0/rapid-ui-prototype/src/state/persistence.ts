@@ -15,12 +15,13 @@ import {
   RENAMED_PHRASE_IDS,
 } from '../content';
 import { OWN_PHRASE_PREFIX, OWN_SET_PREFIX } from './catalog';
+import { clock } from './clock';
 // The same limits the forms apply, for data that arrives by sync or migration.
 import { clip, LIMITS } from './limits';
 import { decodeLog, encodeLog } from './compactLog';
 import { initialLearner, initialPlayer, initialPrefs, initialProfile } from './initial';
 import { derive, memoryKey } from './memory';
-import { mergeLearner } from './merge';
+import { mergeLearner, mergePending, ratingCommitId } from './merge';
 import { announceSave, clearOtherPendings, clearPending, clearRaw, clearStray, readRaw, Stored, writePending, writeRaw } from './storage';
 import {
   AppState,
@@ -220,7 +221,9 @@ function sanitizePending(value: unknown, learner: LearnerState): PendingRating[]
     const phraseId = renamed(p.phraseId);
     if (!knownPhrase(phraseId, learner.ownPhrases)) return [];
     const key = p.phraseId === phraseId ? p.key : p.key.replace(/:[^:]*$/, `:${phraseId}`);
-    return [{ key, phraseId, setId: str(p.setId) ? p.setId : null, grade: p.grade as Grade, at: p.at }];
+    // Saved before ratings synced between tabs: its last change is its own time.
+    const changedAt = num(p.changedAt) ? p.changedAt : p.at;
+    return [{ key, phraseId, setId: str(p.setId) ? p.setId : null, grade: p.grade as Grade, at: p.at, changedAt, ...(p.undone === true ? { undone: true } : {}) }];
   });
 }
 
@@ -366,13 +369,10 @@ export function loadState({ saved, pending, others = [], stray = null }: Stored,
     return parsed ? [parsed] : [];
   });
   strayOutstanding = stray !== null || others.length > 0;
-  const pendingRatings = [...state.pending];
-  for (const more of extra) for (const p of more.pending) if (!pendingRatings.some((q) => q.key === p.key)) pendingRatings.push(p);
-  return {
-    ...state,
-    pending: pendingRatings,
-    learner: extra.reduce((learner, more) => mergeLearner(learner, more.learner), state.learner),
-  };
+  const learner = extra.reduce((merged, more) => mergeLearner(merged, more.learner), state.learner);
+  const committed = (p: PendingRating) => learner.log.some((e) => e.id === ratingCommitId(state.device.id, p));
+  const pendingRatings = extra.reduce((merged, more) => mergePending(merged, more.pending, committed, clock.now()), state.pending);
+  return { ...state, pending: pendingRatings, learner };
 }
 
 function loadWithoutStray({ saved, pending }: Stored, initial: (device: Device) => AppState): AppState {
@@ -410,10 +410,13 @@ export function saveState(state: AppState): Promise<SaveResult> {
 async function writeState(state: AppState): Promise<SaveResult> {
   try {
     const current = await readRaw();
-    // Parsing and merging the stored copy is only needed when another tab changed it.
-    const stored = current !== null && current !== lastWritten ? parseState(current, state.device)?.learner : null;
-    const learner = stored ? mergeLearner(state.learner, stored) : state.learner;
-    const json = serializeState(learner === state.learner ? state : { ...state, learner });
+    // Parsing and merging the stored copy is only needed when another tab changed it. Its
+    // pending ratings merge too: a rating given in another tab mustn't be written over.
+    const stored = current !== null && current !== lastWritten ? parseState(current, state.device) : null;
+    const learner = stored ? mergeLearner(state.learner, stored.learner) : state.learner;
+    const committed = (p: PendingRating) => learner.log.some((e) => e.id === ratingCommitId(state.device.id, p));
+    const pending = stored ? mergePending(state.pending, stored.pending, committed, clock.now()) : state.pending;
+    const json = serializeState(learner === state.learner && pending === state.pending ? state : { ...state, learner, pending });
     await writeRaw(json);
     lastWritten = json;
     if (pendingFor === 'loaded' || pendingFor === state) {

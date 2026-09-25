@@ -43,7 +43,8 @@ export function points(learner: LearnerState): number {
 
 export function pendingFor(state: AppState, phraseId: string): PendingRating | undefined {
   const key = keyOf(state.learner, phraseId);
-  return state.pending.find((p) => p.key === key);
+  // An undone rating's tombstone isn't a rating.
+  return state.pending.find((p) => p.key === key && !p.undone);
 }
 
 /** Milliseconds left to change or undo a pending rating. */
@@ -360,7 +361,7 @@ export function sessionSummary(state: AppState, now: number): SessionSummary | n
   const heard = mine.filter((e): e is Extract<LogEntry, { kind: 'heard' }> => e.kind === 'heard');
   const ratings: Record<Grade, number> = { missed: 0, hard: 0, easy: 0 };
   for (const e of mine) if (e.kind === 'rated') ratings[e.grade]++;
-  const pending = state.pending.filter((p) => p.at >= session.startedAt);
+  const pending = state.pending.filter((p) => p.at >= session.startedAt && !p.undone);
   for (const p of pending) ratings[p.grade]++;
   let earned = mine.reduce((sum, e) => sum + (derived.awards.get(e.id) ?? 0), 0);
   // A learned bonus counts here when this device's rating in this session earned it, like the rest.
@@ -386,7 +387,7 @@ export function todayCounts(state: AppState, now: number): { heard: number; rate
   // This course only, like the Learned and Started beside it.
   const course = keyOf(state.learner, '');
   // Phrases, like "heard": one rated on three passes is one rated phrase.
-  const rated = new Set(state.pending.filter((p) => p.at >= start && p.key.startsWith(course)).map((p) => p.key));
+  const rated = new Set(state.pending.filter((p) => p.at >= start && !p.undone && p.key.startsWith(course)).map((p) => p.key));
   for (let i = state.learner.log.length - 1; i >= 0; i--) {
     const e = state.learner.log[i];
     if (e.at < start) break;

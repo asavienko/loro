@@ -8,9 +8,35 @@
 //   timestamp (a tie goes the same way on every device). Deletion is a
 //   tombstone (`deleted: true`), so it merges too.
 // - profile: last writer wins as a whole, by `updatedAt`.
-// Pending ratings, prefs and the player are per device and never merged.
-import { compareEntries } from './memory';
-import type { LearnerState, Like, LogEntry } from './types';
+// - pending ratings (tabs of one browser): last change wins per phrase key, by
+//   `changedAt`; an undo is a tombstone (`undone: true`) until its window closes.
+//   A rating already committed to the log is dropped, so storage doesn't keep it.
+// Prefs and the player are per tab and never merged.
+import { compareEntries, RATING_WINDOW_MS } from './memory';
+import type { LearnerState, Like, LogEntry, PendingRating } from './types';
+
+/** The log id a pending rating commits under: the same in every tab of this browser. */
+export function ratingCommitId(deviceId: string, p: PendingRating): string {
+  return `${deviceId}.r-${p.key}-${p.at.toString(36)}`;
+}
+
+/**
+ * This tab's pending ratings merged with another tab's. `committed` says whether a rating is
+ * already in the log (it then stays out); returns `ours` itself when nothing changes.
+ */
+export function mergePending(ours: PendingRating[], theirs: PendingRating[], committed: (p: PendingRating) => boolean, now: number): PendingRating[] {
+  let out = ours;
+  for (const t of theirs) {
+    if (committed(t) || (t.undone && now - t.at >= RATING_WINDOW_MS)) continue;
+    const at = out.findIndex((o) => o.key === t.key);
+    if (at === -1) {
+      out = [...out, t];
+    } else if (wins(t, out[at], (p) => p.changedAt)) {
+      out = out.map((o, i) => (i === at ? t : o));
+    }
+  }
+  return out;
+}
 
 function mergeLog(a: LogEntry[], b: LogEntry[]): LogEntry[] {
   const ids = new Set(a.map((e) => e.id));
