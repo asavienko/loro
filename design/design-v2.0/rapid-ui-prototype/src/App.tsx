@@ -293,7 +293,17 @@ function Shell() {
         // Another queue is going (a review, another set): play this phrase now, and keep that
         // queue after it rather than throwing it away without a word.
         if (player.order.length > 0 && player.setId !== view?.id) {
-          actions.enqueue([phraseId], phrase?.setId ?? null, 'next');
+          if (player.order[player.index] === phraseId) {
+            actions.jump(player.index, true); // already the one playing: from its start
+            return;
+          }
+          const later = player.order.indexOf(phraseId, player.index + 1);
+          if (later !== -1) {
+            actions.jump(later, true); // already coming up: go to it
+            return;
+          }
+          // Inserted next without changing whose queue it is (its set, continue mode).
+          actions.restoreUpNext([phraseId], 0);
           actions.jump(player.index + 1, true);
           return;
         }

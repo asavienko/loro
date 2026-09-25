@@ -26,8 +26,10 @@ test.describe('a returning learner with reviews due', () => {
     await page.goto('/#/explore?q=estacion');
     await page.getByRole('button', { name: /^Play .*estación/ }).first().click();
     await page.getByRole('button', { name: /^Now playing:/ }).click();
-    // Next in the review (moved up if the review already had it), not a new 4-phrase queue.
-    await expect(player.getByText(new RegExp(`^2 of (${total}|${total + 1})$`))).toBeVisible();
+    // The tapped phrase plays (the review already had it: Play went to it), and the review is
+    // still the queue, not the phrase's 4-phrase set.
+    await expect(page.getByRole('button', { name: /^Now playing: .*estación/ }).or(player.getByRole('heading', { name: /estación/ })).first()).toBeAttached();
+    await expect(player.getByText(new RegExp(`^\\d+ of (${total}|${total + 1})$`))).toBeVisible();
   });
 
   test('Library opens on the reviews that are due', async ({ page }) => {
@@ -47,5 +49,41 @@ test('a filter in Explore puts its results first', async ({ page }) => {
   await page.goto('/#/explore?tag=food');
   await expect(page.getByRole('heading', { name: /phrases?$/ }).first()).toBeVisible();
   // The topic tiles step aside, so the results sit under the filters.
-  await expect(page.getByRole('heading', { name: 'Topics' })).toHaveCount(0);
+  await expect(page.locator('#topics-heading')).toHaveCount(0);
+});
+
+test.describe('Play from Explore keeps the queue in order (regression)', () => {
+  test('the phrase already playing replays, instead of the one after it', async ({ page }) => {
+    await page.goto('/#/set/set-taxi?from=explore');
+    await page.getByRole('button', { name: 'Play Taxi de Noche' }).click();
+    await page.getByRole('button', { name: 'Pause', exact: true }).first().click();
+    await page.goto('/#/set/set-cafe?from=explore');
+    // Cafe's first phrase from Explore's search, while the taxi queue is going.
+    await page.goto('/#/explore?q=cortado');
+    await page.getByRole('button', { name: /^Play Me pone un cortado/ }).first().click();
+    await page.getByRole('button', { name: /^Now playing:/ }).click();
+    const player = page.getByRole('dialog', { name: 'Now playing' });
+    await expect(player.getByText(/^2 of \d+$/)).toBeVisible();
+    await page.getByRole('button', { name: 'Close player' }).click();
+    await page.getByRole('button', { name: /^Play Me pone un cortado/ }).first().click();
+    await page.getByRole('button', { name: /^Now playing:/ }).click();
+    await expect(player.getByText(/^2 of \d+$/)).toBeVisible();
+  });
+
+  test("the queue stays its set's: its page still shows it playing", async ({ page }) => {
+    await page.goto('/#/explore');
+    await page.getByRole('button', { name: 'Café & Mañanas' }).first().click();
+    await page.getByRole('button', { name: 'Play Café & Mañanas' }).click();
+    await page.evaluate(() => (window.location.hash = '#/explore?q=libre'));
+    await page.getByRole('button', { name: /^Play ¿Está libre/ }).first().click();
+    await page.evaluate(() => (window.location.hash = '#/set/set-cafe?from=explore'));
+    await expect(page.getByRole('button', { name: 'Pause Café & Mañanas' })).toBeVisible();
+  });
+});
+
+test('with a level filter on, a topic can still be added', async ({ page }) => {
+  await page.goto('/#/explore?level=A1');
+  await page.getByRole('region', { name: 'Topics' }).getByRole('button').first().click();
+  await expect(page).toHaveURL(/topic=/);
+  await expect(page).toHaveURL(/level=A1/);
 });

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { navigate } from '../nav/history';
 import { useNav } from '../nav/NavContext';
 import type { LibraryView } from '../nav/routes';
@@ -38,14 +39,16 @@ export function LibraryScreen({ view: chosen }: { view?: LibraryView }) {
   const stats = learnerStats(learner, now);
   // Opened without a view: what's useful now (reviews due, then liked, then what you've
   // started), not an empty Liked for someone who has liked nothing.
-  const firstPhraseView: LibraryView =
+  // Chosen once, when the page opens: it doesn't switch under the learner as phrases fall due.
+  const [firstPhraseView] = useState<LibraryView>(() =>
     duePhraseIds(learner, now).length > 0
       ? 'due'
       : likedPhraseIds(learner).length > 0
         ? 'liked'
         : learningIds(learner, now).length > 0
           ? 'learning'
-          : 'liked';
+          : 'liked',
+  );
   const view = chosen ?? firstPhraseView;
   const segment = SET_VIEWS.includes(view) ? 'sets' : 'phrases';
   const views = segment === 'sets' ? SET_VIEWS : PHRASE_VIEWS;
@@ -79,7 +82,8 @@ export function LibraryScreen({ view: chosen }: { view?: LibraryView }) {
             key={s}
             type="button"
             aria-pressed={segment === s}
-            onClick={() => go(s === 'sets' ? 'ownSets' : firstPhraseView)}
+            // The segment already shown keeps its view (Missed stays Missed).
+            onClick={() => segment !== s && go(s === 'sets' ? 'ownSets' : firstPhraseView)}
             className={`min-h-11 rounded-full text-body ${segment === s ? 'bg-surface-container-lowest font-bold shadow-sm' : 'text-secondary font-medium'}`}
           >
             {s === 'sets' ? c.library.setsSegment : c.library.phrasesSegment}
