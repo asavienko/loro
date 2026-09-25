@@ -8,7 +8,7 @@ import { AppEvent, transition } from './machine';
 import { mergeLearner, mergePending, mergePrefs } from './merge';
 import { flushState, loadState, parseState, saveState } from './persistence';
 import { onOtherTabSave, readRaw, Stored } from './storage';
-import type { AppState, AudioFailure, Grade, LearnerState, PendingRating, Prefs, Profile } from './types';
+import type { AppState, AudioFailure, Grade, LearnerState, PendingRating, Prefs, Profile, QueueSource } from './types';
 
 const newSeed = () => Math.floor(Math.random() * 2 ** 32);
 /** Saves wait this long for more changes; a hidden page saves at once. */
@@ -19,8 +19,8 @@ const COMMIT_EVERY_MS = 15_000;
 function makeActions(dispatch: (event: AppEvent) => void, latest: RefObject<AppState>) {
   const now = clock.now;
   return {
-    load: (phraseIds: string[], setId: string | null, startIndex = 0, shuffle = false) =>
-      dispatch({ type: 'LOAD', phraseIds, setId, startIndex, shuffle, now: now(), seed: newSeed() }),
+    load: (phraseIds: string[], setId: string | null, startIndex = 0, shuffle = false, source: QueueSource | null = null) =>
+      dispatch({ type: 'LOAD', phraseIds, setId, startIndex, shuffle, source, now: now(), seed: newSeed() }),
     play: () => dispatch({ type: 'PLAY', now: now() }),
     pause: () => dispatch({ type: 'PAUSE', now: now() }),
     phaseDone: (cycle: number, result: { measuredMs?: number; failure?: AudioFailure; unconfirmed?: boolean } = {}) =>
@@ -31,7 +31,8 @@ function makeActions(dispatch: (event: AppEvent) => void, latest: RefObject<AppS
     /** Start the current phrase again from its prompt. */
     restart: () => dispatch({ type: 'JUMP', index: latest.current.player.index, now: now() }),
     rate: (grade: Grade) => dispatch({ type: 'RATE', grade, now: now() }),
-    unrate: () => dispatch({ type: 'UNRATE', now: now() }),
+    /** Undo the current phrase's rating, or `phraseId`'s once the player has moved on. */
+    unrate: (phraseId?: string) => dispatch({ type: 'UNRATE', phraseId, now: now() }),
     commit: () => dispatch({ type: 'COMMIT', now: now() }),
     setPrefs: (prefs: Partial<Prefs>) => dispatch({ type: 'SET_PREFS', prefs, now: now() }),
     toggleShuffle: () => dispatch({ type: 'TOGGLE_SHUFFLE', seed: newSeed() }),

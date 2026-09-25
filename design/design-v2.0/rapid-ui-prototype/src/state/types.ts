@@ -123,6 +123,8 @@ export type PlayMode = 'repeat' | 'continue';
 export type RepeatsSetting = 'auto' | 1 | 3;
 export type Speed = 0.8 | 1 | 1.25;
 export type SortKey = 'set' | 'az' | 'due' | 'weakest';
+/** The learner's turn: the standard pause, or a longer one (about twice the phrase). */
+export type PauseLength = 'standard' | 'longer';
 
 export interface Prefs {
   /** At the end of the queue: play it again, or continue with the next phrases of the course. */
@@ -136,6 +138,10 @@ export interface Prefs {
   skippedDemo: boolean;
   /** The learner's own choice of device voice per language, by name; otherwise the best is picked. */
   voiceByLang: Partial<Record<LanguageCode, string>>;
+  /** How long "your turn" lasts (Settings → Listening). */
+  pauseLength: PauseLength;
+  /** The queue's swipe-and-drag hint has done its job (a swipe or drag worked): it folds away. */
+  queueHintDone: boolean;
   /** When each setting last changed, so tabs of this browser keep the newest value of each. */
   changedAt: Partial<Record<Exclude<keyof Prefs, 'changedAt'>, number>>;
 }
@@ -150,6 +156,15 @@ export interface AudioFailure {
 
 export type Phase = 'native' | 'pause' | 'target' | 'rate';
 export type PlayerStatus = 'idle' | 'playing' | 'paused';
+
+/** Library lists a queue can come from (the phrase views of the Library tab). */
+export type LibraryListView = 'liked' | 'mine' | 'due' | 'learning' | 'missed' | 'learned';
+
+/**
+ * Where an unnamed queue came from, for its title, and whether it has a natural end:
+ * a review, the first-run demo and a Library list play once and stop on an end panel.
+ */
+export type QueueSource = { kind: 'review' } | { kind: 'demo' } | { kind: 'library'; view: LibraryListView };
 
 export interface Session {
   id: string;
@@ -181,6 +196,15 @@ export interface PlayerState {
   elapsedMs: number;
   /** Measured prompt length in the current repetition, attached to its "heard" entry. */
   nativeMsThisRep: number | null;
+  /** When the running phase started playing; null while paused or idle. */
+  phaseStartedAt: number | null;
+  /**
+   * How long the running phase lasts when that is known in advance: the learner's turn and
+   * the rating hold, fixed when the phase starts. The audio driver plays exactly this.
+   */
+  phaseMs: number | null;
+  /** Where an unnamed queue came from (see QueueSource); null for a set or a queue built by hand. */
+  source: QueueSource | null;
   /** The queue finished; Play starts the last phrase again. */
   ended: boolean;
   /** Speech that failed, and why; playback stops until the learner presses Play. */
