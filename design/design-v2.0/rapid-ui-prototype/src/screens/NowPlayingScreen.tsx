@@ -35,6 +35,7 @@ import { usePlayerKeys } from './usePlayerKeys';
 import { useRate } from './useRate';
 import { Sheet } from '../ui/Sheet';
 import { useToast } from '../ui/Toast';
+import { btnPrimary, btnText } from '../ui/button';
 
 const STEPS: Exclude<Phase, 'rate'>[] = ['native', 'pause', 'target'];
 const SWIPE = 70;
@@ -164,8 +165,8 @@ export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps
             onDragEnd={onSwipe}
             className={`relative mx-auto w-full shrink-0 max-w-[min(100%,21dvh)] aspect-square ${ROOMY_ONLY} phone-landscape:hidden md:max-w-[min(100%,34dvh)] lg:max-w-[min(100%,52dvh)] lg:col-start-1 lg:row-span-2 lg:self-center touch-pan-y`}
           >
-            <SetCover set={coverSet ?? { topicId: null, coverIcon: 'edit_note' }} size="lg" className="w-full h-full rounded-3xl shadow-xl" />
-            <span role="img" aria-label={languageLabel(phrase.targetLang, c.locale)} className="absolute bottom-3 left-3 w-9 h-9 rounded-full bg-surface/70 flex items-center justify-center text-lg">
+            <SetCover set={coverSet ?? { topicId: null, coverIcon: 'edit_note' }} size="lg" className="w-full h-full rounded-3xl shadow-cover" />
+            <span role="img" aria-label={languageLabel(phrase.targetLang, c.locale)} className="absolute bottom-3 left-3 w-9 h-9 rounded-full bg-surface/70 flex items-center justify-center text-icon-sm">
               {getLanguage(phrase.targetLang).flag}
             </span>
           </motion.div>
@@ -216,7 +217,7 @@ export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps
                 aria-checked={state.prefs.speed === s}
                 onClick={() => actions.setPrefs({ speed: s })}
                 className={`min-h-11 rounded-full text-body tabular-nums ${
-                  state.prefs.speed === s ? 'bg-surface-container-lowest text-on-surface font-bold shadow-sm' : 'text-secondary font-medium'
+                  state.prefs.speed === s ? 'bg-surface-container-lowest text-on-surface font-bold shadow-card' : 'text-secondary font-medium'
                 }`}
               >
                 {s}×
@@ -549,19 +550,19 @@ function EndPanel({ onClose }: { onClose: () => void }) {
       </div>
       <div className="w-full max-w-[20rem] flex flex-col gap-2">
         {source?.kind === 'library' ? (
-          <button type="button" onClick={() => actions.jump(0, true)} className="min-h-12 px-5 rounded-full bg-primary-container text-on-primary font-bold inline-flex items-center justify-center gap-2">
+          <button type="button" onClick={() => actions.jump(0, true)} className={btnPrimary}>
             <Icon name="replay" className="text-icon" />
             {c.player.end.playAgain}
           </button>
         ) : (
           suggested && (
-            <button type="button" onClick={startSuggested} className="min-h-12 px-5 rounded-full bg-primary-container text-on-primary font-bold inline-flex items-center justify-center gap-2">
+            <button type="button" onClick={startSuggested} className={btnPrimary}>
               <Icon name="play_arrow" fill className="text-icon" />
               {demo ? c.player.end.startSet(suggested.title) : c.player.end.continueSet(suggested.title)}
             </button>
           )
         )}
-        <button type="button" onClick={onClose} className="min-h-11 px-4 rounded-full text-body font-semibold text-primary-container">
+        <button type="button" onClick={onClose} className={btnText}>
           {demo ? c.player.end.notNow : c.common.close}
         </button>
       </div>
@@ -585,7 +586,7 @@ function Transport() {
         aria-label={playing ? c.common.pause : c.common.play}
         aria-keyshortcuts="Space"
         onClick={playing ? actions.pause : actions.play}
-        className="size-[64px] shrink-0 rounded-full bg-primary-container text-on-primary flex items-center justify-center shadow-lg active:scale-95 transition-transform"
+        className="size-[64px] shrink-0 rounded-full bg-primary-container text-on-primary flex items-center justify-center shadow-float active:scale-95 transition-transform"
       >
         <Icon name={playing ? 'pause' : 'play_arrow'} fill className="text-[40px]" />
       </button>

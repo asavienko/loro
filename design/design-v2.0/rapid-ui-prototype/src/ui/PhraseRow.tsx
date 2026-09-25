@@ -3,6 +3,7 @@ import { promptOf } from '../state/catalog';
 import { useCopy, useStore } from '../state/store';
 import { languageName } from '../copy';
 import { Icon } from './Icon';
+import { btnIcon } from './button';
 
 interface PhraseRowProps {
   phrase: Phrase;
@@ -36,10 +37,10 @@ export function PhraseRow({ phrase, detail, leading, isCurrent = false, isPlayin
         {leading !== undefined && (
           <span className="w-6 shrink-0 flex items-center justify-center text-label font-bold text-secondary tabular-nums">
             {isPlaying ? (
-              <span className="flex items-end gap-0.5 h-3.5" aria-hidden="true">
-                <span className="w-0.5 bg-primary-container rounded-full eq-bar-1" />
-                <span className="w-0.5 bg-primary-container rounded-full eq-bar-2" />
-                <span className="w-0.5 bg-primary-container rounded-full eq-bar-3" />
+              <span className="flex items-end gap-[2px] h-4" aria-hidden="true">
+                <span className="w-[3px] bg-primary-container rounded-full eq-bar-1" />
+                <span className="w-[3px] bg-primary-container rounded-full eq-bar-2" />
+                <span className="w-[3px] bg-primary-container rounded-full eq-bar-3" />
               </span>
             ) : (
               leading
@@ -55,13 +56,19 @@ export function PhraseRow({ phrase, detail, leading, isCurrent = false, isPlayin
           >
             {title}
           </span>
-          <span className="block text-label text-secondary truncate mt-0.5">
-            {hideTarget ? (
-              c.player.hidden(languageName(phrase.targetLang, c.locale))
-            ) : (
-              <span lang={prompt.lang}>{prompt.text}</span>
-            )}
-            {detail && <span className="text-on-surface-variant"> · {detail}</span>}
+          {/* Only the prompt truncates. The status is a real figure and is never cut: when the two
+              don't fit on one line, it takes the next (and wraps there if it must). */}
+          <span className="flex flex-wrap gap-x-1 text-label text-secondary mt-0.5">
+            <span className="max-w-full truncate">
+              {hideTarget ? (
+                c.player.hidden(languageName(phrase.targetLang, c.locale))
+              ) : (
+                <span lang={prompt.lang}>{prompt.text}</span>
+              )}
+              {/* The space keeps the line's text one sentence; at the end of the line it takes no room. */}
+              {detail && ' · '}
+            </span>
+            {detail && <span className="min-w-0 text-on-surface-variant">{detail}</span>}
           </span>
         </span>
         {phrase.own && <Icon name="edit_note" className="text-icon-sm text-secondary shrink-0" />}
@@ -70,7 +77,7 @@ export function PhraseRow({ phrase, detail, leading, isCurrent = false, isPlayin
         type="button"
         onClick={onMore}
         aria-label={c.phrase.details(title)}
-        className="w-11 h-11 shrink-0 flex items-center justify-center rounded-full text-secondary active:bg-surface-container"
+        className={`${btnIcon} text-secondary`}
       >
         <Icon name="more_vert" className="text-icon" />
       </button>

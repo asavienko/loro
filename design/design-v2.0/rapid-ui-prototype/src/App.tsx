@@ -35,6 +35,7 @@ import { NowPlayingScreen } from './screens/NowPlayingScreen';
 import { Onboarding } from './screens/Onboarding';
 import { QueueScreen } from './screens/QueueScreen';
 import { SetScreen } from './screens/SetScreen';
+import { btnPrimary, btnTonal } from './ui/button';
 
 export default function App({ stored }: { stored: Stored }) {
   return (
@@ -75,12 +76,12 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean
     const raw = rawSavedState();
     return (
       <main className="min-h-dvh bg-surface text-on-surface flex flex-col justify-center gap-3 px-6 max-w-md mx-auto">
-        <h1 className="font-serif text-display-sm font-bold">{c.error.title}</h1>
+        <h1 className="font-serif text-display-sm font-semibold">{c.error.title}</h1>
         <p className="text-body text-secondary">{c.error.body}</p>
         <button
           type="button"
           onClick={() => window.location.reload()}
-          className="self-start min-h-12 px-5 rounded-full bg-primary-container text-on-primary font-bold"
+          className={`${btnPrimary} self-start`}
         >
           {c.error.reload}
         </button>
@@ -90,7 +91,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean
             onClick={() => {
               void navigator.clipboard?.writeText(raw).then(() => this.setState({ copied: true }));
             }}
-            className="self-start min-h-12 px-5 rounded-full bg-surface-container text-on-surface font-bold"
+            className={`${btnTonal} self-start`}
           >
             {this.state.copied ? c.error.copied : c.error.copy}
           </button>

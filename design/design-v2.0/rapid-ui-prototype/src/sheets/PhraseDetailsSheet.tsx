@@ -2,7 +2,7 @@ import { languageLabel } from '../copy';
 import { getLanguage } from '../content';
 import { useNav } from '../nav/NavContext';
 import { findPhrase, findSetView, promptOf } from '../state/catalog';
-import { currentPhraseId, isLiked, phraseProgress } from '../state/selectors';
+import { currentPhraseId, displayLearner, isLiked, phraseProgress } from '../state/selectors';
 import { useCopy, useNow, useStore } from '../state/store';
 import { PhraseNotesView } from '../ui/Notes';
 import { progressLabel } from '../ui/progressLabel';
@@ -35,7 +35,7 @@ function PhraseDetails({ phraseId, ownSetId, onClose }: { phraseId: string; ownS
   // Deleting your own phrase closes the sheet; while it slides away, the phrase is already gone.
   if (!phrase) return null;
   const liked = isLiked(state.learner, 'phrase', phrase.id);
-  const progress = phraseProgress(state.learner, phrase.id, now);
+  const progress = phraseProgress(displayLearner(state), phrase.id, now);
   const prompt = promptOf(phrase, state.learner.profile.nativeLang);
   const isCurrent = currentPhraseId(state.player) === phrase.id;
   const ownSet = ownSetId ? findSetView(state.learner, ownSetId) : undefined;

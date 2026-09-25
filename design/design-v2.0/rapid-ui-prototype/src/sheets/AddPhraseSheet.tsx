@@ -7,6 +7,8 @@ import { useCopy, useStore } from '../state/store';
 import { CharCount } from '../ui/CharCount';
 import { Sheet } from '../ui/Sheet';
 import { useToast } from '../ui/Toast';
+import { btnPrimary } from '../ui/button';
+import { fieldClass } from '../ui/field';
 
 /**
  * The learner's own phrase: both languages, played with the device voice like
@@ -94,7 +96,7 @@ function PhraseForm({ editId, initialTarget, initialNative, targetLang, nativeLa
             }
           }}
           required
-          className="min-h-12 px-4 rounded-2xl bg-surface-container-low border border-outline-variant/60 text-base font-serif italic"
+          className={`${fieldClass} font-serif italic`}
         />
         <CharCount id={targetCount} value={target} max={LIMITS.phrase} />
       </label>
@@ -110,7 +112,7 @@ function PhraseForm({ editId, initialTarget, initialNative, targetLang, nativeLa
           enterKeyHint="done"
           autoComplete="off"
           required
-          className="min-h-12 px-4 rounded-2xl bg-surface-container-low border border-outline-variant/60 text-base"
+          className={fieldClass}
         />
         <CharCount id={nativeCount} value={native} max={LIMITS.phrase} />
       </label>
@@ -126,7 +128,7 @@ function PhraseForm({ editId, initialTarget, initialNative, targetLang, nativeLa
         </p>
       )}
       <p className="text-label text-secondary">{c.addPhrase.hint}</p>
-      <button type="submit" disabled={!ready} className="min-h-12 rounded-full bg-primary-container text-on-primary font-bold disabled:opacity-40">
+      <button type="submit" disabled={!ready} className={btnPrimary}>
         {editId ? c.common.save : c.addPhrase.add}
       </button>
     </form>

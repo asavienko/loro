@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { greeting } from '../copy';
 import { useNav } from '../nav/NavContext';
-import { coursePhrases, courseSets, findSetView, SetView } from '../state/catalog';
+import { coursePhrases, courseSets, findSetView } from '../state/catalog';
 import { formatAgo, formatElapsed, formatWhen } from '../state/clock';
 import {
+  displayLearner,
   duePhraseIds,
   learnerStats,
   listDurationMs,
@@ -20,8 +21,10 @@ import {
 import { useCopy, useNow, useStore } from '../state/store';
 import { Icon } from '../ui/Icon';
 import { SetCard } from '../ui/SetCard';
-import { SetCover } from '../ui/SetCover';
+import { SetRow } from '../ui/SetRow';
 import { Sheet } from '../ui/Sheet';
+import { StatChip } from '../ui/StatTile';
+import { btnPrimary, btnPrimarySm, btnText, btnTonal } from '../ui/button';
 
 export function HomeScreen() {
   const c = useCopy();
@@ -29,7 +32,8 @@ export function HomeScreen() {
   const { state } = useStore();
   const now = useNow(30_000);
   const [historyOpen, setHistoryOpen] = useState(false);
-  const { learner } = state;
+  // Ratings still in their undo window count in every figure here (not in points).
+  const learner = displayLearner(state);
   const stats = learnerStats(learner, now);
   const today = todayCounts(state, now);
   const due = duePhraseIds(learner, now);
@@ -57,16 +61,16 @@ export function HomeScreen() {
           {greeting(learner.profile.targetLang, learner.profile.name)}
         </h1>
         {firstRun && <p className="text-body text-secondary mt-1">{c.home.firstRun}</p>}
-        <div className="grid grid-cols-2 mt-4 rounded-2xl overflow-hidden bg-surface-container-low border border-outline-variant/40 divide-x divide-outline-variant/40">
-          <Stat label={c.home.learned} value={stats.learned} icon="verified" onClick={() => nav.go({ name: 'library', view: 'learned' })} />
-          <Stat label={c.home.started} value={stats.started} icon="headphones" onClick={() => nav.go({ name: 'library', view: 'learning' })} />
+        <div className="flex flex-wrap gap-2 mt-4">
+          <StatChip label={c.home.learned} value={stats.learned} icon="verified" onClick={() => nav.go({ name: 'library', view: 'learned' })} />
+          <StatChip label={c.home.started} value={stats.started} icon="headphones" onClick={() => nav.go({ name: 'library', view: 'learning' })} />
         </div>
         {today.heard + today.rated > 0 && <p className="text-body text-secondary mt-2 px-1">{c.home.today(today.heard, today.rated)}</p>}
       </section>
 
       {offerDemo && firstPhrase && (
         <section aria-labelledby="demo-heading" className="rounded-3xl bg-primary-fixed/50 p-4">
-          <h2 id="demo-heading" className="font-serif text-lg font-bold">{c.home.demoTitle}</h2>
+          <h2 id="demo-heading" className="font-serif text-title font-semibold">{c.home.demoTitle}</h2>
           <p className="text-body text-on-surface-variant mt-0.5">{c.home.demoBody}</p>
           <button
             type="button"
@@ -74,7 +78,7 @@ export function HomeScreen() {
               nav.playList([firstPhrase], 0, { kind: 'demo' });
               nav.openPlayer();
             }}
-            className="mt-3 min-h-12 px-5 rounded-full bg-primary-container text-on-primary font-bold inline-flex items-center gap-2"
+            className={`${btnPrimary} mt-3`}
           >
             <Icon name="play_arrow" fill className="text-icon" />
             {c.home.demoButton}
@@ -84,8 +88,8 @@ export function HomeScreen() {
 
       <section aria-label={c.home.reviewTitle} className="flex flex-col gap-3">
         {due.length > 0 && (
-          <div className="rounded-3xl border border-outline-variant bg-surface-container-lowest p-4 shadow-sm">
-            <h2 className="font-serif text-lg font-bold">{c.home.reviewTitle}</h2>
+          <div className="rounded-3xl border border-outline-variant bg-surface-container-lowest p-4 shadow-card">
+            <h2 className="font-serif text-title font-semibold">{c.home.reviewTitle}</h2>
             <p className="text-body text-secondary mt-0.5">
               {c.home.reviewBody(due.length)}
               {due.length > review.length && ` ${c.home.reviewCapped(review.length)}`}
@@ -98,8 +102,8 @@ export function HomeScreen() {
           </div>
         )}
         {suggested && suggestedProgress && suggestedIds.length > 0 && (
-          <div className={`rounded-3xl border border-outline-variant p-4 ${due.length > 0 || offerDemo ? 'bg-surface-container-low' : 'bg-surface-container-lowest shadow-sm'}`}>
-            <h2 className="font-serif text-lg font-bold">{stats.started === 0 ? c.home.startTitle : c.home.continueTitle}</h2>
+          <div className={`rounded-3xl border border-outline-variant p-4 ${due.length > 0 || offerDemo ? 'bg-surface-container-low' : 'bg-surface-container-lowest shadow-card'}`}>
+            <h2 className="font-serif text-title font-semibold">{stats.started === 0 ? c.home.startTitle : c.home.continueTitle}</h2>
             <p className="text-body text-secondary mt-0.5">
               {c.home.continueBody(suggested.title, suggestedProgress.learned, suggestedProgress.total)}
             </p>
@@ -113,17 +117,17 @@ export function HomeScreen() {
         )}
         {courseDone && (
           <div className="rounded-3xl bg-tertiary-fixed/60 p-4">
-            <h2 className="font-serif text-lg font-bold flex items-center gap-2">
+            <h2 className="font-serif text-title font-semibold flex items-center gap-2">
               <Icon name="task_alt" className="text-icon text-tertiary" />
               {c.home.courseDoneTitle}
             </h2>
             <p className="text-body text-on-surface-variant mt-1">{c.home.courseDoneBody}</p>
             <div className="flex flex-wrap gap-2 mt-3">
-              <button type="button" onClick={() => nav.addPhrase()} className="min-h-11 px-4 rounded-full bg-primary-container text-on-primary font-bold flex items-center gap-1.5">
+              <button type="button" onClick={() => nav.addPhrase()} className={btnPrimarySm}>
                 <Icon name="add" className="text-icon-md" />
                 {c.home.addOwn}
               </button>
-              <button type="button" onClick={nav.openSettings} className="min-h-11 px-4 rounded-full bg-surface-container-high text-on-surface font-semibold">
+              <button type="button" onClick={nav.openSettings} className={btnTonal}>
                 {c.home.otherCourse}
               </button>
             </div>
@@ -146,16 +150,22 @@ export function HomeScreen() {
             <button
               type="button"
               onClick={() => setHistoryOpen(true)}
-              className="min-h-11 px-3 -mr-2 rounded-full text-body font-semibold text-primary-container flex items-center gap-1 active:bg-surface-container"
+              className={`${btnText} -mr-2`}
             >
               <Icon name="history" className="text-icon-sm" />
               {c.home.history}
             </button>
           </div>
-          <ul className="grid grid-cols-1 gap-2 md:grid-cols-2">
+          <ul className="grid grid-cols-1 gap-x-8 md:grid-cols-2">
             {recent.map((id) => {
               const view = findSetView(learner, id);
-              return view ? <li key={id}><SetRow view={view} now={now} /></li> : null;
+              if (!view) return null;
+              const progress = setProgress(learner, view.phraseIds, now);
+              return (
+                <li key={id}>
+                  <SetRow set={view} meta={c.set.summary(progress.total, progress.learned, progress.due)} onOpen={() => nav.openSet(view.id)} />
+                </li>
+              );
             })}
           </ul>
         </section>
@@ -178,7 +188,7 @@ export function HomeScreen() {
       )}
 
       {recent.length === 0 && !firstRun && (
-        <button type="button" onClick={() => setHistoryOpen(true)} className="self-start min-h-11 px-3 -ml-3 rounded-full text-body font-semibold text-primary-container flex items-center gap-1">
+        <button type="button" onClick={() => setHistoryOpen(true)} className={`${btnText} self-start -ml-3`}>
           <Icon name="history" className="text-icon-sm" />
           {c.home.history}
         </button>
@@ -213,39 +223,6 @@ function PlayButton({ label, detail, onClick, secondary = false }: { label: stri
   );
 }
 
-function Stat({ label, value, icon, onClick }: { label: string; value: number; icon: 'verified' | 'headphones'; onClick: () => void }) {
-  return (
-    <button type="button" onClick={onClick} className="w-full flex flex-col items-center py-3 gap-0.5 active:bg-surface-container">
-      <span className="flex items-center gap-1 text-label font-semibold text-secondary">
-        <Icon name={icon} className="text-icon-sm text-primary-container" />
-        {label}
-      </span>
-      <span className="text-lg font-bold tabular-nums leading-tight">{value}</span>
-    </button>
-  );
-}
-
-function SetRow({ view, now }: { view: SetView; now: number }) {
-  const c = useCopy();
-  const nav = useNav();
-  const { state } = useStore();
-  const progress = setProgress(state.learner, view.phraseIds, now);
-  return (
-    <button
-      type="button"
-      onClick={() => nav.openSet(view.id)}
-      className="w-full min-h-16 flex items-center gap-3 p-2 rounded-2xl bg-surface-container-lowest border border-outline-variant/50 text-left active:bg-surface-container-low"
-    >
-      <SetCover set={view} size="sm" className="w-12 h-12 rounded-xl shrink-0" />
-      <span className="flex-1 min-w-0">
-        <span lang={view.targetLang} className="block text-row font-semibold truncate">{view.title}</span>
-        <span className="block text-label text-secondary">{c.set.summary(progress.total, progress.learned, progress.due)}</span>
-      </span>
-      <Icon name="chevron_right" className="text-icon text-secondary" />
-    </button>
-  );
-}
-
 /** History as the sets that were played, newest first. */
 function HistorySheet({ open, onClose, now }: { open: boolean; onClose: () => void; now: number }) {
   const c = useCopy();
@@ -260,27 +237,18 @@ function HistorySheet({ open, onClose, now }: { open: boolean; onClose: () => vo
         <ul className="flex flex-col">
           {runs.map((run) => {
             const view = findSetView(state.learner, run.setId);
-            const label = view?.title ?? c.history.mixed;
             return (
               <li key={`${run.setId}-${run.from}`}>
-                <button
-                  type="button"
+                <SetRow
+                  set={view ?? { title: c.history.mixed, topicId: null, coverIcon: 'queue_music' }}
+                  meta={`${c.history.run(run.phrases, run.points)} · ${formatAgo(run.to, now, c.locale)}`}
                   disabled={!view}
-                  onClick={() => {
+                  onOpen={() => {
                     if (!view) return;
                     onClose();
                     nav.openSet(view.id);
                   }}
-                  className="w-full min-h-14 py-2 flex items-center gap-3 text-left rounded-xl active:bg-surface-container"
-                >
-                  <SetCover set={view ?? { topicId: null, coverIcon: 'queue_music' }} size="sm" className="w-10 h-10 rounded-lg shrink-0" />
-                  <span className="flex-1 min-w-0">
-                    <span className="block text-row font-semibold truncate">{label}</span>
-                    <span className="block text-label text-secondary">
-                      {c.history.run(run.phrases, run.points)} · {formatAgo(run.to, now, c.locale)}
-                    </span>
-                  </span>
-                </button>
+                />
               </li>
             );
           })}

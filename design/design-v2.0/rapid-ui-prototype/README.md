@@ -25,8 +25,9 @@ The scheduler is Loro's Rust core: the app imports the generated
 - `src/state/` — `transition(state, event)` is pure, and `chart.ts` holds the allowed events. The
   learner's history is an append-only log; memory and points are derived from it (`memory.ts`).
   `merge.ts` merges two copies (another tab, the server), and `persistence.ts` migrates old saves.
-  `selectors.ts` derives every number shown on screen. `clock.ts` is the only place that reads the
-  time.
+  `selectors.ts` derives every number shown on screen. A rating waits five minutes (change or
+  undo) before it joins the log; `displayLearner` applies it at once to every status, due and
+  learned figure, while points wait for the log. `clock.ts` is the only place that reads the time.
 - `src/audio/` — the loop's side effects, soft cues and the Media Session. Device speech stands in
   for recorded clips, which the backend will provide (`audio`/`durationMs` in content).
 - `src/copy/` — every string, in English, Bulgarian and Russian.
