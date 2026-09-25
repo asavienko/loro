@@ -1,5 +1,5 @@
 // The phrase sheets: details lead with Play and a compact grid, so the notes start on screen;
-// your own phrase's sheet has a title.
+// your own phrase's sheet has a title; a phrase you add offers to play it.
 import { Page } from '@playwright/test';
 import { expect, sampleHistory, test } from './fixtures';
 
@@ -45,4 +45,14 @@ test('your own phrase: the sheet is titled "Your phrase", its rare actions after
   const addToSet = (await sheet.getByRole('button', { name: 'Add to set…' }).boundingBox())!;
   const edit = (await sheet.getByRole('button', { name: 'Edit phrase' }).boundingBox())!;
   expect(edit.y).toBeGreaterThan(addToSet.y);
+});
+
+test('"Phrase added" offers Play, which plays the new phrase (U-17)', async ({ page }) => {
+  await addOwnPhrase(page);
+  const toast = page.locator('.toast-layer');
+  await expect(toast.getByText('Phrase added')).toBeVisible();
+  await toast.getByRole('button', { name: 'Play', exact: true }).click();
+  await expect(page.getByRole('button', { name: /^Now playing:/ })).toBeVisible();
+  await page.getByRole('button', { name: /^Now playing:/ }).click();
+  await expect(page.getByRole('dialog', { name: 'Now playing' }).getByText('Is there wifi?').first()).toBeVisible();
 });
