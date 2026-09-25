@@ -131,7 +131,8 @@ test.describe('library', () => {
     await page.getByRole('button', { name: /^Now playing:/ }).click();
     await page.getByRole('button', { name: 'Open queue' }).click();
     const queue = page.getByRole('dialog', { name: 'Queue' });
-    await expect(queue.getByRole('button', { name: /^Play .* now$/ }).first()).toHaveAccessibleName(/Hola/);
+    // Up next goes by the prompt (the Spanish stays hidden until heard).
+    await expect(queue.getByRole('button', { name: /^Play .* now$/ }).first()).toHaveAccessibleName('Play Hi now');
   });
 
   test('a like shows under Liked, and Play all plays it', async ({ page }) => {

@@ -109,11 +109,12 @@ test.describe('Play from Explore keeps the queue in order (regression)', () => {
     await page.getByRole('button', { name: /^Play Me pone un cortado/ }).first().click();
     await page.getByRole('button', { name: /^Now playing:/ }).click();
     const player = page.getByRole('dialog', { name: 'Now playing' });
-    await expect(player.getByText(/^2 of \d+$/)).toBeVisible();
+    // The café phrase joined the taxi queue: the count is the queue's.
+    await expect(player.getByText(/^2 of \d+ in the queue$/)).toBeVisible();
     await page.getByRole('button', { name: 'Close player' }).click();
     await page.getByRole('button', { name: /^Play Me pone un cortado/ }).first().click();
     await page.getByRole('button', { name: /^Now playing:/ }).click();
-    await expect(player.getByText(/^2 of \d+$/)).toBeVisible();
+    await expect(player.getByText(/^2 of \d+ in the queue$/)).toBeVisible();
   });
 
   test("the queue stays its set's: its page still shows it playing", async ({ page }) => {
