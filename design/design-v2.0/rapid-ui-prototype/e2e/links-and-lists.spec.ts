@@ -87,3 +87,12 @@ test.describe('forms', () => {
     await expect(save).toBeEnabled();
   });
 });
+
+test("the set page's Back works after a reload with a sheet open", async ({ page }) => {
+  await page.goto('/#/explore');
+  await page.getByRole('button', { name: 'Café & Mañanas' }).first().click();
+  await page.getByRole('button', { name: /^More/ }).click();
+  await page.reload();
+  await page.getByRole('button', { name: /^Back/ }).first().click();
+  await expect(page).toHaveURL(/#\/explore/);
+});
