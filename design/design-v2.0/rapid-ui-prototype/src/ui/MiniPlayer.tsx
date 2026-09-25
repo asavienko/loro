@@ -6,7 +6,9 @@ import { findPhrase, findSetView, promptOf } from '../state/catalog';
 import { currentPhraseId } from '../state/selectors';
 import { useCopy, useStore } from '../state/store';
 import { Icon } from './Icon';
-import { isTargetRevealed, phaseInstruction } from './phase';
+import { playsOnce } from '../state/machine';
+import { isTargetRevealed, PHASE_ICONS, phaseInstruction } from './phase';
+import { PhaseFill } from './PhaseFill';
 import { SetCover } from './SetCover';
 
 const SWIPE_DISTANCE = 60;
@@ -22,8 +24,8 @@ export function MiniPlayer({ onOpenPlayer }: { onOpenPlayer: () => void }) {
   const phrase = findPhrase(state.learner, currentPhraseId(state.player));
   if (!phrase) return null;
 
-  const { status, phase, repetition, repeats, audioError } = state.player;
-  const playing = status === 'playing';
+  const { phase, repetition, repeats, audioError } = state.player;
+  const playing = state.player.status === 'playing';
   const stepIndex = phase === 'rate' ? STEPS_PER_REPETITION : ['native', 'pause', 'target'].indexOf(phase);
   const step = (repetition - 1) * STEPS_PER_REPETITION + stepIndex;
   const progress = playing || step > 0 ? Math.min(1, step / (repeats * STEPS_PER_REPETITION)) : 0;
@@ -32,6 +34,25 @@ export function MiniPlayer({ onOpenPlayer }: { onOpenPlayer: () => void }) {
   const revealed = isTargetRevealed(state.player);
   const title = revealed ? phrase.target : prompt.text;
   const set = findSetView(state.learner, phrase.setId) ?? findSetView(state.learner, state.player.setId);
+  // The learner's turn and the hold show their own time on the line; other steps, how far through.
+  const timed = playing && (phase === 'pause' || phase === 'rate') && state.player.phaseMs !== null;
+  const source = state.player.source?.kind;
+  const status = audioError
+    ? audioError.reason === 'no-voice'
+      ? c.player.noVoice
+      : c.player.silent
+    : state.player.ended && playsOnce(state.player)
+      ? source === 'demo'
+        ? c.player.end.demoTitle
+        : source === 'review'
+          ? c.player.end.reviewTitle
+          : c.player.end.listTitle
+      : !playing
+        ? c.player.paused
+        : phase === 'rate'
+          ? // The grades are in the full player (owner decision); the hold asks for a tap there.
+            c.player.miniRate
+          : phaseInstruction(c, phase, prompt.lang, phrase.targetLang);
 
   const onDragEnd = (_: unknown, info: PanInfo) => {
     clicks.release();
@@ -60,7 +81,15 @@ export function MiniPlayer({ onOpenPlayer }: { onOpenPlayer: () => void }) {
         >
           {/* Under 18rem (about 150% text on a phone) the cover gives way and the title may take two
               lines, so it isn't crushed to one letter between the cover and the two buttons. */}
-          <SetCover set={set ?? { topicId: null, coverIcon: 'edit_note' }} size="sm" className="w-11 h-11 rounded-lg shrink-0 @max-[18rem]:hidden" />
+          <span className="relative shrink-0 @max-[18rem]:hidden">
+            <SetCover set={set ?? { topicId: null, coverIcon: 'edit_note' }} size="sm" className="w-11 h-11 rounded-lg" />
+            {/* The step at a glance: listening, your turn, hearing it, or rating. */}
+            {playing && !audioError && (
+              <span aria-hidden="true" className="absolute -bottom-1 -right-1 size-5 rounded-full bg-primary-fixed text-on-primary-fixed flex items-center justify-center ring-2 ring-inverse-surface">
+                <Icon name={phase === 'rate' ? 'task_alt' : PHASE_ICONS[phase]} className="text-[14px]" />
+              </span>
+            )}
+          </span>
           <span className="min-w-0">
             <span
               lang={revealed ? phrase.targetLang : prompt.lang}
@@ -69,13 +98,7 @@ export function MiniPlayer({ onOpenPlayer }: { onOpenPlayer: () => void }) {
               {title}
             </span>
             <span id={statusId} className="block text-label text-secondary-fixed-dim truncate">
-              {audioError
-                ? audioError.reason === 'no-voice'
-                  ? c.player.noVoice
-                  : c.player.silent
-                : playing
-                  ? phaseInstruction(c, phase, prompt.lang, phrase.targetLang)
-                  : c.player.paused}
+              {status}
               <span className="sr-only">. {languageLabel(phrase.targetLang, c.locale)}</span>
             </span>
           </span>
@@ -97,8 +120,12 @@ export function MiniPlayer({ onOpenPlayer }: { onOpenPlayer: () => void }) {
           <Icon name="skip_next" fill className="text-icon-lg" />
         </button>
       </div>
-      <div className="absolute bottom-0 inset-x-2 h-0.5 bg-inverse-on-surface/20 rounded-full" aria-hidden="true">
-        <div className="h-full bg-primary-fixed rounded-full" style={{ width: `${progress * 100}%` }} />
+      <div className="absolute bottom-0 inset-x-2 h-1 bg-inverse-on-surface/20 rounded-full overflow-hidden" aria-hidden="true">
+        {timed ? (
+          <PhaseFill deplete={phase === 'rate'} className="inset-0 bg-primary-fixed rounded-full" />
+        ) : (
+          <div className="h-full bg-primary-fixed rounded-full" style={{ width: `${progress * 100}%` }} />
+        )}
       </div>
     </motion.div>
   );

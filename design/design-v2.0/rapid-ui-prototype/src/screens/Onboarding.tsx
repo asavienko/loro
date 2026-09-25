@@ -36,7 +36,7 @@ export function Onboarding() {
     if (!demo) actions.setPrefs({ skippedDemo: true });
     const first = courseSets(state.learner)[0]?.phraseIds[0];
     if (demo && first) {
-      nav.playList([first]);
+      nav.playList([first], 0, { kind: 'demo' });
       nav.openPlayer();
     }
   };
@@ -98,7 +98,7 @@ export function Onboarding() {
               {c.onboarding.loopSteps(native, target).map((text, i) => (
                 <li key={text} className="flex gap-3 items-start">
                   <span className="w-9 h-9 rounded-full bg-primary-fixed text-on-primary-fixed flex items-center justify-center shrink-0">
-                    <Icon name={(['hearing', 'mic', 'volume_up', 'task_alt'] as IconName[])[i]} className="text-icon-md" />
+                    <Icon name={(['hearing', 'record_voice_over', 'volume_up', 'task_alt'] as IconName[])[i]} className="text-icon-md" />
                   </span>
                   <span className="text-body pt-1.5">{text}</span>
                 </li>

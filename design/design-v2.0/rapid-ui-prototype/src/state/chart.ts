@@ -59,6 +59,7 @@ export const STATUS_EDGES: { from: PlayerStatus; event: string; to: PlayerStatus
   { from: 'idle', event: 'ENQUEUE', to: 'paused' },
   { from: 'playing', event: 'PAUSE', to: 'paused' },
   { from: 'playing', event: 'PHASE_DONE (end of queue, or audio failed)', to: 'paused' },
+  { from: 'playing', event: 'NEXT (past the end of a one-pass queue)', to: 'paused' },
   { from: 'paused', event: 'PLAY', to: 'playing' },
   { from: 'paused', event: 'LOAD', to: 'playing' },
   { from: 'paused', event: 'JUMP (play now)', to: 'playing' },

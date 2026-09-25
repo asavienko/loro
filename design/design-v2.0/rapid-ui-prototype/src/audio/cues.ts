@@ -65,6 +65,11 @@ export function turnCue() {
   tone(880, 0.1, 0.16);
 }
 
+/** The rating hold begins: one soft, neutral note, so the silence that follows isn't a mystery. */
+export function holdCue() {
+  tone(587.33, 0, 0.14, 0.05);
+}
+
 /** Easy: a light tap. */
 export function easyCue() {
   vibrate(15);

@@ -6,7 +6,9 @@
 //   native (hear it in your language) → pause (say it yourself) → target (hear it)
 // then a short hold for a rating if there is none, then the next phrase. At the
 // end of the queue the play mode decides: play it again, or continue with the
-// next phrases of the course. The allowed events per status are in chart.ts.
+// next phrases of the course — except a queue with a natural end (a review, the
+// demo, a Library list), which plays once and stops. The allowed events per status
+// are in chart.ts.
 import { findPhrase, keyOf, OWN_PHRASE_PREFIX, OWN_SET_PREFIX } from './catalog';
 import { clip, LIMITS, tidy } from './limits';
 import { canHandle } from './chart';
@@ -14,7 +16,7 @@ import { initialPlayer, initialState } from './initial';
 import { insertEntry, RATING_WINDOW_MS } from './memory';
 import { committedIn, mergeLearner, mergePending, mergePrefs, ratingCommitId, ratingEntry } from './merge';
 import { sanitizeState } from './persistence';
-import { continuation, currentPhraseId, displayLearner, repeatsFor } from './selectors';
+import { continuation, currentPhraseId, displayLearner, phaseDurationMs, repeatsFor } from './selectors';
 import type {
   AppState,
   AudioFailure,
@@ -25,6 +27,7 @@ import type {
   PlayerState,
   Prefs,
   Profile,
+  QueueSource,
   RepeatsSetting,
   Speed,
 } from './types';
@@ -39,7 +42,17 @@ export const RESTART_THRESHOLD_MS = 3000;
 export const RELEARN_GAP = 4;
 
 export type AppEvent =
-  | { type: 'LOAD'; phraseIds: string[]; setId: string | null; startIndex?: number; shuffle?: boolean; now: number; seed: number }
+  | {
+      type: 'LOAD';
+      phraseIds: string[];
+      setId: string | null;
+      startIndex?: number;
+      shuffle?: boolean;
+      /** Where an unnamed queue comes from; such a queue plays once (see QueueSource). */
+      source?: QueueSource | null;
+      now: number;
+      seed: number;
+    }
   | { type: 'PLAY'; now: number }
   | { type: 'PAUSE'; now: number }
   | {
@@ -57,7 +70,8 @@ export type AppEvent =
   | { type: 'PREV'; now: number }
   | { type: 'JUMP'; index: number; now: number; play?: boolean }
   | { type: 'RATE'; grade: Grade; now: number }
-  | { type: 'UNRATE'; now: number }
+  /** Undo a rating inside its window: the current phrase's, or `phraseId`'s (the phrase has moved on). */
+  | { type: 'UNRATE'; now: number; phraseId?: string }
   | { type: 'COMMIT'; now: number }
   | { type: 'SET_PREFS'; prefs: Partial<Prefs>; now: number }
   | { type: 'TOGGLE_SHUFFLE'; seed: number }
@@ -151,8 +165,29 @@ function withPlayer(state: AppState, player: PlayerState): AppState {
   return { ...state, player };
 }
 
-/** Past the last phrase: the play mode decides what happens. */
+/** A queue with a natural end (a review, the demo, a Library list) plays once, in either mode. */
+export function playsOnce(player: Pick<PlayerState, 'source'>): boolean {
+  return player.source !== null;
+}
+
+/** Whether rating the current phrase `grade` brings it back a few phrases later in this queue. */
+export function requeuesOn(player: PlayerState, grade: Grade): boolean {
+  const id = currentPhraseId(player);
+  const upNext = player.order.slice(player.index + 1);
+  // Missed or hard, with at least one other phrase first. On the last phrase there's none, so
+  // it isn't re-queued: it would replay at once (and in repeat mode the queue would grow each pass).
+  return id !== null && (grade === 'missed' || grade === 'hard') && upNext.length > 0 && !upNext.includes(id);
+}
+
+/** Stop on the last phrase, ready to replay it: the queue has ended. */
+function stopAtTheEnd(player: PlayerState, now: number): PlayerState {
+  return { ...stopClock(player, now), status: 'paused', phase: 'native', repetition: 1, cycle: player.cycle + 1, ended: true };
+}
+
+/** Past the last phrase: a one-pass queue ends; otherwise the play mode decides what happens. */
 function pastTheEnd(state: AppState, player: PlayerState, now: number, fromLastPhase: boolean): AppState {
+  // Next on the last phrase ends it too: the learner is done with it.
+  if (playsOnce(player)) return withPlayer(state, stopAtTheEnd(player, now));
   if (state.prefs.playMode === 'repeat' && player.order.length > 0) {
     const session = player.session ? { ...player.session, passes: player.session.passes + 1 } : null;
     return withPlayer(state, enterPhrase(state, { ...player, session }, 0, now));
@@ -170,15 +205,8 @@ function pastTheEnd(state: AppState, player: PlayerState, now: number, fromLastP
     return withPlayer(state, enterPhrase(state, extended, player.index + 1, now));
   }
   if (!fromLastPhase) return state;
-  // Nothing left to continue with: stop on the last phrase, ready to replay it.
-  return withPlayer(state, {
-    ...stopClock(player, now),
-    status: 'paused',
-    phase: 'native',
-    repetition: 1,
-    cycle: player.cycle + 1,
-    ended: true,
-  });
+  // Nothing left to continue with.
+  return withPlayer(state, stopAtTheEnd(player, now));
 }
 
 function advance(state: AppState, player: PlayerState, now: number, fromLastPhase: boolean): AppState {
@@ -236,6 +264,27 @@ const trimmed = (text: string, max: number) => clip(tidy(text), max);
 // ---------- the machine ----------
 
 export function transition(state: AppState, event: AppEvent): AppState {
+  return withPhaseTiming(state, step(state, event), 'now' in event ? event.now : null);
+}
+
+/**
+ * The running phase's start and, for the learner's turn and the rating hold, its length,
+ * fixed when it starts (a phase starts whenever the cycle moves on while playing, or
+ * playback starts). Later setting changes don't stretch a phase already running, just as
+ * they don't restart it. Nothing runs while paused.
+ */
+function withPhaseTiming(before: AppState, after: AppState, now: number | null): AppState {
+  const player = after.player;
+  if (player === before.player) return after;
+  if (player.status !== 'playing') {
+    return player.phaseStartedAt === null && player.phaseMs === null ? after : withPlayer(after, { ...player, phaseStartedAt: null, phaseMs: null });
+  }
+  const started = player.cycle !== before.player.cycle || before.player.status !== 'playing';
+  if (!started || now === null) return after;
+  return withPlayer(after, { ...player, phaseStartedAt: now, phaseMs: phaseDurationMs(after) });
+}
+
+function step(state: AppState, event: AppEvent): AppState {
   if (!canHandle(state.player.status, event.type)) return state;
   const { player, learner } = state;
   const currentId = currentPhraseId(player);
@@ -258,6 +307,7 @@ export function transition(state: AppState, event: AppEvent): AppState {
         order,
         cycle: player.cycle + 1,
         session,
+        source: event.source ?? null,
       };
       return withPlayer(next, enterPhrase(next, loaded, shuffle ? 0 : start, event.now));
     }
@@ -354,12 +404,9 @@ export function transition(state: AppState, event: AppEvent): AppState {
         const rating = { key, phraseId: currentId, setId: player.setId, grade: event.grade, at: event.now, changedAt: event.now };
         next = { ...committed, pending: [...committed.pending.filter((p) => p !== existing), rating] };
       }
-      // Missed or hard: bring it back a few phrases later in this queue, with at least one
-      // other phrase first. On the last phrase there's none, so it isn't re-queued: it would
-      // replay at once (and in repeat mode the queue would grow each pass).
+      // Missed or hard: bring it back a few phrases later in this queue.
       let nextPlayer = player;
-      const upNext = player.order.slice(player.index + 1);
-      if ((event.grade === 'missed' || event.grade === 'hard') && upNext.length > 0 && !upNext.includes(currentId)) {
+      if (requeuesOn(player, event.grade)) {
         const at = Math.min(player.order.length, player.index + 1 + RELEARN_GAP);
         nextPlayer = { ...player, order: [...player.order.slice(0, at), currentId, ...player.order.slice(at)] };
       }
@@ -368,8 +415,9 @@ export function transition(state: AppState, event: AppEvent): AppState {
     }
 
     case 'UNRATE': {
-      if (currentId === null) return state;
-      const key = keyOf(learner, currentId);
+      const id = event.phraseId ?? currentId;
+      if (id === null) return state;
+      const key = keyOf(learner, id);
       const committed = commitDue(state, event.now);
       // A tombstone until the window closes, so the undo wins over another tab's copy.
       return {

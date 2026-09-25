@@ -1,4 +1,5 @@
 import { createContext, useContext } from 'react';
+import type { QueueSource } from '../state/types';
 import type { Route } from './routes';
 
 /** Everything a screen can ask the shell to do. The callbacks are stable across renders. */
@@ -10,8 +11,8 @@ export interface Navigation {
   playSet: (setId: string, options?: { phraseIds?: string[]; startIndex?: number; shuffle?: boolean }) => void;
   /** Play a phrase within its own set, from that phrase onwards. */
   playPhraseInSet: (phraseId: string) => void;
-  /** Play an explicit list (reviews, liked phrases). */
-  playList: (phraseIds: string[], startIndex?: number) => void;
+  /** Play an explicit list (reviews, liked phrases); a `source` names it and makes it play once. */
+  playList: (phraseIds: string[], startIndex?: number, source?: QueueSource) => void;
   openPlayer: () => void;
   openQueue: () => void;
   openSummary: () => void;
@@ -23,6 +24,8 @@ export interface Navigation {
   /** New set, optionally holding these phrases; `rename` edits an own set instead. */
   createSet: (phraseIds?: string[], rename?: string) => void;
   openSettings: () => void;
+  /** Settings, scrolled to its voice pickers with the first one focused (the player's voice line). */
+  openVoiceSettings: () => void;
 }
 
 export const NavContext = createContext<Navigation | null>(null);

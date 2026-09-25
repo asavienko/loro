@@ -6,16 +6,21 @@ import { useEffect } from 'react';
 import { useLatest } from '../lib/useLatest';
 import { findPhrase, findSetView, promptOf } from '../state/catalog';
 import { currentPhraseId } from '../state/selectors';
-import { useStore } from '../state/store';
-import { isTargetRevealed } from '../ui/phase';
+import { useCopy, useStore } from '../state/store';
+import { isTargetRevealed, phaseInstruction, queueTitle } from '../ui/phase';
 
 export function useMediaSession(): void {
+  const c = useCopy();
   const { state, actions } = useStore();
   const phraseId = currentPhraseId(state.player);
   const phrase = findPhrase(state.learner, phraseId);
   const revealed = isTargetRevealed(state.player);
-  const title = phrase ? (revealed ? phrase.target : promptOf(phrase, state.learner.profile.nativeLang).text) : null;
-  const artist = findSetView(state.learner, state.player.setId)?.title ?? 'Loro';
+  const prompt = phrase ? promptOf(phrase, state.learner.profile.nativeLang) : null;
+  const title = phrase && prompt ? (revealed ? phrase.target : prompt.text) : null;
+  const queue = queueTitle(c, state.player, findSetView(state.learner, state.player.setId));
+  // Eyes off the screen (lock screen, a watch): what to do now, then the queue.
+  const artist =
+    phrase && prompt && state.player.status === 'playing' ? `${phaseInstruction(c, state.player.phase, prompt.lang, phrase.targetLang)} · ${queue}` : queue;
 
   const handlers = useLatest(actions);
 

@@ -224,3 +224,35 @@ describe('loading', () => {
     assert.equal(state.learner.likes['set:set-cafe'].liked, true, 'the fallback session’s progress is not lost');
   });
 });
+
+describe('persistence of the player’s round-3 settings', () => {
+  it('keeps a longer pause and a folded queue hint; anything else is the default', () => {
+    const s = run(fresh(), { type: 'SET_PREFS', prefs: { pauseLength: 'longer', queueHintDone: true }, now: T0 });
+    const back = parseState(serializeState(s), device)!;
+    assert.equal(back.prefs.pauseLength, 'longer');
+    assert.equal(back.prefs.queueHintDone, true);
+    const raw = JSON.parse(serializeState(s));
+    raw.prefs.pauseLength = 'forever';
+    raw.prefs.queueHintDone = 'yes';
+    const odd = sanitizeState(raw, device)!;
+    assert.equal(odd.prefs.pauseLength, 'standard');
+    assert.equal(odd.prefs.queueHintDone, false);
+    // A save from before these settings existed.
+    delete raw.prefs.pauseLength;
+    assert.equal(sanitizeState(raw, device)!.prefs.pauseLength, 'standard');
+  });
+
+  it('keeps where a queue came from, only in a known shape, and never a running phase', () => {
+    const s = transition(fresh(), { type: 'LOAD', phraseIds: ['cafe-01'], setId: null, source: { kind: 'library', view: 'due' }, now: T0, seed: 1 });
+    const back = parseState(serializeState(s), device)!;
+    assert.deepEqual(back.player.source, { kind: 'library', view: 'due' });
+    assert.deepEqual([back.player.phaseStartedAt, back.player.phaseMs], [null, null]);
+    const raw = JSON.parse(serializeState(s));
+    for (const bad of [{ kind: 'library', view: 'ownSets' }, { kind: 'mystery' }, 'review', null]) {
+      raw.player.source = bad;
+      assert.equal(sanitizeState(raw, device)!.player.source, null, JSON.stringify(bad));
+    }
+    raw.player.source = { kind: 'review', extra: 1 };
+    assert.deepEqual(sanitizeState(raw, device)!.player.source, { kind: 'review' });
+  });
+});
