@@ -57,6 +57,17 @@ for (const viewport of [
       await expect(page.getByRole('button', { name: /^Learned 3/ })).toBeAttached();
     });
 
+    test('a set page shows its first phrase above the mini-player (V-04)', async ({ page }) => {
+      await withMiniPlayer(page);
+      const miniTop = await open(page, '#/set/set-cafe?from=explore');
+      const row = (await page.getByRole('main').getByRole('listitem').first().boundingBox())!;
+      expect(row.y + row.height).toBeLessThanOrEqual(miniTop);
+      // Cover and title side by side, whatever the title's length.
+      const cover = (await page.locator('main section span.block.overflow-hidden[aria-hidden="true"]').first().boundingBox())!;
+      const title = (await page.getByRole('heading', { level: 1 }).boundingBox())!;
+      expect(title.x).toBeGreaterThanOrEqual(cover.x + cover.width);
+    });
+
     test("Home's Learned lands on the Learned list, its chip and first phrase in view", async ({ page }) => {
       await withMiniPlayer(page);
       await page.goto('/');

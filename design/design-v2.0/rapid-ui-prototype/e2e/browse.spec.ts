@@ -183,7 +183,7 @@ test.describe('sets you make', () => {
 
   test('the sort is remembered per set', async ({ page }) => {
     await page.goto('/#/set/set-cafe?from=explore');
-    await page.getByRole('button', { name: 'Set order' }).click();
+    await page.getByRole('button', { name: /Set order/ }).click();
     await page.getByRole('radio', { name: 'A–Z' }).click();
     await expect(page.getByText('Plays in: A–Z')).toBeVisible();
     await page.reload();
