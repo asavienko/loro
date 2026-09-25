@@ -1,4 +1,4 @@
-import { expect, expectAccessible, test } from './fixtures';
+import { expect, expectAccessible, sampleHistory, test } from './fixtures';
 
 test.describe('onboarding', () => {
   test.use({ seed: null });
@@ -20,6 +20,21 @@ test.describe('onboarding', () => {
     await expect(page.getByRole('dialog', { name: 'Now playing' })).toBeVisible();
     await page.getByRole('button', { name: 'Close player' }).click();
     await expect(page.getByRole('heading', { name: '¡Hola, Clara!' })).toBeVisible();
+  });
+
+  test('the demo is one pass, then hands over to a whole set', async ({ page }) => {
+    await page.goto('/');
+    for (let i = 0; i < 4; i++) await page.getByRole('button', { name: 'Continue' }).click();
+    await page.getByRole('button', { name: 'Start with one phrase' }).click();
+    const player = page.getByRole('dialog', { name: 'Now playing' });
+    await expect(player.getByRole('heading', { level: 1 })).toHaveText('Try the loop');
+    await player.getByRole('button', { name: 'Next phrase' }).click();
+    await expect(player.getByRole('heading', { name: 'That’s the loop' })).toBeVisible();
+    await expect(player.getByRole('button', { name: 'Pause', exact: true })).toHaveCount(0);
+    await player.getByRole('button', { name: 'Start Café & Mañanas' }).click();
+    await expect(player.getByRole('heading', { level: 1 })).toHaveText('Café & Mañanas');
+    await expect(player.getByText('1 of 5')).toBeVisible();
+    await expect(player.getByRole('button', { name: 'Pause', exact: true })).toBeVisible();
   });
 
   test('a Bulgarian speaker gets the UI in Bulgarian and only the Spanish course', async ({ page }) => {
@@ -213,6 +228,37 @@ test.describe('the loop', () => {
     await page.getByRole('button', { name: /^Now playing:/ }).click();
     await page.getByRole('button', { name: 'Notes' }).click();
     await expect(page.getByRole('dialog', { name: 'Notes' }).getByRole('heading', { name: '«Me pone…»' })).toBeVisible();
+  });
+});
+
+test.describe('queues with a natural end', () => {
+  test.use({ seed: { log: sampleHistory(Date.now()) } });
+
+  test('a review is named, plays once in repeat mode and stops on "Review done"', async ({ page }) => {
+    await page.clock.install();
+    await page.goto('/');
+    await page.getByRole('button', { name: /^Play 7 phrases/ }).click();
+    await page.getByRole('button', { name: /^Now playing:/ }).click();
+    const player = page.getByRole('dialog', { name: 'Now playing' });
+    await expect(player.getByRole('heading', { level: 1 })).toHaveText('Review');
+    for (let i = 0; i < 6; i++) await player.getByRole('button', { name: 'Next phrase' }).click();
+    await expect(player.getByText('7 of 7')).toBeVisible();
+    // Let the last phrase play out, hold included: it doesn't start the review again.
+    for (let t = 0; t < 40_000; t += 500) await page.clock.runFor(500);
+    await expect(player.getByRole('heading', { name: 'Review done' })).toBeVisible();
+    await expect(player.getByText(/^\d+ rated · /)).toBeVisible();
+    await expect(player.getByText('7 of 7')).toBeVisible();
+    await expect(page.getByText('Queue played through')).toHaveCount(0);
+    await expect(player.getByRole('button', { name: /^Continue / })).toBeVisible();
+    await player.getByRole('button', { name: 'Close', exact: true }).click();
+    await expect(player).toHaveCount(0);
+  });
+
+  test('a Library list is named by its view', async ({ page }) => {
+    await page.goto('/#/library?view=due');
+    await page.getByRole('button', { name: /^Play all/ }).click();
+    await page.getByRole('button', { name: /^Now playing:/ }).click();
+    await expect(page.getByRole('dialog', { name: 'Now playing' }).getByRole('heading', { level: 1 })).toHaveText('Due');
   });
 });
 

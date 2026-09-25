@@ -245,6 +245,20 @@ export function makeEn(n: Plural) {
       audioError: (language: string) =>
         `This device has no ${language} voice, so the phrase can’t play. Add one in your system’s speech settings, then press Play.`,
       showText: (language: string) => `Show the ${language} text`,
+      /** The panel a queue with a natural end stops on (a review, the demo, a Library list). */
+      end: {
+        reviewTitle: 'Review done',
+        listTitle: 'All played',
+        rated: (count: number) => `${count} rated`,
+        nextReview: (when: string) => `Next review ${when}`,
+        nothingDue: 'Nothing due yet',
+        continueSet: (title: string) => `Continue ${title}`,
+        playAgain: 'Play again',
+        demoTitle: 'That’s the loop',
+        demoBody: 'Hear it, say it out loud, hear it, rate it. Ready for a whole set?',
+        startSet: (title: string) => `Start ${title}`,
+        notNow: 'Not now',
+      },
       noVoice: 'No voice for this language',
       audioSilent: 'Speech stopped before the phrase played. Press Play to try again.',
       silent: 'Speech stopped — press Play',

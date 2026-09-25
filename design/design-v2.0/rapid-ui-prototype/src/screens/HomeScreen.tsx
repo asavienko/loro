@@ -71,7 +71,7 @@ export function HomeScreen() {
           <button
             type="button"
             onClick={() => {
-              nav.playList([firstPhrase]);
+              nav.playList([firstPhrase], 0, { kind: 'demo' });
               nav.openPlayer();
             }}
             className="mt-3 min-h-12 px-5 rounded-full bg-primary-container text-on-primary font-bold inline-flex items-center gap-2"
@@ -93,7 +93,7 @@ export function HomeScreen() {
             <PlayButton
               label={c.home.playPhrases(review.length)}
               detail={reviewMs === null ? null : c.home.duration(formatElapsed(reviewMs))}
-              onClick={() => nav.playList(review)}
+              onClick={() => nav.playList(review, 0, { kind: 'review' })}
             />
           </div>
         )}

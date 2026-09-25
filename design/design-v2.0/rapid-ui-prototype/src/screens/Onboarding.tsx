@@ -34,7 +34,7 @@ export function Onboarding() {
     if (!demo) actions.setPrefs({ skippedDemo: true });
     const first = courseSets(state.learner)[0]?.phraseIds[0];
     if (demo && first) {
-      nav.playList([first]);
+      nav.playList([first], 0, { kind: 'demo' });
       nav.openPlayer();
     }
   };

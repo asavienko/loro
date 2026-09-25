@@ -1,5 +1,5 @@
 import { motion, PanInfo, useDragControls } from 'motion/react';
-import { PointerEvent, ReactNode, useRef, useState } from 'react';
+import { PointerEvent, ReactNode, useEffect, useRef, useState } from 'react';
 import { voiceName, voicesFor } from '../audio/speech';
 import { languageLabel, languageName } from '../copy';
 import { getLanguage, Phrase } from '../content';
@@ -8,7 +8,7 @@ import { useClickBlockerDuringDrag } from '../lib/suppressClick';
 import { useNav } from '../nav/NavContext';
 import { findPhrase, findSetView, promptOf } from '../state/catalog';
 import { formatElapsed, formatInterval, formatWhen } from '../state/clock';
-import { REPEAT_SETTINGS, SPEEDS } from '../state/machine';
+import { playsOnce, REPEAT_SETTINGS, SPEEDS } from '../state/machine';
 import { RATING_WINDOW_MS } from '../state/memory';
 import {
   currentPhraseId,
@@ -17,14 +17,17 @@ import {
   listenedMs,
   pendingFor,
   phraseFullPlayMs,
+  playableIds,
   previewDue,
+  sessionSummary,
+  suggestedSetId,
   windowLeft,
 } from '../state/selectors';
 import { useCopy, useNow, useStore } from '../state/store';
 import type { Grade, Phase } from '../state/types';
 import { Icon, IconName } from '../ui/Icon';
 import { PhraseNotesView } from '../ui/Notes';
-import { isTargetRevealed, PHASE_ICONS, phaseInstruction, phaseStepLabel } from '../ui/phase';
+import { isTargetRevealed, PHASE_ICONS, phaseInstruction, phaseStepLabel, queueTitle } from '../ui/phase';
 import { GlossedPhrase, HiddenPhrase } from '../ui/PhraseText';
 import { SetCover } from '../ui/SetCover';
 import { PhaseFill } from '../ui/PhaseFill';
@@ -78,6 +81,8 @@ export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps
   const targetName = languageName(phrase.targetLang, c.locale);
   const queueSet = findSetView(state.learner, state.player.setId);
   const coverSet = findSetView(state.learner, phrase.setId) ?? queueSet;
+  // A review, the demo or a Library list played through: an end panel instead of the loop.
+  const endedOnce = state.player.ended && playsOnce(state.player);
   const quiet = !state.prefs.announceEveryStep;
 
   const onDragEnd = (_: unknown, info: PanInfo) => {
@@ -137,7 +142,7 @@ export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps
             className="font-serif text-row font-semibold text-on-surface line-clamp-2 break-normal hyphens-auto text-center max-w-full leading-tight"
           >
             {/* The count is already in the position line below. */}
-            {queueSet?.title ?? c.queue.title}
+            {queueTitle(c, state.player, queueSet)}
           </h1>
           <p className="text-label text-secondary tabular-nums">{c.player.position(index + 1, order.length)}</p>
         </div>
@@ -171,7 +176,7 @@ export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps
             <ActionRow phrase={phrase} onNotes={() => setNotesOpen(true)} />
 
             {/* The loop: prompt → your turn → target, with real repetition and time */}
-            <div className="flex flex-col gap-1.5">
+            <div className={`flex flex-col gap-1.5 ${endedOnce ? 'hidden' : ''}`}>
               <PlayTime phrase={phrase} />
               <Steps phrase={phrase} promptLang={prompt.lang} />
               {audioError ? (
@@ -199,10 +204,10 @@ export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps
         </div>
 
         <div className="shrink-0 px-5 pt-2 pb-[max(env(safe-area-inset-bottom),0.75rem)] border-t border-surface-container-high flex flex-col gap-2 max-h-[60dvh] overflow-y-auto phone-landscape:border-t-0 phone-landscape:self-center phone-landscape:max-h-full phone-landscape:py-2 lg:col-start-2 lg:row-start-2 lg:px-0 lg:border-t-0 lg:max-h-none lg:overflow-visible lg:pb-6">
-          <Rating phrase={phrase} />
-          <Transport />
+          {endedOnce ? <EndPanel onClose={onClose} /> : <Rating phrase={phrase} />}
+          {!endedOnce && <Transport />}
           {/* Speed: the only speed control in the app (a chip in the action row when compact). */}
-          <div role="radiogroup" aria-label={c.player.speed} className={`grid grid-cols-3 gap-1 p-0.5 w-full max-w-[18rem] mx-auto bg-surface-container-low rounded-full ${ROOMY_ONLY}`}>
+          <div role="radiogroup" aria-label={c.player.speed} className={`grid grid-cols-3 gap-1 p-0.5 w-full max-w-[18rem] mx-auto bg-surface-container-low rounded-full ${ROOMY_ONLY} ${endedOnce ? '!hidden' : ''}`}>
             {SPEEDS.map((s) => (
               <button
                 key={s}
@@ -489,6 +494,78 @@ function Rating({ phrase }: { phrase: Phrase }) {
       </div>
       {hold && <PhaseFill deplete className="left-4 right-4 bottom-1 h-1 rounded-full bg-primary-container" />}
     </div>
+  );
+}
+
+/**
+ * Where a queue with a natural end stops (in either play mode): a review says it's done and
+ * when the next one is; the demo hands over to a whole set; a Library list can play again.
+ * Every figure is the session's own (sessionSummary), with this session's ratings counted.
+ */
+function EndPanel({ onClose }: { onClose: () => void }) {
+  const c = useCopy();
+  const nav = useNav();
+  const { state, actions } = useStore();
+  const { announce } = useToast();
+  const now = useNow(30_000);
+  const heading = useRef<HTMLHeadingElement>(null);
+  const source = state.player.source;
+  const summary = sessionSummary(state, now);
+  const rated = summary ? summary.ratings.missed + summary.ratings.hard + summary.ratings.easy : 0;
+  const suggested = findSetView(state.learner, suggestedSetId(state.learner, now));
+  const next = !summary
+    ? c.player.end.nothingDue
+    : summary.dueNow > 0
+      ? c.home.reviewBody(summary.dueNow)
+      : summary.nextDue
+        ? c.player.end.nextReview(formatWhen(summary.nextDue.at, now, c.locale))
+        : c.player.end.nothingDue;
+  const demo = source?.kind === 'demo';
+  const title = demo ? c.player.end.demoTitle : source?.kind === 'review' ? c.player.end.reviewTitle : c.player.end.listTitle;
+  const body = demo ? c.player.end.demoBody : `${c.player.end.rated(rated)} · ${next}`;
+  const startSuggested = () => {
+    if (!suggested) return;
+    // Its phrases still worth playing (all of them for a new learner), with the player left open.
+    const ids = playableIds(state.learner, suggested.phraseIds, now);
+    nav.playSet(suggested.id, { phraseIds: ids.length > 0 ? ids : suggested.phraseIds });
+  };
+
+  // The transport has just gone: keep keyboard focus in the player, on the panel, and say it.
+  useEffect(() => {
+    const active = document.activeElement;
+    if (!active || active === document.body || !active.isConnected) heading.current?.focus({ preventScroll: true });
+    announce(`${title}. ${body}`);
+    // Once, when the queue ends.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <section aria-labelledby="end-panel-title" className="rounded-3xl bg-surface-container-low px-4 py-4 flex flex-col items-center gap-3 text-center">
+      <div>
+        <h2 id="end-panel-title" ref={heading} tabIndex={-1} className="font-serif text-heading font-semibold text-on-surface">
+          {title}
+        </h2>
+        <p className="text-body text-secondary mt-1">{body}</p>
+      </div>
+      <div className="w-full max-w-[20rem] flex flex-col gap-2">
+        {source?.kind === 'library' ? (
+          <button type="button" onClick={() => actions.jump(0, true)} className="min-h-12 px-5 rounded-full bg-primary-container text-on-primary font-bold inline-flex items-center justify-center gap-2">
+            <Icon name="replay" className="text-icon" />
+            {c.player.end.playAgain}
+          </button>
+        ) : (
+          suggested && (
+            <button type="button" onClick={startSuggested} className="min-h-12 px-5 rounded-full bg-primary-container text-on-primary font-bold inline-flex items-center justify-center gap-2">
+              <Icon name="play_arrow" fill className="text-icon" />
+              {demo ? c.player.end.startSet(suggested.title) : c.player.end.continueSet(suggested.title)}
+            </button>
+          )
+        )}
+        <button type="button" onClick={onClose} className="min-h-11 px-4 rounded-full text-body font-semibold text-primary-container">
+          {demo ? c.player.end.notNow : c.common.close}
+        </button>
+      </div>
+    </section>
   );
 }
 
