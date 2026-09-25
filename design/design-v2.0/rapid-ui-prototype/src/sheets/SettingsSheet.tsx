@@ -1,4 +1,5 @@
 import { SelectHTMLAttributes, useEffect, useId, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { bestVoice, speak, voicesFor } from '../audio/speech';
 import { useLatest } from '../lib/useLatest';
 import { useVoiceList } from '../lib/useVoiceList';
@@ -165,7 +166,12 @@ function VoicePickers({ langs }: { langs: LanguageCode[] }) {
               <button
                 type="button"
                 aria-label={c.onboarding.test(languageName(lang, c.locale))}
-                onClick={() => void speak(sampleText(lang), lang, state.prefs.speed).done}
+                onClick={() => {
+                  // One voice at a time: the sample would cut the player off mid-phrase. The
+                  // pause commits first (its effect stops the player's speech), then the sample.
+                  if (state.player.status === 'playing') flushSync(() => actions.pause());
+                  void speak(sampleText(lang), lang, state.prefs.speed).done;
+                }}
                 className="shrink-0 min-h-12 px-3 rounded-full bg-surface-container text-body font-semibold flex items-center gap-1.5"
               >
                 <Icon name="volume_up" className="text-icon-sm" />

@@ -449,3 +449,15 @@ test("a set page's Back returns to the filtered page it came from", async ({ pag
   await page.goBack();
   await expect(page).not.toHaveURL(/#\/set\//);
 });
+
+test("testing a voice in Settings pauses the player, so neither cuts the other off", async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: /^Play \d+ phrases/ }).first().click();
+  await page.getByRole('button', { name: /^Now playing:/ }).click();
+  await page.getByRole('button', { name: /^Voice: Test Español/ }).click();
+  await page.evaluate(() => (window.__spoken = []));
+  await page.getByRole('button', { name: 'Test Spanish' }).click();
+  await expect.poll(() => page.evaluate(() => window.__spoken.map((u) => u.text))).toContain('Me pone un cortado, por favor');
+  await page.getByRole('dialog', { name: 'Settings' }).getByRole('button', { name: 'Close' }).click();
+  await expect(page.getByRole('dialog', { name: 'Now playing' }).getByRole('button', { name: 'Play', exact: true })).toBeVisible();
+});
