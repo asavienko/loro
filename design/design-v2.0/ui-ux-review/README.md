@@ -726,6 +726,11 @@ a meaning. Both want a real screen-reader pass (VoiceOver, TalkBack, NVDA).
 Playwright: 154 on the dev server and 153 against the production build; random walks found no page
 error; with a year of history, playback shows no long main-thread task.
 
+**WebKit (iOS's engine):** the suite now also runs with `BROWSER=webkit` (150 passed; the Tab and
+DevTools-protocol tests skip). It found that Settings' selects were 26 px targets in WebKit, which
+ignores a native select's height (now drawn by the app, 48 px), and a focus race after creating a
+set from a sheet (fixed).
+
 **Open question:** "Full play 0:41 at 1×" is speech plus pauses, measured; it leaves out the 4 s
 rating hold (only for unrated phrases) and the engine's start-up delay, so an unrated new set can
 take ~1:01. Should it include the hold for unrated phrases, or be relabelled "listening time"?
