@@ -168,8 +168,9 @@ export async function expectMobileBasics(page: Page) {
     };
     for (const el of document.querySelectorAll('button, a[href], input, select, [role="tab"], [role="radio"]')) {
       if (!visible(el)) continue;
-      // Words inside a sentence are exempt from the target size (WCAG 2.5.8 inline exception).
-      if (el.closest('h2') && getComputedStyle(el).display === 'inline') continue;
+      // The revealed phrase's glossed words are words in a sentence, exempt from the target size
+      // (WCAG 2.5.8 inline exception): exactly the buttons in the glossed heading that carry its hint.
+      if (el.closest('h2[data-glossed]') && el.hasAttribute('aria-describedby')) continue;
       if (el instanceof HTMLInputElement && (el.type === 'radio' || el.type === 'checkbox')) continue;
       const r = el.getBoundingClientRect();
       if (r.width < 43.5 || r.height < 43.5) out.push(`small target ${Math.round(r.width)}×${Math.round(r.height)}: ${(el.getAttribute('aria-label') ?? el.textContent ?? '').trim().slice(0, 40)}`);
