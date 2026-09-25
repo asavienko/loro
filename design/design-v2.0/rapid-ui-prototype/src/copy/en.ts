@@ -135,7 +135,7 @@ export function makeEn(n: Plural) {
       deleted: 'Set deleted',
       own: 'Your set',
       ownEmpty: 'Add phrases from their details (⋮) or from the player.',
-      findPhrases: 'Find phrases',
+      addPhrases: 'Add phrases',
       addedNext: 'Plays next',
       addedEnd: 'Added to queue',
       notFound: 'This set isn’t available.',
@@ -174,6 +174,12 @@ export function makeEn(n: Plural) {
       already: (title: string) => `Already in ${title}`,
       alreadyHere: 'Already in this set',
       none: 'You haven’t made a set yet.',
+    },
+    pickPhrases: {
+      search: 'Search phrases',
+      add: 'Add',
+      added: 'Added',
+      done: 'Done',
     },
     createSet: {
       title: 'New set',

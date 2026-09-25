@@ -126,7 +126,7 @@ export function makeBg(n: Plural): Copy {
       deleted: 'Наборът е изтрит',
       own: 'Ваш набор',
       ownEmpty: 'Добавяйте фрази от подробностите им (⋮) или от плейъра.',
-      findPhrases: 'Намерете фрази',
+      addPhrases: 'Добави фрази',
       addedNext: 'Ще е следваща',
       addedEnd: 'Добавено в опашката',
       notFound: 'Този набор не е достъпен.',
@@ -165,6 +165,12 @@ export function makeBg(n: Plural): Copy {
       already: (title) => `Вече е в „${title}“`,
       alreadyHere: 'Вече е в този набор',
       none: 'Все още нямате свои набори.',
+    },
+    pickPhrases: {
+      search: 'Търсене на фрази',
+      add: 'Добави',
+      added: 'Добавена',
+      done: 'Готово',
     },
     createSet: {
       title: 'Нов набор',

@@ -125,7 +125,7 @@ export function makeRu(n: Plural): Copy {
       deleted: 'Набор удалён',
       own: 'Ваш набор',
       ownEmpty: 'Добавляйте фразы из их подробностей (⋮) или из плеера.',
-      findPhrases: 'Найти фразы',
+      addPhrases: 'Добавить фразы',
       addedNext: 'Будет следующей',
       addedEnd: 'Добавлено в очередь',
       notFound: 'Этот набор недоступен.',
@@ -164,6 +164,12 @@ export function makeRu(n: Plural): Copy {
       already: (title) => `Уже в «${title}»`,
       alreadyHere: 'Уже в этом наборе',
       none: 'У вас пока нет своих наборов.',
+    },
+    pickPhrases: {
+      search: 'Поиск фраз',
+      add: 'Добавить',
+      added: 'Добавлена',
+      done: 'Готово',
     },
     createSet: {
       title: 'Новый набор',
