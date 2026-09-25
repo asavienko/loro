@@ -30,11 +30,21 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const [item, setItem] = useState<ToastItem | null>(null);
   const [message, setMessage] = useState('');
   const nextId = useRef(1);
+  // Said in the next frame; several in one frame are said together. Otherwise the last replaced
+  // the others unheard: a rating in the hold (with its Undo) and the end panel it led to.
+  const queued = useRef<string[]>([]);
 
   const announce = useCallback((text: string) => {
-    // Clearing first makes a repeated message count as new.
-    setMessage('');
-    requestAnimationFrame(() => setMessage(text));
+    if (queued.current.length === 0) {
+      // Clearing first makes a repeated message count as new.
+      setMessage('');
+      requestAnimationFrame(() => {
+        const texts = queued.current;
+        queued.current = [];
+        setMessage(texts.length === 1 ? texts[0] : texts.map((t) => (/[.!?…]$/.test(t) ? t : `${t}.`)).join(' '));
+      });
+    }
+    if (!queued.current.includes(text)) queued.current.push(text);
   }, []);
 
   // It stays while the learner is on it (hover or keyboard focus), then gives its time again.

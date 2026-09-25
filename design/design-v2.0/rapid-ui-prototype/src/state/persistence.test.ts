@@ -255,4 +255,18 @@ describe('persistence of the player’s round-3 settings', () => {
     raw.player.source = { kind: 'review', extra: 1 };
     assert.deepEqual(sanitizeState(raw, device)!.player.source, { kind: 'review' });
   });
+
+  it('keeps whether an ended queue heard its last target; a save without it keeps it hidden (R-01)', () => {
+    const review = transition(fresh(), { type: 'LOAD', phraseIds: ['cafe-01'], setId: null, source: { kind: 'review' }, now: T0, seed: 1 });
+    const skipped = run(review, { type: 'NEXT', now: T0 + 1 });
+    assert.equal(parseState(serializeState(skipped), device)!.player.targetHeard, false);
+    const heard = run(done(done(review, T0 + 1), T0 + 2), { type: 'NEXT', now: T0 + 3 });
+    assert.equal(parseState(serializeState(heard), device)!.player.targetHeard, true);
+    const raw = JSON.parse(serializeState(heard));
+    delete raw.player.targetHeard;
+    assert.equal(sanitizeState(raw, device)!.player.targetHeard, false, 'an older save');
+    // Mid-phrase, a restored player starts the phrase from its prompt: not heard in that play.
+    const midPhrase = JSON.parse(serializeState(done(done(review, T0 + 1), T0 + 2)));
+    assert.equal(sanitizeState(midPhrase, device)!.player.targetHeard, false);
+  });
 });

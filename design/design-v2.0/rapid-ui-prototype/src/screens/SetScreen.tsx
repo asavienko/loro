@@ -111,7 +111,10 @@ export function SetScreen({ setId }: { setId: string }) {
   const loaded = loadedHere.get(setId);
   const queue = isThisSet ? player.baseOrder : [];
   const dueNewQueue = loaded?.kind === 'dueNew' && sameList(queue, loaded.ids);
-  const wholeSetQueue = isThisSet && ((loaded?.kind === 'set' && loaded.sort === sort && sameList(queue, loaded.ids)) || sameList(queue, sortedIds));
+  // What Resume would play: the queue as it stands, so a phrase removed or moved in Up next
+  // means it is no longer the set in the order shown. A missed phrase's second copy aside.
+  const remaining = isThisSet ? player.order.filter((id, i, all) => all.indexOf(id) === i) : [];
+  const wholeSetQueue = isThisSet && ((loaded?.kind === 'set' && loaded.sort === sort && sameList(remaining, loaded.ids)) || sameList(remaining, sortedIds));
   // Paused on this whole set, in the order shown (not shuffled, not finished): Play resumes it.
   const resumes = wholeSetQueue && player.status === 'paused' && !player.shuffle && !player.ended && currentId !== null;
   // The big button pauses whatever this set is playing, except the due-and-new queue, which its own button pauses.
@@ -260,7 +263,8 @@ export function SetScreen({ setId }: { setId: string }) {
         ) : (
           <ul>
             {sorted.map(({ phrase, position, progress: p }, i) => {
-              const isCurrent = isThisSet && currentId === phrase.id;
+              // The phrase playing, whichever queue it plays in (this set, a review, a list).
+              const isCurrent = currentId === phrase.id;
               return (
                 <li key={phrase.id}>
                   <PhraseRow
@@ -268,9 +272,9 @@ export function SetScreen({ setId }: { setId: string }) {
                     leading={String(position)}
                     detail={progressLabel(c, p, now)}
                     isCurrent={isCurrent}
-                    isPlaying={isCurrent && playing}
+                    isPlaying={isCurrent && player.status === 'playing'}
                     // As in the queue: the playing phrase's Spanish stays hidden while you recall it.
-                    hideTarget={isCurrent && !isTargetRevealed(state.player)}
+                    hideTarget={isCurrent && !isTargetRevealed(player)}
                     onPlay={() => load('set', sortedIds, { startIndex: i })}
                     onMore={() => nav.showDetails(phrase.id, view.kind === 'own' ? { ownSetId: setId } : {})}
                   />

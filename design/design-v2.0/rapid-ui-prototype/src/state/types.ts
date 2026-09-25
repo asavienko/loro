@@ -33,6 +33,7 @@ export type LogEntry =
       /** Measured target and prompt audio at 1.0×, excluding engine start-up; null if not measured. */
       targetMs: number | null;
       nativeMs: number | null;
+      day?: LocalDay;
     }
   | {
       id: string;
@@ -43,6 +44,7 @@ export type LogEntry =
       phraseId: string;
       setId: string | null;
       grade: Grade;
+      day?: LocalDay;
     }
   | {
       id: string;
@@ -54,6 +56,14 @@ export type LogEntry =
     };
 
 export type LogKind = LogEntry['kind'];
+
+/**
+ * A local calendar day, "2026-09-24". A heard or rated entry is stamped with the learner's day
+ * as it is written, and calendar rules (the first-review cap) read that, so every device replays
+ * one log to the same schedule whatever its own time zone, and so does this one after travel.
+ * Entries from before the stamp have none: their day is worked out where they are replayed.
+ */
+export type LocalDay = string;
 
 /** A like with its time, so a like on one device and an unlike on another merge by last write. */
 export interface Like {
@@ -117,6 +127,8 @@ export interface PendingRating {
   changedAt: number;
   /** Undone inside its window: kept until the window closes so the undo reaches other tabs. */
   undone?: boolean;
+  /** The local day it was given, which its log entry keeps. */
+  day?: LocalDay;
 }
 
 export type PlayMode = 'repeat' | 'continue';
@@ -207,6 +219,11 @@ export interface PlayerState {
   source: QueueSource | null;
   /** The queue finished; Play starts the last phrase again. */
   ended: boolean;
+  /**
+   * This play of the current phrase has reached its target, so the learner has heard it. A queue
+   * that ends shows the target only then: Next on its last phrase ends it before it is heard.
+   */
+  targetHeard: boolean;
   /** Speech that failed, and why; playback stops until the learner presses Play. */
   audioError: AudioFailure | null;
   session: Session | null;
@@ -228,6 +245,8 @@ export interface PhraseMemory {
   fsrs: FsrsState | null;
   heardCount: number;
   firstHeardAt: number | null;
+  /** The local day of `firstHeardAt`, as the learner lived it. */
+  firstHeardDay: LocalDay | null;
   lastHeardAt: number | null;
   /** Recent measurements at 1.0×, newest last. */
   targetSamples: number[];

@@ -13,6 +13,7 @@ import { findPhrase, keyOf, OWN_PHRASE_PREFIX, OWN_SET_PREFIX } from './catalog'
 import { clip, LIMITS, tidy } from './limits';
 import { canHandle } from './chart';
 import { initialPlayer, initialState } from './initial';
+import { localDay } from './clock';
 import { insertEntry, RATING_WINDOW_MS } from './memory';
 import { committedIn, mergeLearner, mergePending, mergePrefs, ratingCommitId, ratingEntry } from './merge';
 import { sanitizeState } from './persistence';
@@ -83,11 +84,15 @@ export type AppEvent =
   /** Undo of Clear queue or Remove: back in up next, `offset` places after whatever is playing by then. */
   | { type: 'RESTORE_UP_NEXT'; phraseIds: string[]; offset?: number }
   | { type: 'TOGGLE_LIKE'; kind: 'phrase' | 'set'; id: string; now: number }
-  | { type: 'ADD_OWN_PHRASE'; target: string; native: string; now: number }
+  /**
+   * `id`: the one the store promised its caller (so a toast can play the phrase, or a page open the
+   * set, before the next render). Taken unless it's in use; otherwise the counter's next id.
+   */
+  | { type: 'ADD_OWN_PHRASE'; target: string; native: string; now: number; id?: string }
   | { type: 'EDIT_OWN_PHRASE'; id: string; target: string; native: string; now: number }
   | { type: 'DELETE_OWN_PHRASE'; id: string; now: number }
   | { type: 'RESTORE_OWN_PHRASE'; id: string; now: number }
-  | { type: 'CREATE_SET'; title: string; phraseIds: string[]; now: number }
+  | { type: 'CREATE_SET'; title: string; phraseIds: string[]; now: number; id?: string }
   /** `at` inserts at that position (undoing a removal); otherwise at the end. */
   | { type: 'ADD_TO_SET'; setId: string; phraseIds: string[]; at?: number; now: number }
   | { type: 'REMOVE_FROM_SET'; setId: string; phraseId: string; now: number }
@@ -156,6 +161,7 @@ function enterPhrase(state: AppState, player: PlayerState, index: number, now: n
     playingSince: playing ? now : null,
     cycle: player.cycle + 1,
     ended: false,
+    targetHeard: false,
     // A failure belonged to the phrase it happened on; the next one hasn't been tried.
     audioError: null,
   };
@@ -226,6 +232,7 @@ function recordHeard(state: AppState, phraseId: string, now: number, targetMs: n
     setId: state.player.setId,
     targetMs,
     nativeMs: state.player.nativeMsThisRep,
+    day: localDay(now),
   };
   const session = next.player.session;
   const heard = session && !(session.heard ?? []).includes(entry.key) ? { ...session, heard: [...(session.heard ?? []), entry.key] } : session;
@@ -344,7 +351,8 @@ function step(state: AppState, event: AppEvent): AppState {
             cycle: player.cycle + 1,
           });
         case 'pause':
-          return withPlayer(state, { ...player, phase: 'target', cycle: player.cycle + 1 });
+          // The target plays and shows from here: heard, even if Next cuts it short.
+          return withPlayer(state, { ...player, phase: 'target', targetHeard: true, cycle: player.cycle + 1 });
         case 'rate':
           return advance(state, player, event.now, true);
         case 'target': {
@@ -401,7 +409,7 @@ function step(state: AppState, event: AppEvent): AppState {
         next = { ...committed, pending: committed.pending.map((p) => (p === existing ? changed : p)) };
       } else {
         // New, or rated again after an undo: a fresh rating in place of the undo's tombstone.
-        const rating = { key, phraseId: currentId, setId: player.setId, grade: event.grade, at: event.now, changedAt: event.now };
+        const rating = { key, phraseId: currentId, setId: player.setId, grade: event.grade, at: event.now, changedAt: event.now, day: localDay(event.now) };
         next = { ...committed, pending: [...committed.pending.filter((p) => p !== existing), rating] };
       }
       // Missed or hard: bring it back a few phrases later in this queue.
@@ -545,7 +553,7 @@ function step(state: AppState, event: AppEvent): AppState {
       const native = trimmed(event.native, LIMITS.phrase);
       if (!target || !native) return state;
       const [seqId, next] = takeId(state);
-      const id = `${OWN_PHRASE_PREFIX}${seqId}`;
+      const id = event.id?.startsWith(OWN_PHRASE_PREFIX) && !learner.ownPhrases[event.id] ? event.id : `${OWN_PHRASE_PREFIX}${seqId}`;
       const { nativeLang, targetLang } = learner.profile;
       const phrase = { id, target, native, nativeLang, targetLang, createdAt: event.now, updatedAt: event.now, deleted: false };
       return { ...next, learner: { ...next.learner, ownPhrases: { ...next.learner.ownPhrases, [id]: phrase } } };
@@ -595,7 +603,7 @@ function step(state: AppState, event: AppEvent): AppState {
       const title = trimmed(event.title, LIMITS.title);
       if (!title) return state;
       const [seqId, next] = takeId(state);
-      const id = `${OWN_SET_PREFIX}${seqId}`;
+      const id = event.id?.startsWith(OWN_SET_PREFIX) && !learner.ownSets[event.id] ? event.id : `${OWN_SET_PREFIX}${seqId}`;
       // A set holds one course's phrases: another course's phrase (from a page left open
       // across a switch, or a link) would play in the wrong language pair.
       const inCourse = (pid: string) => findPhrase(learner, pid)?.targetLang === learner.profile.targetLang;
@@ -696,7 +704,7 @@ function step(state: AppState, event: AppEvent): AppState {
       const currentGone = !known(current.order[current.index]);
       const index = Math.min(current.order.slice(0, current.index).filter(known).length, Math.max(0, order.length - 1));
       const cleaned: PlayerState = {
-        ...(currentGone ? { ...stopClock(current, event.now), phase: 'native' as const, repetition: 1, cycle: current.cycle + 1 } : current),
+        ...(currentGone ? { ...stopClock(current, event.now), phase: 'native' as const, repetition: 1, targetHeard: false, cycle: current.cycle + 1 } : current),
         status: order.length === 0 ? 'idle' : currentGone ? 'paused' : current.status,
         order,
         baseOrder: current.baseOrder.filter(known),

@@ -13,6 +13,7 @@
 //   A rating already committed to the log is dropped, so storage doesn't keep it.
 // - prefs (tabs of one browser): per setting, the later change wins, by `changedAt`.
 // The player (queue) is per tab and never merged.
+import { localDay } from './clock';
 import { compareEntries, RATING_WINDOW_MS } from './memory';
 import type { LearnerState, Like, LogEntry, PendingRating, Prefs } from './types';
 
@@ -36,6 +37,8 @@ export function ratingEntry(deviceId: string, p: PendingRating): LogEntry {
     phraseId: p.phraseId,
     setId: p.setId,
     grade: p.grade,
+    // Its own day; one saved before ratings had it is stamped now, on the device that gave it.
+    day: p.day ?? localDay(p.at),
   };
 }
 

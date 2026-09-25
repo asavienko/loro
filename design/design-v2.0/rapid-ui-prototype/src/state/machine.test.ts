@@ -7,11 +7,12 @@ import { derive, isLearned, RATING_WINDOW_MS } from './memory';
 import { currentPhraseId, memoryOf, phraseProgress, points, previouslyPlayed, sessionSummary, upNextIds } from './selectors';
 import { addLocalDays, HOUR, startOfLocalDay } from './clock';
 // Phase timing, one-pass queues and undo after moving on (the player's round-3 changes).
-import { findPhrase } from './catalog';
+import { findPhrase, OWN_PHRASE_PREFIX, OWN_SET_PREFIX } from './catalog';
 import { requeuesOn } from './machine';
 import { measuredTargetMs, pendingFor, phaseDurationMs } from './selectors';
 import { pauseMs, RATE_HOLD_MS } from './timing';
 import { cafe, DAY, done, fresh, load, MINUTE, playPhrase, run, T0 } from './testing';
+import { isTargetRevealed } from '../ui/phase';
 
 describe('player loop', () => {
   it('walks native → pause → target three times for a new phrase, then holds for a rating', () => {
@@ -343,6 +344,25 @@ describe('the learner’s own phrases and sets', () => {
     assert.equal(run(s, { type: 'MOVE_IN_SET', setId, phraseId: 'cafe-01', delta: -1, now: T0 + 2 }), s, 'the first cannot move up');
   });
 
+  it('a new phrase or set gets the id promised to the caller, though the speech took the counter first', () => {
+    // The store promises the counter's next id as last rendered; a heard entry, not yet rendered,
+    // takes that number first. The new phrase and set keep the promised ids all the same.
+    let s = load(fresh());
+    const promised = (prefix: string, state: typeof s) => `${prefix}dev.tab-${(state.device.seq + 1).toString(36)}`;
+    const phraseId = promised(OWN_PHRASE_PREFIX, s);
+    s = done(done(done(s, T0 + 1), T0 + 2), T0 + 3); // the target is heard: an id from the counter
+    s = run(s, { type: 'ADD_OWN_PHRASE', target: '¿Hay wifi?', native: 'Is there wifi?', now: T0 + 4, id: phraseId });
+    assert.equal(s.learner.ownPhrases[phraseId]?.target, '¿Hay wifi?');
+    const setId = promised(OWN_SET_PREFIX, s);
+    s = done(done(done(s, T0 + 5), T0 + 6), T0 + 7);
+    s = run(s, { type: 'CREATE_SET', title: 'Travel bits', phraseIds: [phraseId], now: T0 + 8, id: setId });
+    assert.equal(s.learner.ownSets[setId]?.title, 'Travel bits');
+    // An id already in use is never reused: the counter's next one instead.
+    s = run(s, { type: 'ADD_OWN_PHRASE', target: 'Hola', native: 'Hi', now: T0 + 9, id: phraseId });
+    assert.equal(s.learner.ownPhrases[phraseId].target, '¿Hay wifi?');
+    assert.equal(Object.keys(s.learner.ownPhrases).length, 2);
+  });
+
   it('changing course empties the queue', () => {
     const s = run(load(fresh()), { type: 'SET_PROFILE', profile: { targetLang: 'bg-BG' }, now: T0 });
     assert.equal(s.player.status, 'idle');
@@ -559,6 +579,32 @@ describe('queues with a natural end', () => {
     s = load(fresh({ playMode: 'repeat' }), T0, ['cafe-01'], 'set-cafe');
     [s] = playPhrase(s, T0);
     assert.deepEqual([s.player.ended, s.player.index, s.player.status], [false, 0, 'playing'], 'a set starts again');
+  });
+
+  it('Next on the last phrase before its target ends the queue with the target still hidden (R-01)', () => {
+    const lastOfReview = (mode: 'repeat' | 'continue') =>
+      transition(fresh({ playMode: mode }), { type: 'LOAD', phraseIds: ['cafe-01', 'cafe-02'], setId: null, source: { kind: 'review' }, startIndex: 1, now: T0, seed: 1 });
+    for (const mode of ['repeat', 'continue'] as const) {
+      // In the prompt, and in the learner's turn: never heard.
+      for (const phasesDone of [0, 1]) {
+        let s = lastOfReview(mode);
+        for (let i = 0; i < phasesDone; i++) s = done(s, T0 + 1 + i);
+        s = run(s, { type: 'NEXT', now: T0 + 10 });
+        assert.deepEqual([s.player.ended, s.player.targetHeard], [true, false], `${mode}, ${phasesDone} phases`);
+        assert.equal(isTargetRevealed(s.player), false, 'recall rule: not shown before it is heard');
+      }
+    }
+    // Once the target has played, Next ends it with the target shown, as a finished queue does.
+    let s = done(done(lastOfReview('continue'), T0 + 1), T0 + 2);
+    assert.equal(s.player.phase, 'target');
+    s = run(s, { type: 'NEXT', now: T0 + 3 });
+    assert.deepEqual([s.player.ended, isTargetRevealed(s.player)], [true, true]);
+    // Play replays it from the prompt, hidden again.
+    s = run(s, { type: 'PLAY', now: T0 + 4 });
+    assert.deepEqual([s.player.ended, s.player.targetHeard, isTargetRevealed(s.player)], [false, false, false]);
+    // Played through to the end, it is shown.
+    [s] = playPhrase(s, T0 + 5);
+    assert.deepEqual([s.player.ended, isTargetRevealed(s.player)], [true, true]);
   });
 
   it('keeps where it came from, for its title', () => {
