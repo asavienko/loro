@@ -329,6 +329,26 @@ test.describe('queue', () => {
   });
 
 
+  test('the session summary, from the top of the queue, shows what happened and no wall of zeros', async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Play 5 phrases' }).click();
+    await page.getByRole('button', { name: 'Pause', exact: true }).click();
+    await page.getByRole('button', { name: /^Now playing:/ }).click();
+    await page.getByRole('button', { name: 'Open queue' }).click();
+    await page.getByRole('button', { name: 'This session · 0 phrases · +0 pts' }).click();
+    const summary = page.getByRole('dialog', { name: 'This session' });
+    await expect(summary.getByText('Nothing played in this session yet.')).toBeVisible();
+    await expect(summary.getByText('Repetitions')).toHaveCount(0);
+    await summary.getByRole('button', { name: 'Close' }).click();
+    await page.getByRole('button', { name: 'Back to player' }).click();
+    await page.getByRole('dialog', { name: 'Now playing' }).getByRole('button', { name: /^Hard/ }).click();
+    await page.getByRole('button', { name: 'Open queue' }).click();
+    await page.getByRole('button', { name: /^This session · / }).click();
+    await expect(summary.getByText('Hard\u00a01', { exact: false })).toBeVisible();
+    // No pass yet: no "times through the queue" tile.
+    await expect(summary.getByText('Times through the queue')).toHaveCount(0);
+  });
+
   test('keeps the target hidden during recall; remove can be undone', async ({ page }) => {
     await page.goto('/');
     await page.getByRole('button', { name: 'Play 5 phrases' }).click();
