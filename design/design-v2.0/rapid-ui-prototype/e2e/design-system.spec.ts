@@ -21,3 +21,13 @@ test('at 200% text the header title keeps room: "pts" gives way first', async ({
   // The word is hidden, not the meaning: the chip still names the points.
   await expect(page.getByTestId('points')).toContainText(/\d+ points/);
 });
+
+test('at 200% text the mini-player gives its title room: the cover gives way', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: /^Play \d+ phrases/ }).first().click();
+  await page.addStyleTag({ content: 'html { font-size: 200% }' });
+  await page.waitForTimeout(300);
+  const mini = page.getByRole('button', { name: /^Now playing:/ });
+  const title = (await mini.locator('[lang]').first().boundingBox())!;
+  expect(title.width).toBeGreaterThanOrEqual(120);
+});
