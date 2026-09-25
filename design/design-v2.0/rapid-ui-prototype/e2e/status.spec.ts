@@ -1,13 +1,18 @@
-// A phrase row's status names its number ("Learned · recall 97%", "Recall 100% · back tomorrow",
-// U-11), and the status is never cut off: on a 320 px phone and at 200% text only the prompt
-// before it truncates, and the status takes a line of its own when the two don't fit.
+// A phrase row's status names its number ("Learned · recall 97%", "Recall 82% · back tomorrow",
+// U-11); for an hour after a rating it says the rating instead ("Rated Missed — back in 9 minutes",
+// Q-03), since recall is 100% then. The status is never cut off: on a 320 px phone and at 200% text
+// only the prompt before it truncates, and the status takes a line of its own when the two don't fit.
 import { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 
 const DAY = 86_400_000;
 const HOUR = 3_600_000;
+const MINUTE = 60_000;
 
-/** cafe-01..03 learned; cafe-04 heard on an earlier day and first rated today; cafe-05 first heard today. */
+/**
+ * cafe-01..03 learned; cafe-04 heard on an earlier day and first rated two hours ago; cafe-05 first
+ * heard and rated Missed five minutes ago.
+ */
 function history(native: string, now: number) {
   const log: Record<string, unknown>[] = [];
   let n = 0;
@@ -18,15 +23,15 @@ function history(native: string, now: number) {
   };
   for (const id of ['cafe-01', 'cafe-02', 'cafe-03']) for (const days of [200, 190, 170, 130, 60]) add(id, now - days * DAY, 'easy');
   add('cafe-04', now - 3 * DAY);
-  add('cafe-04', now - HOUR, 'easy');
-  add('cafe-05', now - HOUR, 'easy');
+  add('cafe-04', now - 2 * HOUR, 'easy');
+  add('cafe-05', now - 5 * MINUTE, 'missed');
   return log.sort((a, b) => (a.at as number) - (b.at as number));
 }
 
 const FORMS = {
-  'en-GB': { learned: /^Learned · recall \d+%$/, learning: /^Recall \d+% · back / },
-  'bg-BG': { learned: /^Научена · памет \d+%$/, learning: /^Памет \d+% · отново / },
-  'ru-RU': { learned: /^Выучена · память \d+%$/, learning: /^Память \d+% · снова / },
+  'en-GB': { learned: /^Learned · recall \d+%$/, learning: /^Recall \d+% · back /, rated: /^Rated Missed — back in \d+ minutes$/ },
+  'bg-BG': { learned: /^Научена · памет \d+%$/, learning: /^Памет \d+% · отново /, rated: /^Оценка „Не се сетих“ — отново след \d+ мин/ },
+  'ru-RU': { learned: /^Выучена · память \d+%$/, learning: /^Память \d+% · снова /, rated: /^Оценка «Не помню» — снова через \d+ мин/ },
 } as const;
 
 /** Every status matching `form` is whole: not inside a truncated line, not clipped, on screen. */
@@ -55,10 +60,28 @@ for (const [native, form] of Object.entries(FORMS)) {
         // Split for layout, the line still reads as one: "The bill, please · Learned · recall 97%".
         if (native === 'en-GB') await expect(page.getByText(/^The bill, please · Learned · recall \d+%$/)).toBeVisible();
         await expectWhole(page, form.learned, 3);
-        await expectWhole(page, form.learning, 2);
+        await expectWhole(page, form.learning, 1);
+        await expectWhole(page, form.rated, 1);
         await open('/#/library?view=learning');
-        await expectWhole(page, form.learning, 2);
+        await expectWhole(page, form.learning, 1);
+        await expectWhole(page, form.rated, 1);
       });
     }
   });
 }
+
+test('a rating still in its undo window reads the same on the row as in the player (Q-03)', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Play 5 phrases' }).click();
+  const player = page.getByRole('dialog', { name: 'Now playing' });
+  await player.getByRole('button', { name: 'Pause', exact: true }).click();
+  await player.getByRole('button', { name: /^Hard/ }).click();
+  const line = player.getByText(/^Rated Hard — back in \d+ minutes/);
+  await expect(line).toBeVisible();
+  const said = (await line.textContent())!.replace(/ · .*$/, '');
+  await page.getByRole('button', { name: 'Close player' }).click();
+  await page.getByRole('button', { name: 'Library' }).click();
+  await page.getByRole('tab', { name: 'Learning' }).click();
+  await expect(page.getByText(`A cortado, please · ${said}`)).toBeVisible();
+  await expect(page.getByText(/Recall 100%/)).toHaveCount(0);
+});

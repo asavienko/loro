@@ -79,3 +79,28 @@ describe('word gloss coverage', () => {
     }
   });
 });
+
+describe('a phrase row status', () => {
+  it('says the rating just given, not recall 100%, for an hour; then the recall again (Q-03)', async () => {
+    const { progressLabel } = await import('./progressLabel');
+    const { phraseProgress } = await import('../state/selectors');
+    const { keyOf } = await import('../state/catalog');
+    const { copyFor } = await import('../copy');
+    const { fresh, T0, MINUTE } = await import('../state/testing');
+    const c = copyFor('en');
+    const s = fresh();
+    const key = keyOf(s.learner, 'cafe-01');
+    const learner = {
+      ...s.learner,
+      log: [
+        { id: 'q.h', at: T0, device: 'q', kind: 'heard' as const, key, phraseId: 'cafe-01', setId: 'set-cafe', targetMs: 1000, nativeMs: 1000 },
+        { id: 'q.r', at: T0 + 1000, device: 'q', kind: 'rated' as const, key, phraseId: 'cafe-01', setId: 'set-cafe', grade: 'hard' as const },
+      ],
+    };
+    const label = (now: number) => progressLabel(c, phraseProgress(learner, 'cafe-01', now), now);
+    assert.match(label(T0 + MINUTE), /^Rated Hard — back /);
+    assert.doesNotMatch(label(T0 + MINUTE), /Recall/);
+    // An hour on, the recall figure means something again (or it is due by then, and says so).
+    assert.match(label(T0 + 61 * MINUTE), /^(Recall \d+% · back |Due now$)/);
+  });
+});
