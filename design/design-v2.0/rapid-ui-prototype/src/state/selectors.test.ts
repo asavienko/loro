@@ -7,6 +7,9 @@ import { RATING_WINDOW_MS, typicalMs } from './memory';
 import {
   continuation,
   learnedPerWeek,
+  learnerStats,
+  learnedIds,
+  learningIds,
   nextDue,
   playableIds,
   playedSets,
@@ -189,5 +192,15 @@ describe('the current course only', () => {
     s = { ...s, learner: { ...s.learner, log: [...s.learner.log, bg] } };
     assert.equal(todayCounts(s, T0 + 10).heard, 0);
     assert.deepEqual(playedSets(s.learner), []);
+  });
+});
+
+describe('the Learning view', () => {
+  it('holds every started phrase not yet learned, heard-but-unrated included', () => {
+    let s = load(fresh());
+    [s] = playPhrase(s, T0); // cafe-01 heard, never rated
+    const learning = learningIds(s.learner, T0 + DAY);
+    assert.ok(learning.includes('cafe-01'));
+    assert.equal(learnerStats(s.learner, T0 + DAY).started, learning.length + learnedIds(s.learner, cafe()).length);
   });
 });

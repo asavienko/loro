@@ -295,7 +295,7 @@ export function makeEn(n: Plural) {
         liked: 'Tap the heart on a phrase to keep it here.',
         mine: 'Add a phrase of your own and it plays like any other.',
         due: 'Nothing is due right now.',
-        learning: 'Phrases you have rated but not yet learned show here.',
+        learning: 'Phrases you have heard or rated but not yet learned show here.',
         missed: 'Phrases rated Missed in the last week show here.',
         learned: (days: number, recalls: number) =>
           `A phrase is learned once recall is expected to last ${days} days or more, after at least ${recalls} successful recalls.`,
