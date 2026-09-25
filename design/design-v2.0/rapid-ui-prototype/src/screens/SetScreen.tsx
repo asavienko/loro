@@ -233,9 +233,9 @@ export function SetScreen({ setId }: { setId: string }) {
             </span>
           </div>
           {/* The play order and the sort are one control: it says the order, and changes it. An
-              empty set of your own has nothing to order yet. */}
+              empty set of your own has nothing to order yet. Clear of the big Play above it. */}
           {sortedIds.length > 0 && (
-            <div className="flex flex-wrap items-center justify-between gap-x-2">
+            <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 mt-2">
               <button
                 type="button"
                 aria-haspopup="dialog"
