@@ -1,5 +1,6 @@
 import { FormEvent, useId, useRef, useState } from 'react';
 import { languageName } from '../copy';
+import { useNav } from '../nav/NavContext';
 import type { LanguageCode } from '../content';
 import { findSamePhrase, promptOf } from '../state/catalog';
 import { LIMITS, tidy } from '../state/limits';
@@ -46,6 +47,7 @@ interface FormProps {
 
 function PhraseForm({ editId, initialTarget, initialNative, targetLang, nativeLang, onDone }: FormProps) {
   const c = useCopy();
+  const nav = useNav();
   const { toast } = useToast();
   const { state, actions } = useStore();
   const [target, setTarget] = useState(initialTarget);
@@ -67,8 +69,9 @@ function PhraseForm({ editId, initialTarget, initialNative, targetLang, nativeLa
       actions.editOwnPhrase(editId, target, native);
       toast(c.addPhrase.edited);
     } else {
-      actions.addOwnPhrase(target, native);
-      toast(c.addPhrase.added);
+      const id = actions.addOwnPhrase(target, native);
+      // The next step is hearing it.
+      toast(c.addPhrase.added, { action: { label: c.common.play, run: () => nav.playPhraseInSet(id) } });
     }
     onDone();
   };

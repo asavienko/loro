@@ -1,7 +1,7 @@
 import { createContext, ReactNode, RefObject, useContext, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { useLatest } from '../lib/useLatest';
 import { copyForNative, Copy } from '../copy';
-import { OWN_SET_PREFIX } from './catalog';
+import { OWN_PHRASE_PREFIX, OWN_SET_PREFIX } from './catalog';
 import { clock } from './clock';
 import { initialState } from './initial';
 import { AppEvent, transition } from './machine';
@@ -42,7 +42,13 @@ function makeActions(dispatch: (event: AppEvent) => void, latest: RefObject<AppS
       dispatch({ type: 'ENQUEUE', phraseIds, setId, at, now: now() }),
     clearQueue: () => dispatch({ type: 'CLEAR_QUEUE' }),
     toggleLike: (kind: 'phrase' | 'set', id: string) => dispatch({ type: 'TOGGLE_LIKE', kind, id, now: now() }),
-    addOwnPhrase: (target: string, native: string) => dispatch({ type: 'ADD_OWN_PHRASE', target, native, now: now() }),
+    /** Adds your own phrase and returns its id (from the device counter, as createSet). */
+    addOwnPhrase: (target: string, native: string): string => {
+      const { device } = latest.current;
+      const id = `${OWN_PHRASE_PREFIX}${device.id}.${device.instance}-${(device.seq + 1).toString(36)}`;
+      dispatch({ type: 'ADD_OWN_PHRASE', target, native, now: now() });
+      return id;
+    },
     editOwnPhrase: (id: string, target: string, native: string) =>
       dispatch({ type: 'EDIT_OWN_PHRASE', id, target, native, now: now() }),
     deleteOwnPhrase: (id: string) => dispatch({ type: 'DELETE_OWN_PHRASE', id, now: now() }),
