@@ -1,5 +1,6 @@
 import { Component, ReactNode } from 'react';
 import { copyFor } from '../copy';
+import { btnPrimarySm } from './button';
 
 interface Props {
   children: ReactNode;
@@ -38,7 +39,7 @@ export class LocalBoundary extends Component<Props, { failed: boolean; key: stri
     return (
       <div role="alert" className="max-w-md mx-auto m-4 p-4 rounded-2xl bg-surface-container-low flex flex-col gap-2">
         <p className="text-body">{c.error.part}</p>
-        <button type="button" onClick={() => window.location.reload()} className="self-start min-h-11 px-4 rounded-full bg-primary-container text-on-primary font-bold">
+        <button type="button" onClick={() => window.location.reload()} className={`${btnPrimarySm} self-start`}>
           {c.error.reload}
         </button>
       </div>

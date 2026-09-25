@@ -29,6 +29,7 @@ import { usePlayerKeys } from './usePlayerKeys';
 import { useRate } from './useRate';
 import { Sheet } from '../ui/Sheet';
 import { useToast } from '../ui/Toast';
+import { btnIcon } from '../ui/button';
 
 const STEPS: Exclude<Phase, 'rate'>[] = ['native', 'pause', 'target'];
 const SWIPE = 70;
@@ -191,7 +192,7 @@ export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps
                   type="button"
                   aria-label={c.phrase.addToSet}
                   onClick={() => nav.addToSet([phrase.id])}
-                  className="w-11 h-11 flex items-center justify-center rounded-full text-secondary active:bg-surface-container"
+                  className={`${btnIcon} text-secondary`}
                 >
                   <Icon name="playlist_add" className="text-icon-lg" />
                 </button>
@@ -200,7 +201,7 @@ export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps
                     type="button"
                     aria-label={c.phrase.notesTitle}
                     onClick={() => setNotesOpen(true)}
-                    className="w-11 h-11 flex items-center justify-center rounded-full text-secondary active:bg-surface-container"
+                    className={`${btnIcon} text-secondary`}
                   >
                     <Icon name="lightbulb" className="text-icon-lg" />
                   </button>
@@ -309,7 +310,7 @@ export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps
 
 function HeaderButton({ label, icon, onClick }: { label: string; icon: IconName; onClick: () => void }) {
   return (
-    <button type="button" aria-label={label} onClick={onClick} className="w-11 h-11 shrink-0 flex items-center justify-center rounded-full active:bg-surface-container">
+    <button type="button" aria-label={label} onClick={onClick} className={btnIcon}>
       <Icon name={icon} className="text-icon-lg" />
     </button>
   );
@@ -430,7 +431,7 @@ function RepeatsButton() {
         actions.setPrefs({ repeats: next });
         announce(next === 'auto' ? c.player.repeats.auto : next === 1 ? c.player.repeats.one : c.player.repeats.three);
       }}
-      className="w-11 h-11 flex items-center justify-center rounded-full active:bg-surface-container"
+      className={btnIcon}
     >
       <span aria-hidden="true" className="min-w-9 h-7 px-1.5 rounded-lg border-2 border-primary-container text-primary-container text-label font-black flex items-center justify-center tabular-nums">
         {setting === 'auto' ? 'A' : `${setting}×`}

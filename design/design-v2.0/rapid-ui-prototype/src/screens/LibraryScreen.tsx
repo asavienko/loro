@@ -27,6 +27,7 @@ import { PhraseRow } from '../ui/PhraseRow';
 import { progressLabel } from '../ui/progressLabel';
 import { SetRow } from '../ui/SetRow';
 import { StatTile } from '../ui/StatTile';
+import { btnPrimarySm, btnTonal } from '../ui/button';
 
 const PHRASE_VIEWS: LibraryView[] = ['liked', 'mine', 'due', 'learning', 'missed', 'learned'];
 const SET_VIEWS: LibraryView[] = ['ownSets', 'likedSets'];
@@ -121,13 +122,13 @@ export function LibraryScreen({ view: chosen }: { view?: LibraryView }) {
           <SetList ids={view === 'ownSets' ? ownSets(learner).map((s) => s.id) : likedSetIds(learner)} view={view} now={now} />
         )}
         {view === 'mine' && (
-          <button type="button" onClick={() => nav.addPhrase()} className="mt-3 min-h-11 px-4 rounded-full bg-surface-container text-on-surface text-body font-semibold flex items-center gap-1.5">
+          <button type="button" onClick={() => nav.addPhrase()} className={`${btnTonal} mt-3`}>
             <Icon name="add" className="text-icon-md" />
             {c.library.addPhrase}
           </button>
         )}
         {view === 'ownSets' && (
-          <button type="button" onClick={() => nav.createSet()} className="mt-3 min-h-11 px-4 rounded-full bg-surface-container text-on-surface text-body font-semibold flex items-center gap-1.5">
+          <button type="button" onClick={() => nav.createSet()} className={`${btnTonal} mt-3`}>
             <Icon name="add" className="text-icon-md" />
             {c.library.newSet}
           </button>
@@ -150,7 +151,7 @@ function PhraseList({ ids, view, now }: { ids: string[]; view: LibraryView; now:
   if (ids.length === 0) return <p className="text-body text-secondary py-2">{empty}</p>;
   return (
     <>
-      <button type="button" onClick={() => nav.playList(ids)} className="mb-2 min-h-11 px-4 rounded-full bg-primary-container text-on-primary text-body font-bold flex items-center gap-1.5">
+      <button type="button" onClick={() => nav.playList(ids)} className={`${btnPrimarySm} mb-2`}>
         <Icon name="play_arrow" fill className="text-icon-md" />
         {c.library.playAll(ids.length)}
       </button>

@@ -6,6 +6,7 @@ import { useCopy, useStore } from '../state/store';
 import { CharCount } from '../ui/CharCount';
 import { Sheet } from '../ui/Sheet';
 import { useToast } from '../ui/Toast';
+import { btnPrimary } from '../ui/button';
 
 /** Names a new set (optionally holding phrases already), or renames one of the learner's sets. */
 export function CreateSetSheet({ request, onClose }: { request: { phraseIds: string[]; rename?: string } | null; onClose: () => void }) {
@@ -77,7 +78,7 @@ function SetNameForm({ initial, taken, submitLabel, onSubmit }: { initial: strin
             {c.createSet.taken}
           </p>
         )}
-        <button type="submit" disabled={!title.trim() || (initial !== '' && tidy(title) === initial)} className="min-h-12 rounded-full bg-primary-container text-on-primary font-bold disabled:opacity-40">
+        <button type="submit" disabled={!title.trim() || (initial !== '' && tidy(title) === initial)} className={btnPrimary}>
           {submitLabel}
         </button>
       </form>

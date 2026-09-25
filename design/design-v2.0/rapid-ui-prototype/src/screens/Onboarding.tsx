@@ -8,6 +8,7 @@ import { courseSets, findPhrase, promptOf } from '../state/catalog';
 import { LIMITS } from '../state/limits';
 import { useCopy, useStore } from '../state/store';
 import { Icon, IconName } from '../ui/Icon';
+import { btnPrimary, btnTonal } from '../ui/button';
 
 type Step = 'native' | 'name' | 'course' | 'voices' | 'loop';
 const STEPS: Step[] = ['native', 'name', 'course', 'voices', 'loop'];
@@ -110,7 +111,7 @@ export function Onboarding() {
       <div className="sticky bottom-0 -mx-6 px-6 pt-3 mt-3 pb-[calc(1.5rem+env(safe-area-inset-bottom))] bg-surface flex flex-col gap-2 before:absolute before:inset-x-0 before:-top-6 before:h-6 before:bg-linear-to-t before:from-surface before:to-transparent before:pointer-events-none">
         {step === 'loop' ? (
           <>
-            <button type="button" onClick={() => finish(true)} className="min-h-12 rounded-full bg-primary-container text-on-primary font-bold flex items-center justify-center gap-2">
+            <button type="button" onClick={() => finish(true)} className={btnPrimary}>
               <Icon name="play_arrow" fill className="text-icon" />
               {c.onboarding.start}
             </button>
@@ -119,7 +120,7 @@ export function Onboarding() {
             </button>
           </>
         ) : (
-          <button type="button" onClick={next} className="min-h-12 rounded-full bg-primary-container text-on-primary font-bold">
+          <button type="button" onClick={next} className={btnPrimary}>
             {c.onboarding.next}
           </button>
         )}
@@ -180,7 +181,7 @@ function VoiceCheck() {
                     type="button"
                     aria-label={c.onboarding.test(languageName(lang, c.locale))}
                     onClick={() => void speak(text, lang, 1).done}
-                    className="shrink-0 min-h-11 px-3 rounded-full bg-surface-container text-body font-semibold flex items-center gap-1.5"
+                    className={btnTonal}
                   >
                     <Icon name="volume_up" className="text-icon-sm" />
                     {c.onboarding.testShort}

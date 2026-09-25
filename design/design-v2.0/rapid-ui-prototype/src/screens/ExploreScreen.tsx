@@ -13,6 +13,7 @@ import { PhraseRow } from '../ui/PhraseRow';
 import { progressLabel } from '../ui/progressLabel';
 import { SetCard } from '../ui/SetCard';
 import { TONE } from '../ui/SetCover';
+import { btnIcon, btnText, btnTonal } from '../ui/button';
 
 const LEVELS: Level[] = ['A1', 'A2', 'B1'];
 const TAGS: Tag[] = ['question', 'request', 'politeness', 'food', 'directions', 'numbers', 'social'];
@@ -171,7 +172,7 @@ export function ExploreScreen({ filters }: { filters: ExploreFilters }) {
             </Chip>
           ))}
           {chips.length > 1 && (
-            <button type="button" onClick={() => navigate({ name: 'explore', q: filters.q })} className="min-h-11 px-3 rounded-full text-body font-semibold text-primary-container">
+            <button type="button" onClick={() => navigate({ name: 'explore', q: filters.q })} className={btnText}>
               {c.explore.clearFilters}
             </button>
           )}
@@ -240,7 +241,7 @@ export function ExploreScreen({ filters }: { filters: ExploreFilters }) {
                 <button
                   type="button"
                   onClick={() => nav.addPhrase({ target: clip(tidy(filters.q ?? ''), LIMITS.phrase) })}
-                  className="min-h-11 px-4 rounded-full bg-surface-container text-on-surface text-body font-semibold flex items-center gap-1.5"
+                  className={btnTonal}
                 >
                   <Icon name="add" className="text-icon-md" />
                   {c.explore.addAsOwn(filters.q)}
@@ -306,7 +307,7 @@ function PhraseResult({ phrase, words, detail }: { phrase: Phrase; words: string
           <span> · {detail}</span>
         </span>
       </button>
-      <button type="button" onClick={() => nav.showDetails(phrase.id)} aria-label={c.phrase.details(phrase.target)} className="w-11 h-11 shrink-0 flex items-center justify-center rounded-full text-secondary">
+      <button type="button" onClick={() => nav.showDetails(phrase.id)} aria-label={c.phrase.details(phrase.target)} className={`${btnIcon} text-secondary`}>
         <Icon name="more_vert" className="text-icon" />
       </button>
     </div>
