@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from 'react';
+import { SelectHTMLAttributes, useEffect, useId, useState } from 'react';
 import { bestVoice, speak, voicesFor, waitForVoices } from '../audio/speech';
 import { courseSets, findPhrase, promptOf } from '../state/catalog';
 import { Icon } from '../ui/Icon';
@@ -96,17 +96,13 @@ function LanguageSelect({ label, value, options, name, onChange }: { label: stri
   return (
     <label className="flex flex-col gap-1 px-2 py-1">
       <span className="text-label text-secondary">{label}</span>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value as LanguageCode)}
-        className="min-h-12 px-3 rounded-2xl bg-surface-container-low border border-outline-variant/60 text-base"
-      >
+      <SelectBox value={value} onChange={(e) => onChange(e.target.value as LanguageCode)}>
         {options.map((code) => (
           <option key={code} value={code}>
             {name(code)}
           </option>
         ))}
-      </select>
+      </SelectBox>
     </label>
   );
 }
@@ -139,10 +135,9 @@ function VoicePickers({ langs }: { langs: LanguageCode[] }) {
             {/* At least 12rem for the voice name; on a narrow phone Test wraps below. */}
             <label className="flex-1 min-w-[12rem] flex flex-col gap-1">
               <span className="text-label text-secondary">{languageLabel(lang, c.locale)}</span>
-              <select
+              <SelectBox
                 value={chosen && list.some((v) => v.name === chosen) ? chosen : ''}
                 onChange={(e) => actions.setPrefs({ voiceByLang: { ...state.prefs.voiceByLang, [lang]: e.target.value || undefined } })}
-                className="min-h-12 px-3 rounded-2xl bg-surface-container-low border border-outline-variant/60 text-base"
               >
                 <option value="">{c.settings.voiceAuto(bestVoice(list, lang)?.name ?? '')}</option>
                 {list.map((v) => (
@@ -150,7 +145,7 @@ function VoicePickers({ langs }: { langs: LanguageCode[] }) {
                     {v.name}
                   </option>
                 ))}
-              </select>
+              </SelectBox>
             </label>
             {sampleText(lang) && (
               <button
@@ -167,5 +162,21 @@ function VoicePickers({ langs }: { langs: LanguageCode[] }) {
         );
       })}
     </SheetSection>
+  );
+}
+
+/**
+ * A select drawn by the app: WebKit (every browser on iOS) keeps its native look and
+ * ignores the height, leaving a 26 px target; without it the 48 px height holds.
+ */
+function SelectBox(props: SelectHTMLAttributes<HTMLSelectElement>) {
+  return (
+    <span className="relative flex">
+      <select
+        {...props}
+        className="appearance-none w-full min-w-0 min-h-12 pl-3 pr-10 rounded-2xl bg-surface-container-low border border-outline-variant/60 text-base"
+      />
+      <Icon name="keyboard_arrow_down" className="text-icon absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-secondary" />
+    </span>
   );
 }
