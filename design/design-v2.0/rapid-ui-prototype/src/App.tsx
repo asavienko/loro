@@ -180,6 +180,8 @@ type Overlay = { player: boolean; queue: boolean };
 
 /** Home's column (HomeScreen, the same container query): one reading column, then two in the usual width. */
 const HOME_COLUMN = 'max-w-2xl @min-[56rem]:max-w-5xl';
+/** Each tab's page column, so the top bar's avatar and title line up with the page under them. */
+const COLUMN: Partial<Record<Route['name'], string>> = { home: HOME_COLUMN, explore: 'max-w-6xl', library: 'max-w-3xl lg:max-w-6xl' };
 
 function Shell() {
   usePlaybackDriver();
@@ -376,7 +378,7 @@ function Shell() {
           inert={behind}
           scrolledTitle={route.name === 'set' ? setView?.title : undefined}
           narrow={route.name === 'set'}
-          column={route.name === 'home' ? HOME_COLUMN : undefined}
+          column={COLUMN[route.name]}
           action={
             route.name === 'library' ? (
               <button type="button" aria-label={c.nav.add} onClick={() => setAddOpen(true)} className={`${btnIcon} text-on-surface`}>
