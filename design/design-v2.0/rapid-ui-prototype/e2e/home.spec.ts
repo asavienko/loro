@@ -122,6 +122,17 @@ test.describe('Home has one hero, and one terracotta Play (V-05)', () => {
   });
 });
 
+test('while the demo is in the mini-player, Home leads with the first set, not the demo again (Q-15)', async ({ page }) => {
+  await page.clock.install();
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Play one phrase' }).click();
+  await page.getByRole('button', { name: 'Close player' }).click();
+  await expect(page.getByRole('button', { name: /^Now playing:/ })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Try the loop' })).toHaveCount(0);
+  await expect(page.getByRole('region', { name: 'Start here' })).toContainText('Café & Mañanas');
+  expect(await filled(page)).toEqual(['Play 5 phrases']);
+});
+
 test.describe('a learner switching to a course they have not started (U-15)', () => {
   test.use({ seed: { targetLang: 'bg-BG', log: sampleHistory(Date.now()) } });
   test('is not offered the demo or the first-run line again', async ({ page }) => {
