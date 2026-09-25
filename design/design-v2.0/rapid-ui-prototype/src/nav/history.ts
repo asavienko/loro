@@ -46,7 +46,7 @@ function navigateNow(route: Route, options: { replace?: boolean }): void {
   } else {
     // Marked as the app's own entry, so the header's Back can go back to it (keeping its
     // filters and view) instead of pushing a fresh copy of the page.
-    window.history.pushState({ inApp: true }, '', hash);
+    window.history.pushState({ inApp: true, pos: ++position }, '', hash);
     window.dispatchEvent(new HashChangeEvent('hashchange'));
   }
 }
@@ -105,6 +105,13 @@ interface Layer {
 }
 
 const layers: Layer[] = [];
+interface EntryState {
+  layer?: number;
+  inApp?: boolean;
+  /** Order of the entries the app wrote, to tell Back from Forward. */
+  pos?: number;
+}
+let position = typeof window === 'undefined' ? 0 : ((window.history.state as EntryState | null)?.pos ?? 0);
 let nextLayerId = 1;
 /** Pops caused by our own history.back() when an overlay closes from the UI. */
 let ownPops = 0;
@@ -125,18 +132,60 @@ function settled() {
   queued.forEach((fn) => fn());
 }
 
+/** An overlay's entry whose overlay isn't open: left by a reload, or closed under another. */
+const isStale = (state: EntryState | null) => typeof state?.layer === 'number' && !layers.some((l) => l.id === state.layer);
+
 if (typeof window !== 'undefined') {
+  // The entry the app started on gets a position too, so every later step has a direction.
+  if (typeof (window.history.state as EntryState | null)?.pos !== 'number') {
+    window.history.replaceState({ ...(window.history.state as EntryState | null), pos: position }, '');
+  }
+  // A reload keeps the history entry of an overlay that was open, but not the overlay: step
+  // back off it, or the first Back would land on the same page and seem to do nothing.
+  if (isStale(window.history.state as EntryState | null)) {
+    ownPops++;
+    window.history.back();
+  }
+
   window.addEventListener('popstate', (event) => {
+    let state = event.state as EntryState | null;
+    // An entry without a position is new (a link or a URL typed in): number it. It closes an
+    // open overlay like Back does.
+    if (typeof state?.pos !== 'number') {
+      state = { ...state, pos: ++position };
+      window.history.replaceState(state, '');
+    }
+    // Which way the learner went: entries the app wrote carry their position.
+    const forward = (state.pos ?? 0) > position;
+    position = state.pos ?? position;
     if (ownPops > 0) {
       ownPops--;
+      // Our own back() landed on a stale overlay entry: keep going to the page below it.
+      if (isStale(state)) {
+        ownPops++;
+        window.history.back();
+        return;
+      }
       settled();
       return;
     }
+    if (forward) {
+      // Forward can't reopen a closed overlay; stepping onto its entry would leave a dead Back.
+      if (isStale(state)) {
+        ownPops++;
+        window.history.back();
+      }
+      return;
+    }
     const top = layers[layers.length - 1];
-    const state = event.state as { layer?: number } | null;
     if (top && state?.layer !== top.id) {
       layers.pop();
       top.close();
+    }
+    // Back onto an overlay entry that's no longer open: skip it, so one press does one thing.
+    if (isStale(state)) {
+      ownPops++;
+      window.history.back();
     }
   });
 }
@@ -155,9 +204,9 @@ export function useBackToClose(open: boolean, onClose: () => void): void {
     // over the closing one's entry instead of stacking a new one above a pending back.
     if (pendingBack !== null && (window.history.state as { layer?: number } | null)?.layer === pendingBack) {
       pendingBack = null;
-      window.history.replaceState({ layer: layer.id }, '');
+      window.history.replaceState({ layer: layer.id, pos: position }, '');
     } else {
-      window.history.pushState({ layer: layer.id }, '');
+      window.history.pushState({ layer: layer.id, pos: ++position }, '');
     }
     return () => {
       const at = layers.indexOf(layer);
