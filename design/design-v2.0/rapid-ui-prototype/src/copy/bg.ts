@@ -40,6 +40,7 @@ export function makeBg(n: Plural): Copy {
       explore: 'Разгледай',
       library: 'Библиотека',
       settings: (name) => (name ? `${name}: настройки` : 'Настройки'),
+      learning: (language) => `Учите ${language}`,
       points: (c) => n(c, { one: `${c} точка`, other: `${c} точки` }),
       pointsShort: () => 'т.',
     },

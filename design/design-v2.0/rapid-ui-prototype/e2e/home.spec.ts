@@ -134,3 +134,23 @@ test.describe("Home's study plays open the player, where the grades are (U-01b)"
     });
   });
 });
+
+test('the avatar shows the course: its flag, and "Learning Spanish" as its description (U-06)', async ({ page }) => {
+  await page.goto('/');
+  const avatar = page.getByRole('button', { name: 'Ana: settings' });
+  await expect(avatar).toHaveAccessibleDescription('Learning Spanish');
+  await expect(avatar).toContainText('🇪🇸');
+  await avatar.click();
+  await page.getByLabel('I’m learning').selectOption('bg-BG');
+  await page.getByRole('button', { name: 'Close' }).click();
+  await expect(avatar).toHaveAccessibleDescription('Learning Bulgarian');
+  await expect(avatar).toContainText('🇧🇬');
+});
+
+test.describe('in Bulgarian', () => {
+  test.use({ seed: { nativeLang: 'bg-BG', name: 'Мира' } });
+  test('the avatar says the course in the UI language (U-06)', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.getByRole('button', { name: 'Мира: настройки' })).toHaveAccessibleDescription('Учите испански');
+  });
+});

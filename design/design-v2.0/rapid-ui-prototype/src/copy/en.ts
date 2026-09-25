@@ -47,6 +47,8 @@ export function makeEn(n: Plural) {
       explore: 'Explore',
       library: 'Library',
       settings: (name: string) => (name ? `${name}: settings` : 'Settings'),
+      /** The avatar's description: the course its settings switch. */
+      learning: (language: string) => `Learning ${language}`,
       points: (count: number) => n(count, { one: `${count} point`, other: `${count} points` }),
       pointsShort: (count: number) => n(count, { one: 'pt', other: 'pts' }),
     },

@@ -39,6 +39,7 @@ export function makeRu(n: Plural): Copy {
       explore: 'Обзор',
       library: 'Библиотека',
       settings: (name) => (name ? `${name}: настройки` : 'Настройки'),
+      learning: (language) => `Изучаете ${language}`,
       points: (c) => n(c, { one: `${c} очко`, few: `${c} очка`, many: `${c} очков`, other: `${c} очка` }),
       pointsShort: () => 'очк.',
     },
