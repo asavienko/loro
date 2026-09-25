@@ -704,6 +704,14 @@ onboarding's "about 20 seconds" was invented; the player showed a 1× total besi
 running at another speed; the automatic-repetitions label was wrong for shaky reviewed phrases; the
 summary didn't say pending ratings' points count later; the recall chart bucketed unrounded values.
 
+A sixth review, of routes and flows, found eight, all fixed with tests that fail without the fix:
+a set page's Back dropped Explore's filters and Library's view and left browser Back returning to the
+set; Explore search swallowed a typed space; another course's set opened and played in this course
+(now it says which course and offers the switch); own sets took other courses' phrases; History and
+Today counted every course; an unknown topic hid behind "All sets" and empty topics showed "0 sets";
+Started opened a Learning list that missed due and heard-but-unrated phrases. Share is no longer
+offered for own sets, whose ids exist only on the device.
+
 **Open question:** "Full play 0:41 at 1×" is speech plus pauses, measured; it leaves out the 4 s
 rating hold (only for unrated phrases) and the engine's start-up delay, so an unrated new set can
 take ~1:01. Should it include the hold for unrated phrases, or be relabelled "listening time"?
