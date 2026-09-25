@@ -12,7 +12,7 @@ import { clip, LIMITS, tidy } from './limits';
 import { canHandle } from './chart';
 import { initialPlayer, initialState } from './initial';
 import { insertEntry, RATING_WINDOW_MS } from './memory';
-import { mergeLearner, mergePending, ratingCommitId } from './merge';
+import { committedIn, mergeLearner, mergePending, ratingCommitId } from './merge';
 import { sanitizeState } from './persistence';
 import { continuation, currentPhraseId, repeatsFor } from './selectors';
 import type {
@@ -311,7 +311,8 @@ export function transition(state: AppState, event: AppEvent): AppState {
               cycle: player.cycle + 1,
             });
           }
-          const rated = next.pending.some((p) => p.key === keyOf(learner, currentId));
+          // An undone rating's tombstone isn't a rating: the phrase waits to be rated again.
+          const rated = next.pending.some((p) => p.key === keyOf(learner, currentId) && !p.undone);
           if (!rated) return withPlayer(next, { ...player, phase: 'rate', cycle: player.cycle + 1 });
           return advance(next, player, event.now, true);
         }
@@ -617,7 +618,7 @@ export function transition(state: AppState, event: AppEvent): AppState {
     case 'MERGE_REMOTE': {
       const merged = mergeLearner(learner, event.learner);
       const pending = event.pending
-        ? mergePending(state.pending, event.pending, (p) => merged.log.some((e) => e.id === ratingCommitId(state.device.id, p)), event.now)
+        ? mergePending(state.pending, event.pending, committedIn(merged.log, state.device.id), event.now)
         : state.pending;
       if (pending !== state.pending) state = { ...state, pending };
       if (merged === learner) return state;

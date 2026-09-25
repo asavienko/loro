@@ -452,3 +452,12 @@ describe('continue mode (regression)', () => {
     assert.ok(s.player.order.length > 30, `went past one pass (${s.player.order.length})`);
   });
 });
+
+describe('undo inside the window (regression)', () => {
+  it('a phrase whose rating was undone waits to be rated again', () => {
+    let s = run(load(fresh()), { type: 'RATE', grade: 'easy', now: T0 }, { type: 'UNRATE', now: T0 + 1 });
+    for (let i = 0; i < 9 && s.player.phase !== 'rate'; i++) s = done(s, T0 + 10 + i);
+    assert.equal(s.player.phase, 'rate');
+    assert.equal(s.player.index, 0);
+  });
+});
