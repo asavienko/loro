@@ -16,7 +16,7 @@ for (const [w, h] of [[390, 844], [1440, 900]] as const) {
       const hidden: string[] = [];
       for (let i = 0; i < 50; i++) {
         await page.keyboard.press('Tab');
-        const problem = await page.evaluate(() => {
+        const check = () => page.evaluate(() => {
           const el = document.activeElement as HTMLElement | null;
           if (!el || el === document.body) return null;
           const r = el.getBoundingClientRect();
@@ -27,6 +27,13 @@ for (const [w, h] of [[390, 844], [1440, 900]] as const) {
           const top = document.elementFromPoint(x, y);
           return top && !el.contains(top) && !top.contains(el) ? `${name}: covered` : null;
         });
+        // WebKit scrolls to a newly focused control over a few frames (e.g. Tab wrapping from
+        // the page's bottom back to the top): a problem counts only once it has settled.
+        let problem = await check();
+        if (problem) {
+          await page.waitForTimeout(300);
+          problem = await check();
+        }
         if (problem) hidden.push(problem);
       }
       expect([...new Set(hidden)]).toEqual([]);
@@ -34,7 +41,11 @@ for (const [w, h] of [[390, 844], [1440, 900]] as const) {
   }
 }
 
-test('Tab and Shift+Tab stay inside an open sheet, past its tabs', async ({ page }) => {
+// Safari's Tab reaches buttons only with full keyboard access turned on (macOS / iOS setting).
+const TAB_SKIPS_BUTTONS = 'WebKit: Tab skips buttons unless full keyboard access is on';
+
+test('Tab and Shift+Tab stay inside an open sheet, past its tabs', async ({ page, browserName }) => {
+  test.skip(browserName === 'webkit', TAB_SKIPS_BUTTONS);
   await page.goto('/#/set/set-cafe?from=explore');
   await page.getByRole('button', { name: /^Details for/ }).first().click();
   const inside = () => page.evaluate(() => Boolean(document.activeElement?.closest('[role="dialog"]')));
@@ -78,8 +89,10 @@ test("the player's keys stay out of a sheet opened over it", async ({ page }) =>
 
 test.describe('one sheet handing over to another', () => {
   test('Back closes the new sheet and stays on the page', async ({ page }) => {
+    // Into the set from Explore as a learner would (a second hash-only goto isn't always
+    // a navigation in WebKit).
     await page.goto('/#/explore');
-    await page.goto('/#/set/set-cafe?from=explore');
+    await page.getByRole('button', { name: 'Café & Mañanas' }).first().click();
     await page.getByRole('button', { name: /^Details for/ }).first().click();
     await page.getByRole('button', { name: 'Add to set…' }).click();
     await expect(page.getByRole('dialog', { name: 'Add to set' })).toBeVisible();
@@ -106,8 +119,10 @@ test.describe('one sheet handing over to another', () => {
   });
 
   test('creating a set from a sheet opens it with focus on its heading and a clean Back', async ({ page }) => {
+    // Into the set from Explore as a learner would (a second hash-only goto isn't always
+    // a navigation in WebKit).
     await page.goto('/#/explore');
-    await page.goto('/#/set/set-cafe?from=explore');
+    await page.getByRole('button', { name: 'Café & Mañanas' }).first().click();
     await page.getByRole('button', { name: /^Details for/ }).first().click();
     await page.getByRole('button', { name: 'Add to set…' }).click();
     await page.getByRole('button', { name: 'New set…' }).click();
@@ -122,7 +137,8 @@ test.describe('one sheet handing over to another', () => {
   });
 });
 
-test('Undo is reachable by keyboard from the queue, and stays while focused', async ({ page }) => {
+test('Undo is reachable by keyboard from the queue, and stays while focused', async ({ page, browserName }) => {
+  test.skip(browserName === 'webkit', TAB_SKIPS_BUTTONS);
   await page.goto('/');
   await page.getByRole('button', { name: /^Play/ }).first().click();
   await page.getByRole('button', { name: 'Pause', exact: true }).first().click();
