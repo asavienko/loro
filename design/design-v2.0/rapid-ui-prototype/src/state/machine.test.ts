@@ -379,4 +379,12 @@ describe('clearing the queue', () => {
     s = run(s, { type: 'RESTORE_UP_NEXT', phraseIds: ['cafe-04'], offset: 2 });
     assert.deepEqual(upNextIds(s.player), ['cafe-03', 'cafe-05', 'cafe-04']);
   });
+
+  it('shuffle off after an undo keeps the restored phrases where they came back', () => {
+    let s = load(fresh());
+    const upNext = upNextIds(s.player);
+    s = run(s, { type: 'CLEAR_QUEUE' }, { type: 'RESTORE_UP_NEXT', phraseIds: upNext });
+    s = run(s, { type: 'TOGGLE_SHUFFLE', seed: 7 }, { type: 'TOGGLE_SHUFFLE', seed: 7 });
+    assert.deepEqual(upNextIds(s.player), upNext);
+  });
 });
