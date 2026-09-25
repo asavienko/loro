@@ -32,6 +32,7 @@ export function initialPlayer(): PlayerState {
     phaseMs: null,
     source: null,
     ended: false,
+    targetHeard: false,
     audioError: null,
     session: null,
   };
