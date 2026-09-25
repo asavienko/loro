@@ -140,6 +140,8 @@ function enterPhrase(state: AppState, player: PlayerState, index: number, now: n
     playingSince: playing ? now : null,
     cycle: player.cycle + 1,
     ended: false,
+    // A failure belonged to the phrase it happened on; the next one hasn't been tried.
+    audioError: null,
   };
 }
 
@@ -382,9 +384,15 @@ export function transition(state: AppState, event: AppEvent): AppState {
     case 'TOGGLE_SHUFFLE': {
       const played = player.order.slice(0, player.index + 1);
       const upNext = player.order.slice(player.index + 1);
-      const reordered = player.shuffle
-        ? [...upNext].sort((a, b) => baseRank(player.baseOrder, a) - baseRank(player.baseOrder, b))
-        : shuffled(upNext, event.seed);
+      // A missed phrase's second copy (it's also in `played`) keeps its place a few phrases
+      // on; only the rest reorder, or unshuffling would sort it right next to itself.
+      const isCopy = upNext.map((id) => played.includes(id));
+      const rest = upNext.filter((_, i) => !isCopy[i]);
+      const sortedRest = player.shuffle
+        ? [...rest].sort((a, b) => baseRank(player.baseOrder, a) - baseRank(player.baseOrder, b))
+        : shuffled(rest, event.seed);
+      let r = 0;
+      const reordered = upNext.map((id, i) => (isCopy[i] ? id : sortedRest[r++]));
       return withPlayer(state, { ...player, shuffle: !player.shuffle, order: [...played, ...reordered] });
     }
 
@@ -430,7 +438,8 @@ export function transition(state: AppState, event: AppEvent): AppState {
     }
 
     case 'ENQUEUE': {
-      const ids = event.phraseIds.filter((id) => findPhrase(learner, id));
+      // This course's phrases only: another's would play in the wrong language pair.
+      const ids = event.phraseIds.filter((id) => findPhrase(learner, id)?.targetLang === learner.profile.targetLang);
       if (ids.length === 0) return state;
       if (player.order.length === 0) {
         // An empty queue adopts the phrases without playing them.
@@ -601,6 +610,11 @@ export function transition(state: AppState, event: AppEvent): AppState {
     case 'MERGE_REMOTE': {
       const merged = mergeLearner(learner, event.learner);
       if (merged === learner) return state;
+      // The course switched on another tab or device: this queue belongs to the old one, as
+      // with a switch here (SET_PROFILE).
+      if (merged.profile.nativeLang !== learner.profile.nativeLang || merged.profile.targetLang !== learner.profile.targetLang) {
+        return { ...state, learner: merged, player: { ...initialPlayer(), cycle: player.cycle + 1 } };
+      }
       // Another device may have deleted one of your queued phrases, even the current one
       // (a local delete refuses that). Drop what's gone; if the current phrase went, pause
       // on the one after it rather than "play" a phrase that no longer exists.

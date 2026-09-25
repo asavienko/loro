@@ -4,7 +4,7 @@ import { keyOf } from './catalog';
 import { canHandle } from './chart';
 import { transition } from './machine';
 import { derive, isLearned, RATING_WINDOW_MS } from './memory';
-import { currentPhraseId, memoryOf, phraseProgress, points, upNextIds } from './selectors';
+import { currentPhraseId, memoryOf, phraseProgress, points, previouslyPlayed, upNextIds } from './selectors';
 import { cafe, DAY, done, fresh, load, MINUTE, playPhrase, run, T0 } from './testing';
 
 describe('player loop', () => {
@@ -386,5 +386,55 @@ describe('clearing the queue', () => {
     s = run(s, { type: 'CLEAR_QUEUE' }, { type: 'RESTORE_UP_NEXT', phraseIds: upNext });
     s = run(s, { type: 'TOGGLE_SHUFFLE', seed: 7 }, { type: 'TOGGLE_SHUFFLE', seed: 7 });
     assert.deepEqual(upNextIds(s.player), upNext);
+  });
+});
+
+describe('player review fixes', () => {
+  it("a course switched on another tab stops this tab's queue", () => {
+    const s = run(load(fresh()), { type: 'PLAY', now: T0 });
+    const remote = { ...s.learner, profile: { ...s.learner.profile, targetLang: 'bg-BG' as const, updatedAt: T0 + 5 } };
+    const after = run(s, { type: 'MERGE_REMOTE', learner: remote, now: T0 + 6 });
+    assert.equal(after.learner.profile.targetLang, 'bg-BG');
+    assert.equal(after.player.status, 'idle');
+    assert.deepEqual(after.player.order, []);
+  });
+
+  it("another course's phrase isn't queued", () => {
+    const s = run(load(fresh()), { type: 'ENQUEUE', phraseIds: ['bg-kafene-01', 'tapas-01'], setId: null, at: 'next', now: T0 });
+    assert.ok(!s.player.order.includes('bg-kafene-01'));
+    assert.ok(s.player.order.includes('tapas-01'));
+  });
+
+  it('continue mode after a queue with no set moves past what it played', () => {
+    let s = load(fresh({ playMode: 'continue' }), T0, ['cafe-01'], null);
+    s = run(s, { type: 'NEXT', now: T0 + 1 });
+    const order = s.player.order;
+    assert.notEqual(order[s.player.index], 'cafe-01', 'not the phrase just heard again');
+  });
+
+  it("shuffle on and off leaves a missed phrase's copy a few phrases on", () => {
+    let s = run(load(fresh()), { type: 'NEXT', now: T0 }, { type: 'RATE', grade: 'missed', now: T0 + 1 });
+    const copyAt = s.player.order.lastIndexOf('cafe-02');
+    assert.ok(copyAt > s.player.index + 1);
+    s = run(s, { type: 'TOGGLE_SHUFFLE', seed: 3 }, { type: 'TOGGLE_SHUFFLE', seed: 3 });
+    assert.equal(s.player.order.lastIndexOf('cafe-02'), copyAt);
+  });
+
+  it('an audio error is left behind on Next', () => {
+    let s = run(load(fresh()), { type: 'PLAY', now: T0 });
+    s = run(s, { type: 'PHASE_DONE', cycle: s.player.cycle, now: T0 + 1, failure: { lang: 'en-GB', reason: 'silent' } });
+    assert.ok(s.player.audioError);
+    s = run(s, { type: 'NEXT', now: T0 + 2 });
+    assert.equal(s.player.audioError, null);
+  });
+});
+
+describe('previously played', () => {
+  it("lists this course's phrases only", () => {
+    const s = load(fresh());
+    const heard = (key: string, phraseId: string, setId: string, at: number) =>
+      ({ id: `${s.device.id}.h-${at}`, at, device: s.device.id, kind: 'heard' as const, key, phraseId, setId, targetMs: 1000, nativeMs: 1000 });
+    const withLog = { ...s, learner: { ...s.learner, log: [heard('en-GB>bg-BG:bg-kafene-01', 'bg-kafene-01', 'set-bg-kafene', T0 - 2), heard('en-GB>es-ES:tapas-01', 'tapas-01', 'set-tapas', T0 - 1)] } };
+    assert.deepEqual(previouslyPlayed(withLog).map((e) => e.phraseId), ['tapas-01']);
   });
 });
