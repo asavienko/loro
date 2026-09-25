@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { coursesFor, getTopic, Phrase } from '../content';
 import { languageName } from '../copy';
-import { routeUrl } from '../nav/history';
+import { goBack, routeUrl } from '../nav/history';
 import { useNav } from '../nav/NavContext';
 import { findPhrase, findSetView } from '../state/catalog';
 import { formatElapsed } from '../state/clock';
@@ -10,7 +10,6 @@ import {
   isLiked,
   phraseProgress,
   PhraseProgress,
-  playableIds,
   setDurationMs,
   setProgress,
   sortFor,
@@ -91,7 +90,8 @@ export function SetScreen({ setId }: { setId: string }) {
     }
   });
   const sortedIds = sorted.map((r) => r.phrase.id);
-  const dueAndNew = playableIds(state.learner, sortedIds, now);
+  // What the button says: due again, or never rated (the statuses the rows show).
+  const dueAndNew = sorted.filter((r) => r.progress.status === 'due' || r.progress.status === 'new').map((r) => r.phrase.id);
 
   const onPlay = () => {
     if (isThisSet && playing) actions.pause();
@@ -288,7 +288,8 @@ export function SetScreen({ setId }: { setId: string }) {
                 actions.deleteSet(setId);
                 setMoreOpen(false);
                 toast(c.set.deleted, { action: { label: c.common.undo, run: () => actions.restoreSet(setId) } });
-                nav.go({ name: 'library', view: 'ownSets' });
+                // Back out of the deleted set's page, so Back later can't return to it.
+                goBack({ name: 'library', view: 'ownSets' });
               }}
             />
           </>
