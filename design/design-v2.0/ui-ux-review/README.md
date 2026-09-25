@@ -778,3 +778,20 @@ result said No phrases match "". Playwright: Chromium 167, WebKit 160, Firefox 1
 **Open question:** on a set that is already the paused queue, the big Play button resumes that queue,
 even when it holds only part of the set (Home's Continue) or the page's sort has since changed. Should
 it resume, or restart the whole set in the order shown (and say "Resume" when it resumes)?
+
+**Later reviews (same day):** further read-only reviews, each finding verified and fixed with a test
+that fails without it:
+- *Copy (bg/ru):* counts that disagreed with their words ("1 фраза чути", "21 дней"), "5 д" on the
+  Bulgarian rating buttons, Russian "Играть" (a game) for playback, "изсвирена". Bulgarian and Russian
+  now also get the 320 px, axe and page-language checks.
+- *Home and stats:* the weekly chart lost a week after the spring clock change; Home counted sets
+  heard in another course; the summary counted another device's learned bonus; Today counted
+  ratings, not rated phrases.
+- *Forms:* the Settings name was lost on Escape; "Add as your phrase" from a long search went over
+  the limit; the duplicate check treated ñ/й as n/и; Save was offered for unchanged edits.
+- *Player and queue:* a course switched in another tab kept playing; other-course phrases in
+  Previously played; shuffle moved a missed phrase's copy next to itself; a held arrow key flew
+  through the queue; the Settings voice Test cut the player off.
+- *Regressions from these fixes:* four, found by a review of the day's commits and fixed.
+
+Playwright: Chromium 184, WebKit 177, Firefox 180; 111 unit tests.
