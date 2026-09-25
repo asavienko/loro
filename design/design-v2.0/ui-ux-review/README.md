@@ -722,6 +722,10 @@ Known and left: button names that embed a phrase ("Play Me pone un cortado…") 
 language, since `aria-label` carries no `lang`; the word-gloss buttons give no hint that they reveal
 a meaning. Both want a real screen-reader pass (VoiceOver, TalkBack, NVDA).
 
+**Checks after the seven reviews:** 93 unit tests, the build (main chunk 186 kB gzipped), and
+Playwright: 154 on the dev server and 153 against the production build; random walks found no page
+error; with a year of history, playback shows no long main-thread task.
+
 **Open question:** "Full play 0:41 at 1×" is speech plus pauses, measured; it leaves out the 4 s
 rating hold (only for unrated phrases) and the engine's start-up delay, so an unrated new set can
 take ~1:01. Should it include the hold for unrated phrases, or be relabelled "listening time"?
