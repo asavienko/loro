@@ -2,9 +2,12 @@ import { defineConfig, devices } from '@playwright/test';
 
 // PREVIEW=1 runs the suite against the production build (`vite preview`),
 // service worker included; otherwise against the dev server. BROWSER=webkit runs
-// it in WebKit, the engine of every browser on iOS (`npx playwright install webkit`).
+// it in WebKit, the engine of every browser on iOS (`npx playwright install webkit`);
+// BROWSER=firefox in Gecko (Firefox for Android), without mobile emulation, which
+// Firefox doesn't support.
 const preview = process.env.PREVIEW === '1';
 const PORT = preview ? 4180 : 5320;
+const browser = process.env.BROWSER === 'webkit' || process.env.BROWSER === 'firefox' ? process.env.BROWSER : 'chromium';
 
 export default defineConfig({
   testDir: 'e2e',
@@ -14,7 +17,8 @@ export default defineConfig({
   use: {
     baseURL: `http://localhost:${PORT}`,
     ...devices['iPhone 13'],
-    browserName: process.env.BROWSER === 'webkit' ? 'webkit' : 'chromium',
+    ...(browser === 'firefox' ? { isMobile: false } : {}),
+    browserName: browser,
     viewport: { width: 390, height: 844 },
     trace: 'retain-on-failure',
     serviceWorkers: preview ? 'allow' : 'block',
