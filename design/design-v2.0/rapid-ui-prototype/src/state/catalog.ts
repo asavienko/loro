@@ -126,10 +126,25 @@ export function coursePhrases(learner: LearnerState): Phrase[] {
   return [...CONTENT_PHRASES.filter((p) => p.targetLang === target), ...ownPhrases(learner)];
 }
 
-/** Case, accents, punctuation and spacing don't make a phrase different. */
+/** Case, accents, punctuation and spacing don't make a phrase different (search: "ano" finds "año"). */
 export function phraseKey(text: string): string {
-  return text
+  return foldKey(text.normalize('NFD'));
+}
+
+/**
+ * For "you already have this": as phraseKey, but ñ and й stay letters of their own
+ * (año ≠ ano, мой ≠ мои). An accent (dónde / donde) or ё written as е still matches.
+ */
+export function sameKey(text: string): string {
+  const kept = text
     .normalize('NFD')
+    .replace(/([nN])\u0303/g, (_, n: string) => (n === 'n' ? '\u00f1' : '\u00d1'))
+    .replace(/([иИ])\u0306/g, (_, i: string) => (i === 'и' ? 'й' : 'Й'));
+  return foldKey(kept);
+}
+
+function foldKey(decomposed: string): string {
+  return decomposed
     .replace(/\p{M}/gu, '')
     .toLowerCase()
     .replace(/[^\p{L}\p{N}]+/gu, ' ')
@@ -138,7 +153,7 @@ export function phraseKey(text: string): string {
 
 /** A phrase of the current course that says the same as `text` (not `exceptId`), if any. */
 export function findSamePhrase(learner: LearnerState, text: string, exceptId?: string): Phrase | undefined {
-  const key = phraseKey(text);
+  const key = sameKey(text);
   if (!key) return undefined;
-  return coursePhrases(learner).find((p) => p.id !== exceptId && phraseKey(p.target) === key);
+  return coursePhrases(learner).find((p) => p.id !== exceptId && sameKey(p.target) === key);
 }

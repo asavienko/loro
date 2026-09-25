@@ -15,6 +15,8 @@ import {
   RENAMED_PHRASE_IDS,
 } from '../content';
 import { OWN_PHRASE_PREFIX, OWN_SET_PREFIX } from './catalog';
+// The same limits the forms apply, for data that arrives by sync or migration.
+import { clip, LIMITS } from './limits';
 import { decodeLog, encodeLog } from './compactLog';
 import { initialLearner, initialPlayer, initialPrefs, initialProfile } from './initial';
 import { derive, memoryKey } from './memory';
@@ -44,9 +46,6 @@ const num = (value: unknown): value is number => typeof value === 'number' && Nu
 const str = (value: unknown): value is string => typeof value === 'string';
 const strings = (value: unknown): string[] => (Array.isArray(value) ? value.filter(str) : []);
 const GRADES: readonly string[] = ['missed', 'hard', 'easy'];
-/** The same limits the forms apply, for data that arrives by sync or migration. */
-const MAX_PHRASE_LENGTH = 120;
-const MAX_TITLE_LENGTH = 60;
 const MAX_CARRYOVER = 1_000_000;
 /** Epoch ms the core accepts: not negative, within JavaScript's safe range. */
 const validTime = (value: unknown): value is number => num(value) && value >= 0 && value <= Number.MAX_SAFE_INTEGER;
@@ -128,8 +127,8 @@ function sanitizeOwnPhrases(value: unknown): Record<string, OwnPhrase> {
     if (!str(p.targetLang) || !str(p.nativeLang)) continue;
     out[id] = {
       id,
-      target: p.target.slice(0, MAX_PHRASE_LENGTH),
-      native: p.native.slice(0, MAX_PHRASE_LENGTH),
+      target: clip(p.target, LIMITS.phrase),
+      native: clip(p.native, LIMITS.phrase),
       targetLang: p.targetLang as LanguageCode,
       nativeLang: p.nativeLang as LanguageCode,
       createdAt: num(p.createdAt) ? p.createdAt : 0,
@@ -147,7 +146,7 @@ function sanitizeOwnSets(value: unknown, own: Record<string, OwnPhrase>): Record
     if (!id.startsWith(OWN_SET_PREFIX) || !isObject(s) || !str(s.title) || !str(s.targetLang)) continue;
     out[id] = {
       id,
-      title: s.title.slice(0, MAX_TITLE_LENGTH),
+      title: clip(s.title, LIMITS.title),
       targetLang: s.targetLang as LanguageCode,
       phraseIds: strings(s.phraseIds).map(renamed).filter((pid) => knownPhrase(pid, own)),
       createdAt: num(s.createdAt) ? s.createdAt : 0,
