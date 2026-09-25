@@ -87,3 +87,14 @@ test("after a reload with a sheet open, the header's Back returns to the search"
   await page.getByRole('button', { name: /^Back/ }).first().click();
   await expect(page).toHaveURL(/#\/explore\?q=mer/);
 });
+
+test('Forward gets past a closed overlay to the page after it', async ({ page }) => {
+  await openPlayer(page);
+  // A hash typed in the address bar while the player is open: the player closes, its entry stays.
+  await page.evaluate(() => (window.location.hash = '#/library'));
+  await expect(page.getByRole('heading', { name: 'Library', level: 1 })).toBeVisible();
+  await page.goBack();
+  await expect(page).toHaveURL(/#\/set\/set-market/);
+  await page.goForward();
+  await expect(page).toHaveURL(/#\/library/);
+});
