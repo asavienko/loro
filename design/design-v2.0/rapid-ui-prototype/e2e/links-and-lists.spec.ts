@@ -11,7 +11,8 @@ test('a link with a stray "%" opens a page instead of an error', async ({ page }
 
 test('after deleting your set, Back does not return to it', async ({ page }) => {
   await page.goto('/#/explore');
-  await page.goto('/#/library?view=ownSets');
+  // A second hash-only goto isn't always a navigation in WebKit: change the hash as a link would.
+  await page.evaluate(() => (window.location.hash = '#/library?view=ownSets'));
   await page.getByRole('button', { name: 'New set' }).first().click();
   await page.getByLabel('Name').fill('Probe');
   await page.getByLabel('Name').press('Enter');
