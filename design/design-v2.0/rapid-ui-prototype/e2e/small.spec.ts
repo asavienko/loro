@@ -174,3 +174,40 @@ test('a long press selects no button label, while phrases stay selectable', asyn
   const phrase = page.getByRole('dialog').getByText('Me pone un cortado, por favor', { exact: true });
   expect(await phrase.evaluate((e) => getComputedStyle(e).userSelect)).not.toBe('none');
 });
+
+// Bulgarian and Russian labels run longer than English: the same 320 px phone, the same checks.
+for (const nativeLang of ['bg-BG', 'ru-RU'] as const) {
+  test.describe(`${nativeLang} UI on a 320 px phone`, () => {
+    test.use({ seed: { nativeLang, targetLang: 'es-ES' } });
+    const spills = (page: import('@playwright/test').Page) =>
+      page.evaluate(() =>
+        [...document.querySelectorAll('button, [role="button"], a, h1, h2, p, li')]
+          .filter((e) => {
+            const r = e.getBoundingClientRect();
+            if (r.width === 0 || e.closest('.truncate, .scroll-row, .sr-only')) return false;
+            return r.right > 321 || (e.clientHeight > 0 && e.scrollWidth > e.clientWidth + 1);
+          })
+          .map((e) => (e.textContent ?? '').trim().slice(0, 40))
+          .slice(0, 5),
+      );
+
+    for (const hash of ['/', '/#/explore', '/#/library', '/#/set/set-cafe?from=explore']) {
+      test(`nothing spills: ${hash}`, async ({ page }) => {
+        await page.goto(hash);
+        await page.waitForTimeout(300);
+        expect(await spills(page)).toEqual([]);
+        expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
+      });
+    }
+
+    test('the player and its rating window line fit', async ({ page }) => {
+      await page.goto('/#/set/set-cafe?from=explore');
+      await page.getByRole('button', { name: /^(Пусни „|Слушать «)Café & Mañanas/ }).click();
+      await page.getByRole('button', { name: /^(Сега звучи|Сейчас звучит)/ }).click();
+      await page.waitForTimeout(700);
+      await page.locator('[aria-keyshortcuts="1"]').click();
+      await page.waitForTimeout(300);
+      expect(await spills(page)).toEqual([]);
+    });
+  });
+}
