@@ -182,7 +182,13 @@ export function SetScreen({ setId }: { setId: string }) {
           </div>
           <p className="text-body text-secondary mt-3">
             {c.set.summary(progress.total, progress.learned, progress.due)}
-            {duration !== null && sortedIds.length > 0 && ` · ${c.set.duration(formatElapsed(duration))}`}
+            {/* The duration moves to the next line whole rather than leaving "1×" alone there. */}
+            {duration !== null && sortedIds.length > 0 && (
+              <>
+                {' · '}
+                <span className="inline-block">{c.set.duration(formatElapsed(duration))}</span>
+              </>
+            )}
           </p>
           {/* Like and More on the left; Play (and shuffle) on the right, and on a line of their own
               when large text leaves no room for both. */}
