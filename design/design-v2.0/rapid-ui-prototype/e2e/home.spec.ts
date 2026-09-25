@@ -264,6 +264,33 @@ test.describe("Library's + adds a phrase or a set (U-09)", () => {
   });
 });
 
+/** The header's one-word title is whole: not cut to "Libra…". */
+const titleWhole = (page: import('@playwright/test').Page) => page.locator('header h1').evaluate((e) => e.scrollWidth <= e.clientWidth + 1);
+
+test('at 200% text a tab\'s one-word title is whole: the points give way to it, and stay on Home (Q-06)', async ({ page }) => {
+  for (const [hash, points] of [['/#/explore', false], ['/#/library', false], ['/', true]] as const) {
+    await page.goto(hash);
+    await page.addStyleTag({ content: 'html { font-size: 200% }' });
+    await page.waitForTimeout(200);
+    expect(await titleWhole(page), hash).toBe(true);
+    await expect(page.getByTestId('points')).toBeVisible({ visible: points });
+  }
+});
+
+for (const nativeLang of ['bg-BG', 'ru-RU'] as const) {
+  test.describe(`${nativeLang} on a 320 px phone`, () => {
+    test.use({ viewport: { width: 320, height: 568 }, seed: { nativeLang } });
+    test('"Библиотека" is whole beside the +: the points give way there, and only there (Q-06)', async ({ page }) => {
+      for (const [hash, points] of [['/#/library', false], ['/#/explore', true], ['/', true]] as const) {
+        await page.goto(hash);
+        await page.waitForTimeout(200);
+        expect(await titleWhole(page), hash).toBe(true);
+        await expect(page.getByTestId('points')).toBeVisible({ visible: points });
+      }
+    });
+  });
+}
+
 test.describe('onboarding', () => {
   test.use({ seed: null });
   test('a drawn progress bar fills step by step; the loop says to speak out loud (V-21, U-04)', async ({ page }) => {

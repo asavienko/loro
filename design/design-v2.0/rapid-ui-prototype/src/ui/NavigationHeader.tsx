@@ -83,7 +83,7 @@ export function NavigationHeader({ title, titleLang, onBack, onOpenSettings, ine
             // A one-word page title ("Library") is cut with an ellipsis rather than broken mid-word.
             <h1
               lang={titleLang}
-              className={`font-serif text-heading leading-tight text-on-surface ${titleLang ? 'italic font-medium line-clamp-2 break-words @max-[18rem]:text-title' : 'font-semibold truncate'}`}
+              className={`font-serif text-heading leading-tight text-on-surface @max-[18rem]:text-title ${titleLang ? 'italic font-medium line-clamp-2 break-words' : 'font-semibold truncate'}`}
             >
               {title}
             </h1>
@@ -96,10 +96,14 @@ export function NavigationHeader({ title, titleLang, onBack, onOpenSettings, ine
         </div>
         {action}
         {!onBack && (
-          // Beside a page's action at large text (Library's "+" at 150% and up), the points give way to
-          // the title and the action: the chip is on every other tab. On the narrowest bar (a 320 px
-          // phone at 200%) they give way everywhere, or the title would be a letter or two.
-          <p data-testid="points" className={`${action ? '@max-[18rem]:hidden' : ''} @max-[11rem]:hidden shrink-0 -mr-1 h-8 px-2.5 rounded-full bg-surface-container-low text-on-primary-fixed-variant flex items-center gap-1`}>
+          // A one-word page title is cut, never broken, so the points give way to it: beside a page's
+          // action on a small phone (Library's "+" at 320 px, where "Библиотека" needs the room), on
+          // any tab but Home at large text (200% on a 390 px phone), and on the narrowest bar everywhere.
+          // Home keeps them longer: its greeting wraps to two lines instead. The chip is on every tab.
+          <p
+            data-testid="points"
+            className={`${action ? '@max-[22rem]:hidden' : ''} ${titleLang ? '' : '@max-[14rem]:hidden'} @max-[11rem]:hidden shrink-0 -mr-1 h-8 px-2.5 rounded-full bg-surface-container-low text-on-primary-fixed-variant flex items-center gap-1`}
+          >
             <span className="sr-only">{c.nav.points(points)}</span>
             <Icon name="stars" fill className="text-icon-xs text-primary-container" />
             <span aria-hidden="true" className="text-body font-bold tabular-nums">{new Intl.NumberFormat(c.locale).format(points)}</span>
