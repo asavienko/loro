@@ -39,10 +39,16 @@ export function useDialog(ref: RefObject<HTMLElement | null>, onClose: () => voi
     dialogs.set(id, { node, opener: returnTo?.isConnected ? returnTo : fallback });
     // Only what Tab actually reaches: a hidden, inert or tabindex="-1" element (an unselected tab)
     // counted as "last" would let Tab slip out of the dialog.
+    // An open message's buttons (Undo) count as part of the top dialog, or a keyboard user
+    // in the player or queue could never reach them.
+    const toasts = () => document.querySelector<HTMLElement>('.toast-layer');
     const focusables = () =>
       node
-        ? [...node.querySelectorAll<HTMLElement>(FOCUSABLE)].filter((el) => el.tabIndex >= 0 && el.getClientRects().length > 0 && !el.closest('[inert]'))
+        ? [...node.querySelectorAll<HTMLElement>(FOCUSABLE), ...(toasts()?.querySelectorAll<HTMLElement>('button') ?? [])].filter(
+            (el) => el.tabIndex >= 0 && el.getClientRects().length > 0 && !el.closest('[inert]'),
+          )
         : [];
+    const inside = (el: Element | null) => Boolean(el && (node?.contains(el) || toasts()?.contains(el)));
     (focusables()[0] ?? node)?.focus({ preventScroll: true });
 
     const onKey = (event: KeyboardEvent) => {
@@ -58,10 +64,10 @@ export function useDialog(ref: RefObject<HTMLElement | null>, onClose: () => voi
       const first = items[0];
       const last = items[items.length - 1];
       const active = document.activeElement;
-      if (event.shiftKey && (active === first || !node?.contains(active))) {
+      if (event.shiftKey && (active === first || !inside(active))) {
         event.preventDefault();
         last.focus();
-      } else if (!event.shiftKey && (active === last || !node?.contains(active))) {
+      } else if (!event.shiftKey && (active === last || !inside(active))) {
         event.preventDefault();
         first.focus();
       }
