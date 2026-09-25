@@ -1,5 +1,5 @@
 import { motion, PanInfo, useDragControls } from 'motion/react';
-import { PointerEvent, useRef, useState } from 'react';
+import { PointerEvent, useEffect, useRef, useState } from 'react';
 import { voiceName, voicesFor } from '../audio/speech';
 import { easyCue, gentleCue } from '../audio/cues';
 import { languageLabel, languageName } from '../copy';
@@ -28,6 +28,7 @@ import { GlossedPhrase, HiddenPhrase } from '../ui/PhraseText';
 import { SetCover } from '../ui/SetCover';
 import { usePlayerKeys } from './usePlayerKeys';
 import { Sheet } from '../ui/Sheet';
+import { useToast } from '../ui/Toast';
 
 const STEPS: Exclude<Phase, 'rate'>[] = ['native', 'pause', 'target'];
 const SWIPE = 70;
@@ -77,14 +78,17 @@ export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps
     else if (info.offset.x > SWIPE) actions.prev();
   };
 
-  // What a screen reader hears: every step, or only "your turn" and the reveal.
+  // What a screen reader hears: every step (the learner's choice), or, by default, as
+  // little as possible over the audio: a short "your turn" while the learner speaks, and
+  // the phrase once it has been heard, in its own language, during the hold for a rating.
+  const reveal = playing && quiet && phase === 'rate';
   const announcement = !playing
     ? ''
     : !quiet
       ? phaseInstruction(c, phase, prompt.lang, phrase.targetLang)
       : phase === 'pause'
-        ? phaseInstruction(c, 'pause', prompt.lang, phrase.targetLang)
-        : phase === 'target' && state.player.repetition === 1
+        ? c.player.yourTurn
+        : reveal
           ? phrase.target
           : '';
 
@@ -172,7 +176,8 @@ export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps
               <div className="flex flex-col shrink-0 short:flex-row short:-ml-2 short:order-first">
                 <button
                   type="button"
-                  aria-label={liked ? c.phrase.unlikeLabel : c.phrase.likeLabel}
+                  // One name; the pressed state says whether it's liked.
+                  aria-label={c.phrase.likeLabel}
                   aria-pressed={liked}
                   onClick={() => actions.toggleLike('phrase', phrase.id)}
                   className="w-11 h-11 flex items-center justify-center rounded-full text-primary-container active:bg-primary-fixed/40"
@@ -238,7 +243,9 @@ export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps
                   <PlayTime phrase={phrase} />
                 </div>
               )}
-              <p aria-live="polite" className="sr-only">{announcement}</p>
+              <p aria-live="polite" lang={reveal ? phrase.targetLang : undefined} className="sr-only">
+                {announcement}
+              </p>
             </div>
 
             <div className="phone-landscape:col-start-2 phone-landscape:row-start-2">
@@ -337,9 +344,20 @@ function Rating({ phrase }: { phrase: Phrase }) {
     else gentleCue();
   };
 
+  // Announced once when a grade is given or changed (tap or key), not from a live region
+  // whose "back in N minutes" would re-announce every minute of the undo window.
+  const { announce } = useToast();
+  const said = useRef<string | null>(null);
+  const ratedAs = active ? `${active.key}|${active.grade}|${active.at}` : null;
+  useEffect(() => {
+    if (!active || ratedAs === said.current) return;
+    said.current = ratedAs;
+    announce(c.player.rated(c.common.grade[active.grade], formatWhen(previewDue(state.learner, phrase.id, active.grade, active.at), active.at, c.locale)));
+  });
+
   return (
     <div className="h-[7.5rem] flex flex-col justify-between">
-      <p className="text-label text-secondary text-center" aria-live="polite">
+      <p className="text-label text-secondary text-center">
         {active
           ? c.player.rated(c.common.grade[active.grade], formatWhen(previewDue(state.learner, phrase.id, active.grade, active.at), now, c.locale))
           : c.player.howDidItGo}
@@ -385,13 +403,19 @@ function Rating({ phrase }: { phrase: Phrase }) {
 function PlayModeButton() {
   const c = useCopy();
   const { state, actions } = useStore();
+  const { announce } = useToast();
   const mode = state.prefs.playMode;
   return (
     <button
       type="button"
       aria-label={c.player.playMode[mode]}
       title={c.player.playMode[mode]}
-      onClick={() => actions.setPrefs({ playMode: mode === 'repeat' ? 'continue' : 'repeat' })}
+      onClick={() => {
+        const next = mode === 'repeat' ? 'continue' : 'repeat';
+        actions.setPrefs({ playMode: next });
+        // The name changes with the setting; say the new one, or the press seems to do nothing.
+        announce(c.player.playMode[next]);
+      }}
       className="w-11 h-11 flex items-center justify-center rounded-full text-primary-container active:bg-surface-container"
     >
       <Icon name={mode === 'repeat' ? 'repeat' : 'playlist_play'} className="text-icon-lg" />
@@ -402,6 +426,7 @@ function PlayModeButton() {
 function RepeatsButton() {
   const c = useCopy();
   const { state, actions } = useStore();
+  const { announce } = useToast();
   const setting = state.prefs.repeats;
   const label = setting === 'auto' ? c.player.repeats.auto : setting === 1 ? c.player.repeats.one : c.player.repeats.three;
   const next = REPEAT_SETTINGS[(REPEAT_SETTINGS.indexOf(setting) + 1) % REPEAT_SETTINGS.length];
@@ -410,7 +435,10 @@ function RepeatsButton() {
       type="button"
       aria-label={label}
       title={label}
-      onClick={() => actions.setPrefs({ repeats: next })}
+      onClick={() => {
+        actions.setPrefs({ repeats: next });
+        announce(next === 'auto' ? c.player.repeats.auto : next === 1 ? c.player.repeats.one : c.player.repeats.three);
+      }}
       className="w-11 h-11 flex items-center justify-center rounded-full active:bg-surface-container"
     >
       <span aria-hidden="true" className="min-w-9 h-7 px-1.5 rounded-lg border-2 border-primary-container text-primary-container text-label font-black flex items-center justify-center tabular-nums">

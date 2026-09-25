@@ -146,7 +146,7 @@ export function SetScreen({ setId }: { setId: string }) {
         <div className="flex flex-wrap items-center gap-1 mt-2">
           <button
             type="button"
-            aria-label={liked ? c.set.unlike : c.set.like}
+            aria-label={c.set.like}
             aria-pressed={liked}
             onClick={() => actions.toggleLike('set', setId)}
             className="w-11 h-11 -ml-2 flex items-center justify-center rounded-full text-primary-container active:bg-surface-container"
