@@ -260,7 +260,8 @@ export function SetScreen({ setId }: { setId: string }) {
         ) : (
           <ul>
             {sorted.map(({ phrase, position, progress: p }, i) => {
-              const isCurrent = isThisSet && currentId === phrase.id;
+              // The phrase playing, whichever queue it plays in (this set, a review, a list).
+              const isCurrent = currentId === phrase.id;
               return (
                 <li key={phrase.id}>
                   <PhraseRow
@@ -268,9 +269,9 @@ export function SetScreen({ setId }: { setId: string }) {
                     leading={String(position)}
                     detail={progressLabel(c, p, now)}
                     isCurrent={isCurrent}
-                    isPlaying={isCurrent && playing}
+                    isPlaying={isCurrent && player.status === 'playing'}
                     // As in the queue: the playing phrase's Spanish stays hidden while you recall it.
-                    hideTarget={isCurrent && !isTargetRevealed(state.player)}
+                    hideTarget={isCurrent && !isTargetRevealed(player)}
                     onPlay={() => load('set', sortedIds, { startIndex: i })}
                     onMore={() => nav.showDetails(phrase.id, view.kind === 'own' ? { ownSetId: setId } : {})}
                   />
