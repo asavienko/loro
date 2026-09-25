@@ -249,6 +249,31 @@ for (const nativeLang of ['bg-BG', 'ru-RU'] as const) {
       });
     }
 
+    test('topic tiles keep every word and "2 набора" on one line (Q-14)', async ({ page }) => {
+      for (const scale of [100, 200]) {
+        await page.goto('/#/explore');
+        if (scale !== 100) await page.addStyleTag({ content: `html { font-size: ${scale}% }` });
+        await page.waitForTimeout(200);
+        const split = await page.getByRole('region', { name: /^(Теми|Темы)$/ }).evaluate((region) => {
+          const out: string[] = [];
+          for (const tile of region.querySelectorAll('button')) {
+            const [title, count] = [...tile.querySelectorAll('span')].filter((e) => e.children.length === 0 && !e.classList.contains('material-symbols-outlined'));
+            const lines = (node: Node, from: number, to: number) => {
+              const range = document.createRange();
+              range.setStart(node, from);
+              range.setEnd(node, to);
+              return new Set([...range.getClientRects()].map((r) => Math.round(r.top))).size;
+            };
+            const text = title.firstChild!;
+            for (const m of (text.textContent ?? '').matchAll(/\S+/g)) if (lines(text, m.index, m.index + m[0].length) > 1) out.push(m[0]);
+            if (lines(count.firstChild!, 0, count.textContent!.length) > 1) out.push(count.textContent!);
+          }
+          return out;
+        });
+        expect(split, `${scale}%`).toEqual([]);
+      }
+    });
+
     test('the player and its rating window line fit', async ({ page }) => {
       await page.goto('/#/set/set-cafe?from=explore');
       await page.getByRole('button', { name: /^(Пусни „|Слушать «)Café & Mañanas/ }).click();
