@@ -1,6 +1,6 @@
 // Runs the side effects of the state machine's current phase:
 //   native → speak the prompt, then a short gap
-//   pause  → the "your turn" cue, then silence sized to the measured target
+//   pause  → the "your turn" cue, then silence sized to the measured target (player.phaseMs)
 //   target → speak the target, then a short gap
 //   rate   → hold briefly for a rating
 // Each finished phase is reported as PHASE_DONE with the phase's cycle, so a
@@ -8,9 +8,9 @@
 import { useEffect } from 'react';
 import { useLatest } from '../lib/useLatest';
 import { findPhrase, promptOf } from '../state/catalog';
-import { currentPhraseId, measuredTargetMs } from '../state/selectors';
+import { currentPhraseId, phaseDurationMs } from '../state/selectors';
 import { useStore } from '../state/store';
-import { GAP_MS, pauseMs, RATE_HOLD_MS } from '../state/timing';
+import { GAP_MS, RATE_HOLD_MS } from '../state/timing';
 import { turnCue } from './cues';
 import { Playback, PlaybackResult, preloadClip, silence, speak } from './speech';
 
@@ -56,16 +56,18 @@ export function usePlaybackDriver(): void {
         lang = prompt.lang;
         playback = speakThenGap(speak(prompt.text, prompt.lang, speed, phrase.audio?.[prompt.lang]));
         break;
+      // The learner's turn and the hold last exactly as long as the machine fixed when they
+      // started (`phaseMs`), which is also what the screen counts down.
       case 'pause': {
         turnCue();
-        playback = silence(pauseMs(measuredTargetMs(s.learner, phraseId), phrase.target, speed));
+        playback = silence(s.player.phaseMs ?? phaseDurationMs(s) ?? 0);
         break;
       }
       case 'target':
         playback = speakThenGap(speak(phrase.target, phrase.targetLang, speed, phrase.audio?.[phrase.targetLang]));
         break;
       case 'rate':
-        playback = silence(RATE_HOLD_MS);
+        playback = silence(s.player.phaseMs ?? RATE_HOLD_MS);
         break;
     }
     let active = true;

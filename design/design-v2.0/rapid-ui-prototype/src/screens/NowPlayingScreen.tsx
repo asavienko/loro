@@ -381,7 +381,7 @@ function Rating({ phrase }: { phrase: Phrase }) {
         {active && (
           <>
             <span className="tabular-nums">{c.player.changeFor(formatElapsed(left))}</span>
-            <button type="button" onClick={actions.unrate} className="min-h-11 px-3 rounded-full font-bold text-primary-container underline underline-offset-2">
+            <button type="button" onClick={() => actions.unrate()} className="min-h-11 px-3 rounded-full font-bold text-primary-container underline underline-offset-2">
               {c.common.undo}
             </button>
           </>
