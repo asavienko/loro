@@ -3,7 +3,7 @@ import { expect, sampleHistory, test } from './fixtures';
 test.describe('explore', () => {
   test('search highlights matches and survives opening a set', async ({ page }) => {
     await page.goto('/#/explore');
-    await page.getByRole('searchbox', { name: 'Search phrases, notes and topics' }).fill('cuenta');
+    await page.getByRole('searchbox', { name: 'Phrases, notes, topics' }).fill('cuenta');
     await expect(page).toHaveURL(/q=cuenta/);
     await expect(page.locator('mark', { hasText: 'cuenta' }).first()).toBeVisible();
     await page.getByRole('button', { name: 'Café & Mañanas' }).first().click();
@@ -37,7 +37,7 @@ test.describe('explore', () => {
   test('a topic becomes a removable filter chip', async ({ page }) => {
     await page.goto('/#/explore');
     await page.getByRole('button', { name: /Getting around/ }).click();
-    await expect(page.getByRole('heading', { name: 'Filtered sets · 2' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Getting around · 2 sets' })).toBeVisible();
     await page.getByRole('button', { name: 'Remove filter: Getting around' }).click();
     await expect(page.getByRole('heading', { name: 'All sets' })).toBeVisible();
   });
@@ -131,7 +131,8 @@ test.describe('library', () => {
     await page.getByRole('button', { name: /^Now playing:/ }).click();
     await page.getByRole('button', { name: 'Open queue' }).click();
     const queue = page.getByRole('dialog', { name: 'Queue' });
-    await expect(queue.getByRole('button', { name: /^Play .* now$/ }).first()).toHaveAccessibleName(/Hola/);
+    // Up next goes by the prompt (the Spanish stays hidden until heard).
+    await expect(queue.getByRole('button', { name: /^Play .* now$/ }).first()).toHaveAccessibleName('Play Hi now');
   });
 
   test('a like shows under Liked, and Play all plays it', async ({ page }) => {
@@ -183,7 +184,7 @@ test.describe('sets you make', () => {
 
   test('the sort is remembered per set', async ({ page }) => {
     await page.goto('/#/set/set-cafe?from=explore');
-    await page.getByRole('button', { name: 'Set order' }).click();
+    await page.getByRole('button', { name: /Set order/ }).click();
     await page.getByRole('radio', { name: 'A–Z' }).click();
     await expect(page.getByText('Plays in: A–Z')).toBeVisible();
     await page.reload();
@@ -246,11 +247,11 @@ test('explore by level and by tag', async ({ page }) => {
   await page.goto('/#/explore');
   await page.getByRole('button', { name: 'A2', exact: true }).click();
   await expect(page).toHaveURL(/level=A2/);
-  await expect(page.getByRole('heading', { name: 'Filtered sets · 2' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Sets · 2' })).toBeVisible();
   await expect(page.getByRole('button', { name: /^Taxi de Noche/ })).toBeVisible();
   await page.getByRole('button', { name: 'Numbers', exact: true }).click();
   // Only A2 sets with a numbers phrase, and the numbers phrases themselves.
-  await expect(page.getByRole('heading', { name: 'Filtered sets · 1' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Sets · 1' })).toBeVisible();
   await expect(page.getByRole('heading', { name: '1 phrase', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Clear filters' }).click();
   await expect(page.getByRole('heading', { name: 'All sets' })).toBeVisible();
@@ -304,8 +305,8 @@ test('an empty set of your own points to phrases', async ({ page }) => {
   await page.getByRole('button', { name: 'New set' }).click();
   await page.getByLabel('Name', { exact: true }).fill('Trip');
   await page.getByRole('button', { name: 'Create' }).click();
-  await page.getByRole('button', { name: 'Find phrases' }).click();
-  await expect(page).toHaveURL(/#\/explore/);
+  await page.getByRole('button', { name: 'Add phrases' }).click();
+  await expect(page.getByRole('dialog', { name: 'Add phrases' })).toBeVisible();
 });
 
 test.describe('history', () => {
@@ -333,7 +334,7 @@ test('near the limit, a phrase field says how many characters are left', async (
 
 test('the Search key commits the query and puts the keyboard away', async ({ page }) => {
   await page.goto('/#/explore');
-  const field = page.getByRole('searchbox', { name: 'Search phrases, notes and topics' });
+  const field = page.getByRole('searchbox', { name: 'Phrases, notes, topics' });
   await expect(page.getByRole('search')).toBeVisible();
   await field.fill('metro');
   await field.press('Enter');

@@ -89,7 +89,7 @@ export function HomeScreen() {
                 label={c.home.demoButton}
                 detail={null}
                 onClick={() => {
-                  nav.playList([firstPhrase]);
+                  nav.playList([firstPhrase], 0, { kind: 'demo' });
                   nav.openPlayer();
                 }}
               />
@@ -105,7 +105,7 @@ export function HomeScreen() {
                 label={c.home.playPhrases(review.length)}
                 detail={reviewMs === null ? null : c.home.duration(formatElapsed(reviewMs))}
                 onClick={() => {
-                  nav.playList(review);
+                  nav.playList(review, 0, { kind: 'review' });
                   nav.openPlayer();
                 }}
               />

@@ -42,6 +42,9 @@ test('continue mode moves on to the next set', async ({ page }) => {
   await expect(player.getByText('5 of 5')).toBeVisible();
   await player.getByRole('button', { name: 'Next phrase', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Tapas & Tabernas' })).toBeVisible();
+  // It says so, and counts the whole queue now, not the new set's five.
+  await expect(page.locator('.toast-layer')).toContainText('Next: Tapas & Tabernas');
+  await expect(player.getByText('6 of 10 in the queue')).toBeVisible();
 });
 
 test('the mini-player skips and pauses', async ({ page }) => {
@@ -114,7 +117,7 @@ test('play next from details goes straight after the current phrase', async ({ p
   await page.getByRole('button', { name: /^Now playing:/ }).click();
   await page.getByRole('button', { name: 'Open queue' }).click();
   const first = page.getByRole('dialog', { name: 'Queue' }).getByRole('button', { name: /^Play .* now$/ }).first();
-  await expect(first).toHaveAccessibleName('Play Sin gluten, por favor now');
+  await expect(first).toHaveAccessibleName('Play Gluten-free, please now');
 });
 
 test('two tabs never overwrite each other', async ({ page, context }) => {

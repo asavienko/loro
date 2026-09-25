@@ -117,7 +117,7 @@ test("a setting changed in one tab isn't reverted when another tab saves later",
   const other = await context.newPage();
   await other.goto('/#/set/set-taxi?from=explore');
   await page.bringToFront();
-  await page.getByRole('button', { name: 'Set order' }).click();
+  await page.getByRole('button', { name: /Set order/ }).click();
   await page.getByRole('radio', { name: 'A–Z' }).click();
   await expect(page.getByText('Plays in: A–Z')).toBeVisible();
   await page.waitForTimeout(800);

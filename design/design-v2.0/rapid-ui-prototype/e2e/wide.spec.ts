@@ -16,8 +16,9 @@ test("the player's header lines up with its body", async ({ page }) => {
   await page.getByRole('button', { name: /^Play \d+ phrases/ }).first().click();
   const player = page.getByRole('dialog', { name: 'Now playing' });
   const queue = (await player.getByRole('button', { name: 'Open queue' }).boundingBox())!;
-  const speed = (await player.getByRole('radiogroup', { name: 'Speed' }).boundingBox())!;
-  expect(Math.abs(queue.x + queue.width - (speed.x + speed.width))).toBeLessThan(24);
+  // The grades span the controls' column (speed is a narrower, centred row).
+  const easy = (await player.getByRole('button', { name: /^Easy/ }).boundingBox())!;
+  expect(Math.abs(queue.x + queue.width - (easy.x + easy.width))).toBeLessThan(24);
 });
 
 test.describe('a portrait tablet (768×1024)', () => {

@@ -1,4 +1,4 @@
-import { expect, expectAccessible, test } from './fixtures';
+import { expect, expectAccessible, sampleHistory, test } from './fixtures';
 
 test.describe('onboarding', () => {
   test.use({ seed: null });
@@ -22,6 +22,21 @@ test.describe('onboarding', () => {
     await expect(page.getByRole('heading', { name: '¡Hola, Clara!' })).toBeVisible();
   });
 
+  test('the demo is one pass, then hands over to a whole set', async ({ page }) => {
+    await page.goto('/');
+    for (let i = 0; i < 4; i++) await page.getByRole('button', { name: 'Continue' }).click();
+    await page.getByRole('button', { name: 'Start with one phrase' }).click();
+    const player = page.getByRole('dialog', { name: 'Now playing' });
+    await expect(player.getByRole('heading', { level: 1 })).toHaveText('Try the loop');
+    await player.getByRole('button', { name: 'Next phrase' }).click();
+    await expect(player.getByRole('heading', { name: 'That’s the loop' })).toBeVisible();
+    await expect(player.getByRole('button', { name: 'Pause', exact: true })).toHaveCount(0);
+    await player.getByRole('button', { name: 'Start Café & Mañanas' }).click();
+    await expect(player.getByRole('heading', { level: 1 })).toHaveText('Café & Mañanas');
+    await expect(player.getByText('1 of 5')).toBeVisible();
+    await expect(player.getByRole('button', { name: 'Pause', exact: true })).toBeVisible();
+  });
+
   test('a Bulgarian speaker gets the UI in Bulgarian and only the Spanish course', async ({ page }) => {
     await page.goto('/');
     await page.getByRole('radio', { name: 'Български' }).check();
@@ -40,7 +55,7 @@ test.describe('the loop', () => {
     await expect(player.getByText('Spanish hidden until you hear it')).toBeAttached();
     await expect(player.getByRole('heading', { name: 'Me pone un cortado, por favor' })).toHaveCount(0);
     // Prompt, then the learner's turn, then the target.
-    await expect(player.getByText('Your turn — say it in Spanish', { exact: true }).first()).toBeVisible();
+    await expect(player.getByText('Your turn — say it out loud in Spanish', { exact: true }).first()).toBeVisible();
     await expect(player.getByText('Hear it in Spanish', { exact: true }).first()).toBeVisible({ timeout: 10_000 });
     await player.getByRole('button', { name: 'Pause', exact: true }).click();
     // The glossed heading reads exactly as the phrase: no punctuation lost or doubled.
@@ -56,6 +71,16 @@ test.describe('the loop', () => {
     const pause = page.getByRole('dialog', { name: 'Now playing' }).getByRole('button', { name: 'Pause', exact: true });
     const box = await pause.boundingBox();
     expect(box!.y + box!.height).toBeLessThanOrEqual(844);
+    // Every control, the speed row too: nothing needs a scroll.
+    const offscreen = await page.getByRole('dialog', { name: 'Now playing' }).evaluate((root) =>
+      [...root.querySelectorAll('button, [role="radio"]')]
+        .filter((e) => {
+          const r = e.getBoundingClientRect();
+          return r.width > 0 && r.height > 0 && (r.top < 0 || r.bottom > window.innerHeight);
+        })
+        .map((e) => e.getAttribute('aria-label') ?? e.textContent),
+    );
+    expect(offscreen).toEqual([]);
     await page.getByRole('button', { name: 'Open queue' }).click();
     await expect(page.getByRole('dialog', { name: 'Queue' })).toBeVisible();
     await page.goBack();
@@ -76,13 +101,60 @@ test.describe('the loop', () => {
     await expect(player.getByRole('button', { name: /^Hard/ })).toHaveAttribute('aria-pressed', 'true');
     await player.getByRole('button', { name: /^Easy/ }).click();
     await expect(player.getByRole('button', { name: /^Easy/ })).toHaveAttribute('aria-pressed', 'true');
-    await expect(player.getByText(/Change or undo for 4:5\d/)).toBeVisible();
+    await expect(player.getByRole('button', { name: /^Undo rating \(4:5\d left\)$/ })).toHaveText(/^Undo · 4:5\d$/);
     await player.getByRole('button', { name: 'Undo' }).click();
     await expect(player.getByRole('button', { name: /^Easy/ })).toHaveAttribute('aria-pressed', 'false');
     await player.getByRole('button', { name: /^Easy/ }).click();
     await page.clock.runFor(5 * 60_000 + 20_000);
     await page.getByRole('button', { name: 'Close player' }).click();
     await expect(page.getByTestId('points')).toContainText(/[1-9]\d* points/);
+  });
+
+  test('a rating given in the hold is shown with Undo, which still works once the next phrase plays', async ({ page }) => {
+    await page.clock.install();
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Play 5 phrases' }).click();
+    const player = page.getByRole('dialog', { name: 'Now playing' });
+    const waiting = player.getByText('Rate it, or wait to go on').first();
+    for (let t = 0; t < 120_000 && !(await waiting.isVisible()); t += 250) await page.clock.runFor(250);
+    await player.getByRole('button', { name: /^Easy/ }).click();
+    await expect(player.getByText('2 of 5')).toBeVisible();
+    const toast = page.locator('.toast-layer');
+    await expect(toast).toContainText(/^Rated Easy — back (tomorrow|in \d+ days)/);
+    await toast.getByRole('button', { name: 'Undo' }).click();
+    // Back on the first phrase, nothing is rated.
+    await player.getByRole('button', { name: 'Previous phrase' }).click();
+    await expect(player.getByText('1 of 5')).toBeVisible();
+    await expect(player.getByRole('button', { name: /^Easy/ })).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  test('the repetitions and play-mode buttons show their setting and say what a tap changed', async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Play 5 phrases' }).click();
+    const player = page.getByRole('dialog', { name: 'Now playing' });
+    const reps = player.getByRole('button', { name: /^Repetitions:/ });
+    await expect(reps).toHaveText('Autoreps');
+    await reps.click();
+    await expect(page.locator('.toast-layer')).toContainText('Each phrase plays once');
+    await expect(reps).toHaveText('1reps');
+    const mode = player.getByRole('button', { name: /^At the end:/ });
+    await expect(mode).toContainText('Again');
+    await mode.click();
+    await expect(page.locator('.toast-layer')).toContainText('At the end, new phrases follow');
+    await expect(mode).toContainText('Continue');
+  });
+
+  test('in the hold the mini-player asks for a tap: the grades are in the player', async ({ page }) => {
+    await page.clock.install();
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Play 5 phrases' }).click();
+    await page.getByRole('button', { name: 'Close player' }).click(); // Home's Play opens the player
+    const mini = page.getByRole('button', { name: /^Now playing:/ });
+    for (let t = 0; t < 60_000 && !/Tap to rate/.test((await mini.textContent()) ?? ''); t += 250) await page.clock.runFor(250);
+    await expect(mini).toContainText('Tap to rate');
+    await expect(mini).toContainText('Me pone un cortado, por favor');
+    await mini.click();
+    await expect(page.getByRole('dialog', { name: 'Now playing' }).getByText('Rate it, or wait to go on')).toBeVisible();
   });
 
   test('keyboard: space plays and pauses, arrows change phrase, 1–3 rate', async ({ page }) => {
@@ -108,7 +180,15 @@ test.describe('the loop', () => {
     const player = page.getByRole('dialog', { name: 'Now playing' });
     await expect(player.getByRole('alert')).toContainText('This device has no Spanish voice');
     await expect(player.getByRole('button', { name: 'Play', exact: true })).toBeVisible();
+    // Stopped before the prompt, and the Spanish, never heard, stays hidden (the recall rule)…
+    // (Only the silent utterance that unlocks audio on the first tap.)
+    expect(await page.evaluate(() => window.__spoken.filter((u) => u.text.trim()).length)).toBe(0);
+    await expect(player.getByRole('heading', { name: 'Me pone un cortado, por favor' })).toHaveCount(0);
+    await expect(player.getByText('Spanish hidden until you hear it')).toBeAttached();
     await expectAccessible(page);
+    // …unless the learner chooses to read it.
+    await player.getByRole('button', { name: 'Show the Spanish text' }).click();
+    await expect(player.getByRole('heading', { name: 'Me pone un cortado, por favor' })).toBeVisible();
     await page.getByRole('button', { name: 'Close player' }).click();
     await expect(page.getByTestId('points')).toContainText('0 points');
   });
@@ -124,7 +204,7 @@ test.describe('the loop', () => {
     let turns = 0;
     for (let t = 0; t < 20_000; t += 250) {
       await page.clock.runFor(250);
-      if (await player.getByText('Your turn — say it in Spanish', { exact: true }).count()) {
+      if (await player.getByText('Your turn — say it out loud in Spanish', { exact: true }).count()) {
         turns++;
         expect(await page.evaluate(() => window.__talking)).toBe(false);
       }
@@ -148,6 +228,14 @@ test.describe('the loop', () => {
     await expect(page.getByRole('button', { name: /^Now playing:/ })).toContainText('Your turn', { timeout: 5000 });
   });
 
+  test('the voice line opens Settings at the voices', async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Play 5 phrases' }).click();
+    await page.getByRole('button', { name: 'Pause', exact: true }).click();
+    await page.getByRole('button', { name: 'Voice: Test Español. Change voice' }).click();
+    await expect(page.getByRole('dialog', { name: 'Settings' }).getByRole('combobox', { name: 'Spanish' })).toBeFocused();
+  });
+
   test('notes open in a sheet', async ({ page }) => {
     await page.goto('/');
     await page.getByRole('button', { name: 'Play 5 phrases' }).click();
@@ -156,7 +244,100 @@ test.describe('the loop', () => {
   });
 });
 
+test.describe('queues with a natural end', () => {
+  test.use({ seed: { log: sampleHistory(Date.now()) } });
+
+  test('a review is named, plays once in repeat mode and stops on "Review done"', async ({ page }) => {
+    await page.clock.install();
+    await page.goto('/');
+    await page.getByRole('button', { name: /^Play 7 phrases/ }).click();
+    const player = page.getByRole('dialog', { name: 'Now playing' });
+    await expect(player.getByRole('heading', { level: 1 })).toHaveText('Review');
+    for (let i = 0; i < 6; i++) await player.getByRole('button', { name: 'Next phrase' }).click();
+    await expect(player.getByText('7 of 7')).toBeVisible();
+    // Let the last phrase play out, hold included: it doesn't start the review again.
+    for (let t = 0; t < 40_000; t += 500) await page.clock.runFor(500);
+    await expect(player.getByRole('heading', { name: 'Review done' })).toBeVisible();
+    await expect(player.getByText(/^\d+ rated · /)).toBeVisible();
+    await expect(player.getByText('7 of 7')).toBeVisible();
+    await expect(page.getByText('Queue played through')).toHaveCount(0);
+    await expect(player.getByRole('button', { name: /^Continue / })).toBeVisible();
+    await player.getByRole('button', { name: 'Close', exact: true }).click();
+    await expect(player).toHaveCount(0);
+    await expect(page.getByRole('button', { name: /^Now playing:/ })).toContainText('Review done');
+  });
+
+  test('a longer "time to say it" lengthens every play time it shows', async ({ page }) => {
+    await page.goto('/');
+    const review = page.getByRole('button', { name: /^Play 7 phrases · / });
+    const before = await review.getAttribute('aria-label') ?? (await review.textContent())!;
+    await page.getByRole('button', { name: 'Ana: settings' }).click();
+    const settings = page.getByRole('dialog', { name: 'Settings' });
+    // The course comes first in the profile.
+    await expect(settings.getByRole('combobox').first()).toHaveAccessibleName('I’m learning');
+    await settings.getByRole('radio', { name: 'Longer' }).check();
+    await expect(settings.getByText('Longer gives you about twice the phrase’s length.')).toBeVisible();
+    await settings.getByRole('button', { name: 'Close' }).click();
+    const after = await review.getAttribute('aria-label') ?? (await review.textContent())!;
+    const seconds = (label: string) => {
+      const [m, s] = label.match(/(\d+):(\d{2}) at 1×/)!.slice(1).map(Number);
+      return m * 60 + s;
+    };
+    expect(seconds(after)).toBeGreaterThan(seconds(before));
+  });
+
+  test('a Library list is named by its view', async ({ page }) => {
+    await page.goto('/#/library?view=due');
+    await page.getByRole('button', { name: /^Play all/ }).click();
+    await page.getByRole('button', { name: /^Now playing:/ }).click();
+    await expect(page.getByRole('dialog', { name: 'Now playing' }).getByRole('heading', { level: 1 })).toHaveText('Due');
+  });
+});
+
 test.describe('queue', () => {
+  test('up next goes by the prompt, keeps the Spanish hidden, and marks a phrase coming back', async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Play 5 phrases' }).click();
+    await page.getByRole('button', { name: 'Pause', exact: true }).click();
+    const player = page.getByRole('dialog', { name: 'Now playing' });
+    await player.getByRole('button', { name: /^Missed/ }).click();
+    await expect(player.getByText('1 of 6')).toBeVisible();
+    // The count grew by one: the status line says why.
+    await expect(player.getByText(/^Rated Missed — back in \d+ minutes · again in this queue$/)).toBeVisible();
+    await page.getByRole('button', { name: 'Open queue' }).click();
+    const queue = page.getByRole('dialog', { name: 'Queue' });
+    const next = queue.getByRole('button', { name: /^Play .* now$/ });
+    await expect(next.first()).toHaveAccessibleName('Play Do you have oat milk? now');
+    await expect(next.first()).toContainText('2');
+    // Not one Spanish phrase of up next is on screen before it is heard.
+    for (const target of ['¿Tienen leche de avena?', 'La cuenta, por favor', 'Sin gluten, por favor']) await expect(queue.getByText(target)).toHaveCount(0);
+    await expect(next.first()).toContainText('Spanish hidden until you hear it');
+    // The missed phrase comes back later in this queue, and says so.
+    await expect(next.last()).toHaveAccessibleName('Play A cortado, please now');
+    await expect(next.last()).toContainText('Again');
+    await expect(next.first()).not.toContainText('Again');
+  });
+
+
+  test('the session summary, from the top of the queue, shows what happened and no wall of zeros', async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Play 5 phrases' }).click();
+    await page.getByRole('button', { name: 'Pause', exact: true }).click();
+    await page.getByRole('button', { name: 'Open queue' }).click();
+    await page.getByRole('button', { name: 'This session · 0 phrases · +0 pts' }).click();
+    const summary = page.getByRole('dialog', { name: 'This session' });
+    await expect(summary.getByText('Nothing played in this session yet.')).toBeVisible();
+    await expect(summary.getByText('Repetitions')).toHaveCount(0);
+    await summary.getByRole('button', { name: 'Close' }).click();
+    await page.getByRole('button', { name: 'Back to player' }).click();
+    await page.getByRole('dialog', { name: 'Now playing' }).getByRole('button', { name: /^Hard/ }).click();
+    await page.getByRole('button', { name: 'Open queue' }).click();
+    await page.getByRole('button', { name: /^This session · / }).click();
+    await expect(summary.getByText('Hard\u00a01', { exact: false })).toBeVisible();
+    // No pass yet: no "times through the queue" tile.
+    await expect(summary.getByText('Times through the queue')).toHaveCount(0);
+  });
+
   test('keeps the target hidden during recall; remove can be undone', async ({ page }) => {
     await page.goto('/');
     await page.getByRole('button', { name: 'Play 5 phrases' }).click();
@@ -164,11 +345,11 @@ test.describe('queue', () => {
     const queue = page.getByRole('dialog', { name: 'Queue' });
     await expect(queue.getByText('Spanish hidden until you hear it · Repetition 1 of 3')).toBeVisible();
     await expect(queue.getByText('4 left')).toBeVisible();
-    await queue.getByRole('button', { name: 'Move La cuenta, por favor' }).press('Delete');
+    await queue.getByRole('button', { name: 'Move The bill, please' }).press('Delete');
     await expect(queue.getByText('3 left')).toBeVisible();
     await page.getByRole('button', { name: 'Undo' }).click();
     await expect(queue.getByText('4 left')).toBeVisible();
-    await queue.getByRole('button', { name: 'Move La cuenta, por favor' }).press('ArrowUp');
+    await queue.getByRole('button', { name: 'Move The bill, please' }).press('ArrowUp');
     await expect(page.getByRole('status')).toHaveText('Moved to position 1 of 4');
   });
 });
@@ -261,6 +442,20 @@ test('Play from the lock screen while hidden starts when the page is visible aga
   await setVisible(true);
   await expect(page.getByRole('button', { name: 'Pause', exact: true })).toBeVisible();
   await expect(mini).not.toContainText('Speech stopped');
+});
+
+test('the lock screen says what to do now, and keeps the Spanish hidden until heard', async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'mediaSession', { value: { setActionHandler: () => {}, metadata: null, playbackState: 'none' } });
+  });
+  await page.clock.install();
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Play 5 phrases' }).click();
+  const meta = () => page.evaluate(() => ({ title: navigator.mediaSession.metadata?.title, artist: navigator.mediaSession.metadata?.artist }));
+  for (let t = 0; t < 20_000 && !/Your turn/.test((await meta()).artist ?? ''); t += 100) await page.clock.runFor(100);
+  expect(await meta()).toEqual({ title: 'A cortado, please', artist: 'Your turn — say it out loud in Spanish · Café & Mañanas' });
+  await page.getByRole('button', { name: 'Pause', exact: true }).click();
+  expect((await meta()).artist).toBe('Café & Mañanas');
 });
 
 test('a new version is offered only while nothing plays', async ({ page }) => {

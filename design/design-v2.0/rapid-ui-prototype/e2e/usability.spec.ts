@@ -72,7 +72,7 @@ test.describe('a returning learner with reviews due', () => {
 
     // Undo the last rating: that phrase is due again, everywhere, at once.
     await page.getByRole('button', { name: /^Now playing:/ }).click();
-    await player.getByRole('button', { name: 'Undo', exact: true }).click();
+    await player.getByRole('button', { name: /^Undo rating/ }).click();
     await page.getByRole('button', { name: 'Close player' }).click();
     await expect(page.getByText('Nothing is due right now.')).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Play all (1)' })).toBeVisible();
@@ -107,11 +107,12 @@ test.describe('Play from Explore keeps the queue in order (regression)', () => {
     await page.getByRole('button', { name: /^Play Me pone un cortado/ }).first().click();
     await page.getByRole('button', { name: /^Now playing:/ }).click();
     const player = page.getByRole('dialog', { name: 'Now playing' });
-    await expect(player.getByText(/^2 of \d+$/)).toBeVisible();
+    // The café phrase joined the taxi queue: the count is the queue's.
+    await expect(player.getByText(/^2 of \d+ in the queue$/)).toBeVisible();
     await page.getByRole('button', { name: 'Close player' }).click();
     await page.getByRole('button', { name: /^Play Me pone un cortado/ }).first().click();
     await page.getByRole('button', { name: /^Now playing:/ }).click();
-    await expect(player.getByText(/^2 of \d+$/)).toBeVisible();
+    await expect(player.getByText(/^2 of \d+ in the queue$/)).toBeVisible();
   });
 
   test("the queue stays its set's: its page still shows it playing", async ({ page }) => {
@@ -127,7 +128,7 @@ test.describe('Play from Explore keeps the queue in order (regression)', () => {
 
 test('with a level filter on, a topic can still be added', async ({ page }) => {
   await page.goto('/#/explore?level=A1');
-  await page.getByRole('region', { name: 'Topics' }).getByRole('button').first().click();
+  await page.getByRole('group', { name: 'Topics' }).getByRole('button').first().click();
   await expect(page).toHaveURL(/topic=/);
   await expect(page).toHaveURL(/level=A1/);
 });

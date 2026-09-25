@@ -1,5 +1,6 @@
 import { ReactNode, useEffect, useRef, useState } from 'react';
 import { Level, Phrase, Tag, TOPICS } from '../content';
+import { useSelectedInView } from '../lib/useSelectedInView';
 import { navigate } from '../nav/history';
 import { useNav } from '../nav/NavContext';
 import type { ExploreFilters } from '../nav/routes';
@@ -76,7 +77,6 @@ export function ExploreScreen({ filters }: { filters: ExploreFilters }) {
   const locale = c.locale.slice(0, 2) as 'en' | 'bg' | 'ru';
   const learner = displayLearner(state); // ratings in their undo window count in each status
   const [text, setText] = useState(filters.q ?? '');
-  const results = useRef<HTMLHeadingElement>(null);
   // Back and links can change the query; the field follows (derived during render).
   const [seenQ, setSeenQ] = useState(filters.q);
   if (seenQ !== filters.q) {
@@ -84,6 +84,8 @@ export function ExploreScreen({ filters }: { filters: ExploreFilters }) {
     setText(filters.q ?? '');
   }
 
+  const chipRow = useRef<HTMLDivElement>(null);
+  useSelectedInView(chipRow, `${filters.level}${filters.tag}`);
   const update = (patch: Partial<ExploreFilters>, replace = false) => navigate({ name: 'explore', ...filters, ...patch }, { replace });
   // Typing replaces the history entry, so Back leaves Explore instead of undoing letters.
   // The query keeps what was typed, spaces and all: trimming it here would write the
@@ -133,107 +135,52 @@ export function ExploreScreen({ filters }: { filters: ExploreFilters }) {
   if (filters.level) chips.push({ label: filters.level, clear: { level: undefined } });
   if (filters.tag) chips.push({ label: c.common.tag[filters.tag], clear: { tag: undefined } });
 
-  const pickTopic = (id: string) => {
-    update({ topic: id });
-    requestAnimationFrame(() => results.current?.scrollIntoView({ block: 'start' }));
-  };
+  const showPhrases = Boolean(q || filters.tag);
+  // A search or filter that finds nothing says so once, under the phrases, not again under the sets.
+  const showSets = !(showPhrases && phrases.length === 0 && sets.length === 0);
+  const setsHeading = topic
+    ? `${topic.title[locale]} · ${c.explore.sets(sets.length)}`
+    : q || filters.level || filters.tag
+      ? `${c.explore.searchedSets} · ${sets.length}`
+      : c.explore.allSets;
 
-  return (
-    <div className="max-w-5xl mx-auto px-4 pt-4 flex flex-col gap-6">
-      {/* The keyboard's Search key commits the query at once and puts the keyboard away. */}
-      <form
-        role="search"
-        className="relative"
-        onSubmit={(event) => {
-          event.preventDefault();
-          update({ q: text.trim() || undefined }, true);
-          (document.activeElement as HTMLElement | null)?.blur();
-        }}
-      >
-        <Icon name="search" className="text-icon absolute left-3.5 top-1/2 -translate-y-1/2 text-secondary" />
-        <input
-          type="search"
-          enterKeyHint="search"
-          autoCorrect="off"
-          autoCapitalize="none"
-          spellCheck={false}
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder={c.explore.search}
-          aria-label={c.explore.search}
-          className={`${fieldClass} w-full pl-11`}
-        />
-      </form>
-
-      {chips.length > 0 && (
-        <div className="flex flex-wrap items-center gap-x-2 -mt-3">
-          {chips.map((chip) => (
-            <Chip key={chip.label} removable aria-label={c.explore.removeFilter(chip.label)} onClick={() => update(chip.clear)}>
-              {chip.label}
-            </Chip>
-          ))}
-          {chips.length > 1 && (
-            <button type="button" onClick={() => navigate({ name: 'explore', q: filters.q })} className={btnText}>
-              {c.explore.clearFilters}
-            </button>
-          )}
-        </div>
-      )}
-
-      {/* With any filter on, the results come first: the topic tiles would push them off screen. */}
-      {!topic && !q && !filters.level && !filters.tag && (
-        <section aria-labelledby="topics-heading">
-          <h2 id="topics-heading" className="font-serif text-heading font-semibold mb-2">{c.explore.topics}</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {courseTopics.map(({ topic: t, count }, i) => {
-              // An odd last tile spans the row instead of leaving a gap beside it.
-              const spansRow = i === courseTopics.length - 1 && courseTopics.length % 2 === 1;
-              return (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => pickTopic(t.id)}
-                  className={`relative min-h-20 rounded-2xl p-3 text-left flex flex-col justify-between overflow-hidden ${TONE[t.tone]} ${spansRow ? 'col-span-2 md:col-span-1' : ''}`}
-                >
-                  <span>
-                    <span className="block text-row font-bold">{t.title[locale]}</span>
-                    <span className="block text-label opacity-80">{c.explore.sets(count)}</span>
-                  </span>
-                  <Icon name={t.icon as IconName} className="text-icon-2xl self-end opacity-80" />
-                </button>
-              );
-            })}
-          </div>
-        </section>
-      )}
-
-      {/* With a level or tag on, topics stay choosable as chips instead of tiles. */}
+  // Levels and tags as one line of chips; with a level or tag on, the topics join them as chips.
+  const filterRow = (
+    <div ref={chipRow} className="scroll-row flex items-stretch gap-x-2 overflow-x-auto -mx-4 px-4">
       {!topic && !q && (filters.level || filters.tag) && (
-        <FilterRow label={c.explore.topics}>
-          {courseTopics.map(({ topic: t }) => (
-            <Chip key={t.id} selected={false} onClick={() => pickTopic(t.id)}>
-              {t.title[locale]}
-            </Chip>
-          ))}
-        </FilterRow>
+        <>
+          <ChipGroup label={c.explore.topics}>
+            {courseTopics.map(({ topic: t }) => (
+              <Chip key={t.id} selected={false} onClick={() => update({ topic: t.id })}>
+                {t.title[locale]}
+              </Chip>
+            ))}
+          </ChipGroup>
+          <Divider />
+        </>
       )}
-      <FilterRow label={c.explore.levels}>
+      <ChipGroup label={c.explore.levels}>
         {LEVELS.filter((l) => courseSets(learner).some((s) => s.level === l)).map((l) => (
           <Chip key={l} selected={filters.level === l} onClick={() => update({ level: filters.level === l ? undefined : l })}>
             {l}
           </Chip>
         ))}
-      </FilterRow>
-      <FilterRow label={c.explore.tags}>
+      </ChipGroup>
+      <Divider />
+      <ChipGroup label={c.explore.tags}>
         {TAGS.map((t) => (
           <Chip key={t} selected={filters.tag === t} onClick={() => update({ tag: filters.tag === t ? undefined : t })}>
             {c.common.tag[t]}
           </Chip>
         ))}
-      </FilterRow>
+      </ChipGroup>
+    </div>
+  );
 
-      {(q || filters.tag) && (
-        <section aria-labelledby="phrase-results">
+  const results = (
+    <>
+      {showPhrases && (
+        <section aria-labelledby="phrase-results" className="max-w-3xl">
           <h2 id="phrase-results" className="font-serif text-heading font-semibold mb-1">{c.explore.phrases(phrases.length)}</h2>
           {phrases.length === 0 ? (
             <div className="py-2 flex flex-col items-start gap-2">
@@ -261,25 +208,110 @@ export function ExploreScreen({ filters }: { filters: ExploreFilters }) {
         </section>
       )}
 
-      <section aria-labelledby="set-results">
-        <h2 id="set-results" ref={results} className="font-serif text-heading font-semibold mb-2 scroll-mt-20">
-          {chips.length > 0 ? `${c.explore.filtered} · ${sets.length}` : q ? `${c.explore.searchedSets} · ${sets.length}` : c.explore.allSets}
-        </h2>
-        {sets.length === 0 ? (
-          <p className="text-body text-secondary py-2">{c.explore.noSets}</p>
-        ) : (
-          <ul className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {sets.map((set) => {
-              const view = findSetView(learner, set.id)!;
-              return (
-                <li key={set.id}>
-                  <SetCard wide view={view} progress={setProgress(learner, set.phraseIds, now)} onOpen={() => nav.openSet(set.id)} onPlay={() => nav.playSet(set.id)} />
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </section>
+      {showSets && (
+        <section aria-labelledby="set-results">
+          <h2 id="set-results" className="font-serif text-heading font-semibold mb-2">
+            {setsHeading}
+          </h2>
+          {sets.length === 0 ? (
+            <p className="text-body text-secondary py-2">{c.explore.noSets}</p>
+          ) : (
+            // Cards keep a readable size: two across a phone, as many as fit from 10rem up on wider screens.
+            <ul className="grid grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(10rem,1fr))] gap-x-3 gap-y-5">
+              {sets.map((set) => {
+                const view = findSetView(learner, set.id)!;
+                return (
+                  <li key={set.id}>
+                    <SetCard wide view={view} progress={setProgress(learner, set.phraseIds, now)} onOpen={() => nav.openSet(set.id)} onPlay={() => nav.playSet(set.id)} />
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
+      )}
+    </>
+  );
+
+  return (
+    <div className="max-w-6xl mx-auto px-4 pt-4 flex flex-col gap-4">
+      {/* The keyboard's Search key commits the query at once and puts the keyboard away. */}
+      <form
+        role="search"
+        className="relative max-w-3xl"
+        onSubmit={(event) => {
+          event.preventDefault();
+          update({ q: text.trim() || undefined }, true);
+          (document.activeElement as HTMLElement | null)?.blur();
+        }}
+      >
+        <Icon name="search" className="text-icon absolute left-3.5 top-1/2 -translate-y-1/2 text-secondary" />
+        <input
+          type="search"
+          enterKeyHint="search"
+          autoCorrect="off"
+          autoCapitalize="none"
+          spellCheck={false}
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder={c.explore.search}
+          aria-label={c.explore.search}
+          className={`${fieldClass} w-full pl-11`}
+        />
+      </form>
+
+      {chips.length > 0 && (
+        <div className="flex flex-wrap items-center gap-x-2 -my-1">
+          {chips.map((chip) => (
+            <Chip key={chip.label} removable aria-label={c.explore.removeFilter(chip.label)} onClick={() => update(chip.clear)}>
+              {chip.label}
+            </Chip>
+          ))}
+          {chips.length > 1 && (
+            <button type="button" onClick={() => navigate({ name: 'explore', q: filters.q })} className={btnText}>
+              {c.explore.clearFilters}
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Nothing chosen yet: the topics, one row of tiles. Any filter or search puts them away. */}
+      {!topic && !q && !filters.level && !filters.tag && (
+        <section aria-labelledby="topics-heading">
+          <h2 id="topics-heading" className="sr-only">{c.explore.topics}</h2>
+          {/* Tiles share the row from 5.5rem up; one never gets narrower than its longest word, so a
+              long title (Bulgarian "Придвижване") moves a tile to the next row instead of breaking. */}
+          <div className="flex flex-wrap gap-2">
+            {courseTopics.map(({ topic: t, count }) => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => update({ topic: t.id })}
+                className={`flex-[1_1_5.5rem] min-h-20 rounded-2xl p-3 text-left flex flex-col justify-between gap-1 ${TONE[t.tone]}`}
+              >
+                <span className="text-body font-bold leading-tight hyphens-auto">{t.title[locale]}</span>
+                <span className="flex items-end justify-between gap-1">
+                  <span className="min-w-0 text-label opacity-80">{c.explore.sets(count)}</span>
+                  <Icon name={t.icon as IconName} className="shrink-0 text-icon-md opacity-80" />
+                </span>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* A chosen topic is what the learner came for: its sets come first, the finer filters after. */}
+      {topic ? (
+        <>
+          {results}
+          {filterRow}
+        </>
+      ) : (
+        <>
+          {filterRow}
+          {results}
+        </>
+      )}
     </div>
   );
 }
@@ -290,6 +322,8 @@ function PhraseResult({ phrase, words, detail }: { phrase: Phrase; words: string
   const { state } = useStore();
   const prompt = promptOf(phrase, state.learner.profile.nativeLang);
   if (!words.length) return <PhraseRow phrase={phrase} detail={detail} onPlay={() => nav.playPhraseInSet(phrase.id)} onMore={() => nav.showDetails(phrase.id)} />;
+  // As PhraseRow: your own phrase says so after its status.
+  const status = phrase.own ? `${detail} · ${c.phrase.yoursShort}` : detail;
   return (
     <div className="flex items-center gap-1">
       <button
@@ -309,7 +343,7 @@ function PhraseResult({ phrase, words, detail }: { phrase: Phrase; words: string
             </span>
             {' · '}
           </span>
-          <span className="min-w-0">{detail}</span>
+          <span className="min-w-0">{status}</span>
         </span>
       </button>
       <button type="button" onClick={() => nav.showDetails(phrase.id)} aria-label={c.phrase.details(phrase.target)} className={`${btnIcon} text-secondary`}>
@@ -319,11 +353,16 @@ function PhraseResult({ phrase, words, detail }: { phrase: Phrase; words: string
   );
 }
 
-function FilterRow({ label, children }: { label: string; children: ReactNode }) {
+/** One kind of filter inside the chip line, named for screen readers ("Levels", "Tags"). */
+function ChipGroup({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <section aria-label={label} className="-mt-2">
-      <h2 className="text-label font-bold uppercase tracking-wider text-secondary mb-1.5">{label}</h2>
-      <div className="flex flex-wrap gap-x-2">{children}</div>
-    </section>
+    <div role="group" aria-label={label} className="flex shrink-0 gap-x-2">
+      {children}
+    </div>
   );
+}
+
+/** A hairline between two groups in the chip line. */
+function Divider() {
+  return <span aria-hidden="true" className="w-px shrink-0 my-2.5 bg-hairline" />;
 }
