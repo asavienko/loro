@@ -731,7 +731,9 @@ DevTools-protocol tests skip). It found that Settings' selects were 26 px target
 ignores a native select's height (now drawn by the app, 48 px), and a focus race after creating a
 set from a sheet (fixed). `BROWSER=firefox` runs it in Gecko too (150 passed). In Firefox a mouse
 drag on the mini-player and the player moves them but never completes, while the queue's drags work;
-**swipes on those two need checking with touch on Firefox for Android.**
+**swipes on those two need checking with touch on Firefox for Android.** (Probed: after such a drag
+Firefox delivers no pointerup, mouseup or click to the window at all; not text selection, and no image
+in the cover to drag.)
 
 **Open question:** "Full play 0:41 at 1×" is speech plus pauses, measured; it leaves out the 4 s
 rating hold (only for unrated phrases) and the engine's start-up delay, so an unrated new set can
