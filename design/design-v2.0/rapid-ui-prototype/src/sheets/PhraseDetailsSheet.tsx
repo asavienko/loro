@@ -147,14 +147,15 @@ function PhraseDetails({ phraseId, ownSetId, onClose }: { phraseId: string; ownS
             onClick={() => {
               // Undo also puts it back in Up next, as far ahead of the playing phrase as it was.
               const { order, index } = state.player;
-              const upNextAt = order.indexOf(phrase.id, index + 1) - (index + 1);
+              const upNextAt = order.slice(index + 1).flatMap((id, i) => (id === phrase.id ? [i] : []));
               actions.deleteOwnPhrase(phrase.id);
               toast(c.phrase.deleted, {
                 action: {
                   label: c.common.undo,
                   run: () => {
                     actions.restoreOwnPhrase(phrase.id);
-                    if (upNextAt >= 0) actions.restoreUpNext([phrase.id], upNextAt);
+                    // In order, so each copy (a missed phrase can be queued twice) lands at its old place.
+                    for (const at of upNextAt) actions.restoreUpNext([phrase.id], at);
                   },
                 },
               });
