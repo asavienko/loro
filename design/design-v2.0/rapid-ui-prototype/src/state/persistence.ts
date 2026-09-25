@@ -15,7 +15,7 @@ import {
   RENAMED_PHRASE_IDS,
 } from '../content';
 import { OWN_PHRASE_PREFIX, OWN_SET_PREFIX } from './catalog';
-import { clock } from './clock';
+import { clock, isLocalDayOf } from './clock';
 // The same limits the forms apply, for data that arrives by sync or migration.
 import { clip, LIMITS } from './limits';
 import { decodeLog, encodeLog } from './compactLog';
@@ -177,7 +177,8 @@ function sanitizeLog(value: unknown, own: Record<string, OwnPhrase>): LogEntry[]
     if (!knownPhrase(phraseId, own)) continue;
     const key = e.phraseId === phraseId ? e.key : e.key.replace(/:[^:]*$/, `:${phraseId}`);
     const setId = str(e.setId) ? e.setId : null;
-    const base = { id: e.id, at: e.at, device: e.device, key, phraseId, setId };
+    // A day no device could have stamped at that moment is dropped: replay then works it out.
+    const base = { id: e.id, at: e.at, device: e.device, key, phraseId, setId, ...(isLocalDayOf(e.day, e.at) ? { day: e.day } : {}) };
     if (e.kind === 'heard') {
       out.push({ ...base, kind: 'heard', targetMs: num(e.targetMs) ? e.targetMs : null, nativeMs: num(e.nativeMs) ? e.nativeMs : null });
     } else if (e.kind === 'rated' && GRADES.includes(e.grade as string)) {
@@ -225,7 +226,8 @@ function sanitizePending(value: unknown, learner: LearnerState): PendingRating[]
     const key = p.phraseId === phraseId ? p.key : p.key.replace(/:[^:]*$/, `:${phraseId}`);
     // Saved before ratings synced between tabs: its last change is its own time.
     const changedAt = num(p.changedAt) ? p.changedAt : p.at;
-    return [{ key, phraseId, setId: str(p.setId) ? p.setId : null, grade: p.grade as Grade, at: p.at, changedAt, ...(p.undone === true ? { undone: true } : {}) }];
+    const day = isLocalDayOf(p.day, p.at) ? { day: p.day } : {};
+    return [{ key, phraseId, setId: str(p.setId) ? p.setId : null, grade: p.grade as Grade, at: p.at, changedAt, ...(p.undone === true ? { undone: true } : {}), ...day }];
   });
 }
 
