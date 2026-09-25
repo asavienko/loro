@@ -6,6 +6,7 @@ import { panelId, tabId, tabListKeyDown } from '../lib/tabs';
 import { findPhrase, findSetView, ownPhrases, ownSets, SetView } from '../state/catalog';
 import { LEARNED_MIN_SUCCESSES, LEARNED_STABILITY_DAYS } from '../state/memory';
 import {
+  displayLearner,
   duePhraseIds,
   learningIds,
   learnedIds,
@@ -35,7 +36,8 @@ export function LibraryScreen({ view: chosen }: { view?: LibraryView }) {
   const nav = useNav();
   const { state } = useStore();
   const now = useNow(30_000);
-  const { learner } = state;
+  // Ratings still in their undo window count in every list and figure here.
+  const learner = displayLearner(state);
   const stats = learnerStats(learner, now);
   // Opened without a view: what's useful now (reviews due, then liked, then what you've
   // started), not an empty Liked for someone who has liked nothing.
@@ -174,7 +176,7 @@ function PhraseList({ ids, view, now }: { ids: string[]; view: LibraryView; now:
             <li key={id}>
               <PhraseRow
                 phrase={phrase}
-                detail={progressLabel(c, phraseProgress(state.learner, id, now), now)}
+                detail={progressLabel(c, phraseProgress(displayLearner(state), id, now), now)}
                 onPlay={() => nav.playList(ids, i)}
                 onMore={() => nav.showDetails(id)}
               />
@@ -195,7 +197,7 @@ function SetList({ ids, view, now }: { ids: string[]; view: LibraryView; now: nu
   return (
     <ul className="grid grid-cols-1 gap-2 md:grid-cols-2">
       {views.map((v) => {
-        const progress = setProgress(state.learner, v.phraseIds, now);
+        const progress = setProgress(displayLearner(state), v.phraseIds, now);
         return (
           <li key={v.id}>
             <button

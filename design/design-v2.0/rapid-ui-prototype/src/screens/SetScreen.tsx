@@ -7,6 +7,7 @@ import { findPhrase, findSetView } from '../state/catalog';
 import { formatElapsed } from '../state/clock';
 import {
   currentPhraseId,
+  displayLearner,
   isLiked,
   phraseProgress,
   PhraseProgress,
@@ -66,7 +67,7 @@ export function SetScreen({ setId }: { setId: string }) {
 
   const sort = sortFor(state.prefs, setId);
   const topic = view.topicId ? getTopic(view.topicId) : undefined;
-  const progress = setProgress(state.learner, view.phraseIds, now);
+  const progress = setProgress(displayLearner(state), view.phraseIds, now);
   const liked = isLiked(state.learner, 'set', setId);
   const currentId = currentPhraseId(state.player);
   const isThisSet = state.player.setId === setId;
@@ -77,7 +78,7 @@ export function SetScreen({ setId }: { setId: string }) {
   const rows = view.phraseIds
     .map((id, i) => ({ phrase: findPhrase(state.learner, id), position: i + 1 }))
     .filter((r): r is { phrase: Phrase; position: number } => Boolean(r.phrase))
-    .map((r) => ({ ...r, progress: phraseProgress(state.learner, r.phrase.id, now) }));
+    .map((r) => ({ ...r, progress: phraseProgress(displayLearner(state), r.phrase.id, now) }));
   const sorted = [...rows].sort((a, b) => {
     switch (sort) {
       case 'az':

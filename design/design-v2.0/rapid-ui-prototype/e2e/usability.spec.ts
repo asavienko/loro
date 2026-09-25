@@ -43,6 +43,52 @@ test.describe('a returning learner with reviews due', () => {
     await expect(page.getByText(/After these: \d+ more phrases? /)).toBeVisible();
     await expect(page.getByText(/Next: \d+ phrases? /)).toHaveCount(0);
   });
+
+  test('a finished review stops reading as due at once; Undo brings its phrase back (U-03)', async ({ page }) => {
+    await page.clock.install();
+    await page.goto('/');
+    const dueLine = page.getByText(/^\d+ phrases? (is|are) due/);
+    const due = Number((await dueLine.textContent())!.match(/^(\d+)/)![1]);
+    await page.getByRole('button', { name: /^Play \d+ phrases · / }).first().click();
+    await page.getByRole('button', { name: /^Now playing:/ }).click();
+    const player = page.getByRole('dialog', { name: 'Now playing' });
+    await player.getByRole('button', { name: 'Pause', exact: true }).click();
+    // Rate every phrase of the review, paused, so the loop can't move on under the test.
+    for (let i = 1; i <= due; i++) {
+      await expect(player.getByText(`${i} of ${due}`, { exact: true })).toBeVisible();
+      await player.getByRole('button', { name: /^Easy/ }).click();
+      await expect(player.getByText(/^Rated Easy — back /)).toBeVisible();
+      if (i < due) await player.getByRole('button', { name: 'Next phrase', exact: true }).click();
+    }
+    const pointsBefore = await page.getByTestId('points').textContent();
+    await page.getByRole('button', { name: 'Close player' }).click();
+
+    // Home: the review is done, and the next one is in the future.
+    await expect(page.getByRole('heading', { name: 'Review', exact: true })).toHaveCount(0);
+    await expect(dueLine).toHaveCount(0);
+    await expect(page.getByText(/Next: \d+ phrases? /)).toBeVisible();
+    // Library: nothing due, and the rows say when each phrase comes back.
+    await page.getByRole('button', { name: 'Library', exact: true }).click();
+    await page.getByRole('tab', { name: 'Due' }).click();
+    await expect(page.getByText('Nothing is due right now.')).toBeVisible();
+
+    // Undo the last rating: that phrase is due again, everywhere, at once.
+    await page.getByRole('button', { name: /^Now playing:/ }).click();
+    await player.getByRole('button', { name: 'Undo', exact: true }).click();
+    await page.getByRole('button', { name: 'Close player' }).click();
+    await expect(page.getByText('Nothing is due right now.')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Play all (1)' })).toBeVisible();
+    await page.getByRole('button', { name: 'Home', exact: true }).click();
+    await expect(page.getByText('1 phrase is due', { exact: true })).toBeVisible();
+
+    // The window closes: the ratings count (points) and not one figure moves.
+    await page.clock.fastForward('06:00');
+    await expect(page.getByTestId('points')).not.toHaveText(pointsBefore!);
+    await expect(page.getByText('1 phrase is due', { exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'Library', exact: true }).click();
+    await page.getByRole('tab', { name: 'Due' }).click();
+    await expect(page.locator('[role="tabpanel"] li')).toHaveCount(1);
+  });
 });
 
 test('a filter in Explore puts its results first', async ({ page }) => {

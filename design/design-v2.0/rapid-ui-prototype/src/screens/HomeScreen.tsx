@@ -4,6 +4,7 @@ import { useNav } from '../nav/NavContext';
 import { coursePhrases, courseSets, findSetView, SetView } from '../state/catalog';
 import { formatAgo, formatElapsed, formatWhen } from '../state/clock';
 import {
+  displayLearner,
   duePhraseIds,
   learnerStats,
   listDurationMs,
@@ -29,7 +30,8 @@ export function HomeScreen() {
   const { state } = useStore();
   const now = useNow(30_000);
   const [historyOpen, setHistoryOpen] = useState(false);
-  const { learner } = state;
+  // Ratings still in their undo window count in every figure here (not in points).
+  const learner = displayLearner(state);
   const stats = learnerStats(learner, now);
   const today = todayCounts(state, now);
   const due = duePhraseIds(learner, now);
@@ -229,7 +231,7 @@ function SetRow({ view, now }: { view: SetView; now: number }) {
   const c = useCopy();
   const nav = useNav();
   const { state } = useStore();
-  const progress = setProgress(state.learner, view.phraseIds, now);
+  const progress = setProgress(displayLearner(state), view.phraseIds, now);
   return (
     <button
       type="button"
