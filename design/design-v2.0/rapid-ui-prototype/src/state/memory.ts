@@ -11,10 +11,6 @@ export function memoryKey(nativeLang: LanguageCode, targetLang: LanguageCode, ph
   return `${nativeLang}>${targetLang}:${phraseId}`;
 }
 
-export function phraseIdOfKey(key: string): string {
-  return key.slice(key.indexOf(':') + 1);
-}
-
 /** A rating can be changed or undone for this long; then it counts. */
 export const RATING_WINDOW_MS = 5 * MINUTE;
 /** Listening to a phrase pays at most once per this interval. */

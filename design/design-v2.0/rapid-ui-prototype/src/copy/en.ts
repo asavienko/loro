@@ -197,7 +197,6 @@ export function makeEn(n: Plural) {
       hidden: (language: string) => `${language} hidden until you hear it`,
       steps: 'Steps',
       yourTurn: 'Your turn',
-      rateStep: 'Rate',
       instruction: {
         native: (language: string) => `Listen in ${language}`,
         pause: (language: string) => `Your turn — say it in ${language}`,
@@ -207,10 +206,8 @@ export function makeEn(n: Plural) {
       paused: 'Paused',
       repetition: (r: number, total: number) => `Repetition ${r} of ${total}`,
       howDidItGo: 'How did saying it go?',
-      gradeButton: (grade: string, interval: string) => `${grade} · ${interval}`,
       rated: (grade: string, when: string) => `Rated ${grade} — back ${when}`,
       changeFor: (time: string) => `Change or undo for ${time}`,
-      counts: 'It counts when the window closes.',
       previous: 'Previous phrase',
       next: 'Next phrase',
       repeats: {
@@ -231,7 +228,6 @@ export function makeEn(n: Plural) {
       silent: 'Speech stopped — press Play',
       voice: (name: string) => `Voice: ${name}`,
       changeVoice: (name: string) => `Voice: ${name}. Change voice`,
-      hide: 'Tap to reveal',
     },
     toast: {
       updateReady: 'A new version of Loro is ready',

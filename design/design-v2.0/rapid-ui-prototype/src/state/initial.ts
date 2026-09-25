@@ -46,7 +46,3 @@ export function initialState(deviceId: string, instance = deviceId): AppState {
   };
 }
 
-/** Short random id for a new device; the only randomness outside events. */
-export function newDeviceId(): string {
-  return Math.random().toString(36).slice(2, 8);
-}
