@@ -271,6 +271,7 @@ function Shell() {
 
   const routeRef = useLatest(route);
   const learnerRef = useLatest(state.learner);
+  const playerRef = useLatest(state.player);
 
   const nav: Navigation = useMemo(
     () => ({
@@ -288,6 +289,14 @@ function Shell() {
       playPhraseInSet: (phraseId) => {
         const phrase = findPhrase(learnerRef.current, phraseId);
         const view = findSetView(learnerRef.current, phrase?.setId);
+        const player = playerRef.current;
+        // Another queue is going (a review, another set): play this phrase now, and keep that
+        // queue after it rather than throwing it away without a word.
+        if (player.order.length > 0 && player.setId !== view?.id) {
+          actions.enqueue([phraseId], phrase?.setId ?? null, 'next');
+          actions.jump(player.index + 1, true);
+          return;
+        }
         if (view) actions.load(view.phraseIds, view.id, view.phraseIds.indexOf(phraseId));
         else actions.load([phraseId], null, 0);
       },
@@ -301,7 +310,7 @@ function Shell() {
       createSet: (phraseIds = [], rename) => setCreate({ phraseIds, rename }),
       openSettings: () => setSettingsOpen(true),
     }),
-    [actions, routeRef, learnerRef],
+    [actions, routeRef, learnerRef, playerRef],
   );
   useCelebrations(nav.openSummary);
   useSaveWarnings();
