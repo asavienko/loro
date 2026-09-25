@@ -8,6 +8,7 @@
 // end of the queue the play mode decides: play it again, or continue with the
 // next phrases of the course. The allowed events per status are in chart.ts.
 import { findPhrase, keyOf, OWN_PHRASE_PREFIX, OWN_SET_PREFIX } from './catalog';
+import { clip, LIMITS, tidy } from './limits';
 import { canHandle } from './chart';
 import { initialPlayer, initialState } from './initial';
 import { insertEntry, RATING_WINDOW_MS } from './memory';
@@ -226,7 +227,8 @@ function commitDue(state: AppState, now: number): AppState {
   return { ...next, learner: { ...next.learner, log } };
 }
 
-const trimmed = (text: string) => text.trim().replace(/\s+/g, ' ');
+/** Stored form of typed text: whitespace folded, cut to its limit. */
+const trimmed = (text: string, max: number) => clip(tidy(text), max);
 
 // ---------- the machine ----------
 
@@ -473,8 +475,8 @@ export function transition(state: AppState, event: AppEvent): AppState {
     }
 
     case 'ADD_OWN_PHRASE': {
-      const target = trimmed(event.target);
-      const native = trimmed(event.native);
+      const target = trimmed(event.target, LIMITS.phrase);
+      const native = trimmed(event.native, LIMITS.phrase);
       if (!target || !native) return state;
       const [seqId, next] = takeId(state);
       const id = `${OWN_PHRASE_PREFIX}${seqId}`;
@@ -486,8 +488,8 @@ export function transition(state: AppState, event: AppEvent): AppState {
     case 'EDIT_OWN_PHRASE': {
       // A correction keeps the phrase's id, so its history and memory stay with it.
       const own = learner.ownPhrases[event.id];
-      const target = trimmed(event.target);
-      const native = trimmed(event.native);
+      const target = trimmed(event.target, LIMITS.phrase);
+      const native = trimmed(event.native, LIMITS.phrase);
       if (!own || own.deleted || !target || !native) return state;
       if (target === own.target && native === own.native) return state;
       const updated = { ...own, target, native, updatedAt: event.now };
@@ -524,7 +526,7 @@ export function transition(state: AppState, event: AppEvent): AppState {
     }
 
     case 'CREATE_SET': {
-      const title = trimmed(event.title);
+      const title = trimmed(event.title, LIMITS.title);
       if (!title) return state;
       const [seqId, next] = takeId(state);
       const id = `${OWN_SET_PREFIX}${seqId}`;
@@ -567,8 +569,9 @@ export function transition(state: AppState, event: AppEvent): AppState {
       } else if (event.type === 'REMOVE_FROM_SET') {
         updated = { ...set, phraseIds: set.phraseIds.filter((id) => id !== event.phraseId) };
       } else if (event.type === 'RENAME_SET') {
-        const title = trimmed(event.title);
-        if (!title) return state;
+        const title = trimmed(event.title, LIMITS.title);
+        // An unchanged name changes nothing (not even the set's place, which follows updatedAt).
+        if (!title || title === set.title) return state;
         updated = { ...set, title };
       } else {
         updated = { ...set, deleted: true };
@@ -581,7 +584,7 @@ export function transition(state: AppState, event: AppEvent): AppState {
 
     case 'SET_PROFILE': {
       const profile: Profile = { ...learner.profile, ...event.profile, updatedAt: event.now };
-      if (typeof profile.name === 'string') profile.name = trimmed(profile.name);
+      if (typeof profile.name === 'string') profile.name = trimmed(profile.name, LIMITS.name);
       const courseChanged =
         profile.nativeLang !== learner.profile.nativeLang || profile.targetLang !== learner.profile.targetLang;
       return {
