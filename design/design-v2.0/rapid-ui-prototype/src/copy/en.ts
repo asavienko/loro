@@ -151,7 +151,7 @@ export function makeEn(n: Plural) {
       notesTitle: 'Notes',
       notesInEnglish: 'Notes are in English for now.',
       words: 'Tap a word for its meaning.',
-      wordMeaning: (word: string, gloss: string) => `${word}: ${gloss}`,
+      glossHint: 'Shows its meaning',
       edit: 'Edit phrase',
       delete: 'Delete phrase',
       deleted: 'Phrase deleted',

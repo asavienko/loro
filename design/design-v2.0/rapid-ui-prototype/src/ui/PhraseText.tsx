@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useId, useLayoutEffect, useRef, useState } from 'react';
 import type { LanguageCode, Phrase } from '../content';
 import { useCopy, useStore } from '../state/store';
 
@@ -88,10 +88,13 @@ export function GlossedPhrase({ phrase, className }: { phrase: Phrase; className
   const c = useCopy();
   const { state } = useStore();
   const [open, setOpen] = useState<number | null>(null);
+  const meaningId = useId();
+  const hintId = useId();
   const tokens = tokenize(phrase, state.learner.profile.nativeLang);
   const openToken = open === null ? null : tokens[open];
   return (
     <div>
+      {/* Named by the phrase itself: from its content the word buttons would split the name's spacing. */}
       <h2 lang={phrase.targetLang} aria-label={phrase.target} className={className}>
         {tokens.map((t, i) => {
           // Punctuation touching a word ('¡Qué', 'pasado!') must not wrap onto a line of its own,
@@ -112,6 +115,8 @@ export function GlossedPhrase({ phrase, className }: { phrase: Phrase; className
               <button
                 type='button'
                 aria-expanded={open === i}
+                aria-controls={meaningId}
+                aria-describedby={hintId}
                 onClick={() => setOpen(open === i ? null : i)}
                 className={`inline rounded-md underline decoration-dotted decoration-outline underline-offset-4 ${open === i ? 'bg-primary-fixed/60' : ''}`}
               >
@@ -122,8 +127,15 @@ export function GlossedPhrase({ phrase, className }: { phrase: Phrase; className
           );
         })}
       </h2>
-      <p aria-live='polite' className='min-h-5 text-body text-on-surface-variant mt-1'>
-        {openToken?.gloss ? c.phrase.wordMeaning(openToken.text, openToken.gloss) : ''}
+      <p id={hintId} hidden>
+        {c.phrase.glossHint}
+      </p>
+      <p id={meaningId} aria-live='polite' className='min-h-5 text-body text-on-surface-variant mt-1'>
+        {openToken?.gloss && (
+          <>
+            <span lang={phrase.targetLang}>{openToken.text}</span>: {openToken.gloss}
+          </>
+        )}
       </p>
     </div>
   );
