@@ -21,7 +21,7 @@ import { clip, LIMITS } from './limits';
 import { decodeLog, encodeLog } from './compactLog';
 import { initialLearner, initialPlayer, initialPrefs, initialProfile } from './initial';
 import { derive, memoryKey } from './memory';
-import { mergeLearner, mergePending, ratingCommitId } from './merge';
+import { committedIn, mergeLearner, mergePending } from './merge';
 import { announceSave, clearOtherPendings, clearPending, clearRaw, clearStray, readRaw, Stored, writePending, writeRaw } from './storage';
 import {
   AppState,
@@ -370,7 +370,7 @@ export function loadState({ saved, pending, others = [], stray = null }: Stored,
   });
   strayOutstanding = stray !== null || others.length > 0;
   const learner = extra.reduce((merged, more) => mergeLearner(merged, more.learner), state.learner);
-  const committed = (p: PendingRating) => learner.log.some((e) => e.id === ratingCommitId(state.device.id, p));
+  const committed = committedIn(learner.log, state.device.id);
   const pendingRatings = extra.reduce((merged, more) => mergePending(merged, more.pending, committed, clock.now()), state.pending);
   return { ...state, pending: pendingRatings, learner };
 }
@@ -414,7 +414,7 @@ async function writeState(state: AppState): Promise<SaveResult> {
     // pending ratings merge too: a rating given in another tab mustn't be written over.
     const stored = current !== null && current !== lastWritten ? parseState(current, state.device) : null;
     const learner = stored ? mergeLearner(state.learner, stored.learner) : state.learner;
-    const committed = (p: PendingRating) => learner.log.some((e) => e.id === ratingCommitId(state.device.id, p));
+    const committed = committedIn(learner.log, state.device.id);
     const pending = stored ? mergePending(state.pending, stored.pending, committed, clock.now()) : state.pending;
     const json = serializeState(learner === state.learner && pending === state.pending ? state : { ...state, learner, pending });
     await writeRaw(json);

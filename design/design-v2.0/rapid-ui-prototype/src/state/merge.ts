@@ -20,6 +20,14 @@ export function ratingCommitId(deviceId: string, p: PendingRating): string {
   return `${deviceId}.r-${p.key}-${p.at.toString(36)}`;
 }
 
+/** Whether a pending rating is already in `log`: its id built once, not per entry (a year's log is long). */
+export function committedIn(log: LogEntry[], deviceId: string): (p: PendingRating) => boolean {
+  return (p) => {
+    const id = ratingCommitId(deviceId, p);
+    return log.some((e) => e.id === id);
+  };
+}
+
 /**
  * This tab's pending ratings merged with another tab's. `committed` says whether a rating is
  * already in the log (it then stays out); returns `ours` itself when nothing changes.
