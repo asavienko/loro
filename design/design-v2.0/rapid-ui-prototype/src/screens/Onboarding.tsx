@@ -43,11 +43,19 @@ export function Onboarding() {
 
   return (
     <main className="min-h-dvh bg-surface text-on-surface flex flex-col px-6 pt-[calc(2rem+env(safe-area-inset-top))] max-w-md mx-auto">
-      <p className="text-label font-semibold text-secondary">{c.onboarding.step(at + 1, STEPS.length)}</p>
-      <h1 className="font-serif text-display font-semibold mt-1">Loro</h1>
+      {/* How far along, drawn; the step text says it in words. */}
+      <div className="flex items-center gap-3">
+        <div aria-hidden="true" className="flex-1 flex gap-1.5">
+          {STEPS.map((s, i) => (
+            <span key={s} className={`h-1 flex-1 rounded-full ${i <= at ? 'bg-primary-container' : 'bg-surface-container-high'}`} />
+          ))}
+        </div>
+        <p className="shrink-0 text-label font-semibold text-secondary">{c.onboarding.step(at + 1, STEPS.length)}</p>
+      </div>
+      <h1 className="font-serif text-display font-semibold mt-4">Loro</h1>
       {at === 0 && <p className="text-body text-secondary mt-1">{c.onboarding.welcome}</p>}
 
-      <div className={`flex-1 flex flex-col gap-3 ${at === 0 ? 'mt-8' : 'mt-4'}`}>
+      <div className={`flex-1 flex flex-col gap-3 ${at === 0 ? 'mt-8' : 'mt-6'}`}>
         {step === 'native' && (
           <Choice
             legend={c.onboarding.native}
@@ -98,7 +106,7 @@ export function Onboarding() {
               {c.onboarding.loopSteps(native, target).map((text, i) => (
                 <li key={text} className="flex gap-3 items-start">
                   <span className="w-9 h-9 rounded-full bg-primary-fixed text-on-primary-fixed flex items-center justify-center shrink-0">
-                    <Icon name={(['hearing', 'mic', 'volume_up', 'task_alt'] as IconName[])[i]} className="text-icon-md" />
+                    <Icon name={(['hearing', 'record_voice_over', 'volume_up', 'task_alt'] as IconName[])[i]} className="text-icon-md" />
                   </span>
                   <span className="text-body pt-1.5">{text}</span>
                 </li>
