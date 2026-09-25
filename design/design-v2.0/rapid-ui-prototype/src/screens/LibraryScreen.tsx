@@ -21,6 +21,7 @@ import {
 import { coursePhrases } from '../state/catalog';
 import { useCopy, useNow, useStore } from '../state/store';
 import { RecallChart, WeeklyChart } from '../ui/Charts';
+import { Chip } from '../ui/Chip';
 import { Icon } from '../ui/Icon';
 import { PhraseRow } from '../ui/PhraseRow';
 import { progressLabel } from '../ui/progressLabel';
@@ -92,27 +93,23 @@ export function LibraryScreen({ view: chosen }: { view?: LibraryView }) {
       </div>
 
       <div
-        className="flex flex-wrap gap-2 -mt-2"
+        className="flex flex-wrap gap-x-2 -mt-2"
         role="tablist"
         aria-label={segment === 'sets' ? c.library.setsSegment : c.library.phrasesSegment}
       >
         {views.map((v) => (
-          <button
+          <Chip
             key={v}
             id={tabId(TABS, v)}
-            type="button"
             role="tab"
-            aria-selected={view === v}
+            selected={view === v}
             aria-controls={panelId(TABS, v)}
             tabIndex={view === v ? 0 : -1}
             onKeyDown={tabListKeyDown(TABS, views, view, go)}
             onClick={() => go(v)}
-            className={`min-h-11 px-4 rounded-full text-body font-semibold whitespace-nowrap border ${
-              view === v ? 'bg-primary-container text-on-primary border-primary-container' : 'bg-surface-container-low text-on-surface border-outline-variant/50'
-            }`}
           >
             {c.library.filters[v]}
-          </button>
+          </Chip>
         ))}
       </div>
 

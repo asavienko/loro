@@ -7,6 +7,7 @@ import { courseSets, coursePhrases, findSetView, phraseKey, promptOf } from '../
 import { clip, LIMITS, tidy } from '../state/limits';
 import { phraseProgress, setProgress } from '../state/selectors';
 import { useCopy, useNow, useStore } from '../state/store';
+import { Chip } from '../ui/Chip';
 import { Icon, IconName } from '../ui/Icon';
 import { PhraseRow } from '../ui/PhraseRow';
 import { progressLabel } from '../ui/progressLabel';
@@ -163,18 +164,11 @@ export function ExploreScreen({ filters }: { filters: ExploreFilters }) {
       </form>
 
       {chips.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2 -mt-3">
+        <div className="flex flex-wrap items-center gap-x-2 -mt-3">
           {chips.map((chip) => (
-            <button
-              key={chip.label}
-              type="button"
-              aria-label={c.explore.removeFilter(chip.label)}
-              onClick={() => update(chip.clear)}
-              className="min-h-11 pl-3 pr-2 rounded-full bg-primary-container text-on-primary text-body font-semibold flex items-center gap-1"
-            >
+            <Chip key={chip.label} removable aria-label={c.explore.removeFilter(chip.label)} onClick={() => update(chip.clear)}>
               {chip.label}
-              <Icon name="close" className="text-icon-sm" />
-            </button>
+            </Chip>
           ))}
           {chips.length > 1 && (
             <button type="button" onClick={() => navigate({ name: 'explore', q: filters.q })} className="min-h-11 px-3 rounded-full text-body font-semibold text-primary-container">
@@ -323,22 +317,7 @@ function FilterRow({ label, children }: { label: string; children: ReactNode }) 
   return (
     <section aria-label={label} className="-mt-2">
       <h2 className="text-label font-bold uppercase tracking-wider text-secondary mb-1.5">{label}</h2>
-      <div className="flex flex-wrap gap-2">{children}</div>
+      <div className="flex flex-wrap gap-x-2">{children}</div>
     </section>
-  );
-}
-
-function Chip({ selected, onClick, children }: { selected: boolean; onClick: () => void; children: ReactNode }) {
-  return (
-    <button
-      type="button"
-      aria-pressed={selected}
-      onClick={onClick}
-      className={`min-h-11 px-4 rounded-full text-body font-semibold border ${
-        selected ? 'bg-primary-container text-on-primary border-primary-container' : 'bg-surface-container-low text-on-surface border-outline-variant/50'
-      }`}
-    >
-      {children}
-    </button>
   );
 }

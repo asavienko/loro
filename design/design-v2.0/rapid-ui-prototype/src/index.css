@@ -215,6 +215,13 @@
     [role='button']:not([aria-disabled='true']):hover {
       background-image: linear-gradient(color-mix(in srgb, currentColor 8%, transparent), color-mix(in srgb, currentColor 8%, transparent));
     }
+    /* A chip's target is taller than its pill (Chip.tsx): the layer goes on the pill, not around it. */
+    button.chip:not(:disabled):hover {
+      background-image: none;
+    }
+    button.chip:not(:disabled):hover > span {
+      background-image: linear-gradient(color-mix(in srgb, currentColor 8%, transparent), color-mix(in srgb, currentColor 8%, transparent));
+    }
   }
 
   ::selection {
@@ -229,6 +236,14 @@
   }
   .on-dark :focus-visible {
     outline-color: var(--color-primary-fixed);
+  }
+  /* A chip's ring hugs its pill rather than the larger target around it. */
+  button.chip:focus-visible {
+    outline: none;
+  }
+  button.chip:focus-visible > span {
+    outline: 2px solid var(--color-primary-container);
+    outline-offset: 2px;
   }
   /* Containers that take focus only to hold it (dialogs) draw no ring. */
   [tabindex="-1"]:focus-visible {
