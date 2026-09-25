@@ -1,7 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
 // PREVIEW=1 runs the suite against the production build (`vite preview`),
-// service worker included; otherwise against the dev server.
+// service worker included; otherwise against the dev server. BROWSER=webkit runs
+// it in WebKit, the engine of every browser on iOS (`npx playwright install webkit`).
 const preview = process.env.PREVIEW === '1';
 const PORT = preview ? 4180 : 5320;
 
@@ -13,7 +14,7 @@ export default defineConfig({
   use: {
     baseURL: `http://localhost:${PORT}`,
     ...devices['iPhone 13'],
-    browserName: 'chromium',
+    browserName: process.env.BROWSER === 'webkit' ? 'webkit' : 'chromium',
     viewport: { width: 390, height: 844 },
     trace: 'retain-on-failure',
     serviceWorkers: preview ? 'allow' : 'block',
