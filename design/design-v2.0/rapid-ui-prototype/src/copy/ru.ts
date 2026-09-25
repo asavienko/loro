@@ -352,6 +352,10 @@ export function makeRu(n: Plural): Copy {
       accessibility: 'Экранный диктор',
       announceEveryStep: 'Объявлять каждый шаг',
       announceHint: 'Выключено: объявляются только «Ваша очередь» и ответ.',
+      listening: 'Прослушивание',
+      pauseLength: 'Время, чтобы сказать',
+      pause: { standard: 'Обычное', longer: 'Подольше' },
+      pauseHint: '«Подольше» — примерно вдвое дольше самой фразы.',
     },
     onboarding: {
       step: (i, total) => `Шаг ${i} из ${total}`,

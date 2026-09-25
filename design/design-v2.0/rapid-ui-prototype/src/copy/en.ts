@@ -3,7 +3,7 @@
 // go through `n()` so each language can use its own plural rules.
 import type { Grade } from '../core/fsrs';
 import type { Level, Register, Tag } from '../content';
-import type { PlayMode, SortKey } from '../state/types';
+import type { PauseLength, PlayMode, SortKey } from '../state/types';
 import type { PluralForms } from './plural';
 
 export interface Plural {
@@ -368,6 +368,10 @@ export function makeEn(n: Plural) {
       voiceAuto: (name: string) => `Automatic (${name})`,
       announceEveryStep: 'Announce every step',
       announceHint: 'Off: only “Your turn” and the reveal are announced.',
+      listening: 'Listening',
+      pauseLength: 'Time to say it',
+      pause: { standard: 'Standard', longer: 'Longer' } satisfies Record<PauseLength, string>,
+      pauseHint: 'Longer gives you about twice the phrase’s length.',
     },
     onboarding: {
       step: (i: number, total: number) => `Step ${i} of ${total}`,

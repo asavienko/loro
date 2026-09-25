@@ -351,6 +351,10 @@ export function makeBg(n: Plural): Copy {
       accessibility: 'Екранен четец',
       announceEveryStep: 'Обявявай всяка стъпка',
       announceHint: 'Изключено: обявяват се само „Ваш ред“ и отговорът.',
+      listening: 'Слушане',
+      pauseLength: 'Време да го кажете',
+      pause: { standard: 'Стандартно', longer: 'По-дълго' },
+      pauseHint: '„По-дълго“ дава около два пъти дължината на фразата.',
     },
     onboarding: {
       step: (i, total) => `Стъпка ${i} от ${total}`,

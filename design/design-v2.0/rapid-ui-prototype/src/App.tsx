@@ -192,6 +192,7 @@ function Shell() {
   const [create, setCreate] = useState<{ phraseIds: string[]; rename?: string } | null>(null);
   const [phraseForm, setPhraseForm] = useState<{ editId?: string; target?: string } | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsAtVoices, setSettingsAtVoices] = useState(false);
   const [summaryOpen, setSummaryOpen] = useState(false);
 
   // The tab, the app switcher and screen readers say where the learner is (WCAG 2.4.2).
@@ -324,7 +325,14 @@ function Shell() {
       addToSet: (phraseIds) => setAddTo(phraseIds),
       addPhrase: (options = {}) => setPhraseForm(options),
       createSet: (phraseIds = [], rename) => setCreate({ phraseIds, rename }),
-      openSettings: () => setSettingsOpen(true),
+      openSettings: () => {
+        setSettingsAtVoices(false);
+        setSettingsOpen(true);
+      },
+      openVoiceSettings: () => {
+        setSettingsAtVoices(true);
+        setSettingsOpen(true);
+      },
     }),
     [actions, routeRef, learnerRef, playerRef],
   );
@@ -399,7 +407,7 @@ function Shell() {
         </LocalBoundary>
 
         <LocalBoundary resetKey={`${settingsOpen}${summaryOpen}${details?.phraseId}${addTo}${create?.rename}${phraseForm?.editId ?? phraseForm !== null}`} quiet onError={closeSheets}>
-          <SettingsSheet open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+          <SettingsSheet open={settingsOpen} atVoices={settingsAtVoices} onClose={() => setSettingsOpen(false)} />
           <SessionSummarySheet open={summaryOpen} onClose={() => setSummaryOpen(false)} />
           <PhraseDetailsSheet details={details} onClose={() => setDetails(null)} />
           <AddToSetSheet phraseIds={addTo} onClose={() => setAddTo(null)} />
