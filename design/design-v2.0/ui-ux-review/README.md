@@ -806,3 +806,18 @@ also reworked after a review (`e2e/back.spec.ts`). Left open, for decision:
   queue stays per tab by design.
 - Across devices, a device whose clock runs ahead wins last-writer-wins until real time catches up;
   the server would need to stamp times (plan 60 / sync protocol).
+
+**First-time learner walkthrough (screenshots, 390 px, 320 px, desktop):** every timed tap changed
+the screen in 36–68 ms. Fixed: the set page showed the Spanish of the playing row during "Your
+turn"; tapping a phrase in Explore replaced a review without a word (it now plays next, keeping the
+queue); Library opened on an empty Liked (now Due / Liked / Learning); filters left the topic tiles
+above their results; Home's "Next: … in 13 days" beside "7 due"; "1 pts"; "Filtered sets" for a
+plain search. Open, for decision:
+- The one-phrase demo repeats forever in repeat mode ("Queue played through", then again). End it
+  after one pass with "That's the loop — start Café & Mañanas?"
+- The player's time can run past its "full play" total (the rating hold and engine start-up aren't
+  in it); see the full-play question above.
+- The rating previews read "Missed 10 min": say "back in 10 min"? The Easy preview grows between
+  repetitions (the first review is capped by how often the phrase was heard) — explain or freeze?
+- Set covers crop their drawn icon at the corner; on desktop the player cover shows a sliver.
+- At 320×568 the player's speed control sits at the very bottom with no hint that the player scrolls.
