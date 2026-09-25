@@ -185,6 +185,8 @@ test.describe('recorded clips', () => {
 
   test('a clip that fails falls back to the device voice', async ({ page }) => {
     await page.goto('/');
+    // Wait for the app to mount: its start-up cleanup (stopSpeech) would cancel this speech.
+    await expect(page.getByRole('heading', { name: '¡Hola, Ana!' })).toBeVisible();
     const result = await page.evaluate(async () => {
       class BrokenAudio {
         error = { code: 4 };

@@ -8,7 +8,12 @@ async function drag(page: Page, target: Locator, dx: number, dy: number) {
   const y = box.y + box.height / 2;
   await page.mouse.move(x, y);
   await page.mouse.down();
-  for (let i = 1; i <= 10; i++) await page.mouse.move(x + (dx * i) / 10, y + (dy * i) / 10);
+  // At a finger's pace, a frame per step: faster, WebKit's frames don't keep up and a
+  // reorder drag doesn't register.
+  for (let i = 1; i <= 20; i++) {
+    await page.mouse.move(x + (dx * i) / 20, y + (dy * i) / 20);
+    await page.waitForTimeout(16);
+  }
   await page.mouse.up();
 }
 

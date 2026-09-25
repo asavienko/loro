@@ -30,7 +30,8 @@ test('a year of history stays smooth while playing', async ({ page }) => {
 
 // Taps and typing on a slow phone (CPU 4× throttled), from the browser's own
 // event timing: every interaction paints within 200 ms (the "good" INP line).
-test('interactions respond quickly on a slow phone', async ({ page }) => {
+test('interactions respond quickly on a slow phone', async ({ page, browserName }) => {
+  test.skip(browserName !== 'chromium', 'CPU throttling and event timing come from the Chrome DevTools Protocol');
   test.setTimeout(120_000);
   const cdp = await page.context().newCDPSession(page);
   await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
@@ -69,7 +70,8 @@ test('interactions respond quickly on a slow phone', async ({ page }) => {
 // page doesn't grow. Before the toast was one element, replaced toasts piled up.
 test.describe('a long session', () => {
   test.use({ seed: {} });
-  test('keeps the page the same size', async ({ page }) => {
+  test('keeps the page the same size', async ({ page, browserName }) => {
+    test.skip(browserName !== 'chromium', 'heap and listener counts come from the Chrome DevTools Protocol');
     test.setTimeout(120_000);
     await page.clock.install();
     await page.goto('/');
