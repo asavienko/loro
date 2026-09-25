@@ -129,7 +129,8 @@ export function HomeScreen() {
             </div>
           </div>
         )}
-        {upcoming && (
+        {/* With more due than the review plays, the next due date isn't what comes next: say nothing. */}
+        {upcoming && due.length <= review.length && (
           <p className="text-body text-secondary px-1 flex items-center gap-1.5">
             <Icon name="schedule" className="text-icon-sm" />
             {/* With reviews due now, the next ones come after them, not "next". */}

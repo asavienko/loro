@@ -211,6 +211,16 @@ export function ExploreScreen({ filters }: { filters: ExploreFilters }) {
         </section>
       )}
 
+      {/* With a level or tag on, topics stay choosable as chips instead of tiles. */}
+      {!topic && !q && (filters.level || filters.tag) && (
+        <FilterRow label={c.explore.topics}>
+          {courseTopics.map(({ topic: t }) => (
+            <Chip key={t.id} selected={false} onClick={() => pickTopic(t.id)}>
+              {t.title[locale]}
+            </Chip>
+          ))}
+        </FilterRow>
+      )}
       <FilterRow label={c.explore.levels}>
         {LEVELS.filter((l) => courseSets(learner).some((s) => s.level === l)).map((l) => (
           <Chip key={l} selected={filters.level === l} onClick={() => update({ level: filters.level === l ? undefined : l })}>
