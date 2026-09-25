@@ -56,3 +56,44 @@ test('"Phrase added" offers Play, which plays the new phrase (U-17)', async ({ p
   await page.getByRole('button', { name: /^Now playing:/ }).click();
   await expect(page.getByRole('dialog', { name: 'Now playing' }).getByText('Is there wifi?').first()).toBeVisible();
 });
+
+test.describe('adding a phrase from another Library list', () => {
+  test.use({ seed: { log: sampleHistory(Date.now()) } });
+
+  for (const [scale, width, height] of [[100, 390, 844], [200, 320, 568]] as const) {
+    test(`shows it under Mine, in view, with Play still offered (Q-07) at ${scale}% text on ${width} px`, async ({ page }) => {
+      await page.setViewportSize({ width, height });
+      await page.goto('/#/library?view=due');
+      if (scale !== 100) await page.addStyleTag({ content: `html { font-size: ${scale}% }` });
+      await page.getByRole('button', { name: 'Add a phrase or set' }).click();
+      await page.getByRole('dialog').getByRole('button', { name: 'Add your phrase' }).click();
+      await page.getByLabel('In Spanish').fill('¿Hay wifi?');
+      await page.getByLabel('In English').fill('Is there wifi?');
+      await page.getByRole('button', { name: 'Add phrase' }).click();
+      await expect(page.getByRole('tab', { name: 'Mine' })).toHaveAttribute('aria-selected', 'true');
+      await expect(page).toHaveURL(/#\/library\?view=mine$/);
+      // The whole row: its phrase and its status, not just the edge of it above the tab bar.
+      await expect(page.getByRole('button', { name: 'Play ¿Hay wifi?' })).toBeInViewport({ ratio: 1 });
+      await expect(page.locator('.toast-layer').getByRole('button', { name: 'Play', exact: true })).toBeVisible();
+      // Back returns to the list the learner was on.
+      await page.goBack();
+      await expect(page.getByRole('tab', { name: 'Due' })).toHaveAttribute('aria-selected', 'true');
+    });
+  }
+
+  test('an edit stays on the list it was made from (Q-07)', async ({ page }) => {
+    await addOwnPhrase(page);
+    await page.getByRole('button', { name: 'Details for ¿Hay wifi?' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Like', exact: true }).click();
+    await page.keyboard.press('Escape');
+    await page.getByRole('tab', { name: 'Liked' }).click();
+    await page.getByRole('button', { name: 'Details for ¿Hay wifi?' }).click();
+    await page.getByRole('button', { name: 'Edit phrase' }).click();
+    await page.getByLabel('In English').fill('Is there Wi-Fi?');
+    await page.getByRole('button', { name: 'Save' }).click();
+    await expect(page.locator('.toast-layer').getByText('Phrase updated')).toBeVisible();
+    await page.waitForTimeout(300);
+    await expect(page).toHaveURL(/#\/library\?view=liked$/);
+    await expect(page.getByRole('tab', { name: 'Liked' })).toHaveAttribute('aria-selected', 'true');
+  });
+});
