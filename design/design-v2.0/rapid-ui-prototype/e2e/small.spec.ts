@@ -174,11 +174,12 @@ test.describe('large text (150%) on a 320 px phone: player, queue and summary', 
     await page.getByRole('button', { name: /queue/i }).first().click();
     await page.waitForTimeout(500);
     expect(await clippedText(page.locator('body'), 'li [lang]:not(.truncate)')).toEqual([]);
-    await expect(page.getByText('Una ración de croquetas, por favor')).toBeVisible();
+    await expect(page.getByText('A portion of croquettes, please')).toBeVisible();
   });
 
   test('each grade in the summary stays with its count', async ({ page }) => {
-    await page.getByRole('button', { name: 'Session summary' }).click();
+    await page.getByRole('button', { name: /queue/i }).first().click();
+    await page.getByRole('button', { name: /^This session · / }).click();
     await page.waitForTimeout(500);
     const text = await page.getByRole('dialog').last().locator('dd').filter({ hasText: 'Missed' }).innerText();
     for (const line of text.split('\n')) expect(line.trim()).not.toMatch(/^(\d+|·)/);

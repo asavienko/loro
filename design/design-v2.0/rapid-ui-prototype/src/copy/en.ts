@@ -296,6 +296,9 @@ export function makeEn(n: Plural) {
       swipePlay: 'Play now',
       swipeRemove: 'Remove',
       previously: 'Previously played',
+      /** On an up-next phrase already played in this queue (a Missed or Hard one coming back). */
+      again: 'Again',
+      justNow: 'just now',
       playNext: (text: string) => `Play ${text} next`,
       clear: 'Clear queue',
       saveAsSet: 'Save as set',

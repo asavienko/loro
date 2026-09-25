@@ -51,6 +51,27 @@ export function HiddenPhrase({ text, className, label }: { text: string; classNa
   );
 }
 
+/**
+ * The hidden target in a list row: one dashed line as wide as the phrase would be in `className`'s
+ * font (up to the row's width), with `label` for screen readers. For rows about to be recalled.
+ */
+export function HiddenLine({ text, className, label }: { text: string; className: string; label: string }) {
+  const probe = useRef<HTMLSpanElement>(null);
+  const [width, setWidth] = useState<number | null>(null);
+  useLayoutEffect(() => {
+    const el = probe.current;
+    if (!el) return;
+    const style = getComputedStyle(el);
+    setWidth(textWidth(text, `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`));
+  }, [text]);
+  return (
+    <span ref={probe} className={`block ${className}`}>
+      <span className="sr-only">{label}</span>
+      <span aria-hidden="true" className="block max-w-full h-3 my-1 rounded-md border-[1.5px] border-dashed border-outline forced-colors:border-2" style={{ width: width ?? '60%' }} />
+    </span>
+  );
+}
+
 type Token = { text: string; gloss: string | null };
 
 /** Splits the target into glossed units, longest match first ('por favor' before 'por'). */

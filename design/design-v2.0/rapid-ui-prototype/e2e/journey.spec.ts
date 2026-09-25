@@ -113,7 +113,7 @@ test('play next from details goes straight after the current phrase', async ({ p
   await page.getByRole('button', { name: /^Now playing:/ }).click();
   await page.getByRole('button', { name: 'Open queue' }).click();
   const first = page.getByRole('dialog', { name: 'Queue' }).getByRole('button', { name: /^Play .* now$/ }).first();
-  await expect(first).toHaveAccessibleName('Play Sin gluten, por favor now');
+  await expect(first).toHaveAccessibleName('Play Gluten-free, please now');
 });
 
 test('two tabs never overwrite each other', async ({ page, context }) => {
