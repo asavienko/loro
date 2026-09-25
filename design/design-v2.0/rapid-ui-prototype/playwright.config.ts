@@ -4,9 +4,10 @@ import { defineConfig, devices } from '@playwright/test';
 // service worker included; otherwise against the dev server. BROWSER=webkit runs
 // it in WebKit, the engine of every browser on iOS (`npx playwright install webkit`);
 // BROWSER=firefox in Gecko (Firefox for Android), without mobile emulation, which
-// Firefox doesn't support.
+// Firefox doesn't support. E2E_PORT gives a second checkout (a worktree) its own
+// server, since the dev server is reused when one is already on the port.
 const preview = process.env.PREVIEW === '1';
-const PORT = preview ? 4180 : 5320;
+const PORT = Number(process.env.E2E_PORT) || (preview ? 4180 : 5320);
 const browser = process.env.BROWSER === 'webkit' || process.env.BROWSER === 'firefox' ? process.env.BROWSER : 'chromium';
 
 export default defineConfig({
