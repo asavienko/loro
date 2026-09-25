@@ -404,3 +404,13 @@ test("another course's set says so and offers the switch instead of playing", as
   await page.getByRole('button', { name: 'Learn Bulgarian' }).click();
   await expect(page.getByRole('button', { name: /^Play Кафене/ })).toBeVisible();
 });
+
+test("a set page's Back returns to the filtered page it came from", async ({ page }) => {
+  await page.goto('/#/explore?topic=getting-around&level=A2');
+  await page.getByRole('button', { name: /^Taxi de Noche/ }).first().click();
+  await page.getByRole('button', { name: /^Back/ }).first().click();
+  await expect(page).toHaveURL(/#\/explore\?topic=getting-around&level=A2$/);
+  // And browser Back now leaves Explore rather than reopening the set.
+  await page.goBack();
+  await expect(page).not.toHaveURL(/#\/set\//);
+});
