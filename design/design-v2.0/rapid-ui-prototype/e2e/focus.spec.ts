@@ -210,3 +210,18 @@ test('closing a message focused with nothing before it keeps focus in the top sh
   await expect(page.getByRole('button', { name: 'Dismiss message' })).toHaveCount(0);
   expect(await page.evaluate(() => document.activeElement?.closest('[role="dialog"]')?.getAttribute('aria-label'))).toBe('Queue');
 });
+
+test('holding an arrow key moves one phrase, not through the queue', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: /^Play/ }).first().click();
+  await page.getByRole('button', { name: 'Pause', exact: true }).first().click();
+  await page.getByRole('button', { name: /^Now playing:/ }).click();
+  const player = page.getByRole('dialog', { name: 'Now playing' });
+  await expect(player.getByText(/^1 of \d+$/)).toBeVisible();
+  await page.keyboard.press('ArrowRight');
+  // A held key: the system's auto-repeat sends more keydowns marked `repeat`.
+  await page.evaluate(() => {
+    for (let i = 0; i < 10; i++) window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', repeat: true, bubbles: true }));
+  });
+  await expect(player.getByText(/^2 of \d+$/)).toBeVisible();
+});
