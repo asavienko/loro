@@ -176,6 +176,19 @@ test.describe('onboarding on a device with no Spanish voice', () => {
     await expect(page.getByText('Spanish: no voice on this device')).toBeVisible();
     await expectAccessible(page);
   });
+
+  test('a voice that loads late shows up without going back', async ({ page }) => {
+    await page.addInitScript(() => (window.__noVoices = ['es-ES', 'es-MX']));
+    await page.goto('/');
+    for (let i = 0; i < 3; i++) await page.getByRole('button', { name: 'Continue' }).click();
+    await expect(page.getByText('Spanish: no voice on this device')).toBeVisible();
+    await page.evaluate(() => {
+      window.__noVoices = [];
+      window.__voicesChanged?.();
+    });
+    await expect(page.getByText('Spanish: Test Español')).toBeVisible();
+    await expect(page.getByText('Spanish: no voice on this device')).toHaveCount(0);
+  });
 });
 
 test.describe('onboarding by keyboard', () => {

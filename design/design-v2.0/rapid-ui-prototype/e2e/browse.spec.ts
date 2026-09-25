@@ -410,6 +410,20 @@ test('the learner can choose the voice for a language', async ({ page }) => {
   await expect(page.getByRole('combobox', { name: 'English', exact: true })).toHaveCount(0);
 });
 
+test('a second voice that loads late appears in Settings while it is open', async ({ page }) => {
+  await page.addInitScript(() => (window.__noVoices = ['es-MX']));
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Ana: settings' }).click();
+  const spanish = page.getByRole('combobox', { name: 'Spanish', exact: true });
+  await expect(page.getByRole('dialog', { name: 'Settings' })).toBeVisible();
+  await expect(spanish).toHaveCount(0);
+  await page.evaluate(() => {
+    window.__noVoices = [];
+    window.__voicesChanged?.();
+  });
+  await expect(spanish).toBeVisible();
+});
+
 test("the player's voice line leads to the voice picker", async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: /^Play \d+ phrases/ }).first().click();
