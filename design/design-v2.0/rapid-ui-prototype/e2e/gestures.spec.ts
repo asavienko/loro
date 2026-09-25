@@ -30,34 +30,38 @@ async function openQueue(page: Page) {
 test('swipe a queued phrase left to remove it, right to play it now', async ({ page }) => {
   const queue = await openQueue(page);
   await expect(queue.getByText('4 left')).toBeVisible();
-  await drag(page, queue.getByRole('button', { name: 'Play La cuenta, por favor now' }), -160, 0);
+  const hint = queue.getByText(/^Swipe right to play now/);
+  await expect(hint).toBeVisible();
+  await drag(page, queue.getByRole('button', { name: 'Play The bill, please now' }), -160, 0);
   await expect(queue.getByText('3 left')).toBeVisible();
-  await drag(page, queue.getByRole('button', { name: 'Play Sin gluten, por favor now' }), 160, 0);
+  // It has done its job: the hint folds away (and stays folded, a device setting).
+  await expect(hint).toHaveCount(0);
+  await drag(page, queue.getByRole('button', { name: 'Play Gluten-free, please now' }), 160, 0);
   await expect(queue.getByRole('button', { name: /Me pone|Sin gluten/ }).first()).toBeVisible();
   await expect(queue.locator('[aria-current="true"]')).toContainText('Gluten-free, please');
 });
 
 test('drag a queued phrase by its handle to reorder', async ({ page }) => {
   const queue = await openQueue(page);
-  const last = queue.getByRole('button', { name: 'Move Sin gluten, por favor' });
-  const first = queue.getByRole('button', { name: 'Move ¿Tienen leche de avena?' });
+  const last = queue.getByRole('button', { name: 'Move Gluten-free, please' });
+  const first = queue.getByRole('button', { name: 'Move Do you have oat milk?' });
   const to = (await first.boundingBox())!;
   const from = (await last.boundingBox())!;
   await drag(page, last, 0, to.y - from.y - 10);
   await page.waitForTimeout(300);
-  await expect(queue.getByRole('button', { name: /^Play .* now$/ }).first()).toHaveAccessibleName('Play Sin gluten, por favor now');
+  await expect(queue.getByRole('button', { name: /^Play .* now$/ }).first()).toHaveAccessibleName('Play Gluten-free, please now');
   // A drag is not a tap: it doesn't also open the row's options.
-  await expect(page.getByRole('dialog', { name: 'Sin gluten, por favor' })).toHaveCount(0);
+  await expect(page.getByRole('dialog', { name: 'Gluten-free, please' })).toHaveCount(0);
 });
 
 test('a tap on the handle offers the same moves without dragging (WCAG 2.5.7)', async ({ page }) => {
   const queue = await openQueue(page);
-  await queue.getByRole('button', { name: 'Move La cuenta, por favor' }).tap();
-  const options = page.getByRole('dialog', { name: 'La cuenta, por favor' });
+  await queue.getByRole('button', { name: 'Move The bill, please' }).tap();
+  const options = page.getByRole('dialog', { name: 'The bill, please' });
   await options.getByRole('button', { name: 'Move up' }).tap();
   await expect(page.getByRole('status')).toHaveText('Moved to position 1 of 4');
   await expect(options).toHaveCount(0);
-  await queue.getByRole('button', { name: 'Move La cuenta, por favor' }).tap();
+  await queue.getByRole('button', { name: 'Move The bill, please' }).tap();
   await expect(options.getByRole('button', { name: 'Move up' })).toBeDisabled();
   await options.getByRole('button', { name: 'Remove from queue' }).tap();
   await expect(queue.getByText('3 left')).toBeVisible();
@@ -119,13 +123,13 @@ test('media keys: seek back replays the phrase, seek forward moves on', async ({
 
 test("a queue row's options stay with that phrase while playback moves on", async ({ page }) => {
   const queue = await openQueue(page);
-  await queue.getByRole('button', { name: 'Move Sin gluten, por favor' }).tap();
-  const options = page.getByRole('dialog', { name: 'Sin gluten, por favor' });
+  await queue.getByRole('button', { name: 'Move Gluten-free, please' }).tap();
+  const options = page.getByRole('dialog', { name: 'Gluten-free, please' });
   await expect(options).toBeVisible();
   // Playback moves on underneath the open sheet.
   await page.evaluate(() => document.querySelector<HTMLElement>('[data-player]')?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true })));
   await page.waitForTimeout(300);
   await expect(options).toBeVisible();
   await options.getByRole('button', { name: 'Remove from queue' }).tap();
-  await expect(queue.getByRole('button', { name: 'Play Sin gluten, por favor now' })).toHaveCount(0);
+  await expect(queue.getByRole('button', { name: 'Play Gluten-free, please now' })).toHaveCount(0);
 });

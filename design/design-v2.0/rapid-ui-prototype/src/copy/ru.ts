@@ -284,6 +284,8 @@ export function makeRu(n: Plural): Copy {
       swipePlay: 'Слушать',
       swipeRemove: 'Убрать',
       previously: 'Уже звучали',
+      again: 'Снова',
+      justNow: 'только что',
       playNext: (text) => `Поставить следующей: ${text}`,
       clear: 'Очистить очередь',
       saveAsSet: 'Сохранить как набор',

@@ -263,6 +263,29 @@ test.describe('queues with a natural end', () => {
 });
 
 test.describe('queue', () => {
+  test('up next goes by the prompt, keeps the Spanish hidden, and marks a phrase coming back', async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Play 5 phrases' }).click();
+    await page.getByRole('button', { name: 'Pause', exact: true }).click();
+    await page.getByRole('button', { name: /^Now playing:/ }).click();
+    const player = page.getByRole('dialog', { name: 'Now playing' });
+    await player.getByRole('button', { name: /^Missed/ }).click();
+    await expect(player.getByText('1 of 6')).toBeVisible();
+    await page.getByRole('button', { name: 'Open queue' }).click();
+    const queue = page.getByRole('dialog', { name: 'Queue' });
+    const next = queue.getByRole('button', { name: /^Play .* now$/ });
+    await expect(next.first()).toHaveAccessibleName('Play Do you have oat milk? now');
+    await expect(next.first()).toContainText('2');
+    // Not one Spanish phrase of up next is on screen before it is heard.
+    for (const target of ['¿Tienen leche de avena?', 'La cuenta, por favor', 'Sin gluten, por favor']) await expect(queue.getByText(target)).toHaveCount(0);
+    await expect(next.first()).toContainText('Spanish hidden until you hear it');
+    // The missed phrase comes back later in this queue, and says so.
+    await expect(next.last()).toHaveAccessibleName('Play A cortado, please now');
+    await expect(next.last()).toContainText('Again');
+    await expect(next.first()).not.toContainText('Again');
+  });
+
+
   test('keeps the target hidden during recall; remove can be undone', async ({ page }) => {
     await page.goto('/');
     await page.getByRole('button', { name: 'Play 5 phrases' }).click();
@@ -271,11 +294,11 @@ test.describe('queue', () => {
     const queue = page.getByRole('dialog', { name: 'Queue' });
     await expect(queue.getByText('Spanish hidden until you hear it · Repetition 1 of 3')).toBeVisible();
     await expect(queue.getByText('4 left')).toBeVisible();
-    await queue.getByRole('button', { name: 'Move La cuenta, por favor' }).press('Delete');
+    await queue.getByRole('button', { name: 'Move The bill, please' }).press('Delete');
     await expect(queue.getByText('3 left')).toBeVisible();
     await page.getByRole('button', { name: 'Undo' }).click();
     await expect(queue.getByText('4 left')).toBeVisible();
-    await queue.getByRole('button', { name: 'Move La cuenta, por favor' }).press('ArrowUp');
+    await queue.getByRole('button', { name: 'Move The bill, please' }).press('ArrowUp');
     await expect(page.getByRole('status')).toHaveText('Moved to position 1 of 4');
   });
 });

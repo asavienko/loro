@@ -4,11 +4,13 @@ import { useClickBlockerDuringDrag } from '../lib/suppressClick';
 import { useDialog } from '../lib/useDialog';
 import { useNav } from '../nav/NavContext';
 import { findPhrase, findSetView, promptOf } from '../state/catalog';
-import { formatAgo } from '../state/clock';
-import { currentPhraseId, previouslyPlayed, upNextIds } from '../state/selectors';
+import { formatAgo, MINUTE } from '../state/clock';
+import { currentPhraseId, previouslyPlayed, sessionSummary, upNextIds } from '../state/selectors';
 import { useCopy, useNow, useStore } from '../state/store';
 import { Icon } from '../ui/Icon';
-import { isTargetRevealed } from '../ui/phase';
+import { languageName } from '../copy';
+import { isTargetRevealed, queueTitle } from '../ui/phase';
+import { HiddenLine } from '../ui/PhraseText';
 import { PhraseRow } from '../ui/PhraseRow';
 import { Sheet, SheetOption } from '../ui/Sheet';
 import { useToast } from '../ui/Toast';
@@ -41,6 +43,13 @@ export function QueueScreen({ onClose }: { onClose: () => void }) {
   const [menuKey, setMenuKey] = useState<string | null>(null);
   const menu = menuKey === null || !items.includes(menuKey) ? null : items.indexOf(menuKey);
   const menuPhrase = menu === null ? undefined : findPhrase(state.learner, upNext[menu]);
+  // Up next hasn't been heard yet: the row, and its options, go by the prompt.
+  const menuTitle = menuPhrase ? promptOf(menuPhrase, state.learner.profile.nativeLang).text : '';
+  const summary = sessionSummary(state, now);
+  // The swipe-and-drag hint folds away once a swipe or drag has worked (a device setting).
+  const learnedGestures = () => {
+    if (!state.prefs.queueHintDone) actions.setPrefs({ queueHintDone: true });
+  };
   const setMenu = (i: number | null) => setMenuKey(i === null ? null : items[i]);
 
   const move = (from: number, to: number) => {
@@ -86,8 +95,7 @@ export function QueueScreen({ onClose }: { onClose: () => void }) {
         <div className="flex-1 min-w-0 text-center">
           <h1 className="font-serif text-title font-semibold leading-tight">{c.queue.title}</h1>
           <p className="text-label text-secondary truncate">
-            {c.queue.left(upNext.length)}
-            {set ? ` · ${set.title}` : ''}
+            {c.queue.left(upNext.length)} · <span lang={set?.targetLang}>{queueTitle(c, state.player, set)}</span>
           </p>
         </div>
         <button
@@ -103,9 +111,24 @@ export function QueueScreen({ onClose }: { onClose: () => void }) {
 
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-lg mx-auto px-3 py-4 flex flex-col gap-5">
+          {/* This session so far, the way into its summary (the player's header no longer has one). */}
+          {summary && (
+            <button
+              type="button"
+              onClick={nav.openSummary}
+              className="-mt-2 min-h-12 px-3 rounded-2xl bg-surface-container-low text-left flex items-center gap-2 active:bg-surface-container"
+            >
+              <Icon name="insights" className="text-icon-md text-primary-container" />
+              <span className="flex-1 min-w-0 text-body">
+                <span className="font-semibold">{c.summary.title}</span>
+                <span className="text-secondary"> · {c.history.run(summary.phrasesPlayed, summary.points)}</span>
+              </span>
+              <Icon name="chevron_right" className="text-icon-md text-secondary" />
+            </button>
+          )}
           {current && (
             <section>
-              <h2 className="px-2 mb-1 text-label font-bold uppercase tracking-wider text-secondary">{c.queue.nowPlaying}</h2>
+              <h2 className="px-2 mb-1 text-label font-bold text-secondary">{c.queue.nowPlaying}</h2>
               <PhraseRow
                 phrase={current}
                 leading={String(state.player.index + 1)}
@@ -121,24 +144,35 @@ export function QueueScreen({ onClose }: { onClose: () => void }) {
           )}
 
           <section>
-            <h2 className="px-2 mb-1 text-label font-bold uppercase tracking-wider text-secondary">{c.queue.upNext(upNext.length)}</h2>
+            <h2 className="px-2 mb-1 text-label font-bold text-secondary">{c.queue.upNext(upNext.length)}</h2>
             {upNext.length === 0 ? (
               <p className="px-2 py-3 text-body text-secondary">{c.queue.nothing}</p>
             ) : (
               <>
-                <p className="px-2 mb-2 text-label text-secondary">{c.queue.hint}</p>
+                {!state.prefs.queueHintDone && <p className="px-2 mb-2 text-caption text-secondary">{c.queue.hint}</p>}
                 <p id={hintId} hidden>
                   {c.queue.handleHint}
                 </p>
-                <Reorder.Group axis="y" values={items} onReorder={(next) => actions.reorderUpNext(next.map(idOf))} className="flex flex-col gap-2">
+                <Reorder.Group
+                  axis="y"
+                  values={items}
+                  onReorder={(next) => {
+                    actions.reorderUpNext(next.map(idOf));
+                    learnedGestures();
+                  }}
+                  className="flex flex-col"
+                >
                   {items.map((item, i) => (
                     <QueueItem
                       key={item}
                       item={item}
                       phraseId={idOf(item)}
+                      position={positionOf(i) + 1}
+                      again={state.player.order.slice(0, positionOf(i)).includes(idOf(item))}
                       hintId={hintId}
                       onPlayNow={() => actions.jump(positionOf(i), true)}
                       onRemove={() => remove(i)}
+                      onSwiped={learnedGestures}
                       onMove={(delta) => move(i, i + delta)}
                       onMenu={() => setMenu(i)}
                     />
@@ -177,14 +211,15 @@ export function QueueScreen({ onClose }: { onClose: () => void }) {
 
           {previous.length > 0 && (
             <section>
-              <h2 className="px-2 mb-1 text-label font-bold uppercase tracking-wider text-secondary">{c.queue.previously}</h2>
+              <h2 className="px-2 mb-1 text-label font-bold text-secondary">{c.queue.previously}</h2>
               {previous.map((entry) => {
                 const phrase = findPhrase(state.learner, entry.phraseId)!;
                 return (
                   <PhraseRow
                     key={entry.phraseId}
                     phrase={phrase}
-                    detail={formatAgo(entry.at, now, c.locale)}
+                    // "now" reads oddly in a list: under a minute is "just now".
+                    detail={now - entry.at < MINUTE ? c.queue.justNow : formatAgo(entry.at, now, c.locale)}
                     playLabel={c.queue.playNext(phrase.target)}
                     // Queues it next rather than replacing the queue.
                     onPlay={() => {
@@ -200,7 +235,7 @@ export function QueueScreen({ onClose }: { onClose: () => void }) {
         </div>
       </div>
 
-      <Sheet open={menu !== null && Boolean(menuPhrase)} title={menuPhrase?.target ?? ''} onClose={() => setMenu(null)}>
+      <Sheet open={menu !== null && Boolean(menuPhrase)} title={menuTitle} onClose={() => setMenu(null)}>
         {menu !== null && (
           <div className="flex flex-col">
             <SheetOption icon="arrow_upward" label={c.queue.moveUp} disabled={menu === 0} onClick={() => { move(menu, menu - 1); setMenu(null); }} />
@@ -216,15 +251,21 @@ export function QueueScreen({ onClose }: { onClose: () => void }) {
 interface QueueItemProps {
   item: string;
   phraseId: string;
+  /** Its place in the whole queue, as the player counts ("4 of 9"). */
+  position: number;
+  /** Already played earlier in this queue: a Missed or Hard phrase coming back. */
+  again: boolean;
   hintId: string;
   onPlayNow: () => void;
   onRemove: () => void;
+  /** A swipe did its job (the hint can fold away). */
+  onSwiped: () => void;
   onMove: (delta: -1 | 1) => void;
   /** A tap on the handle (not a drag) opens the row's options. */
   onMenu: () => void;
 }
 
-function QueueItem({ item, phraseId, hintId, onPlayNow, onRemove, onMove, onMenu }: QueueItemProps) {
+function QueueItem({ item, phraseId, position, again, hintId, onPlayNow, onRemove, onSwiped, onMove, onMenu }: QueueItemProps) {
   const c = useCopy();
   const { state } = useStore();
   const controls = useDragControls();
@@ -236,6 +277,7 @@ function QueueItem({ item, phraseId, hintId, onPlayNow, onRemove, onMove, onMenu
 
   const onSwipeEnd = (_: unknown, info: PanInfo) => {
     clicks.release();
+    if (Math.abs(info.offset.x) > SWIPE) onSwiped();
     if (info.offset.x > SWIPE) onPlayNow();
     else if (info.offset.x < -SWIPE) onRemove();
   };
@@ -267,17 +309,25 @@ function QueueItem({ item, phraseId, hintId, onPlayNow, onRemove, onMove, onMenu
           <Icon name="delete" className="text-icon-md" />
         </span>
       </div>
-      <motion.div drag="x" dragSnapToOrigin dragElastic={0.5} onDragStart={clicks.block} onDragEnd={onSwipeEnd} className="relative flex-1 min-w-0 flex items-center bg-surface-container-low touch-pan-y">
-        <button type="button" onClick={onPlayNow} aria-label={c.queue.playNow(phrase.target)} className="flex-1 min-w-0 min-h-14 px-3 py-2 text-left">
-          <span lang={phrase.targetLang} className="font-serif italic text-row font-medium break-words">
-            {phrase.target}
+      {/* Flat on the page like the rows around it; the tint under it shows only while swiping. */}
+      <motion.div drag="x" dragSnapToOrigin dragElastic={0.5} onDragStart={clicks.block} onDragEnd={onSwipeEnd} className="relative flex-1 min-w-0 flex items-center bg-surface touch-pan-y">
+        {/* Not heard yet in this play: led by the prompt, with the target a dashed line (the recall rule). */}
+        <button type="button" onClick={onPlayNow} aria-label={c.queue.playNow(prompt.text)} className="flex-1 min-w-0 min-h-14 pl-2 pr-3 py-2 text-left flex items-start gap-2">
+          <span className="w-6 shrink-0 pt-0.5 text-center text-label tabular-nums text-secondary">{position}</span>
+          <span className="flex-1 min-w-0">
+            <span className="flex items-start gap-1.5">
+              <span lang={prompt.lang} className="text-row font-medium break-words min-w-0">
+                {prompt.text}
+              </span>
+              {again && <span className="shrink-0 mt-0.5 px-1.5 rounded text-caption font-bold bg-secondary-container text-on-secondary-fixed">{c.queue.again}</span>}
+            </span>
+            <HiddenLine text={phrase.target} className="font-serif italic text-row" label={c.player.hidden(languageName(phrase.targetLang, c.locale))} />
           </span>
-          <span lang={prompt.lang} className="block text-label text-secondary truncate">{prompt.text}</span>
         </button>
       </motion.div>
       <button
         type="button"
-        aria-label={c.queue.move(phrase.target)}
+        aria-label={c.queue.move(prompt.text)}
         aria-describedby={hintId}
         aria-haspopup="dialog"
         onPointerDown={(e) => {
@@ -288,7 +338,7 @@ function QueueItem({ item, phraseId, hintId, onPlayNow, onRemove, onMove, onMenu
           if (!dragged.current) onMenu();
         }}
         onKeyDown={onHandleKey}
-        className="relative w-12 shrink-0 flex items-center justify-center bg-surface-container-low text-secondary touch-none cursor-grab active:cursor-grabbing"
+        className="relative w-12 shrink-0 flex items-center justify-center bg-surface text-secondary touch-none cursor-grab active:cursor-grabbing"
       >
         <Icon name="drag_handle" className="text-icon-lg" />
       </button>

@@ -283,6 +283,8 @@ export function makeBg(n: Plural): Copy {
       swipePlay: 'Пусни',
       swipeRemove: 'Махни',
       previously: 'Вече звучали',
+      again: 'Отново',
+      justNow: 'току-що',
       playNext: (text) => `Пусни следваща: ${text}`,
       clear: 'Изчисти опашката',
       saveAsSet: 'Запази като набор',

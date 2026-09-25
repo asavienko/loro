@@ -61,7 +61,6 @@ interface NowPlayingScreenProps {
 
 export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps) {
   const c = useCopy();
-  const nav = useNav();
   const { state, actions } = useStore();
   const dragControls = useDragControls();
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -147,7 +146,6 @@ export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps
           </h1>
           <p className="text-label text-secondary tabular-nums">{c.player.position(index + 1, order.length)}</p>
         </div>
-        <HeaderButton label={c.player.summary} icon="insights" onClick={nav.openSummary} />
         <HeaderButton label={c.player.openQueue} icon="queue_music" onClick={onOpenQueue} />
       </header>
 
