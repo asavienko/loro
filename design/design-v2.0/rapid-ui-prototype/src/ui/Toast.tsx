@@ -151,7 +151,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               {/* Words, actions, ×. One action: one row, or two when narrow (the words, then the
                   action and × on the right). Two actions: the words and ×, then both actions. */}
               <div className={`min-h-12 pl-4 pr-1 flex items-center gap-x-2 ${item.also ? 'flex-wrap' : item.action ? NARROW_WRAP : ''}`}>
-                <span aria-hidden="true" className={`flex-1 min-w-0 py-2 ${!item.also && item.action ? NARROW_TEXT : ''}`}>
+                <span aria-hidden="true" className={`flex-1 min-w-0 py-2 text-pretty ${!item.also && item.action ? NARROW_TEXT : ''}`}>
                   {item.text}
                 </span>
                 {item.action && (

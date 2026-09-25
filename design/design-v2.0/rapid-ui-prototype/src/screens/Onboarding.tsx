@@ -55,7 +55,7 @@ export function Onboarding() {
         <p className="shrink-0 text-label font-semibold text-secondary">{c.onboarding.step(at + 1, STEPS.length)}</p>
       </div>
       <h1 className="font-serif text-display font-semibold mt-4">Loro</h1>
-      {at === 0 && <p className="text-body text-secondary mt-1">{c.onboarding.welcome}</p>}
+      {at === 0 && <p className="text-body text-secondary mt-1 text-pretty">{c.onboarding.welcome}</p>}
 
       <div className={`flex-1 flex flex-col gap-3 ${at === 0 ? 'mt-8' : 'mt-6'}`}>
         {step === 'native' && (
@@ -110,7 +110,7 @@ export function Onboarding() {
                   <span className="w-9 h-9 rounded-full bg-primary-fixed text-on-primary-fixed flex items-center justify-center shrink-0">
                     <Icon name={(['hearing', 'record_voice_over', 'volume_up', 'task_alt'] as IconName[])[i]} className="text-icon-md" />
                   </span>
-                  <span className="text-body pt-1.5">{text}</span>
+                  <span className="text-body pt-1.5 text-pretty">{text}</span>
                 </li>
               ))}
             </ol>

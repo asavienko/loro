@@ -484,7 +484,7 @@ function Rating({ phrase }: { phrase: Phrase }) {
             </button>
           </>
         ) : (
-          <span className={hold ? 'font-bold text-on-surface' : 'text-secondary'}>{beforeTurn ? c.player.rateAfterTurn : c.player.howDidItGo}</span>
+          <span className={`text-pretty ${hold ? 'font-bold text-on-surface' : 'text-secondary'}`}>{beforeTurn ? c.player.rateAfterTurn : c.player.howDidItGo}</span>
         )}
       </div>
       <div className="@container grid grid-cols-3 gap-2">
@@ -564,7 +564,7 @@ function EndPanel({ onClose }: { onClose: () => void }) {
         <h2 id="end-panel-title" ref={heading} tabIndex={-1} className="font-serif text-heading font-semibold text-on-surface">
           {title}
         </h2>
-        <p className="text-body text-secondary mt-1">{body}</p>
+        <p className="text-body text-secondary mt-1 text-pretty">{body}</p>
       </div>
       <div className="w-full max-w-[20rem] flex flex-col gap-2">
         {source?.kind === 'library' ? (
