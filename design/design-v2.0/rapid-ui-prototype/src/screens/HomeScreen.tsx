@@ -49,9 +49,10 @@ export function HomeScreen() {
   const firstRun = stats.started === 0;
   const firstPhrase = courseSets(learner)[0]?.phraseIds[0];
   // New to Loro: nothing heard in any course (a course switched to later is not a first run),
-  // and the demo not declined in onboarding. Only then the demo and the first-run line.
+  // and the demo not declined in onboarding. Only then the demo and the first-run line. Not the
+  // demo again while it is loaded (in the mini-player): Home leads with what comes after it.
   const newToLoro = !state.prefs.skippedDemo && !state.learner.log.some((entry) => entry.kind === 'heard');
-  const offerDemo = newToLoro && Boolean(firstPhrase);
+  const offerDemo = newToLoro && Boolean(firstPhrase) && state.player.source?.kind !== 'demo';
   const courseTotal = coursePhrases(learner).length;
   // Nothing due and nothing left to learn: say so, and offer what to do next.
   const courseDone = courseTotal > 0 && due.length === 0 && suggestedIds.length === 0 && stats.learned === courseTotal;
