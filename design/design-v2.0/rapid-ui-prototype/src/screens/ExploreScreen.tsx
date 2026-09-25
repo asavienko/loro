@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useRef, useState } from 'react';
+import { ReactNode, RefObject, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Level, Phrase, Tag, TOPICS } from '../content';
 import { useSelectedInView } from '../lib/useSelectedInView';
 import { navigate } from '../nav/history';
@@ -86,6 +86,8 @@ export function ExploreScreen({ filters }: { filters: ExploreFilters }) {
 
   const chipRow = useRef<HTMLDivElement>(null);
   useSelectedInView(chipRow, `${filters.level}${filters.tag}`);
+  const searchField = useRef<HTMLInputElement>(null);
+  const placeholder = useFittingPlaceholder(searchField, c.explore.search, c.explore.searchShort);
   const update = (patch: Partial<ExploreFilters>, replace = false) => navigate({ name: 'explore', ...filters, ...patch }, { replace });
   // Typing replaces the history entry, so Back leaves Explore instead of undoing letters.
   // The query keeps what was typed, spaces and all: trimming it here would write the
@@ -258,7 +260,8 @@ export function ExploreScreen({ filters }: { filters: ExploreFilters }) {
           spellCheck={false}
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder={c.explore.search}
+          ref={searchField}
+          placeholder={placeholder}
           aria-label={c.explore.search}
           className={`${fieldClass} w-full pl-11`}
         />
@@ -357,6 +360,36 @@ function PhraseResult({ phrase, words, detail }: { phrase: Phrase; words: string
       </button>
     </div>
   );
+}
+
+/**
+ * The field's placeholder: the whole one while it fits, one word ("Search") when the field is too
+ * narrow for it (large text), rather than "Phrases, not…". Its name for screen readers stays whole.
+ */
+function useFittingPlaceholder(field: RefObject<HTMLInputElement | null>, whole: string, short: string): string {
+  const [fits, setFits] = useState(true);
+  useLayoutEffect(() => {
+    const input = field.current;
+    const context = document.createElement('canvas').getContext('2d');
+    if (!input || !context) return;
+    const measure = () => {
+      const style = getComputedStyle(input);
+      context.font = style.font;
+      const room = input.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+      setFits(context.measureText(whole).width <= room);
+    };
+    measure();
+    // Its width, padding and font follow the screen and the text size; the web font may come later.
+    const observer = new ResizeObserver(measure);
+    observer.observe(input);
+    let live = true;
+    void document.fonts?.ready.then(() => live && measure());
+    return () => {
+      live = false;
+      observer.disconnect();
+    };
+  }, [field, whole]);
+  return fits ? whole : short;
 }
 
 /** One kind of filter inside the chip line, named for screen readers ("Levels", "Tags"). */

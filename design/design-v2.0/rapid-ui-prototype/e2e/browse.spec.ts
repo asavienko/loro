@@ -332,6 +332,39 @@ test('near the limit, a phrase field says how many characters are left', async (
   await expect(field).toHaveAccessibleDescription('0 characters left');
 });
 
+test('when the search field is too narrow for its placeholder it says one word; its name stays whole (Q-17)', async ({ page }) => {
+  await page.goto('/#/explore');
+  const field = page.getByRole('searchbox', { name: 'Phrases, notes, topics' });
+  await expect(field).toHaveAttribute('placeholder', 'Phrases, notes, topics');
+  await page.addStyleTag({ content: 'html { font-size: 200% }' });
+  await expect(field).toHaveAttribute('placeholder', 'Search');
+  await expect(field).toHaveAccessibleName('Phrases, notes, topics');
+  // The word shown fits the field.
+  const fits = await field.evaluate((input: HTMLInputElement) => {
+    const style = getComputedStyle(input);
+    const context = document.createElement('canvas').getContext('2d')!;
+    context.font = style.font;
+    return context.measureText(input.placeholder).width <= input.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+  });
+  expect(fits).toBe(true);
+  // Back to the usual size, the whole placeholder again.
+  await page.evaluate(() => document.querySelectorAll('style').forEach((s) => s.textContent?.includes('200%') && s.remove()));
+  await expect(field).toHaveAttribute('placeholder', 'Phrases, notes, topics');
+});
+
+for (const [nativeLang, whole, short] of [['bg-BG', 'Фрази, бележки, теми', 'Търсене'], ['ru-RU', 'Фразы, заметки, темы', 'Поиск']] as const) {
+  test.describe(`${nativeLang} search`, () => {
+    test.use({ seed: { nativeLang }, viewport: { width: 320, height: 568 } });
+    test(`a 320 px phone has room for "${whole}"; at 200% text it says "${short}" (Q-17)`, async ({ page }) => {
+      await page.goto('/#/explore');
+      const field = page.getByRole('searchbox', { name: whole });
+      await expect(field).toHaveAttribute('placeholder', whole);
+      await page.addStyleTag({ content: 'html { font-size: 200% }' });
+      await expect(field).toHaveAttribute('placeholder', short);
+    });
+  });
+}
+
 test('the Search key commits the query and puts the keyboard away', async ({ page }) => {
   await page.goto('/#/explore');
   const field = page.getByRole('searchbox', { name: 'Phrases, notes, topics' });
