@@ -12,6 +12,8 @@ import { btnPrimary, btnTonal } from '../ui/button';
 import { fieldClass } from '../ui/field';
 
 type Step = 'native' | 'name' | 'course' | 'voices' | 'loop';
+/** The step's action: Home's hero radius, so at large text it wraps as a rounded block, not an oval. */
+const PRIMARY = `${btnPrimary.replace('rounded-full', 'rounded-3xl')} w-full py-2`;
 const STEPS: Step[] = ['native', 'name', 'course', 'voices', 'loop'];
 
 /** First run: languages, name, a voice check before anything plays, and the loop in one screen. */
@@ -53,7 +55,7 @@ export function Onboarding() {
         <p className="shrink-0 text-label font-semibold text-secondary">{c.onboarding.step(at + 1, STEPS.length)}</p>
       </div>
       <h1 className="font-serif text-display font-semibold mt-4">Loro</h1>
-      {at === 0 && <p className="text-body text-secondary mt-1">{c.onboarding.welcome}</p>}
+      {at === 0 && <p className="text-body text-secondary mt-1 text-pretty">{c.onboarding.welcome}</p>}
 
       <div className={`flex-1 flex flex-col gap-3 ${at === 0 ? 'mt-8' : 'mt-6'}`}>
         {step === 'native' && (
@@ -108,7 +110,7 @@ export function Onboarding() {
                   <span className="w-9 h-9 rounded-full bg-primary-fixed text-on-primary-fixed flex items-center justify-center shrink-0">
                     <Icon name={(['hearing', 'record_voice_over', 'volume_up', 'task_alt'] as IconName[])[i]} className="text-icon-md" />
                   </span>
-                  <span className="text-body pt-1.5">{text}</span>
+                  <span className="text-body pt-1.5 text-pretty">{text}</span>
                 </li>
               ))}
             </ol>
@@ -116,40 +118,49 @@ export function Onboarding() {
         )}
       </div>
 
-      {/* The step's action stays on screen however long the step or large the text. */}
-      <div className="sticky bottom-0 -mx-6 px-6 pt-3 mt-3 pb-[calc(1.5rem+env(safe-area-inset-bottom))] bg-surface flex flex-col gap-2 before:absolute before:inset-x-0 before:-top-6 before:h-6 before:bg-linear-to-t before:from-surface before:to-transparent before:pointer-events-none">
+      {/* Only the step's action is pinned, so it stays on screen however long the step or large
+          the text without hiding the step itself; the quieter choices follow it in the page. */}
+      <div className={`sticky bottom-0 -mx-6 px-6 pt-3 mt-3 ${at === 0 ? 'pb-[calc(1.5rem+env(safe-area-inset-bottom))]' : 'pb-[calc(0.75rem+env(safe-area-inset-bottom))]'} bg-surface flex flex-col before:absolute before:inset-x-0 before:-top-6 before:h-6 before:bg-linear-to-t before:from-surface before:to-transparent before:pointer-events-none`}>
         {step === 'loop' ? (
-          <>
-            <button type="button" onClick={() => finish(true)} className={btnPrimary}>
-              <Icon name="play_arrow" fill className="text-icon" />
-              {c.onboarding.start}
-            </button>
-            <button type="button" onClick={() => finish(false)} className="min-h-12 rounded-full text-primary-container font-semibold">
-              {c.onboarding.skip}
-            </button>
-          </>
+          <button type="button" onClick={() => finish(true)} className={PRIMARY}>
+            <Icon name="play_arrow" fill className="text-icon" />
+            {c.onboarding.start}
+          </button>
         ) : (
-          <button type="button" onClick={next} className={btnPrimary}>
+          <button type="button" onClick={next} className={PRIMARY}>
             {c.onboarding.next}
           </button>
         )}
-        {at > 0 && (
-          <button type="button" onClick={() => setStep(STEPS[at - 1])} className="min-h-11 rounded-full text-secondary font-semibold">
-            {c.common.back}
-          </button>
-        )}
       </div>
+      {(step === 'loop' || at > 0) && (
+        // The pinned strip's safe-area padding is for when it is stuck; here it would be a gap.
+        <div className="-mt-[env(safe-area-inset-bottom)] pb-[calc(1.5rem+env(safe-area-inset-bottom))] flex flex-col gap-1">
+          {step === 'loop' && (
+            <button type="button" onClick={() => finish(false)} className="min-h-12 rounded-full text-primary-container font-semibold">
+              {c.onboarding.skip}
+            </button>
+          )}
+          {at > 0 && (
+            <button type="button" onClick={() => setStep(STEPS[at - 1])} className="min-h-11 rounded-full text-secondary font-semibold">
+              {c.common.back}
+            </button>
+          )}
+        </div>
+      )}
     </main>
   );
 }
 
 function Choice({ legend, options, label, value, onChange }: { legend: string; options: LanguageCode[]; label: (code: LanguageCode) => string; value: LanguageCode; onChange: (code: LanguageCode) => void }) {
   return (
-    <fieldset className="flex flex-col gap-2">
-      <legend className="font-serif text-title font-semibold mb-2">{legend}</legend>
+    // min-w-0: a fieldset is at least as wide as its widest word by default, which at large text on
+    // a small phone pushed the page sideways.
+    <fieldset className="min-w-0 flex flex-col gap-2">
+      <legend className="font-serif text-title font-semibold mb-2 break-words hyphens-auto">{legend}</legend>
       {options.map((code) => (
-        <label key={code} className={`min-h-12 px-4 rounded-2xl border flex items-center gap-3 cursor-pointer ${value === code ? 'border-primary-container bg-primary-fixed/40' : 'border-outline-variant/60'}`}>
-          <input type="radio" name={legend} checked={value === code} onChange={() => onChange(code)} className="w-5 h-5 accent-primary-container" />
+        <label key={code} className={`min-h-12 px-4 py-1 rounded-2xl border flex flex-wrap items-center gap-x-3 cursor-pointer ${value === code ? 'border-inverse-surface bg-surface-container-low' : 'border-hairline'}`}>
+          {/* Chosen is ink, as in Settings: terracotta is for Play and the step's action. */}
+          <input type="radio" name={legend} checked={value === code} onChange={() => onChange(code)} className="w-5 h-5 accent-inverse-surface" />
           <span aria-hidden="true">{getLanguage(code).flag}</span>
           <span className="text-row font-semibold">{label(code)}</span>
         </label>
@@ -179,7 +190,7 @@ function VoiceCheck() {
             const voice = voiceName(lang);
             const text = sample ? (lang === profile.targetLang ? sample.target : promptOf(sample, lang).text) : '';
             return (
-              <li key={lang} className="flex items-center gap-2 min-h-12">
+              <li key={lang} className="flex flex-wrap items-center gap-2 min-h-12">
                 <Icon name={voice ? 'check_circle' : 'error'} className={`text-icon ${voice ? 'text-tertiary' : 'text-error'}`} />
                 <span className="flex-1 text-body">
                   {voice ? c.onboarding.voiceOk(languageLabel(lang, c.locale), voice) : c.onboarding.voiceMissing(languageLabel(lang, c.locale))}
@@ -190,7 +201,7 @@ function VoiceCheck() {
                     type="button"
                     aria-label={c.onboarding.test(languageName(lang, c.locale))}
                     onClick={() => void speak(text, lang, 1).done}
-                    className={btnTonal}
+                    className={`${btnTonal} ml-auto`}
                   >
                     <Icon name="volume_up" className="text-icon-sm" />
                     {c.onboarding.testShort}

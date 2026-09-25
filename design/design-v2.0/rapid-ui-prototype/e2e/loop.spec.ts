@@ -37,6 +37,30 @@ test.describe('onboarding', () => {
     await expect(player.getByRole('button', { name: 'Pause', exact: true })).toBeVisible();
   });
 
+  test('the end panel sits under the phrase, the two centred as a finish, with focus and word on it (Q-09)', async ({ page }) => {
+    await page.goto('/');
+    for (let i = 0; i < 4; i++) await page.getByRole('button', { name: 'Continue' }).click();
+    await page.getByRole('button', { name: 'Start with one phrase' }).click();
+    const player = page.getByRole('dialog', { name: 'Now playing' });
+    const next = player.getByRole('button', { name: 'Next phrase' });
+    await next.focus();
+    await page.keyboard.press('Enter');
+    const heading = player.getByRole('heading', { name: 'That’s the loop' });
+    await expect(heading).toBeFocused();
+    await expect(page.locator('div[role="status"]')).toContainText('That’s the loop. Hear it, say it out loud');
+    await page.waitForTimeout(700); // the player has slid up
+    const actions = (await player.getByRole('button', { name: 'Add to set' }).boundingBox())!;
+    const panel = (await player.locator('section[aria-labelledby="end-panel-title"]').boundingBox())!;
+    const cover = (await player.locator('.aspect-square').first().boundingBox())!;
+    const header = (await player.locator('header').boundingBox())!;
+    // Right under the action row, not at the foot of an empty stage.
+    expect(panel.y - (actions.y + actions.height)).toBeLessThan(48);
+    // The cover-to-panel group is centred in the space under the header.
+    const above = cover.y - (header.y + header.height);
+    const below = 844 - (panel.y + panel.height);
+    expect(Math.abs(above - below)).toBeLessThan(60);
+  });
+
   test('Next at once ends the demo without showing the Spanish anywhere (R-01)', async ({ page }) => {
     await page.addInitScript(() => {
       Object.defineProperty(navigator, 'mediaSession', { value: { setActionHandler: () => {}, metadata: null, playbackState: 'none' } });
@@ -121,6 +145,43 @@ test.describe('the loop', () => {
     await expect(player.getByText('cortado: espresso with a dash of milk')).toBeVisible();
   });
 
+  // The dashed slot has the revealed phrase's lines: as many, as wide, and never a stray sliver.
+  for (const [name, width, height, textSize] of [['390', 390, 844, ''], ['320', 320, 568, ''], ['200% text', 390, 844, '200%']] as const) {
+    test(`the hidden phrase wraps where the revealed phrase wraps, at ${name} (Q-01)`, async ({ page }) => {
+      await page.setViewportSize({ width, height });
+      await page.goto('/');
+      if (textSize) await page.addStyleTag({ content: `html { font-size: ${textSize} }` });
+      await page.getByRole('button', { name: 'Play 5 phrases' }).click();
+      const player = page.getByRole('dialog', { name: 'Now playing' });
+      // "¿Nos podemos sentar en la terraza?": a little wider than the column at 390 px.
+      for (let i = 0; i < 3; i++) await player.getByRole('button', { name: 'Next phrase' }).click();
+      await player.getByRole('button', { name: 'Pause', exact: true }).click();
+      await expect(player.getByText('Can we sit on the terrace?')).toBeVisible();
+      const slot = await player.locator('[data-hidden-slot] > span').evaluateAll((rows) => rows.map((r) => r.getBoundingClientRect().width));
+      await player.getByRole('button', { name: 'Play', exact: true }).click();
+      const heading = player.getByRole('heading', { name: '¿Nos podemos sentar en la terraza?' });
+      await expect(heading).toBeVisible({ timeout: 20_000 });
+      // Each rendered line of the revealed heading, left edge to right edge.
+      const lines = await heading.evaluate((h) => {
+        const range = document.createRange();
+        range.selectNodeContents(h);
+        const byTop = new Map<number, { left: number; right: number }>();
+        for (const r of range.getClientRects()) {
+          if (r.width === 0) continue;
+          const top = [...byTop.keys()].find((t) => Math.abs(t - r.top) < r.height / 2) ?? r.top;
+          const line = byTop.get(top);
+          byTop.set(top, line ? { left: Math.min(line.left, r.left), right: Math.max(line.right, r.right) } : { left: r.left, right: r.right });
+        }
+        return [...byTop.values()].map((l) => l.right - l.left);
+      });
+      expect(slot.length, `slot ${slot.map(Math.round)} vs lines ${lines.map(Math.round)}`).toBe(lines.length);
+      if (width === 390 && !textSize) expect(lines.length).toBe(2);
+      slot.forEach((w, i) => expect(Math.abs(w - lines[i]), `row ${i + 1}`).toBeLessThan(6));
+      // No sliver: every row is at least a whole word wide ("la", the shortest, is wider than this).
+      for (const w of slot) expect(w).toBeGreaterThan(20);
+    });
+  }
+
   test('transport is visible without scrolling; Back closes the queue, then the player', async ({ page }) => {
     await page.goto('/');
     await page.getByRole('button', { name: 'Play 5 phrases' }).click();
@@ -177,7 +238,7 @@ test.describe('the loop', () => {
     await player.getByRole('button', { name: /^Easy/ }).click();
     await expect(player.getByText('2 of 5')).toBeVisible();
     const toast = page.locator('.toast-layer');
-    await expect(toast).toContainText(/^Rated Easy — back (tomorrow|in \d+ days)/);
+    await expect(toast).toContainText(/^Rated Easy — back in \d+ days?/);
     await toast.getByRole('button', { name: 'Undo' }).click();
     // Back on the first phrase, nothing is rated.
     await player.getByRole('button', { name: 'Previous phrase' }).click();
@@ -304,7 +365,7 @@ test.describe('the loop', () => {
 test.describe('queues with a natural end', () => {
   test.use({ seed: { log: sampleHistory(Date.now()) } });
 
-  test('a review is named, plays once in repeat mode and stops on "Review done"', async ({ page }) => {
+  test('a review is named and plays once in repeat mode; with nothing rated it was "Played through"', async ({ page }) => {
     await page.clock.install();
     await page.goto('/');
     await page.getByRole('button', { name: /^Play 7 phrases/ }).click();
@@ -314,13 +375,32 @@ test.describe('queues with a natural end', () => {
     await expect(player.getByText('7 of 7')).toBeVisible();
     // Let the last phrase play out, hold included: it doesn't start the review again.
     for (let t = 0; t < 40_000; t += 500) await page.clock.runFor(500);
-    await expect(player.getByRole('heading', { name: 'Review done' })).toBeVisible();
-    await expect(player.getByText(/^\d+ rated · /)).toBeVisible();
+    // Not "Review done · 0 rated · 7 phrases are due", which contradicts itself; the real counts stay.
+    await expect(player.getByRole('heading', { name: 'Played through' })).toBeVisible();
+    await expect(player.getByRole('heading', { name: 'Review done' })).toHaveCount(0);
+    await expect(player.getByText('0 rated · 7 phrases are due')).toBeVisible();
     await expect(player.getByText('7 of 7')).toBeVisible();
     await expect(page.getByText('Queue played through')).toHaveCount(0);
     await expect(player.getByRole('button', { name: /^Continue / })).toBeVisible();
     await player.getByRole('button', { name: 'Close', exact: true }).click();
     await expect(player).toHaveCount(0);
+    await expect(page.getByRole('button', { name: /^Now playing:/ })).toContainText('Played through');
+  });
+
+  test('a review with a rating is "Review done", said after the last rating and its Undo (Q-08)', async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: /^Play 7 phrases/ }).click();
+    const player = page.getByRole('dialog', { name: 'Now playing' });
+    await player.getByRole('button', { name: /^Repetitions/ }).click(); // one repetition: to the hold sooner
+    for (let i = 0; i < 6; i++) await player.getByRole('button', { name: 'Next phrase' }).click();
+    await expect(player.getByText('7 of 7')).toBeVisible();
+    await expect(player.getByText('Rate it, or wait to go on').first()).toBeVisible({ timeout: 30_000 });
+    await page.keyboard.press('3');
+    await expect(player.getByRole('heading', { name: 'Review done' })).toBeVisible();
+    await expect(player.getByText('1 rated · 6 phrases are due')).toBeVisible();
+    // One live region: the rating with its Undo is heard first, then the end, not one over the other.
+    await expect(page.locator('div[role="status"]')).toHaveText(/^Rated Easy — [^.]+\. Undo\. Review done\. 1 rated · 6 phrases are due\.$/);
+    await player.getByRole('button', { name: 'Close', exact: true }).click();
     await expect(page.getByRole('button', { name: /^Now playing:/ })).toContainText('Review done');
   });
 
@@ -351,6 +431,24 @@ test.describe('queues with a natural end', () => {
   });
 });
 
+for (const [nativeLang, title, next] of [
+  ['bg-BG', 'Изслушано докрай', 'Следваща фраза'],
+  ['ru-RU', 'Прослушано до конца', 'Следующая фраза'],
+]) {
+  test.describe(`a review played through in ${nativeLang}`, () => {
+    test.use({ seed: { nativeLang, log: sampleHistory(Date.now()).map((e) => ({ ...e, key: String(e.key).replace('en-GB>', `${nativeLang}>`) })) } });
+
+    test('is titled so, over its real counts', async ({ page }) => {
+      await page.goto('/');
+      await page.locator('main button').filter({ hasText: /7/ }).first().click();
+      const player = page.getByRole('dialog');
+      for (let i = 0; i < 7; i++) await player.getByRole('button', { name: next }).click();
+      await expect(player.getByRole('heading', { name: title })).toBeVisible();
+      await expect(player.getByText(/^(Оценени|Оценено): 0 · /)).toBeVisible();
+    });
+  });
+}
+
 test.describe('queue', () => {
   test('up next goes by the prompt, keeps the Spanish hidden, and marks a phrase coming back', async ({ page }) => {
     await page.goto('/');
@@ -360,7 +458,7 @@ test.describe('queue', () => {
     await player.getByRole('button', { name: /^Missed/ }).click();
     await expect(player.getByText('1 of 6')).toBeVisible();
     // The count grew by one: the status line says why.
-    await expect(player.getByText(/^Rated Missed — back in \d+ minutes · again in this queue$/)).toBeVisible();
+    await expect(player.getByText(/^Rated Missed — back in \d+ min · again in this queue$/)).toBeVisible();
     await page.getByRole('button', { name: 'Open queue' }).click();
     const queue = page.getByRole('dialog', { name: 'Queue' });
     const next = queue.getByRole('button', { name: /^Play .* now$/ });
@@ -408,6 +506,50 @@ test.describe('queue', () => {
     await expect(queue.getByText('4 left')).toBeVisible();
     await queue.getByRole('button', { name: 'Move The bill, please' }).press('ArrowUp');
     await expect(page.getByRole('status')).toHaveText('Moved to position 1 of 4');
+  });
+
+  test('a pass in repeat mode offers the next set beside its summary, and plays it (Q-18)', async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Play 5 phrases' }).click();
+    const player = page.getByRole('dialog', { name: 'Now playing' });
+    // Repeat mode is the default: past the last phrase the set starts again, and says so.
+    for (let i = 0; i < 5; i++) await player.getByRole('button', { name: 'Next phrase' }).click();
+    const toast = page.locator('.toast-layer');
+    await expect(toast).toContainText('Queue played through');
+    await expect(toast.getByRole('button', { name: 'Session summary' })).toBeVisible();
+    const next = toast.getByRole('button', { name: 'Continue Tapas & Tabernas' });
+    await expect(next).toBeVisible();
+    await expect(page.locator('div[role="status"]')).toHaveText('Queue played through. Session summary. Continue Tapas & Tabernas');
+    // Two choices: the words have their own line, the buttons sit under them.
+    const words = (await toast.locator('span[aria-hidden="true"]').first().boundingBox())!;
+    expect(words.y + words.height).toBeLessThanOrEqual((await next.boundingBox())!.y + 1);
+    await next.click();
+    await expect(player.getByRole('heading', { level: 1 })).toHaveText('Tapas & Tabernas');
+    await expect(player.getByText('1 of 5')).toBeVisible();
+    await expect(player.getByRole('button', { name: 'Pause', exact: true })).toBeVisible();
+  });
+
+  test('a narrow toast (200% text) keeps its words on whole lines, and its buttons under them (Q-04)', async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Play 5 phrases' }).click();
+    await page.getByRole('button', { name: 'Open queue' }).click();
+    await page.getByRole('dialog', { name: 'Queue' }).getByRole('button', { name: 'Move The bill, please' }).press('Delete');
+    const toast = page.locator('.toast-layer');
+    const words = toast.locator('span[aria-hidden="true"]').first();
+    const undo = toast.getByRole('button', { name: 'Undo' });
+    await expect(undo).toBeVisible();
+    // Roomy: the words, Undo and × on one row.
+    let [w, u] = [(await words.boundingBox())!, (await undo.boundingBox())!];
+    expect(w.y).toBeLessThan(u.y + u.height);
+    expect(u.y).toBeLessThan(w.y + w.height);
+    await page.addStyleTag({ content: 'html { font-size: 200% }' });
+    await page.waitForTimeout(200);
+    [w, u] = [(await words.boundingBox())!, (await undo.boundingBox())!];
+    const box = (await toast.locator('> div').boundingBox())!;
+    // Narrow: the words take the toast's width, and the buttons sit under them, on the right.
+    expect(w.y + w.height).toBeLessThanOrEqual(u.y + 1);
+    expect(w.width).toBeGreaterThan(box.width * 0.75);
+    expect(u.x + u.width).toBeGreaterThan(box.x + box.width * 0.6);
   });
 });
 
@@ -570,6 +712,24 @@ test.describe('what a screen reader hears', () => {
     await expect(status).toHaveText(/^Rated Hard/);
     const player = page.getByRole('dialog', { name: 'Now playing' });
     await expect(player.getByText(/^Rated Hard/)).toHaveText((await status.textContent())!);
+  });
+
+  test('the rated line and the chosen grade say one "when", in one unit (Q-10)', async ({ page }) => {
+    await page.clock.install();
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Play 5 phrases' }).click();
+    await page.getByRole('button', { name: 'Pause', exact: true }).first().click();
+    const player = page.getByRole('dialog', { name: 'Now playing' });
+    await player.getByRole('button', { name: /^Hard/ }).click();
+    // A minute and a half on: counted from the rating, the caption would still say 15.
+    await page.clock.runFor(90_000);
+    const caption = (await player.getByRole('button', { name: /^Hard/, pressed: true }).locator('span').last().textContent())!;
+    expect(caption).toBe('in 14 min');
+    await expect(player.getByText(/^Rated Hard/)).toHaveText(new RegExp(`^Rated Hard — back ${caption}( ·|$)`));
+    // The other grades count from now too, in the same unit.
+    await expect(player.getByRole('button', { name: /^Missed/ })).toContainText('in 9 min');
+    // Just under a day is a day, not "24 hr".
+    await expect(player.getByRole('button', { name: /^Easy/ })).toContainText('in 1 day');
   });
 
   test('a rating given while the grades wait is announced then, not when the phrase returns', async ({ page }) => {
