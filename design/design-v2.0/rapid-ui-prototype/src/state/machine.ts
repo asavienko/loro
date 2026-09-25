@@ -12,7 +12,7 @@ import { clip, LIMITS, tidy } from './limits';
 import { canHandle } from './chart';
 import { initialPlayer, initialState } from './initial';
 import { insertEntry, RATING_WINDOW_MS } from './memory';
-import { committedIn, mergeLearner, mergePending, ratingCommitId } from './merge';
+import { committedIn, mergeLearner, mergePending, mergePrefs, ratingCommitId } from './merge';
 import { sanitizeState } from './persistence';
 import { continuation, currentPhraseId, repeatsFor } from './selectors';
 import type {
@@ -59,7 +59,7 @@ export type AppEvent =
   | { type: 'RATE'; grade: Grade; now: number }
   | { type: 'UNRATE'; now: number }
   | { type: 'COMMIT'; now: number }
-  | { type: 'SET_PREFS'; prefs: Partial<Prefs> }
+  | { type: 'SET_PREFS'; prefs: Partial<Prefs>; now: number }
   | { type: 'TOGGLE_SHUFFLE'; seed: number }
   | { type: 'REORDER_UP_NEXT'; phraseIds: string[] }
   | { type: 'REMOVE_FROM_QUEUE'; position: number }
@@ -84,7 +84,7 @@ export type AppEvent =
   | { type: 'SET_PROFILE'; profile: Partial<Omit<Profile, 'updatedAt'>>; now: number }
   | { type: 'RESTORE'; state: unknown }
   /** Another tab's or device's copy; `pending` only from another tab of this browser. */
-  | { type: 'MERGE_REMOTE'; learner: LearnerState; pending?: PendingRating[]; now: number }
+  | { type: 'MERGE_REMOTE'; learner: LearnerState; pending?: PendingRating[]; prefs?: Prefs; now: number }
   | { type: 'RESET' };
 
 export type AppEventType = AppEvent['type'];
@@ -382,7 +382,7 @@ export function transition(state: AppState, event: AppEvent): AppState {
       return commitDue(state, event.now);
 
     case 'SET_PREFS': {
-      const prefs = { ...state.prefs, ...event.prefs };
+      const prefs = { ...state.prefs, ...event.prefs, updatedAt: event.now };
       if (event.prefs.repeats === undefined || currentId === null) return { ...state, prefs };
       // A new repetitions setting applies now, finishing the repetition in progress.
       const repeats = repeatsFor({ ...state, prefs }, currentId);
@@ -621,6 +621,8 @@ export function transition(state: AppState, event: AppEvent): AppState {
         ? mergePending(state.pending, event.pending, committedIn(merged.log, state.device.id), event.now)
         : state.pending;
       if (pending !== state.pending) state = { ...state, pending };
+      const prefs = event.prefs ? mergePrefs(state.prefs, event.prefs) : state.prefs;
+      if (prefs !== state.prefs) state = { ...state, prefs };
       if (merged === learner) return state;
       // The course switched on another tab or device: this queue belongs to the old one, as
       // with a switch here (SET_PROFILE).

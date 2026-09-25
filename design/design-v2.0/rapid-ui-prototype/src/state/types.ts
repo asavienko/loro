@@ -136,6 +136,8 @@ export interface Prefs {
   skippedDemo: boolean;
   /** The learner's own choice of device voice per language, by name; otherwise the best is picked. */
   voiceByLang: Partial<Record<LanguageCode, string>>;
+  /** Last change, so tabs of this browser keep the newest settings, not the last tab's to save. */
+  updatedAt: number;
 }
 
 // ---------- player ----------

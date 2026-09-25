@@ -112,3 +112,22 @@ test('a tab on the old app after an update stops saving over the newer save, and
   );
   expect(kept).toBe('newer');
 });
+
+test("a setting changed in one tab isn't reverted when another tab saves later", async ({ page, context }) => {
+  await page.goto('/#/set/set-cafe?from=explore');
+  const other = await context.newPage();
+  await other.goto('/#/set/set-taxi?from=explore');
+  await page.bringToFront();
+  await page.getByRole('button', { name: 'Set order' }).click();
+  await page.getByRole('radio', { name: 'A–Z' }).click();
+  await expect(page.getByText('Plays in: A–Z')).toBeVisible();
+  await page.waitForTimeout(800);
+  await page.close({ runBeforeUnload: true });
+  // The other tab, opened before the change, saves something else.
+  await other.bringToFront();
+  await other.getByRole('button', { name: 'Like set' }).click();
+  await other.waitForTimeout(800);
+  const next = await context.newPage();
+  await next.goto('/#/set/set-cafe?from=explore');
+  await expect(next.getByText('Plays in: A–Z')).toBeVisible();
+});

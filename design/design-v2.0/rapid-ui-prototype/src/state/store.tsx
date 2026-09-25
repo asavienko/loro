@@ -5,7 +5,7 @@ import { OWN_SET_PREFIX } from './catalog';
 import { clock } from './clock';
 import { initialState } from './initial';
 import { AppEvent, transition } from './machine';
-import { mergeLearner, mergePending } from './merge';
+import { mergeLearner, mergePending, mergePrefs } from './merge';
 import { flushState, loadState, parseState, saveState } from './persistence';
 import { onOtherTabSave, readRaw, Stored } from './storage';
 import type { AppState, AudioFailure, Grade, LearnerState, PendingRating, Prefs, Profile } from './types';
@@ -33,7 +33,7 @@ function makeActions(dispatch: (event: AppEvent) => void, latest: RefObject<AppS
     rate: (grade: Grade) => dispatch({ type: 'RATE', grade, now: now() }),
     unrate: () => dispatch({ type: 'UNRATE', now: now() }),
     commit: () => dispatch({ type: 'COMMIT', now: now() }),
-    setPrefs: (prefs: Partial<Prefs>) => dispatch({ type: 'SET_PREFS', prefs }),
+    setPrefs: (prefs: Partial<Prefs>) => dispatch({ type: 'SET_PREFS', prefs, now: now() }),
     toggleShuffle: () => dispatch({ type: 'TOGGLE_SHUFFLE', seed: newSeed() }),
     reorderUpNext: (phraseIds: string[]) => dispatch({ type: 'REORDER_UP_NEXT', phraseIds }),
     removeFromQueue: (position: number) => dispatch({ type: 'REMOVE_FROM_QUEUE', position }),
@@ -62,7 +62,7 @@ function makeActions(dispatch: (event: AppEvent) => void, latest: RefObject<AppS
     deleteSet: (setId: string) => dispatch({ type: 'DELETE_SET', setId, now: now() }),
     restoreSet: (setId: string) => dispatch({ type: 'RESTORE_SET', setId, now: now() }),
     setProfile: (profile: Partial<Omit<Profile, 'updatedAt'>>) => dispatch({ type: 'SET_PROFILE', profile, now: now() }),
-    mergeRemote: (learner: LearnerState, pending?: PendingRating[]) => dispatch({ type: 'MERGE_REMOTE', learner, pending, now: now() }),
+    mergeRemote: (learner: LearnerState, pending?: PendingRating[], prefs?: Prefs) => dispatch({ type: 'MERGE_REMOTE', learner, pending, prefs, now: now() }),
     reset: () => dispatch({ type: 'RESET' }),
   };
 }
@@ -115,14 +115,15 @@ export function StoreProvider({ children, stored }: { children: ReactNode; store
           if (!remote) return;
           // Its pending ratings too (another tab of this browser): a rating or undo there
           // counts here, and commits once whichever tab gets to it.
-          actions.mergeRemote(remote.learner, remote.pending);
+          actions.mergeRemote(remote.learner, remote.pending, remote.prefs);
           // Two tabs saving at once: the other's write may have been based on a copy from
           // before ours, and dropped our progress. If storage lacks anything we have, save
           // again (a save merges what's stored), or it would be lost when this tab closes.
           const ours = latest.current;
           const missing =
             mergeLearner(remote.learner, ours.learner) !== remote.learner ||
-            mergePending(remote.pending, ours.pending, () => false, clock.now()) !== remote.pending;
+            mergePending(remote.pending, ours.pending, () => false, clock.now()) !== remote.pending ||
+            mergePrefs(remote.prefs, ours.prefs) !== remote.prefs;
           if (missing) void saveState(ours);
         });
       }),

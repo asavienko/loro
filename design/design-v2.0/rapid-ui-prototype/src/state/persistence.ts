@@ -21,7 +21,7 @@ import { clip, LIMITS } from './limits';
 import { decodeLog, encodeLog } from './compactLog';
 import { initialLearner, initialPlayer, initialPrefs, initialProfile } from './initial';
 import { derive, memoryKey } from './memory';
-import { committedIn, mergeLearner, mergePending } from './merge';
+import { committedIn, mergeLearner, mergePending, mergePrefs } from './merge';
 import { announceSave, clearOtherPendings, clearPending, clearRaw, clearStray, readRaw, Stored, writePending, writeRaw } from './storage';
 import {
   AppState,
@@ -248,6 +248,7 @@ function sanitizePrefs(value: unknown): Prefs {
         ([lang, name]) => LANGUAGES.some((l) => l.code === lang) && typeof name === 'string' && name.length > 0 && name.length <= 200,
       ),
     ) as Prefs['voiceByLang'],
+    updatedAt: num(value.updatedAt) ? value.updatedAt : 0,
   };
 }
 
@@ -442,7 +443,10 @@ async function writeState(state: AppState): Promise<SaveResult> {
     const learner = stored ? mergeLearner(state.learner, stored.learner) : state.learner;
     const committed = committedIn(learner.log, state.device.id);
     const pending = stored ? mergePending(state.pending, stored.pending, committed, clock.now()) : state.pending;
-    const json = serializeState(learner === state.learner && pending === state.pending ? state : { ...state, learner, pending });
+    // Settings changed in another tab since this one's last change are kept, not reverted.
+    const prefs = stored ? mergePrefs(state.prefs, stored.prefs) : state.prefs;
+    const unchanged = learner === state.learner && pending === state.pending && prefs === state.prefs;
+    const json = serializeState(unchanged ? state : { ...state, learner, pending, prefs });
     await writeRaw(json);
     lastWritten = json;
     if (pendingFor === 'loaded' || pendingFor === state) {

@@ -48,3 +48,16 @@ describe('pending ratings across tabs', () => {
     assert.equal(mergePending(ours, [rating('hard', T0)], none, T0 + MINUTE), ours);
   });
 });
+
+describe('settings across tabs', () => {
+  it('the later change wins; a tie keeps ours', async () => {
+    const { mergePrefs } = await import('./merge');
+    const { initialPrefs } = await import('./initial');
+    const older = { ...initialPrefs(), speed: 1 as const, updatedAt: T0 };
+    const newer = { ...initialPrefs(), speed: 0.8 as const, updatedAt: T0 + MINUTE };
+    assert.equal(mergePrefs(older, newer), newer);
+    assert.equal(mergePrefs(newer, older), newer);
+    const tie = { ...older, speed: 1.25 as const };
+    assert.equal(mergePrefs(older, tie), older);
+  });
+});
