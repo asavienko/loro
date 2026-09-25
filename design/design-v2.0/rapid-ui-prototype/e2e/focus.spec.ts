@@ -155,4 +155,25 @@ test('Undo is reachable by keyboard from the queue, and stays while focused', as
   await expect(undo).toBeVisible();
   await page.keyboard.press('Enter');
   await expect(queue.getByRole('button', { name: /^Play .* now$/ })).toHaveCount(count);
+  // Focus goes back into the queue, not to the page behind it.
+  expect(await page.evaluate(() => Boolean(document.activeElement?.closest('[role="dialog"]')))).toBe(true);
+});
+
+test('a new message in place of the one focused stays, and keeps focus', async ({ page, browserName }) => {
+  test.skip(browserName === 'webkit', TAB_SKIPS_BUTTONS);
+  await page.goto('/');
+  await page.getByRole('button', { name: /^Play/ }).first().click();
+  await page.getByRole('button', { name: 'Pause', exact: true }).first().click();
+  await page.getByRole('button', { name: /^Now playing:/ }).click();
+  await page.getByRole('button', { name: 'Open queue' }).click();
+  await page.getByRole('dialog', { name: 'Queue' }).getByRole('button', { name: /^Move / }).first().press('Delete');
+  const undo = page.getByRole('button', { name: 'Undo' });
+  for (let i = 0; i < 40 && !(await undo.evaluate((el) => el === document.activeElement)); i++) await page.keyboard.press('Tab');
+  await expect(undo).toBeFocused();
+  // A message without an action takes its place (here: a save that failed).
+  await page.evaluate(() => window.dispatchEvent(new CustomEvent('loro:save-failed', { detail: 'full' })));
+  const dismiss = page.getByRole('button', { name: 'Dismiss' });
+  await expect(dismiss).toBeFocused();
+  await page.waitForTimeout(5000); // longer than the message's own time
+  await expect(dismiss).toBeVisible();
 });

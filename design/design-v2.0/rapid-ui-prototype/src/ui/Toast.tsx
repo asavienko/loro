@@ -38,22 +38,44 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // It stays while the learner is on it (hover or keyboard focus), then gives its time again.
-  // A new or closed message starts unheld: a removed element fires no leave or blur.
   const [held, setHeld] = useState(false);
+  const layer = useRef<HTMLDivElement>(null);
+  const dismiss = useRef<HTMLButtonElement>(null);
+  // Where keyboard focus came from, to go back to once the message is gone.
+  const cameFrom = useRef<HTMLElement | null>(null);
+  const hadFocus = useRef(false);
+  const focusInside = () => Boolean(layer.current?.contains(document.activeElement));
+
   const close = useCallback(() => {
+    // A removed element takes focus with it; hand it back instead of dropping it on the page.
+    if (focusInside()) {
+      const back = cameFrom.current;
+      if (back?.isConnected) back.focus();
+      else (document.querySelector<HTMLElement>('[role="dialog"][aria-modal="true"]') ?? document.querySelector<HTMLElement>('main h1'))?.focus();
+    }
     setItem(null);
+    // A removed element fires no leave or blur.
     setHeld(false);
   }, []);
 
   const toast = useCallback(
     (text: string, options: ToastOptions = {}) => {
+      // A new message replaces the text in place: while the learner is on it, it stays held.
+      hadFocus.current = focusInside();
+      const onIt = hadFocus.current || Boolean(layer.current?.querySelector(':hover'));
       setItem({ id: nextId.current++, text, ...options });
-      setHeld(false);
+      setHeld(onIt);
       // Say there's an action, or a screen-reader user never learns Undo exists.
       announce(options.action ? `${text}. ${options.action.label}` : text);
     },
     [announce],
   );
+
+  // A replacement without an action drops its Undo button: keep focus on the message.
+  useEffect(() => {
+    if (item && hadFocus.current && document.activeElement === document.body) dismiss.current?.focus();
+    hadFocus.current = false;
+  }, [item, held]);
 
   useEffect(() => {
     if (!item || held) return;
@@ -69,7 +91,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       <div role="status" aria-live="polite" className="sr-only">
         {message}
       </div>
-      <div className="toast-layer fixed inset-x-3 bottom-[calc(8.5rem+env(safe-area-inset-bottom))] z-[70] flex justify-center pointer-events-none">
+      <div ref={layer} className="toast-layer fixed inset-x-3 bottom-[calc(8.5rem+env(safe-area-inset-bottom))] z-[70] flex justify-center pointer-events-none">
         <AnimatePresence>
           {item && (
             // One element whatever the message: a new toast replaces the text in place. Keyed per
@@ -79,7 +101,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               key="toast"
               onPointerEnter={() => setHeld(true)}
               onPointerLeave={() => setHeld(false)}
-              onFocus={() => setHeld(true)}
+              onFocus={(e) => {
+                const from = e.relatedTarget as HTMLElement | null;
+                if (from && !e.currentTarget.contains(from)) cameFrom.current = from;
+                setHeld(true);
+              }}
               onBlur={() => setHeld(false)}
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
@@ -105,6 +131,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               )}
               <button
                 type="button"
+                ref={dismiss}
                 aria-label={c.toast.dismiss}
                 onClick={close}
                 className="w-11 h-11 rounded-xl flex items-center justify-center opacity-80"
