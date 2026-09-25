@@ -5,10 +5,10 @@ import { OWN_SET_PREFIX } from './catalog';
 import { clock } from './clock';
 import { initialState } from './initial';
 import { AppEvent, transition } from './machine';
-import { mergeLearner } from './merge';
+import { mergeLearner, mergePending } from './merge';
 import { flushState, loadState, parseState, saveState } from './persistence';
 import { onOtherTabSave, readRaw, Stored } from './storage';
-import type { AppState, AudioFailure, Grade, LearnerState, Prefs, Profile } from './types';
+import type { AppState, AudioFailure, Grade, LearnerState, PendingRating, Prefs, Profile } from './types';
 
 const newSeed = () => Math.floor(Math.random() * 2 ** 32);
 /** Saves wait this long for more changes; a hidden page saves at once. */
@@ -62,7 +62,7 @@ function makeActions(dispatch: (event: AppEvent) => void, latest: RefObject<AppS
     deleteSet: (setId: string) => dispatch({ type: 'DELETE_SET', setId, now: now() }),
     restoreSet: (setId: string) => dispatch({ type: 'RESTORE_SET', setId, now: now() }),
     setProfile: (profile: Partial<Omit<Profile, 'updatedAt'>>) => dispatch({ type: 'SET_PROFILE', profile, now: now() }),
-    mergeRemote: (learner: LearnerState) => dispatch({ type: 'MERGE_REMOTE', learner, now: now() }),
+    mergeRemote: (learner: LearnerState, pending?: PendingRating[]) => dispatch({ type: 'MERGE_REMOTE', learner, pending, now: now() }),
     reset: () => dispatch({ type: 'RESET' }),
   };
 }
@@ -113,11 +113,17 @@ export function StoreProvider({ children, stored }: { children: ReactNode; store
         void readRaw().then((json) => {
           const remote = json ? parseState(json, latest.current.device) : null;
           if (!remote) return;
-          actions.mergeRemote(remote.learner);
+          // Its pending ratings too (another tab of this browser): a rating or undo there
+          // counts here, and commits once whichever tab gets to it.
+          actions.mergeRemote(remote.learner, remote.pending);
           // Two tabs saving at once: the other's write may have been based on a copy from
           // before ours, and dropped our progress. If storage lacks anything we have, save
           // again (a save merges what's stored), or it would be lost when this tab closes.
-          if (mergeLearner(remote.learner, latest.current.learner) !== remote.learner) void saveState(latest.current);
+          const ours = latest.current;
+          const missing =
+            mergeLearner(remote.learner, ours.learner) !== remote.learner ||
+            mergePending(remote.pending, ours.pending, () => false, clock.now()) !== remote.pending;
+          if (missing) void saveState(ours);
         });
       }),
     [actions, latest],

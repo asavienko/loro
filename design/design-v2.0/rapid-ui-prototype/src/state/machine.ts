@@ -12,7 +12,7 @@ import { clip, LIMITS, tidy } from './limits';
 import { canHandle } from './chart';
 import { initialPlayer, initialState } from './initial';
 import { insertEntry, RATING_WINDOW_MS } from './memory';
-import { mergeLearner } from './merge';
+import { mergeLearner, mergePending, ratingCommitId } from './merge';
 import { sanitizeState } from './persistence';
 import { continuation, currentPhraseId, repeatsFor } from './selectors';
 import type {
@@ -21,6 +21,7 @@ import type {
   Grade,
   LearnerState,
   LogEntry,
+  PendingRating,
   PlayerState,
   Prefs,
   Profile,
@@ -82,7 +83,8 @@ export type AppEvent =
   | { type: 'RESTORE_SET'; setId: string; now: number }
   | { type: 'SET_PROFILE'; profile: Partial<Omit<Profile, 'updatedAt'>>; now: number }
   | { type: 'RESTORE'; state: unknown }
-  | { type: 'MERGE_REMOTE'; learner: LearnerState; now: number }
+  /** Another tab's or device's copy; `pending` only from another tab of this browser. */
+  | { type: 'MERGE_REMOTE'; learner: LearnerState; pending?: PendingRating[]; now: number }
   | { type: 'RESET' };
 
 export type AppEventType = AppEvent['type'];
@@ -211,9 +213,10 @@ function commitDue(state: AppState, now: number): AppState {
   const next: AppState = { ...state, pending: state.pending.filter((p) => !due.includes(p)) };
   let log = next.learner.log;
   for (const p of [...due].sort((a, b) => a.at - b.at)) {
+    if (p.undone) continue; // an undo's tombstone: nothing to count
     // The same id in every tab of this browser (they share the device id and the pending
     // rating), so two tabs committing it, or one merging the other's commit, count it once.
-    const id = `${state.device.id}.r-${p.key}-${p.at.toString(36)}`;
+    const id = ratingCommitId(state.device.id, p);
     if (log.some((e) => e.id === id)) continue;
     log = insertEntry(log, {
       id,
@@ -341,14 +344,14 @@ export function transition(state: AppState, event: AppEvent): AppState {
       const committed = commitDue(state, event.now);
       const existing = committed.pending.find((p) => p.key === key);
       let next: AppState;
-      if (existing) {
+      if (existing && !existing.undone) {
         // Inside the window: change the grade, keep the original time and window.
-        next = { ...committed, pending: committed.pending.map((p) => (p === existing ? { ...p, grade: event.grade } : p)) };
+        const changed = { ...existing, grade: event.grade, changedAt: event.now };
+        next = { ...committed, pending: committed.pending.map((p) => (p === existing ? changed : p)) };
       } else {
-        next = {
-          ...committed,
-          pending: [...committed.pending, { key, phraseId: currentId, setId: player.setId, grade: event.grade, at: event.now }],
-        };
+        // New, or rated again after an undo: a fresh rating in place of the undo's tombstone.
+        const rating = { key, phraseId: currentId, setId: player.setId, grade: event.grade, at: event.now, changedAt: event.now };
+        next = { ...committed, pending: [...committed.pending.filter((p) => p !== existing), rating] };
       }
       // Missed or hard: bring it back a few phrases later in this queue, with at least one
       // other phrase first. On the last phrase there's none, so it isn't re-queued: it would
@@ -367,7 +370,11 @@ export function transition(state: AppState, event: AppEvent): AppState {
       if (currentId === null) return state;
       const key = keyOf(learner, currentId);
       const committed = commitDue(state, event.now);
-      return { ...committed, pending: committed.pending.filter((p) => p.key !== key) };
+      // A tombstone until the window closes, so the undo wins over another tab's copy.
+      return {
+        ...committed,
+        pending: committed.pending.map((p) => (p.key === key && !p.undone ? { ...p, undone: true, changedAt: event.now } : p)),
+      };
     }
 
     case 'COMMIT':
@@ -609,6 +616,10 @@ export function transition(state: AppState, event: AppEvent): AppState {
 
     case 'MERGE_REMOTE': {
       const merged = mergeLearner(learner, event.learner);
+      const pending = event.pending
+        ? mergePending(state.pending, event.pending, (p) => merged.log.some((e) => e.id === ratingCommitId(state.device.id, p)), event.now)
+        : state.pending;
+      if (pending !== state.pending) state = { ...state, pending };
       if (merged === learner) return state;
       // The course switched on another tab or device: this queue belongs to the old one, as
       // with a switch here (SET_PROFILE).

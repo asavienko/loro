@@ -136,7 +136,12 @@ describe('rating window', () => {
 
   it('undo removes the rating inside the window only', () => {
     let s = transition(load(fresh()), { type: 'RATE', grade: 'easy', now: T0 });
-    assert.equal(transition(s, { type: 'UNRATE', now: T0 + MINUTE }).pending.length, 0);
+    const undone = transition(s, { type: 'UNRATE', now: T0 + MINUTE });
+    // Kept as a tombstone until the window closes (so the undo reaches other tabs), never counted.
+    assert.equal(undone.pending.filter((p) => !p.undone).length, 0);
+    const later = transition(undone, { type: 'COMMIT', now: T0 + RATING_WINDOW_MS });
+    assert.equal(later.pending.length, 0);
+    assert.equal(later.learner.log.filter((e) => e.kind === 'rated').length, 0);
     s = transition(s, { type: 'UNRATE', now: T0 + RATING_WINDOW_MS });
     assert.equal(s.pending.length, 0);
     assert.equal(s.learner.log.filter((e) => e.kind === 'rated').length, 1, 'the window had closed: it counted');

@@ -111,7 +111,12 @@ export interface PendingRating {
   phraseId: string;
   setId: string | null;
   grade: Grade;
+  /** When it was given: its window and its log entry's time. */
   at: number;
+  /** Its last change (grade or undo), which wins a merge between tabs. */
+  changedAt: number;
+  /** Undone inside its window: kept until the window closes so the undo reaches other tabs. */
+  undone?: boolean;
 }
 
 export type PlayMode = 'repeat' | 'continue';
