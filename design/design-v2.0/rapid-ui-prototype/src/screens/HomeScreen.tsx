@@ -22,6 +22,7 @@ import { Icon } from '../ui/Icon';
 import { SetCard } from '../ui/SetCard';
 import { SetCover } from '../ui/SetCover';
 import { Sheet } from '../ui/Sheet';
+import { StatChip } from '../ui/StatTile';
 
 export function HomeScreen() {
   const c = useCopy();
@@ -57,9 +58,9 @@ export function HomeScreen() {
           {greeting(learner.profile.targetLang, learner.profile.name)}
         </h1>
         {firstRun && <p className="text-body text-secondary mt-1">{c.home.firstRun}</p>}
-        <div className="grid grid-cols-2 mt-4 rounded-2xl overflow-hidden bg-surface-container-low border border-outline-variant/40 divide-x divide-outline-variant/40">
-          <Stat label={c.home.learned} value={stats.learned} icon="verified" onClick={() => nav.go({ name: 'library', view: 'learned' })} />
-          <Stat label={c.home.started} value={stats.started} icon="headphones" onClick={() => nav.go({ name: 'library', view: 'learning' })} />
+        <div className="flex flex-wrap gap-2 mt-4">
+          <StatChip label={c.home.learned} value={stats.learned} icon="verified" onClick={() => nav.go({ name: 'library', view: 'learned' })} />
+          <StatChip label={c.home.started} value={stats.started} icon="headphones" onClick={() => nav.go({ name: 'library', view: 'learning' })} />
         </div>
         {today.heard + today.rated > 0 && <p className="text-body text-secondary mt-2 px-1">{c.home.today(today.heard, today.rated)}</p>}
       </section>
@@ -209,18 +210,6 @@ function PlayButton({ label, detail, onClick, secondary = false }: { label: stri
           </span>
         )}
       </span>
-    </button>
-  );
-}
-
-function Stat({ label, value, icon, onClick }: { label: string; value: number; icon: 'verified' | 'headphones'; onClick: () => void }) {
-  return (
-    <button type="button" onClick={onClick} className="w-full flex flex-col items-center py-3 gap-0.5 active:bg-surface-container">
-      <span className="flex items-center gap-1 text-label font-semibold text-secondary">
-        <Icon name={icon} className="text-icon-sm text-primary-container" />
-        {label}
-      </span>
-      <span className="text-title font-bold tabular-nums leading-tight">{value}</span>
     </button>
   );
 }

@@ -2,6 +2,7 @@ import { formatWhen } from '../state/clock';
 import { sessionSummary } from '../state/selectors';
 import { useCopy, useNow, useStore } from '../state/store';
 import { Sheet } from '../ui/Sheet';
+import { StatTile } from '../ui/StatTile';
 
 /** What this session did, all from the log: phrases, repetitions, ratings, points, next review. */
 export function SessionSummarySheet({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -15,10 +16,10 @@ export function SessionSummarySheet({ open, onClose }: { open: boolean; onClose:
       {open && !summary && <p className="text-body text-secondary">{c.summary.none}</p>}
       {summary && (
         <dl className="grid grid-cols-2 gap-2">
-          <Item label={c.summary.phrases} value={String(summary.phrasesPlayed)} />
-          <Item label={c.summary.repetitions} value={String(summary.repetitions)} />
-          <Item label={c.summary.points} value={`+${summary.points}`} />
-          <Item label={c.summary.passes} value={String(summary.passes)} />
+          <StatTile label={c.summary.phrases} value={String(summary.phrasesPlayed)} />
+          <StatTile label={c.summary.repetitions} value={String(summary.repetitions)} />
+          <StatTile label={c.summary.points} value={`+${summary.points}`} />
+          <StatTile label={c.summary.passes} value={String(summary.passes)} />
           <div className="col-span-2 rounded-2xl bg-surface-container-low p-3">
             <dt className="text-label font-semibold text-secondary">{c.summary.ratings}</dt>
             <dd className="text-body mt-0.5">
@@ -40,14 +41,5 @@ export function SessionSummarySheet({ open, onClose }: { open: boolean; onClose:
         </dl>
       )}
     </Sheet>
-  );
-}
-
-function Item({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-2xl bg-surface-container-low p-3">
-      <dt className="text-label font-semibold text-secondary">{label}</dt>
-      <dd className="font-serif text-display-sm font-bold tabular-nums">{value}</dd>
-    </div>
   );
 }

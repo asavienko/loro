@@ -26,6 +26,7 @@ import { Icon } from '../ui/Icon';
 import { PhraseRow } from '../ui/PhraseRow';
 import { progressLabel } from '../ui/progressLabel';
 import { SetCover } from '../ui/SetCover';
+import { StatTile } from '../ui/StatTile';
 
 const PHRASE_VIEWS: LibraryView[] = ['liked', 'mine', 'due', 'learning', 'missed', 'learned'];
 const SET_VIEWS: LibraryView[] = ['ownSets', 'likedSets'];
@@ -67,14 +68,14 @@ export function LibraryScreen({ view: chosen }: { view?: LibraryView }) {
   return (
     <div className="max-w-5xl mx-auto px-4 pt-4 flex flex-col gap-6">
       <div className="grid grid-cols-3 gap-2">
-        <StatCard label={c.library.learned} value={String(stats.learned)} note={c.library.learnedNote(LEARNED_STABILITY_DAYS, LEARNED_MIN_SUCCESSES)} onClick={() => go('learned')} />
-        <StatCard
+        <StatTile label={c.library.learned} value={String(stats.learned)} note={c.library.learnedNote(LEARNED_STABILITY_DAYS, LEARNED_MIN_SUCCESSES)} onClick={() => go('learned')} />
+        <StatTile
           label={c.library.recall}
           value={stats.averageRecall === null ? '—' : `${stats.averageRecall}%`}
           note={stats.averageRecall === null ? c.library.recallNone : c.library.recallNote(stats.rated)}
           onClick={() => go('learning')}
         />
-        <StatCard label={c.library.started} value={String(stats.started)} note={c.library.startedNote} onClick={() => go('learning')} />
+        <StatTile label={c.library.started} value={String(stats.started)} note={c.library.startedNote} onClick={() => go('learning')} />
       </div>
 
       <div className="grid grid-cols-2 gap-1 p-1 bg-surface-container-low rounded-full" role="group">
@@ -138,16 +139,6 @@ export function LibraryScreen({ view: chosen }: { view?: LibraryView }) {
         <WeeklyChart weeks={learnedPerWeek(learner, now)} />
       </section>
     </div>
-  );
-}
-
-function StatCard({ label, value, note, onClick }: { label: string; value: string; note: string; onClick: () => void }) {
-  return (
-    <button type="button" onClick={onClick} className="p-3 rounded-2xl bg-surface-container-lowest border border-outline-variant/50 flex flex-col text-left active:bg-surface-container-low">
-      <span className="text-label font-semibold text-secondary break-words hyphens-auto">{label}</span>
-      <span className="font-serif text-display-sm font-bold mt-0.5 tabular-nums">{value}</span>
-      <span className="text-caption leading-snug text-on-surface-variant mt-0.5 break-words hyphens-auto">{note}</span>
-    </button>
   );
 }
 
