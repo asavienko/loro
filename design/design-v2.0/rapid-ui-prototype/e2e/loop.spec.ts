@@ -455,6 +455,20 @@ test('Play from the lock screen while hidden starts when the page is visible aga
   await expect(mini).not.toContainText('Speech stopped');
 });
 
+test('the lock screen says what to do now, and keeps the Spanish hidden until heard', async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'mediaSession', { value: { setActionHandler: () => {}, metadata: null, playbackState: 'none' } });
+  });
+  await page.clock.install();
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Play 5 phrases' }).click();
+  const meta = () => page.evaluate(() => ({ title: navigator.mediaSession.metadata?.title, artist: navigator.mediaSession.metadata?.artist }));
+  for (let t = 0; t < 20_000 && !/Your turn/.test((await meta()).artist ?? ''); t += 100) await page.clock.runFor(100);
+  expect(await meta()).toEqual({ title: 'A cortado, please', artist: 'Your turn — say it out loud in Spanish · Café & Mañanas' });
+  await page.getByRole('button', { name: 'Pause', exact: true }).click();
+  expect((await meta()).artist).toBe('Café & Mañanas');
+});
+
 test('a new version is offered only while nothing plays', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Play 5 phrases' }).click();

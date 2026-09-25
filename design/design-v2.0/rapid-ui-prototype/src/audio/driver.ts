@@ -2,7 +2,7 @@
 //   native → speak the prompt, then a short gap
 //   pause  → the "your turn" cue, then silence sized to the measured target (player.phaseMs)
 //   target → speak the target, then a short gap
-//   rate   → hold briefly for a rating
+//   rate   → a soft note, then hold briefly for a rating
 // Each finished phase is reported as PHASE_DONE with the phase's cycle, so a
 // stale completion (after pause/skip) is ignored by the machine.
 import { useEffect } from 'react';
@@ -11,7 +11,7 @@ import { findPhrase, promptOf } from '../state/catalog';
 import { currentPhraseId, phaseDurationMs } from '../state/selectors';
 import { useStore } from '../state/store';
 import { GAP_MS, RATE_HOLD_MS } from '../state/timing';
-import { turnCue } from './cues';
+import { holdCue, turnCue } from './cues';
 import { canSpeak, Playback, PlaybackResult, preloadClip, silence, speak } from './speech';
 
 /** Speech followed by a gap; the gap is not part of the measurement. */
@@ -73,6 +73,7 @@ export function usePlaybackDriver(): void {
         playback = speakThenGap(speak(phrase.target, phrase.targetLang, speed, phrase.audio?.[phrase.targetLang]));
         break;
       case 'rate':
+        holdCue();
         playback = silence(s.player.phaseMs ?? RATE_HOLD_MS);
         break;
     }
