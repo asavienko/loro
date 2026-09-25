@@ -263,6 +263,9 @@ function Shell() {
   const closeQueue = () => setOverlay((o) => ({ ...o, queue: false }));
   useBackToClose(overlay.player, closePlayer);
   useBackToClose(overlay.queue, closeQueue);
+  // The queue emptied under the player (a course switch in Settings over it): close it, or
+  // the page would stay inert behind a player that isn't drawn. Adjusted during render.
+  if (overlay.player && !currentId) setOverlay({ player: false, queue: false });
 
   const routeRef = useLatest(route);
   const learnerRef = useLatest(state.learner);
@@ -270,7 +273,11 @@ function Shell() {
   const nav: Navigation = useMemo(
     () => ({
       go: (next: Route) => navigate(next),
-      openSet: (setId) => navigate({ name: 'set', id: setId, from: tabOf(routeRef.current) }),
+      openSet: (setId) => {
+        // A page opened from inside the player (a set just created there) shows in its place.
+        setOverlay((o) => (o.player ? { player: false, queue: false } : o));
+        navigate({ name: 'set', id: setId, from: tabOf(routeRef.current) });
+      },
       playSet: (setId, options = {}) => {
         const view = findSetView(learnerRef.current, setId);
         if (!view) return;
