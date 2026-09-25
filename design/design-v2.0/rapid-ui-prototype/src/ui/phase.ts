@@ -12,10 +12,11 @@ export const PHASE_ICONS: Record<Exclude<Phase, 'rate'>, IconName> = {
 
 /**
  * The target text stays hidden while the learner is recalling it (the prompt
- * and their own turn), and appears once they hear it.
+ * and their own turn), and appears once they hear it. Not while speech has
+ * failed: then it may never have played (no voice for the language).
  */
-export function isTargetRevealed(player: Pick<PlayerState, 'phase' | 'ended' | 'repetition'>): boolean {
-  return player.phase === 'target' || player.phase === 'rate' || player.ended;
+export function isTargetRevealed(player: Pick<PlayerState, 'phase' | 'ended' | 'repetition' | 'audioError'>): boolean {
+  return !player.audioError && (player.phase === 'target' || player.phase === 'rate' || player.ended);
 }
 
 /** What the learner should do right now, e.g. "Your turn — say it in Spanish". */

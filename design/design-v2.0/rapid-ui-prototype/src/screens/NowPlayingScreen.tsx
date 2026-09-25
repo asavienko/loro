@@ -53,13 +53,16 @@ export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps
   useDialog(dialogRef, onClose);
   usePlayerKeys();
   const [notesOpen, setNotesOpen] = useState(false);
+  // With no voice for the target, the learner can still choose to read it.
+  const [shownAnyway, setShownAnyway] = useState<string | null>(null);
   const clicks = useClickBlockerDuringDrag();
 
   const phrase = findPhrase(state.learner, currentPhraseId(state.player));
   if (!phrase) return null;
   const { status, phase, index, order, audioError } = state.player;
   const playing = status === 'playing';
-  const revealed = isTargetRevealed(state.player);
+  const cannotSay = audioError?.reason === 'no-voice' && audioError.lang === phrase.targetLang;
+  const revealed = isTargetRevealed(state.player) || (cannotSay && shownAnyway === phrase.id);
   const liked = isLiked(state.learner, 'phrase', phrase.id);
   const prompt = promptOf(phrase, state.learner.profile.nativeLang);
   const targetName = languageName(phrase.targetLang, c.locale);
@@ -237,10 +240,17 @@ export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps
                 })}
               </ol>
               {audioError ? (
-                <p role="alert" className="mt-2 rounded-xl bg-error-container/60 text-on-error-container text-body p-3 flex gap-2">
-                  <Icon name="volume_off" className="text-icon-md" />
-                  <span>{audioError.reason === 'no-voice' ? c.player.audioError(languageName(audioError.lang, c.locale)) : c.player.audioSilent}</span>
-                </p>
+                <div className="mt-2 rounded-xl bg-error-container/60 text-on-error-container text-body p-3">
+                  <p role="alert" className="flex gap-2">
+                    <Icon name="volume_off" className="text-icon-md" />
+                    <span>{audioError.reason === 'no-voice' ? c.player.audioError(languageName(audioError.lang, c.locale)) : c.player.audioSilent}</span>
+                  </p>
+                  {cannotSay && !revealed && (
+                    <button type="button" onClick={() => setShownAnyway(phrase.id)} className="mt-1 ml-7 min-h-11 font-bold underline underline-offset-2">
+                      {c.player.showText(targetName)}
+                    </button>
+                  )}
+                </div>
               ) : (
                 <div className="flex items-center justify-between gap-2 mt-2 text-label text-secondary">
                   <span className="font-semibold text-on-surface">{playing ? phaseInstruction(c, phase, prompt.lang, phrase.targetLang) : c.player.paused}</span>

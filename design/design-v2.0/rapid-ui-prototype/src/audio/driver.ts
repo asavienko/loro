@@ -12,7 +12,7 @@ import { currentPhraseId, phaseDurationMs } from '../state/selectors';
 import { useStore } from '../state/store';
 import { GAP_MS, RATE_HOLD_MS } from '../state/timing';
 import { turnCue } from './cues';
-import { Playback, PlaybackResult, preloadClip, silence, speak } from './speech';
+import { canSpeak, Playback, PlaybackResult, preloadClip, silence, speak } from './speech';
 
 /** Speech followed by a gap; the gap is not part of the measurement. */
 function speakThenGap(play: Playback): Playback {
@@ -53,6 +53,12 @@ export function usePlaybackDriver(): void {
     let lang = phrase.targetLang;
     switch (phase) {
       case 'native':
+        // A target this device can't say stops the phrase before its prompt: the learner's
+        // turn would be for nothing, and the answer would never be heard.
+        if (!phrase.audio?.[phrase.targetLang] && !canSpeak(phrase.targetLang)) {
+          playback = { done: Promise.resolve({ status: 'failed', reason: 'no-voice' }), cancel: () => {} };
+          break;
+        }
         lang = prompt.lang;
         playback = speakThenGap(speak(prompt.text, prompt.lang, speed, phrase.audio?.[prompt.lang]));
         break;
