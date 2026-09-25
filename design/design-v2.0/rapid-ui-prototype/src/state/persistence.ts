@@ -111,7 +111,7 @@ function sanitizeProfile(value: unknown): Profile {
   const native = NATIVE_LANGUAGES.find((l) => l === value.nativeLang) ?? fresh.nativeLang;
   const target = coursesFor(native).find((l) => l === value.targetLang) ?? coursesFor(native)[0];
   return {
-    name: str(value.name) ? value.name.slice(0, 40) : '',
+    name: str(value.name) ? clip(value.name, LIMITS.name) : '',
     nativeLang: native,
     targetLang: target,
     onboarded: value.onboarded === true,
