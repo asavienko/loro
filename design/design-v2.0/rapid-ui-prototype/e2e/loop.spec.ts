@@ -88,6 +88,25 @@ test.describe('the loop', () => {
     await expect(page.getByTestId('points')).toContainText(/[1-9]\d* points/);
   });
 
+  test('a rating given in the hold is shown with Undo, which still works once the next phrase plays', async ({ page }) => {
+    await page.clock.install();
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Play 5 phrases' }).click();
+    await page.getByRole('button', { name: /^Now playing:/ }).click();
+    const player = page.getByRole('dialog', { name: 'Now playing' });
+    const waiting = player.getByText('Rate it, or wait to go on').first();
+    for (let t = 0; t < 120_000 && !(await waiting.isVisible()); t += 250) await page.clock.runFor(250);
+    await player.getByRole('button', { name: /^Easy/ }).click();
+    await expect(player.getByText('2 of 5')).toBeVisible();
+    const toast = page.locator('.toast-layer');
+    await expect(toast).toContainText(/^Rated Easy — back in \d+ days?/);
+    await toast.getByRole('button', { name: 'Undo' }).click();
+    // Back on the first phrase, nothing is rated.
+    await player.getByRole('button', { name: 'Previous phrase' }).click();
+    await expect(player.getByText('1 of 5')).toBeVisible();
+    await expect(player.getByRole('button', { name: /^Easy/ })).toHaveAttribute('aria-pressed', 'false');
+  });
+
   test('keyboard: space plays and pauses, arrows change phrase, 1–3 rate', async ({ page }) => {
     await page.goto('/');
     await page.getByRole('button', { name: 'Play 5 phrases' }).click();
