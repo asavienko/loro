@@ -5,6 +5,7 @@ import { useKeyboardInset } from '../lib/useKeyboardInset';
 import { useBackToClose } from '../nav/history';
 import { useCopy } from '../state/store';
 import { Icon, IconName } from './Icon';
+import { btnText } from './button';
 
 interface SheetProps {
   open: boolean;
@@ -57,7 +58,7 @@ function SheetPanel({ title, onClose, children }: Omit<SheetProps, 'open'>) {
           <button
             type="button"
             onClick={onClose}
-            className="min-w-11 h-11 px-3 -mr-2 rounded-full text-body font-semibold text-primary-container active:bg-surface-container"
+            className={`${btnText} min-w-11 -mr-2`}
           >
             {c.common.close}
           </button>

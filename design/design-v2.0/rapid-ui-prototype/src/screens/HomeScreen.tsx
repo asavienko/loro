@@ -23,6 +23,7 @@ import { SetCard } from '../ui/SetCard';
 import { SetRow } from '../ui/SetRow';
 import { Sheet } from '../ui/Sheet';
 import { StatChip } from '../ui/StatTile';
+import { btnPrimary, btnPrimarySm, btnText, btnTonal } from '../ui/button';
 
 export function HomeScreen() {
   const c = useCopy();
@@ -75,7 +76,7 @@ export function HomeScreen() {
               nav.playList([firstPhrase]);
               nav.openPlayer();
             }}
-            className="mt-3 min-h-12 px-5 rounded-full bg-primary-container text-on-primary font-bold inline-flex items-center gap-2"
+            className={`${btnPrimary} mt-3`}
           >
             <Icon name="play_arrow" fill className="text-icon" />
             {c.home.demoButton}
@@ -120,11 +121,11 @@ export function HomeScreen() {
             </h2>
             <p className="text-body text-on-surface-variant mt-1">{c.home.courseDoneBody}</p>
             <div className="flex flex-wrap gap-2 mt-3">
-              <button type="button" onClick={() => nav.addPhrase()} className="min-h-11 px-4 rounded-full bg-primary-container text-on-primary font-bold flex items-center gap-1.5">
+              <button type="button" onClick={() => nav.addPhrase()} className={btnPrimarySm}>
                 <Icon name="add" className="text-icon-md" />
                 {c.home.addOwn}
               </button>
-              <button type="button" onClick={nav.openSettings} className="min-h-11 px-4 rounded-full bg-surface-container-high text-on-surface font-semibold">
+              <button type="button" onClick={nav.openSettings} className={btnTonal}>
                 {c.home.otherCourse}
               </button>
             </div>
@@ -147,7 +148,7 @@ export function HomeScreen() {
             <button
               type="button"
               onClick={() => setHistoryOpen(true)}
-              className="min-h-11 px-3 -mr-2 rounded-full text-body font-semibold text-primary-container flex items-center gap-1 active:bg-surface-container"
+              className={`${btnText} -mr-2`}
             >
               <Icon name="history" className="text-icon-sm" />
               {c.home.history}
@@ -185,7 +186,7 @@ export function HomeScreen() {
       )}
 
       {recent.length === 0 && !firstRun && (
-        <button type="button" onClick={() => setHistoryOpen(true)} className="self-start min-h-11 px-3 -ml-3 rounded-full text-body font-semibold text-primary-container flex items-center gap-1">
+        <button type="button" onClick={() => setHistoryOpen(true)} className={`${btnText} self-start -ml-3`}>
           <Icon name="history" className="text-icon-sm" />
           {c.home.history}
         </button>

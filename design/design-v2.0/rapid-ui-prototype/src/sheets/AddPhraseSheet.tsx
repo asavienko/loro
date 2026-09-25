@@ -7,6 +7,7 @@ import { useCopy, useStore } from '../state/store';
 import { CharCount } from '../ui/CharCount';
 import { Sheet } from '../ui/Sheet';
 import { useToast } from '../ui/Toast';
+import { btnPrimary } from '../ui/button';
 
 /**
  * The learner's own phrase: both languages, played with the device voice like
@@ -126,7 +127,7 @@ function PhraseForm({ editId, initialTarget, initialNative, targetLang, nativeLa
         </p>
       )}
       <p className="text-label text-secondary">{c.addPhrase.hint}</p>
-      <button type="submit" disabled={!ready} className="min-h-12 rounded-full bg-primary-container text-on-primary font-bold disabled:opacity-40">
+      <button type="submit" disabled={!ready} className={btnPrimary}>
         {editId ? c.common.save : c.addPhrase.add}
       </button>
     </form>

@@ -23,6 +23,7 @@ import { progressLabel } from '../ui/progressLabel';
 import { SetCover } from '../ui/SetCover';
 import { Sheet, SheetOption } from '../ui/Sheet';
 import { useToast } from '../ui/Toast';
+import { btnIcon, btnPrimarySm, btnText, btnTonal } from '../ui/button';
 
 const SORTS: { id: SortKey; icon: IconName }[] = [
   { id: 'set', icon: 'format_list_numbered' },
@@ -55,7 +56,7 @@ export function SetScreen({ setId }: { setId: string }) {
           <button
             type="button"
             onClick={() => actions.setProfile({ targetLang: view.targetLang })}
-            className="min-h-11 px-4 rounded-full bg-primary-container text-on-primary text-body font-bold"
+            className={btnPrimarySm}
           >
             {c.set.switchCourse(language)}
           </button>
@@ -150,11 +151,11 @@ export function SetScreen({ setId }: { setId: string }) {
             aria-label={c.set.like}
             aria-pressed={liked}
             onClick={() => actions.toggleLike('set', setId)}
-            className="w-11 h-11 -ml-2 flex items-center justify-center rounded-full text-primary-container active:bg-surface-container"
+            className={`${btnIcon} -ml-2 text-primary-container`}
           >
             <Icon name="favorite" fill={liked} className="text-icon-lg" />
           </button>
-          <button type="button" aria-label={c.common.moreOptions} onClick={() => setMoreOpen(true)} className="w-11 h-11 flex items-center justify-center rounded-full text-secondary active:bg-surface-container">
+          <button type="button" aria-label={c.common.moreOptions} onClick={() => setMoreOpen(true)} className={`${btnIcon} text-secondary`}>
             <Icon name="more_horiz" className="text-icon-lg" />
           </button>
           <span className="flex-1" />
@@ -162,7 +163,7 @@ export function SetScreen({ setId }: { setId: string }) {
             type="button"
             aria-label={c.set.shufflePlay}
             onClick={() => nav.playSet(setId, { phraseIds: sortedIds, shuffle: true })}
-            className="w-11 h-11 flex items-center justify-center rounded-full text-secondary active:bg-surface-container"
+            className={`${btnIcon} text-secondary`}
           >
             <Icon name="shuffle" className="text-icon-lg" />
           </button>
@@ -182,7 +183,7 @@ export function SetScreen({ setId }: { setId: string }) {
             <button
               type="button"
               onClick={() => nav.playSet(setId, { phraseIds: dueAndNew })}
-              className="min-h-11 px-4 rounded-full bg-surface-container-high text-on-surface text-body font-semibold flex items-center gap-1.5"
+              className={btnTonal}
             >
               <Icon name="play_arrow" fill className="text-icon-md" />
               {c.set.playDueNew(dueAndNew.length)}
@@ -194,7 +195,7 @@ export function SetScreen({ setId }: { setId: string }) {
       <section className="px-2 pt-3" aria-labelledby="phrases-heading">
         <div className="flex items-center justify-between px-2 mb-1">
           <h2 id="phrases-heading" className="font-serif text-heading font-semibold">{c.set.phrasesHeading}</h2>
-          <button type="button" onClick={() => setSortOpen(true)} className="min-h-11 px-3 -mr-2 rounded-full text-body font-semibold text-primary-container flex items-center gap-1 active:bg-surface-container">
+          <button type="button" onClick={() => setSortOpen(true)} className={`${btnText} -mr-2`}>
             <Icon name="sort" className="text-icon-sm" />
             {c.set.sort[sort]}
           </button>
@@ -205,7 +206,7 @@ export function SetScreen({ setId }: { setId: string }) {
             <button
               type="button"
               onClick={() => nav.go({ name: 'explore' })}
-              className="min-h-11 px-4 rounded-full bg-primary-container text-on-primary text-body font-bold flex items-center gap-1.5"
+              className={btnPrimarySm}
             >
               <Icon name="search" className="text-icon-md" />
               {c.set.findPhrases}

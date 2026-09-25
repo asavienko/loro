@@ -3,6 +3,7 @@ import { promptOf } from '../state/catalog';
 import { useCopy, useStore } from '../state/store';
 import { languageName } from '../copy';
 import { Icon } from './Icon';
+import { btnIcon } from './button';
 
 interface PhraseRowProps {
   phrase: Phrase;
@@ -70,7 +71,7 @@ export function PhraseRow({ phrase, detail, leading, isCurrent = false, isPlayin
         type="button"
         onClick={onMore}
         aria-label={c.phrase.details(title)}
-        className="w-11 h-11 shrink-0 flex items-center justify-center rounded-full text-secondary active:bg-surface-container"
+        className={`${btnIcon} text-secondary`}
       >
         <Icon name="more_vert" className="text-icon" />
       </button>

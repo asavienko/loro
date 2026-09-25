@@ -35,6 +35,7 @@ import { NowPlayingScreen } from './screens/NowPlayingScreen';
 import { Onboarding } from './screens/Onboarding';
 import { QueueScreen } from './screens/QueueScreen';
 import { SetScreen } from './screens/SetScreen';
+import { btnPrimary, btnTonal } from './ui/button';
 
 export default function App({ stored }: { stored: Stored }) {
   return (
@@ -80,7 +81,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean
         <button
           type="button"
           onClick={() => window.location.reload()}
-          className="self-start min-h-12 px-5 rounded-full bg-primary-container text-on-primary font-bold"
+          className={`${btnPrimary} self-start`}
         >
           {c.error.reload}
         </button>
@@ -90,7 +91,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean
             onClick={() => {
               void navigator.clipboard?.writeText(raw).then(() => this.setState({ copied: true }));
             }}
-            className="self-start min-h-12 px-5 rounded-full bg-surface-container text-on-surface font-bold"
+            className={`${btnTonal} self-start`}
           >
             {this.state.copied ? c.error.copied : c.error.copy}
           </button>
