@@ -22,6 +22,24 @@ export function ratingCommitId(deviceId: string, p: PendingRating): string {
 }
 
 /**
+ * The log entry a pending rating becomes when its window closes: at its original time, under
+ * `ratingCommitId`. The provisional view (selectors' `displayLearner`) applies this same entry,
+ * so the figures don't move when the window commits.
+ */
+export function ratingEntry(deviceId: string, p: PendingRating): LogEntry {
+  return {
+    id: ratingCommitId(deviceId, p),
+    at: p.at,
+    device: deviceId,
+    kind: 'rated',
+    key: p.key,
+    phraseId: p.phraseId,
+    setId: p.setId,
+    grade: p.grade,
+  };
+}
+
+/**
  * Settings of two tabs of this browser: for each setting, the later change wins (a tie keeps
  * ours), so a speed changed in one tab and repeats in another both stay. Returns `ours` itself
  * when nothing changes.
