@@ -177,3 +177,36 @@ test('a new message in place of the one focused stays, and keeps focus', async (
   await page.waitForTimeout(5000); // longer than the message's own time
   await expect(dismiss).toBeVisible();
 });
+
+test('a focused message stays when the pointer passes over it and leaves', async ({ page, browserName }) => {
+  test.skip(browserName === 'webkit', TAB_SKIPS_BUTTONS);
+  await page.goto('/');
+  await page.getByRole('button', { name: /^Play/ }).first().click();
+  await page.getByRole('button', { name: 'Pause', exact: true }).first().click();
+  await page.getByRole('button', { name: /^Now playing:/ }).click();
+  await page.getByRole('button', { name: 'Open queue' }).click();
+  await page.getByRole('dialog', { name: 'Queue' }).getByRole('button', { name: /^Move / }).first().press('Delete');
+  const undo = page.getByRole('button', { name: 'Undo' });
+  for (let i = 0; i < 40 && !(await undo.evaluate((el) => el === document.activeElement)); i++) await page.keyboard.press('Tab');
+  await expect(undo).toBeFocused();
+  await undo.hover();
+  await page.mouse.move(5, 5);
+  await page.waitForTimeout(7000); // longer than the message's own time
+  await expect(undo).toBeVisible();
+});
+
+test('closing a message focused with nothing before it keeps focus in the top sheet', async ({ page, browserName }) => {
+  test.skip(browserName === 'webkit', TAB_SKIPS_BUTTONS);
+  await page.goto('/');
+  await page.getByRole('button', { name: /^Play/ }).first().click();
+  await page.getByRole('button', { name: 'Pause', exact: true }).first().click();
+  await page.getByRole('button', { name: /^Now playing:/ }).click();
+  await page.getByRole('button', { name: 'Open queue' }).click();
+  await page.getByRole('button', { name: /^Clear/ }).click();
+  // Focus came from nowhere (the Clear button is gone), then moved into the message.
+  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+  await page.getByRole('button', { name: 'Dismiss message' }).focus();
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('button', { name: 'Dismiss message' })).toHaveCount(0);
+  expect(await page.evaluate(() => document.activeElement?.closest('[role="dialog"]')?.getAttribute('aria-label'))).toBe('Queue');
+});
