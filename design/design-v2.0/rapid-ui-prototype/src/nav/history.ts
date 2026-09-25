@@ -56,15 +56,19 @@ function navigateNow(route: Route, options: { replace?: boolean }): void {
  * page it came from keeps its filters, view and scroll), otherwise (a shared link, a
  * fresh start) to `fallback`, replacing this entry so browser Back doesn't return here.
  */
-export function goBack(fallback: Route, tries = 5): void {
-  // Called as a sheet closes: act once its history entry is gone, as navigate does. A few
-  // tries only: a layer entry left behind by a reload has no close coming to wait for.
-  if (tries > 0 && (window.history.state as { layer?: number } | null)?.layer) {
-    setTimeout(() => whenHistorySettles(() => goBack(fallback, tries - 1)), 0);
+export function goBack(fallback: Route, waitUntil = performance.now() + GO_BACK_WAIT_MS): void {
+  // Called as a sheet closes: act once its history entry is gone, as navigate does. For a
+  // short while only: a layer entry left behind by a reload has no close coming to wait for.
+  // Time, not a count of tries, so a busy device (React slow to commit the close) still waits.
+  if (performance.now() < waitUntil && (window.history.state as { layer?: number } | null)?.layer) {
+    setTimeout(() => whenHistorySettles(() => goBack(fallback, waitUntil)), 16);
     return;
   }
   goBackNow(fallback);
 }
+
+/** How long Back waits for a closing sheet's history entry to go. */
+const GO_BACK_WAIT_MS = 600;
 
 function goBackNow(fallback: Route): void {
   if ((window.history.state as { inApp?: boolean } | null)?.inApp) window.history.back();
