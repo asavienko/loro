@@ -181,7 +181,16 @@
   }
   @media (orientation: landscape) and (max-height: 32rem) {
     html {
+      /* The top bar is compact in phone landscape (NavigationHeader h-11). */
+      scroll-padding-top: calc(2.75rem + env(safe-area-inset-top) + 0.5rem);
       scroll-padding-bottom: calc(7rem + env(safe-area-inset-bottom));
+    }
+  }
+  /* A wide screen (lg): the rail on the left, and only the mini-player below. */
+  @media (min-width: 64rem) {
+    html {
+      scroll-padding-left: 5rem;
+      scroll-padding-bottom: calc(6rem + env(safe-area-inset-bottom));
     }
   }
 
@@ -272,10 +281,19 @@
   }
 }
 
+/* A wide screen: toasts sit over the content, right of the rail, just above the docked mini-player. */
+@media (min-width: 64rem) {
+  .toast-layer {
+    left: 5.75rem;
+    bottom: calc(5.5rem + env(safe-area-inset-bottom));
+  }
+}
+
 /* Over the full-screen player or queue, toasts sit at the top, clear of the transport. */
 body:has([role="dialog"][aria-modal="true"]) .toast-layer {
   top: calc(4rem + env(safe-area-inset-top));
   bottom: auto;
+  left: 0.75rem;
 }
 
 /* Horizontal shelves scroll by touch; their scrollbar is only noise. */

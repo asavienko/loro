@@ -101,3 +101,67 @@ test.describe('with a dark system theme', () => {
     expect(await select.evaluate((e) => getComputedStyle(e).colorScheme)).toBe('light');
   });
 });
+
+test.describe('a navigation rail on a wide screen (V-11)', () => {
+  for (const [w, h] of [[1440, 900], [1024, 768]] as const) {
+    test(`at ${w}×${h} the tabs are a rail on the left; the header, the page and the mini-player sit right of it`, async ({ page }) => {
+      await page.setViewportSize({ width: w, height: h });
+      await page.goto('/#/explore');
+      await page.getByRole('button', { name: /^Play Café/ }).first().click();
+      await page.goto('/');
+      const rail = (await page.getByRole('navigation', { name: 'Main' }).boundingBox())!;
+      expect(rail.x).toBe(0);
+      expect(rail.width).toBeLessThanOrEqual(96);
+      expect(rail.height).toBeGreaterThan(h - 2);
+      const home = (await page.getByRole('button', { name: 'Home', exact: true }).boundingBox())!;
+      const explore = (await page.getByRole('button', { name: 'Explore', exact: true }).boundingBox())!;
+      expect(explore.y).toBeGreaterThan(home.y + home.height - 1);
+      expect(Math.abs(explore.x - home.x)).toBeLessThan(2);
+      const right = rail.x + rail.width;
+      expect((await page.locator('header').boundingBox())!.x).toBeGreaterThanOrEqual(right - 1);
+      expect((await page.getByRole('region', { name: 'Review' }).boundingBox())!.x).toBeGreaterThan(right);
+      const mini = (await page.getByRole('button', { name: /^Now playing:/ }).boundingBox())!;
+      expect(mini.x).toBeGreaterThan(right);
+      expect(mini.y + mini.height).toBeGreaterThan(h - 100);
+      await expectAccessible(page);
+    });
+  }
+
+  test('Home has two columns: what to play on the left, the shelves on the right', async ({ page }) => {
+    await page.goto('/');
+    const hero = (await page.getByRole('region', { name: 'Review' }).boundingBox())!;
+    const shelves = (await page.getByRole('heading', { name: 'Jump back in' }).boundingBox())!;
+    expect(shelves.x).toBeGreaterThan(hero.x + hero.width);
+    expect(Math.abs(shelves.y - hero.y)).toBeLessThan(60);
+    // The header lines up with the page's column.
+    const avatar = (await page.getByRole('button', { name: 'Ana: settings' }).boundingBox())!;
+    expect(Math.abs(avatar.x - hero.x)).toBeLessThan(24);
+  });
+
+  test('at 200% text Home goes back to one column instead of spilling sideways', async ({ page }) => {
+    await page.setViewportSize({ width: 1024, height: 768 });
+    await page.goto('/');
+    await page.addStyleTag({ content: 'html { font-size: 200% }' });
+    await page.waitForTimeout(200);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(1024);
+    const hero = (await page.getByRole('region', { name: 'Review' }).boundingBox())!;
+    const shelves = (await page.getByRole('heading', { name: 'Jump back in' }).boundingBox())!;
+    expect(shelves.y).toBeGreaterThan(hero.y + hero.height);
+  });
+
+  test.describe('a portrait tablet (768×1024)', () => {
+    test.use({ viewport: { width: 768, height: 1024 } });
+    test('keeps the tab bar at the bottom and Home in one reading column', async ({ page }) => {
+      await page.goto('/');
+      const bar = (await page.getByRole('navigation', { name: 'Main' }).boundingBox())!;
+      expect(bar.width).toBe(768);
+      expect(bar.y + bar.height).toBeGreaterThan(1022);
+      const hero = (await page.getByRole('region', { name: 'Review' }).boundingBox())!;
+      const shelves = (await page.getByRole('heading', { name: 'Jump back in' }).boundingBox())!;
+      expect(shelves.y).toBeGreaterThan(hero.y + hero.height);
+      expect(hero.width).toBeLessThanOrEqual(672);
+      const avatar = (await page.getByRole('button', { name: 'Ana: settings' }).boundingBox())!;
+      expect(Math.abs(avatar.x - hero.x)).toBeLessThan(24);
+    });
+  });
+});

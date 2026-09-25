@@ -72,153 +72,160 @@ export function HomeScreen() {
   const nextLine = upcoming && due.length <= review.length ? (review.length > 0 ? c.home.nextAfter : c.home.next)(upcoming.count, formatWhen(upcoming.at, now, c.locale)) : null;
 
   return (
-    <div className="max-w-5xl mx-auto px-4 pt-4 flex flex-col gap-7">
-      <div className="flex flex-col gap-7">
-        {newToLoro && <p className="text-body text-secondary -mb-3">{c.home.firstRun}</p>}
+    // One column (a reading measure once the screen is wider than that), then two once there's room
+    // at the current text size: what to play now on the left, staying in view, and what else there
+    // is on the right. A container query, so 200% text on a tablet stays one column rather than
+    // spilling sideways. The header lines up with it (App HOME_COLUMN, the same query).
+    <div className="@container">
+      <div className="max-w-2xl @min-[56rem]:max-w-5xl mx-auto px-4 pt-4 flex flex-col gap-7 @min-[56rem]:grid @min-[56rem]:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] @min-[56rem]:gap-x-10 @min-[56rem]:items-start">
+        <div className="flex flex-col gap-7 @min-[56rem]:sticky @min-[56rem]:top-[calc(4.5rem+env(safe-area-inset-top))]">
+          {newToLoro && <p className="text-body text-secondary -mb-3">{c.home.firstRun}</p>}
 
-        {hero === 'demo' && firstPhrase && (
-          <Hero labelledBy="demo-heading">
-            <h2 id="demo-heading" className={EYEBROW}>{c.home.demoTitle}</h2>
-            <p className={HERO_TITLE}>{c.home.demoBody}</p>
-            <PlayButton
-              label={c.home.demoButton}
-              detail={null}
-              onClick={() => {
-                nav.playList([firstPhrase]);
-                nav.openPlayer();
-              }}
-            />
-          </Hero>
-        )}
+          {hero === 'demo' && firstPhrase && (
+            <Hero labelledBy="demo-heading">
+              <h2 id="demo-heading" className={EYEBROW}>{c.home.demoTitle}</h2>
+              <p className={HERO_TITLE}>{c.home.demoBody}</p>
+              <PlayButton
+                label={c.home.demoButton}
+                detail={null}
+                onClick={() => {
+                  nav.playList([firstPhrase]);
+                  nav.openPlayer();
+                }}
+              />
+            </Hero>
+          )}
 
-        {hero === 'review' && (
-          <Hero labelledBy="review-heading">
-            <h2 id="review-heading" className={EYEBROW}>{c.home.reviewTitle}</h2>
-            <p className={HERO_TITLE}>{c.home.reviewBody(due.length)}</p>
-            {due.length > review.length && <p className="text-body text-on-surface-variant mt-1">{c.home.reviewCapped(review.length)}</p>}
-            <PlayButton
-              label={c.home.playPhrases(review.length)}
-              detail={reviewMs === null ? null : c.home.duration(formatElapsed(reviewMs))}
-              onClick={() => {
-                nav.playList(review);
-                nav.openPlayer();
-              }}
-            />
-            {nextLine && <NextLine text={nextLine} className="mt-3 text-on-surface-variant" />}
-          </Hero>
-        )}
+          {hero === 'review' && (
+            <Hero labelledBy="review-heading">
+              <h2 id="review-heading" className={EYEBROW}>{c.home.reviewTitle}</h2>
+              <p className={HERO_TITLE}>{c.home.reviewBody(due.length)}</p>
+              {due.length > review.length && <p className="text-body text-on-surface-variant mt-1">{c.home.reviewCapped(review.length)}</p>}
+              <PlayButton
+                label={c.home.playPhrases(review.length)}
+                detail={reviewMs === null ? null : c.home.duration(formatElapsed(reviewMs))}
+                onClick={() => {
+                  nav.playList(review);
+                  nav.openPlayer();
+                }}
+              />
+              {nextLine && <NextLine text={nextLine} className="mt-3 text-on-surface-variant" />}
+            </Hero>
+          )}
 
-        {hero === 'continue' && suggested && (
-          <Hero labelledBy="continue-heading">
-            <h2 id="continue-heading" className={EYEBROW}>{continueTitle}</h2>
-            <button type="button" onClick={() => nav.openSet(suggested.id)} className="mt-2 -mx-2 px-2 py-1 w-[calc(100%+1rem)] flex items-center gap-3 text-left rounded-2xl active:bg-primary-fixed/60">
-              <SetCover set={suggested} size="sm" className="w-14 h-14 rounded-xl shrink-0 shadow-cover" />
-              <span className="min-w-0">
-                <span lang={suggested.targetLang} className="block font-serif text-display-sm font-semibold leading-tight [overflow-wrap:anywhere]">{suggested.title}</span>
-                <span className="block text-label text-on-surface-variant mt-0.5">{continueMeta}</span>
-              </span>
-            </button>
-            <PlayButton label={c.home.playPhrases(suggestedIds.length)} detail={null} onClick={playContinue} />
-          </Hero>
-        )}
-
-        {hero === 'done' && (
-          <Hero labelledBy="done-heading" tone="tertiary">
-            <Icon name="task_alt" className="block text-icon-xl text-tertiary mb-1" />
-            <h2 id="done-heading" className="font-serif text-display-sm font-semibold">{c.home.courseDoneTitle}</h2>
-            <p className="text-body text-on-surface-variant mt-1">{c.home.courseDoneBody}</p>
-            <button type="button" onClick={() => nav.addPhrase()} className={`${btnPrimary} w-full mt-4`}>
-              <Icon name="add" className="text-icon" />
-              {c.home.addOwn}
-            </button>
-            <button type="button" onClick={nav.openSettings} className={`${btnTonal} w-full mt-2`}>
-              {c.home.otherCourse}
-            </button>
-          </Hero>
-        )}
-
-        {/* Behind a demo or a review, what to continue is a row with a quiet Play of its own. */}
-        {hero !== 'continue' && suggested && suggestedIds.length > 0 && (
-          <section aria-labelledby="continue-heading">
-            <h2 id="continue-heading" className="font-serif text-heading font-semibold mb-1">{continueTitle}</h2>
-            <SetRow
-              set={suggested}
-              meta={continueMeta}
-              onOpen={() => nav.openSet(suggested.id)}
-              action={
-                <button type="button" onClick={playContinue} aria-label={c.home.playPhrases(suggestedIds.length)} className={`${btnIcon} bg-surface-container-high text-on-surface`}>
-                  <Icon name="play_arrow" fill className="text-icon" />
-                </button>
-              }
-            />
-          </section>
-        )}
-
-        {/* Quiet figures: none on a first run (three zeros say nothing). */}
-        {(!firstRun || today.heard + today.rated > 0 || (nextLine && hero !== 'review')) && (
-          <div className="flex flex-col gap-2">
-            {!firstRun && (
-              <div className="flex flex-wrap gap-2">
-                <StatChip label={c.home.learned} value={stats.learned} icon="verified" onClick={() => nav.go({ name: 'library', view: 'learned' })} />
-                <StatChip label={c.home.started} value={stats.started} icon="headphones" onClick={() => nav.go({ name: 'library', view: 'learning' })} />
-              </div>
-            )}
-            {today.heard + today.rated > 0 && <p className="text-label text-secondary px-1">{c.home.today(today.heard, today.rated)}</p>}
-            {nextLine && hero !== 'review' && <NextLine text={nextLine} className="px-1 text-secondary" />}
-          </div>
-        )}
-      </div>
-
-      <div className="flex flex-col gap-7">
-        {recent.length > 0 && (
-          <section aria-labelledby="recent-heading">
-            <div className="flex items-center justify-between mb-1">
-              <h2 id="recent-heading" className="font-serif text-heading font-semibold">{c.home.jumpBackIn}</h2>
-              <button type="button" onClick={() => setHistoryOpen(true)} className={`${btnText} -mr-2`}>
-                <Icon name="history" className="text-icon-sm" />
-                {c.home.history}
+          {hero === 'continue' && suggested && (
+            <Hero labelledBy="continue-heading">
+              <h2 id="continue-heading" className={EYEBROW}>{continueTitle}</h2>
+              <button type="button" onClick={() => nav.openSet(suggested.id)} className="mt-2 -mx-2 px-2 py-1 w-[calc(100%+1rem)] flex items-center gap-3 text-left rounded-2xl active:bg-primary-fixed/60">
+                <SetCover set={suggested} size="sm" className="w-14 h-14 rounded-xl shrink-0 shadow-cover" />
+                <span className="min-w-0">
+                  <span lang={suggested.targetLang} className="block font-serif text-display-sm font-semibold leading-tight [overflow-wrap:anywhere]">{suggested.title}</span>
+                  <span className="block text-label text-on-surface-variant mt-0.5">{continueMeta}</span>
+                </span>
               </button>
+              <PlayButton label={c.home.playPhrases(suggestedIds.length)} detail={null} onClick={playContinue} />
+            </Hero>
+          )}
+
+          {hero === 'done' && (
+            <Hero labelledBy="done-heading" tone="tertiary">
+              <Icon name="task_alt" className="block text-icon-xl text-tertiary mb-1" />
+              <h2 id="done-heading" className="font-serif text-display-sm font-semibold">{c.home.courseDoneTitle}</h2>
+              <p className="text-body text-on-surface-variant mt-1">{c.home.courseDoneBody}</p>
+              <button type="button" onClick={() => nav.addPhrase()} className={`${btnPrimary} w-full mt-4`}>
+                <Icon name="add" className="text-icon" />
+                {c.home.addOwn}
+              </button>
+              <button type="button" onClick={nav.openSettings} className={`${btnTonal} w-full mt-2`}>
+                {c.home.otherCourse}
+              </button>
+            </Hero>
+          )}
+
+          {/* Behind a demo or a review, what to continue is a row with a quiet Play of its own. */}
+          {hero !== 'continue' && suggested && suggestedIds.length > 0 && (
+            <section aria-labelledby="continue-heading">
+              <h2 id="continue-heading" className="font-serif text-heading font-semibold mb-1">{continueTitle}</h2>
+              <SetRow
+                set={suggested}
+                meta={continueMeta}
+                onOpen={() => nav.openSet(suggested.id)}
+                action={
+                  <button type="button" onClick={playContinue} aria-label={c.home.playPhrases(suggestedIds.length)} className={`${btnIcon} bg-surface-container-high text-on-surface`}>
+                    <Icon name="play_arrow" fill className="text-icon" />
+                  </button>
+                }
+              />
+            </section>
+          )}
+
+          {/* Quiet figures: none on a first run (three zeros say nothing). */}
+          {(!firstRun || today.heard + today.rated > 0 || (nextLine && hero !== 'review')) && (
+            <div className="flex flex-col gap-2">
+              {!firstRun && (
+                <div className="flex flex-wrap gap-2">
+                  <StatChip label={c.home.learned} value={stats.learned} icon="verified" onClick={() => nav.go({ name: 'library', view: 'learned' })} />
+                  <StatChip label={c.home.started} value={stats.started} icon="headphones" onClick={() => nav.go({ name: 'library', view: 'learning' })} />
+                </div>
+              )}
+              {today.heard + today.rated > 0 && <p className="text-label text-secondary px-1">{c.home.today(today.heard, today.rated)}</p>}
+              {nextLine && hero !== 'review' && <NextLine text={nextLine} className="px-1 text-secondary" />}
             </div>
-            <ul className="grid grid-cols-1 gap-x-8 md:grid-cols-2">
-              {recent.map((id) => {
-                const view = findSetView(learner, id);
-                if (!view) return null;
-                const progress = setProgress(learner, view.phraseIds, now);
-                return (
-                  <li key={id}>
-                    <SetRow set={view} meta={c.set.summary(progress.total, progress.learned, progress.due)} onOpen={() => nav.openSet(view.id)} />
-                  </li>
-                );
-              })}
-            </ul>
-          </section>
-        )}
+          )}
+        </div>
 
-        {fresh.length > 0 && (
-          <section aria-labelledby="fresh-heading">
-            <h2 id="fresh-heading" className="font-serif text-heading font-semibold mb-2">{c.home.notStarted}</h2>
-            <ul className="scroll-row flex gap-3 overflow-x-auto snap-x snap-mandatory scroll-px-4 -mx-4 px-4 pb-2">
-              {fresh.map((set) => {
-                const view = findSetView(learner, set.id)!;
-                return (
-                  <li key={set.id} className="snap-start shrink-0">
-                    <SetCard view={view} progress={setProgress(learner, set.phraseIds, now)} onOpen={() => nav.openSet(set.id)} onPlay={() => nav.playSet(set.id)} />
-                  </li>
-                );
-              })}
-            </ul>
-          </section>
-        )}
+        <div className="flex flex-col gap-7">
+          {recent.length > 0 && (
+            <section aria-labelledby="recent-heading">
+              <div className="flex items-center justify-between mb-1">
+                <h2 id="recent-heading" className="font-serif text-heading font-semibold">{c.home.jumpBackIn}</h2>
+                <button type="button" onClick={() => setHistoryOpen(true)} className={`${btnText} -mr-2`}>
+                  <Icon name="history" className="text-icon-sm" />
+                  {c.home.history}
+                </button>
+              </div>
+              <ul className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,16rem),1fr))] gap-x-8">
+                {recent.map((id) => {
+                  const view = findSetView(learner, id);
+                  if (!view) return null;
+                  const progress = setProgress(learner, view.phraseIds, now);
+                  return (
+                    <li key={id}>
+                      <SetRow set={view} meta={c.set.summary(progress.total, progress.learned, progress.due)} onOpen={() => nav.openSet(view.id)} />
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          )}
 
-        {recent.length === 0 && !firstRun && (
-          <button type="button" onClick={() => setHistoryOpen(true)} className={`${btnText} self-start -ml-3`}>
-            <Icon name="history" className="text-icon-sm" />
-            {c.home.history}
-          </button>
-        )}
+          {fresh.length > 0 && (
+            <section aria-labelledby="fresh-heading">
+              <h2 id="fresh-heading" className="font-serif text-heading font-semibold mb-2">{c.home.notStarted}</h2>
+              {/* A shelf on a phone; a grid of cards at least 10rem wide once there's room for it. */}
+              <ul className="scroll-row flex gap-3 overflow-x-auto snap-x snap-mandatory scroll-px-4 -mx-4 px-4 pb-2 @min-[56rem]:grid @min-[56rem]:grid-cols-[repeat(auto-fill,minmax(10rem,1fr))] @min-[56rem]:gap-x-4 @min-[56rem]:gap-y-6 @min-[56rem]:overflow-visible @min-[56rem]:mx-0 @min-[56rem]:px-0">
+                {fresh.map((set) => {
+                  const view = findSetView(learner, set.id)!;
+                  return (
+                    <li key={set.id} className="snap-start shrink-0 w-40 @min-[56rem]:w-auto">
+                      <SetCard wide view={view} progress={setProgress(learner, set.phraseIds, now)} onOpen={() => nav.openSet(set.id)} onPlay={() => nav.playSet(set.id)} />
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          )}
+
+          {recent.length === 0 && !firstRun && (
+            <button type="button" onClick={() => setHistoryOpen(true)} className={`${btnText} self-start -ml-3`}>
+              <Icon name="history" className="text-icon-sm" />
+              {c.home.history}
+            </button>
+          )}
+        </div>
+
+        <HistorySheet open={historyOpen} onClose={() => setHistoryOpen(false)} now={now} />
       </div>
-
-      <HistorySheet open={historyOpen} onClose={() => setHistoryOpen(false)} now={now} />
     </div>
   );
 }
