@@ -802,6 +802,7 @@ and two tabs rating one phrase make one review (tests in `e2e/tabs.spec.ts`). Ba
 also reworked after a review (`e2e/back.spec.ts`). Left open, for decision:
 - ~~After an app update, a tab still running the old code can write over data saved by the new
   code.~~ Fixed: the old tab stops saving over a newer save and offers Reload.
-- Settings, sort orders and the queue follow whichever tab saved last (they're per tab, not merged).
+- ~~Settings and sort orders follow whichever tab saved last.~~ Fixed: the later change wins. The
+  queue stays per tab by design.
 - Across devices, a device whose clock runs ahead wins last-writer-wins until real time catches up;
   the server would need to stamp times (plan 60 / sync protocol).
