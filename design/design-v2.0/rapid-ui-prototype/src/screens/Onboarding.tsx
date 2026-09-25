@@ -9,6 +9,7 @@ import { LIMITS } from '../state/limits';
 import { useCopy, useStore } from '../state/store';
 import { Icon, IconName } from '../ui/Icon';
 import { btnPrimary, btnTonal } from '../ui/button';
+import { fieldClass } from '../ui/field';
 
 type Step = 'native' | 'name' | 'course' | 'voices' | 'loop';
 const STEPS: Step[] = ['native', 'name', 'course', 'voices', 'loop'];
@@ -76,7 +77,7 @@ export function Onboarding() {
               }}
               maxLength={LIMITS.name}
               placeholder={c.onboarding.namePlaceholder}
-              className="min-h-12 px-4 rounded-2xl bg-surface-container-low border border-outline-variant/60 text-field"
+              className={fieldClass}
             />
           </label>
         )}

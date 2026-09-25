@@ -7,6 +7,7 @@ import { CharCount } from '../ui/CharCount';
 import { Sheet } from '../ui/Sheet';
 import { useToast } from '../ui/Toast';
 import { btnPrimary } from '../ui/button';
+import { fieldClass } from '../ui/field';
 
 /** Names a new set (optionally holding phrases already), or renames one of the learner's sets. */
 export function CreateSetSheet({ request, onClose }: { request: { phraseIds: string[]; rename?: string } | null; onClose: () => void }) {
@@ -69,7 +70,7 @@ function SetNameForm({ initial, taken, submitLabel, onSubmit }: { initial: strin
             autoComplete="off"
             enterKeyHint="done"
             required
-            className="min-h-12 px-4 rounded-2xl bg-surface-container-low border border-outline-variant/60 text-field"
+            className={fieldClass}
           />
           <CharCount id={countId} value={title} max={LIMITS.title} />
         </label>
