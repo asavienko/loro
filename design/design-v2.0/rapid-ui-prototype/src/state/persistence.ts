@@ -385,7 +385,29 @@ function loadWithoutStray({ saved, pending }: Stored, initial: (device: Device) 
   return fromSaved ? { ...fromPending, learner: mergeLearner(fromPending.learner, fromSaved.learner) } : fromPending;
 }
 
-export type SaveResult = 'saved' | 'full' | 'unavailable';
+/** `outdated`: a newer version of the app saved last; this (older) tab mustn't write over it. */
+export type SaveResult = 'saved' | 'full' | 'unavailable' | 'outdated';
+
+/** Content versions look like "2026-09-24.4": the date, then the day's edition as a number. */
+export function contentIsNewer(theirs: string, ours: string): boolean {
+  const split = (v: string) => {
+    const [date, edition] = v.split('.');
+    return [date ?? '', Number(edition ?? 0) || 0] as const;
+  };
+  const [[td, te], [od, oe]] = [split(theirs), split(ours)];
+  return td > od || (td === od && te > oe);
+}
+
+/** Whether stored JSON was written by a newer app than this one (after an update, in another tab). */
+function writtenByNewer(json: string): boolean {
+  try {
+    const value: unknown = JSON.parse(json);
+    if (!isObject(value)) return false;
+    return (num(value.version) && value.version > STATE_VERSION) || (str(value.contentVersion) && contentIsNewer(value.contentVersion, CONTENT_VERSION));
+  } catch {
+    return false;
+  }
+}
 
 /** Event the shell listens for, so a failed save is never silent. */
 export const SAVE_FAILED_EVENT = 'loro:save-failed';
@@ -410,6 +432,10 @@ export function saveState(state: AppState): Promise<SaveResult> {
 async function writeState(state: AppState): Promise<SaveResult> {
   try {
     const current = await readRaw();
+    // A tab still running the old app after an update would drop what it can't read (new
+    // fields, new phrase ids) and write over the newer save. It stops saving instead; its own
+    // close copy still reaches the next launch, which runs the new app and merges it.
+    if (current !== null && current !== lastWritten && writtenByNewer(current)) return 'outdated';
     // Parsing and merging the stored copy is only needed when another tab changed it. Its
     // pending ratings merge too: a rating given in another tab mustn't be written over.
     const stored = current !== null && current !== lastWritten ? parseState(current, state.device) : null;

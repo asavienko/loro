@@ -241,6 +241,7 @@ export function makeEn(n: Plural) {
       saved: (title: string) => `Saved as ${title}`,
       storageFull: 'This device’s storage for Loro is full, so new progress isn’t being saved.',
       storageUnavailable: 'This browser isn’t letting Loro save progress on this device.',
+      outdated: 'A newer version of Loro is open in another tab. Reload to keep saving here.',
     },
     queue: {
       title: 'Queue',

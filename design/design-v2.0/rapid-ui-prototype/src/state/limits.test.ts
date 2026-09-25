@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { findSamePhrase, sameKey } from './catalog';
 import { clip, LIMITS } from './limits';
+import { contentIsNewer } from './persistence';
 import { fresh, run, T0 } from './testing';
 
 describe('typed text', () => {
@@ -33,5 +34,14 @@ describe('typed text', () => {
     const s = run(fresh(), { type: 'ADD_OWN_PHRASE', target: 'Feliz año', native: 'Happy new year', now: T0 });
     assert.equal(findSamePhrase(s.learner, 'Feliz ano'), undefined);
     assert.ok(findSamePhrase(s.learner, 'feliz año!'));
+  });
+});
+
+describe('content versions', () => {
+  it('compare by date, then by the edition as a number', () => {
+    assert.equal(contentIsNewer('2026-09-24.10', '2026-09-24.4'), true);
+    assert.equal(contentIsNewer('2026-09-25.1', '2026-09-24.9'), true);
+    assert.equal(contentIsNewer('2026-09-24.4', '2026-09-24.4'), false);
+    assert.equal(contentIsNewer('2026-09-23.9', '2026-09-24.1'), false);
   });
 });

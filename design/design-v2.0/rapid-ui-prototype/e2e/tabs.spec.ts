@@ -79,3 +79,36 @@ test('an undo in one tab holds when another tab opened during the window', async
   await expect(page.getByRole('heading', { name: '¡Hola, Ana!' })).toBeVisible();
   await expect(page.getByText(/· [1-9]\d* rated$/)).toHaveCount(0);
 });
+
+test('a tab on the old app after an update stops saving over the newer save, and says why', async ({ page }) => {
+  await page.goto('/#/set/set-taxi?from=explore');
+  await page.waitForTimeout(800);
+  // Another tab, already updated, saves in a newer format.
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) => {
+        const open = indexedDB.open('loro-prototype', 1);
+        open.onsuccess = () => {
+          const store = open.result.transaction('kv', 'readwrite').objectStore('kv');
+          const get = store.get('state');
+          get.onsuccess = () => {
+            const newer = { ...JSON.parse(get.result as string), version: 99, marker: 'newer' };
+            store.put(JSON.stringify(newer), 'state').onsuccess = () => resolve();
+          };
+        };
+      }),
+  );
+  await page.getByRole('button', { name: 'Like set' }).click();
+  await expect(page.locator('.toast-layer').getByText('A newer version of Loro is open in another tab. Reload to keep saving here.')).toBeVisible();
+  const kept = await page.evaluate(
+    () =>
+      new Promise<string>((resolve) => {
+        const open = indexedDB.open('loro-prototype', 1);
+        open.onsuccess = () => {
+          const get = open.result.transaction('kv').objectStore('kv').get('state');
+          get.onsuccess = () => resolve(JSON.parse(get.result as string).marker);
+        };
+      }),
+  );
+  expect(kept).toBe('newer');
+});
