@@ -210,7 +210,8 @@ export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps
 
             {/* The loop: prompt → your turn → target, with real repetition and time */}
             <div className="phone-landscape:col-start-1 phone-landscape:row-start-2">
-              {/* At large text the three pills are too narrow for icon and label side by side. */}
+              {/* At large text the three pills are too narrow for icon and label side by side; a
+                  word too long for its pill (a longer language name) wraps the icon above it. */}
               <ol className="@container grid grid-cols-3 gap-1.5" aria-label={c.player.steps}>
                 {STEPS.map((p) => {
                   const current = p === phase;
@@ -219,7 +220,7 @@ export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps
                     <li
                       key={p}
                       aria-current={current ? 'step' : undefined}
-                      className={`min-h-11 px-1 rounded-xl flex items-center justify-center gap-1.5 @max-[15rem]:flex-col @max-[15rem]:gap-0 @max-[15rem]:py-1 text-center leading-tight text-label font-semibold border ${
+                      className={`min-h-11 px-1 rounded-xl flex flex-wrap content-center items-center justify-center gap-x-1.5 @max-[15rem]:flex-col @max-[15rem]:gap-0 @max-[15rem]:py-1 text-center leading-tight text-label font-semibold border ${
                         current && playing
                           ? 'bg-primary-container text-on-primary border-primary-container'
                           : current
