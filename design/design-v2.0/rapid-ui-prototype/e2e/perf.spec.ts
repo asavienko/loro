@@ -89,7 +89,9 @@ test.describe('a long session', () => {
     const early = await size();
     for (let t = 0; t < 29 * 60_000; t += 1000) await page.clock.runFor(1000);
     const late = await size();
-    expect(late.elements - early.elements, 'elements added in 29 minutes').toBeLessThan(20);
+    // Not growth: a different phrase in the player (±15) and, late, the pass toast with its two
+    // choices (8). The pile-up this guards against added ~130.
+    expect(late.elements - early.elements, 'elements added in 29 minutes').toBeLessThan(30);
     expect(late.listeners - early.listeners, 'listeners added in 29 minutes').toBeLessThan(10);
   });
 });

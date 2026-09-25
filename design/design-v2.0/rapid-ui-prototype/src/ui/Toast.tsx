@@ -5,8 +5,15 @@ import { AnimatePresence, motion } from 'motion/react';
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useCopy } from '../state/store';
 
+interface ToastAction {
+  label: string;
+  run: () => void;
+}
+
 interface ToastOptions {
-  action?: { label: string; run: () => void };
+  action?: ToastAction;
+  /** A second choice after the first (with it, the words always take a line of their own). */
+  also?: ToastAction;
   tone?: 'info' | 'success';
 }
 
@@ -87,7 +94,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       setFocused(hadFocus.current);
       setHovered(Boolean(layer.current?.querySelector(':hover')));
       // Say there's an action, or a screen-reader user never learns Undo exists.
-      announce(options.action ? `${text}. ${options.action.label}` : text);
+      const actions = [options.action, options.also].filter((a) => a !== undefined);
+      announce([text, ...actions.map((a) => a.label)].join('. '));
     },
     [announce],
   );
@@ -140,33 +148,41 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                 item.tone === 'success' ? 'bg-tertiary text-on-tertiary' : 'bg-inverse-surface text-inverse-on-surface'
               }`}
             >
-              <div className={`min-h-12 pl-4 pr-1 flex items-center gap-x-2 ${item.action ? NARROW_WRAP : ''}`}>
-                <span aria-hidden="true" className={`flex-1 py-2 ${item.action ? NARROW_TEXT : ''}`}>
+              {/* Words, actions, ×. One action: one row, or two when narrow (the words, then the
+                  action and × on the right). Two actions: the words and ×, then both actions. */}
+              <div className={`min-h-12 pl-4 pr-1 flex items-center gap-x-2 ${item.also ? 'flex-wrap' : item.action ? NARROW_WRAP : ''}`}>
+                <span aria-hidden="true" className={`flex-1 min-w-0 py-2 ${!item.also && item.action ? NARROW_TEXT : ''}`}>
                   {item.text}
                 </span>
-                <div className="ml-auto shrink-0 flex items-center">
-                  {item.action && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        item.action?.run();
-                        close();
-                      }}
-                      className="min-h-11 px-3 rounded-xl font-bold text-primary-fixed-dim"
-                    >
-                      {item.action.label}
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    ref={dismiss}
-                    aria-label={c.toast.dismiss}
-                    onClick={close}
-                    className="w-11 h-11 rounded-xl flex items-center justify-center opacity-80"
-                  >
-                    <span aria-hidden="true" className="material-symbols-outlined text-icon-md">close</span>
-                  </button>
-                </div>
+                {item.action && (
+                  <div className={item.also ? 'order-2 basis-full -mt-1 pb-1 flex flex-wrap justify-end' : 'ml-auto shrink-0 flex'}>
+                    {[item.action, item.also].map(
+                      (action) =>
+                        action && (
+                          <button
+                            key={action.label}
+                            type="button"
+                            onClick={() => {
+                              action.run();
+                              close();
+                            }}
+                            className="min-h-11 px-3 rounded-xl font-bold text-primary-fixed-dim text-right"
+                          >
+                            {action.label}
+                          </button>
+                        ),
+                    )}
+                  </div>
+                )}
+                <button
+                  type="button"
+                  ref={dismiss}
+                  aria-label={c.toast.dismiss}
+                  onClick={close}
+                  className={`w-11 h-11 shrink-0 rounded-xl flex items-center justify-center opacity-80 ${item.also ? 'self-start mt-0.5' : ''}`}
+                >
+                  <span aria-hidden="true" className="material-symbols-outlined text-icon-md">close</span>
+                </button>
               </div>
             </motion.div>
           )}

@@ -508,6 +508,27 @@ test.describe('queue', () => {
     await expect(page.getByRole('status')).toHaveText('Moved to position 1 of 4');
   });
 
+  test('a pass in repeat mode offers the next set beside its summary, and plays it (Q-18)', async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Play 5 phrases' }).click();
+    const player = page.getByRole('dialog', { name: 'Now playing' });
+    // Repeat mode is the default: past the last phrase the set starts again, and says so.
+    for (let i = 0; i < 5; i++) await player.getByRole('button', { name: 'Next phrase' }).click();
+    const toast = page.locator('.toast-layer');
+    await expect(toast).toContainText('Queue played through');
+    await expect(toast.getByRole('button', { name: 'Session summary' })).toBeVisible();
+    const next = toast.getByRole('button', { name: 'Continue Tapas & Tabernas' });
+    await expect(next).toBeVisible();
+    await expect(page.locator('div[role="status"]')).toHaveText('Queue played through. Session summary. Continue Tapas & Tabernas');
+    // Two choices: the words have their own line, the buttons sit under them.
+    const words = (await toast.locator('span[aria-hidden="true"]').first().boundingBox())!;
+    expect(words.y + words.height).toBeLessThanOrEqual((await next.boundingBox())!.y + 1);
+    await next.click();
+    await expect(player.getByRole('heading', { level: 1 })).toHaveText('Tapas & Tabernas');
+    await expect(player.getByText('1 of 5')).toBeVisible();
+    await expect(player.getByRole('button', { name: 'Pause', exact: true })).toBeVisible();
+  });
+
   test('a narrow toast (200% text) keeps its words on whole lines, and its buttons under them (Q-04)', async ({ page }) => {
     await page.goto('/');
     await page.getByRole('button', { name: 'Play 5 phrases' }).click();
