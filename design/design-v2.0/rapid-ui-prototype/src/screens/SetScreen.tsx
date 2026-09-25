@@ -268,7 +268,8 @@ export function SetScreen({ setId }: { setId: string }) {
             setMoreOpen(false);
           }}
         />
-        <SheetOption icon="share" label={c.set.share} onClick={() => void share()} />
+        {/* Your own set lives only on this device: its link would open "isn't available" for anyone else. */}
+        {view.kind === 'content' && <SheetOption icon="share" label={c.set.share} onClick={() => void share()} />}
         {view.kind === 'own' && (
           <>
             <SheetOption
