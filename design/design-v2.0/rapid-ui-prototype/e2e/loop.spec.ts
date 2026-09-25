@@ -37,6 +37,30 @@ test.describe('onboarding', () => {
     await expect(player.getByRole('button', { name: 'Pause', exact: true })).toBeVisible();
   });
 
+  test('the end panel sits under the phrase, the two centred as a finish, with focus and word on it (Q-09)', async ({ page }) => {
+    await page.goto('/');
+    for (let i = 0; i < 4; i++) await page.getByRole('button', { name: 'Continue' }).click();
+    await page.getByRole('button', { name: 'Start with one phrase' }).click();
+    const player = page.getByRole('dialog', { name: 'Now playing' });
+    const next = player.getByRole('button', { name: 'Next phrase' });
+    await next.focus();
+    await page.keyboard.press('Enter');
+    const heading = player.getByRole('heading', { name: 'That’s the loop' });
+    await expect(heading).toBeFocused();
+    await expect(page.locator('div[role="status"]')).toContainText('That’s the loop. Hear it, say it out loud');
+    await page.waitForTimeout(700); // the player has slid up
+    const actions = (await player.getByRole('button', { name: 'Add to set' }).boundingBox())!;
+    const panel = (await player.locator('section[aria-labelledby="end-panel-title"]').boundingBox())!;
+    const cover = (await player.locator('.aspect-square').first().boundingBox())!;
+    const header = (await player.locator('header').boundingBox())!;
+    // Right under the action row, not at the foot of an empty stage.
+    expect(panel.y - (actions.y + actions.height)).toBeLessThan(48);
+    // The cover-to-panel group is centred in the space under the header.
+    const above = cover.y - (header.y + header.height);
+    const below = 844 - (panel.y + panel.height);
+    expect(Math.abs(above - below)).toBeLessThan(60);
+  });
+
   test('Next at once ends the demo without showing the Spanish anywhere (R-01)', async ({ page }) => {
     await page.addInitScript(() => {
       Object.defineProperty(navigator, 'mediaSession', { value: { setActionHandler: () => {}, metadata: null, playbackState: 'none' } });
