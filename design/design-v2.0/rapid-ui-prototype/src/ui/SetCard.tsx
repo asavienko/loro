@@ -18,7 +18,7 @@ export function SetCard({ view, progress, onOpen, onPlay, wide = false }: { view
       <button type="button" onClick={onOpen} className="w-full text-left">
         <SetCover set={view} size="md" className={`${wide ? 'w-full aspect-square' : 'w-40 h-40'} rounded-2xl shadow-sm`} />
         <span className="flex items-start gap-1.5 mt-2">
-          <span className="text-body font-bold line-clamp-2 break-words">{view.title}</span>
+          <span lang={view.targetLang} className="text-body font-bold line-clamp-2 break-words">{view.title}</span>
           {view.level && <span className="shrink-0 text-caption font-bold text-secondary mt-0.5">{view.level}</span>}
         </span>
         <span className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 mt-0.5">

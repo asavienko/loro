@@ -1,4 +1,5 @@
 import { motion, PanInfo } from 'motion/react';
+import { useId } from 'react';
 import { languageLabel } from '../copy';
 import { useClickBlockerDuringDrag } from '../lib/suppressClick';
 import { findPhrase, findSetView, promptOf } from '../state/catalog';
@@ -17,6 +18,7 @@ export function MiniPlayer({ onOpenPlayer }: { onOpenPlayer: () => void }) {
   const c = useCopy();
   const { state, actions } = useStore();
   const clicks = useClickBlockerDuringDrag();
+  const statusId = useId();
   const phrase = findPhrase(state.learner, currentPhraseId(state.player));
   if (!phrase) return null;
 
@@ -51,6 +53,9 @@ export function MiniPlayer({ onOpenPlayer }: { onOpenPlayer: () => void }) {
           type="button"
           onClick={onOpenPlayer}
           aria-label={`${c.player.dialog}: ${title}`}
+          // The status line (including "No voice…" or "Speech stopped") and the course's
+          // language are its description; the label alone would hide them.
+          aria-describedby={statusId}
           className="flex-1 min-w-0 min-h-11 flex items-center gap-3 text-left rounded-xl"
         >
           <SetCover set={set ?? { topicId: null, coverIcon: 'edit_note' }} size="sm" className="w-11 h-11 rounded-lg shrink-0" />
@@ -58,7 +63,7 @@ export function MiniPlayer({ onOpenPlayer }: { onOpenPlayer: () => void }) {
             <span lang={revealed ? phrase.targetLang : prompt.lang} className={`block text-row truncate ${revealed ? 'font-serif italic' : 'font-medium'}`}>
               {title}
             </span>
-            <span className="block text-label text-secondary-fixed-dim truncate">
+            <span id={statusId} className="block text-label text-secondary-fixed-dim truncate">
               {audioError
                 ? audioError.reason === 'no-voice'
                   ? c.player.noVoice
@@ -66,6 +71,7 @@ export function MiniPlayer({ onOpenPlayer }: { onOpenPlayer: () => void }) {
                 : playing
                   ? phaseInstruction(c, phase, prompt.lang, phrase.targetLang)
                   : c.player.paused}
+              <span className="sr-only">. {languageLabel(phrase.targetLang, c.locale)}</span>
             </span>
           </span>
         </button>
@@ -89,7 +95,6 @@ export function MiniPlayer({ onOpenPlayer }: { onOpenPlayer: () => void }) {
       <div className="absolute bottom-0 inset-x-2 h-0.5 bg-inverse-on-surface/20 rounded-full" aria-hidden="true">
         <div className="h-full bg-primary-fixed rounded-full" style={{ width: `${progress * 100}%` }} />
       </div>
-      <span className="sr-only">{languageLabel(phrase.targetLang, c.locale)}</span>
     </motion.div>
   );
 }
