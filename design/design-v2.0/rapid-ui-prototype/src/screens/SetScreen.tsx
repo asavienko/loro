@@ -233,9 +233,11 @@ export function SetScreen({ setId }: { setId: string }) {
             </span>
           </div>
           {/* The play order and the sort are one control: it says the order, and changes it. An
-              empty set of your own has nothing to order yet. Clear of the big Play above it. */}
+              empty set of your own has nothing to order yet. Where "Play due and new" fits beside it,
+              it sits right under the big Play, so the row keeps clear of it; on a small phone it
+              wraps under "Plays in", on the left, and the first phrase keeps its place on screen. */}
           {sortedIds.length > 0 && (
-            <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 mt-2">
+            <div className="flex flex-wrap items-center justify-between gap-x-2 @min-[22rem]:mt-2">
               <button
                 type="button"
                 aria-haspopup="dialog"
