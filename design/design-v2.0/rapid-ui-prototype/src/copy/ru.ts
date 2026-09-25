@@ -91,6 +91,7 @@ export function makeRu(n: Plural): Copy {
       sets: (c) => n(c, { one: `${c} набор`, few: `${c} набора`, many: `${c} наборов`, other: `${c} набора` }),
       phrases,
       noPhrases: (q) => `Нет фраз по запросу «${q}».`,
+      noPhrasesFiltered: 'Нет фраз с этими фильтрами.',
       noSets: 'Нет подходящих наборов.',
       addAsOwn: (q) => `Добавить «${q}» как свою фразу`,
       removeFilter: (label) => `Убрать фильтр: ${label}`,

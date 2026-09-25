@@ -100,6 +100,7 @@ export function makeEn(n: Plural) {
       sets: (count: number) => n(count, { one: `${count} set`, other: `${count} sets` }),
       phrases: (count: number) => n(count, { one: `${count} phrase`, other: `${count} phrases` }),
       noPhrases: (query: string) => `No phrases match “${query}”.`,
+      noPhrasesFiltered: 'No phrases match these filters.',
       noSets: 'No sets match.',
       addAsOwn: (query: string) => `Add “${query}” as your phrase`,
       removeFilter: (label: string) => `Remove filter: ${label}`,

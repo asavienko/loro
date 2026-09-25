@@ -22,11 +22,14 @@ export const fold = (text: string) => [...text].map(foldChar).join('');
 /** The query as words: case, accents and punctuation don't count. */
 export const queryWords = (query: string) => phraseKey(query).split(' ').filter(Boolean);
 
-/** Every word of the query appears, in any order. */
+/** Every word of the query starts a word of the text, in any order: "una" doesn't find
+ * "cuenta", while "caf" still finds "café" as you type. */
 export const matchesWords = (text: string, words: string[]) => {
-  const haystack = phraseKey(text);
-  return words.every((w) => haystack.includes(w));
+  const haystack = phraseKey(text).split(' ');
+  return words.every((w) => haystack.some((h) => h.startsWith(w)));
 };
+
+const WORD_CHAR = /[\p{L}\p{N}]/u;
 
 /** Text with every occurrence of each query word marked. */
 function Highlight({ text, words }: { text: string; words: string[] }) {
@@ -35,6 +38,8 @@ function Highlight({ text, words }: { text: string; words: string[] }) {
   const marked = chars.map(() => false);
   for (const w of words) {
     for (let at = folded.indexOf(w); at !== -1; at = folded.indexOf(w, at + 1)) {
+      // Only where a word starts, as the search matches.
+      if (at > 0 && WORD_CHAR.test(folded[at - 1])) continue;
       for (let i = at; i < at + w.length; i++) marked[i] = true;
     }
   }
@@ -106,7 +111,10 @@ export function ExploreScreen({ filters }: { filters: ExploreFilters }) {
     const tags = p.tags.map((t) => c.common.tag[t]).join(' ');
     return matchesWords(`${p.target} ${Object.values(p.translations).join(' ')} ${notes} ${topicTitle} ${tags}`, words);
   };
-  const phrases = q || filters.tag ? coursePhrases(learner).filter(phraseMatches) : [];
+  // Matches in the phrase or its translation come before those only in notes, topics or tags.
+  const inText = (p: Phrase) => matchesWords(`${p.target} ${Object.values(p.translations).join(' ')}`, words);
+  const found = q || filters.tag ? coursePhrases(learner).filter(phraseMatches) : [];
+  const phrases = q ? [...found.filter(inText), ...found.filter((p) => !inText(p))] : found;
   const sets = courseSets(learner).filter((s) => {
     if (filters.topic && s.topicId !== filters.topic) return false;
     if (filters.level && s.level !== filters.level) return false;
@@ -221,7 +229,7 @@ export function ExploreScreen({ filters }: { filters: ExploreFilters }) {
           <h2 id="phrase-results" className="font-serif text-heading font-semibold mb-1">{c.explore.phrases(phrases.length)}</h2>
           {phrases.length === 0 ? (
             <div className="py-2 flex flex-col items-start gap-2">
-              <p className="text-body text-secondary">{c.explore.noPhrases(filters.q ?? '')}</p>
+              <p className="text-body text-secondary">{filters.q ? c.explore.noPhrases(filters.q) : c.explore.noPhrasesFiltered}</p>
               {filters.q && (
                 <button
                   type="button"

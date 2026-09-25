@@ -1,0 +1,55 @@
+// Pasted links, list counts and search: what a learner reaches is what the page says.
+import { expect, test } from './fixtures';
+
+test('a link with a stray "%" opens a page instead of an error', async ({ page }) => {
+  await page.goto('/#/%');
+  await expect(page.getByRole('heading', { name: '¡Hola, Ana!' })).toBeVisible();
+  await page.goto('/#/set/abc%zz?from=explore');
+  await expect(page.getByText('This set isn’t available.')).toBeVisible();
+  await expect(page.getByText('Something went wrong')).toHaveCount(0);
+});
+
+test('after deleting your set, Back does not return to it', async ({ page }) => {
+  await page.goto('/#/explore');
+  await page.goto('/#/library?view=ownSets');
+  await page.getByRole('button', { name: 'New set' }).first().click();
+  await page.getByLabel('Name').fill('Probe');
+  await page.getByLabel('Name').press('Enter');
+  await expect(page.getByRole('heading', { name: 'Probe', level: 1 })).toBeVisible();
+  await page.getByRole('button', { name: /^More/ }).click();
+  await page.getByRole('button', { name: 'Delete set' }).click();
+  await expect(page).toHaveURL(/#\/library/);
+  await page.goBack();
+  await expect(page.getByText('This set isn’t available.')).toHaveCount(0);
+});
+
+test('filters with no phrases say so, without an empty search', async ({ page }) => {
+  await page.goto('/#/explore?topic=eating-out&tag=directions');
+  await expect(page.getByText('No phrases match these filters.')).toBeVisible();
+});
+
+test.describe('search', () => {
+  test('matches words from their start, not inside other words', async ({ page }) => {
+    // "uenta" is inside "cuenta", and starts no word.
+    await page.goto('/#/explore?q=uenta');
+    await expect(page.getByRole('button', { name: 'Play La cuenta, por favor' })).toHaveCount(0);
+  });
+});
+
+test.describe('a set with phrases being learned', () => {
+  const now = Date.now();
+  const log = ['tapas-01', 'tapas-02', 'tapas-03', 'tapas-04'].flatMap((phraseId, i) => {
+    const key = `en-GB>es-ES:${phraseId}`;
+    const at = now - 60_000 * (10 + i);
+    return [
+      { id: `t.x-${i}a`, at, device: 't', kind: 'heard', key, phraseId, setId: 'set-tapas', targetMs: 1500, nativeMs: 1100 },
+      { id: `t.x-${i}b`, at: at + 30_000, device: 't', kind: 'rated', key, phraseId, setId: 'set-tapas', grade: 'easy' },
+    ];
+  });
+  test.use({ seed: { log } });
+
+  test('"Play due and new" counts only due and new phrases', async ({ page }) => {
+    await page.goto('/#/set/set-tapas?from=explore');
+    await expect(page.getByRole('button', { name: 'Play due and new (1)' })).toBeVisible();
+  });
+});
