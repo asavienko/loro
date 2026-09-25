@@ -226,6 +226,7 @@ export function makeEn(n: Plural) {
       keys: 'Keys: Space play or pause · ← → previous, next · 1 2 3 rate',
       audioError: (language: string) =>
         `This device has no ${language} voice, so the phrase can’t play. Add one in your system’s speech settings, then press Play.`,
+      showText: (language: string) => `Show the ${language} text`,
       noVoice: 'No voice for this language',
       audioSilent: 'Speech stopped before the phrase played. Press Play to try again.',
       silent: 'Speech stopped — press Play',

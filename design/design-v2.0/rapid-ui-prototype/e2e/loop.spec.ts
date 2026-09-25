@@ -111,7 +111,15 @@ test.describe('the loop', () => {
     const player = page.getByRole('dialog', { name: 'Now playing' });
     await expect(player.getByRole('alert')).toContainText('This device has no Spanish voice');
     await expect(player.getByRole('button', { name: 'Play', exact: true })).toBeVisible();
+    // Stopped before the prompt, and the Spanish, never heard, stays hidden (the recall rule)…
+    // (Only the silent utterance that unlocks audio on the first tap.)
+    expect(await page.evaluate(() => window.__spoken.filter((u) => u.text.trim()).length)).toBe(0);
+    await expect(player.getByRole('heading', { name: 'Me pone un cortado, por favor' })).toHaveCount(0);
+    await expect(player.getByText('Spanish hidden until you hear it')).toBeAttached();
     await expectAccessible(page);
+    // …unless the learner chooses to read it.
+    await player.getByRole('button', { name: 'Show the Spanish text' }).click();
+    await expect(player.getByRole('heading', { name: 'Me pone un cortado, por favor' })).toBeVisible();
     await page.getByRole('button', { name: 'Close player' }).click();
     await expect(page.getByTestId('points')).toContainText('0 points');
   });
