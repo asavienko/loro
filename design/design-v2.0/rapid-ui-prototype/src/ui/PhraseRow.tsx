@@ -25,8 +25,11 @@ export function PhraseRow({ phrase, detail, leading, isCurrent = false, isPlayin
   const { state } = useStore();
   const prompt = promptOf(phrase, state.learner.profile.nativeLang);
   const title = hideTarget ? prompt.text : phrase.target;
+  // Your own phrase says so in words, not with an icon that looks like a button.
+  const status = [detail, phrase.own && c.phrase.yoursShort].filter(Boolean).join(' · ');
   return (
-    <div className={`flex items-center gap-1 rounded-2xl ${isCurrent ? 'bg-primary-fixed/40' : ''}`}>
+    // A container: at large text on a small phone the position number gives its room to the phrase.
+    <div className={`@container flex items-center gap-1 rounded-2xl ${isCurrent ? 'bg-primary-fixed/40' : ''}`}>
       <button
         type="button"
         onClick={onPlay}
@@ -35,7 +38,7 @@ export function PhraseRow({ phrase, detail, leading, isCurrent = false, isPlayin
         className="flex-1 min-w-0 min-h-14 flex items-center gap-3 pl-2 py-2 text-left rounded-2xl active:bg-surface-container"
       >
         {leading !== undefined && (
-          <span className="w-6 shrink-0 flex items-center justify-center text-label font-bold text-secondary tabular-nums">
+          <span className="w-6 shrink-0 flex items-center justify-center text-label font-bold text-secondary tabular-nums @max-[13rem]:hidden">
             {isPlaying ? (
               <span className="flex items-end gap-[2px] h-4" aria-hidden="true">
                 <span className="w-[3px] bg-primary-container rounded-full eq-bar-1" />
@@ -66,12 +69,11 @@ export function PhraseRow({ phrase, detail, leading, isCurrent = false, isPlayin
                 <span lang={prompt.lang}>{prompt.text}</span>
               )}
               {/* The space keeps the line's text one sentence; at the end of the line it takes no room. */}
-              {detail && ' · '}
+              {status && ' · '}
             </span>
-            {detail && <span className="min-w-0 text-on-surface-variant">{detail}</span>}
+            {status && <span className="min-w-0 text-on-surface-variant">{status}</span>}
           </span>
         </span>
-        {phrase.own && <Icon name="edit_note" className="text-icon-sm text-secondary shrink-0" />}
       </button>
       <button
         type="button"

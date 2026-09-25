@@ -118,7 +118,8 @@ test("the player's keys stay out of a sheet opened over it", async ({ page }) =>
   await page.getByRole('button', { name: /^Play/ }).first().click();
   const player = page.getByRole('dialog', { name: 'Now playing' });
   const position = await player.getByText(/^1 of \d+$/).textContent();
-  await page.getByRole('button', { name: 'Session summary' }).click();
+  await page.getByRole('button', { name: 'Open queue' }).click();
+  await page.getByRole('button', { name: /^This session · / }).click();
   await page.getByRole('region', { name: 'This session' }).focus();
   await page.keyboard.press('ArrowRight');
   await page.keyboard.press('Space');

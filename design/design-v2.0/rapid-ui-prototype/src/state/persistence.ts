@@ -28,6 +28,7 @@ import {
   Device,
   Grade,
   LearnerState,
+  LibraryListView,
   Like,
   LogEntry,
   OwnPhrase,
@@ -36,6 +37,7 @@ import {
   PlayerState,
   Prefs,
   Profile,
+  QueueSource,
   STATE_VERSION,
 } from './types';
 
@@ -248,6 +250,8 @@ function sanitizePrefs(value: unknown): Prefs {
         ([lang, name]) => LANGUAGES.some((l) => l.code === lang) && typeof name === 'string' && name.length > 0 && name.length <= 200,
       ),
     ) as Prefs['voiceByLang'],
+    pauseLength: value.pauseLength === 'longer' ? 'longer' : 'standard',
+    queueHintDone: value.queueHintDone === true,
     changedAt: Object.fromEntries(Object.entries(isObject(value.changedAt) ? value.changedAt : {}).filter(([k, at]) => k in fresh && num(at))) as Prefs['changedAt'],
   };
 }
@@ -285,7 +289,17 @@ function sanitizePlayer(value: unknown, learner: LearnerState): PlayerState {
     index,
     ended: value.ended === true,
     session,
+    source: sanitizeSource(value.source),
   };
+}
+
+const LIST_VIEWS: readonly LibraryListView[] = ['liked', 'mine', 'due', 'learning', 'missed', 'learned'];
+
+function sanitizeSource(value: unknown): QueueSource | null {
+  if (!isObject(value)) return null;
+  if (value.kind === 'review' || value.kind === 'demo') return { kind: value.kind };
+  if (value.kind === 'library' && LIST_VIEWS.includes(value.view as LibraryListView)) return { kind: 'library', view: value.view as LibraryListView };
+  return null;
 }
 
 /**

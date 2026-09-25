@@ -160,15 +160,20 @@ function useCelebrations(openSummary: () => void) {
   const { toast } = useToast();
   const learned = derive(state.learner.log).learnedBonuses.size;
   const passes = state.player.session?.passes ?? 0;
-  const seen = useRef({ learned, passes });
+  // Continue mode moving on to another set keeps the session; loading one starts a new session.
+  const setId = state.player.setId;
+  const sessionId = state.player.session?.id;
+  const nextSet = findSetView(state.learner, setId)?.title;
+  const seen = useRef({ learned, passes, setId, sessionId });
   useEffect(() => {
     if (learned > seen.current.learned) {
       learnedCue();
       toast(c.toast.learned(POINTS.learned), { tone: 'success' });
     }
     if (passes > seen.current.passes) toast(c.toast.passComplete, { action: { label: c.player.summary, run: openSummary } });
-    seen.current = { learned, passes };
-  }, [learned, passes, c, toast, openSummary]);
+    if (nextSet && setId !== seen.current.setId && sessionId !== undefined && sessionId === seen.current.sessionId) toast(c.toast.nextSet(nextSet));
+    seen.current = { learned, passes, setId, sessionId };
+  }, [learned, passes, setId, sessionId, nextSet, c, toast, openSummary]);
 }
 
 type Overlay = { player: boolean; queue: boolean };
@@ -196,6 +201,7 @@ function Shell() {
   const [create, setCreate] = useState<{ phraseIds: string[]; rename?: string } | null>(null);
   const [phraseForm, setPhraseForm] = useState<{ editId?: string; target?: string } | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsAtVoices, setSettingsAtVoices] = useState(false);
   const [summaryOpen, setSummaryOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
 
@@ -322,7 +328,7 @@ function Shell() {
         if (view) actions.load(view.phraseIds, view.id, view.phraseIds.indexOf(phraseId));
         else actions.load([phraseId], null, 0);
       },
-      playList: (phraseIds, startIndex = 0) => actions.load(phraseIds, null, startIndex),
+      playList: (phraseIds, startIndex = 0, source) => actions.load(phraseIds, null, startIndex, false, source ?? null),
       openPlayer: () => setOverlay({ player: true, queue: false }),
       openQueue: () => setOverlay({ player: true, queue: true }),
       openSummary: () => setSummaryOpen(true),
@@ -330,7 +336,14 @@ function Shell() {
       addToSet: (phraseIds) => setAddTo(phraseIds),
       addPhrase: (options = {}) => setPhraseForm(options),
       createSet: (phraseIds = [], rename) => setCreate({ phraseIds, rename }),
-      openSettings: () => setSettingsOpen(true),
+      openSettings: () => {
+        setSettingsAtVoices(false);
+        setSettingsOpen(true);
+      },
+      openVoiceSettings: () => {
+        setSettingsAtVoices(true);
+        setSettingsOpen(true);
+      },
     }),
     [actions, routeRef, learnerRef, playerRef],
   );
@@ -418,7 +431,7 @@ function Shell() {
         </LocalBoundary>
 
         <LocalBoundary resetKey={`${settingsOpen}${summaryOpen}${details?.phraseId}${addTo}${create?.rename}${phraseForm?.editId ?? phraseForm !== null}${addOpen}`} quiet onError={closeSheets}>
-          <SettingsSheet open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+          <SettingsSheet open={settingsOpen} atVoices={settingsAtVoices} onClose={() => setSettingsOpen(false)} />
           <SessionSummarySheet open={summaryOpen} onClose={() => setSummaryOpen(false)} />
           <PhraseDetailsSheet details={details} onClose={() => setDetails(null)} />
           <AddToSetSheet phraseIds={addTo} onClose={() => setAddTo(null)} />
