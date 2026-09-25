@@ -271,6 +271,8 @@ test.describe('queue', () => {
     const player = page.getByRole('dialog', { name: 'Now playing' });
     await player.getByRole('button', { name: /^Missed/ }).click();
     await expect(player.getByText('1 of 6')).toBeVisible();
+    // The count grew by one: the status line says why.
+    await expect(player.getByText(/^Rated Missed — back in \d+ minutes · again in this queue$/)).toBeVisible();
     await page.getByRole('button', { name: 'Open queue' }).click();
     const queue = page.getByRole('dialog', { name: 'Queue' });
     const next = queue.getByRole('button', { name: /^Play .* now$/ });

@@ -158,15 +158,20 @@ function useCelebrations(openSummary: () => void) {
   const { toast } = useToast();
   const learned = derive(state.learner.log).learnedBonuses.size;
   const passes = state.player.session?.passes ?? 0;
-  const seen = useRef({ learned, passes });
+  // Continue mode moving on to another set keeps the session; loading one starts a new session.
+  const setId = state.player.setId;
+  const sessionId = state.player.session?.id;
+  const nextSet = findSetView(state.learner, setId)?.title;
+  const seen = useRef({ learned, passes, setId, sessionId });
   useEffect(() => {
     if (learned > seen.current.learned) {
       learnedCue();
       toast(c.toast.learned(POINTS.learned), { tone: 'success' });
     }
     if (passes > seen.current.passes) toast(c.toast.passComplete, { action: { label: c.player.summary, run: openSummary } });
-    seen.current = { learned, passes };
-  }, [learned, passes, c, toast, openSummary]);
+    if (nextSet && setId !== seen.current.setId && sessionId !== undefined && sessionId === seen.current.sessionId) toast(c.toast.nextSet(nextSet));
+    seen.current = { learned, passes, setId, sessionId };
+  }, [learned, passes, setId, sessionId, nextSet, c, toast, openSummary]);
 }
 
 type Overlay = { player: boolean; queue: boolean };

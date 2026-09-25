@@ -197,6 +197,8 @@ export function makeEn(n: Plural) {
       openQueue: 'Open queue',
       summary: 'Session summary',
       position: (i: number, total: number) => `${i} of ${total}`,
+      /** When the queue holds more than its set (continue mode added the next one). */
+      positionInQueue: (i: number, total: number) => `${i} of ${total} in the queue`,
       hidden: (language: string) => `${language} hidden until you hear it`,
       steps: 'Steps',
       yourTurn: 'Your turn',
@@ -215,6 +217,8 @@ export function makeEn(n: Plural) {
       /** Under each grade: when the phrase comes back if rated so. */
       nextIn: (interval: string) => `in ${interval}`,
       rated: (grade: string, when: string) => `Rated ${grade} — back ${when}`,
+      /** After “Rated …” when a Missed or Hard phrase also comes back later in this queue. */
+      requeued: '· again in this queue',
       undoFor: (time: string) => `Undo · ${time}`,
       undoLabel: (time: string) => `Undo rating (${time} left)`,
       previous: 'Previous phrase',
@@ -271,6 +275,7 @@ export function makeEn(n: Plural) {
       dismiss: 'Dismiss message',
       learned: (points: number) => `Learned · +${points}`,
       passComplete: 'Queue played through',
+      nextSet: (title: string) => `Next: ${title}`,
       removed: 'Removed from queue',
       cleared: 'Queue cleared',
       saved: (title: string) => `Saved as ${title}`,
