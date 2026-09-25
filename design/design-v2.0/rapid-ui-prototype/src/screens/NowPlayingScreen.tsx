@@ -264,7 +264,7 @@ function PhraseBlock({ phrase, revealed }: { phrase: Phrase; revealed: boolean }
         </>
       ) : (
         <>
-          <HiddenPhrase text={phrase.target} label={c.player.hidden(languageName(phrase.targetLang, c.locale))} className="font-serif italic text-display-sm font-semibold leading-snug" />
+          <HiddenPhrase phrase={phrase} label={c.player.hidden(languageName(phrase.targetLang, c.locale))} className="font-serif italic text-display-sm font-semibold leading-snug" />
           <p lang={prompt.lang} className="mt-1 text-display-sm short:text-heading @max-[22rem]/player:text-heading font-semibold text-on-surface">{prompt.text}</p>
         </>
       )}
