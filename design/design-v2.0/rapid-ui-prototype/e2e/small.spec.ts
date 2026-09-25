@@ -178,11 +178,16 @@ test.describe('large text (150%) on a 320 px phone: player, queue and summary', 
   });
 
   test('each grade in the summary stays with its count', async ({ page }) => {
+    // Something rated, so the summary has ratings to show (nothing played is one line).
+    await page.getByRole('dialog', { name: 'Now playing' }).getByRole('button', { name: /^Missed/ }).click();
     await page.getByRole('button', { name: /queue/i }).first().click();
     await page.getByRole('button', { name: /^This session · / }).click();
     await page.waitForTimeout(500);
-    const text = await page.getByRole('dialog').last().locator('dd').filter({ hasText: 'Missed' }).innerText();
-    for (const line of text.split('\n')) expect(line.trim()).not.toMatch(/^(\d+|·)/);
+    const ratings = page.getByRole('dialog').last().locator('dd').filter({ hasText: 'Missed' });
+    // The grades' line only: the note under it about the changeable rating starts with its count.
+    const note = await ratings.locator('span').innerText();
+    const text = (await ratings.innerText()).replace(note, '');
+    for (const line of text.split('\n').filter((l) => l.trim())) expect(line.trim()).not.toMatch(/^(\d+|·)/);
   });
 });
 
