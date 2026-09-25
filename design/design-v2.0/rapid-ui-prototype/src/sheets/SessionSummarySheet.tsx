@@ -11,6 +11,8 @@ export function SessionSummarySheet({ open, onClose }: { open: boolean; onClose:
   const summary = open ? sessionSummary(state, now) : null;
   return (
     <Sheet open={open} title={c.summary.title} onClose={onClose}>
+      {/* Opened with no session (a toast's action after the queue was cleared): say so. */}
+      {open && !summary && <p className="text-body text-secondary">{c.summary.none}</p>}
       {summary && (
         <dl className="grid grid-cols-2 gap-2">
           <Item label={c.summary.phrases} value={String(summary.phrasesPlayed)} />

@@ -348,6 +348,7 @@ export function makeRu(n: Plural): Copy {
       passes: 'Прохождений очереди',
       nextDue: 'Следующее повторение',
       nothingDue: 'Пока ничего не запланировано',
+      none: 'В этой сессии пока ничего не звучало.',
     },
     error: {
       title: 'Что-то пошло не так',

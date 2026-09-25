@@ -349,6 +349,7 @@ export function makeBg(n: Plural): Copy {
       passes: 'Пъти през опашката',
       nextDue: 'Следващ преговор',
       nothingDue: 'Все още нищо не е насрочено',
+      none: 'В тази сесия още нищо не е пускано.',
     },
     error: {
       title: 'Нещо се обърка',

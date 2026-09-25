@@ -358,6 +358,7 @@ export function makeEn(n: Plural) {
       passes: 'Times through the queue',
       nextDue: 'Next review',
       nothingDue: 'Nothing scheduled yet',
+      none: 'Nothing played in this session yet.',
     },
     error: {
       title: 'Something went wrong',
