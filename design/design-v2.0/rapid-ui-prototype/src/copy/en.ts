@@ -54,8 +54,8 @@ export function makeEn(n: Plural) {
       new: 'New',
       listenedNotRated: 'Listened, not rated',
       due: 'Due now',
-      learned: (pct: number) => `Learned · ${pct}%`,
-      learning: (pct: number, when: string) => `${pct}% · next ${when}`,
+      learned: (pct: number) => `Learned · recall ${pct}%`,
+      learning: (pct: number, when: string) => `Recall ${pct}% · back ${when}`,
       set: { new: 'New', 'in-progress': 'In progress', learned: 'All learned' },
     },
     home: {

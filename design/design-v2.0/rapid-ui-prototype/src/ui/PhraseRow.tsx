@@ -55,13 +55,19 @@ export function PhraseRow({ phrase, detail, leading, isCurrent = false, isPlayin
           >
             {title}
           </span>
-          <span className="block text-label text-secondary truncate mt-0.5">
-            {hideTarget ? (
-              c.player.hidden(languageName(phrase.targetLang, c.locale))
-            ) : (
-              <span lang={prompt.lang}>{prompt.text}</span>
-            )}
-            {detail && <span className="text-on-surface-variant"> · {detail}</span>}
+          {/* Only the prompt truncates. The status is a real figure and is never cut: when the two
+              don't fit on one line, it takes the next (and wraps there if it must). */}
+          <span className="flex flex-wrap gap-x-1 text-label text-secondary mt-0.5">
+            <span className="max-w-full truncate">
+              {hideTarget ? (
+                c.player.hidden(languageName(phrase.targetLang, c.locale))
+              ) : (
+                <span lang={prompt.lang}>{prompt.text}</span>
+              )}
+              {/* The space keeps the line's text one sentence; at the end of the line it takes no room. */}
+              {detail && ' · '}
+            </span>
+            {detail && <span className="min-w-0 text-on-surface-variant">{detail}</span>}
           </span>
         </span>
         {phrase.own && <Icon name="edit_note" className="text-icon-sm text-secondary shrink-0" />}

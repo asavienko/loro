@@ -2,7 +2,7 @@ import type { Copy } from '../copy';
 import { formatWhen } from '../state/clock';
 import type { PhraseProgress } from '../state/selectors';
 
-/** Short real status for a phrase row: "New", "Due now", "Learned · 97%", "82% · next in 3 days". */
+/** Short real status for a phrase row: "New", "Due now", "Learned · recall 97%", "Recall 82% · back in 3 days". */
 export function progressLabel(c: Copy, progress: PhraseProgress, now: number): string {
   switch (progress.status) {
     case 'new':

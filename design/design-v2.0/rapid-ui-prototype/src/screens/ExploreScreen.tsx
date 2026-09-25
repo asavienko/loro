@@ -305,11 +305,15 @@ function PhraseResult({ phrase, words, detail }: { phrase: Phrase; words: string
         <span lang={phrase.targetLang} className="block font-serif italic text-row truncate">
           <Highlight text={phrase.target} words={words} />
         </span>
-        <span className="block text-label text-secondary truncate">
-          <span lang={prompt.lang}>
-            <Highlight text={prompt.text} words={words} />
+        {/* As PhraseRow: the prompt truncates, the status is never cut. */}
+        <span className="flex flex-wrap gap-x-1 text-label text-secondary">
+          <span className="max-w-full truncate">
+            <span lang={prompt.lang}>
+              <Highlight text={prompt.text} words={words} />
+            </span>
+            {' · '}
           </span>
-          <span> · {detail}</span>
+          <span className="min-w-0">{detail}</span>
         </span>
       </button>
       <button type="button" onClick={() => nav.showDetails(phrase.id)} aria-label={c.phrase.details(phrase.target)} className="w-11 h-11 shrink-0 flex items-center justify-center rounded-full text-secondary">

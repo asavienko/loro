@@ -46,8 +46,8 @@ export function makeRu(n: Plural): Copy {
       new: 'Новая',
       listenedNotRated: 'Прослушана, без оценки',
       due: 'Пора повторить',
-      learned: (pct) => `Выучена · ${pct}%`,
-      learning: (pct, when) => `${pct}% · снова ${when}`,
+      learned: (pct) => `Выучена · память ${pct}%`,
+      learning: (pct, when) => `Память ${pct}% · снова ${when}`,
       set: { new: 'Новый', 'in-progress': 'В процессе', learned: 'Всё выучено' },
     },
     home: {
