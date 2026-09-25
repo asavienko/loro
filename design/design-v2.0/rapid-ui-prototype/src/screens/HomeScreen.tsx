@@ -48,8 +48,10 @@ export function HomeScreen() {
   const fresh = notStartedSets(learner, now).filter((s) => s.id !== suggestedId);
   const firstRun = stats.started === 0;
   const firstPhrase = courseSets(learner)[0]?.phraseIds[0];
-  // The demo is offered until the first phrase is heard, unless onboarding declined it.
-  const offerDemo = firstRun && Boolean(firstPhrase) && !state.prefs.skippedDemo;
+  // New to Loro: nothing heard in any course (a course switched to later is not a first run),
+  // and the demo not declined in onboarding. Only then the demo and the first-run line.
+  const newToLoro = !state.prefs.skippedDemo && !state.learner.log.some((entry) => entry.kind === 'heard');
+  const offerDemo = newToLoro && Boolean(firstPhrase);
   const courseTotal = coursePhrases(learner).length;
   // Nothing due and nothing left to learn: say so, and offer what to do next.
   const courseDone = courseTotal > 0 && due.length === 0 && suggestedIds.length === 0 && stats.learned === courseTotal;
@@ -66,7 +68,7 @@ export function HomeScreen() {
   return (
     <div className="max-w-5xl mx-auto px-4 pt-4 flex flex-col gap-7">
       <div className="flex flex-col gap-7">
-        {firstRun && <p className="text-body text-secondary -mb-3">{c.home.firstRun}</p>}
+        {newToLoro && <p className="text-body text-secondary -mb-3">{c.home.firstRun}</p>}
 
         {hero === 'demo' && firstPhrase && (
           <Hero labelledBy="demo-heading">

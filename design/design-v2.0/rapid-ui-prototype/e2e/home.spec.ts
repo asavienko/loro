@@ -94,3 +94,15 @@ test.describe('Home has one hero, and one terracotta Play (V-05)', () => {
     });
   });
 });
+
+test.describe('a learner switching to a course they have not started (U-15)', () => {
+  test.use({ seed: { targetLang: 'bg-BG', log: sampleHistory(Date.now()) } });
+  test('is not offered the demo or the first-run line again', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.getByRole('heading', { name: 'Start here' })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Play one phrase/ })).toHaveCount(0);
+    await expect(page.getByText('Listen to a phrase, then say it before you hear it again.')).toHaveCount(0);
+    // Its first set is the hero instead.
+    expect(await filled(page)).toEqual(['Play 4 phrases']);
+  });
+});
