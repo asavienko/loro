@@ -91,6 +91,7 @@ export function makeBg(n: Plural): Copy {
       sets,
       phrases,
       noPhrases: (q) => `Няма фрази за „${q}“.`,
+      noPhrasesFiltered: 'Няма фрази с тези филтри.',
       noSets: 'Няма подходящи набори.',
       addAsOwn: (q) => `Добавете „${q}“ като своя фраза`,
       removeFilter: (label) => `Махни филтъра: ${label}`,
