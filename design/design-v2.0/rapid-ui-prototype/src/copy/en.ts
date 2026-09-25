@@ -224,6 +224,17 @@ export function makeEn(n: Plural) {
         repeat: 'At the end: play the queue again',
         continue: 'At the end: continue with the next phrases',
       } satisfies Record<PlayMode, string>,
+      /** Visible words under the transport's two setting buttons. */
+      captions: { reps: 'reps', again: 'Again', continue: 'Continue', auto: 'Auto' },
+      repeatsToast: {
+        auto: 'Each phrase plays 3× while new, 1× once it sticks',
+        one: 'Each phrase plays once',
+        three: 'Each phrase plays 3 times',
+      },
+      playModeToast: {
+        repeat: 'At the end, the queue starts again',
+        continue: 'At the end, new phrases follow',
+      } satisfies Record<PlayMode, string>,
       speed: 'Speed',
       speedIs: (speed: number) => `Speed: ${speed}×`,
       keys: 'Keys: Space play or pause · ← → previous, next · 1 2 3 rate',
