@@ -250,8 +250,8 @@ export function continuation(
   for (let step = 1; step <= sets.length; step++) {
     const set = sets[(Math.max(at, -1) + step + sets.length) % sets.length];
     if (set.id === player.setId) continue;
-    // Not what this queue just played (a review or mixed queue has no set to skip).
-    const ids = playableIds(learner, set.phraseIds, now).filter((id) => !player.order.includes(id));
+    // Never the phrase playing now straight again (a review or mixed queue has no set to skip).
+    const ids = playableIds(learner, set.phraseIds, now).filter((id) => id !== currentPhraseId(player));
     if (ids.length > 0) return { phraseIds: ids, setId: set.id };
   }
   const due = reviewQueue(learner, now).filter((id) => id !== currentPhraseId(player));
