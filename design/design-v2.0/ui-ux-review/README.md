@@ -800,8 +800,8 @@ Playwright: Chromium 184, WebKit 177, Firefox 180; 111 unit tests.
 tabs, so another tab's save no longer erases one, an undo or change holds in a tab opened meanwhile,
 and two tabs rating one phrase make one review (tests in `e2e/tabs.spec.ts`). Back and Forward were
 also reworked after a review (`e2e/back.spec.ts`). Left open, for decision:
-- After an app update, a tab still running the old code can write over data saved by the new code
-  until it reloads. Options: the old tab reloads when it sees a newer save, or refuses to save.
+- ~~After an app update, a tab still running the old code can write over data saved by the new
+  code.~~ Fixed: the old tab stops saving over a newer save and offers Reload.
 - Settings, sort orders and the queue follow whichever tab saved last (they're per tab, not merged).
 - Across devices, a device whose clock runs ahead wins last-writer-wins until real time catches up;
   the server would need to stamp times (plan 60 / sync protocol).

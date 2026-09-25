@@ -118,7 +118,9 @@ function useSaveWarnings() {
     const onFail = (event: Event) => {
       if (warned.current) return;
       warned.current = true;
-      toast((event as CustomEvent<SaveResult>).detail === 'full' ? c.toast.storageFull : c.toast.storageUnavailable);
+      const result = (event as CustomEvent<SaveResult>).detail;
+      if (result === 'outdated') toast(c.toast.outdated, { action: { label: c.toast.reload, run: () => window.location.reload() } });
+      else toast(result === 'full' ? c.toast.storageFull : c.toast.storageUnavailable);
     };
     window.addEventListener(SAVE_FAILED_EVENT, onFail);
     return () => window.removeEventListener(SAVE_FAILED_EVENT, onFail);
