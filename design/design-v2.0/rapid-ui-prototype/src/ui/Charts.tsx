@@ -24,7 +24,7 @@ export function RecallChart({ buckets }: { buckets: RecallBucket[] }) {
                 <span className="sr-only">{c.library.bucketCount(label, b.count)}</span>
                 <span aria-hidden="true" className="text-secondary tabular-nums">{label}</span>
                 <span aria-hidden="true" className="h-3 rounded-full bg-surface-container-high overflow-hidden">
-                  <span data-bar data-count={b.count} data-max={max} className="block h-full rounded-full bg-primary-container" style={{ width: `${(b.count / max) * 100}%` }} />
+                  <span data-bar data-count={b.count} data-max={max} className="block h-full rounded-full bg-tertiary-container" style={{ width: `${(b.count / max) * 100}%` }} />
                 </span>
                 <span aria-hidden="true" className="text-right font-bold tabular-nums">{b.count}</span>
               </li>

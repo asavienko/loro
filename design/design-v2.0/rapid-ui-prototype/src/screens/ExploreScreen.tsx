@@ -200,11 +200,7 @@ export function ExploreScreen({ filters }: { filters: ExploreFilters }) {
             <ul className="-mx-2">
               {phrases.map((p) => (
                 <li key={p.id}>
-                  <PhraseResult
-                    phrase={p}
-                    words={words}
-                    detail={[progressLabel(c, phraseProgress(learner, p.id, now), now), p.own && c.phrase.yoursShort].filter(Boolean).join(' · ')}
-                  />
+                  <PhraseResult phrase={p} words={words} detail={progressLabel(c, phraseProgress(learner, p.id, now), now)} />
                 </li>
               ))}
             </ul>
@@ -326,6 +322,8 @@ function PhraseResult({ phrase, words, detail }: { phrase: Phrase; words: string
   const { state } = useStore();
   const prompt = promptOf(phrase, state.learner.profile.nativeLang);
   if (!words.length) return <PhraseRow phrase={phrase} detail={detail} onPlay={() => nav.playPhraseInSet(phrase.id)} onMore={() => nav.showDetails(phrase.id)} />;
+  // As PhraseRow: your own phrase says so after its status.
+  const status = phrase.own ? `${detail} · ${c.phrase.yoursShort}` : detail;
   return (
     <div className="flex items-center gap-1">
       <button
@@ -345,7 +343,7 @@ function PhraseResult({ phrase, words, detail }: { phrase: Phrase; words: string
             </span>
             {' · '}
           </span>
-          <span className="min-w-0">{detail}</span>
+          <span className="min-w-0">{status}</span>
         </span>
       </button>
       <button type="button" onClick={() => nav.showDetails(phrase.id)} aria-label={c.phrase.details(phrase.target)} className={`${btnIcon} text-secondary`}>
