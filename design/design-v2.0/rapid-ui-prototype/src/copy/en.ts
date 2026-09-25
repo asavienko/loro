@@ -93,7 +93,7 @@ export function makeEn(n: Plural) {
         `${n(phrases, { one: `${phrases} phrase`, other: `${phrases} phrases` })} · +${n(points, { one: `${points} pt`, other: `${points} pts` })}`,
     },
     explore: {
-      search: 'Search phrases, notes and topics',
+      search: 'Phrases, notes, topics',
       topics: 'Topics',
       levels: 'Levels',
       tags: 'Tags',

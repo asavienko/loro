@@ -85,7 +85,7 @@ export function makeBg(n: Plural): Copy {
       run: (p, points) => `${phrases(p)} · +${points} т.`,
     },
     explore: {
-      search: 'Търсене във фрази, бележки и теми',
+      search: 'Фрази, бележки, теми',
       topics: 'Теми',
       levels: 'Нива',
       tags: 'Етикети',
