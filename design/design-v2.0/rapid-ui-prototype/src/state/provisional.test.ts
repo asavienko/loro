@@ -6,7 +6,7 @@ import fc from 'fast-check';
 import { coursePhrases, courseSets, keyOf } from './catalog';
 import { initialState } from './initial';
 import { AppEvent, transition } from './machine';
-import { RATING_WINDOW_MS } from './memory';
+import { applyEntry, emptyMemory, RATING_WINDOW_MS } from './memory';
 import {
   displayLearner,
   displayMemory,
@@ -214,6 +214,21 @@ const scenario = fc.array(fc.integer({ min: 1000, max: 4 * MINUTE }), { minLengt
 });
 
 describe('the provisional view, for any sequence', () => {
+  it('a rating changed in its window shows its new grade, not the one the view last derived', () => {
+    // The entry keeps its id when the grade changes (so it commits as the same entry); the
+    // replay cache must still see the new grade. Found by the property below (seed 1762549222).
+    const t = T0 + 30 * DAY;
+    const id = cafe()[0];
+    let s = run(load(fresh(), t), { type: 'RATE', grade: 'easy', now: t });
+    displayMemory(s, id); // derived once with Easy
+    s = run(s, { type: 'RATE', grade: 'missed', now: t + MINUTE });
+    const view = displayLearner(s);
+    const key = keyOf(view, id);
+    const entries = view.log.filter((e) => e.kind !== 'carryover' && e.key === key);
+    assert.deepEqual(entries.map((e) => (e.kind === 'rated' ? e.grade : e.kind)), ['missed']);
+    assert.deepEqual(displayMemory(s, id), entries.reduce(applyEntry, emptyMemory()));
+  });
+
   it('commits without moving a figure, and an undo restores the figures from before the rating', () => {
     fc.assert(
       fc.property(scenario, fc.boolean(), fc.integer({ min: 0, max: 2 * RATING_WINDOW_MS }), (events, reviewed, commitAfter) => {

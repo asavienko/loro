@@ -177,8 +177,17 @@ export interface Derived {
 const cache = new WeakMap<LogEntry[], Derived>();
 let lastByKey = new Map<string, { entries: LogEntry[]; memory: PhraseMemory }>();
 
+// Not the id alone: a rating changed in its window keeps its id (so its commit lands as the
+// same entry), and the view then carries that id with another grade.
+function sameEntry(a: LogEntry, b: LogEntry): boolean {
+  if (a === b) return true;
+  if (a.id !== b.id || a.at !== b.at || a.kind !== b.kind) return false;
+  if (a.kind === 'carryover' || b.kind === 'carryover') return true;
+  return a.day === b.day && (a.kind !== 'rated' || (b.kind === 'rated' && a.grade === b.grade));
+}
+
 function sameEntries(a: LogEntry[], b: LogEntry[]): boolean {
-  return a.length === b.length && a.every((entry, i) => entry.id === b[i].id);
+  return a.length === b.length && a.every((entry, i) => sameEntry(entry, b[i]));
 }
 
 /** Memory, points and per-entry awards, derived from a log sorted by `compareEntries`. */
