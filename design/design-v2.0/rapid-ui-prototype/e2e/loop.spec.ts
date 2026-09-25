@@ -73,6 +73,8 @@ test.describe('the loop', () => {
     await page.getByRole('button', { name: 'Play 5 phrases' }).click();
     await page.getByRole('button', { name: /^Now playing:/ }).click();
     const player = page.getByRole('dialog', { name: 'Now playing' });
+    // Paused, so the phrase can't reach its rating hold (where a rating moves on) on a slow run.
+    await player.getByRole('button', { name: 'Pause', exact: true }).click();
     await player.getByRole('button', { name: /^Hard/ }).click();
     await expect(player.getByRole('button', { name: /^Hard/ })).toHaveAttribute('aria-pressed', 'true');
     await player.getByRole('button', { name: /^Easy/ }).click();
