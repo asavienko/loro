@@ -311,4 +311,24 @@ test.describe('what a screen reader hears', () => {
     await page.clock.runFor(3 * 60_000);
     await expect(status).toHaveText('');
   });
+
+  test('a rating given while the grades wait is announced then, not when the phrase returns', async ({ page }) => {
+    await page.clock.install();
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Play 5 phrases' }).click();
+    await page.getByRole('button', { name: /^Now playing:/ }).click();
+    const player = page.getByRole('dialog', { name: 'Now playing' });
+    const waiting = player.getByText('Rate it, or wait to go on').first();
+    for (let t = 0; t < 120_000 && !(await waiting.isVisible()); t += 250) await page.clock.runFor(250);
+    await expect(waiting).toBeVisible();
+    await page.keyboard.press('1');
+    const status = page.locator('div[role="status"]');
+    await expect(status).toHaveText(/^Rated Missed/);
+    await page.evaluate(() => document.querySelector('div[role="status"]')!.replaceChildren());
+    // The missed phrase comes back a few phrases later, well inside its five-minute window.
+    for (let t = 0; t < 4 * 60_000; t += 1000) {
+      await page.clock.runFor(1000);
+      expect(await status.textContent()).not.toMatch(/^Rated/);
+    }
+  });
 });
