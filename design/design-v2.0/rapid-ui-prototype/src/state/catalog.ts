@@ -41,12 +41,6 @@ export function findPhrase(learner: LearnerState, id: string | null | undefined)
   return own && !own.deleted ? ownPhraseToPhrase(own) : undefined;
 }
 
-export function getPhrase(learner: LearnerState, id: string): Phrase {
-  const phrase = findPhrase(learner, id);
-  if (!phrase) throw new Error(`Unknown phrase: ${id}`);
-  return phrase;
-}
-
 /** The prompt in the learner's language, falling back to whatever the phrase has. */
 export function promptOf(phrase: Phrase, nativeLang: LanguageCode): { lang: LanguageCode; text: string } {
   const own = phrase.translations[nativeLang];

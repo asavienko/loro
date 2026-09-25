@@ -129,12 +129,6 @@ export function learnedIds(learner: LearnerState, phraseIds: string[]): string[]
   return phraseIds.filter((id) => isLearned(memoryOf(learner, id)));
 }
 
-export function idsWithStatus(learner: LearnerState, status: PhraseStatus, now: number): string[] {
-  return coursePhrases(learner)
-    .filter((p) => phraseProgress(learner, p.id, now).status === status)
-    .map((p) => p.id);
-}
-
 /**
  * Started (heard or rated, as Started counts) and not learned yet, due ones included:
  * every started phrase is here or under Learned, and a phrase heard but never rated
@@ -203,10 +197,6 @@ export function setProgress(learner: LearnerState, phraseIds: string[], now: num
     due: memories.filter((m) => isDue(m, now)).length,
     status: learned === phraseIds.length && phraseIds.length > 0 ? 'learned' : started > 0 ? 'in-progress' : 'new',
   };
-}
-
-export function contentSetProgress(learner: LearnerState, set: PhraseSet, now: number): SetProgress {
-  return setProgress(learner, set.phraseIds, now);
 }
 
 /** Sets most recently listened to, newest first. */

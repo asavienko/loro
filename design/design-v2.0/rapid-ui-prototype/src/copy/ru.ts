@@ -187,7 +187,6 @@ export function makeRu(n: Plural): Copy {
       hidden: (language) => `Текст (${language}) скрыт, пока вы его не услышите`,
       steps: 'Шаги',
       yourTurn: 'Ваша очередь',
-      rateStep: 'Оценка',
       instruction: {
         native: (language) => `Слушайте: ${language}`,
         pause: (language) => `Ваша очередь — скажите это (${language})`,
@@ -197,10 +196,8 @@ export function makeRu(n: Plural): Copy {
       paused: 'Пауза',
       repetition: (r, total) => `Повтор ${r} из ${total}`,
       howDidItGo: 'Как получилось сказать?',
-      gradeButton: (grade, interval) => `${grade} · ${interval}`,
       rated: (grade, when) => `Оценка «${grade}» — снова ${when}`,
       changeFor: (time) => `Можно изменить или отменить ещё ${time}`,
-      counts: 'Оценка засчитается, когда окно закроется.',
       previous: 'Предыдущая фраза',
       next: 'Следующая фраза',
       repeats: {
@@ -221,7 +218,6 @@ export function makeRu(n: Plural): Copy {
       silent: 'Речь остановилась — нажмите «Играть»',
       voice: (name) => `Голос: ${name}`,
       changeVoice: (name) => `Голос: ${name}. Сменить голос`,
-      hide: 'Нажмите, чтобы показать',
     },
     toast: {
       updateReady: 'Готова новая версия Loro',

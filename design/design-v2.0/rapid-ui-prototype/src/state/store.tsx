@@ -8,7 +8,6 @@ import { AppEvent, transition } from './machine';
 import { mergeLearner } from './merge';
 import { flushState, loadState, parseState, saveState } from './persistence';
 import { onOtherTabSave, readRaw, Stored } from './storage';
-import { currentPhraseId } from './selectors';
 import type { AppState, AudioFailure, Grade, LearnerState, Prefs, Profile } from './types';
 
 const newSeed = () => Math.floor(Math.random() * 2 ** 32);
@@ -139,10 +138,6 @@ export function useStore(): StoreValue {
   const value = useContext(StoreContext);
   if (!value) throw new Error('useStore must be used inside StoreProvider');
   return value;
-}
-
-export function useCurrentPhraseId(): string | null {
-  return currentPhraseId(useStore().state.player);
 }
 
 /** UI copy in the learner's native language. */

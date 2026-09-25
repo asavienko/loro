@@ -187,7 +187,6 @@ export function makeBg(n: Plural): Copy {
       hidden: (language) => `Текстът на ${language} е скрит, докато не го чуете`,
       steps: 'Стъпки',
       yourTurn: 'Ваш ред',
-      rateStep: 'Оценка',
       instruction: {
         native: (language) => `Слушайте на ${language}`,
         pause: (language) => `Ваш ред — кажете го на ${language}`,
@@ -197,10 +196,8 @@ export function makeBg(n: Plural): Copy {
       paused: 'Пауза',
       repetition: (r, total) => `Повторение ${r} от ${total}`,
       howDidItGo: 'Как се получи?',
-      gradeButton: (grade, interval) => `${grade} · ${interval}`,
       rated: (grade, when) => `Оценка „${grade}“ — отново ${when}`,
       changeFor: (time) => `Може да я смените или отмените още ${time}`,
-      counts: 'Оценката се зачита, когато времето изтече.',
       previous: 'Предишна фраза',
       next: 'Следваща фраза',
       repeats: {
@@ -221,7 +218,6 @@ export function makeBg(n: Plural): Copy {
       silent: 'Речта спря — натиснете „Пусни“',
       voice: (name) => `Глас: ${name}`,
       changeVoice: (name) => `Глас: ${name}. Смени гласа`,
-      hide: 'Докоснете, за да видите',
     },
     toast: {
       updateReady: 'Има нова версия на Loro',
