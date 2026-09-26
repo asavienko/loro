@@ -82,6 +82,8 @@ test('covers show their whole icon, from the 44 px mini-player to the grid', asy
 
 test('covers in one topic share a colour but not a shape', async ({ page }) => {
   await page.goto('/#/explore?topic=eating-out');
+  // The covers are read once the topic's sets are drawn, not as the app starts.
+  await expect(page.getByRole('heading', { name: /^Eating out · \d+ sets$/ })).toBeVisible();
   const shapes = await page.evaluate(() =>
     [...document.querySelectorAll<HTMLElement>('main li span.block.overflow-hidden[aria-hidden="true"]')].map((cover) => {
       const shape = getComputedStyle(cover.firstElementChild as HTMLElement);
