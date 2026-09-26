@@ -52,6 +52,8 @@ for (const [w, h] of [[390, 844], [844, 390], [1024, 768], [1440, 900]] as const
   test(`scroll padding matches the fixed bars at ${w}×${h}`, async ({ page }) => {
     await page.setViewportSize({ width: w, height: h });
     await page.goto('/');
+    // Measured once the app has drawn its bars, not as it starts.
+    await expect(page.getByRole('navigation', { name: 'Main' })).toBeVisible();
     const px = (value: string) => parseFloat(value);
     // Within 2 px: the bars' hairline borders.
     const near = (a: number, b: number) => expect(Math.abs(a - b), `${a} vs ${b}`).toBeLessThanOrEqual(2);
