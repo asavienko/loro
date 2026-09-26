@@ -162,6 +162,19 @@ test.describe('onboarding on a small phone at 125% text', () => {
     const start = (await page.getByRole('button', { name: 'Start with one phrase' }).boundingBox())!;
     expect(start.y + start.height).toBeLessThanOrEqual(568);
   });
+
+  test('an icon font still loading never widens a step past the screen', async ({ page }) => {
+    // Until the icon font arrives an icon's ligature name ("volume_up") lays out as text. Blocked
+    // here, so that moment lasts; WebKit showed it as a 342 px page on the voices step.
+    await page.route('**/fonts/material-symbols.woff2', (route) => route.abort());
+    await page.setViewportSize({ width: 320, height: 568 });
+    await page.goto('/');
+    await page.addStyleTag({ content: 'html { font-size: 200% }' });
+    for (let step = 1; step <= 5; step++) {
+      expect(await page.evaluate(() => document.documentElement.scrollWidth), `step ${step}`).toBeLessThanOrEqual(320);
+      if (step < 5) await page.getByRole('button', { name: 'Continue' }).click();
+    }
+  });
 });
 
 test.describe('onboarding at 200% text (Q-05)', () => {

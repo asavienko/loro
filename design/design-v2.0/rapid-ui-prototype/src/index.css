@@ -269,6 +269,10 @@
     letter-spacing: normal;
     text-transform: none;
     display: inline-block;
+    /* Until the icon font arrives its ligature name ("volume_up") lays out as text; capped at
+       one em it can't widen a button past the screen in the meantime. */
+    max-width: 1em;
+    overflow-x: clip;
     white-space: nowrap;
     word-wrap: normal;
     direction: ltr;
