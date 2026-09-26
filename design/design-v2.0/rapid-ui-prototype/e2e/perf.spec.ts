@@ -85,12 +85,16 @@ test.describe('a long session', () => {
       const { metrics } = await cdp.send('Performance.getMetrics');
       return { elements, listeners: metrics.find((m) => m.name === 'JSEventListeners')!.value };
     };
-    for (let t = 0; t < 60_000; t += 1000) await page.clock.runFor(1000);
+    // The first sample waits for the first pass message: it stays up from then on (with its
+    // choices), so both samples hold it and only growth shows.
+    const passed = () => page.evaluate(() => /Queue played through/.test(document.body.textContent ?? ''));
+    for (let t = 0; t < 10 * 60_000 && !(await passed()); t += 1000) await page.clock.runFor(1000);
+    expect(await passed(), 'a pass within ten minutes').toBe(true);
     const early = await size();
     for (let t = 0; t < 29 * 60_000; t += 1000) await page.clock.runFor(1000);
     const late = await size();
-    // Not growth: a different phrase in the player (±15) and, late, the pass toast with its two
-    // choices (8). The pile-up this guards against added ~130.
+    // Not growth: a different phrase in the player (±15). The pile-up this guards against added
+    // ~130 elements; measured over 150 minutes, listeners stay within ±5.
     expect(late.elements - early.elements, 'elements added in 29 minutes').toBeLessThan(30);
     expect(late.listeners - early.listeners, 'listeners added in 29 minutes').toBeLessThan(10);
   });
