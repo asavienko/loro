@@ -1,5 +1,5 @@
 // A phrase row's status names its number ("Learned · recall 97%", "Recall 82% · back tomorrow",
-// U-11); for an hour after a rating it says the rating instead ("Rated Missed — back in 9 minutes",
+// U-11); for an hour after a rating it says the rating instead ("Rated Missed — back in 9 min",
 // Q-03), since recall is 100% then. The status is never cut off: on a 320 px phone and at 200% text
 // only the prompt before it truncates, and the status takes a line of its own when the two don't fit.
 import { Page } from '@playwright/test';
@@ -29,7 +29,7 @@ function history(native: string, now: number) {
 }
 
 const FORMS = {
-  'en-GB': { learned: /^Learned · recall \d+%$/, learning: /^Recall \d+% · back /, rated: /^Rated Missed — back in \d+ minutes$/ },
+  'en-GB': { learned: /^Learned · recall \d+%$/, learning: /^Recall \d+% · back /, rated: /^Rated Missed — back in \d+ min$/ },
   'bg-BG': { learned: /^Научена · памет \d+%$/, learning: /^Памет \d+% · отново /, rated: /^Оценка „Не се сетих“ — отново след \d+ мин/ },
   'ru-RU': { learned: /^Выучена · память \d+%$/, learning: /^Память \d+% · снова /, rated: /^Оценка «Не помню» — снова через \d+ мин/ },
 } as const;
@@ -76,7 +76,7 @@ test('a rating still in its undo window reads the same on the row as in the play
   const player = page.getByRole('dialog', { name: 'Now playing' });
   await player.getByRole('button', { name: 'Pause', exact: true }).click();
   await player.getByRole('button', { name: /^Hard/ }).click();
-  const line = player.getByText(/^Rated Hard — back in \d+ minutes/);
+  const line = player.getByText(/^Rated Hard — back in \d+ min/);
   await expect(line).toBeVisible();
   const said = (await line.textContent())!.replace(/ · .*$/, '');
   await page.getByRole('button', { name: 'Close player' }).click();
