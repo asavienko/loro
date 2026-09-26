@@ -162,19 +162,6 @@ test.describe('onboarding on a small phone at 125% text', () => {
     const start = (await page.getByRole('button', { name: 'Start with one phrase' }).boundingBox())!;
     expect(start.y + start.height).toBeLessThanOrEqual(568);
   });
-
-  test('an icon font still loading never widens a step past the screen', async ({ page }) => {
-    // Until the icon font arrives an icon's ligature name ("volume_up") lays out as text. Blocked
-    // here, so that moment lasts; WebKit showed it as a 342 px page on the voices step.
-    await page.route('**/fonts/material-symbols.woff2', (route) => route.abort());
-    await page.setViewportSize({ width: 320, height: 568 });
-    await page.goto('/');
-    await page.addStyleTag({ content: 'html { font-size: 200% }' });
-    for (let step = 1; step <= 5; step++) {
-      expect(await page.evaluate(() => document.documentElement.scrollWidth), `step ${step}`).toBeLessThanOrEqual(320);
-      if (step < 5) await page.getByRole('button', { name: 'Continue' }).click();
-    }
-  });
 });
 
 test.describe('onboarding at 200% text (Q-05)', () => {
@@ -209,6 +196,40 @@ test.describe('onboarding at 200% text (Q-05)', () => {
     }
     const start = (await page.getByRole('button', { name: 'Start with one phrase' }).boundingBox())!;
     expect(start.y + start.height).toBeLessThanOrEqual(568);
+  });
+
+  test('an icon font still loading never widens a step past the screen', async ({ page }) => {
+    // Until the icon font arrives an icon's ligature name ("volume_up") lays out as text; WebKit
+    // showed it as a 342 px page on the voices step. The font is held back until every step has
+    // been checked, so that moment lasts; held, not failed, since Firefox reports a failed font
+    // download as a page error.
+    let release!: () => void;
+    const held = new Promise<void>((resolve) => (release = resolve));
+    await page.route('**/fonts/material-symbols.woff2', async (route) => {
+      await held;
+      await route.continue();
+    });
+    const iconFont = () =>
+      page.evaluate(() => [...document.fonts].find((f) => f.family.replace(/"/g, '') === 'Material Symbols Outlined')?.status);
+    await page.setViewportSize({ width: 320, height: 568 });
+    // Chromium and WebKit hold the load event for a preloaded font in flight.
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await page.addStyleTag({ content: 'html { font-size: 200% }' });
+    await expect(page.getByRole('button', { name: 'Continue' })).toBeVisible();
+    try {
+      for (let step = 1; step <= 5; step++) {
+        await expect(page.getByText(`Step ${step} of 5`)).toBeVisible();
+        expect(await iconFont(), `step ${step}: the icons are still their names`).not.toBe('loaded');
+        expect(await page.evaluate(() => document.documentElement.scrollWidth), `step ${step}`).toBeLessThanOrEqual(320);
+        // Enter, not a tap: a tap waits for a painted frame, and WebKit paints none while the
+        // page is still loading.
+        if (step < 5) await page.getByRole('button', { name: 'Continue' }).press('Enter');
+      }
+    } finally {
+      release();
+    }
+    // Let through, the font arrives without an error.
+    await expect.poll(iconFont).toBe('loaded');
   });
 });
 
