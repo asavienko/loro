@@ -821,3 +821,71 @@ plain search. Open, for decision:
   repetitions (the first review is capped by how often the phrase was heard) — explain or freeze?
 - Set covers crop their drawn icon at the corner; on desktop the player cover shows a sliver.
 - At 320×568 the player's speed control sits at the very bottom with no hint that the player scrolls.
+
+---
+
+# Round 4 — a team pass, 2026-09-25/26
+
+**Goal:** make the prototype visually polished and ready to use. A team of agents did it in
+stages: three audits (visual design, UX flows, the core loop); a design-system foundation; four
+parallel streams (the player and loop, the provisional schedule, Home and the app shell, and
+Explore, Library, set pages and sheets); an independent code review; bug fixes; a fresh-eyes QA
+walkthrough; and two polish passes. Every change has a test, and each fix's test was checked to
+fail without it.
+
+## What changed
+
+| Area | Now |
+| --- | --- |
+| Visual system | "Paper, ink and one terracotta": a terracotta fill only on play and the primary action, and a selected chip or tab in ink. Flat rows, tonal cards, one hero per screen, one type scale (serif for content, sans for the interface), warm shadows, and fields with a visible edge. Shared `Chip`, `StatTile`, `SetRow`, button and field styles replace about two dozen near-duplicates |
+| Covers | The whole icon at every size, on a per-set shape, so sets in one topic differ; no more cropped fragments or a desktop sliver |
+| Home | One hero: the demo, then the review, then Continue, then **Next set** once every phrase of the last set has been started and none is due. The greeting is the header's title. Review, Start here and Continue open the full player, where the grades are |
+| Player | A scrolling stage over a fixed dock, so Pause and the grades stay on screen at 320 px and at 200% text. "Your turn — say it out loud in Spanish" is the headline and fills over the real pause; a coach line for the first phrases. The prompt is the headline while the target hides as a dashed slot that wraps like the phrase. The rating hold is framed, with a bar counting down; a rating given in the hold shows "Rated Easy — back in 2 days · Undo". "Did you remember it?" with "in 10 min" captions. The repetitions and play-mode buttons have visible captions and say what changed. The session summary moved into the queue |
+| End of a queue | A review, the demo and Library lists play once and end on a panel ("Review done", "That's the loop", "All played", or "Played through" when nothing was rated), with the next step. Sets keep play again / continue, and the pass message offers the next set |
+| Numbers | A rating in its undo window counts at once in every status, due count and next review (points wait), so a finished review stops reading as due. For an hour after a rating a row says "Rated Missed — back in 9 min", not "Recall 100%". The Easy preview no longer grows during a play (the first-review cap counts local days, stamped on each entry). Durations include the rating hold |
+| Explore | Sets on the first screen. Topics sit in one row; levels and tags share one chip line. A topic's results come first, under "Getting around · 2 sets" |
+| Library | List-first: views, count and Play all, the list, then Progress. A "+" adds your phrase or a set, and a phrase added from Library shows under Mine |
+| Set page | The cover and title always side by side, on a full-width topic wash. "Plays in: Set order ▾" is also the sort. Play says Resume only for an untouched paused queue of this set. Your own set gets "Add phrases" with search and Add/Added toggles |
+| Sheets and onboarding | Phrase details lead with Play and a compact grid, so the notes start on screen. Your own phrase is titled "Your phrase". Onboarding says to speak out loud, shows its progress, marks the choice in ink, and pins only its action |
+| Settings | "I'm learning" first. Listening → "Time to say it: Standard / Longer". The player's voice line opens the voice pickers |
+| Wide and landscape | A navigation rail and two-column Home and Library from `lg`; reading measures; a slimmer bar in phone landscape |
+| Recall rule | The target stays hidden until heard: with no voice (plus a deliberate "Show the Spanish text"), in Up next, on any set page, and after Next on a last phrase |
+
+## Decisions taken in this round (the owner may reverse any)
+
+1. Grades stay only in the full player (round 1). So Home's study buttons open the player; the
+   mini-player says "Tap to rate" during the hold.
+2. A review, the demo and Library lists end after one pass; sets keep the mode button.
+3. Durations include the 4 s hold of each unrated phrase; past the total the player shows the
+   elapsed time alone.
+4. "Missed · in 10 min" on the grades; "Rated Missed — back in 10 min" once rated.
+5. The Easy preview is frozen by the rule (calendar days), not by the display.
+6. A longer pause is an explicit setting; the pause doesn't grow on its own after Missed.
+7. No dark theme in the prototype: plan 57 owns dark mode.
+8. At 320 px and large text, speed becomes one cycling chip in the action row (still the only
+   speed control).
+9. Home moves on to the next set once the current one has been through and nothing is due.
+
+The app-facing ones are also recorded in
+[`docs/design/v2-prototype-decisions.md`](../../../docs/design/v2-prototype-decisions.md).
+
+## Bugs found by the review and QA, all fixed with tests
+
+- Next on the last phrase of a one-pass queue revealed the target unheard, and the set page
+  showed the Spanish of a phrase playing from another queue (both recall-rule breaks).
+- Resume was offered after the queue had been edited.
+- The first-review cap moved with the device's time zone.
+- The grade keys still rated on the end panel.
+- "Phrase added → Play" could play another phrase.
+- The last rating of a review wasn't announced.
+- The replay cache kept a changed rating's first grade (recall read 100% instead of 99%).
+
+## Still open
+
+- History still calls review runs "Mixed queue": naming them needs a source on heard entries.
+- All new Bulgarian and Russian copy needs a native reviewer.
+- A real screen-reader pass (VoiceOver, TalkBack), and touch on iOS Safari and Firefox for Android.
+- At 200% text on a 320 px phone, a one-word tab title can still end in "…"
+  ("Библиотека"): fixing it means reworking the header.
+- The ended player still shows the compact speed chip at 320 px (harmless).
+

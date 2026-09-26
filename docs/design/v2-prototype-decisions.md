@@ -2,7 +2,7 @@
 
 The v2.0 rapid UI prototype (`design/design-v2.0/rapid-ui-prototype`) explores a Spotify-shaped,
 listening-first Loro. It is a **proposal**, not an authored artifact: the v1.1 design package still
-owns screens, navigation and visuals. This page records what the prototype decided across three
+owns screens, navigation and visuals. This page records what the prototype decided across its
 review rounds (`design/design-v2.0/ui-ux-review/`), so a decision reaches the app deliberately, and
 nothing reaches it by accident.
 
@@ -25,6 +25,11 @@ Requirement IDs touched: `P3-01` (continuous playback), `P2-24` (difficulty driv
 | Repetitions | Auto: 3 while new or shaky, 1 under review; override 1 or 3 | Aligns with `P2-24` |
 | Covers | Drawn from content (topic colour + icon), never photos with invented text | Candidate |
 | Own content | Learners add phrases and make sets; both sync | Proposal |
+| End of a queue | A review, the demo and a Library list play one pass in either mode and end on a panel ("Review done", "That's the loop", "All played"); a set keeps "play again" or "continue" | Proposal |
+| Where rating happens | Grades only in the full player. Home's Review, Start here and Continue open it; during the hold the mini-player says "Tap to rate"; a rating given in the hold is confirmed by a message with Undo | Proposal |
+| Time to say it | The silence is 1.3× the measured phrase plus 0.6 s (Standard) or 2× plus 1 s, 2.5–12 s (Longer, a setting), and the "Your turn" step fills as it runs. Durations include it and the 4 s hold of each unrated phrase | Proposal; timing stays measured, never estimated |
+| Home | One hero at a time: the demo, then the review, then Continue, then the next set once every phrase of the last one has been started and none is due | Proposal |
+| Visual system | Terracotta fill only for play and the primary action; a selected state is ink; flat rows, tonal cards, one hero per screen; covers drawn from topic colour, a per-set shape and the whole icon | Proposal; the v1.1 design package owns visuals |
 
 ## Engineering the app can reuse
 
