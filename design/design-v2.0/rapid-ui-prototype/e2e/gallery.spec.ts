@@ -46,8 +46,9 @@ test('tablet and landscape', async ({ page }) => {
   await page.goto('/');
   await page.waitForTimeout(500);
   await shot(page, 'tablet-home');
+  // Home's first Play opens the player itself (U-01b).
   await page.getByRole('button', { name: /Play/ }).first().click();
-  await page.getByRole('button', { name: /^Now playing:/ }).click();
+  await page.getByRole('dialog', { name: 'Now playing' }).waitFor();
   await page.waitForTimeout(700);
   await shot(page, 'tablet-player');
   await page.setViewportSize({ width: 844, height: 390 });
