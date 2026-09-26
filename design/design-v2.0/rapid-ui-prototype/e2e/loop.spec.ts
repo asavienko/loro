@@ -721,8 +721,9 @@ test.describe('what a screen reader hears', () => {
     await page.getByRole('button', { name: 'Pause', exact: true }).first().click();
     const player = page.getByRole('dialog', { name: 'Now playing' });
     await player.getByRole('button', { name: /^Hard/ }).click();
-    // A minute and a half on: counted from the rating, the caption would still say 15.
-    await page.clock.runFor(90_000);
+    // A minute on: counted from the rating, the caption would still say 15. (Not 90 s: 13.5 min
+    // sits on the rounding boundary, and a millisecond between tap and clock rounds it to 13.)
+    await page.clock.runFor(60_000);
     const caption = (await player.getByRole('button', { name: /^Hard/, pressed: true }).locator('span').last().textContent())!;
     expect(caption).toBe('in 14 min');
     await expect(player.getByText(/^Rated Hard/)).toHaveText(new RegExp(`^Rated Hard — back ${caption}( ·|$)`));
