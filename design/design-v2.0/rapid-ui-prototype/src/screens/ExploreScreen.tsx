@@ -375,7 +375,9 @@ function useFittingPlaceholder(field: RefObject<HTMLInputElement | null>, whole:
     const measure = () => {
       const style = getComputedStyle(input);
       context.font = style.font;
-      const room = input.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+      // The content box, from the border box: an input's clientWidth already leaves out its
+      // padding in Firefox (not in Chromium or WebKit), which cut the room by the padding twice.
+      const room = input.offsetWidth - [style.borderLeftWidth, style.borderRightWidth, style.paddingLeft, style.paddingRight].reduce((sum, px) => sum + parseFloat(px), 0);
       setFits(context.measureText(whole).width <= room);
     };
     measure();

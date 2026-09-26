@@ -335,20 +335,34 @@ test('near the limit, a phrase field says how many characters are left', async (
 test('when the search field is too narrow for its placeholder it says one word; its name stays whole (Q-17)', async ({ page }) => {
   await page.goto('/#/explore');
   const field = page.getByRole('searchbox', { name: 'Phrases, notes, topics' });
+  const textSize = (percent: number) =>
+    page.evaluate((p) => {
+      const style = document.getElementById('text-size') ?? document.head.appendChild(Object.assign(document.createElement('style'), { id: 'text-size' }));
+      style.textContent = `html { font-size: ${p}% }`;
+    }, percent);
+  // Whether `text` fits the field's content box: its border box less borders and padding (an
+  // input's clientWidth leaves out the padding in Firefox, not in Chromium or WebKit).
+  const fits = (text: string) =>
+    field.evaluate((input: HTMLInputElement, t) => {
+      const style = getComputedStyle(input);
+      const context = document.createElement('canvas').getContext('2d')!;
+      context.font = style.font;
+      const edges = [style.borderLeftWidth, style.borderRightWidth, style.paddingLeft, style.paddingRight].reduce((sum, px) => sum + parseFloat(px), 0);
+      return context.measureText(t).width <= input.getBoundingClientRect().width - edges;
+    }, text);
   await expect(field).toHaveAttribute('placeholder', 'Phrases, notes, topics');
-  await page.addStyleTag({ content: 'html { font-size: 200% }' });
+  await textSize(200);
   await expect(field).toHaveAttribute('placeholder', 'Search');
   await expect(field).toHaveAccessibleName('Phrases, notes, topics');
-  // The word shown fits the field.
-  const fits = await field.evaluate((input: HTMLInputElement) => {
-    const style = getComputedStyle(input);
-    const context = document.createElement('canvas').getContext('2d')!;
-    context.font = style.font;
-    return context.measureText(input.placeholder).width <= input.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
-  });
-  expect(fits).toBe(true);
-  // Back to the usual size, the whole placeholder again.
-  await page.evaluate(() => document.querySelectorAll('style').forEach((s) => s.textContent?.includes('200%') && s.remove()));
+  // The whole placeholder didn't fit; the word shown does.
+  expect(await fits('Phrases, notes, topics')).toBe(false);
+  expect(await fits('Search')).toBe(true);
+  // Large text that still leaves room for it (some 30 px here) gets the whole placeholder back.
+  await textSize(140);
+  await expect(field).toHaveAttribute('placeholder', 'Phrases, notes, topics');
+  expect(await fits('Phrases, notes, topics')).toBe(true);
+  // And at the usual size.
+  await textSize(100);
   await expect(field).toHaveAttribute('placeholder', 'Phrases, notes, topics');
 });
 
