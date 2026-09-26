@@ -889,3 +889,16 @@ The app-facing ones are also recorded in
   ("Библиотека"): fixing it means reworking the header.
 - The ended player still shows the compact speed chip at 320 px (harmless).
 
+## Checks
+
+- `npm run check`: ESLint, strict types, 163 unit tests (up from 123) and the build.
+- Playwright, with 0 failures:
+  - Chromium: 333 passed on the dev server, 332 against the production build.
+  - WebKit: 326 passed.
+  - Firefox: 329 passed.
+- The cross-browser pass found one real Gecko bug and fixed it: an input's `clientWidth` leaves out
+  its padding there, which made the search hint shrink too early.
+- It also fixed a WebKit-first-run sideways scroll: an icon's ligature text, shown before the icon
+  font arrives, is now capped at one em.
+- Run the suites with the display awake (`caffeinate -dimsu npx playwright test`): with a sleeping
+  display, macOS stalls headless browsers' frames, and animation-bound tests time out.
