@@ -13,6 +13,16 @@ async function run(page: Page, ms: number) {
   for (let t = 0; t < ms; t += 500) await page.clock.runFor(500);
 }
 
+/**
+ * Closes the player that Home's Play opened, once it has slid up. Its animation frames run on the
+ * installed clock, not the browser's, so a click's stability check can pass mid-slide and the tap
+ * land where Close was a moment before (seen in Firefox under load).
+ */
+async function closeOpenedPlayer(page: Page) {
+  await expect(page.getByRole('dialog', { name: 'Now playing' })).toHaveCSS('transform', 'none');
+  await page.getByRole('button', { name: 'Close player' }).click();
+}
+
 const spoken = (page: Page) => page.evaluate(() => window.__spoken.map((s) => s.text).filter((t) => t.trim()));
 
 test('a whole set plays through, holds for ratings, then starts again', async ({ page }) => {
@@ -50,7 +60,7 @@ test('continue mode moves on to the next set', async ({ page }) => {
 test('the mini-player skips and pauses', async ({ page }) => {
   await start(page);
   await page.getByRole('button', { name: 'Play 5 phrases' }).click();
-  await page.getByRole('button', { name: 'Close player' }).click(); // Home's Play opens the player
+  await closeOpenedPlayer(page); // Home's Play opens the player
   await run(page, 1_000);
   const mini = page.getByRole('button', { name: /^Now playing:/ });
   await expect(mini).toContainText('A cortado, please');
@@ -149,7 +159,7 @@ test.describe('a learner who has learned the whole course', () => {
 test('switching course mid-session says the queue was cleared', async ({ page }) => {
   await start(page);
   await page.getByRole('button', { name: /^Play \d+ phrases/ }).first().click();
-  await page.getByRole('button', { name: 'Close player' }).click(); // Home's Play opens the player
+  await closeOpenedPlayer(page); // Home's Play opens the player
   await page.getByRole('button', { name: 'Ana: settings' }).click();
   await page.getByLabel('I’m learning').selectOption('bg-BG');
   await expect(page.getByRole('status').filter({ hasText: 'Now learning Bulgarian. The queue was cleared' })).toBeVisible();
