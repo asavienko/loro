@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { speak, voiceName } from '../audio/speech';
 import { useVoiceList } from '../lib/useVoiceList';
 import { languageLabel, languageName } from '../copy';
@@ -12,6 +12,34 @@ import { btnPrimary, btnTonal } from '../ui/button';
 import { fieldClass } from '../ui/field';
 
 type Step = 'native' | 'name' | 'course' | 'voices' | 'loop';
+
+/** Past this share of the screen a pinned action hides the step it is for. */
+const PIN_MAX_SHARE = 0.4;
+
+/**
+ * Whether the step's action can stay pinned: not when it would cover more than 40% of the screen
+ * (a small phone at large text, where it wraps to four lines), so the step shows on arrival and
+ * the action follows it in the page.
+ */
+function usePinnable() {
+  const ref = useRef<HTMLDivElement>(null);
+  const [pinnable, setPinnable] = useState(true);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    // Its height is the same pinned or not, so this can't flip back and forth.
+    const check = () => setPinnable(el.offsetHeight <= window.innerHeight * PIN_MAX_SHARE);
+    check();
+    const observer = new ResizeObserver(check);
+    observer.observe(el);
+    window.addEventListener('resize', check);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', check);
+    };
+  }, []);
+  return [ref, pinnable] as const;
+}
 /** The step's action: Home's hero radius, so at large text it wraps as a rounded block, not an oval. */
 const PRIMARY = `${btnPrimary.replace('rounded-full', 'rounded-3xl')} w-full py-2`;
 const STEPS: Step[] = ['native', 'name', 'course', 'voices', 'loop'];
@@ -25,6 +53,7 @@ export function Onboarding() {
   const [step, setStep] = useState<Step>('native');
   const [name, setName] = useState(profile.name);
   const at = STEPS.indexOf(step);
+  const [strip, pinned] = usePinnable();
   // The name is kept as the learner goes on (like the languages), so a reload doesn't lose it.
   const next = () => {
     if (step === 'name' && name.trim() !== profile.name) actions.setProfile({ name: name.trim() });
@@ -120,7 +149,11 @@ export function Onboarding() {
 
       {/* Only the step's action is pinned, so it stays on screen however long the step or large
           the text without hiding the step itself; the quieter choices follow it in the page. */}
-      <div className={`sticky bottom-0 -mx-6 px-6 pt-3 mt-3 ${at === 0 ? 'pb-[calc(1.5rem+env(safe-area-inset-bottom))]' : 'pb-[calc(0.75rem+env(safe-area-inset-bottom))]'} bg-surface flex flex-col before:absolute before:inset-x-0 before:-top-6 before:h-6 before:bg-linear-to-t before:from-surface before:to-transparent before:pointer-events-none`}>
+      <div
+        ref={strip}
+        data-pinned={pinned}
+        className={`-mx-6 px-6 pt-3 mt-3 ${at === 0 ? 'pb-[calc(1.5rem+env(safe-area-inset-bottom))]' : 'pb-[calc(0.75rem+env(safe-area-inset-bottom))]'} bg-surface flex flex-col ${pinned ? 'sticky bottom-0 before:absolute before:inset-x-0 before:-top-6 before:h-6 before:bg-linear-to-t before:from-surface before:to-transparent before:pointer-events-none' : 'relative'}`}
+      >
         {step === 'loop' ? (
           <button type="button" onClick={() => finish(true)} className={PRIMARY}>
             <Icon name="play_arrow" fill className="text-icon" />

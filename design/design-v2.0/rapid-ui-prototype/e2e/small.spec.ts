@@ -204,8 +204,32 @@ test.describe('onboarding at 200% text (Q-05)', () => {
       expect(await page.evaluate(() => document.documentElement.scrollWidth), `step ${step}`).toBeLessThanOrEqual(320);
       if (step < 5) await page.getByRole('button', { name: 'Continue' }).click();
     }
-    const start = (await page.getByRole('button', { name: 'Start with one phrase' }).boundingBox())!;
-    expect(start.y + start.height).toBeLessThanOrEqual(568);
+    // The action follows the steps here (the next test): it is reached by scrolling.
+    const start = page.getByRole('button', { name: 'Start with one phrase' });
+    await start.scrollIntoViewIfNeeded();
+    await expect(start).toBeInViewport();
+  });
+
+  test('on a 320 px phone the last step shows first, its four-line action after it, not over it', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 568 });
+    await page.goto('/');
+    await page.addStyleTag({ content: 'html { font-size: 200% }' });
+    for (let step = 1; step < 5; step++) {
+      // Pinned while it is short ("Continue"), so tapped where it sits.
+      await expect(page.locator('[data-pinned]')).toHaveAttribute('data-pinned', 'true');
+      const next = (await page.getByRole('button', { name: 'Continue' }).boundingBox())!;
+      await page.mouse.click(next.x + next.width / 2, next.y + next.height / 2);
+      await expect(page.getByText(`Step ${step + 1} of 5`)).toBeVisible();
+    }
+    // "Start with one phrase" wraps to four lines: pinned it would cover the steps it starts.
+    await expect(page.locator('[data-pinned]')).toHaveAttribute('data-pinned', 'false');
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await expect(page.getByText('Hear the phrase in English.')).toBeInViewport();
+    const start = page.getByRole('button', { name: 'Start with one phrase' });
+    const last = (await page.getByText(/^Rate how it went:/).boundingBox())!;
+    expect((await start.boundingBox())!.y).toBeGreaterThanOrEqual(last.y + last.height);
+    await start.scrollIntoViewIfNeeded();
+    await expect(start).toBeInViewport();
   });
 
   test('an icon font still loading never widens a step past the screen', async ({ page }) => {
