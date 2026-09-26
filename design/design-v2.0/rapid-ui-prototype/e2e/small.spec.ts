@@ -165,17 +165,27 @@ test.describe('onboarding on a small phone at 125% text', () => {
 });
 
 test.describe('onboarding at 200% text (Q-05)', () => {
-  test.use({ seed: null });
+  // A 390×844 phone (the file's default is 320×568); the checks at 320 px set their own size.
+  test.use({ seed: null, viewport: { width: 390, height: 844 } });
 
   test('only the step\'s action is pinned: the explanation shows above it, the other choices follow it', async ({ page }) => {
     await page.goto('/');
     await page.addStyleTag({ content: 'html { font-size: 200% }' });
-    for (let i = 0; i < 4; i++) await page.getByRole('button', { name: 'Continue' }).click();
+    // Tapped where it is pinned, as a finger does. A locator click first scrolls the pinned action
+    // "into view", and each engine scrolls the page by a different amount for that.
+    for (let step = 1; step < 5; step++) {
+      const next = (await page.getByRole('button', { name: 'Continue' }).boundingBox())!;
+      await page.mouse.click(next.x + next.width / 2, next.y + next.height / 2);
+      await expect(page.getByText(`Step ${step + 1} of 5`)).toBeVisible();
+    }
     const start = page.getByRole('button', { name: 'Start with one phrase' });
     const box = (await start.boundingBox())!;
     expect(box.y + box.height).toBeLessThanOrEqual(844);
-    // Two of the four steps are readable over it (the pinned footer used to leave half of one).
+    // Two of the four steps are readable over it, whole and on screen (the pinned footer used to
+    // leave half of one).
+    const first = (await page.getByText('Hear the phrase in English.').boundingBox())!;
     const second = (await page.getByText('Say it out loud in Spanish while it’s quiet.').boundingBox())!;
+    expect(first.y).toBeGreaterThanOrEqual(0);
     expect(second.y + second.height).toBeLessThanOrEqual(box.y);
     // Skipping the demo and Back come after it, in the page; not stacked into the pinned strip.
     const skip = page.getByRole('button', { name: 'Start without the demo' });
