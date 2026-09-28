@@ -25,6 +25,8 @@ import type {
   LearnerState,
   LogEntry,
   PendingRating,
+  PhraseOrigin,
+  PhrasePick,
   PlayerState,
   Prefs,
   Profile,
@@ -88,7 +90,7 @@ export type AppEvent =
    * `id`: the one the store promised its caller (so a toast can play the phrase, or a page open the
    * set, before the next render). Taken unless it's in use; otherwise the counter's next id.
    */
-  | { type: 'ADD_OWN_PHRASE'; target: string; native: string; now: number; id?: string }
+  | { type: 'ADD_OWN_PHRASE'; target: string; native: string; now: number; id?: string; origin?: PhraseOrigin }
   | { type: 'EDIT_OWN_PHRASE'; id: string; target: string; native: string; now: number }
   | { type: 'DELETE_OWN_PHRASE'; id: string; now: number }
   | { type: 'RESTORE_OWN_PHRASE'; id: string; now: number }
@@ -100,6 +102,11 @@ export type AppEvent =
   | { type: 'RENAME_SET'; setId: string; title: string; now: number }
   | { type: 'DELETE_SET'; setId: string; now: number }
   | { type: 'RESTORE_SET'; setId: string; now: number }
+  /**
+   * What the learner kept in "Make a set", saved at once: new phrases become their own, then all
+   * of them a new set named `title` (under the promised `id`), or join their set `setId`.
+   */
+  | { type: 'ADD_PICKS'; picks: PhrasePick[]; now: number; title?: string; id?: string; setId?: string }
   | { type: 'SET_PROFILE'; profile: Partial<Omit<Profile, 'updatedAt'>>; now: number }
   | { type: 'RESTORE'; state: unknown }
   /** Another tab's or device's copy; `pending` only from another tab of this browser. */
@@ -555,8 +562,37 @@ function step(state: AppState, event: AppEvent): AppState {
       const [seqId, next] = takeId(state);
       const id = event.id?.startsWith(OWN_PHRASE_PREFIX) && !learner.ownPhrases[event.id] ? event.id : `${OWN_PHRASE_PREFIX}${seqId}`;
       const { nativeLang, targetLang } = learner.profile;
-      const phrase = { id, target, native, nativeLang, targetLang, createdAt: event.now, updatedAt: event.now, deleted: false };
+      const phrase = {
+        id,
+        target,
+        native,
+        nativeLang,
+        targetLang,
+        createdAt: event.now,
+        updatedAt: event.now,
+        deleted: false,
+        ...(event.origin ? { origin: event.origin } : {}),
+      };
       return { ...next, learner: { ...next.learner, ownPhrases: { ...next.learner.ownPhrases, [id]: phrase } } };
+    }
+
+    case 'ADD_PICKS': {
+      // One event, so the new phrases and their set appear, merge and sync together.
+      let next = state;
+      const ids: string[] = [];
+      for (const pick of event.picks) {
+        if ('phraseId' in pick) {
+          if (findPhrase(learner, pick.phraseId)) ids.push(pick.phraseId);
+          continue;
+        }
+        const before = next.learner.ownPhrases;
+        next = step(next, { type: 'ADD_OWN_PHRASE', target: pick.target, native: pick.native, origin: pick.origin, id: pick.id, now: event.now });
+        const added = Object.keys(next.learner.ownPhrases).find((id) => !before[id]);
+        if (added) ids.push(added);
+      }
+      if (ids.length === 0) return state;
+      if (event.setId) return step(next, { type: 'ADD_TO_SET', setId: event.setId, phraseIds: ids, now: event.now });
+      return step(next, { type: 'CREATE_SET', title: event.title ?? '', phraseIds: ids, now: event.now, id: event.id });
     }
 
     case 'EDIT_OWN_PHRASE': {

@@ -107,6 +107,20 @@ describe('persistence', () => {
     assert.deepEqual(s.learner.log.map((e) => (e.kind === 'carryover' ? e.points : null)), [13]);
   });
 
+  it('keeps where a phrase came from, and only the origins it knows', () => {
+    const raw = JSON.parse(serializeState(fresh()));
+    const phrase = { native: 'b', targetLang: 'es-ES', nativeLang: 'en-GB', createdAt: 1, updatedAt: 1, deleted: false };
+    raw.learner.ownPhrases = {
+      'mine-p-ai': { ...phrase, target: 'a', origin: 'ai' },
+      'mine-p-bank': { ...phrase, target: 'b', origin: 'bank' },
+      'mine-p-odd': { ...phrase, target: 'c', origin: 'rumour' },
+      'mine-p-own': { ...phrase, target: 'd' },
+    };
+    const own = sanitizeState(raw, device)!.learner.ownPhrases;
+    assert.deepEqual(Object.values(own).map((p) => p.origin), ['ai', 'bank', undefined, undefined]);
+    assert.equal('origin' in own['mine-p-own'], false, 'a phrase the learner wrote saves no origin');
+  });
+
   it('RESTORE goes through the same sanitising', () => {
     const s = fresh();
     assert.equal(transition(s, { type: 'RESTORE', state: { junk: true } }), s);

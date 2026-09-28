@@ -71,6 +71,12 @@ export interface Like {
   at: number;
 }
 
+/**
+ * Where an own phrase's text came from when the learner didn't write it: Loro's phrase bank, or
+ * AI, which no native speaker has checked. It stays through the learner's own corrections.
+ */
+export type PhraseOrigin = 'bank' | 'ai';
+
 export interface OwnPhrase {
   id: string;
   targetLang: LanguageCode;
@@ -80,7 +86,11 @@ export interface OwnPhrase {
   createdAt: number;
   updatedAt: number;
   deleted: boolean;
+  origin?: PhraseOrigin;
 }
+
+/** A phrase picked in "Make a set": one that exists, by id, or a new one to write (with the id the store promised). */
+export type PhrasePick = { phraseId: string } | { target: string; native: string; origin?: PhraseOrigin; id?: string };
 
 export interface OwnSet {
   id: string;

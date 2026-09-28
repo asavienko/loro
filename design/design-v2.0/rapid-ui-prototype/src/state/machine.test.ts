@@ -363,6 +363,46 @@ describe('the learner’s own phrases and sets', () => {
     assert.equal(Object.keys(s.learner.ownPhrases).length, 2);
   });
 
+  it('saves what was kept in Make a set at once: new phrases, existing ones, one new set', () => {
+    let s = run(fresh(), { type: 'ADD_OWN_PHRASE', target: 'Hola', native: 'Hi', now: T0 });
+    const mine = Object.keys(s.learner.ownPhrases)[0];
+    const promised = (n: number) => `dev.tab-${(s.device.seq + n).toString(36)}`;
+    const [aiId, bankId, setId] = [`${OWN_PHRASE_PREFIX}${promised(1)}`, `${OWN_PHRASE_PREFIX}${promised(2)}`, `${OWN_SET_PREFIX}${promised(3)}`];
+    s = run(s, {
+      type: 'ADD_PICKS',
+      picks: [
+        { target: '¿Hay  farmacia? ', native: 'Is there a pharmacy?', origin: 'ai', id: aiId },
+        { phraseId: 'cafe-01' },
+        { target: 'Me duele la garganta', native: 'I have a sore throat', origin: 'bank', id: bankId },
+        { phraseId: mine },
+        { phraseId: 'nowhere-01' },
+      ],
+      title: 'Pharmacy',
+      id: setId,
+      now: T0 + 1,
+    });
+    assert.deepEqual(s.learner.ownSets[setId].phraseIds, [aiId, 'cafe-01', bankId, mine], 'in the order kept; an unknown phrase is left out');
+    assert.equal(s.learner.ownSets[setId].title, 'Pharmacy');
+    assert.equal(s.learner.ownPhrases[aiId].target, '¿Hay farmacia?');
+    assert.equal(s.learner.ownPhrases[aiId].origin, 'ai');
+    assert.equal(s.learner.ownPhrases[bankId].origin, 'bank');
+    assert.equal(s.learner.ownPhrases[mine].origin, undefined);
+    // Corrected by the learner, an AI phrase is still one no native speaker has checked.
+    s = run(s, { type: 'EDIT_OWN_PHRASE', id: aiId, target: '¿Hay una farmacia?', native: 'Is there a pharmacy?', now: T0 + 2 });
+    assert.equal(s.learner.ownPhrases[aiId].origin, 'ai');
+  });
+
+  it('Make a set can fill one of your sets instead, and saves nothing when nothing was kept', () => {
+    let s = run(fresh(), { type: 'CREATE_SET', title: 'Trip', phraseIds: ['cafe-01'], now: T0 });
+    const setId = Object.keys(s.learner.ownSets)[0];
+    s = run(s, { type: 'ADD_PICKS', picks: [{ phraseId: 'cafe-01' }, { target: 'Hola', native: 'Hi' }], setId, now: T0 + 1 });
+    const [hola] = Object.values(s.learner.ownPhrases);
+    assert.deepEqual(s.learner.ownSets[setId].phraseIds, ['cafe-01', hola.id]);
+    assert.equal(Object.keys(s.learner.ownSets).length, 1);
+    assert.equal(run(s, { type: 'ADD_PICKS', picks: [{ target: '  ', native: 'x' }], title: 'Empty', now: T0 + 2 }), s);
+    assert.equal(canHandle('playing', 'ADD_PICKS'), true, 'saving never waits for the player');
+  });
+
   it('changing course empties the queue', () => {
     const s = run(load(fresh()), { type: 'SET_PROFILE', profile: { targetLang: 'bg-BG' }, now: T0 });
     assert.equal(s.player.status, 'idle');

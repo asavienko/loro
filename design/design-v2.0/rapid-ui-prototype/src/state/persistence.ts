@@ -137,6 +137,7 @@ function sanitizeOwnPhrases(value: unknown): Record<string, OwnPhrase> {
       createdAt: num(p.createdAt) ? p.createdAt : 0,
       updatedAt: num(p.updatedAt) ? p.updatedAt : 0,
       deleted: p.deleted === true,
+      ...(p.origin === 'bank' || p.origin === 'ai' ? { origin: p.origin } : {}),
     };
   }
   return out;
