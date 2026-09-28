@@ -2,7 +2,7 @@
 // where the learner meets the phrase: its details and the player's cover.
 import fs from 'node:fs';
 import { Page } from '@playwright/test';
-import { expect, test } from './fixtures';
+import { expect, test, WRITTEN_NOTES } from './fixtures';
 
 const PHRASES = JSON.parse(fs.readFileSync(new URL('../src/content/phrases.json', import.meta.url), 'utf8')) as {
   id: string;
@@ -66,5 +66,50 @@ test.describe('in Bulgarian', () => {
     await sheet.getByRole('tab').first().click();
     await expect(sheet.getByRole('tabpanel')).toContainText('Póngame: сложете ми');
     await expect(sheet.getByText('Засега бележките са на английски.')).toHaveCount(0);
+  });
+});
+
+async function typePhrase(page: Page, target: string, native: string) {
+  await page.goto('/#/library?view=mine');
+  await page.getByRole('button', { name: 'Add your phrase' }).click();
+  await page.getByLabel('In Spanish').fill(target);
+  await page.getByLabel('In English').fill(native);
+  await page.getByRole('button', { name: 'Add phrase' }).click();
+  await page.getByRole('button', { name: `Details for ${target}` }).click();
+  return page.getByRole('dialog').last();
+}
+
+test.describe('a phrase the learner types', () => {
+  test('takes the bank’s notes when the bank has it', async ({ page }) => {
+    const sheet = await typePhrase(page, '¿a qué hora es el desayuno?', 'Breakfast when?');
+    await expect(sheet.locator('[data-phrase-image]')).toBeVisible();
+    await expect(sheet.locator('[data-sounds]')).toBeVisible();
+    await expect(sheet.getByRole('tab')).toHaveCount(3);
+  });
+
+  test('without a writer, says where its notes would come from', async ({ page }) => {
+    const sheet = await typePhrase(page, 'Mi perro se llama Toby', 'My dog is called Toby');
+    await expect(sheet.getByRole('heading', { name: 'This phrase has no notes yet.' })).toBeVisible();
+    await expect(sheet.getByText('Notes for a phrase you wrote come from Loro’s writer, which isn’t available here.')).toBeVisible();
+    await expect(sheet.getByRole('button', { name: 'Write its notes' })).toHaveCount(0);
+  });
+
+  test('with a writer, gets AI notes, marked as such; asked again if the first try fails', async ({ page }) => {
+    let calls = 0;
+    const asked: unknown[] = [];
+    await page.route('**/api/phrases/status', (route) => route.fulfill({ json: { live: true } }));
+    await page.route('**/api/phrases/notes', (route) => {
+      asked.push(route.request().postDataJSON());
+      // The first try (just after adding) fails; the button asks again.
+      if (calls++ === 0) return route.fulfill({ status: 502, json: { error: 'unavailable' } });
+      return route.fulfill({ json: { image: ['group'], notes: WRITTEN_NOTES, model: 'stand-in' } });
+    });
+    const sheet = await typePhrase(page, 'Mi perro se llama Toby', 'My dog is called Toby');
+    await expect(sheet.getByRole('heading', { name: 'This phrase has no notes yet.' })).toBeVisible();
+    await sheet.getByRole('button', { name: 'Write its notes' }).click();
+    await expect(sheet.getByText('Its notes are written by AI. No native speaker has checked them.')).toBeVisible();
+    await expect(sheet.getByRole('tab')).toHaveCount(3);
+    await expect(sheet.locator('[data-phrase-image]')).toHaveAttribute('data-phrase-image', 'group');
+    expect(asked[0]).toEqual({ target: 'Mi perro se llama Toby', native: 'My dog is called Toby', targetLang: 'es-ES', nativeLang: 'en-GB' });
   });
 });

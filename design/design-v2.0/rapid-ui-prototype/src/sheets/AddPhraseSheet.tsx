@@ -3,7 +3,8 @@ import { languageName } from '../copy';
 import { useRoute } from '../nav/history';
 import { useNav } from '../nav/NavContext';
 import type { LanguageCode } from '../content';
-import { findSamePhrase, promptOf } from '../state/catalog';
+import { bankMatch, findSamePhrase, promptOf } from '../state/catalog';
+import { liveAvailable, writeNotes } from '../generate/remote';
 import { LIMITS, tidy } from '../state/limits';
 import { useCopy, useStore } from '../state/store';
 import { CharCount } from '../ui/CharCount';
@@ -72,6 +73,17 @@ function PhraseForm({ editId, initialTarget, initialNative, targetLang, nativeLa
       toast(c.addPhrase.edited);
     } else {
       const id = actions.addOwnPhrase(target, native);
+      // Its notes: the bank's when the bank has it, otherwise the writer's, asked for quietly now.
+      if (!bankMatch(targetLang, target)) {
+        const asked = { target: tidy(target), native: tidy(native), targetLang, nativeLang };
+        void liveAvailable().then((live) => {
+          if (!live) return;
+          writeNotes(asked).then(
+            (written) => actions.setOwnNotes(id, asked.target, written.notes, written.image),
+            () => {},
+          );
+        });
+      }
       // The next step is hearing it.
       toast(c.addPhrase.added, { action: { label: c.common.play, run: () => nav.playPhraseInSet(id) } });
       // Added from the Library: show it there, under Mine (once this sheet's history entry is gone).
