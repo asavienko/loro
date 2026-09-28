@@ -3,8 +3,12 @@
 - **Requirement IDs:** `AI-06` (guarded phrase suggestions, explicit add), `AI-05` (bounded AI path
   with a bundled fallback), `P2-06` (a scenario builds a coherent set), `P2-07` (add your own)
 - **Milestone:** Design exploration (v2.0 rapid prototype); no app release depends on it
-- **Status:** 🟡 In progress. Owner request 2026-09-28: "generate my albums/phrases from topic or
-  text or keywords … user input … suggest phrases … a UI similar to Tinder to add and to skip".
+- **Status:** 🟡 Scope 1–7 implemented and tested on 2026-09-28. **Left:** one run of the live path
+  with a real `ANTHROPIC_API_KEY`. The request shape, reply parsing, refusal handling and the
+  fallback are verified against a stand-in server and a refused (unauthorised) call only. **Blocked
+  by:** a key on the machine that runs it. The bank and its copy await native review, as all
+  prototype content does. Owner request 2026-09-28: "generate my albums/phrases from topic or text
+  or keywords … user input … suggest phrases … a UI similar to Tinder to add and to skip".
 - **Depends on:** nothing in the app. Works inside `design/design-v2.0/rapid-ui-prototype`. The
   product boundary is plan [97](97-generative-discover-and-phrase-reach.md) and ADR-0010's
   amendment: runtime suggestions are the learner's own phrases, marked, editable, never auto-added.
@@ -60,15 +64,34 @@ they started from.
    for the whole flow offline, the live path with a mocked server, the fallback, the empty state,
    the Bulgarian course, accessibility and 44 px targets.
 
+## Implementation record (2026-09-28)
+
+| Scope               | Where                                                                           | Evidence                                                                                                                                                              |
+| ------------------- | ------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1 Phrase bank       | `src/content/bank.json`, `schema.ts` (`bankProblems`)                           | 12 themes, 72 es-ES and 60 bg-BG phrases; build and `content.test.ts` validate it                                                                                     |
+| 2 Offline generator | `src/generate/local.ts`                                                         | `local.test.ts`: terms, stems, topic/keywords/text, both courses, duplicates, exclusions                                                                              |
+| 3 Live generator    | `server/suggest.ts`, `src/generate/remote.ts`, `suggest.ts`                     | `server/suggest.test.ts`, `suggest.test.ts`; dev-server smoke: no key → offline, invalid key → refused, bad body → 400                                                |
+| 4 One save event    | `ADD_PICKS`, `OwnPhrase.origin`                                                 | `machine.test.ts`, `persistence.test.ts`                                                                                                                              |
+| 5 Make a set        | `src/screens/MakeSetScreen.tsx`, `src/ui/SwipeDeck.tsx`, `src/generate/deck.ts` | `deck.test.ts`; entry points in Library +, My sets, Explore (no phrase), own set                                                                                      |
+| 6 Copy and icons    | `src/copy/{en,bg,ru}.ts` (`make`), `auto_awesome`/`undo` in the icon subset     | `copy.test.ts` key parity; `ui.test.ts` font drift                                                                                                                    |
+| 7 Tests             | `e2e/make-set.spec.ts`, `e2e/a11y.spec.ts`                                      | 11 flow tests green in Chromium, WebKit, Firefox and the production preview; axe, 44 px and text size on the three steps at 100%/200%; full Chromium suite 350 passed |
+
+Found while building: a card on its way out stayed in the accessibility tree (two cards were read at
+once), so a leaving card is now inert and hidden; and a drag must not start a text selection, so the
+draggable card is not selectable.
+
 ## Acceptance
 
-- Topic, keywords and text each produce a deck offline for topics the bank covers, in both courses.
-- Swipe right/left, the buttons and ←/→ add and skip; Undo restores the last card and its choice.
-- Saving creates one set holding exactly the added phrases in the order they were added; a catalog
-  phrase is added by its id (no duplicate in Mine); an existing own phrase is reused.
-- With `ANTHROPIC_API_KEY` set, the dev server's suggestions are labelled as AI-written; a failed or
-  invalid reply falls back to the bank with a notice.
-- `npm run check` and the Playwright suite are green.
+- [x] Topic, keywords and text each produce a deck offline for topics the bank covers, in both
+      courses.
+- [x] Swipe right/left, the buttons and ←/→ add and skip; Undo restores the last card and its
+      choice.
+- [x] Saving creates one set holding exactly the added phrases in the order they were added; a
+      catalog phrase is added by its id (no duplicate in Mine); an existing own phrase is reused.
+- [ ] With `ANTHROPIC_API_KEY` set, the dev server's suggestions are labelled as AI-written
+      (verified with a stand-in server); a failed or invalid reply falls back to the bank with a
+      notice (verified). A run against the real service remains.
+- [x] `npm run check` and the Playwright suite are green.
 
 ## Out of scope
 

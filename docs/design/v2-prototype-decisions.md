@@ -7,7 +7,7 @@ review rounds (`design/design-v2.0/ui-ux-review/`), so a decision reaches the ap
 nothing reaches it by accident.
 
 Requirement IDs touched: `P3-01` (continuous playback), `P2-24` (difficulty drives repetitions),
-`F-03` (offline-first), `F-04` (cross-device sync).
+`F-03` (offline-first), `F-04` (cross-device sync), `AI-06` (guarded phrase suggestions).
 
 ## Decisions the prototype made
 
@@ -29,6 +29,7 @@ Requirement IDs touched: `P3-01` (continuous playback), `P2-24` (difficulty driv
 | Where rating happens | Grades only in the full player. Home's Review, Start here and Continue open it; during the hold the mini-player says "Tap to rate"; a rating given in the hold is confirmed by a message with Undo | Proposal |
 | Time to say it | The silence is 1.3× the measured phrase plus 0.6 s (Standard) or 2× plus 1 s, 2.5–12 s (Longer, a setting), and the "Your turn" step fills as it runs. Durations include it and the 4 s hold of each unrated phrase | Proposal; timing stays measured, never estimated |
 | Home | One hero at a time: the demo, then the review, then Continue, then the next set once every phrase of the last one has been started and none is due | Proposal |
+| Make a set | A topic, keywords or a pasted text become a deck of suggested phrases, decided one card at a time (swipe right or Add to add, left or Skip to skip, Undo, correct before adding); what was added becomes a set, or joins the learner's own. Each card names its source: a course set, the learner's own, the bundled phrase bank, or AI marked as unchecked by a native speaker. Offline and in tests the bank and the course answer; Claude writes suggestions only when the dev server holds a key ([plan 103](../../plans/103-prototype-phrase-generator.md)) | Proposal; the explicit-add, provenance and editable-card rules follow plan 97, which owns suggestions in the app |
 | Visual system | Terracotta fill only for play and the primary action; a selected state is ink; flat rows, tonal cards, one hero per screen; covers drawn from topic colour, a per-set shape and the whole icon | Proposal; the v1.1 design package owns visuals |
 
 ## Engineering the app can reuse
@@ -50,8 +51,9 @@ Requirement IDs touched: `P3-01` (continuous playback), `P2-24` (difficulty driv
   loop. The prototype therefore reviews when predicted recall falls to **90%**, after the stability
   in days, keeping the core's 50% date as the upper bound. The app keeps the authored 50% policy
   until Product decides; this is the evidence for that decision.
-- New Spanish, Bulgarian and Russian text in the prototype (phrases, notes, glosses, UI copy)
-  awaits native review, as recorded in the prototype's `content/meta.json`.
+- New Spanish, Bulgarian and Russian text in the prototype (phrases, notes, glosses, UI copy, and
+  the Make a set phrase bank) awaits native review, as recorded in the prototype's
+  `content/meta.json`.
 
 ## Not decided here
 
