@@ -12,7 +12,7 @@ import noteTranslationsJson from './note-translations.json';
 import bankJson from './bank.json';
 import type { BankJson, BankTheme, Language, LanguageCode, Meta, NoteTranslations, PhraseJson, SetJson, Topic, UiLocale } from './schema';
 
-export type { LanguageCode, UiLocale, Topic, Language, Localized, Tag, Level, Register, PhraseNotes, BankTheme } from './schema';
+export type { LanguageCode, UiLocale, Topic, Language, Localized, Tag, Level, Register, PhraseNotes, PhraseImage, BankTheme } from './schema';
 export type TopicTone = Topic['tone'];
 
 // The JSON's inferred types are wider (plain strings); validation has proved the narrow ones.
@@ -36,6 +36,8 @@ export interface Phrase {
   register: PhraseJson['register'] | null;
   tags: PhraseJson['tags'];
   words: PhraseJson['words'];
+  /** Its picture (plan 105); null for one of the learner's own that has none yet. */
+  image: PhraseJson['image'] | null;
   notes: PhraseJson['notes'] | null;
   /** Note titles and texts in other native languages, by note kind. */
   noteTranslations: Partial<Record<keyof PhraseJson['notes'], NoteTranslations[string]>>;
@@ -73,6 +75,7 @@ export const CONTENT_PHRASES: Phrase[] = phraseJson.map((p) => {
     register: p.register,
     tags: p.tags,
     words: p.words,
+    image: p.image,
     notes: p.notes,
     noteTranslations: Object.fromEntries(Object.keys(p.notes).map((kind) => [kind, noteTranslations[`${p.id}.${kind}`] ?? {}])),
     audio: p.audio ?? null,

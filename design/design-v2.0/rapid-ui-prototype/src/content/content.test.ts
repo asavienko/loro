@@ -7,7 +7,8 @@ import languagesJson from './languages.json';
 import noteTranslationsJson from './note-translations.json';
 import bankJson from './bank.json';
 import { BANK_PHRASES, BANK_THEMES, CONTENT_PHRASES, coursesFor, LANGUAGES, SETS, TARGET_LANGUAGES, TOPICS } from './index';
-import { BankJson, bankProblems, contentProblems, PhraseJson, SetJson } from './schema';
+import { z } from 'zod';
+import { BankJson, bankProblems, contentProblems, PhraseJson, phraseSchema, SetJson } from './schema';
 import { validateContent } from './validate';
 
 const base = () => ({
@@ -31,8 +32,24 @@ describe('content', () => {
     }
   });
 
-  it('every phrase has at least one note', () => {
-    for (const p of CONTENT_PHRASES) assert.ok(p.notes && Object.keys(p.notes).length > 0, p.id);
+  it('every phrase has an image, its sounds, a memory hint and a grammar rule', () => {
+    for (const p of CONTENT_PHRASES) {
+      assert.ok(p.image && p.image.length > 0, `${p.id}: image`);
+      assert.deepEqual(Object.keys(p.notes ?? {}).sort(), ['grammar', 'mnemonic', 'pronunciation'], p.id);
+      assert.match(p.notes!.pronunciation.ipa, /^\[.+\]$/, p.id);
+      assert.ok(p.notes!.pronunciation.respelling, p.id);
+    }
+  });
+
+  it('a phrase missing a note or its image fails validation', () => {
+    const missing = structuredClone(phrasesJson) as unknown as Record<string, unknown>[];
+    delete (missing[0].notes as Record<string, unknown>).mnemonic;
+    delete missing[1].image;
+    const result = z.array(phraseSchema).safeParse(missing);
+    assert.equal(result.success, false);
+    const paths = result.error!.issues.map((i) => i.path.join('.'));
+    assert.ok(paths.includes('0.notes.mnemonic'), paths.join());
+    assert.ok(paths.includes('1.image'), paths.join());
   });
 
   it('every note has Bulgarian and Russian versions where the learner could need them', () => {

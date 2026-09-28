@@ -10,6 +10,7 @@
     "register": "neutral",
     "region": "ES",
     "tags": ["request", "food", "politeness"],
+    "image": ["coffee", "water_drop"],
     "words": {
       "me": { "en-GB": "(for) me", "bg-BG": "на мен", "ru-RU": "мне" },
       "pone": { "en-GB": "(you) put, serve", "bg-BG": "слагате, давате", "ru-RU": "(вы) ставите, подаёте" },
@@ -18,6 +19,10 @@
       "por favor": { "en-GB": "please", "bg-BG": "моля", "ru-RU": "пожалуйста" }
     },
     "notes": {
+      "mnemonic": {
+        "title": "Cortado: a cut coffee",
+        "text": "«Cortado» is espresso “cut” (cortar) with a dash of milk: picture a knife through a black coffee."
+      },
       "grammar": {
         "title": "«Me pone…»",
         "text": "«Me pone…» (literally “will you put me…”) is the everyday way to order in Spain. It is the usted form of poner, but it doesn't sound stiff."
@@ -41,6 +46,7 @@
     "register": "neutral",
     "region": "ES",
     "tags": ["question", "food"],
+    "image": ["local_drink", "grass"],
     "words": {
       "tienen": { "en-GB": "(you all) have", "bg-BG": "имате", "ru-RU": "у вас есть" },
       "leche": { "en-GB": "milk", "bg-BG": "мляко", "ru-RU": "молоко" },
@@ -48,6 +54,10 @@
       "avena": { "en-GB": "oats", "bg-BG": "овес", "ru-RU": "овёс" }
     },
     "notes": {
+      "mnemonic": {
+        "title": "Avena is oats",
+        "text": "«Avena» is oats: botanists call the plant Avena sativa."
+      },
       "grammar": {
         "title": "Asking the whole café",
         "text": "«Tienen» speaks to the whole place (ustedes). It's the natural way to ask what a café has."
@@ -71,12 +81,17 @@
     "register": "neutral",
     "region": "ES",
     "tags": ["request", "politeness"],
+    "image": ["receipt_long", "payments"],
     "words": {
       "la": { "en-GB": "the", "bg-BG": "-та (членуване)", "ru-RU": "(артикль)" },
       "cuenta": { "en-GB": "bill", "bg-BG": "сметка", "ru-RU": "счёт" },
       "por favor": { "en-GB": "please", "bg-BG": "моля", "ru-RU": "пожалуйста" }
     },
     "notes": {
+      "mnemonic": {
+        "title": "The bill counts",
+        "text": "«Cuenta» comes from «contar», to count: the bill counts up what you had."
+      },
       "grammar": {
         "title": "Always «la cuenta»",
         "text": "Say «la cuenta», with “the”: it's the bill for this table, so never «una cuenta»."
@@ -100,6 +115,7 @@
     "register": "neutral",
     "region": "ES",
     "tags": ["question", "politeness"],
+    "image": ["deck", "light_mode"],
     "words": {
       "nos": { "en-GB": "ourselves", "bg-BG": "(ние) се", "ru-RU": "(мы) себя" },
       "podemos": { "en-GB": "we can", "bg-BG": "можем", "ru-RU": "мы можем" },
@@ -109,6 +125,10 @@
       "terraza": { "en-GB": "terrace", "bg-BG": "тераса", "ru-RU": "терраса" }
     },
     "notes": {
+      "mnemonic": {
+        "title": "Terraza, terrace",
+        "text": "«Terraza» is the English “terrace”: in Spain it means the tables outside a café."
+      },
       "grammar": {
         "title": "Where «nos» goes",
         "text": "«Nos» can go before the verb or on the end: «¿Podemos sentarnos…?» means the same."
@@ -132,12 +152,17 @@
     "register": "neutral",
     "region": "ES",
     "tags": ["request", "food"],
+    "image": ["bakery_dining", "block"],
     "words": {
       "sin": { "en-GB": "without", "bg-BG": "без", "ru-RU": "без" },
       "gluten": { "en-GB": "gluten", "bg-BG": "глутен", "ru-RU": "глютен" },
       "por favor": { "en-GB": "please", "bg-BG": "моля", "ru-RU": "пожалуйста" }
     },
     "notes": {
+      "mnemonic": {
+        "title": "Sin, without",
+        "text": "«Sin» means “without”; its opposite is «con», with: café con leche, sin gluten."
+      },
       "grammar": {
         "title": "«Sin» without an article",
         "text": "«Sin» takes no article: sin azúcar, sin lactosa, sin gluten."
@@ -161,19 +186,26 @@
     "register": "formal",
     "region": "ES",
     "tags": ["question", "food"],
+    "image": ["restaurant_menu", "thumb_up"],
     "words": {
       "qué": { "en-GB": "what", "bg-BG": "какво", "ru-RU": "что" },
       "nos": { "en-GB": "(to) us", "bg-BG": "на нас", "ru-RU": "нам" },
       "recomienda": { "en-GB": "(you) recommend", "bg-BG": "препоръчвате", "ru-RU": "(вы) советуете" }
     },
     "notes": {
+      "mnemonic": {
+        "title": "e becomes ie",
+        "text": "When the stress lands on it, the e of recomendar becomes ie: recomienda."
+      },
       "grammar": {
         "title": "Polite «recomienda»",
         "text": "«Recomienda» is the usted form, polite with a waiter. With friends: «¿Qué nos recomiendas?»."
       },
-      "mnemonic": {
-        "title": "e becomes ie",
-        "text": "When the stress lands on it, the e of recomendar becomes ie: recomienda."
+      "pronunciation": {
+        "title": "The ie in recomienda",
+        "ipa": "[ˈke nos re.koˈmjen.da]",
+        "respelling": "KEH nos reh-ko-MYEN-dah",
+        "text": "The ie is one syllable, “yeh”: re-co-MIEN-da."
       }
     }
   },
@@ -188,6 +220,7 @@
     "register": "neutral",
     "region": "ES",
     "tags": ["request", "food"],
+    "image": ["tapas", "restaurant"],
     "words": {
       "una": { "en-GB": "a", "bg-BG": "една", "ru-RU": "одну" },
       "ración": { "en-GB": "portion (a plate to share)", "bg-BG": "порция", "ru-RU": "порция" },
@@ -199,6 +232,16 @@
       "mnemonic": {
         "title": "Tapa, ración, media ración",
         "text": "A ración is a full plate to share; a tapa is a small one; media ración is half a plate."
+      },
+      "grammar": {
+        "title": "«De» joins the food",
+        "text": "A dish of something takes «de»: una ración de croquetas, un plato de jamón."
+      },
+      "pronunciation": {
+        "title": "Castilian c in ración",
+        "ipa": "[ˈu.na raˈθjon de kɾoˈke.tas poɾ faˈβoɾ]",
+        "respelling": "OO-nah rah-THYON deh kro-KEH-tahs, por fah-VOR",
+        "text": "In Spain the c of ración sounds like the th in “think”, and the r at the start is rolled."
       }
     }
   },
@@ -213,6 +256,7 @@
     "register": "formal",
     "region": "ES",
     "tags": ["question", "request", "food"],
+    "image": ["sports_bar", "replay"],
     "words": {
       "nos": { "en-GB": "(to) us", "bg-BG": "на нас", "ru-RU": "нам" },
       "trae": { "en-GB": "(you) bring", "bg-BG": "донасяте", "ru-RU": "(вы) приносите" },
@@ -220,9 +264,19 @@
       "ronda": { "en-GB": "round (of drinks)", "bg-BG": "поръчка за всички", "ru-RU": "круг (напитков)" }
     },
     "notes": {
+      "mnemonic": {
+        "title": "A round is a ronda",
+        "text": "«Ronda» is a round of drinks, like a lap of a race: one more for the whole table."
+      },
       "grammar": {
         "title": "«Otra», never «una otra»",
         "text": "«Otra» already means “another”, so it never takes «una»."
+      },
+      "pronunciation": {
+        "title": "Rolled r in ronda",
+        "ipa": "[nos ˈtɾa.e ˈo.tɾa ˈron.da]",
+        "respelling": "nos TRAH-eh OH-trah RRON-dah",
+        "text": "An r at the start of a word is rolled, like rr: «ronda». «Trae» keeps both vowels: TRA-e."
       }
     }
   },
@@ -237,14 +291,25 @@
     "register": "neutral",
     "region": "ES",
     "tags": ["food", "social"],
+    "image": ["restaurant", "sentiment_very_satisfied"],
     "words": {
       "está": { "en-GB": "(it) is", "bg-BG": "е", "ru-RU": "(это)" },
       "buenísimo": { "en-GB": "really good", "bg-BG": "много хубаво", "ru-RU": "очень хорошо" }
     },
     "notes": {
+      "mnemonic": {
+        "title": "Stretch the word",
+        "text": "Say «buenísimo» with a long, happy «-ísimo»: the longer the ending, the better the food."
+      },
       "grammar": {
         "title": "«Está» for taste",
         "text": "Use «está» for how food tastes right now. «-ísimo» turns an adjective up: bueno → buenísimo."
+      },
+      "pronunciation": {
+        "title": "Stress on -ní-",
+        "ipa": "[esˈta bweˈni.si.mo]",
+        "respelling": "es-TAH bweh-NEE-see-moh",
+        "text": "Buenísimo is stressed on «ní», as its accent shows; «bue» is one syllable, “bweh”."
       }
     }
   },
@@ -259,6 +324,7 @@
     "register": "neutral",
     "region": "ES",
     "tags": ["request", "food"],
+    "image": ["sports_bar"],
     "words": {
       "una": { "en-GB": "a", "bg-BG": "една", "ru-RU": "одну" },
       "caña": { "en-GB": "small glass of draught beer", "bg-BG": "малка наливна бира", "ru-RU": "маленький бокал разливного пива" },
@@ -268,6 +334,10 @@
       "mnemonic": {
         "title": "What a caña is",
         "text": "A caña is a small glass of draught beer. Calling the bartender «jefe» is common but very casual, so this phrase leaves it out."
+      },
+      "grammar": {
+        "title": "Una: caña is feminine",
+        "text": "«Caña» ends in -a and is feminine, so it takes «una», not «un»."
       },
       "pronunciation": {
         "title": "The ñ",
@@ -288,6 +358,7 @@
     "register": "neutral",
     "region": "ES",
     "tags": ["question", "directions"],
+    "image": ["subway", "location_on"],
     "words": {
       "dónde": { "en-GB": "where", "bg-BG": "къде", "ru-RU": "где" },
       "está": { "en-GB": "is", "bg-BG": "е", "ru-RU": "находится" },
@@ -300,6 +371,16 @@
       "mnemonic": {
         "title": "Parada or estación",
         "text": "Buses stop at a «parada»; the metro has «estaciones»."
+      },
+      "grammar": {
+        "title": "Estar for where",
+        "text": "Where something is takes «estar»: ¿Dónde está…? Use «hay» to ask whether there is one: ¿Hay metro aquí?"
+      },
+      "pronunciation": {
+        "title": "Stress on -ción",
+        "ipa": "[ˈdon.de esˈta la es.taˈθjon de ˈme.tɾo]",
+        "respelling": "DON-deh es-TAH lah es-tah-THYON deh MEH-tro",
+        "text": "Words in -ción are stressed on the end, and the c sounds like th in Spain."
       }
     }
   },
@@ -314,6 +395,7 @@
     "register": "neutral",
     "region": "ES",
     "tags": ["request", "numbers"],
+    "image": ["confirmation_number", "train"],
     "words": {
       "un": { "en-GB": "a", "bg-BG": "един", "ru-RU": "один" },
       "billete": { "en-GB": "ticket", "bg-BG": "билет", "ru-RU": "билет" },
@@ -324,6 +406,16 @@
       "mnemonic": {
         "title": "Billete, not boleto",
         "text": "In Spain a ticket is a «billete»; «boleto» is Latin American."
+      },
+      "grammar": {
+        "title": "Adjective after the noun",
+        "text": "Most adjectives follow the noun: un billete sencillo. A return is un billete de ida y vuelta."
+      },
+      "pronunciation": {
+        "title": "Ll in billete",
+        "ipa": "[um biˈʝe.te senˈθi.ʝo poɾ faˈβoɾ]",
+        "respelling": "oom bee-YEH-teh sen-THEE-yoh, por fah-VOR",
+        "text": "Ll sounds like the y in “yes”, and un before b sounds like “oom”."
       }
     }
   },
@@ -338,6 +430,7 @@
     "register": "neutral",
     "region": "ES",
     "tags": ["question", "directions"],
+    "image": ["train", "wb_sunny"],
     "words": {
       "este": { "en-GB": "this", "bg-BG": "този", "ru-RU": "этот" },
       "tren": { "en-GB": "train", "bg-BG": "влак", "ru-RU": "поезд" },
@@ -346,9 +439,19 @@
       "sol": { "en-GB": "Sol (Madrid’s central station)", "bg-BG": "Сол (централната станция на Мадрид)", "ru-RU": "Соль (центральная станция Мадрида)" }
     },
     "notes": {
+      "mnemonic": {
+        "title": "Sol, the sun",
+        "text": "«Sol» means “sun”: Madrid's Puerta del Sol, at the centre of the city, is the Gate of the Sun."
+      },
       "grammar": {
         "title": "«Ir a» + place",
         "text": "Going somewhere is «ir a»: va a Sol. Sol (Puerta del Sol) is Madrid's central station."
+      },
+      "pronunciation": {
+        "title": "A tapped r in tren",
+        "ipa": "[ˈes.te ˈtɾem ˈba a ˈsol]",
+        "respelling": "ES-teh TREM BAH ah SOL",
+        "text": "In «tren» the r is a single quick tap, and before «va» the n sounds like m."
       }
     }
   },
@@ -363,6 +466,7 @@
     "register": "neutral",
     "region": "ES",
     "tags": ["question", "directions"],
+    "image": ["train", "directions_walk"],
     "words": {
       "en": { "en-GB": "at, in", "bg-BG": "на", "ru-RU": "на" },
       "qué": { "en-GB": "which", "bg-BG": "коя", "ru-RU": "какой" },
@@ -370,9 +474,19 @@
       "me bajo": { "en-GB": "I get off", "bg-BG": "слизам", "ru-RU": "я выхожу" }
     },
     "notes": {
+      "mnemonic": {
+        "title": "Bajo, down",
+        "text": "«Bajo» is “low”, as in «planta baja», the ground floor: bajarse is to step down off the train."
+      },
       "grammar": {
         "title": "Bajarse and subirse",
         "text": "«Bajarse» is to get off; «subirse» is to get on."
+      },
+      "pronunciation": {
+        "title": "J from the throat",
+        "ipa": "[en ˈke es.taˈθjon me ˈβa.xo]",
+        "respelling": "en KEH es-tah-THYON meh BAH-ho",
+        "text": "The j is a rough h from the back of the throat, like the ch in Scottish “loch”."
       }
     }
   },
@@ -387,6 +501,7 @@
     "register": "neutral",
     "region": "ES",
     "tags": ["question", "numbers", "food"],
+    "image": ["scale", "shopping_basket"],
     "words": {
       "a cuánto": { "en-GB": "at how much", "bg-BG": "по колко", "ru-RU": "почём" },
       "está": { "en-GB": "is (today)", "bg-BG": "е (днес)", "ru-RU": "(сегодня)" },
@@ -394,9 +509,19 @@
       "kilo": { "en-GB": "kilo", "bg-BG": "килограм", "ru-RU": "килограмм" }
     },
     "notes": {
+      "mnemonic": {
+        "title": "Cuánto, quantity",
+        "text": "«Cuánto» shares its root with “quantity”: how much, per kilo."
+      },
       "grammar": {
         "title": "Today's price",
         "text": "«¿A cuánto está…?» asks for today's price of things whose price changes, like fruit."
+      },
+      "pronunciation": {
+        "title": "Kwan in cuánto",
+        "ipa": "[a ˈkwan.to esˈta el ˈki.lo]",
+        "respelling": "ah KWAN-toh es-TAH el KEE-loh",
+        "text": "«Cuán» is one syllable, “kwan”, and it carries the stress."
       }
     }
   },
@@ -411,6 +536,7 @@
     "register": "formal",
     "region": "ES",
     "tags": ["request", "numbers", "food"],
+    "image": ["nutrition", "scale"],
     "words": {
       "póngame": { "en-GB": "give me (lit. put me)", "bg-BG": "дайте ми", "ru-RU": "дайте мне" },
       "medio": { "en-GB": "half", "bg-BG": "половин", "ru-RU": "пол-" },
@@ -419,9 +545,19 @@
       "tomates": { "en-GB": "tomatoes", "bg-BG": "домати", "ru-RU": "помидоры" }
     },
     "notes": {
+      "mnemonic": {
+        "title": "Póngame: put it for me",
+        "text": "«Póngame» is «ponga» (put) plus «me»: “put me” half a kilo, the way stallholders expect."
+      },
       "grammar": {
         "title": "No «un» before medio",
         "text": "«Póngame» is the usted command of poner, normal at a stall. «Medio kilo» takes no «un»."
+      },
+      "pronunciation": {
+        "title": "Stress on pón-",
+        "ipa": "[ˈpoŋ.ɡa.me ˈme.ðjo ˈki.lo ðe toˈma.tes]",
+        "respelling": "PONG-gah-meh MEH-dyoh KEE-loh deh toh-MAH-tes",
+        "text": "The accent on «pón» keeps the stress there once «me» is added; n before g sounds like ng."
       }
     }
   },
@@ -436,6 +572,7 @@
     "register": "formal",
     "region": "ES",
     "tags": ["question", "request"],
+    "image": ["shopping_bag", "redeem"],
     "words": {
       "me": { "en-GB": "for me", "bg-BG": "ми", "ru-RU": "мне" },
       "lo": { "en-GB": "it", "bg-BG": "го", "ru-RU": "это" },
@@ -443,9 +580,19 @@
       "envolver": { "en-GB": "wrap", "bg-BG": "опаковате", "ru-RU": "завернуть" }
     },
     "notes": {
+      "mnemonic": {
+        "title": "Envolver, envelope",
+        "text": "«Envolver» is to wrap, like an envelope around a letter."
+      },
       "grammar": {
         "title": "Me before lo",
         "text": "Two pronouns go before the verb in this order: me (for me), then lo (it)."
+      },
+      "pronunciation": {
+        "title": "Hard and soft v",
+        "ipa": "[me lo ˈpwe.ðe em.bolˈβeɾ]",
+        "respelling": "meh loh PWEH-deh em-bol-VEHR",
+        "text": "After n the v is a full b, “em-bol”; the second v is soft, the lips barely touch."
       }
     }
   },
@@ -460,6 +607,7 @@
     "register": "neutral",
     "region": "ES",
     "tags": ["politeness"],
+    "image": ["shopping_basket", "done_all"],
     "words": {
       "nada": { "en-GB": "nothing", "bg-BG": "нищо", "ru-RU": "ничего" },
       "más": { "en-GB": "more", "bg-BG": "повече", "ru-RU": "больше" },
@@ -469,6 +617,16 @@
       "mnemonic": {
         "title": "When to say it",
         "text": "Say it when the seller asks «¿Algo más?» (anything else?)."
+      },
+      "grammar": {
+        "title": "Nada más",
+        "text": "«Nada más» means “nothing more”. Spanish can stack negatives: «No quiero nada más»."
+      },
+      "pronunciation": {
+        "title": "Soft d in nada",
+        "ipa": "[ˈna.ða ˈmas ˈɣɾa.θjas]",
+        "respelling": "NAH-thah MAS, GRAH-thyahs",
+        "text": "The d of nada is soft, like th in “this”; in Spain gracias has a th sound too."
       }
     }
   },
@@ -483,14 +641,25 @@
     "register": "informal",
     "region": "ES",
     "tags": ["question", "social"],
+    "image": ["work", "forum"],
     "words": {
       "a qué": { "en-GB": "to what", "bg-BG": "с какво", "ru-RU": "чем" },
       "te dedicas": { "en-GB": "you devote yourself", "bg-BG": "се занимаваш", "ru-RU": "ты занимаешься" }
     },
     "notes": {
+      "mnemonic": {
+        "title": "Dedicated to",
+        "text": "«Dedicarse a» is what you are dedicated to: your work."
+      },
       "grammar": {
         "title": "Tú or usted",
         "text": "«Te» makes this informal (tú). To a stranger, say «¿A qué se dedica?»."
+      },
+      "pronunciation": {
+        "title": "Soft d in dedicas",
+        "ipa": "[a ˈke te ðeˈði.kas]",
+        "respelling": "ah KEH teh deh-DEE-kahs",
+        "text": "Both d's of dedicas are soft, between vowels: said lightly, almost a th."
       }
     }
   },
@@ -505,14 +674,25 @@
     "register": "neutral",
     "region": "ES",
     "tags": ["social"],
+    "image": ["celebration", "sentiment_very_satisfied"],
     "words": {
       "qué bien": { "en-GB": "how well", "bg-BG": "колко хубаво", "ru-RU": "как хорошо" },
       "lo hemos pasado": { "en-GB": "we have had (a time)", "bg-BG": "прекарахме", "ru-RU": "мы провели (время)" }
     },
     "notes": {
+      "mnemonic": {
+        "title": "The evening passed well",
+        "text": "Picture the evening passing well: «pasarlo bien» is to have a good time."
+      },
       "grammar": {
         "title": "Pasarlo bien",
         "text": "«Pasarlo bien» means to have a good time. Spain often uses «hemos pasado» for something that happened today."
+      },
+      "pronunciation": {
+        "title": "A silent h",
+        "ipa": "[ˈke ˈβjen lo eˈmos paˈsa.ðo]",
+        "respelling": "KEH BYEN loh eh-MOS pah-SAH-doh",
+        "text": "The h of hemos is silent: “eh-MOS”."
       }
     }
   },
@@ -527,15 +707,26 @@
     "register": "neutral",
     "region": "ES",
     "tags": ["social"],
+    "image": ["directions_walk", "schedule"],
     "words": {
       "tengo que": { "en-GB": "I have to", "bg-BG": "трябва", "ru-RU": "мне нужно" },
       "irme": { "en-GB": "go (away)", "bg-BG": "да тръгна", "ru-RU": "уйти" },
       "ya": { "en-GB": "now, already", "bg-BG": "вече", "ru-RU": "уже" }
     },
     "notes": {
+      "mnemonic": {
+        "title": "Ya, right now",
+        "text": "«Ya» sounds like “yeah”: yeah, I really have to go now."
+      },
       "grammar": {
         "title": "Tener que",
         "text": "«Tener que» + infinitive means “have to”. «Ya» here means “now, already”."
+      },
+      "pronunciation": {
+        "title": "Tengo: ng",
+        "ipa": "[ˈteŋ.ɡo ke ˈiɾ.me ˈʝa]",
+        "respelling": "TENG-go keh EER-meh YAH",
+        "text": "N before g sounds like ng in “finger”; «que» is just “keh”, the u is silent."
       }
     }
   },
@@ -550,14 +741,25 @@
     "register": "informal",
     "region": "ES",
     "tags": ["question", "social"],
+    "image": ["calendar_month", "group"],
     "words": {
       "quedamos": { "en-GB": "shall we meet", "bg-BG": "ще се видим", "ru-RU": "встретимся" },
       "la semana que viene": { "en-GB": "next week", "bg-BG": "следващата седмица", "ru-RU": "на следующей неделе" }
     },
     "notes": {
+      "mnemonic": {
+        "title": "The week that comes",
+        "text": "«La semana que viene» is, word for word, “the week that comes”: next week."
+      },
       "grammar": {
         "title": "Quedar",
         "text": "«Quedar» means to arrange to meet. «La semana que viene» is next week."
+      },
+      "pronunciation": {
+        "title": "Qu is k",
+        "ipa": "[keˈða.mos la seˈma.na ke ˈβje.ne]",
+        "respelling": "keh-DAH-mos lah seh-MAH-nah keh BYEH-neh",
+        "text": "Qu sounds like k; in quedamos the d between vowels is soft."
       }
     }
   },
@@ -572,6 +774,7 @@
     "register": "formal",
     "region": "ES",
     "tags": ["question"],
+    "image": ["local_taxi", "check_circle"],
     "words": {
       "está": { "en-GB": "(it / you) is, are", "bg-BG": "е, сте", "ru-RU": "(вы)" },
       "libre": { "en-GB": "free", "bg-BG": "свободно, свободен", "ru-RU": "свободны" }
@@ -580,6 +783,16 @@
       "mnemonic": {
         "title": "The green light",
         "text": "A free taxi in Spain shows a green light and the word «libre»."
+      },
+      "grammar": {
+        "title": "Estar for now",
+        "text": "«Está libre» uses «estar»: free right now. «Es libre» would mean free by nature."
+      },
+      "pronunciation": {
+        "title": "Br in libre",
+        "ipa": "[esˈta ˈli.βɾe]",
+        "respelling": "es-TAH LEE-breh",
+        "text": "The b in libre is soft, and the r after it is a single tap."
       }
     }
   },
@@ -594,6 +807,7 @@
     "register": "neutral",
     "region": "ES",
     "tags": ["request", "directions"],
+    "image": ["local_taxi", "pin_drop"],
     "words": {
       "a": { "en-GB": "to", "bg-BG": "до", "ru-RU": "по, к" },
       "esta": { "en-GB": "this", "bg-BG": "този", "ru-RU": "этому" },
@@ -604,6 +818,16 @@
       "mnemonic": {
         "title": "Show it too",
         "text": "Show the address on your phone as you say it."
+      },
+      "grammar": {
+        "title": "Esta, this",
+        "text": "«Esta» (this) matches «dirección», which is feminine; with a masculine noun it is «este»: este hotel."
+      },
+      "pronunciation": {
+        "title": "Dirección: two c's",
+        "ipa": "[a ˈes.ta ði.ɾekˈθjon poɾ faˈβoɾ]",
+        "respelling": "ah ES-tah dee-rek-THYON, por fah-VOR",
+        "text": "The first c is a k, the second a th: dee-rek-THYON."
       }
     }
   },
@@ -618,15 +842,26 @@
     "register": "formal",
     "region": "ES",
     "tags": ["question", "numbers"],
+    "image": ["payments", "local_taxi"],
     "words": {
       "cuánto": { "en-GB": "how much", "bg-BG": "колко", "ru-RU": "сколько" },
       "le": { "en-GB": "(to) you", "bg-BG": "ви", "ru-RU": "вам" },
       "debo": { "en-GB": "I owe", "bg-BG": "дължа", "ru-RU": "(я) должен / должна" }
     },
     "notes": {
+      "mnemonic": {
+        "title": "Debo, debt",
+        "text": "«Debo» (I owe) shares its root with “debt”: how much is my debt?"
+      },
       "grammar": {
         "title": "Polite «le»",
         "text": "«Le» is the polite “you”. To a friend: «¿Cuánto te debo?»."
+      },
+      "pronunciation": {
+        "title": "Soft b in debo",
+        "ipa": "[ˈkwan.to le ˈðe.βo]",
+        "respelling": "KWAN-toh leh DEH-boh",
+        "text": "Between vowels both the d and the b of debo are soft."
       }
     }
   },
@@ -641,15 +876,26 @@
     "register": "formal",
     "region": "ES",
     "tags": ["request", "directions"],
+    "image": ["local_taxi", "front_hand"],
     "words": {
       "pare": { "en-GB": "stop (polite)", "bg-BG": "спрете", "ru-RU": "остановите" },
       "aquí": { "en-GB": "here", "bg-BG": "тук", "ru-RU": "здесь" },
       "por favor": { "en-GB": "please", "bg-BG": "моля", "ru-RU": "пожалуйста" }
     },
     "notes": {
+      "mnemonic": {
+        "title": "Pare, park",
+        "text": "«Pare» sounds like the start of “park”: stop and park here."
+      },
       "grammar": {
         "title": "Pare, aquí mismo",
         "text": "«Pare» is the usted command of parar. «Aquí mismo» means right here."
+      },
+      "pronunciation": {
+        "title": "Aquí: ah-KEE",
+        "ipa": "[ˈpa.ɾe aˈki poɾ faˈβoɾ]",
+        "respelling": "PAH-reh ah-KEE, por fah-VOR",
+        "text": "The u in «aquí» is silent: ah-KEE, stressed on the end."
       }
     }
   },
@@ -663,12 +909,17 @@
     "register": "neutral",
     "region": "BG",
     "tags": ["request", "food"],
+    "image": ["coffee"],
     "words": {
       "едно": { "en-GB": "one, a", "ru-RU": "один" },
       "кафе": { "en-GB": "coffee", "ru-RU": "кофе" },
       "моля": { "en-GB": "please", "ru-RU": "пожалуйста" }
     },
     "notes": {
+      "mnemonic": {
+        "title": "Моля: please",
+        "text": "«Моля» is both “please” and “you are welcome”, like German «bitte»."
+      },
       "grammar": {
         "title": "Neuter «едно»",
         "text": "«Кафе» is neuter, so “one” is «едно»."
@@ -691,14 +942,25 @@
     "register": "neutral",
     "region": "BG",
     "tags": ["request", "politeness"],
+    "image": ["receipt_long", "payments"],
     "words": {
       "сметката": { "en-GB": "the bill", "ru-RU": "счёт" },
       "моля": { "en-GB": "please", "ru-RU": "пожалуйста" }
     },
     "notes": {
+      "mnemonic": {
+        "title": "Сметка counts",
+        "text": "«Сметка» comes from «смятам», to count: the bill counts up what you had."
+      },
       "grammar": {
         "title": "“The” is a suffix",
         "text": "Bulgarian adds “the” to the end of the word: сметка (a bill) → сметката (the bill)."
+      },
+      "pronunciation": {
+        "title": "SMET-ka-ta",
+        "ipa": "[ˈsmɛtkɐtɐ ˈmɔʎɐ]",
+        "respelling": "SMET-kuh-tuh, MO-lya",
+        "text": "Stress the first syllable; the unstressed a's are short and neutral."
       }
     }
   },
@@ -712,6 +974,7 @@
     "register": "neutral",
     "region": "BG",
     "tags": ["question", "food"],
+    "image": ["local_drink", "block"],
     "words": {
       "имате": { "en-GB": "(you) have", "ru-RU": "у вас есть" },
       "ли": { "en-GB": "(question word)", "ru-RU": "ли" },
@@ -720,9 +983,19 @@
       "лактоза": { "en-GB": "lactose", "ru-RU": "лактоза" }
     },
     "notes": {
+      "mnemonic": {
+        "title": "Без: without",
+        "text": "«Без» means “without”, as in Russian: мляко без лактоза, кафе без захар."
+      },
       "grammar": {
         "title": "Questions with «ли»",
         "text": "«Ли» turns a sentence into a yes/no question. It comes right after the word you ask about."
+      },
+      "pronunciation": {
+        "title": "A soft л in мляко",
+        "ipa": "[ˈimɐtɛ li ˈmʎako bɛz lɐkˈtɔzɐ]",
+        "respelling": "EE-muh-teh lee MLYA-ko bez lak-TO-zuh",
+        "text": "«Мля» is one syllable with a soft l: “mlya”."
       }
     }
   },
@@ -736,15 +1009,26 @@
     "register": "neutral",
     "region": "BG",
     "tags": ["food", "social"],
+    "image": ["restaurant", "sentiment_very_satisfied"],
     "words": {
       "много": { "en-GB": "very", "ru-RU": "очень" },
       "е": { "en-GB": "is", "ru-RU": "(есть)" },
       "вкусно": { "en-GB": "tasty", "ru-RU": "вкусно" }
     },
     "notes": {
+      "mnemonic": {
+        "title": "Вкус: taste",
+        "text": "«Вкусно» comes from «вкус», taste: it is full of taste."
+      },
       "grammar": {
         "title": "«Е» comes second",
         "text": "The short «е» (is) usually comes second in the sentence: много е вкусно."
+      },
+      "pronunciation": {
+        "title": "в sounds like f",
+        "ipa": "[ˈmnɔɡɔ ɛ ˈfkusnɔ]",
+        "respelling": "MNO-go eh FKOOS-no",
+        "text": "The в at the start of «вкусно» sounds like f before к: “fkoos-no”."
       }
     }
   },
@@ -758,6 +1042,7 @@
     "register": "neutral",
     "region": "BG",
     "tags": ["question", "directions"],
+    "image": ["directions_bus", "location_on"],
     "words": {
       "къде": { "en-GB": "where", "ru-RU": "где" },
       "е": { "en-GB": "is", "ru-RU": "(есть)" },
@@ -767,6 +1052,16 @@
       "mnemonic": {
         "title": "Спирка",
         "text": "A «спирка» is a bus or tram stop; with “the” it becomes «спирката»."
+      },
+      "grammar": {
+        "title": "Къде е…?",
+        "text": "«Къде е…?» asks where something is. The same «е» (is) serves every noun: къде е спирката, къде е хотелът."
+      },
+      "pronunciation": {
+        "title": "The ъ in къде",
+        "ipa": "[kɐˈdɛ ɛ ˈspirkɐtɐ]",
+        "respelling": "kuh-DEH eh SPEER-kuh-tuh",
+        "text": "«Ъ» in къде is short and neutral, and the stress is on «де»."
       }
     }
   },
@@ -780,15 +1075,26 @@
     "register": "neutral",
     "region": "BG",
     "tags": ["request", "numbers"],
+    "image": ["confirmation_number"],
     "words": {
       "един": { "en-GB": "one", "ru-RU": "один" },
       "билет": { "en-GB": "ticket", "ru-RU": "билет" },
       "моля": { "en-GB": "please", "ru-RU": "пожалуйста" }
     },
     "notes": {
+      "mnemonic": {
+        "title": "Билет: ticket",
+        "text": "«Билет» is the French «billet» and the Spanish «billete»: a ticket in all three."
+      },
       "grammar": {
         "title": "Един, една, едно",
         "text": "“One” follows the gender of the noun: един билет, една бира, едно кафе."
+      },
+      "pronunciation": {
+        "title": "e-DEEN bee-LET",
+        "ipa": "[ɛˈdin biˈlɛt ˈmɔʎɐ]",
+        "respelling": "eh-DEEN bee-LET, MO-lya",
+        "text": "Both words are stressed on the end: е-DIN bi-LET."
       }
     }
   },
@@ -802,6 +1108,7 @@
     "register": "neutral",
     "region": "BG",
     "tags": ["question", "directions"],
+    "image": ["directions_bus", "location_city"],
     "words": {
       "този": { "en-GB": "this", "ru-RU": "этот" },
       "автобус": { "en-GB": "bus", "ru-RU": "автобус" },
@@ -811,6 +1118,14 @@
       "центъра": { "en-GB": "the centre", "ru-RU": "центр" }
     },
     "notes": {
+      "mnemonic": {
+        "title": "Ходи: it walks",
+        "text": "A Bulgarian bus «ходи», walks, to the centre: the same verb as for people."
+      },
+      "grammar": {
+        "title": "До + “the”",
+        "text": "«До» (to, as far as) takes the noun with “the”: центъра, the centre, from «център»."
+      },
       "pronunciation": {
         "title": "The ъ vowel",
         "ipa": "[ˈtɔzi aftoˈbus ˈxɔdi li do ˈt͡sɛntɐrɐ]",
@@ -829,15 +1144,26 @@
     "register": "formal",
     "region": "BG",
     "tags": ["request", "directions"],
+    "image": ["front_hand", "location_on"],
     "words": {
       "спрете": { "en-GB": "stop (polite)", "ru-RU": "остановите" },
       "тук": { "en-GB": "here", "ru-RU": "здесь" },
       "моля": { "en-GB": "please", "ru-RU": "пожалуйста" }
     },
     "notes": {
+      "mnemonic": {
+        "title": "Спирам, спирка",
+        "text": "«Спрете» (stop) and «спирка» (a stop) share a root: the bus stops at the stop."
+      },
       "grammar": {
         "title": "Polite commands",
         "text": "«Спрете» is the polite command; to a friend you'd say «спри»."
+      },
+      "pronunciation": {
+        "title": "Тук, a short u",
+        "ipa": "[ˈsprɛtɛ tuk ˈmɔʎɐ]",
+        "respelling": "SPREH-teh TOOK, MO-lya",
+        "text": "«Тук» is short, like “took”; «спре» starts with three consonants."
       }
     }
   }
