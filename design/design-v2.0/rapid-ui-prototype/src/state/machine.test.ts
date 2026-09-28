@@ -7,6 +7,7 @@ import { derive, isLearned, RATING_WINDOW_MS } from './memory';
 import { currentPhraseId, memoryOf, phraseProgress, points, previouslyPlayed, sessionSummary, upNextIds } from './selectors';
 import { addLocalDays, HOUR, startOfLocalDay } from './clock';
 // Phase timing, one-pass queues and undo after moving on (the player's round-3 changes).
+import { findBankPhrase } from '../content';
 import { findPhrase, OWN_PHRASE_PREFIX, OWN_SET_PREFIX } from './catalog';
 import { requeuesOn } from './machine';
 import { measuredTargetMs, pendingFor, phaseDurationMs } from './selectors';
@@ -401,6 +402,52 @@ describe('the learner’s own phrases and sets', () => {
     assert.equal(Object.keys(s.learner.ownSets).length, 1);
     assert.equal(run(s, { type: 'ADD_PICKS', picks: [{ target: '  ', native: 'x' }], title: 'Empty', now: T0 + 2 }), s);
     assert.equal(canHandle('playing', 'ADD_PICKS'), true, 'saving never waits for the player');
+  });
+
+  it('every own phrase gets notes where it can: the bank’s, or AI’s for its text (plan 105)', () => {
+    const notes = {
+      mnemonic: { title: 'Toalla, towel', text: 'Sounds alike.' },
+      grammar: { title: 'Otra', text: 'No «una» before «otra».' },
+      pronunciation: { title: 'Ll', text: 'Like y.', ipa: '[oˈtɾa toˈa.ʝa]', respelling: 'OH-trah toh-AH-yah' },
+    };
+    // Typed by hand, the bank's own phrase: it links to the bank and shows the bank's notes and picture.
+    let s = run(fresh(), { type: 'ADD_OWN_PHRASE', target: ' ¿a qué hora es el desayuno ', native: 'Breakfast?', now: T0 });
+    const typed = Object.values(s.learner.ownPhrases)[0];
+    assert.equal(typed.bankId, 'bank-hotel-es-02');
+    const shown = findPhrase(s.learner, typed.id)!;
+    assert.deepEqual(shown.notes, findBankPhrase('bank-hotel-es-02')!.notes);
+    assert.deepEqual(shown.image, findBankPhrase('bank-hotel-es-02')!.image);
+    // AI's notes for a phrase the bank lacks, kept with it; in Bulgarian they stand as Bulgarian.
+    s = run(s, { type: 'ADD_OWN_PHRASE', target: 'Otra toalla', native: 'Another towel', notes, image: ['dry_cleaning'], id: `${OWN_PHRASE_PREFIX}ai`, now: T0 + 1 });
+    assert.deepEqual(findPhrase(s.learner, `${OWN_PHRASE_PREFIX}ai`)?.notes, notes);
+    assert.deepEqual(findPhrase(s.learner, `${OWN_PHRASE_PREFIX}ai`)?.image, ['dry_cleaning']);
+    // A new text drops notes written for the old one; a native-only correction keeps them.
+    s = run(s, { type: 'EDIT_OWN_PHRASE', id: `${OWN_PHRASE_PREFIX}ai`, target: 'Otra toalla', native: 'One more towel', now: T0 + 2 });
+    assert.deepEqual(s.learner.ownPhrases[`${OWN_PHRASE_PREFIX}ai`].notes, notes);
+    s = run(s, { type: 'EDIT_OWN_PHRASE', id: `${OWN_PHRASE_PREFIX}ai`, target: 'Otra toalla limpia', native: 'Another clean towel', now: T0 + 3 });
+    assert.equal(s.learner.ownPhrases[`${OWN_PHRASE_PREFIX}ai`].notes, undefined);
+    assert.equal(findPhrase(s.learner, `${OWN_PHRASE_PREFIX}ai`)?.notes, null);
+    // Notes from the writer apply to the text they were written for, once.
+    assert.equal(run(s, { type: 'SET_OWN_NOTES', id: `${OWN_PHRASE_PREFIX}ai`, target: 'Otra toalla', notes, image: ['dry_cleaning'], now: T0 + 4 }), s, 'written for an older text');
+    s = run(s, { type: 'SET_OWN_NOTES', id: `${OWN_PHRASE_PREFIX}ai`, target: 'Otra toalla limpia', notes, image: ['dry_cleaning'], now: T0 + 5 });
+    assert.deepEqual(s.learner.ownPhrases[`${OWN_PHRASE_PREFIX}ai`].notes, notes);
+    assert.equal(run(s, { type: 'SET_OWN_NOTES', id: typed.id, target: typed.target, notes, image: [], now: T0 + 6 }), s, 'the bank’s notes are kept');
+    // Edited into the bank's text, it takes the bank's notes.
+    s = run(s, { type: 'EDIT_OWN_PHRASE', id: `${OWN_PHRASE_PREFIX}ai`, target: 'Llévate un paraguas', native: 'Take an umbrella', now: T0 + 7 });
+    assert.equal(s.learner.ownPhrases[`${OWN_PHRASE_PREFIX}ai`].bankId, 'bank-weather-es-06');
+    assert.equal(s.learner.ownPhrases[`${OWN_PHRASE_PREFIX}ai`].notes, undefined);
+  });
+
+  it('AI notes in the learner’s own language stand as that language’s notes', () => {
+    const s0 = fresh();
+    const bg = { ...s0, learner: { ...s0.learner, profile: { ...s0.learner.profile, nativeLang: 'bg-BG' as const } } };
+    const notes = {
+      mnemonic: { title: 'Бележка', text: 'Текст.' },
+      grammar: { title: 'Граматика', text: 'Текст.' },
+      pronunciation: { title: 'Звук', text: 'Текст.', ipa: '[ˈo.la]', respelling: 'OH-lah' },
+    };
+    const s = run(bg, { type: 'ADD_OWN_PHRASE', target: 'Hola, ¿qué tal?', native: 'Здравей', notes, image: ['waving_hand'], id: `${OWN_PHRASE_PREFIX}bg`, now: T0 });
+    assert.deepEqual(findPhrase(s.learner, `${OWN_PHRASE_PREFIX}bg`)?.noteTranslations.grammar, { 'bg-BG': { title: 'Граматика', text: 'Текст.' } });
   });
 
   it('changing course empties the queue', () => {

@@ -1,6 +1,7 @@
 // "Make a set": what the learner asks for, and the phrases offered back. A suggestion is only an
 // offer; nothing becomes the learner's until they add it (plan 103, after plan 97's boundary).
 import type { LanguageCode, TopicTone } from '../content';
+import type { OwnNotes } from '../state/types';
 
 /** A topic ("at the pharmacy"), a few keywords ("hotel, towel") or a pasted text. */
 export type SuggestMode = 'topic' | 'keywords' | 'text';
@@ -40,4 +41,8 @@ export interface Suggestion {
   /** Its picture (plan 105), when it has one, and the colour it sits on. */
   image?: readonly string[];
   tone?: TopicTone;
+  /** A phrase-bank suggestion: the phrase added keeps it, and reads its notes and picture from the bank. */
+  bankId?: string;
+  /** An AI suggestion's notes, in the learner's language: the phrase added keeps them. */
+  notes?: OwnNotes;
 }

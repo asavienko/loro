@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { added, currentCard, deal, dealt, decide, edit, lastDecision, newDeck, nextCard, picksOf, undo, unadd } from './deck';
+import { added, currentCard, deal, dealt, decide, edit, lastDecision, newDeck, nextCard, picksOf, shown, undo, unadd } from './deck';
 import type { Suggestion } from './types';
 
 const ai: Suggestion = { key: 'ai:a', source: 'ai', target: '¿Hay una farmacia cerca?', native: 'Is there a pharmacy nearby?' };
@@ -42,6 +42,25 @@ describe('deck', () => {
     ]);
     assert.equal(edit(deck, ai.key, '', 'x'), deck, 'empty text is refused');
     assert.deepEqual(edit(deck, course.key, course.target, course.native).edits[course.key], undefined, 'the original text drops the correction');
+  });
+
+  it('a bank card keeps its bank link, an AI card its notes, until the learner corrects the text', () => {
+    const notes = {
+      mnemonic: { title: 'm', text: 'x' },
+      grammar: { title: 'g', text: 'y' },
+      pronunciation: { title: 'p', text: 'z', ipa: '[a]', respelling: 'AH' },
+    };
+    const fromBank: Suggestion = { ...bank, bankId: 'bank-health-es-03', image: ['sick'] };
+    const fromAi: Suggestion = { ...ai, notes, image: ['local_pharmacy'] };
+    assert.deepEqual(picksOf([fromBank, fromAi]), [
+      { target: bank.target, native: bank.native, origin: 'bank', bankId: 'bank-health-es-03' },
+      { target: ai.target, native: ai.native, origin: 'ai', notes, image: ['local_pharmacy'] },
+    ]);
+    const deck = edit(edit(newDeck([fromBank, fromAi]), fromBank.key, 'Me duele mucho la garganta', bank.native), fromAi.key, '¿Hay farmacia?', ai.native);
+    assert.deepEqual(picksOf([currentCard(deck)!, shown(deck, fromAi)]), [
+      { target: 'Me duele mucho la garganta', native: bank.native, origin: 'bank' },
+      { target: '¿Hay farmacia?', native: ai.native, origin: 'ai' },
+    ]);
   });
 
   it('saves existing phrases by id and the rest with their origin', () => {

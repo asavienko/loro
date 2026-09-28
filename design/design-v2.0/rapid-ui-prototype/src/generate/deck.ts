@@ -28,11 +28,15 @@ export function nextCard(deck: Deck): Suggestion | null {
   return card ? shown(deck, card) : null;
 }
 
-/** A card with the learner's correction, if any. A corrected card is a new phrase: it no longer adds an existing one. */
+/**
+ * A card with the learner's correction, if any. A corrected card is a new phrase: it no longer adds
+ * an existing one, and the notes of its old text (the bank's, AI's) no longer explain it. Its
+ * picture, which shows what it is about, stays.
+ */
 export function shown(deck: Deck, card: Suggestion): Suggestion {
   const edit = deck.edits[card.key];
   if (!edit) return card;
-  const { phraseId: _phraseId, setTitle: _setTitle, ...rest } = card;
+  const { phraseId: _phraseId, setTitle: _setTitle, bankId: _bankId, notes: _notes, ...rest } = card;
   return { ...rest, target: edit.target, native: edit.native };
 }
 
@@ -96,6 +100,12 @@ export function picksOf(cards: Suggestion[]): PhrasePick[] {
   return cards.map((card) => {
     if (card.phraseId) return { phraseId: card.phraseId };
     const origin = card.source === 'ai' ? 'ai' : card.source === 'bank' ? 'bank' : undefined;
-    return { target: card.target, native: card.native, ...(origin ? { origin } : {}) };
+    return {
+      target: card.target,
+      native: card.native,
+      ...(origin ? { origin } : {}),
+      ...(card.bankId ? { bankId: card.bankId } : {}),
+      ...(card.notes ? { notes: card.notes, ...(card.image ? { image: [...card.image] } : {}) } : {}),
+    };
   });
 }

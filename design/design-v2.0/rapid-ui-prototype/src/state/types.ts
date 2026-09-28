@@ -77,6 +77,19 @@ export interface Like {
  */
 export type PhraseOrigin = 'bank' | 'ai';
 
+/** A note written for one of the learner's own phrases, in their language (plan 105). */
+export interface OwnNote {
+  title: string;
+  text: string;
+}
+
+/** All three notes of one of the learner's own phrases, as AI wrote them for it. */
+export interface OwnNotes {
+  mnemonic: OwnNote;
+  grammar: OwnNote;
+  pronunciation: OwnNote & { ipa: string; respelling: string };
+}
+
 export interface OwnPhrase {
   id: string;
   targetLang: LanguageCode;
@@ -87,10 +100,18 @@ export interface OwnPhrase {
   updatedAt: number;
   deleted: boolean;
   origin?: PhraseOrigin;
+  /** The same phrase in Loro's phrase bank: its notes and picture are read from there. */
+  bankId?: string;
+  /** Notes AI wrote for this text, in the learner's language; dropped when the text changes. */
+  notes?: OwnNotes;
+  /** The picture AI chose for it: Material Symbols from the registry. */
+  image?: string[];
 }
 
 /** A phrase picked in "Make a set": one that exists, by id, or a new one to write (with the id the store promised). */
-export type PhrasePick = { phraseId: string } | { target: string; native: string; origin?: PhraseOrigin; id?: string };
+export type PhrasePick =
+  | { phraseId: string }
+  | { target: string; native: string; origin?: PhraseOrigin; id?: string; bankId?: string; notes?: OwnNotes; image?: string[] };
 
 export interface OwnSet {
   id: string;

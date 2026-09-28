@@ -1,6 +1,8 @@
 // Content plus the learner's own phrases and sets, seen as one catalog.
 import {
+  BANK_PHRASES,
   CONTENT_PHRASES,
+  findBankPhrase,
   findContentPhrase,
   findSet,
   LanguageCode,
@@ -16,6 +18,14 @@ export const OWN_PHRASE_PREFIX = 'mine-p-';
 export const OWN_SET_PREFIX = 'mine-s-';
 
 export function ownPhraseToPhrase(own: OwnPhrase): Phrase {
+  // Its notes and picture: the bank's when it is a bank phrase, else what AI wrote for it (in the
+  // learner's language, so they also stand as that language's version), else none yet.
+  const bank = findBankPhrase(own.bankId);
+  const notes = bank?.notes ?? own.notes ?? null;
+  const written =
+    !bank && own.notes && own.nativeLang !== 'en-GB'
+      ? Object.fromEntries(Object.entries(own.notes).map(([kind, note]) => [kind, { [own.nativeLang]: { title: note.title, text: note.text } }]))
+      : {};
   return {
     id: own.id,
     setId: null,
@@ -25,13 +35,19 @@ export function ownPhraseToPhrase(own: OwnPhrase): Phrase {
     register: null,
     tags: [],
     words: {},
-    image: null,
-    notes: null,
-    noteTranslations: {},
+    image: bank?.image ?? own.image ?? null,
+    notes,
+    noteTranslations: bank?.noteTranslations ?? written,
     audio: null,
     durationMs: null,
     own: true,
   };
+}
+
+/** The phrase bank's phrase that says the same as `text` in the course language, if there is one. */
+export function bankMatch(targetLang: LanguageCode, text: string): string | undefined {
+  const key = sameKey(text);
+  return key ? BANK_PHRASES.find((b) => b.targetLang === targetLang && sameKey(b.target) === key)?.id : undefined;
 }
 
 export function findPhrase(learner: LearnerState, id: string | null | undefined): Phrase | undefined {

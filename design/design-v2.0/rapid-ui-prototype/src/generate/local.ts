@@ -106,6 +106,8 @@ function entries(learner: LearnerState): Entry[] {
         source: 'bank',
         target: p.target,
         native: p.translations[nativeLang] ?? Object.values(p.translations)[0] ?? '',
+        image: p.image,
+        bankId: p.id,
       },
       primary: wordsOf(p.target, ...Object.values(p.translations)),
       theme: wordsOf(...(theme?.keywords ?? []), ...Object.values(theme?.title ?? {})),
