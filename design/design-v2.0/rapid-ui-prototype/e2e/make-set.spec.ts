@@ -3,7 +3,7 @@
 // as a set. Offline the suggestions come from the phrase bank and the course; with a writer on the
 // server they are AI-written and say so (tested against a stand-in, never the real service).
 import { Locator, Page } from '@playwright/test';
-import { expect, test } from './fixtures';
+import { expect, test, WRITTEN_NOTES } from './fixtures';
 
 const make = (page: Page) => page.getByRole('dialog', { name: /^(Make a set|Add to )/ });
 const card = (page: Page) => make(page).getByRole('group', { name: /^Suggestion \d+ of \d+$/ });
@@ -44,6 +44,7 @@ async function expectCard(page: Page, position: string | RegExp, target: string 
 }
 
 const rows = (page: Page): Locator => page.getByRole('main').getByRole('listitem');
+
 
 test('a topic becomes a set: swipe, the buttons and the keys add and skip, Undo takes back, a card can be corrected', async ({ page }) => {
   await open(page);
@@ -95,6 +96,12 @@ test('a topic becomes a set: swipe, the buttons and the keys add and skip, Undo 
   await expect(make(page)).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'Pharmacy', level: 1 })).toBeVisible();
   await expect(page.getByRole('status')).toHaveText('Created Pharmacy');
+  // A phrase from the bank keeps the bank's picture and notes.
+  await page.getByRole('button', { name: 'Details for Me duele la garganta' }).click();
+  const bankSheet = page.getByRole('dialog').last();
+  await expect(bankSheet.locator('[data-phrase-image]')).toBeVisible();
+  await expect(bankSheet.getByRole('tab')).toHaveCount(3);
+  await bankSheet.getByRole('button', { name: 'Close' }).click();
   // In the order they were added, the correction included.
   await expect(rows(page)).toHaveCount(3);
   await expect(rows(page).nth(0)).toContainText('¿Dónde hay una farmacia cerca?');
@@ -159,8 +166,8 @@ test('AI suggestions say they are AI-written and unchecked, and keep saying it o
       json: {
         model: 'stand-in',
         phrases: [
-          { target: '¿Me puede recomendar algo para la tos?', native: 'Can you recommend something for a cough?' },
-          { target: 'La cuenta, por favor', native: 'The bill, please' },
+          { target: '¿Me puede recomendar algo para la tos?', native: 'Can you recommend something for a cough?', image: ['medication', 'sick'], notes: WRITTEN_NOTES },
+          { target: 'La cuenta, por favor', native: 'The bill, please', image: ['receipt_long'], notes: WRITTEN_NOTES },
         ],
       },
     });
@@ -179,6 +186,11 @@ test('AI suggestions say they are AI-written and unchecked, and keep saying it o
   await make(page).getByRole('button', { name: 'Create' }).click();
   await page.getByRole('button', { name: 'Details for ¿Me puede recomendar algo para la tos?' }).click();
   await expect(page.getByText('Written by AI. No native speaker has checked it.')).toBeVisible();
+  // It keeps the picture and notes the writer sent with it.
+  const sheet = page.getByRole('dialog').last();
+  await expect(sheet.locator('[data-phrase-image]')).toHaveAttribute('data-phrase-image', 'medication sick');
+  await expect(sheet.getByRole('tabpanel')).toContainText('Tos, a cough');
+  await expect(sheet.locator('[data-sounds]')).toContainText('meh PWEH-deh');
 });
 
 test('when the AI writer fails, the device’s phrases stand in, and the screen says so', async ({ page }) => {

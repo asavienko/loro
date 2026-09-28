@@ -252,3 +252,10 @@ export function yearOfHistory(now: number) {
   });
   return log;
 }
+
+/** What the stand-in writer sends with each phrase: its picture and all three notes (plan 105). */
+export const WRITTEN_NOTES = {
+  mnemonic: { title: 'Tos, a cough', text: '«Tos» sounds like the start of “toss”: a cough tosses air out.' },
+  grammar: { title: 'Algo para', text: '«Algo para» + a noun is “something for”.' },
+  pronunciation: { title: 'Soft d in puede', text: 'The d between vowels is soft.', ipa: '[me ˈpwe.ðe re.ko.menˈdaɾ ˈal.ɣo ˈpa.ɾa la ˈtos]', respelling: 'meh PWEH-deh reh-ko-men-DAR AL-go PAH-rah lah TOS' },
+};

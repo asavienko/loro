@@ -6,6 +6,13 @@ import { fromWritten, suggest } from './suggest';
 import type { SuggestRequest } from './types';
 
 const request: SuggestRequest = { mode: 'topic', input: 'pharmacy', targetLang: 'es-ES', nativeLang: 'en-GB' };
+const NOTES = {
+  mnemonic: { title: 'Tos, toss', text: 'Sounds alike.' },
+  grammar: { title: 'Para', text: 'For something.' },
+  pronunciation: { title: 'Soft d', text: 'Like th.', ipa: '[ˈa.ʝa]', respelling: 'AH-yah' },
+};
+/** A written phrase as the server sends it: its picture and all three notes. */
+const w = (target: string, native: string) => ({ target, native, image: ['medication'], notes: NOTES });
 const original = globalThis.fetch;
 afterEach(() => {
   globalThis.fetch = original;
@@ -24,7 +31,10 @@ function server(body: unknown, init: ResponseInit = {}) {
 
 describe('readPhrases', () => {
   it('takes a list of phrases and nothing else', () => {
-    assert.deepEqual(readPhrases({ phrases: [{ target: ' Hola ', native: 'Hi' }, { target: '', native: 'x' }] }), [{ target: 'Hola', native: 'Hi' }]);
+    assert.deepEqual(readPhrases({ phrases: [{ ...w(' Hola ', 'Hi'), image: ['medication', 'nope'] }, w('', 'x')] }), [w('Hola', 'Hi')]);
+    // Every phrase has its notes and picture: one without is left out.
+    assert.deepEqual(readPhrases({ phrases: [{ target: 'Hola', native: 'Hi' }, { ...w('Adiós', 'Bye'), image: ['nope'] }] }), []);
+    assert.deepEqual(readPhrases({ phrases: [{ ...w('Hola', 'Hi'), notes: { ...NOTES, grammar: { title: 'x' } } }] }), []);
     assert.equal(readPhrases({ phrases: [{ target: 1, native: 'x' }] }), null);
     assert.equal(readPhrases('<!doctype html>'), null);
     assert.equal(readPhrases({}), null);
@@ -37,11 +47,11 @@ describe('fromWritten', () => {
     const out = fromWritten(
       s.learner,
       [
-        { target: '¿Hay una farmacia cerca?', native: 'Is there a pharmacy nearby?' },
-        { target: 'la cuenta por favor', native: 'The bill' },
-        { target: 'tengo tos', native: 'Cough' },
-        { target: '¿Hay una farmacia cerca', native: 'Again' },
-        { target: 'Ya lo tengo', native: 'Seen' },
+        w('¿Hay una farmacia cerca?', 'Is there a pharmacy nearby?'),
+        w('la cuenta por favor', 'The bill'),
+        w('tengo tos', 'Cough'),
+        w('¿Hay una farmacia cerca', 'Again'),
+        w('Ya lo tengo', 'Seen'),
       ],
       new Set(['ya lo tengo']),
     );
@@ -54,6 +64,8 @@ describe('fromWritten', () => {
       ],
     );
     assert.equal(out[1].setTitle, 'Café & Mañanas');
+    assert.deepEqual([out[0].image, out[0].notes], [['medication'], NOTES], 'an AI card carries its picture and notes');
+    assert.deepEqual(out[1].image, ['receipt_long', 'payments'], 'a course card shows the course phrase’s picture');
   });
 });
 
@@ -67,7 +79,7 @@ describe('suggest', () => {
   });
 
   it('asks the writer, telling it what to avoid', async () => {
-    const sent = server({ phrases: [{ target: 'Necesito algo para la tos', native: 'I need something for a cough' }], model: 'm' });
+    const sent = server({ phrases: [w('Necesito algo para la tos', 'I need something for a cough')], model: 'm' });
     const result = await suggest(fresh().learner, request, { live: true, exclude: new Set(), avoid: ['Hola'] });
     assert.deepEqual(sent, [{ ...request, avoid: ['Hola'] }]);
     assert.equal(result.writer, 'ai');
