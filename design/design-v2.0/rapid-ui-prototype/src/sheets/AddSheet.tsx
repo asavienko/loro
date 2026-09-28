@@ -2,7 +2,7 @@ import { useNav } from '../nav/NavContext';
 import { useCopy } from '../state/store';
 import { Sheet, SheetOption } from '../ui/Sheet';
 
-/** Library's "+": the two things a learner can add, each handing over to its own sheet. */
+/** Library's "+": what a learner can add, each handing over to its own sheet or screen. */
 export function AddSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const c = useCopy();
   const nav = useNav();
@@ -22,6 +22,15 @@ export function AddSheet({ open, onClose }: { open: boolean; onClose: () => void
         onClick={() => {
           onClose();
           nav.createSet();
+        }}
+      />
+      <SheetOption
+        icon="auto_awesome"
+        label={c.make.title}
+        detail={c.make.entryDetail}
+        onClick={() => {
+          onClose();
+          nav.makeSet();
         }}
       />
     </Sheet>

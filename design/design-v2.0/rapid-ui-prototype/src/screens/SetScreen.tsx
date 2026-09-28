@@ -287,10 +287,16 @@ export function SetScreen({ setId }: { setId: string }) {
         )}
         {/* Your own set grows from here: pick phrases without leaving the page. */}
         {view.kind === 'own' && (
-          <button type="button" onClick={() => setPicking(true)} className={`${btnTonal} mx-2 mt-2`}>
-            <Icon name="add" className="text-icon-md" />
-            {c.set.addPhrases}
-          </button>
+          <div className="flex flex-wrap gap-2 mx-2 mt-2">
+            <button type="button" onClick={() => setPicking(true)} className={btnTonal}>
+              <Icon name="add" className="text-icon-md" />
+              {c.set.addPhrases}
+            </button>
+            <button type="button" onClick={() => nav.makeSet({ setId })} className={btnTonal}>
+              <Icon name="auto_awesome" className="text-icon-md" />
+              {c.make.fromSet}
+            </button>
+          </div>
         )}
       </section>
 

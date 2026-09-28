@@ -68,6 +68,39 @@ const screens: { name: string; open: (page: Page) => Promise<void> }[] = [
     },
   },
   {
+    name: 'make a set',
+    open: async (page) => {
+      await page.goto('/#/library?view=ownSets');
+      await page.getByRole('button', { name: 'Make a set' }).click();
+      await page.waitForTimeout(500);
+    },
+  },
+  {
+    // A card being decided, with the one under it and Undo available.
+    name: 'make a set, deck',
+    open: async (page) => {
+      await page.goto('/#/library?view=ownSets');
+      await page.getByRole('button', { name: 'Make a set' }).click();
+      await page.getByRole('button', { name: 'At the hotel' }).click();
+      await page.getByRole('group', { name: /^Suggestion 1 of/ }).waitFor();
+      await page.keyboard.press('ArrowRight');
+      await page.waitForTimeout(500);
+    },
+  },
+  {
+    name: 'make a set, save',
+    open: async (page) => {
+      await page.goto('/#/library?view=ownSets');
+      await page.getByRole('button', { name: 'Make a set' }).click();
+      await page.getByRole('button', { name: 'At the hotel' }).click();
+      await page.getByRole('group', { name: /^Suggestion 1 of/ }).waitFor();
+      await page.keyboard.press('ArrowRight');
+      await page.keyboard.press('ArrowRight');
+      await page.getByRole('button', { name: 'Done' }).click();
+      await page.waitForTimeout(500);
+    },
+  },
+  {
     name: 'session summary',
     open: async (page) => {
       await page.goto('/');

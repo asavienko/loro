@@ -8,6 +8,7 @@ import { useMediaSession } from './audio/mediaSession';
 import { learnedCue } from './audio/cues';
 import { copyFor, copyForNative, greeting } from './copy';
 import { NATIVE_LANGUAGES } from './content';
+import { added } from './generate/deck';
 import { goBack, navigate, useBackToClose, useRoute, useScrollRestoration } from './nav/history';
 import { Navigation, NavContext } from './nav/NavContext';
 import { Route, tabOf } from './nav/routes';
@@ -32,6 +33,7 @@ import { SessionSummarySheet } from './sheets/SessionSummarySheet';
 import { SettingsSheet } from './sheets/SettingsSheet';
 import { ExploreScreen } from './screens/ExploreScreen';
 import { HomeScreen } from './screens/HomeScreen';
+import { MakeRequest, MakeSession, MakeSetScreen } from './screens/MakeSetScreen';
 import { LibraryScreen } from './screens/LibraryScreen';
 import { NowPlayingScreen } from './screens/NowPlayingScreen';
 import { Onboarding } from './screens/Onboarding';
@@ -219,11 +221,18 @@ function Shell() {
   const [settingsAtVoices, setSettingsAtVoices] = useState(false);
   const [summaryOpen, setSummaryOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
+  // Make a set: full screen, like the player. What it holds is kept here as it closes, so phrases
+  // added but not saved can be offered back.
+  const [making, setMaking] = useState<MakeRequest | null>(null);
+  const makeSession = useRef<MakeSession | null>(null);
+  const { toast } = useToast();
 
   // The tab, the app switcher and screen readers say where the learner is (WCAG 2.4.2).
   const pageTitle = !state.learner.profile.onboarded
     ? null
-    : overlay.queue
+    : making
+      ? c.make.title
+      : overlay.queue
       ? c.queue.title
       : overlay.player
         ? c.player.dialog
@@ -298,6 +307,17 @@ function Shell() {
   const closeQueue = () => setOverlay((o) => ({ ...o, queue: false }));
   useBackToClose(overlay.player, closePlayer);
   useBackToClose(overlay.queue, closeQueue);
+  // Closed with phrases added but not saved: they are one tap from coming back.
+  const closeMaking = () => {
+    const unsaved = makeSession.current;
+    makeSession.current = null;
+    setMaking(null);
+    const count = unsaved?.deck ? added(unsaved.deck).length : 0;
+    if (unsaved && count > 0) {
+      toast(c.make.unsaved(count), { action: { label: c.make.reopen, run: () => setMaking({ resume: unsaved }) } });
+    }
+  };
+  useBackToClose(making !== null, closeMaking);
   // The queue emptied under the player (a course switch in Settings over it): close it, or
   // the page would stay inert behind a player that isn't drawn. Adjusted during render.
   if (overlay.player && !currentId) setOverlay({ player: false, queue: false });
@@ -351,6 +371,10 @@ function Shell() {
       addToSet: (phraseIds) => setAddTo(phraseIds),
       addPhrase: (options = {}) => setPhraseForm(options),
       createSet: (phraseIds = [], rename) => setCreate({ phraseIds, rename }),
+      makeSet: (options = {}) => {
+        makeSession.current = null;
+        setMaking({ input: options.input, setId: options.setId });
+      },
       openSettings: () => {
         setSettingsAtVoices(false);
         setSettingsOpen(true);
@@ -376,7 +400,7 @@ function Shell() {
 
   const tab = tabOf(route);
   const setView = route.name === 'set' ? findSetView(state.learner, route.id) : undefined;
-  const behind = overlay.player;
+  const behind = overlay.player || making !== null;
   const screenKey = route.name === 'set' ? `set-${route.id}` : route.name;
 
   return (
@@ -442,6 +466,23 @@ function Shell() {
           <AnimatePresence>
             {playerDrawn && currentId && <NowPlayingScreen key="player" onClose={closePlayer} onOpenQueue={nav.openQueue} />}
             {overlay.queue && <QueueScreen key="queue" onClose={closeQueue} />}
+          </AnimatePresence>
+        </LocalBoundary>
+
+        <LocalBoundary resetKey={String(making !== null)} quiet onError={() => setMaking(null)}>
+          <AnimatePresence>
+            {making && (
+              <MakeSetScreen
+                key="make"
+                request={making}
+                session={makeSession}
+                onClose={closeMaking}
+                onSaved={() => {
+                  makeSession.current = null;
+                  setMaking(null);
+                }}
+              />
+            )}
           </AnimatePresence>
         </LocalBoundary>
 

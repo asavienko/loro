@@ -191,14 +191,20 @@ export function ExploreScreen({ filters }: { filters: ExploreFilters }) {
             <div className="py-2 flex flex-col items-start gap-2">
               <p className="text-body text-secondary">{filters.q ? c.explore.noPhrases(filters.q) : c.explore.noPhrasesFiltered}</p>
               {filters.q && (
-                <button
-                  type="button"
-                  onClick={() => nav.addPhrase({ target: clip(tidy(filters.q ?? ''), LIMITS.phrase) })}
-                  className={btnTonal}
-                >
-                  <Icon name="add" className="text-icon-md" />
-                  {c.explore.addAsOwn(filters.q)}
-                </button>
+                <div className="flex flex-wrap gap-2">
+                  <button type="button" onClick={() => nav.makeSet({ input: filters.q })} className={btnTonal}>
+                    <Icon name="auto_awesome" className="text-icon-md" />
+                    {c.make.fromExplore(filters.q)}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => nav.addPhrase({ target: clip(tidy(filters.q ?? ''), LIMITS.phrase) })}
+                    className={btnTonal}
+                  >
+                    <Icon name="add" className="text-icon-md" />
+                    {c.explore.addAsOwn(filters.q)}
+                  </button>
+                </div>
               )}
             </div>
           ) : (
