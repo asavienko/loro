@@ -1,10 +1,10 @@
 # Active plans
 
-This index lists only the **44 plans with remaining work**. Completed records and historical
+This index lists only the **45 plans with remaining work**. Completed records and historical
 snapshots are kept in [the archive](archive/README.md), without compatibility symlinks or redirect
 files in this directory. Links point directly to each plan's actual location.
 
-The highest assigned ID is **104** and the next new plan is **105**. Recheck concurrent worktrees
+The highest assigned ID is **105** and the next new plan is **106**. Recheck concurrent worktrees
 and untracked `plans/` files before allocating; the "next is N" sentence can lag. Numbers are never
 reused; 49 remains an existing gap. When a plan finishes, archive it in the same change and list it
 only in the archive index.
@@ -199,6 +199,7 @@ feature↔release-completion cycle. See each plan's checkboxes for executable ta
 | [102](102-prototype-stress-fixture.md) | v2.0 prototype at 20× content and a year of history: generator, dev switch, measured budgets | Design | — Ready; nothing built yet (prototype review round 3, item 65) | None in the app; v2.0 prototype only |
 | [103](103-prototype-phrase-generator.md) | v2.0 prototype: make a set from a topic, keywords or a text, swiping suggestions to add or skip | Design | 🟡 Implemented and tested; one live-key run left (blocked on a key) | None in the app; v2.0 prototype only; plan 97 boundary |
 | [104](104-prototype-react-native.md) | v2.0 prototype as an Expo (React Native) app sharing the prototype's state, content and copy | Design | 🟡 Paused at the foundation (screens are stand-ins); resumes after 105 | 103; `apps/mobile/modules/loro-core` for the native core |
+| [105](105-prototype-phrase-notes.md) | v2.0 prototype: every phrase has an image, IPA and respelling, a memory hint and a grammar rule | Design | 🟡 In progress | 103 bank and writer |
 
 Plan 88 owns the selected AWS testing profile and
 [operations runbook](../docs/runbooks/backend-testing.md); plan 73 retains production operations.
