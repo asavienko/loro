@@ -2,8 +2,14 @@
 
 - **Requirement IDs:** `P3-01` (continuous playback), `F-03` (offline-first), `AI-06` (make a set)
 - **Milestone:** Design exploration (v2.0 rapid prototype); no app release depends on it
-- **Status:** 🟡 In progress. Owner request 2026-09-28: "make this ui a react native app with …"
-  (the message ends there; Expo, the repository's React Native toolchain, is assumed).
+- **Status:** 🟡 Paused 2026-09-28 at the foundation, when the owner set the phrase-content goal
+  (plan 105) first. **Done:** scope 1–3 (the Expo app, Metro wiring to the shared modules, the
+  native storage/speech/cues/core modules, Intl polyfills, the native store and playback driver,
+  navigation over the prototype's `Navigation` interface, primitives); it typechecks, exports for
+  the web and boots there. **Left:** scope 4 (every screen and sheet is a marked stand-in) and 5
+  (verification, including the Android development build). **Blocked by:** nothing but priority.
+  Owner request 2026-09-28: "make this ui a react native app with …" (the message ends there; Expo,
+  the repository's React Native toolchain, is assumed).
 - **Depends on:** plan [103](103-prototype-phrase-generator.md) (Make a set) and the web prototype
   in `design/design-v2.0/rapid-ui-prototype`. Uses `apps/mobile/modules/loro-core` for the Rust core
   on native; changes nothing in `apps/mobile`.

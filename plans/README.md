@@ -198,7 +198,7 @@ feature↔release-completion cycle. See each plan's checkboxes for executable ta
 | [101](101-phrase-sound-graph.md)                                           | Authored phrase edges; Discover association score; authoring generate queue      | M2/M3       | 🟡 Remaining-work landed; review follow-up wires catalog sound fields, orphan drafts, cloud audio URIs; Q-15/Q-21/Q-22 unchanged                        | 60 maths boundary; 61/97/98/99; 87 for new linguistic edges                            |
 | [102](102-prototype-stress-fixture.md) | v2.0 prototype at 20× content and a year of history: generator, dev switch, measured budgets | Design | — Ready; nothing built yet (prototype review round 3, item 65) | None in the app; v2.0 prototype only |
 | [103](103-prototype-phrase-generator.md) | v2.0 prototype: make a set from a topic, keywords or a text, swiping suggestions to add or skip | Design | 🟡 Implemented and tested; one live-key run left (blocked on a key) | None in the app; v2.0 prototype only; plan 97 boundary |
-| [104](104-prototype-react-native.md) | v2.0 prototype as an Expo (React Native) app sharing the prototype's state, content and copy | Design | 🟡 In progress | 103; `apps/mobile/modules/loro-core` for the native core |
+| [104](104-prototype-react-native.md) | v2.0 prototype as an Expo (React Native) app sharing the prototype's state, content and copy | Design | 🟡 Paused at the foundation (screens are stand-ins); resumes after 105 | 103; `apps/mobile/modules/loro-core` for the native core |
 
 Plan 88 owns the selected AWS testing profile and
 [operations runbook](../docs/runbooks/backend-testing.md); plan 73 retains production operations.
