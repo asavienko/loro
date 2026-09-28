@@ -12,6 +12,23 @@ const byLanguage = z.partialRecord(LANGUAGE_CODE, z.string().min(1));
 
 const note = z.object({ title: z.string().min(1), text: z.string().min(1) });
 
+/**
+ * Every phrase's notes, all three (plan 105): a memory hint, the grammar rule it shows, and its
+ * sounds, with IPA and a respelling for English readers. Written in English; the other UI
+ * languages' versions sit beside them.
+ */
+export const notesSchema = z.object({
+  mnemonic: note,
+  grammar: note,
+  pronunciation: note.extend({ ipa: z.string().regex(/^\[.+\]$/, 'IPA goes in [square brackets]'), respelling: z.string().min(1) }),
+});
+
+/**
+ * A phrase's picture: one to three Material Symbols, drawn on its topic's colour. Drawn, as covers
+ * are: offline, free to load, and never showing text. The icons must be in the registry (ui.test).
+ */
+export const imageSchema = z.array(z.string().regex(/^[a-z0-9_]+$/)).min(1).max(3);
+
 export const phraseSchema = z.object({
   id: z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*-\d{2}$/, 'ids look like "cafe-01"'),
   target: z.string().min(1),
@@ -19,15 +36,10 @@ export const phraseSchema = z.object({
   register: z.enum(['formal', 'informal', 'neutral']),
   region: z.string().length(2),
   tags: z.array(z.enum(['politeness', 'question', 'request', 'numbers', 'food', 'directions', 'social'])).min(1),
+  image: imageSchema,
   /** Gloss of a word or a multi-word unit, keyed by its lower-case surface form. */
   words: z.record(z.string().min(1), byLanguage),
-  notes: z
-    .object({
-      mnemonic: note.optional(),
-      grammar: note.optional(),
-      pronunciation: note.extend({ ipa: z.string().min(1), respelling: z.string().min(1) }).optional(),
-    })
-    .refine((n) => Boolean(n.mnemonic || n.grammar || n.pronunciation), 'every phrase has at least one note'),
+  notes: notesSchema,
   /** Recorded clips, once the backend provides them. Absent means device speech. */
   audio: z.partialRecord(LANGUAGE_CODE, z.string().url()).optional(),
   /** Length of each recorded clip at 1.0×, in ms, as the backend measured it. */
@@ -102,6 +114,7 @@ export type Tag = PhraseJson['tags'][number];
 export type Level = SetJson['level'];
 export type Register = PhraseJson['register'];
 export type PhraseNotes = PhraseJson['notes'];
+export type PhraseImage = PhraseJson['image'];
 export type NoteTranslations = z.infer<typeof noteTranslationsSchema>;
 export type Meta = z.infer<typeof metaSchema>;
 export type BankJson = z.infer<typeof bankSchema>;

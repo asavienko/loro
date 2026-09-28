@@ -25,6 +25,7 @@ export function ownPhraseToPhrase(own: OwnPhrase): Phrase {
     register: null,
     tags: [],
     words: {},
+    image: null,
     notes: null,
     noteTranslations: {},
     audio: null,

@@ -20,6 +20,7 @@ describe('icons', () => {
     const names: readonly string[] = ICON_NAMES;
     for (const s of SETS) assert.ok(names.includes(s.coverIcon), s.coverIcon);
     for (const t of TOPICS) assert.ok(names.includes(t.icon), t.icon);
+    for (const p of CONTENT_PHRASES) for (const icon of p.image ?? []) assert.ok(names.includes(icon), `${p.id}: ${icon}`);
   });
 });
 
