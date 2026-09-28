@@ -37,7 +37,6 @@ import { Icon, IconName } from '../ui/Icon';
 import { PhraseNotesView } from '../ui/Notes';
 import { PhaseFill } from '../ui/PhaseFill';
 import { PhraseImage } from '../ui/PhraseImage';
-import { SetCover } from '../ui/SetCover';
 import { Sheet } from '../ui/Sheet';
 import { ToastOffsetContext, useToast } from '../ui/Toast';
 import { Txt } from '../ui/Txt';
@@ -93,11 +92,7 @@ export function NowPlayingScreen() {
 
         <ScrollView style={styles.stage} contentContainerStyle={styles.stageContent}>
           <View style={styles.cover}>
-            {phrase.image ? (
-              <PhraseImage icons={phrase.image} tone={tone} width={COVER} height={COVER} rounded={24} style={shadow.cover} />
-            ) : (
-              <SetCover set={coverSet ?? { topicId: null, coverIcon: 'edit_note' }} px={COVER} rounded={24} style={shadow.cover} />
-            )}
+            <PhraseImage icons={phrase.image} tone={tone} width={COVER} height={COVER} rounded={24} style={shadow.cover} />
           </View>
           <PhraseBlock phrase={phrase} revealed={revealed} />
           <ActionRow phrase={phrase} onNotes={() => setNotesOpen(true)} />
@@ -198,11 +193,9 @@ function ActionRow({ phrase, onNotes }: { phrase: Phrase; onNotes: () => void })
       <Pressable accessibilityRole="button" accessibilityLabel={c.phrase.addToSet} onPress={() => nav.addToSet([phrase.id])} style={styles.iconButton}>
         <Icon name="playlist_add" size={24} color="secondary" />
       </Pressable>
-      {phrase.notes && (
-        <Pressable accessibilityRole="button" accessibilityLabel={c.phrase.notesTitle} onPress={onNotes} style={styles.iconButton}>
-          <Icon name="lightbulb" size={24} color="secondary" />
-        </Pressable>
-      )}
+      <Pressable accessibilityRole="button" accessibilityLabel={c.phrase.notesTitle} onPress={onNotes} style={styles.iconButton}>
+        <Icon name="lightbulb" size={24} color="secondary" />
+      </Pressable>
     </View>
   );
 }

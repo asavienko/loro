@@ -21,7 +21,6 @@ export function PhraseNotesView({ phrase }: { phrase: Phrase }) {
   const native = state.learner.profile.nativeLang;
   const notes = phrase.notes;
   const [tab, setTab] = useState<NoteTab>('mnemonic');
-  if (!notes) return null;
   const translated = native === 'en-GB' ? undefined : phrase.noteTranslations[tab]?.[native];
   const note = notes[tab];
   const { title, text } = translated ?? note;
