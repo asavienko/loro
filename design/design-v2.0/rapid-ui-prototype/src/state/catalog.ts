@@ -11,6 +11,7 @@ import {
   PhraseSet,
   setsForCourse,
 } from '../content';
+import { deviceNotes } from '../notes';
 import { memoryKey } from './memory';
 import type { LearnerState, OwnPhrase, OwnSet } from './types';
 
@@ -19,9 +20,10 @@ export const OWN_SET_PREFIX = 'mine-s-';
 
 export function ownPhraseToPhrase(own: OwnPhrase): Phrase {
   // Its notes and picture: the bank's when it is a bank phrase, else what AI wrote for it (in the
-  // learner's language, so they also stand as that language's version), else none yet.
+  // learner's language, so they also stand as that language's version), else what the device's
+  // rules work out from the phrase itself. Every phrase has all of them.
   const bank = findBankPhrase(own.bankId);
-  const notes = bank?.notes ?? own.notes ?? null;
+  const device = bank || (own.notes && own.image) ? null : deviceNotes(own);
   const written =
     !bank && own.notes && own.nativeLang !== 'en-GB'
       ? Object.fromEntries(Object.entries(own.notes).map(([kind, note]) => [kind, { [own.nativeLang]: { title: note.title, text: note.text } }]))
@@ -35,9 +37,10 @@ export function ownPhraseToPhrase(own: OwnPhrase): Phrase {
     register: null,
     tags: [],
     words: {},
-    image: bank?.image ?? own.image ?? null,
-    notes,
-    noteTranslations: bank?.noteTranslations ?? written,
+    image: bank?.image ?? own.image ?? device!.image,
+    notes: bank?.notes ?? own.notes ?? device!.notes,
+    noteTranslations: bank?.noteTranslations ?? (own.notes ? written : device!.noteTranslations),
+    ...(bank ? {} : { notesBy: own.notes ? ('ai' as const) : ('device' as const) }),
     audio: null,
     durationMs: null,
     own: true,

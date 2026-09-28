@@ -8,6 +8,7 @@ import { currentPhraseId, memoryOf, phraseProgress, points, previouslyPlayed, se
 import { addLocalDays, HOUR, startOfLocalDay } from './clock';
 // Phase timing, one-pass queues and undo after moving on (the player's round-3 changes).
 import { findBankPhrase } from '../content';
+import { deviceNotes } from '../notes';
 import { findPhrase, OWN_PHRASE_PREFIX, OWN_SET_PREFIX } from './catalog';
 import { requeuesOn } from './machine';
 import { measuredTargetMs, pendingFor, phaseDurationMs } from './selectors';
@@ -404,7 +405,7 @@ describe('the learner’s own phrases and sets', () => {
     assert.equal(canHandle('playing', 'ADD_PICKS'), true, 'saving never waits for the player');
   });
 
-  it('every own phrase gets notes where it can: the bank’s, or AI’s for its text (plan 105)', () => {
+  it('every own phrase has notes: the bank’s, AI’s for its text, or else the device’s (plan 105)', () => {
     const notes = {
       mnemonic: { title: 'Toalla, towel', text: 'Sounds alike.' },
       grammar: { title: 'Otra', text: 'No «una» before «otra».' },
@@ -426,7 +427,11 @@ describe('the learner’s own phrases and sets', () => {
     assert.deepEqual(s.learner.ownPhrases[`${OWN_PHRASE_PREFIX}ai`].notes, notes);
     s = run(s, { type: 'EDIT_OWN_PHRASE', id: `${OWN_PHRASE_PREFIX}ai`, target: 'Otra toalla limpia', native: 'Another clean towel', now: T0 + 3 });
     assert.equal(s.learner.ownPhrases[`${OWN_PHRASE_PREFIX}ai`].notes, undefined);
-    assert.equal(findPhrase(s.learner, `${OWN_PHRASE_PREFIX}ai`)?.notes, null);
+    // Until the writer writes again, the device's rules give it notes and a picture of its own.
+    const edited = findPhrase(s.learner, `${OWN_PHRASE_PREFIX}ai`)!;
+    assert.equal(edited.notesBy, 'device');
+    assert.deepEqual(edited.notes, deviceNotes({ target: 'Otra toalla limpia', native: 'Another clean towel', targetLang: 'es-ES', nativeLang: 'en-GB' }).notes);
+    assert.equal(shown.notesBy, undefined, 'a bank phrase’s notes are Loro’s own');
     // Notes from the writer apply to the text they were written for, once.
     assert.equal(run(s, { type: 'SET_OWN_NOTES', id: `${OWN_PHRASE_PREFIX}ai`, target: 'Otra toalla', notes, image: ['dry_cleaning'], now: T0 + 4 }), s, 'written for an older text');
     s = run(s, { type: 'SET_OWN_NOTES', id: `${OWN_PHRASE_PREFIX}ai`, target: 'Otra toalla limpia', notes, image: ['dry_cleaning'], now: T0 + 5 });

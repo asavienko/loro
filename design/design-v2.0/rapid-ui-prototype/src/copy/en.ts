@@ -177,11 +177,10 @@ export function makeEn(n: Plural) {
       yoursShort: 'Yours',
       /** Before a phrase's IPA and respelling in its details. */
       sounds: 'Sounds:',
-      /** A phrase of the learner's own that has no notes yet, and where its notes come from (plan 105). */
-      noNotes: 'This phrase has no notes yet.',
-      writeNotes: 'Write its notes',
+      /** Where the notes of a phrase of the learner's own come from (plan 105). */
+      notesByDevice: (language: string) => `Loro worked these notes out on this device from ${language} spelling and grammar. No native speaker has checked them.`,
+      writeNotes: 'Ask the writer for its notes',
       writingNotes: 'Writing notes…',
-      notesOffline: 'Notes for a phrase you wrote come from Loro’s writer, which isn’t available here.',
       notesFailed: 'The writer didn’t answer. Try again in a moment.',
       notesByAi: 'Its notes are written by AI. No native speaker has checked them.',
     },

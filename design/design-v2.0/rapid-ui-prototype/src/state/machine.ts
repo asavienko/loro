@@ -11,7 +11,7 @@
 // are in chart.ts.
 import { bankMatch, findPhrase, keyOf, OWN_PHRASE_PREFIX, OWN_SET_PREFIX } from './catalog';
 import { findBankPhrase } from '../content';
-import { clip, LIMITS, tidy } from './limits';
+import { clip, LIMITS, sayable, tidy } from './limits';
 import { canHandle } from './chart';
 import { initialPlayer, initialState } from './initial';
 import { localDay } from './clock';
@@ -578,7 +578,7 @@ function step(state: AppState, event: AppEvent): AppState {
     case 'ADD_OWN_PHRASE': {
       const target = trimmed(event.target, LIMITS.phrase);
       const native = trimmed(event.native, LIMITS.phrase);
-      if (!target || !native) return state;
+      if (!sayable(target) || !native) return state;
       const [seqId, next] = takeId(state);
       const id = event.id?.startsWith(OWN_PHRASE_PREFIX) && !learner.ownPhrases[event.id] ? event.id : `${OWN_PHRASE_PREFIX}${seqId}`;
       const { nativeLang, targetLang } = learner.profile;
@@ -634,7 +634,7 @@ function step(state: AppState, event: AppEvent): AppState {
       const own = learner.ownPhrases[event.id];
       const target = trimmed(event.target, LIMITS.phrase);
       const native = trimmed(event.native, LIMITS.phrase);
-      if (!own || own.deleted || !target || !native) return state;
+      if (!own || own.deleted || !sayable(target) || !native) return state;
       if (target === own.target && native === own.native) return state;
       // Notes explain the text they were written for: a new text drops them, and takes the bank's
       // notes if the bank has it.

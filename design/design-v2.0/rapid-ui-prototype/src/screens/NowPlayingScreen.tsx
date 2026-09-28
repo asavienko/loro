@@ -33,7 +33,6 @@ import { PhraseNotesView } from '../ui/Notes';
 import { backIn, endTitle, isTargetRevealed, PHASE_ICONS, phaseInstruction, phaseStepLabel, queueTitle } from '../ui/phase';
 import { GlossedPhrase, HiddenPhrase } from '../ui/PhraseText';
 import { PhraseImage } from '../ui/PhraseImage';
-import { SetCover } from '../ui/SetCover';
 import { PhaseFill } from '../ui/PhaseFill';
 import { usePlayerKeys } from './usePlayerKeys';
 import { useRate } from './useRate';
@@ -183,12 +182,8 @@ export function NowPlayingScreen({ onClose, onOpenQueue }: NowPlayingScreenProps
             onDragEnd={onSwipe}
             className={`relative mx-auto w-full shrink-0 max-w-[min(100%,21dvh)] aspect-square ${ROOMY_ONLY} phone-landscape:hidden md:max-w-[min(100%,34dvh)] lg:max-w-[min(100%,52dvh)] lg:col-start-1 lg:row-span-2 lg:self-center touch-pan-y`}
           >
-            {/* The phrase's own picture, on its set's colour; a phrase without one shows its set's cover. */}
-            {phrase.image ? (
-              <PhraseImage icons={phrase.image} tone={(coverSet?.topicId && getTopic(coverSet.topicId)?.tone) || 'secondary'} size="lg" className="w-full h-full rounded-3xl shadow-cover" />
-            ) : (
-              <SetCover set={coverSet ?? { topicId: null, coverIcon: 'edit_note' }} size="lg" className="w-full h-full rounded-3xl shadow-cover" />
-            )}
+            {/* The phrase's own picture, on its set's colour. */}
+            <PhraseImage icons={phrase.image} tone={(coverSet?.topicId && getTopic(coverSet.topicId)?.tone) || 'secondary'} size="lg" className="w-full h-full rounded-3xl shadow-cover" />
             <span role="img" aria-label={languageLabel(phrase.targetLang, c.locale)} className="absolute bottom-3 left-3 w-9 h-9 rounded-full bg-surface/70 flex items-center justify-center text-icon-sm">
               {getLanguage(phrase.targetLang).flag}
             </span>
@@ -339,16 +334,14 @@ function ActionRow({ phrase, onNotes }: { phrase: Phrase; onNotes: () => void })
         >
           <Icon name="playlist_add" className="text-[24px]" />
         </button>
-        {phrase.notes && (
-          <button
-            type="button"
-            aria-label={c.phrase.notesTitle}
-            onClick={onNotes}
-            className="size-[44px] flex items-center justify-center rounded-full text-secondary active:bg-surface-container"
-          >
-            <Icon name="lightbulb" className="text-[24px]" />
-          </button>
-        )}
+        <button
+          type="button"
+          aria-label={c.phrase.notesTitle}
+          onClick={onNotes}
+          className="size-[44px] flex items-center justify-center rounded-full text-secondary active:bg-surface-container"
+        >
+          <Icon name="lightbulb" className="text-[24px]" />
+        </button>
       </div>
     </div>
   );

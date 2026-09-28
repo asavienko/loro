@@ -69,10 +69,10 @@ test.describe('in Bulgarian', () => {
   });
 });
 
-async function typePhrase(page: Page, target: string, native: string) {
+async function typePhrase(page: Page, target: string, native: string, language = 'Spanish') {
   await page.goto('/#/library?view=mine');
   await page.getByRole('button', { name: 'Add your phrase' }).click();
-  await page.getByLabel('In Spanish').fill(target);
+  await page.getByLabel(`In ${language}`).fill(target);
   await page.getByLabel('In English').fill(native);
   await page.getByRole('button', { name: 'Add phrase' }).click();
   await page.getByRole('button', { name: `Details for ${target}` }).click();
@@ -87,11 +87,31 @@ test.describe('a phrase the learner types', () => {
     await expect(sheet.getByRole('tab')).toHaveCount(3);
   });
 
-  test('without a writer, says where its notes would come from', async ({ page }) => {
-    const sheet = await typePhrase(page, 'Mi perro se llama Toby', 'My dog is called Toby');
-    await expect(sheet.getByRole('heading', { name: 'This phrase has no notes yet.' })).toBeVisible();
-    await expect(sheet.getByText('Notes for a phrase you wrote come from Loro’s writer, which isn’t available here.')).toBeVisible();
-    await expect(sheet.getByRole('button', { name: 'Write its notes' })).toHaveCount(0);
+  test('without a writer, gets notes the device works out, and says so', async ({ page }) => {
+    const sheet = await typePhrase(page, 'Mi perro se llama Rufo', 'My dog is called Rufo');
+    await expect(sheet.locator('[data-phrase-image]')).toBeVisible();
+    await expect(sheet.locator('[data-sounds]')).toContainText('[mi ˈpe.ro se ˈʝa.ma ˈru.fo]');
+    await expect(sheet.locator('[data-sounds]')).toContainText('mee PEH-rroh seh YAH-mah RROO-foh');
+    await expect(sheet.getByText('Loro worked these notes out on this device from Spanish spelling and grammar. No native speaker has checked them.')).toBeVisible();
+    await expect(sheet.getByRole('button', { name: 'Ask the writer for its notes' })).toHaveCount(0);
+    // All three notes: the grammar is the construction it shows.
+    await expect(sheet.getByRole('tab')).toHaveCount(3);
+    for (const tab of ['Memory tip', 'Grammar', 'Sounds']) {
+      await sheet.getByRole('tab', { name: tab }).click();
+      await expect(sheet.getByRole('tabpanel')).not.toBeEmpty();
+    }
+    await sheet.getByRole('tab', { name: 'Grammar' }).click();
+    await expect(sheet.getByRole('tabpanel')).toContainText('«se llama»: names');
+  });
+
+  test('needs something to say aloud: a text of only marks can’t be added', async ({ page }) => {
+    await page.goto('/#/library?view=mine');
+    await page.getByRole('button', { name: 'Add your phrase' }).click();
+    await page.getByLabel('In Spanish').fill('¿?');
+    await page.getByLabel('In English').fill('A question');
+    await expect(page.getByRole('button', { name: 'Add phrase' })).toBeDisabled();
+    await page.getByLabel('In Spanish').fill('¿2?');
+    await expect(page.getByRole('button', { name: 'Add phrase' })).toBeEnabled();
   });
 
   test('with a writer, gets AI notes, marked as such; asked again if the first try fails', async ({ page }) => {
@@ -105,11 +125,27 @@ test.describe('a phrase the learner types', () => {
       return route.fulfill({ json: { image: ['group'], notes: WRITTEN_NOTES, model: 'stand-in' } });
     });
     const sheet = await typePhrase(page, 'Mi perro se llama Toby', 'My dog is called Toby');
-    await expect(sheet.getByRole('heading', { name: 'This phrase has no notes yet.' })).toBeVisible();
-    await sheet.getByRole('button', { name: 'Write its notes' }).click();
+    // Until the writer answers, the device's notes stand.
+    await expect(sheet.getByText(/worked these notes out on this device/)).toBeVisible();
+    await sheet.getByRole('button', { name: 'Ask the writer for its notes' }).click();
     await expect(sheet.getByText('Its notes are written by AI. No native speaker has checked them.')).toBeVisible();
     await expect(sheet.getByRole('tab')).toHaveCount(3);
     await expect(sheet.locator('[data-phrase-image]')).toHaveAttribute('data-phrase-image', 'group');
+    await expect(sheet.getByText(/worked these notes out on this device/)).toHaveCount(0);
     expect(asked[0]).toEqual({ target: 'Mi perro se llama Toby', native: 'My dog is called Toby', targetLang: 'es-ES', nativeLang: 'en-GB' });
+  });
+});
+
+test.describe('a phrase the learner types in the Bulgarian course', () => {
+  test.use({ seed: { nativeLang: 'en-GB', targetLang: 'bg-BG' } });
+
+  test('gets its picture, sounds and notes, and names a stress Loro doesn’t know', async ({ page }) => {
+    const sheet = await typePhrase(page, 'Искам да купя хляб', 'I want to buy bread', 'Bulgarian');
+    await expect(sheet.locator('[data-phrase-image]')).toHaveAttribute('data-phrase-image', /^bakery_dining/);
+    await expect(sheet.locator('[data-sounds]')).toContainText('[ˈiskɐm dɐ kupʲa ˈxʎap]');
+    await sheet.getByRole('tab', { name: 'Grammar' }).click();
+    await expect(sheet.getByRole('tabpanel')).toContainText('да, not an infinitive');
+    await sheet.getByRole('tab', { name: 'Sounds' }).click();
+    await expect(sheet.getByRole('tabpanel')).toContainText('Loro doesn’t know where the stress falls in «купя» yet');
   });
 });

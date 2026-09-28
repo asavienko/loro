@@ -37,11 +37,16 @@ export interface Phrase {
   register: PhraseJson['register'] | null;
   tags: PhraseJson['tags'];
   words: PhraseJson['words'];
-  /** Its picture (plan 105); null for one of the learner's own that has none yet. */
-  image: PhraseJson['image'] | null;
-  notes: PhraseJson['notes'] | null;
+  /** Its picture (plan 105). Every phrase has one, as it has all three notes. */
+  image: PhraseJson['image'];
+  notes: PhraseJson['notes'];
   /** Note titles and texts in other native languages, by note kind. */
   noteTranslations: Partial<Record<keyof PhraseJson['notes'], NoteTranslations[string]>>;
+  /**
+   * Who wrote the notes of one of the learner's own phrases, when not Loro: the AI writer, or the
+   * device's rules (plan 105). Absent for course and bank phrases.
+   */
+  notesBy?: 'ai' | 'device';
   audio: PhraseJson['audio'] | null;
   /** Clip lengths from content; the device's own measurements take over once it has them. */
   durationMs: PhraseJson['durationMs'] | null;
