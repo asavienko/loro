@@ -105,6 +105,8 @@ test.describe('a Russian speaker', () => {
     await page.goto('/#/set/set-cafe?from=home');
     await page.getByRole('button', { name: 'Подробнее: Me pone un cortado, por favor' }).click();
     await page.clock.runFor(1000);
+    // The notes open on the memory tip; the grammar note is one tab along.
+    await page.getByRole('tab', { name: 'Грамматика' }).click();
     await expect(page.getByText('«Me pone…» (буквально «поставьте мне…»)', { exact: false })).toBeVisible();
     await expect(page.getByText('Заметки пока на английском.')).toHaveCount(0);
     await page.keyboard.press('Escape');
