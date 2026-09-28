@@ -8,7 +8,10 @@ import { FormEvent, KeyboardEvent as ReactKeyboardEvent, RefObject, useEffect, u
 import { canSpeak, speak } from '../audio/speech';
 import { languageName } from '../copy';
 import { BANK_THEMES } from '../content';
-import { added, currentCard, deal, dealt, decide, Deck, edit, lastDecision, newDeck, nextCard, picksOf, unadd, undo } from '../generate/deck';
+import { added, currentCard, deal, dealt, decide, edit, lastDecision, newDeck, nextCard, picksOf, unadd, undo } from '../generate/deck';
+import { defaultTitle, MakeRequest, MakeSession } from '../generate/session';
+
+export type { MakeRequest, MakeSession } from '../generate/session';
 import { liveAvailable } from '../generate/remote';
 import { suggest } from '../generate/suggest';
 import { INPUT_LIMITS, SUGGEST_MODES, SuggestMode, SuggestRequest, Suggestion } from '../generate/types';
@@ -18,7 +21,6 @@ import { useNav } from '../nav/NavContext';
 import { findPhrase, findSetView, ownSets, sameKey } from '../state/catalog';
 import { clip, LIMITS, tidy } from '../state/limits';
 import { useCopy, useStore } from '../state/store';
-import type { Copy } from '../copy';
 import { CharCount } from '../ui/CharCount';
 import { Chip } from '../ui/Chip';
 import { Icon, IconName } from '../ui/Icon';
@@ -27,47 +29,10 @@ import { useToast } from '../ui/Toast';
 import { btnIcon, btnPrimary, btnText, btnTonal } from '../ui/button';
 import { fieldClass } from '../ui/field';
 
-/** Everything the flow holds, so a flow closed by mistake can be opened again as it was. */
-export interface MakeSession {
-  /** The learner's set being filled; null makes a new one. */
-  setId: string | null;
-  mode: SuggestMode;
-  /** What is typed in each mode's field, kept while switching between them. */
-  texts: Record<SuggestMode, string>;
-  /** The last request dealt, which More repeats. */
-  asked: SuggestRequest | null;
-  deck: Deck | null;
-  writer: 'ai' | 'device';
-  /** The AI writer failed and the device's phrases stand in: said above the cards. */
-  fellBack: boolean;
-  /** More found nothing new. */
-  exhausted: boolean;
-  step: 'ask' | 'deck' | 'save';
-  /** The new set's name, suggested from the first request. */
-  title: string;
-  /** The last request found nothing: said under the field. */
-  nothingFor: string | null;
-}
-
-export interface MakeRequest {
-  input?: string;
-  setId?: string;
-  resume?: MakeSession;
-}
-
 /** A card takes most of a tall phone, as a card to decide should; large text grows it further. */
 const CARD_HEIGHT = 'min-h-[min(24rem,52dvh)]';
 
 const SOURCE_ICONS: Record<Suggestion['source'], IconName> = { course: 'menu_book', mine: 'person', bank: 'library_music', ai: 'auto_awesome' };
-
-const capitalized = (text: string) => text.charAt(0).toLocaleUpperCase() + text.slice(1);
-
-/** A name for the new set from what was asked: the topic, the keywords, or "From my text". */
-function defaultTitle(c: Copy, request: SuggestRequest): string {
-  if (request.mode === 'text') return c.make.defaultTitleText;
-  const words = request.mode === 'keywords' ? request.input.split(/[,;\n]+/).map(tidy).filter(Boolean).join(', ') : tidy(request.input);
-  return clip(capitalized(words), LIMITS.title);
-}
 
 export function MakeSetScreen({
   request,
