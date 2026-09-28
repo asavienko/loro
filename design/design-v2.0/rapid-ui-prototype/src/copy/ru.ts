@@ -162,6 +162,7 @@ export function makeRu(n: Plural): Copy {
       moveDown: 'Ниже в наборе',
       yours: 'Ваша фраза',
       yoursShort: 'Ваша',
+      sounds: 'Произношение:',
     },
     addToSet: {
       title: 'Добавить в набор',

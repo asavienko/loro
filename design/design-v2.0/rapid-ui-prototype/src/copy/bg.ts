@@ -161,6 +161,7 @@ export function makeBg(n: Plural): Copy {
       moveDown: 'Премести надолу в набора',
       yours: 'Ваша фраза',
       yoursShort: 'Ваша',
+      sounds: 'Звучене:',
     },
     addToSet: {
       title: 'Добави в набор',

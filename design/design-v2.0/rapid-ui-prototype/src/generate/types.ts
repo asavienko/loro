@@ -1,6 +1,6 @@
 // "Make a set": what the learner asks for, and the phrases offered back. A suggestion is only an
 // offer; nothing becomes the learner's until they add it (plan 103, after plan 97's boundary).
-import type { LanguageCode } from '../content';
+import type { LanguageCode, TopicTone } from '../content';
 
 /** A topic ("at the pharmacy"), a few keywords ("hotel, towel") or a pasted text. */
 export type SuggestMode = 'topic' | 'keywords' | 'text';
@@ -37,4 +37,7 @@ export interface Suggestion {
   phraseId?: string;
   /** A course phrase's set, which the card names. */
   setTitle?: string;
+  /** Its picture (plan 105), when it has one, and the colour it sits on. */
+  image?: readonly string[];
+  tone?: TopicTone;
 }

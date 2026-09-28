@@ -84,6 +84,7 @@ function entries(learner: LearnerState): Entry[] {
         native: promptOf(p, nativeLang).text,
         phraseId: p.id,
         ...(set ? { setTitle: set.title } : {}),
+        ...(p.image ? { image: p.image, tone: topic?.tone ?? 'secondary' } : {}),
       },
       primary: wordsOf(p.target, ...Object.values(p.translations)),
       theme: [],

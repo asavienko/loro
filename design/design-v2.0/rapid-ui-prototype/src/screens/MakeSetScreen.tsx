@@ -24,6 +24,7 @@ import { useCopy, useStore } from '../state/store';
 import { CharCount } from '../ui/CharCount';
 import { Chip } from '../ui/Chip';
 import { Icon, IconName } from '../ui/Icon';
+import { PhraseImage } from '../ui/PhraseImage';
 import { SwipeDeck, SwipeTravel } from '../ui/SwipeDeck';
 import { useToast } from '../ui/Toast';
 import { btnIcon, btnPrimary, btnText, btnTonal } from '../ui/button';
@@ -610,7 +611,14 @@ function CardFace({ card, position, total, onEdit }: { card: Suggestion; positio
   };
 
   return (
-    <div role="group" aria-label={c.make.cardLabel(position, total)} className={`${CARD_HEIGHT} p-5 pt-16 flex flex-col gap-4`}>
+    <div role="group" aria-label={c.make.cardLabel(position, total)} className={`${CARD_HEIGHT} flex flex-col`}>
+      {/* The picture across the top, as a card to swipe has; the stamps show over it. */}
+      {card.image ? (
+        <PhraseImage icons={card.image} tone={card.tone} size="lg" className="w-full h-[min(9rem,18dvh)] rounded-t-3xl" />
+      ) : (
+        <span aria-hidden="true" className="block h-14" />
+      )}
+      <div className="flex-1 p-5 pt-4 flex flex-col gap-4">
       <p
         className={`self-start inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-label font-semibold ${
           card.source === 'ai' ? 'bg-primary-fixed text-on-primary-fixed' : 'bg-surface-container text-on-surface-variant'
@@ -640,6 +648,7 @@ function CardFace({ card, position, total, onEdit }: { card: Suggestion; positio
           </button>
         </div>
       )}
+      </div>
     </div>
   );
 }

@@ -175,6 +175,8 @@ export function makeEn(n: Plural) {
       moveDown: 'Move down in this set',
       yours: 'Your phrase',
       yoursShort: 'Yours',
+      /** Before a phrase's IPA and respelling in its details. */
+      sounds: 'Sounds:',
     },
     addToSet: {
       title: 'Add to set',
