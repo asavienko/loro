@@ -135,10 +135,16 @@ export function LibraryScreen({ view: chosen }: { view?: LibraryView }) {
             </button>
           )}
           {view === 'ownSets' && (
-            <button type="button" onClick={() => nav.createSet()} className={`${btnTonal} mt-3`}>
-              <Icon name="add" className="text-icon-md" />
-              {c.library.newSet}
-            </button>
+            <div className="flex flex-wrap gap-2 mt-3">
+              <button type="button" onClick={() => nav.createSet()} className={btnTonal}>
+                <Icon name="add" className="text-icon-md" />
+                {c.library.newSet}
+              </button>
+              <button type="button" onClick={() => nav.makeSet()} className={btnTonal}>
+                <Icon name="auto_awesome" className="text-icon-md" />
+                {c.make.title}
+              </button>
+            </div>
           )}
         </section>
       </div>

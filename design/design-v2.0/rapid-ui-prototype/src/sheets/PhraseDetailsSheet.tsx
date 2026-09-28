@@ -43,6 +43,8 @@ function PhraseDetails({ phraseId, ownSetId, onClose }: { phraseId: string; ownS
   const prompt = promptOf(phrase, state.learner.profile.nativeLang);
   const isCurrent = currentPhraseId(state.player) === phrase.id;
   const ownSet = ownSetId ? findSetView(state.learner, ownSetId) : undefined;
+  // A phrase the learner added from suggestions says where its text came from.
+  const origin = state.learner.ownPhrases[phrase.id]?.origin;
 
   return (
     <div className="flex flex-col gap-4">
@@ -65,6 +67,12 @@ function PhraseDetails({ phraseId, ownSetId, onClose }: { phraseId: string; ownS
               </span>
             ))}
         </p>
+        {origin && (
+          <p className="text-label text-on-surface-variant mt-2 flex items-start gap-1.5">
+            <Icon name={origin === 'ai' ? 'auto_awesome' : 'library_music'} className="text-icon-sm shrink-0" />
+            {origin === 'ai' ? c.make.originAi : c.make.originBank}
+          </p>
+        )}
         {phrase.tags.length > 0 && (
           <ul className="flex flex-wrap gap-1.5 mt-2">
             {phrase.tags.map((t) => (

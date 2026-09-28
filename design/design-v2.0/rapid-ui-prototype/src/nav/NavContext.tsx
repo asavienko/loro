@@ -23,6 +23,11 @@ export interface Navigation {
   addPhrase: (options?: { editId?: string; target?: string }) => void;
   /** New set, optionally holding these phrases; `rename` edits an own set instead. */
   createSet: (phraseIds?: string[], rename?: string) => void;
+  /**
+   * Make a set from suggested phrases, swiped through one at a time. `input` starts from a topic
+   * (and suggests at once); `setId` fills one of the learner's sets instead of making a new one.
+   */
+  makeSet: (options?: { input?: string; setId?: string }) => void;
   openSettings: () => void;
   /** Settings, scrolled to its voice pickers with the first one focused (the player's voice line). */
   openVoiceSettings: () => void;

@@ -9,20 +9,22 @@ type ChipProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'type' | 'role' |
   role?: 'tab';
   /** An active filter that a tap removes: ink with an ×, and no pressed state. Name it with aria-label. */
   removable?: boolean;
+  /** A one-tap action (a suggested topic), not a toggle: no pressed state. */
+  action?: boolean;
 };
 
 /**
  * A filter chip: a 36 px pill inside a 44 px target, so a row of them stays light while every
  * one is easy to hit. It doesn't wrap its label: in a scrolling row it scrolls, never squeezes.
  */
-export function Chip({ children, selected = false, role, removable = false, ...rest }: ChipProps) {
+export function Chip({ children, selected = false, role, removable = false, action = false, ...rest }: ChipProps) {
   const on = selected || removable;
   return (
     <button
       type="button"
       role={role}
       aria-selected={role === 'tab' ? selected : undefined}
-      aria-pressed={role === 'tab' || removable ? undefined : selected}
+      aria-pressed={role === 'tab' || removable || action ? undefined : selected}
       className="chip min-h-11 inline-flex items-center rounded-full forced-colors:border-0"
       {...rest}
     >
